@@ -54,9 +54,15 @@ void free_powfs_cfg(powfs_cfg_t *powfscfg){
 		free(powfscfg->llt);
 		powfscfg->llt=NULL;
 	}
+	if(powfscfg->pywfs){
+		dfree(powfscfg->pywfs->psx);
+		dfree(powfscfg->pywfs->psy);
+		free(powfscfg->pywfs);
+	}
 	lfree(powfscfg->wfs);
 	lfree(powfscfg->wfsr);
 	lfree(powfscfg->wfsind);
+	free(powfscfg->fnpywfs);
 	free(powfscfg->fnllt);
 	free(powfscfg->piinfile);
 	free(powfscfg->sninfile);
@@ -140,6 +146,7 @@ void free_parms(parms_t *parms){
 		dfree(parms->wfs[iwfs].sabad);
 	}
 	free(parms->wfs);
+
 	for(int idm=0; idm<parms->ndm; idm++){
 		dfree(parms->dm[idm].actstuck);
 		dfree(parms->dm[idm].actfloat);
@@ -177,8 +184,6 @@ void free_parms(parms_t *parms){
 	free_strarr(parms->recon.distortion_tel2wfs,parms->nwfsr);
 	dfree(parms->dirs);
 	lfree(parms->dbg.tomo_maxit);
-	dfree(parms->dbg.pwfs_psx);
-	dfree(parms->dbg.pwfs_psy);
 	dcellfree(parms->dbg.dmoff);
 	dcellfree(parms->dbg.gradoff);
 	dfree(parms->dbg.draw_opdmax);
@@ -209,21 +214,22 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(0,0,#A) /*read a key with lmat. */
 #define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat(n,1,#A) /*read a key with lmat. */
+
 #define READ_POWFS(A,B)						\
     readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B);		\
-    for(i=0; i<npowfs; i++){					\
-	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
+    for(int i=0; i<npowfs; i++){					\
+		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }	
 #define READ_POWFS_MAT(A,B)						\
     readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B);			\
-    for(i=0; i<npowfs; i++){						\
-	parms->powfs[i].B = readstr_##A##mat(0,0,strtmp[i]);/*doesn't need ## in B*/ \
-	free(strtmp[i]); strtmp[i]=NULL;\
+    for(int i=0; i<npowfs; i++){						\
+		parms->powfs[i].B = readstr_##A##mat(0,0,strtmp[i]);/*doesn't need ## in B*/ \
+		free(strtmp[i]); strtmp[i]=NULL;\
     }								
 #define READ_POWFS_RELAX(A,B)					\
     readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B);	\
-    for(i=0; i<npowfs; i++){					\
-	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
+    for(int i=0; i<npowfs; i++){					\
+		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
 
 /**
@@ -231,7 +237,7 @@ static inline int sum_dblarr(int n, real *a){
    it is used to represent the types of WFS.
 */
 static void readcfg_powfs(parms_t *parms){
-	int     npowfs,i;
+	int   npowfs;
 	parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
 	parms->powfs=mycalloc(parms->npowfs,powfs_cfg_t);
 	int *inttmp=NULL;
@@ -356,6 +362,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_MAT(d,qe);
 	READ_POWFS_RELAX(dbl,dx);
 	READ_POWFS(dbl,pixtheta);
+	READ_POWFS_RELAX(str,fnpywfs);
 	READ_POWFS_RELAX(str,fnllt);
 	READ_POWFS_RELAX(int,trs);
 	READ_POWFS_RELAX(int,frs);
@@ -373,19 +380,40 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(int,modulpos);
 	READ_POWFS_RELAX(int,modulring);
 	READ_POWFS(int,nwfs);
+	int nllt=0;
+	int npywfs=0;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
-		if(isinf(powfsi->hs)&&powfsi->fnllt){
-			warning("powfs %d is at infinity, disable LLT\n",ipowfs);
-			free(powfsi->fnllt);
-			powfsi->fnllt=NULL;
+		if(isinf(powfsi->hs)){
+			if(powfsi->fnllt){
+				warning("powfs %d is at infinity, disable LLT\n", ipowfs);
+				free(powfsi->fnllt);
+				powfsi->fnllt=NULL;
+			}
+		}else{
+			if(powfsi->fnllt){
+				nllt++;
+			}else{
+				warning("powfs %d is at finity range but LLT is not specified.\n", ipowfs);
+			}
 		}
-		char prefix[60];
-		snprintf(prefix,60,"powfs%d_",ipowfs);
-
+		if(!powfsi->fnllt && powfsi->radpix){
+			warning("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
+			powfsi->radpix=0;
+		}
+		if(powfsi->type!=WFS_SH){
+			npywfs++;
+		}
+	}
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->fnllt){
-#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
-#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
+			char prefix[60]={0};
+			if(nllt>1){//if there are more than 1 type of LLT, need to distinguish.
+				snprintf(prefix, 60, "powfs%d_", ipowfs);
+			}
+			#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
+			#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
 			open_config(powfsi->fnllt,prefix,-1);
 			powfsi->llt=mycalloc(1,llt_cfg_t);
 			READ_LLT(dbl,d);
@@ -406,15 +434,29 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat,ox);
 			READ_LLT_ARR(dmat,oy);
 			powfsi->llt->n=NX(powfsi->llt->ox);
-		} else{/*there is no LLT. */
-			powfsi->llt=NULL;
-			if(!isinf(powfsi->hs)){
-				error("powfs%d has finite hs at %g but no llt specified\n",
-					ipowfs,powfsi->hs);
+		}
+		if(powfsi->fnpywfs){
+			if(powfsi->type==WFS_SH){
+				error("powfs %d: fnpywfs is supplied (%s) by wfstype is set to SH\n", ipowfs, powfsi->fnpywfs);
 			}
-			if(powfsi->radpix){
-				warning("powfs%d has no LLT, disable radial coordinate.\n",ipowfs);
-				powfsi->radpix=0;
+			char prefix[60]={0};
+			if(npywfs>1){//if there are more than 1 type of LLT, need to distinguish.
+				snprintf(prefix, 60, "powfs%d_", ipowfs);
+			}
+			open_config(powfsi->fnpywfs, prefix, -1);
+			powfsi->pywfs=mycalloc(1, pywfs_cfg_t);
+			#define READ_PYWFS(T,key) powfsi->pywfs->key=readcfg_##T("%spywfs."#key, prefix)
+			#define READ_PYWFS_MAT(T,key) powfsi->pywfs->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
+			READ_PYWFS(int, nside);
+			READ_PYWFS(int, raw);
+			READ_PYWFS(dbl, flate);
+			READ_PYWFS(dbl, flatv);
+			READ_PYWFS(dbl, pupelong);
+			READ_PYWFS_MAT(d, psx);
+			READ_PYWFS_MAT(d, psy);
+			for(int i=0; i<npywfs; i++){
+				powfsi->pywfs->flate*=MAS2RAD;
+				powfsi->pywfs->flatv*=MAS2RAD;
 			}
 		}
 		/*
@@ -485,7 +527,6 @@ static void readcfg_wfs(parms_t *parms){
 	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++,ipowfs++){
 		if(parms->powfs[kpowfs].nwfs==0){//no stars.
 			free_powfs_cfg(&parms->powfs[kpowfs]);
-			parms->nwfs-=parms->powfs[kpowfs].nwfs;
 			ipowfs--;
 			continue;
 		} else{
@@ -584,6 +625,7 @@ static void readcfg_wfs(parms_t *parms){
 	free(inttmp);
 	free(strtmp);
 }
+
 #define READ_DM(A,B)				\
     readcfg_##A##arr((&A##tmp),ndm,0,"dm."#B);	\
     for(i=0; i<ndm; i++){			\
@@ -1282,13 +1324,6 @@ static void readcfg_dbg(parms_t *parms){
 	READ_INT(dbg.gp_noamp);
 	READ_DBL(dbg.gradoff_scale);
 	READ_INT(dbg.gradoff_reset);
-	READ_DMAT(dbg.pwfs_psx);
-	READ_DMAT(dbg.pwfs_psy);
-	READ_INT(dbg.pwfs_side);
-	READ_INT(dbg.pwfs_raw);
-	READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate*=MAS2RAD;
-	READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv*=MAS2RAD;
-	READ_DBL(dbg.pwfs_pupelong);
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
 	parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
@@ -1611,9 +1646,28 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		free(parms->wfs); parms->wfs=NULL;
 		parms->nwfs=0;
 	}
-	//Check powfs.dsa
+
+	//Note that empty powfs have been removed in readcfg_wfs.
+	
+	parms->itpowfs=-1;
+	parms->ilgspowfs=-1;
+	parms->nlgspowfs=0;
+	parms->hipowfs_hs=INFINITY;
+	parms->sim.dtrat_hi=-1;
+	parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
+	parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
+	parms->sim.dtrat_lof=-1;
+	parms->step_lo=-1;
+	parms->step_hi=-1;
+
+	if(!parms->nwfs||!parms->npowfs){
+		return;
+	}
+	parms->hipowfs=lnew(parms->npowfs, 1);
+	parms->lopowfs=lnew(parms->npowfs, 1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
+		pywfs_cfg_t *pycfg=powfsi->pywfs;
 		if(powfsi->dsa<=-1){//Order
 			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
 		} else if(powfsi->dsa<0){//In unit of d
@@ -1630,29 +1684,29 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		powfsi->order=ceil(parms->aper.d/powfsi->dsa);
-		parms->powfs[ipowfs].ng=(parms->powfs[ipowfs].type==WFS_PY&&parms->dbg.pwfs_raw)?parms->dbg.pwfs_side:2;
+		powfsi->ng=(pycfg&&pycfg->raw)?pycfg->nside:2;//number of gradients per subaperture
 		{
 			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
-			const real dsa=parms->powfs[ipowfs].dsa;
-			int nx=2*(int)round(0.5*dsa/parms->powfs[ipowfs].dx);
+			const real dsa=powfsi->dsa;
+			int nx=2*(int)round(0.5*dsa/powfsi->dx);
 			if(nx<2) nx=2;
 			real dx=dsa/nx;/*adjust dx. */
-			if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
+			if(fabs(powfsi->dx-dx)>EPS){
 				info("powfs %d: Adjusting dx from %g to %g. \n",
-					ipowfs,parms->powfs[ipowfs].dx,dx);
+					ipowfs,powfsi->dx,dx);
 			}
-			parms->powfs[ipowfs].dx=dx;
+			powfsi->dx=dx;
 		}
-		if(!parms->sim.closeloop&&parms->powfs[ipowfs].dtrat){
-			parms->powfs[ipowfs].dtrat=1;
-			parms->powfs[ipowfs].step=0;
-		} else if(parms->powfs[ipowfs].dtrat==0){//wfs disabled.
-			parms->powfs[ipowfs].dtrat=1;
-			parms->powfs[ipowfs].step=INT_MAX;
+		if(!parms->sim.closeloop&&powfsi->dtrat){
+			powfsi->dtrat=1;
+			powfsi->step=0;
+		} else if(powfsi->dtrat==0){//wfs disabled.
+			powfsi->dtrat=1;
+			powfsi->step=INT_MAX;
 		}
 		if(parms->sim.wfsalias){
-			parms->powfs[ipowfs].noisy=0;
-			parms->powfs[ipowfs].phystep=-1;
+			powfsi->noisy=0;
+			powfsi->phystep=-1;
 		}
 		if(powfsi->type==1&&powfsi->phystep!=0){
 			warning("PWFS must run in physical optics mode, changed.\n");
@@ -1811,11 +1865,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 			if(powfsi->dither_glpf==0) powfsi->dither_glpf=1;
 		}
-	}/*ipowfs */
-	/*link wfs with powfs*/
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		int mwfs=parms->powfs[ipowfs].nwfs;
+	
+		/*link LLT with iwfs*/
 		if(parms->powfs[ipowfs].llt){
+			int mwfs=parms->powfs[ipowfs].nwfs;
 			parms->powfs[ipowfs].llt->i=lnew(mwfs,1);/*default to zero. */
 			if(parms->powfs[ipowfs].llt->n>1){
 				/*this is single llt for this powfs. */
@@ -1825,34 +1878,18 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 					P(parms->powfs[ipowfs].llt->i,iwfs)=iwfs;
 				}
 			}
-		}
-	}//for ipowfs
-
-	//Match TWFS to LGS POWFS
-	parms->itpowfs=-1;
-	parms->ilgspowfs=-1;
-	parms->nlgspowfs=0;
-	for(int lgspowfs=0; lgspowfs<parms->npowfs; lgspowfs++){
-		if(parms->powfs[lgspowfs].llt){
 			parms->nlgspowfs++;
 			if(parms->ilgspowfs==-1){
-				parms->ilgspowfs=lgspowfs;
+				parms->ilgspowfs=ipowfs;
 			} else{
 				warning("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
 			}
 		}
-	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		//Match TWFS to LGS POWFS
 		if(parms->powfs[ipowfs].skip==2){//TWFS
 			parms->itpowfs=ipowfs;
-			int lgspowfs=parms->ilgspowfs;
-			if(lgspowfs!=-1){
-				info("powfs %d is TWFS for powfs %d\n",ipowfs,lgspowfs);
-				/*
-				//Set TWFS integration start time to pll start time to synchronize with matched filter update.
-				if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
-					parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
-				}*/
+			if(parms->ilgspowfs!=-1){
+				info("powfs %d is TWFS for powfs %d\n",ipowfs,parms->ilgspowfs);
 			}
 		}
 
@@ -1860,61 +1897,50 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(parms->powfs[ipowfs].phystep>0&&parms->powfs[ipowfs].phystep<parms->powfs[ipowfs].step){
 			parms->powfs[ipowfs].phystep=parms->powfs[ipowfs].step;
 		}
-		/*
-			const int dtrat=parms->powfs[ipowfs].dtrat;
-			if(dtrat>0){//this should be necessary. Not good for TWFS with high dtrat.
-			parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
-		}*/
-		//warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
-	}
-	parms->hipowfs_hs=INFINITY;
-	parms->hipowfs=lnew(parms->npowfs,1);
-	parms->lopowfs=lnew(parms->npowfs,1);
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs>0){
-			if(parms->powfs[ipowfs].lo){
-				P(parms->lopowfs,parms->nlopowfs)=ipowfs;
-				parms->nlopowfs++;
-				parms->nlowfs+=parms->powfs[ipowfs].nwfs;
-				if(parms->powfs[ipowfs].trs==1){
-					error("Low order wfs should not be tilt removed\n");
-				}
-				if(parms->powfs[ipowfs].gtype_sim==GTYPE_G&&parms->powfs[ipowfs].type==WFS_SH){
-					warning("Low order powfs %d is using gtilt in simulation. "
-						"This is not recommended\n",ipowfs);
-				}
-			} else{
-				P(parms->hipowfs,parms->nhipowfs)=ipowfs;
-				parms->nhipowfs++;
-				parms->nhiwfs+=parms->powfs[ipowfs].nwfs;
-				if(parms->powfs[ipowfs].hs<parms->hipowfs_hs){
-					parms->hipowfs_hs=parms->powfs[ipowfs].hs;
-				}
+	
+		if(parms->powfs[ipowfs].lo){
+			P(parms->lopowfs,parms->nlopowfs)=ipowfs;
+			parms->nlopowfs++;
+			parms->nlowfs+=parms->powfs[ipowfs].nwfs;
+			if(parms->powfs[ipowfs].trs==1){
+				error("Low order wfs should not be tilt removed\n");
 			}
-			if(parms->powfs[ipowfs].trs){
-				if(!parms->powfs[ipowfs].llt){
-					warning("WFS with tip/tilt removed should be LGS\n");
-				}
-				if(parms->powfs[ipowfs].lo){
-					warning("WFS with tip/tilt removed should be high order\n");
-				}
-				parms->ntrpowfs++;
-			} else{
-				if(parms->powfs[ipowfs].llt){
-					warning("WFS with tip/tilt include should not be LGS\n");
-				}
-				parms->ntipowfs++;
+			if(parms->powfs[ipowfs].gtype_sim==GTYPE_G&&parms->powfs[ipowfs].type==WFS_SH){
+				warning("Low order powfs %d is using gtilt in simulation. "
+					"This is not recommended\n",ipowfs);
 			}
-			if(parms->powfs[ipowfs].llt){
-				if(isinf(parms->powfs[ipowfs].hs)){
-					warning("powfs with llt should have finite hs\n");
-				}
-			} else{
-				if(!isinf(parms->powfs[ipowfs].hs)){
-					warning("powfs without llt should have infinite hs\n");
-				}
+		} else{
+			P(parms->hipowfs,parms->nhipowfs)=ipowfs;
+			parms->nhipowfs++;
+			parms->nhiwfs+=parms->powfs[ipowfs].nwfs;
+			if(parms->powfs[ipowfs].hs<parms->hipowfs_hs){
+				parms->hipowfs_hs=parms->powfs[ipowfs].hs;
 			}
 		}
+		if(parms->powfs[ipowfs].trs){
+			if(!parms->powfs[ipowfs].llt){
+				warning("WFS with tip/tilt removed should be LGS\n");
+			}
+			if(parms->powfs[ipowfs].lo){
+				warning("WFS with tip/tilt removed should be high order\n");
+			}
+			parms->ntrpowfs++;
+		} else{
+			if(parms->powfs[ipowfs].llt){
+				warning("WFS with tip/tilt include should not be LGS\n");
+			}
+			parms->ntipowfs++;
+		}
+		if(parms->powfs[ipowfs].llt){
+			if(isinf(parms->powfs[ipowfs].hs)){
+				warning("powfs with llt should have finite hs\n");
+			}
+		} else{
+			if(!isinf(parms->powfs[ipowfs].hs)){
+				warning("powfs without llt should have infinite hs\n");
+			}
+		}
+	
 
 		if(parms->powfs[ipowfs].usephy){
 			if(parms->powfs[ipowfs].neaextra){
@@ -1948,63 +1974,70 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		parms->powfs[ipowfs].phytype_sim1=parms->powfs[ipowfs].phytype_sim;//save value
-	}
-	lresize(parms->hipowfs,parms->nhipowfs,1);
-	lresize(parms->lopowfs,parms->nlopowfs,1);
-	if(parms->npowfs&&!parms->nhipowfs){
-		warning("There is no high order WFS.\n");
-	}
-	parms->sim.dtrat_hi=-1;
-	parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
-	parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
-	parms->sim.dtrat_lof=-1;
-	parms->step_lo=-1;
-	parms->step_hi=-1;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].skip==2) continue;
-		if(parms->powfs[ipowfs].type==WFS_PY&&parms->powfs[ipowfs].llt){
-			error("Pyramid WFS is not available for LGS WFS\n");
-		}
-		if(parms->powfs[ipowfs].lo||(parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){//has t/t measurement.
-			if(parms->sim.dtrat_lo<0){
-				parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
-			} else if(parms->sim.dtrat_lo<parms->powfs[ipowfs].dtrat){
-				parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
+
+		if(parms->powfs[ipowfs].skip!=2){//Only for none Truth WFS
+			if(parms->powfs[ipowfs].type==WFS_PY&&parms->powfs[ipowfs].llt){
+				error("Pyramid WFS is not available for LGS WFS\n");
 			}
-			if(parms->sim.dtrat_lo2<0){
-				parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
-			} else if(parms->sim.dtrat_lo2>parms->powfs[ipowfs].dtrat){
-				parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
-			}
-			if(parms->powfs[ipowfs].order>1){
-				if(parms->sim.dtrat_lof<0||parms->sim.dtrat_lof>parms->powfs[ipowfs].dtrat){
-					parms->sim.dtrat_lof=parms->powfs[ipowfs].dtrat;
+			if(parms->powfs[ipowfs].lo||(parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){//has t/t measurement.
+				if(parms->sim.dtrat_lo<0){
+					parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
+				} else if(parms->sim.dtrat_lo<parms->powfs[ipowfs].dtrat){
+					parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
 				}
-			}
-			if(parms->step_lo<0||parms->step_lo>parms->powfs[ipowfs].step){
-				parms->step_lo=parms->powfs[ipowfs].step;
-			}
-			if(parms->powfs[ipowfs].noisy){
-				parms->sim.noisy_lo=1;
-			}
-		}
-		if(!parms->powfs[ipowfs].lo){
-			if(!parms->powfs[ipowfs].skip){//participate in high order recon
-				if(parms->sim.dtrat_hi<0){
-					parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
-				} else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
-					error("We don't handle multiple framerate of the LO WFS yet\n");
+				if(parms->sim.dtrat_lo2<0){
+					parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
+				} else if(parms->sim.dtrat_lo2>parms->powfs[ipowfs].dtrat){
+					parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
 				}
-				if(parms->step_hi<0){
-					parms->step_hi=parms->powfs[ipowfs].step;
-				} else if(parms->step_hi!=parms->powfs[ipowfs].step){
-					error("Different high order WFS has different enabling step\n");
+				if(parms->powfs[ipowfs].order>1){
+					if(parms->sim.dtrat_lof<0||parms->sim.dtrat_lof>parms->powfs[ipowfs].dtrat){
+						parms->sim.dtrat_lof=parms->powfs[ipowfs].dtrat;
+					}
+				}
+				if(parms->step_lo<0||parms->step_lo>parms->powfs[ipowfs].step){
+					parms->step_lo=parms->powfs[ipowfs].step;
 				}
 				if(parms->powfs[ipowfs].noisy){
-					parms->sim.noisy_hi=1;
+					parms->sim.noisy_lo=1;
+				}
+			}
+			if(!parms->powfs[ipowfs].lo){
+				if(!parms->powfs[ipowfs].skip){//participate in high order recon
+					if(parms->sim.dtrat_hi<0){
+						parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
+					} else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
+						error("We don't handle multiple framerate of the LO WFS yet\n");
+					}
+					if(parms->step_hi<0){
+						parms->step_hi=parms->powfs[ipowfs].step;
+					} else if(parms->step_hi!=parms->powfs[ipowfs].step){
+						error("Different high order WFS has different enabling step\n");
+					}
+					if(parms->powfs[ipowfs].noisy){
+						parms->sim.noisy_hi=1;
+					}
 				}
 			}
 		}
+		if(pycfg){
+			pycfg->hs=parms->powfs[ipowfs].hs;
+			pycfg->hc=parms->powfs[ipowfs].hc;
+			pycfg->sigmatch=parms->powfs[ipowfs].sigmatch;
+			pycfg->siglev=parms->powfs[ipowfs].siglev;
+			pycfg->poke=parms->recon.poke;//How many meters to poke
+			if(pycfg->poke>1e-5||pycfg->poke<1e-10){
+				warning("poke=%g m is out of range\n", pycfg->poke);
+			}
+			pycfg->modulate=parms->powfs[ipowfs].modulate;
+			pycfg->modulpos=pycfg->modulate>0?(parms->powfs[ipowfs].modulpos/pycfg->nside*pycfg->nside):1;
+			pycfg->modulring=pycfg->modulate>0?MAX(1, parms->powfs[ipowfs].modulring):1;
+		}
+	}//for ipowfs
+	lresize(parms->hipowfs, parms->nhipowfs, 1);
+	lresize(parms->lopowfs, parms->nlopowfs, 1);
+	if(parms->npowfs&&!parms->nhipowfs){
+		warning("There is no high order WFS.\n");
 	}
 	if(parms->sim.dtrat_lo%parms->sim.dtrat_lo2!=0){
 		error("Slower dtrat=%d has to be multiple of %d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2);

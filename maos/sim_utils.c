@@ -829,7 +829,7 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].type==WFS_SH){
 				P(simu->ints, iwfs)=dcellnew_same(nsa, 1, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 			} else{
-				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->nside);
+				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->cfg->nside);
 			}
 		}
 		if(parms->powfs[ipowfs].phystep!=0||P(parms->save.gradgeom, iwfs)||parms->powfs[ipowfs].pistatout){

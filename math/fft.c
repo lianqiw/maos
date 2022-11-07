@@ -82,7 +82,7 @@ static void (*init_threads())(int){
 #if HAS_FFTW_CALLBACK
 static void FFTW(task_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
 	(void)data;
-	dbg("fft_task_callback: %d threads\n", njobs);
+	//dbg("fft_task_callback: %d threads\n", njobs);
 #if _OPENMP
 	//Adaptively handling in or outside of parallel region.
 	if(NTHREAD>1&&!omp_in_parallel()){

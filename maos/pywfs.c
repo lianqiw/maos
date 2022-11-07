@@ -32,7 +32,7 @@
 static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, real pupelong){
 	dspcellfree(pywfs->si);
 	cellfree(pywfs->msaloc);
-	const int pyside=pywfs->nside;
+	const int pyside=pywfs->cfg->nside;
 	pywfs->si=dspcellnew(pyside, 1);
 	if(!pywfs->sioff){
 		pywfs->sioff=dnew(pyside, 2);
@@ -99,22 +99,20 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 }
 /**
    Setup pyramid WFS based on configuration.
+
+   Todo: In order to move the implementation to lib/ the following changes are needed
+   - Generate loc/amp externally and supply here. 
+   - Handle misregistration externally. Different misregisration is used in simulation and reconstruction.
+   - ...
 */
-void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
+void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs){
 	pywfs_free(powfs[ipowfs].pywfs);
 	pywfs_t* pywfs=powfs[ipowfs].pywfs=mycalloc(1, pywfs_t);
-	const int pyside=pywfs->nside=parms->dbg.pwfs_side;
-	pywfs->raw=parms->dbg.pwfs_raw;
-	const int ng=pywfs->raw?pyside:2;
+	pywfs->cfg=pycfg; //consider copy struct if necessary.
+	const int pyside=pycfg->nside;
+	const int ng=pycfg->raw?pyside:2;
 	map_t* map=0;
-	pywfs->hs=parms->powfs[ipowfs].hs;
-	pywfs->hc=parms->powfs[ipowfs].hc;
-	pywfs->sigmatch=parms->powfs[ipowfs].sigmatch;
-	pywfs->siglev=parms->powfs[ipowfs].siglev;
-	pywfs->poke=parms->recon.poke;//How many meters to poke
-	if(pywfs->poke>1e-5||pywfs->poke<1e-10){
-		warning("poke=%g m is out of range\n", pywfs->poke);
-	}
+
 	pywfs->iwfs0=P(parms->powfs[ipowfs].wfs,0);
 	real dx=parms->powfs[ipowfs].dx;
 	create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
@@ -147,9 +145,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	real oversize=2*PYWFS_GUARD;
 	pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, oversize, 0);
 	pywfs->wvlwts=ddup(parms->powfs[ipowfs].wvlwts);
-	pywfs->modulate=parms->powfs[ipowfs].modulate;
-	pywfs->modulpos=pywfs->modulate>0?(parms->powfs[ipowfs].modulpos/pyside*pyside):1;
-	pywfs->modulring=pywfs->modulate>0?MAX(1, parms->powfs[ipowfs].modulring):1;
+	
 	long nembed=P(pywfs->locfft->nembed,0);
 	real wvlmin, wvlmax;
 	dmaxmin(P(parms->powfs[ipowfs].wvl), nwvl, &wvlmax, &wvlmin);
@@ -183,8 +179,8 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		}
 		real radius2=nstop*nstop*0.25;
 		//Make pyramid edge or vertax flat within certain range
-		real eskip=(parms->dbg.pwfs_flate/dtheta/2);
-		real vskip=(parms->dbg.pwfs_flatv/dtheta/2);
+		real eskip=(pycfg->flate/dtheta/2);
+		real vskip=(pycfg->flatv/dtheta/2);
 		const real sqrt3=sqrt(3.);
 		//const real ratio2=acos(sqrt(0.5))/acos(0.5);
 		for(long iy=skip; iy<ncomp-skip; iy++){
@@ -256,22 +252,22 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	cfft2(nominal, 1);
 	cscale(nominal, 1./(NX(nominal)*NY(nominal)));
 	*/
-	if(parms->dbg.pwfs_psx){
-		if(NX(parms->dbg.pwfs_psx)!=4){
+	if(pycfg->psx){
+		if(NX(pycfg->psx)!=4){
 			error("dbg.pwfs_psx has wrong format: expected 4x1, got %ldx%ld\n",
-				NX(parms->dbg.pwfs_psx), NY(parms->dbg.pwfs_psx));
+				NX(pycfg->psx), NY(pycfg->psx));
 		}
-		if(NX(parms->dbg.pwfs_psy)!=4){
+		if(NX(pycfg->psy)!=4){
 			error("dbg.pwfs_psy has wrong format: expected 4x1, got %ldx%ld\n",
-				NX(parms->dbg.pwfs_psy), NY(parms->dbg.pwfs_psy));
+				NX(pycfg->psy), NY(pycfg->psy));
 		}
 		int redefine=parms->powfs[ipowfs].saloc?0:1;
 		pywfs->pupilshift=dnew(4, 2);
 		for(int i=0; i<4; i++){
 			real tmp;
-			tmp=P(parms->dbg.pwfs_psx, i);
+			tmp=P(pycfg->psx, i);
 			P(pywfs->pupilshift, i, 0)=tmp-redefine?round(tmp):0;
-			tmp=P(parms->dbg.pwfs_psy, i);
+			tmp=P(pycfg->psy, i);
 			P(pywfs->pupilshift, i, 1)=tmp-redefine?round(tmp):0;
 
 		}
@@ -289,7 +285,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 		}
 	} else{
 	//Pad the grid to avoid missing significant pixels (subapertures).
-		long order2=ceil(order)+2*MAX(0, ceil(parms->dbg.pwfs_pupelong));
+		long order2=ceil(order)+2*MAX(0, ceil(pycfg->pupelong));
 		if(order2>order){
 			warning("order=%ld, order2=%ld.\n", order, order2);
 		}
@@ -298,7 +294,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
 	}
 
 	loc_t* loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
-	const real pupelong=parms->dbg.pwfs_pupelong*sqrt(2)/(order*0.5);
+	const real pupelong=pycfg->pupelong*sqrt(2)/(order*0.5);
 	pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, dx2, pupelong);//for each quadrant.
 
 	if(parms->save.setup){
@@ -558,6 +554,7 @@ void pywfs_setup(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs)
    pyramid. FFT on each quadrant of the PSF creates diffraction effects.
 */
 void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	locfft_t* locfft=pywfs->locfft;
 	ccell* psfs=0;
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
@@ -567,9 +564,9 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
 	long nembed2=nembed/2;
 	dmat* wvlwts=pywfs->wvlwts;
 	//position of pyramid for modulation
-	int pos_n=pywfs->modulpos;
-	int pos_nr=pywfs->modulring;
-	real pos_r=pywfs->modulate;
+	int pos_n=pycfg->modulpos;
+	int pos_nr=pycfg->modulring;
+	real pos_r=pycfg->modulate;
 	long ncomp=NX(pywfs->nominal);
 	long ncomp2=ncomp/2;
 	cmat* otf=cnew(ncomp, ncomp);
@@ -641,9 +638,9 @@ void pywfs_fft(dmat** ints, const pywfs_t* pywfs, const dmat* opd){
    Compute gradients. It replaces the result, not accumulate.
  */
 void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const long nsa=NX(ints);
-	const int pyside=pywfs->nside;
-	const int ng=pywfs->raw?pyside:2;
+	const int ng=pycfg->raw?pycfg->nside:2;
 	if(!*pgrad){
 		*pgrad=dnew(nsa*ng, 1);
 	}
@@ -653,19 +650,19 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 	real gain=pywfs->gain;
 	real triscalex=sqrt(3.)/2;
 	real imean=0;
-	if(pywfs->sigmatch==2){
+	if(pycfg->sigmatch==2){
 		imean=dsum(ints)/nsa;
 	}
 	for(int isa=0; isa<nsa; isa++){
 		real isum=0;
-		switch(pywfs->sigmatch){
+		switch(pycfg->sigmatch){
 		case 0:
 			info_once("PWFS: No siglev correction.\n");
-			isum=pywfs->siglev*P(pywfs->saa,isa);
+			isum=pycfg->siglev*P(pywfs->saa,isa);
 			break;
 		case 1:
 			info_once("PWFS: Individual siglev correction.\n");
-			for(int i=0; i<pyside; i++){
+			for(int i=0; i<pycfg->nside; i++){
 				isum+=P(ints, isa, i);
 			}
 			break;
@@ -675,12 +672,12 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 			break;
 		}
 		real alpha2=gain/isum;
-		if(pywfs->raw){
-			for(int iside=0; iside<pyside; iside++){
+		if(pycfg->raw){
+			for(int iside=0; iside<pycfg->nside; iside++){
 				P(grad,isa+nsa*iside)=P(ints, isa, iside)*alpha2;
 			}
 		}else{
-			switch(pyside){
+			switch(pycfg->nside){
 			case 3:
 				pgx[isa]=(P(ints, isa, 1)-P(ints, isa, 2))*alpha2*triscalex;
 				pgy[isa]=(P(ints, isa, 0)-0.5*(P(ints, isa, 1)+P(ints, isa, 2)))*alpha2;
@@ -704,11 +701,12 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 */
 dmat* pywfs_tt(const pywfs_t* pywfs){
 	TIC;tic;info2("Computing pywfs_tt...");
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const loc_t* loc=pywfs->locfft->loc;
 	dmat* opd=dnew(loc->nloc, 1);
 	dmat* ints=0;
 	long nsa=P(pywfs->si,0)->nx;
-	const int ng=pywfs->raw?pywfs->nside:2;
+	const int ng=pycfg->raw?pycfg->nside:2;
 	dmat* out=dnew(nsa*ng, 2);
 	dmat* gradx=drefcols(out, 0, 1);
 	dmat* grady=drefcols(out, 1, 1);
@@ -776,6 +774,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	return out;
 }
 static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	key=lochash(pywfs->loc, key);
 	key=dhash(pywfs->amp, key);
 	key=dhash(pywfs->saa, key);
@@ -784,8 +783,8 @@ static uint32_t pywfs_hash(const pywfs_t* pywfs, uint32_t key){
 	if(pywfs->pupilshift){
 		key=dhash(pywfs->pupilshift, key);
 	}
-	key=hashlittle(&pywfs->raw, sizeof(int), key);
-	key=hashlittle(&pywfs->nside, sizeof(int), key);
+	key=hashlittle(&pycfg->raw, sizeof(int), key);
+	key=hashlittle(&pycfg->nside, sizeof(int), key);
 	return key;
 }
 /**
@@ -801,8 +800,9 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		return gpu_pywfs_mkg(pywfs, locin, locfft, mod, displacex, displacey);
 	}
 #endif
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const int nsa=P(pywfs->si,0)->nx;
-	const int ng=pywfs->raw?pywfs->nside:2;
+	const int ng=pycfg->raw?pycfg->nside:2;
 	dmat* grad0=dnew(nsa*ng, 1);
 	dmat* opd0;
 	if(pywfs->opdadd){
@@ -825,7 +825,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		error("NX(mod) must equal to %ld", locin->nloc);
 	}
 
-	const real scale=1.-(locin->ht-pywfs->hc)/pywfs->hs;
+	const real scale=1.-(locin->ht-pycfg->hc)/pycfg->hs;
 	TIC;tic;
 OMP_TASK_FOR(4)
 	for(int imod=0; imod<nmod; imod++){
@@ -833,7 +833,7 @@ OMP_TASK_FOR(4)
 		dmat* opdfft=ddup(opd0);
 		dmat* ints=0;
 		dmat* grad=drefcols(ggd, imod, 1);
-		real poke=pywfs->poke;
+		real poke=pycfg->poke;
 		if(mod){
 			dmat* tmp=drefcols(mod, imod, 1);
 			//the equivalent radimodl order of zernike.
@@ -874,6 +874,7 @@ OMP_TASK_FOR(4)
  */
 dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, const dmat* mod, const dmat* opdadd,
 	real displacex, real displacey){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	if(opdadd){
 		dfree(pywfs->opdadd);
 		pywfs->opdadd=dnew(pywfs->locfft->loc->nloc, 1);
@@ -895,8 +896,8 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	char fnlock[PATH_MAX];
 	mymkdir("%s/G/", CACHE);
 	snprintf(fn, sizeof(fn), "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_v2.bin", CACHE,
-		key, P(pywfs->locfft->nembed,0), locin->nloc, pywfs->modulate, pywfs->modulpos,
-		locin->iac, displacex, displacey, 1., pywfs->poke);
+		key, P(pywfs->locfft->nembed,0), locin->nloc, pycfg->modulate, pycfg->modulpos,
+		locin->iac, displacex, displacey, 1., pycfg->poke);
 	snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
 	info2("Using G in %s\n", fn);
 	dmat* gg=0;

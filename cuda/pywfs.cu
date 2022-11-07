@@ -128,30 +128,31 @@ void pywfs_grad(curmat& grad, /**<[out] gradients*/
 		const curmat& goff, /**<[in] Gradient of flat wavefront*/
 		const pywfs_t* pywfs,
 		cudaStream_t stream){
-	const int ng=pywfs->raw?pywfs->nside:2;
-	switch(pywfs->sigmatch){
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
+	const int ng=pycfg->raw?pycfg->nside:2;
+	switch(pycfg->sigmatch){
 	case 0://No siglev correction
 		info_once("No siglev correction\n");
-		if(pywfs->raw){
+		if(pycfg->raw){
 			pywfsr_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx(),ng);
-		}else if(pywfs->nside==3){
+				(grad, ints, saa, pycfg->siglev, goff, pywfs->gain, ints.Nx(),ng);
+		}else if(pycfg->nside==3){
 			pywfs3_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
-		}else if(pywfs->nside==4){
+				(grad, ints, saa, pycfg->siglev, goff, pywfs->gain, ints.Nx());
+		}else if(pycfg->nside==4){
 			pywfs4_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-				(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
+				(grad, ints, saa, pycfg->siglev, goff, pywfs->gain, ints.Nx());
 		}
 		break;
 	case 1:
 		info_once("Individual correction\n");
-		if(pywfs->raw){
+		if(pycfg->raw){
 			pywfsr_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, goff, pywfs->gain, ints.Nx(),ng);
-		}else if(pywfs->nside==3){
+		}else if(pycfg->nside==3){
 			pywfs3_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, goff, pywfs->gain, ints.Nx());
-		}else if(pywfs->nside==4){
+		}else if(pycfg->nside==4){
 			pywfs4_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, goff, pywfs->gain, ints.Nx());
 		}
@@ -159,13 +160,13 @@ void pywfs_grad(curmat& grad, /**<[out] gradients*/
 	case 2:
 		info_once("Global correction (preferred);\n");
 		cursum2(isum, ints, stream);//sum of ints
-		if(pywfs->raw){
+		if(pycfg->raw){
 			pywfsr_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx(),ng);
-		}else if(pywfs->nside==3){
+		}else if(pycfg->nside==3){
 			pywfs3_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
-		}else if(pywfs->nside==4){
+		}else if(pycfg->nside==4){
 			pywfs4_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 				(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
 		}
@@ -188,6 +189,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	cupowfs_t* cupowfs=cuwfs.powfs;
 	stream_t& stream=cuwfs.stream;
 	pywfs_t* pywfs=cupowfs->pywfs;
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	cuzero(cuwfs.pypsf, stream);
 	locfft_t* locfft=pywfs->locfft;
 	const int nwvl=locfft->wvl->nx;
@@ -196,9 +198,9 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	const long nembed2=nembed/2;
 	const long ncomp=pywfs->nominal->nx;
 	const long ncomp2=ncomp/2;
-	const Real pos_r=pywfs->modulate;
-	const int pos_n=pywfs->modulpos;
-	const int pos_nr=pywfs->modulring;
+	const Real pos_r=pycfg->modulate;
+	const int pos_n=pycfg->modulpos;
+	const int pos_nr=pycfg->modulring;
 	cucmat& otf=cuwfs.pyotf;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		ctoc_init(20);
@@ -268,7 +270,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 		const Real dx2=dx*nembed/ncomp;
 		const int nsa=cupowfs->saloc.Nloc();
 		const Real alpha=(Real)nsa*siglev/(Real)(ncomp*ncomp);
-		for(int ind=0; ind<pywfs->nside; ind++){
+		for(int ind=0; ind<pycfg->nside; ind++){
 			Real shx=0, shy=0;
 			culoc_t saloc;
 			if(cupowfs->msaloc){
@@ -297,6 +299,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 }
 dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
 	gpu_set(cuglobal->wfsgpu[pywfs->iwfs0]);
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	cuwfs_t& cuwfs=cuglobal->wfs[pywfs->iwfs0];
 	cupowfs_t* cupowfs=cuwfs.powfs;
 	stream_t& stream=cuwfs.stream;
@@ -316,8 +319,8 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	}
 	culoc_t culocout(locfft);
 	const int nsa=cupowfs->saloc.Nloc();
-	curmat ints(nsa, pywfs->nside);
-	const int ng=pywfs->raw?pywfs->nside:2;
+	curmat ints(nsa, pycfg->nside);
+	const int ng=pycfg->raw?pycfg->nside:2;
 	curmat grad(nsa*ng, 1);
 	curmat grad0(nsa*ng, 1);
 	cuzero(ints, stream);
@@ -331,7 +334,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	dmat* ggd=dnew(nsa*ng, nmod);
 
 	for(int imod=0; imod<nmod; imod++){
-		Real poke=pywfs->poke;
+		Real poke=pycfg->poke;
 		if(mod){
 			dmat* tmp=drefcols(mod, imod, 1);
 			//real radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
@@ -351,7 +354,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);
 		cucp(phiout, phiout0, stream);
-		dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
+		dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->cfg->hs, pywfs->cfg->hc, displacex, displacey, 0, 0, 1, stream);
 		//cuwrite(cumapin[0].p, stream, "gpu_cumapin_%d", imod);
 		//cuwrite(phiout, stream, "gpu_phiout_%d", imod);
 		cuzero(ints, stream);

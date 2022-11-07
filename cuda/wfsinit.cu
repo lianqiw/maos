@@ -462,7 +462,7 @@ void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 		if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].dither){
 			if(!cuwfs[iwfs].ints){
 				if(parms->powfs[ipowfs].type==WFS_PY){//PYWFS
-					cuwfs[iwfs].ints=curcell(1, 1, nsa, powfs[ipowfs].pywfs->nside);
+					cuwfs[iwfs].ints=curcell(1, 1, nsa, powfs[ipowfs].pywfs->cfg->nside);
 				} else{
 					cuwfs[iwfs].ints=curcell(nsa, 1, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 				}

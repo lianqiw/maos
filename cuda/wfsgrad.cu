@@ -601,7 +601,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			if(do_phy){
 			/*signal level was already multiplied in ints. */
 				curcell& ints=cuwfs[iwfs].ints;
-				const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->nside:(ints[0].N());//PyWFs and SHWFS
+				const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->cfg->nside:(ints[0].N());//PyWFs and SHWFS
 				if(save_ints){
 					zfarr_push_scale(simu->save->intsnf[iwfs], isim, ints, 1, stream);
 				}

@@ -133,6 +133,29 @@ typedef struct dither_cfg_t{
 	int ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
 } dither_cfg_t;
 /**
+ * Pyramid WFS configurations. //Todo: move to pywfs.h after pywfs.h is moved to lib folder
+ * */
+typedef struct pywfs_cfg_t{
+    int nside;       /**<Number of sides. can be 4 or 3. 4-side is traditional pyramid while 3-side is much easier to make.*/
+    int raw;         /**<1: use normalized ints of each sub-pupil as gradient. 0: use difference between sub-pupils*/
+    int modulpos;    /**<Number of positions per modulation cycle*/
+    int modulring;   /**<Number of rings within the maximum radius to modulate*/
+    int sigmatch;    /**<Scale gradients by matching intensity (1: locally, 2: globally).*/
+
+    real siglev;     /**<Nominal siglev per subaperture*/
+    real hs;         /**<Height of guide star*/
+    real hc;         /**<Conjugation height of WFS pupil*/
+    real poke;       /**<How much to poke for mkg*/
+    real modulate;   /**<Amount of modulation in radian*/
+
+    //The following are used to simulate the implementation error.
+    dmat *psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
+    dmat *psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
+    real flate; /**<pyramid flat edge angular width */
+    real flatv; /**<pyramid flat vertex angular width*/
+    real pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
+}pywfs_cfg_t;
+/**
    contains input parameters for each type of wfs (powfs).
 */
 typedef struct powfs_cfg_t{
@@ -142,8 +165,7 @@ typedef struct powfs_cfg_t{
     real misregx;  /**<offset of saloc from pupil illumination in unit of dsa*/
     real misregy;  /**<offset of saloc from pupil illumination in unit of dsa*/
     char *amp;     /**<amplitude override file*/
-    char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
-		      to disable*/
+    char *piinfile;/**<input averaged pixel intensities for matched filter. NULL to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
     real hs;       /**<height of guide star*/
     real hc;       /**<conjugation height of WFS pupil*/
@@ -159,21 +181,15 @@ typedef struct powfs_cfg_t{
     real neaextra; /**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
     real neamin;   /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
     real bkgrnd;   /**<background in electron per pixel per LGS frame*/
-    real bkgrndc;  /**<How much of the background in bkgrnd can be calibrated
-		      out. depends on variability.*/
-    char *bkgrndfn;/**<file contains sky background/rayleigh scatter input for
-		       each subaperture in each wfs. */
-    char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
-		       calibrated out. depends on variability.*/
-    dmat *qe;      /**<File containing matrix of pixpsax*pixpsay specifying QE
-		     * of each pixel. To simulate PCCD non uniform response*/
+    real bkgrndc;  /**<How much of the background in bkgrnd can be calibrated out. depends on variability.*/
+    char *bkgrndfn;/**<file contains sky background/rayleigh scatter input for each subaperture in each wfs. */
+    char *bkgrndfnc;/**<How much of the background in bkgrndfn can be calibrated out. depends on variability.*/
+    dmat *qe;      /**<File containing matrix of pixpsax*pixpsay specifying QE of each pixel. To simulate PCCD non uniform response*/
     real rne;      /**<read out noise in electron per pixel per frame*/
     real pixblur;  /**<pixel bluring due to leakage. relative to pixel size.*/
     real dsa;      /**<Size of subaperture in 1 dimension*/
-    real dx;       /**<sampling of opd points in each subaperture. usually
-		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    real pixtheta; /**<size of pixel pitch along x/y or azimuthal if radial
-		       ccd. Converted to radian from user input*/
+    real dx;       /**<sampling of opd points in each subaperture. usually matches atmosphere sampling for LGS. may be coraser for NGS.*/
+    real pixtheta; /**<size of pixel pitch along x/y or azimuthal if radial ccd. Converted to radian from user input*/
     real radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
     real fieldstop;/**<size of field stop in arcsec.*/
     real pixoffx;  /**<offset of image center from center of detector*/
@@ -184,10 +200,12 @@ typedef struct powfs_cfg_t{
     real sigrecon; /**<signal level for NEA computation*/
     struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/
+    pywfs_cfg_t *pywfs; /**<Set only for Pyramid WFS.*/
+    char *fnpywfs; /**<Pyramid WFS configuration*/
     int type;      /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
     int step;      /**<frame to start using WFS*/
     int trs;       /**<tip/tilt removal flag. True for LGS, False for NGS*/
-    int frs;      /**Global focus removal flag. Optional for LGS, False for NGS*/
+    int frs;       /**Global focus removal flag. Optional for LGS, False for NGS*/
     int lo;        /**<whether this is a low order wfs. False for LGS, True for NGS*/
     int skip;      /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;      /**<Compute pseudo open loop gradients (derived parameter)*/
@@ -197,8 +215,7 @@ typedef struct powfs_cfg_t{
     int nwfs;      /**<number of wfs belonging to this powfs*/
     int nwfsr;     /**<number of wfs for reconstruction belonging to this powfs*/
     int neaphy;    /**<use nea from physical optical precomputation in geometric simulations.*/
-    int phyusenea; /**<force using supplied noise equivalent angle in physical
-		      optics simulations*/
+    int phyusenea; /**<force using supplied noise equivalent angle in physical optics simulations*/
     int order;     /**<order of wavefront sensing along one dimension.*/
     int pixpsa;    /**<number of detector pixels along x/y (or azimuthal if radial CCD).*/
     int radpix;    /**<number of detector pixels along radial direction if radial CCD*/
@@ -660,13 +677,7 @@ typedef struct dbg_cfg_t{
     dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     real gradoff_scale;/**<Scale the reference vector*/
 	int gradoff_reset;/**<reset gradoff after creating matched filter with dithering*/
-    dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
-    dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
-    real pwfs_flate; /**<pyramid flat edge angular width */
-    real pwfs_flatv; /**<pyramid flat vertex angular width*/
-    real pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
-    int pwfs_side;   /**<Make pyramid WFS a single roof only.*/
-    int pwfs_raw;    /**<1: use normalized ints as gradient.*/
+
     dcell *dmoff;    /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
     int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/
@@ -809,6 +820,7 @@ typedef struct parms_t{
     wfs_cfg_t   *wfs;   /**<Array of wfs*/
     wfs_cfg_t   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
 			   per powfs in glao mode, otherwise same as wfs.*/
+    //pywfs_cfg_t *pywfs; /**<Array of Pyramid WFS pywfs*/
     dm_cfg_t    *dm;    /**<Array of DM*/
     moao_cfg_t  *moao;  /**<Array of MOAO*/
 
@@ -823,6 +835,7 @@ typedef struct parms_t{
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
     int nwfsr;       /**<Number of wfs used in reconstruction. =npowfs in glao, =nwfs otherwise*/
+    //int npywfs;      /**<Number of Pyramid WFS*/
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
     char **surf;     /**<OPD surfaces*/
