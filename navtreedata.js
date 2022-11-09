@@ -155,15 +155,15 @@ var NAVTREEINDEX =
 "maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8",
 "mvm__direct_8cu.html",
 "page20_compile.html#autotoc_md11",
-"parms_8h.html#a51c0168f22222353aac82edcf4304342",
-"parms_8h.html#aad108d3a5091968e86ec8adcc269d450",
-"parms_8h.html#structsim__cfg__t",
-"shwfs_ngs.html",
-"smath_8h.html#adbe42983be6ba5e7ef4a33ab7095c36d",
-"sys_2misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd",
+"parms_8h.html#a4eabb79f5637692b3f661502c4fb31cb",
+"parms_8h.html#aaa1b3a0d6f8bd0e99e85ba0bb7221269",
+"parms_8h.html#structgpu__cfg__t",
+"shwfs_lgs.html",
+"smath_8h.html#ad9c3ac088bbd559077bf08efbaadc3c9",
+"sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded",
 "type_8h.html#a531beb50ffb32d08756e6462c037c8e1",
-"type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764",
-"zmath_8h.html#a15807bf2afec1689050ad0026d8f097e"
+"type_8h.html#aaec140c022ddd087c93f2e480e3f3aa9",
+"zmath_8h.html#a1252f1bc587dcf2059560f212694ec3c"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

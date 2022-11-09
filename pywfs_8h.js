@@ -1,15 +1,8 @@
 var pywfs_8h =
 [
     [ "pywfs_t", "pywfs_8h.html#structpywfs__t", [
-      [ "hs", "pywfs_8h.html#acb2eb058f04d70ecca61c671959211b8", null ],
-      [ "hc", "pywfs_8h.html#a18b4ff58560281451768030ecb1c121d", null ],
-      [ "poke", "pywfs_8h.html#ab098639040c682981339dbefef4852c0", null ],
-      [ "modulate", "pywfs_8h.html#a8a2a084dcd62eaa6c168937169062b4b", null ],
-      [ "modulpos", "pywfs_8h.html#a2e92e084525e7c8c2b55354cf15d69b7", null ],
-      [ "modulring", "pywfs_8h.html#a2b1ffe55318ce98df952ece9110b96eb", null ],
+      [ "cfg", "pywfs_8h.html#a19f33579a7f8481bb685e1d658a7d3fa", null ],
       [ "iwfs0", "pywfs_8h.html#a89978edc12c2761bf8cda0fc5b31281e", null ],
-      [ "nside", "pywfs_8h.html#a124b1bc353888ec30a8eef9551d43c63", null ],
-      [ "raw", "pywfs_8h.html#a618e8115e0f317a83d339288650d71a8", null ],
       [ "gpu", "pywfs_8h.html#aea7b10710994fc11ffb7259f75fb21ae", null ],
       [ "wvlwts", "pywfs_8h.html#ac3b17ade068b4bd758a0317a619e72da", null ],
       [ "loc", "pywfs_8h.html#a784fc485fd9cf7e0bd12b452a6953d40", null ],
@@ -25,11 +18,9 @@ var pywfs_8h =
       [ "GTT", "pywfs_8h.html#ab511e9b7adbbddd52b563fc7cec80ecf", null ],
       [ "pupilshift", "pywfs_8h.html#aef48199fd578484ed3d4208c19e1fdaf", null ],
       [ "msaloc", "pywfs_8h.html#aef2b60f9e256be3b8fba4f498a7e13d5", null ],
-      [ "sigmatch", "pywfs_8h.html#a12618c63865ba4a0458a07a716e2bee4", null ],
-      [ "siglev", "pywfs_8h.html#ac5489f11858dc001a6f24d6f06bd87fe", null ],
       [ "opdadd", "pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47", null ]
     ] ],
-    [ "pywfs_setup", "pywfs_8h.html#a789e96109bc46511afbe5113f8ed08f9", null ],
+    [ "pywfs_setup", "pywfs_8h.html#a7d528f6e5683a4cdc9d071cb4019c5a8", null ],
     [ "pywfs_free", "pywfs_8h.html#ab9030c894228f7971f87beda176273c5", null ],
     [ "pywfs_grad", "pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99", null ],
     [ "pywfs_fft", "pywfs_8h.html#ad3873cca1ad9b0066c013a0666dc79f4", null ],

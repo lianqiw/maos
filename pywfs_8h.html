@@ -109,8 +109,8 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a789e96109bc46511afbe5113f8ed08f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a789e96109bc46511afbe5113f8ed08f9">pywfs_setup</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int ipowfs)</td></tr>
-<tr class="separator:a789e96109bc46511afbe5113f8ed08f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d528f6e5683a4cdc9d071cb4019c5a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a7d528f6e5683a4cdc9d071cb4019c5a8">pywfs_setup</a> (const <a class="el" href="parms_8h.html#structpywfs__cfg__t">pywfs_cfg_t</a> *pycfg, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int ipowfs)</td></tr>
+<tr class="separator:a7d528f6e5683a4cdc9d071cb4019c5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9030c894228f7971f87beda176273c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#ab9030c894228f7971f87beda176273c5">pywfs_free</a> (<a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs)</td></tr>
 <tr class="separator:ab9030c894228f7971f87beda176273c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cd0d635d05937b89807720bcd4fac99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99">pywfs_grad</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **pgrad, const <a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ints)</td></tr>
@@ -136,50 +136,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"><p>Parameters used by Pyramid WFS </p>
+<div class="textblock"><p>Parameters used by Pyramid WFS. </p>
 </div><table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
-<a id="acb2eb058f04d70ecca61c671959211b8"></a>real</td>
+<a id="a19f33579a7f8481bb685e1d658a7d3fa"></a>const <a class="el" href="parms_8h.html#structpywfs__cfg__t">pywfs_cfg_t</a> *</td>
 <td class="fieldname">
-hs</td>
+cfg</td>
 <td class="fielddoc">
-<p>Height of guide star </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a18b4ff58560281451768030ecb1c121d"></a>real</td>
-<td class="fieldname">
-hc</td>
-<td class="fielddoc">
-<p>Conjugation height of WFS pupil </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ab098639040c682981339dbefef4852c0"></a>real</td>
-<td class="fieldname">
-poke</td>
-<td class="fielddoc">
-<p>How much to poke for mkg </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a8a2a084dcd62eaa6c168937169062b4b"></a>real</td>
-<td class="fieldname">
-modulate</td>
-<td class="fielddoc">
-<p>Amount of modulation in radian </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a2e92e084525e7c8c2b55354cf15d69b7"></a>int</td>
-<td class="fieldname">
-modulpos</td>
-<td class="fielddoc">
-<p>Number of positions per modulation cycle </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a2b1ffe55318ce98df952ece9110b96eb"></a>int</td>
-<td class="fieldname">
-modulring</td>
-<td class="fielddoc">
-<p>Number of rings within the maximum radius to modulate </p>
+<p>Configuration </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a89978edc12c2761bf8cda0fc5b31281e"></a>int</td>
@@ -187,20 +152,6 @@ modulring</td>
 iwfs0</td>
 <td class="fielddoc">
 <p>First iwfs for this powfs </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a124b1bc353888ec30a8eef9551d43c63"></a>int</td>
-<td class="fieldname">
-nside</td>
-<td class="fielddoc">
-<p>Number of sides </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a618e8115e0f317a83d339288650d71a8"></a>int</td>
-<td class="fieldname">
-raw</td>
-<td class="fielddoc">
-<p>use normalized ints as gradient </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aea7b10710994fc11ffb7259f75fb21ae"></a>int</td>
@@ -308,20 +259,6 @@ msaloc</td>
 <p>Mishaped saloc of each sub-pupil due to optical effects </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a12618c63865ba4a0458a07a716e2bee4"></a>int</td>
-<td class="fieldname">
-sigmatch</td>
-<td class="fielddoc">
-<p>Scale gradients by matching intensity (1: locally, 2: globally). </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ac5489f11858dc001a6f24d6f06bd87fe"></a>real</td>
-<td class="fieldname">
-siglev</td>
-<td class="fielddoc">
-<p>Nominal siglev per subaperture </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a268491858839c93d7e3f79ed514f3b47"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 opdadd</td>
@@ -333,8 +270,8 @@ opdadd</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a789e96109bc46511afbe5113f8ed08f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a789e96109bc46511afbe5113f8ed08f9">&#9670;&nbsp;</a></span>pywfs_setup()</h2>
+<a id="a7d528f6e5683a4cdc9d071cb4019c5a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d528f6e5683a4cdc9d071cb4019c5a8">&#9670;&nbsp;</a></span>pywfs_setup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -342,6 +279,12 @@ opdadd</td>
         <tr>
           <td class="memname">void pywfs_setup </td>
           <td>(</td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structpywfs__cfg__t">pywfs_cfg_t</a> *&#160;</td>
+          <td class="paramname"><em>pycfg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
         </tr>
@@ -370,7 +313,12 @@ opdadd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setup pyramid WFS based on configuration. </p>
+<p>Setup pyramid WFS based on configuration.</p>
+<p>Todo: In order to move the implementation to lib/ the following changes are needed</p><ul>
+<li>Generate loc/amp externally and supply here.</li>
+<li>Handle misregistration externally. Different misregisration is used in simulation and reconstruction.</li>
+<li>... </li>
+</ul>
 
 </div>
 </div>

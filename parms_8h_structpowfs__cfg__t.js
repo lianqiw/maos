@@ -40,6 +40,8 @@ var parms_8h_structpowfs__cfg__t =
     [ "sigrecon", "parms_8h.html#aec77715022986f5ec8002e3e457bb72d", null ],
     [ "llt", "parms_8h.html#a176fda60e684602e4da9bd5382c42b0f", null ],
     [ "fnllt", "parms_8h.html#a7889e96c10932f0fd1227091f1a70ecd", null ],
+    [ "pywfs", "parms_8h.html#a79569212b6a38daeeffb80e776cdaf0e", null ],
+    [ "fnpywfs", "parms_8h.html#a915f951cc292afd14cb9384056720386", null ],
     [ "type", "parms_8h.html#aa4df9de485454ee311c4bc4b4242d67a", null ],
     [ "step", "parms_8h.html#a2d518726fcd51b01de833317d48acd89", null ],
     [ "trs", "parms_8h.html#af68295aed03eca4810c88583d7c1ff9d", null ],

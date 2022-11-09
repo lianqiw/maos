@@ -183,6 +183,7 @@ var annotated_dup =
     [ "pts_t.__unnamed__", "type_8h.html#unionpts__t_8____unnamed____", "type_8h_unionpts__t_8____unnamed____" ],
     [ "pts_t.__unnamed__.__unnamed__", "type_8h.html#structpts__t_8____unnamed_____8____unnamed____", "type_8h_structpts__t_8____unnamed_____8____unnamed____" ],
     [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", "type_8h_unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____" ],
+    [ "pywfs_cfg_t", "parms_8h.html#structpywfs__cfg__t", "parms_8h_structpywfs__cfg__t" ],
     [ "pywfs_t", "pywfs_8h.html#structpywfs__t", "pywfs_8h_structpywfs__t" ],
     [ "recon_cfg_t", "parms_8h.html#structrecon__cfg__t", "parms_8h_structrecon__cfg__t" ],
     [ "recon_t", "maos_2types_8h.html#structrecon__t", "maos_2types_8h_structrecon__t" ],

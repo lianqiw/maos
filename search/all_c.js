@@ -95,7 +95,7 @@ var searchData=
   ['nsaimcc',['nsaimcc',['../maos_2types_8h.html#a62ab8ffb3e2b5c582711b78ae4282604',1,'powfs_t']]],
   ['nseed',['nseed',['../parms_8h.html#ab9c88554d64721107e7ecd31bf3387ca',1,'sim_cfg_t']]],
   ['nsep',['nsep',['../cn2est_8h.html#a20140541481f1398aa4a7e8e3b43c01e',1,'cn2est_pair_t']]],
-  ['nside',['nside',['../pywfs_8h.html#a124b1bc353888ec30a8eef9551d43c63',1,'pywfs_t']]],
+  ['nside',['nside',['../parms_8h.html#a165013585625c81b54bcd6fa15db2f6a',1,'pywfs_cfg_t']]],
   ['nsurf',['nsurf',['../parms_8h.html#ab0e533993129c07fa6da32080d86d8d3',1,'parms_t']]],
   ['nthread',['nthread',['../maos_2types_8h.html#a62a2826f0026371368a178ee77a560bc',1,'recon_t::nthread()'],['../process_8h.html#abfa3e75f57d30c702cb92412ca1e6392',1,'NTHREAD():&#160;process.c']]],
   ['ntipowfs',['ntipowfs',['../parms_8h.html#a7425f8520d7f349f3b2886c2d9097b77',1,'parms_t']]],

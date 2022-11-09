@@ -7,6 +7,7 @@ var searchData=
   ['cachex',['cachex',['../parms_8h.html#a3a3094df61d751f383f87ed9dc443bea',1,'fit_cfg_t']]],
   ['cb',['CB',['../muv_8h.html#ae156a3d6374e6710d1e5ef6ef316bdb3',1,'muv_t']]],
   ['cd',['Cd',['../kalman_8h.html#af46e2a92d29de6efda5353657f3da3a3',1,'kalman_t']]],
+  ['cfg',['cfg',['../pywfs_8h.html#a19f33579a7f8481bb685e1d658a7d3fa',1,'pywfs_t']]],
   ['cgres',['cgres',['../maos_2types_8h.html#a4a79e5b6ccbbe4cc95de5c10c70accca',1,'sim_t']]],
   ['cgwarm',['cgwarm',['../parms_8h.html#ab498d7546c0f2bd3ef637b95cf3815bc',1,'tomo_cfg_t::cgwarm()'],['../parms_8h.html#a0738094a8c492bb5a64a34b07e581acd',1,'fit_cfg_t::cgwarm()'],['../parms_8h.html#ab835223b0f4bbf4e4c8f6ca05b979154',1,'lsr_cfg_t::cgwarm()']]],
   ['cle',['cle',['../maos_2types_8h.html#ae33cd712aff2556c8ee82489ad0626f3',1,'sim_t']]],

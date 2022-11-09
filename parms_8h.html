@@ -116,6 +116,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:structllt__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structdither__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structdither__cfg__t">dither_cfg_t</a></td></tr>
 <tr class="separator:structdither__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structpywfs__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structpywfs__cfg__t">pywfs_cfg_t</a></td></tr>
+<tr class="separator:structpywfs__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structpowfs__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structpowfs__cfg__t">powfs_cfg_t</a></td></tr>
 <tr class="separator:structpowfs__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structwfs__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structwfs__cfg__t">wfs_cfg_t</a></td></tr>
@@ -849,6 +851,129 @@ ogsingle</td>
 
 </div>
 </div>
+<a name="structpywfs__cfg__t" id="structpywfs__cfg__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structpywfs__cfg__t">&#9670;&nbsp;</a></span>pywfs_cfg_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct pywfs_cfg_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Pyramid WFS configurations. //Todo: move to <a class="el" href="pywfs_8h.html">pywfs.h</a> after <a class="el" href="pywfs_8h.html">pywfs.h</a> is moved to lib folder </p>
+</div><table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a165013585625c81b54bcd6fa15db2f6a"></a>int</td>
+<td class="fieldname">
+nside</td>
+<td class="fielddoc">
+<p>Number of sides. can be 4 or 3. 4-side is traditional pyramid while 3-side is much easier to make. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a31180e752c3a1e615e413f61fe3b7aa2"></a>int</td>
+<td class="fieldname">
+raw</td>
+<td class="fielddoc">
+<p>1: use normalized ints of each sub-pupil as gradient. 0: use difference between sub-pupils </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acbd0d2bbccd50cfd8cb716021e376eee"></a>int</td>
+<td class="fieldname">
+modulpos</td>
+<td class="fielddoc">
+<p>Number of positions per modulation cycle </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad36b35d4aa3843841f00aea5783f0429"></a>int</td>
+<td class="fieldname">
+modulring</td>
+<td class="fielddoc">
+<p>Number of rings within the maximum radius to modulate </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa7d874c40041ba05525a118ecde1d4c4"></a>int</td>
+<td class="fieldname">
+sigmatch</td>
+<td class="fielddoc">
+<p>Scale gradients by matching intensity (1: locally, 2: globally). </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a923bea3f0ed3a3c7b46f6f53e5356251"></a>real</td>
+<td class="fieldname">
+siglev</td>
+<td class="fielddoc">
+<p>Nominal siglev per subaperture </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a09af26960a414c5bd1d9410e82c40885"></a>real</td>
+<td class="fieldname">
+hs</td>
+<td class="fielddoc">
+<p>Height of guide star </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acc902b9eadedebe1fd29fc06bfaee458"></a>real</td>
+<td class="fieldname">
+hc</td>
+<td class="fielddoc">
+<p>Conjugation height of WFS pupil </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acdb71e37bc278e2caeabf8d6defb0288"></a>real</td>
+<td class="fieldname">
+poke</td>
+<td class="fielddoc">
+<p>How much to poke for mkg </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="abf6b2eee87e4010d2b5a8a279690faf2"></a>real</td>
+<td class="fieldname">
+modulate</td>
+<td class="fielddoc">
+<p>Amount of modulation in radian </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2139cf9d26efd615bdfba028c4b57e02"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+psx</td>
+<td class="fielddoc">
+<p>pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a18be9e46e11e25e1ba8a8278417a9826"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+psy</td>
+<td class="fielddoc">
+<p>pyramid WFS pupil shift along y (in pixel). </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a94f63cb833763a5a4e23a5589c7d08b2"></a>real</td>
+<td class="fieldname">
+flate</td>
+<td class="fielddoc">
+<p>pyramid flat edge angular width </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a313f56cea0a064c26afdbbdb8d93194b"></a>real</td>
+<td class="fieldname">
+flatv</td>
+<td class="fielddoc">
+<p>pyramid flat vertex angular width </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1c01800cdad9b5c0c6abc597ec4667c2"></a>real</td>
+<td class="fieldname">
+pupelong</td>
+<td class="fielddoc">
+<p>pyramid pupil (detector) elongation ratio (long axis / short axis). </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a name="structpowfs__cfg__t" id="structpowfs__cfg__t"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structpowfs__cfg__t">&#9670;&nbsp;</a></span>powfs_cfg_t</h2>
 
@@ -1142,6 +1267,20 @@ llt</td>
 fnllt</td>
 <td class="fielddoc">
 <p>filename of LLT configuration. empty means no llt. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a79569212b6a38daeeffb80e776cdaf0e"></a><a class="el" href="parms_8h.html#structpywfs__cfg__t">pywfs_cfg_t</a> *</td>
+<td class="fieldname">
+pywfs</td>
+<td class="fielddoc">
+<p>Set only for Pyramid WFS. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a915f951cc292afd14cb9384056720386"></a>char *</td>
+<td class="fieldname">
+fnpywfs</td>
+<td class="fielddoc">
+<p>Pyramid WFS configuration </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aa4df9de485454ee311c4bc4b4242d67a"></a>int</td>
@@ -3705,55 +3844,6 @@ gradoff_scale</td>
 gradoff_reset</td>
 <td class="fielddoc">
 <p>reset gradoff after creating matched filter with dithering </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae639b8d6520afe65e17477936c005586"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-pwfs_psx</td>
-<td class="fielddoc">
-<p>pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a8e1c36384416b4875ece10a3b634a583"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-pwfs_psy</td>
-<td class="fielddoc">
-<p>pyramid WFS pupil shift along y (in pixel). </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a4079f7fa774bab7c42c8fcb824af9b4b"></a>real</td>
-<td class="fieldname">
-pwfs_flate</td>
-<td class="fielddoc">
-<p>pyramid flat edge angular width </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a86cce69c5f6ec213c6b2131c8aac09cc"></a>real</td>
-<td class="fieldname">
-pwfs_flatv</td>
-<td class="fielddoc">
-<p>pyramid flat vertex angular width </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ac08de94a88488ca5f106a8db93990bc4"></a>real</td>
-<td class="fieldname">
-pwfs_pupelong</td>
-<td class="fielddoc">
-<p>pyramid pupil (detector) elongation ratio (long axis / short axis). </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae3deb092bfe5dc3a50b83e5cf260386a"></a>int</td>
-<td class="fieldname">
-pwfs_side</td>
-<td class="fielddoc">
-<p>Make pyramid WFS a single roof only. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae75085a11958558ad3a91823d596fc65"></a>int</td>
-<td class="fieldname">
-pwfs_raw</td>
-<td class="fielddoc">
-<p>1: use normalized ints as gradient. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a5fd3fe216f7e8580569b3b23b5fa90f7"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
