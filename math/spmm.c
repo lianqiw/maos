@@ -529,7 +529,9 @@ void X(cellcp)(X(cell)** A_, const X(cell)* B_){
    scale each element of A.
 */
 void X(cellscale_any)(cell* A, R w){
-	if(iscell(A)){
+	if(!A) {
+		return;
+	}else if(iscell(A)){
 		for(int i=0; i<A->nx*A->ny; i++){
 			X(cellscale_any)(P(A,i), w);
 		}
@@ -538,7 +540,7 @@ void X(cellscale_any)(cell* A, R w){
 			X(scale)((X(mat*))A, w);
 		} else if(issp(A)){
 			X(spscale)((X(sp*))A, w);
-		} else{
+		} else if(A){
 			error("Invalid type: id=%u\n", A->id);
 		}
 	}
