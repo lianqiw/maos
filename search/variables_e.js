@@ -74,6 +74,7 @@ var searchData=
   ['pupelong',['pupelong',['../parms_8h.html#a1c01800cdad9b5c0c6abc597ec4667c2',1,'pywfs_cfg_t']]],
   ['pupilshift',['pupilshift',['../pywfs_8h.html#aef48199fd578484ed3d4208c19e1fdaf',1,'pywfs_t']]],
   ['pupmask',['pupmask',['../parms_8h.html#ad5e99c7003917875264e61c295f514bd',1,'aper_cfg_t::pupmask()'],['../parms_8h.html#a6254fda2f0eac927fe835142f00b639d',1,'dbg_cfg_t::pupmask()']]],
+  ['pycfg',['pycfg',['../parms_8h.html#a90b545dcae9daf073bc6563262e90113',1,'powfs_cfg_t']]],
   ['pyramid',['pyramid',['../pywfs_8h.html#aee96eeac0e08462d90b62d877b9d0f9c',1,'pywfs_t']]],
-  ['pywfs',['pywfs',['../parms_8h.html#a79569212b6a38daeeffb80e776cdaf0e',1,'powfs_cfg_t::pywfs()'],['../maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93',1,'powfs_t::pywfs()']]]
+  ['pywfs',['pywfs',['../parms_8h.html#aae8cff7ede85811670d8ef0875fe069a',1,'powfs_cfg_t::pywfs()'],['../maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93',1,'powfs_t::pywfs()']]]
 ];

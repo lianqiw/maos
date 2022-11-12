@@ -156,7 +156,7 @@ var NAVTREEINDEX =
 "mvm__direct_8cu.html",
 "page20_compile.html#autotoc_md11",
 "parms_8h.html#a4eabb79f5637692b3f661502c4fb31cb",
-"parms_8h.html#aaa1b3a0d6f8bd0e99e85ba0bb7221269",
+"parms_8h.html#aaa589d5e27b504a1c58ebae8df276771",
 "parms_8h.html#structgpu__cfg__t",
 "shwfs_lgs.html",
 "smath_8h.html#ad9c3ac088bbd559077bf08efbaadc3c9",
