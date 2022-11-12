@@ -1635,7 +1635,7 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 			setup_shwfs_grad(powfs, parms, ipowfs);
 		} else if(parms->powfs[ipowfs].type==WFS_PY){
 			info2("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN, ipowfs, BLACK);
-			pywfs_setup(parms->powfs[ipowfs].pywfs, powfs, parms, aper, ipowfs);
+			pywfs_setup(parms->powfs[ipowfs].pycfg, powfs, parms, aper, ipowfs);
 		} else{
 			error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
 		}

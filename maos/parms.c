@@ -55,14 +55,14 @@ void free_powfs_cfg(powfs_cfg_t *powfscfg){
 		powfscfg->llt=NULL;
 	}
 	if(powfscfg->pywfs){
-		dfree(powfscfg->pywfs->psx);
-		dfree(powfscfg->pywfs->psy);
-		free(powfscfg->pywfs);
+		dfree(powfscfg->pycfg->psx);
+		dfree(powfscfg->pycfg->psy);
+		free(powfscfg->pycfg);
 	}
 	lfree(powfscfg->wfs);
 	lfree(powfscfg->wfsr);
 	lfree(powfscfg->wfsind);
-	free(powfscfg->fnpywfs);
+	free(powfscfg->pywfs);
 	free(powfscfg->fnllt);
 	free(powfscfg->piinfile);
 	free(powfscfg->sninfile);
@@ -362,7 +362,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_MAT(d,qe);
 	READ_POWFS_RELAX(dbl,dx);
 	READ_POWFS(dbl,pixtheta);
-	READ_POWFS_RELAX(str,fnpywfs);
+	READ_POWFS_RELAX(str,pywfs);
 	READ_POWFS_RELAX(str,fnllt);
 	READ_POWFS_RELAX(int,trs);
 	READ_POWFS_RELAX(int,frs);
@@ -409,9 +409,9 @@ static void readcfg_powfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->fnllt){
 			char prefix[60]={0};
-			if(nllt>1){//if there are more than 1 type of LLT, need to distinguish.
-				snprintf(prefix, 60, "powfs%d_", ipowfs);
-			}
+			//if(nllt>1){//if there are more than 1 type of LLT, need to distinguish. 
+			snprintf(prefix, 60, "powfs%d_", ipowfs);
+			//}
 			#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
 			#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
 			open_config(powfsi->fnllt,prefix,-1);
@@ -435,18 +435,18 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat,oy);
 			powfsi->llt->n=NX(powfsi->llt->ox);
 		}
-		if(powfsi->fnpywfs){
+		if(powfsi->pywfs){
 			if(powfsi->type==WFS_SH){
-				error("powfs %d: fnpywfs is supplied (%s) by wfstype is set to SH\n", ipowfs, powfsi->fnpywfs);
+				error("powfs %d: fnpywfs is supplied (%s) by wfstype is set to SH\n", ipowfs, powfsi->pywfs);
 			}
 			char prefix[60]={0};
 			if(npywfs>1){//if there are more than 1 type of LLT, need to distinguish.
 				snprintf(prefix, 60, "powfs%d_", ipowfs);
 			}
-			open_config(powfsi->fnpywfs, prefix, -1);
-			powfsi->pywfs=mycalloc(1, pywfs_cfg_t);
-			#define READ_PYWFS(T,key) powfsi->pywfs->key=readcfg_##T("%spywfs."#key, prefix)
-			#define READ_PYWFS_MAT(T,key) powfsi->pywfs->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
+			open_config(powfsi->pywfs, prefix, -1);
+			powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
+			#define READ_PYWFS(T,key) powfsi->pycfg->key=readcfg_##T("%spywfs."#key, prefix)
+			#define READ_PYWFS_MAT(T,key) powfsi->pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
 			READ_PYWFS(int, nside);
 			READ_PYWFS(int, raw);
 			READ_PYWFS(dbl, flate);
@@ -455,8 +455,8 @@ static void readcfg_powfs(parms_t *parms){
 			READ_PYWFS_MAT(d, psx);
 			READ_PYWFS_MAT(d, psy);
 			for(int i=0; i<npywfs; i++){
-				powfsi->pywfs->flate*=MAS2RAD;
-				powfsi->pywfs->flatv*=MAS2RAD;
+				powfsi->pycfg->flate*=MAS2RAD;
+				powfsi->pycfg->flatv*=MAS2RAD;
 			}
 		}
 		/*
@@ -1667,7 +1667,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->lopowfs=lnew(parms->npowfs, 1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
-		pywfs_cfg_t *pycfg=powfsi->pywfs;
+		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		if(powfsi->dsa<=-1){//Order
 			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
 		} else if(powfsi->dsa<0){//In unit of d

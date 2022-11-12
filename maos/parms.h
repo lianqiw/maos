@@ -200,8 +200,8 @@ typedef struct powfs_cfg_t{
     real sigrecon; /**<signal level for NEA computation*/
     struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/
-    pywfs_cfg_t *pywfs; /**<Set only for Pyramid WFS.*/
-    char *fnpywfs; /**<Pyramid WFS configuration*/
+    pywfs_cfg_t *pycfg; /**<Set only for Pyramid WFS.*/
+    char *pywfs; /**<Pyramid WFS configuration*/
     int type;      /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
     int step;      /**<frame to start using WFS*/
     int trs;       /**<tip/tilt removal flag. True for LGS, False for NGS*/
