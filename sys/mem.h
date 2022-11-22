@@ -57,10 +57,12 @@ extern void  (*free_default)(void *);
 #define realloc(p, size)    (funtrace_set, realloc_maos(p, size))
 #define free(p) if(p) free_maos(p)
 #endif
+void register_malloc(void* (*ex_malloc)(size_t), void* (*ex_calloc)(size_t, size_t), void* (*ex_realloc)(void*, size_t), void (*ex_free)(void*));
 void register_deinit(void (*fun)(void), void *data);
 void read_sys_env();
 ///Check whether signal is crash
 #define iscrash(sig) (sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)
 void register_signal_handler(int(*)(int));
+int dummy_signal_handler(int sig);
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused);
 #endif

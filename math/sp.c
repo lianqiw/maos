@@ -549,14 +549,15 @@ void X(spadd)(X(sp)** A0, T alpha, const X(sp)* B, T beta){
 }
 
 /**
-   Add alpha times identity to a sparse matrix
+   Add alpha times identity to a sparse matrix.
+   If X(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)
 */
 void X(spaddI)(X(sp)* A, T alpha){
-	assert((A)->nx==(A)->ny);
 	X(spsort)(A);//make sure it is sorted correctly.
 	//First check for missing diagonal elements
+	long nm=MIN(A->nx, A->ny);
 	long missing=0;
-	for(long icol=0; icol<A->ny; icol++){
+	for(long icol=0; icol<nm; icol++){
 		int found=0;
 		for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 			if(A->pi[ix]==icol){
@@ -575,22 +576,24 @@ void X(spaddI)(X(sp)* A, T alpha){
 	for(long icol=0; icol<A->ny; icol++){
 		A->pp[icol]+=missing;
 		int found=0;
-		long ix;
-		for(ix=A->pp[icol]; ix<A->pp[icol+1]+missing; ix++){
-			if(A->pi[ix]==icol){
-				found=1;
-				A->px[ix]+=alpha;
-				break;
-			} else if(A->pi[ix]>icol){ //insertion place
-				break;
+		long ix=0;
+		if(icol<nm){
+			for(ix=A->pp[icol]; ix<A->pp[icol+1]+missing; ix++){
+				if(A->pi[ix]==icol){
+					found=1;
+					A->px[ix]+=alpha;
+					break;
+				} else if(A->pi[ix]>icol){ //insertion place
+					break;
+				}
 			}
-		}
-		if(!found){
-			memmove(A->px+ix+1, A->px+ix, sizeof(T)*(nzmax+missing-ix));
-			memmove(A->pi+ix+1, A->pi+ix, sizeof(spint)*(nzmax+missing-ix));
-			A->pi[ix]=icol;
-			A->px[ix]=alpha;
-			missing++;
+			if(!found){
+				memmove(A->px+ix+1, A->px+ix, sizeof(T)*(nzmax+missing-ix));
+				memmove(A->pi+ix+1, A->pi+ix, sizeof(spint)*(nzmax+missing-ix));
+				A->pi[ix]=icol;
+				A->px[ix]=alpha;
+				missing++;
+			}
 		}
 	}
 	A->pp[A->ny]+=missing;

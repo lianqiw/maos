@@ -268,25 +268,29 @@ CELLDEF(loccell, locccell);
 
 //CELLDEF(cell, cell);
 /*
-    Reshape array without altering number of elements.
+    Reshape array without altering the number of elements.
 */
 #define reshape(in, nx_, ny_) \
-if(in){\
+({\
+  int ans=0;\
+  if(in){\
     long nx__=nx_;/*preserve input value*/\
     long ny__=ny_;\
     if(PN(in)==nx__*ny__){\
         in->nx=nx__;\
         in->ny=ny__;\
-    } else if(nx__>0 && PN(in)%nx__==0){\
-        in->nx=nx__;\
+    }else if(ny__==0 && nx__>0 && PN(in)%nx__==0){ /* change number of rows*/\
         in->ny=PN(in)/nx__;\
-        if(ny__>0){\
-            warning("ny=%ld is invalid, use %ld instead\n", ny__, in->ny);\
-        }\
+        in->nx=nx__;\
+    }else if(nx__==0 && ny__==1){ /* change to vector */\
+        in->nx=PN(in);\
+        in->ny=1;\
     } else{\
         error("Must not change number of elements, aborted.\n");\
+        ans=-1;\
     }\
-}
+  };ans;\
+})
 #undef ARR
 #undef CELLARR
 #undef MATARR

@@ -23,11 +23,6 @@
 #include "aos.h"
 //jmp_buf exception_return;
 
-static int dummy_signal_handler(int sig){
-	info2("Signal %d caught, will not quit.\n", sig);
-	return 1;
-	//longjmp(exception_return, sig);
-}
 static __attribute__((constructor)) void init(){
 	fprintf(stderr, "aolib loaded\n");
 	register_signal_handler(dummy_signal_handler);

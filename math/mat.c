@@ -22,59 +22,52 @@
 #include "defs.h"/*Defines T, X, etc */
 
 /**
-   The only function that actually creats the matrix object. It ensures that all
-   fields are properly initialized. If p is NULL, memory is allocated. If ref is
-   true, p is treated as external resource and is not reference counted.
+   The only function that allocates memory for the matrix object. It ensures that all
+   fields are properly initialized. 
+   - If p is NULL, mem should be NULL as well. memory is allocated. if mem is not null, it is ignored and warning is print. new mem_t is created.
+   - If p is not NULL, mem is NULL, we act as a weak pointer. p is managed externally. 
+   - If both p and mem are not NULL, we increment mem reference count.
 */
 X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
+	if(nx<=0||ny<=0){
+		nx=0;
+		ny=0;
+	}
+	X(mat) *out=mycalloc(1, X(mat));
+	if(!out){
+		warning("malloc for X(mat) failed\n");
+		return NULL;
+	}
 	if(!p){//no pointer is supplied
-		if(nx>0&&ny>0){
+		if(nx && ny){
 			if(!(p=mycalloc((nx*ny), T))){
 				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
 			}
 			if(mem){
-				print_backtrace();
-				error("mem=%p must be NULL when p is NULL.\n", mem);
+				//print_backtrace();
+				warning("mem=%p should be NULL when p is NULL, ignored.\n", mem);
 			}
 			mem=mem_new(p);
 		}
 	}
-	if(nx<=0 || ny<=0){
-		nx=0;
-		ny=0;
-	}
-	X(mat)* out=mycalloc(1, X(mat));
-	if(!out) {//failed
-		free(p);
-		mem_unref(&mem);
-	}else{
-		out->id=M_T;
-		out->nx=nx;
-		out->ny=ny;
-		out->p=p;
-		if(mem) out->mem=mem_ref(mem);
-	}
+	
+	out->id=M_T;
+	out->nx=nx;
+	out->ny=ny;
+	out->p=p;
+	if(mem) out->mem=mem_ref(mem);
+	
 	return out;
 }
 
 /**
-   creat a reference an existing matrix. Use the reference carefully.
-*/
-X(mat)* X(ref)(const X(mat)* in){
-	if(!in) return NULL;
-	X(mat)* out=X(new_do)(in->nx, in->ny, P(in), in->mem);
-	if(out&&in->header) out->header=strdup(in->header);
-	return out;
-}
-
-/**
-   Create a new T matrix object. initialized all to zero.
+   Create a new X(mat). Initialized to zero.
 */
  X(mat)* X(new)(long nx, long ny){
 	return X(new_do)(nx, ny, NULL, 0);
 }
 /**
- * Calls X(new) with a filename to be saved to
+ * Calls X(new) with a filename to be saved to.
  * */
 X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ...){
 	if(!nx||!ny) return NULL;
@@ -91,17 +84,21 @@ X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ..
 	return out;
 }
 /**
-   check the size of matrix if exist. Otherwise create it. content is not zeroed.
+   check the size of matrix if exist. Otherwise create it. content is not zeroed if already exists.
+   - empty matrix is initialized.
+   - existing matrix is not resized.
 */
-void X(init)(X(mat)** A, long nx, long ny){
+int X(init)(X(mat)** A, long nx, long ny){
+	int ans=0;
 	if(!*A){
 		*A=X(new)(nx, ny);
 	} else if((*A)->nx==0||(*A)->ny==0){
 		X(resize)(*A, nx, ny);
 	} else if((*A)->nx!=nx||(*A)->ny!=ny){
-		error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
-			(*A)->nx, (*A)->ny, nx, ny);
+		error("Mismatch: A is %ldx%ld, want %ldx%ld\n", (*A)->nx, (*A)->ny, nx, ny);
+		ans=-1;
 	}
+	return ans;
 }
 /**
    cast a cell object to matrix
@@ -133,13 +130,28 @@ void X(free_do)(X(mat)* A){
 
 /**
    create an new reference another with different shape.
+   - total number of elements must be preserved
+   - set ny to 1 or 0 to return a vector.
 */
 X(mat)* X(ref_reshape)(const X(mat)* in, long nx, long ny){
+	X(mat) *out=NULL;
+	if(check_mat(in)){
+		out=X(ref)(in);
+		if(reshape(out, nx, ny)){//failed
+			error("Dimension mismatch: (%ldx%ld) vs (%ldx%ld)\n", NX(in), NY(in), nx, ny);
+			X(free)(out);
+		}
+	}
+	return out;
+}
+
+/**
+   creat a reference to an existing matrix. header is duplicated if exists.
+*/
+X(mat) *X(ref)(const X(mat) *in){
 	if(!check_mat(in)) return NULL;
-	X(mat)* out=X(ref)(in);
-	reshape(out, nx, ny);
-	out->nx=nx;
-	out->ny=ny;
+	X(mat) *out=X(new_do)(in->nx, in->ny, P(in), in->mem);
+	if(out&&in->header) out->header=strdup(in->header);
 	return out;
 }
 
@@ -178,18 +190,21 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 /**
    Resize a matrix by adding or removing columns or rows. Data is kept whenever
    possible.
+   - 0 in dimension preserves original value.
 */
 int X(resize)(X(mat)* A, long nx, long ny){
-	if(!A) {
+	if(!nx && !ny){
+		return 0;
+	}else if(!A) {
 		if(!nx || !ny){
 			return 0;
 		}else{
 			error("Trying to resize NULL array to %ldx%ld, cancelled.\n", nx, ny);
 			return -1;
 		}
-	}
-	else if(!ismat(A)){
+	}else if(!ismat(A)){
 		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){
+			dbg("Changing cell to type: id=%d\n", A->id);
 			A->id=M_T;//convert empty cell to mat.
 		} else{
 			error("Incorrect type: id=%d, cancelled\n", A->id);
@@ -198,8 +213,8 @@ int X(resize)(X(mat)* A, long nx, long ny){
 	}
 	if(!nx) nx=A->nx;
 	if(!ny) ny=A->ny;
-	if(mem_nref(A->mem)>1){
-		error("Trying to resize referenced matrix, cancelled.\n");
+	if(P(A) && mem_nref(A->mem)!=1){
+		error("Resizing referenced matrix or weak reference is invalid. Cancelled.\n");
 		return -1;
 	}
 	if(A->nx!=nx||A->ny!=ny){
@@ -284,14 +299,19 @@ void X(zero)(X(mat)* A){
 /**
    Set column elements to zero.
 */
-void X(zerocol)(X(mat)* A, int icol){
+int X(zerocol)(X(mat)* A, int icol){
+	int ans=0;
 	if(check_mat(A)){
 		if(icol>=0&&icol<A->ny){
 			memset(PCOL(A, icol), 0, sizeof(T)*A->nx);
 		} else{
 			warning("Invalid range.\n");
+			ans=-1;
 		}
+	}else{
+		ans=-1;
 	}
+	return ans;
 }
 /**
    Compute the hashlittle
@@ -414,10 +434,11 @@ void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
 /**
  * Flip the matrix along the set axis. 0 to flip both, 1 along x, 2 along y.
  * */
-void X(flip)(X(mat)* A, int axis){
-	if(!A || axis<0 || axis>2) {
+int X(flip)(X(mat)* A, int axis){
+	if(!A || !PN(A)) return 0;
+	if(axis<0 || axis>2) {
 		dbg("flip: A is null or axis is invalid: %p %d\n", A, axis);
-		return;
+		return -1;
 	}
 	const long xoff=(axis==0||axis==1)?(A->nx-1):0;
 	const long xscale=xoff?-1:0;
@@ -433,7 +454,7 @@ void X(flip)(X(mat)* A, int axis){
 			P(A, ix, iy)=tmp;
 		}
 	}
-
+	return 0;
 }
 /**
    create sum of all the elements in A.
@@ -592,8 +613,8 @@ void X(fftshift)(X(mat)* A){
    3 4
    \endverbatim
 */
-void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
-	if(!check_mat(A)||!check_mat(B)) return;
+int X(cpcorner2center)(X(mat)* A, const X(mat)* B){
+	if(!check_mat(A)||!check_mat(B) || P(A)==P(B)) return -1;
 	const long Anx=A->nx;
 	const long Any=A->ny;
 	const long Bnx=B->nx;
@@ -615,6 +636,7 @@ void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 		memcpy(&P(A, xoff, 		yoff+i+ny2), &P(B, Bnx-nx2,	i), 		nx2d);
 		memcpy(&P(A, xoff+nx2, 	yoff+i+ny2), &P(B, 0, 		i), 		nx2d);
 	}
+	return 0;
 }
 
 /**
@@ -625,11 +647,11 @@ void X(cpcorner2center)(X(mat)* A, const X(mat)* B){
    2   1 to  3   4
    \endverbatim
 */
-void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
-	if(!check_mat(A)) return;
+int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
+	if(!check_mat(A)) return -1;
 	X(init)(B0, A->nx, A->ny);
 	X(mat)* B=*B0;
-
+	if(P(B)==P(A)) return -1;
 	const int nx=A->nx;
 	const int ny=A->ny;
 	sx=sx%nx; if(sx<0) sx+=nx;
@@ -648,6 +670,7 @@ void X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 	} else{
 		X(cp)(B0, A);
 	}
+	return 0;
 }
 /**
    cast a cell object to actual cell after checking.

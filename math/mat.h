@@ -28,7 +28,7 @@
     X(mat) *X(new_file)(long nx, long ny, const char* header, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
     X(mat) *X(mat_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
-    void X(init)(X(mat)**A, long nx, long ny) ;				\
+    int X(init)(X(mat)**A, long nx, long ny) ;				\
     void X(free_do)(X(mat) *A);						\
     X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
     X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT; \
@@ -38,7 +38,7 @@
     X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT; \
     X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
     void X(zero)(X(mat)*A);						\
-    void X(zerocol)(X(mat)*A, int icol);				\
+    int X(zerocol)(X(mat)*A, int icol);				\
     uint32_t X(hash)(const X(mat)*A, uint32_t key) CHECK_UNUSED_RESULT;	\
     void X(cp)(X(mat) **out0, const X(mat) *in);			\
     X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;		\
@@ -46,7 +46,7 @@
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
     void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm);	\
     void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm);	\
-    void X(flip)(X(mat)*A, int axis);\
+    int X(flip)(X(mat)*A, int axis);\
     T X(vecsum)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
@@ -64,7 +64,8 @@
     R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(sumdiffsq)(const X(mat)*A, const X(mat)*B) CHECK_UNUSED_RESULT;	\
     void X(fftshift)(X(mat) *A);					\
-    void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
+    int X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
+    int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy);\
     X(cell) *X(cell_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew2)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny) CHECK_UNUSED_RESULT; \

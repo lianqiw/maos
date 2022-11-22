@@ -16,6 +16,18 @@ LDADD+=-lcmocka
 endif
 
 TESTS=$(bin_PROGRAMS)
+
 clean-local:
 	@rm -rf *.bin *.fits
+if GCOV	
+	@rm -fr coverage
+	@find . -name "*.gcda" -exec rm {} \;
+	@lcov --directory . --zerocounters
+endif
 
+if GCOV
+check:
+	@mkdir -p coverage
+	@lcov --compat-libtool --directory .. --capture --output-file coverage/app.info  
+	@genhtml -o coverage/ coverage/app.info 
+endif

@@ -98,11 +98,13 @@ extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value 
 extern int signal_caught;
 extern FILE* fplog;//The output to fplog is always without color unless user specified.
 #define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
-  if(!detached){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
+  if(!detached){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__);} \
+  if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 #define logstd(level, A...) ({if(LOG_LEVEL>level){\
   if(!detached){fprintf(stdout, A);} if(fplog){fprintf(fplog, A);}}})
 #define logstd_color(level, COLOR, format, ...) ({if(LOG_LEVEL>level){\
-  if(!detached){fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__);} if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
+  if(!detached){fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__);} \
+  if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 
 #define error(format,...)      ({logerr(-4, RED,        "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})
 #define warning(format,...)      logerr(-4, CYAN,     "Warning(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__)

@@ -92,10 +92,7 @@ static void readstr_array(void **state){
 	assert_int_equal(ncol,1);
 	assert_int_equal(nr,8);
 }
-static int dummy_signal_handler(int sig){
-	info("Signal=%d caught, will ignore.\n", sig);
-	return 1;
-}
+
 int main(void){
 	register_signal_handler(dummy_signal_handler);
 	LOG_LEVEL=0;

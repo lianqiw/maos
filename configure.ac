@@ -236,7 +236,7 @@ else
     enable_single=0
 fi
 AC_DEFINE_UNQUOTED(CPU_SINGLE, $enable_single, "Use single precision mode")
-
+AM_CONDITIONAL(GCOV, [ test x$enable_gcov = "xyes" ])
 if test x$enable_gcov = "xyes" ;then
     OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
     enable_debug="yes"

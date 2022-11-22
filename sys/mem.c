@@ -769,6 +769,15 @@ static void init_mem(){
 static __attribute__((constructor)) void init(){
 	init_mem();
 }
+/**
+ * register an external set of malloc functions
+ * */
+void register_malloc(void* (*ex_malloc)(size_t), void* (*ex_calloc)(size_t, size_t), void* (*ex_realloc)(void *, size_t), void(*ex_free)(void *)){
+	if(ex_malloc)  malloc_default= ex_malloc;
+	if(ex_calloc)  calloc_default= ex_calloc;
+	if(ex_realloc) realloc_default=ex_realloc;
+	if(ex_free)    free_default=   ex_free;
+}
 typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 	void (*fun)(void);
 	void *data;
@@ -889,6 +898,10 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 			fatal_error_in_progress=0;
 		}
 	}
+}
+int dummy_signal_handler(int sig){
+	info2("Signal %d caught, will not quit.\n", sig);
+	return 1;
 }
 
 /**
