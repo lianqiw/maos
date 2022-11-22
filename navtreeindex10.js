@@ -1,5 +1,6 @@
 var NAVTREEINDEX10 =
 {
+"mvm__daemon_8cu.html#structmvm__t":[11,0,0,1,0],
 "mvm__direct_8cu.html":[11,0,0,2],
 "mvm__direct_8cu.html#a51b7a9c320bb9b58fc5632da0a44ab84":[11,0,0,2,1],
 "mvm__direct_8cu.html#a876e62ded10948d3801432dee1554415":[11,0,0,2,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX10 =
 "page10_intro.html":[1],
 "page20_compile.html":[2],
 "page20_compile.html#autotoc_md0":[2,0],
-"page20_compile.html#autotoc_md1":[2,0,0],
-"page20_compile.html#autotoc_md10":[2,0,5]
+"page20_compile.html#autotoc_md1":[2,0,0]
 };

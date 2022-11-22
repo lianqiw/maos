@@ -1,5 +1,6 @@
 var NAVTREEINDEX13 =
 {
+"parms_8h.html#aaa1b3a0d6f8bd0e99e85ba0bb7221269":[11,0,2,5,14,67],
 "parms_8h.html#aaa589d5e27b504a1c58ebae8df276771":[11,0,2,5,15,3],
 "parms_8h.html#aaaae1ac84c4c2a845200e043ba26dd11":[11,0,2,5,1,0],
 "parms_8h.html#aaac871dc3cb6b986c381e633c076fa27":[11,0,2,5,23,20],
@@ -248,6 +249,5 @@ var NAVTREEINDEX13 =
 "parms_8h.html#structdist__cfg__t":[11,0,2,5,22],
 "parms_8h.html#structdither__cfg__t":[11,0,2,5,4],
 "parms_8h.html#structdm__cfg__t":[11,0,2,5,8],
-"parms_8h.html#structevl__cfg__t":[11,0,2,5,9],
-"parms_8h.html#structfit__cfg__t":[11,0,2,5,11]
+"parms_8h.html#structevl__cfg__t":[11,0,2,5,9]
 };

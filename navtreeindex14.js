@@ -1,5 +1,6 @@
 var NAVTREEINDEX14 =
 {
+"parms_8h.html#structfit__cfg__t":[11,0,2,5,11],
 "parms_8h.html#structgpu__cfg__t":[11,0,2,5,18],
 "parms_8h.html#structllt__cfg__t":[11,0,2,5,3],
 "parms_8h.html#structload__cfg__t":[11,0,2,5,20],
@@ -248,6 +249,5 @@ var NAVTREEINDEX14 =
 "servo_8h.html#af8c19d3a61994201d9dd0457af46187d":[11,0,1,23,15],
 "servo_8h.html#af8fcc61afe2aece4dad4d08f68c0a852":[11,0,1,23,17],
 "servo_8h.html#af90fb2803458c06a4da027f6cbb23e76":[11,0,1,23,1,6],
-"servo_8h.html#structservo__t":[11,0,1,23,0],
-"servo_8h.html#structsho__t":[11,0,1,23,1]
+"servo_8h.html#structservo__t":[11,0,1,23,0]
 };

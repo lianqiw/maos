@@ -55,7 +55,7 @@ var searchData=
   ['schol',['schol',['../smath_8h.html#a5c2a02b2f33df3e62f5dcee5e0049d99',1,'stmp.c']]],
   ['scorr',['scorr',['../smath_8h.html#ad59f00a8390dd2621108b222c789ed60',1,'stmp.c']]],
   ['scp',['scp',['../smath_8h.html#abd1bfec3c5d391eb895dc6386cc79dbc',1,'stmp.c']]],
-  ['scpcorner2center',['scpcorner2center',['../smath_8h.html#a1709f8cfe3ad24d5afc3e76a29180b5d',1,'stmp.c']]],
+  ['scpcorner2center',['scpcorner2center',['../smath_8h.html#a66ee274ad104499bd067fc8f6ff91936',1,'stmp.c']]],
   ['scwlog',['scwlog',['../smath_8h.html#ab196a9711f28510474047bed43ac9f0a',1,'stmp.c']]],
   ['scwlog10',['scwlog10',['../smath_8h.html#a708870ff3ac3a5bb1e2376ad68594b1e',1,'stmp.c']]],
   ['scwmcol',['scwmcol',['../smath_8h.html#a0433396ee78a8d19c6e08056ac86fff9',1,'stmp.c']]],
@@ -114,7 +114,7 @@ var searchData=
   ['setup_5frecon_5fupdate_5fcn2',['setup_recon_update_cn2',['../maos_2recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7',1,'setup_recon_update_cn2(recon_t *recon, const parms_t *parms):&#160;recon_setup.c'],['../recon__setup_8c.html#affdf4abbd6002b77777fe7c1852cfcc7',1,'setup_recon_update_cn2(recon_t *recon, const parms_t *parms):&#160;recon_setup.c']]],
   ['setup_5fsurf',['setup_surf',['../surf_8h.html#ab9d628f58bc2c7aa07274f9f00462107',1,'surf.c']]],
   ['sfftshift',['sfftshift',['../smath_8h.html#a9110aaf766519ffc07645d8a088a0dd3',1,'stmp.c']]],
-  ['sflip',['sflip',['../smath_8h.html#a8d2c27fbbf527a64bc10656384c376b4',1,'stmp.c']]],
+  ['sflip',['sflip',['../smath_8h.html#a6e846b50f6296509cfdf9931c1b6c201',1,'stmp.c']]],
   ['sfree_5fdo',['sfree_do',['../smath_8h.html#a061ae93168e5bc1bd962a0763953c1eb',1,'stmp.c']]],
   ['sfwhm',['sfwhm',['../smath_8h.html#ae6c3ea15f8a733de5ff02783c3438121',1,'stmp.c']]],
   ['sfwhm_5fgauss',['sfwhm_gauss',['../smath_8h.html#a4ff79613b1def7b41cd01c7a630e864e',1,'stmp.c']]],
@@ -130,7 +130,7 @@ var searchData=
   ['sim_5fupdate_5fflags',['sim_update_flags',['../sim__utils_8h.html#a1b6fece1353ecdf4dd6be61e2536fd5a',1,'sim_utils.c']]],
   ['simcc',['simcc',['../smath_8h.html#a9989aecbfb72055d314c9a4d33ef929f',1,'stmp.c']]],
   ['single_5finstance_5fdaemonize',['single_instance_daemonize',['../daemonize_8h.html#a11717d53b875bab717d53dc7c280b1af',1,'daemonize.c']]],
-  ['sinit',['sinit',['../smath_8h.html#a103f199d42c3eebbdc9c55711ef11514',1,'stmp.c']]],
+  ['sinit',['sinit',['../smath_8h.html#aa6fa0b5c2f20bcf9a20b2f45f619db2e',1,'stmp.c']]],
   ['sinn',['sinn',['../smath_8h.html#abe5974c21a719b81963e8116282c87c8',1,'stmp.c']]],
   ['sinv',['sinv',['../smath_8h.html#a7948a90fb78fb285a7dc91140838e10a',1,'stmp.c']]],
   ['sinv_5finplace',['sinv_inplace',['../smath_8h.html#aa371a77d0b4b6666dc2239c9dbd8a55a',1,'stmp.c']]],
@@ -162,7 +162,7 @@ var searchData=
   ['sref_5freshape',['sref_reshape',['../smath_8h.html#ab482e2894ec1fa75eff33b00e4798b7c',1,'stmp.c']]],
   ['srefcols',['srefcols',['../smath_8h.html#af4401aec4fbc231454b0158978892d29',1,'stmp.c']]],
   ['sresize',['sresize',['../smath_8h.html#a2142f864377839e118347712f53df5e4',1,'stmp.c']]],
-  ['sshift',['sshift',['../smath_8h.html#a108b4663c182519c6016972d84589024',1,'stmp.c']]],
+  ['sshift',['sshift',['../smath_8h.html#a15f319dc6dc2d38d09cb41c0fb2f2d68',1,'stmp.c']]],
   ['sshow',['sshow',['../smath_8h.html#ab04bc9482a1e68109024c9b6f8eb13f4',1,'stmp.c']]],
   ['ssort',['ssort',['../smath_8h.html#a4214592ff704173e74df017ece0085fc',1,'stmp.c']]],
   ['ssp_5fcast',['ssp_cast',['../smath_8h.html#a30f555a5dad01890719811ce86afa4f9',1,'stmp.c']]],
@@ -229,5 +229,5 @@ var searchData=
   ['svecpermi',['svecpermi',['../smath_8h.html#aa6bfba27ac7d85f08dac240face920d3',1,'stmp.c']]],
   ['swritedata',['swritedata',['../smath_8h.html#ac4771215ac68d5952371c8d57fded2f7',1,'stmp.c']]],
   ['szero',['szero',['../smath_8h.html#a0d63bad5fa8dd1fcee405d33fd55ab3a',1,'stmp.c']]],
-  ['szerocol',['szerocol',['../smath_8h.html#a035f0fc47d4330c15907bbff69ba7f2d',1,'stmp.c']]]
+  ['szerocol',['szerocol',['../smath_8h.html#a15c13e6b4755e5cc5c85e84707617e85',1,'stmp.c']]]
 ];
