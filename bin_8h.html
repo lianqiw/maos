@@ -248,8 +248,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="separator:a30c2423f18febf174e2c8a3397fcfdc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fe6b1220b1d2418a8198fcf62c8892e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a8fe6b1220b1d2418a8198fcf62c8892e">mmap_read_header</a> (char **p0, uint32_t *magic, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, const char **header0)</td></tr>
 <tr class="separator:a8fe6b1220b1d2418a8198fcf62c8892e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a097892c6434a429ee7a2b89ea712b05e"><td class="memItemLeft" align="right" valign="top"><a id="a097892c6434a429ee7a2b89ea712b05e"></a>
-async_t *&#160;</td><td class="memItemRight" valign="bottom"><b>async_init</b> (file_t *fp, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
+<tr class="memitem:a097892c6434a429ee7a2b89ea712b05e"><td class="memItemLeft" align="right" valign="top">async_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a097892c6434a429ee7a2b89ea712b05e">async_init</a> (file_t *fp, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a097892c6434a429ee7a2b89ea712b05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13">async_write</a> (async_t *async, <a class="el" href="classlong.html">long</a> offset, int wait)</td></tr>
 <tr class="separator:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1004,7 +1003,7 @@ magic</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Open a file for write with mmmap. We don't provide a access control here for generic usage of the function. Lock on a special dummy file for access control. </p>
+<p>Open a file for write with mmmap. We don't provide an access control here for generic usage of the function. Lock on a special dummy file for access control. </p>
 
 </div>
 </div>
@@ -1102,6 +1101,65 @@ magic</td>
 
 </div>
 </div>
+<a id="a097892c6434a429ee7a2b89ea712b05e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a097892c6434a429ee7a2b89ea712b05e">&#9670;&nbsp;</a></span>async_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">async_t* async_init </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint32_t&#160;</td>
+          <td class="paramname"><em>magic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint64_t&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint64_t&#160;</td>
+          <td class="paramname"><em>ny</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Allocates space in fp for our block of data by writing header first and skip to the end of data offset. It has the same interface as writearr except only fp is allowed Use aio_* api if USE_ASYNC is set, otherwise use pwrite() aio_* api launches threads for async writing. pwrite is much simpler for our usecase. There is no impact on simulation step timing. we don't use mmap to write to file as it causes excessive traffic to NFS file system. </p>
+
+</div>
+</div>
 <a id="ae0208a3d751b79aaaf879f0ce17a1b13"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae0208a3d751b79aaaf879f0ce17a1b13">&#9670;&nbsp;</a></span>async_write()</h2>
 
@@ -1133,7 +1191,7 @@ magic</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Write to file asynchronously </p>
+<p>Wait until previous async write are finished. Write to file asynchronously. offset is the end of block that is ready to write. </p>
 
 </div>
 </div>

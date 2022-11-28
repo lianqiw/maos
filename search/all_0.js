@@ -135,6 +135,7 @@ var searchData=
   ['array_3c_20t_20_2a_2c_20pinned_20_3e',['Array&lt; T *, Pinned &gt;',['../class_array.html',1,'']]],
   ['array_3c_20t_2c_20cpu_20_3e',['Array&lt; T, Cpu &gt;',['../class_array.html',1,'']]],
   ['assemble',['assemble',['../parms_8h.html#a90bc409f77f7501b01782da66f02b5d2',1,'tomo_cfg_t::assemble()'],['../parms_8h.html#a31fba635ec8522c3007bf2be5ea3649e',1,'fit_cfg_t::assemble()']]],
+  ['async_5finit',['async_init',['../bin_8h.html#a097892c6434a429ee7a2b89ea712b05e',1,'bin.c']]],
   ['async_5fwrite',['async_write',['../bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13',1,'bin.c']]],
   ['atm',['atm',['../classcudata__t.html#a0e7443031c60279cb6532aaed98db7b3',1,'cudata_t::atm()'],['../parms_8h.html#a951b512ac41a43f49c15e6c56a213861',1,'plot_cfg_t::atm()'],['../parms_8h.html#a7fc309fe1d331dcb7c5a74bceea37e04',1,'dbg_cfg_t::atm()'],['../parms_8h.html#a88294ea1aa96c8c5ed79387e5f20d7b4',1,'load_cfg_t::atm()'],['../parms_8h.html#aeb8f807c7714a185bd47152dda0b1351',1,'save_cfg_t::atm()'],['../parms_8h.html#a9779bb236dc3842d0106e21d8d953bef',1,'parms_t::atm()'],['../maos_2types_8h.html#adb2cd5e3215663bfae8d7f01e937959c',1,'sim_t::atm()']]],
   ['atm2xloc',['atm2xloc',['../sim__utils_8h.html#a6140547e84ed40849518c002ff165382',1,'sim_utils.c']]],
