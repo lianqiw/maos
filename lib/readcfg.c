@@ -338,6 +338,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		if(eql[-1]=='+'){
 			append=1;//append to key
 			eql[-1]='\0';
+		}else if(eql[-1]=='-'){
+			append=-1;//remove from key
+			eql[-1]='\0';
 		}
 		eql[0]='\0';
 		char* var0=ssline;
@@ -376,7 +379,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			remove in the future.
 			*/
 			/*RENAME(atm.fractal, atm.method);*/
-			RENAME(atm.zadeg, sim.zadeg);
+			//RENAME(atm.zadeg, sim.zadeg);
 			/*Added on 2011-04-28 */
 			/*RENAME(dbg.noatm, sim.noatm);
 			RENAME(dbg.fitonly, sim.fitonly);
@@ -396,7 +399,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			RENAME(evl.opdcov, evl.cov);
 			RENAME(evl.psfpttr, evl.pttr);*/
 			/*Added 2017-11-27*/
-			RENAME(sim.apdm, sim.aphi);
+			/*RENAME(sim.apdm, sim.aphi);
 			RENAME(sim.epdm, sim.ephi);
 			RENAME(sim.aldm, sim.alhi);
 			RENAME(powfs.neaspeckle, powfs.neaextra);
@@ -411,7 +414,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			RENAME(powfs.ncomp, powfs.notf);
 			IGNORE(powfs.radrot);
 			RENAME(fit.actinterp, fit.actextrap);
-			RENAME(lsr.actinterp, lsr.actextrap);
+			RENAME(lsr.actinterp, lsr.actextrap);*/
 #endif
 			STORE_T* store=mycalloc(1, STORE_T);
 			if(prefix){
@@ -436,19 +439,31 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 					((oldstore->data!=NULL&&store->data!=NULL)
 						&&strcmp(oldstore->data, store->data)));
 				if(append){
-					/*concatenate new value with old value for arrays. both have to start/end with [/]*/
-					const char* olddata=oldstore->data;
-					const char* newdata=store->data;
-					const int nolddata=strlen(olddata);
-					const int nnewdata=strlen(newdata);
-					if(olddata[0]!='['||olddata[nolddata-1]!=']'){
-						error("olddata='%s' should be encapsulated by bare [].\n", olddata);
-					} else if(newdata[0]!='['||newdata[nnewdata-1]!=']'){
-						error("newdata='%s' should be encapsulated by bare [].\n", newdata);
+					/*append (append=1) or remove (append=-1) new value with/from old value for arrays. 
+					both have to start/end with [/] */
+					const int nolddata=strlen(oldstore->data);
+					const int nnewdata=strlen(store->data);
+					if(nolddata>0 && (oldstore->data[0]!='['||oldstore->data[nolddata-1]!=']')){
+						error("olddata='%s' should be entirely encapsulated by [].\n", oldstore->data);
+					} else if(store->data[0]!='['||store->data[nnewdata-1]!=']'){
+						error("newdata='%s' should be entirely encapsulated by [].\n", store->data);
 					} else{
-						oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata), char);
-						oldstore->data[nolddata-1]=oldstore->data[nolddata-2]=='['?0:' ';
-						strncat(oldstore->data, newdata+1, nnewdata-1);
+						if(append==1){//append
+							oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata), char);
+							oldstore->data[nolddata-1]=oldstore->data[nolddata-2]=='['?0:' ';
+							strncat(oldstore->data, store->data+1, nnewdata-1);
+						}else if(append==-1){//remove
+							if(!strncmp(oldstore->data+(nolddata-nnewdata+1), store->data+1, nnewdata-1)){
+								char *ptmp=oldstore->data+(nolddata-nnewdata+1);
+								while(ptmp>oldstore->data && ptmp[-1]==' ') ptmp--;
+								ptmp[0]=']';
+								ptmp[1]=0;
+							}else{
+								error("Cannot remove %s from the end of %s\n", store->data, oldstore->data);
+							}
+						}else{
+							error("Invalid value: append=%d\n", append);
+						}
 						oldstore->priority=priority;
 					}
 				} else if(diffval){
@@ -457,7 +472,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 						info("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
 						//Skip the entry.
 					} else{
-						info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+						if(priority>0){//not default
+							info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+						}
 						/*free old value */
 						free(oldstore->data);
 						/*move pointer of new value. */
