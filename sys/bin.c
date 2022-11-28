@@ -26,7 +26,6 @@
 #include <limits.h>
 #include <ctype.h> /*isspace */
 #include <errno.h>
-#include <aio.h>
 #include "process.h"
 #include "misc.h"
 #include "path.h"
@@ -1188,7 +1187,7 @@ void* mem_p(const mem_t* in){
 	return in?in->mem:NULL;
 }
 /**
-   Open a file for write with mmmap. We don't provide a access control here for
+   Open a file for write with mmmap. We don't provide an access control here for
    generic usage of the function. Lock on a special dummy file for access
    control.
 */
@@ -1317,19 +1316,32 @@ void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char
 	*p0=p;
 	if(header0) *header0=header;
 }
+#define USE_ASYNC 0
+#if USE_ASYNC
+#include <aio.h>
+#endif
 struct async_t{
 	file_t* fp;
 	const char* p;  //original memory
 	long pos; //start position of array in file
 	long prev;//previous saved index 
+#if USE_ASYNC
 	struct aiocb aio;
+#endif	
 };
-//same interface as writearr except only fp is allowed
+/**
+ * Allocates space in fp for our block of data by writing header first and skip to the end of data offset.
+ * It has the same interface as writearr except only fp is allowed
+ * Use aio_* api if USE_ASYNC is set, otherwise use pwrite()
+ * aio_* api launches threads for async writing.
+ * pwrite is much simpler for our usecase. There is no impact on simulation step timing.
+ * we don't use mmap to write to file as it causes excessive traffic to NFS file system.
+ * */
 async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 			  const char* str, const void* p, const uint64_t nx, const uint64_t ny){
 	//dbg("%s: initializing async info\n", fp->fn);
 	if(!fp) return NULL;
-#if 1 //use hole
+#if 1 //use hole to reserve space for the current block.
 	header_t header={magic, nx, ny, (char*)str};
 	write_header(&header, fp);
 	long pos=zfpos(fp);
@@ -1349,15 +1361,18 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 	if(async){
 		async->fp=fp;
 		async->p=p;
-		async->pos=pos;
-		async->prev=0;
+		async->pos=pos;//start of data block. do not modify
+		async->prev=0; //length of data block written by previous async_write() call.
+#if USE_ASYNC	
 		async->aio.aio_fildes=fp->fd;
+#endif		
 	}
 	return async;
 }
 /**
  * Wait until previous async write are finished.
  * */
+#if USE_ASYNC	
 static void async_sync(async_t* async, int wait){
 	long ans;
 	if(async->aio.aio_nbytes){//check previous result
@@ -1384,8 +1399,10 @@ static void async_sync(async_t* async, int wait){
 		}
 	}
 }
+#endif	
+
 /**
- * Write to file asynchronously
+ * Write to file asynchronously. offset is the end of block that is ready to write.
  * */
 void async_write(async_t* async, long offset, int wait){
 	if(!async||async->fp->err){
@@ -1396,9 +1413,9 @@ void async_write(async_t* async, long offset, int wait){
 		}
 		return;
 	}
+#if USE_ASYNC
 	long ans;
 	//synchronize previous operation
-
 	if(async->aio.aio_nbytes){
 		async_sync(async, wait);
 	}
@@ -1424,9 +1441,16 @@ void async_write(async_t* async, long offset, int wait){
 			async->prev=offset;
 		}
 	}
+#else
+	(void) wait;
+	pwrite(async->fp->fd, async->p+async->prev, offset-async->prev, async->prev+async->pos);
+	async->prev=offset;
+#endif	
 }
 void async_free(async_t* async){
 	if(!async) return;
+#if USE_ASYNC
 	async_sync(async, 1);
+#endif	
 	free(async);
 }
