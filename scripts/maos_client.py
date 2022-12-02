@@ -1,5 +1,5 @@
 #!env python3
-import aolib
+import aotools
 import readbin
 import socket
 import sys

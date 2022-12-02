@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import print_function
 import sys
-import maos
+import maos_parse
 if len(sys.argv)>2:
     srcdir=sys.argv[1];
     fnout=sys.argv[2];
@@ -16,7 +16,7 @@ headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalma
           'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
 
 #Obtain the definition of all structs
-dictall=maos.parse_structs(srcdir, headlist)
+dictall=maos_parse.parse_structs(srcdir, headlist)
 
 simu=dict()
 simu=dictall['sim_t']

@@ -4,7 +4,7 @@
 
 from __future__ import print_function
 import sys
-import maos
+import maos_parse
 from pathlib import Path
 if len(sys.argv)>2:
     srcdir=sys.argv[1]
@@ -17,9 +17,9 @@ simu_all=list()
 
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
           'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h', 'lib/mkdtf.h','lib/hyst.h']
-structs=maos.parse_structs(srcdir, headlist)
+structs=maos_parse.parse_structs(srcdir, headlist)
 
-funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
+funcs=maos_parse.parse_func(srcdir, structs, ['mex/aolib.h'])
 
 fpout=open(fnout,'w')
 print('#ifdef __INTEL_COMPILER\n#undef _GNU_SOURCE\n#endif\n#include "interface.h"\n', file=fpout)

@@ -106,7 +106,7 @@ static mapcell* genatm_do(sim_t* simu){
 				if(!psloc){
 					psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
 				}
-				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", -dbgatm, strength*1e9);
+				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", dbgatm, strength*1e9);
 				dmat* opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
 				dmat* opd2=dref_reshape(opd, nx, ny);
 				dadd((dmat**)&P(screens, ips), 0, opd2, P(atm->wt, ips)*strength);

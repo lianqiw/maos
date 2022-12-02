@@ -27,14 +27,16 @@
 
 #include "draw.h"
 #include "cure.h"
-int draw_id=0;
-int draw_direct=0;
-int draw_disabled=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 #define MAXDRAW 1024
-static int sock_helper=-1;
-int listening=0;
-int draw_single=0;//1: Only draw active frame. 0: draw all frames.
+#define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
+
+int draw_id=0;      //Client identification. Same draw_id  reuses drawdaemon.
+int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
+int draw_disabled=0; //if set, draw will be disabled
+static int sock_helper=-1;//socket of draw_helper
+int listening=0;    //If set, listen_drawdaemon is listening to replies from drawdemon
+int draw_single=0;  //if set, only draw active frame and skip if line is busy. otherwise draw all frames.
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -58,7 +60,7 @@ int draw_single=0;//1: Only draw active frame. 0: draw all frames.
    3 If draw_direct=1, get_drawdaemon() will launch drawdaemon directly.
 
 */
-#define TEST_UDP 0 //test UDP implementation.
+
 /* List of list*/
 typedef struct list_t{
 	char* key;
@@ -93,7 +95,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 		sock_data->udp.sock=bind_socket(SOCK_DGRAM, 0, 0);
 		int client_port=socket_port(sock_data->udp.sock);
 		int cmd[4]={DRAW_ENTRY, sizeof(int)*2, DRAW_UDPPORT, client_port};
-		static int count=0;
+		static int nretry=0;
 		dbg("client_port=%d\n", client_port);
 retry:
 		if(stwrite(sock_draw, cmd, sizeof(cmd))){
@@ -122,8 +124,8 @@ retry:
 				dbg("connection is established.\n");
 			}
 		}else{
-			count++;
-			if(count<5){
+			nretry++;
+			if(nretry<5){
 				warning("no data is received, retry\n");
 				goto retry;
 			}else{
@@ -510,7 +512,7 @@ static inline int fwritestr(FILE* fbuf, const char* str){
 	if(fwriteint(fbuf, nlen)||fwrite(str, 1, nlen, fbuf)<nlen) return -1;
 	return 0;
 }
-static int count=0; 
+static int iframe=0; //frame counter
 #define CATCH(A) if(A) {ans=1; warning("fwrite failed\n"); goto end2;}
 #define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
 #define FWRITESTR(str) CATCH(fwritestr(fbuf, str))
@@ -598,7 +600,7 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 	if(draw_disabled) return 0;
 	format2fn;
 	
-	count++;
+	iframe++;
 	int ans=0;
 	if(!get_drawdaemon()){
 		int needed=0;
@@ -704,7 +706,7 @@ end2:
 			} else{
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame size
-				bufp[1]=count;//frame number
+				bufp[1]=iframe;//frame number
 				bufp[2]=(int)bufsize;//sub-frame size
 				bufp[3]=0;//sub-frame number
 			}
@@ -739,7 +741,7 @@ typedef struct imagesc_t{
 }imagesc_t;
 static void* imagesc_do(imagesc_t* data){
 	if(draw_disabled) return NULL;
-	count++;
+	iframe++;//frame counter
 	
 	if(!get_drawdaemon()){
 		char* fig=data->fig;
@@ -802,7 +804,7 @@ end2:
 			} else{
 				int* bufp=(int*)(buf+3*sizeof(int));
 				bufp[0]=(int)bufsize;//frame number
-				bufp[1]=count;//frame number
+				bufp[1]=iframe;//frame number
 				bufp[2]=(int)bufsize;//sub-frame number
 				bufp[3]=0;//sub-frame number
 				//dbg("draw_image: buf has size %ld. %d %d %d %d\n", bufsize,
@@ -885,6 +887,7 @@ int ddraw(const char *fig, /**<Category of the figure*/
     data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
+	dbg("draw_single=%d\n", draw_single);
     if(draw_single){
         thread_new((thread_fun)imagesc_do, data);
     } else{
@@ -941,6 +944,13 @@ int cdraw(const char *fig, const cmat *p, const real *limit, const real *zlim,
   same type and title as existing plots will replace the already
   existing plots.
 */
+/*
+	Compute the graph limit. ox and oy are low left corner of the grid. When plotting, shown on the center of the the lower left "pixel"
+	Seperate out to be easily modifiable.
+*/
+#define LIMIT_SET_X(limit, ox, offset, dx, nx) limit[0]=(ox)+(offset)*fabs(dx); limit[1]=limit[0]+fabs(dx)*(nx);
+#define LIMIT_SET_Y(limit, ox, offset, dx, nx) limit[2]=(ox)+(offset)*fabs(dx); limit[3]=limit[1]+fabs(dx)*(nx);
+
 /**
    Mapping the floating point numbers onto screen with scaling similar to matlab
    imagesc.  . see ddraw()
@@ -955,10 +965,12 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	format2fn;
 	if(!map || !draw_current(fig, fn)) return 0;
 	real limit[4];
-	limit[0]=map->ox-map->dx/2;
+	LIMIT_SET_X(limit, map->ox, 0.5, map->dx, map->nx);
+	LIMIT_SET_Y(limit, map->oy, 0.5, map->dx, map->ny);
+	/*limit[0]=map->ox-map->dx/2;
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
 	limit[2]=map->oy-map->dx/2;
-	limit[3]=map->oy+(map->ny-0.5)*map->dx;
+	limit[3]=map->oy+(map->ny-0.5)*map->dx;*/
 	ddraw(fig, (const dmat*)map, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
@@ -981,10 +993,12 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 		}
 	}
 	real limit[4];
-	limit[0]=loc->map->ox+loc->dx*(npad-1/2);
-	limit[1]=limit[0]+loc->dx*nx;
-	limit[2]=loc->map->oy+loc->dx*(npad-1/2);
-	limit[3]=limit[2]+loc->dx*ny;
+	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
+	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dx, ny);
+	/*limit[0]=loc->map->ox+fabs(loc->dx)*(npad);
+	limit[1]=limit[0]+loc->dx*(nx);
+	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
+	limit[3]=limit[2]+loc->dy*(ny);*/
 	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
@@ -1018,10 +1032,13 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 		}
 	}
 	real limit[4];
-	limit[0]=loc->map->ox+fabs(loc->dx)*(npad-1/2);
-	limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
-	limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2);
-	limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2);
+	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
+	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dy, ny);
+/*	limit[0]=loc->map->ox+fabs(loc->dx)*(npad);
+	limit[1]=limit[0]+fabs(loc->dx)*(nx);
+	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
+	limit[3]=limit[2]+fabs(loc->dy)*(ny);
+	*/
 	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
@@ -1072,10 +1089,13 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		cure_loc(&phi, grad, saloc);
 		real limit[4];
 		int npad=saloc->npad;
-		limit[0]=saloc->map->ox+fabs(saloc->dx)*(npad-1/2);
+		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
+		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
+/*		limit[0]=saloc->map->ox+fabs(saloc->dx)*(npad-1/2);
 		limit[1]=saloc->map->ox+fabs(saloc->dx)*(phi->nx+npad-1/2);
 		limit[2]=saloc->map->oy+fabs(saloc->dy)*(npad-1/2+1);
 		limit[3]=saloc->map->oy+fabs(saloc->dy)*(phi->ny+npad-1/2+1);
+		*/
 		//writebin(phi, "phi");
 		ddraw(fig, phi, limit, zlim, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
@@ -1091,7 +1111,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	return 1;
 }
 /**
-   Plot opd*amp with coordinate loc. see ddraw()
+   Plot opd with coordinate loc where amp is above threshold. see ddraw()
 */
 int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -1120,10 +1140,12 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 		}
 	}
 	real limit[4];
-	limit[0]=loc->map->ox+loc->dx*(npad-1);
+	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
+	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dy, ny);
+	/*limit[0]=loc->map->ox+loc->dx*(npad-1);
 	limit[1]=limit[0]+loc->dx*nx;
 	limit[2]=loc->map->oy+loc->dx*(npad-1);
-	limit[3]=limit[2]+loc->dx*ny;
+	limit[3]=limit[2]+loc->dx*ny;*/
 	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;

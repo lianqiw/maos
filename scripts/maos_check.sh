@@ -150,7 +150,7 @@ run_maos "LGS MCAO SL:    " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.
 
 if [ $D -eq 30 ];then
 run_maos "NFIRAOS LGS: " nfiraos_lgs_full.conf
-run_maos_gpu "NFIRAOS PWFS:" nfiraos_ngs.conf
+run_maos_gpu "NFIRAOS PYWFS:" nfiraos_ngs.conf
 fi
 echo "REF=(${RMS[*]})"
 
