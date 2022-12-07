@@ -398,7 +398,29 @@ void test_servo(){
     info("gain=%g\n", g);
     exit(0);
 }
+void test_psd2d(){
+    dcell *screen=dcellread("~/.aos/cache/atm/vonkarman_7_4096x4096_0.015625_2909894203d.bin");
+    dmat *screen2=NULL;
+    dmat *psd=NULL;
+    for (int px=6; px<10; px++){
+        long nx=2<<(px-1);
+        screen2=dsub(P(screen, 0), 0, nx, 0, nx);
+        psd=psd2d_aniso(screen2, 1./64.);
+        real inte1=psd_inte2(psd);
+        writebin(psd, "psd_%ld", nx);dfree(psd);
+        
+        psd=psd2d(screen2, 1./64.);
+        real inte2=psd_inte2(psd);
+        writebin(psd, "psd2_%ld", nx);dfree(psd);
+        info("size is %ld rms is %g, psdint is %g, psdint 2 is %g\n", 
+            nx, sqrt(dsumsq(screen2)/PN(screen2)), sqrt(inte1), sqrt(inte2));
+
+        dfree(screen2);
+    }
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_psd2d();
     test_servo();
     test_async();
     test_sde();

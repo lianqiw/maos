@@ -43,7 +43,7 @@ aper_t* setup_aper(const parms_t* const parms){
 			real amp_d, amp_din;
 			map_d_din(aper->ampground, &amp_d, &amp_din);
 			if(fabs(parms->aper.d-amp_d)>1||
-				fabs(parms->aper.din-amp_din)>0.5){
+				fabs(parms->aper.din-amp_din)>1){
 				info2("Amplitude map (%g, %g) does not match aperture diameter (%g, %g). Disabled\n",
 					amp_d, amp_din, parms->aper.d, parms->aper.din);
 				mapfree(aper->ampground);

@@ -887,7 +887,7 @@ int ddraw(const char *fig, /**<Category of the figure*/
     data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-	dbg("draw_single=%d\n", draw_single);
+	//dbg("draw_single=%d\n", draw_single);
     if(draw_single){
         thread_new((thread_fun)imagesc_do, data);
     } else{

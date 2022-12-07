@@ -23,7 +23,7 @@
 #define W_J(i,N2) 1
 
 /**
-   Compute the PSD from a sequence.
+   Compute the 1-d PSD from a 1-d sequence.
 */
 dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
 	long nseg      /**<[in] Number of overlapping segments*/
@@ -85,9 +85,12 @@ dmat* psd1dt(const dmat* v, long nseg, real dt){
 }
 
 /**
-   Interpolate psd onto new f. We interpolate in log space which is more linear.
+   Interpolate psd onto new f. We interpolate in log space which is usually more linear.
 */
 dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
+	if(NY(psdin)!=2){
+		error("psdin should have 2 columns for frequency and psd.\n");
+	}
 	dmat* f1=drefcols(psdin, 0, 1);
 	dmat* psd1=dsub(psdin, 0, 0, 1, 1);//copy
 	dmat* f2=dref(fnew);
@@ -242,11 +245,11 @@ real psd_inte(const real* nu, const real* psd, long n){
 	return res_sig;
 }
 /**
-   wraps psd_inte
+   wraps psd_inte with a single input variable containing both frequency and psd.
 */
 real psd_inte2(const dmat* psdin){
 	if(NY(psdin)!=2){
-		error("psdin  should have two columns\n");
+		error("psdin should have two columns\n");
 	}
 	real* nu=P(psdin);
 	long n=NX(psdin);
@@ -254,7 +257,7 @@ real psd_inte2(const dmat* psdin){
 	return psd_inte(nu, psd, n);
 }
 /**
- * Convert PSD into time series.
+ * Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input.
  * */
 dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstepin){
 	rand_t stat0;
@@ -380,4 +383,70 @@ void psd_sum(dmat* psd, real scale){
 		P(psd, ix, 1)=tmp*scale;
 	}
 	dresize(psd, NX(psd), 2);
+}
+/*
+	from a 2-d screen, compute 1-d PSD by radially averaging the 2-D psd assuming isotropy. 
+*/
+dmat *psd2d_aniso(const dmat *screen, real dx){
+	if(!screen || NX(screen)!=NY(screen)){
+		error("psd2d_aniso: expects a square screen\n");
+		return NULL;
+	}
+	cmat *hat=NULL;
+	ccpd(&hat, screen);
+	cfft2(hat, -1);
+	dmat *psd=NULL;
+	cfftshift(hat);
+	cabs22d(&psd, 1, hat, 1./(PN(screen)*PN(screen)));
+	cfree(hat);
+	long npsd=MIN(NX(screen), NY(screen))/2+1;
+	dmat *rvec=dnew(npsd,1);
+	for(long i=0; i<npsd; i++){
+		P(rvec,i)=i;
+	}
+	dbg("npsd=%ld\n", npsd);
+	dmat *psd1d=denc(psd, rvec, -1, NTHREAD);
+	dfree(rvec);
+	dfree(psd);
+	dresize(psd1d, NX(psd1d), 2);
+	real df=1./(NX(screen)*dx);
+	real df1=1./df;
+	for(long i=0; i<npsd; i++){
+		P(psd1d, i,1)=P(psd1d,i,0)*df1;
+		P(psd1d, i,0)=df*i;
+	}
+	return psd1d;
+}
+/*
+	From a 2-d screen, compute 1-d PSD by averaging the 1-D psd of each
+	row/column, and then scale back to the 2-D psd using the technique of computing
+	temporay PSD of turbulence.
+	*/
+dmat *psd2d(const dmat *screen, real dx){
+	if(!screen||NX(screen)!=NY(screen)){
+		error("psd2d_aniso: expects a square screen\n");
+		return NULL;
+	}
+	dmat *p1=psd1d(screen, 1);
+	dmat *screen2=dtrans(screen);
+	dmat *p2=psd1d(screen2, 1);
+	dfree(screen2);
+	dmat *psd2=dnew(NX(p1),2);
+	real df=1/(NX(screen)*dx);
+	/*
+		1-D psd is converted to 2-D psd. B(1/2, (n-1)/2) is not yet accounted for.
+		*/
+	real scale=1./(NY(p1)+NY(p1))/df;
+	for(long ix=0; ix<NX(psd2); ix++){
+		P(psd2, ix, 0)=df*ix;
+		real tmp=0;
+		for(long iy=0; iy<NY(p1); iy++){
+			tmp+=P(p1, ix, iy)+P(p2,ix,iy);
+		}
+		P(psd2, ix, 1)=tmp*scale/P(psd2, ix, 0);
+	}
+	P(psd2,0,1)=P(psd2,1,1);//remove the singular value.
+	dfree(p1);
+	dfree(p2);
+	return psd2;
 }

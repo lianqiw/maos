@@ -33,7 +33,7 @@
 locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	const dmat* amp,        /**<[in] The amplitude*/
 	const dmat* wvl,        /**<[in] The wavelength*/
-	const lmat* fftsize,    /**<[in] The suggested size for FFT*/
+	const lmat* fftsize,    /**<[in] The suggested size for FFT, nwvl values*/
 	const real oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
 	real fieldstop        /**<[in] Size of field stop (radian) if used*/
 ){

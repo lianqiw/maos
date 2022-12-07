@@ -268,7 +268,15 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 		}
 		
 		for(long ix=0; ix<(nx*ny); ix++){
+			int remove_header=0;
+			if(A->header && !P(A,ix)->header){
+				P(A,ix)->header=A->header;
+				remove_header=1;
+			}
 			writedata_by_id(fp, P(A,ix), id2, ncol);
+			if(remove_header){
+				P(A,ix)->header=NULL;
+			}
 		}
 	}
 	break;

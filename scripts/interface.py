@@ -172,7 +172,7 @@ class cell(Structure):
             if tmpid is None:
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
-            if tid!=0 and tmpid != tid:
+            if tid!=0 and tmpid != tid and tid!=0x6421:
                 raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
             if arr.ndim>2:
@@ -231,8 +231,10 @@ class cell(Structure):
             kind=-1
         if kind==0: #dense matrix
             if self.header:
-                headers.append(self.header.decode("utf-8"))
-                #print(self.header)
+                try:
+                    headers.append(self.header.decode("utf-8"))
+                except:
+                    pass
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csr)).contents.as_array()

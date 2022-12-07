@@ -135,7 +135,7 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid*/
 	int maxorder     /**<[in] Maximum order*/
 ){
 	if(!(NX(in)==NX(out)&&NY(in)==2&&NY(out)==2)){
-		error("polyfit: in and out mismatch\n");
+		error("poly2fit: in and out mismatch\n");
 		return 0;
 	}
 	const int limitmax=maxorder>0?1:0;

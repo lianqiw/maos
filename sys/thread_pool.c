@@ -213,6 +213,9 @@ static int do_job(int urgent){
 void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent){
 	thread_t *arg2=(thread_t *)arg;
 	jobs_t job={0};
+	if(!jobsall){
+		thread_pool_init(NTHREAD);
+	}
 	for(int ijob=0; ijob<njob; ijob++){
 		if(!fun&&(!arg2[ijob].fun||arg2[ijob].start>=arg2[ijob].end)){
 			continue;
@@ -318,6 +321,10 @@ static int do_job(int urgent){
 void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent){
 	unsigned int headind=0, tailind=0;
 	thread_t *arg2=(thread_t *)arg;
+	if(!jobsall){
+		extern int NTHREAD;
+		thread_pool_init(NTHREAD);
+	}
 	for(int ijob=0; ijob<njob; ijob++){
 		unsigned int jobind=0;
 		jobs_t *job=NULL;

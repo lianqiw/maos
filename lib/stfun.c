@@ -82,7 +82,7 @@ void stfun_push(stfun_t* A, dmat* opd){
 		P(A->hattot,i)+=creal(P(A->hat2,i)*conj(P(A->hat0,i)))
 			-P(A->hat1,i)*conj(P(A->hat1,i));
 	}
-}
+} 
 /**
    Use accumulated data to compute the structure function.
  */
@@ -111,6 +111,27 @@ dmat* stfun_finalize(stfun_t* A){
 	dfree(A->amp);
 	free(A);
 	return st;
+}
+/**
+ * Batch process cell array of OPDs. 
+ * */
+dmat *stfun_batch(const cell *opd, /**<nz array of nx*ny array of the OPD*/
+	const dmat *amp /**<n*ny array of the amplitude map*/
+){
+	if(!opd){
+		error("OPD should be provided\n");
+	}
+	stfun_t *A=NULL;
+	if(iscell(opd)){
+		A=stfun_init(NX(P(opd,0)), NY(P(opd,0)), amp?P(amp):NULL);
+		for(long i=0; i<PN(opd); i++){
+			stfun_push(A, dmat_cast(P(opd, i)));
+		}
+	}else{
+		A=stfun_init(NX(opd), NY(opd), amp?P(amp):NULL);
+		stfun_push(A, dmat_cast(opd));
+	}
+	return stfun_finalize(A);
 }
 /**
    Generate the structure function of the phase of kolmogorov spectrum.

@@ -328,11 +328,12 @@ mapcell* genscreen_str(const char* header){
 /**
    A simpler interface to gerate a single screen.
  */
-map_t* genatm_simple(real r0, real L0, real dx, long nx){
+map_t* genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed){
 	rand_t rstat;
-	seed_rand(&rstat, 1);
+	seed_rand(&rstat, seed);
 	real wt=1.;
-	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, -11./3., nx, nx, 1, 0, 0, 0, 0};
+	if(slope==0) slope=-11./3.;
+	genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, nx, nx, 1, 0, 0, 0, 0};
 	mapcell* screens=genscreen(&cfg);
 	map_t* out=mapref(P(screens, 0));
 	cellfree(screens);
@@ -341,10 +342,10 @@ map_t* genatm_simple(real r0, real L0, real dx, long nx){
 /**
    Generate atmosphere and map onto loc.
 */
-dmat* genatm_loc(loc_t* loc, real r0, real dsa){
+dmat* genatm_loc(loc_t* loc, real r0, real dsa, real slope, int seed){
 	real D=loc_diam(loc);
 	dmat* opd=dnew(loc->nloc, 1);
-	map_t* atm=genatm_simple(r0, dsa, loc->dx, ceil(D/loc->dx)*2);
+	map_t* atm=genatm_simple(r0, dsa, slope, loc->dx, ceil(D/loc->dx)*2, seed);
 	prop_grid(atm, loc, P(opd), 1, 0, 0, 1, 1, 0, 0);
 	mapfree(atm);
 	return opd;

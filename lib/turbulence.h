@@ -41,8 +41,8 @@ typedef struct genatm_t{
     dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
     dcell *screen;  /**<The destination screen pointer*/
 }genatm_t;
-map_t *genatm_simple(real r0, real L0, real dx, long nx);
-dmat *genatm_loc(loc_t *loc, real r0, real L0);
+map_t *genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed);
+dmat *genatm_loc(loc_t *loc, real r0, real L0, real slope, int seed);
 //mapcell* genatm_from_spect(genatm_t *data);
 mapcell* genscreen(genatm_t *data);
 mapcell* genscreen_str(const char *header);

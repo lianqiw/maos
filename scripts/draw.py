@@ -45,6 +45,8 @@ def locembed(loc, opd0, return_ext=0):
                 ims_i,ext=locembed(loc, opdi, return_ext)
                 ims.append(ims_i)
         ims=np.asarray(ims)
+        if nframe == 1:
+            ims=ims[0]
         if return_ext:
             return ims, ext
         else:
@@ -70,7 +72,7 @@ def locembed(loc, opd0, return_ext=0):
         ims[iframe] = im
     ext = np.r_[xi[0]-dx/2, xi[1]+dx/2, yi[0]-dy/2, yi[1]+dy/2]
     if nframe == 1:
-        ims=im
+        ims=ims[0]
     if return_ext:
         return ims, ext
     else:

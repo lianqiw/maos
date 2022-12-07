@@ -56,7 +56,10 @@ map_t* mapref(map_t* in){
 	if(!check_map(in)) return NULL;
 	map_t* out=mycalloc(1, map_t);
 	memcpy(out, in, sizeof(map_t));
+	if(in->header) out->header=strdup(in->header);
 	out->mem=mem_ref(in->mem);
+	out->fp=NULL;
+	out->fft=NULL;
 	return out;
 }
 
@@ -218,7 +221,14 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 }
 
 /**
-   convert a dmat to map_t.
+   convert a dmat to map_t. 
+   
+   keywords are used to specify parameters:
+   - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.), 
+   - layer heiht (default to 0), 
+   - frozen flow speed (vx, vy)
+   - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
+   - for DM grid only: inter-actuator-coupling (iac)
 */
 map_t* d2map(const dmat* in){
 	if(!check_map(in)) return NULL;
@@ -234,9 +244,15 @@ map_t* d2map(const dmat* in){
 	map->h=search_header_num(header, "h");
 	map->vx=search_header_num(header, "vx");
 	map->vy=search_header_num(header, "vy");
+	real D=search_header_num(header, "D");
 	if(isnan(map->dx)){
-		warning_once("dx is not specified in header, set to 1/64.\n");
-		map->dx=1./64.;
+		if(isnan(D)){
+			map->dx=1./64.;
+			warning_once("dx and D are not specified in header. Set dx, dy to 1/%g.\n", 1./map->dx);
+		}else{
+			map->dx=D/map->nx;
+			info("dx is not specified in header, but D is. Set dx, dy to 1/%g.\n", 1/map->dx);
+		}
 	}
 	if(isnan(map->dy)){
 		map->dy=map->dx;
@@ -268,7 +284,15 @@ mapcell* dcell2map(const dcell* in){
 
 
 /**
-   convert a dmat to rmap_t.
+    convert a dmat to rmap_t.
+
+  	keywords are used to specify parameters:
+    - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),
+    - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
+    - txdeg, dydeg: tilt of surface in degree wrt beam. only 1 can be less than 90 degree. 
+	- ftel:  focal length of the telescope
+	- fexit: distance from exit pupil to focus
+	- fsurf  distance from surface to focu
 */
 rmap_t* d2rmap(const dmat* in){
 	if(!check_map(in)) return NULL;
@@ -308,7 +332,9 @@ rmap_t** dcell2rmap(int* nlayer, const dcell* in){
 }
 
 
-//void mapwritedata(file_t *fp, map_t *map){
+/**
+	convert fields to keyword string
+*/
 void map_header(map_t* map){
 	if(map&&!map->header){
 		char header[1024];
@@ -318,7 +344,9 @@ void map_header(map_t* map){
 	}
 }
 
-//void rmapwritedata(file_t *fp, rmap_t *map){
+/**
+ * convert fields to keyword string
+*/
 void rmap_header(rmap_t* map){
 	if(map&&!map->header){
 		char header[1024];

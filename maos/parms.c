@@ -2223,7 +2223,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			if(parms->atm.iground==-1){
 				parms->atm.iground=ips;
 			} else{
-				warning("Multiple grounds atm. Please combine them together.\n");
+				warning("Multiple grounds atm.\n");
 			}
 		}
 		if(P(parms->atm.ht,ips)<0){

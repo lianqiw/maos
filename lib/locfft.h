@@ -35,8 +35,7 @@ typedef struct{
     real fieldstop;
 }locfft_t;
 
-locfft_t *locfft_init(loc_t *loc, const dmat *amp, const dmat *wvl, 
-		      const lmat *fftsize, real oversize , real fieldstop); 
+locfft_t *locfft_init(loc_t *loc, const dmat *amp, const dmat *wvl, const lmat *fftsize, real oversize, real fieldstop); 
 void locfft_free(locfft_t *locfft);
 void locfft_psf(ccell **psfs, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one);
 void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts);
