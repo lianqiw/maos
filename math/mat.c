@@ -69,17 +69,17 @@ X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
 /**
  * Calls X(new) with a filename to be saved to.
  * */
-X(mat)* X(new_file)(long nx, long ny, const char* header, const char* format, ...){
+X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	X(mat)* out=X(new)(nx, ny);
-	if(out&&header) out->header=strdup(header);
+	if(out&&keywords) out->keywords=strdup(keywords);
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
 		writedata_by_id(out->fp, CELL(out), 0, -1);
-		//out->async=async_init(out->fp, sizeof(T), M_T, out->header, P(out), out->nx, out->ny);
+		//out->async=async_init(out->fp, sizeof(T), M_T, out->keywords, P(out), out->nx, out->ny);
 	}
 	return out;
 }
@@ -123,7 +123,7 @@ void X(free_do)(X(mat)* A){
 #ifndef COMP_LONG
 		if(A->fft) X(fft_free_plan)(A->fft);
 #endif
-		if(A->header) {free(A->header); A->header=NULL;}
+		if(A->keywords) {free(A->keywords); A->keywords=NULL;}
 	}
 	free(A);
 }
@@ -151,7 +151,7 @@ X(mat)* X(ref_reshape)(const X(mat)* in, long nx, long ny){
 X(mat) *X(ref)(const X(mat) *in){
 	if(!check_mat(in)) return NULL;
 	X(mat) *out=X(new_do)(in->nx, in->ny, P(in), in->mem);
-	if(out&&in->header) out->header=strdup(in->header);
+	if(out&&in->keywords) out->keywords=strdup(in->keywords);
 	return out;
 }
 
@@ -329,9 +329,9 @@ void X(cp)(X(mat)** out0, const X(mat)* in){
 	if(check_mat(in)){
 		X(init)(out0, in->nx, in->ny);
 		X(mat)* out=*out0;
-		if(in->header){
-			free(out->header);
-			out->header=strdup(in->header);
+		if(in->keywords){
+			free(out->keywords);
+			out->keywords=strdup(in->keywords);
 		}
 		if(P(out)!=P(in)){
 			memcpy(P(out), P(in), in->nx*in->ny*sizeof(T));
@@ -744,12 +744,12 @@ X(cell)* X(cellnew_same)(long nx, long ny, long mx, long my){
    Calls cellnew3 with a filename to be saved to.
 */
 X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
-	const char* header, const char* format, ...){
+	const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	X(cell)* out=X(cellnew3)(nx, ny, nnx, nny);
-	if(out&&header) out->header=strdup(header);
+	if(out&&keywords) out->keywords=strdup(keywords);
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
@@ -761,12 +761,12 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
    Calls cellnew_same with a filename to be saved to.
 */
 X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
-	const char* header, const char* format, ...){
+	const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
 	X(cell)* out=X(cellnew_same)(nx, ny, mx, my);
-	if(out&&header) out->header=strdup(header);
+	if(out&&keywords) out->keywords=strdup(keywords);
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
@@ -787,7 +787,7 @@ X(cell)* X(cellref)(const X(cell)* in){
 	for(int i=0; i<in->nx*in->ny; i++){
 		P(out, i)=X(ref)(P(in, i));
 	}
-	if(in->header) out->header=strdup(in->header);
+	if(in->keywords) out->keywords=strdup(in->keywords);
 	return out;
 }
 

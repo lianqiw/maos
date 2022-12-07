@@ -1658,8 +1658,8 @@ loc_t* d2loc(const dmat *A){
 		warning("d2loc: wrong dimension %ldx%ld\n", NX(A), NY(A));
 		return NULL;
 	}
-	real dx=fabs(search_header_num(A->header, "dx"));
-	real dy=fabs(search_header_num(A->header, "dy"));
+	real dx=fabs(search_keyword_num(A->keywords, "dx"));
+	real dy=fabs(search_keyword_num(A->keywords, "dy"));
 	loc_t *loc=locnew(NX(A), dx, dy);
 	memcpy(loc->locx, PCOL(A, 0), sizeof(real)*NX(A));
 	memcpy(loc->locy, PCOL(A, 1), sizeof(real)*NX(A));
@@ -1682,8 +1682,8 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 		warning("magic=%u. Expect %x\n", header->magic, M_REAL);
 		return NULL;
 	}
-	real dx=fabs(search_header_num(header->str, "dx"));
-	real dy=fabs(search_header_num(header->str, "dy"));
+	real dx=fabs(search_keyword_num(header->str, "dx"));
+	real dy=fabs(search_keyword_num(header->str, "dy"));
 
 	free(header->str);header->str=0;
 	long nx=header->nx;

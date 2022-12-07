@@ -408,12 +408,12 @@ arg_t* parse_args(int argc, const char* argv[]){
 /**
    Creates header for saving PSFs.
  */
-char* evl_header(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
-	char header[400];
+char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
+	char keywords[400];
 	int nembed=P(aper->embed->nembed,iwvl);
 	real wvl=P(parms->evl.wvl,iwvl);
 	real sumamp2=aper->sumamp2;
-	snprintf(header, sizeof(header),
+	snprintf(keywords, sizeof(keywords),
 		"theta=(%.15g, %.15g) / Field location (arcsec)\n"
 		"r0=%g / Fried parameter (meter)\n"
 		"L0=%g / Outer scale (meter)\n"
@@ -427,7 +427,7 @@ char* evl_header(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, i
 		parms->atm.r0, P(parms->atm.L0,0),
 		wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*RAD2AS,
 		sumamp2* nembed* nembed, parms->sim.dt* (isim-parms->evl.psfisim+1));
-	return strdup(header);
+	return strdup(keywords);
 }
 /**
    Plot grid points, amplitude maps and NCPA.

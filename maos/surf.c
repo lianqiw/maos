@@ -200,10 +200,10 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		for(int isurf2=0; isurf2<PN(surfs); isurf2++){
 			map_t* surf=P(surfs, isurf2);
 			//writebin((dmat*)surf, "surf_%d", isurf);
-			const char* strname=search_header(surf->header, "SURFNAME");
-			const char* strevl=search_header(surf->header, "SURFEVL");
-			const char* strwfs=search_header(surf->header, "SURFWFS");
-			const char* stropdx=search_header(surf->header, "SURFOPDX");
+			const char* strname=search_keyword(surf->keywords, "SURFNAME");
+			const char* strevl=search_keyword(surf->keywords, "SURFEVL");
+			const char* strwfs=search_keyword(surf->keywords, "SURFWFS");
+			const char* stropdx=search_keyword(surf->keywords, "SURFOPDX");
 			if(strname&&(!strcmp(strname, "M1"))){
 				if(fabs(P(parms->aper.misreg, 0))>EPS||fabs(P(parms->aper.misreg, 1))>EPS){
 					warning("M1 surface ox, oy is adjusted by aper.misreg\n");

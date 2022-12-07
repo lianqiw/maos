@@ -33,7 +33,7 @@ int main(){
     drandn(A, 1, &rstat);
     drandn(P(B,0), 1, &rstat);
     drandn(P(B,2), 1, &rstat);
-    A->header=strdup("dx=1/64\ndy=1/64\nLong=kaflasdjfl ksflksjlfjasdflkj asldfj als fals fl asfjalsdf jalsf djasldf jal fsalfkjasdflkj asldfkj asldf \nadf\nwvf=1.e-4");
+    A->keywords=strdup("dx=1/64\ndy=1/64\nLong=kaflasdjfl ksflksjlfjasdflkj asldfj als fals fl asfjalsdf jalsf djasldf jal fsalfkjasdflkj asldfkj asldf \nadf\nwvf=1.e-4");
     writebin(A, "A.bin");
     writebin(A, "A.fits");
     writebin(A, "Azip.fits.gz");

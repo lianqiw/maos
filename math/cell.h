@@ -56,7 +56,7 @@ cell* read_by_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
 //(const void* dc, const char* format, ...) CHECK_ARG(2);
 void writecell_async(const cell *A, long ncol);
 #define writebin_async(A,ncol) writecell_async(A?CELL(A):NULL, ncol)
-void writebin_header(cell* dc, const char* header, const char* format, ...) CHECK_ARG(3);
+void writebin_header(cell* dc, const char* keywords, const char* format, ...) CHECK_ARG(3);
 cell* readsock(int sock);
 void writesock(const cell* dc, int sock);
 #define readdata(fp) readdata_by_id(fp, 0, -1, 0)

@@ -817,10 +817,10 @@ void kalman_write(kalman_t* kalman, const char* format, ...){
 		write_header(&header, fp);
 		char* tmp;
 #define WRITE_KEY(fp, str, key)			\
-	tmp=str->key->header;			\
-	str->key->header=(char*)#key;		\
+	tmp=str->key->keywords;			\
+	str->key->keywords=(char*)#key;		\
 	writedata_by_id(fp, (cell*)str->key,0, 0);	\
-	str->key->header=tmp;
+	str->key->keywords=tmp;
 
 		WRITE_KEY(fp, kalman, Ad);
 		WRITE_KEY(fp, kalman, Cd);

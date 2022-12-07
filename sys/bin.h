@@ -129,13 +129,13 @@ void zfclose(file_t *fp);
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 int zferrno(file_t* fp);
-uint64_t bytes_header(const char *header);
+uint64_t bytes_header(const char *keywords);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
 int read_header(header_t *header, file_t *fp);
 /**Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.*/
 long writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
-	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
+	      const char *keywords, const void *p, const uint64_t nx, const uint64_t ny);
 typedef struct mem_t mem_t;
 struct mem_t *mem_new(void *p)__attribute__((warn_unused_result));
 void mem_unref(mem_t **in);
@@ -144,8 +144,8 @@ void mem_replace(mem_t *in, void *p);
 int mem_nref(const mem_t *in);
 void* mem_p(const mem_t *in);
 mem_t* mmap_open(const char *fn, size_t msize, int rw);
-void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *header);
-void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **header0);
+void mmap_write_header(char **p0, uint32_t magic, long nx, long ny, const char *keywords);
+void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char **pkeywords);
 #define IS_SHM(name) (name && ((name[0]=='/' && !strchr(name+1, '/')) || !mystrcmp(name, "/shm")))
 
 //For parallel/async IO.

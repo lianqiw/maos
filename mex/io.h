@@ -135,6 +135,6 @@ void zfreadlarr(file_t* fp, int count, ...);
 void write_header(const header_t* header, file_t* fp);
 int read_header2(header_t* header, file_t* fp);
 void read_header(header_t* header, file_t* fp);
-int search_header_int(const char* header, const char* name);
-double search_header_dbl(const char* header, const char* name);
+int search_keyword_int(const char* keywords, const char* name);
+double search_keyword_dbl(const char* keywords, const char* name);
 #endif

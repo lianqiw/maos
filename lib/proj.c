@@ -139,9 +139,9 @@ void m3proj(const rmap_t* tsurf, dmat* opd, const loc_t* locout, real thetax, re
 /**
    A convenient wrapper for m3proj() to be called from matlab or python
  */
-dmat* m3proj2(dmat* mapin_0, const char* header, const loc_t* locout, real thetax, real thetay, real hs){
-	free(mapin_0->header);
-	mapin_0->header=strdup(header);
+dmat* m3proj2(dmat* mapin_0, const char* keywords, const loc_t* locout, real thetax, real thetay, real hs){
+	free(mapin_0->keywords);
+	mapin_0->keywords=strdup(keywords);
 	rmap_t* mapin=d2rmap(mapin_0);
 	dmat* opd=dnew(locout->nloc, 1);
 	m3proj(mapin, opd, locout, thetax, thetay, hs);

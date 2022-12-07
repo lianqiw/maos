@@ -45,7 +45,7 @@ map_t *genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed);
 dmat *genatm_loc(loc_t *loc, real r0, real L0, real slope, int seed);
 //mapcell* genatm_from_spect(genatm_t *data);
 mapcell* genscreen(genatm_t *data);
-mapcell* genscreen_str(const char *header);
+mapcell* genscreen_str(const char *keywords);
 dmat* turbcov(dmat *r, real rmax, real r0, real L0);
 void spatial_psd(dmat **out, long nx, long ny, real dx, real strength, real L0,
 		 real fmin, real fmax, real slope, real power);

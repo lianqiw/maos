@@ -56,7 +56,7 @@ map_t* mapref(map_t* in){
 	if(!check_map(in)) return NULL;
 	map_t* out=mycalloc(1, map_t);
 	memcpy(out, in, sizeof(map_t));
-	if(in->header) out->header=strdup(in->header);
+	if(in->keywords) out->keywords=strdup(in->keywords);
 	out->mem=mem_ref(in->mem);
 	out->fp=NULL;
 	out->fft=NULL;
@@ -235,16 +235,16 @@ map_t* d2map(const dmat* in){
 	dmat *tmp=dref(in);
 	map_t* map=myrealloc(tmp, 1, map_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
-	char* header=in->header;
+	char* keywords=in->keywords;
 	map->iac=0;
-	map->ox=search_header_num(header, "ox");
-	map->oy=search_header_num(header, "oy");
-	map->dx=search_header_num(header, "dx");
-	map->dy=search_header_num(header, "dy");
-	map->h=search_header_num(header, "h");
-	map->vx=search_header_num(header, "vx");
-	map->vy=search_header_num(header, "vy");
-	real D=search_header_num(header, "D");
+	map->ox=search_keyword_num(keywords, "ox");
+	map->oy=search_keyword_num(keywords, "oy");
+	map->dx=search_keyword_num(keywords, "dx");
+	map->dy=search_keyword_num(keywords, "dy");
+	map->h=search_keyword_num(keywords, "h");
+	map->vx=search_keyword_num(keywords, "vx");
+	map->vy=search_keyword_num(keywords, "vy");
+	real D=search_keyword_num(keywords, "D");
 	if(isnan(map->dx)){
 		if(isnan(D)){
 			map->dx=1./64.;
@@ -274,8 +274,8 @@ mapcell* dcell2map(const dcell* in){
 	if(!check_map(in)) return NULL;
 	mapcell* map=(mapcell*)cellnew(in->nx, in->ny);
 	for(long i=0; i<in->nx*in->ny; i++){
-		if(!P(in,i)->header&&in->header){
-			P(in,i)->header=strdup(in->header);
+		if(!P(in,i)->keywords&&in->keywords){
+			P(in,i)->keywords=strdup(in->keywords);
 		}
 		P(map,i)=d2map(P(in,i));
 	}
@@ -299,19 +299,19 @@ rmap_t* d2rmap(const dmat* in){
 	dmat *tmp=dref(in);
 	rmap_t* map=myrealloc(tmp, 1, rmap_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
-	char* header=in->header;
-	if(!in->header){
+	if(!in->keywords){
 		error("this dmat has no header\n");
 	}
-	map->ox=search_header_num(header, "ox");
-	map->oy=search_header_num(header, "oy");
-	map->dx=search_header_num(header, "dx");
-	map->dy=search_header_num(header, "dy");
-	map->txdeg=search_header_num(header, "txdeg");
-	map->tydeg=search_header_num(header, "tydeg");
-	map->ftel=search_header_num(header, "ftel");
-	map->fexit=search_header_num(header, "fexit");
-	map->fsurf=search_header_num(header, "fsurf");
+	const char *keywords=in->keywords;
+	map->ox=search_keyword_num(keywords, "ox");
+	map->oy=search_keyword_num(keywords, "oy");
+	map->dx=search_keyword_num(keywords, "dx");
+	map->dy=search_keyword_num(keywords, "dy");
+	map->txdeg=search_keyword_num(keywords, "txdeg");
+	map->tydeg=search_keyword_num(keywords, "tydeg");
+	map->ftel=search_keyword_num(keywords, "ftel");
+	map->fexit=search_keyword_num(keywords, "fexit");
+	map->fsurf=search_keyword_num(keywords, "fsurf");
 	if(isnan(map->ox)||isnan(map->oy)||isnan(map->dx)||isnan(map->dy)||isnan(map->fsurf)){
 		error("header is needed to convert dmat to map_t\n");
 	}
@@ -336,11 +336,11 @@ rmap_t** dcell2rmap(int* nlayer, const dcell* in){
 	convert fields to keyword string
 */
 void map_header(map_t* map){
-	if(map&&!map->header){
-		char header[1024];
-		snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+	if(map&&!map->keywords){
+		char keywords[1024];
+		snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 			map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
-		map->header=strdup(header);
+		map->keywords=strdup(keywords);
 	}
 }
 
@@ -348,10 +348,10 @@ void map_header(map_t* map){
  * convert fields to keyword string
 */
 void rmap_header(rmap_t* map){
-	if(map&&!map->header){
-		char header[1024];
-		snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\ntxdeg=%.15g\ntydeg=%.15g\nftel=%.15g\nfexit=%.15g\nfsurf=%.15g\n",
+	if(map&&!map->keywords){
+		char keywords[1024];
+		snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\ntxdeg=%.15g\ntydeg=%.15g\nftel=%.15g\nfexit=%.15g\nfsurf=%.15g\n",
 			map->ox, map->oy, map->dx, map->dy, map->txdeg, map->tydeg, map->ftel, map->fexit, map->fsurf);
-		map->header=strdup(header);
+		map->keywords=strdup(keywords);
 	}
 }

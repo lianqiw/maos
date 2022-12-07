@@ -30,11 +30,11 @@ int main(int argc, char* argv[]){
 		exit(0);
 	}
 	int jarg=1;
-	char** header=NULL;
+	char** keywords=NULL;
 	if(!strcmp(argv[jarg], "gc")){
 		jarg++;
 		dbg("Creating headers for GC\n");
-		header=mymalloc(25, char*);
+		keywords=mymalloc(25, char*);
 		char tmp[320];
 		double wvl[5]={0.9, 0.975, 1, 1.025, 1.1};
 		for(int iwvl=0; iwvl<5; iwvl++){
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
 					"Exposure: %gs\n",
 					wvl[iwvl], dx, psfgrid, psfgrid, wvl[iwvl]/(dx*psfgrid)*RAD2AS,
 					psfsum, (double)((istep+1)*4));
-				header[iwvl+istep*5]=strdup(tmp);
+				keywords[iwvl+istep*5]=strdup(tmp);
 			}
 		}
 	}
@@ -70,9 +70,9 @@ int main(int argc, char* argv[]){
 		strcpy(tmp, ".fits");
 		info("Copying from %s to %s\n", fn, fn2);
 		dcell* temp=dcellread("%s", fn);
-		if(header){
+		if(keywords){
 			for(int i=0; i<temp->nx*temp->ny; i++){
-				P(temp,i)->header=strdup(header[i]);
+				P(temp,i)->keywords=strdup(keywords[i]);
 			}
 		}
 		writebin(temp, "%s", fn2);

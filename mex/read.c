@@ -56,7 +56,7 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 			howmany=ntot-start;
 		}
 	} else if(fp->isfits){
-		if(search_header_int(header2.str, "Sparse=")){
+		if(search_keyword_int(header2.str, "Sparse=")){
 			magic=M_DSP64;
 		}
 		if(howmany!=0){

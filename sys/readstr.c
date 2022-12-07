@@ -498,28 +498,28 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 /**
 	update header and end to point to valid region. Does not modify the string
 */
-void trim_string(const char **pheader, const char **pend){
-	if(!pheader) return;
-	const char* header=*pheader;
-	const char* end=(pend && *pend)?*pend:(header+strlen(header));
+void trim_string(const char **pstart, const char **pend){
+	if(!pstart) return;
+	const char* start=*pstart;
+	const char* end=(pend && *pend)?*pend:(start+strlen(start));
 repeat:
-	while(isspace((int)header[0]) && header<end) header++;
-	while(isspace((int)end[-1])&& header<end) end--;
-	if(header>=end){ 
-		header=NULL;
+	while(isspace((int)start[0]) && start<end) start++;
+	while(isspace((int)end[-1])&& start<end) end--;
+	if(start>=end){ 
+		start=NULL;
 		end=NULL;
 	} else{
-		if(header+1<end && (header[0]=='\''||header[0]=='"')){
-			if(end[-1]!=header[0]){
-				warning("Quote is not matched: {%s}\n", *pheader);
+		if(start+1<end && (start[0]=='\''||start[0]=='"')){
+			if(end[-1]!=start[0]){
+				warning("Quote is not matched: {%s}\n", *pstart);
 			} else{
 				end--;
 			}
-			header++;
+			start++;
 			goto repeat;
 		}
 	}
-	*pheader=header;
+	*pstart=start;
 	if(pend) *pend=end;
 }
 /**
@@ -527,16 +527,16 @@ repeat:
    NULL if not found. Do not free the returned pointer. 
    The key must be preceeded by space, semicolon, coma or new line (isspace),
    and succeeded by = sign. */
-const char* search_header(const char* header, const char* key){
-	if(!header) return NULL;
+const char* search_keyword(const char* keywords, const char* key){
+	if(!keywords) return NULL;
 	const char* ans=NULL;
 	//const char* val=header;
 	const char* end=NULL;
-	trim_string(&header, &end);
-	if(header&&end){
+	trim_string(&keywords, &end);
+	if(keywords&&end){
 		const int nkey=strlen(key);
 		int was_space=1;
-		for(const char* p=header; p<end; p++){
+		for(const char* p=keywords; p<end; p++){
 			const char c=*p;
 			if(!isspace((int)c)&&c!=';'&&c!=','){
 				if(was_space){//start of key
@@ -564,9 +564,9 @@ const char* search_header(const char* header, const char* key){
 /**
    Read a number from the header with key
 */
-double search_header_num(const char* header, const char* key){
-	if(!header) return NAN;
-	const char* val=search_header(header, key);
+double search_keyword_num(const char* keywords, const char* key){
+	if(!keywords) return NAN;
+	const char* val=search_keyword(keywords, key);
 	if(val){
 		return readstr_num(val, NULL);
 	} else{
@@ -576,18 +576,18 @@ double search_header_num(const char* header, const char* key){
 /**
    Read a number from the header and verify.
 */
-double search_header_num_valid(const char* header, const char* key){
-	double val=search_header_num(header, key);
+double search_keyword_num_valid(const char* keywords, const char* key){
+	double val=search_keyword_num(keywords, key);
 	if(!(val==val)){
-		error("{%s}: Unable to parse a number for %s from %s\n", header, key, search_header(header, key));
+		error("{%s}: Unable to parse a number for %s from %s\n", keywords, key, search_keyword(keywords, key));
 	}
 	return val;
 }
 /**
    Read a number from the header and use value0 if not found.
 */
-double search_header_num_default(const char* header, const char* key, double value0){
-	double val=search_header_num(header, key);
+double search_keyword_num_default(const char* keywords, const char* key, double value0){
+	double val=search_keyword_num(keywords, key);
 	if(!(val==val)){
 		val=value0;
 	}

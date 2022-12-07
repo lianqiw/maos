@@ -104,12 +104,12 @@ static void* psfiris_do(thread_t* info){
 		cfftshift(otf);
 		creal2d(&P(output,ipsf), 0, otf, impst);
 	}
-	char header[500];
-	snprintf(header, 500, "%s"
+	char keywords[500];
+	snprintf(keywords, 500, "%s"
 		"Wavelength: %g\n"
 		"PSF Sampling: %g\"\n"
 		, msg, wvl, dtheta*RAD2AS);
-	P(output,ipsf)->header=strdup(header);
+	P(output,ipsf)->keywords=strdup(keywords);
 
 	cfree(otf);
 	dfree(pixoffx);
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]){
 		nexp=psf_lgs->ny;
 	} else{
 		for(int i=0; i<psf_lgs->nx*psf_lgs->ny; i++){
-			double wvl=search_header_num_valid(P(psf_lgs,i)->header, "Wavelength");
+			double wvl=search_keyword_num_valid(P(psf_lgs,i)->keywords, "Wavelength");
 			int iwvl;
 			for(iwvl=0; iwvl<nwvl; iwvl++){
 				if(fabs(wvls[iwvl]-wvl)<1e-14){
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]){
 			error("nwvl=%d, nexp=%d, not matching ntot=%ld\n", nwvl, nexp, psf_lgs->nx);
 		}
 	}
-	double texp=search_header_num_valid(P(psf_lgs,0)->header, "Exposure");
+	double texp=search_keyword_num_valid(P(psf_lgs,0)->keywords, "Exposure");
 	double tmp;
 	if(fabs(modf(exposure/texp, &tmp))>1e-5||exposure <0||exposure>texp*nexp){
 		error("exposure time must be multiple of %g and less than or equal to %g. 0 for all length\n",
@@ -224,21 +224,21 @@ int main(int argc, char* argv[]){
 	int npsf=nexp*nwvl;
 	int psfsize1=P(psf_lgs,0)->nx;
 	double image_size=pixsize*npix;
-	int notf=(int)search_header_num_valid(P(psf_lgs,0)->header, "FFT Grid");
-	double sumpsf=search_header_num_valid(P(psf_lgs,0)->header, "PSF Sum to");
-	double dx=search_header_num_valid(P(psf_lgs,0)->header, "OPD Sampling");
-	double dtheta1=search_header_num_valid(P(psf_lgs,0)->header, "PSF Sampling")*AS2RAD;
+	int notf=(int)search_keyword_num_valid(P(psf_lgs,0)->keywords, "FFT Grid");
+	double sumpsf=search_keyword_num_valid(P(psf_lgs,0)->keywords, "PSF Sum to");
+	double dx=search_keyword_num_valid(P(psf_lgs,0)->keywords, "OPD Sampling");
+	double dtheta1=search_keyword_num_valid(P(psf_lgs,0)->keywords, "PSF Sampling")*AS2RAD;
 	int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
 	if(image_size>dtheta1*psfsizevalid){/*need blending*/
 		dbg("Enlarging PSF\n");
 		dcell* psf_large=dcellread("evlpsfcl_4096.fits");
-		dx=search_header_num_valid(P(psf_large,0)->header, "OPD Sampling");
-		notf=(int)search_header_num_valid(P(psf_large,0)->header, "FFT Grid");
+		dx=search_keyword_num_valid(P(psf_large,0)->keywords, "OPD Sampling");
+		notf=(int)search_keyword_num_valid(P(psf_large,0)->keywords, "FFT Grid");
 		if(psf_large->nx!=nwvl){
 			error("PSF large has incorrect dimension\n");
 		}
 		for(int i1=0; i1<npsf; i1++){
-			double wvl2=search_header_num_valid(P(psf_large,i1%nwvl)->header, "Wavelength");
+			double wvl2=search_keyword_num_valid(P(psf_large,i1%nwvl)->keywords, "Wavelength");
 			if(fabs(wvl2-wvls[i1%nwvl])>1e-10){
 				error("Wavelenght mismatch.\n");
 			}

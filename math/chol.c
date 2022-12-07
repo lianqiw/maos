@@ -340,8 +340,8 @@ spchol* chol_read(const char* format, ...){
 		if(!header.str){
 			error("File %s does not contain a cholmod_factor\n", fn);
 		}
-#define READ_SIZE_T(A) L->A=(size_t)search_header_num(header.str,#A)
-#define READ_INT(A) L->A=(int)search_header_num(header.str,#A)
+#define READ_SIZE_T(A) L->A=(size_t)search_keyword_num(header.str,#A)
+#define READ_INT(A) L->A=(int)search_keyword_num(header.str,#A)
 		cholmod_factor* L=A->L=mycalloc(1, cholmod_factor);
 		READ_SIZE_T(n);
 		READ_SIZE_T(minor);

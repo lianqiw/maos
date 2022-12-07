@@ -199,17 +199,17 @@ static void* find_var(const char* name){
 				count+=strlen(var_map[i].name)+1;
 			}
 		}
-		dummy->header=mycalloc(count, char);
-		strcat(dummy->header, msg0);
+		dummy->keywords=mycalloc(count, char);
+		strcat(dummy->keywords, msg0);
 		for(int j=0; map_map[j].name; j++){
 			struct VAR_MAP* var_map=map_map[j].map;
 			for(int i=0; var_map[i].name; i++){
-				strcat(dummy->header, var_map[i].name);
-				strcat(dummy->header, "\n");
+				strcat(dummy->keywords, var_map[i].name);
+				strcat(dummy->keywords, "\n");
 			}
 		}
 	}
-	dbg("return dummy cell with header %s for %s\n", dummy->header, name);
+	dbg("return dummy cell with header %s for %s\n", dummy->keywords, name);
 	return dummy;
 
 }

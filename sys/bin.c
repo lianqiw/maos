@@ -1057,9 +1057,9 @@ int read_header(header_t* header, file_t* fp){
 /**
  * Get the length of mem to storge the header and its dimension, rounded to multiple of 8.
  */
-uint64_t bytes_header(const char* header){
-	if(header){
-		uint64_t len=strlen(header)+1;
+uint64_t bytes_header(const char* keywords){
+	if(keywords){
+		uint64_t len=strlen(keywords)+1;
 		if(len%8!=0){
 			len=(len/8+1)*8;
 		}
@@ -1263,14 +1263,14 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 /**
    Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
 */
-void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* header){
+void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* keywords){
 	char* p=*p0;
 	/*Always have a header to align the data. */
-	if(header){
-		uint64_t nlen=bytes_header(header)-24;
+	if(keywords){
+		uint64_t nlen=bytes_header(keywords)-24;
 		((uint32_t*)p)[0]=(uint32_t)M_COMMENT; p+=4;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
-		memcpy(p, header, strlen(header)+1); p+=nlen;
+		memcpy(p, keywords, strlen(keywords)+1); p+=nlen;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
 		((uint32_t*)p)[0]=(uint32_t)M_COMMENT;p+=4;
 	}
@@ -1284,29 +1284,29 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 /**
    Initialize the dimension from the header in the mmaped file.
 */
-void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char** header0){
+void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char** pkeywords){
 	char* p=*p0;
-	char* header=NULL;
+	char* keywords=NULL;
 	while(((uint32_t*)p)[0]==M_COMMENT){
 		p+=4;
 		uint64_t nlen=((uint64_t*)p)[0];p+=8;
-		header=p;
+		keywords=p;
 		p+=nlen;
 		if(nlen==((uint64_t*)p)[0]){
 			p+=8;
 			if(((uint32_t*)p)[0]==M_COMMENT){
 				p+=4;
 			} else{
-				header=NULL;
+				keywords=NULL;
 			}
 		} else{
-			header=NULL;
+			keywords=NULL;
 		}
-		if(!header){
+		if(!keywords){
 			error("Parse head failed\n");
 		}
 	}
-	if(!header){
+	if(!keywords){
 		p=*p0;
 	}
 	if(((uint32_t*)p)[0]==M_SKIP) p+=4;
@@ -1314,7 +1314,7 @@ void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char
 	*nx=((uint64_t*)p)[0]; p+=8;
 	*ny=((uint64_t*)p)[0]; p+=8;
 	*p0=p;
-	if(header0) *header0=header;
+	if(pkeywords) *pkeywords=keywords;
 }
 #define USE_ASYNC 0
 #if USE_ASYNC

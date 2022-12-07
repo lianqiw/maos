@@ -219,7 +219,7 @@ protected:
 	long nx;
 	long ny;
 public:
-	string header;
+	string keywords;
 	using Parent::deinit;
 	using Parent::operator+;
 	using Parent::operator T*;
@@ -272,13 +272,13 @@ public:
 	Array(long nxi, long nyi, const Array& pi, long offset=0):Parent(pi, offset), nx(nxi), ny(nyi){}
 	//Use default destructor
 
-	Array(const Array& in):Parent(in), nx(in.nx), ny(in.ny), header(in.header){}
+	Array(const Array& in):Parent(in), nx(in.nx), ny(in.ny), keywords(in.keywords){}
 	Array& operator=(const Array& in){
 		if(this!=&in){
 			Parent::operator=(in);
 			nx=in.nx;
 			ny=in.ny;
-			header=in.header;
+			keywords=in.keywords;
 		}
 		return *this;
 	}

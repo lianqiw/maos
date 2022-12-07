@@ -29,7 +29,7 @@ dmat* turbcov(dmat* r, double rmax, double r0, double L0);
 cell* read=read_by_id(0, -1, const char* fn);
 cell* readsock(int sock);
 void  write=write_by_id(const cell*dc, 0, const char* fn);
-void  write_header=writebin_header(const cell*dc, const char* header, const char* fn);
+void  write_header=writebin_header(const cell*dc, const char* keywords, const char* fn);
 void  writesock(const cell* dc, int sock);
 dmat* sde_fit(const dmat* psdin, const dmat* coeff0, double tmax_fit, int vibid);
 double dtrapz(const dmat* x, const dmat* y);
@@ -50,7 +50,7 @@ dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, double scale, double
 dmat* sho_filter(const dmat* xi, double dt, double f0, double zeta);
 void genotf(ccell**potf,loc_t*loc, const dmat*amp, const dmat*opdbias, const dmat*area, double thres, double wvl, const dmat*cov, double r0, double l0, long npsfx, long npsfy, long nsa, long pttr);
 dmat* calcenc=denc(dmat* psf, dmat* dvec, int type, int nthread);
-dmat* m3proj=m3proj2(dmat*mapin_0, char* header, loc_t*locout, double thetax, double thetay, double hs);
+dmat* m3proj=m3proj2(dmat*mapin_0, char* keywords, loc_t*locout, double thetax, double thetay, double hs);
 dspcell* act_extrap(loccell* aloc, const dcell* actcplc, double thres, int lor);
 dmat* psd1d(dmat* data, long nseg);
 dmat* psd1dt(dmat* data, long nseg, double dt);

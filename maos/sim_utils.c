@@ -561,8 +561,8 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	{/*USE async write for data that need to save at every time step */
-		const char* header="Results per direction: olmp; clmp; olep; clep";
-		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, header, "%s/Resp_%d.bin", fnextra, seed);
+		const char* keywords="Results per direction: olmp; clmp; olep; clep";
+		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, keywords, "%s/Resp_%d.bin", fnextra, seed);
 
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
 		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
@@ -600,8 +600,8 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean){
-		char header[800];
-		header[0]='\0';
+		char keywords[800];
+		keywords[0]='\0';
 		if(parms->evl.psfmean||parms->evl.psfhist){
 			for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 				char headeri[00];
@@ -610,19 +610,19 @@ static void init_simu_evl(sim_t* simu){
 					P(parms->evl.wvl, iwvl),
 					P(parms->evl.wvl, iwvl)/(nembed*parms->evl.dx),
 					aper->sumamp2*nembed*nembed);
-				strncat(header, headeri, sizeof(header)-strlen(header)-1);
+				strncat(keywords, headeri, sizeof(keywords)-strlen(keywords)-1);
 			}
 		}
-		header[sizeof(header)-1]='\0';
+		keywords[sizeof(keywords)-1]='\0';
 		//The saved PSF and COVs are padded by empty cells.
 		long nframepsf=parms->sim.end;
 		char strht[24];
 		if(parms->evl.psfmean&&!parms->sim.evlol){
 			simu->evlpsfmean=dcellnew(parms->evl.nwvl, nevl);
-			simu->evlpsfmean->header=strdup(header);
+			simu->evlpsfmean->keywords=strdup(keywords);
 			save->evlpsfmean=mycalloc(nevl, zfarr*);
 			simu->evlpsfmean_ngsr=dcellnew(parms->evl.nwvl, nevl);
-			simu->evlpsfmean_ngsr->header=strdup(header);
+			simu->evlpsfmean_ngsr->keywords=strdup(keywords);
 			save->evlpsfmean_ngsr=mycalloc(nevl, zfarr*);
 		}
 		if(parms->evl.psfhist){
@@ -681,7 +681,7 @@ static void init_simu_evl(sim_t* simu){
 		if(parms->evl.psfol){
 			if(parms->evl.psfmean){
 				simu->evlpsfolmean=dcellnew(parms->evl.nwvl, 1);
-				simu->evlpsfolmean->header=strdup(header);
+				simu->evlpsfolmean->keywords=strdup(keywords);
 				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov){
@@ -1460,8 +1460,8 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 			}
 		}
 		{
-			const char* header="CG residual for Tomography; DM Fit";
-			simu->cgres=dcellnewsame_file(2, 1, parms->sim.end, 1, header, "%s/ResCG_%d.bin", fnextra, seed);
+			const char* keywords="CG residual for Tomography; DM Fit";
+			simu->cgres=dcellnewsame_file(2, 1, parms->sim.end, 1, keywords, "%s/ResCG_%d.bin", fnextra, seed);
 		}
 		if(parms->recon.psd&&parms->save.extra){
 			if(parms->recon.psddtrat_hi){

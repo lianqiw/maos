@@ -25,7 +25,7 @@
 
 #define AOS_MAT_DEF(X,T,R)						\
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
-    X(mat) *X(new_file)(long nx, long ny, const char* header, const char* format, ...) CHECK_ARG(4);\
+    X(mat) *X(new_file)(long nx, long ny, const char* keywords, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
     X(mat) *X(mat_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
     int X(init)(X(mat)**A, long nx, long ny) ;				\
@@ -70,8 +70,8 @@
     X(cell) *X(cellnew2)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny) CHECK_UNUSED_RESULT; \
     X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my) CHECK_UNUSED_RESULT; \
-    X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,const char* header, const char* format, ...)CHECK_ARG(6);	\
-    X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,const char* header, const char* format, ...)CHECK_ARG(6);	\
+    X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,const char* keywords, const char* format, ...)CHECK_ARG(6);	\
+    X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,const char* keywords, const char* format, ...)CHECK_ARG(6);	\
     void X(cellzero)(X(cell) *dc);						\
     void X(cellset)(X(cell)*dc, T alpha);				\
     X(cell) *X(celltrans)(const X(cell) *A) CHECK_UNUSED_RESULT;	\

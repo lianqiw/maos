@@ -36,7 +36,7 @@ void rename_file(int sig);
 int maos_signal_handler(int sig);
 arg_t* parse_args(int argc, const char *argv[]);
 void free_arg(arg_t** parg);
-char *evl_header(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
+char *evl_keywords(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
 void apply_fieldstop(dmat *opd, const dmat *amp, const lmat *embed, long nembed, const dmat* fieldstop, real wvl);
 void display_server(int sock);
 void plot_setup(const parms_t *parms, const powfs_t *powfs, const aper_t *aper, const recon_t *recon);

@@ -560,8 +560,8 @@ static void perfevl_save(sim_t* simu){
 				if(!simu->save->evlpsfmean[ievl]
 					||!P(simu->evlpsfmean,ievl)) continue;
 				for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-					free(P(pcl, iwvl, ievl)->header);
-					P(pcl, iwvl, ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
+					free(P(pcl, iwvl, ievl)->keywords);
+					P(pcl, iwvl, ievl)->keywords=evl_keywords(simu->parms, simu->aper, ievl, iwvl, isim);
 					zfarr_push(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, P(pcl, iwvl, ievl));
 				}
 			}
@@ -574,8 +574,8 @@ static void perfevl_save(sim_t* simu){
 				if(!simu->save->evlpsfmean_ngsr[ievl]
 					||!P(simu->evlpsfmean_ngsr,ievl)) continue;
 				for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-					free(P(pcl, iwvl, ievl)->header);
-					P(pcl, iwvl, ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
+					free(P(pcl, iwvl, ievl)->keywords);
+					P(pcl, iwvl, ievl)->keywords=evl_keywords(simu->parms, simu->aper, ievl, iwvl, isim);
 					zfarr_push(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, P(pcl, iwvl, ievl));
 				}
 			}
@@ -587,8 +587,8 @@ static void perfevl_save(sim_t* simu){
 			dmat** pcl=P(simu->evlpsfolmean);
 			for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 				if(!P(simu->evlpsfolmean,iwvl)) continue;
-				free(pcl[iwvl]->header);
-				pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl, isim);
+				free(pcl[iwvl]->keywords);
+				pcl[iwvl]->keywords=evl_keywords(simu->parms, simu->aper, -1, iwvl, isim);
 				zfarr_push(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
 			}
 			dcellscale(simu->evlpsfolmean, 1./scaleol);

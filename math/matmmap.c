@@ -23,7 +23,7 @@
 
 /**
    Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
-X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ...){
+X(mat)* X(new_mmap)(long nx, long ny, const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
@@ -32,7 +32,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ..
 		fn=NULL;
 		//return X(new)(nx, ny);
 	}
-	size_t metasize=3*8+bytes_header(header);//size of meta data. 
+	size_t metasize=3*8+bytes_header(keywords);//size of meta data. 
 	size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
 	mem_t* mem=mmap_open(fn, msize, 1);
 	if(!mem){
@@ -40,10 +40,10 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ..
 		return NULL;
 	}
 	char* map=(char*)mem_p(mem);//save value of map
-	mmap_write_header(&map, M_T, nx, ny, header);
+	mmap_write_header(&map, M_T, nx, ny, keywords);
 	X(mat)* out=X(new_do)(nx, ny, (T*)map, mem);
 	memset(map, 0, nx*ny*sizeof(T));//Is this necessary?
-	if(header) out->header=strdup(header);
+	if(keywords) out->keywords=strdup(keywords);
 	return out;
 }
 /**
@@ -51,7 +51,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char* header, const char* format, ..
    truncated if already exists.
 */
 X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
-	const char* header, const char* format, ...){
+	const char* keywords, const char* format, ...){
 	if(!nx||!ny) return NULL;
 	format2fn;
 	if(fn&&fn[0]=='-') fn=NULL;//leading - disables filename.
@@ -62,7 +62,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 	}
 	
 	long metasize=3*8;
-	long msize=metasize+bytes_header(header);
+	long msize=metasize+bytes_header(keywords);
 	for(long ix=0; ix<nx*ny; ix++){
 		long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
 		long my=nny?((long)nny>0?nny[ix]:(-(long)nny)):1;
@@ -74,9 +74,9 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 		return NULL;
 	}
 	char* map=mem_p(mem);
-	mmap_write_header(&map, MCC_ANY, nx, ny, header);
+	mmap_write_header(&map, MCC_ANY, nx, ny, keywords);
 	X(cell)* out=X(cellnew)(nx, ny);
-	if(header) out->header=strdup(header);
+	if(keywords) out->keywords=strdup(keywords);
 
 	for(long ix=0; ix<nx*ny; ix++){
 		long mx=(long)nnx>0?nnx[ix]:(-(long)nnx);
@@ -95,24 +95,24 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
    Create a new dense matrix cell object, with identical blocks, mmapped from
    file. be aware that the data is not 8-byte aligned. The file is truncated if
    already exists.  */
-X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* header,
+X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* keywords,
 	const char* format, ...){
 	format2fn;
-	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, header, "%s", fn);
+	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, keywords, "%s", fn);
 }
 
 static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
 	long nx, ny;
 	uint32_t magic;
-	const char* header;
-	mmap_read_header(map, &magic, &nx, &ny, &header);
+	const char* keywords;
+	mmap_read_header(map, &magic, &nx, &ny, &keywords);
 	if(magic!=M_T){
 		error("File has magic %d, we want %d\n", (int)magic, M_T);
 	}
 	X(mat)* out=X(new_do)(nx, ny, (T*)(*map), mem);
 	*map+=nx*ny*sizeof(T);
 	if(out){
-		out->header=strdup(header);
+		out->keywords=strdup(keywords);
 	}
 	return out;
 }
@@ -144,13 +144,13 @@ X(cell)* X(cellread_mmap)(const char* format, ...){
 	char* map=mem_p(mem);
 	long nx, ny;
 	uint32_t magic;
-	const char* header;
-	mmap_read_header(&map, &magic, &nx, &ny, &header);
+	const char* keywords;
+	mmap_read_header(&map, &magic, &nx, &ny, &keywords);
 	if(!iscell(&magic)){
 		error("We want a cell array, File has %x\n", (int)magic);
 	}
 	X(cell)* out=X(cellnew)(nx, ny);
-	if(header) out->header=strdup(header);
+	if(keywords) out->keywords=strdup(keywords);
 	for(long ix=0; ix<nx*ny; ix++){
 		P(out,ix)=X(readdata_mmap)(&map, mem);
 	}

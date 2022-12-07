@@ -179,8 +179,8 @@ void cellfree_do(cell* A){
 			}
 			free(P(dc));P(dc)=0;
 		}
-		if(dc->header){
-			free(dc->header); dc->header=NULL;		
+		if(dc->keywords){
+			free(dc->keywords); dc->keywords=NULL;		
 		}
 		if(dc->m){
 			cellfree_do(dc->m);dc->m=NULL;		
@@ -263,19 +263,19 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 			}
 		}
 		if(ncol<=0){
-			header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
+			header_t header={MCC_ANY, nx, ny, A?A->keywords:NULL};
 			write_header(&header, fp);
 		}
 		
 		for(long ix=0; ix<(nx*ny); ix++){
 			int remove_header=0;
-			if(A->header && !P(A,ix)->header){
-				P(A,ix)->header=A->header;
+			if(A->keywords && !P(A,ix)->keywords){
+				P(A,ix)->keywords=A->keywords;
 				remove_header=1;
 			}
 			writedata_by_id(fp, P(A,ix), id2, ncol);
 			if(remove_header){
-				P(A,ix)->header=NULL;
+				P(A,ix)->keywords=NULL;
 			}
 		}
 	}
@@ -331,13 +331,13 @@ void writecell_async(const cell* A, long ncol){
 	}
 }
 /**
-   A generic routine for write data to file with separate header
+   A generic routine for write data to file with separate keywords
  */
-void writebin_header(cell* Ac, const char* header, const char* format, ...){
+void writebin_header(cell* Ac, const char* keywords, const char* format, ...){
 	format2fn;
-	if(Ac && header){
-		free(Ac->header);
-		Ac->header=strdup(header);
+	if(Ac && keywords){
+		free(Ac->keywords);
+		Ac->keywords=strdup(keywords);
 	}
 	write_by_id(Ac, M_0, "%s", fn);
 }
@@ -398,7 +398,7 @@ static cell *readdata_cell(file_t *fp, M_ID id, header_t *header){
 	long ny=header->ny;
 	//dbg("calling readdata_cell with dimension %ldx%ld\n", nx, ny);
 	cell *dcout=cellnew(nx, ny);
-	dcout->header=header->str; header->str=0;
+	dcout->keywords=header->str; header->str=0;
 	header_t headerc={0,0,0,0};
 	int ans=0;
 	

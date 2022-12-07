@@ -412,7 +412,7 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	}								\
 	if(!*out) {							\
 	    *out=D##new(in.Nx(), in.Ny());				\
-		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+		if(in.keywords.length()) (*out)->keywords=strdup(in.keywords.c_str());\
 	}else{								\
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
@@ -434,7 +434,7 @@ add2cpu_mat(c, real, Comp)
 	}								\
 	if(!*out) {							\
 	    *out=D##cellnew(in.Nx(), in.Ny());				\
-		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+		if(in.keywords.length()) (*out)->keywords=strdup(in.keywords.c_str());\
 	}else{								\
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
@@ -457,7 +457,7 @@ void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 	}								\
 	if(!*out) {\
 		*out=dnew(in.Nx(), in.Ny());				\
-		if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+		if(in.keywords.length()) (*out)->keywords=strdup(in.keywords.c_str());\
 	}else{\
 		if(PN((*out))!=in.N()){\
 			error("Dimension mismatch: %ldx%ld vs %ldx%ld\n", NX((*out)), NY((*out)), in.Nx(), in.Ny());\
@@ -466,8 +466,8 @@ void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 	dmat *pout=*out;						\
 	DO(cudaMemcpyAsync(P(pout), in(), in.N()*sizeof(T),D2H, stream));	\
 	CUDA_SYNC_STREAM;\
-	if(pout->header) free(pout->header);				\
-	if(in.header.length()) pout->header=strdup(in.header.c_str());	\
+	if(pout->keywords) free(pout->keywords);				\
+	if(in.keywords.length()) pout->keywords=strdup(in.keywords.c_str());	\
 }
 #if COMP_SINGLE==0
 	cp2cpu_same(dmat, dzero, dnew, double)
@@ -500,7 +500,7 @@ void cp2cpu(S##cell **out, const Cell<T, Gpu> &in, cudaStream_t stream){ \
 	}								\
 	if(!*out){\
 		 *out=S##cellnew(in.Nx(), in.Ny());			\
-		 if(in.header.length()) (*out)->header=strdup(in.header.c_str());\
+		 if(in.keywords.length()) (*out)->keywords=strdup(in.keywords.c_str());\
 	}\
 	for(int i=0; i<in.N(); i++){					\
 	    cp2cpu(&(*out)->p[i], in[i], stream);			\

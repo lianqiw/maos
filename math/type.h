@@ -47,7 +47,7 @@ typedef enum CEMBED{
     T *restrict p; /**<The data pointer*/				\
     long nx;       /**< number of rows */				\
     long ny;       /**< number of columns */				\
-    char *header;  /**<The header*/					\
+    char *keywords;/**<The keywords as a string*/					\
     file_t *fp;    /**<Opened file, to be saved to when called or freed*/\
     struct fft_t* fft					\
 
@@ -89,7 +89,7 @@ typedef struct cell{
             T *restrict px;      /**<numerical values, size nzmax */	\
             long nx;             /**<number of rows */			        \
             long ny;             /**<number of columns */			    \
-            char *header;        /**<header*/				            \
+            char *keywords;      /**<the keywords as a string*/         \
             char *fn;            /**<The file, to be saved upon free*/  \
             long nzmax;          /**<maximum number of entries */		\
             spint *restrict pp;  /**<col indices (size nzmax)  */       \

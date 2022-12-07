@@ -119,12 +119,12 @@ static void* psfiris_do(thread_t* info){
 		cfftshift(otf);
 		creal2d(&P(output,iwvl), 0, otf, impst);
 	}
-	char header[500];
-	snprintf(header, 500, "%s"
+	char keywords[500];
+	snprintf(keywords, 500, "%s"
 		"Wavelength: %g\n"
 		"PSF Sampling: %g\"\n"
 		, msg, wvl, dtheta2*RAD2AS);
-	P(output,iwvl)->header=strdup(header);
+	P(output,iwvl)->keywords=strdup(keywords);
 
 	cfree(otf);
 	dfree(pixoffx);

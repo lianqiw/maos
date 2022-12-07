@@ -455,24 +455,24 @@ static void write_bin_magic(uint32_t magic, file_t* fp){
    header may be written multiple times. They will be concatenated when
    read. The header should contain key=value entries just like the configuration
    files. The entries should be separated by new line charactor. */
-static void write_bin_header(const char* header, file_t* fp){
-	if(!header) return;
+static void write_bin_header(const char* keywords, file_t* fp){
+	if(!keywords) return;
 	if(fp->isfits){
 		zfclose(fp);
 		error("fits file is not supported\n");
 	}
 	uint32_t magic=M_COMMENT;
-	uint64_t nlen=strlen(header)+1;
+	uint64_t nlen=strlen(keywords)+1;
 	/*make header 8 byte alignment.*/
 	uint64_t nlen2=(nlen/8+1)*8;
-	char* header2=(char*)calloc(nlen2, sizeof(char));
-	memcpy(header2, header, nlen);
+	char* keywords2=(char*)calloc(nlen2, sizeof(char));
+	memcpy(keywords2, keywords, nlen);
 	zfwrite(&magic, sizeof(uint32_t), 1, fp);
 	zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
-	zfwrite(header2, 1, nlen2, fp);
+	zfwrite(keywords2, 1, nlen2, fp);
 	zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
 	zfwrite(&magic, sizeof(uint32_t), 1, fp);
-	free(header2);
+	free(keywords2);
 }
 
 /*static void write_timestamp(file_t *fp){
@@ -486,7 +486,7 @@ static void write_bin_header(const char* header, file_t* fp){
 /**
    Obtain the current magic number. If it is a header, read it out if output of
 header is not NULL.  The header will be appended to the output header.*/
-uint32_t read_bin_magic(file_t* fp, char** header){
+uint32_t read_bin_magic(file_t* fp, char** pkeywords){
 	uint32_t magic, magic2;
 	uint64_t nlen, nlen2;
 	if(fp->isfits){
@@ -502,15 +502,15 @@ uint32_t read_bin_magic(file_t* fp, char** header){
 		} else if(magic==M_COMMENT){
 			zfread(&nlen, sizeof(uint64_t), 1, fp);
 			if(nlen>0){
-				if(header){
-					char header2[nlen];
-					zfread(header2, 1, nlen, fp);
-					header2[nlen-1]='\0'; /*make sure it is NULL terminated.*/
-					if(*header){
-						*header=(char*)realloc(*header, sizeof(char)*(((*header)?strlen(*header):0)+strlen(header2)+1));
-						strncat(*header, header2, nlen);
+				if(pkeywords){
+					char keywords[nlen];
+					zfread(keywords, 1, nlen, fp);
+					keywords[nlen-1]='\0'; /*make sure it is NULL terminated.*/
+					if(*pkeywords){
+						*pkeywords=(char*)realloc(*pkeywords, sizeof(char)*(((*pkeywords)?strlen(*pkeywords):0)+strlen(keywords)+1));
+						strncat(*pkeywords, keywords, nlen);
 					} else{
-						*header=strdup(header2);
+						*pkeywords=strdup(keywords);
 					}
 				} else{
 					zfseek(fp, nlen, SEEK_CUR);
@@ -816,7 +816,7 @@ void read_header(header_t* header, file_t* fp){
 /**
    Parse an integer from header str
  */
-int search_header_int(const char* str, const char* name){
+int search_keyword_int(const char* str, const char* name){
 	if(!str||!name) return 0;
 	const char* tmp=strstr(str, name);
 	if(tmp){
@@ -828,7 +828,7 @@ int search_header_int(const char* str, const char* name){
 /**
    Parse an integer from header str
 */
-double search_header_dbl(const char* str, const char* name){
+double search_keyword_dbl(const char* str, const char* name){
 	const char* tmp=strstr(str, name);
 	if(tmp){
 		return strtod(tmp+strlen(name), NULL);

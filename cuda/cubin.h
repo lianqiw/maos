@@ -53,31 +53,31 @@ struct Magic<long int>{//always 64 bit int. long is not.
 //C++ does not support partial specialization of functions, we use overloading.
 
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Gpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
+static inline void cuwritedata_do(const Array<T, Gpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* keywords){
 	T* tmp=(T*)malloc(A.N()*sizeof(T));
 	DO(cudaMemcpyAsync(tmp, A(), A.N()*sizeof(T), D2H, stream));
 	CUDA_SYNC_STREAM;
-	writearr(fp, 0, sizeof(T), magic, header, tmp, A.Nx(), A.Ny());
+	writearr(fp, 0, sizeof(T), magic, keywords, tmp, A.Nx(), A.Ny());
 	free(tmp);
 }
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Cpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
+static inline void cuwritedata_do(const Array<T, Cpu>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* keywords){
 	(void)stream;
-	writearr(fp, 0, sizeof(T), magic, header, A(), A.Nx(), A.Ny());
+	writearr(fp, 0, sizeof(T), magic, keywords, A(), A.Nx(), A.Ny());
 }
 template <typename T>
-static inline void cuwritedata_do(const Array<T, Pinned>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* header){
-	writearr(fp, 0, sizeof(T), magic, header, A(), A.Nx(), A.Ny());
+static inline void cuwritedata_do(const Array<T, Pinned>& A, cudaStream_t stream, file_t* fp, uint32_t magic, const char* keywords){
+	writearr(fp, 0, sizeof(T), magic, keywords, A(), A.Nx(), A.Ny());
 }
 
 template <typename T, template<typename> class Dev>
 static inline void cuwritedata(const Array<T, Dev>& A, cudaStream_t stream, file_t* fp){
 	uint32_t magic=Magic<T>::magic;
-	const char* header=A.header.length()?A.header.c_str():NULL;
+	const char* keywords=A.keywords.length()?A.keywords.c_str():NULL;
 	if(A.N()>0){
-		cuwritedata_do(A, stream, fp, magic, header);
+		cuwritedata_do(A, stream, fp, magic, keywords);
 	} else{
-		writearr(fp, 0, sizeof(T), magic, header, NULL, 0, 0);
+		writearr(fp, 0, sizeof(T), magic, keywords, NULL, 0, 0);
 	}
 }
 

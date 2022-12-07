@@ -29,5 +29,5 @@ void proj_rect_grid(real* phiout, const rmap_t *mapin, real thetax, real thetay,
 		    real sc, real hs, real ht,
 		    real betax, real betay);
 void m3proj(const rmap_t *tsurf, dmat *opd, const loc_t *locin, real thetax, real thetay, real hs);
-dmat *m3proj2(dmat *mapin_0, const char *header, const loc_t *locout, real thetax, real thetay, real hs);
+dmat *m3proj2(dmat *mapin_0, const char *keywords, const loc_t *locout, real thetax, real thetay, real hs);
 #endif

@@ -89,13 +89,13 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	P(dc, 1)=dnew(nx, ny);
 	real* restrict p1=P(P(dc, 0));
 	real* restrict p2=P(P(dc, 1));
-	char header[1024];
+	char keywords[1024];
 	real ox=-nx/2*dx;
 	real oy=-ny/2*dx;
-	snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 		ox, oy, dx, 0., 0., 0.);
-	P(dc, 0)->header=strdup(header);
-	P(dc, 1)->header=strdup(header);
+	P(dc, 0)->keywords=strdup(keywords);
+	P(dc, 1)->keywords=strdup(keywords);
 	//For create spatially varying r0
 	dmat* spect2=0;
 	dcell* dc2=0;//for scaling.
@@ -188,12 +188,12 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 static void fractal_screen_do(zfarr* fc, genatm_t* data){
 	const long nx=NX(data);
 	const long ny=NY(data);
-	char header[1024];
-	snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+	char keywords[1024];
+	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 		-data->nx/2*data->dx, -data->ny/2*data->dx, data->dx, 0., 0., 0.);
 	if(fc){
 		dmat* screen=dnew(NX(data), NY(data));
-		screen->header=strdup(header);
+		screen->keywords=strdup(keywords);
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 			drandn(screen, 1, data->rstat);
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
@@ -208,7 +208,7 @@ static void fractal_screen_do(zfarr* fc, genatm_t* data){
 		dmat** screen=P(data->screen);
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 			drandn(screen[ilayer], 1, data->rstat);
-			screen[ilayer]->header=strdup(header);
+			screen[ilayer]->keywords=strdup(keywords);
 		}
 OMP_TASK_FOR(4)
 		for(long ilayer=0; ilayer<data->nlayer; ilayer++){	
@@ -271,25 +271,25 @@ mapcell* genscreen(genatm_t* data){
  * dx
  * nx
  */
-mapcell* genscreen_str(const char* header){
+mapcell* genscreen_str(const char* keywords){
 	mapcell* surfs=NULL;
-	if(zfexist("%s",header)){
-		info2("Loading surface OPD from %s\n", header);
-		surfs=mapcellread("%s", header);
+	if(zfexist("%s",keywords)){
+		info2("Loading surface OPD from %s\n", keywords);
+		surfs=mapcellread("%s", keywords);
 	} else{
-		info2("Generating surface OPD from %s\n", header);
-		real r0=search_header_num(header, "r0");
-		real mode=search_header_num(header, "mode");
-		real dx=search_header_num_default(header, "dx", 1./64.);
-		real nx=search_header_num_default(header, "nx", 2048);
-		real ht=search_header_num_default(header, "ht", 0);
-		real vx=search_header_num_default(header, "vx", 0);
-		real vy=search_header_num_default(header, "vy", 0);
+		info2("Generating surface OPD from %s\n", keywords);
+		real r0=search_keyword_num(keywords, "r0");
+		real mode=search_keyword_num(keywords, "mode");
+		real dx=search_keyword_num_default(keywords, "dx", 1./64.);
+		real nx=search_keyword_num_default(keywords, "nx", 2048);
+		real ht=search_keyword_num_default(keywords, "ht", 0);
+		real vx=search_keyword_num_default(keywords, "vx", 0);
+		real vy=search_keyword_num_default(keywords, "vy", 0);
 		if(!isnan(r0)){
 			static real seed=0;//avoid using the same seed
-			real L0=search_header_num_default(header, "L0", 30);
-			real slope=search_header_num_default(header, "slope", -11./3.);
-			seed=search_header_num_default(header, "seed", seed+1);
+			real L0=search_keyword_num_default(keywords, "L0", 30);
+			real slope=search_keyword_num_default(keywords, "slope", -11./3.);
+			seed=search_keyword_num_default(keywords, "seed", seed+1);
 			info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
 				r0, L0, dx, slope, nx, seed);
 			rand_t rstat;
@@ -298,7 +298,7 @@ mapcell* genscreen_str(const char* header){
 			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
 			surfs=genscreen(&cfg);
 		}else if (!isnan(mode)){
-			real rms=search_header_num_valid(header, "rms");//in nm.
+			real rms=search_keyword_num_valid(keywords, "rms");//in nm.
 			info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rms);
 			loc_t *loc=mksqloc_auto(nx, nx, dx, dx);
 			dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
@@ -310,12 +310,12 @@ mapcell* genscreen_str(const char* header){
 			dfree(opd);
 			locfree(loc);
 		}else{
-			error("input is invalid: %s\n", header);
+			error("input is invalid: %s\n", keywords);
 		}
 		for(int i=0; i<PN(surfs); i++){
 			if(P(surfs,i)){
-				char* old=P(surfs, i)->header;
-				P(surfs, i)->header=stradd(header, old, NULL);
+				char* old=P(surfs, i)->keywords;
+				P(surfs, i)->keywords=stradd(keywords, old, NULL);
 				P(surfs,i)->h=ht;
 				P(surfs, i)->vx=vx;
 				P(surfs, i)->vx=vy;

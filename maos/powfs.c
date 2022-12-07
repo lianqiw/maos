@@ -1417,8 +1417,8 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				intstat->gx=dcellread("%s/powfs%d_gx", parms->powfs[ipowfs].i0load, ipowfs);
 				intstat->gy=dcellread("%s/powfs%d_gy", parms->powfs[ipowfs].i0load, ipowfs);
 			}
-			if(intstat->i0->header){
-				real dt=search_header_num(intstat->i0->header, "dt");
+			if(intstat->i0->keywords){
+				real dt=search_keyword_num(intstat->i0->keywords, "dt");
 				if(!isinf(dt)){
 					real ratio=parms->sim.dt*parms->powfs[ipowfs].dtrat/dt;
 					info("Scale loaded i0/gx/gy by %g\n", ratio);
@@ -1468,14 +1468,14 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 					dccell* lltpsf=0;
 					dmat* wvl=parms->powfs[ipowfs].wvl;
 					gensepsf(&lltpsf, lotf, NULL, NULL, wvl, 0, 0);
-					char header[64];
+					char keywords[64];
 
 					for(int iwvl=0; iwvl<PN(wvl); iwvl++){
 						for(int illt=0; illt<NX(lotf); illt++){
 							dmat* psf=P(P(lltpsf, illt, iwvl), 0);
 							const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*RAD2AS;
-							snprintf(header, 64, "dtheta=%g; #arcsecond\n", dpsf);
-							psf->header=strdup(header);
+							snprintf(keywords, 64, "dtheta=%g; #arcsecond\n", dpsf);
+							psf->keywords=strdup(keywords);
 							real fwhm=dfwhm_gauss(psf)*dpsf;
 							info("Uplink FWHM (illt %d, iwvl %d) is %g\"\n", illt, iwvl, fwhm);
 						}

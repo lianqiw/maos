@@ -29,7 +29,7 @@ void X(spwritedata)(file_t* fp, const X(sp)* sp){
 	if(sp&&sp->nzmax){
 		header.nx=sp->nx;
 		header.ny=sp->ny;
-		header.str=sp->header;
+		header.str=sp->keywords;
 	}
 	write_header(&header, fp);
 	if(sp&&sp->nzmax){
@@ -86,7 +86,7 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 		zfread(&nzmax, sizeof(uint64_t), 1, fp);
 		if(nzmax!=0){
 			out=X(spnew)(m, n, nzmax);
-			out->header=header->str; header->str=NULL;
+			out->keywords=header->str; header->str=NULL;
 			readvec(out->pp, M_SPINT, magic2, sizeof(spint), n+1, fp);
 			readvec(out->pi, M_SPINT, magic2, sizeof(spint), nzmax, fp);
 			readvec(out->px, M_T, magic1, sizeof(T), nzmax, fp);
