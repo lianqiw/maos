@@ -128,7 +128,6 @@ def py2cell(arr, tid=0):
 def py2cellref(arr, tid=0):
     if type(arr) is list:
         arr = np.asarray(arr)
-        
     if type(arr) is np.ndarray:        
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
@@ -172,7 +171,7 @@ class cell(Structure):
             if tmpid is None:
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
-            if tid!=0 and tmpid != tid and tid!=0x6421:
+            if tid!=0 and tmpid != tid and tid!=0x6421 and tmpid !=0x6421:
                 raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
             if arr.ndim>2:

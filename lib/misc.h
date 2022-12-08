@@ -30,4 +30,6 @@ void addnoise_grad(dmat *grad, const dmat *neal, rand_t *srand);
 dmat *poly2fit(const dmat *in, const dmat *out, int maxorder);
 dmat *loc_calib(const dsp *GA, const loc_t *aloc, const loc_t *saloc,
 		real dispx, real dispy, real scale, int maxorder);
+dmat *polyfit(const dmat *x, const dmat *y, int maxorder);
+dmat *polyval(const dmat *x, const dmat *coeff, int separate);
 #endif

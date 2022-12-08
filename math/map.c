@@ -241,29 +241,32 @@ map_t* d2map(const dmat* in){
 	map->oy=search_keyword_num(keywords, "oy");
 	map->dx=search_keyword_num(keywords, "dx");
 	map->dy=search_keyword_num(keywords, "dy");
-	map->h=search_keyword_num(keywords, "h");
-	map->vx=search_keyword_num(keywords, "vx");
-	map->vy=search_keyword_num(keywords, "vy");
+	map->h=search_keyword_num_default(keywords, "h", 0);
+	map->vx=search_keyword_num_default(keywords, "vx", 0);
+	map->vy=search_keyword_num_default(keywords, "vy", 0);
 	real D=search_keyword_num(keywords, "D");
+	real offset=search_keyword_num_default(keywords, "offset",0);
+	
 	if(isnan(map->dx)){
 		if(isnan(D)){
 			map->dx=1./64.;
-			warning_once("dx and D are not specified in header. Set dx, dy to 1/%g.\n", 1./map->dx);
+			warning_once("dx and D are not specified. Set dx, dy to 1/%g.\n", 1./map->dx);
 		}else{
 			map->dx=D/map->nx;
-			info("dx is not specified in header, but D is. Set dx, dy to 1/%g.\n", 1/map->dx);
+			dbg("dx is not specified, but D is. Set dx, dy to 1/%g.\n", 1/map->dx);
 		}
 	}
 	if(isnan(map->dy)){
 		map->dy=map->dx;
 	}
-	if(isnan(map->ox)||isnan(map->oy)){
-		map->ox=-map->nx/2*map->dx;
-		map->oy=-map->ny/2*map->dy;
+	if(isnan(map->ox)){
+		map->ox=(-map->nx/2+offset)*map->dx;
+		dbg("ox is not specified. set to %g\n", map->ox);
 	}
-	if(isnan(map->h)) map->h=0;
-	if(isnan(map->vx)) map->vx=0;
-	if(isnan(map->vy)) map->vy=0;
+	if(isnan(map->oy)){
+		map->oy=(-map->ny/2+offset)*map->dy;
+		dbg("oy is not specified. set to %g\n", map->oy);
+	}
 	return map;
 }
 

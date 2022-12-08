@@ -422,31 +422,77 @@ dmat *psd2d_aniso(const dmat *screen, real dx){
 	row/column, and then scale back to the 2-D psd using the technique of computing
 	temporay PSD of turbulence.
 	*/
-dmat *psd2d(const dmat *screen, real dx){
-	if(!screen||NX(screen)!=NY(screen)){
-		error("psd2d_aniso: expects a square screen\n");
+dmat *psd2d(dmat **extra, /**<[out] extra output*/
+		const cell *screens, /**<[in] 2-d screen or cell of 2-d screens*/
+		real dx /**<[in] Sampling*/
+){
+	if(!screens){
+		dbg("screen is empty\n");
 		return NULL;
 	}
-	dmat *p1=psd1d(screen, 1);
-	dmat *screen2=dtrans(screen);
-	dmat *p2=psd1d(screen2, 1);
-	dfree(screen2);
-	dmat *psd2=dnew(NX(p1),2);
-	real df=1/(NX(screen)*dx);
-	/*
-		1-D psd is converted to 2-D psd. B(1/2, (n-1)/2) is not yet accounted for.
-		*/
-	real scale=1./(NY(p1)+NY(p1))/df;
-	for(long ix=0; ix<NX(psd2); ix++){
-		P(psd2, ix, 0)=df*ix;
-		real tmp=0;
-		for(long iy=0; iy<NY(p1); iy++){
-			tmp+=P(p1, ix, iy)+P(p2,ix,iy);
+	long nc=iscell(screens)?PN(screens):1;
+	dmat *psd2=NULL;
+	real df=0;
+	for(long ic=0; ic<nc; ic++){
+		dmat *screen=dmat_cast(iscell(screens)?P(screens,ic):screens);
+		if(NX(screen)!=NY(screen)){
+			error("psd2d: expects a square screen\n");
+			return NULL;
 		}
-		P(psd2, ix, 1)=tmp*scale/P(psd2, ix, 0);
+		dmat *p1=psd1d(screen, 1);
+		dmat *screen2=dtrans(screen);
+		dmat *p2=psd1d(screen2, 1);
+		dfree(screen2);
+		if(!psd2){
+			psd2=dnew(NX(p1),2);
+		}else if(NX(psd2)!=NX(p1)){
+			error("psd2d: screens shall have the same size\n");
+			continue;
+		}
+		if(ic==0){
+			df=1/(NX(screen)*dx);
+			for(long ix=0; ix<NX(psd2); ix++){
+				P(psd2, ix, 0)=df*ix;
+			}
+		}
+		real scale=1./(NY(p1)+NY(p1))/df/nc;
+		for(long ix=0; ix<NX(psd2); ix++){
+			real tmp=0;
+			for(long iy=0; iy<NY(p1); iy++){
+				tmp+=P(p1, ix, iy)+P(p2,ix,iy);
+			}
+			P(psd2, ix, 1)+=tmp*scale/P(psd2, ix, 0);
+		}
+		dfree(p1);
+		dfree(p2);
 	}
-	P(psd2,0,1)=P(psd2,1,1);//remove the singular value.
-	dfree(p1);
-	dfree(p2);
+	P(psd2, 0, 1)=P(psd2, 1, 1);//remove the singular value.
+	
+	/*
+		1-D psd is converted to 2-D psd. B(1/2, (n-1)/2) is accounted for.
+	*/
+	//Fit power law, then determine the coefficient of scaling
+	dmat *x=dnew(NX(psd2)-1,1);//skip DC term
+	dmat *y=dnew(NX(psd2)-1,1);
+	for(long i=0; i<NX(x); i++){
+		P(x, i)=log(P(psd2, i+1, 0));
+		P(y, i)=log(P(psd2, i+1, 1));
+	}
+	dmat *coeff=polyfit(x,y,1);
+	dfree(x);
+	dfree(y);
+	real ss=(-P(coeff,0)-1)*0.5;
+	//beta(a,b)=gamma(a)gamma(b)/gamma(a+b)
+	real bt=1/(tgamma(0.5)*tgamma(ss)/tgamma(0.5+ss));//correction factor
+	for(long i=0; i<NX(psd2); i++){
+		P(psd2, i, 1)*=bt;
+	}
+	if(extra){
+		*extra=dnew(2,1);//r0, slope
+		real ckp2=0.0229*pow(2.*M_PI/0.5e-6,-2);
+		P(*extra,0)=pow(exp(P(coeff,1))*bt/ckp2, -3./5.);//r0 equivalent
+		P(*extra,1)=P(coeff,0); //slope
+	}
+	dfree(coeff);
 	return psd2;
 }

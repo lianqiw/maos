@@ -128,10 +128,10 @@ int cog_multi(
 	return 0;
 }
 /**
-   Determine the polynomial coefficients that transforms in to out.
+   Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out.
 */
-dmat* poly2fit(const dmat* in,  /**<[in] input grid*/
-	const dmat* out, /**<[in] distorted grid*/
+dmat* poly2fit(const dmat* in,  /**<[in] input grid. n*2 */
+	const dmat* out, /**<[in] distorted grid, n*2 */
 	int maxorder     /**<[in] Maximum order*/
 ){
 	if(!(NX(in)==NX(out)&&NY(in)==2&&NY(out)==2)){
@@ -283,5 +283,52 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	dfree(gloc);
 	dfree(cg);
 
+	return coeff;
+}
+dmat* polyval(
+	const dmat *x, 	/**<[in] input vector */
+	const dmat *coeff,	/**<[in] the coefficient from polyfit*/
+	const int separate	/**<[in] if set, separately for each order*/
+){
+	int mul=separate?1:0;//column multiplier
+	int nmod=separate?PN(coeff):1;
+	dmat *out=dnew(PN(x), nmod);
+	for(long iy=0; iy<PN(coeff); iy++){
+		int icol=iy*mul;
+		real pc=P(coeff,iy); //coefficient
+		real po=PN(coeff)-1-iy;//descending order
+		for(long ix=0; ix<PN(x); ix++){
+			//not optimized for speed.
+			P(out, ix, icol)+=pow(P(x,ix),po)*pc;
+		}
+	}
+	return out;
+}
+
+/**
+   Determine the polynomial coefficients that transforms vector in to out.
+   Both column and row vectors are allowed.
+*/
+dmat *polyfit(const dmat *x, /**<[in] input vector */
+	const dmat *y, /**<[in] output */
+	const int maxorder /**<[in] maximum order to fit*/
+	){
+	if(!(PN(x)==PN(x) && (NX(x)==1 || NY(x)==1) && (NX(y)==1 || NY(y)==1))){
+		error("polyfit: in and out must be vector\n");
+		return NULL;
+	}
+	dmat *coeff=dnew(maxorder+1,1);
+	dset(coeff, 1);
+	dmat *mod=polyval(x, coeff, 1);
+	dmat *my=0;//M^T * y
+	dmat *mm=0;//M^T * M
+	dmm(&my, 1, mod, y, "tn", 1);
+	dmm(&mm, 1, mod, mod, "tn", 1);
+	dinvspd_inplace(mm);
+	dzero(coeff);
+	dmm(&coeff, 1, mm, my, "nn", 1);
+	dfree(mod);
+	dfree(my);
+	dfree(mm);
 	return coeff;
 }

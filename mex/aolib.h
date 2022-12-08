@@ -39,7 +39,7 @@ dmat* psd2ts(const dmat* psdin, rand_t* seed, double dt, int nstepin);
 dmat* psd_t2s(const dmat* psdt, double vmean);
 dmat* psd_s2t(const dmat* psdt, double vmean);
 dmat* psd1d(const dmat* v, long nseg);
-dmat *psd2d(const dmat *screen, real dx);
+dmat *psd2d(dmat **extra, const cell *screen, real dx);
 dmat* psd2d_aniso(const dmat* screen, real dx);
 dmat* psd1dt(const dmat* v, long nseg, double dt);
 dsp* mkh(loc_t* locin, loc_t* locout, double displacex, double displacey, double scale);

@@ -409,7 +409,7 @@ void test_psd2d(){
         real inte1=psd_inte2(psd);
         writebin(psd, "psd_%ld", nx);dfree(psd);
         
-        psd=psd2d(screen2, 1./64.);
+        psd=psd2d(NULL, CELL(screen2), 1./64.);
         real inte2=psd_inte2(psd);
         writebin(psd, "psd2_%ld", nx);dfree(psd);
         info("size is %ld rms is %g, psdint is %g, psdint 2 is %g\n", 
