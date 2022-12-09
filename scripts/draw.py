@@ -90,7 +90,6 @@ def draw(*args, **kargs):
     elif arg0.dtype == object or arg0.ndim==3:
         if arg0.shape[0]==1:
             arg0=arg0[0]
-    
     if type(arg0) == list or arg0.dtype == object or arg0.ndim==3:  # list, array of array or 3d array
         kargs['keep'] = 1  # do not clear
         if type(arg0) == list:
@@ -114,6 +113,8 @@ def draw(*args, **kargs):
             nx = int(np.ceil(np.sqrt(nframe)))
         else:
             nx = nframe
+        if nx>nframe:
+            nx=nframe
         ny = int(np.ceil(nframe/nx))
         # print(nx,ny)
         if nx>1 or ny > 1:
@@ -150,7 +151,9 @@ def draw(*args, **kargs):
     
     else: #2-d numeric array
         img = np.squeeze(arg0)
-        if len(img.shape) == 1 and img.shape[0]>0:
+        if img.size==0: #empty
+            return
+        elif len(img.shape) == 1 and img.shape[0]>0: #1-D array
             nx = int(np.sqrt(img.shape[0]))
             ny = int(img.shape[0] / nx)
             if nx*ny==img.shape[0]:
@@ -161,6 +164,8 @@ def draw(*args, **kargs):
             plt.gca().images[-1].colorbar.remove()
         except:
             pass
+        if img.dtype.name.find('complex')>-1:
+            img=np.real(img)
         im=plt.imshow(img, extent=kargs.get('ext'), origin='lower', cmap='jet')
         #for im in gca().get_images():
         #im.set_clim(0, 0.5)

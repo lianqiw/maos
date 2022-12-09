@@ -25,9 +25,9 @@
 struct stfun_t{
 	long count;
 	dmat* amp;
-	cmat* hat0;
-	cmat* hat1;
-	cmat* hat2;
+	cmat* hat0;//FFT of a
+	cmat* hat1;//FFT of f*a
+	cmat* hat2;//FFT of f*f*a
 	cmat* hattot;
 };
 
@@ -42,14 +42,13 @@ stfun_t* stfun_init(long nx, long ny, real* amp){
 	A->hat2=cnew(nx*2, ny*2);
 	A->hattot=cnew(nx*2, ny*2);
 
-	dmat* damp=dnew(nx, ny);;
+	A->amp=dnew(nx, ny);
 	if(amp){
-		memcpy(P(damp), amp, nx*ny*sizeof(real));
+		memcpy(P(A->amp), amp, nx*ny*sizeof(real));
 	} else{
-		dset(damp, 1);
+		dset(A->amp, 1);
 	}
-	cembedd(A->hat0, damp, 0);
-	A->amp=damp;
+	cembedd(A->hat0, A->amp, 0);
 	cfft2(A->hat0, -1);
 	return A;
 }
@@ -58,27 +57,23 @@ stfun_t* stfun_init(long nx, long ny, real* amp){
  */
 void stfun_push(stfun_t* A, dmat* opd){
 	A->count++;
-	long ny=NY(A->hat0)/2;/*maybe smaller than opd. */
-	long nx=NX(A->hat0)/2;
-	long nx2=nx>>1;
-	long ny2=ny>>1;
-	dmat* popd=opd;
-	dmat* pamp=A->amp;
-	cmat* p1=A->hat1;
-	cmat* p2=A->hat2;
+	const long nx=NX(A->amp);
+	const long ny=NY(A->amp);
+	const long nx2=(NX(A->hat0)-nx)>>1;//skip
+	const long ny2=(NY(A->hat0)-ny)>>1;
 	cset(A->hat1, 0);
 	cset(A->hat2, 0);
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-			real o=P(popd, ix, iy)*P(pamp, ix, iy);
-			P(p1, ix+nx2, iy+ny2)=o;
-			P(p2, ix+nx2, iy+ny2)=o*o;
+			real o=P(opd, ix, iy)*P(A->amp, ix, iy);
+			P(A->hat1, ix+nx2, iy+ny2)=o;
+			P(A->hat2, ix+nx2, iy+ny2)=o*P(opd, ix, iy);
 		}
 	}
 	cfft2(A->hat1, -1);
 	cfft2(A->hat2, -1);
-	for(long i=0; i<NX(A->hat1)*NY(A->hat1); i++){
-	/*real(t2*t0*)-t1*t1* */
+	for(long i=0; i<PN(A->hat1); i++){
+		/*real(t2*t0^*)-t1*t1^* */
 		P(A->hattot,i)+=creal(P(A->hat2,i)*conj(P(A->hat0,i)))
 			-P(A->hat1,i)*conj(P(A->hat1,i));
 	}
@@ -87,21 +82,21 @@ void stfun_push(stfun_t* A, dmat* opd){
    Use accumulated data to compute the structure function.
  */
 dmat* stfun_finalize(stfun_t* A){
-	cscale(A->hattot, 2./A->count);
-	cfft2i(A->hattot, 1);
-	cabs2toreal(A->hat0, 1);
+	cscale(A->hattot, 2./A->count);//2 was omitted in accumulation
+	cabs2toreal(A->hat0, 1); //hat0 * hat0^*
+	cfft2i(A->hattot, 1);	
 	cfft2i(A->hat0, 1);
-	cfftshift(A->hattot);
+	cfftshift(A->hattot);//fftshift is necessary
 	cfftshift(A->hat0);
-	long nx=NX(A->hat0);
-	long ny=NY(A->hat0);
+	const long nx=NX(A->hat0);
+	const long ny=NY(A->hat0);
 	dmat* st=dnew(nx, ny);
-	dmat* pst=st;
-	cmat* p1=A->hattot;
-	cmat* p2=A->hat0;
 	for(long iy=1; iy<ny; iy++){/*skip first row/column where hat0 is 0. */
 		for(long ix=1; ix<nx; ix++){
-			P(pst, ix, iy)=creal(P(p1, ix, iy)/P(p2, ix, iy));
+			const double overlap=creal(P(A->hat0, ix, iy));
+			if(overlap>0.5){
+				P(st, ix, iy)=creal(P(A->hattot, ix, iy))/overlap;
+			}
 		}
 	}
 	cfree(A->hat0);

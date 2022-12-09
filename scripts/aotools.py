@@ -10,6 +10,7 @@ from scipy.special import erf
 from scipy.integrate import cumtrapz
 from numpy import sqrt, exp, log, floor, ceil, nan, pi
 from numpy.random import rand, randn
+from numpy.fft import fft,ifft,fft2, ifft2, fftshift
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
 from cycler import cycler
@@ -282,8 +283,12 @@ def plot_smooth(x,y,color=''):
 
     #create smooth line chart 
     plt.plot(xnew, y_smooth,color)
-
-def radial_profile(data, center=None, enclosed=0):
+def radial_profile(data, nx=None):
+    if nx is None:
+        nx=data.shape[0]>>1
+    x=np.arange(nx+0.)
+    return calcenc(data, x, -1, 10) #azimuthal averaging
+def radial_profile_obsolete(data, center=None, enclosed=0):
     '''Compute the radial average or radially enclosed energy. radial start with 1'''
     if center is None:
         center=(data.shape[0]>>1, data.shape[1]>>1)
@@ -339,25 +344,12 @@ def photon_flux(magnitude, wvls):
         flux=flux[0,0]
     return flux
 
-def fftshift(a):
-    a=a+0 #make a copy
-    if a.dtype.name=='object':
-        for it in np.ndindex(a.shape):
-            a[it]=fftshift(a[it])
-    else:
-        na=a.ndim
-        ia=na-2
-        if ia<0:
-            ia=0;
-        for ic in range(ia, na):
-            a=np.roll(a, int(a.shape[ic]/2), axis=ic)
-    return a
 def calc_psd(v, dt=1, fold=1, axis=-1):
     '''compute PSD from time histories'''
     nstep=v.shape[axis]
     nmid=(nstep>>1)
     df=1/(nstep*dt);
-    af=np.abs(np.fft.fft(v,axis=axis))**2*(1/(df*nstep*nstep))
+    af=np.abs(fft(v,axis=axis))**2*(1/(df*nstep*nstep))
     
     if fold:
         f=np.arange(nmid+1)*df
@@ -449,3 +441,21 @@ def unembed(a,ratio=2):
     nx4=int(nx/ratio/2)
     ny4=int(ny/ratio/2)
     return a[nx2-nx4:nx2+nx4,ny2-ny4:ny4+ny2]    
+
+def stfun(opd, amp):
+    '''Compute structure function.'''
+    nx=opd.shape[0]
+    if amp is None:
+        amp=np.ones(opd.shape)
+    opd2=center(opd, nx*2);
+    amp2=center(amp, nx*2);
+    hat0=fft2(amp2);
+    hat1=fft2(opd2*amp2);
+    hat2=fft2(opd2*opd2*amp2);
+    hat3=2*(np.real(hat2*np.conj(hat0))-hat1*np.conj(hat1))
+    hat3i=np.real(ifft2(hat3))
+    hat0i=np.real(ifft2(hat0*np.conj(hat0)))
+    hat3i[hat0i>0.4]/=hat0i[hat0i>0.4]
+    hat3i[hat0i<=0.5]=0;
+    st=fftshift(hat3i);
+    return st

@@ -126,9 +126,11 @@ def py2cell(arr, tid=0):
 
 #convert numpy array to any C array pointer adaptively
 def py2cellref(arr, tid=0):
-    if type(arr) is list:
+    if arr is None:
+        return None
+    elif type(arr) is list:
         arr = np.asarray(arr)
-    if type(arr) is np.ndarray:        
+    elif type(arr) is np.ndarray:        
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
         elif sp.isspmatrix_csr(arr):
@@ -152,7 +154,7 @@ class cell(Structure):
  
     def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
         #attributes set within __init__ are per object
-        dtype2id={#Conversion from numpy type to maos id
+        dtype2id={#Conversion from numpy dtype to maos id
             np.double:  0x6402,
             np.int64:   0x6403,
             np.complex128:0x6404,
@@ -172,7 +174,12 @@ class cell(Structure):
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
             if tid!=0 and tmpid != tid and tid!=0x6421 and tmpid !=0x6421:
-                raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
+                dtp = next(key for key, value in dtype2id.items() if value == tid) 
+                try: #convert data
+                    arr=arr.astype(dtp)
+                    tmpid=dtype2id.get(arr.dtype.type)
+                except:
+                    raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
             if arr.ndim>2:
                 print("init: Only use 2 dimensions\n");
@@ -330,14 +337,14 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         ('nref', c_void_p),
     ]
     def __init__(self, arr=None, tid=0): #convert from numpy to C. Memory is borrowed
-        dtype2id={#Conversion from sparse type to maos id
-            np.float32:  25607,
-            np.float64:  25601,
-            np.complex64: 25606,
-            np.complex128:25600,
+        spdtype2id={#Conversion from sparse type to maos id
+            np.float32:   0x6407,
+            np.float64:   0x6401,
+            np.complex64: 0x6406,
+            np.complex128:0x6400,
         }
         if arr is not None and sp.isspmatrix_csr(arr):
-            self.id=dtype2id.get(arr.dtype.type)
+            self.id=spdtype2id.get(arr.dtype.type)
             if  tid !=0 and self.id != tid:
                 raise(Exception('data mismatch want {}, got {}'.format(self.id, tid)))
             #save subarrays
@@ -350,7 +357,7 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             self.ny, self.nx=arr.shape #Fortran order
             self.nzmax=self.pp[-1]
         else:
-            self.id=dtype2id.get(np.float64)
+            self.id=spdtype2id.get(np.float64)
             self.x=None
             self.i=None
             self.p=None
