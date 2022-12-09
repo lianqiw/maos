@@ -43,87 +43,7 @@ typedef struct GENOTF_T{
 	long isafull;
 	const cmat* otffull;
 }GENOTF_T;
-/**
-   Remove tip/tilt from the covariance matrix.
-*/
-static dmat* pttr_B(const dmat* B,   /**<The B matrix. */
-	loc_t* loc,       /**<The aperture grid*/
-	const real* amp /**<The amplitude map*/
-){
-	if(!amp) error("amplitude map has to be not empty to remove pistion/tip/tilt\n");
-	real* locx=loc->locx;
-	real* locy=loc->locy;
-	int nloc=loc->nloc;
 
-	dmat* B2=dnew(nloc, nloc);
-	dmat* BP=B2;
-
-	real* mod[3];
-	dmat* mcc=dnew(3, 3);/*modal cross coupling matrix. */
-
-	mod[0]=NULL;
-	mod[1]=locx;
-	mod[2]=locy;
-	for(int im=0; im<3;im++){
-		for(int jm=im;jm<3;jm++){
-			P(mcc, im, jm)=P(mcc, jm, im)=dvecdot(mod[im], mod[jm], amp, nloc);
-		}
-	}
-	dinvspd_inplace(mcc);
-	dmat* M=dnew(nloc, 3);/*The tip/tilt modal matrix */
-	dmat* MW=dnew(nloc, 3);/*M*W */
-	dmat* MCC=dnew(3, nloc);/*M*inv(M'*W*M) */
-	dmat* Mtmp=dnew(3, nloc);/*B'*MW; */
-
-	for(long iloc=0; iloc<nloc; iloc++){
-		P(M,iloc,0)=1;
-	}
-	memcpy(PCOL(M, 1), locx, nloc*sizeof(real));
-	memcpy(PCOL(M, 2), locy, nloc*sizeof(real));
-	for(long iloc=0; iloc<nloc; iloc++){
-		P(MW,iloc,0)=amp[iloc];
-		P(MW,iloc,1)=amp[iloc]*locx[iloc];
-		P(MW,iloc,2)=amp[iloc]*locy[iloc];
-	}
-	/* MCC = - cci' *M' */
-	dmm(&MCC, 0, mcc, M, "tt", -1);
-	dmat* pMCC=MCC;
-	/* Mtmp =  MW' * B  */
-	dmm(&Mtmp, 0, MW, B, "tn", 1);
-	/*Remove tip/tilt from left side*/
-	dmat* pMtmp=Mtmp;
-	for(long iloc=0; iloc<nloc; iloc++){
-		real tmp1=P(pMtmp, 0, iloc);
-		real tmp2=P(pMtmp, 1, iloc);
-		real tmp3=P(pMtmp, 2, iloc);
-		for(long jloc=0; jloc<nloc; jloc++){
-			P(BP, jloc, iloc)=P(B, jloc, iloc)+
-				(P(pMCC, 0, jloc)*tmp1
-					+P(pMCC, 1, jloc)*tmp2
-					+P(pMCC, 2, jloc)*tmp3);
-		}
-	}
-	/* Mtmp = MW' * BP' */
-	dmm(&Mtmp, 0, MW, B2, "tt", 1);
-	/*Remove tip/tilt from right side*/
-	for(long iloc=0; iloc<nloc; iloc++){
-		real tmp1=P(pMCC, 0, iloc);
-		real tmp2=P(pMCC, 1, iloc);
-		real tmp3=P(pMCC, 2, iloc);
-		for(long jloc=0; jloc<nloc; jloc++){
-			P(BP, jloc, iloc)+=
-				tmp1*P(pMtmp, 0, jloc)
-				+tmp2*P(pMtmp, 1, jloc)
-				+tmp3*P(pMtmp, 2, jloc);
-		}
-	}
-	dfree(mcc);
-	dfree(M);
-	dfree(MW);
-	dfree(MCC);
-	dfree(Mtmp);
-	return B2;
-}
 /**
    Generate OTF from the B or tip/tilted removed B matrix. Notice that tip/tilt
    in opdbias is NOT removed.
@@ -140,11 +60,9 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 			}
 		}
 		long nloc=loc->nloc;
-		dmat* BP;
-		if(pttr){/*remove p/t/t from the B matrix */
-			BP=pttr_B(B, loc, amp);
-		} else{
-			BP=ddup(B);/*duplicate since we need to modify it. */
+		dmat *BP=ddup(B);/*duplicate since we need to modify it. */
+		if(pttr){/*remove p/t/t from both sides of the B matrix */
+			loc_remove_ptt(BP, loc, amp, NULL, 1);
 		}
 
 		if(!*otf){

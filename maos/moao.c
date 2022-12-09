@@ -257,7 +257,7 @@ void moao_recon(sim_t* simu){
 				  loc_t *aloc=recon->moao[imoao].aloc;
 				  dmat *aimcc=recon->moao[imoao].aimcc;
 				  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(P(dmmoao,0)));
-				  loc_remove_ptt(P(P(dmmoao,0)), ptt, aloc);
+				  loc_sub_ptt(P(P(dmmoao,0)), ptt, aloc);
 				  }*/
 			if(!isinf(parms->moao[imoao].stroke)){
 				int nclip=dclip(P(dmmoao,0),
@@ -303,7 +303,7 @@ void moao_recon(sim_t* simu){
 			  loc_t *aloc=recon->moao[imoao].aloc;
 			  dmat *aimcc=recon->moao[imoao].aimcc;
 			  loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, P(P(dmmoao,0)));
-			  loc_remove_ptt(P(P(dmmoao,0)), ptt, aloc);
+			  loc_sub_ptt(P(P(dmmoao,0)), ptt, aloc);
 			  }*/
 			if(!isinf(parms->moao[imoao].stroke)){
 				int nclip=dclip(P(dmmoao,0),

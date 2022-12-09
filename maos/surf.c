@@ -666,11 +666,11 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 						real ptt[3]={0,0,0};
 						loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./P(mcc, 0), mcc,
 							P(powfs[ipowfs].amp), P(P(powfs[ipowfs].opdbias, jwfs)));
-						loc_remove_ptt(P(powfs[ipowfs].opdbias, jwfs), ptt, powfs[ipowfs].loc);
+						loc_sub_ptt(P(powfs[ipowfs].opdbias, jwfs), ptt, powfs[ipowfs].loc);
 						if(!P(powfs[ipowfs].opdadd, jwfs)){
 							P(powfs[ipowfs].opdadd, jwfs)=dnew(powfs[ipowfs].loc->nloc, 1);
 						}
-						loc_remove_ptt(P(powfs[ipowfs].opdadd, jwfs), ptt, powfs[ipowfs].loc);
+						loc_sub_ptt(P(powfs[ipowfs].opdadd, jwfs), ptt, powfs[ipowfs].loc);
 					}
 				}
 				dfree(mcc);

@@ -21,7 +21,6 @@
 #include "loc.h"
 #include "map.h"
 
-struct loc_private{};
 /**
    Free pts_t data
 */
@@ -645,9 +644,9 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
    evaluate piston/tip-tilt/ removed wavefront error.
    output coeffout in unit of radian like units.
 */
-void loc_calc_ptt(real* rmsout, real* coeffout,
+void loc_calc_ptt_stride(real* rmsout, real* coeffout,
 	const loc_t* loc, const real ipcc,
-	const dmat* imcc, const real* amp, const real* opd){
+	const dmat* imcc, const real* amp, const real* opd, int stride){
 	if(!loc||!imcc||!opd) return;
 	assert(imcc->nx==imcc->ny&&imcc->nx==3);
 	const long nloc=loc->nloc;
@@ -657,20 +656,24 @@ void loc_calc_ptt(real* rmsout, real* coeffout,
 	real tot=0;
 	double coeff[3]={0,0,0};//use double for accumulation
 	if(amp){
+		long iopd=0;
 		for(long iloc=0; iloc<nloc; iloc++){
-			const real junk=opd[iloc]*amp[iloc];
+			const real junk=opd[iopd]*amp[iloc];
 			coeff[0]+=junk;
 			coeff[1]+=junk*locx[iloc];
 			coeff[2]+=junk*locy[iloc];
-			tot+=junk*opd[iloc];
+			tot+=junk*opd[iopd];
+			iopd+=stride;
 		}
 	} else{
+		long iopd=0;
 		for(long iloc=0; iloc<nloc; iloc++){
-			const real junk=opd[iloc];
+			const real junk=opd[iopd];
 			coeff[0]+=junk;
 			coeff[1]+=junk*locx[iloc];
 			coeff[2]+=junk*locy[iloc];
-			tot+=junk*opd[iloc];
+			tot+=junk*opd[iopd];
+			iopd+=stride;
 		}
 	}
 	real coeff2[3]={coeff[0],coeff[1],coeff[2]};
@@ -684,6 +687,11 @@ void loc_calc_ptt(real* rmsout, real* coeffout,
 		rmsout[1]=ptt-pis;/*TT */
 		rmsout[2]=tot-ptt;/*PTTR */
 	}
+}
+void loc_calc_ptt(real *rmsout, real *coeffout,
+	const loc_t *loc, const real ipcc,
+	const dmat *imcc, const real *amp, const real *opd){
+	loc_calc_ptt_stride(rmsout, coeffout, loc, ipcc, imcc, amp, opd, 1);
 }
 /**
    Calculate variance of OPD in modes defined in mod.
@@ -724,9 +732,9 @@ void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod,
 }
 
 /**
-   Remove Piston/Tip/Tilt (in radian) from OPD
+   Subtract Piston/Tip/Tilt (in radian) from OPD
 */
-void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc){
+void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
 	real ptt1[3];
 	ptt1[0]=-ptt[0];
@@ -734,7 +742,19 @@ void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	ptt1[2]=-ptt[2];
 	loc_add_ptt(opd, ptt1, loc);
 }
-
+/**
+   Add Piston/Tip/Tilt from OPD
+*/
+void loc_add_ptt_stride(real *opd, int stride, const real *ptt, const loc_t *loc){
+	if(!opd||!ptt||!loc) return;
+	const long nloc=loc->nloc;
+	const real *restrict locx=loc->locx;
+	const real *restrict locy=loc->locy;
+	OMP_TASK_FOR(4)
+	for(long iloc=0; iloc<nloc; iloc++){
+		opd[iloc*stride]+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
+	}
+}
 /**
    Add Piston/Tip/Tilt from OPD
 */
@@ -744,14 +764,52 @@ void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
 		return;
 	}
-	const long nloc=loc->nloc;
+	loc_add_ptt_stride(P(opd), 1, ptt, loc);
+	/*const long nloc=loc->nloc;
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
 OMP_TASK_FOR(4)
 	for(long iloc=0; iloc<nloc; iloc++){
 		P(opd,iloc)+=ptt[0]+ptt[1]*locx[iloc]+ptt[2]*locy[iloc];
+	}*/
+}
+/**
+ * Project piston/tip/tilt from opd which may have multiple independent columns.
+ * If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side.
+ * */
+void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, dmat *imcc, int cov){
+	if(NX(opd)!=loc->nloc){
+		error("loc_remove_ptt: opd should have rows equal to loc->nloc and amplitude map size.\n");
+		return;
+	}
+	real ptt[3];
+	int free_imcc=0;
+	if(!imcc){
+		imcc=loc_mcc_ptt(loc, amp);
+		dinvspd_inplace(imcc);
+		free_imcc=1;
+	}
+	for(int ic=0; ic<NY(opd); ic++){
+		loc_calc_ptt_stride(NULL, ptt, loc, 0, imcc, amp, PCOL(opd, ic),1);
+		ptt[0]=-ptt[0]; ptt[1]=-ptt[1]; ptt[2]=-ptt[2];
+		loc_add_ptt_stride(PCOL(opd,ic), 1, ptt, loc);
+	}
+	if(cov){
+		if(NX(opd)!=NY(opd)){
+			error("when cov is set, opd shall be symmetric\n");
+		}else{
+			for(int ic=0; ic<NX(opd); ic++){
+				loc_calc_ptt_stride(NULL, ptt, loc, 0, imcc, amp, &P(opd, ic, 0), NX(opd));
+				ptt[0]=-ptt[0]; ptt[1]=-ptt[1]; ptt[2]=-ptt[2];
+				loc_add_ptt_stride(&P(opd, ic, 0), NX(opd), ptt, loc);
+			}
+		}
+	}
+	if(free_imcc){
+		dfree(imcc);
 	}
 }
+
 /**
  * Remove focus mode from gradients. Do not consider noise weighting
  * */

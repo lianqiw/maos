@@ -227,7 +227,7 @@ void* perfevl_ievl(thread_t* info){
 			dmat* opdevlcopy=NULL;
 			if(P(parms->evl.pttr,ievl)){
 				dcp(&opdevlcopy, iopdevl);
-				loc_remove_ptt(opdevlcopy, PCOL(polmp, isim), aper->locs);
+				loc_sub_ptt(opdevlcopy, PCOL(polmp, isim), aper->locs);
 			} else if(parms->evl.cov||parms->evl.opdmean){
 				dcp(&opdevlcopy, iopdevl);
 				dadds(opdevlcopy, -P(polmp, 0, isim));
@@ -330,7 +330,7 @@ void* perfevl_ievl(thread_t* info){
 			/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 				if(P(parms->evl.pttr,ievl)){
 					warning_once("Removing piston/tip/tilt from OPD.\n");
-					loc_remove_ptt(iopdevl, PCOL(pclmp, isim), aper->locs);
+					loc_sub_ptt(iopdevl, PCOL(pclmp, isim), aper->locs);
 				} else if(parms->evl.cov||parms->evl.opdmean){/*remove piston */
 					dadds(iopdevl, -P(pclmp, 0, isim));
 				}
@@ -500,7 +500,7 @@ static void perfevl_mean(sim_t* simu){
 							  has tip/tilt component*/
 							real ptt[3];
 							loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, P(aper->amp), P(iopdevl));
-							loc_remove_ptt(iopdevl, ptt, aper->locs);
+							loc_sub_ptt(iopdevl, ptt, aper->locs);
 						}
 						if(P(parms->evl.psfr,ievl)){
 							if(parms->evl.cov){

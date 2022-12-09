@@ -64,8 +64,9 @@ void loc_calc_mod(real* out, real* coeffout,
 	const dmat* mod, const real* amp, real* opd);
 dmat* loc_mcc_ptt(const loc_t* loc, const real* amp);
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp);
-void loc_remove_ptt(dmat* opd, const real* ptt, const loc_t* loc);
+void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc);
 void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc);
+void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, dmat *imcc, int both);
 real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor);
 void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 	const real* amp, const real* opd);
