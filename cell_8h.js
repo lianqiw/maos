@@ -19,7 +19,7 @@ var cell_8h =
     [ "readdata_by_id", "cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b", null ],
     [ "read_by_id", "cell_8h.html#a4abf011cb94b206de4af1f097ca14db7", null ],
     [ "writecell_async", "cell_8h.html#af13944ccb7705169e1b005f01f375886", null ],
-    [ "writebin_header", "cell_8h.html#a2c7af1f7b98e0be507434eebb94afc49", null ],
+    [ "writebin_header", "cell_8h.html#a0b2b605af666bb83ad7da88e28269911", null ],
     [ "readsock", "cell_8h.html#a34da2630d81d5e01052e5636091c831d", null ],
     [ "writesock", "cell_8h.html#a4233ff76282f61e7b72ec0dadb015ce2", null ]
 ];

@@ -22,6 +22,6 @@ var class_array =
     [ "NRef", "class_array.html#aadcad54fb14e9a4e3b9b23580938f24c", null ],
     [ "nx", "class_array.html#a4c6415b20c239a0f0c17ebd434b2836e", null ],
     [ "ny", "class_array.html#ad1de364cf2ef82f13826c252bd5c2a36", null ],
-    [ "header", "class_array.html#ac157f3f9aec3937ecbb573937a19007b", null ],
+    [ "keywords", "class_array.html#af1a15e267f896c9532c5653d9cccb0f6", null ],
     [ "p", "class_array.html#ab3e26219f36db0255ff6cdc869879e33", null ]
 ];

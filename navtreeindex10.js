@@ -1,5 +1,8 @@
 var NAVTREEINDEX10 =
 {
+"mvm__daemon_8cu.html#aa73731e8509a151ea160a9d14689b2e6":[11,0,0,1,0,8],
+"mvm__daemon_8cu.html#aad37a4ef0351ad56bb1f760489a7b7d3":[11,0,0,1,1],
+"mvm__daemon_8cu.html#aeaf9e0a87a5832cb7ae5d449506b124f":[11,0,0,1,0,10],
 "mvm__daemon_8cu.html#structmvm__t":[11,0,0,1,0],
 "mvm__direct_8cu.html":[11,0,0,2],
 "mvm__direct_8cu.html#a51b7a9c320bb9b58fc5632da0a44ab84":[11,0,0,2,1],
@@ -246,8 +249,5 @@ var NAVTREEINDEX10 =
 "nfiraos_example.html":[4,0],
 "nfiraos_lgs.html":[4,4,21],
 "nfiraos_ngs.html":[4,4,22],
-"page10_intro.html":[1],
-"page20_compile.html":[2],
-"page20_compile.html#autotoc_md0":[2,0],
-"page20_compile.html#autotoc_md1":[2,0,0]
+"page10_intro.html":[1]
 };

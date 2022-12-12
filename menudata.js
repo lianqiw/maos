@@ -26,7 +26,7 @@ var menudata={children:[
 {text:"Related Pages",url:"pages.html"},
 {text:"Data Structures",url:"annotated.html",children:[
 {text:"Data Structures",url:"annotated.html"},
-{text:"Class Hierarchy",url:"hierarchy.html"},
+{text:"Class Hierarchy",url:"inherits.html"},
 {text:"Data Fields",url:"functions.html",children:[
 {text:"All",url:"functions.html",children:[
 {text:"a",url:"functions.html#index_a"},

@@ -109,14 +109,14 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:addf46c2b6461f8cd3045493cb2422b90"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#addf46c2b6461f8cd3045493cb2422b90">genatm_simple</a> (real r0, real L0, real dx, <a class="el" href="classlong.html">long</a> nx)</td></tr>
-<tr class="separator:addf46c2b6461f8cd3045493cb2422b90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d2df4e268244fbc0f8ea206aa7a5b51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a6d2df4e268244fbc0f8ea206aa7a5b51">genatm_loc</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, real r0, real L0)</td></tr>
-<tr class="separator:a6d2df4e268244fbc0f8ea206aa7a5b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56cbd79c64802b9fd312d085f58a86f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a56cbd79c64802b9fd312d085f58a86f7">genatm_simple</a> (real r0, real L0, real slope, real dx, <a class="el" href="classlong.html">long</a> nx, int seed)</td></tr>
+<tr class="separator:a56cbd79c64802b9fd312d085f58a86f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89dc9076345630b274a60996496930ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a89dc9076345630b274a60996496930ec">genatm_loc</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, real r0, real L0, real slope, int seed)</td></tr>
+<tr class="separator:a89dc9076345630b274a60996496930ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a0a6a9578e6bd96e6a6ea0b7285cf3587">genscreen</a> (<a class="el" href="turbulence_8h.html#structgenatm__t">genatm_t</a> *data)</td></tr>
 <tr class="separator:a0a6a9578e6bd96e6a6ea0b7285cf3587"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e3606e0e0ac7eedc0ed98b865c4b9c4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a5e3606e0e0ac7eedc0ed98b865c4b9c4">genscreen_str</a> (const char *header)</td></tr>
-<tr class="separator:a5e3606e0e0ac7eedc0ed98b865c4b9c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9770f4be698771927c0420b495f6ef4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a9770f4be698771927c0420b495f6ef4c">genscreen_str</a> (const char *keywords)</td></tr>
+<tr class="separator:a9770f4be698771927c0420b495f6ef4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a355ca2e7672a29cbefea042caba47c47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a355ca2e7672a29cbefea042caba47c47">turbcov</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *r, real rmax, real r0, real L0)</td></tr>
 <tr class="separator:a355ca2e7672a29cbefea042caba47c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a003ba466f6608495ae22890661663e8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turbulence_8h.html#a003ba466f6608495ae22890661663e8e">spatial_psd</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **out, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, real dx, real strength, real L0, real fmin, real fmax, real slope, real power)</td></tr>
@@ -144,7 +144,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><table class="fieldtable">
+<div class="textblock"></div><div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Collaboration diagram for genatm_t:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="structgenatm__t__coll__graph.png" border="0" usemap="#genatm__t_coll__map" alt="Collaboration graph"/></div>
+<map name="genatm__t_coll__map" id="genatm__t_coll__map">
+</map>
+</div>
+<table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
 <a id="a06bae77b23497a10e8a04568bc702dc4"></a><a class="el" href="structmt__state.html">rand_t</a> *</td>
@@ -256,8 +265,8 @@ screen</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="addf46c2b6461f8cd3045493cb2422b90"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#addf46c2b6461f8cd3045493cb2422b90">&#9670;&nbsp;</a></span>genatm_simple()</h2>
+<a id="a56cbd79c64802b9fd312d085f58a86f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56cbd79c64802b9fd312d085f58a86f7">&#9670;&nbsp;</a></span>genatm_simple()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -278,13 +287,25 @@ screen</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>slope</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
           <td class="paramname"><em>dx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nx</em>&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -297,8 +318,8 @@ screen</td>
 
 </div>
 </div>
-<a id="a6d2df4e268244fbc0f8ea206aa7a5b51"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d2df4e268244fbc0f8ea206aa7a5b51">&#9670;&nbsp;</a></span>genatm_loc()</h2>
+<a id="a89dc9076345630b274a60996496930ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89dc9076345630b274a60996496930ec">&#9670;&nbsp;</a></span>genatm_loc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -319,7 +340,19 @@ screen</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>dsa</em>&#160;</td>
+          <td class="paramname"><em>dsa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>slope</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -351,8 +384,8 @@ screen</td>
 
 </div>
 </div>
-<a id="a5e3606e0e0ac7eedc0ed98b865c4b9c4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5e3606e0e0ac7eedc0ed98b865c4b9c4">&#9670;&nbsp;</a></span>genscreen_str()</h2>
+<a id="a9770f4be698771927c0420b495f6ef4c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9770f4be698771927c0420b495f6ef4c">&#9670;&nbsp;</a></span>genscreen_str()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -361,7 +394,7 @@ screen</td>
           <td class="memname"><a class="el" href="type_8h.html#structmapcell">mapcell</a>* genscreen_str </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em></td><td>)</td>
+          <td class="paramname"><em>keywords</em></td><td>)</td>
           <td></td>
         </tr>
       </table>

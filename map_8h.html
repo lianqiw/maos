@@ -136,11 +136,9 @@ Functions</h2></td></tr>
 <tr class="separator:a1644a6c8b061768555f7312cd6703ab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa371c9443b4eef4612378c3f487a81c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structrmap__t">rmap_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="map_8h.html#aa371c9443b4eef4612378c3f487a81c0">dcell2rmap</a> (int *nlayer, const <a class="el" href="type_8h.html#structdcell">dcell</a> *in)</td></tr>
 <tr class="separator:aa371c9443b4eef4612378c3f487a81c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11bf134f4cc46ecb1fe45018ab2031d8"><td class="memItemLeft" align="right" valign="top"><a id="a11bf134f4cc46ecb1fe45018ab2031d8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>map_header</b> (<a class="el" href="type_8h.html#structmap__t">map_t</a> *map)</td></tr>
+<tr class="memitem:a11bf134f4cc46ecb1fe45018ab2031d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="map_8h.html#a11bf134f4cc46ecb1fe45018ab2031d8">map_header</a> (<a class="el" href="type_8h.html#structmap__t">map_t</a> *map)</td></tr>
 <tr class="separator:a11bf134f4cc46ecb1fe45018ab2031d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e1764070cfa4ede067b006618d5bc6f"><td class="memItemLeft" align="right" valign="top"><a id="a4e1764070cfa4ede067b006618d5bc6f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>rmap_header</b> (<a class="el" href="type_8h.html#structrmap__t">rmap_t</a> *map)</td></tr>
+<tr class="memitem:a4e1764070cfa4ede067b006618d5bc6f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="map_8h.html#a4e1764070cfa4ede067b006618d5bc6f">rmap_header</a> (<a class="el" href="type_8h.html#structrmap__t">rmap_t</a> *map)</td></tr>
 <tr class="separator:a4e1764070cfa4ede067b006618d5bc6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -442,7 +440,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>rmap_header</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>convert a dmat to <a class="el" href="type_8h.html#structmap__t">map_t</a>. </p>
+<p>convert a dmat to <a class="el" href="type_8h.html#structmap__t">map_t</a>.</p>
+<p>keywords are used to specify parameters:</p><ul>
+<li>the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),</li>
+<li>layer heiht (default to 0),</li>
+<li>frozen flow speed (vx, vy)</li>
+<li>origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)</li>
+<li>for DM grid only: inter-actuator-coupling (iac) </li>
+</ul>
 
 </div>
 </div>
@@ -480,7 +485,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>rmap_header</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>convert a dmat to <a class="el" href="type_8h.html#structrmap__t">rmap_t</a>. </p>
+<p>convert a dmat to <a class="el" href="type_8h.html#structrmap__t">rmap_t</a>.</p>
+<p>keywords are used to specify parameters:</p><ul>
+<li>the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),</li>
+<li>origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)</li>
+<li>txdeg, dydeg: tilt of surface in degree wrt beam. only 1 can be less than 90 degree.</li>
+<li>ftel: focal length of the telescope</li>
+<li>fexit: distance from exit pupil to focus</li>
+<li>fsurf distance from surface to focu </li>
+</ul>
 
 </div>
 </div>
@@ -510,6 +523,44 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>rmap_header</b> (<a c
       </table>
 </div><div class="memdoc">
 <p>convert a mmap'ed dcell to <a class="el" href="type_8h.html#structmap__t">map_t</a> array </p>
+
+</div>
+</div>
+<a id="a11bf134f4cc46ecb1fe45018ab2031d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11bf134f4cc46ecb1fe45018ab2031d8">&#9670;&nbsp;</a></span>map_header()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void map_header </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td>
+          <td class="paramname"><em>map</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>convert fields to keyword string </p>
+
+</div>
+</div>
+<a id="a4e1764070cfa4ede067b006618d5bc6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e1764070cfa4ede067b006618d5bc6f">&#9670;&nbsp;</a></span>rmap_header()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rmap_header </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structrmap__t">rmap_t</a> *&#160;</td>
+          <td class="paramname"><em>map</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>convert fields to keyword string </p>
 
 </div>
 </div>

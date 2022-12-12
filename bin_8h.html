@@ -219,8 +219,8 @@ file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int 
 <tr class="separator:ac266a2663e090233d93f35fc2453a753"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac87d75297b5fc4ea1d7c8ad2a62dbd7b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b">zferrno</a> (file_t *fp)</td></tr>
 <tr class="separator:ac87d75297b5fc4ea1d7c8ad2a62dbd7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
-<tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb64008115e1bf526705974a7031a4c3"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeb64008115e1bf526705974a7031a4c3">bytes_header</a> (const char *keywords)</td></tr>
+<tr class="separator:aeb64008115e1bf526705974a7031a4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top"><a id="a1825ca342f947862c152e0408e923189"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (file_t *fp)</td></tr>
 <tr class="separator:a1825ca342f947862c152e0408e923189"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -228,8 +228,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="separator:aeafd15c22e61f56f291b709b43ddb04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adae7a5ada62a1a4bb2f5934e2ebc538f">read_header</a> (<a class="el" href="bin_8h.html#structheader__t">header_t</a> *header, file_t *fp)</td></tr>
 <tr class="separator:adae7a5ada62a1a4bb2f5934e2ebc538f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a546b25cd4878494b18d9af3f929042ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a546b25cd4878494b18d9af3f929042ba">writearr</a> (const void *fpn, const int <a class="el" href="sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0">isfile</a>, const size_t size, const uint32_t magic, const char *header, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
-<tr class="separator:a546b25cd4878494b18d9af3f929042ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cd5173c875b0dd21e5800d8dd5d3e7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a5cd5173c875b0dd21e5800d8dd5d3e7d">writearr</a> (const void *fpn, const int <a class="el" href="sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0">isfile</a>, const size_t size, const uint32_t magic, const char *keywords, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
+<tr class="separator:a5cd5173c875b0dd21e5800d8dd5d3e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35de71ea607603a92f4713654866764f"><td class="memItemLeft" align="right" valign="top">struct mem_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a35de71ea607603a92f4713654866764f">mem_new</a> (void *p) __attribute__((warn_unused_result))</td></tr>
 <tr class="separator:a35de71ea607603a92f4713654866764f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3c54c42831a640968dd760dab69abf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa3c54c42831a640968dd760dab69abf3">mem_unref</a> (mem_t **in)</td></tr>
@@ -244,10 +244,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="separator:ab90b10101a8a04135e48d6fd545a42fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8a17b269aed5fb1ef2d79fe70ac4077"><td class="memItemLeft" align="right" valign="top">mem_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa8a17b269aed5fb1ef2d79fe70ac4077">mmap_open</a> (const char *fn, size_t msize, int rw)</td></tr>
 <tr class="separator:aa8a17b269aed5fb1ef2d79fe70ac4077"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30c2423f18febf174e2c8a3397fcfdc6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a30c2423f18febf174e2c8a3397fcfdc6">mmap_write_header</a> (char **p0, uint32_t magic, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *header)</td></tr>
-<tr class="separator:a30c2423f18febf174e2c8a3397fcfdc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fe6b1220b1d2418a8198fcf62c8892e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a8fe6b1220b1d2418a8198fcf62c8892e">mmap_read_header</a> (char **p0, uint32_t *magic, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, const char **header0)</td></tr>
-<tr class="separator:a8fe6b1220b1d2418a8198fcf62c8892e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa24dfa7dd0bc1a63d6fe256f3fc3ff66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa24dfa7dd0bc1a63d6fe256f3fc3ff66">mmap_write_header</a> (char **p0, uint32_t magic, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *keywords)</td></tr>
+<tr class="separator:aa24dfa7dd0bc1a63d6fe256f3fc3ff66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af62cc405c56c23085a5d86e71a6ae0ed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#af62cc405c56c23085a5d86e71a6ae0ed">mmap_read_header</a> (char **p0, uint32_t *magic, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, const char **pkeywords)</td></tr>
+<tr class="separator:af62cc405c56c23085a5d86e71a6ae0ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a097892c6434a429ee7a2b89ea712b05e"><td class="memItemLeft" align="right" valign="top">async_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a097892c6434a429ee7a2b89ea712b05e">async_init</a> (file_t *fp, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="separator:a097892c6434a429ee7a2b89ea712b05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0208a3d751b79aaaf879f0ce17a1b13"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13">async_write</a> (async_t *async, <a class="el" href="classlong.html">long</a> offset, int wait)</td></tr>
@@ -270,7 +270,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>async_free</b> (async
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><table class="fieldtable">
+<div class="textblock"></div><div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Collaboration diagram for header_t:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="structheader__t__coll__graph.png" border="0" usemap="#header__t_coll__map" alt="Collaboration graph"/></div>
+<map name="header__t_coll__map" id="header__t_coll__map">
+</map>
+</div>
+<table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
 <a id="a72b096a89890f74af1f91bc4f03538fb"></a>union <a class="el" href="bin_8h.html#unionheader__t_8____unnamed____">header_t</a></td>
@@ -311,7 +320,16 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><table class="fieldtable">
+<div class="textblock"></div><div id="dynsection-1" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-1-trigger" src="closed.png" alt="+"/> Collaboration diagram for header_t.__unnamed__:</div>
+<div id="dynsection-1-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-1-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="unionheader__t_8____unnamed______coll__graph.png" border="0" usemap="#header__t_8____unnamed_____coll__map" alt="Collaboration graph"/></div>
+<map name="header__t_8____unnamed_____coll__map" id="header__t_8____unnamed_____coll__map">
+</map>
+</div>
+<table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
 <a id="ab80bb7740288fda1f201890375a60c8f"></a>M_ID</td>
@@ -690,8 +708,8 @@ magic</td>
 
 </div>
 </div>
-<a id="a343d68b2551eff30cf94bb976cafb0ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a343d68b2551eff30cf94bb976cafb0ff">&#9670;&nbsp;</a></span>bytes_header()</h2>
+<a id="aeb64008115e1bf526705974a7031a4c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb64008115e1bf526705974a7031a4c3">&#9670;&nbsp;</a></span>bytes_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -700,7 +718,7 @@ magic</td>
           <td class="memname">uint64_t bytes_header </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em></td><td>)</td>
+          <td class="paramname"><em>keywords</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -767,8 +785,8 @@ magic</td>
 
 </div>
 </div>
-<a id="a546b25cd4878494b18d9af3f929042ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a546b25cd4878494b18d9af3f929042ba">&#9670;&nbsp;</a></span>writearr()</h2>
+<a id="a5cd5173c875b0dd21e5800d8dd5d3e7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cd5173c875b0dd21e5800d8dd5d3e7d">&#9670;&nbsp;</a></span>writearr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1007,8 +1025,8 @@ magic</td>
 
 </div>
 </div>
-<a id="a30c2423f18febf174e2c8a3397fcfdc6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30c2423f18febf174e2c8a3397fcfdc6">&#9670;&nbsp;</a></span>mmap_write_header()</h2>
+<a id="aa24dfa7dd0bc1a63d6fe256f3fc3ff66"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa24dfa7dd0bc1a63d6fe256f3fc3ff66">&#9670;&nbsp;</a></span>mmap_write_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1041,7 +1059,7 @@ magic</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>&#160;</td>
+          <td class="paramname"><em>keywords</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1054,8 +1072,8 @@ magic</td>
 
 </div>
 </div>
-<a id="a8fe6b1220b1d2418a8198fcf62c8892e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8fe6b1220b1d2418a8198fcf62c8892e">&#9670;&nbsp;</a></span>mmap_read_header()</h2>
+<a id="af62cc405c56c23085a5d86e71a6ae0ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af62cc405c56c23085a5d86e71a6ae0ed">&#9670;&nbsp;</a></span>mmap_read_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1088,7 +1106,7 @@ magic</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char **&#160;</td>
-          <td class="paramname"><em>header0</em>&#160;</td>
+          <td class="paramname"><em>pkeywords</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

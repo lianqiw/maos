@@ -1,0 +1,33 @@
+digraph "cuda_recon::cufit_grid"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node5 [label="{cuda_recon::cufit_grid\n||+ cufit_grid()\l+ ~cufit_grid()\l+ R()\l+ L()\l+ Rt()\l# do_hxp()\l# do_hxpt()\l# do_ha()\l# do_hat()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node6 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node6 [label="{cuda_recon::cusolve_r\n||+ R()\l+ Rt()\l+ ~cusolve_r()\l}",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__r.html"];
+  Node7 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node7 [label="{cuda_recon::cusolve_cg\n||+ cusolve_cg()\l+ ~cusolve_cg()\l+ L()\l+ operator()()\l+ solve()\l+ Pre()\l}",height=0.2,width=0.4,color="red",URL="$classcuda__recon_1_1cusolve__cg.html"];
+  Node11 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #fitNW\n#opdfitv\n#fitwt\n#dotNW\n#opdfit2v" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node11 [label="{NumArray\< Real, Gpu \>\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}",height=0.2,width=0.4,color="red",URL="$class_num_array.html"];
+  Node21 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #xcache\n#dmcache\n#opdfit2\n#opdfit" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node21 [label="{Cell\< Real, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l}",height=0.2,width=0.4,color="red",URL="$class_cell.html"];
+  Node41 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #floc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node41 [label="{culoc_t\n||+ operator()()\l+ operator()()\l+ Nloc()\l+ Dx()\l+ Dy()\l+ culoc_t()\l}",height=0.2,width=0.4,color="red",URL="$classculoc__t.html"];
+  Node43 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #idealfit\n#nfit" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node43 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node44 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #ha0\n#ha1\n#hxp0\n#hxp1\n#hxp\n#ha" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node44 [label="{map2map\n||+ map2map()\l+ init_l2d()\l+ init_l2l()\l+ forward()\l+ backward()\l+ ~map2map()\l+ operator bool()\l}",height=0.2,width=0.4,color="red",URL="$classmap2map.html"];
+  Node45 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #dir" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node45 [label="{dir_t\n||+ dir_t()\l}",height=0.2,width=0.4,color="red",URL="$structdir__t.html"];
+  Node43 -> Node45 [color="grey25",fontsize="10",style="solid",label=" +skip" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node46 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #grid" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node46 [label="{cuda_recon::curecon_geom\n||+ curecon_geom()\l+ ~curecon_geom()\l}",height=0.2,width=0.4,color="red",URL="$classcuda__recon_1_1curecon__geom.html"];
+  Node43 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +reconisim\n+delay\n+ndm\n+npsr" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node48 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +xcmap\n+amap\n+xmap" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node48 [label="{CellArray\< cugrid_t \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="red",URL="$class_cell_array.html"];
+  Node48 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #acmap" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node52 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #actslave" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node52 [label="{cusp\n||+ Type()\l+ Nx()\l+ Ny()\l+ Nzmax()\l+ Pp()\l+ Pp()\l+ Pi()\l+ Pi()\l+ Px()\l+ Px()\land 8 more...\l}",height=0.2,width=0.4,color="black",URL="$classcusp.html"];
+}

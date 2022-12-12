@@ -111,14 +111,14 @@ Functions</h2></td></tr>
 <tr class="separator:a8f43dbd58ddc961aabd03fb7b0167919"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa740d6879e4af2bdd01f9624ef206fe3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aa740d6879e4af2bdd01f9624ef206fe3">trim_string</a> (const char **pheader, const char **pend)</td></tr>
 <tr class="separator:aa740d6879e4af2bdd01f9624ef206fe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:adf3e8d275430f33c2cd8262fac88cac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af916b0aa443255291534c8a9222dd585"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:af916b0aa443255291534c8a9222dd585"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abefda2be23c35c49761c61084c86b936"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#abefda2be23c35c49761c61084c86b936">search_header_num_valid</a> (const char *header, const char *key)</td></tr>
-<tr class="separator:abefda2be23c35c49761c61084c86b936"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefabb4a29a2294c86edc668c06c088b5"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aefabb4a29a2294c86edc668c06c088b5">search_header_num_default</a> (const char *header, const char *key, double value0)</td></tr>
-<tr class="separator:aefabb4a29a2294c86edc668c06c088b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa281a626081d3e0c5bf288a97d12b30e"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aa281a626081d3e0c5bf288a97d12b30e">search_keyword</a> (const char *keywords, const char *key)</td></tr>
+<tr class="separator:aa281a626081d3e0c5bf288a97d12b30e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecf97bfe55620a3d5fa3b94622d7d4d9"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aecf97bfe55620a3d5fa3b94622d7d4d9">search_keyword_num</a> (const char *keywords, const char *key)</td></tr>
+<tr class="separator:aecf97bfe55620a3d5fa3b94622d7d4d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9aa85ac921df08c6e82593069af2143"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#ae9aa85ac921df08c6e82593069af2143">search_keyword_num_valid</a> (const char *keywords, const char *key)</td></tr>
+<tr class="separator:ae9aa85ac921df08c6e82593069af2143"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bc027079886202739dee3dda6166ff4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a8bc027079886202739dee3dda6166ff4">search_keyword_num_default</a> (const char *keywords, const char *key, double value0)</td></tr>
+<tr class="separator:a8bc027079886202739dee3dda6166ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Group all routines that are used to parse values from string that contain key=value pairs. </p>
@@ -293,7 +293,7 @@ Functions</h2></td></tr>
           <td class="memname">void trim_string </td>
           <td>(</td>
           <td class="paramtype">const char **&#160;</td>
-          <td class="paramname"><em>pheader</em>, </td>
+          <td class="paramname"><em>pstart</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -312,17 +312,17 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="adf3e8d275430f33c2cd8262fac88cac8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf3e8d275430f33c2cd8262fac88cac8">&#9670;&nbsp;</a></span>search_header()</h2>
+<a id="aa281a626081d3e0c5bf288a97d12b30e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa281a626081d3e0c5bf288a97d12b30e">&#9670;&nbsp;</a></span>search_keyword()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* search_header </td>
+          <td class="memname">const char* search_keyword </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
+          <td class="paramname"><em>keywords</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -341,17 +341,17 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af916b0aa443255291534c8a9222dd585"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af916b0aa443255291534c8a9222dd585">&#9670;&nbsp;</a></span>search_header_num()</h2>
+<a id="aecf97bfe55620a3d5fa3b94622d7d4d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecf97bfe55620a3d5fa3b94622d7d4d9">&#9670;&nbsp;</a></span>search_keyword_num()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double search_header_num </td>
+          <td class="memname">double search_keyword_num </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
+          <td class="paramname"><em>keywords</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -370,17 +370,17 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="abefda2be23c35c49761c61084c86b936"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abefda2be23c35c49761c61084c86b936">&#9670;&nbsp;</a></span>search_header_num_valid()</h2>
+<a id="ae9aa85ac921df08c6e82593069af2143"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae9aa85ac921df08c6e82593069af2143">&#9670;&nbsp;</a></span>search_keyword_num_valid()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double search_header_num_valid </td>
+          <td class="memname">double search_keyword_num_valid </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
+          <td class="paramname"><em>keywords</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -399,17 +399,17 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aefabb4a29a2294c86edc668c06c088b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aefabb4a29a2294c86edc668c06c088b5">&#9670;&nbsp;</a></span>search_header_num_default()</h2>
+<a id="a8bc027079886202739dee3dda6166ff4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bc027079886202739dee3dda6166ff4">&#9670;&nbsp;</a></span>search_keyword_num_default()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double search_header_num_default </td>
+          <td class="memname">double search_keyword_num_default </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>header</em>, </td>
+          <td class="paramname"><em>keywords</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

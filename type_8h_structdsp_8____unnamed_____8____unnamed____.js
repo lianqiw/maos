@@ -4,7 +4,7 @@ var type_8h_structdsp_8____unnamed_____8____unnamed____ =
     [ "px", "type_8h.html#a21de26caa6bcfc936378c4e45d235bd9", null ],
     [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
     [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-    [ "header", "type_8h.html#a099fb995346f31c749f6e40db0f395e3", null ],
+    [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
     [ "fn", "type_8h.html#a4d9d6c17eeae2754c9b49171261b93bd", null ],
     [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
     [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],

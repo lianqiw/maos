@@ -22,7 +22,7 @@ var searchData=
   ['event_5ft',['event_t',['../structevent__t.html',1,'']]],
   ['evl',['evl',['../parms_8h.html#ac55ab21c10f79619bcf2d24691f7b372',1,'gpu_cfg_t::evl()'],['../parms_8h.html#aeb7080a1361ce72c58225dd3a9b761b5',1,'parms_t::evl()']]],
   ['evl_5fcfg_5ft',['evl_cfg_t',['../parms_8h.html#structevl__cfg__t',1,'']]],
-  ['evl_5fheader',['evl_header',['../maos_2utils_8h.html#a7faaf8b78d248c0dd93d53cdcd248976',1,'utils.c']]],
+  ['evl_5fkeywords',['evl_keywords',['../maos_2utils_8h.html#aea13a70c41c01ee729fdee9058dc24c7',1,'utils.c']]],
   ['evl_5fsq34_2econf',['evl_sq34.conf',['../evl_sq34.html',1,'page34_conf']]],
   ['evl_5fx_2econf',['evl_x.conf',['../evl_x.html',1,'page34_conf']]],
   ['evlol',['evlol',['../parms_8h.html#a96d68ff61ce6978d5c40c844a8e06dab',1,'sim_cfg_t']]],

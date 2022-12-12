@@ -111,6 +111,10 @@ Functions</h2></td></tr>
 <tr class="separator:a7c9165de2539783b575271862d30e0d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58a22bed03d88e2f5f910880f7cec8e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a58a22bed03d88e2f5f910880f7cec8e0">loc_calib</a> (const <a class="el" href="type_8h.html#structdsp">dsp</a> *GA, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *aloc, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, real dispx, real dispy, real scale, int maxorder)</td></tr>
 <tr class="separator:a58a22bed03d88e2f5f910880f7cec8e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06cf7ebeeb404e3c738260609e0f45fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a06cf7ebeeb404e3c738260609e0f45fa">polyfit</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *x, const <a class="el" href="type_8h.html#structdmat">dmat</a> *y, int maxorder)</td></tr>
+<tr class="separator:a06cf7ebeeb404e3c738260609e0f45fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace25cdf353eb393aa5abaf0c95e49efe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#ace25cdf353eb393aa5abaf0c95e49efe">polyval</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *x, const <a class="el" href="type_8h.html#structdmat">dmat</a> *coeff, int separate)</td></tr>
+<tr class="separator:ace25cdf353eb393aa5abaf0c95e49efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a4bf8970d027f919a7485a8e426415de6"></a>
@@ -264,11 +268,11 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the polynomial coefficients that transforms in to out. </p>
+<p>Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>input grid </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>distorted grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>input grid. n*2 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>distorted grid, n*2 </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum order </td></tr>
   </table>
   </dd>
@@ -341,6 +345,91 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Beam displacement along y </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Beam cone effect </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum power of x/y. Negative to limit total power </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a06cf7ebeeb404e3c738260609e0f45fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06cf7ebeeb404e3c738260609e0f45fa">&#9670;&nbsp;</a></span>polyfit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* polyfit </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>maxorder</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Determine the polynomial coefficients that transforms vector in to out. Both column and row vectors are allowed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>output </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>maximum order to fit </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ace25cdf353eb393aa5abaf0c95e49efe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace25cdf353eb393aa5abaf0c95e49efe">&#9670;&nbsp;</a></span>polyval()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* polyval </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>coeff</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>separate</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>the coefficient from polyfit </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">separate</td><td>if set, separately for each order </td></tr>
   </table>
   </dd>
 </dl>

@@ -115,6 +115,7 @@ var searchData=
   ['rflgsg',['RFlgsg',['../maos_2types_8h.html#ab19ee67f78ce16e243f0fd229d862205',1,'recon_t']]],
   ['rfngsg',['RFngsg',['../maos_2types_8h.html#a9d6348cce108bb1fc513f07b08570b13',1,'recon_t']]],
   ['rl',['RL',['../maos_2types_8h.html#adb83f467d429dc3d1c9ce3031a16f09f',1,'recon_t']]],
+  ['rmap_5fheader',['rmap_header',['../map_8h.html#a4e1764070cfa4ede067b006618d5bc6f',1,'map.c']]],
   ['rmap_5ft',['rmap_t',['../type_8h.html#structrmap__t',1,'']]],
   ['rmap_5ft_2e_5f_5funnamed_5f_5f',['rmap_t.__unnamed__',['../type_8h.html#unionrmap__t_8____unnamed____',1,'']]],
   ['rmap_5ft_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['rmap_t.__unnamed__.__unnamed__',['../type_8h.html#structrmap__t_8____unnamed_____8____unnamed____',1,'']]],

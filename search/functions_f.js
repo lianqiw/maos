@@ -28,5 +28,6 @@ var searchData=
   ['redirect',['redirect',['../daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3',1,'daemonize.c']]],
   ['remove_5ffile_5folder',['remove_file_older',['../sys_2misc_8h.html#a25b56eea8d47545699946b02ffd09690',1,'misc.c']]],
   ['rename_5ffile',['rename_file',['../maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490',1,'utils.c']]],
+  ['rmap_5fheader',['rmap_header',['../map_8h.html#a4e1764070cfa4ede067b006618d5bc6f',1,'map.c']]],
   ['rmpath',['rmpath',['../path_8h.html#aa95ac1be1b592e9a3d6761a8376b72b2',1,'path.c']]]
 ];

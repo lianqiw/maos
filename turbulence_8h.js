@@ -17,10 +17,10 @@ var turbulence_8h =
       [ "r0logpsds", "turbulence_8h.html#a2205340b3ee4c50696fb19e78dfbe16a", null ],
       [ "screen", "turbulence_8h.html#ab812022f4956b0712a16646d09015b0c", null ]
     ] ],
-    [ "genatm_simple", "turbulence_8h.html#addf46c2b6461f8cd3045493cb2422b90", null ],
-    [ "genatm_loc", "turbulence_8h.html#a6d2df4e268244fbc0f8ea206aa7a5b51", null ],
+    [ "genatm_simple", "turbulence_8h.html#a56cbd79c64802b9fd312d085f58a86f7", null ],
+    [ "genatm_loc", "turbulence_8h.html#a89dc9076345630b274a60996496930ec", null ],
     [ "genscreen", "turbulence_8h.html#a0a6a9578e6bd96e6a6ea0b7285cf3587", null ],
-    [ "genscreen_str", "turbulence_8h.html#a5e3606e0e0ac7eedc0ed98b865c4b9c4", null ],
+    [ "genscreen_str", "turbulence_8h.html#a9770f4be698771927c0420b495f6ef4c", null ],
     [ "turbcov", "turbulence_8h.html#a355ca2e7672a29cbefea042caba47c47", null ],
     [ "spatial_psd", "turbulence_8h.html#a003ba466f6608495ae22890661663e8e", null ],
     [ "turbpsd", "turbulence_8h.html#a5ac871dc0baf2241c719fa67f892f292", null ],

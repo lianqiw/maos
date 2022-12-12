@@ -1,0 +1,43 @@
+digraph "Graphical Class Hierarchy"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node344 [label="cuda_recon::cusolve\l_cgpre",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__cgpre.html"];
+  Node344 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node1 [label="cuda_recon::cufdpcg_t",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cufdpcg__t.html"];
+  Node343 [label="cuda_recon::cusolve_l",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__l.html"];
+  Node343 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="cuda_recon::cusolve_cbs",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__cbs.html"];
+  Node343 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="cuda_recon::cusolve_cg",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__cg.html"];
+  Node5 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="cuda_recon::cufit_grid",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cufit__grid.html"];
+  Node5 -> Node7 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="cuda_recon::cumoao_t",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cumoao__t.html"];
+  Node5 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 [label="cuda_recon::cusolve\l_sparse",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__sparse.html"];
+  Node5 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 [label="cuda_recon::cutomo_grid",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cutomo__grid.html"];
+  Node343 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node11 [label="cuda_recon::cusolve_mvm",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__mvm.html"];
+  Node342 [label="cuda_recon::cusolve_r",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__r.html"];
+  Node342 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node342 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node342 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 [label="nonCopyable",height=0.2,width=0.4,color="black",URL="$classnon_copyable.html"];
+  Node0 -> Node1 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="cuda_recon::curecon_geom",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1curecon__geom.html"];
+  Node0 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="cuda_recon::curecon_t",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1curecon__t.html"];
+  Node0 -> Node4 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node5 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node10 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node10 [label="cuda_recon::cusolve_muv",height=0.2,width=0.4,color="black",URL="$classcuda__recon_1_1cusolve__muv.html"];
+  Node0 -> Node11 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node12 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node12 [label="map2map",height=0.2,width=0.4,color="black",URL="$classmap2map.html"];
+}
