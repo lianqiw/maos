@@ -399,24 +399,24 @@ void test_servo(){
     exit(0);
 }
 void test_psd2d(){
-    dcell *screen=dcellread("~/.aos/cache/atm/vonkarman_7_4096x4096_0.015625_2909894203d.bin");
-    dmat *screen2=NULL;
-    dmat *psd=NULL;
-    for (int px=6; px<10; px++){
+    dmat *screen=(dmat*)genatm_simple(0.186, 0, -11./3., 1./64., 128, 1);
+    for (int px=5; px<8; px++){
         long nx=2<<(px-1);
-        screen2=dsub(P(screen, 0), 0, nx, 0, nx);
-        psd=psd2d_aniso(screen2, 1./64.);
+        dmat *screen2=dsub(screen, 0, nx, 0, nx);
+        dmat *psd=psd2d_aniso(screen2, 1./64.);
         real inte1=psd_inte2(psd);
-        writebin(psd, "psd_%ld", nx);dfree(psd);
-        
-        psd=psd2d(NULL, CELL(screen2), 1./64.);
+        //writebin(psd, "psd_%ld", nx);
+        dfree(psd);
+        dmat *extra=NULL;
+        psd=psd2d(&extra, CELL(screen2), 1./64.);
         real inte2=psd_inte2(psd);
-        writebin(psd, "psd2_%ld", nx);dfree(psd);
-        info("size is %ld rms is %g, psdint is %g, psdint 2 is %g\n", 
-            nx, sqrt(dsumsq(screen2)/PN(screen2)), sqrt(inte1), sqrt(inte2));
-
+        //writebin(psd, "psd2_%ld", nx);dfree(psd);
+        info("size is %ld rms is %g, psdint is %g, psdint 2 is %g, recon r0=%g, slope=%g\n", 
+            nx, sqrt(dsumsq(screen2)/PN(screen2)), sqrt(inte1), sqrt(inte2), P(extra,0),P(extra,1));
+        dfree(extra);
         dfree(screen2);
     }
+    dfree(screen);    
     exit(0);
 }
 int main(int argc, char **argv){

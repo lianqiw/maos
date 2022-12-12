@@ -404,7 +404,7 @@ dmat *psd2d_aniso(const dmat *screen, real dx){
 	for(long i=0; i<npsd; i++){
 		P(rvec,i)=i;
 	}
-	dbg("npsd=%ld\n", npsd);
+	//dbg("npsd=%ld\n", npsd);
 	dmat *psd1d=denc(psd, rvec, -1, NTHREAD);
 	dfree(rvec);
 	dfree(psd);
@@ -483,7 +483,8 @@ dmat *psd2d(dmat **extra, /**<[out] extra output*/
 	dfree(y);
 	real ss=(-P(coeff,0)-1)*0.5;
 	//beta(a,b)=gamma(a)gamma(b)/gamma(a+b)
-	real bt=1/(tgamma(0.5)*tgamma(ss)/tgamma(0.5+ss));//correction factor
+	real bt=1./(tgamma(0.5)*tgamma(ss)/tgamma(0.5+ss));//correction factor
+	//dbg("PSD scaled by %g\n", bt);
 	for(long i=0; i<NX(psd2); i++){
 		P(psd2, i, 1)*=bt;
 	}
