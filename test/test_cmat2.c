@@ -99,9 +99,6 @@ static static void cmat_correctness(static void){
     cembed(B,A,M_PI*0.75,C_FULL);
     writebin(B,"PSFrot");
     cdraw("test_cmat",B,"B embed");
-    cembedscaleout(B,A,0.5,1,M_PI*0.75,C_FULL);
-    cdraw("test_cmat",B,"B embedscale");
-}
 static static void test_sq2(){
     int N=4096;
     cmat *restrict C=cnew(N,N);

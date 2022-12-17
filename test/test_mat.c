@@ -419,7 +419,57 @@ void test_psd2d(){
     dfree(screen);    
     exit(0);
 }
+void test_calcenc(){
+    long nx=512;
+    dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., nx, 1);
+    dmat* xx=dlinspace(0, 1, nx>>1);
+    dmat *enc=denc(screen, xx, -1, 10); 
+    dshow(enc, "enc"); 
+    dfree(enc);
+    dfree(xx);
+    dfree(screen);
+    exit(0);
+}
+void test_embed(){
+    for(long nx=6; nx<8; nx++){
+        for(double ang=0; ang<M_PI/2; ang+=M_PI/3){
+            map_t *atm=genatm_simple(0.186, 0, -11./3., 1./64., 6, 1);
+            dmat *in=(dmat *)atm;
+            cmat* cin=cnew(NX(atm), NY(atm));
+            cembedd(cin, in, 0);
+            dshow(in, "in");
+            for(long i=0; i<10; i++){
+                dmat *out=dnew(i,i);   
+                dembed(out, in, ang); 
+                dshow(out, "out");
+                if(i>0 && fabs(P(in, nx>>1, nx>>1) - P(out,i>>1, i>>1))>1e-15){
+                    error("mismatch\n");
+                }
+                dfree(out);
+                cmat* cout=cnew(i, i);
+                cembedd(cout, in, ang);
+                if(i>0&&fabs(P(in, nx>>1, nx>>1)-creal(P(cout, i>>1, i>>1)))>1e-15){
+                    error("mismatch\n");
+                }
+                cmat* cout2=cnew(i, i);
+                cembed(cout2, cin, ang);
+                if(csumdiffsq(cout, cout2)>1e-12){
+                    error("mismatch\n");
+                }
+                cfree(cout);
+                cfree(cout2);
+            }
+            cfree(cin);
+            mapfree(atm);
+            break;
+        }
+    }
+    exit(0);
+}
 int main(int argc, char **argv){
+    
+    test_embed();
+    test_calcenc();
     test_psd2d();
     test_servo();
     test_async();

@@ -18,7 +18,7 @@
 
 
 #include "map.h"
-#define check_map(A) (A?(A->nx?(A->ny?1:0):0):0)
+#define check_nonempty(A) (A?(A->nx?(A->ny?1:0):0):0)
 /**
    create a new map_t object.
 */
@@ -39,7 +39,7 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
    ceate a new map_t object from existing one. P is left empty.
 */
 map_t* mapnew2(map_t* A){
-	if(!check_map(A)) return NULL;
+	if(!check_nonempty(A)) return NULL;
 	dmat *tmp=dnew_do(A->nx, A->ny, NULL, 0);
 	map_t* map=myrealloc(tmp, 1, map_t);
 	map->h=A->h;
@@ -53,7 +53,7 @@ map_t* mapnew2(map_t* A){
 	return map;
 }
 map_t* mapref(map_t* in){
-	if(!check_map(in)) return NULL;
+	if(!check_nonempty(in)) return NULL;
 	map_t* out=mycalloc(1, map_t);
 	memcpy(out, in, sizeof(map_t));
 	if(in->keywords) out->keywords=strdup(in->keywords);
@@ -67,14 +67,14 @@ map_t* mapref(map_t* in){
    Create a circular aperture on map_t.
 */
 void mapcircle(map_t* map, real r, real val){
-	if(!check_map(map)) return;
+	if(!check_nonempty(map)) return;
 	dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
 /**
    Create a circular aperture on map_t.
 */
 void mapcircle_symbolic(map_t* map, real r){
-	if(!check_map(map)) return;
+	if(!check_nonempty(map)) return;
 	dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
 }
 
@@ -83,7 +83,7 @@ void mapcircle_symbolic(map_t* map, real r){
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
 void map_d_din(map_t* map, real* d, real* din){
-	if(!check_map(map)||!d||!din) return;
+	if(!check_nonempty(map)||!d||!din) return;
 	real r2min=INFINITY, r2max=0;
 	for(long iy=0; iy<map->ny; iy++){
 		real y=iy*map->dy+map->oy;
@@ -231,7 +231,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
    - for DM grid only: inter-actuator-coupling (iac)
 */
 map_t* d2map(const dmat* in){
-	if(!check_map(in)) return NULL;
+	if(!check_nonempty(in)) return NULL;
 	dmat *tmp=dref(in);
 	map_t* map=myrealloc(tmp, 1, map_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
@@ -274,7 +274,7 @@ map_t* d2map(const dmat* in){
  * convert a mmap'ed dcell to map_t array
  */
 mapcell* dcell2map(const dcell* in){
-	if(!check_map(in)) return NULL;
+	if(!check_nonempty(in)) return NULL;
 	mapcell* map=(mapcell*)cellnew(in->nx, in->ny);
 	for(long i=0; i<in->nx*in->ny; i++){
 		if(!P(in,i)->keywords&&in->keywords){
@@ -298,7 +298,7 @@ mapcell* dcell2map(const dcell* in){
 	- fsurf  distance from surface to focu
 */
 rmap_t* d2rmap(const dmat* in){
-	if(!check_map(in)) return NULL;
+	if(!check_nonempty(in)) return NULL;
 	dmat *tmp=dref(in);
 	rmap_t* map=myrealloc(tmp, 1, rmap_t);
 	memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
@@ -325,7 +325,7 @@ rmap_t* d2rmap(const dmat* in){
  * convert a mmap'ed dcell to map_t array
  */
 rmap_t** dcell2rmap(int* nlayer, const dcell* in){
-	if(!check_map(in)) return NULL;
+	if(!check_nonempty(in)) return NULL;
 	*nlayer=in->nx*in->ny;
 	rmap_t** map=mycalloc(in->nx*in->ny, rmap_t*);
 	for(long i=0; i<in->nx*in->ny; i++){

@@ -253,48 +253,27 @@ void print_mat(dmat *out){
         print_message("\n");
     }
 }
-void set_mat(dmat *out){
-    int ny2=NY(out)>>1;
-    int nx2=NX(out)>>1;
-    for(long iy=0; iy<NY(out); iy++){
-        for(long ix=0; ix<NX(out); ix++){
-            P(out, ix, iy)=(ix-nx2)+(iy-ny2)*10;
+void mat_embed(){
+    for(long nx=6; nx<8; nx++){
+        for(double ang=0; ang<M_PI/2; ang+=M_PI/3){
+            map_t *atm=genatm_simple(0.186, 0, -11./3., 1./64., 6, 1);
+            dmat *in=(dmat *)atm;
+            //dshow(in, "in");
+            for(long i=0; i<10; i++){
+                dmat *out=dnew(i,i);   
+                dembed(out, in, ang); 
+                //dshow(out, "out");
+                if(i>0){
+                    assert_float_equal(P(in, nx>>1, nx>>1), P(out,i>>1, i>>1), 1e-15);
+                }
+                dfree(out);
+            }
+            mapfree(atm);
+            break;
         }
     }
 }
-void mat_embed_n(int nin, int nout){
-    dmat *in=dnew(nin, nin);
-    dmat *out=dnew(nout, nout);
-    set_mat(in);
-    dembed(out, in, 0);
-   //print_mat(in);
-    //print_mat(out);
-    int nin2=nin>>1;
-    int nout2=nout>>1;
-    for(int io=-1; io<2; io++){
-        for(int jo=-1; jo<2; jo++){
-            assert_float_equal(P(in, nin2+io, nin2+jo), P(out, nout2+io, nout2+jo), 1e-16);
-        }
-    }
-    dzero(out);
-    dembed(out, in, M_PI/2);
-    //print_mat(in);
-    //rint_mat(out);
-    assert_float_equal(P(in, nin2+1, nin2), P(out, nout2, nout2+1), 1e-16);
 
-}
-//test the embedding routines
-static void mat_embed(void **state){
-    (void)state;
-    mat_embed_n(4, 8);
-    mat_embed_n(4, 7);
-    mat_embed_n(5, 8);
-    mat_embed_n(5, 7);
-    mat_embed_n(8, 4);
-    mat_embed_n(7, 4);
-    mat_embed_n(8, 5);
-    mat_embed_n(7, 5);
-}
 static void mat_fresnel_prop(void **state){
     (void)state;
     if(zfexist("wvf0")){
@@ -303,6 +282,22 @@ static void mat_fresnel_prop(void **state){
         real dxout=0;
         fresnel_prop(&wvf1, &dxout, wvf0, 1./64, 0.589e-6, 100, 1, 1);
     }
+}
+void mat_calcenc(){
+    dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 129, 1);
+    dmat *xx, *enc;
+    real ss1=0, ss2=0, ss3=0;
+    xx=dlinspace(0,1,60); enc=denc(screen, xx, -1, 10); ss1=P(enc, 10); dfree(enc); dfree(xx);
+    xx=dlinspace(0,1,70); enc=denc(screen, xx, -1, 10); ss2=P(enc, 10); dfree(enc); dfree(xx);
+    dmat *screen2=dnew(128,128);
+    dembed(screen2,screen,0);
+    xx=dlinspace(0,1,70); enc=denc(screen2, xx, -1, 10); ss3=P(enc, 10); dfree(enc); dfree(xx);
+    //info("ss=%g,%g,%g\n", ss1, ss2, ss3);
+    assert_float_equal(ss1, ss2, 1e-9);
+    assert_float_equal(ss1, ss3, 1e-9);
+    dfree(enc);
+    dfree(xx);
+    dfree(screen);
 }
 
 int main(void){
@@ -317,11 +312,12 @@ int main(void){
     mat_embed(NULL);
     mat_fresnel_prop(NULL);
 #else
-    LOG_LEVEL=-4;
+    LOG_LEVEL=0;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(mat_basic),
         cmocka_unit_test(mat_embed),
         cmocka_unit_test(mat_fresnel_prop),
+        cmocka_unit_test(mat_calcenc),
     };
     //(void)tests;
     return cmocka_run_group_tests(tests, NULL, NULL);

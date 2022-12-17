@@ -1356,7 +1356,7 @@ void X(cwlog)(X(mat)* A){
    merge this definition with cembed in cmat.c
    }
 */
-
+/*
 void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 	const long ninx=in->nx;
 	const long niny=in->ny;
@@ -1368,18 +1368,21 @@ void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 	const long niny2=niny/2;
 	const long nouty2=nouty/2;
 	X(zero)(out);
-	if(theta==0){/*no rotation. */
-		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
-		const long skipy=nouty2-niny2;
-		long ixstart=0, ixend=ninx;
-		long iystart=0, iyend=niny;
-		if(skipx<0){
-			ixstart=-skipx;
-			ixend=ninx+skipx;
+	if(theta==0){//no rotation. 
+		long skipx, ixstart, ixend, skipy, iystart, iyend;
+		skipx=noutx2-ninx2;//skip in output array
+		if(ninx>noutx){//reduce
+			ixstart=-skipx;//start in intput array
+			ixend=ixstart+noutx;//ninx+skipx;
+		}else{
+			ixstart=0, ixend=ninx;
 		}
-		if(skipy<0){
+		skipy=nouty2-niny2; 
+		if(niny>nouty){//reduce
 			iystart=-skipy;
-			iyend=niny+skipy;
+			iyend=iystart+nouty;//niny+skipy;
+		}else{
+			iystart=0, iyend=niny;			
 		}
 		for(long iy=iystart; iy<iyend; iy++){
 			T* outi=&P(out, skipx+ixstart, skipy+iy);
@@ -1403,15 +1406,77 @@ void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 					y2=y2-iy2;
 					P(out, ix, iy)=
 						+P(in, ix2, iy2)*((1.-x2)*(1.-y2))
-						+(x2>0?(P(in, ix2+1, iy2)*(x2*(1.-y2))):0)
+							+(x2>0?(P(in, ix2+1, iy2)*(x2*(1.-y2))):0)
 						+(y2>0?(P(in, ix2, iy2+1)*((1.-x2)*y2)
 							+(x2>0?P(in, ix2+1, iy2+1)*(x2*y2):0)):0);
 				}
 			}
 		}
 	}
+}*/
+#define EMBED_OP(out, in, theta, OPin)\
+const long ninx=in->nx;\
+const long niny=in->ny;\
+const long noutx=out->nx;\
+const long nouty=out->ny;\
+const long ninx2=ninx/2;\
+const long noutx2=noutx/2;\
+const long niny2=niny/2;\
+const long nouty2=nouty/2;\
+X(zero)(out);\
+if(theta==0){/*no rotation.*/ \
+	long skipx, ixstart, ixend, skipy, iystart, iyend;\
+	skipx=noutx2-ninx2;/*skip in output array*/\
+	if(ninx>noutx){/*reduce*/\
+		ixstart=-skipx;/*start in intput array*/\
+		ixend=ixstart+noutx;/*ninx+skipx;*/\
+	} else{\
+		ixstart=0, ixend=ninx;\
+	}\
+	skipy=nouty2-niny2;\
+	if(niny>nouty){\
+		iystart=-skipy;\
+		iyend=iystart+nouty;\
+	} else{\
+		iystart=0, iyend=niny;\
+	}\
+	for(long iy=iystart; iy<iyend; iy++){\
+		T* outi=&P(out, skipx, iy+skipy);\
+		for(long ix=ixstart; ix<ixend; ix++){\
+			outi[ix]=OPin(P(in, ix, iy));\
+		}\
+	}\
+} else{\
+	const R ctheta=cos(theta);\
+	const R stheta=sin(theta);\
+	long ix2, iy2;\
+	for(long iy=0; iy<nouty; iy++){\
+		R y=(R)(iy-nouty2);\
+		for(long ix=0; ix<noutx; ix++){\
+			R x=(R)(ix-noutx2);\
+			R x2=x*ctheta+y*stheta+ninx2;\
+			R y2=-x*stheta+y*ctheta+niny2;\
+			if(x2>=0&&x2<=ninx-1&&y2>=0&&y2<=niny-1){\
+				ix2=ifloor(x2);\
+				iy2=ifloor(y2);\
+				x2=x2-ix2;\
+				y2=y2-iy2;\
+				P(out, ix, iy)=OPin(\
+					+P(in, ix2, iy2)*((1.-x2)*(1.-y2))\
+						+(x2>0?(P(in, ix2+1, iy2)*(x2*(1.-y2))):0)\
+					+(y2>0?(P(in, ix2, iy2+1)*((1.-x2)*y2)\
+						+(x2>0?P(in, ix2+1, iy2+1)*(x2*y2):0)):0));\
+			}\
+		}\
+	}\
 }
 
+void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
+	EMBED_OP(out, in, theta, );
+}
+void X(embedd)(X(mat)* restrict out, const XR(mat)* restrict in, const R theta){
+	EMBED_OP(out, in, theta, )
+}
 /**
    Calculate number of pixels having values larger than or equal to half of
    maximum and convert to diameter.
@@ -1509,7 +1574,7 @@ R X(fwhm_gauss)(X(mat)* A){
 #ifndef COMP_COMPLEX
 typedef struct{
 	X(mat)* enc; /**<Output*/
-	X(mat)* dvec;/**<Radius wanted*/
+	const X(mat)* dvec;/**<Radius wanted*/
 	X(mat)* phat; /**<processed image.*/
 	int type;
 }ENC_T;
@@ -1585,30 +1650,30 @@ static void* X(enc_thread)(thread_t* pdata){
 /**
    Compute the enclosed energy or azimuthal average of a.
 */
-X(mat)* X(enc)(X(mat)* psf, /**<The input array*/
-	X(mat)* dvec,/**<The diameter for enclosed energy, or radius for azimuthal average*/
-	int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
-	int nthread
+X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
+		const X(mat)* dvec,/**<The diameter for enclosed energy, or radius for azimuthal average*/
+		int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
+		int nthread
 	){
 	if(type<-1||type>2){
 		error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");
 	}
 	if(nthread<=0) nthread=NTHREAD;	
-	R rmax=ceil(X(max)(dvec))+1;
-	long ncomp;
-	ncomp=nextfftsize(rmax*2);//avoid wrapping
-	long ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
+	const R rmax=ceil(X(max)(dvec))+1;
+	long ncomp=nextfftsize(rmax*2);
+	const long ncomp_max=MAX(psf->nx, psf->ny);
 	X(mat)* psfc;
-	if(ncomp_max>ncomp){
+	if(ncomp_max>ncomp){//reduce the size of array
 		psfc=X(new)(ncomp, ncomp);
 		X(embed)(psfc, psf, 0);
+		//info("1ncomp=%ld, %ld, nref=%d, %d, %p %p\n", ncomp, ncomp_max, mem_nref(psf->mem), mem_nref(psfc->mem), P(psf), P(psfc));
 	} else{
-		ncomp=ncomp_max;
 		psfc=X(ref)(psf);
+		//info("2ncomp=%ld, %ld, nref=%d\n", ncomp, ncomp_max, mem_nref(psf->mem));
+		ncomp=ncomp_max;
 	}
-	long ncomp2=ncomp*2;
+	long ncomp2=ncomp*2;//to avoid wrapping
 	XC(mat)* psf2=XC(new)(ncomp2, ncomp2);
-	//XC(fft2plan)(psf2, -1);
 	XC(embedd)(psf2, psfc, 0);
 	X(free)(psfc);
 	XC(fftshift)(psf2);

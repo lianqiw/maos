@@ -81,12 +81,10 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	rand_t* rstat=data->rstat;
 	real* wt=data->wt;
 	int nlayer=data->nlayer;
-	dcell* dc=dcellnew(2, 1);
 	long nx=data->nx;
 	long ny=data->ny;
 	real dx=data->dx;
-	P(dc, 0)=dnew(nx, ny);
-	P(dc, 1)=dnew(nx, ny);
+	dcell* dc=dcellnew_same(2, 1, nx, ny);
 	real* restrict p1=P(P(dc, 0));
 	real* restrict p2=P(P(dc, 1));
 	char keywords[1024];
@@ -248,7 +246,7 @@ mapcell* genscreen(genatm_t* data){
 					{});
 	}else{
 		genscreen_do(NULL, data);
-		in=data->screen;
+		in=data->screen; data->screen=0;
 	}
 	screen=dcell2map(in);
 	cellfree(in);

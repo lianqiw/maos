@@ -130,7 +130,7 @@ def py2cellref(arr, tid=0):
         return None
     elif type(arr) is list:
         arr = np.asarray(arr)
-    elif type(arr) is np.ndarray:        
+    if type(arr) is np.ndarray:        
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
         elif sp.isspmatrix_csr(arr):
@@ -173,11 +173,11 @@ class cell(Structure):
             if tmpid is None:
                 print("init: Unknown data" +str( arr.dtype.type))
                 return None
-            if tid!=0 and tmpid != tid and tid!=0x6421 and tmpid !=0x6421:
+            if tid!=0 and tmpid != tid and tid!=0x6421 : #and tmpid !=0x6421:
                 dtp = next(key for key, value in dtype2id.items() if value == tid) 
                 try: #convert data
                     arr=arr.astype(dtp)
-                    tmpid=dtype2id.get(arr.dtype.type)
+                    tmpid=tid
                 except:
                     raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
@@ -196,7 +196,7 @@ class cell(Structure):
                 self.p=0
             elif arr.dtype.kind != 'O':
                 if arr.flags['C']==False:
-                    arr=self.arr=arr.copy()
+                    arr=arr.copy(order='C')
                 self.p=arr.ctypes.data_as(c_void_p)
             else:
                 self.qarr=np.zeros(self.shape(1), dtype=object) #stores objects
@@ -213,6 +213,7 @@ class cell(Structure):
                         else:
                             self.parr[iy,ix]=0
                 self.p=self.parr.ctypes.data_as(c_void_p)
+            self.arr=arr #keep a reference to arr as it can be a copy otherwise it may be destroyed
         else:
             self.id=25633
             self.p=None
@@ -222,7 +223,7 @@ class cell(Structure):
         self.mmap=None
         self.nref=None
         self.fft=None
-
+        
     def shape(self, twod):
         if self.ny > 1 or twod:
             return (self.ny, self.nx)

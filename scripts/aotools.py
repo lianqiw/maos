@@ -186,19 +186,21 @@ def grad_ttfr(grad, saloc):
     g2v=gv-mod@ptt
     g2v.shape=[2,nsa]
     return g2v
-#remove zernike modes from rmin to rmax from 1-D OPD and loc
-def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
+def loc_zernike_proj(loc, rmin, rmax, radonly=0):    
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
     mod=zernike(loc, D, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
+    return mod, rmod
+#remove zernike modes from rmin to rmax from 1-D OPD and loc
+def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
+    '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
+    mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
     return mod@(rmod@opd)
     
 def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     '''Remove zernike mode between rmin and rmax from opd which is defined on loc'''
-    D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
-    mod=zernike(loc, D, rmin, rmax, radonly).T
-    rmod=np.linalg.pinv(mod)
+    mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
     opd2=opd-mod@(rmod@opd)
     return opd2
 #remove zernike modes from rmin to rmax from 2-D OPD
@@ -286,8 +288,8 @@ def plot_smooth(x,y,color=''):
 def radial_profile(data, nx=None):
     if nx is None:
         nx=data.shape[0]>>1
-    x=np.arange(nx+0.)
-    return calcenc(data, x, -1, 10) #azimuthal averaging
+    xx=np.arange(nx).astype(np.float64).copy() # np.linspace(0,nx-1,nx) #np.arange(nx).asfarray()
+    return calcenc(data, xx, -1, 10) #azimuthal averaging
 def radial_profile_obsolete(data, center=None, enclosed=0):
     '''Compute the radial average or radially enclosed energy. radial start with 1'''
     if center is None:

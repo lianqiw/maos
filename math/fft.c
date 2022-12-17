@@ -125,7 +125,7 @@ static void FFTW(fft_threads)(long nx, long ny){
 	if(fft_has_threads==1){
 		int nth=(nx*ny>256*256)?NTHREAD:1;
 		if(nth!=last_nthread){
-			dbg("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
+			dbg3("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
 			p_fftw_plan_with_nthreads(nth);
 			last_nthread=nth;
 		}

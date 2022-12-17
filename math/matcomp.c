@@ -187,11 +187,14 @@ static inline T XY2RA(T A){
 	return COMPLEX(fabs(A), atan2(IMAG(A), REAL(A)));
 }
 
+
 /**
-   Embed array B into A with rotation theta CW.  Current version, preferred */
-void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMBED flag){
+   Embed array B into A with rotation theta CW.  Current version, preferred 
+   TODO: combine X(embed), X(embedd), X(embedc)
+   */
+
+void X(embedc_obsolete)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMBED flag){
 	if(!check_mat(A, B)) return;
-	const T* restrict in=P(B);
 	const int ninx=B->nx;
 	const int niny=B->ny;
 	const int noutx=A->nx;
@@ -221,10 +224,9 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 			iystart=-skipy;
 			iyend=niny+skipy;
 		}
-		T* restrict out2=&P(A, skipx, skipy);
 		for(int iy=iystart; iy<iyend; iy++){
-			T* outi=out2+iy*noutx;
-			const T* ini=in+iy*ninx;
+			T*restrict outi=&P(A, skipx, iy+skipy);
+			const T*restrict ini=PCOL(B, iy);
 			switch(flag){/*this switch does not affect speed. */
 			case C_FULL:
 				cmpcpy(outi+ixstart, ini+ixstart, (ixend-ixstart));
@@ -264,7 +266,7 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 		R x3, y3, x31;
 		int ix2, iy2;
 
-#define DO_LOOP(AFTER,CMD)						\
+#define DO_LOOP(AFTER,CMD)							\
 	x4=ninx2-noutx2*ctheta-nouty2*stheta;			\
 	y4=niny2+noutx2*stheta-nouty2*ctheta;			\
 	for(int iy=0; iy<nouty; iy++){					\
@@ -272,23 +274,23 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 	    R ybd1=-y4/negstheta; R ybd2=(ninx-1-y4)/negstheta; \
 	    if(xbd1>xbd2){R tmp=xbd1; xbd1=xbd2; xbd2=tmp;}	\
 	    if(ybd1>ybd2){R tmp=ybd1; ybd1=ybd2; ybd2=tmp;}	\
-	    int sx=iceil(fmax(xbd1,ybd1));				\
+	    int sx=iceil(fmax(xbd1,ybd1));					\
 	    int mx=1+ifloor(fmin(xbd2,ybd2));				\
 	    sx=sx>0?sx:0; mx=mx<noutx?mx:noutx;				\
 	    x2=x4+ctheta*sx; y2=y4+negstheta*sx;			\
-	    for(int ix=sx; ix<mx; ix++){				\
-		ix2=ifloor(x2); x3=x2-ix2;x31=1.-x3;			\
-		iy2=ifloor(y2); y3=y2-iy2;				\
-		P(A,ix,iy) =						\
-		    AFTER((CMD(P(B,ix2,iy2))*(x31)			\
-			   +CMD(P(B,ix2+1,iy2))*x3)*(1.-y3)		\
-			  +(CMD(P(B,ix2,iy2+1))*(x31)			\
+	    for(int ix=sx; ix<mx; ix++){					\
+			ix2=ifloor(x2); x3=x2-ix2;x31=1.-x3;		\
+			iy2=ifloor(y2); y3=y2-iy2;				\
+			P(A,ix,iy) = AFTER(						\
+		    	(CMD(P(B,ix2,iy2))*(x31)			\
+			    +CMD(P(B,ix2+1,iy2))*x3)*(1.-y3)	\
+			   +(CMD(P(B,ix2,iy2+1))*(x31)			\
 			    +CMD(P(B,ix2+1,iy2+1))*x3)*y3);		\
-		x2+=ctheta;						\
-		y2+=negstheta;						\
-	    }								\
-	    x4+=stheta;							\
-	    y4+=ctheta;							\
+			x2+=ctheta;								\
+			y2+=negstheta;							\
+	    }											\
+	    x4+=stheta;									\
+	    y4+=ctheta;									\
 	} 
 	/*it is not good to test embed flag in the inner most loop. */
 		switch(flag){
@@ -314,9 +316,9 @@ void X(embedc)(X(mat)* restrict A, const X(mat)* restrict B, const R theta, CEMB
 	}
 }
 /**
-   Embed or crop a XR(mat) into center of X(mat).
+   Embed or crop a XR(mat) into center of X(mat). See X(embed)
  */
-void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
+void X(embedd_obsolete)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 	if(!A || !B) return;
 	long ninx=B->nx;
 	long niny=B->ny;
@@ -329,21 +331,23 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 	const long nouty2=nouty/2;
 	X(zero)(A);
 	if(!theta){/*no rotation. */
-		const long skipx=noutx2-ninx2;//2022-07-13: fixed offset error.
-		const long skipy=nouty2-niny2;
-		long ixstart=0, ixend=ninx;
-		long iystart=0, iyend=niny;
-		if(skipx<0){
-			ixstart=-skipx;
-			ixend=ninx+skipx;
+		long skipx, ixstart, ixend, skipy, iystart, iyend;
+		skipx=noutx2-ninx2;//skip in output array
+		if(ninx>noutx){//reduce
+			ixstart=-skipx;//start in intput array
+			ixend=ixstart+noutx;//ninx+skipx;
+		} else{
+			ixstart=0, ixend=ninx;
 		}
-		if(skipy<0){
+		skipy=nouty2-niny2;
+		if(niny>nouty){//reduce
 			iystart=-skipy;
-			iyend=niny+skipy;
+			iyend=iystart+nouty;//niny+skipy;
+		} else{
+			iystart=0, iyend=niny;
 		}
-		T* out2=&P(A, skipx, skipy);
 		for(long iy=iystart; iy<iyend; iy++){
-			T* outi=out2+iy*noutx;
+			T* outi=&P(A, skipx, iy+skipy);
 			const R* ini=PCOL(B, iy);
 			for(long ix=ixstart; ix<ixend; ix++){
 				outi[ix]=ini[ix];
@@ -376,74 +380,6 @@ void X(embedd)(X(mat)* restrict A, XR(mat)* restrict B, const R theta){
 		}
 	}
 }
-
-/**
-   rotate (around fft center: (nx/2,ny/2)) CCW theta and embed in into A.
-*/
-void X(embedscaleout)(X(mat)* restrict A, const X(mat)* B,
-	R xoutscale, R youtscale,
-	const R theta, CEMBED flag){
-	if(!check_mat(A, B)) return;
-	if(fabs(xoutscale-1)<1.e-10&&fabs(youtscale-1)<1.e-10){
-		X(embedc)(A, B, theta, flag);
-		return;
-	}
-	const int ninx=B->nx;
-	const int niny=B->ny;
-	const int noutx=A->nx;
-	const int nouty=A->ny;
-
-	const R ctheta=cos(theta);
-	const R stheta=sin(theta);
-	R x2, y2;
-	R x, y;
-	int ninx2=ninx/2;
-	int noutx2=noutx/2;
-	int niny2=niny/2;
-	int nouty2=nouty/2;
-	int ix2, iy2;
-#define DO_LOOP(AFTER,CMD)						\
-    for(int iy=0; iy<nouty; iy++){					\
-	y=(iy-nouty2)*youtscale;					\
-	for(int ix=0; ix<noutx; ix++){					\
-	    x=(ix-noutx2)*xoutscale;					\
-	    x2=(x*ctheta+y*stheta+ninx2);				\
-	    y2=(-x*stheta+y*ctheta+niny2);				\
-	    if(x2>0 && x2<ninx-1 && y2>0 && y2<niny-1){			\
-		ix2=ifloor(x2);						\
-		iy2=ifloor(y2);						\
-		x2=x2-ix2;						\
-		y2=y2-iy2;						\
-		P(A,ix,iy) =AFTER(+CMD(P(B,ix2,iy2))*((1.-x2)*(1.-y2)) \
-				    +CMD(P(B,ix2+1,iy2))*(x2*(1.-y2))	\
-				    +CMD(P(B,ix2,iy2+1))*((1-x2)*y2)	\
-				    +CMD(P(B,ix2+1,iy2+1))*(x2*y2));	\
-	    }else P(A,ix,iy)=0;					\
-	}								\
-    }
-	/*it is not good to embed flag in the inner most loop. */
-	switch(flag){
-	case C_FULL:
-		DO_LOOP(, );
-		break;
-	case C_ABS2:
-		DO_LOOP(, ABS2);
-		break;
-	case C_REAL:
-		DO_LOOP(, REAL);
-		break;
-	case C_ABS:
-		DO_LOOP(, fabs);
-		break;
-	case C_LITERAL:
-		DO_LOOP(RA2XY, XY2RA);
-		break;
-	default:
-		error("Invalid flag\n");
-	}
-#undef DO_LOOP
-}
-
 
 /**
    copy and embed/crop psfin into psfout

@@ -27,6 +27,7 @@
 #if defined __CYGWIN__
 #include <sys/cygwin.h>
 #endif
+#define IN_MEM_C 1 //disable memory management in this file.
 #include "common.h"
 #include "misc.h"
 #include "process.h"

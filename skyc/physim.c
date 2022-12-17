@@ -318,7 +318,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							/*Apply NGS mode error to PSF. */
 							ngsmod2wvf(P(wvfc,iwfs), wvl, merr, powfs+ipowfs, isa,
 								thetax, thetay, parms);
-							cembedc(P(wvf,iwfs), P(wvfc,iwfs), 0, C_FULL);
+							cembed(P(wvf,iwfs), P(wvfc,iwfs), 0);
 							cfft2(P(wvf,iwfs), -1);
 							/*peak in corner. */
 							cabs22d(&P(psf[iwfs],isa,iwvl), 1., P(wvf,iwfs), 1.);

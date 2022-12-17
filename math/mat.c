@@ -83,6 +83,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 	}
 	return out;
 }
+
 /**
    check the size of matrix if exist. Otherwise create it. content is not zeroed if already exists.
    - empty matrix is initialized.
@@ -124,6 +125,8 @@ void X(free_do)(X(mat)* A){
 		if(A->fft) X(fft_free_plan)(A->fft);
 #endif
 		if(A->keywords) {free(A->keywords); A->keywords=NULL;}
+	}else{
+		warning("check_mat returns false\n");
 	}
 	free(A);
 }

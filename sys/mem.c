@@ -105,13 +105,10 @@ static void memkey_init(int enabled){
 		memfree=0;
 		memkey_maxadd=0;
 		memkey_maxdel=0;
-	
-
 		memkey_len=0x1FFFFF;
 		dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
 		memkey_all=calloc_default(memkey_len+1, sizeof(memkey_t));
 		memkey_thres=memkey_len>>1;
-
 		MEM_DEBUG=enabled;//enable after we setup.
 	}else if(!enabled && memkey_len){
 		MEM_DEBUG=enabled;//disable before we clean up.
@@ -162,14 +159,15 @@ static void memkey_add(void *p, size_t size){
 	}
 }
 //Memory allocated from exterior library will not be found. We limit number of tries to avoid searching too much
-static void memkey_del(void *p){
-	if(!memkey_maxadd) return;
+static size_t memkey_del(void *p){
+	size_t size=0;
 	unsigned int counter=0;
 	for(unsigned int ind=addr2ind(p); counter<=memkey_maxadd ; ind=(ind+1)&memkey_len, counter++){
 		if(memkey_all[ind].p==p){//found. no race condition can occure
 			__atomic_add_fetch(&memfree, memkey_all[ind].size, MEM_ORDER);
 			atomic_sub_fetch(&memcnt, 1);
 			memkey_all[ind].p=0;
+			size=memkey_all[ind].size;
 			break;
 		}
 	}
@@ -184,6 +182,7 @@ static void memkey_del(void *p){
 		//dbg("%16p: unable to find after %u tries\n", p, memkey_maxadd);
 		//print_backtrace();
 	}
+	return size;
 }
 static void print_mem_debug(){
 	if(!memkey_len){
@@ -207,7 +206,7 @@ static void print_mem_debug(){
 			if(memkey_all[i].p){
 				if(counter<50){
 					counter++;
-					info3("%9dB", memkey_all[i].size);
+					info3("%p %9dB", memkey_all[i].p, memkey_all[i].size);
 					if(memkey_all[i].nfunc){
 						int offset=memkey_all[i].nfunc>3?1:0;
 						if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
@@ -577,7 +576,7 @@ static void print_usage(const void *key, VISIT which, int level){
 	if(which==leaf||which==postorder){
 		print_count++;
 		if(print_count<100){
-			info3("%9zu", key2->size);
+			info3("%p(%9zu)", key2->p, key2->size);
 			if(key2->funtrace[0]){
 				info3(" %s\n", key2->funtrace);
 			}else if(key2->nfunc){
@@ -696,7 +695,7 @@ void *calloc_maos(size_t nbyte, size_t nelem){
 		memkey_add(p, nbyte*nelem);
 	}
 	if(MEM_VERBOSE){
-		info("%s calloc: %p with %zu (%2zu) bytes\n", funtrace, p, nelem, nbyte);
+		info("%p %s calloc with %zux%zu bytes\n", p, funtrace, nelem, nbyte);
 	}
 	funtrace_unset;
 	return p;
@@ -710,7 +709,7 @@ void *malloc_maos(size_t size){
 		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
-		info("%s malloc: %p with %zu bytes\n", funtrace, p, size);
+		info("%p %s malloc with %zu bytes\n", p, funtrace, size);
 	}
 	funtrace_unset;
 	return p;
@@ -729,18 +728,19 @@ void *realloc_maos(void *p0, size_t size){
 		memkey_add(p, size);
 	}
 	if(MEM_VERBOSE){
-		info("%s realloc: %p with %zu bytes\n", funtrace, p, size);
+		info("%p %s realloc with %zu bytes\n", p, funtrace, size);
 	}
 	funtrace_unset;
 	return p;
 }
 void free_maos(void *p){
+	size_t size=0;
 	if(memkey_len && p){
-		memkey_del(p);//calls free_default when marked success.
+		size=memkey_del(p);//calls free_default when marked success.
 	}
 	free_default(p);//must be after memkey_del to avoid race condition (add before del)
 	if(MEM_VERBOSE){
-		info("%s free: %p\n", funtrace, p);
+		info("%p %s freed with %zu bytes.\n", p, funtrace, size);
 	}
 	funtrace_unset;
 }
@@ -806,6 +806,7 @@ static __attribute__((destructor)) void deinit(){
 		print_mem_debug();
 	}
 	free_process();//call after print_mem_debug which needs TEMP
+	if(fplog) fclose(fplog);
 }
 
 /**

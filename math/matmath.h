@@ -37,12 +37,8 @@
     void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);	\
     void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B);	\
-    void X(cwmcol2)(X(mat) *restrict A,					\
-		    const X(mat) *restrict B1, const R wt1,		\
-		    const X(mat) *restrict B2, const R wt2);		\
-    void X(cwmrow2)(X(mat) *restrict A,					\
-		    const X(mat) *restrict B1, const R wt1,		\
-		    const X(mat) *restrict B2, const R wt2);		\
+    void X(cwmcol2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);		\
+    void X(cwmrow2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);		\
     void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
     void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha); \
     void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha); \
@@ -97,16 +93,15 @@
     void X(cwlog10)(X(mat) *A);						\
     void X(cwlog)(X(mat) *A);						\
     void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
+    void X(embedd)(X(mat) *restrict A, const XR(mat) *restrict B, const R theta); \
     R X(fwhm)(X(mat) *A);						\
     void X(gauss_fit)(R*mr, R*ma, R*mb, R*theta, X(mat)*A, R thres);\
     R X(gauss_width)(X(mat)*A, R thres);\
     R X(fwhm_gauss)(X(mat) *A);\
-    X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);	\
-    typedef T (*X(minsearch_fun))(const T *x, void *info);		\
+    X(mat) *X(enc)(const X(mat) *A, const X(mat) *dvec, int type, int nthread);	typedef T (*X(minsearch_fun))(const T *x, void *info);		\
     int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info); \
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
-									\
     R X(cellnorm)(const X(cell) *in);					\
     void X(cellscale)(X(cell) *A, R w);					\
     void X(cellscale_any)(cell *A, R w);					\
@@ -132,14 +127,8 @@
 #define AOS_CMATMATH_DEF(X,XR,T,R)					\
     void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha); \
     void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha); \
-    void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	\
-		      const int nopdx, const int nopdy,			\
-		      const R wvl, const R theta);			\
-    void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \
-    void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta); \
-    void X(embedscaleout)(X(mat) *restrict A, const X(mat) * in,	\
-			  R xoutscale,R youtscale,			\
-			  const R theta, CEMBED flag);			\
+    void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	const int nopdx, const int nopdy, const R wvl, const R theta);			\
+    void X(embedc_flag)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \
     void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag);	\
     void X(abstoreal)(X(mat) *A);					\
     void X(abs2toreal)(X(mat) *A, R scale);					\
@@ -149,9 +138,7 @@
     void X(abs22d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int peak_corner); \
     void X(tilt)(X(mat) *otf, R sx, R sy, int peak_corner);		\
-    void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,			\
-		    R offsety,R thres, R bkgrnd);			\
-    void X(cogabs)(R *grad,const X(mat) *i0,R offsetx,			\
-		   R offsety,R thres, R bkgrnd);			
+    void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,	R offsety,R thres, R bkgrnd);	\
+    void X(cogabs)(R *grad,const X(mat) *i0,R offsetx,  R offsety,R thres, R bkgrnd);			
 
 #endif

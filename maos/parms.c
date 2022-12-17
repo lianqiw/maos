@@ -3236,10 +3236,11 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 		error("Unable to find usable configuration file\n");
 	}
 	/*info2("Using config files found in %s\n", config_path); */
-	char *bin_path=stradd(config_path,"/bin",NULL);
 	addpath(config_path);
-	addpath(bin_path);
-	free(bin_path);
+	char *add_path=NULL;
+	add_path=stradd(config_path,"/atm",NULL);addpath(add_path);free(add_path);
+	add_path=stradd(config_path,"/bin",NULL);addpath(add_path);free(add_path);
+	add_path=stradd(config_path,"/examples",NULL);addpath(add_path);free(add_path);
 	free(config_path);
 	open_config(mainconf,NULL,0);/*main .conf file. */
 	open_config(extraconf,NULL,1);

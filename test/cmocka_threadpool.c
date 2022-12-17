@@ -86,7 +86,7 @@ static void test_mem(void** state){
 int main(void){
 #if 0
     quitfun=dummy_quitfun;
-    LOG_LEVEL=-4;
+    LOG_LEVEL=0;
     const struct CMUnitTest tests[]={
         cmocka_unit_test(test_thread_pool),
 		cmocka_unit_test(test_mem)
