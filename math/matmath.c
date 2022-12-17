@@ -1348,72 +1348,7 @@ void X(cwlog)(X(mat)* A){
 		P(A, i)=log(P(A, i));
 	}
 }
-/**
-   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
-   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
-   \todo{
-   merge this definition with cembed in cmat.c
-   }
-*/
-/*
-void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
-	const long ninx=in->nx;
-	const long niny=in->ny;
-	const long noutx=out->nx;
-	const long nouty=out->ny;
-	//middle points
-	const long ninx2=ninx/2;
-	const long noutx2=noutx/2;
-	const long niny2=niny/2;
-	const long nouty2=nouty/2;
-	X(zero)(out);
-	if(theta==0){//no rotation. 
-		long skipx, ixstart, ixend, skipy, iystart, iyend;
-		skipx=noutx2-ninx2;//skip in output array
-		if(ninx>noutx){//reduce
-			ixstart=-skipx;//start in intput array
-			ixend=ixstart+noutx;//ninx+skipx;
-		}else{
-			ixstart=0, ixend=ninx;
-		}
-		skipy=nouty2-niny2; 
-		if(niny>nouty){//reduce
-			iystart=-skipy;
-			iyend=iystart+nouty;//niny+skipy;
-		}else{
-			iystart=0, iyend=niny;			
-		}
-		for(long iy=iystart; iy<iyend; iy++){
-			T* outi=&P(out, skipx+ixstart, skipy+iy);
-			T* ini=&P(in, ixstart, iy);
-			memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
-		}
-	} else{
-		const R ctheta=cos(theta);
-		const R stheta=sin(theta);
-		long ix2, iy2;
-		for(long iy=0; iy<nouty; iy++){
-			R y=(R)(iy-nouty2);
-			for(long ix=0; ix<noutx; ix++){
-				R x=(R)(ix-noutx2);
-				R x2=x*ctheta+y*stheta+ninx2;
-				R y2=-x*stheta+y*ctheta+niny2;
-				if(x2>=0&&x2<=ninx-1&&y2>=0&&y2<=niny-1){
-					ix2=ifloor(x2);
-					iy2=ifloor(y2);
-					x2=x2-ix2;
-					y2=y2-iy2;
-					P(out, ix, iy)=
-						+P(in, ix2, iy2)*((1.-x2)*(1.-y2))
-							+(x2>0?(P(in, ix2+1, iy2)*(x2*(1.-y2))):0)
-						+(y2>0?(P(in, ix2, iy2+1)*((1.-x2)*y2)
-							+(x2>0?P(in, ix2+1, iy2+1)*(x2*y2):0)):0);
-				}
-			}
-		}
-	}
-}*/
+
 #define EMBED_OP(out, in, theta, OPin)\
 const long ninx=in->nx;\
 const long niny=in->ny;\
@@ -1470,10 +1405,19 @@ if(theta==0){/*no rotation.*/ \
 		}\
 	}\
 }
-
+/**
+   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
+   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
+   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
+*/
 void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 	EMBED_OP(out, in, theta, );
 }
+/**
+   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
+   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
+   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
+*/
 void X(embedd)(X(mat)* restrict out, const XR(mat)* restrict in, const R theta){
 	EMBED_OP(out, in, theta, )
 }
@@ -1572,15 +1516,15 @@ R X(fwhm_gauss)(X(mat)* A){
 	return X(gauss_width)(A, 0.01)*1.17741;
 }
 #ifndef COMP_COMPLEX
-typedef struct{
+struct enc_t{
 	X(mat)* enc; /**<Output*/
 	const X(mat)* dvec;/**<Radius wanted*/
 	X(mat)* phat; /**<processed image.*/
 	int type;
-}ENC_T;
+};
 
 static void* X(enc_thread)(thread_t* pdata){
-	ENC_T* data=(ENC_T*)pdata->data;
+	struct enc_t* data=(struct enc_t*)pdata->data;
 	const X(mat)* dvec=data->dvec;
 	X(mat)* restrict enc=data->enc;
 	const X(mat)* restrict ppsf=data->phat;
@@ -1683,7 +1627,7 @@ X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
 	X(scale)(phat, pow((R)ncomp2, -2));
 	XC(free)(psf2);
 	X(mat)* enc=X(new)(PN(dvec), 1);
-	ENC_T data={enc, dvec, phat, type};
+	struct enc_t data={enc, dvec, phat, type};
 	thread_t* tdata=thread_prep(0, PN(dvec), nthread, X(enc_thread), &data);
 	CALL_THREAD(tdata, 0);
 	free(tdata);

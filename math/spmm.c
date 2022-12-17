@@ -20,7 +20,7 @@
 #include "mathdef.h"
 #include "defs.h"
 
-typedef struct{
+typedef struct mm_t{
 	int nx, ny, nz;
 	int ax, az;
 	int bz, by;
