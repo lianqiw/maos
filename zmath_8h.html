@@ -531,6 +531,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwlog</b> (<a class=
 <tr class="memitem:ab81e25748c24ac46d94a0f5ac5e4a100"><td class="memItemLeft" align="right" valign="top"><a id="ab81e25748c24ac46d94a0f5ac5e4a100"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zembed</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, const float theta)</td></tr>
 <tr class="separator:ab81e25748c24ac46d94a0f5ac5e4a100"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4fe8d25bf22123fd2a25be38b42cf01"><td class="memItemLeft" align="right" valign="top"><a id="af4fe8d25bf22123fd2a25be38b42cf01"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zembedd</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structsmat">smat</a> *__restrict B, const float theta)</td></tr>
+<tr class="separator:af4fe8d25bf22123fd2a25be38b42cf01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab593fed61ac7155827e3769e9c437961"><td class="memItemLeft" align="right" valign="top"><a id="ab593fed61ac7155827e3769e9c437961"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>zfwhm</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:ab593fed61ac7155827e3769e9c437961"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -543,9 +546,9 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>zgauss_width</b> (<a
 <tr class="memitem:a2d4a8c0f8143841e59b78cd6b925de1e"><td class="memItemLeft" align="right" valign="top"><a id="a2d4a8c0f8143841e59b78cd6b925de1e"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>zfwhm_gauss</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a2d4a8c0f8143841e59b78cd6b925de1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8be5c8f2f30d97e00d67791f42eb847a"><td class="memItemLeft" align="right" valign="top"><a id="a8be5c8f2f30d97e00d67791f42eb847a"></a>
-<a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zenc</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, <a class="el" href="type_8h.html#structzmat">zmat</a> *dvec, int type, int nthread)</td></tr>
-<tr class="separator:a8be5c8f2f30d97e00d67791f42eb847a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5101ed55d71cb3bad7c81791a251e1a5"><td class="memItemLeft" align="right" valign="top"><a id="a5101ed55d71cb3bad7c81791a251e1a5"></a>
+<a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zenc</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *dvec, int type, int nthread)</td></tr>
+<tr class="separator:a5101ed55d71cb3bad7c81791a251e1a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af381ec913bfc83025c51764daf09af73"><td class="memItemLeft" align="right" valign="top"><a id="af381ec913bfc83025c51764daf09af73"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>zminsearch</b> (fcomplex *x, int nmod, fcomplex ftol, int nmax, zminsearch_fun fun, void *info)</td></tr>
 <tr class="separator:af381ec913bfc83025c51764daf09af73"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -624,15 +627,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmd</b> (<a class="
 <tr class="memitem:a1b87c34916cc8da75a319ea3d6e09c78"><td class="memItemLeft" align="right" valign="top"><a id="a1b87c34916cc8da75a319ea3d6e09c78"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zembed_wvf</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const float *opd, const float *amp, const int nopdx, const int nopdy, const float wvl, const float theta)</td></tr>
 <tr class="separator:a1b87c34916cc8da75a319ea3d6e09c78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a217cc3a2fd242035a35ce04768ba1ddc"><td class="memItemLeft" align="right" valign="top"><a id="a217cc3a2fd242035a35ce04768ba1ddc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zembedc</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, const float theta, CEMBED flag)</td></tr>
-<tr class="separator:a217cc3a2fd242035a35ce04768ba1ddc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acff0024d4119c98af14207f60eac78ca"><td class="memItemLeft" align="right" valign="top"><a id="acff0024d4119c98af14207f60eac78ca"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zembedd</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, <a class="el" href="type_8h.html#structsmat">smat</a> *__restrict B, const float theta)</td></tr>
-<tr class="separator:acff0024d4119c98af14207f60eac78ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a786728f06265868f9826bddf3a6f0c94"><td class="memItemLeft" align="right" valign="top"><a id="a786728f06265868f9826bddf3a6f0c94"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zembedscaleout</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *in, float xoutscale, float youtscale, const float theta, CEMBED flag)</td></tr>
-<tr class="separator:a786728f06265868f9826bddf3a6f0c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a614e674dfca27fe808b36004ae97916a"><td class="memItemLeft" align="right" valign="top"><a id="a614e674dfca27fe808b36004ae97916a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zembedc_flag</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, const float theta, CEMBED flag)</td></tr>
+<tr class="separator:a614e674dfca27fe808b36004ae97916a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a753f3296f598e465ebf34648a2d59533"><td class="memItemLeft" align="right" valign="top"><a id="a753f3296f598e465ebf34648a2d59533"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcpcorner</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, CEMBED flag)</td></tr>
 <tr class="separator:a753f3296f598e465ebf34648a2d59533"><td class="memSeparator" colspan="2">&#160;</td></tr>

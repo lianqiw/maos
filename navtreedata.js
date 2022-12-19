@@ -147,7 +147,7 @@ var NAVTREEINDEX =
 "classcuda__recon_1_1cgtmp__t.html#a190a6f7f30f6ea8967d795177d4700a3",
 "classcudata__t.html#ad9bad0392b15a8e1f189e0ee768f7952",
 "cmath_8h.html#a505b38d31765196007662b0cc2aaa796",
-"daemonize_8h.html#a2cf440f7f061b747c2e06b0cef9f045b",
+"daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3",
 "dmath_8h.html#af22808f24a18d13c16b5e92bdc6e34d4",
 "lib_2accphi_8h.html#ad2f6d0fd0f0cb1739ed7e695a8f2539c",
 "maos_2types_8h.html#a12885438bdefbfffba8230079dac8ac0",
@@ -159,11 +159,11 @@ var NAVTREEINDEX =
 "parms_8h.html#aa92dec25643fad0a7ca921dfb8561e0f",
 "parms_8h.html#structdither__cfg__t",
 "servo_8h.html#af73da05983185a3e29a86a480fb06e17",
-"smath_8h.html#ad1c23a17c97445bc4cae17b0df14a4d5",
-"sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6",
-"type_8h.html#a5792fec74b998515bb4ccca87df68948",
-"type_8h.html#aa1b6d8424c46d0f684a1e941b834b1b8",
-"zmath_8h.html#a0ba0f7e3a8e5b8c03e4e37b1a590507f",
+"smath_8h.html#ad18d150df7c5df61a980e6d01851e239",
+"sys_2misc_8h.html#a3301c2cb79c61e97a1b84f92edb989ef",
+"type_8h.html#a55f956630e6ba03d1760e7f4b27fb7a1",
+"type_8h.html#a990426f785bfea3367aa8bfe6ec861b4",
+"zmath_8h.html#a0b336fcab78fb5fad4d6c16b37ee846e",
 "zmath_8h.html#afa7796845bf0d614b0407697ba38bfd8"
 ];
 

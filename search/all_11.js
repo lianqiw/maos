@@ -110,7 +110,7 @@ var searchData=
   ['seed',['seed',['../maos_2types_8h.html#a70068bd1ecc6478dc836162e2bfbf777',1,'sim_t']]],
   ['seeding',['seeding',['../sim__utils_8h.html#a6b1f1928d824e6686d78972835a22467',1,'sim_utils.c']]],
   ['seeds',['seeds',['../parms_8h.html#a3559396cb01e83303920574e71fcca0c',1,'sim_cfg_t']]],
-  ['senc',['senc',['../smath_8h.html#aca3c5fdfa929c201c8f4f40be26a3118',1,'stmp.c']]],
+  ['senc',['senc',['../smath_8h.html#aa5226487854e30cc0c25a9ae771a6845',1,'stmp.c']]],
   ['sepsf',['sepsf',['../maos_2types_8h.html#afbbfc16176f79ffb1341c270015a81f5',1,'intstat_t']]],
   ['server',['server',['../parms_8h.html#a9dd2fbd3368036a4ea001ada021feb80',1,'arg_t']]],
   ['servo_2eh',['servo.h',['../servo_8h.html',1,'']]],
