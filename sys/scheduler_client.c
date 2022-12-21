@@ -133,10 +133,10 @@ PNEW(mutex_hosts);
 */
 void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 ){
-	static int memhost=0;
+	static size_t memhost=0;
 	if(strlen(line)>0&&line[0]!='#'){
 		LOCK(mutex_hosts);
-		if(memhost<nhost+1){
+		if(memhost<(size_t)(nhost+1)){
 			memhost+=10;
 			hosts=realloc(hosts, memhost*sizeof(char*));
 			hostsaddr=realloc(hostsaddr, memhost*sizeof(char*));
@@ -145,8 +145,8 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 		char* eq=strchr(line, '=');
 		hostsaddr[nhost]=strdup(eq?(eq+1):line);
 		char *dot=strchr(line, '.');
-		int n0=strlen(line);
-		int n=MIN(dot?(dot-line):n0, eq?(eq-line):n0);
+		size_t n0=strlen(line);
+		size_t n=MIN(dot?(size_t)(dot-line):n0, eq?(size_t)(eq-line):n0);
 		hosts[nhost]=strndup(line, n?n:n0);
 		nhost++;
 		UNLOCK(mutex_hosts);

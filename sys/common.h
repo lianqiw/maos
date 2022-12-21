@@ -209,7 +209,7 @@ static inline int check_space(const char *endptr, const char *endstr){
       char *endptr=0;  \
       const char *str=getenv("MAOS_"#A);\
       const char *endstr=str+strlen(str);\
-		  T B=FUN(str,&endptr);           \
+		  T B=(T)FUN(str,&endptr);           \
       if(endptr==str || check_space(endptr, endstr)){  \
         error("MAOS_"#A"={%s} has invalid value.\n", str);\
       }                                 \

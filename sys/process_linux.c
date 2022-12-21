@@ -51,8 +51,8 @@ int get_job_progname(char* res, int nres, int pid){
 /**
    Get the memory usage of current process.
  */
-int get_job_mem(void){
-	int mem;
+size_t get_job_mem(void){
+	size_t mem;
 	FILE* pfile;
 	static int pagesize=0;//in kB
 	if(!pagesize){
@@ -60,7 +60,7 @@ int get_job_mem(void){
 		//pagesize=getpagesize()/1024;
 	}
 	if((pfile=fopen("/proc/self/statm", "r"))){
-		if(fscanf(pfile, "%*d %d", &mem)!=1){
+		if(fscanf(pfile, "%*d %zu", &mem)!=1){
 			warning("failed to read statm\n");
 		}
 		mem*=pagesize;

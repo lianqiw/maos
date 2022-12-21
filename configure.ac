@@ -254,10 +254,10 @@ if test "${USER}" = "lianqiw" ;then
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 
-COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers" 
+COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers " 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed" 
-COMMON_CLANG+=" -Wno-sign-compare" #CLANG has false positive in detecting sign comparison.
+COMMON_CLANG+=" -Wno-sign-compare " #CLANG has false positive in detecting sign comparison.
 #Set optimize flags for different compilers
 OPTIM_ALL="-g -O3 -mtune=native -ftree-vectorize -ffast-math -fno-finite-math-only"
 
@@ -1136,6 +1136,7 @@ echo "host_os:         $host_os"
 echo "host_cpu:        $host_cpu"
 echo "CC:              $CN ($major.$minor)"
 echo "Debug:           ${enable_debug:-no}"
+echo "Coverage:        ${enable_gcov:-no}"
 echo "OpenMP:          $has_omp"
 echo "FFTW Threads:    $fftw_threads"
 echo "Single:          $enable_single"

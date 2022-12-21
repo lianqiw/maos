@@ -11,7 +11,8 @@ bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 #endif
 
 if USE_CMOCKA
-bin_PROGRAMS+=cmocka_mat cmocka_readstr cmocka_threadpool
+bin_PROGRAMS+=cmocka_mat cmocka_matmath cmocka_locfft cmocka_blas \
+cmocka_readstr cmocka_threadpool cmocka_psd
 LDADD+=-lcmocka
 endif
 
@@ -26,7 +27,7 @@ if GCOV
 endif
 
 if GCOV
-check:
+check-local:
 	@mkdir -p coverage
 	@lcov --compat-libtool --directory .. --capture --output-file coverage/app.info  
 	@genhtml -o coverage/ coverage/app.info 

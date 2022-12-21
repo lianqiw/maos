@@ -38,12 +38,10 @@ int get_job_progname(char* res, int nres, int pid){
 	strncpy(res, nres, path2); res[nres-1]=0;
 	return 0;
 }
-int get_job_mem(void){/*return in KiB */
-	int mem;
+size_t get_job_mem(void){/*return in KiB */
 	struct rusage usage;
 	getrusage(0, &usage);
-	mem=usage.ru_idrss;
-	return mem;
+	return usage.ru_idrss;
 }
 double get_job_launchtime(int pid){
 	#warning "Please implement"

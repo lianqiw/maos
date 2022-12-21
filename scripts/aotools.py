@@ -314,16 +314,30 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
     
     return radialprofile
 
-def center(A, n):
+def center(A, nx, ny=None):
     '''crop or embed A into nxn array from the center'''
-    indx=(A.shape[0]-n+1)>>1
-    indy=(A.shape[1]-n+1)>>1
-    if indx >= 0 and indy >= 0:
-        A2=A[indx:indx+n, indy:indy+n]
-    elif indx <0 and indy <0 :
-        A2=np.zeros((n,n))
-        A2[-indx:-indx+A.shape[0], -indy:-indy+A.shape[1]]=A
+    if ny is None:
+        ny=np.int(np.round(A.shape[1]*nx/A.shape[0]))
+    if A.shape[0]>=nx and A.shape[1]>=ny:#extract
+        indx=(A.shape[0]-nx+1)>>1
+        indy=(A.shape[1]-ny+1)>>1
+        A2=A[indx:indx+nx, indy:indy+ny]
+    elif A.shape[0]<nx and A.shape[1]<ny:#embed
+        indx=(nx-A.shape[0]+1)>>1
+        indy=(nx-A.shape[1]+1)>>1
+        A2=np.zeros((nx,ny))
+        A2[indx:indx+A.shape[0], indy:indy+A.shape[1]]=A
+    else:
+        raise(Exception('Does not support this operation'))
     return A2
+
+def embed(a,ratio=2):
+    '''Embed a 2-d image into a new array bigger by ratio '''
+    return center(a, np.int(a.shape[0]*ratio))
+
+def unembed(a,ratio=2):
+    '''undo embed(). unembed center piece'''
+    return center(a, np.int(a.shape[0]/ratio))
 
 def photon_flux(magnitude, wvls):
     '''Claculate photon flux for magnitude at wavelength wvls'''
@@ -422,27 +436,6 @@ def calc_fwhm(dx, intensity):
     '''A simple way to compute the FWHM'''
     return sqrt(np.sum(intensity>=0.5*np.max(intensity))*4/np.pi)*dx
 
-def embed(a,ratio=2):
-    '''Embed a 2-d image into a new array bigger by ratio'''
-    nx=a.shape[0]
-    ny=a.shape[1]
-    nx4=int(nx/2)
-    ny4=int(ny/2)
-    nx2=int(nx4*ratio)
-    ny2=int(ny4*ratio)
-    a2=np.zeros((nx*ratio,ny*ratio),dtype=a.dtype)
-    a2[nx2-nx4:nx2+nx4,ny2-ny4:ny2+ny4]=a
-    #a2[nx2*ratio-nx2:nx2*ratio+nx2,ny2*ratio-ny2:ny*ratio+ny2]=a
-    return a2
-def unembed(a,ratio=2):
-    '''undo embed(). unembed center piece'''
-    nx=a.shape[0]
-    ny=a.shape[1]
-    nx2=int(nx/2)
-    ny2=int(ny/2)
-    nx4=int(nx/ratio/2)
-    ny4=int(ny/ratio/2)
-    return a[nx2-nx4:nx2+nx4,ny2-ny4:ny4+ny2]    
 
 def stfun(opd, amp):
     '''Compute structure function.'''

@@ -22,88 +22,9 @@
 
 #include <sys/mman.h>
 #include "../lib/aos.h"
-static void test_dpinv(){
-    rand_t rstat;
-    seed_rand(&rstat,1);
-    dmat *A=dnew(10,4);
-    drandn(A,1,&rstat);
-    dmat *w=dnew(10,1);
-    dset(w,2);
-    dmat *Ap=dpinv(A,CELL(w));
-    writebin(A,"A");
-    writebin(Ap,"Ap");
-    dmat *ApA=NULL;
-    dmm(&ApA,0,Ap,A,"nn",1);
-    dsp *spw=dspnewdiag(w->nx, P(w), 1);
-    dmat *Ap2=dpinv(A,CELL(spw));
-    writebin(w,"w");
-    writebin(spw,"spw");
-    writebin(Ap2,"Ap2");
-    dfree(A); dfree(w); dfree(Ap); dfree(ApA); dspfree(spw); dfree(Ap2);
-}
+
 TIC;
-static void test_dcp(){
-    dmat *A=dnew(10240,1);
-    dmat *B=dnew(10240,1);
-    tic;
-    for(int i=0; i<100;i++){
-	dcp(&A,B);
-    }
-    toc("dcp");
-    tic;
-    for(int i=0; i<100; i++){
-	memcpy(P(A),P(B),A->nx*A->ny*sizeof(real));
-    }
-    toc("cpy");
-    tic;
-    for(int i=0; i<100;i++){
-	dcp(&A,B);
-    }
-    toc("dcp");
-    dfree(A);
-    dfree(B);
-}
 
-static void test_dcircle(){
-    dmat *A=dnew(100,100);
-    real r=45;
-    dcircle(A,50,50,1,1,r,1);
-    writebin(A,"dcircle_linear");
-    dzero(A);
-    writebin(A,"dcircle");
-    real r2=sqrt(dsum(A)/M_PI);
-    dbg("r=%g, r2=%g\n",r,r2);
-}
-static void test_d2cell(){
-    dcell *A=dcellread("bcell.bin");
-    dmat *A2=dcell2m(A);
-    writebin(A2,"bcell2m.bin");
-    dcell *B=NULL;
-    d2cell(&B,A2,A);
-    writebin(B,"bcell2m2cell.bin");
-    dcellfree(A);
-    dfree(A2);
-
-    A=dcellread("ccell.bin");
-    long *dims=mycalloc(A->nx,long);
-    for(int ix=0; ix<A->nx; ix++){
-	dims[ix]=P(A,ix)->nx;
-    }
-    A2=dcell2m(A);
-    dcell *B2=d2cellref(A2,dims,A->nx);
-    writebin(B2,"ccell2m2cell2.bin");
-    
-}
-static void test_dshift2center(){
-
-    dcell *pis=dcellread("pistat_seed1_wfs6.bin");
-    cmat *B=NULL;
-    for(int ip=0; ip<pis->nx; ip++){
-	ccpd(&B,P(pis,ip));
-	cshift2center(B,0.5,0.5);
-	dshift2center(P(pis,ip),0.5,0.5);
-    }
-}
 static void test_clip(){
     int N=64;
     dmat *A=dnew(N,N);
@@ -398,79 +319,8 @@ void test_servo(){
     info("gain=%g\n", g);
     exit(0);
 }
-void test_psd2d(){
-    dmat *screen=(dmat*)genatm_simple(0.186, 0, -11./3., 1./64., 128, 1);
-    for (int px=5; px<8; px++){
-        long nx=2<<(px-1);
-        dmat *screen2=dsub(screen, 0, nx, 0, nx);
-        dmat *psd=psd2d_aniso(screen2, 1./64.);
-        real inte1=psd_inte2(psd);
-        //writebin(psd, "psd_%ld", nx);
-        dfree(psd);
-        dmat *extra=NULL;
-        psd=psd2d(&extra, CELL(screen2), 1./64.);
-        real inte2=psd_inte2(psd);
-        //writebin(psd, "psd2_%ld", nx);dfree(psd);
-        info("size is %ld rms is %g, psdint is %g, psdint 2 is %g, recon r0=%g, slope=%g\n", 
-            nx, sqrt(dsumsq(screen2)/PN(screen2)), sqrt(inte1), sqrt(inte2), P(extra,0),P(extra,1));
-        dfree(extra);
-        dfree(screen2);
-    }
-    dfree(screen);    
-    exit(0);
-}
-void test_calcenc(){
-    long nx=512;
-    dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., nx, 1);
-    dmat* xx=dlinspace(0, 1, nx>>1);
-    dmat *enc=denc(screen, xx, -1, 10); 
-    dshow(enc, "enc"); 
-    dfree(enc);
-    dfree(xx);
-    dfree(screen);
-    exit(0);
-}
-void test_embed(){
-    for(long nx=6; nx<8; nx++){
-        for(double ang=0; ang<M_PI/2; ang+=M_PI/3){
-            map_t *atm=genatm_simple(0.186, 0, -11./3., 1./64., 6, 1);
-            dmat *in=(dmat *)atm;
-            cmat* cin=cnew(NX(atm), NY(atm));
-            cembedd(cin, in, 0);
-            dshow(in, "in");
-            for(long i=0; i<10; i++){
-                dmat *out=dnew(i,i);   
-                dembed(out, in, ang); 
-                dshow(out, "out");
-                if(i>0 && fabs(P(in, nx>>1, nx>>1) - P(out,i>>1, i>>1))>1e-15){
-                    error("mismatch\n");
-                }
-                dfree(out);
-                cmat* cout=cnew(i, i);
-                cembedd(cout, in, ang);
-                if(i>0&&fabs(P(in, nx>>1, nx>>1)-creal(P(cout, i>>1, i>>1)))>1e-15){
-                    error("mismatch\n");
-                }
-                cmat* cout2=cnew(i, i);
-                cembed(cout2, cin, ang);
-                if(csumdiffsq(cout, cout2)>1e-12){
-                    error("mismatch\n");
-                }
-                cfree(cout);
-                cfree(cout2);
-            }
-            cfree(cin);
-            mapfree(atm);
-            break;
-        }
-    }
-    exit(0);
-}
+
 int main(int argc, char **argv){
-    
-    test_embed();
-    test_calcenc();
-    test_psd2d();
     test_servo();
     test_async();
     test_sde();
@@ -484,15 +334,11 @@ int main(int argc, char **argv){
     test_psd1d();
     test_spline_2d();
     test_spline();
-    test_dpinv();
 
     test_save();
     test_dcellcat(argc, argv);
     test_dcellpinv();
     test_hist();
     test_clip();
-    test_dshift2center();
-    test_dcircle();
-    test_d2cell();
-    test_dcp();
+   
 }

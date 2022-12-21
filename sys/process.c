@@ -134,7 +134,7 @@ void init_process(void){
 	}
 
 	NCPU=get_ncpu();
-	MAXTHREAD=sysconf(_SC_NPROCESSORS_ONLN);
+	MAXTHREAD=(int)sysconf(_SC_NPROCESSORS_ONLN);
 #if _OPENMP
 	//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
 	if(getenv("OMP_NUM_THREADS")){
@@ -145,7 +145,7 @@ void init_process(void){
 	}
 #endif
 	if(!NTHREAD) NTHREAD=MAXTHREAD;
-	TCK=sysconf(_SC_CLK_TCK);
+	TCK=(int)sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
 	FILE* fp=fopen("/proc/meminfo", "r");
 	if(fp&&fscanf(fp, "%*s %ld %*s", &NMEM)==1){

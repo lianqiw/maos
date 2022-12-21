@@ -34,7 +34,7 @@ double get_usage_mem(void);
 double get_usage_cpu(void);
 
 int get_job_progname(char *res, int nres, int pid);
-int get_job_mem(void);
+size_t get_job_mem(void);
 double get_job_launchtime(int pid);
 
 int get_cpu_avail(void);

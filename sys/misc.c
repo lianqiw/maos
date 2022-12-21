@@ -120,8 +120,8 @@ int copyfile(const char* src, const char* dest){
 */
 int check_suffix(const char* fn, const char* suffix){
 	if(!fn||!suffix) return 0;
-	int lfn=strlen(fn);
-	int lsu=strlen(suffix);
+	size_t lfn=strlen(fn);
+	size_t lsu=strlen(suffix);
 	if(lfn<lsu) return 0;
 	if(mystrcmp(fn+lfn-lsu, suffix)){
 		return 0;
@@ -354,7 +354,7 @@ int issock(int fd){
 size_t flen(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
-	return stat(fn, &buf)?0:buf.st_size;
+	return stat(fn, &buf)?0:(size_t)buf.st_size;
 }
 /**
    Return the modification time of the file
@@ -369,7 +369,7 @@ time_t fmtime(const char* fn){
 */
 char* stradd(const char* a, ...){
 	char* out;
-	int n=0;
+	size_t n=0;
 	va_list ap;
 	va_start(ap, a);
 	if(a){
@@ -395,7 +395,7 @@ char* stradd(const char* a, ...){
 */
 char* strnadd(int argc, const char* argv[], const char* delim){
 	if(!argc) return NULL;
-	int slen=1+strlen(delim);
+	size_t slen=1+strlen(delim);
 	for(int iarg=0; iarg<argc; iarg++){
 		slen+=strlen(delim)+strlen(argv[iarg]);
 	}
@@ -428,9 +428,9 @@ char* expand_filename(const char* fn){
 /**
    Duplicate a string. Check for NULL.  Do not call strndup to avoid recursive deadlock.
  */
-char* mystrndup(const char* A, int len){
+char* mystrndup(const char* A, size_t len){
 	if(!len) return NULL;
-	int len2=strlen(A);
+	size_t len2=strlen(A);
 	if(!len2) return NULL;
 	if(len2<len) len=len2;
 	char* B=(char*)malloc(len+1);
@@ -446,7 +446,7 @@ char* mystrdup(const char* A){
 	if(!A){
 		return NULL;
 	} else{
-		int nlen=strlen(A);
+		size_t nlen=strlen(A);
 		char* B=(char*)malloc(nlen+1);
 		memcpy(B, A, nlen+1);
 		return B;
@@ -516,8 +516,8 @@ void mymkdir(const char* format, ...){
  */
 int mystrcmp(const char* a, const char* b){
 	if(!a||!b) return 1;
-	int la=strlen(a);
-	int lb=strlen(b);
+	size_t la=strlen(a);
+	size_t lb=strlen(b);
 	if(la==0||lb==0||la<lb){
 		return 1;
 	} else{
@@ -694,7 +694,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 			case M_INT:{
 				if(options[iopt].valtype==2){//needs an array
 					if(isfun) error("Not implemented yet\n");
-					int val=strtol(value, &start, 10);
+					int val=(int)strtol(value, &start, 10);
 					int** tmp=(int**)options[iopt].val;
 					int* nval=(int*)options[iopt].nval;
 					int i;
@@ -703,11 +703,11 @@ void parse_argopt(char* cmds, argopt_t* options){
 					}
 					if(i==*nval){
 						(*nval)++;
-						*tmp=myrealloc(*tmp, *nval, int);
+						*tmp=myrealloc(*tmp, (size_t)*nval, int);
 						(*tmp)[(*nval)-1]=val;
 					}
 				} else{
-					int val=value?strtol(value, &start, 10):1;
+					int val=value?(int)strtol(value, &start, 10):1;
 					if(value==start) val=1;//no entry, default to 1.
 					if(isfun){/*Is function */
 						void (*tmp)(int)=(void (*)(int))options[iopt].val;
@@ -726,7 +726,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 					double** tmp=(double**)options[iopt].val;
 					int* nval=(int*)options[iopt].nval;
 					(*nval)++;
-					*tmp=myrealloc(*tmp, *nval, double);
+					*tmp=myrealloc(*tmp, (size_t)*nval, double);
 					(*tmp)[(*nval)-1]=(int)val;
 				} else{
 					double val=value?strtod(value, &start):1;
@@ -861,14 +861,14 @@ void set_realtime(int icpu, int niceness){
 	//fail stack
 	struct rlimit rl;
 	if(!getrlimit(RLIMIT_STACK, &rl)){
-		const int NSTACK=rl.rlim_cur/2;
+		const int NSTACK=(int)(rl.rlim_cur/2);
 		char tmp[NSTACK];
 		memset(tmp, 0, NSTACK);
 	}
 	//Set only if we are root.
 	if(getuid()==0){
 		info("Set priority to -20\n");
-		setpriority(PRIO_PROCESS, getpid(), -20);//is this necessary?
+		setpriority(PRIO_PROCESS, (id_t)getpid(), -20);//is this necessary?
 #ifdef __linux__
 		struct sched_param param;
 		sched_getparam(getpid(), &param);

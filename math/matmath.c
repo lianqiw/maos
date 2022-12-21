@@ -460,10 +460,10 @@ T X(diff)(const X(mat)* A, const X(mat)* B){
    the points in meter along x or y dimension. Each full point received value of
    'val'
 */
-void X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
+int X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 	if(!check_mat(A)||r<0){
-		warning("Input is not valid");
-		return;
+		warning("Input is not valid\n");
+		return -1;
 	}
 	const int nres=10;
 	const R res=(R)(2./nres);
@@ -500,16 +500,17 @@ OMP_SIMD()
 			P(A, ix, iy)+=val2;
 		}
 	}
+	return 0;
 }
 
 /**
    Mark valid grid points. If any direct neighbor of a point is within r, make
    the point valid. Parameters are the same as X(circle).
 */
-void X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
-	if(!check_mat(A)){
-		warning("A is not valid");
-		return;
+int X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
+	if(!check_mat(A) || r<0){
+		warning("Input is not valid\n");
+		return -1;
 	}
 	R r2=r*r;
 	R r2l=(r-1.5)*(r-1.5);//lower limit
@@ -536,6 +537,7 @@ void X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
 			}
 		}
 	}
+	return 0;
 }
 
 /**
@@ -1376,9 +1378,8 @@ if(theta==0){/*no rotation.*/ \
 		iystart=0, iyend=niny;\
 	}\
 	for(long iy=iystart; iy<iyend; iy++){\
-		T* outi=&P(out, skipx, iy+skipy);\
 		for(long ix=ixstart; ix<ixend; ix++){\
-			outi[ix]=OPin(P(in, ix, iy));\
+			P(out, ix+skipx, iy+skipy)=OPin(P(in, ix, iy));\
 		}\
 	}\
 } else{\
@@ -1677,6 +1678,7 @@ T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 
 /**
    duplicate a X(cell) object.
+   Not implemented for lmat or imat as X(cellcp) is defined in spmm.c
 */
 X(cell)* X(celldup)(const X(cell)* in){
 	X(cell)* out=NULL;

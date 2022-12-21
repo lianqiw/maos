@@ -62,8 +62,8 @@ int get_job_progname(char* res, int nres, int pid){
 /**
    Get the memory usage of current process.
  */
-int get_job_mem(void){/*return in KiB */
-	int mem;
+size_t get_job_mem(void){/*return in KiB */
+	size_t mem;
 
 	struct task_basic_info t_info;
 	mach_msg_type_number_t t_info_count=TASK_BASIC_INFO_COUNT;

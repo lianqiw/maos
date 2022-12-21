@@ -24,7 +24,7 @@
 #include <cmocka.h>
 #include "../lib/aos.h"
 
-static void mat_basic(void **state){
+void mat_basic(void **state){
     (void)state;
     dmat *b=dnew(3, 3);
     rand_t rstat;
@@ -245,81 +245,29 @@ static void mat_basic(void **state){
     dfree(b);
     assert_null(b);
 }
-void print_mat(dmat *out){
-    for(long iy=0; iy<NY(out); iy++){
-        for(long ix=0; ix<NX(out); ix++){
-            print_message("%4.0f ", P(out, ix, iy));
-        }
-        print_message("\n");
-    }
-}
-void mat_embed(){
-    for(long nx=6; nx<8; nx++){
-        for(double ang=0; ang<M_PI/2; ang+=M_PI/3){
-            map_t *atm=genatm_simple(0.186, 0, -11./3., 1./64., 6, 1);
-            dmat *in=(dmat *)atm;
-            //dshow(in, "in");
-            for(long i=0; i<10; i++){
-                dmat *out=dnew(i,i);   
-                dembed(out, in, ang); 
-                //dshow(out, "out");
-                if(i>0){
-                    assert_float_equal(P(in, nx>>1, nx>>1), P(out,i>>1, i>>1), 1e-15);
-                }
-                dfree(out);
-            }
-            mapfree(atm);
-            break;
-        }
-    }
-}
 
-static void mat_fresnel_prop(void **state){
-    (void)state;
-    if(zfexist("wvf0")){
-        cmat *wvf0=cread("wvf0");
-        cmat *wvf1=0;
-        real dxout=0;
-        fresnel_prop(&wvf1, &dxout, wvf0, 1./64, 0.589e-6, 100, 1, 1);
-    }
+void mat_cell(){
+    dmat *in=dlinspace(0,1,16);
+    long dims[2]={4,12};
+    dcell *in2vec=d2cellref(in, dims, 2);
+    assert_non_null(in2vec->m);
+    assert_int_equal(NX(in2vec),2);
+    assert_int_equal(NX(P(in2vec,1)),dims[1]);
+    assert_float_equal(dcellsum(in2vec), dsum(in), 1e-12);
+    dcell *inc=dcellnew_same(2, 2, 2, 2);assert_non_null(inc->m);
+    reshape(in, 4, 4);
+    dcell *out=0;
+    d2cell(&out, in, inc);
+    assert_float_equal(dcellsum(out), dsum(in), 1e-12);
+    assert_int_equal(NX(out), NX(inc));
+    assert_int_equal(NY(out), NY(inc));
 }
-void mat_calcenc(){
-    dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 129, 1);
-    dmat *xx, *enc;
-    real ss1=0, ss2=0, ss3=0;
-    xx=dlinspace(0,1,60); enc=denc(screen, xx, -1, 10); ss1=P(enc, 10); dfree(enc); dfree(xx);
-    xx=dlinspace(0,1,70); enc=denc(screen, xx, -1, 10); ss2=P(enc, 10); dfree(enc); dfree(xx);
-    dmat *screen2=dnew(128,128);
-    dembed(screen2,screen,0);
-    xx=dlinspace(0,1,70); enc=denc(screen2, xx, -1, 10); ss3=P(enc, 10); dfree(enc); dfree(xx);
-    //info("ss=%g,%g,%g\n", ss1, ss2, ss3);
-    assert_float_equal(ss1, ss2, 1e-9);
-    assert_float_equal(ss1, ss3, 1e-9);
-    dfree(enc);
-    dfree(xx);
-    dfree(screen);
-}
-
 int main(void){
-    register_signal_handler(dummy_signal_handler);//captures error().
-    //register_malloc(_test_malloc, _test_calloc, _test_realloc, _test_free);
-    (void)dummy_signal_handler;
-    (void)mat_basic;
-    (void)mat_embed;
-    (void)mat_fresnel_prop;
-#if 0
-    mat_basic(NULL);
-    mat_embed(NULL);
-    mat_fresnel_prop(NULL);
-#else
-    LOG_LEVEL=0;
+    register_signal_handler(dummy_signal_handler);//captures error(). remove for debugging.
+    LOG_LEVEL=-4;//set higher level to suppress print out
     const struct CMUnitTest tests[]={
         cmocka_unit_test(mat_basic),
-        cmocka_unit_test(mat_embed),
-        cmocka_unit_test(mat_fresnel_prop),
-        cmocka_unit_test(mat_calcenc),
+        cmocka_unit_test(mat_cell)
     };
-    //(void)tests;
     return cmocka_run_group_tests(tests, NULL, NULL);
-#endif
 }

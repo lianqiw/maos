@@ -81,7 +81,7 @@ static size_t memalloc=0, memfree=0;
 #if METHOD == 1 //Use hash table
 typedef struct{
 	void *p;
-	int size;
+	unsigned int size;
 	int nfunc;
 	union{
 		char funtrace[funtrace_len];//new way of recording initial call location (not yet used)
@@ -141,7 +141,7 @@ static void memkey_add(void *p, size_t size){
 			void *dummy=NULL;
 			//try to occupy slot using CAS
 			if(atomic_compare_exchange_n(&memkey_all[ind].p, &dummy, p)){//success
-				memkey_all[ind].size=size;
+				memkey_all[ind].size=(unsigned int)size;
 				if(funtrace[0]){
 					memcpy(memkey_all[ind].funtrace, funtrace, funtrace_len);
 				} else{
@@ -201,7 +201,7 @@ static void print_mem_debug(){
 		info3("Signal is caught, will not print detailed memory usage.\n");
 	}else{
 		unsigned int counter=0;
-		unsigned int ans=0;
+		int ans=0;
 		for(unsigned int i=0; i<=memkey_len; i++){
 			if(memkey_all[i].p){
 				if(counter<50){

@@ -54,7 +54,7 @@ char *expand_filename(const char *fn);
 void remove_file_older(const char *fndir, int level, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);
 int mystrcmp(const char *a, const char *b);
-char *mystrndup(const char *A, int len);
+char *mystrndup(const char *A, size_t len);
 void cloexec(int fd);
 void mysleep(double sec);
 int mypause(int fd1, int fd2);

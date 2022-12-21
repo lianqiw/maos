@@ -178,7 +178,7 @@ int single_instance_daemonize(const char* lockfolder_in,
 	}
 	/*lock success, forking and put to background. */
 	/*fork to detach from terminal. Do the fist fork*/
-	long pid=fork();
+	pid_t pid=fork();
 	if(pid<0){
 		dbg_time("failed to fork. return\n");
 		if(daemon_func){

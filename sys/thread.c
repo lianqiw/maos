@@ -51,10 +51,10 @@ int thread_new(thread_fun fun, void* arg){
 thread_t* thread_prep(long start, long end, long nthread,
 	thread_wrapfun fun, void* data){
 	if(nthread==0) return NULL;
-	thread_t *thd=mycalloc(nthread, thread_t);
+	thread_t *thd=mycalloc((size_t)nthread, thread_t);
 	long nt=(end-start+nthread-1)/nthread;
 	int skip=0;
-	int nthread_active=0; //active threads
+	long nthread_active=0; //active threads
 	for(long ithread=0; ithread<nthread; ithread++){
 		thd[ithread].ithread=ithread;
 		thd[ithread].nthread=nthread;
