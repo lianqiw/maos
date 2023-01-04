@@ -337,12 +337,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>smm</b> (<a class="el
 <tr class="separator:a34466c2314bb94fe25308be75c03d81b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff04baf45423cd8a3c3bc03e0a334a0f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="smath_8h.html#aff04baf45423cd8a3c3bc03e0a334a0f">sdiff</a> (const <a class="el" href="type_8h.html#structsmat">smat</a> *A, const <a class="el" href="type_8h.html#structsmat">smat</a> *B)</td></tr>
 <tr class="separator:aff04baf45423cd8a3c3bc03e0a334a0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afec275089ac8cb58cd8495d1e6a5b3a6"><td class="memItemLeft" align="right" valign="top"><a id="afec275089ac8cb58cd8495d1e6a5b3a6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scircle</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, float cx, float cy, float dx, float dy, float r, float val)</td></tr>
-<tr class="separator:afec275089ac8cb58cd8495d1e6a5b3a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf363f4ead108a601853638c18e54055"><td class="memItemLeft" align="right" valign="top"><a id="abf363f4ead108a601853638c18e54055"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scircle_symbolic</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, float cx, float cy, float dx, float dy, float r)</td></tr>
-<tr class="separator:abf363f4ead108a601853638c18e54055"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66f5d7a45851a2f70718861c3fdecbcf"><td class="memItemLeft" align="right" valign="top"><a id="a66f5d7a45851a2f70718861c3fdecbcf"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>scircle</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, float cx, float cy, float dx, float dy, float r, float val)</td></tr>
+<tr class="separator:a66f5d7a45851a2f70718861c3fdecbcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dfab897a3d6ec38c2754528f8840793"><td class="memItemLeft" align="right" valign="top"><a id="a6dfab897a3d6ec38c2754528f8840793"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>scircle_symbolic</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, float cx, float cy, float dx, float dy, float r)</td></tr>
+<tr class="separator:a6dfab897a3d6ec38c2754528f8840793"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b131f2c6b0a7537d27e746232e86e98"><td class="memItemLeft" align="right" valign="top"><a id="a8b131f2c6b0a7537d27e746232e86e98"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>srotvec</b> (<a class="el" href="type_8h.html#structsmat">smat</a> *A, const float theta)</td></tr>
 <tr class="separator:a8b131f2c6b0a7537d27e746232e86e98"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1948,7 +1948,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>sspcelldroptol</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>duplicate a SX(cell) object. </p>
+<p>duplicate a SX(cell) object. Not implemented for lmat or imat as SX(cellcp) is defined in spmm.c </p>
 
 </div>
 </div>

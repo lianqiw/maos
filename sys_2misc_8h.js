@@ -39,7 +39,7 @@ var sys_2misc_8h =
     [ "remove_file_older", "sys_2misc_8h.html#a25b56eea8d47545699946b02ffd09690", null ],
     [ "mymkdir", "sys_2misc_8h.html#a2bd73426371e8d2d46dbf3cb11c45f60", null ],
     [ "mystrcmp", "sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f", null ],
-    [ "mystrndup", "sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37", null ],
+    [ "mystrndup", "sys_2misc_8h.html#adc66375416e374222e5f189632e3a08a", null ],
     [ "cloexec", "sys_2misc_8h.html#a7558928e15e86ed66d9139b472b0723b", null ],
     [ "mysleep", "sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53", null ],
     [ "mypause", "sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9", null ],

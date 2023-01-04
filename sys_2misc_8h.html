@@ -114,7 +114,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>strdup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> /*our strdup handles NULL correctly, and talk to mem.c */</td></tr>
 <tr class="separator:a9254b089d435892385cf14d0ab4a7a2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memItemLeft" align="right" valign="top"><a id="ad03229fc70e029be3fb59fe8dc7aef6f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>strndup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37">mystrndup</a></td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>strndup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#adc66375416e374222e5f189632e3a08a">mystrndup</a></td></tr>
 <tr class="separator:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -176,8 +176,8 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>myhostname</b
 <tr class="separator:a2bd73426371e8d2d46dbf3cb11c45f60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abdb55b1f06f30fbd5f164aa613a0c67f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f">mystrcmp</a> (const char *a, const char *b)</td></tr>
 <tr class="separator:abdb55b1f06f30fbd5f164aa613a0c67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b7bb8ce8f72f86aaefb58720ec8ef37"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37">mystrndup</a> (const char *A, int len)</td></tr>
-<tr class="separator:a7b7bb8ce8f72f86aaefb58720ec8ef37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc66375416e374222e5f189632e3a08a"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#adc66375416e374222e5f189632e3a08a">mystrndup</a> (const char *A, size_t len)</td></tr>
+<tr class="separator:adc66375416e374222e5f189632e3a08a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7558928e15e86ed66d9139b472b0723b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a7558928e15e86ed66d9139b472b0723b">cloexec</a> (int fd)</td></tr>
 <tr class="separator:a7558928e15e86ed66d9139b472b0723b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42b49c2e4e28a25a37bb3a3760cedf53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53">mysleep</a> (double sec)</td></tr>
@@ -906,8 +906,8 @@ nval</td>
 
 </div>
 </div>
-<a id="a7b7bb8ce8f72f86aaefb58720ec8ef37"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b7bb8ce8f72f86aaefb58720ec8ef37">&#9670;&nbsp;</a></span>mystrndup()</h2>
+<a id="adc66375416e374222e5f189632e3a08a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc66375416e374222e5f189632e3a08a">&#9670;&nbsp;</a></span>mystrndup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -921,7 +921,7 @@ nval</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>len</em>&#160;</td>
         </tr>
         <tr>

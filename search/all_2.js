@@ -71,7 +71,7 @@ var searchData=
   ['ccelltrans',['ccelltrans',['../cmath_8h.html#adb8e69bbe2c05a039f236fbb2eae12de',1,'ctmp.c']]],
   ['ccellzero',['ccellzero',['../cmath_8h.html#a193a03f98ee7128386819d9821ceb859',1,'ctmp.c']]],
   ['cchol',['cchol',['../cmath_8h.html#a8cec4e93b06f9c4f1b9b220a93d04db6',1,'ctmp.c']]],
-  ['ccircle_5fsymbolic',['ccircle_symbolic',['../cmath_8h.html#a6c30f0ac4e6604e95b842e54442ff1c2',1,'ctmp.c']]],
+  ['ccircle_5fsymbolic',['ccircle_symbolic',['../cmath_8h.html#aeffa397a3843c4547c6877c6cb7b2e62',1,'ctmp.c']]],
   ['ccog',['ccog',['../cmath_8h.html#a415711fbbbfd48fdf7ff5c843c8ba53e',1,'ctmp.c']]],
   ['ccorr',['ccorr',['../cmath_8h.html#ad22442f812f82bd6b213bedcbcd83e5f',1,'ctmp.c']]],
   ['ccp',['ccp',['../cmath_8h.html#adb3c55ee96a9e7249403f738d251688c',1,'ctmp.c']]],

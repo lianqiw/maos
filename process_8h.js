@@ -8,7 +8,7 @@ var process_8h =
     [ "get_usage_mem", "process_8h.html#a1a10d4fee6c8290b8d8d9308e56cc0e2", null ],
     [ "get_usage_cpu", "process_8h.html#a46d636a938c91ef9c50de2f562bf6c9e", null ],
     [ "get_job_progname", "process_8h.html#a7d7108cad88dd2116d1e1876f6c1bcc2", null ],
-    [ "get_job_mem", "process_8h.html#a9832172193bbb8833be3a585047b12e3", null ],
+    [ "get_job_mem", "process_8h.html#a536d4d119e9a46c98334364b765d51ae", null ],
     [ "get_job_launchtime", "process_8h.html#a0dee8cc569401f4424d40079c84135a1", null ],
     [ "get_cpu_avail", "process_8h.html#a1c176fb9d3525328cc87386d587b156a", null ],
     [ "read_cpu_counter", "process_8h.html#a9c4709c0dd3a1116498f55e126e39e8b", null ],

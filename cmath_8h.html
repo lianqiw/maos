@@ -335,11 +335,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cmm</b> (<a class="el
 <tr class="separator:a67888115ee1c65459c26209c313befe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad266d4e8d08088a9ea02d16e6b9e6f15"><td class="memItemLeft" align="right" valign="top">comp&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ad266d4e8d08088a9ea02d16e6b9e6f15">cdiff</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A, const <a class="el" href="type_8h.html#structcmat">cmat</a> *B)</td></tr>
 <tr class="separator:ad266d4e8d08088a9ea02d16e6b9e6f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf0f00447df5c141f1326931ceb63e68"><td class="memItemLeft" align="right" valign="top"><a id="acf0f00447df5c141f1326931ceb63e68"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ccircle</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real cx, real cy, real dx, real dy, real r, comp val)</td></tr>
-<tr class="separator:acf0f00447df5c141f1326931ceb63e68"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c30f0ac4e6604e95b842e54442ff1c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a6c30f0ac4e6604e95b842e54442ff1c2">ccircle_symbolic</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real cx, real cy, real dx, real dy, real r)</td></tr>
-<tr class="separator:a6c30f0ac4e6604e95b842e54442ff1c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af58c153ffedd233ccbfc4423d1e7f953"><td class="memItemLeft" align="right" valign="top"><a id="af58c153ffedd233ccbfc4423d1e7f953"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>ccircle</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real cx, real cy, real dx, real dy, real r, comp val)</td></tr>
+<tr class="separator:af58c153ffedd233ccbfc4423d1e7f953"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeffa397a3843c4547c6877c6cb7b2e62"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aeffa397a3843c4547c6877c6cb7b2e62">ccircle_symbolic</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real cx, real cy, real dx, real dy, real r)</td></tr>
+<tr class="separator:aeffa397a3843c4547c6877c6cb7b2e62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14c53b64890a8d75683c0421b4810593"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a14c53b64890a8d75683c0421b4810593">crotvec</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, const real theta)</td></tr>
 <tr class="separator:a14c53b64890a8d75683c0421b4810593"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f87b233f6f3283794697c9403240dce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a5f87b233f6f3283794697c9403240dce">crotvect</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, const real theta)</td></tr>
@@ -1959,8 +1959,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
         </tr>
       </table>
 </div><div class="memdoc">
-<p>duplicate a CX(cell) object.</p>
-<p>duplicate a ZX(cell) object. </p>
+<p>duplicate a CX(cell) object. Not implemented for lmat or imat as CX(cellcp) is defined in spmm.c</p>
+<p>duplicate a ZX(cell) object. Not implemented for lmat or imat as ZX(cellcp) is defined in spmm.c </p>
 
 </div>
 </div>
@@ -2970,14 +2970,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
 
 </div>
 </div>
-<a id="a6c30f0ac4e6604e95b842e54442ff1c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c30f0ac4e6604e95b842e54442ff1c2">&#9670;&nbsp;</a></span>ccircle_symbolic()</h2>
+<a id="aeffa397a3843c4547c6877c6cb7b2e62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeffa397a3843c4547c6877c6cb7b2e62">&#9670;&nbsp;</a></span>ccircle_symbolic()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void ccircle_symbolic </td>
+          <td class="memname">int ccircle_symbolic </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>

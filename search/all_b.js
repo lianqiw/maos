@@ -199,6 +199,6 @@ var searchData=
   ['mysleep',['mysleep',['../sys_2misc_8h.html#a42b49c2e4e28a25a37bb3a3760cedf53',1,'misc.c']]],
   ['mystrcmp',['mystrcmp',['../sys_2misc_8h.html#abdb55b1f06f30fbd5f164aa613a0c67f',1,'misc.c']]],
   ['mystrdup',['mystrdup',['../sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9',1,'misc.c']]],
-  ['mystrndup',['mystrndup',['../sys_2misc_8h.html#a7b7bb8ce8f72f86aaefb58720ec8ef37',1,'misc.c']]],
+  ['mystrndup',['mystrndup',['../sys_2misc_8h.html#adc66375416e374222e5f189632e3a08a',1,'misc.c']]],
   ['mysymlink',['mysymlink',['../sys_2misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a',1,'misc.c']]]
 ];
