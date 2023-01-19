@@ -8,12 +8,17 @@ import numpy as np
 #import struct
 
 
-def coord2grid(x):
+def coord2grid(x, **kargs):
     xmin = x.min()
     xmax = x.max()
     x2 = x-xmin
     if x2.max() > 0:
-        dx = x2[x2 > 0].min()
+        if 'dx' in kargs:
+            dx=kargs['dx']
+        else:
+            dx = x2[x2 > 0].min()
+            if dx*x.size < xmax-xmin: #irregular grid 
+                dx=(xmax-xmin)/np.sqrt(x.size-1)
         dx2 = 1/dx
         nx = np.round((xmax-xmin)*dx2+1.).astype(int)
         ix = np.floor(x2*dx2+1e-5).astype(int)
@@ -30,11 +35,13 @@ def isvec(arg):
 
 
 def isloc(arg):
-    return arg.ndim == 2 and arg.shape[0] == 2
+    return arg.ndim == 2 and ((arg.shape[0]>2 and arg.shape[1]==2) or (arg.shape[0] == 2 and arg.shape[1]>2))
 
 
-def locembed(loc, opd0, return_ext=0):
+def locembed(loc, opd0, return_ext=0, **kargs):
     # draw(loc, opd): embed opd onto loc
+    if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
+        loc=loc.T
     opd=opd0.view()
     nloc = loc.shape[1]
     if opd.dtype==object: #cell
@@ -42,7 +49,7 @@ def locembed(loc, opd0, return_ext=0):
         ext = None
         for opdi in opd:
             if opdi.size>0:
-                ims_i,ext=locembed(loc, opdi, return_ext)
+                ims_i,ext=locembed(loc, opdi, return_ext, **kargs)
                 ims.append(ims_i)
         ims=np.asarray(ims)
         if nframe == 1:
@@ -63,8 +70,8 @@ def locembed(loc, opd0, return_ext=0):
 
     # print('opd=',opd.shape)
     ims = np.empty(nframe, dtype=object)
-    (ix, nx, dx, xi) = coord2grid(loc[0])
-    (iy, ny, dy, yi) = coord2grid(loc[1])
+    (ix, nx, dx, xi) = coord2grid(loc[0], **kargs)
+    (iy, ny, dy, yi) = coord2grid(loc[1], **kargs)
     for iframe in range(nframe):
         im = np.full((nx*ny),np.NaN)
         im[ix+iy*nx] = opd[iframe, :]
@@ -134,6 +141,8 @@ def draw(*args, **kargs):
         if type(arg0)==object:
             arg0.shape=old_shape
     elif isloc(arg0):  # first argument is loc
+        if arg0.shape[0]>2 and arg0.shape[1]==2: #need a transpose
+            arg0=arg0.T
         if len(args) == 1:
             # plot grid
             plt.plot(arg0[0], arg0[1], '+')
@@ -142,7 +151,7 @@ def draw(*args, **kargs):
             plt.ylabel('y (m)')
         elif len(args) == 2:
             # draw(loc, opd): embed opd onto loc
-            ims, ext2 = locembed(arg0, args[1], 1)
+            ims, ext2 = locembed(arg0, args[1], 1, **kargs)
             # print('ext2=',ext2)
             kargs['ext']=ext2
             draw(ims, **kargs)
@@ -171,7 +180,10 @@ def draw(*args, **kargs):
         #im.set_clim(0, 0.5)
         if 'clim' in kargs and kargs['clim'] is not None:
             plt.clim(kargs['clim'])
-        plt.colorbar(im, fraction=0.046, pad=0.04)
+        im_ratio = img.shape[0]/img.shape[1]
+        plt.colorbar(im, fraction=0.046*im_ratio, pad=0.04, extendfrac='auto')
+        #cax = plt.gcf().add_axes([plt.gca().get_position().x1+0.01, plt.gca().get_position().y0, 0.02, plt.gca().get_position().height])
+        #plt.colorbar(im, cax=cax)
         plt.grid(False)
 
 # Use as standalone script
