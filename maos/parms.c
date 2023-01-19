@@ -72,7 +72,12 @@ void free_powfs_cfg(powfs_cfg_t *powfscfg){
 	free(powfscfg->qe);
 	dfree(powfscfg->siglevs);
 }
-
+void free_dm_cfg(dm_cfg_t *dmcfg){
+	dfree(dmcfg->actstuck);
+	dfree(dmcfg->actfloat);
+	cellfree(dmcfg->strokescale);
+	dfree(dmcfg->stroke);
+}
 /**
    Free the parms struct.
 */
@@ -128,37 +133,34 @@ void free_parms(parms_t *parms){
 	for(int isurf=0; isurf<parms->nsurf; isurf++){
 		free(parms->surf[isurf]);
 	}
-	free(parms->surf);
+	free(parms->surf); parms->nsurf=0;
 	for(int isurf=0; isurf<parms->ntsurf; isurf++){
 		free(parms->tsurf[isurf]);
 	}
-	free(parms->tsurf);
+	free(parms->tsurf); parms->ntsurf=0;
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		free_powfs_cfg(&parms->powfs[ipowfs]);
 	}
-	free(parms->powfs);
+	free(parms->powfs); parms->npowfs=0;
 	if(parms->wfs!=parms->wfsr){
-		free(parms->wfsr);
+		free(parms->wfsr); parms->nwfsr=0;
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		dfree(parms->wfs[iwfs].wvlwts);
 		dfree(parms->wfs[iwfs].sabad);
 	}
-	free(parms->wfs);
+	free(parms->wfs); parms->nwfs=0;
 
 	for(int idm=0; idm<parms->ndm; idm++){
-		dfree(parms->dm[idm].actstuck);
-		dfree(parms->dm[idm].actfloat);
-		cellfree(parms->dm[idm].strokescale);
-		dfree(parms->dm[idm].stroke);
+		free_dm_cfg(&parms->dm[idm]);
 	}
-	free(parms->dm);
+	free(parms->dm); parms->ndm=0;
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 		dfree(parms->moao[imoao].actstuck);
 		dfree(parms->moao[imoao].actfloat);
 	}
-	free(parms->moao);
+	free(parms->moao); parms->nmoao=0;
 	free(parms->aper.fnamp);
 	free(parms->aper.pupmask);
 	lfree(parms->save.ints);
@@ -1637,14 +1639,18 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			free_powfs_cfg(&parms->powfs[ipowfs]);
 		}
-		free(parms->powfs); parms->powfs=NULL;
-		parms->npowfs=0;
+		free(parms->powfs); parms->powfs=NULL;parms->npowfs=0;
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			dfree(parms->wfs[iwfs].wvlwts);
 			free(parms->wfs[iwfs].sabad);
 		}
-		free(parms->wfs); parms->wfs=NULL;
-		parms->nwfs=0;
+		free(parms->wfs); parms->wfs=NULL;parms->nwfs=0;
+	}
+	if(parms->sim.evlol){
+		for(int idm=0; idm<parms->ndm; idm++){
+			free_dm_cfg(&parms->dm[idm]);
+		}
+		free(parms->dm); parms->dm=NULL; parms->ndm=0;
 	}
 
 	//Note that empty powfs have been removed in readcfg_wfs.

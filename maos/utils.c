@@ -438,15 +438,17 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	int draw_single_save=draw_single;
 	draw_single=0;
 	plotdir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */
-	plotloc("Aperture", parms, recon->ploc, 0, "ploc");
-	plotloc("Aperture", parms, recon->floc, 0, "floc");
-	for(int idm=0; idm<parms->ndm; idm++){
-		real ht=parms->dm[idm].ht;
-		plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc%d", idm);
-	}
-	for(int ips=0; ips<recon->npsr; ips++){
-		const real ht=P(recon->ht,ips);
-		plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc%d", ips);
+	if(recon){
+		plotloc("Aperture", parms, recon->ploc, 0, "ploc");
+		plotloc("Aperture", parms, recon->floc, 0, "floc");
+		for(int idm=0; idm<parms->ndm; idm++){
+			real ht=parms->dm[idm].ht;
+			plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc%d", idm);
+		}
+		for(int ips=0; ips<recon->npsr; ips++){
+			const real ht=P(recon->ht,ips);
+			plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc%d", ips);
+		}
 	}
 	drawopd("Aperture", aper->locs, aper->amp1, NULL, "Aperture Amplitude Map",
 		"x (m)", "y (m)", "aper");

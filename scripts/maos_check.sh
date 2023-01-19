@@ -12,12 +12,17 @@ if [ -n "$1" ];then
 else
     D=30
 fi
+has_gpu=0
 if nvidia-smi -i 0 >/dev/null 2>&1 ;then
-	has_gpu=1
-else
-	has_gpu=0
+	case "$@" in
+		"-g-1" | "-G0")
+		has_gpu=0
+		;;
+	*)
+		has_gpu=1
+		;;
+	esac
 fi
-
 case $D in
     2)
 		REF_GPU=(624.74 87.53 86.32 116.18 124.88 126.96 137.45 133.29 154.33 125.97 333.07 333.78 96.20 96.05 112.54 114.53 111.13 108.47 182.17 215.01 102.20 116.27 124.01 134.59) #2022-03-08 Cassiopeia
@@ -41,24 +46,27 @@ case $D in
 	;;
 esac
 if [ $has_gpu -eq 1 ];then
+	echo "Using GPU" 
 	REF=(${REF_GPU[@]})
 else
+	echo "Using CPU"
 	REF=(${REF_CPU[@]})
 fi
 fnlog=maos_check_${D}.log #log of all
 fntmp=maos_check_${D}.tmp #log of current simulation
 fnres=maos_check_${D}.res #result summary
-fnerr=maos_check_${D}.err
+#fnerr=maos_check_${D}.err
 
 echo $(date) > $fnlog
-echo $(date) > $fnerr
+#echo $(date) > $fnerr
 
 ii=0
 printf "%-20s   Res   Ref     %%\n" "D=${D}m DM is $((D*2))x$((D*2))" | tee $fnres
 function run_maos(){
 	aotype=$1
 	shift
-    ./maos sim.end=100 "$*" $args > $fntmp 2>&1
+    cmd="./maos sim.end=100 $* $args > $fntmp 2>&1"
+	eval $cmd
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]}
@@ -66,7 +74,7 @@ function run_maos(){
 		a=
 	fi
 	if [ x$a = x ];then
-		cat $fntmp >> $fnerr
+		cat $fntmp >> $fnlog
 		RMS[ii]=000.00
 		a=0
 		ans=1

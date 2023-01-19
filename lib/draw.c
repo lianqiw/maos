@@ -246,8 +246,10 @@ int draw_add(int sock){
 ///fd==-1 will remove all clients
 ///reuse==0 is called when write failed, do not try to write again
 static void draw_remove(int fd, int reuse){
-	for(sockinfo_t *p=sock_draws,*ppriv=NULL; p; ppriv=p,p=p->next){
+	for(sockinfo_t **curr=&sock_draws; *curr;){
+		sockinfo_t *p=*curr;
 		if(p->fd==fd || fd==-1){
+			*curr=p->next;
 			if(reuse){
 				stwriteint(p->fd, DRAW_FINAL);
 				dbg("send %d back to scheduler for reuse\n", p->fd);
@@ -268,12 +270,9 @@ static void draw_remove(int fd, int reuse){
 			list_destroy(&p->list);
 			free(p->figfn[0]);
 			free(p->figfn[1]);
-			if(ppriv){
-				ppriv=p->next;
-			}else{
-				sock_draws=p->next;
-			}
 			free(p);
+		}else{
+			curr=&p->next;
 		}
 	}
 	if(!sock_draws){
