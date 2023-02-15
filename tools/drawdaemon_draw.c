@@ -731,6 +731,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			/*computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim */
 			int icumu=(int)drawdata->icumu;
 			for(int ipts=0; ipts<drawdata->npts; ipts++){
+				const float *pts=drawdata->pts[ipts];
+				const int ptsnx=drawdata->ptsdim[ipts][0];
+				const int ptsny=drawdata->ptsdim[ipts][1];
+				if(!pts||ptsnx==0||ptsny==0) continue;
+
 				cairo_save(cr);
 				cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 				if(drawdata->nstyle>1){
@@ -742,10 +747,6 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				drawdata->style_pts[ipts]=style|connectpts<<3|color<<8|(int)(sym_size)<<4;
 				set_color(cr, color);
 
-				const float* pts=drawdata->pts[ipts];
-				const int ptsnx=drawdata->ptsdim[ipts][0];
-				const int ptsny=drawdata->ptsdim[ipts][1];
-				if(!pts||ptsnx==0||ptsny==0) continue;
 				const float* ptsx, * ptsy=NULL;
 				if(ptsny==2){
 					ptsx=pts;
@@ -1088,19 +1089,21 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		cairo_identity_matrix(cr);
 		/*draw legend */
 		char** legend=drawdata->legend;
-		const int ng=drawdata->npts;
+		const int npts=drawdata->npts;
 		const float linelen=30;/*length of line in legend if exist. */
 		float textlen=0;/*maximum legend length. */
 		float tall=0;
 		float symlen=0;/*length of legend symbol */
+		int npts_valid=0;
 		/*first figure out the size required of longest legend entry. */
-		for(int ig=0; ig<ng; ig++){
-			if(!legend[ig]) continue;
+		for(int ipts=0; ipts<npts; ipts++){
+			if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 			float legwidth, legheight;
-			pango_size(layout, legend[ig], &legwidth, &legheight);
+			npts_valid++;
+			pango_size(layout, legend[ipts], &legwidth, &legheight);
 			textlen=MAX(textlen, legwidth);/*length of text. */
 			tall=MAX(tall, legheight*1.2);/*tall of text. */
-			PARSE_STYLE(drawdata->style_pts[ig]);
+			PARSE_STYLE(drawdata->style_pts[ipts]);
 			if(connectpts){
 				symlen=MAX(symlen, linelen);
 			} else{
@@ -1113,7 +1116,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			const float legmarout=5;/*margin outside of box */
 			const float symmargin=5;/*space before and after symbol */
 			float legwidth=textlen+symlen+2*legmarin+symmargin*2;
-			float legheight=tall*ng+legmarin*2;
+			float legheight=tall*npts_valid+legmarin*2;
 			cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
 				yoff+legmarout+drawdata->legendoffy*(heightim-legheight-2*legmarout));
 			if(1){//box
@@ -1126,9 +1129,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_restore(cr);
 			}
 			cairo_translate(cr, legmarin+symmargin, legmarin);
-			for(int ig=0; ig<ng; ig++){
-				if(!legend[ig]) continue;
-				PARSE_STYLE(drawdata->style_pts[ig]);
+			for(int ipts=0; ipts<npts; ipts++){
+				if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
+				PARSE_STYLE(drawdata->style_pts[ipts]);
 				set_color(cr, color);
 				float ix=symlen*0.5;
 				float iy=tall*0.5;
@@ -1143,7 +1146,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				float toff=tall*1.1;
 				cairo_move_to(cr, symlen+symmargin, tall*0.8);
 				/*cairo_show_text(cr, legend[ig]); */
-				pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ig], 0, 0, 0);
+				pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ipts], 0, 0, 0);
 				cairo_translate(cr, 0, tall);
 			}
 		}

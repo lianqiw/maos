@@ -36,7 +36,6 @@
 #include <numa.h>
 #endif
 extern int KEEP_MEM;
-extern int draw_single;
 static real tk_0;
 static real tk_1;
 static real tk_atm=0;

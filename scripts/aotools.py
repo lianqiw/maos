@@ -12,7 +12,7 @@ from numpy import sqrt, exp, log, floor, ceil, nan, pi
 from numpy.random import rand, randn
 from numpy.fft import fft,ifft,fft2, ifft2, fftshift
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim, close, savefig
+from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close, savefig
 from cycler import cycler
 try:
     from natsort import natsorted
@@ -454,3 +454,22 @@ def stfun(opd, amp):
     hat3i[hat0i<=0.5]=0;
     st=fftshift(hat3i);
     return st
+def opdfillzero(im0, nrep):
+    '''Fill zero value of 2d image im0 nrep times by shifting and adding'''
+    im=im0+0 #avoid changing input data
+    for irep in range(nrep):
+        mask=im==0;#select zero points to fill
+        print(np.sum(mask))
+        if np.sum(mask)==0:
+            break;
+
+        mask1=im!=0;
+        im2=0;
+        mask2=0;
+        for ix in [-1,1]:
+            for axis in 0,1:
+                im2+=np.roll(im, ix, axis=axis)
+                mask2+=np.roll(mask1, ix, axis=axis)
+        mask[mask2==0]=0 
+        im[mask]=im2[mask]/mask2[mask]
+    return im

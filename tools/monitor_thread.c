@@ -150,6 +150,7 @@ static void host_added(int ihost, int sock){
 	proc_remove_all(ihost);/*remove all entries. */
 	if(sock>-1){
 		hsock[ihost]=sock;
+		socket_recv_timeout(sock, 60); //when use select, enable read timeout to avoid hang
 		FD_SET(sock, &active_fd_set);
 		if(!headless) g_idle_add(host_up, GINT_TO_POINTER(ihost));
 	}
@@ -473,6 +474,7 @@ void* listen_host(void* pmsock){
 	htime=mycalloc(nhost, time_t);
 	FD_ZERO(&active_fd_set);
 	FD_SET(msock, &active_fd_set);//listen to monitor itself
+	socket_recv_timeout(msock, 60); //when use select, enable read timeout to avoid hang
 	int keep_listen=1;
 	while(keep_listen){
 		fd_set read_fd_set=active_fd_set;

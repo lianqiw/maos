@@ -570,7 +570,7 @@ static void readcfg_wfs(parms_t *parms){
 	int powfs_wvlwts_override=readcfg_peek_override("powfs.wvlwts");
 	int count=0;
 	if(NX(siglev)!=0&&NX(siglev)!=parms->nwfs){
-		error("wfs.siglev can be either empty or %d\n",parms->nwfs);
+		error("wfs.siglev can be either empty or a vector of %d entries.\n",parms->nwfs);
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
@@ -1954,6 +1954,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 			if(parms->powfs[ipowfs].neamin){
 				warning("powfs%d: Limit minimum NEA to %.2f mas\n",ipowfs,parms->powfs[ipowfs].neamin);
+			}
+			if(parms->powfs[ipowfs].siglev<=0 || dmin(parms->powfs[ipowfs].siglevs)<=0){
+				error("powfs%d: siglev must be positive\n", ipowfs);
 			}
 		}
 		if(!parms->powfs[ipowfs].usephy&&parms->powfs[ipowfs].bkgrndfn){

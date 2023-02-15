@@ -37,6 +37,7 @@ int main(int argc, char* argv[]){
 	/*use the parent pid so same bash session has the same drawdaemon. */
 	draw_id=getsid(0)+1e6;
 	draw_direct=1;
+	draw_single=-1;//disable draw_single support;
 	/*launch scheduler if it is not already running. */
 	dcell *arg1=0, *arg2=0;
 	if(argc>1){

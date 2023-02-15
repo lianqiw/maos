@@ -36,7 +36,7 @@ int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
 static int sock_helper=-1;//socket of draw_helper
 int listening=0;    //If set, listen_drawdaemon is listening to replies from drawdemon
-int draw_single=0;  //if set, only draw active frame and skip if line is busy. otherwise draw all frames.
+int draw_single=0;  //if ==1, only draw active frame and skip if line is busy. if ==-1, disable draw_single altogether. otherwise draw all frames.
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -156,7 +156,7 @@ retry:
 			streadstr(sock_draw, &fn);
 			if(fig&&fn){
 				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
-					if(sock_data->draw_single){
+					if(sock_data->draw_single==1){
 						dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 					}
 				}
@@ -236,10 +236,12 @@ int draw_add(int sock){
 	if(sock==-1) return -1;
 	sockinfo_t *p=mycalloc(1, sockinfo_t);
 	p->fd=sock;
-	p->draw_single=1;
 	p->next=sock_draws;
 	sock_draws=p;
-    pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
+	if(draw_single!=-1){
+		p->draw_single=1;
+	    pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
+	}
 	draw_disabled=0;
 	return 0;
 }
@@ -439,7 +441,7 @@ void draw_final(int reuse){
 */
 static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
-	if(!(draw_single && ps->draw_single)) return 1;
+	if(!(draw_single==1 && ps->draw_single==1)) return 1;
 	list_t* child=0;
 	list_search(&ps->list, &child, fig, 1);
 	int found=0;
@@ -474,7 +476,7 @@ int draw_current(const char* fig, const char* fn){
     int current=0;
 	if(draw_disabled){
         current=0;
-    }else if(!draw_single){
+    }else if(draw_single!=1){
         current=1;
     }else{
 		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
@@ -887,7 +889,7 @@ int ddraw(const char *fig, /**<Category of the figure*/
 #undef datastrdup
 #undef datamemdup
 	//dbg("draw_single=%d\n", draw_single);
-    if(draw_single){
+    if(draw_single==1){
         thread_new((thread_fun)imagesc_do, data);
     } else{
         imagesc_do(data);

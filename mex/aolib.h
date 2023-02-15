@@ -82,6 +82,7 @@ dcell* loc_embed=loc_embed2(loc_t*loc, dmat*arr);
 double loc_angle(const loc_t* loc1, const loc_t* loc2);
 void locrot(loc_t* loc, const double theta);
 loc_t* mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
+loc_t* mkannloc(real D, real Din, real dx, real thres);
 dmat* loc_calib(const dsp* GA, const loc_t* aloc, const loc_t* saloc,
 	double dispx, double dispy, double scale, int maxorder);
 dmat* poly2fit(const dmat* in, const dmat* out, int maxorder);

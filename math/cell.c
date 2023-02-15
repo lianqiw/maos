@@ -137,7 +137,7 @@ void cellresize_do(cell* A, long nx, long ny){
 		}
 		P(A)=myrealloc(P(A), nnew, cell*);
 		if(nnew>nold){
-			memset(&P(A, nold), 0, (nnew-nold)*sizeof(cell*));
+			memset(A->p+nold, 0, (nnew-nold)*sizeof(cell*));
 		}
 	} else{
 		cell** p=mycalloc(nx*ny, cell*);
@@ -154,8 +154,8 @@ void cellresize_do(cell* A, long nx, long ny){
 				cellfree_do(P(A,i));
 			}
 		}
-		free(P(A));
-		P(A)=p;
+		free(A->p);
+		A->p=p;
 	}
 	A->nx=nx;
 	A->ny=ny;

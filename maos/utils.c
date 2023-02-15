@@ -434,7 +434,6 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
  */
 void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	const aper_t* aper, const recon_t* recon){
-	extern int draw_single;
 	int draw_single_save=draw_single;
 	draw_single=0;
 	plotdir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */

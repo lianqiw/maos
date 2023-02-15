@@ -1285,7 +1285,6 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				}
 
 				if(parms->plot.run){
-					extern int draw_single;
 					int draw_single_save=draw_single;
 					draw_single=0;
 					drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),

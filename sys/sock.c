@@ -524,7 +524,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		for(int count=0; count<25; count++){
 			sock=socket(PF_INET, SOCK_STREAM, 0);
 			socket_nopipe(sock);
-			socket_send_timeout(sock, 60);//do not set recv timeout as client may not be using select()
+			socket_send_timeout(sock, 60);//do not set recv timeout as client may rely on blocking read without using select()
 			socket_tcp_keepalive(sock);
 			if(nodelay){
 				socket_tcp_nodelay(sock);

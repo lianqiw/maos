@@ -98,6 +98,7 @@ int main(int argc, char* argv[]){
 	/*use the parent pid so same bash session has the same drawdaemon. */
 	draw_id=getsid(0)+2e6;/*variables in draw.c */
 	draw_direct=1;/*launch drawdaemon directly, without going through server. */
+	draw_single=-1;//disable draw_single support.
 	char** path;
 	int npath;
 	if(arg->iarg<argc){
@@ -135,7 +136,8 @@ int main(int argc, char* argv[]){
 						mpath*=2;
 						path=realloc(path, sizeof(char*)*mpath);
 					}
-					path[npath]=stradd(path[ipath], "/", dp->d_name, NULL);
+					char *newpath=stradd(path[ipath], "/", dp->d_name, NULL);
+					free(path[npath]); path[npath]=newpath;
 					npath++;
 				}
 			} else if(!strncmp(dp->d_name, "Res", 3)&&check_suffix(dp->d_name, ".bin")){
@@ -462,8 +464,8 @@ int main(int argc, char* argv[]){
 		prefix[0]='A'+ipath;
 		pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
 	}
-	if(nseed>1){//seed averaged
-		if(npath==1){//plot seeds together when only 1 path is found.
+	if(nseed>1){//more than one seed is available
+		if(npath==1){//plot different seeds when only 1 path is found.
 			char* legs0[nseed+1];
 			for(int iseed=0; iseed<nseed; iseed++){
 				legs0[iseed]=mymalloc(50, char);
@@ -489,6 +491,17 @@ int main(int argc, char* argv[]){
 			for(int iseed=0; iseed<=nseed; iseed++){
 				free(legs0[iseed]);
 			}
+			{//plot all modes together for seed average
+				dcell *restmp=dcellnew(6, 1);
+				for(int ic=0; ic<restmp->nx; ic++){
+					if(P(resm, ic)){
+						P(restmp, ic, 0)=dref(P(P(resm, ic),0));
+					}
+				}
+				plot_points("CL", (plot_opts){ .ngroup=restmp->nx, .dc=restmp, .xylog=xylog, .legend=(const char *const *)sidetab },
+						"Closed loop Wavefront Error", xlabel, ylabel, "All");
+				dcellfree(restmp);
+			}
 		} else{//only plot mean
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
@@ -499,18 +512,22 @@ int main(int argc, char* argv[]){
 		}	
 	}
 	for(int iseed=0; iseed<nseed; iseed++){//each seed
-		for(int ic=0; ic<res->nx; ic++){
-			if(P(res, ic)){
-				dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-				plot_points(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
-					title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
-				dcellfree(tmp);
+		if(npath>1){//plot all path together for each seed
+			for(int ic=0; ic<res->nx; ic++){
+				if(P(res, ic)){
+					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
+					plot_points(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
+						title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
+					dcellfree(tmp);
+				}
 			}
 		}
-		if(npath==1){//plot all modes together
+		if(npath==1){//plot all modes together for each seed
 			dcell *restmp=dcellnew(6,1);
 			for(int ic=0; ic<restmp->nx; ic++){
-				P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
+				if(P(res, ic)){
+					P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
+				}
 			}
 			plot_points("CL", (plot_opts){ .ngroup=restmp->nx, .dc=restmp, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
