@@ -549,13 +549,13 @@ typedef struct sim_cfg_t{
     real alhi;     /**<Additional latency (*sim.dt) of the high order loop besides 2 cycle delay.*/
     real allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     real alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
-    int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
+    int commonfsm;   /**<Make FSM common for each powfs (LLT). Keep at 0. */
     real zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
     real f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
     real aptwfs;   /**<Twfs reference vector servo coefficient.*/
     real eptwfs;   /**<Twfs reference vector servo gain.*/
     real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
-    real fcttm;    /**<cross over frequency of tip/tilt split*/
+    real fcttm;    /**<cross over frequency of tip/tilt split. 0 to disable ttm.*/
     real fcfocus;  /**<cross-over frequency of the focus LPF.*/
     real fov;      /**<The diameter of total fov in arcsec*/
     int focus2tel;   /**<Offload focus to telescope*/
@@ -891,7 +891,6 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...);
 
 enum WFS_TYPE{ //WFS type
     WFS_SH=0,//shack-hartmann WFS

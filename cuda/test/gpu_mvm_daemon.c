@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-
+  
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -17,10 +17,24 @@
 */
 
 
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
+/**
+   \file gpu_mvm_daemon.c
 
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
-#endif
+    A standalone executable that can do MVM for maos remotely (using socket)
+  */
+#include <stdlib.h>
+#include <stdio.h>
+#include "gpu_test.h"
+int main(int argc, char* argv[]){
+	enum{
+		P_EXE,
+		P_PORT,
+		P_TOT,
+	};
+	if(argc<P_TOT){
+		fprintf(stderr, "Usage: %s port\n", argv[0]);
+		exit(0);
+	}
+	int port=strtol(argv[P_PORT], NULL, 10);
+	gpu_mvm_daemon(port);
+}

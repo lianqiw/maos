@@ -30,7 +30,7 @@
 
 global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
 int use_cuda=0;
-const char* dirskysim=NULL;
+const char *dirskysim=NULL;
 
 /** begin variable overridable by environment variable MAOS_ .  These are for
  debugging maos itself. Not pertinent to a particular simulation*/
@@ -88,6 +88,37 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
+	#if CUDA_VERSION>10000
+	extern void (*dsvd_large)(dmat**U_, dmat**S_, dmat**Vt_, dmat*A_);
+	warning("set dsvd_large to gpu_dsvd\n");
+	dsvd_large=gpu_dsvd;
+	if(0){//test passed
+		//gpu_dsvd is faster than dsvd for matrix larger than 500x500 (test is on cassiopeia)
+		dmat *A=dnew(500, 500);
+		rand_t rstat; seed_rand(&rstat, 1);
+		drandn(A,1,&rstat);
+		daddI(A,1);
+		dmat *U=0, *Vt=0, *S=0;
+		dmat *U2=0, *Vt2=0, *S2=0;
+		tic;
+		dsvd(&U, &S, &Vt, A);
+		toc("dsvd");tic;
+		gpu_dsvd(&U2, &S2, &Vt2, A);
+		toc("gpu_dsvd");
+		real diffu=ddiff(U,U2);
+		real diffs=ddiff(S, S2);
+		real diffv=ddiff(Vt, Vt2);
+		info("dsvd and gpu_svd diff are %g %g %g\n", diffu, diffs, diffv);
+		writebin(U, "U");
+		writebin(S, "S");
+		writebin(Vt, "Vt");
+		writebin(U2, "U2");
+		writebin(S2, "S2");
+		writebin(Vt2, "Vt2");
+		writebin(A, "A");
+		exit(0);
+	}
+	#endif
 #endif
 	global->aper=aper=setup_aper(parms);
 	print_mem("After setup_aper");

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-
+  
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -16,11 +16,34 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef AOS_CUDA_MOAO_H
+#define AOS_CUDA_MOAO_H
+#include "../math/math.h"
+#include "solve.h"
+#include "recon_geom.h"
 
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
+class cumoao_t:private cusolve_cg{
+private:
+	curecon_geom* grid;
+	curmat NW, dotNW;
+	cugridcell amap;
+	cusp actslave;
+	curcell opdfit;
+	curcell opdfit2;
+	map2map ha;
+	Array<map2map>hxp;
+	Array<map2map>hap;
+	int ndir;
+	curcell rhs;
+public:
+	friend class curecon_t;
+	virtual void L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream);
+	Real moao_solve(curccell& xout, const curcell& xin, const curcell& ain, stream_t& stream);
+	cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, curecon_geom* _grid);
+	~cumoao_t(){}
+	operator bool(){
+		return amap?1:0;
+	}
+};
 
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
 #endif

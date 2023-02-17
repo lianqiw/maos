@@ -51,7 +51,7 @@
 
 #if defined(__cplusplus)
 //When including by CUDA, all definitions are already available.
-#ifndef AOS_CUDA_GPU_H
+#ifndef AOS_CUDA_H
 //C++ mode
 #include <complex>
 #include <cmath>
@@ -127,7 +127,7 @@ static inline double real(double A){
 	return A;
 }
 
-#endif//#ifndef AOS_CUDA_GPU_H
+#endif//#ifndef AOS_CUDA_H
 #else //#if defined(__cplusplus) C99 mode
 //tgmath provides type generic macros for common math routines. It includes math.h and complex.h
 //never include tgmath.h in CUDA included headers (C++ uses overloading instead).

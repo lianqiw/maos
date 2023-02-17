@@ -13,21 +13,22 @@ lib_LTLIBRARIES=libmaos.la
 libmaos_la_SOURCES=$(SRCS)
 libmaos_la_LIBADD=
 if USE_CUDA
-libmaos_la_LIBADD+=../cuda/libaogpu.la
+libmaos_la_LIBADD+=../cuda/recon/libcurecon.la
 #if USE_STATIC
 #libmaos_la_LIBADD+=../cuda/dlink.o
 #endif
 endif
 libmaos_la_LIBADD+=../lib/libaos.la 
+
 bin_PROGRAMS=../bin/maos 
 ___bin_maos_SOURCES=maos.c
 ___bin_maos_LDADD=libmaos.la  
-if USE_CUDA
-___bin_maos_LDADD+=$(libmaos_la_LIBADD) $(LIBCUDA)
+#if USE_CUDA
+#___bin_maos_LDADD+=$(LIBCUDA)
 #if USE_STATIC
 #___bin_maos_LDADD+=-lculibos -ldl -lrt
 #endif
-endif
+#endif
 ___bin_maos_LDADD+=$(LDEXE_MAOS) $(LDEXE_FULL) 
 
 TESTS=maos.test

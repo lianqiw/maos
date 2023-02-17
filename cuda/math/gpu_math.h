@@ -16,11 +16,23 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef AOS_CUDA_GPU_MATH_H
+#define AOS_CUDA_GPU_MATH_H
+#define AOS_CUDA_H
+/**
+ * \file gpu_math.h
+ * Routines that can be used by CPU.
+ * */
+#if defined(__cplusplus) && !USE_CPP
+extern "C"{
+#endif
+#include "../../lib/aos.h"
 
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
+#if CUDA_VERSION>10000
+	void gpu_dsvd(dmat **U, dmat **S, dmat **Vt, dmat *A);
+#endif
 
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
+#if defined(__cplusplus) && !USE_CPP
+}
+#endif
 #endif

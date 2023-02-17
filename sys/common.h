@@ -45,7 +45,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h> //don't use tgmath here. it is included in math/numtype.h
-#if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
+#if defined(__cplusplus) && !defined(AOS_CUDA_H)
 //c++ mode, not CUDA
 using std::signbit;
 using std::isfinite;

@@ -968,13 +968,13 @@ if test "$with_cuda" != "no" ;then
 		CUDAOPT=
     fi
     if test "$with_cuda" != "no" ;then
-	    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
+	    LIBCUDA+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart"
 		if test "$enable_debug" = "yes" ;then
 			CUDAOPT+=" -O0 -g"
 		else
 			CUDAOPT+=" -O3 -g"
 		fi
-		CUDAOPT+=" -DHAVE_CONFIG_H -I.. "
+		CUDAOPT+=" -DHAVE_CONFIG_H -I$BUILD_DIR "
 
 		#CCBINOPT is what NVCC passes to C++ compiler
 		CCBINOPT="$OPTScommon $OPTSprof $OPTS_CC $CPPFLAGS $OPENMP_CFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
@@ -1073,6 +1073,10 @@ AC_CONFIG_FILES( [Makefile
 	sys/Makefile
 	math/Makefile
 	lib/Makefile
+	cuda/math/Makefile
+	cuda/sim/Makefile
+	cuda/recon/Makefile
+	cuda/test/Makefile
 	cuda/Makefile
 	maos/Makefile 
 	skyc/Makefile

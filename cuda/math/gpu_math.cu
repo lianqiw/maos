@@ -16,11 +16,25 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
-
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
+/**
+ * \file gpu.cu
+ * 
+ * Wraps cuda routines for CPU data type.
+ * */
+#include "cublas.h"
+#include "utils.h"
+#include "gpu_math.h"
+#if CUDA_VERSION>10000
+void gpu_dsvd(dmat **U_, dmat **S_, dmat **Vt_, dmat *A_){
+  NumArray<real, Gpu> U, S, Vt, A;
+	cp2gpu(A, A_);
+	cusvd(U, S, Vt, A); 
+	cp2cpu(U_, U);
+	cp2cpu(S_, S);
+  //dmat *V_=NULL, *Vt2=NULL;
+	//cp2cpu(&V_, V);
+  //Vt2=dtrans(V_); dfree(V_);
+  cp2cpu(Vt_, Vt);
+  //dfree(Vt2);
+}
 #endif

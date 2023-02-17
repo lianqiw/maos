@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
 						path=realloc(path, sizeof(char*)*mpath);
 					}
 					char *newpath=stradd(path[ipath], "/", dp->d_name, NULL);
-					free(path[npath]); path[npath]=newpath;
+					path[npath]=newpath;//append as a new path.
 					npath++;
 				}
 			} else if(!strncmp(dp->d_name, "Res", 3)&&check_suffix(dp->d_name, ".bin")){

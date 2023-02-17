@@ -427,7 +427,10 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		cellfree(in);
 	}
 }
-
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+//If an external declaration is marked weakandthat symbol does not exist during linking(possibly dynamic) the address of the symbol will evaluate to NULL.
+void (*dsvd_large)(dmat **U_, dmat **S_, dmat **Vt_, dmat *A_)=NULL;
+#endif
 /**
    computes pow(A,power) in place using svd.
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
@@ -443,6 +446,13 @@ void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
 	X(mat)* VT=NULL;
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(NX(A)>500 && dsvd_large){
+		warning("Using external routine for dsvd\n");
+		//void gpu_dsvd(dmat**U, dmat**S, dmat**Vt, dmat*A);
+		dsvd_large(&U, &Sdiag, &VT, A);
+	}else
+#endif
 	X(svd)(&U, &Sdiag, &VT, A);
 	if(tikcr>0){
 		X(addI)(A, P(Sdiag,0)*tikcr);

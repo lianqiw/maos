@@ -157,7 +157,7 @@ retry:
 			if(fig&&fn){
 				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
 					if(sock_data->draw_single==1){
-						dbg("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+						dbg2("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 					}
 				}
 				free(figfn[0]);
@@ -169,15 +169,15 @@ retry:
 		break;
 		case DRAW_PAUSE:
 			sock_data->pause=1;
-			dbg("draw %d paused\n", sock_draw);
+			dbg2("draw %d paused\n", sock_draw);
 			break;
 		case DRAW_RESUME:
 			sock_data->pause=0;
-			dbg("draw %d resumed\n", sock_draw);
+			dbg2("draw %d resumed\n", sock_draw);
 			break;
 		case DRAW_SINGLE:
 			sock_data->draw_single=sock_data->draw_single?0:1;
-			dbg("draw %d draw_single=%d\n", sock_draw, sock_data->draw_single);
+			dbg2("draw %d draw_single=%d\n", sock_draw, sock_data->draw_single);
 			break;
 		default:
 			dbg("Unknown cmd: %d with size %d from socket %d\n", cmd, nlen, sock_draw);

@@ -16,11 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
-
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
+#ifndef AOS_CUDA_MATH_H
+#define AOS_CUDA_MATH_H
+#include "utils.h"
+#include "curmat.h"
+#include "prop_map.h"
 #endif

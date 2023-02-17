@@ -53,7 +53,7 @@
 */
 void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const parms_t* parms=simu->parms;
-	powfs_t* powfs=simu->powfs;
+	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 	const real hs=parms->wfs[iwfs].hs;
@@ -101,7 +101,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	*/
 	/*input */
 
-	mapcell* atm=simu->atm;
+	const mapcell* atm=simu->atm;
 	const recon_t* recon=simu->recon;
 	const powfs_t* powfs=simu->powfs;
 	/*output */
@@ -123,9 +123,9 @@ void* wfsgrad_iwfs(thread_t* info){
 	const int do_pistat=simu->wfsflags[ipowfs].do_pistat;
 	const int do_geom=(!do_phy||save_gradgeom||do_pistat)&&parms->powfs[ipowfs].type==WFS_SH;
 	const dmat* realamp=powfs[ipowfs].realamp?P(powfs[ipowfs].realamp, wfsind):0;
-	dmat* gradcalc=NULL;
-	dmat** gradacc=&P(simu->gradacc, iwfs);
-	dmat** gradout=&P(simu->gradcl, iwfs);
+	dmat *gradcalc=NULL; //calculation output (geometric mode)
+	dmat** gradacc=&P(simu->gradacc, iwfs);//accumulation output (geometric mode)
+	dmat** gradout=&P(simu->gradcl, iwfs); //final output
 	dcell* ints=P(simu->ints, iwfs);
 	dmat* opd=P(simu->wfsopd, iwfs);
 	TIM0;
@@ -495,12 +495,12 @@ static real calc_dither_amp(dmat* signal, /**<array of data. nmod*nsim */
 /*Compute global tip/tilt error for each WFS*/
 static void wfsgrad_fsm(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
+	const recon_t* recon=simu->recon;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int isim=simu->wfsisim;
 	/*Uplink FSM*/
 	const int ind=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
-	dmat* PTT=recon->PTT?(P(recon->PTT, ind)):0;
+	const dmat* PTT=recon->PTT?(P(recon->PTT, ind)):0;
 	if(!PTT){
 		error("powfs %d has FSM, but PTT is empty\n", ipowfs);
 	}
@@ -516,14 +516,14 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
 static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int remove){
 	//gain can be set to 1 if the rate is slower than the main tip/tilt and focus control rate.
 	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
+	const recon_t* recon=simu->recon;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int iwfsr=parms->recon.glao?ipowfs:iwfs;
 
 	if(parms->powfs[ipowfs].trs){
 		/* Update T/T drift signal to prevent matched filter from drifting*/
 		dmat* tt=dnew(2, 1);
-		dmat* PTT=P(recon->PTT, iwfsr, iwfsr);
+		const dmat* PTT=P(recon->PTT, iwfsr, iwfsr);
 		dmm(&tt, 0, PTT, grad, "nn", 1);
 		if(remove){
 			dmat* TT=P(recon->TT, iwfsr, iwfsr);
@@ -566,8 +566,8 @@ static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, in
 */
 static void wfsgrad_dither(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
-	powfs_t* powfs=simu->powfs;
+	const recon_t* recon=simu->recon;
+	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int iwfsr=parms->recon.glao?ipowfs:iwfs;
 	const int isim=simu->wfsisim;
@@ -941,7 +941,7 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
    Dither update: zoom corrector, matched filter, gain ajustment, TWFS.
 */
 static void wfsgrad_dither_post(sim_t* simu){
-	powfs_t* powfs=simu->powfs;
+	powfs_t* powfs=simu->powfs;//not const to set instat. //todo: move intstat to simu.
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
 	const int isim=simu->wfsisim;

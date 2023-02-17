@@ -16,11 +16,26 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef AOS_CUDA_GPU_TEST_H
+#define AOS_CUDA_GPU_TEST_H
+/**
+ * \file gpu_test.h
+ * Routines that can be used by CPU.
+ * */
+#if defined(__cplusplus) && !USE_CPP
+extern "C"{
+#endif
+#include "../../lib/aos.h"
+	void gpu_mvm_daemon(int port);
+	void mvm_iwfs(int *gpus, int ngpu, int nstep);
+	void mvm_only(int *gpus, int ngpu, int nstep);
+	void mvmfull_iwfs(int *gpus, int ngpu, int nstep);
+	void mvmfull_real(int *gpus, int ngpu, int nstep);
+	void mvmfull_pipe(const char *mvm1, const char *mvm2, const char *pix1, const char *pix2, const char *mtch, int *gpus, int ngpu, int nstep);
+	void mvm_test(int igpu);
 
-#ifndef AOS_CUDA_GPU_H
-#define AOS_CUDA_GPU_H
 
-#include "math/gpu_math.h"
-#include "sim/gpu_sim.h"
-#include "recon/gpu_recon.h"
+#if defined(__cplusplus) && !USE_CPP
+}
+#endif
 #endif
