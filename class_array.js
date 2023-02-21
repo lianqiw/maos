@@ -1,5 +1,6 @@
 var class_array =
 [
+    [ "type", "class_array.html#aa9b8f6dcc7c1afcbcbc7bf7ad9e47972", null ],
     [ "~Array", "class_array.html#a6ff1a3bcced5c607c0bbdda2f4f0dc51", null ],
     [ "Array", "class_array.html#a87b3882963c32560e77afc102256ccbf", null ],
     [ "Array", "class_array.html#aa118e107e466a327de11d42ce8ba1e2d", null ],

@@ -226,8 +226,6 @@ Functions</h2></td></tr>
 <tr class="separator:aad108d3a5091968e86ec8adcc269d450"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a6a2e33b33daf9cc04fbbd68733cd26"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26">free_parms</a> (<a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:a8a6a2e33b33daf9cc04fbbd68733cd26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb5045761ac37707beaf143c30f68b3b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#abb5045761ac37707beaf143c30f68b3b">plotdir</a> (const char *fig, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, real totfov, const char *format,...)</td></tr>
-<tr class="separator:abb5045761ac37707beaf143c30f68b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Configuration parameters that remain constant during simulation. </p>
@@ -3242,7 +3240,7 @@ alfsm</td>
 <td class="fieldname">
 commonfsm</td>
 <td class="fielddoc">
-<p>Make FSM common for each powfs (LLT) </p>
+<p>Make FSM common for each powfs (LLT). Keep at 0. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a609290fd17696311c6d1ee65de869ff0"></a>real</td>
@@ -3284,7 +3282,7 @@ eptsph</td>
 <td class="fieldname">
 fcttm</td>
 <td class="fielddoc">
-<p>cross over frequency of tip/tilt split </p>
+<p>cross over frequency of tip/tilt split. 0 to disable ttm. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af89b05e322912b2be93a7e2cb870dd04"></a>real</td>
@@ -5349,53 +5347,6 @@ execmd</td>
       </table>
 </div><div class="memdoc">
 <p>Free the parms struct. </p>
-
-</div>
-</div>
-<a id="abb5045761ac37707beaf143c30f68b3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb5045761ac37707beaf143c30f68b3b">&#9670;&nbsp;</a></span>plotdir()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void plotdir </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fig</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
-          <td class="paramname"><em>parms</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>totfov</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>ploted all the different beam directions as points. </p>
 
 </div>
 </div>

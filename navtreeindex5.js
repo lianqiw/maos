@@ -1,5 +1,13 @@
 var NAVTREEINDEX5 =
 {
+"dmath_8h.html#ae8986fc7f0c22844bf754528f288e41d":[11,0,3,3,106],
+"dmath_8h.html#aeab6e60594c2c1b51d4d8c4cd5ac59cc":[11,0,3,3,190],
+"dmath_8h.html#aed72ea03bbea7c8ef187e554250b3217":[11,0,3,3,103],
+"dmath_8h.html#aee6695a264c654650b2661ec3f21a988":[11,0,3,3,119],
+"dmath_8h.html#af018c45028f5ca89d532dfd81d8c9bff":[11,0,3,3,44],
+"dmath_8h.html#af192a0343362df6b2c85f851b6c0b7f0":[11,0,3,3,52],
+"dmath_8h.html#af1d807e61cac0bc08bdadb776f60f514":[11,0,3,3,131],
+"dmath_8h.html#af22808f24a18d13c16b5e92bdc6e34d4":[11,0,3,3,202],
 "dmath_8h.html#af555b65d113fad7b0aac8c498444a884":[11,0,3,3,143],
 "dmath_8h.html#af6c253e8ef4432268a038a4545dafe79":[11,0,3,3,104],
 "dmath_8h.html#af6ff44494a51a4ae0a87af8022b009bc":[11,0,3,3,34],
@@ -161,9 +169,8 @@ var NAVTREEINDEX5 =
 "globals_vars.html":[11,1,2],
 "globals_w.html":[11,1,0,20],
 "globals_z.html":[11,1,0,21],
-"gpu__mvm_8c.html":[11,0,0,0],
-"gpu__mvm_8c.html#a0ddf1224851353fc92bfbff6f499fa97":[11,0,0,0,1],
-"gpu__mvm_8c.html#a6d44667873161ef7051813c26f18ca90":[11,0,0,0,0],
+"gpu__math_8h.html":[11,0,0,0,1],
+"gpu__math_8h.html#ad22f75434fe41b2ddb957cb50c0b5374":[11,0,0,0,1,0],
 "hashlittle_8h.html":[11,0,4,3],
 "hashlittle_8h.html#a8fcafa39241f09d13a63a0f9756772cc":[11,0,4,3,0],
 "hierarchy.html":[10,1],
@@ -242,12 +249,5 @@ var NAVTREEINDEX5 =
 "lib_2accphi_8h.html#a8f88414caf9fcfe894ade339959230e7":[11,0,1,0,11],
 "lib_2accphi_8h.html#a904e104dcec764baea15d99d269ad5a8":[11,0,1,0,20],
 "lib_2accphi_8h.html#a91947d30774249452cb381a9f22331d6":[11,0,1,0,7],
-"lib_2accphi_8h.html#a92fb321ae4e7ebe290d017b8e0f2086f":[11,0,1,0,22],
-"lib_2accphi_8h.html#a956b6f6f4e721f06770be0f09012f78f":[11,0,1,0,18],
-"lib_2accphi_8h.html#a99702981f40980ed0c6957b9117c748f":[11,0,1,0,10],
-"lib_2accphi_8h.html#a9b533242df82dca780ff7e647a5f65d9":[11,0,1,0,2],
-"lib_2accphi_8h.html#abff8bec5029b8704bec1a79440a4bfc4":[11,0,1,0,33],
-"lib_2accphi_8h.html#ac06d47d925ceaef5ba3f96fb53b0aeef":[11,0,1,0,31],
-"lib_2accphi_8h.html#ac12e67c80c1418cc003c74694081194e":[11,0,1,0,21],
-"lib_2accphi_8h.html#ac5ffbc4ca42b87496ae6f231c8b350f0":[11,0,1,0,0,12]
+"lib_2accphi_8h.html#a92fb321ae4e7ebe290d017b8e0f2086f":[11,0,1,0,22]
 };

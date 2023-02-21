@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['datatype',['datatype',['../classdatatype.html',1,'']]],
   ['dbg_5fcfg_5ft',['dbg_cfg_t',['../parms_8h.html#structdbg__cfg__t',1,'']]],
   ['dcccell',['dcccell',['../type_8h.html#structdcccell',1,'']]],
   ['dcccell_2e_5f_5funnamed_5f_5f',['dcccell.__unnamed__',['../type_8h.html#uniondcccell_8____unnamed____',1,'']]],

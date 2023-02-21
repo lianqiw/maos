@@ -21,8 +21,8 @@ digraph "CellArray&lt; T &gt;"
   Node15 [label="{CellArray\< cugrid_t \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$class_cell_array.html"];
   Node0 -> Node16 [dir="back",color="orange",fontsize="10",style="solid",label=" \< curccell \>" ,fontname="Helvetica"];
   Node16 [label="{CellArray\< curccell \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$class_cell_array.html"];
-  Node0 -> Node17 [dir="back",color="orange",fontsize="10",style="solid",label=" \< cumap_t \>" ,fontname="Helvetica"];
-  Node17 [label="{CellArray\< cumap_t \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$class_cell_array.html"];
-  Node0 -> Node18 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< int, Gpu \> \>" ,fontname="Helvetica"];
-  Node18 [label="{CellArray\< NumArray\l\< int, Gpu \> \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="red",URL="$class_cell_array.html"];
+  Node0 -> Node17 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< int, Gpu \> \>" ,fontname="Helvetica"];
+  Node17 [label="{CellArray\< NumArray\l\< int, Gpu \> \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="red",URL="$class_cell_array.html"];
+  Node0 -> Node18 [dir="back",color="orange",fontsize="10",style="solid",label=" \< cumap_t \>" ,fontname="Helvetica"];
+  Node18 [label="{CellArray\< cumap_t \>\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$class_cell_array.html"];
 }

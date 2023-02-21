@@ -18,7 +18,7 @@ var searchData=
   ['icol',['icol',['../mkdtf_8h.html#a951b28fa012fe5115c9edc6dedc05d4f',1,'etf_t']]],
   ['id',['id',['../type_8h.html#a8de9ad2bda53e2da59969024fbc3660f',1,'cell']]],
   ['idealevl',['idealevl',['../parms_8h.html#af351e09d239a171f9d2e8b876f4daccc',1,'sim_cfg_t']]],
-  ['idealfit',['idealfit',['../classcuda__recon_1_1cufit__grid.html#aa4f47344767f787fa79da04cbf34140e',1,'cuda_recon::cufit_grid::idealfit()'],['../parms_8h.html#a75e9ec3fdeeb0293b5ff1722b21195e3',1,'sim_cfg_t::idealfit()']]],
+  ['idealfit',['idealfit',['../classcufit__grid.html#a35b5ffc3c69ba711f25befe926dfa469',1,'cufit_grid::idealfit()'],['../parms_8h.html#a75e9ec3fdeeb0293b5ff1722b21195e3',1,'sim_cfg_t::idealfit()']]],
   ['idealfsm',['idealfsm',['../parms_8h.html#a1c0f9f8ad167b15c0717d3c49bdfb75f',1,'sim_cfg_t']]],
   ['idealtomo',['idealtomo',['../parms_8h.html#aa1155cbd9ec6662b5f512709a2e95461',1,'sim_cfg_t']]],
   ['idealwfs',['idealwfs',['../parms_8h.html#a80f1b05f97fb68c81515aebbaea0f128',1,'sim_cfg_t']]],

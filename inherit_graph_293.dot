@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="tp_counter_t",height=0.2,width=0.4,color="black",URL="$thread__pool_8h.html#structtp__counter__t"];
+  Node0 [label="zcccell.__unnamed__",height=0.2,width=0.4,color="black",URL="$type_8h.html#unionzcccell_8____unnamed____"];
 }

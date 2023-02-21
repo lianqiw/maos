@@ -1,5 +1,6 @@
 var class_ref_p =
 [
+    [ "type", "class_ref_p.html#a97fae8cb7c03408c03ba0a8c6ae8c37c", null ],
     [ "RefP", "class_ref_p.html#abef6e77c0856cdc397e41054f4f88a07", null ],
     [ "RefP", "class_ref_p.html#a460774d314b3de33a43f158ee5350aa4", null ],
     [ "RefP", "class_ref_p.html#a6ac6060f5219e62b3b0d1b4e958fe417", null ],

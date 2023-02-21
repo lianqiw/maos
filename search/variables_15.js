@@ -2,7 +2,7 @@ var searchData=
 [
   ['w',['W',['../parms_8h.html#ad9c16246914f43b58a276bea21c2ac9a',1,'load_cfg_t']]],
   ['w0',['W0',['../maos_2types_8h.html#a0644ce6a39714646b1256c97ff219e30',1,'moao_t::W0()'],['../maos_2types_8h.html#a1c6bd2f904fc54212fa077daf80bd5bb',1,'fit_t::W0()'],['../maos_2types_8h.html#ac7ba656879aa2148bd5fb2ddcd8de998',1,'recon_t::W0()']]],
-  ['w01',['W01',['../classcuda__recon_1_1curecon__geom.html#adb43cb88fdba88a86a75f26852ef5208',1,'cuda_recon::curecon_geom']]],
+  ['w01',['W01',['../classcurecon__geom.html#a4027a545a061db101166b9bea8c07736',1,'curecon_geom']]],
   ['w1',['W1',['../maos_2types_8h.html#a3024f14ac8cb0be7c6219ccfdbf5484f',1,'moao_t::W1()'],['../maos_2types_8h.html#a8c7520f0ac0db4ba04479e250acd7519',1,'fit_t::W1()'],['../maos_2types_8h.html#a70d72dae68689a1f60c20726e37fe832',1,'recon_t::W1()']]],
   ['wa',['Wa',['../maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61',1,'ngsmod_t']]],
   ['wamethod',['wamethod',['../parms_8h.html#a1bdf71f0b68a210e130fa366fec8cadc',1,'dbg_cfg_t']]],

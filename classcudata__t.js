@@ -10,7 +10,7 @@ var classcudata__t =
     [ "perf", "classcudata__t.html#a2f070b01164923b31a22193c048b3a7f", null ],
     [ "perf_stream", "classcudata__t.html#aa3f6e5419e4751d3dec5d7999e574145", null ],
     [ "powfs", "classcudata__t.html#a4b2768cc55fcf19af967e53d4dc07283", null ],
-    [ "recon", "classcudata__t.html#a0862d3766ca07b82dd31cd62be4ac120", null ],
+    [ "recon", "classcudata__t.html#a60ae6d33d13d0b138a195f952cfca589", null ],
     [ "dm_wfs", "classcudata__t.html#a115fc3343cf5fe801d8464f4c686d971", null ],
     [ "dm_evl", "classcudata__t.html#a7baa17f30db981adbaad7a75a6828fc5", null ],
     [ "mvm_m", "classcudata__t.html#a9f23cd6e1814e97636133fdb76fb0d1e", null ],

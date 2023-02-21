@@ -9,7 +9,7 @@ var searchData=
   ['perfevl_5fievl',['perfevl_ievl',['../perfevl_8c.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c'],['../sim_8h.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c']]],
   ['plot_5fpoints',['plot_points',['../draw_8h.html#a95b568d898b905d16dfc19d0d53e3cbc',1,'draw.c']]],
   ['plot_5fsetup',['plot_setup',['../maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'utils.c']]],
-  ['plotdir',['plotdir',['../parms_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c'],['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c']]],
+  ['plotdir',['plotdir',['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'utils.c']]],
   ['plotloc',['plotloc',['../maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48',1,'utils.c']]],
   ['poly2fit',['poly2fit',['../lib_2misc_8h.html#a7c9165de2539783b575271862d30e0d2',1,'misc.c']]],
   ['polyfit',['polyfit',['../lib_2misc_8h.html#a06cf7ebeeb404e3c738260609e0f45fa',1,'misc.c']]],

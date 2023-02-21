@@ -1,7 +1,6 @@
 var classcugrid__t =
 [
     [ "cugrid_t", "classcugrid__t.html#a23b0de5e5c2fa2282631f4ec5ca82ba0", null ],
-    [ "iac2cc", "classcugrid__t.html#a93d2876ad4d74069d0b7f1633040e14d", null ],
     [ "operator=", "classcugrid__t.html#a75b4d07ed08df1c9017e6d417d2caeb5", null ],
     [ "Scale", "classcugrid__t.html#acf705ffb11cc8cffcdc99c5b91577e06", null ],
     [ "operator bool", "classcugrid__t.html#a257aa93ea42a23a272902ca892e8b4a8", null ],

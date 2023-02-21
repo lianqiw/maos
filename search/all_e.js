@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['p',['P',['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
+  ['p',['p',['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
   ['pair',['pair',['../cn2est_8h.html#a8984a6f7acbcd94ccd68c2a94fa7275f',1,'cn2est_t::pair()'],['../parms_8h.html#a5fa2b03fef6524369da80328ac5b4da6',1,'cn2est_cfg_t::pair()']]],
   ['parms',['parms',['../maos_2types_8h.html#a0fa3fc80828e7714dbe3b2ae58ccb437',1,'sim_t']]],
   ['parms_2eh',['parms.h',['../parms_8h.html',1,'']]],
@@ -36,9 +36,7 @@ var searchData=
   ['phyusenea',['phyusenea',['../parms_8h.html#ae1ecdf10110395442e13a49c3f63dac6',1,'powfs_cfg_t']]],
   ['piinfile',['piinfile',['../parms_8h.html#af0efc45bacceee721bd5d61db82ef00a',1,'powfs_cfg_t']]],
   ['pinned',['Pinned',['../class_pinned.html',1,'']]],
-  ['pinned_3c_20areal_20_3e',['Pinned&lt; AReal &gt;',['../class_pinned.html',1,'']]],
   ['pinned_3c_20comp_20_2a_3e',['Pinned&lt; Comp *&gt;',['../class_pinned.html',1,'']]],
-  ['pinned_3c_20greal_20_3e',['Pinned&lt; GReal &gt;',['../class_pinned.html',1,'']]],
   ['pinned_3c_20int_20_2a_3e',['Pinned&lt; int *&gt;',['../class_pinned.html',1,'']]],
   ['pinned_3c_20real_20_2a_3e',['Pinned&lt; Real *&gt;',['../class_pinned.html',1,'']]],
   ['pinned_3c_20real_20_3e',['Pinned&lt; Real &gt;',['../class_pinned.html',1,'']]],
@@ -69,7 +67,7 @@ var searchData=
   ['plot_5fopts',['plot_opts',['../draw_8h.html#structplot__opts',1,'']]],
   ['plot_5fpoints',['plot_points',['../draw_8h.html#a95b568d898b905d16dfc19d0d53e3cbc',1,'draw.c']]],
   ['plot_5fsetup',['plot_setup',['../maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'utils.c']]],
-  ['plotdir',['plotdir',['../parms_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c'],['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'plotdir(const char *fig, const parms_t *parms, real totfov, const char *format,...):&#160;utils.c']]],
+  ['plotdir',['plotdir',['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'utils.c']]],
   ['plotloc',['plotloc',['../maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48',1,'utils.c']]],
   ['pmap',['pmap',['../maos_2types_8h.html#a8a4f8413be5b9f89b91d522c40cf71ef',1,'recon_t']]],
   ['pn',['PN',['../type_8h.html#ace9dc2f64789615eca5eee8fa8e80bb6',1,'type.h']]],

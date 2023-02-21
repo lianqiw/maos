@@ -8,7 +8,6 @@ var searchData=
   ['telws',['telws',['../maos_2types_8h.html#abb5f50409d8cca6e56b84d82c8f0b2a4',1,'sim_t']]],
   ['telws_5frand',['telws_rand',['../maos_2types_8h.html#a706ec0a800d592ed41d91791c4e4412d',1,'sim_t']]],
   ['test',['test',['../parms_8h.html#afedc7b5347a4d114cb1a362ba023c3ab',1,'dbg_cfg_t']]],
-  ['test_2ecu',['test.cu',['../test_8cu.html',1,'']]],
   ['thetax',['thetax',['../structdir__t.html#a50bda7ac279f6d195a64727f3eb1f871',1,'dir_t::thetax()'],['../parms_8h.html#aae77804c23e6d3cdbdb6a369f32a19d1',1,'wfs_cfg_t::thetax()'],['../parms_8h.html#a8fa8835aecb159116f83c43831a415b7',1,'evl_cfg_t::thetax()'],['../parms_8h.html#a650bdf9a2f6a1a73408f7ad2b8333888',1,'fit_cfg_t::thetax()'],['../maos_2types_8h.html#aa9ff41815533803ef0fd98b196cb205d',1,'fit_t::thetax()']]],
   ['thetay',['thetay',['../structdir__t.html#af76c53b3abc71cde43f87c25a2d960ed',1,'dir_t::thetay()'],['../parms_8h.html#adfa061b95f51bae9238d7c2501535475',1,'wfs_cfg_t::thetay()'],['../parms_8h.html#a2ec8406bc59df86756fe47283c866379',1,'evl_cfg_t::thetay()'],['../parms_8h.html#a6d678f84df929ad41d33f7892e535a1f',1,'fit_cfg_t::thetay()'],['../maos_2types_8h.html#a46d3a7d20af30dfd0bbdfa1cc8dbe89f',1,'fit_t::thetay()']]],
   ['thread_2eh',['thread.h',['../thread_8h.html',1,'']]],

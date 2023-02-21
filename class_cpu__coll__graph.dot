@@ -4,5 +4,5 @@ digraph "Cpu&lt; T &gt;"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node27 [label="{Cpu\< T \>\n||+ operator new[]()\l+ operator delete[]()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node23 [label="{Cpu\< T \>\n||+ operator new[]()\l+ operator delete[]()\l+ Zero()\l+ Copy()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
 }

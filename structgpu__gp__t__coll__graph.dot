@@ -10,5 +10,5 @@ digraph "gpu_gp_t"
   Node3 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +saptr\n+jwfs\n+pos\n+ipowfs\n+nxp\n+nwfs\n+nsa" ,arrowhead="odiamond",fontname="Helvetica"];
   Node3 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +GPp" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node4 [label="{short2\n||}",height=0.2,width=0.4,color="grey75"];
+  Node4 [label="{short2 *\n||}",height=0.2,width=0.4,color="grey75"];
 }

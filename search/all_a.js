@@ -5,7 +5,7 @@ var searchData=
   ['l2cell',['l2cell',['../lmath_8h.html#a58564392e6d0b5caab436f3e64947f57',1,'ltmp.c']]],
   ['l2cellref',['l2cellref',['../lmath_8h.html#a13293f598e36b00fe332e5fa7afe9f43',1,'ltmp.c']]],
   ['l2save',['L2save',['../maos_2types_8h.html#a981779629f310562cd303dbf607ead48',1,'recon_t']]],
-  ['lap_5ft',['lap_t',['../structcuda__recon_1_1lap__t.html',1,'cuda_recon']]],
+  ['lap_5ft',['lap_t',['../structlap__t.html',1,'']]],
   ['laplacian_2eh',['laplacian.h',['../laplacian_8h.html',1,'']]],
   ['laplacian_5fcoef',['laplacian_coef',['../laplacian_8h.html#a14cd19a758bc6165318771ed461f3a73',1,'laplacian.c']]],
   ['last_5freport_5ftime',['last_report_time',['../maos_2types_8h.html#a282a8beb9fa5a5b2168d7e6bfb758e41',1,'sim_t']]],

@@ -1,5 +1,11 @@
 var NAVTREEINDEX4 =
 {
+"cure_8h.html#ac66e57085269aa6a0ba7526c40a11060":[11,0,1,2,0],
+"cure_8h.html#ae208aa4b8be979db2b5d4c2cedf90cdd":[11,0,1,2,3],
+"daemonize_8h.html":[11,0,4,2],
+"daemonize_8h.html#a11717d53b875bab717d53dc7c280b1af":[11,0,4,2,1],
+"daemonize_8h.html#a29b0af1da2432bcc90721c0b62f4e660":[11,0,4,2,4],
+"daemonize_8h.html#a2cf440f7f061b747c2e06b0cef9f045b":[11,0,4,2,3],
 "daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3":[11,0,4,2,5],
 "daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672":[11,0,4,2,8],
 "daemonize_8h.html#a9707696da35911195b46dff9db3531bc":[11,0,4,2,7],
@@ -8,11 +14,13 @@ var NAVTREEINDEX4 =
 "daemonize_8h.html#aee375a410e4732c98fa384493dc394ad":[11,0,4,2,0],
 "dbg.html":[4,4,2],
 "default.html":[4,4,3],
+"dir_05d127c6c3d3dc6f16d886bd76bf11d8.html":[11,0,0,1],
 "dir_296d53ceaeaa7e099814a6def439fe8a.html":[11,0,3],
 "dir_7f72761faf76ad5b97d7f36c114afa29.html":[11,0,0],
 "dir_8ce14126537f3a9a7f58ccafbb182cd0.html":[11,0,2],
 "dir_97aefd0d527b934f1d99a682da8fe6a9.html":[11,0,1],
 "dir_a408b6d3a4a484720bc3ecfeac8947e3.html":[11,0,4],
+"dir_e38acee9e55e296f877666af204ca3b7.html":[11,0,0,0],
 "dm_dual.html":[4,4,4],
 "dm_none.html":[4,4,5],
 "dm_single.html":[4,4,6],
@@ -241,13 +249,5 @@ var NAVTREEINDEX4 =
 "dmath_8h.html#ae490be1308b3596d8f88b8acbf3f4bce":[11,0,3,3,49],
 "dmath_8h.html#ae55d5f2527984cf9b14a2bc68eb134e4":[11,0,3,3,113],
 "dmath_8h.html#ae68648f01752a9ca085cc55948b59878":[11,0,3,3,147],
-"dmath_8h.html#ae82db9dbc7ec6cbe8c439a864f8c8e80":[11,0,3,3,174],
-"dmath_8h.html#ae8986fc7f0c22844bf754528f288e41d":[11,0,3,3,106],
-"dmath_8h.html#aeab6e60594c2c1b51d4d8c4cd5ac59cc":[11,0,3,3,190],
-"dmath_8h.html#aed72ea03bbea7c8ef187e554250b3217":[11,0,3,3,103],
-"dmath_8h.html#aee6695a264c654650b2661ec3f21a988":[11,0,3,3,119],
-"dmath_8h.html#af018c45028f5ca89d532dfd81d8c9bff":[11,0,3,3,44],
-"dmath_8h.html#af192a0343362df6b2c85f851b6c0b7f0":[11,0,3,3,52],
-"dmath_8h.html#af1d807e61cac0bc08bdadb776f60f514":[11,0,3,3,131],
-"dmath_8h.html#af22808f24a18d13c16b5e92bdc6e34d4":[11,0,3,3,202]
+"dmath_8h.html#ae82db9dbc7ec6cbe8c439a864f8c8e80":[11,0,3,3,174]
 };

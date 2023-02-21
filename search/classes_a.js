@@ -23,6 +23,5 @@ var searchData=
   ['moao_5ft',['moao_t',['../maos_2types_8h.html#structmoao__t',1,'']]],
   ['mt_5fstate',['mt_state',['../structmt__state.html',1,'']]],
   ['muv_5ft',['muv_t',['../muv_8h.html#structmuv__t',1,'']]],
-  ['mvm_5figpu_5ft',['mvm_igpu_t',['../mvm__trans_8cu.html#structmvm__igpu__t',1,'']]],
-  ['mvm_5ft',['mvm_t',['../mvm__daemon_8cu.html#structmvm__t',1,'']]]
+  ['mvm_5figpu_5ft',['mvm_igpu_t',['../mvm__trans_8cu.html#structmvm__igpu__t',1,'']]]
 ];

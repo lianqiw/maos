@@ -718,6 +718,5 @@ var parms_8h =
     ] ],
     [ "setup_parms", "parms_8h.html#ad6dd439c2115b1f50b1a177073cbd23c", null ],
     [ "setup_parms_gpu", "parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],
-    [ "free_parms", "parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ],
-    [ "plotdir", "parms_8h.html#abb5045761ac37707beaf143c30f68b3b", null ]
+    [ "free_parms", "parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ]
 ];

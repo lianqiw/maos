@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="sspcell.__unnamed_\l_.__unnamed__",height=0.2,width=0.4,color="black",URL="$type_8h.html#structsspcell_8____unnamed_____8____unnamed____"];
+  Node0 [label="unsigned int *",height=0.2,width=0.4,color="black",URL="$classunsigned_01int_01_5.html"];
 }

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['lap_5ft',['lap_t',['../structcuda__recon_1_1lap__t.html',1,'cuda_recon']]],
+  ['lap_5ft',['lap_t',['../structlap__t.html',1,'']]],
   ['lcell',['lcell',['../type_8h.html#structlcell',1,'']]],
   ['lcell_2e_5f_5funnamed_5f_5f',['lcell.__unnamed__',['../type_8h.html#unionlcell_8____unnamed____',1,'']]],
   ['lcell_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['lcell.__unnamed__.__unnamed__',['../type_8h.html#structlcell_8____unnamed_____8____unnamed____',1,'']]],

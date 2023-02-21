@@ -17,7 +17,7 @@ var hierarchy =
     [ "ccell.__unnamed__", "type_8h.html#unionccell_8____unnamed____", null ],
     [ "ccell.__unnamed__.__unnamed__", "type_8h.html#structccell_8____unnamed_____8____unnamed____", null ],
     [ "cell", "type_8h.html#structcell", null ],
-    [ "cuda_recon::cgtmp_t", "classcuda__recon_1_1cgtmp__t.html", null ],
+    [ "cgtmp_t", "classcgtmp__t.html", null ],
     [ "cmat", "type_8h.html#structcmat", null ],
     [ "cmat.__unnamed__", "type_8h.html#unioncmat_8____unnamed____", null ],
     [ "cmat.__unnamed__.__unnamed__", "type_8h.html#structcmat_8____unnamed_____8____unnamed____", null ],
@@ -27,9 +27,6 @@ var hierarchy =
     [ "Cpu< T >", "class_cpu.html", [
       [ "Pinned< T >", "class_pinned.html", null ]
     ] ],
-    [ "Cpu< AReal >", "class_cpu.html", [
-      [ "Pinned< AReal >", "class_pinned.html", null ]
-    ] ],
     [ "Cpu< Comp * >", "class_cpu.html", [
       [ "Pinned< Comp *>", "class_pinned.html", null ]
     ] ],
@@ -37,9 +34,6 @@ var hierarchy =
     [ "Cpu< cumap_t >", "class_cpu.html", null ],
     [ "Cpu< curccell >", "class_cpu.html", null ],
     [ "Cpu< cusp >", "class_cpu.html", null ],
-    [ "Cpu< GReal >", "class_cpu.html", [
-      [ "Pinned< GReal >", "class_pinned.html", null ]
-    ] ],
     [ "Cpu< int * >", "class_cpu.html", [
       [ "Pinned< int *>", "class_pinned.html", null ]
     ] ],
@@ -79,27 +73,28 @@ var hierarchy =
     [ "culoc_t", "classculoc__t.html", [
       [ "cupts_t", "classcupts__t.html", null ]
     ] ],
+    [ "cumemcache_t", "classcumemcache__t.html", null ],
     [ "cuperf_g", "classcuperf__g.html", null ],
     [ "cuperf_t", "classcuperf__t.html", null ],
     [ "cupowfs_t", "structcupowfs__t.html", null ],
     [ "cuda_wfs::curand_t", "classcuda__wfs_1_1curand__t.html", null ],
-    [ "cuda_recon::cusolve_cgpre", "classcuda__recon_1_1cusolve__cgpre.html", [
-      [ "cuda_recon::cufdpcg_t", "classcuda__recon_1_1cufdpcg__t.html", null ]
+    [ "cusolve_cgpre", "classcusolve__cgpre.html", [
+      [ "cufdpcg_t", "classcufdpcg__t.html", null ]
     ] ],
-    [ "cuda_recon::cusolve_l", "classcuda__recon_1_1cusolve__l.html", [
-      [ "cuda_recon::cusolve_cbs", "classcuda__recon_1_1cusolve__cbs.html", null ],
-      [ "cuda_recon::cusolve_cg", "classcuda__recon_1_1cusolve__cg.html", [
-        [ "cuda_recon::cufit_grid", "classcuda__recon_1_1cufit__grid.html", null ],
-        [ "cuda_recon::cumoao_t", "classcuda__recon_1_1cumoao__t.html", null ],
-        [ "cuda_recon::cusolve_sparse", "classcuda__recon_1_1cusolve__sparse.html", null ],
-        [ "cuda_recon::cutomo_grid", "classcuda__recon_1_1cutomo__grid.html", null ]
+    [ "cusolve_l", "classcusolve__l.html", [
+      [ "cusolve_cbs", "classcusolve__cbs.html", null ],
+      [ "cusolve_cg", "classcusolve__cg.html", [
+        [ "cufit_grid", "classcufit__grid.html", null ],
+        [ "cumoao_t", "classcumoao__t.html", null ],
+        [ "cusolve_sparse", "classcusolve__sparse.html", null ],
+        [ "cutomo_grid", "classcutomo__grid.html", null ]
       ] ],
-      [ "cuda_recon::cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html", null ]
+      [ "cusolve_mvm", "classcusolve__mvm.html", null ]
     ] ],
-    [ "cuda_recon::cusolve_r", "classcuda__recon_1_1cusolve__r.html", [
-      [ "cuda_recon::cufit_grid", "classcuda__recon_1_1cufit__grid.html", null ],
-      [ "cuda_recon::cusolve_sparse", "classcuda__recon_1_1cusolve__sparse.html", null ],
-      [ "cuda_recon::cutomo_grid", "classcuda__recon_1_1cutomo__grid.html", null ]
+    [ "cusolve_r", "classcusolve__r.html", [
+      [ "cufit_grid", "classcufit__grid.html", null ],
+      [ "cusolve_sparse", "classcusolve__sparse.html", null ],
+      [ "cutomo_grid", "classcutomo__grid.html", null ]
     ] ],
     [ "cusp", "classcusp.html", null ],
     [ "cuda_wfs::cuwfs_base", "classcuda__wfs_1_1cuwfs__base.html", [
@@ -115,6 +110,7 @@ var hierarchy =
     [ "cuda_wfs::cuwfs_info", "classcuda__wfs_1_1cuwfs__info.html", null ],
     [ "cuwfs_t", "classcuwfs__t.html", null ],
     [ "cuda_wfs::cuwfs_t", "classcuda__wfs_1_1cuwfs__t.html", null ],
+    [ "datatype< T >", "classdatatype.html", null ],
     [ "dbg_cfg_t", "parms_8h.html#structdbg__cfg__t", null ],
     [ "dcccell", "type_8h.html#structdcccell", null ],
     [ "dcccell.__unnamed__", "type_8h.html#uniondcccell_8____unnamed____", null ],
@@ -154,20 +150,18 @@ var hierarchy =
     [ "Gpu< AReal >", "class_gpu.html", null ],
     [ "Gpu< Comp *>", "class_gpu.html", null ],
     [ "Gpu< Comp >", "class_gpu.html", null ],
-    [ "Gpu< cuda_recon::lap_t >", "class_gpu.html", null ],
     [ "Gpu< gpu_fdpcg_t >", "class_gpu.html", null ],
     [ "Gpu< gpu_gp_t >", "class_gpu.html", null ],
     [ "Gpu< GReal >", "class_gpu.html", null ],
     [ "Gpu< int *>", "class_gpu.html", null ],
     [ "Gpu< int >", "class_gpu.html", null ],
+    [ "Gpu< lap_t >", "class_gpu.html", null ],
     [ "Gpu< Real *>", "class_gpu.html", null ],
     [ "Gpu< Real >", "class_gpu.html", null ],
-    [ "Gpu< short >", "class_gpu.html", null ],
     [ "Gpu< short2 *>", "class_gpu.html", null ],
     [ "Gpu< short2 >", "class_gpu.html", null ],
     [ "Gpu< T *>", "class_gpu.html", null ],
     [ "gpu_cfg_t", "parms_8h.html#structgpu__cfg__t", null ],
-    [ "gpu_data_t", "mvmfull__real_8cu.html#structgpu__data__t", null ],
     [ "gpu_fdpcg_t", "structgpu__fdpcg__t.html", null ],
     [ "gpu_gp_t", "structgpu__gp__t.html", null ],
     [ "header_t", "bin_8h.html#structheader__t", null ],
@@ -184,7 +178,7 @@ var hierarchy =
     [ "intstat_t", "maos_2types_8h.html#structintstat__t", null ],
     [ "invpsd_t", "maos_2types_8h.html#structinvpsd__t", null ],
     [ "kalman_t", "kalman_8h.html#structkalman__t", null ],
-    [ "cuda_recon::lap_t", "structcuda__recon_1_1lap__t.html", null ],
+    [ "lap_t", "structlap__t.html", null ],
     [ "lcell", "type_8h.html#structlcell", null ],
     [ "lcell.__unnamed__", "type_8h.html#unionlcell_8____unnamed____", null ],
     [ "lcell.__unnamed__.__unnamed__", "type_8h.html#structlcell_8____unnamed_____8____unnamed____", null ],
@@ -231,16 +225,15 @@ var hierarchy =
     [ "mt_state", "structmt__state.html", null ],
     [ "muv_t", "muv_8h.html#structmuv__t", null ],
     [ "mvm_igpu_t", "mvm__trans_8cu.html#structmvm__igpu__t", null ],
-    [ "mvm_t", "mvm__daemon_8cu.html#structmvm__t", null ],
     [ "ngsmod_t", "maos_2types_8h.html#structngsmod__t", null ],
     [ "nonCopyable", "classnon_copyable.html", [
-      [ "cuda_recon::cufdpcg_t", "classcuda__recon_1_1cufdpcg__t.html", null ],
-      [ "cuda_recon::curecon_geom", "classcuda__recon_1_1curecon__geom.html", null ],
-      [ "cuda_recon::curecon_t", "classcuda__recon_1_1curecon__t.html", null ],
-      [ "cuda_recon::cusolve_cbs", "classcuda__recon_1_1cusolve__cbs.html", null ],
-      [ "cuda_recon::cusolve_cg", "classcuda__recon_1_1cusolve__cg.html", null ],
-      [ "cuda_recon::cusolve_muv", "classcuda__recon_1_1cusolve__muv.html", null ],
-      [ "cuda_recon::cusolve_mvm", "classcuda__recon_1_1cusolve__mvm.html", null ],
+      [ "cufdpcg_t", "classcufdpcg__t.html", null ],
+      [ "curecon_geom", "classcurecon__geom.html", null ],
+      [ "curecon_t", "classcurecon__t.html", null ],
+      [ "cusolve_cbs", "classcusolve__cbs.html", null ],
+      [ "cusolve_cg", "classcusolve__cg.html", null ],
+      [ "cusolve_muv", "classcusolve__muv.html", null ],
+      [ "cusolve_mvm", "classcusolve__mvm.html", null ],
       [ "map2map", "classmap2map.html", null ]
     ] ],
     [ "parms_t", "parms_8h.html#structparms__t", null ],
@@ -267,12 +260,6 @@ var hierarchy =
         [ "NumArray< AReal, Gpu >", "class_num_array.html", null ]
       ] ]
     ] ],
-    [ "RefP< AReal, Pinned >", "class_ref_p.html", [
-      [ "Array< AReal, Pinned >", "class_array.html", null ]
-    ] ],
-    [ "RefP< Array< AReal, Pinned >, Dev >", "class_ref_p.html", [
-      [ "Array< Array< AReal, Pinned > >", "class_array.html", null ]
-    ] ],
     [ "RefP< Array< culoc_t >, Dev >", "class_ref_p.html", [
       [ "Array< Array< culoc_t > >", "class_array.html", null ]
     ] ],
@@ -295,9 +282,6 @@ var hierarchy =
       [ "Array< Comp, Gpu >", "class_array.html", [
         [ "NumArray< Comp, Gpu >", "class_num_array.html", null ]
       ] ]
-    ] ],
-    [ "RefP< cuda_recon::lap_t, Gpu >", "class_ref_p.html", [
-      [ "Array< cuda_recon::lap_t, Gpu >", "class_array.html", null ]
     ] ],
     [ "RefP< cudtf_t, Dev >", "class_ref_p.html", [
       [ "Array< cudtf_t >", "class_array.html", null ]
@@ -348,9 +332,6 @@ var hierarchy =
         [ "NumArray< GReal, Gpu >", "class_num_array.html", null ]
       ] ]
     ] ],
-    [ "RefP< GReal, Pinned >", "class_ref_p.html", [
-      [ "Array< GReal, Pinned >", "class_array.html", null ]
-    ] ],
     [ "RefP< int *, Gpu >", "class_ref_p.html", [
       [ "Array< int *, Gpu >", "class_array.html", null ]
     ] ],
@@ -364,6 +345,9 @@ var hierarchy =
       [ "Array< int, Gpu >", "class_array.html", [
         [ "NumArray< int, Gpu >", "class_num_array.html", null ]
       ] ]
+    ] ],
+    [ "RefP< lap_t, Gpu >", "class_ref_p.html", [
+      [ "Array< lap_t, Gpu >", "class_array.html", null ]
     ] ],
     [ "RefP< map2map, Dev >", "class_ref_p.html", [
       [ "Array< map2map >", "class_array.html", null ]
@@ -421,9 +405,6 @@ var hierarchy =
       [ "Array< Real, Pinned >", "class_array.html", [
         [ "NumArray< Real, Pinned >", "class_num_array.html", null ]
       ] ]
-    ] ],
-    [ "RefP< short, Gpu >", "class_ref_p.html", [
-      [ "Array< short, Gpu >", "class_array.html", null ]
     ] ],
     [ "RefP< short2 *, Gpu >", "class_ref_p.html", [
       [ "Array< short2 *, Gpu >", "class_array.html", null ]
@@ -491,7 +472,7 @@ var hierarchy =
     [ "tomo_cfg_t", "parms_8h.html#structtomo__cfg__t", null ],
     [ "tp_counter_t", "thread__pool_8h.html#structtp__counter__t", null ],
     [ "udp_t", "sockio_8h.html#structudp__t", null ],
-    [ "cuda_recon::w01_t", "classcuda__recon_1_1w01__t.html", null ],
+    [ "w01_t", "classw01__t.html", null ],
     [ "wfs_cfg_t", "parms_8h.html#structwfs__cfg__t", null ],
     [ "cuda_wfs::wfscfg_t", "structcuda__wfs_1_1wfscfg__t.html", null ],
     [ "wfsflags_t", "maos_2types_8h.html#structwfsflags__t", null ],
