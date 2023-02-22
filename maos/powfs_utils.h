@@ -55,7 +55,6 @@ void sodium_fit(
   real hs,      /**<LGS focusing height*/
   real htel,    /**<Telescope hegith*/
   real za,      /**<Telescope zenith angle*/
-  real tikcr,   /**<Tikhonov regularization*/
   real svdthres, /**<SVD threshold*/
   int nrep,     /**<Number of iterations*/
   int save,      /**<Save results to file*/

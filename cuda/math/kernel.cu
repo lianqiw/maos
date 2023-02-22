@@ -497,4 +497,3 @@ multimv_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, i
 	}
 	atomicAdd(&a[iact], acc[threadIdx.x]);
 }
-

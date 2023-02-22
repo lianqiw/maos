@@ -35,18 +35,19 @@ typedef struct pywfs_t{
   cmat *nominal;     /**<For sampling results onto detector*/
   dspcell *si;       /**<For sampling results onto detector*/
   dmat *sioff;       /**<Offset for si*/
-  real gain;         /**<Optical gain of PYWFS*/
   dmat *saa;         /**<Subaperture area. Average is one*/
   dmat *gradoff;     /**<Gradient of a flat wavefront*/
   dmat *GTT;          /**<Response of TT mode.*/
   dmat *pupilshift;  /**<Pupil shift. 4x2.*/
   loccell *msaloc;   /**<Mishaped saloc of each sub-pupil due to optical effects*/
   dmat *opdadd;      /**<Aberrations along the WFS path (on locfft grid)*/
+  real gain;         /**<Optical gain of PYWFS*/
+  real siglev;       /**<Signal level*/
 }pywfs_t;
 void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
 void pywfs_free(pywfs_t *pywfs);
 void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints);
-void pywfs_fft(dmat **ints, const pywfs_t *pywfs, const dmat *opd);
+void pywfs_ints(dmat **ints, const pywfs_t *pywfs, const dmat *opd, real siglev);
 dmat* pywfs_mkg(pywfs_t *pywfs, const loc_t* ploc, const char *distortion, 
 		const dmat *mod, const dmat *opdadd, real displacex,  real displacey);
 dmat *pywfs_tt(const pywfs_t *pywfs);

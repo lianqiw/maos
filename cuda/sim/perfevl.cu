@@ -313,7 +313,7 @@ static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
 							int ingpu, int do_cov, int do_opdmean, stream_t& stream){
 	if(ingpu){
 		if(do_cov){
-			curmm(opdcov, 1, iopdevl, iopdevl, "nt", 1, stream);
+			cugemm(opdcov, (Real)1, iopdevl, iopdevl, "nt", (Real)1, stream);
 		}
 		if(do_opdmean){
 			curadd(opdmean, 1, iopdevl, 1, stream);

@@ -1,7 +1,7 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) 
+AM_LDFLAGS=$(LDOPTS) $(LDCUDA)
 #In the order of include:
-HEADER_LIB=common.h  cubin.h  cublas.h  cucmat.h  curmat.h  gpu_math.h  kernel.h  types.h  utils.h prop_map.h
+HEADER_LIB=common.h  cubin.h  cublas.h  cucmat.h  curmat.h  gpu_math.h  kernel.h  types.h  utils.h prop_map.h math.h
 
 EXTRA_DIST=$(HEADER_LIB) 
 SRCS=cublas.cu  cucmat.cu  curmat.cu  kernel.cu  types.cu  utils.cu prop_map.cu gpu_math.cu

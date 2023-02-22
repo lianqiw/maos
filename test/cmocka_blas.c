@@ -43,7 +43,7 @@ static void blas_dpinv(void **state){
 	dcell *At=dcellnew_same(2,2,5,2);
 	dcell *Ac=NULL;
 	d2cell(&Ac, A, At);
-	dcell *Acp=dcellpinv2(Ac, NULL, 1e-14, 0);
+	dcell *Acp=dcellpinv2(Ac, NULL, 1e-14);
 	dmat *Acp2=dcell2m(Acp);
 	assert_float_equal(ddiff(Acp2, Ap2), 0, 1e-6);
 

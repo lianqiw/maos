@@ -332,3 +332,58 @@ dmat *polyfit(const dmat *x, /**<[in] input vector */
 	dfree(mm);
 	return coeff;
 }
+/**
+   Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
+*/
+real calc_dither_amp(const dmat *signal, /**<array of data. nmod*nsim */
+	long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
+	long npoint,  /**<number of points during dithering*/
+	int detrend   /**<flag for detrending (remove linear signal)*/
+){
+	long nmod=NY(signal)==1?1:NX(signal);
+	long nframe=((NY(signal)==1?signal->nx:signal->ny)-1)/dtrat+1;//number of actual frames
+	real slope=0;//for detrending
+	long offset=(nframe/npoint-1)*npoint;//number of WFS frame separations between first and last cycle
+	if(detrend&&offset){//detrending
+		for(long ip=0; ip<npoint; ip++){
+			for(long im=0; im<nmod; im++){
+				long i0=ip*dtrat*nmod+im;
+				long i1=(ip+offset)*dtrat*nmod+im;
+				slope+=P(signal, i1)-P(signal, i0);
+			}
+		}
+		slope/=(npoint*nmod*offset);
+		//dbg("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
+	}
+	real anglei=M_PI*2/npoint;
+	real ipv=0, qdv=0;
+	switch(nmod){
+	case 1://single mode dithering
+		for(int iframe=0; iframe<nframe; iframe++){
+			real angle=anglei*iframe;//position of dithering
+			real cs=cos(angle);
+			real ss=sin(angle);
+			real mod=P(signal, iframe*dtrat)-slope*iframe;
+			ipv+=(mod*cs);
+			qdv+=(mod*ss);
+		}
+		break;
+	case 2://tip and tilt dithering
+		for(int iframe=0; iframe<nframe; iframe++){
+			real angle=anglei*iframe;//position of dithering
+			real cs=cos(angle);
+			real ss=sin(angle);
+			real ttx=P(signal, iframe*dtrat*2)-slope*iframe;
+			real tty=P(signal, iframe*dtrat*2+1)-slope*iframe;
+			ipv+=(ttx*cs+tty*ss);
+			qdv+=(ttx*ss-tty*cs);
+		}
+		break;
+	default:
+		error("Invalid nmod=%ld", nmod);
+
+	}
+	real a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
+	if(nmod==1) a2m*=2;//single mode, needs to double to get the actual amplitude
+	return a2m;
+}

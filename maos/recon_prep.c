@@ -948,8 +948,8 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 		//2021-10-15: Since we are not selecting modes, there is no need for high threshold
 		//to high threshold makes the filtering ill formed
 		const real thres=1e-14; 
-		info("RRlgs svd tikcr is %g\n", thres);
-		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, 0, thres);
+		info("RRlgs svd thres is %g\n", thres);
+		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, thres);
 	}
 	if(parms->save.setup){
 		writebin(recon->GRall, "twfs_GR");
@@ -1111,7 +1111,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 					powfs[ipowfs].loc, P(opd),-1, dispx, dispy, scale, 0, 0);
 				dmat* ints=0;
 				dmat* grad=0;
-				pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+				pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, parms->wfs[iwfs].siglev);
 				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
 				P(recon->dither_rg, iwfs, iwfs)=dpinv(grad, CELL(P(recon->saneai, iwfs, iwfs)));
 				if(0){//test linearity
@@ -1121,7 +1121,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 					for(int i=0; i<10; i++){
 						dscale(opd, 2);
 						dzero(ints);
-						pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+						pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, parms->wfs[iwfs].siglev);
 						pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
 						dmm(&tmp, 0, P(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
 						P(res, i)=P(tmp, 0);

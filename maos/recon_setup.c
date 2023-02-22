@@ -52,8 +52,7 @@
    angle covariance matrix. For physical optics wfs, the NEA is computed using
    matched filter output. For geometric optics, the NEA is from input.
 */
-static void
-setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
+void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	const int nwfs=parms->nwfsr;
 	dspcellfree(recon->sanea);
 	dspcellfree(recon->saneai);
@@ -634,28 +633,29 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	print_mem("After assemble tomo matrix");
 }
 
-static dcell* setup_recon_ecnn(recon_t* recon, const parms_t* parms, loc_t* locs, lmat* mask){
-	/**
-	   We compute the wavefront estimation error covariance in science focal
-	   plane due to wavefront measurement noise. Basically we compute
-	   Hx*E*Cnn*E'*Hx' where E is the tomography operator, and Hx is ray
-	   tracing from tomography grid xloc to science focal plane ploc. Since
-	   Cnn is symmetrical and sparse, we can decompose it easily into
-	   Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
-	   LL'; This is much faster than computing left and right separately,
-	   because 1) the number of points in xloc is larger than in Cnn, so
-	   after the tomography right hand side vector is applied, the number of
-	   rows is larger than number of columns, this causes the right hand
-	   side solver to be much slower. 2) Simply real the computation.
 
-	   For HX opeation, build the sparse matrix and do multiply is way
-	   slower than doing ray tracing directly.
+/**
+	 We compute the wavefront estimation error covariance in science focal
+	plane due to wavefront measurement noise. Basically we compute
+	Hx*E*Cnn*E'*Hx' where E is the tomography operator, and Hx is ray
+	tracing from tomography grid xloc to science focal plane ploc. Since
+	Cnn is symmetrical and sparse, we can decompose it easily into
+	Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
+	LL'; This is much faster than computing left and right separately,
+	because 1) the number of points in xloc is larger than in Cnn, so
+	after the tomography right hand side vector is applied, the number of
+	rows is larger than number of columns, this causes the right hand
+	side solver to be much slower. 2) Simply real the computation.
 
-	   For ad hoc split tomography, we need to remove the five NGS modes
-	   from here, as well as in time averaging of estimated turbulence.
+	For HX opeation, build the sparse matrix and do multiply is way
+	slower than doing ray tracing directly.
 
-	   recon->saneal contains Cnl.
-	*/
+	For ad hoc split tomography, we need to remove the five NGS modes
+	from here, as well as in time averaging of estimated turbulence.
+
+	recon->saneal contains Cnl.
+*/
+static dcell *setup_recon_ecnn(recon_t *recon, const parms_t *parms, loc_t *locs, lmat *mask){
 	TIC;tic;
 	read_self_cpu();
 	dmat* t1=NULL;
@@ -881,7 +881,7 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 		real thres=1e-10;
 		info("RRtwfs svd threshold is %g\n", thres);
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv2(recon->GRtwfs, CELL(neai), thres, 0);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, CELL(neai), thres);
 	}
 
 	if(parms->save.setup){
@@ -1260,8 +1260,6 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	info("Setup or update control matrix parameters.\n");
 	TIC;tic;
-	/*assemble noise equiva angle inverse from powfs information */
-	setup_recon_saneai(recon, parms, powfs);
 	/*setup LGS tip/tilt/diff focus removal */
 	setup_recon_TTFR(recon, parms);
 	/*mvst uses information here*/
@@ -1283,6 +1281,23 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			default:
 				error("recon.alg=%d is not recognized\n", parms->recon.alg);
 			}
+		}
+	}
+	if(parms->recon.split){
+			/*split tomography */
+		ngsmod_setup(parms, recon);
+		if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
+			setup_recon_mvst(recon, parms);
+		}
+	}
+
+	if(parms->recon.alg==0||parms->sim.dmproj){
+		setup_recon_fit(recon, parms);
+	}
+	if(recon->actcpl&&!recon->actextrap){
+		recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 1);
+		if(parms->save.setup){
+			writebin(recon->actextrap, "actextrap");
 		}
 	}
 	toc2("setup_recon_control");

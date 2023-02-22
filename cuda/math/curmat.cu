@@ -67,39 +67,7 @@ void curscale(curmat& in, Real alpha, cudaStream_t stream){
 	}
 }
 
-/**
-   Computes C = alpha * C + beta * op(A) * B ;
-*/
-void curmm(curmat& C, Real alpha, const curmat& A, const curmat& B, const char trans[2], Real beta, stream_t& stream){
-	int m, n, k, k2;
-	cublasOperation_t transa, transb;
-	if(trans[0]=='t'){
-		m=A.Ny();
-		k=A.Nx();
-		transa=CUBLAS_OP_T;
-	} else{
-		m=A.Nx();
-		k=A.Ny();
-		transa=CUBLAS_OP_N;
-	}
-	if(trans[1]=='t'){
-		n=B.Nx();
-		k2=B.Ny();
-		transb=CUBLAS_OP_T;
-	} else{
-		n=B.Ny();
-		k2=B.Nx();
-		transb=CUBLAS_OP_N;
-	}
-	if(!C){
-		C=curmat(m, n);
-	} else{
-		assert(C.Nx()==m&&C.Ny()==n);
-	}
-	if(k!=k2) error("Matrix mismatch\n");
-	DO(CUBL(gemm)(stream.blas(), transa, transb, m, n, k,
-		&beta, A(), A.Nx(), B(), B.Nx(), &alpha, C(), C.Nx()));
-}
+
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
@@ -144,7 +112,7 @@ void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 		for(int ix=0; ix<nx; ix++){
 			for(int iz=0; iz<nz; iz++){
 				if(A[ix*ax+iz*az]&&B[iz*bz+iy*by]){
-					curmm(C[ix+iy*nx], 1., A[ix*ax+iz*az],
+					cugemm(C[ix+iy*nx], (Real)1., A[ix*ax+iz*az],
 						B[iz*bz+iy*by], trans, beta, stream);
 				}
 			}

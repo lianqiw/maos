@@ -1,5 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) 
+AM_LDFLAGS=$(LDOPTS) $(LDCUDA)
 LDADD=../recon/libcurecon.la ../../lib/libaos.la $(LDEXE_FULL)
 #In the order of include:
 HEADER_LIB=gpu_test.h

@@ -23,6 +23,12 @@
 /*
   Group operations related to BLAS/LAPACK to this file.
 */
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+//If an external declaration is marked weakandthat symbol does not exist during linking(possibly dynamic) the address of the symbol will evaluate to NULL.
+void (*dsvd_ext)(dmat **U_, dmat **S_, dmat **Vt_, const dmat *A_)=NULL;
+void (*dsvd_pow_ext)(dmat *A_, real power, real thres)=NULL;
+void (*dgemm_ext)(dmat **out, const real beta, const dmat *A, const dmat *B, const char trans[2], const real alpha)=NULL;
+#endif
 /**
    compute matrix product using blas dgemm.;
    C=beta*C+ alpha *trans(A)*trans(B); if C exist.
@@ -30,6 +36,13 @@
 void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	const char trans[2], const T alpha){
 	if(!A||!B||A->nx==0||B->nx==0) return;
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(dgemm_ext&&NX(A)>500&&NY(A)>500&&NY(B)>100){
+		dbg("Using external routine for dmm of size %ldx%ldx%ld\n", NX(A), NY(A), NY(B));
+		dgemm_ext(C0,beta,A,B,trans,alpha);
+		return;
+	}
+#endif
 	ptrdiff_t m, n, k, lda, ldb, ldc, k2;
 	if(trans[0]=='T'||trans[0]=='t'||trans[0]=='C'||trans[0]=='c'){
 		m=A->ny; k=A->nx;
@@ -129,7 +142,7 @@ X(mat)* X(inv)(const X(mat)* A){
    for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
    thres is the threshold to truncate eigenvalues.
 */
-X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres, R tikcr){
+X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres){
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
 	/*Compute AtW=A'*W */
@@ -170,7 +183,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres, R tikcr){
 		writebin(AtW, "AtW_isnan");
 		writecell(W, "W_isnan");
 	}
-	X(svd_pow)(cc, -1, thres, tikcr);/*invert the matrix using SVD. safe with small eigen values. */
+	X(svd_pow)(cc, -1, thres);/*invert the matrix using SVD. safe with small eigen values. */
 	X(mat)* out=NULL;
 	/*Compute (A'*W*A)*A'*W */
 	X(mm) (&out, 0, cc, AtW, "nn", 1);
@@ -183,7 +196,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres, R tikcr){
    A convenient wrapper.
  */
 X(mat)* X(pinv)(const X(mat)* A, const cell* W){
-	return X(pinv2)(A, W, 1e-14, 0);
+	return X(pinv2)(A, W, 1e-14);
 }
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
@@ -250,21 +263,6 @@ X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 	return mcc;
 }
 
-
-/**
-   Apply tikhonov regularization to A. tikcr is specified as relative to the maximu eigen value.
-   merged into svd_pow
-*/
-/*
-void X(tikcr)(X(mat)* A, T tikcr){
-	if(!tikcr) return;
-	XR(mat)* S=NULL;
-	X(svd)(NULL, &S, NULL, A);
-	T val=P(S,0)*tikcr;
-	XR(free)(S);
-	X(addI)(A, val);
-}
-*/
 /**
    Compute the cholesky decomposition of a symmetric semi-definit dense matrix.
 */
@@ -299,6 +297,7 @@ X(mat)* X(chol)(const X(mat)* A){
 	}
 	return B;
 }
+
 DEF_ENV_FLAG(SVD_SDD_THRES, 0);
 /**
    Compute SVD of a general matrix A.
@@ -312,6 +311,14 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		if(Sdiag) *Sdiag=0;
 		return;
 	}
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(NX(A)>500&&dsvd_ext){
+		dbg("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
+		//void gpu_dsvd(dmat**U, dmat**S, dmat**Vt, dmat*A);
+		dsvd_ext(U, Sdiag, VT, A);
+		return;
+	} 
+#endif
 	int fd=-1;
 	if(A->nx>2048&&!OMP_IN_PARALLEL){
 	//Prevent multiple processes class gesvd simultaneously.
@@ -319,8 +326,8 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		snprintf(fnlock, PATH_MAX, "%s/%s", TEMP, "svd");
 		fd=lock_file(fnlock, 1);
 	}
-	ptrdiff_t M=(int)A->nx;
-	ptrdiff_t N=(int)A->ny;
+	ptrdiff_t M=(ptrdiff_t)A->nx;
+	ptrdiff_t N=(ptrdiff_t)A->ny;
 	/*if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
 	warning("Sdiag,U,VT should all be NULL. discard their value\n");
 	}*/
@@ -427,40 +434,29 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		cellfree(in);
 	}
 }
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-//If an external declaration is marked weakandthat symbol does not exist during linking(possibly dynamic) the address of the symbol will evaluate to NULL.
-void (*dsvd_large)(dmat **U_, dmat **S_, dmat **Vt_, dmat *A_)=NULL;
-#endif
+
 /**
    computes pow(A,power) in place using svd.
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
-   if not zero, tikcr*max(eig) is added to the diagonal.
 */
 void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
 	R power, /**<[in] power of eigen values. usually -1 for inverse*/ 
-	R thres, /**<[in] SVD inverse threshold*/
-	R tikcr  /**<[in] Tikhonov regularization. It has similar effect as SVD inverse threshold*/
+	R thres /**<[in] SVD inverse threshold*/
 	){
 	if(isempty(A)) return;
+#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(NX(A)>500&&dsvd_pow_ext){
+		dbg("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));
+		dsvd_pow_ext(A, power, thres);
+		return;
+	}
+#endif
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
 	X(mat)* VT=NULL;
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-	if(NX(A)>500 && dsvd_large){
-		warning("Using external routine for dsvd\n");
-		//void gpu_dsvd(dmat**U, dmat**S, dmat**Vt, dmat*A);
-		dsvd_large(&U, &Sdiag, &VT, A);
-	}else
-#endif
 	X(svd)(&U, &Sdiag, &VT, A);
-	if(tikcr>0){
-		X(addI)(A, P(Sdiag,0)*tikcr);
-		X(free)(U);
-		XR(free)(Sdiag);
-		X(free)(VT);
-		X(svd)(&U, &Sdiag, &VT, A);
-	}
+
 	/*eigen values below the threshold will not be used. the first is the biggest. */
 	R maxeig=fabs(P(Sdiag,0));
 	R thres0=fabs(thres)*maxeig;
@@ -538,8 +534,7 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
 X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const cell* W,    /**<[in] The weighting matrix. dense or sparse*/
-	R thres,          /**<[in] SVD inverse threshold*/
-	R tikcr           /**<[in] Tikhonov regularization. It has similar effect as SVD inverse threshold*/
+	R thres          /**<[in] SVD inverse threshold*/
 	){
 	if(!A) return NULL;
 	X(cell)* wA=NULL;
@@ -559,7 +554,7 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 
 	X(cell)* ata=NULL;
 	X(cellmm_cell)(&ata, CELL(wA), A, "tn", 1);
-	X(cellsvd_pow)(ata, -1, thres, tikcr);
+	X(cellsvd_pow)(ata, -1, thres);
 	X(cell)* out=NULL;
 	X(cellmm_cell)(&out, CELL(ata), wA, "nt", 1);
 	X(cellfree)(wA);
@@ -568,33 +563,17 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 }
 X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const X(spcell)* W){
-	return X(cellpinv2)(A, W?CELL(W):NULL, 1e-14, 0);
+	return X(cellpinv2)(A, W?CELL(W):NULL, 1e-14);
 }
 
 /**
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-void X(cellsvd_pow)(X(cell)* A, R power, R thres, R tikcr){
+void X(cellsvd_pow)(X(cell)* A, R power, R thres){
 	X(mat)* Ac=X(cell2m)(A);
-	X(svd_pow)(Ac, power, thres, tikcr);
+	X(svd_pow)(Ac, power, thres);
 	X(2cell)(&A, Ac, NULL);
 	X(celldropzero)(A, 0);
 	X(free)(Ac);
 }
-
-
-/**
-   Apply tickholov regularization of relative thres to cell array by
-   converting it to mat
-   merged into svd_pow
-*/
-/*
-void X(celltikcr)(X(cell)* A, R tikcr){
-	if(!tikcr) return;
-	X(mat)* Ab=X(cell2m)(A);
-	X(tikcr)(Ab, tikcr);
-	X(2cell)(&A, Ab, NULL);
-	X(free)(Ab);
-}
-*/

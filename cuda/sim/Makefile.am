@@ -1,5 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) 
+AM_LDFLAGS=$(LDOPTS) $(LDCUDA)
 #In the order of include:
 HEADER_LIB=cudata.h accphi.h gpu_sim.h  perf.h  wfs.h
 

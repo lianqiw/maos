@@ -73,7 +73,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             if res is None or res.shape[0]==0:
                 continue
             if name=="Res":
-                if res.size>3 and res[3].size>0: #split tomography
+                if res.shape[0]>3 and res[3].size>0: #split tomography
                     res=res[3]
                     split=1
                 else: #integrated

@@ -853,7 +853,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 						val[0]=drawdata->legend[ipts][0];
 					}
 					if(drawdata->cumu){
-						snprintf(val, sizeof(val), "%c(%.2f)", val[0], y);
+						snprintf(val, sizeof(val), "%c (%.2f)", val[0], y);
 					}
 					if(val[0]!=0){
 						cairo_save(cr);
@@ -864,6 +864,19 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 					}
 				}
 				cairo_restore(cr);
+				//append cumulative average to end of legend.
+				if(drawdata->cumu&&drawdata->legend[ipts]){
+					char *tmp=drawdata->legend[ipts];
+					char val[20]={0};
+					snprintf(val, sizeof(val), " (%.2f)", y);
+					char *old=strstr(tmp, " (");
+					if(old){//remove old
+						old[0]=0;
+					}
+
+					drawdata->legend[ipts]=stradd(tmp, val, NULL);
+					free(tmp);
+				}
 			}/*iptsy */
 #if DRAW_NEW == 1
 			cairo_destroy(cr);
@@ -932,7 +945,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 
 	//draw the x axis
 	for(int itic=0; itic<ntic; itic++){
-		float ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
+		float ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-4) ticv=0;
 		float val=ticv*pow(10, order);
 		float frac=(val-xmin0)/sep;
 		float xpos=xoff+widthim*frac;

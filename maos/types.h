@@ -481,7 +481,6 @@ typedef struct {
     int do_phy;   /**<Do physical optics*/
     int do_pistat;/**<Collect pixel intensity statistics*/
     int gradout;  /**<Gradient count or 0 if no output*/
-    int pllind;   /**<Index of current PLL cycle*/
     int pllout;   /**<PLL output count or 0 if no update*/
     //int ogcount;   /**<Number of optical gain accumulations*/
     int ogacc;    /**<OG accumulation count or 0 if no action*/

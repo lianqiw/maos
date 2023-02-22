@@ -156,7 +156,6 @@ void sodium_fit(
 	real hs,      /**<LGS focusing height*/
 	real htel,    /**<Telescope hegith*/
 	real za,      /**<Telescope zenith angle*/
-	real tikcr,   /**<Tikhonov regularization*/
 	real svdthres, /**<SVD threshold*/
 	int nrep,     /**<Number of iterations*/
 	int save,      /**<Save results to file*/
@@ -236,7 +235,7 @@ void sodium_fit(
 		dbg("reuse previous grad, i0m, i0mv\n");
 	}
 
-	dbg("svdthres=%g, tikcr=%g, nrep=%d\n", svdthres, tikcr, nrep);
+	dbg("svdthres=%g, nrep=%d\n", svdthres, nrep);
 	//don't try to cachc fotf. It is per WFS and uses too much storage.
 	dcell* ata=0, * atb=0;
 	etf_t *etf_full=0;
@@ -274,7 +273,7 @@ void sodium_fit(
 			writebin(atb, "sodium_atb_%d_%d", count, irep);
 			if(count==0&&irep==0) writebin(i0m, "sodium_i0m_%d_%d", count, irep);
 		}
-		dcellsvd_pow(ata, -1, svdthres, tikcr);
+		dcellsvd_pow(ata, -1, svdthres);
 		dcellzero(res);
 		dcellmm(&res, ata, atb, "nn", 1);
 		real scale=1./dcellsum(res);//make sure nai sum to 1.
@@ -398,7 +397,7 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
 		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
-		0, parms->dbg.na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
+		parms->dbg.na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
 	
 	/*if(parms->save.setup){
 		if(pi0) writebin(*pi0, "powfs%d_i0_fit", ipowfs);

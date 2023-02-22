@@ -413,6 +413,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	  }*/
 
 	if(parms->recon.modal){//convert Modes to space of amod
+		tic;
 		for(int idm=0; idm<parms->ndm; idm++){
 			dmat* proj=dpinv(P(recon->amod,idm), NULL);
 			dmat* tmp=0;
@@ -421,6 +422,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 			P(ngsmod->Modes,idm)=tmp;
 			dfree(proj);
 		}
+		toc2("converting amod to modal space:");
 	}
 	/*
 	  ngsmod to NGS gradient interaction matrix. Defined in modal space for modal control

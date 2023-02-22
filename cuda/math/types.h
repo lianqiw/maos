@@ -377,7 +377,7 @@ public:
 	using Parent::init;
 	using Parent::Vector;
 	#if CUDA_VERSION>10000
-	cudaDataType datatype();
+	cudaDataType dtype();
 	#endif
 	NumArray trans(stream_t &stream);
 	//using Parent::Copy;
@@ -537,15 +537,15 @@ public:
 typedef class NumArray<int, Gpu>   cuimat;
 typedef class NumArray<Real, Gpu>   curmat;
 typedef class NumArray<Comp, Gpu>   cucmat;
-typedef class NumArray<real, Gpu>   cudmat;//same datatype as cpu dmat
-typedef class NumArray<comp, Gpu>   cuzmat;//same datatype as cpu cmat
+typedef class NumArray<real, Gpu>   cudmat;//same dtype as cpu dmat
+typedef class NumArray<comp, Gpu>   cuzmat;//same dtype as cpu cmat
 typedef class Cell<Real, Gpu>  curcell;
 typedef class Cell<Comp, Gpu>  cuccell;
 typedef class NumArray<real, Cpu>   crmat;//equivalent to rmat in c
 typedef class NumArray<comp, Cpu>   ccmat;//equivalent to cmat in c
 
 template <typename T>
-class datatype{
+class dtype{
 	int operator()();
 };
 

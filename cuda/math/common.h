@@ -35,6 +35,7 @@
 #include <cufft.h>
 #include <cuComplex.h>
 #include <cuda_profiler_api.h>
+#include <cusolverDn.h>
 
 typedef double2 dcomplex;
 typedef float2 fcomplex;
@@ -252,6 +253,8 @@ class stream_t{
 	cudaStream_t stream;
 	cublasHandle_t handle;
 	cusparseHandle_t sphandle;
+	cusolverDnHandle_t dnhandle; 
+
 public:
 	stream_t(){
 		init();
@@ -260,11 +263,13 @@ public:
 		STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
 		HANDLE_NEW(handle, stream);
 		SPHANDLE_NEW(sphandle, stream);
+		DO(cusolverDnCreate(&dnhandle)); DO(cusolverDnSetStream(dnhandle, stream));
 	}
 	~stream_t(){
 		deinit();
 	}
 	void deinit(){
+		cusolverDnDestroy(dnhandle);
 		SPHANDLE_DONE(sphandle);
 		HANDLE_DONE(handle);
 		STREAM_DONE(stream);
@@ -274,26 +279,23 @@ public:
 		init();
 	}
 	void sync(){
-	//assert(this);
 		DO(cudaStreamSynchronize(stream));
 	}
 	operator cudaStream_t(){
-	//assert(this);
 		return stream;
 	}
 	/*
-	  cuda 10.0 complains multiple conversion function to void *
-	  operator cublasHandle_t(){
-	return handle;
-	}
-	operator cusparseHandle_t(){
-	return sphandle;
+		the handle_t are pointers. 
+	  	cuda 10.0 complains multiple conversion function to void * when multiple operators are defined.
 	}*/
 	cublasHandle_t blas(){
 		return handle;
 	}
 	cusparseHandle_t sparse(){
 		return sphandle;
+	}
+	cusolverDnHandle_t dn(){
+		return dnhandle;
 	}
 private://do not allow copy.
 	stream_t& operator=(const stream_t& in);

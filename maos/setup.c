@@ -88,15 +88,35 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
-	#if CUDA_VERSION>10000
-	extern void (*dsvd_large)(dmat**U_, dmat**S_, dmat**Vt_, dmat*A_);
-	warning("set dsvd_large to gpu_dsvd\n");
-	dsvd_large=gpu_dsvd;
-	if(0){//test passed
-		//gpu_dsvd is faster than dsvd for matrix larger than 500x500 (test is on cassiopeia)
-		dmat *A=dnew(500, 500);
+	#if USE_CUDA>100
+	extern void (*dsvd_ext)(dmat**U_, dmat**S_, dmat**Vt_, const dmat*A_);
+	extern void (*dsvd_pow_ext)(dmat*A_, real power, real thres);
+	extern void (*dgemm_ext)(dmat**out, const real beta, const dmat*A, const dmat*B, const char trans[2], const real alpha);
+	if(0){
+		dmat *A=dnew(2000, 2000);
+		dmat *B=dref(A);
 		rand_t rstat; seed_rand(&rstat, 1);
-		drandn(A,1,&rstat);
+		drandn(A, 10, &rstat);
+		daddI(A, 1);
+		dmat *C=NULL;
+		dmm(&C, 0, A, B, "nn", 1);
+		dmat *C2=NULL;
+		gpu_dgemm(&C2, 0, A, B, "nn", 1);
+		real diffu=ddiff(C, C2);
+		real CS=dsumabs(C);
+		real C2S=dsumabs(C2);
+		dmm(&C, 1, A, B, "nn", 1);
+		gpu_dgemm(&C2, 1, A, B, "nn", 1);
+		real diffu2=ddiff(C, C2);
+		dfree(A); dfree(B); dfree(C); dfree(C2);
+		info("dmm and gpu_dgemm diff are %g %g. sum are %g, %g\n", diffu, diffu2, CS, C2S);
+		exit(0);
+	}
+	if(0){//test
+		//gpu_dsvd is faster than dsvd for matrix larger than 500x500 (test is on cassiopeia)
+		dmat *A=dnew(2000, 2000);
+		rand_t rstat; seed_rand(&rstat, 1);
+		drandn(A,10,&rstat);
 		daddI(A,1);
 		dmat *U=0, *Vt=0, *S=0;
 		dmat *U2=0, *Vt2=0, *S2=0;
@@ -118,6 +138,10 @@ void maos_setup(const parms_t* parms){
 		writebin(A, "A");
 		exit(0);
 	}
+	dbg("set dsvd_ext to gpu_dsvd\n");
+	dsvd_ext=gpu_dsvd;
+	dsvd_pow_ext=gpu_dsvd_pow;
+	dgemm_ext=gpu_dgemm;
 	#endif
 #endif
 	global->aper=aper=setup_aper(parms);
@@ -149,41 +173,27 @@ void maos_setup(const parms_t* parms){
 		}
 #endif
 		setup_recon_prep2(recon, parms, aper, powfs);
-		//Don't put this inside parallel, otherwise svd will run single threaded.
-		setup_recon_control(recon, parms, powfs);
-		if(parms->recon.split){
-			/*split tomography */
-			ngsmod_setup(parms, recon);
-			if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
-				setup_recon_mvst(recon, parms);
-			}
-		}
+		/*assemble noise equiva angle inverse from powfs information */
+		setup_recon_saneai(recon, parms, powfs);
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
-		//setup_recon_sodium_fit(recon, parms);//to restrict modes in sodium fitting correction
-		if(parms->recon.alg==0||parms->sim.dmproj){
-			setup_recon_fit(recon, parms);
-		}
-		if(recon->actcpl && !recon->actextrap){
-			recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 1);
-			if(parms->save.setup){
-				writebin(recon->actextrap, "actextrap");
+		if(!NO_RECON){
+			setup_recon_control(recon, parms, powfs);
+			if(parms->recon.alg==0&&parms->nmoao){
+				setup_recon_moao(recon, parms);
 			}
 		}
 		if(parms->sim.wfsalias==2||parms->sim.idealwfs==2){
 			setup_powfs_fit(powfs, recon, parms);
 		}
-		if(parms->recon.alg==0&&parms->nmoao){
-			setup_recon_moao(recon, parms);
-		}
 		print_mem("After setup_recon");
-		if(parms->dbg.wfslinearity!=-1){
-			int iwfs=parms->dbg.wfslinearity;
-			assert(iwfs>-1||iwfs<parms->nwfs);
-			info2("Studying wfslineariy for WFS %d\n", iwfs);
-			wfslinearity(parms, powfs, iwfs);
-			((parms_t*)parms)->sim.end=parms->sim.start;//indicate no simulation
-		}
-		{
+		{//testing
+			if(parms->dbg.wfslinearity!=-1){//testing wfs linearity
+				int iwfs=parms->dbg.wfslinearity;
+				assert(iwfs>-1||iwfs<parms->nwfs);
+				info2("Studying wfslineariy for WFS %d\n", iwfs);
+				wfslinearity(parms, powfs, iwfs);
+				((parms_t*)parms)->sim.end=parms->sim.start;//indicate no simulation
+			}
 			int LGS_SPH_PSD=-1;
 			READ_ENV_INT(LGS_SPH_PSD, -1, INFINITY);
 			if(LGS_SPH_PSD>-1){
@@ -219,7 +229,7 @@ void maos_setup(const parms_t* parms){
 #endif
 
 	if(!parms->sim.evlol){
-		setup_recon_post(recon, parms, aper);
+		setup_recon_post(recon, parms, aper);//needs MVM matrix
 	}
 	if(parms->plot.setup){
 		plot_setup(parms, powfs, aper, recon);

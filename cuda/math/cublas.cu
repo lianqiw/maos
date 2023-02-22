@@ -160,4 +160,40 @@ cusparseSpMM(cusparseHandle_t     handle,
 	}
 }
 
-
+template<>
+cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+						  int m, int n,
+						  const float *A, int lda,
+						  const float *x, int incx,
+						  float *C, int ldc){
+	return cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
+}
+cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+						  int m, int n,
+						  const double *A, int lda,
+						  const double *x, int incx,
+						  double *C, int ldc){
+	return cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
+}
+template<>
+cublasStatus_t cublasGgemm(cublasHandle_t handle,
+						   cublasOperation_t transa, cublasOperation_t transb,
+						   int m, int n, int k,
+						   const float *alpha,
+						   const float *A, int lda,
+						   const float *B, int ldb,
+						   const float *beta,
+						   float *C, int ldc){
+	return cublasSgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+}
+template<>
+cublasStatus_t cublasGgemm(cublasHandle_t handle,
+						   cublasOperation_t transa, cublasOperation_t transb,
+						   int m, int n, int k,
+						   const double *alpha,
+						   const double *A, int lda,
+						   const double *B, int ldb,
+						   const double *beta,
+						   double *C, int ldc){
+	return cublasDgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+}

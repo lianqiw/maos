@@ -490,7 +490,7 @@ void X(celladd_any)(cell** pA, R ac, const cell* B, R bc){
 				X(spmove)((X(sp)*)(*pA), (X(sp)*)tmp);
 				free(tmp);
 			} else{
-				error("Adding dense to sparse matrix is not allowed.\n");
+				error("Adding dense to sparse matrix is not supported.\n");
 			}
 		} else{
 			error("Invalid operand\n");

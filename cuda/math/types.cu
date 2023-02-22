@@ -51,19 +51,19 @@ NumArray<fcomplex, Cpu>::NumArray(const zmat *A){
 }
 #if CUDA_VERSION>10000
 template <>
-cudaDataType NumArray<float, Gpu>::datatype(){
+cudaDataType NumArray<float, Gpu>::dtype(){
 	return CUDA_R_32F;
 }
 template <>
-cudaDataType NumArray<float2, Gpu>::datatype(){
+cudaDataType NumArray<float2, Gpu>::dtype(){
 	return CUDA_C_32F;
 }
 template <>
-cudaDataType NumArray<double, Gpu>::datatype(){
+cudaDataType NumArray<double, Gpu>::dtype(){
 	return CUDA_R_64F;
 }
 template <>
-cudaDataType NumArray<double2, Gpu>::datatype(){
+cudaDataType NumArray<double2, Gpu>::dtype(){
 	return CUDA_C_64F;
 }
 #endif

@@ -1,11 +1,18 @@
 AC_INIT(maos, 2.8.0, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
+AC_PREFIX_DEFAULT(${HOME}/.aos) #do not use variable set in this file. 
 AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
 BASEURL="https://github.com/lianqiw/files/raw/master/"
+
+PATH+=":${ac_default_prefix}/bin"
+SRC_DIR=$(cd "$srcdir" && pwd) #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
+BUILD_DIR=$(pwd)
+TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
+DOWNLOAD_DIR="${TMP_DIR}/downloads"
 
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
@@ -46,14 +53,10 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 LT_INIT([disable-shared, static]) #prefer static internal linking.
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
-
-#top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
-SRC_DIR=$(cd "$srcdir" && pwd)
-BUILD_DIR=$(pwd)
-
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
+
 
 die(){
     shift
@@ -375,15 +378,9 @@ case "$host_os" in
 		AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
-
-#depends on libsuffix 
-PRE_DIR="${HOME}/.aos"          #prefix for installation
-TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
-LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version . 
-CPPFLAGS+=" -I${PRE_DIR}/include " #use CPPFLAGS so that the preprocessor can also use it.
-PATH+=":${PRE_DIR}/bin"
-DOWNLOAD_DIR="${TMP_DIR}/downloads"
+libdir="${ac_default_prefix}/lib${libsuffix}" #external library
+LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version . 
+CPPFLAGS+=" -I${ac_default_prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
 
 extract(){
     fn="$1"
@@ -458,8 +455,8 @@ compile(){
     echo "Compiling $name with CFLAGS=\"$CFLAGS\" CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\" \"$@\". Check $fnlog for details"
     echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -Wno-error"  && export CPPFLAGS="$CPPFLAGS" && export LDFLAGS="$LDFLAGS" && \
-		((./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} && make -j4 install) ||
-		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
+		((./configure --libdir=${libdir} $@ --prefix=${ac_default_prefix} && make -j4 install) ||
+		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${ac_default_prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
 		echo "Compiled $name successfully."
     else
 		echo "Failed to compile $name. Please see $fnlog for details"
@@ -472,13 +469,13 @@ AS_IF([test "$enable_openmp" = "yes"], [
 		#MACOS supports openmp with separate omp library
 		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${PRE_DIR} 
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix} 
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
 		AS_IF([test "$has_omp" = "0" ], [
 			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
-			compile LIBOMP "libomp.tar.xz" ${PRE_DIR} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
+			compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
@@ -539,7 +536,7 @@ function set_lapack(){
     case $type in
 	mkl*)
 	    if test "$type" = "mkl-download" -a "$mkl_avail" = "yes";then
-			download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
+			download MKL "mkl${libsuffix}.tar.bz2" ${ac_default_prefix}
 	    fi
 	    #First use MKL if available. 
 	    if test "$host_cpu" = "x86_64" ;then
@@ -645,7 +642,7 @@ if test "$has_fftw" = "builtin";then
 else
     if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
-		download FFTW "fftw${libsuffix}.tar.bz2" ${PRE_DIR}
+		download FFTW "fftw${libsuffix}.tar.bz2" ${ac_default_prefix}
 		unset ac_cv_lib_fftw3_fftw_execute
 		AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
 
@@ -697,7 +694,7 @@ AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR(["FFT single preci
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
 if test "$has_chol" = "no" ;then
-	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${PRE_DIR}
+	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${ac_default_prefix}
 	unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 
@@ -721,7 +718,7 @@ if test "$enable_websockets" != "no" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
-		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
+		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${ac_default_prefix}
 		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     
@@ -752,7 +749,7 @@ if test "$enable_cmocka" != "no" ;then
 		#include <stdint.h>
 		#include <setjmp.h>])
 	if test "$enable_cmocka" = "no" ;then
-		download CMOCKA cmocka${libsuffix}.tar.bz2 ${PRE_DIR}
+		download CMOCKA cmocka${libsuffix}.tar.bz2 ${ac_default_prefix}
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 	
@@ -952,13 +949,13 @@ if test "$with_cuda" != "no" ;then
 		CUDA_L=""
     fi
     if test -d "$CUDA_L" ;then
-		LIBCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
+		LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
     else
-		LIBCUDA=
+		LDCUDA=
 		AC_MSG_NOTICE([CUDA library not found])
 		with_cuda="no"
     fi
-    AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA])
+    AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA $LDCUDA])
 
     #Check for cuda header
     if test -f "${CUDADIR}/include/cuda.h" ;then
@@ -968,7 +965,7 @@ if test "$with_cuda" != "no" ;then
 		CUDAOPT=
     fi
     if test "$with_cuda" != "no" ;then
-	    LIBCUDA+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart"
+	    LIBCUDA+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart -lstdc++"
 		if test "$enable_debug" = "yes" ;then
 			CUDAOPT+=" -O0 -g"
 		else
@@ -990,7 +987,6 @@ if test "$with_cuda" != "no" ;then
 			CCN=GCC
 			CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ "
 		esac
-		LIBCUDA+=" -lstdc++"
     fi
 fi
 if test "$with_cuda" != "no" -a $CN = CLANG ;then #use clang to compile GPU code. Which is as fast as nvcc but more tolerant.
@@ -998,7 +994,6 @@ if test "$with_cuda" != "no" -a $CN = CLANG ;then #use clang to compile GPU code
 	CUDAOPT+=" --cuda-gpu-arch=sm_${cuarch} $CCBINOPT --cuda-path=$CUDADIR"
 	CUDAOPT+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
 	CCBINOPT= #no need for this
-	LIBCUDA+=" -lstdc++"
 elif test "$with_cuda" != "no" ;then #Set nvcc flags
     AC_MSG_NOTICE(["Use cuda in directory $CUDADIR"])
     #NVCC+=" $CFLAGS_CPU"
@@ -1031,10 +1026,10 @@ if test "$with_cuda" != "no" ;then
     else
 		AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
     fi
-    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
     AC_SUBST(CUDAOPT)
     AC_SUBST(CCBINOPT)
     AC_SUBST(LIBCUDA)
+	AC_SUBST(LDCUDA)
     AC_SUBST(NVCC)
 else
 	if test "$user_enabled_cuda" = "yes" ;then
@@ -1044,16 +1039,16 @@ else
 	else
 		AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location to enable CUDA support"])
 	fi
-    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
-	unset cudaver
+	cudaver=0
 fi
+AC_DEFINE_UNQUOTED(USE_CUDA, [$cudaver], "Cuda version")
 AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
 AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
     if ! which doxygen ;then
-        download DOXYGEN doxygen${libsuffix}.tar.bz2 ${PRE_DIR}
+        download DOXYGEN doxygen${libsuffix}.tar.bz2 ${ac_default_prefix}
     fi
     PATH+=":${HOME}/bin"
     if ! which latex ;then
@@ -1127,6 +1122,7 @@ if test "$with_cuda" != "no" ;then
     echo CUDAOPT=$CUDAOPT
 	echo CCBINOPT=$CCBINOPT
     echo LIBCUDA=$LIBCUDA
+	echo LDCUDA=$LDCUDA
 fi
 if test "$with_matlab" != "no" ;then
     echo MEXDIR=$MEXDIR

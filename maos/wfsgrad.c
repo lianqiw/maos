@@ -342,8 +342,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				zfarr_push(ztiltoutzfarr, isim, *gradacc);
 			}
 		} else{//Pywfs
-			pywfs_fft(&P(ints, 0), powfs[ipowfs].pywfs, opd);
-			dscale(P(ints, 0), parms->wfs[iwfs].sigsim);
+			pywfs_ints(&P(ints, 0), powfs[ipowfs].pywfs, opd, parms->wfs[iwfs].sigsim);
 		}
 	}
 	TIM(3);
@@ -437,60 +436,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	TIM1;
 	return NULL;
 }
-/**
-   Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
-*/
-static real calc_dither_amp(dmat* signal, /**<array of data. nmod*nsim */
-	long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
-	long npoint,  /**<number of points during dithering*/
-	int detrend   /**<flag for detrending (remove linear signal)*/
-){
-	const long nmod=NX(signal);
-	long nframe=(signal->ny-1)/dtrat+1;//number of actual frames
-	real slope=0;//for detrending
-	long offset=(nframe/npoint-1)*npoint;//number of WFS frame separations between first and last cycle
-	if(detrend&&offset){//detrending
-		for(long ip=0; ip<npoint; ip++){
-			for(long im=0; im<nmod; im++){
-				long i0=ip*dtrat*nmod+im;
-				long i1=(ip+offset)*dtrat*nmod+im;
-				slope+=P(signal, i1)-P(signal, i0);
-			}
-		}
-		slope/=(npoint*nmod*offset);
-		//dbg("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
-	}
-	real anglei=M_PI*2/npoint;
-	real ipv=0, qdv=0;
-	switch(nmod){
-	case 1://single mode dithering
-		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=anglei*iframe;//position of dithering
-			real cs=cos(angle);
-			real ss=sin(angle);
-			real mod=P(signal, iframe*dtrat)-slope*iframe;
-			ipv+=(mod*cs);
-			qdv+=(mod*ss);
-		}
-		break;
-	case 2://tip and tilt dithering
-		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=anglei*iframe;//position of dithering
-			real cs=cos(angle);
-			real ss=sin(angle);
-			real ttx=P(signal, iframe*dtrat*2)-slope*iframe;
-			real tty=P(signal, iframe*dtrat*2+1)-slope*iframe;
-			ipv+=(ttx*cs+tty*ss);
-			qdv+=(ttx*ss-tty*cs);
-		}
-		break;
-	default:
-		error("Invalid nmod");
 
-	}
-	real a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-	return a2m;
-}
 
 /*Compute global tip/tilt error for each WFS*/
 static void wfsgrad_fsm(sim_t* simu, int iwfs){
@@ -648,7 +594,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				isim, iwfs, pd->deltam/anglei, pd->a2m*scale, pd->a2me*scale);
 		}
 		if(simu->resdither){
-			int ic=simu->wfsflags[ipowfs].pllind;
+			int ic=simu->wfsflags[ipowfs].pllout-1;
 			P(P(simu->resdither, iwfs), 0, ic)=pd->deltam;
 			P(P(simu->resdither, iwfs), 1, ic)=pd->a2m;
 			P(P(simu->resdither, iwfs), 2, ic)=pd->a2me;
@@ -946,9 +892,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 	const recon_t* recon=simu->recon;
 	const int isim=simu->wfsisim;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(!parms->powfs[ipowfs].dither) continue;
-		if(isim<parms->powfs[ipowfs].step) continue;
-		if((isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
+		if(!parms->powfs[ipowfs].dither || isim<parms->powfs[ipowfs].step || (isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
 		const int nwfs=parms->powfs[ipowfs].nwfs;
 
 		if(simu->wfsflags[ipowfs].ogout){//This is matched filter or cog update
@@ -1239,7 +1183,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					info2("Step %5d wfs %d CoG gain adjusted from %g to %g %s.\n",
 						isim, iwfs, mgold, mgnew, ogtype);
 					if(simu->resdither){
-						int ic=simu->wfsflags[ipowfs].pllind;
+						int ic=simu->wfsflags[ipowfs].pllout-1;
 						P(P(simu->resdither, iwfs), 3, ic)=mgnew;
 					}
 					//adjust WFS measurement dither dithersig by gain adjustment. used for dither t/t removal from gradients.

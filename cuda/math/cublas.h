@@ -19,12 +19,76 @@
 #define AOS_CUDA_CUBLAS_H
 #include <typeinfo>
 #include "types.h"
-#include <cusolverDn.h>
 /**
  * \file cublas.h
 */
 void cuspmul(Real *y, const cusp &A, const Real *x, int ncol, char trans, Real alpha, stream_t &stream);
 //int cusvd(curmat &U, curmat &S, curmat &VT, curmat &A);
+/**<
+ * C=A*diag(x)
+ * */
+template<typename T>
+cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+                          int m, int n,
+                          const T *A, int lda,
+                          const T *x, int incx,
+                          T *C, int ldc);
+
+/**
+ * C=A*S
+ * Sd=diagonal(S)
+*/
+template<typename T>
+void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<T, Gpu>Sd, stream_t &stream){
+    DO(cublasGdgmm(stream.blas(), CUBLAS_SIDE_RIGHT, A.Nx(), A.Ny(), A(), A.Nx(), Sd(), 1, C(), C.Nx()));
+}
+/**
+ * C=alpha*op(A)*op(B)+beta*C
+ * */
+template<typename T>
+cublasStatus_t cublasGgemm(cublasHandle_t handle,
+                           cublasOperation_t transa, cublasOperation_t transb,
+                           int m, int n, int k,
+                           const T *alpha,
+                           const T *A, int lda,
+                           const T *B, int ldb,
+                           const T *beta,
+                           T *C, int ldc);
+
+/**
+   Computes C = beta * C + alpha * op(A) * B ;
+*/
+template<typename T>
+void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArray<T, Gpu> &B, const char trans[2], T alpha, stream_t &stream){
+    int m, n, k, k2;
+    cublasOperation_t transa, transb;
+    if(trans[0]=='t'){
+        m=A.Ny();
+        k=A.Nx();
+        transa=CUBLAS_OP_T;
+    } else{
+        m=A.Nx();
+        k=A.Ny();
+        transa=CUBLAS_OP_N;
+    }
+    if(trans[1]=='t'){
+        n=B.Nx();
+        k2=B.Ny();
+        transb=CUBLAS_OP_T;
+    } else{
+        n=B.Ny();
+        k2=B.Nx();
+        transb=CUBLAS_OP_N;
+    }
+    if(!C){
+        C.init(m, n);
+    } else{
+        assert(C.Nx()==m&&C.Ny()==n);
+    }
+    if(k!=k2) error("Matrix mismatch\n");
+    DO(cublasGgemm(stream.blas(), transa, transb, m, n, k,
+                   &alpha, A(), A.Nx(), B(), B.Nx(), &beta, C(), C.Nx()));
+}
 /**
  * SVD decomposition of a dense matrix using QR algorithm. Deprecated
  * A = U * S * Vt
@@ -44,35 +108,34 @@ void cuspmul(Real *y, const cusp &A, const Real *x, int ncol, char trans, Real a
 	}\
 
 template<typename T>
-int cusvd(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &Vt, NumArray<T, Gpu> &A){
-  cusolverDnHandle_t handle; cusolverDnCreate(&handle);
-  cusolverDnParams_t params; cusolverDnCreateParams(&params);
-  cusolverStatus_t status;
-  S.init(MIN(A.Nx(), A.Ny()), 1);
-  U.init(A.Nx(), A.Nx());
-  Vt.init(A.Ny(), A.Ny());
-  size_t wDevice, wHost;
-  status=cusolverDnXgesvd_bufferSize(handle, params, 'A', 'A', A.Nx(), A.Ny(),
-    A.datatype(), A(), A.Nx(), S.datatype(), S(), U.datatype(), U(), U.Nx(), Vt.datatype(), Vt(), Vt.Nx(), A.datatype(), &wDevice, &wHost);
-  CHECK(status);
-  //Allocate work space
-  RefP<char, Gpu> tmpDevice(wDevice);
-  RefP<char, Cpu> tmpHost(wHost);
-  RefP<int, Gpu>tmpans(1);
-  int ans;
-  status=cusolverDnXgesvd(handle, params, 'A', 'A', A.Nx(), A.Ny(),
-    A.datatype(), A(), A.Nx(), S.datatype(), S(), U.datatype(), U(), U.Nx(), Vt.datatype(), Vt(), Vt.Nx(), A.datatype(), tmpDevice(), wDevice, tmpHost(), wHost, tmpans());
-  CHECK(status);
-  DO(cudaMemcpy(&ans, tmpans(), sizeof(int), D2H));
+int cusvd(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &Vt, NumArray<T, Gpu> &A, stream_t &stream){
+    cusolverDnParams_t params; cusolverDnCreateParams(&params);
+    cusolverStatus_t status;
+    S.init(MIN(A.Nx(), A.Ny()), 1);
+    U.init(A.Nx(), A.Nx());
+    Vt.init(A.Ny(), A.Ny());
+    size_t wDevice, wHost;
+    status=cusolverDnXgesvd_bufferSize(stream.dn(), params, 'A', 'A', A.Nx(), A.Ny(),
+      A.dtype(), A(), A.Nx(), S.dtype(), S(), U.dtype(), U(), U.Nx(), Vt.dtype(), Vt(), Vt.Nx(), A.dtype(), &wDevice, &wHost);
+    CHECK(status);
+    //Allocate work space
+    RefP<char, Gpu> tmpDevice(wDevice);
+    RefP<char, Cpu> tmpHost(wHost);
+    RefP<int, Gpu>tmpans(1);
+    int ans;
+    status=cusolverDnXgesvd(stream.dn(), params, 'A', 'A', A.Nx(), A.Ny(),
+      A.dtype(), A(), A.Nx(), S.dtype(), S(), U.dtype(), U(), U.Nx(), Vt.dtype(), Vt(), Vt.Nx(), A.dtype(), tmpDevice(), wDevice, tmpHost(), wHost, tmpans());
+    CHECK(status);
+    DO(cudaMemcpy(&ans, tmpans(), sizeof(int), D2H));
 
-  if(ans){
-    if(ans<0){
-      warning("the %d-th parameter is wrong", -ans);
-    } else{
-      warning("%d superdiagonals of an intermediate bidiagonal form did not converge to zero", ans);
+    if(ans){
+        if(ans<0){
+            warning("the %d-th parameter is wrong", -ans);
+        } else{
+            warning("%d superdiagonals of an intermediate bidiagonal form did not converge to zero", ans);
+        }
     }
-  }
-  return ans;
+    return ans;
 }
 /**
  * SVD decomposition of a dense matrix using polar decomposition. It is much
@@ -91,40 +154,53 @@ int cusvd(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &Vt, NumArr
  * words, h_err_sigma shows the accuracy of SVD.
  * */
 template<typename T>
-int cusvdp(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &V, NumArray<T, Gpu> &A){
-  cusolverDnHandle_t handle; cusolverDnCreate(&handle);
-  cusolverDnParams_t params; cusolverDnCreateParams(&params);
-  cusolverEigMode_t jobz=CUSOLVER_EIG_MODE_VECTOR;
-  cusolverStatus_t status;
-  S.init(MIN(A.Nx(), A.Ny()), 1);
-  U.init(A.Nx(), A.Nx());
-  V.init(A.Ny(), A.Ny());
-  size_t wDevice, wHost;
+int cusvdp(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &V, NumArray<T, Gpu> &A, stream_t &stream){
+    cusolverDnParams_t params; cusolverDnCreateParams(&params);
+    cusolverEigMode_t jobz=CUSOLVER_EIG_MODE_VECTOR;
+    cusolverStatus_t status;
+    S.init(MIN(A.Nx(), A.Ny()), 1);
+    U.init(A.Nx(), A.Nx());
+    V.init(A.Ny(), A.Ny());
+    size_t wDevice, wHost;
 
-  status=cusolverDnXgesvdp_bufferSize(handle, params, jobz, 0, A.Nx(), A.Ny(),
-    A.datatype(), A(), A.Nx(), S.datatype(), S(), U.datatype(), U(), U.Nx(), V.datatype(), V(), V.Nx(), A.datatype(), &wDevice, &wHost);
-  CHECK(status);
-  //Allocate work space
-  RefP<char, Gpu> tmpDevice(wDevice);
-  RefP<char, Cpu> tmpHost(wHost);
-  int ans;
-  RefP<int, Gpu>tmpans(1);
-  double h_err_sigma;
-  status=cusolverDnXgesvdp(handle, params, jobz, 0, A.Nx(), A.Ny(),
-    A.datatype(), A(), A.Nx(), S.datatype(), S(), U.datatype(), U(), U.Nx(), V.datatype(), V(), V.Nx(), A.datatype(), tmpDevice(), wDevice, tmpHost(), wHost, tmpans(), &h_err_sigma);
-  CHECK(status);
-  DO(cudaMemcpy(&ans, tmpans(), sizeof(int), D2H));
-  if(ans){
-    if(ans<0){
-      warning("the %d-th parameter is wrong", -ans);
-    } else{
-      warning("%d superdiagonals of an intermediate bidiagonal form did not converge to zero", ans);
+    status=cusolverDnXgesvdp_bufferSize(stream.dn(), params, jobz, 0, A.Nx(), A.Ny(),
+      A.dtype(), A(), A.Nx(), S.dtype(), S(), U.dtype(), U(), U.Nx(), V.dtype(), V(), V.Nx(), A.dtype(), &wDevice, &wHost);
+    CHECK(status);
+    //Allocate work space
+    RefP<char, Gpu> tmpDevice(wDevice);
+    RefP<char, Cpu> tmpHost(wHost);
+    int ans;
+    RefP<int, Gpu>tmpans(1);
+    double h_err_sigma;
+    status=cusolverDnXgesvdp(stream.dn(), params, jobz, 0, A.Nx(), A.Ny(),
+      A.dtype(), A(), A.Nx(), S.dtype(), S(), U.dtype(), U(), U.Nx(), V.dtype(), V(), V.Nx(), A.dtype(), tmpDevice(), wDevice, tmpHost(), wHost, tmpans(), &h_err_sigma);
+    CHECK(status);
+    DO(cudaMemcpy(&ans, tmpans(), sizeof(int), D2H));
+    if(ans){
+        if(ans<0){
+            warning("the %d-th parameter is wrong", -ans);
+        } else{
+            warning("%d superdiagonals of an intermediate bidiagonal form did not converge to zero", ans);
+        }
     }
-  }
-  if(h_err_sigma){
-    warning("small singular values are perturbed by %g amount.\n", h_err_sigma);
-  }
-  return ans;
+    if(h_err_sigma){
+        warning("small singular values are perturbed by %g amount.\n", h_err_sigma);
+    }
+    return ans;
+}
+/**
+ * Use SVD decomposition to compute power (usually inverse) of A. 
+ * A=U*S*Vt --> A^-1 = Vt'*S^-1*U'
+ * */
+template<typename T>
+int cusvd_pow(NumArray<T, Gpu> &A, T power, T thres, stream_t &stream){
+    NumArray<Real, Gpu> U, S, Vt;//match Gpu precision
+    cusvd(U, S, Vt, A, stream);
+    pow_do<<<DIM(S.N(), 256), 0, stream>>>(S(), S.N(), power, thres);
+    //U=U*S
+    cudgmm(U, U, S, stream);
+    cugemm(A, (Real)0, Vt, U, "tt", (Real)1, stream);
+    return 0;
 }
 #endif
 #endif

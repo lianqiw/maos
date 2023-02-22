@@ -1567,7 +1567,7 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 					real* realamp=P(P(powfs[ipowfs].realamp, jwfs));
 					if(parms->powfs[ipowfs].type==WFS_PY){//pywfs
 						dmat* ints=0;
-						pywfs_fft(&ints, powfs[ipowfs].pywfs, P(powfs[ipowfs].opdbias, jwfs));
+						pywfs_ints(&ints, powfs[ipowfs].pywfs, P(powfs[ipowfs].opdbias, jwfs), parms->powfs[ipowfs].siglev);
 						//writebin(P(powfs[ipowfs].opdbias,jwfs), "opdbias\n");exit(0);
 						pywfs_grad(&P(powfs[ipowfs].gradncpa, jwfs), powfs[ipowfs].pywfs, ints);
 						dfree(ints);

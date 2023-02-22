@@ -50,7 +50,7 @@
     X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv2)(const X(mat) *A, const cell *W,R thres, R tikcr) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv2)(const X(mat) *A, const cell *W,R thres) CHECK_UNUSED_RESULT; \
     X(mat) *X(pinv)(const X(mat) *A, const cell *W) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     int X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
@@ -71,14 +71,13 @@
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
     void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
     void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
-    void X(svd_pow)(X(mat) *A, R power, R thres, R tikcr);			\
+    void X(svd_pow)(X(mat) *A, R power, R thres);			\
     void X(expm)(X(mat) **out, R alpha, const X(mat) *A, R beta);	\
     void X(polyval)(X(mat) *A, XR(mat)*p);				\
     void X(addI)(X(mat) *A, T val);					\
     void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
     void X(add_relax)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
     void X(adds)(X(mat*)A, const T ac);					\
-    void X(tikcr)(X(mat) *A, T thres);					\
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
@@ -111,14 +110,13 @@
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv2)(const X(cell) *A, const cell *W, R thres, R tikcr);		\
+    X(cell)* X(cellpinv2)(const X(cell) *A, const cell *W, R thres);		\
     X(cell)* X(cellpinv)(const X(cell) *A, const X(spcell) *W);		\
-    void X(cellsvd_pow)(X(cell) *A, R power, R thres, R tikcr);		\
+    void X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\
     R X(celldiff)(const X(cell) *A, const X(cell) *B);			\
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
-    void X(celltikcr)(X(cell) *A, R thres);				\
     X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
     X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);		\
     X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);

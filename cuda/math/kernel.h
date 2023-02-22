@@ -145,4 +145,17 @@ __global__ void cwm_do(Comp* dest, Comp* from1, Comp* from2, int lda, int ldb, i
 __global__ void unwrap_phase_do(Comp* wvf, Real* opd, int* embed, int n, Real wvl);
 __global__ void mvm_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, int nact, int ng);
 __global__ void multimv_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, int nact, int ng);
+
+template<typename T>
+__global__ void pow_do(T *restrict S, long n, T power, T thres){
+	const int step=blockDim.x*gridDim.x;
+	T thres2=fabs(thres*S[0]);
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		if(S[i]>thres2){
+			S[i]=pow(S[i], power);
+		} else{
+			S[i]=0;
+		}
+	}
+}
 #endif
