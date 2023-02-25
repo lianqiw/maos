@@ -115,8 +115,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab9030c894228f7971f87beda176273c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cd0d635d05937b89807720bcd4fac99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99">pywfs_grad</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **pgrad, const <a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ints)</td></tr>
 <tr class="separator:a4cd0d635d05937b89807720bcd4fac99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3873cca1ad9b0066c013a0666dc79f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#ad3873cca1ad9b0066c013a0666dc79f4">pywfs_fft</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **ints, const <a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="type_8h.html#structdmat">dmat</a> *opd)</td></tr>
-<tr class="separator:ad3873cca1ad9b0066c013a0666dc79f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14bafa3942ffa1d79033b200729a555d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d">pywfs_ints</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **ints, const <a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="type_8h.html#structdmat">dmat</a> *opd, real siglev)</td></tr>
+<tr class="separator:a14bafa3942ffa1d79033b200729a555d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54d180c17544b1e528115fa8160c75bf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a54d180c17544b1e528115fa8160c75bf">pywfs_mkg</a> (<a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *ploc, const char *distortion, const <a class="el" href="type_8h.html#structdmat">dmat</a> *mod, const <a class="el" href="type_8h.html#structdmat">dmat</a> *opdadd, real displacex, real displacey)</td></tr>
 <tr class="separator:a54d180c17544b1e528115fa8160c75bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91432268bc54e68b69b04e3f0ebc0875"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8h.html#a91432268bc54e68b69b04e3f0ebc0875">pywfs_tt</a> (const <a class="el" href="pywfs_8h.html#structpywfs__t">pywfs_t</a> *pywfs)</td></tr>
@@ -226,13 +226,6 @@ sioff</td>
 <p>Offset for si </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a93a85e438a350f07999bb8cfd18705eb"></a>real</td>
-<td class="fieldname">
-gain</td>
-<td class="fielddoc">
-<p>Optical gain of PYWFS </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a0f4db87d2d77f991038a62d055ff82b5"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
 <td class="fieldname">
 saa</td>
@@ -273,6 +266,20 @@ msaloc</td>
 opdadd</td>
 <td class="fielddoc">
 <p>Aberrations along the WFS path (on locfft grid) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a93a85e438a350f07999bb8cfd18705eb"></a>real</td>
+<td class="fieldname">
+gain</td>
+<td class="fielddoc">
+<p>Optical gain of PYWFS </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ac5489f11858dc001a6f24d6f06bd87fe"></a>real</td>
+<td class="fieldname">
+siglev</td>
+<td class="fielddoc">
+<p>Signal level </p>
 </td></tr>
 </table>
 
@@ -385,14 +392,14 @@ opdadd</td>
 
 </div>
 </div>
-<a id="ad3873cca1ad9b0066c013a0666dc79f4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3873cca1ad9b0066c013a0666dc79f4">&#9670;&nbsp;</a></span>pywfs_fft()</h2>
+<a id="a14bafa3942ffa1d79033b200729a555d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14bafa3942ffa1d79033b200729a555d">&#9670;&nbsp;</a></span>pywfs_ints()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void pywfs_fft </td>
+          <td class="memname">void pywfs_ints </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
           <td class="paramname"><em>ints</em>, </td>
@@ -407,7 +414,13 @@ opdadd</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>opd</em>&#160;</td>
+          <td class="paramname"><em>opd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>siglev</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

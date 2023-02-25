@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['p',['p',['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
+  ['p',['P',['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
   ['pair',['pair',['../cn2est_8h.html#a8984a6f7acbcd94ccd68c2a94fa7275f',1,'cn2est_t::pair()'],['../parms_8h.html#a5fa2b03fef6524369da80328ac5b4da6',1,'cn2est_cfg_t::pair()']]],
   ['parms',['parms',['../maos_2types_8h.html#a0fa3fc80828e7714dbe3b2ae58ccb437',1,'sim_t']]],
   ['parms_2eh',['parms.h',['../parms_8h.html',1,'']]],
@@ -56,7 +56,6 @@ var searchData=
   ['pixthetax',['pixthetax',['../mkdtf_8h.html#a1fa91ac855c2427b5e05ebc11b3269fc',1,'dtf_t']]],
   ['pixthetay',['pixthetay',['../mkdtf_8h.html#ae764aa0535ea748610bb898da0b454e1',1,'dtf_t']]],
   ['plan_5ffs',['plan_fs',['../classcuwfs__t.html#a75ad2ecf41255346377406f2bdff3c5a',1,'cuwfs_t']]],
-  ['pllind',['pllind',['../maos_2types_8h.html#a942f756674db632e1c53b6f1b31f76e3',1,'wfsflags_t']]],
   ['pllout',['pllout',['../maos_2types_8h.html#acf262c84d0f25430470446a8ee476de8',1,'wfsflags_t']]],
   ['pllrat',['pllrat',['../parms_8h.html#ac68625ea2ae25023932e430e55309f2d',1,'dither_cfg_t']]],
   ['pllskip',['pllskip',['../parms_8h.html#ad0a429ba1f33645cbbd3f4d15b9cce59',1,'dither_cfg_t']]],
@@ -166,9 +165,9 @@ var searchData=
   ['pywfs',['pywfs',['../parms_8h.html#aae8cff7ede85811670d8ef0875fe069a',1,'powfs_cfg_t::pywfs()'],['../maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93',1,'powfs_t::pywfs()']]],
   ['pywfs_2eh',['pywfs.h',['../pywfs_8h.html',1,'']]],
   ['pywfs_5fcfg_5ft',['pywfs_cfg_t',['../parms_8h.html#structpywfs__cfg__t',1,'']]],
-  ['pywfs_5ffft',['pywfs_fft',['../pywfs_8h.html#ad3873cca1ad9b0066c013a0666dc79f4',1,'pywfs.c']]],
   ['pywfs_5ffree',['pywfs_free',['../pywfs_8h.html#ab9030c894228f7971f87beda176273c5',1,'pywfs.c']]],
   ['pywfs_5fgrad',['pywfs_grad',['../pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99',1,'pywfs.c']]],
+  ['pywfs_5fints',['pywfs_ints',['../pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d',1,'pywfs.c']]],
   ['pywfs_5fmkg',['pywfs_mkg',['../pywfs_8h.html#a54d180c17544b1e528115fa8160c75bf',1,'pywfs.c']]],
   ['pywfs_5fsetup',['pywfs_setup',['../pywfs_8h.html#a7d528f6e5683a4cdc9d071cb4019c5a8',1,'pywfs.c']]],
   ['pywfs_5ft',['pywfs_t',['../pywfs_8h.html#structpywfs__t',1,'']]],

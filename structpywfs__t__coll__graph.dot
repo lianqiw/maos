@@ -9,7 +9,7 @@ digraph "pywfs_t"
   Node2 [label="{loccell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structloccell"];
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +si" ,arrowhead="odiamond",fontname="Helvetica"];
   Node4 [label="{dspcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdspcell"];
-  Node6 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +gain" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node6 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +siglev\n+gain" ,arrowhead="odiamond",fontname="Helvetica"];
   Node6 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
   Node7 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +cfg" ,arrowhead="odiamond",fontname="Helvetica"];
   Node7 [label="{pywfs_cfg_t\n||}",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structpywfs__cfg__t"];

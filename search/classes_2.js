@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['datatype',['datatype',['../classdatatype.html',1,'']]],
   ['dbg_5fcfg_5ft',['dbg_cfg_t',['../parms_8h.html#structdbg__cfg__t',1,'']]],
   ['dcccell',['dcccell',['../type_8h.html#structdcccell',1,'']]],
   ['dcccell_2e_5f_5funnamed_5f_5f',['dcccell.__unnamed__',['../type_8h.html#uniondcccell_8____unnamed____',1,'']]],
@@ -25,5 +24,6 @@ var searchData=
   ['dspcell',['dspcell',['../type_8h.html#structdspcell',1,'']]],
   ['dspcell_2e_5f_5funnamed_5f_5f',['dspcell.__unnamed__',['../type_8h.html#uniondspcell_8____unnamed____',1,'']]],
   ['dspcell_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['dspcell.__unnamed__.__unnamed__',['../type_8h.html#structdspcell_8____unnamed_____8____unnamed____',1,'']]],
-  ['dtf_5ft',['dtf_t',['../mkdtf_8h.html#structdtf__t',1,'']]]
+  ['dtf_5ft',['dtf_t',['../mkdtf_8h.html#structdtf__t',1,'']]],
+  ['dtype',['dtype',['../classdtype.html',1,'']]]
 ];

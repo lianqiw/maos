@@ -107,6 +107,8 @@ Functions</h2></td></tr>
 <tr class="separator:a5737f2c65941e6531e6111fe81299796"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad14827c32c590cb63e340fc02f0d3cad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#ad14827c32c590cb63e340fc02f0d3cad">setup_recon_prep2</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
 <tr class="separator:ad14827c32c590cb63e340fc02f0d3cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a367e861f652afcd5f4764c37a09c9400"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a367e861f652afcd5f4764c37a09c9400">setup_recon_saneai</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a367e861f652afcd5f4764c37a09c9400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac24d3db35e5e0e23cf90389c578d4473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#ac24d3db35e5e0e23cf90389c578d4473">setup_recon_fit</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:ac24d3db35e5e0e23cf90389c578d4473"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58f4cbdab5f06550701e99866c9e6002"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit</a> (<a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
@@ -222,6 +224,41 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
       </table>
 </div><div class="memdoc">
 <p>That may depend on GPU data. </p>
+
+</div>
+</div>
+<a id="a367e861f652afcd5f4764c37a09c9400"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a367e861f652afcd5f4764c37a09c9400">&#9670;&nbsp;</a></span>setup_recon_saneai()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_saneai </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
+          <td class="paramname"><em>powfs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance matrix. For physical optics wfs, the NEA is computed using matched filter output. For geometric optics, the NEA is from input. </p>
 
 </div>
 </div>

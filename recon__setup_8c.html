@@ -103,6 +103,8 @@ $(document).ready(function(){initNavTree('recon__setup_8c.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a367e861f652afcd5f4764c37a09c9400"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__setup_8c.html#a367e861f652afcd5f4764c37a09c9400">setup_recon_saneai</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
+<tr class="separator:a367e861f652afcd5f4764c37a09c9400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4ca5a984cc27dacd89abeaf25e927cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__setup_8c.html#ab4ca5a984cc27dacd89abeaf25e927cb">setup_recon_tomo_prep</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:ab4ca5a984cc27dacd89abeaf25e927cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a734c26f3d555e9e8038c196ad0a242ef"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__setup_8c.html#a734c26f3d555e9e8038c196ad0a242ef">setup_recon_tomo_matrix</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
@@ -127,6 +129,41 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that setup the wavefront reconstructor and DM fitting. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a367e861f652afcd5f4764c37a09c9400"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a367e861f652afcd5f4764c37a09c9400">&#9670;&nbsp;</a></span>setup_recon_saneai()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_saneai </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *&#160;</td>
+          <td class="paramname"><em>powfs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance matrix. For physical optics wfs, the NEA is computed using matched filter output. For geometric optics, the NEA is from input. </p>
+
+</div>
+</div>
 <a id="ab4ca5a984cc27dacd89abeaf25e927cb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab4ca5a984cc27dacd89abeaf25e927cb">&#9670;&nbsp;</a></span>setup_recon_tomo_prep()</h2>
 

@@ -46,7 +46,7 @@ digraph "sim_t"
   Node292 [label="{cccell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structcccell"];
   Node294 -> Node265 [color="grey25",fontsize="10",style="solid",label=" +wfsflags" ,arrowhead="odiamond",fontname="Helvetica"];
   Node294 [label="{wfsflags_t\n||}",height=0.2,width=0.4,color="black",URL="$maos_2types_8h.html#structwfsflags__t"];
-  Node275 -> Node294 [color="grey25",fontsize="10",style="solid",label=" +do_pistat\n+ogout\n+pllout\n+pllind\n+do_phy\n+ogacc\n+gradout" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node275 -> Node294 [color="grey25",fontsize="10",style="solid",label=" +do_pistat\n+ogout\n+pllout\n+do_phy\n+ogacc\n+gradout" ,arrowhead="odiamond",fontname="Helvetica"];
   Node295 -> Node265 [color="grey25",fontsize="10",style="solid",label=" +zoomavg_count\n+zoomdrift_count" ,arrowhead="odiamond",fontname="Helvetica"];
   Node295 [label="{lmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structlmat"];
   Node297 -> Node265 [color="grey25",fontsize="10",style="solid",label=" +atmcfg" ,arrowhead="odiamond",fontname="Helvetica"];

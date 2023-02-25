@@ -55,9 +55,9 @@ var searchData=
   ['pts_5fmcc_5fptt',['pts_mcc_ptt',['../loc_8h.html#ad2c46c7e29c5b96c508c5ec853220456',1,'loc.c']]],
   ['pts_5fztilt',['pts_ztilt',['../loc_8h.html#a14ca3161124674983c579cd327b77a4a',1,'loc.c']]],
   ['ptsnew',['ptsnew',['../loc_8h.html#a234dd697bbc4adce9b26502fcf424df2',1,'loc.c']]],
-  ['pywfs_5ffft',['pywfs_fft',['../pywfs_8h.html#ad3873cca1ad9b0066c013a0666dc79f4',1,'pywfs.c']]],
   ['pywfs_5ffree',['pywfs_free',['../pywfs_8h.html#ab9030c894228f7971f87beda176273c5',1,'pywfs.c']]],
   ['pywfs_5fgrad',['pywfs_grad',['../pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99',1,'pywfs.c']]],
+  ['pywfs_5fints',['pywfs_ints',['../pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d',1,'pywfs.c']]],
   ['pywfs_5fmkg',['pywfs_mkg',['../pywfs_8h.html#a54d180c17544b1e528115fa8160c75bf',1,'pywfs.c']]],
   ['pywfs_5fsetup',['pywfs_setup',['../pywfs_8h.html#a7d528f6e5683a4cdc9d071cb4019c5a8',1,'pywfs.c']]],
   ['pywfs_5ftt',['pywfs_tt',['../pywfs_8h.html#a91432268bc54e68b69b04e3f0ebc0875',1,'pywfs.c']]]

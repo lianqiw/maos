@@ -1,5 +1,10 @@
 var NAVTREEINDEX9 =
 {
+"maos_2types_8h.html#structpowfs__t":[11,0,2,20,3],
+"maos_2types_8h.html#structrecon__t":[11,0,2,20,10],
+"maos_2types_8h.html#structsim__save__t":[11,0,2,20,11],
+"maos_2types_8h.html#structsim__t":[11,0,2,20,15],
+"maos_2types_8h.html#structwfsflags__t":[11,0,2,20,14],
 "maos_2types_8h.html#structwfsints__t":[11,0,2,20,12],
 "maos_2utils_8h.html":[11,0,2,21],
 "maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48":[11,0,2,21,0],
@@ -244,10 +249,5 @@ var NAVTREEINDEX9 =
 "mvm__direct_8cu.html#a51b7a9c320bb9b58fc5632da0a44ab84":[11,0,0,1,0,1],
 "mvm__direct_8cu.html#a876e62ded10948d3801432dee1554415":[11,0,0,1,0,2],
 "mvm__trans_8cu.html":[11,0,0,1,1],
-"mvm__trans_8cu.html#a038b745c09b374c03ef84e08aa49635b":[11,0,0,1,0,0,8],
-"mvm__trans_8cu.html#a038b745c09b374c03ef84e08aa49635b":[11,0,0,1,1,0,8],
-"mvm__trans_8cu.html#a08d0523dc0d748b6487f63dfe2a9a404":[11,0,0,1,0,0,4],
-"mvm__trans_8cu.html#a08d0523dc0d748b6487f63dfe2a9a404":[11,0,0,1,1,0,4],
-"mvm__trans_8cu.html#a08ea1b8be1ab48778f5081ebcc3efe7e":[11,0,0,1,0,0,17],
-"mvm__trans_8cu.html#a08ea1b8be1ab48778f5081ebcc3efe7e":[11,0,0,1,1,0,17]
+"mvm__trans_8cu.html#a038b745c09b374c03ef84e08aa49635b":[11,0,0,1,0,0,8]
 };

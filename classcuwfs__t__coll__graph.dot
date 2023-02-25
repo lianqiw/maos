@@ -26,7 +26,7 @@ digraph "cuwfs_t"
   Node90 [label="{Dither_t\n||+ Dither_t()\l+ Dither_t()\l+ acc()\l+ acc_i0()\l}",height=0.2,width=0.4,color="black",URL="$class_dither__t.html"];
   Node38 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +lltotfc2\n+psfout\n+lltotfc\n+psfstat\n+psf\n+wvf\n+pyotf\n+lltwvf" ,arrowhead="odiamond",fontname="Helvetica"];
   Node89 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +stream" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node89 [label="{stream_t\n||+ stream_t()\l+ init()\l+ ~stream_t()\l+ deinit()\l+ reset()\l+ sync()\l+ operator cudaStream_t()\l+ blas()\l+ sparse()\l}",height=0.2,width=0.4,color="black",URL="$classstream__t.html"];
+  Node89 [label="{stream_t\n||+ stream_t()\l+ init()\l+ ~stream_t()\l+ deinit()\l+ reset()\l+ sync()\l+ operator cudaStream_t()\l+ blas()\l+ sparse()\l+ dn()\l}",height=0.2,width=0.4,color="black",URL="$classstream__t.html"];
   Node6 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +i0sumsum" ,arrowhead="odiamond",fontname="Helvetica"];
   Node6 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
   Node42 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +pypsfs\n+intsout\n+pistatout\n+ints" ,arrowhead="odiamond",fontname="Helvetica"];
