@@ -232,6 +232,7 @@ setup_fit_matrix(fit_t* fit){
 			}
 			fit->FR.V=dcellnew(npsr, 1);
 			dmat** FRV=P(fit->FR.V);
+			dmat frvi={0};
 			//FRV
 			for(int ips=0; ips<npsr; ips++){
 				int nloc=P(fit->xloc,ips)->nloc;
@@ -239,9 +240,8 @@ setup_fit_matrix(fit_t* fit){
 				for(int ifit=0; ifit<nfit; ifit++){
 					/*notice the sqrt. */
 					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
-					dspmulvec(PCOL(FRV[ips], ifit),
-						P(HXF, ifit, ips), P(fit->W1), 't',
-						sqrt(P(fit->wt,ifit)));
+					dcols(&frvi, FRV[ips], ifit, 1);
+					dspmv(&frvi, P(HXF, ifit, ips), fit->W1, 't', sqrt(P(fit->wt,ifit)));
 				}
 			}
 			cellfree(fit->HXF);
@@ -253,16 +253,15 @@ setup_fit_matrix(fit_t* fit){
 		/*Always need FR.U as it is used to do FL.U, FL.V */
 		fit->FR.U=dcellnew(ndm, 1);
 		dmat** FRU=P(fit->FR.U);
-
+		dmat frui={0};
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
 			FRU[idm]=dnew(nloc, nfit);
 			for(int ifit=0; ifit<nfit; ifit++){
 			/*notice the sqrt. */
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
-				dspmulvec(PCOL(FRU[idm], ifit),
-					P(HA, ifit, idm), P(fit->W1), 't',
-					sqrt(P(fit->wt,ifit)));
+				dcols(&frui, FRU[idm], ifit, 1);
+				dspmv(&frui, P(HA, ifit, idm), fit->W1, 't', sqrt(P(fit->wt,ifit)));
 			}
 		}
 	}

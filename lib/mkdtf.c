@@ -419,16 +419,15 @@ dmat* smooth(const dmat* prof, real dxnew){
 		dsp* ht=mkhb(loc_out, loc_in, 0, 0, 1);
 		out=dnew(nxnew, NY(prof));
 		memcpy(P(out), loc_out->locx, sizeof(real)*nxnew);
-		OMP_TASK_FOR(4)
+		{
+			dmat pin={0}, pout={0};//temporary, does not own reference, no need to free
+			dcols(&pin, prof, 1, NY(prof)-1);/*input profile */
+			dcols(&pout, out, 1, NY(prof)-1);/*output profile */
+			dspmv(&pout, ht, &pin, 'n', 1);
+		}
 		for(long icol=1; icol<NY(prof); icol++){
-			/*input profile */
-			const real* pin=PCOL(prof, icol);
-			/*output profile */
-			real* pout=PCOL(out, icol);
-			/*preserve sum of input profile */
-			real Nasum=dvecsum(pin, nxin);
-			dspmulvec(pout, ht, pin, 'n', 1);
-			dnormalize_sumabs(pout, nxnew, Nasum);
+			real Nasum=dvecsum(PCOL(prof, icol), nxin);/*preserve sum of input profile */
+			dnormalize_sumabs(PCOL(out, icol), nxnew, Nasum);
 		}
 		dspfree(ht);
 		locfree(loc_in);

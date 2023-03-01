@@ -103,8 +103,8 @@ static void test_accuracy(int argc, char** argv){
     dset((dmat*)screen2, NAN);
     loc_embed(screen2, locin, P(screen));
 
-
-    real* phi_h, * phi_cub, * phi_cub2, * phi_cubh;
+    dmat *phi_h=NULL, *phi_cubh=NULL;
+    real* phi_cub, * phi_cub2;
 
     real cubic=0.3;
     int ii;
@@ -156,14 +156,13 @@ static void test_accuracy(int argc, char** argv){
     toc("nongrid\t");
 
 
-    phi_h=mycalloc(loc->nloc, real);
-
+    phi_h=dnew(loc->nloc, 1);
     tic;
     dsp* hfor=mkh(locin, loc, displacex, displacey, scale);
     toc("mkh\t\t");
-    dspmulvec(phi_h, hfor, P(screen), 'n', -2);
+    dspmv(phi_h, hfor, dmat_cast(screen), 'n', -2);
     tic;
-    dspmulvec(phi_h, hfor, P(screen), 'n', 1);
+    dspmv(phi_h, hfor, dmat_cast(screen), 'n', 1);
     toc("mul h\t");
 
 
@@ -171,7 +170,7 @@ static void test_accuracy(int argc, char** argv){
     phi_cub2=mycalloc(loc->nloc, real);
     real* phi_cub3=mycalloc(loc->nloc, real);
     real* phi_cub4=mycalloc(loc->nloc, real);
-    phi_cubh=mycalloc(loc->nloc, real);
+    phi_cubh=dnew(loc->nloc, 1);
 
     prop_nongrid_cubic(locin, P(screen), loc, phi_cub, -2, displacex, displacey, scale, cubic, 0, 0);
     tic;
@@ -193,9 +192,9 @@ static void test_accuracy(int argc, char** argv){
     tic;
     hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, cubic);
     toc("mkh cubic \t\t");
-    dspmulvec(phi_cubh, hforcubic, P(screen), 'n', -2);
+    dspmv(phi_cubh, hforcubic, dmat_cast(screen), 'n', -2);
     tic;
-    dspmulvec(phi_cubh, hforcubic, P(screen), 'n', 1);
+    dspmv(phi_cubh, hforcubic, dmat_cast(screen), 'n', 1);
     toc("cubic mul h\t\t");
     real diffc12=0, diff45=0, diff46=0, diff47=0;
     for(ii=0; ii<loc->nloc; ii++){
@@ -203,9 +202,9 @@ static void test_accuracy(int argc, char** argv){
         diff2+=fabs(phi_stat[ii]-phi_loc[ii]);
         diff3+=fabs(phi_stat[ii]-phi_pts[ii]);
         diff14+=fabs(phi_loc2loc[ii]-phi_pts[ii]);
-        diff15+=fabs(phi_h[ii]-phi_pts[ii]);
-        diff45+=fabs(phi_loc2loc[ii]-phi_h[ii]);
-        diffc12+=fabs(phi_cub[ii]-phi_cubh[ii]);
+        diff15+=fabs(P(phi_h,ii)-phi_pts[ii]);
+        diff45+=fabs(phi_loc2loc[ii]-P(phi_h,ii));
+        diffc12+=fabs(phi_cub[ii]-P(phi_cubh,ii));
         diff46+=fabs(phi_cub[ii]-phi_cub2[ii]);
         diff47+=fabs(phi_cub[ii]-phi_cub3[ii]);
     }
@@ -255,9 +254,9 @@ static void test_accuracy(int argc, char** argv){
     free(phi_loc2loc);
 
     free(phi_pts);
-    free(phi_h);
+    dfree(phi_h);
     free(phi_cub);
-    free(phi_cubh);
+    dfree(phi_cubh);
 
     cellfree(screen);
     locfree(locin);

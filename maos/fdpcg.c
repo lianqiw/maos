@@ -705,7 +705,8 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 #endif
 #if PRE_PERMUT
 	czero(xhat2);
-	cspmulvec(P(xhat2), recon->fdpcg->Minv, &(xhat), 1);
+	//cspmulvec(P(xhat2), recon->fdpcg->Minv, &(xhat), 1);changed to below
+	cspmv(xhat2, recon->fdpcg->Minv, xhat, 'n', 1);//double check. 
 #else/*permute vectors and apply block diagonal matrix */
 	/*permute xhat and put into xhat2 */
 	cvecperm(xhat2, xhat, P(recon->fdpcg->perm));

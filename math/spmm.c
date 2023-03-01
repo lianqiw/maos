@@ -91,32 +91,44 @@ void X(spmulcreal)(T* restrict y, const X(sp)* A, const RI* restrict x, R alpha)
  op(A)=A' if trans=='t'
  op(A)=conj(A') if trans=='c'
 */
-void X(spmulvec)(T* restrict y, const X(sp)* A, const T* restrict x, char trans, T alpha){
+void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T alpha){
 	if(A&&x&&y){
 		assert(y);
 		if(trans=='n'){
+			if(PN(x)!=NY(A)||PN(y)!=NX(A)){
+				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld", 
+				trans, NX(y),NY(y),NX(A),NY(A),NX(x),NY(x));
+			}
 			for(long icol=0; icol<A->ny; icol++){
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
-					y[A->pi[ix]]+=alpha*A->px[ix]*x[icol];
+					P(y,A->pi[ix])+=alpha*A->px[ix]*P(x,icol);
 				}
 			}
 		} else if(trans=='t'){
+			if(PN(x)!=NX(A)||PN(y)!=NY(A)){
+				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
+				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
+			}
 OMP_TASK_FOR(4)
 			for(long icol=0L; icol<A->ny; icol++){			
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
-					tmp+=alpha*(A->px[ix])*x[A->pi[ix]];
+					tmp+=alpha*(A->px[ix])*P(x,A->pi[ix]);
 				}
-				y[icol]+=tmp;
+				P(y,icol)+=tmp;
 			}
 		} else if(trans=='c'){
+			if(PN(x)!=NX(A)||PN(y)!=NY(A)){
+				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
+				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
+			}
 OMP_TASK_FOR(4)			
 			for(long icol=0L; icol<A->ny; icol++){
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
-					tmp+=alpha*conj(A->px[ix])*x[A->pi[ix]];
+					tmp+=alpha*conj(A->px[ix])*P(x,A->pi[ix]);
 				}
-				y[icol]+=tmp;
+				P(y,icol)+=tmp;
 			}
 		} else{
 			error("Invalid trans=%c\n", trans);
@@ -138,7 +150,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
-		X(spmulvec)(P(y), A, P(x), trans[0], alpha);
+		X(spmv)(y, A, x, trans[0], alpha);
 	} else{
 
 #define no_conj(A) (A)

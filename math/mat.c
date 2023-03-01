@@ -102,15 +102,15 @@ int X(init)(X(mat)** A, long nx, long ny){
 	return ans;
 }
 /**
-   cast a cell object to matrix
+   check and cast an object to matrix
  */
-X(mat)* X(mat_cast)(const cell* A){
-	return (A && A->nx && A->ny && ismat(A))?(X(mat)*)A:NULL;
+X(mat)* X(mat_cast)(const void* A){
+	return ismat(A)?(X(mat)*)A:NULL;
 }
 /**
-   free a matrix object.
+   free content of a matrix object.
 */
-void X(free_do)(X(mat)* A){
+void X(free_content)(X(mat)* A){
 	if(check_mat(A)){
 		//only need to initiate write when fp is set.
 		//if(A->fp) X(writedata)(A->fp, A, A->ny);//don't do this. 
@@ -122,15 +122,23 @@ void X(free_do)(X(mat)* A){
 		mem_unref(&A->mem);//takes care of freeing memory.
 		
 #ifndef COMP_LONG
-		if(A->fft) X(fft_free_plan)(A->fft);
+		if(A->fft) {X(fft_free_plan)(A->fft); A->fft=NULL;}
 #endif
 		if(A->keywords) {free(A->keywords); A->keywords=NULL;}
+		A->nx=0;
+		A->ny=0;
+		A->p=0;
 	}else{
 		warning("check_mat returns false\n");
 	}
+}
+/**
+   free a matrix object.
+*/
+void X(free_do)(X(mat) *A){
+	X(free_content)(A);
 	free(A);
 }
-
 /**
    create an new reference another with different shape.
    - total number of elements must be preserved
@@ -160,13 +168,29 @@ X(mat) *X(ref)(const X(mat) *in){
 
 /**
    creat a new matrix referencing columns in existing
-   matrix. reference counted. not used
+   matrix. reference counted. 
 */
 X(mat)* X(refcols)(const X(mat)* in, long icol, long ncol){
 	if(!check_mat(in)) return NULL;
+	if(icol<0 || (icol+ncol)>NY(in)){
+		error("Invalid parameters: icol=%ld, ncol=%ld, ny=%ld", icol, ncol, NY(in));
+	}
 	return X(new_do)(in->nx, ncol, PCOL(in, icol), in->mem);
 }
-
+/**
+   Override a stack matrix struct with pointers to columns of another matrix. Does not add reference count the original data.
+*/
+void X(cols)(X(mat) *out, const X(mat) *in, long icol, long ncol){
+	if(!check_mat(in)||!out) return;
+	if(icol<0||(icol+ncol)>NY(in)){
+		error("Invalid parameters: icol=%ld, ncol=%ld, ny=%ld", icol, ncol, NY(in));
+	}
+	if(out->id) X(free_content)(out);	
+	out->id=M_T;
+	out->nx=in->nx;
+	out->ny=ncol;
+	out->p=PCOL(in, icol);
+}
 /**
    Create a new sub matrix of nx*ny starting from(sx,sy) and copy the data.
 */

@@ -27,12 +27,14 @@
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
     X(mat) *X(new_file)(long nx, long ny, const char* keywords, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
-    X(mat) *X(mat_cast)(const cell *A) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
     int X(init)(X(mat)**A, long nx, long ny) ;				\
+    void X(free_content)(X(mat) *A);						\
     void X(free_do)(X(mat) *A);						\
     X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;		\
     X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT; \
     X(mat) *X(refcols)(const X(mat) *in, long icol, long ncol) CHECK_UNUSED_RESULT; \
+    void X(cols)(X(mat)* out, const X(mat)* in, long icol, long ncol); \
     int X(resize)(X(mat) *A, long nx, long ny);			\
     X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT; \
     X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT; \

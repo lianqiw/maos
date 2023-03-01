@@ -701,7 +701,9 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					1, dispx, dispy, scale, 0, 0);
 			}
 		}
-		writebin(aper->opdadd, "surfevl_correctable.bin");
+		if(parms->save.setup){
+			writebin(aper->opdadd, "surfevl_correctable.bin");
+		}
 	}
 	dcellfree(aper->opdfloc);
 	dcellfree(recon->dm_ncpa);
