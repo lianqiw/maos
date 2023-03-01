@@ -1,5 +1,11 @@
 var NAVTREEINDEX8 =
 {
+"maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61":[11,0,2,20,4,15],
+"maos_2types_8h.html#a84cd068c5700856d0c0b8380238d38b0":[11,0,2,20,13,10],
+"maos_2types_8h.html#a84e8e62ecde6b798940df410a7f348c1":[11,0,2,20,14,5],
+"maos_2types_8h.html#a85f154a82c7001dcd69f1f555061ef5e":[11,0,2,20,13,1],
+"maos_2types_8h.html#a86532695cf86221fa5171428568b2c20":[11,0,2,20,10,34],
+"maos_2types_8h.html#a86b394dfb71b8da2820c4c4969012b61":[11,0,2,20,8,4],
 "maos_2types_8h.html#a87db0afb9eb261a473eca8270a151e48":[11,0,2,20,9,11],
 "maos_2types_8h.html#a89079d2ca016bf98fe39b7b6cfb1442b":[11,0,2,20,10,26],
 "maos_2types_8h.html#a89d9de13974b3201315e4907b13f4485":[11,0,2,20,15,53],
@@ -195,7 +201,6 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#ae9f39ba587807aed467fddf03162a7a7":[11,0,2,20,10,92],
 "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93":[11,0,2,20,3,46],
 "maos_2types_8h.html#aeb6b3013b915d6f3a775b47e8c12cf79":[11,0,2,20,3,19],
-"maos_2types_8h.html#aebedfac394ed5b874fd14e8afda31671":[11,0,2,20,10,105],
 "maos_2types_8h.html#aecc7b6a6b8fdc5d501910af0fc5bb2ac":[11,0,2,20,2,2],
 "maos_2types_8h.html#aece79bac5fe519437b96396a277d0527":[11,0,2,20,15,89],
 "maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95":[11,0,2,20,15,76],
@@ -217,6 +222,7 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#af3800141a3447e072e9f6b9dcdb712b9":[11,0,2,20,11,10],
 "maos_2types_8h.html#af3f979ac8449ef954bc754ddbc3b6f40":[11,0,2,20,15,30],
 "maos_2types_8h.html#af40a905829a4bcfc0ee0eff9a5916c73":[11,0,2,20,10,43],
+"maos_2types_8h.html#af4555b7c44a8fb404144f8033d72bee2":[11,0,2,20,10,105],
 "maos_2types_8h.html#af45de4971282fca370154ce75b1a8792":[11,0,2,20,15,74],
 "maos_2types_8h.html#af461226d469e0fd52949cf3c34f75202":[11,0,2,20,11,37],
 "maos_2types_8h.html#af6629d9c2985028c2e6fefd24c52aeee":[11,0,2,20,5,0],
@@ -243,11 +249,5 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#structdither__t":[11,0,2,20,13],
 "maos_2types_8h.html#structfdpcg__t":[11,0,2,20,5],
 "maos_2types_8h.html#structfit__t":[11,0,2,20,9],
-"maos_2types_8h.html#structfractal__t":[11,0,2,20,8],
-"maos_2types_8h.html#structglobal__t":[11,0,2,20,16],
-"maos_2types_8h.html#structintstat__t":[11,0,2,20,2],
-"maos_2types_8h.html#structinvpsd__t":[11,0,2,20,7],
-"maos_2types_8h.html#structllt__t":[11,0,2,20,1],
-"maos_2types_8h.html#structmoao__t":[11,0,2,20,6],
-"maos_2types_8h.html#structngsmod__t":[11,0,2,20,4]
+"maos_2types_8h.html#structfractal__t":[11,0,2,20,8]
 };

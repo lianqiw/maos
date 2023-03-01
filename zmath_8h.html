@@ -132,12 +132,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a20ea4521bc4cad4978c1b19da5e64e59"><td class="memItemLeft" align="right" valign="top"><a id="a20ea4521bc4cad4978c1b19da5e64e59"></a>
 <a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>znew_do</b> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, fcomplex *p, mem_t *mem)</td></tr>
 <tr class="separator:a20ea4521bc4cad4978c1b19da5e64e59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af161d134de868b41171a698b8142efec"><td class="memItemLeft" align="right" valign="top"><a id="af161d134de868b41171a698b8142efec"></a>
-<a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zmat_cast</b> (const <a class="el" href="type_8h.html#structcell">cell</a> *A)</td></tr>
-<tr class="separator:af161d134de868b41171a698b8142efec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4c1fb7b396f8c2621d44de3749c804b"><td class="memItemLeft" align="right" valign="top"><a id="ad4c1fb7b396f8c2621d44de3749c804b"></a>
+<a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zmat_cast</b> (const void *A)</td></tr>
+<tr class="separator:ad4c1fb7b396f8c2621d44de3749c804b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e9b9e591e3eb732bf0d1a568564a016"><td class="memItemLeft" align="right" valign="top"><a id="a6e9b9e591e3eb732bf0d1a568564a016"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>zinit</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:a6e9b9e591e3eb732bf0d1a568564a016"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a02dc6b649faf4c0433fbac16504181"><td class="memItemLeft" align="right" valign="top"><a id="a0a02dc6b649faf4c0433fbac16504181"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zfree_content</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
+<tr class="separator:a0a02dc6b649faf4c0433fbac16504181"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07c0e5ce11c200b3ce4fa48eda679d6c"><td class="memItemLeft" align="right" valign="top"><a id="a07c0e5ce11c200b3ce4fa48eda679d6c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zfree_do</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a07c0e5ce11c200b3ce4fa48eda679d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,6 +153,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zfree_do</b> (<a clas
 <tr class="memitem:ac7c247374d9d6893b29ba53b19857245"><td class="memItemLeft" align="right" valign="top"><a id="ac7c247374d9d6893b29ba53b19857245"></a>
 <a class="el" href="type_8h.html#structzmat">zmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zrefcols</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *in, <a class="el" href="classlong.html">long</a> icol, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
 <tr class="separator:ac7c247374d9d6893b29ba53b19857245"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb56052332feb784c3658e47ad29c53e"><td class="memItemLeft" align="right" valign="top"><a id="acb56052332feb784c3658e47ad29c53e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zcols</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *out, const <a class="el" href="type_8h.html#structzmat">zmat</a> *in, <a class="el" href="classlong.html">long</a> icol, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:acb56052332feb784c3658e47ad29c53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60d4dd5059294f31733d9243a8119b19"><td class="memItemLeft" align="right" valign="top"><a id="a60d4dd5059294f31733d9243a8119b19"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>zresize</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:a60d4dd5059294f31733d9243a8119b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -735,9 +741,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellscale</b> (<a 
 <tr class="memitem:a4d86d62ac0d7a78a6bcf44ad29fbf052"><td class="memItemLeft" align="right" valign="top"><a id="a4d86d62ac0d7a78a6bcf44ad29fbf052"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zspmuldiag</b> (<a class="el" href="type_8h.html#structzsp">zsp</a> *__restrict A, const fcomplex *w, fcomplex alpha)</td></tr>
 <tr class="separator:a4d86d62ac0d7a78a6bcf44ad29fbf052"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a451f7dacce944b1e4f5647428e235e10"><td class="memItemLeft" align="right" valign="top"><a id="a451f7dacce944b1e4f5647428e235e10"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zspmulvec</b> (fcomplex *__restrict y, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const fcomplex *__restrict x, char trans, fcomplex alpha)</td></tr>
-<tr class="separator:a451f7dacce944b1e4f5647428e235e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec730a1a3f0bf54ce2854c5b443b24a9"><td class="memItemLeft" align="right" valign="top"><a id="aec730a1a3f0bf54ce2854c5b443b24a9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zspmv</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *y, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict x, char trans, fcomplex alpha)</td></tr>
+<tr class="separator:aec730a1a3f0bf54ce2854c5b443b24a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01b2318cebd9051b37691ae99d3a4ed2"><td class="memItemLeft" align="right" valign="top"><a id="a01b2318cebd9051b37691ae99d3a4ed2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zspmulcreal</b> (fcomplex *__restrict y, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const fcomplex *__restrict x, float alpha)</td></tr>
 <tr class="separator:a01b2318cebd9051b37691ae99d3a4ed2"><td class="memSeparator" colspan="2">&#160;</td></tr>

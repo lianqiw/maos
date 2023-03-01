@@ -2905,6 +2905,20 @@ cgwarm</td>
 <table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
+<a id="a98541445c603cb18fea03bbd9dd9fc71"></a>real</td>
+<td class="fieldname">
+psdservo_gain</td>
+<td class="fielddoc">
+<p>Gain used to update servo parameter </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5c184980785a17c9ef1b72ab7e01b530"></a>real</td>
+<td class="fieldname">
+poke</td>
+<td class="fielddoc">
+<p>How much WFE (meter) to apply to OPD for computing experimental interaction matrix </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="ac87660610cae7d45661ec52354ca507e"></a>int</td>
 <td class="fieldname">
 alg</td>
@@ -2957,34 +2971,6 @@ mvm</td>
 <p>Use the various algorithms recon.alg to assemble a control matrix to multiply to gradients to get DM commands. If the algorithm needs PSOL gradient, we will have an auxillary matrix to multiply to the DM actuators and subtract from the result. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a185514284ff87c3ac54162d7d0daf5c6"></a>char **</td>
-<td class="fieldname">
-distortion_dm2wfs</td>
-<td class="fielddoc">
-<p>Distortion from DM to each WFS model used in reconstruction. Affects GA </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="afdbafb6fc04edd13d5bdd8cfe5d9d730"></a>char **</td>
-<td class="fieldname">
-distortion_dm2sci</td>
-<td class="fielddoc">
-<p>Distortion from DM to each science model used in reconstruction. Affects HA </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a8544e4837a99f0c7857756b583a72989"></a>char **</td>
-<td class="fieldname">
-distortion_tel2wfs</td>
-<td class="fielddoc">
-<p>Distortion from Telescope to each WFS model used in reconstruction. Affects HXW </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a5c184980785a17c9ef1b72ab7e01b530"></a>real</td>
-<td class="fieldname">
-poke</td>
-<td class="fielddoc">
-<p>How much WFE (meter) to apply to OPD for computing experimental interaction matrix </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ab4d4972861877b925caec10fd38f528b"></a>int</td>
 <td class="fieldname">
 psd</td>
@@ -3004,13 +2990,6 @@ psddtrat_hi</td>
 psddtrat_lo</td>
 <td class="fielddoc">
 <p>how many time step to sample for low order PSD computation. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae369a7c654aac70a708cbe167a11724f"></a>int</td>
-<td class="fieldname">
-psdservo_gain</td>
-<td class="fielddoc">
-<p>Gain used to update servo parameter </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a512a720e55ae17bb9195cd29c516ed42"></a>int</td>
@@ -3039,6 +3018,27 @@ twfs_rmax</td>
 twfs_radonly</td>
 <td class="fielddoc">
 <p>1: radial only, 0: all modes </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a185514284ff87c3ac54162d7d0daf5c6"></a>char **</td>
+<td class="fieldname">
+distortion_dm2wfs</td>
+<td class="fielddoc">
+<p>Distortion from DM to each WFS model used in reconstruction. Affects GA </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="afdbafb6fc04edd13d5bdd8cfe5d9d730"></a>char **</td>
+<td class="fieldname">
+distortion_dm2sci</td>
+<td class="fielddoc">
+<p>Distortion from DM to each science model used in reconstruction. Affects HA </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8544e4837a99f0c7857756b583a72989"></a>char **</td>
+<td class="fieldname">
+distortion_tel2wfs</td>
+<td class="fielddoc">
+<p>Distortion from Telescope to each WFS model used in reconstruction. Affects HXW </p>
 </td></tr>
 </table>
 

@@ -130,7 +130,7 @@ var searchData=
   ['psddtrat_5fhi',['psddtrat_hi',['../parms_8h.html#af4e5cc1e1b7d722759040ce14803cc02',1,'recon_cfg_t']]],
   ['psddtrat_5flo',['psddtrat_lo',['../parms_8h.html#a609e7c8272861608ee46370578fbc723',1,'recon_cfg_t']]],
   ['psdnseg',['psdnseg',['../parms_8h.html#a512a720e55ae17bb9195cd29c516ed42',1,'recon_cfg_t']]],
-  ['psdservo_5fgain',['psdservo_gain',['../parms_8h.html#ae369a7c654aac70a708cbe167a11724f',1,'recon_cfg_t']]],
+  ['psdservo_5fgain',['psdservo_gain',['../parms_8h.html#a98541445c603cb18fea03bbd9dd9fc71',1,'recon_cfg_t']]],
   ['psf',['psf',['../parms_8h.html#a65512f5d78654b63c0d9a4f1b48fcc9e',1,'evl_cfg_t::psf()'],['../parms_8h.html#a90b23b744ceb825576bc4288e43f0455',1,'plot_cfg_t::psf()'],['../parms_8h.html#ab6dda40a75d6de75e54437696e0162b8',1,'gpu_cfg_t::psf()']]],
   ['psfgridsize',['psfgridsize',['../parms_8h.html#a16c97dbec2236db56b38c5e8a724f7ef',1,'evl_cfg_t']]],
   ['psfhist',['psfhist',['../parms_8h.html#ac33ac28eb5ac113cd42e973694319916',1,'evl_cfg_t']]],

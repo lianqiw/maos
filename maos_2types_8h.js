@@ -281,7 +281,7 @@ var maos_2types_8h =
       [ "npsr", "maos_2types_8h.html#a9ca2bd9a33823a54ce58c20312b5e05c", null ],
       [ "nthread", "maos_2types_8h.html#a62a2826f0026371368a178ee77a560bc", null ],
       [ "cxxalg", "maos_2types_8h.html#a256eebe74763739433e397eb9a2e2ba0", null ],
-      [ "Herr", "maos_2types_8h.html#aebedfac394ed5b874fd14e8afda31671", null ]
+      [ "Herr", "maos_2types_8h.html#af4555b7c44a8fb404144f8033d72bee2", null ]
     ] ],
     [ "sim_save_t", "maos_2types_8h.html#structsim__save__t", [
       [ "wfspsfout", "maos_2types_8h.html#a412a53ba66bdf50bd9461706a5d1cbc2", null ],

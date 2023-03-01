@@ -10,7 +10,7 @@ digraph "mvm_igpu_t"
   Node3 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +FLI" ,arrowhead="odiamond",fontname="Helvetica"];
   Node3 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +recon" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node4 [label="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXlo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\land 23 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structrecon__t"];
+  Node4 [label="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structrecon__t"];
   Node14 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +cxxalg\n+dither_dtrat\n+nthread\n+npsr\n+dither_npoint\n+lowfs_gtilt" ,arrowhead="odiamond",fontname="Helvetica"];
   Node14 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node26 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +ht\n+W1\n+wt\n+MVM\n+neam\n+dx\n+os" ,arrowhead="odiamond",fontname="Helvetica"];

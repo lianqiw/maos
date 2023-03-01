@@ -8,7 +8,7 @@ digraph "global_t"
   Node376 -> Node375 [color="grey25",fontsize="10",style="solid",label=" +simu" ,arrowhead="odiamond",fontname="Helvetica"];
   Node376 [label="{sim_t\n|+ wfsopd\l+ gradacc\l+ gradlastcl\l+ gradlastol\l+ cn2res\l+ gradoffacc\l+ gradoffdrift\l+ gradscale\l+ llt_tt\l+ opdr\land 61 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structsim__t"];
   Node414 -> Node376 [color="grey25",fontsize="10",style="solid",label=" +recon" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node414 [label="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXlo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\land 23 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structrecon__t"];
+  Node414 [label="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structrecon__t"];
   Node386 -> Node414 [color="grey25",fontsize="10",style="solid",label=" +cxxalg\n+dither_dtrat\n+nthread\n+npsr\n+dither_npoint\n+lowfs_gtilt" ,arrowhead="odiamond",fontname="Helvetica"];
   Node386 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node386 -> Node376 [color="grey25",fontsize="10",style="solid",label=" +gradoffnacc\n+reconisim\n+wfsisim\n+gradoffisim0\n+pause\n+dmreal_isim\n+dmreal_count\n+tomo_update\n+seed\n+gradoffisim\n..." ,arrowhead="odiamond",fontname="Helvetica"];

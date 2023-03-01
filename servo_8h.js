@@ -25,7 +25,7 @@ var servo_8h =
     ] ],
     [ "servo_optim", "servo_8h.html#a403214adf62020a6f707a29d0c4d14d6", null ],
     [ "servo_optim_margin", "servo_8h.html#a63c6a3e2b3d97d0ab387a2c7a3b09ade", null ],
-    [ "servo_rej2ol", "servo_8h.html#a1aab2a4d37e5fb57e6ddb6a28bfc7e56", null ],
+    [ "servo_cl2ol", "servo_8h.html#a1b6fa2cead3766be91077fdf268070b3", null ],
     [ "servo_residual", "servo_8h.html#a6c1610b9a8a5bf2d2e260a4ce8ca5633", null ],
     [ "servo_update", "servo_8h.html#aad6d4d54f623cc4a8a134eec68f56ea5", null ],
     [ "servo_new", "servo_8h.html#a29d0be1c907299b934692f1ec98bd8e0", null ],

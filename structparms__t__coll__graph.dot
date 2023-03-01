@@ -67,10 +67,10 @@ digraph "parms_t"
   Node148 -> Node166 [color="grey25",fontsize="10",style="solid",label=" +psfol\n+indoa\n+psfisim\n+tomo\n+nevl\n+moao\n+opdmean\n+psfmean\n+nwvl\n+rmax\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node154 -> Node166 [color="grey25",fontsize="10",style="solid",label=" +thetax\n+thetay\n+hs\n+wt\n+wvl" ,arrowhead="odiamond",fontname="Helvetica"];
   Node167 -> Node145 [color="grey25",fontsize="10",style="solid",label=" +recon" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node167 [label="{recon_cfg_t\n|+ alg\l+ modal\l+ nmod\l+ psddtrat_hi\l+ twfs_radonly\l|}",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structrecon__cfg__t"];
-  Node151 -> Node167 [color="grey25",fontsize="10",style="solid",label=" +poke" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node167 [label="{recon_cfg_t\n|+ alg\l+ modal\l+ nmod\l+ psddtrat_hi\l|}",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structrecon__cfg__t"];
+  Node151 -> Node167 [color="grey25",fontsize="10",style="solid",label=" +poke\n+psdservo_gain" ,arrowhead="odiamond",fontname="Helvetica"];
   Node147 -> Node167 [color="grey25",fontsize="10",style="solid",label=" +distortion_dm2wfs\n+distortion_tel2wfs\n+distortion_dm2sci" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node148 -> Node167 [color="grey25",fontsize="10",style="solid",label=" +psddtrat_lo\n+twfs_rmin\n+psd\n+mvm\n+twfs_rmax\n+psdservo_gain\n+psol\n+split\n+glao\n+psdnseg\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node148 -> Node167 [color="grey25",fontsize="10",style="solid",label=" +psddtrat_lo\n+twfs_rmin\n+psd\n+mvm\n+twfs_rmax\n+psol\n+split\n+glao\n+psdnseg\n+twfs_radonly\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node168 -> Node145 [color="grey25",fontsize="10",style="solid",label=" +atmr" ,arrowhead="odiamond",fontname="Helvetica"];
   Node168 [label="{atmr_cfg_t\n||}",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structatmr__cfg__t"];
   Node151 -> Node168 [color="grey25",fontsize="10",style="solid",label=" +hmax\n+hs\n+r0z\n+r0\n+dx\n+L0" ,arrowhead="odiamond",fontname="Helvetica"];

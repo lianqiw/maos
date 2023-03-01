@@ -4,11 +4,11 @@ digraph "recon_cfg_t"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node91 [label="{recon_cfg_t\n|+ alg\l+ modal\l+ nmod\l+ psddtrat_hi\l+ twfs_radonly\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node92 -> Node91 [color="grey25",fontsize="10",style="solid",label=" +poke" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node91 [label="{recon_cfg_t\n|+ alg\l+ modal\l+ nmod\l+ psddtrat_hi\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node92 -> Node91 [color="grey25",fontsize="10",style="solid",label=" +poke\n+psdservo_gain" ,arrowhead="odiamond",fontname="Helvetica"];
   Node92 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
   Node93 -> Node91 [color="grey25",fontsize="10",style="solid",label=" +distortion_dm2wfs\n+distortion_tel2wfs\n+distortion_dm2sci" ,arrowhead="odiamond",fontname="Helvetica"];
   Node93 [label="{char\n||}",height=0.2,width=0.4,color="grey75"];
-  Node94 -> Node91 [color="grey25",fontsize="10",style="solid",label=" +psddtrat_lo\n+twfs_rmin\n+psd\n+mvm\n+twfs_rmax\n+psdservo_gain\n+psol\n+split\n+glao\n+psdnseg\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node94 -> Node91 [color="grey25",fontsize="10",style="solid",label=" +psddtrat_lo\n+twfs_rmin\n+psd\n+mvm\n+twfs_rmax\n+psol\n+split\n+glao\n+psdnseg\n+twfs_radonly\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node94 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
 }
