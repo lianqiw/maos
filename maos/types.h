@@ -380,7 +380,7 @@ typedef struct recon_t{
     int cxxalg;        /**<records parms->tomo.cxxalg*/
 
     //For Error PSD computation
-    dspcell *Herr;      /**<Ray tracing from DM along science directions for a few points*/
+    cell *Herr;      /**<Ray tracing from DM along science directions for a few points. dcell for modal control. sparse for zonal control*/
     
 }recon_t;
 

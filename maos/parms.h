@@ -485,6 +485,9 @@ typedef struct lsr_cfg_t{
    contains input parameters for wavefront reconstruction.
 */
 typedef struct recon_cfg_t{
+    real psdservo_gain; /**<Gain used to update servo parameter*/
+    real poke;       /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
+
     int alg;         /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
     int glao;        /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
     int split;       /**<split reconstruction/tomography type.
@@ -499,19 +502,19 @@ typedef struct recon_cfg_t{
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
-    char **distortion_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
-    char **distortion_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
-    char **distortion_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
-
-    real poke;       /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
+    
     int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
-    int psdservo_gain; /**<Gain used to update servo parameter*/
+    
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
     int twfs_rmin; /**<minimum zernike order (inclusive)*/
     int twfs_rmax; /**<maximum zernike order (inclusive)*/
     int twfs_radonly;/**<1: radial only, 0: all modes*/
+
+    char **distortion_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
+    char **distortion_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
+    char **distortion_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
 }recon_cfg_t;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.

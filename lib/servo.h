@@ -49,7 +49,7 @@ typedef struct servo_t{
 dcell *servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zeta, int servo_type, 
    const dmat *psdin,  const dmat* sigma2n);
 real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, real zeta);
-dmat *servo_rej2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
+dmat *servo_cl2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
 //cmat *servo_Hol(const dmat *nu, real dt, real dtrat, real al, const dmat *gain);
 real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, real al, const dmat *gain, int servo_type);
 void servo_update(servo_t *st, const dmat *ep);

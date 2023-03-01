@@ -406,18 +406,30 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 
 	if(PYWFS_DEBUG){//Test implementation using zernikes
 		dmat* ints=0;
-		int nn=1;
-		real wve=1e-9*160;
-		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
-		zfarr* pupsave=zfarr_init(nn, NY(opds), "pywfs_zernike_ints");
-		zfarr* grads=zfarr_init(nn, NY(opds), "pywfs_zernike_grad");
+		real wve=1e-9*20;
+		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 60, 1);
 		dmat* opd=0;
 		dmat* grad=0;
+		int nn=1;
+		dcell *atms=NULL;
+		dmat *atm=NULL;
+		if(zfexist("wfs0_opd_1.bin")){
+			info("Using wfs0_opd_1.bin as atmosphere for pywfs zernike testing\n");
+			atms=dcellread("wfs0_opd_1.bin");
+			atm=dref(P(atms, PN(atms)-1));
+			nn=2;
+		}
+		zfarr *pupsave=zfarr_init(nn, NY(opds), "pywfs_zernike_ints");
+		zfarr *grads=zfarr_init(nn, NY(opds), "pywfs_zernike_grad");
 		for(int im=0; im<NY(opds); im++){
 			for(int j=0; j<nn; j++){
 				info2("im=%d, j=%d\n", im, j);
 				opd=dsub(opds, 0, 0, im, 1);
-				dscale(opd, pow(2, j)*wve);
+				if(j>0 && atm){
+					dadd(&opd, wve, atm, 1);
+				}else{
+					dscale(opd, pow(2, j)*wve);
+				}
 				dzero(ints);
 				pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
 				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
@@ -430,6 +442,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		zfarr_close(grads);
 		cellfree(ints);
 		dfree(opds);
+		dcellfree(atms); dfree(atm);
 	}
 	if(PYWFS_DEBUG){//Test linearity of a zenike mode with noise
 		real wve=20e-9;

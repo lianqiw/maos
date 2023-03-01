@@ -48,16 +48,15 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	}
 	info("Building recon->LR\n");
 	int free_GAlsr=0;
-	/*if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full
+	if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full. sparse matrix mul are too slow.
 		dsp* tmp=dsp_cast(P(GAlsr,0));
 		if(tmp->nzmax>NX(tmp)*NY(tmp)*0.2){//not very sparse
-			dcell* tmp2=0;
+			dcell *tmp2=NULL;
 			free_GAlsr=1;
-			dcelladd(&tmp2, 1, (dspcell*)GAlsr, 1);
+			dcelladdsp(&tmp2, 1, dspcell_cast(GAlsr), 1);
 			GAlsr=(cell*)tmp2;
 		}
 	}
-	recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");*/
 	dcellmm_any(&recon->LR.M, GAlsr, CELL(recon->saneai), "tn", 1);
 	// Tip/tilt and diff focus removal low rand terms for LGS WFS or split control.
 	if(recon->TTF){
@@ -86,7 +85,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		strength=pow(strength, 2./ndm);
 		maxeig*=strength;
 	}
-	if(fabs(parms->lsr.tikcr)>EPS&&parms->lsr.actslave<=1){
+	if(fabs(parms->lsr.tikcr)>EPS&&(parms->lsr.actslave<=1||parms->recon.modal)){
 		info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 		info("The maximum eigen value is estimated to be around %g\n", maxeig);
 		dcelladdI_any(recon->LL.M, parms->lsr.tikcr*maxeig);

@@ -266,8 +266,9 @@ void recon_servo_update(sim_t* simu){
 		//Accumulate data history.
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
-				dspmulvec(PCOL(P(simu->dmerrts, ievl), iframe), P(recon->Herr, ievl, idm),
-					P(P(simu->dmerr,idm)), 'n', 1);
+				dmat *out=drefcols(P(simu->dmerrts, ievl), iframe,1);
+				dcellmm_any((cell**)&out, P(recon->Herr, ievl, idm), CELL(P(simu->dmerr,idm)), "nn", 1);
+				dfree(out);
 			}
 		}
 
@@ -289,16 +290,13 @@ void recon_servo_update(sim_t* simu){
 			if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
 			//writebin(psd, "psdcl_%d_%d", simu->iseed, simu->reconisim);
 			if(NX(simu->dmint->ep)==1&&NY(simu->dmint->ep)==1){
-				dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
+				dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
 				dcell* coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25,
 					parms->sim.f0dm, parms->sim.zetadm, 1, psdol, NULL);
-				real g=0.5;
+				const real g=parms->recon.psdservo_gain;
 				P(simu->dmint->ep,0)=P(simu->dmint->ep,0)*(1-g)+P(P(coeff,0),0)*g;
-				info("Step %5d New gain (high): %.3f\n", simu->reconisim, P(simu->dmint->ep,0));
-				//if(parms->save.run){
-				//writebin(psdol, "psdol_%d_%d", simu->iseed, simu->reconisim);
+				info("Step %5d updated high order loop gain: %.3f\n", simu->reconisim, P(simu->dmint->ep,0));
 				if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
-				//}
 				dcellfree(coeff);
 				dfree(psdol);
 			} else{
@@ -317,19 +315,26 @@ void recon_servo_update(sim_t* simu){
 			dmat* ts=dtrans(simu->Merrts);
 			dzero(simu->Merrts);
 			real dt=parms->sim.dt*parms->sim.dtrat_lo;
-			for(int icol=0; icol<NY(ts); icol++){
-				dmat* tsi=dsub(ts, icol, 1, 0, 0);
-				dmat* psd=psd1dt(tsi, parms->recon.psdnseg, dt);
+			for(int icol=0; icol<NY(simu->Mint_lo->ep); icol++){
+				dmat* psd=NULL;
+				if(NY(simu->Mint_lo->ep)==1){//single gain 
+					psd=psd1dt(ts, parms->recon.psdnseg, dt);
+					psd_sum(psd, 1);
+				} else if(NY(simu->Mint_lo->ep)==NY(ts)){//a gain per mode
+					dmat* tsi=dsub(ts, 0, 0, icol, 1);
+					psd=psd1dt(tsi, parms->recon.psdnseg, dt);
+					dfree(tsi);
+				}else{
+					error("Please implement\n");
+				}
 				if(simu->save->psdcl_lo) zfarr_push(simu->save->psdcl_lo, -1, psd);
-				//writebin(psd, "psdlo%d_cl_%d", icol, simu->reconisim);
 				if(NX(simu->Mint_lo->ep)==1){//integrator
-					dmat* psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0), 0);
-					//writebin(psdol, "psdlo%d_ol_%d", icol, simu->reconisim);
+					dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0,icol), 0);
 					if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
 					dcell *coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 0, 1, psdol, 0);
 					const real g=parms->recon.psdservo_gain;
-					P(simu->Mint_lo->ep,0)=P(simu->Mint_lo->ep,0)*(1-g)+P(P(coeff,0),0)*g;
-					if(icol==0) dbg("Step %5d New gain (low) : %.3f\n", simu->reconisim, P(simu->Mint_lo->ep,0));
+					P(simu->Mint_lo->ep,0,icol)=P(simu->Mint_lo->ep,0,icol)*(1.-g)+P(P(coeff,0),0)*g;
+					if(icol==0) info("Step %5d updated low order loop gain : %.3f\n", simu->reconisim, P(simu->Mint_lo->ep,0,icol));
 					dfree(psdol);
 					dcellfree(coeff);
 				} else{

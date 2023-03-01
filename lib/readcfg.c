@@ -704,7 +704,7 @@ int readcfg_int(const char* format, ...){
 	char* val;
 	char* endstr;
 	real ans=0;
-	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'||fabs(ans-(int)ans)>EPS){
+	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return (int)ans;

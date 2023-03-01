@@ -52,7 +52,7 @@ def locembed(loc, opd0, return_ext=0, **kargs):
                 ims_i,ext=locembed(loc, opdi, return_ext, **kargs)
                 ims.append(ims_i)
         ims=np.asarray(ims)
-        if nframe == 1:
+        if ims.size == 1:
             ims=ims[0]
         if return_ext:
             return ims, ext

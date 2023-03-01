@@ -421,7 +421,7 @@ real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, rea
    PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist;
    Only implemented for integrator.
  */
-dmat* servo_rej2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
+dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
 	SERVO_CALC_T st; memset(&st, 0, sizeof(st));
 	servo_calc_init(&st, psdcl, dt, dtrat, al);
 	const dmat* nu=st.nu;
@@ -547,6 +547,9 @@ void servo_update(servo_t* st, const dmat* ep){
 	dfree(st->ep);
 	if(NX(ep)!=3){//type I
 		st->ep=ddup(ep);
+		if(NY(st->ep)==1&&NX(st->ep)>3){
+			reshape(st->ep, 1, NX(st->ep));
+		}
 	} else{//type II. convert data format
 		st->ep=dnew(NX(ep), NY(ep));
 		for(int i=0; i<NY(ep); i++){
@@ -643,9 +646,6 @@ int servo_filter(servo_t* st, const dcell* _merr){
 	servo_shift_ap(st);
 	if(!st->mint){
 		error("servo_t must be created using servo_new()\n");
-	}
-	if(NY(st->ep)==1&&NX(st->ep)>3){
-		reshape(st->ep, 1, NX(st->ep));
 	}
 	switch(NX(st->ep)){
 	case 1://type I

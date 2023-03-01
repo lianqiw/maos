@@ -53,31 +53,31 @@ typedef enum CEMBED{
 
 typedef struct cell{
     ARR(struct cell*);
-    struct cell* m;
+    struct cell *m;/*continuous data*/
 }cell;
 
 //Make sure the memory layout of CELLDEF is identical to cell
 //base[1] is conveniently used to return a pointer as cell without casting which is error prone
-#define CELLDEF(T,S) typedef struct S{		\
-    union{  \
-            cell cell[1];\
-            struct{\
-	            ARR(struct T*);				\
-	            struct T* m; /*continuous data*/	\
-            };\
-        };\
-    }S
-
-
-#define MATARR(T)				\
+#define CELLDEF(T,S) typedef struct S{\
     union{\
         cell cell[1];\
         struct{\
-            ARR(T);					\
+            ARR(struct T*);\
+            struct T* m; \
+        };\
+    };\
+}S;
+
+
+#define MATARR(T)\
+    union{\
+        cell cell[1];\
+        struct{\
+            ARR(T);\
             mem_t *mem; /**< Memory management*/	\
             async_t *async; /**<async io*/\
         };\
-    }\
+    }
 
 #define MATDEF(T,S) typedef struct S{MATARR(T);} S
 

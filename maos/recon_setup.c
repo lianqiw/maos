@@ -1308,7 +1308,7 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
  */
 void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	if(!parms->recon.psd) return;
-	recon->Herr=dspcellnew(parms->evl.nevl, parms->ndm);
+	recon->Herr=cellnew(parms->evl.nevl, parms->ndm);
 	real d1=parms->aper.d-parms->dm[0].dx;
 	real d2=parms->aper.din+parms->dm[0].dx;
 	real dx=(d1-d2)*0.1;
@@ -1322,10 +1322,18 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 			real dispx=P(parms->evl.thetax,ievl)*ht;
 			real dispy=P(parms->evl.thetay,ievl)*ht;
 			real scale=1-ht/P(parms->evl.hs,ievl);
-			P(recon->Herr, ievl, idm)=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale);
+			dsp* Htmp=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale);
+			dmat* Hdtmp=NULL;
+			if(parms->recon.modal){
+				dspmm(&Hdtmp, Htmp, P(recon->amod, idm), "nn", 1);
+				dspfree(Htmp);
+				P(recon->Herr, ievl, idm)=CELL(Hdtmp);
+			}else{
+				P(recon->Herr, ievl, idm)=CELL(Htmp);
+			}
 		}
 	}
-	if(parms->recon.psd==2){//don't use signanhi by default
+	if(parms->recon.psd==2){//don't use sigmanhi by default
 		dcell* ecnn=setup_recon_ecnn(recon, parms, eloc, 0);
 		real sigma2e=0;
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -1343,7 +1351,7 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 		dcellfree(ecnn);
 	}
 	if(parms->save.setup){
-		writebin(recon->Herr, "psd_Herr");
+		writecell(recon->Herr, "psd_Herr");
 		writebin(eloc, "psd_eloc.bin");
 	}
 	locfree(eloc);
