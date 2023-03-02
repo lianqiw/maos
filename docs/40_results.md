@@ -137,7 +137,7 @@ add the suffix when use \c read.
       above.
 
     - \c resp[3]: Closed loop wavefront variance for each science field point,
-      in the same format as \c Resolep_1
+      in the same format as \c resp[2].
 
 ## Split tomography
 

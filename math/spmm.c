@@ -181,7 +181,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 			if(trans[0]=='n'){
 				switch(trans[1]){
 				case 'n':
-					LOOP_NORMA(do_trans, y->ny, no_conj, no_trans, no_conj);break;
+					LOOP_NORMA(do_trans, y->nx, no_conj, no_trans, no_conj);break;
 				case 'N'://conjuate, but not transpose
 					LOOP_NORMA(do_trans, y->nx, no_conj, no_trans, do_conj);break;
 				case 't':

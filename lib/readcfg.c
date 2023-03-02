@@ -316,7 +316,12 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		if(!eql){//no equal sign
 			if(check_suffix(ssline, ".conf")){
 				char* embeded=strextract(ssline);
-				open_config(embeded, prefix, priority);
+				if(strcmp(embeded, config_in)){
+					//info("Opening embeded {%s} from {%s}\n", config_in, embeded);
+					open_config(embeded, prefix, priority);
+				}else{
+					error("Recursive inclusion: %s include %s\n", config_in, embeded);
+				}
 				free(embeded);
 			} else if(!strcmp(ssline, "__reset__")){
 				if(nstore>0){
@@ -369,7 +374,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			/*dbg("Opening embeded config file %s\n",value); */
 			char* embeded=strextract(value);
 			if(embeded){
-				open_config(embeded, prefix, priority);
+				if(strcmp(embeded, config_in)){
+					open_config(embeded, prefix, priority);
+				}else{
+					error("Recursive inclusion: %s include %s\n", config_in, embeded);
+				}
 				free(embeded);
 			}
 		} else{

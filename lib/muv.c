@@ -294,16 +294,15 @@ void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
 }
 /**
    Apply CBS or SVD multiply to square sparse matrix.
-	   xout = A^-1 * xin *
-	   (A^-1)^T.
+	   xout = A^-1 * xin * (A^-1)^T.
    The output is dmat if using SVD, and dsp if using CBS.
  */
 void* muv_direct_spsolve(const muv_t* A, const dsp* xin){
 	void* xout=NULL;
 	if(A->MI){
 		dmat* x1=NULL;
-		dmulsp(&x1, A->MI, xin, "nn", 1);
-		dmm((dmat**)&xout, 0, x1, A->MI, "nt", 1);
+		dspmm(&x1, xin, A->MI, "nt", 1);//x1-xin*(A^-1)^T
+		dmm((dmat **)&xout, 0, A->MI, x1, "nn", 1);//A^-1*x1
 		dfree(x1);
 	} else{
 		dsp* x1=chol_spsolve(A->C, xin);

@@ -162,10 +162,8 @@ X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres){
 				error("Invalid format\n");
 			}
 		} else if(issp(W)){//sparse
-			const X(sp)* Wsp=(X(sp)*)W;
-			X(mat)* At=X(trans)(A);
-			X(mulsp)(&AtW, At, Wsp, "nn", 1);
-			X(free)(At);
+			const X(sp)* Wsp=X(sp_cast)(W);
+			X(mulsp)(&AtW, A, Wsp, "tn", 1);
 		} else{
 			error("Invalid data type :%u\n", W->id);
 		}

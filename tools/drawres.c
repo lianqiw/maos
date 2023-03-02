@@ -432,7 +432,7 @@ int main(int argc, char* argv[]){
 			int nsim=0;
 			for(int iseed=0; iseed<nseed; iseed++){
 				dmat* resi=P(P(res, im), ipath, iseed);
-				if(resi && NX(resi)>100){
+				if(resi && NX(resi)){
 					dadd_relax(&P(P(resm, im), ipath), 1, resi, 1);
 					nsim=MIN(NX(P(P(resm, im), ipath)), NX(resi));
 					seedcount++;
@@ -454,9 +454,6 @@ int main(int argc, char* argv[]){
 			dcellcwpow(P(resm, i), 0.5);
 			dcellscale(P(resm, i), 1e9);
 		}
-	}
-	if(!P(res, P_PS)&&!P(res, P_F)){
-		dcellfree(P(res, P_LO));
 	}
 	char* pathtag0[npath];
 	char prefix[4]="A: ";
@@ -492,19 +489,25 @@ int main(int argc, char* argv[]){
 				free(legs0[iseed]);
 			}
 			{//plot all modes together for seed average
-				dcell *restmp=dcellnew(6, 1);
+				dcell *restmp=dcellnew(N_ALL, 1);
 				for(int ic=0; ic<restmp->nx; ic++){
 					if(P(resm, ic)){
 						P(restmp, ic, 0)=dref(P(P(resm, ic),0));
 					}
 				}
-				plot_points("CL", (plot_opts){ .ngroup=restmp->nx, .dc=restmp, .xylog=xylog, .legend=(const char *const *)sidetab },
-						"Closed loop Wavefront Error", xlabel, ylabel, "All");
+				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
+				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
+				plot_points("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+					"Closed loop Wavefront Error", xlabel, ylabel, "All");
+				plot_points("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+					"Open loop Wavefront Error", xlabel, ylabel, "All");
+				dcellfree(restmpol);
+				dcellfree(restmpcl);
 				dcellfree(restmp);
 			}
-		} else{//only plot mean
-			for(int ic=0; ic<res->nx; ic++){
-				if(P(res, ic)){
+		} else{//plot seed average for each mode.
+			for(int ic=0; ic<resm->nx; ic++){
+				if(P(resm, ic)){
 					plot_points(toptab[ic], (plot_opts){.ngroup=npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
@@ -523,14 +526,20 @@ int main(int argc, char* argv[]){
 			}
 		}
 		if(npath==1){//plot all modes together for each seed
-			dcell *restmp=dcellnew(6,1);
+			dcell *restmp=dcellnew(N_ALL,1);
 			for(int ic=0; ic<restmp->nx; ic++){
 				if(P(res, ic)){
 					P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
 				}
 			}
-			plot_points("CL", (plot_opts){ .ngroup=restmp->nx, .dc=restmp, .xylog=xylog, .legend=(const char *const *)sidetab },
-					"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
+			dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
+			plot_points("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+			plot_points("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+			dcellfree(restmpol);
+			dcellfree(restmpcl);
 			dcellfree(restmp);
 		}
 	}

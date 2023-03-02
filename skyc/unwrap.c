@@ -102,8 +102,10 @@ static dmat* gen_unwrap(long nx, long ny){
 	/*caddI(cHtH,1e-9); */
 	dmat* IcHtH=dinv(cHtH);
 	/*writebin(IcHtH,"IcHtH"); */
-	dmat* out=NULL;
-	dmulsp(&out, IcHtH, Ht, 1);
+	dmat* outt=NULL;
+	dspmul(&outt, Ht, IcHtH, "tt", 1);
+	dmat *out=dtrans(outt); 
+	dfree(outt);
 	/*writebin(out,"HI"); */
 	dfree(IcHtH);
 	dfree(cHtH);
