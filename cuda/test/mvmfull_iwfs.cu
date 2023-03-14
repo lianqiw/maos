@@ -529,6 +529,6 @@ void mvmfull_iwfs(int* gpus, int ngpu, int nstep){
 		delete[] data[igpu]->event_p;
 		cudaDeviceReset();
 	}
-	free(data);
+	delete []data;
 
 }

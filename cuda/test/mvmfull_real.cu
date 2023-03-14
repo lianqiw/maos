@@ -634,6 +634,6 @@ endhere:;
 		delete[] data[igpu]->event_p;
 		cudaDeviceReset();
 	}
-	free(data);
+	delete []data;
 
 }

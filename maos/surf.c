@@ -701,7 +701,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					1, dispx, dispy, scale, 0, 0);
 			}
 		}
-		if(parms->save.setup){
+		if(parms->save.setup>1){
 			writebin(aper->opdadd, "surfevl_correctable.bin");
 		}
 	}

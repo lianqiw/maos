@@ -537,7 +537,7 @@ static void init_simu_evl(sim_t* simu){
 	const char* fnextra=parms->save.extra?"extra":"-";
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
-	if(!disable_save&&parms->save.extra){
+	if(!disable_save&&parms->save.extra>1){
 		simu->timing=dnew_file(5, nsim, NULL, "%s/Timing_%d.bin", fnextra, seed);
 	}
 	//2021-07-2: do not use mmap to write file. It causes a lot of disk activity.

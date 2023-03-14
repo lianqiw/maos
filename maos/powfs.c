@@ -713,12 +713,12 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		real rsa2, rsa2max=0;
 		dcellfree(powfs[ipowfs].srot);
 		dcellfree(powfs[ipowfs].srsa);
-		dcellfree(powfs[ipowfs].sprint);
+		cellfree(powfs[ipowfs].sprint);
 
 		powfs[ipowfs].srot=dcellnew(nllt, 1);
 		powfs[ipowfs].srsa=dcellnew(nllt, 1);
 		powfs[ipowfs].srsamax=dnew(nllt, 1);
-		powfs[ipowfs].sprint=dcellnew(nllt, 1);
+		powfs[ipowfs].sprint=lcellnew(nllt, 1);
 
 		for(int illt=0;illt<nllt;illt++){
 			/*adjusted llt center because saloc->locx/y is corner */
@@ -740,13 +740,13 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			int pnsa=(int)ceil(sqrt(rsa2max)/dprint)+1;
 
 			real prot[pnsa];
-			P(powfs[ipowfs].sprint, illt)=dnew(pnsa, 1);
-			real* pp=P(P(powfs[ipowfs].sprint, illt));
+			P(powfs[ipowfs].sprint, illt)=lnew(pnsa, 1);
+			long* pp=P(P(powfs[ipowfs].sprint, illt));
 			for(int ind=0; ind<pnsa; ind++){
 				prot[ind]=INFINITY;
 				pp[ind]=-1;
 			}
-			real desrot=0;
+			real desrot=0;//LLT polar angle
 			if(fabs(P(parms->powfs[ipowfs].llt->ox, illt))<dsa
 				&&fabs(P(parms->powfs[ipowfs].llt->oy, illt))<dsa){
 				desrot=0;
@@ -764,7 +764,7 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				}
 				if(irot<prot[ind]&&P(saa, isa)>0.9){
 					prot[ind]=irot;
-					pp[ind]=(real)isa;
+					pp[ind]=isa;
 				}
 			}
 		}
@@ -1713,7 +1713,7 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	dcellfree(powfs[ipowfs].srot);
 	dcellfree(powfs[ipowfs].srsa);
 	dfree(powfs[ipowfs].srsamax);
-	dcellfree(powfs[ipowfs].sprint);
+	cellfree(powfs[ipowfs].sprint);
 	dfree(powfs[ipowfs].pixoffx);
 	dfree(powfs[ipowfs].pixoffy);
 

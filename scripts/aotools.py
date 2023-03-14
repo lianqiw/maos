@@ -94,14 +94,20 @@ def mysqrt(x):
     else:
         return np.sqrt(x)
 
-def rss(*args):
+def rss(*args, **kargs):
     '''compute rss of input'''
-    arr=np.array(args)
-    return mysqrt(np.sum(np.real(np.sign(arr)*arr*np.conj(arr))))
-def rms(*args):
+    if len(args)>1:
+        arr=np.array(args)
+    else:
+        arr=np.array(args[0])
+    return mysqrt(np.sum(np.real(np.sign(arr)*arr*np.conj(arr)), **kargs))
+def rms(*args, **kargs):
     '''compute rms of input'''
-    arr=np.array(args)
-    return np.sqrt(np.mean(np.real(arr*np.conj(arr))))
+    if len(args)>1:
+        arr=np.array(args)
+    else:
+        arr=np.array(args[0])
+    return np.sqrt(np.mean(np.real(arr*np.conj(arr)), **kargs))
     
 def styles(ii):
     reset_color()

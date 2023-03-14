@@ -24,7 +24,7 @@ def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     resc[res[:,:,nsim0:]==0]=nan
     return resc,xx
 def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
-    '''Results are in order of High, T/T, NGS total, Focus'''
+    '''Results are in order of High, T/T, NGS total[, Focus]'''
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
 def maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1):
     '''Results are High + NGS tot'''

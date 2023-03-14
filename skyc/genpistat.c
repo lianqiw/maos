@@ -310,12 +310,12 @@ void prep_bspstrehl(SIM_S* simu){
 		}
 
 		simu->bspstrehl[ipowfs]=mycalloc(nsa*nwvl, dcell*);
-		writebin(strehlgrid, "strehlgrid_%d", ipowfs);
+		//writebin(strehlgrid, "strehlgrid_%d", ipowfs);
 		for(long ic=0; ic<nsa*nwvl; ic++){
 			simu->bspstrehl[ipowfs][ic]=dbspline_prep(gg, gg, P(strehlgrid,ic));
-			dmat* strehlnew=dbspline_eval(simu->bspstrehl[ipowfs][ic], gg, gg, xnew, ynew);
+			/*dmat* strehlnew=dbspline_eval(simu->bspstrehl[ipowfs][ic], gg, gg, xnew, ynew);
 			writebin(strehlnew, "strehlnew_%d_%ld", ipowfs, ic);
-			dfree(strehlnew);
+			dfree(strehlnew);*/
 		}
 		dcellfree(strehlgrid);
 	}

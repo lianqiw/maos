@@ -21,7 +21,7 @@ fi
 if test -z "$LIBS" ;then
     LIBS=" "
 fi
-if test -z "$CC" ;then 
+if test -z "$CC" && which $MAOS_CC;then 
     CC="$MAOS_CC"
 fi
 AC_CONFIG_MACRO_DIR([m4])
@@ -735,7 +735,7 @@ if test "$enable_websockets" != "no" ;then
 	if test "$has_lws" != "no" ;then
 		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
 	else
-		AC_MSG_NOTICE(["libwebsocket library or header is not available"])
+		AC_MSG_NOTICE([libwebsockets library or header is not available])
 		enable_websockets="no"
 	fi
 fi

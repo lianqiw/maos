@@ -111,7 +111,7 @@ typedef struct powfs_t{
 			   unit in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
     /*Matched filter */
-    dcell *sprint;      /**<which subapertures to print sanea*/
+    lcell *sprint;      /**<indices of subapertures to print sanea*/
     intstat_t *intstat; /**<matched filter i0 and its derivative.*/
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/

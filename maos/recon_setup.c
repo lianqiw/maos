@@ -310,7 +310,7 @@ setup_recon_tomo_prep(recon_t* recon, const parms_t* parms){
 				}
 			}
 		}
-		if(parms->save.setup){
+		if(parms->save.setup>1){
 			writebin(recon->L2, "L2");
 		}
 		dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
