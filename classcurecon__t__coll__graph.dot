@@ -8,7 +8,7 @@ digraph "curecon_t"
   Node3 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
   Node3 [label="{nonCopyable\n||# nonCopyable()\l}",height=0.2,width=0.4,color="black",URL="$classnon_copyable.html"];
   Node4 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +moao" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node4 [label="{cumoao_t\n||+ L()\l+ moao_solve()\l+ cumoao_t()\l+ ~cumoao_t()\l+ operator bool()\l}",height=0.2,width=0.4,color="red",URL="$classcumoao__t.html"];
+  Node4 [label="{cumoao_t\n||+ L()\l+ moao_solve()\l+ cumoao_t()\l+ operator bool()\l}",height=0.2,width=0.4,color="red",URL="$classcumoao__t.html"];
   Node6 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +RL\n+MVM\n+FL" ,arrowhead="odiamond",fontname="Helvetica"];
   Node6 [label="{cusolve_l\n||+ solve()\l+ ~cusolve_l()\l}",height=0.2,width=0.4,color="black",URL="$classcusolve__l.html"];
   Node8 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +dm_moao" ,arrowhead="odiamond",fontname="Helvetica"];

@@ -29,7 +29,7 @@ var maos_2types_8h_structpowfs__t =
     [ "pixoffy", "maos_2types_8h.html#a38b3737619743afd44673717a64b8548", null ],
     [ "GS0", "maos_2types_8h.html#ae3871024c46b75c7655d904ee168a6bc", null ],
     [ "neasim", "maos_2types_8h.html#a7aaf0d95aa0b3ee69bcd62aec08832dc", null ],
-    [ "sprint", "maos_2types_8h.html#aa408cd6bbf0dd0f0c04d38ea3e87e774", null ],
+    [ "sprint", "maos_2types_8h.html#aee822f9ee67a2f166e0066db6c286491", null ],
     [ "intstat", "maos_2types_8h.html#abc3fa8f493c58600fc6e7621fb9c89cf", null ],
     [ "dtheta", "maos_2types_8h.html#af71dd693feb078b31e587d30ad71e17c", null ],
     [ "bkgrnd", "maos_2types_8h.html#af1f72dd5af2b9727a8c6b3e4d3125956", null ],

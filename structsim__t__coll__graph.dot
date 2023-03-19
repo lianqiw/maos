@@ -87,8 +87,8 @@ digraph "sim_t"
   Node338 -> Node265 [color="grey25",fontsize="10",style="solid",label=" +wfsgrad_condr\n+dmreal_condr\n+wfsgrad_condw\n+dmreal_condw" ,arrowhead="odiamond",fontname="Helvetica"];
   Node338 [label="{pthread_cond_t\n||}",height=0.2,width=0.4,color="grey75"];
   Node339 -> Node265 [color="grey25",fontsize="10",style="solid",label=" +powfs" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node339 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ neasim\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structpowfs__t"];
-  Node266 -> Node339 [color="grey25",fontsize="10",style="solid",label=" +realamp\n+bkgrnd\n+sprint\n+srsa\n+sodiumprep\n+opdbias\n+realsaa\n+sodium\n+gradncpa\n+opdadd\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node339 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structpowfs__t"];
+  Node266 -> Node339 [color="grey25",fontsize="10",style="solid",label=" +realamp\n+bkgrnd\n+srsa\n+sodiumprep\n+opdbias\n+realsaa\n+sodium\n+gradncpa\n+opdadd\n+neasim\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node285 -> Node339 [color="grey25",fontsize="10",style="solid",label=" +saimcc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node272 -> Node339 [color="grey25",fontsize="10",style="solid",label=" +saasum\n+areascale" ,arrowhead="odiamond",fontname="Helvetica"];
   Node275 -> Node339 [color="grey25",fontsize="10",style="solid",label=" +notfx\n+notfy\n+pixpsax\n+pixpsay\n+nsaimcc" ,arrowhead="odiamond",fontname="Helvetica"];

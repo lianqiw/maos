@@ -1,6 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"scao_lgs_example.html":[4,2],
 "scao_ngs.html":[4,4,29],
 "scao_ngs_example.html":[4,3],
 "scao_pwfs.html":[4,4,30],
@@ -249,5 +248,6 @@ var NAVTREEINDEX14 =
 "smath_8h.html#a9989aecbfb72055d314c9a4d33ef929f":[11,0,3,9,96],
 "smath_8h.html#a99adc27b116bb13002d22f0f5c1debbe":[11,0,3,9,108],
 "smath_8h.html#a99bb61248017316bb83d123691edba86":[11,0,3,9,112],
-"smath_8h.html#a99cab96cae8acb3f38d625965f29599f":[11,0,3,9,216]
+"smath_8h.html#a99cab96cae8acb3f38d625965f29599f":[11,0,3,9,216],
+"smath_8h.html#a9a25cfbabc1e4fba75bc7f7751a4aaf4":[11,0,3,9,182]
 };

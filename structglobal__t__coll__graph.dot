@@ -13,7 +13,7 @@ digraph "global_t"
   Node386 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node386 -> Node376 [color="grey25",fontsize="10",style="solid",label=" +gradoffnacc\n+reconisim\n+wfsisim\n+gradoffisim0\n+pause\n+dmreal_isim\n+dmreal_count\n+tomo_update\n+seed\n+gradoffisim\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node450 -> Node376 [color="grey25",fontsize="10",style="solid",label=" +powfs" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node450 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ neasim\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structpowfs__t"];
+  Node450 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structpowfs__t"];
   Node386 -> Node450 [color="grey25",fontsize="10",style="solid",label=" +notfx\n+notfy\n+pixpsax\n+pixpsay\n+nsaimcc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node460 -> Node376 [color="grey25",fontsize="10",style="solid",label=" +aper" ,arrowhead="odiamond",fontname="Helvetica"];
   Node460 [label="{aper_t\n||}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structaper__t"];

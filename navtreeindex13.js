@@ -1,6 +1,5 @@
 var NAVTREEINDEX13 =
 {
-"parms_8h.html#af15d8288b79591828c56e42a21ff6b93":[11,0,2,5,7,0],
 "parms_8h.html#af1808cc87b6e54d5307ff412ec314415":[11,0,2,5,14,22],
 "parms_8h.html#af181a30f152d1b663339437d2bd93bd9":[11,0,2,5,20,6],
 "parms_8h.html#af1a85154e53005746da5ebc3436a63fb":[11,0,2,5,11,10],
@@ -249,5 +248,6 @@ var NAVTREEINDEX13 =
 "save_8h.html#aa45e0d59e1a995d8b16ea9ac01607281":[11,0,2,16,2],
 "scao_base.html":[4,4,27],
 "scao_base_example.html":[4,1],
-"scao_lgs.html":[4,4,28]
+"scao_lgs.html":[4,4,28],
+"scao_lgs_example.html":[4,2]
 };
