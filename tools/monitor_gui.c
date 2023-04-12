@@ -113,7 +113,7 @@ static void list_proc_update(proc_t* p){
 		p->iseed_old=ps->iseed;
 	}*/
 	char stmp[8];
-	if(snprintf(stmp, 8, "%.2f", step)>=8){
+	if(snprintf(stmp, 8, "%.3f", step)>=8){
 		warning_once("format is truncated\n");
 	}
 	char tmp[64];

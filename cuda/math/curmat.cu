@@ -57,7 +57,17 @@ void curaddcabs2(curmat& out, Real alpha, const cucmat& in, Real beta, cudaStrea
 	addcabs2_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
 		(out(), alpha, in(), beta, in.Nx()*in.Ny());
 }
-void curscale(curmat& in, Real alpha, cudaStream_t stream){
+/**
+   out=out+abs2(in)*alpha;
+*/
+void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream){
+	if(!out){
+		out=curmat(in.Nx(), in.Ny());
+	}
+	addcabs2_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
+		(out(), in(), beta, in.Nx()*in.Ny());
+}
+void curscale(curmat &in, Real alpha, cudaStream_t stream){
 	if(!in) return;
 	if(alpha==0){
 		cuzero(in, stream);

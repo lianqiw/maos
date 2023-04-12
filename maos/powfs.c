@@ -1455,35 +1455,31 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 					opdbias, CELL(powfs[ipowfs].realsaa), parms->powfs[ipowfs].wvl,
 					parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 					parms->powfs[ipowfs].embfac);
-
-				//genseotf(parms, powfs, ipowfs);
+				const int print_psf=2; //1: uplink 2: downlink
 				if(parms->powfs[ipowfs].llt){
-					//genselotf(parms, powfs, ipowfs);
 					lotf=genseotf(powfs[ipowfs].llt->pts, CELL(powfs[ipowfs].llt->amp),
 						powfs[ipowfs].llt->ncpa, NULL, parms->powfs[ipowfs].wvl,
 						parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 						parms->powfs[ipowfs].embfac);
 
+					if(print_psf==1 || 1){
 						//print uplink PSF width
-					dccell* lltpsf=0;
-					dmat* wvl=parms->powfs[ipowfs].wvl;
-					gensepsf(&lltpsf, lotf, NULL, NULL, wvl, 0, 0);
-					char keywords[64];
-
-					for(int iwvl=0; iwvl<PN(wvl); iwvl++){
-						for(int illt=0; illt<NX(lotf); illt++){
-							dmat* psf=P(P(lltpsf, illt, iwvl), 0);
-							const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*RAD2AS;
-							snprintf(keywords, 64, "dtheta=%g; #arcsecond\n", dpsf);
-							psf->keywords=strdup(keywords);
-							real fwhm=dfwhm_gauss(psf)*dpsf;
-							info("Uplink FWHM (illt %d, iwvl %d) is %g\"\n", illt, iwvl, fwhm);
+						dccell* lltpsf=0;
+						const dmat* wvl=parms->powfs[ipowfs].wvl;
+						gensepsf(&lltpsf, lotf, NULL, NULL, wvl, 0, 0);
+						for(int iwvl=0; iwvl<PN(wvl); iwvl++){
+							for(int illt=0; illt<NX(lotf); illt++){
+								dmat* psf=P(P(lltpsf, illt, iwvl), 0);
+								const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*RAD2AS;
+								real fwhm=dfwhm_gauss(psf)*dpsf;
+								info("Uplink FWHM (illt %d, iwvl %d) is %g\"\n", illt, iwvl, fwhm);
+							}
 						}
+						if(parms->save.setup){//Save uplink PSF.
+							writebin(lltpsf, "powfs%d_llt_psf", ipowfs);
+						}
+						cellfree(lltpsf);
 					}
-					if(parms->save.setup){//Save uplink PSF.
-						writebin(lltpsf, "powfs%d_llt_psf", ipowfs);
-					}
-					cellfree(lltpsf);
 				}
 
 				/*Generating short exposure psfs for both uplink and downlink
@@ -1491,7 +1487,23 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				
 				gensepsf(&intstat->sepsf, otf, lotf, CELL(powfs[ipowfs].realsaa),
 					parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
-				//gensepsf(parms, powfs, ipowfs);
+				if(print_psf==2){
+					const dmat *wvl=parms->powfs[ipowfs].wvl;
+					for(int iwvl=0; iwvl<PN(wvl); iwvl++){
+						for(int illt=0; illt<NX(lotf); illt++){
+							dcell *psfs=P(intstat->sepsf, illt, iwvl);
+							for(int isa=0; isa<PN(psfs); isa++){
+								if(P(P(powfs[ipowfs].realsaa, illt), isa)>0.95){
+									dmat *psf=P(psfs, isa);
+									const real dpsf=P(wvl, 0)/(NX(psf)*powfs[ipowfs].llt->pts->dx)*RAD2AS;
+									real fwhm=dfwhm_gauss(psf)*dpsf;
+									info("Downlink FWHM (illt %d, iwvl %d) is %g\"\n", illt, iwvl, fwhm);
+									break;
+								}
+							}
+						}
+					}
+				}
 
 				if(parms->save.setup>1&&intstat){
 					writebin(P(intstat->sepsf, 0), "powfs%d_sepsf", ipowfs);

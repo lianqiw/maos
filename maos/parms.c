@@ -338,9 +338,9 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(int,i0save);
 	READ_POWFS_RELAX(str,i0load);
 	READ_POWFS_RELAX(dbl,sigscale);
+	READ_POWFS_RELAX(dbl,gradscale);
 	READ_POWFS_RELAX(int,moao);
 	READ_POWFS_RELAX(int,dither);
-	READ_POWFS_RELAX(dbl,gradscale);
 	READ_POWFS_RELAX(dbl,dither_amp);
 	READ_POWFS_RELAX(int,dither_npoint);
 	READ_POWFS_RELAX(int,dither_pllskip);
@@ -378,9 +378,6 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(int,skip);
 	READ_POWFS(int,type);
 	READ_POWFS_RELAX(int,step);
-	READ_POWFS_RELAX(dbl,modulate);
-	READ_POWFS_RELAX(int,modulpos);
-	READ_POWFS_RELAX(int,modulring);
 	READ_POWFS(int,nwfs);
 	int nllt=0;
 	int npywfs=0;
@@ -411,9 +408,7 @@ static void readcfg_powfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->fnllt){
 			char prefix[60]={0};
-			//if(nllt>1){//if there are more than 1 type of LLT, need to distinguish. 
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			//}
 			#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
 			#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
 			open_config(powfsi->fnllt,prefix,-1);
@@ -437,18 +432,19 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat,oy);
 			powfsi->llt->n=NX(powfsi->llt->ox);
 		}
-		if(powfsi->pywfs){
-			if(powfsi->type==WFS_SH){
-				error("powfs %d: fnpywfs is supplied (%s) by wfstype is set to SH\n", ipowfs, powfsi->pywfs);
+		if(powfsi->pywfs || powfsi->type==WFS_PY){
+			if(powfsi->type==WFS_SH||!powfsi->pywfs){
+				error("powfs %d: pywfs must and must only be supplied (%s) for Pyramid WFS.\n", ipowfs, powfsi->pywfs);
 			}
 			char prefix[60]={0};
-			if(npywfs>1){//if there are more than 1 type of LLT, need to distinguish.
-				snprintf(prefix, 60, "powfs%d_", ipowfs);
-			}
+			snprintf(prefix, 60, "powfs%d_", ipowfs);
 			open_config(powfsi->pywfs, prefix, -1);
 			powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
 			#define READ_PYWFS(T,key) powfsi->pycfg->key=readcfg_##T("%spywfs."#key, prefix)
 			#define READ_PYWFS_MAT(T,key) powfsi->pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
+			READ_PYWFS(dbl, modulate);
+			READ_PYWFS(int, modulpos);
+			READ_PYWFS(int, modulring);
 			READ_PYWFS(int, nside);
 			READ_PYWFS(int, raw);
 			READ_PYWFS(dbl, flate);
@@ -1812,7 +1808,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
 			powfsi->pixpsa=2;//always 2x2 pixels by definition.
 			//Input of modulate is in unit of wvl/D. Convert to radian
-			powfsi->modulate*=wvlmax/parms->aper.d;
+			powfsi->pycfg->modulate*=wvlmax/parms->aper.d;
 			if(powfsi->phyusenea==-1){
 				powfsi->phyusenea=1;
 			} else if(powfsi->phyusenea!=1){
@@ -1836,10 +1832,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n",ipowfs,powfsi->fieldstop);
 			}
 			powfsi->fieldstop*=AS2RAD;
-			if(powfsi->type==1&&powfsi->fieldstop<powfsi->modulate*2+0.5*AS2RAD){
+			if(powfsi->type==1&&powfsi->fieldstop<powfsi->pycfg->modulate*2+0.5*AS2RAD){
 				warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
-					powfsi->fieldstop*RAD2AS,powfsi->modulate*RAD2AS*2);
-				powfsi->fieldstop=powfsi->modulate*2+0.5*AS2RAD;
+					powfsi->fieldstop*RAD2AS,powfsi->pycfg->modulate*RAD2AS*2);
+				powfsi->fieldstop=powfsi->pycfg->modulate*2+0.5*AS2RAD;
 			}
 		}
 
@@ -2038,9 +2034,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(pycfg->poke>1e-5||pycfg->poke<1e-10){
 				warning("poke=%g m is out of range\n", pycfg->poke);
 			}
-			pycfg->modulate=parms->powfs[ipowfs].modulate;
-			pycfg->modulpos=pycfg->modulate>0?(parms->powfs[ipowfs].modulpos/pycfg->nside*pycfg->nside):1;
-			pycfg->modulring=pycfg->modulate>0?MAX(1, parms->powfs[ipowfs].modulring):1;
+			pycfg->modulpos=pycfg->modulate>0?(pycfg->modulpos/pycfg->nside*pycfg->nside):1;
+			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
 		}
 	}//for ipowfs
 	lresize(parms->hipowfs, parms->nhipowfs, 1);

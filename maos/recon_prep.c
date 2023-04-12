@@ -1028,14 +1028,12 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	}
 }
 /**
-   operator to remove global or diffrential focus modes that might be caused by sodium layer
-   horizontal structure.
+   Operator to remove focus modes.
 */
 
 static void
 setup_recon_FF(recon_t* recon, const parms_t* parms){
 	int nwfs=parms->nwfsr;
-	/*Then differential focus modes. */
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs>0 
 			&& !parms->powfs[ipowfs].skip

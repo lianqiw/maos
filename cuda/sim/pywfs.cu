@@ -248,7 +248,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 				   //cuwrite(otf, stream, "gpu_wvf1_%d", ipos);
 				CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 				//cuwrite(otf, stream, "gpu_wvf2_%d", ipos);
-				curaddcabs2(cuwfs.pypsf, 1, otf, alpha, stream);
+				curaddcabs2(cuwfs.pypsf, otf, alpha, stream);
 				//cuwrite(cuwfs.pypsf, stream, "gpu_wvf3_%d", ipos);
 			}//iposr: points along a ring.
 		}//ir: ring of dithering
@@ -257,11 +257,11 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 			(otf, cuwfs.pypsf, ncomp*ncomp);
 		ctoc("embed");
 		//cuwrite(otf, stream, "gpu_wvf4");
-		CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);
+		CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);//otf contains the OTF
 		ctoc("fft");
 		//cuwrite(otf, stream, "gpu_wvf5");
 		cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
-			(otf(), cupowfs->pynominal(), ncomp*ncomp);
+			(otf(), cupowfs->pynominal(), ncomp*ncomp);//applying DTF and then FFT
 		ctoc("cwm");
 		CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 		ctoc("ifft");

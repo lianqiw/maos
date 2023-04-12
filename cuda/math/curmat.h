@@ -27,6 +27,7 @@ void curset(curmat &A, Real alpha, cudaStream_t stream);
 void curshow(curmat &A, cudaStream_t stream);
 void curadd(curmat &out,Real alpha,const curmat &in,Real beta,cudaStream_t stream);
 void curaddcabs2(curmat &out, Real alpha, const cucmat &in, Real beta, cudaStream_t stream);
+void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream);
 void curscale(curmat &in, Real alpha, cudaStream_t stream);
 void curmv(Real *c, Real alpha, const curmat &A, const Real *b, 
 	   char trans, Real beta, stream_t &stream);

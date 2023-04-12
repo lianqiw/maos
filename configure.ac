@@ -1,4 +1,4 @@
-AC_INIT(maos, 2.8.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.8.1, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
 AC_PREFIX_DEFAULT(${HOME}/.aos) #do not use variable set in this file. 

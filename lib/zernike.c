@@ -108,8 +108,8 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	}
 	if(rover>1.5){
 	//if(nover > (M_PI*D/loc->dx)*1.5 ){
-		warning("%ld/%ld points outside unit circle with maximum radius %g\n",
-			nover, nloc, rover);
+		warning("%ld/%ld points are outside D=%g circle with maximum radius %gm\n",
+			nover, nloc, D, rover*D*0.5);
 	}
 	int cmod=0;//index into opd
 	int imod=0;//Noll's count of modes

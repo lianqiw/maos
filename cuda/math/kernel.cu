@@ -120,6 +120,7 @@ __global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2, const Real* 
 }
 
 /**
+ * vec+=beta
    add a beta to a vector.
 */
 __global__ void add_do(Real* vec, Real beta, int n){
@@ -128,7 +129,9 @@ __global__ void add_do(Real* vec, Real beta, int n){
 		vec[i]+=beta;
 	}
 }
-
+/**
+	a=a*alpha+b*beta
+*/
 __global__ void addcabs2_do(Real* restrict a, Real alpha,
 	const Comp* restrict b, Real beta, int n){
 	const int step=blockDim.x*gridDim.x;
@@ -136,7 +139,16 @@ __global__ void addcabs2_do(Real* restrict a, Real alpha,
 		a[i]=a[i]*alpha+CABS2(b[i])*beta;
 	}
 }
-
+/**
+	a+=b*beta
+*/
+__global__ void addcabs2_do(Real *restrict a, 
+	const Comp *restrict b, Real beta, int n){
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		a[i]+=+CABS2(b[i])*beta;
+	}
+}
 /*reduction routines*/
 
 __global__ void sum_do(Real* restrict res, const Real* a, const int n){

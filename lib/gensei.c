@@ -169,13 +169,8 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 			error("mismatch: notf is %d, lotf is %d\n", nsepsf, nlotf);
 		}
 	}
-	dccell* sepsfs=NULL;
 	cellinit((cell**)psepsfs, nsepsf, nwvl);
-
-	if(!*psepsfs){
-		*psepsfs=dccellnew(nsepsf, nwvl);
-	}
-	sepsfs=*psepsfs;
+	dccell* sepsfs=*psepsfs;
 	int notfx=NX(P(P(otfs, 0), 0));
 	int notfy=NY(P(P(otfs, 0), 0));
 	if(!npsfx) npsfx=notfx;

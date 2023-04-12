@@ -289,10 +289,6 @@ typedef struct powfs_cfg_t{
     real zoomgain; /**<gain of the trombone controller*/
     real zoomgain_drift; /**<gain for the trombone controller with i0 drift input*/
     int zoomset;     /**<Set zoom position from the beginning*/
-    /*Options for Pywfs*/
-    real modulate;  /**<Pyramid modulation diamter in arcsec*/
-    int    modulpos;  /**<Number of positions per modulation cycle*/
-    int    modulring; /**<Number of rings within the maximum radius to modulate*/
     int ng;         /**<number of gradients per subaperture. 2 for SHWFS. >2 for raw PWFS*/
 }powfs_cfg_t;
 /**

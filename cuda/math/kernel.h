@@ -89,12 +89,13 @@ __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 	Real thetax, Real thetay, Real scale, Real ht, Real alpha);
 
 __global__ void add_do(Real* vec, Real beta, int n);
-__global__ void addcabs2_do(Real* restrict a, Real alpha, const Comp* restrict b, Real beta, int n);
 __global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2, const Real* restrict b, int n);
 __global__ void add_do(Real* restrict a, const Real* restrict b, Real* beta1, Real beta2, int n);
 __global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2,
 	const Real* restrict b, Real* beta1, Real beta2, int n);
 
+__global__ void addcabs2_do(Real *restrict a, Real alpha, const Comp *restrict b, Real beta, int n);
+__global__ void addcabs2_do(Real *restrict a, const Comp *restrict b, Real beta, int n);
 __global__ void max_do(Real* restrict res, const Real* a, const int n);
 __global__ void maxabs_do(Real* restrict res, const Real* a, const int n);
 __global__ void sum_do(Real* restrict res, const Real* a, const int n);
