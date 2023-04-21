@@ -319,6 +319,12 @@ arg_t* parse_args(int argc, const char* argv[]){
 	};
 	arg->confcmd=strnadd(argc-1, argv+1, " ");
 	parse_argopt(arg->confcmd, options);
+	if(arg->conf&&arg->conf[0]!='/'&&exist(arg->conf)){
+		//make it absolute path to avoid recursive loading when maos_recent.conf is used
+		char *argconf=arg->conf;
+		arg->conf=myabspath(argconf);
+		free(argconf);
+	}
 	if((!arg->host||!strcmp(arg->host, "localhost"))&&!arg->detach){//forground running.
 		arg->force=1;
 	} else{
@@ -400,7 +406,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 			error("Unable to chdir to %s\n", arg->dirout);
 		}
 	} else{
-	//warning("Disable saving when no -o is supplied.\n");
+		//warning("Disable saving when no -o is supplied.\n");
 		disable_save=1;
 	}
 	return arg;
@@ -508,7 +514,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	dmat** mtche=NULL;
-	if(parms->powfs[ipowfs].phytype_sim==1){
+	if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 		mtche=PCOLR(powfs[ipowfs].intstat->mtche, wfsind);
 	}
 	int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;

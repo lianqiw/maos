@@ -228,7 +228,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				}
 				evlct=nevl;
 			} else{
-				readstr_numarr((void**)&evlcover, NULL, NULL, nevl, 2, M_INT, strevl);
+				readstr_numarr((void**)&evlcover, NULL, NULL, nevl, 2, M_INT, "SURFEVL",strevl);
 				for(int ievl=0; ievl<nevl; ievl++){
 					evlct+=evlcover[ievl]==1?1:0;
 				}
@@ -259,7 +259,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					wfscover[iwfs]=1;
 				}
 			} else{
-				readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, strwfs);
+				readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, "SURFWFS",strwfs);
 				int ncover=0;
 				for(int i=0; i<nwfs; i++){
 					ncover+=wfscover[i]?1:0;
@@ -275,9 +275,9 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				}
 			}
 			if(stropdx){
-				real val=readstr_num(stropdx, NULL);
+				real val=readstr_num("SURFOPDX", stropdx, NULL);
 				if(isnan(val)){
-					warning("Failed to read int from {%s}\n", stropdx);
+					warning("SURFOPDX=%s: failed to read int\n", stropdx);
 				} else{
 					opdxcover=(int)val;
 				}

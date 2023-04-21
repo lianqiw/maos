@@ -187,16 +187,16 @@ static void print_key(const void* key, VISIT which, int level){
 		}
 		if(store->used!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->used==0){
-				if(PERMISSIVE){
+				if(PERMISSIVE || !store->priority){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
-					error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
 			} else if(store->used!=1){
 				if(PERMISSIVE){
 					warning("Key %s is used %ld times\n", store->key, store->used);
 				} else{
-					error("Key %s is used %ld times\n", store->key, store->used);
+					error("Key %s is used %ld times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->used);
 				}
 			}
 		}
@@ -248,12 +248,16 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	FILE* fd=NULL;
 	char* config_file=NULL;
 	if(check_suffix(config_in, ".conf")){
-		config_file=find_file(config_in);
+		config_file=search_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
-			error("Cannot open file %s for reading.\n", config_file);
+			if(!prefix){
+				error("Cannot open file %s for reading.\n", config_file);
+			}else{
+				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_file, prefix);
+			}
 		}
 		if(!priority && !default_config){//used in close_config
-			default_config=strdup(config_in);
+			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
 		}
 	} else{
 		config_file=strdup(config_in);
@@ -377,7 +381,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				if(strcmp(embeded, config_in)){
 					open_config(embeded, prefix, priority);
 				}else{
-					error("Recursive inclusion: %s include %s\n", config_in, embeded);
+					warning("Recursive inclusion: %s includes %s. Ignored.\n", config_in, embeded);
 				}
 				free(embeded);
 			}
@@ -573,14 +577,14 @@ int readcfg_peek_n(const char* format, ...){
 	int count=0;
 	if(quote&&quote<endptr){/*this is string array */
 		char** ret=NULL;
-		count=readstr_strarr(&ret, 0, 0, sdata);
+		count=readstr_strarr(&ret, 0, 0, key, sdata);
 		for(int i=0; i<count; i++){
 			free(ret[i]);
 		}
 		free(ret);
 	} else{/*this is numerical array */
 		void* ret;
-		count=readstr_numarr(&ret, NULL, NULL, 0, 0, M_REAL, sdata);
+		count=readstr_numarr(&ret, NULL, NULL, 0, 0, M_REAL, key, sdata);
 		free(ret);
 	}
 	return count;
@@ -626,7 +630,7 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	format2key;
 	long* val=NULL;
 	int nx, ny;
-	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, getrecord(key, 1)->data);
+	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, getrecord(key, 1)->data);
 	lmat* res=NULL;
 	if(nx && ny){
 		res=lnew_do(nx, ny, val, mem_new(val));
@@ -638,6 +642,7 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
  */
 dmat* readstr_dmat(int n, ///[in]Number of elements requested
 				int relax, ///[in]1: allow fewer values and fill the rest
+				const char *key, /**<[in] the key that needs the value.*/
 				const char *str///[in]input
 				){
 	if(!str){
@@ -648,7 +653,7 @@ dmat* readstr_dmat(int n, ///[in]Number of elements requested
 	if(check_suffix(fn, ".bin.gz")||check_suffix(fn, ".fits.gz")||
 		check_suffix(fn, ".bin")||check_suffix(fn, ".fits")){
 		if(!(res=dread("%s", fn))){
-			error("Read %s failed\n", fn);
+			error("%s: read file %s failed\n", key, fn);
 		}
 		if(n>0 && PN(res)!=n){
 			if((relax==2&& n>0) || (relax==1 && n==1)){//resize and fill remaining values
@@ -658,14 +663,14 @@ dmat* readstr_dmat(int n, ///[in]Number of elements requested
 					P(res,i)=P(res,n2-1);
 				}
 			}else{
-				error("{%s}: need %d values, got %ld\n", fn, n, PN(res));
+				error("%s=%s: need %d values, got %ld instead.\n", key, fn, n, PN(res));
 			}
 		}
 	} else{
 		int nx, ny;
 		real* val=NULL;
 		real** pval=&val;
-		readstr_numarr((void**)pval, &nx, &ny, n, relax, M_REAL, fn);
+		readstr_numarr((void**)pval, &nx, &ny, n, relax, M_REAL, key, fn);
 		if(nx&&ny){
 			res=dnew_do(nx, ny, val, mem_new(val));
 		}
@@ -679,7 +684,7 @@ dmat* readstr_dmat(int n, ///[in]Number of elements requested
  */
 dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 	format2key;
-	return readstr_dmat(n, relax, getrecord(key, 1)->data);
+	return readstr_dmat(n, relax, key, getrecord(key, 1)->data);
 }
 
 /**
@@ -687,7 +692,7 @@ dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 */
 int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 	format2key;
-	return readstr_strarr((char ***)ret, len, relax, getrecord(key, 1)->data);
+	return readstr_strarr((char ***)ret, len, relax, key, getrecord(key, 1)->data);
 }
 
 /**
@@ -695,7 +700,7 @@ int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 */
 int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 	format2key;
-	return readstr_numarr((void**)ret,  NULL, NULL, len, relax,  M_INT, getrecord(key, 1)->data);
+	return readstr_numarr((void**)ret,  NULL, NULL, len, relax,  M_INT, key, getrecord(key, 1)->data);
 
 }
 /**
@@ -703,7 +708,7 @@ int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 */
 int readcfg_dblarr(real **ret, int len, int relax, const char *format, ...){
 	format2key;
-	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, getrecord(key, 1)->data);
+	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, key, getrecord(key, 1)->data);
 }
 /**
    Read integer
@@ -713,7 +718,7 @@ int readcfg_int(const char* format, ...){
 	char* val;
 	char* endstr;
 	real ans=0;
-	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
+	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return (int)ans;
@@ -726,7 +731,7 @@ real readcfg_dbl(const char* format, ...){
 	char *val; 
 	char *endstr;
 	real ans=0;
-	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(val, &endstr))||endstr[0]!='\0'){
+	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return ans;

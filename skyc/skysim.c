@@ -583,7 +583,7 @@ void skysim(const PARMS_S* parms){
 				simu->stars=dcellread("%s", parms->skyc.stars);
 			} else{
 				simu->stars=dcellnew(1, 1);
-				P(simu->stars,0)=readstr_dmat(0,0,parms->skyc.stars);
+				P(simu->stars,0)=readstr_dmat(0,0,"skyc.stars",parms->skyc.stars);
 			}
 			if(PN(simu->stars)<1 || NX(simu->stars,0)<2+parms->maos.nwvl){
 				error("Loaded stars (%s) has wrong rows (%ld, expect %d)\n", 

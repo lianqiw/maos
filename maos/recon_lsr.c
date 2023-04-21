@@ -86,7 +86,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		maxeig*=strength;
 	}
 	if(fabs(parms->lsr.tikcr)>EPS&&(parms->lsr.actslave<=1||parms->recon.modal)){
-		info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
+		info("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 		info("The maximum eigen value is estimated to be around %g\n", maxeig);
 		dcelladdI_any(recon->LL.M, parms->lsr.tikcr*maxeig);
 	}

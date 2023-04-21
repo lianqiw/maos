@@ -134,18 +134,17 @@ int check_suffix(const char* fn, const char* suffix){
 */
 char* argv2str(int argc, const char* argv[], const char* delim){
 	if(!argc) return NULL;
-	char* cwd=mygetcwd();
-	size_t slen=strlen(cwd)+2+strlen(HOME);
+	size_t slen=strlen(DIRSTART)+2;
 	if(!delim) delim=" ";
 	for(int iarg=0; iarg<argc; iarg++){
 		slen+=strlen(delim)+strlen(argv[iarg]);
 	}
 	char* scmd=mycalloc(slen, char);
-	if(!mystrcmp(cwd, HOME)){
+	if(!mystrcmp(DIRSTART, HOME)){
 		strcpy(scmd, "~");
-		strcat(scmd, cwd+strlen(HOME));
+		strcat(scmd, DIRSTART+strlen(HOME));
 	} else{
-		strncpy(scmd, cwd, slen);
+		strncpy(scmd, DIRSTART, slen);
 	}
 	strcat(scmd, "/");
 	char* exename=mybasename(argv[0]);
@@ -159,7 +158,6 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 		}
 	}
 	if(strlen(scmd)>slen-1) error("Overflow\n");
-	free(cwd);
 	char* scmdend=scmd+strlen(scmd);
 	if(delim[0]!='\n'){
 		for(char* p=scmd; p<scmdend; p++){
@@ -258,27 +256,27 @@ char* mygetcwd(void){
 	return strdup(cwd0);
 }
 /**
-   Translate a path into absolute path. The caller shall free the returned string.
+Translate a path into absolute path.The caller shall free the returned string.
 */
-char* myabspath(const char* path){
+char *myabspath(const char *path){
 	if(!path) return 0;
+	if(path[0]=='/') return strdup(path);
 	char path2[PATH_MAX];
-	switch(path[0]){
-	case '~':
-		snprintf(path2, PATH_MAX, "%s/%s", HOME, path+1);
-		break;
-	case '/':
-		snprintf(path2, PATH_MAX, "%s", path);
-		break;
-	default:
-		snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
+	if(path[0]=='~' && path[1]=='/'){
+		snprintf(path2, PATH_MAX, "%s/%s", HOME, path+2);
+	}else{
+		if(path[0]=='.' && path[1]=='/'){
+			path+=2;
+		}
+		if(getcwd(path2, PATH_MAX)){
+			strncat(path2, "/", PATH_MAX-strlen(path2)-1);
+			strncat(path2, path, PATH_MAX-strlen(path2)-1);
+		}else{
+			dbg("Error getting current directory\n");
+			snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
+		}
 	}
-	if(!isdir(path2)){
-		error("path %s does not exist\n", path2);
-		return 0;
-	} else{
-		return strdup(path2);
-	}
+	return strdup(path2);
 }
 /**
  * Create symbolic link

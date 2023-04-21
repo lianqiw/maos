@@ -1393,7 +1393,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 	if(parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF||!parms->powfs[ipowfs].phyusenea
 		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)
-		||parms->powfs[ipowfs].phytype_sim==4
+		||parms->powfs[ipowfs].phytype_sim==PTYPE_CORR
 		){
 		intstat_t* intstat=powfs[ipowfs].intstat=mycalloc(1, intstat_t);
 		if(parms->powfs[ipowfs].i0load){
@@ -1412,7 +1412,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 					dcellfree(i0);
 				}
 			}
-			if((parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1)
+			if((parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF)
 				&&!parms->powfs[ipowfs].mtchfft){
 				intstat->gx=dcellread("%s/powfs%d_gx", parms->powfs[ipowfs].i0load, ipowfs);
 				intstat->gy=dcellread("%s/powfs%d_gy", parms->powfs[ipowfs].i0load, ipowfs);
@@ -1517,7 +1517,7 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				if(parms->powfs[ipowfs].llt){
 					setup_powfs_etf(powfs, parms, ipowfs, 0, parms->powfs[ipowfs].llt->colprep, 0, 0);
 				}
-				cccell** pfotf=(parms->powfs[ipowfs].phytype_sim==3
+				cccell** pfotf=(parms->powfs[ipowfs].phytype_sim==PTYPE_MAP
 					||(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs))?&intstat->fotf:0;
 				gensei(&intstat->i0, &intstat->gx, &intstat->gy, pfotf,
 					intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, powfs[ipowfs].realsaa,
@@ -1545,13 +1545,13 @@ setup_powfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
 	}
 	/*Generating Matched filter */
-	if(parms->powfs[ipowfs].phytype_recon==1||parms->powfs[ipowfs].phytype_sim==1){
+	if(parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 		genmtch(parms, powfs, ipowfs);
 		if(parms->save.setup){
 			writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche", ipowfs);
 		}
 	}
-	if(parms->powfs[ipowfs].phytype_recon==2&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
+	if(parms->powfs[ipowfs].phytype_recon==PTYPE_COG&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
 		setup_powfs_cog_nea(parms, powfs, ipowfs);
 	}
 	if(parms->save.setup){

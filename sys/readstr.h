@@ -42,9 +42,9 @@ static inline int is_end(char c){
 	return 0;
     }
 }
-int readstr_strarr(char ***res, int len, int relax, const char *sdata);
-double readstr_num(const char *data, char **endptr0);
-int readstr_numarr(void **ret, int *nrow0, int *ncol0, int len, int relax, int type, const char *data);
+int readstr_strarr(char ***res, int len, int relax, const char *key, const char *sdata);
+double readstr_num(const char *key, const char *data, char **endptr0);
+int readstr_numarr(void **ret, int *nrow0, int *ncol0, int len, int relax, int type, const char *key, const char *data);
 void trim_string(const char** pheader, const char** pend);
 const char* search_keyword(const char* keywords, const char* key);
 double search_keyword_num(const char* keywords, const char *key);

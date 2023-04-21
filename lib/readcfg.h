@@ -50,7 +50,7 @@ int    readcfg_strarr(char ***res, int len, int relax, const char *format, ...) 
 int    readcfg_intarr(int **ret, int len, int relax, const char *format,...) CHECK_ARG(4);
 int    readcfg_dblarr(real **ret,int len, int relax, const char *format,...) CHECK_ARG(4);
 
-dmat*  readstr_dmat(int n, int relax, const char *str);
+dmat*  readstr_dmat(int n, int relax, const char* key, const char *str);
 dmat*  readcfg_dmat(int n, int relax, const char *format, ...) CHECK_ARG(3);
 lmat*  readcfg_lmat(int n, int relax, const char *format,...) CHECK_ARG(3);
 

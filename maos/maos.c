@@ -420,7 +420,7 @@ int main(int argc, const char* argv[]){
 		scheduler_report_path(arg->execmd);
 	}
 	info2("%s\n", arg->execmd);
-	info2("Output folder is '%s'. %d threads\n", arg->dirout, NTHREAD);
+	if(arg->dirout) info2("Output folder is '%s'.\n", arg->dirout);
 	maos_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
 	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
@@ -448,7 +448,7 @@ int main(int argc, const char* argv[]){
 					remove("maos");
 					mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
 				}*/
-				info2("\n*** Simulation  started at %s in %s. ***\n\n", myasctime(0), HOST);
+				info2("\n*** Simulation started at %s in %s. ***\n\n", myasctime(0), HOST);
 				maos_sim();
 			}
 		}

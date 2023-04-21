@@ -707,7 +707,7 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat* pywfs_tt(const pywfs_t* pywfs){
-	TIC;tic;info2("Computing pywfs_tt...");
+	TIC;tic;info("Computing pywfs_tt...");
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const loc_t* loc=pywfs->locfft->loc;
 	dmat* opd=dnew(loc->nloc, 1);

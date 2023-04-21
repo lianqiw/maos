@@ -225,7 +225,7 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_POWFS_MAT(A,B)						\
     readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B);			\
     for(int i=0; i<npowfs; i++){						\
-		parms->powfs[i].B = readstr_##A##mat(0,0,strtmp[i]);/*doesn't need ## in B*/ \
+		parms->powfs[i].B = readstr_##A##mat(0,0,"powfs."#B, strtmp[i]);/*doesn't need ## in B*/ \
 		free(strtmp[i]); strtmp[i]=NULL;\
     }								
 #define READ_POWFS_RELAX(A,B)					\
@@ -404,6 +404,9 @@ static void readcfg_powfs(parms_t *parms){
 			npywfs++;
 		}
 	}
+	
+	dbg("There are %d powfs with LLT. \n", nllt);
+	
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->fnllt){
@@ -498,7 +501,7 @@ static void readcfg_powfs(parms_t *parms){
 #define READ_WFS_MAT(A,B)						\
     readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B);	\
     for(i=0; i<nwfs; i++){						\
-	parms->wfs[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	parms->wfs[i].B = readstr_##A##mat(0,0,"wfs."#B,strtmp[i]); \
 	free(strtmp[i]); strtmp[i]=NULL;\
     }
 /**
@@ -638,7 +641,7 @@ static void readcfg_wfs(parms_t *parms){
 #define READ_DM_MAT(A,B)						\
     readcfg_strarr((&strtmp), ndm, 1,"dm."#B);	\
     for(i=0; i<ndm; i++){						\
-	parms->dm[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	parms->dm[i].B = readstr_##A##mat(0,0,"dm."#B,strtmp[i]); \
 	free(strtmp[i]); strtmp[i]=NULL;\
     }
 /**
@@ -675,7 +678,7 @@ static void readcfg_dm(parms_t *parms){
 		int nstroke=readcfg_strarr(&tmp,0,0,"dm.stroke");
 		if(nstroke==1&&!zfexist("%s",tmp[0])){//is number array without separation
 			real *ret=0;
-			readstr_numarr((void **)&ret,NULL,NULL,ndm,1,M_REAL,tmp[0]);
+			readstr_numarr((void **)&ret,NULL,NULL,ndm,1,M_REAL,"dm.stroke",tmp[0]);
 			for(int idm=0; idm<ndm; idm++){
 				parms->dm[idm].stroke=dnew(1,1);
 				P(parms->dm[idm].stroke,0)=ret[idm];
@@ -683,13 +686,12 @@ static void readcfg_dm(parms_t *parms){
 			free(ret);
 			free(tmp[0]); tmp[0]=0;
 		} else{
-
 			for(int idm=0; idm<ndm; idm++){
 				if(idm==0||nstroke==ndm){
 					char *stmp;
 					real x=strtod(tmp[idm],&stmp);
 					if(stmp==tmp[idm]){//unable to parse number
-						parms->dm[idm].stroke=readstr_dmat(0,0,tmp[idm]);
+						parms->dm[idm].stroke=readstr_dmat(0, 0, "dm.stroke", tmp[idm]);
 					} else{
 						parms->dm[idm].stroke=dnew(1,1);
 						P(parms->dm[idm].stroke,0)=x;
@@ -752,7 +754,7 @@ static void readcfg_dm(parms_t *parms){
 #define READ_MOAO_MAT(A,B)						\
     readcfg_strarr((&strtmp), nmoao, 1,"moao."#B);	\
     for(i=0; i<nmoao; i++){						\
-	parms->moao[i].B = readstr_##A##mat(0,0,strtmp[i]); \
+	parms->moao[i].B = readstr_##A##mat(0,0,"moao."#B,strtmp[i]); \
 	free(strtmp[i]); strtmp[i]=NULL;\
     }
 /**
@@ -3002,30 +3004,30 @@ static void print_parms(const parms_t *parms){
 		parms->aper.d,1/parms->evl.dx);
 	real fgreen=calc_greenwood(parms->atm.r0z,parms->atm.nps,P(parms->atm.ws),P(parms->atm.wt));
 	real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
-if(!parms->sim.noatm){
-	info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
-		GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
-	info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
-		fgreen,theta0z*RAD2AS);
-	if(parms->ndm==2){
-		real H1=parms->dm[0].ht;
-		real H2=parms->dm[1].ht;
-		real theta2z=calc_aniso2(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt),H1,H2);
-		info(", generalized is %.2f as\n",theta2z*RAD2AS);
-	} else{
-		info("\n");
+	if(!parms->sim.noatm){
+		info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
+			GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
+		info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
+			fgreen,theta0z*RAD2AS);
+		if(parms->ndm==2){
+			real H1=parms->dm[0].ht;
+			real H2=parms->dm[1].ht;
+			real theta2z=calc_aniso2(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt),H1,H2);
+			info(", generalized is %.2f as\n",theta2z*RAD2AS);
+		} else{
+			info("\n");
+		}
+		info("    Sampled %dx%d at 1/%gm. wind dir is%s randomized.\n",
+			parms->atm.nx,parms->atm.ny,1./parms->atm.dx,
+			(parms->atm.wdrand?"":" not"));
+		if(parms->atm.nps>1&&theta0z*RAD2AS>4){
+			warning("Atmosphere theta0 maybe wrong\n");
+		}
+		for(int ips=0; ips<parms->atm.nps; ips++){
+			info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
+				ips,P(parms->atm.ht,ips),P(parms->atm.wt,ips),P(parms->atm.ws,ips));
+		}
 	}
-	info("    Sampled %dx%d at 1/%gm. wind dir is%s randomized.\n",
-		parms->atm.nx,parms->atm.ny,1./parms->atm.dx,
-		(parms->atm.wdrand?"":" not"));
-	if(parms->atm.nps>1&&theta0z*RAD2AS>4){
-		warning("Atmosphere theta0 maybe wrong\n");
-	}
-	for(int ips=0; ips<parms->atm.nps; ips++){
-		info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
-			ips,P(parms->atm.ht,ips),P(parms->atm.wt,ips),P(parms->atm.ws,ips));
-	}
-}
 	if(parms->recon.alg==RECON_MVR){
 		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n",GREEN,BLACK,
 			parms->atmr.r0,parms->atmr.L0,
@@ -3271,26 +3273,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	readcfg_load(parms);
 	parms->nsurf=readcfg_strarr(&parms->surf,0,0,"surf");
 	parms->ntsurf=readcfg_strarr(&parms->tsurf,0,0,"tsurf");
-	/*
-	  Output all the readed parms to a single file that can be used to reproduce
-	  the same simulation.
-	*/
-	if(disable_save){
-		close_config(NULL);
-	} else{
-		char fn[PATH_MAX];
-		snprintf(fn,PATH_MAX,"maos_%s_%ld.conf",HOST,(long)getpid());
-		close_config("%s",fn);
-	}
-	/*
-	  Postprocess the parameters for integrity. The ordering of the following
-	  routines are critical.
-	*/
-	if(disable_save){
-		if(parms->save.setup||parms->save.all||parms->sim.skysim||parms->evl.psfmean||parms->evl.psfhist){
-			error("Please specify -o to enable saving to disk\n");
-		}
-	}
+
 	setup_parms_postproc_za(parms);
 	setup_parms_postproc_sim(parms);
 	setup_parms_postproc_wfs(parms);
@@ -3301,6 +3284,28 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	setup_parms_postproc_dm(parms);
 	setup_parms_postproc_recon(parms);
 	setup_parms_postproc_misc(parms,over_ride);
+
+	/*
+	  Output all the readed parms to a single file that can be used to reproduce
+	  the same simulation.
+	*/
+	if(disable_save||parms->sim.nseed==0){
+		close_config(NULL);
+	} else{
+		char fn[PATH_MAX];
+		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+		close_config("%s", fn);
+	}
+	/*
+	  Postprocess the parameters for integrity. The ordering of the following
+	  routines are critical.
+	*/
+	if(disable_save){
+		if(parms->save.setup||parms->save.all||parms->sim.skysim||parms->evl.psfmean||parms->evl.psfhist){
+			error("Please specify -o to enable saving to disk\n");
+		}
+	}
+
 	if(parms->sim.nseed>0){
 		print_parms(parms);
 		if(!disable_save){

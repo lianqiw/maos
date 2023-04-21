@@ -64,6 +64,9 @@ void addpath2(const char* path, int priority){
 	*curr=node;
 	UNLOCK(mutex_path);
 }
+/**
+   Add a directory to path with default priority of 0.
+*/
 void addpath(const char* path){
 	addpath2(path, 0);
 }
@@ -71,7 +74,7 @@ void addpath(const char* path){
    Remove a directory from path.
  */
 void rmpath(const char* path){
-	char* abspath=myabspath(path);
+	char *abspath=myabspath(path);
 	LOCK(mutex_path);
 	for(PATH_T **curr=&PATH;*curr;){
 		PATH_T *node=*curr;
