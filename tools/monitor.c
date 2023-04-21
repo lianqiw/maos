@@ -59,14 +59,14 @@ GdkPixbuf* icon_save=NULL;
 GdkPixbuf* icon_skip=NULL;
 GdkPixbuf* icon_clear=NULL;
 GdkPixbuf* icon_connect=NULL;
-
 GtkWidget* notebook=NULL;
 GtkWidget** pages;
 GtkWidget* window=NULL;
 //static GtkWidget** tabs;
 static GtkWidget** titles;
-static GtkWidget** cmdconnect;
-GtkTextBuffer** buffers;
+//static GtkWidget** cmdconnect;
+GtkWidget *textscroll=NULL;
+GtkTextBuffer* textbuffer=NULL;
 double* usage_cpu, * usage_cpu2;
 //double *usage_mem, *usage_mem2;
 static GtkWidget** prog_cpu;
@@ -175,8 +175,8 @@ static const gchar* rc_string_entry=
    Enables the notebook page for a host*/
 gboolean host_up(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
-	gtk_widget_set_sensitive(cmdconnect[ihost], 0);
-	gtk_widget_hide(cmdconnect[ihost]);
+	//gtk_widget_set_sensitive(cmdconnect[ihost], 0);
+	//gtk_widget_hide(cmdconnect[ihost]);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
 	return 0;
 }
@@ -186,9 +186,9 @@ gboolean host_down(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	char status[100];
 	snprintf(status, sizeof(status), "Disconnected at %s", myasctime(0));
-	gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]), status);
+	/*gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]), status);
 	gtk_widget_show(cmdconnect[ihost]);
-	gtk_widget_set_sensitive(cmdconnect[ihost], 1);
+	gtk_widget_set_sensitive(cmdconnect[ihost], 1);*/
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
 	//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
@@ -701,6 +701,13 @@ void parse_provider(){
 #endif
 #endif
 }
+void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gpointer user_data){
+	(void)user_data;
+	(void)page_num;
+	(void)page;
+	(void)self;
+	gtk_widget_hide(textscroll);
+}
 void create_window(
 #if GTK_MAJOR_VERSION>3
 	GtkApplication* app,
@@ -753,7 +760,31 @@ void create_window(
 
 	//gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
-
+	{//text are to show details job information
+		//GtkWidget* seperator=gtk_hseparator_new();
+		//box_append(GTK_BOX(pages[ihost]), seperator, FALSE, FALSE, 0);
+		GtkWidget* textview=gtk_text_view_new();
+		textbuffer=gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+		textscroll=gtk_scrolled_window_new(
+#if GTK_MAJOR_VERSION<4					
+				NULL, NULL
+#endif					
+		);
+		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(textscroll),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+		gtk_widget_set_size_request(textscroll, -1, 50);
+#if GTK_MAJOR_VERSION<4	
+		gtk_container_add(GTK_CONTAINER(textscroll), textview);//page is scrollable.
+#else
+		gtk_widget_set_hexpand(textscroll, TRUE);//important
+		gtk_widget_set_vexpand(textscroll, TRUE);
+		gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(textscroll), textview);
+#endif				
+		box_append(GTK_BOX(vbox), textscroll, TRUE, TRUE, 0);
+		gtk_text_buffer_set_text(textbuffer, "", -1);
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), 0);
+		gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview), GTK_WRAP_WORD);
+	}
 
 	//g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(quitmonitor), NULL);
@@ -765,8 +796,8 @@ void create_window(
 	pages=mycalloc(nhost+1, GtkWidget*);
 	titles=mycalloc(nhost+1, GtkWidget*);
 
-	cmdconnect=mycalloc(nhost+1, GtkWidget*);
-	buffers=mycalloc(nhost+1, GtkTextBuffer*);
+	//cmdconnect=mycalloc(nhost+1, GtkWidget*);
+	//buffers=mycalloc(nhost+1, GtkTextBuffer*);
 
 	
 	prog_cpu=mycalloc(nhost, GtkWidget*);
@@ -816,8 +847,8 @@ void create_window(
 			gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
 	#endif		
 		}
-		pages[ihost]=gtk_vbox_new(FALSE, 0);
-
+		//pages[ihost]=gtk_paned_new(GTK_ORIENTATION_VERTICAL);//gtk_vbox_new(FALSE, 0);
+		//gtk_paned_set_position(GTK_PANED(pages[ihost]), 500);
 		{//area for showing list of jobs
 			GtkWidget* page=new_page(ihost);
 			
@@ -829,6 +860,7 @@ void create_window(
 					);
 				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
 					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+				gtk_widget_set_size_request(scroll, -1, 300);
 #if GTK_MAJOR_VERSION<4	
 				gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
 #else
@@ -836,27 +868,20 @@ void create_window(
 				gtk_widget_set_vexpand(scroll, TRUE);
 				gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
 #endif				
-				box_append(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
+				//box_append(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
+				//gtk_paned_add1(GTK_PANED(pages[ihost]), scroll);
+				pages[ihost]=scroll;
 			}
 		}
-		{//text are to show details job information
-			GtkWidget* seperator=gtk_hseparator_new();
-			box_append(GTK_BOX(pages[ihost]), seperator, FALSE, FALSE, 0);
-			GtkWidget* view=gtk_text_view_new();
-			buffers[ihost]=gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
-			box_append(GTK_BOX(pages[ihost]), view, FALSE, FALSE, 0);
-			gtk_text_buffer_set_text(buffers[ihost], "", -1);
-			gtk_text_view_set_editable(GTK_TEXT_VIEW(view), 0);
-			gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD);
-		}
-		if(ihost<nhost){
+		
+		/*if(ihost<nhost){
 			cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
 			g_signal_connect(cmdconnect[ihost], "clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
 			// button for reconnection
 			GtkWidget* hbox=gtk_hbox_new(FALSE, 0);
 			box_append(GTK_BOX(hbox), cmdconnect[ihost], TRUE, FALSE, 0);
 			box_append(GTK_BOX(pages[ihost]), hbox, FALSE, FALSE, 0);
-		}
+		}*/
 		if(ihost<nhost){
 			gtk_notebook_append_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox);
 		} else{
@@ -866,11 +891,13 @@ void create_window(
 		//gtk_widget_show_all(pages[ihost]);
 	}
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
+	g_signal_connect(notebook, "switch-page", G_CALLBACK(notebook_switch_page), NULL);
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(window);
 #else	
 	gtk_widget_show(window);
 #endif
+	gtk_widget_hide(textscroll);
 }
 
 void print_help(const char *cmd){

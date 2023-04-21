@@ -679,14 +679,24 @@ static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTree
   handle section change event to update the GtkTextBuffer buffers[ihost]
  */
 void view_selection_event(GtkTreeSelection* selection, gpointer user_data){
-	int ipage=GPOINTER_TO_INT(user_data);
+	(void)user_data;
+	//int ipage=GPOINTER_TO_INT(user_data);
 	int nsel=gtk_tree_selection_count_selected_rows(selection);
 	if(nsel){
 		gchar* buf=0;
 		gtk_tree_selection_selected_foreach(selection, concat_selected_path, &buf);
-		gtk_text_buffer_set_text(buffers[ipage], buf, -1);
+		gtk_text_buffer_set_text(textbuffer, buf, -1);
+		gtk_widget_show(textscroll);
 		g_free(buf);
+	}else{
+		gtk_widget_hide(textscroll);
 	}
+}
+static gboolean view_unselect_all(GtkTreeView *view, gpointer user_data){
+	(void)view;
+	(void)user_data;
+	gtk_widget_hide(textscroll);
+	return 0;
 }
 static gboolean filter_host(GtkTreeModel* model, GtkTreeIter* iter, gpointer host){
 	gchar* host2;
@@ -751,6 +761,7 @@ GtkWidget* new_page(int ihost){
 
 		g_signal_connect(view, "popup-menu",
 			G_CALLBACK(view_popup_menu), GINT_TO_POINTER(ihost));
+		g_signal_connect(view, "unselect-all", G_CALLBACK(view_unselect_all), GINT_TO_POINTER(ihost));
 #else
 		GtkGesture* gesture=gtk_gesture_click_new();
 		g_signal_connect(gesture, "pressed", 
