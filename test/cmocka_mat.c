@@ -105,10 +105,10 @@ void mat_basic(void **state){
     assert_int_equal(mem_nref(a->mem), 1);
     dfree(a);
     cell* ac=cellnew(0,0);
-    assert_int_equal(dresize((dmat*)ac, 6, 5), 0);//resize empty dimension cell to dmat is ok
-    assert_int_equal(NX(ac), 6);
+    assert_int_equal(dresize((dmat*)ac, 6, 5), -1);//resize cell to dmat is not allowed due to size incompatibility.
+    /*assert_int_equal(NX(ac), 6);
     assert_int_equal(NY(ac), 5);
-    assert_int_equal(ac->id, M_REAL);
+    assert_int_equal(ac->id, M_REAL);*/
     cellfree(ac);
     ac=cellnew(1,1);
     assert_int_equal(dresize((dmat*)ac, 6, 5), -1);//resize cell to dmat is not valid

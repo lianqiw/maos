@@ -51,6 +51,11 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
+	if(sp->fp){
+		writedata_by_id(sp->fp, CELL(sp), 0, 0);
+		zfclose(sp->fp);
+		sp->fp=NULL;
+	}
 	if(sp->nref && !atomic_sub_fetch(sp->nref, 1)){
 		free(sp->px);
 		free(sp->pp);
@@ -62,11 +67,6 @@ static void X(spfree_content)(X(sp)* sp){
  * free a sparse matrix*/
 void X(spfree_do)(X(sp)* sp){
 	if(sp){
-		if(sp->fn){
-			writebin(sp, "%s", sp->fn);
-			free(sp->fn);
-		}
-		assert(issp(sp));
 		X(spfree_content)(sp);
 		free(sp);
 	}

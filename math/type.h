@@ -49,7 +49,7 @@ typedef enum CEMBED{
     long ny;       /**< number of columns */				\
     char *keywords;/**<The keywords as a string*/					\
     file_t *fp;    /**<Opened file, to be saved to when called or freed*/\
-    struct fft_t* fft					\
+    struct fft_t* fft
 
 typedef struct cell{
     ARR(struct cell*);
@@ -74,6 +74,7 @@ typedef struct cell{
         cell cell[1];\
         struct{\
             ARR(T);\
+            void *padding1; /**<unused padding to align with cell*/\
             mem_t *mem; /**< Memory management*/	\
             async_t *async; /**<async io*/\
         };\
@@ -90,7 +91,9 @@ typedef struct cell{
             long nx;             /**<number of rows */			        \
             long ny;             /**<number of columns */			    \
             char *keywords;      /**<the keywords as a string*/         \
-            char *fn;            /**<The file, to be saved upon free*/  \
+            file_t *fp;          /**<The file, to be saved upon free*/  \
+            struct fft_t* fft;   /**<Not used*/                         \
+            void *padding1; /**<unused padding to align with cell*/     \
             long nzmax;          /**<maximum number of entries */		\
             spint *restrict pp;  /**<col indices (size nzmax)  */       \
             spint *restrict pi;  /**<row indices, size nzmax */		    \

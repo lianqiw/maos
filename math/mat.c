@@ -230,13 +230,9 @@ int X(resize)(X(mat)* A, long nx, long ny){
 			return -1;
 		}
 	}else if(!ismat(A)){
-		if(iscell(A)&&!P(A)&&(A->nx==0||A->ny==0)){
-			dbg("Changing cell to type: id=%d\n", A->id);
-			A->id=M_T;//convert empty cell to mat.
-		} else{
-			error("Incorrect type: id=%d, cancelled\n", A->id);
-			return -1;
-		}
+
+		error("Incorrect type: id=%d, cancelled\n", A->id);
+		return -1;
 	}
 	if(!nx) nx=A->nx;
 	if(!ny) ny=A->ny;
