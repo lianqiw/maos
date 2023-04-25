@@ -112,8 +112,5 @@ var parms_8h_structpowfs__cfg__t =
     [ "zoomgain", "parms_8h.html#ac8ecc8a08547a292f2c3e6fc47d98e9b", null ],
     [ "zoomgain_drift", "parms_8h.html#a97b40d9e2b96bbf67978b8d92e58299f", null ],
     [ "zoomset", "parms_8h.html#a5aea9dc5cc99570a54fd28232ea55b37", null ],
-    [ "modulate", "parms_8h.html#ab79f6d4014453311d2cfe27f8a588971", null ],
-    [ "modulpos", "parms_8h.html#a28a43c12b79d409c563e2591e4d538b6", null ],
-    [ "modulring", "parms_8h.html#a2bdb4ad90002240b3fde97901f61a6e5", null ],
     [ "ng", "parms_8h.html#abb349e921acd3f558dad1d163e868d53", null ]
 ];

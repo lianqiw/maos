@@ -7,6 +7,7 @@ var type_8h_structzmat_8____unnamed_____8____unnamed____ =
     [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
     [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
     [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
+    [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
     [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
     [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
 ];

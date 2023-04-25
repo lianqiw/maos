@@ -133,8 +133,8 @@ Functions</h2></td></tr>
 <tr class="separator:a2290db06964ea9a9fd4c551c14140be5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5e8c5ec278c7e489287715ded902a52"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ad5e8c5ec278c7e489287715ded902a52">readcfg_dblarr</a> (real **ret, int len, int relax, const char *format,...)</td></tr>
 <tr class="separator:ad5e8c5ec278c7e489287715ded902a52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a622ec3384cb2b7bbe27756c089a2b212"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a622ec3384cb2b7bbe27756c089a2b212">readstr_dmat</a> (int n, int relax, const char *str)</td></tr>
-<tr class="separator:a622ec3384cb2b7bbe27756c089a2b212"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16cc54aa4b9d9e8ac0723c393483b93a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a16cc54aa4b9d9e8ac0723c393483b93a">readstr_dmat</a> (int n, int relax, const char *key, const char *str)</td></tr>
+<tr class="separator:a16cc54aa4b9d9e8ac0723c393483b93a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8122c529bbbfc9c76740e8f2b79c5f5d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a8122c529bbbfc9c76740e8f2b79c5f5d">readcfg_dmat</a> (int n, int relax, const char *format,...)</td></tr>
 <tr class="separator:a8122c529bbbfc9c76740e8f2b79c5f5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93843a162c4fdd43eca269e9f10adb6e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a93843a162c4fdd43eca269e9f10adb6e">readcfg_lmat</a> (int n, int relax, const char *format,...)</td></tr>
@@ -576,8 +576,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a622ec3384cb2b7bbe27756c089a2b212"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a622ec3384cb2b7bbe27756c089a2b212">&#9670;&nbsp;</a></span>readstr_dmat()</h2>
+<a id="a16cc54aa4b9d9e8ac0723c393483b93a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16cc54aa4b9d9e8ac0723c393483b93a">&#9670;&nbsp;</a></span>readstr_dmat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -598,6 +598,12 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>str</em>&#160;</td>
         </tr>
         <tr>
@@ -611,7 +617,8 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Number of elements requested </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>1: allow fewer values and fill the rest[in]input </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>1: allow fewer values and fill the rest[in] the key that needs the value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>input </td></tr>
   </table>
   </dd>
 </dl>

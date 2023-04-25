@@ -25,6 +25,7 @@ var searchData=
   ['addlow2dm',['addlow2dm',['../sim_8h.html#a722a80fbfae289e4c927d98427eee27b',1,'filter.c']]],
   ['addnoise',['addnoise',['../lib_2misc_8h.html#a4bf8970d027f919a7485a8e426415de6',1,'misc.c']]],
   ['addnoise_5fgrad',['addnoise_grad',['../lib_2misc_8h.html#a48f27901c57db366ade9713f9eabc688',1,'misc.c']]],
+  ['addpath',['addpath',['../path_8h.html#a8539b4e587a7ea71221206e43f29ead5',1,'path.c']]],
   ['addpath2',['addpath2',['../path_8h.html#a2360bff9d3cee0d880596ed915f54463',1,'path.c']]],
   ['addr2name',['addr2name',['../sock_8h.html#aea2693b4a873c21f2c2d4835a56b2e3b',1,'sock.c']]],
   ['adm',['AdM',['../kalman_8h.html#ad80337c76aefe94fd0996f3a5fc88326',1,'kalman_t']]],

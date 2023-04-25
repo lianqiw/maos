@@ -13,7 +13,7 @@ var readcfg_8h =
     [ "readcfg_strarr", "readcfg_8h.html#a659fe04cd01242b492a63a26b3895bce", null ],
     [ "readcfg_intarr", "readcfg_8h.html#a2290db06964ea9a9fd4c551c14140be5", null ],
     [ "readcfg_dblarr", "readcfg_8h.html#ad5e8c5ec278c7e489287715ded902a52", null ],
-    [ "readstr_dmat", "readcfg_8h.html#a622ec3384cb2b7bbe27756c089a2b212", null ],
+    [ "readstr_dmat", "readcfg_8h.html#a16cc54aa4b9d9e8ac0723c393483b93a", null ],
     [ "readcfg_dmat", "readcfg_8h.html#a8122c529bbbfc9c76740e8f2b79c5f5d", null ],
     [ "readcfg_lmat", "readcfg_8h.html#a93843a162c4fdd43eca269e9f10adb6e", null ],
     [ "readcfg_dcell", "readcfg_8h.html#a5fd72ddb2a821baf224122de60711b6d", null ]
