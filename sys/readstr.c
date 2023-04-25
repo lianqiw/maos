@@ -382,13 +382,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		switch(type){
 		case M_INT:
 			if(fabs(res-(int)res)>EPS){
-				warning("%s=%s: floating point number supplied while integer is needed.\n", key, data);
+				error("%s=%s: floating point number supplied while integer is required.\n", key, data);
 			}
 			((int*)(*ret))[count]=(int)res;
 			break;
 		case M_LONG:
 			if(fabs(res-(long)res)>EPS){
-				warning("%s=%s: floating point number supplied while long integer is needed.\n", key, data);
+				error("%s=%s: floating point number supplied while integer is required.\n", key, data);
 			}
 			((long*)(*ret))[count]=(long)res;
 			break;
@@ -528,7 +528,7 @@ repeat:
 	} else{
 		if(start+1<end && (start[0]=='\''||start[0]=='"')){
 			if(end[-1]!=start[0]){
-				warning("Quote is not matched: {%s}\n", *pstart);
+				error("Quote is not matched: {%s}\n", *pstart);
 			} else{
 				end--;
 			}
