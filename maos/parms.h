@@ -174,7 +174,7 @@ typedef struct powfs_cfg_t{
     real saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
     real safocuspv;   /**<Subaperture focus error in nm p/v*/
     char  *neareconfile;/**<File contains noise equivalent angle in radian^2. Contains cell array of nwfsx1.*/
-    real nearecon; /**<NEA used in reconstruction*/
+    real nearecon; /**<NEA used in reconstruction in milli-arcsecond, sim.dtref integration time. Will be scaled by powfs.dtrat and subaperture area before use.*/
     real neasim;   /**<NEA used in simulation. -1 to use nearecon*/
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at
 			 sim.dt sampling rate, in radian. neasim must be -1*/
@@ -263,7 +263,7 @@ typedef struct powfs_cfg_t{
     int pistatstart;/**<time step to compute pistatout*/
     int pistatstc;  /**<1: shift to center using fft method. 0: use geometric gradients.*/
     int psfout;     /**<output time history of low order wfs PSF. never do this for LGS.*/
-    int dtrat;      /**<ratio of sample period over fast loop (LGS)*/
+    int dtrat;      /**<ratio of sample period over sim.dt. Note that sim.dt is assumed to be the fast, high-order loop (e.g. LGS) and the slow or low-order TT WFS cannot run faster. sim.dtrat must be an integer value.*/
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
@@ -516,8 +516,8 @@ typedef struct recon_cfg_t{
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
 typedef struct sim_cfg_t{
-    real dt;         /**<sampling period for simulation*/
-    real dtref;      /**<sampling period for setting siglev*/
+    real dt;         /**<sampling period (s) for simulation.*/
+    real dtref;      /**<sampling period (s) for setting siglev or nearecon.*/
     real za;         /**<zenith angle in radian*/
     real zadeg;      /**<zenith angle in degree. For print out.*/
     real htel;       /**<Height of telescope. Used to adjust sodium profile range*/

@@ -102,9 +102,8 @@ mkdir optim && cd optim
 $src_dir/configure
 make -j4 #this will compile using 4 threads.
 ```
-
-The compiled executable is maos in the sub-folder `bin` of the compiling
-folder. You do not have to do `make install` to run the simulations.
+You can replace `optim` with any directory name of your choice. The compiled executable is maos in the sub-folder `bin` of the compiling
+folder. You do not have to do `make install` to run the simulations, but if not, then you need to add `optim/bin` to your executable path (e.g. update your .bash_profile or .zshenv file `$PATH` variable).
 
 ## Compiler options (Optional)
 
@@ -171,7 +170,7 @@ For macOS, it is simplest to install gtk and gtk-mac-integration using homebrew
 configure the envirionmental parameters. Version 2 and 3 are supported. Make
 sure `pkg-config` is in the `PATH`.
 
-Now rerun `autogen.sh`, `configure` and `make. Monitor and drawdaemon should appear in `bin` folder now. To select gtk version when multiple ones are available:
+Now rerun `autogen.sh`, `configure` and `make`. Monitor and drawdaemon should appear in `bin` folder now. To select gtk version when multiple ones are available:
 ```
 $src_dir/configure --disable-gtk-3 #disables gtk-3
 $src_dir/configure --disable-gtk-2 #disable gtk-2 (gtk-3 is used by default)
