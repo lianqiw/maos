@@ -499,7 +499,7 @@ typedef struct recon_cfg_t{
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
     
-    int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
+    int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points (m^2/Hz).*/
     int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
     
