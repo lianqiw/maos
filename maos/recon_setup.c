@@ -101,7 +101,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 					warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
 				}
 				//convert from mill-arcsec to radian.
-				real nearad=pow(neamas*MAS2RAD, 2)/(parms->powfs[ipowfs].dtrat);
+				real nearad=pow(neamas*MAS2RAD, 2)/(parms->powfs[ipowfs].dtrat*parms->sim.dt/parms->sim.dtref);
 				for(int isa=0; isa<nsa; isa++){
 					P(P(saneac,0), isa, 0)=P(P(saneac,0), isa, 1)=nearad/(P(powfs[ipowfs].saa, isa));
 					for(int ig=2; ig<ng; ig++){

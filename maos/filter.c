@@ -67,7 +67,7 @@ static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long s
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
-static inline void ttsplit_do(recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
+static inline void ttsplit_do(const recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 #if 1
 	int ndm=NX(dmcmd);
 	real totaltt[2]={0,0};
@@ -257,7 +257,7 @@ static void filter_cl(sim_t* simu){
 	  a(n)=0.5*(a(n-1)+a(n-2))+ep*e(n-2);
 	*/
 	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
+	const recon_t* recon=simu->recon;
 	assert(parms->sim.closeloop);
 	/*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
 	const sim_cfg_t* simcfg=&(parms->sim);

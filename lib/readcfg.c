@@ -599,7 +599,7 @@ void readcfg_ignore(const char *format, ...){
 /**
    Check whether the record is overriden by user supplied conf files.
 */
-int readcfg_peek_override(const char* format, ...){
+int readcfg_peek_priority(const char* format, ...){
 	/*Check whether key exists */
 	format2key;
 	const STORE_T* store=getrecord(key, 0);

@@ -348,21 +348,27 @@ def unembed(a,ratio=2):
 def photon_flux(magnitude, wvls):
     '''Claculate photon flux for magnitude at wavelength wvls'''
     Jy=1.51e7 #photons /sec / m^2 / dl_l
-    name =  'UBVRIJHK';
+    name =  'UBVRIJHK'
     wvlc= np.array([0.35,0.44,0.55,0.64,0.79,1.26,1.60,2.22 ]) #center wavelength in micron
     dl_l= np.array([0.15,0.22,0.16,0.23,0.19,0.16,0.23,0.23 ])
     flux0=np.array([1810,4260,3640,3080,2550,1600,1080,670 ]) #zero magnitude flux
-    flux= np.zeros((len(magnitude), len(wvls)))
+    magnitude=np.asarray(magnitude)
+    magnitude.shape=(magnitude.size,)
+    wvls=np.asarray(wvls)
+    wvls.shape=(wvls.size,)
+    nmag=magnitude.size
+    nwvl=wvls.size
+    flux= np.zeros((nmag, nwvl))
     if np.max(wvls)<0.1:
         wvls=wvls*1e6
         
-    for iwvl in range(len(wvls)):
+    for iwvl in range(nwvl):
         ind=np.argmin(abs(wvlc-wvls[iwvl]))
         zs=flux0[ind]*Jy*dl_l[ind]
-        for imag in range(len(magnitude)):
+        for imag in range(nmag):
             flux[imag, iwvl]=zs*10.**(-0.4*magnitude[imag]) #photon m^-2 s^-1
         #pde1=flux*dsa^2*dt*thru_tot*strehl;
-    if len(flux)==1:
+    if flux.size==1:
         flux=flux[0,0]
     return flux
 
@@ -479,3 +485,17 @@ def opdfillzero(im0, nrep):
         mask[mask2==0]=0 
         im[mask]=im2[mask]/mask2[mask]
     return im
+def str_remove_prefix(ini_strlist):
+    '''find and remove the common prefix of string list'''
+    if len(ini_strlist)>1:
+        '''find the common prefix of string list'''
+        prefix = ini_strlist[0]
+        for string in ini_strlist[1:]:
+            while string[:len(prefix)] != prefix and prefix:
+                prefix = prefix[:len(prefix)-1]
+            if not prefix:
+                break
+        nprefix=len(prefix)
+        return [ tmp[nprefix:] for tmp in ini_strlist]
+    else:
+        return ini_strlist

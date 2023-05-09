@@ -656,7 +656,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				nea_chol(&P(nea, ii), P(nea, ii),ng);
 			}
 		} else{
-			//neasimfile/neareconfile is saved by skyc in rad, not in rad^2.
+			//neasimfile/neareconfile is saved by skyc in radian.
 			char* file=parms->powfs[ipowfs].neasimfile;
 			if(!file&&parms->powfs[ipowfs].neasim==-1){
 				file=parms->powfs[ipowfs].neareconfile;
@@ -679,7 +679,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				} else{
 					nea_rad=parms->powfs[ipowfs].neasim;//in mas
 				}
-				nea_rad=nea_rad*MAS2RAD/sqrt(parms->powfs[ipowfs].dtrat);//in rad
+				nea_rad=nea_rad*MAS2RAD/sqrt(parms->powfs[ipowfs].dtrat*parms->sim.dt/parms->sim.dtref);//in rad
 				real* saa=powfs[ipowfs].realsaa?P(P(powfs[ipowfs].realsaa, jwfs)):P(powfs[ipowfs].saa);
 				dmat* nea_each=P(nea, jwfs)=dnew(nsa, 3);
 				for(int isa=0; isa<nsa; isa++){
@@ -836,11 +836,11 @@ setup_powfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		powfs[ipowfs].bkgrndc=dcellread("%s", fn);
 	}
 	if(parms->powfs[ipowfs].bkgrndfn||parms->powfs[ipowfs].bkgrndfnc){
-		real bkscale=parms->sim.dt*800*parms->powfs[ipowfs].dtrat;
+		real bkscale=(parms->sim.dt/parms->sim.dtref)*parms->powfs[ipowfs].dtrat;
 		if(fabs(bkscale-1)>1.e-20){
 			dcellscale(powfs[ipowfs].bkgrnd, bkscale);
 			dcellscale(powfs[ipowfs].bkgrndc, bkscale);
-			warning("Scaling bkgrnd by %g", bkscale);
+			warning("Scaling bkgrndfn by %g", bkscale);
 		}
 		if(parms->powfs[ipowfs].bkgrndfn&&
 			(NX(powfs[ipowfs].bkgrnd)!=powfs[ipowfs].saloc->nloc

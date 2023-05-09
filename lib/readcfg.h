@@ -39,7 +39,7 @@ void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
 int    readcfg_peek_n(const char *format, ...) CHECK_ARG(1);
-int    readcfg_peek_override(const char *format,...) CHECK_ARG(1);
+int    readcfg_peek_priority(const char *format,...) CHECK_ARG(1);
 void   readcfg_ignore(const char *format, ...) CHECK_ARG(1);
 
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);
