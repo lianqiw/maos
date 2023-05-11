@@ -263,7 +263,7 @@ typedef struct powfs_cfg_t{
     int pistatstart;/**<time step to compute pistatout*/
     int pistatstc;  /**<1: shift to center using fft method. 0: use geometric gradients.*/
     int psfout;     /**<output time history of low order wfs PSF. never do this for LGS.*/
-    int dtrat;      /**<ratio of sample period over sim.dt. Note that sim.dt is assumed to be the fast, high-order loop (e.g. LGS) and the slow or low-order TT WFS cannot run faster. sim.dtrat must be an integer value.*/
+    int dtrat;      /**<ratio of sample period over sim.dt. Note that sim.dt is assumed to be the fast, high-order loop (e.g. LGS) and the slow or low-order TT WFS cannot run faster. powfs.dtrat must be an integer value.*/
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
