@@ -1159,7 +1159,7 @@ neareconfile</td>
 <td class="fieldname">
 nearecon</td>
 <td class="fielddoc">
-<p>NEA used in reconstruction </p>
+<p>NEA used in reconstruction in milli-arcsecond, sim.dtref integration time. Will be scaled by powfs.dtrat and subaperture area before use. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="acf99b81d4a12662863581560ccdeb051"></a>real</td>
@@ -1690,7 +1690,7 @@ psfout</td>
 <td class="fieldname">
 dtrat</td>
 <td class="fielddoc">
-<p>ratio of sample period over fast loop (LGS) </p>
+<p>ratio of sample period over sim.dt. Note that sim.dt is assumed to be the fast, high-order loop (e.g. LGS) and the slow or low-order TT WFS cannot run faster. powfs.dtrat must be an integer value. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a879595c59cbe05f07e6b681319a2b697"></a>int</td>
@@ -2954,7 +2954,7 @@ mvm</td>
 <td class="fieldname">
 psd</td>
 <td class="fielddoc">
-<p>Flag: compute PSDs of DM error signal averaged over aperture and field points. </p>
+<p>Flag: compute PSDs of DM error signal averaged over aperture and field points (m^2/Hz). </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af4e5cc1e1b7d722759040ce14803cc02"></a>int</td>
@@ -3051,14 +3051,14 @@ distortion_tel2wfs</td>
 <td class="fieldname">
 dt</td>
 <td class="fielddoc">
-<p>sampling period for simulation </p>
+<p>sampling period (s) for simulation. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a6765bd0af9b651c2fcf55701086597d3"></a>real</td>
 <td class="fieldname">
 dtref</td>
 <td class="fielddoc">
-<p>sampling period for setting siglev </p>
+<p>sampling period (s) for setting siglev or nearecon. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a6b51a9ddc11c0ce89dafbc845e1a71ea"></a>real</td>
