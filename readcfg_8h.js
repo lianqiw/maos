@@ -5,7 +5,7 @@ var readcfg_8h =
     [ "close_config", "readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76", null ],
     [ "readcfg_peek", "readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f", null ],
     [ "readcfg_peek_n", "readcfg_8h.html#a2e922a9c36a239462733acec6cd00827", null ],
-    [ "readcfg_peek_override", "readcfg_8h.html#a82c0679f3fb4519b902b2e616032e6cd", null ],
+    [ "readcfg_peek_priority", "readcfg_8h.html#a23e6af091d96304ce76d92acc966c9cb", null ],
     [ "readcfg_ignore", "readcfg_8h.html#a3d049e1fb1b83a7c3cd7b1d5866f43f9", null ],
     [ "readcfg_str", "readcfg_8h.html#a36b85bb80ce8ab0ecdf6fd0762d4921d", null ],
     [ "readcfg_int", "readcfg_8h.html#af90add8965ad5b713f08e85d11ea70a0", null ],
