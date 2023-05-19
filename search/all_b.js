@@ -42,6 +42,7 @@ var searchData=
   ['mathmisc_2eh',['mathmisc.h',['../mathmisc_8h.html',1,'']]],
   ['maxapriori',['maxapriori',['../maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e',1,'utils.c']]],
   ['maxit',['maxit',['../muv_8h.html#a01fa5335b5adf8b7689f3e09bdb97760',1,'muv_t::maxit()'],['../parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd',1,'tomo_cfg_t::maxit()'],['../parms_8h.html#a7c7f2b7b6ffa94243467f9d33797b27a',1,'fit_cfg_t::maxit()'],['../parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd',1,'lsr_cfg_t::maxit()']]],
+  ['maxlen',['maxlen',['../draw_8h.html#ac21e46b3e42072d5401f11d728402070',1,'plot_opts']]],
   ['maxminlong',['maxminlong',['../mathmisc_8h.html#aaaaed679d152deb02470ebcb73919242',1,'mathmisc.c']]],
   ['maxthread',['MAXTHREAD',['../process_8h.html#aaf201d9c154f29dd2853b04a1ec9533f',1,'process.c']]],
   ['mbinv',['Mbinv',['../maos_2types_8h.html#ad0e43cd4a0ccf988001caf1fb04b8cbb',1,'fdpcg_t']]],

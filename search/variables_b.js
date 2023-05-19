@@ -3,6 +3,7 @@ var searchData=
   ['m',['M',['../kalman_8h.html#ae2aeabf3a7c79c16c9bd76c1a1caaaa7',1,'kalman_t::M()'],['../muv_8h.html#a788f22a3be5e5bc809459f3be177b98a',1,'muv_t::M()']]],
   ['mask',['mask',['../cn2est_8h.html#a3fb3eee55725a2837bdd280aff4fef62',1,'cn2est_t']]],
   ['maxit',['maxit',['../muv_8h.html#a01fa5335b5adf8b7689f3e09bdb97760',1,'muv_t::maxit()'],['../parms_8h.html#a5be7bf62274b812a85a2d88af53abbdd',1,'tomo_cfg_t::maxit()'],['../parms_8h.html#a7c7f2b7b6ffa94243467f9d33797b27a',1,'fit_cfg_t::maxit()'],['../parms_8h.html#aebb289f8a35eb9efba2eb3cac66701dd',1,'lsr_cfg_t::maxit()']]],
+  ['maxlen',['maxlen',['../draw_8h.html#ac21e46b3e42072d5401f11d728402070',1,'plot_opts']]],
   ['maxthread',['MAXTHREAD',['../process_8h.html#aaf201d9c154f29dd2853b04a1ec9533f',1,'process.c']]],
   ['mbinv',['Mbinv',['../maos_2types_8h.html#ad0e43cd4a0ccf988001caf1fb04b8cbb',1,'fdpcg_t']]],
   ['mcc',['MCC',['../maos_2types_8h.html#a58140cc6c4f3719762527d79564ae797',1,'ngsmod_t::MCC()'],['../maos_2types_8h.html#a14fef4d4fa3e3e07f6aab1dacd9cdda5',1,'llt_t::mcc()']]],

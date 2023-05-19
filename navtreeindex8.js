@@ -1,5 +1,6 @@
 var NAVTREEINDEX8 =
 {
+"maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61":[11,0,2,20,4,15],
 "maos_2types_8h.html#a84cd068c5700856d0c0b8380238d38b0":[11,0,2,20,13,10],
 "maos_2types_8h.html#a84e8e62ecde6b798940df410a7f348c1":[11,0,2,20,14,5],
 "maos_2types_8h.html#a85f154a82c7001dcd69f1f555061ef5e":[11,0,2,20,13,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX8 =
 "maos_2types_8h.html#structdither__t":[11,0,2,20,13],
 "maos_2types_8h.html#structfdpcg__t":[11,0,2,20,5],
 "maos_2types_8h.html#structfit__t":[11,0,2,20,9],
-"maos_2types_8h.html#structfractal__t":[11,0,2,20,8],
-"maos_2types_8h.html#structglobal__t":[11,0,2,20,16]
+"maos_2types_8h.html#structfractal__t":[11,0,2,20,8]
 };

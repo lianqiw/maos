@@ -1,7 +1,8 @@
 var draw_8h =
 [
     [ "plot_opts", "draw_8h.html#structplot__opts", [
-      [ "ngroup", "draw_8h.html#a79f53f049487f0fcb830f01d08fecd25", null ],
+      [ "ngroup", "draw_8h.html#a45aba71d793c975b2917a795c68a2083", null ],
+      [ "maxlen", "draw_8h.html#ac21e46b3e42072d5401f11d728402070", null ],
       [ "loc", "draw_8h.html#a21f274cacd6006de0eab6a2ac12a0875", null ],
       [ "dc", "draw_8h.html#a7e74316d7e62b72c8bbe0aeb3471a081", null ],
       [ "style", "draw_8h.html#a2aed35de5578898c2c69cc3a6722c725", null ],
