@@ -434,7 +434,7 @@ void sim_update_etf(sim_t* simu){
 						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
 					deltah=P(simu->zoomint, iwfs0)*factor;
 				}
-				if(simu->zoompos&&P(simu->zoompos, iwfs0)){
+				if(simu->zoompos&&simu->zoompos_icol<PN(simu->zoompos, iwfs0)){
 					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
 					simu->zoompos_icol++;
 				}
@@ -1099,7 +1099,7 @@ static void init_simu_wfs(sim_t* simu){
 				nnx[iwfs]=1;
 				nny[iwfs]=0;
 				if(parms->powfs[ipowfs].llt->coldtrat){
-					nny[iwfs]=(parms->sim.end+parms->powfs[ipowfs].llt->coldtrat-1)/parms->powfs[ipowfs].llt->coldtrat;
+					nny[iwfs]=parms->sim.end/parms->powfs[ipowfs].llt->coldtrat+1;
 				}
 				nny2[iwfs]=nsim;
 			} else{
