@@ -177,6 +177,7 @@ gboolean host_up(gpointer data){
 	int ihost=GPOINTER_TO_INT(data);
 	//gtk_widget_set_sensitive(cmdconnect[ihost], 0);
 	//gtk_widget_hide(cmdconnect[ihost]);
+	gtk_widget_set_sensitive(pages[ihost], 1);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
 	return 0;
 }
@@ -189,6 +190,7 @@ gboolean host_down(gpointer data){
 	/*gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]), status);
 	gtk_widget_show(cmdconnect[ihost]);
 	gtk_widget_set_sensitive(cmdconnect[ihost], 1);*/
+	gtk_widget_set_sensitive(pages[ihost], 0);
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
 	//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);

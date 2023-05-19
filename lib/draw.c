@@ -631,12 +631,14 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 			FWRITECMDSTR(DRAW_NAME, fn);
 			if(opts.loc){/*there are points to plot. */
 				for(int ig=0; ig<opts.ngroup; ig++){
-					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*opts.loc[ig]->nloc*2);
-					FWRITEINT(opts.loc[ig]->nloc);
+					int nlen=opts.loc[ig]->nloc;
+					if(opts.maxlen && opts.maxlen<nlen) nlen=opts.maxlen;
+					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*nlen*2);
+					FWRITEINT(nlen);
 					FWRITEINT(2);
 					FWRITEINT(1);
-					FWRITEARR(opts.loc[ig]->locx, sizeof(real)*opts.loc[ig]->nloc);
-					FWRITEARR(opts.loc[ig]->locy, sizeof(real)*opts.loc[ig]->nloc);
+					FWRITEARR(opts.loc[ig]->locx, sizeof(real)*nlen);
+					FWRITEARR(opts.loc[ig]->locy, sizeof(real)*nlen);
 				}
 				if(opts.dc){
 					warning("both loc and dc are specified, ignore dc.\n");
@@ -647,13 +649,14 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 				}
 				for(int ig=0; ig<opts.ngroup; ig++){
 					dmat* p=P(opts.dc, ig);
-					uint32_t nlen=sizeof(real)*PN(p);
-					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen);
-					FWRITEINT(NX(p));
-					FWRITEINT(NY(p));
-					FWRITEINT(0);
+					int nlen=NX(p);
+					if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
+					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen*sizeof(real));
+					FWRITEINT(nlen);//number of points
+					FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
+					FWRITEINT(0);//square plot or not
 					if(p){
-						FWRITEARR(P(p), nlen);
+						FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
 					}
 				}
 			} else{

@@ -260,24 +260,8 @@ static void filter_cl(sim_t* simu){
 	const recon_t* recon=simu->recon;
 	assert(parms->sim.closeloop);
 	/*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
-	const sim_cfg_t* simcfg=&(parms->sim);
 	const int isim=simu->reconisim;
 	//dbg("reconisim=%d\n", isim);
-	{/*Auto adjusting ephi for testing different ephi*/
-		static int ephi_is_auto=0;
-		if(P(simcfg->ephi,0)<0){
-			ephi_is_auto=1;
-			P(simcfg->ephi,0)=0.5;
-		}
-		if(ephi_is_auto){
-			if((isim*10)<parms->sim.end){//initial steps
-				P(simcfg->ephi,0)=0.5;
-			} else if((isim*10)%parms->sim.end==0){
-				P(simcfg->ephi,0)=(real)isim/(real)parms->sim.end;
-				dbg("ephi is set to %.1f at step %d\n", P(simcfg->ephi,0), isim);
-			}
-		}
-	}
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).

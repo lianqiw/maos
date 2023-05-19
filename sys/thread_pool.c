@@ -91,7 +91,7 @@ static thread_pool_t pool;/*The default pool; */
 static const unsigned int jobsall_mask=0xFFF;//number of jobs in jobsall. Must be all 1's
 static int do_job(int urgent);
 #define USE_QUEUE 0
-#if USE_QUEUE //New implementation use queue. 2022-02-08. 
+#if USE_QUEUE //New implementation use queue. 2022-02-08. Not yet working.
 /**
  * struct of jobs for the linked first in first out (fifo) list.
  * We use index here to emulate a 4 byte pointer
@@ -256,9 +256,6 @@ typedef union{
 }jobshead_t;
 
 static jobs_t *jobsall=NULL;//all jobs are allocated here. The first element has next set to 0 to indicate end of list
-static unsigned int jobsall_i=0; //available job to use
-static unsigned int jobsall_count=0;//number of jobs in jobsall
-
 static jobshead_t jobsnormal={0L};/**<Start of the fifo list of pending jobs*/
 static jobshead_t jobsurgent={0L};/**<Start of the fifo list of urgent jobs*/
 static jobshead_t jobspool={0L};  /**<saving unused jobs_t*/
@@ -303,9 +300,11 @@ static int do_job(int urgent){
 				while(old_value>tk1&&!atomic_compare_exchange_n(&job->counter->tmin, &old_value, tk1));
 			}
 		}
-#endif		
-		atomic_sub_fetch(&job->counter->group, 1);
-		jobs_push(&jobspool, jobind, jobind);//return job to the pool.
+#endif	
+		if(__atomic_sub_fetch(&job->counter->group, 1, __ATOMIC_RELEASE)==4294967295){
+			warning("group %p is now -1.\n", job->counter);
+		}
+		jobs_push(&jobspool, jobind, jobind);//return job to the pool.	
 		return 1;//more jobs pending
 	}
 	return 0;//no more job
@@ -330,13 +329,6 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 		jobs_t *job=NULL;
 		if(fun || (arg2[ijob].fun && arg2[ijob].start < arg2[ijob].end)){//valid job
 			jobind=jobs_pop(&jobspool);//take idle job from the pool using lock free approach. 
-			if(jobind==0 && jobsall_i<jobsall_count){//no more jobs in the pool, allocate from jobsall
-				jobind=atomic_fetch_add(&jobsall_i, 1);
-				//need to check >= not = as jobs_pop may fail multiple times.
-				if(jobind>=jobsall_count){//all jobs are being used
-					jobind=0;
-				}
-			}
 			if(jobind==0){//no slot is available.
 				ijob--;
 			}else{
@@ -349,7 +341,7 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 					job->arg=&arg2[ijob];
 				}
 				job->counter=counter;
-				atomic_add_fetch(&counter->group, 1);
+				__atomic_add_fetch(&counter->group, 1, __ATOMIC_RELEASE);
 				job->next=0;
 				if(!headind){
 					headind=jobind;
@@ -458,18 +450,20 @@ void thread_pool_init(unsigned int nthread){
 		pool.ncur=1;/*counting the master thread. */
 		pool.nmax=1;
 		tid=pool.ncur;
+		jobsall=mycalloc(jobsall_mask+1, jobs_t);
 #if USE_QUEUE
 		jobsall_head=0;
 		jobsall_tail=0;
 		jobsall_njob=0;
 #else
-		jobsall_i=1;
-		jobsall_count=jobsall_mask+1;
 		jobsnormal.state=0;
 		jobsurgent.state=0;
 		jobspool.state=0;
+		for(unsigned int i=1; i<=jobsall_mask; i++){//put all into the pool
+			jobs_push(&jobspool, i, i);
+		}
 #endif
-		jobsall=mycalloc(jobsall_mask+1, jobs_t);
+
 
 	}
 	unsigned int nthread_max=sysconf(_SC_NPROCESSORS_ONLN);

@@ -35,7 +35,8 @@ void draw_final(int reuse);
 int draw_current(const char* fig, const char* fn);
 int plot_empty(int sock_draw,const char *fig,const char *fn);
 typedef struct {
-  long ngroup;
+  int ngroup;///number of lines
+  int maxlen;///limit maximum nx
   loc_t** loc;
   const dcell* dc;
   const int32_t* style;

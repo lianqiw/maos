@@ -373,6 +373,8 @@ int main(int argc, char* argv[]){
 						fixnan(tmp);
 						P(P(res, P_TT), ipath, iseed)=dtrans(tmp);
 						dfree(tmp);
+					}
+					if(indfocus>-1 && indtt>-1){
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_LO), ipath, iseed), 1);
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_TT), ipath, iseed), -1);
 						dadd(&P(P(res, P_PS), ipath, iseed), 1, P(P(res, P_F), ipath, iseed), -1);

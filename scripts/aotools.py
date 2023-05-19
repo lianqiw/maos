@@ -485,7 +485,7 @@ def opdfillzero(im0, nrep):
         mask[mask2==0]=0 
         im[mask]=im2[mask]/mask2[mask]
     return im
-def str_remove_prefix(ini_strlist):
+def str_remove_prefix(ini_strlist, offset=0):
     '''find and remove the common prefix of string list'''
     if len(ini_strlist)>1:
         '''find the common prefix of string list'''
@@ -495,7 +495,8 @@ def str_remove_prefix(ini_strlist):
                 prefix = prefix[:len(prefix)-1]
             if not prefix:
                 break
-        nprefix=len(prefix)
+        nprefix=len(prefix)+offset
         return [ tmp[nprefix:] for tmp in ini_strlist]
     else:
         return ini_strlist
+    
