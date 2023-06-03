@@ -22,7 +22,7 @@ The following table and figure show comparison of turbulence profile at 25, 50, 
 |------------------|
 |![](cn2.svg)|
 
-# AO Performance
+# NFIRAOS AO Performance
 
 The following lists AO system and instrument parameters and the respective AO performance.
 
@@ -87,3 +87,18 @@ The following figures show the wavefront error and Strehl Ratio for median seein
 |Wavefront error|Strehl Ratio|
 |:-------------------:|:-------------------:|
 |![WFE on axis](modhis_wfe.svg) | ![Strehl Ratio on axis](modhis_strehl.svg)|
+
+# NFIRAOS+
+
+NFIRAOS+ is upgraded NFIRAOS with 0.25m actuator spacing. The following figure shows the comparison of NFIRAOS and NFIRAOS+ fundamental WFE (without implementation error) for different LGS magnitude or detector read out noise. The following conditions are used:
+
+- actuator spacing and subaperture size: 0.25m.
+- sampling frequency: 800 Hz.
+- end to end LGS throughput from atmosphere to detector:0.2577.
+- zero magnitude flux: \f$ 8.7942\times 10^9 photon/m^2/s \f$.
+- instrument: IRIS with 34"x34" FoV.
+- the rest are the same as NFIRAOS.
+
+|Wavefront erroor of NFIRAOS+ vs NFIRAOS|
+|------------------|
+|![](LGS_mag_dsa_ron.svg)|

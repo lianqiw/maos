@@ -279,18 +279,17 @@ def svd_pinv(mod, thres=0, tikcr=0):
     immt=svd_inv(mmt, thres, tikcr)
     return mod.T@immt
 
-def plot_smooth(x,y,color=''):
+def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
 
     #define x as 200 equally spaced values between the min and max of original x 
     xnew = np.linspace(x.min(), x.max(), 200) 
-
     #define spline
     spl = make_interp_spline(x, y, k=3)
     y_smooth = spl(xnew)
 
     #create smooth line chart 
-    plt.plot(xnew, y_smooth,color)
+    plt.plot(xnew, y_smooth, *args, **kargs)
 def radial_profile(data, nx=None):
     if nx is None:
         nx=data.shape[0]>>1

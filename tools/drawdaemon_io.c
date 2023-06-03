@@ -207,7 +207,7 @@ drawdata_t *drawdata_get(char **fig, char **name, int reset){
 			warning_time("Wait for previous data to draw before receiving new data\n");
 			mysleep(1);
 		}*/
-		//drawdata->limit_changed=-1;
+		drawdata->limit_changed=-1;
 		//drawdata->drawn=0;
 		free(*fig); *fig=0;
 		free(*name); *name=0;
@@ -229,6 +229,7 @@ static void drawdata_clear_older(float timclear){
 	}
 }
 #define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); break;}
+#define CATCH_TO(A,p) if(A) {if(errno==EAGAIN ||errno==EWOULDBLOCK){continue;}else{ close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); break;}}
 #define STREADINT(p) CATCH(streadint(sock, &p),p)
 #define STREAD(p,len) CATCH(stread(sock,p,len),p)
 #define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
@@ -284,7 +285,7 @@ void *listen_draw(void *user_data){
 			g_idle_add((GSourceFunc)update_title, NULL);
 			//we set socket timeout to check disconnection.
 			//server sends heartbeat every 10 seconds (since 2021-09-29).
-			if(socket_block(sock, 0)||socket_recv_timeout(sock, 600)){
+			if(socket_block(sock, 0)||socket_recv_timeout(sock, 30)){//was 600. changed to 30 to detect disconnection.
 				sock=-1;
 			}
 		}
@@ -296,7 +297,7 @@ void *listen_draw(void *user_data){
 		//int pid=getpid();
 		if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
 		while(sock!=-1){
-			STREADINT(cmd);//will block if no data is available.
+			CATCH_TO(streadint(sock, &cmd), cmd);//handles time out.
 			if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 				STREADINT(nlen);
 				STREADINT(cmd);
@@ -369,7 +370,7 @@ void *listen_draw(void *user_data){
 					STREADFLT(drawdata->pts[ipts], nptsx*nptsy);
 					if(nptsx>50){
 						if(!drawdata->icumu){
-							drawdata->icumu=nptsx/10;
+							drawdata->icumu=nptsx/5;
 						}
 					}
 				}

@@ -216,13 +216,17 @@ void round_limit(float* xmin, float* xmax, int logscale){
 	}
 }
 /**
-   convert new limit to zoom and off using updated limit0.
-
-   Updates drawdata->zoomx,y and offx,y
+ * When limit or limit0 changes, update zoomx,y and offx,y to not alter the limit0.
 */
-void apply_limit(drawdata_t* drawdata){
-	if(drawdata->limit_changed==-1&&drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
-	//when new data is plotted, do not try to preserve the displayed region.
+void update_zoom(drawdata_t* drawdata){
+	//info("update_zoom in: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	/*if(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
+		return;
+	}*/
+	if((drawdata->limit0[0]==0&&drawdata->limit0[1]==0)||(drawdata->limit0[2]==0&&drawdata->limit0[3]==0)){
+		return;//never been plotted. do not try to zoom/offset.
+	}
+	if(drawdata->limit_changed!=1){
 		return;
 	}
 	/*limit0 matches limit in unzoomed state */
@@ -277,7 +281,7 @@ void apply_limit(drawdata_t* drawdata){
 		drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
 	}
 
-	//dbg("zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	//info("update_zoom: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 }
 /*
   Definition of style: (bits count from lowest end0
@@ -357,19 +361,14 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size){
 /**
    Compute the limit from data for line plotting.
  */
-static void update_limit(drawdata_t* drawdata){
-	/*need to update max/minimum. */
-	drawdata->limit_changed=0;//do not try to update zoom from the updated limit.
-	if(drawdata->cumulast!=drawdata->cumu || (drawdata->cumu && (drawdata->icumu != drawdata->icumulast))){
-		drawdata->offx=0;
-		drawdata->offy=0;
-		drawdata->zoomx=1;
-		drawdata->zoomy=1;
-	}
-	if(drawdata->limit_manual) return;
+static void update_limit(drawdata_t *drawdata){
+	/* update max/minimum for both non-cumu and cumulative case. */
+	//info("update_limit in\n");
+	if((drawdata->limit_manual&&!drawdata->cumu)||drawdata->limit_changed!=-1) return;
+
 	float xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
-		const float* ptsx=drawdata->pts[ipts], * ptsy=0;
+		const float *ptsx=drawdata->pts[ipts], *ptsy=0;
 		if(!ptsx) continue;
 		const int ptsnx=drawdata->ptsdim[ipts][0];
 		const int ptsny=drawdata->ptsdim[ipts][1];
@@ -425,24 +424,53 @@ static void update_limit(drawdata_t* drawdata){
 	}
 	if(isinf(ymin0)) ymin0=0;
 	if(isinf(ymax0)) ymax0=0;
-	
+
 	int xlog=drawdata->xylog[0]=='y'?1:0;
 	int ylog=drawdata->xylog[1]=='y'?1:0;
-	if(!xlog) round_limit(&xmin0, &xmax0, xlog);
-	if(!ylog) round_limit(&ymin0, &ymax0, ylog);
-	//dbg("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
-	drawdata->limit[0]=xmin0;
-	drawdata->limit[1]=xmax0;
-	float gain=1;
-	/*if((io_time1-io_time2)<2&&drawdata->cumulast==drawdata->cumu){//continuous update, do not update the y range too quickly.
-		gain=0.1;
-	}*/
-	drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
-	drawdata->limit[3]=ymax0*gain+(1-gain)*drawdata->limit[3];
-}
 
+	
+	float xlimit=(xmax0-xmin0)*0.1;
+	float ylimit=(ymax0-ymin0)*0.1;
+	if(drawdata->cumu!=drawdata->cumulast){
+		drawdata->limit_changed=3;//limit is changed. reset zoom.
+		drawdata->limit[0]=xmin0;
+		drawdata->limit[1]=xmax0;
+		drawdata->limit[2]=ymin0;
+		drawdata->limit[3]=ymax0;
+	}else{
+		drawdata->limit_changed=0;
+		if(drawdata->limit[0]>xmin0||drawdata->limit[0]+xlimit<xmin0){
+			drawdata->limit[0]=xmin0;//only update if the lower limit is below or a threshold above the old result
+			drawdata->limit_changed=3;
+		}
+		if(drawdata->limit[1]<xmax0||drawdata->limit[1]>xlimit+xmax0){
+			drawdata->limit[1]=xmax0;//only update if the upper limit is above or a threshold below the old result
+			drawdata->limit_changed=3;
+		}
+		if(drawdata->limit[2]>ymin0||drawdata->limit[2]+ylimit<ymin0){
+			drawdata->limit[2]=ymin0;//only update if the limit is below or a threshold above the old result
+			drawdata->limit_changed=3;
+		}
+		if(drawdata->limit[3]<ymax0||drawdata->limit[3]>ylimit+ymax0){
+			drawdata->limit[3]=ymax0;//only update if the upper limit is above or a threshold below the old result
+			drawdata->limit_changed=3;
+		}
+	}
+	if(drawdata->limit_changed==3){
+		round_limit(&drawdata->limit[0], &drawdata->limit[1], xlog);
+		round_limit(&drawdata->limit[2], &drawdata->limit[3], ylog);
+	}
+	//info("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
+}
 /**
    The master routine that draws in the cairo surface.
+
+   meaning of limit_changed
+   0: no change from previous plot.
+   1: limit0 is changed and update_zoom is needed to update zoom.
+   2: z limit is changed
+   3: limit is changed and zoom will be reset.
+   -1:new data, or switch between cumu and non-cumu. need to run update_limit.
 */
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(!drawdata->ready) {
@@ -461,10 +489,10 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		drawdata->cumu=0;
 	}*/
 	if(drawdata->cumu){
-		if((int)drawdata->icumulast!=(int)drawdata->icumu){
+		/*if((int)drawdata->icumulast!=(int)drawdata->icumu){
 			free(drawdata->limit_cumu);
 			drawdata->limit_cumu=NULL;
-		}
+		}*/
 		if(!drawdata->limit_cumu){
 			drawdata->limit_cumu=mycalloc(4, float);
 		}
@@ -476,14 +504,29 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		drawdata->limit=drawdata->limit_data;
 	}
 	if(!drawdata->image){
-		update_limit(drawdata);
-	}
-	if(drawdata->cumulast!=drawdata->cumu){
-		drawdata->drawn=0;
-	}
-	if(drawdata->cumu){
-		if(drawdata->cumuquadlast!=drawdata->cumuquad || drawdata->icumu != drawdata->icumulast){
+		if(drawdata->cumulast!=drawdata->cumu){
 			drawdata->drawn=0;
+			drawdata->limit_changed=-1;
+		}else if(drawdata->cumu){
+			if(drawdata->icumu!=drawdata->icumulast){
+				drawdata->drawn=0;//just redraw, do not recompute limit
+				//drawdata->limit[0]=drawdata->icumu;
+				drawdata->limit_changed=-1;
+			}
+			if(drawdata->cumuquadlast!=drawdata->cumuquad){
+				drawdata->drawn=0;//just redraw, do not recompute limit
+			}
+		}
+		if(drawdata->limit_changed==-1){
+			update_limit(drawdata);
+		}
+		if(drawdata->limit_changed==3){
+			drawdata->offx=0;
+			drawdata->offy=0;
+			drawdata->zoomx=1;
+			drawdata->zoomy=1;
+			drawdata->drawn=0;
+			drawdata->limit_changed=0;
 		}
 	}
 	int xlog=drawdata->xylog[0]=='y'?1:0;
@@ -516,8 +559,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		xdim=xmax-xmin;
 		ydim=ymax-ymin;
 	}
-	if(xdim==0) xdim=1;
-	if(ydim==0) ydim=1;
+	if(xdim==0||!isfinite(xdim)) xdim=1;
+	if(ydim==0||!isfinite(ydim)) ydim=1;
 	//dbg("xdim=%g, ydim=%g\n", xdim, ydim);
 	float sp_xr=20;
 	if(drawdata->image){/*there is a colorbar */
@@ -527,8 +570,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	float scaley=(float)(height-SP_YT-SP_YB)/ydim;
 
 	if(drawdata->square){
-		float scale=(scalex<scaley?scalex:scaley);
-		scalex=scaley=scale;
+		scaley=(scalex<scaley?scalex:scaley);
+		scalex=scaley;
 	}
 	widthim=(int)(xdim*scalex/2)*2;
 	heightim=(int)(ydim*scaley/2)*2;
@@ -544,40 +587,41 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		||(drawdata->widthim_last!=0
 			&&(drawdata->widthim_last!=drawdata->widthim
 				||drawdata->heightim_last!=drawdata->heightim))){
-		 /*apply_limit: response to canvas resize or zoom/move called by the GUI*/
-		apply_limit(drawdata);
+		 /*update_zoom: response to canvas resize or zoom/move called by the GUI*/
+		update_zoom(drawdata);
 		drawdata->limit_changed=0;
 		drawdata->drawn=0;
 	}
 	if(drawdata->limit_changed==2&&drawdata->p){/*zlim changed. */
-		int nx=drawdata->nx;
-		int ny=drawdata->ny;
-		int stride=cairo_format_stride_for_width(drawdata->format, nx);
+		const int nx=drawdata->nx;
+		const int ny=drawdata->ny;
+		const int stride=cairo_format_stride_for_width(drawdata->format, nx);
 
 		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=cairo_image_surface_create_for_data
-		(drawdata->p, drawdata->format, nx, ny, stride);
+			(drawdata->p, drawdata->format, nx, ny, stride);
+		drawdata->limit_changed=0;
 	}
 	drawdata->widthim_last=drawdata->widthim;
 	drawdata->heightim_last=drawdata->heightim;
 
 	/*Offset in the cairo surface to draw the image. */
-	float xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
-	float yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
+	const float xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
+	const float yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
 	drawdata->xoff=xoff;/*save for the GUI to use. */
 	drawdata->yoff=yoff;
 	/*center of the image on the screen. */
 	drawdata->centerx=xoff+widthim*0.5;
 	drawdata->centery=yoff+heightim*0.5;
-	float zoomx=drawdata->zoomx;/*Zoom of the image when displayed. */
-	float zoomy=drawdata->zoomy;
+	const float zoomx=drawdata->zoomx;/*Zoom of the image when displayed. */
+	const float zoomy=drawdata->zoomy;
 	
 	cairo_select_font_face(cr, font_name, font_style, font_weight);
 	cairo_set_font_size(cr, font_size);
 	float linewidth=round(font_size*0.08);
 	float ticlength=font_size*0.5;
-	float ticskip=drawdata->ticinside?5:ticlength;
+	const float ticskip=drawdata->ticinside?5:ticlength;
 	//float gridskip=drawdata->ticinside?ticlength:0;
 	if(drawdata->ticinside){
 		ticlength=-ticlength;
@@ -892,11 +936,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		xmin0=((-widthim*0.5)/zoomx-drawdata->offx)/scalex+centerx;
 		ymax0=(((heightim)*0.5)/zoomy-drawdata->offy)/scaley+centery;
 		ymin0=((-heightim*0.5)/zoomy-drawdata->offy)/scaley+centery;
-
+		
 		cairo_restore(cr);
 		//toc("cairo_draw pts");
 	}
-
+	/*info("im: %d, %d min0: %g, %g, max0 %g, %g. zoom: %g, %g, scale %g, %g, off: %g, %g\n",
+		widthim, heightim, xmin0, ymin0, xmax0, ymax0, zoomx, zoomy, scalex, scaley, drawdata->offx, drawdata->offy);*/
 	if(drawdata->ncir>0){//plot circles
 		cairo_save(cr);
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_GRAY);

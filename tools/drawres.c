@@ -318,7 +318,7 @@ int main(int argc, char* argv[]){
 				int indtt=-1;
 				int indfocus=-1;
 				if(P(ires, 3)&&P(ires, 3)->nx>0){/*split tomography. */
-					ind=3;
+					ind=3;//cell index for CL results
 					indlo=2;//total ngs
 					indhi=0;//high
 					indtt=1;//tt
@@ -326,7 +326,7 @@ int main(int argc, char* argv[]){
 						indfocus=3;
 					}
 				} else{
-					ind=2;
+					ind=2;//cell index for CL results
 					indlo=1;/*tt */
 					indhi=2;/*pttr */
 				}
@@ -381,6 +381,9 @@ int main(int argc, char* argv[]){
 						if(dmax(P(res, P_PS, ipath, iseed))<1e-24){//<1e-3 nm
 							dfree(P(res, P_PS, ipath, iseed));
 						}
+					}
+					if(!P(res, P_PS, ipath, iseed)&&!P(P(res, P_F), ipath, iseed)){
+						dfree(P(P(res, P_LO), ipath, iseed));//If there is only t/t, do not plot low order
 					}
 				}
 				if(drawres_ol){

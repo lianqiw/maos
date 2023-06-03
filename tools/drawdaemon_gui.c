@@ -415,29 +415,27 @@ static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
 	(void)btn;
 	delete_page(*drawdatawrap);
 }
-gboolean update_title(gpointer data){
-	int pid=data?GPOINTER_TO_INT(data):client_pid; 
-	int iwindow=1;
-	for(GSList *p=windows; p; p=p->next){
-		GtkWidget *window=(GtkWidget *)p->data;
-		char title[80];
-		if(pid>0){
-			snprintf(title, 80, "Drawdaemon (%s:%d)", client_hostname, pid);
-		}else if(pid==0){
-			snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
-		}else{
-			snprintf(title, 80, "Drawdaemon (disconnected)");
-		}
-
-		if(iwindow>1){
-			int nt=strlen(title);
-			if(nt<75){
-				snprintf(title+nt, 80-nt, " (%d)", iwindow);
-			}
-		}
-		gtk_window_set_title(GTK_WINDOW(window), title);
-		iwindow++;
+gboolean update_title(gpointer window){
+	if(!GTK_IS_WINDOW(window)) return FALSE;//deleted
+	
+	char title[80];
+	if(client_pid>0){
+		snprintf(title, 80, "Drawdaemon (%s:%d)", client_hostname, client_pid);
+	}else if(client_pid==0 && sock>-1){
+		snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
+	}else{
+		snprintf(title, 80, "Drawdaemon (%s:disconnected)", client_hostname);
 	}
+
+	/*if(iwindow>1){
+		int nt=strlen(title);
+		if(nt<75){
+			snprintf(title+nt, 80-nt, " (%d)", iwindow);
+		}
+	}*/
+	gtk_window_set_title(GTK_WINDOW(window), title);
+	//iwindow++;
+	
 	return 0;
 }
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
@@ -715,7 +713,7 @@ static gboolean button_release(GtkWidget* widget, GdkEventButton* event, drawdat
 		drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
 		drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
 		drawdata->limit_changed=1;
-		apply_limit(drawdata);
+		update_zoom(drawdata);
 		update_pixmap(drawdata);
 	}
 
@@ -1204,14 +1202,14 @@ static void tool_zoom(GtkToolButton* button, gpointer data){
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->limit_changed=1;
-	apply_limit(drawdata_dialog);
+	update_zoom(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }
 
 static void limit_change2(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->limit_changed=2;
-	apply_limit(drawdata_dialog);
+	update_zoom(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkToggleButton* btn, gint* key){
@@ -1657,23 +1655,17 @@ int update_fpslabel(gpointer label){
 	if(!GTK_IS_LABEL(label)) return FALSE;//deleted
 	float thistime=myclockd();
 	extern float io_time1;//receiving time for latest frame
-	extern float io_time2;//previous frame or 0 if different
+	extern float io_time2;//receiving time for previous frame or 0 if a different plot is received
 	//using static variable is problematic as this is called for different labels
-	float fps=0;
-	if(io_time1+2>thistime && io_time2+100>io_time1){//current
-		fps=1./(io_time1-io_time2);
+	char newtext[16];
+	if(io_time1+2>thistime && io_time2+12>io_time1){//continuous update
+		float fps=1./(io_time1-io_time2);
+		snprintf(newtext, sizeof(newtext), "%.1f Hz", fps);
 	}else{
-		fps=0;
+		newtext[0]=0;
+		//snprintf(newtext, sizeof(newtext), "%.0f s", thistime-io_time1);
 	}
-	{
-		char newtext[16];
-		if(fps>0){
-			snprintf(newtext, sizeof(newtext), "FPS: %.1f", fps);
-		}else{
-			newtext[0]='\0';
-		}
-		gtk_label_set_text(GTK_LABEL(label), newtext);
-	}
+	gtk_label_set_text(GTK_LABEL(label), newtext);
 	return TRUE;
 }
 //Create a new toolbar item.
@@ -1761,7 +1753,7 @@ GtkWidget* create_window(GtkWidget* window){
 	extern GdkPixbuf* icon_main;
 	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
 	//g_object_unref(icon_main);
-	update_title(NULL);
+	g_timeout_add(2000, update_title, window);
 #if GTK_MAJOR_VERSION>=3
 	GtkCssProvider* provider_default=gtk_css_provider_new();
 	gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);

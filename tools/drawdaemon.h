@@ -168,7 +168,7 @@ extern int keep_listen;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
-void apply_limit(drawdata_t* drawdata);
+void update_zoom(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);
 gboolean addpage(gpointer user_data);
