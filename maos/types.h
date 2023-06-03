@@ -291,7 +291,7 @@ typedef struct recon_t{
     lmat *ngrad;      /**<Size of each grad for each wfs*/
     lcell *actfloat;   /**<floating actuators*/
     lcell *actstuck;   /**<stuck actuators*/
-    dcell *amod;       /**<Zernike/KL modes defined on aloc for modal control*/
+    dcell *amod;       /**<ndmx1. Zernike/KL modes defined on aloc for modal control*/
     lmat *anmod;       /**<Sizeof of amod*/
 
     fit_t *fit;        /**<Holding data and parameters for DM fitting.*/
@@ -368,8 +368,10 @@ typedef struct recon_t{
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
     int dither_dtrat;  /**<The dtrat of the powers that requests dithering*/
+    int dither_md;     /**<multi-mode bin size in amod*/
     dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
     dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
+    //dcell *dither_rm;  /**<The dither mode recon from dm modal error signal (ndm*ndm)*/
     ngsmod_t *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     cn2est_t *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
@@ -459,8 +461,10 @@ typedef struct dither_t{
     real deltam;/**<Output of PLL*/
     real deltao;/**<Offset of delta from outer loop*/
     real delay; /**<Diference of delay from 2 frame due to beam propagation*/
-    real a2m;   /**<actual dither amplitude*/
-    real a2me;   /**<actual dither amplitude*/
+    real a2m;    /**<input dither amplitude*/
+    real a2me;   /**<measured dither amplitude*/
+    dmat *a2mv;  /**<input dither amplitude per mode*/
+    dmat *a2mev;  /**<measured dither amplitude per mode*/
     //For matched filter
     dcell *imb;   /**<accumulated im*/
     dcell *imx;   /**<accumulated cos()*im */
@@ -536,6 +540,7 @@ typedef struct sim_t{
     real eptwfs;     /**<Twfs reference vector servo gain.*/
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
+    dcell *gradscale2; /**<Gain scaling for other dithering modes.*/
     dcell *llt_tt;   /**<LLT uplink jitter*/
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
@@ -680,7 +685,10 @@ typedef struct sim_t{
     /**For testing*/
     ccell *opdrhat;    /**<For wind estimation (testing)*/
     ccell *opdrhatlast;/**<for wind estimation.(testing)*/
-
+    /**Saved for plotting*/
+    const char **plot_legs;///legend
+    dcell *plot_res;    ///results array
+    int plot_isim;      ///previous plotted isum;
     /*A few indicators*/
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/

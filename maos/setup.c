@@ -173,6 +173,7 @@ void maos_setup(const parms_t* parms){
 		}
 #endif
 		setup_recon_prep2(recon, parms, aper, powfs);
+		pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		/*assemble noise equiva angle inverse from powfs information */
 		setup_recon_saneai(recon, parms, powfs);
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai

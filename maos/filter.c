@@ -339,9 +339,10 @@ static void filter_cl(sim_t* simu){
 		dcellmm(&simu->telfocusint, recon->RFdm, simu->dmcmd, "nn", parms->sim.epfocus2tel);
 	}
 	if(recon->dither_m){
-	//Change phase in calc_dither_amp if phase of dithering is changed
-	//this is for step isim+1
-		real anglei=((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
+		//Change phase in calc_dither_amp if phase of dithering is changed
+		//this is for step isim+1
+		//2023-05-20: bias by pi/2 so that it works with npoint==2
+		real anglei=M_PI*0.5+((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
 		dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
 	}
 

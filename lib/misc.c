@@ -335,55 +335,74 @@ dmat *polyfit(const dmat *x, /**<[in] input vector */
 /**
    Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
 */
-real calc_dither_amp(const dmat *signal, /**<array of data. nmod*nsim */
+real calc_dither_amp(
+	dmat **res, /**<result. nmod*1 if not combine. */
+	const dmat *signal, /**<array of data. nmod*nsim */
 	long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
 	long npoint,  /**<number of points during dithering*/
-	int detrend   /**<flag for detrending (remove linear signal)*/
+	int detrend,  /**<flag for detrending (remove linear signal)*/
+	int combine	  /**<flag for combining modes. for tip/tilt only*/
 ){
 	long nmod=NY(signal)==1?1:NX(signal);
 	long nframe=((NY(signal)==1?signal->nx:signal->ny)-1)/dtrat+1;//number of actual frames
-	real slope=0;//for detrending
+	dmat *slope=dnew(nmod, 1);//for detrending
 	long offset=(nframe/npoint-1)*npoint;//number of WFS frame separations between first and last cycle
 	if(detrend&&offset){//detrending
-		for(long ip=0; ip<npoint; ip++){
-			for(long im=0; im<nmod; im++){
-				long i0=ip*dtrat*nmod+im;
-				long i1=(ip+offset)*dtrat*nmod+im;
-				slope+=P(signal, i1)-P(signal, i0);
+		for(long imod=0; imod<nmod; imod++){
+			for(long ip=0; ip<npoint; ip++){
+				long i0=ip*dtrat*nmod+imod;
+				long i1=(ip+offset)*dtrat*nmod+imod;
+				P(slope,imod)+=P(signal, i1)-P(signal, i0);
 			}
+			P(slope,imod)/=(npoint*offset);
 		}
-		slope/=(npoint*nmod*offset);
 		//dbg("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
 	}
 	real anglei=M_PI*2/npoint;
-	real ipv=0, qdv=0;
-	switch(nmod){
-	case 1://single mode dithering
-		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=anglei*iframe;//position of dithering
-			real cs=cos(angle);
-			real ss=sin(angle);
-			real mod=P(signal, iframe*dtrat)-slope*iframe;
-			ipv+=(mod*cs);
-			qdv+=(mod*ss);
+	real angle0=M_PI*0.5;//2023-05-29: bias added to work with npoint==2
+	real ipv=0, qdv=0, a2m=0;
+	if(combine){//tip and tilt dithering
+		if(nmod!=2){
+			error("combine only support nmod=2\n");
 		}
-		break;
-	case 2://tip and tilt dithering
 		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=anglei*iframe;//position of dithering
+			real angle=angle0+anglei*iframe;//position of dithering
 			real cs=cos(angle);
 			real ss=sin(angle);
-			real ttx=P(signal, iframe*dtrat*2)-slope*iframe;
-			real tty=P(signal, iframe*dtrat*2+1)-slope*iframe;
+			real ttx=P(signal, iframe*dtrat*nmod)-P(slope,0)*iframe;
+			real tty=P(signal, iframe*dtrat*nmod+1)-P(slope,1)*iframe;
 			ipv+=(ttx*cs+tty*ss);
 			qdv+=(ttx*ss-tty*cs);
 		}
-		break;
-	default:
-		error("Invalid nmod=%ld", nmod);
-
+		a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
+		
+	}else{//independent mode
+		if(nmod>1&&!res){
+			error("when there are more than 1 mode. res must be used to return the results\n");
+		}
+		if(res){
+			dinit(res, nmod, 1);
+		}
+		dmat *ipq=dnew(2,nmod);
+		for(int iframe=0; iframe<nframe; iframe++){
+			real angle=angle0+anglei*iframe;//position of dithering
+			real cs=cos(angle);
+			real ss=sin(angle);
+			for(int imod=0; imod<nmod; imod++){
+				real mod=P(signal, iframe*dtrat*nmod+imod)-P(slope,imod)*iframe;
+				P(ipq,0,imod)+=(mod*cs);//ipv
+				P(ipq,1,imod)+=(mod*ss);//iqv
+			}
+		}
+		for(int imod=0; imod<nmod; imod++){
+			a2m=sqrt(P(ipq,0,imod)*P(ipq,0,imod)+P(ipq,1,imod)*P(ipq,1,imod))/nframe*2.;
+			if(res) P(*res, imod)=a2m;
+		}
+		if(res){
+			a2m=P(*res,0);//first mode
+		}
+		dfree(ipq);
 	}
-	real a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-	if(nmod==1) a2m*=2;//single mode, needs to double to get the actual amplitude
+	dfree(slope);
 	return a2m;
 }

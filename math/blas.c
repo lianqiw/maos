@@ -38,7 +38,7 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	if(!A||!B||A->nx==0||B->nx==0) return;
 #if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 	if(dgemm_ext&&NX(A)>500&&NY(A)>500&&NY(B)>100){
-		dbg("Using external routine for dmm of size %ldx%ldx%ld\n", NX(A), NY(A), NY(B));
+		dbg_once("Using external routine for dmm of size %ldx%ldx%ld\n", NX(A), NY(A), NY(B));
 		dgemm_ext(C0,beta,A,B,trans,alpha);
 		return;
 	}
@@ -311,7 +311,7 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	}
 #if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 	if(NX(A)>500&&dsvd_ext){
-		dbg("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
+		dbg_once("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
 		//void gpu_dsvd(dmat**U, dmat**S, dmat**Vt, dmat*A);
 		dsvd_ext(U, Sdiag, VT, A);
 		return;
@@ -445,7 +445,7 @@ void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
 	if(isempty(A)) return;
 #if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 	if(NX(A)>500&&dsvd_pow_ext){
-		dbg("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));
+		dbg_once("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));
 		dsvd_pow_ext(A, power, thres);
 		return;
 	}

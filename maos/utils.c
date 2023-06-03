@@ -882,8 +882,9 @@ void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int i
 	//adjust to get delay at beginning of integration
 	const int adjust2=dtrat-1;
 	const real anglei=(2*M_PI/npoint);
-	const real angle=((isim-adjust-adjust2)/dtrat)*anglei+deltam;
-	const real angle2=((isim-adjust)/dtrat)*anglei+deltam;
+	const real angle0=M_PI*0.5;
+	const real angle=angle0+((isim-adjust-adjust2)/dtrat)*anglei+deltam;
+	const real angle2=angle0+((isim-adjust)/dtrat)*anglei+deltam;
 	const real delay=(real)adjust/dtrat;
 	const real beta=1+delay+floor(-delay);
 	const real scale=1./(beta*beta+(1-beta)*(1-beta));

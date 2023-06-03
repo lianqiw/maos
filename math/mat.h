@@ -57,6 +57,7 @@
     T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n); \
     void X(normalize_sum)(T *restrict p, long nloc, T norm);		\
     void X(normalize_sumabs)(T *restrict p, long nloc, T norm);		\
+    void X(normalize_rms)(T *restrict p, long nx, T norm);\
     void X(normalize_max)(T *restrict p, long nloc, T max);		\
     R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(vecmaxabs)(const T *restrict p, long n) CHECK_UNUSED_RESULT;	\

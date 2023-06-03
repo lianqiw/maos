@@ -20,6 +20,7 @@
 #ifndef AOS_PYWFS_H
 #define AOS_PYWFS_H
 #include "parms.h"
+#include "types.h"
 /**
   Parameters used by Pyramid WFS. 
  */
@@ -45,6 +46,7 @@ typedef struct pywfs_t{
   real siglev;       /**<Signal level*/
 }pywfs_t;
 void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon);
 void pywfs_free(pywfs_t *pywfs);
 void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints);
 void pywfs_ints(dmat **ints, const pywfs_t *pywfs, const dmat *opd, real siglev);

@@ -31,7 +31,7 @@ struct zfarr{
 /**
    Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell
  */
-zfarr* zfarr_init(long nx, long ny, const char* format, ...){
+zfarr* zfarr_init2(long nx, long ny, const char *keywords, const char* format, ...){
 	format2fn;
 	if(!fn) return NULL;
 	if(nx<0) nx=0;
@@ -42,9 +42,15 @@ zfarr* zfarr_init(long nx, long ny, const char* format, ...){
 	if(!zfisfits(ca->fp)){
 		ca->tot=nx*ny;
 	}
-	header_t header={MCC_ANY, (uint64_t)nx, (uint64_t)ny, NULL};
+	header_t header={MCC_ANY, (uint64_t)nx, (uint64_t)ny, (char*)keywords};
 	write_header(&header, ca->fp);
 	return ca;
+}
+/**
+ * */
+zfarr *zfarr_init(long nx, long ny, const char *format, ...){
+	format2fn;
+	return zfarr_init2(nx, ny, NULL, "%s", fn);
 }
 /**
    Append a A of type type into the zfarr ca, at location i.

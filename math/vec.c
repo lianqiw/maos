@@ -34,7 +34,7 @@ T X(vecsum)(const T *restrict p, long nx){
     return (T)sum;
 }
 /**
-   normalize vector to sum to norm;*/
+   normalize vector so that the sum is norm;*/
 void X(normalize_sum)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     T ss=norm/X(vecdot)(p,NULL,NULL,nx);
@@ -43,7 +43,7 @@ void X(normalize_sum)(T *restrict p, long nx, T norm){
     }
 }
 /**
-   normalize vector to sum of abs to norm;*/
+   normalize vector so that the sum of abs is norm;*/
 void X(normalize_sumabs)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     TD ss=0;
@@ -56,7 +56,20 @@ void X(normalize_sumabs)(T *restrict p, long nx, T norm){
     }
 }
 /**
-   normalize vector to max to max;*/
+   normalize vector so that the rms is norm*/
+void X(normalize_rms)(T *restrict p, long nx, T norm){
+    if(!check_vec(p, nx)) return;
+    TD ss=0;
+    for(long i=0; i<nx; i++){
+        ss+=ABS2(p[i]);
+    }
+    ss=norm/sqrt(ss);
+    for(int i=0; i<nx; i++){
+        p[i]*=ss;
+    }
+}
+/**
+   normalize vector so that the max is max;*/
 void X(normalize_max)(T *restrict p, long nx, T max){
     if(!check_vec(p,nx)) return;
     T ss=max/X(vecmaxabs)(p, nx);

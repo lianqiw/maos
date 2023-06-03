@@ -211,11 +211,11 @@ static void servo_calc_free(SERVO_CALC_T* st){
 	dfree(st->nu);
 	dfree(st->psd);
 }
-static int servo_isstable(const dmat* nu, const cmat* Hol){
+static int servo_isstable(const dmat* nu, const cmat* Hol, real pmargin_thres){
 	real fp, fg;
 	real pmargin=phase_at_gain(&fp, nu, Hol, 1)+M_PI;
 	real gmargin=0-gain_at_phase(&fg, nu, Hol, -M_PI);
-	int isstable=pmargin>M_PI/4.1&&fp<fg&& gmargin>0;
+	int isstable=pmargin>pmargin_thres && fp<fg && gmargin>0;
 	/*if(!isstable){
 	   info("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
 		 pmargin*180/M_PI, fp, gmargin, fg);
@@ -302,19 +302,19 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 	res_sig*=dlognu;
 	st->res_sig=res_sig;
 	st->gain_n=sum_n/sum_1;
-	if(!servo_isstable(nu, st->Hol)){
+	if(!servo_isstable(nu, st->Hol, st->pmargin)){
 		st->gain_n=100;
 		/*put a high penalty to drive down the gain*/
 		st->res_n=10*(1+g0)*(st->var_sig+st->sigma2n);
-		/*warning("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
-			 g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
+		/*warning("Unstable: g0=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+			 g0, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
 	} else{
 		if(st->gain_n>1){
 			st->gain_n=pow(st->gain_n, 3);/*a fudge factor to increase the penalty*/
 		}
 		st->res_n=st->sigma2n*st->gain_n;
-		/*info("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
-	  g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
+		/*info("  Stable: g0=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+	  	g0, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
 	}
 	return res_sig+st->res_n;
 }

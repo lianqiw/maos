@@ -308,7 +308,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	//Determine subapertures area
 		dmat* opd=dnew(pywfs->locfft->loc->nloc, 1);
 		dmat* ints=0;
-		pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
+		pywfs_ints(&ints, pywfs, opd, siglev);
 		if(parms->save.setup){
 			writebin(ints, "powfs%d_ints0", ipowfs);
 		}
@@ -403,40 +403,84 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
 		writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
 	}
-
+}
+void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon){
+	if(!parms || !powfs || !recon){
+		warning("Some parameters not set\n");
+		return;
+	}
+	pywfs_t *pywfs=NULL;
+	int ipowfs;
+	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].type==1){
+			pywfs=powfs[ipowfs].pywfs;
+			break;
+		}
+	}
+	if(!pywfs) return;
+	const real siglev=pywfs->siglev;
+	const int iwfs=pywfs->iwfs0;
 	if(PYWFS_DEBUG){//Test implementation using zernikes
 		dmat* ints=0;
 		real wve=1e-9*20;
-		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 60, 1);
-		dmat* opd=0;
+		dmat* opds=NULL;
+
+		if(parms->recon.modal){
+			int idm=parms->idmground;
+			dmat *amod=P(recon->amod, idm);
+			opds=dnew(pywfs->locfft->loc->nloc, MIN(1000,NY(amod))+1);
+			const real hc=parms->wfs[iwfs].hc;
+			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+			const real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
+			const real dispx=ht*parms->wfs[iwfs].thetax;
+			const real dispy=ht*parms->wfs[iwfs].thetay;
+			warning("Using amod for pywfs gain testing\n");
+			for(int im=0; im<NY(opds)-1; im++){
+				prop_nongrid(P(recon->aloc, idm), PCOL(amod, im), 
+					powfs[ipowfs].loc, PCOL(opds, im+1), 1, dispx, dispy, scale, 0, 0);
+			}
+		}else{
+			opds=zernike(pywfs->locfft->loc, 0, 0, 60, 1);
+		}
+		
 		dmat* grad=0;
 		int nn=1;
 		dcell *atms=NULL;
 		dmat *atm=NULL;
-		if(zfexist("wfs0_opd_1.bin")){
-			info("Using wfs0_opd_1.bin as atmosphere for pywfs zernike testing\n");
-			atms=dcellread("wfs0_opd_1.bin");
+		const char *keywords=NULL;
+		const char *clopd="wfs0_opd_1.bin";
+		if(!zfexist("%s", clopd)){
+			clopd="../wfs0_opd_1.bin";
+		}
+		if(zfexist("%s", clopd)){
+			info("Using %s as baseline atmosphere for pywfs zernike sensitivity testing\n", clopd);
+			atms=dcellread("%s", clopd);
 			atm=dref(P(atms, PN(atms)-1));
 			nn=2;
+			keywords="First column is without turbulence. Second column is with turbulence. ";
+		}else{
+			error("Atmosphere is not avilable to read\n");
 		}
-		zfarr *pupsave=zfarr_init(nn, NY(opds), "pywfs_zernike_ints");
-		zfarr *grads=zfarr_init(nn, NY(opds), "pywfs_zernike_grad");
+		
+		zfarr *pupsave=zfarr_init2(nn, NY(opds), keywords, "pywfs_zernike_ints");
+		zfarr *grads=zfarr_init2(nn, NY(opds), keywords, "pywfs_zernike_grad");
+		dmat *opd=dnew(NX(opds),1);
 		for(int im=0; im<NY(opds); im++){
+			dmat *opdi=drefcols(opds, im, 1);
 			for(int j=0; j<nn; j++){
 				info2("im=%d, j=%d\n", im, j);
-				opd=dsub(opds, 0, 0, im, 1);
+				dzero(opd);
+				dadd(&opd, 1, opdi, pow(2, j)*wve);
 				if(j>0 && atm){
-					dadd(&opd, wve, atm, 1);
-				}else{
-					dscale(opd, pow(2, j)*wve);
+					dadd(&opd, 1, atm, 1);
 				}
 				dzero(ints);
-				pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+				pywfs_ints(&ints, pywfs, opd, siglev);
+				pywfs_grad(&grad, pywfs, ints);
 				zfarr_push(pupsave, j+im*nn, ints);
 				zfarr_push(grads, j+im*nn, grad);
-				dfree(opd);
 			}
+			dfree(opdi);
 		}
 		zfarr_close(pupsave);
 		zfarr_close(grads);
@@ -444,14 +488,14 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		dfree(opds);
 		dcellfree(atms); dfree(atm);
 	}
-	if(PYWFS_DEBUG){//Test linearity of a zenike mode with noise
+	if(PYWFS_DEBUG && 0){//Test linearity of a zenike mode with noise
 		real wve=20e-9;
 		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 0, -parms->powfs[ipowfs].dither);
 		dmat* opdi=0;
 		dmat* ints=0, * grad=0;
 		dadd(&opdi, 0, opds, wve);
-		pywfs_ints(&ints, powfs[ipowfs].pywfs, opdi, siglev);
-		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+		pywfs_ints(&ints, pywfs, opdi, siglev);
+		pywfs_grad(&grad, pywfs, ints);
 		dmat* reg=dpinv(grad, 0);
 		writebin(opds, "pywfs_dither_opd");
 		writebin(ints, "pywfs_dither_ints");
@@ -466,11 +510,11 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		for(int j=0; j<nj; j++){
 			dzero(ints);
 			dadd(&opdi, 0, opds, wve*(j+1));
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opdi, siglev);
+			pywfs_ints(&ints, pywfs, opdi, siglev);
 			for(int in=0; in<nn; in++){
 				dadd(&ints2, 0, ints, 1);
 				addnoise(ints2, &rstat, 0, 0, 0, 0, 0, in, 1);
-				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
+				pywfs_grad(&grad, pywfs, ints2);
 				dmm(&tmp, 0, reg, grad, "nn", 1);
 				P(res, j, in)=P(tmp,0);
 				info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, P(tmp,0));
@@ -497,48 +541,48 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 
 			dadd(&opd, 0, opdatm, (i+1)*0.02);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "grad_atm_%d", i);
 
 			dadd(&opd, 0, opdbias_full, (i+1)*0.02);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradbias_full_%d", i);
 
 			dadd(&opd, 0, opdbias_astigx, (i+1)*0.02);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradbias_astigx_%d", i);
 
 			dadd(&opd, 0, opdbias_polish, (i+1)*0.02);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradbias_polish_%d", i);
 
 			dadd(&opd, 0, opdbias_full, (i+1)*0.02);
 			dadd(&opd, 1, opdatm, atmscale);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradboth_full_%d", i);
 
 
 			dadd(&opd, 0, opdbias_astigx, (i+1)*0.02);
 			dadd(&opd, 1, opdatm, atmscale);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradboth_astigx_%d", i);
 
 			dadd(&opd, 0, opdbias_polish, (i+1)*0.02);
 			dadd(&opd, 1, opdatm, atmscale);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradboth_polish_%d", i);
 			dfree(opd);
 			dfree(ints);
@@ -548,8 +592,8 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 			dadd(&opd, 0, opdbias_full, (i+1)*0.02);
 			dadd(&opd, 1, opdatm, (i+1)*0.02);
 			dzero(ints);
-			pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, siglev);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			pywfs_ints(&ints, pywfs, opd, siglev);
+			pywfs_grad(&grad, pywfs, ints);
 			writebin(grad, "gradall_%d", i);
 			dfree(opd);
 			dfree(ints);

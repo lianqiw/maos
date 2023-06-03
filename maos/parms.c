@@ -478,6 +478,7 @@ static void readcfg_powfs(parms_t *parms){
 			READ_DITHER(dbl, gdrift);
 		}*/
 	}
+
 	free(inttmp);
 	free(dbltmp);
 	free(strtmp);
@@ -1839,14 +1840,21 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				powfsi->fieldstop=powfsi->pycfg->modulate*2+0.5*AS2RAD;
 			}
 		}
-
+		if(powfsi->dither<-1){
+			powfsi->dither*=-1;
+			if(powfsi->type==1&&parms->recon.modal){
+				warning("Temporary: enable 2nd dithering mode if dither is <-1 for pywfs.\n");
+				//int nr=powfsi->pycfg->modulate;
+				powfsi->dither_mode2=1; //(nr+1)*(nr+2)/2;
+			}
+		}
 		if(powfsi->dither){
 			parms->dither=1;
 			if(powfsi->dither==-1){//no dithering, just collect i0
 				powfsi->dither_amp=0;
 			} else if(powfsi->dither==1){//tip/tilt/arcsec->radian
 				powfsi->dither_amp*=AS2RAD;
-			} else if(powfsi->dither>1){//zernike modes. micron-->meter
+			} else {//zernike modes. micron-->meter
 				powfsi->dither_amp/=1e6;
 				if(powfsi->phytype_sim2==PTYPE_MF){
 					error("Cannot build matched filter with dither>1.");

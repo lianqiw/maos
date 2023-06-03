@@ -267,11 +267,13 @@ typedef struct powfs_cfg_t{
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-    int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
+    
     int i0save;     /**<Save time averaged subaperture images.*/
     char *i0load;   /**<load i0,gx,gy from this folder.*/
     real gradscale; /**<Scale CL gradients. For testing*/
 	//char* fndither; /**<Configuration for dither*/
+    int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
+    int dither_mode2;/**<Enable second mode dithering. Only effective when recon.modal is set*/
 	real dither_amp; /**<Dither amplitude.*/
 	real dither_gpll;/**<Gain of phase locked loop*/
 	real dither_gog; /**<Gain for updating optical gain for cog*/

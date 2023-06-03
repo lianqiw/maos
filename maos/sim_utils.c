@@ -418,18 +418,6 @@ void sim_update_etf(sim_t* simu){
 					real hnew=1./(1./hold+2*P(simu->zoomint, iwfs0));
 					deltah=hnew-hold;
 				}else{
-					//create a zoom bias may help to degrade performance that
-					//also depends on the sodium profile. Not a universal
-					//solution
-					/*real zoomerr2_bias=0;
-					if(getenv("MAOS_ZOOM_BIAS")){//trombone bias in meter
-						real ZOOM_BIAS=0;
-						READ_ENV_DBL(ZOOM_BIAS, -10000, 10000);
-						if(ZOOM_BIAS){
-							warning_once("trombine bias is set to %g m\n", ZOOM_BIAS);
-							zoomerr2_bias=ZOOM_BIAS/factor;//convert to focus
-						}
-					}*/
 					P(simu->zoomint, iwfs0)+=parms->powfs[ipowfs].zoomgain*zoomerr1
 						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
 					deltah=P(simu->zoomint, iwfs0)*factor;
@@ -818,6 +806,7 @@ static void init_simu_wfs(sim_t* simu){
 	simu->gradacc=dcellnew(nwfs, 1);/*wfsgrad internal */
 	simu->gradoff=dcellnew(nwfs, 1);
 	simu->gradscale=dcellnew(nwfs, 1);//leave empty first
+	simu->gradscale2=dcellnew(nwfs, 1);//leave empty first.
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int nsa=powfs[ipowfs].saloc->nloc;
@@ -1118,17 +1107,24 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].dither){
 				simu->dither[iwfs]=mycalloc(1, dither_t);
 				if(parms->powfs[ipowfs].dither>1){
-					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, 1, nsim, NULL, "%s/Resdithermr_%d", fnextra, seed);
+					//int nm=parms->powfs[ipowfs].dither_mode2?2:1;
+					int nm=NX(P(recon->dither_rg, iwfs, iwfs));
+					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, NULL, "%s/Resdithermr_wfs%d_%d", fnextra, iwfs, seed);
 				}
 			}
 		}
-		if(parms->save.extra){
+		if(parms->save.extra||parms->save.dither){
 			long nnx[nwfs];
 			long nny[nwfs];
 			for(int iwfs=0; iwfs<nwfs; iwfs++){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				if(parms->powfs[ipowfs].dither){
-					nnx[iwfs]=4;
+					if(parms->powfs[ipowfs].dither==1){
+						nnx[iwfs]=4;
+					}else{
+						int nm=NX(P(recon->dither_rg, iwfs, iwfs));
+						nnx[iwfs]=4+2*nm;
+					}
 					nny[iwfs]=(nsim-parms->powfs[ipowfs].dither_pllskip)/(parms->powfs[ipowfs].dtrat*parms->powfs[ipowfs].dither_pllrat);
 				} else{
 					nnx[iwfs]=0;
@@ -1691,6 +1687,9 @@ void free_simu(sim_t* simu){
 
 	cellfree(simu->zoompos);
 	cellfree(simu->llt_tt);
+	free(simu->plot_legs);
+	cellfree(simu->plot_res);
+
 	/*Close all files */
 	zfarr_close(save->restwfs);
 	zfarr_close_n(save->wfspsfout, nwfs);
@@ -1837,42 +1836,47 @@ void print_progress(sim_t* simu){
 
 		if(parms->plot.run&&draw_current("Res", "Close loop")){
 			dmat* tmp=parms->recon.split?simu->clem:simu->cle;
-			const char* legs[5]={0,0,0,0,0};
-			int nline=0;
-			legs[nline++]="Total";
-			legs[nline++]="High Order";
-			legs[nline++]="Tip/Tilt";
-			if(parms->recon.split){
-				if(simu->recon->ngsmod->indps){
-					legs[nline++]="Plate Scale";
-				} else if(simu->recon->ngsmod->indastig){
-					legs[nline++]="Astig";
-				}
-				if(NX(tmp)==4){
-					legs[nline++]="Focus";
-				}
-			}
-			dcell* res=dcellnew_same(nline, 1, simu->perfisim+1, 1);
-			for(int i=0; i<=simu->perfisim; i++){
-				P(P(res, 0), i)=P(simu->cle, 0, i);//PR
+			if(!simu->plot_res){
+				simu->plot_legs=mycalloc(5, const char*);
+				const char **legs=simu->plot_legs;
+				int nline=0;
+				legs[nline++]="Total";
+				legs[nline++]="High Order";
+				legs[nline++]="Tip/Tilt";
 				if(parms->recon.split){
-					P(P(res, 1), i)=P(tmp, 0, i);//LGS
-					P(P(res, 2), i)=P(tmp, 1, i);//TT
-					if(nline>3){
-						P(P(res, 3), i)=P(tmp, 2, i)-P(tmp, 1, i);//PS
+					if(simu->recon->ngsmod->indps){
+						legs[nline++]="Plate Scale";
+					} else if(simu->recon->ngsmod->indastig){
+						legs[nline++]="Astig";
 					}
-					if(nline>4){
-						P(P(res, 4), i)=P(tmp, 3, i);//Focus
+					if(NX(tmp)==4){
+						legs[nline++]="Focus";
+					}
+				}
+				simu->plot_res=dcellnew_same(nline, 1, parms->sim.end, 1);
+				//dset(simu->plot_res->m, NAN);
+			}
+			dcell* res=simu->plot_res;
+			const char **legs=simu->plot_legs;
+			for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
+				int i=simu->plot_isim;
+				P(P(res, 0), i)=sqrt(P(simu->cle, 0, i))*1e9;//PR
+				if(parms->recon.split){
+					P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
+					P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT
+					if(NX(res)>4){
+						P(P(res, 4), i)=sqrt(P(tmp, 3, i))*1e9;//Focus
+					}
+					if(NX(res)>3){
+						P(P(res, 3), i)=sqrt(P(tmp, 2, i)-(P(tmp, 3, i)+P(tmp, 1, i)))*1e9;//PS
 					}
 				} else{
-					P(P(res, 1), i)=P(tmp, 2, i);//PTTR
-					P(P(res, 2), i)=P(tmp, 0, i)-P(tmp, 2, i);//TT
+					P(P(res, 1), i)=sqrt(P(tmp, 2, i))*1e9;//PTTR
+					P(P(res, 2), i)=sqrt(P(tmp, 0, i)-P(tmp, 2, i))*1e9;//TT
 				}
 			}
-			dcellcwpow(res, 0.5); dcellscale(res, 1e9);
-			plot_points("Res", (plot_opts){.ngroup=NX(res), .dc=res, .xylog="nn", .legend=legs},
+			plot_points("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=legs},
 				"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
-			dcellfree(res);
 		}
 	}
 }

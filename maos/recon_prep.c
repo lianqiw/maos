@@ -671,10 +671,10 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 					if(!parms->powfs[ipowfs].lo){
 						dmat* opdadd=0;
-						if(!parms->recon.glao&&powfs[ipowfs].opdadd&&0){
+						/*if(!parms->recon.glao&&powfs[ipowfs].opdadd&&0){
 							int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 							opdadd=P(powfs[ipowfs].opdadd, wfsind);
-						}
+						}*/
 						if(!parms->recon.modal){
 							info("\nPyWFS from aloc to saloc directly\n");
 							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*nwfs],
@@ -1069,14 +1069,14 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].dither>1){//common path dithering
 			if(any){//already found, check consistency
-				if(dither_mode!=-parms->powfs[ipowfs].dither||
+				if(dither_mode!=parms->powfs[ipowfs].dither||
 					fabs(dither_amp-parms->powfs[ipowfs].dither_amp)>dither_amp*1e-5
 					||dither_npoint!=parms->powfs[ipowfs].dither_npoint
 					||dither_dtrat!=parms->powfs[ipowfs].dtrat){
 					error("Multiple dither with different configuration is not supported\n");
 				}
 			}
-			dither_mode=-parms->powfs[ipowfs].dither;
+			dither_mode=parms->powfs[ipowfs].dither;
 			dither_amp=parms->powfs[ipowfs].dither_amp;
 			dither_npoint=parms->powfs[ipowfs].dither_npoint;
 			dither_dtrat=parms->powfs[ipowfs].dtrat;
@@ -1091,53 +1091,113 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 		dcellfree(recon->dither_ra);
 		dcellfree(recon->dither_rg);
 		recon->dither_m=dcellnew(parms->ndm, 1);
-		P(recon->dither_m, idm)=zernike(P(recon->aloc, idm), parms->aper.d, 0, 0, dither_mode);
-		dscale(P(recon->dither_m, idm), dither_amp);
-		recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
-		P(recon->dither_ra, idm, idm)=dpinv(P(recon->dither_m, idm), 0);
-		recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
-		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-			int ipowfs=parms->wfsr[iwfs].powfs;
-			const real hc=parms->wfsr[iwfs].hc;
+		recon->dither_ra=dcellnew(parms->nwfs, parms->ndm);
+		//recon->dither_rm=dcellnew(parms->nwfs, parms->ndm);
+		recon->dither_rg=dcellnew(parms->nwfs, parms->nwfs);
+		int DITHER_ND=6;
+		READ_ENV_INT(DITHER_ND, 1, 3000); //number of mode bins
+		int DITHER_MD2=1;
+		READ_ENV_INT(DITHER_MD2, 1, 3000); // average # modes around first bin
+		int DITHER_MD3=20;
+		READ_ENV_INT(DITHER_MD3, 1, 3000); //average # modes in other bin
+		const int nd=MAX(1, DITHER_ND);
+		const int md=(parms->recon.nmod+nd-1)/nd; //number of modes per bin
+		recon->dither_md=md;
+		DITHER_MD2=MIN(md, DITHER_MD2);
+		DITHER_MD3=MIN(md, DITHER_MD3);
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			const int ipowfs=parms->wfs[iwfs].powfs;
+			//const real hc=parms->wfs[iwfs].hc;
 			if(parms->powfs[ipowfs].dither>1){
-				dmat* opd=dnew(powfs[ipowfs].loc->nloc, 1);
-				real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-				real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
-				real dispx=ht*parms->wfsr[iwfs].thetax;
-				real dispy=ht*parms->wfsr[iwfs].thetay;
-				prop_nongrid(P(recon->aloc, idm), P(P(recon->dither_m, idm)),
-					powfs[ipowfs].loc, P(opd),-1, dispx, dispy, scale, 0, 0);
-				dmat* ints=0;
-				dmat* grad=0;
-				pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, parms->wfs[iwfs].siglev);
-				pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-				P(recon->dither_rg, iwfs, iwfs)=dpinv(grad, CELL(P(recon->saneai, iwfs, iwfs)));
-				if(0){//test linearity
-					dscale(opd, 1./4.);
-					dmat* tmp=0;
-					dmat* res=dnew(10, 1);
-					for(int i=0; i<10; i++){
-						dscale(opd, 2);
-						dzero(ints);
-						pywfs_ints(&ints, powfs[ipowfs].pywfs, opd, parms->wfs[iwfs].siglev);
-						pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-						dmm(&tmp, 0, P(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
-						P(res, i)=P(tmp, 0);
+				const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+				//const real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
+				const real dispx=ht*parms->wfs[iwfs].thetax;
+				const real dispy=ht*parms->wfs[iwfs].thetay;
+			
+
+				//(parms->powfs[ipowfs].dither_mode2)?MAX(1,(parms->recon.nmod+md-1)/md):1;//number of dither modes. 2 for modal control
+				info("dither mds are md=%d, %d, %d. nd=%d. dither_amp=%g\n", md, DITHER_MD2, DITHER_MD3, nd, dither_amp);
+				
+				dmat *grad=0;
+				for(int id=0; id<nd; id++){
+					dmat *dither_rg=NULL;
+					dmat *dither_ra=NULL;
+					dmat *dither_m=NULL;
+					int jm=id*md;
+					if (nd==1){//single mode dithering uses zernike mode
+						dither_m=zernike(P(recon->aloc, idm), 0, 0, 0, -dither_mode);
+						dscale(dither_m, dither_amp);
+						if(parms->powfs[ipowfs].type==1){//PWFS
+							dfree(grad);
+							grad=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc, idm), 
+								parms->recon.distortion_dm2wfs[iwfs+idm*parms->nwfs],
+								dither_m, NULL, dispx, dispy);
+						}else{
+							error("Please implement for SHWFS\n");
+						}
+					}else if(md>1){//average every md2 modes
+						int md2=(id==0?DITHER_MD2:DITHER_MD3);
+						if(md2<2){//a single amod per dithering mode 
+							if(id==0){
+								jm=MAX(0,parms->powfs[ipowfs].dither-2);
+								warning("The first dithering mode uses amod %d directly\n", jm);
+							}
+							md2=1;
+						}
+						if(jm+md2>parms->recon.nmod){
+							md2=parms->recon.nmod-jm;
+						}
+						real dither_amp2=dither_amp*(1-id/nd);//higher order modes have higher gain, so reduce its strength.
+						real dither_amp3=dither_amp2/sqrt(md2);//split into modes within the bin
+						dmat *wt=dnew(md2, 1);
+						dset(wt, 1);
+
+						dmat *mtmp=drefcols(P(recon->amod,idm),jm, md2);
+						dmat *gtmp=drefcols(P(recon->GM, iwfs, idm), jm, md2);
+						dmm(&dither_m, 0, mtmp, wt, "nn", dither_amp3);
+						dmm(&grad, 0, gtmp, wt, "nn", dither_amp3);
+						dfree(mtmp);
+						dfree(gtmp);
+						dfree(wt);
 					}
-					writebin(res, "linearity");
-					dfree(tmp);
-					dfree(res);
-					exit(0);
+
+					dither_rg=dpinv(grad, CELL(P(recon->saneai, iwfs, iwfs)));
+					dither_ra=dpinv(dither_m, 0);
+					if(id==0){
+						P(recon->dither_m, idm)=dither_m; dither_m=NULL;
+						P(recon->dither_rg, iwfs, iwfs)=dither_rg; dither_rg=NULL;
+						P(recon->dither_ra, iwfs, idm)=dither_ra; dither_ra=NULL;
+					}else{
+						{
+							dmat *tmp=P(recon->dither_ra, iwfs, idm);
+							P(recon->dither_ra, iwfs, idm)=dcat(tmp, dither_ra, 1);
+							dfree(tmp);
+							dfree(dither_ra);
+						}
+						{
+							dmat *tmp=P(recon->dither_rg, iwfs, iwfs);
+							P(recon->dither_rg, iwfs, iwfs)=dcat(tmp, dither_rg, 1);
+							dfree(tmp);
+							dfree(dither_rg);
+						}
+						{
+							dadd(&P(recon->dither_m, idm), 1, dither_m, 1);
+							dfree(dither_m);
+						}
+					}
 				}
-				dfree(ints);
-				dfree(opd);
+				
+				//dmm(&P(recon->dither_rm, iwfs, idm), 0, P(recon->dither_ra, iwfs, idm), P(recon->amod, idm), "nn", 1.);
 				dfree(grad);
 			}
 		}
+		
+		
 		if(parms->save.setup){
 			writebin(recon->dither_m, "dither_m");
 			writebin(recon->dither_ra, "dither_ra");
 			writebin(recon->dither_rg, "dither_rg");
+			//writebin(recon->dither_rm, "dither_rm");
 		}
 	}
 }

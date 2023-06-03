@@ -255,6 +255,9 @@ static void recon_split(sim_t* simu){
 	}
 }
 
+/**
+ * Servo gain optimization.
+  * */
 void recon_servo_update(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -449,11 +452,45 @@ void* reconstruct(sim_t* simu){
 				dmpsol=P(simu->dmint->mint,0);
 			}
 			dcelladd(&simu->dmerr, 1, dmpsol, -1);
+		}else if(parms->recon.modal){//multi-mode dithering in modal reconstruction
+			const int iwfs=0;
+			const int ipowfs=parms->wfs[iwfs].powfs;
+			if(parms->powfs[ipowfs].dither>1){
+				//multi-mode dithering for PWFS
+				if(parms->powfs[ipowfs].type==1&&simu->gradscale2&&P(simu->gradscale2, iwfs)){
+					warning_once("Temporary for PWFS to reduce gain correction for high order modes.\n");
+					//const double gscale=P(P(simu->gradscale, iwfs),0);
+					int print=simu->wfsflags[ipowfs].ogout?1:0;
+					for(int idm=0; idm<parms->ndm; idm++){
+						//long nmod=parms->powfs[ipowfs].dither_mode2>1?parms->powfs[ipowfs].dither_mode2:PN(simu->dmerr, idm);
+						const dmat *gs2=P(simu->gradscale2, iwfs);					
+						const real gs1=sqrt(P(gs2, 0)*P(gs2, PN(gs2)-1));//scaling baseline: don't use gradscale, it is computed differently from gradscale2.
+						const long nd=NX(gs2);//number of dithered modes.
+						const int md=recon->dither_md;
+						
+						if(print){
+							info("modal scaling (%d,%ld): ", md, nd);
+						}
+						for(int id=0; id<nd; id++){//index of dithered mode
+							const int jm=md*id;//DM mode of dithered mode. 
+							const int jm2=(id+1==nd)?(parms->recon.nmod):(jm+md);
+							const real scale0=P(gs2, id)/gs1;
+							const real dscale1=scale0-P(gs2, MIN(nd-1, id+1))/gs1;
+							if(print) info(" %4.2f", scale0);
+							for(int imod=jm; imod<jm2; imod++){
+								P(P(simu->dmerr, idm), imod)*=(scale0-dscale1*(imod-jm)/(jm2-jm));
+							}
+						}
+						if(print){
+							info("\n");
+						}
+					}
+				}
+			}
 		}
 		if(parms->recon.split){
 			ngsmod_remove(simu, simu->dmerr);
 		}
-
 	}
 
 	if(parms->recon.split){//low order reconstruction
@@ -466,7 +503,7 @@ void* reconstruct(sim_t* simu){
 		if(!parms->recon.psol){
 			error("Please enable PSOL\n");
 		}
-	//For PSF reconstruction.
+		//For PSF reconstruction.
 		psfr_calc(simu, simu->opdr, P(simu->wfspsol,P(parms->hipowfs,0)),
 			simu->dmerr, simu->Merr_lo);
 	}
