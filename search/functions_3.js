@@ -132,6 +132,7 @@ var searchData=
   ['dnew_5fmmap',['dnew_mmap',['../dmath_8h.html#a07f25910283967be5512552fe4bd42c1',1,'dtmp.c']]],
   ['dnorm',['dnorm',['../dmath_8h.html#abf101079dc47a043bf1be4e6ac187136',1,'dtmp.c']]],
   ['dnormalize_5fmax',['dnormalize_max',['../dmath_8h.html#af6ff44494a51a4ae0a87af8022b009bc',1,'vec.c']]],
+  ['dnormalize_5frms',['dnormalize_rms',['../dmath_8h.html#af9a7d2a394988f01a916e5a7d3b5b1e7',1,'vec.c']]],
   ['dnormalize_5fsum',['dnormalize_sum',['../dmath_8h.html#a102125766e74ade3bf3dfcf39a27c63d',1,'vec.c']]],
   ['dnormalize_5fsumabs',['dnormalize_sumabs',['../dmath_8h.html#ad380e26b2e7068cd7362663c45052afa',1,'vec.c']]],
   ['do_5fha',['do_ha',['../classcufit__grid.html#a4465eccb943f4d043b2e1f2ce8c7be90',1,'cufit_grid']]],

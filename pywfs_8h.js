@@ -22,6 +22,7 @@ var pywfs_8h =
       [ "siglev", "pywfs_8h.html#ac5489f11858dc001a6f24d6f06bd87fe", null ]
     ] ],
     [ "pywfs_setup", "pywfs_8h.html#a7d528f6e5683a4cdc9d071cb4019c5a8", null ],
+    [ "pywfs_test", "pywfs_8h.html#ad4f48104808d3ed6858c4fcf09c94819", null ],
     [ "pywfs_free", "pywfs_8h.html#ab9030c894228f7971f87beda176273c5", null ],
     [ "pywfs_grad", "pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99", null ],
     [ "pywfs_ints", "pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d", null ],

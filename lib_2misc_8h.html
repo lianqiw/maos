@@ -115,8 +115,8 @@ Functions</h2></td></tr>
 <tr class="separator:a06cf7ebeeb404e3c738260609e0f45fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace25cdf353eb393aa5abaf0c95e49efe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#ace25cdf353eb393aa5abaf0c95e49efe">polyval</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *x, const <a class="el" href="type_8h.html#structdmat">dmat</a> *coeff, int separate)</td></tr>
 <tr class="separator:ace25cdf353eb393aa5abaf0c95e49efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a865de3386b2dae34b9dc06b4c9849168"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a865de3386b2dae34b9dc06b4c9849168">calc_dither_amp</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *signal, <a class="el" href="classlong.html">long</a> dtrat, <a class="el" href="classlong.html">long</a> npoint, int detrend)</td></tr>
-<tr class="separator:a865de3386b2dae34b9dc06b4c9849168"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13c5edd8c559386a72b522f43e49e733"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a13c5edd8c559386a72b522f43e49e733">calc_dither_amp</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **res, const <a class="el" href="type_8h.html#structdmat">dmat</a> *signal, <a class="el" href="classlong.html">long</a> dtrat, <a class="el" href="classlong.html">long</a> npoint, int detrend, int combine)</td></tr>
+<tr class="separator:a13c5edd8c559386a72b522f43e49e733"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a4bf8970d027f919a7485a8e426415de6"></a>
@@ -438,8 +438,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a865de3386b2dae34b9dc06b4c9849168"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a865de3386b2dae34b9dc06b4c9849168">&#9670;&nbsp;</a></span>calc_dither_amp()</h2>
+<a id="a13c5edd8c559386a72b522f43e49e733"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13c5edd8c559386a72b522f43e49e733">&#9670;&nbsp;</a></span>calc_dither_amp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -447,6 +447,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">real calc_dither_amp </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
+          <td class="paramname"><em>res</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
           <td class="paramname"><em>signal</em>, </td>
         </tr>
@@ -466,7 +472,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>detrend</em>&#160;</td>
+          <td class="paramname"><em>detrend</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>combine</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -478,10 +490,12 @@ Functions</h2></td></tr>
 <p>Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramname">res</td><td>result. nmod*1 if not combine. </td></tr>
     <tr><td class="paramname">signal</td><td>array of data. nmod*nsim </td></tr>
     <tr><td class="paramname">dtrat</td><td>skip columns due to wfs/sim dt ratio </td></tr>
     <tr><td class="paramname">npoint</td><td>number of points during dithering </td></tr>
     <tr><td class="paramname">detrend</td><td>flag for detrending (remove linear signal) </td></tr>
+    <tr><td class="paramname">combine</td><td>flag for combining modes. for tip/tilt only </td></tr>
   </table>
   </dd>
 </dl>

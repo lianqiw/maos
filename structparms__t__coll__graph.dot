@@ -54,7 +54,7 @@ digraph "parms_t"
   Node148 -> Node162 [color="grey25",fontsize="10",style="solid",label=" +used\n+actslave\n+lrt_ptt\n+order" ,arrowhead="odiamond",fontname="Helvetica"];
   Node154 -> Node162 [color="grey25",fontsize="10",style="solid",label=" +actfloat\n+actstuck" ,arrowhead="odiamond",fontname="Helvetica"];
   Node163 -> Node145 [color="grey25",fontsize="10",style="solid",label=" +powfs" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node163 [label="{powfs_cfg_t\n|+ misregx\l+ misregy\l+ hc\l+ saat\l+ safill2d\l+ saspherical\l+ safocuspv\l+ nearecon\l+ neasim\l+ neamin\land 63 more...\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structpowfs__cfg__t"];
+  Node163 [label="{powfs_cfg_t\n|+ misregx\l+ misregy\l+ hc\l+ saat\l+ safill2d\l+ saspherical\l+ safocuspv\l+ nearecon\l+ neasim\l+ neamin\land 64 more...\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structpowfs__cfg__t"];
   Node151 -> Node163 [color="grey25",fontsize="10",style="solid",label=" +sigscale\n+pixblur\n+zoomgain_drift\n+pixtheta\n+bkgrnd\n+neaextra\n+dither_amp\n+gradscale\n+hs\n+dither_gpll\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node152 -> Node163 [color="grey25",fontsize="10",style="solid",label=" +wfs\n+wfsind\n+wfsr" ,arrowhead="odiamond",fontname="Helvetica"];
   Node147 -> Node163 [color="grey25",fontsize="10",style="solid",label=" +piinfile\n+saloc\n+bkgrndfnc\n+sninfile\n+neasimfile\n+amp\n+neareconfile\n+bkgrndfn\n+pywfs\n+fnllt\n..." ,arrowhead="odiamond",fontname="Helvetica"];

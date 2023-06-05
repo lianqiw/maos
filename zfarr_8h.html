@@ -110,7 +110,10 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a245a46d3c1e49146ce516c883cca6c0e"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#a245a46d3c1e49146ce516c883cca6c0e">zfarr_init</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *format,...)</td></tr>
+<tr class="memitem:aba144356e88796909659b1c096d6483f"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#aba144356e88796909659b1c096d6483f">zfarr_init2</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
+<tr class="separator:aba144356e88796909659b1c096d6483f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a245a46d3c1e49146ce516c883cca6c0e"><td class="memItemLeft" align="right" valign="top"><a id="a245a46d3c1e49146ce516c883cca6c0e"></a>
+zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *format,...)</td></tr>
 <tr class="separator:a245a46d3c1e49146ce516c883cca6c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae24e3a6368fdab0e06e9e08d85d4131a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="zfarr_8h.html#ae24e3a6368fdab0e06e9e08d85d4131a">zfarr_push_cell</a> (zfarr *ca, int i, const <a class="el" href="type_8h.html#structcell">cell</a> *A)</td></tr>
 <tr class="separator:ae24e3a6368fdab0e06e9e08d85d4131a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -122,14 +125,14 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>zfarr is an object used to write arrays of dcell or ccell into file. Mainly used to output PSF into files. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a245a46d3c1e49146ce516c883cca6c0e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a245a46d3c1e49146ce516c883cca6c0e">&#9670;&nbsp;</a></span>zfarr_init()</h2>
+<a id="aba144356e88796909659b1c096d6483f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba144356e88796909659b1c096d6483f">&#9670;&nbsp;</a></span>zfarr_init2()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">zfarr* zfarr_init </td>
+          <td class="memname">zfarr* zfarr_init2 </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
           <td class="paramname"><em>nx</em>, </td>
@@ -139,6 +142,12 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
           <td class="paramname"><em>ny</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>keywords</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

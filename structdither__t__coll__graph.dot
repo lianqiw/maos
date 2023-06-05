@@ -9,6 +9,6 @@ digraph "dither_t"
   Node256 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdcell"];
   Node258 -> Node255 [color="grey25",fontsize="10",style="solid",label=" +deltam\n+delay\n+deltao\n+a2me\n+a2m\n+delta" ,arrowhead="odiamond",fontname="Helvetica"];
   Node258 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
-  Node259 -> Node255 [color="grey25",fontsize="10",style="solid",label=" +gg0\n+ggm" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node259 -> Node255 [color="grey25",fontsize="10",style="solid",label=" +gg0\n+a2mv\n+a2mev\n+ggm" ,arrowhead="odiamond",fontname="Helvetica"];
   Node259 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
 }

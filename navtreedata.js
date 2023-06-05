@@ -89,7 +89,7 @@ var NAVTREE =
     ] ],
     [ "NFIRAOS Performance", "page43_nfiraos.html", [
       [ "Turbulence profile", "page43_nfiraos.html#autotoc_md31", null ],
-      [ "AO Performance", "page43_nfiraos.html#autotoc_md32", [
+      [ "NFIRAOS AO Performance", "page43_nfiraos.html#autotoc_md32", [
         [ "NFIRAOS", "page43_nfiraos.html#autotoc_md33", null ],
         [ "IRIS Imager", "page43_nfiraos.html#autotoc_md34", [
           [ "Wavefront error", "page43_nfiraos.html#autotoc_md35", null ],
@@ -98,23 +98,24 @@ var NAVTREE =
           [ "K band Strehl Ratio", "page43_nfiraos.html#autotoc_md38", null ]
         ] ],
         [ "MODHIS", "page43_nfiraos.html#autotoc_md39", null ]
-      ] ]
+      ] ],
+      [ "NFIRAOS+", "page43_nfiraos.html#autotoc_md40", null ]
     ] ],
     [ "Algorithms", "algorithm.html", [
       [ "DM Actuator Influence Function", "algorithm.html#sect-dm-actuator", [
-        [ "Linear influence function", "algorithm.html#autotoc_md40", null ],
-        [ "Cubic influence function", "algorithm.html#autotoc_md41", null ]
+        [ "Linear influence function", "algorithm.html#autotoc_md41", null ],
+        [ "Cubic influence function", "algorithm.html#autotoc_md42", null ]
       ] ],
       [ "DM Hysteresis", "algorithm.html#hysteresis", null ],
       [ "Physical Optics Beam Propagation", "algorithm.html#pop", [
-        [ "Maxwell Equation", "algorithm.html#autotoc_md42", null ],
-        [ "Fresnel diffraction integral", "algorithm.html#autotoc_md43", null ],
-        [ "Fresnel approximation", "algorithm.html#autotoc_md44", [
-          [ "Angular Spectrum", "algorithm.html#autotoc_md45", null ],
-          [ "Single FFT", "algorithm.html#autotoc_md46", null ]
+        [ "Maxwell Equation", "algorithm.html#autotoc_md43", null ],
+        [ "Fresnel diffraction integral", "algorithm.html#autotoc_md44", null ],
+        [ "Fresnel approximation", "algorithm.html#autotoc_md45", [
+          [ "Angular Spectrum", "algorithm.html#autotoc_md46", null ],
+          [ "Single FFT", "algorithm.html#autotoc_md47", null ]
         ] ],
-        [ "Fraunhofer approximation", "algorithm.html#autotoc_md47", null ],
-        [ "Sphere to sphere propagation", "algorithm.html#autotoc_md48", null ]
+        [ "Fraunhofer approximation", "algorithm.html#autotoc_md48", null ],
+        [ "Sphere to sphere propagation", "algorithm.html#autotoc_md49", null ]
       ] ]
     ] ],
     [ "Development", "page90_devel.html", "page90_devel" ],
@@ -147,23 +148,23 @@ var NAVTREEINDEX =
 "classcgtmp__t.html#a02931b311da7ea7289c50cc40dc5b1b5",
 "classcurecon__t.html#a9bd713d23ad6f0f485d19c81c0aa569e",
 "cmath_8h.html#a4a8db9c35e106c64a679ae96beb61b66",
-"cublas_8h.html#aaace2041f027ca5d8c4a502193c3d1c9",
-"dmath_8h.html#ae55d5f2527984cf9b14a2bc68eb134e4",
-"lib_2accphi_8h.html#a83b3e79da057480a35138cbb8686d457",
-"maos_2types_8h.html#a0633a1f665f77092dc3550a620ab3b4a",
-"maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61",
-"maos_2types_8h.html#structglobal__t",
-"muv_8h.html#structmuv__t",
-"parms_8h.html#a3240c885a49403e54b845710a85313f0",
-"parms_8h.html#a95d7a78271761c1ef0aea4f3106601fe",
-"parms_8h.html#af1a85154e53005746da5ebc3436a63fb",
-"scao_pwfs.html",
-"smath_8h.html#a9cb28a81bde54d63d472bf305200b0cb",
-"sys_2common_8h.html#a3fb5a5a0838cf7bc55c3eb40a34cb942",
-"type_8h.html#a41f08025d1c08596000b5ebbdf4d5322",
+"cublas_8h.html#aa8395302f8567d745bfa7a5137eb6a4f",
+"dmath_8h.html#ae490be1308b3596d8f88b8acbf3f4bce",
+"lib_2accphi_8h.html#a7957c99547a5a45a7fb7418c68e837e1",
+"maos_2types_8h.html#a0444e9675ebda314d3fc589a77caf342",
+"maos_2types_8h.html#a8131af7aebef76af45f891fadc512ab1",
+"maos_2types_8h.html#afd3bf7999f66779351e1ce2b60aeb42f",
+"muv_8h.html#ad69fad8e7ca6f125c5697622dcb378bd",
+"parms_8h.html#a2f9d6fdac75bb33eec9d79c822d522a7",
+"parms_8h.html#a923bea3f0ed3a3c7b46f6f53e5356251",
+"parms_8h.html#aed7dce716aa5cb419dfe80070b6fa36e",
+"save_8h.html",
+"smath_8h.html#a91137db976907a9df77ffc4d664a8869",
+"sys_2common_8h.html",
+"type_8h.html#a22a5f0c87d64ca4693c54f5989285022",
 "type_8h.html#a9473db81d7af66f5e2a8319424834877",
-"type_8h.html#unionlmat_8____unnamed____",
-"zmath_8h.html#ac2f449425fe363958386e0878f91f1ca"
+"type_8h.html#unionccell_8____unnamed____",
+"zmath_8h.html#ab593fed61ac7155827e3769e9c437961"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('page43_nfiraos.html','');});
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
 <ul><li class="level1"><a href="#autotoc_md31">Turbulence profile</a></li>
-<li class="level1"><a href="#autotoc_md32">AO Performance</a><ul><li class="level2"><a href="#autotoc_md33">NFIRAOS</a></li>
+<li class="level1"><a href="#autotoc_md32">NFIRAOS AO Performance</a><ul><li class="level2"><a href="#autotoc_md33">NFIRAOS</a></li>
 <li class="level2"><a href="#autotoc_md34">IRIS Imager</a><ul><li class="level3"><a href="#autotoc_md35">Wavefront error</a></li>
 <li class="level3"><a href="#autotoc_md36">J band Strehl Ratio</a></li>
 <li class="level3"><a href="#autotoc_md37">H band Strehl Ratio</a></li>
@@ -110,6 +110,7 @@ $(document).ready(function(){initNavTree('page43_nfiraos.html','');});
 <li class="level2"><a href="#autotoc_md39">MODHIS</a></li>
 </ul>
 </li>
+<li class="level1"><a href="#autotoc_md40">NFIRAOS+</a></li>
 </ul>
 </div>
 <div class="textblock"><h1><a class="anchor" id="autotoc_md31"></a>
@@ -145,7 +146,7 @@ Turbulence profile</h1>
   </td></tr>
 </table>
 <h1><a class="anchor" id="autotoc_md32"></a>
-AO Performance</h1>
+NFIRAOS AO Performance</h1>
 <p>The following lists AO system and instrument parameters and the respective AO performance.</p>
 <h2><a class="anchor" id="autotoc_md33"></a>
 NFIRAOS</h2>
@@ -254,6 +255,26 @@ WFE on axis</div></div>
 <div class="caption">
 Strehl Ratio on axis</div></div>
    </td></tr>
+</table>
+<h1><a class="anchor" id="autotoc_md40"></a>
+NFIRAOS+</h1>
+<p>NFIRAOS+ is upgraded NFIRAOS with 0.25m actuator spacing. The following figure shows the comparison of NFIRAOS and NFIRAOS+ fundamental WFE (without implementation error) for different LGS magnitude or detector read out noise. The following conditions are used:</p>
+<ul>
+<li>actuator spacing and subaperture size: 0.25m.</li>
+<li>sampling frequency: 800 Hz.</li>
+<li>end to end LGS throughput from atmosphere to detector:0.2577.</li>
+<li>zero magnitude flux: \( 8.7942\times 10^9 photon/m^2/s \).</li>
+<li>instrument: IRIS with 34"x34" FoV.</li>
+<li>the rest are the same as NFIRAOS.</li>
+</ul>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Wavefront erroor o   </th></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><div class="image">
+<object type="image/svg+xml" data="LGS_mag_dsa_ron.svg">LGS_mag_dsa_ron.svg</object>
+</div>
+  </td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

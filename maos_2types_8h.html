@@ -1726,7 +1726,7 @@ actstuck</td>
 <td class="fieldname">
 amod</td>
 <td class="fielddoc">
-<p>Zernike/KL modes defined on aloc for modal control </p>
+<p>ndmx1. Zernike/KL modes defined on aloc for modal control </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a70af1a69656b46e9fd9f810a2a115fe9"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
@@ -2196,6 +2196,13 @@ dither_npoint</td>
 dither_dtrat</td>
 <td class="fielddoc">
 <p>The dtrat of the powers that requests dithering </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9ea35e501cc07a8fdad12d77ac92a2ff"></a>int</td>
+<td class="fieldname">
+dither_md</td>
+<td class="fielddoc">
+<p>multi-mode bin size in amod </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab95e805545c3fb08b7418f57a6fabee8"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -2700,14 +2707,28 @@ delay</td>
 <td class="fieldname">
 a2m</td>
 <td class="fielddoc">
-<p>actual dither amplitude </p>
+<p>input dither amplitude </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aefa137c80d54bbdfd09b5e73154fb38b"></a>real</td>
 <td class="fieldname">
 a2me</td>
 <td class="fielddoc">
-<p>actual dither amplitude </p>
+<p>measured dither amplitude </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7dd5c4541053a5594084706937592a4c"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+a2mv</td>
+<td class="fielddoc">
+<p>input dither amplitude per mode </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="adc189f4fdc0c4dc1794afc344d2b88b6"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+a2mev</td>
+<td class="fielddoc">
+<p>measured dither amplitude per mode </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a1c34e9a98685907db0d47926e1ac8781"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -3090,6 +3111,13 @@ eptwfs</td>
 gradscale</td>
 <td class="fielddoc">
 <p>Gain adjustment for cog and pywfs. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a13c26494ce3f580a13f280c22c7454e4"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+gradscale2</td>
+<td class="fielddoc">
+<p>Gain scaling for other dithering modes. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af7f5504268fb3897cc6d3cb8594c08c7"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -3846,11 +3874,30 @@ opdrhatlast</td>
 <p>for wind estimation.(testing) </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a99035050c10bc59293b18f40a0786fbf"></a>const char **</td>
+<td class="fieldname">
+plot_legs</td>
+<td class="fielddoc">
+<p>Saved for plotting </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8d62da356a81eb9e53750791f9c8fd80"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+plot_res</td>
+<td class="fielddoc">
+legend </td></tr>
+<tr><td class="fieldtype">
+<a id="a02fc8e8ccad8c87e30e5003e056fd821"></a>int</td>
+<td class="fieldname">
+plot_isim</td>
+<td class="fielddoc">
+results array </td></tr>
+<tr><td class="fieldtype">
 <a id="acb3585b187d349dd454477dee37961ed"></a>int</td>
 <td class="fieldname">
 wfsints_isa</td>
 <td class="fielddoc">
-<p>sa counter for wfsints </p>
+previous plotted isum; <p>sa counter for wfsints </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ae6c2436d6d3c7cc92d230f7628d9ccaa"></a>int</td>

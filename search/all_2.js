@@ -11,7 +11,7 @@ var searchData=
   ['calc_5faniso',['calc_aniso',['../turbulence_8h.html#a24f1950319bbbf2a5537b853bdb3b879',1,'turbulence.c']]],
   ['calc_5faniso2',['calc_aniso2',['../turbulence_8h.html#af56dc39765ac225d9183cccfa7583a02',1,'turbulence.c']]],
   ['calc_5fcachedm',['calc_cachedm',['../sim_8h.html#afabaa0621dfaba431cd4df7bd67e7b6a',1,'cachedm.c']]],
-  ['calc_5fdither_5famp',['calc_dither_amp',['../lib_2misc_8h.html#a865de3386b2dae34b9dc06b4c9849168',1,'misc.c']]],
+  ['calc_5fdither_5famp',['calc_dither_amp',['../lib_2misc_8h.html#a13c5edd8c559386a72b522f43e49e733',1,'misc.c']]],
   ['calc_5fgreenwood',['calc_greenwood',['../turbulence_8h.html#a44a7c973125f67a96ac67f93fe400e5d',1,'turbulence.c']]],
   ['calcwmcc',['calcWmcc',['../recon__utils_8h.html#ac2bca0565f72973497ae8d589a8be63d',1,'recon_utils.c']]],
   ['call',['CALL',['../thread_8h.html#ac484ce8461053d81b280ae84d3d2c110',1,'thread.h']]],

@@ -2,6 +2,8 @@ var searchData=
 [
   ['a2m',['a2m',['../maos_2types_8h.html#a90443b58517ca48e9628caffd6b4c137',1,'dither_t']]],
   ['a2me',['a2me',['../maos_2types_8h.html#aefa137c80d54bbdfd09b5e73154fb38b',1,'dither_t']]],
+  ['a2mev',['a2mev',['../maos_2types_8h.html#adc189f4fdc0c4dc1794afc344d2b88b6',1,'dither_t']]],
+  ['a2mv',['a2mv',['../maos_2types_8h.html#a7dd5c4541053a5594084706937592a4c',1,'dither_t']]],
   ['actcpl',['actcpl',['../maos_2types_8h.html#acb30846c6a32116509ebcef6af1f4d5a',1,'moao_t::actcpl()'],['../maos_2types_8h.html#ade6a7f9cc880946bc23ac1f3d1e64197',1,'recon_t::actcpl()']]],
   ['actextrap',['actextrap',['../parms_8h.html#ade54c87d5f3a03b988c22f4f6e96b3b2',1,'fit_cfg_t::actextrap()'],['../parms_8h.html#a351c0258e176d0167b72e3a023d5c671',1,'lsr_cfg_t::actextrap()'],['../maos_2types_8h.html#a03b755a914805e0ae089b4f752f486ac',1,'fit_t::actextrap()'],['../maos_2types_8h.html#a62e8893405865fb512a00038307a99e3',1,'recon_t::actextrap()']]],
   ['actfloat',['actfloat',['../parms_8h.html#ae625645b8211d61e519e8998f5d1e2c5',1,'dm_cfg_t::actfloat()'],['../parms_8h.html#ae06bc46c384fac3d23623002ac3c7025',1,'moao_cfg_t::actfloat()'],['../maos_2types_8h.html#aad0a8c0fc33f8066dd4fd72a95f1ebe3',1,'moao_t::actfloat()'],['../maos_2types_8h.html#a89079d2ca016bf98fe39b7b6cfb1442b',1,'recon_t::actfloat()']]],

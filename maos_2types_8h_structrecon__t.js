@@ -96,6 +96,7 @@ var maos_2types_8h_structrecon__t =
     [ "dither_m", "maos_2types_8h.html#a0315c8beee67362d7ab03b9bdc8660ea", null ],
     [ "dither_npoint", "maos_2types_8h.html#a2cdaa275b0021387e777775b3761a719", null ],
     [ "dither_dtrat", "maos_2types_8h.html#ac9a604bd35d64c4d1aa2916372cf84ae", null ],
+    [ "dither_md", "maos_2types_8h.html#a9ea35e501cc07a8fdad12d77ac92a2ff", null ],
     [ "dither_rg", "maos_2types_8h.html#ab95e805545c3fb08b7418f57a6fabee8", null ],
     [ "dither_ra", "maos_2types_8h.html#aabf87ed8cfc835bd9244d4118d5de549", null ],
     [ "ngsmod", "maos_2types_8h.html#ad276ecf3dabe3a6184cb5678297cab89", null ],

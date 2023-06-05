@@ -6,6 +6,8 @@ var maos_2types_8h_structdither__t =
     [ "delay", "maos_2types_8h.html#a4bf63456d6d5ba2b4fd471efeeb2ea22", null ],
     [ "a2m", "maos_2types_8h.html#a90443b58517ca48e9628caffd6b4c137", null ],
     [ "a2me", "maos_2types_8h.html#aefa137c80d54bbdfd09b5e73154fb38b", null ],
+    [ "a2mv", "maos_2types_8h.html#a7dd5c4541053a5594084706937592a4c", null ],
+    [ "a2mev", "maos_2types_8h.html#adc189f4fdc0c4dc1794afc344d2b88b6", null ],
     [ "imb", "maos_2types_8h.html#a1c34e9a98685907db0d47926e1ac8781", null ],
     [ "imx", "maos_2types_8h.html#ac38e3eedd59c8fcc9d49cca13c285eb9", null ],
     [ "imy", "maos_2types_8h.html#ac89e6edb3556c1f783c08f11414a9a04", null ],

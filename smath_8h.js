@@ -36,6 +36,7 @@ var smath_8h =
     [ "svecdot", "smath_8h.html#aeff0852060eefacc0dfedbb634f8266e", null ],
     [ "snormalize_sum", "smath_8h.html#aeaf6141502db582452b15e6e00b25b48", null ],
     [ "snormalize_sumabs", "smath_8h.html#ab267c92f1c781a4369ea2701d0f2012e", null ],
+    [ "snormalize_rms", "smath_8h.html#a5a6ee5d24eb57c305058da7ecab259f2", null ],
     [ "snormalize_max", "smath_8h.html#a4f7c76b09b67513685f321abe90bca0a", null ],
     [ "smax", "smath_8h.html#a0257ad4dc3e56c9a22a23625e6ee7abf", null ],
     [ "svecmaxabs", "smath_8h.html#afa710a69788ccc733b231264144ccf45", null ],

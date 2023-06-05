@@ -37,6 +37,7 @@ var zmath_8h =
     [ "zvecdot", "zmath_8h.html#aca8ceba39a1e42a4a76c6ff20d117bb2", null ],
     [ "znormalize_sum", "zmath_8h.html#a1ce2fef103abd9be3874bf5b8b78de25", null ],
     [ "znormalize_sumabs", "zmath_8h.html#aa192ed2205edaf7143ab136127d4a64c", null ],
+    [ "znormalize_rms", "zmath_8h.html#ae04f44cde8d356201e2b68958f386a57", null ],
     [ "znormalize_max", "zmath_8h.html#afcab7e9191e48c2d7040be6156129f1c", null ],
     [ "zmax", "zmath_8h.html#a25b65d7507b58df73915833f743aa842", null ],
     [ "zvecmaxabs", "zmath_8h.html#a18c5688ba980b18f290c030fa6f2f78b", null ],

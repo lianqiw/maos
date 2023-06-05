@@ -186,6 +186,8 @@ Functions</h2></td></tr>
 <tr class="separator:a102125766e74ade3bf3dfcf39a27c63d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad380e26b2e7068cd7362663c45052afa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ad380e26b2e7068cd7362663c45052afa">dnormalize_sumabs</a> (real *__restrict p, <a class="el" href="classlong.html">long</a> nloc, real norm)</td></tr>
 <tr class="separator:ad380e26b2e7068cd7362663c45052afa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9a7d2a394988f01a916e5a7d3b5b1e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#af9a7d2a394988f01a916e5a7d3b5b1e7">dnormalize_rms</a> (real *__restrict p, <a class="el" href="classlong.html">long</a> nx, real norm)</td></tr>
+<tr class="separator:af9a7d2a394988f01a916e5a7d3b5b1e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6ff44494a51a4ae0a87af8022b009bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#af6ff44494a51a4ae0a87af8022b009bc">dnormalize_max</a> (real *__restrict p, <a class="el" href="classlong.html">long</a> nloc, real max)</td></tr>
 <tr class="separator:af6ff44494a51a4ae0a87af8022b009bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae42837a4f13df4a5110e90c12a01d56a"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#ae42837a4f13df4a5110e90c12a01d56a">dmax</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *A)</td></tr>
@@ -1612,7 +1614,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>normalize vector to sum to norm; </p>
+<p>normalize vector so that the sum is norm; </p>
 
 </div>
 </div>
@@ -1647,7 +1649,42 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>normalize vector to sum of abs to norm; </p>
+<p>normalize vector so that the sum of abs is norm; </p>
+
+</div>
+</div>
+<a id="af9a7d2a394988f01a916e5a7d3b5b1e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9a7d2a394988f01a916e5a7d3b5b1e7">&#9670;&nbsp;</a></span>dnormalize_rms()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dnormalize_rms </td>
+          <td>(</td>
+          <td class="paramtype">double *__restrict&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>norm</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>normalize vector so that the rms is norm </p>
 
 </div>
 </div>
@@ -1682,7 +1719,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-<p>normalize vector to max to max; </p>
+<p>normalize vector so that the max is max; </p>
 
 </div>
 </div>

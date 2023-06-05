@@ -23,6 +23,8 @@ var searchData=
   ['dither_5fgog',['dither_gog',['../parms_8h.html#a40295038250a67f0473a7f684bb057cb',1,'powfs_cfg_t']]],
   ['dither_5fgpll',['dither_gpll',['../parms_8h.html#a0f6f0f952791d437ff12d843d32abb05',1,'powfs_cfg_t']]],
   ['dither_5fm',['dither_m',['../maos_2types_8h.html#a0315c8beee67362d7ab03b9bdc8660ea',1,'recon_t']]],
+  ['dither_5fmd',['dither_md',['../maos_2types_8h.html#a9ea35e501cc07a8fdad12d77ac92a2ff',1,'recon_t']]],
+  ['dither_5fmode2',['dither_mode2',['../parms_8h.html#a3f6117fb60677b22990a412a3bf2f33c',1,'powfs_cfg_t']]],
   ['dither_5fnpoint',['dither_npoint',['../parms_8h.html#aef40569b1440e63af3c2730e44116484',1,'powfs_cfg_t::dither_npoint()'],['../maos_2types_8h.html#a2cdaa275b0021387e777775b3761a719',1,'recon_t::dither_npoint()']]],
   ['dither_5fograt',['dither_ograt',['../parms_8h.html#a23bfd9e98336e6e4ddcc5f9ee2098737',1,'powfs_cfg_t']]],
   ['dither_5fogsingle',['dither_ogsingle',['../parms_8h.html#a6ef7f7c718cf537a9642d2dd7ca40896',1,'powfs_cfg_t']]],

@@ -37,6 +37,7 @@ var cmath_8h =
     [ "cvecdot", "cmath_8h.html#adc931b6cb271007ab9112b0a7bc673ee", null ],
     [ "cnormalize_sum", "cmath_8h.html#a1d54dd0ad1200cdf1d2326feeba2f7b3", null ],
     [ "cnormalize_sumabs", "cmath_8h.html#aa56dbcdd04ce355f462cc441852bd814", null ],
+    [ "cnormalize_rms", "cmath_8h.html#a4ab6d3ccbcaf884d3718f73f0a689b2b", null ],
     [ "cnormalize_max", "cmath_8h.html#ad801717427d88c8809ad515688b1fd61", null ],
     [ "cmax", "cmath_8h.html#a5853b8f390ba1727ac9ca5b39ac4753e", null ],
     [ "cvecmaxabs", "cmath_8h.html#a5be754d664dc37f8869f1399a6d99faa", null ],

@@ -84,6 +84,7 @@ var searchData=
   ['gradout',['gradout',['../maos_2types_8h.html#a19f016045936b308f3e57df6648807a9',1,'wfsflags_t']]],
   ['gradpsol',['gradpsol',['../parms_8h.html#a90dc2dd0ba6e31a888e90ba846cedda3',1,'save_cfg_t']]],
   ['gradscale',['gradscale',['../parms_8h.html#a6c3ddbbabb0b102212567d573c4a1180',1,'powfs_cfg_t::gradscale()'],['../maos_2types_8h.html#afbbeea9628533032448d257c526e5225',1,'sim_t::gradscale()']]],
+  ['gradscale2',['gradscale2',['../maos_2types_8h.html#a13c26494ce3f580a13f280c22c7454e4',1,'sim_t']]],
   ['grall',['GRall',['../maos_2types_8h.html#a52f7ada5cebe7a83b05bd89bc303db25',1,'recon_t']]],
   ['grlgs',['GRlgs',['../maos_2types_8h.html#abd36ea165120af1ecba440122ad018f6',1,'recon_t']]],
   ['grtwfs',['GRtwfs',['../maos_2types_8h.html#acd4472b8a0042ade77cbe67742b3da37',1,'recon_t']]],
