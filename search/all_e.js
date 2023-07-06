@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['p',['p',['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
+  ['p',['P',['../kalman_8h.html#a2a00af7c2c22998d272e5a06f5ef2e29',1,'kalman_t::P()'],['../type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569',1,'cell::p()'],['../type_8h.html#afba9f40fe63e258302b2c472f9e9f386',1,'P():&#160;type.h']]],
   ['pair',['pair',['../cn2est_8h.html#a8984a6f7acbcd94ccd68c2a94fa7275f',1,'cn2est_t::pair()'],['../parms_8h.html#a5fa2b03fef6524369da80328ac5b4da6',1,'cn2est_cfg_t::pair()']]],
   ['parms',['parms',['../maos_2types_8h.html#a0fa3fc80828e7714dbe3b2ae58ccb437',1,'sim_t']]],
   ['parms_2eh',['parms.h',['../parms_8h.html',1,'']]],
