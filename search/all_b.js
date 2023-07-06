@@ -123,7 +123,6 @@ var searchData=
   ['modes',['Modes',['../maos_2types_8h.html#ac7e1e3b45fbe7c2f170410b50462dbc9',1,'ngsmod_t']]],
   ['modulate',['modulate',['../parms_8h.html#abf6b2eee87e4010d2b5a8a279690faf2',1,'pywfs_cfg_t']]],
   ['modulpos',['modulpos',['../parms_8h.html#acbd0d2bbccd50cfd8cb716021e376eee',1,'pywfs_cfg_t']]],
-  ['modulpos_5fi',['modulpos_i',['../parms_8h.html#afe8fb8802e3775d894ca9c3d6ab36742',1,'pywfs_cfg_t']]],
   ['modulring',['modulring',['../parms_8h.html#ad36b35d4aa3843841f00aea5783f0429',1,'pywfs_cfg_t']]],
   ['modvalid',['modvalid',['../maos_2types_8h.html#ac95732b78c8e53f041ef64893511a0ad',1,'ngsmod_t']]],
   ['moveht',['moveht',['../parms_8h.html#afb3cab698fdd0b1dac5ec286f53c325b',1,'cn2est_cfg_t']]],

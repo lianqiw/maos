@@ -23,7 +23,7 @@ digraph "powfs_cfg_t"
   Node52 -> Node43 [color="grey25",fontsize="10",style="solid",label=" +pycfg" ,arrowhead="odiamond",fontname="Helvetica"];
   Node52 [label="{pywfs_cfg_t\n||}",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structpywfs__cfg__t"];
   Node45 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +poke\n+hs\n+hc\n+siglev\n+modulate\n+pupelong\n+flatv\n+flate" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node49 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +modulring\n+modulpos_i\n+nside\n+raw\n+sigmatch\n+modulpos" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node49 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +modulring\n+nside\n+raw\n+sigmatch\n+modulpos" ,arrowhead="odiamond",fontname="Helvetica"];
   Node50 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +psx\n+psy" ,arrowhead="odiamond",fontname="Helvetica"];
   Node49 -> Node43 [color="grey25",fontsize="10",style="solid",label=" +mtchadp\n+ng\n+i0save\n+radpix\n+psfout\n+type\n+idtrat\n+neaphy\n+step\n+dtrat\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node50 -> Node43 [color="grey25",fontsize="10",style="solid",label=" +ncpa\n+wvlwts\n+siglevs\n+qe\n+wvl" ,arrowhead="odiamond",fontname="Helvetica"];
