@@ -281,7 +281,9 @@ def svd_pinv(mod, thres=0, tikcr=0):
 
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
-
+    ind=np.argsort(x)
+    x=x[ind]
+    y=y[ind]
     #define x as 200 equally spaced values between the min and max of original x 
     xnew = np.linspace(x.min(), x.max(), 200) 
     #define spline

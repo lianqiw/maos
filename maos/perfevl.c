@@ -169,10 +169,10 @@ void* perfevl_ievl(thread_t* info){
 		}
 		TIM(0);
 		/*Setup pointers for easy usage */
-		dmat* polmp=P(simu->olmp,ievl)/*PDMAT*/;/*OL mode for each dir */
-		dmat* polep=P(simu->olep,ievl)/*PDMAT*/;/*OL error for each dir */
-		dmat* pclmp=P(simu->clmp,ievl)/*PDMAT*/;
-		dmat* pclep=P(simu->clep,ievl)/*PDMAT*/;
+		dmat* polmp=P(simu->olmp, ievl);/*OL mode for each dir in P, Tip, Tilt */
+		dmat* polep=P(simu->olep, ievl);/*OL error for each dir in PR, TT, PTTR*/
+		dmat *pclmp=P(simu->clmp, ievl);/*CL mode for each dir in P, Tip, Tilt*/
+		dmat* pclep=P(simu->clep, ievl);/*CL error for each dir in PR, TT, PTTR*/
 
 		/*atmosphere contribution. */
 		if(parms->sim.idealevl){
@@ -444,9 +444,9 @@ static void perfevl_mean(sim_t* simu){
 			}
 		}
 		//Record NGS mode RMS error time history
-		P(simu->clem, 0, isim)=lgs; /*lgs mode */
-		P(simu->clem, 1, isim)=tt;    /*tt mode */
-		P(simu->clem, 2, isim)=ngs;   /*ngs mod */
+		P(simu->clem, 0, isim)=lgs;  /*high order mode */
+		P(simu->clem, 1, isim)=tt;    /*t/t modes */
+		P(simu->clem, 2, isim)=ngs;   /*low order modes including t/t */
 		if(recon->ngsmod->indfocus){
 			P(simu->clem, 3, isim)=focus;
 		}
@@ -533,6 +533,7 @@ static void perfevl_mean(sim_t* simu){
 				isim, sqrt(P(simu->ole,0,isim))*1e9,
 				sqrt(P(simu->cle,0,isim))*1e9);
 			simu->last_report_time=0; //force print out.
+			draw_single=0;
 			if(ct>10){
 				warning("Exit after this time step.\n");
 				signal_caught=1;

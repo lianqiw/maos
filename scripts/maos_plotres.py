@@ -1,5 +1,12 @@
 #!/bin/env ipython3
-from startup import *
+try:
+    from startup import *
+except:
+    pass
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+from readbin import readbin
 import glob
 
 def maos_plotres(fns):

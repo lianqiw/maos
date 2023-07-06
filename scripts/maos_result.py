@@ -10,6 +10,7 @@ except:
 import glob, os
 
 from libaos import read
+from readbin import readbin
 
 def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     res,fds=maos_res(files,seeds,0,0)
@@ -27,7 +28,7 @@ def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1):
     '''Results are in order of High, T/T, NGS total[, Focus]'''
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2)
 def maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1):
-    '''Results are High + NGS tot'''
+    '''Results are High + Low tot'''
     res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2)
     res2=res[:,0]+res[:,2]
     return res2,fds
@@ -37,10 +38,12 @@ def maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1):
     res2=res[:,0]
     return res2,fds
 def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
-    return maos_res_do(fds, "Resclep", seeds, iframe1, iframe2)
+    return maos_res_do(fds, "extra/Resclep", seeds, iframe1, iframe2)
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1):
+    '''Results fore all directions with dimension nfolder*ndirection*nmod. The modes are in PR, TT, PTTR.'''
     return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
+    '''Process maos results and average between firame1 to iframe2'''
     if type(fdin) is not list:
         fdin=[fdin]
     fds2=[]
@@ -67,7 +70,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
             if not os.path.exists(fn):
                 print(fn, 'does not exist')
                 continue
-            res=read(fn)
+            res=readbin(fn)
             if type(res) is tuple:
                 res=res[0]
             if res is None or res.shape[0]==0:
@@ -78,12 +81,14 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1):
                     split=1
                 else: #integrated
                     res=res[2]
+                    res[:,0]=res[:,2] #convert from pr, tt, pttr to pttr, tt, tt to have the same as the split mode.
+                    res[:,2]=res[:,1]
                     split=0
-            elif name=="Resclep":
+            elif name=="extra/Resclep": #for split tomo
                 res=np.stack(res, axis=1)
                 split=0
-            elif name=="extra/Resp":
-                res=np.stack(res[-1],axis=1)
+            elif name=="extra/Resp": #for integrated tomo
+                res=np.stack(res[-1],axis=1) #last cell is clep
                 split=0            
             else:
                 print('Invalid result')

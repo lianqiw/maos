@@ -238,18 +238,19 @@ MAOS comes with a few useful python routines location in \c scripts/ folder:
 
 - `readbin.py` contains `readbin` that can read `bin` or `fits` files.
 
-- `aolib.py` contains routines to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
+- `aotools.py` contains a few useful routines for data processing.
+
+- `draw.py` contains routines to draw `opd` defined on coordinate `loc`. Use `draw(loc, opd)` or `draw(map)` where `map` is a 2d array.
+
+- `maos_result.py` contains routines `maos_res` to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py
 
 - `libaos.py` contains routines that wraps \c MAOS library routines via \c aolib.so and \c ctypes. It contains `read` and `write` that can also read and write `bin` and `fits` files. 
 
-- `lib2py.py` generates `libaos.py`
-
-- `draw.py` used to draw opd defined on coordinate loc. \c draw(loc, opd) or \c draw(map) where \c map is a 2d array.
+- `lib2py.py` generates `libaos.py`. Similarly `lib2mex.py` generates MATLAB mex routines.
 
 - `maos_client` provides an interface to a running maos session. See next subsection.
 
-For `libaos.py` to work, an environment variable `MAOS_AOLIB` need to set to
-the path of `aolib.so`.
+For `libaos.py` to work, an environment variable `MAOS_AOLIB` need to set to the path of `aolib.so`.
 
 ## Interface to MAOS
 

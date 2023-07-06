@@ -53,14 +53,14 @@ zfarr *zfarr_init(long nx, long ny, const char *format, ...){
 	return zfarr_init2(nx, ny, NULL, "%s", fn);
 }
 /**
-   Append a A of type type into the zfarr ca, at location i.
+   Append a A of type type into the zfarr ca, at location i. Append if i==0.
 */
 void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 	if(!ca){
 		warning_once("zfarr is NULL\n");
 		return;
 	}
-	if(i>=0&&ca->cur>i){
+	if(i>0&&ca->cur>i){
 		warning("Invalid. %s, cur=%ld, i=%x, skip.\n", zfname(ca->fp), ca->cur, i);
 		print_backtrace();
 		return;
@@ -80,7 +80,7 @@ void zfarr_push_cell(zfarr* ca, int i, const cell* A){
 			warning("Data mismatch: %s, existing data is %x, new data is %x", zfname(ca->fp), ca->id, id);
 		}
 	}
-	while(ca->cur<i && ca->tot){//fill blank
+	while(i>0 && ca->cur<i && ca->tot){//fill blank
 		writedata_by_id(ca->fp, 0, ca->id, 0);
 		ca->cur++;
 	}

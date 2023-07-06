@@ -402,9 +402,9 @@ static int respond(int sock){
 			if((flag < 0 && test_jobs(iproc, flag)) || iproc->pid==flag){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
 					warning_time("Clear job %d on host %d failed.\n", iproc->pid, ihost);
-				}else{
-					info_time("Clear job %d on host %d ok.\n", iproc->pid, ihost);
-				}
+				}/*else{
+					dbg_time("Clear job %d on host %d ok.\n", iproc->pid, ihost);
+				}*/
 			}
 		}
 	}
@@ -416,9 +416,9 @@ static int respond(int sock){
 			if(iproc->status.info<11&&(!pid||pid==iproc->pid)){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_KILL)){
 					warning_time("Kill job %d on host %d failed.\n", iproc->pid, ihost);
-				}else{
-					info_time("Kill job %d on host %d ok.\n", iproc->pid, ihost);
-				}
+				}/*else{
+					dbg_time("Kill job %d on host %d ok.\n", iproc->pid, ihost);
+				}*/
 			}
 		}
 	}

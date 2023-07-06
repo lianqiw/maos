@@ -364,8 +364,6 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_MAT(d,qe);
 	READ_POWFS_RELAX(dbl,dx);
 	READ_POWFS(dbl,pixtheta);
-	READ_POWFS_RELAX(str,pywfs);
-	READ_POWFS_RELAX(str,fnllt);
 	READ_POWFS_RELAX(int,trs);
 	READ_POWFS_RELAX(int,frs);
 	READ_POWFS(int,lo);
@@ -383,33 +381,31 @@ static void readcfg_powfs(parms_t *parms){
 	int npywfs=0;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
-		if(isinf(powfsi->hs)){
-			if(powfsi->fnllt){
-				error("powfs %d is at infinity, but LLT is specified.\n", ipowfs);
-				free(powfsi->fnllt);
-				powfsi->fnllt=NULL;
-			}
-		}else{
-			if(powfsi->fnllt){
-				nllt++;
-			}else{
-				error("powfs %d is at finity range but LLT is not specified.\n", ipowfs);
-			}
+		if(!isinf(powfsi->hs)){
+			nllt++;
 		}
-		if(!powfsi->fnllt && powfsi->radpix){
-			warning("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
-			powfsi->radpix=0;
-		}
-		if(powfsi->type!=WFS_SH){
+		if(powfsi->type==WFS_PY){
 			npywfs++;
 		}
 	}
-	
-	dbg("There are %d powfs with LLT. \n", nllt);
+	if(npywfs){
+		READ_POWFS_RELAX(str,pywfs);
+	}else{
+		readcfg_ignore("powfs.pywfs");
+	}
+	if(nllt){
+		READ_POWFS_RELAX(str,fnllt);
+	}else{
+		readcfg_ignore("powfs.fnllt");
+	}
+	dbg("There are %d LGS powfs. \n", nllt);
 	
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
-		if(powfsi->fnllt){
+		if(isfinite(powfsi->hs)){//LGS
+			if(!powfsi->fnllt){
+				error("powfs %d is at finity range but LLT is not specified.\n", ipowfs);
+			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
 			#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
@@ -434,6 +430,16 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat,ox);
 			READ_LLT_ARR(dmat,oy);
 			powfsi->llt->n=NX(powfsi->llt->ox);
+		}else{//NGS
+			if(powfsi->fnllt){
+				warning("powfs %d is NGS but LLT is specified which will be ignored.\n", ipowfs);
+				free(powfsi->fnllt);
+				powfsi->fnllt=NULL;
+			}
+			if(powfsi->radpix){
+				warning("powfs%d is NGS but radpix is set which will be ignored\n", ipowfs);
+				powfsi->radpix=0;
+			}
 		}
 		if(powfsi->pywfs || powfsi->type==WFS_PY){
 			if(powfsi->type==WFS_SH||!powfsi->pywfs){
@@ -441,7 +447,7 @@ static void readcfg_powfs(parms_t *parms){
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			open_config(powfsi->pywfs, prefix, -1);
+			open_config(powfsi->pywfs, prefix, readcfg_peek_priority("powfs.pywfs"));
 			powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
 			#define READ_PYWFS(T,key) powfsi->pycfg->key=readcfg_##T("%spywfs."#key, prefix)
 			#define READ_PYWFS_MAT(T,key) powfsi->pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
@@ -1579,6 +1585,10 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		if(parms->sim.closeloop==1){
 			dbg2("idealfit or idealtomo works in open loop. changed.\n");
 			parms->sim.closeloop=0;
+		}
+		if(parms->recon.modal){
+			dbg2("idealfit or idealtomo only works with zonal reconstruction. changed.\n");
+			parms->recon.modal=0;
 		}
 		if(parms->sim.wfsalias){
 			error("wfsalias and idealtomo/idealfit conflicts\n");
@@ -2851,6 +2861,8 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		parms->recon.psd=0;
 	}
 
+	/*
+		It is OK to tune gain without noise. the algorithm doesnot need noise information.
 	if(parms->recon.psd){
 		if(parms->recon.psddtrat_hi&&!parms->sim.noisy_hi){
 			parms->recon.psddtrat_hi=0;
@@ -2861,7 +2873,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		if(!parms->recon.psddtrat_hi&&!parms->recon.psddtrat_lo){
 			parms->recon.psd=0;
 		}
-	}
+	}*/
 	switch(parms->recon.twfs_rmin){
 	case 1:
 		parms->itwfssph=parms->recon.twfs_radonly?1:9; break;

@@ -109,7 +109,7 @@ AM_CONDITIONAL(GCC, [test x$CN = xGCC])
 AM_CONDITIONAL(ICC, [test x$CN = xICC])
 AM_CONDITIONAL(CLANG, [test x$CN = xCLANG])
 CC_VERSION=$($CC -dumpversion)
-AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
+AC_DEFINE_UNQUOTED(COMPILER, ["$CN (v$CC_VERSION)"], ["Compiler"])
 
 if test -n "$CC_VERSION" ;then
 	major=${CC_VERSION%%.*}

@@ -428,7 +428,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		if(parms->recon.modal){
 			int idm=parms->idmground;
 			dmat *amod=P(recon->amod, idm);
-			opds=dnew(pywfs->locfft->loc->nloc, MIN(1000,NY(amod))+1);
+			opds=dnew(pywfs->locfft->loc->nloc, MIN(20,NY(amod))+1);//first mode is piston
 			const real hc=parms->wfs[iwfs].hc;
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 			const real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
@@ -459,26 +459,29 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 			nn=2;
 			keywords="First column is without turbulence. Second column is with turbulence. ";
 		}else{
-			error("Atmosphere is not avilable to read\n");
+			warning("Atmosphere is not avilable to read, do not use.\n");
 		}
 		
-		zfarr *pupsave=zfarr_init2(nn, NY(opds), keywords, "pywfs_zernike_ints");
-		zfarr *grads=zfarr_init2(nn, NY(opds), keywords, "pywfs_zernike_grad");
+		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_zernike_ints");
+		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_zernike_grad");
 		dmat *opd=dnew(NX(opds),1);
 		for(int im=0; im<NY(opds); im++){
 			dmat *opdi=drefcols(opds, im, 1);
 			for(int j=0; j<nn; j++){
 				info2("im=%d, j=%d\n", im, j);
-				dzero(opd);
-				dadd(&opd, 1, opdi, pow(2, j)*wve);
-				if(j>0 && atm){
-					dadd(&opd, 1, atm, 1);
+				for(int posi=0; posi<pywfs->cfg->modulpos; posi++){
+					((pywfs_cfg_t*)pywfs->cfg)->modulpos_i=posi+1;//for testing modulate subframe
+					dzero(opd);
+					dadd(&opd, 1, opdi, pow(2, j)*wve);
+					if(j>0 && atm){
+						dadd(&opd, 1, atm, 1);
+					}
+					dzero(ints);
+					pywfs_ints(&ints, pywfs, opd, siglev);
+					pywfs_grad(&grad, pywfs, ints);
+					zfarr_push(pupsave, 0, ints);
+					zfarr_push(grads, 0, grad);
 				}
-				dzero(ints);
-				pywfs_ints(&ints, pywfs, opd, siglev);
-				pywfs_grad(&grad, pywfs, ints);
-				zfarr_push(pupsave, j+im*nn, ints);
-				zfarr_push(grads, j+im*nn, grad);
 			}
 			dfree(opdi);
 		}
@@ -634,7 +637,9 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 		real pos_ri=pos_r*(ir+1)/pos_nr;
 		//Scale number of points by ring size to have even surface brightness
 		int pos_ni=pos_n*(ir+1)/pos_nr;
-		for(int ipos=0; ipos<pos_ni; ipos++){
+		int ipos0=pycfg->modulpos_i>0?(pycfg->modulpos_i-1):0;
+		int ipos1=pycfg->modulpos_i>0?pycfg->modulpos_i:pos_ni;
+		for(int ipos=ipos0; ipos<ipos1; ipos++){
 				//whether the first point falls on the edge or not makes little difference
 			real theta=2*M_PI*((real)ipos/pos_ni);
 			real posx=cos(theta)*pos_ri;

@@ -93,6 +93,7 @@ long gpu_get_mem(void){
 */
 static long gpu_get_free_mem_ratio(int igpu, long minimum){
 	size_t fr=0, tot=0;
+	cudaDeviceProp prop;
 	int ans;
 	if((ans=cudaSetDevice(igpu))){
 		info("GPU%2d cudaSetDevice failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
@@ -100,8 +101,11 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
 	}else if((ans=cudaMemGetInfo(&fr, &tot))){
 		info("GPU%2d cudaMemGetInfo failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
 		return 0;
+	}else if((ans=cudaGetDeviceProperties(&prop, igpu))){
+		info("GPU%2d cudaGetDeviceProperties failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
+		return 0;
 	}else{
-		info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", igpu, fr*9.3e-10, tot*9.3e-10);
+		info("GPU%2d is %s with arch %d.%d, %.1fGB free, %.1fGB total device memory.\n", igpu, prop.name, prop.major, prop.minor, fr*9.3e-10, tot*9.3e-10);
 		if((long)fr>minimum){
 			return (long)(fr*100./tot);
 		} else{

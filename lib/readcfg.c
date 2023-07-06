@@ -590,11 +590,13 @@ int readcfg_peek_n(const char* format, ...){
 	return count;
 }
 /**
- * Ignore an entry
+ * Ignore an entry and do not warn if it does not exist.
  * */
 void readcfg_ignore(const char *format, ...){
 	format2key;
-	getrecord(key, 1);
+	if(getrecord(key,0)){
+		getrecord(key, 1);//mark as used.
+	}//else: silently ignore non-existant input.
 }
 /**
    Check whether the record is overriden by user supplied conf files.

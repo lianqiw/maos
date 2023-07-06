@@ -1191,9 +1191,22 @@ static void wfsgrad_dither_post(sim_t* simu){
 					if(ogsingle){//single gain for all subapertures. For Pyramid WFS
 						ogtype="globally";
 						real gerr=pd->a2m/pd->a2me;
+#define HIA_G_UPDATA 0
+#if HIA_G_UPDATE //HIA method.
+						real adj=parms->powfs[ipowfs].dither_gog*mgold*(gerr-1);
+						if(fabs(adj)>0.1) adj*=0.1/fabs(adj);
+						while(adj+mgold<0){//prevent negative value
+							adj*=0.5;
+						}
+						dadds(P(simu->gradscale, iwfs), adj);
+						mgnew=mgold+adj;
+#else
 						real adj=pow(gerr, parms->powfs[ipowfs].dither_gog);
+						//clip the adjustment to prevent divergence.
+						if(adj>1.5) adj=1.5; else if(adj<0.5) adj=0.5;
 						dscale(P(simu->gradscale, iwfs), adj);
 						mgnew=mgold*adj;
+#endif
 						if(nd>1){//multi-mode dithering
 							dmat *gs2=P(simu->gradscale2, iwfs);
 							for(int id=0; id<nd; id++){
@@ -1216,7 +1229,17 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dscale(pd->gg0, scale1); //Scale value at end of accumulation
 						for(long ig=0; ig<ng; ig++){
 							if(P(pd->gg0, ig)>0.01){//skip weakly determined subapertures.
-								P(P(simu->gradscale, iwfs), ig)*=pow(P(pd->gg0, ig), -parms->powfs[ipowfs].dither_gog);
+#if HIA_G_UPDATE //HIA method.							
+								real adj=parms->powfs[ipowfs].dither_gog*mgold*(1.-P(pd->gg0, ig));
+								while(adj+P(P(simu->gradscale, iwfs), ig)<0){
+									adj*=0.5;
+								}
+								P(P(simu->gradscale, iwfs), ig)+=adj;
+#else
+								real adj=pow(P(pd->gg0, ig), -parms->powfs[ipowfs].dither_gog);
+								if(adj>1.5) adj=1.5; else if(adj<0.5) adj=0.5;
+								P(P(simu->gradscale, iwfs), ig)*=adj;
+#endif								
 							}
 						}
 						mgnew=dsum(P(simu->gradscale, iwfs))/ng;

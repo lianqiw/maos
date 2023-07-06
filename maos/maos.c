@@ -334,24 +334,26 @@ void maos_version(void){
 	}else{
 		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
 	}
-#if CPU_SINGLE 
-	info2(" CPU(single)");
+#ifdef __OPTIMIZE__
+#define OPT_STR "+O3"
 #else
-	info2(" CPU(double)");
+#define OPT_STR "+O0"
 #endif
+#if CPU_SINGLE 
+#define CPU_FP "F32"
+#else
+#define CPU_FP "F64"
+#endif
+	info2(" CPU(" CPU_FP "," OPT_STR ")");
 #if USE_CUDA
 #if CUDA_DOUBLE
-	info2(" +CUDA(double)");
+#define GPU_FP "F64"
 #else
-	info2(" +CUDA(single)");
+#define GPU_FP "F32"
 #endif
+	info2(" with CUDA(v%d," GPU_FP ")\n", USE_CUDA);
 #else
-	info2(" -CUDA");
-#endif
-#ifdef __OPTIMIZE__
-	info2(" +optimization.\n");
-#else
-	info2(" -optimization\n");
+	info2(" w/o CUDA\n");
 #endif
 	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
 #if HAS_LWS

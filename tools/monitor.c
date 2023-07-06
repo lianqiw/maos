@@ -65,8 +65,8 @@ GtkWidget* window=NULL;
 //static GtkWidget** tabs;
 static GtkWidget** titles;
 //static GtkWidget** cmdconnect;
-GtkWidget *textscroll=NULL;
-GtkTextBuffer* textbuffer=NULL;
+//GtkWidget *textscroll=NULL;
+//GtkTextBuffer* textbuffer=NULL;
 double* usage_cpu, * usage_cpu2;
 //double *usage_mem, *usage_mem2;
 static GtkWidget** prog_cpu;
@@ -708,7 +708,7 @@ void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gp
 	(void)page_num;
 	(void)page;
 	(void)self;
-	gtk_widget_hide(textscroll);
+	//gtk_widget_hide(textscroll);
 }
 void create_window(
 #if GTK_MAJOR_VERSION>3
@@ -726,12 +726,7 @@ void create_window(
 #endif
 	parse_provider();//requires window to be set
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
-	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
-#if GTK_MAJOR_VERSION<4
-	gtk_container_add(GTK_CONTAINER(window),vbox);
-#else
-	gtk_window_set_child(GTK_WINDOW(window),vbox);
-#endif
+
 #if GTK_MAJOR_VERSION<4 && 0
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar),GTK_ICON_SIZE_MENU);
@@ -752,17 +747,22 @@ void create_window(
 	gtk_widget_show_all(toptoolbar);
 #endif
 	notebook=gtk_notebook_new();
-	if(1){
-		gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toptoolbar, GTK_PACK_START);
-	}else{
-		box_append(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
-	}
-	//gtk_widget_show(notebook);
-	box_append(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
-
-	//gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
-	{//text are to show details job information
+	//gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
+
+	gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toptoolbar, GTK_PACK_START);
+
+	//gtk_widget_show(notebook);
+	//box_append(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
+
+	//GtkWidget *vbox=gtk_vbox_new(FALSE, 0);
+#if GTK_MAJOR_VERSION<4
+	gtk_container_add(GTK_CONTAINER(window), notebook);
+#else
+	gtk_window_set_child(GTK_WINDOW(window), notebook);
+#endif
+	
+	/*{//text are to show details job information
 		//GtkWidget* seperator=gtk_hseparator_new();
 		//box_append(GTK_BOX(pages[ihost]), seperator, FALSE, FALSE, 0);
 		GtkWidget* textview=gtk_text_view_new();
@@ -786,7 +786,7 @@ void create_window(
 		gtk_text_buffer_set_text(textbuffer, "", -1);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), 0);
 		gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview), GTK_WRAP_WORD);
-	}
+	}*/
 
 	//g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(quitmonitor), NULL);
@@ -899,7 +899,7 @@ void create_window(
 #else	
 	gtk_widget_show(window);
 #endif
-	gtk_widget_hide(textscroll);
+	//gtk_widget_hide(textscroll);
 }
 
 void print_help(const char *cmd){

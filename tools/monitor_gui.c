@@ -38,8 +38,10 @@
 enum{
 	COL_DATE=0,//date in string
 	COL_TIME,//time in time_t. //only set once, to keep task order stable.
+	COL_HOST,
 	COL_PID,
 	COL_FULL,/*full path+arguments+output*/
+	COL_TOOLTIP,/*reformatted from COL_FULL for tooltip*/
 	COL_PATH,/*starting path*/
 	COL_ARGS,/*arguments*/
 	COL_OUT, /*output folder*/
@@ -49,13 +51,13 @@ enum{
 	COL_STEP,
 	COL_STEPP,/*gint */
 	COL_TIMING,
-	COL_ALL,
-	COL_REST,
+	//COL_ALL,
+	//COL_REST,
 	COL_ERRLO,
 	COL_ERRHI,
 	COL_ACTION,
 	COL_COLOR,
-	COL_HOST,
+	
 	COL_TOT,
 };
 static GtkListStore* listall=NULL;
@@ -173,6 +175,7 @@ static void list_proc_append(proc_t *p){
 	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
 	char* spath=p->path;
+	char* stooltip=NULL;//for tooltip
 	char* sstart=NULL;//starting directory
 	char* sout=NULL;  //output directory
 	char* sargs=NULL; //job arguments
@@ -210,14 +213,20 @@ static void list_proc_append(proc_t *p){
 				strcat(sargs, sout);//append sout back to sargs. Cannot overflow
 			}
 		}
+		{
+			stooltip=strdup(sargs);
+			parse_argopt(stooltip, NULL);
+		}
 	}
 	GtkTreeIter iter;
 	gtk_list_store_append(listall, &iter);
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
 		COL_TIME, p->status.timstart,
+		COL_HOST, hosts[p->hid],
 		COL_PID, spid,
 		COL_FULL, spath?spath:" ",
+		COL_TOOLTIP, stooltip?stooltip:"",
 		COL_PATH, sstart?sstart:" ",
 		COL_ARGS, sargs?sargs:" ",//arguments
 		COL_OUT, sout?sout:" ",//output directory
@@ -226,9 +235,8 @@ static void list_proc_append(proc_t *p){
 		COL_STEPT, " ",
 		COL_STEP, " ",
 		COL_STEPP, 0,
-		COL_HOST, hosts[p->hid],
 		-1);
-	free(sstart); free(sout); free(sargs);
+	free(sstart); free(sout); free(sargs); free(stooltip);
 	GtkTreePath* tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(listall), &iter);
 	p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(listall), tpath);
 	gtk_tree_path_free(tpath);
@@ -588,12 +596,12 @@ static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x,
 				gtk_tree_selection_select_path(selection, path);
 			}
 		}
-	} else{//clicks outsize of treeview. unselect all.
+	}/* else{//clicks outsize of treeview. unselect all.
 		if(button==1){
 			gtk_tree_selection_unselect_all(selection);
 			column=NULL;
 		}
-	}
+	}*/
 	if(path) {
 		gtk_tree_path_free(path); path=NULL;
 	}
@@ -661,7 +669,7 @@ static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x
 	}
 	return TRUE;
 }
-static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
+/*static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
 	(void)path;
 	gchar** buf=(gchar**)user_data;
 	if(!*buf){
@@ -672,13 +680,13 @@ static void concat_selected_path(GtkTreeModel* model, GtkTreePath* path, GtkTree
 		parse_argopt(*buf, NULL);
 		g_value_unset(&value);
 	} else{
-		//*buf=g_strjoin("\n", *buf, val, NULL);
+		// *buf=g_strjoin("\n", *buf, val, NULL);
 	}
-}
+}*/
 /*
   handle section change event to update the GtkTextBuffer buffers[ihost]
  */
-void view_selection_event(GtkTreeSelection* selection, gpointer user_data){
+/*void view_selection_event(GtkTreeSelection* selection, gpointer user_data){
 	(void)user_data;
 	//int ipage=GPOINTER_TO_INT(user_data);
 	int nsel=gtk_tree_selection_count_selected_rows(selection);
@@ -697,7 +705,7 @@ static gboolean view_unselect_all(GtkTreeView *view, gpointer user_data){
 	(void)user_data;
 	gtk_widget_hide(textscroll);
 	return 0;
-}
+}*/
 static gboolean filter_host(GtkTreeModel* model, GtkTreeIter* iter, gpointer host){
 	gchar* host2;
 	gtk_tree_model_get(model, iter, COL_HOST, &host2, -1);
@@ -714,26 +722,28 @@ static gboolean filter_status(GtkTreeModel* model, GtkTreeIter* iter, gpointer s
 GtkWidget* new_page(int ihost){
 	if(!listall){
 		listall=gtk_list_store_new(COL_TOT,
-			G_TYPE_STRING,/*DATE */
-			G_TYPE_LONG, /*TIME*/
-			G_TYPE_STRING,/*PID */
-			G_TYPE_STRING,/*FULL */
-			G_TYPE_STRING,/*PATH */
-			G_TYPE_STRING,/*ARGS */
-			G_TYPE_STRING,/*OUT */
-			//G_TYPE_STRING,/*SEED */
-			//G_TYPE_INT, /*SEEDP */
-			G_TYPE_STRING,/*STEPT*/
-			G_TYPE_STRING,/*STEP */
-			G_TYPE_INT, /*STEPP */
-			G_TYPE_STRING,/*TIMING */
-			G_TYPE_STRING,/*ALL */
-			G_TYPE_STRING,/*REST */
-			G_TYPE_STRING,/*ERRLO */
-			G_TYPE_STRING,/*ERRHI */
-			GDK_TYPE_PIXBUF,/*ACTION */
-			G_TYPE_STRING, /*COLOR */
-			G_TYPE_STRING /*HOST*/
+			G_TYPE_STRING,/*COL_DATE */
+			G_TYPE_LONG, /*COL_TIME*/
+			G_TYPE_STRING, /*COL_HOST*/
+			G_TYPE_STRING,/*COL_PID */
+			G_TYPE_STRING,/*COL_FULL */
+			G_TYPE_STRING,/*COL_TOOLTIP */
+			G_TYPE_STRING,/*COL_PATH */
+			G_TYPE_STRING,/*COL_ARGS */
+			G_TYPE_STRING,/*COL_OUT */
+			//G_TYPE_STRING,/*COL_SEED */
+			//G_TYPE_INT, /*COL_SEEDP */
+			G_TYPE_STRING,/*COL_STEPT*/
+			G_TYPE_STRING,/*COL_STEP */
+			G_TYPE_INT, /*COL_STEPP */
+			G_TYPE_STRING,/*COL_TIMING */
+			//G_TYPE_STRING,/*COL_ALL */
+			//G_TYPE_STRING,/*COL_REST */
+			G_TYPE_STRING,/*COL_ERRLO */
+			G_TYPE_STRING,/*COL_ERRHI */
+			GDK_TYPE_PIXBUF,/*COL_ACTION */
+			G_TYPE_STRING /*COL_COLOR */
+
 		);
 		lists=mycalloc(nhost+1, GtkTreeModel*);
 		views=mycalloc(nhost+1, GtkWidget*);
@@ -761,7 +771,7 @@ GtkWidget* new_page(int ihost){
 
 		g_signal_connect(view, "popup-menu",
 			G_CALLBACK(view_popup_menu), GINT_TO_POINTER(ihost));
-		g_signal_connect(view, "unselect-all", G_CALLBACK(view_unselect_all), GINT_TO_POINTER(ihost));
+		//g_signal_connect(view, "unselect-all", G_CALLBACK(view_unselect_all), GINT_TO_POINTER(ihost));
 #else
 		GtkGesture* gesture=gtk_gesture_click_new();
 		g_signal_connect(gesture, "pressed", 
@@ -774,8 +784,8 @@ GtkWidget* new_page(int ihost){
 	GtkTreeSelection* viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	/*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
 	gtk_tree_selection_set_mode(viewsel, GTK_SELECTION_MULTIPLE);
-	g_signal_connect(viewsel, "changed", G_CALLBACK(view_selection_event), GINT_TO_POINTER(ihost));
-	gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_FULL);
+	//g_signal_connect(viewsel, "changed", G_CALLBACK(view_selection_event), GINT_TO_POINTER(ihost));
+	gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_TOOLTIP);
 	/*
 	  The implementation of GtkTreeView hardcoded GDK_LINE_ON_OFF_DASH in
 	  gtk_tree_view_set_grid_lines, which makes it impossible to make solid
