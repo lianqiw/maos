@@ -98,7 +98,7 @@ void save_gradol(sim_t* simu){
 	}
 }
 //Convert the DM command from modal space if needed. The returned dmat should be freed.
-dmat* convert_dm(const recon_t* recon, dmat* in, int idm){
+static dmat* convert_dm(const recon_t* recon, dmat* in, int idm){
 	dmat* out=NULL;
 	if(recon->amod && P(recon->amod,idm)){
 		dmm(&out, 0, P(recon->amod,idm), in, "nn", 1);
@@ -140,18 +140,16 @@ void save_recon(sim_t* simu){
 			}
 		}
 
-		if(!parms->recon.modal){
-			for(int idm=0; simu->dmerr&&idm<parms->ndm; idm++){
-				if(P(simu->dmerr,idm)){
-					dmat* tmp=convert_dm(recon, P(simu->dmerr,idm), idm);
-					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
-						"DM Error Signal (Hi)", "x (m)", "y (m)",
-						"Err Hi %d", idm);
-					dfree(tmp);
-				}
+		for(int idm=0; simu->dmerr&&idm<parms->ndm; idm++){
+			if(P(simu->dmerr,idm)){
+				dmat* tmp=convert_dm(recon, P(simu->dmerr,idm), idm);
+				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
+					"DM Error Signal (Hi)", "x (m)", "y (m)",
+					"Err Hi %d", idm);
+				dfree(tmp);
 			}
 		}
-
+		
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
@@ -161,16 +159,22 @@ void save_recon(sim_t* simu){
 			}
 		}
 
-		if(simu->Merr_lo&&draw_current("DM", "Err lo")){
-			dcell* dmlo=simu->dmtmp;
-			dcellzero(dmlo);
-			addlow2dm(&dmlo, simu, simu->Merr_lo, 1);
-
-			for(int idm=0; dmlo&&idm<parms->ndm; idm++){
+		if(simu->Merr_lo){
+			char fig[64];
+			int idm;
+			for(idm=0; idm<parms->ndm; idm++){
+				snprintf(fig, sizeof(fig), "Err Lo %d", idm);
+				if(draw_current("DM", fig)){
+					break;
+				}
+			}
+			if(idm<parms->ndm){//need plotting
+				dcell* dmlo=simu->dmtmp;
+				dcellzero(dmlo);
+				addlow2dm(&dmlo, simu, simu->Merr_lo, 1);
 				dmat* tmp=convert_dm(recon, P(dmlo,idm), idm);
 				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
-					"DM Error Signal (Lo)", "x (m)", "y (m)",
-					"Err Lo %d", idm);
+					"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 				dfree(tmp);
 			}
 			//plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
@@ -324,7 +328,7 @@ void save_dmreal(sim_t* simu){
 							"DM OPD", "x (m)", "y (m)", "RealOPD %d", idm);
 					}
 				}
-				if(draw_current("Evldm", "OA")){
+				if(draw_current("Evldm", "DM")){
 					dmat* opd=dnew(simu->aper->locs->nloc, 1);
 					for(int idm=0; idm<parms->ndm; idm++){
 						int ind=parms->evl.nevl*idm;
@@ -340,7 +344,7 @@ void save_dmreal(sim_t* simu){
 					}
 
 					drawopd("Evldm", simu->aper->locs, opd, P(parms->dbg.draw_opdmax),
-						"DM OPD", "x (m)", "y (m)", "OA");
+						"DM OPD", "x (m)", "y (m)", "DM");
 					dfree(opd);
 				}
 			}

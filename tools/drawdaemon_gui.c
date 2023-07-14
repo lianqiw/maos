@@ -416,6 +416,7 @@ static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
 	delete_page(*drawdatawrap);
 }
 gboolean update_title(gpointer window){
+	if(!window) window=curwindow;
 	if(!GTK_IS_WINDOW(window)) return FALSE;//deleted
 	
 	char title[80];
@@ -424,7 +425,7 @@ gboolean update_title(gpointer window){
 	}else if(client_pid==0 && sock>-1){
 		snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
 	}else{
-		snprintf(title, 80, "Drawdaemon (%s:disconnected)", client_hostname);
+		snprintf(title, 80, "Drawdaemon (disconnected)");
 	}
 
 	/*if(iwindow>1){

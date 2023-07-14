@@ -141,6 +141,7 @@ enum{
     DRAW_UDPPORT,//22 send udp port of the client
     DRAW_INIT,//23 set the time to delete old plots that are not updated when draw_final is called
     DRAW_PID,//24 followed by pid
+    DRAW_ZLOG,//25 log scale for image.
     DRAW_END=100,//data send is over. start drawing
     
     DRAW_ENTRY=9999 /*A new entry*/

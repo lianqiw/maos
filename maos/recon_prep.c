@@ -433,6 +433,42 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		writebin(recon->amap, "amap");
 	}
 }
+static void
+setup_recon_amod(recon_t* recon, const parms_t* parms){
+	const int ndm=parms->ndm;
+	if(!ndm) return;
+	recon->amod=dcellnew(ndm, 1);
+	recon->anmod=lnew(ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+		int nmod=parms->recon.nmod;
+		const long nloc=P(recon->aloc, idm)->nloc;
+		switch(parms->recon.modal){
+		case -2: {//dummy modal control, emulating zonal mode with identity modal matrix
+			if(nmod&&nmod!=nloc){
+				warning("recon.mod should be 0 or %ld when recon.modal=2 \n", nloc);
+			}
+			P(recon->amod, idm)=dnew(nloc, nloc);
+			real val=sqrt(nloc);
+			daddI(P(recon->amod, idm), val);
+			dadds(P(recon->amod, idm), -val/nloc);
+		}
+			   break;
+		case -1://zernike
+		{
+			if(!nmod) nmod=nloc;
+			int rmax=floor((sqrt(1+8*nmod)-3)*0.5);
+			P(recon->amod, idm)=zernike(P(recon->aloc, idm), 0, 0, rmax, 0);
+		}
+		break;
+		case 1://Karhunen loeve. Don't limit number of modes here to make caching of G_M right.
+			P(recon->amod, idm)=KL_vonkarman(P(recon->aloc, idm), 0, parms->atmr.L0);
+			break;
+		default:
+			error("Invalid recon.modal");
+		}
+		P(recon->anmod, idm)=P(recon->amod, idm)->ny;
+	}
+}
 /**
    Setup ray tracing operator from xloc to ploc for guide stars
 */
@@ -617,38 +653,6 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		recon->GA=dspcellnew(nwfs, ndm);
 		if(parms->recon.modal){
 			recon->GM=dcellnew(nwfs, ndm);
-
-			recon->amod=dcellnew(ndm, 1);
-			recon->anmod=lnew(ndm, 1);
-			for(int idm=0; idm<ndm; idm++){
-				int nmod=parms->recon.nmod;
-				const long nloc=P(recon->aloc, idm)->nloc;
-				switch(parms->recon.modal){
-				case -2: {//dummy modal control, emulating zonal mode with identity modal matrix
-					if(nmod&&nmod!=nloc){
-						warning("recon.mod should be 0 or %ld when recon.modal=2 \n", nloc);
-					}
-					P(recon->amod, idm)=dnew(nloc, nloc);
-					real val=sqrt(nloc);
-					daddI(P(recon->amod, idm), val);
-					dadds(P(recon->amod, idm), -val/nloc);
-				}
-					   break;
-				case -1://zernike
-				{
-					if(!nmod) nmod=nloc;
-					int rmax=floor((sqrt(1+8*nmod)-3)*0.5);
-					P(recon->amod, idm)=zernike(P(recon->aloc, idm), 0, 0, rmax, 0);
-				}
-				break;
-				case 1://Karhunen loeve. Don't limit number of modes here to make caching of G_M right.
-					P(recon->amod, idm)=KL_vonkarman(P(recon->aloc, idm), 0, parms->atmr.L0);
-					break;
-				default:
-					error("Invalid recon.modal");
-				}
-				P(recon->anmod, idm)=P(recon->amod, idm)->ny;
-			}
 		}
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1232,6 +1236,10 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	setup_recon_ploc(recon, parms);
 	/*setup DM actuator grid */
 	setup_recon_aloc(recon, parms);
+	if(parms->recon.modal){
+		//DM modal control matrix.
+		setup_recon_amod(recon, parms);
+	}
 	/*Grid for DM fitting*/
 	setup_recon_floc(recon, parms);
 	/*Gradient operators*/
@@ -1296,7 +1304,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 /**
    That may depend on GPU data.
  */
-void setup_recon_prep2(recon_t* recon, const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
+void setup_recon_prep_ga(recon_t* recon, const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
 	info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
 	setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
 	setup_recon_GF(recon, parms);//GF depends on GA.

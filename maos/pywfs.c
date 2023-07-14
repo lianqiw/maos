@@ -45,7 +45,7 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 		loc_t* saloc=0;
 		if(pupelong){//pupil elongation (along radial direction)
 			if(pyside!=4){
-				error("Revise implementation\n");
+				error("Needs implementation\n");
 			} else{
 				if(!pywfs->msaloc){
 					pywfs->msaloc=loccellnew(pyside, 1);
@@ -325,8 +325,9 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	if(parms->powfs[ipowfs].saat>0&&!parms->powfs[ipowfs].saloc){
 	//Get ride of insufficiently illuminated subapertures.
 		dmat* saa=pywfs->saa;
-		real samax=dmaxabs(saa);
-		loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samax, 0, 0);
+		//real samax=dmaxabs(saa);
+		real samean=dsum(saa)/PN(saa);
+		loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samean, 1, 0);
 		dscale(saa, NX(saa)/dsum(saa));//saa average to one.
 		pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, dx2, pupelong);
 	}
@@ -404,7 +405,9 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
 	}
 }
+///Test PYWFS implementation
 void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon){
+	if(!PYWFS_DEBUG) return;
 	if(!parms || !powfs || !recon){
 		warning("Some parameters not set\n");
 		return;
@@ -420,7 +423,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 	if(!pywfs) return;
 	const real siglev=pywfs->siglev;
 	const int iwfs=pywfs->iwfs0;
-	if(PYWFS_DEBUG){//Test implementation using zernikes
+	if(PYWFS_DEBUG==1){//Test implementation using zernikes
 		dmat* ints=0;
 		real wve=1e-9*20;
 		dmat* opds=NULL;
@@ -465,6 +468,21 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_zernike_ints");
 		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_zernike_grad");
 		dmat *opd=dnew(NX(opds),1);
+		if(1){//replace with petalling modes
+			real* px=pywfs->locfft->loc->locx;
+			real *py=pywfs->locfft->loc->locy;
+			real dang=M_PI/3;
+			real ang0=M_PI;
+			for(int ix=0; ix<NX(opds);ix++){
+				real angle=atan2(px[ix],py[ix]);//intentionally reverse x/y to match the pupil amplitude map
+				int ip=ifloor((angle+ang0)/dang)+1;
+				for(int iy=1; iy<7; iy++){
+					P(opds, ix, iy)=0;
+				}
+				P(opds, ix, ip)=1;
+			}
+			writebin(opds, "pywfs_opds_petal");
+		}
 		for(int im=0; im<NY(opds); im++){
 			dmat *opdi=drefcols(opds, im, 1);
 			for(int j=0; j<nn; j++){
@@ -490,8 +508,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		cellfree(ints);
 		dfree(opds);
 		dcellfree(atms); dfree(atm);
-	}
-	if(PYWFS_DEBUG && 0){//Test linearity of a zenike mode with noise
+	}else if(PYWFS_DEBUG==2){//Test linearity of a zenike mode with noise
 		real wve=20e-9;
 		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 0, -parms->powfs[ipowfs].dither);
 		dmat* opdi=0;
@@ -526,11 +543,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		
 		writebin(res, "pywfs_dither_response");
 		dfree(opds); dfree(opdi); dfree(ints); dfree(grad); dfree(reg); dfree(tmp); dfree(res); dfree(ints2);
-	}
-	//Test NCPA calibration
-	int PYWFS_NCPA=0;
-	READ_ENV_INT(PYWFS_NCPA, 0, 1);
-	if(PYWFS_NCPA){
+	}else if(PYWFS_DEBUG==3){//Test NCPA calibration
 		dmat* opdatm=dread("opdatm");
 		dmat* opdbias_full=dread("opdbias_full");
 		dmat* opdbias_astigx=dread("opdbias_astigx");
@@ -603,8 +616,6 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 			dfree(grad);
 
 		}
-
-		exit(0);
 	}
 	if(PYWFS_DEBUG){
 		exit(0);

@@ -156,25 +156,27 @@ void maos_setup(const parms_t* parms){
 #endif
 	if(!parms->sim.evlol){
 		global->powfs=powfs=setup_powfs_init(parms, aper);
-		print_mem("After setup_powfs");
-		/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
+		print_mem("After setup_powfs_init");
+		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c 
 		global->recon=recon=setup_recon_prep(parms, aper, powfs);
-		/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
+		pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
+		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
 		setup_surf(parms, aper, powfs, recon);
-		/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/
-		setup_powfs_phy(parms, powfs);
-		/*setup gradient noise during simulation. */
+		//set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()
+		setup_shwfs_phy(parms, powfs);
+		//setup gradient noise during simulation. 
 		setup_powfs_neasim(parms, powfs);
-		/*calibrate gradient offset*/
+		//calibrate gradient offset of NCPA
 		setup_powfs_calib(parms, powfs);
 #if USE_CUDA
 		if(parms->gpu.wfs&&powfs&&has_pywfs){
 			gpu_wfsgrad_init(parms, powfs);//needed by pywfs_mkg
 		}
 #endif
-		setup_recon_prep2(recon, parms, aper, powfs);
-		pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
-		/*assemble noise equiva angle inverse from powfs information */
+		//creates DM to WFS IA. needs GPU for pwfs. create amod for modal control.
+		setup_recon_prep_ga(recon, parms, aper, powfs);
+		
+		//assemble noise equiva angle inverse from powfs information 
 		setup_recon_saneai(recon, parms, powfs);
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 		if(!NO_RECON){

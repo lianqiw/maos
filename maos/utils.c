@@ -460,13 +460,15 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp, NULL,
-			"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d", ipowfs);
+			"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d amp", ipowfs);
 		if(powfs[ipowfs].amp_tel){
 			for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
 				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp_tel,wfsind), NULL,
 					"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d tel2wfs", ipowfs);
 			}
 		}
+		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, NULL, 
+			"WFS Subaperture Amplitude", "x (m)", "y (m)", "powfs %d saa", ipowfs);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			if(powfs[ipowfs].gradncpa){
@@ -685,7 +687,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	const real cogthres=parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int icol=0; icol<1000; icol+=dtrat){
-		setup_powfs_etf(powfs, parms, ipowfs, 0, icol, 0, 0);
+		setup_shwfs_etf(powfs, parms, ipowfs, 0, icol, 0, 0);
 		dcell *i0_new=0;
 		
 		gensei(&i0_new, NULL, NULL, NULL, 

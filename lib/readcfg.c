@@ -115,32 +115,6 @@ static char* strextract(const char* data){
 	const char *start=data, *end=0;
 	trim_string(&start, &end);
 	return mystrndup(start, end-start);
-	/*
-	size_t slen=strlen(data);
-	while(slen>0&&isspace(data[0])){
-		data++;
-		slen--;
-	}
-	while(slen>0&&isspace(data[slen-1])){
-		slen--;
-	}
-	if(!slen) return NULL;
-	if(slen>1 && (data[0]=='"'||data[0]=='\'')){
-		if(data[slen-1]!=data[0]){
-			warning("Record is {%s}, quotes should come in pair\n", data);
-			return strdup(data);
-		} else{
-			char* res=strdup(data+1);
-			res[slen-2]='\0';
-			if(is_end(res[0])){
-				free(res);
-				res=NULL;
-			}
-			return res;
-		}
-	} else{
-		return strdup(data);
-	}*/
 }
 /**
    Remove comment (after #), leading spaces, and trailing line break and spaces from a
@@ -386,49 +360,6 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				free(embeded);
 			}
 		} else{
-#if COMPATIBILITY == 1	    
-			/*
-			Compatibility mode: rename old key names to new key names. Will
-			remove in the future.
-			*/
-			/*RENAME(atm.fractal, atm.method);*/
-			//RENAME(atm.zadeg, sim.zadeg);
-			/*Added on 2011-04-28 */
-			/*RENAME(dbg.noatm, sim.noatm);
-			RENAME(dbg.fitonly, sim.fitonly);
-			RENAME(dbg.evlol, sim.evlol);
-			RENAME(sim.fitonly, sim.idealfit);
-			IGNORE(sim.servotype_hi);
-			IGNORE(sim.servotype_lo);
-			IGNORE(sim.epfocus);
-			IGNORE(dbg.dxonedge);
-			IGNORE(sim.ahst_ttr);
-			RENAME(sim.gtypeII_lo, sim.eplo);
-			RENAME(sim.epngs, sim.eplo);
-			RENAME(sim.apngs, sim.aplo);
-			RENAME(dbg.splitlrt, tomo.splitlrt);
-			RENAME(tomo.split_wt, tomo.ahst_wt);
-			RENAME(tomo.split, recon.split);
-			RENAME(evl.opdcov, evl.cov);
-			RENAME(evl.psfpttr, evl.pttr);*/
-			/*Added 2017-11-27*/
-			/*RENAME(sim.apdm, sim.aphi);
-			RENAME(sim.epdm, sim.ephi);
-			RENAME(sim.aldm, sim.alhi);
-			RENAME(powfs.neaspeckle, powfs.neaextra);
-			RENAME(tomo.cxx, tomo.cxxalg);
-			RENAME(sim.ahstfocus, tomo.ahst_focus);
-			RENAME(powfs.phytype, powfs.phytype_recon);
-			RENAME(powfs.phytypesim, powfs.phytype_sim);
-			RENAME(powfs.phytypesim2, powfs.phytype_sim2);
-			RENAME(dbg.ncpa_nouncorr, dbg.ncpa_rmsci);
-			RENAME(powfs0_llt.colsimdtrat, powfs0_llt.coldtrat);
-			RENAME(recon.psddtrat, recon.psddtrat_hi);
-			RENAME(powfs.ncomp, powfs.notf);
-			IGNORE(powfs.radrot);
-			RENAME(fit.actinterp, fit.actextrap);
-			RENAME(lsr.actinterp, lsr.actextrap);*/
-#endif
 			STORE_T* store=mycalloc(1, STORE_T);
 			if(prefix){
 				store->key=stradd(prefix, var, NULL);

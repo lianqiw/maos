@@ -22,13 +22,13 @@
 powfs_t * setup_powfs_init(const parms_t *parms, aper_t *aper);
 void setup_powfs_misreg_tel(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
 void setup_powfs_misreg_dm(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
-void setup_powfs_phy(const parms_t *parms,  powfs_t *powfs);
+void setup_shwfs_phy(const parms_t *parms,  powfs_t *powfs);
 void setup_powfs_neasim(const parms_t *parms,  powfs_t *powfs);
 void setup_powfs_calib(const parms_t *parms, powfs_t *powfs);
 void free_powfs_unused(const parms_t *parms, powfs_t *powfs);
 void free_powfs(const parms_t *parms, powfs_t *powfs);
 //void test_powfs(const parms_t *parms, powfs_t *powfs);
-void setup_powfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, 
+void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, 
   real deltah, real thresh);
 void wfspupmask(const parms_t *parms, loc_t *loc, dmat *amp, int iwfs);
 

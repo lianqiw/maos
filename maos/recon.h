@@ -22,7 +22,7 @@
 #include "common.h"
 //Called by maos.c
 recon_t *setup_recon_prep(const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
-void setup_recon_prep2(recon_t *recon, const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
+void setup_recon_prep_ga(recon_t *recon, const parms_t *parms, const aper_t *aper, const powfs_t *powfs);
 void setup_recon_saneai(recon_t *recon, const parms_t *parms, const powfs_t *powfs);
 void setup_recon_fit(recon_t *recon, const parms_t *parms);
 void setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms);

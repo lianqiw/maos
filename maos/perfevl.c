@@ -629,14 +629,14 @@ static void perfevl_save(sim_t* simu){
 				zfarr_push(simu->save->evlopdmean[ievl], isim, P(simu->evlopdmean,ievl));
 				if(parms->plot.run){
 					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean, ievl), simu->aper->amp1, P(parms->dbg.draw_opdmax),
-						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL %d", ievl);
+						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean %d", ievl);
 				}
 			}
 			if(P(simu->evlopdmean_ngsr, ievl)){
 				zfarr_push(simu->save->evlopdmean_ngsr[ievl], isim, P(simu->evlopdmean_ngsr,ievl));
 				if(parms->plot.run){
 					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean_ngsr, ievl), simu->aper->amp1, P(parms->dbg.draw_opdmax),
-						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "ngsr %d", ievl);
+						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean ngsr %d", ievl);
 				}
 			}
 		}

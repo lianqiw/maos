@@ -755,6 +755,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 	const real *cpl0=cpl-1;
 	dsp *outt=NULL;
 	long nmissing=0;
+	int nrepeat=0;
 	do{
 		long count=0;
 		nmissing=0;
@@ -817,8 +818,18 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
 		}
 		dspfree(outit);
 		dfree(actcpl2);
-		if(nmissing) dbg("act_extrap: nmissing=%ld, repeat.\n", nmissing);
-	}while(nmissing>0);
+		if(nmissing) {
+			if(nrepeat==0){
+				dbg("act_extrap: nmissing=%ld", nmissing);
+			}else{
+				dbg(" %ld", nmissing);
+			}
+			nrepeat++;
+		}
+	}while(nmissing>0 && nrepeat<20);
+	if(nrepeat>0){
+		dbg("\n");
+	}
 	dsp* out=dsptrans(outt);
 	dspfree(outt);
 	/*

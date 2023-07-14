@@ -430,9 +430,9 @@ void sim_update_etf(sim_t* simu){
 			}
 			info("Step %d: powfs %d: Updating ETF.\n", isim, ipowfs);
 			TIC;tic;
-			setup_powfs_etf(powfs, parms, ipowfs, 1, icol, deltah, zoomset?0:100);
+			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah, zoomset?0:100);
 			if(icol2!=icol){
-				setup_powfs_etf(powfs, parms, ipowfs, 2, icol2, deltah, 0);
+				setup_shwfs_etf(powfs, parms, ipowfs, 2, icol2, deltah, 0);
 			}
 			toc2("ETF");
 #if USE_CUDA

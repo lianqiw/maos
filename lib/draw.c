@@ -953,7 +953,7 @@ int cdraw(const char *fig, const cmat *p, const real *limit, const real *zlim,
 	Seperate out to be easily modifiable.
 */
 #define LIMIT_SET_X(limit, ox, offset, dx, nx) limit[0]=(ox)+(offset)*fabs(dx); limit[1]=limit[0]+fabs(dx)*(nx);
-#define LIMIT_SET_Y(limit, ox, offset, dx, nx) limit[2]=(ox)+(offset)*fabs(dx); limit[3]=limit[1]+fabs(dx)*(nx);
+#define LIMIT_SET_Y(limit, ox, offset, dx, nx) limit[2]=(ox)+(offset)*fabs(dx); limit[3]=limit[2]+fabs(dx)*(nx);
 
 /**
    Mapping the floating point numbers onto screen with scaling similar to matlab
@@ -1056,16 +1056,14 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	format2fn;
 	if(!saloc || !gradin) return 0;
     long nsa=saloc->nloc;
+	if(nsa<=4) grad2opd=0;
     //check current plotting target
-    if(grad2opd&&nsa>4){
-        if(!draw_current(fig, fn)) return 0;
-    } else{
-        char fnx[100];
-        char fny[100];
-        snprintf(fnx, sizeof(fnx), "%s x", fn);
-        snprintf(fny, sizeof(fny), "%s y", fn);
-        if(!draw_current(fig, fnx) && !draw_current(fig, fny)) return 0;
-    }
+    
+	char fnx[100];
+	char fny[100];
+	snprintf(fnx, sizeof(fnx), "%s x", fn);
+	snprintf(fny, sizeof(fny), "%s y", fn);
+	if(!(grad2opd&&draw_current(fig, fn)) && !draw_current(fig, fnx)&&!draw_current(fig, fny)) return 0;
 	
 	dmat* grad=0;
 	if(trs){//remove tip/tilt
@@ -1087,7 +1085,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	}else{
 		grad=dref(gradin);
 	}
-	if(grad2opd&&nsa>4){
+	if(grad2opd&&draw_current(fig, fn)){
 		//This is different from loc_embed. It removes the padding.
 		dmat* phi=0;
 		cure_loc(&phi, grad, saloc);
@@ -1095,20 +1093,17 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		int npad=saloc->npad;
 		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
 		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
-/*		limit[0]=saloc->map->ox+fabs(saloc->dx)*(npad-1/2);
-		limit[1]=saloc->map->ox+fabs(saloc->dx)*(phi->nx+npad-1/2);
-		limit[2]=saloc->map->oy+fabs(saloc->dy)*(npad-1/2+1);
-		limit[3]=saloc->map->oy+fabs(saloc->dy)*(phi->ny+npad-1/2+1);
-		*/
-		//writebin(phi, "phi");
 		ddraw(fig, phi, limit, zlim, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
-	} else{
+	}
+	if(draw_current(fig, fnx)){
 		dmat* gx=dnew_do(nsa, 1, P(grad), 0);
-		dmat* gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
 		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
-		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
 		dfree(gx);
+	}
+	if(draw_current(fig, fny)){
+		dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
+		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
 		dfree(gy);
 	}
 	dfree(grad);

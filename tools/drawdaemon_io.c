@@ -497,6 +497,9 @@ void *listen_draw(void *user_data){
 				g_idle_add((GSourceFunc)update_title, NULL);
 			}
 			break;
+			case DRAW_ZLOG://flip zlog
+				drawdata->zlog=drawdata->zlog?0:1;
+				break;
 			case DRAW_END:
 			{
 				drawdata->npts=npts;

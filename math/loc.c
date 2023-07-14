@@ -1047,19 +1047,46 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 		for(int icol=0; icol<ncol; icol++){
 			int pstart=locstat->cols[icol].pos;
 			int pend=locstat->cols[icol+1].pos;
+			if(cont==1){//original method
+				for(int pos=pstart; pos<pend; pos++){
+					if(P(amp, pos)<thres){
+						skip[pos]=1;
+					} else{
+						break;
+					}
+				}
+				for(int pos=pend-1; pos>pstart-1; pos--){
+					if(P(amp, pos)<thres){
+						skip[pos]=1;
+					} else{
+						break;
+					}
+				}
+			}else{//new method
+			int nkeep=0, nskip=0;//count continuous keep/skip
+			int lastskip=1;
 			for(int pos=pstart; pos<pend; pos++){
 				if(P(amp,pos)<thres){
-					skip[pos]=1;
-				} else{
-					break;
+					nskip++;
+					nkeep=0;
+				}else{
+					nkeep++;
+					nskip=0;
 				}
+				if(nkeep==4){//continuous keep
+					for(int it=1; it<nkeep; it++){
+						skip[pos-it]=0;
+					}
+					lastskip=0;
+				}
+				if(nskip==4){//continuous skip
+					for(int it=1; it<nskip; it++){
+						skip[pos-it]=1;
+					}
+					lastskip=1;
+				}
+				skip[pos]=lastskip;
 			}
-			for(int pos=pend-1; pos>pstart-1; pos--){
-				if(P(amp,pos)<thres){
-					skip[pos]=1;
-				} else{
-					break;
-				}
 			}
 		}
 	} else{
