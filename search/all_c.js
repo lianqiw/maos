@@ -47,7 +47,7 @@ var searchData=
   ['nfiraos_5flgs_2econf',['nfiraos_lgs.conf',['../nfiraos_lgs.html',1,'page34_conf']]],
   ['nfiraos_5fngs_2econf',['nfiraos_ngs.conf',['../nfiraos_ngs.html',1,'page34_conf']]],
   ['nfit',['nfit',['../parms_8h.html#af1a85154e53005746da5ebc3436a63fb',1,'fit_cfg_t']]],
-  ['ng',['ng',['../parms_8h.html#abb349e921acd3f558dad1d163e868d53',1,'powfs_cfg_t']]],
+  ['ng',['ng',['../parms_8h.html#a7c5c19ddbb55ded813102aec2370ed75',1,'pywfs_cfg_t::ng()'],['../parms_8h.html#abb349e921acd3f558dad1d163e868d53',1,'powfs_cfg_t::ng()']]],
   ['ngcov',['ngcov',['../parms_8h.html#a5c1842cb554ddd94daa285d4fc3486c4',1,'save_cfg_t']]],
   ['ngpu',['ngpu',['../parms_8h.html#af23c42a9b0647dbad3464fd349bcf2f2',1,'arg_t']]],
   ['ngpu2',['ngpu2',['../parms_8h.html#a7356cd98a8c2d8b193ed97a1ab568b29',1,'arg_t']]],

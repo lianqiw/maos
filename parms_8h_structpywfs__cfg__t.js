@@ -2,6 +2,7 @@ var parms_8h_structpywfs__cfg__t =
 [
     [ "nside", "parms_8h.html#a165013585625c81b54bcd6fa15db2f6a", null ],
     [ "raw", "parms_8h.html#a31180e752c3a1e615e413f61fe3b7aa2", null ],
+    [ "ng", "parms_8h.html#a7c5c19ddbb55ded813102aec2370ed75", null ],
     [ "modulpos", "parms_8h.html#acbd0d2bbccd50cfd8cb716021e376eee", null ],
     [ "modulpos_i", "parms_8h.html#afe8fb8802e3775d894ca9c3d6ab36742", null ],
     [ "modulring", "parms_8h.html#ad36b35d4aa3843841f00aea5783f0429", null ],

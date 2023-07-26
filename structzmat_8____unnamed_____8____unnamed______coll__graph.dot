@@ -4,5 +4,5 @@ digraph "zmat.__unnamed__.__unnamed__"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node146 [label="{zmat.__unnamed__._\l_unnamed__\n|+ id\l+ p\l+ nx\l+ ny\l+ keywords\l+ fp\l+ fft\l+ padding1\l+ mem\l+ async\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node146 [label="{zmat.__unnamed__._\l_unnamed__\n|+ id\l+ p\l+ nx\l+ ny\l+ keywords\l+ fp\l+ fft\l+ dummy_m\l+ mem\l+ async\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
 }

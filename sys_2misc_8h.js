@@ -11,7 +11,6 @@ var sys_2misc_8h =
     ] ],
     [ "strdup", "sys_2misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
     [ "strndup", "sys_2misc_8h.html#ad03229fc70e029be3fb59fe8dc7aef6f", null ],
-    [ "mybasename", "sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded", null ],
     [ "mydirname", "sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
     [ "check_suffix", "sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
     [ "copyfile", "sys_2misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd", null ],

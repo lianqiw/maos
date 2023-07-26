@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="pywfs_cfg_t",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structpywfs__cfg__t"];
+  Node0 [label="pts_t.__unnamed__.\l__unnamed__.__unnamed__",height=0.2,width=0.4,color="black",URL="$type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____"];
 }

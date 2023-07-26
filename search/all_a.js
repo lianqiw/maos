@@ -133,7 +133,7 @@ var searchData=
   ['locmean',['locmean',['../loc_8h.html#a2ebfd8125f4622ea422adca8cc71c110',1,'loc.c']]],
   ['locnew',['locnew',['../loc_8h.html#a1d868e2d9576be1bb354d904dc002662',1,'loc.c']]],
   ['locreaddata',['locreaddata',['../loc_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6',1,'loc.c']]],
-  ['locref',['locref',['../loc_8h.html#ab929d93ab02c2d3931fb10fdd78ec4ad',1,'loc.c']]],
+  ['locref',['locref',['../loc_8h.html#ad11c4f74d2be11af174161a40e18d9fd',1,'loc.c']]],
   ['locresize',['locresize',['../loc_8h.html#a4d17a0ee145421054bd35a35b55fb05d',1,'loc.c']]],
   ['locrot',['locrot',['../loc_8h.html#a43744124123f421e19046c7d64502ec7',1,'loc.c']]],
   ['locs',['locs',['../parms_8h.html#a07a8a56b6968583ca4f22907b93abb50',1,'load_cfg_t::locs()'],['../maos_2types_8h.html#ac63f9af1f96b9494da73641be8d9f225',1,'aper_t::locs()']]],

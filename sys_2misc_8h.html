@@ -119,8 +119,6 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5609e288961da8d6cfcc7494afbb3ded"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded">mybasename</a> (const char *fn)</td></tr>
-<tr class="separator:a5609e288961da8d6cfcc7494afbb3ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7eb606f7b007bd7d99f5063742df1b07"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07">mydirname</a> (const char *fn)</td></tr>
 <tr class="separator:a7eb606f7b007bd7d99f5063742df1b07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6c9a96f04de8b5f720072691fbec0de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de">check_suffix</a> (const char *fn, const char *suffix)</td></tr>
@@ -275,25 +273,6 @@ nval</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a5609e288961da8d6cfcc7494afbb3ded"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5609e288961da8d6cfcc7494afbb3ded">&#9670;&nbsp;</a></span>mybasename()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char* mybasename </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fn</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Obtain the basename of a file. The returnned string must be freed. Behavior is the same as basename() except that this implementation is reentrant and thread safe. </p>
-
-</div>
-</div>
 <a id="a7eb606f7b007bd7d99f5063742df1b07"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7eb606f7b007bd7d99f5063742df1b07">&#9670;&nbsp;</a></span>mydirname()</h2>
 
@@ -309,7 +288,7 @@ nval</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain the dirname of a path. See <a class="el" href="sys_2misc_8h.html#a5609e288961da8d6cfcc7494afbb3ded">mybasename()</a>. </p>
+<p>Obtain the dirname of a path. See mybasename(). </p>
 
 </div>
 </div>

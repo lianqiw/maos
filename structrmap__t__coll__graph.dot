@@ -5,8 +5,8 @@ digraph "rmap_t"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   Node46 [label="{rmap_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node47 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +ox\n+oy\n+tydeg\n+fexit\n+txdeg\n+dx\n+ftel\n+dy\n+fsurf" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node47 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
-  Node48 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +@52" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node48 [label="{anonymous:+@52\n||}",height=0.2,width=0.4,color="grey75"];
+  Node47 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +@54" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node47 [label="{anonymous:+@54\n||}",height=0.2,width=0.4,color="grey75"];
+  Node48 -> Node46 [color="grey25",fontsize="10",style="solid",label=" +ox\n+oy\n+tydeg\n+fexit\n+txdeg\n+dx\n+ftel\n+dy\n+fsurf" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node48 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
 }

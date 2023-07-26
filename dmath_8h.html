@@ -124,7 +124,8 @@ Functions</h2></td></tr>
 <tr class="separator:a0d7497e2dbb79adb228de6bdde4a201e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85615cd65e2532cf0bd935ba0246e815"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a85615cd65e2532cf0bd935ba0246e815">dnew_file</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
 <tr class="separator:a85615cd65e2532cf0bd935ba0246e815"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86fe6fb768ee1be1720318e600af104b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a86fe6fb768ee1be1720318e600af104b">dnew_do</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, real *p, mem_t *mem)</td></tr>
+<tr class="memitem:a86fe6fb768ee1be1720318e600af104b"><td class="memItemLeft" align="right" valign="top"><a id="a86fe6fb768ee1be1720318e600af104b"></a>
+<a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>dnew_do</b> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny, real *p, mem_t *mem)</td></tr>
 <tr class="separator:a86fe6fb768ee1be1720318e600af104b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d7a0dc35f5202eb52bc9654f2ae8ea9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a8d7a0dc35f5202eb52bc9654f2ae8ea9">dmat_cast</a> (const void *A)</td></tr>
 <tr class="separator:a8d7a0dc35f5202eb52bc9654f2ae8ea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -703,51 +704,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladdI</b> (<a c
       </table>
 </div><div class="memdoc">
 <p>Calls X(new) with a filename to be saved to. </p>
-
-</div>
-</div>
-<a id="a86fe6fb768ee1be1720318e600af104b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a86fe6fb768ee1be1720318e600af104b">&#9670;&nbsp;</a></span>dnew_do()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* dnew_do </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>nx</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
-          <td class="paramname"><em>ny</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">mem_t *&#160;</td>
-          <td class="paramname"><em>mem</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>The only function that allocates memory for the matrix object. It ensures that all fields are properly initialized.</p><ul>
-<li>If p is NULL, mem should be NULL as well. memory is allocated. if mem is not null, it is ignored and warning is print. new mem_t is created.</li>
-<li>If p is not NULL, mem is NULL, we act as a weak pointer. p is managed externally.</li>
-<li>If both p and mem are not NULL, we increment mem reference count. </li>
-</ul>
 
 </div>
 </div>

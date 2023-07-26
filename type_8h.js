@@ -94,7 +94,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -109,7 +109,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -124,7 +124,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -139,7 +139,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -154,7 +154,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -169,7 +169,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -242,9 +242,12 @@ var type_8h =
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
     ] ],
     [ "map_t.__unnamed__", "type_8h.html#unionmap__t_8____unnamed____", [
+      [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
+    ] ],
+    [ "map_t.__unnamed__.__unnamed__", "type_8h.html#unionmap__t_8____unnamed_____8____unnamed____", [
       [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
-    [ "map_t.__unnamed__.__unnamed__", "type_8h.html#structmap__t_8____unnamed_____8____unnamed____", [
+    [ "map_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#structmap__t_8____unnamed_____8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
       [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
       [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
@@ -252,14 +255,17 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "rmap_t.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed____", [
+      [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
+    ] ],
+    [ "rmap_t.__unnamed__.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed_____8____unnamed____", [
       [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
     ] ],
-    [ "rmap_t.__unnamed__.__unnamed__", "type_8h.html#structrmap__t_8____unnamed_____8____unnamed____", [
+    [ "rmap_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#structrmap__t_8____unnamed_____8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
       [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
       [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
@@ -267,7 +273,7 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
@@ -280,6 +286,12 @@ var type_8h =
       [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
       [ "nloc", "type_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
       [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
+      [ "dummy_fp", "type_8h.html#a0f4f35c364503ca278475c1e93a12c61", null ],
+      [ "dummy_fft", "type_8h.html#a8c8dc74c2c5e4a9413c6e8889cc7b1e0", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
+      [ "dummy_mem", "type_8h.html#a54f4447a699c9cbf233a512f20b5c45e", null ],
+      [ "dummy_async", "type_8h.html#aa3fa849a201baa66a3f321c97ac4acd9", null ],
       [ "locy", "type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
       [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
       [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
@@ -300,13 +312,19 @@ var type_8h =
       [ "origx", "type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ],
       [ "nsa", "type_8h.html#a8d2a959e6b154ec9215882b82f28cfcb", null ],
       [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
+      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
+      [ "dummy_fp", "type_8h.html#a0f4f35c364503ca278475c1e93a12c61", null ],
+      [ "dummy_fft", "type_8h.html#a8c8dc74c2c5e4a9413c6e8889cc7b1e0", null ],
+      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
+      [ "dummy_mem", "type_8h.html#a54f4447a699c9cbf233a512f20b5c45e", null ],
+      [ "dummy_async", "type_8h.html#aa3fa849a201baa66a3f321c97ac4acd9", null ],
       [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
       [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
       [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
       [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ],
       [ "dsay", "type_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
-      [ "dummy1", "type_8h.html#a8c2753548775b4161e531c323ea24c08", null ],
-      [ "dummy2", "type_8h.html#ac0c40e7a94eea7e2c238b75273087710", null ],
+      [ "dummy_ht", "type_8h.html#acded0299863f46bf80bd357bb35a805f", null ],
+      [ "dummy_iac", "type_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
       [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ],
       [ "nxsa", "type_8h.html#a0a2d27f7d64db51bcec44b4fc84ab83c", null ],
       [ "nysa", "type_8h.html#aecee41078f1f9719276a530b727cbdfa", null ],

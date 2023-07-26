@@ -10,6 +10,7 @@ var searchData=
   ['fdpcg',['fdpcg',['../parms_8h.html#adfff69f506d8ab4035b494617e65c105',1,'save_cfg_t::fdpcg()'],['../maos_2types_8h.html#a4ff2c1a33dd9653b1ab5269023e9a1a7',1,'recon_t::fdpcg()']]],
   ['fexit',['fexit',['../type_8h.html#ae57dd7d071af3a560a2914e7b52db00a',1,'rmap_t']]],
   ['ff',['FF',['../maos_2types_8h.html#a07aebe5c2c1195f58a0e78eee4fd261f',1,'recon_t']]],
+  ['fft',['fft',['../type_8h.html#aa9a21923a0b8cec03c6eea2226e48b0f',1,'cell']]],
   ['fftxopd',['fftxopd',['../maos_2types_8h.html#a9b1faaf334a469516d323b723abcfde5',1,'invpsd_t']]],
   ['fieldmask',['fieldmask',['../locfft_8h.html#ae0eae8328f8f78f82fb3294ebf96c79c',1,'locfft_t']]],
   ['fieldstop',['fieldstop',['../structcupowfs__t.html#a1c1f4351e64ad1f2cef932eabc4e2b6e',1,'cupowfs_t::fieldstop()'],['../parms_8h.html#a5a51874ef5e2219cb7480672c0908afe',1,'powfs_cfg_t::fieldstop()'],['../maos_2types_8h.html#a5c2dbfabdadad397731b9edc16924f45',1,'powfs_t::fieldstop()']]],

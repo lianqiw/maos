@@ -215,7 +215,6 @@ var searchData=
   ['dmulvec',['dmulvec',['../dmath_8h.html#a4baf5d7d6a841215ee59ae2dd891b69e',1,'dtmp.c']]],
   ['dmulvec3',['dmulvec3',['../dmath_8h.html#af6c253e8ef4432268a038a4545dafe79',1,'dtmp.c']]],
   ['dnew',['dnew',['../dmath_8h.html#a0d7497e2dbb79adb228de6bdde4a201e',1,'dtmp.c']]],
-  ['dnew_5fdo',['dnew_do',['../dmath_8h.html#a86fe6fb768ee1be1720318e600af104b',1,'dtmp.c']]],
   ['dnew_5ffile',['dnew_file',['../dmath_8h.html#a85615cd65e2532cf0bd935ba0246e815',1,'dtmp.c']]],
   ['dnew_5fmmap',['dnew_mmap',['../dmath_8h.html#a07f25910283967be5512552fe4bd42c1',1,'dtmp.c']]],
   ['dnorm',['dnorm',['../dmath_8h.html#abf101079dc47a043bf1be4e6ac187136',1,'dtmp.c']]],

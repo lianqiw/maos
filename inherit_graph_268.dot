@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="sim_save_t",height=0.2,width=0.4,color="black",URL="$maos_2types_8h.html#structsim__save__t"];
+  Node0 [label="sho_t",height=0.2,width=0.4,color="black",URL="$servo_8h.html#structsho__t"];
 }
