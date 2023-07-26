@@ -42,14 +42,14 @@ typedef enum CEMBED{
   may use the same pointer, but with different nx or ny
   partition. */
 
-#define ARR(T)								\
-    M_ID id;   /**< to identify the array type. Must be the first element*/	\
-    T *restrict p; /**<The data pointer*/				\
-    long nx;       /**< number of rows */				\
+#define ARR(T)								                \
+    M_ID id;   /**< to identify the array type.*/	        \
+    T *restrict p; /**<The data pointer*/				    \
+    long nx;       /**< number of rows */				    \
     long ny;       /**< number of columns */				\
-    char *keywords;/**<The keywords as a string*/					\
-    file_t *fp;    /**<Opened file, to be saved to when called or freed*/\
-    struct fft_t* fft
+    char *keywords;/**<The keywords as a string*/			\
+    file_t *fp;    /**<Opened file to be saved to*/         \
+    struct fft_t* fft /**<For FFT plan*/
 
 typedef struct cell{
     ARR(struct cell*);
@@ -74,8 +74,8 @@ typedef struct cell{
         cell cell[1];\
         struct{\
             ARR(T);\
-            void *padding1; /**<unused padding to align with cell*/\
-            mem_t *mem; /**< Memory management*/	\
+            void *dummy_m; /**<unused padding to align with cell*/\
+            mem_t *mem;   /**< Memory management*/	\
             async_t *async; /**<async io*/\
         };\
     }
@@ -93,7 +93,7 @@ typedef struct cell{
             char *keywords;      /**<the keywords as a string*/         \
             file_t *fp;          /**<The file, to be saved upon free*/  \
             struct fft_t* fft;   /**<Not used*/                         \
-            void *padding1; /**<unused padding to align with cell*/     \
+            void *padding1;      /**<padding to align with cell*/       \
             long nzmax;          /**<maximum number of entries */		\
             spint *restrict pp;  /**<col indices (size nzmax)  */       \
             spint *restrict pi;  /**<row indices, size nzmax */		    \
@@ -126,7 +126,10 @@ SPMATDEF(comp, csp);
 */
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
-    MATARR(real);
+    union{
+        MATARR(real);
+        dmat dmat[1];
+    };
     real ox;      /**<Origin in x*/
     real oy;      /**<Origin in y*/
     real dx;      /**<Sampling along x*/
@@ -141,7 +144,10 @@ typedef struct map_t{
    Map with different x/y sampling. Can be cased to dmat
 */
 typedef struct rmap_t{
-    MATARR(real);
+    union{
+        MATARR(real);
+        dmat dmat[1];
+    };
     real ox;      /**<Origin in x*/
     real oy;      /**<Origin in y*/
     real dx;      /**<Sampling along x (first dimension)*/
@@ -189,6 +195,12 @@ typedef struct loc_t{
             real* locx;  /**< x coordinates of each point [allocates memory for both locx and locy]*/
             long nloc;   /**< number of points*/
             long two;    /**<Constant 2. to be binary compatble with rmat*/
+            char *keywords; /**<The keywords as a string*/
+            void *dummy_fp;   /**<unused padding to align with cell (fp)*/
+            void *dummy_fft;  /**<unused padding to align with cell (fft)*/
+            void *dummy_m;    /**<unused padding to align with cell (m)*/
+            void *dummy_mem;  /**<unused padding to align with mat (mem)*/
+            void *dummy_async;/**<unused padding to align with mat (async)*/
             real* locy;  /**< y coordinates of each point*/
             locstat_t* stat;/**<points to column statistics*/
             map_t* map;    /**< point to the map used for identifying neihboring points.*/
@@ -213,9 +225,15 @@ typedef struct pts_t{
         loc_t loc[1];
         struct{
             M_ID id;
-            real* origx; /**<The x origin of each subaperture. Contains memory for origy*/
-            long nsa;      /**<number of subapertures.*/
-            long two;
+            real* origx;    /**<The x origin of each subaperture. Contains memory for origy*/
+            long nsa;       /**<number of subapertures.*/
+            long two;       /**<Constant 2. to be binary compatble with rmat*/
+            char *keywords; /**<The keywords as a string*/
+            void *dummy_fp;   /**<unused padding to align with cell (fp)*/
+            void *dummy_fft;  /**<unused padding to align with cell (fft)*/
+            void *dummy_m;    /**<unused padding to align with cell (m)*/
+            void *dummy_mem;  /**<unused padding to align with mat (mem)*/
+            void *dummy_async;/**<unused padding to align with mat (async)*/
             real* origy; /**<The y origin of each subaperture*/
             locstat_t* stat;/**<padding so that we can be casted to loc_t*/
             map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
@@ -225,8 +243,8 @@ typedef struct pts_t{
                 real dsax;   /**<side length of subaperture*/
             };
             real dsay;   /**<side length of subaperture*/
-            real dummy1; /**<Place holder*/
-            real dummy2;  /**<Place holder*/
+            real dummy_ht; /**<Place holder*/
+            real dummy_iac;  /**<Place holder*/
             int npad;      /*padding when create map*/
             //before this line same memory layout as loc_t
             //the following are specific to pts_t

@@ -325,10 +325,10 @@ void save_dmreal(sim_t* simu){
 				if(simu->cachedm){//use cachedm
 					for(int idm=0; idm<parms->ndm; idm++){
 						drawmap("DM", P(simu->cachedm,idm), NULL,
-							"DM OPD", "x (m)", "y (m)", "RealOPD %d", idm);
+							"DM OPD", "x (m)", "y (m)", "Real OPD %d", idm);
 					}
 				}
-				if(draw_current("Evldm", "DM")){
+				if(draw_current("DM", "Real OPD OA")){
 					dmat* opd=dnew(simu->aper->locs->nloc, 1);
 					for(int idm=0; idm<parms->ndm; idm++){
 						int ind=parms->evl.nevl*idm;
@@ -343,8 +343,8 @@ void save_dmreal(sim_t* simu){
 						loc_add_ptt(opd, ptt, simu->aper->locs);
 					}
 
-					drawopd("Evldm", simu->aper->locs, opd, P(parms->dbg.draw_opdmax),
-						"DM OPD", "x (m)", "y (m)", "DM");
+					drawopd("DM", simu->aper->locs, opd, P(parms->dbg.draw_opdmax),
+						"DM OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
 					dfree(opd);
 				}
 			}

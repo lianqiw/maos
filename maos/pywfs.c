@@ -21,15 +21,30 @@
 #include "powfs.h"
 #include "pywfs.h"
 #include "../cuda/gpu.h"
-#define PYWFS_GUARD 1.5 //separate the pupil by this amount in relative
+
 /**
    \file pywfs.h
 
    Setup pyramid WFS and do simulation.
 */
+static double PYWFS_PSIZE=3; //Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2
 static int PYWFS_DEBUG=0;//debugging implementation
 static int PYWFS_TT_DUAL=0;//average tip/tilt response along +/-
-static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, real pupelong){
+static int PYWFS_FULL=0;//make saloc entire focal plane
+/**
+ * Create detector pixel to subaperture mapping
+ * nside==4: (regular 4-side pyramid)
+ * 	2 3
+ * 	0 1
+ * nside==3: (3-sided pyramid)
+ * 1  2
+ *   0
+ * nside==2: (roof)
+ * 0 1
+ * nside==1: (zernike sensor)
+ * 0
+ * */
+static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real pupelong){
 	dspcellfree(pywfs->si);
 	cellfree(pywfs->msaloc);
 	const int pyside=pywfs->cfg->nside;
@@ -37,29 +52,16 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 	if(!pywfs->sioff){
 		pywfs->sioff=dnew(pyside, 2);
 	}
+	if(pupelong){//msaloc is also used by cuda code for direct interpolation
+		pywfs->msaloc=loccellnew(pyside, 1);
+	}
+	const real dxp=loc_fft->dx;
 	const real dsa=saloc0->dx;
-	const long ncomp2=NX(pywfs->nominal)/2;
+	const long notf2=NX(pywfs->nominal)/2;
 	for(int ind=0; ind<pyside; ind++){
-		const int iy=ind/2;//4-sided
-		const int ix=ind%2;//4-sided
+		const int iy=ind/2;
+		const int ix=ind%2;
 		loc_t* saloc=0;
-		if(pupelong){//pupil elongation (along radial direction)
-			if(pyside!=4){
-				error("Needs implementation\n");
-			} else{
-				if(!pywfs->msaloc){
-					pywfs->msaloc=loccellnew(pyside, 1);
-				}
-				saloc=locdup(saloc0);
-				real angle=atan2(iy-0.5, ix-0.5);
-				//squeeze the detector pixel coordinate radially to simulate pupil elongation
-				real frac=1.-pupelong;
-				saloc=P(pywfs->msaloc,ind)=locdup(saloc0);
-				locstretch(saloc, angle, frac);
-			}
-		} else{
-			saloc=saloc0;
-		}
 		real shx=0, shy=0;
 		if(pywfs->pupilshift){
 			shx=P(pywfs->pupilshift, ind, 0)*dsa;
@@ -67,12 +69,15 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 		}
 		real offx=0, offy=0;
 		switch(pyside){
+		case 1:
+			offx=0;
+			offy=0;
+			break;
 		case 2:
 			offx=ix-0.5;
-			offy=0.5;
+			offy=0;
 			break;
 		case 3:
-		{
 			if(ind==0){
 				offx=0;
 				offy=-0.5;
@@ -80,8 +85,7 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 				offx=(ind-1.5)*sqrt(3.)*0.5;
 				offy=0.25;
 			}
-		}
-		break;
+			break;
 		case 4:
 			offx=ix-0.5;
 			offy=iy-0.5;
@@ -89,12 +93,18 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
 		default:
 			error("Invalid dbg.pwfs_side=%d\n", pyside);
 		}
+		if(pupelong){//pupil elongation (along radial direction)
+			real angle=atan2(offy, offx);
+			real frac=1.-pupelong;
+			saloc=P(pywfs->msaloc, ind)=locdup(saloc0);
+			//squeeze the detector pixel coordinate radially to simulate pupil elongation
+			locstretch(saloc, angle, frac);
+		} else{
+			saloc=saloc0;
+		}
 		P(pywfs->sioff, ind, 0)=offx;
 		P(pywfs->sioff, ind, 1)=offy;
-		P(pywfs->si,ind)=mkh(loc_fft, saloc,
-			(offx*ncomp2)*dx2+shx,
-			(offy*ncomp2)*dx2+shy,
-			1.);
+		P(pywfs->si,ind)=mkh(loc_fft, saloc, (offx*notf2)*dxp+shx, (offy*notf2)*dxp+shy, 1.);
 	}
 }
 /**
@@ -106,13 +116,15 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real dx2, 
    - ...
 */
 void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs){
-	READ_ENV_INT(PYWFS_DEBUG, 0, 1);
+	READ_ENV_INT(PYWFS_DEBUG, -10, 10);
 	READ_ENV_INT(PYWFS_TT_DUAL, 0, 1);
+	READ_ENV_DBL(PYWFS_PSIZE,   1, 10);
+	READ_ENV_INT(PYWFS_FULL,    0, 1);
 	pywfs_free(powfs[ipowfs].pywfs);
 	pywfs_t* pywfs=powfs[ipowfs].pywfs=mycalloc(1, pywfs_t);
 	pywfs->cfg=pycfg; //consider copy struct if necessary.
 	const int pyside=pycfg->nside;
-	const int ng=pycfg->raw?pyside:2;
+	const int ng=pycfg->ng;
 	map_t* map=0;
 	const real siglev=pywfs->siglev=parms->powfs[ipowfs].siglev;//signal level for noise free calculation
 	pywfs->iwfs0=P(parms->powfs[ipowfs].wfs,0);
@@ -144,65 +156,56 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	}
 
 	int nwvl=NX(parms->powfs[ipowfs].wvl);
-	real oversize=2*PYWFS_GUARD;
-	pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, oversize, 0);
+	pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, PYWFS_PSIZE, 0);
 	pywfs->wvlwts=ddup(parms->powfs[ipowfs].wvlwts);
 	
-	long nembed=P(pywfs->locfft->nembed,0);
-	real wvlmin, wvlmax;
-	dmaxmin(P(parms->powfs[ipowfs].wvl), nwvl, &wvlmax, &wvlmin);
-	real dtheta_min=wvlmin/(dx*nembed);
+	long npsf=P(pywfs->locfft->nembed,0);//size of PSF at the Pyramid tip.
 	pywfs->gain=1;
 	//size of the part of the PSF captured by pyramid
-	long ncomp=nembed;
-	if(parms->powfs[ipowfs].fieldstop){
-		ncomp=nextfftsize(ceil(parms->powfs[ipowfs].fieldstop/dtheta_min));
-		if(ncomp>nembed){
-			ncomp=nembed;
-			warning("pywfs sampling is too coarse. Need %ld but has %ld pixels\n",
-				ncomp, nembed);
-		}
-	}
-
-	const long ncomp2=ncomp/2;
+	const long notf=npsf;//size of OTF array
+	const long notf2=notf/2;
+	const comp coeff=COMPLEX(0, M_PI*0.5);
 	pywfs->pyramid=ccellnew(nwvl, 1);
-	dmat* pyramid=dnew(ncomp, ncomp);
+	dmat* pyramid=dnew(notf, notf);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		P(pywfs->pyramid,iwvl)=cnew(ncomp, ncomp);
+		P(pywfs->pyramid,iwvl)=cnew(notf, notf);
 		cmat* pp=P(pywfs->pyramid,iwvl)/*PCMAT*/;
-		comp coeff=COMPLEX(0, M_PI*0.5);
-		long skip=0;
-		real dtheta=P(parms->powfs[ipowfs].wvl,iwvl)/(dx*nembed);//PSF sampling
-		int nstop=ncomp;
-		if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
+		const real dtheta=P(parms->powfs[ipowfs].wvl,iwvl)/(dx*npsf);//PSF sampling
+		int nstop=notf;//needed coverage by the Pyramid
+		if(pyside==1){
+			nstop=round(1.063*dx*npsf/parms->aper.d);
+			dbg("zernike wfs: nstop=%d\n", nstop);
+		}else if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
 			nstop=ceil(parms->powfs[ipowfs].fieldstop/dtheta*0.5)*2;
-			skip=(ncomp-nstop)/2;
-			if(skip<0) skip=0;
+			if(nstop>npsf){
+				warning("field stop is not effective (bigger than PSF size).\n");
+			}
 		}
-		real radius2=nstop*nstop*0.25;
+		const long skip=notf>nstop?(notf-nstop)/2:0;
+		const real radius2=nstop*nstop*0.25;
 		//Make pyramid edge or vertax flat within certain range
-		real eskip=(pycfg->flate/dtheta/2);
-		real vskip=(pycfg->flatv/dtheta/2);
+		const real eskip=(pycfg->flate/dtheta/2);
+		const real vskip=(pycfg->flatv/dtheta/2);
 		const real sqrt3=sqrt(3.);
 		//const real ratio2=acos(sqrt(0.5))/acos(0.5);
-		for(long iy=skip; iy<ncomp-skip; iy++){
-			for(long ix=skip; ix<ncomp-skip; ix++){
-				real xd=fabs(ix-ncomp2);
-				real yy=iy-ncomp2;
+		for(long iy=skip; iy<notf-skip; iy++){
+			for(long ix=skip; ix<notf-skip; ix++){
+				real xd=fabs(ix-notf2);
+				real yy=iy-notf2;
 				real yd=fabs(yy);
 				real opd=0;
-				if(!(pyside==4&&(xd<eskip||yd<eskip||(xd<vskip&&yd<vskip)))
-					&&(xd*xd+yd*yd)<radius2){
+				if((xd*xd+yd*yd)<radius2){
 					 //not on flat edge
 					switch(pyside){
+					case 1://zernike
+						opd=2.;//opd*coeff=pi
+						break;
 					case 2://roof with slope 
-						opd=(xd+yy);
+						opd=xd;
 						break;
 					case 3://3 sided pyrmaid
-					/*
-					  We keep one side of the pyramid the same as slope as a
-					  roof in order to shift pupil by half.
-					*/
+						//We keep one side of the pyramid the same as slope as a
+						//roof in order to shift pupil by half.
 						if(yy*sqrt3>xd){
 							opd=yy;
 						} else{
@@ -211,10 +214,12 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 						}
 						break;
 					case 4://4-sided pyramid
-						opd=(xd+yd);
+						if(!(xd<eskip||yd<eskip||(xd<vskip&&yd<vskip))){//pyramid defacts
+							opd=(xd+yd);
+						}
 						break;
 					default:
-						error("Invalid pwfs_side=%d\n", pyside);
+						error("Invalid pywfs.nside=%d\n", pyside);
 					}
 				}
 				P(pp, ix, iy)=cexp(opd*coeff);
@@ -227,20 +232,21 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	}
 	dfree(pyramid);
 	//Detector transfer function (sampling onto pixels).
-	cmat* nominal=pywfs->nominal=cnew(ncomp, ncomp);
+	cmat* nominal=pywfs->nominal=cnew(notf, notf);
 	cmat* pn=nominal/*PCMAT*/;
 	const long order=parms->powfs[ipowfs].order;
-	const real dsa=parms->powfs[ipowfs].dsa;//size of detector pixel mapped on pupil
-	const real dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
-	const real du=1./(dx2*ncomp);
+	//when pyside==1 (zernike wfs), dsa needs to be scaled
+	const real dsa=(pyside==1?2:1)*parms->powfs[ipowfs].dsa;//size of detector pixel mapped on pupil
+	const real dx2=dx*npsf/notf;//sampling of pupil after inverse fft
+	const real du=1./(dx2*notf);
 	const real dupix=dsa*du;
 	const real pdmeter=pow(dsa/dx2, 2);
 	const real pixblur=parms->powfs[ipowfs].pixblur*dsa;
 	const real e0b=-2*pow(M_PI*pixblur*du, 2);
-	for(int iy=0; iy<ncomp; iy++){
-		int jy=iy-ncomp2;
-		for(int ix=0; ix<ncomp; ix++){
-			int jx=ix-ncomp2;
+	for(int iy=0; iy<notf; iy++){
+		int jy=iy-notf2;
+		for(int ix=0; ix<notf; ix++){
+			int jx=ix-notf2;
 			P(pn, ix, iy)=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
 			if(pixblur){
 				P(pn, ix, iy)*=exp(e0b*(jx*jx+jy*jy));
@@ -277,27 +283,27 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 			writebin(pywfs->pupilshift, "powfs%d_pupilshift", ipowfs);
 		}
 	}
-
-	//Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
-	if(parms->powfs[ipowfs].saloc){
+	loc_t *loc_fft=mksqloc(notf, notf, dx2, dx2, (-notf2+0.5)*dx2, (-notf2+0.5)*dx2);
+	const real pupelong=pycfg->pupelong*sqrt(2.)/(order*0.5);
+	if(PYWFS_FULL){//sample the full image. for debugging only
+		powfs[ipowfs].saloc=locdup(loc_fft);
+	}else if(parms->powfs[ipowfs].saloc){
 		powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
 		if(fabs(powfs[ipowfs].saloc->dx-dsa)>1e-6*fabs(dsa)){
 			warning("loaded saloc has dx=%g, while powfs.dsa=%g\n",
 				powfs[ipowfs].saloc->dx, dsa);
 		}
-	} else{
-	//Pad the grid to avoid missing significant pixels (subapertures).
+	} else{//Pad the grid to avoid missing significant pixels (subapertures).
 		long order2=ceil(order)+2*MAX(0, ceil(pycfg->pupelong));
 		if(order2>order){
 			warning("order=%ld, order2=%ld.\n", order, order2);
 		}
+		//Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
 		powfs[ipowfs].saloc=mksqloc(order2, order2, dsa, dsa,
 			(-order2*0.5+0.5)*dsa, (-order2*0.5+0.5)*dsa);
 	}
-
-	loc_t* loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
-	const real pupelong=pycfg->pupelong*sqrt(2)/(order*0.5);
-	pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, dx2, pupelong);//for each quadrant.
+	
+	pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, pupelong);//for each quadrant.
 
 	if(parms->save.setup){
 		writebin(pywfs->si, "powfs%d_si0", ipowfs);
@@ -329,7 +335,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		real samean=dsum(saa)/PN(saa);
 		loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samean, 1, 0);
 		dscale(saa, NX(saa)/dsum(saa));//saa average to one.
-		pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, dx2, pupelong);
+		pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, pupelong);
 	}
 	powfs[ipowfs].saa=dref(pywfs->saa);
 	const int nsa=powfs[ipowfs].saloc->nloc;
@@ -346,29 +352,18 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	}
 	//Determine the gain and offset of PyWFS
 	{
-	//offset: grad of a flat wavefront
+		//offset: grad of a flat wavefront
 		dmat* opd=dnew(pywfs->locfft->loc->nloc, 1);
 		dmat* ints=0;
 		dmat* goff=0;
 		pywfs_ints(&ints, pywfs, opd, siglev);
-		if(parms->save.setup){
-			writebin(ints, "powfs%d_ints1", ipowfs);
-		}
 		pywfs_grad(&goff, pywfs, ints);
 		if(parms->save.setup){
-			writebin(goff, "powfs%d_goff1", ipowfs);
+			writebin(ints, "powfs%d_piston_ints", ipowfs);
+			writebin(goff, "powfs%d_piston_grad", ipowfs);
 		}
 		dadd(&pywfs->gradoff, 1, goff, 1);
-		if(0){//test TT response
-			real ptt[3]={0,0.001*AS2RAD,0};
-			loc_add_ptt(opd, ptt, pywfs->locfft->loc);
-			dzero(ints); dzero(goff);
-			pywfs_ints(&ints, pywfs, opd, siglev);
-			writebin(ints, "powfs%d_ttx_ints", ipowfs);
-			pywfs_grad(&goff, pywfs, ints);
-			writebin(goff, "powfs%d_ttx_grad", ipowfs);
-			exit(0);
-		}
+
 		dfree(goff);
 		dfree(opd);
 		dfree(ints);
@@ -423,12 +418,25 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 	if(!pywfs) return;
 	const real siglev=pywfs->siglev;
 	const int iwfs=pywfs->iwfs0;
-	if(PYWFS_DEBUG==1){//Test implementation using zernikes
+	if(fabs(PYWFS_DEBUG)==1){//Test implementation using zernikes
 		dmat* ints=0;
 		real wve=1e-9*20;
 		dmat* opds=NULL;
-
-		if(parms->recon.modal){
+		if(PYWFS_DEBUG==-1){//replace with petalling modes
+			opds=dnew(pywfs->locfft->loc->nloc, 7);
+			real *px=pywfs->locfft->loc->locx;
+			real *py=pywfs->locfft->loc->locy;
+			real dang=M_PI/3;
+			real ang0=M_PI;
+			for(int ix=0; ix<NX(opds);ix++){
+				real angle=atan2(px[ix], py[ix]);//intentionally reverse x/y to match the pupil amplitude map
+				int ip=ifloor((angle+ang0)/dang)+1;
+				for(int iy=1; iy<7; iy++){
+					P(opds, ix, iy)=0;
+				}
+				P(opds, ix, ip)=1;
+			}
+		}else if(parms->recon.modal){
 			int idm=parms->idmground;
 			dmat *amod=P(recon->amod, idm);
 			opds=dnew(pywfs->locfft->loc->nloc, MIN(20,NY(amod))+1);//first mode is piston
@@ -443,9 +451,10 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 					powfs[ipowfs].loc, PCOL(opds, im+1), 1, dispx, dispy, scale, 0, 0);
 			}
 		}else{
-			opds=zernike(pywfs->locfft->loc, 0, 0, 60, 1);
+			opds=zernike(pywfs->locfft->loc, 0, 0, 5, 0);
+			warning("Using zernike for pywfs gain testing\n");
 		}
-		
+		writebin(opds, "pywfs_modal_opds");
 		dmat* grad=0;
 		int nn=1;
 		dcell *atms=NULL;
@@ -465,30 +474,16 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 			warning("Atmosphere is not avilable to read, do not use.\n");
 		}
 		
-		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_zernike_ints");
-		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_zernike_grad");
+		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_modal_ints");
+		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_modal_grad");
 		dmat *opd=dnew(NX(opds),1);
-		if(1){//replace with petalling modes
-			real* px=pywfs->locfft->loc->locx;
-			real *py=pywfs->locfft->loc->locy;
-			real dang=M_PI/3;
-			real ang0=M_PI;
-			for(int ix=0; ix<NX(opds);ix++){
-				real angle=atan2(px[ix],py[ix]);//intentionally reverse x/y to match the pupil amplitude map
-				int ip=ifloor((angle+ang0)/dang)+1;
-				for(int iy=1; iy<7; iy++){
-					P(opds, ix, iy)=0;
-				}
-				P(opds, ix, ip)=1;
-			}
-			writebin(opds, "pywfs_opds_petal");
-		}
+		
 		for(int im=0; im<NY(opds); im++){
 			dmat *opdi=drefcols(opds, im, 1);
 			for(int j=0; j<nn; j++){
 				info2("im=%d, j=%d\n", im, j);
-				for(int posi=0; posi<pywfs->cfg->modulpos; posi++){
-					((pywfs_cfg_t*)pywfs->cfg)->modulpos_i=posi+1;//for testing modulate subframe
+				//for(int posi=0; posi<pywfs->cfg->modulpos; posi++){
+					//((pywfs_cfg_t*)pywfs->cfg)->modulpos_i=posi+1;//for testing modulate subframe
 					dzero(opd);
 					dadd(&opd, 1, opdi, pow(2, j)*wve);
 					if(j>0 && atm){
@@ -499,7 +494,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 					pywfs_grad(&grad, pywfs, ints);
 					zfarr_push(pupsave, 0, ints);
 					zfarr_push(grads, 0, grad);
-				}
+				//}
 			}
 			dfree(opdi);
 		}
@@ -630,54 +625,53 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 	locfft_t* locfft=pywfs->locfft;
 	ccell* psfs=0;
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
-	int nwvl=NX(locfft->wvl);
-	real dx=locfft->loc->dx;
-	long nembed=P(locfft->nembed,0);
-	long nembed2=nembed/2;
+	const int nwvl=NX(locfft->wvl);
+	const real dx=locfft->loc->dx;
+	const long npsf=P(locfft->nembed,0);
+	const long npsf2=npsf/2;
 	dmat* wvlwts=pywfs->wvlwts;
 	//position of pyramid for modulation
-	int pos_n=pycfg->modulpos;
-	int pos_nr=pycfg->modulring;
-	real pos_r=pycfg->modulate;
-	long ncomp=NX(pywfs->nominal);
-	long ncomp2=ncomp/2;
-	cmat* otf=cnew(ncomp, ncomp);
-	dmat* pupraw=dnew(ncomp, ncomp);
-	for(int ir=0; ir<pos_nr; ir++){
-	//Radius of the current ring
-		real pos_ri=pos_r*(ir+1)/pos_nr;
+	const int pos_n=pycfg->modulpos;
+	const int pos_nr=pycfg->modulring;
+	const real pos_r=pycfg->modulate;
+	const long notf=NX(pywfs->nominal);
+	const long notf2=notf/2;
+	cmat* otf=cnew(notf, notf);
+	dmat* pupraw=dnew(notf, notf);
+	for(int ir=0; ir<pos_nr; ir++){//Radius of the current ring
+		const real pos_ri=pos_r*(ir+1)/pos_nr;
 		//Scale number of points by ring size to have even surface brightness
-		int pos_ni=pos_n*(ir+1)/pos_nr;
-		int ipos0=pycfg->modulpos_i>0?(pycfg->modulpos_i-1):0;
-		int ipos1=pycfg->modulpos_i>0?pycfg->modulpos_i:pos_ni;
+		const int pos_ni=pos_n*(ir+1)/pos_nr;
+		const int ipos0=pycfg->modulpos_i>0?(pycfg->modulpos_i-1):0;
+		const int ipos1=pycfg->modulpos_i>0?pycfg->modulpos_i:pos_ni;
 		for(int ipos=ipos0; ipos<ipos1; ipos++){
-				//whether the first point falls on the edge or not makes little difference
-			real theta=2*M_PI*((real)ipos/pos_ni);
-			real posx=cos(theta)*pos_ri;
-			real posy=sin(theta)*pos_ri;
+			//whether the first point falls on the edge or not makes little difference
+			const real theta=2*M_PI*((real)ipos/pos_ni);
+			const real posx=cos(theta)*pos_ri;
+			const real posy=sin(theta)*pos_ri;
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				real dtheta=P(locfft->wvl,iwvl)/(dx*nembed);
-				long offy=(long)round(posy/dtheta);
-				long offy2=nembed2+offy-ncomp2;
-				long iy0=MAX(-offy2, 0);
-				long ny2=MIN(ncomp, nembed-offy2)-iy0;
+				real dtheta=P(locfft->wvl,iwvl)/(dx*npsf);
+				const long offy=(long)round(posy/dtheta);
+				const long offy2=npsf2+offy-notf2;
+				const long iy0=MAX(-offy2, 0);
+				const long ny2=MIN(notf, npsf-offy2)-iy0;
 
-				long offx=(long)round(posx/dtheta);
-				long offx2=nembed/2+offx-ncomp2;
-				long ix0=MAX(-offx2, 0);
-				long nx2=MIN(ncomp, nembed-offx2)-ix0;
+				const long offx=(long)round(posx/dtheta);
+				const long offx2=npsf/2+offx-notf2;
+				const long ix0=MAX(-offx2, 0);
+				const long nx2=MIN(notf, npsf-offx2)-ix0;
 
 				czero(otf);
-				comp* pyramid=P(P(pywfs->pyramid,iwvl));
+				const comp* pyramid=P(P(pywfs->pyramid,iwvl));
 				for(long iy=iy0; iy<ny2; iy++){
 					for(long ix=ix0; ix<nx2; ix++){
-						long indin=ix+offx2+(iy+offy2)*nembed;
-						long indout=ix+iy*ncomp;
+						const long indin=ix+offx2+(iy+offy2)*npsf;
+						const long indout=ix+iy*notf;
 						P(otf,indout)=P(P(psfs,iwvl),indin)*pyramid[indout];
 					}
 				}
 				cfft2(otf, 1);
-				cabs22d(&pupraw, 1., otf, P(wvlwts,iwvl)/(ncomp*ncomp*pos_ni*pos_nr));
+				cabs22d(&pupraw, 1., otf, P(wvlwts,iwvl)/(notf*notf*pos_ni*pos_nr));
 			}//for iwvl
 		}//for ipos
 	}//for ir
@@ -695,7 +689,7 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 	}
 	for(int i=0; i<NX(pywfs->si); i++){
 		//normalized so that each "subaperture" sum to 1.
-		dspmulcreal(PCOL(*ints,i), P(pywfs->si,i), P(otf), (real)nsa*siglev/(ncomp*ncomp));
+		dspmulcreal(PCOL(*ints,i), P(pywfs->si,i), P(otf), (real)nsa*siglev/(notf*notf));
 	}
 	//writebin(*ints, "cpu_ints"); exit(0);
 	ccellfree(psfs);
@@ -707,7 +701,7 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const long nsa=NX(ints);
-	const int ng=pycfg->raw?pycfg->nside:2;
+	const int ng=pycfg->ng;
 	if(!*pgrad){
 		*pgrad=dnew(nsa*ng, 1);
 	}
@@ -721,29 +715,30 @@ void pywfs_grad(dmat** pgrad, const pywfs_t* pywfs, const dmat* ints){
 		imean=dsum(ints)/nsa;
 	}
 	for(int isa=0; isa<nsa; isa++){
-		real isum=0;
-		switch(pycfg->sigmatch){
-		case 0:
-			info_once("PWFS: No siglev correction.\n");
-			isum=pycfg->siglev*P(pywfs->saa,isa);
-			break;
-		case 1:
-			info_once("PWFS: Individual siglev correction.\n");
-			for(int i=0; i<pycfg->nside; i++){
-				isum+=P(ints, isa, i);
-			}
-			break;
-		case 2:
-			info_once("PWFS: Global siglev correction.\n");//preferred.
-			isum=imean*P(pywfs->saa,isa);
-			break;
-		}
-		real alpha2=gain/isum;
-		if(pycfg->raw){
+		if(pycfg->raw||pycfg->nside<3){
+			real alpha2=gain/pycfg->siglev;
 			for(int iside=0; iside<pycfg->nside; iside++){
-				P(grad,isa+nsa*iside)=P(ints, isa, iside)*alpha2;
+				P(grad, isa+nsa*iside)=P(ints, isa, iside)*alpha2;
 			}
-		}else{
+		} else{
+			real isum=0;//subaperture intensity for normalization
+			switch(pycfg->sigmatch){
+			case 0:
+				info_once("PWFS: No siglev correction.\n");
+				isum=pycfg->siglev*P(pywfs->saa,isa);
+				break;
+			case 1:
+				info_once("PWFS: Individual siglev correction.\n");
+				for(int i=0; i<pycfg->nside; i++){
+					isum+=P(ints, isa, i);
+				}
+				break;
+			case 2:
+				info_once("PWFS: Global siglev correction.\n");//preferred.
+				isum=imean*P(pywfs->saa,isa);
+				break;
+			}
+			real alpha2=gain/isum;
 			switch(pycfg->nside){
 			case 3:
 				pgx[isa]=(P(ints, isa, 1)-P(ints, isa, 2))*alpha2*triscalex;
@@ -772,8 +767,8 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 	const loc_t* loc=pywfs->locfft->loc;
 	dmat* opd=dnew(loc->nloc, 1);
 	dmat* ints=0;
-	long nsa=P(pywfs->si,0)->nx;
-	const int ng=pycfg->raw?pycfg->nside:2;
+	const long nsa=P(pywfs->si,0)->nx;
+	const int ng=pycfg->ng;
 	dmat* out=dnew(nsa*ng, 2);
 	dmat* gradx=drefcols(out, 0, 1);
 	dmat* grady=drefcols(out, 1, 1);
@@ -801,7 +796,6 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 		writebin(ints, "pywfs_tty_ints");
 		writebin(grady, "pywfs_tty_grad");
 	}
-
 	
 	if(PYWFS_TT_DUAL){
 		dmat* gradx2=dnew(nsa*2, 1);
@@ -870,7 +864,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 #endif
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const int nsa=P(pywfs->si,0)->nx;
-	const int ng=pycfg->raw?pycfg->nside:2;
+	const int ng=pycfg->ng;
 	dmat* grad0=dnew(nsa*ng, 1);
 	dmat* opd0;
 	if(pywfs->opdadd){

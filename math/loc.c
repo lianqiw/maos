@@ -67,8 +67,8 @@ void locfree_do(loc_t* loc){
 		free(loc->locx);
 		//free(loc->locy);
 		free(loc->nref);
+		free(loc);
 	}
-	free(loc);
 }
 
 /**
@@ -105,14 +105,17 @@ loc_t* locnew(long nloc, real dx, real dy){
 /**
    Reference an existing loc
  */
-loc_t* locref(const loc_t* in){
+loc_t* locref(loc_t* in){
 	if(!in) return NULL;
-	loc_t* out=mycalloc(1, loc_t);
-	memcpy(out, in, sizeof(loc_t));
-	if(out->nref){
-		atomic_add_fetch(out->nref,1);
+	//loc_t* out=mycalloc(1, loc_t);
+	//memcpy(out, in, sizeof(loc_t));
+	if(in->nref){
+		atomic_add_fetch(in->nref,1);
+		return in;
+	}else{
+		error("Invalid: in->nref is NULL\n");
+		return NULL;
 	}
-	return out;
 }
 /**
    Create a pts with nsa, dsa, nx, dx

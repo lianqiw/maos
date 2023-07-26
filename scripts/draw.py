@@ -117,6 +117,8 @@ def draw(*args, **kargs):
             return
         if 'nx' in kargs:
             nx=kargs['nx']
+        elif 'ncol' in kargs:
+            nx=kargs['ncol']
         elif nframe > 3:
             nx = int(np.ceil(np.sqrt(nframe)))
         else:

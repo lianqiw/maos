@@ -155,11 +155,8 @@ int single_instance_daemonize(const char* lockfolder_in,
 	int fd=-1;
 	char* lockfolder=expand_filename(lockfolder_in);
 	char fnlock[PATH_MAX];
-	char fnerr[PATH_MAX];
-	char fnlog[PATH_MAX];
+	
 	snprintf(fnlock, PATH_MAX, "%s/%s.pid", lockfolder, progname);
-	snprintf(fnerr, PATH_MAX, "%s/%s.err", lockfolder, progname);
-	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	free(lockfolder);
 	
 	fd=lock_file_version(fnlock, 0, version);//non-blocking lock
@@ -221,6 +218,15 @@ int single_instance_daemonize(const char* lockfolder_in,
 	/*redirect stdin/stdout. */
 	if(!freopen("/dev/null", "r", stdin)) warning("Error closing stdin\n");
 	//not good to redirect both stdout and stderr to the same file. out of order.
+	char fnerr[PATH_MAX];
+	char fnlog[PATH_MAX];
+	
+	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
+	if(exist(fnlog)){
+		snprintf(fnerr, PATH_MAX, "%s/%s.log.%s", lockfolder, progname, myasctime(0));
+		(void)rename(fnlog, fnerr);
+	}
+	snprintf(fnerr, PATH_MAX, "%s/%s.err", lockfolder, progname);
 	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
 	if(!freopen(fnerr, "w", stderr)) warning("Error redirect stderr\n");
 	setbuf(stdout, NULL);/*disable buffering. */

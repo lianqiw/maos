@@ -375,10 +375,10 @@ void scheduler_cmd_wrap2(GtkDialog *dialog, int response_id, int* cmds){
 	free(cmds);
 }
 CHECK_ARG(2)
-void dialog_confirm(int *cmds, const char* format, ...){
+static void dialog_confirm(int *cmds, const char* format, ...){
 #else
 CHECK_ARG(1)
-gboolean dialog_confirm(const char* format, ...){
+static gboolean dialog_confirm(const char* format, ...){
 #endif
 	format2fn;
 	GtkWidget* dia=gtk_message_dialog_new

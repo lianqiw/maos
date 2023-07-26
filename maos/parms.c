@@ -190,6 +190,7 @@ void free_parms(parms_t *parms){
 	dcellfree(parms->dbg.gradoff);
 	dfree(parms->dbg.draw_opdmax);
 	dfree(parms->dbg.draw_gmax);
+	dfree(parms->dbg.atm);
 	free(parms);
 }
 /*static inline int sum_intarr(int n, long *a){
@@ -1698,7 +1699,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		powfsi->order=ceil(parms->aper.d/powfsi->dsa);
-		powfsi->ng=(pycfg&&pycfg->raw)?pycfg->nside:2;//number of gradients per subaperture
+		if(pycfg){
+			pycfg->ng=(pycfg->raw||pycfg->nside<3)?pycfg->nside:2;
+		}
+		powfsi->ng=pycfg?pycfg->ng:2; //number of gradients per subaperture
 		{
 			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
 			const real dsa=powfsi->dsa;

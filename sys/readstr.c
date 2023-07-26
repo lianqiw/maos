@@ -147,14 +147,19 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 	return count;
 }
 /**
- * Parse the extra expression to the form _*mul+add. It supports +,-,*,/ operators with no space in between.
+ * Parse the extra expression to the form _*mul+add. It supports +,-,*,/ operators with no space before the operator.
  * */
 static void parse_expr(double* vmul, double* vadd, char** pendptr){
+	*vmul=1;
+	*vadd=0;
+	if(!pendptr || !*pendptr) {
+		dbg("parse_expr: string is empty.\n");
+		return;
+	}
 	char *endptr=*pendptr;
 	double valpriv=1;
 	int optpriv=0;
-	*vmul=1;
-	*vadd=0;
+
 	while(endptr[0]=='/'||endptr[0]=='*'||endptr[0]=='+'||endptr[0]=='-'){
 		char op=endptr[0];
 		endptr++;
@@ -162,6 +167,7 @@ static void parse_expr(double* vmul, double* vadd, char** pendptr){
 		char *data=endptr;
 		double tmp=strtod(data, (char**)&endptr);
 		if(data==endptr){
+			error("%s: Unable to read a number after operator %c\n", *pendptr, op);
 			break;
 		}
 		//convert - to + and / to * for easy handling

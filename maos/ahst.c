@@ -640,7 +640,7 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	}
 
 	if(parms->tomo.ahst_wt==1){
-	/*Use gradient weighting. */
+		/*Use gradient weighting. */
 		dcellzero(ngsmod->Pngs);
 		dcellmm_any((cell**)&ngsmod->Pngs, CELL(P(ngsmod->Rngs,0)), recon->GAlo, "nn", 1);
 		if(parms->save.setup){

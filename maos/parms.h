@@ -138,6 +138,7 @@ typedef struct dither_cfg_t{
 typedef struct pywfs_cfg_t{
     int nside;       /**<Number of sides. can be 4 or 3. 4-side is traditional pyramid while 3-side is much easier to make.*/
     int raw;         /**<1: use normalized ints of each sub-pupil as gradient. 0: use difference between sub-pupils*/
+    int ng;          /**<Number of gradients per 'subaperture'. */
     int modulpos;    /**<Number of positions per modulation cycle*/
     int modulpos_i;  /**<For testing: Index of modulate position to use between 0 and modulpos*/
     int modulring;   /**<Number of rings within the maximum radius to modulate*/

@@ -69,7 +69,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 		if(parms->powfs[ipowfs].skip==3) continue;
 		const int nsa=powfs[ipowfs].saloc->nloc;
 		const int ng=parms->powfs[ipowfs].ng;
-		int ncol=MAX(ng,3);
+		int ncol=(ng==2?3:ng);
 		const real pixtheta=parms->powfs[ipowfs].pixtheta;
 		dcell* saneac=0;//in unit of rad^2.
 
@@ -103,8 +103,8 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				//convert from mill-arcsec to radian.
 				real nearad=pow(neamas*MAS2RAD, 2)/(parms->powfs[ipowfs].dtrat*parms->sim.dt/parms->sim.dtref);
 				for(int isa=0; isa<nsa; isa++){
-					P(P(saneac,0), isa, 0)=P(P(saneac,0), isa, 1)=nearad/(P(powfs[ipowfs].saa, isa));
-					for(int ig=2; ig<ng; ig++){
+					P(P(saneac,0), isa, 0)=nearad/(P(powfs[ipowfs].saa, isa));
+					for(int ig=1; ig<ng; ig++){
 						P(P(saneac, 0), isa, ig)=P(P(saneac, 0), isa, 0);
 					}
 				}
@@ -152,15 +152,17 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 						}
 					}
 					if(P(powfs[ipowfs].saa, isa)>area_thres){
-						nea2_sum+=P(sanea0, isa, 0)+P(sanea0, isa, 1);
-						nea2_count++;
+						for(int iy=0; iy<ng; iy++){
+							nea2_sum+=P(sanea0, isa, iy);
+							nea2_count++;
+						}
 					}
 				}
 				
 				nea_chol(&sanea0l, sanea0, ng);
 				nea_inv(&sanea0i, sanea0, ng, TOMOSCALE);//without TOMOSCALE, it overflows in float mode
 				
-				real nea_mean=sqrt(nea2_sum/nea2_count*0.5);
+				real nea_mean=sqrt(nea2_sum/nea2_count);
 				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
 				if(nea_mean>pixtheta*0.33
 					&&parms->powfs[ipowfs].usephy

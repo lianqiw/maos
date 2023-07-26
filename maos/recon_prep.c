@@ -673,7 +673,8 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				const real dispy=parms->wfsr[iwfs].thetay*ht;
 
 				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
-					if(!parms->powfs[ipowfs].lo){
+					/*if(!parms->powfs[ipowfs].lo)*/
+					{
 						dmat* opdadd=0;
 						/*if(!parms->recon.glao&&powfs[ipowfs].opdadd&&0){
 							int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);

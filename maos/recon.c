@@ -465,6 +465,7 @@ void* reconstruct(sim_t* simu){
 						//long nmod=parms->powfs[ipowfs].dither_mode2>1?parms->powfs[ipowfs].dither_mode2:PN(simu->dmerr, idm);
 						const dmat *gs2=P(simu->gradscale2, iwfs);					
 						const real gs1=sqrt(P(gs2, 0)*P(gs2, PN(gs2)-1));//scaling baseline: don't use gradscale, it is computed differently from gradscale2.
+						//const real gs1=P(gs2, PN(gs2)-1); //testing. when main dithering integrator uses the last loop.
 						const long nd=NX(gs2);//number of dithered modes.
 						const int md=recon->dither_md;
 						

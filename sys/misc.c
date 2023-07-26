@@ -37,26 +37,7 @@
 #include "path.h"
 #include "bin.h"
 #include "scheduler_client.h"
-/**
-   Obtain the basename of a file. The returnned string must be freed.  Behavior
-   is the same as basename() except that this implementation is reentrant and
-   thread safe.
-*/
-char* mybasename(const char* fn){
-	if(!fn||strlen(fn)==0) return NULL;
-	char fn2[PATH_MAX];
-	strncpy(fn2, fn, PATH_MAX-1);
-	/*If this is a folder, remove the last / */
-	if(fn2[strlen(fn2)-1]=='/')
-		fn2[strlen(fn2)-1]='\0';
-	char* sep=strrchr(fn2, '/');
-	if(!sep){
-		sep=fn2;
-	} else{
-		sep++;
-	}
-	return mystrdup(sep);
-}
+
 /**
    Obtain the dirname of a path. See mybasename().
 */
@@ -147,10 +128,10 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 		strncpy(scmd, DIRSTART, slen);
 	}
 	strcat(scmd, "/");
-	char* exename=mybasename(argv[0]);
+	const char* exename=mybasename(argv[0]);
 	strcat(scmd, exename);
 	strcat(scmd, delim);
-	free(exename);
+
 	for(int iarg=1; iarg<argc; iarg++){
 		if(argv[iarg]&&strlen(argv[iarg])>0){
 			strcat(scmd, argv[iarg]);

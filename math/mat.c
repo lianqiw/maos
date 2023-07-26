@@ -28,38 +28,61 @@
    - If p is not NULL, mem is NULL, we act as a weak pointer. p is managed externally. 
    - If both p and mem are not NULL, we increment mem reference count.
 */
-X(mat)* X(new_do)(long nx, long ny, T* p, mem_t* mem){
+static int X(init_do)(X(mat) **pout, long nx, long ny, T *p, mem_t *mem){
+	if(!pout){
+		warning("Null pointer for pout\n");
+		return -1;
+	}
+	if(!*pout&&!(*pout=mycalloc(1, X(mat)))){
+		warning("malloc for X(mat) failed\n");
+		return -1;
+	}
+	X(mat)*out=*pout;
 	if(nx<=0||ny<=0){
 		nx=0;
 		ny=0;
 	}
-	X(mat) *out=mycalloc(1, X(mat));
-	if(!out){
-		warning("malloc for X(mat) failed\n");
-		return NULL;
-	}
-	if(!p){//no pointer is supplied
-		if(nx && ny){
+	
+	if(out->id && (out->id&M_T)!=M_T){
+		error("Mismatch: pout is of type %u, expect %u.\n", out->id, M_T);
+		return -1;
+	}else if(out->id && out->p){//data exists. check dimension
+		if(out->nx!=nx || out->ny!=ny){
+			error("Mismatch: pout is %ldx%ld, expect %ldx%ld\n", out->nx, out->ny, nx, ny);
+			return -1;
+		}//else: just return
+	}else{
+		if(!p && nx && ny){//no pointer is supplied
 			if(!(p=mycalloc((nx*ny), T))){
 				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
 			}
 			if(mem){
-				//print_backtrace();
-				warning("mem=%p should be NULL when p is NULL, ignored.\n", mem);
+				error("mem=%p should be NULL when p is NULL. It will be overriden.\n", mem);
 			}
 			mem=mem_new(p);
 		}
+		
+		out->id=M_T;
+		out->nx=nx;
+		out->ny=ny;
+		out->p=p;
+		if(mem) out->mem=mem_ref(mem);
 	}
-	
-	out->id=M_T;
-	out->nx=nx;
-	out->ny=ny;
-	out->p=p;
-	if(mem) out->mem=mem_ref(mem);
-	
+	return 0;
+}
+/**
+   check the size of matrix if exist. Otherwise create it. content is not zeroed if already exists.
+   - empty matrix is initialized.
+   - existing matrix is not resized.
+*/
+int X(init)(X(mat) **A, long nx, long ny){
+	return X(init_do)(A, nx, ny, NULL, 0);
+}
+X(mat) *X(new_do)(long nx, long ny, T *p, mem_t *mem){
+	X(mat)* out=NULL;
+	X(init_do)(&out, nx, ny, p, mem);
 	return out;
 }
-
 /**
    Create a new X(mat). Initialized to zero.
 */
@@ -82,24 +105,6 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 		//out->async=async_init(out->fp, sizeof(T), M_T, out->keywords, P(out), out->nx, out->ny);
 	}
 	return out;
-}
-
-/**
-   check the size of matrix if exist. Otherwise create it. content is not zeroed if already exists.
-   - empty matrix is initialized.
-   - existing matrix is not resized.
-*/
-int X(init)(X(mat)** A, long nx, long ny){
-	int ans=0;
-	if(!*A){
-		*A=X(new)(nx, ny);
-	} else if((*A)->nx==0||(*A)->ny==0){
-		X(resize)(*A, nx, ny);
-	} else if((*A)->nx!=nx||(*A)->ny!=ny){
-		error("Mismatch: A is %ldx%ld, want %ldx%ld\n", (*A)->nx, (*A)->ny, nx, ny);
-		ans=-1;
-	}
-	return ans;
 }
 /**
    check and cast an object to matrix
@@ -230,7 +235,6 @@ int X(resize)(X(mat)* A, long nx, long ny){
 			return -1;
 		}
 	}else if(!ismat(A)){
-
 		error("Incorrect type: id=%d, cancelled\n", A->id);
 		return -1;
 	}

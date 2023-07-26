@@ -55,7 +55,7 @@ void locarrfree_do(loc_t** loc, int nloc);
 real loc_diam(const loc_t* loc);
 int loccenter(const loc_t* loc);
 loc_t* locnew(long nloc, real dx, real dy);
-loc_t* locref(const loc_t* in);
+loc_t* locref(loc_t* in);
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy);
 void loc_calc_ptt(real* out, real* coeffout,
 	const loc_t* loc, const real ipcc,

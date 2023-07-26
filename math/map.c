@@ -23,8 +23,8 @@
    create a new map_t object.
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
-	dmat *tmp=dnew_do(nx, ny, NULL, 0);
-	map_t* map=myrealloc(tmp, 1, map_t);
+	map_t* map=mycalloc(1, map_t);
+	dinit((dmat**)&map, nx, ny);
 	map->h=0;
 	map->dx=dx;
 	map->dy=dy;
@@ -40,8 +40,8 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 */
 map_t* mapnew2(map_t* A){
 	if(!check_nonempty(A)) return NULL;
-	dmat *tmp=dnew_do(A->nx, A->ny, NULL, 0);
-	map_t* map=myrealloc(tmp, 1, map_t);
+	map_t* map=mycalloc(1, map_t);
+	dinit((dmat**)&map, A->nx, A->ny);
 	map->h=A->h;
 	map->dx=A->dx;
 	map->dy=A->dy;
@@ -70,6 +70,7 @@ void mapcircle(map_t* map, real r, real val){
 	if(!check_nonempty(map)) return;
 	dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
+
 /**
    Create a circular aperture on map_t.
 */
@@ -77,7 +78,6 @@ void mapcircle_symbolic(map_t* map, real r){
 	if(!check_nonempty(map)) return;
 	dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
 }
-
 
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.

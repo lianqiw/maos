@@ -25,7 +25,7 @@
    \file sys/misc.h
    misc routines.
 */
-char *mybasename(const char *fn);
+//const char *mybasename(const char *fn);
 char *mydirname(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 int copyfile(const char* src, const char* dest);

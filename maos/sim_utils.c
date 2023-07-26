@@ -1508,7 +1508,7 @@ void free_simu(sim_t* simu){
 	}
 	cellfree(simu->atm);
 	dfree(simu->atmscale);
-	if(parms->sim.cachedm&&!parms->sim.evlol){
+	if(simu->cachedm){
 		cellfree(simu->cachedm);
 		for(int i=0; i<parms->ndm; i++){
 			free(simu->cachedm_prop[i]);
@@ -1567,6 +1567,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->gradoffacc);
 	dcellfree(simu->gradoffdrift);
 	dcellfree(simu->gradscale);
+	dcellfree(simu->gradscale2);
 	dcellfree(simu->opdr);
 	dcellfree(simu->gngsmvst);
 	dcellfree(simu->cn2res);

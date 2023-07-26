@@ -384,7 +384,7 @@ void kill_job(int hid, int pid){
 		if(scheduler_cmd(p->hid, p->pid, CMD_KILL)){
 			warning("Failed to kill the job\n");
 		}
-		
+
 		refresh(p);
 		break;
 	case 1:

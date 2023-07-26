@@ -79,8 +79,18 @@ using std::strerror;
 #else
 #define EPS 1.e-15
 #endif
-
-#define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
+/**
+   Obtain the basename of a file. Has the GNU basename behavior.
+*/
+static inline const char *mybasename(const char *fn){
+  if(fn){
+    const char *slash=strrchr(fn, '/');
+    if(slash){
+      if(slash[1]=='\0') return "";else return slash+1;
+    } else return fn;
+  } else return "";
+}
+#define BASEFILE mybasename(__FILE__) //(strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
 
 /*
   use () to make the statements a single statement.
@@ -204,12 +214,11 @@ static inline int check_space(const char *endptr, const char *endstr){
       const char *str=getenv("MAOS_"#A);\
       const char *endstr=str+strlen(str);\
 		  T B=(T)FUN(str,&endptr);           \
-      if(endptr==str || check_space(endptr, endstr)){  \
-        error("MAOS_"#A"={%s} has invalid value.\n", str);\
+      if(endptr==str || check_space(endptr, endstr) || B>max || B<min){  \
+        error("MAOS_"#A"={%s} is invalid. Must be within [%g, %g].\n", str, (double) min, (double) max);\
       }                                 \
 		  if(A!=B){ 								        \
-			  A=MIN(MAX(B, min), max);			  \
-			  dbg3(#A" changed to %g\n", (double)A);		\
+        A=B; dbg(#A" changed to %g\n", (double)A);		\
 		  }										              \
     }
 

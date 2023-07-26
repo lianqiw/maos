@@ -597,6 +597,11 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			tmp=drefcols(P(pd->mr, 1), simu->wfsisim-ncol+1, ncol);//Grad
 			pd->a2me=calc_dither_amp(&pd->a2mev, tmp, parms->powfs[ipowfs].dtrat, npoint, detrend, 0);
 			dfree(tmp);
+			/*if(PN(pd->a2mv)>1){//multi-mode
+				warning_once("Use the last dithering mode\n");
+				pd->a2m=P(pd->a2mv, PN(pd->a2mv)-1);
+				pd->a2me=P(pd->a2mev, PN(pd->a2mev)-1);
+			}*/
 			/*if(PN(pd->mr)>3){
 				tmp=drefcols(P(pd->mr, 2), simu->wfsisim-ncol+1, ncol);//DM
 				pd->a2m2=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, detrend);
@@ -1185,7 +1190,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dset(P(simu->gradscale2, iwfs), 1);
 					}
 					real mgold=dsum(P(simu->gradscale, iwfs))/ng;
-					real mgnew=0,mgnew2=0;
+					real mgnew=0;//,mgnew2=0;
 					const char* ogtype=0;
 					//gg0 is output/input of dither dithersig.
 					if(ogsingle){//single gain for all subapertures. For Pyramid WFS
@@ -1219,7 +1224,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 									P(gs2, id)*=pow(g2err, parms->powfs[ipowfs].dither_gog);
 								}
 							}
-							mgnew2=P(gs2, nd-1);
+							//mgnew2=P(gs2, nd-1);
 							//dshow(gs2, "gradscale2");
 							//info2("Scale ratios are High: %g Low: %g\n", P(simu->gradscale2, iwfs), P(P(simu->gradscale, iwfs), 0));
 						}
@@ -1245,10 +1250,10 @@ static void wfsgrad_dither_post(sim_t* simu){
 						mgnew=dsum(P(simu->gradscale, iwfs))/ng;
 						dzero(pd->gg0);
 					}
-					if(mgnew2){
+					/*if(mgnew2){
 						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=(%5.2f, %5.2f) %s\n", 
 							isim, iwfs, pd->a2me/pd->a2m, mgnew, mgnew2, ogtype);
-					}else{
+					}else*/{
 						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=%5.2f %s\n", 
 							isim, iwfs, pd->a2me/pd->a2m, mgnew, ogtype);
 					}

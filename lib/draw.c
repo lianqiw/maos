@@ -176,7 +176,7 @@ retry:
 			dbg2("draw %d resumed\n", sock_draw);
 			break;
 		case DRAW_SINGLE:
-			sock_data->draw_single=sock_data->draw_single?0:1;
+			sock_data->draw_single=!sock_data->draw_single;
 			dbg2("draw %d draw_single=%d\n", sock_draw, sock_data->draw_single);
 			break;
 		default:
@@ -1056,17 +1056,22 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	format2fn;
 	if(!saloc || !gradin) return 0;
     long nsa=saloc->nloc;
-	if(nsa<=4) grad2opd=0;
+	if(nsa<=4||NY(gradin)!=2) grad2opd=0;
     //check current plotting target
     
 	char fnx[100];
 	char fny[100];
-	snprintf(fnx, sizeof(fnx), "%s x", fn);
-	snprintf(fny, sizeof(fny), "%s y", fn);
-	if(!(grad2opd&&draw_current(fig, fn)) && !draw_current(fig, fnx)&&!draw_current(fig, fny)) return 0;
+	if(NY(gradin)>1){
+		snprintf(fnx, sizeof(fnx), "%sx", fn);
+		snprintf(fny, sizeof(fny), "%sy", fn);
+	}else{
+		snprintf(fnx, sizeof(fnx), "%s", fn);
+		snprintf(fny, sizeof(fny), "%s", fn);
+	}
+	if(!(grad2opd&&draw_current(fig, fn)) && !draw_current(fig, fnx) && !draw_current(fig, fny)) return 0;
 	
 	dmat* grad=0;
-	if(trs){//remove tip/tilt
+	if(trs && NY(grad)==2){//remove tip/tilt
 		grad=ddup(gradin);
 		reshape(grad, nsa, 2);
 		real gxm=0;
@@ -1098,12 +1103,12 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	}
 	if(draw_current(fig, fnx)){
 		dmat* gx=dnew_do(nsa, 1, P(grad), 0);
-		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s x", fn);
+		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s", fnx);
 		dfree(gx);
 	}
-	if(draw_current(fig, fny)){
+	if(NY(grad)>1 && draw_current(fig, fny)){
 		dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
-		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s y", fn);
+		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s", fny);
 		dfree(gy);
 	}
 	dfree(grad);

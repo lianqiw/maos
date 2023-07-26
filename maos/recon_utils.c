@@ -645,11 +645,12 @@ static int nea_prep(dmat **pout, const dmat *in, const int ng){
 	if(NY(in)!=ng&&NY(in)!=3){
 		error("in has wrong format: %ldx%ld\n", NX(in), NY(in));
 	}
-	int isxy=(NY(in)!=ng)?1:0;//cross term
+	int isxy=(NY(in)>ng&&ng==2)?1:0;//cross term
+	int ncol=ng==2?3:ng;
 	if(!*pout){
-		*pout=dnew(NX(in), MAX(ng, 3));
-	}else if(isxy&&NY((*pout))!=3){
-		dresize(*pout, NX(in), 3);
+		*pout=dnew(NX(in), ncol);
+	}else if(isxy&&NY((*pout))!=ncol){
+		dresize(*pout, NX(in), ncol);
 	}
 	return isxy;
 }

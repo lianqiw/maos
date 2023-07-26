@@ -174,7 +174,7 @@ void cellfree_do(cell* A){
 		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
 		//do not close for yet for individual cells may need to do synchronization.
 		if(P(dc)){
-			for(int ix=0; ix<dc->nx*dc->ny; ix++){
+			for(int ix=0; ix<PN(dc); ix++){
 				cellfree_do(P(dc,ix));
 			}
 			free(P(dc));P(dc)=0;
