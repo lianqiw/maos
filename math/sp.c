@@ -124,6 +124,7 @@ X(sp)* X(spdup)(const X(sp)* A){
    Create a new sparse matrix of the same size as A.
 */
 X(sp)* X(spnew2)(const X(sp)* A){
+	if(!A) return NULL;
 	assert_sp(A);
 	return X(spnew)(A->nx, A->ny, A->pp[A->ny]);
 }
@@ -131,8 +132,7 @@ X(sp)* X(spnew2)(const X(sp)* A){
    Create a new sparse matrix and fill in uniform random
    numbers with filling factor of 'fill'
 */
-X(sp)* X(spnewrandu)(long nx, long ny, const T mean,
-	R fill, rand_t* rstat){
+X(sp)* X(spnewrandu)(long nx, long ny, const T mean, R fill, rand_t* rstat){
 	if(fill>1) fill=1.;
 	if(fill<0) fill=0.;
 	const long nzmax=nx*ny;
@@ -177,7 +177,11 @@ X(sp)* X(sp_cast)(const cell* A){
    resize a sparse matrix
 */
 void X(spsetnzmax)(X(sp)* sp, long nzmax){
-	assert(issp(sp));
+	if(!sp) return;
+	if(!issp(sp)){
+		warning("Not a sparse matrix\n");
+		return;
+	}
 	if(sp->nzmax!=nzmax){
 		sp->pi=myrealloc(sp->pi, nzmax, spint);
 		sp->px=myrealloc(sp->px, nzmax, T);
@@ -250,46 +254,45 @@ int X(spcheck)(const X(sp)* sp){
 /**
  * inplace scale sparse matrix elements.*/
 void X(spscale)(X(sp)* A, const T beta){
-	if(A){
-		assert_sp(A);
-		if(A->nref[0]>1){
-			warning("spscale on referenced dsp\n");
-		}
-		for(long i=0; i<A->pp[A->ny]; i++){
-			A->px[i]*=beta;
-		}
+	if(!A) return;
+	assert_sp(A);
+	if(A->nref[0]>1){
+		warning("spscale on referenced dsp\n");
+	}
+	for(long i=0; i<A->pp[A->ny]; i++){
+		A->px[i]*=beta;
 	}
 }
+
 /**
  * inplace scale sparse matrix elements.*/
 void X(spscalex)(X(sp)* A, const X(mat)* xs){
-	if(A){
-		assert_sp(A);
-		if(A->nx!=xs->nx){
-			error("sparse matrix[%ldx%ld] does not match vector [%ldx%ld]\n",
-				A->nx, A->ny, xs->nx, xs->ny);
-		}
-		for(long iy=0; iy<A->ny; iy++){
-			for(long i=A->pp[iy]; i<A->pp[iy+1]; i++){
-				long ix=A->pi[i];
-				A->px[i]*=P(xs,ix);
-			}
+	if(!A) return;
+	assert_sp(A);
+	if(A->nx!=xs->nx){
+		error("sparse matrix[%ldx%ld] does not match vector [%ldx%ld]\n",
+			A->nx, A->ny, xs->nx, xs->ny);
+	}
+	for(long iy=0; iy<A->ny; iy++){
+		for(long i=A->pp[iy]; i<A->pp[iy+1]; i++){
+			long ix=A->pi[i];
+			A->px[i]*=P(xs,ix);
 		}
 	}
 }
+
 /**
  * inplace scale sparse matrix elements.*/
 void X(spscaley)(X(sp)* A, const X(mat)* ys){
-	if(A){
-		assert_sp(A);
-		if(A->ny!=ys->nx){
-			error("sparse matrix[%ldx%ld] does not match vector [%ldx%ld]\n",
-				A->nx, A->ny, ys->nx, ys->ny);
-		}
-		for(long iy=0; iy<A->ny; iy++){
-			for(long i=A->pp[iy]; i<A->pp[iy+1]; i++){
-				A->px[i]*=P(ys,iy);
-			}
+	if(!A) return;
+	assert_sp(A);
+	if(A->ny!=ys->nx){
+		error("sparse matrix[%ldx%ld] does not match vector [%ldx%ld]\n",
+			A->nx, A->ny, ys->nx, ys->ny);
+	}
+	for(long iy=0; iy<A->ny; iy++){
+		for(long i=A->pp[iy]; i<A->pp[iy+1]; i++){
+			A->px[i]*=P(ys,iy);
 		}
 	}
 }
@@ -358,8 +361,9 @@ X(sp)* X(spnewdiag)(long N, T* vec, T alpha){
    Extract diagonal element of A and return
 */
 X(mat)* X(spdiag)(const X(sp)* A){
+	if(!A) return NULL;
 	if(A->nx!=A->ny){
-		error("Only work for square matrix\n");
+		error("Only implemented for square matrix\n");
 	}
 	assert_sp(A);
 	X(mat)* out=X(new)(A->nx, 1);
@@ -401,8 +405,9 @@ T X(spwdinn)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 	T res=0;
 	if(x&&y){
 		if(A){
-			assert_sp(A);
-			assert(x->ny==1&&y->ny==1&&A->nx==y->nx&&A->ny==x->nx);
+			if(!(issp(A) &&x->ny==1&&y->ny==1&&A->nx==y->nx&&A->ny==x->nx)){
+				error("Parameters mismatch\n");
+			}
 			for(int icol=0; icol<A->ny; icol++){
 				for(int ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 					res+=P(y, A->pi[ix])*A->px[ix]*P(x, icol);
@@ -421,8 +426,9 @@ T X(spcellwdinn)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 	T res=0;
 	if(x&&y){
 		if(A){
-			assert_sp(A);
-			assert(x->ny==1&&y->ny==1&&A->nx==y->nx&&A->ny==x->nx);
+			if(!(issp(A)&&x->ny==1&&y->ny==1&&A->nx==y->nx&&A->ny==x->nx)){
+				error("Parameters mismatch\n");
+			}
 			/*PSX(cell)* Ap=A; */
 			for(int iy=0; iy<A->ny; iy++){
 				for(int ix=0; ix<A->nx; ix++){
@@ -440,8 +446,7 @@ T X(spcellwdinn)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
  * Convert sparse matrix into dense matrix and add to output:
  * out0=out0+full(A)*alpha*/
 void X(spfull)(X(mat)** out0, const X(sp)* A, const char trans, const T alpha){
-	if(!A)
-		return;
+	if(!A) return;
 		/**
 		   add A*f to dense matrix located in p;
 		*/
