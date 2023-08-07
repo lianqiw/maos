@@ -261,12 +261,14 @@ static jobshead_t jobsurgent={0L};/**<Start of the fifo list of urgent jobs*/
 static jobshead_t jobspool={0L};  /**<saving unused jobs_t*/
 
 
-//Place job to the beginning of list.
+//Place job list (jobhead to jobtail) to the beginning of list (head) by connecting jobtail.next to head and replacing head by jobhead
 static void jobs_push(jobshead_t *head, unsigned int jobheadind, unsigned int jobtailind){
-	jobsall[jobtailind].next=head->head;
-	while(!atomic_compare_exchange_n(&(head->head), &jobsall[jobtailind].next, jobheadind));
+	do{
+		jobsall[jobtailind].next=head->head;
+	}while(!__atomic_compare_exchange_n(&(head->head), &jobsall[jobtailind].next, jobheadind, 
+										1, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
 }
-//Get job from the beginning of list
+//Get a job from the beginning of the list.
 static unsigned int jobs_pop(jobshead_t *head){
 	jobshead_t job, job2;
 	job.state=head->state;
@@ -274,7 +276,8 @@ static unsigned int jobs_pop(jobshead_t *head){
 		//compare both counter and pointer to make sure the node is not changed.
 		job2.counter=job.counter+1;//increse the counter
 		job2.head=jobsall[job.head].next;
-	} while(!atomic_compare_exchange(&head->state, &job.state, &job2.state));
+	} while(!__atomic_compare_exchange(&head->state, &job.state, &job2.state, 
+									   1, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
 	return job.head;
 }
 
@@ -301,7 +304,7 @@ static int do_job(int urgent){
 			}
 		}
 #endif	
-		if(__atomic_sub_fetch(&job->counter->group, 1, __ATOMIC_RELEASE)==4294967295){
+		if(__atomic_sub_fetch(&job->counter->group, 1, __ATOMIC_ACQUIRE)==4294967295){
 			warning("group %p is now -1.\n", job->counter);
 		}
 		jobs_push(&jobspool, jobind, jobind);//return job to the pool.	
@@ -341,8 +344,10 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 					job->arg=&arg2[ijob];
 				}
 				job->counter=counter;
-				__atomic_add_fetch(&counter->group, 1, __ATOMIC_RELEASE);
 				job->next=0;
+				//_ATOMIC_RELEASE after store, and _ATOMIC_ACQUIRE before load. Always in pairs.
+				//_ATOMIC_RELEASE ensures operations before this line is not moved to after.
+				__atomic_add_fetch(&counter->group, 1, __ATOMIC_RELEASE);
 				if(!headind){
 					headind=jobind;
 				} else{

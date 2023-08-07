@@ -580,10 +580,12 @@ static int respond(int sock){
 		/*if(errno!=ESRCH && errno!=ENOENT){//timeout or closed
 			dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		}*/
+		dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		goto end;
+	}else{
+		dbg2_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
 	}
 	pid=cmd[1];
-	dbg3_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
 	//LOCK(mutex_sch);
 	switch(cmd[0]){
 	case CMD_START://1: Called by maos when job starts.
@@ -907,6 +909,7 @@ end:
 #if HAS_LWS
 	ws_service(0);
 #endif
+	dbg_time("respond returns %d\n", ret);
 	return ret;//ret=-1 will close the socket.
 }
 /*

@@ -28,7 +28,7 @@
 
 */
 
-
+#include <errno.h>
 #include <sys/socket.h>
 #include "../sys/sys.h"
 #include "monitor.h"
@@ -37,6 +37,7 @@ static proc_t** pproc;
 static int* nproc;
 static int* hsock;   //socket of each host
 static time_t* htime;//last time having signal from each host.
+static time_t* hnotify;//last time notification for this server.
 extern int sock_main[2]; /*listens command from main*/
 static fd_set active_fd_set;
 //int pipe_addhost[2]={0,0};
@@ -170,8 +171,12 @@ static void host_removed(int sock, int notify){
 		if(!headless) g_idle_add(host_down, GINT_TO_POINTER(ihost));
 		warning_time("Disconnected from %s\n", hosts[ihost]);
 		if(notify){
-			sendmail("Subject:monitor on disconnected from %s\n\nAt %s\n",
-				 hosts[ihost], myasctime(0));
+			time_t now=myclocki();
+			if(hnotify[ihost]+86400<now){
+				hnotify[ihost]=now;
+				sendmail("Subject:monitor on disconnected from %s\n\nAt %s on %s\n",
+					 hosts[ihost], myasctime(0), HOST);
+			}
 		}
 	}
 }
@@ -291,12 +296,15 @@ const char *status_msg[]={
 	"removed",	"killed",//15
 	};
 static int respond(int sock){
+	int ihost=host_from_sock(sock);
 	int cmd[3];
 	//read fixed length header info.
 	if(streadintarr(sock, cmd, 3)){
+		dbg_time("failed to read from %d %s: %s (%d) \n", sock, ihost>0?hosts[ihost]:"Unknown", strerror(errno), errno);
 		return -1;//failed
+	}else{
+		dbg2_time("got %d from %d %s\n", cmd[0], sock, ihost>0?hosts[ihost]:"Unknown");
 	}
-	int ihost=host_from_sock(sock);
 	if(ihost>=0){
 		htime[ihost]=myclocki();
 	}
@@ -335,6 +343,7 @@ static int respond(int sock){
 		}*/
 		int old_info=iproc->status.info;
 		if(stread(sock, &iproc->status, sizeof(status_t))){
+			dbg_time("respond: read status failed\n");
 			return -1;
 		}
 		/*if(!iproc->timstart){//only set once
@@ -343,6 +352,9 @@ static int respond(int sock){
 		if(iproc->status.timlast){
 			iproc->timlast=iproc->status.timlast;
 		}*/
+		if(old_info==S_TOKILL && iproc->status.info==S_RUNNING){
+			iproc->status.info=S_TOKILL;//pending kill.
+		}
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{
@@ -378,7 +390,7 @@ static int respond(int sock){
 	case MON_PATH://called by scheduler to pass maos path
 	{
 		if(ihost<0){
-			info_time("Host not found\n");
+			warning_time("Host not found\n");
 			return -1;
 		}
 		proc_t* iproc=proc_get(ihost, pid);
@@ -386,6 +398,7 @@ static int respond(int sock){
 		iproc=proc_add(ihost,pid);
 		}*/
 		if(streadstr(sock, &iproc->path)){
+			warning_time("respond: read path failed\n");
 			return -1;
 		}
 		char* tmp=NULL;
@@ -433,7 +446,7 @@ static int respond(int sock){
 	case MON_LOAD:
 	{
 		if(ihost<0){
-			info_time("Host not found\n");
+			dbg_time("Host not found\n");
 			return -1;
 		}
 		usage_cpu[ihost]=(double)((pid>>16)&0xFFFF)/100.;
@@ -447,6 +460,7 @@ static int respond(int sock){
 		if(cmd[1]>-1&&cmd[1]<nhost){
 			add_host(cmd[1]);
 		} else if(cmd[1]==-2){//quit
+			dbg_time("respond: quit\n");
 			return -2;
 		}
 		break;
@@ -472,6 +486,7 @@ void* listen_host(void* pmsock){
 		hsock[i]=-1;
 	}
 	htime=mycalloc(nhost, time_t);
+	hnotify=mycalloc(nhost, time_t);
 	FD_ZERO(&active_fd_set);
 	FD_SET(msock, &active_fd_set);//listen to monitor itself
 	socket_recv_timeout(msock, 60); //when use select, enable read timeout to avoid hang
@@ -487,6 +502,7 @@ void* listen_host(void* pmsock){
 			if(FD_ISSET(i, &read_fd_set)){
 				int res;
 				if((res=respond(i))<0){
+					dbg_time("respond returned -1\n");
 					host_removed(i, res==-1?1:0);
 				}
 				if(res==-2){//quit
@@ -563,6 +579,7 @@ static int scheduler_display(int ihost, int pid){
 */
 static int scheduler_cmd(int ihost, int pid, int command){
 	if(ihost<0) return 0;
+	dbg2_time("Send %d to %s\n", command, hosts[ihost]);
 	if(command==CMD_DISPLAY){
 		return scheduler_display(ihost, pid);
 	} else{
@@ -574,6 +591,7 @@ static int scheduler_cmd(int ihost, int pid, int command){
 			cmd[1]=pid;/*pid */
 			ans=stwriteintarr(sock, cmd, 2);
 			if(ans){/*communicated failed.*/
+				warning_time("Failed to write to %s, remove host.\n", hosts[ihost]);
 				host_removed(sock, 0);
 			}
 		}

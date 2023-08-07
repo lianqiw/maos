@@ -56,10 +56,13 @@ dcell *dcellread_prefix(const char *file, const parms_t *parms, int ipowfs);
 */
 static inline real fc2lp(real fc, real dt){
     if(fc*dt>=1){
-	return 1;
+	    return 1.;
+    }else if(fc>0){
+	    return 1.-exp(-2.*M_PI*fc*dt);
     }else{
-	return 1-exp(-2*M_PI*fc*dt);
+        return 0;
     }
 }
 real average_powfs(dmat* A, lmat* wfsindex, int replace);
+void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
 #endif

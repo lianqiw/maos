@@ -279,6 +279,15 @@ def svd_pinv(mod, thres=0, tikcr=0):
     immt=svd_inv(mmt, thres, tikcr)
     return mod.T@immt
 
+def plot_cdf(y, *args, abs=0, **kargs):
+    '''plot cumulative distribution function. Take absolute value times 2 if abs is set'''
+    n=y.size
+    x=np.arange(n)/(n-1)
+    if abs:
+        y=np.abs(y)*2
+    plot(np.sort(y.flat), x, *args, **kargs)
+    ylim(0,1)
+    
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
     ind=np.argsort(x)
@@ -382,12 +391,17 @@ def calc_psd(v, dt=1, fold=1, axis=-1):
     
     if fold:
         f=np.arange(nmid+1)*df
-        psd=af[:,0:1+nmid]
-        psd[:,1:-1]+=af[:,-1:nmid+1:-1]
+        if af.ndim==2:
+            af[:,1:nmid]+=af[:,-1:nmid:-1]
+            psd=af[:,0:1+nmid] #psd[:,1:-1]+=af[:,-1:nmid:-1]
+        elif af.ndim==1:
+            af[1:nmid]+=af[-1:nmid:-1]
+            psd=af[0:1+nmid] #psd[:,1:-1]+=af[:,-1:nmid:-1]
+        else:
+            raise(Exception('Please fill in'))
     else:
         f=np.arange(nstep)*df
         psd=af
-    
     return(f,psd)
 def plot_psd_cumu(f, psd, plot_options='-'):
     '''Plot the PSD cumulative integral from high to low'''
@@ -397,7 +411,7 @@ def plot_psd_cumu(f, psd, plot_options='-'):
     else:
         fr2=fr;
     psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
-    loglog(fr,psdr, plot_options)
+    semilogx(fr,psdr, plot_options)
 
 def cog(data):
     '''Center of gravity'''

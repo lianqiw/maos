@@ -77,7 +77,8 @@
     void X(addI)(X(mat) *A, T val);					\
     void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
     void X(add_relax)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
-    void X(adds)(X(mat*)A, const T ac);					\
+    void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac);\
+    void X(adds)(X(mat*)A, const T ac);	\
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \

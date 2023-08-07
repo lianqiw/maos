@@ -66,7 +66,10 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 		warning("Reduce rmax=%d to %d\n", rmax, nr3);
 		rmax=nr3;
 	}
-	if(rmin>rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
+	if(rmin>rmax){
+		warning("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
+		return NULL;
+	}
 	const long nloc=loc->nloc;
 	int nmod=0;
 	if(flag>0){//radial only

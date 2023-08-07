@@ -409,28 +409,36 @@ static void readcfg_powfs(parms_t *parms){
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			#define READ_LLT(T,key) powfsi->llt->key=readcfg_##T("%sllt."#key, prefix)
-			#define READ_LLT_ARR(T,key) powfsi->llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
+			#define READ_LLT(T,key) llt->key=readcfg_##T("%sllt."#key, prefix)
+			#define READ_LLT_ARR(T,key) llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
 			open_config(powfsi->fnllt,prefix,readcfg_peek_priority("powfs.fnllt"));
-			powfsi->llt=mycalloc(1,llt_cfg_t);
-			READ_LLT(dbl,d);
-			READ_LLT(dbl,widthp);
-			READ_LLT(dbl,ttrat);
-			READ_LLT(str,ttpsd);
-			READ_LLT(str,fnrange);
-			READ_LLT(str,fnprof);
-			READ_LLT(str,fnprep);
-			READ_LLT(str,fnamp);
-			READ_LLT(str,fnsurf);
-			READ_LLT(dbl,focus);
-			READ_LLT(int,ttfr);
+			llt_cfg_t* llt=powfsi->llt=mycalloc(1,llt_cfg_t);
+			READ_LLT(dbl, d);
+			READ_LLT(dbl, widthp);
+			READ_LLT(dbl, focus);
+			READ_LLT(dbl, ttrat);
+			READ_LLT(dbl, fcfsm);
+			READ_LLT(str, ttpsd);
+			READ_LLT(str, fnrange);
+			READ_LLT(str, fnprof);
+			READ_LLT(str, fnprep);
+			READ_LLT(str, fnsurf);
+			READ_LLT(str, fnamp);
+
+			READ_LLT_ARR(dmat, ox);
+			READ_LLT_ARR(dmat, oy);
+			READ_LLT_ARR(dmat, misreg);
+			
+			READ_LLT(int, ttfr);
 			READ_LLT(int,colprep);
 			READ_LLT(int,colsim);
 			READ_LLT(int,coldtrat);
-			READ_LLT_ARR(dmat,misreg);
-			READ_LLT_ARR(dmat,ox);
-			READ_LLT_ARR(dmat,oy);
-			powfsi->llt->n=NX(powfsi->llt->ox);
+			
+			llt->n=NX(llt->ox);
+			if(llt->fcfsm!=0&&llt->n>1){
+				error("FSM to common LLT FSM offload is only supported for single LLT.\n");
+			}
+			
 		}else{//NGS
 			if(powfsi->fnllt){
 				warning("powfs %d is NGS but LLT is specified which will be ignored.\n", ipowfs);
@@ -1909,6 +1917,12 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			} else{
 				warning("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
 			}
+			
+			double FC2EP=1;//factor for fc to ep conversion
+			READ_ENV_DBL(FC2EP, 0, INFINITY);
+			//parms->powfs[ipowfs].llt->lpfsm=fc2lp(parms->powfs[ipowfs].llt->fcfsm, parms->sim.dt*parms->powfs[ipowfs].dtrat);//active only when high order wfs has output.
+			parms->powfs[ipowfs].llt->epfsm=FC2EP*parms->powfs[ipowfs].llt->fcfsm*parms->sim.dt*parms->powfs[ipowfs].dtrat;//2 gives slight overshoot
+			info("powfs%d.llt: fc2ep=%g, epfsm=%g\n", ipowfs, FC2EP, parms->powfs[ipowfs].llt->epfsm);
 		}
 		//Match TWFS to LGS POWFS
 		if(parms->powfs[ipowfs].skip==2){//TWFS
@@ -2075,10 +2089,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		parms->sim.fcfocus=0.1/parms->sim.dtlo;
 	}
 
-	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);
+	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output. 
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 
-	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dthi);
+	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dt);//active at every time step. use dt
 	if(parms->nphypowfs>0&&!P(parms->sim.epfsm,0)){
 		real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alfsm,
 			M_PI/4,parms->sim.f0fsm,parms->sim.zetafsm);
@@ -2103,7 +2117,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 static void setup_parms_postproc_siglev(parms_t *parms){
 	real sigscale=parms->sim.dt>0?(parms->sim.dt/parms->sim.dtref):1;
 	if(fabs(sigscale-1.)>EPS){
-		info("sim.dt is 1/%g, need to scale siglev and bkgrnd by %g.\n",1/parms->sim.dt,sigscale);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			parms->wfs[iwfs].siglev*=sigscale;
 		}
@@ -3121,7 +3134,7 @@ static void print_parms(const parms_t *parms){
 		const int ipowfs=parms->wfs[i].powfs;
 		info("    wfs %d: type %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
 			i,parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
-			parms->wfs[i].thetay*RAD2AS,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev);
+			parms->wfs[i].thetay*RAD2AS,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)",parms->wfs[i].sigsim);
 		}

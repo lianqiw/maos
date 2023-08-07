@@ -24,6 +24,14 @@
 #include "accphi.h"
 #include "wfs.h"
 #include "cudata.h"
+#if !USE_CPP
+extern "C"
+{
+#endif
+#include "../../maos/utils.h"
+#if !USE_CPP
+}
+#endif
 /*
   Timing results for TMT NFIRAOS case per LGS WFS:
   Embedding takes about 1 ms.
@@ -326,32 +334,23 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			parms->powfs[ipowfs].llt->misreg->p[0],
 			parms->powfs[ipowfs].llt->misreg->p[1],
 			parms->sim.dt, isim, 1, stream);
-		Real ttx=0, tty=0;
-		if((simu->fsmreal&&simu->fsmreal->p[iwfs])||pistatout||parms->sim.idealfsm){
-			if(pistatout||parms->sim.idealfsm){
-			//warning("Remove tip/tilt in uplink ideally\n");
-				Real* lltg=cuwfs[iwfs].lltg;
-				lltg[0]=lltg[1]=0;
-				cuztilt(lltg, lltopd, 1,
-					cupowfs[ipowfs].llt.pts.Dxsa(),
-					cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
-					cupowfs[ipowfs].llt.pts(), cuwfs[iwfs].lltamp, 1.f, stream);
-				CUDA_SYNC_STREAM;
-				simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
-				simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
-			}
-			ttx=simu->fsmreal->p[iwfs]->p[0];
-			tty=simu->fsmreal->p[iwfs]->p[1];
-		}/*if fsmreal */
-		if(simu->telws){
-			Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
-			Real angle=simu->winddir?simu->winddir->p[0]:0;
-			ttx+=tt*cosf(angle)*parms->powfs[ipowfs].llt->ttrat;
-			tty+=tt*sinf(angle)*parms->powfs[ipowfs].llt->ttrat;
+		
+		
+		if(pistatout||parms->sim.idealfsm){
+		//warning("Remove tip/tilt in uplink ideally\n");
+			Real* lltg=cuwfs[iwfs].lltg;
+			lltg[0]=lltg[1]=0;
+			cuztilt(lltg, lltopd, 1,
+				cupowfs[ipowfs].llt.pts.Dxsa(),
+				cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
+				cupowfs[ipowfs].llt.pts(), cuwfs[iwfs].lltamp, 1.f, stream);
+			CUDA_SYNC_STREAM;
+			simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
+			simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
 		}
-		if(simu->llt_tt&&simu->llt_tt->p[iwfs]){
-			ttx+=simu->llt_tt->p[iwfs]->p[isim];//put all to x direction.
-		}
+		real ttx=0, tty=0;
+		wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
+
 		if(ttx!=0&&tty!=0){
 			/* add tip/tilt to opd  */
 			const real dx=powfs[ipowfs].llt->pts->dx;

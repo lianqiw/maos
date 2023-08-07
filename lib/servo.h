@@ -70,19 +70,23 @@ struct sho_t{
     real dt;//minimum dt for advancing state.
     real c1;//2*zeta*omega0; omega0=2*pi*f0;
     real c2;//omega0^2;
-    //real x1;//status (speed)
-    //real x2;//status (position)
-    dcell *dx; //status (speed)
-    dcell *x; //status (position)
-    dcell *xtmp; //temp
-    dcell *ytmp; //temp
+    cell *dx; //status (speed, dx/dt)
+    cell *x; //status (position)
+    cell *ddx; //ddx (acceleration)
+    cell *ytmp; //temp
 };
 sho_t *sho_new(real f0, real zeta);
 void sho_free(sho_t *sho);
 //real sho_step(sho_t *sho, real xi, real dt);
 //real sho_step_avg(sho_t *sho, real xi, real dt);
-void sho_step(dcell **xout, sho_t *sho, dcell *xi, real dt);
-void sho_step_avg(dcell **xout, sho_t *sho, dcell *xi, real dt);
+void sho_step_any(cell **xout, sho_t *sho, cell *xi, real dt, int average);
+static inline void sho_step(dcell **xout, sho_t *sho, dcell *xi, real dt, int average){
+   sho_step_any((cell**)xout, sho, CELL(xi), dt, average);
+}
+static inline void sho_step_dmat(dmat **xout, sho_t *sho, dmat *xi, real dt, int average){
+   sho_step_any((cell **)xout, sho, CELL(xi), dt, average);
+}
+//void sho_step_avg(dcell **xout, sho_t *sho, dcell *xi, real dt);
 void sho_reset(sho_t *sho);
-dmat *sho_filter(const dmat *xi, real dt, real f0, real zeta);
+dmat *sho_filter(const dmat *xi, real dt, real f0, real zeta, int average);
 #endif

@@ -136,8 +136,7 @@ int main(int argc, char* argv[]){
 						mpath*=2;
 						path=realloc(path, sizeof(char*)*mpath);
 					}
-					char *newpath=stradd(path[ipath], "/", dp->d_name, NULL);
-					path[npath]=newpath;//append as a new path.
+					path[npath]=stradd(path[ipath], "/", dp->d_name, NULL);
 					npath++;
 				}
 			} else if(!strncmp(dp->d_name, "Res", 3)&&check_suffix(dp->d_name, ".bin")){
@@ -203,6 +202,8 @@ int main(int argc, char* argv[]){
 			path[jpath]=path[ipath];
 			info("Found path: %s\n", path[jpath]);
 			jpath++;
+		}else{
+			free(path[ipath]);path[ipath]=NULL;
 		}
 	}
 	npath=jpath;

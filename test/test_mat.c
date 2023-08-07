@@ -262,11 +262,11 @@ void test_sho(){
     real f0=200;
     real dt=1./64000.;
     real zeta=0.9;
-    dmat *y=sho_filter(x, dt, f0, zeta);
+    dmat *y=sho_filter(x, dt, f0, zeta, 0);
     writebin(y, "output");
     dmat *x2=dread("input2");
     real dt2=1./800.;
-    dmat *y2=sho_filter(x2, dt2, f0, zeta);
+    dmat *y2=sho_filter(x2, dt2, f0, zeta, 0);
 
     writebin(y2, "output2");
     dfree(x);

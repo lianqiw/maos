@@ -438,6 +438,9 @@ typedef struct sim_save_t{
     zfarr* psdol_lo;
     //
     zfarr* restwfs;    /**<Truth wfs output*/
+    dcell *fsmerrs;    /**< file to store fsmerr history*/
+    dcell *fsmcmds;    /**< file to store fsmcmd history*/
+    dcell *llt_fsmreal;    /**<file to store llt_fsmreal history*/
 }sim_save_t;
 /*
   data wrap for wfsints.
@@ -541,7 +544,11 @@ typedef struct sim_t{
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
     dcell *gradscale2; /**<Gain scaling for other dithering modes.*/
-    dcell *llt_tt;   /**<LLT uplink jitter*/
+    dcell *llt_ws;     /**<LLT uplink jitter*/
+    dcell *llt_fsmlpf;    /**<LLT common path pointing mirror LPF*/
+    dcell *llt_fsmcmd;    /**<LLT common path pointing mirror command*/
+    dcell *llt_fsmreal;    /**<LLT common path pointing mirror state after sho filtering*/
+    sho_t **llt_fsmsho; /**<LLT common path pointing mirror state*/
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/
@@ -593,10 +600,11 @@ typedef struct sim_t{
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
     dcell *fsmerr_drift;/**<Drift control of uplink*/
-    dcell *fsmreal;    /**<uplink real*/
+    
     servo_t *fsmint;    /**<uplink integrator output.*/
-    dcell *fsmerrs;    /**<mmaped file to store fsmerr history*/
-    dcell *fsmcmds;    /**<mmaped file to store fsmcmd history*/
+    sho_t *fsmsho;      /**<FSM sho response*/
+    dcell *fsmcmd;      /**<FSM command*/
+    dcell *fsmreal;     /**<FSM real position*/
 
     /*focus tracking loop*/
     dcell *LGSfocus;  /**<LGS focus error*/

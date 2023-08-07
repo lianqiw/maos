@@ -24,7 +24,7 @@
 #include <cmocka.h>
 #include "../lib/aos.h"
 
-static void dummy_loader(unsigned int depth, int urgent);
+static void dummy_loader(unsigned int depth, unsigned int n, int urgent);
 static void dummy_quitfun(const char *msg){
     info("quitfun called with %s.\n", msg);
 }
@@ -49,17 +49,15 @@ static void* dummy_runner(data_t *data){
 	atomic_fetch_add(&data->tot, tot);
 	if(do_loader){
 		//dbg("depth=%u\n", data->depth);
-		dummy_loader(data->depth, data->urgent);
+		dummy_loader(data->depth, data->n, data->urgent);
 	}
 	return NULL;
 }
-static void dummy_loader(unsigned int depth, int urgent){
+static void dummy_loader(unsigned int depth, unsigned int n, int urgent){
 	//dbg("depth=%u\n", depth);
-	const unsigned int n=10000;
 	data_t data={0,n,0,depth-1,urgent};
-	const int nthread=1000;
 	tp_counter_t counter={0};
-	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, nthread, urgent);
+	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, n, urgent);
 	thread_pool_wait(&counter, urgent);
 	assert_int_equal(data.tot, n*(n-1)/2);
 	if(data.tot!=n*(n-1)/2){
@@ -68,9 +66,8 @@ static void dummy_loader(unsigned int depth, int urgent){
 }
 static void test_thread_pool(void** state){
     (void)state;
-	const int nthread=NTHREAD;
-	thread_pool_init(nthread);
-	dummy_loader(100,0);//depth>1 may cause deadlock.
+	thread_pool_init(NTHREAD);
+	dummy_loader(100,1000,1);
 }
 void print_mem_debug();
 static void test_mem(void** state){

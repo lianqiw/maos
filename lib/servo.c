@@ -192,7 +192,7 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
  * */
 static void
 servo_calc_sho(SERVO_CALC_T *st, real f0, real zeta){
-	if(f0<=0) return;
+	if(f0<=0||isinf(f0)) return;
 	real omega0=f0*2*M_PI;
 	real omega02=omega0*omega0;
 	real zeta2o=2.*zeta*omega0;
@@ -348,6 +348,7 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 */
 dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zeta,
 	int servo_type, const dmat *psdin, const dmat *sigma2n){
+	if(!pmargin) pmargin=M_PI/4;
 	SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(SERVO_CALC_T));
 	servo_calc_init(&st, psdin, dt, dtrat, al);
 	st.type=servo_type;
@@ -392,13 +393,20 @@ dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zet
 		P(P(gm, 0), 0)=1./pow(10, gdB*0.05);
 	}
 	servo_calc_free(&st);
+	if(isnan(P(P(gm,0),0))){
+		error("g=%g\n", P(P(gm, 0), 0));
+	}
 	return gm;
 }
 /**
  * Optimize integrator control with optional SHO response (output) to have correct phase margin (pi/4) when abs(Hol)==1.
  * */
 real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, real zeta){
-	SERVO_CALC_T st={0};
+	dcell *g=servo_optim(dt, dtrat, al, pmargin, f0, zeta, 1, NULL, 0);
+	real gain=P(P(g,0),0);
+	dcellfree(g);
+	return gain;
+	/*SERVO_CALC_T st={0};
 	servo_calc_init(&st, NULL, dt, dtrat, al);
 	st.type=1;
 	st.pmargin=pmargin;
@@ -406,7 +414,7 @@ real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, rea
 		servo_calc_sho(&st, f0, zeta);
 	}
 	real fcross;
-	if(!pmargin) pmargin=M_PI/4;
+	
 	real gdB=gain_at_phase(&fcross, st.nu, st.Hsys, -M_PI+pmargin);
 	servo_calc_free(&st);
 	if(0){
@@ -414,7 +422,7 @@ real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, rea
 		writebin(st.Hsys, "Hsys");
 		info("gain=%gdB. fcross=%g\n", gdB, fcross);
 	}
-	return 1./pow(10, gdB*0.05);
+	return 1./pow(10, gdB*0.05);*/
 }
 /**
    Convert Closed loop residual PSD back to OL psd using rejection transfer function:
@@ -489,7 +497,7 @@ servo_typeII_filter(servo_t* st, const dcell* merrc){
 		error("Wrong format in gain\n");
 	}
 	real gg, e1a, e1;
-	for(int ic=0; ic<NX(merrc)*NY(merrc); ic++){
+	for(int ic=0; ic<PN(merrc); ic++){
 		dmat* merr=P(merrc,ic);
 		if(!merr) continue;
 		dmat* mlead=P(st->mlead,ic);
@@ -576,7 +584,7 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 		dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
 	}
 	st->mint=(dccell*)cellnew(NX(st->ap), 1);
-	st->dt=dt;
+	st->dt=dt;//this is simulation time step. not loop update time.
 	st->alint=(int)floor(al);
 	st->alfrac=al-floor(al);
 	st->merrhist=(dccell*)cellnew(st->alint+1, 1);
@@ -588,7 +596,7 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 }
 servo_t *servo_new_sho(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta){
 	servo_t *st=servo_new(merr, ap, al, dt, ep);
-	if(f0>0){
+	if(f0>0 && !isinf(f0)){
 		st->sho=sho_new(f0, zeta);
 	}
 	return st;
@@ -679,32 +687,32 @@ int servo_filter(servo_t* st, const dcell* _merr){
 	default:
 		error("Invalid: NX(st->ep)=%ld\n", NX(st->ep));
 	}
-	dcelladd(P(st->mint), 1, st->mpreint, 1);
+	dcelladd(&P(st->mint, 0), 1, st->mpreint, 1);
 	return 1;
 }
 /**
    Adjust integrator content without shift.
 */
 void servo_add(servo_t* st, const dcell* madj, real alpha){
-	dcelladd(&P(st->mint,0), 1, madj, alpha);
+	dcelladd(&P(st->mint, 0), 1, madj, alpha);
 }
 /**
-   Create servo output. It handles st->alfrac.
+   Create servo output. It handles st->alfrac. and outputs the averaged position over the integration period.
  */
 void servo_output(const servo_t* st, dcell** out){
+	dcellzero(*out);
 	if(st->sho){//filter output using SHO
-		dcellzero(*out);
 		if(st->alfrac){//from previous output
-			sho_step_avg(&st->sho->ytmp, st->sho, P(st->mint, 1), st->alfrac*st->dt);
-			dcelladd(out, 1, st->sho->ytmp, st->alfrac);
+			sho_step_any(&st->sho->ytmp, st->sho, CELL(P(st->mint, 1)), st->alfrac*st->dt, 1);
+			dcelladd_any((cell**)out, 1, st->sho->ytmp, st->alfrac);
 		}
-		sho_step_avg(&st->sho->ytmp, st->sho, P(st->mint, 0), (1.-st->alfrac)*st->dt);
-		dcelladd(out, 1, st->sho->ytmp, 1.-st->alfrac);
+		sho_step_any(&st->sho->ytmp, st->sho, CELL(P(st->mint, 0)), (1.-st->alfrac)*st->dt, 1);
+		dcelladd_any((cell**)out, 1, st->sho->ytmp, 1.-st->alfrac);
 	}else{
-		dcellcp(out, P(st->mint,0));//current output
 		if(st->alfrac){//previous output
-			dcelladd(out, 1.-st->alfrac, P(st->mint,1), st->alfrac);
+			dcelladd_any((cell **)out, 1, CELL(P(st->mint, 1)), st->alfrac);
 		}
+		dcelladd_any((cell **)out, 1, CELL(P(st->mint, 0)), 1.-st->alfrac);//current output
 	}
 }
 
@@ -795,76 +803,77 @@ void servo_free(servo_t* st){
 }
 /**
    Second harmonic oscillator. Initialization.
+   Equation is is d^x/dt^2+c1*dx/dt+c2*x=c2*xi
+   State space model is 
+   |x'|'   | -c1 -c2 | |x'|      |xi|
+   |x |  = |   1   0 | | x| + c2 |0 |
+   where x' is dx/dt and written as dx in struct.
+   we use c2*xi so that it is in the same unit and scale as x.
  */
 sho_t* sho_new(real f0,   /**<Resonance frequency*/
 	real zeta  /**<Damping*/
 	){
-	if(!f0) return NULL;
+	if(!f0||isinf(f0)) return NULL;
 	sho_t* out=mycalloc(1, sho_t);
 	const real omega0=2*M_PI*f0;
 	out->dt=0.01/f0;
 	out->c1=2*zeta*omega0;
 	out->c2=omega0*omega0;
-	//out->x1=out->x2=0; //x1 is speed, x2 is position.
 	return out;
 }
 /**
  * */
 void sho_free(sho_t *sho){
 	if(!sho) return;
-	dcellfree(sho->dx);
-	dcellfree(sho->x);
-	dcellfree(sho->xtmp);
-	dcellfree(sho->ytmp);
+	cellfree(sho->dx);
+	cellfree(sho->x);
+	cellfree(sho->ddx);
+	cellfree(sho->ytmp);
 	free(sho);
 }
 /**
    Second harmonic oscillator state space update.
-   xi is driving position. Update the position after time dt.
+   xi is driving position. 
  */
-void sho_step(dcell**xout, sho_t* sho, dcell* xi, real dt){
-	//divide dt to multiple time to do proper integration.
-	long nover=(long)ceil(dt/sho->dt);
-	real dti=dt/nover;
-	for(long i=0; i<nover; i++){
-		dcelladd(&sho->xtmp, 0, sho->dx, -sho->c1);
-		dcelladd(&sho->xtmp, 1, xi, sho->c2);
-		dcelladd(&sho->xtmp, 1, sho->x, -sho->c2);
-		
-		dcelladd(&sho->x, 1, sho->dx, dti);//update position
-		dcelladd(&sho->dx, 1, sho->xtmp, dti);//update speed
-		//real x1d=sho->x1*(-sho->c1)+(xi-sho->x2)*sho->c2;
-		//sho->x2+=dti*sho->x1;//update position
-		//sho->x1+=dti*x1d;	 //update speed
-	}
-	dcellcp(xout, sho->x);
-}
+
 /**
    Second harmonic oscillator state space update.
-   xi is driving position. Compute the average position between 0 and dt (for WFS integration)
+   xi is driving position. Update the position after time dt.
+   Also compute the average position between 0 and dt (for WFS integration) if avg is set.
+	
+	//sho->x +=dt*sho->dx;//update position
+	//ddx=sho->dx*(-sho->c1)+sho->x*(-sho->c2)+xi;//update speed
+	//sho->dx+=dt*ddx;	 //update speed
  */
-void sho_step_avg(dcell **xout, sho_t *sho, dcell *xi, real dt){
+void sho_step_any(cell **xout, sho_t *sho, cell *xi, real dt, int avg){
+	if(!sho){//null filter. just copy input to output.
+		dcelladd_any(xout, 0, xi, 1);
+		return;
+	}
 	//divide dt to multiple time to do proper integration.
 	long nover=(long)ceil(dt/sho->dt);
+	if(nover==1) avg=0;//no need for averaging.
 	real scale=1./nover;
-	real dti=dt*scale;
-	dcellzero(*xout);
+	dt*=scale;
+	if(avg)	dcellscale_any(*xout, 0);
 	for(long i=0; i<nover; i++){
-		dcelladd(&sho->xtmp, 0, sho->dx, -sho->c1);
-		dcelladd(&sho->xtmp, 1, xi, sho->c2);
-		dcelladd(&sho->xtmp, 1, sho->x, -sho->c2);
-		
-		dcelladd(&sho->x, 1, sho->dx, dti);//update position
-		dcelladd(&sho->dx, 1, sho->xtmp, dti);//update speed
-		dcelladd(xout, 1, sho->x, scale);
+		dcelladd_any(&sho->ddx, 0, sho->dx, -sho->c1);
+		dcelladd_any(&sho->ddx, 1, sho->x,  -sho->c2);
+		dcelladd_any(&sho->ddx, 1, xi,       sho->c2);
+		dcelladd_any(&sho->x,   1, sho->dx,  dt);//update position
+		dcelladd_any(&sho->dx,  1, sho->ddx, dt);//update position
+		if(avg) dcelladd_any(xout, 1, sho->x, scale);
+	}
+	if(!avg){
+		dcelladd_any(xout, 0, sho->x, 1);
 	}
 }
 /**
    Second harmonic oscillator. Reset.
 */
 void sho_reset(sho_t* sho){
-	dcellzero(sho->dx);
-	dcellzero(sho->x);
+	dcellscale_any(sho->dx, 0);
+	dcellscale_any(sho->x, 0);
 }
 /**
    Second harmonic oscillator. Filter a time series for testing.
@@ -872,7 +881,9 @@ void sho_reset(sho_t* sho){
 dmat* sho_filter(const dmat* x,/**<Input time series*/
 	real dt,     /**<Input time series sampling*/
 	real f0,    /**<Resonance frequency*/
-	real zeta  /**<Damping*/){
+	real zeta,  /**<Damping*/
+	int avg /**<Average or not*/
+	){
 	sho_t* sho=sho_new(f0, zeta);
 	dmat* xi=dref(x);
 	if(NX(xi)==1){
@@ -885,7 +896,7 @@ dmat* sho_filter(const dmat* x,/**<Input time series*/
 		sho_reset(sho);
 		for(long ix=0; ix<NX(xi); ix++){
 			P(xtmp,0,0,0,0)=P(xi, ix, iy);
-			sho_step(&ytmp, sho, xtmp, dt);
+			sho_step(&ytmp, sho, xtmp, dt, avg);
 			P(yo, ix, iy)=P(ytmp,0,0,0,0);
 		}
 	}

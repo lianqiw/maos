@@ -512,7 +512,7 @@ void seeding(sim_t* simu){
 #endif
 	seed_rand(simu->misc_rand, simu->seed);
 }
-
+const char *fnextra="-";
 static void init_simu_evl(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const aper_t* aper=simu->aper;
@@ -522,7 +522,6 @@ static void init_simu_evl(sim_t* simu){
 	const int nmod=parms->evl.nmod;
 	const int seed=simu->seed;
 	sim_save_t* save=simu->save;
-	const char* fnextra=parms->save.extra?"extra":"-";
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
 	if(!disable_save&&parms->save.extra>1){
@@ -789,7 +788,7 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
-	const char* fnextra=parms->save.extra?"extra":"-";
+	
 	/*Do not initialize gradlastcl. Do not initialize gradlastol in open
 	  loop. They are used for testing*/
 	if(parms->sim.closeloop){
@@ -853,10 +852,11 @@ static void init_simu_wfs(sim_t* simu){
 		}
 		simu->fsmerr_store=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmerr_drift=dcellnew3(nwfs, 1, nnx, NULL);
+		simu->fsmcmd=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmreal=dcellnew3(nwfs, 1, nnx, NULL);
 		if(parms->sim.closeloop){
-			simu->fsmint=servo_new_sho(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
-				parms->sim.dthi, parms->sim.epfsm, parms->sim.f0fsm, parms->sim.zetafsm);
+			simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm, parms->sim.dt, parms->sim.epfsm);
+			simu->fsmsho=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);
 		}
 	}
 
@@ -879,8 +879,8 @@ static void init_simu_wfs(sim_t* simu){
 			}
 		}
 
-		simu->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
-		simu->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
+		simu->save->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
+		simu->save->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
 	}
 
 	/* For sky coverage telemetry output */
@@ -1060,15 +1060,38 @@ static void init_simu_wfs(sim_t* simu){
 		simu->wfs_ints[iwfs]=thread_prep(0, tot, nthread, wfsints, data);
 	}
 	if(parms->nlgspowfs){
-		simu->llt_tt=dcellnew(parms->nwfs, 1);
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			int ipowfs=parms->wfs[iwfs].powfs;
-			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->ttpsd){
-				dmat* psdin=dread("%s", parms->powfs[ipowfs].llt->ttpsd);
-				P(simu->llt_tt, iwfs)=psd2ts(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
+		simu->llt_ws=dcellnew(parms->npowfs, 1);//windshake t/t per LLT
+		simu->llt_fsmsho=mycalloc(parms->npowfs, sho_t*); //LLT common FSM SHO filter
+		simu->llt_fsmreal=dcellnew(parms->npowfs, 1);//LLT common FSM state
+		simu->llt_fsmcmd=dcellnew(parms->npowfs, 1);//LLT common FSM command
+		simu->llt_fsmlpf=dcellnew(parms->npowfs, 1);//LLT common FSM LPF
+		long nnx[parms->npowfs];
+		long nny[parms->npowfs];
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].llt){
+				if(parms->powfs[ipowfs].llt->ttpsd){
+					dmat *psdin=dread("%s", parms->powfs[ipowfs].llt->ttpsd);
+					P(simu->llt_ws, ipowfs)=dnew(parms->sim.end, parms->powfs[ipowfs].llt->n);
+					for(int i=0; i<parms->powfs[ipowfs].llt->n; i++){//per LLT.
+						dmat *tmp=psd2ts(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
+						daddcol(P(simu->llt_ws, ipowfs), i, 0, tmp, 1);
+						dfree(tmp);
+					}
+					dfree(psdin);
+				}
+				//P(simu->llt_fsmcmd, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->n);
+				//P(simu->llt_fsmreal, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->n);
+				if(parms->powfs[ipowfs].llt->fcfsm){
+					simu->llt_fsmsho[ipowfs]=sho_new(parms->powfs[ipowfs].llt->fcfsm, 1);
+				}
+				nnx[ipowfs]=2;
+				nny[ipowfs]=parms->sim.end;
+			}else{
+				nnx[ipowfs]=0;
+				nny[ipowfs]=0;
 			}
 		}
-		//writebin(simu->llt_tt, "llt_tt_%d", seed);
+		save->llt_fsmreal=dcellnew_file(parms->npowfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_common_%d", fnextra, seed);
 	}
 	if(parms->nlgspowfs){
 		simu->LGSfocus=dcellnew(parms->nwfs, 1);
@@ -1109,7 +1132,7 @@ static void init_simu_wfs(sim_t* simu){
 				if(parms->powfs[ipowfs].dither>1){
 					//int nm=parms->powfs[ipowfs].dither_mode2?2:1;
 					int nm=NX(P(recon->dither_rg, iwfs, iwfs));
-					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, NULL, "%s/Resdithermr_wfs%d_%d", fnextra, iwfs, seed);
+					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, NULL, "%s/Resdithererr_wfs%d_%d", fnextra, iwfs, seed);
 				}
 			}
 		}
@@ -1131,7 +1154,7 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resdither_%d.bin", fnextra, seed);
+			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resditheramp_%d.bin", fnextra, seed);
 		}
 	}
 	if(recon->cn2est){
@@ -1164,11 +1187,7 @@ static void init_simu_dm(sim_t* simu){
 		}
 	}
 	/*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
-	if(1){
-		simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
-	} else{
-		simu->dmerr_store=dcellnew_file(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL, NULL, "/dmerr");
-	}
+	simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
 	if(parms->fit.cgwarm){
@@ -1232,7 +1251,7 @@ static void init_simu_dm(sim_t* simu){
 	simu->wfspsol=dccellnew(parms->npowfs, 1);
 	if(parms->sim.closeloop){
 		simu->dmint=servo_new_sho(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi,
-			parms->sim.dthi, parms->sim.ephi, parms->sim.f0dm, parms->sim.zetadm);
+			parms->sim.dt, parms->sim.ephi, parms->sim.f0dm, parms->sim.zetadm);
 	}
 	if(parms->dbg.ncpa_preload&&recon->dm_ncpa){//set the integrator
 		warning_once("Preload integrator with NCPA\n");
@@ -1243,8 +1262,7 @@ static void init_simu_dm(sim_t* simu){
 		simu->Merr_lo2=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
 		if(parms->sim.closeloop){
 			simu->Mint_lo=servo_new(simu->Merr_lo_store,
-				parms->sim.aplo, parms->sim.allo,
-				parms->sim.dtlo, parms->sim.eplo);
+				parms->sim.aplo, parms->sim.allo, parms->sim.dt, parms->sim.eplo);
 		}
 	}
 	{/* History */
@@ -1267,7 +1285,7 @@ static void init_simu_dm(sim_t* simu){
 					nny[idm]=0;
 				}
 			}
-			simu->dmhist=dcellnew_file(parms->ndm, 1, nnx, nny, NULL, "dmhist_%d.bin", simu->seed);
+			simu->dmhist=dcellnew_file(parms->ndm, 1, nnx, nny, NULL, "%s/dmhist_%d.bin", fnextra, simu->seed);
 		}
 	}
 	if(parms->recon.psd){
@@ -1408,7 +1426,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	if(parms->save.extra||parms->save.dither){
 		mymkdir("extra");
 	}
-	const char* fnextra=parms->save.extra?"extra":"-";
+	fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
 		/* Telescope wind shake added to TT input. */
 		info("Converting windshake PSD to time series.\n");
@@ -1517,6 +1535,12 @@ void free_simu(sim_t* simu){
 		free(simu->cachedm_propdata);
 
 	}
+	if(parms->nlgspowfs){
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			sho_free(simu->llt_fsmsho[ipowfs]);
+		}
+		free(simu->llt_fsmsho);
+	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			free(simu->wfs_prop_atm[iwfs+nwfs*ips]);
@@ -1598,7 +1622,9 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->fsmerr_store);
 	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);
+	dcellfree(simu->fsmcmd);
 	servo_free(simu->fsmint);
+	sho_free(simu->fsmsho);
 	/*if(simu->fsmsho){
 		for(int i=0; i<parms->nwfs*2; i++){
 			free(simu->fsmsho[i]);
@@ -1615,8 +1641,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->olmp);
 	dcellfree(simu->clep);
 	dcellfree(simu->clmp);
-	dcellfree(simu->fsmerrs);
-	dcellfree(simu->fsmcmds);
+	
 	dcellfree(simu->LGSfocus);
 	dcellfree(simu->LGSfocus_drift);
 	dcellfree(simu->LGSfocusts);
@@ -1687,7 +1712,7 @@ void free_simu(sim_t* simu){
 	cellfree(simu->resdither);
 
 	cellfree(simu->zoompos);
-	cellfree(simu->llt_tt);
+	cellfree(simu->llt_ws);
 	free(simu->plot_legs);
 	cellfree(simu->plot_res);
 
@@ -1720,6 +1745,11 @@ void free_simu(sim_t* simu){
 	zfarr_close_n(save->intsnf, nwfs);
 	zfarr_close_n(save->dm_evl, nevl);
 	zfarr_close_n(save->dm_wfs, nwfs);
+	dcellfree(save->fsmerrs);
+	dcellfree(save->fsmcmds);
+	dcellfree(simu->llt_fsmcmd);
+	dcellfree(simu->llt_fsmreal);
+	dcellfree(save->llt_fsmreal);
 	free(simu->wfsflags);
 	dfree(simu->winddir);
 	if(parms->fdlock){
@@ -1767,8 +1797,9 @@ void print_progress(sim_t* simu){
 				writebin_async(simu->resp, simu->perfisim+1);
 				//writebin_async(simu->restwfs, simu->perfisim+1);//column is different
 				//writebin_async(simu->resdither, simu->perfisim+1);//column is different
-				writebin_async(simu->fsmerrs, simu->wfsisim+1);
-				writebin_async(simu->fsmcmds, simu->wfsisim+1);
+				writebin_async(simu->save->fsmerrs, simu->wfsisim+1);
+				writebin_async(simu->save->fsmcmds, simu->wfsisim+1);
+				writebin_async(simu->save->llt_fsmreal, simu->wfsisim+1);
 				if(parms->nlgspowfs){
 					writebin_async(simu->LGSfocusts, simu->wfsisim+1);
 					if(simu->zoompos_icol){

@@ -27,7 +27,10 @@
    types.
 
    Don't use ulong for dimensions because subtracting a bigger ulong from a
-   smaller ulong overflows.  */
+   smaller ulong overflows.  
+
+   Remember to update interface.py after updating the structs below.
+*/
 
 typedef enum CEMBED{
     C_FULL,
