@@ -301,6 +301,15 @@ typedef struct powfs_cfg_t{
     real zoomgain_drift; /**<gain for the trombone controller with i0 drift input*/
     int zoomset;     /**<Set zoom position from the beginning*/
     int ng;         /**<number of gradients per subaperture. 2 for SHWFS. >2 for raw PWFS*/
+
+    //options for FSM
+    real apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/
+    real epfsm;     /**<error gain for uplink pointing*/
+    real alfsm;      /**<Additional latency (*sim.dt) of the uplink loop*/
+    real zetafsm;    /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
+    real f0fsm;      /**<Resonance frequency of FSM (SHO). 0: infinite.*/
+    int idealfsm;    /**<ideal compensation for uplink pointing*/
+    int commonfsm;   /**<Make FSM common for each powfs (LLT). Keep at 0. */
 }powfs_cfg_t;
 /**
    contains input parmaeters for each wfs
@@ -554,14 +563,10 @@ typedef struct sim_cfg_t{
     //real zetatt;    /**<Damping frequency of tip/tilt mirror.*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
-    dmat *apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/
-    dmat *epfsm;     /**<error gain for uplink pointing*/
+    
     real alhi;     /**<Additional latency (*sim.dt) of the high order loop besides 2 cycle delay.*/
     real allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
-    real alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
-    int commonfsm;   /**<Make FSM common for each powfs (LLT). Keep at 0. */
-    real zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
-    real f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
+    
     real aptwfs;   /**<Twfs reference vector servo coefficient.*/
     real eptwfs;   /**<Twfs reference vector servo gain.*/
     real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
@@ -575,7 +580,6 @@ typedef struct sim_cfg_t{
 			- 1: Focus blending using CL gradients, for each LGS independently.
 			- 2: Focus blending using CL gradinets, for common LGS focus only (not preferred).
 		     */
-    int idealfsm;    /**<ideal compensation for uplink pointing*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/

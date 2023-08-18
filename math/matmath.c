@@ -917,19 +917,21 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 			error("A is %ldx%ld, B is %ldx%ld. They should match in size.\n",
 				NX(A), NY(A), NX(*B0), NY(*B0));
 		}
-		X(mat) * restrict B=*B0;
-		if(bc){
-			OMP_SIMD()
-			for(int i=0; i<PN(A); i++){
-				P(B, i)=P(B, i)*bc+P(A, i)*ac;
-			}
-		} else{
-			if(ac==(T)1){
-				X(cp)(B0, A);
-			} else{/*just assign */
+		if(ac){
+			X(mat) * restrict B=*B0;
+			if(bc){
 				OMP_SIMD()
 				for(int i=0; i<PN(A); i++){
-					P(B, i)=P(A, i)*ac;
+					P(B, i)=P(B, i)*bc+P(A, i)*ac;
+				}
+			} else{
+				if(ac==(T)1){
+					X(cp)(B0, A);
+				} else{/*just assign */
+					OMP_SIMD()
+					for(int i=0; i<PN(A); i++){
+						P(B, i)=P(A, i)*ac;
+					}
 				}
 			}
 		}

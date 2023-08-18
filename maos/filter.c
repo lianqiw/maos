@@ -299,7 +299,7 @@ static void filter_cl(sim_t* simu){
 			/*accumulate to the main integrator. Use mpreint to properly account
 			 * for type II controler. Gain is already applied.*/
 			dcellzero(simu->dmtmp);
-			addlow2dm(&simu->dmtmp, simu, simu->Mint_lo->mpreint, 1);
+			addlow2dm(&simu->dmtmp, simu, simu->Mint_lo->mpreintc, 1);
 			servo_add(simu->dmint, simu->dmtmp, 1);
 		}
 	}
@@ -325,7 +325,7 @@ static void filter_cl(sim_t* simu){
 	} else if(simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
 		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
-		dspcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
+		dcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
 	} else{
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
@@ -374,7 +374,7 @@ static void filter_cl(sim_t* simu){
 		if(recon->actstuck&&parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
 		if(feedback){
 			dcelladd(&simu->dmtmp2, 1, simu->dmcmd, -1); //find what is clipped
-			servo_add(simu->dmint,     simu->dmtmp2, -1);//remove from integrator (anti wind up)
+			servo_add(simu->dmint, simu->dmtmp2, -1);//remove from integrator (anti wind up)
 			if(parms->recon.psol) dcelladd(&simu->dmpsol, 1, simu->dmtmp2, -1);//remove from dmpsol.
 		}
 		if(recon->actstuck&&!parms->dbg.recon_stuck) clipdm_dead(simu, simu->dmcmd);
@@ -444,10 +444,10 @@ void filter_fsm(sim_t* simu){
 	if(!simu->fsmint) return;
 		/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 		
-	if(parms->sim.commonfsm&&simu->fsmerr){//use common FSM. not good
-		warning_once("Using common fsm\n");
+	if(simu->fsmerr){//use common FSM. not good
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].llt){
+			if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].commonfsm){
+				warning_once("powfs%d: Using common fsm\n", ipowfs);
 				dmat* fsmerr=0;
 				real scale=1./parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -462,39 +462,44 @@ void filter_fsm(sim_t* simu){
 			}
 		}
 	}
-	servo_output(simu->fsmint, &simu->fsmcmd);//sho filter is separate
-	int hasinput=servo_filter(simu->fsmint, simu->fsmerr);
-	if(parms->nlgspowfs){//Update common FSM position from command.
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n==1&&parms->powfs[ipowfs].llt->fcfsm>0){
-				int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM. 
-				if(remove){//use frequency split offloading to LLT_FSM
-					dzero(P(simu->llt_fsmcmd, ipowfs));
-					real scale=1./parms->powfs[ipowfs].nwfs;
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
-						//remove position from previous step. (with time lag)
-						dadd(&P(simu->fsmcmd, iwfs), 1, P(simu->llt_fsmreal, ipowfs), -1);
-					}
-				} else if(hasinput){//integrator based offloading to LLT_FSM
-					real scale=parms->powfs[ipowfs].llt->epfsm/parms->powfs[ipowfs].nwfs;
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
-					}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		int hasinput=0;
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			if(!simu->fsmint[iwfs]) continue;
+			servo_output(simu->fsmint[iwfs], &P(simu->fsmcmd, iwfs));//sho filter is separate. /todo: splitting sho from servo_output is inaccurate if there is partial frame delay.
+			hasinput=servo_filter(simu->fsmint[iwfs], simu->fsmerr?P(simu->fsmerr, iwfs):NULL);
+		}
+		//lgs wfs common fsm 
+		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n==1&&parms->powfs[ipowfs].llt->fcfsm>0){
+			int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM. 
+			if(remove){//use frequency split offloading to LLT_FSM
+				dzero(P(simu->llt_fsmcmd, ipowfs));
+				real scale=1./parms->powfs[ipowfs].nwfs;
+				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
+					//remove position from previous step. (with time lag)
+					dadd(&P(simu->fsmcmd, iwfs), 1, P(simu->llt_fsmreal, ipowfs), -1);
 				}
-				sho_step_dmat(&P(simu->llt_fsmreal, ipowfs), simu->llt_fsmsho[ipowfs],
-					P(simu->llt_fsmcmd, ipowfs), parms->sim.dt, 0);
+			} else if(hasinput){//integrator based offloading to LLT_FSM
+				real scale=parms->powfs[ipowfs].llt->epfsm/parms->powfs[ipowfs].nwfs;
+				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
+				}
 			}
+			sho_step(&P(simu->llt_fsmreal, ipowfs), simu->llt_fsmsho[ipowfs],
+				P(simu->llt_fsmcmd, ipowfs), parms->sim.dt, 0);
 		}
 	}
-	/*Inject dithering command, for step isim+1*/
+	
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
+		/*Inject dithering command, for step isim+1*/
 		if(parms->powfs[ipowfs].dither==1){//T/T dithering.
 			//adjust delay due to propagation, and computation delay.
-			const real adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat+0.5;//0.5 is for testing. the value here shouldn't matter
+			const real adjust=parms->powfs[ipowfs].alfsm+1-parms->powfs[ipowfs].dtrat+0.5;//0.5 is for testing. the value here shouldn't matter
 			//Use isim+1 because the command is for next time step.
 			//minus adjust for delay
 			real anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
@@ -502,9 +507,10 @@ void filter_fsm(sim_t* simu){
 			P(P(simu->fsmcmd, iwfs), 0)-=parms->powfs[ipowfs].dither_amp*cos(angle);
 			P(P(simu->fsmcmd, iwfs), 1)-=parms->powfs[ipowfs].dither_amp*sin(angle);
 		}
-	}
-	sho_step(&simu->fsmreal, simu->fsmsho, simu->fsmcmd, parms->sim.dt, 0);
 	
+		sho_step(&P(simu->fsmreal, iwfs), simu->fsmsho?simu->fsmsho[iwfs]:NULL, 
+			P(simu->fsmcmd, iwfs), parms->sim.dt, 0);
+	}
 	/*info("fsmerr=%d fsmint[0]=%g, fsmint[1]=%g. fsmreal=%g\n", simu->fsmerr?1:0,
 		simu->fsmint->mint->p[0]->p[0]->p[0], simu->fsmint->mint->p[1]->p[0]->p[0], simu->fsmreal->p[0]->p[0]);*/
 
@@ -539,7 +545,7 @@ static void filter_ol(sim_t* simu){
 	if(simu->recon->actextrap&&!parms->recon.modal&&!(parms->recon.psol&&parms->fit.actextrap)){
 		dcellcp(&simu->dmtmp2, simu->dmcmd);
 		dcellzero(simu->dmcmd);
-		dcellmm_any((cell**)&simu->dmcmd, CELL(simu->recon->actextrap), CELL(simu->dmtmp2), "nn", 1);
+		dcellmm((cell**)&simu->dmcmd, simu->recon->actextrap, simu->dmtmp2, "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

@@ -30,12 +30,21 @@ typedef struct sho_t sho_t;
 /**
    Struct for servo filtering
 */
-typedef struct servo_t{
-    dcell *mlead;       /**<lead filter temporary storage*/
-    dcell *merrlast;    /**<recorded errro signal from last step*/
-    dcell *mpreint;     /**<first integrator or other value.*/
-    dccell *merrhist;   /**<Keep a short history of merr*/
-    dccell *mint;       /**<second integrator. It is array to accomodate multiple ap's*/
+typedef struct servo_t{ 
+	union{
+		cell *mint;       /**<second integrator. It is array to accomodate multiple ap's*/
+		dccell *mintc;
+		dcell  *mintd;
+	};
+	union{
+		cell *mpreint;     /**<first integrator or other value.*/
+		dcell *mpreintc;
+		dmat  *mpreintd;
+	};
+	cell *mlead;       /**<lead filter temporary storage*/
+	cell *merrlast;    /**<recorded errro signal from last step*/
+	cell *merrhist;   /**<Keep a short history of merr*/
+	
     int initialized;    /**<is this data initialized*/
     int alint;          /**<Integral part of latency*/
     real alfrac;        /**<Fractional latency*/
@@ -43,21 +52,24 @@ typedef struct servo_t{
     dmat *ap;
     dmat *ep;
     real dt;
-    /*if the corrector is a simple harmonic oscillator*/
-    sho_t *sho;
+	sho_t *sho;/*if the corrector is a simple harmonic oscillator*/
 }servo_t;
+//servo optimization related routines
 dcell *servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zeta, int servo_type, 
    const dmat *psdin,  const dmat* sigma2n);
 real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, real zeta);
 dmat *servo_cl2ol(const dmat *psdcl, real dt, long dtrat, real al, real gain, real sigma2n);
 //cmat *servo_Hol(const dmat *nu, real dt, real dtrat, real al, const dmat *gain);
 real servo_residual(real *noise_amp, const dmat *psdin, real dt, long dtrat, real al, const dmat *gain, int servo_type);
-void servo_update(servo_t *st, const dmat *ep);
-servo_t *servo_new(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep);
-servo_t *servo_new_sho(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta);
-int servo_filter(servo_t *st, const dcell *merr);
-void servo_add(servo_t *st, const dcell *madj, real alpha);
-void servo_output(const servo_t *st, dcell **out);
+
+//servo time domain filtering routines
+
+servo_t *servo_new(anyarray merr, const dmat *ap, real al, real dt, const dmat *ep);
+servo_t *servo_new_scalar(anyarray merr, real ap, real al, real dt, real ep);
+servo_t *servo_new_sho(anyarray merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta);
+int servo_filter(servo_t *st, const anyarray merr);
+void servo_add(servo_t *st, const anyarray madj, real alpha);
+void servo_output(const servo_t *st, panyarray out);
 dmat* servo_test(dmat *mideal, real dt, int dtrat, dmat* sigma2n, dmat *gain);
 void servo_reset(servo_t *st);
 void servo_free(servo_t *st);
@@ -77,16 +89,7 @@ struct sho_t{
 };
 sho_t *sho_new(real f0, real zeta);
 void sho_free(sho_t *sho);
-//real sho_step(sho_t *sho, real xi, real dt);
-//real sho_step_avg(sho_t *sho, real xi, real dt);
-void sho_step_any(cell **xout, sho_t *sho, cell *xi, real dt, int average);
-static inline void sho_step(dcell **xout, sho_t *sho, dcell *xi, real dt, int average){
-   sho_step_any((cell**)xout, sho, CELL(xi), dt, average);
-}
-static inline void sho_step_dmat(dmat **xout, sho_t *sho, dmat *xi, real dt, int average){
-   sho_step_any((cell **)xout, sho, CELL(xi), dt, average);
-}
-//void sho_step_avg(dcell **xout, sho_t *sho, dcell *xi, real dt);
+void sho_step(panyarray xout, sho_t *sho, anyarray xi, real dt, int average);
 void sho_reset(sho_t *sho);
 dmat *sho_filter(const dmat *xi, real dt, real f0, real zeta, int average);
 #endif

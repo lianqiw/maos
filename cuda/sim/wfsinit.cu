@@ -427,7 +427,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				int nlx=powfs[ipowfs].llt->pts->nxsa;
 				int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 				cuwfs[iwfs].lltopd=curmat(nlx, nlx);
-				if(parms->powfs[ipowfs].pistatout||parms->sim.idealfsm){
+				if(parms->powfs[ipowfs].pistatout||parms->powfs[ipowfs].idealfsm){
 					cuwfs[iwfs].lltg.init(2, 1);
 				}
 				if(nlwvf!=nwvf){

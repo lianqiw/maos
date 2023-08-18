@@ -235,14 +235,14 @@ void chol_convert(spchol* A, int keep){
 /**
    Alternative interface
 */
-dsp* chol_factorize2(spint** Cp, const dsp* A_in){
+dsp* chol_factorize2(lmat** Cp, const dsp* A_in){
 	spchol* C=chol_factorize(A_in);
 	if(!C->Cl){
 		chol_convert(C, 1);
 	}
 	if(Cp){
-		*Cp=C->Cp;
-		C->Cp=0;
+		*Cp=lnew(NX(A_in),1);
+		DO_COPY(P(*Cp), C->Cp, long, spint, NX(A_in));
 	}
 	dsp* out=C->Cl; C->Cl=0;
 	chol_free_do(C);

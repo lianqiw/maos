@@ -386,9 +386,9 @@ dspcell* slaving(loccell* aloc,        /**<[in]The actuator grid*/
 /**
    When some actuators are stuck, zero the corresponding column in HA
 */
-void act_stuck(loccell* aloc, cell* HA, const lcell* stuck){
+void act_stuck(loccell* aloc, anyarray HA_, const lcell* stuck){
+	cell *HA=HA_.c;
 	if(!stuck||!HA) return;
-	
 	int ndm=NX(aloc);
 	int nfit=0;
 	if(NY(HA)==ndm){
@@ -883,7 +883,7 @@ dsp *act_extrap_each(loc_t *aloc,
 	//writebin(Hr, "Hr");
 	//step2: project 
 	dmat *Mz=zernike(aloc, loc_diam(aloc), 1, 3, 0);//Modes
-	dmat *Md=dpinv2(Mz, CELL(mask), 1e-12);//projector
+	dmat *Md=dpinv2(Mz, mask, 1e-12);//projector
 	//writebin(mask, "mask");
 	dfree(mask);
 	dmat *MMp=NULL;//MMp=1-Mz*Md. //removal projector

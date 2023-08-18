@@ -45,7 +45,7 @@ dmat* psd1dt(const dmat* v, long nseg, double dt);
 dsp* mkh(loc_t* locin, loc_t* locout, double displacex, double displacey, double scale);
 dsp* mkh_cubic(loc_t* locin, loc_t* locout, double displacex, double displacey, double scale, double cubic_iac);
 void svdpow=dsvd_pow(dmat*A, double power, double thres);
-void cellmm=dcellmm_any(cell **C, const cell*A, const cell*B, const char* trans, double alpha);
+void cellmm=dcellmm(cell **C, const cell*A, const cell*B, const char* trans, double alpha);
 dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, double scale, double dispx, double dispy, int do_partial);
 dmat* sho_filter(const dmat* xi, double dt, double f0, double zeta, int average);
 void genotf(ccell**potf,loc_t*loc, const dmat*amp, const dmat*opdbias, const dmat*area, double thres, double wvl, const dmat*cov, double r0, double l0, long npsfx, long npsfy, long nsa, long pttr);
@@ -87,7 +87,7 @@ dmat* loc_calib(const dsp* GA, const loc_t* aloc, const loc_t* saloc,
 	double dispx, double dispy, double scale, int maxorder);
 dmat* poly2fit(const dmat* in, const dmat* out, int maxorder);
 loc_t* loctransform2(const loc_t* loc, const dmat* coeff);
-dsp* chol_factorize2(long** Cp, const dsp* A_in);
+dsp* chol_factorize2(lmat** Cp, const dsp* A_in);
 dmat* hyst_test(double hysteresis, double hyst_alpha, double hyst_stroke, const dmat* dmcmd);
 void addpath(const char* path);
 void rmpath(const char* path);

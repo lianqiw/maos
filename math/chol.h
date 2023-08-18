@@ -33,7 +33,7 @@ typedef struct spchol{
 }spchol;
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
 spchol* chol_factorize(const dsp* A_in);
-dsp* chol_factorize2(spint** Cp, const dsp* A_in);
+dsp* chol_factorize2(lmat** Cp, const dsp* A_in);
 void chol_solve(dmat** x, spchol* A, dmat* y);
 dsp* chol_spsolve(spchol* A, const dsp* y);
 void chol_free_do(spchol* A);

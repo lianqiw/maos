@@ -31,7 +31,7 @@ void test_psd2d(){
 	//writebin(psd, "psd_%ld", nx);
 	dfree(psd);
 	dmat *extra=NULL;
-	psd=psd2d(&extra, CELL(screen), 1./64.);
+	psd=psd2d(&extra, screen, 1./64.);
 	real inte2=sqrt(psd_inte2(psd))*1e9;
 	//writebin(psd, "psd2_%ld", nx);dfree(psd);
 	real rms1=sqrt(dsumsq(screen)/PN(screen))*1e9;
@@ -48,7 +48,7 @@ void test_psd2d(){
 
 void test_stfun(){
 	dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 128, 1);
-	dmat *st=stfun_batch(CELL(screen), NULL);
+	dmat *st=stfun_batch(screen, NULL);
 	info("sum=%g, max=%g\n", dsum(st), dmax(st));
 	assert_float_equal(dsum(st)*1e9, 3.01473, 1e-3);
 	assert_float_equal(dmax(st)*1e13, 1.15708, 1e-3);

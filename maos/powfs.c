@@ -1099,14 +1099,14 @@ static int etf_match(etf_t* etf, int icol, real hs, real thresh){
 void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, real deltah, real thresh){
 	if(!parms->powfs[ipowfs].llt) return;
     etf_t** petf=0;
-	const cell* sodium=CELL(powfs[ipowfs].sodium);
+	const dcell* sodium=powfs[ipowfs].sodium;
 	if(mode==0){/*preparation. */
 		if(powfs[ipowfs].etfprep&&powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
 			etf_free(powfs[ipowfs].etfprep);
 		}
 		if(powfs[ipowfs].sodiumprep){
 			dbg("Using sodiumprep for etfprep\n");
-			sodium=CELL(powfs[ipowfs].sodiumprep);
+			sodium=powfs[ipowfs].sodiumprep;
 			petf=&powfs[ipowfs].etfprep;
 		} else if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			powfs[ipowfs].etfprep=powfs[ipowfs].etfsim;
@@ -1267,7 +1267,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		int nmod=parms->powfs[ipowfs].llt->ttfr==2?4:3;
 		dmat* pttfa=zernike(llt->loc, parms->powfs[ipowfs].llt->d, 0, 2, 0);
 		dmat* pttf=drefcols(pttfa, 0, nmod);
-		dmat* proj=dpinv(pttf, CELL(llt->amp));
+		dmat* proj=dpinv(pttf, llt->amp);
 		dmat* res=dnew(nmod, 1);
 		for(int ilotf=0; ilotf<NX(llt->ncpa)*NY(llt->ncpa); ilotf++){
 			dzero(res);
@@ -1453,13 +1453,13 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				cccell* lotf=0;
 
 				dcell* opdbias=parms->powfs[ipowfs].ncpa_method==NCPA_I0?powfs[ipowfs].opdbias:0;
-				otf=genseotf(powfs[ipowfs].pts, CELL(powfs[ipowfs].realamp),
-					opdbias, CELL(powfs[ipowfs].realsaa), parms->powfs[ipowfs].wvl,
+				otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp,
+					opdbias, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl,
 					parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 					parms->powfs[ipowfs].embfac);
 				const int print_psf=2; //1: uplink 2: downlink
 				if(parms->powfs[ipowfs].llt){
-					lotf=genseotf(powfs[ipowfs].llt->pts, CELL(powfs[ipowfs].llt->amp),
+					lotf=genseotf(powfs[ipowfs].llt->pts, powfs[ipowfs].llt->amp,
 						powfs[ipowfs].llt->ncpa, NULL, parms->powfs[ipowfs].wvl,
 						parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 						parms->powfs[ipowfs].embfac);
@@ -1487,7 +1487,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				/*Generating short exposure psfs for both uplink and downlink
 				turbulence effect. */
 				
-				gensepsf(&intstat->sepsf, otf, lotf, CELL(powfs[ipowfs].realsaa),
+				gensepsf(&intstat->sepsf, otf, lotf, powfs[ipowfs].realsaa,
 					parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
 				if(print_psf==2){
 					const dmat *wvl=parms->powfs[ipowfs].wvl;

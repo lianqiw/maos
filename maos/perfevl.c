@@ -397,7 +397,7 @@ static void perfevl_mean(sim_t* simu){
 		if(simu->corrNGSm&&P(simu->Mint_lo->mint,0)&&isim<parms->sim.end-1){
 			real* pcorrNGSm=PCOL(simu->corrNGSm,isim+1);
 			for(int imod=0; imod<nngsmod; imod++){
-				pcorrNGSm[imod]=P(P(P(simu->Mint_lo->mint,0),0),imod);
+				pcorrNGSm[imod]=P(P(P(simu->Mint_lo->mintc,0),0),imod);
 			}
 		}
 		//Compute dot product of NGS mode with OPD
@@ -440,7 +440,7 @@ static void perfevl_mean(sim_t* simu){
 			memcpy(P(P(simu->Merr_lo,0)), pcleNGSm, nngsmod*sizeof(real));
 			//Add current low order command to form PSOL measurement for skyc.
 			for(int imod=0; imod<nngsmod; imod++){
-				pcleNGSm[imod]+=P(P(P(simu->Mint_lo->mint,0),0),imod);
+				pcleNGSm[imod]+=P(P(P(simu->Mint_lo->mintc,0),0),imod);
 			}
 		}
 		//Record NGS mode RMS error time history

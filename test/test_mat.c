@@ -56,7 +56,7 @@ static void test_dcellpinv(){
     writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
-	    P(PTT2,i,i)=dpinv(P(TT,i,i),CELL(P(saneai,i,i)));
+	    P(PTT2,i,i)=dpinv(P(TT,i,i),P(saneai,i,i));
     }
     writebin(PTT2,"TT2_pinv.bin");
     /*exit(0); */

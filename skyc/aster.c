@@ -539,7 +539,7 @@ static void setup_aster_servo(SIM_S* simu, ASTER_S* aster, const PARMS_S* parms)
 			//todo: implement for more than 2 rates
 			gm=setup_aster_mask_gm(aster->g, mask, (icase+1!=ncase)?&aster->mdirect:NULL);
 		}
-		P(aster->pgm,icase)=dpinv(gm, CELL(nea->m));
+		P(aster->pgm,icase)=dpinv(gm, nea->m);
 
 		//Noise propagation
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){

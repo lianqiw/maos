@@ -336,7 +336,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			parms->sim.dt, isim, 1, stream);
 		
 		
-		if(pistatout||parms->sim.idealfsm){
+		if(pistatout||parms->powfs[ipowfs].idealfsm){
 		//warning("Remove tip/tilt in uplink ideally\n");
 			Real* lltg=cuwfs[iwfs].lltg;
 			lltg[0]=lltg[1]=0;

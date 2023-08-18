@@ -459,18 +459,18 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		  participate in tomography.
 		*/
 		dspcell* GXtomoT=dspcelltrans(recon->GXtomo);
-		dcellmm_any(&recon->RR.M,CELL(GXtomoT), CELL(saneai), "nn", 1);
+		dcellmm(&recon->RR.M,GXtomoT, saneai, "nn", 1);
 		dspcell* RRM=(dspcell*)recon->RR.M/*PDSPCELL*/;
 		/*
 		  Tip/tilt and diff focus removal low rand terms for LGS WFS.
 		*/
 		if(recon->TTF){
-			dcellmm_cell(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
+			dcellmm(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
 			recon->RR.V=dcelltrans(recon->PTTF);
 		}
 
 		info("Building recon->RL\n"); /*left hand side matrix */
-		dcellmm_any(&recon->RL.M, recon->RR.M, CELL(recon->GXtomo), "nn", 1);
+		dcellmm(&recon->RL.M, recon->RR.M, recon->GXtomo, "nn", 1);
 		dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 		if(parms->tomo.piston_cr){
 			/*single point piston constraint. no need tikholnov.*/
@@ -487,7 +487,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			real tikcr=parms->tomo.tikcr;
 			info("Adding tikhonov constraint of %.1e to RLM\n", tikcr);
 			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
-			dcelladdI_any(recon->RL.M, tikcr*maxeig);
+			dcelladdI(recon->RL.M, tikcr*maxeig);
 		}
 		/*add L2 and ZZT */
 		switch(parms->tomo.cxxalg){
@@ -535,14 +535,14 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		if(parms->recon.split!=1 || parms->tomo.splitlrt==2){//require low rank term in LHS
 			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 			dcell* GPTTDF=NULL;
-			dspcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
+			dcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
 			recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 			dcellfree(GPTTDF);
 		} else if(parms->tomo.splitlrt && recon->FF){
 			//include removal focus low rank term in LHS, not tip/tilt
 			//Including tip/tilt in LHS causing rank deficiency.
-			dcellmm_cell(&recon->RL.U, recon->RR.M, recon->FF, "nn", 1);
-			dspcellmm(&recon->RL.V, recon->GX, recon->PFF, "tt", 1);
+			dcellmm(&recon->RL.U, recon->RR.M, recon->FF, "nn", 1);
+			dcellmm(&recon->RL.V, recon->GX, recon->PFF, "tt", 1);
 		} else{
 			info("Skipping RL Low rank terms in split tomography\n");
 		}
@@ -670,7 +670,7 @@ static dcell *setup_recon_ecnn(recon_t *recon, const parms_t *parms, loc_t *locs
 			}
 		}
 		//dsp *tmp=dspcell2sp(sanealhi);  dspcellfree(sanealhi);
-		dmat* tmp=dspcell2m(sanealhi); dspcellfree(sanealhi);
+		dmat* tmp=dcell2m(sanealhi); dspcellfree(sanealhi);
 		dmm(&t1, 0, recon->MVM, tmp, "nn", 1);
 		cellfree(tmp);
 		toc2("MVM ");tic;
@@ -829,7 +829,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 				int iwfs0=P(parms->powfs[ipowfs].wfs,0);
 				if(iwfs==iwfs0||!parms->recon.glao){
-					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), CELL(P(recon->saneai, iwfs, iwfs)));
+					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfs, iwfs));
 				} else{
 					P(recon->RFlgsg, iwfs, iwfs)=dref(P(recon->RFlgsg, iwfs0, iwfs0));
 				}
@@ -883,7 +883,7 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 		real thres=1e-10;
 		info("RRtwfs svd threshold is %g\n", thres);
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv2(recon->GRtwfs, CELL(neai), thres);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai, thres);
 	}
 
 	if(parms->save.setup){
@@ -1041,7 +1041,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcell* QwQc=NULL;
 	{
 		dcell* Q=NULL;/*the NGS modes in ploc. */
-		dspcellmm(&Q, recon->fit->HA, FUw, "nn", 1);
+		dcellmm(&Q, recon->fit->HA, FUw, "nn", 1);
 		QwQc=calcWmcc(Q, Q, recon->W0, recon->W1, parms->fit.wt);
 		dcellfree(Q);
 	}
@@ -1130,7 +1130,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 
 	recon->MVRngs=dcellreduce(Minv, 1);/*1xnwfs cell */
 	recon->MVModes=dcellreduce(FUw, 2);/*ndmx1 cell */
-	dcellmm_cell(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
+	dcellmm(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
 	dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);
 	dcellfree(neailo);
 	dcellfree(nealo);
@@ -1141,10 +1141,10 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcellfree(Uw);
 	if(parms->save.setup){
 		dcell* Qn=NULL;
-		dspcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
+		dcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
 		dcell* Qntt=dcellnew(NX(Qn), NY(Qn));
 		dmat* TTploc=loc2mat(recon->floc, 1);/*TT mode. need piston mode too! */
-		dmat* PTTploc=dpinv(TTploc, CELL(recon->W0));/*TT projector. no need w1 since we have piston. */
+		dmat* PTTploc=dpinv(TTploc, recon->W0);/*TT projector. no need w1 since we have piston. */
 		dfree(TTploc);
 		for(int ix=0; ix<NX(Qn)*NY(Qn); ix++){
 			if(!P(Qn,ix)) continue;
@@ -1329,9 +1329,9 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 			if(parms->recon.modal){
 				dspmm(&Hdtmp, Htmp, P(recon->amod, idm), "nn", 1);
 				dspfree(Htmp);
-				P(recon->Herr, ievl, idm)=CELL(Hdtmp);
+				P(recon->Herr, ievl, idm)=(cell*)Hdtmp;
 			}else{
-				P(recon->Herr, ievl, idm)=CELL(Htmp);
+				P(recon->Herr, ievl, idm)=(cell*)Htmp;
 			}
 		}
 	}

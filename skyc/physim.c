@@ -402,7 +402,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 			//output to mreal after using it to ensure two cycle delay.
 			if(st2t){//Type I or II control.
 				if(P(st2t->mint,0)){//has output.
-					dcp(&mreal, P(P(st2t->mint,0),0));
+					dcp(&mreal, P(P(st2t->mintc,0),0));
 				}
 			} else{//LQG control
 				kalman_output(kalman, &mreal, 0, 1);

@@ -142,7 +142,8 @@ X(mat)* X(inv)(const X(mat)* A){
    for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
    thres is the threshold to truncate eigenvalues.
 */
-X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres){
+X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
+	const cell* W=W_.c;
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
 	/*Compute AtW=A'*W */
@@ -193,7 +194,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const cell* W, R thres){
 /**
    A convenient wrapper.
  */
-X(mat)* X(pinv)(const X(mat)* A, const cell* W){
+X(mat)* X(pinv)(const X(mat)* A, const_anyarray W){
 	return X(pinv2)(A, W, 1e-14);
 }
 /**
@@ -531,14 +532,15 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
 X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const cell* W,    /**<[in] The weighting matrix. dense or sparse*/
+	const_anyarray W_,    /**<[in] The weighting matrix. dense or sparse*/
 	R thres          /**<[in] SVD inverse threshold*/
 	){
 	if(!A) return NULL;
 	X(cell)* wA=NULL;
+	const cell *W=W_.c;
 	if(W){
 		if(NY(W)==NX(A)){
-			X(cellmm_cell)(&wA, W, A, "nn", 1);
+			X(cellmm)(&wA, W, A, "nn", 1);
 		}else if(NX(A)==NX(W) && NY(A)==NY(W)){
 			wA=X(celldup)(A);
 			X(cellcwm)(wA, (X(cell)*)W);
@@ -551,17 +553,17 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	}
 
 	X(cell)* ata=NULL;
-	X(cellmm_cell)(&ata, CELL(wA), A, "tn", 1);
+	X(cellmm)(&ata, wA, A, "tn", 1);
 	X(cellsvd_pow)(ata, -1, thres);
 	X(cell)* out=NULL;
-	X(cellmm_cell)(&out, CELL(ata), wA, "nt", 1);
+	X(cellmm)(&out, ata, wA, "nt", 1);
 	X(cellfree)(wA);
 	X(cellfree)(ata);
 	return out;
 }
 X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const X(spcell)* W){
-	return X(cellpinv2)(A, W?CELL(W):NULL, 1e-14);
+	return X(cellpinv2)(A, W?W:NULL, 1e-14);
 }
 
 /**

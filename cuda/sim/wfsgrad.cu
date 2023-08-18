@@ -638,7 +638,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					int npll=parms->powfs[ipowfs].dither_pllrat;
 					if(parms->powfs[ipowfs].dither==1){
 						real cs=0, ss=0;
-						dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
+						dither_position(&cs, &ss, parms->powfs[ipowfs].alfsm, parms->powfs[ipowfs].dtrat,
 							parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
 						cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 					}else{//just accumulate i0

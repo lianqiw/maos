@@ -81,9 +81,9 @@ static cccell* genseotf_do(const pts_t* pts,
    Generates short exposure OTF by calling genotf() with p/t/t removal set.
 */
 cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
-				const cell* amp, /**<[in] amplitude map. can be dcell or dmat*/
+				const_anyarray amp_, /**<[in] amplitude map. can be dcell or dmat*/
 				const dcell* opdbias, /**<[in] opd bias for otf.*/
-				const cell* saa, /**<[in] list of subaperture area, can be dcell or dmat*/
+				const_anyarray saa_, /**<[in] list of subaperture area, can be dcell or dmat*/
 				const dmat* wvl, /**<[in] list of wavelength*/
 				const real r0, /**<[in] Fried parameter*/
 				const real L0, /**<[in] Outer scale*/
@@ -92,6 +92,8 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	char fnprefix[200]; fnprefix[0]='\0';
 	uint32_t key=0;
 	strcat(fnprefix, "SEOTF");
+	const cell *amp=amp_.c;
+	const cell *saa=saa_.c;
 	if(amp){
 		if(iscell(amp)){
 			key=dcellhash((dcell*)amp, key);
@@ -153,7 +155,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling of OTF and notfx*/
 	const cccell* otfs, /**<[in] OTFs of down link*/
 	const cccell* lotf, /**<[in] OTFs of uplink, optional*/
-	const cell* saa, /**<[in] subaperture area, optional*/
+	const_anyarray saa_, /**<[in] subaperture area, optional*/
 	const dmat* wvl, /**<[in] wavelength*/
 	int npsfx,/**<[in] PSF dimension. optional. If specified, the psf will be padded by 0 or truncated*/
 	int npsfy
@@ -176,6 +178,7 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 	if(!npsfx) npsfx=notfx;
 	if(!npsfy) npsfy=notfy;
 	dmat *sepsftmp=0;
+	const cell *saa=saa_.c;
 	for(int isepsf=0; isepsf<nsepsf; isepsf++){
 		const dmat* saai=saa?(iscell(saa)?PR((dcell*)saa, isepsf, 1):(dmat*)saa):NULL;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){

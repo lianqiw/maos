@@ -28,7 +28,9 @@ typedef struct mm_t{
 /*
   determine parameters to perform for loop based on trans
 */
-static mm_t parse_trans(const cell* A, const cell* B, const char trans[2]){
+static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2]){
+	const cell *A=A_.c;
+	const cell *B=B_.c;
 	int ax, az;
 	int nx, ny, nz;
 	int bz, by;
@@ -146,7 +148,7 @@ OMP_TASK_FOR(4)
 */
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x) return;
-	mm_t D=parse_trans(CELL(A), CELL(x), trans);
+	mm_t D=parse_trans(A, x, trans);
 	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
@@ -369,7 +371,10 @@ X(sp)* X(spmulsp)(const X(sp)* A, const X(sp)* B, const char trans[2]){
    for beta!=1 because for every call to dmm, the already accumulated ones are
    scaled.  removed beta.
 */
-void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2], const R alpha){
+void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char trans[2], const R alpha){
+	cell **C0=C0_.c;
+	const cell *A=A_.c;
+	const cell *B=B_.c;
 	if(!A||!B) return;
 	if(iscell(A)&&iscell(B)){//multiplication of cells.
 		mm_t D=parse_trans(A, B, trans);
@@ -378,7 +383,7 @@ void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2],
 		for(int iy=0; iy<D.ny; iy++){
 			for(int ix=0; ix<D.nx; ix++){
 				for(int iz=0; iz<D.nz; iz++){
-					X(cellmm_any)(P(C)+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
+					X(cellmm)(P(C)+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 				}
 			}
 		}
@@ -416,12 +421,12 @@ void X(cellmm_any)(cell** C0, const cell* A, const cell* B, const char trans[2],
 }
 void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2], const R alpha){
 	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A, CELL(B), trans, alpha);
+	X(cellmm)((cell**)C0, A, B, trans, alpha);
 }
-void X(cellmm)(X(cell)** C0, const X(cell)* A, const X(cell)* B, const char trans[2], const R alpha){
+/*void X(cellmm)(X(cell)** C0, const X(cell)* A, const X(cell)* B, const char trans[2], const R alpha){
 	if(!A || !B || !C0) return;
-	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
-}
+	X(cellmm)((cell**)C0, A, B, trans, alpha);
+}*/
 /**
    a different interface for multiplying cells.
  */
@@ -430,26 +435,12 @@ X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]){
 	X(cellmm)(&res, A, B, trans, 1);
 	return res;
 }
-void X(cellmulsp)(X(cell)** C0, const X(cell)* A, const X(spcell)* B, const char trans[2], const R alpha){
-	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
-}
-void X(spcellmm)(X(cell)** C0, const X(spcell)* A, const X(cell)* B, const char trans[2], const R alpha){
-	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
-}
-void X(cellmm_cell)(X(cell)** C0, const cell* A, const X(cell)* B, const char trans[2], const R alpha){
-	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, A, CELL(B), trans, alpha);
-}
-void X(spcellmulsp)(X(spcell)** C0, const X(spcell)* A, const X(spcell)* B, const char trans[2], const R alpha){
-	if(!A||!B||!C0) return;
-	X(cellmm_any)((cell**)C0, CELL(A), CELL(B), trans, alpha);
-}
+
 /**
    Add alpha to diagnonal elements of A_. A_ can be matrix or sparse matrix.
  */
-void X(celladdI_any)(cell* A, T alpha){
+void X(celladdI)(anyarray A_, T alpha){
+	cell* A=A_.c;
 	if(!A) return;
 	assert(A->nx==A->ny);
 	for(int ii=0; ii<A->ny; ii++){
@@ -464,27 +455,31 @@ void X(celladdI_any)(cell* A, T alpha){
 		}
 	}
 }
-void X(celladdI)(X(cell)* A, T alpha){
-	if(!A) return;
-	X(celladdI_any)(CELL(A), alpha);
-}
-void X(spcelladdI)(X(spcell)* A, T alpha){
-	if(!A) return;
-	X(celladdI_any)(CELL(A), alpha);
-}
+
 /**
    Calculate A_=A_*ac+B_*bc;
 
    Takes parameters of matrix, sparse matrix, or cell array of them.
  */
-void X(celladd_any)(cell** pA, R ac, const cell* B, R bc){
-	if(!pA||!B||!bc) return;
+void X(celladd)(panyarray pA_, R ac, const_anyarray B_, R bc){
+	const cell* B=B_.c;
+	cell** pA=pA_.c;
+	if(!pA){
+		error("pA is null\n");
+		return; 
+	}
+	if(!B){
+		if(ac==1){
+			return;//no operation
+		}
+		X(cellscale)(*pA, ac);
+	}
 	
 	if(iscell(B)){//cell
 		cellinit2(pA, B);
 		cell* A=*pA;
 		for(int i=0; i<B->nx*B->ny; i++){
-			X(celladd_any)(&P(A,i), ac, P(B,i), bc);
+			X(celladd)(&P(A,i), ac, P(B,i), bc);
 		}
 	} else{//non cell
 		if(!*pA||ismat(*pA)){//A is dense
@@ -509,20 +504,20 @@ void X(celladd_any)(cell** pA, R ac, const cell* B, R bc){
 		}
 	}
 }
-void X(celladd)(X(cell)**pA, R ac, const X(cell)* B, R bc){
+/*void X(celladd)(X(cell)**pA, R ac, const X(cell)* B, R bc){
 	if(!pA || !B || !bc) return;
 	if(!*pA){
 		*pA=X(cellnew2)(B);//makes m
 	};
-	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
-}
+	X(celladd_any)((cell**)pA, ac, B, bc);
+}*/
 void X(celladdsp)(X(cell)** pA, R ac, const X(spcell)* B, R bc){
 	if(!pA||!B||!bc) return;
-	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
+	X(celladd)((cell**)pA, ac, B, bc);
 }
 void X(spcelladd)(X(spcell)** pA, R ac, const X(spcell)* B, R bc){
 	if(!pA||!B||!bc) return;
-	X(celladd_any)((cell**)pA, ac, CELL(B), bc);
+	X(celladd)((cell**)pA, ac, B, bc);
 }
 /**
    Copy B to A.
@@ -540,12 +535,13 @@ void X(cellcp)(X(cell)** A_, const X(cell)* B_){
 /**
    scale each element of A.
 */
-void X(cellscale_any)(cell* A, R w){
+void X(cellscale)(anyarray A_, R w){
+	cell* A=A_.c;
 	if(!A) {
 		return;
 	}else if(iscell(A)){
 		for(int i=0; i<A->nx*A->ny; i++){
-			X(cellscale_any)(P(A,i), w);
+			X(cellscale)(P(A,i), w);
 		}
 	} else{
 		if(ismat(A)){
@@ -557,21 +553,19 @@ void X(cellscale_any)(cell* A, R w){
 		}
 	}
 }
-void X(cellscale)(X(cell)* A, R w){
-	if(A) X(cellscale_any)(CELL(A), w);
-}
 
 /**
    Setting all elements of a cell to zero.
 */
 void X(cellzero)(X(cell)* dc){
-	if(dc) X(cellscale_any)(CELL(dc), 0);
+	if(dc) X(cellscale)(dc, 0);
 }
 
 /**
    Convert dense or sparse matrix cell to matrix.
 */
-X(mat)* X(cell2m_any)(const cell* A){
+X(mat)* X(cell2m)(const_anyarray A_){
+	const cell* A=A_.c;
 	if(!A) return 0;
 	long nx=0, ny=0, *nxs=NULL, *nys=NULL;
 	celldim(A, &nx, &ny, &nxs, &nys);
@@ -601,11 +595,4 @@ X(mat)* X(cell2m_any)(const cell* A){
 	free(nxs);
 	free(nys);
 	return out;
-}
-X(mat)* X(cell2m)(const X(cell)* A){
-	return X(cell2m_any)(A?CELL(A):NULL);
-}
-
-X(mat)* X(spcell2m)(const X(spcell)* A){
-	return X(cell2m_any)(A?CELL(A):NULL);
 }

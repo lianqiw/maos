@@ -601,8 +601,8 @@ typedef struct sim_t{
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
     dcell *fsmerr_drift;/**<Drift control of uplink*/
     
-    servo_t *fsmint;    /**<uplink integrator output.*/
-    sho_t *fsmsho;      /**<FSM sho response*/
+    servo_t **fsmint;    /**<uplink integrator output.*/
+    sho_t **fsmsho;      /**<FSM sho response*/
     dcell *fsmcmd;      /**<FSM command*/
     dcell *fsmreal;     /**<FSM real position*/
 

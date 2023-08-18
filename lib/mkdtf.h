@@ -72,7 +72,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
     const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 );
 etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
-    const cell* sodium, /**<The sodium profile. First column is coordinate.*/
+    const_anyarray sodium, /**<The sodium profile. First column is coordinate.*/
     int icol,     /**<Which sodium profile to use*/
     const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
     const dcell* srsa,  /**<Subaperture to LLT distance*/

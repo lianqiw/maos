@@ -39,7 +39,8 @@ cell* cellnew(long nx, long ny){
 /**
    check the size of cell array if exist. Otherwise create it
 */
-void cellinit(cell** A, long nx, long ny){
+void cellinit(panyarray A_, long nx, long ny){
+	cell** A=A_.c;
 	if(*A){
 		if(!(iscell(*A)&&(*A)->nx==nx&&(*A)->ny==ny)){
 			error("type or size mismatch: id=%u, require (%ld, %ld), A is (%ld, %ld)\n",
@@ -52,12 +53,14 @@ void cellinit(cell** A, long nx, long ny){
 /**
    check the size of cell array if exist. Otherwise create it. m is created for dcell
 */
-void cellinit2(cell** A, const cell* B){
+void cellinit2(panyarray A_, const_anyarray B_){
+	const cell* B=B_.c;
+	cell** A=A_.c;
 	if(!iscell(B)){
 		error("Invalid usage. B must be cell\n");
 	}if(*A){
 		cellinit(A, B->nx, B->ny);
-	} else{
+	} else if(iscell(B)){
 		M_ID magic=0;
 		for(int ib=0; ib<B->nx*B->ny; ib++){
 			if(P(B, ib)){
@@ -84,7 +87,8 @@ void cellinit2(cell** A, const cell* B){
 /**
    Obtain the dimensions.
 */
-void celldim(const cell* A, long* nx, long* ny, long** nxs, long** nys){
+void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys){
+	const cell* A=A_.c;
 	*nx=0;
 	*ny=0;
 	if(!A || !A->nx || !A->ny){
@@ -122,9 +126,10 @@ void celldim(const cell* A, long* nx, long* ny, long** nxs, long** nys){
 /**
    Resize a generic cell array.
 */
-void cellresize_do(cell* A, long nx, long ny){
+void cellresize(anyarray A_, long nx, long ny){
+	cell* A=A_.c;
 	if(!A || A->m){ 
-		warning("Can only resize a valid cell array with m unset.\n");
+		error("Can only resize a valid cell array with m unset.\n");
 		return;
 	}
 	if(A->nx==nx||A->ny==1){
@@ -165,7 +170,8 @@ void cellresize_do(cell* A, long nx, long ny){
 /**
    free a mat or cell object.
 */
-void cellfree_do(cell* A){
+void cellfree_do(anyarray A_){
+	cell* A=A_.c;
 	if(!A) return;
 	M_ID id=A->id;
 	switch(id){
@@ -221,7 +227,8 @@ void cellfree_do(cell* A){
  * ncol: 0: normal writing. -1: initialize async data. >0: async writing.
  * 	
  * */
-void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
+void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
+	const cell* A=A_.c;
 	if(fp&&ncol>0){
 		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
 		return;
@@ -311,7 +318,7 @@ void writedata_by_id(file_t* fp, const cell* A, M_ID id, long ncol){
 	}
 }
 
-void write_by_id(const cell* A, M_ID id, const char* format, ...){
+void write_by_id(const_anyarray A, M_ID id, const char* format, ...){
 	format2fn;
 	if(!fn) return;
 	file_t* fp=zfopen(fn, "wb");
@@ -323,7 +330,7 @@ void write_by_id(const cell* A, M_ID id, const char* format, ...){
 /**
  * Calls writebin with build in fp
  * */
-void writecell_async(const cell* A, long ncol){
+void writecell_async(const_anyarray A, long ncol){
 	if(ncol==0){
 		warning("writecell_async shall not be called with ncol=0, aborted.\n");
 	}else{
@@ -333,8 +340,9 @@ void writecell_async(const cell* A, long ncol){
 /**
    A generic routine for write data to file with separate keywords
  */
-void writebin_header(cell* Ac, const char* keywords, const char* format, ...){
+void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...){
 	format2fn;
+	cell* Ac=Ac_.c;
 	if(Ac && keywords){
 		free(Ac->keywords);
 		Ac->keywords=strdup(keywords);
@@ -537,7 +545,7 @@ cell* readsock(int sock){
    A generic routine for write data to socket.
    We dup the fd to avoid close it after read.
  */
-void writesock(const cell* A, int sock){
+void writesock(const_anyarray A, int sock){
 	file_t* fp=zfdopen(dup(sock));
 	if(fp) writedata_by_id(fp, A, 0, 0);
 	zfclose(fp);

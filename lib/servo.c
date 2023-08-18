@@ -484,25 +484,27 @@ real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, rea
 	servo_calc_free(&st);
 	return st.res_sig;
 }
-
 /**
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
 static inline void
-servo_typeII_filter(servo_t* st, const dcell* merrc){
+servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrlastc, const cell *merrc){
 	if(!merrc) return;
-	const dmat* gain=st->ep;
 	int indmul=0;
 	if(NX(gain)!=3){
 		error("Wrong format in gain\n");
 	}
 	real gg, e1a, e1;
-	for(int ic=0; ic<PN(merrc); ic++){
-		dmat* merr=P(merrc,ic);
-		if(!merr) continue;
-		dmat* mlead=P(st->mlead,ic);
-		dmat* merrlast=P(st->merrlast,ic);
-		int nmod=0;/*error. */
+	if(iscell(merrc)){
+		for(int ic=0; ic<PN(merrc); ic++){
+			servo_typeII_filter(gain, P(mpreintc, ic), P(mleadc, ic), P(merrlastc, ic), P(merrc, ic));
+		}
+	}else{
+		dmat* merr=dmat_cast(merrc);
+		dmat* mlead=dmat_cast(mleadc);
+		dmat* merrlast=dmat_cast(merrlastc);
+		int nmod=0;/*number of modes*/
+		nmod=PN(merr);
 		if(NY(merr)==1){
 			nmod=NX(merr);
 		} else{
@@ -528,30 +530,29 @@ servo_typeII_filter(servo_t* st, const dcell* merrc){
 			e1=P(gain, 2, indm);
 			P(mlead,imod)=e1a*P(mlead,imod)+gg*(1-e1a)/(1-e1)*(P(merr,imod)-e1*P(merrlast,imod));
 		}
+		dcelladd(&merrlastc, 0, merrc, 1);//save for next time.
+		dcelladd(&mpreintc, 1, mleadc, 1);//integrator
 	}
-	dcellcp(&st->merrlast, merrc);
-	dcelladd(&st->mpreint, 1, st->mlead, 1);
 }
-static void servo_init(servo_t* st, const dcell* merr){
-	if(!merr||st->initialized){
-		error("merr must be valid and servo_t must be not yet initialized\n");
-	}
+static void servo_init(servo_t* st, const anyarray merr_){
+	cell* merr=merr_.c;
+	if(!merr) return;
 	if(NX(st->ep)>1){
-		st->mpreint=dcellnew2(merr);
+		dcelladd(&st->mpreint, 0, merr, EPS);
 	}
 	if(NX(st->ep)==3){
-		st->mlead=dcellnew2(merr);
-		st->merrlast=dcellnew2(merr);
+		dcelladd(&st->mlead, 0, merr, EPS);
+		dcelladd(&st->merrlast, 0, merr, EPS);
 	}
 	for(int i=0; i<NX(st->mint); i++){
-		P(st->mint,i)=dcellnew2(merr);
+		dcelladd(&P(st->mint, i), 0, merr, EPS);
 	}
 	st->initialized=1;
 }
 /**
    Update servo parameters
 */
-void servo_update(servo_t* st, const dmat* ep){
+static void servo_update_ep(servo_t* st, const dmat* ep){
 	dfree(st->ep);
 	if(NX(ep)!=3){//type I
 		st->ep=ddup(ep);
@@ -570,9 +571,9 @@ void servo_update(servo_t* st, const dmat* ep){
 	}
 }
 /**
-   Initialize. al is additional latency
+   Initialize servo_t. al is additional latency
 */
-servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep){
+servo_t* servo_new(anyarray merr, const dmat* ap, real al, real dt, const dmat* ep){
 	servo_t* st=mycalloc(1, servo_t);
 	if(ap){
 		st->ap=ddup(ap);
@@ -583,18 +584,29 @@ servo_t* servo_new(dcell* merr, const dmat* ap, real al, real dt, const dmat* ep
 	if(NX(st->ap)<2){
 		dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
 	}
-	st->mint=(dccell*)cellnew(NX(st->ap), 1);
+	st->mint=cellnew(NX(st->ap), 1);
 	st->dt=dt;//this is simulation time step. not loop update time.
 	st->alint=(int)floor(al);
 	st->alfrac=al-floor(al);
-	st->merrhist=(dccell*)cellnew(st->alint+1, 1);
-	servo_update(st, ep);
-	if(merr&&NX(merr)!=0&&NY(merr)!=0&&P(merr,0)){
-		servo_init(st, merr);
-	}
+	st->merrhist=cellnew(st->alint+1, 1);
+	servo_update_ep(st, ep);
+	servo_init(st, merr);
 	return st;
 }
-servo_t *servo_new_sho(dcell *merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta){
+/**
+ * Initialize servo_t with scalar ap and ep
+ * */
+servo_t *servo_new_scalar(anyarray merr, real ap, real al, real dt, real ep){
+	dmat *ap2=dnew(1,1); P(ap2,0)=ap;
+	dmat *ep2=dnew(1,1); P(ep2,0)=ep;
+	servo_t *st=servo_new(merr, ap2, al, dt, ep2);
+	dfree(ap2); dfree(ep2); 
+	return st;
+}
+/**
+ * Initialize servo_t with an sho
+ * */
+servo_t *servo_new_sho(anyarray merr, const dmat *ap, real al, real dt, const dmat *ep, real f0, real zeta){
 	servo_t *st=servo_new(merr, ap, al, dt, ep);
 	if(f0>0 && !isinf(f0)){
 		st->sho=sho_new(f0, zeta);
@@ -612,44 +624,65 @@ static void servo_shift_ap(servo_t* st){
 		cellresize(st->mint, NX(ap), 1);
 	}
 	if(!st->initialized) return;
-	dcell** inte=P(st->mint);
-	dcell* recycle=inte[ap->nx-1];
+	cell *recycle=P(st->mint,ap->nx-1);
 	dcellscale(recycle, P(ap, ap->nx-1));
 	for(int iap=ap->nx-2; iap>=0; iap--){
-		dcelladd(&recycle, 1, inte[iap], P(ap,iap));
+		dcelladd(&recycle, 1, P(st->mint,iap), P(ap, iap));
 	}
 	for(int iap=ap->nx-1; iap>0; iap--){
-		inte[iap]=inte[iap-1];/*shifting */
+		P(st->mint, iap)=P(st->mint,iap-1);/*shifting */
 	}
-	inte[0]=recycle;/*new command. */
+	P(st->mint,0)=recycle;/*new command. */
 }
 /*A FIFO queue to add delay*/
-static const dcell* servo_shift_al(servo_t* st, const dcell* merr){
+static const cell* servo_shift_al(servo_t* st, const cell* merr){
 	if(!st->alint){
 		return merr;
 	} else{
 		long nhist=NX(st->merrhist);
-		dcell* recycle=P(st->merrhist,0);
+		cell* recycle=P(st->merrhist,0);
 		for(int i=0; i<nhist-1; i++){
 			P(st->merrhist,i)=P(st->merrhist,i+1);
 		}
 		P(st->merrhist,nhist-1)=recycle;
 		if(!merr){
-			dcellfree(P(st->merrhist,nhist-1));
+			cellfree(P(st->merrhist,nhist-1));
 		} else{
 			dcelladd(&P(st->merrhist,nhist-1), 0, merr, 1);
 		}
 		return P(st->merrhist,0);
 	}
 }
+/*
+	Scale each row by each value of ep
+*/
+static void scale_row_ep(cell *A, dmat *ep){
+	if(!A) return;
+	if(iscell(A)){
+		for(int ic=0; ic<PN(A); ic++){
+			scale_row_ep(P(A, ic), ep);
+		}
+	}else{
+		dmat *Ad=dmat_cast(A);
+		if(NX(Ad)!=PN(ep)){
+			error("Mismatch: A is %ldx%ld, ep is %ldx%ld\n", NX(A), NY(A), NX(ep), NY(ep));
+			return;
+		}
+		for(int iy=0; iy<NY(Ad); iy++){
+			for(int ix=0; ix<NX(Ad); ix++){
+				P(Ad, ix, iy)*=P(ep, ix);
+			}
+		}
+	}
+}
 /**
    Applies type I or type II filter based on number of entries in gain.
 */
-int servo_filter(servo_t* st, const dcell* _merr){
-	if(!st->initialized&&_merr){
+int servo_filter(servo_t* st, const anyarray _merr){
+	if(!st->initialized&&_merr.c){
 		servo_init(st, _merr);
 	}
-	const dcell* merr=servo_shift_al(st, _merr);
+	const cell* merr=servo_shift_al(st, _merr.c);
 	if(!merr) return 0;
 	servo_shift_ap(st);
 	if(!st->mint){
@@ -657,19 +690,11 @@ int servo_filter(servo_t* st, const dcell* _merr){
 	}
 	switch(NX(st->ep)){
 	case 1://type I
-		if(NY(st->ep)==1){
+		if(NY(st->ep)==1){//single gain
 			dcelladd(&st->mpreint, 0, merr, P(st->ep,0));//just record what is added.
-		} else{
-			if(!st->mpreint){
-				st->mpreint=dcellnew2(merr);
-			}
-			for(int ic=0; ic<NX(merr); ic++){
-				if(!P(merr,ic)) continue;
-				assert(P(merr,ic)->nx==NY(st->ep));
-				for(long i=0; i<P(merr,ic)->nx; i++){
-					P(P(st->mpreint,ic),i)=P(st->ep,i)*P(P(merr,ic),i);
-				}
-			}
+		} else{//gain per mode (row)
+			dcelladd(&st->mpreint, 0, merr, 1);
+			scale_row_ep(st->mpreint, st->ep);
 		}
 		break;
 	case 2:{//PID controller
@@ -678,11 +703,11 @@ int servo_filter(servo_t* st, const dcell* _merr){
 		real g2=-P(st->ep,1);
 		dcelladd(&st->mpreint, 0, merr, g1);
 		dcelladd(&st->mpreint, 1, st->merrlast, g2);
-		dcellcp(&st->merrlast, merr);
+		dcelladd(&st->merrlast, 0, merr, 1);
 	}
 		  break;
 	case 3://type II
-		servo_typeII_filter(st, merr);
+		servo_typeII_filter(st->ep, st->mpreint, st->mlead, st->merrlast, merr);
 		break;
 	default:
 		error("Invalid: NX(st->ep)=%ld\n", NX(st->ep));
@@ -693,26 +718,27 @@ int servo_filter(servo_t* st, const dcell* _merr){
 /**
    Adjust integrator content without shift.
 */
-void servo_add(servo_t* st, const dcell* madj, real alpha){
-	dcelladd(&P(st->mint, 0), 1, madj, alpha);
+void servo_add(servo_t* st, const anyarray madj, real alpha){
+	dcelladd(&P(st->mint, 0), 1, madj.c, alpha);
 }
 /**
    Create servo output. It handles st->alfrac. and outputs the averaged position over the integration period.
  */
-void servo_output(const servo_t* st, dcell** out){
-	dcellzero(*out);
+void servo_output(const servo_t* st, panyarray out_){
+	cell **out=out_.c;
+	dcellscale(*out, 0);
 	if(st->sho){//filter output using SHO
 		if(st->alfrac){//from previous output
-			sho_step_any(&st->sho->ytmp, st->sho, CELL(P(st->mint, 1)), st->alfrac*st->dt, 1);
-			dcelladd_any((cell**)out, 1, st->sho->ytmp, st->alfrac);
+			sho_step(&st->sho->ytmp, st->sho, P(st->mint, 1), st->alfrac*st->dt, 1);
+			dcelladd(out, 1, st->sho->ytmp, st->alfrac);
 		}
-		sho_step_any(&st->sho->ytmp, st->sho, CELL(P(st->mint, 0)), (1.-st->alfrac)*st->dt, 1);
-		dcelladd_any((cell**)out, 1, st->sho->ytmp, 1.-st->alfrac);
+		sho_step(&st->sho->ytmp, st->sho, P(st->mint, 0), (1.-st->alfrac)*st->dt, 1);
+		dcelladd(out, 1, st->sho->ytmp, 1.-st->alfrac);
 	}else{
 		if(st->alfrac){//previous output
-			dcelladd_any((cell **)out, 1, CELL(P(st->mint, 1)), st->alfrac);
+			dcelladd(out, 1, P(st->mint, 1), st->alfrac);
 		}
-		dcelladd_any((cell **)out, 1, CELL(P(st->mint, 0)), 1.-st->alfrac);//current output
+		dcelladd(out, 1, P(st->mint, 0), 1.-st->alfrac);//current output
 	}
 }
 
@@ -747,7 +773,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 			dzero(P(meas,0));
 		}
 		dadd(&P(meas,0), 1, merr, 1);/*average the error. */
-		dcellcp(&mreal, P(st2t->mint,0));
+		dcellcp(&mreal, P(st2t->mintc,0));
 		if((istep+1)%dtrat==0){
 			if(dtrat!=1) dscale(P(meas,0), 1./dtrat);
 			if(sigman){
@@ -772,28 +798,20 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
    reset the data to 0.
 */
 void servo_reset(servo_t* st){
-	dcellzero(st->mlead);
-	dcellzero(st->merrlast);
-	dcellzero(st->mpreint);
-	if(st->merrhist){
-		for(int i=0; i<NX(st->merrhist); i++){
-			dcellzero(P(st->merrhist,i));
-		}
-	}
-	if(st->mint){
-		for(int i=0; i<NX(st->mint); i++){
-			dcellzero(P(st->mint,i));
-		}
-	}
+	dcellscale(st->mlead, 0);
+	dcellscale(st->merrlast, 0);
+	dcellscale(st->mpreint, 0);
+	dcellscale(st->merrhist, 0);
+	dcellscale(st->mint, 0);
 }
 /**
    Free servo_t struct
 */
 void servo_free(servo_t* st){
 	if(!st) return;
-	dcellfree(st->mlead);
-	dcellfree(st->merrlast);
-	dcellfree(st->mpreint);
+	cellfree(st->mlead);
+	cellfree(st->merrlast);
+	cellfree(st->mpreint);
 	cellfree(st->merrhist);
 	cellfree(st->mint);
 	dfree(st->ap);
@@ -845,9 +863,11 @@ void sho_free(sho_t *sho){
 	//ddx=sho->dx*(-sho->c1)+sho->x*(-sho->c2)+xi;//update speed
 	//sho->dx+=dt*ddx;	 //update speed
  */
-void sho_step_any(cell **xout, sho_t *sho, cell *xi, real dt, int avg){
+void sho_step(panyarray xout_, sho_t *sho, anyarray xi_, real dt, int avg){
+	cell* xi=xi_.c;
+	cell** xout=xout_.c;
 	if(!sho){//null filter. just copy input to output.
-		dcelladd_any(xout, 0, xi, 1);
+		dcelladd(xout, 0, xi, 1);
 		return;
 	}
 	//divide dt to multiple time to do proper integration.
@@ -855,25 +875,25 @@ void sho_step_any(cell **xout, sho_t *sho, cell *xi, real dt, int avg){
 	if(nover==1) avg=0;//no need for averaging.
 	real scale=1./nover;
 	dt*=scale;
-	if(avg)	dcellscale_any(*xout, 0);
+	if(avg)	dcellscale(*xout, 0);
 	for(long i=0; i<nover; i++){
-		dcelladd_any(&sho->ddx, 0, sho->dx, -sho->c1);
-		dcelladd_any(&sho->ddx, 1, sho->x,  -sho->c2);
-		dcelladd_any(&sho->ddx, 1, xi,       sho->c2);
-		dcelladd_any(&sho->x,   1, sho->dx,  dt);//update position
-		dcelladd_any(&sho->dx,  1, sho->ddx, dt);//update position
-		if(avg) dcelladd_any(xout, 1, sho->x, scale);
+		dcelladd(&sho->ddx, 0, sho->dx, -sho->c1);
+		dcelladd(&sho->ddx, 1, sho->x,  -sho->c2);
+		dcelladd(&sho->ddx, 1, xi,       sho->c2);
+		dcelladd(&sho->x,   1, sho->dx,  dt);//update position
+		dcelladd(&sho->dx,  1, sho->ddx, dt);//update position
+		if(avg) dcelladd(xout, 1, sho->x, scale);
 	}
 	if(!avg){
-		dcelladd_any(xout, 0, sho->x, 1);
+		dcelladd(xout, 0, sho->x, 1);
 	}
 }
 /**
    Second harmonic oscillator. Reset.
 */
 void sho_reset(sho_t* sho){
-	dcellscale_any(sho->dx, 0);
-	dcellscale_any(sho->x, 0);
+	dcellscale(sho->dx, 0);
+	dcellscale(sho->x, 0);
 }
 /**
    Second harmonic oscillator. Filter a time series for testing.

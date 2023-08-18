@@ -28,7 +28,7 @@ typedef struct stfun_t stfun_t;
 stfun_t* stfun_init(long nx, long ny, real *amp);
 void stfun_push(stfun_t *A, dmat *opd);
 dmat *stfun_finalize(stfun_t *A);
-dmat *stfun_batch(const cell *opd, const dmat *amp);
+dmat *stfun_batch(const_anyarray opd, const dmat *amp);
 dmat* stfun_kolmogorov(loc_t *loc, real r0);
 //dmat *vkcov(long nx, real dx, real r0, real L0);
 #endif

@@ -87,7 +87,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 			recon->moao[imoao].actstuck=lcellnew(1, 1);
 			P(recon->moao[imoao].actstuck,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actstuck);
 			if(parms->dbg.recon_stuck){
-				act_stuck(recon->moao[imoao].aloc, CELL(recon->moao[imoao].HA), recon->moao[imoao].actstuck);
+				act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
 			}
 		}
 		if(parms->moao[imoao].actfloat){
@@ -181,7 +181,7 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	}
 	real wt=1;
 	applyW(xp, recon->moao[imoao].W0, recon->moao[imoao].W1, &wt);
-	dspcellmm(xout, recon->moao[imoao].HA, xp, "tn", alpha);
+	dcellmm(xout, recon->moao[imoao].HA, xp, "tn", alpha);
 	dcellfree(xp);
 }
 /**
@@ -197,14 +197,14 @@ moao_FitL(dcell** xout, const void* A,
 	const moao_t* moao=(const moao_t*)A;
 	dcell* xp=NULL;
 	real wt=1;
-	dspcellmm(&xp, moao->HA, xin, "nn", 1.);
+	dcellmm(&xp, moao->HA, xin, "nn", 1.);
 	applyW(xp, moao->W0, moao->W1, &wt);
-	dspcellmm(xout, moao->HA, xp, "tn", alpha);
+	dcellmm(xout, moao->HA, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	dcellmm(&xp, moao->NW, xin, "tn", 1);
 	dcellmm(xout, moao->NW, xp, "nn", alpha);
 	dcellfree(xp);
-	dspcellmm(xout, moao->actslave, xin, "nn", alpha);
+	dcellmm(xout, moao->actslave, xin, "nn", alpha);
 }
 /**
    moao_recon happens after the common DM fitting and its integrator output
@@ -224,12 +224,12 @@ void moao_recon(sim_t* simu){
 	} else{/*Take integrator output, remove NGS modes if any. */
 		if(parms->sim.closeloop){
 			if(parms->sim.fuseint){
-				dcellcp(&dmcommon, P(simu->dmint->mint,0));
+				dcellcp(&dmcommon, P(simu->dmint->mintc,0));
 				if(parms->recon.split==1){
 					ngsmod_remove(simu, dmcommon);
 				}
 			} else{
-				dcellcp(&dmcommon, P(simu->dmint->mint,0));
+				dcellcp(&dmcommon, P(simu->dmint->mintc,0));
 			}
 		} else{
 			dcellcp(&dmcommon, simu->dmerr);

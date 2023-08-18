@@ -323,7 +323,7 @@ static void FitR_NCPA(dcell** xout, recon_t* recon, aper_t* aper){
 		}
 	}
 	applyW(xp, recon->W0, recon->W1, P(parms->sim.ncpa_wt));
-	dspcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
+	dcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
 	dcellfree(xp);
 }
 void FitL_NCPA(dcell** xout, const void* A,
@@ -331,9 +331,9 @@ void FitL_NCPA(dcell** xout, const void* A,
 	const recon_t* recon=(const recon_t*)A;
 	const parms_t* parms=global->parms;
 	dcell* xp=NULL;
-	dspcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
+	dcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
 	applyW(xp, recon->W0, recon->W1, P(parms->sim.ncpa_wt));
-	dspcellmm(xout, recon->HA_ncpa, xp, "tn", alpha);
+	dcellmm(xout, recon->HA_ncpa, xp, "tn", alpha);
 	dcellfree(xp);xp=NULL;
 	/*dcellmm(&xp,recon->fitNW, xin, "tn", 1);
 	dcellmm(xout,recon->fitNW, xp, "nn", alpha);

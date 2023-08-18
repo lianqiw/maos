@@ -37,5 +37,5 @@ dmat* add_psd(const dmat *psd1, const dmat *psd2, real scale2);
 void add_psd2(dmat **out, const dmat *in, real scale);
 void psd_sum(dmat *psd, real scale);
 dmat *psd2d_aniso(const dmat *screen, real dx);
-dmat *psd2d(dmat** extra, const cell *screen, real dx);
+dmat *psd2d(dmat** extra, const_anyarray screen, real dx);
 #endif

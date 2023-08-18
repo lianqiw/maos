@@ -404,13 +404,13 @@ static void zferrprint(file_t *fp){
 	case 0:
 		break;//dbg("%s: Clear error\n", fp->fn);
 	case 1:
-		dbg("%s: EOF encountered\n", fp->fn);
+		dbg3("%s: EOF encountered\n", fp->fn);
 		break;
 	case 2:
-		dbg("%s: Unknown error\n", fp->fn);
+		warning("%s: Unknown error\n", fp->fn);
 		break;
 	default:
-		dbg("%s: Invalid entry: %d\n", fp->fn, fp->err);
+		warning("%s: Invalid entry: %d\n", fp->fn, fp->err);
 	}
 }
 /**

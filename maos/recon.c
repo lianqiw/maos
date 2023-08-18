@@ -234,7 +234,7 @@ static void recon_split(sim_t* simu){
 			dcellzero(simu->gngsmvst);/*reset accumulation. */
 			dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn", 1);
 			if(parms->recon.psol){
-				dcell* Mpsol_lo=P(simu->Mint_lo->mint,0);
+				dcell* Mpsol_lo=P(simu->Mint_lo->mintc,0);
 				dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 			}
 			if(parms->sim.mffocus){
@@ -270,7 +270,7 @@ void recon_servo_update(sim_t* simu){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
 				dmat *out=drefcols(P(simu->dmerrts, ievl), iframe,1);
-				dcellmm_any((cell**)&out, P(recon->Herr, ievl, idm), CELL(P(simu->dmerr,idm)), "nn", 1);
+				dcellmm((cell**)&out, P(recon->Herr, ievl, idm), P(simu->dmerr,idm), "nn", 1);
 				dfree(out);
 			}
 		}
@@ -439,7 +439,7 @@ void* reconstruct(sim_t* simu){
 					dmtmp=simu->dmtmp;
 				}
 				dcellzero(simu->dmerr);
-				dspcellmm(&simu->dmerr, simu->recon->actextrap, dmtmp, "nn", 1);
+				dcellmm(&simu->dmerr, simu->recon->actextrap, dmtmp, "nn", 1);
 			}
 
 			dcell* dmpsol;
@@ -449,7 +449,7 @@ void* reconstruct(sim_t* simu){
 				dmpsol=P(simu->wfspsol,P(parms->hipowfs,0));
 			} else{
 				warning_once("Temporary solution for MVST.\n");
-				dmpsol=P(simu->dmint->mint,0);
+				dmpsol=P(simu->dmint->mintc,0);
 			}
 			dcelladd(&simu->dmerr, 1, dmpsol, -1);
 		}else if(parms->recon.modal){//multi-mode dithering in modal reconstruction

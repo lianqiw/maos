@@ -29,21 +29,20 @@ cell* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
 static inline cell* cell_cast(const void* A){
 	return iscell(A)?(cell*)A:0;
 }
-void cellinit(cell** A, long nx, long ny);
-void cellinit2(cell** A, const cell* B);
-void celldim(const cell* A_, long* nx, long* ny, long** nxs, long** nys);
-void cellresize_do(cell* in, long nx, long ny);
-#define cellresize(A, nx, ny) if(A) cellresize_do(CELL(A), nx, ny);
+void cellinit(panyarray A, long nx, long ny);
+void cellinit2(panyarray A, const_anyarray B);
+void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys);
+void cellresize(anyarray in, long nx, long ny);
 /*!free a cell array and zero the pointer.*/
-#define cellfree(A) if(A){cellfree_do((cell*)A); A=NULL;}
+#define cellfree(A) if(A){cellfree_do(A); A=NULL;}
 
-void cellfree_do(cell* dc);
-void writedata_by_id(file_t* fd, const cell* A, M_ID id, long ncol);
-void write_by_id(const cell* dc, M_ID id, const char* format, ...) CHECK_ARG(3);
+void cellfree_do(anyarray dc);
+void writedata_by_id(file_t* fd, const_anyarray A, M_ID id, long ncol);
+void write_by_id(const_anyarray dc, M_ID id, const char* format, ...) CHECK_ARG(3);
 /**
    A generic routine for write data to file.
  */
-#define writebin(A,format...) if(A) write_by_id(CELL(A), M_0, format)
+#define writebin(A,format...) if(A) write_by_id(A, M_0, format)
 #define writecell(A,format...) write_by_id(A, M_0, format)
 cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header);
 cell* read_by_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
@@ -54,11 +53,11 @@ cell* read_by_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
 //cell* readbin(const char* format, ...) CHECK_ARG(1);
 
 //(const void* dc, const char* format, ...) CHECK_ARG(2);
-void writecell_async(const cell *A, long ncol);
-#define writebin_async(A,ncol) writecell_async(A?CELL(A):NULL, ncol)
-void writebin_header(cell* dc, const char* keywords, const char* format, ...) CHECK_ARG(3);
+void writecell_async(const_anyarray A, long ncol);
+#define writebin_async(A,ncol) writecell_async(A, ncol)
+void writebin_header(anyarray dc, const char* keywords, const char* format, ...) CHECK_ARG(3);
 cell* readsock(int sock);
-void writesock(const cell* dc, int sock);
+void writesock(const_anyarray dc, int sock);
 #define readdata(fp) readdata_by_id(fp, 0, -1, 0)
 #define writedata(fp, A) writedata_by_id(fp, A, 0, 0)
 

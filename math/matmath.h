@@ -50,8 +50,8 @@
     X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv2)(const X(mat) *A, const cell *W,R thres) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv)(const X(mat) *A, const cell *W) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv2)(const X(mat) *A, const_anyarray W, R thres) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv)(const X(mat) *A, const_anyarray W) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     int X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
     int X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);	\
@@ -103,15 +103,14 @@
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
     R X(cellnorm)(const X(cell) *in);					\
-    void X(cellscale)(X(cell) *A, R w);					\
-    void X(cellscale_any)(cell *A, R w);					\
+    void X(cellscale)(anyarray A, R w);					\
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(cellinn)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv2)(const X(cell) *A, const cell *W, R thres);		\
+    X(cell)* X(cellpinv2)(const X(cell) *A, const_anyarray W, R thres);		\
     X(cell)* X(cellpinv)(const X(cell) *A, const X(spcell) *W);		\
     void X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
     void X(cellcwpow)(X(cell)*A, R power);				\

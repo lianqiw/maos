@@ -85,8 +85,6 @@
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
     void X(cellcat2)(X(cell) **A, const X(cell) *B, int dim);		\
     X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim) CHECK_UNUSED_RESULT; \
-    X(mat) *X(cell2m)(const X(cell) *A) CHECK_UNUSED_RESULT;		\
-    X(mat) *X(cell2m_any)(const cell *A) CHECK_UNUSED_RESULT;		\
     X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim) CHECK_UNUSED_RESULT; \
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
     X(mat) *X(cell_col)(X(cell) *input, long icol);			\

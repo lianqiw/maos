@@ -25,7 +25,7 @@ void benchmark()
     toc("");tic;
     dspcell *G0T=dspcelltrans(G0);
     toc("");tic;
-    dspcell *A=dspcellmulspcell(G0T,G0,1);//this is slow.
+    dspcell *A=dcellmm(G0T,G0,1);//this is slow.
     toc("");
     dcell *x=dcellread("rhs.bin");
     tic;

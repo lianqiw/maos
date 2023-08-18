@@ -203,7 +203,6 @@ static inline int issp(const void* id){
 static inline int ismat(const void* id){
 	return id?(*((const M_ID*)id)==M_T):0;
 }
-
 //Check that A is valid and has mat type and has non zero size.
 #define check_mat1(A) ((A)?(check(ismat(A))?1:(error("type id mismatch, got %x, expect %x\n", *(M_ID*)A, M_T),0)):0)
 #define check_mat2(A,B) (check_mat1(A) && check_mat1(B))

@@ -110,9 +110,10 @@ dmat* stfun_finalize(stfun_t* A){
 /**
  * Batch process cell array of OPDs. 
  * */
-dmat *stfun_batch(const cell *opd, /**<nz array of nx*ny array of the OPD*/
+dmat *stfun_batch(const_anyarray opd_, /**<nz array of nx*ny array of the OPD*/
 	const dmat *amp /**<n*ny array of the amplitude map*/
 ){
+	const cell *opd=opd_.c;
 	if(!opd){
 		error("OPD should be provided\n");
 	}

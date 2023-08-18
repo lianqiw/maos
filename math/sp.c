@@ -52,7 +52,7 @@ static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
 	if(sp->fp){
-		writedata_by_id(sp->fp, CELL(sp), 0, 0);
+		writedata_by_id(sp->fp, sp, 0, 0);
 		zfclose(sp->fp);
 		sp->fp=NULL;
 	}

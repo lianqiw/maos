@@ -520,7 +520,7 @@ void* listen_host(void* pmsock){
 						add_host(ihost);//do not use _add_host_wrap. It will deadlock.
 					}
 				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
-					info_time("60 seconds no respond. probing server %s.\n", hosts[ihost]);
+					info_time("no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
 				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds

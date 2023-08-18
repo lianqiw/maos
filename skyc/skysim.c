@@ -600,7 +600,7 @@ void skysim(const PARMS_S* parms){
 			simu->stars->ny=1;
 		}
 		if(simu->stars->nx>parms->skyc.nsky){
-			cellresize(simu->stars, parms->skyc.nsky, 1);
+			dcellresize(simu->stars, parms->skyc.nsky, 1);
 		}
 		sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
 		writebin(simu->stars, "Res%d_%d_stars", simu->seed_maos, parms->skyc.seed);

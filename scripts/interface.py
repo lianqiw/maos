@@ -140,7 +140,7 @@ def py2cellref(arr, tid=0):
     else:
         return byref(arr)
 class cell(Structure):
-    _fields_ = [ #fields compatible with C type
+    _fields_ = [ #fields compatible with C type of cell and mat
         ('id', c_uint32),
         ('p',  c_void_p),
         ('nx', c_long),
@@ -148,8 +148,7 @@ class cell(Structure):
         ('header', c_char_p),
         ('dummy_fp', c_void_p),
         ('dummy_fft', c_void_p),
-        ('dummy_m', c_void_p),
-        ('dummy_mem', c_void_p),#cell stops here
+        ('dummy_mem', c_void_p),
         ('dummy_async', c_void_p),
         ]
  
@@ -221,9 +220,10 @@ class cell(Structure):
             self.nx=0
             self.ny=0
         self.header=None
-        self.mmap=None
-        self.nref=None
-        self.fft=None
+        self.dummy_fp=None
+        self.dummy_fft=None
+        self.dummy_mem=None
+        self.dummy_async=None
         
     def shape(self, twod):
         if self.ny > 1 or twod:
@@ -277,7 +277,6 @@ class loc(Structure):
         ('header',c_void_p),
         ('dummy_fp',c_void_p),
         ('dummy_fft',c_void_p),
-        ('dummy_m',c_void_p),
         ('dummy_mem',c_void_p),
         ('dummy_async',c_void_p),
         ('locy', c_void_p),
@@ -307,19 +306,7 @@ class loc(Structure):
                 dlocy=arr[1,1:]-arr[1,0:-1]
                 self.dy=min(dlocy[dlocy>0])
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
-        else:
-            self.nloc=0
-            self.locx=None
-            self.locy=None
-            self.dx=0
-            self.dy=0
-        self.ht=0
-        self.iac=0
-        self.locstat_t=0
-        self.map=0
-        self.npad=0
-        self.nref=0
-
+		#default initialization to zero
     def as_array(self): #convert form C to numpy. Memory is copied
         if(self.locx):
             if self.id!=222210:
@@ -339,8 +326,6 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         ('ny', c_long),
         ('header',   c_char_p),
         ('dummy_fp', c_void_p),
-        ('dummy_fft',c_void_p),
-        ('dummy_m',  c_void_p),
         ('nzmax', c_long),
         ('p', c_void_p),
         ('i', c_void_p),
@@ -368,14 +353,7 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             self.nzmax=self.pp[-1]
         else:
             self.id=spdtype2id.get(np.float64)
-            self.x=None
-            self.i=None
-            self.p=None
-            self.nx=0
-            self.ny=0
-            self.nzmax=0
-        self.header=None
-        self.nref=None
+
     def as_array(self): #convert form C to numpy. Memory is copied
         if self.nzmax>0:
             self.xp=as_array(self.x, self.id, (self.nzmax,))

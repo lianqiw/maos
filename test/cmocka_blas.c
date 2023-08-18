@@ -32,11 +32,11 @@ static void blas_dpinv(void **state){
 	drandn(A, 1, &rstat);
 	dmat *w=dnew(10, 1);
 	dset(w, 2);
-	dmat *Ap=dpinv(A, CELL(w));
+	dmat *Ap=dpinv(A, w);
 	dmat *ApA=NULL;
 	dmm(&ApA, 0, Ap, A, "nn", 1);
 	dsp *spw=dspnewdiag(w->nx, P(w), 1);
-	dmat *Ap2=dpinv(A, CELL(spw));
+	dmat *Ap2=dpinv(A, spw);
 	assert_float_equal(dsum(Ap), 0.675211, 1e-6);
 	assert_float_equal(ddiff(Ap, Ap2), 0, 1e-6);
 

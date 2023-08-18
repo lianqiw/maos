@@ -164,7 +164,7 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 			P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
 			dspmuldiag(P(Hat,idm), amp, wt[ievl]);
 		}
-		dspcellmulsp(&Wa, Hat, Hat, "nt", 1);
+		dcellmm(&Wa, Hat, Hat, "nt", 1);
 		dspcellfree(Hat);
 	}
 	if(use_ploc){
@@ -266,7 +266,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 				}
 			}
 		}
-		dspcellmm(&HatWHm, Hat, WHm, "nn", wt[ievl]);
+		dcellmm(&HatWHm, Hat, WHm, "nn", wt[ievl]);
 		dspcellfree(Hat);
 	}
 	dspfree(HatGround);
@@ -435,7 +435,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 				&&(parms->powfs[ipowfs].lo||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(parms->powfs[ipowfs].type==WFS_SH || parms->recon.modal){//shwfs or modal control
-						dmm_cell(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
+						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 					} else{//pwfs in zonal control.
 						real  ht=parms->dm[idm].ht-parms->powfs[ipowfs].hc;
 						real  dispx=0, dispy=0;
@@ -487,7 +487,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 				nact+=P(recon->aloc,idm)->nloc;
 			}
 			real maxeig=4./nact;
-			dspcelladdI(ngsmod->Wa, 1e-9*maxeig);
+			dcelladdI(ngsmod->Wa, 1e-9*maxeig);
 
 			toc2("Wa");
 			ngsmod->Pngs=dcellpinv(ngsmod->Modes, ngsmod->Wa);
@@ -642,7 +642,7 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	if(parms->tomo.ahst_wt==1){
 		/*Use gradient weighting. */
 		dcellzero(ngsmod->Pngs);
-		dcellmm_any((cell**)&ngsmod->Pngs, CELL(P(ngsmod->Rngs,0)), recon->GAlo, "nn", 1);
+		dcellmm((cell**)&ngsmod->Pngs, P(ngsmod->Rngs,0), recon->GAlo, "nn", 1);
 		if(parms->save.setup){
 			writebin(ngsmod->Pngs, "ahst_Pngs");
 		}

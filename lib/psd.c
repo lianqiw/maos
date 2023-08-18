@@ -423,9 +423,10 @@ dmat *psd2d_aniso(const dmat *screen, real dx){
 	temporay PSD of turbulence.
 	*/
 dmat *psd2d(dmat **extra, /**<[out] extra output*/
-		const cell *screens, /**<[in] 2-d screen or cell of 2-d screens*/
+		const_anyarray screens_, /**<[in] 2-d screen or cell of 2-d screens*/
 		real dx /**<[in] Sampling*/
 ){
+	const cell* screens=screens_.c;
 	if(!screens){
 		dbg("screen is empty\n");
 		return NULL;

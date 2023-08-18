@@ -754,7 +754,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		  effect on GA is also removed
 		 */
 			warning("Apply stuck actuators to GA\n");
-			act_stuck(recon->aloc, CELL(recon->GA), recon->actstuck);
+			act_stuck(recon->aloc, recon->GA, recon->actstuck);
 
 		}
 		if(parms->recon.alg==1){//LSR.
@@ -762,12 +762,12 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			if(parms->save.setup){
 				writebin(recon->actcpl, "lsr_actcpl");
 			}
-			act_stuck(recon->aloc, CELL(recon->actcpl), recon->actfloat);
+			act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
 			if(parms->lsr.actextrap){
 				//when lor is enabled, the resulting matrix is much less sparse.
 				recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 0);
 				dspcell *GA2=0;
-				dspcellmulsp(&GA2, recon->GA, recon->actextrap, "nn", 1);
+				dcellmm(&GA2, recon->GA, recon->actextrap, "nn", 1);
 				dspcellfree(recon->GA);
 				recon->GA=GA2;
 				if(parms->save.setup){
@@ -1166,7 +1166,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						dfree(wt);
 					}
 
-					dither_rg=dpinv(grad, CELL(P(recon->saneai, iwfs, iwfs)));
+					dither_rg=dpinv(grad, P(recon->saneai, iwfs, iwfs));
 					dither_ra=dpinv(dither_m, 0);
 					if(id==0){
 						P(recon->dither_m, idm)=dither_m; dither_m=NULL;

@@ -329,7 +329,15 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		char* var0=ssline;
 		strtrim(&var0);
 		const char* var=var0;//so we can assign a const string to it in RENAME.
-
+		{
+			RENAME(sim.apfsm, powfs.apfsm);	
+			RENAME(sim.epfsm, powfs.epfsm);
+			RENAME(sim.alfsm, powfs.alfsm);
+			RENAME(sim.zetafsm, powfs.zetafsm);
+			RENAME(sim.f0fsm, powfs.f0fsm);
+			RENAME(sim.idealfsm, powfs.idealfsm);
+			RENAME(sim.commonfsm, powfs.commonfsm);
+		}
 		char* value=eql+1;
 		strtrim(&value);
 

@@ -101,7 +101,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, CELL(out), 0, -1);
+		writedata_by_id(out->fp, out, 0, -1);
 		//out->async=async_init(out->fp, sizeof(T), M_T, out->keywords, P(out), out->nx, out->ny);
 	}
 	return out;
@@ -780,7 +780,7 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, CELL(out), 0, -1);
+		writedata_by_id(out->fp, out, 0, -1);
 	}
 	return out;
 }
@@ -797,7 +797,7 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, CELL(out), 0, -1);
+		writedata_by_id(out->fp, out, 0, -1);
 	}
 	return out;
 }
@@ -850,7 +850,7 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 	if(!A) return NULL;
 	X(cell)* out=NULL;
 	long nx, ny, * nxs, * nys;
-	celldim(CELL(A), &nx, &ny, &nxs, &nys);
+	celldim(A, &nx, &ny, &nxs, &nys);
 	if(nx==0||ny==0) return NULL;
 	if(dim==1){
 		out=X(cellnew)(1, A->ny);
@@ -1001,7 +1001,7 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	long nx, ny, * nxs, * nys;
 	if(*B) ref=*B;/*use B as reference. */
-	celldim(CELL(ref), &nx, &ny, &nxs, &nys);
+	celldim(ref, &nx, &ny, &nxs, &nys);
 	if(!A){
 		if(nx!=0||ny!=0){
 			error("Shape doesn't agree. A is 0x0. Reference is %ldx%ld\n",

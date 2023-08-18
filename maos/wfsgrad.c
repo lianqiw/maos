@@ -319,7 +319,7 @@ void* wfsgrad_iwfs(thread_t* info){
 						scale, 1., 0, 0);
 				}
 			}
-			if(do_pistat||parms->sim.idealfsm){
+			if(do_pistat||parms->powfs[ipowfs].idealfsm){
 				/* remove tip/tilt completely */
 				dmat* lltg=dnew(2, 1);
 				pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
@@ -413,7 +413,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				dcelladd(&pd->imb, 1, ints, 1.);
 				if(parms->powfs[ipowfs].dither==1){
 					real cs, ss;
-					dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
+					dither_position(&cs, &ss, parms->powfs[ipowfs].alfsm, parms->powfs[ipowfs].dtrat,
 						parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
 					//accumulate for matched filter
 
@@ -543,7 +543,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 	dither_t* pd=simu->dither[iwfs];
 	if(parms->powfs[ipowfs].dither==1){ //T/T dithering.
 		//Current dithering signal phase
-		dither_position(&cs, &ss, parms->sim.alfsm, parms->powfs[ipowfs].dtrat,
+		dither_position(&cs, &ss, parms->powfs[ipowfs].alfsm, parms->powfs[ipowfs].dtrat,
 			parms->powfs[ipowfs].dither_npoint, isim, pd->deltam);
 
 		/* Use delay locked loop to determine the phase of actual
@@ -748,7 +748,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 
 			real scale=simu->recon->ngsmod->scale;
 			int indps=simu->recon->ngsmod->indps;
-			dmat* mint=P(P(simu->Mint_lo->mint, 0), 0);//2018-12-11: changed first p[1] to p[0]
+			dmat* mint=P(P(simu->Mint_lo->mintc, 0), 0);//2018-12-11: changed first p[1] to p[0]
 			real focus=P(mint, indps)*(scale-1);
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);

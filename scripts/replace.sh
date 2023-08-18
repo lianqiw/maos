@@ -59,6 +59,8 @@ fi
 #sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->NY\(|NY(\1->|g" $@
 
 #replace A->base by CELL(A)
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->base([^a-zA-Z+-])|CELL(\1)\2|g" $@
+#sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<>%-]+)->base([^a-zA-Z+-])|CELL(\1)\2|g" $@
 #replace A->CELL(B) by CELL(A->B)
-sed -i -E "s|([^,\"[:blank:]=+():?/*|!&;<%-]+)->CELL\(|CELL(\1->|g" $@
+#sed -i -E "s|([ ,()])CELL\(([a-zA-Z0-9]+)\)|\1\2|g" $@
+#replace CELL(A) by A
+sed -i -E "s|([^a-zA-Z_]+)CELL\(([^()]+)\)|\1\2|g" $@

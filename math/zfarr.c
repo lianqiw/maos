@@ -55,7 +55,8 @@ zfarr *zfarr_init(long nx, long ny, const char *format, ...){
 /**
    Append a A of type type into the zfarr ca, at location i. Append if i==0.
 */
-void zfarr_push_cell(zfarr* ca, int i, const cell* A){
+void zfarr_push(zfarr* ca, int i, const_anyarray A_){
+	const cell* A=A_.c;
 	if(!ca){
 		warning_once("zfarr is NULL\n");
 		return;
@@ -101,7 +102,7 @@ void zfarr_close(zfarr* ca){
 				"but %ld elements were written\n",
 				zfname(ca->fp), ca->tot, ca->cur);
 		} else if(ca->cur<ca->tot){//under fill
-			zfarr_push_cell(ca, ca->tot-1, NULL);
+			zfarr_push(ca, ca->tot-1, NULL);
 		}
 	}else if(!zfisfits(ca->fp)){//total is not specified for bin file
 		zfrewind(ca->fp);

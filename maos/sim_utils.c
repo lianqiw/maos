@@ -854,9 +854,18 @@ static void init_simu_wfs(sim_t* simu){
 		simu->fsmerr_drift=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmcmd=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmreal=dcellnew3(nwfs, 1, nnx, NULL);
+		simu->fsmint=mycalloc(parms->nwfs, servo_t *);
+		simu->fsmsho=mycalloc(parms->nwfs, sho_t *);
 		if(parms->sim.closeloop){
-			simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm, parms->sim.dt, parms->sim.epfsm);
-			simu->fsmsho=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);
+			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+				if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
+					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						simu->fsmint[iwfs]=servo_new_scalar(P(simu->fsmreal, iwfs), parms->powfs[ipowfs].apfsm, parms->powfs[ipowfs].alfsm, parms->sim.dt, parms->powfs[ipowfs].epfsm);
+						simu->fsmsho[iwfs]=sho_new(parms->powfs[ipowfs].f0fsm, parms->powfs[ipowfs].zetafsm);
+					}
+				}
+			}
 		}
 	}
 
@@ -1549,7 +1558,11 @@ void free_simu(sim_t* simu){
 			free(simu->wfs_prop_dm[iwfs+nwfs*idm]);
 		}
 		free(simu->wfs_ints[iwfs]);
+		if(simu->fsmint) servo_free(simu->fsmint[iwfs]);
+		if(simu->fsmsho) sho_free(simu->fsmsho[iwfs]);
 	}
+	free(simu->fsmint);
+	free(simu->fsmsho);
 	for(int ievl=0; ievl<nevl; ievl++){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			int ind=ievl+nevl*ips;
@@ -1623,14 +1636,6 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);
 	dcellfree(simu->fsmcmd);
-	servo_free(simu->fsmint);
-	sho_free(simu->fsmsho);
-	/*if(simu->fsmsho){
-		for(int i=0; i<parms->nwfs*2; i++){
-			free(simu->fsmsho[i]);
-		}
-		free(simu->fsmsho);
-	}*/
 	dcellfree(simu->cgres);
 	dcellfree(simu->dm_wfs);
 	dcellfree(simu->dm_evl);

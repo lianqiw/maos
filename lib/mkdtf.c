@@ -173,7 +173,7 @@ static inline int wrap_seq(long index, long n){
 }
 
 etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
-	const cell* sodium,/**<The sodium profile. In each cell First column is coordinate. Different cells must have the same coordinate. Can also be a dmat*/
+	const_anyarray sodium_,/**<The sodium profile. In each cell First column is coordinate. Different cells must have the same coordinate. Can also be a dmat*/
 	int icol,     /**<Which sodium profile to use*/
 	const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	const dcell* srsa,  /**<Subaperture to LLT distance*/
@@ -188,6 +188,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 	etfs->hs=hs;
 	/*setup elongation along radial direction. don't care azimuthal. */
 	if(!srot) error("srot is required");
+	const cell *sodium=sodium_.c;
 	const int nllt=MAX(NX(srot), iscell(sodium)?NX(sodium):1);
 	const int nsa=P(srot,0)->nx;
 	dmat* sodium0=dmat_cast(iscell(sodium)?P(sodium,0):sodium);

@@ -242,7 +242,7 @@ def read_many(fdin):
         except:
             print('Fail to read',fd)
             pass
-    return simplify(np.array(res)),fds
+    return simplify(np.array(res, dtype=object)),fds
 def read_many_dict(fdin):
     '''read many files together into a dictionary'''
     fds2=natsorted(glob.glob(fdin,recursive=1))

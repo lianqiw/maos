@@ -118,8 +118,7 @@ void free_parms(parms_t *parms){
 	dfree(parms->sim.ephi);
 	dfree(parms->sim.aplo);
 	dfree(parms->sim.eplo);
-	dfree(parms->sim.apfsm);
-	dfree(parms->sim.epfsm);
+
 	lfree(parms->sim.seeds);
 	dfree(parms->sim.wspsd);
 
@@ -358,6 +357,13 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(dbl,zoomgain);
 	READ_POWFS_RELAX(dbl,zoomgain_drift);
 	READ_POWFS_RELAX(int,zoomset);
+	READ_POWFS_RELAX(dbl,apfsm);
+	READ_POWFS_RELAX(dbl,epfsm);
+	READ_POWFS_RELAX(dbl,alfsm);
+	READ_POWFS_RELAX(dbl,zetafsm);
+	READ_POWFS_RELAX(dbl,f0fsm);
+	READ_POWFS_RELAX(int,idealfsm);
+	READ_POWFS_RELAX(int,commonfsm);
 	READ_POWFS(dbl,hs);
 	READ_POWFS_RELAX(dbl,hc);
 	READ_POWFS_RELAX(dbl,nearecon);
@@ -1174,26 +1180,19 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.mffocus);
 	READ_DBL(sim.epfocus2tel);
 	READ_INT(sim.focus2tel);
-	READ_INT(sim.idealfsm);
-	READ_INT(sim.commonfsm);
 	READ_DMAT(sim.aphi);
 	READ_DMAT(sim.ephi);
 	READ_DMAT(sim.aplo);
 	READ_DMAT(sim.eplo);
-	READ_DMAT(sim.apfsm);
-	READ_DMAT(sim.epfsm);
 	READ_DBL(sim.f0dm);
 	READ_DBL(sim.zetadm);
 	//READ_DBL(sim.f0tt);
 	//READ_DBL(sim.zetatt);
-	READ_DBL(sim.f0fsm);
-	READ_DBL(sim.zetafsm);
 	READ_DBL(sim.aptwfs);
 	READ_DBL(sim.eptwfs);
 	READ_DBL(sim.eptsph);
 	READ_DBL(sim.alhi);
 	READ_DBL(sim.allo);
-	READ_DBL(sim.alfsm);
 	/*We append a 0 so that we keep a time history of the integrator. */
 	if(NX(parms->sim.aphi)==1){
 		dresize(parms->sim.aphi,2,1);
@@ -2073,6 +2072,14 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			pycfg->modulpos=pycfg->modulate>0?(pycfg->modulpos/pycfg->nside*pycfg->nside):1;
 			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
 		}
+		if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){//has FSM
+			if(!parms->powfs[ipowfs].epfsm){
+				real g=servo_optim_margin(parms->sim.dt,parms->powfs[ipowfs].dtrat,parms->powfs[ipowfs].alfsm,
+					M_PI/4,parms->powfs[ipowfs].f0fsm,parms->powfs[ipowfs].zetafsm);
+				parms->powfs[ipowfs].epfsm=g;
+				info("powfs%d: sim.epfsm is set to %g\n",ipowfs, g);
+			}
+		}
 	}//for ipowfs
 	lresize(parms->hipowfs, parms->nhipowfs, 1);
 	lresize(parms->lopowfs, parms->nlopowfs, 1);
@@ -2093,12 +2100,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 
 	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dt);//active at every time step. use dt
-	if(parms->nphypowfs>0&&!P(parms->sim.epfsm,0)){
-		real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alfsm,
-			M_PI/4,parms->sim.f0fsm,parms->sim.zetafsm);
-		P(parms->sim.epfsm,0)=g;
-		info("sim.epfsm is set to %g\n",g);
-	}
+	
 	if(parms->nphypowfs>0&&!P(parms->sim.ephi,0)){
 		real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alhi,
 			M_PI/4,parms->sim.f0dm,parms->sim.zetadm);
@@ -2999,12 +3001,12 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 	}
 	if(parms->dbg.dmoff){
 		if(NX(parms->dbg.dmoff)!=parms->ndm){
-			cellresize(parms->dbg.dmoff,parms->ndm,NY(parms->dbg.dmoff));
+			dcellresize(parms->dbg.dmoff,parms->ndm,NY(parms->dbg.dmoff));
 		}
 	}
 	if(parms->dbg.gradoff){
 		if(NX(parms->dbg.gradoff)!=parms->nwfs){
-			cellresize(parms->dbg.gradoff,parms->nwfs,NY(parms->dbg.gradoff));
+			dcellresize(parms->dbg.gradoff,parms->nwfs,NY(parms->dbg.gradoff));
 		}
 	}
 }

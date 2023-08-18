@@ -54,55 +54,35 @@ typedef enum CEMBED{
     file_t *fp;    /**<Opened file to be saved to*/         \
     struct fft_t* fft /**<For FFT plan*/
 
-typedef struct cell{
-    ARR(struct cell*);
-    struct cell *m;/*continuous data*/
-}cell;
 
-//Make sure the memory layout of CELLDEF is identical to cell
-//base[1] is conveniently used to return a pointer as cell without casting which is error prone
-#define CELLDEF(T,S) typedef struct S{\
-    union{\
-        cell cell[1];\
-        struct{\
-            ARR(struct T*);\
-            struct T* m; \
-        };\
-    };\
+#define CELLDEF(T,S) \
+typedef struct S{\
+	ARR(struct T*);\
+	struct T* m; \
+	void *dummy1;/*pad the size to agree with MATARR*/ \
 }S;
 
 
-#define MATARR(T)\
-    union{\
-        cell cell[1];\
-        struct{\
-            ARR(T);\
-            void *dummy_m; /**<unused padding to align with cell*/\
-            mem_t *mem;   /**< Memory management*/	\
-            async_t *async; /**<async io*/\
-        };\
-    }
+#define MATARR(T,S) \
+struct S{\
+	ARR(T);\
+	mem_t *mem;   /**< Memory management*/	\
+	async_t *async; /**<async io*/\
+}
 
-#define MATDEF(T,S) typedef struct S{MATARR(T);} S
+#define MATDEF(T,S) typedef MATARR(T,S) S
 
 #define SPMATDEF(T,S) typedef struct S{					        \
-    union{\
-        cell cell[1];     /**<Use array to get pointer easily*/  \
-        struct{\
-            M_ID id;             /**<to identify the array type*/		\
-            T *restrict px;      /**<numerical values, size nzmax */	\
-            long nx;             /**<number of rows */			        \
-            long ny;             /**<number of columns */			    \
-            char *keywords;      /**<the keywords as a string*/         \
-            file_t *fp;          /**<The file, to be saved upon free*/  \
-            struct fft_t* fft;   /**<Not used*/                         \
-            void *padding1;      /**<padding to align with cell*/       \
-            long nzmax;          /**<maximum number of entries */		\
-            spint *restrict pp;  /**<col indices (size nzmax)  */       \
-            spint *restrict pi;  /**<row indices, size nzmax */		    \
-            unsigned int *nref;           /**<reference counting for px, pp, pi*/\
-        };\
-    };/*todo: padding base to the maximum size. Make sure to update python ctypes definition as well*/\
+	M_ID id;             /**<to identify the array type*/		\
+	T *restrict px;      /**<numerical values, size nzmax */	\
+	long nx;             /**<number of rows */			        \
+	long ny;             /**<number of columns */			    \
+	char *keywords;      /**<the keywords as a string*/         \
+	file_t *fp;          /**<The file, to be saved upon free*/  \
+	long nzmax;          /**<maximum number of entries */		\
+	spint *restrict pp;  /**<col indices (size nzmax)  */       \
+	spint *restrict pi;  /**<row indices, size nzmax */		    \
+	unsigned int *nref;           /**<reference counting for px, pp, pi*/\
 }S
 
 
@@ -121,17 +101,15 @@ SPMATDEF(fcomplex, zsp);
 SPMATDEF(real, dsp);
 SPMATDEF(comp, csp);
 
-
-
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
-   on x/y. Can be casted to dmat
+   on x/y. Can be casted to dmat.
 */
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
     union{
-        MATARR(real);
-        dmat dmat[1];
+        MATARR(real,);
+		dmat dmat[1]; //base[1] is conveniently used to return a pointer as cell without casting which is error prone
     };
     real ox;      /**<Origin in x*/
     real oy;      /**<Origin in y*/
@@ -148,7 +126,7 @@ typedef struct map_t{
 */
 typedef struct rmap_t{
     union{
-        MATARR(real);
+        MATARR(real,);
         dmat dmat[1];
     };
     real ox;      /**<Origin in x*/
@@ -191,7 +169,6 @@ typedef struct locstat_t{
 */
 typedef struct loc_t{
     union{
-        cell cell[1];
         dmat dmat[1];
         struct{
             M_ID id;
@@ -199,21 +176,18 @@ typedef struct loc_t{
             long nloc;   /**< number of points*/
             long two;    /**<Constant 2. to be binary compatble with rmat*/
             char *keywords; /**<The keywords as a string*/
-            void *dummy_fp;   /**<unused padding to align with cell (fp)*/
-            void *dummy_fft;  /**<unused padding to align with cell (fft)*/
-            void *dummy_m;    /**<unused padding to align with cell (m)*/
-            void *dummy_mem;  /**<unused padding to align with mat (mem)*/
-            void *dummy_async;/**<unused padding to align with mat (async)*/
-            real* locy;  /**< y coordinates of each point*/
-            locstat_t* stat;/**<points to column statistics*/
-            map_t* map;    /**< point to the map used for identifying neihboring points.*/
-            unsigned int *nref;    /**<Reference counting*/
-            real dx;     /**< Sampling along x*/
-            real dy;     /**< Sampling along y*/
-            real ht;     /**< Conjugation height of the loc grid.*/
-            real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-            int npad;      /*padding when create map*/
-        };
+		};
+	};
+	struct{
+		real* locy;  /**< y coordinates of each point*/
+		locstat_t* stat;/**<points to column statistics*/
+		map_t* map;    /**< point to the map used for identifying neihboring points.*/
+		unsigned int *nref;    /**<Reference counting*/
+		real dx;     /**< Sampling along x*/
+		real dy;     /**< Sampling along y*/
+		real ht;     /**< Conjugation height of the loc grid.*/
+		real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+		int npad;      /*padding when create map*/
     };
 }loc_t;
 /**
@@ -223,7 +197,6 @@ typedef struct loc_t{
 */
 typedef struct pts_t{
     union{
-        cell cell[1];
         dmat dmat[1];
         loc_t loc[1];
         struct{
@@ -234,7 +207,6 @@ typedef struct pts_t{
             char *keywords; /**<The keywords as a string*/
             void *dummy_fp;   /**<unused padding to align with cell (fp)*/
             void *dummy_fft;  /**<unused padding to align with cell (fft)*/
-            void *dummy_m;    /**<unused padding to align with cell (m)*/
             void *dummy_mem;  /**<unused padding to align with mat (mem)*/
             void *dummy_async;/**<unused padding to align with mat (async)*/
             real* origy; /**<The y origin of each subaperture*/
@@ -249,16 +221,16 @@ typedef struct pts_t{
             real dummy_ht; /**<Place holder*/
             real dummy_iac;  /**<Place holder*/
             int npad;      /*padding when create map*/
-            //before this line same memory layout as loc_t
-            //the following are specific to pts_t
-            int nxsa;        /**<number of cols per subaperture*/
-            int nysa;        /**<number of rows per subaperture*/
-            real dx;     /**<sampling of points in each subaperture*/
-            real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
-        };
-    };
+		};
+	};
+	//before this line same memory layout as loc_t
+	//the following are specific to pts_t
+	int nxsa;        /**<number of cols per subaperture*/
+	int nysa;        /**<number of rows per subaperture*/
+	real dx;     /**<sampling of points in each subaperture*/
+	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
-
+CELLDEF(cell, cell); 
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);
 CELLDEF(dmat, dcell);
@@ -274,13 +246,13 @@ CELLDEF(ccell, cccell);
 CELLDEF(zcell, zccell);
 CELLDEF(dcell, dccell);
 CELLDEF(scell, sccell);
-CELLDEF(lcell, iccell);
+CELLDEF(lcell, lccell);
 
 CELLDEF(cccell, ccccell);
 CELLDEF(zccell, zcccell);
 CELLDEF(dccell, dcccell);
 CELLDEF(sccell, scccell);
-CELLDEF(iccell, icccell);
+CELLDEF(lccell, lcccell);
 
 CELLDEF(map_t, mapcell);
 CELLDEF(rmap_t, rmapcell);
@@ -322,6 +294,72 @@ static inline int iscell(const void* id){
     return id?(*(const M_ID*)id==MCC_ANY):0;
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
+//When a transparent_union is used as a function argument, any subtype can be used as argument.
+/*#if defined(__cplusplus)
+typedef void* anyarray;
+typedef void* panyarray;
+typedef const void* const_anyarray;
+#else*/
+#define types_anyarray(T,S)\
+	T cell S c;\
+	T dccell S dcc;\
+	T sccell S scc;\
+	T cccell S ccc;\
+	T zccell S zcc;\
+	T lccell S lcc;\
+	T dcccell S dccc;\
+	T scccell S sccc;\
+	T ccccell S cccc;\
+	T zcccell S zccc;\
+	T lcccell S lccc;\
+	T dcell S dc;\
+	T scell S sc;\
+	T ccell S cc;\
+	T zcell S zc;\
+	T lcell S lc;\
+	T dspcell S dspc;\
+	T sspcell S sspc;\
+	T cspcell S cspc;\
+	T zspcell S zspc;\
+	T mapcell S mapc;\
+	T rmapcell S rmapc;\
+	T loccell S locc;\
+	T mapccell S mapcc;\
+	T rmapccell S rmapcc;\
+	T locccell S loccc;\
+	T dmat S dm;\
+	T smat S sm;\
+	T cmat S cm;\
+	T zmat S zm;\
+	T lmat S lm;\
+	T dsp S ds;\
+	T ssp S ss;\
+	T csp S cs;\
+	T zsp S zs;\
+	T map_t S map;\
+	T rmap_t S rmap;\
+	T loc_t S loc;\
+	T pts_t S pts
+
+#if defined(__cplusplus)
+#define def_anyarray(T,S,C)\
+typedef union C{\
+	T void *b;\
+	types_anyarray(T,S);\
+	C(T void* p):b(p){}\
+}C
+#else
+#define def_anyarray(T,S,C)\
+typedef union __attribute__((__transparent_union__)){\
+	types_anyarray(T,S);\
+}C
+#endif
+
+def_anyarray(, *, anyarray);
+def_anyarray(const, *, const_anyarray);
+def_anyarray(, **, panyarray);
+//#endif
+
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
 static inline long index_1d(long i, long nx, long ny){

@@ -82,10 +82,10 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 	toc2("HA");
 	fit->actcpl=genactcpl(fit->HA, fit->W1);
 	if(fit->actfloat){//zero coupling for floating actuators. Do not zero for sutck actuators.
-		act_stuck(fit->aloc, CELL(fit->actcpl), fit->actfloat);
+		act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
 	}
 	if(global->parms->dbg.recon_stuck){
-		act_stuck(fit->aloc, CELL(fit->HA), fit->actstuck);
+		act_stuck(fit->aloc, fit->HA, fit->actstuck);
 	}
 
 	if(fit->flag.actextrap){
@@ -100,7 +100,7 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
 		info("Replacing HA by HA*fit->actextrap\n");
 		dspcell *HA2=0;
-		dspcellmulsp(&HA2, fit->HA, fit->actextrap, "nn", 1);
+		dcellmm(&HA2, fit->HA, fit->actextrap, "nn", 1);
 		dspcellfree(fit->HA);
 		fit->HA=HA2;
 	} else if(fit->actfloat){//avoid commanding floating actuators
@@ -131,7 +131,7 @@ setup_fit_lrt(fit_t* fit){
 	dcell* actcpl=dcelldup(fit->actcpl);
 	if(global->parms->dbg.recon_stuck){
 	//avoid stuck actuators for piston constraint.
-		act_stuck(fit->aloc, CELL(actcpl), fit->actstuck);
+		act_stuck(fit->aloc, actcpl, fit->actstuck);
 	}
 	for(int idm=0; idm<ndm; idm++){
 		int nloc=P(fit->aloc,idm)->nloc;
@@ -292,7 +292,7 @@ setup_fit_matrix(fit_t* fit){
 			real maxeig=4./nact;
 			info("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
 			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
-			dcelladdI_any(fit->FL.M, tikcr*maxeig);
+			dcelladdI(fit->FL.M, tikcr*maxeig);
 			//toc("addI done...");
 		}
 
@@ -305,7 +305,7 @@ setup_fit_matrix(fit_t* fit){
 			//toc("uv done...");
 		}
 		if(fit->actslave){
-			dcelladd_any(&fit->FL.M, 1, CELL(fit->actslave), 1);
+			dcelladd(&fit->FL.M, 1, fit->actslave, 1);
 			//toc("slaving done...");
 		}
 		/*dspcellsym(fit->FL.M); */
