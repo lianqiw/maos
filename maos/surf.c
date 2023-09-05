@@ -213,11 +213,8 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			}
 			//pupil rotation. rotate the surface directly
 			if(strname&&(!strcmp(strname, "M1")||!strcmp(strname, "M2"))){
-				if(fabs(parms->aper.rotdeg)>1.e-10){
-					dmat* B=ddup((dmat*)surf);
-					dzero((dmat*)surf);
-					dembed((dmat*)surf, B, parms->aper.rotdeg/180.*M_PI);
-					dfree(B);
+				if(parms->aper.rot){
+					dmaprot(surf, parms->aper.rot);
 				}
 			}
 			int evlct=0;

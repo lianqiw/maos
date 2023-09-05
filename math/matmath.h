@@ -119,7 +119,8 @@
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
     X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
     X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);		\
-    X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);
+    X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
+	void X(maprot)(anyarray A_, real theta);
 
 /*The following are only useful for cmat */
 #define AOS_CMATMATH_DEF(X,XR,T,R)					\

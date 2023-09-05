@@ -83,7 +83,7 @@ typedef struct atmr_cfg_t{
 typedef struct aper_cfg_t{
     real d;     /**<Telescope aperture diameter*/
     real din;   /**<Telescope inner blocking diameter*/
-    real rotdeg;/**<pupil rotation in degree*/
+    real rot;	/**<pupil rotation*/
     dmat *misreg;  /**<Misregistration of the telescope pupil. 2x1
                     The intersection between the misregistered pupil (aper.d or fnamp) and a centered aper.d defines the actual pupil.*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
@@ -539,7 +539,6 @@ typedef struct sim_cfg_t{
     real dt;         /**<sampling period (s) for simulation.*/
     real dtref;      /**<sampling period (s) for setting siglev or nearecon.*/
     real za;         /**<zenith angle in radian*/
-    real zadeg;      /**<zenith angle in degree. For print out.*/
     real htel;       /**<Height of telescope. Used to adjust sodium profile range*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/

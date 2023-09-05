@@ -596,3 +596,24 @@ X(mat)* X(cell2m)(const_anyarray A_){
 	free(nys);
 	return out;
 }
+
+/**
+ * Rotate a or multiple 2d array ccw by angle
+ * */
+void X(maprot)(anyarray A_, real theta){
+	const cell* A=A_.c; 
+	if(!A|| !theta) return;
+	if(iscell(A)){
+		for(int i=0; i<PN(A); i++){
+			X(maprot)(P(A,i),theta);
+		}
+	}else if(ismat(A)){
+		X(mat)*Am=X(mat_cast)(A);
+		X(mat)*B=X(dup)(Am);
+		X(zero)(Am);
+		X(embed)(Am, B, theta);
+		X(free)(B);
+	}else{
+		error("Invalid usage\n");
+	}
+}

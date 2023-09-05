@@ -241,6 +241,9 @@ void genatm(sim_t* simu){
 		const char* fn=simu->parms->load.atm;
 		info("loading atm from %s\n", fn);
 		simu->atm=mapcellread("%s", fn);
+		if(parms->aper.rot){
+			dmaprot(simu->atm, parms->aper.rot);
+		}
 		if(NX(simu->atm)!=atm->nps) error("ATM Mismatch\n");
 	} else{
 		simu->atm=genatm_do(simu);
@@ -1922,7 +1925,7 @@ void print_progress(sim_t* simu){
 */
 void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	char fn[PATH_MAX];
-	real zadeg=parms->sim.zadeg;
+	real zadeg=parms->sim.za*180/M_PI;
 	snprintf(fn, PATH_MAX, "%s/maos.conf", dirskysim);
 	FILE* fp=fopen(fn, "w");
 	fprintf(fp, "maos.r0z=%g\n", parms->atm.r0z);

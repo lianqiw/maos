@@ -49,11 +49,9 @@ aper_t* setup_aper(const parms_t* const parms){
 				mapfree(aper->ampground);
 			}
 		}
-		if(fabs(parms->aper.rotdeg)>1.e-12){
-			warning("Pupil is rotated by %g deg\n", parms->aper.rotdeg);
-			dmat* B=ddup((dmat*)aper->ampground);
-			dembed((dmat*)aper->ampground, B, parms->aper.rotdeg/180.*M_PI);
-			dfree(B);
+		if(parms->aper.rot){
+			warning("Pupil is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+			dmaprot(aper->ampground, parms->aper.rot);
 		}
 	}
 	if(parms->load.locs){
@@ -79,11 +77,9 @@ aper_t* setup_aper(const parms_t* const parms){
 	}
 	if(parms->aper.pupmask){
 		map_t* mask=mapread("%s", parms->aper.pupmask);
-		if(fabs(parms->aper.rotdeg)>1.e-12){
-			warning("Pupil mask is rotated by %g deg\n", parms->aper.rotdeg);
-			dmat* B=ddup((dmat*)mask);
-			dembed((dmat*)mask, B, parms->aper.rotdeg/180.*M_PI);
-			dfree(B);
+		if(parms->aper.rot){
+			warning("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+			dmaprot(mask, parms->aper.rot);
 		}
 		dmat* ampmask=dnew(aper->locs->nloc, 1);
 		prop_grid_stat(mask, aper->locs->stat, P(ampmask), 1, 0, 0, 1, 0, 0, 0);

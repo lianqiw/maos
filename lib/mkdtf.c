@@ -413,7 +413,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 	const real dxin=(P(prof,nxin-1)-x0in)/(nxin-1);
 	dmat* out;
 	if(dxnew>dxin*2){
-		dbg("Smoothing sodium profile from %g to %g sampling\n", dxin, dxnew);
+		dbg("Smoothing sodium profile from %g to %g m sampling\n", dxin, dxnew);
 		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
 		loc_t* loc_in=mk1dloc_vec(P(prof), nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);

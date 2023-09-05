@@ -210,6 +210,7 @@ static inline int sum_dblarr(int n, real *a){
 #define MAX_STRLEN 80
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with real value */
+#define READ_DBL_SCALE(A,B,C) parms->A = readcfg_dbl(#B)*(C) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(0,0,#A) /*read a key with dmat. */
 #define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat(n,1,#A) /*read a key with dmat. */
@@ -898,7 +899,7 @@ static void readcfg_aper(parms_t *parms){
 	} else if(parms->aper.d<0||parms->aper.din<0){
 		error("Inner (%g) and outer (%g) diameters should be positive.\n",parms->aper.din,parms->aper.d);
 	}
-	READ_DBL(aper.rotdeg);
+	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
 	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
 	parms->aper.fnampuser=readcfg_peek_priority("aper.fnamp");
 	READ_STR(aper.fnamp);
@@ -1220,8 +1221,8 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.fuseint);
 	READ_INT(sim.closeloop);
 	READ_INT(sim.skysim);
-	READ_DBL(sim.fov);parms->sim.fov*=AS2RAD;
-	READ_DBL(sim.zadeg); parms->sim.za=parms->sim.zadeg*M_PI/180;
+	READ_DBL_SCALE(sim.fov,sim.fov,AS2RAD);
+	READ_DBL_SCALE(sim.za,sim.zadeg,M_PI/180);
 	READ_INT(sim.htel);
 	READ_INT(sim.evlol);
 	READ_INT(sim.noatm);
@@ -1483,7 +1484,7 @@ static void setup_parms_postproc_za(parms_t *parms){
 		info("Adjust LGS range by telescope altitude %gm.\n",parms->sim.htel);
 	}
 	if(fabs(parms->sim.za)>1.e-14){
-		info("Zenith angle is %g degree.\n",parms->sim.zadeg);
+		info("Zenith angle is %g degree.\n",parms->sim.za*180./M_PI);
 		info("    Scaling turbulence height and LGS hs by sec(za).\n"
 			"    Scaling r0 by cos(za)^(3/5).\n"
 			"    Scaling wind speed and LGS signal level by cos(za).\n");
@@ -3043,7 +3044,7 @@ static void print_parms(const parms_t *parms){
 	real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
 	if(!parms->sim.noatm){
 		info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
-			GREEN,parms->sim.zadeg,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
+			GREEN,parms->sim.za*180./M_PI,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 		info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
 			fgreen,theta0z*RAD2AS);
 		if(parms->ndm==2){

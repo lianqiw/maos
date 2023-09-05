@@ -225,9 +225,9 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		config_file=search_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
 			if(!prefix){
-				error("Cannot open file %s for reading.\n", config_file);
+				error("Cannot open file %s for reading.\n", config_in);
 			}else{
-				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_file, prefix);
+				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_in, prefix);
 			}
 		}
 		if(!priority && !default_config){//used in close_config
