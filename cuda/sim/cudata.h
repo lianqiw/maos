@@ -110,7 +110,7 @@ extern __thread cudata_t *cudata;
 extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
 extern cuglobal_t *cuglobal;
 void gpu_print_mem(const char *msg);
-long gpu_get_mem(void);
+long gpu_get_free_mem(void);
 /**
    switch to the next GPU and update the pointer.
 */

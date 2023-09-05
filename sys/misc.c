@@ -676,10 +676,11 @@ void parse_argopt(char* cmds, argopt_t* options){
 					int val=(int)strtol(value, &start, 10);
 					int** tmp=(int**)options[iopt].val;
 					int* nval=(int*)options[iopt].nval;
-					int i;
-					for(i=0; i<*nval; i++){
+					int i=*nval;
+					//uncomment the following to avoid duplicates
+					/*for(i=0; i<*nval; i++){
 						if((*tmp)[i]==val) break;
-					}
+					}*/
 					if(i==*nval){
 						(*nval)++;
 						*tmp=myrealloc(*tmp, (size_t)*nval, int);

@@ -47,7 +47,7 @@ MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info
 MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only,
                            -2:  essential info, -1  useful info, 0:  all info,
                            1:  debugging info, 2: more debugging info, 3: everything.
-
+MAOS_GPU_DISABLE_0=1         Do not utilize GPU 0 (sudo nvidia-smi -i 0 -c 2 has the same effect)
 ```
 
 \section sect-config Configuration Files

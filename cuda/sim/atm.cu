@@ -127,7 +127,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			long avail_min=LONG_MAX, avail_max=0;
 			for(int igpu=0; igpu<NGPU; igpu++){
 				gpu_set(igpu);
-				long availi=gpu_get_mem();
+				long availi=gpu_get_free_mem();
 				if(avail_min>availi){
 					avail_min=availi;
 				}
@@ -148,7 +148,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 					for(int igpu=0; igpu<NGPU; igpu++){
 					//extern Array<int> GPUS;
 						gpu_set(igpu);
-						if(gpu_get_mem()>need){
+						if(gpu_get_free_mem()>need){
 							char tmp[8];
 							snprintf(tmp, 8, " -g%d", GPUS[igpu]);
 							char* tmp2=gcmd;

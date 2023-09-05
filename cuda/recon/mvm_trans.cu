@@ -357,7 +357,7 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		gpu_set(cuglobal->recongpu);
 		tic;
 		gpu_print_mem("before trans");
-		long mem=gpu_get_mem();
+		long mem=gpu_get_free_mem();
 		if((long)(mvmt.N()*sizeof(Real)+100000L)>mem){
 			warning("Not enough memory to do the transpose in GPU.\n");
 			dmat *MVMt=0;
