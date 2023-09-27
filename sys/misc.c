@@ -237,7 +237,7 @@ char* mygetcwd(void){
 	return strdup(cwd0);
 }
 /**
-Translate a path into absolute path.The caller shall free the returned string.
+Translate a path into absolute path. The caller shall free the returned string.
 */
 char *myabspath(const char *path){
 	if(!path) return 0;
@@ -256,6 +256,10 @@ char *myabspath(const char *path){
 			dbg("Error getting current directory\n");
 			snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
 		}
+		if(!exist(path2)){
+			warning("File or directory %s does not exist\n", path2);
+		}
+			
 	}
 	return strdup(path2);
 }

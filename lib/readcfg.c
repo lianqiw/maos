@@ -221,6 +221,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	if(!config_in) return;
 	FILE* fd=NULL;
 	char* config_file=NULL;
+	char* config_dir=NULL;//directory for config_file
 	if(check_suffix(config_in, ".conf")){
 		config_file=search_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
@@ -233,6 +234,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		if(!priority && !default_config){//used in close_config
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
 		}
+		config_dir=mydirname(config_file);
 	} else{
 		config_file=strdup(config_in);
 		parse_argopt(config_file, NULL);
@@ -345,9 +347,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			error("Line '%s' is invalid\n", line);
 		} else if(!strcmp(var, "path")||!strcmp(var, "PATH")){
 			char* val2=strextract(value);
-			addpath2(val2, 99);
-			info("addpath %s\n", val2);
+			char* val3=stradd(config_dir, "/", val2, NULL);
+			addpath2(val3, 99);
+			dbg("addpath %s\n", val3);
 			free(val2);
+			free(val3);
 		} else if(!strncmp(var, "MAOS_", 5)){
 			//This is environment variable.
 			if(!value){
@@ -421,7 +425,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				} else if(diffval){
 					if(oldstore->priority>priority){
 						//countskip++;
-						info("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
+						dbg("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
 						//Skip the entry.
 					} else{
 						if(priority>0){//not default
@@ -455,6 +459,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		fclose(fd);
 	}
 	free(config_file);
+	free(config_dir);
 #undef MAXLN
 }
 /**

@@ -44,7 +44,7 @@ PNEW(mutex_path);
 */
 void addpath2(const char* path, int priority){
 	char* abspath=myabspath(path);
-	if(!path||!abspath){
+	if(!path||!abspath||!isdir(abspath)){
 		warning("Path not found: path=%s; abspath=%s; Ignored.\n", path, abspath);
 		return;
 	}
