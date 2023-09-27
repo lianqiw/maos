@@ -178,6 +178,8 @@ def draw(*args, **kargs):
             pass
         if img.dtype.name.find('complex')>-1:
             img=np.real(img)
+        if 'ext' not in kargs and 'dx' in kargs:
+            kargs['ext']=np.array([-img.shape[0]/2, img.shape[0]/2, -img.shape[1]/2, img.shape[1]/2])*kargs['dx']
         im=plt.imshow(img, extent=kargs.get('ext'), origin='lower', cmap='jet')
         #for im in gca().get_images():
         #im.set_clim(0, 0.5)

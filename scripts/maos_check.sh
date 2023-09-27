@@ -107,30 +107,30 @@ function run_maos_gpu(){
 }
 export MAOS_LOG_LEVEL=-1
 
-run_maos "Openloop:        " sim.evlol=1
+run_maos "Openloop:        " -cmcao_lgs.conf sim.evlol=1
 
-run_maos "Ideal fit:       " sim.idealfit=1 
+run_maos "Ideal fit:       " -cmcao_lgs.conf sim.idealfit=1 
 
-run_maos "Ideal tomo:      " sim.idealtomo=1 
+run_maos "Ideal tomo:      " -cmcao_lgs.conf sim.idealtomo=1 
 
-run_maos "LGS MCAO (inte): " recon.split=0 tomo.precond=0
+run_maos "LGS MCAO (inte): " -cmcao_lgs.conf recon.split=0 tomo.precond=0
 
-run_maos "LGS MCAO (CG):   " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 tomo.assemble=0 fit.assemble=1
+run_maos "LGS MCAO (CG):   " -cmcao_lgs.conf tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 tomo.assemble=0 fit.assemble=1
 
-run_maos "LGS MCAO (FDPCG):" tomo.precond=1 tomo.assemble=1 fit.assemble=0
+run_maos "LGS MCAO (FDPCG):" -cmcao_lgs.conf tomo.precond=1 tomo.assemble=1 fit.assemble=0
 
-run_maos "LGS MCAO (CBS):  " tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
+run_maos "LGS MCAO (CBS):  " -cmcao_lgs.conf tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
 
 if [ $D -le 10 ];then
-run_maos "LGS MCAO (SVD):  " tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1] gpu.tomo=0
+run_maos "LGS MCAO (SVD):  " -cmcao_lgs.conf tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1] gpu.tomo=0
 fi
-run_maos_gpu "LGS MCAO (MVM):  " atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
+run_maos_gpu "LGS MCAO (MVM):  " -cmcao_lgs.conf atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
 
-run_maos "LGS MOAO:        " evl.moao=0 moao.dx=[1/2]
+run_maos "LGS MOAO:        " -cmcao_lgs.conf evl.moao=0 moao.dx=[1/2]
 
-run_maos "LGS GLAO (inte): " glao.conf recon.split=0 evl.psfmean=0
+run_maos "LGS GLAO (inte): " -cmcao_lgs.conf glao.conf recon.split=0 evl.psfmean=0
 
-run_maos "LGS GLAO (split):" glao.conf recon.split=1 evl.psfmean=0
+run_maos "LGS GLAO (split):" -cmcao_lgs.conf glao.conf recon.split=1 evl.psfmean=0
 
 run_maos "NGS SCAO (inte): " -cscao_ngs.conf recon.split=0
 
@@ -144,21 +144,21 @@ run_maos "SCAO LGS (inte): " -cscao_lgs.conf recon.split=0
 
 run_maos "SCAO LGS (split):" -cscao_lgs.conf recon.split=1
 
-run_maos "LGS LTAO (inte): " dm_single.conf fov_oa.conf recon.split=0
+run_maos "LGS LTAO (inte): " -cmcao_lgs.conf dm_single.conf fov_oa.conf recon.split=0
 
-run_maos "LGS LTAO (split):" dm_single.conf fov_oa.conf recon.split=1 
+run_maos "LGS LTAO (split):" -cmcao_lgs.conf dm_single.conf fov_oa.conf recon.split=1 
 
 run_maos "NGS SCAO (lsq,inte)" -cscao_ngs.conf recon.split=0 recon.alg=1
 
 run_maos "NGS SCAO (lsq,split)" -cscao_ngs.conf recon.split=1 recon.alg=1
 
-run_maos "LGS MCAO PCCD:  " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
+run_maos "LGS MCAO PCCD:  " -cmcao_lgs.conf tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
 
-run_maos "LGS MCAO SL:    " tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
+run_maos "LGS MCAO SL:    " -cmcao_lgs.conf tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
 
 if [ $D -eq 30 ];then
-run_maos "NFIRAOS LGS: " nfiraos_lgs_full.conf
-run_maos_gpu "NFIRAOS PYWFS:" nfiraos_ngs.conf
+run_maos "NFIRAOS LGS: "	  -c nfiraos_lgs_full.conf
+run_maos_gpu "NFIRAOS PYWFS:" -c nfiraos_ngs.conf
 fi
 echo "REF=(${RMS[*]})"
 

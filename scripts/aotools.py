@@ -279,11 +279,11 @@ def svd_pinv(mod, thres=0, tikcr=0):
     immt=svd_inv(mmt, thres, tikcr)
     return mod.T@immt
 
-def plot_cdf(y, *args, abs=0, **kargs):
+def plot_cdf(y, *args, **kargs):
     '''plot cumulative distribution function. Take absolute value times 2 if abs is set'''
     n=y.size
     x=np.arange(n)/(n-1)
-    if abs:
+    if 'abs' in kargs and kargs['abs']:
         y=np.abs(y)*2
     plot(np.sort(y.flat), x, *args, **kargs)
     ylim(0,1)
@@ -333,7 +333,7 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
 def center(A, nx, ny=None):
     '''crop or embed A into nxn array from the center'''
     if ny is None:
-        ny=np.int(np.round(A.shape[1]*nx/A.shape[0]))
+        ny=int(np.round(A.shape[1]*nx/A.shape[0]))
     if A.shape[0]>=nx and A.shape[1]>=ny:#extract
         indx=(A.shape[0]-nx+1)>>1
         indy=(A.shape[1]-ny+1)>>1
@@ -349,11 +349,11 @@ def center(A, nx, ny=None):
 
 def embed(a,ratio=2):
     '''Embed a 2-d image into a new array bigger by ratio '''
-    return center(a, np.int(a.shape[0]*ratio))
+    return center(a, int(a.shape[0]*ratio))
 
 def unembed(a,ratio=2):
     '''undo embed(). unembed center piece'''
-    return center(a, np.int(a.shape[0]/ratio))
+    return center(a, int(a.shape[0]/ratio))
 
 def photon_flux(magnitude, wvls):
     '''Claculate photon flux for magnitude at wavelength wvls'''
@@ -432,7 +432,7 @@ def cog_shift(data):
 
     return np.roll(data, (ccx,ccy),axis=(0,1))
     
-def plot_circle(radius, *args):
+def plot_circle(radius, center=[0, 0], *args):
     '''plot_circle(radius, *args):'''
     theta=np.arange(0,np.pi*2,0.01)
     if type(radius) is list or type(radius) is np.ndarray:
@@ -441,7 +441,7 @@ def plot_circle(radius, *args):
     else:
         rx=radius
         ry=radius
-    plot(rx*np.cos(theta), ry*np.sin(theta), *args)
+    plot(rx*np.cos(theta)+center[0], ry*np.sin(theta)+center[1], *args)
     
 def calc_width_gauss(dx,data):
     '''Compute the Gaussian width of 2-d array data with sampling of dx'''
@@ -500,6 +500,7 @@ def opdfillzero(im0, nrep):
         mask[mask2==0]=0 
         im[mask]=im2[mask]/mask2[mask]
     return im
+
 def str_remove_prefix(ini_strlist, offset=0):
     '''find and remove the common prefix of string list'''
     if len(ini_strlist)>1:
@@ -514,4 +515,20 @@ def str_remove_prefix(ini_strlist, offset=0):
         return [ tmp[nprefix:] for tmp in ini_strlist]
     else:
         return ini_strlist
-    
+
+def meshgrid(nx,dx):
+    xv=(np.arange(nx)-nx/2)*dx
+    [X,Y]=np.meshgrid(xv, xv)
+    return X,Y
+
+def reflection(n1, n2, degree):
+    '''incident from n1 to n2 (refractive index), incident angle in degree
+		compute s and p wave reflectivity
+    '''
+    ti=degree*np.pi/180 #incident angle in radian
+    tt=np.arcsin(np.sin(ti)*n1/n2) #refractive angle in radian
+    ci=np.cos(ti)
+    ct=np.cos(tt)
+    rs=((n1*ci-n2*ct)/(n1*ci+n2*ct))**2
+    rp=((n1*ct-n2*ci)/(n1*ct+n2*ci))**2
+    return rs,rp

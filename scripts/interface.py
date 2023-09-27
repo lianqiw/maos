@@ -130,11 +130,11 @@ def py2cellref(arr, tid=0):
         return None
     elif type(arr) is list:
         arr = np.asarray(arr)
-    if type(arr) is np.ndarray:        
+    if sp.isspmatrix_csr(arr):
+        return byref(csr(arr,tid))
+    elif type(arr) is np.ndarray:        
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0
-        elif sp.isspmatrix_csr(arr):
-            return byref(csr(arr,tid))
         else:
             return byref(cell(arr,tid))
     else:
@@ -340,7 +340,7 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         }
         if arr is not None and sp.isspmatrix_csr(arr):
             self.id=spdtype2id.get(arr.dtype.type)
-            if  tid !=0 and self.id != tid:
+            if  tid !=0 and tid !=0x6421 and self.id != tid:
                 raise(Exception('data mismatch want {}, got {}'.format(self.id, tid)))
             #save subarrays
             self.xp=arr.data
