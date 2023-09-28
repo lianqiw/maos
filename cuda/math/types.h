@@ -713,6 +713,7 @@ public:
 	Real dx, dy;
 	Real ht;
 	Real vx, vy;
+	Real dratio;/**<demagnification ratio (>1 for shrinking beam)*/
 	curmat cubic_cc; /*coefficients for cubic influence function. */
 	//use default copy assignment operator and copy constructor
 
@@ -727,11 +728,12 @@ public:
 			ht=in->h;
 			vx=in->vx;
 			vy=in->vy;
+			dratio=in->dratio;
 			cubic_cc=iac2cc(in->iac);
 		}
 		return *this;
 	}
-	cugrid_t():nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0){}
+	cugrid_t():nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0),dratio(1){}
 	cugrid_t Scale(Real sc)const{
 		cugrid_t tmp(*this);
 		tmp.ox*=sc;

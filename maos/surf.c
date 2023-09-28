@@ -358,6 +358,8 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 			displace[1]=P(parms->sim.ncpa_thetay, ievl)*ht;
 			P(HA, ievl, idm)=mkh(P(recon->aloc, idm), recon->floc,
 				displace[0], displace[1], scale);
+			const real theta=RSS(P(parms->sim.ncpa_thetax, ievl), P(parms->sim.ncpa_thetay, ievl));
+			dspscale(P(HA, ievl, idm), cos(theta*parms->dm[idm].dratio));
 		}
 	}
 	//We don't handle float ot stuck actuators in NCPA calibration.
@@ -635,8 +637,9 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					const real hs=parms->wfs[iwfs].hs;
 					const real hc=parms->wfs[iwfs].hc;
-					real thetax=parms->wfs[iwfs].thetax;
-					real thetay=parms->wfs[iwfs].thetay;
+					const real thetax=parms->wfs[iwfs].thetax;
+					const real thetay=parms->wfs[iwfs].thetay;
+					const real theta=RSS(thetax, thetay);
 					if(!powfs[ipowfs].opdbias){
 						powfs[ipowfs].opdbias=dcellnew_same(parms->powfs[ipowfs].nwfs, 1, powfs[ipowfs].loc->nloc, 1);
 					}
@@ -647,9 +650,10 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 						real scale=1.-(ht-hc)/hs;
 						real dispx=ht*thetax;
 						real dispy=ht*thetay;
+						real alpha=-cos(theta*parms->dm[idm].dratio);
 						prop_nongrid(P(recon->aloc, idm), P(P(recon->dm_ncpa, idm)),
 							powfs[ipowfs].loc, P(P(powfs[ipowfs].opdbias, jwfs)),
-							-1, dispx, dispy, scale, 0, 0);
+							alpha, dispx, dispy, scale, 0, 0);
 					}
 				}
 			}
@@ -692,10 +696,12 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				const real hl=parms->dm[idm].ht;
 				const real dispx=P(parms->evl.thetax, ievl)*hl;
 				const real dispy=P(parms->evl.thetay, ievl)*hl;
+				const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
 				const real scale=1-hl/P(parms->evl.hs, ievl);
+				const real alpha=cos(theta*parms->dm[idm].dratio);
 				prop_nongrid(P(recon->aloc, idm), P(P(recon->dm_ncpa, idm)),
 					aper->locs, P(P(aper->opdadd, ievl)),
-					1, dispx, dispy, scale, 0, 0);
+					alpha, dispx, dispy, scale, 0, 0);
 			}
 		}
 		if(parms->save.setup>1){

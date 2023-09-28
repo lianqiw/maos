@@ -749,6 +749,7 @@ static void readcfg_dm(parms_t *parms){
 		}
 		free(tmp);
 	}
+	READ_DM_RELAX(dbl,dratio);
 	READ_DM_RELAX(dbl,vmisreg);
 	READ_DM_RELAX(dbl,histbin);
 	READ_DM_RELAX(int,histn);
@@ -3155,7 +3156,7 @@ static void print_parms(const parms_t *parms){
 	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
 	for(i=0; i<parms->ndm; i++){
 		info("  DM %d at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
-			i, parms->dm[i].ht/1000,parms->dm[i].dx,
+			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
 			parms->dm[i].offset,
 			fabs(P(parms->dm[i].stroke,0))*1e6);
 		if(parms->dm[i].iac){

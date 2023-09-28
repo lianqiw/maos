@@ -59,8 +59,7 @@ using std::strerror;
 #define MAX(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); (_M1)>(_M2)?(_M1):(_M2);})
 #undef	MIN
 #define MIN(a,b) ({__typeof__(a) _m1=(a); __typeof__(b) _m2=(b); (_m1)<(_m2)?(_m1):(_m2);})
-
-
+#define RSS(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); sqrtf(_M1*_M1+_M2*_M2);})
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
 #else

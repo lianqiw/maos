@@ -119,6 +119,7 @@ typedef struct map_t{
     real vx;      /**Wind velocity. Useful for atmospheric grid*/
     real vy;      /**Wind velocity. Useful for atmospheric grid*/
     real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
+	real dratio;  /**<demagnification ratio (>1 for shrinking beam)*/
 } map_t;
 
 /**

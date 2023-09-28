@@ -748,7 +748,8 @@ static void init_simu_evl(sim_t* simu){
 			data->displacex0=ht*P(parms->evl.thetax, ievl);
 			data->displacey0=ht*P(parms->evl.thetay, ievl);
 			data->scale=1-ht/P(parms->evl.hs, ievl);
-			data->alpha=-1;
+			const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
+			data->alpha=-cos(theta*parms->dm[idm].dratio);
 			data->wrap=0;
 			if(parms->sim.cachedm){
 				data->mapin=P(simu->cachedm, idm);
@@ -1033,7 +1034,8 @@ static void init_simu_wfs(sim_t* simu){
 			data->displacex0=ht*parms->wfs[iwfs].thetax;
 			data->displacey0=ht*parms->wfs[iwfs].thetay;
 			data->scale=1.-ht/hs;
-			data->alpha=-1;/*remove dm contribution. */
+			const real theta=RSS(parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay);
+			data->alpha=-cos(theta*parms->dm[idm].dratio);/*remove dm contribution. */
 			data->wrap=0;
 			if(parms->sim.cachedm){
 				data->mapin=P(simu->cachedm, idm);
@@ -1223,6 +1225,7 @@ static void init_simu_dm(sim_t* simu){
 		if(simu->dmrealsq){
 			P(simu->dmrealsq, idm)=mapnew2(P(recon->amap, idm));
 			dset((dmat*)P(simu->dmrealsq, idm), NAN);
+			P(simu->dmrealsq, idm)->dratio=parms->dm[idm].dratio;
 		}
 		if(simu->dmprojsq){
 			P(simu->dmprojsq, idm)=mapnew2(P(recon->amap, idm));
@@ -1440,6 +1443,9 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	}
 	fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
+		if(parms->sim.idealfit||parms->sim.idealtomo){
+			error("sim.idealfit or sim.idealtomo is not yet implemented for sim.wspsd.\n");
+		}
 		/* Telescope wind shake added to TT input. */
 		info("Converting windshake PSD to time series.\n");
 		simu->telws=psd2ts(parms->sim.wspsd, simu->telws_rand, parms->sim.dt, parms->sim.end);

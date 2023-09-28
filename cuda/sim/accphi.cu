@@ -220,10 +220,11 @@ void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
 */
 void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, int ndm,
 	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht-hc;
-		map2loc(cudm[idm], locondm[idm], phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
+		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
 	}
 }
 /**
@@ -231,10 +232,11 @@ void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 */
 void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
 	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht-hc;
-		map2loc(cudm[idm], locout, phiout, alpha, ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
+		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
 	}/*idm */
 }
 /**
