@@ -530,6 +530,12 @@ void FitR(dcell** xout, const void* A,
 				prop_grid(P(simu->atm, ips), fit->floc, P(P(xp, ifit)),
 					atmscale, displace[0], displace[1], scale, 1, 0, 0);
 			}
+			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
+				real tmp=P(simu->telws, isim);
+				real angle=simu->winddir?P(simu->winddir, 0):0;
+				real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+				loc_add_ptt(P(xp, ifit), ptt, fit->floc);
+			}*/
 		}
 	} else if(fit->HXF){
 		dcellmm(&xp, fit->HXF, xin, "nn", 1.);

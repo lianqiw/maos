@@ -3316,7 +3316,9 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	readcfg_load(parms);
 	parms->nsurf=readcfg_strarr(&parms->surf,0,0,"surf");
 	parms->ntsurf=readcfg_strarr(&parms->tsurf,0,0,"tsurf");
-
+	if((parms->nsurf || parms->ntsurf) && (parms->sim.idealfit || parms->sim.idealtomo)){
+		error("sim.idealfit or sim.idealtomo is not yet implemented for surf or tsurf.\n");
+	}
 	setup_parms_postproc_za(parms);
 	setup_parms_postproc_sim(parms);
 	setup_parms_postproc_wfs(parms);

@@ -1444,12 +1444,13 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
 		if(parms->sim.idealfit||parms->sim.idealtomo){
-			error("sim.idealfit or sim.idealtomo is not yet implemented for sim.wspsd.\n");
+			warning("sim.idealfit or sim.idealtomo is not yet implemented for sim.wspsd. Ignored\n");
+		}else{
+			/* Telescope wind shake added to TT input. */
+			info("Converting windshake PSD to time series.\n");
+			simu->telws=psd2ts(parms->sim.wspsd, simu->telws_rand, parms->sim.dt, parms->sim.end);
+			if(parms->save.extra) writebin(simu->telws, "%s/telws_%d", fnextra, seed);
 		}
-		/* Telescope wind shake added to TT input. */
-		info("Converting windshake PSD to time series.\n");
-		simu->telws=psd2ts(parms->sim.wspsd, simu->telws_rand, parms->sim.dt, parms->sim.end);
-		if(parms->save.extra) writebin(simu->telws, "%s/telws_%d", fnextra, seed);
 	}
 
 	/* Select GPU or CPU for the tasks.*/
