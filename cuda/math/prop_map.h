@@ -78,13 +78,13 @@ struct dir_t{
 	Real thetax; /**<Direction of guide star*/
 	Real thetay; /**<Direction of guide star*/
 	Real hs;     /**<Height of guide star*/
-	Real hc;     /**<Conjugation of lenslet*/
+	//Real hc;     /**<Conjugation of lenslet. Removed from parameter. Only useful for multi-sublayer raytracing. Lenslet is in collimated space for guide star in focus.*/
 	Real misregx;/**<Misregistration*/
 	Real misregy;/**<Misregistration*/
 	Real delay;  /**<The delay used for tomo.predict*/
 	int skip;    /**<Skip this direction*/
 public:
-	dir_t():thetax(0), thetay(0), hs(INFINITY), hc(0), misregx(0), misregy(0), delay(0), skip(0){}
+	dir_t():thetax(0), thetay(0), hs(INFINITY), misregx(0), misregy(0), delay(0), skip(0){}
 };
 
 class map2map:public nonCopyable{

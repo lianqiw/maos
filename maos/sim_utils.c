@@ -310,10 +310,9 @@ void setup_recon_HXW_predict(sim_t* simu){
 		if(!parms->powfs[ipowfs].skip){/*for tomography */
 			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 			const real hs=parms->wfs[iwfs].hs;
-			const real hc=parms->wfs[iwfs].hc;
 			for(int ips=0; ips<npsr; ips++){
 				dspfree(P(HXWtomo, iwfs, ips));
-				real  ht=P(recon->ht, ips)-hc;
+				real  ht=P(recon->ht, ips);
 				real  scale=1.-ht/hs;
 				real  displace[2];
 				displace[0]=parms->wfsr[iwfs].thetax*ht;
@@ -1001,10 +1000,9 @@ static void init_simu_wfs(sim_t* simu){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 		const real hs=parms->wfs[iwfs].hs;
-		const real hc=parms->wfs[iwfs].hc;
 		
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			const real ht=P(parms->atm.ht, ips)-hc;
+			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
 			data->displacex0=ht*parms->wfs[iwfs].thetax;
 			data->displacey0=ht*parms->wfs[iwfs].thetay;
@@ -1028,7 +1026,7 @@ static void init_simu_wfs(sim_t* simu){
 			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop, data);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
+			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 			propdata_t* data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 			int tot;
 			data->displacex0=ht*parms->wfs[iwfs].thetax;

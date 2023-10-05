@@ -446,8 +446,6 @@ void *gpu_wfsgrad_queue(thread_t* info){
 		const int imoao=parms->powfs[ipowfs].moao;
 		const int nsa=powfs[ipowfs].saloc->nloc;
 		const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-		const Real hs=parms->wfs[iwfs].hs;
-		const Real hc=parms->wfs[iwfs].hc;
 		const int dtrat=parms->powfs[ipowfs].dtrat;
 		const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 		const int save_opd=parms->save.wfsopd->p[iwfs];
@@ -473,215 +471,221 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			cuzero(cuwfs[iwfs].ints, stream);
 			cuzero(cuwfs[iwfs].gradacc, stream);
 		}
-		if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
-			cucp(phiout, cuwfs[iwfs].opdadd, stream);
-		} else{
-			cuzero(phiout, stream);
-		}
-		if(simu->atm&&((!parms->sim.idealwfs&&!parms->powfs[ipowfs].lo)
-						||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
-			atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
-		}
-		if(!parms->powfs[ipowfs].lo&&(parms->sim.idealwfs||parms->sim.wfsalias)){
-			Real alpha=parms->sim.idealwfs?1:-1;
-			if(parms->sim.idealwfs==2||parms->sim.wfsalias==2){
-				dmat* opd=dnew(phiout.Nx(), 1);
-				add2cpu(&opd, 0, phiout, 1, stream, 0);
-				wfs_ideal_atm(simu, opd, iwfs, alpha);
-				cp2gpu(phiout, opd);
-				dfree(opd);
+		const int nhs=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->nhs:1;//number of sublayer
+		const Real dhs=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->dhs/nhs:0;//spacing of sublayer
+		for(int ihs=0; ihs<nhs; ihs++){
+			const Real hs=(nhs>1?(ihs-(nhs-1)*0.5):0)*dhs+parms->wfs[iwfs].hs;
+			const Real hc=nhs>1?(parms->wfs[iwfs].hc*(1.-hs/parms->wfs[iwfs].hs)):0;//effective hc
+			if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
+				cucp(phiout, cuwfs[iwfs].opdadd, stream);
 			} else{
-				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
-					hs, hc, thetax, thetay, 0, 0, alpha, stream);
+				cuzero(phiout, stream);
 			}
-		}
-		if(simu->telws){
-			Real tt=simu->telws->p[isim];
-			Real angle=simu->winddir?simu->winddir->p[0]:0;
-			curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
-		}
-		if(save_opd){
-			zfarr_push_scale(simu->save->wfsopdol[iwfs], isim, phiout, 1, stream);
-		}
-		if(CL){
-			wait_dmreal(simu, isim);
-			dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
-				hs, hc, thetax, thetay, 0, 0, -1, stream);
-			Real ttx=0, tty=0;
-			if(simu->ttmreal){
-				ttx+=simu->ttmreal->p[0];
-				tty+=simu->ttmreal->p[1];
+			if(simu->atm&&((!parms->sim.idealwfs&&!parms->powfs[ipowfs].lo)
+							||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
+				atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 			}
-			if(simu->fsmreal&&PN(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
-				ttx+=simu->fsmreal->p[iwfs]->p[0];
-				tty+=simu->fsmreal->p[iwfs]->p[1];
-			}
-			if(ttx||tty){
-				curaddptt(phiout, loc, 0, -ttx, -tty, stream);
-			}
-		}
-
-		if(parms->tomo.ahst_idealngs==1&&parms->powfs[ipowfs].lo){
-			const real* cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
-			ngsmod2loc(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm,
-				parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
-				-1, stream);
-		}
-		if(imoao>-1){
-			dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
-				INFINITY, hc, 0, 0, 0, 0, -1, stream);
-		}
-
-		Real focus=(Real)wfsfocusadj(simu, iwfs);
-		if(Z(fabs)(focus)>1e-20){
-			const int nloc=cupowfs[ipowfs].loc.Nloc();
-			add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus);
-		}
-
-		if(cupowfs[ipowfs].fieldstop){
-			if(parms->powfs[ipowfs].nwvl>1){
-				error("Implement broadband case\n");
-			}
-			cu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed[0], cupowfs[ipowfs].nembed[0],
-				cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
-		}
-		if(save_opd){
-			zfarr_push_scale(simu->save->wfsopd[iwfs], isim, phiout, 1, stream);
-		}
-		if(parms->plot.run){
-			const dmat* realamp=powfs[ipowfs].realamp->p[wfsind];
-			drawopdamp_gpu("wfsopd", powfs[ipowfs].loc, phiout, stream, realamp, NULL,
-				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
-		}
-		ctoc("opd");
-		if(parms->powfs[ipowfs].type==WFS_PY){
-			CUDA_CHECK_ERROR;
-			pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs], parms->wfs[iwfs].sigsim);
-			ctoc("pywfs");
-			CUDA_CHECK_ERROR;
-		} else{
-			if(do_geom){
-				real ratio;
-				if(do_pistatout&&dtrat>1){
-					gradref=gradcalc;
-					cuzero(gradcalc, stream);
-					ratio=1;
+			if(!parms->powfs[ipowfs].lo&&(parms->sim.idealwfs||parms->sim.wfsalias)){
+				Real alpha=parms->sim.idealwfs?1:-1;
+				if(parms->sim.idealwfs==2||parms->sim.wfsalias==2){
+					dmat* opd=dnew(phiout.Nx(), 1);
+					add2cpu(&opd, 0, phiout, 1, stream, 0);
+					wfs_ideal_atm(simu, opd, iwfs, alpha);
+					cp2gpu(phiout, opd);
+					dfree(opd);
 				} else{
-					gradref=gradacc;
-					ratio=1.f/(Real)dtrat;
+					dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
+						hs, hc, thetax, thetay, 0, 0, alpha, stream);
 				}
+			}
+			if(simu->telws){
+				Real tt=simu->telws->p[isim];
+				Real angle=simu->winddir?simu->winddir->p[0]:0;
+				curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
+			}
+			if(save_opd){
+				zfarr_push_scale(simu->save->wfsopdol[iwfs], isim, phiout, 1, stream);
+			}
+			if(CL){
+				wait_dmreal(simu, isim);
+				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
+					hs, hc, thetax, thetay, 0, 0, -1, stream);
+				Real ttx=0, tty=0;
+				if(simu->ttmreal){
+					ttx+=simu->ttmreal->p[0];
+					tty+=simu->ttmreal->p[1];
+				}
+				if(simu->fsmreal&&PN(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
+					ttx+=simu->fsmreal->p[iwfs]->p[0];
+					tty+=simu->fsmreal->p[iwfs]->p[1];
+				}
+				if(ttx||tty){
+					curaddptt(phiout, loc, 0, -ttx, -tty, stream);
+				}
+			}
 
-				if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){
-					cuztilt(gradref, phiout,
-						cupowfs[ipowfs].pts.Nloc(),
-						cupowfs[ipowfs].pts.Dxsa(),
-						cupowfs[ipowfs].pts.Nxsa(), cuwfs[iwfs].imcc,
-						cupowfs[ipowfs].pts(), cuwfs[iwfs].amp, ratio, stream);
-				} else{
-					cuspmul(gradref, cuwfs[iwfs].GS0, phiout, 1, 'n', ratio, stream);
-				}
-				if(gradacc()!=gradref()){
-					curadd(gradacc, 1, gradref, 1.f/(Real)dtrat, stream);
-				}
+			if(parms->tomo.ahst_idealngs==1&&parms->powfs[ipowfs].lo){
+				const real* cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
+				ngsmod2loc(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm,
+					parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
+					-1, stream);
 			}
-			if(parms->powfs[ipowfs].psfout){
-				zfarr_push_scale(simu->save->ztiltout[iwfs], isim, gradcalc, 1, stream);
+			if(imoao>-1){
+				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
+					INFINITY, hc, 0, 0, 0, 0, -1, stream);
 			}
-			if(do_phy||parms->powfs[ipowfs].psfout||do_pistatout){/*physical optics */
-				CUDA_CHECK_ERROR;
-				wfsints(simu, phiout, gradref, iwfs, isim);
-				CUDA_CHECK_ERROR;
-				ctoc("shwfs");
-			}/*do phy */
-		}
-		if(dtrat_output){
-			Real rne=0, bkgrnd=0;
-			if(do_phy){
-			/*signal level was already multiplied in ints. */
-				curcell& ints=cuwfs[iwfs].ints;
-				const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->cfg->nside:(ints[0].N());//PyWFs and SHWFS
-				if(save_ints){
-					zfarr_push_scale(simu->save->intsnf[iwfs], isim, ints, 1, stream);
+
+			Real focus=(Real)wfsfocusadj(simu, iwfs);
+			if(Z(fabs)(focus)>1e-20){
+				const int nloc=cupowfs[ipowfs].loc.Nloc();
+				add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus);
+			}
+
+			if(cupowfs[ipowfs].fieldstop){
+				if(parms->powfs[ipowfs].nwvl>1){
+					error("Implement broadband case\n");
 				}
-				if(noisy){
-					if(parms->save.gradnf->p[iwfs]){
-						if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
-							pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
-								cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
-						} else{
-							shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
-						}
-						if(parms->powfs[ipowfs].phytype_sim<3){
-							zfarr_push_scale(simu->save->gradnf[iwfs], isim, gradcalc, 1, stream);
-						} else{//CPU version
-							zfarr_push(simu->save->gradnf[iwfs], isim, simu->gradcl->p[iwfs]);
-						}
+				cu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed[0], cupowfs[ipowfs].nembed[0],
+					cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
+			}
+			if(save_opd){
+				zfarr_push_scale(simu->save->wfsopd[iwfs], isim, phiout, 1, stream);
+			}
+			if(parms->plot.run){
+				const dmat* realamp=powfs[ipowfs].realamp->p[wfsind];
+				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, realamp, NULL,
+					"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
+			}
+			ctoc("opd");
+			if(parms->powfs[ipowfs].type==WFS_PY){
+				if(nhs>1) error("Please implement\n");
+				CUDA_CHECK_ERROR;
+				pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs], parms->wfs[iwfs].sigsim);
+				ctoc("pywfs");
+				CUDA_CHECK_ERROR;
+			} else{
+				if(do_geom){
+					real ratio;
+					if(do_pistatout&&(dtrat>1||nhs>1)){//compute each
+						gradref=gradcalc;
+						cuzero(gradcalc, stream);
+						ratio=1;
+					} else{
+						gradref=gradacc;
+						ratio=1.f/(dtrat*nhs);
 					}
-					rne=parms->powfs[ipowfs].rne;
-					bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-					addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-						(ints[0], nsa, totpix, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
-							cuwfs[iwfs].bkgrnd2(), cuwfs[iwfs].bkgrnd2c(),
-							cuwfs[iwfs].qe, rne, cuwfs[iwfs].custat);
-					ctoc("noise");
+
+					if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){
+						cuztilt(gradref, phiout,
+							cupowfs[ipowfs].pts.Nloc(),
+							cupowfs[ipowfs].pts.Dxsa(),
+							cupowfs[ipowfs].pts.Nxsa(), cuwfs[iwfs].imcc,
+							cupowfs[ipowfs].pts(), cuwfs[iwfs].amp, ratio, stream);
+					} else{
+						cuspmul(gradref, cuwfs[iwfs].GS0, phiout, 1, 'n', ratio, stream);
+					}
+					if(gradacc()!=gradref()){
+						curadd(gradacc, 1, gradref, 1.f/(dtrat*nhs), stream);
+					}
+				}
+				if(parms->powfs[ipowfs].psfout){
+					zfarr_push_scale(simu->save->ztiltout[iwfs], isim, gradcalc, 1, stream);
+				}
+				if(do_phy||parms->powfs[ipowfs].psfout||do_pistatout){/*physical optics */
+					if(nhs>1) error("Please implement\n");
+					CUDA_CHECK_ERROR;
+					wfsints(simu, phiout, gradref, iwfs, isim);
+					CUDA_CHECK_ERROR;
+					ctoc("shwfs");
+				}/*do phy */
+			}
+			if(dtrat_output && (ihs+1)==nhs){
+				Real rne=0, bkgrnd=0;
+				if(do_phy){
+					curcell &ints=cuwfs[iwfs].ints;	/*signal level was already multiplied in ints. */
+					const int totpix=(powfs[ipowfs].pywfs)?powfs[ipowfs].pywfs->cfg->nside:(ints[0].N());//PyWFs and SHWFS
 					if(save_ints){
-						zfarr_push_scale(simu->save->intsny[iwfs], isim, ints, 1, stream);
+						zfarr_push_scale(simu->save->intsnf[iwfs], isim, ints, 1, stream);
 					}
-				}
-				if(parms->powfs[ipowfs].i0save){
-					curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
-				}
-				if(abs(parms->powfs[ipowfs].dither)==1
-					&&isim>=parms->powfs[ipowfs].dither_ogskip
-					&&parms->powfs[ipowfs].type==WFS_SH
-					&&(parms->powfs[ipowfs].dither==-1||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
-					int npll=parms->powfs[ipowfs].dither_pllrat;
-					if(parms->powfs[ipowfs].dither==1){
-						real cs=0, ss=0;
-						dither_position(&cs, &ss, parms->powfs[ipowfs].alfsm, parms->powfs[ipowfs].dtrat,
-							parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
-						cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
-					}else{//just accumulate i0
-						cuwfs[iwfs].dither.acc_i0(simu->dither[iwfs], ints, npll, stream);
+					if(noisy){
+						if(parms->save.gradnf->p[iwfs]){
+							if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
+								pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
+									cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
+							} else{
+								shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
+							}
+							if(parms->powfs[ipowfs].phytype_sim<3){
+								zfarr_push_scale(simu->save->gradnf[iwfs], isim, gradcalc, 1, stream);
+							} else{//CPU version
+								zfarr_push(simu->save->gradnf[iwfs], isim, simu->gradcl->p[iwfs]);
+							}
+						}
+						rne=parms->powfs[ipowfs].rne;
+						bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
+						addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+							(ints[0], nsa, totpix, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
+								cuwfs[iwfs].bkgrnd2(), cuwfs[iwfs].bkgrnd2c(),
+								cuwfs[iwfs].qe, rne, cuwfs[iwfs].custat);
+						ctoc("noise");
+						if(save_ints){
+							zfarr_push_scale(simu->save->intsny[iwfs], isim, ints, 1, stream);
+						}
 					}
-					ctoc("dither");
-				}
-			}
-			if(do_phy){
-				if(parms->powfs[ipowfs].type==WFS_PY){
-					pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
-						cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
-					//cuwrite(gradcalc, stream, "gradcalc"); exit(0);
-				} else{
-					shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
-				}
-				ctoc("grad");
+					if(parms->powfs[ipowfs].i0save){
+						curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
+					}
+					if(abs(parms->powfs[ipowfs].dither)==1
+						&&isim>=parms->powfs[ipowfs].dither_ogskip
+						&&parms->powfs[ipowfs].type==WFS_SH
+						&&(parms->powfs[ipowfs].dither==-1||parms->powfs[ipowfs].phytype_sim2==PTYPE_MF)){
+						int npll=parms->powfs[ipowfs].dither_pllrat;
+						if(parms->powfs[ipowfs].dither==1){
+							real cs=0, ss=0;
+							dither_position(&cs, &ss, parms->powfs[ipowfs].alfsm, parms->powfs[ipowfs].dtrat,
+								parms->powfs[ipowfs].dither_npoint, isim, simu->dither[iwfs]->deltam);
+							cuwfs[iwfs].dither.acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
+						}else{//just accumulate i0
+							cuwfs[iwfs].dither.acc_i0(simu->dither[iwfs], ints, npll, stream);
+						}
+						ctoc("dither");
+					}
 				
-			} else{
-				if(noisy){
-					if(parms->save.gradnf->p[iwfs]){
-						zfarr_push_scale(simu->save->gradnf[iwfs], isim, gradacc, 1, stream);
+					if(parms->powfs[ipowfs].type==WFS_PY){
+						pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
+							cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
+						//cuwrite(gradcalc, stream, "gradcalc"); exit(0);
+					} else{
+						shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
 					}
-					if(!parms->powfs[ipowfs].usephy){//do not add noise for presimulation to physical optics
-						add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-							(gradacc, cuwfs[iwfs].neasim, nsa, cuwfs[iwfs].custat);
-						ctoc("geom_noise");
+					ctoc("grad");
+					
+				} else{//geometric
+					if(noisy){
+						if(parms->save.gradnf->p[iwfs]){
+							zfarr_push_scale(simu->save->gradnf[iwfs], isim, gradacc, 1, stream);
+						}
+						if(!parms->powfs[ipowfs].usephy){//do not add noise for presimulation to physical optics
+							add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+								(gradacc, cuwfs[iwfs].neasim, nsa, cuwfs[iwfs].custat);
+							ctoc("geom_noise");
+						}
 					}
 				}
-			}
-		}/*dtrat_output */
-		//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
-		ctoc_final("wfs %d", iwfs);
-		
-		/*{//this replaces gpu_wfsgrad_sync
-			//This does not work. memcpy is not allowed in callback
-			struct wfsgrad_callback_t* tmp=mycalloc(1, struct wfsgrad_callback_t);
-			tmp->simu=simu;
-			tmp->iwfs=iwfs;
-			tmp->op=2;
-			cudaStreamAddCallback(stream, wfsgrad_callback, (void*)tmp, 0);
-		}*/
-		CUDA_CHECK_ERROR;
+			}/*dtrat_output */
+			//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
+			ctoc_final("wfs %d", iwfs);
+			
+			/*{//this replaces gpu_wfsgrad_sync
+				//This does not work. memcpy is not allowed in callback
+				struct wfsgrad_callback_t* tmp=mycalloc(1, struct wfsgrad_callback_t);
+				tmp->simu=simu;
+				tmp->iwfs=iwfs;
+				tmp->op=2;
+				cudaStreamAddCallback(stream, wfsgrad_callback, (void*)tmp, 0);
+			}*/
+			CUDA_CHECK_ERROR;
+		}//for ihs
 	}//for iwfs
 	return NULL;
 }

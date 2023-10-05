@@ -237,7 +237,6 @@ static void* Tomo_prop_do(Tomo_T *data){
 		const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		dmat* xx=dnew(recon->ploc->nloc, 1);
 		const real hs=parms->wfs[iwfs].hs;
-		const real hc=parms->wfs[iwfs].hc;
 		for(int ips=0; ips<nps; ips++){
 			if(parms->tomo.square&&!parms->dbg.tomo_hxw){
 			/*Do the ray tracing instead of using HXW. */
@@ -250,7 +249,7 @@ static void* Tomo_prop_do(Tomo_T *data){
 					displace[0]+=P(simu->atm, ips0)->vx*delay;
 					displace[1]+=P(simu->atm, ips0)->vy*delay;
 				}
-				real scale=1.-(ht-hc)/hs;
+				real scale=1.-ht/hs;
 				if(scale<0) continue;
 				map_t xmap;/*make a temporary xmap for thread safety.*/
 				memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
@@ -354,7 +353,6 @@ static void* Tomo_iprop_do(Tomo_T *data){
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				if(!P(data->gg, iwfs)) continue;
 				const real hs=parms->wfs[iwfs].hs;
-				const real hc=parms->wfs[iwfs].hc;
 				const int ipowfs=parms->wfs[iwfs].powfs;
 				real displace[2];
 				displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
@@ -365,7 +363,7 @@ static void* Tomo_iprop_do(Tomo_T *data){
 					displace[0]+=P(simu->atm, ips0)->vx*delay;
 					displace[1]+=P(simu->atm, ips0)->vy*delay;
 				}
-				real scale=1.-(ht-hc)/hs;
+				real scale=1.-ht/hs;
 				if(scale<0) continue;
 				prop_grid_stat_transpose(&xmap, recon->ploc->stat, P(P(data->gg, iwfs)), 1,
 					displace[0], displace[1], scale, 0, 0, 0);

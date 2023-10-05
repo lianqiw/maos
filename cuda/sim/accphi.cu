@@ -158,12 +158,12 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 	for(int ips=0; ips<cudata->atm.N(); ips++){
 		const Real dx=cuatm[ips].dx;
 		const Real dy=cuatm[ips].dy;
-		const Real ht=cuatm[ips].ht-hc;
+		const Real ht=cuatm[ips].ht;
 		const Real vx=cuatm[ips].vx;
 		const Real vy=cuatm[ips].vy;
 		const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
 		const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
-		const Real scale=1.f-ht/hs;
+		const Real scale=1.f-(ht-hc)/(hs-hc);
 		if(scale<0) continue;
 		const int nloc=loc.Nloc();
 
@@ -223,8 +223,8 @@ void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-		const Real ht=cudm[idm].ht-hc;
-		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
+		const Real ht=cudm[idm].ht;
+		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/(hs-hc), 0, stream);
 	}
 }
 /**
@@ -235,8 +235,8 @@ void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
 	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-		const Real ht=cudm[idm].ht-hc;
-		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-ht/hs, 0, stream);
+		const Real ht=cudm[idm].ht;
+		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/(hs-hc), 0, stream);
 	}/*idm */
 }
 /**
@@ -248,7 +248,7 @@ void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
 	if(ngsmod->nmod==2){
 		curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
 	} else{
-		const Real ht=ngsmod->ht;
+		const Real ht=ngsmod->hdm;
 		const Real scale=ngsmod->scale;
 
 		Real focus=0, ps1=0, ps2=0, ps3=0, astigx=0, astigy=0;

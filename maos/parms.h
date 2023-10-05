@@ -100,7 +100,7 @@ typedef struct llt_cfg_t{
     real focus;  /**<RMS focus error in nm of LLT.*/
     real ttrat;  /**<Ratio of uplink jitter to science jitter due to M2 windshake.*/
     real fcfsm;  /**<corner frequency for offloading FSM to a common path pointing mirror in LLT. 0: disabled*/
-
+	real dhs;    /**<Spacing of sublayers to simulate for LGS*/
     char *ttpsd;   /**<PSD of uplink beam jitter*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fnprof;  /**<File contains sodium profile*/
@@ -114,8 +114,9 @@ typedef struct llt_cfg_t{
     int ttfr;      /**<Remove piston/tip/tilt and focus (if = 2) from ncpa*/
     int colprep;   /**<starting column to use in fn for ETF in preparation of matched filter*/
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
-    int coldtrat;/**<change to next sodium profile during simulation every coldtrat time step*/
-    
+    int coldtrat;  /**<change to next sodium profile during simulation every coldtrat time step*/
+    int nhs;       /**<Number of sublayer to simulate for LGS*/
+	
     //Computed
     lmat *i;        /**<Index into llt for this iwfs.*/
     int n;         /**<number of launch telescopes in this powfs*/

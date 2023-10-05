@@ -440,9 +440,8 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 			int idm=parms->idmground;
 			dmat *amod=P(recon->amod, idm);
 			opds=dnew(pywfs->locfft->loc->nloc, MIN(20,NY(amod))+1);//first mode is piston
-			const real hc=parms->wfs[iwfs].hc;
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			const real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
+			const real scale=1.-ht/parms->wfs[iwfs].hs;
 			const real dispx=ht*parms->wfs[iwfs].thetax;
 			const real dispy=ht*parms->wfs[iwfs].thetay;
 			warning("Using amod for pywfs gain testing\n");
@@ -887,7 +886,7 @@ static dmat* pywfs_mkg_do(const pywfs_t* pywfs, const loc_t* locin, const loc_t*
 		error("NX(mod) must equal to %ld", locin->nloc);
 	}
 
-	const real scale=1.-(locin->ht-pycfg->hc)/pycfg->hs;
+	const real scale=1.-locin->ht/pycfg->hs;
 	TIC;tic;
 OMP_TASK_FOR(4)
 	for(int imod=0; imod<nmod; imod++){

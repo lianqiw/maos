@@ -144,7 +144,7 @@ static void* prop_surf_wfs(thread_t* info){
 	const parms_t* parms=data->parms;
 	const powfs_t* powfs=data->powfs;
 	const map_t* surf=data->surf;
-	const real hl=surf->h;
+	const real ht=surf->h;
 	const int* wfscover=data->wfscover;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
 		if(!wfscover[iwfs]){
@@ -153,10 +153,9 @@ static void* prop_surf_wfs(thread_t* info){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 		const real hs=parms->wfs[iwfs].hs;
-		const real hc=parms->wfs[iwfs].hc;
-		const real scale=1.-(hl-hc)/hs;
-		const real displacex=parms->wfs[iwfs].thetax*hl;
-		const real displacey=parms->wfs[iwfs].thetay*hl;
+		const real scale=1.-ht/hs;
+		const real displacex=parms->wfs[iwfs].thetax*ht;
+		const real displacey=parms->wfs[iwfs].thetay*ht;
 
 		loc_t* locwfs;
 		if(powfs[ipowfs].loc_tel){
@@ -636,7 +635,6 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					const real hs=parms->wfs[iwfs].hs;
-					const real hc=parms->wfs[iwfs].hc;
 					const real thetax=parms->wfs[iwfs].thetax;
 					const real thetay=parms->wfs[iwfs].thetay;
 					const real theta=RSS(thetax, thetay);
@@ -647,7 +645,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					for(int idm=0; idm<parms->ndm; idm++){
 						if(!P(recon->dm_ncpa, idm)||P(recon->dm_ncpa, idm)->nx==0) continue;
 						real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-						real scale=1.-(ht-hc)/hs;
+						real scale=1.-ht/hs;
 						real dispx=ht*thetax;
 						real dispy=ht*thetay;
 						real alpha=-cos(theta*parms->dm[idm].dratio);

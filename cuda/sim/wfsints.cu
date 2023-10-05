@@ -280,7 +280,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;
-	const Real hc=0;//uplink is always from ground.
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
@@ -330,7 +329,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		const real thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
 		const real thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
 		atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
-			hs, hc, thetaxl, thetayl,
+			hs, 0, thetaxl, thetayl,
 			parms->powfs[ipowfs].llt->misreg->p[0],
 			parms->powfs[ipowfs].llt->misreg->p[1],
 			parms->sim.dt, isim, 1, stream);

@@ -76,7 +76,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 		/*this is not precisely R^2/2 due to obscuration */
 
 		const real MCC_fcp=aper->fcp;
-		const real ht=ngsmod->ht;
+		const real ht=ngsmod->hdm;
 		const real scale=ngsmod->scale;
 		const real scale1=1.-scale;
 		//dmat *modvec=dnew(nmod, 1);
@@ -157,9 +157,9 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 		real thetay=P(parms->evl.thetay,ievl);
 		dspcell* Hat=dspcellnew(ndm, 1);
 		for(int idm=0; idm<ndm; idm++){
-			real hc=parms->dm[idm].ht;
-			real displacex=thetax*hc;
-			real displacey=thetay*hc;
+			real ht=parms->dm[idm].ht;
+			real displacex=thetax*ht;
+			real displacey=thetay*ht;
 			/*from DM to ploc (plocs) science beam */
 			P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
 			dspmuldiag(P(Hat,idm), amp, wt[ievl]);
@@ -182,7 +182,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	const aper_t* aper, int use_ploc){
 
 	ngsmod_t* ngsmod=recon->ngsmod;
-	const real ht=ngsmod->ht;
+	const real hdm=ngsmod->hdm;
 	const real scale=ngsmod->scale;
 	const real scale1=1.-scale;
 	const real* wt=P(parms->evl.wt);
@@ -229,18 +229,18 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 				if(ngsmod->indps){
 					if(ngsmod->ahstfocus){//no focus mode at ps
 						P(mod, iloc, ngsmod->indps)=amp[iloc]
-							*(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
+							*(-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
 					} else{
 						P(mod, iloc, ngsmod->indps)=amp[iloc]
 							*(scale1*(xx+yy-MCC_fcp)
-								-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
+								-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
 					}
 					P(mod, iloc, ngsmod->indps+1)=amp[iloc]
 						*(scale1*(xx-yy)
-							-2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]));
+							-2.*hdm*scale*(thetax*x[iloc]-thetay*y[iloc]));
 					P(mod, iloc, ngsmod->indps+2)=amp[iloc]
 						*(scale1*(xy)
-							-ht*scale*(thetay*x[iloc]+thetax*y[iloc]));
+							-hdm*scale*(thetay*x[iloc]+thetax*y[iloc]));
 				}
 				if(ngsmod->indastig){
 					P(mod, iloc, ngsmod->indastig)=amp[iloc]*(xx-yy);
@@ -253,9 +253,9 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 		}
 		dspcell* Hat=dspcellnew(ndm, 1);
 		for(int idm=0; idm<ndm; idm++){
-			real hc=parms->dm[idm].ht;
-			real displacex=thetax*hc;
-			real displacey=thetay*hc;
+			real ht=parms->dm[idm].ht;
+			real displacex=thetax*ht;
+			real displacey=thetay*ht;
 			if(parms->dm[idm].isground&&HatGround){
 				P(Hat,idm)=dspref(HatGround);
 			} else{
@@ -367,11 +367,11 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indastig);
 	ngsmod->hs=hs;
 	if(ndm>1){
-		ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
+		ngsmod->hdm=parms->dm[ndm-1].ht;//last DM.
 	} else{
-		ngsmod->ht=0;
+		ngsmod->hdm=0;
 	}
-	ngsmod->scale=pow(1.-ngsmod->ht/ngsmod->hs, -2);
+	ngsmod->scale=pow(1.-ngsmod->hdm/ngsmod->hs, -2);
 	/*modal cross coupling matrix along science for performance evaluation. */
 	ngsmod->MCCP=ngsmod_mcc(parms, recon, aper, P(parms->evl.wt));
 	if(NX(ngsmod->MCCP)==1){
@@ -437,7 +437,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 					if(parms->powfs[ipowfs].type==WFS_SH || parms->recon.modal){//shwfs or modal control
 						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 					} else{//pwfs in zonal control.
-						real  ht=parms->dm[idm].ht-parms->powfs[ipowfs].hc;
+						real  ht=parms->dm[idm].ht;
 						real  dispx=0, dispy=0;
 						dispx=parms->wfsr[iwfs].thetax*ht;
 						dispy=parms->wfsr[iwfs].thetay*ht;
@@ -704,7 +704,7 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	real tot, const real* coeff, const ngsmod_t* ngsmod,
 	const aper_t* aper, real thetax, real thetay){
 	const real MCC_fcp=ngsmod->aper_fcp;
-	const real ht=ngsmod->ht;
+	const real hdm=ngsmod->hdm;
 	const real scale=ngsmod->scale;
 	const real scale1=1.-scale;
 	int ans=0;
@@ -732,15 +732,15 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 
 	if(ngsmod->indps){
 		if(ngsmod->ahstfocus){
-			ngsmod_out[ngsmod->indps]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+			ngsmod_out[ngsmod->indps]=(-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]));
 		} else{
 			ngsmod_out[ngsmod->indps]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-				-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+				-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]));
 		}
 		ngsmod_out[ngsmod->indps+1]=(scale1*(coeff[3]-coeff[4])
-			-2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
+			-2*scale*hdm*(thetax*coeff[1]-thetay*coeff[2]));
 		ngsmod_out[ngsmod->indps+2]=(scale1*(coeff[5])
-			-scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
+			-scale*hdm*(thetay*coeff[1]+thetax*coeff[2]));
 	}
 	if(ngsmod->indastig){
 		ngsmod_out[ngsmod->indastig]=(coeff[3]-coeff[4]);
@@ -845,7 +845,7 @@ void ngsmod2science(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 			P(iopd,iloc)+=tmp*alpha;
 		}
 	} else{
-		const real ht=ngsmod->ht;
+		const real hdm=ngsmod->hdm;
 		const real scale=ngsmod->scale;
 		const real scale1=1.-scale;
 		real focus=0, ps1=0, ps2=0, ps3=0, astigx=0, astigy=0;
@@ -873,9 +873,9 @@ void ngsmod2science(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 			real tmp=locx[iloc]*mod[0]
 				+locy[iloc]*mod[1]
 				+focus*(x2+y2)
-				+ps1*(-2*scale*ht*(thetax*x+thetay*y))
-				+ps2*((x2-y2)*scale1-2*scale*ht*(thetax*x-thetay*y))
-				+ps3*(xy*scale1-scale*ht*(thetay*x+thetax*y))
+				+ps1*(-2*scale*hdm*(thetax*x+thetay*y))
+				+ps2*((x2-y2)*scale1-2*scale*hdm*(thetax*x-thetay*y))
+				+ps3*(xy*scale1-scale*hdm*(thetay*x+thetax*y))
 				+astigx*(x2-y2)
 				+astigy*(xy);
 			P(iopd,iloc)+=tmp*alpha;

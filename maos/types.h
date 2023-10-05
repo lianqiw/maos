@@ -141,7 +141,7 @@ typedef struct powfs_t{
  */
 typedef struct ngsmod_t{
     real hs;      /**<height of LGS*/
-    real ht;      /**<height of upper DM.*/
+    real hdm;      /**<height of upper DM.*/
     real scale;   /**<(1-ht/hs)^-2*/
     real aper_fcp;/**<piston term in focus in plocs.*/
     real lp2;     /**<LPF coefficient for P(Rngs,1)*/

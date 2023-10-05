@@ -144,7 +144,6 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
 		dir[iwfs].skip=parms->powfs[ipowfs].skip;
 		dir[iwfs].hs=parms->wfsr[iwfs].hs;
-		dir[iwfs].hc=parms->wfsr[iwfs].hc;
 		dir[iwfs].thetax=parms->wfsr[iwfs].thetax;
 		dir[iwfs].thetay=parms->wfsr[iwfs].thetay;
 		dir[iwfs].misregx=parms->wfsr[iwfs].misreg_x;

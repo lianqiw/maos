@@ -508,14 +508,13 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 				continue;
 			}
 			const real  hs=parms->wfs[iwfs].hs;
-			const real  hc=parms->wfs[iwfs].hc;
 			loc_t* loc=recon->ploc;
 			if(recon->ploc_tel&&P(recon->ploc_tel, iwfs)){
 				loc=P(recon->ploc_tel, iwfs);
 			}
 			for(int ips=0; ips<npsr; ips++){
 				const real  ht=P(recon->ht, ips);
-				const real  scale=1.-(ht-hc)/hs;
+				const real  scale=1.-ht/hs;
 				const real dispx=parms->wfsr[iwfs].thetax*ht;
 				const real dispy=parms->wfsr[iwfs].thetay*ht;
 				P(HXW, iwfs, ips)=mkh(P(recon->xloc, ips), loc,
@@ -663,11 +662,10 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				continue;
 			}*/
 			const real hs=parms->wfs[iwfs].hs;
-			const real hc=parms->wfs[iwfs].hc;
 			const loc_t* saloc=P(recon->saloc, ipowfs);
 			for(int idm=0; idm<ndm; idm++){
 				const real  ht=parms->dm[idm].ht;
-				const real  scale=1.-(ht-hc)/hs;
+				const real  scale=1.-ht/hs;
 				const loc_t* aloc=P(recon->aloc, idm);
 				const real dispx=parms->wfsr[iwfs].thetax*ht;
 				const real dispy=parms->wfsr[iwfs].thetay*ht;
@@ -1112,13 +1110,10 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 		DITHER_MD3=MIN(md, DITHER_MD3);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
-			//const real hc=parms->wfs[iwfs].hc;
 			if(parms->powfs[ipowfs].dither>1){
 				const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-				//const real scale=1.-(ht-hc)/parms->powfs[ipowfs].hs;
 				const real dispx=ht*parms->wfs[iwfs].thetax;
 				const real dispy=ht*parms->wfs[iwfs].thetay;
-			
 
 				//(parms->powfs[ipowfs].dither_mode2)?MAX(1,(parms->recon.nmod+md-1)/md):1;//number of dither modes. 2 for modal control
 				info("dither mds are md=%d, %d, %d. nd=%d. dither_amp=%g\n", md, DITHER_MD2, DITHER_MD3, nd, dither_amp);

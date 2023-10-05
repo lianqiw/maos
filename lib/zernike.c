@@ -35,6 +35,7 @@ dmat* zernike_Rnm(const dmat* locr, int ir, int im){
 		coeff[s]=factorial((ir+im)/2-s+1, ir-s)/factorial(1, s)/factorial(1, (ir-im)/2-s)*pow(-1, s);
 		power[s]=ir-2*s;
 	}
+OMP_TASK_FOR(4)	
 	for(long iloc=0; iloc<nloc; iloc++){
 		real tmp=0;
 		real r=P(locr,iloc);
@@ -124,13 +125,15 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 			
 			dmat* Rnm=zernike_Rnm(locr, ir, im);
 			if(im==0){/*Radial*/
-				real coeff=sqrt(ir+1.);
-				real* restrict pmod=PCOL(opd, cmod); 
-				//OMP_TASK_FOR(4)
-				for(long iloc=0; iloc<nloc; iloc++){
-					pmod[iloc]=P(Rnm,iloc)*coeff;
+				if(flag>=0 || (flag+imod)==0){
+					real coeff=sqrt(ir+1.);
+					real* restrict pmod=PCOL(opd, cmod); 
+					//OMP_TASK_FOR(4)
+					for(long iloc=0; iloc<nloc; iloc++){
+						pmod[iloc]=P(Rnm,iloc)*coeff;
+					}
+					cmod++;
 				}
-				cmod++;
 				imod++;
 			} else if(flag<=0){
 				real coeff=sqrt(2*(ir+1.));

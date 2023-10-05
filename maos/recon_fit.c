@@ -471,7 +471,7 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 		int nwfs=parms->powfs[ipowfs].nwfs;
 		fit_t* fitall=powfs[ipowfs].fit=mycalloc(nwfs, fit_t);
 		loc_t* wfsloc=mkannloc(parms->aper.d+parms->powfs[ipowfs].dsa*2, 0, parms->powfs[ipowfs].dsa, 0);
-		wfsloc->ht=parms->powfs[ipowfs].hc;
+		wfsloc->ht=0;
 		wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
@@ -482,8 +482,7 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 				fit->flag.assemble=0;
 				fit->notrecon=1; //not for reconstruction
 				fit->wt=dnew(1, 1); P(fit->wt,0)=1;
-				fit->hs=dnew(1, 1); P(fit->hs,0)=parms->powfs[ipowfs].hs;
-
+				fit->hs=dnew(1, 1); P(fit->hs,0)=parms->wfs[iwfs].hs;
 				fit->aloc=loccellnew(1, 1); P(fit->aloc,0)=locref(wfsloc);
 				fit->floc=locref(recon->floc);
 				fit->W0=recon->W0;

@@ -425,6 +425,7 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT(dbl, focus);
 			READ_LLT(dbl, ttrat);
 			READ_LLT(dbl, fcfsm);
+			READ_LLT(dbl, dhs);
 			READ_LLT(str, ttpsd);
 			READ_LLT(str, fnrange);
 			READ_LLT(str, fnprof);
@@ -437,10 +438,10 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat, misreg);
 			
 			READ_LLT(int, ttfr);
-			READ_LLT(int,colprep);
-			READ_LLT(int,colsim);
-			READ_LLT(int,coldtrat);
-			
+			READ_LLT(int, colprep);
+			READ_LLT(int, colsim);
+			READ_LLT(int, coldtrat);
+			READ_LLT(int, nhs);
 			llt->n=NX(llt->ox);
 			if(llt->fcfsm!=0&&llt->n>1){
 				error("FSM to common LLT FSM offload is only supported for single LLT.\n");
@@ -2076,7 +2077,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
-			if(!powfsi->epfsm){
+			if(powfsi->epfsm<0){
+				powfsi->epfsm=0;
+			}else if(!powfsi->epfsm){
 				real g=servo_optim_margin(parms->sim.dt,powfsi->dtrat,powfsi->alfsm,
 					M_PI/4,powfsi->f0fsm,powfsi->zetafsm);
 				powfsi->epfsm=g;
@@ -2105,13 +2108,17 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dt);//active at every time step. use dt
 	
 	if(parms->nphypowfs>0){
-		if(!P(parms->sim.ephi,0)){
+		if(P(parms->sim.ephi, 0)<0){
+			P(parms->sim.ephi, 0)=0;
+		}else if(!P(parms->sim.ephi,0)){
 			real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alhi,
 				M_PI/4,parms->sim.f0dm,parms->sim.zetadm);
 			P(parms->sim.ephi,0)=g;
 			info("sim.ephi is set to %g (auto)\n",g);
 		}
-		if(!P(parms->sim.eplo,0)){
+		if(P(parms->sim.eplo, 0)<0){
+			P(parms->sim.eplo, 0)=0;
+		}else if(!P(parms->sim.eplo,0)){
 			real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo,
 				M_PI/4, parms->sim.f0dm, parms->sim.zetadm);//dm is used for tweeter t/t control.
 			P(parms->sim.eplo,0)=g;

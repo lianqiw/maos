@@ -19,6 +19,12 @@
 
 #include "map.h"
 #define check_nonempty(A) (A?(A->nx?(A->ny?1:0):0):0)
+static void map_keywords(map_t *map){
+	if(!map || map->keywords) return;
+	char keywords[1024];
+	snprintf(keywords, sizeof(keywords), "dx=%g; dy=%g; ox=%g; oy=%g;", map->dx, map->dy, map->ox, map->oy);
+	map->keywords=strdup(keywords);
+}
 /**
    create a new map_t object.
 */
@@ -33,6 +39,7 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 	map->vx=0;
 	map->vy=0;
 	map->iac=0;
+	map_keywords(map);
 	return map;
 }
 /**
@@ -50,6 +57,7 @@ map_t* mapnew2(map_t* A){
 	map->vx=A->vx;
 	map->vy=A->vy;
 	map->iac=A->iac;
+	map_keywords(map);
 	return map;
 }
 map_t* mapref(map_t* in){
