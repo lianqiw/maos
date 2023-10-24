@@ -6,7 +6,7 @@ var searchData=
   ['zfarr_5fclose',['zfarr_close',['../zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3',1,'zfarr.c']]],
   ['zfarr_5fclose_5fn',['zfarr_close_n',['../zfarr_8h.html#a4da312d93e7d98d003098db6976392fc',1,'zfarr.c']]],
   ['zfarr_5finit2',['zfarr_init2',['../zfarr_8h.html#aba144356e88796909659b1c096d6483f',1,'zfarr.c']]],
-  ['zfarr_5fpush_5fcell',['zfarr_push_cell',['../zfarr_8h.html#ae24e3a6368fdab0e06e9e08d85d4131a',1,'zfarr.c']]],
+  ['zfarr_5fpush',['zfarr_push',['../zfarr_8h.html#ab81474f55c843efb1d1a3df0b427aef1',1,'zfarr.c']]],
   ['zfclose',['zfclose',['../bin_8h.html#a4ed840d37c980314e41e565e7dd617d3',1,'bin.c']]],
   ['zfeof',['zfeof',['../bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201',1,'bin.c']]],
   ['zferrno',['zferrno',['../bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b',1,'bin.c']]],

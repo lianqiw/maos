@@ -1,7 +1,7 @@
 var mathdef_8h =
 [
     [ "isempty", "mathdef_8h.html#a8f2a2ca135c533310f29d67afd6b4faf", null ],
-    [ "CELL", "mathdef_8h.html#a1f5e85ed2468c1efe1a16f43fb693162", null ],
+    [ "A", "mathdef_8h.html#a955f504eccf76b4eb2489c0adab03121", null ],
     [ "DMAT", "mathdef_8h.html#a0a998f3aa39f59ee0cecf466df254caf", null ],
     [ "LOC", "mathdef_8h.html#a706360ad97cc8eb9ab03fb30f8e8f3ea", null ],
     [ "abs2", "mathdef_8h.html#a961041ffc5791f313972c32fcb6bb36c", null ],
@@ -89,5 +89,6 @@ var mathdef_8h =
     [ "dspccellnew", "mathdef_8h.html#a5bf742ba3778fa4cee270545581fff42", null ],
     [ "cspcellnew", "mathdef_8h.html#a80403a6da6e463568b2afe9063760691", null ],
     [ "cspccellnew", "mathdef_8h.html#a440b2ba964f39fe50b3a6b14a407a711", null ],
+    [ "dcellresize", "mathdef_8h.html#a85e81ff29a83823f6f395c8aa21ee41b", null ],
     [ "fft_threads", "mathdef_8h.html#a422c3479f9cb7e9749e18b005fdd7693", null ]
 ];

@@ -1,7 +1,7 @@
 var maos_2types_8h_structngsmod__t =
 [
     [ "hs", "maos_2types_8h.html#a228ce9878bfc10d67927f4a19be445f1", null ],
-    [ "ht", "maos_2types_8h.html#ae73a48bb9e582e6979e2cf24f4ebcbbd", null ],
+    [ "hdm", "maos_2types_8h.html#a0c2374807453947d95ba95153812390e", null ],
     [ "scale", "maos_2types_8h.html#a23ba1bb4fccb3df5f0c6d6bfbe762929", null ],
     [ "aper_fcp", "maos_2types_8h.html#a06663ea7d30cf79b84ea1be0b51ea929", null ],
     [ "lp2", "maos_2types_8h.html#aa04c964f5a6e2f0016719afa2b06ba87", null ],

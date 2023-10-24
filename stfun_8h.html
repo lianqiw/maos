@@ -109,8 +109,8 @@ Functions</h2></td></tr>
 <tr class="separator:a25760d56b9e232904dacb79b1446a4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c9ecd1d7433204924e32cc095772364"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#a4c9ecd1d7433204924e32cc095772364">stfun_finalize</a> (stfun_t *A)</td></tr>
 <tr class="separator:a4c9ecd1d7433204924e32cc095772364"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97ce2be00eddebca8de54af7c02822ce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#a97ce2be00eddebca8de54af7c02822ce">stfun_batch</a> (const <a class="el" href="type_8h.html#structcell">cell</a> *opd, const <a class="el" href="type_8h.html#structdmat">dmat</a> *amp)</td></tr>
-<tr class="separator:a97ce2be00eddebca8de54af7c02822ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32fc5347598b0fbd1f612daf15f9a1eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#a32fc5347598b0fbd1f612daf15f9a1eb">stfun_batch</a> (const_anyarray opd, const <a class="el" href="type_8h.html#structdmat">dmat</a> *amp)</td></tr>
+<tr class="separator:a32fc5347598b0fbd1f612daf15f9a1eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9855f320b1e1509d04123f03c867c1b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#ac9855f320b1e1509d04123f03c867c1b">stfun_kolmogorov</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, real r0)</td></tr>
 <tr class="separator:ac9855f320b1e1509d04123f03c867c1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -200,8 +200,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a97ce2be00eddebca8de54af7c02822ce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a97ce2be00eddebca8de54af7c02822ce">&#9670;&nbsp;</a></span>stfun_batch()</h2>
+<a id="a32fc5347598b0fbd1f612daf15f9a1eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32fc5347598b0fbd1f612daf15f9a1eb">&#9670;&nbsp;</a></span>stfun_batch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,8 +209,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* stfun_batch </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>opd</em>, </td>
+          <td class="paramtype">const_anyarray&#160;</td>
+          <td class="paramname"><em>opd_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -228,7 +228,7 @@ Functions</h2></td></tr>
 <p>Batch process cell array of OPDs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">opd</td><td>nz array of nx*ny array of the OPD </td></tr>
+    <tr><td class="paramname">opd_</td><td>nz array of nx*ny array of the OPD </td></tr>
     <tr><td class="paramname">amp</td><td>n*ny array of the amplitude map </td></tr>
   </table>
   </dd>

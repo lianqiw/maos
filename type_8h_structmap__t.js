@@ -7,5 +7,6 @@ var type_8h_structmap__t =
     [ "h", "type_8h.html#a5a775e608fdc821648d555dee623ae2f", null ],
     [ "vx", "type_8h.html#a90d89f3bf30d439963a3d13f6c7d968d", null ],
     [ "vy", "type_8h.html#a1b941ccdd3db094fe026e49f9c4da998", null ],
-    [ "iac", "type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ]
+    [ "iac", "type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ],
+    [ "dratio", "type_8h.html#ad9e9c9b8a27a834b7500ba1aba25a991", null ]
 ];

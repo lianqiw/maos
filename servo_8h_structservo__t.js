@@ -1,10 +1,8 @@
 var servo_8h_structservo__t =
 [
-    [ "mlead", "servo_8h.html#a7e24c5e6183a99b47a3eaa862073d980", null ],
-    [ "merrlast", "servo_8h.html#a66fcf1c064b368b354fdd13bea1b1d57", null ],
-    [ "mpreint", "servo_8h.html#a41fd25aa315bcc3648527ffd09c5d182", null ],
-    [ "merrhist", "servo_8h.html#a25ac4e49bfce258074fbd968332d34e2", null ],
-    [ "mint", "servo_8h.html#aac7dd8585ac3fb7118aa067886ef92b2", null ],
+    [ "mlead", "servo_8h.html#afc2b64572a37bc383cfe7593edf0e8ca", null ],
+    [ "merrlast", "servo_8h.html#ad01eff376592a9362eaef1c5b34f8703", null ],
+    [ "merrhist", "servo_8h.html#ab3fa88fbdec72f0aa3fe0ebd740d5236", null ],
     [ "initialized", "servo_8h.html#a116a456fe82429ab3403b3f115cfa4f6", null ],
     [ "alint", "servo_8h.html#a0620b1820afdc91b6b6f3e2adeec3615", null ],
     [ "alfrac", "servo_8h.html#a61f95b9c42cb12c783f000b13a4838f8", null ],

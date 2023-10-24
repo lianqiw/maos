@@ -40,7 +40,7 @@ var searchData=
   ['prop_5fnongrid_5fpts_5fcubic',['prop_nongrid_pts_cubic',['../lib_2accphi_8h.html#a011e004c6514f7d80cbd46ddbe1f793e',1,'accphi.c']]],
   ['psd1d',['psd1d',['../psd_8h.html#a0388947d2d4665d2c18e71a4a390c6db',1,'psd.c']]],
   ['psd1dt',['psd1dt',['../psd_8h.html#aaa5fd3565f979b1bf3e2d5b6082bc8e8',1,'psd.c']]],
-  ['psd2d',['psd2d',['../psd_8h.html#a0f6eded153068540e2a463cf9637135e',1,'psd.c']]],
+  ['psd2d',['psd2d',['../psd_8h.html#ae338c7401af52bf2228af2e482a5daec',1,'psd.c']]],
   ['psd2ts',['psd2ts',['../psd_8h.html#adebf5816143086a79768e5837eb800ae',1,'psd.c']]],
   ['psd2ts2',['psd2ts2',['../psd_8h.html#a8d26c57efba842fb9ef4fa48d7fa9aa2',1,'psd.c']]],
   ['psd_5finte',['psd_inte',['../psd_8h.html#a5c5d4d001360bd0401dcf2c402ae5243',1,'psd.c']]],

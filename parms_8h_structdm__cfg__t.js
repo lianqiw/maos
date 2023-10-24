@@ -4,6 +4,7 @@ var parms_8h_structdm__cfg__t =
     [ "stroke", "parms_8h.html#ab8b2c621cd08d7b33b6856e7c0b0baaf", null ],
     [ "iastroke", "parms_8h.html#ab49b483f1b6a14f8be562605833c9522", null ],
     [ "strokescale", "parms_8h.html#ad6415fdca79642e38adfb6f1116a8552", null ],
+    [ "dratio", "parms_8h.html#ad852fb1e8d8077f26ac79017bcee1027", null ],
     [ "vmisreg", "parms_8h.html#af81a20c35a750e761d550ba5974ba8b6", null ],
     [ "ht", "parms_8h.html#a3ed9dd9f61090feb63e218f79a58a360", null ],
     [ "dx", "parms_8h.html#a68f83e1a2074710313580b7b171861f8", null ],

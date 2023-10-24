@@ -1,25 +1,119 @@
 var type_8h =
 [
-    [ "cell", "type_8h.html#structcell", [
-      [ "id", "type_8h.html#a8de9ad2bda53e2da59969024fbc3660f", null ],
-      [ "p", "type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569", null ],
-      [ "nx", "type_8h.html#a546c88ba8a0e1904479cc349aef10feb", null ],
-      [ "ny", "type_8h.html#a71be2e4edd9c472b42e25f45efc063ed", null ],
-      [ "keywords", "type_8h.html#a823d904ce6542918ce1af19dc0843399", null ],
-      [ "fp", "type_8h.html#ad43278e4d933d66b294d5cd3eb51e05f", null ],
-      [ "fft", "type_8h.html#aa9a21923a0b8cec03c6eea2226e48b0f", null ],
-      [ "m", "type_8h.html#a39f0897b9cd49a745d060e89c5f5964c", null ]
+    [ "smat", "type_8h.html#structsmat", [
+      [ "id", "type_8h.html#add8c1e7b9e24c5fc51757d73dc1afa0e", null ],
+      [ "p", "type_8h.html#a12a04a35e171d0fcc99167a253b68731", null ],
+      [ "nx", "type_8h.html#a967a4b756c610ee3c374e29c4e135a16", null ],
+      [ "ny", "type_8h.html#ada1d9027490bc227cbecc003fc316fce", null ],
+      [ "keywords", "type_8h.html#a816755737d111120dd722b25c2649e35", null ],
+      [ "fp", "type_8h.html#a1cf498c3486312116f960226da81fc2f", null ],
+      [ "fft", "type_8h.html#ae30354cac5ab0bdf5325dd8fe8155bd7", null ],
+      [ "mem", "type_8h.html#afcfc436a5cf203a9d4a1855b00ea1db4", null ],
+      [ "async", "type_8h.html#a797cee43d56e099394211095fb59870f", null ]
     ] ],
-    [ "smat", "type_8h.html#structsmat", null ],
-    [ "zmat", "type_8h.html#structzmat", null ],
-    [ "dmat", "type_8h.html#structdmat", null ],
-    [ "cmat", "type_8h.html#structcmat", null ],
-    [ "lmat", "type_8h.html#structlmat", null ],
-    [ "imat", "type_8h.html#structimat", null ],
-    [ "ssp", "type_8h.html#structssp", null ],
-    [ "zsp", "type_8h.html#structzsp", null ],
-    [ "dsp", "type_8h.html#structdsp", null ],
-    [ "csp", "type_8h.html#structcsp", null ],
+    [ "zmat", "type_8h.html#structzmat", [
+      [ "id", "type_8h.html#addb7d48455b511ec01d57a526f551e06", null ],
+      [ "p", "type_8h.html#ab499e5384348226214f5e8c6b26a8001", null ],
+      [ "nx", "type_8h.html#a252b00e9ba675da2e7622be31419751f", null ],
+      [ "ny", "type_8h.html#ad5f27e5d70b200f47027f1aa72b7d793", null ],
+      [ "keywords", "type_8h.html#a406da87d2fb36e795d0b686f24bca2d1", null ],
+      [ "fp", "type_8h.html#ae7ed8f99aeda91b00a1c9492fde06259", null ],
+      [ "fft", "type_8h.html#afdc78422f94d167f0f1f2e509d624e21", null ],
+      [ "mem", "type_8h.html#a381f4bfc7935fcbd9f0a380c8a166b88", null ],
+      [ "async", "type_8h.html#ab609e35fa47e8086b29a42cf4a83c5c8", null ]
+    ] ],
+    [ "dmat", "type_8h.html#structdmat", [
+      [ "id", "type_8h.html#a12eb40e2034dc5802dc7ca302b9db78c", null ],
+      [ "p", "type_8h.html#a97ddea51e9b11a5f4382e3095e8a5dee", null ],
+      [ "nx", "type_8h.html#a983086836d817046db8588de2873dd36", null ],
+      [ "ny", "type_8h.html#a690854282ff0f4fbd5d734d6c377c9b2", null ],
+      [ "keywords", "type_8h.html#ac153cdb0a14da8355fe50cacc823648e", null ],
+      [ "fp", "type_8h.html#a78f9407d56707249079b6a8104d56884", null ],
+      [ "fft", "type_8h.html#a88d7f7e053b7232e17f99ac09168de4b", null ],
+      [ "mem", "type_8h.html#ace7f877fd34c3f699d35a6a81c081a26", null ],
+      [ "async", "type_8h.html#a8e0e537e4e6617bdcc80bf9c86038de1", null ]
+    ] ],
+    [ "cmat", "type_8h.html#structcmat", [
+      [ "id", "type_8h.html#a8e951e1bfb35dc8bdb728c5505233442", null ],
+      [ "p", "type_8h.html#ab0fb73bb21aa4296d4438e7c92c2029f", null ],
+      [ "nx", "type_8h.html#aa4194b0fe36568f0dd5101cde603cb3c", null ],
+      [ "ny", "type_8h.html#af5f56097ef44115b7454dad413d6bba2", null ],
+      [ "keywords", "type_8h.html#a5125f57c4ec688318b1f9e80004b60b9", null ],
+      [ "fp", "type_8h.html#af1b7b2bf9970c3e125cdc7ccae44e43f", null ],
+      [ "fft", "type_8h.html#acf19dbd0b1ae36346119c39436f8e53d", null ],
+      [ "mem", "type_8h.html#a33b4349cf54302d233ab43e5b272b4f8", null ],
+      [ "async", "type_8h.html#ae447d7dd4733fcfa567ae670a49e6461", null ]
+    ] ],
+    [ "lmat", "type_8h.html#structlmat", [
+      [ "id", "type_8h.html#a546729a75029efbcd990566dadf7d9ee", null ],
+      [ "p", "type_8h.html#a5c17607d2ebfee8a7af36c69a58f815d", null ],
+      [ "nx", "type_8h.html#abbca7b9e31e4b7ff79c7b513958b8ac6", null ],
+      [ "ny", "type_8h.html#aeb4847d36e6114a213cea349d28b21ed", null ],
+      [ "keywords", "type_8h.html#a2f8bbab387b5252efaea3d12ef6a39f9", null ],
+      [ "fp", "type_8h.html#a9df0c1de6574bd15d2bacddd781ede46", null ],
+      [ "fft", "type_8h.html#ac2fdf0231034aef581c9aa2107380661", null ],
+      [ "mem", "type_8h.html#a95fa1e2213888b5415c204febbe5a49f", null ],
+      [ "async", "type_8h.html#a60283acdda3f4619fb2805fbbe7b1284", null ]
+    ] ],
+    [ "imat", "type_8h.html#structimat", [
+      [ "id", "type_8h.html#a750da6c5c22aeb95ced9571b92eebfdf", null ],
+      [ "p", "type_8h.html#a06c825f301aee4da38378f00d965be46", null ],
+      [ "nx", "type_8h.html#a9df84457ee161c3c6599c434e1cb5c6e", null ],
+      [ "ny", "type_8h.html#a47262b38357ddd7bec9236bda2b14835", null ],
+      [ "keywords", "type_8h.html#a9cb491156fa05e73c3340dd89da05d06", null ],
+      [ "fp", "type_8h.html#ab96ddf667f7a95b3be2d84c3ff07a3de", null ],
+      [ "fft", "type_8h.html#ae3173afc4af95c3940b7a9a2bd27e247", null ],
+      [ "mem", "type_8h.html#aad75f2a38593e510766ad8d6dfee6e04", null ],
+      [ "async", "type_8h.html#adf821923cf537d51b526fb8a3e8498e4", null ]
+    ] ],
+    [ "ssp", "type_8h.html#structssp", [
+      [ "id", "type_8h.html#ae73f9514ec4ded7636be14389176b6b7", null ],
+      [ "px", "type_8h.html#a7a34241419fef1030fd4f64523a3a4e7", null ],
+      [ "nx", "type_8h.html#aa84765fc5a630c891a4da91b67d9c99d", null ],
+      [ "ny", "type_8h.html#aa4f8c06da45cabee28d0964e39dcdc41", null ],
+      [ "keywords", "type_8h.html#aec8f7aefad9b0235245520241adb0449", null ],
+      [ "fp", "type_8h.html#a6fd6b63d4aaa3e50e733c3ae927f02af", null ],
+      [ "nzmax", "type_8h.html#a6e0547432ee13aa7262084392eabed1b", null ],
+      [ "pp", "type_8h.html#a5fe361ac177f1d7594992b020989ec59", null ],
+      [ "pi", "type_8h.html#a945fa6665acd6385b097058d29479ccf", null ],
+      [ "nref", "type_8h.html#a26d1d89bef690f01b475c1726bd7a07b", null ]
+    ] ],
+    [ "zsp", "type_8h.html#structzsp", [
+      [ "id", "type_8h.html#aed2a6d20488766c76aefb51e2ac4e54b", null ],
+      [ "px", "type_8h.html#acd830f7bde016c7c315364d3d81fc9cb", null ],
+      [ "nx", "type_8h.html#ac618331c31838a444819a8a2578c88ad", null ],
+      [ "ny", "type_8h.html#ae930595f141be9b65080a44747e5439a", null ],
+      [ "keywords", "type_8h.html#a4a66e42dfaea5f3bbec7f9ca18562c6a", null ],
+      [ "fp", "type_8h.html#a340ff044a49985cc619efe1949111025", null ],
+      [ "nzmax", "type_8h.html#a8d66a092f10fe75633440800a8bfe341", null ],
+      [ "pp", "type_8h.html#a8d527c6040fd33616a1c2c23897ce771", null ],
+      [ "pi", "type_8h.html#aff73dd7b569f5ba0016e39c4adea8b81", null ],
+      [ "nref", "type_8h.html#add3062c983bde1a679a8ae31151895ea", null ]
+    ] ],
+    [ "dsp", "type_8h.html#structdsp", [
+      [ "id", "type_8h.html#a9940dbb1f655e43790fa4f48903f6452", null ],
+      [ "px", "type_8h.html#a1c9c16038627be17e3244fd6081bdf52", null ],
+      [ "nx", "type_8h.html#af73e8354dff1e695a825ffb084ac64d9", null ],
+      [ "ny", "type_8h.html#a5ac3666a5e38bde4f0002b18af9318ba", null ],
+      [ "keywords", "type_8h.html#a2ab63e68fbb424d26b0fe859a5c9a199", null ],
+      [ "fp", "type_8h.html#a6d4592e46b38cadc72d36e1803852064", null ],
+      [ "nzmax", "type_8h.html#a870a449e24356b8a08ec11a4916be6a0", null ],
+      [ "pp", "type_8h.html#ae8acd15d132e4d743726610d93d26d6a", null ],
+      [ "pi", "type_8h.html#aa12d0a13a21ea965033a305302ed8368", null ],
+      [ "nref", "type_8h.html#a45496852dc94fbb11124a08c53d5469d", null ]
+    ] ],
+    [ "csp", "type_8h.html#structcsp", [
+      [ "id", "type_8h.html#aa78a0978520f9419420ccf582826d2c7", null ],
+      [ "px", "type_8h.html#a1306e3dc38bbccfcd02b0df56ccedc3d", null ],
+      [ "nx", "type_8h.html#aad7f9afab1677e489fff66625036fda4", null ],
+      [ "ny", "type_8h.html#ac7102cbe89e0f455deb13406499f348e", null ],
+      [ "keywords", "type_8h.html#a3cc49acd0b2ed1ccec63a6f31ec49e90", null ],
+      [ "fp", "type_8h.html#a049bd979b3452455953225a479d74d5b", null ],
+      [ "nzmax", "type_8h.html#a1ac262485faf97bba7f808626854a480", null ],
+      [ "pp", "type_8h.html#a778f9b68589cb7135babe3f7e222e7d8", null ],
+      [ "pi", "type_8h.html#aa360b079e9763d2955fd280c96a93731", null ],
+      [ "nref", "type_8h.html#a77d5149d835d4cb355395b4284fe333e", null ]
+    ] ],
     [ "map_t", "type_8h.html#structmap__t", [
       [ "ox", "type_8h.html#a34eb928be06a75df224949c753beef8f", null ],
       [ "oy", "type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159", null ],
@@ -28,7 +122,8 @@ var type_8h =
       [ "h", "type_8h.html#a5a775e608fdc821648d555dee623ae2f", null ],
       [ "vx", "type_8h.html#a90d89f3bf30d439963a3d13f6c7d968d", null ],
       [ "vy", "type_8h.html#a1b941ccdd3db094fe026e49f9c4da998", null ],
-      [ "iac", "type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ]
+      [ "iac", "type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ],
+      [ "dratio", "type_8h.html#ad9e9c9b8a27a834b7500ba1aba25a991", null ]
     ] ],
     [ "rmap_t", "type_8h.html#structrmap__t", [
       [ "ox", "type_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31", null ],
@@ -57,197 +152,302 @@ var type_8h =
       [ "ny", "type_8h.html#a149274579012b1df0813c6020df76c36", null ]
     ] ],
     [ "loc_t", "type_8h.html#structloc__t", null ],
-    [ "pts_t", "type_8h.html#structpts__t", null ],
-    [ "ccell", "type_8h.html#structccell", null ],
-    [ "zcell", "type_8h.html#structzcell", null ],
-    [ "dcell", "type_8h.html#structdcell", null ],
-    [ "scell", "type_8h.html#structscell", null ],
-    [ "lcell", "type_8h.html#structlcell", null ],
-    [ "dspcell", "type_8h.html#structdspcell", null ],
-    [ "sspcell", "type_8h.html#structsspcell", null ],
-    [ "cspcell", "type_8h.html#structcspcell", null ],
-    [ "zspcell", "type_8h.html#structzspcell", null ],
-    [ "cccell", "type_8h.html#structcccell", null ],
-    [ "zccell", "type_8h.html#structzccell", null ],
-    [ "dccell", "type_8h.html#structdccell", null ],
-    [ "sccell", "type_8h.html#structsccell", null ],
-    [ "iccell", "type_8h.html#structiccell", null ],
-    [ "ccccell", "type_8h.html#structccccell", null ],
-    [ "zcccell", "type_8h.html#structzcccell", null ],
-    [ "dcccell", "type_8h.html#structdcccell", null ],
-    [ "scccell", "type_8h.html#structscccell", null ],
-    [ "icccell", "type_8h.html#structicccell", null ],
-    [ "mapcell", "type_8h.html#structmapcell", null ],
-    [ "rmapcell", "type_8h.html#structrmapcell", null ],
-    [ "loccell", "type_8h.html#structloccell", null ],
-    [ "mapccell", "type_8h.html#structmapccell", null ],
-    [ "rmapccell", "type_8h.html#structrmapccell", null ],
-    [ "locccell", "type_8h.html#structlocccell", null ],
-    [ "smat.__unnamed__", "type_8h.html#unionsmat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "pts_t", "type_8h.html#structpts__t", [
+      [ "nxsa", "type_8h.html#a320665323a3307f015cab4b5b1cdf161", null ],
+      [ "nysa", "type_8h.html#a90e7c3a8c0eebab6593e56fc2e782f89", null ],
+      [ "dx", "type_8h.html#a0de974d017f51d0cb3d30e6406bb0cf4", null ],
+      [ "dy", "type_8h.html#a494f53b2987007bb4550f3c548ff1bf6", null ]
     ] ],
-    [ "smat.__unnamed__.__unnamed__", "type_8h.html#structsmat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "cell", "type_8h.html#structcell", [
+      [ "id", "type_8h.html#a8de9ad2bda53e2da59969024fbc3660f", null ],
+      [ "p", "type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569", null ],
+      [ "nx", "type_8h.html#a546c88ba8a0e1904479cc349aef10feb", null ],
+      [ "ny", "type_8h.html#a71be2e4edd9c472b42e25f45efc063ed", null ],
+      [ "keywords", "type_8h.html#a823d904ce6542918ce1af19dc0843399", null ],
+      [ "fp", "type_8h.html#ad43278e4d933d66b294d5cd3eb51e05f", null ],
+      [ "fft", "type_8h.html#aa9a21923a0b8cec03c6eea2226e48b0f", null ],
+      [ "m", "type_8h.html#a39f0897b9cd49a745d060e89c5f5964c", null ],
+      [ "dummy1", "type_8h.html#a5cdbd9cd96059f1ca238f619d61a6d73", null ]
     ] ],
-    [ "zmat.__unnamed__", "type_8h.html#unionzmat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "ccell", "type_8h.html#structccell", [
+      [ "id", "type_8h.html#a447810e4efa6bb6785e9de5c42179aa8", null ],
+      [ "p", "type_8h.html#a17f933fabe6c0174a87909f0cbb913f0", null ],
+      [ "nx", "type_8h.html#ab08666a33e3b77dc0ebad13f58cd6f86", null ],
+      [ "ny", "type_8h.html#a02882865ece8aa1dab5515077834d67e", null ],
+      [ "keywords", "type_8h.html#ae32b611eb588931d9a1380c2058b45f8", null ],
+      [ "fp", "type_8h.html#a365e7234e1856729969e272118728b56", null ],
+      [ "fft", "type_8h.html#ab1e2b9a32f0e4ea2310a9df69f70f25e", null ],
+      [ "m", "type_8h.html#abc4a68deeee6c4643c23d7f0516dacf5", null ],
+      [ "dummy1", "type_8h.html#a4b545ed763f407ad49fa79bb79d3a487", null ]
     ] ],
-    [ "zmat.__unnamed__.__unnamed__", "type_8h.html#structzmat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "zcell", "type_8h.html#structzcell", [
+      [ "id", "type_8h.html#aac67ce7fe5b8946b6372b11440fe6038", null ],
+      [ "p", "type_8h.html#a85ffb5fbf19612fe3bf2e5112863ccb2", null ],
+      [ "nx", "type_8h.html#a437d0cbaa3744b2bf732123a5fce5201", null ],
+      [ "ny", "type_8h.html#a9725889139933de3185747c6c47874bc", null ],
+      [ "keywords", "type_8h.html#a4c60a454cf5e82df5731a1c2f2e47e02", null ],
+      [ "fp", "type_8h.html#ab5e385c851a8668d172e412b9e2ed05d", null ],
+      [ "fft", "type_8h.html#aec4ce21ba1748eccbccc18a7468e2603", null ],
+      [ "m", "type_8h.html#ac4168ca5abfb8fcdfbe6af503b0a0328", null ],
+      [ "dummy1", "type_8h.html#afb568c00809b0b9a7333d04a4b52992e", null ]
     ] ],
-    [ "dmat.__unnamed__", "type_8h.html#uniondmat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "dcell", "type_8h.html#structdcell", [
+      [ "id", "type_8h.html#ab144dcde19b2dc4975c7b91a0d20b2b8", null ],
+      [ "p", "type_8h.html#aaad00ad22402a0ecca1d799fcebf977f", null ],
+      [ "nx", "type_8h.html#ac88fed44e9f978c6757ec8dfcfb31589", null ],
+      [ "ny", "type_8h.html#acd7579d2c13ae676bbfba099ae78b35c", null ],
+      [ "keywords", "type_8h.html#ae032073426647634197ef2d1cf67c243", null ],
+      [ "fp", "type_8h.html#abd5041d4330c51a546d1ba8238018ab1", null ],
+      [ "fft", "type_8h.html#a5dd7df3add46c2475b4786efa5a60ed3", null ],
+      [ "m", "type_8h.html#a3287da79627bab9a736712f6d1b06cfc", null ],
+      [ "dummy1", "type_8h.html#aaaf4a20b300a53687df4a97000d9eb82", null ]
     ] ],
-    [ "dmat.__unnamed__.__unnamed__", "type_8h.html#structdmat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "scell", "type_8h.html#structscell", [
+      [ "id", "type_8h.html#adf05719ba81333c7a04deb8a5d80dff4", null ],
+      [ "p", "type_8h.html#ad16ff87a6ae002a844590cf93d63767f", null ],
+      [ "nx", "type_8h.html#afcb887f6a3d1c0104ee232d8bcd3778c", null ],
+      [ "ny", "type_8h.html#ad2826e067a8104ab8712ae2dfede8897", null ],
+      [ "keywords", "type_8h.html#a0ee94d3a6fd29ebb95567fc1e1146121", null ],
+      [ "fp", "type_8h.html#a3601b9160da67c232796f5c83db434b6", null ],
+      [ "fft", "type_8h.html#a122e41846a0d98d77dce745defea564f", null ],
+      [ "m", "type_8h.html#ad9c597e37a60c76b1b6c7594f5c3b0c9", null ],
+      [ "dummy1", "type_8h.html#ae88e6898a73bd7a6ec01e2703056fed4", null ]
     ] ],
-    [ "cmat.__unnamed__", "type_8h.html#unioncmat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "lcell", "type_8h.html#structlcell", [
+      [ "id", "type_8h.html#a3670f11218f9de6b89364c5069c7f1f6", null ],
+      [ "p", "type_8h.html#ad8cf1385c59d82e67260167c71bbb78a", null ],
+      [ "nx", "type_8h.html#ab6645abc1f12ec6029a73115852e9d77", null ],
+      [ "ny", "type_8h.html#a0edc93242dc03eef3a233af605314eb3", null ],
+      [ "keywords", "type_8h.html#a7bc430101ee613300a0820bd2e6f01af", null ],
+      [ "fp", "type_8h.html#a93f1e5aea662b68d89c6c8df73ed8554", null ],
+      [ "fft", "type_8h.html#a37114e2a47abe8e151caf728cc562039", null ],
+      [ "m", "type_8h.html#ad01a34a57a1f835be3147bf3f6c7df27", null ],
+      [ "dummy1", "type_8h.html#a6f9da4fb9b6d983098a2785ad3cb8a07", null ]
     ] ],
-    [ "cmat.__unnamed__.__unnamed__", "type_8h.html#structcmat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "dspcell", "type_8h.html#structdspcell", [
+      [ "id", "type_8h.html#a861462d4fb34521cc0406fd27dac44da", null ],
+      [ "p", "type_8h.html#a59015595bbb69c836f38693da17f1bcd", null ],
+      [ "nx", "type_8h.html#a4907036476f83672387421a76ed4de35", null ],
+      [ "ny", "type_8h.html#aa59a5c0a98e31997f5b9f83d106f3dc9", null ],
+      [ "keywords", "type_8h.html#aaff9a834d03372d48cb249707fed62d4", null ],
+      [ "fp", "type_8h.html#a8a750721bae53c7ae96bf9aabdd7b877", null ],
+      [ "fft", "type_8h.html#a059530fc3605355e473c2bb0a2be7a7f", null ],
+      [ "m", "type_8h.html#a026a1e12a790a8c4e13d633653c7e49f", null ],
+      [ "dummy1", "type_8h.html#a7971f036177fe17ad29ebc237c328ada", null ]
     ] ],
-    [ "lmat.__unnamed__", "type_8h.html#unionlmat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "sspcell", "type_8h.html#structsspcell", [
+      [ "id", "type_8h.html#a9dbac946fa140d4dd0c1e91ae693d9a6", null ],
+      [ "p", "type_8h.html#aa72a081dbe2bd66f63a0c2d09276d883", null ],
+      [ "nx", "type_8h.html#a9240148c1e6966496de723fcadfb2fb8", null ],
+      [ "ny", "type_8h.html#a6e80b384080c57eabb7b830fca201bbf", null ],
+      [ "keywords", "type_8h.html#a2703d1158275dc98bfda0190c63b31b0", null ],
+      [ "fp", "type_8h.html#ac46fd13b4a0b7a8476a3efdc89db8b71", null ],
+      [ "fft", "type_8h.html#a027a28c9492c81252aebc47186273ddb", null ],
+      [ "m", "type_8h.html#a001a7acb9f5d1954c2d0528fbb48d7dc", null ],
+      [ "dummy1", "type_8h.html#a6036797f11ec4a75e9f3cad4c592a5a4", null ]
     ] ],
-    [ "lmat.__unnamed__.__unnamed__", "type_8h.html#structlmat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "cspcell", "type_8h.html#structcspcell", [
+      [ "id", "type_8h.html#a7107a3025720f4bb8df91f91690addad", null ],
+      [ "p", "type_8h.html#a2e321bcfe0bbb1a2d64772ff6db291ac", null ],
+      [ "nx", "type_8h.html#a53908c34870ae6094f472897f2be9a7e", null ],
+      [ "ny", "type_8h.html#a2000cf8ce69a38a69473e4b681adb21a", null ],
+      [ "keywords", "type_8h.html#a6e62b32d47d73e8fb749eba0bc1bcd6a", null ],
+      [ "fp", "type_8h.html#abd28401544fcd3f565876d5e5118e89b", null ],
+      [ "fft", "type_8h.html#a9d77cd69ddc057865d53e149823a5bd6", null ],
+      [ "m", "type_8h.html#a6c00f479db12c16502cb4185ba2a2d73", null ],
+      [ "dummy1", "type_8h.html#afc3253488a96f16a30010fe65954e2bc", null ]
     ] ],
-    [ "imat.__unnamed__", "type_8h.html#unionimat_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "zspcell", "type_8h.html#structzspcell", [
+      [ "id", "type_8h.html#a084a4a981296105b52c8b648be61329d", null ],
+      [ "p", "type_8h.html#a10f3c582760133e12739ea8c4e8929df", null ],
+      [ "nx", "type_8h.html#ac268274968d640469fba3ec31ed5b3a9", null ],
+      [ "ny", "type_8h.html#ac69053a6dad27c1bc6fba2fb34ff1be6", null ],
+      [ "keywords", "type_8h.html#ae53584d87a160c77c75346e8937138fc", null ],
+      [ "fp", "type_8h.html#a47cb248140743d3050d1818ebb7ef69c", null ],
+      [ "fft", "type_8h.html#a96b87b7deb90b7f35eee67b255f9fd8d", null ],
+      [ "m", "type_8h.html#a554270bdc46b2595ea38435520c9d86d", null ],
+      [ "dummy1", "type_8h.html#a64b1bf05a6e7f6e1831d547f7909f586", null ]
     ] ],
-    [ "imat.__unnamed__.__unnamed__", "type_8h.html#structimat_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
-      [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
+    [ "cccell", "type_8h.html#structcccell", [
+      [ "id", "type_8h.html#ab85aa7493e52bdda37813bcaf5359d30", null ],
+      [ "p", "type_8h.html#abbc9cd776935217d96ec2902b4b971b9", null ],
+      [ "nx", "type_8h.html#a9722be8213f30ccd4d83fe7451c424d7", null ],
+      [ "ny", "type_8h.html#a380c1e2f1294c6b6ca9924bf9575dd9d", null ],
+      [ "keywords", "type_8h.html#a1b1acd33804d8b5b7385ef231a599d0a", null ],
+      [ "fp", "type_8h.html#a13030180f9a6aff4f2f5ae840895cf6b", null ],
+      [ "fft", "type_8h.html#a620d0d4c80f812d516f5e85a3e7c4874", null ],
+      [ "m", "type_8h.html#a55d0fbc520b08b25a82384ff9e481236", null ],
+      [ "dummy1", "type_8h.html#a4e712e28ad8e783cf06bb087c0904a8c", null ]
     ] ],
-    [ "ssp.__unnamed__", "type_8h.html#unionssp_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "zccell", "type_8h.html#structzccell", [
+      [ "id", "type_8h.html#a943ca3354ffd7030e6e5642683bbc2c3", null ],
+      [ "p", "type_8h.html#a85058f9c06c6ac49068e2b77ffd67265", null ],
+      [ "nx", "type_8h.html#a6c5b7c6b159ec0456e2e23e2d4970f6f", null ],
+      [ "ny", "type_8h.html#a6806b466b6fb799f01df4ca8025f688d", null ],
+      [ "keywords", "type_8h.html#aba30b2965e029dafcdfb28b94b012b7f", null ],
+      [ "fp", "type_8h.html#a3b05d815ad38871870986b407db2f993", null ],
+      [ "fft", "type_8h.html#a9184b11e8c4f7152ea14265acae82535", null ],
+      [ "m", "type_8h.html#a886a14b1f12df5277dfb31e4f87c5e2c", null ],
+      [ "dummy1", "type_8h.html#af6ea359b07377b60f003632897b72851", null ]
     ] ],
-    [ "ssp.__unnamed__.__unnamed__", "type_8h.html#structssp_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "px", "type_8h.html#a21de26caa6bcfc936378c4e45d235bd9", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
-      [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
-      [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],
-      [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+    [ "dccell", "type_8h.html#structdccell", [
+      [ "id", "type_8h.html#a0a0ba7f087d86ff8b6c3e0cfd3c01bbe", null ],
+      [ "p", "type_8h.html#a6b9c9e9b258a30ea79a57199ee92e564", null ],
+      [ "nx", "type_8h.html#a21c5c6a47f7e46b204c31131c79d3b1a", null ],
+      [ "ny", "type_8h.html#ab902b69f82f1894e2d3a37214d9f1ae6", null ],
+      [ "keywords", "type_8h.html#a8392eb954e284d3f5727a7cab667b55b", null ],
+      [ "fp", "type_8h.html#acbe8165220bd56892c5b93106028926a", null ],
+      [ "fft", "type_8h.html#a153e3ee48016254fa22c91212f442027", null ],
+      [ "m", "type_8h.html#ac1284fa78184eb13652595639c1015ff", null ],
+      [ "dummy1", "type_8h.html#abf172a4df343e74da4b66221a655fac0", null ]
     ] ],
-    [ "zsp.__unnamed__", "type_8h.html#unionzsp_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "sccell", "type_8h.html#structsccell", [
+      [ "id", "type_8h.html#a6b39eac1f2ca48081dcd36fd91842767", null ],
+      [ "p", "type_8h.html#ab44d358a57168011125ab1af5c6d1692", null ],
+      [ "nx", "type_8h.html#a50c80e25c4cd50c6235a7cb33fdfe3aa", null ],
+      [ "ny", "type_8h.html#a4c98771c420616f8768d5cefeaf9be82", null ],
+      [ "keywords", "type_8h.html#aaede87c78ca304690f96539177a4ec5c", null ],
+      [ "fp", "type_8h.html#a80fdc57ccda6dd24ef2e84344dd9cc14", null ],
+      [ "fft", "type_8h.html#a2531387d042708b5bc7aeb7596b6ac35", null ],
+      [ "m", "type_8h.html#aea7f447febf7c96afc2e36605fa48ebb", null ],
+      [ "dummy1", "type_8h.html#ab453bda8f604c8945fbb25d29f32a052", null ]
     ] ],
-    [ "zsp.__unnamed__.__unnamed__", "type_8h.html#structzsp_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "px", "type_8h.html#a21de26caa6bcfc936378c4e45d235bd9", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
-      [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
-      [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],
-      [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+    [ "lccell", "type_8h.html#structlccell", [
+      [ "id", "type_8h.html#a48f5eced1c774973c460820475b62646", null ],
+      [ "p", "type_8h.html#aa17f0fa269c150b1564e74bea1dc4340", null ],
+      [ "nx", "type_8h.html#a9c63951b4f15d1934ddbc6d2bed1793a", null ],
+      [ "ny", "type_8h.html#a58ccc96608ccd6c19e43e6378646ab27", null ],
+      [ "keywords", "type_8h.html#a16bbf29c3c81f5691fa79f5352d69d98", null ],
+      [ "fp", "type_8h.html#a22ed5332569be3ede9b92395e8fbf3bd", null ],
+      [ "fft", "type_8h.html#afecd433c2cc8d95f167ea7ae1a5c8c3a", null ],
+      [ "m", "type_8h.html#a0e3ecd785ced6de72bdbab31bd394086", null ],
+      [ "dummy1", "type_8h.html#aa319cb3e9918d709dedde5c23a39a55e", null ]
     ] ],
-    [ "dsp.__unnamed__", "type_8h.html#uniondsp_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "ccccell", "type_8h.html#structccccell", [
+      [ "id", "type_8h.html#afc0943fec380cf27fe8e9e5484a8cdfd", null ],
+      [ "p", "type_8h.html#ab5824ca70d289fa9ab2a50697f7ff6a7", null ],
+      [ "nx", "type_8h.html#a37e2e0f86d0da4a723c1c2278dce5532", null ],
+      [ "ny", "type_8h.html#a1577ec41e047204038177cbbcdb4098e", null ],
+      [ "keywords", "type_8h.html#a0793b48227462025a4825caf70011639", null ],
+      [ "fp", "type_8h.html#aae6525eea2770f35bddda463efb0c18a", null ],
+      [ "fft", "type_8h.html#aa274e1b44fbf71ceeedebfe216199cba", null ],
+      [ "m", "type_8h.html#a76ede3cec7ecabae009b872462f47061", null ],
+      [ "dummy1", "type_8h.html#a229738b2f09162e035563a49f1bad4c4", null ]
     ] ],
-    [ "dsp.__unnamed__.__unnamed__", "type_8h.html#structdsp_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "px", "type_8h.html#a21de26caa6bcfc936378c4e45d235bd9", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
-      [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
-      [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],
-      [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+    [ "zcccell", "type_8h.html#structzcccell", [
+      [ "id", "type_8h.html#aa8cb7ee42b85a0346052b380b3493ef1", null ],
+      [ "p", "type_8h.html#aa9018e95bb13770d1a5f8e2d34edd482", null ],
+      [ "nx", "type_8h.html#abdc7a2f1ce4149db3f4227f9d2dcc78f", null ],
+      [ "ny", "type_8h.html#ace5dc01349dcc234d960edac1ff45987", null ],
+      [ "keywords", "type_8h.html#a4f4ecb747fd9ba99a236dab3ff56f98b", null ],
+      [ "fp", "type_8h.html#ad2546c6a6eb7ae9e1a5763c419ce8bf2", null ],
+      [ "fft", "type_8h.html#aa923b32d75a5e7d1bfa299d08e9e9b24", null ],
+      [ "m", "type_8h.html#a960b8c32f8444b8bdde30af0e12e7774", null ],
+      [ "dummy1", "type_8h.html#a96b73d816bc07b65e6be190af711a267", null ]
     ] ],
-    [ "csp.__unnamed__", "type_8h.html#unioncsp_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
+    [ "dcccell", "type_8h.html#structdcccell", [
+      [ "id", "type_8h.html#a8c033a469cb1a2870932c56d4bc7792e", null ],
+      [ "p", "type_8h.html#a3b53e441976ea59541f34cd7b0105d26", null ],
+      [ "nx", "type_8h.html#a5dceb122d9a8fa9c6eb2bca4708e68f3", null ],
+      [ "ny", "type_8h.html#acf4d5f0460b27e0d7f87db456c6f4835", null ],
+      [ "keywords", "type_8h.html#a37d28490a8310c27ae2cf93a75bf4aef", null ],
+      [ "fp", "type_8h.html#a6ef4343585edd984e61e55dc018f76d2", null ],
+      [ "fft", "type_8h.html#a833dfb0cd47c4735a0dbf127c890a6a3", null ],
+      [ "m", "type_8h.html#aec4cd1066bb9f4eb3e567754e24039aa", null ],
+      [ "dummy1", "type_8h.html#ad1e3a58e2107750fd5fb568809fd158c", null ]
     ] ],
-    [ "csp.__unnamed__.__unnamed__", "type_8h.html#structcsp_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "px", "type_8h.html#a21de26caa6bcfc936378c4e45d235bd9", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "padding1", "type_8h.html#acac9461b0293ed69fe250a7a68c3221e", null ],
-      [ "nzmax", "type_8h.html#a3fda2232a7f3399b9f2d4b0a0769758c", null ],
-      [ "pp", "type_8h.html#ac483f6ce851c9ecd9fb835ff7551737c", null ],
-      [ "pi", "type_8h.html#a72ab8af56bddab33b269c5964b26620a", null ],
-      [ "nref", "type_8h.html#a5792fec74b998515bb4ccca87df68948", null ]
+    [ "scccell", "type_8h.html#structscccell", [
+      [ "id", "type_8h.html#a9a281390aa1f58db0761c9269fa16d0c", null ],
+      [ "p", "type_8h.html#a184dc077e7e9573e7c871babaaca2a87", null ],
+      [ "nx", "type_8h.html#ab8fb79012784e8d786e4447268449151", null ],
+      [ "ny", "type_8h.html#aeda09782235a349c37ac066f74bdaacc", null ],
+      [ "keywords", "type_8h.html#aaa7beecd6b06d6599428fe837d60467f", null ],
+      [ "fp", "type_8h.html#afd0c5381b1ecd1ec280db41cc4d20d80", null ],
+      [ "fft", "type_8h.html#a7958a804e4e6bb70fd035540a8d914c9", null ],
+      [ "m", "type_8h.html#ab1665168ddaee139b56490d0b762bcd7", null ],
+      [ "dummy1", "type_8h.html#a982e0c4817d88c2c4f5960e0c9ecbe7a", null ]
+    ] ],
+    [ "lcccell", "type_8h.html#structlcccell", [
+      [ "id", "type_8h.html#aaea997cfb316c1ff491d4adae5d8ea9d", null ],
+      [ "p", "type_8h.html#a7ec3c7ff2870fe6a36370e563b84f481", null ],
+      [ "nx", "type_8h.html#a9edad05fbd6465b0a5d8715d90de571b", null ],
+      [ "ny", "type_8h.html#ad6ff340b76144bd224003ceae28de5e0", null ],
+      [ "keywords", "type_8h.html#a790a2c8fd13793a43844bc977f0eeaf6", null ],
+      [ "fp", "type_8h.html#a62285fb07781e870946dad7d5d0df37f", null ],
+      [ "fft", "type_8h.html#a9d3bca3f9fb3c61d20ac9e903915689b", null ],
+      [ "m", "type_8h.html#a66fd7fbb3062538fc089e3079025b127", null ],
+      [ "dummy1", "type_8h.html#a76553578244a69a99dfe903166b199b1", null ]
+    ] ],
+    [ "mapcell", "type_8h.html#structmapcell", [
+      [ "id", "type_8h.html#abd4dde868ed467340f126bcda316c35b", null ],
+      [ "p", "type_8h.html#ac6ae9ce4f2b13130d7a8bdc18517aa45", null ],
+      [ "nx", "type_8h.html#a39c8bfe5cc63a4119946dbc683e416ec", null ],
+      [ "ny", "type_8h.html#a77e42f20961814be9429ff975f14dbc4", null ],
+      [ "keywords", "type_8h.html#ab55ff3a6f42bfeb95111acd3153579ce", null ],
+      [ "fp", "type_8h.html#a33f7b985bf7933943eed9bb36b4676ed", null ],
+      [ "fft", "type_8h.html#a87989b68db16d4b9d55166ac23220175", null ],
+      [ "m", "type_8h.html#a94d75115d93b65992c5ddd2dd4296c4a", null ],
+      [ "dummy1", "type_8h.html#a4413b3beb643043480e0b71f4564c3ef", null ]
+    ] ],
+    [ "rmapcell", "type_8h.html#structrmapcell", [
+      [ "id", "type_8h.html#a7700a424ce66fe3a873b3f2d6b35f480", null ],
+      [ "p", "type_8h.html#abda5fadfc89be69ce5e72a1d8ad3106b", null ],
+      [ "nx", "type_8h.html#a008c699eab198197133d868882e53e03", null ],
+      [ "ny", "type_8h.html#aeaa44bd52e5c700b8e1733e524e82842", null ],
+      [ "keywords", "type_8h.html#a1ee74c8ce9ac65a4598426e1e227eeb8", null ],
+      [ "fp", "type_8h.html#ad39885080780935218a9dd2ae1bd7f14", null ],
+      [ "fft", "type_8h.html#ae0e58b881069fe738ca9fa751dadfbeb", null ],
+      [ "m", "type_8h.html#a4d7a056b0c828227b74b9cb4e7d0f293", null ],
+      [ "dummy1", "type_8h.html#a26ad8f0dc258d3099dd4d6e5ce60434a", null ]
+    ] ],
+    [ "loccell", "type_8h.html#structloccell", [
+      [ "id", "type_8h.html#a984c75297b61489a9971dc73e4dc10db", null ],
+      [ "p", "type_8h.html#ad2befa5c2a8ad93d1a99bd60598dc445", null ],
+      [ "nx", "type_8h.html#a720d6cb28c51822fefa2e456bcf37a30", null ],
+      [ "ny", "type_8h.html#a66b8c833b1f4ddb3dbea96e52d017de5", null ],
+      [ "keywords", "type_8h.html#a62c1005b5bc685a05ede4891d0e8077b", null ],
+      [ "fp", "type_8h.html#aa6492335f4b1bc8a44d157ee10799d78", null ],
+      [ "fft", "type_8h.html#aa69362525e4b65598c734985799aab23", null ],
+      [ "m", "type_8h.html#a64f034633d63c45d7ffff528d5e101e4", null ],
+      [ "dummy1", "type_8h.html#a157f286c308e6e9e9f75d1473791b8dc", null ]
+    ] ],
+    [ "mapccell", "type_8h.html#structmapccell", [
+      [ "id", "type_8h.html#a69fd1efb52b4874513d4dcf20430afd8", null ],
+      [ "p", "type_8h.html#a07231079b0ee6ed3103ae12cc4307124", null ],
+      [ "nx", "type_8h.html#a6c67a1b467cd0e69eeb922423587bff6", null ],
+      [ "ny", "type_8h.html#ac44e43b6fa6f6ee1f49b8adb88fba15c", null ],
+      [ "keywords", "type_8h.html#aaf912eee3f3876fab0ebe242727c2e2c", null ],
+      [ "fp", "type_8h.html#a29c8bc16704c5f288c7f9a668c6edc84", null ],
+      [ "fft", "type_8h.html#a7a997b716ccbfea8a99934c1d2a0767a", null ],
+      [ "m", "type_8h.html#a25515d72f8a2d72619fbcc5bada21c22", null ],
+      [ "dummy1", "type_8h.html#a48e2f585594172831ff71f7060f7ca1d", null ]
+    ] ],
+    [ "rmapccell", "type_8h.html#structrmapccell", [
+      [ "id", "type_8h.html#a950a9fb0f01ab9f28270f18a57f075a6", null ],
+      [ "p", "type_8h.html#a42e2503f68240fc7269809cf7e7400cf", null ],
+      [ "nx", "type_8h.html#a8b6f5ceb3d17415cebabb556bd63ca0a", null ],
+      [ "ny", "type_8h.html#a33f0fb8ea98a84d3cfd0d086daa13e1e", null ],
+      [ "keywords", "type_8h.html#a14eeb669a67f89f4945caccd0db78311", null ],
+      [ "fp", "type_8h.html#aaf3e0026e675930a55ae9826c1c626db", null ],
+      [ "fft", "type_8h.html#a9d1def8cf9f0bbb7f8389f1a8bc21e13", null ],
+      [ "m", "type_8h.html#ad52dd8e2088a3a12cd3967101f3546ca", null ],
+      [ "dummy1", "type_8h.html#a60243157214520bfa42480c1a2933157", null ]
+    ] ],
+    [ "locccell", "type_8h.html#structlocccell", [
+      [ "id", "type_8h.html#a77502e1c90f739c19a7fa4d46c1c1774", null ],
+      [ "p", "type_8h.html#aae20cbd68e78c1be2e3c12b2ea104fb5", null ],
+      [ "nx", "type_8h.html#a7aed070afe966dec55317fd674a7392c", null ],
+      [ "ny", "type_8h.html#a946433f33feaacaf6d81258b91829f08", null ],
+      [ "keywords", "type_8h.html#ad54348b6237e45461cc92adea4a5e3f3", null ],
+      [ "fp", "type_8h.html#a199094230efe69505275d17f504d6fcd", null ],
+      [ "fft", "type_8h.html#af2408d9b16d6eb3d0a3579cb7f3cec41", null ],
+      [ "m", "type_8h.html#abe1fabe079be38cf5ef18feb383e4093", null ],
+      [ "dummy1", "type_8h.html#ac571769a99b0dd1a2e5761c4fd11beaa", null ]
     ] ],
     [ "map_t.__unnamed__", "type_8h.html#unionmap__t_8____unnamed____", [
       [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
     ] ],
-    [ "map_t.__unnamed__.__unnamed__", "type_8h.html#unionmap__t_8____unnamed_____8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "map_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#structmap__t_8____unnamed_____8____unnamed_____8____unnamed____", [
+    [ "map_t.__unnamed__.__unnamed__", "type_8h.html#structmap__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
       [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
       [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
@@ -255,17 +455,13 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "rmap_t.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed____", [
       [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
     ] ],
-    [ "rmap_t.__unnamed__.__unnamed__", "type_8h.html#unionrmap__t_8____unnamed_____8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "rmap_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#structrmap__t_8____unnamed_____8____unnamed_____8____unnamed____", [
+    [ "rmap_t.__unnamed__.__unnamed__", "type_8h.html#structrmap__t_8____unnamed_____8____unnamed____", [
       [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
       [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
       [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
@@ -273,12 +469,10 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
       [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "mem", "type_8h.html#aafc4fc7e48a0710a1dc94ef3e8bc5764", null ],
       [ "async", "type_8h.html#a0df93e34273b367bb63bad28c94c78d5", null ]
     ] ],
     [ "loc_t.__unnamed__", "type_8h.html#unionloc__t_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ],
       [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ]
     ] ],
     [ "loc_t.__unnamed__.__unnamed__", "type_8h.html#structloc__t_8____unnamed_____8____unnamed____", [
@@ -286,12 +480,9 @@ var type_8h =
       [ "locx", "type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
       [ "nloc", "type_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
       [ "two", "type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "dummy_fp", "type_8h.html#a0f4f35c364503ca278475c1e93a12c61", null ],
-      [ "dummy_fft", "type_8h.html#a8c8dc74c2c5e4a9413c6e8889cc7b1e0", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
-      [ "dummy_mem", "type_8h.html#a54f4447a699c9cbf233a512f20b5c45e", null ],
-      [ "dummy_async", "type_8h.html#aa3fa849a201baa66a3f321c97ac4acd9", null ],
+      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ]
+    ] ],
+    [ "loc_t.__unnamed__", "type_8h.html#structloc__t_8____unnamed____", [
       [ "locy", "type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
       [ "stat", "type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
       [ "map", "type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
@@ -303,7 +494,6 @@ var type_8h =
       [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
     ] ],
     [ "pts_t.__unnamed__", "type_8h.html#unionpts__t_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ],
       [ "dmat", "type_8h.html#a22a5f0c87d64ca4693c54f5989285022", null ],
       [ "loc", "type_8h.html#a4c3aa741ca3a3433b19aea06e0a597fe", null ]
     ] ],
@@ -315,7 +505,6 @@ var type_8h =
       [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
       [ "dummy_fp", "type_8h.html#a0f4f35c364503ca278475c1e93a12c61", null ],
       [ "dummy_fft", "type_8h.html#a8c8dc74c2c5e4a9413c6e8889cc7b1e0", null ],
-      [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
       [ "dummy_mem", "type_8h.html#a54f4447a699c9cbf233a512f20b5c45e", null ],
       [ "dummy_async", "type_8h.html#aa3fa849a201baa66a3f321c97ac4acd9", null ],
       [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
@@ -325,347 +514,20 @@ var type_8h =
       [ "dsay", "type_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
       [ "dummy_ht", "type_8h.html#acded0299863f46bf80bd357bb35a805f", null ],
       [ "dummy_iac", "type_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
-      [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ],
-      [ "nxsa", "type_8h.html#a0a2d27f7d64db51bcec44b4fc84ab83c", null ],
-      [ "nysa", "type_8h.html#aecee41078f1f9719276a530b727cbdfa", null ],
-      [ "dx", "type_8h.html#aacd2b09d39705a84bff035c18c9faea9", null ],
-      [ "dy", "type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ]
+      [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
     ] ],
     [ "pts_t.__unnamed__.__unnamed__.__unnamed__", "type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____", [
       [ "dsa", "type_8h.html#a5f039b4ef0058a1d652f13d612375a5b", null ],
       [ "dsax", "type_8h.html#ac00f31f2b88090d3b65908bc03a79765", null ]
     ] ],
-    [ "ccell.__unnamed__", "type_8h.html#unionccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "ccell.__unnamed__.__unnamed__", "type_8h.html#structccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "zcell.__unnamed__", "type_8h.html#unionzcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "zcell.__unnamed__.__unnamed__", "type_8h.html#structzcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "dcell.__unnamed__", "type_8h.html#uniondcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "dcell.__unnamed__.__unnamed__", "type_8h.html#structdcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "scell.__unnamed__", "type_8h.html#unionscell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "scell.__unnamed__.__unnamed__", "type_8h.html#structscell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "lcell.__unnamed__", "type_8h.html#unionlcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "lcell.__unnamed__.__unnamed__", "type_8h.html#structlcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "dspcell.__unnamed__", "type_8h.html#uniondspcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "dspcell.__unnamed__.__unnamed__", "type_8h.html#structdspcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "sspcell.__unnamed__", "type_8h.html#unionsspcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "sspcell.__unnamed__.__unnamed__", "type_8h.html#structsspcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "cspcell.__unnamed__", "type_8h.html#unioncspcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "cspcell.__unnamed__.__unnamed__", "type_8h.html#structcspcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "zspcell.__unnamed__", "type_8h.html#unionzspcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "zspcell.__unnamed__.__unnamed__", "type_8h.html#structzspcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "cccell.__unnamed__", "type_8h.html#unioncccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "cccell.__unnamed__.__unnamed__", "type_8h.html#structcccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "zccell.__unnamed__", "type_8h.html#unionzccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "zccell.__unnamed__.__unnamed__", "type_8h.html#structzccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "dccell.__unnamed__", "type_8h.html#uniondccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "dccell.__unnamed__.__unnamed__", "type_8h.html#structdccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "sccell.__unnamed__", "type_8h.html#unionsccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "sccell.__unnamed__.__unnamed__", "type_8h.html#structsccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "iccell.__unnamed__", "type_8h.html#unioniccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "iccell.__unnamed__.__unnamed__", "type_8h.html#structiccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "ccccell.__unnamed__", "type_8h.html#unionccccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "ccccell.__unnamed__.__unnamed__", "type_8h.html#structccccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "zcccell.__unnamed__", "type_8h.html#unionzcccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "zcccell.__unnamed__.__unnamed__", "type_8h.html#structzcccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "dcccell.__unnamed__", "type_8h.html#uniondcccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "dcccell.__unnamed__.__unnamed__", "type_8h.html#structdcccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "scccell.__unnamed__", "type_8h.html#unionscccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "scccell.__unnamed__.__unnamed__", "type_8h.html#structscccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "icccell.__unnamed__", "type_8h.html#unionicccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "icccell.__unnamed__.__unnamed__", "type_8h.html#structicccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "mapcell.__unnamed__", "type_8h.html#unionmapcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "mapcell.__unnamed__.__unnamed__", "type_8h.html#structmapcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "rmapcell.__unnamed__", "type_8h.html#unionrmapcell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "rmapcell.__unnamed__.__unnamed__", "type_8h.html#structrmapcell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "loccell.__unnamed__", "type_8h.html#unionloccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "loccell.__unnamed__.__unnamed__", "type_8h.html#structloccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "mapccell.__unnamed__", "type_8h.html#unionmapccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "mapccell.__unnamed__.__unnamed__", "type_8h.html#structmapccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "rmapccell.__unnamed__", "type_8h.html#unionrmapccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "rmapccell.__unnamed__.__unnamed__", "type_8h.html#structrmapccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
-    [ "locccell.__unnamed__", "type_8h.html#unionlocccell_8____unnamed____", [
-      [ "cell", "type_8h.html#a5d079b5e8aa28eafad5d687b2df6cd2a", null ]
-    ] ],
-    [ "locccell.__unnamed__.__unnamed__", "type_8h.html#structlocccell_8____unnamed_____8____unnamed____", [
-      [ "id", "type_8h.html#ab80bb7740288fda1f201890375a60c8f", null ],
-      [ "p", "type_8h.html#a83878c91171338902e0fe0fb97a8c47a", null ],
-      [ "nx", "type_8h.html#a97893f46e7e13ef37b4c2e0ac60d85ca", null ],
-      [ "ny", "type_8h.html#a531beb50ffb32d08756e6462c037c8e1", null ],
-      [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
-      [ "fp", "type_8h.html#a0666f0acdeed38d4cd9084ade1739498", null ],
-      [ "fft", "type_8h.html#a9473db81d7af66f5e2a8319424834877", null ],
-      [ "m", "type_8h.html#a6f8f57715090da2632453988d9a1501b", null ]
-    ] ],
     [ "ARR", "type_8h.html#a03f463a93452d4a47b80ee67e0ac1cea", null ],
     [ "CELLDEF", "type_8h.html#a4d2e723924aaa0c6ec6d9a43ed479f39", null ],
-    [ "MATARR", "type_8h.html#a2e62a38d7281e7d3eb937e1bd9bd9b38", null ],
+    [ "MATARR", "type_8h.html#a95cd1f418b6ab3140a223e15b6335dd6", null ],
     [ "MATDEF", "type_8h.html#a4a89f4e3f08304b6e58dd9b4624dc537", null ],
     [ "SPMATDEF", "type_8h.html#a5e24a899d5eba05f00080278021660e7", null ],
     [ "reshape", "type_8h.html#a5dbb29bc89ab7c0aa20a95843357503d", null ],
+    [ "types_anyarray", "type_8h.html#a2f27df1e37b286dd25a29bb667d58c95", null ],
+    [ "def_anyarray", "type_8h.html#a212f829d0f8bee0919e6a707952f9d12", null ],
     [ "index_1d", "type_8h.html#a0e8de8cafce91fe393887a3b18438bc3", null ],
     [ "index_2d", "type_8h.html#aa33e46d60ad710db3271415750851624", null ],
     [ "index_col", "type_8h.html#af2e3779b987c5f08a4ffdfd58da90823", null ],
@@ -704,5 +566,6 @@ var type_8h =
       [ "C_REAL", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a299271446cb38cc17e02f2c73e140a57", null ],
       [ "C_ABS", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037ac9aa42fd0901d91de8b0fa4f53bd55c8", null ],
       [ "C_LITERAL", "type_8h.html#a6260adf4abbf6316fe2fa1f0a479a037a7b61c740d932ffa6dd6bd26ed81c739c", null ]
-    ] ]
+    ] ],
+    [ "__attribute__", "type_8h.html#a6c2fee5c070a40b0a3b71c28f2ac0e48", null ]
 ];

@@ -1,8 +1,0 @@
-digraph "ssp.__unnamed__.__unnamed__"
-{
- // INTERACTIVE_SVG=YES
-  bgcolor="transparent";
-  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
-  node [fontname="Helvetica",fontsize="10",shape=record];
-  Node166 [label="{ssp.__unnamed__.__unnamed__\n|+ id\l+ px\l+ nx\l+ ny\l+ keywords\l+ fp\l+ fft\l+ padding1\l+ nzmax\l+ pp\l+ pi\l+ nref\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-}

@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="lmat",height=0.2,width=0.4,color="black",URL="$type_8h.html#structlmat"];
+  Node0 [label="mvm_igpu_t",height=0.2,width=0.4,color="black",URL="$mvm__trans_8cu.html#structmvm__igpu__t"];
 }

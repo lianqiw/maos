@@ -13,5 +13,6 @@ var classcugrid__t =
     [ "ht", "classcugrid__t.html#adca0e9f20e59d84787a7afef6a8a79a2", null ],
     [ "vx", "classcugrid__t.html#ab0a0719d0638693f2f900fd9d552195a", null ],
     [ "vy", "classcugrid__t.html#a4e049d864c9cd9a8093c0d0b7c0dfdc1", null ],
+    [ "dratio", "classcugrid__t.html#ad5fdaf01f5b19b9f2d916bdebedce75a", null ],
     [ "cubic_cc", "classcugrid__t.html#a07d5b58b1284943aa1a43eea0cba5c03", null ]
 ];

@@ -6,7 +6,7 @@ var searchData=
   ['embed',['embed',['../structcupowfs__t.html#a0bd06570b05aa772ed51f624a84b5b99',1,'cupowfs_t::embed()'],['../cn2est_8h.html#a937715383f9469c7fe963fa9d02f8137',1,'cn2est_t::embed()'],['../locfft_8h.html#a2fe49d22c7bddda68abe1bb0ff1325a6',1,'locfft_t::embed()'],['../maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d',1,'aper_t::embed()']]],
   ['embfac',['embfac',['../parms_8h.html#a2d44845b73a35319bee93030d952db47',1,'powfs_cfg_t']]],
   ['end',['end',['../parms_8h.html#aee03f8f7417636c1662aceb0c7297030',1,'sim_cfg_t']]],
-  ['epfsm',['epfsm',['../parms_8h.html#aa50f68272e3aadf7d8353e0bda99ba21',1,'sim_cfg_t']]],
+  ['epfsm',['epfsm',['../parms_8h.html#a1e680197445478d85c51eb7413d73e90',1,'llt_cfg_t::epfsm()'],['../parms_8h.html#abe42d224efc359b32d436b9442f55c8c',1,'powfs_cfg_t::epfsm()']]],
   ['ephi',['ephi',['../parms_8h.html#ad21eec9162edd89a58cd77f93b717ffe',1,'sim_cfg_t']]],
   ['eplo',['eplo',['../parms_8h.html#adc3f5fc04222abb1aea2ebafe100eac9',1,'sim_cfg_t']]],
   ['eploscale',['eploscale',['../parms_8h.html#ac37f02a595c508cfa971f0c5fdc1ab98',1,'dbg_cfg_t']]],

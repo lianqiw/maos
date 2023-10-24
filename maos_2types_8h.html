@@ -824,9 +824,9 @@ hs</td>
 <p>height of LGS </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ae73a48bb9e582e6979e2cf24f4ebcbbd"></a>real</td>
+<a id="a0c2374807453947d95ba95153812390e"></a>real</td>
 <td class="fieldname">
-ht</td>
+hdm</td>
 <td class="fielddoc">
 <p>height of upper DM. </p>
 </td></tr>
@@ -2573,6 +2573,27 @@ restwfs</td>
 <td class="fielddoc">
 <p>Truth wfs output </p>
 </td></tr>
+<tr><td class="fieldtype">
+<a id="af34aa73f18f48d23702697d78e41c59d"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+fsmerrs</td>
+<td class="fielddoc">
+<p>file to store fsmerr history </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1464b135e09709aefdcc383b76a71b67"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+fsmcmds</td>
+<td class="fielddoc">
+<p>file to store fsmcmd history </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad5bde94ad58d45e432a8eed70e14643e"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+llt_fsmreal</td>
+<td class="fielddoc">
+<p>file to store llt_fsmreal history </p>
+</td></tr>
 </table>
 
 </div>
@@ -3120,11 +3141,39 @@ gradscale2</td>
 <p>Gain scaling for other dithering modes. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af7f5504268fb3897cc6d3cb8594c08c7"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="aae4ff04cd8d9cdbd57a7171851a7f52b"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-llt_tt</td>
+llt_ws</td>
 <td class="fielddoc">
 <p>LLT uplink jitter </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="abb513efba7438d4c8ffd085c6caae09d"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+llt_fsmlpf</td>
+<td class="fielddoc">
+<p>LLT common path pointing mirror LPF </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab741e0fb0719272d5df3f6fcae2c2e24"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+llt_fsmcmd</td>
+<td class="fielddoc">
+<p>LLT common path pointing mirror command </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab6ea364f492acd1108a8e9f25989325e"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+llt_fsmreal</td>
+<td class="fielddoc">
+<p>LLT common path pointing mirror state after sho filtering </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a27c193d659f780bb7c259018e25a70c3"></a><a class="el" href="servo_8h.html#structsho__t">sho_t</a> **</td>
+<td class="fieldname">
+llt_fsmsho</td>
+<td class="fielddoc">
+<p>LLT common path pointing mirror state </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a54b13cbf92ab6e6ac20933c362fa9f61"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -3398,32 +3447,32 @@ fsmerr_drift</td>
 <p>Drift control of uplink </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="aa6fb8b2d74119f81e0a7734454bd51be"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
-<td class="fieldname">
-fsmreal</td>
-<td class="fielddoc">
-<p>uplink real </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ad6b654b3fcc4ed466e7906405d0cb43d"></a><a class="el" href="servo_8h.html#structservo__t">servo_t</a> *</td>
+<a id="a8dfec678db7ff76f5af657875d926abc"></a><a class="el" href="servo_8h.html#structservo__t">servo_t</a> **</td>
 <td class="fieldname">
 fsmint</td>
 <td class="fielddoc">
 <p>uplink integrator output. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af45de4971282fca370154ce75b1a8792"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="ae71a6207ada2a7685529a8de571de447"></a><a class="el" href="servo_8h.html#structsho__t">sho_t</a> **</td>
 <td class="fieldname">
-fsmerrs</td>
+fsmsho</td>
 <td class="fielddoc">
-<p>mmaped file to store fsmerr history </p>
+<p>FSM sho response </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab5121345ac62a534dd0fbf214e5c949f"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="aa346ff0558868bccf755741e9f4e1acd"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-fsmcmds</td>
+fsmcmd</td>
 <td class="fielddoc">
-<p>mmaped file to store fsmcmd history </p>
+<p>FSM command </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa6fb8b2d74119f81e0a7734454bd51be"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+fsmreal</td>
+<td class="fielddoc">
+<p>FSM real position </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aecfdde04f1823426a4a6bde295ae6e95"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>

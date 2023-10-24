@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="loc_t.__unnamed__",height=0.2,width=0.4,color="black",URL="$type_8h.html#unionloc__t_8____unnamed____"];
+  Node0 [label="NumArray\< T, Dev \> *",height=0.2,width=0.4,color="black",URL="$class_num_array_3_01_t_00_01_dev_01_4_01_5.html"];
 }

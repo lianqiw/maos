@@ -7,5 +7,6 @@ var type_8h_structcell =
     [ "keywords", "type_8h.html#a823d904ce6542918ce1af19dc0843399", null ],
     [ "fp", "type_8h.html#ad43278e4d933d66b294d5cd3eb51e05f", null ],
     [ "fft", "type_8h.html#aa9a21923a0b8cec03c6eea2226e48b0f", null ],
-    [ "m", "type_8h.html#a39f0897b9cd49a745d060e89c5f5964c", null ]
+    [ "m", "type_8h.html#a39f0897b9cd49a745d060e89c5f5964c", null ],
+    [ "dummy1", "type_8h.html#a5cdbd9cd96059f1ca238f619d61a6d73", null ]
 ];

@@ -104,12 +104,9 @@ $(document).ready(function(){initNavTree('cell_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a161c146fd4bf18f01f24f33d26fe6709"><td class="memItemLeft" align="right" valign="top"><a id="a161c146fd4bf18f01f24f33d26fe6709"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>cellresize</b>(A,  nx,  ny)&#160;&#160;&#160;if(A) <a class="el" href="cell_8h.html#a35b14f81dd4a3d7179ca999c4641b706">cellresize_do</a>(CELL(A), nx, ny);</td></tr>
-<tr class="separator:a161c146fd4bf18f01f24f33d26fe6709"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a088fe3d13e53e5d92d0b9c0165d92420"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((<a class="el" href="type_8h.html#structcell">cell</a>*)A); A=NULL;}</td></tr>
+<tr class="memitem:a088fe3d13e53e5d92d0b9c0165d92420"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a>(A)&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ad815a5654363116ef049ec99de3648cd">cellfree_do</a>(A); A=NULL;}</td></tr>
 <tr class="separator:a088fe3d13e53e5d92d0b9c0165d92420"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1d9a9bae6eafd580462028dc872484c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab1d9a9bae6eafd580462028dc872484c">writebin</a>(A,  format...)&#160;&#160;&#160;if(A) write_by_id(CELL(A), M_0, format)</td></tr>
+<tr class="memitem:ab1d9a9bae6eafd580462028dc872484c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab1d9a9bae6eafd580462028dc872484c">writebin</a>(A,  format...)&#160;&#160;&#160;if(A) write_by_id(A, M_0, format)</td></tr>
 <tr class="separator:ab1d9a9bae6eafd580462028dc872484c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67875c85ee2a66991d854265dfb10852"><td class="memItemLeft" align="right" valign="top"><a id="a67875c85ee2a66991d854265dfb10852"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>writecell</b>(A,  format...)&#160;&#160;&#160;write_by_id(A, M_0, format)</td></tr>
@@ -117,47 +114,47 @@ Macros</h2></td></tr>
 <tr class="memitem:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ab19dbf41490724c2f3d7897c8fd6995b">readbin</a>(format...)&#160;&#160;&#160;read_by_id(M_0, -1, format);</td></tr>
 <tr class="separator:ab19dbf41490724c2f3d7897c8fd6995b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71d8d9331f64e9b6a3f59776d26b5c63"><td class="memItemLeft" align="right" valign="top"><a id="a71d8d9331f64e9b6a3f59776d26b5c63"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>writebin_async</b>(A,  ncol)&#160;&#160;&#160;<a class="el" href="cell_8h.html#af13944ccb7705169e1b005f01f375886">writecell_async</a>(A?CELL(A):NULL, ncol)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>writebin_async</b>(A,  ncol)&#160;&#160;&#160;<a class="el" href="cell_8h.html#a3318a6ff9fbfe98b18b40677f050d965">writecell_async</a>(A, ncol)</td></tr>
 <tr class="separator:a71d8d9331f64e9b6a3f59776d26b5c63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed548cf39b1be47ae83cb37198544edd"><td class="memItemLeft" align="right" valign="top"><a id="aed548cf39b1be47ae83cb37198544edd"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>readdata</b>(fp)&#160;&#160;&#160;<a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a>(fp, 0, -1, 0)</td></tr>
 <tr class="separator:aed548cf39b1be47ae83cb37198544edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a896f1cb693d59566539d74ad0e639dea"><td class="memItemLeft" align="right" valign="top"><a id="a896f1cb693d59566539d74ad0e639dea"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>writedata</b>(fp,  A)&#160;&#160;&#160;<a class="el" href="cell_8h.html#afcbacd5dc6a654c3632f30e37b512b54">writedata_by_id</a>(fp, A, 0, 0)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>writedata</b>(fp,  A)&#160;&#160;&#160;<a class="el" href="cell_8h.html#a8b4b39f8d7da4a654f42ae6e2491aedd">writedata_by_id</a>(fp, A, 0, 0)</td></tr>
 <tr class="separator:a896f1cb693d59566539d74ad0e639dea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af5ecd7ec0a002a20b2f5af006c9ae47a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#af5ecd7ec0a002a20b2f5af006c9ae47a">cellnew</a> (<a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
 <tr class="separator:af5ecd7ec0a002a20b2f5af006c9ae47a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb65b5605889cf804e3a132332a4857d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#abb65b5605889cf804e3a132332a4857d">cellinit</a> (<a class="el" href="type_8h.html#structcell">cell</a> **A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:abb65b5605889cf804e3a132332a4857d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1398d9e0cd56674c160b61ac69dc738"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ad1398d9e0cd56674c160b61ac69dc738">cellinit2</a> (<a class="el" href="type_8h.html#structcell">cell</a> **A, const <a class="el" href="type_8h.html#structcell">cell</a> *B)</td></tr>
-<tr class="separator:ad1398d9e0cd56674c160b61ac69dc738"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3f1c50daa45e9192b2e97fd21c004a4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#aa3f1c50daa45e9192b2e97fd21c004a4">celldim</a> (const <a class="el" href="type_8h.html#structcell">cell</a> *A_, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, <a class="el" href="classlong.html">long</a> **nxs, <a class="el" href="classlong.html">long</a> **nys)</td></tr>
-<tr class="separator:aa3f1c50daa45e9192b2e97fd21c004a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35b14f81dd4a3d7179ca999c4641b706"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a35b14f81dd4a3d7179ca999c4641b706">cellresize_do</a> (<a class="el" href="type_8h.html#structcell">cell</a> *in, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
-<tr class="separator:a35b14f81dd4a3d7179ca999c4641b706"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace17129d236ad5ce10a1e920be5b0eb8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a> (<a class="el" href="type_8h.html#structcell">cell</a> *dc)</td></tr>
-<tr class="separator:ace17129d236ad5ce10a1e920be5b0eb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcbacd5dc6a654c3632f30e37b512b54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#afcbacd5dc6a654c3632f30e37b512b54">writedata_by_id</a> (file_t *fd, const <a class="el" href="type_8h.html#structcell">cell</a> *A, M_ID id, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
-<tr class="separator:afcbacd5dc6a654c3632f30e37b512b54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0445cc3b7c393fa092af1f1cd0ae507"><td class="memItemLeft" align="right" valign="top"><a id="ad0445cc3b7c393fa092af1f1cd0ae507"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (const <a class="el" href="type_8h.html#structcell">cell</a> *dc, M_ID id, const char *format,...)</td></tr>
-<tr class="separator:ad0445cc3b7c393fa092af1f1cd0ae507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5645e40f7c15c32bdfd9ac9687e98bb6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a5645e40f7c15c32bdfd9ac9687e98bb6">cellinit</a> (panyarray A, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a5645e40f7c15c32bdfd9ac9687e98bb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42be36f5596cc6e188db0826d7bc3a54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a42be36f5596cc6e188db0826d7bc3a54">cellinit2</a> (panyarray A, const_anyarray B)</td></tr>
+<tr class="separator:a42be36f5596cc6e188db0826d7bc3a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c3774a4ba86dbfea0460496940ede9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a8c3774a4ba86dbfea0460496940ede9b">celldim</a> (const_anyarray A_, <a class="el" href="classlong.html">long</a> *nx, <a class="el" href="classlong.html">long</a> *ny, <a class="el" href="classlong.html">long</a> **nxs, <a class="el" href="classlong.html">long</a> **nys)</td></tr>
+<tr class="separator:a8c3774a4ba86dbfea0460496940ede9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10d0abaf1d605dd1584f4511e12587b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a10d0abaf1d605dd1584f4511e12587b5">cellresize</a> (anyarray in, <a class="el" href="classlong.html">long</a> nx, <a class="el" href="classlong.html">long</a> ny)</td></tr>
+<tr class="separator:a10d0abaf1d605dd1584f4511e12587b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad815a5654363116ef049ec99de3648cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#ad815a5654363116ef049ec99de3648cd">cellfree_do</a> (anyarray dc)</td></tr>
+<tr class="separator:ad815a5654363116ef049ec99de3648cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b4b39f8d7da4a654f42ae6e2491aedd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a8b4b39f8d7da4a654f42ae6e2491aedd">writedata_by_id</a> (file_t *fd, const_anyarray A, M_ID id, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:a8b4b39f8d7da4a654f42ae6e2491aedd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3f52af1fd2a1130f6d0285cb1f0b857"><td class="memItemLeft" align="right" valign="top"><a id="ae3f52af1fd2a1130f6d0285cb1f0b857"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (const_anyarray dc, M_ID id, const char *format,...)</td></tr>
+<tr class="separator:ae3f52af1fd2a1130f6d0285cb1f0b857"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d57ede92b8e2e6205141dfe2b5ee06b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a8d57ede92b8e2e6205141dfe2b5ee06b">readdata_by_id</a> (file_t *fp, M_ID id, int level, <a class="el" href="bin_8h.html#structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a8d57ede92b8e2e6205141dfe2b5ee06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4abf011cb94b206de4af1f097ca14db7"><td class="memItemLeft" align="right" valign="top"><a id="a4abf011cb94b206de4af1f097ca14db7"></a>
 <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>read_by_id</b> (M_ID id, int level, const char *format,...)</td></tr>
 <tr class="separator:a4abf011cb94b206de4af1f097ca14db7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af13944ccb7705169e1b005f01f375886"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#af13944ccb7705169e1b005f01f375886">writecell_async</a> (const <a class="el" href="type_8h.html#structcell">cell</a> *A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
-<tr class="separator:af13944ccb7705169e1b005f01f375886"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b2b605af666bb83ad7da88e28269911"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a0b2b605af666bb83ad7da88e28269911">writebin_header</a> (<a class="el" href="type_8h.html#structcell">cell</a> *dc, const char *keywords, const char *format,...)</td></tr>
-<tr class="separator:a0b2b605af666bb83ad7da88e28269911"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3318a6ff9fbfe98b18b40677f050d965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a3318a6ff9fbfe98b18b40677f050d965">writecell_async</a> (const_anyarray A, <a class="el" href="classlong.html">long</a> ncol)</td></tr>
+<tr class="separator:a3318a6ff9fbfe98b18b40677f050d965"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03d329bb450f58ede64d7b39119ad45b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a03d329bb450f58ede64d7b39119ad45b">writebin_header</a> (anyarray dc, const char *keywords, const char *format,...)</td></tr>
+<tr class="separator:a03d329bb450f58ede64d7b39119ad45b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34da2630d81d5e01052e5636091c831d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a34da2630d81d5e01052e5636091c831d">readsock</a> (int sock)</td></tr>
 <tr class="separator:a34da2630d81d5e01052e5636091c831d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4233ff76282f61e7b72ec0dadb015ce2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#a4233ff76282f61e7b72ec0dadb015ce2">writesock</a> (const <a class="el" href="type_8h.html#structcell">cell</a> *dc, int sock)</td></tr>
-<tr class="separator:a4233ff76282f61e7b72ec0dadb015ce2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbdf8c3d7c4f9c4c23530c7639b0648f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cell_8h.html#adbdf8c3d7c4f9c4c23530c7639b0648f">writesock</a> (const_anyarray dc, int sock)</td></tr>
+<tr class="separator:adbdf8c3d7c4f9c4c23530c7639b0648f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Function for a generic cell. use CELL() to case to cell. </p>
@@ -173,7 +170,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">A</td><td>)</td>
-          <td>&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ace17129d236ad5ce10a1e920be5b0eb8">cellfree_do</a>((<a class="el" href="type_8h.html#structcell">cell</a>*)A); A=NULL;}</td>
+          <td>&#160;&#160;&#160;if(A){<a class="el" href="cell_8h.html#ad815a5654363116ef049ec99de3648cd">cellfree_do</a>(A); A=NULL;}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -202,7 +199,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;if(A) write_by_id(CELL(A), M_0, format)</td>
+          <td></td><td>&#160;&#160;&#160;if(A) write_by_id(A, M_0, format)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -259,8 +256,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="abb65b5605889cf804e3a132332a4857d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb65b5605889cf804e3a132332a4857d">&#9670;&nbsp;</a></span>cellinit()</h2>
+<a id="a5645e40f7c15c32bdfd9ac9687e98bb6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5645e40f7c15c32bdfd9ac9687e98bb6">&#9670;&nbsp;</a></span>cellinit()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -268,8 +265,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void cellinit </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcell">cell</a> **&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
+          <td class="paramtype">panyarray&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -294,8 +291,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="ad1398d9e0cd56674c160b61ac69dc738"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad1398d9e0cd56674c160b61ac69dc738">&#9670;&nbsp;</a></span>cellinit2()</h2>
+<a id="a42be36f5596cc6e188db0826d7bc3a54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42be36f5596cc6e188db0826d7bc3a54">&#9670;&nbsp;</a></span>cellinit2()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -303,14 +300,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void cellinit2 </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcell">cell</a> **&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
+          <td class="paramtype">panyarray&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>B</em>&#160;</td>
+          <td class="paramtype">const_anyarray&#160;</td>
+          <td class="paramname"><em>B_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -323,8 +320,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="aa3f1c50daa45e9192b2e97fd21c004a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa3f1c50daa45e9192b2e97fd21c004a4">&#9670;&nbsp;</a></span>celldim()</h2>
+<a id="a8c3774a4ba86dbfea0460496940ede9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c3774a4ba86dbfea0460496940ede9b">&#9670;&nbsp;</a></span>celldim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -332,8 +329,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void celldim </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
+          <td class="paramtype">const_anyarray&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -370,17 +367,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="a35b14f81dd4a3d7179ca999c4641b706"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35b14f81dd4a3d7179ca999c4641b706">&#9670;&nbsp;</a></span>cellresize_do()</h2>
+<a id="a10d0abaf1d605dd1584f4511e12587b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10d0abaf1d605dd1584f4511e12587b5">&#9670;&nbsp;</a></span>cellresize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void cellresize_do </td>
+          <td class="memname">void cellresize </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
+          <td class="paramtype">anyarray&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -405,8 +402,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="ace17129d236ad5ce10a1e920be5b0eb8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ace17129d236ad5ce10a1e920be5b0eb8">&#9670;&nbsp;</a></span>cellfree_do()</h2>
+<a id="ad815a5654363116ef049ec99de3648cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad815a5654363116ef049ec99de3648cd">&#9670;&nbsp;</a></span>cellfree_do()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -414,8 +411,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void cellfree_do </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>A</em></td><td>)</td>
+          <td class="paramtype">anyarray&#160;</td>
+          <td class="paramname"><em>A_</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -424,8 +421,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="afcbacd5dc6a654c3632f30e37b512b54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afcbacd5dc6a654c3632f30e37b512b54">&#9670;&nbsp;</a></span>writedata_by_id()</h2>
+<a id="a8b4b39f8d7da4a654f42ae6e2491aedd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b4b39f8d7da4a654f42ae6e2491aedd">&#9670;&nbsp;</a></span>writedata_by_id()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -439,8 +436,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
+          <td class="paramtype">const_anyarray&#160;</td>
+          <td class="paramname"><em>A_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -511,8 +508,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="af13944ccb7705169e1b005f01f375886"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af13944ccb7705169e1b005f01f375886">&#9670;&nbsp;</a></span>writecell_async()</h2>
+<a id="a3318a6ff9fbfe98b18b40677f050d965"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3318a6ff9fbfe98b18b40677f050d965">&#9670;&nbsp;</a></span>writecell_async()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -520,7 +517,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void writecell_async </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
+          <td class="paramtype">const_anyarray&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -540,8 +537,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="a0b2b605af666bb83ad7da88e28269911"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0b2b605af666bb83ad7da88e28269911">&#9670;&nbsp;</a></span>writebin_header()</h2>
+<a id="a03d329bb450f58ede64d7b39119ad45b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03d329bb450f58ede64d7b39119ad45b">&#9670;&nbsp;</a></span>writebin_header()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -549,8 +546,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void writebin_header </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>Ac</em>, </td>
+          <td class="paramtype">anyarray&#160;</td>
+          <td class="paramname"><em>Ac_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -600,8 +597,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
 
 </div>
 </div>
-<a id="a4233ff76282f61e7b72ec0dadb015ce2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4233ff76282f61e7b72ec0dadb015ce2">&#9670;&nbsp;</a></span>writesock()</h2>
+<a id="adbdf8c3d7c4f9c4c23530c7639b0648f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbdf8c3d7c4f9c4c23530c7639b0648f">&#9670;&nbsp;</a></span>writesock()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -609,7 +606,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_by_id</b> (cons
         <tr>
           <td class="memname">void writesock </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcell">cell</a> *&#160;</td>
+          <td class="paramtype">const_anyarray&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>

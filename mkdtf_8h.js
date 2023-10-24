@@ -26,7 +26,7 @@ var mkdtf_8h =
     [ "dtf_free", "mkdtf_8h.html#a3a970db34227c79d8b55302019889911", null ],
     [ "etf_free", "mkdtf_8h.html#a74e74e9b6320fc56da458c784afd7368", null ],
     [ "mkdtf", "mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9", null ],
-    [ "mketf", "mkdtf_8h.html#a36eece1fba4d03e3d4a41138d893d73e", null ],
+    [ "mketf", "mkdtf_8h.html#aad2da90ca20f2193222829e3ea9b32ee", null ],
     [ "dtf_free_do", "mkdtf_8h.html#aebceaa4b5aa6ca6e7aaa011d7dea2bc5", null ],
     [ "etf_free_do", "mkdtf_8h.html#ad2d2722feb99b759b848cbab3f600eb3", null ],
     [ "smooth", "mkdtf_8h.html#a42d0fe623bbbd35b36c395fd52904603", null ],

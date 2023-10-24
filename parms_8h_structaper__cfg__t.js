@@ -2,7 +2,7 @@ var parms_8h_structaper__cfg__t =
 [
     [ "d", "parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7", null ],
     [ "din", "parms_8h.html#a09ae154f837db49c7cb8ba98666c8c5a", null ],
-    [ "rotdeg", "parms_8h.html#a14f3320d745e66fa755da933adc4a0a4", null ],
+    [ "rot", "parms_8h.html#a3eaec0255616afce501e04a304fe1eb7", null ],
     [ "misreg", "parms_8h.html#ae2954c86dea9ddd31254a7b5e940e765", null ],
     [ "fnamp", "parms_8h.html#ab58fa659977e671d883dc4597bb11ea9", null ],
     [ "fnampuser", "parms_8h.html#a4ca899cd1f3e07d55ca844b4b04d5359", null ],

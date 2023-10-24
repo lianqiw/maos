@@ -191,7 +191,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key has a priority or 0 or higher. A new key with same or higher priority can override previous entry. priority is 0 for default configurations </p>
+<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key has a priority or 0 or higher. A new key with same or higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">config_in</td><td>The .conf file to read </td></tr>

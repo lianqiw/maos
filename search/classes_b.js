@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['ncpa_5fcfg_5ft',['ncpa_cfg_t',['../parms_8h.html#structncpa__cfg__t',1,'']]],
   ['ngsmod_5ft',['ngsmod_t',['../maos_2types_8h.html#structngsmod__t',1,'']]],
   ['noncopyable',['nonCopyable',['../classnon_copyable.html',1,'']]],
   ['numarray',['NumArray',['../class_num_array.html',1,'']]],

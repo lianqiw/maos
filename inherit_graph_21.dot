@@ -5,5 +5,7 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="cn2est_cfg_t",height=0.2,width=0.4,color="black",URL="$parms_8h.html#structcn2est__cfg__t"];
+  Node0 [label="Cpu\< int * \>",height=0.2,width=0.4,color="black",URL="$class_cpu.html"];
+  Node0 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node1 [label="Pinned\< int *\>",height=0.2,width=0.4,color="black",URL="$class_pinned.html"];
 }

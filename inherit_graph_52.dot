@@ -5,5 +5,5 @@ digraph "Graphical Class Hierarchy"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   rankdir="LR";
-  Node0 [label="cuda_wfs::cuwfs_t",height=0.2,width=0.4,color="black",URL="$classcuda__wfs_1_1cuwfs__t.html"];
+  Node0 [label="cupowfs_t",height=0.2,width=0.4,color="black",URL="$structcupowfs__t.html"];
 }

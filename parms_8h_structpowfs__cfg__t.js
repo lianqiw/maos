@@ -113,5 +113,12 @@ var parms_8h_structpowfs__cfg__t =
     [ "zoomgain", "parms_8h.html#ac8ecc8a08547a292f2c3e6fc47d98e9b", null ],
     [ "zoomgain_drift", "parms_8h.html#a97b40d9e2b96bbf67978b8d92e58299f", null ],
     [ "zoomset", "parms_8h.html#a5aea9dc5cc99570a54fd28232ea55b37", null ],
-    [ "ng", "parms_8h.html#abb349e921acd3f558dad1d163e868d53", null ]
+    [ "ng", "parms_8h.html#abb349e921acd3f558dad1d163e868d53", null ],
+    [ "apfsm", "parms_8h.html#a6074b1c7bdf1eb69a90fd993db87d315", null ],
+    [ "epfsm", "parms_8h.html#abe42d224efc359b32d436b9442f55c8c", null ],
+    [ "alfsm", "parms_8h.html#a9ae94fc4708db5ab66e49288109eb638", null ],
+    [ "zetafsm", "parms_8h.html#ad0d799e9547229b6024b3830001cb713", null ],
+    [ "f0fsm", "parms_8h.html#ad52effb18ed166f9e0bb21a6dd4c3ef5", null ],
+    [ "idealfsm", "parms_8h.html#a20c125700a912e5036fe630ffff07bbb", null ],
+    [ "commonfsm", "parms_8h.html#a3b4d29e93e775dcf3f2d5acfa7e5ffbc", null ]
 ];

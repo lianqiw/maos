@@ -63,8 +63,6 @@ var lmath_8h =
     [ "lcellcat", "lmath_8h.html#a3f99f1468a147311478b0ba0fbaa3834", null ],
     [ "lcellcat2", "lmath_8h.html#a79b41394ff67d621300e5b35b2a0dae6", null ],
     [ "lcellcat_each", "lmath_8h.html#abd744b8d589016c5c43dfffaf74fe300", null ],
-    [ "lcell2m", "lmath_8h.html#a3acc4a5834549269491ed958e7e07e13", null ],
-    [ "lcell2m_any", "lmath_8h.html#a814338ffeff039ecd75c8c11d16bf3bc", null ],
     [ "l2cellref", "lmath_8h.html#a13293f598e36b00fe332e5fa7afe9f43", null ],
     [ "l2cell", "lmath_8h.html#a58564392e6d0b5caab436f3e64947f57", null ],
     [ "lcell_col", "lmath_8h.html#abd063e483f71cca17ca38414f189f139", null ],

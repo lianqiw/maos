@@ -4,9 +4,9 @@ digraph "dither_cfg_t"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node33 [label="{dither_cfg_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node34 -> Node33 [color="grey25",fontsize="10",style="solid",label=" +gog\n+gpll\n+glpf\n+amp\n+gdrift" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node34 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
-  Node35 -> Node33 [color="grey25",fontsize="10",style="solid",label=" +ogskip\n+ogsingle\n+mode\n+ograt\n+pllrat\n+npoint\n+pllskip" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node35 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node64 [label="{dither_cfg_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node65 -> Node64 [color="grey25",fontsize="10",style="solid",label=" +gog\n+gpll\n+glpf\n+amp\n+gdrift" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node65 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
+  Node66 -> Node64 [color="grey25",fontsize="10",style="solid",label=" +ogskip\n+ogsingle\n+mode\n+ograt\n+pllrat\n+npoint\n+pllskip" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node66 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
 }

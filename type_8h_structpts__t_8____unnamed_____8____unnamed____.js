@@ -7,7 +7,6 @@ var type_8h_structpts__t_8____unnamed_____8____unnamed____ =
     [ "keywords", "type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ],
     [ "dummy_fp", "type_8h.html#a0f4f35c364503ca278475c1e93a12c61", null ],
     [ "dummy_fft", "type_8h.html#a8c8dc74c2c5e4a9413c6e8889cc7b1e0", null ],
-    [ "dummy_m", "type_8h.html#ae9c3bdb0e2b75ba22ce3a0274b3b7496", null ],
     [ "dummy_mem", "type_8h.html#a54f4447a699c9cbf233a512f20b5c45e", null ],
     [ "dummy_async", "type_8h.html#aa3fa849a201baa66a3f321c97ac4acd9", null ],
     [ "origy", "type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
@@ -17,9 +16,5 @@ var type_8h_structpts__t_8____unnamed_____8____unnamed____ =
     [ "dsay", "type_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
     [ "dummy_ht", "type_8h.html#acded0299863f46bf80bd357bb35a805f", null ],
     [ "dummy_iac", "type_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
-    [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ],
-    [ "nxsa", "type_8h.html#a0a2d27f7d64db51bcec44b4fc84ab83c", null ],
-    [ "nysa", "type_8h.html#aecee41078f1f9719276a530b727cbdfa", null ],
-    [ "dx", "type_8h.html#aacd2b09d39705a84bff035c18c9faea9", null ],
-    [ "dy", "type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ]
+    [ "npad", "type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
 ];

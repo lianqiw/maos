@@ -136,6 +136,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:structrecon__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structsim__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structsim__cfg__t">sim_cfg_t</a></td></tr>
 <tr class="separator:structsim__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structncpa__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structncpa__cfg__t">ncpa_cfg_t</a></td></tr>
+<tr class="separator:structncpa__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structcn2est__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structcn2est__cfg__t">cn2est_cfg_t</a></td></tr>
 <tr class="separator:structcn2est__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structplot__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structplot__cfg__t">plot_cfg_t</a></td></tr>
@@ -588,11 +590,11 @@ din</td>
 <p>Telescope inner blocking diameter </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a14f3320d745e66fa755da933adc4a0a4"></a>real</td>
+<a id="a3eaec0255616afce501e04a304fe1eb7"></a>real</td>
 <td class="fieldname">
-rotdeg</td>
+rot</td>
 <td class="fielddoc">
-<p>pupil rotation in degree </p>
+<p>pupil rotation </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ae2954c86dea9ddd31254a7b5e940e765"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
@@ -670,6 +672,27 @@ focus</td>
 <p>RMS focus error in nm of LLT. </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ab7c18c14a6c7934793b061debb067022"></a>real</td>
+<td class="fieldname">
+ttrat</td>
+<td class="fielddoc">
+<p>Ratio of uplink jitter to science jitter due to M2 windshake. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a97e1b61a5a28b3e51475e595969c74fc"></a>real</td>
+<td class="fieldname">
+fcfsm</td>
+<td class="fielddoc">
+<p>corner frequency for offloading FSM to a common path pointing mirror in LLT. 0: disabled </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a13a54a429a6288c0922eb5932394fef7"></a>real</td>
+<td class="fieldname">
+dhs</td>
+<td class="fielddoc">
+<p>Spacing of sublayers to simulate for LGS </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="aaafdf85c0702c2520e67e8bcfb674495"></a>char *</td>
 <td class="fieldname">
 ttpsd</td>
@@ -732,25 +755,11 @@ misreg</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a29160c3005a8bdd695a4844876d7fe73"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
-<td class="fieldname">
-i</td>
-<td class="fielddoc">
-<p>Index into llt for this iwfs. </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a68b3246948f5391cf11cba0ce5245d88"></a>int</td>
 <td class="fieldname">
 ttfr</td>
 <td class="fielddoc">
 <p>Remove piston/tip/tilt and focus (if = 2) from ncpa </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a6b394a95b47f77d90c339203675842b5"></a>int</td>
-<td class="fieldname">
-n</td>
-<td class="fielddoc">
-<p>number of launch telescopes in this powfs </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a79c6097d933b503551755bdd229f3fba"></a>int</td>
@@ -774,11 +783,74 @@ coldtrat</td>
 <p>change to next sodium profile during simulation every coldtrat time step </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab7c18c14a6c7934793b061debb067022"></a>real</td>
+<a id="aef8f0afa4d1102a1c83ca7ad78a4b684"></a>int</td>
 <td class="fieldname">
-ttrat</td>
+nhs</td>
 <td class="fielddoc">
-<p>Ratio of uplink jitter to downlink jitter due to M2 windshake. </p>
+<p>Number of sublayer to simulate for LGS </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a07a5b48125674bcdf30e31d971868ca4"></a>int</td>
+<td class="fieldname">
+na_smooth</td>
+<td class="fielddoc">
+<p>1: smooth sodium profile to coarser grid before computing etf </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acf80a74d9143fdd565adec3581e1f55a"></a>int</td>
+<td class="fieldname">
+na_interp</td>
+<td class="fielddoc">
+<p>1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="adf527231fba73c1260d3294c14daef17"></a>int</td>
+<td class="fieldname">
+na_fit_maxit</td>
+<td class="fielddoc">
+<p>Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a649e07849db7b2359628dfac7d78bfd3"></a>real</td>
+<td class="fieldname">
+na_fit_svdthres</td>
+<td class="fielddoc">
+<p>threshold for SVD inverse in sodium fitting. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a44300a9e30c3dcf18817edc9359cde8b"></a>real</td>
+<td class="fieldname">
+na_fit_dh</td>
+<td class="fielddoc">
+<p>sampling in height in sodium fitting </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4105800a3efd7a54b6fc7d2a9870a678"></a>real</td>
+<td class="fieldname">
+na_thres</td>
+<td class="fielddoc">
+<p>altitude error threshold to move trombone, in unit of meter. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a29160c3005a8bdd695a4844876d7fe73"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
+<td class="fieldname">
+i</td>
+<td class="fielddoc">
+<p>Index into llt for this iwfs. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad29b819dfe42ec26645992a2e299099c"></a>int</td>
+<td class="fieldname">
+nllt</td>
+<td class="fielddoc">
+<p>number of launch telescopes in this powfs </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1e680197445478d85c51eb7413d73e90"></a>real</td>
+<td class="fieldname">
+epfsm</td>
+<td class="fielddoc">
+<p>Integrator gain for LLT FSM offloading </p>
 </td></tr>
 </table>
 
@@ -1874,6 +1946,55 @@ ng</td>
 <td class="fielddoc">
 <p>number of gradients per subaperture. 2 for SHWFS. &gt;2 for raw PWFS </p>
 </td></tr>
+<tr><td class="fieldtype">
+<a id="a6074b1c7bdf1eb69a90fd993db87d315"></a>real</td>
+<td class="fieldname">
+apfsm</td>
+<td class="fielddoc">
+<p>servo coefficient for for LGS uplink pointing loop. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="abe42d224efc359b32d436b9442f55c8c"></a>real</td>
+<td class="fieldname">
+epfsm</td>
+<td class="fielddoc">
+<p>error gain for uplink pointing </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9ae94fc4708db5ab66e49288109eb638"></a>real</td>
+<td class="fieldname">
+alfsm</td>
+<td class="fielddoc">
+<p>Additional latency (*sim.dt) of the uplink loop </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad0d799e9547229b6024b3830001cb713"></a>real</td>
+<td class="fieldname">
+zetafsm</td>
+<td class="fielddoc">
+<p>Damping of FSM modeled as second harmonic oscillater (SHO). </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad52effb18ed166f9e0bb21a6dd4c3ef5"></a>real</td>
+<td class="fieldname">
+f0fsm</td>
+<td class="fielddoc">
+<p>Resonance frequency of FSM (SHO). 0: infinite. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a20c125700a912e5036fe630ffff07bbb"></a>int</td>
+<td class="fieldname">
+idealfsm</td>
+<td class="fielddoc">
+<p>ideal compensation for uplink pointing </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3b4d29e93e775dcf3f2d5acfa7e5ffbc"></a>int</td>
+<td class="fieldname">
+commonfsm</td>
+<td class="fielddoc">
+<p>Make FSM common for each powfs (LLT). Keep at 0. </p>
+</td></tr>
 </table>
 
 </div>
@@ -2045,6 +2166,13 @@ iastroke</td>
 strokescale</td>
 <td class="fielddoc">
 <p>describes polynomials that convert opd to voltage (first cell), and voltage to opd (second cell). The two operations has to be strict inverse of each other </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad852fb1e8d8077f26ac79017bcee1027"></a>real</td>
+<td class="fieldname">
+dratio</td>
+<td class="fielddoc">
+<p>telescope diameter to DM diameter ratio (beam angle magnification factor) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af81a20c35a750e761d550ba5974ba8b6"></a>real</td>
@@ -3089,13 +3217,6 @@ za</td>
 <p>zenith angle in radian </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ae3fa55d3b6a3885eefe638c89690ec97"></a>real</td>
-<td class="fieldname">
-zadeg</td>
-<td class="fielddoc">
-<p>zenith angle in degree. For print out. </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a7b15776821fd592c84f1e42f3e469aa0"></a>real</td>
 <td class="fieldname">
 htel</td>
@@ -3201,20 +3322,6 @@ eplo</td>
 <p>error gain for NGS modes (low order) </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a9e3f7c414158e6aad9dec29f38a658b0"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-apfsm</td>
-<td class="fielddoc">
-<p>servo coefficient for for LGS uplink pointing loop. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="aa50f68272e3aadf7d8353e0bda99ba21"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-epfsm</td>
-<td class="fielddoc">
-<p>error gain for uplink pointing </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="adc5d4faa3dda41b4a7ea2490726bae3f"></a>real</td>
 <td class="fieldname">
 alhi</td>
@@ -3227,34 +3334,6 @@ alhi</td>
 allo</td>
 <td class="fielddoc">
 <p>Additional latnecy (*sim.dt) of the low order loop </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a7c631ba85bfe2f3908968480ca6b32b1"></a>real</td>
-<td class="fieldname">
-alfsm</td>
-<td class="fielddoc">
-<p>Additional latency (*sim.dt) of the uplink loop </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ac43528f14d1f304d9fb65d1aee658382"></a>int</td>
-<td class="fieldname">
-commonfsm</td>
-<td class="fielddoc">
-<p>Make FSM common for each powfs (LLT). Keep at 0. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a609290fd17696311c6d1ee65de869ff0"></a>real</td>
-<td class="fieldname">
-zetafsm</td>
-<td class="fielddoc">
-<p>Damping of FSM modeled as second harmonic oscillater (SHO). </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a2d9081ac11c381092e5594c7eed9fbff"></a>real</td>
-<td class="fieldname">
-f0fsm</td>
-<td class="fielddoc">
-<p>Resonance frequency of FSM (SHO). 0: infinite. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a3240c885a49403e54b845710a85313f0"></a>real</td>
@@ -3321,13 +3400,6 @@ mffocus</td>
 <li>1: Focus blending using CL gradients, for each LGS independently.</li>
 <li>2: Focus blending using CL gradinets, for common LGS focus only (not preferred). </li>
 </ul>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a1c0f9f8ad167b15c0717d3c49bdfb75f"></a>int</td>
-<td class="fieldname">
-idealfsm</td>
-<td class="fielddoc">
-<p>ideal compensation for uplink pointing </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ad5674c2b4206a5d1d8bf1eb9b800fb23"></a>int</td>
@@ -3547,60 +3619,128 @@ mvmngpu</td>
 <p>number of GPUs to use in server </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a37253f5b18fea3e00316623a26569488"></a>int</td>
-<td class="fieldname">
-ncpa_calib</td>
-<td class="fielddoc">
-<p>calibrate NCPA. 1: with all DMs. 2: with only ground DM. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a41727bc7360fab4be50e8e5a7e6b8c23"></a>int</td>
-<td class="fieldname">
-ncpa_ttr</td>
-<td class="fielddoc">
-<p>Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a70d2ebddb0939bb5fff5df9cf2b788fc"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-ncpa_thetax</td>
-<td class="fielddoc">
-<p>Coordinate for NCPA calibration (arcsec) </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="af5838d273fc65257aeba7637e85725ee"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-ncpa_thetay</td>
-<td class="fielddoc">
-<p>Coordinate for NCPA calibration (arcsec) </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ae618faea65fc79d4e21144e79ae040ec"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-ncpa_wt</td>
-<td class="fielddoc">
-<p>Weight for each point. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a75d313e78fb237719a1ae9bccc227a59"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-ncpa_hs</td>
-<td class="fielddoc">
-<p>Height of star. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="aca0e45964fac5e6abb6d1dcd79bb91cb"></a>int</td>
-<td class="fieldname">
-ncpa_ndir</td>
-<td class="fielddoc">
-<p>Number of points for NCPA calibration </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="af97c70bc6e1a2514b961cda471c68c31"></a>char *</td>
 <td class="fieldname">
 dmadd</td>
 <td class="fielddoc">
 <p>Containing dm vector to simulate turbulence (added to integrator output). It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a name="structncpa__cfg__t" id="structncpa__cfg__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structncpa__cfg__t">&#9670;&nbsp;</a></span>ncpa_cfg_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct ncpa_cfg_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><div id="dynsection-15" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-15-trigger" src="closed.png" alt="+"/> Collaboration diagram for ncpa_cfg_t:</div>
+<div id="dynsection-15-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-15-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="structncpa__cfg__t__coll__graph.png" border="0" usemap="#ncpa__cfg__t_coll__map" alt="Collaboration graph"/></div>
+<map name="ncpa__cfg__t_coll__map" id="ncpa__cfg__t_coll__map">
+</map>
+</div>
+<table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a296222280135ef352b1df27db7465eab"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+thetax</td>
+<td class="fielddoc">
+<p>Coordinate for NCPA calibration (arcsec) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9f0cb0cd4119a1cfcf97e6b280d66067"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+thetay</td>
+<td class="fielddoc">
+<p>Coordinate for NCPA calibration (arcsec) </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3fc0bdfdb3fff5d13b3837df02f3b079"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+wt</td>
+<td class="fielddoc">
+<p>Weight for each point. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a22baa3e7235c06f4645d9e3cd5252f1d"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+hs</td>
+<td class="fielddoc">
+<p>Height of star. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a11d9ea0dd24fdfeb11f50fb9605212ff"></a>int</td>
+<td class="fieldname">
+calib</td>
+<td class="fielddoc">
+<p>calibrate NCPA. 1: with all DMs. 2: with only ground DM. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a93abd1a95716a3b68d0e0cd0345044fb"></a>int</td>
+<td class="fieldname">
+ttr</td>
+<td class="fielddoc">
+<p>Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a28e46ba8a95459ad6b4b3b9b4199f47b"></a>int</td>
+<td class="fieldname">
+rmsci</td>
+<td class="fielddoc">
+<p>1: do not include calibration residual in science path. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8ca4c1e9a6c531b35a5060cbec4afe3a"></a>int</td>
+<td class="fieldname">
+preload</td>
+<td class="fielddoc">
+<p>preload integrator with DM sys flat </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8628162e1b88128c93f2902663a20395"></a>int</td>
+<td class="fieldname">
+ndir</td>
+<td class="fielddoc">
+<p>Number of points for NCPA calibration </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a1121f4962777f060c1c3e6ea15c54a26"></a>char **</td>
+<td class="fieldname">
+surf</td>
+<td class="fielddoc">
+<p>OPD surfaces </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aac47b3b3ca35230b8a3a7ffe73c2feb2"></a>int</td>
+<td class="fieldname">
+nsurf</td>
+<td class="fielddoc">
+<p>Number of OPD surfaces </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="adc4c60016b38cbc0f17a8e46c5731c8a"></a>char **</td>
+<td class="fieldname">
+tsurf</td>
+<td class="fielddoc">
+<p>Tilted surfaces, surface, not OPD </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a99ed45de169602730ef5b08d5846a6ac"></a>int</td>
+<td class="fieldname">
+ntsurf</td>
+<td class="fielddoc">
+<p>Number of tilted surfaces </p>
 </td></tr>
 </table>
 
@@ -3618,11 +3758,11 @@ dmadd</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Parameters for Cn square estimation. </p>
-</div><div id="dynsection-15" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-15-trigger" src="closed.png" alt="+"/> Collaboration diagram for cn2est_cfg_t:</div>
-<div id="dynsection-15-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-16" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-16-trigger" src="closed.png" alt="+"/> Collaboration diagram for cn2est_cfg_t:</div>
+<div id="dynsection-16-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-15-content" class="dyncontent" style="display:none;">
+<div id="dynsection-16-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structcn2est__cfg__t__coll__graph.png" border="0" usemap="#cn2est__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="cn2est__cfg__t_coll__map" id="cn2est__cfg__t_coll__map">
 </map>
@@ -3722,11 +3862,11 @@ saat</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for plotting during simulation. For debug purpose </p>
-</div><div id="dynsection-16" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-16-trigger" src="closed.png" alt="+"/> Collaboration diagram for plot_cfg_t:</div>
-<div id="dynsection-16-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-17" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-17-trigger" src="closed.png" alt="+"/> Collaboration diagram for plot_cfg_t:</div>
+<div id="dynsection-17-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-16-content" class="dyncontent" style="display:none;">
+<div id="dynsection-17-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structplot__cfg__t__coll__graph.png" border="0" usemap="#plot__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="plot__cfg__t_coll__map" id="plot__cfg__t_coll__map">
 </map>
@@ -3782,6 +3922,20 @@ all</td>
 <td class="fielddoc">
 <p>Enables setup, atm, run </p>
 </td></tr>
+<tr><td class="fieldtype">
+<a id="aefacdb684bd6efe84c807ae7da7e1c1b"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+opdmax</td>
+<td class="fielddoc">
+<p>Set zlim for OPD drawing </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a21b88375385a3c4676e218e376f49848"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+gmax</td>
+<td class="fielddoc">
+<p>Set zlim for gradient drawing </p>
+</td></tr>
 </table>
 
 </div>
@@ -3798,11 +3952,11 @@ all</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for debugging. </p>
-</div><div id="dynsection-17" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-17-trigger" src="closed.png" alt="+"/> Collaboration diagram for dbg_cfg_t:</div>
-<div id="dynsection-17-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-18" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-18-trigger" src="closed.png" alt="+"/> Collaboration diagram for dbg_cfg_t:</div>
+<div id="dynsection-18-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-17-content" class="dyncontent" style="display:none;">
+<div id="dynsection-18-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structdbg__cfg__t__coll__graph.png" border="0" usemap="#dbg__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="dbg__cfg__t_coll__map" id="dbg__cfg__t_coll__map">
 </map>
@@ -3922,62 +4076,6 @@ fit</td>
 <p>Comparing DM fitting in GPU and CPU </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af8ab185ff63193e57117c1ad53c51510"></a>int</td>
-<td class="fieldname">
-na_smooth</td>
-<td class="fielddoc">
-<p>1: smooth sodium profile to coarser grid before computing etf </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a74e87eb91309b735bf6c098061de9be7"></a>int</td>
-<td class="fieldname">
-na_interp</td>
-<td class="fielddoc">
-<p>1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ac3af414f13966874a37499f92dc598bb"></a>real</td>
-<td class="fieldname">
-na_thres</td>
-<td class="fielddoc">
-<p>altitude error threshold to move trombone, in unit of meter. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a862a0bdf561448d46ac5f116270b6c20"></a>real</td>
-<td class="fieldname">
-na_fit_svdthres</td>
-<td class="fielddoc">
-<p>threshold for SVD inverse in sodium fitting. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a9103dd56c93415d15445726d30154905"></a>real</td>
-<td class="fieldname">
-na_fit_dh</td>
-<td class="fielddoc">
-<p>sampling in height in sodium fitting </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a0ddf4d898208930ac11aa00bf3e5960e"></a>int</td>
-<td class="fieldname">
-na_fit_maxit</td>
-<td class="fielddoc">
-<p>Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a76602ea9e795f7028ecc562d4d98e09c"></a>int</td>
-<td class="fieldname">
-ncpa_preload</td>
-<td class="fielddoc">
-<p>preload integrator with DM sys flat </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a978014e63729f484b3843aac58c78cc0"></a>int</td>
-<td class="fieldname">
-ncpa_rmsci</td>
-<td class="fielddoc">
-<p>1: do not include calibration residual in science path. </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a9c48e15856c949aa188c2bc002fc990b"></a>int</td>
 <td class="fieldname">
 gp_noamp</td>
@@ -4032,20 +4130,6 @@ twfsflag</td>
 twfsrmax</td>
 <td class="fielddoc">
 <p>TWFS maximum zernike radial order. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a86873420992b6b3394b728111a8998df"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-draw_opdmax</td>
-<td class="fielddoc">
-<p>Set zlim for OPD drawing </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a8b4b55cdb080ff3de805ee8361b9ef20"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-draw_gmax</td>
-<td class="fielddoc">
-<p>Set zlim for gradient drawing </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a612cbf098321429befc1e161bdef7ab6"></a>int</td>
@@ -4105,11 +4189,11 @@ recon_stuck</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Configure GPU usage for different parts. </p>
-</div><div id="dynsection-18" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-18-trigger" src="closed.png" alt="+"/> Collaboration diagram for gpu_cfg_t:</div>
-<div id="dynsection-18-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-19" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-19-trigger" src="closed.png" alt="+"/> Collaboration diagram for gpu_cfg_t:</div>
+<div id="dynsection-19-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-18-content" class="dyncontent" style="display:none;">
+<div id="dynsection-19-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structgpu__cfg__t__coll__graph.png" border="0" usemap="#gpu__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="gpu__cfg__t_coll__map" id="gpu__cfg__t_coll__map">
 </map>
@@ -4188,11 +4272,11 @@ moao</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for each MOAO type. </p>
-</div><div id="dynsection-19" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-19-trigger" src="closed.png" alt="+"/> Collaboration diagram for moao_cfg_t:</div>
-<div id="dynsection-19-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-20" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-20-trigger" src="closed.png" alt="+"/> Collaboration diagram for moao_cfg_t:</div>
+<div id="dynsection-20-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-19-content" class="dyncontent" style="display:none;">
+<div id="dynsection-20-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structmoao__cfg__t__coll__graph.png" border="0" usemap="#moao__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="moao__cfg__t_coll__map" id="moao__cfg__t_coll__map">
 </map>
@@ -4298,11 +4382,11 @@ actstuck</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for reusing of saved variables. </p>
-</div><div id="dynsection-20" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-20-trigger" src="closed.png" alt="+"/> Collaboration diagram for load_cfg_t:</div>
-<div id="dynsection-20-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-21" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-21-trigger" src="closed.png" alt="+"/> Collaboration diagram for load_cfg_t:</div>
+<div id="dynsection-21-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-20-content" class="dyncontent" style="display:none;">
+<div id="dynsection-21-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structload__cfg__t__coll__graph.png" border="0" usemap="#load__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="load__cfg__t_coll__map" id="load__cfg__t_coll__map">
 </map>
@@ -4458,11 +4542,11 @@ ncpa</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for saving variables. </p>
-</div><div id="dynsection-21" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-21-trigger" src="closed.png" alt="+"/> Collaboration diagram for save_cfg_t:</div>
-<div id="dynsection-21-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-22" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-22-trigger" src="closed.png" alt="+"/> Collaboration diagram for save_cfg_t:</div>
+<div id="dynsection-22-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-21-content" class="dyncontent" style="display:none;">
+<div id="dynsection-22-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structsave__cfg__t__coll__graph.png" border="0" usemap="#save__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="save__cfg__t_coll__map" id="save__cfg__t_coll__map">
 </map>
@@ -4736,11 +4820,11 @@ mvm</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><div id="dynsection-22" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-22-trigger" src="closed.png" alt="+"/> Collaboration diagram for dist_cfg_t:</div>
-<div id="dynsection-22-summary" class="dynsummary" style="display:block;">
+<div class="textblock"></div><div id="dynsection-23" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-23-trigger" src="closed.png" alt="+"/> Collaboration diagram for dist_cfg_t:</div>
+<div id="dynsection-23-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-22-content" class="dyncontent" style="display:none;">
+<div id="dynsection-23-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structdist__cfg__t__coll__graph.png" border="0" usemap="#dist__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="dist__cfg__t_coll__map" id="dist__cfg__t_coll__map">
 </map>
@@ -4784,11 +4868,11 @@ dm2sci</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>is a wrapper of all _CFG_T data types. </p>
-</div><div id="dynsection-23" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-23-trigger" src="closed.png" alt="+"/> Collaboration diagram for parms_t:</div>
-<div id="dynsection-23-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-24" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-24-trigger" src="closed.png" alt="+"/> Collaboration diagram for parms_t:</div>
+<div id="dynsection-24-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-23-content" class="dyncontent" style="display:none;">
+<div id="dynsection-24-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structparms__t__coll__graph.png" border="0" usemap="#parms__t_coll__map" alt="Collaboration graph"/></div>
 <map name="parms__t_coll__map" id="parms__t_coll__map">
 </map>
@@ -4894,6 +4978,13 @@ sim</td>
 <p>Simulation information </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a965dd4302de5eaa217951741e296e9f3"></a><a class="el" href="parms_8h.html#structncpa__cfg__t">ncpa_cfg_t</a></td>
+<td class="fieldname">
+ncpa</td>
+<td class="fielddoc">
+<p>Surface and NCPA caibration parameters. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="ae9dbe606c800bca5528efb2ce3c3ef67"></a><a class="el" href="parms_8h.html#structcn2est__cfg__t">cn2est_cfg_t</a></td>
 <td class="fieldname">
 cn2</td>
@@ -4976,34 +5067,6 @@ ndm</td>
 nmoao</td>
 <td class="fielddoc">
 <p>Number of different MOAO type </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ad7305af35ee2d5d669c0bbb60d7e1bcc"></a>char **</td>
-<td class="fieldname">
-surf</td>
-<td class="fielddoc">
-<p>OPD surfaces </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ab0e533993129c07fa6da32080d86d8d3"></a>int</td>
-<td class="fieldname">
-nsurf</td>
-<td class="fielddoc">
-<p>Number of OPD surfaces </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a93ae8919035b9670e31715e44d3251e0"></a>char **</td>
-<td class="fieldname">
-tsurf</td>
-<td class="fielddoc">
-<p>Tilted surfaces, surface, not OPD </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a08e203fafd737258b7fb8cc2d8e315a3"></a>int</td>
-<td class="fieldname">
-ntsurf</td>
-<td class="fielddoc">
-<p>Number of tilted surfaces </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab769f09c29a9bb993bb9c2abffc847f9"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
@@ -5161,11 +5224,11 @@ itwfssph</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p><a class="el" href="parms_8h.html#structarg__t">arg_t</a> is used for command line parsing. </p>
-</div><div id="dynsection-24" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-24-trigger" src="closed.png" alt="+"/> Collaboration diagram for arg_t:</div>
-<div id="dynsection-24-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-25" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-25-trigger" src="closed.png" alt="+"/> Collaboration diagram for arg_t:</div>
+<div id="dynsection-25-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-24-content" class="dyncontent" style="display:none;">
+<div id="dynsection-25-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structarg__t__coll__graph.png" border="0" usemap="#arg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="arg__t_coll__map" id="arg__t_coll__map">
 </map>
