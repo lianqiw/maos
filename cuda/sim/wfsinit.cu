@@ -52,8 +52,8 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 						cuwfs[iwfs].dtf[iwvl].etf[1].etf=tmp;
 					}
 				}
-				if(jwfs==0||parms->powfs[ipowfs].llt->n>1){
-					int kwfs=parms->powfs[ipowfs].llt->n>1?jwfs:0;
+				if(jwfs==0||parms->powfs[ipowfs].llt->nllt>1){
+					int kwfs=parms->powfs[ipowfs].llt->nllt>1?jwfs:0;
 					if(powfs[ipowfs].etfsim && !skip_1){
 						//dbg("Copy etf from wfs %d from CPU to GPU\n", iwfs);
 						etf2gpu(cuwfs[iwfs].dtf[iwvl].etf[0].etf, &powfs[ipowfs].etfsim[iwvl], kwfs);
@@ -355,7 +355,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			}
 			/*DTF. */
 			if(parms->powfs[ipowfs].usephy){
-				if((parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n>1)||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+				if((parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->nllt>1)||wfsind==0||wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 					 /*Need one per wfs in this powfs, or the first wfs. */
 					cuwfs[iwfs].dtf.init(nwvl, 1);
 					for(int iwvl=0; iwvl<nwvl; iwvl++){

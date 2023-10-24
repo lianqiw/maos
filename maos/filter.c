@@ -346,7 +346,7 @@ static void filter_cl(sim_t* simu){
 		dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
 	}
 
-	if(!parms->dbg.ncpa_preload&&recon->dm_ncpa){
+	if(!parms->ncpa.preload&&recon->dm_ncpa){
 		info_once("Add NCPA after integrator\n");
 		dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
 	}
@@ -471,7 +471,7 @@ void filter_fsm(sim_t* simu){
 			hasinput=servo_filter(simu->fsmint[iwfs], simu->fsmerr?P(simu->fsmerr, iwfs):NULL);
 		}
 		//lgs wfs common fsm 
-		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->n==1&&parms->powfs[ipowfs].llt->fcfsm>0){
+		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->nllt==1&&parms->powfs[ipowfs].llt->fcfsm>0){
 			int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM. 
 			if(remove){//use frequency split offloading to LLT_FSM
 				dzero(P(simu->llt_fsmcmd, ipowfs));

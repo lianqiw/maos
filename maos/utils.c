@@ -44,8 +44,8 @@ void plotloc(const char* fig, const parms_t* parms,
 	loc_t* loc, real ht, const char* format, ...){
 	format2fn;
 	int ncir=parms->evl.nevl+parms->fit.nfit+parms->nwfs;
-	if(parms->sim.ncpa_calib){
-		ncir+=parms->sim.ncpa_ndir;
+	if(parms->ncpa.calib){
+		ncir+= parms->ncpa.ndir;
 	}
 	dmat* cir=dnew(4, ncir);
 	int count=0;
@@ -65,10 +65,10 @@ void plotloc(const char* fig, const parms_t* parms,
 		P(cir, 3, count)=0xFF22DD;/*rgb color */
 		count++;
 	}
-	for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-		real hs=P(parms->sim.ncpa_hs,idir);
-		P(cir, 0, count)=ht*P(parms->sim.ncpa_thetax,idir);
-		P(cir, 1, count)=ht*P(parms->sim.ncpa_thetay,idir);
+	for(int idir=0; idir< parms->ncpa.ndir; idir++){
+		real hs=P(parms->ncpa.hs,idir);
+		P(cir, 0, count)=ht*P(parms->ncpa.thetax,idir);
+		P(cir, 1, count)=ht*P(parms->ncpa.thetay,idir);
 		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
 		P(cir, 3, count)=0x22FF00;/*rgb color */
 		count++;
@@ -129,10 +129,10 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	count++;
 	legend[count]="NCPA";
 	style[count]=(0x22FF00<<8)+(4<<4)+2;
-	P(locs,count)=locnew(parms->sim.ncpa_ndir, 0, 0);
-	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-		P(locs,count)->locx[ifit]=P(parms->sim.ncpa_thetax,ifit)*RAD2AS;
-		P(locs,count)->locy[ifit]=P(parms->sim.ncpa_thetay,ifit)*RAD2AS;
+	P(locs,count)=locnew( parms->ncpa.ndir, 0, 0);
+	for(int ifit=0; ifit< parms->ncpa.ndir; ifit++){
+		P(locs,count)->locx[ifit]=P(parms->ncpa.thetax,ifit)*RAD2AS;
+		P(locs,count)->locy[ifit]=P(parms->ncpa.thetay,ifit)*RAD2AS;
 	}
 	count++;
 	const char* const legwfs[]={
@@ -506,7 +506,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 		mtche=PCOLR(powfs[ipowfs].intstat->mtche, wfsind);
 	}
-	int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
+	int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->nllt:0;
 	real* srot=NULL;
 		if(nllt){
 		srot=P(PR(powfs[ipowfs].srot,wfsind,0));

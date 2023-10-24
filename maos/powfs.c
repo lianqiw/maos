@@ -709,7 +709,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	const real dsa=powfs[ipowfs].pts->dsa;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(parms->powfs[ipowfs].llt){
-		const int nllt=parms->powfs[ipowfs].llt->n;
+		const int nllt=parms->powfs[ipowfs].llt->nllt;
 		real rsa2, rsa2max=0;
 		dcellfree(powfs[ipowfs].srot);
 		dcellfree(powfs[ipowfs].srsa);
@@ -1058,7 +1058,7 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 		error("The sodium profile input %s is in wrong fromat\n", fnprof);
 	}
 	real dxnew=0;
-	if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
+	if(parms->powfs[ipowfs].llt->na_smooth){/*resampling the sodium profile by binning. */
 		/*Make new sampling: */
 		const real rsamax=dmax(powfs[ipowfs].srsamax);
 		const real dthetamin=dmin(powfs[ipowfs].dtheta);
@@ -1148,7 +1148,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		*petf=mketf(powfs[ipowfs].dtf, sodium, icol, 
 					powfs[ipowfs].srot, powfs[ipowfs].srsa,
 					parms->powfs[ipowfs].hs+deltah, 
-					parms->sim.htel, parms->sim.za,	!parms->dbg.na_interp);
+					parms->sim.htel, parms->sim.za,	!parms->powfs[ipowfs].llt->na_interp);
 	}
 }
 

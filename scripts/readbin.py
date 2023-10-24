@@ -124,6 +124,8 @@ def readbin(file):
                 else:
                     fp.seek(0, 0)
             (out, header, err)=readbin_auto(fp, isfits)
+            if type(header)==str:
+                header=[header]
             headers.extend(header)
         except Exception as error:#file may not be ready
             print("readbin failed:", file, error)
@@ -133,9 +135,9 @@ def readbin(file):
 
 def readbin_auto(fp, isfits, scan=0):
     err=0
-    out=list()
-    header=list()
     if scan or isfits:
+        out=list()
+        header=list()
         while err==0:
             [out_i, header_i, err]=readbin_do(fp, isfits)
             if err==0:

@@ -268,9 +268,9 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), P(parms->dbg.draw_opdmax),
+				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs rhs %d", iwfs);
-				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->dbg.draw_opdmax),
+				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs %d", iwfs);
 			}
 			if(parms->save.dm){
@@ -314,9 +314,9 @@ void moao_recon(sim_t* simu){
 				}
 			}
 			if(parms->plot.run){
-				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), P(parms->dbg.draw_opdmax),
+				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Evl %d", ievl);
-				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->dbg.draw_opdmax),
+				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->plot.opdmax),
 					"MOAO for EVL", "x (m)", "y(m)", "Evl %d", ievl);
 			}
 			if(parms->save.dm){

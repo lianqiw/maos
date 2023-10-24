@@ -391,6 +391,7 @@ void sim_update_etf(sim_t* simu){
 				icol=colsim+isim/dtrat;
 				icol2=icol+1;
 			}
+			static real deltah_last=0;
 			real deltah=0;
 			//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
 			//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
@@ -422,14 +423,18 @@ void sim_update_etf(sim_t* simu){
 				}else{
 					P(simu->zoomint, iwfs0)+=parms->powfs[ipowfs].zoomgain*zoomerr1
 						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
-					deltah=P(simu->zoomint, iwfs0)*factor;
+					deltah=P(simu->zoomint, iwfs0)*factor;//convert focus to height
 				}
 				if(simu->zoompos&&simu->zoompos_icol<PN(simu->zoompos, iwfs0)){
 					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
 					simu->zoompos_icol++;
 				}
 				dbg("Step %d: powfs %d: trombone error is %g %g zoompos is %g zoomset=%d.\n", isim, ipowfs, zoomerr1*factor, zoomerr2*factor, deltah, zoomset);
+				if(fabs(deltah-deltah_last)<parms->powfs[ipowfs].llt->na_thres){//limit trombone travel minimum step size.
+					deltah=deltah_last;
+				}
 			}
+			
 			info("Step %d: powfs %d: Updating ETF.\n", isim, ipowfs);
 			TIC;tic;
 			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah, zoomset?0:100);
@@ -1083,16 +1088,16 @@ static void init_simu_wfs(sim_t* simu){
 			if(parms->powfs[ipowfs].llt){
 				if(parms->powfs[ipowfs].llt->ttpsd){
 					dmat *psdin=dread("%s", parms->powfs[ipowfs].llt->ttpsd);
-					P(simu->llt_ws, ipowfs)=dnew(parms->sim.end, parms->powfs[ipowfs].llt->n);
-					for(int i=0; i<parms->powfs[ipowfs].llt->n; i++){//per LLT.
+					P(simu->llt_ws, ipowfs)=dnew(parms->sim.end, parms->powfs[ipowfs].llt->nllt);
+					for(int i=0; i<parms->powfs[ipowfs].llt->nllt; i++){//per LLT.
 						dmat *tmp=psd2ts(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
 						daddcol(P(simu->llt_ws, ipowfs), i, 0, tmp, 1);
 						dfree(tmp);
 					}
 					dfree(psdin);
 				}
-				//P(simu->llt_fsmcmd, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->n);
-				//P(simu->llt_fsmreal, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->n);
+				//P(simu->llt_fsmcmd, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
+				//P(simu->llt_fsmreal, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
 				if(parms->powfs[ipowfs].llt->fcfsm){
 					simu->llt_fsmsho[ipowfs]=sho_new(parms->powfs[ipowfs].llt->fcfsm, 1);
 				}
@@ -1266,7 +1271,7 @@ static void init_simu_dm(sim_t* simu){
 		simu->dmint=servo_new_sho(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi,
 			parms->sim.dt, parms->sim.ephi, parms->sim.f0dm, parms->sim.zetadm);
 	}
-	if(parms->dbg.ncpa_preload&&recon->dm_ncpa){//set the integrator
+	if(parms->ncpa.preload&&recon->dm_ncpa){//set the integrator
 		warning_once("Preload integrator with NCPA\n");
 		dcelladd(&P(simu->dmint->mint, 0), 1, recon->dm_ncpa, 1);
 	}

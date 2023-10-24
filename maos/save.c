@@ -80,7 +80,7 @@ void save_gradol(sim_t* simu){
 		if(!parms->powfs[ipowfs].psol||!P(simu->gradlastol,iwfs)) continue;
 		if(parms->plot.run){
 			drawgrad("Gpol", powfs[ipowfs].saloc, P(simu->gradlastol,iwfs),
-				parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->dbg.draw_opdmax),
+				parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.opdmax),
 				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "Gpol %d", iwfs);
 		}
 		if(simu->save->gradol[iwfs]&&(simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){
@@ -127,14 +127,14 @@ void save_recon(sim_t* simu){
 		if(simu->dm_evl){
 			int imoao=parms->evl.moao;
 			for(int ievl=0; ievl<parms->evl.nevl&&imoao>=0; ievl++){
-				drawopd("moao", P(recon->moao[imoao].aloc,0), P(simu->dm_evl,ievl), P(parms->dbg.draw_opdmax),
+				drawopd("moao", P(recon->moao[imoao].aloc,0), P(simu->dm_evl,ievl), P(parms->plot.opdmax),
 					"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
 		for(int idm=0; parms->recon.alg==0&&simu->dmrecon&&idm<parms->ndm; idm++){
 			if(P(simu->dmrecon,idm)){
 				dmat* tmp=convert_dm(recon, P(simu->dmrecon,idm), idm);
-				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
+				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
 				"DM Fitting Output", "x (m)", "y (m)", "Fit %d", idm);
 				dfree(tmp);
 			}
@@ -143,7 +143,7 @@ void save_recon(sim_t* simu){
 		for(int idm=0; simu->dmerr&&idm<parms->ndm; idm++){
 			if(P(simu->dmerr,idm)){
 				dmat* tmp=convert_dm(recon, P(simu->dmerr,idm), idm);
-				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
+				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
 					"DM Error Signal (Hi)", "x (m)", "y (m)",
 					"Err Hi %d", idm);
 				dfree(tmp);
@@ -153,7 +153,7 @@ void save_recon(sim_t* simu){
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
-					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), P(parms->dbg.draw_opdmax),
+					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), P(parms->plot.opdmax),
 						"Reconstructed Atmosphere", "x (m)", "y (m)", "Layer %d", i);
 				}
 			}
@@ -173,7 +173,7 @@ void save_recon(sim_t* simu){
 				dcellzero(dmlo);
 				addlow2dm(&dmlo, simu, simu->Merr_lo, 1);
 				dmat* tmp=convert_dm(recon, P(dmlo,idm), idm);
-				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
+				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
 					"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 				dfree(tmp);
 			}
@@ -196,7 +196,7 @@ void save_recon(sim_t* simu){
 			if(parms->plot.opdx){ /*draw opdx */
 				for(int i=0; i<NX(opdx); i++){
 					if(P(opdx,i)){
-						drawopd("opdx", P(recon->xloc,i), P(opdx,i), P(parms->dbg.draw_opdmax),
+						drawopd("opdx", P(recon->xloc,i), P(opdx,i), P(parms->plot.opdmax),
 							"Atmosphere Projected to XLOC", "x (m)", "y (m)", "opdx %d", i);
 					}
 				}
@@ -264,7 +264,7 @@ void save_dmproj(sim_t* simu){
 	if(parms->plot.run&&simu->dmproj){
 		for(int idm=0; idm<parms->ndm; idm++){
 			if(P(simu->dmproj,idm)){
-				drawopd("DM", P(recon->aloc,idm), P(simu->dmproj,idm), P(parms->dbg.draw_opdmax),
+				drawopd("DM", P(recon->aloc,idm), P(simu->dmproj,idm), P(parms->plot.opdmax),
 					"ATM to DM Projection (Hi)", "x (m)", "y (m)", "Proj Hi %d", idm);
 			}
 		}
@@ -298,7 +298,7 @@ void save_dmreal(sim_t* simu){
 				break;
 			}
 			for(int idm=0; dmlo && idm<parms->ndm; idm++){
-				drawopd("DM",P(recon->aloc,idm), P(P(dmlo,idm)),P(parms->dbg.draw_opdmax),
+				drawopd("DM",P(recon->aloc,idm), P(P(dmlo,idm)),P(parms->plot.opdmax),
 					"DM Integrator (Lo)","x (m)","y (m)",
 					"Int Lo %d",idm);
 			}
@@ -306,7 +306,7 @@ void save_dmreal(sim_t* simu){
 			if(simu->dmreal){
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(P(simu->dmreal,idm)){
-						drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->dbg.draw_opdmax),
+						drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->plot.opdmax),
 							"DM Command OPD", "x (m)", "y (m)", "Real %d", idm);
 					}
 				}
@@ -317,7 +317,7 @@ void save_dmreal(sim_t* simu){
 					ptt[2]=P(simu->ttmreal,1);
 					dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
 					loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
-					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->dbg.draw_opdmax),
+					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
 						"TTM Command OPD", "x (m)", "y (m)", "Real TTM");
 					dfree(tmp);
 				}
@@ -343,7 +343,7 @@ void save_dmreal(sim_t* simu){
 						loc_add_ptt(opd, ptt, simu->aper->locs);
 					}
 
-					drawopd("DM", simu->aper->locs, opd, P(parms->dbg.draw_opdmax),
+					drawopd("DM", simu->aper->locs, opd, P(parms->plot.opdmax),
 						"DM OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
 					dfree(opd);
 				}
@@ -351,7 +351,7 @@ void save_dmreal(sim_t* simu){
 
 			for(int idm=0; idm<parms->ndm; idm++){
 				if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
-					drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), P(parms->dbg.draw_opdmax),
+					drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), P(parms->plot.opdmax),
 						"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 				}
 			}

@@ -122,21 +122,21 @@ void free_parms(parms_t *parms){
 	lfree(parms->sim.seeds);
 	dfree(parms->sim.wspsd);
 
-	dfree(parms->sim.ncpa_thetax);
-	dfree(parms->sim.ncpa_thetay);
-	dfree(parms->sim.ncpa_wt);
-	dfree(parms->sim.ncpa_hs);
+	dfree(parms->ncpa.thetax);
+	dfree(parms->ncpa.thetay);
+	dfree(parms->ncpa.wt);
+	dfree(parms->ncpa.hs);
 	free(parms->sim.mvmhost);
 	dfree(parms->cn2.pair);
 	lfree(parms->save.gcov);
-	for(int isurf=0; isurf<parms->nsurf; isurf++){
-		free(parms->surf[isurf]);
+	for(int isurf=0; isurf<parms->ncpa.nsurf; isurf++){
+		free(parms->ncpa.surf[isurf]);
 	}
-	free(parms->surf); parms->nsurf=0;
-	for(int isurf=0; isurf<parms->ntsurf; isurf++){
-		free(parms->tsurf[isurf]);
+	free(parms->ncpa.surf); parms->ncpa.nsurf=0;
+	for(int isurf=0; isurf<parms->ncpa.ntsurf; isurf++){
+		free(parms->ncpa.tsurf[isurf]);
 	}
-	free(parms->tsurf); parms->ntsurf=0;
+	free(parms->ncpa.tsurf); parms->ncpa.ntsurf=0;
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		free_powfs_cfg(&parms->powfs[ipowfs]);
@@ -187,8 +187,8 @@ void free_parms(parms_t *parms){
 	lfree(parms->dbg.tomo_maxit);
 	dcellfree(parms->dbg.dmoff);
 	dcellfree(parms->dbg.gradoff);
-	dfree(parms->dbg.draw_opdmax);
-	dfree(parms->dbg.draw_gmax);
+	dfree(parms->plot.opdmax);
+	dfree(parms->plot.gmax);
 	dfree(parms->dbg.atm);
 	free(parms);
 }
@@ -432,7 +432,12 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT(str, fnprep);
 			READ_LLT(str, fnsurf);
 			READ_LLT(str, fnamp);
-
+			READ_LLT(int, na_smooth);
+			READ_LLT(int, na_interp);
+			READ_LLT(dbl, na_thres);
+			READ_LLT(dbl, na_fit_dh);
+			READ_LLT(dbl, na_fit_svdthres);
+			READ_LLT(int, na_fit_maxit);
 			READ_LLT_ARR(dmat, ox);
 			READ_LLT_ARR(dmat, oy);
 			READ_LLT_ARR(dmat, misreg);
@@ -442,8 +447,8 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT(int, colsim);
 			READ_LLT(int, coldtrat);
 			READ_LLT(int, nhs);
-			llt->n=NX(llt->ox);
-			if(llt->fcfsm!=0&&llt->n>1){
+			llt->nllt=NX(llt->ox);
+			if(llt->fcfsm!=0&&llt->nllt>1){
 				error("FSM to common LLT FSM offload is only supported for single LLT.\n");
 			}
 			
@@ -1239,20 +1244,26 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.mvmport);
 	READ_INT(sim.mvmsize);
 	READ_INT(sim.mvmngpu);
-
-	READ_INT(sim.ncpa_calib);
-	READ_INT(sim.ncpa_ttr);
-	parms->sim.ncpa_thetax=readcfg_dmat(0,0,"sim.ncpa_thetax");
-	parms->sim.ncpa_ndir=NX(parms->sim.ncpa_thetax);
-	parms->sim.ncpa_thetay=readcfg_dmat(parms->sim.ncpa_ndir,0,"sim.ncpa_thetay");
-	parms->sim.ncpa_wt=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_wt");
-	parms->sim.ncpa_hs=readcfg_dmat(parms->sim.ncpa_ndir,1,"sim.ncpa_hs");
-	dscale(parms->sim.ncpa_thetax,1.*AS2RAD);
-	dscale(parms->sim.ncpa_thetay,1.*AS2RAD);
-	if(parms->sim.ncpa_wt){
-		dnormalize_sumabs(P(parms->sim.ncpa_wt),parms->sim.ncpa_ndir,1);
-	}
 	READ_STR(sim.dmadd);
+}
+static void readcfg_ncpa(parms_t *parms){
+	READ_INT(ncpa.calib);
+	READ_INT(ncpa.ttr);
+	READ_DMAT(ncpa.thetax);
+	parms->ncpa.ndir=NX(parms->ncpa.thetax);
+	READ_DMAT_NMAX(ncpa.thetay, parms->ncpa.ndir);
+	READ_DMAT_NMAX(ncpa.wt, parms->ncpa.ndir);
+	READ_DMAT_NMAX(ncpa.hs, parms->ncpa.ndir);
+	dscale(parms->ncpa.thetax,1.*AS2RAD);
+	dscale(parms->ncpa.thetay,1.*AS2RAD);
+	if(parms->ncpa.wt){
+		dnormalize_sumabs(P(parms->ncpa.wt),parms->ncpa.ndir,1);
+	}
+	READ_INT(ncpa.preload);
+	READ_INT(ncpa.rmsci);
+	parms->ncpa.nsurf=readcfg_strarr(&parms->ncpa.surf, 0, 0, "ncpa.surf");
+	parms->ncpa.ntsurf=readcfg_strarr(&parms->ncpa.tsurf, 0, 0, "ncpa.tsurf");
+
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -1278,6 +1289,15 @@ static void readcfg_cn2(parms_t *parms){
 	}
 }
 /**
+   Convert real to value pair of [-val, val].
+*/
+static dmat *dbl2pair(real val){
+	dmat *out=dnew(2, 1);
+	P(out, 0)=-fabs(val);
+	P(out, 1)=-P(out, 0);
+	return out;
+}
+/**
    Specify which variables to plot
 */
 static void readcfg_plot(parms_t *parms){
@@ -1289,6 +1309,8 @@ static void readcfg_plot(parms_t *parms){
 	READ_INT(plot.psf);
 	READ_INT(plot.all);
 	READ_INT(plot.grad2opd);
+	parms->plot.opdmax=dbl2pair(readcfg_dbl("plot.opdmax"));
+	parms->plot.gmax=dbl2pair(readcfg_dbl("plot.gmax"));
 	if(parms->plot.all){
 		parms->plot.setup=parms->plot.all;
 		parms->plot.run=parms->plot.all;
@@ -1300,15 +1322,7 @@ static void readcfg_plot(parms_t *parms){
 		draw_helper();
 	}
 }
-/**
-   Convert real to value pair of [-val, val].
-*/
-static dmat *dbl2pair(real val){
-	dmat *out=dnew(2,1);
-	P(out,0)=-fabs(val);
-	P(out,1)=-P(out,0);
-	return out;
-}
+
 /**
    Read in debugging parameters
 */
@@ -1330,21 +1344,12 @@ static void readcfg_dbg(parms_t *parms){
 	READ_INT(dbg.dmfullfov);
 	READ_INT(dbg.tomo);
 	READ_INT(dbg.fit);
-	READ_INT(dbg.na_smooth);
-	READ_INT(dbg.na_interp);
-	READ_DBL(dbg.na_thres);
-	READ_DBL(dbg.na_fit_dh);
-	READ_DBL(dbg.na_fit_svdthres);
-	READ_INT(dbg.na_fit_maxit);
-	READ_INT(dbg.ncpa_preload);
-	READ_INT(dbg.ncpa_rmsci);
+	
 	READ_INT(dbg.gp_noamp);
 	READ_DBL(dbg.gradoff_scale);
 	READ_INT(dbg.gradoff_reset);
 	READ_DCELL(dbg.dmoff);
 	READ_DCELL(dbg.gradoff);
-	parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
-	parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
 	READ_INT(dbg.wfs_iac);
 	READ_INT(dbg.fullatm);
 	READ_INT(dbg.lo_blend);
@@ -1528,7 +1533,7 @@ static void setup_parms_postproc_za(parms_t *parms){
 	}
 
 	dadds(parms->evl.hs,-parms->sim.htel); dscale(parms->evl.hs,secz);
-	dadds(parms->sim.ncpa_hs,-parms->sim.htel); dscale(parms->sim.ncpa_hs,secz);
+	dadds(parms->ncpa.hs,-parms->sim.htel); dscale(parms->ncpa.hs,secz);
 	dadds(parms->fit.hs,-parms->sim.htel); dscale(parms->fit.hs,secz);
 }
 /**
@@ -1622,25 +1627,28 @@ static void setup_parms_postproc_sim(parms_t *parms){
 	if(parms->sim.wfsalias||parms->sim.idealwfs||parms->sim.idealevl){
 		parms->sim.dmproj=1;/*need dmproj */
 	}
-	/*if(parms->sim.ncpa_calib && !(parms->nsurf || parms->ntsurf || parms->load.ncpa)){
-	info2("No surface found. sim.ncpa_calib is reset to 0.\n");
-	parms->sim.ncpa_calib=0;
+	/*if(parms->ncpa.calib && !(parms->nsurf || parms->ntsurf || parms->load.ncpa)){
+	info2("No surface found. ncpa.calib is reset to 0.\n");
+	parms->ncpa.calib=0;
 	}*/
-	if(parms->sim.ncpa_calib&&!parms->sim.ncpa_ndir){
+	if(parms->ncpa.calib&&!parms->ncpa.ndir){
 		dbg("Using evaluation directions as ncpa calibration directions if needed.\n");
-		int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
-		dfree(parms->sim.ncpa_thetax);
-		dfree(parms->sim.ncpa_thetay);
-		dfree(parms->sim.ncpa_wt);
-		dfree(parms->sim.ncpa_hs);
-		parms->sim.ncpa_thetax=dnew(ndir,1);
-		parms->sim.ncpa_thetay=dnew(ndir,1);
-		parms->sim.ncpa_wt=dnew(ndir,1);
-		parms->sim.ncpa_hs=dnew(ndir,1);
-		dcp(&parms->sim.ncpa_thetax,parms->evl.thetax);
-		dcp(&parms->sim.ncpa_thetay,parms->evl.thetay);
-		dcp(&parms->sim.ncpa_wt,parms->evl.wt);
-		dcp(&parms->sim.ncpa_hs,parms->evl.hs);
+		int ndir=parms->ncpa.ndir=parms->evl.nevl;
+		dfree(parms->ncpa.thetax);
+		dfree(parms->ncpa.thetay);
+		dfree(parms->ncpa.wt);
+		dfree(parms->ncpa.hs);
+		parms->ncpa.thetax=dnew(ndir,1);
+		parms->ncpa.thetay=dnew(ndir,1);
+		parms->ncpa.wt=dnew(ndir,1);
+		parms->ncpa.hs=dnew(ndir,1);
+		dcp(&parms->ncpa.thetax,parms->evl.thetax);
+		dcp(&parms->ncpa.thetay,parms->evl.thetay);
+		dcp(&parms->ncpa.wt,parms->evl.wt);
+		dcp(&parms->ncpa.hs,parms->evl.hs);
+	}
+	if((parms->ncpa.nsurf||parms->ncpa.ntsurf)&&(parms->sim.idealfit||parms->sim.idealtomo)){
+		error("sim.idealfit or sim.idealtomo is not yet implemented for surf or tsurf.\n");
 	}
 }
 
@@ -1906,11 +1914,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(lltcfg){
 			int mwfs=powfsi->nwfs;
 			lltcfg->i=lnew(mwfs,1);/*default to zero. */
-			if(lltcfg->n>1){
+			if(lltcfg->nllt>1){
 				/*this is single llt for this powfs. */
-				if(lltcfg->n!=mwfs)
+				if(lltcfg->nllt!=mwfs)
 					error("# of llts should either be 1 or match nwfs for this powfs");
-				for(int iwfs=0; iwfs<lltcfg->n; iwfs++){
+				for(int iwfs=0; iwfs<lltcfg->nllt; iwfs++){
 					P(lltcfg->i,iwfs)=iwfs;
 				}
 			}
@@ -1998,7 +2006,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(!powfsi->usephy&&powfsi->bkgrndfn){
 			warning("powfs%d: there is sky background, but wfs is in geometric mode. The background is ignored.\n",ipowfs);
 		}
-		if(parms->sim.ncpa_calib){
+		if(parms->ncpa.calib){
 			int enable_2=(powfsi->type==WFS_SH&&powfsi->phytype_sim==1&&powfsi->usephy)
 				&&!(parms->tomo.ahst_idealngs&&powfsi->skip);
 			if(powfsi->ncpa_method==-1){//auto
@@ -2378,7 +2386,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 }
 static void setup_parms_postproc_dirs(parms_t *parms){
 	//Collect all beam directions 
-	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
+	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->ncpa.calib?parms->ncpa.ndir:0);
 	parms->dirs=dnew(4,ndir);
 	dmat *pdir=parms->dirs/*PDMAT*/;
 	int count=0;
@@ -2403,11 +2411,11 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 		P(pdir,2,count)=P(parms->fit.hs,i);
 		count++;
 	}
-	if(parms->sim.ncpa_calib){
-		for(int i=0; i<parms->sim.ncpa_ndir; i++){
-			P(pdir,0,count)=P(parms->sim.ncpa_thetax,i);
-			P(pdir,1,count)=P(parms->sim.ncpa_thetay,i);
-			P(pdir,2,count)=P(parms->sim.ncpa_hs,i);
+	if(parms->ncpa.calib){
+		for(int i=0; i<parms->ncpa.ndir; i++){
+			P(pdir,0,count)=P(parms->ncpa.thetax,i);
+			P(pdir,1,count)=P(parms->ncpa.thetay,i);
+			P(pdir,2,count)=P(parms->ncpa.hs,i);
 			count++;
 		}
 	}
@@ -3303,6 +3311,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	parms_t *parms=mycalloc(1,parms_t);
 	readcfg_dbg(parms);//2022-08-26: moved to front to use flags here.
 	readcfg_sim(parms);
+	readcfg_ncpa(parms);
 	readcfg_aper(parms);
 	readcfg_atm(parms);
 	readcfg_powfs(parms);
@@ -3321,11 +3330,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	readcfg_save(parms);
 	readcfg_misreg(parms);
 	readcfg_load(parms);
-	parms->nsurf=readcfg_strarr(&parms->surf,0,0,"surf");
-	parms->ntsurf=readcfg_strarr(&parms->tsurf,0,0,"tsurf");
-	if((parms->nsurf || parms->ntsurf) && (parms->sim.idealfit || parms->sim.idealtomo)){
-		error("sim.idealfit or sim.idealtomo is not yet implemented for surf or tsurf.\n");
-	}
+
 	setup_parms_postproc_za(parms);
 	setup_parms_postproc_sim(parms);
 	setup_parms_postproc_wfs(parms);

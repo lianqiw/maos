@@ -736,8 +736,8 @@ typedef struct imagesc_t{
 	long ny;   /**<the image is of size nx*ny*/
 	long bsize;/**<bytes of each element*/
 	dtype* limit; /**<x min; xmax; ymin and ymax*/
-	dtype* zlim;/**< min;max; the data*/
-	dtype* p; /**<The image*/
+	dtype* zlim;  /**<Clip the data to min; max*/
+	dtype* p; 	  /**<The image*/
 	char* title;  /**<title of the plot*/
 	char* xlabel; /**<x axis label*/
 	char* ylabel; /**<y axis label*/

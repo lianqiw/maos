@@ -396,8 +396,8 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].realsaa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
-		parms->dbg.na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
-		parms->dbg.na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
+		parms->powfs[ipowfs].llt->na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
+		parms->powfs[ipowfs].llt->na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
 	
 	/*if(parms->save.setup){
 		if(pi0) writebin(*pi0, "powfs%d_i0_fit", ipowfs);

@@ -745,7 +745,7 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 	   subtract the constribution of the added DM command to form closed loop
 	   estimates.
 	*/
-	dcell* dmadd=NULL;
+	dcell* dmtmp=NULL;
 	if(opdr&&parms->dbg.useopdr){
 	/* The original formulation using Hx*x-Ha*a.  Changed from ploc to plocs
 	   on July 18, 2011. Ploc is too low sampled. Make sure the sampling of
@@ -758,10 +758,10 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 			   modes from final OPD, xx, instead?*/
 				dcell* tmp=dcelldup(dmpsol);/*The DM command used for high order. */
 				ngsmod_remove(simu, tmp);/*remove NGS modes as we do in ahst. */
-				dcelladd(&dmadd, 1, tmp, -1);
+				dcelladd(&dmtmp, 1, tmp, -1);
 				dcellfree(tmp);
 			} else{
-				dcelladd(&dmadd, 1, dmpsol, -1);
+				dcelladd(&dmtmp, 1, dmpsol, -1);
 			}
 		}
 
@@ -792,14 +792,14 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 						}
 					}
 				}
-				if(dmadd){
+				if(dmtmp){
 					for(int idm=0; idm<parms->ndm; idm++){
 						const real ht=parms->dm[idm].ht;
 						real scale=1.-ht/hs;
 						real dispx=P(parms->evl.thetax, ievl)*ht;
 						real dispy=P(parms->evl.thetay, ievl)*ht;
 						if(scale<0) continue;
-						prop_nongrid(P(recon->aloc, idm), P(P(dmadd, idm)), locs,
+						prop_nongrid(P(recon->aloc, idm), P(P(dmtmp, idm)), locs,
 							P(xx), 1, dispx, dispy, scale, 0, 0);
 					}
 				}
@@ -812,14 +812,14 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 		dfree(xx);
 	} else{/*Do Ha in postproc, so just do a. */
 		if(dmerr){/*high order closed loop estimates. (lsr)*/
-			dcelladd(&dmadd, 1, dmerr, 1);
+			dcelladd(&dmtmp, 1, dmerr, 1);
 		}
 		if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
-			addlow2dm(&dmadd, simu, dmerr_lo, 1);
+			addlow2dm(&dmtmp, simu, dmerr_lo, 1);
 		}
-		dcellmm(&simu->ecov, dmadd, dmadd, "nt", 1);
+		dcellmm(&simu->ecov, dmtmp, dmtmp, "nt", 1);
 	}
-	dcellfree(dmadd);
+	dcellfree(dmtmp);
 }
 
 /**

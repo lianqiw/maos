@@ -271,7 +271,7 @@ void* wfsgrad_iwfs(thread_t* info){
 			zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 		}
 		if(parms->plot.run){
-			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, realamp, P(parms->dbg.draw_opdmax),
+			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, realamp, P(parms->plot.opdmax),
 				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 		}
 		if(do_geom){
@@ -835,7 +835,7 @@ void* wfsgrad_post(thread_t* info){
 		if(simu->wfsflags[ipowfs].gradout){
 			if(parms->plot.run){
 				/*drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
-					parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->dbg.draw_gmax),
+					parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.gmax),
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
 				if(do_phy){
 					drawints("Ints", simu->powfs[ipowfs].saloc, P(simu->ints, iwfs), NULL,
@@ -1080,7 +1080,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dcell** pgx=(ptype2==PTYPE_MF)?&intstat->gx:NULL;
 						dcell** pgy=(ptype2==PTYPE_MF)?&intstat->gy:NULL;
 						//1 iteration of cog/mtch is necessary to get sodium profile, 3 iterations of mtche is necessary for gradient of i0
-						int niter=parms->dbg.na_fit_maxit?parms->dbg.na_fit_maxit:(ptype2==PTYPE_MF?1:3);
+						int niter=parms->powfs[ipowfs].llt->na_fit_maxit?parms->powfs[ipowfs].llt->na_fit_maxit:(ptype2==PTYPE_MF?1:3);
 
 						if(parms->save.dither){
 							writebin(intstat->i0, "extra/powfs%d_i0i_%d", ipowfs, isim);
@@ -1346,7 +1346,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 					int draw_single_save=draw_single;
 					draw_single=0;
 					drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),
-						parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->dbg.draw_gmax),
+						parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.gmax),
 						"WFS Offset", "x (m)", "y (m)", "Gtwfs %d", iwfs);
 					draw_single=draw_single_save;
 				}
@@ -1382,7 +1382,7 @@ void* wfsgrad(sim_t* simu){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl, iwfs),
-				parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->dbg.draw_gmax),
+				parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.gmax),
 				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcal %d", iwfs);
 		}
 	}

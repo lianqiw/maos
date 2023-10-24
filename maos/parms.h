@@ -116,10 +116,17 @@ typedef struct llt_cfg_t{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int coldtrat;  /**<change to next sodium profile during simulation every coldtrat time step*/
     int nhs;       /**<Number of sublayer to simulate for LGS*/
+	//Moved from dbg_cfg_t
+	int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
+	int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
+	int na_fit_maxit;/**<Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c*/
+	real na_fit_svdthres;/**<threshold for SVD inverse in sodium fitting.*/
+	real na_fit_dh;  /**<sampling in height in sodium fitting*/
+	real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
 	
     //Computed
     lmat *i;        /**<Index into llt for this iwfs.*/
-    int n;         /**<number of launch telescopes in this powfs*/
+    int nllt;       /**<number of launch telescopes in this powfs*/
     //real lpfsm;    /**<Low pass filter for LLT FSM offloading*/
     real epfsm;    /**<Integrator gain for LLT FSM offloading*/
 } llt_cfg_t;
@@ -606,9 +613,9 @@ typedef struct sim_cfg_t{
     int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int noisy_hi;    /**<whether high order WFS is noisy*/
     int noisy_lo;    /**<whether low order WFS is noisy*/
-    real lpfocushi;/**<derived: lpfocus=2*pi*fc*sim.dthi*/
-    real lpfocuslo;/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
-    real lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
+    real lpfocushi;	/**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    real lpfocuslo;	/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
+    real lpttm;    	/**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
 
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
@@ -617,16 +624,24 @@ typedef struct sim_cfg_t{
     char *mvmhost;   /**<Which host does the MVM server run*/
     int mvmsize;     /**<number of gradients to send each time. 0 is all.*/
     int mvmngpu;     /**<number of GPUs to use in server*/
-    int ncpa_calib;  /**<calibrate NCPA. 1: with all DMs. 2: with only ground DM.*/
-    int ncpa_ttr;    /**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
-    dmat *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
-    dmat *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
-    dmat *ncpa_wt;   /**<Weight for each point.*/
-    dmat *ncpa_hs;   /**<Height of star.*/
-    int ncpa_ndir;   /**<Number of points for NCPA calibration*/
-    char *dmadd;     /**<Containing dm vector to simulate turbulence (added to integrator output). 
-			 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/
+	char *dmadd;     /**<Containing dm vector to simulate turbulence (added to integrator output).
+			 		 	 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/
 }sim_cfg_t;
+typedef struct ncpa_cfg_t{
+    dmat *thetax; 	/**<Coordinate for NCPA calibration (arcsec)*/
+    dmat *thetay; 	/**<Coordinate for NCPA calibration (arcsec)*/
+    dmat *wt;   	/**<Weight for each point.*/
+    dmat *hs;   	/**<Height of star.*/
+	int calib;  	/**<calibrate NCPA. 1: with all DMs. 2: with only ground DM.*/
+	int ttr;    	/**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
+	int rmsci;  	/**<1: do not include calibration residual in science path.*/
+	int preload; 	/**<preload integrator with DM sys flat*/
+    int ndir;   	/**<Number of points for NCPA calibration*/
+	char **surf;    /**<OPD surfaces*/
+	int nsurf;      /**<Number of OPD surfaces*/
+	char **tsurf;   /**<Tilted surfaces, surface, not OPD*/
+	int ntsurf;     /**<Number of tilted surfaces*/
+}ncpa_cfg_t;
 /**
    Parameters for Cn square estimation.
 */
@@ -658,6 +673,8 @@ typedef struct plot_cfg_t{
     int psf;         /**<Plot PSF in linear (1) or log (2) mode*/
     int grad2opd;    /**<Plot gradients as reconstructed opd*/
     int all;         /**<Enables setup, atm, run*/
+	dmat *opdmax;/**<Set zlim for OPD drawing*/
+	dmat *gmax; /**<Set zlim for gradient drawing*/
 }plot_cfg_t;
 /**
    contains input parameters for debugging.
@@ -679,14 +696,7 @@ typedef struct dbg_cfg_t{
     int dmfullfov;   /**<let DM cover full FoV (sim.fov)*/
     int tomo;        /**<Comparing tomography in GPU and CPU*/
     int fit;         /**<Comparing DM fitting in GPU and CPU*/
-    int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
-    int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
-    real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
-    real na_fit_svdthres;/**<threshold for SVD inverse in sodium fitting.*/
-    real na_fit_dh;  /**<sampling in height in sodium fitting*/
-    int na_fit_maxit;/**<Number of iterations. 0: auto, 1 for CMF, 3 for COG. see wfsgrad.c*/
-    int ncpa_preload;/**<preload integrator with DM sys flat*/
-    int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
+
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     real gradoff_scale;/**<Scale the reference vector*/
@@ -696,8 +706,7 @@ typedef struct dbg_cfg_t{
     dcell *gradoff;  /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
     int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/
 	int twfsrmax;    /**<TWFS maximum zernike radial order.*/
-    dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
-    dmat* draw_gmax; /**<Set zlim for gradient drawing*/
+
     int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
     int fullatm;     /**<Always copy full atm to GPU.*/
     int lo_blend;    /**<Low order multi-rate control blending scheme.*/
@@ -839,6 +848,7 @@ typedef struct parms_t{
     moao_cfg_t  *moao;  /**<Array of MOAO*/
 
     sim_cfg_t    sim;   /**<Simulation information*/
+	ncpa_cfg_t	 ncpa;  /**<Surface and NCPA caibration parameters.*/
     cn2est_cfg_t cn2;   /**<Parameters for Cn2 estimation*/
     plot_cfg_t   plot;  /**<Specify what to plot during simulation.*/
     dbg_cfg_t    dbg;   /**<Specify debugging parameters*/
@@ -852,10 +862,7 @@ typedef struct parms_t{
     //int npywfs;      /**<Number of Pyramid WFS*/
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
-    char **surf;     /**<OPD surfaces*/
-    int nsurf;       /**<Number of OPD surfaces*/
-    char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
-    int ntsurf;      /**<Number of tilted surfaces*/
+
     lmat *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int nlopowfs;    /**<Number of low order wfs types*/
     lmat *lopowfs;   /**<List of low order powfs*/

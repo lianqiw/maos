@@ -34,22 +34,15 @@
 /**
    Compatibility mode: old keys are automatically renamed to new keys.
 */
-#define COMPATIBILITY 1
 DEF_ENV_FLAG(PERMISSIVE, 0)
-#if COMPATIBILITY == 1
-#define RENAME(old,new)	if(!strcmp(var,#old)){warning("Deprecated: change %s to %s.\n",#old,#new);var=#new; }
-#define IGNORE(old) if(!strcmp(var,#old)){ssline[0]='\0';continue; }
-#else
-#define RENAME(old,new)
-#define IGNORE(old)
-#endif
+
 static void* MROOT=NULL;
 static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
 	long priority;//Priority of the entry
-	long used;    //Whether the entry has been used
+	long flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
 }STORE_T;
 static int key_cmp(const void* a, const void* b){
 	return strcmp(((STORE_T*)a)->key, ((STORE_T*)b)->key);
@@ -58,7 +51,7 @@ static int key_cmp(const void* a, const void* b){
 /*Keep record of all the strings so that we can check whether they have all been used. */
 static long nstore=0;/*number of total records */
 static long nused=0;/*number of read records */
-
+static int changes_loaded=0;//whether changes.conf has been loaded.
 #define STRICT 1
 
 /**
@@ -159,18 +152,18 @@ static void print_key(const void* key, VISIT which, int level){
 				fprintf(fpout, "\n");
 			}
 		}
-		if(store->used!=1&&(!store->data||strcmp(store->data, "ignore"))){
-			if(store->used==0){
+		if((store->flag!=-1 && store->flag!=1)&&(!store->data||strcmp(store->data, "ignore"))){
+			if(store->flag==0){
 				if(PERMISSIVE || !store->priority){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
-			} else if(store->used!=1){
+			} else if(store->flag>1){
 				if(PERMISSIVE){
-					warning("Key %s is used %ld times\n", store->key, store->used);
+					warning("Key %s is used %ld times\n", store->key, store->flag);
 				} else{
-					error("Key %s is used %ld times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->used);
+					error("Key %s is used %ld times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->flag);
 				}
 			}
 		}
@@ -192,6 +185,7 @@ void erase_config(){
 	}
 	nused=0;
 	nstore=0;
+	changes_loaded=0;
 	free(default_config); default_config=NULL;
 }
 /**
@@ -209,29 +203,36 @@ void close_config(const char* format, ...){
 	}
 	erase_config();
 }
+
 /**
    Start the read config process by opening .conf files and fill the entries in
    a hash table. A key has a priority or 0 or higher. A new key with same or
-   higher priority can override previous entry. priority is 0 for default configurations
+   higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently.
  */
 void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	const char* prefix,    /**<[in]if not NULL, prefix the key with this.*/
 	int priority     /**<[in]Priorities of keys.*/
 ){
 	if(!config_in) return;
+	if(!changes_loaded){//on first call, load changes.conf
+		changes_loaded=1;
+		open_config("changes.conf", NULL, -1);
+	}
 	FILE* fd=NULL;
 	char* config_file=NULL;
 	char* config_dir=NULL;//directory for config_file
 	if(check_suffix(config_in, ".conf")){
 		config_file=search_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
-			if(!prefix){
+			if(priority<0){
+				dbg("Cannot open file %s for reading.\n", config_in);
+			}else if(!prefix){
 				error("Cannot open file %s for reading.\n", config_in);
 			}else{
 				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_in, prefix);
 			}
 		}
-		if(!priority && !default_config){//used in close_config
+		if(!default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
 		}
 		config_dir=mydirname(config_file);
@@ -307,6 +308,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				if(nstore>0){
 					info("Replacing all existing input\n");
 					erase_config();
+					open_config("changes.conf", NULL, -1);
 				}
 				countnew=0;
 				countold=0;
@@ -318,6 +320,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			}
 			ssline[0]='\0';
 			continue;
+		}else if(eql==ssline){
+			error("Input (%s) should not start with =", ssline);
 		}
 		int append=0;
 		if(eql[-1]=='+'){
@@ -327,19 +331,16 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			append=-1;//remove from key
 			eql[-1]='\0';
 		}
+		int replace=0;//this indicates a replacement entry
+		if(eql[1]=='='){
+			replace=1;
+			eql[1]=' ';
+			if(eql[2]=='>') eql[2]=' ';
+		}
 		eql[0]='\0';
 		char* var0=ssline;
 		strtrim(&var0);
 		const char* var=var0;//so we can assign a const string to it in RENAME.
-		{
-			RENAME(sim.apfsm, powfs.apfsm);	
-			RENAME(sim.epfsm, powfs.epfsm);
-			RENAME(sim.alfsm, powfs.alfsm);
-			RENAME(sim.zetafsm, powfs.zetafsm);
-			RENAME(sim.f0fsm, powfs.f0fsm);
-			RENAME(sim.idealfsm, powfs.idealfsm);
-			RENAME(sim.commonfsm, powfs.commonfsm);
-		}
 		char* value=eql+1;
 		strtrim(&value);
 
@@ -384,17 +385,31 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			} else{
 				store->data=NULL;
 			}
-			store->used=0;
+			if(replace){
+				store->flag=-1;
+			}else{
+				store->flag=0;
+			}
 			store->priority=priority;
 			void* entryfind=tfind(store, &MROOT, key_cmp);
-			if(entryfind){
-			/*same key found */
+			if(entryfind){/*same key found, check whether replacement exists*/
 				STORE_T* oldstore=*(STORE_T**)entryfind;
-				int diffval=(((oldstore->data==NULL||store->data==NULL)
-					&&(oldstore->data!=store->data))||
-					((oldstore->data!=NULL&&store->data!=NULL)
-						&&strcmp(oldstore->data, store->data)));
-				if(append){
+				if(oldstore->flag==-1){//a replacement entry
+					if(oldstore->data && oldstore->data[0]!=0){
+						warning("%s has been renamed to %s.\n", store->key, oldstore->data);
+						free(store->key);
+						store->key=strdup(oldstore->data);
+						entryfind=tfind(store, &MROOT, key_cmp);//search again
+					}else{
+						warning("%s is no longer needed.\n", store->key);
+						free(store->key); store->key=NULL;
+						entryfind=NULL;
+					}
+				}
+			}
+			if(entryfind){
+				STORE_T *oldstore=*(STORE_T **)entryfind;
+			 	if(append){
 					/*append (append=1) or remove (append=-1) new value with/from old value for arrays. 
 					both have to start/end with [/] */
 					const int nolddata=strlen(oldstore->data);
@@ -422,39 +437,46 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 						}
 						oldstore->priority=priority;
 					}
-				} else if(diffval){
-					if(oldstore->priority>priority){
-						//countskip++;
-						dbg("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
-						//Skip the entry.
-					} else{
-						if(priority>0){//not default
-							info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+				} else {//check if the values are identical
+					if(((oldstore->data==NULL||store->data==NULL)&&(oldstore->data!=store->data))||
+							((oldstore->data!=NULL&&store->data!=NULL)&&strcmp(oldstore->data, store->data))){
+						if(oldstore->priority>priority){//Entry with higher priority prevails.
+							dbg("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
+						} else{//Replace value if different.
+							if(priority>0){//Print if not default
+								info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+							}
+							free(oldstore->data);/*free old value */
+							oldstore->data=store->data; store->data=NULL;/*move pointer of new value. */
+							oldstore->priority=priority;
+							oldstore->flag=store->flag;
 						}
-						/*free old value */
-						free(oldstore->data);
-						/*move pointer of new value. */
-						oldstore->data=store->data; store->data=NULL;
-						oldstore->priority=priority;
-						oldstore->used=store->used;
 					}
 				}
 				countold++;
-				free(store->data);
-				free(store->key);
-				free(store);
-			} else{
-			/*new key */
+			}else if(store->key){/*new key */
 				if(!tsearch(store, &MROOT, key_cmp)){
 					error("Error inserting to tree\n");
 				}
 				countnew++;
-				nstore++;
+				if(store->flag!=-1){
+					nstore++;
+				}
+				store=NULL;//consumed by the tree.
+			}
+			if(store){
+				free(store->data);
+				free(store->key);
+				free(store);
 			}
 		}
 		ssline[0]='\0';
 	}
-	info("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
+	if(strcmp(config_in, "changes.conf")){
+		info("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
+	}else{
+		dbg("loaded %3d (%3d new) change records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
+	}
 	if(fd){
 		fclose(fd);
 	}
@@ -477,10 +499,10 @@ static const STORE_T* getrecord(char* key, int mark){
 	store.key=key;
 	if((found=tfind(&store, &MROOT, key_cmp))){
 		if(mark>0){
-			if((*(STORE_T**)found)->used){
-				error("This record %s is already read\n", key);
+			if((*(STORE_T**)found)->flag!=0){
+				error("This record %s is already read or not to be used.\n", key);
 			}
-			(*(STORE_T**)found)->used++;
+			(*(STORE_T**)found)->flag=1;
 			nused++;
 		}
 		const char* data=(*(STORE_T**)found)->data;
@@ -492,7 +514,6 @@ static const STORE_T* getrecord(char* key, int mark){
 			return refed;
 		}
 	} else if(mark){
-		print_file("change.log");
 		error("Record %s not found\n", key);
 	}
 	return found?(*(STORE_T**)found):0;
