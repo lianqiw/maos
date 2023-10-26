@@ -182,6 +182,31 @@ Adjust the controller
 ```
 maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
 ```
+\section sect-ebb Error Budget Breakdown
+
+There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc. 
+
+```
+maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 #step1: single DM fitting on axis
+maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 #step1b: Multiconjugate DM fitting over a field
+maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] #step2: noise free classic AO simulation with geometric SHWFS.
+maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] #step2b: noise free MCAO with geometric SHWFS.
+maos mcao_ngs.conf powfs.phystep=[-1] powfs.noisy=[0] #step3: noise free MCAO with geometric SHWFS in closed loop simulation.
+maos mcao_ngs.conf powfs.noisy=[0] #step4: noise free MCAO with physical optics WFS.
+maos mcao_lgs.conf powfs.noisy=[1] #step5: noisy MCAO with physical optics LGS WFS.
+
+```
+
+Note that the option `sim.closeloop=0 atm.frozenflow=1` uses open loop correction (no servo lag) with frozen flow turbulence. The option `sim.idealfit=1` enables DM fitting directly from turbulence rather than from tomography output. The following error budget items are computed:
+
+- `DM fitting error`: step1 gives DM fitting error which depends on the actuator spacing.
+- `DM projection error`: the quadrature difference between step1 and step1b gives DM projecting error which depends on the field of view and number of DMs.
+- `WFS aliasing error`: the quadrature difference between step1 and step2 gives WFS aliasing error.
+- `Tomography error`: the quadrature difference between the RSS of the three terms above and step2b is the tomography error which depends on the asterism geometry. 
+- `Servo lag error`:  the quadrature difference between step2b and step3 gives servo lag error.
+- `WFS nonlinearity error`: the quadrature difference between step3 and step4 gives WFS non-linearity error.
+- `WFS noise effect`: the quadrature difference between step4 and step5 gives WFS noise error.
+
 
 \section advanced Advanced configuration
 
@@ -320,6 +345,10 @@ number of LGS in this powfs (6 for NFIRAOS).
 
 The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.
 
+\subsubsection pixel-background Rayleigh backscatter
+
+The Rayleigh backscatter effect can be introduced using `powfs.bkgrndfn=[filename,]` which contains simulation background level for each pixel defined at `sim.dtref`. The file contains a cell array of `nsa*nlgswfs` while each cell contains a `npixpisax*npixpsay` numerical array. `nlgswfs` is the number of `wfs` for this `powfs`. 
+
 \section skycoverage Sky coverage
 
 The sky coverage simulation is done in two parts. \c maos is run first used to prepare NGS mode and WFS PSF time series:
@@ -332,11 +361,11 @@ The second step is to run \c skyc in the sky sim folder
 
 The results are stored in \c Res1_1.bin for \c maos seed 1, \c skyc seed 1. There are \c nsky=500 columns with the following row definitions:
 
-0. Total residual error
-1. Residual atmpheric (included in \c maos simulations) error
-2. Residual atmosphere error only in tip/tilt modes.
-3. Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)
-4. 0 (not used)
+1. Total residual error
+2. Residual atmpheric (included in \c maos simulations) error
+3. Residual atmosphere error only in tip/tilt modes.
+4. Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)
+5. 0 (not used)
 
 ===
 

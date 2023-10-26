@@ -9,6 +9,8 @@ not enabled by \c save.setup=1.
 The following explains each file. Not all of them may exist, depending on set
 of options. The suffix of the file names are removed.
 
+<table>
+
 File name | Description
 ---------|--------------
 \c actslave  |The slaving operator
