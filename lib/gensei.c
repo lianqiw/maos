@@ -157,8 +157,8 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 	const cccell* lotf, /**<[in] OTFs of uplink, optional*/
 	const_anyarray saa_, /**<[in] subaperture area, optional*/
 	const dmat* wvl, /**<[in] wavelength*/
-	int npsfx,/**<[in] PSF dimension. optional. If specified, the psf will be padded by 0 or truncated*/
-	int npsfy
+	int npsfx,/**<[in] PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated*/
+	int npsfy/**<[in] PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated*/
 ){
 	const int nwvl=PN(wvl);
 	const int nsa=NX(P(otfs, 0, 0));

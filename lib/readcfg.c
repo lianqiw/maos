@@ -607,10 +607,10 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 /**
    Read as a dmat. It can be a file name or an array.
  */
-dmat* readstr_dmat(int n, ///[in]Number of elements requested
-				int relax, ///[in]1: allow fewer values and fill the rest
-				const char *key, /**<[in] the key that needs the value.*/
-				const char *str///[in]input
+dmat* readstr_dmat(int n, ///<[in]Number of elements requested
+				int relax, ///<[in]1: allow fewer values and fill the rest
+				const char *key, ///<[in] the key that needs the value.
+				const char *str///<[in]input
 				){
 	if(!str){
 		return NULL;

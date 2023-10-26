@@ -19,7 +19,7 @@
         - setup_powfs_fit(): to setup fitting to WFS subaperture algorithm
         - setup_recon_moao(): to setup MOAO
         - setup_recon_mvm(): to calculate MVM control matrix 
-        - gpu_setup_recon_mvm(): #to setup recon in all GPUs and calculate MVM control matrix 
+        - gpu_setup_recon_mvm(): to setup recon in all GPUs and calculate MVM control matrix 
         - gpu_setup_recon(): to setup recon in the preferred GPU
         - gpu_perfevl_init(): to initialize GPU performance evaluation parameters
         - gpu_wfssurf2gpu(): to copy NCPA OPDs to gpu

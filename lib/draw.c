@@ -592,7 +592,7 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
 int plot_points(const char* fig,    /**<Category of the figure*/
-	plot_opts opts,
+	plot_opts opts,     /**<Additional options*/
 	const char* title,  /**<title of the plot*/
 	const char* xlabel, /**<x axis label*/
 	const char* ylabel, /**<y axis label*/

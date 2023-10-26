@@ -476,10 +476,10 @@ void act_zero(loccell* aloc, const dcell* HB, const lcell* dead){
    When some actuators are float, remove the corresponding column in HA and/or HB,
    and add to neighboring actuators. This is implemented using a second matrix and
    then add to the original matrix.*/
-void act_float(loccell* aloc, 	///coordinate of actuators
-	dspcell** HA, 				///sparse matrix to modify
-	const dcell* HB, 			///dense matrix to modify
-	const lcell* actfloat		///floating actuator mask
+void act_float(loccell* aloc, 	///<coordinate of actuators
+	dspcell** HA, 				///<sparse matrix to modify
+	const dcell* HB, 			///<dense matrix to modify
+	const lcell* actfloat		///<floating actuator mask
 	){
 	if(!actfloat||((!HA||!*HA)&&!HB)){
 		warning("Nothing to do\n");

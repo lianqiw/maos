@@ -1631,7 +1631,7 @@ static void* X(enc_thread)(thread_t* pdata){
 X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
 		const X(mat)* dvec,/**<The diameter for enclosed energy, or radius for azimuthal average*/
 		int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
-		int nthread
+		int nthread /**<Number of CPU threads to use.*/
 	){
 	if(type<-1||type>2){
 		error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");

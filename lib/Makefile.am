@@ -5,7 +5,7 @@ AM_LDFLAGS=$(LDOPTS)
 nobase_include_HEADERS=accphi.h aos.h cn2est.h cure.h draw.h fractal.h genotf.h gensei.h hyst.h kalman.h laplacian.h locfft.h \
 		       misc.h mkdtf.h mkg.h mkh.h mkw.h mkz.h mtch.h muv.h pcg.h proj.h psd.h readcfg.h servo.h slaving.h stfun.h turbulence.h zernike.h
 
-EXTRA_DIST=fractal_do.c prop_grid.c 
+EXTRA_DIST=fractal_do.c accphi_grid_do.c 
 
 AOS_SRC=readcfg.c turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c		\
 laplacian.c pcg.c muv.c draw.c genotf.c gensei.c fractal.c stfun.c servo.c hyst.c	\

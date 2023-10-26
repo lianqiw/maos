@@ -17,7 +17,7 @@
 */
 
 /**
-   \file genseotf.h
+   \file powfs_utils.h
 
    Contains routines to generate mean short exposure (tip/tilt
    removed) pixel intensities. Mostly used for LGS pixel intensity for its
@@ -27,8 +27,8 @@
    \todo find ways to factor in outerscale effect (use von karman spectrum
    instead of kolmogorov) 
 */
-#ifndef AOS_GENSEOTF_H
-#define AOS_GENSEOTF_H
+#ifndef AOS_POWFS_UTILS_H
+#define AOS_POWFS_UTILS_H
 #include "common.h"
 void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs);
 void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,

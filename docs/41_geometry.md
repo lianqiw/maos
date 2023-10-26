@@ -9,7 +9,6 @@ not enabled by \c save.setup=1.
 The following explains each file. Not all of them may exist, depending on set
 of options. The suffix of the file names are removed.
 
-<table>
 
 File name | Description
 ---------|--------------
@@ -76,6 +75,3 @@ File name | Description
 \c powfs0_sprint       |which subapertures to print
 \c powfs0_GS0          |The averaging gradient operator from pts.
 \c powfs1_ZS0          |The ztilt best fit gradient operator from pts.
-
-</table>
-

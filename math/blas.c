@@ -562,7 +562,7 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	return out;
 }
 X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const X(spcell)* W){
+	const X(spcell)* W /**<[in] The weighting matrix. */){
 	return X(cellpinv2)(A, W?W:NULL, 1e-14);
 }
 

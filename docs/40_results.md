@@ -97,7 +97,7 @@ for reading \c .bin files, and \c writebin.pro for writing \c .bin files.
 
 Certain results (e.g., PSF) are saved in \c .fits format. Any standard fits
 reader (e.g., \c fv, \c ds9) should be able to read them. There is also an
-executable \c bin2fits that can convert \c .bin to \c. fits files.
+executable \c bin2fits that can convert \c .bin to \c .fits files.
 
 # Result Files
 

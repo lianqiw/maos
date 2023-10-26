@@ -502,7 +502,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 int connect_port(const char* hostname,/**<The hostname can be just name or name:port.*/
 	int port,            /**<The port if hostname does not include it*/
 	int block,           /**<Do we block until connection is established*/
-	int nodelay){
+	int nodelay			 /**<set TCP nodelay flag*/
+	){
 	int sock=-1;
 	if(hostname[0]=='/'){//connect locally so we can pass fd.
 		sock=socket(PF_UNIX, SOCK_STREAM, 0);

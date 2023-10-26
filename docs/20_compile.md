@@ -262,10 +262,10 @@ First, set up shell environment so that the libaos.py can find it.
   
 Then open \c ipython (or \c python) and run the following
 
-- \c import \c maos_client  #import the module
-- \c maos_client.connect(host,port) #the host and port is the same as used by monitor
-- \c maos_client.get_list() #get list of available variables
-- \c maos_client.get_var(name)  #get variable with the name
-- \c maos_client.get_all()  #get all variables
-- \c maos_client.pause(0)   #unpause maos
-- \c maos_client.pause(1)   #pause or step maos.
+- \c import \c maos_client  # import the module
+- \c maos_client.connect(host,port) # the host and port is the same as used by monitor
+- \c maos_client.get_list() # get list of available variables
+- \c maos_client.get_var(name)  # get variable with the name
+- \c maos_client.get_all()  # get all variables
+- \c maos_client.pause(0)   # unpause maos
+- \c maos_client.pause(1)   # pause or step maos.

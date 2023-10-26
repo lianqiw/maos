@@ -133,26 +133,21 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC);
 /**
    Do the reverse propagation of prop_grid_map. If prop_grid_map does y+=H*x;
    This just does x+=H'*y; */
-void prop_grid_map_transpose(map_t *mapin, const map_t *mapout, 
-			     real alpha, real displacex, real displacey, real scale,
-			     int wrap, long start, long end);
+void prop_grid_map_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
+							const map_t *mapout, /**<[in] OPD defined in a square grid*/
+							ARG_PROP_WRAP);
 /**
    Do the reverse propagation of prop_grid_stat. If prop_grid_stat does y+=H*x;
    This just does x+=H'*y; */
-void prop_grid_stat_transpose(map_t *mapin, const locstat_t *ostat, 
-			      const real *phiout, real alpha,
-			      real displacex, real displacey,
-			      real scale, int wrap,
-			      long colstart, long colend);
+void prop_grid_stat_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
+							const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/
+							const real *phiout, /**<[in] Output OPD defined in locout*/
+							ARG_PROP_WRAP);
 /*
   the following routine is used to do down sampling by doing binning ray tracing.
   locout is coarse sampling, locint is fine sampling.
   phiin->phiout.
 */
-void prop_nongrid_bin(const loc_t *locin,
-		      const real* phiin,
-		      loc_t *locout, 
-		      real* phiout,
-		      ARG_PROP);
+void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP);
 
 #endif

@@ -17,7 +17,7 @@
 */
 
 /**
- * \file gpu.cu
+ * \file gpu_math.cu
  * 
  * Wraps cuda routines for CPU data type.
  * */

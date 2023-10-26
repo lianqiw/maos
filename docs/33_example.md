@@ -23,10 +23,10 @@ define all the parameters.
 
     - \ref powfs_common
     - \ref powfs_none
-    - \ref shwfs_lgs
+    - \ref powfs_shlgs
     - \ref llt_CL
-    - \ref shwfs_ttf
-    - \ref shwfs_tt
+    - \ref powfs_shttf
+    - \ref powfs_shtt
 
 - \ref fov_sq34 (\ref fit_sq34 and \ref evl_sq34) to define the science fov for performance evaluation with IRIS.
 
@@ -55,11 +55,11 @@ The clasic AO configuration sans WFS is defined in \ref scao_base. It includes
 
 \page scao_ngs_example SCAO NGS
 
-The classic NGS AO is defined in \ref scao_ngs which supplements the basic \ref scao_base_example definition with NGS WFS \ref shwfs_ngs. 
+The classic NGS AO is defined in \ref scao_ngs which supplements the basic \ref scao_base_example definition with NGS WFS \ref powfs_shngs. 
 
 \page scao_lgs_example SCAO LGS
 
-The classic LGS AO is defined in \ref scao_lgs which supplements the basic \ref scao_base_example definition with an LGS WFS \ref shwfs_lgs and a Tip/Tilt/Focus NGS WFS \ref shwfs_ttf. 
+The classic LGS AO is defined in \ref scao_lgs which supplements the basic \ref scao_base_example definition with an LGS WFS \ref powfs_shlgs and a Tip/Tilt/Focus NGS WFS \ref powfs_shttf. 
 
 
 

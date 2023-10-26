@@ -416,20 +416,18 @@ void* prop(thread_t* data){
 DEF_ENV_FLAG(PROP_GRID_MAP_OPTIM, 1);
 
 #define TRANSPOSE 0
-#include "prop_grid.c"
+#include "accphi_grid_do.c"
 #undef  TRANSPOSE
 
 #define TRANSPOSE 1
-#include "prop_grid.c"
+#include "accphi_grid_do.c"
 #undef  TRANSPOSE
 
 /**
    Propagate OPD defines on grid mapin to coordinate locout.  alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect.*/
-void prop_grid(ARGIN_GRID,
-	ARGOUT_LOC,
-	ARG_PROP_WRAP){
+void prop_grid(ARGIN_GRID, ARGOUT_LOC, ARG_PROP_WRAP){
 	if(mapin->iac){
 		if(wrap) error("wrap=1 is invalid for cubic\n");
 		prop_grid_cubic(ARGIN_GRID2, ARGOUT_LOC2, ARG_PROP2, mapin->iac, start, end);
@@ -484,10 +482,7 @@ OMP_TASK_FOR(2)
    <em>slowest</em>. alpha is the scaling of data. displacex, displacy is the
    displacement of the center of the beam on the input grid.  scale is the cone
    effect. See prop_grid() for definition of other parameters.*/
-void prop_nongrid(ARGIN_NONGRID,
-	ARGOUT_LOC,
-	ARG_PROP_NOWRAP
-){
+void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP){
 	if(locin->iac){
 		prop_nongrid_cubic(ARGIN_NONGRID2, ARGOUT_LOC2, ARG_PROP2, locin->iac, start, end);
 		return;
@@ -550,10 +545,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect. See prop_groid().*/
-void prop_nongrid_pts(ARGIN_NONGRID,
-	ARGOUT_PTS,
-	ARG_PROP_NOWRAP
-){
+void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP){
 	if(locin->iac){
 		prop_nongrid_pts_cubic(ARGIN_NONGRID2, ARGOUT_PTS2, ARG_PROP2, locin->iac, start, end);
 		return;
@@ -599,10 +591,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
    effect. The input grid must cover the output loc completely (we aim for best
    efficiency), with at least one full guard ring.
 */
-void prop_grid_cubic(ARGIN_GRID,
-	ARGOUT_LOC,
-	ARG_PROP_CUBIC
-){
+void prop_grid_cubic(ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC){
 	PREPIN_GRID(1);
 	(void)nymin;
 	PREPOUT_LOC;
@@ -676,10 +665,7 @@ OMP_TASK_FOR(4)
 /**
    like prop_grid_map() but with cubic influence functions. cubic_iac is the
    inter-actuator-coupling. */
-void prop_grid_map_cubic(ARGIN_GRID,
-	ARGOUT_MAP,
-	ARG_PROP_CUBIC
-){
+void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC){
 	PREPIN_GRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
@@ -751,10 +737,7 @@ OMP_TASK_FOR(2)
    inter-actuator coupling. Consider embed the input into a map_t and call
    prop_grid_cubic instead, which is must faster.
 */
-void prop_nongrid_cubic(ARGIN_NONGRID,
-	ARGOUT_LOC,
-	ARG_PROP_CUBIC
-){
+void prop_nongrid_cubic(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_CUBIC){
 	PREPIN_NONGRID(1);
 	PREPOUT_LOC;
 	PREP_CUBIC_PARAM;
@@ -780,9 +763,7 @@ OMP_TASK_FOR(2)
 /**
    like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
    inter-actuator-coupling.  */
-void prop_nongrid_pts_cubic(ARGIN_NONGRID,
-	ARGOUT_PTS,
-	ARG_PROP_CUBIC){
+void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC){
 	PREPIN_NONGRID(1);
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
@@ -821,10 +802,7 @@ OMP_TASK_FOR(2)
 /**
    like prop_nongrid_map() but with cubic influence functions. cubic_iac is the
    inter-actuator-coupling. */
-void prop_nongrid_map_cubic(ARGIN_NONGRID,
-	ARGOUT_MAP,
-	ARG_PROP_CUBIC){
-
+void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC){
 	PREPIN_NONGRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
@@ -871,11 +849,7 @@ OMP_TASK_FOR(2)
    2014-06-04: Notice that this operation is not direct transpose of
    prop_nongrid() to avoid accumulate bumps around the edge.
 */
-void prop_nongrid_bin(const loc_t* locin,
-	const real* phiin,
-	loc_t* locout,
-	real* phiout,
-	ARG_PROP){
+void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP){
 	if(locout->dx<locin->dx){
 		error("This routine is designed for down sampling.\n");
 	}

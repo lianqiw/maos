@@ -24,10 +24,9 @@
 
 //PRINT_MACRO(USE_CUDA)
 /**
- * \file main.c
- * main() is created separately in this main.c instead of maos.c so that we can
- * compile libmaos to be used with mex without main().
+ * \file maos.c
  * 
+ * Defines main() and a few utilities. * 
 */
 /**
     Return maos data pointer by name. Currently the numbers are filled manually. The
