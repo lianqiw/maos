@@ -60,9 +60,8 @@ var NAVTREE =
         [ "WFS Configuration", "page30_run.html#sect-wfs", null ],
         [ "Point Spread Function", "page30_run.html#sect-perfevl", null ],
         [ "Actuator Slaving", "page30_run.html#sect-act", null ],
-        [ "Sodium range variation", "page30_run.html#sect-sodium", [
-          [ "Rayleigh backscatter", "page30_run.html#pixel-background", null ]
-        ] ]
+        [ "Sodium range variation", "page30_run.html#sect-sodium", null ],
+        [ "Rayleigh backscatter", "page30_run.html#pixel-background", null ]
       ] ],
       [ "Sky coverage", "page30_run.html#skycoverage", null ]
     ] ],
@@ -148,25 +147,26 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "ahst_8h.html",
-"classcgtmp__t.html#a27230cc771c7478a8f541592cbae4333",
-"classcurecon__t.html#a9bd713d23ad6f0f485d19c81c0aa569e",
-"cmath_8h.html#a4e4d62c43b3d619d2cb0769c7dae51a5",
-"daemonize_8h.html#a2cf440f7f061b747c2e06b0cef9f045b",
-"dmath_8h.html#af9e6f3ec3f775160919b860a6773bfd0",
-"lib_2accphi_8h.html#ad970b0231a62eb5dd9e40351e10f4f1f",
-"maos_2types_8h.html#a10a5811f23d10372169974f3736ae770",
-"maos_2types_8h.html#a8c7520f0ac0db4ba04479e250acd7519",
-"maos_2types_8h.html#structngsmod__t",
-"mvm__direct_8cu.html#a876e62ded10948d3801432dee1554415",
-"parms_8h.html#a31180e752c3a1e615e413f61fe3b7aa2",
-"parms_8h.html#a9517aa28e8a0d7526bf5f37a034bb600",
-"parms_8h.html#aefacdb684bd6efe84c807ae7da7e1c1b",
-"save_8h.html#a59bce75cf46503cd9846074a31ffe7fa",
-"smath_8h.html#a93a8b4a30cca4d86de84cf604e36a140",
-"sys_2common_8h.html#a1bfdd258f3af154ceaa89aae8c092711",
-"type_8h.html#a2e321bcfe0bbb1a2d64772ff6db291ac",
-"type_8h.html#aaede87c78ca304690f96539177a4ec5c",
-"zmath_8h.html#a1ef11a90b38925908441e6253bfc527f"
+"class_num_array.html#ab22e8ef943b01ad0d9db66bd2ae7cf11",
+"classcurecon__geom.html#a85603f4396a739efa6df8df08b5f23de",
+"cmath_8h.html#a29e6875dc3d517aab0b31b26f6572807",
+"cn2est_8h.html#a937715383f9469c7fe963fa9d02f8137",
+"dmath_8h.html#ad380e26b2e7068cd7362663c45052afa",
+"lib_2accphi_8h.html#a011e004c6514f7d80cbd46ddbe1f793e",
+"maos_2recon_8h.html#ab4ca5a984cc27dacd89abeaf25e927cb",
+"maos_2types_8h.html#a73169a032b60839f353886e03c7da578",
+"maos_2types_8h.html#af14d18422b62549ec417a75e64fa9439",
+"mkw_8h.html#aeaa9094cbd2164990ed48e43896a2752",
+"parms_8h.html#a1e19eb4ec667e9294eb0735087e74336",
+"parms_8h.html#a80f63ef15e3a37778d2c755e4abba909a13d89b87e5193142cd2737b09c1e5510",
+"parms_8h.html#adc5d4faa3dda41b4a7ea2490726bae3f",
+"readcfg_8h.html#a93843a162c4fdd43eca269e9f10adb6e",
+"smath_8h.html#a4ff8484ceae7b9f079310dcd762faa93",
+"structdir__t.html#a86dae8a624c4cb29d3662dcd312a87fc",
+"type_8h.html#a06c825f301aee4da38378f00d965be46",
+"type_8h.html#a95cd1f418b6ab3140a223e15b6335dd6",
+"type_8h.html#unionloc__t_8____unnamed____",
+"zmath_8h.html#adae59bc123032598245c1639ca1a50b9"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

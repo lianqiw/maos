@@ -5,6 +5,7 @@ var searchData=
   ['pcg_2eh',['pcg.h',['../lib_2pcg_8h.html',1,'']]],
   ['perfevl_2ec',['perfevl.c',['../perfevl_8c.html',1,'']]],
   ['powfs_2eh',['powfs.h',['../powfs_8h.html',1,'']]],
+  ['powfs_5futils_2eh',['powfs_utils.h',['../powfs__utils_8h.html',1,'']]],
   ['process_2eh',['process.h',['../process_8h.html',1,'']]],
   ['proj_2eh',['proj.h',['../proj_8h.html',1,'']]],
   ['psd_2eh',['psd.h',['../psd_8h.html',1,'']]],

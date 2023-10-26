@@ -52,7 +52,7 @@ var lib_2accphi_8h =
     [ "prop_nongrid_cubic", "lib_2accphi_8h.html#ac06d47d925ceaef5ba3f96fb53b0aeef", null ],
     [ "prop_nongrid_pts_cubic", "lib_2accphi_8h.html#a011e004c6514f7d80cbd46ddbe1f793e", null ],
     [ "prop_nongrid_map_cubic", "lib_2accphi_8h.html#abff8bec5029b8704bec1a79440a4bfc4", null ],
-    [ "prop_grid_map_transpose", "lib_2accphi_8h.html#a83b3e79da057480a35138cbb8686d457", null ],
-    [ "prop_grid_stat_transpose", "lib_2accphi_8h.html#ad2f6d0fd0f0cb1739ed7e695a8f2539c", null ],
-    [ "prop_nongrid_bin", "lib_2accphi_8h.html#af60b7192f236b1e729f8b71c43a7ab57", null ]
+    [ "prop_grid_map_transpose", "lib_2accphi_8h.html#a1e7ae7116499fc5d5480805396d2e61f", null ],
+    [ "prop_grid_stat_transpose", "lib_2accphi_8h.html#a2df2ec14c0e5adb8ceb52b38c13b564e", null ],
+    [ "prop_nongrid_bin", "lib_2accphi_8h.html#a5aac3e22873fb1654932ba65c06c6dd3", null ]
 ];

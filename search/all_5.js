@@ -30,7 +30,7 @@ var searchData=
   ['fit',['fit',['../parms_8h.html#aea5b3ea6b0ee5b19ab6d4cba59da4977',1,'dbg_cfg_t::fit()'],['../parms_8h.html#aa19a968f6e9a866b6972174ce2eae6ff',1,'gpu_cfg_t::fit()'],['../parms_8h.html#a704d7a2af9ec217fd400be18a8e6ee04',1,'load_cfg_t::fit()'],['../parms_8h.html#ac3d7c8e7da171936556396b54e71d445',1,'parms_t::fit()'],['../maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa',1,'powfs_t::fit()'],['../maos_2types_8h.html#abf86f7942b75f2bf4f943f3451574104',1,'recon_t::fit()']]],
   ['fit_5fcfg_5ft',['fit_cfg_t',['../parms_8h.html#structfit__cfg__t',1,'']]],
   ['fit_5fcir30_2econf',['fit_cir30.conf',['../fit_cir30.html',1,'page34_conf']]],
-  ['fit_5fcir48_2econf',['fit_cir48.conf',['../fit_cir48.html',1,'page34_conf']]],
+  ['fit_5foa_2econf',['fit_oa.conf',['../fit_oa.html',1,'page34_conf']]],
   ['fit_5fsq34_2econf',['fit_sq34.conf',['../fit_sq34.html',1,'page34_conf']]],
   ['fit_5ft',['fit_t',['../maos_2types_8h.html#structfit__t',1,'']]],
   ['fitl',['FitL',['../recon__utils_8h.html#a435a433b74e48db9983210dc8a4235ef',1,'recon_utils.c']]],

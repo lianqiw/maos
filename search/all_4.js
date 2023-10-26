@@ -23,6 +23,7 @@ var searchData=
   ['evl',['evl',['../parms_8h.html#ac55ab21c10f79619bcf2d24691f7b372',1,'gpu_cfg_t::evl()'],['../parms_8h.html#aeb7080a1361ce72c58225dd3a9b761b5',1,'parms_t::evl()']]],
   ['evl_5fcfg_5ft',['evl_cfg_t',['../parms_8h.html#structevl__cfg__t',1,'']]],
   ['evl_5fkeywords',['evl_keywords',['../maos_2utils_8h.html#aea13a70c41c01ee729fdee9058dc24c7',1,'utils.c']]],
+  ['evl_5foa_2econf',['evl_oa.conf',['../evl_oa.html',1,'page34_conf']]],
   ['evl_5fsq34_2econf',['evl_sq34.conf',['../evl_sq34.html',1,'page34_conf']]],
   ['evl_5fx_2econf',['evl_x.conf',['../evl_x.html',1,'page34_conf']]],
   ['evlol',['evlol',['../parms_8h.html#a96d68ff61ce6978d5c40c844a8e06dab',1,'sim_cfg_t']]],
@@ -45,5 +46,11 @@ var searchData=
   ['exist',['exist',['../sys_2misc_8h.html#a7bdca4cbc6b53e05e66455d9ffb8af2d',1,'misc.c']]],
   ['expand_5ffilename',['expand_filename',['../sys_2misc_8h.html#a0e5be7eca572df22b3cca73454f3e667',1,'misc.c']]],
   ['extra',['extra',['../muv_8h.html#a680b2b553061f7be6f8925b41ed9260c',1,'muv_t::extra()'],['../parms_8h.html#adc5f095fbcbe5d74b70f04707e4ba46b',1,'save_cfg_t::extra()']]],
-  ['examples',['Examples',['../page33_example.html',1,'']]]
+  ['examples_2fgems_5flgs_2econf',['examples/gems_lgs.conf',['../gems_lgs.html',1,'page34_conf']]],
+  ['examples_2fkeck_5fbase_2econf',['examples/keck_base.conf',['../keck_base.html',1,'page34_conf']]],
+  ['examples_2fkeck_5flgs_2econf',['examples/keck_lgs.conf',['../keck_lgs.html',1,'page34_conf']]],
+  ['examples_2fkeck_5fngs_2econf',['examples/keck_ngs.conf',['../keck_ngs.html',1,'page34_conf']]],
+  ['examples',['Examples',['../page33_example.html',1,'']]],
+  ['examples_2fraven_5flgs_2econf',['examples/raven_lgs.conf',['../raven_lgs.html',1,'page34_conf']]],
+  ['examples_2fraven_5fngs_2econf',['examples/raven_ngs.conf',['../raven_ngs.html',1,'page34_conf']]]
 ];

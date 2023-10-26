@@ -157,6 +157,8 @@ var searchData=
   ['socket_5fport',['socket_port',['../sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970',1,'sock.c']]],
   ['socket_5frecv_5ftimeout',['socket_recv_timeout',['../sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7',1,'sock.c']]],
   ['socket_5fsend_5ftimeout',['socket_send_timeout',['../sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5',1,'sock.c']]],
+  ['sodium_5ffit',['sodium_fit',['../powfs__utils_8h.html#ad86ea5d181ec954223605dd5d857f940',1,'powfs_utils.c']]],
+  ['sodium_5ffit_5fwrap',['sodium_fit_wrap',['../powfs__utils_8h.html#a78515cd482dfbcfc21ce21ad6a1275c7',1,'powfs_utils.c']]],
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
   ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
   ['spinv',['spinv',['../smath_8h.html#a67009bc4ed8b96a8080165fb0da35040',1,'stmp.c']]],

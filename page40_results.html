@@ -159,7 +159,7 @@ IDL</h2>
 <p>There are two idl scripts in the sub-folder <code>script</code>. They are <code>readbin.pro</code> for reading <code></code>.bin files, and <code>writebin.pro</code> for writing <code></code>.bin files.</p>
 <h2><a class="anchor" id="sect-fits"></a>
 FITS</h2>
-<p>Certain results (e.g., PSF) are saved in <code></code>.fits format. Any standard fits reader (e.g., <code>fv</code>, <code>ds9</code>) should be able to read them. There is also an executable <code>bin2fits</code> that can convert <code></code>.bin to <code></code>. fits files.</p>
+<p>Certain results (e.g., PSF) are saved in <code></code>.fits format. Any standard fits reader (e.g., <code>fv</code>, <code>ds9</code>) should be able to read them. There is also an executable <code>bin2fits</code> that can convert <code></code>.bin to <code></code>.fits files.</p>
 <h1><a class="anchor" id="autotoc_md25"></a>
 Result Files</h1>
 <p>There will be several files created during simulation in the result folder and subfolder <code>extra</code> (those results are not saved when <code>save.extra=0</code>). The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.fits has been omitted. You do not need to add the suffix when use <code>read</code>. </p>
@@ -235,136 +235,136 @@ Other</h2>
 Geometry Data</h1>
 <p>When <code>save.setup=1</code>, MAOS will save the geometry data created before entering simulation to files in folder <code>setup</code>. When <code>save.recon=1</code>, the tomography and DM fitting matrices are also saved, which takes space and are not enabled by <code>save.setup=1</code>.</p>
 <p>The following explains each file. Not all of them may exist, depending on set of options. The suffix of the file names are removed.</p>
-<table class="doxtable">
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">File name  </th><th class="markdownTableHeadNone">Description   </th></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>actslave</code>  </td><td class="markdownTableBodyNone">The slaving operator   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>ahst_GM</code>  </td><td class="markdownTableBodyNone">ad hoc split tomography, model to gradient operator   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>ahst_MCC</code>  </td><td class="markdownTableBodyNone">ahst, model cross coupling matrix.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>ahst_Mdm</code>  </td><td class="markdownTableBodyNone">ahst, the NGS mode defined on DM grid   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>ahst_Pngs</code>  </td><td class="markdownTableBodyNone">ahst, ngs mode removal operator from DM commands   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>ahst_Ptt</code>  </td><td class="markdownTableBodyNone">ahst, tip/tilt removal operator from DM commands   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>ahst_Rngs</code>  </td><td class="markdownTableBodyNone">ahst, ngs mode reconstructor   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>ahst_Wa</code>  </td><td class="markdownTableBodyNone">ahst, the weighting using science field.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>aloc</code>  </td><td class="markdownTableBodyNone">DM actuator grid.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>ploc</code>  </td><td class="markdownTableBodyNone">The coarse sampled grid on aperture for reconstruction   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>xloc</code>  </td><td class="markdownTableBodyNone">The tomography grid.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>TT</code>  </td><td class="markdownTableBodyNone">The global tip/tilt modes for wfs   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>PTT</code>  </td><td class="markdownTableBodyNone">The global tip/tilt removal operator for wfs   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>saneai</code>  </td><td class="markdownTableBodyNone">The inverse of nea^2 used in tomography (rad^2)   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>W0</code>  </td><td class="markdownTableBodyNone">The W0 weighting defined on ploc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>W1</code>  </td><td class="markdownTableBodyNone">The W1 weighting defined on ploc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>aper_locs</code>  </td><td class="markdownTableBodyNone">The fine sampled grid on telescope aperture.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>aper_amp</code>  </td><td class="markdownTableBodyNone">Telescope aperture amplitude defined on aper_locs   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>aper_mcc</code>  </td><td class="markdownTableBodyNone">modal cross-coupling matrix for modes defined on aper_locs   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>FLM</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, sparse matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>FLU</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, Low rank U matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>FLV</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, Low rank V matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>FRM</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, sparse matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>FRU</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, Low rank U matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>FRV</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, Low rank V matrix   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>GA</code>  </td><td class="markdownTableBodyNone">Gradient operator from aloc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>GP</code>  </td><td class="markdownTableBodyNone">Gradient operator from ploc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>GX</code>  </td><td class="markdownTableBodyNone">Gradient operator from xloc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>HA</code>  </td><td class="markdownTableBodyNone">Ray tracing from aloc to ploc along fit directions   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>HXF</code>  </td><td class="markdownTableBodyNone">Ray tracing from xloc to ploc along fit directions   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>HXW</code>  </td><td class="markdownTableBodyNone">Ray tracing from xloc to ploc along wfs directions   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>L2</code>  </td><td class="markdownTableBodyNone">Laplacian regularization on xloc   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>NW</code>  </td><td class="markdownTableBodyNone">Low rank terms in fitting   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>NW2</code>  </td><td class="markdownTableBodyNone">Adjusted low rank terms by slaving.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_area</code>  </td><td class="markdownTableBodyNone">The subaperture area   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_dtf0_nominal</code>  </td><td class="markdownTableBodyNone">The nominal of DTF   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_dtf0_si</code>  </td><td class="markdownTableBodyNone">The si of DTF   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_etfprep0_2d</code>  </td><td class="markdownTableBodyNone">The elongation transfer function   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_GP</code>  </td><td class="markdownTableBodyNone">The gradient operator from ploc.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_GS0</code>  </td><td class="markdownTableBodyNone">The gradient operator from aper_locs.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_i0</code>  </td><td class="markdownTableBodyNone">The subaperture time averaged image for matched filter   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_gx</code>  </td><td class="markdownTableBodyNone">The pixel by pixel x gradient of i0   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_gy</code>  </td><td class="markdownTableBodyNone">The pixel by pixel y gradient of i0   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_imcc</code>  </td><td class="markdownTableBodyNone">The inverse of model cross-coupling matrix of piston/tip/tilt modes   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_loc</code>  </td><td class="markdownTableBodyNone">The grid for all subapertures (grouped by subapertures)   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_amp</code>  </td><td class="markdownTableBodyNone">The amplitude defined on powfs0_loc   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_llt_loc</code>  </td><td class="markdownTableBodyNone">The aperture grid of the uplink laser launch telescope (LLT)   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_llt_amp</code>  </td><td class="markdownTableBodyNone">The aperture amplitude of LLT defined on powfs0_llt_loc   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_llt_imcc</code>  </td><td class="markdownTableBodyNone">The inverse of model cross-coupling matrix of p/t/t modes for LLT   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_srot</code>  </td><td class="markdownTableBodyNone">The orientation of each subaperture wrt LLT   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_srsa</code>  </td><td class="markdownTableBodyNone">The distance of each subaperture from the LLT   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_mtche</code>  </td><td class="markdownTableBodyNone">The matched filter gradient estimator   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_pts</code>  </td><td class="markdownTableBodyNone">The lower left grid point of each subaperture.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_saloc</code>  </td><td class="markdownTableBodyNone">The lower left corner of each subaperture   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_sanea</code>  </td><td class="markdownTableBodyNone">The subaperture noise equivalent angle(nea) in rad^2   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_saneaxy</code>  </td><td class="markdownTableBodyNone">The nea along x/y directions in rad^2   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_saneaixy</code>  </td><td class="markdownTableBodyNone">The inverse of nea along x/y directions in rad^-2   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_saneara</code>  </td><td class="markdownTableBodyNone">The subaperture nea along r/a directions in rad^-2   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_sepsf</code>  </td><td class="markdownTableBodyNone">The subaperture short exposure psf (tip/tilt removed)   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_sodium</code>  </td><td class="markdownTableBodyNone">The sodium layer profile   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs0_sprint</code>  </td><td class="markdownTableBodyNone">which subapertures to print   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>powfs0_GS0</code>  </td><td class="markdownTableBodyNone">The averaging gradient operator from pts.   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>powfs1_ZS0</code>  </td><td class="markdownTableBodyNone">The ztilt best fit gradient operator from pts.   </td></tr>
 </table>
-<p>File name  </p>
-<p>Description   </p>
-<p><code>actslave</code>  </p>
-<p>The slaving operator   </p>
-<p><code>ahst_GM</code>  </p>
-<p>ad hoc split tomography, model to gradient operator   </p>
-<p><code>ahst_MCC</code>  </p>
-<p>ahst, model cross coupling matrix.   </p>
-<p><code>ahst_Mdm</code>  </p>
-<p>ahst, the NGS mode defined on DM grid   </p>
-<p><code>ahst_Pngs</code>  </p>
-<p>ahst, ngs mode removal operator from DM commands   </p>
-<p><code>ahst_Ptt</code>  </p>
-<p>ahst, tip/tilt removal operator from DM commands   </p>
-<p><code>ahst_Rngs</code>  </p>
-<p>ahst, ngs mode reconstructor   </p>
-<p><code>ahst_Wa</code>  </p>
-<p>ahst, the weighting using science field.   </p>
-<p><code>aloc</code>  </p>
-<p>DM actuator grid.   </p>
-<p><code>ploc</code>  </p>
-<p>The coarse sampled grid on aperture for reconstruction   </p>
-<p><code>xloc</code>  </p>
-<p>The tomography grid.   </p>
-<p><code>TT</code>  </p>
-<p>The global tip/tilt modes for wfs   </p>
-<p><code>PTT</code>  </p>
-<p>The global tip/tilt removal operator for wfs   </p>
-<p><code>saneai</code>  </p>
-<p>The inverse of nea^2 used in tomography (rad^2)   </p>
-<p><code>W0</code>  </p>
-<p>The W0 weighting defined on ploc.   </p>
-<p><code>W1</code>  </p>
-<p>The W1 weighting defined on ploc.   </p>
-<p><code>aper_locs</code>  </p>
-<p>The fine sampled grid on telescope aperture.   </p>
-<p><code>aper_amp</code>  </p>
-<p>Telescope aperture amplitude defined on aper_locs   </p>
-<p><code>aper_mcc</code>  </p>
-<p>modal cross-coupling matrix for modes defined on aper_locs   </p>
-<p><code>FLM</code>  </p>
-<p>Fit left hand side operator, sparse matrix   </p>
-<p><code>FLU</code>  </p>
-<p>Fit left hand side operator, Low rank U matrix   </p>
-<p><code>FLV</code>  </p>
-<p>Fit left hand side operator, Low rank V matrix   </p>
-<p><code>FRM</code>  </p>
-<p>Fit right hand side operator, sparse matrix   </p>
-<p><code>FRU</code>  </p>
-<p>Fit right hand side operator, Low rank U matrix   </p>
-<p><code>FRV</code>  </p>
-<p>Fit right hand side operator, Low rank V matrix   </p>
-<p><code>GA</code>  </p>
-<p>Gradient operator from aloc.   </p>
-<p><code>GP</code>  </p>
-<p>Gradient operator from ploc.   </p>
-<p><code>GX</code>  </p>
-<p>Gradient operator from xloc.   </p>
-<p><code>HA</code>  </p>
-<p>Ray tracing from aloc to ploc along fit directions   </p>
-<p><code>HXF</code>  </p>
-<p>Ray tracing from xloc to ploc along fit directions   </p>
-<p><code>HXW</code>  </p>
-<p>Ray tracing from xloc to ploc along wfs directions   </p>
-<p><code>L2</code>  </p>
-<p>Laplacian regularization on xloc   </p>
-<p><code>NW</code>  </p>
-<p>Low rank terms in fitting   </p>
-<p><code>NW2</code>  </p>
-<p>Adjusted low rank terms by slaving.   </p>
-<p><code>powfs0_area</code>  </p>
-<p>The subaperture area   </p>
-<p><code>powfs0_dtf0_nominal</code>  </p>
-<p>The nominal of DTF   </p>
-<p><code>powfs0_dtf0_si</code>  </p>
-<p>The si of DTF   </p>
-<p><code>powfs0_etfprep0_2d</code>  </p>
-<p>The elongation transfer function   </p>
-<p><code>powfs0_GP</code>  </p>
-<p>The gradient operator from ploc.   </p>
-<p><code>powfs0_GS0</code>  </p>
-<p>The gradient operator from aper_locs.   </p>
-<p><code>powfs0_i0</code>  </p>
-<p>The subaperture time averaged image for matched filter   </p>
-<p><code>powfs0_gx</code>  </p>
-<p>The pixel by pixel x gradient of i0   </p>
-<p><code>powfs0_gy</code>  </p>
-<p>The pixel by pixel y gradient of i0   </p>
-<p><code>powfs0_imcc</code>  </p>
-<p>The inverse of model cross-coupling matrix of piston/tip/tilt modes   </p>
-<p><code>powfs0_loc</code>  </p>
-<p>The grid for all subapertures (grouped by subapertures)   </p>
-<p><code>powfs0_amp</code>  </p>
-<p>The amplitude defined on powfs0_loc   </p>
-<p><code>powfs0_llt_loc</code>  </p>
-<p>The aperture grid of the uplink laser launch telescope (LLT)   </p>
-<p><code>powfs0_llt_amp</code>  </p>
-<p>The aperture amplitude of LLT defined on powfs0_llt_loc   </p>
-<p><code>powfs0_llt_imcc</code>  </p>
-<p>The inverse of model cross-coupling matrix of p/t/t modes for LLT   </p>
-<p><code>powfs0_srot</code>  </p>
-<p>The orientation of each subaperture wrt LLT   </p>
-<p><code>powfs0_srsa</code>  </p>
-<p>The distance of each subaperture from the LLT   </p>
-<p><code>powfs0_mtche</code>  </p>
-<p>The matched filter gradient estimator   </p>
-<p><code>powfs0_pts</code>  </p>
-<p>The lower left grid point of each subaperture.   </p>
-<p><code>powfs0_saloc</code>  </p>
-<p>The lower left corner of each subaperture   </p>
-<p><code>powfs0_sanea</code>  </p>
-<p>The subaperture noise equivalent angle(nea) in rad^2   </p>
-<p><code>powfs0_saneaxy</code>  </p>
-<p>The nea along x/y directions in rad^2   </p>
-<p><code>powfs0_saneaixy</code>  </p>
-<p>The inverse of nea along x/y directions in rad^-2   </p>
-<p><code>powfs0_saneara</code>  </p>
-<p>The subaperture nea along r/a directions in rad^-2   </p>
-<p><code>powfs0_sepsf</code>  </p>
-<p>The subaperture short exposure psf (tip/tilt removed)   </p>
-<p><code>powfs0_sodium</code>  </p>
-<p>The sodium layer profile   </p>
-<p><code>powfs0_sprint</code>  </p>
-<p>which subapertures to print   </p>
-<p><code>powfs0_GS0</code>  </p>
-<p>The averaging gradient operator from pts.   </p>
-<p><code>powfs1_ZS0</code>  </p>
-<p>The ztilt best fit gradient operator from pts.   </p>
 <h1><a class="anchor" id="telemetry"></a>
 Telemetry Data</h1>
 <p>Depending on parameters enabled, the simulation telemetry data will be saved to files in the simulation folder. The following describes them in detail. Notice that save.grad, save.gradgeom, save.ints and save.wfsopd takes values of 1, 2 or 3, where 1 means saving for all wfs, 2 means saving for only high order wfs and 3 means saving for lower order wfs.</p>

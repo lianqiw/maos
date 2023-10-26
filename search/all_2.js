@@ -132,6 +132,7 @@ var searchData=
   ['cgres',['cgres',['../maos_2types_8h.html#a4a79e5b6ccbbe4cc95de5c10c70accca',1,'sim_t']]],
   ['cgtmp_5ft',['cgtmp_t',['../classcgtmp__t.html',1,'']]],
   ['cgwarm',['cgwarm',['../parms_8h.html#ab498d7546c0f2bd3ef637b95cf3815bc',1,'tomo_cfg_t::cgwarm()'],['../parms_8h.html#a0738094a8c492bb5a64a34b07e581acd',1,'fit_cfg_t::cgwarm()'],['../parms_8h.html#ab835223b0f4bbf4e4c8f6ca05b979154',1,'lsr_cfg_t::cgwarm()']]],
+  ['changes_2econf',['changes.conf',['../changes.html',1,'page34_conf']]],
   ['chash',['chash',['../cmath_8h.html#a2ed7b4dbda308400bef750ae292a011b',1,'ctmp.c']]],
   ['check_5fsuffix',['check_suffix',['../sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de',1,'misc.c']]],
   ['chol_2eh',['chol.h',['../chol_8h.html',1,'']]],

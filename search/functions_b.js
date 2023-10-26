@@ -2,6 +2,7 @@ var searchData=
 [
   ['m3proj',['m3proj',['../proj_8h.html#a90190c181f11b90a3bbd15f5b83c6ca4',1,'proj.c']]],
   ['m3proj2',['m3proj2',['../proj_8h.html#a4a398b809cb4f4aaa9fd4403b6cd6464',1,'proj.c']]],
+  ['main',['main',['../maos_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'maos.c']]],
   ['maos_5fiseed',['maos_iseed',['../maos_8h.html#ab642ac48296a45f061bd093ecee20604',1,'sim.c']]],
   ['maos_5fisim',['maos_isim',['../maos_8h.html#afda0654e4cb8f4e37feb53986e044e19',1,'sim.c']]],
   ['maos_5freset',['maos_reset',['../maos_8h.html#ab51286f168c1230cda425a07100662ea',1,'setup.c']]],
