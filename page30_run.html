@@ -102,11 +102,14 @@ $(document).ready(function(){initNavTree('page30_run.html','');});
 <ul><li class="level1"><a href="#sect-run">Usage</a></li>
 <li class="level1"><a href="#sect-config">Configuration Files</a></li>
 <li class="level1"><a href="#sect-exe">Sample Runs</a></li>
+<li class="level1"><a href="#sect-ebb">Error Budget Breakdown</a></li>
 <li class="level1"><a href="#advanced">Advanced configuration</a><ul><li class="level2"><a href="#sect-surface">Specifying Surface OPDs</a></li>
 <li class="level2"><a href="#sect-wfs">WFS Configuration</a></li>
 <li class="level2"><a href="#sect-perfevl">Point Spread Function</a></li>
 <li class="level2"><a href="#sect-act">Actuator Slaving</a></li>
-<li class="level2"><a href="#sect-sodium">Sodium range variation</a></li>
+<li class="level2"><a href="#sect-sodium">Sodium range variation</a><ul><li class="level3"><a href="#pixel-background">Rayleigh backscatter</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="level1"><a href="#skycoverage">Sky coverage</a></li>
@@ -162,7 +165,20 @@ Sample Runs</h1>
 <div class="fragment"><div class="line">maos aper.d=[10]    # 10 meter circular</div><div class="line">maos aper.d=[10, 1] # 10 meter annular diameter with 1 meter inner obscuration</div><div class="line">maos aper.d=[10, 1] aper.fnamp=aper.bin # with supplied amplitude map. Diameters need to match.</div></div><!-- fragment --><p>Change turbulence</p>
 <div class="fragment"><div class="line">maos atm_mk13n25p.conf #use another predefined profile. The default is atm_mk13n50p.conf</div><div class="line">maos atm.r0z=0.1     # change r0 at zenith to 0.1m</div><div class="line">maos sim.zadeg=30    # change zenith angle to 30 degrees</div><div class="line">maos atm_single.conf # use single ground layer turbulence</div></div><!-- fragment --><p>Configuring WFS. Adjust the number of elements depending on how many powfs is in use. A powfs is a type of WFS. Each type can have multiple WFS.</p>
 <div class="fragment"><div class="line">maos powfs.noisy=[0]     # use noise free WFS for all wfs types</div><div class="line">maos powfs.noisy=[1 0 0] # use noise free WFS for wfs type 1 and 2.</div><div class="line">maos powfs.phystep=[-1]  # use geometric wfs instead of physical optics wfs for all</div></div><!-- fragment --><p>Adjust the controller</p>
-<div class="fragment"><div class="line">maos sim.ephi=0.3 #Change gain of the main integrator to 0.3</div></div><!-- fragment --><h1><a class="anchor" id="advanced"></a>
+<div class="fragment"><div class="line">maos sim.ephi=0.3 #Change gain of the main integrator to 0.3</div></div><!-- fragment --> <h1><a class="anchor" id="sect-ebb"></a>
+Error Budget Breakdown</h1>
+<p>There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc.</p>
+<div class="fragment"><div class="line">maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 #step1: single DM fitting on axis</div><div class="line">maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 #step1b: Multiconjugate DM fitting over a field</div><div class="line">maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] #step2: noise free classic AO simulation with geometric SHWFS.</div><div class="line">maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] #step2b: noise free MCAO with geometric SHWFS.</div><div class="line">maos mcao_ngs.conf powfs.phystep=[-1] powfs.noisy=[0] #step3: noise free MCAO with geometric SHWFS in closed loop simulation.</div><div class="line">maos mcao_ngs.conf powfs.noisy=[0] #step4: noise free MCAO with physical optics WFS.</div><div class="line">maos mcao_lgs.conf powfs.noisy=[1] #step5: noisy MCAO with physical optics LGS WFS.</div></div><!-- fragment --><p>Note that the option <code>sim.closeloop=0 atm.frozenflow=1</code> uses open loop correction (no servo lag) with frozen flow turbulence. The option <code>sim.idealfit=1</code> enables DM fitting directly from turbulence rather than from tomography output. The following error budget items are computed:</p>
+<ul>
+<li><code>DM fitting error</code>: step1 gives DM fitting error which depends on the actuator spacing.</li>
+<li><code>DM projection error</code>: the quadrature difference between step1 and step1b gives DM projecting error which depends on the field of view and number of DMs.</li>
+<li><code>WFS aliasing error</code>: the quadrature difference between step1 and step2 gives WFS aliasing error.</li>
+<li><code>Tomography error</code>: the quadrature difference between the RSS of the three terms above and step2b is the tomography error which depends on the asterism geometry.</li>
+<li><code>Servo lag error</code>: the quadrature difference between step2b and step3 gives servo lag error.</li>
+<li><code>WFS nonlinearity error</code>: the quadrature difference between step3 and step4 gives WFS non-linearity error.</li>
+<li><code>WFS noise effect</code>: the quadrature difference between step4 and step5 gives WFS noise error.</li>
+</ul>
+<h1><a class="anchor" id="advanced"></a>
 Advanced configuration</h1>
 <h2><a class="anchor" id="sect-surface"></a>
 Specifying Surface OPDs</h2>
@@ -188,13 +204,17 @@ Actuator Slaving</h2>
 Sodium range variation</h2>
 <p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="llt__c_l.html">llt_CL.conf</a> or <a class="el" href="llt__s_l.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
 <p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.</p>
+<h3><a class="anchor" id="pixel-background"></a>
+Rayleigh backscatter</h3>
+<p>The Rayleigh backscatter effect can be introduced using <code>powfs.bkgrndfn=[filename,]</code> which contains simulation background level for each pixel defined at <code>sim.dtref</code>. The file contains a cell array of <code>nsa*nlgswfs</code> while each cell contains a <code>npixpisax*npixpsay</code> numerical array. <code>nlgswfs</code> is the number of <code>wfs</code> for this <code>powfs</code>.</p>
 <h1><a class="anchor" id="skycoverage"></a>
 Sky coverage</h1>
 <p>The sky coverage simulation is done in two parts. <code>maos</code> is run first used to prepare NGS mode and WFS PSF time series:</p>
 <p><code>maos</code> -c nfiraos_lgs.conf skyc_10.conf -o 50p_za0_ncpa</p>
 <p>The second step is to run <code>skyc</code> in the sky sim folder <code>cd</code> 50p_za0_ncpa/skysim <code>skyc</code> -d -o APD_JHKs_typeImr</p>
 <p>The results are stored in <code>Res1_1.bin</code> for <code>maos</code> seed 1, <code>skyc</code> seed 1. There are <code>nsky=500</code> columns with the following row definitions:</p>
-<p>0. Total residual error</p><ol type="1">
+<ol type="1">
+<li>Total residual error</li>
 <li>Residual atmpheric (included in <code>maos</code> simulations) error</li>
 <li>Residual atmosphere error only in tip/tilt modes.</li>
 <li>Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)</li>

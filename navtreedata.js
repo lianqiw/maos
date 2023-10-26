@@ -54,12 +54,15 @@ var NAVTREE =
       [ "Usage", "page30_run.html#sect-run", null ],
       [ "Configuration Files", "page30_run.html#sect-config", null ],
       [ "Sample Runs", "page30_run.html#sect-exe", null ],
+      [ "Error Budget Breakdown", "page30_run.html#sect-ebb", null ],
       [ "Advanced configuration", "page30_run.html#advanced", [
         [ "Specifying Surface OPDs", "page30_run.html#sect-surface", null ],
         [ "WFS Configuration", "page30_run.html#sect-wfs", null ],
         [ "Point Spread Function", "page30_run.html#sect-perfevl", null ],
         [ "Actuator Slaving", "page30_run.html#sect-act", null ],
-        [ "Sodium range variation", "page30_run.html#sect-sodium", null ]
+        [ "Sodium range variation", "page30_run.html#sect-sodium", [
+          [ "Rayleigh backscatter", "page30_run.html#pixel-background", null ]
+        ] ]
       ] ],
       [ "Sky coverage", "page30_run.html#skycoverage", null ]
     ] ],
@@ -155,15 +158,15 @@ var NAVTREEINDEX =
 "maos_2types_8h.html#a8c7520f0ac0db4ba04479e250acd7519",
 "maos_2types_8h.html#structngsmod__t",
 "mvm__direct_8cu.html#a876e62ded10948d3801432dee1554415",
-"parms_8h.html#a31fba635ec8522c3007bf2be5ea3649e",
-"parms_8h.html#a9554d120557eaff309615c9c5b575aec",
-"parms_8h.html#af0463073dee619e6e5dd143c0ed97031",
-"save_8h.html#a9f80d186c3605fa44c8a8acb2586dfa0",
-"smath_8h.html#a96afc713f45852f183e2380e5cca3d63",
-"sys_2common_8h.html#a2961979d92811d291076c186a7f4de8d",
-"type_8h.html#a2f8bbab387b5252efaea3d12ef6a39f9",
-"type_8h.html#aaf912eee3f3876fab0ebe242727c2e2c",
-"zmath_8h.html#a203084d7ff9694506d0c6543ff9daaa9"
+"parms_8h.html#a31180e752c3a1e615e413f61fe3b7aa2",
+"parms_8h.html#a9517aa28e8a0d7526bf5f37a034bb600",
+"parms_8h.html#aefacdb684bd6efe84c807ae7da7e1c1b",
+"save_8h.html#a59bce75cf46503cd9846074a31ffe7fa",
+"smath_8h.html#a93a8b4a30cca4d86de84cf604e36a140",
+"sys_2common_8h.html#a1bfdd258f3af154ceaa89aae8c092711",
+"type_8h.html#a2e321bcfe0bbb1a2d64772ff6db291ac",
+"type_8h.html#aaede87c78ca304690f96539177a4ec5c",
+"zmath_8h.html#a1ef11a90b38925908441e6253bfc527f"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
