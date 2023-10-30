@@ -193,8 +193,7 @@ typedef struct powfs_cfg_t{
     char  *neareconfile;/**<File contains noise equivalent angle in radian^2. Contains cell array of nwfsx1.*/
     real nearecon; /**<NEA used in reconstruction in milli-arcsecond, sim.dtref integration time. Will be scaled by powfs.dtrat and subaperture area before use.*/
     real neasim;   /**<NEA used in simulation. -1 to use nearecon*/
-    char*  neasimfile;/**<read NEA used in simulation from file. Defined at
-			 sim.dt sampling rate, in radian. neasim must be -1*/
+    char*  neasimfile;/**<read NEA used in simulation from file. Defined at sim.dt sampling rate, in radian. neasim must be -1*/
     real neaextra; /**<Extra NEA to add in quadrature to the NEA determined by matched filter or CoG*/
     real neamin;   /**<Minimum NEA to limit the NEA determined by matched filter or CoG*/
     real bkgrnd;   /**<background in electron per pixel per LGS frame*/
@@ -213,7 +212,7 @@ typedef struct powfs_cfg_t{
     real pixoffy;  /**<see pixoffx*/
     real sigscale; /**<scale the signal level for simulation.*/
     real siglev;   /**<signal level at dtrat=1. will be override by wfs.siglev is specified.*/
-    dmat* siglevs;  /**<in array format. 1x1 or nwfsx1, scaled by dtrat*/
+    dmat* siglevs;  /**<in array format. 1x1 or nwfsx1, scaled from wfs.siglev by dtrat. */
     real sigrecon; /**<signal level for NEA computation*/
     struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/

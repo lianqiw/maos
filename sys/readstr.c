@@ -209,13 +209,14 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	char* endptr;
-	if(!data){
-		warning("%s: cannot parse a number from NULL string.\n", key);
-		return NAN;
+	while(isspace(data[0]) && data[0]!='\0') data++;
+	if(!data || data[0]=='\0'){
+		warning("%s: cannot parse a number from an empty string. Assume 0.\n", key);
+		return 0;
 	}
 	double res=strtod(data, &endptr);
 	if(data==endptr){
-		dbg3("%s=%s: unable to parse for a number, return NAN.\n", key, data);
+		error("%s=%s: unable to parse for a number, assume nan.\n", key, data);
 		return NAN;
 	}
 	double vmul, vadd;
@@ -275,11 +276,11 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		size=sizeof(float);
 		break;
 	default:
-		error("%s=%s: invalid type", key, data);
+		error("%s=%s: invalid type", key, data); return -1;
 	}
 	if(len==0){
 		if(!(*ret=calloc(nmax, size))){
-			error("%s=%s: failed to allocate memory for ret\n", key, data);
+			error("%s=%s: failed to allocate memory for ret\n", key, data);return -1;
 		}
 	} else{
 		nmax=len;
@@ -305,7 +306,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		while(startptr[0]!='['){/*parse expression before [. only * and / are allowed*/
 			double fact1=strtod(startptr, (char**)&endptr);/*get the number */
 			if(startptr==endptr){
-				error("%s=%s: invalid entry to parse for numerical array\n", key, data);
+				error("%s=%s: invalid entry to parse for numerical array\n", key, data);return -1;
 			} else{/*valid number */
 				if(power==1){
 					fact*=fact1;
@@ -318,13 +319,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 				} else if(endptr[0]=='*'){
 					power=1;
 				} else{
-					error("%s=%s: Invalid entry to parse for numerical array.\n", key, data);
+					error("%s=%s: Invalid entry to parse for numerical array.\n", key, data);return -1;
 				}
 				startptr=endptr+1;
 			}
 		}
 		if(startptr[0]!='['){
-			error("%s=%s: Invalid entry to parse for numerical array\n", key, data);
+			error("%s=%s: Invalid entry to parse for numerical array\n", key, data);return -1;
 		}
 		startptr++;/*points to the beginning of the array in [] */
 		/*process possible numbers after the array. do not use startptr here.*/
@@ -348,11 +349,11 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		fact*=vmul;
 		while(isspace(endptr[0])) endptr++;
 		if(!is_end(endptr[0])&&endptr[0]!=';'&&endptr[0]!=','){
-			error("%s=%s: There is garbage in the end of the string.\n", key, data);return 0;
+			error("%s=%s: There is garbage in the end of the string.\n", key, data);return -1;
 		}
 	}
 	if((bopen!=NULL) != (bclose!=NULL)){
-		error("%s=%s: unmatched [] in input.\n", key, data);
+		error("%s=%s: unmatched [] in input.\n", key, data);return -1;
 	}
 	int count=0;
 	int nrow=0;/*number of rows*/
@@ -362,7 +363,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	while(startptr<endarr){
 		if(count>=nmax){
 			if(len){
-				error("%s=%s: Needs %d numbers, but more are supplied.\n", key, data, len);
+				error("%s=%s: Needs %d numbers, but more are supplied.\n", key, data, len);return -1;
 			} else{
 				*ret=myrealloc(*ret, size*nmax*2, char);
 				memset((char*)*ret+size*nmax, 0, size*nmax);
@@ -371,11 +372,11 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 		/*parse the string for a floating point number.  */
 		double res=readstr_num(key, startptr, (char**)&endptr);
-		startptr=endptr;
-		if(isnan(res)){
-			dbg("%s=%s: %s: nan found\n", key, data, startptr);
+		if(startptr==endptr){
+			warning("%s=%s: enable to parse a number at %s\n", key, data, startptr);
 			break;
 		}
+		startptr=endptr;
 		/*apply the factors appear before or after [] */
 		if(power==1){
 			res=fact*res;
@@ -388,13 +389,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		switch(type){
 		case M_INT:
 			if(fabs(res-(int)res)>EPS){
-				error("%s=%s: floating point number supplied while integer is required.\n", key, data);
+				error("%s=%s: floating point number supplied while integer is required.\n", key, data);return -1;
 			}
 			((int*)(*ret))[count]=(int)res;
 			break;
 		case M_LONG:
 			if(fabs(res-(long)res)>EPS){
-				error("%s=%s: floating point number supplied while integer is required.\n", key, data);
+				error("%s=%s: floating point number supplied while integer is required.\n", key, data);return -1;
 			}
 			((long*)(*ret))[count]=(long)res;
 			break;
@@ -405,12 +406,12 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			((float*)(*ret))[count]=(float)res;
 			break;
 		default:
-			error("Invalid type");
+			error("Invalid type");return -1;
 		}
 		count++;
 		if(startptr<endarr){//more data to read
 			if(!(startptr[0]==' '||startptr[0]==';'||startptr[0]==',')){
-				error("%s=%s: garbage is found: {%s}\n", key, data, startptr);
+				error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
 			}
 		}
 		/*process the number separators. */
@@ -422,7 +423,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			if(nrow==0){
 				nrow=count-rowbegin;
 			} else if(nrow!=count-rowbegin){
-				error("%s=%s: previous row has %d numbers while the current row has %d numbers\n", key, data, nrow, count-rowbegin);
+				error("%s=%s: previous row has %d numbers while the current row has %d numbers\n", key, data, nrow, count-rowbegin); return -1;
 			}
 			rowbegin=count;
 			startptr++;
@@ -430,7 +431,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		while(startptr<endarr && startptr[0]==' ') startptr++;//continuous spaces are ignored
 	}
 	if(startptr!=endarr){
-		error("%s=%s: garbage is found: {%s}\n", key, data, startptr);
+		error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
 	}
 	//postprocessing to satisfy request.
 	if(rowbegin<count){/*if last row is not ended with ;*/
@@ -438,16 +439,16 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		if(nrow==0){
 			nrow=count-rowbegin;
 		} else if(nrow!=count-rowbegin){
-			error("%s=%s: previous row has %d numbers while the current row has %d numbers\n", key, data, nrow, count-rowbegin);
+			error("%s=%s: previous row has %d numbers while the current row has %d numbers\n", key, data, nrow, count-rowbegin); return -1;
 		}
 	}
 	if(nrow*ncol!=count){
-		error("%s=%s: nrow=%d, ncol=%d, count=%d\n", key, data, nrow, ncol, count);
+		error("%s=%s: nrow=%d, ncol=%d, count=%d\n", key, data, nrow, ncol, count); return -1;
 	}
 	//count is gauranteed to not exceed len
-	if(count&&count<len){//not enough values are read
+	if(count>0&&count<len){//not enough values are read
 		if(!relax||(relax==1&&count>1)||trans){
-			error("%s=%s: require %d numbers, but got %d\n", key, data, len, count);
+			error("%s=%s: require %d numbers, but got %d\n", key, data, len, count);return -1;
 		} else{//Fill the array with the last number
 			dbg3("%s=%s: fill %d to %d by value in %d\n", key, data, count, len, count-1);
 			for(int i=count; i<len; i++){
@@ -495,7 +496,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			DO_TRANS(float);
 			break;
 		default:
-			error("%s=%s: invalid type", key, data);
+			error("%s=%s: invalid type", key, data);return -1;
 		}
 #undef DO_TRANS
 		int tmp=ncol; ncol=nrow; nrow=tmp;

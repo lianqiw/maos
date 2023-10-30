@@ -680,7 +680,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 		gensei(&i0_new, NULL, NULL, NULL, 
 			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, 
 			powfs[ipowfs].realsaa, parms->powfs[ipowfs].radgx?powfs[ipowfs].srot:NULL,
-			parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, NULL,
+			parms->powfs[ipowfs].siglevs, parms->wfs[iwfs].wvlwts, NULL,
 			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].mtchstc);
 			
 		//writebin(i0_new, "i0_%d", icol);

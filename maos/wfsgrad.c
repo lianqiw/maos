@@ -264,7 +264,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 
 		if(parms->powfs[ipowfs].fieldstop>0&&parms->powfs[ipowfs].type==WFS_SH){
-			locfft_fieldstop(powfs[ipowfs].fieldstop, opd, parms->powfs[ipowfs].wvlwts);
+			locfft_fieldstop(powfs[ipowfs].fieldstop, opd, parms->wfs[iwfs].wvlwts);
 		}
 
 		if(save_opd){
