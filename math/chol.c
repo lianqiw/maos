@@ -99,7 +99,7 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 static dsp* chol2sp(const cholmod_sparse* B){
 	dsp* A;
 	A=dspnew(B->nrow, B->ncol, 0);
-	A->pp=(spint*)P(B);
+	A->pp=(spint*)B->p;
 	A->nzmax=A->pp[A->ny];
 	A->pi=(spint*)B->i;
 	DO_CONVERT(A->px, B->x, real, chol_real, A->nzmax);
@@ -209,13 +209,10 @@ void chol_convert(spchol* A, int keep){
 	cholmod_factor* L=A->L;
 	if(keep){
 		A->Cp=A->L->Perm;
+		L=MOD(copy_factor)(A->L, A->c);
 	} else{
 		A->Cp=mymalloc(A->L->n, spint);
 		memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
-	}
-	if(keep){
-		L=MOD(copy_factor)(A->L, A->c);
-	} else{
 		L=A->L;
 	}
 	cholmod_sparse* B=MOD(factor_to_sparse)(L, A->c);
@@ -224,8 +221,9 @@ void chol_convert(spchol* A, int keep){
 		free(B->x);
 	}
 	free(B);
-	MOD(free_factor)(&L, A->c);
-	if(!keep){
+	if(keep){
+		MOD(free_factor)(&L, A->c);
+	}else{
 		MOD(finish)(A->c);
 		free(A->c);
 		A->c=NULL;

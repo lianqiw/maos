@@ -155,7 +155,7 @@ static void host_added(int ihost, int sock){
 		FD_SET(sock, &active_fd_set);
 		if(!headless) g_idle_add(host_up, GINT_TO_POINTER(ihost));
 	}
-	dbg_time("connected to %s\n", hosts[ihost]);
+	info_time("connected to %s\n", hosts[ihost]);
 }
 
 /*remove the host upon disconnection*/
@@ -183,9 +183,9 @@ static void host_removed(int sock, int notify){
 //connect to scheduler(host). The call is always from the thread running listen_host()
 static int add_host(int ihost){
 	if(ihost<0 || ihost>=nhost){
-		dbg2("Invalid ihost=%d\n", ihost);
+		warning_time("Invalid ihost=%d\n", ihost);
 	}else if(hsock[ihost]>-1){
-		dbg2("host %d is already connected\n", ihost);
+		warning_time("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
 		hsock[ihost]--;//make it -2 so no concurrent access.
 		int sock=scheduler_connect(hosts[ihost]);
@@ -202,7 +202,7 @@ static int add_host(int ihost){
 			}
 		}
 		if(sock<0){
-			dbg_time("Cannot reach %s\n", hosts[ihost]);
+			info_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
 	}
@@ -300,7 +300,7 @@ static int respond(int sock){
 	int cmd[3];
 	//read fixed length header info.
 	if(streadintarr(sock, cmd, 3)){
-		dbg_time("failed to read from %d %s: %s (%d) \n", sock, ihost>0?hosts[ihost]:"Unknown", strerror(errno), errno);
+		info_time("failed to read from %d %s: %s (%d) \n", sock, ihost>0?hosts[ihost]:"Unknown", strerror(errno), errno);
 		return -1;//failed
 	}else{
 		dbg2_time("got %d from %d %s\n", cmd[0], sock, ihost>0?hosts[ihost]:"Unknown");
@@ -343,7 +343,7 @@ static int respond(int sock){
 		}*/
 		int old_info=iproc->status.info;
 		if(stread(sock, &iproc->status, sizeof(status_t))){
-			dbg_time("respond: read status failed\n");
+			info_time("respond: read status failed\n");
 			return -1;
 		}
 		/*if(!iproc->timstart){//only set once
@@ -416,7 +416,7 @@ static int respond(int sock){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_REMOVE)){
 					warning_time("Clear job %d on host %d failed.\n", iproc->pid, ihost);
 				}/*else{
-					dbg_time("Clear job %d on host %d ok.\n", iproc->pid, ihost);
+					info_time("Clear job %d on host %d ok.\n", iproc->pid, ihost);
 				}*/
 			}
 		}
@@ -430,7 +430,7 @@ static int respond(int sock){
 				if(scheduler_cmd(ihost, iproc->pid, CMD_KILL)){
 					warning_time("Kill job %d on host %d failed.\n", iproc->pid, ihost);
 				}/*else{
-					dbg_time("Kill job %d on host %d ok.\n", iproc->pid, ihost);
+					info_time("Kill job %d on host %d ok.\n", iproc->pid, ihost);
 				}*/
 			}
 		}
@@ -446,7 +446,7 @@ static int respond(int sock){
 	case MON_LOAD:
 	{
 		if(ihost<0){
-			dbg_time("Host not found\n");
+			info_time("Host not found\n");
 			return -1;
 		}
 		usage_cpu[ihost]=(double)((pid>>16)&0xFFFF)/100.;
@@ -460,7 +460,7 @@ static int respond(int sock){
 		if(cmd[1]>-1&&cmd[1]<nhost){
 			add_host(cmd[1]);
 		} else if(cmd[1]==-2){//quit
-			dbg_time("respond: quit\n");
+			info_time("respond: quit\n");
 			return -2;
 		}
 		break;
@@ -502,7 +502,7 @@ void* listen_host(void* pmsock){
 			if(FD_ISSET(i, &read_fd_set)){
 				int res;
 				if((res=respond(i))<0){
-					dbg_time("respond returned -1\n");
+					warning_time("respond returned -1\n");
 					host_removed(i, res==-1?1:0);
 				}
 				if(res==-2){//quit
@@ -523,7 +523,7 @@ void* listen_host(void* pmsock){
 					info_time("no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
-				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within 60 seconds
+				} else if(htime[ihost]<0&&ntime>-htime[ihost]+60){//probed, but not response within another 60 seconds
 					info_time("no respond. disconnect server %s.\n", hosts[ihost]);
 					host_removed(hsock[ihost], 1);
 				}

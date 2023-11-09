@@ -102,6 +102,9 @@ static void monitor_send_load(void);
 static long counter=-1;//an negative index for a pending run
 static int nused_cpu=0;//number of CPUs being used
 static int nused_gpu=0;//number of GPUs being used
+static time_t lasttime3=0;//every 3 seconds
+static time_t lasttime10=0;//every 10 seconds
+
 static int nrun_handle(int cmd, int pid, int nthread, int ngpu){
 	switch(cmd){
 	case 0:
@@ -909,7 +912,7 @@ end:
 #if HAS_LWS
 	ws_service(0);
 #endif
-	dbg_time("respond returns %d\n", ret);
+	dbg_time("respond returns %d. lasttime3 is %lds ago, lasttime10 is %lds ago.\n", ret, myclocki()-lasttime3, myclocki()-lasttime10);
 	return ret;//ret=-1 will close the socket.
 }
 /*
@@ -960,9 +963,6 @@ void scheduler_handle_ws(char* in, size_t len){
 	//UNLOCK(mutex_sch);
 }
 static void scheduler_timeout(void){
-	static time_t lasttime3=0;//every 3 seconds
-	static time_t lasttime10=0;//every 10 seconds
-
 	time_t thistime=myclocki();
 	//Process job queue
 	if(running){

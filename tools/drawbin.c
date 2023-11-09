@@ -42,11 +42,19 @@ int main(int argc, char* argv[]){
 	dcell *arg1=0, *arg2=0;
 	if(argc>1){
 		arg1=dcellread("%s", argv[1]);
-		info("%s is %ldx%ld\n", argv[1], arg1->nx, arg1->ny);
+		if(!arg1){
+			error("Unable to read %s\n", argv[1]);
+		}else{
+			info("%s is %ldx%ld\n", argv[1], arg1->nx, arg1->ny);
+		}
 	}
 	if(argc>2){
 		arg2=dcellread("%s",argv[2]);
-		info("%s is %ldx%ld\n", argv[2], arg2->nx, arg2->ny);
+		if(!arg2){
+			error("Unable to read %s\n", argv[2]);
+		}else{
+			info("%s is %ldx%ld\n", argv[2], arg2->nx, arg2->ny);
+		}
 	}
 	int mx=0;
 	int my=0;

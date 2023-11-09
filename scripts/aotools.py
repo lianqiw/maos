@@ -532,3 +532,28 @@ def reflection(n1, n2, degree):
     rs=((n1*ci-n2*ct)/(n1*ci+n2*ct))**2
     rp=((n1*ct-n2*ci)/(n1*ct+n2*ci))**2
     return rs,rp
+
+def gen_atm(nx, dx=1./64., r0=0.186, L0=30., powerlaw=-11./3., seed=0):
+    def make_R2N(n):
+        X=np.arange(-n/2,n/2)
+        X.shape=(n,1)
+        Y=X+0
+        Y.shape=(1,n)
+        R2=X*X+Y*Y
+        return R2
+    R2=make_R2N(nx) #radius squared (without dx)
+    if L0>0: #outer scale
+        R2+=(nx*dx/L0)**2
+    if seed:
+        rng=np.random.default_rng(seed)
+    else:
+        rng=np.random.default_rng()
+    wn=rng.standard_normal(nx*nx)+1j*rng.standard_normal(nx*nx)
+    wn.shape=(nx,nx)
+    alpha=0.1517*(nx*dx/r0)**(5./6.)*0.5e-6/(2*np.pi)
+    spect=alpha*wn*R2**(-abs(powerlaw/4)) #spectrum
+    spect[nx>>1, nx>>1]=0
+    spect[:,0]=0
+    spect[0,:]=0
+    screen=np.real(np.fft.fft2(np.fft.fftshift(spect)))
+    return screen

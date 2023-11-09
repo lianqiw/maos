@@ -31,10 +31,9 @@
    elements allocated.
 */
 X(sp)* X(spnew)(long nx, long ny, long nzmax){
-	X(sp)* sp;
 	if(nx<0) nx=0;
 	if(ny<0) ny=0;
-	sp=mycalloc(1, X(sp));
+	X(sp)* sp=mycalloc(1, X(sp));
 	sp->id=M_SPT;
 	sp->pp=mymalloc((ny+1), spint);
 	if(nzmax>0){

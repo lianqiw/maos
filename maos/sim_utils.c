@@ -1766,6 +1766,7 @@ void free_simu(sim_t* simu){
 	dcellfree(save->fsmerrs);
 	dcellfree(save->fsmcmds);
 	dcellfree(simu->llt_fsmcmd);
+	dcellfree(simu->llt_fsmlpf);
 	dcellfree(simu->llt_fsmreal);
 	dcellfree(save->llt_fsmreal);
 	free(simu->wfsflags);
