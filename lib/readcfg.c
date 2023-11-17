@@ -195,7 +195,7 @@ void close_config(const char* format, ...){
 	format2fn;
 	const char* fnout=format?fn:NULL;
 	if(MROOT){
-		info("Used %ld of %ld supplied keys\n", nused, nstore);
+		dbg("Used %ld of %ld supplied keys\n", nused, nstore);
 		if(fnout&&strlen(fnout)>0&&!disable_save) fpout=fopen(fnout, "w");
 		if(fpout && default_config) fprintf(fpout, "include=%s\n", default_config);
 		twalk(MROOT, print_key);
@@ -232,10 +232,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_in, prefix);
 			}
 		}
+		config_dir=mydirname(config_file);
 		if(!default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
+			addpath(config_dir);
 		}
-		config_dir=mydirname(config_file);
 	} else{
 		config_file=strdup(config_in);
 		parse_argopt(config_file, NULL);
@@ -308,13 +309,15 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				if(nstore>0){
 					info("Replacing all existing input\n");
 					erase_config();
-					open_config("changes.conf", NULL, -1);
 				}
 				countnew=0;
 				countold=0;
 				//countskip=0;
+				priority=0;//this file contains default setup.
 			} else if(!strcmp(ssline, "__default__")){
 				priority=0;//this file contains default setup.
+			} else if (!strcmp(ssline, "__changes__")){
+				priority=-1;//this file contains key changes
 			} else{
 				error("Input (%s) is not valid\n", ssline);
 			}
@@ -348,11 +351,14 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			error("Line '%s' is invalid\n", line);
 		} else if(!strcmp(var, "path")||!strcmp(var, "PATH")){
 			char* val2=strextract(value);
-			char* val3=stradd(config_dir, "/", val2, NULL);
-			addpath2(val3, 99);
-			dbg("addpath %s\n", val3);
+			if(config_dir&&val2[0]!='/'&&val2[0]!='~'){//not absolute path, make it relative to config_dir
+				char *tmp=val2;
+				val2=stradd(config_dir, "/", tmp, NULL);
+				free(tmp);
+			}
+			dbg("addpath %s.\n", val2);
+			addpath2(val2, 99);
 			free(val2);
-			free(val3);
 		} else if(!strncmp(var, "MAOS_", 5)){
 			//This is environment variable.
 			if(!value){
@@ -392,7 +398,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			}
 			store->priority=priority;
 			void* entryfind=tfind(store, &MROOT, key_cmp);
-			if(entryfind){/*same key found, check whether replacement exists*/
+			if(entryfind && priority!=-1){/*key found, check whether it is renamed.*/
 				STORE_T* oldstore=*(STORE_T**)entryfind;
 				if(oldstore->flag==-1){//a replacement entry
 					if(oldstore->data && oldstore->data[0]!=0){

@@ -2047,7 +2047,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			READ_ENV_DBL(FC2EP, 0, INFINITY);
 			//llt->lpfsm=fc2lp(llt->fcfsm, parms->sim.dt*powfs->dtrat);//active only when high order wfs has output.
 			lltcfg->epfsm=FC2EP*lltcfg->fcfsm*parms->sim.dt*powfsi->dtrat;//2 gives slight overshoot
-			info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
+			if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
 		}
 		//Match TWFS to LGS POWFS
 		if(powfsi->skip==2){//TWFS
@@ -3410,16 +3410,21 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 			mainconf="default.conf";
 		}
 	}
-	info("Main config file is %s\n",mainconf);
-
-	/*Setup PATH and result directory so that the config_path is in the back of path */
-	char *config_path=find_config("maos");
-	if(!config_path||!exist(config_path)){
-		error("Unable to find usable configuration file\n");
-	}
-	/*info2("Using config files found in %s\n", config_path); */
-	addpath(config_path);
-	free(config_path);
+	info("Main config file is %s\n", mainconf);
+	{
+		/*Setup PATH and result directory so that the config_path is in the back of path */
+		char *config_path=find_config("maos");
+		if(!config_path||!exist(config_path)){
+			error("Unable to find usable configuration file\n");
+		}
+		/*info2("Using config files found in %s\n", config_path); */
+		addpath(config_path);
+		char config_other[PATH_MAX];
+		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "bin"); addpath(config_other);
+		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "atm"); addpath(config_other);
+		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "examples"); addpath(config_other);
+		free(config_path);
+	}	
 	open_config(mainconf,NULL,0);/*main .conf file. */
 	open_config(extraconf,NULL,1);
 	parms_t *parms=mycalloc(1,parms_t);
