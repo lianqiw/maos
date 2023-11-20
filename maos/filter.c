@@ -215,12 +215,12 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 				}
 			}
 			trials++;
-			if(trials==1&&count>0){
-				info2("Step %d, DM %d: %d actuators over ia limit. ", simu->reconisim, idm, count);
+			if(trials==1&&count>0&&simu->reconisim<10){
+				info2("Step %d, DM %d: %d actuators over ia limit (print will be disabled after 10 steps). ", simu->reconisim, idm, count);
 			}
 		} while(count>0&&trials<100);
-		if(trials>1){
-			info2("trials=%d: %s\n", trials, count?"failed.":"success.");
+		if(trials>1&&simu->reconisim<10){
+			info2("Fix is %s after %d trials\n", count?"failed.":"success.", trials);
 		}
 		if(!parms->fit.square){//copy data back
 			loc_extract(P(simu->dmreal,idm), P(recon->aloc,idm), P(simu->dmrealsq,idm));

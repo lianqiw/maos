@@ -41,7 +41,7 @@ static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
-	long priority;//Priority of the entry
+	long priority;//Priority of the entry. -1: a replacement entry. 0: default, larger: higher priority
 	long flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
 }STORE_T;
 static int key_cmp(const void* a, const void* b){
@@ -140,7 +140,7 @@ static FILE* fpout=NULL;
 static void print_key(const void* key, VISIT which, int level){
 	const STORE_T* store=*((const STORE_T**)key);
 	(void)level;
-	if(which==leaf||which==postorder){
+	if((which==leaf||which==postorder) && store->flag!=-1){
 		if(fpout){
 			if(!store->priority){
 				fprintf(fpout, "#");
@@ -152,7 +152,7 @@ static void print_key(const void* key, VISIT which, int level){
 				fprintf(fpout, "\n");
 			}
 		}
-		if((store->flag!=-1 && store->flag!=1)&&(!store->data||strcmp(store->data, "ignore"))){
+		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
 				if(PERMISSIVE || !store->priority){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
@@ -229,11 +229,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			}else if(!prefix){
 				error("Cannot open file %s for reading.\n", config_in);
 			}else{
-				warning("Cannot open file %s for reading. Ignored for prefix %s\n", config_in, prefix);
+				warning("Cannot open file %s for reading. Ignored (prefix=%s)\n", config_in, prefix);
 			}
 		}
 		config_dir=mydirname(config_file);
-		if(!default_config){//used in close_config to reproduce the simulation
+		if(priority!=-1 && !default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
 			addpath(config_dir);
 		}
