@@ -10,25 +10,25 @@ import socket
 # dname descrinebs data type. M_ types are fundamental types. 
 # MC_ types has been superseded by MCC_ANY
 magic2dname={
-    25600: 'M_CSP64', 
-    25601: 'M_DSP64',
-    25602: 'M_DBL',
-    25603: 'M_INT64',
-    25604: 'M_CMP',
-    25605: 'M_INT32',
-    25606: 'M_CSP32', #32 is for integer index
-    25607: 'M_DSP32',
-    25608: 'M_FLT',
-    25609: 'M_ZMP',
-    25610: 'M_INT8',
-    25611: 'M_INT16',
-    25616: 'MC_CSP',
-    25617: 'MC_SP',
-    25618: 'MC_DBL',
-    25619: 'MC_INT64',
-    25620: 'MC_CMP',
-    25621: 'MC_INT32',
-    25633: 'MCC_ANY',
+    0x6400: 'M_CSP64', 
+    0x6401: 'M_DSP64',
+    0x6402: 'M_DBL',
+    0x6403: 'M_INT64',
+    0x6404: 'M_CMP',
+    0x6405: 'M_INT32',
+    0x6406: 'M_CSP32', #32 is for integer index
+    0x6407: 'M_DSP32',
+    0x6408: 'M_FLT',
+    0x6409: 'M_ZMP',
+    0x640A: 'M_INT8',
+    0x640B: 'M_INT16',
+    #0x6410: 'MC_CSP', #obsolete
+    #0x6411: 'MC_SP',#obsolete
+    #0x6412: 'MC_DBL',#obsolete
+    #0x6413: 'MC_INT64',#obsolete
+    #0x6414: 'MC_CMP',#obsolete
+    #0x6415: 'MC_INT32',#obsolete
+    0x6421: 'MCC_ANY',
     0x6430: 'M_SSP64',
     0x6431: 'M_SSP32',
     0x6432: 'M_ZSP64',
@@ -43,10 +43,10 @@ dname2type={
     'M_DBL': np.double,
     'M_FLT': np.float32,
 
+    'M_INT8': np.int8,
     'M_INT16': np.int16,
     'M_INT32': np.int32,
     'M_INT64': np.int64,
-    'M_INT8': np.int8,
     
     'M_CSP32': np.complex128,
     'M_CSP64': np.complex128,
@@ -68,7 +68,10 @@ bitpix2magic={
     8:0x640,
     0:0
 }
-
+bitpix2magic_complex={ #for complex values
+    -32:0x6409,
+    -64:0x6404
+}
 def readuint16(fp):
     return struct.unpack("<H", fp.read(2))[0]
 def readuint32(fp):
@@ -246,8 +249,15 @@ def readfits_header(fp):
             bitpix=int(res[10:30])
             res=fp.read(80)
             naxis=int(res[10:30])
+            if naxis>3:
+                raise ValueError('readbin only support naxis<=3')
             if naxis>2:
-                raise ValueError('readbin only support naxis<=2')
+                res=fp.read(80)
+                nc=int(res[10:30])
+                if nc!=2 and nc!=1:
+                    raise ValueError('if naxis==3, axis[0] must be 2 for complex numbers')
+            else:
+                nc=1
             if naxis>0:
                 res=fp.read(80)
                 nx=int(res[10:30])
@@ -276,7 +286,11 @@ def readfits_header(fp):
                     header[key]=value
         page=page+1
     if END == 1:
-        return (bitpix2magic[bitpix], nx, ny, header)
+        if nc==2:#complex
+            magic=bitpix2magic_complex[bitpix]
+        else:#real
+            magic=bitpix2magic[bitpix]
+        return (magic, nx, ny, header)
     elif END == 2: #end of file
         return (M_EOD, 0, 0, header)
     else:

@@ -147,7 +147,7 @@ void swap_array(void* out, void* in, long bytes, int size){
 		}
 	}
 	break;
-	default://this is the longest data unit we handle.
+	default://this is the longest data unit we need to handle.
 	{
 		uint64_t* pout=out;
 		uint64_t* pin=in;
@@ -781,7 +781,7 @@ write_bin_headerstr(const char* str, file_t* fp){
 */
 static void
 write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
-	uint64_t naxis[count];
+	uint64_t naxis[count+1];
 	va_list ap;
 	va_start(ap, count);              /*Initialize the argument list. */
 	int empty=0;
@@ -793,14 +793,25 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	va_end(ap);
 
 	if(empty) count=0;
-
+	int iscomplex=0;
 	int bitpix=0;
 	switch(magic&0xFFFF){
 	case M_FLT:
 		bitpix=-32;
+		break;		
+	case M_ZMP:
+		bitpix=-32;
+		iscomplex=1;
 		break;
 	case M_DBL:
 		bitpix=-64;
+		break;
+	case M_CMP:
+		bitpix=-64;
+		iscomplex=1;
+		break;
+	case M_INT64:
+		bitpix=64;
 		break;
 	case M_INT32:
 		bitpix=32;
@@ -814,6 +825,13 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	default:
 		warning("Data type is not yet supported. magic=%x\n", magic);
 		return;
+	}
+	if(iscomplex){//insert 2 to beginning of naxis
+		for(int i=count; i>0; i--){
+			naxis[i]=naxis[i-1];
+		}
+		naxis[0]=2;
+		count++;
 	}
 	const int nh=36;//each fits page can only contain 36 headers.
 	char header[nh][80];
@@ -908,12 +926,12 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 */
 static int
 read_fits_header(header_t* header, file_t* fp){
-	//, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
 	char line[82];//extra space for \n \0
 	int end=0;
 	int page=0;
 	int bitpix=0;
 	int naxis=0;
+	int nc=1;//1: default. 2: is complex number
 	while(!end){
 		int start=0;
 		if(page==0){
@@ -924,7 +942,11 @@ read_fits_header(header_t* header, file_t* fp){
 			CHECK_ERR(sscanf(line+10, "%20d", &bitpix)!=1, "Read bitpix failed");
 			CHECK_ERR(zfread(line, 1, 80, fp), "Read line 3 failed"); line[80]='\0';
 			CHECK_ERR(sscanf(line+10, "%20d", &naxis)!=1, "Read naxis failed");
-			CHECK_ERR(naxis>2, "Unable to handle naxis>2");
+			CHECK_ERR(naxis>3, "Unable to handle naxis>3");
+			if(naxis>2){
+				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 4 failed"); line[80]='\0';
+				CHECK_ERR(sscanf(line+10, "%20d", &nc)!=1, "Read nc failed");
+			}
 			if(naxis>0){
 				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 4 failed"); line[80]='\0';
 				CHECK_ERR(sscanf(line+10, "%20lu", (unsigned long*)&header->nx)!=1, "Read nx failed");
@@ -985,10 +1007,10 @@ read_fits_header(header_t* header, file_t* fp){
 	}
 	switch(bitpix){
 	case -32:
-		header->magic=M_FLT;
+		header->magic=nc==2?M_ZMP:M_FLT;
 		break;
 	case -64:
-		header->magic=M_DBL;
+		header->magic=nc==2?M_CMP:M_DBL;
 		break;
 	case 64:
 		header->magic=M_INT64;
