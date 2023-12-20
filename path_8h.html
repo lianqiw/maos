@@ -103,8 +103,8 @@ $(document).ready(function(){initNavTree('path_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a2360bff9d3cee0d880596ed915f54463"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a2360bff9d3cee0d880596ed915f54463">addpath2</a> (const char *path, int priority)</td></tr>
-<tr class="separator:a2360bff9d3cee0d880596ed915f54463"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb29962e960d55db5ecd8812f61a9441"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#acb29962e960d55db5ecd8812f61a9441">addpath2</a> (int priority, const char *format,...) CHECK_ARG(2)</td></tr>
+<tr class="separator:acb29962e960d55db5ecd8812f61a9441"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8539b4e587a7ea71221206e43f29ead5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a8539b4e587a7ea71221206e43f29ead5">addpath</a> (const char *path)</td></tr>
 <tr class="separator:a8539b4e587a7ea71221206e43f29ead5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa95ac1be1b592e9a3d6761a8376b72b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#aa95ac1be1b592e9a3d6761a8376b72b2">rmpath</a> (const char *path)</td></tr>
@@ -123,8 +123,8 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file contains function managing the searching path for files, behaves like PATH in POSIX systems. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a2360bff9d3cee0d880596ed915f54463"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2360bff9d3cee0d880596ed915f54463">&#9670;&nbsp;</a></span>addpath2()</h2>
+<a id="acb29962e960d55db5ecd8812f61a9441"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb29962e960d55db5ecd8812f61a9441">&#9670;&nbsp;</a></span>addpath2()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -132,14 +132,20 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void addpath2 </td>
           <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>path</em>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>priority</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>priority</em>&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
