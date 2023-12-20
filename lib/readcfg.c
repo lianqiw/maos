@@ -357,7 +357,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				free(tmp);
 			}
 			dbg("addpath %s.\n", val2);
-			addpath2(val2, 99);
+			addpath2(99, "%s", val2);
 			free(val2);
 		} else if(!strncmp(var, "MAOS_", 5)){
 			//This is environment variable.

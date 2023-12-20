@@ -28,6 +28,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#define DISABLE_CUSPARSE_DEPRECATED
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cublas_v2.h>

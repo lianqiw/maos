@@ -197,7 +197,9 @@ maos mcao_lgs.conf powfs.noisy=[1] # step5: noisy MCAO with physical optics LGS 
 
 ```
 
-Note that the option `sim.closeloop=0 atm.frozenflow=1` uses open loop correction (no servo lag) with frozen flow turbulence. The option `sim.idealfit=1` enables DM fitting directly from turbulence rather than from tomography output. The following error budget items are computed:
+Note that the option `sim.closeloop=0 atm.frozenflow=1` uses open loop correction (no servo lag) with frozen flow turbulence. The option `sim.idealfit=1` enables DM fitting directly from turbulence rather than from tomography output. For open loop simulations, truth wfs should not be included or disabled with sim.eptwfs=0, and non-iterative solvers (tomo.alg=0, fit.alg=0) usually work better than CG.
+
+The following error budget items are computed:
 
 - `DM fitting error`: step1 gives DM fitting error which depends on the actuator spacing.
 - `DM projection error`: the quadrature difference between step1 and step1b gives DM projecting error which depends on the field of view and number of DMs.

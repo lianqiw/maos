@@ -42,10 +42,11 @@ PNEW(mutex_path);
 /**
    Add a directory to path. Higher priority is searched first.
 */
-void addpath2(const char* path, int priority){
-	char* abspath=myabspath(path);
-	if(!path||!abspath||!isdir(abspath)){
-		warning("Path not found: path=%s; abspath=%s; Ignored.\n", path, abspath);
+void addpath2(int priority, const char *format, ...){
+	format2fn;
+	char* abspath=myabspath(fn);
+	if(!fn||!abspath||!isdir(abspath)){
+		warning("Path not found: path=%s; abspath=%s; Ignored.\n", fn, abspath);
 		return;
 	}
 	PATH_T* node=mycalloc(1, PATH_T);
@@ -67,8 +68,8 @@ void addpath2(const char* path, int priority){
 /**
    Add a directory to path with default priority of 0.
 */
-void addpath(const char* path){
-	addpath2(path, 0);
+void addpath(const char *path){
+	addpath2(0, "%s", path);
 }
 /**
    Remove a directory from path.

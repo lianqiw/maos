@@ -57,8 +57,11 @@ aper_t* setup_aper(const parms_t* const parms){
 	if(parms->load.locs){
 		char* fn=parms->load.locs;
 		if(!zfexist("%s",fn)) error("%s doesn't exist\n", fn);
-		warning("Loading plocs from %s\n", fn);
-		aper->locs=locread("%s", fn);
+		if(!(aper->locs=locread("%s", fn))){
+			error("Failed to Load locs from %s\n", fn);
+		}else{
+			info("Loaded locs from %s\n", fn);
+		}
 		if(fabs(aper->locs->dx-parms->evl.dx)>1e-7*parms->evl.dx){
 			warning("Loaded locs has unexpected sampling of %g, should be %g\n",
 				aper->locs->dx, parms->evl.dx);
@@ -77,15 +80,20 @@ aper_t* setup_aper(const parms_t* const parms){
 	}
 	if(parms->aper.pupmask){
 		map_t* mask=mapread("%s", parms->aper.pupmask);
-		if(parms->aper.rot){
-			warning("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
-			dmaprot(mask, parms->aper.rot);
+		if(!mask){
+			error("Failed to load pupil mask from %s\n", parms->aper.pupmask);
+		}else{
+			info("Loaded pupil mask from %s\n", parms->aper.pupmask);
+		 	if(parms->aper.rot){
+				warning("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+				dmaprot(mask, parms->aper.rot);
+			}
+			dmat* ampmask=dnew(aper->locs->nloc, 1);
+			prop_grid_stat(mask, aper->locs->stat, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
+			dcwm(aper->amp, ampmask);
+			dfree(ampmask);
+			mapfree(mask);
 		}
-		dmat* ampmask=dnew(aper->locs->nloc, 1);
-		prop_grid_stat(mask, aper->locs->stat, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
-		dcwm(aper->amp, ampmask);
-		dfree(ampmask);
-		mapfree(mask);
 	}
 	if(!parms->load.locs){
 		loc_reduce(aper->locs, aper->amp, EPS, 1, NULL);

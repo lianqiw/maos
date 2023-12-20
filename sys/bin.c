@@ -310,7 +310,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	const char* fn2=fp->fn=procfn(fni, mod);
 	if(!fn2){
 		if(mod[0]=='r'){
-			dbg("%s does not exist for read\n", fni);
+			warning("%s does not exist for read\n", fni);
 			printpath();
 		}
 		goto fail;
@@ -353,11 +353,11 @@ file_t* zfopen(const char* fni, const char* mod){
 		}
 		break;
 	default:
-		dbg("Unknown mod=%s. Supported are r, w, a\n", mod);
+		warning("Unknown mod=%s. Supported are r, w, a\n", mod);
 		goto fail;
 	}
 	if(fp->fd==-1){
-		dbg("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
+		warning("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
 		goto fail;
 	}
 	fcntl(fp->fd, F_SETFD, FD_CLOEXEC);
@@ -365,7 +365,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	if(mod[0]=='r'){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-			dbg("Unable to read magic from %s.\n", fn2);
+			warning("Unable to read magic from %s.\n", fn2);
 			goto fail;
 		} else{
 			if(magic==0x8b1f){
@@ -378,7 +378,7 @@ file_t* zfopen(const char* fni, const char* mod){
 	}
 	if(fp->isgzip){
 		if(!(fp->gp=gzdopen(fp->fd, mod))){
-			dbg("Error gzdopen for %s\n", fn2);
+			warning("Error gzdopen for %s\n", fn2);
 			goto fail;
 		}
 	}
@@ -465,7 +465,7 @@ void zfclose(file_t* fp){
 		long pos=zfpos(fp);
 		long len=zflen(fp);
 		if(pos<len){
-			dbg("zfclose %s: there is extra data not read. pos=%ld, len=%ld\n", fp->fn, pos, len);
+			warning("zfclose %s: there is extra data not read. pos=%ld, len=%ld\n", fp->fn, pos, len);
 		}
 	}
 	//LOCK(lock);//causes race condition with zfopen_try
@@ -484,7 +484,7 @@ void zfclose(file_t* fp){
  * */
 int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
 	if(!fp||fp->fd<0||fp->err||!ptr){
-		dbg("zfwrite_wrap: error encountered, cancelled.\n");
+		warning("zfwrite_wrap: error encountered, cancelled.\n");
 		return (fp&&fp->err)?fp->err:-1;
 	} else if(fp->isgzip){
 		return gzwrite(fp->gp, ptr, tot);
@@ -524,7 +524,7 @@ int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* f
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
 	if(!ptr || !size || !nmemb || !fp){
-		dbg("zfwrite: invalid input\n");
+		warning("zfwrite: invalid input\n");
 		return -1;
 	}
 	int ans=0;
@@ -555,7 +555,7 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
  * */
 int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
 	if(!fp||fp->fd<0||fp->err||!ptr){
-		dbg("zfread_wrap: error encountered\n");
+		warning("zfread_wrap: error encountered\n");
 		return -1;
 	} else if(fp->isgzip){
 		return gzread(fp->gp, ptr, tot);
@@ -580,7 +580,7 @@ int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 		} else if(count==0){//eof
 			zferr(fp, 1);
 		} else{//unknown error
-			dbg("%s: unknown error happend during reading.\n", fp->fn);
+			warning("%s: unknown error happend during reading.\n", fp->fn);
 			zferr(fp, 2);
 		}
 	}
@@ -1376,7 +1376,7 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 	long pos=writearr(fp, 0, size, magic, str, p, nx, ny);
 #endif
 	if(pos<0){
-		dbg("pos shall not be negative\n");
+		warning("pos shall not be negative\n");
 		return NULL;
 	}
 	async_t* async=mycalloc(1, struct async_t);
@@ -1457,7 +1457,7 @@ void async_write(async_t* async, long offset, int wait){
 				async->aio.aio_nbytes=0;
 			}else{//mark as permanent failure
 				zferr(async->fp, 2);
-				dbg("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
+				warning("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
 			}
 		}else{//update previous marker only if success
 			async->prev=offset;

@@ -105,7 +105,7 @@ ARG_S* parse_args(int argc, const char* argv[]){
 	if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
 		arg->conf=strdup("maos.conf");
 	}
-	addpath2(".", 2);
+	addpath2(2, ".");
 	mymkdir("%s", arg->dirout);
 	if(chdir(arg->dirout)){
 		error("Unable to chdir to %s\n", arg->dirout);

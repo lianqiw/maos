@@ -253,7 +253,7 @@ fi
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas -Wformat=2"
+    OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations"
     #OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
 fi
 
@@ -908,7 +908,7 @@ if test "$with_cuda" != "no" ;then #test CUDA availability
     AC_MSG_NOTICE([Checking CUDA])
     #Check for nvcc executable
     if test ${CUDADIR:0:1} = '~' ;then
-		CUDADIR=$HOME:${CUDADIR:1}
+		CUDADIR=$HOME${CUDADIR:1}
     fi
     NVCC="$CUDADIR/bin/nvcc"
     if test ! -x "$NVCC" -a -x "$CUDADIR/nvcc"; then

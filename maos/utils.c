@@ -386,7 +386,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 		}
 	}
 
-	addpath2(".", 2);
+	addpath2(2, ".");
 	if(arg->dirout){
 		mymkdir("%s", arg->dirout);
 		if(chdir(arg->dirout)){

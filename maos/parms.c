@@ -213,6 +213,7 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_DBL_SCALE(A,B,C) parms->A = readcfg_dbl(#B)*(C) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(0,0,#A) /*read a key with dmat. */
+#define READ_DMAT_N(A,n) parms->A= readcfg_dmat(n,0,#A) /*read a key with dmat. */
 #define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat(n,1,#A) /*read a key with dmat. */
 #define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(0,0,#A) /*read a key with lmat. */
@@ -676,11 +677,11 @@ static void readcfg_siglev(parms_t *parms){
 	check_dimension("wfs.wvlwts", wfs_wvlwts, wfs_wvl_tot);
 	check_dimension("wfs.mag",    wfs_mag,    wfs_wvl_tot);
 #undef check_dimension	
-	if(dsum(wfs_mag)>0&&dsum(powfs_mag)>0){
-		warning_once("when both wfs.mag and powfs.mag are specified, wfs.mag takes precedence\n");
+	/*if(dsum(wfs_mag)>0||dsum(powfs_mag)>0){
+		info("When both wfs.mag and powfs.mag are specified, wfs.mag takes precedence\n");
 	} else{
-		warning_once("computing siglev from %s\n", PN(wfs_mag)?"wfs.mag":"powfs.mag");
-	}
+		info("Computing siglev from %s\n", PN(wfs_mag)?"wfs.mag":"powfs.mag");
+	}*/
 	int wfs_wvl_count=0;
 	int powfs_wvl_count=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -965,7 +966,6 @@ static void readcfg_moao(parms_t *parms){
 */
 static void readcfg_atm(parms_t *parms){
 	READ_DBL(atm.r0z);
-	//READ_DBL(atm.L0);
 	READ_DBL(atm.dx);
 	READ_INT(atm.wdrand);
 	READ_INT(atm.method);
@@ -976,21 +976,15 @@ static void readcfg_atm(parms_t *parms){
 	READ_DMAT(atm.r0logpsdt);
 	READ_DMAT(atm.r0logpsds);
 	READ_DMAT(atm.ht);
-	//parms->atm.r0logpsdt=readcfg_dmat(0,0,"atm.r0logpsdt");
-	//parms->atm.r0logpsds=readcfg_dmat(0,0,"atm.r0logpsds");
-	parms->atm.size=readcfg_dmat(2,0,"atm.size");
-	//parms->atm.ht=readcfg_dmat(0,0,"atm.ht");
+	READ_DMAT_N(atm.size, 2);
 	parms->atm.nps=NX(parms->atm.ht);
-	parms->atm.wt=readcfg_dmat(parms->atm.nps,0,"atm.wt");
-	parms->atm.ws=readcfg_dmat(parms->atm.nps,0,"atm.ws");
-	parms->atm.wddeg=readcfg_dmat(parms->atm.nps,1,"atm.wddeg");
-	parms->atm.L0=readcfg_dmat(parms->atm.nps,1,"atm.L0");
-	for(int ih=0; ih<parms->atm.nps; ih++){
-		if(fabs(P(parms->atm.wddeg,ih))>1){
-			warning("atm.wddeg is not zero. Disable atm.wdrand\n");
-			parms->atm.wdrand=0;
-			break;
-		}
+	READ_DMAT_N(atm.wt, parms->atm.nps);
+	READ_DMAT_N(atm.ws, parms->atm.nps);
+	READ_DMAT_NMAX(atm.L0, parms->atm.nps);
+	if(!parms->atm.wdrand){
+		READ_DMAT_NMAX(atm.wddeg, parms->atm.nps);
+	}else{
+		readcfg_ignore("atm.wddeg");
 	}
 }
 /**
@@ -1121,7 +1115,7 @@ static void readcfg_evl(parms_t *parms){
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){
-			warning("Assume evl.wvl[%d] is supplied in micron. scale %g by 1e-6\n", iwvl, P(parms->evl.wvl,iwvl));
+			//info("Assume evl.wvl[%d]=%g is supplied in micron.\n", iwvl, P(parms->evl.wvl,iwvl));
 			P(parms->evl.wvl,iwvl)*=1e-6;
 		}
 	}
@@ -1933,7 +1927,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
 				powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 			} else if(powfsi->pixtheta<1e-4){
-				info("powfs%d: assume pixtheta=%g is in radian\n",ipowfs, powfsi->pixtheta);
+				//info("powfs%d: assume pixtheta=%g is in radian\n",ipowfs, powfsi->pixtheta);
 			} else{//input is arcsecond.
 				powfsi->pixtheta*=AS2RAD;/*convert form arcsec to radian. */
 			}
@@ -2406,7 +2400,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		if(P(parms->atm.ht,ips)<0){
 			warning("Layer %d height %g is below ground (OK).\n",ips,P(parms->atm.ht,ips));
 		}
-		if(ips>0&&fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<20){
+		if(ips>0&&fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<10){
 			warning("Layer %d at %gm is very close to layer %d at %gm (OK).\n",
 				ips,P(parms->atm.ht,ips),ips-1,P(parms->atm.ht,ips-1));
 		}
@@ -2657,7 +2651,7 @@ static void setup_parms_postproc_dm(parms_t *parms){
 			real strokemicron=fabs(P(parms->dm[i].stroke,0))*1e6;
 			if(strokemicron>1000){
 				dscale(parms->dm[i].stroke,1e-6);
-				info("dm %d: stroke=%g um is provided in micron.\n",i,strokemicron*1e-6);
+				//info("dm %d: assume stroke=%g is in micron.\n",i,strokemicron*1e-6);
 			}
 			if(parms->sim.fcttm==0){
 				warning("Please set sim.fcttm for offloading to tip/tilt mirror when DM stroke is limited.\n");
@@ -2667,7 +2661,7 @@ static void setup_parms_postproc_dm(parms_t *parms){
 			real strokemicron=parms->dm[i].iastroke*1e6;
 			if(strokemicron>1000){
 				parms->dm[i].iastroke*=1e-6;
-				info("dm %d: assume ia stroke=%g um is provided in micron.\n",i,strokemicron*1e-6);
+				//info("dm %d: assume ia stroke=%g is in micron.\n",i,strokemicron*1e-6);
 			}
 		}
 	}
@@ -3101,12 +3095,12 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 	}
 
 	if(parms->dbg.cmpgpu){
-		warning("Make cpu code follow gpu implementations.\n");
+		info("Make cpu code follow gpu implementations.\n");
 		parms->tomo.square=1;
 	}
 
 	if(!parms->atm.frozenflow){
-		warning("psfisim is set from %d to %d in openloop mode\n",parms->evl.psfisim,parms->sim.start);
+		info("psfisim is set from %d to %d in openloop mode\n",parms->evl.psfisim,parms->sim.start);
 		parms->evl.psfisim=parms->sim.start;
 	}
 	if(parms->evl.psfisim<parms->sim.start){
@@ -3197,7 +3191,7 @@ static void print_parms(const parms_t *parms){
 			warning("Atmosphere theta0 maybe wrong\n");
 		}
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			info("    layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
+			info("    layer %2d: height is %6.0f m, weight is %5.3f, wind speed is %4.1f m/s\n",
 				ips,P(parms->atm.ht,ips),P(parms->atm.wt,ips),P(parms->atm.ws,ips));
 		}
 	}
@@ -3207,7 +3201,7 @@ static void print_parms(const parms_t *parms){
 			parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
 
 		for(int ips=0; ips<parms->atmr.nps; ips++){
-			info("    layer %d: ht= %6.0f m, wt= %5.3f\n",
+			info("    layer %2d: height is %6.0f m, weight is %5.3f\n",
 				ips,P(parms->atmr.ht,ips),P(parms->atmr.wt,ips));
 		}
 	}
@@ -3270,7 +3264,7 @@ static void print_parms(const parms_t *parms){
 	info2("%sThere are %d wfs%s\n",GREEN,parms->nwfs,BLACK);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
-		info("    wfs %d: type %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
+		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
 			i,parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
 			parms->wfs[i].thetay*RAD2AS,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
@@ -3284,10 +3278,10 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
 	for(i=0; i<parms->ndm; i++){
-		info("  DM %d at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+		info("  DM %d: at %g km, pitch %g m, offset %g, %g micron stroke, %g micron inter-actuator stroke.\n",
 			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
 			parms->dm[i].offset,
-			fabs(P(parms->dm[i].stroke,0))*1e6);
+			fabs(P(parms->dm[i].stroke, 0))*1e6, fabs(parms->dm[i].iastroke)*1e6);
 		if(parms->dm[i].iac){
 			info("    Normalized cubic influence function with inter-actuator coupling of %g\n",
 				parms->dm[i].iac);
@@ -3411,20 +3405,18 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 		}
 	}
 	info("Main config file is %s\n", mainconf);
-	{
-		/*Setup PATH and result directory so that the config_path is in the back of path */
-		char *config_path=find_config("maos");
-		if(!config_path||!exist(config_path)){
-			error("Unable to find usable configuration file\n");
-		}
+	char *config_path=find_config("maos");
+	/*Setup PATH and result directory so that the config_path is in the back of path */
+	if(!config_path||!exist(config_path)){
+		error("Unable to find usable configuration file\n");
+	}else{
 		/*info2("Using config files found in %s\n", config_path); */
 		addpath(config_path);
-		char config_other[PATH_MAX];
-		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "bin"); addpath(config_other);
-		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "atm"); addpath(config_other);
-		snprintf(config_other, PATH_MAX, "%s/%s", config_path, "examples"); addpath(config_other);
-		free(config_path);
-	}	
+		addpath2(0, "%s/%s", config_path, "bin");
+		addpath2(0, "%s/%s", config_path, "atm");
+		addpath2(0, "%s/%s", config_path, "examples");
+		free(config_path); config_path=NULL;
+	}
 	open_config(mainconf,NULL,0);/*main .conf file. */
 	open_config(extraconf,NULL,1);
 	parms_t *parms=mycalloc(1,parms_t);

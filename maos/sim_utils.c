@@ -218,13 +218,9 @@ void genatm(sim_t* simu){
 	}
 	info("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
 	simu->winddir=dnew(atm->nps, 1);
-	int wdnz=0;
 	for(int i=0; i<atm->nps; i++){
 		real angle;
 		if(atm->wdrand){
-			if(fabs(P(atm->wddeg, i))>EPS){
-				wdnz=1;
-			}
 			angle=randu(simu->atmwd_rand)*M_PI*2;
 		} else{
 			angle=P(atm->wddeg, i)*M_PI/180;
@@ -233,10 +229,6 @@ void genatm(sim_t* simu){
 		info(" %5.1f", angle*180/M_PI);
 	}
 	info(" deg\n");
-	if(wdnz){
-		error("wdrand is specified, but wddeg are not all zero. \n"
-			"possible confliction of intension!\n");
-	}
 	if(simu->parms->load.atm){
 		const char* fn=simu->parms->load.atm;
 		info("loading atm from %s\n", fn);
@@ -2065,7 +2057,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	fprintf(fp, "include=\"skyc_za%g.conf\"\n", zadeg);
 	fprintf(fp, "maos.wddeg=[");
 	for(int ips=0; ips<parms->atm.nps; ips++){
-		fprintf(fp, "%.2f ", P(parms->atm.wddeg, ips));
+		fprintf(fp, "%.2f ", parms->atm.wddeg?P(parms->atm.wddeg, ips):0);
 	}
 	fprintf(fp, "]\n");
 	fprintf(fp, "maos.nstep=%d\n", parms->sim.end);
