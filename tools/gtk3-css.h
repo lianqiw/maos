@@ -18,9 +18,10 @@
 
 /*
 CSS selector: 
-  A B #B inside A.
-  A,B #A or B
-
+  A B    means B inside A (descendant, includes child, grand-child, etc.).
+  A,B    means A or B
+  #name: widget name must be prefixed aith a # character
+  .class: class names must be prefixed with a period.
 In CSS, a margin is the space around an element's border, while padding is the
 space between an element's border and the element's content. Put another way,
 the margin property controls the space outside an element, and the padding
@@ -31,17 +32,23 @@ min-height and min-width are affective at controller widget size
 //border-radius is TL, TR, BR, BL
 */
 const gchar* all_style=
-"progress, trough {\n"
-"min-height:4px;"
-"min-width: 4px;"
-"}\n"
-"*{\n"
+//progressbar progress:backdrop is when window is non-active.
+"progressbar trough, progress{" //trough is the entire bar. progress is active area(?)
+"min-height:15px;"
+"min-width: 4px;" 
+"border-radius:2px;"
+//"background-image: linear-gradient(0deg, yellow, red);"
+//"background-color: blue; "
+"}"
+"*{" //for everything
+//"min-height:5px;"
+//"min-width: 5px;" //"background-color: rgba(255, 0, 0, 255);"
 "margin:0px;" //OK. margin is outside
 "padding:1px;" //OK. Padding is blank inside
 "border-radius:1px;" //OK
 "border-width:1px;" //OK
 "font:12px Sans;"
-"}\n"
+"}"
 "entry{"
 "min-height:12px;"
 "padding: 2px;"

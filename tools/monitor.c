@@ -84,9 +84,6 @@ GdkColor color_odd;
 #endif
 GtkWidget* toptoolbar;
 #if GTK_MAJOR_VERSION>=3 
-//GtkCssProvider *provider_prog;
-GtkCssProvider* provider_red;
-GtkCssProvider* provider_blue;
 #include "gtk3-css.h"
 #endif
 #define MAX_HOST 20
@@ -210,23 +207,29 @@ int host2i(const char *hostn){
 }
 /**
    modifies the color of progress bar*/
+   /*
 static void modify_bg(GtkWidget* widget, int type){
 #if GTK_MAJOR_VERSION>=3 
-	GtkCssProvider* provider;
+	//GtkCssProvider* provider;
+	const char *class[]={NULL,NULL};
 	switch(type){
 	case 1:
-		provider=provider_blue;
+		class[0]="blue";
 		break;
 	case 2:
-		provider=provider_red;
+		class[0]="red";
 		break;
 	default:
-		provider=NULL;
+		class[0]=NULL;
 	}
-	if(provider){
-		GtkStyleContext* context=gtk_widget_get_style_context(widget);
-		gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
-			GTK_STYLE_PROVIDER_PRIORITY_USER);
+	if(class[0]){
+#if GTK_MAJOR_VERSION>=4
+		gtk_widget_set_css_classes(widget, class);
+#else
+		//gtk_widget_set_name(widget, class[0]);
+		GtkStyleContext *context=gtk_widget_get_style_context(widget);
+		gtk_style_context_add_class(context, class[0]);
+#endif		
 	}
 #else
 	GdkColor* color;
@@ -237,29 +240,32 @@ static void modify_bg(GtkWidget* widget, int type){
 	case 2:
 		color=&red;
 		break;
+	case 3:		
+		color=&green;
+		break;
 	default:
 		color=NULL;
 	}
 	gtk_widget_modify_bg(widget, GTK_STATE_SELECTED, color);
 	gtk_widget_modify_bg(widget, GTK_STATE_PRELIGHT, color);
 #endif
-}
+}*/
 /**
    updates the progress bar for a job*/
 gboolean update_progress(gpointer input){
 	int ihost=GPOINTER_TO_INT(input);
-	double last_cpu=usage_cpu2[ihost];
+	//double last_cpu=usage_cpu2[ihost];
 	//double last_mem=usage_mem2[ihost];
 	usage_cpu2[ihost]=usage_cpu[ihost];
 	//usage_mem2[ihost]=usage_mem[ihost];
 	if(GTK_WIDGET_VISIBLE(window)){
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), usage_cpu[ihost]);
 		//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), usage_mem[ihost]);
-		if(usage_cpu[ihost]>=0.8&&last_cpu<0.8){
+		/*if(usage_cpu[ihost]>=0.8&&last_cpu<0.8){
 			modify_bg(prog_cpu[ihost], 2);
 		} else if(usage_cpu[ihost]<0.8&&last_cpu>=0.8){
 			modify_bg(prog_cpu[ihost], 1);
-		}
+		}*/
 			/*
 		if(usage_mem[ihost]>=0.8 && last_mem<0.8){
 			modify_bg(prog_mem[ihost],2);
@@ -394,7 +400,7 @@ void kill_job(int hid, int pid){
 	break;
 	}
 }*/
-#if GTK_MAJOR_VERSION>3
+#if GTK_MAJOR_VERSION>=4
 void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
 	gtk_window_destroy(GTK_WINDOW(dialog));
 	int this_host=GPOINTER_TO_INT(data);
@@ -419,9 +425,9 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 		GTK_BUTTONS_NONE,
 		"Kill all jobs on %s?", this_host==-1?"all servers":hosts[this_host]);
 	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
-#if GTK_MAJOR_VERSION>3
+#if GTK_MAJOR_VERSION>=4
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));
-	gtk_widget_show(dia);
+	gtk_window_present(GTK_WINDOW(dia));
 #else
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy(dia);
@@ -535,13 +541,13 @@ void save_all_jobs(GtkButton* btn, gpointer data){
 GtkWidget* monitor_new_entry_progress(void){
 	GtkWidget* prog=gtk_entry_new();
 	gtk_editable_set_editable(GTK_EDITABLE(prog), FALSE);
-#if GTK_MAJOR_VERSION > 3
+#if GTK_MAJOR_VERSION>=4
 	gtk_editable_set_width_chars(GTK_EDITABLE(prog), 12);
 #else
 	gtk_entry_set_width_chars(GTK_ENTRY(prog), 12);
 #endif
-#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 18
-	gtk_widget_set_can_focus(prog, FALSE);
+#if GTK_VERSION_AFTER(2,18)
+	gtk_widget_set_can_focus(prog, FALSE);//2.18
 #else
 	g_object_set(prog, "can-focus", FALSE, NULL);
 #endif
@@ -549,28 +555,28 @@ GtkWidget* monitor_new_entry_progress(void){
 	/*gtk_widget_modify_base(prog,GTK_STATE_NORMAL, &white);
 	gtk_widget_modify_bg(prog,GTK_STATE_SELECTED, &blue);
 	*/
-#if GTK_MAJOR_VERSION==2 && GTK_MINOR_VERSION >= 10 || GTK_MAJOR_VERSION==3 && GTK_MINOR_VERSION < 4
-	gtk_entry_set_inner_border(GTK_ENTRY(prog), 0);
+#if GTK_VERSION_AFTER(2,10) && !GTK_VERSION_AFTER(3,4)
+	gtk_entry_set_inner_border(GTK_ENTRY(prog), 0);//after 2.10, beore 3.4
 #endif
 	gtk_entry_set_has_frame(GTK_ENTRY(prog), 0);
-	gtk_entry_set_alignment(GTK_ENTRY(prog), 0.5);
+	gtk_entry_set_alignment(GTK_ENTRY(prog), 0.5);//since 2.4
 	return prog;
 }
 GtkWidget* monitor_new_progress(int vertical, int length){
 	GtkWidget* prog=gtk_progress_bar_new();
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog), 0);
 	if(vertical){
 #if GTK_MAJOR_VERSION>=3 
 		gtk_orientable_set_orientation(GTK_ORIENTABLE(prog),
 			GTK_ORIENTATION_VERTICAL);
 		gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(prog), TRUE);
-
+		gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(prog), FALSE);
 #else
 		gtk_progress_bar_set_orientation(GTK_PROGRESS_BAR(prog),
 			GTK_PROGRESS_BOTTOM_TO_TOP);
+		//g_object_set(G_OBJECT(prog), "show-text", FALSE, NULL);
 #endif
-		gtk_widget_set_size_request(prog, 8, length);
-		g_object_set(G_OBJECT(prog), "show-text", FALSE, NULL);
-		//gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(prog), FALSE);//not in gtk2
+		gtk_widget_set_size_request(prog, 4,4);
 	} else{
 		gtk_widget_set_size_request(prog, length, 12);
 	}
@@ -592,10 +598,10 @@ static void add_host_event(GtkButton* button, gpointer data){
 }
 //todo: consolidate with drawdaemon_gui.new_tool()
 static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf* iconbuf, const char* cmdname, void(*func)(GtkButton*, gpointer data), int data){
-#if GTK_MAJOR_VERSION<3
 	GtkWidget* item;
 	if(cmdname){
-		GtkWidget* image;
+#if GTK_MAJOR_VERSION<3
+		GtkWidget *image;
 		if(iconbuf){
 			image=gtk_image_new_from_pixbuf(iconbuf);
 		} else{
@@ -603,35 +609,29 @@ static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf
 		}
 		item=gtk_button_new();//image, cmdname);
 		gtk_button_set_image(GTK_BUTTON(item), image);
-		//gtk_button_set_label(GTK_BUTTON(item), cmdname);
-		gtk_widget_set_tooltip_text(item, cmdname);
-		g_signal_connect(item, "clicked", G_CALLBACK(func), GINT_TO_POINTER(data));
-	}else{
-		item=gtk_vseparator_new();
-	}
-	//gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item,-1);
-#else //gtk3 or gtk4
-	GtkWidget *item;
-	if(cmdname){
+#else
 		item=button_new(iconname);
 #if GTK_MAJOR_VERSION<=3
 		gtk_button_set_relief(GTK_BUTTON(item),GTK_RELIEF_NONE);
+#else
+		gtk_button_set_has_frame(GTK_BUTTON(item), FALSE);
 #endif
 		if(iconbuf){
+#if GTK_MAJOR_VERSION<=3
 			GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
-	#if GTK_MAJOR_VERSION<=3
 			gtk_button_set_image(GTK_BUTTON(item), image);
-	#else
+#else
+			GtkWidget *image=gtk_image_new_from_paintable(GDK_PAINTABLE(gdk_texture_new_for_pixbuf(iconbuf)));
 			gtk_button_set_child(GTK_BUTTON(item), image);
-	#endif		
+#endif		
 		}
+#endif		
 		if(func) g_signal_connect(item,"clicked",G_CALLBACK(func),GINT_TO_POINTER(data));
 		if(cmdname) gtk_widget_set_tooltip_text(item, cmdname);
-		gtk_widget_set_size_request(item, 16, 16);
+		//gtk_widget_set_size_request(item, 16, 16);
 	}else{
-		item=gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+		item=gtk_vseparator_new();
 	}
-#endif
 	box_append(GTK_BOX(toolbar), item, FALSE, FALSE, 0);
 }
 
@@ -665,42 +665,22 @@ void parse_provider(){
 	gtk_rc_parse_string(rc_string_entry);
 	//    GtkStyle *style=gtk_widget_get_style(window);
 #else
-	/*trough is the main background. progressbar is the sizable bar.*/
-
-	const gchar* prog_blue=".progressbar{"
-		"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));\n}";
-	const gchar* prog_red=".progressbar{"
-		"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#FF0000), to (#FF0000));\n}";
-
-		//    provider_prog=gtk_css_provider_new();
-		//gtk_css_provider_load_from_data(provider_prog, prog_style, strlen(prog_style), NULL);
-	provider_blue=gtk_css_provider_new();
-	gtk_css_provider_load_from_data(provider_blue, prog_blue, strlen(prog_blue)
-#if GTK_MAJOR_VERSION<4	
-	, NULL
-#endif
-	);
-	provider_red=gtk_css_provider_new();
-	gtk_css_provider_load_from_data(provider_red, prog_red, strlen(prog_red)
-#if GTK_MAJOR_VERSION<4	
-	, NULL
-#endif	
-	);
-	/*Properties not belonging to GtkWidget need to begin with -WidgetClassName*/
-	/*four sides: 4 values:top right bottom left;3 values:top horizontal bottom;2 values:vertical horizontal;1 value:all*/
-	GtkCssProvider* provider_default=gtk_css_provider_new();
-	gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style)
-#if GTK_MAJOR_VERSION<4	
-	, NULL
-#endif	
-	);
-	GtkStyleContext* all_context=gtk_widget_get_style_context(window);
-#if GTK_MAJOR_VERSION<4	
-	GdkScreen* screen=gtk_style_context_get_screen(all_context);
-	gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default), GTK_STYLE_PROVIDER_PRIORITY_USER);
+	//	copied from drawdaemon_gui.c
+	GtkCssProvider*provider_default=gtk_css_provider_new();
+#if GTK_MAJOR_VERSION>=4
+	gtk_css_provider_load_from_string(provider_default, all_style);
+	gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(provider_default),
+		GTK_STYLE_PROVIDER_PRIORITY_USER);
+	GtkSettings *settings=gtk_settings_get_for_display(gdk_display_get_default());
+	g_object_set(G_OBJECT(settings), "gtk-hint-font-metrics", TRUE, NULL);//fix gtk4 subpixel positioning blurry.
 #else
-	gtk_style_context_add_provider(all_context, GTK_STYLE_PROVIDER(provider_default), GTK_STYLE_PROVIDER_PRIORITY_USER);
-#endif
+	gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
+
+	GtkStyleContext *all_context=gtk_widget_get_style_context(window);
+	GdkScreen *screen=gtk_style_context_get_screen(all_context);
+	gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
+		GTK_STYLE_PROVIDER_PRIORITY_USER);
+#endif	
 #endif
 }
 void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gpointer user_data){
@@ -711,7 +691,7 @@ void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gp
 	//gtk_widget_hide(textscroll);
 }
 void create_window(
-#if GTK_MAJOR_VERSION>3
+#if GTK_MAJOR_VERSION>=4
 	GtkApplication* app,
 	gpointer        user_data
 #endif		  
@@ -827,7 +807,7 @@ void create_window(
 				//prog_mem[ihost]=monitor_new_progress(1,16);
 	#endif
 				box_append(GTK_BOX(hbox0), prog_cpu[ihost], FALSE, FALSE, 1);
-				modify_bg(prog_cpu[ihost], 1);
+				//modify_bg(prog_cpu[ihost], 2);
 				//modify_bg(prog_mem[ihost], 1);
 			}			
 			gtk_box_set_homogeneous(GTK_BOX(hbox0), 0);
@@ -897,7 +877,7 @@ void create_window(
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(window);
 #else	
-	gtk_widget_show(window);
+	gtk_window_present(GTK_WINDOW(window));
 #endif
 	//gtk_widget_hide(textscroll);
 }
@@ -968,7 +948,7 @@ int main(int argc, char* argv[]){
 		}
 		free(fnlog);
 	}
-#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
+#if	!GLIB_VERSION_AFTER(2, 32)
 	if(!g_thread_supported()){
 		g_thread_init(NULL);
 		gdk_threads_init();
@@ -1020,7 +1000,7 @@ int main(int argc, char* argv[]){
 #else
 	GtkApplication* app;
 	int status;
-	app=gtk_application_new("maos.monitor", G_APPLICATION_FLAGS_NONE);
+	app=gtk_application_new("maos.monitor", G_APPLICATION_DEFAULT_FLAGS);
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);

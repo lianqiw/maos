@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "drawdaemon.h"
 #include <math.h>
+#include "drawdaemon.h"
 /*
   Routines in this file are about drawing in the cairo surface.
 
@@ -35,7 +35,7 @@ float SP_XL;/*space reserved for ylabel */
 float SP_YT;/*space reserved for title */
 float SP_YB;/*space reserved for xlabel */
 float SP_XR;/*space reserved for legend */
-#define DRAW_NEW 1
+#define DRAW_NEW 1 //1: draw to a cache surface
 
 int default_color_table[]={0x0000FF,
 			   0xFF0000,
@@ -616,7 +616,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->centery=yoff+heightim*0.5;
 	const float zoomx=drawdata->zoomx;/*Zoom of the image when displayed. */
 	const float zoomy=drawdata->zoomy;
-	
+
 	cairo_select_font_face(cr, font_name, font_style, font_weight);
 	cairo_set_font_size(cr, font_size);
 	float linewidth=round(font_size*0.08);
@@ -638,7 +638,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	  cairo_font_options_set_antialias (fonto,CAIRO_ANTIALIAS_SUBPIXEL);
 	  cairo_set_font_options(cr, fonto);
 	  cairo_font_options_destroy(fonto);
-	  }*/
+	}*/
 	cairo_set_line_width(cr, linewidth);
 	/*Save the state of cairo before we drawing the image/points. */
 	cairo_save(cr);
@@ -1222,7 +1222,6 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	cairo_rectangle(cr, xoff, yoff, widthim, heightim);
 	cairo_stroke(cr);/*border */
 	g_object_unref(layout);
-	cairo_destroy(cr);
 	drawdata->icumulast=drawdata->icumu;
 	drawdata->cumulast=drawdata->cumu;
 	drawdata->cumuquadlast=drawdata->cumuquad;

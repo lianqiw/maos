@@ -164,16 +164,16 @@ directory.
 
 ## Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)
 
-For macOS, it is simplest to install gtk and gtk-mac-integration using homebrew
-(or macport). For manual install, follow the instructions on
-[page](https://www.gtk.org/docs/installations/) to install gtk+ for osx and
-configure the envirionmental parameters. Version 2 and 3 are supported. Make
-sure `pkg-config` is in the `PATH`.
+For macOS, it is the simplest to install gtk and gtk-mac-integration (only for
+gtk+-3) using homebrew (or macport). For manual install, follow the instructions
+on [page](https://www.gtk.org/docs/installations/) to install gtk+ for osx and
+configure the envirionmental parameters. Make sure `pkg-config` is in the
+`PATH`. Version 2, 3, and 4 are supported. Highest version is chosen unless explicitly disabled (see below).
 
 Now rerun `autogen.sh`, `configure` and `make`. Monitor and drawdaemon should appear in `bin` folder now. To select gtk version when multiple ones are available:
 ```
-$src_dir/configure --disable-gtk-3 #disables gtk-3
-$src_dir/configure --disable-gtk-2 #disable gtk-2 (gtk-3 is used by default)
+$src_dir/configure --disable-gtk-3 #disable gtk-3
+$src_dir/configure --disable-gtk-4 #disable gtk-4 
 ```
 
 # Graphical User Interface

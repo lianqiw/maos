@@ -192,9 +192,9 @@ AC_ARG_ENABLE(websockets, AS_HELP_STRING([--disable-websockets],[Disable websock
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR=])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
-AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
-AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="yes"])
-AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--enable-gtk-4],[Using GTK4]), [use_gtk_4="$enableval"], [use_gtk_4="no"])
+AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Specify non-standard GTK+2 directory (obsolete).]), [GTKDIR=${withval}], [GTKDIR=])
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--disable-gtk-3],[Disable GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3=])
+AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--disable-gtk-4],[Disable GTK4]), [use_gtk_4="$enableval"], [use_gtk_4=])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
@@ -771,7 +771,8 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
     #make sure there are spaces before and after >=
-	if test -n "$GTKDIR" ;then #User specified GTK directory
+	if test -n "$GTKDIR" -a test -d "$GTKDIR" ;then #User specified GTK directory
+		gtk_ver="2"
 		if test -d "$GTKDIR/pkgconfig" ;then
 			GTKDIR="$GTKDIR/../"
 		fi
@@ -784,10 +785,9 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 		if test -d "$GTKDIR/bin" ;then
 			GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
 		fi
-		gtk_ver="2"
-    else
-		AS_IF([test "$use_gtk_4" != "no" ], [PKG_CHECK_MODULES([GTK], gtk4,               [gtk_ver="4"], [gtk_ver="0"])])
-		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0,[gtk_ver="3"], [gtk_ver="0"])])
+    else 
+		AS_IF([test "$use_gtk_4" != "no"], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0, [gtk_ver="3"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
     fi
     AS_IF([test "$gtk_ver" != "0"], [

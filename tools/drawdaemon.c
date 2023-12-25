@@ -33,6 +33,17 @@ activate (GtkApplication *app,
 	GtkWidget *window = gtk_application_window_new (app);
 	create_window(window);
 }
+/*static int command_line(GApplication *app, GApplicationCommandLine *cmdline){
+	(void)app;
+	int argc;
+	gchar **argv;
+	argv=g_application_command_line_get_arguments(cmdline, &argc);
+	if(argc<2){
+		error("Usage: %s socket or hostname.\n", argv[0]);
+	}
+	thread_new(listen_draw, argv[1]);
+	return false;
+}*/
 #endif
 
 #if MAC_INTEGRATION
@@ -77,9 +88,7 @@ int main(int argc, char* argv[]){
 #endif
 
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
-	if(argc<2){
-		error("Usage: %s socket or hostname.\n", argv[0]);
-	}
+
 
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
@@ -87,17 +96,20 @@ int main(int argc, char* argv[]){
 	gtkosx_application_ready(theApp);
 	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), &sock);
 #endif
-	thread_new(listen_draw, argv[1]);
 	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
+	if(argc<2){
+		error("Usage: %s socket or hostname.\n", argv[0]);
+	}
+	thread_new(listen_draw, argv[1]);
 #if GTK_MAJOR_VERSION<4
 	create_window(NULL);
 	gtk_main();
 #else
-	GtkApplication *app;
-  	int status;
-  	app = gtk_application_new ("maos.drawdaemon", G_APPLICATION_FLAGS_NONE);
-  	g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-  	status = g_application_run (G_APPLICATION (app), argc, argv);
+	GtkApplication *app=gtk_application_new("maos.drawdaemon", G_APPLICATION_DEFAULT_FLAGS);
+	g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+	//g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL);
+  	int status = g_application_run (G_APPLICATION (app), 0, NULL);
+	info("status=%d\n", status);
   	g_object_unref (app);
 	return status;
 #endif

@@ -162,7 +162,8 @@ void drawdata_free_input(drawdata_t *drawdata){
 		}
 		FREE(drawdata->legend);
 	}
-
+	drawdata->page=NULL;
+	drawdata->subnb=NULL;
 	FREE(drawdata);
 }
 static drawdata_t *HEAD=NULL;
@@ -224,7 +225,7 @@ static void drawdata_clear_older(float timclear){
 		if(p->io_time<timclear){
 			p->delete=1;
 			info("Request deleting page %s %s\n", p->fig, p->name);
-			gdk_threads_add_idle(delete_page, p);
+			g_idle_add((GSourceFunc)delete_page, p);
 		}
 	}
 }
@@ -525,7 +526,7 @@ void *listen_draw(void *user_data){
 				io_time1=myclockd();
 				drawdata->io_time=io_time1;
 				drawdata_prev=drawdata;//for computing time
-				gdk_threads_add_idle(addpage, drawdata);
+				g_idle_add((GSourceFunc)addpage, drawdata);
 				drawdata=NULL;
 			}
 			break;

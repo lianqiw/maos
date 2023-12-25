@@ -86,7 +86,8 @@ struct drawdata_t{
 	char* ylabel;
 	char** legend;
 	
-	GtkWidget* page;
+	GtkWidget *subnb;
+	GtkWidget *page;
 	GtkWidget* drawarea;
 #if GTK_MAJOR_VERSION>=3 
 	cairo_surface_t* pixmap;
@@ -172,7 +173,7 @@ void update_zoom(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);
 gboolean addpage(gpointer user_data);
-int delete_page(gpointer user_data);
+int delete_page(drawdata_t *drawdata);
 /*from drawdaemon_io */
 void* listen_draw(void*);
 void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* zlim, int zlog);
