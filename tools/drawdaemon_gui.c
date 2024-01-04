@@ -695,7 +695,7 @@ static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble 
 	double y=drawdata->mydown;
 	
 	unsigned int time=gdk_event_get_time(event);
-	int zoom_dir=dy;
+	int zoom_dir=dy!=0?dy:dx;
 	//info("dx=%g, dy=%g, x=%g, y=%g\n", dx, dy, x, y);
 #else
 static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, drawdata_t** drawdatawrap){

@@ -16,10 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 #include <math.h>
 #include "drawdaemon.h"
 /*
