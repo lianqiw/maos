@@ -5,6 +5,7 @@ This module contains routines to embed opds defined on coordinates to 2-d array 
 #from aolib import *
 import matplotlib.pyplot as plt
 import numpy as np
+#from aotools import center 
 #import struct
 
 
@@ -176,8 +177,11 @@ def draw(*args, **kargs):
             plt.gca().images[-1].colorbar.remove()
         except:
             pass
-        if img.dtype.name.find('complex')>-1:
+        #if img.dtype.name.find('complex')>-1:
+        if np.iscomplexobj(img):
             img=np.real(img)
+        if 'center' in kargs:
+            img=center(img, kargs['center'])
         if 'ext' not in kargs and 'dx' in kargs:
             kargs['ext']=np.array([-img.shape[0]/2, img.shape[0]/2, -img.shape[1]/2, img.shape[1]/2])*kargs['dx']
         im=plt.imshow(img, extent=kargs.get('ext'), origin='lower', cmap='jet')

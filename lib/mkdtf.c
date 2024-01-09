@@ -210,8 +210,8 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 		dhp1=cosza/(px[1]-px[0]);
 		/*assume linear spacing. check the assumption valid */
 		real diff;
-		if((diff=fabs((px[nhp-1]-px[0])/((nhp-1)*(px[1]-px[0]))-1.))>1.e-5){
-			error("sodium profile is not evenly spaced: %g\n", diff);
+		if((diff=fabs((px[nhp-1]-px[0])/((nhp-1)*(px[1]-px[0]))-1.))>1.e-3){
+			error("The sodium profile is not evenly spaced. The variation is %g%%\n", diff*100);
 		}
 	}//else: Any spacing is ok.
 

@@ -21,7 +21,7 @@ fi
 if test -z "$LIBS" ;then
     LIBS=" "
 fi
-if test -z "$CC" && which $MAOS_CC;then 
+if test -n "$MAOS_CC" && which "$MAOS_CC" >/dev/null 2>&1;then 
     CC="$MAOS_CC"
 fi
 AC_CONFIG_MACRO_DIR([m4])
@@ -120,7 +120,7 @@ if test -n "$CC_VERSION" ;then
 		minor=${minor%%.*}
 	fi
 	CC_VERSION="$major${minor:0:1}"
-	echo CC_VERSION=$CC_VERSION
+	#echo CC_VERSION=$CC_VERSION
 fi
 
 case "$CN" in
@@ -144,7 +144,7 @@ esac
 if ! which which >/dev/null 2>&1;then
     die "Please install 'which'"
 fi
-if test -n "`which nvcc 2>/dev/null`" ;then
+if which nvcc >/dev/null 2>&1;then
     NVCC="$(which nvcc)"
     if test -L "$NVCC" ;then
 		NVCC="$(readlink "$NVCC")"
@@ -157,7 +157,7 @@ fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
 MEXDIR_AUTO=
-if test -n "`which matlab 2>/dev/null`" ;then
+if which matlab >/dev/null 2>&1;then
     MEX="$(which matlab)"
     if test -L "$MEX" ;then
 	MEX="$(readlink "$MEX")"
@@ -201,8 +201,8 @@ AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen bina
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downling precompiled library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]), [], [enable_openmp="$openmp_default"])
-echo enable_openmp="$enable_openmp"
-echo openmp_default="$openmp_default"
+#echo enable_openmp="$enable_openmp"
+#echo openmp_default="$openmp_default"
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
@@ -294,9 +294,9 @@ optname1=COMMON_ALL
 optname2=COMMON_${CN}
 optname3=${ccprefix}_ALL
 optname4=${ccprefix}_${CN}
-echo OPTS_CC from "${optname1} ${optname2} ${optname3} ${optname4}"
+#echo OPTS_CC from "${optname1} ${optname2} ${optname3} ${optname4}"
 OPTS_CC="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
-echo OPTS_CC=$OPTS_CC
+#echo OPTS_CC=$OPTS_CC
 unset optname1 optname2 optname3 optname4
 
 #Used for embedding conf folder in maos exe
@@ -309,7 +309,7 @@ AM_CONDITIONAL(BSD,    false)
 AM_CONDITIONAL(DARWIN, false)
 AM_CONDITIONAL(WIN,    false)
 mkl_avail="no"
-echo host_os=$host_os
+#echo host_os=$host_os
 case "$host_os" in
     *linux*)
 		AM_CONDITIONAL(LINUX, true)
@@ -402,14 +402,14 @@ extract(){
 }
 
 #Discover default download method
-if test -x "`which curl 2>/dev/null`" ;then
+if which curl >/dev/null 2>&1;then
     wget="curl --retry 1 -L -s "
     wgetoutput="--output"
-elif test -x "`which wget 2>/dev/null`" ;then
+elif which wget >/dev/null 2>&1;then
     wget="wget -t1 --no-check-certificate"
     wgetoutput="-O"
 else
-    wget="die wget/curl not found ; "
+    wget="die wget/curl not found;"
 fi
 
 download(){
@@ -771,7 +771,7 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
     #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
     #cairo 1.2 comes with gtk+-2.10
     #make sure there are spaces before and after >=
-	if test -n "$GTKDIR" -a test -d "$GTKDIR" ;then #User specified GTK directory
+	if test -n "$GTKDIR" -a -d "$GTKDIR" ;then #User specified GTK directory
 		gtk_ver="2"
 		if test -d "$GTKDIR/pkgconfig" ;then
 			GTKDIR="$GTKDIR/../"
@@ -883,7 +883,7 @@ if test "$with_matlab" != "no" ;then
 		mex_lib="no"
     else       
 		LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
-		AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+		AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX -shared])
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT+=" -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
@@ -1083,7 +1083,7 @@ AC_CONFIG_FILES( [Makefile
 LDOPTS+=" -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
-echo LIBS=$LIBS
+#echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
 AC_SUBST(CN)
@@ -1127,6 +1127,7 @@ fi
 if test "$with_matlab" != "no" ;then
     echo MEXDIR=$MEXDIR
     echo LIBMEX=$LIBMEX
+	echo LDMEX=$LDMEX
     echo MEXOPT=$MEXOPT
 fi
 echo

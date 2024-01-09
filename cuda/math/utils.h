@@ -213,11 +213,20 @@ static inline void cp2gpu(curmat& dest, const dmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-static inline void cp2gpu(cudmat &dest, const dmat *src, cudaStream_t stream=0){
+static inline void cp2gpu(cucmat &dest, const cmat *src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-static inline void cp2gpu(cucmat& dest, const cmat* src, cudaStream_t stream=0){
+static inline void cp2gpu(curmat &dest, const smat *src, cudaStream_t stream=0){
+	if(!src) return;
+	cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+static inline void cp2gpu(cucmat &dest, const zmat *src, cudaStream_t stream=0){
+	if(!src) return;
+	cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+#if CPU_SINGLE==0
+static inline void cp2gpu(cudmat &dest, const dmat *src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
@@ -225,16 +234,7 @@ static inline void cp2gpu(cuzmat &dest, const cmat *src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-//#endif
-static inline void cp2gpu(curmat& dest, const smat* src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
 static inline void cp2gpu(cudmat &dest, const smat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cucmat& dest, const zmat* src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
@@ -242,6 +242,7 @@ static inline void cp2gpu(cuzmat &dest, const zmat *src, cudaStream_t stream=0){
 	if(!src) return;
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
+#endif
 void cp2gpu(cumapcell& dest, const mapcell* source);
 void cp2gpu(cusp& dest, const dsp* src, int tocsr);
 void cp2gpu(cusp& dest, const dspcell* src, int tocsr);
@@ -266,15 +267,15 @@ void add2cpu(real* restrict* dest, real alpha, Real* src, real beta, long n, cud
 void add2cpu(dmat** out, real alpha, const curmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(cmat** out, real alpha, const cucmat& in, real beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream=0);
+void cp2cpu(cmat **out, const cucmat &in, cudaStream_t stream=0);
+void cp2cpu(smat **out, const curmat &in, cudaStream_t stream=0);
+void cp2cpu(zmat **out, const cucmat &in, cudaStream_t stream=0);
+#if CPU_SINGLE==0
 void cp2cpu(dmat **out, const cudmat &in, cudaStream_t stream=0);
-void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream=0);
 void cp2cpu(cmat **out, const cuzmat &in, cudaStream_t stream=0);
-
-void cp2cpu(smat** out, const curmat& in, cudaStream_t stream=0);
 void cp2cpu(smat **out, const cudmat &in, cudaStream_t stream=0);
-void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream=0);
 void cp2cpu(zmat **out, const cuzmat &in, cudaStream_t stream=0);
-
+#endif
 void cp2cpu(scell** out, const curcell& in, cudaStream_t stream=0);
 void cp2cpu(zcell** out, const cuccell& in, cudaStream_t stream=0);
 void cp2cpu(dcell** out, const curcell& in, cudaStream_t stream=0);

@@ -24,12 +24,12 @@
 /*
   Group operations related to BLAS/LAPACK to this file.
 */
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+//#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 //If an external declaration is marked weakandthat symbol does not exist during linking(possibly dynamic) the address of the symbol will evaluate to NULL.
-void (*dsvd_ext)(dmat **U_, dmat **S_, dmat **Vt_, const dmat *A_)=NULL;
-void (*dsvd_pow_ext)(dmat *A_, real power, real thres)=NULL;
-void (*dgemm_ext)(dmat **out, const real beta, const dmat *A, const dmat *B, const char trans[2], const real alpha)=NULL;
-#endif
+void (*X(svd_ext))(X(mat) **U_, XR(mat) **S_, X(mat) **Vt_, const X(mat) *A_)=NULL;
+void (*X(svd_pow_ext))(X(mat) *A_, real power, real thres)=NULL;
+void (*X(gemm_ext))(X(mat) **out, const real beta, const X(mat) *A, const X(mat) *B, const char trans[2], const real alpha)=NULL;
+//#endif
 /**
    compute matrix product using blas dgemm.;
    C=beta*C+ alpha *trans(A)*trans(B); if C exist.
@@ -311,14 +311,13 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		if(Sdiag) *Sdiag=0;
 		return;
 	}
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-	if(NX(A)>500&&dsvd_ext){
+//#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(NX(A)>500&&X(svd_ext)){
 		dbg_once("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
-		//void gpu_dsvd(dmat**U, dmat**S, dmat**Vt, dmat*A);
-		dsvd_ext(U, Sdiag, VT, A);
+		X(svd_ext)(U, Sdiag, VT, A);
 		return;
 	} 
-#endif
+//#endif
 	int fd=-1;
 	if(A->nx>2048&&!OMP_IN_PARALLEL){
 	//Prevent multiple processes class gesvd simultaneously.

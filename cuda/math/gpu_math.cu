@@ -33,8 +33,8 @@ void gpu_dsvd(dmat **U_, dmat **S_, dmat **Vt_, const dmat *A_){
   //NumArray<real, Gpu> U, S, Vt, A;//match cpu precision (double is slow)
   NumArray<Real, Gpu> U, S, Vt, A;//match GPU precision
   stream_t stream;
-	cp2gpu(A, A_, stream);
-	cusvd(U, S, Vt, A, stream); 
+  cp2gpu(A, A_, stream);
+  cusvd(U, S, Vt, A, stream); 
   cp2cpu(U_, U, stream);
   cp2cpu(S_, S, stream);
   //dmat *V_=NULL, *Vt2=NULL;

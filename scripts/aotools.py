@@ -331,9 +331,17 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
     return radialprofile
 
 def center(A, nx, ny=None):
+    if type(A) is list:
+        B=[]
+        for Ai in A:
+            B.append(center(Ai, nx, ny))
+        return B
     '''crop or embed A into nxn array from the center'''
+    nx=int(nx)
     if ny is None:
         ny=int(np.round(A.shape[1]*nx/A.shape[0]))
+    else:
+        ny=int(ny)
     if A.shape[0]>=nx and A.shape[1]>=ny:#extract
         indx=(A.shape[0]-nx+1)>>1
         indy=(A.shape[1]-ny+1)>>1
@@ -557,3 +565,5 @@ def gen_atm(nx, dx=1./64., r0=0.186, L0=30., powerlaw=-11./3., seed=0):
     spect[0,:]=0
     screen=np.real(np.fft.fft2(np.fft.fftshift(spect)))
     return screen
+def abs2(A):
+    return np.real(A*np.conj(A))

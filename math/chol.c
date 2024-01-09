@@ -179,10 +179,10 @@ spchol* chol_factorize(const dsp* A_in){
 		error("Cholmod factorize failed\n");
 	}
 #if CHOL_SIMPLE 
-	if(!out->c->final_asis && sizeof(real)!=sizeof(chol_real)){
+	if(!out->c->final_asis && sizeof(real)!=sizeof(chol_real) && 0){
 		/*Our solver is much slower than the cholmod simplicity solver, or the
 	 	* supernodal solver. Keep original data to use cholmod solver*/
-	 	dbg("Converting chol result to sparse\n");
+	 	info("Converting chol result to sparse\n");
 		chol_convert(out, 0);
 		out->Cu=dsptrans(out->Cl); dspfree(out->Cl);
 	}

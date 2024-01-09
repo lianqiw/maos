@@ -255,6 +255,7 @@ void scale_add<float2, float, Comp>(float2* p1, float alpha, const Comp* p2, flo
 		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
 	}
 }
+#if CPU_SINGLE==0
 template <>
 void scale_add<float2, float, comp>(float2 *p1, float alpha, const comp *p2, float beta, long n){
 	for(long i=0; i<n; i++){
@@ -262,6 +263,7 @@ void scale_add<float2, float, comp>(float2 *p1, float alpha, const comp *p2, flo
 		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
 	}
 }
+#endif
 /**
    Convert device (Real) array and add to host double.
    dest = alpha * dest + beta *src;
@@ -301,14 +303,18 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
     }
 
 add2cpu_mat(s, float, Real)
-add2cpu_mat(s, float, real)
 add2cpu_mat(z, float, Comp)
+#if CPU_SINGLE==0
+add2cpu_mat(s, float, real)
 add2cpu_mat(z, float, comp)
+#endif
 #if COMP_SINGLE==0
 add2cpu_mat(d, real, Real)
-add2cpu_mat(d, real, real)
 add2cpu_mat(c, real, Comp)
+#if CPU_SINGLE==0
+add2cpu_mat(d, real, real)
 add2cpu_mat(c, real, comp)
+#endif
 #endif
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
