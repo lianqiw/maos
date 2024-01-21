@@ -268,12 +268,12 @@ void moao_recon(sim_t* simu){
 					dbg("wfs %d: %d actuators clipped\n", iwfs, nclip);
 				}
 			}
-			if(parms->plot.run){
+			/*if(parms->plot.run){
 				drawopd("MOAO WFS RHS", recon->floc, P(rhsout,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs rhs %d", iwfs);
 				drawopd("MOAO WFS", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Wfs %d", iwfs);
-			}
+			}*/
 			if(parms->save.dm){
 				zfarr_push(simu->save->dm_wfs[iwfs], simu->wfsisim, P(dmmoao,0));
 			}
@@ -314,12 +314,12 @@ void moao_recon(sim_t* simu){
 					dbg("evl %d: %d actuators clipped\n", ievl, nclip);
 				}
 			}
-			if(parms->plot.run){
+			/*if(parms->plot.run){
 				drawopd("MOAO EVL RHS", recon->floc, P(rhsout,0), P(parms->plot.opdmax),
 					"MOAO for WFS", "x (m)", "y(m)", "Evl %d", ievl);
-				drawopd("MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->plot.opdmax),
+				drawopd("DM MOAO EVL", P(recon->moao[imoao].aloc,0), P(dmmoao,0), P(parms->plot.opdmax),
 					"MOAO for EVL", "x (m)", "y(m)", "Evl %d", ievl);
-			}
+			}*/
 			if(parms->save.dm){
 				zfarr_push(simu->save->dm_evl[ievl], simu->perfisim, P(dmmoao,0));
 			}

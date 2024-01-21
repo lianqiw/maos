@@ -76,7 +76,16 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	const dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx;
 	const dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy;
-	real sigratio=parms->powfs[ipowfs].sigrecon>0?(parms->powfs[ipowfs].sigrecon/parms->powfs[ipowfs].siglev):1;
+	real sigrecon=parms->powfs[ipowfs].sigrecon;
+	if(sigrecon<=0){
+		if(parms->powfs[ipowfs].siglev>1200){
+			info("powfs%d: sigrecon is limited to %g for too high siglev %g\n", ipowfs, sigrecon, parms->powfs[ipowfs].siglev);
+			sigrecon=1200;
+		}else{
+			sigrecon=parms->powfs[ipowfs].siglev;
+		}
+	}
+	real sigratio=sigrecon/parms->powfs[ipowfs].siglev;
 	const int mtchadp=parms->powfs[ipowfs].mtchadp;
 	int mtchcr=mtchadp?-1:parms->powfs[ipowfs].mtchcr;
 	mtch_cell(&intstat->mtche, &powfs[ipowfs].sanea, &intstat->i0sum, &intstat->i0sumsum,

@@ -296,16 +296,20 @@ void mtch_cell(
 				bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
 				pixrot, radgx, cr);
 			if(fabs(sigratio-1)>1e-5){
-				dscale(P(i0s, isa, ii0), sigratio);
-				if(gxs) dscale(P(gxs, isa, ii0), sigratio);
-				if(gys) dscale(P(gys, isa, ii0), sigratio);
-				mtch(NULL, &nea2, P(i0s, isa, ii0),
-					gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0,
-					qe, bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
-					pixrot, radgx, cr);
-				dscale(P(i0s, isa, ii0), sigratior);
-				if(gxs) dscale(P(gxs, isa, ii0), sigratior);
-				if(gys) dscale(P(gys, isa, ii0), sigratior);
+				if(1){//new simplified scaling
+					dcellscale(nea2, 1./sigratio);
+				}else{
+					dscale(P(i0s, isa, ii0), sigratio);
+					if(gxs) dscale(P(gxs, isa, ii0), sigratio);
+					if(gys) dscale(P(gys, isa, ii0), sigratio);
+					mtch(NULL, &nea2, P(i0s, isa, ii0),
+						gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0,
+						qe, bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
+						pixrot, radgx, cr);
+					dscale(P(i0s, isa, ii0), sigratior);
+					if(gxs) dscale(P(gxs, isa, ii0), sigratior);
+					if(gys) dscale(P(gys, isa, ii0), sigratior);
+				}
 			}
 
 			i0sumsum+=P(i0sum, isa, ii0);

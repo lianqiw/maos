@@ -129,16 +129,19 @@ See page31_example for more detailed explanations.
 
 \section sect-exe Sample Runs
 
-To run predefined AO modes
+To run predefined AO modes:
 
 ```
-maos -o mcao # default is dual conjugate AO, save results to folder mcao
+maos -o mcao # default is MCAO with 2 dms. Save results to folder mcao. 
 maos -c mcao_ngs.conf  # NGS MCAO
 maos -c scao_ngs.conf  # NGS SCAO
 maos -c scao_pwfs.conf # NGS SCAO using PWFS
 maos -c scao_lgs.conf  # LGS SCAO
 maos -c examples/keck_lgs.conf #KECK LGS AO
+maos -c mcao_lgs.conf dm_single.conf evl.moao=0 moao.dx=[1/2] #LGS LTAO with MOAO for each science field.
+maos -c mcao_lgs.conf dm_triple.conf #LGS MCAO with 3 DMs
 ```
+The default case starts with default.conf. It can be overriden by the environment variable MAOS_DEFAULT.
 
 To customize number of components
 

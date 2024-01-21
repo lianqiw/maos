@@ -121,15 +121,15 @@ void save_recon(sim_t* simu){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				int imoao=parms->powfs[ipowfs].moao;
 				if(imoao<0) continue;
-				drawopd("moao", P(recon->moao[imoao].aloc,0), P(simu->dm_wfs,iwfs), NULL,
-					"MOAO", "x(m)", "y(m)", "WFS %d", iwfs);
+				drawopd("DM", P(recon->moao[imoao].aloc,0), P(simu->dm_wfs,iwfs), NULL,
+					"MOAO DM Command", "x(m)", "y(m)", "WFS %d", iwfs);
 			}
 		}
 		if(simu->dm_evl){
 			int imoao=parms->evl.moao;
 			for(int ievl=0; ievl<parms->evl.nevl&&imoao>=0; ievl++){
-				drawopd("moao", P(recon->moao[imoao].aloc,0), P(simu->dm_evl,ievl), P(parms->plot.opdmax),
-					"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
+				drawopd("DM", P(recon->moao[imoao].aloc,0), P(simu->dm_evl,ievl), P(parms->plot.opdmax),
+					"MOAO DM Command", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
 		for(int idm=0; parms->recon.alg==0&&simu->dmrecon&&idm<parms->ndm; idm++){
@@ -308,7 +308,7 @@ void save_dmreal(sim_t* simu){
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(P(simu->dmreal,idm)){
 						drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->plot.opdmax),
-							"DM Command OPD", "x (m)", "y (m)", "Real %d", idm);
+							"DM Command", "x (m)", "y (m)", "Real %d", idm);
 					}
 				}
 				if(simu->ttmreal&&draw_current("DM", "Real TTM")){
@@ -319,7 +319,7 @@ void save_dmreal(sim_t* simu){
 					dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
 					loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
 					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
-						"TTM Command OPD", "x (m)", "y (m)", "Real TTM");
+						"TTM Command", "x (m)", "y (m)", "Real TTM");
 					dfree(tmp);
 				}
 
