@@ -154,8 +154,9 @@ Configuration Files</h1>
 <li><code>fov_*.conf</code>: set the science FoV.</li>
 <li><code>wfs_*.conf</code>: set the wfs group type</li>
 </ul>
-<p>For example, the baseline configuration for TMT MCAO system <code>mcao_lgs.conf</code> includes <code>atm_mk13n50p.conf</code> to specify MK13N median seeing turbulence profile, <code>dm_dual.conf</code> to specify dual DM system, <code>wfs_lgs_ttf_tt.conf</code> to specify WFS configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS, <code>fov_sq34.conf</code> to specify the science FoV as simpson weighting on 3x3 points in the square 34x34" FoV.</p>
-<p>See page31_example for more detailed explanations.</p>
+<p>For example, the baseline configuration for TMT MCAO system <code>mcao_lgs.conf</code> includes <code>atm_mk13n50p.conf</code> to specify MK13N median seeing turbulence profile, <code>dm_dual.conf</code> to specify dual DM system, <code>wfs_lgs_ttf_tt.conf</code> to specify WFS configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS, <code>evl_sq34.conf</code> to specify the science FoV as simpson weighting on 3x3 points in the square 34x34" FoV, and <code>fit_sq34.conf</code> to sepcify the DM fitting FoV as simpson weighting on 3x3 points in the square 34x34" FoV.</p>
+<p>For an MCAO configuration, the DM fitting FoV can be larger than the science FoV in order to sharpen diffraction limited TTF NGS. For an LTAO configuration, use <code>fit_oa.conf</code> to set only on axis DM fitting FoV. A GLAO system can be simulated by having a single DM but with a wide DM fitting FoV, as an alternative to setting <code>recon.glao=0</code> which averages WFS measurements before reconstruction.</p>
+<p>See <a class="el" href="page33_example.html">Examples</a> for more detailed explanations.</p>
 <h1><a class="anchor" id="sect-exe"></a>
 Sample Runs</h1>
 <p>To run predefined AO modes:</p>

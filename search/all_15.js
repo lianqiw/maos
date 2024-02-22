@@ -59,6 +59,7 @@ var searchData=
   ['wfsr',['wfsr',['../parms_8h.html#afafeda26ea873ac0a474a2a6372924aa',1,'powfs_cfg_t::wfsr()'],['../parms_8h.html#a2dcb15240dc2739558d1eb27501d2bdc',1,'parms_t::wfsr()']]],
   ['widthp',['widthp',['../parms_8h.html#adbac1e0733ae702a61152b16b2663c15',1,'llt_cfg_t']]],
   ['winddir',['winddir',['../maos_2types_8h.html#aa3f1529a55c25f73a1fccc55a291075d',1,'sim_t']]],
+  ['wrap2range',['wrap2range',['../maos_2utils_8h.html#a5b60d683c9be737576399efb2096b1f6',1,'utils.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
   ['writearr',['writearr',['../bin_8h.html#a5cd5173c875b0dd21e5800d8dd5d3e7d',1,'bin.c']]],
   ['writebin',['writebin',['../cell_8h.html#ab1d9a9bae6eafd580462028dc872484c',1,'cell.h']]],

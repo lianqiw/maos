@@ -19,5 +19,6 @@ var maos_2utils_8h =
     [ "shwfs_grad", "maos_2utils_8h.html#a6790b30ef72abe52665bcc6c6a850402", null ],
     [ "dcellread_prefix", "maos_2utils_8h.html#a1d432fa7ac8ba2180db106a021e32488", null ],
     [ "average_powfs", "maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8", null ],
-    [ "wfsgrad_llt_tt", "maos_2utils_8h.html#a06bf1e5a0ffb47990da4ee94056b0ddd", null ]
+    [ "wfsgrad_llt_tt", "maos_2utils_8h.html#a06bf1e5a0ffb47990da4ee94056b0ddd", null ],
+    [ "wrap2range", "maos_2utils_8h.html#a5b60d683c9be737576399efb2096b1f6", null ]
 ];

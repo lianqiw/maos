@@ -1,5 +1,6 @@
 var NAVTREEINDEX15 =
 {
+"smath_8h.html#a4ff79613b1def7b41cd01c7a630e864e":[11,0,3,9,144],
 "smath_8h.html#a4ff8484ceae7b9f079310dcd762faa93":[11,0,3,9,234],
 "smath_8h.html#a50161dfd4e2b3c5ff4e93f89eef86b2e":[11,0,3,9,165],
 "smath_8h.html#a50dbbcbf4a0457f70f98e81f58eaf6e5":[11,0,3,9,146],
@@ -248,6 +249,5 @@ var NAVTREEINDEX15 =
 "structdir__t.html":[10,0,56],
 "structdir__t.html#a2fe3a690fbc9a5884c02bb22e7555b5a":[10,0,56,4],
 "structdir__t.html#a326f2c7b1bdf45242df02ff0a26ab349":[10,0,56,5],
-"structdir__t.html#a3943fa7cc2499d4a8d7286156f105414":[10,0,56,3],
-"structdir__t.html#a50bda7ac279f6d195a64727f3eb1f871":[10,0,56,1]
+"structdir__t.html#a3943fa7cc2499d4a8d7286156f105414":[10,0,56,3]
 };

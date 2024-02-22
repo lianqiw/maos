@@ -10,6 +10,7 @@ var searchData=
   ['wfsints',['wfsints',['../sim_8h.html#a214893f05935e1a6b1e3b8776b1b15e3',1,'wfsints.c']]],
   ['wfslinearity',['wfslinearity',['../maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5',1,'utils.c']]],
   ['wfspupmask',['wfspupmask',['../powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f',1,'powfs.c']]],
+  ['wrap2range',['wrap2range',['../maos_2utils_8h.html#a5b60d683c9be737576399efb2096b1f6',1,'utils.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
   ['writearr',['writearr',['../bin_8h.html#a5cd5173c875b0dd21e5800d8dd5d3e7d',1,'bin.c']]],
   ['writebin_5fheader',['writebin_header',['../cell_8h.html#a03d329bb450f58ede64d7b39119ad45b',1,'cell.c']]],
