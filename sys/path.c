@@ -26,6 +26,7 @@
 #include "path.h"
 #include "misc.h"
 #include "thread.h"
+#include "scheduler_client.h"
 /**
    This file contains function managing the searching path for files, behaves
    like PATH in POSIX systems.*/
@@ -50,20 +51,27 @@ void addpath2(int priority, const char *format, ...){
 		warning("Path not found: path=%s; abspath=%s; Ignored.\n", fn, abspath);
 		return;
 	}
-	PATH_T* node=mycalloc(1, PATH_T);
-	node->path=abspath; abspath=NULL;
-	node->priority=priority;
 	LOCK(mutex_path);
 	PATH_T **curr;
 	for(curr=&PATH;*curr;){
 		PATH_T *old=*curr;
+		if(!strcmp(old->path, abspath)){//this only happens if old->priority>priority or equal but at the place of insertion.
+			dbg("Path already exists with enough priority: %s\n", abspath);
+			free(abspath);abspath=NULL;break;
+		}
 		if(old->priority<=priority){
 			break;
 		}
 		curr=&old->next;
 	}
-	node->next=*curr;
-	*curr=node;
+	if(abspath){
+		dbg("Path with priority %d is added: %s\n", priority, abspath);
+		PATH_T *node=mycalloc(1, PATH_T);
+		node->path=abspath; abspath=NULL;
+		node->priority=priority;
+		node->next=*curr;
+		*curr=node;
+	}
 	UNLOCK(mutex_path);
 }
 /**
@@ -135,7 +143,7 @@ char* search_file(const char* fn){
 				if(!fnout){
 					fnout=strdup(fntmp);
 				} else if(strcmp(fnout, fntmp)){
-					dbg("Found multiple %s at %s, %s. Will use the first one found.\n", fn, fnout, fntmp);
+					dbg("Found multiple %s. Will use %s and ignore %s.\n", fn, fnout, fntmp);
 				}
 			}
 		}

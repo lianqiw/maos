@@ -119,13 +119,20 @@ set of configurations. Each group should only appear once.
 - `wfs_*.conf`: set the wfs group type
 
 For example, the baseline configuration for TMT MCAO system `mcao_lgs.conf`
-includes `atm_mk13n50p.conf` to specify MK13N median seeing turbulence
-profile, `dm_dual.conf` to specify dual DM system, `wfs_lgs_ttf_tt.conf` to
-specify WFS configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS,
-`fov_sq34.conf` to specify the science FoV as simpson weighting on 3x3
-points in the square 34x34" FoV.
+includes `atm_mk13n50p.conf` to specify MK13N median seeing turbulence profile,
+`dm_dual.conf` to specify dual DM system, `wfs_lgs_ttf_tt.conf` to specify WFS
+configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS, `evl_sq34.conf` to
+specify the science FoV as simpson weighting on 3x3 points in the square 34x34"
+FoV, and `fit_sq34.conf` to sepcify the DM fitting FoV as simpson weighting on
+3x3 points in the square 34x34" FoV. 
 
-See page31_example for more detailed explanations.
+For an MCAO configuration, the DM fitting FoV can be larger than the science FoV
+in order to sharpen diffraction limited TTF NGS. For an LTAO configuration, use
+`fit_oa.conf` to set only on axis DM fitting FoV. A GLAO system can be simulated
+by having a single DM but with a wide DM fitting FoV, as an alternative to
+setting `recon.glao=0` which averages WFS measurements before reconstruction.
+
+See \ref page33_example for more detailed explanations.
 
 \section sect-exe Sample Runs
 

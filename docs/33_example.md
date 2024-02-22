@@ -28,7 +28,9 @@ define all the parameters.
     - \ref powfs_shttf
     - \ref powfs_shtt
 
-- \ref fov_sq34 (\ref fit_sq34 and \ref evl_sq34) to define the science fov for performance evaluation with IRIS.
+- \ref fov_sq34 which is composed of the following
+    - \ref fit_sq34 to define the DM fitting fov
+    - \ref evl_sq34 to define the science fov for performance evaluation.
 
 - \ref recon to define the parameters about turbulence reconstruction and DM fitting
 

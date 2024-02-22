@@ -242,7 +242,11 @@ def read_many(fdin):
         except:
             print('Fail to read',fd)
             pass
-    return simplify(np.array(res, dtype=object)),fds
+    try:
+        res=simplify(np.array(res, dtype=object))
+    except:
+        pass
+    return res,fds
 def read_many_dict(fdin):
     '''read many files together into a dictionary'''
     fds2=natsorted(glob.glob(fdin,recursive=1))
@@ -531,7 +535,7 @@ def meshgrid(nx,dx):
 
 def reflection(n1, n2, degree):
     '''incident from n1 to n2 (refractive index), incident angle in degree
-		compute s and p wave reflectivity
+        compute s and p wave reflectivity
     '''
     ti=degree*np.pi/180 #incident angle in radian
     tt=np.arcsin(np.sin(ti)*n1/n2) #refractive angle in radian

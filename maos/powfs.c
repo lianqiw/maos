@@ -233,16 +233,7 @@ sa_reduce(powfs_t* powfs, int ipowfs, real thresarea){
 		}
 	}
 }
-/**
- * wrap val to between low and high
- * */
-real wrap2range(real val, real low, real high){
-	if(low>=high) {
-		warning("Invalid usage: low=%g should be smaller than high %g\n", low ,high);
-		return val;
-	}
-	return remainder(val-low, high-low)+low;
-}
+
 /**
    setting up subaperture geometry.
 
@@ -302,7 +293,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 		/*Offset of the coordinate of the center most subaperture from the center. */
 		real offsetx=wrap2range(parms->powfs[ipowfs].misregx,-0.5,0.5)+((order&1)?-0.5:0);
 		real offsety=wrap2range(parms->powfs[ipowfs].misregy,-0.5,0.5)+((order&1)?-0.5:0);
-		dbg("offsetx=%g, offsety=%g, order=%d, orderpad=%d\n", offsetx, offsety, order, orderpad);
+		dbg("saloc: offsetx=%g, offsety=%g, order=%d, orderpad=%d\n", offsetx, offsety, order, orderpad);
 		/*r2max: Maximum distance^2 from the center to keep a subaperture */
 		real r2max=pow(order*0.5, 2);
 		real r2min=dsa<parms->aper.din?pow(parms->aper.din/dsa/2, 2):-1;

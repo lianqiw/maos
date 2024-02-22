@@ -36,7 +36,10 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 			GP->nx, GP->ny, saloc->nloc*2, ploc->nloc);
 	}
 	real pos=saloc->dx/ploc->dx;
-	if((fabs(pos-1)<1e-12||fabs(pos-2)<1e-12)){//This case is accelerated.
+	if((fabs(pos-1)<1e-12||fabs(pos-2)<1e-12) 
+		&& fabs(fmod(ploc->locx[0]-saloc->locx[0],ploc->dx))<EPS
+		&& fabs(fmod(ploc->locy[0]-saloc->locy[0],ploc->dy))<EPS){//These well aligned cases are accelerated with matrix-free approach.
+		dbg("GP uses matrix-free approach.\n");
 		dsp* GPt=dsptrans(GP);
 		const spint* pp=GPt->pp;
 		const spint* pi=GPt->pi;
@@ -66,7 +69,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 				   confined within the subaperture.
 				*/
 				if((zx<0||zx>zmax||zy<0||zy>zmax)&&fabs(px[ir])>1e-7){
-					warning("isa=%d, G(%d, %d)=%g\n", isa, zx, zy, px[ir]);
+					warning("isa=%d, G(%d, %d)=%g is not zero. ploc is at (%g,%g), saloc is at (%g, %g)\n", isa, zx, zy, px[ir], lx, ly, sx, sy);
 				}
 				if(zx<0) zx=0;
 				if(zx>zmax) zx=zmax;
@@ -85,6 +88,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		*GPscale=1./pxscale;
 		free(partxy);
 	} else{/*use sparse */
+		dbg("GP uses sparse matrix.\n");
 		GPf=cusp(GP, 1);
 	}
 }

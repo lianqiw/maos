@@ -1166,3 +1166,15 @@ real average_powfs(dmat *A, lmat *wfsindex, int replace){
 	}
 	return avg;
 }
+
+/**
+ * wrap val to between low and high
+ * */
+real wrap2range(real val, real low, real high){
+	if(low>high){//swap the values
+		real low2=high;
+		high=low;
+		low=low2;
+	}
+	return remainder(val-low, high-low)+low;
+}

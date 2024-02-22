@@ -334,7 +334,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 			real ht=parms->dm[idm].ht;
 			real dx=parms->dm[idm].dx;
 			real dy=parms->dm[idm].dy;
-			real offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+			real offset=wrap2range(parms->dm[idm].offset,-0.5,0.5)+((int)round(parms->dm[idm].order)%2)*0.5;
 			real guard=parms->dm[idm].guard*MAX(dx, dy);
 			map_t* map;
 			if(parms->dbg.dmfullfov&&!parms->fit.square){//DM covers full fov
@@ -356,7 +356,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 	recon->amap=mapcellnew(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
 		real ht=parms->dm[idm].ht;
-		real offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+		real offset=wrap2range(parms->dm[idm].offset,-0.5,0.5)+((int)round(parms->dm[idm].order)%2)*0.5;
 		real dx=parms->dm[idm].dx;
 		P(recon->aloc, idm)->iac=parms->dm[idm].iac;
 		loc_create_map_npad(P(recon->aloc, idm), parms->fit.square?0:1, 0, 0);

@@ -304,57 +304,57 @@ void save_dmreal(sim_t* simu){
 					"Int Lo %d",idm);
 			}
 			}*/
-			if(simu->dmreal){
-				for(int idm=0; idm<parms->ndm; idm++){
-					if(P(simu->dmreal,idm)){
-						drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->plot.opdmax),
-							"DM Command", "x (m)", "y (m)", "Real %d", idm);
-					}
-				}
-				if(simu->ttmreal&&draw_current("DM", "Real TTM")){
-					int idm=0;
-					real ptt[3]={0,0,0};
-					ptt[1]=P(simu->ttmreal,0);
-					ptt[2]=P(simu->ttmreal,1);
-					dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
-					loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
-					drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
-						"TTM Command", "x (m)", "y (m)", "Real TTM");
-					dfree(tmp);
-				}
-
-				if(simu->cachedm){//use cachedm
-					for(int idm=0; idm<parms->ndm; idm++){
-						drawmap("DM", P(simu->cachedm,idm), NULL,
-							"DM OPD", "x (m)", "y (m)", "Real OPD %d", idm);
-					}
-				}
-				if(draw_current("DM", "Real OPD OA")){
-					dmat* opd=dnew(simu->aper->locs->nloc, 1);
-					for(int idm=0; idm<parms->ndm; idm++){
-						int ind=parms->evl.nevl*idm;
-						simu->evl_propdata_dm[ind].phiout=opd;
-						CALL_THREAD(simu->evl_prop_dm[ind], 0);
-					}
-					dscale(opd, -1);
-					if(simu->ttmreal){
-						real ptt[]={0,0,0};
-						ptt[1]=P(simu->ttmreal,0);
-						ptt[2]=P(simu->ttmreal,1);
-						loc_add_ptt(opd, ptt, simu->aper->locs);
-					}
-
-					drawopd("DM", simu->aper->locs, opd, P(parms->plot.opdmax),
-						"DM OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
-					dfree(opd);
+		}
+		if(simu->dmreal){
+			for(int idm=0; idm<parms->ndm; idm++){
+				if(P(simu->dmreal,idm)){
+					drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), P(parms->plot.opdmax),
+						"DM Command", "x (m)", "y (m)", "Real %d", idm);
 				}
 			}
+			if(simu->ttmreal&&draw_current("DM", "Real TTM")){
+				int idm=0;
+				real ptt[3]={0,0,0};
+				ptt[1]=P(simu->ttmreal,0);
+				ptt[2]=P(simu->ttmreal,1);
+				dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
+				loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
+				drawopd("DM", P(recon->aloc,idm), tmp, P(parms->plot.opdmax),
+					"TTM Command", "x (m)", "y (m)", "Real TTM");
+				dfree(tmp);
+			}
 
-			for(int idm=0; idm<parms->ndm; idm++){
-				if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
-					drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), P(parms->plot.opdmax),
-						"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
+			if(simu->cachedm){//use cachedm
+				for(int idm=0; idm<parms->ndm; idm++){
+					drawmap("DM", P(simu->cachedm,idm), NULL,
+						"DM OPD", "x (m)", "y (m)", "Real OPD %d", idm);
 				}
+			}
+			if(draw_current("DM", "Real OPD OA")){
+				dmat* opd=dnew(simu->aper->locs->nloc, 1);
+				for(int idm=0; idm<parms->ndm; idm++){
+					int ind=parms->evl.nevl*idm;
+					simu->evl_propdata_dm[ind].phiout=opd;
+					CALL_THREAD(simu->evl_prop_dm[ind], 0);
+				}
+				dscale(opd, -1);
+				if(simu->ttmreal){
+					real ptt[]={0,0,0};
+					ptt[1]=P(simu->ttmreal,0);
+					ptt[2]=P(simu->ttmreal,1);
+					loc_add_ptt(opd, ptt, simu->aper->locs);
+				}
+
+				drawopd("DM", simu->aper->locs, opd, P(parms->plot.opdmax),
+					"DM OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
+				dfree(opd);
+			}
+		}
+
+		for(int idm=0; idm<parms->ndm; idm++){
+			if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
+				drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), P(parms->plot.opdmax),
+					"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 			}
 		}
 	}

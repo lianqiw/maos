@@ -332,8 +332,8 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	ngsmod->ahstfocus=parms->tomo.ahst_focus;
 	const int ndm=parms->ndm;
 	ngsmod->aper_fcp=aper->fcp;
-	if(ndm>1&&fabs(parms->dm[0].ht)>1.e-10){
-		error("Error configuration. First DM is not on ground\n");
+	if(ndm>1&&fabs(parms->dm[0].ht)>1000){
+		error("Unsupported configuration. First DM is not on ground\n");
 	}
 	real hs=NAN;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

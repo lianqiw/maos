@@ -1926,10 +1926,15 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 			/*Convert pixtheta to radian and do senity check*/
 			if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
+				dbg("powfs%d: assume pixtheta=%g is in -lambda_max/D\n", ipowfs, powfsi->pixtheta);
 				powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 			} else if(powfsi->pixtheta<1e-4){
-				//info("powfs%d: assume pixtheta=%g is in radian\n",ipowfs, powfsi->pixtheta);
+				dbg("powfs%d: assume pixtheta=%g is in radian\n",ipowfs, powfsi->pixtheta);
+			} else if(powfsi->pixtheta>10){
+				dbg("powfs%d: assume pixtheta=%g is in mas\n", ipowfs, powfsi->pixtheta);
+				powfsi->pixtheta*=AS2RAD/1000;/*convert form mas to radian. */
 			} else{//input is arcsecond.
+				dbg("powfs%d: assume pixtheta=%g is in arcsecond\n", ipowfs, powfsi->pixtheta);
 				powfsi->pixtheta*=AS2RAD;/*convert form arcsec to radian. */
 			}
 			if(!powfsi->radpixtheta){
@@ -2221,27 +2226,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 
 	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output. 
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
-
-	parms->sim.lpttm=fc2lp(parms->sim.fcttm,parms->sim.dt);//active at every time step. use dt
-	
-	if(parms->nphypowfs>0){
-		if(P(parms->sim.ephi, 0)<0){
-			P(parms->sim.ephi, 0)=0;
-		}else if(!P(parms->sim.ephi,0)){
-			real g=servo_optim_margin(parms->sim.dt,parms->sim.dtrat_hi,parms->sim.alhi,
-				M_PI/4,parms->sim.f0dm,parms->sim.zetadm);
-			P(parms->sim.ephi,0)=g;
-			info("sim.ephi is set to %g (auto)\n",g);
-		}
-		if(P(parms->sim.eplo, 0)<0){
-			P(parms->sim.eplo, 0)=0;
-		}else if(!P(parms->sim.eplo,0)){
-			real g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo,
-				M_PI/4, parms->sim.f0dm, parms->sim.zetadm);//dm is used for tweeter t/t control.
-			P(parms->sim.eplo,0)=g;
-			info("sim.eplo is set to %g (auto)\n",g);
-		}
-	}
 }
 
 /**
@@ -2674,6 +2658,33 @@ static void setup_parms_postproc_dm(parms_t *parms){
    altitude is allowed.
 */
 static void setup_parms_postproc_recon(parms_t *parms){
+	{
+		//moved from postproc_wfs to ensure initialization
+		parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dt);//active at every time step. use dt
+
+		if(P(parms->sim.ephi, 0)<0){
+			P(parms->sim.ephi, 0)=0;
+		} else if(!P(parms->sim.ephi, 0)){
+			real g=0.5;
+			if(parms->npowfs>0){
+				g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi,
+					M_PI/4, parms->sim.f0dm, parms->sim.zetadm);
+			}
+			P(parms->sim.ephi, 0)=g;
+			info("sim.ephi is set to %g (auto)\n", g);
+		}
+		if(P(parms->sim.eplo, 0)<0){
+			P(parms->sim.eplo, 0)=0;
+		} else if(!P(parms->sim.eplo, 0)){
+			real g=0.5;
+			if(parms->npowfs>0){
+				servo_optim_margin(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo,
+				M_PI/4, parms->sim.f0dm, parms->sim.zetadm);//dm is used for tweeter t/t control.
+			}
+			P(parms->sim.eplo, 0)=g;
+			info("sim.eplo is set to %g (auto)\n", g);
+		}
+	}
 	if(parms->nmoao>0){//remove unused moao configurations
 		int count=0;
 		for(int imoao=0; imoao<parms->nmoao; imoao++){
@@ -3345,7 +3356,7 @@ static void print_parms(const parms_t *parms){
 		default:
 			error("Invalid\n");
 		}
-		info2("%sThere are %d fit directions%s\n",GREEN,parms->fit.nfit,BLACK);
+		info2("%sThere are %d DM fitting directions%s\n",GREEN,parms->fit.nfit,BLACK);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*RAD2AS,
@@ -3353,6 +3364,9 @@ static void print_parms(const parms_t *parms){
 			if(fabs(P(parms->fit.thetax,i))>1||fabs(P(parms->fit.thetay,i))>1){
 				warning("fit %d thetax or thetay appears too large\n", i);
 			}
+		}
+		if(parms->fit.nfit==1 && parms->ndm>1 && parms->evl.nevl>1){
+			warning("There are multiple DMs and science evaluation directions but only one DM fitting direction.\n");
 		}
 	} else if(parms->recon.alg==RECON_LSR){
 		info2("%sLeast square reconstructor%s is using ",GREEN,BLACK);

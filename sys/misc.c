@@ -247,14 +247,31 @@ char *myabspath(const char *path){
 	if(path[0]=='~' && path[1]=='/'){
 		snprintf(path2, PATH_MAX, "%s/%s", HOME, path+2);
 	}else{
-		if(path[0]=='.' && path[1]=='/'){
-			path+=2;
+		if(path[0]=='.'){
+			if(path[1]=='/'){
+				path+=2;
+			}else if(path[1]=='\0'){
+				path+=1;
+			}
 		}
 		if(getcwd(path2, PATH_MAX)){
-			strncat(path2, "/", PATH_MAX-strlen(path2)-1);
-			strncat(path2, path, PATH_MAX-strlen(path2)-1);
+			while(!mystrcmp(path, "../")){
+				char *tmp=strrchr(path2, '/');
+				if(tmp){
+					tmp[0]='\0';
+					path+=3;
+					while(path[0]=='/') path++;
+				}else{
+					error("Relative path `%s` has too many parent levels from `%s`\n", path, path2);
+					break;
+				}
+			}
+			if(path[0]!='\0'){
+				strncat(path2, "/", PATH_MAX-strlen(path2)-1);
+				strncat(path2, path, PATH_MAX-strlen(path2)-1);
+			}
 		}else{
-			dbg("Error getting current directory\n");
+			warning("Error getting current directory\n");
 			snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
 		}
 		if(!exist(path2)){

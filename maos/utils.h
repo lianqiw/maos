@@ -66,4 +66,5 @@ static inline real fc2lp(real fc, real dt){
 }
 real average_powfs(dmat* A, lmat* wfsindex, int replace);
 void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
+real wrap2range(real val, real low, real high);
 #endif

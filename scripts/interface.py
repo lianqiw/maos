@@ -40,19 +40,25 @@ except:
     raise Exception('Load aolib.so failed from '+aolib_so)
 from readbin import headers
 
-def simplify(arr, do_stack=1):
+def simplify(arr, do_stack=1, do_squeeze=0):
     #'''simplify object array by removing singleton dimensions and stack into numeric array'''
     '''convert object array a[i,j][k,n]... to simple ndarray a[i,j,k,n,...]
         shape and singleton dimensions are preserved.
     '''
-    if arr.dtype.name=='object':
-        #arr=np.squeeze(arr)
-        #if arr.size==1:
-        #    return arr.item(0) #this works for 0d array
+    if type(arr) is list:
+        if len(arr)==1:
+            arr=arr[0]
+        else:
+            arr=np.array(arr)
+    if type(arr) is np.ndarray and do_squeeze:
+        arr=np.squeeze(arr)
+        if arr.size==1:
+            return arr.item(0) #this works for 0d array
+    if type(arr) is np.ndarray and arr.dtype.name=='object':
         flags=np.zeros(arr.shape,dtype=bool)
         can_stack=0
         for ind,iarr in np.ndenumerate(arr):
-            arr[ind]=simplify(iarr)
+            arr[ind]=simplify(iarr,do_stack,do_squeeze)
             if arr[ind].size>0:
                 flags[ind]=True
                 if arr[ind].dtype.name!='object':
@@ -62,6 +68,8 @@ def simplify(arr, do_stack=1):
             try:
                 arr=np.stack(arr[flags])
                 arr.shape=shape
+                if do_squeeze:
+                    arr=np.queeze(arr)
             except Exception as err:
                 #print('stack failed', err)
                 pass
@@ -306,7 +314,7 @@ class loc(Structure):
                 dlocy=arr[1,1:]-arr[1,0:-1]
                 self.dy=min(dlocy[dlocy>0])
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
-		#default initialization to zero
+        #default initialization to zero
     def as_array(self): #convert form C to numpy. Memory is copied
         if(self.locx):
             if self.id!=222210:

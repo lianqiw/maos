@@ -1479,6 +1479,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	dcellfree(recon->RFngsg);
 	dcellfree(recon->RFdm);
 	dcellfree(recon->GRall);
+	dcellfree(recon->GRtwfs);
 	dcellfree(recon->RRtwfs);
 	dspcellfree(recon->ZZT);
 	dspcellfree(recon->HXW);
