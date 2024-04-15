@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -26,8 +26,8 @@
 //PRINT_MACRO(USE_CUDA)
 /**
  * \file maos.c
- * 
- * Defines main() and a few utilities. * 
+ *
+ * Defines main() and a few utilities. *
 */
 /**
     Return maos data pointer by name. Currently the numbers are filled manually. The
@@ -81,7 +81,7 @@ static void* find_var(const char* name){
 	VAR_GET(simu,zoompos),
 	VAR_GET(simu,evlopd),
 	VAR_GET(simu,resdither),
-	
+
 	{NULL, NULL}//mark the end
 	};
 
@@ -95,7 +95,7 @@ static void* find_var(const char* name){
 	VAR_GET(aper,mcc),
 	VAR_GET(aper,imcc),
 	VAR_GET(aper,opdadd),
-	VAR_GET(aper,opdfloc),
+	VAR_GET(aper,opdbias),
 	{NULL, NULL}
 	};
 
@@ -339,7 +339,7 @@ void maos_version(void){
 #else
 #define OPT_STR "+O0"
 #endif
-#if CPU_SINGLE 
+#if CPU_SINGLE
 #define CPU_FP "F32"
 #else
 #define CPU_FP "F64"
@@ -426,7 +426,7 @@ int main(int argc, const char* argv[]){
 	maos_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
 	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
-	
+
 	if(parms->sim.nseed>0){
 		register_signal_handler(maos_signal_handler);
 		scheduler_start(NTHREAD, ngpu, !arg->force);

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -1062,7 +1062,7 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].sodium, "powfs%d_sodium", ipowfs);
 	}
-	
+
 	//profile used for i0 and matched filter (if set)
 	fnprof=parms->powfs[ipowfs].llt->fnprep;
 	if(fnprof){
@@ -1137,9 +1137,9 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 	}
 	if(petf){
 		dbg("mketf: powfs %d using column %d with dh=%g\n", ipowfs, icol, deltah);
-		*petf=mketf(powfs[ipowfs].dtf, sodium, icol, 
+		*petf=mketf(powfs[ipowfs].dtf, sodium, icol,
 					powfs[ipowfs].srot, powfs[ipowfs].srsa,
-					parms->powfs[ipowfs].hs+deltah, 
+					parms->powfs[ipowfs].hs+deltah,
 					parms->sim.htel, parms->sim.za,	!parms->powfs[ipowfs].llt->na_interp);
 	}
 }
@@ -1304,7 +1304,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
    Setup CoG NEA for reconstruction.
 */
 static void
-setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
+setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	TIC;tic;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
@@ -1319,6 +1319,9 @@ setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	rand_t rstat; seed_rand(&rstat, 1);
+	if(parms->powfs[ipowfs].type!=WFS_SH){
+		error("Only SHWFS is supported\n");
+	}
 	if(!intstat||!intstat->i0){
 		if(!parms->powfs[ipowfs].phyusenea){
 			error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
@@ -1370,7 +1373,7 @@ setup_powfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		}
 	}//for jwfs
 
-	toc2("setup_powfs_cog_nea");
+	toc2("setup_shwfs_cog_nea");
 }
 
 
@@ -1478,7 +1481,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
 				/*Generating short exposure psfs for both uplink and downlink
 				turbulence effect. */
-				
+
 				gensepsf(&intstat->sepsf, otf, lotf, powfs[ipowfs].realsaa,
 					parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
 				if(print_psf==2){
@@ -1507,7 +1510,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				cellfree(otf);
 			}
 			/*generate short exposure i0,gx,gy from psf. */
-			{	
+			{
 				if(parms->powfs[ipowfs].llt){
 					setup_shwfs_etf(powfs, parms, ipowfs, 0, parms->powfs[ipowfs].llt->colprep, 0, 0);
 				}
@@ -1531,7 +1534,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				int SODIUM_FIT=0;
 				READ_ENV_INT(SODIUM_FIT, 0, 1);
 				if(SODIUM_FIT){
-					sodium_fit_wrap(NULL, NULL, &intstat->i0, &intstat->gx, &intstat->gy, intstat->i0, parms, powfs, ipowfs, 
+					sodium_fit_wrap(NULL, NULL, &intstat->i0, &intstat->gx, &intstat->gy, intstat->i0, parms, powfs, ipowfs,
 					parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 1, 0);
 				}
 			}
@@ -1546,7 +1549,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		}
 	}
 	if(parms->powfs[ipowfs].phytype_recon==PTYPE_COG&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
-		setup_powfs_cog_nea(parms, powfs, ipowfs);
+		setup_shwfs_cog_nea(parms, powfs, ipowfs);
 	}
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
@@ -1559,8 +1562,9 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 */
 void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	//if opdadd is null, but dm_ncpa is not, there will still be opdbias.
-		if(powfs[ipowfs].opdbias){
+		//opdbias contains real NCPA effects. No CPA is included.
+		dcell *opdbias=powfs[ipowfs].opdbias;
+		if(opdbias){
 			//Always compute gradncpa. May not use it in CMF non updated case.
 			if(!powfs[ipowfs].gradncpa){
 				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
@@ -1570,23 +1574,23 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				if(P(powfs[ipowfs].opdbias, jwfs)){
+				if(P(opdbias, jwfs)){
 					real* realamp=P(P(powfs[ipowfs].realamp, jwfs));
 					if(parms->powfs[ipowfs].type==WFS_PY){//pywfs
 						dmat* ints=0;
-						pywfs_ints(&ints, powfs[ipowfs].pywfs, P(powfs[ipowfs].opdbias, jwfs), parms->wfs[iwfs].siglev);
-						//writebin(P(powfs[ipowfs].opdbias,jwfs), "opdbias\n");exit(0);
+						pywfs_ints(&ints, powfs[ipowfs].pywfs, P(opdbias, jwfs), parms->wfs[iwfs].siglev);
+						//writebin(P(opdbias,jwfs), "opdbias\n");exit(0);
 						pywfs_grad(&P(powfs[ipowfs].gradncpa, jwfs), powfs[ipowfs].pywfs, ints);
 						dfree(ints);
 					} else if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){//Ztilt
 						pts_ztilt(&P(powfs[ipowfs].gradncpa, jwfs), powfs[ipowfs].pts,
 							PR(powfs[ipowfs].saimcc, jwfs, 0),
-							realamp, P(P(powfs[ipowfs].opdbias, jwfs)));
+							realamp, P(P(opdbias, jwfs)));
 					} else{//Gtilt
-						if(parms->powfs[ipowfs].ncpa_method==NCPA_G 
+						if(parms->powfs[ipowfs].ncpa_method==NCPA_G
 							|| (parms->powfs[ipowfs].ncpa_method==NCPA_I0&&parms->powfs[ipowfs].dither)){//GS0*opd
 							dspmm(&P(powfs[ipowfs].gradncpa, jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
-								P(powfs[ipowfs].opdbias, jwfs), "nn", 1);
+								P(opdbias, jwfs), "nn", 1);
 							//MF drift control moved to wfsgrad.c
 							//need gradncpa for sodium profile fit.
 						}

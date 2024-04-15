@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -42,8 +42,8 @@ typedef struct aper_t{
     real sumamp2;      /**<sum of amplitude squared*/
     locfft_t *embed;     /**<For computing FFT*/
     real fcp;          /**<piston correction in focus term.*/
-    dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
-    dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
+    dcell *opdadd;       /**<All OPD surface for each evaluation direction, used for ray tracing*/
+    dcell *opdbias;      /**<NCPA OPD surface for each NCPA direction, used for dm_ncpa calibration.*/
 }aper_t;
 
 /**
@@ -88,7 +88,8 @@ typedef struct powfs_t{
     dcell *saa_tel;        /**<mis-registered saa, if any*/
     real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
-    dcell *opdbias;     /**<OPD NCPA for NCPA calibration*/
+    dcell *opdadd;      /**<opdadd includes both common and NCPA OPDS. It is used for ray tracing*/
+    dcell *opdbias;     /**<opdbias is used to compute gradient offset. It includes contributions only from NCPA OPD.*/
     dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
     /*Physical optics */
     dtf_t *dtf;         /**<array of dtf for each wvl*/
@@ -130,8 +131,7 @@ typedef struct powfs_t{
     dcell*realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
     dmat *sumamp;       /**<sum of realamp*/
     dmat *sumamp2;      /**<sum of realamp.^2*/
-    
-    dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
+
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     struct pywfs_t *pywfs;/**<For pyramid WFS*/
     struct fit_t *fit;  /**<Fit turbulence to lenslet grid. For aliasing computation.*/
@@ -240,7 +240,7 @@ typedef struct fit_t{
     dmat *wt;          /**<DM fitting weights*/
     dmat *hs;          /**<DM fitting GS height*/
     lcell *actstuck;
-    lcell *actfloat;    
+    lcell *actfloat;
     //Flags
     char **misreg;
     fit_cfg_t flag;
@@ -253,10 +253,10 @@ typedef struct fit_t{
     dspcell* actextrap; /**<actuator interpolation*/
     dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     dcell *NW;         /**<null modes for DM fit.*/
-    
+
     muv_t FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
     muv_t FL;          /**<DM fit left hand size matrix*/
-    
+
 }fit_t;
 
 /**
@@ -342,7 +342,7 @@ typedef struct recon_t{
     real neamhi;     /**<average of neam for high order wfs.*/
     real sigmanlo;   /**<Wavefront error (m^2) due to noise for lo order.*/
     real sigmanhi;   /**<Wavefront error (m^2) due to noise for high order. Needs to multiply with simu->gradscale^2.*/
-    
+
     muv_t RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
     muv_t RL;          /**<tomography left hand side matrix*/
     muv_t LR;          /**<least square reconstructor rhs*/
@@ -358,7 +358,7 @@ typedef struct recon_t{
     dcell *RFngsg;     /**<focus reconstruction for all TTF NGS from grad.*/
     /*For focus offloading*/
     dcell *RFdm;       /**<Focus from DM commands. For telescope offloading*/
-    
+
     dcell *GRall;      /**<Truth zernike modes to gradient. Was only radial modes but now all modes (depends on recon.twfs_radonly*/
     dcell* GRtwfs;     /**<Truth zernike modes to gradient for twfs*/
     dcell* RRtwfs;     /**<Truth zernike modes reconstruction from twfs grads*/
@@ -384,7 +384,7 @@ typedef struct recon_t{
 
     //For Error PSD computation
     cell *Herr;      /**<Ray tracing from DM along science directions for a few points. dcell for modal control. sparse for zonal control*/
-    
+
 }recon_t;
 
 typedef struct sim_save_t{
@@ -516,7 +516,7 @@ typedef struct sim_t{
     mapcell *cachedm;   /**<grid cache dm actuator to a finer sampled screen. for
 			   fast ray tracing to WFS and aper*/
     dmat *winddir;     /**<input wind direction*/
-    
+
     /*Optional surface errors in M1, M2, or M3*/
     rmapcell *tsurf; /**<input tilted M3 surface read from parms->tsurf*/
     mapcell *surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
@@ -566,9 +566,9 @@ typedef struct sim_t{
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     dmat *timing;      /**<Timing and memory using for each step*/
-    
+
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
-    
+
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmtmp;      /**<Holds a temporary dm vector. Maybe in zonal or modal space.*/
@@ -596,12 +596,12 @@ typedef struct sim_t{
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
-    servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/  
+    servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
     dcell *fsmerr_drift;/**<Drift control of uplink*/
-    
+
     servo_t **fsmint;    /**<uplink integrator output.*/
     sho_t **fsmsho;      /**<FSM sho response*/
     dcell *fsmcmd;      /**<FSM command*/
@@ -651,7 +651,7 @@ typedef struct sim_t{
     dcell* clmp;       /**<CL mode coefficient per direction.*/
     dcell* olep;       /**<OL error per direction.*/
     dcell* clep;       /**<CL error per direction.*/
-    
+
     dmat* ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
 
@@ -727,7 +727,7 @@ typedef struct sim_t{
     pthread_cond_t wfsgrad_condr;
     pthread_cond_t wfsgrad_condw;
     pthread_mutex_t wfsgrad_mutex;
-    
+
 }sim_t;
 #define CHECK_SAVE(start,end,now,every) ((now)>=(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 
