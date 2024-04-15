@@ -223,9 +223,9 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 					default:
 						error("Invalid pywfs.nside=%d\n", pyside);
 					}
+					P(pp, ix, iy)=cexp(opd*coeff);
+					P(pyramid, ix, iy)=opd;//saving only.
 				}
-				P(pp, ix, iy)=cexp(opd*coeff);
-				P(pyramid, ix, iy)=opd;//saving only.
 			}
 		}
 	}
