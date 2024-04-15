@@ -236,7 +236,24 @@ static inline int sum_dblarr(int n, real *a){
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
-
+static void convert_theta(real *theta, const char *name, real wvlmax, real dsa){
+	/*Convert pixtheta to radian and do senity check*/
+	real val=*theta;
+	const char *tmp=NULL;
+	if(*theta<=0){//minus means ratio to lambda/dsa
+		tmp="-lambda_max/D";
+		*theta=fabs(*theta)*wvlmax/dsa;
+	} else if(*theta<1e-4){
+		tmp="radian";
+	} else if(*theta>10){
+		tmp="mas";
+		*theta*=AS2RAD/1000;/*convert form mas to radian. */
+	} else{//input is arcsecond.
+		tmp="arcsecond";
+		*theta*=AS2RAD;/*convert form arcsec to radian. */
+	}
+	dbg("Assume %s=%g is in %s. Converted value is %g radian.\n", name, val, tmp, *theta);
+}
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
@@ -387,6 +404,23 @@ static void readcfg_powfs(parms_t *parms){
 		if(powfsi->type==WFS_PY){
 			npywfs++;
 		}
+	}
+
+	if(npywfs){
+		READ_POWFS_RELAX(str, pywfs);
+	} else{
+		readcfg_ignore("powfs.pywfs");
+	}
+	if(nllt){
+		READ_POWFS_RELAX(str, fnllt);
+	} else{
+		readcfg_ignore("powfs.fnllt");
+	}
+	dbg("There are %d LGS powfs. \n", nllt);
+
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
+		real wvlmax=dmax(powfsi->wvl);
 		if(powfsi->dsa<=-1){//Order
 			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
 		} else if(powfsi->dsa<0){//In unit of d
@@ -403,31 +437,16 @@ static void readcfg_powfs(parms_t *parms){
 			}
 		}
 		powfsi->order=ceil(parms->aper.d/powfsi->dsa);
-	}
-	if(npywfs){
-		READ_POWFS_RELAX(str,pywfs);
-	}else{
-		readcfg_ignore("powfs.pywfs");
-	}
-	if(nllt){
-		READ_POWFS_RELAX(str,fnllt);
-	}else{
-		readcfg_ignore("powfs.fnllt");
-	}
-	dbg("There are %d LGS powfs. \n", nllt);
-	
-	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(isfinite(powfsi->hs)){//LGS
 			if(!powfsi->fnllt){
 				error("powfs%d is at finity range but LLT is not specified.\n", ipowfs);
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			#define READ_LLT(T,key) llt->key=readcfg_##T("%sllt."#key, prefix)
-			#define READ_LLT_ARR(T,key) llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
-			open_config(powfsi->fnllt,prefix,readcfg_peek_priority("powfs.fnllt"));
-			llt_cfg_t* llt=powfsi->llt=mycalloc(1,llt_cfg_t);
+#define READ_LLT(T,key) llt->key=readcfg_##T("%sllt."#key, prefix)
+#define READ_LLT_ARR(T,key) llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
+			open_config(powfsi->fnllt, prefix, readcfg_peek_priority("powfs.fnllt"));
+			llt_cfg_t *llt=powfsi->llt=mycalloc(1, llt_cfg_t);
 			READ_LLT(dbl, d);
 			READ_LLT(dbl, widthp);
 			READ_LLT(dbl, focus);
@@ -449,7 +468,7 @@ static void readcfg_powfs(parms_t *parms){
 			READ_LLT_ARR(dmat, ox);
 			READ_LLT_ARR(dmat, oy);
 			READ_LLT_ARR(dmat, misreg);
-			
+
 			READ_LLT(int, ttfr);
 			READ_LLT(int, colprep);
 			READ_LLT(int, colsim);
@@ -470,7 +489,7 @@ static void readcfg_powfs(parms_t *parms){
 				}
 			}
 
-		}else{//NGS
+		} else{//NGS
 			if(powfsi->fnllt){
 				warning("powfs%d is NGS but LLT is specified which will be ignored.\n", ipowfs);
 				free(powfsi->fnllt);
@@ -481,17 +500,18 @@ static void readcfg_powfs(parms_t *parms){
 				powfsi->radpix=0;
 			}
 		}
-		if(powfsi->pywfs || powfsi->type==WFS_PY){
+		pywfs_cfg_t *pycfg=NULL;
+		if(powfsi->pywfs||powfsi->type==WFS_PY){
 			if(powfsi->type==WFS_SH||!powfsi->pywfs){
 				error("powfs%d: pywfs must and must only be supplied (%s) for Pyramid WFS.\n", ipowfs, powfsi->pywfs);
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
 			open_config(powfsi->pywfs, prefix, readcfg_peek_priority("powfs.pywfs"));
-			powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
-			#define READ_PYWFS(T,key) powfsi->pycfg->key=readcfg_##T("%spywfs."#key, prefix)
-			#define READ_PYWFS_MAT(T,key) powfsi->pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
-			READ_PYWFS(dbl, modulate);
+			pycfg=powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
+#define READ_PYWFS(T,key) pycfg->key=readcfg_##T("%spywfs."#key, prefix)
+#define READ_PYWFS_MAT(T,key) pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
+			READ_PYWFS(dbl, modulate);pycfg->modulate*=wvlmax/parms->aper.d;
 			READ_PYWFS(int, modulpos);
 			READ_PYWFS(int, modulring);
 			READ_PYWFS(int, nside);
@@ -502,10 +522,94 @@ static void readcfg_powfs(parms_t *parms){
 			READ_PYWFS_MAT(d, psx);
 			READ_PYWFS_MAT(d, psy);
 			for(int i=0; i<npywfs; i++){
-				powfsi->pycfg->flate*=MAS2RAD;
-				powfsi->pycfg->flatv*=MAS2RAD;
+				pycfg->flate*=MAS2RAD;
+				pycfg->flatv*=MAS2RAD;
+			}
+			pycfg->modulpos=pycfg->modulate>0?(pycfg->modulpos/pycfg->nside*pycfg->nside):1;
+			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
+			pycfg->ng=(pycfg->raw||pycfg->nside<3)?pycfg->nside:2;
+			pycfg->hs=powfsi->hs;
+			pycfg->hc=powfsi->hc;
+			powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
+			powfsi->pixpsa=2;//always 2x2 pixels by definition.
+			if(powfsi->phyusenea==-1){
+				powfsi->phyusenea=1;
+			} else if(powfsi->phyusenea!=1){
+				error("PWFS must have phyusenea=1;\n");
+			}
+			powfsi->pixtheta=0;
+		}else{//SHWFS
+			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
+			{
+				int nx=2*(int)round(0.5*powfsi->dsa/powfsi->dx);
+				if(nx<2) nx=2;
+				real dx=powfsi->dsa/nx;/*adjust dx. */
+				if(fabs(powfsi->dx-dx)>EPS){
+					info("powfs%d: Adjusting dx from %g to %g. \n", ipowfs, powfsi->dx, dx);
+				}
+				powfsi->dx=dx;
+			}
+			convert_theta(&powfsi->pixtheta, "pixtheta", wvlmax, powfsi->dsa);
+	
+			if(!powfsi->radpixtheta){
+				powfsi->radpixtheta=powfsi->pixtheta;
+			} else{
+				convert_theta(&powfsi->radpixtheta, "radpixtheta", wvlmax, powfsi->dsa);
+			}
+			if(powfsi->phytype_sim==-1){
+				powfsi->phytype_sim=powfsi->phytype_recon;
+			}
+			if(powfsi->phytype_sim2==-1){
+				powfsi->phytype_sim2=powfsi->phytype_sim;
+			}
+			if(powfsi->phyusenea==-1){
+				if(powfsi->phytype_recon==PTYPE_COG){
+					powfsi->phyusenea=1;//COG use NEA by default
+				} else{
+					powfsi->phyusenea=0;
+				}
+			}
+			long pixpsay=powfsi->pixpsa;
+			long pixpsax=powfsi->radpix;
+			if(!pixpsax) pixpsax=pixpsay;
+			if(pixpsax*pixpsay<4){
+				powfsi->mtchcr=0;//cannot do constraint.
+			}
+
+			if(powfsi->radgx&&!powfsi->radpix){
+				powfsi->radgx=0;
+			}
+			if(powfsi->cogthres<0){
+				powfsi->cogthres*=-powfsi->rne;
+			}
+			if(powfsi->cogoff<0){
+				powfsi->cogoff*=-powfsi->rne;
 			}
 		}
+		if(powfsi->fieldstop){
+			convert_theta(&powfsi->fieldstop, "fieldstop", wvlmax, powfsi->dsa);
+		}
+
+		powfsi->ng=pycfg?pycfg->ng:2; //number of gradients per subaperture
+		if(powfsi->sigmatch==-1){
+			if(powfsi->type==WFS_SH){//SHWFS
+				if(powfsi->phytype_sim==PTYPE_COG){//CoG
+					powfsi->sigmatch=1;
+				} else{//Others
+					powfsi->sigmatch=1;//global match is not good for matched filter
+				}
+			} else if(powfsi->type==WFS_PY){
+				powfsi->sigmatch=2;//global match
+			} else if(powfsi->usephy){
+				error("Please specify sigmatch\n");
+			}
+		}
+		if(powfsi->phytype_sim==2||powfsi->phytype_sim2==2){//COG
+			if((powfsi->cogthres||powfsi->cogoff)&&powfsi->sigmatch!=1){
+				error("When cogthres or cogoff is set, only sigmatch==1 is supported but is %d\n", powfsi->sigmatch);
+			}
+		}
+		if(pycfg) pycfg->sigmatch=powfsi->sigmatch;
 		/*
 		if(powfsi->fndither){
 			open_config(powfsi->fndither, prefix, 0);
@@ -710,7 +814,21 @@ static void readcfg_siglev(parms_t *parms){
 						siglev_mag+=P(parms->wfs[iwfs].wvlwts, iwvl);
 					}
 					if(magb){
-						bkgrnd_mag+=calc_flux(bzero, wvl, thruput, dsa, parms->sim.dtref, magb)*pow(parms->powfs[ipowfs].pixtheta, 2);
+						real as2=0;//arcsecond squared.
+						switch(parms->powfs[ipowfs].type){
+						case WFS_PY:
+							as2=M_PI*pow(parms->powfs[ipowfs].fieldstop*RAD2AS, 2)/4/parms->powfs[ipowfs].pycfg->nside;
+							break;
+						case WFS_SH:
+							as2=pow(parms->powfs[ipowfs].pixtheta*RAD2AS, 2);
+							break;
+						default:
+							error("Please implement\n");
+						}
+						if(as2>1000){
+							error("incorrect input: Pixel equivalent area is %g arcsec^2 on sky.\n", as2);
+						}
+						bkgrnd_mag+=calc_flux(bzero, wvl, thruput, dsa, parms->sim.dtref, magb)*as2;
 					}
 				}
 			}
@@ -1453,9 +1571,9 @@ static void readcfg_plot(parms_t *parms){
 			parms->plot.psf=1;
 		}
 	}
-	if(parms->plot.setup||parms->plot.atm||parms->plot.run||parms->plot.opdx||parms->plot.all||parms->plot.psf){
+	/*if(parms->plot.setup||parms->plot.atm||parms->plot.run||parms->plot.opdx||parms->plot.all||parms->plot.psf){
 		draw_helper();
-	}
+	}*/
 }
 
 /**
@@ -1838,22 +1956,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
 	
-		if(pycfg){
-			pycfg->ng=(pycfg->raw||pycfg->nside<3)?pycfg->nside:2;
-		}
-		powfsi->ng=pycfg?pycfg->ng:2; //number of gradients per subaperture
-		{
-			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
-			const real dsa=powfsi->dsa;
-			int nx=2*(int)round(0.5*dsa/powfsi->dx);
-			if(nx<2) nx=2;
-			real dx=dsa/nx;/*adjust dx. */
-			if(fabs(powfsi->dx-dx)>EPS){
-				info("powfs%d: Adjusting dx from %g to %g. \n",
-					ipowfs,powfsi->dx,dx);
-			}
-			powfsi->dx=dx;
-		}
 		if(!parms->sim.closeloop&&powfsi->dtrat){
 			powfsi->dtrat=1;
 			powfsi->step=0;
@@ -1861,21 +1963,27 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->dtrat=1;
 			powfsi->step=INT_MAX;
 		}
+		if(powfsi->step<0) powfsi->step=0;
+		else if(powfsi->step>0){/*round step to be multiple of dtrat. */
+			powfsi->step=((powfsi->step+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+		}
 		if(parms->sim.wfsalias){
 			powfsi->noisy=0;
 			powfsi->phystep=-1;
-		}
-		if(powfsi->type==1&&powfsi->phystep!=0){
-			warning("PWFS must run in physical optics mode, changed.\n");
-			powfsi->phystep=0;
-		}
-		if(powfsi->dither&&powfsi->phystep<powfsi->step){
+			if(powfsi->type!=WFS_SH){
+				error("sim.wfsalias is only supported for SHWFS\n");
+			}
+		}else if((powfsi->phystep>0||powfsi->dither)&&powfsi->phystep<powfsi->step){
 			warning("Dither requires physical optics mode from the beginning, changed.\n");
 			powfsi->phystep=powfsi->step;
 		}
 		if(powfsi->phystep>0){
 			/*round phystep to be multiple of dtrat. */
 			powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+		}
+		if(powfsi->type==WFS_PY&&powfsi->phystep!=0){
+			error("PWFS must always run in physical optics mode.\n");
+			powfsi->phystep=0;
 		}
 		/*Do we ever do physical optics.*/
 		if(powfsi->phystep>=0&&(powfsi->phystep<parms->sim.end||parms->sim.end==0)){
@@ -1890,92 +1998,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->needGS0=0;
 		}
 
-		if(powfsi->sigmatch==-1){
-			if(powfsi->type==0){//SHWFS
-				if(powfsi->phytype_sim==PTYPE_COG){//CoG
-					powfsi->sigmatch=1;
-				} else{//Others
-					powfsi->sigmatch=1;//global match is not good for matched filter
-				}
-			} else if(powfsi->type==1){
-				powfsi->sigmatch=2;//global match
-			} else if(powfsi->usephy){
-				error("Please specify sigmatch\n");
-			}
-		}
-		real wvlmax=dmax(powfsi->wvl);
-		if(powfsi->type==0){//shwfs, physical optics mode
-			if(powfsi->phytype_sim==-1){
-				powfsi->phytype_sim=powfsi->phytype_recon;
-			}
-			if(powfsi->phytype_sim2==-1){
-				powfsi->phytype_sim2=powfsi->phytype_sim;
-			}
-			if(powfsi->phyusenea==-1){
-				if(powfsi->phytype_recon==PTYPE_COG){
-					powfsi->phyusenea=1;//COG use NEA by default
-				} else{
-					powfsi->phyusenea=0;
-				}
-			}
-			long pixpsay=powfsi->pixpsa;
-			long pixpsax=powfsi->radpix;
-			if(!pixpsax) pixpsax=pixpsay;
-			if(pixpsax*pixpsay<4){
-				powfsi->mtchcr=0;//cannot do constraint.
-			}
-			/*Convert pixtheta to radian and do senity check*/
-			if(powfsi->pixtheta<=0){//minus means ratio to lambda/dsa
-				dbg("powfs%d: assume pixtheta=%g is in -lambda_max/D\n", ipowfs, powfsi->pixtheta);
-				powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
-			} else if(powfsi->pixtheta<1e-4){
-				dbg("powfs%d: assume pixtheta=%g is in radian\n",ipowfs, powfsi->pixtheta);
-			} else if(powfsi->pixtheta>10){
-				dbg("powfs%d: assume pixtheta=%g is in mas\n", ipowfs, powfsi->pixtheta);
-				powfsi->pixtheta*=AS2RAD/1000;/*convert form mas to radian. */
-			} else{//input is arcsecond.
-				dbg("powfs%d: assume pixtheta=%g is in arcsecond\n", ipowfs, powfsi->pixtheta);
-				powfsi->pixtheta*=AS2RAD;/*convert form arcsec to radian. */
-			}
-			if(!powfsi->radpixtheta){
-				powfsi->radpixtheta=powfsi->pixtheta;
-			} else{
-				if(powfsi->radpixtheta>1e-4){
-					powfsi->radpixtheta*=AS2RAD;
-				} else if(powfsi->radpixtheta<0){
-					error("powfs%d radpixtheta<0\n",ipowfs);
-				}
-			}
-			if(powfsi->phytype_sim==2||powfsi->phytype_sim2==2){//COG
-				if(powfsi->cogthres<0){
-					powfsi->cogthres*=-powfsi->rne;
-				}
-				if(powfsi->cogoff<0){
-					powfsi->cogoff*=-powfsi->rne;
-				}
-				if((powfsi->cogthres||powfsi->cogoff)&&powfsi->sigmatch!=1){
-					error("When cogthres or cogoff is set, only sigmatch==1 is supported but is %d\n", powfsi->sigmatch);
-				}
-			}
-			if(powfsi->radgx&&!powfsi->radpix){
-				powfsi->radgx=0;
-			}
-			if(powfsi->llt&&!powfsi->radpix&&!powfsi->mtchcpl){
-				//powfsi->mtchcpl=1;
-				warning("powfs%d has llt and not using polar coordinate detector. We recommand set powfs.mtchcpl to 1.\n",ipowfs);
-			}
-		} else if(powfsi->type==1){//pywfs only uses quad-cell algorithm
-			powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
-			powfsi->pixpsa=2;//always 2x2 pixels by definition.
-			//Input of modulate is in unit of wvl/D. Convert to radian
-			powfsi->pycfg->modulate*=wvlmax/parms->aper.d;
-			if(powfsi->phyusenea==-1){
-				powfsi->phyusenea=1;
-			} else if(powfsi->phyusenea!=1){
-				error("PWFS must have phyusenea=1;\n");
-			}
-		}
-		if(powfsi->qe){
+		if(powfsi->qe&&powfsi->phystep>=0){
 			//Check rne input.
 			long pixpsay=powfsi->pixpsa;
 			long pixpsax=powfsi->radpix;
@@ -1987,23 +2010,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 
-		if(powfsi->fieldstop>0){
-			if(powfsi->fieldstop>10||powfsi->fieldstop<1e-4){
-				warning("powfs%d: fieldstop=%g arcsec. Please double check the value.\n",ipowfs,powfsi->fieldstop);
-			}
-			powfsi->fieldstop*=AS2RAD;
-			if(powfsi->type==1&&powfsi->fieldstop<powfsi->pycfg->modulate*2+0.5*AS2RAD){
-				error("Field stop=%g\" is too small for the modulation diameter %g\". \n",
-					powfsi->fieldstop*RAD2AS,powfsi->pycfg->modulate*RAD2AS*2);
-				powfsi->fieldstop=powfsi->pycfg->modulate*2+0.5*AS2RAD;
-			}
-		}
 		if(powfsi->dither<-1){
 			powfsi->dither*=-1;
-			if(powfsi->type==1&&parms->recon.modal){
-				warning("Temporary: enable 2nd dithering mode if dither is <-1 for pywfs.\n");
-				//int nr=powfsi->pycfg->modulate;
-				powfsi->dither_mode2=1; //(nr+1)*(nr+2)/2;
+			if(powfsi->type==WFS_PY&&parms->recon.modal){
+				info("Enable 2nd dithering mode if dither is <-1 for pywfs.\n");
+				powfsi->dither_mode2=1; 
 			}
 		}
 		if(powfsi->dither){
@@ -2056,11 +2067,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				info("powfs%d is TWFS for powfs%d\n",ipowfs,parms->ilgspowfs);
 			}
 		}
-
-		if(powfsi->step<0) powfsi->step=0;
-		if(powfsi->phystep>0&&powfsi->phystep<powfsi->step){
-			powfsi->phystep=powfsi->step;
-		}
 	
 		if(powfsi->lo){
 			P(parms->lopowfs,parms->nlopowfs)=ipowfs;
@@ -2095,16 +2101,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 			parms->ntipowfs++;
 		}
-		if(lltcfg){
-			if(isinf(powfsi->hs)){
-				warning("powfs%d with llt should have finite hs\n", ipowfs);
-			}
-		} else{
-			if(!isinf(powfsi->hs)){
-				warning("powfs%d without llt should have infinite hs\n", ipowfs);
-			}
-		}
-	
 
 		if(powfsi->usephy){
 			if(powfsi->neaextra){
@@ -2187,16 +2183,12 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		if(pycfg){
-			pycfg->hs=powfsi->hs;
-			pycfg->hc=powfsi->hc;
-			pycfg->sigmatch=powfsi->sigmatch;
-			pycfg->siglev=powfsi->siglev;
+			pycfg->siglev=powfsi->siglev;//do not move.
 			pycfg->poke=parms->recon.poke;//How many meters to poke
 			if(pycfg->poke>1e-5||pycfg->poke<1e-10){
 				warning("Pyramid WFS poke=%g m is out of the recommended range\n", pycfg->poke);
 			}
-			pycfg->modulpos=pycfg->modulate>0?(pycfg->modulpos/pycfg->nside*pycfg->nside):1;
-			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
+
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
 			if(powfsi->epfsm<0){
@@ -3435,6 +3427,9 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	open_config(mainconf,NULL,0);/*main .conf file. */
 	open_config(extraconf,NULL,1);
 	parms_t *parms=mycalloc(1,parms_t);
+	/*
+		Conversion of input (e.g., in units) should be done in readcfg_* not in postproc_* as the values might be used early on.
+	*/
 	readcfg_dbg(parms);//2022-08-26: moved to front to use flags here.
 	readcfg_sim(parms);
 	readcfg_ncpa(parms);
