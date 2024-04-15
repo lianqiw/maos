@@ -413,7 +413,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	  act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
 	  }*/
 
-	if(parms->recon.modal){//convert Modes to space of amod
+	/*if(parms->recon.modal==2){//convert Modes to space of amod
 		tic;
 		for(int idm=0; idm<parms->ndm; idm++){
 			dmat* proj=dpinv(P(recon->amod,idm), NULL);
@@ -424,7 +424,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 			dfree(proj);
 		}
 		toc2("converting amod to modal space:");
-	}
+	}*/
 	/*
 	  ngsmod to NGS gradient interaction matrix. Defined in modal space for modal control
 	*/
@@ -435,7 +435,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 			if(parms->powfs[ipowfs].skip!=3 
 				&&(parms->powfs[ipowfs].lo||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				for(int idm=0; idm<parms->ndm; idm++){
-					if(parms->powfs[ipowfs].type==WFS_SH || parms->recon.modal){//shwfs or modal control
+					if(parms->powfs[ipowfs].type==WFS_SH/*/ || parms->recon.modal==2*/){//shwfs or modal control
 						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
 					} else{//pwfs in zonal control.
 						real  ht=parms->dm[idm].ht;

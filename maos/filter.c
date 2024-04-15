@@ -288,7 +288,7 @@ static void filter_cl(sim_t* simu){
 	dcell* dmerr=0;
 	if(drop){
 		warning("Drop a frame at step %d\n", isim);
-	} else if(simu->dmerr){
+	} else{
 		dmerr=simu->dmerr;
 	}
 	//always run servo_filter even if dmerr is NULL.
@@ -318,12 +318,7 @@ static void filter_cl(sim_t* simu){
 	if(parms->recon.psol){
 		dcellcp(&simu->dmpsol, simu->dmtmp);//dmpsol should be before extrapolation
 	}
-	if(parms->recon.modal){
-		//convert DM command from modal to zonal space
-		for(int idm=0; idm<NX(simu->dmcmd); idm++){
-			dmm(&P(simu->dmcmd,idm), 0, P(simu->recon->amod,idm), P(simu->dmtmp,idm), "nn", 1);
-		}
-	} else if(simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
+	if(!parms->recon.modal && simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
 		//Extrapolate to edge actuators
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);

@@ -423,7 +423,7 @@ void* reconstruct(sim_t* simu){
 				error("recon.alg=%d is not recognized\n", parms->recon.alg);
 			}
 		}
-		if(simu->dmrecon!=simu->dmerr){
+		if(!parms->recon.modal&&simu->dmrecon!=simu->dmerr){
 			dcellcp(&simu->dmerr, simu->dmrecon);/*keep dmrecon for warm restart */
 		}
 		if(parms->recon.psol){
@@ -463,7 +463,7 @@ void* reconstruct(sim_t* simu){
 					//const double gscale=P(P(simu->gradscale, iwfs),0);
 					int print=simu->wfsflags[ipowfs].ogout?1:0;
 					for(int idm=0; idm<parms->ndm; idm++){
-						//long nmod=parms->powfs[ipowfs].dither_mode2>1?parms->powfs[ipowfs].dither_mode2:PN(simu->dmerr, idm);
+						//long nmod=parms->powfs[ipowfs].dither_mode2>1?parms->powfs[ipowfs].dither_mode2:PN(simu->dmrecon, idm);
 						const dmat *gs2=P(simu->gradscale2, iwfs);					
 						const real gs1=sqrt(P(gs2, 0)*P(gs2, PN(gs2)-1));//scaling baseline: don't use gradscale, it is computed differently from gradscale2.
 						//const real gs1=P(gs2, PN(gs2)-1); //testing. when main dithering integrator uses the last loop.
@@ -480,7 +480,7 @@ void* reconstruct(sim_t* simu){
 							const real dscale1=scale0-P(gs2, MIN(nd-1, id+1))/gs1;
 							if(print) info(" %4.2f", scale0);
 							for(int imod=jm; imod<jm2; imod++){
-								P(P(simu->dmerr, idm), imod)*=(scale0-dscale1*(imod-jm)/(jm2-jm));
+								P(P(simu->dmrecon, idm), imod)*=(scale0-dscale1*(imod-jm)/(jm2-jm));
 							}
 						}
 						if(print){
@@ -488,6 +488,10 @@ void* reconstruct(sim_t* simu){
 						}
 					}
 				}
+			}
+			//convert to zonal space
+			for(int idm=0; idm<NX(simu->dmtmp); idm++){
+				dmm(&P(simu->dmerr, idm), 0, P(simu->recon->amod, idm), P(simu->dmrecon, idm), "nn", 1);
 			}
 		}
 		if(parms->recon.split){

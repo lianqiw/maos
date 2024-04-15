@@ -71,7 +71,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 		const int nsa=powfs[ipowfs].saloc->nloc;
 		const int ng=parms->powfs[ipowfs].ng;
 		int ncol=(ng==2?3:ng);
-		const real pixtheta=parms->powfs[ipowfs].pixtheta;
+		const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
 		dcell* saneac=0;//in unit of rad^2.
 
 		if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy)&&!parms->powfs[ipowfs].phyusenea){
@@ -165,7 +165,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				
 				real nea_mean=sqrt(nea2_sum/nea2_count);
 				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
-				if(nea_mean>pixtheta*0.33
+				if(nea_mean>neathres
 					&&parms->powfs[ipowfs].usephy
 					&&parms->powfs[ipowfs].order<=2
 					&&parms->sim.dtrat_lo==parms->sim.dtrat_lo2
@@ -1326,14 +1326,15 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 			real dispy=P(parms->evl.thetay,ievl)*ht;
 			real scale=1-ht/P(parms->evl.hs,ievl);
 			dsp* Htmp=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale);
-			dmat* Hdtmp=NULL;
-			if(parms->recon.modal){
+			
+			/*if(parms->recon.modal){
+				dmat* Hdtmp=NULL;
 				dspmm(&Hdtmp, Htmp, P(recon->amod, idm), "nn", 1);
 				dspfree(Htmp);
 				P(recon->Herr, ievl, idm)=(cell*)Hdtmp;
-			}else{
+			}else{*/
 				P(recon->Herr, ievl, idm)=(cell*)Htmp;
-			}
+			//}
 		}
 	}
 	if(parms->recon.psd==2){//don't use sigmanhi by default

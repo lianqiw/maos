@@ -1197,7 +1197,7 @@ static void init_simu_dm(sim_t* simu){
 		}
 	}
 	/*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
-	simu->dmerr_store=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
+	simu->dmerr_store=dcellnew3(parms->ndm, 1, P(recon->anloc), NULL);
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
 	if(parms->fit.cgwarm){

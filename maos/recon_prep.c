@@ -676,7 +676,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					{
 						dmat* opdadd=0;
 						/*if(!parms->recon.glao&&powfs[ipowfs].opdadd&&0){
-							int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+								int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 							opdadd=P(powfs[ipowfs].opdadd, wfsind);
 						}*/
 						if(!parms->recon.modal){
