@@ -64,6 +64,7 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 			P(locfft->fieldmask, iwvl)=dnew(nembed, nembed);
 			real dtheta=P(wvl, iwvl)/(loc->dx*nembed);//sampling of psf
 			real radius=fieldstop/(dtheta*2);
+			dbg("field stop is %g, dtheta is %g, radius is %g, nembed=%d.\n", fieldstop, dtheta, radius, nembed);
 			dcircle(P(locfft->fieldmask, iwvl), nembed/2+1, nembed/2+1, 1, 1, radius, 1);
 			dfftshift(P(locfft->fieldmask, iwvl));
 		}

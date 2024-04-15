@@ -289,7 +289,10 @@ void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd,  cudaStream_
 	const dmat* amp, real* zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(10);
-void drawpsf_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int plotpsf,
+void curdraw_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int log,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(9);
+void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, int log,
+	const char *title, const char *xlabel, const char *ylabel,
+	const char *format, ...) CHECK_ARG(9);
 #endif

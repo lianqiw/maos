@@ -371,7 +371,7 @@ def photon_flux(magnitude, wvls):
     '''Claculate photon flux for magnitude at wavelength wvls'''
     Jy=1.51e7 #photons /sec / m^2 / dl_l
     name =  'UBVRIJHK'
-    wvlc= np.array([0.35,0.44,0.55,0.64,0.79,1.26,1.60,2.22 ]) #center wavelength in micron
+    wvlc= np.array([0.36,0.44,0.55,0.64,0.79,1.26,1.60,2.22 ]) #center wavelength in micron
     dl_l= np.array([0.15,0.22,0.16,0.23,0.19,0.16,0.23,0.23 ])
     flux0=np.array([1810,4260,3640,3080,2550,1600,1080,670 ]) #zero magnitude flux
     magnitude=np.asarray(magnitude)

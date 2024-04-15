@@ -68,7 +68,7 @@ enum{
     CMD_MAOSDAEMON, /*14 */
     CMD_RESTART,/*15*/
     CMD_KILLED,/*16*/
-    CMD_UNUSED4,/*17*/
+    CMD_DUMMY,/*17. no action. for probing connection with no reply anticipated*/
     CMD_LAUNCH,/*18*/
     CMD_PAUSE,
     CMD_RESUME,

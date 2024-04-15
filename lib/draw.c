@@ -305,9 +305,7 @@ static int launch_drawdaemon(){
 }
 
 /**
-   A helper routine that forks in the early stage to launch drawdaemon.  We
-   don't use the main routine to launch drawdaemon because it may take very long
-   to fork a process that consumes Gig's of memory.
+   A helper routine that forks in the early stage to launch drawdaemon. Retired.
 */
 void draw_helper(void){
 	if(draw_direct){
@@ -321,8 +319,8 @@ void draw_helper(void){
 	int sv[2];
 	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv)){
 		perror("socketpair");
-		warning("socketpair failed, disable drawing.\n");
-		draw_disabled=1;
+		warning("socketpair failed, disable draw_helper.\n");
+		draw_direct=1;
 	} else{
 		info("draw_helper started\n");
 	}
@@ -441,6 +439,7 @@ void draw_final(int reuse){
    3: create an empty page.
 */
 static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
+	if(!fn) warning("fn should be set\n");
 	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
 	if(!(draw_single==1 && ps->draw_single==1)) return 1;
 	list_t* child=0;
@@ -842,6 +841,7 @@ int ddraw(const char *fig, /**<Category of the figure*/
             const dmat *p,   /**<The image*/
             const real *limit,  /**<x min, xmax, ymin and ymax*/
             const real *zlim,   /**< min,max, the data*/
+			int zlog, 	/**<apply log10 to value*/
             const char *title,  /**<title of the plot*/
             const char *xlabel, /**<x axis label*/
             const char *ylabel, /**<y axis label*/
@@ -856,19 +856,19 @@ int ddraw(const char *fig, /**<Category of the figure*/
     // The task will free the data after it finishes.
     imagesc_t *data=mycalloc(1, imagesc_t);
 #define datastrdup(x) data->x=(x)?strdup(x):0
-#define datamemdup(x, size, type)		\
+#define datamemdup(x, size, type, dolog)		\
     if(x){					\
-	data->x=mymalloc(size, type);		\
-	for(long i=0; i<size; i++){		\
-	    data->x[i]=(type)x[i];		\
-	}					\
+		data->x=mymalloc(size, type);\
+		for(long i=0; i<size; i++){		\
+			data->x[i]=(type)(dolog?log10(x[i]):x[i]);\
+		}					\
     }else{					\
-	data->x=0;				\
+		data->x=0;				\
     }
     datastrdup(fig);
     data->bsize=sizeof(dtype);//always send float.
-    datamemdup(limit, 4, dtype);
-    datamemdup(zlim, 2, dtype);
+    datamemdup(limit, 4, dtype, 0);
+    datamemdup(zlim, 2, dtype, zlog);
     {
         //down sampling and change to float
         int xstep=(NX(p)+MAXNX-1)/MAXNX;
@@ -879,9 +879,15 @@ int ddraw(const char *fig, /**<Category of the figure*/
         for(int iy=0; iy<ny2; iy++){
             dtype *p2=P(data)+iy*nx2;
             const real *p1=P(p)+iy*ystep*NX(p);
-            for(int ix=0; ix<nx2; ix++){
-                p2[ix]=(dtype)p1[ix*xstep];
-            }
+			if(zlog){
+				for(int ix=0; ix<nx2; ix++){
+					p2[ix]=(dtype)log10(p1[ix*xstep]+1e-10);
+				}
+			}else{
+            	for(int ix=0; ix<nx2; ix++){
+                	p2[ix]=(dtype)p1[ix*xstep];
+            	}
+			}
         }
         data->nx=nx2;
         data->ny=ny2;
@@ -909,29 +915,65 @@ int cdraw(const char *fig, const cmat *p, const real *limit, const real *zlim,
     int type, const char *title, const char *xlabel, const char *ylabel,
     const char *format, ...){
     format2fn;
-    if(!draw_current(fig, fn)) return 0;
+	const char *t1=NULL, *t2=NULL;
+	switch(type){
+	case 1:
+		t1="abs";
+		t2="phi";
+		break;
+	case 2:
+		t1="real";
+		t2="imag";
+		break;
+	default:
+		t1="abs2";
+		t2="abs2";
+	}
+	char fn2[64];
+	char fn3[64];
+	snprintf(fn2, sizeof(fn2), "%s %s", fn, t1);
+	snprintf(fn3, sizeof(fn3), "%s %s", fn, t2);
+    if(!draw_current(fig, fn2) && !draw_current(fig, fn3)) return 0;
     int isreal=1;
     long nx=NX(p);
     long ny=NY(p);
     dmat *pr=dnew(nx, ny);
     dmat *pi=dnew(nx, ny);
-    for(int i=0; i<nx*ny; i++){
-        comp ppi=P(p, i);
-        if(type==2){
-            P(pr, i)=creal(ppi);
-            P(pi, i)=cimag(ppi);
-        } else{
-            P(pr, i)=cabs(ppi);
-            if(type==1&&P(pr, i)>1.e-10){
-                P(pi, i)=atan2(cimag(ppi), creal(ppi));
-            }
-        }
-        if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
-    }
-    ddraw(fig, pr, limit, zlim, title, xlabel, ylabel, "%s abs", fn);
+
+    
+	switch(type){
+	case 1:
+		for(int i=0; i<nx*ny; i++){
+			P(pr, i)=cabs(P(p,i));
+			if(P(pr, i)>1.e-10){
+				P(pi, i)=atan2(cimag(P(p, i)), creal(P(p, i)));
+				if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
+			}
+		}
+		break;
+	case 2:
+		for(int i=0; i<nx*ny; i++){
+			P(pr, i)=creal(P(p, i));
+			P(pi, i)=cimag(P(p, i));
+			if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
+		}
+		break;
+	case 3:
+		for(int i=0; i<nx*ny; i++){
+			P(pr, i)=cabs2(P(p, i));
+		}
+		break;
+	case 4:
+		for(int i=0; i<nx*ny; i++){
+			P(pr, i)=log10(cabs2(P(p, i))+1e-10);
+		}
+		break;
+	}
+    
+    ddraw(fig, pr, limit, zlim, 0, title, xlabel, ylabel, "%s %s", fn, t1);
     dfree(pr);
     if(!isreal){
-        ddraw(fig, pi, limit, zlim, title, xlabel, ylabel, "%s phi", fn);
+        ddraw(fig, pi, limit, zlim, 0, title, xlabel, ylabel, "%s %s", fn, t2);
     }
     dfree(pi);
     return 1;
@@ -976,7 +1018,7 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
 	limit[2]=map->oy-map->dx/2;
 	limit[3]=map->oy+(map->ny-0.5)*map->dx;*/
-	ddraw(fig, (const dmat*)map, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, (const dmat*)map, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
@@ -1004,7 +1046,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	limit[1]=limit[0]+loc->dx*(nx);
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
 	limit[3]=limit[2]+loc->dy*(ny);*/
-	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1044,7 +1086,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
 	limit[3]=limit[2]+fabs(loc->dy)*(ny);
 	*/
-	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1099,7 +1141,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		int npad=saloc->npad;
 		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
 		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
-		ddraw(fig, phi, limit, zlim, title, xlabel, ylabel, "%s", fn);
+		ddraw(fig, phi, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	}
 	if(draw_current(fig, fnx)){
@@ -1151,7 +1193,7 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	limit[1]=limit[0]+loc->dx*nx;
 	limit[2]=loc->map->oy+loc->dx*(npad-1);
 	limit[3]=limit[2]+loc->dx*ny;*/
-	ddraw(fig, opd0, limit, zlim, title, xlabel, ylabel, "%s", fn);
+	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1186,7 +1228,7 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 		ints2=dcell2m(ints3);
 		dcellfree(ints3);
 	}
-	ddraw("Ints", ints2, NULL, zlim, title, xlabel, ylabel, "%s", fn);
+	ddraw("Ints", ints2, NULL, zlim, 0, title, xlabel, ylabel, "%s", fn);
 	dfree(ints2);
 	return 1;
 }

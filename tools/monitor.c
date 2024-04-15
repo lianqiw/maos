@@ -920,7 +920,7 @@ int main(int argc, char* argv[]){
 					}
 				} else if(!mystrcmp(s, key2a)|| !mystrcmp(s, key2b)){
 					plot_enabled=0;
-					dbg("plot disabled\n");
+					warning("plot disabled\n");
 				} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
 						||(!mystrcmp(s, "help")&&(!s[4]||isspace(s[4])))
 						){

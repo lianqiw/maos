@@ -193,6 +193,9 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 		const Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 		cucscale(wvf, otfnorm, stream);
 		ctoc("scale");
+		if(global->setupdone && global->parms->plot.run){
+			cucdraw_gpu("Ints", wvf, 1, stream, 1, "PWFS PSF", "x", "y", "wfs %d focus", pywfs->iwfs0);
+		}
 		//cuwrite(wvf, stream, "gpu_wvf0");
 		const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 		for(int ir=0; ir<pos_nr; ir++){
@@ -227,6 +230,9 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 				//cuwrite(cuwfs.pypsf, stream, "gpu_wvf3_%d", ipos);
 			}//iposr: points along a ring.
 		}//ir: ring of dithering
+		if(global->setupdone&&global->parms->plot.run){
+			curdraw_gpu("Ints", cuwfs.pypsf, 1, stream, 1, "PWFS Pupil", "x", "y", "wfs %d pupil", pywfs->iwfs0);
+		}
 		ctoc("modul");
 		embed_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
 			(otf, cuwfs.pypsf, ncomp*ncomp);

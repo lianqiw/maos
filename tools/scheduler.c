@@ -584,7 +584,7 @@ static int respond(int sock){
 		/*if(errno!=ESRCH && errno!=ENOENT){//timeout or closed
 			dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		}*/
-		dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
+		dbg_time("(%d) read failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		goto end;
 	}else{
 		dbg2_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
@@ -681,7 +681,7 @@ static int respond(int sock){
 				tmp->plot=pid&(1<<1);
 			}
 		}
-		dbg_time("(%d) Monitor is connected.\n", sock);
+		dbg_time("(%d) monitor from %s is connected.\n", sock, addr2name(socket_peer(sock)));
 	}
 	break;
 	case CMD_PATH://6: Called by MAOS to report the PATH.
@@ -769,7 +769,7 @@ static int respond(int sock){
 					warning_time("(%d) send socket %d failed\n", sock, sock_save);
 					ret=-1;//close connection to draw()
 				} else{//socket is transferred to draw. we close it.
-					dbg_time("(%d) send socket %d success\n", sock, sock_save);
+					dbg_time("(%d) send socket %d from %s success\n", sock, sock_save, addr2name(socket_peer(sock_save)));
 				}
 				close(sock_save);
 			}
@@ -844,7 +844,7 @@ static int respond(int sock){
 		running_remove(pid, S_KILLED);
 		ret=0;//-1; //wait for client to close.
 		break;
-	case CMD_UNUSED4://17;not used
+	case CMD_DUMMY://17; probe. no response.
 		break;
 	case CMD_LAUNCH://18: called from maos from another machine to start a job in this machine
 	{
@@ -913,7 +913,7 @@ end:
 #if HAS_LWS
 	ws_service(0);
 #endif
-	dbg_time("respond returns %d. lasttime3 is %lds ago, lasttime10 is %lds ago.\n", ret, myclocki()-lasttime3, myclocki()-lasttime10);
+	dbg_time("(%d) respond returns %d.\n", sock, ret);
 	return ret;//ret=-1 will close the socket.
 }
 /*
@@ -991,7 +991,7 @@ static void scheduler_timeout(void){
 
 /*The following routines maintains the MONITOR_T linked list. */
 static MONITOR_T* monitor_add(int sock){
-	dbg_time("added monitor on sock %d\n",sock);
+	//dbg_time("added monitor on sock %d\n",sock);
 	MONITOR_T* node=mycalloc(1, MONITOR_T);
 	node->sock=sock;
 	node->next=pmonitor;

@@ -371,9 +371,9 @@ dmat* KL_vonkarman(const loc_t* loc, int nmod, real L0){
 		kl=KL_vonkarman_do(loc, L0);
 	}else{
 		uint32_t key=lochash(loc, 0);
-		mymkdir("%s/.aos/cache", HOME);
+		mymkdir("%s/KL", CACHE);
 		char fn[PATH_MAX];
-		snprintf(fn, sizeof(fn), "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
+		snprintf(fn, sizeof(fn), "%s/KL/KL_vonkarman_%g_%ld_%u.bin", CACHE, L0, loc->nloc, key);
 		CACHE_FILE(kl, fn, ({kl=dread("%s", fn);}), ({kl=KL_vonkarman_do(loc, L0);}), 
 			({writebin(kl, "%s", fn);}));
 	}

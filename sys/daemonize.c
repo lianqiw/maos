@@ -275,6 +275,7 @@ void redirect(void){
 void daemonize(void){ /* Fork off the parent process */
 	pid_t pid=fork();
 	if(pid<0){
+		perror("fork");
 		exit(EXIT_FAILURE);
 	}
 	if(pid>0){/*exit first parent. */

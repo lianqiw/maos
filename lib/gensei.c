@@ -90,9 +90,7 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 				const real L0, /**<[in] Outer scale*/
 				const int embfac/**<[in] Embedding factor, normally 2*/
 ){
-	char fnprefix[200]; fnprefix[0]='\0';
 	uint32_t key=0;
-	strcat(fnprefix, "SEOTF");
 	const cell *amp=amp_.c;
 	const cell *saa=saa_.c;
 	if(amp){
@@ -108,20 +106,10 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	if(opdbias){
 		key=dcellhash(opdbias, key);
 	}
-	if(key!=0){
-		char tmp2[80];
-		snprintf(tmp2, 80, "_%ud", key);
-		strcat(fnprefix, tmp2);
-	}
+	mymkdir("%s/SEOTF/", CACHE);
 	char fnotf[PATH_MAX];
-
-	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/", CACHE);
-	if(!exist(fnotf)){
-		mymkdir("%s", fnotf);
-	}
-
-	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/%s_r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_v3.bin",
-		CACHE, fnprefix, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac);
+	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_%u_v3.bin",
+		CACHE, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac, key);
 	cccell *otf=0;
 
 	CACHE_FILE(otf, fnotf, ({otf=cccellread("%s", fnotf);}), 

@@ -585,7 +585,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 					cfft2(P(otf,iwvl), 1);
 					dspmulcreal(P(ints), sis, P(P(otf,iwvl)), wvlsig);
 				}
-				//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
+				//ddraw("ints", ints, NULL, NULL, 0, "ints", "x", "y", "ints"); PAUSE;
 				real g[3]={0,0,0};
 				//notice that all the following gives gradients in x/y coord only.
 				switch(type){

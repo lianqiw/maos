@@ -446,19 +446,29 @@ void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t
 		dfree(tmp);
 	}
 }
-void drawpsf_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int plotpsf,
+void curdraw_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int zlog,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
 	if(draw_current(fig, fn)){
 		dmat* psftemp=NULL;
-		cp2cpu(&psftemp, psf, stream);
-		if(count!=1) dscale(psftemp, 1./count);
-		if(plotpsf==2){
-			dcwlog10(psftemp);
-		}
-		ddraw(fig, psftemp, NULL, NULL, title, xlabel, ylabel, "%s", fn);
+		add2cpu(&psftemp, 0, psf, 1./count, stream);
+		ddraw(fig, psftemp, NULL, NULL, zlog, title, xlabel, ylabel, "%s", fn);
 		dfree(psftemp);
+	}
+}
+void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, int zlog,
+	const char *title, const char *xlabel, const char *ylabel,
+	const char *format, ...){
+	format2fn;
+	if(draw_current(fig, fn)){
+		cmat *psftemp=NULL;
+		cp2cpu(&psftemp, psf, stream);
+		dmat *psfreal=NULL;
+		cabs22d(&psfreal, 0, psftemp, 1./count);
+		ddraw(fig, psfreal, NULL, NULL, zlog, title, xlabel, ylabel, "%s", fn);
+		dfree(psfreal);
+		cfree(psftemp);
 	}
 }
 /**

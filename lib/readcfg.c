@@ -236,7 +236,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		config_dir=mydirname(config_file);
 		if(priority!=-1 && !default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
-			addpath(config_dir);
+			addpath2(-1, "%s", config_dir);
 		}
 	} else{
 		config_file=strdup(config_in);
@@ -448,10 +448,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 					if(((oldstore->data==NULL||store->data==NULL)&&(oldstore->data!=store->data))||
 							((oldstore->data!=NULL&&store->data!=NULL)&&strcmp(oldstore->data, store->data))){
 						if(oldstore->priority>priority){//Entry with higher priority prevails.
-							dbg("Not overriding %-20s\t%s by %s\n", store->key, oldstore->data, store->data);
+							dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
 						} else{//Replace value if different.
 							if(priority>0){//Print if not default
-								info("Overriding %-20s\t%s --> %s\n", store->key, oldstore->data, store->data);
+								info("Overriding %-20s\t%10s --> %s\n", store->key, oldstore->data, store->data);
 							}
 							free(oldstore->data);/*free old value */
 							oldstore->data=store->data; store->data=NULL;/*move pointer of new value. */
@@ -482,7 +482,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	if(strcmp(config_in, "changes.conf")){
 		info("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
 	}else{
-		dbg("loaded %3d (%3d new) change records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
+		dbg("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
 	}
 	if(fd){
 		fclose(fd);

@@ -181,6 +181,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 			if(nstop>npsf){
 				warning("field stop is not effective (bigger than PSF size).\n");
 			}
+			dbg("fieldstop is %g, dtheta is %g, nstop is %d\n", parms->powfs[ipowfs].fieldstop, dtheta, nstop);
 		}
 		const long skip=notf>nstop?(notf-nstop)/2:0;
 		const real radius2=nstop*nstop*0.25;
@@ -625,6 +626,9 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 	locfft_t* locfft=pywfs->locfft;
 	ccell* psfs=0;
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
+	if(global->setupdone&&global->parms->plot.run){
+		cdraw("Ints", P(psfs,0), NULL, NULL, 4, "PWFS PSF", "x", "y", "wfs %d focus", pywfs->iwfs0);
+	}
 	const int nwvl=NX(locfft->wvl);
 	const real dx=locfft->loc->dx;
 	const long npsf=P(locfft->nembed,0);
@@ -675,6 +679,9 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 			}//for iwvl
 		}//for ipos
 	}//for ir
+	if(global->setupdone&&global->parms->plot.run){
+		ddraw("Ints", pupraw, NULL, NULL, 1, "PWFS Pupil", "x", "y", "wfs %d pupil", pywfs->iwfs0);
+	}
 	//writebin(pupraw, "cpu_psf"); exit(0);
 	ccpd(&otf, pupraw);//pupraw sum to one.
 	//writebin(otf, "cpu_wvf4");
@@ -955,39 +962,13 @@ dmat* pywfs_mkg(pywfs_t* pywfs, const loc_t* locin, const char* distortion, cons
 	if(mod) key=dhash(mod, key);
 	if(opdadd) key=dhash(opdadd, key);
 	char fn[PATH_MAX-10];
-	char fnlock[PATH_MAX];
 	mymkdir("%s/G/", CACHE);
-	snprintf(fn, sizeof(fn), "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_v2.bin", CACHE,
-		key, P(pywfs->locfft->nembed,0), locin->nloc, pycfg->modulate, pycfg->modulpos,
-		locin->iac, displacex, displacey, 1., pycfg->poke);
-	snprintf(fnlock, sizeof(fnlock), "%s.lock", fn);
+	snprintf(fn, sizeof(fn), "%s/G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2.bin", CACHE,
+		P(pywfs->locfft->nembed,0), locin->nloc, NY(mod), pycfg->modulate*RAD2MAS, pycfg->modulpos,
+		locin->iac, displacex, displacey, 1., pycfg->poke*1e9, key);
 	info2("Using G in %s\n", fn);
 	dmat* gg=0;
-	/*
-	if(0){//test amount of poke
-	dmat *mod1=dnew(locin->nloc, 3);
-	if(mod){
-		memcpy(PCOL(mod1, 0), PCOL(mod, 0), sizeof(real)*NX(mod));
-		memcpy(PCOL(mod1, 1), PCOL(mod, 1000), sizeof(real)*NX(mod));
-		memcpy(PCOL(mod1, 2), PCOL(mod, 3200), sizeof(real)*NX(mod));
-	}else{
-		P(mod1, 30, 0)=1;//sqrt(locin->nloc);
-		P(mod1, 800, 1)=1;//sqrt(locin->nloc);
-		P(mod1, 3000, 2)=1;//sqrt(locin->nloc);
-	}
-	writebin(mod1, "mod1");
-	dcell *gg1=dcellnew(13,1);
-	real poke=1e-9;
-	real step=pow(10,0.25);
-	for(int ig=0; ig<NX(gg1); ig++){
-		((pywfs_t*)pywfs)->poke=poke;
-		P(gg1,ig)=pywfs_mkg_do(pywfs, locin, locfft, mod1, displacex, displacey);
-		poke=poke*step;
-	}
-	writebin(gg1, "gg1");
-	cellfree(gg1);
-	exit(0);
-	}*/
+
 	CACHE_FILE(gg, fn, ({gg=dread("%s", fn);}), ({gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);}),
 		({writebin(gg, "%s", fn);}));
 	if(distortion){

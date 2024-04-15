@@ -27,7 +27,6 @@
 extern "C"{
 #endif
 #include "../../lib/aos.h"
-
 void gpu_dsvd(dmat **U, dmat **S, dmat **Vt, const dmat *A);
 void gpu_dsvd_pow(dmat *A_, real pow, real thres);
 void gpu_dgemm(dmat **out, const real beta, const dmat *A, const dmat *B, const char trans[2], const real alpha);

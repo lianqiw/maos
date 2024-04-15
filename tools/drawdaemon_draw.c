@@ -389,32 +389,29 @@ static void update_limit(drawdata_t *drawdata){
 			xmin=ips0;
 			float y_cumu=0, y=0;
 
-			int first=1;
-			if(drawdata->cumuquad){
-				for(int ips=ips0; ips<ptsnx; ips++){
-					const float tmp=ptsy[ips];
-					if(tmp!=0||first){
+			for(int ips=ips0; ips<ptsnx; ips++){
+				const float tmp=ptsy[ips];
+				if(isfinite(tmp)){
+					if(drawdata->cumuquad){
 						y_cumu+=tmp*tmp;
 						y=sqrt(y_cumu/(ips-ips0+1));
-						if(y>ymax) ymax=y;
-						if(y<ymin) ymin=y;
-						first=0;
-					}
-				}
-			} else{
-				for(int ips=ips0; ips<ptsnx; ips++){
-					const float tmp=ptsy[ips];
-					if(tmp!=0||first){
+					}else{
 						y_cumu+=tmp;
 						y=y_cumu/(ips-ips0+1);
-						if(y>ymax) ymax=y;
-						if(y<ymin) ymin=y;
-						first=0;
 					}
+					if(y>ymax) ymax=y;
+					if(y<ymin) ymin=y;
 				}
 			}
 		} else{
-			fmaxmin(ptsy, ptsnx, &ymax, &ymin);
+			//fmaxmin(ptsy, ptsnx, &ymax, &ymin);
+			for(int ips=0; ips<ptsnx; ips++){
+				const float y=ptsy[ips];
+				if(isfinite(y)){
+					if(y>ymax) ymax=y;
+					if(y<ymin) ymin=y;
+				}
+			}
 		}
 		//info("xmin=%g, xmax=%g, ymin=%g, ymax=%g\n", xmin, xmax, ymin, ymax);
 		if(xmin<xmin0) xmin0=xmin;
@@ -460,7 +457,7 @@ static void update_limit(drawdata_t *drawdata){
 		round_limit(&drawdata->limit[0], &drawdata->limit[1], xlog);
 		round_limit(&drawdata->limit[2], &drawdata->limit[3], ylog);
 	}
-	//info("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
+	dbg_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
 }
 /**
    The master routine that draws in the cairo surface.
@@ -482,12 +479,10 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->font_name_version=font_name_version;
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
-	/*
-	if(!drawdata->image&&!drawdata->square){
-		drawdata->cumu=cumu;
-	} else{
+	
+	if(drawdata->image||drawdata->square){
 		drawdata->cumu=0;
-	}*/
+	}
 	if(drawdata->cumu){
 		/*if((int)drawdata->icumulast!=(int)drawdata->icumu){
 			free(drawdata->limit_cumu);
@@ -597,7 +592,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		const int ny=drawdata->ny;
 		const int stride=cairo_format_stride_for_width(drawdata->format, nx);
 
-		flt2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim, drawdata->zlog);
+		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray, drawdata->zlim, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=cairo_image_surface_create_for_data
 			(drawdata->p, drawdata->format, nx, ny, stride);

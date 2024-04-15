@@ -255,6 +255,24 @@ mapcell* genscreen(genatm_t* data){
 	return screen;
 }
 /**
+ * Calculate RMS WFE in m from r0 and L0
+*/
+static real calc_rms(real r0, real L0, real slope){
+	real kn2=pow(2*M_PI/0.5e-6, -2);
+	if(slope==0) slope=-11./3.;
+	real coeff=(slope==-4)?0.0229:0.02748;
+	return sqrt(coeff*M_PI*kn2*pow(r0, -5./3.)*pow(L0, -slope-2));
+}
+/**
+ * Calculate r0 from RMS WFE in m and L0
+*/
+static real calc_r0(real rms, real L0, real slope){
+	real kn2=pow(2*M_PI/0.5e-6, -2);
+	if(slope==0) slope=-11./3.;
+	real coeff=(slope==-4)?0.0229:0.02748;
+	return pow(rms*rms/(coeff*M_PI*kn2*pow(L0, -slope-2)), -3./5.);
+}
+/**
  * Generate screen according to a header. It has three possible options.
  * 1) load from file
  * 2) generate screen from PSD with the following keys
@@ -278,16 +296,23 @@ mapcell* genscreen_str(const char* keywords){
 	} else{
 		info2("Generating surface OPD from %s\n", keywords);
 		real r0=search_keyword_num(keywords, "r0");
+		real rmsnm=search_keyword_num(keywords, "rms");//in nm.
 		real mode=search_keyword_num(keywords, "mode");
 		real dx=search_keyword_num_default(keywords, "dx", 1./64.);
 		real nx=search_keyword_num_default(keywords, "nx", 2048);
 		real ht=search_keyword_num_default(keywords, "ht", 0);
 		real vx=search_keyword_num_default(keywords, "vx", 0);
 		real vy=search_keyword_num_default(keywords, "vy", 0);
-		if(!isnan(r0)){
+		real L0=search_keyword_num_default(keywords, "L0", nx*dx);
+		real slope=search_keyword_num_default(keywords, "slope", -11./3.);
+		if(isnan(r0) && isnan(rmsnm)){
+			error("Either r0 or rms should be specified\n");
+		}else if(isnan(mode)){//mode is not specified
+			if(isnan(r0)){
+				r0=calc_r0(rmsnm*1e-9, L0, slope);
+				info("r0=%g is computed from rms=%g nm\n", r0, rmsnm);
+			}
 			static real seed=0;//avoid using the same seed
-			real L0=search_keyword_num_default(keywords, "L0", 30);
-			real slope=search_keyword_num_default(keywords, "slope", -11./3.);
 			seed=search_keyword_num_default(keywords, "seed", seed+1);
 			info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
 				r0, L0, dx, slope, nx, seed);
@@ -296,20 +321,21 @@ mapcell* genscreen_str(const char* keywords){
 			real wt=1;
 			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
 			surfs=genscreen(&cfg);
-		}else if (!isnan(mode)){
-			real rms=search_keyword_num_valid(keywords, "rms");//in nm.
-			info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rms);
+		}else{
+			if(isnan(rmsnm)){
+				rmsnm=calc_rms(r0, L0, slope)*1e9;
+				info("rms=%g nm is computed from r0=%g m\n", rmsnm, r0);
+			}
+			info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rmsnm);
 			loc_t *loc=mksqloc_auto(nx, nx, dx, dx);
 			dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
-			dscale(opd, rms*1e-9);
+			dscale(opd, rmsnm*1e-9);
 			surfs=mapcellnew(1,1);
 			P(surfs, 0)=mapnew(nx, nx, dx, dx);
 			reshape(opd, nx, nx);
 			dcp((dmat**)&P(surfs,0), opd);
 			dfree(opd);
 			locfree(loc);
-		}else{
-			error("input is invalid: %s\n", keywords);
 		}
 		for(int i=0; i<PN(surfs); i++){
 			if(P(surfs,i)){
@@ -319,6 +345,11 @@ mapcell* genscreen_str(const char* keywords){
 				P(surfs, i)->vx=vx;
 				P(surfs, i)->vx=vy;
 				if(old) free(old);
+				real rmsnmi=sqrt(dsumsq(DMAT(P(surfs,i)))/PN(surfs,i))*1e9;
+				if(isnan(rmsnm)){
+					rmsnm=calc_rms(r0, L0, slope)*1e9;
+				}
+				info("Layer %d has %g nm rms wfe, expected %g nm.\n", i, rmsnmi, rmsnm);
 			}
 		}
 	}

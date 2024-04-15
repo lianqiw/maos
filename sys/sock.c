@@ -215,11 +215,11 @@ static int bind_socket_unix(char* sockpath){
 	strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
 	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
 		perror("bind_socket_unix");
-		warning_time("bind to %s failed\n", sockpath);
+		warning_time("(%d) bind to %s failed\n", sock, sockpath);
 		close(sock);
 		sock=-1;
 	} else{
-		dbg_time("binded to %s at sock %d\n", sockpath, sock);
+		dbg_time("(%d) binded to %s at sock %d\n", sock, sockpath, sock);
 	}
 	return sock;
 }
@@ -328,7 +328,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	int sock=-1;
 	if(port){
 		if((sock=bind_socket(SOCK_STREAM, ip, port))==-1){
-			warning("bind_socket failed\n");
+			warning("(%d) bind_socket failed\n", port);
 			return;
 		}
 		if(nodelay){//turn off tcp caching.
@@ -349,7 +349,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			remove(localpath);//if tcp port bind is success, no other process is running
 			sock_local=bind_socket_unix(localpath);
 			if(sock_local==-1){
-				dbg_time("bind to %s failed\n", localpath);
+				dbg_time("(%d) bind to %s failed\n", sock, localpath);
 			} else{
 				if(!listen(sock_local, 10)){
 					FD_SET(sock_local, &active_fd_set);
@@ -384,7 +384,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			//shutdown(sock, SHUT_RDWR);
 			//shutdown(sock_local, SHUT_RDWR);
 			/*Notice existing client to shutdown*/
-			dbg_time("terminate pending: ask all clients (count=%d) to close.\n", nlisten);
+			dbg_time("(%d) terminate pending: ask all clients (count=%d) to close.\n", sock, nlisten);
 			static double quit_time=0;
 			if(!quit_time) quit_time=myclockd();
 			//stop listening.
@@ -404,7 +404,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			}
 
 			if(myclockd()>quit_time+5){//wait for a few seconds before force terminate.
-				dbg_time("force terminate while %d clients remaining.\n", nlisten);
+				dbg_time("(%d) force terminate while %d clients remaining.\n", sock, nlisten);
 				quit_listen=2;//force quit.
 			}
 			//don't break. Listen for connection close events.
@@ -417,13 +417,13 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		int navail=select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0);
 		if(navail<0){//select failed
 			if(errno==EINTR){
-				dbg_time("select failed: %s\n", strerror(errno));
+				dbg_time("(%d) select failed: %s\n", sock, strerror(errno));
 				continue;
 			} else if(errno==EBADF){
-				warning_time("bad file descriptor: %s\n", strerror(errno));
+				warning_time("(%d) bad file descriptor: %s\n", sock, strerror(errno));
 				break;//bad file descriptor
 			} else{
-				warning_time("unknown error: %s\n", strerror(errno));
+				warning_time("(%d) unknown error: %s\n", sock, strerror(errno));
 				break;
 			}
 		} else if(navail>0){
@@ -437,9 +437,9 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						socklen_t size=sizeof(client);
 						int sock2=accept(i, (struct sockaddr*)&client, &size);
 						if(sock2<0){
-							warning_time("accept failed: %s. \n", strerror(errno));
+							warning_time("(%d) accept failed: %s.\n", sock, strerror(errno));
 						} else{
-							dbg_time("socket %d is connected\n", sock2);
+							dbg_time("(%d) socket is connected.\n", sock2);
 							FD_SET(sock2, &active_fd_set);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							socket_send_timeout(sock2, 60);
@@ -455,7 +455,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						if(ans<0){
 							FD_CLR(i, &active_fd_set);
 							close(i);
-							dbg_time("close socket %d, ans=%d\n", i, ans);
+							dbg_time("(%d) close socket, ans=%d.\n", i, ans);
 							//new_connection=-1;
 						}
 					}
@@ -473,7 +473,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			}
 		}
 		if(!nlisten){
-			dbg_time("all clients have closed.\n");
+			dbg_time("(%d) all clients have closed.\n", sock);
 		}
 	}
 	/* Error happened. We close all connections and this server socket.*/
@@ -555,7 +555,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 				snprintf(portstr, sizeof(portstr), "%d", port);
 			}
 			if((res=getaddrinfo(hoststr, portstr, &hints, &result))){
-				dbg("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
+				warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
 				return -1;
 			}
 			res=connect(sock, result->ai_addr, sizeof(servername));

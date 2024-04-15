@@ -167,6 +167,7 @@ extern pthread_mutex_t drawdata_mutex;
 extern int client_pid;
 extern char *client_hostname;
 extern int keep_listen;
+extern int cumu;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
@@ -177,7 +178,7 @@ gboolean addpage(gpointer user_data);
 int delete_page(drawdata_t *drawdata);
 /*from drawdaemon_io */
 void* listen_draw(void*);
-void flt2pix(long nx, long ny, int color, const float* restrict p, void* pout, float* zlim, int zlog);
+void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlog);
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
 gboolean update_title(gpointer data);

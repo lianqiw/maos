@@ -214,7 +214,7 @@ static void test_stfun(){
 	zfarr_close(save);
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fractal.bin");
-	ddraw("fractal", st, NULL,NULL, "Atmosphere","x","y","stfun");
+	ddraw("fractal", st, NULL,NULL, 0, "Atmosphere","x","y","stfun");
     }
     /*exit(0); */
     {
@@ -241,7 +241,7 @@ static void test_stfun(){
 	}
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fft.bin");
-	ddraw("fft", st, NULL,NULL, "Atmosphere","x","y","stfun");
+	ddraw("fft", st, NULL,NULL,0,"Atmosphere","x","y","stfun");
     }
 	
 }

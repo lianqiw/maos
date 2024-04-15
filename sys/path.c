@@ -53,24 +53,34 @@ void addpath2(int priority, const char *format, ...){
 	}
 	LOCK(mutex_path);
 	PATH_T **curr;
+	PATH_T **ins=NULL;//location for insertion
+	int replace=0;
 	for(curr=&PATH;*curr;){
 		PATH_T *old=*curr;
 		if(!strcmp(old->path, abspath)){//this only happens if old->priority>priority or equal but at the place of insertion.
-			dbg("Path already exists with enough priority: %s\n", abspath);
-			free(abspath);abspath=NULL;break;
+			dbg2("Path already exists (%d)\n", priority);
+			if(ins){
+				replace=1;
+				*curr=old->next;
+				free(old->path); 
+				free(old); old=NULL;
+			}else{
+				free(abspath);abspath=NULL;break;
+			}
 		}
-		if(old->priority<=priority){
-			break;
+		if(!ins && old->priority<=priority){
+			ins=curr;//record location for insertion
 		}
-		curr=&old->next;
+		if(old) curr=&old->next;
 	}
 	if(abspath){
-		dbg("Path with priority %d is added: %s\n", priority, abspath);
+		dbg("Path is %s: %s (%d)\n", replace?"moved":"added", abspath, priority);
 		PATH_T *node=mycalloc(1, PATH_T);
 		node->path=abspath; abspath=NULL;
 		node->priority=priority;
-		node->next=*curr;
-		*curr=node;
+		if(!ins) ins=&PATH;
+		node->next=*ins;
+		*ins=node;
 	}
 	UNLOCK(mutex_path);
 }

@@ -68,7 +68,7 @@ static unsigned int crp(float x, float x0){
 
 /**
    convert float to char with color map*/
-void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, float *zlim, int zlog){
+void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
 	if(zlog){
@@ -85,8 +85,8 @@ void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, f
 	round_limit(zlim, zlim+1, 0);
 	min=zlim[0];
 	max=zlim[1];
-	if(color){/*colored */
-		int *pi=(int *)pout;
+	if(!gray){/*colored */
+		int *pi=(int *)pix;
 		float scale, offset;
 		if(fabs(max-min)>1.e-4*fabs(min)){
 			scale=1./(max-min);
@@ -106,7 +106,7 @@ void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, f
 			}
 		}
 	} else{/*b/w */
-		unsigned char *pc=(unsigned char *)pout;
+		unsigned char *pc=(unsigned char *)pix;
 		float scale=255./(max-min);
 		for(int i=0; i<nx*ny; i++){
 			float xi=p[i];
@@ -119,15 +119,16 @@ void flt2pix(long nx, long ny, int color, const float *restrict p, void *pout, f
 		}
 	}
 }
+
 void *listen_udp(void *dummy){
 	(void)dummy;
-	dbg("listen_dup listening at socket %d\n", udp_sock);
+	dbg_time("listen_dup listening at socket %d\n", udp_sock);
 	void *buf=0;
 	size_t bufsize=0;
 	int counter=0;
 	do{
 		counter=udp_recv(&udp_client, &buf, &bufsize);
-		info("listen_udp: %lu bytes received with counter %d.\n", bufsize, counter);
+		info_time("listen_udp: %lu bytes received with counter %d.\n", bufsize, counter);
 	} while(counter>0);
 	return NULL;
 }
@@ -225,13 +226,13 @@ static void drawdata_clear_older(float timclear){
 	for(drawdata_t *p=HEAD->next; p; p=p->next){
 		if(p->io_time<timclear){
 			p->delete=1;
-			info("Request deleting page %s %s\n", p->fig, p->name);
+			info_time("Request deleting page %s %s\n", p->fig, p->name);
 			g_idle_add((GSourceFunc)delete_page, p);
 		}
 	}
 }
-#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); break;}
-#define CATCH_TO(A,p) if(A) {if(errno==EAGAIN ||errno==EWOULDBLOCK){continue;}else{ close(sock); sock=-1; dbg("read " #p " failed %s.", strerror(errno)); break;}}
+#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg_time("read " #p " failed %s.", strerror(errno)); break;}
+#define CATCH_TO(A,p) if(A) {if(errno==EAGAIN ||errno==EWOULDBLOCK){continue;}else{ close(sock); sock=-1; dbg_time("read " #p " failed %s.", strerror(errno)); break;}}
 #define STREADINT(p) CATCH(streadint(sock, &p),p)
 #define STREAD(p,len) CATCH(stread(sock,p,len),p)
 #define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
@@ -269,13 +270,13 @@ void *listen_draw(void *user_data){
 			dbg_time("Connecting to %s\n", client_hostname);
 			sock=scheduler_connect(client_hostname);
 			if(sock==-1){
-				warning("connect to %s failed, retry in 60 seconds.\n", client_hostname);
+				warning_time("connect to %s failed, retry in 60 seconds.\n", client_hostname);
 				mysleep(60);
 				continue;
 			}
 			int cmd[2]={CMD_DISPLAY, 0};
 			if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
-				warning("Failed to register sock in scheduler, retry in 60 seconds.\n");
+				warning_time("Failed to register sock in scheduler, retry in 60 seconds.\n");
 				close(sock);
 				mysleep(60);
 				continue;
@@ -297,7 +298,7 @@ void *listen_draw(void *user_data){
 		int cmd=0;
 		int nlen=0;
 		//int pid=getpid();
-		if(sock!=-1) dbg("listen_draw is listening at %d\n", sock);
+		if(sock!=-1) dbg_time("listen_draw is listening at %d\n", sock);
 		while(sock!=-1){
 			CATCH_TO(streadint(sock, &cmd), cmd);//handles time out.
 			if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
@@ -313,9 +314,9 @@ void *listen_draw(void *user_data){
 			};break;
 			case DRAW_START:
 				//tic;
-				if(drawdata) warning("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
-				if(fig) warning("fig=%s, should be NULL.\n", fig);
-				if(name) warning("name=%s\n, should be NULL.\n", name);
+				if(drawdata) warning_time("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
+				if(fig) warning_time("fig=%s, should be NULL.\n", fig);
+				if(name) warning_time("name=%s\n, should be NULL.\n", name);
 				break;
 			case DRAW_DATA:/*image data. */
 			{
@@ -337,7 +338,7 @@ void *listen_draw(void *user_data){
 			break;
 			case DRAW_HEARTBEAT:/*no action*/
 				io_heartbeat=myclocki();
-				//dbg("heatbeat=%d\n", io_heartbeat);
+				//dbg_time("heatbeat=%d\n", io_heartbeat);
 				break;
 			case DRAW_POINTS:
 			{
@@ -410,7 +411,7 @@ void *listen_draw(void *user_data){
 					drawdata=drawdata_get(&fig, &name, 1);
 					npts=0;
 				} else{
-					warning("Invalid usage: fig should be provided before namen");
+					warning_time("Invalid usage: fig should be provided before namen");
 				}
 				break;
 			case DRAW_TITLE:
@@ -434,7 +435,7 @@ void *listen_draw(void *user_data){
 				STREAD(drawdata->xylog, sizeof(char)*2);
 				break;
 			case DRAW_FINAL:
-				//dbg("client is done\n");
+				//dbg_time("client is done\n");
 				if(io_timeclear){
 					drawdata_clear_older(io_timeclear);
 				}
@@ -454,7 +455,7 @@ void *listen_draw(void *user_data){
 			{
 				STREADINT(client_port);
 				client_addr=socket_peer(sock);
-				info("received udp port %d fron client %s\n", client_port, addr2name(client_addr));
+				info_time("received udp port %d fron client %s\n", client_port, addr2name(client_addr));
 
 				if(udp_sock<=0){
 					udp_sock=bind_socket(SOCK_DGRAM, 0, 0);
@@ -465,7 +466,7 @@ void *listen_draw(void *user_data){
 				add.sin_addr.s_addr=client_addr;
 				add.sin_port=htons(client_port);
 				if(connect(udp_sock, (const struct sockaddr *)&add, sizeof(add))){
-					warning("connect udp socket to client failed with error %d\n", errno);
+					warning_time("connect udp socket to client failed with error %d\n", errno);
 				} else{
 					//initial handshake with fixed buffer size of 64 ints. The length can not be increased.
 					int cmd2[64]={0};
@@ -481,7 +482,7 @@ void *listen_draw(void *user_data){
 					udp_client.version=1;
 					udp_client.sock=udp_sock;
 					if(send(udp_sock, cmd2, sizeof(cmd2), 0)<(ssize_t)sizeof(cmd2)){
-						warning("write to client failed with error %d\n", errno);
+						warning_time("write to client failed with error %d\n", errno);
 					} else{
 						thread_new(listen_udp, NULL);
 					}
@@ -509,7 +510,7 @@ void *listen_draw(void *user_data){
 					drawdata->cumuquad=1;
 					if(drawdata->nstyle>1){
 						if(drawdata->nstyle!=drawdata->npts){
-							warning("nstyle must equal to npts\n");
+							warning_time("nstyle must equal to npts\n");
 							drawdata->nstyle=0;/*disable it. */
 							free(drawdata->style);
 						}

@@ -25,6 +25,7 @@ extern "C"{
 #include "../../lib/aos.h"
 #include "../../maos/parms.h"
 #include "../../maos/types.h"
+	extern global_t *global;
 	void gpu_dbg(void);
 	void gpu_cleanup(void);
 	int  gpu_init(const parms_t* parms, int* gpus, int ngpu);

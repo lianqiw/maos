@@ -414,8 +414,8 @@ void* gpu_perfevl_queue(thread_t* info){
 					}
 
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFol", cudata->perf.psfol[iwvl], count, stream,
-							parms->plot.psf, "Science Open Loop PSF",
+						curdraw_gpu("PSFol", cudata->perf.psfol[iwvl], count, stream,
+							parms->plot.psf==2?1:0, "Science Open Loop PSF",
 							"x", "y", "OL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 					}
 				}
@@ -483,8 +483,8 @@ void* gpu_perfevl_queue(thread_t* info){
 				if(parms->plot.run){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFcl", cuglobal->perf.psfcl[iwvl+nwvl*ievl], count, stream,
-							parms->plot.psf, "Science Closed Loop PSF",
+						curdraw_gpu("PSFcl", cuglobal->perf.psfcl[iwvl+nwvl*ievl], count, stream,
+							parms->plot.psf==2?1:0, "Science Closed Loop PSF",
 							"x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 					}
 				}
@@ -589,8 +589,8 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 				if(parms->plot.run){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFngsr", cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl], count, stream,
-							parms->plot.psf, "Science Closed Loop PSF",
+						curdraw_gpu("PSFngsr", cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl], count, stream,
+							parms->plot.psf==2?1:0, "Science Closed Loop PSF",
 							"x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 					}
 				}

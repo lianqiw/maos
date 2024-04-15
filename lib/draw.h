@@ -46,9 +46,9 @@ typedef struct {
   const dmat* cir;
   const char* const* const legend;
 } plot_opts;
-int ddraw(const char* fig, const dmat *p, const real* limit, const real* zlimit,
+int ddraw(const char* fig, const dmat *p, const real* limit, const real* zlimit, int zlog,
 	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...) CHECK_ARG(8);
+	const char* format, ...) CHECK_ARG(9);
 int cdraw(const char* fig, const cmat *p, const real* limit, const real* zlim,
 	int type, const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(9);
