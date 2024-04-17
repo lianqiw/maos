@@ -369,7 +369,7 @@ typedef struct recon_t{
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
     int dither_dtrat;  /**<The dtrat of the powers that requests dithering*/
-    int dither_md;     /**<multi-mode bin size in amod*/
+    int dither_md;   /**<multi-mode dithering bin size in amod*/
     dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
     dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
     //dcell *dither_rm;  /**<The dither mode recon from dm modal error signal (ndm*ndm)*/

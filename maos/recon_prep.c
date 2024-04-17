@@ -1104,11 +1104,6 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 		READ_ENV_INT(DITHER_MD2, 1, 3000); // average # modes around first bin
 		int DITHER_MD3=20;
 		READ_ENV_INT(DITHER_MD3, 1, 3000); //average # modes in other bin
-		const int nd=MAX(1, DITHER_ND);
-		const int md=(parms->recon.nmod+nd-1)/nd; //number of modes per bin
-		recon->dither_md=md;
-		DITHER_MD2=MIN(md, DITHER_MD2);
-		DITHER_MD3=MIN(md, DITHER_MD3);
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither>1){
@@ -1116,16 +1111,22 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 				const real dispx=ht*parms->wfs[iwfs].thetax;
 				const real dispy=ht*parms->wfs[iwfs].thetay;
 
+				const int dither_nd=parms->powfs[ipowfs].dither_mmd?MAX(1, DITHER_ND):1;
+				const int dither_md=parms->powfs[ipowfs].dither_mmd?((parms->recon.nmod+dither_nd-1)/dither_nd):1; //number of modes per bin
+				recon->dither_md=dither_md;
+				const int dither_md2=MIN(dither_md, DITHER_MD2);
+				const int dither_md3=MIN(dither_md, DITHER_MD3);
+
 				//(parms->powfs[ipowfs].dither_mode2)?MAX(1,(parms->recon.nmod+md-1)/md):1;//number of dither modes. 2 for modal control
-				info("dither mds are md=%d, %d, %d. nd=%d. dither_amp=%g\n", md, DITHER_MD2, DITHER_MD3, nd, dither_amp);
+				dbg("dither mds are md=%d, %d, %d. nd=%d. dither_amp=%g\n", dither_md, dither_md2, dither_md3, dither_nd, dither_amp);
 				
 				dmat *grad=0;
-				for(int id=0; id<nd; id++){
+				for(int id=0; id<dither_nd; id++){
 					dmat *dither_rg=NULL;
 					dmat *dither_ra=NULL;
 					dmat *dither_m=NULL;
-					int jm=id*md;
-					if (nd==1){//single mode dithering uses zernike mode
+					int jm=id*dither_md;
+					if (dither_nd==1){//single mode dithering uses zernike mode
 						dither_m=zernike(P(recon->aloc, idm), 0, 0, 0, -dither_mode);
 						dscale(dither_m, dither_amp);
 						if(parms->powfs[ipowfs].type==1){//PWFS
@@ -1136,8 +1137,8 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						}else{
 							error("Please implement for SHWFS\n");
 						}
-					}else if(md>1){//average every md2 modes
-						int md2=(id==0?DITHER_MD2:DITHER_MD3);
+					}else if(dither_md>1){//average every md2 modes
+						int md2=(id==0?dither_md2:dither_md3);
 						if(md2<2){//a single amod per dithering mode 
 							if(id==0){
 								jm=MAX(0,parms->powfs[ipowfs].dither-2);
@@ -1148,7 +1149,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						if(jm+md2>parms->recon.nmod){
 							md2=parms->recon.nmod-jm;
 						}
-						real dither_amp2=dither_amp*(1-id/nd);//higher order modes have higher gain, so reduce its strength.
+						real dither_amp2=dither_amp*(1-id/dither_nd);//higher order modes have higher gain, so reduce its strength.
 						real dither_amp3=dither_amp2/sqrt(md2);//split into modes within the bin
 						dmat *wt=dnew(md2, 1);
 						dset(wt, 1);

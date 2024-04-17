@@ -2014,7 +2014,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->dither*=-1;
 			if(powfsi->type==WFS_PY&&parms->recon.modal){
 				info("Enable 2nd dithering mode if dither is <-1 for pywfs.\n");
-				powfsi->dither_mode2=1; 
+				powfsi->dither_mmd=1; 
 			}
 		}
 		if(powfsi->dither){

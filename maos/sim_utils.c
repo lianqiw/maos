@@ -512,7 +512,7 @@ void seeding(sim_t* simu){
 #endif
 	seed_rand(simu->misc_rand, simu->seed);
 }
-const char *fnextra="-";
+const char *fnextra="-";//replaced when save.extra is set
 static void init_simu_evl(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const aper_t* aper=simu->aper;
@@ -1848,14 +1848,14 @@ void print_progress(sim_t* simu){
 			mysqrt(P(simu->ole, 0, isim))*1e9,
 			mysqrt(P(simu->ole, 1, isim))*1e9);
 		if(!parms->sim.evlol){
-			info2("  OA%7.1f %5.1f CL%7.1f %5.1f",
+			info2("  OA%7.1f %6.1f CL%7.1f %6.1f",
 				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
 				mysqrt(P(simu->clep, 0, 0, 1, isim))*1e9,
 				mysqrt(P(simu->cle, 0, isim))*1e9,
 				mysqrt(P(simu->cle, 1, isim))*1e9				
 			);
 			if(parms->recon.split){
-				info2(" Split %7.1f %5.1f %6.1f",
+				info2(" Split %7.1f %6.1f %6.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
@@ -1865,7 +1865,7 @@ void print_progress(sim_t* simu){
 				error("\nStep %d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
 			}
 		}
-		if(LOG_LEVEL<2){//dbg is inactive
+		if(LOG_LEVEL<1){//dbg is inactive
 			info2(" nm %6.3f s\n", status->tot*tkmean);
 		}else{
 			info2(" nm\n");

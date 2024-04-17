@@ -1244,8 +1244,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						mgnew=mgold+adj;
 #else
 						real adj=pow(gerr, parms->powfs[ipowfs].dither_gog);
-						//clip the adjustment to prevent divergence.
-						if(adj>1.5) adj=1.5; else if(adj<0.5) adj=0.5;
+						CLIP(adj, 0.5, 2);//0.5, 1.5 //clip the adjustment to prevent divergence.
 						dscale(P(simu->gradscale, iwfs), adj);
 						mgnew=mgold*adj;
 #endif
@@ -1253,13 +1252,18 @@ static void wfsgrad_dither_post(sim_t* simu){
 							dmat *gs2=P(simu->gradscale2, iwfs);
 							for(int id=0; id<nd; id++){
 								const real g2err=P(pd->a2mv, id)/P(pd->a2mev, id);
-								if(1){
-									const real g=parms->powfs[ipowfs].dither_gog;
-									P(gs2, id)=P(gs2, id)*(1-g)+g2err*g;
-								}else{
-									//can only use integrator if dmerr is used to compute the a2me2 which responses to the gradscale2 change.
-									P(gs2, id)*=pow(g2err, parms->powfs[ipowfs].dither_gog);
-								}
+								/**
+								 * A low pass filter is used to update gs2
+								 * instead of an integrator like gradscale
+								 * because the gradient and a2mev is not
+								 * affected by its value.
+								*/
+								const real g=parms->powfs[ipowfs].dither_gog;
+#if HIA_G_UPDATE //HIA method.
+									P(gs2, id)+=(g2err-P(gs2, id))*g;
+#else									
+									P(gs2, id)*=pow(g2err/P(gs2, id), g);
+#endif
 							}
 							//mgnew2=P(gs2, nd-1);
 							//dshow(gs2, "gradscale2");

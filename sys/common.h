@@ -61,6 +61,7 @@ using std::strerror;
 #undef	MIN
 #define MIN(a,b) ({__typeof__(a) _m1=(a); __typeof__(b) _m2=(b); (_m1)<(_m2)?(_m1):(_m2);})
 #define RSS(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); sqrtf(_M1*_M1+_M2*_M2);})
+#define CLIP(x,d_,u_) ({__typeof__(d_) d=(d_); __typeof__(u_) u=(u_);x=x<d?d:(x>u?u:x);})
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
 #else

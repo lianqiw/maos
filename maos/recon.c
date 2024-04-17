@@ -459,15 +459,15 @@ void* reconstruct(sim_t* simu){
 			if(parms->powfs[ipowfs].dither>1){
 				//multi-mode dithering for PWFS
 				if(parms->powfs[ipowfs].type==1&&simu->gradscale2&&P(simu->gradscale2, iwfs)){
-					warning_once("Temporary for PWFS to reduce gain correction for high order modes.\n");
 					//const double gscale=P(P(simu->gradscale, iwfs),0);
 					int print=simu->wfsflags[ipowfs].ogout?1:0;
 					for(int idm=0; idm<parms->ndm; idm++){
 						//long nmod=parms->powfs[ipowfs].dither_mode2>1?parms->powfs[ipowfs].dither_mode2:PN(simu->dmrecon, idm);
 						const dmat *gs2=P(simu->gradscale2, iwfs);					
-						const real gs1=sqrt(P(gs2, 0)*P(gs2, PN(gs2)-1));//scaling baseline: don't use gradscale, it is computed differently from gradscale2.
-						//const real gs1=P(gs2, PN(gs2)-1); //testing. when main dithering integrator uses the last loop.
 						const long nd=NX(gs2);//number of dithered modes.
+						const real gs1=P(gs2,0);//do not perturb the gain of low order modes.
+						//const real gs1=sqrt(P(gs2, 0)*P(gs2, PN(gs2)-1));//scaling baseline: don't use gradscale, it is computed differently from gradscale2.
+						//const real gs1=P(gs2, PN(gs2)-1); //testing. when main dithering integrator uses the last loop.
 						const int md=recon->dither_md;
 						
 						if(print){

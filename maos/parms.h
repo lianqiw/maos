@@ -290,7 +290,7 @@ typedef struct powfs_cfg_t{
     real gradscale; /**<Scale CL gradients. For testing*/
 	//char* fndither; /**<Configuration for dither*/
     int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
-    int dither_mode2;/**<Enable second mode dithering. Only effective when recon.modal is set*/
+    int dither_mmd;/**<Enable multi-mode dithering. Only effective when recon.modal is set*/
 	real dither_amp; /**<Dither amplitude.*/
 	real dither_gpll;/**<Gain of phase locked loop*/
 	real dither_gog; /**<Gain for updating optical gain for cog*/
