@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -505,7 +505,7 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 
 			if(parms->recon.split!=2&&parms->powfs[ipowfs].skip){
-			//don't need HXW for low order wfs that does not participate in tomography. 
+			//don't need HXW for low order wfs that does not participate in tomography.
 				continue;
 			}
 			const real  hs=parms->wfs[iwfs].hs;
@@ -697,7 +697,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfs+idm*nwfs]:0;
 					loc_t* loc=ploc;
 
-					if(input&&saloc->nloc>4){//there is distortion input			
+					if(input&&saloc->nloc>4){//there is distortion input
 						if(calib){//there is magical calibration input
 							loc=loctransform(ploc, calib);
 						} else{//determine distortion by fitting
@@ -951,7 +951,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(recon->GRlgs){
 		//2021-10-15: Since we are not selecting modes, there is no need for high threshold
 		//to high threshold makes the filtering ill formed
-		const real thres=1e-14; 
+		const real thres=1e-14;
 		info("RRlgs svd thres is %g\n", thres);
 		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, thres);
 	}
@@ -963,7 +963,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 /**
    Tilt removal from DM command. Used by filter.c
  */
-static void 
+static void
 setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	recon->DMTT=dcellnew(parms->ndm, 1);
 	recon->DMPTT=dcellnew(parms->ndm, 1);
@@ -1039,7 +1039,7 @@ static void
 setup_recon_FF(recon_t* recon, const parms_t* parms){
 	int nwfs=parms->nwfsr;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs>0 
+		if(parms->powfs[ipowfs].nwfs>0
 			&& !parms->powfs[ipowfs].skip
 			&& parms->powfs[ipowfs].llt
 			&& parms->powfs[ipowfs].frs){
@@ -1119,7 +1119,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 
 				//(parms->powfs[ipowfs].dither_mode2)?MAX(1,(parms->recon.nmod+md-1)/md):1;//number of dither modes. 2 for modal control
 				dbg("dither mds are md=%d, %d, %d. nd=%d. dither_amp=%g\n", dither_md, dither_md2, dither_md3, dither_nd, dither_amp);
-				
+
 				dmat *grad=0;
 				for(int id=0; id<dither_nd; id++){
 					dmat *dither_rg=NULL;
@@ -1131,7 +1131,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						dscale(dither_m, dither_amp);
 						if(parms->powfs[ipowfs].type==1){//PWFS
 							dfree(grad);
-							grad=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc, idm), 
+							grad=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc, idm),
 								parms->recon.distortion_dm2wfs[iwfs+idm*parms->nwfs],
 								dither_m, NULL, dispx, dispy);
 						}else{
@@ -1139,10 +1139,10 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						}
 					}else if(dither_md>1){//average every md2 modes
 						int md2=(id==0?dither_md2:dither_md3);
-						if(md2<2){//a single amod per dithering mode 
+						if(md2<2){//a single amod per dithering mode
 							if(id==0){
 								jm=MAX(0,parms->powfs[ipowfs].dither-2);
-								warning("The first dithering mode uses amod %d directly\n", jm);
+								dbg("The first dithering mode uses amod %d directly\n", jm);
 							}
 							md2=1;
 						}
@@ -1188,13 +1188,13 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						}
 					}
 				}
-				
+
 				//dmm(&P(recon->dither_rm, iwfs, idm), 0, P(recon->dither_ra, iwfs, idm), P(recon->amod, idm), "nn", 1.);
 				dfree(grad);
 			}
 		}
-		
-		
+
+
 		if(parms->save.setup){
 			writebin(recon->dither_m, "dither_m");
 			writebin(recon->dither_ra, "dither_ra");
@@ -1220,7 +1220,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		P(recon->saloc, ipowfs)=locref(powfs[ipowfs].saloc);
 	}
-	
+
 	recon->ngrad=lnew(parms->nwfsr, 1);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1246,7 +1246,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	setup_recon_TT(recon, parms, powfs);
 	//Global or Differential focus removal.
 	setup_recon_FF(recon, parms);
-	
+
 	if(recon->FF){
 		recon->TTF=dcellcat_each(recon->TT, recon->FF, 2);
 	} else{

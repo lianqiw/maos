@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -28,7 +28,7 @@
    types.
 
    Don't use ulong for dimensions because subtracting a bigger ulong from a
-   smaller ulong overflows.  
+   smaller ulong overflows.
 
    Remember to update interface.py after updating the structs below.
 */
@@ -232,7 +232,7 @@ typedef struct pts_t{
 	real dx;     /**<sampling of points in each subaperture*/
 	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
-CELLDEF(cell, cell); 
+CELLDEF(cell, cell);
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);
 CELLDEF(dmat, dcell);
@@ -297,11 +297,10 @@ static inline int iscell(const void* id){
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
 //When a transparent_union is used as a function argument, any subtype can be used as argument.
-/*#if defined(__cplusplus)
-typedef void* anyarray;
-typedef void* panyarray;
-typedef const void* const_anyarray;
-#else*/
+//use anyarray p to accept dmat*, cmat*, etc.
+//use panyarray p to accept dmat**, cmat**, etc.
+//use const_anyarray p to accept const dmat*, const cmat*, etc.
+
 #define types_anyarray(T,S)\
 	T cell S c;\
 	T dccell S dcc;\
@@ -420,7 +419,7 @@ static inline long index_col(long iy, long nx, long ny){
 #define P(...) P_GET5(_0,__VA_ARGS__,P4,P3,P2,P1,P0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+index_col((iy), (A)->nx, (A)->ny))
 
-//Define indexing using wrapping. 
+//Define indexing using wrapping.
 #define P_GET3(_0,_1,_2,_3,NAME,...) NAME
 #define PR1(A,ix)    P1((A), (((A)->nx==1 && (A)->ny==1)?0:ix))
 #define PR2(A,ix,iy) P2((A), ((A)->nx==1?0:ix), ((A)->ny==1?0:iy))

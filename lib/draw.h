@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -36,23 +36,25 @@ void draw_final(int reuse);
 int draw_current(const char* fig, const char* fn);
 int plot_empty(int sock_draw,const char *fig,const char *fn);
 typedef struct {
+  union{
+    const dmat* image;//2d image. can be real or complex. set ctype for complex.
+    const cmat* cimage;
+  };
   int ngroup;///number of lines
   int maxlen;///limit maximum nx
   loc_t** loc;
   const dcell* dc;
   const int32_t* style;
-  const real* limit;
+  const real* zlim;//z limit
+  const real* limit;//x and y limit
+  const int zlog;//z log.
+  const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
   const char* xylog;
   const dmat* cir;
   const char* const* const legend;
 } plot_opts;
-int ddraw(const char* fig, const dmat *p, const real* limit, const real* zlimit, int zlog,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...) CHECK_ARG(9);
-int cdraw(const char* fig, const cmat *p, const real* limit, const real* zlim,
-	int type, const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...) CHECK_ARG(9);
-int plot_points(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
+
+int draw(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(6);
 
 int drawmap(const char* fig, const map_t* map, real* zlim,

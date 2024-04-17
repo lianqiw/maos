@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
 	if((title2=strrchr(title1, '.'))){
 		title2[0]='\0';
 	}
-	
+
 	long nx=MAX(NX(arg1), arg2?NX(arg2):0); nx=MIN(nx, mx+20);
 	long ny=MAX(NY(arg1), arg2?NY(arg2):0); ny=MIN(ny, my+20);
 	int id=0;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]){
 					if(loc->nloc>100000){/*if too many points, we draw it. */
 						drawloc("loc", loc, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
 					} else{/*we plot individual points. */
-						plot_points("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", title1, id++);
+						draw("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", title1, id++);
 					}
 					if(loc!=loc_save){
 						locfree(loc);
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]){
 					drawmap("map", data, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
 					mapfree(data);
 				}else{
-					plot_points("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%02d]", title1, id++);
+					draw("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%02d]", title1, id++);
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){

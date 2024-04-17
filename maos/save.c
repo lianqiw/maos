@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -148,7 +148,7 @@ void save_recon(sim_t* simu){
 					"Err Hi %d", idm);
 			}
 		}
-		
+
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
@@ -174,7 +174,7 @@ void save_recon(sim_t* simu){
 				drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), P(parms->plot.opdmax),
 					"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 			}
-			//plot_points("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
+			//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 		}
 	}
 	if(parms->recon.alg==0&&!parms->sim.idealfit&&!parms->recon.glao){
@@ -246,7 +246,7 @@ void save_recon(sim_t* simu){
 					P(parms->evl.thetay,ievl)*RAD2AS, strht, simu->reconisim);
 			}
 		}
-		dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset. 
+		dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset.
 	}
 }
 /**

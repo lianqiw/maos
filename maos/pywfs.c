@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -112,7 +112,7 @@ static void pywfs_mksi(pywfs_t* pywfs, loc_t* loc_fft, loc_t* saloc0, real pupel
    Setup pyramid WFS based on configuration.
 
    Todo: In order to move the implementation to lib/ the following changes are needed
-   - Generate loc/amp externally and supply here. 
+   - Generate loc/amp externally and supply here.
    - Handle misregistration externally. Different misregisration is used in simulation and reconstruction.
    - ...
 */
@@ -159,7 +159,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 	int nwvl=NX(parms->powfs[ipowfs].wvl);
 	pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, PYWFS_PSIZE, 0);
 	pywfs->wvlwts=ddup(parms->powfs[ipowfs].wvlwts);
-	
+
 	long npsf=P(pywfs->locfft->nembed,0);//size of PSF at the Pyramid tip.
 	pywfs->gain=1;
 	//size of the part of the PSF captured by pyramid
@@ -202,7 +202,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 					case 1://zernike
 						opd=2.;//opd*coeff=pi
 						break;
-					case 2://roof with slope 
+					case 2://roof with slope
 						opd=xd;
 						break;
 					case 3://3 sided pyrmaid
@@ -304,7 +304,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		powfs[ipowfs].saloc=mksqloc(order2, order2, dsa, dsa,
 			(-order2*0.5+0.5)*dsa, (-order2*0.5+0.5)*dsa);
 	}
-	
+
 	pywfs_mksi(pywfs, loc_fft, powfs[ipowfs].saloc, pupelong);//for each quadrant.
 
 	if(parms->save.setup){
@@ -382,7 +382,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		pywfs->GTT=TT;TT=NULL;
 		info("pywfs_gain=%g\n", pywfs->gain);
 	}
-	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
+	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges
 	{
 		powfs[ipowfs].sanea=dcellnew(1, 1);
 		dmat* sanea=P(powfs[ipowfs].sanea,0)=dnew(nsa, ng);
@@ -448,7 +448,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 			const real dispy=ht*parms->wfs[iwfs].thetay;
 			warning("Using amod for pywfs gain testing\n");
 			for(int im=0; im<NY(opds)-1; im++){
-				prop_nongrid(P(recon->aloc, idm), PCOL(amod, im), 
+				prop_nongrid(P(recon->aloc, idm), PCOL(amod, im),
 					powfs[ipowfs].loc, PCOL(opds, im+1), 1, dispx, dispy, scale, 0, 0);
 			}
 		}else{
@@ -474,11 +474,11 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		}else{
 			warning("Atmosphere is not avilable to read, do not use.\n");
 		}
-		
+
 		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_modal_ints");
 		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_modal_grad");
 		dmat *opd=dnew(NX(opds),1);
-		
+
 		for(int im=0; im<NY(opds); im++){
 			dmat *opdi=drefcols(opds, im, 1);
 			for(int j=0; j<nn; j++){
@@ -516,7 +516,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		writebin(opds, "pywfs_dither_opd");
 		writebin(ints, "pywfs_dither_ints");
 		writebin(grad, "pywfs_dither_grad");
-		
+
 		rand_t rstat;
 		seed_rand(&rstat, 1);
 		dmat* tmp=0;
@@ -536,7 +536,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 				info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, P(tmp,0));
 			}
 		}
-		
+
 		writebin(res, "pywfs_dither_response");
 		dfree(opds); dfree(opdi); dfree(ints); dfree(grad); dfree(reg); dfree(tmp); dfree(res); dfree(ints2);
 	}else if(PYWFS_DEBUG==3){//Test NCPA calibration
@@ -627,7 +627,7 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 	ccell* psfs=0;
 	locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
 	if(global->setupdone&&global->parms->plot.run){
-		cdraw("Ints", P(psfs,0), NULL, NULL, 4, "PWFS PSF", "x", "y", "wfs %d focus", pywfs->iwfs0);
+		draw("Ints", (plot_opts){.cimage=P(psfs,0),.ctype=0,.zlog=1}, "PWFS PSF", "x", "y", "wfs %d focus", pywfs->iwfs0);
 	}
 	const int nwvl=NX(locfft->wvl);
 	const real dx=locfft->loc->dx;
@@ -680,7 +680,7 @@ void pywfs_ints(dmat** ints, const pywfs_t* pywfs, const dmat* opd, real siglev)
 		}//for ipos
 	}//for ir
 	if(global->setupdone&&global->parms->plot.run){
-		ddraw("Ints", pupraw, NULL, NULL, 1, "PWFS Pupil", "x", "y", "wfs %d pupil", pywfs->iwfs0);
+		draw("Ints", (plot_opts){.image=pupraw,.zlog=1}, "PWFS Pupil", "x", "y", "wfs %d pupil", pywfs->iwfs0);
 	}
 	//writebin(pupraw, "cpu_psf"); exit(0);
 	ccpd(&otf, pupraw);//pupraw sum to one.
@@ -803,7 +803,7 @@ dmat* pywfs_tt(const pywfs_t* pywfs){
 		writebin(ints, "pywfs_tty_ints");
 		writebin(grady, "pywfs_tty_grad");
 	}
-	
+
 	if(PYWFS_TT_DUAL){
 		dmat* gradx2=dnew(nsa*2, 1);
 		dmat* grady2=dnew(nsa*2, 1);

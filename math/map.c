@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -230,11 +230,11 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 }
 
 /**
-   convert a dmat to map_t. 
-   
+   convert a dmat to map_t.
+
    keywords are used to specify parameters:
-   - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.), 
-   - layer heiht (default to 0), 
+   - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),
+   - layer heiht (default to 0),
    - frozen flow speed (vx, vy)
    - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
    - for DM grid only: inter-actuator-coupling (iac)
@@ -255,14 +255,14 @@ map_t* d2map(const dmat* in){
 	map->vy=search_keyword_num_default(keywords, "vy", 0);
 	real D=search_keyword_num(keywords, "D");
 	real offset=search_keyword_num_default(keywords, "offset",0);
-	
+
 	if(isnan(map->dx)){
 		if(isnan(D)){
 			map->dx=1./64.;
 			warning_once("dx and D are not specified. Set dx, dy to 1/%g.\n", 1./map->dx);
 		}else{
 			map->dx=D/map->nx;
-			dbg("dx is not specified, but D is. Set dx, dy to 1/%g.\n", 1/map->dx);
+			dbg2("dx is not specified, but D is. Set dx, dy to 1/%g.\n", 1/map->dx);
 		}
 	}
 	if(isnan(map->dy)){
@@ -270,11 +270,11 @@ map_t* d2map(const dmat* in){
 	}
 	if(isnan(map->ox)){
 		map->ox=(-map->nx/2+offset)*map->dx;
-		dbg("ox is not specified. set to %g\n", map->ox);
+		dbg2("ox is not specified. set to %g\n", map->ox);
 	}
 	if(isnan(map->oy)){
 		map->oy=(-map->ny/2+offset)*map->dy;
-		dbg("oy is not specified. set to %g\n", map->oy);
+		dbg2("oy is not specified. set to %g\n", map->oy);
 	}
 	return map;
 }
@@ -301,7 +301,7 @@ mapcell* dcell2map(const dcell* in){
   	keywords are used to specify parameters:
     - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),
     - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
-    - txdeg, dydeg: tilt of surface in degree wrt beam. only 1 can be less than 90 degree. 
+    - txdeg, dydeg: tilt of surface in degree wrt beam. only 1 can be less than 90 degree.
 	- ftel:  focal length of the telescope
 	- fexit: distance from exit pupil to focus
 	- fsurf  distance from surface to focu

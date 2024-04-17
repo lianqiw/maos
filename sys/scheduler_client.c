@@ -75,7 +75,7 @@ void wait_cpu(int nthread){
 void parse_host(const char* line){
 	(void)line;
 }
-const char* lookup_host(const char* hostname){
+const char* lookup_hostaddr(const char* hostname){
 	return hostname;
 }
 void init_hosts(){}
@@ -212,16 +212,30 @@ void init_hosts(){
 	}*/
 }
 /**
-   Translate hostname to based on ~/.aos/hosts
+   Translate hostname to address based on ~/.aos/hosts
 */
-const char* lookup_host(const char* hostname){
-	if(!hostname) return NULL;
-	for(int ihost=0; ihost<nhost; ihost++){
-		if(!strcmp(hosts[ihost], hostname)){
-			return hostsaddr[ihost];
+const char* lookup_hostaddr(const char* hostname){
+	if(hostname){
+		for(int ihost=0; ihost<nhost; ihost++){
+			if(!strcmp(hosts[ihost], hostname)){
+				return hostsaddr[ihost];
+			}
 		}
 	}
 	return hostname;
+}
+/**
+   Translate address to hostname based on ~/.aos/hosts
+*/
+const char *lookup_hostname(const char *hostaddr){
+	if(hostaddr){
+		for(int ihost=0; ihost<nhost; ihost++){
+			if(!strcmp(hostsaddr[ihost], hostaddr)){
+				return hosts[ihost];
+			}
+		}
+	}
+	return hostaddr;
 }
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.

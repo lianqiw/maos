@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -44,12 +44,12 @@ static void test_accuracy(){
     fractal_inv((dmat*)atm, dx, r0,L0,ninit);
     mapwrite(atm, "atm_frac_inv.bin");
 
-   
+
     fractal_trans((dmat*)atm2, dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_trans.bin");
     fractal_inv_trans((dmat*)atm2, dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_inv_trans.bin");
-    
+
     /*
       atm2 is u, atm is v, now comparing u'Av against v'A'u. they should be the same.
       A^-1Av should be the same as v
@@ -95,11 +95,11 @@ static void test_cov(){/*not good */
     dmat *cov=dnew((N+1)*3,(N+1)*3);
     creal2d(&denom, 0, atmhat, 1);
     writebin(denom, "denom.bin");
-    
+
     dzero(atmhattot);
     for(long i=0; i<nframe; i++){
 	dbg("%ld of %ld\n", i, nframe);
-	
+
 	for(long j=0; j<nx*ny; j++){
 	    P(atm,j)=randn(&rstat);
 	}
@@ -214,7 +214,7 @@ static void test_stfun(){
 	zfarr_close(save);
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fractal.bin");
-	ddraw("fractal", st, NULL,NULL, 0, "Atmosphere","x","y","stfun");
+	draw("fractal", (plot_opts){.image=st}, "Atmosphere","x","y","stfun");
     }
     /*exit(0); */
     {
@@ -241,9 +241,9 @@ static void test_stfun(){
 	}
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fft.bin");
-	ddraw("fft", st, NULL,NULL,0,"Atmosphere","x","y","stfun");
+	draw("fft", (plot_opts){.image=st},"Atmosphere","x","y","stfun");
     }
-	
+
 }
 
 static void test_psd(){

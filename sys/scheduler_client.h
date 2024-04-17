@@ -32,7 +32,8 @@ extern char **hosts;
 void parse_host(const char *line);
 void free_hosts();
 void init_hosts();
-const char *lookup_host(const char *hostname);
+const char *lookup_hostaddr(const char *hostname);
+const char *lookup_hostname(const char *hostaddr);
 /*called by maos */
 int scheduler_connect(const char* hostname);
 int scheduler_listen(thread_fun fun);

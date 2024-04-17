@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -92,7 +92,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		}
 		count++;
 	}
-	plot_points(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir},
+	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir},
 		"Coordinate", "x (m)", "y (m)", "%s", fn);
 	dfree(cir);
 }
@@ -187,7 +187,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	real limit[4];
 	limit[0]=limit[2]=-totfov/2;
 	limit[1]=limit[3]=totfov/2;
-	plot_points(fig, (plot_opts){.ngroup=ngroup, .loc=P(locs), .style=style, .limit=limit, .cir=cir, .legend=legend},
+	draw(fig, (plot_opts){.ngroup=ngroup, .loc=P(locs), .style=style, .limit=limit, .cir=cir, .legend=legend},
 		"Asterism", "x (arcsec)", "y (arcsec)", "%s", fn);
 	dfree(cir);
 	cellfree(locs);
@@ -455,7 +455,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 					"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d tel2wfs", ipowfs);
 			}
 		}
-		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, NULL, 
+		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, NULL,
 			"WFS Subaperture Amplitude", "x (m)", "y (m)", "powfs %d saa", ipowfs);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
@@ -585,7 +585,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 					cfft2(P(otf,iwvl), 1);
 					dspmulcreal(P(ints), sis, P(P(otf,iwvl)), wvlsig);
 				}
-				//ddraw("ints", ints, NULL, NULL, 0, "ints", "x", "y", "ints"); PAUSE;
+				//draw("ints", (draw_opts){.image=ints}, "ints", "x", "y", "ints"); PAUSE;
 				real g[3]={0,0,0};
 				//notice that all the following gives gradients in x/y coord only.
 				switch(type){
@@ -677,13 +677,13 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	for(int icol=0; icol<1000; icol+=dtrat){
 		setup_shwfs_etf(powfs, parms, ipowfs, 0, icol, 0, 0);
 		dcell *i0_new=0;
-		
-		gensei(&i0_new, NULL, NULL, NULL, 
-			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep, 
+
+		gensei(&i0_new, NULL, NULL, NULL,
+			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep,
 			powfs[ipowfs].realsaa, parms->powfs[ipowfs].radgx?powfs[ipowfs].srot:NULL,
 			parms->powfs[ipowfs].siglevs, parms->wfs[iwfs].wvlwts, NULL,
 			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].mtchstc);
-			
+
 		//writebin(i0_new, "i0_%d", icol);
 		for(int isa=0; isa<nsa; isa++){
 			real geach[3]={0,0,1};

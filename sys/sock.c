@@ -299,7 +299,7 @@ in_addr_t socket_peer(int sock){
 const char* addr2name(in_addr_t s_addr){
 	struct in_addr addr;
 	addr.s_addr=s_addr;
-	return (const char*)inet_ntoa(addr);
+	return lookup_hostname((const char*)inet_ntoa(addr));
 }
 
 static volatile int quit_listen=0;
@@ -541,7 +541,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 			hints.ai_socktype=SOCK_STREAM;
 			char hoststr[512];
 			char portstr[32];
-			hostname=lookup_host(hostname);
+			hostname=lookup_hostaddr(hostname);
 			const char* col=strchr(hostname, ':');
 			if(col&&strlen(col+1)>0){//port is part of hostname
 				size_t nn=col-hostname;

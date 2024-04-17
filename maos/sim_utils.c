@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -427,7 +427,7 @@ void sim_update_etf(sim_t* simu){
 					deltah=deltah_last;
 				}
 			}
-			
+
 			info("Step %d: powfs %d: Updating ETF.\n", isim, ipowfs);
 			TIC;tic;
 			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah, zoomset?0:100);
@@ -661,7 +661,7 @@ static void init_simu_evl(sim_t* simu){
 					save->evlopdmean_ngsr[ievl]=zfarr_init(0, 0, "evlopdmean_ngsr" DIR_SUFFIX);
 				}
 			}
-#undef DIR_SUFFIX			
+#undef DIR_SUFFIX
 		}/*for ievl */
 #define DIR_SUFFIX_OL "_%d.fits", seed
 		if(parms->evl.psfol){
@@ -789,7 +789,7 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
-	
+
 	/*Do not initialize gradlastcl. Do not initialize gradlastol in open
 	  loop. They are used for testing*/
 	if(parms->sim.closeloop){
@@ -998,7 +998,7 @@ static void init_simu_wfs(sim_t* simu){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 		const real hs=parms->wfs[iwfs].hs;
-		
+
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
@@ -1459,7 +1459,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	{
 		simu->perfevl_pre=thread_prep(0, nevl, nevl, perfevl_ievl, simu);
 	}
-	
+
 #if USE_CUDA
 	if(parms->gpu.wfs){
 		simu->wfsgrad_pre=thread_prep(0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
@@ -1652,7 +1652,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->olmp);
 	dcellfree(simu->clep);
 	dcellfree(simu->clmp);
-	
+
 	dcellfree(simu->LGSfocus);
 	dcellfree(simu->LGSfocus_drift);
 	dcellfree(simu->LGSfocusts);
@@ -1843,7 +1843,7 @@ void print_progress(sim_t* simu){
 			const char *htm="    Timing ";
 			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->recon.split)?hsp:"", LOG_LEVEL<2?htm:"");
 		}
-		info2("Step %5d: OL%7.1f %6.1f", 
+		info2("Step %5d: OL%7.1f %6.1f",
 			isim,
 			mysqrt(P(simu->ole, 0, isim))*1e9,
 			mysqrt(P(simu->ole, 1, isim))*1e9);
@@ -1852,7 +1852,7 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->clep, 0, 0, 0, isim))*1e9,
 				mysqrt(P(simu->clep, 0, 0, 1, isim))*1e9,
 				mysqrt(P(simu->cle, 0, isim))*1e9,
-				mysqrt(P(simu->cle, 1, isim))*1e9				
+				mysqrt(P(simu->cle, 1, isim))*1e9
 			);
 			if(parms->recon.split){
 				info2(" Split %7.1f %6.1f %6.1f",
@@ -1919,7 +1919,7 @@ void print_progress(sim_t* simu){
 					P(P(res, 2), i)=sqrt(P(tmp, 0, i)-P(tmp, 2, i))*1e9;//TT
 				}
 			}
-			plot_points("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=legs},
+			draw("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=legs},
 				"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 		}
 	}

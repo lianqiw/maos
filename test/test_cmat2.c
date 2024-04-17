@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -270,13 +270,13 @@ int test_ints(){
 	}
     }
     /*takes 0.9 ms in debug mode, 0.09ms in O3 mode. */
- 
+
     /*tic; */
     for(int i=0; i<10000; i++){
 	embed_wvf(psf,npsf,opd,amp,nopd,0.5e-6,0.5);
     }
     toc("embed");
-  
+
     fftw_plan plan_psf=fftw_plan_dft_2d
 	(npsf,npsf,psf,psf,-1,FFTW_MEASURE);
     /*tic; */
@@ -291,18 +291,18 @@ int test_ints(){
 	}
     }
     /*takes 0.08ms in debug mode, 0.03 in O3 mode. */
- 
+
     for(int j=0; j<10000; j++){
 	fftshift(psf,npsf,npsf);
     }
     toc("fftshift");/*0.014 ms in O3 */
-    
+
     tic;
     for(int j=0; j<10000; j++){
 	add_hf(psf,npsf,npsf);
     }
     toc("addhf");/*0.011 ms in O3 mode */
-   
+
     }
 #endif
 int main(){

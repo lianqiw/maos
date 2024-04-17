@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]){
 		P_OLLO,
 		N_ALL,
 	};
-	//name of the top tab. 
+	//name of the top tab.
 	const char* toptab[]={
 	"CL",
 	"CL",
@@ -483,7 +483,7 @@ int main(int argc, char* argv[]){
 						cellresize(P(res, ic), 1, nseed+1);
 						P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
 					}
-					plot_points(toptab[ic], (plot_opts){.dc=P(res, ic), .xylog=xylog, .legend=(const char* const*)legs0},
+					draw(toptab[ic], (plot_opts){.dc=P(res, ic), .xylog=xylog, .legend=(const char* const*)legs0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					if(nseed>1){//seed average
 						dfree(P(P(res, ic), nseed));
@@ -504,9 +504,9 @@ int main(int argc, char* argv[]){
 				}
 				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
 				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-				plot_points("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "All");
-				plot_points("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Open loop Wavefront Error", xlabel, ylabel, "All");
 				dcellfree(restmpol);
 				dcellfree(restmpcl);
@@ -515,18 +515,18 @@ int main(int argc, char* argv[]){
 		} else{//plot seed average for each mode.
 			for(int ic=0; ic<resm->nx; ic++){
 				if(P(resm, ic)){
-					plot_points(toptab[ic], (plot_opts){.ngroup=npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab[ic], (plot_opts){.ngroup=npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
 			}
-		}	
+		}
 	}
 	for(int iseed=0; iseed<nseed; iseed++){//each seed
 		if(npath>1){//plot all path together for each seed
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
 					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-					plot_points(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
 					dcellfree(tmp);
 				}
@@ -541,16 +541,16 @@ int main(int argc, char* argv[]){
 			}
 			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
 			dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-			plot_points("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+			draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
-			plot_points("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+			draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 			dcellfree(restmpol);
 			dcellfree(restmpcl);
 			dcellfree(restmp);
 		}
 	}
-	
+
 	draw_final(1);
 	cellfree(ysky);
 	cellfree(res);
@@ -568,7 +568,7 @@ int main(int argc, char* argv[]){
 	  if(upterr && P(upterr,0)){
 	  for(int iseed=0; iseed<nseed; iseed++){
 
-	  plot_points("upterr", nseed, NULL, upterr, NULL, NULL, xylog, NULL, NULL,
+	  draw("upterr", nseed, NULL, upterr, NULL, NULL, xylog, NULL, NULL,
 	  "Uplink error", xlabel, "Error (rad)", "%d", iseed);
 	  }
 	  }*/

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -88,7 +88,7 @@ static void plot_psf(ccell* psf2s, const char* psfname, int closeloop, int ievl,
 			if(uselog==2){
 				dcwlog10(psftemp);
 			}
-			ddraw(psfname, psftemp, NULL, NULL, 0, title, "x", "y", "%s", tabname);
+			draw(psfname, (plot_opts){.image=psftemp},title, "x", "y", "%s", tabname);
 		}
 	}
 	dfree(psftemp);
@@ -425,13 +425,13 @@ static void perfevl_mean(sim_t* simu){
 			focus=dwdot(pcleNGSdot, recon->ngsmod->IMCC_F, pcleNGSdot);
 		}
 		real lgs=tot-ngs;
-		//Turn dot product to modes 
+		//Turn dot product to modes
 		real* pcleNGSm=PCOL(simu->cleNGSm, isim);
 		dmulvec(pcleNGSm, recon->ngsmod->IMCC, pcleNGSdot, 1);
 		real* poleNGSm=PCOL(simu->oleNGSm, isim);
 		dmulvec(poleNGSm, recon->ngsmod->IMCC, poleNGSdot, 1);
 		if(simu->parms->tomo.ahst_idealngs==1){
-			//Magically remove NGS modes 
+			//Magically remove NGS modes
 			tt=0;
 			ngs=0;
 			focus=0;
@@ -644,7 +644,7 @@ static void perfevl_save(sim_t* simu){
 
 		dcellscale(simu->evlopdmean, 1./scale);
 		dcellscale(simu->evlopdmean_ngsr, 1./scale);
-		
+
 		if(parms->evl.psfol){
 			const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 			dscale(simu->evlopdmeanol, scaleol);
@@ -672,7 +672,7 @@ static void perfevl_save(sim_t* simu){
 void* perfevl(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
 	const parms_t* parms=simu->parms;
-	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer. 
+	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer.
 		int ips=simu->perfevl_iground;
 		if(ips!=-1&&simu->atm&&!parms->sim.idealevl){
 			if(!simu->evlopdground){
@@ -680,7 +680,7 @@ void* perfevl(sim_t* simu){
 			} else{
 				dzero(simu->evlopdground);
 			}
-			const int ievl=0;//doesn't matter for ground layer. 
+			const int ievl=0;//doesn't matter for ground layer.
 			int ind=ievl+parms->evl.nevl*ips;
 			const int isim=simu->perfisim;
 			const real dt=parms->sim.dt;

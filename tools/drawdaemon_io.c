@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -37,7 +37,7 @@ in_addr_t client_addr;
 int udp_sock=-1;//server udp socket
 float io_time1=0;//time the latest drawdata is receievd
 float io_time2=0;//time the previous drawdata is receveid
-float io_timeclear=0;//plots 
+float io_timeclear=0;//plots
 int io_heartbeat=0;
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
@@ -68,19 +68,24 @@ static unsigned int crp(float x, float x0){
 
 /**
    convert float to char with color map*/
-void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlog){
+void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
 	if(zlog){
 		max=log10(max);
 		min=log10(min);
 	}
-	//update if range change by 10%
-	if(max>zlim[1]*1.1||max<zlim[1]*0.9){
-		zlim[1]=max;
-	}
-	if(min>zlim[0]*1.1||min<zlim[0]*0.9){
+	if(zlim[0]==zlim[1]){
 		zlim[0]=min;
+		zlim[1]=max;
+	}else if(!zlim_manual){
+		//update if range change by 10%
+		if(max>zlim[1]*1.1||max<zlim[1]*0.9){
+			zlim[1]=max;
+		}
+		if(min>zlim[0]*1.1||min<zlim[0]*0.9){
+			zlim[0]=min;
+		}
 	}
 	round_limit(zlim, zlim+1, 0);
 	min=zlim[0];
@@ -202,6 +207,7 @@ drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->xylog[1]='n';
 		drawdata->cumulast=-1;/*mark as unknown. */
 		drawdata->limit_manual=0;
+		drawdata->zlim_manual=0;
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
 	} else if(reset){
@@ -242,12 +248,12 @@ static void drawdata_clear_older(float timclear){
 	for(int i=0; i<len; i++){					\
 	    ((float*)p)[i]=(float)(((double*)p)[i]);			\
 	}								\
-    }									
-int sock;//socket 
+    }
+int sock;//socket
 int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
 int keep_listen=1;//set to 0 to stop listening
 int draw_single=0;//whether client only wants to draw to the active tab.
-drawdata_t *drawdata=NULL;//current 
+drawdata_t *drawdata=NULL;//current
 drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
 int npts=0;
@@ -425,6 +431,7 @@ void *listen_draw(void *user_data){
 				break;
 			case DRAW_ZLIM:
 				STREADFLT(drawdata->zlim, 2);
+				drawdata->zlim_manual=1;
 				break;
 			case DRAW_LEGEND:
 				for(int i=0; i<npts; i++){
@@ -501,7 +508,7 @@ void *listen_draw(void *user_data){
 			}
 			break;
 			case DRAW_ZLOG://flip zlog
-				drawdata->zlog=drawdata->zlog?0:1;
+				STREADINT(drawdata->zlog);
 				break;
 			case DRAW_END:
 			{
@@ -533,7 +540,7 @@ void *listen_draw(void *user_data){
 			}
 			break;
 			case -1://read failed.
-				close(sock); 
+				close(sock);
 				sock=-1;
 				break;
 			default:

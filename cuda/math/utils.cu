@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -366,7 +366,7 @@ void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 #endif
 	cp2cpu_same(smat, szero, snew, float)
 	cp2cpu_same(zmat, zzero, znew, float2)
-#if ! CUDA_DOUBLE 
+#if ! CUDA_DOUBLE
 #if COMP_SINGLE==0
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
@@ -453,7 +453,7 @@ void curdraw_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, i
 	if(draw_current(fig, fn)){
 		dmat* psftemp=NULL;
 		add2cpu(&psftemp, 0, psf, 1./count, stream);
-		ddraw(fig, psftemp, NULL, NULL, zlog, title, xlabel, ylabel, "%s", fn);
+		draw(fig, (plot_opts){.image=psftemp,.zlog=zlog}, title, xlabel, ylabel, "%s", fn);
 		dfree(psftemp);
 	}
 }
@@ -466,7 +466,7 @@ void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, i
 		cp2cpu(&psftemp, psf, stream);
 		dmat *psfreal=NULL;
 		cabs22d(&psfreal, 0, psftemp, 1./count);
-		ddraw(fig, psfreal, NULL, NULL, zlog, title, xlabel, ylabel, "%s", fn);
+		draw(fig, (plot_opts){.image=psfreal,.zlog=zlog}, title, xlabel, ylabel, "%s", fn);
 		dfree(psfreal);
 		cfree(psftemp);
 	}

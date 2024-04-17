@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -91,7 +91,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 	int sock_draw=sock_data->fd;
 	char** figfn=sock_data->figfn;
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
-#if TEST_UDP	
+#if TEST_UDP
 	if(sock_data->udp.sock<=0){
 		sock_data->udp.sock=bind_socket(SOCK_DGRAM, 0, 0);
 		int client_port=socket_port(sock_data->udp.sock);
@@ -104,14 +104,14 @@ retry:
 			return NULL;
 		}
 		//server replies in UDP packet.
-		socklen_t slen=sizeof(sock_data->udp.peer_addr);	
+		socklen_t slen=sizeof(sock_data->udp.peer_addr);
 		int cmd2[64];
 		socket_recv_timeout(sock_data->udp.sock, 2);
-		int ncmd=recvfrom(sock_data->udp.sock, cmd2, sizeof(cmd2), 0, 
+		int ncmd=recvfrom(sock_data->udp.sock, cmd2, sizeof(cmd2), 0,
 						 (struct sockaddr*)&sock_data->udp.peer_addr, &slen);
 		if(ncmd>0){
-			dbg("received udp reply from %s:%d (%d) bytes. UDP payload is %d. Header size is %d\n", 
-				addr2name(sock_data->udp.peer_addr.sin_addr.s_addr), 
+			dbg("received udp reply from %s:%d (%d) bytes. UDP payload is %d. Header size is %d\n",
+				addr2name(sock_data->udp.peer_addr.sin_addr.s_addr),
 						  sock_data->udp.peer_addr.sin_port, cmd2[3], cmd2[4], cmd2[5]);
 			sock_data->udp.version=cmd2[2];
 			sock_data->udp.payload=cmd2[4];
@@ -134,7 +134,7 @@ retry:
 			}
 		}
 	}
-#endif	
+#endif
 	int cmd;
 	int nlen=0;
 
@@ -265,7 +265,7 @@ static void draw_remove(int fd, int reuse){
 				}
 			}
 			if(fd!=-1) close(fd);
-#if TEST_UDP			
+#if TEST_UDP
 			if(p->udp.sock>0) {
 				close(p->udp.sock);
 			}
@@ -439,7 +439,6 @@ void draw_final(int reuse){
    3: create an empty page.
 */
 static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
-	if(!fn) warning("fn should be set\n");
 	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
 	if(!(draw_single==1 && ps->draw_single==1)) return 1;
 	list_t* child=0;
@@ -448,7 +447,7 @@ static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 	if(child){
 		if(fn){
 			found=list_search(&child->child, NULL, fn, 1);
-		} else{//don't check fn
+		} else{//don't check fn if not set
 			found=1;
 		}
 	}
@@ -491,7 +490,7 @@ int draw_current(const char* fig, const char* fn){
                 current=0;
 				nskip++;
                 if(nplot) dbg2("Skip after plot %d times\n", nplot);
-				nplot=0;			
+				nplot=0;
             } else{
 				nplot++;
 				if(nskip) dbg2("Resume after skip %d times\n", nskip);
@@ -574,8 +573,8 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
 				//toc2("write %s:%s %lu MiB", fig, fn, bufsize>>20);
 			}
 		}
-		
-#if TEST_UDP				
+
+#if TEST_UDP
 		if(ps->udp.sock>0){
 			//test UDP data
 			int counter=myclocki();
@@ -583,15 +582,16 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
 			udp_send(&ps->udp, buf, bufsize, counter);
 			udp_send(&ps->udp, buf, bufsize, counter);
 		}
-#endif	
+#endif
 		UNLOCK(lock);
 	}
 	return ans;
 }
+typedef float dtype;
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
-int plot_points(const char* fig,    /**<Category of the figure*/
+int draw(const char* fig,    /**<Category of the figure*/
 	plot_opts opts,     /**<Additional options*/
 	const char* title,  /**<title of the plot*/
 	const char* xlabel, /**<x axis label*/
@@ -600,7 +600,7 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 	...){
 	if(draw_disabled) return 0;
 	format2fn;
-	
+
 	iframe++;
 	int ans=0;
 	if(!get_drawdaemon()){
@@ -620,15 +620,73 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 		if(needed){
 			//When using UDP, we need to serialize the data instead of writing like a FILE
 			//Use open_memstream to serialize and f_openmem for de-serialize
-			//To be able to handle the data in forward/backward compatible way, 
+			//To be able to handle the data in forward/backward compatible way,
 			//each segment is composed of 1) the length of bytes (int), 2) command name (int), 3) payload
 			FILE* fbuf=open_memstream(&buf, &bufsize);
-			int zeros[4]={0,0,0,0};	
+			int zeros[4]={0,0,0,0};
 			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
 			FWRITECMD(DRAW_START, 0);
-			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
+			if(opts.image){
+				FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
+				//FWRITEARR(opts.image->p, nlen2);
+#define MAXNX 1024 //downsample if bigger.
+				const dmat *p=opts.image;
+				int xstep=(NX(p)+MAXNX-1)/MAXNX;
+				int ystep=(NY(p)+MAXNX-1)/MAXNX;
+				int nx2=(NX(p))/xstep;
+				int ny2=(NY(p))/ystep;
+				dtype *tmp=mymalloc(nx2*ny2, dtype);
+				for(int iy=0; iy<ny2; iy++){
+					dtype *pout=tmp+iy*nx2;
+					if(opts.image->id==M_REAL){
+						const dmat *pd=dmat_cast(opts.image);
+						const real *pin=P(pd)+iy*ystep*NX(pd);
+						for(int ix=0; ix<nx2; ix++){
+							pout[ix]=(dtype)pin[ix*xstep];
+						}
+					}else{//convert complex numbers to real.
+						const cmat *pc=cmat_cast(opts.image);
+						const comp *pin=P(pc)+iy*ystep*NX(pc);
+						switch(opts.ctype){
+						case 0:
+							for(int ix=0; ix<nx2; ix++){
+								pout[ix]=(dtype)cabs(pin[ix*xstep]);
+							}
+							break;
+						case 1:
+							for(int ix=0; ix<nx2; ix++){
+								pout[ix]=(dtype)atan2(cimag(pin[ix*xstep]), creal(pin[ix*xstep]));
+							}
+							break;
+						case 2:
+							for(int ix=0; ix<nx2; ix++){
+								pout[ix]=(dtype)creal(pin[ix*xstep]);
+							}
+							break;
+						case 3:
+							for(int ix=0; ix<nx2; ix++){
+								pout[ix]=(dtype)cimag(pin[ix*xstep]);
+							}
+							break;
+						}
+					}
+				}
+				int32_t header[2];
+				header[0]=nx2;
+				header[1]=ny2;
+				size_t nlen1=sizeof(header);
+				size_t nlen2=sizeof(dtype)*nx2*ny2;
+				FWRITECMD(DRAW_DATA, nlen1+nlen2);
+				FWRITEARR(header, nlen1);
+				FWRITEARR(tmp, nlen2);
+				if(opts.zlog){
+					FWRITECMDARR(DRAW_ZLOG, &opts.zlog, sizeof(int));
+				}
+				free(tmp);
+			}
+			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
 			if(opts.loc){/*there are points to plot. */
 				for(int ig=0; ig<opts.ngroup; ig++){
 					int nlen=opts.loc[ig]->nloc;
@@ -659,8 +717,8 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 						FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
 					}
 				}
-			} else{
-				error("Invalid Usage\n");
+			} else if (!opts.image){
+				warning("Empty plot.\n");
 			}
 			if(opts.style){
 				FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*opts.ngroup);
@@ -675,12 +733,16 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 				FWRITEINT(NY(opts.cir));
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
+			if(opts.zlim){/*xmin,xmax,ymin,ymax */
+				FWRITECMDARR(DRAW_ZLIM, opts.zlim, sizeof(real)*2);
+			}
 			if(opts.limit){/*xmin,xmax,ymin,ymax */
 				FWRITECMDARR(DRAW_LIMIT, opts.limit, sizeof(real)*4);
 			}
 			if(opts.xylog){
 				FWRITECMDARR(DRAW_XYLOG, opts.xylog, sizeof(char)*2);
 			}
+
 			/*if(format){
 				FWRITECMDSTR(DRAW_NAME, fn);
 			}*/
@@ -700,7 +762,7 @@ int plot_points(const char* fig,    /**<Category of the figure*/
 			FWRITECMDSTR(DRAW_TITLE, title);
 			FWRITECMDSTR(DRAW_XLABEL, xlabel);
 			FWRITECMDSTR(DRAW_YLABEL, ylabel);
-		
+
 			FWRITECMD(DRAW_END, 0);
 end2:
 			fclose(fbuf);
@@ -720,264 +782,9 @@ end2:
 			free_default(buf);
 		}
 	}
-
 	return ans;
 }
 
-/**
-   Draw an image.
-*/
-//Data structure for imagesc
-#define MAXNX 1000 //downsample
-typedef float dtype;
-typedef struct imagesc_t{
-	char* fig; /**<Category of the figure*/
-	long nx;   /**<the image is of size nx*ny*/
-	long ny;   /**<the image is of size nx*ny*/
-	long bsize;/**<bytes of each element*/
-	dtype* limit; /**<x min; xmax; ymin and ymax*/
-	dtype* zlim;  /**<Clip the data to min; max*/
-	dtype* p; 	  /**<The image*/
-	char* title;  /**<title of the plot*/
-	char* xlabel; /**<x axis label*/
-	char* ylabel; /**<y axis label*/
-	char* fn;
-}imagesc_t;
-static void* imagesc_do(imagesc_t* data){
-	if(draw_disabled) return NULL;
-	iframe++;//frame counter
-	
-	if(!get_drawdaemon()){
-		char* fig=data->fig;
-		long nx=NX(data);
-		long ny=NY(data);
-		dtype* limit=data->limit;
-		dtype* zlim=data->zlim;
-		dtype* p=P(data);
-		char* title=data->title;
-		char* xlabel=data->xlabel;
-		char* ylabel=data->ylabel;
-		char* fn=data->fn;
-		int needed=0;
-		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
-			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-			int needed_i=check_figfn(ps, fig, fn);
-			//dbg("%s %s: %d\n", fig, fn, needed_i);
-			if(needed_i){
-				if(!needed||needed==3){
-					needed=needed_i;
-				}
-			}
-		}
-		int ans=0;
-		char* buf=0;
-		size_t bufsize=0;
-		if(needed){
-			FILE* fbuf=open_memstream(&buf, &bufsize);
-			int zeros[4]={0,0,0,0};
-			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
-			FWRITECMD(DRAW_START, 0);
-            FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
-			FWRITECMDSTR(DRAW_FIG, fig);
-			FWRITECMDSTR(DRAW_NAME, fn);
-			
-			size_t nlen=2*sizeof(int32_t)+sizeof(dtype)*nx*ny;
-			FWRITECMD(DRAW_DATA, nlen);
-			int32_t header[2];
-			header[0]=nx;
-			header[1]=ny;
-			FWRITEARR(header, sizeof(int32_t)*2);
-			FWRITEARR(p, sizeof(dtype)*nx*ny);
-			if(zlim){
-				FWRITECMDARR(DRAW_ZLIM, zlim, sizeof(dtype)*2);
-			}
-			if(limit){/*xmin,xmax,ymin,ymax */
-				FWRITECMDARR(DRAW_LIMIT, limit, sizeof(dtype)*4);
-			}
-
-			FWRITECMDSTR(DRAW_TITLE, title);
-			FWRITECMDSTR(DRAW_XLABEL, xlabel);
-			FWRITECMDSTR(DRAW_YLABEL, ylabel);
-			
-			FWRITECMD(DRAW_END, 0);
-end2:
-			fclose(fbuf);
-			if(ans){
-				warning("write failed:%d\n", ans);
-				free_default(buf); bufsize=0; buf=0;
-			} else{
-				int* bufp=(int*)(buf+3*sizeof(int));
-				bufp[0]=(int)bufsize;//frame number
-				bufp[1]=iframe;//frame number
-				bufp[2]=(int)bufsize;//sub-frame number
-				bufp[3]=0;//sub-frame number
-				//dbg("draw_image: buf has size %ld. %d %d %d %d\n", bufsize,
-				//	bufp[0], bufp[1], bufp[2], bufp[3]);
-			}
-		}
-
-		if(bufsize&&!ans){
-			ans=send_buf(fig, fn, buf, bufsize);
-			free_default(buf);
-		}
-	}
-	free(data->fig);
-	free(data->limit);
-	free(data->zlim);
-	free(P(data));
-	free(data->title);
-	free(data->xlabel);
-	free(data->ylabel);
-	free(data->fn);
-	free(data);
-	return NULL;
-}
-/**
-   Draws an image.
-
-   It uses a separate thread to avoid slowing down the simulation. Skip if socket is busy.
- */
-int ddraw(const char *fig, /**<Category of the figure*/
-            const dmat *p,   /**<The image*/
-            const real *limit,  /**<x min, xmax, ymin and ymax*/
-            const real *zlim,   /**< min,max, the data*/
-			int zlog, 	/**<apply log10 to value*/
-            const char *title,  /**<title of the plot*/
-            const char *xlabel, /**<x axis label*/
-            const char *ylabel, /**<y axis label*/
-            const char *format, /**<subcategory of the plot.*/
-            ...){
-    format2fn;
-    if(!p||!draw_current(fig, fn)){
-        return 0;
-    }
-
-    // We copy all the data and put the imagesc job into a task
-    // The task will free the data after it finishes.
-    imagesc_t *data=mycalloc(1, imagesc_t);
-#define datastrdup(x) data->x=(x)?strdup(x):0
-#define datamemdup(x, size, type, dolog)		\
-    if(x){					\
-		data->x=mymalloc(size, type);\
-		for(long i=0; i<size; i++){		\
-			data->x[i]=(type)(dolog?log10(x[i]):x[i]);\
-		}					\
-    }else{					\
-		data->x=0;				\
-    }
-    datastrdup(fig);
-    data->bsize=sizeof(dtype);//always send float.
-    datamemdup(limit, 4, dtype, 0);
-    datamemdup(zlim, 2, dtype, zlog);
-    {
-        //down sampling and change to float
-        int xstep=(NX(p)+MAXNX-1)/MAXNX;
-        int ystep=(NY(p)+MAXNX-1)/MAXNX;
-        int nx2=(NX(p))/xstep;
-        int ny2=(NY(p))/ystep;
-        P(data)=malloc(nx2*ny2*sizeof(dtype));
-        for(int iy=0; iy<ny2; iy++){
-            dtype *p2=P(data)+iy*nx2;
-            const real *p1=P(p)+iy*ystep*NX(p);
-			if(zlog){
-				for(int ix=0; ix<nx2; ix++){
-					p2[ix]=(dtype)log10(p1[ix*xstep]+1e-10);
-				}
-			}else{
-            	for(int ix=0; ix<nx2; ix++){
-                	p2[ix]=(dtype)p1[ix*xstep];
-            	}
-			}
-        }
-        data->nx=nx2;
-        data->ny=ny2;
-    }
-    datastrdup(title);
-    datastrdup(xlabel);
-    datastrdup(ylabel);
-    data->fn=format?strdup(fn):0;
-#undef datastrdup
-#undef datamemdup
-	//dbg("draw_single=%d\n", draw_single);
-    if(draw_single==1){
-        thread_new((thread_fun)imagesc_do, data);
-    } else{
-        imagesc_do(data);
-    }
-    return 1;
-}
-
-/**
-   Draw the OPD of abs and phase of complex p defined on nx*ny grid. see ddraw()
-   type: 0: abs only. 1: abs and phase. 2: real and imaginary
-*/
-int cdraw(const char *fig, const cmat *p, const real *limit, const real *zlim,
-    int type, const char *title, const char *xlabel, const char *ylabel,
-    const char *format, ...){
-    format2fn;
-	const char *t1=NULL, *t2=NULL;
-	switch(type){
-	case 1:
-		t1="abs";
-		t2="phi";
-		break;
-	case 2:
-		t1="real";
-		t2="imag";
-		break;
-	default:
-		t1="abs2";
-		t2="abs2";
-	}
-	char fn2[64];
-	char fn3[64];
-	snprintf(fn2, sizeof(fn2), "%s %s", fn, t1);
-	snprintf(fn3, sizeof(fn3), "%s %s", fn, t2);
-    if(!draw_current(fig, fn2) && !draw_current(fig, fn3)) return 0;
-    int isreal=1;
-    long nx=NX(p);
-    long ny=NY(p);
-    dmat *pr=dnew(nx, ny);
-    dmat *pi=dnew(nx, ny);
-
-    
-	switch(type){
-	case 1:
-		for(int i=0; i<nx*ny; i++){
-			P(pr, i)=cabs(P(p,i));
-			if(P(pr, i)>1.e-10){
-				P(pi, i)=atan2(cimag(P(p, i)), creal(P(p, i)));
-				if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
-			}
-		}
-		break;
-	case 2:
-		for(int i=0; i<nx*ny; i++){
-			P(pr, i)=creal(P(p, i));
-			P(pi, i)=cimag(P(p, i));
-			if(isreal&&fabs(P(pi, i))>1.e-10) isreal=0;
-		}
-		break;
-	case 3:
-		for(int i=0; i<nx*ny; i++){
-			P(pr, i)=cabs2(P(p, i));
-		}
-		break;
-	case 4:
-		for(int i=0; i<nx*ny; i++){
-			P(pr, i)=log10(cabs2(P(p, i))+1e-10);
-		}
-		break;
-	}
-    
-    ddraw(fig, pr, limit, zlim, 0, title, xlabel, ylabel, "%s %s", fn, t1);
-    dfree(pr);
-    if(!isreal){
-        ddraw(fig, pi, limit, zlim, 0, title, xlabel, ylabel, "%s %s", fn, t2);
-    }
-    dfree(pi);
-    return 1;
-}
 #include "../math/mathdef.h"
 #include "../math/mathdef.h"
 /*
@@ -1018,7 +825,7 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	limit[1]=map->ox+(map->nx-0.5)*map->dx;
 	limit[2]=map->oy-map->dx/2;
 	limit[3]=map->oy+(map->ny-0.5)*map->dx;*/
-	ddraw(fig, (const dmat*)map, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=(const dmat*)map, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
@@ -1046,7 +853,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	limit[1]=limit[0]+loc->dx*(nx);
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
 	limit[3]=limit[2]+loc->dy*(ny);*/
-	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1086,7 +893,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
 	limit[3]=limit[2]+fabs(loc->dy)*(ny);
 	*/
-	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1101,7 +908,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
     long nsa=saloc->nloc;
 	if(nsa<=4||NY(gradin)!=2) grad2opd=0;
     //check current plotting target
-    
+
 	char fnx[100];
 	char fny[100];
 	if(NY(gradin)>1){
@@ -1112,7 +919,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		snprintf(fny, sizeof(fny), "%s", fn);
 	}
 	if(!(grad2opd&&draw_current(fig, fn)) && !draw_current(fig, fnx) && !draw_current(fig, fny)) return 0;
-	
+
 	dmat* grad=0;
 	if(trs && NY(grad)==2){//remove tip/tilt
 		grad=ddup(gradin);
@@ -1141,7 +948,8 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		int npad=saloc->npad;
 		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
 		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
-		ddraw(fig, phi, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
+		draw(fig, (plot_opts){
+			.image=phi, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	}
 	if(draw_current(fig, fnx)){
@@ -1193,7 +1001,8 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	limit[1]=limit[0]+loc->dx*nx;
 	limit[2]=loc->map->oy+loc->dx*(npad-1);
 	limit[3]=limit[2]+loc->dx*ny;*/
-	ddraw(fig, opd0, limit, zlim, 0, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){
+		.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -1228,7 +1037,8 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 		ints2=dcell2m(ints3);
 		dcellfree(ints3);
 	}
-	ddraw("Ints", ints2, NULL, zlim, 0, title, xlabel, ylabel, "%s", fn);
+	draw("Ints", (plot_opts){
+		.image=ints2, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
 	dfree(ints2);
 	return 1;
 }

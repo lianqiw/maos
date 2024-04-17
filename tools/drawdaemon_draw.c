@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -84,7 +84,7 @@ static void pango_size(PangoLayout* layout, const char* text, float* legwidth, f
 		*legwidth=0;
 		*legheight=0;
 		print_backtrace();
-	}	
+	}
 	pango_layout_set_markup(layout, text, -1);
 	int width, height;
 	pango_layout_get_size(layout, &width, &height);
@@ -172,7 +172,7 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 		*dtic=spacing;
 		*ntic=MAX(2, (int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1));
 	}
-	
+
 }
 /**
    adjust xmin, xmax properly.
@@ -425,7 +425,7 @@ static void update_limit(drawdata_t *drawdata){
 	int xlog=drawdata->xylog[0]=='y'?1:0;
 	int ylog=drawdata->xylog[1]=='y'?1:0;
 
-	
+
 	float xlimit=(xmax0-xmin0)*0.1;
 	float ylimit=(ymax0-ymin0)*0.1;
 	if(drawdata->cumu!=drawdata->cumulast){
@@ -479,7 +479,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->font_name_version=font_name_version;
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
-	
+
 	if(drawdata->image||drawdata->square){
 		drawdata->cumu=0;
 	}
@@ -498,7 +498,19 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		drawdata->limit=drawdata->limit_data;
 	}
-	if(!drawdata->image){
+	if(drawdata->image){
+		if(drawdata->zlog_last!=drawdata->zlog){
+			drawdata->zlim_manual=0;
+			/*if(drawdata->zlog){
+				drawdata->zlim[0]=log10(drawdata->zlim[0]);
+				drawdata->zlim[1]=log10(drawdata->zlim[1]);
+			} else{
+				drawdata->zlim[0]=pow(10, drawdata->zlim[0]);
+				drawdata->zlim[1]=pow(10, drawdata->zlim[1]);
+			}*/
+			drawdata->zlog_last=drawdata->zlog;
+		}
+	}else{
 		if(drawdata->cumulast!=drawdata->cumu){
 			drawdata->drawn=0;
 			drawdata->limit_changed=-1;
@@ -592,7 +604,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		const int ny=drawdata->ny;
 		const int stride=cairo_format_stride_for_width(drawdata->format, nx);
 
-		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray, drawdata->zlim, drawdata->zlog);
+		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray, drawdata->zlim, drawdata->zlim_manual, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=cairo_image_surface_create_for_data
 			(drawdata->p, drawdata->format, nx, ny, stride);
@@ -838,9 +850,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 									y=y_cumu/(ips-ips0+1);
 								}
 							}
-						} 
+						}
 						if(isinf(y)) y=0;
-					
+
 						iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
 
 						cairo_line_to(cr, round(ix), round(iy));
@@ -931,7 +943,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		xmin0=((-widthim*0.5)/zoomx-drawdata->offx)/scalex+centerx;
 		ymax0=(((heightim)*0.5)/zoomy-drawdata->offy)/scaley+centery;
 		ymin0=((-heightim*0.5)/zoomy-drawdata->offy)/scaley+centery;
-		
+
 		cairo_restore(cr);
 		//toc("cairo_draw pts");
 	}
@@ -958,7 +970,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	}
 	cairo_restore(cr);//undo the clip and scale
 
-	//now draw the tics 
+	//now draw the tics
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
 	/*Now doing the tic, and colobar */
 	/*When there is no zoom, panning, limit0 equals to limit. */
@@ -966,12 +978,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->limit0[1]=xmax0;
 	drawdata->limit0[2]=ymin0;
 	drawdata->limit0[3]=ymax0;
-	/*if(drawdata->spins){//dialog is running, update its values 
-		for(int i=0; i<4; i++){//update spin button's value. 
+	/*if(drawdata->spins){//dialog is running, update its values
+		for(int i=0; i<4; i++){//update spin button's value.
 			//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
 		}
 		if(drawdata->zlim[0] || drawdata->zlim[1]){
-			for(int i=5; i<6; i++){//update spin button's value. 
+			for(int i=5; i<6; i++){//update spin button's value.
 				//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
 			}
 		}
@@ -1119,7 +1131,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);
 			}
 			if(frac>=0&&frac<=1){
-				snprintf(ticval, 80, "%g", ticv);
+				snprintf(ticval, 80, "%g", drawdata->zlog?pow(10,ticv):ticv);
 				pango_text(cr, layout, LEN_LEG+4, heightim*(1-frac), ticval, 0, 0, 0);
 			}
 		}

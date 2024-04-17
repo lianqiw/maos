@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -61,36 +61,39 @@ struct drawdata_t{
 	float(*cir)[4];
 	int ncir;
 	int ncirmax; /*storage size of cir*/
-	
+
 	/*limit */
 	float* limit_data;/*x,y,limit of data. might be supplied by user. */
 	float* limit_cumu;/*x,y,limit of cumulatively averaged data. */
 	float* limit;/*points to either limit_data or limit_cumu */
-	float zlim[4];//2 additional elements for i/o in case double is passed in
 	int limit_manual; /*limit_data is supplied by user*/
+	float zlim[4];//2 additional elements for i/o in case double is passed in
+	int zlim_manual;//zlim is manually set.
+
 	char xylog[2];  /*draw in log scale x, y axis*/
 	int zlog; 	    /*draw image in log scale*/
+	int zlog_last; /*zlog status during previous call to cairo_draw()*/
 	//misc
 	int byte_float; //record the value used
 	int ready;      //ready is set to 0 when data is being read and 1 after wards.
-	int recycle;    //when set in GUI thread, data to be deleted by drawdaemon_io() 
+	int recycle;    //when set in GUI thread, data to be deleted by drawdaemon_io()
 	int delete;     //when set in io thread, page will be deleted by addpage()
 	float io_time;  //time data was received.
 	/*The following are for surfaces */
-	
+
 	cairo_format_t format;
 
 	int gray;       /*do we draw in gray scale or in colored */
-	
+
 	char* title;
 	char* xlabel;
 	char* ylabel;
 	char** legend;
-	
+
 	GtkWidget *subnb;
 	GtkWidget *page;
 	GtkWidget* drawarea;
-#if GTK_MAJOR_VERSION>=3 
+#if GTK_MAJOR_VERSION>=3
 	cairo_surface_t* pixmap;
 #else
 	GdkPixmap* pixmap;/*server side memory. */
@@ -114,13 +117,13 @@ struct drawdata_t{
 	float mxdown, mydown, mtdown;/*mouse pointer down. */
 	float dxdown, dydown; /*length of rectangular*/
 	int draw_rect; /*draw a rectangular with mxdown, mydown, dxdown, dydown*/
-	
+
 	float scalex, scaley;/*scale of the data to fit the display. */
 	float centerx, centery;
 	float xoff, yoff;/*offset of the area to draw figure. */
 	int ncxoff, ncyoff;/*offset of ncx, ncy */
 	float limit0[4];/*x,y limit of displayed region. */
-	
+
 	int square;/*make x/y scaling be the same, for image and coordinate display */
 	int valid;/*move is valid. */
 	int font_name_version;
@@ -178,7 +181,7 @@ gboolean addpage(gpointer user_data);
 int delete_page(drawdata_t *drawdata);
 /*from drawdaemon_io */
 void* listen_draw(void*);
-void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlog);
+void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog);
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
 gboolean update_title(gpointer data);
