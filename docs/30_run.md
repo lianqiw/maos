@@ -95,7 +95,7 @@ line to modify the values.
 In the \c config/maos folder, there are a few
 sample \c .conf files that is complete for each configuration:
 
-- \ref mcao_lgs for NFIRAOS mcao simulations (the default),
+- \ref mcao_lgs for LGS mcao simulations (the default),
 - \ref mcao_ngs for NGS mcao simulations
 - \ref scao_lgs for single conjugate LGS simulation
 - \ref scao_ngs for single conjugate NGS simulation.
@@ -124,7 +124,7 @@ includes `atm_mk13n50p.conf` to specify MK13N median seeing turbulence profile,
 configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS, `evl_sq34.conf` to
 specify the science FoV as simpson weighting on 3x3 points in the square 34x34"
 FoV, and `fit_sq34.conf` to sepcify the DM fitting FoV as simpson weighting on
-3x3 points in the square 34x34" FoV. 
+3x3 points in the square 34x34" FoV.
 
 For an MCAO configuration, the DM fitting FoV can be larger than the science FoV
 in order to sharpen diffraction limited TTF NGS. For an LTAO configuration, use
@@ -139,16 +139,24 @@ See \ref page33_example for more detailed explanations.
 To run predefined AO modes:
 
 ```
-maos -o mcao # default is MCAO with 2 dms. Save results to folder mcao. 
+maos -o mcao # default is MCAO with 2 dms. Save results to folder mcao.
 maos -c mcao_ngs.conf  # NGS MCAO
 maos -c scao_ngs.conf  # NGS SCAO
 maos -c scao_pwfs.conf # NGS SCAO using PWFS
 maos -c scao_lgs.conf  # LGS SCAO
-maos -c examples/keck_lgs.conf #KECK LGS AO
 maos -c mcao_lgs.conf dm_single.conf evl.moao=0 moao.dx=[1/2] #LGS LTAO with MOAO for each science field.
 maos -c mcao_lgs.conf dm_triple.conf #LGS MCAO with 3 DMs
 ```
-The default case starts with default.conf. It can be overriden by the environment variable MAOS_DEFAULT.
+
+To run simulation for sample AO systems:
+
+```
+maos -c keck_lgs.conf #KECK LGS AO
+maos -c nfiraos_lgs.conf #NFIRAOS MCAO with implementation errors
+maos -c nfiraos_lgs_pyttf.conf #NFIRAOS MCAO with PWFS as TTF sensor and implementation errors
+maos -c nfiraos_ngs.conf #NFIRAOS NGS AO with PWFS with implementation errors
+```
+The default case starts with `default.conf`. It can be overriden by the environment variable `MAOS_DEFAULT=filename`.
 
 To customize number of components
 
@@ -194,7 +202,7 @@ maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
 ```
 \section sect-ebb Error Budget Breakdown
 
-There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc. 
+There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc.
 
 ```
 maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 # step1: single DM fitting on axis
@@ -214,7 +222,7 @@ The following error budget items are computed:
 - `DM fitting error`: step1 gives DM fitting error which depends on the actuator spacing.
 - `DM projection error`: the quadrature difference between step1 and step1b gives DM projecting error which depends on the field of view and number of DMs.
 - `WFS aliasing error`: the quadrature difference between step1 and step2 gives WFS aliasing error.
-- `Tomography error`: the quadrature difference between the RSS of the three terms above and step2b is the tomography error which depends on the asterism geometry. 
+- `Tomography error`: the quadrature difference between the RSS of the three terms above and step2b is the tomography error which depends on the asterism geometry.
 - `Servo lag error`:  the quadrature difference between step2b and step3 gives servo lag error.
 - `WFS nonlinearity error`: the quadrature difference between step3 and step4 gives WFS non-linearity error.
 - `WFS noise effect`: the quadrature difference between step4 and step5 gives WFS noise error.
@@ -359,7 +367,7 @@ The range variation is simulated by adding corresponding focus mode to LGS WFS w
 
 \subsection pixel-background Rayleigh backscatter
 
-The Rayleigh backscatter effect can be introduced using `powfs.bkgrndfn=[filename,]` which contains simulation background level for each pixel defined at `sim.dtref`. The file contains a cell array of `nsa*nlgswfs` while each cell contains a `npixpisax*npixpsay` numerical array. `nlgswfs` is the number of `wfs` for this `powfs`. 
+The Rayleigh backscatter effect can be introduced using `powfs.bkgrndfn=[filename,]` which contains simulation background level for each pixel defined at `sim.dtref`. The file contains a cell array of `nsa*nlgswfs` while each cell contains a `npixpisax*npixpsay` numerical array. `nlgswfs` is the number of `wfs` for this `powfs`.
 
 \section skycoverage Sky coverage
 
