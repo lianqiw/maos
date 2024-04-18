@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -105,7 +105,7 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 	if(simu->llt_fsmreal&&P(simu->llt_fsmreal, ipowfs)){
 		*ttx+=P(P(simu->llt_fsmreal, ipowfs), 0, illt);
 		*tty+=P(P(simu->llt_fsmreal, ipowfs), 1, illt);
-	
+
 		if(simu->save->llt_fsmreal){
 			P(P(simu->save->llt_fsmreal, ipowfs), 0,isim)=P(P(simu->llt_fsmreal, ipowfs), 0, illt);
 			P(P(simu->save->llt_fsmreal, ipowfs), 1,isim)=P(P(simu->llt_fsmreal, ipowfs), 1, illt);
@@ -239,7 +239,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				ptt[1]-=P(simu->ttmreal, 0);
 				ptt[2]-=P(simu->ttmreal, 1);
 			}
-			//For dithering with downlink instead of uplink FSM 
+			//For dithering with downlink instead of uplink FSM
 			if(simu->fsmreal&&NE(simu->fsmreal, iwfs)&&!powfs[ipowfs].llt){
 				ptt[1]-=P(P(simu->fsmreal, iwfs), 0);
 				ptt[2]-=P(P(simu->fsmreal, iwfs), 1);
@@ -518,7 +518,7 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int r
 			P(P(simu->fsmerr_drift, iwfs), 1)+=P(tt, 1)*gain;
 			if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
 				dbg("Step %5d: wfs %d uplink drift control error is (%.3f, %.3f) mas output is (%.3f, %.3f) mas.\n",
-				simu->wfsisim, iwfs, P(tt, 0)*RAD2MAS, P(tt, 1)*RAD2MAS, 
+				simu->wfsisim, iwfs, P(tt, 0)*RAD2MAS, P(tt, 1)*RAD2MAS,
 				P(P(simu->fsmerr_drift, iwfs), 0)*RAD2MAS, P(P(simu->fsmerr_drift, iwfs), 1)*RAD2MAS);
 			}
 		}
@@ -588,7 +588,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 			}
 		}
 	} else if(parms->powfs[ipowfs].dither>1){ //DM dithering.
-		
+
 		const int idm=parms->idmground;
 		//Input dither signal
 		dmat *mr_in=drefcols(P(pd->mr, 0), isim, 1);
@@ -598,7 +598,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 		if(PN(tmp)>1){//2 mode dithering
 			P(P(pd->mr,2),isim)=P(tmp,1);
 		}*/
-		
+
 		dmat *mr_out=drefcols(P(pd->mr, 1), isim, 1);
 		//Measured dither signal from gradients
 		dmm(&mr_out, 0, P(recon->dither_rg, iwfs, iwfs), P(simu->gradcl, iwfs), "nn", 1);
@@ -648,7 +648,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				dfree(tmp);
 			}*/
 		}
-		
+
 		/*
 		//Print PLL phase. Moved to OG gain print out
 		if(iwfs==P(parms->powfs[ipowfs].wfs, 0)){
@@ -695,7 +695,7 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 				if(parms->powfs[ipowfs].dither==1){
 					dcelladd(&pd->gx, 1, pd->imx, scale2);
 					dcelladd(&pd->gy, 1, pd->imy, scale2);
-				
+
 					dcellzero(pd->imx);
 					dcellzero(pd->imy);
 				}
@@ -789,7 +789,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			P(P(simu->LGSfocusts, iwfs), simu->wfsisim)=P(P(LGSfocus, iwfs), 0);//save time history 
+			P(P(simu->LGSfocusts, iwfs), simu->wfsisim)=P(P(LGSfocus, iwfs), 0);//save time history
 			if(parms->powfs[ipowfs].zoomgain){
 				//Trombone from gradients. always enable
 				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager
@@ -843,7 +843,7 @@ void* wfsgrad_post(thread_t* info){
 						"WFS Subaperture Images", "x", "y", "wfs %d", iwfs);
 				}
 			}
-			
+
 			if(P(simu->gradscale, iwfs)){
 				if(PN(simu->gradscale, iwfs)==1){
 					dscale(gradcl, P(P(simu->gradscale, iwfs),0));
@@ -856,7 +856,7 @@ void* wfsgrad_post(thread_t* info){
 			if(P(simu->gradoff, iwfs)){
 				dadd(&P(simu->gradcl, iwfs), 1, P(simu->gradoff, iwfs), -parms->dbg.gradoff_scale);
 			}
-			
+
 			if(parms->dbg.gradoff){
 				info_once("wfs %d: add dbg.gradoff to gradient vector\n", iwfs);
 				int icol=(simu->wfsisim+1)%NY(parms->dbg.gradoff);
@@ -910,7 +910,7 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 		const int nsa=NX(intstat->i0);
-		//outer loop to prevent i0 from drifting 
+		//outer loop to prevent i0 from drifting
 		//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
 		if(1){
 			dzero(goff);
@@ -1016,7 +1016,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
 					//Scale the output due to accumulation
-					//TODO: remove the LPF which is not useful. 
+					//TODO: remove the LPF which is not useful.
 					//TODO: combine pd->i0 with intstat->i0
 					//TODO: accumulate directly to intstat->i0 instead of to pd->imx
 					for(int isa=0; isa<nsa; isa++){
@@ -1111,7 +1111,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 							}
 							dcellfree(zm);
 						}
-						
+
 						for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 							if(ptype2==PTYPE_COG){
@@ -1124,13 +1124,13 @@ static void wfsgrad_dither_post(sim_t* simu){
 								if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
 								//since we are building ideal matched filter with
 								//the correct gradncpa and sodium profile. no need
-								//to use gradient reference vector. 
+								//to use gradient reference vector.
 								dzero(P(simu->gradoff, iwfs));
 							}
 						}
 						dcellfree(grad);
 						dfree(sodium);
-					}else{//NGS, just use i0 
+					}else{//NGS, just use i0
 						if(ptype2==PTYPE_MF){
 							if(simu->gradoff) {
 								for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1244,7 +1244,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						mgnew=mgold+adj;
 #else
 						real adj=pow(gerr, parms->powfs[ipowfs].dither_gog);
-						CLIP(adj, 0.5, 2);//0.5, 1.5 //clip the adjustment to prevent divergence.
+						CLIP(adj, 0.7, 1.5);//0.5, 1.5 //clip the adjustment to prevent divergence.
 						dscale(P(simu->gradscale, iwfs), adj);
 						mgnew=mgold*adj;
 #endif
@@ -1261,7 +1261,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 								const real g=parms->powfs[ipowfs].dither_gog;
 #if HIA_G_UPDATE //HIA method.
 									P(gs2, id)+=(g2err-P(gs2, id))*g;
-#else									
+#else
 									P(gs2, id)*=pow(g2err/P(gs2, id), g);
 #endif
 							}
@@ -1275,7 +1275,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						dscale(pd->gg0, scale1); //Scale value at end of accumulation
 						for(long ig=0; ig<ng; ig++){
 							if(P(pd->gg0, ig)>0.01){//skip weakly determined subapertures.
-#if HIA_G_UPDATE //HIA method.							
+#if HIA_G_UPDATE //HIA method.
 								real adj=parms->powfs[ipowfs].dither_gog*mgold*(1.-P(pd->gg0, ig));
 								while(adj+P(P(simu->gradscale, iwfs), ig)<0){
 									adj*=0.5;
@@ -1285,17 +1285,17 @@ static void wfsgrad_dither_post(sim_t* simu){
 								real adj=pow(P(pd->gg0, ig), -parms->powfs[ipowfs].dither_gog);
 								if(adj>1.5) adj=1.5; else if(adj<0.5) adj=0.5;
 								P(P(simu->gradscale, iwfs), ig)*=adj;
-#endif								
+#endif
 							}
 						}
 						mgnew=dsum(P(simu->gradscale, iwfs))/ng;
 						dzero(pd->gg0);
 					}
 					/*if(mgnew2){
-						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=(%5.2f, %5.2f) %s\n", 
+						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=(%5.2f, %5.2f) %s\n",
 							isim, iwfs, pd->a2me/pd->a2m, mgnew, mgnew2, ogtype);
 					}else*/{
-						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=%5.2f %s\n", 
+						info2("Step %5d: wfs %d estimate/dither=%.2f, updated CoG gain=%5.2f %s\n",
 							isim, iwfs, pd->a2me/pd->a2m, mgnew, ogtype);
 					}
 					if(simu->resdither){
