@@ -45,7 +45,7 @@ typedef struct {
   loc_t** loc;
   const dcell* dc;
   const int32_t* style;
-  const real* zlim;//z limit
+  const real zlim[2];//z limit
   const real* limit;//x and y limit
   const int zlog;//z log.
   const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
@@ -57,22 +57,22 @@ typedef struct {
 int draw(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(6);
 
-int drawmap(const char* fig, const map_t* map, real* zlim,
+int drawmap(const char *fig, const map_t *map, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(7);
-int drawloc(const char* fig, loc_t* loc, real* zlim,
+int drawloc(const char *fig, loc_t *loc, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(7);
-int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
+int drawopd(const char *fig, loc_t *loc, const dmat *opd, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(8);
-int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, int trs, real* zlim,
+int drawgrad(const char* fig, loc_t* saloc, const dmat* grad, int grad2opd, int trs, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(10);
-int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
+int drawopdamp(const char *fig, loc_t *loc, const dmat *opd, const dmat *amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(9);
-int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
+int drawints(const char *fig, const loc_t *saloc, const dcell *ints, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(8);
 #endif

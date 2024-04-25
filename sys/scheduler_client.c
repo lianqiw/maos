@@ -468,7 +468,7 @@ int scheduler_socket(int dir, int *sfd, int id){
 		}
 	}
 	if(ans){
-		dbg_time("scheduler_socket operation %d failed with error\n", dir);
+		dbg2_time("scheduler_socket operation for %s failed.\n", dir==1?"send":"receive");
 		close(ssock);
 		ssock=-1;
 	}

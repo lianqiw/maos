@@ -67,16 +67,26 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 			0, 0);
 	}
 }
-static void plot_psf(ccell* psf2s, const char* psfname, int closeloop, int ievl, dmat* wvl, int uselog){
+void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
 	dmat* psftemp=NULL;
 	const char* title, * tab;
 	for(int iwvl=0; iwvl<NX(psf2s); iwvl++){
-		if(closeloop){
-			title="Science Closed Loop PSF";
-			tab="CL";
-		} else{
-			title="Science Open Loop PSF";
-			tab="OL";
+		switch(type){
+			case 2:
+				title="Science Diffraction Limited PSF";
+				tab="DL";
+				break;
+			case 1:
+				title="Science Closed Loop PSF";
+				tab="CL";
+				break;
+			case 0:
+				title="Science Open Loop PSF";
+				tab="OL";
+				break;
+			default:
+				title="PSF";
+				tab="PSF";
 		}
 		char tabname[64];
 		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
@@ -85,10 +95,7 @@ static void plot_psf(ccell* psf2s, const char* psfname, int closeloop, int ievl,
 				dfree(psftemp);
 			}
 			cabs22d(&psftemp, 0, P(psf2s,iwvl), 1);
-			if(uselog==2){
-				dcwlog10(psftemp);
-			}
-			draw(psfname, (plot_opts){.image=psftemp},title, "x", "y", "%s", tabname);
+			draw(psfname, (plot_opts){.image=psftemp,.zlog=zlog,.zlim={psfmin,1}},title, "x", "y", "%s", tabname);
 		}
 	}
 	dfree(psftemp);
@@ -112,7 +119,7 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 		zfarr_push(evlpsfhist[ievl], -1, psf2s);
 	}
 	if(parms->plot.run){
-		plot_psf(psf2s, psfname, 1, ievl, parms->evl.wvl, parms->plot.psf==2);
+		plot_psf(psf2s, psfname, 1, ievl, parms->evl.wvl, parms->plot.psf==1, parms->plot.psfmin);
 	}
 	ccellfree(psf2s);
 }
@@ -215,7 +222,7 @@ void* perfevl_ievl(thread_t* info){
 			zfarr_push(simu->save->evlopdol[ievl], simu->perfisim, iopdevl);
 		}
 		if(parms->plot.run){
-			drawopdamp("Evlol", aper->locs, iopdevl, aper->amp1, P(parms->plot.opdmax),
+			drawopdamp("Evlol", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
 		PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
@@ -249,7 +256,7 @@ void* perfevl_ievl(thread_t* info){
 					cabs22d(&P(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
 				}
 				if(parms->plot.run){
-					plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf==2);
+					plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf==1, parms->plot.psfmin);
 				}
 				ccellfree(psf2s);
 			}
@@ -311,7 +318,7 @@ void* perfevl_ievl(thread_t* info){
 		}
 
 		if(parms->plot.run){
-			drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, P(parms->plot.opdmax),
+			drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 				"Science Closed Loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
 		if(save_evlopd){
@@ -493,7 +500,7 @@ static void perfevl_mean(sim_t* simu){
 							P(parms->evl.thetax,ievl), P(parms->evl.thetay,ievl),
 							pcleNGSm, -1);
 						if(parms->plot.run){
-							drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, P(parms->plot.opdmax),
+							drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 								"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
 						}
 						if(P(parms->evl.pttr,ievl)){
@@ -629,14 +636,14 @@ static void perfevl_save(sim_t* simu){
 			if(P(simu->evlopdmean, ievl)){
 				zfarr_push(simu->save->evlopdmean[ievl], isim, P(simu->evlopdmean,ievl));
 				if(parms->plot.run){
-					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean, ievl), simu->aper->amp1, P(parms->plot.opdmax),
+					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean, ievl), simu->aper->amp1, parms->plot.opdmax,
 						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean %d", ievl);
 				}
 			}
 			if(P(simu->evlopdmean_ngsr, ievl)){
 				zfarr_push(simu->save->evlopdmean_ngsr[ievl], isim, P(simu->evlopdmean_ngsr,ievl));
 				if(parms->plot.run){
-					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean_ngsr, ievl), simu->aper->amp1, P(parms->plot.opdmax),
+					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean_ngsr, ievl), simu->aper->amp1, parms->plot.opdmax,
 						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean ngsr %d", ievl);
 				}
 			}
@@ -650,7 +657,7 @@ static void perfevl_save(sim_t* simu){
 			dscale(simu->evlopdmeanol, scaleol);
 			zfarr_push(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
 			if(parms->plot.run){
-				drawopdamp("Evlol", simu->aper->locs, simu->evlopdmeanol, simu->aper->amp1, P(parms->plot.opdmax),
+				drawopdamp("Evlol", simu->aper->locs, simu->evlopdmeanol, simu->aper->amp1, parms->plot.opdmax,
 					"Science Open Loop OPD Mean", "x (m)", "y (m)", "OL mean");
 			}
 			dscale(simu->evlopdmeanol, 1./scaleol);

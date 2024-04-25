@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -84,7 +84,7 @@ GdkColor color_even;
 GdkColor color_odd;
 #endif
 GtkWidget* toptoolbar;
-#if GTK_MAJOR_VERSION>=3 
+#if GTK_MAJOR_VERSION>=3
 #include "gtk3-css.h"
 #endif
 #define MAX_HOST 20
@@ -210,7 +210,7 @@ int host2i(const char *hostn){
    modifies the color of progress bar*/
    /*
 static void modify_bg(GtkWidget* widget, int type){
-#if GTK_MAJOR_VERSION>=3 
+#if GTK_MAJOR_VERSION>=3
 	//GtkCssProvider* provider;
 	const char *class[]={NULL,NULL};
 	switch(type){
@@ -230,7 +230,7 @@ static void modify_bg(GtkWidget* widget, int type){
 		//gtk_widget_set_name(widget, class[0]);
 		GtkStyleContext *context=gtk_widget_get_style_context(widget);
 		gtk_style_context_add_class(context, class[0]);
-#endif		
+#endif
 	}
 #else
 	GdkColor* color;
@@ -241,7 +241,7 @@ static void modify_bg(GtkWidget* widget, int type){
 	case 2:
 		color=&red;
 		break;
-	case 3:		
+	case 3:
 		color=&green;
 		break;
 	default:
@@ -282,7 +282,7 @@ void notify_user(proc_t* p){
 	p->oldinfo=p->status.info;
 #if WITH_NOTIFY
 	if(!notify_daemon) return;
-	
+
 	static NotifyNotification* notify_urgent=NULL, * notify_normal=NULL, * notify_low=NULL;
 	if(!notify_urgent){
 #if !defined(NOTIFY_CHECK_VERSION) || !NOTIFY_CHECK_VERSION(0,7,0)
@@ -332,7 +332,7 @@ void notify_user(proc_t* p){
 	}
 	notify_notification_update(notify, summary, p->path, NULL);
 	notify_notification_show(notify, NULL);
-	
+
 #endif
 }
 /**
@@ -419,7 +419,7 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 	(void)btn;
 	(void)data;
 	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook))-1;
-	
+
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
@@ -567,7 +567,7 @@ GtkWidget* monitor_new_progress(int vertical, int length){
 	GtkWidget* prog=gtk_progress_bar_new();
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog), 0);
 	if(vertical){
-#if GTK_MAJOR_VERSION>=3 
+#if GTK_MAJOR_VERSION>=3
 		gtk_orientable_set_orientation(GTK_ORIENTABLE(prog),
 			GTK_ORIENTATION_VERTICAL);
 		gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(prog), TRUE);
@@ -624,9 +624,9 @@ static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf
 #else
 			GtkWidget *image=gtk_image_new_from_paintable(GDK_PAINTABLE(gdk_texture_new_for_pixbuf(iconbuf)));
 			gtk_button_set_child(GTK_BUTTON(item), image);
-#endif		
+#endif
 		}
-#endif		
+#endif
 		if(func) g_signal_connect(item,"clicked",G_CALLBACK(func),GINT_TO_POINTER(data));
 		if(cmdname) gtk_widget_set_tooltip_text(item, cmdname);
 		//gtk_widget_set_size_request(item, 16, 16);
@@ -681,7 +681,7 @@ void parse_provider(){
 	GdkScreen *screen=gtk_style_context_get_screen(all_context);
 	gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
 		GTK_STYLE_PROVIDER_PRIORITY_USER);
-#endif	
+#endif
 #endif
 }
 void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gpointer user_data){
@@ -695,7 +695,7 @@ void create_window(
 #if GTK_MAJOR_VERSION>=4
 	GtkApplication* app,
 	gpointer        user_data
-#endif		  
+#endif
 		  ){
 #if GTK_MAJOR_VERSION<4
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -703,6 +703,12 @@ void create_window(
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 #else
 	window=gtk_application_window_new(app);
+	{
+		GtkIconTheme *icon_theme=gtk_icon_theme_get_for_display(gtk_widget_get_display(window));
+		gtk_icon_theme_add_resource_path(icon_theme, "/maos/");
+		gtk_window_set_icon_name(GTK_WINDOW(window), "icon-monitor");
+	}
+
 	(void) user_data;
 #endif
 	parse_provider();//requires window to be set
@@ -713,7 +719,7 @@ void create_window(
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar),GTK_ICON_SIZE_MENU);
 #else
 	toptoolbar=gtk_hbox_new(FALSE, 0);
-#endif		
+#endif
 	new_toolbar_item(toptoolbar,"computer", icon_connect, "Connect", add_host_event, -1);
 	new_toolbar_item(toptoolbar, NULL, NULL, NULL, NULL, 0);
 	new_toolbar_item(toptoolbar,"object-select",icon_finished,"Clear finished jobs",clear_jobs,-1);
@@ -742,27 +748,27 @@ void create_window(
 #else
 	gtk_window_set_child(GTK_WINDOW(window), notebook);
 #endif
-	
+
 	/*{//text are to show details job information
 		//GtkWidget* seperator=gtk_hseparator_new();
 		//box_append(GTK_BOX(pages[ihost]), seperator, FALSE, FALSE, 0);
 		GtkWidget* textview=gtk_text_view_new();
 		textbuffer=gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
 		textscroll=gtk_scrolled_window_new(
-#if GTK_MAJOR_VERSION<4					
+#if GTK_MAJOR_VERSION<4
 				NULL, NULL
-#endif					
+#endif
 		);
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(textscroll),
 			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 		gtk_widget_set_size_request(textscroll, -1, 50);
-#if GTK_MAJOR_VERSION<4	
+#if GTK_MAJOR_VERSION<4
 		gtk_container_add(GTK_CONTAINER(textscroll), textview);//page is scrollable.
 #else
 		gtk_widget_set_hexpand(textscroll, TRUE);//important
 		gtk_widget_set_vexpand(textscroll, TRUE);
 		gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(textscroll), textview);
-#endif				
+#endif
 		box_append(GTK_BOX(vbox), textscroll, TRUE, TRUE, 0);
 		gtk_text_buffer_set_text(textbuffer, "", -1);
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), 0);
@@ -772,7 +778,7 @@ void create_window(
 	//g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(quitmonitor), NULL);
 	//g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
-	
+
 	gtk_window_set_default_size(GTK_WINDOW(window), 1200, 800);
 
 	//tabs=mycalloc(nhost+1, GtkWidget*);
@@ -782,7 +788,7 @@ void create_window(
 	//cmdconnect=mycalloc(nhost+1, GtkWidget*);
 	//buffers=mycalloc(nhost+1, GtkTextBuffer*);
 
-	
+
 	prog_cpu=mycalloc(nhost, GtkWidget*);
 	//prog_mem=mycalloc(nhost,GtkWidget *);
 
@@ -810,7 +816,7 @@ void create_window(
 				box_append(GTK_BOX(hbox0), prog_cpu[ihost], FALSE, FALSE, 1);
 				//modify_bg(prog_cpu[ihost], 2);
 				//modify_bg(prog_mem[ihost], 1);
-			}			
+			}
 			gtk_box_set_homogeneous(GTK_BOX(hbox0), 0);
 	#if GTK_MAJOR_VERSION>=4
 			box_append(GTK_BOX(hbox0), titles[ihost], FALSE, TRUE, 0);
@@ -828,35 +834,35 @@ void create_window(
 			gtk_widget_show_all(eventbox);
 			gtk_event_box_set_above_child(GTK_EVENT_BOX(eventbox), TRUE);
 			gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
-	#endif		
+	#endif
 		}
 		//pages[ihost]=gtk_paned_new(GTK_ORIENTATION_VERTICAL);//gtk_vbox_new(FALSE, 0);
 		//gtk_paned_set_position(GTK_PANED(pages[ihost]), 500);
 		{//area for showing list of jobs
 			GtkWidget* page=new_page(ihost);
-			
+
 			if(page){
 				GtkWidget* scroll=gtk_scrolled_window_new(
-#if GTK_MAJOR_VERSION<4					
+#if GTK_MAJOR_VERSION<4
 					NULL, NULL
-#endif					
+#endif
 					);
 				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
 					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 				gtk_widget_set_size_request(scroll, -1, 300);
-#if GTK_MAJOR_VERSION<4	
+#if GTK_MAJOR_VERSION<4
 				gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
 #else
 				gtk_widget_set_hexpand(scroll, TRUE);//important
 				gtk_widget_set_vexpand(scroll, TRUE);
 				gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
-#endif				
+#endif
 				//box_append(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
 				//gtk_paned_add1(GTK_PANED(pages[ihost]), scroll);
 				pages[ihost]=scroll;
 			}
 		}
-		
+
 		/*if(ihost<nhost){
 			cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
 			g_signal_connect(cmdconnect[ihost], "clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
@@ -877,7 +883,7 @@ void create_window(
 	g_signal_connect(notebook, "switch-page", G_CALLBACK(notebook_switch_page), NULL);
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(window);
-#else	
+#else
 	gtk_window_present(GTK_WINDOW(window));
 #endif
 	//gtk_widget_hide(textscroll);
@@ -1002,6 +1008,7 @@ int main(int argc, char* argv[]){
 	GtkApplication* app;
 	int status;
 	app=gtk_application_new("maos.monitor", G_APPLICATION_DEFAULT_FLAGS);
+	gtk_window_set_default_icon_name("video-display");
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);

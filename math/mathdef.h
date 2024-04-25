@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -94,7 +94,7 @@ void fft_threads(long nx, long ny);
 #define mapcellnew (mapcell*)cellnew
 #define mapccellnew (mapccell*)cellnew
 
-#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP, 0, A)    
+#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP, 0, A)
 #define rmapwrite(out, A...)   write_by_id(out?out:NULL, M_RECTMAP, A)
 #define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
@@ -165,4 +165,5 @@ extern const real RAD2AS;
 extern const real RAD2MAS;
 extern const real MAS2RAD;
 extern const real AS2RAD;
+extern const real TWOPI;
 #endif

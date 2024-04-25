@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -97,7 +97,7 @@ void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	M* from=0;
 	int free_from=0;
 	if(cumemcache.memcount.count(dest)&&cumemcache.memcount[dest]>1){
-		error("Should not copy to deduped pointer %p. Count=%d\n", dest, 
+		error("Should not copy to deduped pointer %p. Count=%d\n", dest,
 			cumemcache.memcount[dest]);
 	}
 	if(sizeof(M)!=sizeof(N)){
@@ -286,12 +286,15 @@ void zfarr_push_scale(struct zfarr *ca, int i, const cucmat &A, Real scale, cuda
 void zfarr_push_scale(struct zfarr *ca, int i, const curcell &A, Real scale, cudaStream_t stream=0);
 void zfarr_push_scale(struct zfarr *ca, int i, const cuccell &A, Real scale, cudaStream_t stream=0);
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd,  cudaStream_t stream,
-	const dmat* amp, real* zlim,
+	const dmat* amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(10);
-void curdraw_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int log,
+void drawpsf_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int log, real psfmin,
 	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...) CHECK_ARG(9);
+	const char* format, ...) CHECK_ARG(10);
+void curdraw_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int log,
+	const char *title, const char *xlabel, const char *ylabel,
+	const char *format, ...) CHECK_ARG(9);
 void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, int log,
 	const char *title, const char *xlabel, const char *ylabel,
 	const char *format, ...) CHECK_ARG(9);

@@ -132,6 +132,10 @@ static void* prop_surf_ncpa(thread_t* info){
 	const map_t* surf=data->surf;
 	const real hl=surf->h;
 	const int* ncpacover=data->ncpacover;
+	if(!data->isncpa){
+		dbg2("Ignore CPA surface %d for aper->opdbias\n", data->isurf);
+		return NULL;
+	}
 	for(int idir=info->start; idir<info->end; idir++){
 		if(!ncpacover[idir]) continue;
 		if(!data->isncpa){

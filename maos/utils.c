@@ -443,25 +443,25 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc%d", ips);
 		}
 	}
-	drawopd("Aperture", aper->locs, aper->amp1, NULL, "Aperture Amplitude Map",
+	drawopd("Aperture", aper->locs, aper->amp1, 0, "Aperture Amplitude Map",
 		"x (m)", "y (m)", "aper");
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp, NULL,
+		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp, 0,
 			"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d amp", ipowfs);
 		if(powfs[ipowfs].amp_tel){
 			for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
-				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp_tel,wfsind), NULL,
+				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp_tel,wfsind), 0,
 					"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d tel2wfs", ipowfs);
 			}
 		}
-		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, NULL,
+		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, 0,
 			"WFS Subaperture Amplitude", "x (m)", "y (m)", "powfs %d saa", ipowfs);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			if(powfs[ipowfs].gradncpa){
 				drawgrad("Goff", powfs[ipowfs].saloc, P(powfs[ipowfs].gradncpa,jwfs),
-					parms->plot.grad2opd, parms->powfs[ipowfs].trs, NULL,
+					parms->plot.grad2opd, parms->powfs[ipowfs].trs, 0,
 					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
 			}
 		}

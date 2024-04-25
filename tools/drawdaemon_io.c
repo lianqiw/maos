@@ -72,10 +72,10 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
 	if(zlog){
-		max=log10(max);
-		min=log10(min);
+		max=log10(fabs(max));
+		min=log10(fabs(min));
 	}
-	if(zlim[0]==zlim[1]){
+	if(zlim[0]>=zlim[1]||!isfinite(zlim[0])||!isfinite(zlim[1])){
 		zlim[0]=min;
 		zlim[1]=max;
 	}else if(!zlim_manual){
@@ -174,7 +174,7 @@ void drawdata_free_input(drawdata_t *drawdata){
 	FREE(drawdata);
 }
 static drawdata_t *HEAD=NULL;
-drawdata_t *drawdata_get(char **fig, char **name, int reset){
+static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	if(!HEAD){
 		HEAD=mycalloc(1, drawdata_t);//dummy head for easy handling
 	}
@@ -196,7 +196,6 @@ drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->zoomx=1;
 		drawdata->zoomy=1;
 		drawdata->square=-1;
-		drawdata->format=(cairo_format_t)0;
 		drawdata->gray=0;
 		drawdata->ticinside=1;
 		drawdata->legendbox=1;
@@ -340,6 +339,7 @@ void *listen_draw(void *user_data){
 				drawdata->nx=header[0];
 				drawdata->ny=header[1];
 				if(drawdata->square==-1) drawdata->square=1;//default to square for images.
+				drawdata->zlim_changed=1;//ask cairo_draw to reconvert the data
 			}
 			break;
 			case DRAW_HEARTBEAT:/*no action*/
@@ -378,7 +378,7 @@ void *listen_draw(void *user_data){
 				if(nptsx*nptsy>0){
 					STREADFLT(drawdata->pts[ipts], nptsx*nptsy);
 					if(nptsx>50){
-						if(!drawdata->icumu){
+						if(!drawdata->icumu||drawdata->icumu>nptsx){
 							drawdata->icumu=nptsx/5;
 						}
 					}
@@ -417,7 +417,7 @@ void *listen_draw(void *user_data){
 					drawdata=drawdata_get(&fig, &name, 1);
 					npts=0;
 				} else{
-					warning_time("Invalid usage: fig should be provided before namen");
+					warning_time("Invalid usage: fig should be provided before name.\n");
 				}
 				break;
 			case DRAW_TITLE:
@@ -432,6 +432,7 @@ void *listen_draw(void *user_data){
 			case DRAW_ZLIM:
 				STREADFLT(drawdata->zlim, 2);
 				drawdata->zlim_manual=1;
+				drawdata->zlog_last=0;//zlim is not in log format.
 				break;
 			case DRAW_LEGEND:
 				for(int i=0; i<npts; i++){
@@ -521,6 +522,17 @@ void *listen_draw(void *user_data){
 							drawdata->nstyle=0;/*disable it. */
 							free(drawdata->style);
 						}
+					}
+				}
+				if(drawdata->nx&&drawdata->ny){/*draw image */
+					if(!drawdata->limit_manual){
+						if(!drawdata->limit_data){
+							drawdata->limit_data=mycalloc(4, float);
+						}
+						drawdata->limit_data[0]=-0.5;
+						drawdata->limit_data[1]=drawdata->nx-0.5;
+						drawdata->limit_data[2]=-0.5;
+						drawdata->limit_data[3]=drawdata->ny-0.5;
 					}
 				}
 				if(!drawdata->fig) drawdata->fig=strdup("unknown");

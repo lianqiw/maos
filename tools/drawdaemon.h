@@ -62,14 +62,17 @@ struct drawdata_t{
 	int ncir;
 	int ncirmax; /*storage size of cir*/
 
-	/*limit */
+	/*x/y dimension limit */
 	float* limit_data;/*x,y,limit of data. might be supplied by user. */
 	float* limit_cumu;/*x,y,limit of cumulatively averaged data. */
 	float* limit;/*points to either limit_data or limit_cumu */
 	int limit_manual; /*limit_data is supplied by user*/
-	float zlim[4];//2 additional elements for i/o in case double is passed in
+	int limit_changed;/*limit has changed. */
+	/*data limit*/
+	float zlim[4];//first two elements are for zlog=0; last two elements are for zlog=1.
 	int zlim_manual;//zlim is manually set.
-
+	int zlim_changed;//zlim has changed.
+	//log scale
 	char xylog[2];  /*draw in log scale x, y axis*/
 	int zlog; 	    /*draw image in log scale*/
 	int zlog_last; /*zlog status during previous call to cairo_draw()*/
@@ -80,8 +83,6 @@ struct drawdata_t{
 	int delete;     //when set in io thread, page will be deleted by addpage()
 	float io_time;  //time data was received.
 	/*The following are for surfaces */
-
-	cairo_format_t format;
 
 	int gray;       /*do we draw in gray scale or in colored */
 
@@ -130,7 +131,7 @@ struct drawdata_t{
 	int grid;/*whether we want grid lines. */
 	int ticinside;/*put tick inside. */
 	int cursorinside;
-	int limit_changed;/*limit has changed. */
+
 	int legendbox;/*draw the legend */
 	int legendcurve;/*mark each line with legend entry*/
 	float legendoffx;/*location of legend along x. */

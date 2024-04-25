@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -330,7 +330,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 				opdin->p[0]->p[imod-1]=0;
 			}
 		}
-		loc_embed(mapinsq->p[0], locin, P(opdin->p[0]));
+		loc_embed(mapinsq->p[0], locin, opdin->p[0]);
 		CUDA_SYNC_STREAM;
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -166,7 +166,7 @@ tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
 	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real thres, Real bkgrnd, Real* srot){
 	__shared__ Real sum[3];
 	if(threadIdx.x<3&&threadIdx.y==0) sum[threadIdx.x]=0.f;
-	__syncthreads();//is this necessary? 
+	__syncthreads();//is this necessary?
 	int isa=blockIdx.x;
 	ints+=isa*nx*ny;
 	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
@@ -337,9 +337,9 @@ static void wfsgrad_callback(cudaStream_t stream, cudaError_t status, void *data
 	info("wfsgrad_callback runs with op=%d, iwfs=%d\n", data->op, data->iwfs);
 	CUDA_CHECK_ERROR;
 	switch(data->op){
-		case 1:{	
+		case 1:{
 			cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints);
-			shwfs_grad(&simu->gradcl->p[iwfs], P(simu->ints->p[iwfs]), 
+			shwfs_grad(&simu->gradcl->p[iwfs], P(simu->ints->p[iwfs]),
 				parms, simu->powfs, iwfs, phytype);
 		}break;
 		case 2:{
@@ -416,7 +416,7 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 				cogthres, cogoff, srot);
 	}
 	break;
-	default://Use CPU version 
+	default://Use CPU version
 		cp2cpu(&simu->ints->p[iwfs], ints, stream);//this already syncs stream.
 		info_once("Calling shwfs_grad CPU version for phytype %d\n", parms->powfs[ipowfs].phytype_sim);
 		shwfs_grad(&simu->gradcl->p[iwfs], P(simu->ints->p[iwfs]),
@@ -553,7 +553,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			}
 			if(parms->plot.run){
 				const dmat* realamp=powfs[ipowfs].realamp->p[wfsind];
-				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, realamp, NULL,
+				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, realamp, 0,
 					"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 			}
 			ctoc("opd");
@@ -650,7 +650,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 						}
 						ctoc("dither");
 					}
-				
+
 					if(parms->powfs[ipowfs].type==WFS_PY){
 						pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
 							cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
@@ -659,7 +659,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 						shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
 					}
 					ctoc("grad");
-					
+
 				} else{//geometric
 					if(noisy){
 						if(parms->save.gradnf->p[iwfs]){
@@ -675,7 +675,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			}/*dtrat_output */
 			//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
 			ctoc_final("wfs %d", iwfs);
-			
+
 			/*{//this replaces gpu_wfsgrad_sync
 				//This does not work. memcpy is not allowed in callback
 				struct wfsgrad_callback_t* tmp=mycalloc(1, struct wfsgrad_callback_t);

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -27,6 +27,7 @@ const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
 const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
 const real RAD2AS=206264.8062470964; //radian in unit of arcsec
 const real RAD2MAS=206264806.2470964; //radian to milli-arcsecond
+const real TWOPI=6.28318530717958647692;
 #define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
 /**
    Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
@@ -140,7 +141,7 @@ real golden_section_search(golden_section_fun f, void* param,
 	do{
 		x3=(x4-x2)*resphi+x2;
 		f3=f(param, x3);
-#ifdef DBG_GF 
+#ifdef DBG_GF
 		real f1=f(param, x1);
 		real f4=f(param, x4);
 		info("x=%.4g, %.4g, %.4g, %.4g\n", x1, x2, x3, x4);

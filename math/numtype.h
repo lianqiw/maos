@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -21,10 +21,6 @@
 #ifndef AOS_MATH_NUMTYPE_H
 #define AOS_MATH_NUMTYPE_H
 #include "../sys/sys.h"
-
-#ifndef M_PI
-#define M_PI 3.1415926535897932384626433832795
-#endif
 
 /**
    2010-01-03
@@ -182,7 +178,7 @@ static inline fcomplex cpowf(fcomplex x, fcomplex z){
 	return cexpf(clogf(x)*z);
 }
 #endif //defined(__FreeBSD__) || defined(__NetBSD__)
-#endif //#if defined(__cplusplus) 
+#endif //#if defined(__cplusplus)
 
 #if CPU_SINGLE//run CPU code with single precision.
 typedef float real;

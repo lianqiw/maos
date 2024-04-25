@@ -264,7 +264,7 @@ void update_zoom(drawdata_t* drawdata){
 	/*the new zoom */
 		float ratiox=diffx0/diffx1; if(ratiox==0) ratiox=1;
 		float ratioy=diffy0/diffy1; if(ratioy==0) ratioy=1;
-		if(drawdata->square&&!drawdata->image){/*make the ratio equal. */
+		if(drawdata->square&&!drawdata->p){/*make the ratio equal. */
 			if(fabs(ratiox-drawdata->zoomx)>1e-2&&fabs(ratioy-drawdata->zoomy)<1e-2){
 			/*only x changed */
 				ratioy=ratiox;
@@ -480,7 +480,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
 
-	if(drawdata->image||drawdata->square){
+	if(drawdata->p||drawdata->square){
 		drawdata->cumu=0;
 	}
 	if(drawdata->cumu){
@@ -498,17 +498,20 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		drawdata->limit=drawdata->limit_data;
 	}
-	if(drawdata->image){
+	float *zlim=drawdata->zlim+(drawdata->zlog?2:0);
+	if(drawdata->p){
 		if(drawdata->zlog_last!=drawdata->zlog){
-			drawdata->zlim_manual=0;
-			/*if(drawdata->zlog){
-				drawdata->zlim[0]=log10(drawdata->zlim[0]);
-				drawdata->zlim[1]=log10(drawdata->zlim[1]);
-			} else{
-				drawdata->zlim[0]=pow(10, drawdata->zlim[0]);
-				drawdata->zlim[1]=pow(10, drawdata->zlim[1]);
-			}*/
+			if(drawdata->zlim_manual){
+				if(drawdata->zlog){
+					drawdata->zlim[2]=log10(drawdata->zlim[0]);
+					drawdata->zlim[3]=log10(drawdata->zlim[1]);
+				} else{
+					drawdata->zlim[0]=pow(10, drawdata->zlim[2]);
+					drawdata->zlim[1]=pow(10, drawdata->zlim[3]);
+				}
+			}
 			drawdata->zlog_last=drawdata->zlog;
+			drawdata->zlim_changed=1;
 		}
 	}else{
 		if(drawdata->cumulast!=drawdata->cumu){
@@ -559,7 +562,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	float xmin0, ymin0, xmax0, ymax0;
 	xmin0=xmin; ymin0=ymin; xmax0=xmax; ymax0=ymax;
 	float xdim, ydim;/*dimension of the data. */
-	if(drawdata->image){/*we are drawing an image. */
+	if(drawdata->p){/*we are drawing an image. */
 		xdim=(float)drawdata->nx;
 		ydim=(float)drawdata->ny;
 	} else{
@@ -570,7 +573,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(ydim==0||!isfinite(ydim)) ydim=1;
 	//dbg("xdim=%g, ydim=%g\n", xdim, ydim);
 	float sp_xr=20;
-	if(drawdata->image){/*there is a colorbar */
+	if(drawdata->p){/*there is a colorbar */
 		sp_xr=SP_XR;
 	}
 	float scalex=(float)(width-SP_XL-sp_xr)/xdim;
@@ -599,16 +602,17 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		drawdata->limit_changed=0;
 		drawdata->drawn=0;
 	}
-	if(drawdata->limit_changed==2&&drawdata->p){/*zlim changed. */
+	if(drawdata->zlim_changed&&drawdata->p){/*zlim changed. */
 		const int nx=drawdata->nx;
 		const int ny=drawdata->ny;
-		const int stride=cairo_format_stride_for_width(drawdata->format, nx);
-
-		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray, drawdata->zlim, drawdata->zlim_manual, drawdata->zlog);
+		const cairo_format_t format=(cairo_format_t)(drawdata->gray?CAIRO_FORMAT_A8:CAIRO_FORMAT_ARGB32);
+		const int stride=cairo_format_stride_for_width(format, nx);
+		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray,
+			drawdata->zlim+(drawdata->zlog?2:0), drawdata->zlim_manual, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
 		drawdata->image=cairo_image_surface_create_for_data
-			(drawdata->p, drawdata->format, nx, ny, stride);
-		drawdata->limit_changed=0;
+			(drawdata->p, format, nx, ny, stride);
+		drawdata->zlim_changed=0;
 	}
 	drawdata->widthim_last=drawdata->widthim;
 	drawdata->heightim_last=drawdata->heightim;
@@ -982,9 +986,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		for(int i=0; i<4; i++){//update spin button's value.
 			//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
 		}
-		if(drawdata->zlim[0] || drawdata->zlim[1]){
+		if(zlim[0] || zlim[1]){
 			for(int i=5; i<6; i++){//update spin button's value.
-				//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
+				//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), zlim[i-4]);
 			}
 		}
 	}*/
@@ -1090,7 +1094,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	//draws the y axis power
 	if(order) pango_text_powindex(cr, layout, xoff-font_size*2.8, yoff+font_size*1.8, order, 1);
 
-	if(drawdata->zlim[0]||drawdata->zlim[1]){/*draw colorbar */
+	if(zlim[0]||zlim[1]){/*draw colorbar */
 		cairo_save(cr);
 		cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
 		cairo_rectangle(cr, 0, 0, LEN_LEG, heightim);
@@ -1109,15 +1113,15 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		cairo_stroke(cr);
 
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-		calc_tic(&tic1, &dtic, &ntic, &order, drawdata->zlim[1], drawdata->zlim[0], maxtic_y, 0);
-		sep=drawdata->zlim[1]-drawdata->zlim[0];
+		calc_tic(&tic1, &dtic, &ntic, &order, zlim[1], zlim[0], maxtic_y, drawdata->zlog);
+		sep=zlim[1]-zlim[0];
 
 		for(int itic=0; itic<ntic; itic++){
 			float ticv=tic1+dtic*itic; if(fabs(ticv)<1e-6) ticv=0;
 			float val=ticv*pow(10, order);
 			float frac;
-			if(sep>1.e-10*fabs(drawdata->zlim[1])){
-				frac=(val-drawdata->zlim[0])/sep;
+			if(sep>1.e-10*fabs(zlim[1])){
+				frac=(val-zlim[0])/sep;
 			} else{
 				if(itic==0) frac=0;
 				else if(itic==1) frac=1;

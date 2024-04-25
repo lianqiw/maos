@@ -18,4 +18,4 @@ vy=0;
 header=sprintf('ox=%20g\noy=%20g\ndx=%20g\ndy=%20g\ntxdeg=%20g\ntydeg=%20g\nftel=%20g\nfexit=%20g\nfsurf=%20g\n',...
                ox, oy, dx, dy, txdeg, tydeg, ftel, fexit, fsurf);
 
-write(OPD,header,'temp.bin.gz');
+write(OPD,header,'temp.bin');

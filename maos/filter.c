@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -180,7 +180,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		}
 		iastroked=iastroke*1.414;//for diagonal separation.
 		if(!parms->fit.square){
-			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), P(dm));
+			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), dm);
 			dmr=(dmat*)P(simu->dmrealsq,idm);
 		} else{
 			dmr=dm;
@@ -439,7 +439,7 @@ void filter_fsm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!simu->fsmint) return;
 		/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
-		
+
 	if(simu->fsmerr){//use common FSM. not good
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].commonfsm){
@@ -466,9 +466,9 @@ void filter_fsm(sim_t* simu){
 			servo_output(simu->fsmint[iwfs], &P(simu->fsmcmd, iwfs));//sho filter is separate. /todo: splitting sho from servo_output is inaccurate if there is partial frame delay.
 			hasinput=servo_filter(simu->fsmint[iwfs], simu->fsmerr?P(simu->fsmerr, iwfs):NULL);
 		}
-		//lgs wfs common fsm 
+		//lgs wfs common fsm
 		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->nllt==1&&parms->powfs[ipowfs].llt->fcfsm>0){
-			int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM. 
+			int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM.
 			if(remove){//use frequency split offloading to LLT_FSM
 				dzero(P(simu->llt_fsmcmd, ipowfs));
 				real scale=1./parms->powfs[ipowfs].nwfs;
@@ -489,7 +489,7 @@ void filter_fsm(sim_t* simu){
 				P(simu->llt_fsmcmd, ipowfs), parms->sim.dt, 0);
 		}
 	}
-	
+
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		/*Inject dithering command, for step isim+1*/
@@ -503,8 +503,8 @@ void filter_fsm(sim_t* simu){
 			P(P(simu->fsmcmd, iwfs), 0)-=parms->powfs[ipowfs].dither_amp*cos(angle);
 			P(P(simu->fsmcmd, iwfs), 1)-=parms->powfs[ipowfs].dither_amp*sin(angle);
 		}
-	
-		sho_step(&P(simu->fsmreal, iwfs), simu->fsmsho?simu->fsmsho[iwfs]:NULL, 
+
+		sho_step(&P(simu->fsmreal, iwfs), simu->fsmsho?simu->fsmsho[iwfs]:NULL,
 			P(simu->fsmcmd, iwfs), parms->sim.dt, 0);
 	}
 	/*info("fsmerr=%d fsmint[0]=%g, fsmint[1]=%g. fsmreal=%g\n", simu->fsmerr?1:0,
@@ -563,15 +563,17 @@ void turb_dm(sim_t* simu){
 	if(!simu->dmadd) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(!P(simu->dmadd,idm)) continue;
-		real* restrict p2=P(P(simu->dmreal,idm));
 		const int icol=(simu->reconisim+1)%P(simu->dmadd,idm)->ny;
-		const real* p=P(P(simu->dmadd,idm))+P(simu->dmadd,idm)->nx*icol;
 		if(P(simu->dmadd,idm)->nx==P(simu->dmreal,idm)->nx){//match
+			real *restrict p2=P(P(simu->dmreal, idm));
+			const real *p=PCOL(P(simu->dmadd, idm), icol);
 			for(long i=0; i<P(simu->dmadd,idm)->nx; i++){
 				p2[i]+=p[i];
 			}
-		} else{
-			loc_embed_add(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), p);
+		} else{//dmrealsq is the same as dmreal.
+			dmat *tmp=drefcols(P(simu->dmadd, idm), icol, 1);
+			loc_embed_add(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), tmp);
+			dfree(tmp);
 		}
 	}
 }
@@ -583,7 +585,7 @@ void update_dm(sim_t* simu){
 	if(!parms->fit.square&&simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){
-			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(P(simu->dmreal,idm)));
+			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(simu->dmreal,idm));
 		}
 	}
 #if USE_CUDA

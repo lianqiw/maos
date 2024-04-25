@@ -681,9 +681,6 @@ int draw(const char* fig,    /**<Category of the figure*/
 				FWRITECMD(DRAW_DATA, nlen1+nlen2);
 				FWRITEARR(header, nlen1);
 				FWRITEARR(tmp, nlen2);
-				if(opts.zlog){
-					FWRITECMDARR(DRAW_ZLOG, &opts.zlog, sizeof(int));
-				}
 				free(tmp);
 			}
 			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
@@ -733,7 +730,10 @@ int draw(const char* fig,    /**<Category of the figure*/
 				FWRITEINT(NY(opts.cir));
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
-			if(opts.zlim){/*xmin,xmax,ymin,ymax */
+			if(opts.zlog){
+				FWRITECMDARR(DRAW_ZLOG, &opts.zlog, sizeof(int));
+			}
+			if(opts.zlim[0]!=opts.zlim[1]){
 				FWRITECMDARR(DRAW_ZLIM, opts.zlim, sizeof(real)*2);
 			}
 			if(opts.limit){/*xmin,xmax,ymin,ymax */
@@ -813,7 +813,7 @@ end2:
 /**
    like ddraw, acting on map object. see ddraw()
 */
-int drawmap(const char* fig, const map_t* map, real* zlim,
+int drawmap(const char* fig, const map_t* map, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -821,17 +821,13 @@ int drawmap(const char* fig, const map_t* map, real* zlim,
 	real limit[4];
 	LIMIT_SET_X(limit, map->ox, 0.5, map->dx, map->nx);
 	LIMIT_SET_Y(limit, map->oy, 0.5, map->dx, map->ny);
-	/*limit[0]=map->ox-map->dx/2;
-	limit[1]=map->ox+(map->nx-0.5)*map->dx;
-	limit[2]=map->oy-map->dx/2;
-	limit[3]=map->oy+(map->ny-0.5)*map->dx;*/
-	draw(fig, (plot_opts){.image=(const dmat*)map, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=(const dmat*)map, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
    Plot the loc on the screen. see ddraw()
 */
-int drawloc(const char* fig, loc_t* loc, real* zlim,
+int drawloc(const char* fig, loc_t* loc, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -849,11 +845,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 	real limit[4];
 	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
 	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dx, ny);
-	/*limit[0]=loc->map->ox+fabs(loc->dx)*(npad);
-	limit[1]=limit[0]+loc->dx*(nx);
-	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
-	limit[3]=limit[2]+loc->dy*(ny);*/
-	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -861,7 +853,7 @@ int drawloc(const char* fig, loc_t* loc, real* zlim,
 /**
    Plot the opd using coordinate loc. see ddraw()
 */
-int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
+int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 
@@ -871,36 +863,21 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real* zlim,
 		warning("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, NX(opd), NY(opd));
 		return 0;
 	}
-	if(!loc->map){
-		loc_create_map(loc);
-	}
-	//This is different from loc_embed. It removes the padding.
-	int npad=loc->npad;
-	int nx=loc->map->nx-npad*2;
-	int ny=loc->map->ny-npad*2;
-	dmat* opd0=dnew(nx, ny);
-	for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
-			long ii=P(loc->map, (ix+npad), (iy+npad));
-			P(opd0, ix, iy)=ii>0?P(opd, ii-1):NAN;
-		}
-	}
+	dmat* opd0=dnew(0,0);
+	loc_embed(opd0, loc, opd);
 	real limit[4];
-	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
-	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dy, ny);
-/*	limit[0]=loc->map->ox+fabs(loc->dx)*(npad);
-	limit[1]=limit[0]+fabs(loc->dx)*(nx);
-	limit[2]=loc->map->oy+fabs(loc->dy)*(npad);
-	limit[3]=limit[2]+fabs(loc->dy)*(ny);
-	*/
-	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+	if(loc->map){
+		LIMIT_SET_X(limit, loc->map->ox, loc->npad-0.5, loc->dx, opd0->nx);
+		LIMIT_SET_Y(limit, loc->map->oy, loc->npad-0.5, loc->dy, opd0->ny);
+	}
+	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real* zlim,
+int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -949,7 +926,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
 		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
 		draw(fig, (plot_opts){
-			.image=phi, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+			.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 		dfree(phi);
 	}
 	if(draw_current(fig, fnx)){
@@ -968,7 +945,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 /**
    Plot opd with coordinate loc where amp is above threshold. see ddraw()
 */
-int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real* zlim,
+int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -997,19 +974,15 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	real limit[4];
 	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
 	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dy, ny);
-	/*limit[0]=loc->map->ox+loc->dx*(npad-1);
-	limit[1]=limit[0]+loc->dx*nx;
-	limit[2]=loc->map->oy+loc->dx*(npad-1);
-	limit[3]=limit[2]+loc->dx*ny;*/
 	draw(fig, (plot_opts){
-		.image=opd0, .limit=limit, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+		.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
 /**
    Concatenate and plot subaperture images.
  */
-int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
+int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -1038,7 +1011,7 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real* zlim,
 		dcellfree(ints3);
 	}
 	draw("Ints", (plot_opts){
-		.image=ints2, .zlim=zlim}, title, xlabel, ylabel, "%s", fn);
+		.image=ints2, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(ints2);
 	return 1;
 }

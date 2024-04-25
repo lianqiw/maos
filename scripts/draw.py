@@ -5,7 +5,8 @@ This module contains routines to embed opds defined on coordinates to 2-d array 
 #from aolib import *
 import matplotlib.pyplot as plt
 import numpy as np
-#from aotools import center 
+import scipy
+#from aotools import center
 #import struct
 
 
@@ -161,9 +162,13 @@ def draw(*args, **kargs):
             draw(ims, **kargs)
         else:
             print('Too many arguments')
-    
+
     else: #2-d numeric array
-        img = np.squeeze(arg0)
+        img=arg0
+        if type(img) is scipy.sparse._csr.csr_matrix:
+            img=img.toarray()
+        if type(img) is np.ndarray:
+            img=np.squeeze(img)
         if img.size==0: #empty
             return
         elif len(img.shape) == 1 and img.shape[0]>0: #1-D array
@@ -180,6 +185,8 @@ def draw(*args, **kargs):
         #if img.dtype.name.find('complex')>-1:
         if np.iscomplexobj(img):
             img=np.real(img)
+        if type(img) is scipy.sparse._csr.csr_matrix:
+            img=img.toarray()
         if 'center' in kargs:
             img=center(img, kargs['center'])
         if 'ext' not in kargs and 'dx' in kargs:

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -23,7 +23,7 @@
 #include "../lib/aos.h"
 /**
    \file maos/parms.h
-   
+
    Configuration parameters that remain constant during simulation.
 */
 #define MAX_AMPS 5
@@ -87,9 +87,7 @@ typedef struct aper_cfg_t{
     real rot;	/**<pupil rotation*/
     dmat *misreg;  /**<Misregistration of the telescope pupil. 2x1
                     The intersection between the misregistered pupil (aper.d or fnamp) and a centered aper.d defines the actual pupil.*/
-    char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
-		     [m/2,n/2] (count from 0)*/
-    int fnampuser;/**<User provided amplitude map (not default)*/
+    char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0)*/
     char *pupmask;/**<The pupil cold stop*/
 }aper_cfg_t;
 /**
@@ -124,7 +122,7 @@ typedef struct llt_cfg_t{
 	real na_fit_svdthres;/**<threshold for SVD inverse in sodium fitting.*/
 	real na_fit_dh;  /**<sampling in height in sodium fitting*/
 	real na_thres;   /**<altitude error threshold to move trombone, in unit of meter.*/
-	
+
     //Computed
     lmat *i;        /**<Index into llt for this iwfs.*/
     int nllt;       /**<number of launch telescopes in this powfs*/
@@ -240,17 +238,17 @@ typedef struct powfs_cfg_t{
     int notf;      /**<PSF is extended to this size before FFT into OTF.  0 for automatic*/
     int embfac;    /**<Embed subaperture atm OPD before fft. set to 2.*/
     int nwvl;      /**<Number of wavelength. 1 for LGS, 2 for NGS J+H sensing.*/
-    int gtype_sim; /**<wfs type if not using physical optics in reconstruction. 
+    int gtype_sim; /**<wfs type if not using physical optics in reconstruction.
 		       - 0: geometric
 		       - 1: ztilt.*/
-    int gtype_recon;/**<wfs type if not using physical optics in simulation. 
+    int gtype_recon;/**<wfs type if not using physical optics in simulation.
 		       - 0: geometric
 		       - 1: ztilt.*/
     int phytype_recon;/**<physical optics type for reconstruction. 1: mtch, 2: tcog, 3: MAP*/
     int phytype_sim;  /**<physical optics type for simulation. -1 to follow phytype_recon*/
     int phytype_sim1; /**<Save phytype_sim initial value*/
     int phytype_sim2; /**<physical optics type after dithering update. -1 to follow phytype_sim*/
-    int phystep;    /**<frame to start using physical optics. 
+    int phystep;    /**<frame to start using physical optics.
 		       -  0: means from frame 0.
 		       - >0: need to compute GS0 to calculate geometric optics
 		       - -1: never, doesn't need to compute DTF
@@ -284,7 +282,7 @@ typedef struct powfs_cfg_t{
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-    
+
     int i0save;     /**<Save time averaged subaperture images.*/
     char *i0load;   /**<load i0,gx,gy from this folder.*/
     real gradscale; /**<Scale CL gradients. For testing*/
@@ -353,7 +351,7 @@ typedef struct dm_cfg_t{
     real ar;      /**<[in] aspect ratio: dy/dx*/
     real dy;      /**<actuator separation along y (derived from dx and ar*/
     real offset;  /**<Center-most actuator offset from origin
-		       - =0 means there is a act on center. 
+		       - =0 means there is a act on center.
 		       - 1/2 means no one in the center.*/
     real iac;     /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     real histbin; /**<The bin width for histogram.*/
@@ -381,7 +379,7 @@ typedef struct evl_cfg_t{
     lmat *psf;      /**<1: participate in psf evaluation.*/
     lmat *psfr;     /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
-    int rmax;       /**<max radial mode for performance evaluation. 
+    int rmax;       /**<max radial mode for performance evaluation.
                     - 0: piston only
                     - 1: piston/tip/tilt.*/
     int nmod;       /**<Number of modes. derived from rmax. (nmax+1)*(nmax+2)/2*/
@@ -424,7 +422,7 @@ typedef struct tomo_cfg_t{
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
     int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
     int piston_cr;   /**<single point piston constraint. */
- 
+
     int ahst_wt;     /**<Weight used to compute low order model removal in AHST
 			1: remove effect on NGS WFS (not good if WFS is outside of science FoV)
 			2: remove effect on Science
@@ -503,7 +501,7 @@ typedef struct lsr_cfg_t{
 		     */
     int maxit;       /**<max iterations. Usually 30 for CG*/
     int cgwarm;      /**<Warm restart in CG. */
-    
+
 }lsr_cfg_t;
 /**
    contains input parameters for wavefront reconstruction.
@@ -526,11 +524,11 @@ typedef struct recon_cfg_t{
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
-    
+
     int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points (m^2/Hz).*/
     int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
-    
+
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
     int twfs_rmin; /**<minimum zernike order (inclusive)*/
     int twfs_rmax; /**<maximum zernike order (inclusive)*/
@@ -570,10 +568,10 @@ typedef struct sim_cfg_t{
     //real zetatt;    /**<Damping frequency of tip/tilt mirror.*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
-    
+
     real alhi;     /**<Additional latency (*sim.dt) of the high order loop besides 2 cycle delay.*/
     real allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
-    
+
     real aptwfs;   /**<Twfs reference vector servo coefficient.*/
     real eptwfs;   /**<Twfs reference vector servo gain.*/
     real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
@@ -602,7 +600,7 @@ typedef struct sim_cfg_t{
 			onto the NULL space of DM.*/
     int idealwfs;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
     int idealevl;    /**<Evaluate performance within DM range.*/
-    
+
     /* A few derived parameters*/
     real dtlo;     /**<low order wfs sampling period*/
     real dthi;     /**<high order wfs sampling period*/
@@ -670,11 +668,12 @@ typedef struct plot_cfg_t{
     int atm;         /**<Plot the generated atmosphere*/
     int run;         /**<Plot information during simulation*/
     int opdx;        /**<Plot turbulence projected onto xloc.*/
-    int psf;         /**<Plot PSF in linear (1) or log (2) mode*/
+    int psf;         /**<Plot PSF in log (1) or linear (2) mode*/
     int grad2opd;    /**<Plot gradients as reconstructed opd*/
     int all;         /**<Enables setup, atm, run*/
-	dmat *opdmax;/**<Set zlim for OPD drawing*/
-	dmat *gmax; /**<Set zlim for gradient drawing*/
+	real opdmax;     /**<Set zlim for OPD drawing*/
+	real gmax;       /**<Set zlim for gradient drawing*/
+    real psfmin;     /**<Set zlim for psf drawing*/
 }plot_cfg_t;
 /**
    contains input parameters for debugging.
@@ -775,7 +774,7 @@ typedef struct load_cfg_t{
 */
 typedef struct save_cfg_t{
     int extra;       /**<Save extra results, namely clep, olep, cleNGSmp, etc*/
-    
+
     int all;         /**<save absolutely everything. mainly for debugging*/
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/
@@ -837,7 +836,7 @@ typedef struct parms_t{
     lsr_cfg_t    lsr;   /**<LSR parameters*/
     recon_cfg_t  recon; /**<general reconstruction parameters*/
     evl_cfg_t    evl;   /**<Performance evaluation parameters*/
-    
+
     /*the following are pointers because there may be several*/
     powfs_cfg_t *powfs; /**<Array of wfs type*/
     wfs_cfg_t   *wfs;   /**<Array of wfs*/

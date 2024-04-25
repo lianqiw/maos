@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -28,7 +28,7 @@
 //C standard headers
 
 #ifdef HAVE_CONFIG_H
-#include "config.h" 
+#include "config.h"
 #endif
 
 #if HAS_OPENMP && !defined(_OPENMP)
@@ -179,11 +179,11 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 
 #if    ( __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4) ) && !defined(MATLAB_MEX_FILE)
 #define CHECK_ARG(n) __attribute__ ((format (printf, n, n+1)))
-#else   
+#else
 #define CHECK_ARG(n)
 #endif /* __GNUC__ */
 
-#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__) 
+#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
 #define LIKELY(A)   (__builtin_expect (A,1))
 #define UNLIKELY(A) (__builtin_expect (A,0))
 #else

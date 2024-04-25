@@ -228,7 +228,7 @@ static void topnb_detach_btn(GtkWidget *btn, GtkWidget *topnb){
 static void update_toolbar(drawdata_t *drawdata){
 	if(!drawdata) drawdata=get_current_drawdata();
 	if(!drawdata) return;
-	int cumu_supported=!drawdata->image&&drawdata->npts>0;
+	int cumu_supported=!drawdata->p&&drawdata->npts>0;
 	if(cur_menu_cumu){
 		toggle_button_set_active(cur_menu_cumu, cumu&&cumu_supported);
 		gtk_widget_set_sensitive(cur_menu_cumu, cumu_supported);
@@ -239,7 +239,7 @@ static void update_toolbar(drawdata_t *drawdata){
 	}
 	if(cur_menu_zlog){
 		toggle_button_set_active(cur_menu_zlog, drawdata->zlog);
-		gtk_widget_set_sensitive(cur_menu_zlog, drawdata->image?TRUE:FALSE);
+		gtk_widget_set_sensitive(cur_menu_zlog, drawdata->p?TRUE:FALSE);
 	}
 }
 typedef struct updatetimer_t{
@@ -254,7 +254,7 @@ static void update_pixmap(drawdata_t* drawdata, int redraw){
 		warning_time("recycle is set, do not draw\n");
 		return;
 	}
-	if(!drawdata->image&&!drawdata->square){
+	if(!drawdata->p&&!drawdata->square){
 		drawdata->cumu=cumu;
 	}
 	gint width=drawdata->width;
@@ -368,7 +368,7 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 	cairo_t *cr=gdk_cairo_create(widget->window);
 #endif
 	(void)widget;
-	if(!drawdata->image&&!drawdata->square){
+	if(!drawdata->p&&!drawdata->square){
 		drawdata->cumu=cumu;
 	}
 	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
@@ -627,7 +627,7 @@ static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event,
 			} else if(button==3){/*select and zoom. */
 				if(drawdata->square){/*enforce aspect ratio*/
 					float ratio=1;
-					if(drawdata->image){
+					if(drawdata->p){
 						ratio=(float)drawdata->nx/(float)drawdata->ny;
 					}
 					if(fabs(dx)<fabs(dy)*ratio){
@@ -842,7 +842,7 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 		float yy=drawdata->mydown;
 		if(drawdata->square){
 			float ratio=1;
-			if(drawdata->image){
+			if(drawdata->p){
 				ratio=(float)drawdata->nx/(float)drawdata->ny;
 			}
 			if(fabs(dx)<fabs(dy)*ratio){
@@ -1141,37 +1141,6 @@ gboolean addpage(gpointer indata){
 		}
 		//drawdata_free_input(drawdata_old);
 	}
-	if(drawdata->nx && drawdata->ny){/*draw image */
-		int nx=drawdata->nx;
-		int ny=drawdata->ny;
-		/*if(drawdata_old->p0&&lpf<1){
-			extern int byte_float;
-			if(byte_float==4){
-				DO_LPF(float, drawdata_old->p0, drawdata->p0, nx*ny);
-			} else if(byte_float==8){
-				DO_LPF(double, drawdata_old->p0, drawdata->p0, nx*ny);
-			}
-		}*/
-		if(nx<=0||ny<=0) error("Please call DRAW_DATA\n");
-		if(drawdata->gray){
-			drawdata->format=(cairo_format_t)CAIRO_FORMAT_A8;
-		} else{
-			drawdata->format=(cairo_format_t)CAIRO_FORMAT_ARGB32;
-		}
-		int stride=cairo_format_stride_for_width(drawdata->format, nx);
-		if(!drawdata->limit_manual){
-			if(!drawdata->limit_data){
-				drawdata->limit_data=mycalloc(4, float);
-			}
-			drawdata->limit_data[0]=-0.5;
-			drawdata->limit_data[1]=drawdata->nx-0.5;
-			drawdata->limit_data[2]=-0.5;
-			drawdata->limit_data[3]=drawdata->ny-0.5;
-		}
-		/*convert data from float to int/char. */
-		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray, drawdata->zlim, drawdata->zlim_manual, drawdata->zlog);
-		drawdata->image=cairo_image_surface_create_for_data(drawdata->p, drawdata->format, nx, ny, stride);
-	}
 	if(page){
 		if(get_current_drawdata()==drawdata){/*we are the current page. need to update pixmap */
 			update_pixmap(drawdata, 1);
@@ -1439,16 +1408,16 @@ static void limit_change(GtkSpinButton* spin, gfloat* val){
 	delayed_update_pixmap(drawdata_dialog);
 }
 
-static void limit_change2(GtkSpinButton* spin, gfloat* val){
+static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
-	drawdata_dialog->limit_changed=2;
+	drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->zlim_manual=1;
 	update_zoom(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	*key=check_button_get_active(btn);
-	drawdata_dialog->limit_changed=2;
+	drawdata_dialog->zlim_changed=1;
 	delayed_update_pixmap(drawdata_dialog);
 	/*if(key==&cumu){
 		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
@@ -1456,7 +1425,7 @@ static void checkbtn_toggle(GtkWidget* btn, gint* key){
 }
 static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*key=check_button_get_active(btn)?'y':'n';
-	drawdata_dialog->limit_changed=2;
+	drawdata_dialog->zlim_changed=1;
 	delayed_update_pixmap(drawdata_dialog);
 	/*if(key==&cumu){
 		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
@@ -1479,7 +1448,7 @@ static void spin_changed(GtkSpinButton* spin, gfloat* val){
 }
 static void spin_icumu(GtkSpinButton* spin){
 	drawdata_t *drawdata=get_current_drawdata();
-	if(drawdata && !drawdata->image&&!drawdata->square && drawdata->cumu){
+	if(drawdata && !drawdata->p&&!drawdata->square && drawdata->cumu){
 		drawdata->icumu=gtk_spin_button_get_value(spin);
 		delayed_update_pixmap(drawdata);
 		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
@@ -1494,7 +1463,7 @@ static void togglebutton_toggle(GtkWidget* btn, int *val){
 static void togglebutton_cumu(GtkWidget* btn){
 	drawdata_t* drawdata=get_current_drawdata();
 	if(!drawdata) return;
-	if(!drawdata->image&&!drawdata->square){
+	if(!drawdata->p&&!drawdata->square){
 		drawdata->cumu=toggle_button_get_active(btn);
 		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
 		if(cur_menu_icumu){
@@ -1510,14 +1479,12 @@ static void togglebutton_zlog(GtkWidget *btn){
 	(void)btn;
 	drawdata_t *drawdata=get_current_drawdata();
 	if(!drawdata) return;
-	if(drawdata->image){
+	if(drawdata->p){
 		drawdata->zlog=toggle_button_get_active(btn);
-		drawdata->limit_changed=2;
+		drawdata->zlim_changed=1;
 		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
-	} else{
-		toggle_button_set_active(btn, 0);
+		delayed_update_pixmap(drawdata);
 	}
-	delayed_update_pixmap(drawdata);
 }
 static void toolbutton_stop(GtkWidget* btn){
 	(void)btn;
@@ -1574,8 +1541,9 @@ static void tool_property(GtkWidget* button, gpointer data){
 	float diff[3];
 	diff[0]=(drawdata->limit0[1]-drawdata->limit0[0]);
 	diff[1]=(drawdata->limit0[3]-drawdata->limit0[2]);
-	if(drawdata->zlim[0]||drawdata->zlim[1]){
-		diff[2]=(drawdata->zlim[1]-drawdata->zlim[0]);
+	float *zlim=drawdata->zlim+(drawdata->zlog?2:0);
+	if(zlim[0]||zlim[1]){
+		diff[2]=(zlim[1]-zlim[0]);
 		n=6;
 	} else{
 		n=4;
@@ -1594,9 +1562,9 @@ static void tool_property(GtkWidget* button, gpointer data){
 			gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
 			g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change), val);
 		} else{
-			val=&drawdata->zlim[i-4];
+			val=zlim+(i-4);
 			gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
-			g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change2), val);
+			g_signal_connect(spins[i], "value-changed", G_CALLBACK(zlim_changed), val);
 		}
 	}
 	drawdata->spins=spins;

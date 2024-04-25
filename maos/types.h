@@ -21,6 +21,7 @@
 #ifndef __AOS_TYPES_H__
 #define __AOS_TYPES_H__
 #include <pthread.h>
+#include "../lib/aos.h"
 /**
    \file maos/types.h
    A few run time structs
@@ -30,20 +31,21 @@
    evaluation.
  */
 typedef struct aper_t{
-    loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture for peformance evaluation.*/
+    loc_t *locs;         /**<Fine sampled grid on aperture for peformance evaluation.*/
     loccell *locs_dm;    /**<Distorted locs when mapped onto DM*/
     dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for performance evaluation*/
     dmat *amp1;          /**<amplitude map defined on locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
-    dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
+    dmat *mod;           /**<modal column vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
-    real ipcc;         /**<piston term in imcc.*/
-    real sumamp2;      /**<sum of amplitude squared*/
-    locfft_t *embed;     /**<For computing FFT*/
-    real fcp;          /**<piston correction in focus term.*/
+    real ipcc;           /**<piston term in imcc.*/
+    real sumamp2;        /**<sum of amplitude squared*/
+    locfft_t *embed;     /**<For computing PSF with FFT*/
+    real fcp;            /**<piston correction in focus term.*/
     dcell *opdadd;       /**<All OPD surface for each evaluation direction, used for ray tracing*/
     dcell *opdbias;      /**<NCPA OPD surface for each NCPA direction, used for dm_ncpa calibration.*/
+    dsp *hpetal;         /**<Mapping from petal p/t/t to phase at aperture.*/
 }aper_t;
 
 /**

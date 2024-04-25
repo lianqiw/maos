@@ -108,7 +108,7 @@ def rms(*args, **kargs):
     else:
         arr=np.array(args[0])
     return np.sqrt(np.mean(np.real(arr*np.conj(arr)), **kargs))
-    
+
 def styles(ii):
     reset_color()
     lines=['-','--','-.',':'];
@@ -144,7 +144,7 @@ def nargout():
 #    plt.figure(*args, **kargs)
 #    plt.clf()
 
-    
+
 def width_at(x, y, height):
     '''compute width of 1d function defined on x above a threshold height'''
     return len(np.argwhere(y>=max(y)*height))*(x[1]-x[0])
@@ -168,13 +168,13 @@ def grad_ttfr(grad, saloc):
         return gv
     if saloc.shape[1]==2 and saloc.shape[0]!=2: #nsa*2
         saloc=saloc.T
-        
+
     if saloc.shape[0]==2: #2*nsa
         nsa=saloc.shape[1]
-        tt=saloc.flatten() 
+        tt=saloc.flatten()
     else:
         raise(ValueError('saloc should be 2xnsa or nsax2'))
-    
+
     if grad.shape[0]==2: #2*nsa
         gv=grad.flatten('C')
     elif grad.shape[0]==2*nsa:
@@ -183,16 +183,16 @@ def grad_ttfr(grad, saloc):
         gv=grad.flatten('F')
     else:
         raise(ValueError('g should bd 2*nsa, nsa*2 or nsa*2*m'))
-    
+
     mod=np.c_[np.ones((nsa*2,1)), tt] #nsa*3
-    
+
     rmod=np.linalg.pinv(mod)
-    
+
     ptt=rmod@gv
     g2v=gv-mod@ptt
     g2v.shape=[2,nsa]
     return g2v
-def loc_zernike_proj(loc, rmin, rmax, radonly=0):    
+def loc_zernike_proj(loc, rmin, rmax, radonly=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
     mod=zernike(loc, D, rmin, rmax, radonly).T
@@ -203,7 +203,7 @@ def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
     return mod@(rmod@opd)
-    
+
 def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     '''Remove zernike mode between rmin and rmax from opd which is defined on loc'''
     mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
@@ -212,12 +212,13 @@ def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
 #remove zernike modes from rmin to rmax from 2-D OPD
 def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     '''OPD is 2d array, mask indicates valid points, rmin and rmax are minimum and maximum zernike order (inclusive)'''
-
+    opdshape=opd.shape
+    oloc=mksqloc(opd.shape[1], opd.shape[0], 1, 1, -opd.shape[1]/2, -opd.shape[0]/2).reshape(2,opd.size)
+    opd=opd.reshape((opd.size,))
     if mask is None:
         mask=opd!=0
-    dx=0.4 #doesn't matter
-    oloc=mksqloc(opd.shape[1], opd.shape[0], dx, dx, -opd.shape[1]/2*dx, -opd.shape[0]/2*dx)
-    oloc.shape=[2,opd.shape[0],opd.shape[1]]
+    else:
+        mask=mask.reshape((mask.size,))
     oloc2=oloc[:,mask].copy() #copy is necessary for C to access the data
     opd2=np.zeros(opd.shape)
     opd2[mask]=opd_loc_remove_zernike(opd[mask], oloc2, rmin, rmax, radonly);
@@ -225,7 +226,7 @@ def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     #mod=zernike(oloc2, D, rmin, rmax, radonly).T
     #rmod=np.linalg.pinv(mod)
     #opd2[mask]=opd[mask]-mod@(rmod@opd[mask])
-    return opd2
+    return opd2.reshape(opdshape)
 def opd_loc_remove_focus(opd, loc):
     '''Remove focus mode from opd which is defined on loc'''
     return opd_loc_remove_zernike(2,2,1)
@@ -234,7 +235,7 @@ def read_many(fdin):
     fds2=natsorted(glob.glob(fdin,recursive=1))
     fds=[]
     res=[]
-    for fd in fds2: 
+    for fd in fds2:
         try:
             tmp=readbin(fd)
             fds.append(fd)
@@ -251,7 +252,7 @@ def read_many_dict(fdin):
     '''read many files together into a dictionary'''
     fds2=natsorted(glob.glob(fdin,recursive=1))
     res={}
-    for fd in fds2: 
+    for fd in fds2:
         try:
             res[fd]=readbin(fd)
         except:
@@ -279,7 +280,7 @@ def svd_pinv(mod, thres=0, tikcr=0):
         print('mod has wrong shape, use its transpose instead:', mod.shape)
         return svd_pinv(mod.T, thres, tikcr)
 
-    mmt=mod@mod.T 
+    mmt=mod@mod.T
     immt=svd_inv(mmt, thres, tikcr)
     return mod.T@immt
 
@@ -291,19 +292,19 @@ def plot_cdf(y, *args, **kargs):
         y=np.abs(y)*2
     plot(np.sort(y.flat), x, *args, **kargs)
     ylim(0,1)
-    
+
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
     ind=np.argsort(x)
     x=x[ind]
     y=y[ind]
-    #define x as 200 equally spaced values between the min and max of original x 
-    xnew = np.linspace(x.min(), x.max(), 200) 
+    #define x as 200 equally spaced values between the min and max of original x
+    xnew = np.linspace(x.min(), x.max(), 200)
     #define spline
     spl = make_interp_spline(x, y, k=3)
     y_smooth = spl(xnew)
 
-    #create smooth line chart 
+    #create smooth line chart
     plt.plot(xnew, y_smooth, *args, **kargs)
 def radial_profile(data, nx=None):
     if nx is None:
@@ -331,7 +332,7 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
         nr   = rind[1:] - rind[:-1] # number in radius bin
         tbin = csim[rind[1:]] - csim[rind[:-1]] # sum for image values in radius bins
         radialprofile = tbin/nr # the answer
-    
+
     return radialprofile
 
 def center(A, nx, ny=None):
@@ -383,7 +384,7 @@ def photon_flux(magnitude, wvls):
     flux= np.zeros((nmag, nwvl))
     if np.max(wvls)<0.1:
         wvls=wvls*1e6
-        
+
     for iwvl in range(nwvl):
         ind=np.argmin(abs(wvlc-wvls[iwvl]))
         zs=flux0[ind]*Jy*dl_l[ind]
@@ -400,7 +401,7 @@ def calc_psd(v, dt=1, fold=1, axis=-1):
     nmid=(nstep>>1)
     df=1/(nstep*dt);
     af=np.abs(fft(v,axis=axis))**2*(1/(df*nstep*nstep))
-    
+
     if fold:
         f=np.arange(nmid+1)*df
         if af.ndim==2:
@@ -443,7 +444,7 @@ def cog_shift(data):
     ccy=-int(round(cy))
 
     return np.roll(data, (ccx,ccy),axis=(0,1))
-    
+
 def plot_circle(radius, center=[0, 0], *args):
     '''plot_circle(radius, *args):'''
     theta=np.arange(0,np.pi*2,0.01)
@@ -454,7 +455,7 @@ def plot_circle(radius, center=[0, 0], *args):
         rx=radius
         ry=radius
     plot(rx*np.cos(theta)+center[0], ry*np.sin(theta)+center[1], *args)
-    
+
 def calc_width_gauss(dx,data):
     '''Compute the Gaussian width of 2-d array data with sampling of dx'''
     n=data.shape[0]
@@ -509,7 +510,7 @@ def opdfillzero(im0, nrep):
             for axis in 0,1:
                 im2+=np.roll(im, ix, axis=axis)
                 mask2+=np.roll(mask1, ix, axis=axis)
-        mask[mask2==0]=0 
+        mask[mask2==0]=0
         im[mask]=im2[mask]/mask2[mask]
     return im
 
@@ -545,15 +546,17 @@ def reflection(n1, n2, degree):
     rp=((n1*ct-n2*ci)/(n1*ct+n2*ci))**2
     return rs,rp
 
+def make_R2(n, dx=1):
+    '''Create radius squared of a meshgrid'''
+    X=np.arange(-n/2,n/2)*dx
+    X.shape=(n,1)
+    Y=X+0
+    Y.shape=(1,n)
+    R2=X*X+Y*Y
+    return R2
 def gen_atm(nx, dx=1./64., r0=0.186, L0=30., powerlaw=-11./3., seed=0):
-    def make_R2N(n):
-        X=np.arange(-n/2,n/2)
-        X.shape=(n,1)
-        Y=X+0
-        Y.shape=(1,n)
-        R2=X*X+Y*Y
-        return R2
-    R2=make_R2N(nx) #radius squared (without dx)
+    '''Generate atmosphere'''
+    R2=make_R2(nx) #radius squared (with dx=1)
     if L0>0: #outer scale
         R2+=(nx*dx/L0)**2
     if seed:
@@ -567,7 +570,19 @@ def gen_atm(nx, dx=1./64., r0=0.186, L0=30., powerlaw=-11./3., seed=0):
     spect[nx>>1, nx>>1]=0
     spect[:,0]=0
     spect[0,:]=0
-    screen=np.real(np.fft.fft2(np.fft.fftshift(spect)))
+    screen=np.real(fft2(fftshift(spect)))
     return screen
 def abs2(A):
     return np.real(A*np.conj(A))
+
+def calc_psf(amp, opd, wvl):
+    '''
+        Compute PSF normalized by Strehl ratio.
+    '''
+    if opd is None or opd.size==0:
+        wvf=amp
+    else:
+        wvf=amp*np.exp(opd*(-2j*pi/wvl))
+
+    psf=abs2(fftshift(fft2(fftshift(wvf))))*(1/np.sum(amp)**2)
+    return psf

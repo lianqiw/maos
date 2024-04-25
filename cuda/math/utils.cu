@@ -435,7 +435,7 @@ void zfarr_push_scale(struct zfarr *ca, int i, const cuccell &A, Real scale, cud
 }
 
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t stream,
-	const dmat* amp, real* zlim,
+	const dmat* amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -446,7 +446,17 @@ void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t
 		dfree(tmp);
 	}
 }
-void curdraw_gpu(const char* fig, curmat& psf, int count, cudaStream_t stream, int zlog,
+void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int zlog, real psfmin,
+	const char *title, const char *xlabel, const char *ylabel,
+	const char *format, ...){
+	format2fn;
+	if(draw_current(fig, fn)){
+		dmat *psftemp=NULL;
+		add2cpu(&psftemp, 0, psf, 1./count, stream);
+		draw(fig, (plot_opts){ .image=psftemp, .zlim={psfmin,1}, .zlog=zlog }, title, xlabel, ylabel, "%s", fn);
+		dfree(psftemp);
+	}
+}void curdraw_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int zlog,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;

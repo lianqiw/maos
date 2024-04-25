@@ -34,8 +34,6 @@
 
    Contains a few support functions for simulation.
 */
-/*static real opdzlim[2]={-3e-5,3e-5}; */
-static real* opdzlim=NULL;
 extern int disable_save;
 static mapcell* genatm_do(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -255,7 +253,7 @@ void genatm(sim_t* simu){
 
 	if(parms->plot.atm&&simu->atm){
 		for(int ips=0; ips<atm->nps; ips++){
-			drawmap("Atm", P(simu->atm, ips), opdzlim,
+			drawmap("Atm", P(simu->atm, ips), 0,
 				"Atmosphere OPD", "x (m)", "y (m)", "layer %d", ips);
 		}
 	}
@@ -1200,6 +1198,7 @@ static void init_simu_dm(sim_t* simu){
 	simu->dmerr_store=dcellnew3(parms->ndm, 1, P(recon->anloc), NULL);
 	simu->dmcmd=dcellnew(parms->ndm, 1);
 	simu->dmreal=dcellnew(parms->ndm, 1);
+	simu->dmrealsq=mapcellnew(parms->ndm, 1);
 	if(parms->fit.cgwarm){
 		simu->dmrecon=dcellnew3(parms->ndm, 1, parms->recon.modal?P(recon->anmod):P(recon->anloc), NULL);
 	} else{
@@ -1208,35 +1207,33 @@ static void init_simu_dm(sim_t* simu){
 	if(parms->sim.lpttm>EPS){
 		simu->ttmreal=dnew(2, 1);
 	}
-	simu->dmrealsq=mapcellnew(parms->ndm, 1);
 
 	if(parms->sim.dmproj){
-		simu->dmproj=dcellnew3(parms->ndm, 1, P(recon->anloc), NULL);
+		simu->dmproj=dcellnew(parms->ndm, 1);
 		simu->dmprojsq=mapcellnew(parms->ndm, 1);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
 		P(simu->dmcmd, idm)=dnew(P(recon->anloc, idm), 1);
 		//Do not reference for the new synchronization scheme.
-		P(simu->dmreal, idm)=dnew(P(recon->anloc, idm), 1);
-		if(simu->dmrealsq){
-			P(simu->dmrealsq, idm)=mapnew2(P(recon->amap, idm));
-			dset((dmat*)P(simu->dmrealsq, idm), NAN);
-			P(simu->dmrealsq, idm)->dratio=parms->dm[idm].dratio;
+		P(simu->dmrealsq, idm)=mapnew2(P(recon->amap, idm));
+		dset(P(simu->dmrealsq, idm)->dmat, NAN);
+		P(simu->dmrealsq, idm)->dratio=parms->dm[idm].dratio;
+		if(parms->fit.square){/*dmreal is also square.*/
+			P(simu->dmreal, idm)=dref_reshape(P(simu->dmrealsq, idm)->dmat, P(recon->anloc, idm), 1);
+		} else{
+			P(simu->dmreal, idm)=dnew(P(recon->anloc, idm), 1);
 		}
-		if(simu->dmprojsq){
+
+		if(parms->sim.dmproj){
 			P(simu->dmprojsq, idm)=mapnew2(P(recon->amap, idm));
-			dset((dmat*)P(simu->dmprojsq, idm), NAN);
-		}
-		if(parms->fit.square){/*dmreal is already square.*/
-			mem_unref(&P(simu->dmrealsq, idm)->mem);
-			P(P(simu->dmrealsq, idm))=P(P(simu->dmreal, idm));
-			P(simu->dmrealsq, idm)->mem=mem_ref(P(simu->dmreal, idm)->mem);
-			if(simu->dmprojsq){
-				mem_unref(&P(simu->dmprojsq, idm)->mem);
-				P(P(simu->dmprojsq, idm))=P(P(simu->dmproj, idm));
-				P(simu->dmprojsq, idm)->mem=mem_ref(P(simu->dmprojsq, idm)->mem);
+			dset(P(simu->dmprojsq, idm)->dmat, NAN);
+			if(parms->fit.square){/*dmreal is also square.*/
+				P(simu->dmproj, idm)=dref_reshape(P(simu->dmprojsq, idm)->dmat, P(recon->anloc, idm), 1);
+			}else{
+				P(simu->dmproj, idm)=dnew(P(recon->anloc, idm), 1);
 			}
 		}
+
 	}
 	if(parms->sim.dmadd){
 		simu->dmadd=dcellread("%s", parms->sim.dmadd);

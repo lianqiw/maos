@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -133,7 +133,7 @@ void maos_isim(int isim){
 		if(!parms->fit.square){
 			/* Embed DM commands to a square array for fast ray tracing */
 			for(int idm=0; idm<parms->ndm; idm++){
-				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(P(simu->dmproj,idm)));
+				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm));
 			}
 		}
 #if USE_CUDA

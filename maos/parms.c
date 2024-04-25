@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -188,8 +188,6 @@ void free_parms(parms_t *parms){
 	lfree(parms->dbg.tomo_maxit);
 	dcellfree(parms->dbg.dmoff);
 	dcellfree(parms->dbg.gradoff);
-	dfree(parms->plot.opdmax);
-	dfree(parms->plot.gmax);
 	dfree(parms->dbg.atm);
 	free(parms);
 }
@@ -224,18 +222,18 @@ static inline int sum_dblarr(int n, real *a){
     readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B);		\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }	
+    }
 #define READ_POWFS_MAT(A,B)						\
     readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B);			\
     for(int i=0; i<npowfs; i++){						\
 		parms->powfs[i].B = readstr_##A##mat(0,0,"powfs."#B, strtmp[i]);/*doesn't need ## in B*/ \
 		free(strtmp[i]); strtmp[i]=NULL;\
-    }								
+    }
 #define READ_POWFS_RELAX(A,B)					\
     readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B);	\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }								
+    }
 static void convert_theta(real *theta, const char *name, real wvlmax, real dsa){
 	/*Convert pixtheta to radian and do senity check*/
 	real val=*theta;
@@ -291,7 +289,7 @@ static void readcfg_powfs(parms_t *parms){
 		error("powfs.wvl has wrong value\n");
 	}
 	dfree(wvllist);
-	
+
 	READ_POWFS_RELAX(dbl,siglev);
 	READ_POWFS_RELAX(dbl,sigrecon);
 
@@ -550,7 +548,6 @@ static void readcfg_powfs(parms_t *parms){
 				powfsi->dx=dx;
 			}
 			convert_theta(&powfsi->pixtheta, "pixtheta", wvlmax, powfsi->dsa);
-	
 			if(!powfsi->radpixtheta){
 				powfsi->radpixtheta=powfsi->pixtheta;
 			} else{
@@ -637,17 +634,17 @@ static void readcfg_powfs(parms_t *parms){
     readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B);	\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }									
+    }
 #define READ_WFS_RELAX(A,B)				\
     readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B);	\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }									
+    }
 #define READ_WFS_DELTA(A,B,BD)				\
     readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD);	\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = parms->powfs[parms->wfs[i].powfs].B+A##tmp[i];	\
-    }	
+    }
 #define READ_WFS_MAT(A,B)						\
     readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B);	\
     for(i=0; i<nwfs; i++){						\
@@ -710,7 +707,7 @@ static void readcfg_wfs(parms_t *parms){
 	} else if(parms->nwfs!=wfscount){
 		error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n",
 			parms->nwfs,wfscount);
-	}	
+	}
 	READ_WFS_DELTA(dbl,hs,delta_hs);
 	READ_WFS_DELTA(dbl,hc,delta_hc);
 	free(dbltmp);
@@ -781,7 +778,7 @@ static void readcfg_siglev(parms_t *parms){
 	check_dimension("wfs.siglev", wfs_siglev, parms->nwfs);
 	check_dimension("wfs.wvlwts", wfs_wvlwts, wfs_wvl_tot);
 	check_dimension("wfs.mag",    wfs_mag,    wfs_wvl_tot);
-#undef check_dimension	
+#undef check_dimension
 	/*if(dsum(wfs_mag)>0||dsum(powfs_mag)>0){
 		info("When both wfs.mag and powfs.mag are specified, wfs.mag takes precedence\n");
 	} else{
@@ -900,15 +897,15 @@ static void readcfg_siglev(parms_t *parms){
 	dfree(wfs_siglev);
 	dfree(wfs_wvlwts);
 	dfree(powfs_wvlwts);
-	
+
 	dfree(wfs_mag);
-	
+
 	dfree(powfs_mag);
 	dfree(powfs_magb);
 
 	dfree(telthruput);
 	dfree(atmthruput);
-	
+
 	dfree(bzero);
 	//dfree(wfs_telt);
 	//dfree(wfs_atmt);
@@ -920,13 +917,13 @@ static void readcfg_siglev(parms_t *parms){
     readcfg_##A##arr((&A##tmp),ndm,0,"dm."#B);	\
     for(i=0; i<ndm; i++){			\
 	parms->dm[i].B = A##tmp[i];		\
-    }							     
+    }
 
 #define READ_DM_RELAX(A,B)				\
     readcfg_##A##arr((&A##tmp),ndm,1,"dm."#B);	\
     for(i=0; i<ndm; i++){				\
 	parms->dm[i].B = A##tmp[i];			\
-    }							     
+    }
 #define READ_DM_MAT(A,B)						\
     readcfg_strarr((&strtmp), ndm, 1,"dm."#B);	\
     for(i=0; i<ndm; i++){						\
@@ -1035,12 +1032,12 @@ static void readcfg_dm(parms_t *parms){
     readcfg_##A##arr((&A##tmp),nmoao,0,"moao."#B);	\
     for(i=0; i<nmoao; i++){				\
 	parms->moao[i].B = A##tmp[i];			\
-    }							      
+    }
 #define READ_MOAO_RELAX(A,B)				\
     readcfg_##A##arr((&A##tmp),nmoao,1,"moao."#B);	\
     for(i=0; i<nmoao; i++){				\
 	parms->moao[i].B = A##tmp[i];			\
-    }							      
+    }
 #define READ_MOAO_MAT(A,B)						\
     readcfg_strarr((&strtmp), nmoao, 1,"moao."#B);	\
     for(i=0; i<nmoao; i++){						\
@@ -1161,7 +1158,6 @@ static void readcfg_aper(parms_t *parms){
 	}
 	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
 	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
-	parms->aper.fnampuser=readcfg_peek_priority("aper.fnamp");
 	READ_STR(aper.fnamp);
 	READ_STR(aper.pupmask);
 }
@@ -1176,7 +1172,7 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	}
 	if(fov==0 || fov==1){//when fov is 0 or 1. will not do anything. use thetax and thetay as it.
 		return;
-	} 
+	}
 	real maxxy=0;
 	for(int i=0; i<PN(thetax); i++){
 		if(fabs(P(thetax, i))>maxxy) maxxy=fabs(P(thetax, i));
@@ -1187,7 +1183,7 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		if(nx<3) nx=3;
 		int np=nx*nx;
 		warning("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
-		
+
 		dresize(thetax, nx, nx);
 		dresize(thetay, nx, nx);
 		dresize(wt, nx, nx);
@@ -1362,7 +1358,7 @@ static void readcfg_fit(parms_t *parms){
 				P(parms->fit.thetay, parms->fit.nfit)=rfov*sin(theta);
 				P(parms->fit.hs, parms->fit.nfit)=P(parms->fit.hs,0);
 				P(parms->fit.wt, parms->fit.nfit)=fitwt;
-				info("Including virtual direction (%g, %g) with wt %g in fitting\n", 
+				info("Including virtual direction (%g, %g) with wt %g in fitting\n",
 					P(parms->fit.thetax, parms->fit.nfit),P(parms->fit.thetay, parms->fit.nfit),
 					P(parms->fit.wt, parms->fit.nfit));
 				parms->fit.nfit++;
@@ -1541,15 +1537,7 @@ static void readcfg_cn2(parms_t *parms){
 		parms->cn2.tomo=0;
 	}
 }
-/**
-   Convert real to value pair of [-val, val].
-*/
-static dmat *dbl2pair(real val){
-	dmat *out=dnew(2, 1);
-	P(out, 0)=-fabs(val);
-	P(out, 1)=-P(out, 0);
-	return out;
-}
+
 /**
    Specify which variables to plot
 */
@@ -1562,8 +1550,9 @@ static void readcfg_plot(parms_t *parms){
 	READ_INT(plot.psf);
 	READ_INT(plot.all);
 	READ_INT(plot.grad2opd);
-	parms->plot.opdmax=dbl2pair(readcfg_dbl("plot.opdmax"));
-	parms->plot.gmax=dbl2pair(readcfg_dbl("plot.gmax"));
+	READ_DBL(plot.opdmax);
+	READ_DBL(plot.gmax);
+	READ_DBL(plot.psfmin);
 	if(parms->plot.all){
 		parms->plot.setup=parms->plot.all;
 		parms->plot.run=parms->plot.all;
@@ -1597,7 +1586,7 @@ static void readcfg_dbg(parms_t *parms){
 	READ_INT(dbg.dmfullfov);
 	READ_INT(dbg.tomo);
 	READ_INT(dbg.fit);
-	
+
 	READ_INT(dbg.gp_noamp);
 	READ_DBL(dbg.gradoff_scale);
 	READ_INT(dbg.gradoff_reset);
@@ -1934,7 +1923,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	}
 
 	//Note that empty powfs have been removed in readcfg_wfs.
-	
+
 	parms->itpowfs=-1;
 	parms->ilgspowfs=-1;
 	parms->nlgspowfs=0;
@@ -1955,7 +1944,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
-	
 		if(!parms->sim.closeloop&&powfsi->dtrat){
 			powfsi->dtrat=1;
 			powfsi->step=0;
@@ -2014,7 +2002,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->dither*=-1;
 			if(powfsi->type==WFS_PY&&parms->recon.modal){
 				info("Enable 2nd dithering mode if dither is <-1 for pywfs.\n");
-				powfsi->dither_mmd=1; 
+				powfsi->dither_mmd=1;
 			}
 		}
 		if(powfsi->dither){
@@ -2045,7 +2033,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 			if(powfsi->dither_glpf==0) powfsi->dither_glpf=1;
 		}
-	
+
 		/*link LLT with iwfs*/
 		if(lltcfg){
 			parms->nlgspowfs++;
@@ -2067,7 +2055,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				info("powfs%d is TWFS for powfs%d\n",ipowfs,parms->ilgspowfs);
 			}
 		}
-	
 		if(powfsi->lo){
 			P(parms->lopowfs,parms->nlopowfs)=ipowfs;
 			parms->nlopowfs++;
@@ -2216,7 +2203,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		parms->sim.fcfocus=0.1/parms->sim.dtlo;
 	}
 
-	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output. 
+	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 }
 
@@ -2322,7 +2309,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 	}
 	dnormalize_sumabs(P(parms->atm.wt),parms->atm.nps,1);
 	dnormalize_sumabs(P(parms->atmr.wt),parms->atmr.nps,1);
-	
+
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make
 	  it as least parms->tomo.minwt in setup_recon_tomo_prep
@@ -2470,7 +2457,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 
 }
 static void setup_parms_postproc_dirs(parms_t *parms){
-	//Collect all beam directions 
+	//Collect all beam directions
 	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->ncpa.calib?parms->ncpa.ndir:0);
 	parms->dirs=dnew(4,ndir);
 	dmat *pdir=parms->dirs/*PDMAT*/;
@@ -2823,7 +2810,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
 			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
-		}	
+		}
 	}
 	if(parms->tomo.alg==-1){//default to FDPCG
 		parms->tomo.alg=ALG_CG;
@@ -3512,7 +3499,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
    initialization code for the moment.
 */
 void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
-#if USE_CUDA 
+#if USE_CUDA
 	if(parms->sim.end==0){
 		use_cuda=0;
 	} else{

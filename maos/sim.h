@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -25,8 +25,9 @@
 
    Contains main simulation blocks.
 */
-void* perfevl_ievl(thread_t *info);
-void* perfevl(sim_t *simu);
+void *perfevl_ievl(thread_t *info);
+void *perfevl(sim_t *simu);
+void plot_psf(ccell *psf2s, const char *psfname, int type, int ievl, dmat *wvl, int zlog, real psfmin);
 void prep_cachedm(sim_t *simu);
 void calc_cachedm(sim_t *simu);
 void filter_dm(sim_t *simu);

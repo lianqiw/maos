@@ -18,18 +18,18 @@ libmaos_la_LIBADD+=../cuda/recon/libcurecon.la
 #libmaos_la_LIBADD+=../cuda/dlink.o
 #endif
 endif
-libmaos_la_LIBADD+=../lib/libaos.la 
+libmaos_la_LIBADD+=../lib/libaos.la
 
-bin_PROGRAMS=../bin/maos 
+bin_PROGRAMS=../bin/maos
 ___bin_maos_SOURCES=maos.c
-___bin_maos_LDADD=libmaos.la  
+___bin_maos_LDADD=libmaos.la
 #if USE_CUDA
 #___bin_maos_LDADD+=$(LIBCUDA)
 #if USE_STATIC
 #___bin_maos_LDADD+=-lculibos -ldl -lrt
 #endif
 #endif
-___bin_maos_LDADD+=$(LDEXE_MAOS) $(LDEXE_FULL) 
+___bin_maos_LDADD+=$(LDEXE_MAOS) $(LDEXE_FULL)
 
 TESTS=maos.test
 maos.test:

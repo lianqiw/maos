@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -333,27 +333,40 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 	}
 	UNLOCK(maplock);
 }
+#define CALC_EMBED_OFFSET(doffx,moffx,mx,dnx,mnx)\
+if(dnx>=mnx){/*output array is larger*/\
+	doffx=(dnx-mnx)>>1;\
+	moffx=0;\
+	mx=mnx;\
+} else{/*map is larger*/\
+	doffx=0;\
+	moffx=(mnx-dnx)>>1;\
+	mx=dnx;\
+}
 /**
-  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
-  be used here for mapping.
+  Embed in into dest according to map defined in loc->map. The two arrays are assumed to be concentric.
 */
-void loc_embed(map_t* dest, const loc_t* loc, const real* in){
-	if(!loc||!dest||!in) return;
-	map_t* map=loc->map;
-	if(!map){
+void loc_embed_do(anydmat _dest, const loc_t* loc, const_anydmat in, int add){
+	if(!loc||!_dest.dm||!in.dm) return;
+	if(!loc->map){
 		loc_create_map((loc_t*)loc);
-		map=loc->map;
 	}
-	if(dest->nx!=map->nx||dest->ny!=map->ny){
-		error("dest and map doesn't agree\n");
+	map_t *map=loc->map;
+	dmat *dest=_dest.dm;
+	if(!dest->nx||!dest->ny){
+		dresize(dest, map->nx-loc->npad*2, map->ny-loc->npad*2);
 	}
-	const real* pin=in-1;//iphi count from 1
-	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(P(map,i));
-		if(iphi){
-			P(dest,i)=pin[iphi];
-		} else{
-			P(dest,i)=NAN;
+	long doffx,doffy,moffx,moffy,mx,my;
+	CALC_EMBED_OFFSET(doffx, moffx, mx, dest->nx, map->nx);
+	CALC_EMBED_OFFSET(doffy, moffy, my, dest->ny, map->ny);
+	if(!add) dset(dest, NAN);
+	const real *pin=P(in.dm)-1;//iphi count from 1
+	for(int iy=0; iy<my; iy++){
+		for(int ix=0; ix<mx; ix++){
+			long iphi=fabs(P(map, ix+moffx, iy+moffy));
+			if(iphi){
+				P(dest, ix+doffx, iy+doffy)=add?(P(dest, ix+doffx, iy+doffy)+pin[iphi]):pin[iphi];
+			}
 		}
 	}
 }
@@ -377,35 +390,16 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 		error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arrnx, arrny, loc->nloc);
 	}
 	dcell* dest=dcellnew(nx, ny);
+	dmat *tmp=dnew_do(loc->nloc,1,P(arr),0);//weak reference
 	for(int ix=0; ix<nx*ny; ix++){
 		P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
-		loc_embed((map_t*)P(dest, ix), loc, &P(arr, ix*loc->nloc));
+		tmp->p=&P(arr, ix*loc->nloc);
+		loc_embed(P(dest, ix), loc, tmp);
 	}
+	dfree(tmp);
 	return dest;
 }
 
-/**
-  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
-  be used here for mapping.
-*/
-void loc_embed_add(map_t* dest, const loc_t* loc, const real* in){
-	if(!loc||!in||!dest) return;
-	map_t* map=loc->map;
-	if(!map){
-		loc_create_map((loc_t*)loc);
-		map=loc->map;
-	}
-	if(dest->nx!=map->nx||dest->ny!=map->ny){
-		error("dest and map doesn't agree\n");
-	}
-	const real* pin=in-1;//iphi count from 1
-	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(P(map,i));
-		if(iphi){
-			P(dest,i)+=pin[iphi];
-		}
-	}
-}
 /**
   Embed in into dest according to map defined in loc->map for cells. Arbitraty map cannot
   be used here for mapping.
@@ -466,7 +460,7 @@ loc_t* map2loc(map_t* map, real thres){
 	const long nx=map->nx;
 	const long ny=map->ny;
 	if(thres){
-		thres*=dmax((dmat*)map);
+		thres*=dmax(map->dmat);
 	}
 	long ix, iy;
 	loc_t* loc=locnew(nx*ny, dx, dy);
@@ -1529,7 +1523,7 @@ loc_t* loctransform2(const loc_t* loc, /**<Input loc_t*/
    \f]
    was using string input. New scheme uses bin files to preserve precision.
 */
-loc_t* loctransform(const loc_t* loc, 
+loc_t* loctransform(const loc_t* loc,
 	const char* polycoeff){
 	if(!loc||!polycoeff) return NULL;
 	/*Test whether the transform is pure shift. */

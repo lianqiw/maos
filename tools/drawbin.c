@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
 			if(!p2){//single parameter
 				if(loc){//is loc
 					if(loc->nloc>100000){/*if too many points, we draw it. */
-						drawloc("loc", loc, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
+						drawloc("loc", loc, 0, title1, "x", "y", "%s[%02d]", title1, id++);
 					} else{/*we plot individual points. */
 						draw("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", title1, id++);
 					}
@@ -109,14 +109,14 @@ int main(int argc, char* argv[]){
 					}
 				}else if(p1->nx>1 && p1->ny>1){//map
 					map_t* data=d2map(p1);
-					drawmap("map", data, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
+					drawmap("map", data, 0, title1, "x", "y", "%s[%02d]", title1, id++);
 					mapfree(data);
 				}else{
 					draw("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%02d]", title1, id++);
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){
-					drawopd("opd", loc, p2, NULL, title1, "x", "y", "%s[%02d]", title1, id++);
+					drawopd("opd", loc, p2, 0, title1, "x", "y", "%s[%02d]", title1, id++);
 				}
 			}
 		}

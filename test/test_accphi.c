@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -102,7 +102,7 @@ static void test_accuracy(int argc, char** argv){
 
     map_t* screen2=mapnew2(locin->map);
     dset((dmat*)screen2, NAN);
-    loc_embed(screen2, locin, P(screen));
+    loc_embed(screen2, locin, screen);
 
     dmat *phi_h=NULL, *phi_cubh=NULL;
     real* phi_cub, * phi_cub2;

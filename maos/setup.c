@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -21,6 +21,7 @@
 #include "maos.h"
 #include "moao.h"
 #include "ahst.h"
+#include "sim.h"
 /**
   \file maos.h
   Sets up maos simulation.
@@ -54,7 +55,7 @@ static void read_sim_env(){
 
 /**
    Setup system before entering simulation.
-   
+
    \callgraph
  */
 void maos_setup(const parms_t* parms){
@@ -158,14 +159,14 @@ void maos_setup(const parms_t* parms){
 	if(!parms->sim.evlol){
 		global->powfs=powfs=setup_powfs_init(parms, aper);
 		print_mem("After setup_powfs_init");
-		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c 
+		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c
 		global->recon=recon=setup_recon_prep(parms, aper, powfs);
 		pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
 		setup_surf(parms, aper, powfs, recon);
 		//set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()
 		setup_shwfs_phy(parms, powfs);
-		//setup gradient noise during simulation. 
+		//setup gradient noise during simulation.
 		setup_powfs_neasim(parms, powfs);
 		//calibrate gradient offset of NCPA
 		setup_powfs_calib(parms, powfs);
@@ -176,8 +177,8 @@ void maos_setup(const parms_t* parms){
 #endif
 		//creates DM to WFS IA. needs GPU for pwfs. create amod for modal control.
 		setup_recon_prep_ga(recon, parms, aper, powfs);
-		
-		//assemble noise equiva angle inverse from powfs information 
+
+		//assemble noise equiva angle inverse from powfs information
 		setup_recon_saneai(recon, parms, powfs);
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 		if(!NO_RECON){
@@ -257,6 +258,7 @@ void maos_setup(const parms_t* parms){
 			cabs22d(&P(evlpsfdl,iwvl), 1, P(psf2s,iwvl), 1);
 			P(evlpsfdl,iwvl)->keywords=evl_keywords(parms, aper, -1, iwvl, parms->evl.psfisim-1);
 		}
+		plot_psf(psf2s, "PSFdl", 2, 0, parms->evl.wvl, parms->plot.psf==1, parms->plot.psfmin);
 		ccellfree(psf2s);
 		writebin(evlpsfdl, "evlpsfdl.fits");
 		dcellfree(evlpsfdl);

@@ -13,4 +13,4 @@ vy=0;
 header=sprintf('ox=%20g\noy=%20g\ndx=%20g\nh=%20g\nvx=%20g\nvy=%20g\n',...
                ox, oy, dx, h, vx, vy);
 
-write(OPD,header,'temp.bin.gz');
+write(OPD,header,'temp.bin');

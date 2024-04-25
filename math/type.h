@@ -342,11 +342,60 @@ static inline int iscell(const void* id){
 	T loc_t S loc;\
 	T pts_t S pts
 
-#if defined(__cplusplus)
+//only take cell
+#define types_anycell(T,S)\
+	T cell S c;\
+	T dccell S dcc;\
+	T sccell S scc;\
+	T cccell S ccc;\
+	T zccell S zcc;\
+	T lccell S lcc;\
+	T dcccell S dccc;\
+	T scccell S sccc;\
+	T ccccell S cccc;\
+	T zcccell S zccc;\
+	T lcccell S lccc;\
+	T dcell S dc;\
+	T scell S sc;\
+	T ccell S cc;\
+	T zcell S zc;\
+	T lcell S lc;\
+	T dspcell S dspc;\
+	T sspcell S sspc;\
+	T cspcell S cspc;\
+	T zspcell S zspc;\
+	T mapcell S mapc;\
+	T rmapcell S rmapc;\
+	T loccell S locc;\
+	T mapccell S mapcc;\
+	T rmapccell S rmapcc;\
+	T locccell S loccc;\
+
+//only takes dmat variants
+#define types_anydmat(T,S)\
+	T dmat S dm;\
+	T map_t S map;\
+	T rmap_t S rmap;\
+	T loc_t S loc;\
+	T pts_t S pts
+
+#if defined(__cplusplus)//for cuda
 #define def_anyarray(T,S,C)\
 typedef union C{\
 	T void *b;\
 	types_anyarray(T,S);\
+	C(T void* p):b(p){}\
+}C
+#define def_anycell(T,S,C)\
+typedef union C{\
+	T void *b;\
+	types_anycell(T,S);\
+	C(T void* p):b(p){}\
+}C
+#define def_anydmat(T,S,C)\
+typedef union C{\
+	T void *b;\
+	types_anydmat(T,S);\
 	C(T void* p):b(p){}\
 }C
 #else
@@ -354,11 +403,27 @@ typedef union C{\
 typedef union __attribute__((__transparent_union__)){\
 	types_anyarray(T,S);\
 }C
+#define def_anycell(T,S,C)\
+typedef union __attribute__((__transparent_union__)){\
+	types_anycell(T,S);\
+}C
+#define def_anydmat(T,S,C)\
+typedef union __attribute__((__transparent_union__)){\
+	types_anydmat(T,S);\
+}C
 #endif
 
 def_anyarray(, *, anyarray);
 def_anyarray(const, *, const_anyarray);
 def_anyarray(, **, panyarray);
+
+def_anycell(, *, anycell);
+def_anycell(const, *, const_anycell);
+def_anycell(, **, panycell);
+
+def_anydmat(, *, anydmat);
+def_anydmat(const, *, const_anydmat);
+def_anydmat(, **, panydmat);
 //#endif
 
 /*A method to simulate operator overloading for indexing arrys*/
