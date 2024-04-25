@@ -1,10 +1,10 @@
 AC_INIT(maos, 2.9, lianqiw@gmail.com)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
-AC_PREFIX_DEFAULT(${HOME}/.aos) #do not use variable set in this file. 
+AC_PREFIX_DEFAULT(${HOME}/.aos) #do not use variable set in this file.
 AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 #silent building
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 #The URL where misc supportive libaries are located.
 BASEURL="https://github.com/lianqiw/files/raw/master/"
 
@@ -21,7 +21,7 @@ fi
 if test -z "$LIBS" ;then
 	LIBS=" "
 fi
-if test -n "$MAOS_CC" && which "$MAOS_CC" >/dev/null 2>&1;then 
+if test -n "$MAOS_CC" && which "$MAOS_CC" >/dev/null 2>&1;then
 	CC="$MAOS_CC"
 fi
 AC_CONFIG_MACRO_DIR([m4])
@@ -135,7 +135,7 @@ case "$CN" in
 		fi
 	;;
 	*)
-	;;	
+	;;
 esac
 
 
@@ -254,19 +254,19 @@ fi
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
 	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations"
-	#OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla " 
+	#OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla "
 fi
 
-COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers " 
+COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers "
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed" 
+COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed"
 COMMON_CLANG+=" -Wno-sign-compare " #CLANG has false positive in detecting sign comparison.
 #Set optimize flags for different compilers
 OPTIM_ALL="-g -O3 -mtune=native -ftree-vectorize -ffast-math -fno-finite-math-only"
 
-OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code. 
+OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code.
 if test "$INTEL" = "1" ;then
-	OPTIM_CLANG+=" -fp-model=precise " 
+	OPTIM_CLANG+=" -fp-model=precise "
 	OPTS_CPU+=" -qopenmp-simd"
 fi
 
@@ -278,7 +278,7 @@ DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-funct
 #in GCC, extern inline will use the inline and not emit function definition.
 #in GCC, inline will cause use the inline, but also emit function deminition, causing multiple definitions if put in header.
 #in C99, extern inline will cause use the inline, but also emit function deminition, causing multiple definitions if put in header. This is equivalent to GCC inline
-#in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
+#in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
 
@@ -322,7 +322,7 @@ case "$host_os" in
 		OPTS+=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
 		if test "$INTEL" = "1" ;then
 			OPTS+=" -D_DEFAULT_SOURCE " #DEFAULT_SOURCE is needed for oneAPI clang
-		fi			
+		fi
 		if test "$enable_release" = "yes" ;then
 			OPTS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
 		fi
@@ -345,7 +345,9 @@ case "$host_os" in
 		esac
 		if grep -q "GenuineIntel" /proc/cpuinfo; then
 			mkl_avail="yes" #Only use MKL for Intel CPU.
-			echo "MKL is available"
+			echo "Intel CPU, MKL is ok."
+		else
+			echo "Unknown CPU, do not use MKL."
 		fi
 		system="linux"
 		ldsuffix="so"
@@ -381,7 +383,7 @@ case "$host_os" in
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 libdir="${ac_default_prefix}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version . 
+LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version .
 CPPFLAGS+=" -I${ac_default_prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
 
 extract(){
@@ -427,7 +429,7 @@ download(){
 		extract "${fn}" "$OUTDIR"
 	fi
 	if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
-		case "$fn" in 
+		case "$fn" in
 		http*)
 			url="$fn"
 			fn=`basename $fn`
@@ -436,7 +438,7 @@ download(){
 			url=${BASEURL}/${fn}
 			;;
 		esac
-		echo $wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+		echo $wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
 		$wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
 		if ! extract "$fn" "$OUTDIR" ;then
 			AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
@@ -471,7 +473,7 @@ AS_IF([test "$enable_openmp" = "yes"], [
 		#MACOS supports openmp with separate omp library
 		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix} 
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
@@ -513,11 +515,11 @@ case $host_cpu in
 		chol_fun=cholmod_factorize
 	;;
 	*)
-		AC_MSG_ERROR([Unknown host_cpu])
+		AC_MSG_ERROR(["Unknown host_cpu"])
 	;;
 esac
 
-LDEXE+="$LDRT " #-static" #show that we prefer static linking.
+LDEXE+="$LDRT " #-static #show that we prefer static linking.
 AM_CONDITIONAL(USE_STATIC, [test "x$enable_allstatic" = "xyes"])
 if test "x$enable_allstatic" = "xyes" ;then
 	LDEXE_MAOS="-all-static" #only all static linking for maos
@@ -537,6 +539,8 @@ if test x$mkl_avail = xyes; then
 		try_lapack="$mkl $try_lapack mkl-download"
 		;;
 	esac
+else
+	try_lapack+=" blis-download"
 fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
@@ -550,7 +554,7 @@ function set_lapack(){
 		if test "$type" = "mkl-download";then
 			download MKL "mkl${libsuffix}.tar.bz2" ${ac_default_prefix}
 		fi
-		#First use MKL if available. 
+		#First use MKL if available.
 		if test "$host_cpu" = "x86_64" ;then
 			LAPACK="-lmkl_intel_lp64"
 		else
@@ -559,7 +563,7 @@ function set_lapack(){
 
 		if test "$has_omp" = "0"; then
 			LAPACK+=" -lmkl_sequential "
-		else 
+		else
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
 				LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS" #OPENMP_CFLAGS was already in CFLAGS
 			else #GCC or others. Notice that clang can work with either thread model.
@@ -567,13 +571,17 @@ function set_lapack(){
 			fi
 		fi
 		LAPACK+=" -lmkl_core"
-		if test "$type" = "mkl-static" ;then 
+		if test "$type" = "mkl-static" ;then
 			lapack_mkl_static="yes"
 			LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 			LAPACK=${LAPACK// /,}
 			LAPACK=${LAPACK//,,/,}
 		fi
 		LAPACK+=" -lpthread -ldl"
+		;;
+	blis-download)
+		download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
+		LAPACK="-lblis-mt -lflame"
 		;;
 	blis-mt)
 		LAPACK="-lblis-mt -lflame"
@@ -661,21 +669,21 @@ else
 			if test "$host_cpu" != "aarch64" ;then
 				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2"
 			fi
-			compile FFTW fftw.tar.bz2 $FLAGS  
-			compile FFTW fftw.tar.bz2 $FLAGS --enable-float 
+			compile FFTW fftw.tar.bz2 $FLAGS
+			compile FFTW fftw.tar.bz2 $FLAGS --enable-float
 			unset ac_cv_lib_fftw3_fftw_execute
 			AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
 			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
 		fi
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
-	
+
 	#if test "$has_omp" = "1" ;then
 	#	THREADS_SUFFIX="_omp"
 	#else
 	THREADS_SUFFIX="_threads"
 	#fi
-	LDFFT_THREADS=" -pthread" 
+	LDFFT_THREADS=" -pthread"
 	for name in $LDFFT ;do
 		case "$name" in
 		*.a)
@@ -689,7 +697,7 @@ else
 		esac
 	done
 	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT ])
-	LDFFT_MEX=$LDFFT 
+	LDFFT_MEX=$LDFFT
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
@@ -705,7 +713,7 @@ if test "$has_chol" = "no" ;then
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 
 	if test "$has_chol" = "no" ;then
-		compile CHOLMOD "cholmod.tar.bz2" 
+		compile CHOLMOD "cholmod.tar.bz2"
 		unset ac_cv_lib_cholmod_${chol_fun}
 		AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
 	fi
@@ -727,7 +735,7 @@ if test "$enable_websockets" != "no" ;then
 		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${ac_default_prefix}
 		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
-	
+
 		if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
 			compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=ON
 			unset ac_cv_lib_websockets_lws_service
@@ -758,7 +766,7 @@ if test "$enable_cmocka" != "no" ;then
 		download CMOCKA cmocka${libsuffix}.tar.bz2 ${ac_default_prefix}
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-	
+
 		if test "$enable_cmocka" = "no" ;then
 			compile CMOCKA cmocka.tar.xz
 			unset ac_cv_lib_cmocka_mock_assert
@@ -791,7 +799,7 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 		if test -d "$GTKDIR/bin" ;then
 			GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
 		fi
-	else 
+	else
 		AS_IF([test "$use_gtk_4" != "no"], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0, [gtk_ver="3"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
@@ -801,7 +809,7 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 		  PKG_CHECK_MODULES(NOTIFY, libnotify >= 0.1,[has_notify="1"], [has_notify="0"])
 		  PKG_CHECK_MODULES(MAC,    gtk-mac-integration-gtk${gtk_ver}, [has_mac="1"], [has_mac="0"])
 		  ])
- 
+
 	if test "$gtk_ver" = "2" ;then
 		if ! echo "$GTK_LIBS" | grep -q gthread ;then
 			#OLD GLIB has GTHREAD separated
@@ -815,7 +823,7 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 		GTK_CFLAGS+=" -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 	fi
 	AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], ["Mac integration"])
-	#The following will substitute the variables name 
+	#The following will substitute the variables name
 	#Reexport after updating
 	AC_SUBST(GTK_CFLAGS)
 	AC_SUBST(GTK_LIBS)
@@ -859,12 +867,12 @@ if test "$with_matlab" != "no" ;then
 		;;
 	mexmaci)
 		MEXLIB=maci
-		MEXOPT="$OPTS -fPIC -m32 -fexceptions" 
+		MEXOPT="$OPTS -fPIC -m32 -fexceptions"
 		mex_cpu=x86
 		;;
 	mexmaci64)
 		MEXLIB=maci64
-		MEXOPT="$OPTS -fPIC -m64 -fexceptions" 
+		MEXOPT="$OPTS -fPIC -m64 -fexceptions"
 		MEXOPT="${MEXOPT}"
 		mex_cpu=x86_64
 		;;
@@ -887,12 +895,12 @@ if test "$with_matlab" != "no" ;then
 		echo host_cpu=$host_cpu
 		echo Architecture mismatch, disable mex support.
 		mex_lib="no"
-	else       
+	else
 		LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
 		AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX -shared])
 	fi
 	if test x$mex_lib = xyes ;then
-		MEXOPT+=" -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
+		MEXOPT+=" -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS"
 		#2021-05-24: Linking with mwfftw3 crashes matlab. (mwfftw3 contains thread support)
 		LIBMEX="$LDCHOL -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDRT $LDFFT_MEX"
 		LDMEX+="-no-fast-install -static -Xcompiler -shared"
@@ -1012,16 +1020,16 @@ elif test "$with_cuda" != "no" ;then #Set nvcc flags
 		#CUDA 7.0 supports C++11.
 		AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
 	fi
-	
+
 	#virtual GPUs are used here to allow JIT compilation during runtime
 	#set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
 	CUDAOPT+=" -lineinfo "
 	CUDAOPT+=" -Wno-deprecated-gpu-targets"
-	CUDAOPT+=" -arch=compute_$cuarch" 
+	CUDAOPT+=" -arch=compute_$cuarch"
 	#CUDAOPT+="-Xptxas=-v -dlcm=cg"
 	#To specify multiple architectures, use
 	#CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
- 
+
 	if test -n "$CCBINOPT" ;then
 		CCBINOPT="--compiler-options \"$CCBINOPT\""
 	fi
@@ -1045,9 +1053,9 @@ else
 	else
 		AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location to enable CUDA support"])
 	fi
-	cudaver=0
+	cudaver=
 fi
-AC_DEFINE_UNQUOTED(USE_CUDA, [$cudaver], "Cuda version")
+AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], "Cuda version")
 AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
 AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 
@@ -1079,7 +1087,7 @@ AC_CONFIG_FILES( [Makefile
 	cuda/recon/Makefile
 	cuda/test/Makefile
 	cuda/Makefile
-	maos/Makefile 
+	maos/Makefile
 	skyc/Makefile
 	tools/Makefile
 	test/Makefile
@@ -1139,18 +1147,20 @@ if test "$with_matlab" != "no" ;then
 	echo "  LDMEX=$LDMEX"
 	echo "  MEXOPT=$MEXOPT"
 fi
+YESNO=("No" "Yes")
 echo
 echo Compiling options:
-echo 
+echo
 echo "host_os:         $host_os"
 echo "host_cpu:        $host_cpu"
 echo "CC:              $CN ($major.$minor)"
 echo "Debug:           ${enable_debug:-no}"
+echo "Scheduler:       ${enable_scheduler:-yes}"
 echo "Coverage:        ${enable_gcov:-no}"
-echo "OpenMP:          $has_omp"
-echo "FFTW Threads:    $fftw_threads"
-echo "Single:          $enable_single"
-echo "CUDA:            ${cudaver:-no}${cudaver:+ (double: $cuda_double, arch: $cuarch)}"
+echo "OpenMP:          ${YESNO[[$has_omp]]}"
+echo "FFTW Threads:    ${YESNO[[$fftw_threads]]}"
+echo "Single:          ${YESNO[[$enable_single]]}"
+echo "CUDA:            ${cudaver:-no} ${cudaver:+ (double: $cuda_double, arch: $cuarch)}"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       ${enable_websockets:-yes}"

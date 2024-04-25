@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -20,7 +20,7 @@
 /* make a client address */
 
 #include <sys/types.h>
-#include <fcntl.h> 
+#include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
 #include <sys/types.h>
@@ -78,6 +78,9 @@ void parse_host(const char* line){
 const char* lookup_hostaddr(const char* hostname){
 	return hostname;
 }
+const char *lookup_hostname(const char *hostname){
+	return hostname;
+}
 void init_hosts(){}
 void free_hosts(){}
 int scheduler_connect(const char* hostname){
@@ -128,7 +131,7 @@ static char** hostsaddr=0;
 int nhost=0;
 PNEW(mutex_hosts);
 /**
-   Parse and add host info to hosts[] and hostaddr[]. 
+   Parse and add host info to hosts[] and hostaddr[].
    hosts contains the shortcut name, without dot
    and hostaddr contains the FQDN and optionally the port
 */
@@ -194,7 +197,7 @@ void init_hosts(){
 		}
 		fclose(fp);
 	}
-	if(PORT<1000){ //user dependent PORT to avoid conflict 
+	if(PORT<1000){ //user dependent PORT to avoid conflict
 		PORT=(uint16_t)((uint16_t)(hashlittle(USER, strlen(USER), 0)&0x2FFF)|10000);
 	}
 
@@ -296,7 +299,7 @@ static int scheduler_connect_self(int block){
 
 /**
    Started by maos to listen to the sock which connects to the
-   scheduler for commands. 
+   scheduler for commands.
    It requires a new connection to the scheduler to avoid data racing.
 */
 int scheduler_listen(thread_fun fun){
