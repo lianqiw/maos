@@ -13,5 +13,5 @@ var maos_2types_8h_structaper__t =
     [ "embed", "maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d", null ],
     [ "fcp", "maos_2types_8h.html#a166ea928f9ede0869a67f1ef6cd3276a", null ],
     [ "opdadd", "maos_2types_8h.html#afbd8ae85695fba0927998cf8446defd6", null ],
-    [ "opdfloc", "maos_2types_8h.html#a69fcc006dcfc79f4653922417d81c194", null ]
+    [ "opdbias", "maos_2types_8h.html#a3f85d361fe252aba2ccdda096e28eae1", null ]
 ];

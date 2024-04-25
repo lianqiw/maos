@@ -133,6 +133,7 @@ var annotated_dup =
     [ "Pinned", "class_pinned.html", "class_pinned" ],
     [ "plot_cfg_t", "parms_8h.html#structplot__cfg__t", "parms_8h_structplot__cfg__t" ],
     [ "plot_opts", "draw_8h.html#structplot__opts", "draw_8h_structplot__opts" ],
+    [ "plot_opts.__unnamed__", "draw_8h.html#unionplot__opts_8____unnamed____", "draw_8h_unionplot__opts_8____unnamed____" ],
     [ "powfs_cfg_t", "parms_8h.html#structpowfs__cfg__t", "parms_8h_structpowfs__cfg__t" ],
     [ "powfs_t", "maos_2types_8h.html#structpowfs__t", "maos_2types_8h_structpowfs__t" ],
     [ "propdata_t", "lib_2accphi_8h.html#structpropdata__t", "lib_2accphi_8h_structpropdata__t" ],

@@ -110,8 +110,10 @@ Functions</h2></td></tr>
 <tr class="memitem:aff3729eaeaa11e6b58769cb1e930684f"><td class="memItemLeft" align="right" valign="top"><a id="aff3729eaeaa11e6b58769cb1e930684f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>init_hosts</b> ()</td></tr>
 <tr class="separator:aff3729eaeaa11e6b58769cb1e930684f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada4498265f5e79cf1d2362dded5b83b3"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#ada4498265f5e79cf1d2362dded5b83b3">lookup_host</a> (const char *hostname)</td></tr>
-<tr class="separator:ada4498265f5e79cf1d2362dded5b83b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad67c7f31687c8712e4f6359f06c6267f"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#ad67c7f31687c8712e4f6359f06c6267f">lookup_hostaddr</a> (const char *hostname)</td></tr>
+<tr class="separator:ad67c7f31687c8712e4f6359f06c6267f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa15c2b5c7e80a4676afa4cfa17702a14"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#aa15c2b5c7e80a4676afa4cfa17702a14">lookup_hostname</a> (const char *hostaddr)</td></tr>
+<tr class="separator:aa15c2b5c7e80a4676afa4cfa17702a14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a937c9f864f3c274f2ad154e29e73461f"><td class="memItemLeft" align="right" valign="top"><a id="a937c9f864f3c274f2ad154e29e73461f"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> (const char *hostname)</td></tr>
 <tr class="separator:a937c9f864f3c274f2ad154e29e73461f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,14 +186,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
 
 </div>
 </div>
-<a id="ada4498265f5e79cf1d2362dded5b83b3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ada4498265f5e79cf1d2362dded5b83b3">&#9670;&nbsp;</a></span>lookup_host()</h2>
+<a id="ad67c7f31687c8712e4f6359f06c6267f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad67c7f31687c8712e4f6359f06c6267f">&#9670;&nbsp;</a></span>lookup_hostaddr()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* lookup_host </td>
+          <td class="memname">const char* lookup_hostaddr </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>hostname</em></td><td>)</td>
@@ -199,7 +201,26 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> (
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Translate hostname to based on ~/.aos/hosts </p>
+<p>Translate hostname to address based on ~/.aos/hosts </p>
+
+</div>
+</div>
+<a id="aa15c2b5c7e80a4676afa4cfa17702a14"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa15c2b5c7e80a4676afa4cfa17702a14">&#9670;&nbsp;</a></span>lookup_hostname()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* lookup_hostname </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>hostaddr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Translate address to hostname based on ~/.aos/hosts </p>
 
 </div>
 </div>

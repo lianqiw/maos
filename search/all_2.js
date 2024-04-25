@@ -85,7 +85,6 @@ var searchData=
   ['ccwpow',['ccwpow',['../cmath_8h.html#a88d681d163d1857792e15aa151884f59',1,'ctmp.c']]],
   ['cd',['Cd',['../kalman_8h.html#af46e2a92d29de6efda5353657f3da3a3',1,'kalman_t']]],
   ['cdiff',['cdiff',['../cmath_8h.html#ad266d4e8d08088a9ea02d16e6b9e6f15',1,'ctmp.c']]],
-  ['cdraw',['cdraw',['../draw_8h.html#ad83ce19e6c5fad686f597c6de2c01175',1,'draw.c']]],
   ['cdup',['cdup',['../cmath_8h.html#a66d5a6e5e44f4035aa069d75c47eaf84',1,'ctmp.c']]],
   ['cell',['Cell',['../class_cell.html',1,'Cell&lt; T, Dev &gt;'],['../type_8h.html#structcell',1,'cell']]],
   ['cell_2eh',['cell.h',['../cell_8h.html',1,'']]],

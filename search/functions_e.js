@@ -7,7 +7,6 @@ var searchData=
   ['pcg',['pcg',['../lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3',1,'pcg.c']]],
   ['perfevl',['perfevl',['../perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7',1,'perfevl(sim_t *simu):&#160;perfevl.c'],['../sim_8h.html#a799c7105d3e2ffd9cbcd7de50fbd16e7',1,'perfevl(sim_t *simu):&#160;perfevl.c']]],
   ['perfevl_5fievl',['perfevl_ievl',['../perfevl_8c.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c'],['../sim_8h.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c']]],
-  ['plot_5fpoints',['plot_points',['../draw_8h.html#a95b568d898b905d16dfc19d0d53e3cbc',1,'draw.c']]],
   ['plot_5fsetup',['plot_setup',['../maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'utils.c']]],
   ['plotdir',['plotdir',['../maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b',1,'utils.c']]],
   ['plotloc',['plotloc',['../maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48',1,'utils.c']]],

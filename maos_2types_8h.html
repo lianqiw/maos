@@ -265,14 +265,14 @@ fcp</td>
 <td class="fieldname">
 opdadd</td>
 <td class="fielddoc">
-<p>OPD surface for each evaluation direction. </p>
+<p>All OPD surface for each evaluation direction, used for ray tracing </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a69fcc006dcfc79f4653922417d81c194"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a3f85d361fe252aba2ccdda096e28eae1"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-opdfloc</td>
+opdbias</td>
 <td class="fielddoc">
-<p>OPD surface for each evalution direction defined on floc </p>
+<p>NCPA OPD surface for each NCPA direction, used for dm_ncpa calibration. </p>
 </td></tr>
 </table>
 
@@ -531,11 +531,18 @@ areascale</td>
 <p>1./max(area noramlized by dsa*dsa) </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="aa8eaaa9796312d82ac90aa5aa69e3523"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+opdadd</td>
+<td class="fielddoc">
+<p>opdadd includes both common and NCPA OPDS. It is used for ray tracing </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a8c66d2b2c5c35fbaee1dfae82835a10b"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
 opdbias</td>
 <td class="fielddoc">
-<p>OPD NCPA for NCPA calibration </p>
+<p>opdbias is used to compute gradient offset. It includes contributions only from NCPA OPD. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a162613b54fda54c711284c1b298806d0"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
@@ -760,13 +767,6 @@ sumamp</td>
 sumamp2</td>
 <td class="fielddoc">
 <p>sum of realamp.^2 </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="aa8eaaa9796312d82ac90aa5aa69e3523"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
-<td class="fieldname">
-opdadd</td>
-<td class="fielddoc">
-<p>Additional OPD surfaces for each WFS for ray tracing </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a5c2dbfabdadad397731b9edc16924f45"></a><a class="el" href="locfft_8h.html#structlocfft__t">locfft_t</a> *</td>
@@ -2202,7 +2202,7 @@ dither_dtrat</td>
 <td class="fieldname">
 dither_md</td>
 <td class="fielddoc">
-<p>multi-mode bin size in amod </p>
+<p>multi-mode dithering bin size in amod </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab95e805545c3fb08b7418f57a6fabee8"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>

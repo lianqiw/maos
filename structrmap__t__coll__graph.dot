@@ -5,8 +5,8 @@ digraph "rmap_t"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   Node124 [label="{rmap_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node125 -> Node124 [color="grey25",fontsize="10",style="solid",label=" +ox\n+oy\n+tydeg\n+fexit\n+txdeg\n+dx\n+ftel\n+dy\n+fsurf" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node125 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
-  Node126 -> Node124 [color="grey25",fontsize="10",style="solid",label=" +@16" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node126 [label="{anonymous:+@16\n||}",height=0.2,width=0.4,color="grey75"];
+  Node125 -> Node124 [color="grey25",fontsize="10",style="solid",label=" +@18" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node125 [label="{anonymous:+@18\n||}",height=0.2,width=0.4,color="grey75"];
+  Node126 -> Node124 [color="grey25",fontsize="10",style="solid",label=" +ox\n+oy\n+tydeg\n+fexit\n+txdeg\n+dx\n+ftel\n+dy\n+fsurf" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node126 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
 }

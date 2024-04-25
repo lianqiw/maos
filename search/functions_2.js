@@ -73,7 +73,6 @@ var searchData=
   ['ccwmrow2',['ccwmrow2',['../cmath_8h.html#adede0f4e929a576ce0632b02c4e4758d',1,'ctmp.c']]],
   ['ccwpow',['ccwpow',['../cmath_8h.html#a88d681d163d1857792e15aa151884f59',1,'ctmp.c']]],
   ['cdiff',['cdiff',['../cmath_8h.html#ad266d4e8d08088a9ea02d16e6b9e6f15',1,'ctmp.c']]],
-  ['cdraw',['cdraw',['../draw_8h.html#ad83ce19e6c5fad686f597c6de2c01175',1,'draw.c']]],
   ['cdup',['cdup',['../cmath_8h.html#a66d5a6e5e44f4035aa069d75c47eaf84',1,'ctmp.c']]],
   ['celldim',['celldim',['../cell_8h.html#a8c3774a4ba86dbfea0460496940ede9b',1,'cell.c']]],
   ['cellfree_5fdo',['cellfree_do',['../cell_8h.html#ad815a5654363116ef049ec99de3648cd',1,'cell.c']]],

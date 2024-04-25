@@ -112,6 +112,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a2961979d92811d291076c186a7f4de8d"><td class="memItemLeft" align="right" valign="top"><a id="a2961979d92811d291076c186a7f4de8d"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>RSS</b>(a,  b)&#160;&#160;&#160;({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); sqrtf(_M1*_M1+_M2*_M2);})</td></tr>
 <tr class="separator:a2961979d92811d291076c186a7f4de8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d1b666b1dcd8c2dd235072df0b95ba9"><td class="memItemLeft" align="right" valign="top"><a id="a4d1b666b1dcd8c2dd235072df0b95ba9"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CLIP</b>(x,  d_,  u_)&#160;&#160;&#160;({__typeof__(d_) d=(d_); __typeof__(u_) u=(u_);x=x&lt;d?d:(x&gt;u?u:x);})</td></tr>
+<tr class="separator:a4d1b666b1dcd8c2dd235072df0b95ba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a080abdcb9c02438f1cd2bb707af25af8"><td class="memItemLeft" align="right" valign="top"><a id="a080abdcb9c02438f1cd2bb707af25af8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>restrict</b>&#160;&#160;&#160;__restrict</td></tr>
 <tr class="separator:a080abdcb9c02438f1cd2bb707af25af8"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -106,6 +106,8 @@ $(document).ready(function(){initNavTree('draw_8h.html','');});
 Data Structures</h2></td></tr>
 <tr class="memitem:structplot__opts"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#structplot__opts">plot_opts</a></td></tr>
 <tr class="separator:structplot__opts"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:unionplot__opts_8____unnamed____"><td class="memItemLeft" align="right" valign="top">union &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#unionplot__opts_8____unnamed____">plot_opts.__unnamed__</a></td></tr>
+<tr class="separator:unionplot__opts_8____unnamed____"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -120,12 +122,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a13d17abacae2b57cd668a6af4450cb67"><td class="memItemLeft" align="right" valign="top"><a id="a13d17abacae2b57cd668a6af4450cb67"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>plot_empty</b> (int sock_draw, const char *fig, const char *fn)</td></tr>
 <tr class="separator:a13d17abacae2b57cd668a6af4450cb67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e74d1babc170932259128477be1f48f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw</a> (const char *fig, const <a class="el" href="type_8h.html#structdmat">dmat</a> *p, const real *limit, const real *zlimit, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:a7e74d1babc170932259128477be1f48f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad83ce19e6c5fad686f597c6de2c01175"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#ad83ce19e6c5fad686f597c6de2c01175">cdraw</a> (const char *fig, const <a class="el" href="type_8h.html#structcmat">cmat</a> *p, const real *limit, const real *zlim, int type, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:ad83ce19e6c5fad686f597c6de2c01175"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95b568d898b905d16dfc19d0d53e3cbc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a95b568d898b905d16dfc19d0d53e3cbc">plot_points</a> (const char *fig, <a class="el" href="draw_8h.html#structplot__opts">plot_opts</a> opts, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
-<tr class="separator:a95b568d898b905d16dfc19d0d53e3cbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46d694cfaea0577fcfcf29458b650705"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#a46d694cfaea0577fcfcf29458b650705">draw</a> (const char *fig, <a class="el" href="draw_8h.html#structplot__opts">plot_opts</a> opts, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
+<tr class="separator:a46d694cfaea0577fcfcf29458b650705"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef0cb494e695878f192ecf5b0a49f9f1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#aef0cb494e695878f192ecf5b0a49f9f1">drawmap</a> (const char *fig, const <a class="el" href="type_8h.html#structmap__t">map_t</a> *map, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="separator:aef0cb494e695878f192ecf5b0a49f9f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6a614e128ea550040fe980a1b1922e6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="draw_8h.html#af6a614e128ea550040fe980a1b1922e6">drawloc</a> (const char *fig, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, real *zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
@@ -165,6 +163,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>plot_empty</b> (int so
 <table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
+<a id="a528b50caf0817e8b68f2e15362b58ab4"></a>union <a class="el" href="draw_8h.html#unionplot__opts_8____unnamed____">plot_opts</a></td>
+<td class="fieldname">
+__unnamed__</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a45aba71d793c975b2917a795c68a2083"></a>int</td>
 <td class="fieldname">
 ngroup</td>
@@ -195,9 +199,27 @@ style</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
+<a id="acfb990e49f82100f052a5ef5d5e631d3"></a>const real *</td>
+<td class="fieldname">
+zlim</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a0e2f07361ff3bb0c3412eab994a62f82"></a>const real *</td>
 <td class="fieldname">
 limit</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7d414944728bee996173c62ea656306c"></a>const int</td>
+<td class="fieldname">
+zlog</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a63f75aca74bd384d75bc1e09e38cb0c5"></a>const int</td>
+<td class="fieldname">
+ctype</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
@@ -222,6 +244,44 @@ legend</td>
 
 </div>
 </div>
+<a name="unionplot__opts_8____unnamed____" id="unionplot__opts_8____unnamed____"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#unionplot__opts_8____unnamed____">&#9670;&nbsp;</a></span>plot_opts.__unnamed__</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">union plot_opts.__unnamed__</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"></div><div id="dynsection-1" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-1-trigger" src="closed.png" alt="+"/> Collaboration diagram for plot_opts.__unnamed__:</div>
+<div id="dynsection-1-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-1-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="unionplot__opts_8____unnamed______coll__graph.png" border="0" usemap="#plot__opts_8____unnamed_____coll__map" alt="Collaboration graph"/></div>
+<map name="plot__opts_8____unnamed_____coll__map" id="plot__opts_8____unnamed_____coll__map">
+</map>
+</div>
+<table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a78805a221a988e79ef3f42d7c5bfd418"></a>const <a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+image</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a252d72fd17264b2b413c04d2316c1a68"></a>const <a class="el" href="type_8h.html#structcmat">cmat</a> *</td>
+<td class="fieldname">
+cimage</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a5e2f206b380b5b9a10b87b7d3d80ccc8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5e2f206b380b5b9a10b87b7d3d80ccc8">&#9670;&nbsp;</a></span>draw_helper()</h2>
@@ -238,7 +298,7 @@ legend</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A helper routine that forks in the early stage to launch drawdaemon. We don't use the main routine to launch drawdaemon because it may take very long to fork a process that consumes Gig's of memory. </p>
+<p>A helper routine that forks in the early stage to launch drawdaemon. Retired. </p>
 
 </div>
 </div>
@@ -309,176 +369,14 @@ legend</td>
 
 </div>
 </div>
-<a id="a7e74d1babc170932259128477be1f48f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7e74d1babc170932259128477be1f48f">&#9670;&nbsp;</a></span>ddraw()</h2>
+<a id="a46d694cfaea0577fcfcf29458b650705"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46d694cfaea0577fcfcf29458b650705">&#9670;&nbsp;</a></span>draw()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int ddraw </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fig</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *&#160;</td>
-          <td class="paramname"><em>limit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *&#160;</td>
-          <td class="paramname"><em>zlim</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>title</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>xlabel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>ylabel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Draws an image.</p>
-<p>It uses a separate thread to avoid slowing down the simulation. Skip if socket is busy. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">fig</td><td>Category of the figure </td></tr>
-    <tr><td class="paramname">p</td><td>The image </td></tr>
-    <tr><td class="paramname">limit</td><td>x min, xmax, ymin and ymax </td></tr>
-    <tr><td class="paramname">zlim</td><td>min,max, the data </td></tr>
-    <tr><td class="paramname">title</td><td>title of the plot </td></tr>
-    <tr><td class="paramname">xlabel</td><td>x axis label </td></tr>
-    <tr><td class="paramname">ylabel</td><td>y axis label </td></tr>
-    <tr><td class="paramname">format</td><td>subcategory of the plot. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ad83ce19e6c5fad686f597c6de2c01175"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad83ce19e6c5fad686f597c6de2c01175">&#9670;&nbsp;</a></span>cdraw()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int cdraw </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fig</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *&#160;</td>
-          <td class="paramname"><em>limit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *&#160;</td>
-          <td class="paramname"><em>zlim</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>type</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>title</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>xlabel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>ylabel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>format</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Draw the OPD of abs and phase of complex p defined on nx*ny grid. see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> type: 0: abs only. 1: abs and phase. 2: real and imaginary </p>
-
-</div>
-</div>
-<a id="a95b568d898b905d16dfc19d0d53e3cbc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95b568d898b905d16dfc19d0d53e3cbc">&#9670;&nbsp;</a></span>plot_points()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int plot_points </td>
+          <td class="memname">int draw </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>fig</em>, </td>
@@ -602,7 +500,7 @@ legend</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> like ddraw, acting on map object. see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> </p>
+<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see ddraw() like ddraw, acting on map object. see ddraw() </p>
 
 </div>
 </div>
@@ -667,7 +565,7 @@ legend</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the loc on the screen. see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> </p>
+<p>Plot the loc on the screen. see ddraw() </p>
 
 </div>
 </div>
@@ -738,7 +636,7 @@ legend</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the opd using coordinate loc. see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> </p>
+<p>Plot the opd using coordinate loc. see ddraw() </p>
 
 </div>
 </div>
@@ -898,7 +796,7 @@ legend</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot opd with coordinate loc where amp is above threshold. see <a class="el" href="draw_8h.html#a7e74d1babc170932259128477be1f48f">ddraw()</a> </p>
+<p>Plot opd with coordinate loc where amp is above threshold. see ddraw() </p>
 
 </div>
 </div>

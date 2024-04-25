@@ -14,13 +14,15 @@ digraph "plot_opts"
   Node13 -> Node10 [color="grey25",fontsize="10",style="solid",label=" +p" ,arrowhead="odiamond",fontname="Helvetica"];
   Node13 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
   Node4 -> Node10 [color="grey25",fontsize="10",style="solid",label=" +keywords" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node13 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +limit" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node13 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +limit\n+zlim" ,arrowhead="odiamond",fontname="Helvetica"];
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +xylog\n+legend" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node5 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +maxlen\n+ngroup" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node16 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +@7" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node16 [label="{anonymous:+@7\n||}",height=0.2,width=0.4,color="grey75"];
+  Node5 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +maxlen\n+zlog\n+ngroup\n+ctype" ,arrowhead="odiamond",fontname="Helvetica"];
   Node5 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node10 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +cir" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node16 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +style" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node16 [label="{const int32_t *\n||}",height=0.2,width=0.4,color="grey75"];
-  Node17 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +loc" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node17 [label="{loc_t\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structloc__t"];
+  Node17 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +style" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node17 [label="{const int32_t *\n||}",height=0.2,width=0.4,color="grey75"];
+  Node18 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +loc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node18 [label="{loc_t\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structloc__t"];
 }

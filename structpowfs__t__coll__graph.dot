@@ -5,7 +5,7 @@ digraph "powfs_t"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   Node69 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node70 -> Node69 [color="grey25",fontsize="10",style="solid",label=" +realamp\n+bkgrnd\n+srsa\n+sodiumprep\n+opdbias\n+realsaa\n+sodium\n+gradncpa\n+opdadd\n+neasim\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node70 -> Node69 [color="grey25",fontsize="10",style="solid",label=" +realamp\n+bkgrnd\n+srsa\n+sodiumprep\n+opdbias\n+realsaa\n+sodium\n+gradncpa\n+neasim\n+opdadd\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node70 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdcell"];
   Node78 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
   Node78 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];

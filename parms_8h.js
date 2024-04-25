@@ -213,7 +213,7 @@ var parms_8h =
       [ "i0load", "parms_8h.html#a4571bd67bba3d098dcc54b828a13fb55", null ],
       [ "gradscale", "parms_8h.html#a6c3ddbbabb0b102212567d573c4a1180", null ],
       [ "dither", "parms_8h.html#acc8598a3befb4e67c70d94d96def5359", null ],
-      [ "dither_mode2", "parms_8h.html#a3f6117fb60677b22990a412a3bf2f33c", null ],
+      [ "dither_mmd", "parms_8h.html#a3352fd6c69a63cfdbfcf1763dd3c2944", null ],
       [ "dither_amp", "parms_8h.html#a5f138ce31d15881c9f9d9cc9e473e833", null ],
       [ "dither_gpll", "parms_8h.html#a0f6f0f952791d437ff12d843d32abb05", null ],
       [ "dither_gog", "parms_8h.html#a40295038250a67f0473a7f684bb057cb", null ],

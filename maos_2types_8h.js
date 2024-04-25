@@ -14,7 +14,7 @@ var maos_2types_8h =
       [ "embed", "maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d", null ],
       [ "fcp", "maos_2types_8h.html#a166ea928f9ede0869a67f1ef6cd3276a", null ],
       [ "opdadd", "maos_2types_8h.html#afbd8ae85695fba0927998cf8446defd6", null ],
-      [ "opdfloc", "maos_2types_8h.html#a69fcc006dcfc79f4653922417d81c194", null ]
+      [ "opdbias", "maos_2types_8h.html#a3f85d361fe252aba2ccdda096e28eae1", null ]
     ] ],
     [ "llt_t", "maos_2types_8h.html#structllt__t", [
       [ "loc", "maos_2types_8h.html#a08c9c987ce7084933a258a2074bad68b", null ],
@@ -46,6 +46,7 @@ var maos_2types_8h =
       [ "amp_tel", "maos_2types_8h.html#a52cd753f90a085c679e66a279e272cba", null ],
       [ "saa_tel", "maos_2types_8h.html#a37f2d64931cb4c918609c7439c841dff", null ],
       [ "areascale", "maos_2types_8h.html#a2256cf16f55dc3bb7e4ad97b4a42f044", null ],
+      [ "opdadd", "maos_2types_8h.html#aa8eaaa9796312d82ac90aa5aa69e3523", null ],
       [ "opdbias", "maos_2types_8h.html#a8c66d2b2c5c35fbaee1dfae82835a10b", null ],
       [ "gradncpa", "maos_2types_8h.html#a162613b54fda54c711284c1b298806d0", null ],
       [ "dtf", "maos_2types_8h.html#a52cb65d094051f9cd59428023a19b255", null ],
@@ -79,7 +80,6 @@ var maos_2types_8h =
       [ "realsaa", "maos_2types_8h.html#ad22014b1a4398c9b6ef2dbfa231d30f6", null ],
       [ "sumamp", "maos_2types_8h.html#ab3f64c65fd8e4563771c922cc8ed2f37", null ],
       [ "sumamp2", "maos_2types_8h.html#a94883ef7919c01b79ed74f9b80442cc1", null ],
-      [ "opdadd", "maos_2types_8h.html#aa8eaaa9796312d82ac90aa5aa69e3523", null ],
       [ "fieldstop", "maos_2types_8h.html#a5c2dbfabdadad397731b9edc16924f45", null ],
       [ "pywfs", "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93", null ],
       [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ]
