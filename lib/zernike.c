@@ -86,11 +86,11 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	if(D<0){
 		D=-D;
 		limitr=0;
-	}else if(!D){
+	}else if(!D||D>D2){
 		D=D2;
 	}
-	if(fabs(D-D2)>D*0.5){
-		warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
+	if(fabs(D-D2)>(D2)*0.5){
+		warning("Specified diameter D=%g is smaller than half of loc D=%g\n", D, D2);
 	}
 
 	dmat* restrict opd=dnew(nloc, nmod);
@@ -113,7 +113,7 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	}
 	if(rover>1.5){
 	//if(nover > (M_PI*D/loc->dx)*1.5 ){
-		warning("%ld (of %ld) points are outside D=%g circle with maximum radius %gm\n",
+		info("%ld (of %ld) points are outside D=%g circle with maximum radius %gm\n",
 			nover, nloc, D, rover*D*0.5);
 	}
 	int cmod=0;//index into opd

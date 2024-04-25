@@ -8,11 +8,11 @@ import numpy as np
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
 from scipy.integrate import cumtrapz
-from numpy import sqrt, exp, log, floor, ceil, nan, pi
+from numpy import sqrt, exp, log, floor, ceil, nan, pi, sin, cos, tan, arcsin, arccos
 from numpy.random import rand, randn
 from numpy.fft import fft,ifft,fft2, ifft2, fftshift
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close, savefig
+from matplotlib.pyplot import figure, plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close, savefig
 from cycler import cycler
 try:
     from natsort import natsorted
@@ -27,15 +27,7 @@ except:
 from readbin import readbin, headers
 from draw import draw, locembed
 from maos_result import maos_res, maos_res_tot, maos_res_hi, maos_res_each, maos_cumu
-import maos_client
-
-#To dock multiple figures. Does not work very well.
-def dock_figure():
-    #mpl.use('module://mpldock.backend')
-    from mpldock import persist_layout
-    persist_layout('maos')
-    plt.switch_backend('module://mpldock.backend')
-    ipython.magic('gui qt5') #replacing plt.show() that blocks
+#import maos_client
 
 def iscell(arr):
     if type(arr)==np.ndarray and arr.dtype.name=='object':
@@ -293,6 +285,10 @@ def plot_cdf(y, *args, **kargs):
     plot(np.sort(y.flat), x, *args, **kargs)
     ylim(0,1)
 
+def plot_cross(A):
+    '''Plot a cross section'''
+    plot(np.arange(A.shape[0])-A.shape[0]/2, A[:,A.shape[1]>>1])
+
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
     ind=np.argsort(x)
@@ -341,6 +337,8 @@ def center(A, nx, ny=None):
         for Ai in A:
             B.append(center(Ai, nx, ny))
         return B
+    elif A is None:
+        return None
     '''crop or embed A into nxn array from the center'''
     nx=int(nx)
     if ny is None:
@@ -354,7 +352,7 @@ def center(A, nx, ny=None):
     elif A.shape[0]<nx and A.shape[1]<ny:#embed
         indx=(nx-A.shape[0]+1)>>1
         indy=(nx-A.shape[1]+1)>>1
-        A2=np.zeros((nx,ny))
+        A2=np.zeros((nx,ny),dtype=A.dtype)
         A2[indx:indx+A.shape[0], indy:indy+A.shape[1]]=A
     else:
         raise(Exception('Does not support this operation'))
@@ -575,14 +573,142 @@ def gen_atm(nx, dx=1./64., r0=0.186, L0=30., powerlaw=-11./3., seed=0):
 def abs2(A):
     return np.real(A*np.conj(A))
 
-def calc_psf(amp, opd, wvl):
+def myfft2(A):
+    return fftshift(fft2(fftshift(A)))
+def myifft2(A):
+    return fftshift(ifft2(fftshift(A)))
+    
+def calc_psf(amp, opd, wvl, wts=None, nembed=2):
     '''
         Compute PSF normalized by Strehl ratio.
+        For multi-wavelength PSF, the sampling is matched to the first wavelength
     '''
-    if opd is None or opd.size==0:
-        wvf=amp
+    if type(wvl) is list:
+        wvl=np.asarray(wvl)
+    if type(wvl) is np.ndarray:
+        psfs=None
+        wt=1/wvl.size
+        if amp.shape[0]!=amp.shape[1] or amp.ndim>2:
+            raise(Exception('Only supports square array'))
+        nx=amp.shape[0]
+        wvl0=wvl.flat[0]
+        if type(wts) is list:
+            wts=np.asarray(wts)
+        for iwvl in range(wvl.size):
+            wvli=wvl.flat[iwvl]
+            #nx2=int(round(wvli/wvl0*nx/4))*4 #scale array size so that the sampling match the first wvl.
+            if type(wts) is np.ndarray:
+                wt=wts.flat[iwvl]
+            #psfs+=center(calc_psf(center(amp,nx2),center(opd,nx2),wvli),nx)*wt
+            psfi=calc_psf(amp,opd,wvli,nembed=nembed*(wvli/wvl0))*wt
+            if psfs is None:
+                psfs=psfi
+            else:
+                psfs+=center(psfi,psfs.shape[0])
+        return psfs
     else:
-        wvf=amp*np.exp(opd*(-2j*pi/wvl))
+        if opd is None or opd.size==0:
+            wvf=amp
+        else:
+            wvf=amp*np.exp(opd*(-2j*pi/wvl))
 
-    psf=abs2(fftshift(fft2(fftshift(wvf))))*(1/np.sum(amp)**2)
-    return psf
+        nx2=round(nembed*wvf.shape[0]/2)*2
+        psf=abs2(myfft2(center(wvf,nx2)))*(1/np.sum(amp)**2)
+        return psf
+
+def gerchberg_saxton(A1, A2, OPD1=None, nstep=100, doplot=0):
+    '''
+    The Gerchberg Saxton algorithm (1972)
+    Parameters
+    ------------
+    A1: pupil plane amplitude, embeded into a square array to match PSF sampling
+    A2: image plane amplitude (sqrt of PSF), embeded into a square array with the same size as AMP
+    OPD1: known OPD, only to compute error, embeded into a square array with the same size as AMP
+    nstep: number of iterations
+    doplot: plot the convergence and result
+    '''
+    err=np.zeros((nstep))
+    rng = np.random.default_rng(1)
+    P1E=(rng.random(A1.shape)-0.5)*np.pi/2 #initialize guess
+    C1=A1*exp(1j*P1E)
+    if OPD1 is not None:
+        alpha=1./np.std(OPD1[A1>.1])
+    else:
+        alpha=1
+    for i in range(nstep):
+        C2=myfft2(C1)
+        C2*=A2/np.abs(C2) #fix amplitude
+        C1=myifft2(C2)
+        C1*=A1/np.abs(C1) #fix amplitude
+        P1E=np.angle(C1)
+        P1E[A1>.1]-=np.mean(P1E[A1>.1]) #remove piston
+        P1E[A1<.1]=0 #remove points out side of aperture
+        if OPD1 is not None:
+            err[i]=alpha*np.std(OPD1[A1>.1]-P1E[A1>.1])
+        else:            
+            err[i]=alpha*np.std(P1E[A1>.1])
+
+    if doplot:
+        figure(figsize=(12,2))
+        subplot(1,2,1)
+        semilogy(err/err[0])
+        xlabel('Iterations')
+        ylabel('Residual')
+        subplot(1,2,2)
+        
+        draw(np.c_[unembed(OPD1,2), unembed(P1E,2), unembed(P1E-OPD1,2)])
+    return P1E
+
+def split_even_odd(A, doshift=0):
+    '''
+        split A into even, odd components. A has dc term at lower left corner A[0,0].
+    '''
+    if doshift:
+        Ae=fftshift(A)
+    else:
+        Ae=A+0
+    Ae[1:,1:]+=Ae[-1:0:-1,-1:0:-1]
+    #Ae[:,0]=0; Ae[0,:]=0
+    Ae*=0.5;
+    if doshift:
+        Ae=fftshift(Ae)
+    Ao=A-Ae
+    return Ae, Ao
+
+def fast_furious(AMP, PSF, PSFD, OPDD, epsilon=0.1, doplot=0):
+    '''
+    The fast and furious algorithm for weak phase
+    Parameters
+    ------------
+    AMP: pupil amplitude, embeded into a square array to match PSF sampling. max is 1.
+    PSF: measured PSF with unknown OPD, embeded into a square array with the same size as AMP
+    PSFD: measured PSF with OPD+OPDD, embeded into a square array with the same size as AMP
+    OPDD: opd of phase diversity, embeded into a square array with the same size as AMP
+    epsilon=athres: regularization     
+    doplot: do plotting
+    '''
+    a=np.real(myfft2(AMP)) #do not use sqrt(PSF_DL) as a might be negative
+    PSF_DL=a**2 #Diffraction limited PSF
+    pp=PSF+(1-np.max(PSF)/np.max(PSF_DL))*PSF_DL #modified measurements with peak that matches PSF_DL 
+    ppe,ppo=split_even_odd(pp) #split to even/odd components
+    pd=PSFD+(1-np.max(PSFD)/np.max(PSF_DL))*PSF_DL #modified measurements with diversity
+    pde,pdo=split_even_odd(pd)
+    yp=-a*ppo/(2*PSF_DL+epsilon) #paper was wrong. missing - sign
+    AMP_OPDDe, AMP_OPDDo=split_even_odd(OPDD*AMP)
+    vd=np.real(myfft2(AMP_OPDDe))
+    yd=np.imag(myfft2(AMP_OPDDo))
+    #figure(); draw([vd, yd])
+    vs=(pde-ppe-vd**2-yd**2-2*yp*yd)/(2*vd+np.max(vd)*epsilon) #paper was wrong in the ordering of the first two tems
+    vp=np.sign(vs)*sqrt(np.abs(ppe-PSF_DL-yp**2))
+    #figure();draw([vs,vp])
+    
+    #estimate
+    athres=0.5
+    P1o=np.real(myifft2(1j*yp))
+    P1o[AMP>athres]/=AMP[AMP>athres]; P1o[AMP<=athres]=0; P1o[AMP>athres]-=np.mean(P1o[AMP>athres])
+    P1e=np.real(myifft2(vp))
+    P1e[AMP>athres]/=AMP[AMP>athres]; P1e[AMP<=athres]=0; P1e[AMP>athres]-=np.mean(P1e[AMP>athres])
+    if doplot:
+        figure(); draw([P1e, P1o, OPDDe, OPDDo])
+
+    return P1o+P1e

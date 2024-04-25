@@ -15,16 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_LIB_MKH_H
-#define AOS_LIB_MKH_H
+
+#ifndef AOS_LIB_PETAL_H
+#define AOS_LIB_PETAL_H
 #include "../math/mathdef.h"
-/**
-   \file mkh.h
-   Contains functions that create ray tracing operator
-*/
-dsp *mkhb_cubic(const loc_t *locin, const loc_t *locout, real displacex, real displacey, real scale, real iac);
-dsp *mkh_cubic(const loc_t *locin, const loc_t *locout, real displacex, real displacey, real scale, real iac);
-dsp *mkhb(const loc_t *locin, const loc_t *locout, real displacex, real displacey,real scale);
-dsp *mkh(const loc_t *locin, const loc_t *locout, real displacex, real displacey,real scale);
-dsp *mkhbin1d(const dmat *xin, const dmat *xout);
+dsp *petal_mkh(long nx, long ny, real dx, long nseg, real theta0);
+void petal_opd(anydmat opd, real dx, long nseg, real theta0, const dmat *mode);
+dmat *petal_mkopd(long nx, long ny, real dx, long nseg, real theta0, const dmat *mode);
+
 #endif

@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -28,6 +28,7 @@
 #include "fractal.h"
 #include "accphi.h"
 #include "zernike.h"
+#include "petal.h"
 
 /**
  * hash the data to get a unique file name
@@ -210,7 +211,7 @@ static void fractal_screen_do(zfarr* fc, genatm_t* data){
 			screen[ilayer]->keywords=strdup(keywords);
 		}
 OMP_TASK_FOR(4)
-		for(long ilayer=0; ilayer<data->nlayer; ilayer++){	
+		for(long ilayer=0; ilayer<data->nlayer; ilayer++){
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 			fractal_do(screen[ilayer], data->dx, r0i, data->L0[ilayer], data->ninit);
 			//remove_piston(P(screen[ilayer]), nx*ny);
@@ -273,20 +274,25 @@ static real calc_r0(real rms, real L0, real slope){
 	return pow(rms*rms/(coeff*M_PI*kn2*pow(L0, -slope-2)), -3./5.);
 }
 /**
- * Generate screen according to a header. It has three possible options.
- * 1) load from file
- * 2) generate screen from PSD with the following keys
- * r0 (Fried parameter)
- * L0 (Outer scale)
- * dx (sampling)
- * nx (number of points)
- * slope (optional, default is -11/3)
- * seed (optional)
- * 3) generate from a zernike mode with the following keys
- * rms (in nm) 
- * mode (zernike mode)
- * dx
- * nx
+ * Generate screen according to a header. It has multiple possible options.
+ * 1) If is a filename. load from file
+ * 2) if mode and petal is not set. generate screen from PSD with the following keys
+	* L0 (Outer scale)
+	* slope (optional, default is -11/3)
+	* seed (optional)
+ * 3) If mode is set. generate from a zernike mode with the following keys
+  	* mode (zernike mode)
+ * 4) If petal is set. generate randomized petal modes each with rms value.
+ 	* petal sets total number of petals
+	* theta0 sets petal gap orientation angular offset in radian. 0 means a gap is along y axis.
+	* seed
+	* piston: generates piston mode if set
+	* tip: generate tip mode if set
+	* tilt: generates tilt mode if set
+ The following common parameters are used:
+	* r0 (Fried parameter in m) or rms (in nm)
+	* dx (sampling)
+	* nx (number of points)
  */
 mapcell* genscreen_str(const char* keywords){
 	mapcell* surfs=NULL;
@@ -300,42 +306,84 @@ mapcell* genscreen_str(const char* keywords){
 		real mode=search_keyword_num(keywords, "mode");
 		real dx=search_keyword_num_default(keywords, "dx", 1./64.);
 		real nx=search_keyword_num_default(keywords, "nx", 2048);
+		real ny=search_keyword_num_default(keywords, "nx", nx);
 		real ht=search_keyword_num_default(keywords, "ht", 0);
 		real vx=search_keyword_num_default(keywords, "vx", 0);
 		real vy=search_keyword_num_default(keywords, "vy", 0);
 		real L0=search_keyword_num_default(keywords, "L0", nx*dx);
 		real slope=search_keyword_num_default(keywords, "slope", -11./3.);
+
+		static real seed=0;//avoid using the same seed
+		seed=search_keyword_num_default(keywords, "seed", seed+1);
+		real petal=search_keyword_num(keywords, "petal");
+
 		if(isnan(r0) && isnan(rmsnm)){
 			error("Either r0 or rms should be specified\n");
-		}else if(isnan(mode)){//mode is not specified
+		}else if(isnan(mode)&&isnan(petal)){//mode is not specified
 			if(isnan(r0)){
 				r0=calc_r0(rmsnm*1e-9, L0, slope);
 				info("r0=%g is computed from rms=%g nm\n", r0, rmsnm);
 			}
-			static real seed=0;//avoid using the same seed
-			seed=search_keyword_num_default(keywords, "seed", seed+1);
 			info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
 				r0, L0, dx, slope, nx, seed);
 			rand_t rstat;
 			seed_rand(&rstat, (int)seed);
 			real wt=1;
-			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)nx, 1, 0, 0, 0, 0};
+			genatm_t cfg={&rstat, &wt, r0, &L0, dx, 0, 0, slope, (long)nx, (long)ny, 1, 0, 0, 0, 0};
 			surfs=genscreen(&cfg);
 		}else{
 			if(isnan(rmsnm)){
 				rmsnm=calc_rms(r0, L0, slope)*1e9;
 				info("rms=%g nm is computed from r0=%g m\n", rmsnm, r0);
 			}
-			info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rmsnm);
-			loc_t *loc=mksqloc_auto(nx, nx, dx, dx);
-			dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
-			dscale(opd, rmsnm*1e-9);
-			surfs=mapcellnew(1,1);
-			P(surfs, 0)=mapnew(nx, nx, dx, dx);
-			reshape(opd, nx, nx);
-			dcp((dmat**)&P(surfs,0), opd);
-			dfree(opd);
-			locfree(loc);
+			surfs=mapcellnew(1, 1);
+			P(surfs, 0)=mapnew(nx, ny, dx, dx);
+			if(!isnan(mode)){
+				info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rmsnm);
+				loc_t *loc=mksqloc_auto(nx, ny, dx, dx);
+				dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
+				dscale(opd, rmsnm*1e-9);
+				reshape(opd, nx, ny);
+				dcp((dmat**)&P(surfs,0), opd);
+				dfree(opd);
+				locfree(loc);
+			}else if(!isnan(petal)){
+				info("Generating petal modes for %g nm RMS.\n", rmsnm);
+				int nseg=(int)petal;
+				rand_t rstat;
+				seed_rand(&rstat, (int)seed);
+				//real dtheta=TWOPI/nseg;
+				real theta0=search_keyword_num_default(keywords, "theta0", 0);
+				//real cx=search_keyword_num_default(keywords, "cx", nx/2);
+				//real cy=search_keyword_num_default(keywords, "cy", ny/2);
+				int piston=(int)search_keyword_num_default(keywords, "piston", 0);
+				int tip=(int)search_keyword_num_default(keywords, "tip", 0);
+				int tilt=(int)search_keyword_num_default(keywords, "tilt", 0);
+				dmat *mod=dnew(nseg+1, 3);
+				if(piston<0 && piston+nseg>0){
+					P(mod,-piston,0)=rmsnm*1e-9;
+				}else if(tip<0 && tip+nseg>0){
+					P(mod, -tip, 1)=rmsnm*1e-9*4.*sqrt(petal)/nx;
+				}else if(tilt<0&&tilt+nseg>0){
+					P(mod, -tilt, 2)=rmsnm*1e-9*4.*sqrt(petal)/nx;
+				}else{
+				int flag=(piston?1:0) | (tip?2:0) | (tilt?4:0);
+				if(!flag) flag=7;//all modes
+					for(int imod=0; imod<3; imod++){
+						if((1<<imod)&flag){
+							for(int iseg=0; iseg<nseg; iseg++){
+								P(mod, iseg, imod)=(imod==0?1:4.*sqrt(petal)/nx)*rmsnm*1e-9*randn(&rstat);
+								P(mod, nseg, imod)+=P(mod, iseg, imod);
+							}
+							for(int iseg=0; iseg<nseg; iseg++){//remove average effect.
+								P(mod, iseg, imod)-=P(mod, nseg, imod)/nseg;
+							}
+						}
+					}
+				}
+				petal_opd(P(surfs, 0), dx, nseg, theta0, mod);
+				dfree(mod);
+			}
 		}
 		for(int i=0; i<PN(surfs); i++){
 			if(P(surfs,i)){

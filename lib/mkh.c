@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -15,9 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
-
 
 #include "../math/mathdef.h"
 #include "mkh.h"
@@ -300,4 +297,3 @@ dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 	hbin->pp[NX(xin)]=count;
 	return hbin;
 }
-
