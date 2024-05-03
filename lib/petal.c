@@ -41,10 +41,7 @@ static void petal_do(
 	long ncol=nseg*3;
 	real dtheta=TWOPI/nseg;//central angle
 
-	if(theta0<0||theta0>TWOPI){
-		error("Theta0=%g should be between 0 and 2pi.\n", theta0);
-	}
-	theta0+=M_PI*1.5;
+	theta0=M_PI*1.5-theta0;
 	real Rq=4*cy*sin(dtheta/2)/(3*dtheta);//CoG of a petal from center
 	real CoG[nseg][2];//CoG of each petal
 	for(int iseg=0; iseg<nseg; iseg++){
@@ -75,8 +72,7 @@ static void petal_do(
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
 			real theta=atan2(iy-cy, ix-cx)+theta0;//guaranteed to be between [0,2*twopi]
-			long iseg=ifloor(theta/dtheta);
-			while(iseg>=nseg) iseg-=nseg;
+			long iseg=(ifloor(theta/dtheta)%nseg+nseg)%nseg;
 			if(ph){
 				pp[icol++]=count;
 				px[count]=1; 		   		    pi[count]=iseg;       count++;//piston

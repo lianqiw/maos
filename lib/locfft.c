@@ -90,10 +90,10 @@ void locfft_free(locfft_t* locfft){
    where A is the amplitude map.
 */
 static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
-	comp i2pi=COMPLEX(0, 2*M_PI/wvl);
+	real wvk=TWOPI/wvl;
 	comp strehl=0;
 	for(int iloc=0; iloc<NX(iopdevl); iloc++){
-		strehl+=P(amp, iloc)*cexp(i2pi*P(iopdevl, iloc));
+		strehl+=P(amp, iloc)*EXPI(wvk*P(iopdevl, iloc));
 	}
 	return strehl;
 }
@@ -149,9 +149,9 @@ OMP_TASK_FOR(4)
 			}
 #endif
 
-			comp i2pi=COMPLEX(0, 2*M_PI/P(locfft->wvl, iwvl));
+			real wvk=TWOPI/P(locfft->wvl, iwvl);
 			for(int iloc=0; iloc<NX(opd); iloc++){
-				P(psf2, embed[iloc])=amp[iloc]*cexp(i2pi*P(opd, iloc));
+				P(psf2, embed[iloc])=amp[iloc]*EXPI(wvk*P(opd, iloc));
 			}
 			TIM(1);
 			if(use1d==1){
@@ -202,10 +202,10 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 		P(wvfs, iwvl)=wvf;
 		//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
 		real wvl=P(locfft->wvl, iwvl);
-		comp i2pi=COMPLEX(0, 2*M_PI/wvl);
+		real wvk=TWOPI/wvl;
 		const real* amp=P(locfft->amp);
 		for(int iloc=0; iloc<NX(opd); iloc++){
-			P(wvf, P(embed, iloc))=amp[iloc]*cexp(i2pi*P(opd, iloc));
+			P(wvf, P(embed, iloc))=amp[iloc]*EXPI(wvk*P(opd, iloc));
 		}
 		cfft2(wvf, -1);
 		ccwmd(wvf, P(locfft->fieldmask, iwvl), 1);
@@ -324,7 +324,7 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		//Do not multiply dx*dy to the integrand or apply 1/(wvl*z) to the output 
 		//Due to normalization in discrete domain.
 		//Confirmed to agree with method=1 or 2 when sampling agrees.
-		real k=2.*M_PI/wvl;
+		real wvk=TWOPI/wvl;
 		real zz=z*z;
 		real dxout=*pdxout;
 		if(!dxout){
@@ -344,7 +344,7 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 					for(long ixi=0; ixi<NX(in); ixi++){
 						real xp=(ixi-NX(in)/2)*dxin;
 						real r2=pow(x-xp, 2)+pow(y-yp, 2)+zz;
-						real ph=k*sqrt(r2);
+						real ph=wvk*sqrt(r2);
 						res+=P(in, ixi, iyi)*EXPI(ph)*(zz/r2);
 					}
 				}

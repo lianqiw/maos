@@ -223,13 +223,13 @@ static void convert_wvf(GENPISTAT_S* data){
 	seed_rand(&rstat, 1);
 	real wt=1;
 	const int npsf=16;
-	real pi2l=M_PI/2.2e-6;
+	real wvk=TWOPI/2.2e-6;
 	MAP_S** screen=vonkarman_screen(&rstat, 16, 16, 1/2., .2, 30, &wt, 1, 1);
 	cmat* wvf=cnew(16, 16);
 	dmat* opd=dnew(16, 16);
 	for(int ix=0; ix<16*16; ix++){
-		P(opd,ix)=P(screen[0],ix)*pi2l*2.;
-		P(wvf,ix)=cexp(COMPLEX(0, P(opd,ix)));
+		P(opd,ix)=P(screen[0],ix)*wvk;
+		P(wvf,ix)=EXPI(P(opd,ix));
 	}
 	cmat* phi=cnew(16, 16);
 	dmat* diff=dnew(npsf*2, npsf);

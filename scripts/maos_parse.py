@@ -72,7 +72,7 @@ def parse_structs(srcdir, files):
     return structs
 
     #parse C functions
-def parse_func(srcdir, structs, files):
+def parse_func(srcdir, files):
     funcs=dict()
     lines=parse_file(srcdir, files)
     for ln in lines:

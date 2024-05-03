@@ -136,6 +136,7 @@
     void X(real2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(imag2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(abs22d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
+	void X(arg2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int peak_corner); \
     void X(tilt)(X(mat) *otf, R sx, R sy, int peak_corner);		\
     void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,	R offsety,R thres, R bkgrnd);	\

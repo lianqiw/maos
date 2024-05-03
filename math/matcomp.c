@@ -91,7 +91,7 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 	const int npsfx=A->nx;
 	const int npsfy=A->ny;
 
-	R wvk=2.*M_PI/wvl;
+	R wvk=TWOPI/wvl;
 	memset(psf, 0, sizeof(T)*npsfx*npsfy);
 	if(fabs(theta)<1.e-10){/*no rotation. */
 		const int skipx=(npsfx-nopdx)/2;
@@ -287,70 +287,26 @@ void X(cpd)(X(mat)** restrict A0, const XR(mat)* restrict B){
    Copy real part of a X(mat) to XR(mat) with optional scaling:
    A0=A0.*alpha+real(B)*beta
 */
-void X(real2d)(XR(mat)** restrict A0, R alpha, const X(mat)* restrict B, R beta){
-	if(!check_mat(B)) return;
-	XR(mat)* restrict A=*A0;
 
-	if(!A){
-		*A0=A=XR(new)(B->nx, B->ny);
-	} else{
-		assert(A->nx==B->nx&&A->ny==B->ny);
-	}
-	if(fabs(alpha)<EPS){
-		for(long i=0; i<B->nx*B->ny; i++){
-			P(A,i)=REAL(P(B,i))*beta;
-		}
-	} else{
-		for(long i=0; i<B->nx*B->ny; i++){
-			P(A,i)=P(A,i)*alpha+REAL(P(B,i))*beta;
-		}
-	}
+#define CMAT_TO_DMAT(name, opt)\
+void X(name)(XR(mat)** restrict A0, R alpha, const X(mat)* restrict B, R beta){\
+	if(!check_mat(B)) return;\
+	XR(init)(A0, B->nx,B->ny);\
+	XR(mat)* restrict A=*A0;\
+	if(fabs(alpha)<EPS){\
+		for(long i=0; i<B->nx*B->ny; i++){\
+			P(A,i)=opt(P(B,i))*beta;\
+		}\
+	} else{\
+		for(long i=0; i<B->nx*B->ny; i++){\
+			P(A,i)=P(A,i)*alpha+opt(P(B,i))*beta;\
+		}\
+	}\
 }
-/**
-   Copy imaginary part of a X(mat) to XR(mat) with optional scaling:
-   A0=A0.*alpha+imag(B)*beta
-*/
-void X(imag2d)(XR(mat)** restrict A0, R alpha, const X(mat)* restrict B, R beta){
-	if(!check_mat(B)) return;
-	XR(mat)* restrict A=*A0;
-
-	if(!A){
-		*A0=A=XR(new)(B->nx, B->ny);
-	} else{
-		assert(A->nx==B->nx&&A->ny==B->ny);
-	}
-	if(fabs(alpha)<EPS){
-		for(long i=0; i<B->nx*B->ny; i++){
-			P(A,i)=IMAG(P(B,i))*beta;
-		}
-	} else{
-		for(long i=0; i<B->nx*B->ny; i++){
-			P(A,i)=P(A,i)*alpha+IMAG(P(B,i))*beta;
-		}
-	}
-}
-/**
-   Copy abs squared of a X(mat) to XR(mat) with optional scaling:
-   A0=A0*alpha+abs(B).^2*beta;
- */
-void X(abs22d)(XR(mat)** restrict A0, R alpha,	const X(mat)* restrict B, R beta){
-	if(!check_mat(B)) return;
-	XR(mat)* restrict A=*A0;
-	if(!A){
-		*A0=A=XR(new)(B->nx, B->ny);
-	} else{
-		assert(A->nx==B->nx&&A->ny==B->ny);
-	}
-	if(fabs(alpha)<1.e-60){
-		for(int i=0; i<B->nx*B->ny; i++){
-			P(A,i)=ABS2(P(B,i))*beta;
-		}
-	} else{
-		for(int i=0; i<B->nx*B->ny; i++){
-			P(A,i)=P(A,i)*alpha+ABS2(P(B,i))*beta;
-		}
-	}
-}
+CMAT_TO_DMAT(real2d, REAL)
+CMAT_TO_DMAT(imag2d, IMAG)
+CMAT_TO_DMAT(abs22d, ABS2)
+CMAT_TO_DMAT(arg2d, CARG)
 
 /**
    Tilt the otf to make the image shift.
@@ -369,15 +325,15 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 	R duy=1./(R)ny;
 	T ux[nx];
 	T uy[ny];
-	T cx=EXPI(-2*M_PI*dux*sx);
-	T cy=EXPI(-2*M_PI*duy*sy);
+	T cx=EXPI(-TWOPI*dux*sx);
+	T cy=EXPI(-TWOPI*duy*sy);
 	//warning_once("Consider caching ux, uy\n");
 	if(peak_corner==1){/*peak in center */
-		ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
+		ux[0]=EXPI(-TWOPI*dux*sx*(-nx/2));
 		for(int i=1; i<nx; i++){
 			ux[i]=ux[i-1]*cx;
 		}
-		uy[0]=EXPI(-2*M_PI*duy*sy*(-ny/2));
+		uy[0]=EXPI(-TWOPI*duy*sy*(-ny/2));
 		for(int i=1; i<ny; i++){
 			uy[i]=uy[i-1]*cy;
 		}
@@ -386,7 +342,7 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 		for(int i=1; i<nx/2; i++){
 			ux[i]=ux[i-1]*cx;
 		}
-		ux[nx/2]=EXPI(-2*M_PI*dux*sx*(-nx/2));
+		ux[nx/2]=EXPI(-TWOPI*dux*sx*(-nx/2));
 		for(int i=nx/2+1; i<nx; i++){
 			ux[i]=ux[i-1]*cx;
 		}
@@ -394,7 +350,7 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 		for(int i=1; i<ny/2; i++){
 			uy[i]=uy[i-1]*cy;
 		}
-		uy[ny/2]=EXPI(-2*M_PI*duy*sy*(-ny/2));
+		uy[ny/2]=EXPI(-TWOPI*duy*sy*(-ny/2));
 		for(int i=ny/2+1; i<ny; i++){
 			uy[i]=uy[i-1]*cy;
 		}

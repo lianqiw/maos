@@ -27,7 +27,7 @@
 #include <cholmod.h>
 #endif
 
-#include "mathdef.h"
+#include "../math/mathdef.h"
 #ifdef I
 #undef I
 #endif

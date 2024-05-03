@@ -82,6 +82,10 @@
 #define RD long
 #undef fabs
 #define fabs(A) labs(A)
+#define REAL(A) A
+#define IMAG(A) 0
+#define CONJ(A) A
+#define ARG(A) 0
 #define M_T M_LONG
 #define PRINT(A) info(" %ld",A);
 #else //if COMP_LONG
@@ -107,6 +111,7 @@
 #define REAL
 #define IMAG(A) 0
 #define CONJ
+#define CARG(A) 0
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
 #define PRINT(A) info(" %10.3e",A);
@@ -124,6 +129,7 @@
 #define REAL creal
 #define IMAG cimag
 #define CONJ conj
+#define CARG carg
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
@@ -148,6 +154,7 @@
 #define REAL
 #define IMAG(A) 0
 #define CONJ
+#define CARG(A) 0
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
 #define PRINT(A) info("%10.3e",A);
@@ -164,6 +171,7 @@
 #define REAL crealf
 #define IMAG cimagf
 #define CONJ conjf
+#define CARG cargf
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
@@ -199,8 +207,8 @@ static inline int issp(const void* id){
 #define OMP_SIMD(A...) DO_PRAGMA(omp simd A)
 #define OMP_SIMD_R(A...) DO_PRAGMA(omp simd A)
 #endif
+#define ABS2(A) REAL((A)*CONJ(A))
 
-#define ABS2(A) creal((A)*conj(A))
 static inline int ismat(const void* id){
 	return id?(*((const M_ID*)id)==M_T):0;
 }

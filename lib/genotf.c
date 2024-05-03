@@ -90,7 +90,7 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 
 		struct T_VALID(*qval)[npsfx]=(struct T_VALID(*)[npsfx])pval;
 
-		comp wvk=COMPLEX(0, 2.*M_PI/wvl);
+		real wvk=TWOPI/wvl;
 		for(long jm=0; jm<npsfy; jm++){
 			for(long im=0; im<npsfx; im++){
 				long(*jloc)[2]=qval[jm][im].loc;
@@ -104,7 +104,7 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 						tmp12*=amp[iloc1]*amp[iloc2];
 					}
 					if(opdbias){
-						comp tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
+						comp tmp3=EXPI(wvk*(opdbias[iloc1]-opdbias[iloc2]));
 						tmpc+=tmp12*tmp3;
 					} else{
 						tmpr+=tmp12;

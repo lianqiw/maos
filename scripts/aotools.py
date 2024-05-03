@@ -622,7 +622,7 @@ def myfft2(A):
 def myifft2(A):
     return fftshift(ifft2(fftshift(A)))
     
-def calc_psf(amp, opd, wvl, nembed=2, wts=None):
+def calc_psf(amp, opd, wvl, fembed=2, wts=None):
     '''
         Compute PSF normalized by Strehl ratio.
         For multi-wavelength PSF, the sampling is matched to the first wavelength
@@ -644,23 +644,23 @@ def calc_psf(amp, opd, wvl, nembed=2, wts=None):
             if type(wts) is np.ndarray:
                 wt=wts.flat[iwvl]
             #psfs+=center(calc_psf(center(amp,nx2),center(opd,nx2),wvli),nx)*wt
-            psfi=calc_psf(amp,opd,wvli,nembed=nembed*(wvli/wvl0))*wt
+            psfi=calc_psf(amp,opd,wvli,fembed=fembed*(wvli/wvl0))*wt
             #if psfs is None:
             #    psfs=psfi
             #else:
-            psfs+=center(psfi,nx*nembed)
+            psfs+=center(psfi,nx*fembed)
         return psfs
     else:
         if opd is None or opd.size==0:
             wvf=amp
         else:
-            wvf=amp*np.exp(opd*(-2j*pi/wvl))
+            wvf=amp*np.exp(opd*(2j*pi/wvl))
 
-        nx2=round(nembed*wvf.shape[0]/2)*2
+        nx2=round(fembed*wvf.shape[0]/2)*2
         psf=abs2(myfft2(center(wvf,nx2)))*(1/np.sum(amp)**2)
         return psf
 
-def gerchberg_saxton(A1, A2, modes=None, P1B=None, nstep=100, doprint=0):
+def gerchberg_saxton_py(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nrep=100, doprint=0):
     '''
     The Gerchberg Saxton algorithm (1972)
     Parameters
@@ -669,42 +669,56 @@ def gerchberg_saxton(A1, A2, modes=None, P1B=None, nstep=100, doprint=0):
     A2: image plane amplitude (sqrt of PSF), embeded into a square array with the same size as AMP
     modes: if set, the estimated OPD will be projected onto these modes.
     P1B: the initial phase (in radian). If not set, will use random values. When projection onto the modes, the content is subtracted first.
-    nstep: number of iterations
+    fembed: embedding factor ratio
+    nrep: number of iterations
     doprint: plot the convergence and result
     '''
-    err=np.zeros((nstep,))
-    rng = np.random.default_rng(1)
-    if P1B is None:
-        P1E=(rng.random(A1.shape)-0.5)*np.pi/2 #initialize guess
-    else:
+    err=np.zeros((nrep,))
+    #rng = np.random.default_rng(1)
+    if fembed!=1:
+        A1=embed(A1, ratio=fembed)
+        A2=embed(A2, ratio=fembed)
+        if P1B is not None:
+            P1B=embed(P1B, ratio=fembed)
+
+    if P1B is not None:
         P1E=P1B.copy()
-    C1=A1*exp(-1j*P1E)
-    if modes is not None: #projection solution to the modes
+    else:
+        P1E=np.zeros(A1.shape)
+        #P1E=(rng.random(A1.shape)-0.5)*np.pi/2 #initialize guess
+        
+    C1=A1*exp(1j*P1E)
+    if modes is not None and rmodes is None: #projection solution to the modes
         rmodes=np.linalg.pinv(modes)
     alpha=1./np.sum(A2**2)
-    norm=np.sum(A1) #do not square
-    for i in range(nstep):
-        C2=myfft2(C1)/norm
+    A2=fftshift(A2)
+    for i in range(nrep):
+        C2=fft2(C1) #no need to apply normalization 
         if doprint:
             err[i]=alpha*np.sum((np.abs(C2)-A2)**2)
         C2*=A2/np.abs(C2) #fix amplitude
-        C1=myifft2(C2)*norm
-        P1E=-np.angle(C1)
-        P1E[A1>0]-=np.mean(P1E[A1>0]) #remove piston
-        P1E[A1<=0]=0 #remove points out side of aperture
+        C1=ifft2(C2) #no need to apply normalization 
+        if modes is not None or i+1==nrep:
+            P1E=np.angle(C1)
+            P1E[A1>0]-=np.mean(P1E[A1>0]) #remove piston
+            P1E[A1<=0]=0 #remove points out side of aperture
             
         if modes is None:
             C1*=A1/np.abs(C1) #fix amplitude
         else:
             if P1B is not None:
                 P1E-=P1B
-            P1E=np.reshape((P1E.flat@rmodes)@modes, A1.shape) #project onto modes
+            P1E=unembed(P1E, ratio=fembed)
+            P1E=np.reshape((P1E.flat@rmodes)@modes, P1E.shape) #project onto modes
+            P1E=embed(P1E, ratio=fembed)
             if P1B is not None:
                 P1E+=P1B
-            C1=A1*exp(-1j*P1E)
+            C1=A1*exp(1j*P1E)
 
     if doprint:
         print(err)
+    if fembed!=1:
+        P1E=unembed(P1E, ratio=fembed)
     return P1E
 
 def split_even_odd(A, doshift=0):

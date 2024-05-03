@@ -33,7 +33,6 @@
 #include "lmath.h"
 
 #include "cell.h"
-#include "chol.h"
 #include "zfarr.h"
 #include "mathmisc.h"
 #include "loc.h"
@@ -166,4 +165,7 @@ extern const real RAD2MAS;
 extern const real MAS2RAD;
 extern const real AS2RAD;
 extern const real TWOPI;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #endif

@@ -22,6 +22,7 @@
 #define AOS_LIB_MUV_H
 #include "../math/mathdef.h"
 #include "pcg.h"
+#include "chol.h"
 /**
    \file muv.h
 

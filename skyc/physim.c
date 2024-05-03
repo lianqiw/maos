@@ -50,7 +50,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 	const PARMS_S* parms  /**<[in] the parms*/
 ){
 	const real* mod=P(modm);
-	const comp ik=COMPLEX(0, 2*M_PI/wvl);
+	const real wvk=TWOPI/wvl;
 	real dx=powfs->dxwvf;
 	real ox=powfs->saloc->locx[isa]+dx*0.5;
 	real oy=powfs->saloc->locy[isa]+dx*0.5;
@@ -63,7 +63,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 			for(int ix=0; ix<nx; ix++){
 				real x=ox+ix*dx;
 				real tmp=x*mod[0]+ym;
-				p[ix+wvf->nx*iy]*=cexp(ik*tmp);
+				p[ix+wvf->nx*iy]*=EXPI(wvk*tmp);
 			}
 		}
 	} else{
@@ -94,7 +94,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 					+mod[2]*(-2*scale*hc*(thetax*x+thetay*y))
 					+mod[3]*((x2-y2)*scale1-2*scale*hc*(thetax*x-thetay*y))
 					+mod[4]*(xy*scale1-scale*hc*(thetay*x+thetax*y));
-				p[ix+wvf->nx*iy]*=cexp(ik*tmp);
+				p[ix+wvf->nx*iy]*=EXPI(wvk*tmp);
 			}
 		}
 	}

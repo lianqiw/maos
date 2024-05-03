@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import print_function
 import sys
+import glob
 import maos_parse
 if len(sys.argv)>2:
     srcdir=sys.argv[1];
@@ -11,15 +12,16 @@ else:
 
 simu_all=list();
 
-headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
-          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h',
-          'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
-
-#Obtain the definition of all structs
-dictall=maos_parse.parse_structs(srcdir, headlist)
+headerlist=glob.glob(srcdir+'/lib/*.h')
+headerlist.append(srcdir+'/sys/scheduler.h')
+headerlist.append(srcdir+'/mex/aolib.h')
+headerlist.append(srcdir+'/maos/parms.h')
+headerlist.append(srcdir+'/maos/types.h')
+structs=maos_parse.parse_structs('', headerlist)
+#funcs=maos_parse.parse_func('',headerlist)
 
 simu=dict()
-simu=dictall['sim_t']
+simu=structs['sim_t']
 unknowns=dict()
 def expand_struct(struct):
     for key in struct:
@@ -31,10 +33,10 @@ def expand_struct(struct):
         else:
             val=val0
             ispointer=0
-        if type(val)==type('') and dictall.get(val):
-            if type(dictall[val])==type(dict()): #other types
-                expand_struct(dictall[val])
-            struct[key]=[val0, dictall[val]]
+        if type(val)==type('') and structs.get(val):
+            if type(structs[val])==type(dict()): #other types
+                expand_struct(structs[val])
+            struct[key]=[val0, structs[val]]
 
 expand_struct(simu)
 #Convert cname of type ctype in C to mexname in Matlab

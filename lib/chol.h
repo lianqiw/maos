@@ -20,7 +20,7 @@
 
 #ifndef AOS_LIB_CHOL_H
 #define AOS_LIB_CHOL_H
-#include "mathdef.h"
+#include "../math/mathdef.h"
 /**
    \file chol.h
    Wraps the CHOLESKY Library to provide a simple interface.*/

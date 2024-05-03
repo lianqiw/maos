@@ -41,7 +41,7 @@ typedef struct SERVO_CALC_T{
 	real T;
 	int type;
 }SERVO_CALC_T;
-#define TWOPI 6.283185307179586
+
 /*Compute phase between -2pi, and 0*/
 static inline real phase(comp val){
 	real ang=atan2(cimag(val), creal(val));
