@@ -5,6 +5,7 @@
 import glob
 import os
 import numpy as np
+import warnings
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
 from scipy.integrate import cumtrapz
@@ -28,6 +29,14 @@ from readbin import readbin, headers
 from draw import draw, locembed
 from maos_result import maos_res, maos_res_tot, maos_res_hi, maos_res_each, maos_cumu
 #import maos_client
+def sind(x):
+    return np.sin(x*np.pi/180)
+
+def cosd(x):
+    return np.cos(x*np.pi/180)
+
+def tand(x):
+    return np.tan(x*np.pi/180)
 
 def iscell(arr):
     if type(arr)==np.ndarray and arr.dtype.name=='object':
@@ -186,8 +195,8 @@ def grad_ttfr(grad, saloc):
     return g2v
 def loc_zernike_proj(loc, rmin, rmax, radonly=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
-    D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
-    mod=zernike(loc, D, rmin, rmax, radonly).T
+    #D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
+    mod=zernike(loc, 0, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
     return mod, rmod
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
@@ -201,11 +210,33 @@ def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
     opd2=opd-mod@(rmod@opd)
     return opd2
+def mk2dloc(shape):
+    nx=shape[0]
+    if len(shape)>1:
+        ny=shape[1]
+    else:
+        ny=nx
+    return mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2,nx*ny)
+def mktt(amp):
+    '''create piston/tip/tilt mode from amplitude map'''
+    (nx,ny)=amp.shape
+    loc=mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2, amp.size)
+    loc[:,amp.flat<=0]=0
+    return loc
+def mkptt(amp):
+    '''create piston/tip/tilt mode from amplitude map'''
+    (nx,ny)=amp.shape
+    loc=mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2, amp.size)
+    pis=(amp>0).reshape(1,amp.size)
+    loc[:,pis[0]==0]=0
+    return np.r_[pis, loc]
+
 #remove zernike modes from rmin to rmax from 2-D OPD
 def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
     '''OPD is 2d array, mask indicates valid points, rmin and rmax are minimum and maximum zernike order (inclusive)'''
     opdshape=opd.shape
-    oloc=mksqloc(opd.shape[1], opd.shape[0], 1, 1, -opd.shape[1]/2, -opd.shape[0]/2).reshape(2,opd.size)
+    #oloc=mksqloc(opd.shape[1], opd.shape[0], 1, 1, -opd.shape[1]/2, -opd.shape[0]/2).reshape(2,opd.size)
+    oloc=mk2dloc(opd.shape)
     opd=opd.reshape((opd.size,))
     if mask is None:
         mask=opd!=0
@@ -330,21 +361,34 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
         radialprofile = tbin/nr # the answer
 
     return radialprofile
+def vec2d(A, nx=None): #reshape a vector to 2d array
+    if nx is None:
+        nx=round(np.sqrt(A.size))
+    ny=int(A.size/nx)
+    if A.size!=nx*ny:
+        raise(Exception('Please provide correct nx'))
+    return A.reshape(nx,ny)
 
-def center(A, nx, ny=None):
+def center(A, nx=None, ny=None, ratio=None):
     if type(A) is list:
         B=[]
         for Ai in A:
-            B.append(center(Ai, nx, ny))
+            B.append(center(Ai, nx, ny, ratio))
         return B
     elif A is None:
         return None
     '''crop or embed A into nxn array from the center'''
-    nx=int(nx)
-    if ny is None:
-        ny=int(np.round(A.shape[1]*nx/A.shape[0]))
+    if A.ndim==1 or A.shape[0]==1 or A.shape[1]==1:
+        A=vec2d(A)
+    if ratio is not None:
+        nx=int(A.shape[0]*ratio)
+        ny=int(A.shape[1]*ratio)
     else:
-        ny=int(ny)
+        nx=int(nx)
+        if ny is None:
+            ny=int(np.round(A.shape[1]*nx/A.shape[0]))
+        else:
+            ny=int(ny)
     if A.shape[0]>=nx and A.shape[1]>=ny:#extract
         indx=(A.shape[0]-nx+1)>>1
         indy=(A.shape[1]-ny+1)>>1
@@ -360,11 +404,11 @@ def center(A, nx, ny=None):
 
 def embed(a,ratio=2):
     '''Embed a 2-d image into a new array bigger by ratio '''
-    return center(a, int(a.shape[0]*ratio))
+    return center(a, ratio=ratio)
 
 def unembed(a,ratio=2):
     '''undo embed(). unembed center piece'''
-    return center(a, int(a.shape[0]/ratio))
+    return center(a, ratio=1/ratio)
 
 def photon_flux(magnitude, wvls):
     '''Claculate photon flux for magnitude at wavelength wvls'''
@@ -578,7 +622,7 @@ def myfft2(A):
 def myifft2(A):
     return fftshift(ifft2(fftshift(A)))
     
-def calc_psf(amp, opd, wvl, wts=None, nembed=2):
+def calc_psf(amp, opd, wvl, nembed=2, wts=None):
     '''
         Compute PSF normalized by Strehl ratio.
         For multi-wavelength PSF, the sampling is matched to the first wavelength
@@ -586,12 +630,12 @@ def calc_psf(amp, opd, wvl, wts=None, nembed=2):
     if type(wvl) is list:
         wvl=np.asarray(wvl)
     if type(wvl) is np.ndarray:
-        psfs=None
+        psfs=0
         wt=1/wvl.size
         if amp.shape[0]!=amp.shape[1] or amp.ndim>2:
             raise(Exception('Only supports square array'))
         nx=amp.shape[0]
-        wvl0=wvl.flat[0]
+        wvl0=np.mean(wvl) #.flat[0]
         if type(wts) is list:
             wts=np.asarray(wts)
         for iwvl in range(wvl.size):
@@ -601,10 +645,10 @@ def calc_psf(amp, opd, wvl, wts=None, nembed=2):
                 wt=wts.flat[iwvl]
             #psfs+=center(calc_psf(center(amp,nx2),center(opd,nx2),wvli),nx)*wt
             psfi=calc_psf(amp,opd,wvli,nembed=nembed*(wvli/wvl0))*wt
-            if psfs is None:
-                psfs=psfi
-            else:
-                psfs+=center(psfi,psfs.shape[0])
+            #if psfs is None:
+            #    psfs=psfi
+            #else:
+            psfs+=center(psfi,nx*nembed)
         return psfs
     else:
         if opd is None or opd.size==0:
@@ -616,52 +660,56 @@ def calc_psf(amp, opd, wvl, wts=None, nembed=2):
         psf=abs2(myfft2(center(wvf,nx2)))*(1/np.sum(amp)**2)
         return psf
 
-def gerchberg_saxton(A1, A2, OPD1=None, nstep=100, doplot=0):
+def gerchberg_saxton(A1, A2, modes=None, P1B=None, nstep=100, doprint=0):
     '''
     The Gerchberg Saxton algorithm (1972)
     Parameters
     ------------
     A1: pupil plane amplitude, embeded into a square array to match PSF sampling
     A2: image plane amplitude (sqrt of PSF), embeded into a square array with the same size as AMP
-    OPD1: known OPD, only to compute error, embeded into a square array with the same size as AMP
+    modes: if set, the estimated OPD will be projected onto these modes.
+    P1B: the initial phase (in radian). If not set, will use random values. When projection onto the modes, the content is subtracted first.
     nstep: number of iterations
-    doplot: plot the convergence and result
+    doprint: plot the convergence and result
     '''
-    err=np.zeros((nstep))
+    err=np.zeros((nstep,))
     rng = np.random.default_rng(1)
-    P1E=(rng.random(A1.shape)-0.5)*np.pi/2 #initialize guess
-    C1=A1*exp(1j*P1E)
-    if OPD1 is not None:
-        alpha=1./np.std(OPD1[A1>.1])
+    if P1B is None:
+        P1E=(rng.random(A1.shape)-0.5)*np.pi/2 #initialize guess
     else:
-        alpha=1
+        P1E=P1B.copy()
+    C1=A1*exp(-1j*P1E)
+    if modes is not None: #projection solution to the modes
+        rmodes=np.linalg.pinv(modes)
+    alpha=1./np.sum(A2**2)
+    norm=np.sum(A1) #do not square
     for i in range(nstep):
-        C2=myfft2(C1)
+        C2=myfft2(C1)/norm
+        if doprint:
+            err[i]=alpha*np.sum((np.abs(C2)-A2)**2)
         C2*=A2/np.abs(C2) #fix amplitude
-        C1=myifft2(C2)
-        C1*=A1/np.abs(C1) #fix amplitude
-        P1E=np.angle(C1)
-        P1E[A1>.1]-=np.mean(P1E[A1>.1]) #remove piston
-        P1E[A1<.1]=0 #remove points out side of aperture
-        if OPD1 is not None:
-            err[i]=alpha*np.std(OPD1[A1>.1]-P1E[A1>.1])
-        else:            
-            err[i]=alpha*np.std(P1E[A1>.1])
+        C1=myifft2(C2)*norm
+        P1E=-np.angle(C1)
+        P1E[A1>0]-=np.mean(P1E[A1>0]) #remove piston
+        P1E[A1<=0]=0 #remove points out side of aperture
+            
+        if modes is None:
+            C1*=A1/np.abs(C1) #fix amplitude
+        else:
+            if P1B is not None:
+                P1E-=P1B
+            P1E=np.reshape((P1E.flat@rmodes)@modes, A1.shape) #project onto modes
+            if P1B is not None:
+                P1E+=P1B
+            C1=A1*exp(-1j*P1E)
 
-    if doplot:
-        figure(figsize=(12,2))
-        subplot(1,2,1)
-        semilogy(err/err[0])
-        xlabel('Iterations')
-        ylabel('Residual')
-        subplot(1,2,2)
-        
-        draw(np.c_[unembed(OPD1,2), unembed(P1E,2), unembed(P1E-OPD1,2)])
+    if doprint:
+        print(err)
     return P1E
 
 def split_even_odd(A, doshift=0):
     '''
-        split A into even, odd components. A has dc term at lower left corner A[0,0].
+        split A into even and odd components. A has dc term at lower left corner A[0,0].
     '''
     if doshift:
         Ae=fftshift(A)
@@ -709,6 +757,22 @@ def fast_furious(AMP, PSF, PSFD, OPDD, epsilon=0.1, doplot=0):
     P1e=np.real(myifft2(vp))
     P1e[AMP>athres]/=AMP[AMP>athres]; P1e[AMP<=athres]=0; P1e[AMP>athres]-=np.mean(P1e[AMP>athres])
     if doplot:
-        figure(); draw([P1e, P1o, OPDDe, OPDDo])
+        figure(); draw([P1e, P1o, AMP_OPDDe, AMP_OPDDo])
 
     return P1o+P1e
+
+def nanmean(A, *args, **kargs):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return np.nanmean(A, *args, **kargs)
+    
+def nanmedian(A, *args, **kargs):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return np.nanmedian(A, *args, **kargs)
+    
+def nanmin(A, *args, **kargs):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return np.nanmin(A, *args, **kargs)
+    

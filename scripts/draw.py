@@ -100,36 +100,45 @@ def draw(*args, **kargs):
     elif arg0.dtype == object or arg0.ndim==3:
         if arg0.shape[0]==1:
             arg0=arg0[0]
-    if type(arg0) == list or arg0.dtype == object or arg0.ndim==3:  # list, array of array or 3d array
-        kargs['keep'] = 1  # do not clear
+        
+    if type(arg0) == list or arg0.dtype == object or arg0.ndim==3 or (arg0.ndim==2 and arg0.shape[0]*100<arg0.shape[1]):  # list, array of array or 3d array
+        if 'level' in kargs:
+            kargs['level']+= 1 #>1: create new window
+        else:
+            kargs['level'] = 1  # do not clear
         if type(arg0) == list:
             nframe = len(arg0)
         elif type(arg0) == np.ndarray and arg0.dtype==object:
             old_shape=arg0.shape
             nframe = arg0.size
             arg0.shape=(arg0.size,)
-        elif arg0.ndim==3:
-            nframe = arg0.shape[0]
         else:
-            raise(Exception('Unknow data type'))
+            nframe = arg0.shape[0]
+        
         if nframe>60:
             nframe=60
             print('Limit to first {} frames'.format(nframe))
         elif nframe==0:
             return
-        if 'nx' in kargs:
-            nx=kargs['nx']
-        elif 'ncol' in kargs:
-            nx=kargs['ncol']
-        elif nframe > 3:
-            nx = int(np.ceil(np.sqrt(nframe)))
+        if 'nrow' in kargs:
+            ny=kargs['nrow']
+            nx=int(np.ceil(nframe/ny))
         else:
-            nx = nframe
-        if nx>nframe:
-            nx=nframe
-        ny = int(np.ceil(nframe/nx))
+            if 'nx' in kargs:
+                nx=kargs['nx']
+            elif 'ncol' in kargs:
+                nx=kargs['ncol']
+            elif nframe > 3:
+                nx = int(np.ceil(np.sqrt(nframe)))
+            else:
+                nx = nframe
+            if nx>nframe:
+                nx=nframe
+            ny = int(np.ceil(nframe/nx))
         # print(nx,ny)
-        if nx>1 or ny > 1:
+        if kargs['level']>1:
+            plt.figure()
+        elif nx>1 or ny > 1:
             plt.clf()
         for iframe in range(nframe):
             if nx>1 or ny > 1:
@@ -162,7 +171,6 @@ def draw(*args, **kargs):
             draw(ims, **kargs)
         else:
             print('Too many arguments')
-
     else: #2-d numeric array
         img=arg0
         if type(img) is scipy.sparse._csr.csr_matrix:
