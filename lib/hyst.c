@@ -42,6 +42,7 @@ hyst_t* hyst_new(
 	long nact          /**<Number of actuators*/
 ){
 	hyst_t* hyst=mycalloc(1, hyst_t);
+	if(!hyst) return NULL;
 	hyst->xlast=dnew(nact, 1);
 	hyst->ylast=dnew(nact, 1);
 	if(hysteresis<0||hysteresis>1){
@@ -65,6 +66,7 @@ hyst_t* hyst_new(
    Reset hysteresis state
 */
 void hyst_reset(hyst_t* hyst){
+	if(!hyst) return;
 	dzero(hyst->xlast);
 	dzero(hyst->ylast);
 }
@@ -73,6 +75,7 @@ void hyst_reset(hyst_t* hyst){
    Free hysteresis model.
 */
 void hyst_free(hyst_t* hyst){
+	if(!hyst) return;
 	dfree(hyst->xlast);
 	dfree(hyst->ylast);
 	free(hyst);
@@ -82,6 +85,10 @@ void hyst_free(hyst_t* hyst){
    Apply hysteresis to DM vector. dmreal and dmcmd may be the same
 */
 void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
+	if(!hyst){
+		dcp(&dmreal, dmcmd);
+		return;
+	}
 	real* restrict xlast=P(hyst->xlast);
 	real* restrict ylast=P(hyst->ylast);
 	assert(NX(dmcmd)==NX(hyst->xlast));
@@ -101,7 +108,10 @@ void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
    Apply hysteresis to set of DM vectors
 */
 void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
-	if(!hyst) return;
+	if(!hyst){
+		dcellcp(&dmreal, dmcmd);
+		return;
+	}
 	for(int idm=0; idm<NX(dmcmd)*NY(dmcmd); idm++){
 		hyst_dmat(hyst[idm], P(dmreal,idm), P(dmcmd,idm));
 	}
