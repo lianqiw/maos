@@ -456,10 +456,10 @@ T X(diff)(const X(mat)* A, const X(mat)* B){
 }
 /**
    Generate a new gray pixel map based on bilinear influence functions used in
-   mkw.  It creates slightly larger map than an filled circle.  The Center and
-   Radius cx,cy,r are in unit of meter, The sampling dx,dy specify spacing of
-   the points in meter along x or y dimension. Each full point received value of
-   'val'
+   mkw.  It creates slightly larger map than an filled circle to account for the
+   sampling effect.  The Center and Radius cx,cy,r are in unit of meter, The
+   sampling dx,dy specify spacing of the points in meter along x or y dimension.
+   Each full point received value of 'val'
 */
 int X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 	if(!check_mat(A)||r<0){
@@ -485,7 +485,7 @@ int X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 				for(int jy=0; jy<nres; jy++){
 					R iiy=iy+(jy-resm)*res;
 					R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-					R wty=1.-fabs(iy-iiy);
+					R wty=1.-fabs(iy-iiy);//takes into account bilinear influence function
 OMP_SIMD()
 					for(int jx=0; jx<nres; jx++){
 						R iix=ix+(jx-resm)*res;
@@ -503,39 +503,54 @@ OMP_SIMD()
 	}
 	return 0;
 }
-
 /**
-   Mark valid grid points. If any direct neighbor of a point is within r, make
-   the point valid. Parameters are the same as X(circle).
+   Generate a new gray pixel map based on bilinear influence functions used in
+   mkw.  It creates slightly larger map than an filled rectangle to account for
+   the sampling effect.  The Center and half width cx,cy,rx,ry are in unit of
+   meter, The sampling dx,dy specify spacing of the points in meter along x or y
+   dimension. Each full point received value of 'val'
 */
-int X(circle_symbolic)(X(mat)* A, R cx, R cy, R dx, R dy, R r){
-	if(!check_mat(A) || r<0){
+int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
+	if(!check_mat(A)||rx<0||ry<0){
 		warning("Input is not valid\n");
 		return -1;
 	}
-	R r2=r*r;
-	R r2l=(r-1.5)*(r-1.5);//lower limit
-	R r2u=(r+2.5)*(r+2.5);//upper limit
+	const int nres=10;//super-resolution
+	const R res=(R)(2./nres);
+	const R res2=(R)(res*res);
+	const R cnt=cos(theta);
+	const R snt=sin(theta);
+	
+	R resm=(R)((nres-1)*0.5);
 	for(int iy=0; iy<A->ny; iy++){
-		R r2y=(iy*dy-cy)*(iy*dy-cy);
 		for(int ix=0; ix<A->nx; ix++){
-			R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
-			if(r2r<r2l){
-				P(A, ix, iy)=1;
-			} else if(r2r<r2u){
-				for(R jy=-1; jy<=1; jy++){
-					R iiy=iy+jy;
-					R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-					for(R jx=-1; jx<=1; jx++){
-						R iix=ix+jx;
-						R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-						if(rr2r<=r2){
-							P(A, ix, iy)=1;
-							continue;
+			R xi0=ix-cx;
+			R yi0=iy-cy;
+			R xi=xi0*cnt+yi0*snt;
+			R yi=-xi0*snt+yi0*cnt;
+			T val2=0;
+			if(fabs(xi)<rx&&fabs(yi)<ry){//completely inside
+				val2=val;				
+			} else if(fabs(xi)<rx+1&&fabs(yi)<ry+1){//partially inside
+				T tot=0.;
+				for(int jy=0; jy<nres; jy++){
+					OMP_SIMD()
+					for(int jx=0; jx<nres; jx++){
+						R xj0=ix+(jx-resm)*res-cx;
+						R yj0=iy+(jy-resm)*res-cy;
+						R xj=xj0*cnt+yj0*snt;
+						R yj=-xj0*snt+yj0*cnt;
+						R wtx=1.-fabs(xi0-xj0);
+						R wty=1.-fabs(yi0-yj0);
+
+						if(fabs(xj)<rx && fabs(yj)<ry){
+							tot+=res2*wty*wtx;
 						}
 					}
 				}
+				val2=tot*val;
 			}
+			P(A, ix, iy)+=val2;
 		}
 	}
 	return 0;

@@ -344,7 +344,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 				map=mapnew(nx, ny, dx, dy);
 				map->h=ht;
 				map->ox+=offset*dx;
-				mapcircle_symbolic(map, D*0.5);
+				mapcircle(map, D*0.5, 1);
 			} else{
 				create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dx, dy, offset, guard, 0, 0, 0, parms->fit.square);
 			}

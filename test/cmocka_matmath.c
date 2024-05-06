@@ -108,7 +108,6 @@ void test_dcircle(){
 	assert_float_equal(grad[1], -0.7, 0.1);
 	dcog(grad, A, 0, 0, 0, 0, 0);
 	dzero(A);
-	assert_int_equal(dcircle_symbolic(A, 3, 5, 1, 1, r), 0);
 	//dshow(A, "A");
 
 	r2=sqrt(dsum(A)/M_PI);

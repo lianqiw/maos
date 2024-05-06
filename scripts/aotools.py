@@ -490,12 +490,14 @@ def cog_shift(data):
 def plot_circle(radius, center=[0, 0], *args):
     '''plot_circle(radius, *args):'''
     theta=np.arange(0,np.pi*2,0.01)
-    if type(radius) is list or type(radius) is np.ndarray:
+    if isinstance(radius, (list, tuple, np.ndarray)):
         rx=radius[0]
         ry=radius[1]
     else:
         rx=radius
         ry=radius
+    if isinstance(center, (list, tuple, np.ndarray))==False:
+        center=[center,center]
     plot(rx*np.cos(theta)+center[0], ry*np.sin(theta)+center[1], *args)
 
 def calc_width_gauss(dx,data):

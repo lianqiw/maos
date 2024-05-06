@@ -55,7 +55,7 @@
     X(mat) *X(pinv)(const X(mat) *A, const_anyarray W) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     int X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
-    int X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);	\
+	int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val); \
     void X(rotvec)(X(mat) *A, const R theta);				\
     void X(rotvect)(X(mat) *A, const R theta);				\
     void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta);		\

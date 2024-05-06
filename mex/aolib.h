@@ -58,6 +58,7 @@ dmat* psd1dt(dmat* data, long nseg, double dt);
 dmat* mk2dcov(loc_t* loc, const dmat* amp, double ampthres, const dmat* cov, int norm);
 void mkw=mkw_circular(loc_t*loc, double cx, double cy, double r, dsp**W0, dmat**W1);
 void dcircle(dmat* A,double cx, double cy, double dx, double dy, double r, double val);
+void drectangle(dmat *A, double cx, double cy, double rx, double ry, double theta, double val);
 dmat* servo_cl2ol(const dmat* psdcl, double dt, long dtrat, double al, double gain, double sigma2n);
 dcell *servo_optim(double dt, long dtrat, long al, double pmargin, double f0, double zeta, int servo_type, const dmat *psdin, const dmat *sigma2n);
 double servo_optim_margin(double dt, long dtrat, double al, double pmargin, double f0, double zeta);

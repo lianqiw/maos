@@ -81,14 +81,6 @@ void mapcircle(map_t* map, real r, real val){
 }
 
 /**
-   Create a circular aperture on map_t.
-*/
-void mapcircle_symbolic(map_t* map, real r){
-	if(!check_nonempty(map)) return;
-	dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
-}
-
-/**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
 void map_d_din(map_t* map, real* d, real* din){
@@ -220,7 +212,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 				real sx=-ox+(P(dirs, 0, idir)*ht);
 				real sy=-oy+(P(dirs, 1, idir)*ht);
 				real RR=R*(1.-ht/P(dirs, 2, idir))+guard;
-				dcircle_symbolic(dmap, sx, sy, dx, dy, RR);
+				dcircle(dmap, sx, sy, dx, dy, RR, 1);
 			}
 			for(int i=0; i<nx*ny; i++){
 				P(dmap,i)=(P(dmap,i))>1.e-15?1:0;
