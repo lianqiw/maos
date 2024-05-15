@@ -31,7 +31,7 @@ PNEW2(mutex_fftw);
 /**
    Create a new thread and forget.
 */
-int thread_new(thread_fun fun, void* arg){
+pthread_t thread_new(thread_fun fun, void* arg){
 	int ans;
 	pthread_t temp;
 	pthread_attr_t attr;
@@ -44,7 +44,8 @@ int thread_new(thread_fun fun, void* arg){
 	if((ans=pthread_create(&temp, &attr, fun, arg))){
 		error("pthread_create failed with answer %d\n", ans);
 	}
-	return ans;
+	if(ans) temp=0;
+	return temp;
 }
 /**
    Break out the job to be executed by multiple threads.

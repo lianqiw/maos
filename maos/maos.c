@@ -431,7 +431,8 @@ int main(int argc, const char* argv[]){
 		register_signal_handler(maos_signal_handler);
 		scheduler_start(NTHREAD, ngpu, !arg->force);
 		//Launches a thread to wait for scheduler commands.
-		if(scheduler_listen(maos_listener)){
+		pthread_t plistener;
+		if(!(plistener=scheduler_listen(maos_listener))){
 			info2("Failed to start maos_listener\n");
 		}
 		setup_parms_gpu(parms, arg->gpus, arg->ngpu);//only do this after start running
@@ -454,6 +455,7 @@ int main(int argc, const char* argv[]){
 				maos_sim();
 			}
 		}
+		if(plistener) pthread_cancel(plistener);
 		rename_file(signal_caught);
 		draw_final(1);
 	}

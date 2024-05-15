@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2022 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
 
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -16,23 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_CUDA_GPU_MATH_H
-#define AOS_CUDA_GPU_MATH_H
-#define AOS_CUDA_H
 /**
- * \file gpu_math.h
- * Routines that can be used by CPU.
+ * \file gpu_ext.c
+ *
+ * Test external routines
  * */
-#if defined(__cplusplus) && !USE_CPP
-extern "C"{
-#endif
-#include "../../lib/aos.h"
-void gpu_dsvd(dmat **U, dmat **S, dmat **Vt, const dmat *A);
-void gpu_dsvd_pow(dmat *A_, real pow, real thres);
-void gpu_dgemm(dmat **out, const real beta, const dmat *A, const dmat *B, const char trans[2], const real alpha);
-void gpu_dgemm_test();
-void gpu_dsvd_test();
-#if defined(__cplusplus) && !USE_CPP
+#include "../math/gpu_math.h"
+int main(){
+	gpu_dgemm_test();
+	gpu_dsvd_test();
 }
-#endif
-#endif

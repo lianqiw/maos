@@ -302,20 +302,20 @@ static int scheduler_connect_self(int block){
    scheduler for commands.
    It requires a new connection to the scheduler to avoid data racing.
 */
-int scheduler_listen(thread_fun fun){
+pthread_t scheduler_listen(thread_fun fun){
 	if(!fun) return 0;
 	int	sock=scheduler_connect_self(0);
+	pthread_t ans=0;
 	if(sock!=-1){
 		int cmd[2];
 		cmd[0]=CMD_MAOSDAEMON;
 		cmd[1]=getpid();
 		stwriteintarr(sock, cmd, 2);
-		thread_new(fun, (void*)(long)sock);
-		return 0;
+		ans=thread_new(fun, (void*)(long)sock);
 	} else{
 		warning_time("Failed to connect to scheduler\n");
-		return -1;
 	}
+	return ans;
 }
 
 static int psock=-1;

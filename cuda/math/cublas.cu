@@ -24,12 +24,20 @@
 #include "curmat.h"
 #include "cucmat.h"
 #include <cusolverDn.h>
-
+int NULL_STREAM=0;
 static cusparseMatDescr_t spdesc=NULL;
 static __attribute((constructor)) void init(){
 	DO(cusparseCreateMatDescr(&spdesc));
 	cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(spdesc, CUSPARSE_INDEX_BASE_ZERO);
+	char *tmp=getenv("CUDA_LAUNCH_BLOCKING");
+	if(tmp){
+		int blocking=strtol(tmp, NULL, 10);
+		if(blocking){
+			warning("CUDA_LAUNCH_BLOCKING is enabled. Use only NULL stream\n");
+			NULL_STREAM=1; //Use only default stream
+		}
+	}
 }
 
 

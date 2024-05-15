@@ -22,7 +22,6 @@ int nstream=0;
 #define MEM_RESERVE 50000000 
 int NGPU=0;
 int MAXGPU=0;
-int NULL_STREAM=0;
 Array<int> GPUS;
 cudata_t** cudata_all=NULL;/*for all GPU. */
 cuglobal_t* cuglobal=NULL; /*global data*/
@@ -35,14 +34,6 @@ static __attribute((constructor)) void init(){
 #ifdef __APPLE__
 	pthread_key_create(&cudata_key, NULL);
 #endif
-	char* tmp=getenv("CUDA_LAUNCH_BLOCKING");
-	if(tmp){
-		int blocking=strtol(tmp, NULL, 10);
-		if(blocking){
-			warning("CUDA_LAUNCH_BLOCKING is enabled. Use only NULL stream\n");
-			NULL_STREAM=1; //Use only default stream
-		}
-	}
 }
 
 /**

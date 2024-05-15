@@ -106,15 +106,10 @@ void test_dcircle(){
 	dcog(grad, A, 0, 0, 0, 0, 0);
 	assert_float_equal(grad[0], 0.1, 0.1);
 	assert_float_equal(grad[1], -0.7, 0.1);
-	dcog(grad, A, 0, 0, 0, 0, 0);
-	dzero(A);
-	//dshow(A, "A");
 
 	r2=sqrt(dsum(A)/M_PI);
 	assert_float_equal(r+1, r2, 0.5);
 	info("r=%g, r2=%g, grad=%g %g\n", r, r2, grad[0], grad[1]);
-
-
 }
 
 int main(void){

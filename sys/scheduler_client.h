@@ -36,7 +36,7 @@ const char *lookup_hostaddr(const char *hostname);
 const char *lookup_hostname(const char *hostaddr);
 /*called by maos */
 int scheduler_connect(const char* hostname);
-int scheduler_listen(thread_fun fun);
+pthread_t scheduler_listen(thread_fun fun);
 void scheduler_report_path(const char* path);
 void scheduler_start(int nthread, int ngpu, int waiting);
 void scheduler_finish(int status);

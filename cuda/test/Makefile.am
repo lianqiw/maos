@@ -7,12 +7,12 @@ HEADER_LIB=gpu_test.h
 EXTRA_DIST=$(HEADER_LIB)
 
 if USE_CUDA
-bin_PROGRAMS=gpu_mvm_daemon gpu_mvm_test gpu_test
+bin_PROGRAMS=gpu_mvm_daemon gpu_mvm_test gpu_test gpu_ext
 gpu_mvm_daemon_SOURCES=gpu_mvm_daemon.c mvm_daemon.cu 
 gpu_mvm_test_SOURCES=gpu_mvm_test.c mvm_iwfs.cu mvm_test.cu mvmfull_iwfs.cu mvmfull_pipe.cu mvmfull_real.cu
 gpu_test_SOURCES=gpu_test.cu
+TESTS=gpu_ext
 endif
-
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:
 	$(AM_V_CC)$(NVCC) $(CUDAOPT) $(CCBINOPT) -c -o $@ $<
