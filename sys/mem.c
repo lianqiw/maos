@@ -846,13 +846,12 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else if(sig==SIGUSR1){//Use SIGUSR1 to enable MEM_DEBUG and print memory infromation
 		memkey_init(1);
 		return;
-		//SIGUSR2 is raised by error()	
 	}else if(sig==SIGTERM && siginfo){
 		char sender[PATH_MAX]={0};
 		get_job_progname(sender, PATH_MAX, siginfo->si_pid);
 		info("Code is %d, send by %d (uid=%d, %s).\n",
 			siginfo->si_code, siginfo->si_pid, siginfo->si_uid, sender);
-	}
+	}//SIGUSR2 is raised by error()	
 	signal_caught=sig;
 	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
 	//sync();
@@ -880,8 +879,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 			warning("Setitimer failed\n");
 		}
 		//It is not safe to call backtrace in SIGSEGV, to prevent hang, we set an alarm to force quit
-		print_backtrace();
 	}
+	print_backtrace();
 	if(signal_handler){
 		dbg_time("Call signal_handler %p\n", signal_handler);
 		cancel_action=signal_handler(sig);

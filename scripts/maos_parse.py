@@ -133,8 +133,8 @@ def parse_func(srcdir, files):
                 print(args)
             if len(funname)>0:
                 funcs[funname]=[funtype, funarg, funname2]
-            else:
-                print("Skipped:", ln[end:closep], msg,"\n")
+            #else:
+                #print("Skipped:", ln[end:closep], msg)
             end=closep+1;
             if ln[end]==';' or ln[end]==' ':
                 end+=1

@@ -47,7 +47,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 	dcell* p0=NULL;
 	dcell* Ap=NULL;
 	real ak, bk;
-	real r0z0=dcellinn(b, b);/*|b| */
+	real r0z0=dcelldot(b, b);/*|b| */
 	real res[maxiter+1];
 	res[maxiter]=0;
 	dbg2("CPU %sCG %d:", M?"P":"", maxiter);
@@ -63,11 +63,11 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 				z0=r0;
 			}
 			dcellcp(&p0, z0);
-			r0z1=dcellinn(r0, z0);
+			r0z1=dcelldot(r0, z0);
 		}
 		if(LOG_LEVEL>1){
 			if(Mmul){
-				res[k]=sqrt(dcellinn(r0, r0)/r0z0);
+				res[k]=sqrt(dcelldot(r0, r0)/r0z0);
 			} else{
 				res[k]=sqrt(r0z1/r0z0);
 			}
@@ -77,7 +77,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 
 		if(Ap) dcellzero(Ap);
 		(*Amul)(&Ap, A, p0, 1);
-		ak=r0z1/dcellinn(p0, Ap);
+		ak=r0z1/dcelldot(p0, Ap);
 		if(isinf(ak)){
 			ak=0;
 			goto end;
@@ -85,7 +85,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 		dcelladd(&x0, 1, p0, ak);/*x0=x0+ak*p0 */
 		dcelladd(&r0, 1, Ap, -ak);/*r0=r0-ak*Ap */
 		if(k+1==maxiter){//final residual
-			res[k+1]=sqrt(dcellinn(r0, r0)/r0z0);
+			res[k+1]=sqrt(dcelldot(r0, r0)/r0z0);
 			break;
 		}
 		if(Mmul){
@@ -93,7 +93,7 @@ real pcg(dcell** px,    /**<[in,out] The output vector. input for warm restart.*
 		} else{
 			z0=r0;
 		}
-		r0z2=dcellinn(r0, z0);/*r0z2=r0'*r0 */
+		r0z2=dcelldot(r0, z0);/*r0z2=r0'*r0 */
 		bk=r0z2/r0z1;
 		dcelladd(&p0, bk, z0, 1.);/*p0=bk*pi+r0 */
 		r0z1=r0z2;

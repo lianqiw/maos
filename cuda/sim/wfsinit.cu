@@ -361,9 +361,9 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						if(!parms->powfs[ipowfs].llt){
 							int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
-							cmat* nominal=ccell_col(powfs[ipowfs].dtf[iwvl].nominal, icol);
+							dmat* nominal=dcell_col(powfs[ipowfs].dtf[iwvl].nominal, icol);
 							cp2gpu(cuwfs[iwfs].dtf[iwvl].nominal, nominal);
-							cfree(nominal);
+							dfree(nominal);
 						}
 						//ETF moved to gpu_wfsgrad_update_etf();
 					}/*for iwvl. */

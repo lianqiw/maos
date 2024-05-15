@@ -19,6 +19,6 @@
 #ifndef AOS_LIB_PHASE_RETRIEVAL_H
 #define AOS_LIB_PHASE_RETRIEVAL_H
 #include "../math/mathdef.h"
-dmat* gerchberg_saxton(const dmat *phi1b, const dmat *amp1, const dmat *amp2, const dmat *mode, const dmat *rmod, const real fembed, int nrep);
+void gerchberg_saxton(dmat **pphi1, dmat **mphi1, const dmat *phi1b, const dmat *amp1, const dmat *amp2, const dmat *mode, const dmat *rmod, const real fembed, int nrep);
 
 #endif

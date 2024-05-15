@@ -80,7 +80,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 			cembed_locstat(&P(fftxopd, ips), 0, P(extra->xloc, ips), P(P(xin, ips)), alpha, 0);
 		}
 		cfft2(P(fftxopd, ips), -1);
-		ccwmd(P(fftxopd, ips), P(invpsd, ips), 1);
+		ccwmd(P(fftxopd, ips), P(invpsd, ips));
 		cfft2(P(fftxopd, ips), 1);
 		if(extra->square){
 			dmat* xouti=NULL;

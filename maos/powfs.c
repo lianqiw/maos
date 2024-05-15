@@ -141,7 +141,7 @@ sa_reduce(powfs_t* powfs, int ipowfs, real thresarea){
 			dmax(saa));
 	}
 
-	if(powfs[ipowfs].pts->nsa>4){
+	if(powfs[ipowfs].saloc->nloc>4){
 		loc_t* ptsloc=LOC(powfs[ipowfs].pts);
 		loc_create_map(ptsloc);
 		real dx1=1./ptsloc->dx;
@@ -921,7 +921,7 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	dmat* pixoffx=0;
 	dmat* pixoffy=0;
 	if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
-		const int nsa=powfs[ipowfs].pts->nsa;
+		const int nsa=powfs[ipowfs].saloc->nloc;
 		if(fabs(parms->powfs[ipowfs].pixoffx)<1){
 			info("powfs%d: uniform pixel offset\n", ipowfs);
 			//both pixoff within 1 denotes constant offset in unit of pixel.
@@ -1168,7 +1168,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(lltcfg->fnamp){
 		map_t* lltamp=mapread("%s", lltcfg->fnamp);
 		prop_grid_pts(lltamp, llt->pts, P(llt->amp), 1, 0, 0, 1, 1, 0, 0);
-		sumamp2=dinn(llt->amp, llt->amp);
+		sumamp2=ddot(llt->amp, llt->amp);
 		mapfree(lltamp);
 	} else{
 		real* amps=P(llt->amp);
@@ -1603,7 +1603,7 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int nsa=powfs[ipowfs].pts->nsa;
+				int nsa=powfs[ipowfs].saloc->nloc;
 				if(!P(powfs[ipowfs].gradncpa, jwfs)){
 					P(powfs[ipowfs].gradncpa, jwfs)=dnew(nsa*2, 1);
 				}
@@ -1655,6 +1655,21 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 	return powfs;
 }
 /**
+ * Petaling mode control
+*/
+void setup_shwfs_petaling(powfs_t *powfs, const parms_t *parms, int ipowfs){
+	if(!parms->recon.petaling||!parms->powfs[ipowfs].lo) return;
+	real nembed=2;
+	real dsa=powfs[ipowfs].pts->dsa;
+	real dtheta=parms->powfs[ipowfs].wvlmean/(nembed*dsa);
+	real pdtheta=parms->powfs[ipowfs].pixtheta/dtheta;
+	warning("powfs[%d].pdtheta=%g\n", ipowfs, pdtheta);
+	powfs[ipowfs].petal=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, powfs[ipowfs].amp, pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, 0);
+	if(parms->save.setup){
+		petal_save(powfs[ipowfs].petal, "petal_%d", ipowfs);
+	}
+}
+/**
    Setup physical optics parameters for SHWFS, such as DTF, ETF, LLT, pixel processing.
 */
 void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
@@ -1682,10 +1697,12 @@ void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 			if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy){
 				setup_shwfs_phygrad(powfs, parms, ipowfs);
 			}
+			setup_shwfs_petaling(powfs, parms, ipowfs);
 		}
 	}/*ipowfs */
 	toc2("setup_shwfs_phy");
 }
+
 /**
    free unused parameters before simulation starts
 */
@@ -1755,6 +1772,7 @@ void free_powfs(const parms_t* parms, powfs_t* powfs){
 	free_powfs_unused(parms, powfs);
 	free_powfs_fit(powfs, parms);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(powfs[ipowfs].petal) petal_free(powfs[ipowfs].petal, powfs[ipowfs].saloc->nloc);
 		free_powfs_geom(powfs, ipowfs);
 		free_powfs_shwfs(powfs, ipowfs);
 		pywfs_free(powfs[ipowfs].pywfs);

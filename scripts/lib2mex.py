@@ -3,17 +3,18 @@
 #Convert functions defined in aolib.h to aolib.c with conversion
 
 from __future__ import print_function
-import sys
+import sys,os.path
 import glob
 import maos_parse
 from pathlib import Path
-if len(sys.argv)>2:
+if len(sys.argv)>2 and os.path.isdir(sys.argv[1]+'/maos/'):
     srcdir=sys.argv[1]
     fnout=sys.argv[2]
 else:
     srcdir=str(Path.home())+'/work/programming/aos'
     fnout=srcdir+'/mex/aolib.c'
-
+if not os.path.isdir(srcdir+'/maos/'):
+    raise(Exception('Unable to find maos source dir'))
 simu_all=list()
 
 headerlist=glob.glob(srcdir+'/lib/*.h')

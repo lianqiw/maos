@@ -112,6 +112,24 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 		}
 	}
 }
+void plot_gradoff(sim_t *simu, int iwfs){
+	const parms_t *parms=simu->parms;
+	if(parms->plot.run){
+		if(iwfs<0){
+			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
+				plot_gradoff(simu, iwfs);
+			}
+		}else{
+			int ipowfs=parms->wfs[iwfs].powfs;
+			int draw_single_save=draw_single;
+			draw_single=0;
+			drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),
+				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
+				"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
+			draw_single=draw_single_save;
+		}
+	}
+}
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
@@ -982,7 +1000,11 @@ static void wfsgrad_dither_post(sim_t* simu){
 			int ptype2=parms->powfs[ipowfs].phytype_sim2;
 			if(parms->powfs[ipowfs].dither==-1||(ptype2==PTYPE_MF)){
 				if(parms->powfs[ipowfs].dither==-1){
-					info2("Step %5d: Update sodium fit for powfs %d\n", isim, ipowfs);
+					if(parms->powfs[ipowfs].llt){
+						info2("Step %5d: Update sodium fit for powfs %d\n", isim, ipowfs);
+					}else{
+						info2("Step %5d: Update i0 processing for powfs %d\n", isim, ipowfs);
+					}
 				} else{
 					info2("Step %5d: Update matched filter for powfs %d\n", isim, ipowfs);
 				}
@@ -1072,7 +1094,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 				}
 				//i0 is collected
 				if(parms->powfs[ipowfs].dither==-1){
-					if(parms->powfs[ipowfs].llt){//LGS, require fiting sodiu profile
+					if(parms->powfs[ipowfs].llt){//LGS, require fiting sodium profile
 						dmat* sodium=0;
 						dcell* grad=0;
 						//don't need gradient output for matched filter
@@ -1346,21 +1368,73 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				for(int ilayer=0; ilayer<nlayer; ilayer++){
 					dmm(&P(simu->gradoff, iwfs), 1, P(recon->GRall, iwfs, ilayer), P(Rmod, ilayer), "nn", -simu->eptwfs);
 				}
-
-				if(parms->plot.run){
-					int draw_single_save=draw_single;
-					draw_single=0;
-					drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),
-						parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-						"WFS Offset", "x (m)", "y (m)", "Gtwfs %d", iwfs);
-					draw_single=draw_single_save;
-				}
+				plot_gradoff(simu, iwfs);
 			}
 		}
 		if(parms->save.gradoff){
 			writebin(simu->gradoff, "extra/gradoff_%d_twfs", simu->wfsisim);
 		}
 		dcellfree(Rmod);
+	}
+}
+/**
+ * Reconstruct petal modes
+*/
+void wfsgrad_petal_recon(sim_t *simu){
+	const parms_t *parms=simu->parms;
+	const powfs_t *powfs=simu->powfs;
+
+	if(!simu->petal_i0){
+		simu->petal_i0=dccellnew(2,1);
+	}
+	if(!simu->petal_m){
+		simu->petal_m=dcellnew(3,1);
+	}
+	int isim=simu->wfsisim;
+	const int nrep=8;
+
+	for(int ir=0; ir<2; ir++){
+		int ipowfs=0;
+		if(ir==0&&parms->ittfpowfs!=-1){
+			ipowfs=parms->ittfpowfs;
+		} else if(ir==1&&parms->ittpowfs!=-1){
+			ipowfs=parms->ittpowfs;
+		}else{
+			continue;
+		}
+		if(isim<parms->powfs[ipowfs].step) continue;
+		int iwfs=P(parms->powfs[ipowfs].wfs, 0);
+		dcelladd(&P(simu->petal_i0, ir), 1, P(simu->ints, iwfs), 1);
+		if((isim+1-parms->powfs[ipowfs].step)%parms->recon.petaldtrat==0){
+			dcellscale(P(simu->petal_i0,ir), 1./parms->recon.petaldtrat);
+			//info("i0 sum is %g\n", dcellsum(P(simu->petal_i0, ir)));
+			dmat *phib=ir==1?P(simu->petal_m, 0):NULL;
+			petal_solve(NULL, &P(simu->petal_m, ir), powfs[ipowfs].petal, P(simu->petal_i0, ir), phib, nrep);
+			/*if(parms->plot.run){
+				draw("Petal", (plot_opts){ .image=P(P(simu->petal_i0, ir), 0) }, "PSF of first subaperture", "x", "y", "powfs %d", ipowfs);
+			}*/
+			if(parms->save.recon){
+				writebin(P(simu->petal_i0,ir), "petal_i0_%d_%d", ir, isim);
+			}
+			dcellzero(P(simu->petal_i0, ir));
+			
+			if(ir==1){
+				dadds(P(simu->petal_m, 1), -dmean(P(simu->petal_m, 1)));//remove piston
+				dshow(P(simu->petal_m, 1), "Step%6d: petaling output", isim);
+				real rad2m=parms->powfs[parms->ittfpowfs].wvlmean/TWOPI;//radian to m
+				dscale(P(simu->petal_m, 1), rad2m);//convert to m
+				int idm=parms->idmground;
+				dcellzero(simu->dmtmp);
+				real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
+				dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
+				dcellmm(&simu->gradoff, simu->recon->GA, simu->dmtmp, "nn", -gain);
+				if(parms->plot.run){
+					drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
+					plot_gradoff(simu, -1);
+				}
+				servo_add(simu->dmint, simu->dmtmp, gain);
+			}
+		}
 	}
 }
 /**
@@ -1382,6 +1456,9 @@ void* wfsgrad(sim_t* simu){
 	}
 	if(parms->itpowfs!=-1){
 		wfsgrad_twfs_recon(simu);
+	}
+	if(parms->recon.petaling){
+		wfsgrad_petal_recon(simu);
 	}
 	if(parms->plot.run){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

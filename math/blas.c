@@ -153,7 +153,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
 			const X(mat)* wt=(X(mat)*)W;
 			if(wt->ny==wt->nx){
 				X(mm)(&AtW, 0, A, wt, "tn", 1);
-			} else if(wt->ny==1&&wt->nx==A->nx){
+			} else if(PN(wt)==A->nx){
 				AtW=X(new)(A->ny, A->nx);
 				for(long iy=0; iy<A->ny; iy++){
 					for(long ix=0;ix<A->nx; ix++){
@@ -161,7 +161,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
 					}
 				}
 			} else{
-				error("Invalid format\n");
+				error("Invalid format: A is %ldx%ld, W is %ldx%ld\n", NX(A),NY(A),NX(W),NY(W));
 			}
 		} else if(issp(W)){//sparse
 			const X(sp)* Wsp=X(sp_cast)(W);

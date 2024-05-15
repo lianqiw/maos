@@ -24,7 +24,7 @@ for prof in $profs;do
   for za in $zas;do
 	base="-c nfiraos_lgs_pyttf.conf evl.fov=$fov fit.fov=$fov " #AO configuration
 	base+=" atm_mk13n${prof}p.conf sim.zadeg=$za " #seeing and telescope condition
-	base+=" save.extra=0 evl.psfmean=1 evl.psf=[1 0 0 0 0 0 0 0 0] evl.psfisim=10000" #save extra telemetry, on axis PSF time average from evl.psfisim step for only the on axis field.
+	base+=" save.extra=0 evl.psfmean=1 evl.psf=[1 0 0 0 0 0 0 0 0] evl.psfisim=2000" #save extra telemetry, on axis PSF time average from evl.psfisim step for only the on axis field.
 	base+=" sim.end=5000 sim.seeds=[1,10,20,30] " #simulation length and seeds,
 
 	for ((imag=$imag0; imag<$imag1; imag++));do

@@ -18,14 +18,26 @@
 
 #include "../math/mathdef.h"
 #include "phase.h"
-dmat* gerchberg_saxton(
-  const dmat *phi1b,      /**<[In/Out] The (intial and) final pupil phase estimate in radian.*/
-  const dmat *amp1, /**<[In]Pupil amplitude map. size is n*n. embeded. */
-  const dmat *amp2, /**<[In]Field amplitude map. size is n*n. usually square root of the PSF.*/
-  const dmat *mode, /**[In]modal matrix. If not null, project pupil phase update onto the mode span*/
-  const dmat *rmod, /**[In]modeal reconstructor. If not null, project pupil phase update onto the mode span*/
-  const real fembed,/**<[in]Embeded factor for amp1*/
-  const int nrep    /**<[In]Number of repeatitions*/
+/// @brief 
+/// @param pphi1 
+/// @param mphi1 
+/// @param phi1b 
+/// @param amp1 
+/// @param amp2 
+/// @param mode 
+/// @param rmod 
+/// @param fembed 
+/// @param nrep 
+void gerchberg_saxton(
+	dmat **pphi1, /**<[Out]The final pupil phase estimate in radian. same dimension as amp1.*/
+	dmat **mphi1, /**<[Out]The phase update in modes only if mode and rmode are set.*/
+  	const dmat *phi1b,      /**<[In] The intial final pupil phase estimate in radian.*/
+  	const dmat *amp1, /**<[In]Pupil amplitude map. size is n*n. embeded. */
+  	const dmat *amp2, /**<[In]Field amplitude map. size is m*m. usually square root of the PSF. */
+  	const dmat *mode, /**[In]modal matrix. If not null, project pupil phase update onto the mode span*/
+  	const dmat *rmod, /**[In]modeal reconstructor. If not null, project pupil phase update onto the mode span*/
+  	const real fembed,/**<[in]Embeded factor for amp1*/
+  	const int nrep    /**<[In]Number of repeatitions*/
   ){
 	if(!amp1 || !amp2){
 		error("amp1, and am2 must be all set\n");
@@ -36,9 +48,9 @@ dmat* gerchberg_saxton(
 	cmat *wvf1=cnew(nx, ny);
 	dmat *amp1e=NULL;//same size as wvf1
 	dmat *amp2e=NULL;//same size as wvf1
-	dmat *phi1u=NULL;//unembeded phi1e
 	dmat *phi1e=NULL;//phase estimate.
 	dmat *phi1v=NULL;//phi1e as vector
+	dmat *phi1u=NULL;//phase estimated unembeded.
 	dmat *mv=NULL;//modal estimate
 	if(nx!=NX(amp1)||ny!=NY(amp1)){
 		amp1e=dnew(nx, ny);
@@ -58,10 +70,25 @@ dmat* gerchberg_saxton(
 	}else{
 		cembedd(wvf1, amp1, 0);
 	}
-	if(mode){
-		phi1u=dnew(NX(amp1), NY(amp1));
+	if(pphi1){
+		dinit(pphi1, NX(amp1), NY(amp1));
+		phi1u=*pphi1;
+	}else{
+		phi1u=dnew(NX(amp1),NY(amp1));
 	}
+	if(mphi1){
+		dinit(mphi1, NX(rmod), 1);
+		mv=*mphi1;
+	}
+	//info("nrep=%d, sum(amp1e)=%g, sum(amp2e)=%g, max(amp2e)=%g\n", nrep, dsum(amp1e), dsum(amp2e), dmax(amp2e));
+	/*{
+		static int count=0; count++;
+		writebin(amp2e, "amp2e_%d", count);
+	}*/
 	dfftshift(amp2e);
+	if(P(amp2e,0)>1 ||P(amp2e,0)<0.1){
+		warning("Amplitude at the focal plane is %g, outside of range [0.1,1]\n", P(amp2e,0));
+	}
 	for(int irep=0; irep<nrep; irep++){
 		cfft2(wvf1, -1);//to image plane
 		for(long i=0; i<PN(wvf1); i++){
@@ -90,6 +117,6 @@ dmat* gerchberg_saxton(
 	dfree(phi1e);
 	dfree(phi1v);
 	cfree(wvf1);
-	dfree(mv);
-	return phi1u;
+	if(!mphi1) dfree(mv);
+	if(!pphi1) dfree(phi1u);
 }

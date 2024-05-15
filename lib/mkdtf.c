@@ -22,6 +22,62 @@
 #include "mkdtf.h"
 #include "mkh.h"
 /**
+	Create a chess pattern on nominal that absorbes fftshift
+	fft[nominal*otf(peak in corner)] gives psf in center.
+*/
+void cotf_treat(cmat *wvf){
+	cfftshift(wvf);//peak in corner
+	cfft2(wvf, -1);//peak in corner
+	cfftshift(wvf);//peak in center
+	cfft2(wvf, 1);//peak in corner with chess pattern. fft again will bring peak to center
+	cscale(wvf, 1./(real)(NX(wvf)*NY(wvf)));//cancel FFT scaling effect.
+}
+void dotf_treat(dmat *otf){
+	cmat *wvf=NULL;
+	ccpd(&wvf, otf);
+	cotf_treat(wvf);
+	creal2d(&otf, 0, wvf, 1);
+	cfree(wvf);
+}
+/**
+ * Create a OTF for pix blur and pixel binning effect
+ * @param notfx,notfy size of FFT
+ * @param pixrot	Rotation of pixel array against PSF (polar coordinate)
+ * @param pdtheta	Ratio of pixel dtheta vs PSF dtheta squared.
+ * @param pixblur   Pixel blur sigma(fraction of pixel)
+*/
+void dtf_otf(dmat **nominal, long notfx, long notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat){
+	const long notfx2=notfx>>1;
+	const long notfy2=notfy>>1;
+	real ct=pixrot!=0?cos(pixrot):1;
+	real st=pixrot!=0?sin(pixrot):0;
+	real duxp=pdthetax/notfx;
+	real duyp=pdthetay/notfy;
+	pixblur=fabs(pixblur);
+	real bxp2=-2*pow(M_PI*pixblur*duxp, 2);
+	real byp2=-2*pow(M_PI*pixblur*duyp, 2);
+	dinit(nominal, notfx, notfy);
+	for(long iy=0; iy<notfy; iy++){
+		long jy=iy-notfy2;
+		for(long ix=0; ix<notfx; ix++){
+			long jx=ix-notfx2;
+			real ir=ct*jx+st*jy;
+			real ia=-st*jx+ct*jy;
+			//Pixel function
+			P(*nominal, ix, iy)=(pdthetax?sinc(ir*duxp)*sinc(ia*duyp)*pdthetax*pdthetay:1)*(pixblur?exp(bxp2*(ir*ir)+byp2*(ia*ia)):1);
+			/*if(ix==0 && iy==0){
+				info("%g, %g, %g, %g\n", (ir*duxp), (ia*duyp), bxp2*(ir*ir), byp2*(ia*ia));
+			}*/
+		}
+	}
+	if(treat==1){
+		dotf_treat(*nominal);
+	}else if(treat==2){
+		dfftshift(*nominal);
+	}
+}
+
+/**
    mkdtf() computes the parameters used to sample PSFs onto detectors in the
    Fourier domain. It incorporates size of the detector pixels, and charge
    diffusion. For polar coordinate detectors, it also rotates the pixels and
@@ -39,17 +95,17 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	real pixthetay,   /**<Pixel size along y (a)*/
 	const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
 	const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
-	real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
+	const real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
 	const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 ){
 	int nwvl=NX(wvls)*NY(wvls);
 	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
 	dtfs->nwvl=nwvl;
-	const real blurx=pixblur*pixthetax;
-	const real blury=pixblur*pixthetay;
-	const real e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
-	const real e0y=-2*M_PI*M_PI*blury*blury;
-	const int do_blur=fabs(blurx)>EPS&&fabs(blury)>EPS;
+	//const real blurx=pixblur*pixthetax;
+	//const real blury=pixblur*pixthetay;
+	//const real e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
+	//const real e0y=-2*M_PI*M_PI*blury*blury;
+	//const int do_blur=fabs(blurx)>EPS&&fabs(blury)>EPS;
 	const long notfx2=notfx>>1;
 	const long notfy2=notfy>>1;
 	const real pxo=-(pixpsax*0.5-0.5)*pixthetax;
@@ -64,18 +120,13 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		const real dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
 		const real dux=1./(dtheta*notfx);
 		const real duy=1./(dtheta*notfy);
-		const real dux2=dux*dux;
-		const real duy2=duy*duy;
-		const real pdtheta=pixthetax*pixthetay/(dtheta*dtheta);//scaling factor due to binning into detectors
-		const real duxp=dux*pixthetax;
-		const real duyp=duy*pixthetay;
 		/*For LGS WFS (srot!=NULL), there is elongation effect. For radial pixel
 		  CCD without using rotating psf/otf method, we need to create
 		  nominal/si for each subaperture. The PSF/OTF and hence DTF are on x/y
 		  coordinate, so pixels and pixel coordinates need to rotated to r/a
-		  direction. */
-		//When DTF is along x/y coord, pixel is r/a coord, or when there is pixoffx, we need multiple DTFs.
-		
+		  direction. When DTF is along x/y coord, pixel is r/a coord, or when
+		  there is pixoffx, we also need multiple DTFs.
+		*/
 		dtfs[iwvl].dtheta=dtheta;
 		dtfs[iwvl].dxsa=dxsa;
 		dtfs[iwvl].radpix=pixrot?1:0;
@@ -86,62 +137,32 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		dtfs[iwvl].pixpsay=pixpsay;
 		dtfs[iwvl].pixthetax=pixthetax;
 		dtfs[iwvl].pixthetay=pixthetay;
-		dtfs[iwvl].nominal=ccellnew_same(nsa, nwfs, notfx, notfy);
+		dtfs[iwvl].nominal=dcellnew_same(nsa, nwfs, notfx, notfy);
 		dtfs[iwvl].si=dspcellnew(nsa, nwfs);
-		ccell* nominals=dtfs[iwvl].nominal;
+		dcell* nominals=dtfs[iwvl].nominal;
 		dspcell* sis=dtfs[iwvl].si;
-		cmat* nominal=cnew(notfx, notfy);
 		//Coordinate of PSF points
 		loc_t* loc_psf=mksqloc(notfx, notfy, dtheta, dtheta, -notfx2*dtheta, -notfy2*dtheta);
 		real theta=0;
-		real ct=cos(theta);
-		real st=sin(theta);
+		//real ct=1;
+		//real st=0;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			for(int isa=0; isa<nsa; isa++){
 				if(pixrot){
 					theta=P(PR(pixrot,iwfs,0),isa);
-					ct=cos(theta);
-					st=sin(theta);
 				}
-
-				for(int iy=0; iy<notfy; iy++){
-					int jy=iy-notfy2;
-					for(int ix=0; ix<notfx; ix++){
-						int jx=ix-notfx2;
-						real ir=ct*jx+st*jy;
-						real ia=-st*jx+ct*jy;
-						//Pixel function
-						P(nominal, ix, iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
-						if(do_blur){//Charge diffusion.
-							P(nominal, ix, iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
-						}
-					}
-				}
-				/*put peak in corner. */
-				cfftshift(nominal);
-				/*Embed a fftshift operation in nominal so that we avoid fftshift when forming i0.*/
-				cfft2(nominal, -1);
-				cfftshift(nominal);
-				cfft2(nominal, 1);
-				//cancel FFT scaling effect.
-				cscale(nominal, 1./(real)(NX(nominal)*NY(nominal)));
-				ccp(&P(nominals, isa, iwfs), nominal);
+				dtf_otf(&P(nominals, isa, iwfs), notfx, notfy, pixthetax/dtheta, pixthetay/dtheta, theta, pixblur, 1);
 				//Coordinate of pixels
-				
 				real dx=pixoffx?(PR(pixoffx, isa, iwfs)*pixthetax):0;
 				real dy=pixoffy?(PR(pixoffy, isa, iwfs)*pixthetay):0;
-			
 				loc_t* loc_ccd=mksqloc(pixpsax, pixpsay, pixthetax, pixthetay, pxo-dx, pyo-dy);
 				locrot(loc_ccd, theta);
 				P(sis, isa, iwfs)=mkh(loc_psf, loc_ccd, 0, 0, 1);
 				locfree(loc_ccd);
 			}/*isa */
 		}/*iwfs */
-		cfree(nominal);
 		locfree(loc_psf);
 
-		/*Create an excessive high frequency in nominal so that
-		  we don't have to do fftshift later.*/
 		dtfs[iwvl].Ux=cnew(notfx, 1);
 		dtfs[iwvl].Uy=cnew(notfy, 1);
 		comp* Ux=P(dtfs[iwvl].Ux);
@@ -258,8 +279,8 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 							const real kr=(ct*kx+st*ky);/*along radial*/
 							for(int ih=0; ih<nhp; ih++){
 								if(pna[illt][ih]>0){
-									const real tmp=(-2*M_PI*(kr*(rsa*cosza/(px[ih]-htel)-rsa/hs)));
-									P(etf2d, icompx, icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
+									const real tmp=(-TWOPI*(kr*(rsa*cosza/(px[ih]-htel)-rsa/hs)));
+									P(etf2d, icompx, icompy)+=pna[illt][ih]*EXPI(tmp);
 								}
 							}
 						}
@@ -378,7 +399,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 		//fuse nominal to etf to avoid multiply again.
 		for(int illt=0; illt<nllt; illt++){
 			for(int isa=0; isa<nsa; isa++){
-				ccwm(P(petf, isa, illt), PR(dtfs[iwvl].nominal, isa, illt));
+				ccwmd(P(petf, isa, illt), PR(dtfs[iwvl].nominal, isa, illt));
 			}
 		}
 	}//for iwvl

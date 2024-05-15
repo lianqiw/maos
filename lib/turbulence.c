@@ -348,40 +348,25 @@ mapcell* genscreen_str(const char* keywords){
 				dfree(opd);
 				locfree(loc);
 			}else if(!isnan(petal)){
+				int npetal=(int)search_keyword_num_default(keywords, "npetal", 6);
 				info("Generating petal modes for %g nm RMS.\n", rmsnm);
-				int nseg=(int)petal;
-				rand_t rstat;
-				seed_rand(&rstat, (int)seed);
+				
 				//real dtheta=TWOPI/nseg;
 				real theta0=search_keyword_num_default(keywords, "theta0", 0);
-				//real cx=search_keyword_num_default(keywords, "cx", nx/2);
-				//real cy=search_keyword_num_default(keywords, "cy", ny/2);
-				int piston=(int)search_keyword_num_default(keywords, "piston", 0);
-				int tip=(int)search_keyword_num_default(keywords, "tip", 0);
-				int tilt=(int)search_keyword_num_default(keywords, "tilt", 0);
-				dmat *mod=dnew(nseg+1, 3);
-				if(piston<0 && piston+nseg>0){
-					P(mod,-piston,0)=rmsnm*1e-9;
-				}else if(tip<0 && tip+nseg>0){
-					P(mod, -tip, 1)=rmsnm*1e-9*4.*sqrt(petal)/nx;
-				}else if(tilt<0&&tilt+nseg>0){
-					P(mod, -tilt, 2)=rmsnm*1e-9*4.*sqrt(petal)/nx;
-				}else{
-				int flag=(piston?1:0) | (tip?2:0) | (tilt?4:0);
-				if(!flag) flag=7;//all modes
-					for(int imod=0; imod<3; imod++){
-						if((1<<imod)&flag){
-							for(int iseg=0; iseg<nseg; iseg++){
-								P(mod, iseg, imod)=(imod==0?1:4.*sqrt(petal)/nx)*rmsnm*1e-9*randn(&rstat);
-								P(mod, nseg, imod)+=P(mod, iseg, imod);
-							}
-							for(int iseg=0; iseg<nseg; iseg++){//remove average effect.
-								P(mod, iseg, imod)-=P(mod, nseg, imod)/nseg;
-							}
-						}
-					}
+				real cx=search_keyword_num_default(keywords, "cx", nx/2);
+				real cy=search_keyword_num_default(keywords, "cy", ny/2);
+				dmat *mod=dnew(npetal, 1);
+				if(petal<0 && petal+npetal>0){
+					P(mod,-(int)petal,0)=1;//a single petal
+				}else{//randomized
+					rand_t rstat;
+					seed_rand(&rstat, (int)seed);
+					drandn(mod, 1, &rstat);
 				}
-				petal_opd(P(surfs, 0), dx, nseg, theta0, mod);
+				dadds(mod, -dmean(mod));//remove average piston
+				dshow(mod,"petal mode");
+				dscale(mod, rmsnm*1e-9);
+				petal_opd(P(surfs, 0), cx, cy, npetal, theta0, mod);
 				dfree(mod);
 			}
 		}

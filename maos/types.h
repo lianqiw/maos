@@ -137,6 +137,8 @@ typedef struct powfs_t{
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     struct pywfs_t *pywfs;/**<For pyramid WFS*/
     struct fit_t *fit;  /**<Fit turbulence to lenslet grid. For aliasing computation.*/
+	//for petal mode mitigation using phase retrieval
+	petal_t *petal; /**<Petaling mode reconstruction tools*/
 }powfs_t;
 
 /**
@@ -295,6 +297,7 @@ typedef struct recon_t{
     lcell *actfloat;   /**<floating actuators*/
     lcell *actstuck;   /**<stuck actuators*/
     dcell *amod;       /**<ndmx1. Zernike/KL modes defined on aloc for modal control*/
+	dsp *apetal;      /**<Petal mode defined at the ground DM*/
     lmat *anmod;       /**<Sizeof of amod*/
 
     fit_t *fit;        /**<Holding data and parameters for DM fitting.*/
@@ -386,7 +389,6 @@ typedef struct recon_t{
 
     //For Error PSD computation
     cell *Herr;      /**<Ray tracing from DM along science directions for a few points. dcell for modal control. sparse for zonal control*/
-
 }recon_t;
 
 typedef struct sim_save_t{
@@ -552,6 +554,9 @@ typedef struct sim_t{
     dcell *llt_fsmcmd;    /**<LLT common path pointing mirror command*/
     dcell *llt_fsmreal;    /**<LLT common path pointing mirror state after sho filtering*/
     sho_t **llt_fsmsho; /**<LLT common path pointing mirror state*/
+	/*petaling mode*/
+	dccell *petal_i0;   /**<WFS accumulated i0.*/
+	dcell *petal_m;   /**<Petal estimator output.*/
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/

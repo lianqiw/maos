@@ -138,7 +138,7 @@ OMP_TASK_FOR(4)
 		cellfree(junk);
 	}*/
 }
-static void recon_split(sim_t* simu){
+static void recon_split_lo(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
 	const int isim=simu->reconisim;
@@ -500,7 +500,7 @@ void* reconstruct(sim_t* simu){
 	}
 
 	if(parms->recon.split){//low order reconstruction
-		recon_split(simu);
+		recon_split_lo(simu);
 	}
 	if(parms->recon.psd&&parms->sim.closeloop){
 		recon_servo_update(simu);

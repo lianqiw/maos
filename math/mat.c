@@ -411,22 +411,36 @@ void X(set)(X(mat)* A, const T val){
 */
 void X(show)(const X(mat)* A, const char* format, ...){
 	format2fn;
-	info("Displaying content of %s:\n", fn);
+	if(PN(A)>20){
+		info("Displaying content of %s (%ldx%ld):\n", fn, NX(A), NY(A));
+	}else{
+		info("%s:", fn);//display inline
+	}
 	if(!check_mat(A)) return;
 	int colmax=10;
 	int rowmax=10;
-	int iset, i, j;
+	//int iset, i, j;
 	int nset=1;//(A->ny+colmax-1)/colmax;
-	for(iset=0; iset<nset; iset++){
+	for(int iset=0; iset<nset; iset++){
 		int ncol=(iset+1)*colmax;
-		if(ncol>A->ny) ncol=A->ny;
-		info("Cols %d to %d\n", iset, ncol-1);
-		int nxmax=MIN(A->nx, rowmax);
-		for(j=0; j<nxmax; j++){
-			for(i=iset*colmax; i<ncol; i++){
-				PRINT(P(A, j, i));
+		if(A->ny==1){//Display horizontaly
+			if(ncol>A->nx) ncol=A->nx;
+			if(ncol>100) ncol=100;
+			for(int i=0; i<ncol; i++){
+				PRINT(P(A,i));
+				if ((i+1)%colmax==0) info("\n");
 			}
-			info("\n");
+			if(ncol%colmax!=0) info("\n");
+		}else{
+			if(ncol>A->ny) ncol=A->ny;
+			//info("Cols %d to %d\n", iset, ncol-1);
+			int nxmax=MIN(A->nx, rowmax);
+			for(int j=0; j<nxmax; j++){
+				for(int i=iset*colmax; i<ncol; i++){
+					PRINT(P(A, j, i));
+				}
+				info("\n");
+			}
 		}
 	}
 }
@@ -485,7 +499,7 @@ int X(flip)(X(mat)* A, int axis){
 	return 0;
 }
 /**
-   create sum of all the elements in A.
+   Calculate sum of all the elements in A.
 */
 T X(sum)(const X(mat)* A){
 	T v=0;
@@ -493,6 +507,13 @@ T X(sum)(const X(mat)* A){
 		v=X(vecsum)(P(A), A->nx*A->ny);
 	}
 	return v;
+}
+/**
+   Calculate average of all the elements in A.
+*/
+T X(mean)(const X(mat) *A){
+	if(!A) return 0;
+	return X(sum)(A)/PN(A);
 }
 /**
    compute the trace (sum of diagonal elements)

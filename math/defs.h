@@ -114,7 +114,7 @@
 #define CARG(A) 0
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
-#define PRINT(A) info(" %10.3e",A);
+#define PRINT(A) info(" %10.3g",A);
 
 /*Double Complex */
 #else
@@ -210,7 +210,7 @@ static inline int issp(const void* id){
 #define ABS2(A) REAL((A)*CONJ(A))
 
 static inline int ismat(const void* id){
-	return id?(*((const M_ID*)id)==M_T):0;
+	return id?(*((const M_ID*)id)&M_T)==M_T:0;
 }
 //Check that A is valid and has mat type and has non zero size.
 #define check_mat1(A) ((A)?(check(ismat(A))?1:(error("type id mismatch, got %x, expect %x\n", *(M_ID*)A, M_T),0)):0)

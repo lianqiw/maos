@@ -100,7 +100,7 @@ static void* psfiris_do(thread_t* info){
 	dfree(P(psf_lgs,iwvl));
 	cfftshift(otf);
 	cfft2(otf, 1);
-	ccwmd(otf, (dmat*)otf_fine, 1);
+	ccwmd(otf, (dmat*)otf_fine);
 	mapfree(otf_fine);
 	double sumpsf=creal(P(otf,0));
 	double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9, 2))/(notf2*notf2);
@@ -110,7 +110,7 @@ static void* psfiris_do(thread_t* info){
 		double dxsa=30;//30 meter
 		double embfac=wvl/dtheta2/dxsa;
 		dtf_t* dtf=mkdtf(wvlmat, dxsa, embfac, notf2, notf2, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL);
-		ccwm(otf, P(dtf->nominal,0));
+		ccwmd(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,iwvl)=dnew(npix, npix);
 		dspmulcreal(P(P(output,iwvl)), P(dtf->si,0), P(otf), impst/sumpsf);

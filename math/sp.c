@@ -399,7 +399,7 @@ void X(spmuldiag)(X(sp)* restrict A, const T* w, T alpha){
 
 /**
  * Multiply two vectors with weighting by sparse matrix.  return y'*(A*x)*/
-T X(spwdinn)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
+T X(spwdot)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 	/*X(sp) weighted ddot. */
 	/*computes y'*(A*x). x,y are vectors */
 	T res=0;
@@ -414,14 +414,14 @@ T X(spwdinn)(const X(mat)* y, const X(sp)* A, const X(mat)* x){
 				}
 			}
 		} else{
-			res=X(inn)(x, y);
+			res=X(dot)(x, y);
 		}
 	}
 	return res;
 }
 /**
  * Multiply two cell arrays with weighting by sparse matrix*/
-T X(spcellwdinn)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
+T X(spcellwdot)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 	/*computes y'*(A*x) */
 	T res=0;
 	if(x&&y){
@@ -432,11 +432,11 @@ T X(spcellwdinn)(const X(cell)* y, const X(spcell)* A, const X(cell)* x){
 			/*PSX(cell)* Ap=A; */
 			for(int iy=0; iy<A->ny; iy++){
 				for(int ix=0; ix<A->nx; ix++){
-					res+=X(spwdinn)(P(y, ix), P(A, ix, iy), P(x, iy));
+					res+=X(spwdot)(P(y, ix), P(A, ix, iy), P(x, iy));
 				}
 			}
 		} else{
-			res=X(cellinn)(x, y);
+			res=X(celldot)(x, y);
 		}
 	}
 	return res;
@@ -872,7 +872,28 @@ void X(spcelldroptol)(X(spcell)* A, R thres){
 		X(spdroptol)(P(A,i), thres);
 	}
 }
-
+/**
+ * Drop empty columns
+*/
+lmat *X(spdropemptycol)(X(sp)*A){
+	if (!A) return NULL;
+	lmat *pmap=lnew(A->ny, 1);
+	long jcol=0;
+	for(long icol=0; icol<A->ny; icol++){
+		if(icol!=jcol){//there are skipped cols
+			A->pp[jcol]=A->pp[icol];
+		}
+		P(pmap, jcol)=icol;
+		if(A->pp[icol+1]>A->pp[icol]){//valid col
+			jcol++;
+		}
+	}
+	A->pp[jcol]=A->pp[A->ny];
+	A->ny=jcol;
+	lresize(pmap, jcol, 1);
+	//no need to modify A->pp vector
+	return pmap;
+}
 typedef struct spelem{
 	int pi;
 	T px;

@@ -20,15 +20,17 @@ try:
 except:
     natsorted=sorted
 try:
-    from libaos import *
+    import libaos as aos
 except:
     import lib2py #it generates libaos
-    from libaos import *
-
+    import libaos as aos
+from libaos import read,write
 from readbin import readbin, headers
 from draw import draw, locembed
 from maos_result import maos_res, maos_res_tot, maos_res_hi, maos_res_each, maos_cumu
 #import maos_client
+def error(msg):
+    raise(Exception(msg))
 def sind(x):
     return np.sin(x*np.pi/180)
 
@@ -220,7 +222,7 @@ def mk2dloc(shape):
 def mktt(amp):
     '''create piston/tip/tilt mode from amplitude map'''
     (nx,ny)=amp.shape
-    loc=mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2, amp.size)
+    loc=mksqloc(ny, nx, 2./ny, 2./nx, -1, -1).reshape(2, amp.size)
     loc[:,amp.flat<=0]=0
     return loc
 def mkptt(amp):
@@ -316,9 +318,15 @@ def plot_cdf(y, *args, **kargs):
     plot(np.sort(y.flat), x, *args, **kargs)
     ylim(0,1)
 
-def plot_cross(A):
+def plot_cross(A, n=0):
     '''Plot a cross section'''
-    plot(np.arange(A.shape[0])-A.shape[0]/2, A[:,A.shape[1]>>1])
+    if n==0 or n is None:
+        n=A.shape[0]
+        
+    n1=max((A.shape[0]-n)>>1,0)
+    n2=min((A.shape[0]+n)>>1,A.shape[0])
+    print(n1,n2,A.shape[0]>>1)
+    plot(np.arange(n1,n2)-(A.shape[0]>>1), A[n1:n2,A.shape[1]>>1])
 
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
@@ -361,12 +369,20 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
         radialprofile = tbin/nr # the answer
 
     return radialprofile
-def vec2d(A, nx=None): #reshape a vector to 2d array
+def check2d(A, nx=None): 
+    '''check shape of A and return a 2-d square array'''
+    while A.dtype==object or A.ndim>2:
+        if A.shape[0]==1:
+            A=A[0]
+        else:
+            error('Unable to process A with shape ', A.shape)
+    if A.ndim==2 and A.shape[0]==A.shape[1]:
+        return A
     if nx is None:
         nx=round(np.sqrt(A.size))
-    ny=int(A.size/nx)
+    ny=round(A.size/nx)
     if A.size!=nx*ny:
-        raise(Exception('Please provide correct nx'))
+        error('Please provide correct nx')
     return A.reshape(nx,ny)
 
 def center(A, nx=None, ny=None, ratio=None):
@@ -378,8 +394,7 @@ def center(A, nx=None, ny=None, ratio=None):
     elif A is None:
         return None
     '''crop or embed A into nxn array from the center'''
-    if A.ndim==1 or A.shape[0]==1 or A.shape[1]==1:
-        A=vec2d(A)
+    A=check2d(A)
     if ratio is not None:
         nx=int(A.shape[0]*ratio)
         ny=int(A.shape[1]*ratio)
@@ -468,20 +483,22 @@ def plot_psd_cumu(f, psd, plot_options='-'):
     psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
     semilogx(fr,psdr, plot_options)
 
-def cog(data):
+def cog(data, center=None):
     '''Center of gravity'''
     nx,ny=data.shape
     x=np.arange(nx)
     y=np.arange(ny)
+    if center is None:
+        center=((nx-1)/2,(ny-1)/2)
     [Y,X]=np.meshgrid(y,x)
     ss=np.sum(data)
-    cx=np.sum(X*data)/ss-(nx-1)/2
-    cy=np.sum(Y*data)/ss-(ny-1)/2
+    cx=np.sum(X*data)/ss-center[0]
+    cy=np.sum(Y*data)/ss-center[1]
     return cx,cy
 
-def cog_shift(data):
+def cog_shift(data, center=None):
     '''Shift cog to center'''
-    cx,cy=cog(data)
+    cx,cy=cog(data, center)
     ccx=-int(round(cx))
     ccy=-int(round(cy))
 
@@ -629,13 +646,17 @@ def calc_psf(amp, opd, wvl, fembed=2, wts=None):
         Compute PSF normalized by Strehl ratio.
         For multi-wavelength PSF, the sampling is matched to the first wavelength
     '''
+    
+    amp=check2d(amp)
+    opd=check2d(opd)
+    if amp.ndim!=2 or amp.shape[0]!=amp.shape[1]:
+        raise(Exception('Only supports square array'))
     if type(wvl) is list:
         wvl=np.asarray(wvl)
     if type(wvl) is np.ndarray:
         psfs=0
         wt=1/wvl.size
-        if amp.shape[0]!=amp.shape[1] or amp.ndim>2:
-            raise(Exception('Only supports square array'))
+
         nx=amp.shape[0]
         wvl0=np.mean(wvl) #.flat[0]
         if type(wts) is list:
@@ -679,9 +700,10 @@ def gerchberg_saxton_py(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nre
     #rng = np.random.default_rng(1)
     if fembed!=1:
         A1=embed(A1, ratio=fembed)
-        A2=embed(A2, ratio=fembed)
-        if P1B is not None:
-            P1B=embed(P1B, ratio=fembed)
+    if A1.shape[0]!=A2.shape[0]: 
+        A2=center(A2, A1.shape[0])
+    if P1B is not None:
+        P1B=center(P1B, A1.shape[0])
 
     if P1B is not None:
         P1E=P1B.copy()
@@ -711,7 +733,8 @@ def gerchberg_saxton_py(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nre
             if P1B is not None:
                 P1E-=P1B
             P1E=unembed(P1E, ratio=fembed)
-            P1E=np.reshape((P1E.flat@rmodes)@modes, P1E.shape) #project onto modes
+            mv=(P1E.flat@rmodes) #project onto modes
+            P1E=np.reshape(mv@modes, P1E.shape) 
             P1E=embed(P1E, ratio=fembed)
             if P1B is not None:
                 P1E+=P1B
@@ -721,7 +744,10 @@ def gerchberg_saxton_py(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nre
         print(err)
     if fembed!=1:
         P1E=unembed(P1E, ratio=fembed)
-    return P1E
+    if modes is None:
+        return P1E
+    else:
+        return P1E,mv
 
 def split_even_odd(A, doshift=0):
     '''
@@ -792,3 +818,20 @@ def nanmin(A, *args, **kargs):
         warnings.simplefilter("ignore", category=RuntimeWarning)
         return np.nanmin(A, *args, **kargs)
     
+def dtf_blur(psf, notf, blur):
+    '''Add (blur>0) or remove (blur<0) detector blury function'''
+    if psf.ndim==3:
+        psfout=np.zeros(psf.shape)
+        for i in range(psf.shape[0]):
+            psfout[i]=dtf_blur(psf[i], notf, blur)
+        return psfout
+    wvf=fft2(center(check2d(psf), notf))
+    otf=aos.dtf_otf(notf, notf, 1, 1, 0, abs(blur), 2)
+    #aos.deblur(psf2, otf)
+    if blur>=0:
+        wvf*=otf
+    else:
+        wvf[otf!=0]/=otf[otf!=0]
+    psfout=np.real(ifft2(wvf))
+    psfout[psfout<0]=0
+    return center(psfout, psf.shape[0])

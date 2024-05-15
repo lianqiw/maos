@@ -317,6 +317,11 @@ static void filter_cl(sim_t* simu){
 	//for modal reconstruction, it should be before the conversion.
 	if(parms->recon.psol){
 		dcellcp(&simu->dmpsol, simu->dmtmp);//dmpsol should be before extrapolation
+		if(parms->recon.psol&&recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
+			//zero stuck actuators so that gradpsol still contains gradients caused
+			//by stuck actuators, so that MVR can smooth it out.
+			act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
+		}
 	}
 	if(!parms->recon.modal && simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
 		//Extrapolate to edge actuators
@@ -325,8 +330,6 @@ static void filter_cl(sim_t* simu){
 	} else{
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
-	//The DM commands are always on zonal modes from this moment
-
 	if(simu->ttmreal){
 		ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
 	}
@@ -347,11 +350,6 @@ static void filter_cl(sim_t* simu){
 		dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
 	}
 
-	if(parms->recon.psol&&recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
-	//zero stuck actuators so that gradpsol still contains gradients caused
-	//by stuck actuators, so that MVR can smooth it out.
-		act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
-	}
 	if(parms->dbg.dmoff){
 		info_once("Add injected DM offset vector\n");
 		int icol=(isim+1)%NY(parms->dbg.dmoff);

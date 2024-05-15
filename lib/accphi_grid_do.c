@@ -407,7 +407,7 @@ void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*
 		phiout+start*nxout, nxout, end-start,
 		dxout, dyout, oxout, oyout+dyout*start,
 		alpha, wrap);
-	WARN_MISSING;
+	WARN_MISSING(nxout*(end-start));
 }
 
 void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
@@ -446,7 +446,7 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
 	}
-	WARN_MISSING;
+	WARN_MISSING((end-start)*nxout*nyout);
 }
 
 void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
@@ -484,6 +484,6 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 			phiout+offset, nxout, nyout,
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
+		WARN_MISSING(nxout);
 	}
-	WARN_MISSING;
 }

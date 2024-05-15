@@ -274,6 +274,7 @@ static void readcfg_powfs(parms_t *parms){
 		real wvlmax=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			real wvl=P(wvllist,count+iwvl);
+			
 			if(wvl>1e-3){
 				wvl=wvl*1e-6;
 			}
@@ -420,21 +421,25 @@ static void readcfg_powfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		real wvlmax=dmax(powfsi->wvl);
 		if(powfsi->dsa<=-1){//Order
-			powfsi->dsa=parms->aper.d/(-powfsi->dsa);
-		} else if(powfsi->dsa<0){//In unit of d
-			powfsi->dsa*=-parms->aper.d;
-		} else if(powfsi->dsa==0){
-			if(powfsi->lo){
-				error("powfs[%d].dsa=%g must be set for LO powfs.\n", ipowfs, powfsi->dsa);
-			} else{//Follow ground DM.
-				if(parms->ndm){
-					powfsi->dsa=parms->dm[0].dx;
-				} else{
-					powfsi->dsa=0.5;
+			powfsi->order=(int)(-powfsi->dsa);
+			powfsi->dsa=parms->aper.d/powfsi->order;
+		} else {
+			if(powfsi->dsa<0){//In unit of aper.d
+				powfsi->dsa*=-parms->aper.d;
+			}else if(!powfsi->dsa){
+				if(powfsi->lo){
+					error("powfs[%d].dsa=%g must be set for LO powfs.\n", ipowfs, powfsi->dsa);
+				} else{//Follow ground DM.
+					if(parms->ndm){
+						powfsi->dsa=parms->dm[0].dx;
+					} else{
+						powfsi->dsa=0.5;
+					}
 				}
 			}
+			powfsi->order=ceil(parms->aper.d/powfsi->dsa);
 		}
-		powfsi->order=ceil(parms->aper.d/powfsi->dsa);
+		
 		if(isfinite(powfsi->hs)){//LGS
 			if(!powfsi->fnllt){
 				error("powfs%d is at finity range but LLT is not specified.\n", ipowfs);
@@ -881,6 +886,7 @@ static void readcfg_siglev(parms_t *parms){
 		}else{
 			dcp(&parms->powfs[ipowfs].wvlwts, parms->wfs[iwfs0].wvlwts);
 		}
+		parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->powfs[ipowfs].wvlwts)/dsum(parms->powfs[ipowfs].wvlwts);
 		powfs_wvl_count+=nwvl;
 		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
 		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);
@@ -1427,6 +1433,8 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.twfs_rmin);
 	READ_INT(recon.twfs_rmax);
 	READ_INT(recon.twfs_radonly);
+	READ_INT(recon.petaling);
+	READ_INT(recon.petaldtrat);
 }
 /**
    Read in simulation parameters
@@ -1889,9 +1897,6 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		dcp(&parms->ncpa.wt,parms->evl.wt);
 		dcp(&parms->ncpa.hs,parms->evl.hs);
 	}
-	if((parms->ncpa.nsurf||parms->ncpa.ntsurf)&&(parms->sim.idealfit||parms->sim.idealtomo)){
-		error("sim.idealfit or sim.idealtomo is not yet implemented for surf or tsurf.\n");
-	}
 }
 
 /**
@@ -1914,6 +1919,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			free(parms->wfs[iwfs].sabad);
 		}
 		free(parms->wfs); parms->wfs=NULL;parms->nwfs=0;
+		dfree(parms->cn2.pair);
 	}
 	if(parms->sim.evlol){
 		for(int idm=0; idm<parms->ndm; idm++){
@@ -1923,7 +1929,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	}
 
 	//Note that empty powfs have been removed in readcfg_wfs.
-
+	parms->ittfpowfs=-1;
+	parms->ittpowfs=-1;
 	parms->itpowfs=-1;
 	parms->ilgspowfs=-1;
 	parms->nlgspowfs=0;
@@ -1961,17 +1968,16 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->type!=WFS_SH){
 				error("sim.wfsalias is only supported for SHWFS\n");
 			}
-		}else if((powfsi->phystep>0||powfsi->dither)&&powfsi->phystep<powfsi->step){
-			warning("Dither requires physical optics mode from the beginning, changed.\n");
-			powfsi->phystep=powfsi->step;
 		}
-		if(powfsi->phystep>0){
-			/*round phystep to be multiple of dtrat. */
+		if(powfsi->dither||(parms->recon.petaling&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
+			if(powfsi->phystep==-1){
+				error("Physical optics mode for powfs %d is required.\n", ipowfs);
+			}else{
+				powfsi->phystep=powfsi->step;
+			}
+		}
+		if(powfsi->phystep>0){/*round phystep to be multiple of dtrat. */
 			powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
-		}
-		if(powfsi->type==WFS_PY&&powfsi->phystep!=0){
-			error("PWFS must always run in physical optics mode.\n");
-			powfsi->phystep=0;
 		}
 		/*Do we ever do physical optics.*/
 		if(powfsi->phystep>=0&&(powfsi->phystep<parms->sim.end||parms->sim.end==0)){
@@ -2001,7 +2007,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(powfsi->dither<-1){
 			powfsi->dither*=-1;
 			if(powfsi->type==WFS_PY&&parms->recon.modal){
-				info("Enable 2nd dithering mode if dither is <-1 for pywfs.\n");
+				info("Enable 2nd dithering mode when dither is <-1 for pywfs.\n");
 				powfsi->dither_mmd=1;
 			}
 		}
@@ -2065,6 +2071,12 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->gtype_sim==GTYPE_G&&powfsi->type==WFS_SH){
 				warning("Low order powfs%d is using gtilt instead of ztilt in simulation. "
 					"This is not recommended.\n",ipowfs);
+			}
+			if(parms->powfs[ipowfs].order==2 && parms->ittfpowfs==-1){
+				parms->ittfpowfs=ipowfs;
+			}
+			if(parms->powfs[ipowfs].order==1&&parms->ittpowfs==-1){
+				parms->ittpowfs=ipowfs;
 			}
 		} else{
 			P(parms->hipowfs,parms->nhipowfs)=ipowfs;

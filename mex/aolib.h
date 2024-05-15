@@ -102,3 +102,4 @@ double loc_remove_focus_grad(dmat *grad, const loc_t *saloc, double factor);
 dmat *psd2ts=psd2ts2(const dmat *psdin, int seed, real dt, int nstep);
 dmat *stfun=stfun_batch(const cell *psd, const dmat *amp);
 void dembed(dmat*out, dmat*in, double theta);
+void shift2center=dshift2center(dmat *A, real offx, real offy);

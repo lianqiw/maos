@@ -208,7 +208,7 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 			P(wvf, P(embed, iloc))=amp[iloc]*EXPI(wvk*P(opd, iloc));
 		}
 		cfft2(wvf, -1);
-		ccwmd(wvf, P(locfft->fieldmask, iwvl), 1);
+		ccwmd(wvf, P(locfft->fieldmask, iwvl));
 		cfft2(wvf, 1);
 	}
 	if(nwvl>1){

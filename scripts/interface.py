@@ -147,6 +147,23 @@ def py2cellref(arr, tid=0):
             return byref(cell(arr,tid))
     else:
         return byref(arr)
+def arr2object(arr): 
+    '''convert arrays with more than 3 dimensions to object arrays'''
+    if type(arr) is not np.ndarray:
+        print('Unsupported data type')
+        return arr
+    if arr.ndim<=2:
+        return arr
+    ndim=2-(arr.ndim%2)
+    arr2=np.empty((arr.shape[0:ndim]),dtype=object)
+    if ndim==2:
+        for i in range(arr2.shape[0]):
+            for j in range(arr2.shape[1]):
+                arr2[i,j]=arr2object(arr[i,j])
+    else:
+        for i in range(arr2.shape[0]):
+            arr2[i]=arr2object(arr[i])
+    return arr2
 class cell(Structure):
     _fields_ = [ #fields compatible with C type of cell and mat
         ('id', c_uint32),
@@ -175,7 +192,8 @@ class cell(Structure):
         }
         if type(arr) is list:
             arr=np.asarray(arr)
-        
+        if arr.ndim>2:
+            arr=arr2object(arr)
         if arr is not None:
             tmpid=dtype2id.get(arr.dtype.type)
             if tmpid is None:
@@ -189,8 +207,7 @@ class cell(Structure):
                 except:
                     raise(Exception('data mismatch want {}, got {}'.format(tmpid, tid)))
             self.id=tmpid
-            if arr.ndim>2:
-                print("init: Only use 2 dimensions\n");
+
             if arr.ndim>0:
                 self.nx=arr.shape[-1]
             if arr.ndim>1:
@@ -301,17 +318,19 @@ class loc(Structure):
         self.id= 222210 #0x036402 #M_LOC64
         if arr is not None:
             if len(arr.shape)!=2 or arr.shape[0] !=2 :
-                raise(Exception('Array has to of shape 2xn'))
+                raise(Exception('Array has to be of shape 2xn'))
             else:
                 if arr.flags['C']==False:
                     arr=self.arr=arr.copy()
+                if arr.dtype!=np.double:
+                    arr=arr.astype(np.double)
                 self.nloc=arr.shape[1]
                 self.two=2;
                 self.locx=arr[0,].ctypes.data_as(c_void_p)
                 self.locy=arr[1,].ctypes.data_as(c_void_p)
-                dlocx=arr[0,1:]-arr[0,0:-1]
+                dlocx=np.abs(arr[0,1:]-arr[0,0:-1])
                 self.dx=min(dlocx[dlocx>0])
-                dlocy=arr[1,1:]-arr[1,0:-1]
+                dlocy=np.abs(arr[1,1:]-arr[1,0:-1])
                 self.dy=min(dlocy[dlocy>0])
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero

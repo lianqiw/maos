@@ -6,7 +6,7 @@
 #derived from lib2mex.py
 
 #from __future__ import print_function
-import sys
+import sys,os
 import maos_parse
 from pathlib import Path
 import json
@@ -14,7 +14,8 @@ import keyword
 import glob
 srcdir=str(Path.home())+'/work/programming/aos'
 fnout=srcdir+'/scripts/libaos.py'
-
+if not os.path.isdir(srcdir+'/maos/'):
+    raise(Exception('Unable to find maos source dir'))
 simu_all=list();
 
 headerlist=glob.glob(srcdir+'/lib/*.h')
@@ -202,8 +203,9 @@ for funname in funcs: #loop over functions
         fundef+='\n    return '+pyargout
 
     if(fundef.find('Unknown'))>-1:
-        print("'''", file=fpout)
+        continue
+        #print("'''", file=fpout)
     print(fundef, file=fpout);
-    if(fundef.find('Unknown'))>-1:
-        print("'''", file=fpout)
+    #if(fundef.find('Unknown'))>-1:
+    #    print("'''", file=fpout)
 fpout.close()

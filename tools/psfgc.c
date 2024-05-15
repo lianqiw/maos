@@ -95,7 +95,7 @@ static void* psfiris_do(thread_t* info){
 		double embfac=wvl/dtheta/dxsa;
 		dbg("embfac=%g\n", embfac);
 		dtf_t* dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL);
-		ccwm(otf, P(dtf->nominal,0));
+		ccwmd(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,ipsf)=dnew(npix, npix);
 		dspmulcreal(P(P(output,ipsf)), P(dtf->si,0), P(otf), impst/sumpsf);

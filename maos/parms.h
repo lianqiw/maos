@@ -177,6 +177,7 @@ typedef struct pywfs_cfg_t{
 typedef struct powfs_cfg_t{
     dmat *wvl;     /**<list of wavelength in ascending order.*/
     dmat *wvlwts;  /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
+	real wvlmean;  /**<Average wavelength*/
     char *saloc;   /**<saloc override file*/
     real misregx;  /**<offset of saloc from pupil illumination in unit of dsa*/
     real misregy;  /**<offset of saloc from pupil illumination in unit of dsa*/
@@ -513,27 +514,28 @@ typedef struct recon_cfg_t{
     int alg;         /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
     int glao;        /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
     int split;       /**<split reconstruction/tomography type.
-		       - 0: integrated tomography
-		       - 1: adhoc split tomography
-		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
+						- 0: integrated tomography
+						- 1: adhoc split tomography
+						- 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int modal;       /**-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes*/
     int nmod;        /**<Maximum number of modes to control in modal controller*/
     int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
     int mvm;         /**<Use the various algorithms recon.alg to assemble a control
-		       matrix to multiply to gradients to get DM commands. If
-		       the algorithm needs PSOL gradient, we will have an
-		       auxillary matrix to multiply to the DM actuators and
-		       subtract from the result.*/
+						matrix to multiply to gradients to get DM commands. If
+						the algorithm needs PSOL gradient, we will have an
+						auxillary matrix to multiply to the DM actuators and
+						subtract from the result.*/
 
     int psd;         /**<Flag: compute PSDs of DM error signal averaged over aperture and field points (m^2/Hz).*/
-    int psddtrat_hi;   /**<how many time step to sample for PSD computation.*/
-    int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
+    int psddtrat_hi; /**<how many time step to sample for PSD computation.*/
+    int psddtrat_lo; /**<how many time step to sample for low order PSD computation.*/
 
     int psdnseg;     /**<how many overlapping partitions of the time history to compute PSD.*/
-    int twfs_rmin; /**<minimum zernike order (inclusive)*/
-    int twfs_rmax; /**<maximum zernike order (inclusive)*/
+    int twfs_rmin; 	 /**<minimum zernike order (inclusive)*/
+    int twfs_rmax;	 /**<maximum zernike order (inclusive)*/
     int twfs_radonly;/**<1: radial only, 0: all modes*/
-
+	int petaling;  	 /**1: enable petalling control*/
+	int petaldtrat;	 /**<how many time steps to average for petaling mode control.*/
     char **distortion_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
     char **distortion_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **distortion_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
@@ -553,13 +555,13 @@ typedef struct sim_cfg_t{
     int nseed;       /**<How many simulation seed*/
     int closeloop;   /**<closed loop or open loop*/
     dmat *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
-			freq in Hz, Second column is PSD in rad^2/Hz.*/
+						freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
     dmat *aphi;      /**<servo coefficient for high order dm.  A is command. e is
-			error signal. at time step n, the command is updated by
-			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
-		     */
+						error signal. at time step n, the command is updated by
+						A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
+						*/
     dmat *ephi;      /**<error gain for DM commands (high order)*/
 
     real f0dm;      /**<Natural frequency of the DMs.*/
@@ -876,6 +878,8 @@ typedef struct parms_t{
     int dither;      /**<Some WFS is doing dithering*/
     int ilgspowfs;   /**<Index of LGS WFS*/
     int nlgspowfs;   /**<Number of LGS WFS*/
+	int ittfpowfs;   /**<Index of ttf lo powfs. -1 if none*/
+	int ittpowfs;   /**<Index of tt lo powfs. -1 if none*/
     int itpowfs;     /**<Index of twfs*/
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/

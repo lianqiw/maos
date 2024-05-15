@@ -211,6 +211,9 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		if(!surfs) continue;
 		for(int isurf2=0; isurf2<PN(surfs); isurf2++){
 			map_t* surf=P(surfs, isurf2);
+			if(parms->plot.setup){
+				draw("Surf", (plot_opts){ .image=surf->dmat}, "Surface", "x", "y", "surf %d %d", isurf, isurf2);
+			}
 			//writebin((dmat*)surf, "surf_%d", isurf);
 			const char* strname=search_keyword(surf->keywords, "SURFNAME");
 			const char* strevl=search_keyword(surf->keywords, "SURFEVL");
@@ -462,7 +465,7 @@ static void lenslet_saspherical(const parms_t* parms, powfs_t* powfs, int ipowfs
 		dfree(ampw);
 		dscale(opdi, err/sqrt(var));
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+			for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 				for(int i=0; i<nxsa*nxsa; i++){
 					P(P(powfs[ipowfs].opdbias, jwfs), nxsa*nxsa*isa+i)+=P(opdi, i);
 				}
@@ -486,7 +489,7 @@ static void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			real Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
 			real rmax2=2*nx2*nx2*Rx2;
 			real scale=pv/rmax2;
-			for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+			for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 				for(int iy=0; iy<nxsa; iy++){
 					for(int ix=0; ix<nxsa; ix++){
 						real rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;

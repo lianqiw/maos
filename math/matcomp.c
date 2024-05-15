@@ -53,25 +53,11 @@ void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B, const R alpha){
 /**
    component multiply X(mat) A with XR(mat) B. A=A.*B;
  */
-void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B, const R alpha){
-	if(!check_mat(A, B)) return;
+void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B){
+	if(!check_mat(A) || !B) return;
 	const long ntot=A->nx*A->ny;
-	if(B){
-		if(fabs(alpha-1)>1.e-15){
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=P(B,i)*alpha;
-			}
-		} else{
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=P(B,i);
-			}
-		}
-	} else{
-		if(fabs(alpha-1)>1.e-15){
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=alpha;
-			}
-		}
+	for(long i=0; i<ntot; i++){
+		P(A,i)*=P(B,i);
 	}
 }
 

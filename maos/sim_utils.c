@@ -1668,6 +1668,8 @@ void free_simu(sim_t* simu){
 		dcellfree(simu->cleNGSmp);
 		dcellfree(simu->oleNGSmp);
 	}
+	cellfree(simu->petal_i0);
+	cellfree(simu->petal_m);
 	sim_save_t* save=simu->save;
 	zfarr_close_n(save->evlpsfhist, nevl);
 	zfarr_close_n(save->evlpsfhist_ngsr, nevl);

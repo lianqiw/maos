@@ -81,9 +81,9 @@ struct S{\
 	char *keywords;      /**<the keywords as a string*/         \
 	file_t *fp;          /**<The file, to be saved upon free*/  \
 	long nzmax;          /**<maximum number of entries */		\
-	spint *restrict pp;  /**<col indices (size nzmax)  */       \
-	spint *restrict pi;  /**<row indices, size nzmax */		    \
-	unsigned int *nref;           /**<reference counting for px, pp, pi*/\
+	spint *restrict pp;  /**<col indices (size ny+1)  */        \
+	spint *restrict pi;  /**<row indices (size nzmax) */	    \
+	unsigned int *nref;  /**<reference counting for px, pp, pi*/\
 }S
 
 

@@ -1285,7 +1285,7 @@ loc_t* pts2loc(pts_t* pts){
    Rotate the coordinates by theta (radian) CCW.
 */
 void locrot(loc_t* loc, const real theta){
-	if(!loc) return;
+	if(!loc||!theta) return;
 	const real ctheta=cos(theta);
 	const real stheta=sin(theta);
 

@@ -36,7 +36,37 @@
 /*
    Contains wfsints() that computes physical optics WFS
    subaperture images from OPDs.  */
-
+/**
+ * out=out*A*(B*wtb+C*wtc)
+ * A, B and C are optional except that when C is present, B must be.
+*/
+void apply_dtf_etf(cmat *out, dmat *A, cmat *B, real wtb, cmat *C, real wtc){
+	if(C){
+		if(A){
+			for(long i=0; i<PN(out); i++){
+				P(out, i)*=P(A, i)*(P(B, i)*wtb+P(C, i)*wtc);
+			}
+		}else{
+			for(long i=0; i<PN(out); i++){
+				P(out, i)*=(P(B, i)*wtb+P(C, i)*wtc);
+			}
+		}
+	}else if(B){
+		if(A){
+			for(long i=0; i<PN(out); i++){
+				P(out, i)*=P(A, i)*P(B, i);
+			}
+		}else{
+			for(long i=0; i<PN(out); i++){
+				P(out, i)*=P(B, i);
+			}
+		}
+	}else if(A){
+		for(long i=0; i<PN(out); i++){
+			P(out, i)*=P(A, i);
+		}
+	}
+}
 /**
    compute physical optics images and add to ints.  be careful that fftw inverse
    fft doesn't have 1/n^2 scaling.  this function lives inside the threading
@@ -174,7 +204,7 @@ void* wfsints(thread_t* thread_data){
 		}
 		int multi_nominal=(NX(powfs[ipowfs].dtf[iwvl].si)==nsa);
 		/* nominal and si are used to sampled PSF onto detector pixels */
-		cmat* nominal=NULL;
+		dmat* nominal=NULL;
 		dsp* si=NULL;
 		if(!multi_nominal){
 			/*true only if 1) no elongation, 2) no radpix */
@@ -254,18 +284,11 @@ void* wfsints(thread_t* thread_data){
 			}
 			/* we have otf here in psf*/
 			if(ints){
-				if(hasllt){/*has llt, multiply with DTF and ETF.*/
-					ccwm3(psf, nominal, P(petf1, isa, illt), etf1wt, petf2?P(petf2, isa, illt):0, etf2wt);
-				} else{/*no uplink, multiply with DTF only.*/
-					ccwm(psf, nominal);
-				}
-				TIM(3);
+				apply_dtf_etf(psf, nominal, petf1?P(petf1, isa, illt):0, etf1wt, petf2?P(petf2, isa, illt):0, etf2wt); TIM(3);
 				/*max(otf) is 1 after multiply with norm. peak in corner  */
-				cfft2(psf, 1);
-				TIM(2);
+				cfft2(psf, 1); TIM(2);
 				/*Now peak in center because nominal is pre-treated.  */
-				dspmulcreal(P(P(ints,isa)), si, P(psf), P(wvlwts,iwvl)*norm_ints);
-				TIM(4);
+				dspmulcreal(P(P(ints,isa)), si, P(psf), P(wvlwts,iwvl)*norm_ints); TIM(4);
 			}
 		}/*isa */
 	}/*iwvl */

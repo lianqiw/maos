@@ -34,7 +34,7 @@
    \f$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\f$
 */
 typedef struct dtf_t{
-    ccell* nominal;    /**<The FFT of the pixel functions, don't apply if etf exists .*/
+    dcell* nominal;    /**<The FFT of the pixel functions, don't apply if etf exists .*/
     dspcell* si;       /**<The pixel selection*/
     real wvl;          /**<Wavelength*/
     real dtheta;       /**<Sampling of PSF*/
@@ -57,7 +57,7 @@ typedef struct etf_t{
     int icol;            /**<Store the column index*/
     int nwvl;            /**<Number of dtf_t*/
 }etf_t;
-
+void dtf_otf(dmat **nominal, long notfx, long notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat);
 dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
     real dxsa,        /**<Subaperture size*/
     real embfac,      /**<Embedding factor (2)*/

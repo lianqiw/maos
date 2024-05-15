@@ -493,7 +493,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				}else if(cuwfs[iwfs].dtf[iwvl].nominal){
 					/*multiply with nominal only if there is no etf. nominal is fused to etf otherwise*/
 					int repeat=0;
-					Comp* pnominal=0;
+					Real* pnominal=0;
 					if(cuwfs[iwfs].dtf[iwvl].nominal.Ny()==1){
 						repeat=1;
 						pnominal=cuwfs[iwfs].dtf[iwvl].nominal.Col(0);

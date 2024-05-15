@@ -211,7 +211,7 @@ static void bench_ccwm(void){
     ccwm(A,B);
     toc("ccwm&ccwmcol");
     cset(A,1);
-    tic;
+    /*tic;
     ccwm3col(A,B,D,1,0,0);
     toc("ccwm3col");
     writebin(A,"A2.bin");
@@ -228,7 +228,7 @@ static void bench_ccwm(void){
     tic;
     ccwm3(E,A,B,1,0,0);
     toc("ccwm3");
-    writebin(E,"E2.bin");
+    writebin(E,"E2.bin");*/
 }
 /*TIC; */
 #if 0

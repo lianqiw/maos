@@ -309,13 +309,13 @@ void* prop(thread_t* data){
     const real c3=(2.*cubic_iac-0.5)*cubicn;\
     const real c4=(0.5-cubic_iac)*cubicn; 
 
-#define WARN_MISSING						\
+#define WARN_MISSING(ntot)					\
     {										\
 		static int printed=0;				\
 		if(missing>0 && !printed) {			\
 			printed=1;						\
-			warning("%d points not covered by input screen\n",	\
-				missing);					\
+			warning("%d out of %ld points not covered by input screen\n",	\
+				missing, (long)(ntot));		\
 			print_backtrace();				\
 		}									\
     }
@@ -475,7 +475,7 @@ OMP_TASK_FOR(2)
 		phiout[iloc]+=alpha*((m00+(m10-m00)*dplocx)*(1.-dplocy)
 							+(m01+(m11-m01)*dplocx)*    dplocy);
 	}
-	WARN_MISSING;
+	WARN_MISSING(end-start);
 }
 
 /**
@@ -502,7 +502,7 @@ void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP){
 		nplocy1=nplocy+1;
 		LINEAR_ADD_NONGRID;
 	}
-	WARN_MISSING;
+	WARN_MISSING(end-start);
 }
 /**
    Propagate OPD defines on coordinate locin to grid mapout. alpha is the
@@ -540,7 +540,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 			missing++;
 		}
 	}
-	WARN_MISSING;//will always be triggered.
+	WARN_MISSING((end-start)*nxout);//will always be triggered.
 }
 /**
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
@@ -581,7 +581,7 @@ void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP){
 			}
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING((end-start)*pts->nxsa*pts->nysa);
 }
 
 
@@ -614,7 +614,7 @@ OMP_TASK_FOR(4)
 			missing++;
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING(end-start);
 }
 /**
    Propagate OPD defines on grid mapin to coordinate locout with cubic influence
@@ -661,7 +661,7 @@ OMP_TASK_FOR(4)
 			}
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING((end-start)*pts->nxsa*pts->nysa);
 }
 /**
    like prop_grid_map() but with cubic influence functions. cubic_iac is the
@@ -694,7 +694,7 @@ OMP_TASK_FOR(2)
 			missing++;
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING((end-start)*nxout);
 }
 /**
    like prop_grid_stat() but with cubic influence function.
@@ -706,6 +706,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_STAT;
 	PREP_CUBIC_PARAM;
+	int nxout=0;
 OMP_TASK_FOR(2)
 	for(long icol=start; icol<end; icol++){
 		RUNTIME_CUBIC;
@@ -714,7 +715,7 @@ OMP_TASK_FOR(2)
 			SPLIT(dplocy, dplocy, nplocy);
 			dplocy0=1.-dplocy;
 			MAKE_CUBIC_COEFF_Y;
-			const int nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
+			nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
 			for(int ix=0; ix<nxout; ix++){
 				int iloc=ostat->cols[icol].pos+ix;//output index.
 				dplocx=myfma(ostat->cols[icol].xstart+ix*dxout, dx_in2, displacex);
@@ -730,7 +731,7 @@ OMP_TASK_FOR(2)
 		} else{
 			missing++;
 		}
-		WARN_MISSING;
+		WARN_MISSING(nxout);
 	}
 }
 /**
@@ -759,7 +760,7 @@ OMP_TASK_FOR(2)
 			missing++;
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING(end-start);
 }
 /**
    like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
@@ -798,7 +799,7 @@ OMP_TASK_FOR(2)
 			}
 		}
 	}
-	WARN_MISSING;
+	WARN_MISSING((end-start)*pts->nxsa*pts->nysa);
 }
 /**
    like prop_nongrid_map() but with cubic influence functions. cubic_iac is the
@@ -831,7 +832,7 @@ OMP_TASK_FOR(2)
 			missing++;
 		}
 	}
-	WARN_MISSING;//will always be triggered
+	WARN_MISSING((end-start)*nxout);//will always be triggered
 }
 
 /**

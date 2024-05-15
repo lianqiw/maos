@@ -51,4 +51,6 @@
 #include "zernike.h"
 #include "misc.h"
 #include "cure.h"
+#include "petal.h"
+#include "phase.h"
 #endif

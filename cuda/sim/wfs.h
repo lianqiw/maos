@@ -33,7 +33,7 @@ struct cuetf_t{
 	}
 };
 struct cudtf_t{
-	cucmat nominal;/*array for each sa. */
+	curmat nominal;/*array for each sa. */
 	cuetf_t etf[2];
 };
 struct cullt_t{

@@ -1360,7 +1360,6 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	}
 	locfree(eloc);
 }
-
 /**
    A few further operations that needs MVM.
  */
@@ -1382,6 +1381,13 @@ void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	}
 	if(parms->recon.psd){
 		setup_recon_psd(recon, parms);
+	}
+	if(parms->recon.petaling){
+		int idm=parms->idmground;
+		recon->apetal=petal_mkh_loc(P(recon->aloc,idm), 6, parms->aper.rot);
+		if(parms->save.setup){
+			writebin(recon->apetal, "apetal");
+		}
 	}
 	toc2("setup_recon_post");
 }
@@ -1534,6 +1540,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->dither_ra);
 	//cellfree(recon->GSF);
 	//cellfree(recon->RSF);
+	cellfree(recon->apetal);
 	free(recon);
 }
 

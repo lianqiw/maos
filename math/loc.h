@@ -108,7 +108,7 @@ loc_t* locshift(const loc_t* loc, real sx, real sy);
 void loc_nxny(long* nx, long* ny, const loc_t* loc);
 
 void locresize(loc_t* loc, long nloc);
-#define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
+#define ptsresize(pts, nsa) if(pts) locresize(pts->loc, nsa)
 void dembed_locstat(dmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void cembed_locstat(cmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void loc_dxdy(loc_t* loc);

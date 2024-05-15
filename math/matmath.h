@@ -30,16 +30,16 @@
     void X(randu)(X(mat) *A, const T mean, rand_t *rstat);		\
     void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);		\
     void X(scale)(X(mat) *A, R w);					\
-    T X(inn)(const X(mat)*A, const X(mat) *B);				\
+    T X(dot)(const X(mat)*A, const X(mat) *B);				\
     T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     void X(cwm)(X(mat) *A, const X(mat) *B);				\
     void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2);\
     void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W , const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);	\
-    void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
+    /*void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); */\
     void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B);	\
-    void X(cwmcol2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);		\
-    void X(cwmrow2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);		\
+    /*void X(cwmcol2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);*/		\
+    /*void X(cwmrow2)(X(mat) *restrict A,	const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2);*/		\
     void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
     void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha); \
     void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha); \
@@ -106,7 +106,7 @@
     R X(cellnorm)(const X(cell) *in);					\
     void X(cellscale)(anyarray A, R w);					\
     void X(celldropempty)(X(cell) **A0, int dim);			\
-    T X(cellinn)(const X(cell)*A, const X(cell)*B);			\
+    T X(celldot)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
@@ -126,7 +126,7 @@
 /*The following are only useful for cmat */
 #define AOS_CMATMATH_DEF(X,XR,T,R)					\
     void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha); \
-    void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha); \
+    void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B); \
     void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	const int nopdx, const int nopdy, const R wvl, const R theta);			\
     void X(embedc_flag)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \
     void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag);	\

@@ -49,13 +49,13 @@
     void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, R alpha); \
     void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const T alpha); \
     void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2], const T alpha); \
-    T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;	\
-    T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT; \
+    T X(spwdot)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;	\
+    T X(spcellwdot)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT; \
     void X(cellmm)(panyarray C0, const_anyarray A, const_anyarray B, const char trans[2], const R alpha);\
     X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]); \
 	X(sp) *X(2sp)(X(mat)*A, R thres) CHECK_UNUSED_RESULT; \
-    void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T f); \
-    void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const char trans, const T f); \
+    void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha); \
+    void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const char trans, const T alpha); \
     X(sp) *X(spadd2)(const X(sp) *A, T a, const X(sp)*B,T b) CHECK_UNUSED_RESULT; \
     void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta);		\
     void X(celladd)(panyarray pA, R ac, const_anyarray B, R bc);\
@@ -75,6 +75,7 @@
     void X(spclean)(X(sp) *A);						\
     void X(spdroptol)(X(sp) *A, R thres);				\
     void X(spcelldroptol)(X(spcell) *A, R thres);			\
+	lmat *X(spdropemptycol)(X(sp)*A);\
     void X(spsort)(X(sp) *A);						\
     void X(spcellsort)(X(spcell) *A);					\
     void X(spsym)(X(sp) **A);						\

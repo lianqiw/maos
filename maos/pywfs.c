@@ -181,7 +181,7 @@ void pywfs_setup(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 			if(nstop>npsf){
 				warning("field stop is not effective (bigger than PSF size).\n");
 			}
-			dbg("fieldstop is %g, dtheta is %g, nstop is %d\n", parms->powfs[ipowfs].fieldstop, dtheta, nstop);
+			dbg("fieldstop is %g\", dtheta is %g\", nstop is %d\n", parms->powfs[ipowfs].fieldstop*RAD2AS, dtheta*RAD2AS, nstop);
 		}
 		const long skip=notf>nstop?(notf-nstop)/2:0;
 		const real radius2=nstop*nstop*0.25;

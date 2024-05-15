@@ -347,7 +347,7 @@ OMP_TASK_FOR(8)
 				/*if(!seotfk){
 					seotfk=cnew(notfx, notfy);
 				}*/
-				cmat* nominal=NULL;
+				dmat* nominal=NULL;
 				dsp* si=NULL;
 				if(!etf){
 					nominal=PR(dtf[iwvl].nominal, isa, ii0);
@@ -375,7 +375,7 @@ OMP_TASK_FOR(8)
 				if(petf){/*elongation. */
 					ccwm(seotfk, PR(petf, isa, ii0));
 				}else if(nominal){//nominal is fused into etf.
-					ccwm(seotfk, nominal);
+					ccwmd(seotfk, nominal);
 				}
 				ccp(&seotfj, seotfk);/*save for later use*/
 				if(pfotf){

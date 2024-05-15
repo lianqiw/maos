@@ -52,6 +52,7 @@
     int X(flip)(X(mat)*A, int axis);\
     T X(vecsum)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+	T X(mean)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     void X(sort)(X(mat) *A, int ascend);				\
     void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\

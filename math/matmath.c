@@ -97,10 +97,10 @@ void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 }
 
 /**
-   compute the inner product of A and B. (inner product)
+   compute the dot product of A and B. (inner product)
 */
 
-T X(inn)(const X(mat)* A, const X(mat)* B){
+T X(dot)(const X(mat)* A, const X(mat)* B){
 	if(!check_match(A, B)) return -1;
 	TD out=0;
 	OMP_SIMD_R(reduction(+:out))
@@ -110,7 +110,7 @@ T X(inn)(const X(mat)* A, const X(mat)* B){
 	if(isnan(REAL(out))){
 		X(show)(A, "inn_A");
 		X(show)(B, "inn_B");
-		error("X(inn): NaN found\n");
+		error("X(dot): NaN found\n");
 	}
 	return out;
 }
@@ -152,6 +152,7 @@ OMP_SIMD()
 /**
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
+/*
 void X(cwm2)(X(mat)* restrict A, const X(mat)* B1, R wt1, const X(mat)* B2, R wt2){
 	if(!check_mat(A)){
 		warning("A is not valid\n");
@@ -176,13 +177,13 @@ OMP_SIMD()
 		}
 	}
 }
-
+*/
 
 /**
    component-wise multiply of three matrices.
    A=A.*W.*(B1*wt1+B2*wt2)
 */
-void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
+/*void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 	const X(mat)* restrict B1, R wt1, const X(mat)* restrict B2, R wt2){
 	if(!check_mat(A)){
 		warning("A is not valid\n");
@@ -211,7 +212,7 @@ void X(cwm3)(X(mat)* restrict A, const X(mat)* restrict W,
 		}
 	}
 }
-
+*/
 /**
    Component-wise multiply each column of A with B
    A(:,i)=A(:,i).*B;
@@ -232,7 +233,7 @@ void X(cwmcol)(X(mat)* restrict A, const X(mat)* restrict B){
    component-wise multiply of columns of A with combination of B1 and B2:
    A(:,i)=A(:,i)*(B1*wt1+B2*wt2);
 */
-void X(cwmcol2)(X(mat)* restrict A,
+/*void X(cwmcol2)(X(mat)* restrict A,
 	const X(mat)* restrict B1, const R wt1,
 	const X(mat)* restrict B2, const R wt2){
 	if(!check_mat(A)){
@@ -261,12 +262,12 @@ void X(cwmcol2)(X(mat)* restrict A,
 		X(cwmcol2)(A, B2, wt2, B1, wt1);
 	}
 }
-
+*/
 /**
    component wise multiply of 2d complex matrix A,W and 1d vector B.
    A(:,i)=A(:,i).*W(:,i).*B;
 */
-void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
+/*void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
 	const X(mat)* restrict B1, const R wt1,
 	const X(mat)* restrict B2, const R wt2){
 
@@ -296,7 +297,7 @@ void X(cwm3col)(X(mat)* restrict A, const X(mat)* restrict W,
 			X(cwm3col)(A, W, B2, wt2, B1, wt1);
 		}
 	}
-}
+}*/
 /**
    Component wise multiply each row of A with B.
    A(i,:)=A(i,:)*B
@@ -320,7 +321,7 @@ void X(cwmrow)(X(mat)* restrict A, const X(mat)* restrict B){
    component-wise multiply of rows of A with combination of B1 and B2:
    A(i,:)=A(i,:).*(B1*wt1+B2*wt2);
 */
-void X(cwmrow2)(X(mat)* restrict A,
+/*void X(cwmrow2)(X(mat)* restrict A,
 	const X(mat)* restrict B1, const R wt1,
 	const X(mat)* restrict B2, const R wt2){
 	if(!check_mat(A)){
@@ -350,7 +351,7 @@ void X(cwmrow2)(X(mat)* restrict A,
 		X(cwmrow2)(A, B2, wt2, B1, wt1);
 	}
 }
-
+*/
 /**
    Component wise division B=B./A. 0/0 is replace by 'value';
 */
@@ -1836,14 +1837,14 @@ R X(cellnorm)(const X(cell)* A){
 
 
 /**
-   Compute the inner produce of two dcell.
+   Compute the dot produce of two dcell.
 */
-T X(cellinn)(const X(cell)* A, const X(cell)* B){
+T X(celldot)(const X(cell)* A, const X(cell)* B){
 	if(!A||!B) return 0;
 	if(A->nx!=B->nx||A->ny!=1||B->ny!=1) error("mismatch\n");
 	T out=0;
 	for(int i=0; i<A->nx; i++){
-		out+=X(inn)(P(A, i), P(B, i));
+		out+=X(dot)(P(A, i), P(B, i));
 	}
 	return out;
 }
