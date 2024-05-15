@@ -37,11 +37,9 @@ def maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
     res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2, quiet)
     res2=res[:,0]
     return res2,fds
-def maos_res_each_old(fds, seeds=None, iframe1=0.2, iframe2=1):
-    return maos_res_do(fds, "extra/Resclep", seeds, iframe1, iframe2)
 def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
     '''Results fore all directions with dimension nfolder*ndirection*nmod. The modes are in PR, TT, PTTR.'''
-    return maos_res_do(fds, "extra/Resp", seeds, iframe1, iframe2, quiet)
+    return maos_res_do(fds, "Resp", seeds, iframe1, iframe2, quiet)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
     '''Process maos results and average between firame1 to iframe2'''
     if type(fdin) is not list:
@@ -84,10 +82,10 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
                     res[:,0]=res[:,2] #convert from pr, tt, pttr to pttr, tt, tt to have the same as the split mode.
                     res[:,2]=res[:,1]
                     split=0
-            elif name=="extra/Resclep": #for split tomo
+            elif name[-7:]=="Resclep": #per direction (old format)
                 res=np.stack(res, axis=1)
                 split=0
-            elif name=="extra/Resp": #for integrated tomo
+            elif name[-4:]=="Resp": #per direction (new format)
                 res=np.stack(res[-1],axis=1) #last cell is clep
                 split=0            
             else:

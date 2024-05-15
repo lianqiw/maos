@@ -1737,9 +1737,7 @@ static void readcfg_load(parms_t *parms){
 static void setup_parms_postproc_za(parms_t *parms){
 	real cosz=cos(parms->sim.za);
 	real secz=1./cosz;
-	if(parms->sim.htel){
-		info("Adjust LGS range by telescope altitude %gm.\n",parms->sim.htel);
-	}
+	
 	if(fabs(parms->sim.za)>1.e-14){
 		info("Zenith angle is %g degree.\n",parms->sim.za*180./M_PI);
 		info("    Scaling turbulence height and LGS hs by sec(za).\n"
@@ -1771,6 +1769,9 @@ static void setup_parms_postproc_za(parms_t *parms){
 	//Adjust LGS signal level by cos(za)
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!isinf(parms->powfs[ipowfs].hs)){//LGS
+			if(parms->sim.htel){
+				info("Adjust LGS range by telescope altitude %gm.\n", parms->sim.htel);
+			}
 			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
 			dscale(parms->powfs[ipowfs].siglevs,cosz);
@@ -2706,8 +2707,11 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->moao=NULL;
 		}
 	}
-	if(parms->sim.evlol){
-		parms->recon.split=0;
+	if(parms->recon.split){
+		if(parms->sim.evlol||!parms->sim.closeloop || !parms->ndm){
+			parms->recon.split=0;
+			warning("Split tomography is not support in current configuration. Changed.\n");
+		}
 	}
 	if(parms->recon.glao&&parms->ndm!=1){
 		error("GLAO only works with 1 dm\n");
@@ -2732,10 +2736,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			}
 		}
 	}
-	if((parms->recon.split)&&parms->ndm==0){
-		warning("Disable split tomography since there is no common DM\n");
-		parms->recon.split=0;
-	}
+
 	if(parms->fit.square&&parms->load.aloc){
 		warning("load.aloc contradicts with fit.square. disable fit.square\n");
 		parms->fit.square=0;

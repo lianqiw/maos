@@ -224,9 +224,9 @@ function [res header err]=readbin_do(fid, isfits)
           end
       end
       if(nheaderstr)
-          if length(header)
-              header2{end+1}=header;
-          end
+          %if length(header)
+          %    header2{end+1}=header;
+          %end
           header=header2;
       else
           clear header2;

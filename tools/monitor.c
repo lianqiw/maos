@@ -355,14 +355,15 @@ static void quitmonitor(GtkWidget* widget, gpointer data){
    update the job count
 */
 gboolean update_title(gpointer data){
-	int tmp=GPOINTER_TO_INT(data);
-	int hid=tmp&0xFF;
-	int nproc=tmp>>8;
+	size_t tmp=GPOINTER_TO_SIZE(data);
+	size_t hid=tmp&0xFF;//lowest 1 byte
+	size_t nproc=tmp>>8&0xFFF;//2-3 byte
+	size_t npending=tmp>>20;
 	char tit[40];
 	if(hid<nhost){
-		snprintf(tit, 40, "%s (%u)", hosts[hid], nproc);
+		snprintf(tit, 40, "%s (%zu/%zu)", hosts[hid], npending, nproc);
 	} else{
-		snprintf(tit, 40, "%s", "All");
+		snprintf(tit, 40, "All");
 		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);
 	}
 	gtk_label_set_text(GTK_LABEL(titles[hid]), tit);

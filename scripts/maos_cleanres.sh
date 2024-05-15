@@ -4,9 +4,9 @@
 for fd in "$@" ;do
     (
 	cd ${fd}
-	if ls Res_*.bin >/dev/null;then
+	if ls Res_*.bin >/dev/null 2>&1 ;then
 	    echo cleaning ${fd}
-	    rm -rf setup Res[a-zA-Z]*.bin Timing_*.bin psd*.bin
+	    rm -rfv setup Res[ofzC]*_*.bin Timing_*.bin psd*.bin extra
 	else
 	    for sub in * ;do
 		if [ -d $sub ];then

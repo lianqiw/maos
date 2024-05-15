@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
-  
+
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -25,7 +25,7 @@
 
   All functions here except listen_host() are declared static to avoid calling
   from other threads to avoid corruptiong the data structures. Interaction to
-  this thread is via sock_main. 
+  this thread is via sock_main.
 
 */
 
@@ -35,7 +35,8 @@
 #include "monitor.h"
 //the following are only by the thread running listen_host() to avoid race condition
 static proc_t** pproc;
-static int* nproc;
+static size_t* nproc;
+static size_t* npending;
 static int* hsock;   //socket of each host
 static time_t* htime;//last time having signal from each host.
 static time_t* hnotify;//last time notification for this server.
@@ -76,6 +77,13 @@ static void sendmail(const char*format,...){
 	}
 
 }
+static void delayed_update_title(int id){
+	if(npending[id]<0){
+		dbg_time("npending[%d]=%zu, reset to 0\n", id, npending[id]);
+		npending[id]=0;
+	}
+	if(!headless) g_idle_add((GSourceFunc)update_title, GSIZE_TO_POINTER((id|nproc[id]<<8|npending[id]<<20)));
+}
 static proc_t* proc_get(int id, int pid){
 	proc_t* iproc;
 	if(id<0||id>=nhost){
@@ -95,7 +103,7 @@ static proc_t* proc_get(int id, int pid){
 		iproc->next=pproc[id];
 		pproc[id]=iproc;
 		nproc[id]++;
-		if(!headless) g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+		delayed_update_title(id);
 	}
 	return iproc;
 }
@@ -111,7 +119,7 @@ static void proc_remove_all(int id){
 	}
 	nproc[id]=0;
 	pproc[id]=NULL;
-	if(!headless) g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+	delayed_update_title(id);
 }
 
 static void proc_remove(int id, int pid){
@@ -127,7 +135,7 @@ static void proc_remove(int id, int pid){
 
 			if(!headless) {
 				g_idle_add((GSourceFunc)remove_entry, iproc->row);
-				g_idle_add((GSourceFunc)update_title, GINT_TO_POINTER((id|nproc[id]<<8)));
+				delayed_update_title(id);
 			}
 			free(iproc->path);
 			free(iproc);
@@ -290,7 +298,7 @@ const char *status_msg[]={
 	"waiting",
 	"started",
 	"queued",
-	"","","","","","", 
+	"","","","","","",
 	"finished",//11
 	"crashed",//12
 	"to be killed",//13
@@ -356,6 +364,18 @@ static int respond(int sock){
 		if(old_info==S_TOKILL && iproc->status.info==S_RUNNING){
 			iproc->status.info=S_TOKILL;//pending kill.
 		}
+		//old_info==0: not update received yet.
+		if((old_info==0||old_info>10)&&iproc->status.info<10&&iproc->status.info>0){
+			npending[ihost]++;//new running or pending job
+			delayed_update_title(ihost);
+		}else if(old_info>0 && old_info<10 && iproc->status.info>10){
+			if(npending[ihost]>0){
+				npending[ihost]--;//job exited.
+			}else{
+				dbg("npending[%d] is already zero, cannot decrease. old_info=%d, new_info=%d\n", ihost, old_info, iproc->status.info);
+			}
+			delayed_update_title(ihost);
+		}
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{
@@ -374,10 +394,10 @@ static int respond(int sock){
 				iproc->pid=cmd[1];
 			}
 			//Alert when job crashed during running.
-			if(old_info && old_info!=iproc->status.info 
-				&& iproc->status.info==S_CRASH 
+			if(old_info && old_info!=iproc->status.info
+				&& iproc->status.info==S_CRASH
 				&& (iproc->status.isim>0 || iproc->status.iseed>0)){
-				sendmail("Subject: Job %d crashed on %s\n\nOn %s\n\nPath is %s\n", 
+				sendmail("Subject: Job %d crashed on %s\n\nOn %s\n\nPath is %s\n",
 					iproc->pid, hosts[iproc->hid], myasctime(0), iproc->path);
 			}
 			if(!headless) g_idle_add((GSourceFunc)refresh, iproc);
@@ -481,7 +501,8 @@ static int respond(int sock){
 void* listen_host(void* pmsock){
 	int msock=GPOINTER_TO_INT(pmsock);
 	pproc=mycalloc(nhost+1, proc_t*);
-	nproc=mycalloc(nhost+1, int);
+	nproc=mycalloc(nhost+1, size_t);//total number of procs per host
+	npending=mycalloc(nhost+1, size_t);//pending procs per host
 	hsock=mycalloc(nhost+1, int);
 	for(int i=0; i<=nhost; i++){
 		hsock[i]=-1;
@@ -520,7 +541,7 @@ void* listen_host(void* pmsock){
 						htime[ihost]=ntime;
 						add_host(ihost);//do not use _add_host_wrap. It will deadlock.
 					}
-				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection 
+				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection
 					info_time("no respond. probing server %s.\n", hosts[ihost]);
 					scheduler_cmd(ihost, 0, CMD_PROBE);
 					htime[ihost]=-ntime;
@@ -560,7 +581,7 @@ static int scheduler_display(int ihost, int pid){
 	int sock=scheduler_connect(hosts[ihost]);
 	if(sock==-1) return ans;
 	int cmd[2]={CMD_DISPLAY, pid};
-	
+
 	if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
 		warning("Failed to pass sock to draw via scheduler.\n");
 	} else{

@@ -546,7 +546,7 @@ static void init_simu_evl(sim_t* simu){
 
 	{/*USE async write for data that need to save at every time step */
 		const char* keywords="Results per direction: olmp; clmp; olep; clep";
-		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, keywords, "%s/Resp_%d.bin", fnextra, seed);
+		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, keywords, "Resp_%d.bin", seed);
 
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
 		simu->clmp=dcellsub(simu->resp, 0, nevl, 1, 1);
