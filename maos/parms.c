@@ -862,7 +862,7 @@ static void readcfg_siglev(parms_t *parms){
 						}
 					}
 					P(parms->wfs[iwfs].wvlwts, iwvl)=wvlwti;
-					if(fabs(P(parms->wfs[iwfs0].wvlwts, iwvl)-P(parms->wfs[iwfs].wvlwts, iwvl))>EPS){
+					if(fabs(P(parms->wfs[iwfs0].wvlwts, iwvl)-P(parms->wfs[iwfs].wvlwts, iwvl))>1e-3){
 						wvlwts_diff=1;
 						siglev_shared=0;
 					}
@@ -886,7 +886,7 @@ static void readcfg_siglev(parms_t *parms){
 		}else{
 			dcp(&parms->powfs[ipowfs].wvlwts, parms->wfs[iwfs0].wvlwts);
 		}
-		parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->powfs[ipowfs].wvlwts)/dsum(parms->powfs[ipowfs].wvlwts);
+		parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->wfs[iwfs0].wvlwts)/dsum(parms->wfs[iwfs0].wvlwts);
 		powfs_wvl_count+=nwvl;
 		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
 		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);

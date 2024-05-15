@@ -706,7 +706,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_STAT;
 	PREP_CUBIC_PARAM;
-	int nxout=0;
+	
 OMP_TASK_FOR(2)
 	for(long icol=start; icol<end; icol++){
 		RUNTIME_CUBIC;
@@ -715,7 +715,7 @@ OMP_TASK_FOR(2)
 			SPLIT(dplocy, dplocy, nplocy);
 			dplocy0=1.-dplocy;
 			MAKE_CUBIC_COEFF_Y;
-			nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
+			int nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
 			for(int ix=0; ix<nxout; ix++){
 				int iloc=ostat->cols[icol].pos+ix;//output index.
 				dplocx=myfma(ostat->cols[icol].xstart+ix*dxout, dx_in2, displacex);
@@ -728,10 +728,10 @@ OMP_TASK_FOR(2)
 					missing++;
 				}
 			}
+			WARN_MISSING(nxout);
 		} else{
 			missing++;
 		}
-		WARN_MISSING(nxout);
 	}
 }
 /**

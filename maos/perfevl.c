@@ -188,8 +188,6 @@ void* perfevl_ievl(thread_t* info){
 		} else if(simu->atm&&!parms->sim.wfsalias){
 			if(simu->evlopdground){
 				dcp(&iopdevl, simu->evlopdground);
-			} else{
-				dzero(iopdevl);
 			}
 			/*fix me: the ray tracing of the same part must be performed in the same thread. */
 			for(int ips=0; ips<nps; ips++){
