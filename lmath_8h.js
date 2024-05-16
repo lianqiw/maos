@@ -29,6 +29,7 @@ var lmath_8h =
     [ "lflip", "lmath_8h.html#a62a36ba96ca6793830004c90bfada151", null ],
     [ "lvecsum", "lmath_8h.html#a023af73843ac46394ca89147584b1e93", null ],
     [ "lsum", "lmath_8h.html#a129e4033d5c3a02a35397f8452835ae2", null ],
+    [ "lmean", "lmath_8h.html#a7b63adae4f8ed24c79c3b84eea7566b3", null ],
     [ "ltrace", "lmath_8h.html#ab4cf2eda7e088d902f37089883038e7a", null ],
     [ "lsort", "lmath_8h.html#a463de026b36025ad40bb188e63050fc4", null ],
     [ "lmaxmin", "lmath_8h.html#adce7bb90a0abd68144237c2b4cdd7025", null ],

@@ -2,6 +2,7 @@ var sim_8h =
 [
     [ "perfevl_ievl", "sim_8h.html#a4222c173bf339c4f613587a6b5f8f73b", null ],
     [ "perfevl", "sim_8h.html#a799c7105d3e2ffd9cbcd7de50fbd16e7", null ],
+    [ "plot_psf", "sim_8h.html#a0b5e77914e6084826b5210ff2bf2f474", null ],
     [ "prep_cachedm", "sim_8h.html#aa6076fc51d273d5dce1921f91e280bf0", null ],
     [ "calc_cachedm", "sim_8h.html#afabaa0621dfaba431cd4df7bd67e7b6a", null ],
     [ "filter_dm", "sim_8h.html#a622d82c9ae0920ac6c92085f5178ae28", null ],

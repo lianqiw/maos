@@ -7,6 +7,7 @@ var parms_8h_structplot__cfg__t =
     [ "psf", "parms_8h.html#a90b23b744ceb825576bc4288e43f0455", null ],
     [ "grad2opd", "parms_8h.html#ac971ec5e649fd759ecaf6b7dbde216f8", null ],
     [ "all", "parms_8h.html#a53b007d408e097054a842ad7e648922b", null ],
-    [ "opdmax", "parms_8h.html#aefacdb684bd6efe84c807ae7da7e1c1b", null ],
-    [ "gmax", "parms_8h.html#a21b88375385a3c4676e218e376f49848", null ]
+    [ "opdmax", "parms_8h.html#a0d913d9bbf2e9e0ba0c15703c0f3459f", null ],
+    [ "gmax", "parms_8h.html#a289f538548a8a661af1cc51c796a3234", null ],
+    [ "psfmin", "parms_8h.html#a0d68cef3b14a2340ccc4b40bd1ab2f47", null ]
 ];

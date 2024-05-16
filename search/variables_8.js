@@ -49,6 +49,8 @@ var searchData=
   ['isground',['isground',['../parms_8h.html#a111386ee98f97bf56186bed917aabc93',1,'dm_cfg_t']]],
   ['isref',['isref',['../maos_2types_8h.html#a4ade0ef1063bfd82b9c2544e30c32cc9',1,'fit_t']]],
   ['itpowfs',['itpowfs',['../parms_8h.html#acc65eaf74703886d896c004560af7494',1,'parms_t']]],
+  ['ittfpowfs',['ittfpowfs',['../parms_8h.html#aea2fd10c353a6d83d9f7a3d90869ca55',1,'parms_t']]],
+  ['ittpowfs',['ittpowfs',['../parms_8h.html#a32bd0209a1fbae87f166feff730cb8d6',1,'parms_t']]],
   ['itwfssph',['itwfssph',['../parms_8h.html#a56a693cc1ff576f23f7ff60ca7adfd18',1,'parms_t']]],
   ['iwfs0',['iwfs0',['../pywfs_8h.html#a89978edc12c2761bf8cda0fc5b31281e',1,'pywfs_t']]]
 ];

@@ -32,7 +32,7 @@ var searchData=
   ['global_5ft',['global_t',['../maos_2types_8h.html#structglobal__t',1,'']]],
   ['glpf',['glpf',['../parms_8h.html#a09f7fab375ef04f6460d7a9a06aa9919',1,'dither_cfg_t']]],
   ['gm',['GM',['../maos_2types_8h.html#acc13fbd175230a809cf8411e5ac666a4',1,'ngsmod_t::GM()'],['../maos_2types_8h.html#ac08d2d9f1f847c4eac0946b83dae0a16',1,'recon_t::GM()']]],
-  ['gmax',['gmax',['../parms_8h.html#a21b88375385a3c4676e218e376f49848',1,'plot_cfg_t']]],
+  ['gmax',['gmax',['../parms_8h.html#a289f538548a8a661af1cc51c796a3234',1,'plot_cfg_t']]],
   ['gmhi',['GMhi',['../maos_2types_8h.html#aafc3dd415c75885f6035f7c97f95af1b',1,'recon_t']]],
   ['gngsmvst',['gngsmvst',['../maos_2types_8h.html#ac0a7f00e6b8ea7d0c4478a5fc9c0697e',1,'sim_t']]],
   ['gog',['gog',['../parms_8h.html#a092c3f92059dcbc080a8931311927e47',1,'dither_cfg_t']]],

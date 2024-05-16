@@ -65,6 +65,7 @@ var searchData=
   ['aper_5fcfg_5ft',['aper_cfg_t',['../parms_8h.html#structaper__cfg__t',1,'']]],
   ['aper_5ffcp',['aper_fcp',['../maos_2types_8h.html#a06663ea7d30cf79b84ea1be0b51ea929',1,'ngsmod_t']]],
   ['aper_5ft',['aper_t',['../maos_2types_8h.html#structaper__t',1,'']]],
+  ['apetal',['apetal',['../maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75',1,'recon_t']]],
   ['apfsm',['apfsm',['../parms_8h.html#a6074b1c7bdf1eb69a90fd993db87d315',1,'powfs_cfg_t']]],
   ['aphi',['aphi',['../parms_8h.html#ae6d05bfccc18d0de4bc183cfbca212c0',1,'sim_cfg_t']]],
   ['aplo',['aplo',['../parms_8h.html#ae65ef8c7e32ec1905c34e73156b779de',1,'sim_cfg_t']]],

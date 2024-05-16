@@ -32,7 +32,6 @@ var searchData=
   ['mapccell',['mapccell',['../type_8h.html#structmapccell',1,'']]],
   ['mapcell',['mapcell',['../type_8h.html#structmapcell',1,'']]],
   ['mapcircle',['mapcircle',['../map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6',1,'map.c']]],
-  ['mapcircle_5fsymbolic',['mapcircle_symbolic',['../map_8h.html#a234a7b23db40b4c795339ff6a5fb730f',1,'map.c']]],
   ['mapnew',['mapnew',['../map_8h.html#a53242c426f09fed6dec2cf74e2183089',1,'map.c']]],
   ['mapnew2',['mapnew2',['../map_8h.html#a509760a9136ead882e0750c7480e39fe',1,'map.c']]],
   ['mask',['mask',['../cn2est_8h.html#a3fb3eee55725a2837bdd280aff4fef62',1,'cn2est_t']]],

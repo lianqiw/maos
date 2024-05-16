@@ -399,7 +399,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate screen according to a header. It has three possible options. 1) load from file 2) generate screen from PSD with the following keys r0 (Fried parameter) L0 (Outer scale) dx (sampling) nx (number of points) slope (optional, default is -11/3) seed (optional) 3) generate from a zernike mode with the following keys rms (in nm) mode (zernike mode) dx nx </p>
+<p>Generate screen according to a header. It has multiple possible options. 1) If is a filename. load from file 2) if mode and petal is not set. generate screen from PSD with the following keys L0 (Outer scale) slope (optional, default is -11/3) seed (optional) 3) If mode is set. generate from a zernike mode with the following keys mode (zernike mode) 4) If petal is set. generate randomized petal modes each with rms value. petal sets total number of petals theta0 sets petal gap orientation angular offset in radian. 0 means a gap is along y axis. seed piston: generates piston mode if set tip: generate tip mode if set tilt: generates tilt mode if set The following common parameters are used: r0 (Fried parameter in m) or rms (in nm) dx (sampling) nx (number of points) </p>
 
 </div>
 </div>

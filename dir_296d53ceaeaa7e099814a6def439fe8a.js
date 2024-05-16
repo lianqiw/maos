@@ -1,7 +1,6 @@
 var dir_296d53ceaeaa7e099814a6def439fe8a =
 [
     [ "cell.h", "cell_8h.html", "cell_8h" ],
-    [ "chol.h", "chol_8h.html", "chol_8h" ],
     [ "cmath.h", "cmath_8h.html", "cmath_8h" ],
     [ "dmath.h", "dmath_8h.html", "dmath_8h" ],
     [ "lmath.h", "lmath_8h.html", "lmath_8h" ],

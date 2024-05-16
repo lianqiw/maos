@@ -231,8 +231,17 @@ Macros</h2></td></tr>
 <tr class="memitem:a2f27df1e37b286dd25a29bb667d58c95"><td class="memItemLeft" align="right" valign="top"><a id="a2f27df1e37b286dd25a29bb667d58c95"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>types_anyarray</b>(T,  S)</td></tr>
 <tr class="separator:a2f27df1e37b286dd25a29bb667d58c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1978225b72a8a84273793975128d47e9"><td class="memItemLeft" align="right" valign="top"><a id="a1978225b72a8a84273793975128d47e9"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>types_anycell</b>(T,  S)</td></tr>
+<tr class="separator:a1978225b72a8a84273793975128d47e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa72d8a541be558768164dd0749c1327e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>types_anydmat</b>(T,  S)</td></tr>
+<tr class="separator:aa72d8a541be558768164dd0749c1327e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a212f829d0f8bee0919e6a707952f9d12"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>def_anyarray</b>(T,  S,  C)</td></tr>
 <tr class="separator:a212f829d0f8bee0919e6a707952f9d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa05ab733922ff39d68db4db970b62c63"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>def_anycell</b>(T,  S,  C)</td></tr>
+<tr class="separator:aa05ab733922ff39d68db4db970b62c63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab63aca1809c218c726f5c4014817d9b4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>def_anydmat</b>(T,  S,  C)</td></tr>
+<tr class="separator:ab63aca1809c218c726f5c4014817d9b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e8de8cafce91fe393887a3b18438bc3"><td class="memItemLeft" align="right" valign="top"><a id="a0e8de8cafce91fe393887a3b18438bc3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>index_1d</b>(i,  nx,  ny)&#160;&#160;&#160;(i)</td></tr>
 <tr class="separator:a0e8de8cafce91fe393887a3b18438bc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -957,14 +966,14 @@ nzmax</td>
 <td class="fieldname">
 pp</td>
 <td class="fielddoc">
-<p>col indices (size nzmax) </p>
+<p>col indices (size ny+1) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a945fa6665acd6385b097058d29479ccf"></a>spint *__restrict</td>
 <td class="fieldname">
 pi</td>
 <td class="fielddoc">
-<p>row indices, size nzmax </p>
+<p>row indices (size nzmax) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a26d1d89bef690f01b475c1726bd7a07b"></a>unsigned int *</td>
@@ -1053,14 +1062,14 @@ nzmax</td>
 <td class="fieldname">
 pp</td>
 <td class="fielddoc">
-<p>col indices (size nzmax) </p>
+<p>col indices (size ny+1) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aff73dd7b569f5ba0016e39c4adea8b81"></a>spint *__restrict</td>
 <td class="fieldname">
 pi</td>
 <td class="fielddoc">
-<p>row indices, size nzmax </p>
+<p>row indices (size nzmax) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="add3062c983bde1a679a8ae31151895ea"></a>unsigned int *</td>
@@ -1149,14 +1158,14 @@ nzmax</td>
 <td class="fieldname">
 pp</td>
 <td class="fielddoc">
-<p>col indices (size nzmax) </p>
+<p>col indices (size ny+1) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aa12d0a13a21ea965033a305302ed8368"></a>spint *__restrict</td>
 <td class="fieldname">
 pi</td>
 <td class="fielddoc">
-<p>row indices, size nzmax </p>
+<p>row indices (size nzmax) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a45496852dc94fbb11124a08c53d5469d"></a>unsigned int *</td>
@@ -1245,14 +1254,14 @@ nzmax</td>
 <td class="fieldname">
 pp</td>
 <td class="fielddoc">
-<p>col indices (size nzmax) </p>
+<p>col indices (size ny+1) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aa360b079e9763d2955fd280c96a93731"></a>spint *__restrict</td>
 <td class="fieldname">
 pi</td>
 <td class="fielddoc">
-<p>row indices, size nzmax </p>
+<p>row indices (size nzmax) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a77d5149d835d4cb355395b4284fe333e"></a>unsigned int *</td>
@@ -4698,6 +4707,39 @@ dsax</td>
 <b>Value:</b><div class="fragment"><div class="line"><span class="keyword">struct </span>S{\</div><div class="line">    ARR(T);\</div><div class="line">    mem_t *mem;     \</div><div class="line">    async_t *async; \</div><div class="line">}</div></div><!-- fragment -->
 </div>
 </div>
+<a id="aa72d8a541be558768164dd0749c1327e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa72d8a541be558768164dd0749c1327e">&#9670;&nbsp;</a></span>types_anydmat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define types_anydmat</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">T, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">S&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">T <a class="code" href="type_8h.html#structdmat">dmat</a> S dm;\</div><div class="line">    T <a class="code" href="type_8h.html#structmap__t">map_t</a> S map;\</div><div class="line">    T <a class="code" href="type_8h.html#structrmap__t">rmap_t</a> S rmap;\</div><div class="line">    T <a class="code" href="type_8h.html#structloc__t">loc_t</a> S loc;\</div><div class="line">    T <a class="code" href="type_8h.html#structpts__t">pts_t</a> S pts</div><div class="ttc" id="type_8h_html_structloc__t"><div class="ttname"><a href="type_8h.html#structloc__t">loc_t</a></div><div class="ttdef"><b>Definition:</b> type.h:179</div></div>
+<div class="ttc" id="type_8h_html_structrmap__t"><div class="ttname"><a href="type_8h.html#structrmap__t">rmap_t</a></div><div class="ttdef"><b>Definition:</b> type.h:136</div></div>
+<div class="ttc" id="type_8h_html_structpts__t"><div class="ttname"><a href="type_8h.html#structpts__t">pts_t</a></div><div class="ttdef"><b>Definition:</b> type.h:207</div></div>
+<div class="ttc" id="type_8h_html_structdmat"><div class="ttname"><a href="type_8h.html#structdmat">dmat</a></div><div class="ttdef"><b>Definition:</b> type.h:100</div></div>
+<div class="ttc" id="type_8h_html_structmap__t"><div class="ttname"><a href="type_8h.html#structmap__t">map_t</a></div><div class="ttdef"><b>Definition:</b> type.h:116</div></div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="a212f829d0f8bee0919e6a707952f9d12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a212f829d0f8bee0919e6a707952f9d12">&#9670;&nbsp;</a></span>def_anyarray</h2>
 
@@ -4730,6 +4772,74 @@ dsax</td>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">union </span>__attribute__((__transparent_union__)){\</div><div class="line">    types_anyarray(T,S);\</div><div class="line">}C</div></div><!-- fragment -->
+</div>
+</div>
+<a id="aa05ab733922ff39d68db4db970b62c63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa05ab733922ff39d68db4db970b62c63">&#9670;&nbsp;</a></span>def_anycell</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define def_anycell</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">T, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">S, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">C&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">union </span>__attribute__((__transparent_union__)){\</div><div class="line">    types_anycell(T,S);\</div><div class="line">}C</div></div><!-- fragment -->
+</div>
+</div>
+<a id="ab63aca1809c218c726f5c4014817d9b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab63aca1809c218c726f5c4014817d9b4">&#9670;&nbsp;</a></span>def_anydmat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define def_anydmat</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">T, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">S, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">C&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">union </span>__attribute__((__transparent_union__)){\</div><div class="line">    types_anydmat(T,S);\</div><div class="line">}C</div></div><!-- fragment -->
 </div>
 </div>
 <a id="afba9f40fe63e258302b2c472f9e9f386"></a>

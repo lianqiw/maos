@@ -13,7 +13,6 @@ var searchData=
   ['map_5fd_5fdin',['map_d_din',['../map_8h.html#a37d70ae639530fbecf1e8393a360114a',1,'map.c']]],
   ['map_5fheader',['map_header',['../map_8h.html#a11bf134f4cc46ecb1fe45018ab2031d8',1,'map.c']]],
   ['mapcircle',['mapcircle',['../map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6',1,'map.c']]],
-  ['mapcircle_5fsymbolic',['mapcircle_symbolic',['../map_8h.html#a234a7b23db40b4c795339ff6a5fb730f',1,'map.c']]],
   ['mapnew',['mapnew',['../map_8h.html#a53242c426f09fed6dec2cf74e2183089',1,'map.c']]],
   ['mapnew2',['mapnew2',['../map_8h.html#a509760a9136ead882e0750c7480e39fe',1,'map.c']]],
   ['maxapriori',['maxapriori',['../maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e',1,'utils.c']]],

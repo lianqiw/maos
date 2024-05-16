@@ -6,7 +6,6 @@ var map_8h =
     [ "mapnew2", "map_8h.html#a509760a9136ead882e0750c7480e39fe", null ],
     [ "mapref", "map_8h.html#ad9edf1c0283fa5cdd62b03554e71e97b", null ],
     [ "mapcircle", "map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6", null ],
-    [ "mapcircle_symbolic", "map_8h.html#a234a7b23db40b4c795339ff6a5fb730f", null ],
     [ "map_d_din", "map_8h.html#a37d70ae639530fbecf1e8393a360114a", null ],
     [ "create_metapupil", "map_8h.html#a1863fb416c429ceb5076bbcec266245c", null ],
     [ "d2map", "map_8h.html#a57e2c14a9a54502236a94debfbb3e762", null ],

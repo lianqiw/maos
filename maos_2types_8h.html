@@ -182,7 +182,7 @@ Functions</h2></td></tr>
 <td class="fieldname">
 locs</td>
 <td class="fielddoc">
-<p>PLOCS in laos. the fine sampled grid on aperture for peformance evaluation. </p>
+<p>Fine sampled grid on aperture for peformance evaluation. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aeebf41252a1f794cf5347af1f60036fa"></a><a class="el" href="type_8h.html#structloccell">loccell</a> *</td>
@@ -217,7 +217,7 @@ ampground</td>
 <td class="fieldname">
 mod</td>
 <td class="fielddoc">
-<p>modal columne vectors if parms-&gt;evl.nmax&gt;1 </p>
+<p>modal column vectors if parms-&gt;evl.nmax&gt;1 </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a70e7ed60df1292a94909db86e069f77a"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
@@ -251,7 +251,7 @@ sumamp2</td>
 <td class="fieldname">
 embed</td>
 <td class="fielddoc">
-<p>For computing FFT </p>
+<p>For computing PSF with FFT </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a166ea928f9ede0869a67f1ef6cd3276a"></a>real</td>
@@ -273,6 +273,13 @@ opdadd</td>
 opdbias</td>
 <td class="fielddoc">
 <p>NCPA OPD surface for each NCPA direction, used for dm_ncpa calibration. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acb7caee568757411492d4a262fe6b735"></a><a class="el" href="type_8h.html#structdsp">dsp</a> *</td>
+<td class="fieldname">
+hpetal</td>
+<td class="fielddoc">
+<p>Mapping from petal p/t/t to phase at aperture. </p>
 </td></tr>
 </table>
 
@@ -788,6 +795,13 @@ pywfs</td>
 fit</td>
 <td class="fielddoc">
 <p>Fit turbulence to lenslet grid. For aliasing computation. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a5c8c7ff63e454c0157c9a2b942ac4f5f"></a>petal_t *</td>
+<td class="fieldname">
+petal</td>
+<td class="fielddoc">
+<p>Petaling mode reconstruction tools </p>
 </td></tr>
 </table>
 
@@ -1727,6 +1741,13 @@ actstuck</td>
 amod</td>
 <td class="fielddoc">
 <p>ndmx1. Zernike/KL modes defined on aloc for modal control </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3e411085201b1eb19aebd338801f1a75"></a><a class="el" href="type_8h.html#structdsp">dsp</a> *</td>
+<td class="fieldname">
+apetal</td>
+<td class="fielddoc">
+<p>Petal mode defined at the ground DM </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a70af1a69656b46e9fd9f810a2a115fe9"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
@@ -3174,6 +3195,20 @@ llt_fsmreal</td>
 llt_fsmsho</td>
 <td class="fielddoc">
 <p>LLT common path pointing mirror state </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4b4215bb7179b9fd7b2c0d1a7fad18b3"></a><a class="el" href="type_8h.html#structdccell">dccell</a> *</td>
+<td class="fieldname">
+petal_i0</td>
+<td class="fielddoc">
+<p>WFS accumulated i0. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="addb063fbc8aafcda0d138759d96022fe"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+petal_m</td>
+<td class="fielddoc">
+<p>Petal estimator output. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a54b13cbf92ab6e6ac20933c362fa9f61"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>

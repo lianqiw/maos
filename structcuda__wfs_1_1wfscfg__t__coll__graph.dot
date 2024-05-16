@@ -12,7 +12,7 @@ digraph "cuda_wfs::wfscfg_t"
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +powfs" ,arrowhead="odiamond",fontname="Helvetica"];
   Node4 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structpowfs__t"];
   Node3 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +notfx\n+notfy\n+pixpsax\n+pixpsay\n+nsaimcc" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node48 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +parms" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node48 [label="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ step_lo\l+ itwfssph\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structparms__t"];
-  Node3 -> Node48 [color="grey25",fontsize="10",style="solid",label=" +npowfs\n+nlgspowfs\n+nphypowfs\n+idmground\n+ntipowfs\n+ilgspowfs\n+ndm\n+step_hi\n+itpowfs\n+nhipowfs\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node49 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +parms" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node49 [label="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ step_lo\l+ itwfssph\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structparms__t"];
+  Node3 -> Node49 [color="grey25",fontsize="10",style="solid",label=" +npowfs\n+nlgspowfs\n+nphypowfs\n+idmground\n+ntipowfs\n+ittpowfs\n+ilgspowfs\n+ndm\n+step_hi\n+itpowfs\n..." ,arrowhead="odiamond",fontname="Helvetica"];
 }

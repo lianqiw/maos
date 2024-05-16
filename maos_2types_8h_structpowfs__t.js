@@ -47,5 +47,6 @@ var maos_2types_8h_structpowfs__t =
     [ "sumamp2", "maos_2types_8h.html#a94883ef7919c01b79ed74f9b80442cc1", null ],
     [ "fieldstop", "maos_2types_8h.html#a5c2dbfabdadad397731b9edc16924f45", null ],
     [ "pywfs", "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93", null ],
-    [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ]
+    [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ],
+    [ "petal", "maos_2types_8h.html#a5c8c7ff63e454c0157c9a2b942ac4f5f", null ]
 ];

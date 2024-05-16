@@ -14,7 +14,8 @@ var maos_2types_8h =
       [ "embed", "maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d", null ],
       [ "fcp", "maos_2types_8h.html#a166ea928f9ede0869a67f1ef6cd3276a", null ],
       [ "opdadd", "maos_2types_8h.html#afbd8ae85695fba0927998cf8446defd6", null ],
-      [ "opdbias", "maos_2types_8h.html#a3f85d361fe252aba2ccdda096e28eae1", null ]
+      [ "opdbias", "maos_2types_8h.html#a3f85d361fe252aba2ccdda096e28eae1", null ],
+      [ "hpetal", "maos_2types_8h.html#acb7caee568757411492d4a262fe6b735", null ]
     ] ],
     [ "llt_t", "maos_2types_8h.html#structllt__t", [
       [ "loc", "maos_2types_8h.html#a08c9c987ce7084933a258a2074bad68b", null ],
@@ -82,7 +83,8 @@ var maos_2types_8h =
       [ "sumamp2", "maos_2types_8h.html#a94883ef7919c01b79ed74f9b80442cc1", null ],
       [ "fieldstop", "maos_2types_8h.html#a5c2dbfabdadad397731b9edc16924f45", null ],
       [ "pywfs", "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93", null ],
-      [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ]
+      [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ],
+      [ "petal", "maos_2types_8h.html#a5c8c7ff63e454c0157c9a2b942ac4f5f", null ]
     ] ],
     [ "ngsmod_t", "maos_2types_8h.html#structngsmod__t", [
       [ "hs", "maos_2types_8h.html#a228ce9878bfc10d67927f4a19be445f1", null ],
@@ -205,6 +207,7 @@ var maos_2types_8h =
       [ "actfloat", "maos_2types_8h.html#a89079d2ca016bf98fe39b7b6cfb1442b", null ],
       [ "actstuck", "maos_2types_8h.html#af7629c2ba044ec506e53b08d2ea61706", null ],
       [ "amod", "maos_2types_8h.html#a5be6b1c39e832a8c47b7c13ed96c5543", null ],
+      [ "apetal", "maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75", null ],
       [ "anmod", "maos_2types_8h.html#a70af1a69656b46e9fd9f810a2a115fe9", null ],
       [ "fit", "maos_2types_8h.html#abf86f7942b75f2bf4f943f3451574104", null ],
       [ "aimcc", "maos_2types_8h.html#a210b3d49c9db5c49f6efa7ac93fda8cd", null ],
@@ -408,6 +411,8 @@ var maos_2types_8h =
       [ "llt_fsmcmd", "maos_2types_8h.html#ab741e0fb0719272d5df3f6fcae2c2e24", null ],
       [ "llt_fsmreal", "maos_2types_8h.html#ab6ea364f492acd1108a8e9f25989325e", null ],
       [ "llt_fsmsho", "maos_2types_8h.html#a27c193d659f780bb7c259018e25a70c3", null ],
+      [ "petal_i0", "maos_2types_8h.html#a4b4215bb7179b9fd7b2c0d1a7fad18b3", null ],
+      [ "petal_m", "maos_2types_8h.html#addb063fbc8aafcda0d138759d96022fe", null ],
       [ "opdr", "maos_2types_8h.html#a54b13cbf92ab6e6ac20933c362fa9f61", null ],
       [ "gngsmvst", "maos_2types_8h.html#ac0a7f00e6b8ea7d0c4478a5fc9c0697e", null ],
       [ "opdx", "maos_2types_8h.html#a339e02dcb8013fd6f7ad18015f8ad171", null ],

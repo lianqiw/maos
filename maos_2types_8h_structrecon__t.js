@@ -29,6 +29,7 @@ var maos_2types_8h_structrecon__t =
     [ "actfloat", "maos_2types_8h.html#a89079d2ca016bf98fe39b7b6cfb1442b", null ],
     [ "actstuck", "maos_2types_8h.html#af7629c2ba044ec506e53b08d2ea61706", null ],
     [ "amod", "maos_2types_8h.html#a5be6b1c39e832a8c47b7c13ed96c5543", null ],
+    [ "apetal", "maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75", null ],
     [ "anmod", "maos_2types_8h.html#a70af1a69656b46e9fd9f810a2a115fe9", null ],
     [ "fit", "maos_2types_8h.html#abf86f7942b75f2bf4f943f3451574104", null ],
     [ "aimcc", "maos_2types_8h.html#a210b3d49c9db5c49f6efa7ac93fda8cd", null ],

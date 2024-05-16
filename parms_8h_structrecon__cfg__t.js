@@ -16,6 +16,8 @@ var parms_8h_structrecon__cfg__t =
     [ "twfs_rmin", "parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da", null ],
     [ "twfs_rmax", "parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
     [ "twfs_radonly", "parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ],
+    [ "petaling", "parms_8h.html#aa680b0fea83499f0bc0165ac0589bf6e", null ],
+    [ "petaldtrat", "parms_8h.html#a0fca2bb965487d48e28b716229565ce1", null ],
     [ "distortion_dm2wfs", "parms_8h.html#a185514284ff87c3ac54162d7d0daf5c6", null ],
     [ "distortion_dm2sci", "parms_8h.html#afdbafb6fc04edd13d5bdd8cfe5d9d730", null ],
     [ "distortion_tel2wfs", "parms_8h.html#a8544e4837a99f0c7857756b583a72989", null ]

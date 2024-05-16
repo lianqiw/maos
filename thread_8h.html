@@ -218,9 +218,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a5abc03e87897fd9c0d49c0b837f9d98f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="thread_8h.html#structthread__t">thread_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a5abc03e87897fd9c0d49c0b837f9d98f">thread_prep</a> (<a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end, <a class="el" href="classlong.html">long</a> nthread, thread_wrapfun fun, void *data)</td></tr>
 <tr class="memdesc:a5abc03e87897fd9c0d49c0b837f9d98f"><td class="mdescLeft">&#160;</td><td class="mdescRight">prepare thread information  <a href="#a5abc03e87897fd9c0d49c0b837f9d98f">More...</a><br /></td></tr>
 <tr class="separator:a5abc03e87897fd9c0d49c0b837f9d98f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a026c95e6b2a9ee10f90a5a254548786a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a">thread_new</a> (thread_fun fun, void *arg)</td></tr>
-<tr class="memdesc:a026c95e6b2a9ee10f90a5a254548786a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a thread and take it away.  <a href="#a026c95e6b2a9ee10f90a5a254548786a">More...</a><br /></td></tr>
-<tr class="separator:a026c95e6b2a9ee10f90a5a254548786a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c06e9160167b01ec6e81558ae27e2d8"><td class="memItemLeft" align="right" valign="top">pthread_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#a9c06e9160167b01ec6e81558ae27e2d8">thread_new</a> (thread_fun fun, void *arg)</td></tr>
+<tr class="memdesc:a9c06e9160167b01ec6e81558ae27e2d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a thread and take it away.  <a href="#a9c06e9160167b01ec6e81558ae27e2d8">More...</a><br /></td></tr>
+<tr class="separator:a9c06e9160167b01ec6e81558ae27e2d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcf2784ffc1cb49a293c75cdfe6d64e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7">thread_block_signal</a> ()</td></tr>
 <tr class="separator:abcf2784ffc1cb49a293c75cdfe6d64e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -347,14 +347,14 @@ thread_data</td>
 
 </div>
 </div>
-<a id="a026c95e6b2a9ee10f90a5a254548786a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a026c95e6b2a9ee10f90a5a254548786a">&#9670;&nbsp;</a></span>thread_new()</h2>
+<a id="a9c06e9160167b01ec6e81558ae27e2d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c06e9160167b01ec6e81558ae27e2d8">&#9670;&nbsp;</a></span>thread_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int thread_new </td>
+          <td class="memname">pthread_t thread_new </td>
           <td>(</td>
           <td class="paramtype">thread_fun&#160;</td>
           <td class="paramname"><em>fun</em>, </td>

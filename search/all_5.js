@@ -46,7 +46,6 @@ var searchData=
   ['fmin',['fmin',['../turbulence_8h.html#a26e407bbe79a436d7dd748019379c55d',1,'genatm_t']]],
   ['fmtime',['fmtime',['../sys_2misc_8h.html#a42a3bc3c2a34efcb0f2e10c7a70fd8ff',1,'misc.c']]],
   ['fnamp',['fnamp',['../parms_8h.html#a7e931affa788f77dbaa6305bb750ea09',1,'llt_cfg_t']]],
-  ['fnampuser',['fnampuser',['../parms_8h.html#a4ca899cd1f3e07d55ca844b4b04d5359',1,'aper_cfg_t']]],
   ['fnllt',['fnllt',['../parms_8h.html#a7889e96c10932f0fd1227091f1a70ecd',1,'powfs_cfg_t']]],
   ['fnprep',['fnprep',['../parms_8h.html#aea7a13e9bdcaa7322336fdac205e6941',1,'llt_cfg_t']]],
   ['fnprof',['fnprof',['../parms_8h.html#a1f52ae29c036ef5e1555530e3e5a513f',1,'llt_cfg_t']]],

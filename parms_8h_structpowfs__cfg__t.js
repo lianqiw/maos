@@ -2,6 +2,7 @@ var parms_8h_structpowfs__cfg__t =
 [
     [ "wvl", "parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669", null ],
     [ "wvlwts", "parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9", null ],
+    [ "wvlmean", "parms_8h.html#adafc6077a457078635a202b8d4909b3f", null ],
     [ "saloc", "parms_8h.html#a5670ab9fc69fa9ed4a053636a19f7867", null ],
     [ "misregx", "parms_8h.html#afd7eb74863493ba55fcfc788babbd42e", null ],
     [ "misregy", "parms_8h.html#affa17d36ac1346eefe3619b40da0efca", null ],

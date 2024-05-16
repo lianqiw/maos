@@ -204,6 +204,9 @@ fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zvecsum</b> (cons
 <tr class="memitem:a69da5715fb9d3562919b48a30458e1e9"><td class="memItemLeft" align="right" valign="top"><a id="a69da5715fb9d3562919b48a30458e1e9"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zsum</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a69da5715fb9d3562919b48a30458e1e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bc45eaca826d8ced6b59ff1178dc3a9"><td class="memItemLeft" align="right" valign="top"><a id="a1bc45eaca826d8ced6b59ff1178dc3a9"></a>
+fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zmean</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
+<tr class="separator:a1bc45eaca826d8ced6b59ff1178dc3a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15807bf2afec1689050ad0026d8f097e"><td class="memItemLeft" align="right" valign="top"><a id="a15807bf2afec1689050ad0026d8f097e"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>ztrace</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a15807bf2afec1689050ad0026d8f097e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -342,9 +345,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zrandn</b> (<a class=
 <tr class="memitem:af186a0a139cdc952daa89de4490cf37b"><td class="memItemLeft" align="right" valign="top"><a id="af186a0a139cdc952daa89de4490cf37b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zscale</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float w)</td></tr>
 <tr class="separator:af186a0a139cdc952daa89de4490cf37b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d813209dae3728defaab500ba28a377"><td class="memItemLeft" align="right" valign="top"><a id="a8d813209dae3728defaab500ba28a377"></a>
-fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zinn</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *B)</td></tr>
-<tr class="separator:a8d813209dae3728defaab500ba28a377"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d572516cffcb8e73f3de4060abcf25d"><td class="memItemLeft" align="right" valign="top"><a id="a5d572516cffcb8e73f3de4060abcf25d"></a>
+fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zdot</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *B)</td></tr>
+<tr class="separator:a5d572516cffcb8e73f3de4060abcf25d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4331037f7c1f5c2200cdbd9aa0ba6cb"><td class="memItemLeft" align="right" valign="top"><a id="ae4331037f7c1f5c2200cdbd9aa0ba6cb"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zwdot</b> (const fcomplex *a, const <a class="el" href="type_8h.html#structzmat">zmat</a> *w, const fcomplex *b)</td></tr>
 <tr class="separator:ae4331037f7c1f5c2200cdbd9aa0ba6cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -360,18 +363,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwm3</b> (<a class="
 <tr class="memitem:a1e607caabd217cfccc3a9f4145826878"><td class="memItemLeft" align="right" valign="top"><a id="a1e607caabd217cfccc3a9f4145826878"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmcol</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B)</td></tr>
 <tr class="separator:a1e607caabd217cfccc3a9f4145826878"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad67734c69f2d360d11e603d13af0c6c"><td class="memItemLeft" align="right" valign="top"><a id="aad67734c69f2d360d11e603d13af0c6c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwm3col</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict W, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B1, const float wt1, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B2, const float wt2)</td></tr>
-<tr class="separator:aad67734c69f2d360d11e603d13af0c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1180e6d0f2e25e2dcdb5d0da3829640b"><td class="memItemLeft" align="right" valign="top"><a id="a1180e6d0f2e25e2dcdb5d0da3829640b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmrow</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B)</td></tr>
 <tr class="separator:a1180e6d0f2e25e2dcdb5d0da3829640b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf152ce3fad5b9c1eca01a2442d3e096"><td class="memItemLeft" align="right" valign="top"><a id="abf152ce3fad5b9c1eca01a2442d3e096"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmcol2</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B1, const float wt1, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B2, const float wt2)</td></tr>
-<tr class="separator:abf152ce3fad5b9c1eca01a2442d3e096"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c626dc4cfd1599d2918a2be8b71c0ae"><td class="memItemLeft" align="right" valign="top"><a id="a7c626dc4cfd1599d2918a2be8b71c0ae"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmrow2</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B1, const float wt1, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B2, const float wt2)</td></tr>
-<tr class="separator:a7c626dc4cfd1599d2918a2be8b71c0ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f4e4c0d750e235418946791cdba3da1"><td class="memItemLeft" align="right" valign="top"><a id="a6f4e4c0d750e235418946791cdba3da1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwdiv</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *B, const <a class="el" href="type_8h.html#structzmat">zmat</a> *A, fcomplex value)</td></tr>
 <tr class="separator:a6f4e4c0d750e235418946791cdba3da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -417,9 +411,9 @@ fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zdiff</b> (const 
 <tr class="memitem:abe6f98a768f3a8a7bb9d142652f35153"><td class="memItemLeft" align="right" valign="top"><a id="abe6f98a768f3a8a7bb9d142652f35153"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>zcircle</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float cx, float cy, float dx, float dy, float r, fcomplex val)</td></tr>
 <tr class="separator:abe6f98a768f3a8a7bb9d142652f35153"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ebfdf34e38074b843be71f2bca549fb"><td class="memItemLeft" align="right" valign="top"><a id="a2ebfdf34e38074b843be71f2bca549fb"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>zcircle_symbolic</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float cx, float cy, float dx, float dy, float r)</td></tr>
-<tr class="separator:a2ebfdf34e38074b843be71f2bca549fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77da8639ba0214f1d3808493d30205ff"><td class="memItemLeft" align="right" valign="top"><a id="a77da8639ba0214f1d3808493d30205ff"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>zrectangle</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float cx, float cy, float rx, float ry, float theta, fcomplex val)</td></tr>
+<tr class="separator:a77da8639ba0214f1d3808493d30205ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a761883359b3ac84042e872d9f4cbc1b0"><td class="memItemLeft" align="right" valign="top"><a id="a761883359b3ac84042e872d9f4cbc1b0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zrotvec</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, const float theta)</td></tr>
 <tr class="separator:a761883359b3ac84042e872d9f4cbc1b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -570,9 +564,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcellscale</b> (anyar
 <tr class="memitem:a391ff000506ddfc6a5c95f2ef8227ce4"><td class="memItemLeft" align="right" valign="top"><a id="a391ff000506ddfc6a5c95f2ef8227ce4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcelldropempty</b> (<a class="el" href="type_8h.html#structzcell">zcell</a> **A0, int dim)</td></tr>
 <tr class="separator:a391ff000506ddfc6a5c95f2ef8227ce4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15fd98257417f1458df811e7cb6dbb0a"><td class="memItemLeft" align="right" valign="top"><a id="a15fd98257417f1458df811e7cb6dbb0a"></a>
-fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zcellinn</b> (const <a class="el" href="type_8h.html#structzcell">zcell</a> *A, const <a class="el" href="type_8h.html#structzcell">zcell</a> *B)</td></tr>
-<tr class="separator:a15fd98257417f1458df811e7cb6dbb0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a5356b7b24428309e57695634fd641"><td class="memItemLeft" align="right" valign="top"><a id="a95a5356b7b24428309e57695634fd641"></a>
+fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zcelldot</b> (const <a class="el" href="type_8h.html#structzcell">zcell</a> *A, const <a class="el" href="type_8h.html#structzcell">zcell</a> *B)</td></tr>
+<tr class="separator:a95a5356b7b24428309e57695634fd641"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf121d50c6682e955fef6b162812d7c0"><td class="memItemLeft" align="right" valign="top"><a id="acf121d50c6682e955fef6b162812d7c0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcellcwm</b> (<a class="el" href="type_8h.html#structzcell">zcell</a> *B, const <a class="el" href="type_8h.html#structzcell">zcell</a> *A)</td></tr>
 <tr class="separator:acf121d50c6682e955fef6b162812d7c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -621,9 +615,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zmaprot</b> (anyarray
 <tr class="memitem:aaac6b9a0a5026900b3570ef585521cd8"><td class="memItemLeft" align="right" valign="top"><a id="aaac6b9a0a5026900b3570ef585521cd8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmc</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, const float alpha)</td></tr>
 <tr class="separator:aaac6b9a0a5026900b3570ef585521cd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a144e6e1d41cd834df10e0fc3bf1c5f6b"><td class="memItemLeft" align="right" valign="top"><a id="a144e6e1d41cd834df10e0fc3bf1c5f6b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmd</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structsmat">smat</a> *__restrict B, const float alpha)</td></tr>
-<tr class="separator:a144e6e1d41cd834df10e0fc3bf1c5f6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa86b5fa6cf5d7264948b60eb2a3622c1"><td class="memItemLeft" align="right" valign="top"><a id="aa86b5fa6cf5d7264948b60eb2a3622c1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zcwmd</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const <a class="el" href="type_8h.html#structsmat">smat</a> *__restrict B)</td></tr>
+<tr class="separator:aa86b5fa6cf5d7264948b60eb2a3622c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b87c34916cc8da75a319ea3d6e09c78"><td class="memItemLeft" align="right" valign="top"><a id="a1b87c34916cc8da75a319ea3d6e09c78"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zembed_wvf</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict A, const float *opd, const float *amp, const int nopdx, const int nopdy, const float wvl, const float theta)</td></tr>
 <tr class="separator:a1b87c34916cc8da75a319ea3d6e09c78"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -651,6 +645,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zimag2d</b> (<a class
 <tr class="memitem:a7e41b17cb63daaa1cb6a2ab57b547ea6"><td class="memItemLeft" align="right" valign="top"><a id="a7e41b17cb63daaa1cb6a2ab57b547ea6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zabs22d</b> (<a class="el" href="type_8h.html#structsmat">smat</a> **__restrict A0, float alpha, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, float beta)</td></tr>
 <tr class="separator:a7e41b17cb63daaa1cb6a2ab57b547ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab4c65a6773c028e7320f4d3d87bdece"><td class="memItemLeft" align="right" valign="top"><a id="aab4c65a6773c028e7320f4d3d87bdece"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zarg2d</b> (<a class="el" href="type_8h.html#structsmat">smat</a> **__restrict A0, float alpha, const <a class="el" href="type_8h.html#structzmat">zmat</a> *__restrict B, float beta)</td></tr>
+<tr class="separator:aab4c65a6773c028e7320f4d3d87bdece"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae57dba32b7c9978be680145f9fa8717"><td class="memItemLeft" align="right" valign="top"><a id="aae57dba32b7c9978be680145f9fa8717"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ztilt2</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *otf, <a class="el" href="type_8h.html#structzmat">zmat</a> *otfin, float sx, float sy, int peak_corner)</td></tr>
 <tr class="separator:aae57dba32b7c9978be680145f9fa8717"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -753,12 +750,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zspmm</b> (<a class="
 <tr class="memitem:a64618952ae9aa37a63471f1d89ae1f19"><td class="memItemLeft" align="right" valign="top"><a id="a64618952ae9aa37a63471f1d89ae1f19"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zmulsp</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> **yout, const <a class="el" href="type_8h.html#structzmat">zmat</a> *x, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const char trans[2], const fcomplex alpha)</td></tr>
 <tr class="separator:a64618952ae9aa37a63471f1d89ae1f19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab556f094f5c26060001a8e83af6ac5c4"><td class="memItemLeft" align="right" valign="top"><a id="ab556f094f5c26060001a8e83af6ac5c4"></a>
-fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zspwdinn</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *y, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *x)</td></tr>
-<tr class="separator:ab556f094f5c26060001a8e83af6ac5c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9898630e3b6efbe47be10eb3ca0b3b5d"><td class="memItemLeft" align="right" valign="top"><a id="a9898630e3b6efbe47be10eb3ca0b3b5d"></a>
-fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellwdinn</b> (const <a class="el" href="type_8h.html#structzcell">zcell</a> *y, const <a class="el" href="type_8h.html#structzspcell">zspcell</a> *A, const <a class="el" href="type_8h.html#structzcell">zcell</a> *x)</td></tr>
-<tr class="separator:a9898630e3b6efbe47be10eb3ca0b3b5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80a1d0f0f8e5d6f3af1ce327f8835546"><td class="memItemLeft" align="right" valign="top"><a id="a80a1d0f0f8e5d6f3af1ce327f8835546"></a>
+fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zspwdot</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *y, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const <a class="el" href="type_8h.html#structzmat">zmat</a> *x)</td></tr>
+<tr class="separator:a80a1d0f0f8e5d6f3af1ce327f8835546"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6c1cf31c4d1a5c7115bd087ff7bb969"><td class="memItemLeft" align="right" valign="top"><a id="af6c1cf31c4d1a5c7115bd087ff7bb969"></a>
+fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellwdot</b> (const <a class="el" href="type_8h.html#structzcell">zcell</a> *y, const <a class="el" href="type_8h.html#structzspcell">zspcell</a> *A, const <a class="el" href="type_8h.html#structzcell">zcell</a> *x)</td></tr>
+<tr class="separator:af6c1cf31c4d1a5c7115bd087ff7bb969"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9c7e8323c544620e68e2ee9a9a02ba3"><td class="memItemLeft" align="right" valign="top"><a id="af9c7e8323c544620e68e2ee9a9a02ba3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zcellmm</b> (panyarray C0, const_anyarray A, const_anyarray B, const char trans[2], const float alpha)</td></tr>
 <tr class="separator:af9c7e8323c544620e68e2ee9a9a02ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -768,12 +765,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zcellmm</b> (panyarra
 <tr class="memitem:a9feb977ccef287ea22122ae762793ccb"><td class="memItemLeft" align="right" valign="top"><a id="a9feb977ccef287ea22122ae762793ccb"></a>
 <a class="el" href="type_8h.html#structzsp">zsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>z2sp</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float thres)</td></tr>
 <tr class="separator:a9feb977ccef287ea22122ae762793ccb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e89c697d7cd1cfd3b0de8a0593e8d31"><td class="memItemLeft" align="right" valign="top"><a id="a7e89c697d7cd1cfd3b0de8a0593e8d31"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zspfull</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> **out0, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const char trans, const fcomplex f)</td></tr>
-<tr class="separator:a7e89c697d7cd1cfd3b0de8a0593e8d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5033f42a0c218f67433e4f9802b12e1d"><td class="memItemLeft" align="right" valign="top"><a id="a5033f42a0c218f67433e4f9802b12e1d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellfull</b> (<a class="el" href="type_8h.html#structzcell">zcell</a> **out0, const <a class="el" href="type_8h.html#structzspcell">zspcell</a> *A, const char trans, const fcomplex f)</td></tr>
-<tr class="separator:a5033f42a0c218f67433e4f9802b12e1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68de358d1df8daf20cc51d9ac576b889"><td class="memItemLeft" align="right" valign="top"><a id="a68de358d1df8daf20cc51d9ac576b889"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zspfull</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> **out0, const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, const char trans, const fcomplex alpha)</td></tr>
+<tr class="separator:a68de358d1df8daf20cc51d9ac576b889"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11ca76c73beb8d9d81b641ecd9b13555"><td class="memItemLeft" align="right" valign="top"><a id="a11ca76c73beb8d9d81b641ecd9b13555"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zspcellfull</b> (<a class="el" href="type_8h.html#structzcell">zcell</a> **out0, const <a class="el" href="type_8h.html#structzspcell">zspcell</a> *A, const char trans, const fcomplex alpha)</td></tr>
+<tr class="separator:a11ca76c73beb8d9d81b641ecd9b13555"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a63fa97c5ae428453a310b5c2b06e2343"><td class="memItemLeft" align="right" valign="top"><a id="a63fa97c5ae428453a310b5c2b06e2343"></a>
 <a class="el" href="type_8h.html#structzsp">zsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zspadd2</b> (const <a class="el" href="type_8h.html#structzsp">zsp</a> *A, fcomplex a, const <a class="el" href="type_8h.html#structzsp">zsp</a> *B, fcomplex b)</td></tr>
 <tr class="separator:a63fa97c5ae428453a310b5c2b06e2343"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -831,6 +828,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zspdroptol</b> (<a cl
 <tr class="memitem:a200f98ef648f6aba7d6367bc44098cac"><td class="memItemLeft" align="right" valign="top"><a id="a200f98ef648f6aba7d6367bc44098cac"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zspcelldroptol</b> (<a class="el" href="type_8h.html#structzspcell">zspcell</a> *A, float thres)</td></tr>
 <tr class="separator:a200f98ef648f6aba7d6367bc44098cac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a249fcdc5f764b6b5ee21721b2a22ba2b"><td class="memItemLeft" align="right" valign="top"><a id="a249fcdc5f764b6b5ee21721b2a22ba2b"></a>
+<a class="el" href="type_8h.html#structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>zspdropemptycol</b> (<a class="el" href="type_8h.html#structzsp">zsp</a> *A)</td></tr>
+<tr class="separator:a249fcdc5f764b6b5ee21721b2a22ba2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac1eb21b531b530bb3d70c3a599ccf925"><td class="memItemLeft" align="right" valign="top"><a id="ac1eb21b531b530bb3d70c3a599ccf925"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zspsort</b> (<a class="el" href="type_8h.html#structzsp">zsp</a> *A)</td></tr>
 <tr class="separator:ac1eb21b531b530bb3d70c3a599ccf925"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -119,6 +119,8 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:adce340f42de02d8e6e09312a407fec4b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#adce340f42de02d8e6e09312a407fec4b">dtf_otf</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **nominal, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat)</td></tr>
+<tr class="separator:adce340f42de02d8e6e09312a407fec4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b787112cceef98c1a2c1aed9362ead9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9">mkdtf</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="classlong.html">long</a> notfx, <a class="el" href="classlong.html">long</a> notfy, <a class="el" href="classlong.html">long</a> pixpsax, <a class="el" href="classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffx, const <a class="el" href="type_8h.html#structdmat">dmat</a> *pixoffy, real pixblur, const <a class="el" href="type_8h.html#structdcell">dcell</a> *pixrot)</td></tr>
 <tr class="separator:a8b787112cceef98c1a2c1aed9362ead9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad2da90ca20f2193222829e3ea9b32ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="mkdtf_8h.html#structetf__t">etf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkdtf_8h.html#aad2da90ca20f2193222829e3ea9b32ee">mketf</a> (const <a class="el" href="mkdtf_8h.html#structdtf__t">dtf_t</a> *dtfs, const_anyarray sodium, int icol, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srot, const <a class="el" href="type_8h.html#structdcell">dcell</a> *srsa, real hs, real htel, real za_rad, int no_interp)</td></tr>
@@ -162,7 +164,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
 <table class="fieldtable">
 <tr><th colspan="3">Data Fields</th></tr>
 <tr><td class="fieldtype">
-<a id="a9da2fd723c32ac42db3970244beb4f79"></a><a class="el" href="type_8h.html#structccell">ccell</a> *</td>
+<a id="a254e71c1e7f1aea0e7eb324c7ae2f812"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
 nominal</td>
 <td class="fielddoc">
@@ -364,6 +366,79 @@ nwvl</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="adce340f42de02d8e6e09312a407fec4b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adce340f42de02d8e6e09312a407fec4b">&#9670;&nbsp;</a></span>dtf_otf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dtf_otf </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
+          <td class="paramname"><em>nominal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>notfx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>notfy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pdthetax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pdthetay</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pixrot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>pixblur</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>treat</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create a OTF for pix blur and pixel binning effect </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">notfx,notfy</td><td>size of FFT </td></tr>
+    <tr><td class="paramname">pixrot</td><td>Rotation of pixel array against PSF (polar coordinate) </td></tr>
+    <tr><td class="paramname">pdtheta</td><td>Ratio of pixel dtheta vs PSF dtheta squared. </td></tr>
+    <tr><td class="paramname">pixblur</td><td>Pixel blur sigma(fraction of pixel) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a8b787112cceef98c1a2c1aed9362ead9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8b787112cceef98c1a2c1aed9362ead9">&#9670;&nbsp;</a></span>mkdtf()</h2>
 
@@ -439,7 +514,7 @@ nwvl</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real&#160;</td>
+          <td class="paramtype">const real&#160;</td>
           <td class="paramname"><em>pixblur</em>, </td>
         </tr>
         <tr>

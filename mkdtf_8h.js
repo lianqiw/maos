@@ -1,7 +1,7 @@
 var mkdtf_8h =
 [
     [ "dtf_t", "mkdtf_8h.html#structdtf__t", [
-      [ "nominal", "mkdtf_8h.html#a9da2fd723c32ac42db3970244beb4f79", null ],
+      [ "nominal", "mkdtf_8h.html#a254e71c1e7f1aea0e7eb324c7ae2f812", null ],
       [ "si", "mkdtf_8h.html#a286ad92f245b487cf5683cbb40517b21", null ],
       [ "wvl", "mkdtf_8h.html#a5710d2e6ee69fa1fb2f7b22f4580630d", null ],
       [ "dtheta", "mkdtf_8h.html#a74cfb08bbacacfa58f7fb837470ad28e", null ],
@@ -25,6 +25,7 @@ var mkdtf_8h =
     ] ],
     [ "dtf_free", "mkdtf_8h.html#a3a970db34227c79d8b55302019889911", null ],
     [ "etf_free", "mkdtf_8h.html#a74e74e9b6320fc56da458c784afd7368", null ],
+    [ "dtf_otf", "mkdtf_8h.html#adce340f42de02d8e6e09312a407fec4b", null ],
     [ "mkdtf", "mkdtf_8h.html#a8b787112cceef98c1a2c1aed9362ead9", null ],
     [ "mketf", "mkdtf_8h.html#aad2da90ca20f2193222829e3ea9b32ee", null ],
     [ "dtf_free_do", "mkdtf_8h.html#aebceaa4b5aa6ca6e7aaa011d7dea2bc5", null ],

@@ -5,8 +5,8 @@ digraph "plot_cfg_t"
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
   Node223 [label="{plot_cfg_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node224 -> Node223 [color="grey25",fontsize="10",style="solid",label=" +all\n+psf\n+opdx\n+run\n+atm\n+setup\n+grad2opd" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node224 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
-  Node225 -> Node223 [color="grey25",fontsize="10",style="solid",label=" +gmax\n+opdmax" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node225 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
+  Node224 -> Node223 [color="grey25",fontsize="10",style="solid",label=" +gmax\n+opdmax\n+psfmin" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node224 [label="{double\n||}",height=0.2,width=0.4,color="grey75"];
+  Node225 -> Node223 [color="grey25",fontsize="10",style="solid",label=" +all\n+psf\n+opdx\n+run\n+atm\n+setup\n+grad2opd" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node225 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
 }

@@ -42,6 +42,6 @@ var thread_8h =
     [ "thread_wrapfun", "thread_8h.html#a0af06632e1c10cee94ac065f958b63e7", null ],
     [ "thread_id", "thread_8h.html#a46d357a9305be4f48b8166cb27ec41ff", null ],
     [ "thread_prep", "thread_8h.html#a5abc03e87897fd9c0d49c0b837f9d98f", null ],
-    [ "thread_new", "thread_8h.html#a026c95e6b2a9ee10f90a5a254548786a", null ],
+    [ "thread_new", "thread_8h.html#a9c06e9160167b01ec6e81558ae27e2d8", null ],
     [ "thread_block_signal", "thread_8h.html#abcf2784ffc1cb49a293c75cdfe6d64e7", null ]
 ];

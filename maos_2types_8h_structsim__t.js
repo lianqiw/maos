@@ -38,6 +38,8 @@ var maos_2types_8h_structsim__t =
     [ "llt_fsmcmd", "maos_2types_8h.html#ab741e0fb0719272d5df3f6fcae2c2e24", null ],
     [ "llt_fsmreal", "maos_2types_8h.html#ab6ea364f492acd1108a8e9f25989325e", null ],
     [ "llt_fsmsho", "maos_2types_8h.html#a27c193d659f780bb7c259018e25a70c3", null ],
+    [ "petal_i0", "maos_2types_8h.html#a4b4215bb7179b9fd7b2c0d1a7fad18b3", null ],
+    [ "petal_m", "maos_2types_8h.html#addb063fbc8aafcda0d138759d96022fe", null ],
     [ "opdr", "maos_2types_8h.html#a54b13cbf92ab6e6ac20933c362fa9f61", null ],
     [ "gngsmvst", "maos_2types_8h.html#ac0a7f00e6b8ea7d0c4478a5fc9c0697e", null ],
     [ "opdx", "maos_2types_8h.html#a339e02dcb8013fd6f7ad18015f8ad171", null ],

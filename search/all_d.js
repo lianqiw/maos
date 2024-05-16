@@ -18,7 +18,7 @@ var searchData=
   ['opdfit2',['opdfit2',['../classcufit__grid.html#a694f6ecce208d86fd58269a41cc474b5',1,'cufit_grid']]],
   ['opdfit2v',['opdfit2v',['../classcufit__grid.html#afefc9f104f6954681e3fa6d0e418ce4f',1,'cufit_grid']]],
   ['opdfitv',['opdfitv',['../classcufit__grid.html#adcd341d3913e674ec866fb5998bdf3cc',1,'cufit_grid']]],
-  ['opdmax',['opdmax',['../parms_8h.html#aefacdb684bd6efe84c807ae7da7e1c1b',1,'plot_cfg_t']]],
+  ['opdmax',['opdmax',['../parms_8h.html#a0d913d9bbf2e9e0ba0c15703c0f3459f',1,'plot_cfg_t']]],
   ['opdmean',['opdmean',['../parms_8h.html#a30701030c881d50cd44d239be2fcd1c7',1,'evl_cfg_t']]],
   ['opdr',['opdr',['../parms_8h.html#a3bc867f2d11e3ac2c19233c54aeb753d',1,'save_cfg_t::opdr()'],['../maos_2types_8h.html#a54b13cbf92ab6e6ac20933c362fa9f61',1,'sim_t::opdr()']]],
   ['opdrhat',['opdrhat',['../maos_2types_8h.html#a4391530204b4d68608bf32f2a91b730d',1,'sim_t']]],

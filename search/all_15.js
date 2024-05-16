@@ -74,5 +74,6 @@ var searchData=
   ['wtconvert',['wtconvert',['../cn2est_8h.html#a5b16633e19e68c0f6baa4304da3f79ea',1,'cn2est_t']]],
   ['wtrecon',['wtrecon',['../cn2est_8h.html#adbdcc35a9f621892d1109f4d74fe9cb1',1,'cn2est_t']]],
   ['wvl',['wvl',['../mkdtf_8h.html#a5710d2e6ee69fa1fb2f7b22f4580630d',1,'dtf_t::wvl()'],['../parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669',1,'powfs_cfg_t::wvl()'],['../parms_8h.html#ae8562f302fadab5ad2bfdda875f3eda6',1,'evl_cfg_t::wvl()']]],
+  ['wvlmean',['wvlmean',['../parms_8h.html#adafc6077a457078635a202b8d4909b3f',1,'powfs_cfg_t']]],
   ['wvlwts',['wvlwts',['../parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9',1,'powfs_cfg_t::wvlwts()'],['../parms_8h.html#af15d8288b79591828c56e42a21ff6b93',1,'wfs_cfg_t::wvlwts()'],['../pywfs_8h.html#ac3b17ade068b4bd758a0317a619e72da',1,'pywfs_t::wvlwts()']]]
 ];

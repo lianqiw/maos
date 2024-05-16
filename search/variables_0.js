@@ -42,6 +42,7 @@ var searchData=
   ['any',['any',['../maos_2types_8h.html#afbc2f7325225c4481821a68b4e9cc4b7',1,'recon_t']]],
   ['aper',['aper',['../parms_8h.html#a18df81d9f335d8e4a55adb9c1f88a3eb',1,'parms_t::aper()'],['../maos_2types_8h.html#a32a7dfef555ca9ee125c9f9b9c40383b',1,'sim_t::aper()']]],
   ['aper_5ffcp',['aper_fcp',['../maos_2types_8h.html#a06663ea7d30cf79b84ea1be0b51ea929',1,'ngsmod_t']]],
+  ['apetal',['apetal',['../maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75',1,'recon_t']]],
   ['apfsm',['apfsm',['../parms_8h.html#a6074b1c7bdf1eb69a90fd993db87d315',1,'powfs_cfg_t']]],
   ['aphi',['aphi',['../parms_8h.html#ae6d05bfccc18d0de4bc183cfbca212c0',1,'sim_cfg_t']]],
   ['aplo',['aplo',['../parms_8h.html#ae65ef8c7e32ec1905c34e73156b779de',1,'sim_cfg_t']]],

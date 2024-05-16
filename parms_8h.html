@@ -610,18 +610,11 @@ fnamp</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a4ca899cd1f3e07d55ca844b4b04d5359"></a>int</td>
-<td class="fieldname">
-fnampuser</td>
-<td class="fielddoc">
-<p>amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0) User provided amplitude map (not default) </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ad5e99c7003917875264e61c295f514bd"></a>char *</td>
 <td class="fieldname">
 pupmask</td>
 <td class="fielddoc">
-<p>The pupil cold stop </p>
+<p>amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0) The pupil cold stop </p>
 </td></tr>
 </table>
 
@@ -1148,6 +1141,13 @@ wvl</td>
 wvlwts</td>
 <td class="fielddoc">
 <p>weights for each wavelength. can be overriden by wfs.wvlwts. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="adafc6077a457078635a202b8d4909b3f"></a>real</td>
+<td class="fieldname">
+wvlmean</td>
+<td class="fielddoc">
+<p>Average wavelength </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a5670ab9fc69fa9ed4a053636a19f7867"></a>char *</td>
@@ -3148,6 +3148,19 @@ twfs_radonly</td>
 <p>1: radial only, 0: all modes </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="aa680b0fea83499f0bc0165ac0589bf6e"></a>int</td>
+<td class="fieldname">
+petaling</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a0fca2bb965487d48e28b716229565ce1"></a>int</td>
+<td class="fieldname">
+petaldtrat</td>
+<td class="fielddoc">
+<p>1: enable petalling control how many time steps to average for petaling mode control. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a185514284ff87c3ac54162d7d0daf5c6"></a>char **</td>
 <td class="fieldname">
 distortion_dm2wfs</td>
@@ -3906,7 +3919,7 @@ opdx</td>
 <td class="fieldname">
 psf</td>
 <td class="fielddoc">
-<p>Plot PSF in linear (1) or log (2) mode </p>
+<p>Plot PSF in log (1) or linear (2) mode </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ac971ec5e649fd759ecaf6b7dbde216f8"></a>int</td>
@@ -3923,18 +3936,25 @@ all</td>
 <p>Enables setup, atm, run </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="aefacdb684bd6efe84c807ae7da7e1c1b"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<a id="a0d913d9bbf2e9e0ba0c15703c0f3459f"></a>real</td>
 <td class="fieldname">
 opdmax</td>
 <td class="fielddoc">
 <p>Set zlim for OPD drawing </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a21b88375385a3c4676e218e376f49848"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<a id="a289f538548a8a661af1cc51c796a3234"></a>real</td>
 <td class="fieldname">
 gmax</td>
 <td class="fielddoc">
 <p>Set zlim for gradient drawing </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a0d68cef3b14a2340ccc4b40bd1ab2f47"></a>real</td>
+<td class="fieldname">
+psfmin</td>
+<td class="fielddoc">
+<p>Set zlim for psf drawing </p>
 </td></tr>
 </table>
 
@@ -5165,6 +5185,20 @@ ilgspowfs</td>
 nlgspowfs</td>
 <td class="fielddoc">
 <p>Number of LGS WFS </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aea2fd10c353a6d83d9f7a3d90869ca55"></a>int</td>
+<td class="fieldname">
+ittfpowfs</td>
+<td class="fielddoc">
+<p>Index of ttf lo powfs. -1 if none </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a32bd0209a1fbae87f166feff730cb8d6"></a>int</td>
+<td class="fieldname">
+ittpowfs</td>
+<td class="fielddoc">
+<p>Index of tt lo powfs. -1 if none </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="acc65eaf74703886d896c004560af7494"></a>int</td>

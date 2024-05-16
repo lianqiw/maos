@@ -48,7 +48,6 @@ var parms_8h =
       [ "rot", "parms_8h.html#a3eaec0255616afce501e04a304fe1eb7", null ],
       [ "misreg", "parms_8h.html#ae2954c86dea9ddd31254a7b5e940e765", null ],
       [ "fnamp", "parms_8h.html#ab58fa659977e671d883dc4597bb11ea9", null ],
-      [ "fnampuser", "parms_8h.html#a4ca899cd1f3e07d55ca844b4b04d5359", null ],
       [ "pupmask", "parms_8h.html#ad5e99c7003917875264e61c295f514bd", null ]
     ] ],
     [ "llt_cfg_t", "parms_8h.html#structllt__cfg__t", [
@@ -118,6 +117,7 @@ var parms_8h =
     [ "powfs_cfg_t", "parms_8h.html#structpowfs__cfg__t", [
       [ "wvl", "parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669", null ],
       [ "wvlwts", "parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9", null ],
+      [ "wvlmean", "parms_8h.html#adafc6077a457078635a202b8d4909b3f", null ],
       [ "saloc", "parms_8h.html#a5670ab9fc69fa9ed4a053636a19f7867", null ],
       [ "misregx", "parms_8h.html#afd7eb74863493ba55fcfc788babbd42e", null ],
       [ "misregy", "parms_8h.html#affa17d36ac1346eefe3619b40da0efca", null ],
@@ -387,6 +387,8 @@ var parms_8h =
       [ "twfs_rmin", "parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da", null ],
       [ "twfs_rmax", "parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
       [ "twfs_radonly", "parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ],
+      [ "petaling", "parms_8h.html#aa680b0fea83499f0bc0165ac0589bf6e", null ],
+      [ "petaldtrat", "parms_8h.html#a0fca2bb965487d48e28b716229565ce1", null ],
       [ "distortion_dm2wfs", "parms_8h.html#a185514284ff87c3ac54162d7d0daf5c6", null ],
       [ "distortion_dm2sci", "parms_8h.html#afdbafb6fc04edd13d5bdd8cfe5d9d730", null ],
       [ "distortion_tel2wfs", "parms_8h.html#a8544e4837a99f0c7857756b583a72989", null ]
@@ -490,8 +492,9 @@ var parms_8h =
       [ "psf", "parms_8h.html#a90b23b744ceb825576bc4288e43f0455", null ],
       [ "grad2opd", "parms_8h.html#ac971ec5e649fd759ecaf6b7dbde216f8", null ],
       [ "all", "parms_8h.html#a53b007d408e097054a842ad7e648922b", null ],
-      [ "opdmax", "parms_8h.html#aefacdb684bd6efe84c807ae7da7e1c1b", null ],
-      [ "gmax", "parms_8h.html#a21b88375385a3c4676e218e376f49848", null ]
+      [ "opdmax", "parms_8h.html#a0d913d9bbf2e9e0ba0c15703c0f3459f", null ],
+      [ "gmax", "parms_8h.html#a289f538548a8a661af1cc51c796a3234", null ],
+      [ "psfmin", "parms_8h.html#a0d68cef3b14a2340ccc4b40bd1ab2f47", null ]
     ] ],
     [ "dbg_cfg_t", "parms_8h.html#structdbg__cfg__t", [
       [ "wamethod", "parms_8h.html#a1bdf71f0b68a210e130fa366fec8cadc", null ],
@@ -655,6 +658,8 @@ var parms_8h =
       [ "dither", "parms_8h.html#ae8285c239fd9f63adf7f7d5ccb2aec1f", null ],
       [ "ilgspowfs", "parms_8h.html#a7e5fb4451f9c4ee844e8013b0aefc0a0", null ],
       [ "nlgspowfs", "parms_8h.html#aeac0a5bfe67aa6af9cbfb46596daaaa3", null ],
+      [ "ittfpowfs", "parms_8h.html#aea2fd10c353a6d83d9f7a3d90869ca55", null ],
+      [ "ittpowfs", "parms_8h.html#a32bd0209a1fbae87f166feff730cb8d6", null ],
       [ "itpowfs", "parms_8h.html#acc65eaf74703886d896c004560af7494", null ],
       [ "idmground", "parms_8h.html#a16a927b7359643ecd2a85cc8e42b6167", null ],
       [ "step_lo", "parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf", null ],

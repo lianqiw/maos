@@ -6,7 +6,7 @@ var draw_8h =
       [ "loc", "draw_8h.html#a21f274cacd6006de0eab6a2ac12a0875", null ],
       [ "dc", "draw_8h.html#a7e74316d7e62b72c8bbe0aeb3471a081", null ],
       [ "style", "draw_8h.html#a2aed35de5578898c2c69cc3a6722c725", null ],
-      [ "zlim", "draw_8h.html#acfb990e49f82100f052a5ef5d5e631d3", null ],
+      [ "zlim", "draw_8h.html#aaa1b495fac1b7e99d21647b57eddf15d", null ],
       [ "limit", "draw_8h.html#a0e2f07361ff3bb0c3412eab994a62f82", null ],
       [ "zlog", "draw_8h.html#a7d414944728bee996173c62ea656306c", null ],
       [ "ctype", "draw_8h.html#a63f75aca74bd384d75bc1e09e38cb0c5", null ],
@@ -24,10 +24,10 @@ var draw_8h =
     [ "draw_current", "draw_8h.html#adc80c25521f9db8258abbaf67cba49b0", null ],
     [ "plot_empty", "draw_8h.html#a13d17abacae2b57cd668a6af4450cb67", null ],
     [ "draw", "draw_8h.html#a46d694cfaea0577fcfcf29458b650705", null ],
-    [ "drawmap", "draw_8h.html#aef0cb494e695878f192ecf5b0a49f9f1", null ],
-    [ "drawloc", "draw_8h.html#af6a614e128ea550040fe980a1b1922e6", null ],
-    [ "drawopd", "draw_8h.html#aaa43be3eed0b684fc478223d764a1b3a", null ],
-    [ "drawgrad", "draw_8h.html#ac6a7712945fda655b849ef0d61be82af", null ],
-    [ "drawopdamp", "draw_8h.html#a8525f4c0348a232975c6277d40d85307", null ],
-    [ "drawints", "draw_8h.html#ab6fde060312158de634a6f1d23ee6b47", null ]
+    [ "drawmap", "draw_8h.html#a2e8891182cfedf560ac3f65d8d11bd31", null ],
+    [ "drawloc", "draw_8h.html#ab9f58d1807e52233e03d6df8d30af7e8", null ],
+    [ "drawopd", "draw_8h.html#a69ad1f131e63c4fd9f5dd0ec17145429", null ],
+    [ "drawgrad", "draw_8h.html#ae2d14f8a9a79bb76c572c49fa1d1ae2b", null ],
+    [ "drawopdamp", "draw_8h.html#a1151a896b3e9a29ddb3c92efbf6b3983", null ],
+    [ "drawints", "draw_8h.html#aedaa6bb4db934b5d9d216654af18b8f5", null ]
 ];

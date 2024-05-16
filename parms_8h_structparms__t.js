@@ -41,6 +41,8 @@ var parms_8h_structparms__t =
     [ "dither", "parms_8h.html#ae8285c239fd9f63adf7f7d5ccb2aec1f", null ],
     [ "ilgspowfs", "parms_8h.html#a7e5fb4451f9c4ee844e8013b0aefc0a0", null ],
     [ "nlgspowfs", "parms_8h.html#aeac0a5bfe67aa6af9cbfb46596daaaa3", null ],
+    [ "ittfpowfs", "parms_8h.html#aea2fd10c353a6d83d9f7a3d90869ca55", null ],
+    [ "ittpowfs", "parms_8h.html#a32bd0209a1fbae87f166feff730cb8d6", null ],
     [ "itpowfs", "parms_8h.html#acc65eaf74703886d896c004560af7494", null ],
     [ "idmground", "parms_8h.html#a16a927b7359643ecd2a85cc8e42b6167", null ],
     [ "step_lo", "parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf", null ],
