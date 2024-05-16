@@ -356,12 +356,12 @@ static void quitmonitor(GtkWidget* widget, gpointer data){
 */
 gboolean update_title(gpointer data){
 	size_t tmp=GPOINTER_TO_SIZE(data);
-	size_t hid=tmp&0xFF;//lowest 1 byte
-	size_t nproc=tmp>>8&0xFFF;//2-3 byte
-	size_t npending=tmp>>20;
+	int hid=tmp&0xFF;//lowest 1 byte
+	int nproc=tmp>>8&0xFFF;//2-3 byte
+	int npending=tmp>>20;
 	char tit[40];
 	if(hid<nhost){
-		snprintf(tit, 40, "%s (%zu/%zu)", hosts[hid], npending, nproc);
+		snprintf(tit, 40, "%s (%d/%d)", hosts[hid], npending, nproc);
 	} else{
 		snprintf(tit, 40, "All");
 		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);

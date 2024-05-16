@@ -35,8 +35,8 @@
 #include "monitor.h"
 //the following are only by the thread running listen_host() to avoid race condition
 static proc_t** pproc;
-static size_t* nproc;
-static size_t* npending;
+static int* nproc;
+static int* npending;
 static int* hsock;   //socket of each host
 static time_t* htime;//last time having signal from each host.
 static time_t* hnotify;//last time notification for this server.
@@ -78,11 +78,7 @@ static void sendmail(const char*format,...){
 
 }
 static void delayed_update_title(int id){
-	if(npending[id]<0){
-		dbg_time("npending[%d]=%zu, reset to 0\n", id, npending[id]);
-		npending[id]=0;
-	}
-	if(!headless) g_idle_add((GSourceFunc)update_title, GSIZE_TO_POINTER((id|nproc[id]<<8|npending[id]<<20)));
+	if(!headless) g_idle_add((GSourceFunc)update_title, GSIZE_TO_POINTER(((size_t)id|nproc[id]<<8|npending[id]<<20)));
 }
 static proc_t* proc_get(int id, int pid){
 	proc_t* iproc;
@@ -501,8 +497,8 @@ static int respond(int sock){
 void* listen_host(void* pmsock){
 	int msock=GPOINTER_TO_INT(pmsock);
 	pproc=mycalloc(nhost+1, proc_t*);
-	nproc=mycalloc(nhost+1, size_t);//total number of procs per host
-	npending=mycalloc(nhost+1, size_t);//pending procs per host
+	nproc=mycalloc(nhost+1, int);//total number of procs per host
+	npending=mycalloc(nhost+1, int);//pending procs per host
 	hsock=mycalloc(nhost+1, int);
 	for(int i=0; i<=nhost; i++){
 		hsock[i]=-1;

@@ -71,60 +71,7 @@ void wait_cpu(int nthread){
 	}
 	close(fd);
 }
-#if MAOS_DISABLE_SCHEDULER
-void parse_host(const char* line){
-	(void)line;
-}
-const char* lookup_hostaddr(const char* hostname){
-	return hostname;
-}
-const char *lookup_hostname(const char *hostname){
-	return hostname;
-}
-void init_hosts(){}
-void free_hosts(){}
-int scheduler_connect(const char* hostname){
-	(void)hostname;
-	return -1;
-}
-void scheduler_report_path(const char* path){
-	(void)path;
-}
-/**
-   Wait for available CPUs in case scheduler is not available.
-*/
 
-void scheduler_start(int nthread, int ngpu, int waiting){
-	(void)waiting;
-	(void)ngpu;
-	wait_cpu(nthread);
-}
-void scheduler_finish(int status){
-	(void)status;
-}
-void scheduler_report(status_t* status){
-	(void)status;
-}
-int scheduler_listen(thread_fun fun){
-	(void)fun;
-	return 0;
-}
-int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
-	(void)host;
-	(void)argc;
-	(void)argv;
-	return -1;
-}
-int scheduler_socket(int dir, int* sfd, int id){
-	(void)dir;
-	(void)sfd;
-	(void)id;
-	return -1;
-}
-int scheduler_launch_drawdaemon(void){
-	return -1;
-}
-#else
 uint16_t PORT=0;
 char** hosts=0;
 static char** hostsaddr=0;
@@ -170,22 +117,8 @@ void free_hosts(){
 	nhost=0;
 	UNLOCK(mutex_hosts);
 }
-/*
-
-static int myhostid(const char *host){
-	int i;
-	for(i=0; i<nhost; i++){
-	if(!strncasecmp(hosts[i],host,strlen(hosts[i])))
-		break;
-	}
-	if(i==nhost){
-	i=-1;
-	}
-	return i;
-	}*/
-
-/*Initialize hosts and associate an id number */
-//static __attribute__((constructor))
+/**
+ * Initialize hosts and associate an id number */
 void init_hosts(){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "%s/.aos/port", HOME);
@@ -209,10 +142,7 @@ void init_hosts(){
 			parse_host(line);
 		}
 		fclose(fp);
-	}
-	/*if(myhostid(HOST)==-1){
-	parse_host("localhost");//use local machine
-	}*/
+	}	
 }
 /**
    Translate hostname to address based on ~/.aos/hosts
@@ -240,6 +170,7 @@ const char *lookup_hostname(const char *hostaddr){
 	}
 	return hostaddr;
 }
+
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.
 */
@@ -271,7 +202,11 @@ static void launch_scheduler(int retry){
 	}
 }
 int scheduler_connect(const char *hostname){
+#if MAOS_DISABLE_SCHEDULER
+	(void)hostname; return -1;
+#else		
 	return connect_port(hostname, PORT, 0, 0);
+#endif
 }
 /**
    To open a port and connect to scheduler in the local host*/
@@ -303,9 +238,13 @@ static int scheduler_connect_self(int block){
    It requires a new connection to the scheduler to avoid data racing.
 */
 pthread_t scheduler_listen(thread_fun fun){
+	pthread_t ans=0;
+#if MAOS_DISABLE_SCHEDULER
+	(void) fun; 
+#else
 	if(!fun) return 0;
 	int	sock=scheduler_connect_self(0);
-	pthread_t ans=0;
+
 	if(sock!=-1){
 		int cmd[2];
 		cmd[0]=CMD_MAOSDAEMON;
@@ -315,12 +254,16 @@ pthread_t scheduler_listen(thread_fun fun){
 	} else{
 		warning_time("Failed to connect to scheduler\n");
 	}
+#endif
 	return ans;
 }
 
 static int psock=-1;
 
 void scheduler_report_path(const char* path){
+#if MAOS_DISABLE_SCHEDULER
+	(void)path;
+#else
 	static char path_save[PATH_MAX];
 	path_save[0]=0;
 	if(path){
@@ -341,6 +284,7 @@ void scheduler_report_path(const char* path){
 	cmd[1]=getpid();
 	stwriteintarr(psock, cmd, 2);
 	stwritestr(psock, path_save);
+#endif	
 }
 #define CATCH_ERR(A) if(A){psock=-1;}
 
@@ -348,6 +292,10 @@ void scheduler_report_path(const char* path){
    Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set.
  */
 void scheduler_start(int nthread, int ngpu, int waiting){
+#if MAOS_DISABLE_SCHEDULER
+	(void)ngpu;
+	if(waiting) wait_cpu(nthread);
+#else
 	if(psock<0){
 		psock=scheduler_connect_self(waiting?1:0);
 	}
@@ -372,11 +320,15 @@ void scheduler_start(int nthread, int ngpu, int waiting){
 	if(waiting){
 		wait_cpu(nthread);
 	}
+#endif
 }
 
 /**
    Called by maos to notify scheduler the completion of a job */
 void scheduler_finish(int status){
+#if MAOS_DISABLE_SCHEDULER
+	(void)status;
+#else
 	if(psock<0){
 		psock=scheduler_connect_self(0);//non-blocking connection
 	}
@@ -394,9 +346,10 @@ void scheduler_finish(int status){
 	cmd[1]=getpid();
 	CATCH_ERR(stwriteintarr(psock, cmd, 2));
 	close(psock);psock=-1;
+#endif	
 }
 pthread_t cthread=0;
-static void* scheduler_connect_thread(void *data){
+void* scheduler_connect_thread(void *data){
 	(void) data;
 	dbg_time("started.\n");
 	psock=scheduler_connect_self(1);
@@ -410,6 +363,9 @@ static void* scheduler_connect_thread(void *data){
 /**
    called by sim.c to report job status. Do not try to reconnect. */
 void scheduler_report(status_t* status){
+#if MAOS_DISABLE_SCHEDULER
+	(void)status;
+#else
 	if(psock!=-1){
 		int cmd[2];
 		cmd[0]=CMD_STATUS;
@@ -419,20 +375,26 @@ void scheduler_report(status_t* status){
 	}else if(!cthread){//launch a thread to connect
 		pthread_create(&cthread, NULL, scheduler_connect_thread, NULL);
 	}
+#endif
 }
 
 /**
    Ask scheduler (maybe in another machine) to launch executable.
 */
 int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
+	char *scmd=argv2str(argc, argv, " ");
 	int ret=0;
+#if MAOS_DISABLE_SCHEDULER
+	ret=launch_exe(argv[0], scmd)<0?-1:0;
+	(void)host;(void)argc;(void)argv;
+#else
 	int sock=connect_port(host, PORT, 0, 0);
 	if(sock<=-1){
 		warning("Failed to connect to %s:%d: %s\n", host, PORT, strerror(errno));
 		return -1;
 	}
 	int cmd[2]={CMD_LAUNCH, 2};
-	char* scmd=argv2str(argc, argv, " ");
+	
 	if(stwriteintarr(sock, cmd, 2)
 		||stwritestr(sock, argv[0])
 		||stwritestr(sock, scmd)
@@ -440,8 +402,11 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 		warning("Failed to write to scheduler at %s\n", host);
 		ret=-1;
 	}
-	free(scmd);
+	
 	close(sock);
+	
+#endif
+	free(scmd);
 	return ret;
 }
 /**
@@ -449,6 +414,9 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 */
 int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;
+#if MAOS_DISABLE_SCHEDULER
+	(void)dir;(void)sfd;(void)id;
+#else
 	static int ssock=-1;
 	if(ssock==-1){
 		ssock=scheduler_connect_self(1);
@@ -472,10 +440,9 @@ int scheduler_socket(int dir, int *sfd, int id){
 		close(ssock);
 		ssock=-1;
 	}
+#endif
 	return ans;
 }
-
-#endif /*MAOS_DISABLE_SCHEDULER*/
 
 /**
    Execute addr2line as specified in buf, combine the answer, and return the
