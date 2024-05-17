@@ -209,63 +209,22 @@ static inline int check_space(const char *endptr, const char *endstr){
 }
 #define STR_TO_INT(A,B) strtol(A,B,10)
 #define STR_TO_DBL(A,B) strtod(A,B)
-#define READ_ENV_NUM(A,min,max,T,FUN)	  \
-    if(getenv("MAOS_"#A)){					  	\
-      char *endptr=0;  \
+#define READ_ENV_NUM(A,min,max,T,FUN)\
+    if(getenv("MAOS_"#A)){\
+      char *endptr=0; \
       const char *str=getenv("MAOS_"#A);\
       const char *endstr=str+strlen(str);\
-		  T B=(T)FUN(str,&endptr);           \
+		T B=(T)FUN(str,&endptr); \
       if(endptr==str || check_space(endptr, endstr) || B>max || B<min){  \
         error("MAOS_"#A"={%s} is invalid. Must be within [%g, %g].\n", str, (double) min, (double) max);\
-      }                                 \
-		  if(A!=B){ 								        \
-        A=B; dbg(#A" changed to %g\n", (double)A);		\
-		  }										              \
-    }
+      }else if(A!=B){dbg(#A" changed to %g\n", (double)A); A=B; } }
 
 #define READ_ENV_INT(A,min,max)	READ_ENV_NUM(A,min,max,int,   STR_TO_INT)
 #define READ_ENV_DBL(A,min,max)	READ_ENV_NUM(A,min,max,double,STR_TO_DBL)
-/*#undef READ_INT
-#undef READ_DBL
-#undef READ_ENV_NUM*/
-/*
-    if(getenv("MAOS_"#A)){					  	\
-      char *endptr=0;  \
-      const char *str=getenv("MAOS_"#A);\
-      const char *endstr=str+strlen(str);\
-		  int B=strtol(str,&endptr,10);     \
-      if(check_space(endptr, endstr)){\
-        error("MAOS_"#A"=%s has garbage.\n", str);\
-      }                                 \
-		  if(A!=B){ 								        \
-			  A=MIN(MAX(B, min), max);			  \
-			  dbg(#A" changed to %d\n", A);		\
-		  }										              \
-    }
-#define READ_ENV_DBL(A,min,max)					\
-    if(getenv("MAOS_"#A)){						\
-      char *endptr=0;                 \
-      const char *str=getenv("MAOS_"#A);\
-      const char *endstr=str+strlen(str);\
-		  double B=strtod(str,&endptr);	\
-      if(check_space(endptr, endstr)){\
-        error("MAOS_"#A"=%s has garbage.\n", str);\
-      }                                 \
-		  if(A!=B){								\
-			  A=MIN(MAX(B, min), max);			\
-			  dbg(#A" changed to %g\n", A);		\
-		  }								        \
-    }*/
+
 #define DEF_ENV_FLAG(A,default_val)			\
     static int A=default_val;				\
-    static __attribute__((constructor)) void init(){	\
+    static __attribute__((constructor)) void init(){\
 		READ_ENV_INT(A, 0, 1);				\
     }
-/*#define DEF_ENV_FLAG_LOCAL(A, default_val, min_val, max_val)	\
-    static int A=-1;						\
-    if(A==-1){					 			\
-		A=default_val;						\
-		READ_ENV_INT(A, min_val, max_val);	\
-    }*/
 #endif
-

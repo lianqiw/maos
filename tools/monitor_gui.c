@@ -73,15 +73,17 @@ static int list_get_iter(GtkTreeRowReference* row, GtkTreeIter* iter){
 	}
 	return 1;
 }
-static void list_modify_icon(GtkTreeRowReference* row, GdkPixbuf* newicon){
+static void list_modify_icon(proc_t *proc, GdkPixbuf* newicon){
+	if(!proc || !newicon || proc->oldinfo==proc->status.info) return;
 	GtkTreeIter iter;
-	if(!list_get_iter(row, &iter)){
+	if(!list_get_iter(proc->row, &iter)){
 		gtk_list_store_set(listall, &iter, COL_ACTION, newicon, -1);
 	}
 }
-static void list_modify_color(GtkTreeRowReference* row, const char* color){
+static void list_modify_color(proc_t *proc, const char *color){
+	if(!proc||!color||proc->oldinfo==proc->status.info) return;
 	GtkTreeIter iter;
-	if(!list_get_iter(row, &iter)){
+	if(!list_get_iter(proc->row, &iter)){
 		gtk_list_store_set(listall, &iter, COL_COLOR, color, -1);
 	}
 }
@@ -261,58 +263,58 @@ gboolean refresh(proc_t* p){
 		break;
 	case S_RUNNING:
 		list_proc_update(p);
-		list_modify_icon(p->row, icon_running);
+		list_modify_icon(p, icon_running);
 		break;
 	case S_WAIT: /*waiting to start */
 	//list_modify_status(p, "Waiting");
 		list_proc_reset(p);
-		list_modify_icon(p->row, icon_waiting);
+		list_modify_icon(p, icon_waiting);
 		break;
 	case S_START: /*just started. */
 	//list_modify_status(p, "Started");
 		list_proc_reset(p);
-		list_modify_icon(p->row, icon_running);
+		list_modify_icon(p, icon_running);
 		notify_user(p);
 		break;
 	case S_QUEUED:
 	//list_modify_status(p, "Queued");
 		list_proc_reset(p);
-		list_modify_icon(p->row, icon_waiting);
+		list_modify_icon(p, icon_waiting);
 		break;
 	case S_UNKNOWN:
-		list_modify_icon(p->row, icon_cancel);
+		list_modify_icon(p, icon_cancel);
 		break;
 	case S_FINISH:/*Finished */
 		list_proc_update(p);
-		list_modify_icon(p->row, p->frac==0?icon_skip:icon_finished);
-		//list_modify_icon(p->row, icon_finished);
-		//list_modify_color(p->row,"#00DD00");
+		list_modify_icon(p, p->frac==0?icon_skip:icon_finished);
+		//list_modify_icon(p, icon_finished);
+		//list_modify_color(p,"#00DD00");
 		notify_user(p);
 		break;
 	case S_CRASH:/*Error */
 	//list_modify_status(p, "Error");
-		list_modify_icon(p->row, icon_failed);
-		//list_modify_color(p->row,"#CC0000");
+		list_modify_icon(p, icon_failed);
+		//list_modify_color(p,"#CC0000");
 		notify_user(p);
 		break;
 	case S_TOKILL:/*kill command sent */
 	//list_modify_status(p, "Kill command sent");
-		list_modify_icon(p->row, icon_failed);
-		//list_modify_color(p->row,"#CCCC00");
+		list_modify_icon(p, icon_failed);
+		//list_modify_color(p,"#CCCC00");
 		break;
 	case S_REMOVE:
 		break;
 	case S_KILLED:
 	//list_modify_status(p, "Killed");
-		list_modify_icon(p->row, icon_failed);
-		//list_modify_color(p->row,"#CC0000");
+		list_modify_icon(p, icon_failed);
+		//list_modify_color(p,"#CC0000");
 		notify_user(p);
 		break;
 	default:
 		warning("Unknown info: %d\n", p->status.info);
 	}
 	if(p->status.warning){
-		list_modify_color(p->row, "#FF0000");
+		list_modify_color(p, "#FF0000");
 	}
 	return 0;//must return false
 }

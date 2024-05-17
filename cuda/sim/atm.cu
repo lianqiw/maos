@@ -156,7 +156,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 							free(tmp2);
 						}
 					}
-					error("Please rerun maos with %s\n", gcmd);
+					error("Insufficient memory on some GPUs. Please rerun maos with %s\n", gcmd);
 				}
 				_Exit(0);
 			} else{

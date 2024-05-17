@@ -5,6 +5,7 @@
 import glob
 import os
 import numpy as np
+import scipy
 import warnings
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
@@ -198,7 +199,7 @@ def grad_ttfr(grad, saloc):
 def loc_zernike_proj(loc, rmin, rmax, radonly=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     #D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
-    mod=zernike(loc, 0, rmin, rmax, radonly).T
+    mod=aos.zernike(loc, 0, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
     return mod, rmod
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
@@ -218,17 +219,17 @@ def mk2dloc(shape):
         ny=shape[1]
     else:
         ny=nx
-    return mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2,nx*ny)
+    return aos.mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2,nx*ny)
 def mktt(amp):
     '''create piston/tip/tilt mode from amplitude map'''
     (nx,ny)=amp.shape
-    loc=mksqloc(ny, nx, 2./ny, 2./nx, -1, -1).reshape(2, amp.size)
+    loc=aos.mksqloc(ny, nx, 2./ny, 2./nx, -1, -1).reshape(2, amp.size)
     loc[:,amp.flat<=0]=0
     return loc
 def mkptt(amp):
     '''create piston/tip/tilt mode from amplitude map'''
     (nx,ny)=amp.shape
-    loc=mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2, amp.size)
+    loc=aos.mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2, amp.size)
     pis=(amp>0).reshape(1,amp.size)
     loc[:,pis[0]==0]=0
     return np.r_[pis, loc]
@@ -318,7 +319,7 @@ def plot_cdf(y, *args, **kargs):
     plot(np.sort(y.flat), x, *args, **kargs)
     ylim(0,1)
 
-def plot_cross(A, n=0):
+def plot_cross(A, n=0, dx=1):
     '''Plot a cross section'''
     if n==0 or n is None:
         n=A.shape[0]
@@ -326,7 +327,7 @@ def plot_cross(A, n=0):
     n1=max((A.shape[0]-n)>>1,0)
     n2=min((A.shape[0]+n)>>1,A.shape[0])
     print(n1,n2,A.shape[0]>>1)
-    plot(np.arange(n1,n2)-(A.shape[0]>>1), A[n1:n2,A.shape[1]>>1])
+    plot((np.arange(n1,n2)-(A.shape[0]>>1))*dx, A[n1:n2,A.shape[1]>>1])
 
 def plot_smooth(x,y,*args,**kargs):
     from scipy.interpolate import make_interp_spline, BSpline
@@ -336,7 +337,7 @@ def plot_smooth(x,y,*args,**kargs):
     #define x as 200 equally spaced values between the min and max of original x
     xnew = np.linspace(x.min(), x.max(), 200)
     #define spline
-    spl = make_interp_spline(x, y, k=3)
+    spl = make_interp_spline(x, y, k=3, bc_type="natural")
     y_smooth = spl(xnew)
 
     #create smooth line chart
@@ -345,7 +346,7 @@ def radial_profile(data, nx=None):
     if nx is None:
         nx=data.shape[0]>>1
     xx=np.arange(nx).astype(np.float64).copy() # np.linspace(0,nx-1,nx) #np.arange(nx).asfarray()
-    return calcenc(data, xx, -1, 10) #azimuthal averaging
+    return aos.calcenc(data, xx, -1, 10) #azimuthal averaging
 def radial_profile_obsolete(data, center=None, enclosed=0):
     '''Compute the radial average or radially enclosed energy. radial start with 1'''
     if center is None:
@@ -835,3 +836,14 @@ def dtf_blur(psf, notf, blur):
     psfout=np.real(ifft2(wvf))
     psfout[psfout<0]=0
     return center(psfout, psf.shape[0])
+
+
+def interp_cn2(ht2, ht, wt):
+    '''Represent the cn2dh in new layers by interpolating the forward and backward cumulative sum'''
+    wt2=np.interp(ht2, ht, np.cumsum(wt))
+    wt2rev=np.interp(ht2, ht, np.cumsum(wt[::-1])[::-1])
+
+    wt2[1:]-=wt2[0:-1] #undo cumulative
+    wt2rev[0:-1]-=wt2rev[1:] #undo reverse cumulative
+    wt2=0.5*(wt2+wt2rev) #average
+    return wt2/np.sum(wt2)

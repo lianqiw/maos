@@ -286,6 +286,26 @@ static void save_all_jobs(){
 	free(fnall);
 	free(tm);
 }
+static void update_npending(proc_t *iproc){
+	if(iproc->oldinfo==iproc->status.info) return;//no change.
+	int ihost=iproc->hid;
+	//oldinfo==0 implies no information yet.
+	if((iproc->oldinfo==0||iproc->oldinfo>10)&&iproc->status.info<10&&iproc->status.info>0){
+		npending[ihost]++;//new running or pending job
+		if(npending[ihost]>nproc[ihost]){
+			warning_time("npending[%d]=%d>nproc[%d]=%d. oldinfo=%d, newinfo=%d\n", ihost, npending[ihost], ihost, nproc[ihost], iproc->oldinfo, iproc->status.info);
+			npending[ihost]=nproc[ihost];
+		}
+		delayed_update_title(ihost);
+	} else if(iproc->oldinfo>0&&iproc->oldinfo<10&&iproc->status.info>10){
+		if(npending[ihost]>0){
+			npending[ihost]--;//job exited.
+		} else{
+			warning_time("npending[%d] is already zero, cannot decrease. oldinfo=%d, newinfo=%d\n", ihost, iproc->oldinfo, iproc->status.info);
+		}
+		delayed_update_title(ihost);
+	}
+}
 static int scheduler_cmd(int ihost, int pid, int command);
 //called by listen_host to respond to scheduler
 const char *status_msg[]={
@@ -346,7 +366,7 @@ static int respond(int sock){
 		/*if(!iproc){
 		iproc=proc_add(ihost,pid);
 		}*/
-		int old_info=iproc->status.info;
+		int old_info=iproc->oldinfo=iproc->status.info;
 		if(stread(sock, &iproc->status, sizeof(status_t))){
 			info_time("respond: read status failed\n");
 			return -1;
@@ -361,17 +381,7 @@ static int respond(int sock){
 			iproc->status.info=S_TOKILL;//pending kill.
 		}
 		//old_info==0: not update received yet.
-		if((old_info==0||old_info>10)&&iproc->status.info<10&&iproc->status.info>0){
-			npending[ihost]++;//new running or pending job
-			delayed_update_title(ihost);
-		}else if(old_info>0 && old_info<10 && iproc->status.info>10){
-			if(npending[ihost]>0){
-				npending[ihost]--;//job exited.
-			}else{
-				dbg("npending[%d] is already zero, cannot decrease. old_info=%d, new_info=%d\n", ihost, old_info, iproc->status.info);
-			}
-			delayed_update_title(ihost);
-		}
+		update_npending(iproc);
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{

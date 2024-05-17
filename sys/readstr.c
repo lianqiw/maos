@@ -364,12 +364,11 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	while(startptr<endarr){
 		if(count>=nmax){
 			if(len){
-				error("%s=%s: Needs %d numbers, but more are supplied.\n", key, data, len);return -1;
-			} else{
-				*ret=myrealloc(*ret, size*nmax*2, char);
-				memset((char*)*ret+size*nmax, 0, size*nmax);
-				nmax*=2;
+				warning("%s=%s: Needs %d numbers, but more are supplied.\n", key, data, len);return -1;
 			}
+			*ret=myrealloc(*ret, size*nmax*2, char);
+			memset((char*)*ret+size*nmax, 0, size*nmax);
+			nmax*=2;
 		}
 		/*parse the string for a floating point number.  */
 		double res=readstr_num(key, startptr, (char**)&endptr);
@@ -514,6 +513,10 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}else{//keep data at zero.
 			nrow=len;
 			ncol=1;
+			if(count>len){
+				warning("Need %d, but got %d values, ignore the rest.\n", len, count);
+				count=len;
+			}
 		}
 	}
 	if(nrow0) *nrow0=nrow;

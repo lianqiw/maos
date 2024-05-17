@@ -37,7 +37,38 @@
 /*
    A few utility routines
 */
-
+/**
+ * Return type of wfs
+*/
+const char *powfs_legend(const parms_t *parms, int ipowfs){
+	const char *const legwfs[]={
+	"LGS WFS",
+	"NGS WFS",
+	"PWFS",
+	"TTF WFS",
+	"TT WFS",
+	"Other WFS",
+	};
+	int ilegwfs=6;
+	if(parms->powfs[ipowfs].lo){
+		if(parms->powfs[ipowfs].order==1){
+			ilegwfs=4;
+		} else{
+			ilegwfs=3;
+		}
+	} else{
+		if(parms->powfs[ipowfs].trs){
+			ilegwfs=0;
+		} else{
+			if(parms->powfs[ipowfs].type==WFS_PY){
+				ilegwfs=2;
+			} else{
+				ilegwfs=1;
+			}
+		}
+	}
+	return legwfs[ilegwfs];
+}
 /**
    Plot the loc, together with all beams
 */
@@ -49,6 +80,8 @@ void plotloc(const char* fig, const parms_t* parms,
 		ncir+= parms->ncpa.ndir;
 	}
 	dmat* cir=dnew(4, ncir);
+	const char *legend[ncir+1];
+	memset(legend, 0, sizeof(char*)*(ncir+1));
 	int count=0;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		real hs=P(parms->evl.hs,ievl);
@@ -57,6 +90,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
 		P(cir, 3, count)=0xFF0000;/*rgb color */
 		count++;
+		if(ievl==0) legend[count]="Evaluation";//after count++ because points are plotted first
 	}
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 		real hs=P(parms->fit.hs,ifit);
@@ -65,6 +99,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
 		P(cir, 3, count)=0xFF22DD;/*rgb color */
 		count++;
+		if(ifit==0) legend[count]="DM Fitting";
 	}
 	for(int idir=0; idir< parms->ncpa.ndir; idir++){
 		real hs=P(parms->ncpa.hs,idir);
@@ -73,6 +108,7 @@ void plotloc(const char* fig, const parms_t* parms,
 		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
 		P(cir, 3, count)=0x22FF00;/*rgb color */
 		count++;
+		if(idir==0) legend[count]="NCPA";
 	}
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -91,8 +127,11 @@ void plotloc(const char* fig, const parms_t* parms,
 			P(cir, 3, count)=0x0000FF;//TT
 		}
 		count++;
+		if(P(parms->powfs[ipowfs].wfsind,iwfs)==0){
+			legend[count]=powfs_legend(parms, ipowfs);
+		}
 	}
-	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir},
+	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir, .legend=legend},
 		"Coordinate", "x (m)", "y (m)", "%s", fn);
 	dfree(cir);
 }
@@ -136,34 +175,9 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 		P(locs,count)->locy[ifit]=P(parms->ncpa.thetay,ifit)*RAD2AS;
 	}
 	count++;
-	const char* const legwfs[]={
-	"LGS WFS",
-	"NGS WFS",
-	"PWFS",
-	"TTF WFS",
-	"TT WFS",
-	"Other WFS",
-	};
+
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		int ilegwfs=6;
-		if(parms->powfs[ipowfs].lo){
-			if(parms->powfs[ipowfs].order==1){
-				ilegwfs=4;
-			} else{
-				ilegwfs=3;
-			}
-		} else{
-			if(parms->powfs[ipowfs].trs){
-				ilegwfs=0;
-			} else{
-				if(parms->powfs[ipowfs].type==WFS_PY){
-					ilegwfs=2;
-				} else{
-					ilegwfs=1;
-				}
-			}
-		}
-		legend[count]=legwfs[ilegwfs];
+		legend[count]=powfs_legend(parms, ipowfs);
 		P(locs,count)=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
@@ -202,10 +216,10 @@ void rename_file(int sig){
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 		remove("run_done.log");
-		mysymlink(fn, "run_done.log");
+		mylink(fn, "run_done.log");//use hardlink to preserve the file
 		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 		remove("maos_done.conf");
-		mysymlink(fn, "maos_done.conf");
+		mylink(fn, "maos_done.conf");
 	}
 	if(global&&global->parms&&global->parms->fdlock&&sig!=0){
 		char fn[80];

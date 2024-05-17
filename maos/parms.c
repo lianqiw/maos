@@ -448,7 +448,8 @@ static void readcfg_powfs(parms_t *parms){
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
 #define READ_LLT(T,key) llt->key=readcfg_##T("%sllt."#key, prefix)
 #define READ_LLT_ARR(T,key) llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
-			open_config(powfsi->fnllt, prefix, readcfg_peek_priority("powfs.fnllt"));
+			//use priority-1 so that values specified as powfs0_llt. has priority over powfs.fnllt
+			open_config(powfsi->fnllt, prefix, readcfg_peek_priority("powfs.fnllt")-1);
 			llt_cfg_t *llt=powfsi->llt=mycalloc(1, llt_cfg_t);
 			READ_LLT(dbl, d);
 			READ_LLT(dbl, widthp);
@@ -510,7 +511,8 @@ static void readcfg_powfs(parms_t *parms){
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			open_config(powfsi->pywfs, prefix, readcfg_peek_priority("powfs.pywfs"));
+			//use priority-1 so that values specified as powfs0_pywfs. has priority over powfs.pywfs
+			open_config(powfsi->pywfs, prefix, readcfg_peek_priority("powfs.pywfs")-1);
 			pycfg=powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
 #define READ_PYWFS(T,key) pycfg->key=readcfg_##T("%spywfs."#key, prefix)
 #define READ_PYWFS_MAT(T,key) pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
@@ -948,7 +950,7 @@ static void readcfg_dm(parms_t *parms){
 	char **strtmp=NULL;
 	dmat **dmattmp=NULL;
 	READ_DM(dbl,ht);
-	READ_DM(dbl,offset);
+	READ_DM_RELAX(dbl,offset);
 	READ_DM_RELAX(dbl,dx);
 	READ_DM_RELAX(dbl,ar);
 	for(int idm=0; idm<ndm; idm++){

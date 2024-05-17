@@ -42,8 +42,9 @@ static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
-	long priority;//Priority of the entry. -1: a replacement entry. 0: default, larger: higher priority
-	long flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
+	int priority;//Priority of the entry. -1: a replacement entry. 0: default, larger: higher priority
+	int flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
+	int prefix;  //whether this is prefix'ed entry.
 }STORE_T;
 static int key_cmp(const void* a, const void* b){
 	return strcmp(((STORE_T*)a)->key, ((STORE_T*)b)->key);
@@ -155,16 +156,16 @@ static void print_key(const void* key, VISIT which, int level){
 		}
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
-				if(PERMISSIVE || !store->priority){
+				if(PERMISSIVE||!store->priority||store->prefix){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
 			} else if(store->flag>1){
 				if(PERMISSIVE){
-					warning("Key %s is used %ld times\n", store->key, store->flag);
+					warning("Key %s is used %d times\n", store->key, store->flag);
 				} else{
-					error("Key %s is used %ld times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->flag);
+					error("Key %s is used %d times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->flag);
 				}
 			}
 		}
@@ -383,6 +384,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			STORE_T* store=mycalloc(1, STORE_T);
 			if(prefix){
 				store->key=stradd(prefix, var, NULL);
+				store->prefix=1;
 			} else{
 				store->key=strdup(var);
 			}

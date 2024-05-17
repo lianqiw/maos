@@ -507,15 +507,15 @@ static inline int fwriteint(FILE* fbuf, int A){
 }
 //write str length and str itself (with tailing NULL)
 static inline int fwritestr(FILE* fbuf, const char* str){
-	if(!str) return 0;
+	if(!str) str="";
 	uint32_t nlen=strlen(str)+1;
-	if(fwriteint(fbuf, nlen)||fwrite(str, 1, nlen, fbuf)<nlen) return -1;
+	if(fwriteint(fbuf, nlen) || fwrite(str, 1, nlen, fbuf)<nlen) return -1;
 	return 0;
 }
 static int iframe=0; //frame counter
 #define CATCH(A) if(A) {ans=1; warning("fwrite failed\n"); goto end2;}
 #define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
-#define FWRITESTR(str) CATCH(fwritestr(fbuf, str))
+#define FWRITESTR(str) CATCH(fwritestr(fbuf, str)) //will write 1 byte if str is NULL
 #define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
 #define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, (nlen)+sizeof(int)) || fwriteint(fbuf, cmd))
 #define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, strlen(str)+1); FWRITESTR(str);}
@@ -749,9 +749,7 @@ int draw(const char* fig,    /**<Category of the figure*/
 			if(opts.legend){
 				int nlen=0;
 				for(int ig=0; ig<opts.ngroup; ig++){
-					if(opts.legend[ig]){
-						nlen+=strlen(opts.legend[ig])+1;
-					}
+					nlen+=opts.legend[ig]?strlen(opts.legend[ig]):0+1;
 				}
 				FWRITECMD(DRAW_LEGEND, nlen);
 				for(int ig=0; ig<opts.ngroup; ig++){
