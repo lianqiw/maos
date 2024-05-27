@@ -95,10 +95,12 @@ void maos_setup(const parms_t* parms){
 	extern void (*dsvd_ext)(dmat**U_, dmat**S_, dmat**Vt_, const dmat*A_);
 	extern void (*dsvd_pow_ext)(dmat*A_, real power, real thres);
 	extern void (*dgemm_ext)(dmat**out, const real beta, const dmat*A, const dmat*B, const char trans[2], const real alpha);
+	extern dmat *(*pywfs_mkg_ext)(const pywfs_t*pywfs, const loc_t*locin, const loc_t*locfft, const dmat*mod, real displacex, real displacey);
 	dbg("set dsvd_ext to gpu_dsvd\n");
 	dsvd_ext=gpu_dsvd;
 	dsvd_pow_ext=gpu_dsvd_pow;
 	dgemm_ext=gpu_dgemm;
+	pywfs_mkg_ext=gpu_pywfs_mkg;
 	}
 	#endif
 #endif
@@ -117,7 +119,7 @@ void maos_setup(const parms_t* parms){
 		print_mem("After setup_powfs_init");
 		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c
 		global->recon=recon=setup_recon_prep(parms, aper, powfs);
-		pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
+		//pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
 		setup_surf(parms, aper, powfs, recon);
 		//set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()

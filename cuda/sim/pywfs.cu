@@ -27,7 +27,6 @@
 #if !USE_CPP
 extern "C"{
 #endif
-#include "../../maos/pywfs.h"
 #include "../../maos/sim.h"
 #if !USE_CPP
 }
@@ -110,7 +109,7 @@ void pywfs_grad(curmat& grad, /**<[out] gradients*/
 		const pywfs_t* pywfs,
 		cudaStream_t stream){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
-	const int ng=pycfg->ng;
+	const int ng=pywfs_ng(pycfg);
 	if(pycfg->raw || pycfg->nside<3){
 		pywfsr_grad_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 			(grad, ints, saa, pycfg->siglev, goff, pywfs->gain, ints.Nx(),ng);
@@ -202,7 +201,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 			real pos_ri=pos_r*(ir+1)/pos_nr;
 			//Scale number of points by ring size to have even surface brightness
 			int pos_ni=pos_n*(ir+1)/pos_nr;
-			const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr);
+			const Real alpha=pywfs->cfg->wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr);
 			for(int ipos=0; ipos<pos_ni; ipos++){
 				const Real theta=2*M_PI*ipos/pos_ni;
 				const Real posx=cos(theta)*pos_ri;
@@ -301,7 +300,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	culoc_t culocout(locfft);
 	const int nsa=cupowfs->saloc.Nloc();
 	curmat ints(nsa, pycfg->nside);
-	const int ng=pycfg->ng;
+	const int ng=pywfs_ng(pycfg);
 	curmat grad(nsa*ng, 1);
 	curmat grad0(nsa*ng, 1);
 	cuzero(ints, stream);

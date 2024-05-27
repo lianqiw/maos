@@ -21,7 +21,6 @@
 #include "common.h"
 #include "powfs.h"
 #include "powfs_utils.h"
-#include "pywfs.h"
 #include "recon.h"
 #include "recon_utils.h"
 #undef GREEN
@@ -1631,7 +1630,77 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 		}
 	}
 }
+/**
+   Setup pyramid WFS based on configuration.
 
+   Todo: In order to move the implementation to lib/ the following changes are needed
+   - Generate loc/amp externally and supply here.
+   - Handle misregistration externally. Different misregisration is used in simulation and reconstruction.
+   - ...
+*/
+void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs){
+	pywfs_free(powfs[ipowfs].pywfs);
+	//map_t *map=0;
+	//create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
+	powfs[ipowfs].loc=mkannloc(parms->aper.d, 0, pycfg->dx, 0);
+	powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground,
+		-P(parms->aper.misreg, 0), -P(parms->aper.misreg, 1),
+		parms->aper.d, parms->aper.din);
+	loc_reduce(powfs[ipowfs].loc, powfs[ipowfs].amp, EPS, 0, NULL);
+	setup_powfs_misreg_tel(powfs, parms, aper, ipowfs);
+	setup_powfs_misreg_dm(powfs, parms, aper, ipowfs);
+	if(powfs[ipowfs].realamp){
+		warning("realamp is already set\n");
+		dcellfree(powfs[ipowfs].realamp);
+	}
+	powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]){
+			P(powfs[ipowfs].realamp, jwfs)=dref(P(powfs[ipowfs].amp_tel, jwfs));
+		} else{
+			P(powfs[ipowfs].realamp, jwfs)=dref(powfs[ipowfs].amp);
+		}
+	}
+	pywfs_t *pywfs=powfs[ipowfs].pywfs=pywfs_new((pywfs_cfg_t*)pycfg, powfs[ipowfs].loc, powfs[ipowfs].amp);
+	pywfs->iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+	powfs[ipowfs].saloc=locref(pywfs->saloc);
+	powfs[ipowfs].saa=dref(pywfs->saa);
+
+
+	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges
+	{
+		int nsa=PN(pywfs->saa);
+		int ng=pywfs_ng(pycfg);
+		powfs[ipowfs].sanea=dcellnew(1, 1);
+		dmat *sanea=P(powfs[ipowfs].sanea, 0)=dnew(nsa, ng);
+		real rne=parms->powfs[ipowfs].rne;
+		for(int isa=0; isa<nsa; isa++){
+			real ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
+			real sig=P(pywfs->saa, isa)*parms->powfs[ipowfs].siglev;//siglev of subaperture
+			real neai=pow(ogi/sig, 2)*(sig+4*rne*rne);
+			for(int ig=0; ig<ng; ig++){
+				P(sanea, isa, ig)=neai;
+			}
+		}
+	}
+	if(parms->save.setup){
+		writebin(pywfs->loc, "powfs%d_loc", ipowfs);
+		writebin(pywfs->amp, "powfs%d_amp", ipowfs);
+		writebin(pywfs->saloc, "powfs%d_saloc", ipowfs);
+		writebin(pywfs->saa, "powfs%d_saa", ipowfs);
+		writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
+		writebin(pywfs->nominal, "powfs%d_nominal", ipowfs);
+		writebin(pywfs->si, "powfs%d_si", ipowfs);
+		writebin(pywfs->pupilshift, "powfs%d_pupilshift", ipowfs);
+		writebin(pywfs->si, "powfs%d_si0", ipowfs);
+		locwrite(pywfs->locfft->loc, "powfs%d_locfft", ipowfs);
+		writebin(pywfs->saloc, "powfs%d_saloc0", ipowfs);
+		writebin(pywfs->gradoff, "powfs%d_gradoff", ipowfs);
+		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
+		writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
+	}
+}
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
    setup here.  \callgraph */
@@ -1646,7 +1715,7 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 			setup_shwfs_grad(powfs, parms, ipowfs);
 		} else if(parms->powfs[ipowfs].type==WFS_PY){
 			info2("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN, ipowfs, BLACK);
-			pywfs_setup(parms->powfs[ipowfs].pycfg, powfs, parms, aper, ipowfs);
+			setup_pywfs(parms->powfs[ipowfs].pycfg, powfs, parms, aper, ipowfs);
 		} else{
 			error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
 		}

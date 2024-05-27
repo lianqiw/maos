@@ -22,7 +22,6 @@
 #include "recon.h"
 #include "recon_utils.h"
 #include "powfs.h"
-#include "pywfs.h"
 #include "ahst.h"
 #undef GREEN
 #define GREEN BLACK

@@ -28,7 +28,6 @@ extern "C"
 #endif
 #include "../../maos/sim.h"
 #include "../../maos/utils.h"
-#include "../../maos/pywfs.h"
 #if !USE_CPP
 }
 #endif

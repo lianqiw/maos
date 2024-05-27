@@ -126,28 +126,33 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 	int pad,      /**<[in] Increase nx, ny to power of 2*/
 	int square    /**<[in] Full square/rectangular grid*/
 ){
-	if(!dirs) return;
 	const real R=D/2;
-	real minx=INFINITY, miny=INFINITY, maxx=-INFINITY, maxy=-INFINITY;
-	if(dirs->nx<4||dirs->ny<=0){
-		error("dirs should have no less than 3 rows and positive number of cols.\n");
-	}
-	for(int idir=0; idir<dirs->ny; idir++){
-		real ht=ht0-P(dirs,3, idir);//hc
-		real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
-		real sx1=(P(dirs, 0, idir)*ht)-RR;
-		real sx2=(P(dirs, 0, idir)*ht)+RR;
-		real sy1=(P(dirs, 1, idir)*ht)-RR;
-		real sy2=(P(dirs, 1, idir)*ht)+RR;
-		//Need to work when ht<0;
-		if(sx1<minx) minx=sx1;
-		if(sx1>maxx) maxx=sx1;
-		if(sx2<minx) minx=sx2;
-		if(sx2>maxx) maxx=sx2;
-		if(sy1<miny) miny=sy1;
-		if(sy1>maxy) maxy=sy1;
-		if(sy2<miny) miny=sy2;
-		if(sy2>maxy) maxy=sy2;
+	real minx=-R-guard, miny=-R-guard, maxx=R+guard, maxy=R+guard;
+	if(dirs){
+		if(dirs->nx<4||dirs->ny<=0){
+			error("dirs should have no less than 3 rows and positive number of cols.\n");
+		}
+		for(int idir=0; idir<dirs->ny; idir++){
+			real ht=ht0-P(dirs,3, idir);//hc
+			real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
+			real sx1=(P(dirs, 0, idir)*ht)-RR;
+			real sx2=(P(dirs, 0, idir)*ht)+RR;
+			real sy1=(P(dirs, 1, idir)*ht)-RR;
+			real sy2=(P(dirs, 1, idir)*ht)+RR;
+			//Need to work when ht<0;
+			if(sx1<minx) minx=sx1;
+			if(sx1>maxx) maxx=sx1;
+			if(sx2<minx) minx=sx2;
+			if(sx2>maxx) maxx=sx2;
+			if(sy1<miny) miny=sy1;
+			if(sy1>maxy) maxy=sy1;
+			if(sy2<miny) miny=sy2;
+			if(sy2>maxy) maxy=sy2;
+		}
+	}else{
+		if(ht0!=0){
+			error("if ht0 is 0, dirs must be set\n");
+		}
 	}
 	if(square){//if square, also make symmetric.
 		maxx=MAX(fabs(minx), fabs(maxx));
@@ -207,12 +212,16 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		if(square){/**Only want square grid*/
 			dset(dmap, 1);
 		} else{/*Want non square grid*/
-			for(int idir=0; idir<dirs->ny; idir++){
-				real ht=ht0-P(dirs, 3, idir);
-				real sx=-ox+(P(dirs, 0, idir)*ht);
-				real sy=-oy+(P(dirs, 1, idir)*ht);
-				real RR=R*(1.-ht/P(dirs, 2, idir))+guard;
-				dcircle(dmap, sx, sy, dx, dy, RR, 1);
+			if(dirs){
+				for(int idir=0; idir<dirs->ny; idir++){
+					real ht=ht0-P(dirs, 3, idir);
+					real sx=-ox+(P(dirs, 0, idir)*ht);
+					real sy=-oy+(P(dirs, 1, idir)*ht);
+					real RR=R*(1.-ht/P(dirs, 2, idir))+guard;
+					dcircle(dmap, sx, sy, dx, dy, RR, 1);
+				}
+			}else{
+				dcircle(dmap, -ox, -oy, dx, dy, R, 1);
 			}
 			for(int i=0; i<nx*ny; i++){
 				P(dmap,i)=(P(dmap,i))>1.e-15?1:0;

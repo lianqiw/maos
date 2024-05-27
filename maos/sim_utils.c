@@ -24,7 +24,6 @@
 #include "sim_utils.h"
 #include "surf.h"
 #include "powfs.h"
-#include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif

@@ -39,7 +39,7 @@ maos2mex.h:../scripts/maos2mex.py ../sys/scheduler.h ../maos/parms.h ../maos/typ
 	../lib/gensei.h ../lib/locfft.h ../lib/mkh.h ../lib/muv.h ../lib/proj.h ../lib/slaving.h \
 	../lib/aos.h ../lib/draw.h ../lib/hyst.h ../lib/misc.h ../lib/mkw.h ../lib/pcg.h ../lib/psd.h ../lib/stfun.h\
 	../lib/chol.h ../lib/fractal.h ../lib/kalman.h ../lib/mkdtf.h ../lib/mkz.h ../lib/petal.h ../lib/readcfg.h ../lib/turbulence.h\
-	../lib/cn2est.h ../lib/genotf.h ../lib/laplacian.h ../lib/mkg.h ../lib/mtch.h ../lib/phase.h ../lib/servo.h ../lib/zernike.h
+	../lib/cn2est.h ../lib/genotf.h ../lib/laplacian.h ../lib/mkg.h ../lib/mtch.h ../lib/phase.h ../lib/servo.h ../lib/zernike.h ../lib/pywfs.h
 	@$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) maos2mex.h
 aolib.c:../maos/parms.h ../maos/types.h ../scripts/lib2mex.py ../scripts/maos_parse.py aolib.h
 	@$(SRC_DIR)/scripts/lib2mex.py $(SRC_DIR) aolib.c

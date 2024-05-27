@@ -20,7 +20,6 @@
 #include "accphi.h"
 #include "wfs.h"
 #include "cudata.h"
-#include "../../maos/pywfs.h"
 
 static void etf2gpu(cucmat& cuetf, etf_t* etf, int icol){
 	cmat* etfm=ccell_col(etf->etf, icol);

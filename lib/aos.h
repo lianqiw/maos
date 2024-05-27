@@ -53,4 +53,5 @@
 #include "cure.h"
 #include "petal.h"
 #include "phase.h"
+#include "pywfs.h"
 #endif

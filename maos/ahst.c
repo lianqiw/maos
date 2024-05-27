@@ -34,7 +34,6 @@
 */
 #include "common.h"
 #include "ahst.h"
-#include "pywfs.h"
 /*
    2017-09-11: When there is misregistration/distortion between the DM and
    science pupil, the assumed NGS mode on DM remain intact, but the influence on

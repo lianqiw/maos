@@ -56,9 +56,7 @@ void free_powfs_cfg(powfs_cfg_t *powfscfg){
 		powfscfg->llt=NULL;
 	}
 	if(powfscfg->pywfs){
-		dfree(powfscfg->pycfg->psx);
-		dfree(powfscfg->pycfg->psy);
-		free(powfscfg->pycfg);
+		pycfg_free(powfscfg->pycfg);
 	}
 	lfree(powfscfg->wfs);
 	lfree(powfscfg->wfsr);
@@ -532,9 +530,9 @@ static void readcfg_powfs(parms_t *parms){
 			}
 			pycfg->modulpos=pycfg->modulate>0?(pycfg->modulpos/pycfg->nside*pycfg->nside):1;
 			pycfg->modulring=pycfg->modulate>0?MAX(1, pycfg->modulring):1;
-			pycfg->ng=(pycfg->raw||pycfg->nside<3)?pycfg->nside:2;
 			pycfg->hs=powfsi->hs;
 			pycfg->hc=powfsi->hc;
+			pycfg->dx=parms->powfs[ipowfs].dx;
 			powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
 			powfsi->pixpsa=2;//always 2x2 pixels by definition.
 			if(powfsi->phyusenea==-1){
@@ -594,7 +592,7 @@ static void readcfg_powfs(parms_t *parms){
 			convert_theta(&powfsi->fieldstop, "fieldstop", wvlmax, powfsi->dsa);
 		}
 
-		powfsi->ng=pycfg?pycfg->ng:2; //number of gradients per subaperture
+		powfsi->ng=pywfs_ng(pycfg); //number of gradients per subaperture
 		if(powfsi->sigmatch==-1){
 			if(powfsi->type==WFS_SH){//SHWFS
 				if(powfsi->phytype_sim==PTYPE_COG){//CoG
@@ -2185,12 +2183,19 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		if(pycfg){
-			pycfg->siglev=powfsi->siglev;//do not move.
+			pycfg->siglev=powfsi->siglev;
+			pycfg->wvl=dref(powfsi->wvl);
+			pycfg->wvlwts=dref(powfsi->wvlwts);
 			pycfg->poke=parms->recon.poke;//How many meters to poke
+			pycfg->D=parms->aper.d;
+			pycfg->dsa=powfsi->dsa;
+			pycfg->order=powfsi->order;
+			pycfg->pixblur=powfsi->pixblur;
+			pycfg->fieldstop=powfsi->fieldstop;
+			pycfg->saat=powfsi->saat;
 			if(pycfg->poke>1e-5||pycfg->poke<1e-10){
 				warning("Pyramid WFS poke=%g m is out of the recommended range\n", pycfg->poke);
 			}
-
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
 			if(powfsi->epfsm<0){

@@ -146,31 +146,7 @@ typedef struct dither_cfg_t{
 	int ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
 	int ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
 } dither_cfg_t;
-/**
- * Pyramid WFS configurations. //Todo: move to pywfs.h after pywfs.h is moved to lib folder
- * */
-typedef struct pywfs_cfg_t{
-    int nside;       /**<Number of sides. can be 4 or 3. 4-side is traditional pyramid while 3-side is much easier to make.*/
-    int raw;         /**<1: use normalized ints of each sub-pupil as gradient. 0: use difference between sub-pupils*/
-    int ng;          /**<Number of gradients per 'subaperture'. */
-    int modulpos;    /**<Number of positions per modulation cycle*/
-    int modulpos_i;  /**<For testing: Index of modulate position to use between 0 and modulpos*/
-    int modulring;   /**<Number of rings within the maximum radius to modulate*/
-    int sigmatch;    /**<Scale gradients by matching intensity (1: locally, 2: globally).*/
 
-    real siglev;     /**<Nominal siglev per subaperture*/
-    real hs;         /**<Height of guide star*/
-    real hc;         /**<Conjugation height of WFS pupil*/
-    real poke;       /**<How much to poke for mkg*/
-    real modulate;   /**<Amount of modulation in radian*/
-
-    //The following are used to simulate the implementation error.
-    dmat *psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
-    dmat *psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
-    real flate; /**<pyramid flat edge angular width */
-    real flatv; /**<pyramid flat vertex angular width*/
-    real pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
-}pywfs_cfg_t;
 /**
    contains input parameters for each type of wfs (powfs).
 */
