@@ -847,3 +847,7 @@ def interp_cn2(ht2, ht, wt):
     wt2rev[0:-1]-=wt2rev[1:] #undo reverse cumulative
     wt2=0.5*(wt2+wt2rev) #average
     return wt2/np.sum(wt2)
+
+def strehl(rms, wvl):
+    return exp(-(2*np.pi*rms/wvl)**2)
+
