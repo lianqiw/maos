@@ -421,7 +421,7 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	}
 	//dshow(phi1b, "phi1b");
 	//dshow(phi1b2, "phi1b2");
-	gerchberg_saxton(phi1, &mphi1t, phi1b2, petal->amp, amp2, petal->mod, petal->rmod, petal->fembed, nrep);
+	gerchberg_saxton(phi1, &mphi1t, petal->amp, amp2, phi1b2, petal->mod, petal->rmod, petal->fembed, nrep);
 	if(mphi1){
 		dinit(mphi1, petal->npetal, 1);
 		if(petal->nsa>1){

@@ -190,12 +190,12 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		niny=1<<iceil(log2((real)ny));
 	}
 	if(ninx>1){
-		if(ninx<nx) warning("ninx=%ld is too small. need %ld\n", ninx, nx);
+		if(ninx+1<nx) warning("ninx=%ld is too small. need %ld\n", ninx, nx);
 		ox=ox-(ninx-nx)/2*dx;
 		nx=ninx;
 	}
 	if(niny>1){
-		if(niny<ny)  warning("niny=%ld is too small. need %ld\n", niny, ny);
+		if(niny+1<ny)  warning("niny=%ld is too small. need %ld\n", niny, ny);
 		oy=oy-(niny-ny)/2*dy;
 		ny=niny;
 	}

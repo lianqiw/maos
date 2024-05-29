@@ -23,6 +23,8 @@
  * */
 #include "../math/gpu_math.h"
 int main(){
+#if CUDA_VERSION>10000
 	gpu_dgemm_test();
 	gpu_dsvd_test();
+#endif
 }

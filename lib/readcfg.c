@@ -523,9 +523,13 @@ static const STORE_T* getrecord(char* key, int mark){
 			return refed;
 		}
 	} else if(mark){
-		error("Record %s not found\n", key);
+		warning("Record %s not found\n", key);
 	}
 	return found?(*(STORE_T**)found):0;
+}
+static void *getrecord_data(char* key, int mark){
+	const STORE_T *record=getrecord(key, mark);
+	return record?record->data:0;
 }
 /**
    Check whether a have a record of a key.
@@ -592,7 +596,7 @@ char* readcfg_str(const char* format, ...){
 	format2key;
 	char* data=NULL;
 	const STORE_T* store=getrecord(key, 1);
-	const char* sdata=store->data;
+	const char* sdata=store?store->data:0;
 	if(sdata&&strlen(sdata)>0){
 		data=strextract(sdata);
 	}
@@ -606,7 +610,7 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	format2key;
 	long* val=NULL;
 	int nx, ny;
-	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, getrecord(key, 1)->data);
+	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, getrecord_data(key, 1));
 	lmat* res=NULL;
 	if(nx && ny){
 		res=lnew_do(nx, ny, val, mem_new(val));
@@ -660,7 +664,7 @@ dmat* readstr_dmat(int n, ///<[in]Number of elements requested
  */
 dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 	format2key;
-	return readstr_dmat(n, relax, key, getrecord(key, 1)->data);
+	return readstr_dmat(n, relax, key, getrecord_data(key, 1));
 }
 
 /**
@@ -668,7 +672,7 @@ dmat* readcfg_dmat(int n, int relax, const char* format, ...){
 */
 int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 	format2key;
-	return readstr_strarr((char ***)ret, len, relax, key, getrecord(key, 1)->data);
+	return readstr_strarr((char ***)ret, len, relax, key, getrecord_data(key, 1));
 }
 
 /**
@@ -676,7 +680,7 @@ int readcfg_strarr(char*** ret, int len, int relax, const char* format, ...){
 */
 int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 	format2key;
-	return readstr_numarr((void**)ret,  NULL, NULL, len, relax,  M_INT, key, getrecord(key, 1)->data);
+	return readstr_numarr((void**)ret,  NULL, NULL, len, relax,  M_INT, key, getrecord_data(key, 1));
 
 }
 /**
@@ -684,7 +688,7 @@ int readcfg_intarr(int** ret, int len, int relax, const char* format, ...){
 */
 int readcfg_dblarr(real **ret, int len, int relax, const char *format, ...){
 	format2key;
-	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, key, getrecord(key, 1)->data);
+	return readstr_numarr((void **)ret, NULL, NULL, len, relax, M_REAL, key, getrecord_data(key, 1));
 }
 /**
    Read integer
@@ -694,7 +698,7 @@ int readcfg_int(const char* format, ...){
 	char* val;
 	char* endstr;
 	real ans=0;
-	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
+	if(!(val=getrecord_data(key, 1))||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return (int)ans;
@@ -707,7 +711,7 @@ real readcfg_dbl(const char* format, ...){
 	char *val; 
 	char *endstr;
 	real ans=0;
-	if(!(val=getrecord(key, 1)->data)||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'){
+	if(!(val=getrecord_data(key, 1))||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return ans;
@@ -718,7 +722,7 @@ real readcfg_dbl(const char* format, ...){
 */
 dcell* readcfg_dcell(const char* format, ...){
 	format2key;
-	const char* str=getrecord(key, 1)->data;
+	const char* str=getrecord_data(key, 1);
 	if(str){
 		return dcellread("%s", str);
 	} else{

@@ -1183,12 +1183,15 @@ real average_powfs(dmat *A, lmat *wfsindex, int replace){
 
 /**
  * wrap val to between low and high
+ * Notice the difference between remainder() and fmod().
+ * remainder(a,b) wraps a to [-b/2, b/2)
+ * fmod(a,b) wraps a to [-b,b)
  * */
 real wrap2range(real val, real low, real high){
-	if(low>high){//swap the values
-		real low2=high;
-		high=low;
-		low=low2;
+	if(low==high){
+		return low;
 	}
-	return remainder(val-low, high-low)+low;
+	real med=0.5*(low+high);
+	real range=fabs(high-low);
+	return remainder(val-med, range);
 }

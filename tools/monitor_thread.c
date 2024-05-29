@@ -286,26 +286,6 @@ static void save_all_jobs(){
 	free(fnall);
 	free(tm);
 }
-static void update_npending(proc_t *iproc){
-	if(iproc->oldinfo==iproc->status.info) return;//no change.
-	int ihost=iproc->hid;
-	//oldinfo==0 implies no information yet.
-	if((iproc->oldinfo==0||iproc->oldinfo>10)&&iproc->status.info<10&&iproc->status.info>0){
-		npending[ihost]++;//new running or pending job
-		if(npending[ihost]>nproc[ihost]){
-			warning_time("npending[%d]=%d>nproc[%d]=%d. oldinfo=%d, newinfo=%d\n", ihost, npending[ihost], ihost, nproc[ihost], iproc->oldinfo, iproc->status.info);
-			npending[ihost]=nproc[ihost];
-		}
-		delayed_update_title(ihost);
-	} else if(iproc->oldinfo>0&&iproc->oldinfo<10&&iproc->status.info>10){
-		if(npending[ihost]>0){
-			npending[ihost]--;//job exited.
-		} else{
-			warning_time("npending[%d] is already zero, cannot decrease. oldinfo=%d, newinfo=%d\n", ihost, iproc->oldinfo, iproc->status.info);
-		}
-		delayed_update_title(ihost);
-	}
-}
 static int scheduler_cmd(int ihost, int pid, int command);
 //called by listen_host to respond to scheduler
 const char *status_msg[]={
@@ -381,7 +361,6 @@ static int respond(int sock){
 			iproc->status.info=S_TOKILL;//pending kill.
 		}
 		//old_info==0: not update received yet.
-		update_npending(iproc);
 		if(iproc->status.info==S_REMOVE){
 			proc_remove(ihost, pid);
 		} else{
@@ -557,13 +536,21 @@ void* listen_host(void* pmsock){
 				}
 			}
 			//check for jobs that may have hung
+			int npending_new=0;
 			for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
+				if(iproc->status.info<10){
+					npending_new++;
+				}
 				if(iproc->status.info==S_RUNNING&&iproc->tlast+600<ntime){
 					iproc->status.info=S_WAIT;
 					iproc->status.tot=(ntime-iproc->tlast)/iproc->status.scale;
 					info_time("proc %d in %s is not updating in %lu seconds.\n", iproc->pid, hosts[ihost], ntime-iproc->tlast);
 					if(!headless) g_idle_add((GSourceFunc)refresh, iproc);
 				}
+			}
+			if(npending_new!=npending[ihost]){
+				npending[ihost]=npending_new;
+				delayed_update_title(ihost);
 			}
 		}
 	}

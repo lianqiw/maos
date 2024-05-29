@@ -144,15 +144,12 @@ esac
 if ! which which >/dev/null 2>&1;then
 	die "Please install 'which'"
 fi
-if which nvcc >/dev/null 2>&1;then
-	NVCC="$(which nvcc)"
+NVCC="$(which nvcc 2>/dev/null)"
+if test -n "$NVCC" ;then
 	if test -L "$NVCC" ;then
 		NVCC="$(readlink "$NVCC")"
 	fi
-fi
-if test -n "$NVCC" ;then
 	CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-	unset NVCC
 fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled

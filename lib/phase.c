@@ -31,9 +31,9 @@
 void gerchberg_saxton(
 	dmat **pphi1, /**<[Out]The final pupil phase estimate in radian. same dimension as amp1.*/
 	dmat **mphi1, /**<[Out]The phase update in modes only if mode and rmode are set.*/
-  	const dmat *phi1b,      /**<[In] The intial final pupil phase estimate in radian.*/
   	const dmat *amp1, /**<[In]Pupil amplitude map. size is n*n. embeded. */
   	const dmat *amp2, /**<[In]Field amplitude map. size is m*m. usually square root of the PSF. */
+	const dmat *phi1b,/**<[In] The intial final pupil phase estimate in radian.*/
   	const dmat *mode, /**[In]modal matrix. If not null, project pupil phase update onto the mode span*/
   	const dmat *rmod, /**[In]modeal reconstructor. If not null, project pupil phase update onto the mode span*/
   	const real fembed,/**<[in]Embeded factor for amp1*/

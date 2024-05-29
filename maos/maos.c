@@ -436,7 +436,7 @@ int main(int argc, const char* argv[]){
 			info2("Failed to start maos_listener\n");
 		}
 		setup_parms_gpu(parms, arg->gpus, arg->ngpu);//only do this after start running
-
+		extern real tk_setup; tk_setup=myclockd();
 		/* do not use prallel single in maos(). It causes blas to run single threaded
 		 * during preparation. Selective enable parallel for certain setup functions
 		 * that doesn't use blas*/

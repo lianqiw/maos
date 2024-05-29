@@ -14,7 +14,7 @@ from numpy import sqrt, exp, log, floor, ceil, nan, pi, sin, cos, tan, arcsin, a
 from numpy.random import rand, randn
 from numpy.fft import fft,ifft,fft2, ifft2, fftshift
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure, plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close, savefig
+from matplotlib.pyplot import figure, plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close
 from cycler import cycler
 try:
     from natsort import natsorted
@@ -372,6 +372,8 @@ def radial_profile_obsolete(data, center=None, enclosed=0):
     return radialprofile
 def check2d(A, nx=None): 
     '''check shape of A and return a 2-d square array'''
+    if A is None:
+        return A
     while A.dtype==object or A.ndim>2:
         if A.shape[0]==1:
             A=A[0]
@@ -482,7 +484,7 @@ def plot_psd_cumu(f, psd, plot_options='-'):
     else:
         fr2=fr;
     psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
-    semilogx(fr,psdr, plot_options)
+    loglog(fr,psdr, plot_options)
 
 def cog(data, center=None):
     '''Center of gravity'''
@@ -684,7 +686,7 @@ def calc_psf(amp, opd, wvl, fembed=2, wts=None):
         psf=abs2(myfft2(center(wvf,nx2)))*(1/np.sum(amp)**2)
         return psf
 
-def gerchberg_saxton_py(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nrep=100, doprint=0):
+def gerchberg_saxton(A1, A2, P1B=None, modes=None, rmodes=None, fembed=2, nrep=100, doprint=0):
     '''
     The Gerchberg Saxton algorithm (1972)
     Parameters
@@ -851,3 +853,6 @@ def interp_cn2(ht2, ht, wt):
 def strehl(rms, wvl):
     return exp(-(2*np.pi*rms/wvl)**2)
 
+def savefig(fn, *args, **kargs):
+    plt.gcf().tight_layout() #fix layout
+    plt.savefig(fn, *args, **kargs, bbox_inches='tight')

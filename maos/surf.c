@@ -304,7 +304,6 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					opdxcover=(int)val;
 				}
 			}
-			sdata.evlcover=evlcover;
 			sdata.surf=surf;
 			sdata.opdxcover=opdxcover;
 			sdata.isurf=isurf;

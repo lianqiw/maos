@@ -1740,7 +1740,7 @@ static void setup_parms_postproc_za(parms_t *parms){
 	
 	if(fabs(parms->sim.za)>1.e-14){
 		info("Zenith angle is %g degree.\n",parms->sim.za*180./M_PI);
-		info("    Scaling turbulence height and LGS hs by sec(za).\n"
+		dbg("    Scaling turbulence height and LGS hs by sec(za).\n"
 			"    Scaling r0 by cos(za)^(3/5).\n"
 			"    Scaling wind speed and LGS signal level by cos(za).\n");
 
@@ -1770,7 +1770,7 @@ static void setup_parms_postproc_za(parms_t *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!isinf(parms->powfs[ipowfs].hs)){//LGS
 			if(parms->sim.htel){
-				info("Adjust LGS range by telescope altitude %gm.\n", parms->sim.htel);
+				info("Adjust LGS range %g by telescope altitude %gm.\n", parms->powfs[ipowfs].hs, parms->sim.htel);
 			}
 			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
@@ -1935,7 +1935,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->itpowfs=-1;
 	parms->ilgspowfs=-1;
 	parms->nlgspowfs=0;
-	parms->hipowfs_hs=INFINITY;
+	parms->hipowfs_hsmin=INFINITY;
+	parms->hipowfs_hsmax=INFINITY;
 	parms->sim.dtrat_hi=-1;
 	parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
 	parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
@@ -1946,6 +1947,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	if(!parms->nwfs||!parms->npowfs){
 		return;
 	}
+	parms->hipowfs_hsmax=0;
 	parms->hipowfs=lnew(parms->npowfs, 1);
 	parms->lopowfs=lnew(parms->npowfs, 1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -2059,7 +2061,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(powfsi->skip==2){//TWFS
 			parms->itpowfs=ipowfs;
 			if(parms->ilgspowfs!=-1){
-				info("powfs%d is TWFS for powfs%d\n",ipowfs,parms->ilgspowfs);
+				info("powfs%d is Truth WFS for powfs%d\n",ipowfs,parms->ilgspowfs);
+			}
+			if(parms->powfs[ipowfs].dtrat==1){
+				warning("Truth WFS shall not output at every time step\n");
 			}
 		}
 		if(powfsi->lo){
@@ -2083,8 +2088,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			P(parms->hipowfs,parms->nhipowfs)=ipowfs;
 			parms->nhipowfs++;
 			parms->nhiwfs+=powfsi->nwfs;
-			if(powfsi->hs<parms->hipowfs_hs){
-				parms->hipowfs_hs=powfsi->hs;
+			if(powfsi->hs<parms->hipowfs_hsmin){
+				parms->hipowfs_hsmin=powfsi->hs;
+			}
+			if(powfsi->hs>parms->hipowfs_hsmax){
+				parms->hipowfs_hsmax=powfsi->hs;
 			}
 		}
 		if(powfsi->trs){
@@ -2310,10 +2318,10 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
-	} else{
+	} else if(!parms->sim.idealtomo && parms->npowfs>0){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hs){
+			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hsmax){
 				dbg("Tomography Layer %d is above high order guide star and therefore dropped.\n",ipsr);
 			} else{
 				P(parms->atmr.ht,ipsr2)=P(parms->atmr.ht,ipsr);
@@ -2832,11 +2840,19 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
 		}
 	}
-	if(parms->tomo.alg==-1){//default to FDPCG
+	if(parms->tomo.alg==-1){//default to CG
 		parms->tomo.alg=ALG_CG;
-		parms->tomo.precond=PCG_FD;
 	}
-	if(parms->tomo.alg!=ALG_CG){
+	if(parms->tomo.alg==ALG_CG){
+		if(parms->nhipowfs>1){
+			if(parms->tomo.precond==PCG_FD){
+				info("Disable FDPCG when there are multiple high order powfs.\n");
+				parms->tomo.precond=PCG_NONE;
+			}
+		}else if(parms->tomo.precond==-1){
+			parms->tomo.precond=PCG_FD;
+		}
+	}else{
 		parms->tomo.precond=PCG_NONE;
 	}
 	if(parms->fit.alg==-1){

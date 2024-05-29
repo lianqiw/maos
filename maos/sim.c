@@ -37,9 +37,10 @@
 #include <numa.h>
 #endif
 extern int KEEP_MEM;
-static real tk_0;
-static real tk_1;
-static real tk_atm=0;
+real tk_setup=0;
+static real tk_0;//first seed simulation start time.
+static real tk_1;//current seed simulation start time.
+static real tk_atm=0;//first step end time.
 int sim_pipe[2]={0,0};
 /**
    \file sim.h
@@ -107,7 +108,7 @@ void maos_isim(int isim){
 	if(isim==simstart+1){//skip slow first step.
 		tk_atm=myclockd();
 	}
-	real ck_0=myclockd();
+	real ck_0=myclockd();//current step start time
 
 	sim_update_flags(simu, isim);
 	if(!parms->atm.frozenflow){
@@ -148,7 +149,7 @@ void maos_isim(int isim){
 		draw_single=0;
 	}
 	if(PARALLEL==1){
-		simu->tk_0=myclockd();
+		simu->tk_0=myclockd();//step start time
 		/*
 		  We do the big loop in parallel to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
@@ -236,8 +237,8 @@ void maos_isim(int isim){
 			+(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
 		simu->status->mean=(ck_end-tk_atm)/(real)(isim-simstart);
 	}
-	simu->status->laps=(long)(ck_end-tk_0);
-	simu->status->tot=ck_end-ck_0;
+	simu->status->laps=(long)(ck_end-tk_setup);//total elapsed time
+	simu->status->tot=ck_end-ck_0;//total step time
 
 	print_progress(simu);
 }

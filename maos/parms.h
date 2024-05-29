@@ -860,7 +860,8 @@ typedef struct parms_t{
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
-    real hipowfs_hs; /**<high order wfs minimum height*/
+    real hipowfs_hsmin; /**<high order wfs minimum height*/
+	real hipowfs_hsmax; /**<high order wfs maximum height*/
     int itwfssph;    /**<index of TWFS spherical mode*/
 }parms_t;
 /**

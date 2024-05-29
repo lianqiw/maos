@@ -186,7 +186,8 @@ def draw(*args, **kargs):
             if 'clim' in kargs and kargs['clim'] is not None:
                 plt.clim(kargs['clim'])
             im_ratio = img.shape[0]/img.shape[1]
-            plt.colorbar(im, fraction=0.046*im_ratio, pad=0.04, extendfrac='auto')
+            if not 'colorbar' in kargs or kargs['colorbar']!=0:
+                plt.colorbar(im, fraction=0.046*im_ratio, pad=0.04, extendfrac='auto')
             #cax = plt.gcf().add_axes([plt.gca().get_position().x1+0.01, plt.gca().get_position().y0, 0.02, plt.gca().get_position().height])
             #plt.colorbar(im, cax=cax)
             plt.grid(False)
