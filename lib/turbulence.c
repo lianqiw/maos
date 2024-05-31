@@ -352,7 +352,7 @@ mapcell* genscreen_str(const char* keywords){
 				info("Generating petal modes for %g nm RMS.\n", rmsnm);
 				
 				//real dtheta=TWOPI/nseg;
-				real theta0=search_keyword_num_default(keywords, "theta0", 0);
+				real theta0=search_keyword_num_default(keywords, "rotdeg", 0)*M_PI/180;
 				real cx=search_keyword_num_default(keywords, "cx", nx/2);
 				real cy=search_keyword_num_default(keywords, "cy", ny/2);
 				dmat *mod=dnew(npetal, 1);

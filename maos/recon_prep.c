@@ -210,7 +210,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
 		if(parms->tomo.nxbase){
 			nin0=parms->tomo.nxbase;
-		} else if(!parms->sim.idealfit&&(parms->tomo.precond==1||parms->tomo.square==2)){
+		} else if(!parms->sim.idealtomo&&(parms->tomo.precond==1||parms->tomo.square==2)){
 			/*same square grid dimension in meter on all layers.*/
 			long nxmin=LONG_MAX, nymin=LONG_MAX;
 			long nxmax=0, nymax=0;
@@ -238,7 +238,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		}
 		for(int ips=0; ips<npsr; ips++){
 			const real ht=P(recon->ht, ips);
-			real dxr=(parms->sim.idealfit)?parms->atm.dx:P(recon->dx, ips);
+			real dxr=(parms->sim.idealtomo)?parms->atm.dx:P(recon->dx, ips);
 			const real guard=parms->tomo.guard*dxr;
 			long nin=nin0*P(recon->os, ips);
 			map_t* map=0;
@@ -1251,7 +1251,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	} else{
 		recon->TTF=dcellref(recon->TT);
 	}
-	if(parms->recon.alg==0&&!parms->sim.idealfit){//tomography parameters
+	if(parms->recon.alg==0&&!parms->sim.idealtomo){//tomography parameters
 		if(parms->cn2.tomo&&recon->cn2est){
 			/*Use cn2 estimation results for tomography. Use its ht to build
 			  reconstructor matrices.*/

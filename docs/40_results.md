@@ -110,39 +110,38 @@ add the suffix when use \c read.
 ## Wavefront error
 - \c Res_1: A binary file containing a cell array that include the main results. 
   - Use res=read('Res_1'); 
-  - \c res{1} contains the open loop wavefront variance (WFV in units of \f$m^2\f$) in row vectors. The rows are 
+  - \c res[0] contains the open loop wavefront variance (WFV in units of \f$m^2\f$) in row vectors. When sim.rmax=1, the rows are 
       - Piston removed WFV
       - WFV in tip/tilt modes
       - Piston/tip/tilt removed WFV
-  - \c res{2} contains the residual wavefront variance after the tomography phase screen is directly applied as the correction in open loop mode. Empty if evl.tomo is zero.
-  - \c res{3} contains the closed loop wavefront variance in row vectors. The rows are
+       
+    When sim.rmax>1, the rows are
       - Piston removed WFV
-      - WVF in tip/tilt modes
-      - Piston/tip/tilt removed WFV
-  - \c res{4} (Only in split tomography) contains the closed loop wavefront variance. The rows are
+      - Piston/Tip removed WFE
+      - Piston/Tip/Tilt removed WFE
+      - ...
+  - \c res[1] no longer used.
+  - \c res[2] contains the closed loop wavefront variance in row vectors. The format is the same as res[0]
+  - \c res[3] (Only in split tomography) contains the closed loop wavefront variance. The rows are (not depend on sim.rmax)
       - WFV in LGS contains modes
       - WFV in NGS Tip/Tilt modes
       - WFV in NGS modes (including Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))
 
 - \c Resp_1: \c resp: Results for each direction. Combines the following four files previous saved individually: Resolmp_1, Resclmp_1, Resolep_1, Resclep_1. 
     - Use \c resp=read('Resp_1)
-    - \c resp[0]: Open loop wavefront Zernike modes
-      defined on not-normalized coordinate on the aperture, in the order of piston/tip/tilt ...
+    - \c resp[0,idir]: Open loop wavefront Zernike modes, for evaluation direction idir,
+      defined on un-normalized coordinate on the aperture, in the Noll's Zernike order of piston/tip/tilt ...
 
-    - \c resp[1]: Close loop wavefront Zernike modes, in the
-      same format as \c resp[0].
+    - \c resp[1,idir]: Close loop wavefront Zernike modes, in the same format as \c resp[0,idir].
 
-    - \c resp[2]: Open loop wavefront variance for each science field point.
-      Each cell represent a science field point. The format is similar to res{1}
-      above.
+    - \c resp[2,idir]: Open loop wavefront variance for each science field point in the same format as res[0].
 
-    - \c resp[3]: Closed loop wavefront variance for each science field point,
-      in the same format as \c resp[2].
+    - \c resp[3,idir]: Closed loop wavefront variance for each science field point in the same format as res[0].
+
 
 ## Split tomography
 
-- \c Resclemp_1: LGS/TT/NGS mode wavefront error for
-  each direction.
+- \c Resclemp_1: LGS/TT/NGS mode wavefront error for each direction.
 
 - \c RescleNGSm_1: contains a row vector array of
   either the residual NGS modes (in radian like unit) or the applied NGS mode

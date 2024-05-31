@@ -1732,7 +1732,7 @@ void setup_shwfs_petaling(powfs_t *powfs, const parms_t *parms, int ipowfs){
 	real dsa=powfs[ipowfs].pts->dsa;
 	real dtheta=parms->powfs[ipowfs].wvlmean/(nembed*dsa);
 	real pdtheta=parms->powfs[ipowfs].pixtheta/dtheta;
-	warning("powfs[%d].pdtheta=%g\n", ipowfs, pdtheta);
+	dbg("powfs[%d].pdtheta=%g\n", ipowfs, pdtheta);
 	powfs[ipowfs].petal=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, powfs[ipowfs].amp, pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, 0);
 	if(parms->save.setup){
 		petal_save(powfs[ipowfs].petal, "petal_%d", ipowfs);

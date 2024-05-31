@@ -35,8 +35,8 @@ static int count_unique(const dcell* opdbias){
 	if(!opdbias) return 1;
 	for(int iwfs=1; iwfs<PN(opdbias); iwfs++){
 		real diff=ddiff(P(opdbias, 0), P(opdbias, iwfs));
-		if(diff>1e-4){
-			//dbg("opdbias[%d] is different from opdbias[0] by %g.\n", iwfs, diff);
+		if(diff>0.005){
+			dbg("opdbias[%d] is different from opdbias[0] by %g.\n", iwfs, diff);
 			return PN(opdbias);
 		}
 	}

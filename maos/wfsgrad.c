@@ -1426,10 +1426,16 @@ void wfsgrad_petal_recon(sim_t *simu){
 				dcellzero(simu->dmtmp);
 				real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
 				dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
-				dcellmm(&simu->gradoff, simu->recon->GA, simu->dmtmp, "nn", -gain);
+				for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
+					int jpowfs=parms->wfs[jwfs].powfs;
+					if(parms->powfs[jpowfs].lo) continue;
+					dspmm(&P(simu->gradoff,jwfs),P(simu->recon->GA,jwfs,idm), P(simu->dmtmp,idm), "nn", -gain);
+				}
 				if(parms->plot.run){
+					int draw_single_save=draw_single; draw_single=0;
 					drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
 					plot_gradoff(simu, -1);
+					draw_single=draw_single_save;
 				}
 				servo_add(simu->dmint, simu->dmtmp, gain);
 			}
@@ -1443,7 +1449,7 @@ void wfsgrad_petal_recon(sim_t *simu){
 void* wfsgrad(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
 	const parms_t* parms=simu->parms;
-	if(parms->sim.idealfit||parms->sim.evlol||parms->sim.idealtomo) return NULL;
+	if(parms->nwfs==0) return NULL;
 	// call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
 	if(!(PARALLEL==1&&parms->tomo.ahst_idealngs!=1&&parms->gpu.wfs)){
 		CALL_THREAD(simu->wfsgrad_pre, 0);

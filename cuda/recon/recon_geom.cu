@@ -148,7 +148,7 @@ curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 	W01(recon->W0, recon->W1, recon->fmap->nx), xnx(0), xny(0), anx(0), any(0), anloc(0), ngrad(0), dt(0){
 	dbg("update reconstructor geometry.\n");
 	ndm=parms->ndm;
-	npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
+	npsr=parms->sim.idealtomo?parms->atm.nps:recon->npsr;
 	pmap=recon->pmap;
 	fmap=recon->fmap;
 	/*Setup various grid*/

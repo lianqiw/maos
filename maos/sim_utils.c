@@ -538,6 +538,7 @@ static void init_simu_evl(sim_t* simu){
 		simu->res=dcellnew_file(4, 1, nnx, nny, NULL, "Res_%d.bin", seed);
 		//Do not reference. Just assign. Don't free.
 		simu->ole=P(simu->res, 0);
+		//P(simu->res, 1) is no longer used.
 		simu->cle=P(simu->res, 2);
 		simu->clem=P(simu->res, 3);
 		dcellset(simu->res, NAN);
@@ -678,7 +679,7 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	if(parms->save.ecov){
-		if(!parms->dbg.useopdr||parms->sim.idealfit){
+		if(!parms->dbg.useopdr||parms->sim.idealtomo){
 			simu->ecov=dcellnew(parms->ndm, parms->ndm);/*not really need. */
 		} else{/*deprecated */
 			simu->ecov=dcellnew(nevl, 1);
@@ -770,7 +771,7 @@ static void init_simu_evl(sim_t* simu){
 
 static void init_simu_wfs(sim_t* simu){
 	const parms_t* parms=simu->parms;
-	if(parms->sim.idealfit||parms->sim.idealtomo) return;
+	if(parms->sim.idealtomo) return;
 	powfs_t* powfs=simu->powfs;
 	recon_t* recon=simu->recon;
 	sim_save_t* save=simu->save;
@@ -1435,8 +1436,8 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	}
 	fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
-		if(parms->sim.idealfit||parms->sim.idealtomo){
-			warning("sim.idealfit or sim.idealtomo is not yet implemented for sim.wspsd. Ignored\n");
+		if(parms->sim.idealtomo){
+			warning("sim.idealtomo is not yet implemented for sim.wspsd. Ignored\n");
 		}else{
 			/* Telescope wind shake added to TT input. */
 			info("Converting windshake PSD to time series.\n");
@@ -1471,7 +1472,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	if(!parms->sim.evlol){
 		init_simu_dm(simu);
 		init_simu_moao(simu);
-		if(!parms->sim.idealfit&&!parms->sim.idealtomo){
+		if(!parms->sim.idealtomo){
 			init_simu_wfs(simu);
 		}
 		if(parms->recon.alg==0){

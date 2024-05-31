@@ -76,7 +76,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	}
 
 	if(parms->recon.alg==RECON_MVR&&(parms->gpu.tomo||parms->gpu.fit)
-		&&!parms->sim.idealfit&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
+		&&!parms->sim.idealtomo&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
 		if(parms->tomo.square){
 			opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
 		} else{

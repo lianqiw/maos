@@ -205,8 +205,8 @@ maos sim.ephi=0.3 #Change gain of the main integrator to 0.3
 There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc.
 
 ```
-maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 # step1: single DM fitting on axis
-maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealfit=1 # step1b: Multiconjugate DM fitting over a field
+maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1: single DM fitting on axis
+maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1b: Multiconjugate DM fitting over a field
 maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2: noise free classic AO simulation with geometric SHWFS.
 maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2b: noise free MCAO with geometric SHWFS.
 maos mcao_ngs.conf powfs.phystep=[-1] powfs.noisy=[0] # step3: noise free MCAO with geometric SHWFS in closed loop simulation.
@@ -215,7 +215,7 @@ maos mcao_lgs.conf powfs.noisy=[1] # step5: noisy MCAO with physical optics LGS 
 
 ```
 
-Note that the option `sim.closeloop=0 atm.frozenflow=1` uses open loop correction (no servo lag) with frozen flow turbulence. The option `sim.idealfit=1` enables DM fitting directly from turbulence rather than from tomography output. For open loop simulations, truth wfs should not be included or disabled with sim.eptwfs=0, and non-iterative solvers (tomo.alg=0, fit.alg=0) usually work better than CG.
+Note that the option `sim.closeloop=0 atm.frozenflow=1` uses open loop correction (no servo lag) with frozen flow turbulence. The option `sim.idealtomo=1` enables DM fitting directly from turbulence rather than from tomography output. For open loop simulations, truth wfs should not be included or disabled with sim.eptwfs=0, and non-iterative solvers (tomo.alg=0, fit.alg=0) usually work better than CG.
 
 The following error budget items are computed:
 

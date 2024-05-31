@@ -63,12 +63,13 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 	recon_t* recon=simu->recon;
 	int isim=simu->reconisim;
 
-	if(parms->sim.idealfit){
-		dcellfree(simu->opdr);
-	} else if(parms->sim.idealtomo){
-		atm2xloc(&simu->opdr, simu);
-	} else{
-	/*do tomography. */
+	if(parms->sim.idealtomo){
+		if(parms->evl.tomo){
+			atm2xloc(&simu->opdr, simu);
+		}else{
+			dcellfree(simu->opdr);
+		}
+	} else{	/*do tomography. */
 		int maxit=parms->tomo.maxit;
 		if(NX(parms->dbg.tomo_maxit)){
 			if(isim<NX(parms->dbg.tomo_maxit)){
@@ -88,7 +89,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 			P(P(simu->cgres,0),isim)=muv_solve(&simu->opdr, &recon->RL, &recon->RR, gradin);
 		toc_tm("Tomography");
 	}
-	if(parms->ndm>0){
+	if(parms->ndm>0 && !parms->evl.tomo){
 		TIC_tm; tic_tm;
 #if USE_CUDA
 		if(parms->gpu.fit){
@@ -380,7 +381,7 @@ void* reconstruct(sim_t* simu){
 			cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
 		}//if cn2est 
 	}
-	if(hi_output||parms->sim.idealfit||parms->sim.idealtomo){
+	if(hi_output){
 		simu->dmerr=simu->dmerr_store;
 		dcell* dmout=simu->dmrecon;//always output to dmrecon to enable warm restart.
 		dcell* gradin;
@@ -444,7 +445,7 @@ void* reconstruct(sim_t* simu){
 			}
 
 			dcell* dmpsol;
-			if(parms->sim.idealfit||parms->sim.idealtomo){
+			if(parms->sim.idealtomo){
 				dmpsol=simu->dmpsol;
 			} else if(parms->sim.fuseint||parms->recon.split==1){
 				dmpsol=P(simu->wfspsol,P(parms->hipowfs,0));
@@ -506,7 +507,7 @@ void* reconstruct(sim_t* simu){
 		recon_servo_update(simu);
 	}
 	if(hi_output&&parms->save.ecov&&isim>=parms->evl.psfisim){
-		if(!parms->recon.psol){
+		if(!parms->recon.psol&&parms->sim.closeloop){
 			error("Please enable PSOL\n");
 		}
 		//For PSF reconstruction.

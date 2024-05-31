@@ -535,6 +535,7 @@ void FitR(dcell** xout, const void* A,
 				real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 				loc_add_ptt(P(xp, ifit), ptt, fit->floc);
 			}*/
+			//No need to utilize ncpa.surf or ncpa.tsurf if ncpa.calib=1
 		}
 	} else if(fit->HXF){
 		dcellmm(&xp, fit->HXF, xin, "nn", 1.);
@@ -555,12 +556,8 @@ void FitR(dcell** xout, const void* A,
 			}
 		}
 	}
-	//writebin(xp, "CPU_FitR_x1");
 	applyW(xp, fit->W0, fit->W1, P(fit->wt));
-	//writebin(xp, "CPU_FitR_x2");
-	//dcellzero(xp); P(P(xp,0), PN(xp,0)-1)=1e-7;
 	dcellmm(xout, fit->HA, xp, "tn", alpha);
-	//writebin(*xout, "CPU_FitR_x3");
 	dcellfree(xp);
 }
 /**
@@ -830,7 +827,7 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 */
 void shift_grad(sim_t* simu){
 	const parms_t* parms=simu->parms;
-	if(parms->sim.evlol||parms->sim.idealfit||parms->sim.idealtomo) return;
+	if(parms->nwfs==0||parms->sim.evlol||parms->sim.idealtomo) return;
 	if(PARALLEL==2){
 		if(simu->wfsisim>0){
 			while(simu->wfsgrad_count<1){//not being consumed yet

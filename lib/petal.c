@@ -274,6 +274,8 @@ void petal_connect(dmat **mout, dmat *mphi, int npetal, int nsa){
  * @param amp:		The pupil plane amplitude map. Sorted by subapertures.
  * @param cx,cy:    Coordinate of the pupil center.
  * @param npetal:	Number of petals
+ * @param pdtheta:  Ratio of pixtheta/dtheta
+ * @param pixblur: 	Pixel blur ratio
  * @param theta: 	The pupil clocking angle (CCW) in radian.
  * @param nsa:	 	Number of subapertures within the given WFS.
  * @param withtt:	Whether tip/tilt in included in the reconstruction.

@@ -109,9 +109,9 @@ export MAOS_LOG_LEVEL=-1
 
 run_maos "Openloop:        " -cmcao_lgs.conf sim.evlol=1
 
-run_maos "Ideal fit:       " -cmcao_lgs.conf sim.idealfit=1 
-
 run_maos "Ideal tomo:      " -cmcao_lgs.conf sim.idealtomo=1 
+
+run_maos "Evl tomo:        " -cmcao_lgs.conf evl.tomo=1 
 
 run_maos "LGS MCAO (inte): " -cmcao_lgs.conf recon.split=0 tomo.precond=0
 

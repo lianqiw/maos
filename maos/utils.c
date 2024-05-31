@@ -334,6 +334,13 @@ arg_t* parse_args(int argc, const char* argv[]){
 	};
 	arg->confcmd=strnadd(argc-1, argv+1, " ");
 	parse_argopt(arg->confcmd, options);
+	if(!arg->conf){
+		arg->conf=getenv("MAOS_DEFAULT");//read here to avoid env different when launched by scheduler
+		if(!arg->conf){
+			arg->conf="default.conf";
+		}
+		if(arg->conf) arg->conf=mystrdup(arg->conf);
+	}
 	if(arg->conf&&arg->conf[0]!='/'&&exist(arg->conf)){
 		//make it absolute path to avoid recursive loading when maos_recent.conf is used
 		char *argconf=arg->conf;

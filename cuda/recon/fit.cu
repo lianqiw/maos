@@ -39,8 +39,8 @@ cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon
 			acmap[idm]=(recon->acmap->p[idm]);
 		}
 	}
-	if(parms->sim.idealfit){
-		idealfit=1;
+	if(parms->sim.idealtomo){
+		idealtomo=1;
 		floc=culoc_t(recon->floc);
 	}
 	dir=new dir_t[nfit];
@@ -104,7 +104,7 @@ cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon
    do HXp operation, opdfit+=Hxp*xin*/
 void cufit_grid::do_hxp(const curcell& xin, stream_t& stream){
 	cuzero(opdfit.M(), stream);
-	if(idealfit){//ideal fiting.
+	if(idealtomo){//ideal fiting.
 		for(int ifit=0; ifit<nfit; ifit++){
 			atm2loc(opdfit[ifit](), floc, INFINITY, 0,
 				dir[ifit].thetax, dir[ifit].thetay,

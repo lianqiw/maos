@@ -213,7 +213,7 @@ setup_fit_matrix(fit_t* fit){
 	print_mem("Before assembling fit matrix");
 	/*Assemble Fit matrix. */
 	if(!fit->FR.M&&fit->flag.assemble){
-		if(fit->HXF){//not idealfit.
+		if(fit->HXF){//not idealtomo.
 			const int npsr=NX(fit->xloc);
 			info("Building fit->FR\n");
 			fit->FR.M=cellnew(ndm, npsr);
@@ -247,7 +247,7 @@ setup_fit_matrix(fit_t* fit){
 			}
 			cellfree(fit->HXF);
 		} else{
-			dbg("Avoid building fit->FR.M for idealfit\n");
+			dbg("Avoid building fit->FR.M for idealtomo\n");
 			fit->FR.M=NULL;
 			fit->FR.V=NULL;
 		}
@@ -338,9 +338,9 @@ setup_fit_matrix(fit_t* fit){
 /**
    A generic DM fitting routine.
  */
-void setup_fit(fit_t* fit, int idealfit){
+void setup_fit(fit_t* fit, int idealtomo){
 	TIC;tic;
-	if(!idealfit&&fit->xloc){
+	if(!idealtomo&&fit->xloc){
 		fit->HXF=setup_fit_HXF(fit);
 	}
 	setup_fit_HA(fit);
@@ -350,7 +350,7 @@ void setup_fit(fit_t* fit, int idealfit){
 	if(fit->flag.assemble||fit->flag.alg!=1){
 		setup_fit_matrix(fit);
 	}
-	/*Fall back function method if FR.M is NULL (!HXF<-idealfit) */
+	/*Fall back function method if FR.M is NULL (!HXF<-idealtomo) */
 	fit->FR.Mfun=FitR;
 	fit->FR.Mdata=fit;
 	/*Fall back function method if FL.M is NULL */
@@ -416,7 +416,7 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 
 		}
 	}
-	setup_fit(fit, parms->sim.idealfit);
+	setup_fit(fit, parms->sim.idealtomo);
 	if(fit->actcpl){
 		dcellfree(recon->actcpl);
 		recon->actcpl=dcellref(fit->actcpl);

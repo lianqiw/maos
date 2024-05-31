@@ -698,8 +698,7 @@ void loc_calc_ptt(real *rmsout, real *coeffout,
    in loc_calc_ptt, out[0] is PR, out[1] is TT, out[2] is PTTR
    in loc_calc_mod, out[0] is PR, out[1] is PTR, out[2] is PTTR, etc
 
-   The mod is already orth-noramlized so that we have the
-   following simple forms.
+   The mod is already orth-noramlized so that we have the following simple forms.
 
    coeffout is in unit of zernike!
 */
@@ -711,6 +710,7 @@ void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod,
 	double tot=0; //use double for accumulation
 	double val[nmod];
 	memset(val, 0, sizeof(real)*nmod);
+	//val=(Mod*Amp*Opd)
 	for(long iloc=0; iloc<nloc; iloc++){
 		real junk=opd[iloc]*amp[iloc];
 		tot+=opd[iloc]*junk;

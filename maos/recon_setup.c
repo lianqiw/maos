@@ -1269,7 +1269,7 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 	/*setup Truth wfs*/
 	setup_recon_twfs(recon, parms);
 	
-	if(!parms->sim.idealfit&&!parms->sim.idealtomo){
+	if(!parms->sim.idealtomo){
 		if(parms->recon.mvm&&parms->load.mvm){
 			recon->MVM=dread("%s", parms->load.mvm);
 		} else{
@@ -1285,10 +1285,9 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 			}
 		}
 	}
-	if(parms->recon.split){
-			/*split tomography */
+	if(parms->recon.split){/*split tomography */
 		ngsmod_setup(parms, recon);
-		if(!parms->sim.idealfit&&parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
+		if(parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
 			setup_recon_mvst(recon, parms);
 		}
 	}

@@ -177,7 +177,7 @@ void save_recon(sim_t* simu){
 			//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 		}
 	}
-	if(parms->recon.alg==0&&!parms->sim.idealfit&&!parms->recon.glao){
+	if(parms->recon.alg==0&&!parms->sim.idealtomo&&!parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
 		if(parms->save.opdr){
 			zfarr_push(simu->save->opdr, simu->reconisim, simu->opdr);
@@ -198,7 +198,7 @@ void save_recon(sim_t* simu){
 					}
 				}
 			}
-			if(!parms->sim.idealfit){
+			if(!(parms->sim.idealtomo&&parms->evl.tomo)){
 				dcellfree(opdx);
 			}
 		}
@@ -230,7 +230,7 @@ void save_recon(sim_t* simu){
 		long nstep=simu->reconisim+1-parms->evl.psfisim;
 		real scale=1./nstep;
 		dcellscale(simu->ecov, scale);
-		if(!parms->dbg.useopdr||parms->sim.idealfit){
+		if(!parms->dbg.useopdr||parms->sim.idealtomo){
 			writebin(simu->ecov, "ecov_%d_%d", seed, simu->reconisim);
 		} else{/*deprecated */
 			char strht[24];

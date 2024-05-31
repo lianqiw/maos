@@ -139,10 +139,12 @@ def draw(*args, **kargs):
                 draw(ims, **kargs)
         return
     ct=0
+    stop=0
     for arg0 in args:
-        if arg0 is None:
+        if arg0 is None :
             continue
-            
+        if stop:
+            break
         if type(arg0) == list:
             if len(arg0)==1:
                 arg0=arg0[0]
@@ -236,7 +238,11 @@ def draw(*args, **kargs):
                     plt.subplot(nrow, ncol, iframe+1)
                 else:
                     plt.figure(figsize=kargs.get('figsize'))
-                draw(arg0[iframe], **kargs)
+                if isloc(arg0[iframe]) and len(args)>1:
+                    draw(arg0[iframe], args[1][iframe], **kargs)
+                    stop=1
+                else:
+                    draw(arg0[iframe], **kargs)
 
 # Use as standalone script
 if __name__ == "__main__":

@@ -706,7 +706,7 @@ static void readcfg_wfs(parms_t *parms){
 	parms->npowfs=ipowfs;
 	if(parms->npowfs==0){
 		info("No wfs is specified\n");
-		if(!parms->sim.idealfit&&!parms->sim.idealtomo&&!parms->sim.evlol){
+		if(!parms->sim.idealtomo&&!parms->sim.evlol){
 			error("Cannot proceed\n");
 		}
 	} else if(parms->nwfs!=wfscount){
@@ -886,7 +886,18 @@ static void readcfg_siglev(parms_t *parms){
 		}else{
 			dcp(&parms->powfs[ipowfs].wvlwts, parms->wfs[iwfs0].wvlwts);
 		}
+		
 		parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->wfs[iwfs0].wvlwts)/dsum(parms->wfs[iwfs0].wvlwts);
+		if(parms->powfs[ipowfs].lo){
+			real nembed=2;
+			real dsa=parms->powfs[ipowfs].dsa;
+			real wvlpix=parms->powfs[ipowfs].pixtheta*(nembed*dsa);
+			if(fabs(wvlpix/parms->powfs[ipowfs].wvlmean-1)<0.2){
+				parms->powfs[ipowfs].wvlmean=wvlpix;//change to pixel size equivalent wavelength assuming Nyquist sampling.
+			}
+			dbg("powfs[%d].wvlmean is set to %g\n", ipowfs, parms->powfs[ipowfs].wvlmean);
+		}
+		
 		powfs_wvl_count+=nwvl;
 		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
 		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);
@@ -1490,7 +1501,6 @@ static void readcfg_sim(parms_t *parms){
 	READ_INT(sim.htel);
 	READ_INT(sim.evlol);
 	READ_INT(sim.noatm);
-	READ_INT(sim.idealfit);
 	READ_INT(sim.idealtomo);
 	READ_INT(sim.psfr);
 	READ_INT(sim.ecnn);
@@ -1646,43 +1656,47 @@ static void readcfg_save(parms_t *parms){
 	parms->save.gradgeom=readcfg_lmat(parms->nwfs,1,"save.gradgeom");
 	if(disable_save){
 		parms->save.extra=0;
-	}
-	if(parms->save.all){/*enables everything */
-		if(disable_save){
+		if(parms->save.all||parms->save.setup||parms->save.setup){
 			error("please specify output directory\n");
 		}
-		info("Enabling saving everything.\n");
-		/*The following 3 are for setup. */
-		if(!parms->save.setup) parms->save.setup=parms->save.all;
-		if(!parms->save.recon) parms->save.recon=parms->save.all;
-		if(!parms->save.mvst) parms->save.mvst=parms->save.all;
-		/*The following are run time information that are not enabled by
-		  save.run because they take a lot of space*/
-		if(!parms->save.opdr) parms->save.opdr=parms->save.all;
-		//parms->save.opdx=parms->save.all;
-		if(!parms->save.evlopd) parms->save.evlopd=parms->save.all;
-		if(!parms->save.run) parms->save.run=parms->save.all;/*see following */
-		if(!parms->save.ncpa) parms->save.ncpa=parms->save.all;
-		if(!parms->save.dither) parms->save.dither=parms->save.all;
-		if(!parms->save.gradoff) parms->save.gradoff=parms->save.all;
-		if(parms->save.extra) parms->save.extra=parms->save.all;
 	}
-	if(parms->recon.glao){
-		parms->save.opdx=0;
+	
+	if(parms->save.all){
+		parms->save.setup=parms->save.all;
+		parms->save.run=parms->save.all;
+	}
+	if(parms->save.all>1){
+		parms->save.recon=parms->save.all;
+		parms->save.mvst=parms->save.all;
+		parms->save.ncpa=parms->save.all;
+		parms->save.fdpcg=parms->save.all;
+	}
+	if(parms->save.run==1){
+		info("Saving RTC telemetry.\n");
+	}else if(parms->save.run>1){
+		info("Saving RTC telemetry and OPDs.\n");
 	}
 	if(parms->save.run){
-		parms->save.dm=1;
-		if(!parms->sim.idealfit){
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				P(parms->save.ints,iwfs)=1;
-				P(parms->save.wfsopd,iwfs)=1;
-				P(parms->save.grad,iwfs)=1;
-				P(parms->save.gradnf,iwfs)=1;
-				P(parms->save.gradpsol,iwfs)=1;
-				P(parms->save.gradgeom,iwfs)=1;
-			}
-		}
+		parms->save.gradoff=parms->save.run;
+		parms->save.extra=parms->save.run;
+		parms->save.dither=parms->save.all;
+		parms->save.dm=parms->save.run;
+		lset(parms->save.ints, parms->save.run);
+		lset(parms->save.grad, parms->save.run);
+		lset(parms->save.gradnf, parms->save.run);
+		lset(parms->save.gradpsol, parms->save.run);
+		lset(parms->save.gradgeom, parms->save.run);
 	}
+	if(parms->save.run>1){
+		/*The following are run time information that are only enabled with
+		save.run>1 or save.all>1 because they take a lot of disk space and slows
+		down the simulation dramatically.*/
+		parms->save.opdr=parms->save.run;
+		parms->save.evlopd=parms->save.run;
+		if(!parms->recon.glao) parms->save.opdx=parms->save.run;
+		lset(parms->save.wfsopd, parms->save.run);
+	}
+
 	READ_LMAT(save.gcov);
 	parms->save.ngcov=NX(parms->save.gcov)/2;
 	READ_INT(save.gcovp);
@@ -1833,35 +1847,36 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		}
 		parms->sim.end=NX(parms->dbg.tomo_maxit);
 	}
-	if(parms->sim.idealfit||parms->sim.idealtomo){
-		if(parms->sim.idealfit&&parms->sim.idealtomo){
-			warning("idealfit takes precedence over idealtomo\n");
-		}
+	if(parms->sim.idealtomo){
 		if(parms->recon.alg!=RECON_MVR){
-			dbg2("idealfit only works in recon.alg=0 mode. changed\n");
+			dbg2("idealtomo only works in recon.alg=0 mode. changed\n");
 			parms->recon.alg=RECON_MVR;
 		}
 		if(parms->recon.split){
-			dbg2("idealfit or idealtomo only works in integrated tomo mode. changed\n");
+			dbg2("idealtomo only works in integrated tomo mode. changed\n");
 			parms->recon.split=0;
 		}
 		if(parms->recon.mvm){
-			dbg2("idealfit or idealtomo  cannot be used with recon.mvm. changed\n");
+			dbg2("idealtomo cannot be used with recon.mvm. changed\n");
 			parms->recon.mvm=0;
 		}
 		if(parms->sim.closeloop==1){
-			dbg2("idealfit or idealtomo works in open loop. changed.\n");
+			dbg2("idealtomo works in open loop. changed.\n");
 			parms->sim.closeloop=0;
 		}
 		if(parms->recon.modal){
-			dbg2("idealfit or idealtomo only works with zonal reconstruction. changed.\n");
+			dbg2("idealtomo only works with zonal reconstruction. changed.\n");
 			parms->recon.modal=0;
 		}
 		if(parms->sim.wfsalias){
-			error("wfsalias and idealtomo/idealfit conflicts\n");
+			error("wfsalias and idealtomo conflicts\n");
 		}
 		if(parms->sim.idealwfs){
-			error("idealwfs and idealtomo/idealfit conflicts\n");
+			error("idealwfs and idealtomo conflicts\n");
+		}
+		if((parms->ncpa.nsurf||parms->ncpa.ntsurf)&&!parms->ncpa.calib){
+			warning("idealtomo require ncpa.calib to be enabled. changed.\n");
+			parms->ncpa.calib=1;
 		}
 		parms->gpu.tomo=0;
 	}
@@ -1910,7 +1925,7 @@ static void setup_parms_postproc_sim(parms_t *parms){
    -# necessary adjustments if outputing WFS PSF.
 */
 static void setup_parms_postproc_wfs(parms_t *parms){
-	if(parms->sim.evlol||parms->sim.idealfit||parms->sim.idealtomo){
+	if(parms->sim.evlol||parms->sim.idealtomo){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			free_powfs_cfg(&parms->powfs[ipowfs]);
 		}
@@ -1974,7 +1989,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		}
 		if(powfsi->dither||(parms->recon.petaling&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
 			if(powfsi->phystep==-1){
-				error("Physical optics mode for powfs %d is required.\n", ipowfs);
+				error("powfs%d: Physical optics mode is required for dithering or petaling control.\n", ipowfs);
 			}else{
 				powfsi->phystep=powfsi->step;
 			}
@@ -1986,6 +2001,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(powfsi->phystep>=0&&(powfsi->phystep<parms->sim.end||parms->sim.end==0)){
 			powfsi->usephy=1;
 			parms->nphypowfs++;
+			if(!parms->sim.closeloop){
+				warning("powfs%d: Physical optics mode does not work well in open loop simulations.\n", ipowfs);
+			}
 		} else{
 			powfsi->usephy=0;
 		}
@@ -2296,7 +2314,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 	  dresize(parms->atm.ws, jps, 1);
 	  dresize(parms->atm.wddeg, jps, 1);
 	  }*/
-	if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
+	if(parms->sim.idealtomo){/*For ideal tomography, we using downsampled atm directly for atmr. */
 		dbg("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 		int nps=parms->atm.nps;
 		dresize(parms->atmr.ht,nps,1);
@@ -2310,7 +2328,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		parms->atmr.nps=nps;
 	} else if((parms->recon.glao||parms->nhiwfs==1)
 		&&parms->recon.alg==RECON_MVR&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
-   /*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
+   		/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 		dresize(parms->atmr.ht,1,1);
 		dresize(parms->atmr.wt,1,1);
@@ -2318,7 +2336,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
-	} else if(!parms->sim.idealtomo && parms->npowfs>0){
+	} else if(parms->npowfs>0){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hsmax){
@@ -2723,9 +2741,9 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 	}
 	if(parms->recon.split){
-		if(parms->sim.evlol||!parms->sim.closeloop || !parms->ndm){
+		if(!parms->nwfs||!parms->sim.closeloop || !parms->ndm || parms->evl.tomo){
 			parms->recon.split=0;
-			warning("Split tomography is not support in current configuration. Changed.\n");
+			warning("Split tomography is not support or needed in current configuration. Changed.\n");
 		}
 	}
 	if(parms->recon.glao&&parms->ndm!=1){
@@ -2757,9 +2775,10 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		parms->fit.square=0;
 	}
 	if(!parms->sim.closeloop){
-		parms->recon.psol=0;//open loop cannot use psol
+		parms->recon.psol=0;//open loop do not need psol
+		parms->cn2.psol=0;//open loop do not need psol
 	} else if(parms->recon.psol==-1){
-		if(parms->sim.idealfit){
+		if(parms->sim.idealtomo){
 			parms->recon.psol=1;
 		} else if(parms->recon.alg==RECON_MVR){//MV perfers psol
 			parms->recon.psol=1;
@@ -2870,22 +2889,14 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		warning("ahst split tomography does not have good NGS correction in open loop.\n");
 	}
 	if(parms->recon.split==2&&parms->sim.fuseint==1){
-		warning("MVST Mode can only use separate integrator for the moment. Changed\n");
+		warning("MVST Mode can only use separate integrator for the moment. Changed.\n");
 		parms->sim.fuseint=0;
 	}
 	if(!parms->recon.split&&!parms->sim.fuseint){
 		parms->sim.fuseint=1;/*integrated tomo. only 1 integrator. */
 	}
-	/*Tomography related*/
-	if(parms->sim.closeloop&&parms->evl.tomo){
-		warning("Evaluating tomography performance is best done in open loop\n");
-	}
-	if(parms->recon.split&&parms->evl.tomo){
-		warning("Evaluating tomography performance is best done with integrated tomography.\n");
-	}
-	if(parms->recon.alg==RECON_MVR){
 
-		//fit is also used for idealfit, idealwfs.
+	if(parms->recon.alg==RECON_MVR){
 		if(parms->recon.mvm&&parms->fit.alg==ALG_CG){
 			warning("CG based fit is not suitable for building MVM\n");
 		}
@@ -2970,11 +2981,8 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
 	}
 	if(parms->sim.mffocus>0){
-		if(!parms->recon.split||!parms->nlgspowfs||parms->sim.idealfit){
-			if(!parms->recon.split){
-				info("Focus blending is not implemented yet for integrated tomography\n");
-			}
-			info("parms->sim.mffocus is reset to 0\n");
+		if(!parms->recon.split||!parms->nlgspowfs){
+			info("Focus blending is only implemented for LGS in split tomography. Changed.\n");
 			parms->sim.mffocus=0;
 		}
 	}
@@ -3317,7 +3325,7 @@ static void print_parms(const parms_t *parms){
 		}
 	}
 	if(parms->recon.alg==RECON_MVR){
-		if(!parms->sim.idealfit){
+		if(!parms->sim.idealtomo){
 			info2("%sTomography%s is using ",GREEN,BLACK);
 			if(parms->tomo.bgs){
 				info2("Block Gauss Seidel with ");
@@ -3428,12 +3436,6 @@ static void print_parms(const parms_t *parms){
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
 parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
-	if(!mainconf){
-		mainconf=getenv("MAOS_DEFAULT");
-		if(!mainconf){
-			mainconf="default.conf";
-		}
-	}
 	info("Main config file is %s\n", mainconf);
 	char *config_path=find_config("maos");
 	/*Setup PATH and result directory so that the config_path is in the back of path */
@@ -3548,14 +3550,10 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 			parms->gpu.wfs=0;
 			parms->gpu.lsr=0;
 		}
-		if(parms->sim.idealfit){
+		if(parms->sim.idealtomo){
 			parms->gpu.wfs=0;
 			parms->gpu.tomo=0;/*no need tomo.*/
 			parms->fit.cachex=0;
-		}
-		if(parms->sim.idealtomo){
-			parms->gpu.wfs=0;
-			parms->gpu.tomo=0;
 		}
 		if(parms->evl.tomo&&parms->gpu.evl){
 			warning("evl.tomo is not implemented in gpu. disable gpu.evl\n");
@@ -3583,8 +3581,8 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 				warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
 				parms->gpu.fit=0;
 			}
-			if(parms->sim.idealfit&&parms->gpu.fit){
-				parms->gpu.fit=2;//In idealfit, FR is not assembled.
+			if(parms->sim.idealtomo&&parms->gpu.fit){
+				parms->gpu.fit=2;//in idealtomo FR is not assembled.
 			}
 
 		} else if(parms->recon.alg==RECON_LSR){

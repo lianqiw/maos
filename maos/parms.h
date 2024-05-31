@@ -568,10 +568,7 @@ typedef struct sim_cfg_t{
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int evlol;       /**<evaluate open loop error only*/
     int noatm;       /**<disable atmosphere*/
-    int idealfit;    /**<do ideal DM fitting from atmosphere directly.*/
-    int idealtomo;   /**<ideal tomography without wfs (directly propagate from
-			turbulence). conflicts with idealfit. combine with
-			evl.tomo to evaluate its performance.*/
+    int idealtomo;   /**<Use downsampled turbulence directly as tomography outout (to evaluate fitting error without tomography effect)*/
     int psfr;        /**<do PSF reconstruction telemetry*/
     int ecnn;        /**<Calculate WF covariance due to WFS noise cov Cnn.*/
     int wfsalias;    /**<Study the wfs aliasing effect by projecting turbulence

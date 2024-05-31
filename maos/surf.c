@@ -265,29 +265,31 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				}
 				ncover++;
 			}
-			if(!strwfs){
-				info("Does not contain SURFWFS, Assume it covers all WFS.\n");
-				for(int iwfs=0;iwfs<nwfs; iwfs++){
-					wfscover[iwfs]=1;
-				}
-				ncover++;
-			} else{
-				readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, "SURFWFS",strwfs);
-				int nwfscover=0;
-				for(int i=0; i<nwfs; i++){
-					nwfscover+=wfscover[i]?1:0;
-				}
-				if(nwfscover){
-					info2("Covers WFS");
-					for(int i=0; i<nwfs; i++){
-						if(wfscover[i]){
-							info2(" %d", i);
-						}
+			if(!parms->sim.idealtomo){//in idealtomo, everything is treated as NCPA
+				if(!strwfs){
+					info("Does not contain SURFWFS, Assume it covers all WFS.\n");
+					for(int iwfs=0;iwfs<nwfs; iwfs++){
+						wfscover[iwfs]=1;
 					}
-					info2("\n");
-				}
-				if(nwfscover==nwfs){
 					ncover++;
+				} else{
+					readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, "SURFWFS",strwfs);
+					int nwfscover=0;
+					for(int i=0; i<nwfs; i++){
+						nwfscover+=wfscover[i]?1:0;
+					}
+					if(nwfscover){
+						info2("Covers WFS");
+						for(int i=0; i<nwfs; i++){
+							if(wfscover[i]){
+								info2(" %d", i);
+							}
+						}
+						info2("\n");
+					}
+					if(nwfscover==nwfs){
+						ncover++;
+					}
 				}
 			}
 			if(ncover==2){
@@ -610,7 +612,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			}
 		}
 		/**
-		   note about idealfit: No need to pass surfaces to DM fitting
+		   note about idealtomo: No need to pass surfaces to DM fitting
 		   routine. These are already contained in dm_ncpa which got to add to the
 		   DM command. Nothing needs to be done.
 		*/
