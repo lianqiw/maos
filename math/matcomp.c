@@ -27,27 +27,13 @@
  */
 
 /**
-   component-wise multiply A with conjugate of B: A=A.*conj(B)*alpha;
+   component-wise multiply A with conjugate of B: A=A.*conj(B);
  */
-void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B, const R alpha){
-	if(!check_mat(A, B)) return;
+void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B){
+	if(!check_mat(A, B) || !B) return;
 	const long ntot=A->nx*A->ny;
-	if(B){
-		if(fabs(alpha-1)>1.e-15){
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=conj(P(B,i))*alpha;
-			}
-		} else{
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=conj(P(B,i));
-			}
-		}
-	} else{
-		if(fabs(alpha-1)>1.e-15){
-			for(long i=0; i<ntot; i++){
-				P(A,i)*=alpha;
-			}
-		}
+	for(long i=0; i<ntot; i++){
+		P(A,i)*=conj(P(B,i));
 	}
 }
 /**

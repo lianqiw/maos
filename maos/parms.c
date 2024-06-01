@@ -2142,25 +2142,25 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(!powfsi->usephy&&powfsi->bkgrndfn){
 			warning("powfs%d: there is sky background, but wfs is in geometric mode. The background is ignored.\n",ipowfs);
 		}
-		if(parms->ncpa.calib){
-			int enable_2=(powfsi->type==WFS_SH&&powfsi->phytype_sim==1&&powfsi->usephy)
-				&&!(parms->tomo.ahst_idealngs&&powfsi->skip);
-			if(powfsi->ncpa_method==-1){//auto
-				if(enable_2){//mtch
-					powfsi->ncpa_method=NCPA_I0;//default to 2
-				} else{
-					powfsi->ncpa_method=NCPA_G;
-				}
-			}
-			if(powfsi->ncpa_method==NCPA_I0){
-				if(!enable_2){
-					dbg("powfs%d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n",ipowfs);
-					powfsi->ncpa_method=NCPA_G;
-				} else{
-					powfsi->mtchstc=0;
-				}
+		
+		int calib_i0=(powfsi->type==WFS_SH&&powfsi->phytype_sim==1&&powfsi->usephy)
+			&&!(parms->tomo.ahst_idealngs&&powfsi->skip);
+		if(powfsi->ncpa_method==-1){//auto
+			if(calib_i0){//mtch
+				powfsi->ncpa_method=NCPA_I0;//default to 2
+			} else{
+				powfsi->ncpa_method=NCPA_G;
 			}
 		}
+		if(powfsi->ncpa_method==NCPA_I0){
+			if(!calib_i0){
+				dbg("powfs%d: ncpa_method changed from 2 to 1 for non-matched filter mode.\n",ipowfs);
+				powfsi->ncpa_method=NCPA_G;
+			} else{
+				powfsi->mtchstc=0;
+			}
+		}
+	
 		powfsi->phytype_sim1=powfsi->phytype_sim;//save value
 
 		if(powfsi->skip!=2){//Only for none Truth WFS

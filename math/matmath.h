@@ -125,7 +125,7 @@
 
 /*The following are only useful for cmat */
 #define AOS_CMATMATH_DEF(X,XR,T,R)					\
-    void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha); \
+    void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B); \
     void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B); \
     void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	const int nopdx, const int nopdy, const R wvl, const R theta);			\
     void X(embedc_flag)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \

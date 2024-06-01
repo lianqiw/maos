@@ -63,7 +63,7 @@ static cccell* genseotf_do(const pts_t* pts,
 	}
 	cccell* otf=cccellnew(notf, nwvl);
 
-	info("There is %s bias\n", opdbias?"NCPA":"no");
+	info("There is %s bias. notf=%d.\n", opdbias?"NCPA":"no", notf);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		for(int iotf=0; iotf<notf; iotf++){
 			dmat* opdi=opdbias?P(opdbias, iotf):NULL;
@@ -108,8 +108,8 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	}
 	mymkdir("%s/SEOTF/", CACHE);
 	char fnotf[PATH_MAX];
-	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_embfac%d_%u_v3.bin",
-		CACHE, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac, key);
+	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dxi%g_em%d%s_%u_v4.bin",//v4: inverted opdbias sign to agree with simulation
+		CACHE, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac, opdbias?"_ncpa":"", key);
 	cccell *otf=0;
 
 	CACHE_FILE(otf, fnotf, ({otf=cccellread("%s", fnotf);}), 
@@ -196,7 +196,7 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 					czero(sepsf);
 				}
 				if(lotfi){
-					ccwm(sepsf, lotfi);
+					ccwmc(sepsf, lotfi);//use conjugate to match simulation.
 				}
 				cfftshift(sepsf); /*peak now in corner. */
 				cfft2(sepsf, 1);   /*turn to psf. FFT 1th */

@@ -177,7 +177,7 @@ void* wfsints(thread_t* thread_data){
 				/* uplink has different aperture size than LGS subaperture, but
 				the same spatial and OTF sampling. Crop or pad OTF toget to get
 				the same PSF/OTF sampling.*/
-				islotf=1;cfft2(lwvf, 1);//turn to OTF
+				islotf=1;cfft2(lwvf, -1);//turn to OTF
 				lotfc2=cnew(nwvf, nwvf);//make uplink PSF(OTF) same size and sampling as downlink
 				ccpcorner(lotfc2, lwvf, C_FULL);//crop PSF
 			}else{
@@ -185,7 +185,7 @@ void* wfsints(thread_t* thread_data){
 			}
 			if(nwvf!=notfx||notfx!=notfy){//need to embed/crop uplink PSF
 				if(islotf){
-					cfft2(lotfc2, -1);//turn back to PSF
+					cfft2(lotfc2, 1);//turn back to PSF
 					cscale(lotfc2, 1./((real)nwvf*nwvf));
 					islotf=0;
 				}
@@ -199,7 +199,7 @@ void* wfsints(thread_t* thread_data){
 			}else{
 				lotfc=lotfc2; lotfc2=NULL;
 			}
-			if(!islotf) cfft2(lotfc, 1);/*turn to otf. */
+			if(!islotf) cfft2(lotfc, -1);/*turn to otf. */
 			/*lotfc has peak in lower left corner. */
 		}
 		int multi_nominal=(NX(powfs[ipowfs].dtf[iwvl].si)==nsa);
@@ -280,7 +280,7 @@ void* wfsints(thread_t* thread_data){
 				creal2d(&P(pistatout, isa, iwvl), 1, psftmp, norm_pistat);
 			}
 			if(lltopd){            /*add uplink otf */
-				ccwm(psf, lotfc);   /*normalization done in gen of lotfc. */
+				ccwmc(psf, lotfc);   /*normalization done in gen of lotfc. */
 			}
 			/* we have otf here in psf*/
 			if(ints){
