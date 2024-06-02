@@ -1329,7 +1329,6 @@ static void save_file(){
 		return;
 	}
 	cairo_surface_t *surface=NULL;
-	int width, height;
 	char* suffix=strrchr(filename, '.');
 	if(!suffix){
 		char* filename2=stradd(filename, ".png", NULL);
@@ -1340,51 +1339,31 @@ static void save_file(){
 
 	if(strcmp(suffix, ".eps")==0){
 #if CAIRO_HAS_PS_SURFACE == 1
-		width=96*8;
-		height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
-		surface=cairo_ps_surface_create(filename, width, height);
+		surface=cairo_ps_surface_create(filename, drawdata->width, drawdata->height);
 		cairo_ps_surface_set_eps(surface, TRUE);
-#else
-		error_msg("ps surface is unavailable");
 #endif
 	} else if(strcmp(suffix, ".pdf")==0){
 #if CAIRO_HAS_PDF_SURFACE == 1
-		width=96*8;
-		height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
-		surface=cairo_pdf_surface_create(filename, width, height);
-#else
-		error_msg("pdf surface is unavailable");
+		surface=cairo_pdf_surface_create(filename, drawdata->width, drawdata->height);
 #endif
 	} else if(strcmp(suffix, ".svg")==0){
 #if CAIRO_HAS_SVG_SURFACE == 1
-		width=96*8;
-		height=(drawdata)->height*96*8/(drawdata)->width;/*same aspect ratio as widget */
-		surface=cairo_svg_surface_create(filename, width, height);
-#else
-		error_msg("svg surface is unavailable");
+		surface=cairo_svg_surface_create(filename, drawdata->width, drawdata->height);
 #endif
 	} else if(strcmp(suffix, ".png")==0){
-		width=(drawdata)->width;/*same size as the widget. */
-		height=(drawdata)->height;
-		surface=cairo_image_surface_create
-		((cairo_format_t)CAIRO_FORMAT_RGB24, width, height);
-	} else if(strcmp(suffix, ".svg")==0){
-#if CAIRO_HAS_SVG_SURFACE == 1
-		width=(drawdata)->width;/*same size as the widget. */
-		height=(drawdata)->height;
-		surface=cairo_svg_surface_create(filename, width, height);
-#else
-		error_msg("svg surface is unavailable");
-#endif
-	} else{
-		error_msg("%s has unknown suffix\n", filename);
+#if CAIRO_HAS_PNG_FUNCTIONS
+		//real scale=2;
+		//surface=cairo_image_surface_create((cairo_format_t)CAIRO_FORMAT_ARGB32, drawdata->width*scale, drawdata->height*scale);
+		//cairo_surface_set_device_scale(surface, scale, scale);
+		cairo_surface_write_to_png(drawdata->pixmap, filename);return;
+#endif		
 	}
 	if(!surface){
-		error_msg("surface is NULL\n");
+		error_msg("%s: file type is not supported.\n", filename);
 		return;
 	}
 	cairo_t *cr=cairo_create(surface);
-	cairo_draw(cr, drawdata, width, height);
+	cairo_draw(cr, drawdata, drawdata->width, drawdata->height);
 	cairo_destroy(cr);
 	if(strcmp(suffix, ".png")==0){
 		cairo_surface_write_to_png(surface, filename);
