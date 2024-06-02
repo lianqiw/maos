@@ -1470,7 +1470,7 @@ void* wfsgrad(sim_t* simu){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcal %d", iwfs);
+				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcl %d", iwfs);
 		}
 	}
 	//todo: split filter_fsm to per WFS.

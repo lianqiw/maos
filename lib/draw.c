@@ -872,31 +872,10 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	dfree(opd0);
 	return 1;
 }
-/**
-   Plot gradients using CuReD
-*/
-int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real zlim,
-	const char* title, const char* xlabel, const char* ylabel,
-	const char* format, ...){
-	format2fn;
-	if(!saloc || !gradin) return 0;
-    long nsa=saloc->nloc;
-	if(nsa<=4||NY(gradin)!=2) grad2opd=0;
-    //check current plotting target
-
-	char fnx[100];
-	char fny[100];
-	if(NY(gradin)>1){
-		snprintf(fnx, sizeof(fnx), "%sx", fn);
-		snprintf(fny, sizeof(fny), "%sy", fn);
-	}else{
-		snprintf(fnx, sizeof(fnx), "%s", fn);
-		snprintf(fny, sizeof(fny), "%s", fn);
-	}
-	if(!(grad2opd&&draw_current(fig, fn)) && !draw_current(fig, fnx) && !draw_current(fig, fny)) return 0;
-
-	dmat* grad=0;
-	if(trs && NY(grad)==2){//remove tip/tilt
+static dmat* grad_prep(const dmat *gradin, int nsa, int trs){
+	int ng=PN(gradin)/nsa;
+	dmat *grad=0;
+	if(trs&&ng==2){//remove tip/tilt
 		grad=ddup(gradin);
 		reshape(grad, nsa, 2);
 		real gxm=0;
@@ -912,30 +891,61 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 			P(grad, isa, 1)+=gym;
 		}
 		reshape(grad, NX(gradin), NY(gradin));
-	}else{
+	} else{
 		grad=dref(gradin);
 	}
-	if(grad2opd&&draw_current(fig, fn)){
-		//This is different from loc_embed. It removes the padding.
-		dmat* phi=0;
-		cure_loc(&phi, grad, saloc);
-		real limit[4];
-		int npad=saloc->npad;
-		LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
-		LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
-		draw(fig, (plot_opts){
-			.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
-		dfree(phi);
+	return grad;
+}
+/**
+   Plot gradients using CuReD
+*/
+int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real zlim,
+	const char* title, const char* xlabel, const char* ylabel,
+	const char* format, ...){
+	format2fn;
+	if(!saloc || !gradin) return 0;
+    long nsa=saloc->nloc;
+	long ng=PN(gradin)/nsa;
+	if(nsa<=4||ng!=2) grad2opd=0;
+    //check current plotting target
+	char fnx[100];
+	char fny[100];
+	if(ng>1){
+		snprintf(fnx, sizeof(fnx), "%sx", fn);
+		snprintf(fny, sizeof(fny), "%sy", fn);
+	}else{
+		snprintf(fnx, sizeof(fnx), "%s", fn);
+		snprintf(fny, sizeof(fny), "%s", fn);
 	}
-	if(draw_current(fig, fnx)){
-		dmat* gx=dnew_do(nsa, 1, P(grad), 0);
-		drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s", fnx);
-		dfree(gx);
-	}
-	if(NY(grad)>1 && draw_current(fig, fny)){
-		dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
-		drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s", fny);
-		dfree(gy);
+	
+	dmat *grad=NULL;
+	if(grad2opd){
+		if(draw_current(fig, fn)){
+			grad=grad_prep(gradin, nsa, trs);
+			//This is different from loc_embed. It removes the padding.
+			dmat* phi=0;
+			cure_loc(&phi, grad, saloc);
+			real limit[4];
+			int npad=saloc->npad;
+			LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
+			LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
+			draw(fig, (plot_opts){
+				.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+			dfree(phi);
+		}
+	}else{
+		if (draw_current(fig, fnx)){
+			grad=grad_prep(gradin, nsa, trs);
+			dmat* gx=dnew_do(nsa, 1, P(grad), 0);
+			drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s", fnx);
+			dfree(gx);
+		}
+		if(ng>1 && draw_current(fig, fny)){
+			grad=grad_prep(gradin, nsa, trs);
+			dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
+			drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s", fny);
+			dfree(gy);
+		}
 	}
 	dfree(grad);
 	return 1;
