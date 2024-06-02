@@ -207,7 +207,7 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 					czero(sepsf);
 				}
 				if(lotfi){
-					ccwm(sepsf, lotfi);
+					ccwmc(sepsf, lotfi, 1);
 				}
 				cfftshift(sepsf); /*peak now in corner. */
 				cfft2(sepsf, 1);   /*turn to psf. FFT 1th */

@@ -343,7 +343,12 @@ case "$host_os" in
 				libsuffix="${host_cpu}"
 			;;
 		esac
-		mkl_avail="yes"
+		if grep -q "GenuineIntel" /proc/cpuinfo; then
+			mkl_avail="yes" #Only use MKL for Intel CPU.
+			echo "Intel CPU, MKL is ok."
+		else
+			echo "Unknown CPU, do not use MKL."
+		fi
 		system="linux"
 		ldsuffix="so"
 		LDSO="-Wl,--no-undefined" #force an error if symbols are not resolved.
@@ -525,7 +530,19 @@ else
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 	mkl="mkl mkl-static" #prefer dynamic
 fi
-
+try_lapack="pkg-config blis-mt blis openblas-openmp openblas-threads openblas default-3 default"
+if test x$mkl_avail = xyes; then
+	case $use_mkl in
+	yes) #prefer MKL
+		try_lapack="$mkl mkl-download $try_lapack"
+		;;
+	default) #default order, download mkl if blas is not found
+		try_lapack="$mkl $try_lapack mkl-download"
+		;;
+	esac
+else
+	try_lapack+=" blis-download"
+fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
@@ -563,6 +580,16 @@ function set_lapack(){
 	    fi
 		LAPACK+=" -lpthread -ldl"
 	    ;;
+	blis-download)
+		download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
+		LAPACK="-lblis-mt -lflame"
+		;;
+	blis-mt)
+		LAPACK="-lblis-mt -lflame"
+		;;
+	blis)
+		LAPACK="-lblis -lflame" #blis or AOCC for AMD CPUS
+		;;
 	pkg-config)
 	    LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 	    ;;
@@ -588,20 +615,8 @@ function set_lapack(){
     echo trying LAPACK=$LAPACK
 }
 has_lapack=no
-base_lapack="pkg-config default openblas-openmp openblas-threads openblas default-3"
-case $use_mkl in
-    yes) #prefer MKL
-		trys="$mkl mkl mkl-download $base_lapack"
-		;;
-    no) #disable MKL
-		trys="$base_lapack"
-		;;
-    default) #default order
-		trys="$mkl $base_lapack mkl-download"
-		;;
-esac
 
-for try in ${trys}; do
+for try in ${try_lapack}; do
     if test "$has_lapack" = "no" -o "$has_blas" = "no";then
 		unset ac_cv_lib_m_dgemm_
 		unset ac_cv_lib_m_dposv_
