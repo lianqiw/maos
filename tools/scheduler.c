@@ -510,6 +510,7 @@ static void socket_save(int sock_save, int id){
 		if(p->sock==sock_save){
 			found=1;
 			p->id=id;
+			dbg_time("Update socket %d with id %d\n", sock_save, id);
 		}
 	}
 	if(!found){
@@ -522,6 +523,7 @@ static void socket_save(int sock_save, int id){
 			shead->prev=tmp;
 		}
 		shead=tmp;
+		dbg_time("Save socket %d with id %d\n", sock_save, id);
 	}
 }
 static void socket_remove(SOCKID_T*p){
@@ -544,22 +546,28 @@ static int socket_get(int id){
 		int badsock=0;
 		if((badsock=stcheck(p->sock))||p->id==id){
 			if(badsock){
+				dbg_time("Remove bad socket %d with id %d\n", p->sock, p->id);
 				close(p->sock); //closed socket
 			} else if(sock_save==-1){
 				sock_save=p->sock; //valid match
+				dbg_time("Get socket %d with id %d\n", p->sock, p->id);
 			}else{
 				continue;//check next socket for disconnection.
 			}
 			socket_remove(p);
 		}
 	}
-	return sock_save;
+	if(sock_save==-1&&id!=0){
+		sock_save=socket_get(0);//if not found, also check id=0
+	}
+	return sock_save;	
 }
 static void socket_heartbeat(){
 	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
 		p_next=p->next;
 		int cmd[1]={DRAW_HEARTBEAT};
 		if(stcheck(p->sock) || stwrite(p->sock, cmd, sizeof(cmd))){
+			dbg_time("Remove bad socket %d with id %d\n", p->sock, p->id);
 			socket_remove(p);
 		}
 	}
@@ -754,9 +762,6 @@ static int respond(int sock){
 			}
 		} else if(pid<0){//send existing sock to draw()
 			int sock_save=socket_get(-pid);//drawdaemon with the same session id.
-			if(sock_save==-1){
-				sock_save=socket_get(0);//available drawdaemon with no session id.
-			}
 			dbg_time("(%d) received socket request, sock_saved=%d\n", sock, sock_save);
 
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.

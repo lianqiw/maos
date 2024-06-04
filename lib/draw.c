@@ -32,7 +32,7 @@ PNEW(lock);
 #define MAXDRAW 1024
 #define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
 
-int draw_id=0;      //Client identification. Same draw_id  reuses drawdaemon.
+int draw_id=1;      //Client identification. Same draw_id reuses drawdaemon.
 int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
 static int sock_helper=-1;//socket of draw_helper
@@ -365,12 +365,12 @@ static int get_drawdaemon(){
 		display=0;
 	}
 #endif
-	if(draw_id<=0){
+	/*if(draw_id<=0){
 		draw_id=getsid(0);
 		if(draw_id<=0){
 			draw_id=1;
 		}
-	}
+	}*/
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id
 	while(!scheduler_socket(-1, &sock, draw_id)){

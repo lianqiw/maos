@@ -410,7 +410,7 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 	return ret;
 }
 /**
-   send a drawing sock to the scheduler for caching or request a sock for drawing
+   send a drawing sock to the scheduler for caching (1) or request a sock for drawing (-1)
 */
 int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;
