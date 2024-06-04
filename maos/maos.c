@@ -443,17 +443,16 @@ int main(int argc, const char* argv[]){
 
 		info2("\n*** Preparation started at %s in %s. ***\n\n", myasctime(0), HOST);
 		THREAD_POOL_INIT(NTHREAD);
-	OMPTASK_SINGLE{
-			maos_setup(parms);
-			parms->save.setup=0; //setup is finished. do not save if calling again.
-			if(parms->sim.end>parms->sim.start){
-				/*if(!disable_save){
-					remove("maos");
-					mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
-				}*/
-				info2("\n*** Simulation started at %s in %s. ***\n\n", myasctime(0), HOST);
-				maos_sim();
-			}
+		maos_setup(parms);
+		parms->save.setup=0; //setup is finished. do not save if calling again.
+		if(parms->sim.end>parms->sim.start){
+			/*if(!disable_save){
+				remove("maos");
+				mylink(BUILDDIR "/bin/maos", "maos");//save maos for futher reproduciability.
+			}*/
+			info2("\n*** Simulation started at %s in %s. ***\n\n", myasctime(0), HOST);
+OMPTASK_SINGLE
+			maos_sim();
 		}
 		if(plistener) pthread_cancel(plistener);
 		rename_file(signal_caught);

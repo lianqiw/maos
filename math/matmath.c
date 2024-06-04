@@ -842,18 +842,16 @@ int X(clip)(X(mat)* restrict A, R min, R max){
 /**
    A=A*B, where diag(B)=s
 */
-void X(muldiag)(X(mat)* restrict A, const X(mat)* restrict s){
+void X(muldiag)(X(mat) *restrict A, const XR(mat) *restrict s){
 	assert(A->ny==s->nx&&s->ny==1);
-	X(mat)* pA=A;
-	const T* restrict ps=P(s);
+	const R *restrict ps=P(s);
 	for(long iy=0; iy<A->ny; iy++){
 		OMP_SIMD()
-		for(long ix=0; ix<A->nx; ix++){
-			P(pA, ix, iy)*=ps[iy];
-		}
+			for(long ix=0; ix<A->nx; ix++){
+				P(A, ix, iy)*=ps[iy];
+			}
 	}
 }
-
 /**
    Raise all elements to power 'power'
 */

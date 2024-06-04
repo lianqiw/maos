@@ -342,9 +342,12 @@ case "$host_os" in
 		esac
 		if grep -q "GenuineIntel" /proc/cpuinfo; then
 			mkl_avail="yes" #Only use MKL for Intel CPU.
-			echo "Intel CPU, MKL is ok."
+			echo "Intel CPU, MKL is available."
+		elif grep -q "AuthenticAMD" /proc/cpuinfo; then
+			mkl_avail="yes" 
+			echo "AMD CPU, Latest MKL is ok."
 		else
-			echo "Unknown CPU, do not use MKL."
+			mkl_avail="no"
 		fi
 		system="linux"
 		ldsuffix="so"
@@ -526,7 +529,7 @@ else
 	AC_DEFINE(USE_STATIC, [0], "We are compling maos with dynamic link")
 	mkl="mkl mkl-static" #prefer dynamic
 fi
-try_lapack="pkg-config blis-mt blis openblas-openmp openblas-threads openblas default-3 default"
+try_lapack="openblas openblas-serial pkg-config default-3 default"
 if test x$mkl_avail = xyes; then
 	case $use_mkl in
 	yes) #prefer MKL
@@ -536,8 +539,6 @@ if test x$mkl_avail = xyes; then
 		try_lapack="$mkl $try_lapack mkl-download"
 		;;
 	esac
-else
-	try_lapack+=" blis-download"
 fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
@@ -576,26 +577,28 @@ function set_lapack(){
 		fi
 		LAPACK+=" -lpthread -ldl"
 		;;
-	blis-download)
-		download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
-		LAPACK="-lblis-mt -lflame"
-		;;
-	blis-mt)
-		LAPACK="-lblis-mt -lflame"
-		;;
-	blis)
-		LAPACK="-lblis -lflame" #blis or AOCC for AMD CPUS
+	blis*) #slow. use mkl instead.
+		if test "$type" = "blis-download"; then
+			download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
+		fi
+		if test "$has_omp" = "0" ;then
+			LAPACK="-lblis "
+		else
+			LAPACK="-lblis-mt "
+		fi
+		LAPACK+=" -llapack" #-lflame has bugs for svd
 		;;
 	pkg-config)
 		LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 		;;
-	openblas-openmp)
-		LAPACK="-lopenblaso"
-		;;
-	openblas-threads)
-		LAPACK="-lopenblasp"
-		;;
 	openblas)
+		if test "$has_omp" = "0" ;then
+			LAPACK="-lopenblasp"
+		else
+			LAPACK="-lopenblaso" #openblas has lapack built in
+		fi
+		;;
+	openblas-serial)
 		LAPACK="-lopenblas"
 		;;
 	default)

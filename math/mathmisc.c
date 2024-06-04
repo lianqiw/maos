@@ -260,4 +260,12 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 	}
 	return ans;
 }
-
+/**
+ * Force MKL to treat CPU as Intel
+ * https://danieldk.eu/Posts/2020-08-31-MKL-Zen.html
+ * For dsvd_inv of 2714x2714 array, iit reduced the timing from 2 to 1.4 s
+*/
+int mkl_serv_intel_cpu_true(){
+	//dbg("mkl_serv_intel_cpu_true is called\n");
+	return 1;
+}
