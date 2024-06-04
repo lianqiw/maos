@@ -707,7 +707,6 @@ dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, cons
 	snprintf(fn, sizeof(fn), "%s/G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2.bin", CACHE,
 		P(pywfs->locfft->nembed, 0), locin->nloc, NY(mod), pycfg->modulate*RAD2MAS, pycfg->modulpos,
 		locin->iac, displacex, displacey, 1., pycfg->poke*1e9, key);
-	info2("Using G in %s\n", fn);
 	dmat *gg=0;
 
 	CACHE_FILE(gg, fn, ({gg=dread("%s", fn);}), ({gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);}),

@@ -1466,8 +1466,15 @@ void async_write(async_t* async, long offset, int wait){
 	}
 #else
 	(void) wait;
-	pwrite(async->fp->fd, async->p+async->prev, offset-async->prev, async->prev+async->pos);
-	async->prev=offset;
+	int nwrite=pwrite(async->fp->fd, async->p+async->prev, offset-async->prev, async->prev+async->pos);
+	if(nwrite<=0){
+		perror("pwrite");
+		warning("pwrite returns %d\n", nwrite);
+	}else if(nwrite<offset-async->prev){
+		async->prev+=nwrite;
+	}else{
+		async->prev=offset;
+	}
 #endif	
 }
 void async_free(async_t* async){

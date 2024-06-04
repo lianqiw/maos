@@ -118,8 +118,11 @@ def draw(*args, **kargs):
         return
     #if not 'keep' in kargs or kargs['keep'] == 0:
     #    plt.clf()
-    if isloc(args[0]):  # first argument is loc
-        loc=args[0]
+    arg0=args[0]
+    if type(arg0) is np.ndarray:
+        arg0=np.squeeze(arg0)
+    if isloc(arg0):  # first argument is loc
+        loc=arg0
         if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
             loc=loc.T
         if len(args) == 1:

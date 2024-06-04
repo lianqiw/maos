@@ -232,13 +232,13 @@ static inline int sum_dblarr(int n, real *a){
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }
-static void convert_theta(real *theta, const char *name, real wvlmax, real dsa){
+static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 	/*Convert pixtheta to radian and do senity check*/
 	real val=*theta;
 	const char *tmp=NULL;
 	if(*theta<=0){//minus means ratio to lambda/dsa
 		tmp="-lambda_max/D";
-		*theta=fabs(*theta)*wvlmax/dsa;
+		*theta=fabs(*theta)*wvl/dsa;
 	} else if(*theta<1e-4){
 		tmp="radian";
 	} else if(*theta>10){
@@ -248,7 +248,7 @@ static void convert_theta(real *theta, const char *name, real wvlmax, real dsa){
 		tmp="arcsecond";
 		*theta*=AS2RAD;/*convert form arcsec to radian. */
 	}
-	dbg("Assume %s=%g is in %s. Converted value is %g radian.\n", name, val, tmp, *theta);
+	dbg("Assume %s=%g is in %s. \n", name, val, tmp);
 }
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
@@ -269,20 +269,17 @@ static void readcfg_powfs(parms_t *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		parms->powfs[ipowfs].wvl=dnew(nwvl,1);
-		real wvlmax=0;
+		real wvlmean=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			real wvl=P(wvllist,count+iwvl);
-			
 			if(wvl>1e-3){
 				wvl=wvl*1e-6;
 			}
-			if(wvl<=wvlmax){
-				error("Wavelength must be in ascend order\n");
-			}
-			wvlmax=wvl;
+			wvlmean+=wvl;
 			P(parms->powfs[ipowfs].wvl,iwvl)=wvl;
 		}
 		count+=nwvl;
+		parms->powfs[ipowfs].wvlmean=wvlmean/nwvl;
 	}
 	if(count!=NX(wvllist)){
 		error("powfs.wvl has wrong value\n");
@@ -421,10 +418,12 @@ static void readcfg_powfs(parms_t *parms){
 		if(powfsi->dsa<=-1){//Order
 			powfsi->order=(int)(-powfsi->dsa);
 			powfsi->dsa=parms->aper.d/powfsi->order;
-		} else {
-			if(powfsi->dsa<0){//In unit of aper.d
-				powfsi->dsa*=-parms->aper.d;
-			}else if(!powfsi->dsa){
+		}else if(powfsi->dsa<0){//In unit of aper.d
+			warning("powfs.dsa=[-1/order] is deprecated. Please use powfs.dsa=[-order] instead.\n");
+			powfsi->order=ceil(-1./powfsi->dsa);
+			powfsi->dsa*=-parms->aper.d;
+		}else{
+			if(!powfsi->dsa){
 				if(powfsi->lo){
 					error("powfs[%d].dsa=%g must be set for LO powfs.\n", ipowfs, powfsi->dsa);
 				} else{//Follow ground DM.
@@ -552,11 +551,11 @@ static void readcfg_powfs(parms_t *parms){
 				}
 				powfsi->dx=dx;
 			}
-			convert_theta(&powfsi->pixtheta, "pixtheta", wvlmax, powfsi->dsa);
+			convert_theta(&powfsi->pixtheta, "pixtheta", powfsi->wvlmean, powfsi->dsa);
 			if(!powfsi->radpixtheta){
 				powfsi->radpixtheta=powfsi->pixtheta;
 			} else{
-				convert_theta(&powfsi->radpixtheta, "radpixtheta", wvlmax, powfsi->dsa);
+				convert_theta(&powfsi->radpixtheta, "radpixtheta", powfsi->wvlmean, powfsi->dsa);
 			}
 			if(powfsi->phytype_sim==-1){
 				powfsi->phytype_sim=powfsi->phytype_recon;
@@ -589,7 +588,7 @@ static void readcfg_powfs(parms_t *parms){
 			}
 		}
 		if(powfsi->fieldstop){
-			convert_theta(&powfsi->fieldstop, "fieldstop", wvlmax, powfsi->dsa);
+			convert_theta(&powfsi->fieldstop, "fieldstop", powfsi->wvlmean, powfsi->dsa);
 		}
 
 		powfsi->ng=pywfs_ng(pycfg); //number of gradients per subaperture
@@ -887,15 +886,18 @@ static void readcfg_siglev(parms_t *parms){
 			dcp(&parms->powfs[ipowfs].wvlwts, parms->wfs[iwfs0].wvlwts);
 		}
 		
-		parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->wfs[iwfs0].wvlwts)/dsum(parms->wfs[iwfs0].wvlwts);
+		//parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->wfs[iwfs0].wvlwts)/dsum(parms->wfs[iwfs0].wvlwts);
 		if(parms->powfs[ipowfs].lo){
 			real nembed=2;
 			real dsa=parms->powfs[ipowfs].dsa;
 			real wvlpix=parms->powfs[ipowfs].pixtheta*(nembed*dsa);
-			if(fabs(wvlpix/parms->powfs[ipowfs].wvlmean-1)<0.2){
+			if(fabs(wvlpix/parms->powfs[ipowfs].wvlmean-1)<0.5){
 				parms->powfs[ipowfs].wvlmean=wvlpix;//change to pixel size equivalent wavelength assuming Nyquist sampling.
+				dbg("powfs[%d].wvlmean is set to %g to match detector pixel scale.\n", ipowfs, parms->powfs[ipowfs].wvlmean);
+			}else{
+				//todo: this weighting does not take into account Strehl ratio and may be too short.
+				dbg("powfs[%d].wvlmean is set to %g based on average.\n", ipowfs, parms->powfs[ipowfs].wvlmean);
 			}
-			dbg("powfs[%d].wvlmean is set to %g\n", ipowfs, parms->powfs[ipowfs].wvlmean);
 		}
 		
 		powfs_wvl_count+=nwvl;
@@ -1429,7 +1431,15 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.split);
 	READ_INT(recon.mvm);
 	READ_INT(recon.modal);
-	READ_INT(recon.nmod);
+	real nmod=readcfg_dbl("recon.nmod");
+	if(parms->recon.modal){
+		if(nmod==0) nmod=1;
+		if(nmod<=1){
+			nmod*=pow(parms->ndm>0?parms->dm[0].order:parms->aper.d*2,2)*M_PI/4;
+			dbg("recon.nmod=%d\n", (int)nmod);
+		}
+		parms->recon.nmod=(int)nmod;
+	}
 	READ_INT(recon.psol);
 	READ_DBL(recon.poke);
 	parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
@@ -1665,11 +1675,14 @@ static void readcfg_save(parms_t *parms){
 		parms->save.setup=parms->save.all;
 		parms->save.run=parms->save.all;
 	}
-	if(parms->save.all>1){
+	if(parms->save.setup>1){
 		parms->save.recon=parms->save.all;
 		parms->save.mvst=parms->save.all;
 		parms->save.ncpa=parms->save.all;
 		parms->save.fdpcg=parms->save.all;
+	}
+	if(parms->save.recon||parms->save.mvst||parms->save.ncpa||parms->save.fdpcg){
+		if(!parms->save.setup) parms->save.setup=1;
 	}
 	if(parms->save.run==1){
 		info("Saving RTC telemetry.\n");
@@ -1762,9 +1775,6 @@ static void setup_parms_postproc_za(parms_t *parms){
 	/*
 	  The input r0z is the r0 at zenith. Scale it if off zenith
 	*/
-	if(parms->atm.r0z>parms->aper.d){
-		error("atm.r0z=%g appears too big.\n",parms->atm.r0z);
-	}
 	parms->atm.r0=parms->atm.r0z*pow(cosz,3./5.);
 	parms->atmr.r0=parms->atmr.r0z*pow(cosz,3./5.);
 

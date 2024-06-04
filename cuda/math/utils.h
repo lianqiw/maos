@@ -132,7 +132,7 @@ void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 		UNLOCK(cumemcache.memmutex);
 	}
 }
-/*Async copy does not make sense here because malloc pinned memory is too expensive.*/
+/*Convert and copy CPU data to GPU with deduplication if cuda_dedup is set.*/
 template<typename M, typename N>
 void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	if(!src){

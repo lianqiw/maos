@@ -29,8 +29,8 @@
  * @param loc		The phase screen grid. Replacing nx, ny, cx, cy.
  * @param nx, 	    Size of the phase screen grid.
  * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of aperture 
- * @param cy,       Center of aperture 
+ * @param cx,       Center of pupil 
+ * @param cy,       Center of pupil 
  * @param npetal,   Number of petals.
  * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
  * @param mode  	If set, output opd with the mode vector.
@@ -136,8 +136,8 @@ dsp *petal_mkh_loc(loc_t *loc, long npetal, real theta){
  * @return  	    Outupt the interaction matrix from petal modes to OPD
  * @param nx, 	    Size of the phase screen grid.
  * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of aperture
- * @param cy,       Center of aperture
+ * @param cx,       Center of pupil
+ * @param cy,       Center of pupil
  * @param npetal,   Number of petals.
  * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
  */
@@ -152,8 +152,8 @@ dsp *petal_mkh(long nx, long ny, real cx, real cy, long npetal, real theta){
  * @param[out] opd  Output the opd from petal mode vector
  * @param nx, 	    Size of the phase screen grid.
  * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of aperture
- * @param cy,       Center of aperture
+ * @param cx,       Center of pupil
+ * @param cy,       Center of pupil
  * @param npetal,   Number of petals.
  * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
  * @param mode  	If set, output opd with the mode vector.
@@ -167,8 +167,8 @@ void petal_opd(anydmat opd, real cx, real cy, long npetal, real theta, const dma
  * @return	  		Output the opd from petal mode vector
  * @param nx, 	    Size of the phase screen grid.
  * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of aperture
- * @param cy,       Center of aperture
+ * @param cx,       Center of pupil
+ * @param cy,       Center of pupil
  * @param npetal,   Number of petals.
  * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
  * @param mode  	If set, output opd with the mode vector.

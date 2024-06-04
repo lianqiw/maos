@@ -786,11 +786,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].lo
 				||(parms->recon.split&&parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){/*for low order wfs */
-				if(parms->recon.modal){
-					P(recon->GAlo, iwfs, idm)=(cell*)dref(P(recon->GM, iwfs, idm));
-				} else{
-					P(recon->GAlo, iwfs, idm)=(cell*)dspref(P(recon->GA, iwfs, idm));
-				}
+				P(recon->GAlo, iwfs, idm)=(cell*)dspref(P(recon->GA, iwfs, idm));
 			}
 			if(!parms->powfs[ipowfs].skip){
 				P(recon->GAhi, iwfs, idm)=dspref(P(recon->GA, iwfs, idm));

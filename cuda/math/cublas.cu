@@ -118,6 +118,7 @@ cusparseSpMM(cusparseHandle_t     handle,
 		cusparseDnVecDescr_t xv, yv;
 		cusparseCreateDnVec(&xv, nx, (void *)x, CUDA_R);
 		cusparseCreateDnVec(&yv, ny, (void *)y, CUDA_R);
+		//info("A=%p, x=%p, size=%zd; y=%p, size=%zd\n", &A, x, nx, y, ny);
 #if CUDA_VERSION > 11010 
 		cusparseSpMVAlg_t alg=CUSPARSE_SPMV_ALG_DEFAULT;
 #else
@@ -125,7 +126,14 @@ cusparseSpMM(cusparseHandle_t     handle,
 #endif
 		DO(status=cusparseSpMV_bufferSize(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, &bsize));
 		DO(cudaMalloc(&buffer, bsize));
+#if CUDA_VERSION >= 12040
+		//DO(status=cusparseSpMV_preprocess(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
+#endif
 		DO(status=cusparseSpMV(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
+		//CUDA_SYNC_STREAM;
+		//For cuda-12.4 and 12.5, the call here results in the following error.
+		//error 700, an illegal memory access was encountered
+		//Use cuda-12.3 instead.
 		DO(cudaFree(buffer));
 		cusparseDestroyDnVec(yv);
 		cusparseDestroyDnVec(xv);
@@ -139,12 +147,13 @@ cusparseSpMM(cusparseHandle_t     handle,
 #else
 		cusparseSpMMAlg_t alg=CUSPARSE_MM_ALG_DEFAULT;
 #endif
-		DO(status=cusparseSpMM_bufferSize(stream.sparse(), opr, opB, &alpha,
-										  A.Desc(), Bm, &one, Cm, CUDA_R, alg, &bsize));
+		DO(status=cusparseSpMM_bufferSize(stream.sparse(), opr, opB, &alpha,  A.Desc(), Bm, &one, Cm, CUDA_R, alg, &bsize));
 		DO(cudaMalloc(&buffer, bsize));
-
-		DO(status=cusparseSpMM(stream.sparse(), opr, opB, &alpha,
-							   A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
+#if CUDA_VERSION >= 12040
+		//DO(status=cusparseSpMM_preprocess(stream.sparse(), opr, opB, &alpha, A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
+#endif
+		DO(status=cusparseSpMM(stream.sparse(), opr, opB, &alpha, A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
+		//CUDA_SYNC_STREAM;
 		DO(cudaFree(buffer));
 		cusparseDestroyDnMat(Bm);
 		cusparseDestroyDnMat(Cm);

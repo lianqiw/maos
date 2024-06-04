@@ -240,7 +240,7 @@ mapcell* genscreen(genatm_t* data){
 		fnatm=create_fnatm(data);
 	}
 	if(fnatm){
-		CACHE_FILE(in, fnatm, ({info("Using %s\n", fnatm);in=dcellread_mmap("%s", fnatm);}),
+		CACHE_FILE(in, fnatm, ({in=dcellread_mmap("%s", fnatm);}),
 					({zfarr*fc=zfarr_init(nlayer, 1, "%s", fnatm);
 						genscreen_do(fc, data);
 						zfarr_close(fc);

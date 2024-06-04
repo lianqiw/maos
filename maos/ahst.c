@@ -436,7 +436,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 				for(int idm=0; idm<parms->ndm; idm++){
 					if(parms->powfs[ipowfs].type==WFS_SH/*/ || parms->recon.modal==2*/){//shwfs or modal control
 						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
-					} else{//pwfs in zonal control.
+					} else{//pwfs
 						real  ht=parms->dm[idm].ht;
 						real  dispx=0, dispy=0;
 						dispx=parms->wfsr[iwfs].thetax*ht;
