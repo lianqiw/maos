@@ -297,7 +297,7 @@ X(mat)* X(chol)(const X(mat)* A){
 	return B;
 }
 
-DEF_ENV_FLAG(SVD_SDD_THRES, 0);
+DEF_ENV_FLAG(SVD_SDD_THRES, 0);//Set the threshold to enable using SDD stead of SVD
 /**
    Compute SVD of a general matrix A.
    A=U*diag(S)*V';
@@ -319,7 +319,7 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	} 
 #endif
 	int fd=-1;
-	if(A->nx>2048&&!OMP_IN_PARALLEL){
+	if(A->nx>2048&&OMP_IN_PARALLEL){
 	//Prevent multiple processes class gesvd simultaneously.
 		char fnlock[PATH_MAX];
 		snprintf(fnlock, PATH_MAX, "%s/%s", TEMP, "svd");
@@ -473,12 +473,7 @@ void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
 			break;
 		}
 	}
-	for(long iy=0; iy<VT->ny; iy++){
-		T* p=PCOL(VT, iy);
-		for(long ix=0; ix<VT->nx; ix++){
-			p[ix]*=P(Sdiag,ix);
-		}
-	}
+	X(muldiag)(U, Sdiag);
 #ifdef COMP_COMPLEX
 	X(mm)(&A, 0, VT, U, "cc", 1);
 #else

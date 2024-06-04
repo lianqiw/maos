@@ -65,7 +65,7 @@
     void X(shift2center)(X(mat) *A, R offsetx, R offsety);		\
     int X(clip)(X(mat) *A, R min, R max);				\
     void X(gramschmidt)(X(mat) *Mod, R *amp);				\
-    void X(muldiag)(X(mat) *A, const X(mat) *s);			\
+    void X(muldiag)(X(mat) *A, const XR(mat) *s);			\
     void X(cwpow)(X(mat) *A, R power);					\
     void X(cwexp)(X(mat) *A, R alpha);					\
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
