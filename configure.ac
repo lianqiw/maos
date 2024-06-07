@@ -145,7 +145,10 @@ if ! which which >/dev/null 2>&1;then
 	die "Please install 'which'"
 fi
 NVCC="$(which nvcc 2>/dev/null)"
-if test -n "$NVCC" ;then
+if test -z "$NVCC" ;then
+	NVCC="/usr/local/cuda/bin/nvcc"
+fi
+if test -x "$NVCC" ;then
 	if test -L "$NVCC" ;then
 		NVCC="$(readlink "$NVCC")"
 	fi

@@ -116,9 +116,19 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		if(atmscale) cuglobal->atmscale=ddup(atmscale);
 	}
 	/*The minimum size to cover the meta-pupil*/
-	const long nxn=parms->atm.nxnmax;
 	static int nx0=0, ny0=0;
-	if(!nx0){
+	int atm_match=1;//whether atm matches parms. mismatch happens file atm is loaded from file 
+	if(PN(atmc)!=parms->atm.nps){
+		atm_match=0;
+	}else{
+		for(int ips=0; ips<parms->atm.nps; ips++){
+			if(PN(atm[ips])!=P(parms->atm.nxn,ips)){
+				atm_match=0;
+				break;
+			}
+		}
+	}
+	if(atm_match && !nx0){
 		if(parms->dbg.fullatm){
 			dbg("Always host full atmosphere in GPU. Set dbg.fullatm=0 to disable\n");
 			nx0=parms->atm.nx;
@@ -137,6 +147,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			}
 			//avail_min-=256<<19;//reserve 128MiB 
 			//avail_max-=256<<19;
+			const long nxn=parms->atm.nxnmax;
 			long need=nps*sizeof(Real)*nxn*nxn;
 			dbg("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
 				nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
@@ -171,7 +182,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		}
 	}
 	/*The atm in GPU is the same as in CPU. */
-	if(nx0==parms->atm.nx&&ny0==parms->atm.ny){
+	if(!atm_match || (nx0==parms->atm.nx&&ny0==parms->atm.ny)){
 		cuglobal->atm_full=1;
 		if(iseed0!=iseed){
 			gpu_atm2gpu_full(atmc);
