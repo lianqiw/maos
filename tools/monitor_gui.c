@@ -399,6 +399,7 @@ static gboolean dialog_confirm(const char* format, ...){
 	return result==GTK_RESPONSE_YES;
 #endif	
 }
+int reset_clipboard=0;
 #if GTK_MAJOR_VERSION<4
 /**
    Append text to clipboard (primary and default).
@@ -427,7 +428,7 @@ static void clipboard_append(const char* jobinfo){
 	for(int iatom=0; iatom<2; iatom++){
 		GtkClipboard* clip=gtk_clipboard_get(atoms[iatom]);
 		if(!clip) continue;
-		gchar* old=gtk_clipboard_wait_for_text(clip);
+		gchar* old=reset_clipboard?NULL:gtk_clipboard_wait_for_text(clip);
 		gchar* newer=NULL;
 		if(old){
 			newer=stradd(old, jobinfo, "\n", NULL);
@@ -438,26 +439,28 @@ static void clipboard_append(const char* jobinfo){
 		gtk_clipboard_set_text(clip, newer, -1);
 		free(newer);
 	}
+	if(reset_clipboard){
+		reset_clipboard=0;
+	}
 #endif
 }
 
 typedef struct{
 	const char* menu;
 	const char* action;
-	GdkPixbuf** icon;
+	GdkPixbuf** icon;//use address for compile time constant
 	int command;
 }menudata_t;
 gint cur_page=-1;
 menudata_t menudata[]={
-	{"Plot selected jobs", "Plot", NULL, CMD_DISPLAY},
-	{"Clear selected jobs", "Remove", NULL, CMD_REMOVE},
+	{"Kill", "Kill", &icon_failed, CMD_KILL},
+	{"Restart", "Restart", NULL, CMD_RESTART},
+	{"Plot", "Plot", NULL, CMD_DISPLAY},
+	{"Remove", "Remove", &icon_clear, CMD_REMOVE},
 	{NULL, NULL, NULL, -1},
-	{"Kill selected jobs", "Kill", &icon_failed, CMD_KILL},
-	{"Restart selected jobs", "Restart", NULL, CMD_RESTART},
-	{NULL, NULL, NULL, -1},
-	{"Copy cmdline selected jobs", "Copy", NULL, -1},
-	{"Copy path of selected jobs", "CopyPath", NULL, -1},
-	{"Copy output path of selected jobs", "CopyOutPath", NULL, -1}
+	{"Copy command line", "Copy", NULL, -1},
+	{"Copy starting path", "CopyPath", NULL, -1},
+	{"Copy output path", "CopyOutPath", NULL, -1}
 };
 /*A general routine handle actions to each item.*/
 static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
@@ -518,6 +521,7 @@ static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
 		gtk_widget_destroy(dia);*/
 	}
 	if(ans){
+		reset_clipboard=1;
 		gtk_tree_selection_selected_foreach(selection, handle_selection, user_data);
 	}
 }
@@ -530,7 +534,7 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 	GtkWidget* menu=gtk_menu_new();
 	GtkWidget* menuitem;
 	char text[40];
-	snprintf(text, 40, "%d selected", nsel);
+	snprintf(text, 40, "Select an action for %d selected jobs:", nsel);
 	menuitem=gtk_menu_item_new_with_label(text);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 	menuitem=gtk_separator_menu_item_new();
@@ -540,17 +544,19 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 		cur_page=GPOINTER_TO_INT(user_data);
 		for(size_t i=0; i<sizeof(menudata)/sizeof(menudata_t); i++){
 			if(menudata[i].menu){
-				if(menudata[i].icon && *menudata[i].icon){
+				if(1){
 					menuitem=gtk_menu_item_new();
 #if GTK_MAJOR_VERSION >=3
 					GtkWidget* box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
 #else
 					GtkWidget* box=gtk_hbox_new(0, 6);
 #endif
-					GtkWidget* icon=gtk_image_new_from_pixbuf(*menudata[i].icon);
 					GtkWidget* label=gtk_label_new(menudata[i].menu);
 					gtk_container_add(GTK_CONTAINER(box), label);
-					gtk_box_pack_end(GTK_BOX(box), icon, TRUE, FALSE, 0);
+					if(menudata[i].icon&&*menudata[i].icon){
+						GtkWidget *icon=gtk_image_new_from_pixbuf(*menudata[i].icon);
+						gtk_box_pack_end(GTK_BOX(box), icon, FALSE, FALSE, 0);
+					}
 					//gtk_container_add(GTK_CONTAINER(box), icon);
 					gtk_container_add(GTK_CONTAINER(menuitem), box);
 				} else{

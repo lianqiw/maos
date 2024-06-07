@@ -122,17 +122,9 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 		slen+=strlen(delim)+strlen(argv[iarg]);
 	}
 	char* scmd=mycalloc(slen, char);
-	if(!mystrcmp(DIRSTART, HOME)){
-		strcpy(scmd, "~");
-		strcat(scmd, DIRSTART+strlen(HOME));
-	} else{
-		strncpy(scmd, DIRSTART, slen);
-	}
-	strcat(scmd, "/");
+	
 	const char* exename=mybasename(argv[0]);
-	strcat(scmd, exename);
-	strcat(scmd, delim);
-
+	snprintf(scmd, slen, "%s/%s%s", DIRSTART, exename, delim);
 	for(int iarg=1; iarg<argc; iarg++){
 		if(argv[iarg]&&strlen(argv[iarg])>0){
 			strcat(scmd, argv[iarg]);

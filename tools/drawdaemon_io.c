@@ -255,6 +255,7 @@ int draw_single=0;//whether client only wants to draw to the active tab.
 drawdata_t *drawdata=NULL;//current
 drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
+char *client_path=NULL;
 int npts=0;
 void *listen_draw(void *user_data){
 	char *str2=0;
@@ -511,6 +512,14 @@ void *listen_draw(void *user_data){
 			case DRAW_ZLOG://flip zlog
 				STREADINT(drawdata->zlog);
 				break;
+			case DRAW_PATH:
+				STREADSTR(client_path);
+				if(client_path && client_path[0]=='~'){
+					char *tmp=stradd(HOME, client_path+1, NULL);
+					free(client_path);
+					client_path=tmp;
+				}
+				break;
 			case DRAW_END:
 			{
 				drawdata->npts=npts;
@@ -568,6 +577,7 @@ void *listen_draw(void *user_data){
 		}/*while */
 	}
 	free(client_hostname);client_hostname=NULL;
+	free(client_path); client_path=NULL;
 	dbg_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;

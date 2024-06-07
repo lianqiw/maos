@@ -56,7 +56,7 @@ PangoFontDescription* desc=NULL;
 static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *child, guint n, GtkWidget *topnb);
 int font_name_version=0;
 char* font_name=NULL;
-const char *font_name_default="Sans Regular 12";
+const char *font_name_default="Sans Regular 16";
 float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
@@ -519,7 +519,7 @@ gboolean update_title(gpointer window){
 	}else if(client_pid==0 && sock>-1){
 		snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
 	}else{
-		snprintf(title, 80, "Drawdaemon (%s:disconnected)",client_hostname);
+		snprintf(title, 80, "Drawdaemon (disconnected)");
 	}
 
 	/*if(iwindow>1){
@@ -980,6 +980,8 @@ static void page_changed(int topn, int subn){
 			stwritestr(sock, fig)||
 			stwritestr(sock, fn)){
 			warning("Talk to client failed\n");
+			close(sock);
+			sock=-1;
 		}
 	}else{
 		//dbg("cannot send fig=%s, fn=%s, sock=%d, client_pid=%d\n", fig, fn, sock, client_pid);
@@ -1253,33 +1255,34 @@ gboolean addpage(gpointer indata){
 	g_slist_free(subnbs);
 	return 0;//return 0 cause the function to be removed frm gdb_threads_idle()
 }
-static gchar *filename=NULL;
-static void save_file();
+static void save_file(drawdata_t *drawdata);
 #if GTK_VERSION_AFTER(4,10)
-static GFile *file=NULL;
 static void file_saved(GObject *dialog, GAsyncResult *result, void *data){
-	(void) result; (void) data;
-	if(file) g_free(file);
-	file=gtk_file_dialog_save_finish(GTK_FILE_DIALOG(dialog), result, NULL);//do not free the result
-	if(file){
-		if(filename) g_free(filename);filename=g_file_get_path(file);
-		save_file();
+	drawdata_t *drawdata=(drawdata_t*)data;
+	(void) result;
+	if(drawdata->file) g_object_unref(drawdata->file);
+	drawdata->file=gtk_file_dialog_save_finish(GTK_FILE_DIALOG(dialog), result, NULL);//do not free the result
+	if(drawdata->file){
+		if(drawdata->filename) g_free(drawdata->filename);
+		drawdata->filename=g_file_get_path(drawdata->file);
+		save_file(drawdata);
 	}
 }
 #endif
 static void tool_save(GtkWidget* button){
+	drawdata_t *drawdata=get_current_drawdata();
 	(void)button;
 #if GTK_VERSION_AFTER(4,10)
 	GtkFileDialog *dialog=gtk_file_dialog_new();
-
 	gtk_file_dialog_set_title(GTK_FILE_DIALOG(dialog), "Select a file to save");
 	gtk_file_dialog_set_modal(GTK_FILE_DIALOG(dialog), true);
-
-	gtk_file_dialog_set_initial_file(GTK_FILE_DIALOG(dialog), file);
-	gtk_file_dialog_save(GTK_FILE_DIALOG(dialog), GTK_WINDOW(curwindow), NULL, file_saved, NULL);
+	if(!drawdata->file){
+		drawdata->file=g_file_new_for_path(client_path);
+	}
+	gtk_file_dialog_set_initial_file(GTK_FILE_DIALOG(dialog), drawdata->file);
+	gtk_file_dialog_save(GTK_FILE_DIALOG(dialog), GTK_WINDOW(curwindow), NULL, file_saved, drawdata);
 
 #else
-	static gchar *folder=NULL;
 	GtkWidget *dialog=gtk_file_chooser_dialog_new
 	("Select a file to save",
 		GTK_WINDOW(curwindow),
@@ -1289,11 +1292,11 @@ static void tool_save(GtkWidget* button){
 		NULL);
 	gtk_file_chooser_set_do_overwrite_confirmation
 	(GTK_FILE_CHOOSER(dialog), TRUE);
-	if(filename){
-		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename);
-	} else if(folder){
+	if(drawdata->filename){
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), drawdata->filename);
+	} else if(client_path){
 		gtk_file_chooser_set_current_folder
-		(GTK_FILE_CHOOSER(dialog), folder);
+		(GTK_FILE_CHOOSER(dialog), client_path);
 	} else{
 		char curpath[PATH_MAX];
 		if(!getcwd(curpath, PATH_MAX)){
@@ -1304,36 +1307,37 @@ static void tool_save(GtkWidget* button){
 	}
 
 	if(gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_ACCEPT){
-		if(folder) g_free(folder);
-		folder=gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(dialog));
-		if(filename) g_free(filename);
-		filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		if(client_path) free(client_path);
+		client_path=gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(dialog));
+		if(drawdata->filename) g_free(drawdata->filename);
+		drawdata->filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 		window_destroy(dialog);
 	} else{
 		window_destroy(dialog);
 		return;
 	}
-	save_file();
+	save_file(drawdata);
 #endif
 }
-static void save_file(){
+static void save_file(drawdata_t *drawdata){
+	if(!drawdata){
+		warning("drawdata is empty\n");
+		return;
+	}
+		const char *filename=drawdata->filename;
 	if(!filename){
 		warning("filename is empty\n");
 		return;
 	}else{
 		info("filename is %s\n", filename);
 	}
-	drawdata_t *drawdata=get_current_drawdata();
-	if(!drawdata){
-		warning("drawdata is empty\n");
-		return;
-	}
+
 	cairo_surface_t *surface=NULL;
 	char* suffix=strrchr(filename, '.');
 	if(!suffix){
 		char* filename2=stradd(filename, ".png", NULL);
-		g_free(filename);
-		filename=filename2;
+		g_free(drawdata->filename);
+		filename=drawdata->filename=filename2;
 		suffix=strrchr(filename, '.');
 	}
 
@@ -1352,10 +1356,14 @@ static void save_file(){
 #endif
 	} else if(strcmp(suffix, ".png")==0){
 #if CAIRO_HAS_PNG_FUNCTIONS
-		//real scale=2;
-		//surface=cairo_image_surface_create((cairo_format_t)CAIRO_FORMAT_ARGB32, drawdata->width*scale, drawdata->height*scale);
-		//cairo_surface_set_device_scale(surface, scale, scale);
-		cairo_surface_write_to_png(drawdata->pixmap, filename);return;
+#if GTK_MAJOR_VERSION>=3
+		cairo_surface_write_to_png(drawdata->pixmap, filename);
+		return;
+#else
+		float scale=2;
+		surface=cairo_image_surface_create((cairo_format_t)CAIRO_FORMAT_ARGB32, drawdata->width*scale, drawdata->height*scale);
+		cairo_surface_set_device_scale(surface, scale, scale);
+#endif		
 #endif		
 	}
 	if(!surface){
@@ -1396,7 +1404,17 @@ static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 }
 static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	*key=check_button_get_active(btn);
-	drawdata_dialog->zlim_changed=1;
+	//drawdata_dialog->zlim_changed=1;
+	font_name_version++;
+	delayed_update_pixmap(drawdata_dialog);
+	/*if(key==&cumu){
+		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
+	}*/
+}
+static void checkbtn_toggle_inv(GtkWidget *btn, gint *key){
+	*key=!check_button_get_active(btn);
+	//drawdata_dialog->zlim_changed=1;
+	font_name_version++;
 	delayed_update_pixmap(drawdata_dialog);
 	/*if(key==&cumu){
 		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
@@ -1553,9 +1571,15 @@ static void tool_property(GtkWidget* button, gpointer data){
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 
-	checkbtn=gtk_check_button_new_with_label("Enable grids");
+	checkbtn=gtk_check_button_new_with_label("Show grids");
 	check_button_set_active(checkbtn, drawdata->grid);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
+	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+
+	checkbtn=gtk_check_button_new_with_label("Show colorbar");
+	check_button_set_active(checkbtn, !hide_colorbar&&drawdata->p);
+	gtk_widget_set_sensitive(checkbtn, drawdata->p?1:0);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_colorbar);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 
 	checkbtn=gtk_check_button_new_with_label("Put tic inside");
@@ -1569,7 +1593,7 @@ static void tool_property(GtkWidget* button, gpointer data){
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
-	checkbtn=gtk_check_button_new_with_label("Legend.");
+	checkbtn=gtk_check_button_new_with_label("Show Legend");
 	check_button_set_active(checkbtn, drawdata->legendbox);
 	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
@@ -1648,9 +1672,10 @@ static void tool_property(GtkWidget* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	//gtk_label_set_xalign(GTK_LABEL(label), 0);
-	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	checkbtn=gtk_check_button_new_with_label("Title");
+	check_button_set_active(checkbtn, !hide_title);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_title);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	entry_set_text(GTK_ENTRY(entry), drawdata->title);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
@@ -1658,9 +1683,10 @@ static void tool_property(GtkWidget* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	//gtk_label_set_xalign(GTK_LABEL(label), 0);
-	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	checkbtn=gtk_check_button_new_with_label("X label");
+	check_button_set_active(checkbtn, !hide_xlabel);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_xlabel);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
@@ -1668,14 +1694,14 @@ static void tool_property(GtkWidget* button, gpointer data){
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	entry=gtk_entry_new();
-	label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label), lwidth);
-	//gtk_label_set_xalign(GTK_LABEL(label), 0);
-	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	checkbtn=gtk_check_button_new_with_label("Y label");
+	check_button_set_active(checkbtn, !hide_ylabel);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_ylabel);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
 	entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
 	g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-
 
 	hbox=gtk_hbox_new(FALSE, 0);
 	label=gtk_label_new("X min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
@@ -1870,6 +1896,12 @@ int update_fpslabel(gpointer label){
 		newtext[0]=0;
 	}
 	gtk_label_set_text(GTK_LABEL(label), newtext);
+	if(io_time1+60<thistime){//60 seconds no update, check connectivity.
+		if(stwriteint(sock, DRAW_RESUME)){
+			close(sock);
+			sock=-1;
+		}
+	}
 	return TRUE;//keep the timeout periodic
 }
 //Create a new toolbar item.
@@ -2052,8 +2084,13 @@ GtkWidget* create_window(GtkWidget* window){
 	/*GtkWidget *sep=new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
 	gtk_widget_set_hexpand(sep, TRUE);*/
 	GtkWidget *fpslabel=gtk_label_new("");
+#if GTK_MAJOR_VERSION>=3	
 	gtk_widget_set_hexpand(fpslabel, TRUE);
 	gtk_widget_set_halign(fpslabel, GTK_ALIGN_END);
+#else
+	gtk_misc_set_padding(GTK_MISC(fpslabel), 0, 0);
+	gtk_misc_set_alignment(GTK_MISC(fpslabel), 1, 0.5);
+#endif
 	g_timeout_add(2000, update_fpslabel, fpslabel);
 	new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL);
 

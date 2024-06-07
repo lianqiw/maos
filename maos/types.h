@@ -158,7 +158,7 @@ typedef struct ngsmod_t{
     dmat *MCCu;     /**<MCCu'*MCCu=MCC*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
     dccell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
-    dcell *Pngs;    /**<Project DM command to NGS modes */
+    dcell *Pngs;   /**<Reconstruct DM command to NGS modes with weighting specified by tomo.ahst_wt*/
     dcell *Modes;   /**<DM vector for the modes*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     lmat *modvalid; /**<Flag of valid modes that has multi-rate control*/

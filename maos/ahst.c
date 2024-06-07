@@ -173,8 +173,7 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 	return Wa;
 }
 /**
-   compute NGS mode removal Pngs from LGS commands using aperture
-   weighting. Pngs=(MCC)^-1 (Hm'*W*Ha).
+   compute NGS mode removal Pngs from LGS commands using aperture weighting. Pngs=(MCC)^-1 (Hm'*W*Ha).
 
    2012-05-25: The NGS mode removal should be based on old five modes even if now focus on PS1 is merged with defocus mode
 */
@@ -469,7 +468,9 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	   Identity weighting.
 
 	*/
-	if(parms->tomo.ahst_wt==1){
+	if(parms->tomo.ahst_wt==0){
+		info("NGS mode is not removed from LGS reconstruction output (debug only).\n");
+	}else if(parms->tomo.ahst_wt==1){
 	//Do it in ngsmod_setup();
 	} else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting to isolate active meta pupil. */
@@ -510,7 +511,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 	if(parms->save.setup){
 		writebin(ngsmod->Modes, "ahst_Modes");
 		writebin(ngsmod->GM, "ahst_GM");
-		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs");
+		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs%d", parms->tomo.ahst_wt);
 	}
 }
 /**
@@ -598,6 +599,15 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 }
 /**
    setup NGS modes reconstructor in ahst mode.
+   
+    When tomo.ahst_wt=1:
+
+	Rngs=GM^\dagger=(GM'*W_N*GM)^{-1}*GM'*W_N  #W_N is recon->saneai
+	M^\dagger=Rngs*GA #reconstruct mode from NGS measurements equals to original mode
+	Pngs=M*M^\dagger=M*Rngs*GA satisfies Rngs*GA*Pngs=Rngs*GA
+	In other words, M^\dagger=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA)
+
+	Projector has the properties: M*Pngs*(1-M*Pngs)=0 
  */
 void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	ngsmod_t* ngsmod=recon->ngsmod;
@@ -605,11 +615,7 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 		cellfree(ngsmod->Rngs);
 		ngsmod->Rngs=dccellnew(2, 1);
 		P(ngsmod->Rngs,0)=inv_gm(ngsmod->GM, recon->saneai, 0, 0);
-		/*
-		  W is recon->saneai;
-		  Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
-		  Pngs=Rngs*GA
-		*/
+		
 		if(parms->sim.dtrat_lo!=parms->sim.dtrat_lo2){
 			//Multi-rate control
 			int nwfsr=parms->nwfsr;
@@ -644,7 +650,7 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 		dcellzero(ngsmod->Pngs);
 		dcellmm((cell**)&ngsmod->Pngs, P(ngsmod->Rngs,0), recon->GAlo, "nn", 1);
 		if(parms->save.setup){
-			writebin(ngsmod->Pngs, "ahst_Pngs");
+			writebin(ngsmod->Pngs, "ahst_Pngs%d", parms->tomo.ahst_wt);
 		}
 	}
 
@@ -906,10 +912,10 @@ void ngsmod_free(ngsmod_t* ngsmod){
    if nmod==6: make sure the global focus mode is not removed from LGS result.
 */
 void ngsmod_remove(sim_t* simu, dcell* dmerr){
-	if(!dmerr) return;
 	const recon_t* recon=simu->recon;
 	const parms_t* parms=simu->parms;
 	const ngsmod_t* ngsmod=recon->ngsmod;
+	if(!dmerr||!ngsmod->Pngs) return;
 	dcellzero(simu->Mngs);
 	dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
 	real* mngs=P(P(simu->Mngs,0));

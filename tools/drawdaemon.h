@@ -90,7 +90,10 @@ struct drawdata_t{
 	char* xlabel;
 	char* ylabel;
 	char** legend;
-
+	char *filename; //filename to save
+#if GTK_VERSION_AFTER(4,10)
+	GFile *file;
+#endif	
 	GtkWidget *subnb;
 	GtkWidget *page;
 	GtkWidget* drawarea;
@@ -170,8 +173,14 @@ extern PangoFontDescription* desc;
 extern pthread_mutex_t drawdata_mutex;
 extern int client_pid;
 extern char *client_hostname;
+extern char *client_path;
 extern int keep_listen;
 extern int cumu;
+extern int hide_xlabel;
+extern int hide_ylabel;
+extern int hide_title;
+extern int hide_legend;
+extern int hide_colorbar;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);

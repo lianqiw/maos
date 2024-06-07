@@ -51,7 +51,7 @@ char* HOST=NULL;
 char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
 char* CACHE=NULL;//Directory for caching files that are expensive to compute.
 char* EXEP=NULL;/*absolute path of the exe.*/
-char* DIRSTART=NULL;//Start up directory.
+char* DIRSTART=NULL;//Start up directory. HOME is replaced by ~
 /**
    Set the HOME, TEMP, USER names.
 */
@@ -120,7 +120,10 @@ void init_process(void){
 	mymkdir("%s", CACHE);
 	
 	DIRSTART=mygetcwd();
-	
+	if(!mystrcmp(DIRSTART, HOME)){
+		DIRSTART[0]='~';
+		memmove(DIRSTART+1, DIRSTART+strlen(HOME), strlen(DIRSTART)-strlen(HOME)+1);
+	}
 	{/*PATH to executable*/
 		char exepath[PATH_MAX];
 		if(!get_job_progname(exepath, PATH_MAX, 0)){

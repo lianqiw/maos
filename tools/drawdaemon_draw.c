@@ -35,6 +35,11 @@ float SP_XL;/*space reserved for ylabel */
 float SP_YT;/*space reserved for title */
 float SP_YB;/*space reserved for xlabel */
 float SP_XR;/*space reserved for legend */
+int hide_xlabel=0;
+int hide_ylabel=0;
+int hide_title=0;
+int hide_legend=0;
+int hide_colorbar=0;
 #define DRAW_NEW 1 //1: draw to a cache surface
 
 int default_color_table[]={0x0000FF,
@@ -572,12 +577,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(xdim==0||!isfinite(xdim)) xdim=1;
 	if(ydim==0||!isfinite(ydim)) ydim=1;
 	//dbg("xdim=%g, ydim=%g\n", xdim, ydim);
-	float sp_xr=20;
-	if(drawdata->p){/*there is a colorbar */
-		sp_xr=SP_XR;
-	}
-	float scalex=(float)(width-SP_XL-sp_xr)/xdim;
-	float scaley=(float)(height-SP_YT-SP_YB)/ydim;
+	int sp_xr=(drawdata->p && !hide_colorbar)?SP_XR:0;
+	int sp_xl=hide_ylabel?0:SP_XL;
+	int sp_yt=hide_title?0:SP_YT;
+	int sp_yb=hide_xlabel?0:SP_YB;
+	float scalex=(float)(width-sp_xl-sp_xr)/xdim;
+	float scaley=(float)(height-sp_yt-sp_yb)/ydim;
 
 	if(drawdata->square){
 		scaley=(scalex<scaley?scalex:scaley);
@@ -618,8 +623,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->heightim_last=drawdata->heightim;
 
 	/*Offset in the cairo surface to draw the image. */
-	const float xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
-	const float yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
+	const float xoff=round(((width-widthim-sp_xl-sp_xr)*0.5)+sp_xl);
+	const float yoff=round(((height-heightim-sp_yt-sp_yb)*0.5)+sp_yt);
 	drawdata->xoff=xoff;/*save for the GUI to use. */
 	drawdata->yoff=yoff;
 	/*center of the image on the screen. */
@@ -902,7 +907,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);//stroke all together.
 				toc("stroke");
 				}*/
-				if(ptsnx>0 && (drawdata->cumu || drawdata->legendcurve)){
+				if(ptsnx>0 && drawdata->legendcurve){
 					char val[20]={0};
 					if(drawdata->legend&&drawdata->legend[ipts]&&connectpts){
 						val[0]=drawdata->legend[ipts][0];
@@ -996,6 +1001,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	float tic1, dtic;
 	int ntic, order;
 	float sep;
+
 	calc_tic(&tic1, &dtic, &ntic, &order, xmax0, xmin0, maxtic_x, xlog);
 	sep=xmax0-xmin0;
 
@@ -1017,34 +1023,41 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);
 				cairo_restore(cr);
 			}
-			/*draw the tic */
-			cairo_move_to(cr, xpos, yoff+heightim);
-			cairo_line_to(cr, xpos, yoff+heightim+ticlength);
-			cairo_stroke(cr);
+			if(!hide_xlabel){
+				/*draw the tic */
+				cairo_move_to(cr, xpos, yoff+heightim);
+				cairo_line_to(cr, xpos, yoff+heightim+ticlength);
+				cairo_stroke(cr);
+			}
 		}
-		if(frac>=0&&frac<=1){
+		if(frac>=0&&frac<=1&&!hide_xlabel){
 			snprintf(ticval, 80, "%g", (xlog?pow(10, ticv):ticv));
 			pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1, ticval, 0.5, 0.5, 0);
 		}
 	}
-
-	//draw the x axis minor ticks
-	for(int itic=-1; itic<ntic; itic++){
-		float ticv=(tic1+dtic*itic);
-		for(int im=1; im<10; im++){
-			float ticvm=ticv+(xlog?log10(1+im):im*0.1)*dtic;
-			float valm=ticvm*pow(10, order);
-			float fracm=(valm-xmin0)/sep;
-			float xposm=xoff+widthim*fracm;
-			if((fracm)>0.&&(fracm)<1){
-				cairo_move_to(cr, xposm, yoff+heightim);
-				cairo_line_to(cr, xposm, yoff+heightim+ticlength/2);
+	if(!hide_xlabel){
+		//draw the x axis minor ticks
+		for(int itic=-1; itic<ntic; itic++){
+			float ticv=(tic1+dtic*itic);
+			for(int im=1; im<10; im++){
+				float ticvm=ticv+(xlog?log10(1+im):im*0.1)*dtic;
+				float valm=ticvm*pow(10, order);
+				float fracm=(valm-xmin0)/sep;
+				float xposm=xoff+widthim*fracm;
+				if((fracm)>0.&&(fracm)<1){
+					cairo_move_to(cr, xposm, yoff+heightim);
+					cairo_line_to(cr, xposm, yoff+heightim+ticlength/2);
+				}
 			}
 		}
+		cairo_stroke(cr);
+		//draw the x axis power
+		if(order) pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2, order, 0);
+		if(drawdata->xlabel){
+			pango_text(cr, layout, xoff+widthim/2, yoff+heightim+8+font_size*1.8, drawdata->xlabel, 0.5, 0.5, 0);
+		}
 	}
-	cairo_stroke(cr);
-	//draw the x axis power
-	if(order) pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2, order, 0);
+	
 	calc_tic(&tic1, &dtic, &ntic, &order, ymax0, ymin0, maxtic_y, ylog);
 	sep=ymax0-ymin0;
 
@@ -1065,36 +1078,41 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);
 				cairo_restore(cr);
 			}
-			/*draw the tic */
-			cairo_move_to(cr, xoff, ypos);
-			cairo_line_to(cr, xoff-ticlength, ypos);
-			cairo_stroke(cr);
+			if(!hide_ylabel){
+				/*draw the tic */
+				cairo_move_to(cr, xoff, ypos);
+				cairo_line_to(cr, xoff-ticlength, ypos);
+				cairo_stroke(cr);
+			}
 		}
-		if(frac>=0&&frac<=1){
+		if(frac>=0&&frac<=1&&!hide_ylabel){
 			snprintf(ticval, 80, "%g", (ylog?pow(10, ticv):ticv));
 			pango_text(cr, layout, xoff-font_size*0.6-ticskip+1, ypos, ticval, 0.5, 0.5, 1);
 		}
 	}
-
-	//draw y axis minor ticks
-	for(int itic=-1; itic<ntic; itic++){
-		float ticv=(tic1+dtic*itic);
-		for(int im=1; im<10; im++){
-			float ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
-			float valm=ticvm*pow(10, order);
-			float fracm=(valm-ymin0)/sep;
-			float yposm=yoff+heightim*(1-fracm);
-			if((fracm)>0.&&(fracm)<1){
-				cairo_move_to(cr, xoff, yposm);
-				cairo_line_to(cr, xoff-ticlength/2, yposm);
+	if(!hide_ylabel){
+		//draw y axis minor ticks
+		for(int itic=-1; itic<ntic; itic++){
+			float ticv=(tic1+dtic*itic);
+			for(int im=1; im<10; im++){
+				float ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
+				float valm=ticvm*pow(10, order);
+				float fracm=(valm-ymin0)/sep;
+				float yposm=yoff+heightim*(1-fracm);
+				if((fracm)>0.&&(fracm)<1){
+					cairo_move_to(cr, xoff, yposm);
+					cairo_line_to(cr, xoff-ticlength/2, yposm);
+				}
 			}
 		}
+		cairo_stroke(cr);
+		//draws the y axis power
+		if(order) pango_text_powindex(cr, layout, xoff-font_size*2.8-10, yoff+font_size*1.8, order, 1);
+		if(drawdata->ylabel){
+			pango_text(cr, layout, xoff-font_size*1.8-10, yoff+heightim/2, drawdata->ylabel, 0.5, 0.5, 1);
+		}
 	}
-	cairo_stroke(cr);
-	//draws the y axis power
-	if(order) pango_text_powindex(cr, layout, xoff-font_size*2.8, yoff+font_size*1.8, order, 1);
-
-	if(zlim[0]||zlim[1]){/*draw colorbar */
+	if((zlim[0]||zlim[1])&&!hide_colorbar){/*draw colorbar */
 		cairo_save(cr);
 		cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
 		cairo_rectangle(cr, 0, 0, LEN_LEG, heightim);
@@ -1142,15 +1160,10 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		pango_text_powindex(cr, layout, LEN_LEG/2, -font_size*1.4-2, order, 0);
 		cairo_restore(cr);
 	}
-	if(drawdata->title){
+	if(drawdata->title && !hide_title){
 		pango_text(cr, layout, xoff+widthim/2, yoff-font_size*0.5-4, drawdata->title, 0.5, 0.5, 0);
 	}
-	if(drawdata->xlabel){
-		pango_text(cr, layout, xoff+widthim/2, yoff+heightim+8+font_size*1.8, drawdata->xlabel, 0.5, 0.5, 0);
-	}
-	if(drawdata->ylabel){
-		pango_text(cr, layout, xoff-font_size*1.8-6, yoff+heightim/2, drawdata->ylabel, 0.5, 0.5, 1);
-	}
+
 	if(drawdata->legend&&drawdata->npts&&drawdata->legendbox){
 		int style, color, connectpts;
 		float sym_size=0;
