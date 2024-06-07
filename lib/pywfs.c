@@ -800,7 +800,7 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		dmat* ints=0;
 		real wve=1e-9*20;
 		dmat* opds=NULL;
-		if(PYWFS_DEBUG==-1){//replace with petalling modes
+		if(PYWFS_DEBUG==-1){//replace with petal modes
 			opds=dnew(pywfs->locfft->loc->nloc, 7);
 			real *px=pywfs->locfft->loc->locx;
 			real *py=pywfs->locfft->loc->locy;

@@ -510,8 +510,11 @@ typedef struct recon_cfg_t{
     int twfs_rmin; 	 /**<minimum zernike order (inclusive)*/
     int twfs_rmax;	 /**<maximum zernike order (inclusive)*/
     int twfs_radonly;/**<1: radial only, 0: all modes*/
-	int petaling;  	 /**1: enable petalling control*/
+	int petal;  	 /**1: enable petal mode control*/
 	int petaldtrat;	 /**<how many time steps to average for petaling mode control.*/
+	int petalstep; 	 /**<simulation step to enable petal mode control*/
+	int petalnpsf;   /**<number of pixels (each dimension) used for petal reconstruction*/
+	int petaltt;    /**<whether include t/t modes in the reconstruction*/
     char **distortion_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
     char **distortion_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **distortion_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/

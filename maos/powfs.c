@@ -1726,8 +1726,8 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 /**
  * Petaling mode control
 */
-void setup_shwfs_petaling(powfs_t *powfs, const parms_t *parms, int ipowfs){
-	if(!parms->recon.petaling||!parms->powfs[ipowfs].lo) return;
+void setup_shwfs_petal(powfs_t *powfs, const parms_t *parms, int ipowfs){
+	if(!parms->recon.petal||!parms->powfs[ipowfs].lo) return;
 	real nembed=2;
 	real dsa=powfs[ipowfs].pts->dsa;
 	real dtheta=parms->powfs[ipowfs].wvlmean/(nembed*dsa);
@@ -1736,7 +1736,11 @@ void setup_shwfs_petaling(powfs_t *powfs, const parms_t *parms, int ipowfs){
 	if(fabs(pdtheta-1)>0.01){
 		warning("TODO: pdtheta!=1 requries resampling PSFs\n");
 	}
-	powfs[ipowfs].petal=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, powfs[ipowfs].amp, pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, 0);
+	//only withtt only for t/t oiwfs unless petaltt>1. 
+	//enable it for TTF OIWFS sometimes results in a clocking gradient pattern.
+	int withtt=(parms->powfs[ipowfs].order==1||parms->recon.petaltt>1)?parms->recon.petaltt:0;
+	powfs[ipowfs].petal=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, powfs[ipowfs].amp, 
+		pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, parms->recon.petalnpsf, withtt);
 	if(parms->save.setup){
 		petal_save(powfs[ipowfs].petal, "petal_%d", ipowfs);
 	}
@@ -1769,7 +1773,7 @@ void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 			if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy){
 				setup_shwfs_phygrad(powfs, parms, ipowfs);
 			}
-			setup_shwfs_petaling(powfs, parms, ipowfs);
+			setup_shwfs_petal(powfs, parms, ipowfs);
 		}
 	}/*ipowfs */
 	toc2("setup_shwfs_phy");

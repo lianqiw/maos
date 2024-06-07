@@ -1401,11 +1401,11 @@ void wfsgrad_petal_recon(sim_t *simu){
 		}else{
 			continue;
 		}
-		if(isim<parms->powfs[ipowfs].step) continue;
+		if(isim<parms->powfs[ipowfs].phystep || isim<parms->recon.petalstep) continue;
 		int iwfs=P(parms->powfs[ipowfs].wfs, 0);
 		dcelladd(&P(simu->petal_i0, ir), 1, P(simu->ints, iwfs), 1);
 		if((isim+1-parms->powfs[ipowfs].step)%parms->recon.petaldtrat==0){
-			dcellscale(P(simu->petal_i0,ir), 1./parms->recon.petaldtrat);
+			//dcellscale(P(simu->petal_i0,ir), 1./parms->recon.petaldtrat);//normalization is not necessary
 			//info("i0 sum is %g\n", dcellsum(P(simu->petal_i0, ir)));
 			dmat *phib=ir==1?P(simu->petal_m, 0):NULL;
 			petal_solve(NULL, &P(simu->petal_m, ir), powfs[ipowfs].petal, P(simu->petal_i0, ir), phib, nrep);
@@ -1426,6 +1426,10 @@ void wfsgrad_petal_recon(sim_t *simu){
 				dcellzero(simu->dmtmp);
 				real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
 				dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
+				if(1){
+					warning_once("Remove p/t/t from dm petal offset.\n");
+					loc_remove_ptt(P(simu->dmtmp,idm), P(simu->recon->aloc,idm), NULL, NULL, 0);
+				}
 				for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 					int jpowfs=parms->wfs[jwfs].powfs;
 					if(parms->powfs[jpowfs].lo) continue;
@@ -1462,7 +1466,7 @@ void* wfsgrad(sim_t* simu){
 	if(parms->itpowfs!=-1){
 		wfsgrad_twfs_recon(simu);
 	}
-	if(parms->recon.petaling){
+	if(parms->recon.petal){
 		wfsgrad_petal_recon(simu);
 	}
 	if(parms->plot.run){

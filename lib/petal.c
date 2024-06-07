@@ -280,7 +280,7 @@ void petal_connect(dmat **mout, dmat *mphi, int npetal, int nsa){
  * @param nsa:	 	Number of subapertures within the given WFS.
  * @param withtt:	Whether tip/tilt in included in the reconstruction.
 */
-void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npetal, real pdtheta, real pixblur, real theta, int nsa, int withtt){
+static void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npetal, real pdtheta, real pixblur, real theta, int npsf, int nsa, int withtt){
 	const long nloc=PN(amp);
 	const long nx=round(sqrt(nloc));
 	const long ny=nloc/nx;
@@ -305,7 +305,7 @@ void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npeta
 	}
 	if(withtt){
 		loc_t *tt=mksqloc(nx, ny, 2./nx, 2./ny, -1, -1);
-		dmat *hmod=dcat(tt->dmat, mod, 2);
+		dmat *hmod=dcat(mod, tt->dmat, 2);
 		locfree(tt);
 		dfree(mod);
 		mod=hmod;
@@ -318,7 +318,7 @@ void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npeta
 	petal->rmod=dpinv(mod, wt);
 	petal->ind=map;
 	petal->fembed=2;
-	petal->npsf=12;
+	petal->npsf=npsf;
 	long notf=petal->npsf;//no need to use the FULL psf.
 	if(pdtheta || pixblur) {
 		dtf_otf(&petal->otf, notf, notf, pdtheta, pdtheta, 0, pixblur, 2);
@@ -339,7 +339,7 @@ void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npeta
  * @param theta: 	The pupil clocking angle (CCW) in radian.
  * @param withtt:	Whether tip/tilt in included in the reconstruction.
 */
-petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta, real pixblur, real theta, int withtt){
+petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta, real pixblur, real theta, int npsf, int withtt){
 	const long nsa=(saloc&&saloc->nloc>0)?saloc->nloc:1;
 	const long nloc=PN(amp)/nsa;
 	const long nx=round(sqrt(nloc));
@@ -350,7 +350,7 @@ petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta,
 		real oy=nsa>1?saloc->locy[isa]/dx:-(ny/2-0.5);
 		//info("isa %d: ox=%g, oy=%g, dx=%g, dy=%g\n", isa, ox, oy, saloc->dx, saloc->dy);
 		dmat *ampi=nsa>1?dsub(amp, isa*nloc, nloc, 0, 1):(dmat*)amp;
-		petal_setup_sa(&petal[isa], ampi, -ox, -oy, 6, pdtheta, pixblur, theta, nsa, withtt); 
+		petal_setup_sa(&petal[isa], ampi, -ox, -oy, 6, pdtheta, pixblur, theta, npsf, nsa, withtt); 
 		if(nsa>1) dfree(ampi);
 		/*writebin(petal[isa].mod, "mode_%d", isa);
 		writebin(petal[isa].rmod, "rmode_%d", isa);
@@ -398,9 +398,9 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	if(petal->otf){
 		deblur(amp2, petal->otf);
 	}
-	if(!petal->withtt){
+	if(1 || !petal->withtt){
 		//dbg_once("shift image to center\n");
-		dshift2center(amp2, .5, .5);
+		dshift2center(amp2, .5, .5);//this step helps even if withtt is set
 	}
 	real amax=dmax(amp2);
 	if(amax==0){
@@ -429,11 +429,11 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 		if(petal->nsa>1){
 			dset(*mphi1, NAN);
 			for(int i=0; i<PN(petal->ind); i++){
-				P(*mphi1, P(petal->ind, i))=P(mphi1t,i+(petal->withtt?2:0));//first two values in mphi1t are tip/tilt
+				P(*mphi1, P(petal->ind, i))=P(mphi1t,i);
 			}
 		}else{
 			for(int i=0; i<petal->npetal/2; i++){
-				P(*mphi1, i)=P(mphi1t,i+(petal->withtt?2:0));
+				P(*mphi1, i)=P(mphi1t,i);
 				P(*mphi1, i+petal->npetal/2)=-P(*mphi1, i);
 			}
 		}
@@ -512,7 +512,7 @@ void petal_save(petal_t *petal, const char *format, ...){
  * @param withtt    Whether tip/tilt in included in the reconstruction.
 */
 void petal_solve_wfs(dcell **phi1, dmat **mphi1, const dcell *ints, const dmat *phi1b, const loc_t *saloc, const dmat *amp, real pdtheta, real pixblur, real theta, int nrep, int withtt){
-	petal_t *petal=petal_setup(saloc, 1, amp, pdtheta, pixblur, theta, withtt);
+	petal_t *petal=petal_setup(saloc, 1, amp, pdtheta, pixblur, theta, 16, withtt);
 	if(petal) petal_solve(phi1, mphi1, petal, ints, phi1b, nrep);
 	if(petal) petal_free(petal, petal->nsa);
 }

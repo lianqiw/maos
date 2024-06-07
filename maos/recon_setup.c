@@ -1380,7 +1380,7 @@ void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	if(parms->recon.psd){
 		setup_recon_psd(recon, parms);
 	}
-	if(parms->recon.petaling){
+	if(parms->recon.petal){
 		int idm=parms->idmground;
 		recon->apetal=petal_mkh_loc(P(recon->aloc,idm), 6, parms->aper.rot);
 		if(parms->save.setup){

@@ -1454,8 +1454,11 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.twfs_rmin);
 	READ_INT(recon.twfs_rmax);
 	READ_INT(recon.twfs_radonly);
-	READ_INT(recon.petaling);
+	READ_INT(recon.petal);
 	READ_INT(recon.petaldtrat);
+	READ_INT(recon.petalstep);
+	READ_INT(recon.petalnpsf);
+	READ_INT(recon.petaltt);
 }
 /**
    Read in simulation parameters
@@ -1997,15 +2000,17 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				error("sim.wfsalias is only supported for SHWFS\n");
 			}
 		}
-		if(powfsi->dither||(parms->recon.petaling&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
+		if(powfsi->dither||(parms->recon.petal&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
 			if(powfsi->phystep==-1){
 				error("powfs%d: Physical optics mode is required for dithering or petaling control.\n", ipowfs);
-			}else{
-				powfsi->phystep=powfsi->step;
 			}
 		}
-		if(powfsi->phystep>0){/*round phystep to be multiple of dtrat. */
-			powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+		if(powfsi->phystep!=-1){/*round phystep to be multiple of dtrat. */
+			if(powfsi->phystep<powfsi->step){
+				powfsi->phystep=powfsi->step;
+			}else{
+				powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+			}
 		}
 		/*Do we ever do physical optics.*/
 		if(powfsi->phystep>=0&&(powfsi->phystep<parms->sim.end||parms->sim.end==0)){

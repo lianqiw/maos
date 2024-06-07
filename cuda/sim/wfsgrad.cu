@@ -710,7 +710,7 @@ void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 				zfarr_push_scale(simu->save->gradgeom[iwfs], isim, cuwfs[iwfs].gradacc, 1, stream);
 			}
 			if((parms->plot.run&&draw_current("Ints", NULL))
-			||(parms->powfs[ipowfs].lo && parms->recon.petaling)){// && parms->powfs[ipowfs].lo){
+			||(parms->powfs[ipowfs].lo && parms->recon.petal)){// && parms->powfs[ipowfs].lo){
 				cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
 			}
 		} else{
