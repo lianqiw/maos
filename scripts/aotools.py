@@ -161,6 +161,50 @@ def cellsum(x):
 
     return xsum
 
+def cellmm(A,B):
+    '''
+        Multiply matrices A and B using MAOS convention
+        A or B may be cell or dense matrices.
+        Python stores matrix in row major order, which is like everything must be transposed.
+    '''
+    while A.ndim>2 and A.shape[0]==1:
+        A=A[0]
+    while B.ndim>2 and B.shape[0]==1:
+        B=B[0]
+    
+    if A.ndim>2 or B.ndim>2:
+        error("Invalid input for this operation")
+    if A.ndim<2:
+        A=A.reshape((1, A.size))
+    if B.ndim<2:
+        B=B.reshape((1, B.size))
+    if A.dtype==np.dtype(object) and B.dtype==np.dtype(object):
+        C=np.empty((B.shape[0], A.shape[1]), dtype=object)
+        for iz in range(C.shape[0]):
+            for ix in range(C.shape[1]):
+                for iy in range(A.shape[0]):
+                    if A[iy,ix] is None or A[iy,ix].size==0 or B[iz,iy] is None or B[iz,iy].size==0:
+                        continue
+                    print(ix,iy,iz,A[iy,ix].shape, B[iz,iy].shape)
+                    if C[iz,ix] is None:
+                        C[iz,ix]=B[iz,iy]@A[iy,ix]
+                    else:
+                        C[iz,ix]+=B[iz,iy]@A[iy,ix]
+                    #print(ix,iy,iz,A[iy,ix].shape, B[iz,iy].shape, C[iz,ix].shape)
+    else:
+        C=B@A
+    return C
+def celltrans(A):
+    '''Transpose cell arrays'''
+    if A.ndim==1:
+        A=np.reshape(A, (1, A.size))
+    AT=np.copy(A.T)
+    if A.dtype==np.dtype(object) or A.dtype is object:
+        
+        for i in range(AT.size):
+            AT.flat[i]=np.transpose(AT.flat[i])
+    return AT
+
 #remove tip/tilt/focus from gradients
 def grad_ttfr(grad, saloc):
     '''remove tip/tilt/focus move from gradients defined on subaperture location saloc'''

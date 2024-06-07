@@ -60,11 +60,12 @@ def isloc(arg):
     
     return True
 
-def locembed(loc, opd0, return_ext=0, **kargs):
+def locembed(loc, opd, return_ext=0, **kargs):
     # draw(loc, opd): embed opd onto loc
     if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
         loc=loc.T
-    opd=opd0.view()
+    if type(opd) is scipy.sparse._csr.csr_matrix:
+        opd=opd.toarray()
     nloc = loc.shape[1]
     if opd.dtype==object: #cell
         ims = []
