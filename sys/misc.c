@@ -544,6 +544,7 @@ void mysleep(double sec){
 int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 			int fd2 /**<second file no, usually created from a pipe t*/
 ){
+	int ans=1;
 	info2("Press enter to step, c to resume:\n");
 	fd_set active_fd_set;
 	FD_ZERO(&active_fd_set);
@@ -553,8 +554,7 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 	if(fd2>0 && fd2 != fd1){
 		FD_SET(fd2, &active_fd_set);
 	}
-	int ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
-	if(ans>0){
+	if(select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0)>0){
 		for(int i=0; i<FD_SETSIZE; i++){
 			if(FD_ISSET(i, &active_fd_set)){
 				char key=0;
@@ -563,6 +563,9 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 						return 0;
 						info2("Resuming\n");
 					} else{
+						if(key>='0' && key<='9'){
+							ans=key-'0';
+						}
 						info2("Continuing...\n");
 					}
 				}
@@ -571,7 +574,7 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 	}else{
 		warning("Select failed: %s\n", strerror(errno));
 	}
-	return 1;
+	return ans;
 }
 /**
    Return available space of mounted file system in bytes.

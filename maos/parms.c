@@ -312,6 +312,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(dbl,pixblur);
 	READ_POWFS_RELAX(dbl,radpixtheta);
 	READ_POWFS_RELAX(dbl,fieldstop);
+	READ_POWFS_RELAX(dbl,astscale);
 	READ_POWFS_RELAX(dbl,pixoffx);
 	READ_POWFS_RELAX(dbl,pixoffy);
 	READ_POWFS_RELAX(int,phyusenea);
@@ -696,6 +697,10 @@ static void readcfg_wfs(parms_t *parms){
 				P(parms->powfs[ipowfs].wfs,count)=iwfs;
 				P(parms->powfs[ipowfs].wfsind,iwfs)=count;
 				count++;
+				if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
+					parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
+					parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
+				}
 			} else{
 				P(parms->powfs[ipowfs].wfsind,iwfs)=-1;/*not belong */
 			}

@@ -184,6 +184,7 @@ typedef struct powfs_cfg_t{
     real pixtheta; /**<size of pixel pitch along x/y or azimuthal if radial ccd. Converted to radian from user input*/
     real radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
     real fieldstop;/**<size of field stop in arcsec.*/
+	real astscale; /**<Scale wfs.thetax and wfs.thetay.*/
     real pixoffx;  /**<offset of image center from center of detector*/
     real pixoffy;  /**<see pixoffx*/
     real sigscale; /**<scale the signal level for simulation.*/
