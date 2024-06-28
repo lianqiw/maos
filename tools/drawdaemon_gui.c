@@ -37,6 +37,7 @@
 #define DRAWAREA_MIN_HEIGHT 320
 #define MAX_ZOOM 10000
 #define MIN_ZOOM 1
+static GtkWidget *fpslabel=NULL;
 static GSList* windows=NULL;
 static GtkWidget* curwindow=NULL;
 static GtkWidget* curtopnb=NULL;
@@ -54,9 +55,11 @@ static GtkRcStyle* btn_rcstyle=NULL;
 #endif
 PangoFontDescription* desc=NULL;
 static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *child, guint n, GtkWidget *topnb);
+static gboolean update_fpslabel(gpointer label);
 int font_name_version=0;
 char* font_name=NULL;
-const char *font_name_default="Sans Regular 16";
+const char *font_name_default="Arial Regular 12";
+char **pfilename_gif=NULL;
 float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
@@ -124,8 +127,7 @@ static void window_changed(GtkWidget* window){
 /*Get the current page for notebook*/
 static GtkWidget* get_current_page(GtkWidget* notebook){
 	if(!notebook){
-		warning("notebook is null\n");
-		print_backtrace();
+		dbg_time("notebook is null\n");
 		return NULL;
 	}
 	int n=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
@@ -133,7 +135,7 @@ static GtkWidget* get_current_page(GtkWidget* notebook){
 }
 static drawdata_t* get_current_drawdata(void){
 	if(!curtopnb) {
-		warning("curtopnb is null\n");
+		dbg_time("curtopnb is null\n");
 		return NULL;
 	}
 	GtkWidget* topnb=curtopnb;
@@ -214,7 +216,7 @@ static void move_tab_page(GtkWidget* topnb, int ipage, GtkWidget* topnb2){
 static void topnb_detach_btn(GtkWidget *btn, GtkWidget *topnb){
 	(void)btn;
 	if(!curtopnb){
-		warning("curtopnb is null\n");
+		dbg_time("curtopnb is null\n");
 		return ;
 	}
 	//GtkWidget *topnb=curtopnb;
@@ -242,14 +244,33 @@ static void update_toolbar(drawdata_t *drawdata){
 		gtk_widget_set_sensitive(cur_menu_zlog, drawdata->p?TRUE:FALSE);
 	}
 }
+gboolean finalize_gif(){
+	if(pfilename_gif && *pfilename_gif){
+		info_time("finalizing gif for %s\n", *pfilename_gif);
+		const char *convert[]={"/usr/bin/convert", "/usr/local/bin/convert", "/opt/homebrew/bin/convert"};
+		for(unsigned int i=0; i<sizeof(convert)/sizeof(convert[0]); i++){
+			if(exist(convert[i])){
+				char args[PATH_MAX];
+				snprintf(args, PATH_MAX, "%s -delay 5 %s/???.png %s.gif &", convert[i], *pfilename_gif, *pfilename_gif);
+				if(system(args)==-1){
+					warning("run %s failed\n", args);
+				}else{
+					break;
+				}
+			}
+		}
+		free(*pfilename_gif);
+		*pfilename_gif=NULL;
+	}
+	return FALSE;
+}
 typedef struct updatetimer_t{
 	int pending;
 	double tupdate;//last time update was called
 	drawdata_t* drawdata;
 }updatetimer_t;
-static void update_pixmap(drawdata_t* drawdata, int redraw){
+static void update_pixmap(drawdata_t* drawdata){
 	/*no more pending updates, do the updating. */
-
 	if(drawdata->recycle) {
 		warning_time("recycle is set, do not draw\n");
 		return;
@@ -292,14 +313,24 @@ static void update_pixmap(drawdata_t* drawdata, int redraw){
 #endif
 		cairo_draw(cr, drawdata, width, height);
 		cairo_destroy(cr);
+		//info("%d %d %d\n", drawdata->frame_io, drawdata->frame_draw, drawdata->frame_gif);
+#if GTK_MAJOR_VERSION>=3
+		if(drawdata->filename_gif && drawdata->frame_draw!=drawdata->frame_gif){
+			drawdata->frame_gif=drawdata->frame_draw;
+			char filename[PATH_MAX];
+			snprintf(filename, PATH_MAX, "%s/%03d.png", drawdata->filename_gif,drawdata->frame_gif);
+			//info("filename is %s\n", filename);
+			cairo_surface_write_to_png(drawdata->pixmap, filename);
+		}
+#endif
 	}
-	if(redraw) gtk_widget_queue_draw(drawdata->drawarea);
+	gtk_widget_queue_draw(drawdata->drawarea);
 }
 static gboolean update_pixmap_timer(updatetimer_t* timer){
 	drawdata_t* drawdata=timer->drawdata;
 	double tupdate=myclockd();
 	if(timer->pending==drawdata->pending || tupdate>timer->tupdate+0.02){
-		update_pixmap(drawdata, 1);
+		update_pixmap(drawdata);
 		timer->tupdate=tupdate;
 	}
 	free(timer);
@@ -312,7 +343,7 @@ static gboolean update_pixmap_timer(updatetimer_t* timer){
 static void delayed_update_pixmap(drawdata_t* drawdata){
 	if(!drawdata) return;
 	if(!drawdata->pixmap){
-		update_pixmap(drawdata, 1);
+		update_pixmap(drawdata);
 	} else{
 		drawdata->pending++;
 		updatetimer_t* tmp=mycalloc(1, updatetimer_t);
@@ -372,7 +403,12 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 		drawdata->cumu=cumu;
 	}
 	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
-		update_pixmap(drawdata, 0);
+		update_pixmap(drawdata);//it queues another dray so we return from here.
+#if GTK_MAJOR_VERSION<=3
+		return FALSE;
+#else
+		return;
+#endif	
 	}
 
 #if GTK_MAJOR_VERSION<3
@@ -403,41 +439,11 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 	return FALSE;
 #endif
 }
-/*
-static gboolean
-on_expose_event(GtkWidget* widget, GdkEventExpose* event, gpointer pdata){
-	drawdata_t* drawdata=*((drawdata_t**)pdata);
-	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
-		delayed_update_pixmap(drawdata);
-	}
-	if(drawdata->pixmap){
-		gdk_draw_drawable(widget->window,
-			widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-			drawdata->pixmap,
-			event->area.x, event->area.y,
-			event->area.x, event->area.y,
-			event->area.width, event->area.height);
-		if(drawdata->draw_rect){
-			cairo_t* cr=gdk_cairo_create(widget->window);
-			cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
-			cairo_set_line_width(cr, 1);
-			cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, drawdata->dxdown, drawdata->dydown);
-			cairo_fill_preserve(cr);
-			cairo_set_source_rgba(cr, 0, 0, 0, 1);
-			cairo_stroke(cr);
-			cairo_destroy(cr);
-			drawdata->draw_rect=0;
-		}
-	} else{
-		warning("pixmap is empty\n");
-	}
-	return FALSE;
-}
-*/
+
 //do not call explicitly. Used by drawdatawrap_free
 static void drawdata_delete(drawdata_t* drawdata){
 	if(!drawdata || !drawdata->page){
-		warning("drawdata_free called with NULL page. canceled\n");
+		warning_time("drawdata_free called with NULL page. canceled\n");
 		return ;
 	}
 	drawdata->recycle=1;
@@ -459,10 +465,6 @@ static void drawdata_delete(drawdata_t* drawdata){
 	}
 	drawdata->page=NULL;
 	drawdata->subnb=NULL;
-	//free(drawdatawrap);
-	/*LOCK(drawdata_mutex);
-	ndrawdata--;
-	UNLOCK(drawdata_mutex);*/
 }
 ///Called with g_object_set_data
 static void drawdatawrap_delete(gpointer user_data){
@@ -485,24 +487,6 @@ int delete_page(drawdata_t* drawdata){
 	if(ipage!=-1){
 		gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), ipage);
 	}
-	/*for(GSList *p=windows; p; p=p->next){
-		GtkWidget* window=(GtkWidget *)p->data;
-		GtkWidget* topnb=get_topnb(window);
-		for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
-			GtkWidget *subnb=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), itab);
-			int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(subnb), drawdata->page);
-			if(ipage!=-1){
-				gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), ipage);
-				break;
-				//info("deleting page %d\n", ipage);
-			}
-			//if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb))==0){
-			//	//info("delete top page %d\n", itab);
-			//	gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), itab);
-			//	itab--;
-			//}
-		}
-	}*/
 	return 0;
 }
 static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
@@ -512,7 +496,7 @@ static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
 gboolean update_title(gpointer window){
 	if(!window) window=curwindow;
 	if(!window || !GTK_IS_WINDOW(window)) return FALSE;//deleted
-
+	gboolean ans=TRUE;
 	char title[80];
 	if(client_pid>0){
 		snprintf(title, 80, "Drawdaemon (%s:%d)", client_hostname, client_pid);
@@ -520,18 +504,12 @@ gboolean update_title(gpointer window){
 		snprintf(title, 80, "Drawdaemon (%s:idle)", client_hostname);
 	}else{
 		snprintf(title, 80, "Drawdaemon (disconnected)");
+		ans=FALSE;
 	}
-
-	/*if(iwindow>1){
-		int nt=strlen(title);
-		if(nt<75){
-			snprintf(title+nt, 80-nt, " (%d)", iwindow);
-		}
-	}*/
 	gtk_window_set_title(GTK_WINDOW(window), title);
 	//iwindow++;
-
-	return 0;
+	if(client_pid>0 && fpslabel) update_fpslabel(fpslabel);
+	return ans;//returns true to run repeatedly.
 }
 static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	GtkWidget* out;
@@ -594,8 +572,8 @@ static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 }
 static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	//dbg_time("do_move: %g %g\n", xdiff, ydiff);
-	drawdata->offx+=xdiff/drawdata->zoomx;
-	drawdata->offy+=ydiff/drawdata->zoomy;
+	drawdata->offx+=xdiff;
+	drawdata->offy+=ydiff;
 	delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 #if GTK_MAJOR_VERSION>=4
@@ -603,8 +581,6 @@ static gboolean drawarea_drag_update(GtkGestureDrag *drag, gdouble dx, gdouble d
 	drawdata_t *drawdata=*drawdatawrap;
 	gint button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(drag));
 	//info_time("drag_update at %g %g\n", dx, dy);
-	//gdouble x=drawdata->mxdown+dx;
-	//gdouble y=drawdata->mydown+dy;
 #else
 static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event, drawdata_t** drawdatawrap){
 	drawdata_t *drawdata=*drawdatawrap;
@@ -615,8 +591,13 @@ static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event,
 	gint button=(event->state&GDK_BUTTON1_MASK)?1:((event->state&GDK_BUTTON3_MASK)?3:0);
 	(void)widget;
 #endif
-
-	if(button&&drawdata->valid){
+	if(button==1 && drawdata->region==2){//inside legend box
+		drawdata->legendoffx+=drawdata->legbox_rx*(dx-drawdata->dxdown); CLIP(drawdata->legendoffx, 0, 1);
+		drawdata->legendoffy+=drawdata->legbox_ry*(dy-drawdata->dydown); CLIP(drawdata->legendoffy, 0, 1);
+		delayed_update_pixmap(drawdata);
+		drawdata->dxdown=dx;
+		drawdata->dydown=dy;
+	}else if(button&&drawdata->region==1){
 		//gdouble dt=myclockd()-drawdata->mtdown;
 		/*move with left cursor */
 		if((fabs(dx)>3 || fabs(dy)>3)){
@@ -717,12 +698,10 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	}else if(drawdata->zoomy>MAX_ZOOM){
 		drawdata->zoomy=MAX_ZOOM;
 	}
-	if(mode){/*not zero. */
-		float factorx=1/old_zoomx-1/drawdata->zoomx;
-		drawdata->offx-=xdiff*factorx;
-		float factory=1/old_zoomy-1/drawdata->zoomy;
-		drawdata->offy-=ydiff*factory;
-	}
+	//preserve visual center
+	drawdata->offx=(drawdata->offx-xdiff)*drawdata->zoomx/old_zoomx+xdiff;
+	drawdata->offy=(drawdata->offy-ydiff)*drawdata->zoomy/old_zoomy+ydiff;
+	
 	delayed_update_pixmap(drawdata);
 }
 #if GTK_MAJOR_VERSION>=4
@@ -743,6 +722,7 @@ static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, 
 	double y=event->y;
 	unsigned int time=event->time;
 	int zoom_dir=(event->direction==GDK_SCROLL_UP)?1:-1;
+	dbg("scroll_event with dir %d\n", zoom_dir);
 #endif
 #define DO_ZOOM 1
 #if DO_ZOOM
@@ -777,7 +757,7 @@ static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t*
 	(void)event;
 	(void)widget;
 	drawdata_t* drawdata=*drawdatawrap;
-	drawdata->valid=0;
+	drawdata->region=0;
 	//dbg_time("focus_in_handler.\n");
 	return FALSE;
 }
@@ -794,16 +774,21 @@ static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, d
 	info_time("drag_begin at %g %g\n", x, y);
 #endif
 	drawdata_t* drawdata=*drawdatawrap;
-	if(x>drawdata->xoff&&x < drawdata->xoff+drawdata->widthim
+	if(x>drawdata->legbox_ox&&x<drawdata->legbox_ox+drawdata->legbox_width
+		&&y>drawdata->legbox_oy&&y<drawdata->legbox_oy+drawdata->legbox_height){
+		drawdata->region=2;
+	}else if(x>drawdata->xoff&&x < drawdata->xoff+drawdata->widthim
 		&&y > drawdata->yoff&&y<drawdata->yoff+drawdata->heightim){
+		drawdata->region=1;
+	} else{
+		drawdata->region=0;
+	}
+	if(drawdata->region){
 		drawdata->mxdown=x;
 		drawdata->mydown=y;
 		drawdata->dxdown=0;
 		drawdata->dydown=0;
 		drawdata->mtdown=myclockd();
-		drawdata->valid=1;
-	} else{
-		drawdata->valid=0;
 	}
 	//dbg_time("drawarea_button_press %g %g.\n", x, y);
 	return FALSE;
@@ -827,7 +812,7 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 	info_time("drag_end at %g %g\n", x, y);
 #endif
 
-	if(!drawdata->valid) return FALSE;
+	if(!drawdata->region) return FALSE;
 
 	gdouble dt=myclockd()-drawdata->mtdown;
 	dbg2_time("drawarea_button_release %g %g. dx=%g %g. button is %d.dt is %g\n",x, y, dx, dy, button, dt);
@@ -861,9 +846,9 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 		drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
 		drawdata->limit_changed=1;
 		update_zoom(drawdata);
-		update_pixmap(drawdata, 1);
+		update_pixmap(drawdata);
 	}
-
+	drawdata->region=0;
 	return FALSE;
 
 }
@@ -871,7 +856,7 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 
 static void switch_tab(int lr, int ud){
 	if(!curtopnb){
-		warning("curtopnb is null\n");
+		dbg_time("curtopnb is null\n");
 		return;
 	}
 	GtkWidget* topnb=curtopnb;
@@ -939,7 +924,7 @@ static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guin
 //-1 means current page
 static void page_changed(int topn, int subn){
 	if(!curtopnb){
-		warning("page_changed: curtopnb is NULL\n");
+		dbg_time("page_changed: curtopnb is NULL\n");
 		return;
 	}
 	GtkWidget* topnb=curtopnb;
@@ -979,7 +964,7 @@ static void page_changed(int topn, int subn){
 		if(stwriteint(sock, DRAW_FIGFN)||
 			stwritestr(sock, fig)||
 			stwritestr(sock, fn)){
-			warning("Talk to client failed\n");
+			dbg_time("Talk to client failed\n");
 			close(sock);
 			sock=-1;
 		}
@@ -1008,7 +993,7 @@ static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *child, guint n, Gt
 		if(topnb){
 			int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), GTK_WIDGET(subnb));
 			if(ipage==-1){
-				warning("page not found\n");
+				dbg_time("page not found\n");
 			}else{
 				gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
 			}
@@ -1040,9 +1025,6 @@ static void topnb_page_added(GtkNotebook *topnb, GtkWidget *child, guint n, GtkW
 	page_changed(n, -1);
 	/*gtk_notebook_set_show_tabs(topnb, npage!=1); */
 }
-#define DO_LPF(T,pold,pnew,n) \
-T*p0old=pold; T*p0new=pnew;\
-for(long i=0; i<n; i++) p0new[i]=p0new[i]*(lpf)+p0old[i]*(1.-lpf);
 
 /**
    2012-10-27: GTK 3.6 deprecated gdk_threads_enter(). So it is hard to call
@@ -1053,7 +1035,7 @@ gboolean addpage(gpointer indata){
 	drawdata_t* drawdata=(drawdata_t*)indata;
 	GtkWidget* drawarea;
 	if(!drawdata->fig){
-		warning("Must set fig before calling addpage");
+		dbg_time("Must set fig before calling addpage");
 	}
 	GSList* subnbs=NULL;
 	int nsubnb=0;
@@ -1094,18 +1076,8 @@ gboolean addpage(gpointer indata){
 		g_signal_connect_after(subnb, "switch-page", G_CALLBACK(subnb_page_switch), NULL);
 		g_signal_connect(subnb, "page-removed", G_CALLBACK(subnb_page_removed), topnb);
 		GtkWidget* label=gtk_label_new(drawdata->fig);
-/*#if GTK_MAJOR_VERSION<4
-		GtkWidget* eventbox=gtk_event_box_new();
-		gtk_container_add(GTK_CONTAINER(eventbox), label);
-		gtk_widget_add_events(GTK_WIDGET(eventbox), GDK_BUTTON_PRESS);
-		gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
-		g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), subnb);
-		gtk_notebook_insert_page(GTK_NOTEBOOK(topnb), subnb, eventbox, jtab);
-		gtk_widget_show_all(eventbox);
-#else*/
 		gtk_notebook_insert_page(GTK_NOTEBOOK(topnb), subnb, label, jtab);//todo: restore tab_button_cb
 		//gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, TRUE);
-//#endif
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 	}
 	GtkWidget* page=NULL;
@@ -1131,22 +1103,18 @@ gboolean addpage(gpointer indata){
 			}
 		}
 	}
-	if(page){
-		/*
-			we use drawdatawrap so that we don't have to modify the data on the g_object.
-		*/
+	if(page){/*we use drawdatawrap so that we don't have to modify the data on the g_object.*/
 		drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
 		if(*drawdatawrap!=drawdata){
-			warning("drawdata was %p, new is %p, recycle old value.\n", *drawdatawrap, drawdata);
+			dbg_time("drawdata was %p, new is %p, recycle old value.\n", *drawdatawrap, drawdata);
 			(*drawdatawrap)->recycle=1;
 			*drawdatawrap=drawdata;
 		}
 		//drawdata_free_input(drawdata_old);
 	}
 	if(page){
-		if(get_current_drawdata()==drawdata){/*we are the current page. need to update pixmap */
-			update_pixmap(drawdata, 1);
-		} else{
+		update_pixmap(drawdata);
+		if(get_current_drawdata()!=drawdata){/*we are the current page. need to update pixmap */
 			/*otherwise, notify client that it is not drawing to active page */
 			page_changed(-1, -1);
 		}
@@ -1253,7 +1221,7 @@ gboolean addpage(gpointer indata){
 		}
 	}
 	g_slist_free(subnbs);
-	return 0;//return 0 cause the function to be removed frm gdb_threads_idle()
+	return 0;//return 0 cause the function to be removed from g_idle_add()
 }
 static void save_file(drawdata_t *drawdata);
 #if GTK_VERSION_AFTER(4,10)
@@ -1321,12 +1289,12 @@ static void tool_save(GtkWidget* button){
 }
 static void save_file(drawdata_t *drawdata){
 	if(!drawdata){
-		warning("drawdata is empty\n");
+		dbg_time("drawdata is empty\n");
 		return;
 	}
 		const char *filename=drawdata->filename;
 	if(!filename){
-		warning("filename is empty\n");
+		dbg_time("filename is empty\n");
 		return;
 	}else{
 		info("filename is %s\n", filename);
@@ -1365,6 +1333,17 @@ static void save_file(drawdata_t *drawdata){
 		cairo_surface_set_device_scale(surface, scale, scale);
 #endif		
 #endif		
+	}else if(strcmp(suffix, ".gif")==0){
+#if CAIRO_HAS_PNG_FUNCTIONS
+#if GTK_MAJOR_VERSION>=3
+		drawdata->filename_gif=strndup(filename, strlen(filename)-4);
+		mymkdir("%s", drawdata->filename_gif);
+		pfilename_gif=&drawdata->filename_gif;
+		//drawdata->zlim_manual=1;
+		drawdata->frame_io=0;
+		return;
+#endif
+#endif
 	}
 	if(!surface){
 		error_msg("%s: file type is not supported.\n", filename);
@@ -1407,31 +1386,23 @@ static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	//drawdata_dialog->zlim_changed=1;
 	font_name_version++;
 	delayed_update_pixmap(drawdata_dialog);
-	/*if(key==&cumu){
-		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
-	}*/
 }
 static void checkbtn_toggle_inv(GtkWidget *btn, gint *key){
 	*key=!check_button_get_active(btn);
 	//drawdata_dialog->zlim_changed=1;
 	font_name_version++;
 	delayed_update_pixmap(drawdata_dialog);
-	/*if(key==&cumu){
-		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
-	}*/
 }
 static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*key=check_button_get_active(btn)?'y':'n';
-	drawdata_dialog->zlim_changed=1;
+	//drawdata_dialog->zlim_changed=1;
+	drawdata_dialog->drawn=0;
 	delayed_update_pixmap(drawdata_dialog);
-	/*if(key==&cumu){
-		gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);
-	}*/
 }
-static void range_changed(GtkRange* range, gfloat* val){
+/*static void range_changed(GtkRange* range, gfloat* val){
 	*val=gtk_range_get_value(range);
 	delayed_update_pixmap(drawdata_dialog);
-}
+}*/
 static void entry_changed(GtkEditable* entry, char** key){
 	free(*key);
 	*key=gtk_editable_get_chars(entry, 0, -1);
@@ -1453,25 +1424,10 @@ static void spin_icumu(GtkSpinButton* spin){
 }
 static void togglebutton_toggle(GtkWidget* btn, int *val){
 	*val=toggle_button_get_active(btn);
-	update_pixmap(get_current_drawdata(), 1);
+	update_pixmap(get_current_drawdata());
 	update_toolbar(NULL);
 }
-/*
-static void togglebutton_cumu(GtkWidget* btn){
-	drawdata_t* drawdata=get_current_drawdata();
-	if(!drawdata) return;
-	if(!drawdata->p&&!drawdata->square){
-		drawdata->cumu=toggle_button_get_active(btn);
-		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
-		if(cur_menu_icumu){
-			gtk_spin_button_set_value(GTK_SPIN_BUTTON(cur_menu_icumu),
-				drawdata->cumu?drawdata->icumu:0);
-		}
-	}else{
-		toggle_button_set_active(btn, 0);
-	}
-	delayed_update_pixmap(drawdata);
-}*/
+
 static void togglebutton_zlog(GtkWidget *btn){
 	(void)btn;
 	drawdata_t *drawdata=get_current_drawdata();
@@ -1587,19 +1543,28 @@ static void tool_property(GtkWidget* button, gpointer data){
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
 	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
 
-	checkbtn=gtk_check_button_new_with_label("Legend on curve");
-	check_button_set_active(checkbtn, drawdata->legendcurve);
-	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendcurve);
-	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-
 	hbox=gtk_hbox_new(FALSE, 0);
-	checkbtn=gtk_check_button_new_with_label("Show Legend");
+
+	checkbtn=gtk_check_button_new_with_label("Legend");
 	check_button_set_active(checkbtn, drawdata->legendbox);
 	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 
-	checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
+	checkbtn=gtk_check_button_new_with_label("On curve");
+	check_button_set_active(checkbtn, drawdata->legendcurve);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendcurve);
+	//box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+	
+	checkbtn=gtk_check_button_new_with_label("Ellipsis");
+	check_button_set_active(checkbtn, !noellipsis);
+	gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &noellipsis);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	/*checkbtn=gtk_hscale_new_with_range(0, 1, 0.01);
 	//gtk_widget_set_size_request(checkbtn, 80, 20);
 	gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
 	gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffx);
@@ -1615,7 +1580,7 @@ static void tool_property(GtkWidget* button, gpointer data){
 	box_append(GTK_BOX(hbox), gtk_label_new("  V  "), FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-
+*/
 	//set log scale
 	hbox=gtk_hbox_new(FALSE, 0);
 	//label=gtk_label_new("Set log scale:");
@@ -1707,18 +1672,23 @@ static void tool_property(GtkWidget* button, gpointer data){
 	label=gtk_label_new("X min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[0], TRUE, TRUE, 0);
-	label=gtk_label_new("X max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
-	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-	box_append(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
-	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-	hbox=gtk_hbox_new(FALSE, 0);
 	label=gtk_label_new("Y min");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[2], TRUE, TRUE, 0);
+
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+	hbox=gtk_hbox_new(FALSE, 0);
+	label=gtk_label_new("X max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
+	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
+	
+		
 	label=gtk_label_new("Y max");gtk_label_set_width_chars(GTK_LABEL(label), 5);
 	box_append(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	box_append(GTK_BOX(hbox), spins[3], TRUE, TRUE, 0);
+	
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	if(n>4){
@@ -1784,10 +1754,10 @@ void font_set_desc(){
 #endif
 		font_size=(float)size/(float)PANGO_SCALE*(float)dpi/72.;
 	}
-	SP_XL=font_size*2.4+8;
+	SP_XL=font_size*2.6+12;
 	SP_YT=font_size*1.3+12;
-	SP_YB=font_size*2.4+12;
-	SP_XR=SP_LEG+LEN_LEG+font_size*2;
+	SP_YB=font_size*2.6+12;
+	SP_XR=SP_LEG+LEN_LEG+font_size*3;
 	delayed_update_pixmap(get_current_drawdata());
 }
 void font_set(const char *font_name_new){
@@ -1844,13 +1814,6 @@ static gboolean close_window(GtkObject* window, GdkEvent* event)
 		int npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb));
 		for(int ipage=npages-1; ipage>=0; ipage--){
 			move_tab_page(topnb, ipage, topnb2);
-		//}else{//delete page
-			/*int ntabs=gtk_notebook_get_n_pages(GTK_NOTEBOOK(page));
-			for(int itab=ntabs-1; itab>=0; itab--){
-				gtk_notebook_remove_page(GTK_NOTEBOOK(page), itab);
-			}*/
-			//gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
-
 		}
 	}
 
@@ -1882,53 +1845,62 @@ static gboolean window_activate_focus(GtkWidget *window){
 	return FALSE;
 }
 #endif
-int update_fpslabel(gpointer label){
+static gboolean update_fpslabel(gpointer label){
 	if(!GTK_IS_LABEL(label)) return FALSE;//deleted
+	gint ans=TRUE;//TRUE: keep running, false: delete.
 	float thistime=myclockd();
 	extern float io_time1;//receiving time for latest frame
 	extern float io_time2;//receiving time for previous frame or 0 if a different plot is received
 	//using static variable is problematic as this is called for different labels
 	char newtext[64];
+	float oldfps=0;
+	float fps=0;
 	if(io_time1+2>thistime && io_time2+12>io_time1 && io_time1!=io_time2){//continuous update
-		float fps=1./(io_time1-io_time2);
+		fps=1./(io_time1-io_time2);
 		snprintf(newtext, sizeof(newtext), "%.1f Hz", fps);
 	}else{
 		newtext[0]=0;
+		ans=FALSE;
+		fps=0;
 	}
-	gtk_label_set_text(GTK_LABEL(label), newtext);
-	if(io_time1+60<thistime){//60 seconds no update, check connectivity.
+	if(fps!=oldfps){
+		gtk_label_set_text(GTK_LABEL(label), newtext);
+		oldfps=fps;
+	}
+	/*if(io_time1+60<thistime){//60 seconds no update, check connectivity.
 		if(stwriteint(sock, DRAW_RESUME)){
 			close(sock);
 			sock=-1;
 		}
-	}
-	return TRUE;//keep the timeout periodic
+	}*/
+	return ans;
 }
 //Create a new toolbar item.
 #if GTK_MAJOR_VERSION < 4
-GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char* name,
+GtkWidget *new_tool(GtkWidget *toolbar, GtkWidget *child, int toggle, const char *name, GdkPixbuf *iconbuf,
 	GCallback callback, gpointer user_data){
 	GtkToolItem* item=NULL;
 
-	if(name || child){
+	if(child || name || iconbuf){
 		if(child){
 			item=gtk_tool_item_new();
-		} else if(toggle){
-			item=gtk_toggle_tool_button_new();
-		} else{
-			item=gtk_tool_button_new(NULL, name);
-		}
-		if(child){
 			gtk_container_add(GTK_CONTAINER(item), child);
 		} else{
-			gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), name);
+			if(toggle){
+				item=gtk_toggle_tool_button_new();
+			} else{
+				item=gtk_tool_button_new(NULL, name);
+			}
+			if(name){
+				gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), name);
+			}else{
+				GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
+				gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), image);
+			}
 		}
 	} else{
 		item=gtk_separator_tool_item_new();
 		gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(item), 0);
-		if(toggle){
-			gtk_tool_item_set_expand(GTK_TOOL_ITEM(item), 1);
-		}
 	}
 
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
@@ -1938,15 +1910,20 @@ GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* child, int toggle, const char
 	return GTK_WIDGET(item);
 }
 #else
-GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char* name,
+GtkWidget *new_tool(GtkWidget *toolbar, GtkWidget *item, int toggle, const char *name, GdkPixbuf *iconbuf,
 	GCallback callback, gpointer user_data){
 	if(!item){
-		if(name){
+		if(name || iconbuf){
 			if(!toggle){
-				item=gtk_button_new_from_icon_name(name);
+				item=button_new(name);
 			} else{
 				item=gtk_toggle_button_new();
-				gtk_button_set_icon_name(GTK_BUTTON(item), name);
+			}
+			if(name){
+				if(toggle) gtk_button_set_icon_name(GTK_BUTTON(item), name);
+			}else{
+				GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
+				gtk_button_set_child(GTK_BUTTON(item), image);
 			}
 			gtk_button_set_has_frame(GTK_BUTTON(item), FALSE);
 		} else{
@@ -1961,10 +1938,6 @@ GtkWidget* new_tool(GtkWidget* toolbar, GtkWidget* item, int toggle, const char*
 	return item;
 }
 #endif
-/*gboolean window_close_request(GtkWindows *window){
-	window_closed(window);
-	return FALSE;
-}*/
 /**
  * Create a new window with a topnb
 */
@@ -1993,7 +1966,7 @@ GtkWidget* create_window(GtkWidget* window){
 			gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(old_window));
 		}*/
 	}
-	gtk_window_set_default_size(GTK_WINDOW(window), 1050, 900);
+	gtk_window_set_default_size(GTK_WINDOW(window), 720, 600);//1050, 900);
 	//gtk_window_stick(GTK_WINDOW(window));
 	curwindow=window;
 	windows=g_slist_append(windows, window);
@@ -2005,7 +1978,7 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_window_set_icon_name(GTK_WINDOW(window), "computer");
 #endif
 	//g_object_unref(icon_main);
-	g_timeout_add(2000, update_title, window);
+	
 #if GTK_MAJOR_VERSION>=3
 	GtkCssProvider* provider_default=gtk_css_provider_new();
 #if GTK_MAJOR_VERSION>=4
@@ -2040,28 +2013,28 @@ GtkWidget* create_window(GtkWidget* window){
 	GtkWidget* toolbar=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 #endif
 	gtk_widget_set_sensitive(toolbar, FALSE);
-	new_tool(toolbar, NULL, 0, "document-save-as", G_CALLBACK(tool_save), NULL);
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
-	new_tool(toolbar, NULL, 0, "zoom-in", G_CALLBACK(tool_zoom), GINT_TO_POINTER(1));
-	new_tool(toolbar, NULL, 0, "zoom-fit-best", G_CALLBACK(tool_zoom), GINT_TO_POINTER(0));
-	new_tool(toolbar, NULL, 0, "zoom-out", G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
-	new_tool(toolbar, NULL, 0, "document-properties", G_CALLBACK(tool_property), NULL);
+	new_tool(toolbar, NULL, 0, "document-save-as", NULL, G_CALLBACK(tool_save), NULL);
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
+	new_tool(toolbar, NULL, 0, "zoom-in", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(1));
+	new_tool(toolbar, NULL, 0, "zoom-fit-best", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(0));
+	new_tool(toolbar, NULL, 0, "zoom-out", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
+	new_tool(toolbar, NULL, 0, "document-properties", NULL, G_CALLBACK(tool_property), NULL);
 
 	//Log scale
-	GtkWidget *menu_zlog=new_tool(toolbar, NULL, 1, "go-up", G_CALLBACK(togglebutton_zlog), NULL);
+	GtkWidget *menu_zlog=new_tool(toolbar, NULL, 1, NULL, icon_log, G_CALLBACK(togglebutton_zlog), NULL);
 	g_object_set_data(G_OBJECT(window), "menu_zlog", menu_zlog);
 	//Cumulative
-	GtkWidget* menu_cumu=new_tool(toolbar, NULL, 1, "go-top", G_CALLBACK(togglebutton_toggle), &cumu);
+	GtkWidget *menu_cumu=new_tool(toolbar, NULL, 1, NULL, icon_avg, G_CALLBACK(togglebutton_toggle), &cumu);
 	g_object_set_data(G_OBJECT(window), "menu_cumu", menu_cumu);
 
 	//Cumulative step
 	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 100);
 	g_signal_connect(menu_icumu, "value-changed", G_CALLBACK(spin_icumu), NULL);
-	new_tool(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL);
+	new_tool(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL, NULL);
 	g_object_set_data(G_OBJECT(window), "menu_icumu", menu_icumu);
 
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL); //separator
+	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
 #if GTK_VERSION_AFTER(4,10)
 	GtkFontDialog *fontdiag=gtk_font_dialog_new();
 	GtkWidget *fontsel=gtk_font_dialog_button_new(fontdiag);
@@ -2069,32 +2042,32 @@ GtkWidget* create_window(GtkWidget* window){
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "notify::font-desc", G_CALLBACK(tool_font_set), fontsel);
 #else
 	GtkWidget* fontsel=gtk_font_button_new_with_font(font_name_default);
+	gtk_font_button_set_use_font(GTK_FONT_BUTTON(fontsel), TRUE);
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 #endif
-	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL);
+	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL, NULL);
 
 #if GTK_MAJOR_VERSION<3
-	new_tool(toolbar, NULL, 1, "media-playback-start-ltr", G_CALLBACK(togglebutton_play), NULL);
+	new_tool(toolbar, NULL, 1, "media-playback-start-ltr", NULL, G_CALLBACK(togglebutton_play), NULL);
 #else
-	new_tool(toolbar, NULL, 1, "media-playback-start", G_CALLBACK(togglebutton_play), NULL);
+	new_tool(toolbar, NULL, 1, "media-playback-start", NULL, G_CALLBACK(togglebutton_play), NULL);
 #endif
-	new_tool(toolbar, NULL, 1, "media-playback-pause", G_CALLBACK(togglebutton_pause), NULL);
-	new_tool(toolbar, NULL, 0, "media-playback-stop", G_CALLBACK(toolbutton_stop), NULL);
-	new_tool(toolbar, NULL, 0, "edit-copy", G_CALLBACK(topnb_detach_btn), topnb);
+	new_tool(toolbar, NULL, 1, "media-playback-pause", NULL, G_CALLBACK(togglebutton_pause), NULL);
+	new_tool(toolbar, NULL, 0, "media-playback-stop", NULL, G_CALLBACK(toolbutton_stop), NULL);
+	new_tool(toolbar, NULL, 0, "edit-copy", NULL, G_CALLBACK(topnb_detach_btn), topnb);
 	/*GtkWidget *sep=new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
 	gtk_widget_set_hexpand(sep, TRUE);*/
-	GtkWidget *fpslabel=gtk_label_new("");
-#if GTK_MAJOR_VERSION>=3	
-	gtk_widget_set_hexpand(fpslabel, TRUE);
-	gtk_widget_set_halign(fpslabel, GTK_ALIGN_END);
-#else
-	gtk_misc_set_padding(GTK_MISC(fpslabel), 0, 0);
-	gtk_misc_set_alignment(GTK_MISC(fpslabel), 1, 0.5);
-#endif
-	g_timeout_add(2000, update_fpslabel, fpslabel);
-	new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL);
-
-
+	if(!fpslabel){//create only for the main window.
+		fpslabel=gtk_label_new("");
+	#if GTK_MAJOR_VERSION>=3	
+		gtk_widget_set_hexpand(fpslabel, TRUE);
+		gtk_widget_set_halign(fpslabel, GTK_ALIGN_END);
+	#else
+		gtk_misc_set_padding(GTK_MISC(fpslabel), 0, 0);
+		gtk_misc_set_alignment(GTK_MISC(fpslabel), 1, 0.5);
+	#endif
+		new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL, NULL);
+	}
 	//gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
 #if GTK_VERSION_AFTER(2,24)
 	gtk_notebook_set_group_name(GTK_NOTEBOOK(topnb), "toplevel");//2.24

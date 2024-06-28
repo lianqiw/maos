@@ -127,11 +127,10 @@ static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
 	cairo_restore(cr);
 }
 
-static void pango_text_powindex(cairo_t* cr, PangoLayout* layout, float x, float y, int order, int vertical){
-	if(order==0) return;
+static void pango_text_power(cairo_t *cr, PangoLayout *layout, float x, float y, int power, float fracx, float fracy, int vertical){
 	char powindex[40];
-	snprintf(powindex, 40, "10<sup>%d</sup>", order);
-	pango_text(cr, layout, x, y, powindex, 0, 0, vertical);
+	snprintf(powindex, 40, "10<sup>%d</sup>", power);
+	pango_text(cr, layout, x, y, powindex, fracx, fracy, vertical);
 }
 
 
@@ -149,13 +148,15 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 	}
 	*order=order1;
 	const float scale1=pow(10, -order1);
+	//convert values to between (-10 and 10)
 	xmax*=scale1;
 	xmin*=scale1;
 	diff*=scale1;
+	rmax*=scale1;
 	float spacing;
-	if(diff<rmax*1e-10){//handle special case
-		*tic1=xmin;
-		*dtic=xmax-xmin;
+	if(diff<rmax*1e-5){//handle special case
+		*tic1=round((0.5*(xmax+xmin)-0.1)*10)*0.1;
+		*dtic=0.2;
 		*ntic=2;
 	}else{
 		if(logscale){
@@ -184,6 +185,7 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 */
 void round_limit(float* xmin, float* xmax, int logscale){
 	if(*xmin==0 && *xmax==0) return;
+	//float oldmin=*xmin, oldmax=*xmax;
 	if(logscale){
 		if(*xmin<=0) *xmin=0.1;
 		if(*xmax<=0) *xmax=1;
@@ -219,20 +221,18 @@ void round_limit(float* xmin, float* xmax, int logscale){
 		*xmin=pow(10, *xmin);
 		*xmax=pow(10, *xmax);
 	}
+	//info_time("round_limit: [%g, %g] --> [%g, %g]\n", *xmin, *xmax, oldmin, oldmax);
 }
 /**
  * When limit or limit0 changes, update zoomx,y and offx,y to not alter the limit0.
 */
 void update_zoom(drawdata_t* drawdata){
-	//info("update_zoom in: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	//info_time("update_zoom entr: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 	/*if(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
 		return;
 	}*/
-	if((drawdata->limit0[0]==0&&drawdata->limit0[1]==0)||(drawdata->limit0[2]==0&&drawdata->limit0[3]==0)){
+	if((drawdata->limit0[0]==0&&drawdata->limit0[1]==0)||(drawdata->limit0[2]==0&&drawdata->limit0[3]==0)||drawdata->limit_changed!=1){
 		return;//never been plotted. do not try to zoom/offset.
-	}
-	if(drawdata->limit_changed!=1){
-		return;
 	}
 	/*limit0 matches limit in unzoomed state */
 	int xlog=drawdata->xylog[0]=='y'?1:0;
@@ -241,7 +241,7 @@ void update_zoom(drawdata_t* drawdata){
 	if(xlog){
 		xmin=log10(drawdata->limit[0]);
 		xmax=log10(drawdata->limit[1]);
-		if(isinf(xmin)) xmin=0;
+		if(isinf(xmin)) xmin=xmax-5;
 	} else{
 		xmin=drawdata->limit[0];
 		xmax=drawdata->limit[1];
@@ -249,7 +249,7 @@ void update_zoom(drawdata_t* drawdata){
 	if(ylog){
 		ymin=log10(drawdata->limit[2]);
 		ymax=log10(drawdata->limit[3]);
-		if(isinf(ymin)) ymin=0;
+		if(isinf(ymin)) ymin=ymax-5;
 	} else{
 		ymin=drawdata->limit[2];
 		ymax=drawdata->limit[3];
@@ -266,7 +266,7 @@ void update_zoom(drawdata_t* drawdata){
 	if(diffx1<=0) diffx1=1;
 	if(diffy1<=0) diffy1=1;
 	if(diffx1>diffx0*1e-5&&diffy1>diffy0*1e-5){/*limit allowable range */
-	/*the new zoom */
+		/*the new zoom */
 		float ratiox=diffx0/diffx1; if(ratiox==0) ratiox=1;
 		float ratioy=diffy0/diffy1; if(ratioy==0) ratioy=1;
 		if(drawdata->square&&!drawdata->p){/*make the ratio equal. */
@@ -282,11 +282,10 @@ void update_zoom(drawdata_t* drawdata){
 		}
 		drawdata->zoomx=ratiox;
 		drawdata->zoomy=ratioy;
-		drawdata->offx=-(midx1-midx0)*drawdata->widthim/(diffx1*drawdata->zoomx);
-		drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
+		drawdata->offx=-(midx1-midx0)*drawdata->widthim/(diffx1);
+		drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1);
 	}
-
-	//info("update_zoom: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	//info_time("update_zoom exit: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 }
 /*
   Definition of style: (bits count from lowest end0
@@ -368,9 +367,9 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size){
  */
 static void update_limit(drawdata_t *drawdata){
 	/* update max/minimum for both non-cumu and cumulative case. */
-	//info("update_limit in\n");
-	if((drawdata->limit_manual&&!drawdata->cumu)||drawdata->limit_changed!=-1) return;
-
+	//if(drawdata->p || (drawdata->limit_manual&&!drawdata->cumu)||drawdata->limit_changed!=-1) return;
+	const int xlog=drawdata->xylog[0]=='y'?1:0;
+	const int ylog=drawdata->xylog[1]=='y'?1:0;
 	float xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 		const float *ptsx=drawdata->pts[ipts], *ptsy=0;
@@ -381,6 +380,13 @@ static void update_limit(drawdata_t *drawdata){
 		if(ptsny>1){/*x is supplied */
 			fmaxmin(ptsx, ptsnx, &xmax, &xmin);
 			ptsy=ptsx+ptsnx;
+			if (xlog && xmin==0){
+				if(ptsx[0]==0 && ptsx[1]>0){//frequency index
+					xmin=ptsx[1];
+				}else{
+					xmin=xmax/1e8;
+				}
+			}
 		} else{/*x is index */
 			xmin=0; xmax=(float)(ptsnx-1);
 			ptsy=ptsx;
@@ -425,13 +431,8 @@ static void update_limit(drawdata_t *drawdata){
 		if(ymax>ymax0) ymax0=ymax;
 	}
 	if(isinf(ymin0)) ymin0=0;
-	if(isinf(ymax0)) ymax0=0;
+	if(isinf(ymax0)) ymax0=1;
 
-	int xlog=drawdata->xylog[0]=='y'?1:0;
-	int ylog=drawdata->xylog[1]=='y'?1:0;
-
-
-	float xlimit=(xmax0-xmin0)*0.1;
 	float ylimit=(ymax0-ymin0)*0.1;
 	if(drawdata->cumu!=drawdata->cumulast){
 		drawdata->limit_changed=3;//limit is changed. reset zoom.
@@ -441,28 +442,31 @@ static void update_limit(drawdata_t *drawdata){
 		drawdata->limit[3]=ymax0;
 	}else{
 		drawdata->limit_changed=0;
-		if(drawdata->limit[0]>xmin0||drawdata->limit[0]+xlimit<xmin0){
-			drawdata->limit[0]=xmin0;//only update if the lower limit is below or a threshold above the old result
-			drawdata->limit_changed=3;
+		if(drawdata->limit[0]!=xmin0){
+			drawdata->limit[0]=xmin0;
+			drawdata->limit_changed=1;
 		}
-		if(drawdata->limit[1]<xmax0||drawdata->limit[1]>xlimit+xmax0){
-			drawdata->limit[1]=xmax0;//only update if the upper limit is above or a threshold below the old result
-			drawdata->limit_changed=3;
+		if(drawdata->limit[1]!=xmax0){
+			drawdata->limit[1]=xmax0;
+			drawdata->limit_changed=1;
 		}
-		if(drawdata->limit[2]>ymin0||drawdata->limit[2]+ylimit<ymin0){
+		if(!drawdata->limit[2]||drawdata->limit[2]>ymin0||drawdata->limit[2]+ylimit<ymin0){
 			drawdata->limit[2]=ymin0;//only update if the limit is below or a threshold above the old result
-			drawdata->limit_changed=3;
+			drawdata->limit_changed=1;
 		}
-		if(drawdata->limit[3]<ymax0||drawdata->limit[3]>ylimit+ymax0){
+		if(!drawdata->limit[3]||drawdata->limit[3]<ymax0||drawdata->limit[3]>ylimit+ymax0){
 			drawdata->limit[3]=ymax0;//only update if the upper limit is above or a threshold below the old result
-			drawdata->limit_changed=3;
+			drawdata->limit_changed=1;
 		}
 	}
-	if(drawdata->limit_changed==3){
-		round_limit(&drawdata->limit[0], &drawdata->limit[1], xlog);
-		round_limit(&drawdata->limit[2], &drawdata->limit[3], ylog);
+	round_limit(&drawdata->limit[0], &drawdata->limit[1], xlog);
+	round_limit(&drawdata->limit[2], &drawdata->limit[3], ylog);
+	if(drawdata->limit_changed==1){
+		if(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
+			drawdata->limit_changed=0;//not zoomed. do not preserve viewing area.
+		}
 	}
-	dbg_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
+	//info_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
 }
 /**
    The master routine that draws in the cairo surface.
@@ -470,14 +474,19 @@ static void update_limit(drawdata_t *drawdata){
    meaning of limit_changed
    0: no change from previous plot.
    1: limit0 is changed and update_zoom is needed to update zoom.
-   2: z limit is changed
-   3: limit is changed and zoom will be reset.
+   3: limit is changed and zoom will be reset. also update_limit.
    -1:new data, or switch between cumu and non-cumu. need to run update_limit.
 */
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
-	if(!drawdata->ready) {
-		dbg_time("data is not ready, cancelled.\n");
+	if(!drawdata->ready || width==0 || height == 0) {
+		dbg_time("data is not ready or size is 0, cancelled.\n");
 		return;
+	}
+	//info_time("cairo_draw entr: limit_changed=%d, width=%d, height=%d\n", drawdata->limit_changed, width ,height);
+	if(drawdata->frame_io!=drawdata->frame_draw){
+		drawdata->drawn=0;
+		//info("%s %s: frame_io=%d, frame_draw=%d\n", drawdata->fig, drawdata->name, drawdata->frame_io, drawdata->frame_draw);
+		drawdata->frame_draw=drawdata->frame_io;
 	}
 	/*fill white background */
 	//TIC;tic;
@@ -495,11 +504,13 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}*/
 		if(!drawdata->limit_cumu){
 			drawdata->limit_cumu=mycalloc(4, float);
+			drawdata->limit_changed=-1;
 		}
 		drawdata->limit=drawdata->limit_cumu;
 	} else{
 		if(!drawdata->limit_data){
 			drawdata->limit_data=mycalloc(4, float);
+			drawdata->limit_changed=-1;
 		}
 		drawdata->limit=drawdata->limit_data;
 	}
@@ -523,27 +534,24 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			drawdata->drawn=0;
 			drawdata->limit_changed=-1;
 		}else if(drawdata->cumu){
-			if(drawdata->icumu!=drawdata->icumulast){
-				drawdata->drawn=0;//just redraw, do not recompute limit
-				//drawdata->limit[0]=drawdata->icumu;
+			if(drawdata->icumu!=drawdata->icumulast||drawdata->cumuquadlast!=drawdata->cumuquad){
+				drawdata->drawn=0;
 				drawdata->limit_changed=-1;
 			}
-			if(drawdata->cumuquadlast!=drawdata->cumuquad){
-				drawdata->drawn=0;//just redraw, do not recompute limit
-			}
 		}
-		if(drawdata->limit_changed==-1){
+		if(drawdata->limit_changed==-1||drawdata->limit_changed==3){
 			update_limit(drawdata);
 		}
-		if(drawdata->limit_changed==3){
-			drawdata->offx=0;
-			drawdata->offy=0;
-			drawdata->zoomx=1;
-			drawdata->zoomy=1;
-			drawdata->drawn=0;
-			drawdata->limit_changed=0;
-		}
 	}
+	if(drawdata->limit_changed==3){
+		drawdata->offx=0;
+		drawdata->offy=0;
+		drawdata->zoomx=1;
+		drawdata->zoomy=1;
+		drawdata->drawn=0;
+		drawdata->limit_changed=0;
+	}
+	
 	int xlog=drawdata->xylog[0]=='y'?1:0;
 	int ylog=drawdata->xylog[1]=='y'?1:0;
 	int widthim, heightim;
@@ -577,7 +585,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(xdim==0||!isfinite(xdim)) xdim=1;
 	if(ydim==0||!isfinite(ydim)) ydim=1;
 	//dbg("xdim=%g, ydim=%g\n", xdim, ydim);
-	int sp_xr=(drawdata->p && !hide_colorbar)?SP_XR:0;
+	int sp_xr=drawdata->p?(!hide_colorbar?SP_XR:10):20;
 	int sp_xl=hide_ylabel?0:SP_XL;
 	int sp_yt=hide_title?0:SP_YT;
 	int sp_yb=hide_xlabel?0:SP_YB;
@@ -598,11 +606,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->heightim=heightim;
 	drawdata->scalex=scalex;
 	drawdata->scaley=scaley;
-	if(drawdata->limit_changed==1
-		||(drawdata->widthim_last!=0
-			&&(drawdata->widthim_last!=drawdata->widthim
-				||drawdata->heightim_last!=drawdata->heightim))){
-		 /*update_zoom: response to canvas resize or zoom/move called by the GUI*/
+	if((drawdata->widthim_last>0&&drawdata->widthim_last!=drawdata->widthim)
+		||(drawdata->heightim_last>0 &&drawdata->heightim_last!=drawdata->heightim)){
+		drawdata->limit_changed=1;
+	}
+	if(drawdata->limit_changed==1){
+		/*Update zoomx/y, offx/y to preserve limit0 displayed. responses to window resize or zoom by selection.*/
 		update_zoom(drawdata);
 		drawdata->limit_changed=0;
 		drawdata->drawn=0;
@@ -633,8 +642,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	const float zoomx=drawdata->zoomx;/*Zoom of the image when displayed. */
 	const float zoomy=drawdata->zoomy;
 
-	cairo_select_font_face(cr, font_name, font_style, font_weight);
-	cairo_set_font_size(cr, font_size);
+	//cairo_select_font_face(cr, font_name, font_style, font_weight);//not used by pango
+	//cairo_set_font_size(cr, font_size);//not used by pango
 	float linewidth=round(font_size*0.08);
 	float ticlength=font_size*0.5;
 	const float ticskip=drawdata->ticinside?5:ticlength;
@@ -646,7 +655,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	cairo_rectangle(cr, 0, 0, width, height);
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_fill(cr);
-	cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+	//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 	/*{
 	  cairo_font_options_t *fonto= cairo_font_options_create();
 	  cairo_font_options_set_hint_metrics(fonto,CAIRO_HINT_METRICS_ON);
@@ -670,6 +679,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		cairo_pop_group. It didn't work because the points were drawing into an
 		intermediate buffer to facilitate paning, but it covers all the grids.
 	*/
+	float centerx=0,centery=0;
 	if(drawdata->nx && drawdata->ny){//draw 2-d image
 		cairo_save(cr);
 		cairo_scale(cr, scalex*zoomx, scaley*zoomy);
@@ -677,11 +687,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		  offx, offy are the offset in the cairo window.
 		  ofx, ofy are the actual offset in the original data to display.
 		 */
-		float ofx=(drawdata->nx*0.5)*(1./zoomx-1.)+drawdata->offx/scalex;
-		float ofy=(drawdata->ny*0.5)*(1./zoomy-1.)+drawdata->offy/scaley;
+		centerx=(drawdata->nx*0.5)*(1./zoomx-1.)+drawdata->offx/scalex/zoomx;
+		centery=(drawdata->ny*0.5)*(1./zoomy-1.)+drawdata->offy/scaley/zoomy;
 		/*The x and y patterns are negated and then set as
 		  translation values in the pattern matrix.*/
-		cairo_set_source_surface(cr, drawdata->image, ofx, ofy);
+		cairo_set_source_surface(cr, drawdata->image, centerx, centery);
 		if(scalex*zoomx>1){/*use nearest filter for up sampling to get clear images */
 			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
 		}
@@ -696,20 +706,20 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		  we can figure out xmin0, xmax0 from ofx and zoom.
 		  We can also figure out ofx, zoom, from xmin0, xmax0
 		 */
-		xmin0=xmin-(ofx/drawdata->nx)*xdiff;
+		xmin0=xmin-(centerx/drawdata->nx)*xdiff;
 		xmax0=xmin0+xdiff/zoomx;
-		ymin0=ymin-(ofy/drawdata->ny)*ydiff;
+		ymin0=ymin-(centery/drawdata->ny)*ydiff;
 		ymax0=ymin0+ydiff/zoomy;
 		cairo_restore(cr);
 		//toc("cairo_draw image");
 	}
 	if(drawdata->npts>0){//plot points
 		cairo_save(cr);
-		float centerx=(xmax+xmin)*0.5;
-		float centery=(ymax+ymin)*0.5;
-		float ncx=widthim*0.5+drawdata->offx*zoomx;
-		float ncy=heightim*0.5+drawdata->offy*zoomy;
-		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+		centerx=(xmax+xmin)*0.5;
+		centery=(ymax+ymin)*0.5;
+		float ncx=widthim*0.5+drawdata->offx;
+		float ncy=heightim*0.5+drawdata->offy;
+		//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 		cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
 #if DRAW_NEW == 1
 		int new_width0=(int)ceil(widthim*zoomx)+font_size*80;
@@ -729,8 +739,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			drawdata->ncyoff=0;
 		}
 
-		int new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx*zoomx+drawdata->ncxoff);
-		int new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy*zoomy+drawdata->ncyoff);
+		int new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx+drawdata->ncxoff);
+		int new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy+drawdata->ncyoff);
 		if(drawdata->cacheplot&&(cairo_image_surface_get_width(drawdata->cacheplot)!=new_width||
 			cairo_image_surface_get_height(drawdata->cacheplot)!=new_height)){
 			cairo_surface_destroy(drawdata->cacheplot);
@@ -742,18 +752,18 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			drawdata->cacheplot=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, new_width, new_height);
 			redraw=1;
 		}
-		if(fabs(drawdata->zoomx-drawdata->zoomxlast)>EPS||fabs(drawdata->zoomy-drawdata->zoomylast)>EPS
+		if(fabs(drawdata->zoomx-drawdata->zoomx_last)>EPS||fabs(drawdata->zoomy-drawdata->zoomy_last)>EPS
 			||!drawdata->drawn){
 			redraw=1;
 		}
 		if(new_width<new_width0&&(new_offx>0||-new_offx>(new_width-widthim))){
-			drawdata->ncxoff=(int)(-drawdata->offx*zoomx);
-			new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx*zoomx+drawdata->ncxoff);
+			drawdata->ncxoff=(int)(-drawdata->offx);
+			new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx+drawdata->ncxoff);
 			redraw=1;
 		}
 		if(new_height<new_height0&&(new_offy>0||-new_offy>(new_height-heightim))){
-			drawdata->ncyoff=(int)(-drawdata->offy*zoomy);
-			new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy*zoomy+drawdata->ncyoff);
+			drawdata->ncyoff=(int)(-drawdata->offy);
+			new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy+drawdata->ncyoff);
 			redraw=1;
 		}
 		/*center of plot. Important. */
@@ -762,7 +772,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		if(redraw){
 			cairo_t* cr2=cr;
 			cr=cairo_create(drawdata->cacheplot);
-			cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+			//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_BILINEAR);
 			cairo_set_line_width(cr, linewidth);
 			/*Blank it first. */
@@ -797,7 +807,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				if(!pts||ptsnx==0||ptsny==0) continue;
 
 				cairo_save(cr);
-				cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+				//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 				if(drawdata->nstyle>1){
 					PARSE_STYLE(drawdata->style[ipts]);
 				} else if(drawdata->nstyle==0){
@@ -824,16 +834,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				if(connectpts){/*plot curves. */
 					int ips=ips0;
 					/*Draw first point */
-					if(ptsx){/*don't do round here. */
-						ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
-					} else{
-						ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
-					}
-					if(isinf(ptsy[ips])){
-						iy=0;
-					}else{
-						iy=(((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy);
-					}
+					/*don't do round here. */
+					ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx; if(!isfinite(ix)) ix=0;
+					iy=((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy; if(!isfinite(iy)) iy=0;
 					if(drawdata->cumuquad){
 						y_cumu=ptsy[ips]*ptsy[ips];
 					} else{
@@ -842,33 +845,27 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 					cairo_move_to(cr, ix, iy);
 					/*connect additional points. */
 					for(ips++; ips<ptsnx; ips+=ptstep){
-						if(ptsx){/*don't do round here. */
-							ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
-						} else{
-							ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
-						}
-						y=ptsy[ips];
-
+						ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx;		
+						y=ptsy[ips];if(!isfinite(y)) y=0;
 						if(drawdata->cumu){
-							if(!isinf(y)){
-								if(drawdata->cumuquad){
-									y_cumu+=y*y;
-									y=sqrt(y_cumu/(ips-ips0+1));
-								} else{
-									y_cumu+=y;
-									y=y_cumu/(ips-ips0+1);
-								}
+							if(drawdata->cumuquad){
+								y_cumu+=y*y;
+								y=sqrt(y_cumu/(ips-ips0+1));
+							} else{
+								y_cumu+=y;
+								y=y_cumu/(ips-ips0+1);
 							}
 						}
-						if(isinf(y)) y=0;
 
-						iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
-
-						cairo_line_to(cr, round(ix), round(iy));
-						if(ips%100==0){
+						iy=((ylog?log10(y):y)-centery)*scaley*zoomy+ncy;
+						cairo_line_to(cr, ix, iy);
+						/*if(ips%100==0){
 							cairo_stroke(cr);
-							cairo_move_to(cr, round(ix), round(iy));
-						}
+							cairo_move_to(cr, (ix), (iy));
+						}*/
+						/*if(!strcmp(drawdata->fig, "PSD")){
+							info("%g, %g\n", ix, iy);
+						}*/
 					}
 					cairo_stroke(cr);
 				}
@@ -942,16 +939,16 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			cairo_destroy(cr);
 			cr=cr2;
 		}
-		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+		//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 		/*cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST); */
 		cairo_set_source_surface(cr, drawdata->cacheplot, new_offx, new_offy);
 		cairo_paint(cr);
 #endif
 
-		xmax0=(((widthim)*0.5)/zoomx-drawdata->offx)/scalex+centerx;
-		xmin0=((-widthim*0.5)/zoomx-drawdata->offx)/scalex+centerx;
-		ymax0=(((heightim)*0.5)/zoomy-drawdata->offy)/scaley+centery;
-		ymin0=((-heightim*0.5)/zoomy-drawdata->offy)/scaley+centery;
+		xmax0=(((widthim)*0.5)-drawdata->offx)/zoomx/scalex+centerx;
+		xmin0=((-widthim*0.5)-drawdata->offx)/zoomx/scalex+centerx;
+		ymax0=(((heightim)*0.5)-drawdata->offy)/zoomy/scaley+centery;
+		ymin0=((-heightim*0.5)-drawdata->offy)/zoomy/scaley+centery;
 
 		cairo_restore(cr);
 		//toc("cairo_draw pts");
@@ -961,9 +958,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	if(drawdata->ncir>0){//plot circles
 		cairo_save(cr);
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_GRAY);
-
-		float centerx=(xmax+xmin)/2-drawdata->offx/scalex;
-		float centery=(ymax+ymin)/2-drawdata->offy/scaley;
+		centerx=(xmax+xmin)/2-drawdata->offx/zoomx/scalex;
+		centery=(ymax+ymin)/2-drawdata->offy/zoomy/scaley;
 		int ncx=widthim/2;
 		int ncy=heightim/2;
 
@@ -979,24 +975,17 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	}
 	cairo_restore(cr);//undo the clip and scale
 
-	//now draw the tics
-	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-	/*Now doing the tic, and colobar */
+
 	/*When there is no zoom, panning, limit0 equals to limit. */
 	drawdata->limit0[0]=xmin0;
 	drawdata->limit0[1]=xmax0;
 	drawdata->limit0[2]=ymin0;
 	drawdata->limit0[3]=ymax0;
-	/*if(drawdata->spins){//dialog is running, update its values
-		for(int i=0; i<4; i++){//update spin button's value.
-			//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
-		}
-		if(zlim[0] || zlim[1]){
-			for(int i=5; i<6; i++){//update spin button's value.
-				//gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), zlim[i-4]);
-			}
-		}
-	}*/
+	
+	//now draw the tics
+	/*Now doing the tic, and colobar */
+	//now draw the tics
+	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
 	char ticval[80];
 	float tic1, dtic;
 	int ntic, order;
@@ -1004,7 +993,6 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 
 	calc_tic(&tic1, &dtic, &ntic, &order, xmax0, xmin0, maxtic_x, xlog);
 	sep=xmax0-xmin0;
-
 	//draw the x axis
 	for(int itic=0; itic<ntic; itic++){
 		float ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-6) ticv=0;
@@ -1012,7 +1000,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		float frac=(val-xmin0)/sep;
 		float xpos=xoff+widthim*frac;
 
-		if(frac>0.0&&frac<1){
+		if(frac>0.&&frac<1.){
 			/*draw the vertical grid */
 			if(drawdata->grid){
 				cairo_save(cr);
@@ -1030,8 +1018,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);
 			}
 		}
-		if(frac>=0&&frac<=1&&!hide_xlabel){
-			snprintf(ticval, 80, "%g", (xlog?pow(10, ticv):ticv));
+		if(frac>=-0.01&&frac<=1.01&&!hide_xlabel){
+			if(xlog){
+				snprintf(ticval, 80, "10<sup>%g</sup>", ticv);
+			}else{
+				snprintf(ticval, 80, "%g", ticv);
+			}
 			pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1, ticval, 0.5, 0.5, 0);
 		}
 	}
@@ -1052,9 +1044,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		cairo_stroke(cr);
 		//draw the x axis power
-		if(order) pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2, order, 0);
+		if(order) pango_text_power(cr, layout, xoff+widthim-font_size, yoff+heightim+4+font_size*2, order, 1,.5, 0);
 		if(drawdata->xlabel){
-			pango_text(cr, layout, xoff+widthim/2, yoff+heightim+8+font_size*1.8, drawdata->xlabel, 0.5, 0.5, 0);
+			pango_text(cr, layout, xoff+widthim/2, yoff+heightim+8+font_size*2, drawdata->xlabel, 0.5, 0.5, 0);
 		}
 	}
 	
@@ -1072,7 +1064,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			if(drawdata->grid){
 				cairo_save(cr);
 				//cairo_set_dash(cr, stroke_dot, 2, gridskip);
-				cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 1);
+				cairo_set_source_rgba(cr, 0.6, 0.6, 0.6, 1);
 				cairo_move_to(cr, xoff, ypos);
 				cairo_line_to(cr, xoff+widthim, ypos);
 				cairo_stroke(cr);
@@ -1085,8 +1077,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_stroke(cr);
 			}
 		}
-		if(frac>=0&&frac<=1&&!hide_ylabel){
-			snprintf(ticval, 80, "%g", (ylog?pow(10, ticv):ticv));
+		if(frac>=-0.01&&frac<=1.01&&!hide_ylabel){
+			if(ylog){
+				snprintf(ticval, 80, "10<sup>%g</sup>", ticv);
+			} else{
+				snprintf(ticval, 80, "%g", ticv);
+			}
 			pango_text(cr, layout, xoff-font_size*0.6-ticskip+1, ypos, ticval, 0.5, 0.5, 1);
 		}
 	}
@@ -1107,11 +1103,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		cairo_stroke(cr);
 		//draws the y axis power
-		if(order) pango_text_powindex(cr, layout, xoff-font_size*2.8-10, yoff+font_size*1.8, order, 1);
+		if(order) pango_text_power(cr, layout, xoff-font_size*2-5, yoff+font_size*2, order, .5, .5, 1);
 		if(drawdata->ylabel){
-			pango_text(cr, layout, xoff-font_size*1.8-10, yoff+heightim/2, drawdata->ylabel, 0.5, 0.5, 1);
+			pango_text(cr, layout, xoff-font_size*2-10, yoff+heightim/2, drawdata->ylabel, 0.5, 0.5, 1);
 		}
 	}
+
 	if((zlim[0]||zlim[1])&&!hide_colorbar){/*draw colorbar */
 		cairo_save(cr);
 		cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
@@ -1152,16 +1149,20 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_line_to(cr, LEN_LEG-4, heightim*(1-frac));
 				cairo_stroke(cr);
 			}
-			if(frac>=0&&frac<=1){
-				snprintf(ticval, 80, "%g", drawdata->zlog?pow(10,ticv):ticv);
-				pango_text(cr, layout, LEN_LEG+4, heightim*(1-frac), ticval, 0, 0, 0);
+			if(frac>=-0.01&&frac<=1.01){
+				if(drawdata->zlog){
+					pango_text_power(cr, layout, LEN_LEG+4, heightim *(1-frac), ticv, 0, 0.5, 0);
+				}else{
+					snprintf(ticval, 80, "%g", drawdata->zlog?pow(10,ticv):ticv);
+					pango_text(cr, layout, LEN_LEG+4, heightim*(1-frac), ticval, 0, 0.5, 0);
+				}
 			}
 		}
-		pango_text_powindex(cr, layout, LEN_LEG/2, -font_size*1.4-2, order, 0);
+		if(order) pango_text_power(cr, layout, LEN_LEG/2, -font_size*0.6-4, order, .5, .5, 0);
 		cairo_restore(cr);
 	}
 	if(drawdata->title && !hide_title){
-		pango_text(cr, layout, xoff+widthim/2, yoff-font_size*0.5-4, drawdata->title, 0.5, 0.5, 0);
+		pango_text(cr, layout, xoff+widthim/2, yoff-font_size*0.6-4, drawdata->title, 0.5, 0.5, 0);
 	}
 
 	if(drawdata->legend&&drawdata->npts&&drawdata->legendbox){
@@ -1169,6 +1170,9 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		float sym_size=0;
 		cairo_save(cr);
 		cairo_identity_matrix(cr);
+		int fsize=pango_font_description_get_size(desc);
+		pango_font_description_set_size(desc, fsize*0.8);//use smaller font size for legends.
+		pango_layout_set_font_description(layout, desc);
 		/*draw legend */
 		char** legend=drawdata->legend;
 		const int npts=drawdata->npts;
@@ -1197,13 +1201,17 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			const float legmarin=3;/*margin inside of box */
 			const float legmarout=5;/*margin outside of box */
 			const float symmargin=5;/*space before and after symbol */
-			float legwidth=textlen+symlen+2*legmarin+symmargin*2;
-			float legheight=tall*npts_valid+legmarin*2;
-			cairo_translate(cr, xoff+legmarout+drawdata->legendoffx*(widthim-legwidth-2*legmarout),
-				yoff+legmarout+drawdata->legendoffy*(heightim-legheight-2*legmarout));
+			//same the legend box information for gesture control of it.
+			drawdata->legbox_width=textlen+symlen+2*legmarin+symmargin*2;
+			drawdata->legbox_height=tall*npts_valid+legmarin*2;
+			drawdata->legbox_ox=xoff+legmarout+drawdata->legendoffx*(widthim-drawdata->legbox_width-2*legmarout);
+			drawdata->legbox_oy=yoff+legmarout+drawdata->legendoffy*(heightim-drawdata->legbox_height-2*legmarout);
+			drawdata->legbox_rx=1./(widthim-drawdata->legbox_width-2*legmarout);
+			drawdata->legbox_ry=1./(heightim-drawdata->legbox_height-2*legmarout);
+			cairo_translate(cr, drawdata->legbox_ox, drawdata->legbox_oy);
 			if(1){//box
 				cairo_save(cr);
-				cairo_rectangle(cr, 0, 0, legwidth, legheight);
+				cairo_rectangle(cr, 0, 0, drawdata->legbox_width, drawdata->legbox_height);
 				cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
 				cairo_fill_preserve(cr);
 				cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
@@ -1232,6 +1240,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				cairo_translate(cr, 0, tall);
 			}
 		}
+		pango_font_description_set_size(desc, fsize);
+		pango_layout_set_font_description(layout, desc);
 		cairo_restore(cr);
 	}
 	/*if(drawdata->dtime<10){
@@ -1249,8 +1259,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->icumulast=drawdata->icumu;
 	drawdata->cumulast=drawdata->cumu;
 	drawdata->cumuquadlast=drawdata->cumuquad;
-	drawdata->zoomxlast=drawdata->zoomx;
-	drawdata->zoomylast=drawdata->zoomy;
+	drawdata->zoomx_last=drawdata->zoomx;
+	drawdata->zoomy_last=drawdata->zoomy;
 	drawdata->drawn=1;
 	//toc("cairo_draw");
 }

@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <gresource prefix="/maos">
+    <gresource prefix="/maos/">
     	<file>icon-clear.png</file>
 		<file>icon-connect.png</file>
 		<file>icon-cancel.png</file>
-		<file>icon-draw.png</file>
 		<file>icon-error.png</file>
 		<file>icon-finished.png</file>
-		<file>icon-monitor.png</file>
 		<file>icon-play.png</file>
 		<file>icon-save.png</file>
 		<file>icon-skip.png</file>
 		<file>icon-waiting.png</file>
+    	<file>icon-draw.png</file>
+		<file>icon-draw-small.png</file>
+		<file>icon-monitor.png</file>
+		<file>icon-log.png</file>
+		<file>icon-avg.png</file>
     </gresource>
+	
 </gresources>
 <!--
 	use the following to convert resources.xml to resources.c and include resources.c in Makefile.am sources

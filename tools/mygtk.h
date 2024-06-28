@@ -93,5 +93,6 @@
 #define check_button_get_active(button) gtk_check_button_get_active(GTK_CHECK_BUTTON(button))
 #endif
 
+void new_toolbar_item(GtkWidget *toolbar, const char *iconname, GdkPixbuf *iconbuf, const char *cmdname, void(*func)(GtkButton *, gpointer data), int data);
 #endif
 

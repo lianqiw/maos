@@ -39,6 +39,8 @@ float io_time1=0;//time the latest drawdata is receievd
 float io_time2=0;//time the previous drawdata is receveid
 float io_timeclear=0;//plots
 int io_heartbeat=0;
+int session=1;//session counter
+int noellipsis=0; 	/*do not allow legend ellipsis.*/
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
 void fmaxmin(const float *p, long n, float *pmax, float *pmin){
@@ -71,23 +73,38 @@ static unsigned int crp(float x, float x0){
 void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
+	//info("min=%g, max=%g\n", min, max);
 	if(zlog){
-		max=log10(fabs(max));
-		min=log10(fabs(min));
+		if(max<0){
+			float max2=max;
+			max=log10(fabs(min));
+			min=log10(fabs(max2));
+		}else if(min<0){
+			max=log10(MAX(fabs(max),fabs(min)));
+			min=max-5;
+		}else{
+			max=log10(max);
+			min=log10(min);
+		}
+		//info("min=%g, max=%g\n", min, max);
 	}
-	if(zlim[0]>=zlim[1]||!isfinite(zlim[0])||!isfinite(zlim[1])){
+	round_limit(&min, &max, 0);
+	if(!zlim[0]||!zlim[1]||zlim[0]>=zlim[1]||!isfinite(zlim[0])||!isfinite(zlim[1])){//invalid values.
 		zlim[0]=min;
 		zlim[1]=max;
 	}else if(!zlim_manual){
-		//update if range change by 10%
-		if(max>zlim[1]*1.1||max<zlim[1]*0.9){
+		//update if range change by +15%, -30%
+		float thres=(zlim[1]-zlim[0]+max-min)*0.1;
+		if(max>zlim[1]+thres||max<zlim[1]-thres*2){
+			//info("max updated from %g to %g, thres is %g.\n", zlim[1], max, thres);
 			zlim[1]=max;
 		}
-		if(min>zlim[0]*1.1||min<zlim[0]*0.9){
+		if(min>zlim[0]+thres*2||min<zlim[0]-thres){
+			//info("min updated from %g to %g, thres is %g.\n", zlim[0], min, thres);
 			zlim[0]=min;
 		}
 	}
-	round_limit(zlim, zlim+1, 0);
+	//round_limit(zlim, zlim+1, 0);
 	min=zlim[0];
 	max=zlim[1];
 	if(!gray){/*colored */
@@ -105,7 +122,7 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 			if(isnan(xi)){
 				pi[i]=0;
 			} else{
-				if(zlog) xi=log10(xi);
+				if(zlog) xi=log10(fabs(xi));
 				float x=(xi-min)*scale+offset;
 				pi[i]=255<<24|crp(x, 0.75)<<16|crp(x, 0.5)<<8|crp(x, 0.25);
 			}
@@ -118,7 +135,7 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 			if(isnan(xi)){
 				pc[i]=0;
 			}else{
-				if(zlog) xi=log10(xi);
+				if(zlog) xi=log10(fabs(xi));
 				pc[i]=(unsigned char)((xi-min)*scale);
 			}
 		}
@@ -139,10 +156,10 @@ void *listen_udp(void *dummy){
 }
 void drawdata_free_input(drawdata_t *drawdata){
 	/*Only free the input received via fifo from draw.c */
-
 #define FREE(A) free(A); A=NULL;
 	FREE(drawdata->p);
 	FREE(drawdata->p0);
+	FREE(drawdata->p1);
 	FREE(drawdata->limit_data);
 	FREE(drawdata->limit_cumu);
 	if(drawdata->npts>0){
@@ -209,19 +226,68 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->zlim_manual=0;
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
-	} else if(reset){
+	} else{
 		//reset image, npoints, to default. do not reset memory
 		/*while(!drawdata->drawn && drawdata->ready){
 			warning_time("Wait for previous data to draw before receiving new data\n");
 			mysleep(1);
 		}*/
-		drawdata->limit_changed=-1;
-		//drawdata->drawn=0;
+		if(reset){
+			drawdata->limit_changed=-1;
+		}
 		free(*fig); *fig=0;
 		free(*name); *name=0;
-		//drawdata->ready=0;
+		if(drawdata->session<session){
+			drawdata->session=session;
+			drawdata->limit_manual=0;
+			drawdata->zlim_manual=0;
+			drawdata->limit_changed=3;
+		}
 	}
 	return drawdata;
+}
+/**
+ * Replace common span of phases by ...
+ */
+static void char_ellipsis(char *legends[], int npts){
+	if(!legends || npts<2 || noellipsis){
+		return;
+	}
+	int slen=strlen(legends[0]);
+	int cstart=-1;//start of common string
+	int clen=0;//length if common string
+	for(int is=0; is<slen; is++){
+		char c0=legends[0][is];
+		int eq=1;
+		//check whether this position is common.
+		for(int ip=1; ip<npts; ip++){
+			if(c0!=legends[ip][is]){
+				eq=0;break;
+			}
+		}
+		
+		if(eq){//common
+			if(cstart!=-1){//continuation
+				clen++;
+			}else{
+				cstart=is;//mark the start
+				clen=0;
+			}
+		}
+		if(cstart!=-1 && (!eq || is+1==slen)){//end of common or end of str.
+			if(clen>4){//turn to ellipsis 
+				for(int ip=0; ip<npts; ip++){
+					for(int j=cstart; j<cstart+3; j++){
+						legends[ip][j]='.';
+					}
+					memmove(legends[ip]+cstart+3, legends[ip]+cstart+clen+1, strlen(legends[ip])-cstart-clen);
+				}
+			}
+			is=cstart+3;
+			slen=strlen(legends[0]);
+			cstart=-1;
+		}
+	}
 }
 /**
  * Delete pages that are not updated between DRAW_INIT and DRAW_FINAL
@@ -230,7 +296,6 @@ static void drawdata_clear_older(float timclear){
 	if(!HEAD) return;
 	for(drawdata_t *p=HEAD->next; p; p=p->next){
 		if(p->io_time<timclear){
-			p->delete=1;
 			info_time("Request deleting page %s %s\n", p->fig, p->name);
 			g_idle_add((GSourceFunc)delete_page, p);
 		}
@@ -271,7 +336,6 @@ void *listen_draw(void *user_data){
 	}
 	while(keep_listen){
 		client_pid=-1;
-		g_idle_add((GSourceFunc)update_title, NULL);
 		if(sock<0&&client_hostname){
 			dbg_time("Connecting to %s\n", client_hostname);
 			sock=scheduler_connect(client_hostname);
@@ -291,12 +355,15 @@ void *listen_draw(void *user_data){
 
 		if(sock>=0){
 			client_pid=0;
-			g_idle_add((GSourceFunc)update_title, NULL);
 			//we set socket timeout to check disconnection.
 			//server sends heartbeat every 10 seconds (since 2021-09-29).
 			if(socket_block(sock, 0)||socket_recv_timeout(sock, 30)){//was 600. changed to 30 to detect disconnection.
 				sock=-1;
+				warning("Set sock block and timout failed.\n");
 			}
+		}
+		if(sock>=0){
+			g_timeout_add(5000, update_title, NULL);
 		}
 		draw_single=0;
 		char *fig=0;
@@ -331,16 +398,28 @@ void *listen_draw(void *user_data){
 				long tot=header[0]*header[1];
 				if(drawdata->nmax<tot){
 					drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
+					if(lpf<1){
+						free(drawdata->p1);//recreate below; 
+						drawdata->p1=NULL;
+					}
 					drawdata->p=realloc(drawdata->p, tot*4);
 					drawdata->nmax=tot;
 				}
 				if(tot>0){
-					STREADFLT(drawdata->p0, tot);
+					if(lpf<1&&drawdata->p1){
+						STREADFLT(drawdata->p1, tot);
+						for(long i=0; i<tot; i++){
+							drawdata->p0[i]=drawdata->p0[i]*(1.-lpf)+drawdata->p1[i]*lpf;
+						}
+					}else{
+						STREADFLT(drawdata->p0, tot);
+						if(lpf<1&&!drawdata->p1){
+							drawdata->p1=realloc(drawdata->p1, tot*byte_float);
+						}
+					}
 				}
 				drawdata->nx=header[0];
 				drawdata->ny=header[1];
-				if(drawdata->square==-1) drawdata->square=1;//default to square for images.
-				drawdata->zlim_changed=1;//ask cairo_draw to reconvert the data
 			}
 			break;
 			case DRAW_HEARTBEAT:/*no action*/
@@ -384,6 +463,7 @@ void *listen_draw(void *user_data){
 						}
 					}
 				}
+				//info("%s %s: %dx%d\n", drawdata->fig, drawdata->name, nptsx, nptsy);
 			}
 			break;
 			case DRAW_STYLE:
@@ -415,7 +495,7 @@ void *listen_draw(void *user_data){
 			case DRAW_NAME:
 				STREADSTR(name);
 				if(fig&&name){
-					drawdata=drawdata_get(&fig, &name, 1);
+					drawdata=drawdata_get(&fig, &name, 0);
 					npts=0;
 				} else{
 					warning_time("Invalid usage: fig should be provided before name.\n");
@@ -444,12 +524,13 @@ void *listen_draw(void *user_data){
 				STREAD(drawdata->xylog, sizeof(char)*2);
 				break;
 			case DRAW_FINAL:
+				session++;
 				//dbg_time("client is done\n");
 				if(io_timeclear){
 					drawdata_clear_older(io_timeclear);
 				}
 				client_pid=0;
-				g_idle_add((GSourceFunc)update_title, NULL);
+				g_idle_add(finalize_gif, NULL);
 				break;
 			case DRAW_FLOAT:
 				//notice that this value can change from plot to plot
@@ -506,7 +587,6 @@ void *listen_draw(void *user_data){
 			case DRAW_PID:
 			{
 				STREADINT(client_pid);
-				g_idle_add((GSourceFunc)update_title, NULL);
 			}
 			break;
 			case DRAW_ZLOG://flip zlog
@@ -532,22 +612,33 @@ void *listen_draw(void *user_data){
 							free(drawdata->style);
 						}
 					}
+					drawdata->limit_changed=-1; //data range may be changed. recompute.
+					if(drawdata->legend){
+						char_ellipsis(drawdata->legend, npts);
+					}
 				}
 				if(drawdata->nx&&drawdata->ny){/*draw image */
+					if(!drawdata->limit_data){
+						drawdata->limit_data=mycalloc(4, float);
+						drawdata->limit_manual=0;
+					}
 					if(!drawdata->limit_manual){
-						if(!drawdata->limit_data){
-							drawdata->limit_data=mycalloc(4, float);
-						}
 						drawdata->limit_data[0]=-0.5;
 						drawdata->limit_data[1]=drawdata->nx-0.5;
 						drawdata->limit_data[2]=-0.5;
 						drawdata->limit_data[3]=drawdata->ny-0.5;
 					}
+					if(drawdata->nx_last!=drawdata->nx || drawdata->ny_last!=drawdata->ny){
+						drawdata->limit_changed=3;
+						drawdata->nx_last=drawdata->nx;
+						drawdata->ny_last=drawdata->ny;
+					}
+					if(drawdata->square==-1) drawdata->square=1;//default to square for images.
+					drawdata->zlim_changed=1;//ask cairo_draw to reconvert the data
 				}
-				if(!drawdata->fig) drawdata->fig=strdup("unknown");
-				drawdata->drawn=0;
+				drawdata->frame_io++;
 				drawdata->ready=1;
-
+				
 				if(drawdata_prev&&drawdata_prev==drawdata){//same drawdata is updated, enable computing framerate.
 					io_time2=io_time1;
 				} else{
@@ -557,6 +648,7 @@ void *listen_draw(void *user_data){
 				drawdata->io_time=io_time1;
 				drawdata_prev=drawdata;//for computing time
 				g_idle_add((GSourceFunc)addpage, drawdata);
+				
 				drawdata=NULL;
 			}
 			break;
@@ -582,6 +674,5 @@ void *listen_draw(void *user_data){
 	if(sock!=-1) close(sock);
 	sock=-1;
 	client_pid=-1;
-	g_idle_add((GSourceFunc)update_title, NULL);
 	return NULL;
 }

@@ -73,7 +73,19 @@ int main(int argc, char* argv[]){
 	if((title2=strrchr(title1, '.'))){
 		title2[0]='\0';
 	}
-
+	char *figname=strndup(title1, 12);
+	if(strlen(title1)>12){
+		figname[9]='.';
+		figname[10]='.';
+		figname[11]='.';
+		figname[12]='\0';
+	}
+	if(strlen(title1)>60){
+		title1[60]='\0';
+		title1[59]='.';
+		title1[58]='.';
+		title1[57]='.';
+	}
 	long nx=MAX(NX(arg1), arg2?NX(arg2):0); nx=MIN(nx, mx+20);
 	long ny=MAX(NY(arg1), arg2?NY(arg2):0); ny=MIN(ny, my+20);
 	int id=0;
@@ -100,23 +112,23 @@ int main(int argc, char* argv[]){
 			if(!p2){//single parameter
 				if(loc){//is loc
 					if(loc->nloc>100000){/*if too many points, we draw it. */
-						drawloc("loc", loc, 0, title1, "x", "y", "%s[%02d]", title1, id++);
+						drawloc("loc", loc, 0, title1, "x", "y", "%s[%02d]", figname, id++);
 					} else{/*we plot individual points. */
-						draw("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", title1, id++);
+						draw("loc", (plot_opts){.ngroup=1,.loc=&loc},  title1, "x", "y", "%s[%02d]", figname, id++);
 					}
 					if(loc!=loc_save){
 						locfree(loc);
 					}
 				}else if(p1->nx>1 && p1->ny>1){//map
 					map_t* data=d2map(p1);
-					drawmap("map", data, 0, title1, "x", "y", "%s[%02d]", title1, id++);
+					drawmap("map", data, 0, title1, "x", "y", "%s[%02d]", figname, id++);
 					mapfree(data);
 				}else{
-					draw("points", (plot_opts){.ngroup=1, .dc=arg1} , title1, "x", "y", "%s[%02d]", title1, id++);
+					draw("points", (plot_opts){ .ngroup=1, .dc=arg1 }, title1, "x", "y", "%s[%02d]", figname, id++);
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){
-					drawopd("opd", loc, p2, 0, title1, "x", "y", "%s[%02d]", title1, id++);
+					drawopd("opd", loc, p2, 0, title1, "x", "y", "%s[%02d]", figname, id++);
 				}
 			}
 		}

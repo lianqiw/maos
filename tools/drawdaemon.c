@@ -25,6 +25,8 @@ const char *host=0;
 #include <gtkosxapplication.h>
 #endif
 GdkPixbuf* icon_main=NULL;
+GdkPixbuf *icon_log=NULL;
+GdkPixbuf *icon_avg=NULL;
 #if GTK_MAJOR_VERSION>=4
 static void
 activate (GtkApplication *app,
@@ -89,7 +91,8 @@ int main(int argc, char* argv[]){
 #endif
 
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
-
+	icon_log=gdk_pixbuf_new_from_resource("/maos/icon-log.png", NULL);
+	icon_avg=gdk_pixbuf_new_from_resource("/maos/icon-avg.png", NULL);
 
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);

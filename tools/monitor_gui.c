@@ -453,10 +453,11 @@ typedef struct{
 }menudata_t;
 gint cur_page=-1;
 menudata_t menudata[]={
-	{"Kill", "Kill", &icon_failed, CMD_KILL},
-	{"Restart", "Restart", NULL, CMD_RESTART},
-	{"Plot", "Plot", NULL, CMD_DISPLAY},
+	{"Plot", "Plot", &icon_draw, CMD_DISPLAY},
 	{"Remove", "Remove", &icon_clear, CMD_REMOVE},
+	{NULL, NULL, NULL, -1},
+	{"Kill", "Kill", &icon_failed, CMD_KILL},
+	{"Restart", "Restart", &icon_running, CMD_RESTART},
 	{NULL, NULL, NULL, -1},
 	{"Copy command line", "Copy", NULL, -1},
 	{"Copy starting path", "CopyPath", NULL, -1},
@@ -534,7 +535,7 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 	GtkWidget* menu=gtk_menu_new();
 	GtkWidget* menuitem;
 	char text[40];
-	snprintf(text, 40, "Select an action for %d selected jobs:", nsel);
+	snprintf(text, 40, "%d jobs selected:", nsel);
 	menuitem=gtk_menu_item_new_with_label(text);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 	menuitem=gtk_separator_menu_item_new();

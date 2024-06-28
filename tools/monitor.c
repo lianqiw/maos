@@ -51,6 +51,7 @@ static int notify_daemon=1;
 #endif
 int sock_main[2]={0,0}; /*Used to talk to the thread that runs listen_host*/
 GdkPixbuf* icon_main=NULL;
+GdkPixbuf *icon_draw=NULL;
 GdkPixbuf* icon_finished=NULL;
 GdkPixbuf* icon_failed=NULL;
 GdkPixbuf* icon_running=NULL;
@@ -367,7 +368,7 @@ gboolean update_title(gpointer data){
 		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);
 	}
 	gtk_label_set_text(GTK_LABEL(titles[hid]), tit);
-	return 0;
+	return 0;//always return 0 to avoid repeat itself when use g_idle_add
 }
 /**
    respond to the kill job event
@@ -598,45 +599,6 @@ static void add_host_event(GtkButton* button, gpointer data){
 		}
 	}
 }
-//todo: consolidate with drawdaemon_gui.new_tool()
-static void new_toolbar_item(GtkWidget *toolbar, const char* iconname, GdkPixbuf* iconbuf, const char* cmdname, void(*func)(GtkButton*, gpointer data), int data){
-	GtkWidget* item;
-	if(cmdname){
-#if GTK_MAJOR_VERSION<3
-		GtkWidget *image;
-		if(iconbuf){
-			image=gtk_image_new_from_pixbuf(iconbuf);
-		} else{
-			image=gtk_image_new_from_icon_name(iconname, GTK_ICON_SIZE_SMALL_TOOLBAR);
-		}
-		item=gtk_button_new();//image, cmdname);
-		gtk_button_set_image(GTK_BUTTON(item), image);
-#else
-		item=button_new(iconname);
-#if GTK_MAJOR_VERSION<=3
-		gtk_button_set_relief(GTK_BUTTON(item),GTK_RELIEF_NONE);
-#else
-		gtk_button_set_has_frame(GTK_BUTTON(item), FALSE);
-#endif
-		if(iconbuf){
-#if GTK_MAJOR_VERSION<=3
-			GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
-			gtk_button_set_image(GTK_BUTTON(item), image);
-#else
-			GtkWidget *image=gtk_image_new_from_paintable(GDK_PAINTABLE(gdk_texture_new_for_pixbuf(iconbuf)));
-			gtk_button_set_child(GTK_BUTTON(item), image);
-#endif
-		}
-#endif
-		if(func) g_signal_connect(item,"clicked",G_CALLBACK(func),GINT_TO_POINTER(data));
-		if(cmdname) gtk_widget_set_tooltip_text(item, cmdname);
-		//gtk_widget_set_size_request(item, 16, 16);
-	}else{
-		item=gtk_vseparator_new();
-	}
-	box_append(GTK_BOX(toolbar), item, FALSE, FALSE, 0);
-}
-
 
 void parse_icons(){
 #if GDK_MAJOR_VERSION < 3
@@ -649,6 +611,7 @@ void parse_icons(){
 	gdk_color_parse("#FFFFFF", &color_odd);
 #endif
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-monitor.png", NULL);
+	icon_draw=gdk_pixbuf_new_from_resource("/maos/icon-draw-small.png", NULL);
 	icon_finished=gdk_pixbuf_new_from_resource("/maos/icon-finished.png", NULL);
 	icon_failed=gdk_pixbuf_new_from_resource("/maos/icon-error.png", NULL);
 	icon_running=gdk_pixbuf_new_from_resource("/maos/icon-play.png", NULL);
@@ -700,18 +663,26 @@ void create_window(
 		  ){
 #if GTK_MAJOR_VERSION<4
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 #else
 	window=gtk_application_window_new(app);
-	{
-		GtkIconTheme *icon_theme=gtk_icon_theme_get_for_display(gtk_widget_get_display(window));
-		gtk_icon_theme_add_resource_path(icon_theme, "/maos/");
-		gtk_window_set_icon_name(GTK_WINDOW(window), "icon-monitor");
-	}
-
-	(void) user_data;
+	(void)user_data;
+#endif	
+#if GTK_VERSION_AFTER(3, 14)
+#if GTK_VERSION_AFTER(4, 0)
+	GtkIconTheme *icon_theme=gtk_icon_theme_get_for_display(gtk_widget_get_display(window));
+#else	
+	GtkIconTheme *icon_theme=gtk_icon_theme_get_default();
 #endif
+	gtk_icon_theme_add_resource_path(icon_theme, "/maos/");
+	//gtk_window_set_icon_name(GTK_WINDOW(window), "icon-monitor");
+	gtk_window_set_default_icon_name("icon-monitor");//this does not work in macos as quartz backend does not support it. gtk3 enables dock icon with gtk-macos-integration
+	//info_time("gtk_icon_theme_has_icon returned %d for icon-monitor\n", gtk_icon_theme_has_icon(icon_theme, "icon-monitor"));//test ok.
+#else
+	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
+#endif
+	
+
 	parse_provider();//requires window to be set
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
 
@@ -1009,7 +980,6 @@ int main(int argc, char* argv[]){
 	GtkApplication* app;
 	int status;
 	app=gtk_application_new("maos.monitor", G_APPLICATION_DEFAULT_FLAGS);
-	gtk_window_set_default_icon_name("video-display");
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);

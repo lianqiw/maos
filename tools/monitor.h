@@ -52,6 +52,7 @@ extern GtkWidget* window;
 extern GtkWidget* notebook;
 extern GtkWidget** pages;
 extern GdkPixbuf* icon_main;
+extern GdkPixbuf *icon_draw;
 extern GdkPixbuf* icon_finished;
 extern GdkPixbuf* icon_failed;
 extern GdkPixbuf* icon_running;
