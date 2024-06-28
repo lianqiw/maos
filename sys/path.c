@@ -140,7 +140,7 @@ char* search_file(const char* fn){
 	if(!fn) return NULL;
 	char* fnout=NULL;
 	if(exist(fn)){
-		fnout=strdup(fn);
+		fnout=myabspath(fn);
 	} else{
 		PATH_T* ia;
 		char fntmp[PATH_MAX];

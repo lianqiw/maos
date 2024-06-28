@@ -100,6 +100,7 @@ void free_parms(parms_t *parms){
 	dfree(parms->evl.thetax);
 	dfree(parms->evl.thetay);
 	dfree(parms->evl.wvl);
+	free(parms->evl.wvlname);
 	dfree(parms->evl.wt);
 	dfree(parms->evl.hs);
 	lfree(parms->evl.psf);
@@ -678,7 +679,7 @@ static void readcfg_wfs(parms_t *parms){
 	int wfscount=0;
 	int ipowfs=0;
 	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++,ipowfs++){
-		if(parms->powfs[kpowfs].nwfs==0){//no stars.
+		if(parms->powfs[kpowfs].nwfs==0){//no stars, remove
 			free_powfs_cfg(&parms->powfs[kpowfs]);
 			ipowfs--;
 			continue;
@@ -1113,10 +1114,11 @@ static void readcfg_atm(parms_t *parms){
 	READ_INT(atm.ninit);
 	READ_INT(atm.share);
 	READ_INT(atm.r0evolve);
+	READ_INT(atm.dtrat);
 	READ_DMAT(atm.r0logpsdt);
 	READ_DMAT(atm.r0logpsds);
-	READ_DMAT(atm.ht);
 	READ_DMAT_N(atm.size, 2);
+	READ_DMAT(atm.ht);
 	parms->atm.nps=NX(parms->atm.ht);
 	READ_DMAT_N(atm.wt, parms->atm.nps);
 	READ_DMAT_N(atm.ws, parms->atm.nps);
@@ -1125,6 +1127,15 @@ static void readcfg_atm(parms_t *parms){
 		READ_DMAT_NMAX(atm.wddeg, parms->atm.nps);
 	}else{
 		readcfg_ignore("atm.wddeg");
+	}
+	if(parms->atm.dtrat){
+		parms->atm.nps=2;//1: do not interpolate, 2: interpolate between two frames.
+		dresize(parms->atm.ht, parms->atm.nps, 1);
+		dresize(parms->atm.wt, parms->atm.nps, 1);
+		dresize(parms->atm.ws, parms->atm.nps, 1);
+		dresize(parms->atm.L0, parms->atm.nps, 1);
+		if(!parms->atm.wdrand)dresize(parms->atm.wddeg, parms->atm.nps, 1);
+		dset(parms->atm.ht, 0);
 	}
 }
 /**
@@ -1235,6 +1246,24 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		dscale(thetay,fov);
 	}
 }
+const char *wvl2name(real wvl){
+	if(wvl<0.01){
+		wvl*=1e6; //m -> um
+	}else if(wvl>100){
+		wvl*=1e-3; //nm->um
+	}
+	real wc[]={0.365,0.445,0.464,0.551,0.658,0.8,0.9,1.0,1.25,1.65,2.15,3.45};
+	const char *n[]={"U","B","G","V","R","I","Z","Y","J","H","K","L"};
+	size_t j=0;
+	real dist=1;
+	for(size_t i=0; i<sizeof(wc)/sizeof(real);i++){
+		if(fabs(wc[i]-wvl)<dist){
+			dist=fabs(wc[i]-wvl);
+			j=i;
+		}
+	}
+	return n[j];
+}
 /**
    Read in performance evaluation science point parameters.
 */
@@ -1252,11 +1281,13 @@ static void readcfg_evl(parms_t *parms){
 	READ_LMAT_NMAX(evl.pttr,parms->evl.nevl);
 	READ_DMAT(evl.wvl);
 	parms->evl.nwvl=NX(parms->evl.wvl);
+	parms->evl.wvlname=mycalloc(parms->evl.nwvl, const char*);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(P(parms->evl.wvl,iwvl)>0.1){
 			//info("Assume evl.wvl[%d]=%g is supplied in micron.\n", iwvl, P(parms->evl.wvl,iwvl));
 			P(parms->evl.wvl,iwvl)*=1e-6;
 		}
+		parms->evl.wvlname[iwvl]=wvl2name(P(parms->evl.wvl, iwvl));
 	}
 	parms->evl.psfgridsize=readcfg_lmat(parms->evl.nwvl,1,"evl.psfgridsize");
 	parms->evl.psfsize=readcfg_lmat(parms->evl.nwvl,1,"evl.psfsize");
@@ -1578,7 +1609,6 @@ static void readcfg_cn2(parms_t *parms){
    Specify which variables to plot
 */
 static void readcfg_plot(parms_t *parms){
-
 	READ_INT(plot.setup);
 	READ_INT(plot.atm);
 	READ_INT(plot.run);
@@ -1591,10 +1621,8 @@ static void readcfg_plot(parms_t *parms){
 	READ_DBL(plot.psfmin);
 	if(parms->plot.all){
 		parms->plot.setup=parms->plot.all;
-		parms->plot.run=parms->plot.all;
-		if(!parms->plot.psf){
-			parms->plot.psf=1;
-		}
+		if(!parms->plot.run) parms->plot.run=parms->plot.all;
+		if(!parms->plot.psf) parms->plot.psf=parms->plot.all;
 	}
 	/*if(parms->plot.setup||parms->plot.atm||parms->plot.run||parms->plot.opdx||parms->plot.all||parms->plot.psf){
 		draw_helper();
@@ -1987,15 +2015,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
-		if(!parms->sim.closeloop&&powfsi->dtrat){
-			powfsi->dtrat=1;
-			powfsi->step=0;
-		} else if(powfsi->dtrat==0){//wfs disabled.
-			powfsi->dtrat=1;
-			powfsi->step=INT_MAX;
-		}
-		if(powfsi->step<0) powfsi->step=0;
-		else if(powfsi->step>0){/*round step to be multiple of dtrat. */
+		if(powfsi->step<parms->sim.start 
+			|| (parms->sim.end>0 && powfsi->step>=parms->sim.end)
+			|| powfsi->dtrat==0){//powfs is disabled.
+			info("powfs %d is not used.\n", ipowfs);
+		}else if(powfsi->step>0){/*round step to be multiple of dtrat. */
 			powfsi->step=((powfsi->step+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 		}
 		if(parms->sim.wfsalias){
@@ -2424,7 +2448,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			if(parms->atm.iground==-1){
 				parms->atm.iground=ips;
 			} else{
-				warning("There are multiple ground atm layers (OK).\n");
+				dbg("There are multiple ground atm layers (OK).\n");
 			}
 		}
 		if(P(parms->atm.ht,ips)<0){

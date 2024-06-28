@@ -52,7 +52,9 @@ public:
     Array<int> wfsgpu;
     dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
     int recongpu;
-    int atm_full; /**<Indicate whether atm is loaded in full to GPU*/
+    int atm_full;   /**<Indicate whether atm is loaded in full to GPU*/
+	int atm_dtrat;  /**saves parms->atm.dtrat;*/
+	int atm_nps;    /**<saves parms->atm.nps;*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;
     Array<atm_prep_t>atm_prep_data;
@@ -67,7 +69,6 @@ public:
 class cudata_t{
 public:
     int igpu;
-
     /**<for accphi */
     curmat reserve;   /**<Reserve some memory in GPU*/
     cumapcell atm;   /**<atmosphere: array of cumap_t */

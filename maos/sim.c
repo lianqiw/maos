@@ -261,6 +261,7 @@ void maos_sim(){
 			sim_pipe[0]=-1;//indicate error
 			sim_pipe[1]=-1;//indicate error
 		}
+		info_errno("pipe");
 	}
 	dbg("PARALLEL=%d, NTHREAD=%d\n", PARALLEL, NTHREAD);
 	long rescount=0;

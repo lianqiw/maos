@@ -34,4 +34,5 @@ dmat *loc_calib(const dsp *GA, const loc_t *aloc, const loc_t *saloc,
 dmat *polyfit(const dmat *x, const dmat *y, int maxorder);
 dmat *polyval(const dmat *x, const dmat *coeff, int separate);
 real calc_dither_amp(dmat **res, const dmat *signal, long dtrat, long npoint, int detrend, int combine);
+int wrap_seq(long index, long n);
 #endif

@@ -1708,7 +1708,6 @@ powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
 	TIC;tic;
 	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs==0) continue;
 		if(parms->powfs[ipowfs].type==WFS_SH){
 			info2("\n%sSetting up powfs %d geom%s\n\n", GREEN, ipowfs, BLACK);
 			setup_shwfs_geom(powfs, parms, aper, ipowfs);

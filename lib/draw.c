@@ -224,6 +224,7 @@ static void list_destroy(list_t** head){
 		free(p);
 	}
 }
+#define WRITECMDSTR(sock, cmd, str) (stwriteint(sock, DRAW_ENTRY)||stwriteint(sock, strlen(str)+1+sizeof(int))||stwriteint(sock, cmd)||stwritestr(sock, str))
 /**Add fd to list of drawing socks*/
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
@@ -232,6 +233,13 @@ int draw_add(int sock){
 		if(stwrite(sock, cmd, sizeof(cmd))){
 			dbg("failed to write: sock=%d\n", sock);
 			close(sock); sock=-1;
+		}
+	}
+	if(sock!=-1&&DIRSTART){
+		if(WRITECMDSTR(sock, DRAW_PATH, DIRSTART)){
+			dbg("write DRAW_PATH failed\n");
+			close(sock);
+			sock=-1;
 		}
 	}
 	if(sock==-1) return -1;
@@ -346,7 +354,6 @@ void draw_helper(void){
 		_exit(0);//shall never return.
 	}
 }
-#define WRITECMDSTR(sock, cmd, str) (stwriteint(sock, DRAW_ENTRY)||stwriteint(sock, strlen(str)+1+sizeof(int))||stwriteint(sock, cmd)||stwritestr(sock, str))
 /**
    Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
 */
@@ -407,13 +414,7 @@ static int get_drawdaemon(){
 			dbg("launch using scheduler: sock=%d\n", sock);
 		}
 	}
-	if(sock!=-1 && DIRSTART){
-		if(WRITECMDSTR(sock, DRAW_PATH, DIRSTART)){
-			dbg("write DRAW_PATH failed\n");
-			close(sock);
-			sock=-1;
-		}
-	}
+	
 	if(sock!=-1 && !draw_add(sock) && !socket_send_timeout(sock, 60)){
 		//prevent hang. too small timeout will prevent large data from passing through.
 		return 0;

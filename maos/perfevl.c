@@ -155,8 +155,6 @@ void* perfevl_ievl(thread_t* info){
 	const int isim=simu->perfisim;
 	const real atmscale=simu->atmscale?P(simu->atmscale,isim):1;
 	const int nmod=parms->evl.nmod;
-	const int nps=parms->atm.nps;
-	const int npsr=parms->atmr.nps;
 	const int imoao=parms->evl.moao;
 	const real dt=parms->sim.dt;
 	dmat* iopdevl=0;
@@ -189,14 +187,24 @@ void* perfevl_ievl(thread_t* info){
 			if(simu->evlopdground){
 				dcp(&iopdevl, simu->evlopdground);
 			}
+			const int nps=parms->atm.nps;
 			/*fix me: the ray tracing of the same part must be performed in the same thread. */
 			for(int ips=0; ips<nps; ips++){
-				if(ips!=simu->perfevl_iground||!simu->evlopdground){
+				if(ips!=simu->perfevl_iground||!simu->evlopdground||parms->atm.dtrat>0){
 					int ind=ievl+parms->evl.nevl*ips;
-					simu->evl_propdata_atm[ind].phiout=iopdevl;
-					simu->evl_propdata_atm[ind].displacex1=-P(simu->atm,ips)->vx*isim*dt;
-					simu->evl_propdata_atm[ind].displacey1=-P(simu->atm,ips)->vy*isim*dt;
-					simu->evl_propdata_atm[ind].alpha=atmscale;
+					propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
+					evl_propdata->phiout=iopdevl;
+					if(parms->atm.dtrat>0){
+						int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
+						real wt2=nps==1?0:((real)(isim%parms->atm.dtrat)/parms->atm.dtrat);//nps==1: no interpolation
+						evl_propdata->mapin=P(simu->atm, iframe);
+						evl_propdata->alpha=ips==0?(1-wt2):wt2;
+						//if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
+					}else{
+						evl_propdata->displacex1=-P(simu->atm,ips)->vx*isim*dt;
+						evl_propdata->displacey1=-P(simu->atm,ips)->vy*isim*dt;
+						evl_propdata->alpha=atmscale;
+					}
 					CALL_THREAD(simu->evl_prop_atm[ind], 1);
 				}
 			}
@@ -219,7 +227,7 @@ void* perfevl_ievl(thread_t* info){
 		if(save_evlopd && simu->save->evlopdol){
 			zfarr_push(simu->save->evlopdol[ievl], simu->perfisim, iopdevl);
 		}
-		if(parms->plot.run){
+		if(parms->plot.run && isim%parms->plot.run==0){
 			drawopdamp("Evlol", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
@@ -253,7 +261,7 @@ void* perfevl_ievl(thread_t* info){
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					cabs22d(&P(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
 				}
-				if(parms->plot.run){
+				if(parms->plot.run&&isim%parms->plot.run==0){
 					plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf==1, parms->plot.psfmin);
 				}
 				ccellfree(psf2s);
@@ -269,6 +277,7 @@ void* perfevl_ievl(thread_t* info){
 			*/
 			if(simu->opdr){
 				map_t xmap;
+				const int npsr=parms->atmr.nps;
 				for(int ipsr=0; ipsr<npsr; ipsr++){
 					real hl=P(parms->atmr.ht,ipsr);
 					real scale=1.-hl/P(parms->evl.hs,ievl);
@@ -316,7 +325,7 @@ void* perfevl_ievl(thread_t* info){
 			}
 		}
 
-		if(parms->plot.run){
+		if(parms->plot.run&&isim%parms->plot.run==0){
 			drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 				"Science Closed Loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
@@ -498,7 +507,7 @@ static void perfevl_mean(sim_t* simu){
 						ngsmod2science(iopdevl, aper->locs, recon->ngsmod,
 							P(parms->evl.thetax,ievl), P(parms->evl.thetay,ievl),
 							pcleNGSm, -1);
-						if(parms->plot.run){
+						if(parms->plot.run&&isim%parms->plot.run==0){
 							drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
 								"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
 						}
@@ -634,14 +643,14 @@ static void perfevl_save(sim_t* simu){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			if(P(simu->evlopdmean, ievl)){
 				zfarr_push(simu->save->evlopdmean[ievl], isim, P(simu->evlopdmean,ievl));
-				if(parms->plot.run){
+				if(parms->plot.run&&isim%parms->plot.run==0){
 					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean, ievl), simu->aper->amp1, parms->plot.opdmax,
 						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean %d", ievl);
 				}
 			}
 			if(P(simu->evlopdmean_ngsr, ievl)){
 				zfarr_push(simu->save->evlopdmean_ngsr[ievl], isim, P(simu->evlopdmean_ngsr,ievl));
-				if(parms->plot.run){
+				if(parms->plot.run&&isim%parms->plot.run==0){
 					drawopdamp("Evlclm", simu->aper->locs, P(simu->evlopdmean_ngsr, ievl), simu->aper->amp1, parms->plot.opdmax,
 						"Science Closed Loop OPD Mean", "x (m)", "y (m)", "CL mean ngsr %d", ievl);
 				}
@@ -655,7 +664,7 @@ static void perfevl_save(sim_t* simu){
 			const real scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 			dscale(simu->evlopdmeanol, scaleol);
 			zfarr_push(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
-			if(parms->plot.run){
+			if(parms->plot.run&&isim%parms->plot.run==0){
 				drawopdamp("Evlol", simu->aper->locs, simu->evlopdmeanol, simu->aper->amp1, parms->plot.opdmax,
 					"Science Open Loop OPD Mean", "x (m)", "y (m)", "OL mean");
 			}
@@ -680,7 +689,7 @@ void* perfevl(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer.
 		int ips=simu->perfevl_iground;
-		if(ips!=-1&&simu->atm&&!parms->sim.idealevl){
+		if(ips!=-1&&simu->atm&&!parms->sim.idealevl&&!parms->atm.dtrat){
 			if(!simu->evlopdground){
 				simu->evlopdground=dnew(simu->aper->locs->nloc, 1);
 			} else{
@@ -691,10 +700,11 @@ void* perfevl(sim_t* simu){
 			const int isim=simu->perfisim;
 			const real dt=parms->sim.dt;
 			const real atmscale=simu->atmscale?P(simu->atmscale,isim):1;
-			simu->evl_propdata_atm[ind].phiout=simu->evlopdground;
-			simu->evl_propdata_atm[ind].displacex1=-P(simu->atm,ips)->vx*isim*dt;
-			simu->evl_propdata_atm[ind].displacey1=-P(simu->atm,ips)->vy*isim*dt;
-			simu->evl_propdata_atm[ind].alpha=atmscale;
+			propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
+			evl_propdata->phiout=simu->evlopdground;
+			evl_propdata->displacex1=-P(simu->atm,ips)->vx*isim*dt;
+			evl_propdata->displacey1=-P(simu->atm,ips)->vy*isim*dt;
+			evl_propdata->alpha=atmscale;
 			CALL_THREAD(simu->evl_prop_atm[ind], 1);
 		}
 	}

@@ -62,6 +62,7 @@ typedef struct atm_cfg_t{
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/
     int r0evolve; /**<Evolve r0 according to r0logpsd*/
+	int dtrat;    /**<Only used if atm are loaded with frames that need to playback in time. */
 }atm_cfg_t;
 /**
    contains input parameters for the atmospheric reconstruction.  */
@@ -231,8 +232,7 @@ typedef struct powfs_cfg_t{
 		       - >0: need to compute GS0 to calculate geometric optics
 		       - -1: never, doesn't need to compute DTF
 		    */
-    int usephy;     /**<whether physical optics is used at all during
-		       simulation.(derived parameter)*/
+    int usephy;     /**<whether physical optics is used at all during simulation.(derived parameter)*/
     real r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     real L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     int mtchcr;     /**<use constrained matched filter (0: disable, 1: both axis. 2: radial/x only, 3: az/y only)*/
@@ -352,6 +352,7 @@ typedef struct evl_cfg_t{
     dmat *wt;       /**<weight of each direction*/
     dmat *wvl;      /**<wavelength for PSF and strehl computation*/
     dmat *hs;       /**<height of each science object*/
+	const char **wvlname; /**<Common name of each wavelength. */
     real dx;        /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
     lmat *psf;      /**<1: participate in psf evaluation.*/

@@ -266,10 +266,9 @@ char *myabspath(const char *path){
 			warning("Error getting current directory\n");
 			snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
 		}
-		if(!exist(path2)){
-			warning("File or directory %s does not exist\n", path2);
-		}
-			
+	}
+	if(!exist(path2)){
+		warning("File or directory %s does not exist\n", path2);
 	}
 	return strdup(path2);
 }
@@ -537,7 +536,6 @@ void mysleep(double sec){
 	ts.tv_nsec=(long)((sec-ts.tv_sec)*1e9);
 	nanosleep(&ts, NULL);
 }
-
 /**
 * 	Pause execution and listen input from fd1 and/or fd2 for continuation. Returns new pause flag.
  */
@@ -545,7 +543,8 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 			int fd2 /**<second file no, usually created from a pipe t*/
 ){
 	int ans=1;
-	info2("Press enter to step, c to resume:\n");
+	errno=0;
+	info2("Press enter to step, c to resume:");
 	fd_set active_fd_set;
 	FD_ZERO(&active_fd_set);
 	if(fd1>0|| (fd1==0 && !detached) ){
@@ -554,25 +553,33 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 	if(fd2>0 && fd2 != fd1){
 		FD_SET(fd2, &active_fd_set);
 	}
-	if(select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0)>0){
+	info_errno("mypause");
+	while(1){
+		int select_ans=select(FD_SETSIZE, &active_fd_set, NULL, NULL, 0);
+		if(select_ans<0){
+			warning("Select failed: %s\n", strerror(errno));
+			return ans;
+		}
+		info_errno("select");
 		for(int i=0; i<FD_SETSIZE; i++){
 			if(FD_ISSET(i, &active_fd_set)){
-				char key=0;
-				if(read(i, &key, 1)==1){
+				char key;
+				int nread=read(i, &key, 1);
+				info_errno("read");
+				if(nread==1){
 					if(key=='c'){
-						return 0;
 						info2("Resuming\n");
+						return 0;
 					} else{
 						if(key>='0' && key<='9'){
 							ans=key-'0';
 						}
-						info2("Continuing...\n");
 					}
 				}
+				info2("Continuing...\n");
+				return ans;
 			}
 		}
-	}else{
-		warning("Select failed: %s\n", strerror(errno));
 	}
 	return ans;
 }

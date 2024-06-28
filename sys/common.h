@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <math.h> //don't use tgmath here. it is included in math/numtype.h
 #if defined(__cplusplus) && !defined(AOS_CUDA_H)
 //c++ mode, not CUDA
@@ -116,7 +117,6 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define warning(format,...)      logerr(-4, CYAN,     "Warning(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_time(format,...) logerr(-4, CYAN, "[%s]Warning(%s:%d): " format, myasctime(0),BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
-
 //all info are shown at default log level
 #define info_line(format,...) logstd(-4,     "Info(%s:%d): " format ,BASEFILE,__LINE__,##__VA_ARGS__)
 #define info_time(format,...) logstd(-1, "[%s]Info(%s:%d): " format, myasctime(0), BASEFILE,__LINE__,##__VA_ARGS__)
@@ -125,7 +125,7 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define info3(A...) logstd(-3, A) //most important info
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 #define info_progress(i,n) if((i)%(((n)>>4)+1)==0) fprintf(stderr,">") //;/*if((i)+1==(n)) fprintf(stderr,"\n");*/})
-
+#define info_errno(A) if(errno) info(A " failed (%d): %s\n", errno, strerror(errno))
 //dbg are not shown at default log level
 #define dbg( A...) logdbg(0, YELLOW, A)//most important dbg
 #define dbg2(A...) logdbg(1, YELLOW, A)

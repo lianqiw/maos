@@ -149,13 +149,25 @@ __global__ void map2loc_cubic(Real* restrict out, const Real* restrict in,
    Ray tracing of atm.
 */
 void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Real thetay,
-	Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream){
+	Real mispx, Real mispy, Real dt, int isim, Real atmalpha0, cudaStream_t stream){
 	cumapcell& cuatm=cudata->atm;
+	Real atmalpha=atmalpha0;
 	if(Z(fabs)(atmalpha)<EPS) return;
-	if(cuglobal->atmscale){
+	const int atm_dtrat=cuglobal->atm_dtrat;
+	if(cuglobal->atmscale&&!atm_dtrat){
 		atmalpha*=cuglobal->atmscale->p[isim];
 	}
-	for(int ips=0; ips<cudata->atm.N(); ips++){
+	int nps=atm_dtrat?cuglobal->atm_nps:cudata->atm.N();
+	for(int jps=0; jps<nps; jps++){
+		int ips;
+		if(atm_dtrat){
+			ips=wrap_seq(isim/atm_dtrat+jps, cudata->atm.N());
+			Real wt2=nps==1?0:((real)(isim%atm_dtrat)/atm_dtrat);//nps==1: no interpolation
+			atmalpha=atmalpha0*(jps==0?(1-wt2):wt2);
+			//dbg("isim=%d, atmalpha=%g\n", isim, atmalpha);
+		}else{
+			ips=jps;
+		}
 		const Real dx=cuatm[ips].dx;
 		const Real dy=cuatm[ips].dy;
 		const Real ht=cuatm[ips].ht;

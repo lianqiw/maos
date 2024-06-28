@@ -988,7 +988,6 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	int nwfs=parms->nwfsr;
 	recon->TT=dcellnew(nwfs, nwfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs==0) continue;
 		if(parms->powfs[ipowfs].trs
 			||(parms->recon.split&&!parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].skip)
 			||parms->powfs[ipowfs].dither==1){

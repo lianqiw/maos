@@ -703,7 +703,7 @@ typedef struct sim_t{
     ccell *opdrhatlast;/**<for wind estimation.(testing)*/
     /**Saved for plotting*/
     const char **plot_legs;///legend
-    dcell *plot_res;    ///results array
+    dccell *plot_res;    ///results array
     int plot_isim;      ///previous plotted isum;
     /*A few indicators*/
     int wfsints_isa;   /**<sa counter for wfsints*/

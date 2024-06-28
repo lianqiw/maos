@@ -113,7 +113,7 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 }
 void plot_gradoff(sim_t *simu, int iwfs){
 	const parms_t *parms=simu->parms;
-	if(parms->plot.run){
+	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
 		if(iwfs<0){
 			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
 				plot_gradoff(simu, iwfs);
@@ -155,7 +155,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	/*output */
 	const int CL=parms->sim.closeloop;
 	const int nps=parms->atm.nps;
-	const real atmscale=simu->atmscale?P(simu->atmscale, isim):1;
+	real atmscale=(simu->atmscale&&!parms->atm.dtrat)?P(simu->atmscale, isim):1;
 	const real dt=parms->sim.dt;
 	/*The following are truly constants for this powfs */
 	const int imoao=parms->powfs[ipowfs].moao;
@@ -193,9 +193,17 @@ void* wfsgrad_iwfs(thread_t* info){
 				thread_t* wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 				propdata_t* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 				wfs_propdata->phiout=opd;
-				wfs_propdata->displacex1=-P(atm, ips)->vx*dt*isim;
-				wfs_propdata->displacey1=-P(atm, ips)->vy*dt*isim;
-				wfs_propdata->alpha=atmscale;
+				if(parms->atm.dtrat>0){
+					int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
+					real wt2=nps==1?0:((real)(isim%parms->atm.dtrat)/parms->atm.dtrat);//nps==1: no interpolation
+					wfs_propdata->mapin=P(simu->atm, iframe);
+					wfs_propdata->alpha=ips==0?(1-wt2):wt2;
+					//if(iwfs==0) dbg("wfs: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, wfs_propdata->alpha);
+				}else{
+					wfs_propdata->displacex1=-P(atm, ips)->vx*dt*isim;
+					wfs_propdata->displacey1=-P(atm, ips)->vy*dt*isim;
+					wfs_propdata->alpha=atmscale;
+				}
 				if(nhs>1){
 					const real ht=P(parms->atm.ht, ips);
 					wfs_propdata->scale=1.-(ht-hc)/(hs-hc);
@@ -288,7 +296,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		if(save_opd){
 			zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 		}
-		if(parms->plot.run){
+		if(parms->plot.run&&isim%parms->plot.run==0){
 			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, realamp, parms->plot.opdmax,
 				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 		}
@@ -347,9 +355,24 @@ void* wfsgrad_iwfs(thread_t* info){
 						const real oy=P(parms->powfs[ipowfs].llt->oy, illt);
 						const real thetax=parms->wfs[iwfs].thetax-ox/hs;
 						const real thetay=parms->wfs[iwfs].thetay-oy/hs;
-						const real displacex=-P(atm, ips)->vx*isim*dt+thetax*hl+ox;
-						const real displacey=-P(atm, ips)->vy*isim*dt+thetay*hl+oy;
-						prop_grid_pts(P(atm, ips), powfs[ipowfs].llt->pts,
+						real vx=0;
+						real vy=0;
+						map_t *atmi;
+						if(parms->atm.dtrat>0){
+							int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
+							real wt2=nps==1?0:((real)(isim%parms->atm.dtrat)/parms->atm.dtrat);//nps==1: no interpolation
+							atmi=P(simu->atm, iframe);
+							atmscale=ips==0?(1-wt2):wt2;
+							//if(iwfs==0) dbg("lltopd: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, atmscale);
+						}else{
+							vx=P(atm, ips)->vx;
+							vy=P(atm, ips)->vy;
+							atmi=P(atm, ips);
+						}
+						const real displacex=-vx*isim*dt+thetax*hl+ox;
+						const real displacey=-vy*isim*dt+thetay*hl+oy;
+						
+						prop_grid_pts(atmi, powfs[ipowfs].llt->pts,
 							P(lltopd), atmscale, displacex, displacey,
 							scale, 1., 0, 0);
 					}
@@ -851,7 +874,7 @@ void* wfsgrad_post(thread_t* info){
 			P(P(simu->save->fsmcmds, iwfs), 1, isim)=P(P(simu->fsmreal, iwfs), 1);
 		}
 		if(simu->wfsflags[ipowfs].gradout){
-			if(parms->plot.run){
+			if(parms->plot.run&&isim%parms->plot.run==0){
 				/*drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
 					parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.gmax),
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
@@ -1435,7 +1458,7 @@ void wfsgrad_petal_recon(sim_t *simu){
 					if(parms->powfs[jpowfs].lo) continue;
 					dspmm(&P(simu->gradoff,jwfs),P(simu->recon->GA,jwfs,idm), P(simu->dmtmp,idm), "nn", -gain);
 				}
-				if(parms->plot.run){
+				if(parms->plot.run&&isim%parms->plot.run==0){
 					int draw_single_save=draw_single; draw_single=0;
 					drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
 					plot_gradoff(simu, -1);
@@ -1469,7 +1492,7 @@ void* wfsgrad(sim_t* simu){
 	if(parms->recon.petal){
 		wfsgrad_petal_recon(simu);
 	}
-	if(parms->plot.run){
+	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl, iwfs),

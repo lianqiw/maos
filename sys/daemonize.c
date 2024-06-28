@@ -355,16 +355,19 @@ pid_t launch_exe(const char* exepath, const char* cmd){
    Find an executable from predetermined locations and return the absolute path.
  */
 char* find_exe(const char* name){
-	char* fn=stradd(BUILDDIR, "/bin/", name, NULL);
-	if(!exist(fn)){
-		free(fn);
-		char* cwd=mygetcwd();
-		fn=stradd(cwd, "/", name, NULL);
+	if(exist(name)){
+		return strdup(name);
 	}
-	if(!exist(fn)){
-		free(fn); fn=NULL;
+	const char* dirs[]={BUILDDIR, "/usr", "/usr/local", "/opt", "/opt/homebrew"};
+	for(unsigned int i=0; i<sizeof(dirs)/sizeof(dirs[0]); i++){
+		char* fn=stradd(dirs[i], "/bin/", name, NULL);
+		if(exist(fn)){
+			return fn;
+		}else{
+			free(fn);
+		}
 	}
-	return fn;
+	return NULL;
 }
 /**
    fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
@@ -413,6 +416,7 @@ int spawn_process(const char* exename, const char* args, const char* path){
 			} else{
 				execlp(exename, exename, args, NULL);
 			}
+			warning("exec failed to run %s\n", exename);
 			_exit(EXIT_FAILURE);
 		}
 	}

@@ -303,6 +303,16 @@ void recon_servo_update(sim_t* simu){
 				info("Step %5d updated high order loop gain: %.3f\n", simu->reconisim, P(simu->dmint->ep,0));
 				if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
 				dcellfree(coeff);
+				if(parms->plot.run){//plot psd ol and cl
+					dcell *psds=dcellnew(2,1); 
+					P(psds,0)=dref(psd); 
+					P(psds,1)=dref(psdol);
+					int draw_single_save=draw_single; draw_single=0;
+					const char *legends[]={"Closed loop","Open Loop"};
+					draw("PSD", (plot_opts){.dc=psds, .xylog="yy", .legend=legends}, "High Order Closed PSDs", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD HI");
+					dcellfree(psds);
+					draw_single=draw_single_save;
+				}
 				dfree(psdol);
 			} else{
 				error("Please implement\n");
@@ -340,6 +350,16 @@ void recon_servo_update(sim_t* simu){
 					const real g=parms->recon.psdservo_gain;
 					P(simu->Mint_lo->ep,0,icol)=P(simu->Mint_lo->ep,0,icol)*(1.-g)+P(P(coeff,0),0)*g;
 					if(icol==0) info("Step %5d updated low order loop gain : %.3f\n", simu->reconisim, P(simu->Mint_lo->ep,0,icol));
+					if(parms->plot.run){//plot psd ol and cl
+						dcell *psds=dcellnew(2, 1);
+						P(psds, 0)=dref(psd);
+						P(psds, 1)=dref(psdol);
+						int draw_single_save=draw_single; draw_single=0;
+						const char *legends[]={"Closed loop","Open Loop"};
+						draw("PSD", (plot_opts){ .dc=psds, .xylog="yy", .legend=legends }, "Low Order Closed PSDs", "Frequency (Hz)", "PSD (rad<sup>2</sup>/Hz)", "PSD LO");
+						dcellfree(psds);
+						draw_single=draw_single_save;
+					}
 					dfree(psdol);
 					dcellfree(coeff);
 				} else{

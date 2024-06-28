@@ -407,3 +407,16 @@ real calc_dither_amp(
 	dfree(slope);
 	return a2m;
 }
+
+
+/**
+   Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 
+   0 1 2 3 2 1 0 1 2 3 2 1 0 ...
+*/
+int wrap_seq(long index, long n){
+	if(n<2) return 0;
+	long m=n*2-2;
+	index=(index%m+m)%m;
+	if(index>=n) index=m-index;
+	return index;
+}

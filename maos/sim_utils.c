@@ -227,6 +227,7 @@ void genatm(sim_t* simu){
 		info(" %5.1f", angle*180/M_PI);
 	}
 	info(" deg\n");
+	int atm_movie=0;//whether loaded atm is movie to be playback.
 	if(simu->parms->load.atm){
 		const char* fn=simu->parms->load.atm;
 		info("loading atm from %s\n", fn);
@@ -234,17 +235,41 @@ void genatm(sim_t* simu){
 		if(parms->aper.rot){
 			dmaprot(simu->atm, parms->aper.rot);
 		}
-		if(NX(simu->atm)!=atm->nps) error("ATM Mismatch\n");
+		if(NX(simu->atm)!=atm->nps){
+			if(parms->atm.dtrat && NX(simu->atm)>1){
+				real h=P(simu->atm, 0)->h;
+				int sameh=1;
+				for(int ips=1; ips<NX(simu->atm); ips++){
+					if(h!=P(simu->atm ,ips)->h){
+						sameh=0;
+						break;
+					}
+				}
+				P(((parms_t *)parms)->atm.ht, 0)=h;
+				P(((parms_t *)parms)->atm.ht, 1)=h;
+				if(sameh){
+					atm_movie=1;
+				}
+			}
+			if(!atm_movie){
+				error("Loaded turbulence does not match atm specification.\n");
+			}
+		}
 	} else{
 		simu->atm=genatm_do(simu);
 	}
-	if(!parms->dbg.atm){
+	if(parms->atm.dtrat&&!atm_movie){
+		error("atm.dtrat is set but atm is not movie.\n");
+	}
+	if(!parms->dbg.atm&&atm->nps==parms->atm.nps&&!atm_movie){
 		for(int i=0; i<atm->nps; i++){
 			real angle=P(simu->winddir, i);
 			P(simu->atm, i)->h=P(parms->atm.ht, i);
 			P(simu->atm, i)->vx=cos(angle)*P(parms->atm.ws, i);
 			P(simu->atm, i)->vy=sin(angle)*P(parms->atm.ws, i);
 		}
+	}else{
+		dbg("Turbulence frozen flow velocity are set to 0.\n");
 	}
 	if(simu->parms->save.atm){
 		writebin(simu->atm, "atm_%d.bin", simu->seed);
@@ -1779,6 +1804,9 @@ void free_simu(sim_t* simu){
 	free(simu->save);
 	free(simu);
 }
+int compare_dbl2_ascend(const void *a, const void *b){
+	return (int)(((double *)a)[0]-((double *)b)[0]);
+}
 /**
    Print out wavefront error information and timing at each time step.
 */
@@ -1877,9 +1905,8 @@ void print_progress(sim_t* simu){
 					status->tot*tkmean, status->mean*tkmean,
 					lapsh, lapsm, resth, restm);
 
-		if(parms->plot.run&&draw_current("Res", "Close loop")){
-			dmat* tmp=parms->recon.split?simu->clem:simu->cle;
-			if(!simu->plot_res){
+		if(parms->plot.run){
+			if(!simu->plot_legs){
 				simu->plot_legs=mycalloc(5, const char*);
 				const char **legs=simu->plot_legs;
 				int nline=0;
@@ -1892,34 +1919,111 @@ void print_progress(sim_t* simu){
 					} else if(simu->recon->ngsmod->indastig){
 						legs[nline++]="Astig";
 					}
-					if(NX(tmp)==4){
+					if(simu->recon->ngsmod->indfocus){
 						legs[nline++]="Focus";
 					}
 				}
-				simu->plot_res=dcellnew_same(nline, 1, parms->sim.end, 1);
+				simu->plot_res=dccellnew(5,1);
+				P(simu->plot_res, 0)=dcellnew_same(nline, 1, parms->sim.end, 1);
+				P(simu->plot_res, 1)=dcellnew_same(3, 1, parms->sim.end, 1);
+				P(simu->plot_res, 2)=dcellnew_same(1, 1, parms->evl.nevl, 2);//CL vs dir WEF
+				P(simu->plot_res, 3)=dcellnew_same(1, 1, parms->evl.nevl, 1);//CL vs dir indexing
+				P(simu->plot_res, 4)=dcellnew_same(parms->evl.nwvl, 1, parms->evl.nevl, 2);//CL vs dir Strehl
+				{	// sort evaluation directions
+					//\todo modularize this.
+					dmat *tmp=dnew(2, parms->evl.nevl);
+					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+						real r=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl))*RAD2AS;
+						/*if(P(parms->evl.thetax, ievl)<0 || P(parms->evl.thetay, ievl)<0){
+							r=-r;
+						}*/
+						P(tmp, 0, ievl)=r;
+						P(tmp, 1, ievl)=ievl;//mark direction
+					}
+					//dshow(tmp,"tmp");
+					qsort(P(tmp), NY(tmp), 2*sizeof(real), compare_dbl2_ascend);
+					//dshow(tmp,"tmp sorted");
+					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+						P(P(P(simu->plot_res, 2), 0), ievl, 0)=P(tmp, 0, ievl);
+						P(P(P(simu->plot_res, 3), 0), ievl, 0)=P(tmp, 1, ievl);//index
+						for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+							P(P(P(simu->plot_res, 4), iwvl), ievl, 0)=P(tmp, 0, ievl);
+						}
+					}
+					dfree(tmp);
+				}
 				//dset(simu->plot_res->m, NAN);
 			}
-			dcell* res=simu->plot_res;
-			const char **legs=simu->plot_legs;
-			for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
-				int i=simu->plot_isim;
-				P(P(res, 0), i)=sqrt(P(simu->cle, 0, i))*1e9;//PR
-				if(parms->recon.split){
-					P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
-					P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT
-					if(NX(res)>4){
-						P(P(res, 4), i)=sqrt(P(tmp, 3, i))*1e9;//Focus
+			if((draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))&&simu->perfisim>20){
+				dcell *res=P(simu->plot_res, 2);
+				int istart=MAX(simu->perfisim-1000, 20);
+				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+					int jevl=(int)P(P(P(simu->plot_res,3), 0), ievl);
+					P(P(res,0), ievl, 1)=0;
+					for(int i=istart; i<simu->perfisim; i++){
+						P(P(res,0), ievl, 1)+=P(P(simu->clep, jevl),0,i);
 					}
-					if(NX(res)>3){
-						P(P(res, 3), i)=sqrt(P(tmp, 2, i)-(P(tmp, 3, i)+P(tmp, 1, i)))*1e9;//PS
+					P(P(res, 0), ievl, 1)=sqrt(P(P(res, 0), ievl, 1)/(simu->perfisim-istart))*1e9;
+				}
+				//check directions of the same radius and average them.
+				for(int ievl=0; ievl<parms->evl.nevl-1; ievl++){
+					int jevl=ievl+1;
+					for(; jevl<parms->evl.nevl; jevl++){
+						if(fabs(P(P(res, 0), ievl, 0)-P(P(res, 0), jevl, 0))>1){
+							break;
+						}
 					}
-				} else{
-					P(P(res, 1), i)=sqrt(P(tmp, 2, i))*1e9;//PTTR
-					P(P(res, 2), i)=sqrt(P(tmp, 0, i)-P(tmp, 2, i))*1e9;//TT
+					if(jevl>ievl+1){//directions of the same radius
+						real sum2=0;
+						for(int i=ievl; i<jevl; i++){
+							sum2+=pow(P(P(res, 0), i, 1),2);
+						}
+						sum2=sqrt(sum2/(jevl-ievl));
+						for(int i=ievl; i<jevl; i++){
+							P(P(res, 0), i, 1)=sum2;
+						}
+					}
+				}
+				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+					real wfe=P(P(P(simu->plot_res, 2), 0), ievl, 1)*1e-9;
+					for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+						P(P(P(simu->plot_res, 4), iwvl), ievl, 1)=exp(-pow(TWOPI*wfe/P(parms->evl.wvl,iwvl),2));
+					}
+				}
+				draw("Res", (plot_opts){ .dc=res},
+						"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
+				draw("Res", (plot_opts){ .dc=P(simu->plot_res, 4), .legend=parms->evl.wvlname},
+										"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
+			}else if(draw_current("Res", "Close loop") || draw_current("Res", "Open loop") ){
+				for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
+					int i=simu->plot_isim;
+					for(int ic=0; ic<2; ic++){//0: CL. 1: OL
+						dmat * cle=ic==0?simu->cle:simu->ole;
+						dcell* res=P(simu->plot_res,ic);
+					
+						P(P(res, 0), i)=sqrt(P(cle, 0, i))*1e9;//PR
+						if(parms->recon.split && ic==0){
+							dmat *tmp=simu->clem;
+							P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
+							P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT
+							if(NX(res)>4){
+								P(P(res, 4), i)=sqrt(P(tmp, 3, i))*1e9;//Focus
+							}
+							if(NX(res)>3){
+								P(P(res, 3), i)=sqrt(P(tmp, 2, i)-(P(tmp, 3, i)+P(tmp, 1, i)))*1e9;//PS
+							}
+						} else{
+							P(P(res, 1), i)=sqrt(P(cle, 2, i))*1e9;//PTTR
+							P(P(res, 2), i)=sqrt(P(cle, 0, i)-P(cle, 2, i))*1e9;//TT
+						}
+					}
+				}
+				for(int ic=0; ic<2; ic++){
+					dcell *res=P(simu->plot_res, ic);
+					draw("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=simu->plot_legs},
+						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "%s loop", ic==0?"Close":"Open");
 				}
 			}
-			draw("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=legs},
-				"Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 		}
 	}
 }

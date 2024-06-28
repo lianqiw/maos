@@ -298,8 +298,8 @@ static void* maos_listener(void* psock){
 			draw_add(fd);
 			if(global){
 				parms_t* parms=(parms_t*)global->parms;//cast away constness
-				parms->plot.setup=1;
-				parms->plot.run=1;
+				if(!parms->plot.setup) parms->plot.setup=1;
+				if(!parms->plot.run) parms->plot.run=1;
 				if(global->setupdone){//setup is already finished. request plot setup.
 					plot_setup(global->parms, global->powfs, global->aper, global->recon);
 				}

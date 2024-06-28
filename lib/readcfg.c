@@ -188,7 +188,7 @@ void erase_config(){
 	nused=0;
 	nstore=0;
 	changes_loaded=0;
-	free(default_config); default_config=NULL;
+	//free(default_config); default_config=NULL;//do not replace default_config. the file containing __reset__ may not be full configuration.
 }
 /**
    Save all configs to file and check for unused config options.
@@ -307,17 +307,15 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 					error("Recursive inclusion: %s include %s\n", config_in, embeded);
 				}
 				free(embeded);
-			} else if(!strcmp(ssline, "__reset__")){
-				if(nstore>0){
+			} else if(!strcmp(ssline, "__reset__")){//usage deprecated 
+				/*if(nstore>0){
 					info("Replacing all existing input\n");
 					erase_config();
 				}
 				countnew=0;
-				countold=0;
-				//countskip=0;
-				priority=0;//this file contains default setup.
-			} else if(!strcmp(ssline, "__default__")){
-				priority=0;//this file contains default setup.
+				countold=0;*/
+			} else if(!strcmp(ssline, "__default__")){//usage deprecated
+				//priority=0;//this file contains default setup.
 			} else if (!strcmp(ssline, "__changes__")){
 				priority=-1;//this file contains key changes
 			} else{
@@ -610,7 +608,12 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	format2key;
 	long* val=NULL;
 	int nx, ny;
-	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, getrecord_data(key, 1));
+	char *data;
+	if(!(data=getrecord_data(key, 1))){
+		warning("Record for %s not found, assume 0.\n", key);
+		return NULL;
+	}
+	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, data);
 	lmat* res=NULL;
 	if(nx && ny){
 		res=lnew_do(nx, ny, val, mem_new(val));
@@ -698,7 +701,10 @@ int readcfg_int(const char* format, ...){
 	char* val;
 	char* endstr;
 	real ans=0;
-	if(!(val=getrecord_data(key, 1))||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
+	if(!(val=getrecord_data(key, 1))){
+		warning("Record for %s not found, assume 0.\n", key);
+		ans=0;
+	}else if(isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
 	}
 	return (int)ans;
@@ -708,11 +714,14 @@ int readcfg_int(const char* format, ...){
 */
 real readcfg_dbl(const char* format, ...){
 	format2key;
-	char *val; 
+	char *data; 
 	char *endstr;
 	real ans=0;
-	if(!(val=getrecord_data(key, 1))||isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'){
-		error("Invalid data: %s=%s\n", key, val);
+	if(!(data=getrecord_data(key, 1))){
+		warning("Record for %s not found, assume 0.\n", key);
+		ans=0;
+	}else if(isnan(ans=readstr_num(key, data, &endstr))||endstr[0]!='\0'){
+		error("Invalid data: %s=%s\n", key, data);
 	}
 	return ans;
 }

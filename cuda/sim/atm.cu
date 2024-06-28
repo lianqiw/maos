@@ -110,6 +110,8 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	if(!atmc) return;
 	map_t** atm=P(atmc);
 	const int nps=parms->atm.nps;
+	cuglobal->atm_dtrat=parms->atm.dtrat;
+	cuglobal->atm_nps=parms->atm.nps;
 	static int iseed0=-1;
 	if(iseed0!=iseed){
 		dfree(cuglobal->atmscale);
@@ -128,61 +130,58 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			}
 		}
 	}
-	if(atm_match && !nx0){
-		if(parms->dbg.fullatm){
-			dbg("Always host full atmosphere in GPU. Set dbg.fullatm=0 to disable\n");
-			nx0=parms->atm.nx;
-			ny0=parms->atm.ny;
-		} else{
-			long avail_min=LONG_MAX, avail_max=0;
-			for(int igpu=0; igpu<NGPU; igpu++){
-				gpu_set(igpu);
-				long availi=gpu_get_free_mem();
-				if(avail_min>availi){
-					avail_min=availi;
-				}
-				if(avail_max<availi){
-					avail_max=availi;
-				}
+	if(!atm_match || parms->dbg.fullatm){
+		nx0=parms->atm.nx;
+		ny0=parms->atm.ny;
+	}
+	if(!nx0){
+		long avail_min=LONG_MAX, avail_max=0;
+		for(int igpu=0; igpu<NGPU; igpu++){
+			gpu_set(igpu);
+			long availi=gpu_get_free_mem();
+			if(avail_min>availi){
+				avail_min=availi;
 			}
-			//avail_min-=256<<19;//reserve 128MiB 
-			//avail_max-=256<<19;
-			const long nxn=parms->atm.nxnmax;
-			long need=nps*sizeof(Real)*nxn*nxn;
-			dbg("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
-				nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
-			if(avail_min<need){
-				if(avail_max<need){
-					error("No GPU has enough memory\n");
-				} else{
-					char* gcmd=NULL;
-					for(int igpu=0; igpu<NGPU; igpu++){
-					//extern Array<int> GPUS;
-						gpu_set(igpu);
-						if(gpu_get_free_mem()>need){
-							char tmp[8];
-							snprintf(tmp, 8, " -g%d", GPUS[igpu]);
-							char* tmp2=gcmd;
-							gcmd=stradd(tmp, tmp2, (void*)NULL);
-							free(tmp2);
-						}
-					}
-					error("Insufficient memory on some GPUs. Please rerun maos with %s\n", gcmd);
-				}
-				_Exit(0);
-			} else{
-				/*we are able to host this amount. */
-				long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
-				nxa=MIN(nxa, nxn*2);
-				nx0=MIN(parms->atm.nx, nxa);
-				ny0=MIN(parms->atm.ny, nxa);
+			if(avail_max<availi){
+				avail_max=availi;
 			}
-			dbg("We will host %dx%d in GPU, taking %zd MiB\n",
-				nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 		}
+		//avail_min-=256<<19;//reserve 128MiB 
+		//avail_max-=256<<19;
+		const long nxn=parms->atm.nxnmax;
+		long need=nps*sizeof(Real)*nxn*nxn;
+		dbg("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
+			nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
+		if(avail_min<need){
+			if(avail_max<need){
+				error("No GPU has enough memory\n");
+			} else{
+				char* gcmd=NULL;
+				for(int igpu=0; igpu<NGPU; igpu++){
+				//extern Array<int> GPUS;
+					gpu_set(igpu);
+					if(gpu_get_free_mem()>need){
+						char tmp[8];
+						snprintf(tmp, 8, " -g%d", GPUS[igpu]);
+						char* tmp2=gcmd;
+						gcmd=stradd(tmp, tmp2, (void*)NULL);
+						free(tmp2);
+					}
+				}
+				error("Insufficient memory on some GPUs. Please rerun maos with %s\n", gcmd);
+			}
+			_Exit(0);
+		} else{
+			/*we are able to host this amount. */
+			long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
+			nxa=MIN(nxa, nxn*2);
+			nx0=MIN(parms->atm.nx, nxa);
+			ny0=MIN(parms->atm.ny, nxa);
+		}
+		dbg("We will host %dx%d in GPU, taking %zd MiB\n",	nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 	}
 	/*The atm in GPU is the same as in CPU. */
-	if(!atm_match || (nx0==parms->atm.nx&&ny0==parms->atm.ny)){
+	if(nx0==parms->atm.nx&&ny0==parms->atm.ny){
 		cuglobal->atm_full=1;
 		if(iseed0!=iseed){
 			gpu_atm2gpu_full(atmc);
