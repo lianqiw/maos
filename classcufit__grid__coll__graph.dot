@@ -15,7 +15,7 @@ digraph "cufit_grid"
   Node21 [label="{Cell\< Real, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l}",height=0.2,width=0.4,color="red",URL="$class_cell.html"];
   Node41 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #floc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node41 [label="{culoc_t\n||+ operator()()\l+ operator()()\l+ Nloc()\l+ Dx()\l+ Dy()\l+ culoc_t()\l}",height=0.2,width=0.4,color="red",URL="$classculoc__t.html"];
-  Node43 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #idealfit\n#nfit" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node43 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #idealtomo\n#nfit" ,arrowhead="odiamond",fontname="Helvetica"];
   Node43 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node44 -> Node5 [color="grey25",fontsize="10",style="solid",label=" #ha0\n#ha1\n#hxp0\n#hxp1\n#hxp\n#ha" ,arrowhead="odiamond",fontname="Helvetica"];
   Node44 [label="{map2map\n||+ map2map()\l+ init_l2d()\l+ init_l2l()\l+ forward()\l+ backward()\l+ ~map2map()\l+ operator bool()\l}",height=0.2,width=0.4,color="red",URL="$classmap2map.html"];

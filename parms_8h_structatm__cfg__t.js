@@ -26,5 +26,6 @@ var parms_8h_structatm__cfg__t =
     [ "frozenflow", "parms_8h.html#ae9bb258aaeebfb619fe27ebf1c202f26", null ],
     [ "ninit", "parms_8h.html#a083a316e7771896dd5fa16fbc4f7038e", null ],
     [ "share", "parms_8h.html#afc6a5da1972b32b6abf232a4228b9cc9", null ],
-    [ "r0evolve", "parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41", null ]
+    [ "r0evolve", "parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41", null ],
+    [ "dtrat", "parms_8h.html#a900f18d08f204e8188a7076858a8e1eb", null ]
 ];

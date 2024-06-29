@@ -34,7 +34,6 @@ var parms_8h_structsim__cfg__t =
     [ "skysim", "parms_8h.html#ac62efa0b89a07dfaef1c6d9417e3a538", null ],
     [ "evlol", "parms_8h.html#a96d68ff61ce6978d5c40c844a8e06dab", null ],
     [ "noatm", "parms_8h.html#a96b83b3ef63e1ffe79c21eecf46217be", null ],
-    [ "idealfit", "parms_8h.html#a75e9ec3fdeeb0293b5ff1722b21195e3", null ],
     [ "idealtomo", "parms_8h.html#aa1155cbd9ec6662b5f512709a2e95461", null ],
     [ "psfr", "parms_8h.html#a7fd03e733e426226b1f2353525151830", null ],
     [ "ecnn", "parms_8h.html#af440deb3973cdd8350e894b795aa55c2", null ],

@@ -10,7 +10,6 @@ var dir_8ce14126537f3a9a7f58ccafbb182cd0 =
     [ "perfevl.c", "perfevl_8c.html", "perfevl_8c" ],
     [ "powfs.h", "powfs_8h.html", "powfs_8h" ],
     [ "powfs_utils.h", "powfs__utils_8h.html", "powfs__utils_8h" ],
-    [ "pywfs.h", "pywfs_8h.html", "pywfs_8h" ],
     [ "recon.h", "maos_2recon_8h.html", "maos_2recon_8h" ],
     [ "recon_fit.c", "recon__fit_8c.html", "recon__fit_8c" ],
     [ "recon_lsr.c", "recon__lsr_8c.html", "recon__lsr_8c" ],

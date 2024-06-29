@@ -40,7 +40,7 @@ digraph "powfs_t"
   Node98 [label="{pywfs_t\n||}",height=0.2,width=0.4,color="red",URL="$pywfs_8h.html#structpywfs__t"];
   Node85 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +msaloc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node93 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +si" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node82 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +siglev\n+gain" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node82 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +gain" ,arrowhead="odiamond",fontname="Helvetica"];
   Node100 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +locfft" ,arrowhead="odiamond",fontname="Helvetica"];
   Node100 [label="{locfft_t\n||}",height=0.2,width=0.4,color="red",URL="$locfft_8h.html#structlocfft__t"];
   Node71 -> Node100 [color="grey25",fontsize="10",style="solid",label=" +fieldmask" ,arrowhead="odiamond",fontname="Helvetica"];
@@ -50,8 +50,8 @@ digraph "powfs_t"
   Node79 -> Node100 [color="grey25",fontsize="10",style="solid",label=" +amp\n+wvl" ,arrowhead="odiamond",fontname="Helvetica"];
   Node87 -> Node100 [color="grey25",fontsize="10",style="solid",label=" +loc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node74 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +iwfs0\n+gpu" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node79 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +gradoff\n+saa\n+amp\n+wvlwts\n+sioff\n+opdadd\n+GTT\n+pupilshift" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node87 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +loc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node79 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +gradoff\n+saa\n+amp\n+sioff\n+opdadd\n+GTT\n+pupilshift" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node87 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +loc\n+saloc" ,arrowhead="odiamond",fontname="Helvetica"];
   Node105 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +dtf" ,arrowhead="odiamond",fontname="Helvetica"];
   Node105 [label="{dtf_t\n||}",height=0.2,width=0.4,color="red",URL="$mkdtf_8h.html#structdtf__t"];
   Node71 -> Node105 [color="grey25",fontsize="10",style="solid",label=" +nominal" ,arrowhead="odiamond",fontname="Helvetica"];

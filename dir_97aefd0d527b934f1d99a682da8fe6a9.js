@@ -23,6 +23,7 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "pcg.h", "lib_2pcg_8h.html", "lib_2pcg_8h" ],
     [ "proj.h", "proj_8h.html", "proj_8h" ],
     [ "psd.h", "psd_8h.html", "psd_8h" ],
+    [ "pywfs.h", "pywfs_8h.html", "pywfs_8h" ],
     [ "readcfg.h", "readcfg_8h.html", "readcfg_8h" ],
     [ "servo.h", "servo_8h.html", "servo_8h" ],
     [ "slaving.h", "slaving_8h.html", "slaving_8h" ],

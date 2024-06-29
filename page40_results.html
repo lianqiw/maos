@@ -168,20 +168,21 @@ Wavefront error</h2>
 <ul>
 <li><code>Res_1:</code> A binary file containing a cell array that include the main results.<ul>
 <li>Use res=read('Res_1');</li>
-<li><code>res{1}</code> contains the open loop wavefront variance (WFV in units of \(m^2\)) in row vectors. The rows are<ul>
+<li><p class="startli"><code>res</code>[0] contains the open loop wavefront variance (WFV in units of \(m^2\)) in row vectors. When sim.rmax=1, the rows are</p><ul>
 <li>Piston removed WFV</li>
 <li>WFV in tip/tilt modes</li>
 <li>Piston/tip/tilt removed WFV</li>
 </ul>
-</li>
-<li><code>res{2}</code> contains the residual wavefront variance after the tomography phase screen is directly applied as the correction in open loop mode. Empty if evl.tomo is zero.</li>
-<li><code>res{3}</code> contains the closed loop wavefront variance in row vectors. The rows are<ul>
+<p class="startli">When sim.rmax&gt;1, the rows are</p><ul>
 <li>Piston removed WFV</li>
-<li>WVF in tip/tilt modes</li>
-<li>Piston/tip/tilt removed WFV</li>
+<li>Piston/Tip removed WFE</li>
+<li>Piston/Tip/Tilt removed WFE</li>
+<li>...</li>
 </ul>
 </li>
-<li><code>res{4}</code> (Only in split tomography) contains the closed loop wavefront variance. The rows are<ul>
+<li><code>res</code>[1] no longer used.</li>
+<li><code>res</code>[2] contains the closed loop wavefront variance in row vectors. The format is the same as res[0]</li>
+<li><code>res</code>[3] (Only in split tomography) contains the closed loop wavefront variance. The rows are (not depend on sim.rmax)<ul>
 <li>WFV in LGS contains modes</li>
 <li>WFV in NGS Tip/Tilt modes</li>
 <li>WFV in NGS modes (including Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))</li>
@@ -191,10 +192,10 @@ Wavefront error</h2>
 </li>
 <li><code>Resp_1:</code> <code>resp:</code> Results for each direction. Combines the following four files previous saved individually: Resolmp_1, Resclmp_1, Resolep_1, Resclep_1.<ul>
 <li>Use <code>resp=read</code>('Resp_1)</li>
-<li><code>resp</code>[0]: Open loop wavefront Zernike modes defined on not-normalized coordinate on the aperture, in the order of piston/tip/tilt ...</li>
-<li><code>resp</code>[1]: Close loop wavefront Zernike modes, in the same format as <code>resp</code>[0].</li>
-<li><code>resp</code>[2]: Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li>
-<li><code>resp</code>[3]: Closed loop wavefront variance for each science field point, in the same format as <code>resp</code>[2].</li>
+<li><code>resp</code>[0,idir]: Open loop wavefront Zernike modes, for evaluation direction idir, defined on un-normalized coordinate on the aperture, in the Noll's Zernike order of piston/tip/tilt ...</li>
+<li><code>resp</code>[1,idir]: Close loop wavefront Zernike modes, in the same format as <code>resp</code>[0,idir].</li>
+<li><code>resp</code>[2,idir]: Open loop wavefront variance for each science field point in the same format as res[0].</li>
+<li><code>resp</code>[3,idir]: Closed loop wavefront variance for each science field point in the same format as res[0].</li>
 </ul>
 </li>
 </ul>

@@ -188,7 +188,10 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>setup NGS modes reconstructor in ahst mode. </p>
+<p>setup NGS modes reconstructor in ahst mode.</p>
+<p>When tomo.ahst_wt=1:</p>
+<p>Rngs=GM^=(GM'*W_N*GM)^{-1}*GM'*W_N #W_N is recon-&gt;saneai M^=Rngs*GA <a class="el" href="maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f">reconstruct</a> mode from NGS measurements equals to original mode Pngs=M*M^=M*Rngs*GA satisfies Rngs*GA*Pngs=Rngs*GA In other words, M^=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA)</p>
+<p>Projector has the properties: M*Pngs*(1-M*Pngs)=0 </p>
 
 </div>
 </div>

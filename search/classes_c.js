@@ -18,6 +18,6 @@ var searchData=
   ['pts_5ft_2e_5f_5funnamed_5f_5f',['pts_t.__unnamed__',['../type_8h.html#unionpts__t_8____unnamed____',1,'']]],
   ['pts_5ft_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['pts_t.__unnamed__.__unnamed__',['../type_8h.html#structpts__t_8____unnamed_____8____unnamed____',1,'']]],
   ['pts_5ft_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f_2e_5f_5funnamed_5f_5f',['pts_t.__unnamed__.__unnamed__.__unnamed__',['../type_8h.html#unionpts__t_8____unnamed_____8____unnamed_____8____unnamed____',1,'']]],
-  ['pywfs_5fcfg_5ft',['pywfs_cfg_t',['../parms_8h.html#structpywfs__cfg__t',1,'']]],
+  ['pywfs_5fcfg_5ft',['pywfs_cfg_t',['../pywfs_8h.html#structpywfs__cfg__t',1,'']]],
   ['pywfs_5ft',['pywfs_t',['../pywfs_8h.html#structpywfs__t',1,'']]]
 ];

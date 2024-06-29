@@ -117,6 +117,8 @@ Functions</h2></td></tr>
 <tr class="separator:ace25cdf353eb393aa5abaf0c95e49efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13c5edd8c559386a72b522f43e49e733"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a13c5edd8c559386a72b522f43e49e733">calc_dither_amp</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **res, const <a class="el" href="type_8h.html#structdmat">dmat</a> *signal, <a class="el" href="classlong.html">long</a> dtrat, <a class="el" href="classlong.html">long</a> npoint, int detrend, int combine)</td></tr>
 <tr class="separator:a13c5edd8c559386a72b522f43e49e733"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2235242a9bac255b39560b25cf2e5dd4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a2235242a9bac255b39560b25cf2e5dd4">wrap_seq</a> (<a class="el" href="classlong.html">long</a> index, <a class="el" href="classlong.html">long</a> n)</td></tr>
+<tr class="separator:a2235242a9bac255b39560b25cf2e5dd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a4bf8970d027f919a7485a8e426415de6"></a>
@@ -499,6 +501,35 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a2235242a9bac255b39560b25cf2e5dd4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2235242a9bac255b39560b25cf2e5dd4">&#9670;&nbsp;</a></span>wrap_seq()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int wrap_seq </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>n</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 0 1 2 3 2 1 0 1 2 3 2 1 0 ... </p>
 
 </div>
 </div>

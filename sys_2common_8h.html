@@ -187,6 +187,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a642678006d495d706eb924be24717e81"><td class="memItemLeft" align="right" valign="top"><a id="a642678006d495d706eb924be24717e81"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_progress</b>(i,  n)&#160;&#160;&#160;if((i)%(((n)&gt;&gt;4)+1)==0) fprintf(stderr,&quot;&gt;&quot;)</td></tr>
 <tr class="separator:a642678006d495d706eb924be24717e81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34f907ee6fba99db55dcf46b64836a3d"><td class="memItemLeft" align="right" valign="top"><a id="a34f907ee6fba99db55dcf46b64836a3d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_errno</b>(A)&#160;&#160;&#160;if(errno) info(A &quot; failed (%d): %s\n&quot;, errno, strerror(errno))</td></tr>
+<tr class="separator:a34f907ee6fba99db55dcf46b64836a3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memItemLeft" align="right" valign="top"><a id="a7033895ed53df94af8dc30f4ae8a2e0e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg</b>(A...)&#160;&#160;&#160;logdbg(0, YELLOW, A)</td></tr>
 <tr class="separator:a7033895ed53df94af8dc30f4ae8a2e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>

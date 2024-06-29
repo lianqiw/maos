@@ -27,7 +27,8 @@ var parms_8h =
       [ "frozenflow", "parms_8h.html#ae9bb258aaeebfb619fe27ebf1c202f26", null ],
       [ "ninit", "parms_8h.html#a083a316e7771896dd5fa16fbc4f7038e", null ],
       [ "share", "parms_8h.html#afc6a5da1972b32b6abf232a4228b9cc9", null ],
-      [ "r0evolve", "parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41", null ]
+      [ "r0evolve", "parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41", null ],
+      [ "dtrat", "parms_8h.html#a900f18d08f204e8188a7076858a8e1eb", null ]
     ] ],
     [ "atmr_cfg_t", "parms_8h.html#structatmr__cfg__t", [
       [ "r0z", "parms_8h.html#aaaae1ac84c4c2a845200e043ba26dd11", null ],
@@ -95,25 +96,6 @@ var parms_8h =
       [ "ograt", "parms_8h.html#a2753246d624b392f36bbdf490367bdbf", null ],
       [ "ogsingle", "parms_8h.html#aff9631fcc04fbce3e20247a89e507291", null ]
     ] ],
-    [ "pywfs_cfg_t", "parms_8h.html#structpywfs__cfg__t", [
-      [ "nside", "parms_8h.html#a165013585625c81b54bcd6fa15db2f6a", null ],
-      [ "raw", "parms_8h.html#a31180e752c3a1e615e413f61fe3b7aa2", null ],
-      [ "ng", "parms_8h.html#a7c5c19ddbb55ded813102aec2370ed75", null ],
-      [ "modulpos", "parms_8h.html#acbd0d2bbccd50cfd8cb716021e376eee", null ],
-      [ "modulpos_i", "parms_8h.html#afe8fb8802e3775d894ca9c3d6ab36742", null ],
-      [ "modulring", "parms_8h.html#ad36b35d4aa3843841f00aea5783f0429", null ],
-      [ "sigmatch", "parms_8h.html#aa7d874c40041ba05525a118ecde1d4c4", null ],
-      [ "siglev", "parms_8h.html#a923bea3f0ed3a3c7b46f6f53e5356251", null ],
-      [ "hs", "parms_8h.html#a09af26960a414c5bd1d9410e82c40885", null ],
-      [ "hc", "parms_8h.html#acc902b9eadedebe1fd29fc06bfaee458", null ],
-      [ "poke", "parms_8h.html#acdb71e37bc278e2caeabf8d6defb0288", null ],
-      [ "modulate", "parms_8h.html#abf6b2eee87e4010d2b5a8a279690faf2", null ],
-      [ "psx", "parms_8h.html#a2139cf9d26efd615bdfba028c4b57e02", null ],
-      [ "psy", "parms_8h.html#a18be9e46e11e25e1ba8a8278417a9826", null ],
-      [ "flate", "parms_8h.html#a94f63cb833763a5a4e23a5589c7d08b2", null ],
-      [ "flatv", "parms_8h.html#a313f56cea0a064c26afdbbdb8d93194b", null ],
-      [ "pupelong", "parms_8h.html#a1c01800cdad9b5c0c6abc597ec4667c2", null ]
-    ] ],
     [ "powfs_cfg_t", "parms_8h.html#structpowfs__cfg__t", [
       [ "wvl", "parms_8h.html#a96f91d5fc23b2bd23f801a16cc799669", null ],
       [ "wvlwts", "parms_8h.html#ae59464bff179ac7ca34fb1e9a6b5d8c9", null ],
@@ -148,6 +130,7 @@ var parms_8h =
       [ "pixtheta", "parms_8h.html#ad402ac74c2dad687c092205bcd0a2670", null ],
       [ "radpixtheta", "parms_8h.html#aa79332f6ce41159a7568cdcd2d877296", null ],
       [ "fieldstop", "parms_8h.html#a5a51874ef5e2219cb7480672c0908afe", null ],
+      [ "astscale", "parms_8h.html#a32061bbd059691f974afb69fe128be38", null ],
       [ "pixoffx", "parms_8h.html#a55898ea2afa12725829a9fe3e62f743f", null ],
       [ "pixoffy", "parms_8h.html#a1e19eb4ec667e9294eb0735087e74336", null ],
       [ "sigscale", "parms_8h.html#ac86b1b514e55915bf6761790c9903816", null ],
@@ -283,6 +266,7 @@ var parms_8h =
       [ "wt", "parms_8h.html#a80dc99fb3bdc057ab2951adbfc74b523", null ],
       [ "wvl", "parms_8h.html#ae8562f302fadab5ad2bfdda875f3eda6", null ],
       [ "hs", "parms_8h.html#a25a001bdcbdf2887dd50961df41388a9", null ],
+      [ "wvlname", "parms_8h.html#a2ddeecfe411182da3da84b16a2c8700a", null ],
       [ "dx", "parms_8h.html#ac58baa280d10e5366923acc8b10e744d", null ],
       [ "nwvl", "parms_8h.html#aebc495bf51ea60b48b8564d08f385659", null ],
       [ "psf", "parms_8h.html#a65512f5d78654b63c0d9a4f1b48fcc9e", null ],
@@ -387,8 +371,11 @@ var parms_8h =
       [ "twfs_rmin", "parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da", null ],
       [ "twfs_rmax", "parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
       [ "twfs_radonly", "parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ],
-      [ "petaling", "parms_8h.html#aa680b0fea83499f0bc0165ac0589bf6e", null ],
+      [ "petal", "parms_8h.html#af91ea69b8a70539236052fb08eb856e7", null ],
       [ "petaldtrat", "parms_8h.html#a0fca2bb965487d48e28b716229565ce1", null ],
+      [ "petalstep", "parms_8h.html#abc6a9769b3f1e67f7360a97b278e7980", null ],
+      [ "petalnpsf", "parms_8h.html#a3ea7f3bdb747d09eaf31599d74417877", null ],
+      [ "petaltt", "parms_8h.html#a8a860dfe0c4d43573623c83197f9a1dd", null ],
       [ "distortion_dm2wfs", "parms_8h.html#a185514284ff87c3ac54162d7d0daf5c6", null ],
       [ "distortion_dm2sci", "parms_8h.html#afdbafb6fc04edd13d5bdd8cfe5d9d730", null ],
       [ "distortion_tel2wfs", "parms_8h.html#a8544e4837a99f0c7857756b583a72989", null ]
@@ -428,7 +415,6 @@ var parms_8h =
       [ "skysim", "parms_8h.html#ac62efa0b89a07dfaef1c6d9417e3a538", null ],
       [ "evlol", "parms_8h.html#a96d68ff61ce6978d5c40c844a8e06dab", null ],
       [ "noatm", "parms_8h.html#a96b83b3ef63e1ffe79c21eecf46217be", null ],
-      [ "idealfit", "parms_8h.html#a75e9ec3fdeeb0293b5ff1722b21195e3", null ],
       [ "idealtomo", "parms_8h.html#aa1155cbd9ec6662b5f512709a2e95461", null ],
       [ "psfr", "parms_8h.html#a7fd03e733e426226b1f2353525151830", null ],
       [ "ecnn", "parms_8h.html#af440deb3973cdd8350e894b795aa55c2", null ],
@@ -664,7 +650,8 @@ var parms_8h =
       [ "idmground", "parms_8h.html#a16a927b7359643ecd2a85cc8e42b6167", null ],
       [ "step_lo", "parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf", null ],
       [ "step_hi", "parms_8h.html#a321f3d5b71b7f3cf59af6fe8c97d0c8e", null ],
-      [ "hipowfs_hs", "parms_8h.html#a44a9404b6c66d6229c11786be03f21c4", null ],
+      [ "hipowfs_hsmin", "parms_8h.html#a891bcd366c74ce693e6afbb95e2eb78a", null ],
+      [ "hipowfs_hsmax", "parms_8h.html#ac61a8d956b15cb9fdce6b860e89ef272", null ],
       [ "itwfssph", "parms_8h.html#a56a693cc1ff576f23f7ff60ca7adfd18", null ]
     ] ],
     [ "arg_t", "parms_8h.html#structarg__t", [

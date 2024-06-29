@@ -47,6 +47,7 @@ var parms_8h_structparms__t =
     [ "idmground", "parms_8h.html#a16a927b7359643ecd2a85cc8e42b6167", null ],
     [ "step_lo", "parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf", null ],
     [ "step_hi", "parms_8h.html#a321f3d5b71b7f3cf59af6fe8c97d0c8e", null ],
-    [ "hipowfs_hs", "parms_8h.html#a44a9404b6c66d6229c11786be03f21c4", null ],
+    [ "hipowfs_hsmin", "parms_8h.html#a891bcd366c74ce693e6afbb95e2eb78a", null ],
+    [ "hipowfs_hsmax", "parms_8h.html#ac61a8d956b15cb9fdce6b860e89ef272", null ],
     [ "itwfssph", "parms_8h.html#a56a693cc1ff576f23f7ff60ca7adfd18", null ]
 ];

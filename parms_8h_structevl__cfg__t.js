@@ -5,6 +5,7 @@ var parms_8h_structevl__cfg__t =
     [ "wt", "parms_8h.html#a80dc99fb3bdc057ab2951adbfc74b523", null ],
     [ "wvl", "parms_8h.html#ae8562f302fadab5ad2bfdda875f3eda6", null ],
     [ "hs", "parms_8h.html#a25a001bdcbdf2887dd50961df41388a9", null ],
+    [ "wvlname", "parms_8h.html#a2ddeecfe411182da3da84b16a2c8700a", null ],
     [ "dx", "parms_8h.html#ac58baa280d10e5366923acc8b10e744d", null ],
     [ "nwvl", "parms_8h.html#aebc495bf51ea60b48b8564d08f385659", null ],
     [ "psf", "parms_8h.html#a65512f5d78654b63c0d9a4f1b48fcc9e", null ],

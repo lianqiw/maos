@@ -10,7 +10,7 @@ digraph "cusolve_cg"
   Node2 -> Node0 [dir="back",color="firebrick4",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
   Node2 [label="{nonCopyable\n||# nonCopyable()\l}",height=0.2,width=0.4,color="black",URL="$classnon_copyable.html"];
   Node0 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
-  Node3 [label="{cufit_grid\n|# grid\l# nfit\l# idealfit\l# acmap\l# dmcache\l# xcache\l# opdfit\l# opdfit2\l# opdfitv\l# opdfit2v\land 12 more...\l|+ cufit_grid()\l+ ~cufit_grid()\l+ R()\l+ L()\l+ Rt()\l# do_hxp()\l# do_hxpt()\l# do_ha()\l# do_hat()\l}",height=0.2,width=0.4,color="black",URL="$classcufit__grid.html"];
+  Node3 [label="{cufit_grid\n|# grid\l# nfit\l# idealtomo\l# acmap\l# dmcache\l# xcache\l# opdfit\l# opdfit2\l# opdfitv\l# opdfit2v\land 12 more...\l|+ cufit_grid()\l+ ~cufit_grid()\l+ R()\l+ L()\l+ Rt()\l# do_hxp()\l# do_hxpt()\l# do_ha()\l# do_hat()\l}",height=0.2,width=0.4,color="black",URL="$classcufit__grid.html"];
   Node0 -> Node4 [dir="back",color="firebrick4",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
   Node4 [label="{cumoao_t\n||+ L()\l+ moao_solve()\l+ cumoao_t()\l+ operator bool()\l}",height=0.2,width=0.4,color="black",URL="$classcumoao__t.html"];
   Node0 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];

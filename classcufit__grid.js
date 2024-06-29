@@ -11,7 +11,7 @@ var classcufit__grid =
     [ "Rt", "classcufit__grid.html#a46a4ee9012ba99f42505e61ef51e87ab", null ],
     [ "grid", "classcufit__grid.html#a11433173954cb09178276d3c7e364f02", null ],
     [ "nfit", "classcufit__grid.html#a3b4a6dac18e72aabb32638ba83237267", null ],
-    [ "idealfit", "classcufit__grid.html#a35b5ffc3c69ba711f25befe926dfa469", null ],
+    [ "idealtomo", "classcufit__grid.html#a635cc2311c3c92d8ad98d0fbd3395c6e", null ],
     [ "acmap", "classcufit__grid.html#a58cfbbaf5c3c0f357f7ec73ae7c6b8ae", null ],
     [ "dmcache", "classcufit__grid.html#a61a4f0d5c6b01b9169a31160cc6ee84e", null ],
     [ "xcache", "classcufit__grid.html#ada9069dbb1287f44e59d7fec06bb47bd", null ],

@@ -33,6 +33,7 @@ var parms_8h_structpowfs__cfg__t =
     [ "pixtheta", "parms_8h.html#ad402ac74c2dad687c092205bcd0a2670", null ],
     [ "radpixtheta", "parms_8h.html#aa79332f6ce41159a7568cdcd2d877296", null ],
     [ "fieldstop", "parms_8h.html#a5a51874ef5e2219cb7480672c0908afe", null ],
+    [ "astscale", "parms_8h.html#a32061bbd059691f974afb69fe128be38", null ],
     [ "pixoffx", "parms_8h.html#a55898ea2afa12725829a9fe3e62f743f", null ],
     [ "pixoffy", "parms_8h.html#a1e19eb4ec667e9294eb0735087e74336", null ],
     [ "sigscale", "parms_8h.html#ac86b1b514e55915bf6761790c9903816", null ],

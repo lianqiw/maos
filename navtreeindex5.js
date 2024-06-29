@@ -1,5 +1,7 @@
 var NAVTREEINDEX5 =
 {
+"dmath_8h.html#ad1d20a43f3edb382297e0bfa3ff826a6":[11,0,3,2,229],
+"dmath_8h.html#ad380e26b2e7068cd7362663c45052afa":[11,0,3,2,36],
 "dmath_8h.html#ad39779cf7385f55fc2688354291ddaa0":[11,0,3,2,171],
 "dmath_8h.html#ad55b31a5f99d2b815e0753c77da70cdf":[11,0,3,2,125],
 "dmath_8h.html#ad6518403ee2ca0e2d52eaf2a0813e6c7":[11,0,3,2,45],
@@ -247,7 +249,5 @@ var NAVTREEINDEX5 =
 "kalman_8h.html#af94af56f9ba672f94231abea41a46227":[11,0,1,9,1],
 "kalman_8h.html#structkalman__t":[11,0,1,9,0],
 "keck_base.html":[4,4,92],
-"keck_lgs.html":[4,4,93],
-"keck_ngs.html":[4,4,94],
-"laplacian_8h.html":[11,0,1,10]
+"keck_lgs.html":[4,4,93]
 };

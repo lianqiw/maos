@@ -6,5 +6,6 @@ var lib_2misc_8h =
     [ "loc_calib", "lib_2misc_8h.html#a58a22bed03d88e2f5f910880f7cec8e0", null ],
     [ "polyfit", "lib_2misc_8h.html#a06cf7ebeeb404e3c738260609e0f45fa", null ],
     [ "polyval", "lib_2misc_8h.html#ace25cdf353eb393aa5abaf0c95e49efe", null ],
-    [ "calc_dither_amp", "lib_2misc_8h.html#a13c5edd8c559386a72b522f43e49e733", null ]
+    [ "calc_dither_amp", "lib_2misc_8h.html#a13c5edd8c559386a72b522f43e49e733", null ],
+    [ "wrap_seq", "lib_2misc_8h.html#a2235242a9bac255b39560b25cf2e5dd4", null ]
 ];
