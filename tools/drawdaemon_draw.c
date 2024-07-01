@@ -227,11 +227,8 @@ void round_limit(float* xmin, float* xmax, int logscale){
  * When limit or limit0 changes, update zoomx,y and offx,y to not alter the limit0.
 */
 void update_zoom(drawdata_t* drawdata){
-	//info_time("update_zoom entr: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
-	/*if(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
-		return;
-	}*/
-	if((drawdata->limit0[0]==0&&drawdata->limit0[1]==0)||(drawdata->limit0[2]==0&&drawdata->limit0[3]==0)||drawdata->limit_changed!=1){
+	//dbg_time("update_zoom entr: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	if((drawdata->limit0[0]==0&&drawdata->limit0[1]==0)||(drawdata->limit0[2]==0&&drawdata->limit0[3]==0)){
 		return;//never been plotted. do not try to zoom/offset.
 	}
 	/*limit0 matches limit in unzoomed state */
@@ -285,7 +282,8 @@ void update_zoom(drawdata_t* drawdata){
 		drawdata->offx=-(midx1-midx0)*drawdata->widthim/(diffx1);
 		drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1);
 	}
-	//info_time("update_zoom exit: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+	drawdata->update_zoom=0;
+	//dbg_time("update_zoom exit: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 }
 /*
   Definition of style: (bits count from lowest end0
@@ -430,43 +428,47 @@ static void update_limit(drawdata_t *drawdata){
 		if(ymin<ymin0) ymin0=ymin;
 		if(ymax>ymax0) ymax0=ymax;
 	}
+	for(int icir=0; icir<drawdata->ncir; icir++){
+		xmax0=MAX(xmax0, drawdata->cir[icir][0]+drawdata->cir[icir][2]);
+		xmin0=MIN(xmin0, drawdata->cir[icir][0]-drawdata->cir[icir][2]);
+		ymax0=MAX(ymax0, drawdata->cir[icir][1]+drawdata->cir[icir][2]);
+		ymin0=MIN(ymin0, drawdata->cir[icir][1]-drawdata->cir[icir][2]);
+	}
 	if(isinf(ymin0)) ymin0=0;
 	if(isinf(ymax0)) ymax0=1;
-
+	int limit_changed=0;
 	float ylimit=(ymax0-ymin0)*0.1;
 	if(drawdata->cumu!=drawdata->cumulast){
-		drawdata->limit_changed=3;//limit is changed. reset zoom.
+		drawdata->update_zoom=2;//limit is changed. reset zoom.
 		drawdata->limit[0]=xmin0;
 		drawdata->limit[1]=xmax0;
 		drawdata->limit[2]=ymin0;
 		drawdata->limit[3]=ymax0;
 	}else{
-		drawdata->limit_changed=0;
 		if(drawdata->limit[0]!=xmin0){
 			drawdata->limit[0]=xmin0;
-			drawdata->limit_changed=1;
+			limit_changed=1;
 		}
 		if(drawdata->limit[1]!=xmax0){
 			drawdata->limit[1]=xmax0;
-			drawdata->limit_changed=1;
+			limit_changed=1;
 		}
 		if(!drawdata->limit[2]||drawdata->limit[2]>ymin0||drawdata->limit[2]+ylimit<ymin0){
 			drawdata->limit[2]=ymin0;//only update if the limit is below or a threshold above the old result
-			drawdata->limit_changed=1;
+			limit_changed=1;
 		}
 		if(!drawdata->limit[3]||drawdata->limit[3]<ymax0||drawdata->limit[3]>ylimit+ymax0){
 			drawdata->limit[3]=ymax0;//only update if the upper limit is above or a threshold below the old result
-			drawdata->limit_changed=1;
+			limit_changed=1;
 		}
 	}
 	round_limit(&drawdata->limit[0], &drawdata->limit[1], xlog);
 	round_limit(&drawdata->limit[2], &drawdata->limit[3], ylog);
-	if(drawdata->limit_changed==1){
-		if(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0){
-			drawdata->limit_changed=0;//not zoomed. do not preserve viewing area.
-		}
+	if(limit_changed==1 && !(drawdata->zoomx==1&&drawdata->zoomy==1&&drawdata->offx==0&&drawdata->offy==0)){
+		drawdata->update_zoom=1;//update zoom to preserve viewing area
 	}
-	//info_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, drawdata->limit_changed);
+	drawdata->update_limit=0;
+	//dbg_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, limit_changed);
 }
 /**
    The master routine that draws in the cairo surface.
@@ -474,7 +476,6 @@ static void update_limit(drawdata_t *drawdata){
    meaning of limit_changed
    0: no change from previous plot.
    1: limit0 is changed and update_zoom is needed to update zoom.
-   3: limit is changed and zoom will be reset. also update_limit.
    -1:new data, or switch between cumu and non-cumu. need to run update_limit.
 */
 void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
@@ -504,13 +505,13 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}*/
 		if(!drawdata->limit_cumu){
 			drawdata->limit_cumu=mycalloc(4, float);
-			drawdata->limit_changed=-1;
+			drawdata->update_limit=1;
 		}
 		drawdata->limit=drawdata->limit_cumu;
 	} else{
 		if(!drawdata->limit_data){
 			drawdata->limit_data=mycalloc(4, float);
-			drawdata->limit_changed=-1;
+			drawdata->update_limit=1;
 		}
 		drawdata->limit=drawdata->limit_data;
 	}
@@ -532,24 +533,24 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	}else{
 		if(drawdata->cumulast!=drawdata->cumu){
 			drawdata->drawn=0;
-			drawdata->limit_changed=-1;
+			drawdata->update_limit=1;
 		}else if(drawdata->cumu){
 			if(drawdata->icumu!=drawdata->icumulast||drawdata->cumuquadlast!=drawdata->cumuquad){
 				drawdata->drawn=0;
-				drawdata->limit_changed=-1;
+				drawdata->update_limit=1;
 			}
 		}
-		if(drawdata->limit_changed==-1||drawdata->limit_changed==3){
+		if(drawdata->update_limit){
 			update_limit(drawdata);
 		}
 	}
-	if(drawdata->limit_changed==3){
+	if(drawdata->update_zoom==2){
 		drawdata->offx=0;
 		drawdata->offy=0;
 		drawdata->zoomx=1;
 		drawdata->zoomy=1;
 		drawdata->drawn=0;
-		drawdata->limit_changed=0;
+		drawdata->update_zoom=0;
 	}
 	
 	int xlog=drawdata->xylog[0]=='y'?1:0;
@@ -608,12 +609,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->scaley=scaley;
 	if((drawdata->widthim_last>0&&drawdata->widthim_last!=drawdata->widthim)
 		||(drawdata->heightim_last>0 &&drawdata->heightim_last!=drawdata->heightim)){
-		drawdata->limit_changed=1;
+		drawdata->update_zoom=1;
 	}
-	if(drawdata->limit_changed==1){
+	if(drawdata->update_zoom==1){
 		/*Update zoomx/y, offx/y to preserve limit0 displayed. responses to window resize or zoom by selection.*/
 		update_zoom(drawdata);
-		drawdata->limit_changed=0;
 		drawdata->drawn=0;
 	}
 	if(drawdata->zlim_changed&&drawdata->p){/*zlim changed. */
@@ -1261,6 +1261,8 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->cumuquadlast=drawdata->cumuquad;
 	drawdata->zoomx_last=drawdata->zoomx;
 	drawdata->zoomy_last=drawdata->zoomy;
+	drawdata->update_zoom=0;
+	drawdata->update_limit=0;
 	drawdata->drawn=1;
 	//toc("cairo_draw");
 }

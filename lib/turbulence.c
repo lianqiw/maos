@@ -173,7 +173,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 			dcp(&P(data->screen, ilayer), this_screen);
 		}
 		real tk4=myclockd();
-		info("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n",
+		dbg("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n",
 			ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy", tk4-tk3);
 	}
 	dcellfree(dc);
@@ -322,9 +322,9 @@ mapcell* genscreen_str(const char* keywords){
 		}else if(isnan(mode)&&isnan(petal)){//mode is not specified
 			if(isnan(r0)){
 				r0=calc_r0(rmsnm*1e-9, L0, slope);
-				info("r0=%g is computed from rms=%g nm\n", r0, rmsnm);
+				dbg("r0=%g is computed from rms=%g nm\n", r0, rmsnm);
 			}
-			info("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
+			dbg("Generating screen with r0=%g, L0=%g, dx=%g, slope=%g, nx=%g, seed=%g\n",
 				r0, L0, dx, slope, nx, seed);
 			rand_t rstat;
 			seed_rand(&rstat, (int)seed);
@@ -334,12 +334,12 @@ mapcell* genscreen_str(const char* keywords){
 		}else{
 			if(isnan(rmsnm)){
 				rmsnm=calc_rms(r0, L0, slope)*1e9;
-				info("rms=%g nm is computed from r0=%g m\n", rmsnm, r0);
+				dbg("rms=%g nm is computed from r0=%g m\n", rmsnm, r0);
 			}
 			surfs=mapcellnew(1, 1);
 			P(surfs, 0)=mapnew(nx, ny, dx, dx);
 			if(!isnan(mode)){
-				info("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rmsnm);
+				dbg("Generating screen with zernike mode %d for %g nm RMS.\n", (int)mode, rmsnm);
 				loc_t *loc=mksqloc_auto(nx, ny, dx, dx);
 				dmat *opd=zernike(loc, nx*dx, 0, 0, -(int)mode);
 				dscale(opd, rmsnm*1e-9);
@@ -349,7 +349,7 @@ mapcell* genscreen_str(const char* keywords){
 				locfree(loc);
 			}else if(!isnan(petal)){
 				int npetal=(int)search_keyword_num_default(keywords, "npetal", 6);
-				info("Generating petal modes for %g nm RMS.\n", rmsnm);
+				dbg("Generating petal modes for %g nm RMS.\n", rmsnm);
 				
 				//real dtheta=TWOPI/nseg;
 				real theta0=search_keyword_num_default(keywords, "rotdeg", 0)*M_PI/180;
@@ -382,7 +382,7 @@ mapcell* genscreen_str(const char* keywords){
 				if(isnan(rmsnm)){
 					rmsnm=calc_rms(r0, L0, slope)*1e9;
 				}
-				info("Layer %d has %g nm rms wfe, expected %g nm.\n", i, rmsnmi, rmsnm);
+				dbg("Layer %d has %g nm rms wfe, expected %g nm.\n", i, rmsnmi, rmsnm);
 			}
 		}
 	}

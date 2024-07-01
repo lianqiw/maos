@@ -1994,7 +1994,7 @@ void print_progress(sim_t* simu){
 						"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
 				draw("Res", (plot_opts){ .dc=P(simu->plot_res, 4), .legend=parms->evl.wvlname},
 										"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
-			}else if(draw_current("Res", "Close loop") || draw_current("Res", "Open loop") ){
+			}else if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
 				for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
 					int i=simu->plot_isim;
 					for(int ic=0; ic<2; ic++){//0: CL. 1: OL
@@ -2021,7 +2021,7 @@ void print_progress(sim_t* simu){
 				for(int ic=0; ic<2; ic++){
 					dcell *res=P(simu->plot_res, ic);
 					draw("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=simu->plot_legs},
-						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "%s loop", ic==0?"Close":"Open");
+						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "RMS WFE%s", ic==0?"":" OL");
 				}
 			}
 		}

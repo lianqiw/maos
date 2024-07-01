@@ -826,7 +826,7 @@ int drawmap(const char* fig, const map_t* map, real zlim,
 	if(!map || !draw_current(fig, fn)) return 0;
 	real limit[4];
 	LIMIT_SET_X(limit, map->ox, 0.5, map->dx, map->nx);
-	LIMIT_SET_Y(limit, map->oy, 0.5, map->dx, map->ny);
+	LIMIT_SET_Y(limit, map->oy, 0.5, map->dy, map->ny);
 	draw(fig, (plot_opts){.image=(const dmat*)map, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
@@ -848,9 +848,10 @@ int drawloc(const char* fig, loc_t* loc, real zlim,
 			P(opd0, ix, iy)=(P(loc->map, (ix+npad), (iy+npad))>0);
 		}
 	}
+	real offset=npad+(isfinite(loc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 
 	real limit[4];
-	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
-	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dx, ny);
+	LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, nx);
+	LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, ny);
 	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
@@ -871,10 +872,11 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	}
 	dmat* opd0=dnew(0,0);
 	loc_embed(opd0, loc, opd);
+	real offset=loc->npad+(isfinite(loc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 
 	real limit[4];
 	if(loc->map){
-		LIMIT_SET_X(limit, loc->map->ox, loc->npad-0.5, loc->dx, opd0->nx);
-		LIMIT_SET_Y(limit, loc->map->oy, loc->npad-0.5, loc->dy, opd0->ny);
+		LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, opd0->nx);
+		LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, opd0->ny);
 	}
 	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
@@ -911,51 +913,39 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
-	if(!saloc || !gradin) return 0;
-    long nsa=saloc->nloc;
+	if(!draw_current(fig, fn) || !saloc || !gradin) return 0;
+	long nsa=saloc->nloc;
 	long ng=PN(gradin)/nsa;
 	if(nsa<=4||ng!=2) grad2opd=0;
-    //check current plotting target
-	char fnx[100];
-	char fny[100];
-	if(ng>1){
-		snprintf(fnx, sizeof(fnx), "%sx", fn);
-		snprintf(fny, sizeof(fny), "%sy", fn);
-	}else{
-		snprintf(fnx, sizeof(fnx), "%s", fn);
-		snprintf(fny, sizeof(fny), "%s", fn);
-	}
-	
-	dmat *grad=NULL;
+
+	dmat *grad=grad_prep(gradin, nsa, trs);
+	dmat *phi=0;
 	if(grad2opd){
-		if(draw_current(fig, fn)){
-			grad=grad_prep(gradin, nsa, trs);
-			//This is different from loc_embed. It removes the padding.
-			dmat* phi=0;
-			cure_loc(&phi, grad, saloc);
-			real limit[4];
-			int npad=saloc->npad;
-			LIMIT_SET_X(limit, saloc->map->ox, npad-0.5, saloc->dx, phi->nx);
-			LIMIT_SET_Y(limit, saloc->map->oy, npad-0.5, saloc->dy, phi->ny);
-			draw(fig, (plot_opts){
-				.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
-			dfree(phi);
-		}
+		cure_loc(&phi, grad, saloc);
 	}else{
-		if (draw_current(fig, fnx)){
-			grad=grad_prep(gradin, nsa, trs);
-			dmat* gx=dnew_do(nsa, 1, P(grad), 0);
-			drawopd(fig, saloc, gx, zlim, title, xlabel, ylabel, "%s", fnx);
-			dfree(gx);
-		}
-		if(ng>1 && draw_current(fig, fny)){
-			grad=grad_prep(gradin, nsa, trs);
-			dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
-			drawopd(fig, saloc, gy, zlim, title, xlabel, ylabel, "%s", fny);
-			dfree(gy);
-		}
+		dmat *phix=dnew(0, 0);
+		dmat *phiy=dnew(0, 0);
+		dmat *gx=dnew_do(nsa, 1, P(grad), 0);
+		dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
+		loc_embed(phix, saloc, gx);
+		loc_embed(phiy, saloc, gy);
+		phi=dcat(phix, phiy, 1);
+		dfree(gx);
+		dfree(gy);
+		dfree(phix);
+		dfree(phiy);
 	}
+
+	//This is different from loc_embed. It removes the padding.
+	real offset=saloc->npad+(isfinite(saloc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 
+	real limit[4];
+	LIMIT_SET_X(limit, saloc->map->ox, offset, saloc->dx, phi->nx);
+	LIMIT_SET_Y(limit, saloc->map->oy, offset, saloc->dy, phi->ny);
+	draw(fig, (plot_opts){
+		.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+	
 	dfree(grad);
+	dfree(phi);
 	return 1;
 }
 /**
@@ -987,9 +977,10 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
             P(opd0, ix, iy)=(ii>-1&&P(amp, ii)>ampthres)?P(opd, ii):NAN;
 		}
 	}
+	real offset=npad+(isfinite(loc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 
 	real limit[4];
-	LIMIT_SET_X(limit, loc->map->ox, npad-0.5, loc->dx, nx);
-	LIMIT_SET_Y(limit, loc->map->oy, npad-0.5, loc->dy, ny);
+	LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, nx);
+	LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, ny);
 	draw(fig, (plot_opts){
 		.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);

@@ -233,7 +233,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 			mysleep(1);
 		}*/
 		if(reset){
-			drawdata->limit_changed=-1;
+			drawdata->update_limit=1;
 		}
 		free(*fig); *fig=0;
 		free(*name); *name=0;
@@ -241,7 +241,8 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 			drawdata->session=session;
 			drawdata->limit_manual=0;
 			drawdata->zlim_manual=0;
-			drawdata->limit_changed=3;
+			drawdata->update_zoom=2;
+			drawdata->update_limit=1;
 		}
 	}
 	return drawdata;
@@ -397,13 +398,15 @@ void *listen_draw(void *user_data){
 				STREAD(header, 2*sizeof(int32_t));
 				long tot=header[0]*header[1];
 				if(drawdata->nmax<tot){
+					drawdata->nmax=tot;
 					drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
 					if(lpf<1){
 						free(drawdata->p1);//recreate below; 
 						drawdata->p1=NULL;
 					}
-					drawdata->p=realloc(drawdata->p, tot*4);
-					drawdata->nmax=tot;
+					
+					drawdata->p=realloc(drawdata->p, tot*sizeof(int));
+					
 				}
 				if(tot>0){
 					if(lpf<1&&drawdata->p1){
@@ -612,7 +615,7 @@ void *listen_draw(void *user_data){
 							free(drawdata->style);
 						}
 					}
-					drawdata->limit_changed=-1; //data range may be changed. recompute.
+					drawdata->update_limit=1; //data range may be changed. recompute.
 					if(drawdata->legend){
 						char_ellipsis(drawdata->legend, npts);
 					}
@@ -629,7 +632,7 @@ void *listen_draw(void *user_data){
 						drawdata->limit_data[3]=drawdata->ny-0.5;
 					}
 					if(drawdata->nx_last!=drawdata->nx || drawdata->ny_last!=drawdata->ny){
-						drawdata->limit_changed=3;
+						drawdata->update_zoom=2;
 						drawdata->nx_last=drawdata->nx;
 						drawdata->ny_last=drawdata->ny;
 					}

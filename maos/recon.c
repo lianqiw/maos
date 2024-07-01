@@ -305,7 +305,7 @@ void recon_servo_update(sim_t* simu){
 				dcellfree(coeff);
 				if(parms->plot.run){//plot psd ol and cl
 					dcell *psds=dcellnew(2,1); 
-					P(psds,0)=dref(psd); 
+					P(psds,0)=dref(psd); P(psd,0,0)=P(psd,1,0); P(psd,0,1)=P(psd,1,1);//remove piston term.
 					P(psds,1)=dref(psdol);
 					int draw_single_save=draw_single; draw_single=0;
 					const char *legends[]={"Closed loop","Open Loop"};

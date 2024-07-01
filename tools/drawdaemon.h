@@ -82,9 +82,9 @@ struct drawdata_t{
 	float* limit;		/*x,y limit points to either limit_data or limit_cumu */
 	float limit0[4];	/*x,y limit of displayed region. equals to limit if no zoom or pan */
 	int limit_manual; 	/*limit_data is manually set and should be not changed*/
-	int limit_changed;	/*1: limit0 updated with drag. compute zoomx/offx to perserve limit0.
-						 3: reset zoom. -1: data changed, update limit */
 
+	int update_zoom; /*1: update to preserve zoomed area. 2: reset zoom.*/
+	int update_limit;/*update limit for pts*/
 	//drawy x or y axis with log scale
 	char xylog[2];  /*draw in log scale x, y axis*/
 	

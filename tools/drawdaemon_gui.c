@@ -844,7 +844,6 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 		drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(dx);
 		drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
 		drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(dy);
-		drawdata->limit_changed=1;
 		update_zoom(drawdata);
 		update_pixmap(drawdata);
 	}
@@ -1369,7 +1368,6 @@ static void tool_zoom(GtkWidget* button, gpointer data){
 
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
-	drawdata_dialog->limit_changed=1;
 	update_zoom(drawdata_dialog);
 	delayed_update_pixmap(drawdata_dialog);
 }

@@ -4,7 +4,7 @@ ICONS=icon-clear.png icon-draw.png icon-draw-small.png icon-finished.png icon-pl
 icon-connect.png icon-error.png icon-monitor.png icon-save.png icon-waiting.png icon-cancel.png
 
 
-noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h $(ICONS) 
+noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h resources.xml $(ICONS) 
 
 PROGS=
 

@@ -155,12 +155,16 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
 	real Ts=dt*dtrat;
 	st->fny=0.5/Ts;
 	st->type=1;
-	dmat* nu=st->nu=dlogspace(-3, log10(0.5/dt), 1000);
+	real nu0=-3;
+	if(psdin){
+		nu0=log10(P(psdin, 0, 0)==0?P(psdin, 1, 0):P(psdin, 0, 0));
+	}
+	dmat *nu=st->nu=dlogspace(nu0, log10(0.5/dt), 1000);//must interpolate to log space. servo_calc_do depends on it.
 	if(psdin){
 		if(NY(psdin)!=2){
 			error("psdin should have two columns\n");
 		}
-		st->psd=dinterp1(psdin, 0, nu, 1e-40);
+		st->psd=dinterp1(psdin, 0, nu, NAN);
 		st->var_sig=psd_inte2(psdin);
 	}
 	comp pi2i=COMPLEX(0, TWOPI);
