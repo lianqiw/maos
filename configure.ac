@@ -174,14 +174,9 @@ else
 	fi
 	done
 fi
-openmp_default="no"
-case "$host_os" in
-	*linux*)
-		openmp_default="yes"
-		;;
-esac
+
 #Common configure options.
-AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically]))
+AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically (obsolete)]))
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
 AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverage analysis.]))
 AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Use single precision for CPU and cuda.]))
@@ -189,18 +184,18 @@ AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
 AC_ARG_ENABLE(websockets, AS_HELP_STRING([--disable-websockets],[Disable websockets]))
-AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
+AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], [Prefer MKL]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR=])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Specify non-standard GTK+2 directory (obsolete).]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--disable-gtk-3],[Disable GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3=])
 AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--disable-gtk-4],[Disable GTK4]), [use_gtk_4="$enableval"], [use_gtk_4=])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
-AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]))
-AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Download doxygen binary if not available in the systemy]))
+AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced compatibility]))
+AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downling precompiled library]))
-AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]), [], [enable_openmp="$openmp_default"])
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
+AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 #echo enable_openmp="$enable_openmp"
 #echo openmp_default="$openmp_default"
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
@@ -470,30 +465,26 @@ compile(){
 		cat $fnlog
 	fi
 }
-AS_IF([test "$enable_openmp" = "yes"], [
-	AC_OPENMP
-	AS_IF([test "$system" = "apple" -a -z "$OPENMP_CFLAGS"],[
-		#MACOS supports openmp with separate omp library
-		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
-		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
-			unset ac_cv_lib_omp_omp_set_num_threads
-			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
-		])
-		AS_IF([test "$has_omp" = "0" ], [
-			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
-			compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
-			unset ac_cv_lib_omp_omp_set_num_threads
-			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
-		])
-		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
-	], [
-		AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp="0"], [has_omp="1"])
+AS_IF([test "$enable_openmp" = "yes" -a "$system" = "apple"], [
+	#MACOS supports openmp with separate omp library
+	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
+	AS_IF([test "$has_omp" = "0" ], [
+		download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
+		unset ac_cv_lib_omp_omp_set_num_threads
+		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 	])
-],[
-	has_omp="0"
-])
+	AS_IF([test "$has_omp" = "0" ], [
+		#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
+		compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
+		unset ac_cv_lib_omp_omp_set_num_threads
+		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+	])
+	AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
+], [AS_IF([test "$enable_openmp" != "no"], [AC_OPENMP])]
+)
+
 #Don't add OPENMP_CFLAGS to CFLAGS yet to avoid building external library with the flag
+AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp=0], [has_omp=1])
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
 AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])

@@ -640,7 +640,7 @@ static dmat *pywfs_mkg_do(const pywfs_t *pywfs, const loc_t *locin, const loc_t 
 
 	const real scale=1.-locin->ht/pycfg->hs;
 	TIC;tic;
-	OMP_TASK_FOR(4)
+	OMP_FOR(NTHREAD)
 	for(int imod=0; imod<nmod; imod++){
 		dmat *opdin=dnew(locin->nloc, 1);
 		dmat *opdfft=ddup(opd0);

@@ -106,12 +106,12 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #define expect_level(n)
 #endif
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
-#define OMP_FOR_COLLAPSE(n) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n))
+#define OMP_FOR_COLLAPSE(n, nthread) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n) num_threads(nthread))
 #else
 #define OMPTASK_SINGLE
 #define OMP_IN_PARALLEL 0
 #define OMP_FOR(n)
-#define OMP_FOR_COLLAPSE(n)
+#define OMP_FOR_COLLAPSE(n, nthread)
 #endif
 
 #if _OPENMP>=201511 //need further testing for speed
@@ -143,59 +143,63 @@ static inline void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
 }
 //static inline void QUEUE(tp_counter_t *counter, thread_wrapfun fun, void *arg, int nthread, int urgent){
-#define QUEUE(counter, fun, arg, nthread, urgent) {\
-    (void)counter; (void)urgent;\
+#define QUEUE(counter, fun, arg, nthread, urgent) \
+    (void)counter; \
+if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent) nogroup)\
     for(int it=0; it<nthread; it++){\
         fun(arg);\
     }\
-}
-//static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
-#define CALL(fun, arg, nthread, urgent) {\
-    (void)urgent;\
-    DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
+}else{\
+    DO_PRAGMA(omp parallel for default(shared))\
     for(int it=0; it<nthread; it++){\
         fun(arg);\
     }\
 }
+
+//static inline void CALL(thread_wrapfun fun, void *arg, int nthread, int urgent){
+#define CALL(fun, arg, nthread, urgent) \
+if(omp_in_parallel()){\
+    DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
+    for(int it=0; it<nthread; it++){\
+        fun(arg);\
+    }\
+}else{\
+    DO_PRAGMA(omp parallel for default(shared))\
+    for(int it=0; it<nthread; it++){\
+        fun(arg);\
+    }\
+}
+
 #define WAIT(pcounter, urgent) DO_PRAGMA(omp taskwait)
 /*Turn to static inline function because nvcc concatenates _Pragma to } */
 //Define causes _Pragma to appear in sameline in gcc4.9
-#if 0
-//Using function creates sporadic extra tasks with clang.
-static inline void QUEUE_THREAD(tp_counter_t *counter, thread_t *A, int urgent){
-    (void)counter; (void)urgent;
-    for(long it=0; it<A[0].nthread; it++)
-    {
-        if(A[it].fun){
-            DO_PRAGMA(omp task default(shared)firstprivate(it) priority(urgent))
-            A[it].fun((A+it));
-        }
-    }
-}
 
-//Define causes _Pragma to appear in sameline in gcc4.9
-static inline void CALL_THREAD(thread_t*A, int urgent){
-    /*if(!OMP_IN_PARALLEL){
-        OMPTASK_SINGLE
-            QUEUE_THREAD(NULL, A, urgent);
-    } else{*/
-        DO_PRAGMA(omp taskgroup)
-            QUEUE_THREAD(NULL, A, urgent);
-    //}
-}
-#else
 #define QUEUE_THREAD(pcounter, A, urgent) \
+if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent) nogroup)\
     for(long it=0; it<(A)->nthread; it++){\
         if((A)[it].fun) (A)[it].fun((&(A)[it]));\
-    }
+    }\
+}else{\
+	DO_PRAGMA(omp parallel for default(shared))\
+	for(long it=0; it<(A)->nthread; it++){\
+		if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+	}\
+}
+
 #define CALL_THREAD(A, urgent)\
+if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
     for(long it=0; it<(A)->nthread; it++){\
         if((A)[it].fun) (A)[it].fun((&(A)[it]));\
-    }
-#endif
+    }\
+}else{\
+	DO_PRAGMA(omp parallel for default(shared))\
+    for(long it=0; it<(A)->nthread; it++){\
+        if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+    }\
+}
 
 #else //using our thread_pool
 

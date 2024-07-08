@@ -36,7 +36,7 @@
 #include "chol.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A
-#define CHOL_ITYPE CHOLMOD_LONG
+#define CHOL_ITYPE CHOLMOD_LONG //CHOL_ITYPE is the same as spint.
 #else
 #define MOD(A) cholmod_##A
 #define CHOL_ITYPE CHOLMOD_INT
@@ -81,7 +81,7 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 	B->nrow=A->nx;
 	B->ncol=A->ny;
 	B->nzmax=A->pp[A->ny];
-	P(B)=A->pp;/*do not duplicate. */
+	B->p=A->pp;/*do not duplicate. */
 	B->i=A->pi;
 	DO_CONVERT(B->x, A->px, chol_real, real, B->nzmax);
 	B->dtype=CHOL_DATA;
@@ -97,13 +97,16 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 /**
    Convert cholmod_sparse to dsp. Data is shared
 */
-static dsp* chol2sp(const cholmod_sparse* B){
-	dsp* A;
-	A=dspnew(B->nrow, B->ncol, 0);
+static dsp* chol2sp(cholmod_sparse*B){
+	dsp* A=dspnew(B->nrow, B->ncol, 0);
 	A->pp=(spint*)B->p;
 	A->nzmax=A->pp[A->ny];
 	A->pi=(spint*)B->i;
 	DO_CONVERT(A->px, B->x, real, chol_real, A->nzmax);
+	if(A->px!=B->x){
+		free(B->x);
+	}
+	free(B);//content is moved to A
 	return A;
 }
 /**
@@ -217,14 +220,9 @@ void chol_convert(spchol* A, int keep){
 		L=A->L;
 	}
 	cholmod_sparse* B=MOD(factor_to_sparse)(L, A->c);
-	A->Cl=chol2sp(B);//moves content of B.
-	if(A->Cl->px!=B->x){
-		free(B->x);
-	}
-	free(B);
-	if(keep){
-		MOD(free_factor)(&L, A->c);
-	}else{
+	A->Cl=chol2sp(B); B=NULL;//moves content of B.
+	MOD(free_factor)(&L, A->c);
+	if(!keep){
 		MOD(finish)(A->c);
 		free(A->c);
 		A->c=NULL;
@@ -433,11 +431,9 @@ dsp* chol_spsolve(spchol* A, const dsp* y){
 	cholmod_sparse* y2=dsp2chol(y);
 	cholmod_sparse* x2=MOD(spsolve)(CHOLMOD_A, A->L, y2, A->c);
 	if(!x2||x2->z) error("chol_solve failed or returns unexpected answer.\n");
-	dsp* x=chol2sp(x2);
 	if(y2->x!=y->px) free(y2->x);
-	if(x->px!=x2->x) free(x2->x);
 	free(y2);/*don't do spfree */
-	free(x2);/*don't do spfree */
+	dsp *x=chol2sp(x2); x2=NULL;
 	return x;
 }
 /**

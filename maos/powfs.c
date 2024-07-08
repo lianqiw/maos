@@ -320,6 +320,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 		//info("count=%d\n", count);
 		powfs[ipowfs].saloc->nloc=count;
 	}
+	powfs[ipowfs].saloc->ht=INFINITY;//indicate that it is subaperture corner and do not use it for ray tracing.
 	/*convert saloc to pts*/
 	powfs[ipowfs].pts=ptsnew(powfs[ipowfs].saloc->nloc, dsa, dsa, nxsa, nxsa, dx, dx);
 	for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
@@ -522,7 +523,7 @@ setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, aper_t* aper, int i
 		if(parms->powfs[ipowfs].type==WFS_SH){
 			powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
 		}
-OMP_TASK_FOR(4)
+OMP_FOR(NTHREAD)
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			if(parms->distortion.tel2wfs[iwfs]){
@@ -564,7 +565,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ip
 		*/
 		powfs[ipowfs].loc_dm=loccellnew(nwfsp,parms->ndm);
 		int isset=0;
-OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
+OMP_FOR_COLLAPSE(2, NTHREAD)
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int jwfs=0; jwfs<nwfsp; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);

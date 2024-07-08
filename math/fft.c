@@ -81,7 +81,7 @@ static void (*init_threads())(int){
 
 
 #if HAS_FFTW_CALLBACK
-static void FFTW(task_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
+static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
 	(void)data;
 	//dbg("fft_task_callback: %d threads\n", njobs);
 #if _OPENMP
@@ -113,10 +113,10 @@ static void FFTW(fft_threads)(long nx, long ny){
 	if(fft_has_threads==-1){//first initialization
 		if((p_fftw_plan_with_nthreads=init_threads())){
 #if HAS_FFTW_CALLBACK
-			fftw_threads_set_callback(FFTW(task_callback), NULL); //since version 3.3.9
-			dbg("fftw_thread_set_callback with fftw_task_callback\n");
+			fftw_threads_set_callback(FFTW(parallel_callback), NULL); //since version 3.3.9
+			dbg("fftw_thread_set_callback is set.\n");
 #else			
-			dbg("fftw_thread_set_callback is not available.k\n");
+			dbg("fftw_thread_set_callback is not available.\n");
 #endif
 			fft_has_threads=1;
 		} else{

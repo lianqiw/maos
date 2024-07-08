@@ -256,7 +256,7 @@ void sodium_fit(
 			if(irep>0 && &grad!=pgrad){
 				dcellcp(&grad, *pgrad);
 			}
-			OMP_TASK_FOR(4)
+			OMP_FOR(NTHREAD)
 			for(long ix=0; ix<nh; ix++){
 				dmat *na2i=P(na2s, ix);
 				P(na2i, 0, 0)=P(nai, ix, 0);
@@ -304,7 +304,7 @@ void sodium_fit(
 			for(long ii0=0; ii0<ni0; ii0++){
 				dmat* grad1=P(grad, ii0);//model
 				dmat* grad2=P(*pgrad, ii0);//output
-OMP_TASK_FOR(8)
+OMP_FOR(NTHREAD)
 				for(long isa=0; isa<nsa; isa++){
 					real g[2]={0,0};
 					dmulvec(g, P(mtche, isa, ii0), P(P(i0i, isa, ii0)), 1);
@@ -314,7 +314,7 @@ OMP_TASK_FOR(8)
 			}
 			toc2("mtche apply"); tic;
 			
-OMP_TASK_FOR(4)
+OMP_FOR(NTHREAD)
 			for(long ii0=0; ii0<ni0; ii0++){
 				//Remove focus mode from the gradients as it degenerates with sodium profile shift.
 				loc_remove_focus_grad(P(*pgrad, ii0), saloc, 1);

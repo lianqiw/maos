@@ -238,7 +238,7 @@ static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 	real val=*theta;
 	const char *tmp=NULL;
 	if(*theta<=0){//minus means ratio to lambda/dsa
-		tmp="-lambda_max/D";
+		tmp="-lambda/D";
 		*theta=fabs(*theta)*wvl/dsa;
 	} else if(*theta<1e-4){
 		tmp="radian";
@@ -1944,7 +1944,7 @@ static void setup_parms_postproc_sim(parms_t *parms){
 	parms->ncpa.calib=0;
 	}*/
 	if(parms->ncpa.calib&&!parms->ncpa.ndir){
-		dbg("Using evaluation directions as ncpa calibration directions if needed.\n");
+		dbg("Using evaluation directions as ncpa calibration directions.\n");
 		int ndir=parms->ncpa.ndir=parms->evl.nevl;
 		dfree(parms->ncpa.thetax);
 		dfree(parms->ncpa.thetay);
