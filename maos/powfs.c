@@ -1700,6 +1700,10 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
 		writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
 	}
+	extern int PYWFS_DEBUG;
+	if(PYWFS_DEBUG){
+		pywfs_test(powfs[ipowfs].pywfs);
+	}
 }
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are

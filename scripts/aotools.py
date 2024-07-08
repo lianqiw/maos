@@ -42,10 +42,7 @@ def tand(x):
     return np.tan(x*np.pi/180)
 
 def iscell(arr):
-    if type(arr)==np.ndarray and arr.dtype.name=='object':
-        return True
-    else:
-        return False
+    return type(arr)==np.ndarray and arr.dtype.name=='object'
 
 '''use of .flat with an FORTRAN ordered array will lead to non-optimal memory
 access as adjacent elements in the flattened array (iterator, actually) are not
@@ -53,7 +50,7 @@ contiguous in memory'''
 
 def isequal(a, b):
     if type(a)==np.ndarray and type(b)==np.ndarray:
-        if a.dtype.name=='object':
+        if iscell(a):
             for ii in range(a.size):
                 if not isequal(a.item(ii),b.item(ii)):
                     return False
@@ -178,7 +175,7 @@ def cellmm(A,B):
         A=A.reshape((1, A.size))
     if B.ndim<2:
         B=B.reshape((1, B.size))
-    if A.dtype==np.dtype(object) and B.dtype==np.dtype(object):
+    if iscell(A) and iscell(B):
         C=np.empty((B.shape[0], A.shape[1]), dtype=object)
         for iz in range(C.shape[0]):
             for ix in range(C.shape[1]):
@@ -199,8 +196,7 @@ def celltrans(A):
     if A.ndim==1:
         A=np.reshape(A, (1, A.size))
     AT=np.copy(A.T)
-    if A.dtype==np.dtype(object) or A.dtype is object:
-        
+    if iscell(A):
         for i in range(AT.size):
             AT.flat[i]=np.transpose(AT.flat[i])
     return AT
@@ -208,7 +204,7 @@ def celltrans(A):
 #remove tip/tilt/focus from gradients
 def grad_ttfr(grad, saloc):
     '''remove tip/tilt/focus move from gradients defined on subaperture location saloc'''
-    if grad.dtype==object:
+    if iscell(grad):
         gv=np.empty(grad.shape, dtype=object)
         print(gv.shape)
         for ig,gi in np.ndenumerate(grad):
@@ -418,7 +414,7 @@ def check2d(A, nx=None):
     '''check shape of A and return a 2-d square array'''
     if A is None:
         return A
-    while A.dtype==object or A.ndim>2:
+    while iscell(A) or A.ndim>2:
         if A.shape[0]==1:
             A=A[0]
         else:

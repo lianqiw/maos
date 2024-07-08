@@ -10,7 +10,9 @@ import scipy
 #from aotools import center #cyclic import
 #import struct
 
-
+def iscell(arr):
+    return type(arr)==np.ndarray and arr.dtype.name=='object'
+    
 def coord2grid(x, **kargs):
     xmin = x.min()
     xmax = x.max()
@@ -41,7 +43,7 @@ def isvec(arg):
 def isloc(arg):
     if type(arg) is not np.ndarray:
         return False
-    if arg.dtype is object:
+    if iscell(arg):
         return False
     if arg.ndim !=2:
         return False
@@ -67,7 +69,7 @@ def locembed(loc, opd, return_ext=0, **kargs):
     if type(opd) is scipy.sparse._csr.csr_matrix:
         opd=opd.toarray()
     nloc = loc.shape[1]
-    if opd.dtype==object: #cell
+    if iscell(opd): #cell
         ims = []
         ext = None
         for opdi in opd:
@@ -111,9 +113,9 @@ def isimg(arg0):
     if type(arg0) is scipy.sparse._csr.csr_matrix:
         return True
     elif type(arg0) is np.ndarray:
-        while (arg0.dtype==object or arg0.ndim>2) and arg0.shape[0]==1:
+        while (iscell(arg0) or arg0.ndim>2) and arg0.shape[0]==1:
             arg0=arg0[0]
-        return arg0.dtype != object and (arg0.ndim==1 or (arg0.ndim==2 and arg0.shape[0]*100>arg0.shape[1] and arg0.shape[1]*100>arg0.shape[0]))
+        return iscell(arg0)==False and (arg0.ndim==1 or (arg0.ndim==2 and arg0.shape[0]*100>arg0.shape[1] and arg0.shape[1]*100>arg0.shape[0]))
 def draw(*args, **kargs):
     if(len(args)==0):
         return
@@ -154,7 +156,7 @@ def draw(*args, **kargs):
                 arg0=arg0[0]
         if type(arg0) is np.ndarray:
             arg0=np.squeeze(arg0)
-            while arg0.shape[0]==1 and (arg0.dtype == object or arg0.ndim>2):
+            while arg0.shape[0]==1 and (iscell(arg0) or arg0.ndim>2):
                 arg0=np.squeeze(arg0[0])
         if type(arg0) is scipy.sparse._csr.csr_matrix:
             arg0=arg0.toarray()
@@ -202,7 +204,7 @@ def draw(*args, **kargs):
             if type(arg0) == list or type(arg0)==tuple:
                 nframe = len(arg0)
             elif type(arg0) == np.ndarray:
-                if arg0.dtype==object:
+                if iscell(arg0):
                     nframe = arg0.size
                     arg0=arg0.reshape(nframe)
                 else:

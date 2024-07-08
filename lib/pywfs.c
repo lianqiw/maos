@@ -18,6 +18,9 @@ MAOS.If not, see<http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #include "pywfs.h"
 #include "accphi.h"
+#include "zernike.h"
+#include "turbulence.h"
+#include "misc.h"
 
 static double PYWFS_PSIZE=3; //Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2
 int PYWFS_DEBUG=0;//debugging implementation
@@ -776,27 +779,15 @@ void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *w
 	dfree(ints2);
 	if(free_pycfg) pycfg_free(pycfg);
 }
-/*
+
 extern int PYWFS_DEBUG;
 ///Test PYWFS implementation
-void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon){
+void pywfs_test(pywfs_t *pywfs){
 	if(!PYWFS_DEBUG) return;
-	if(!parms || !powfs || !recon){
-		warning("Some parameters not set\n");
-		return;
-	}
-	pywfs_t *pywfs=NULL;
-	int ipowfs;
-	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].type==1){
-			pywfs=powfs[ipowfs].pywfs;
-			break;
-		}
-	}
 	if(!pywfs) return;
-	const real siglev=pywfs->siglev;
-	const int iwfs=pywfs->iwfs0;
-	if(fabs(PYWFS_DEBUG)==1){//Test implementation using zernikes
+	const pywfs_cfg_t *pycfg=pywfs->cfg;
+	real siglev=pycfg->siglev;
+	if(fabs(PYWFS_DEBUG)==1){//Test linearity of PWFS with a zernike mode.
 		dmat* ints=0;
 		real wve=1e-9*20;
 		dmat* opds=NULL;
@@ -814,45 +805,23 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 				}
 				P(opds, ix, ip)=1;
 			}
-		}else if(parms->recon.modal){
-			int idm=parms->idmground;
-			dmat *amod=P(recon->amod, idm);
-			opds=dnew(pywfs->locfft->loc->nloc, MIN(20,NY(amod))+1);//first mode is piston
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			const real scale=1.-ht/parms->wfs[iwfs].hs;
-			const real dispx=ht*parms->wfs[iwfs].thetax;
-			const real dispy=ht*parms->wfs[iwfs].thetay;
-			warning("Using amod for pywfs gain testing\n");
-			for(int im=0; im<NY(opds)-1; im++){
-				prop_nongrid(P(recon->aloc, idm), PCOL(amod, im),
-					powfs[ipowfs].loc, PCOL(opds, im+1), 1, dispx, dispy, scale, 0, 0);
-			}
 		}else{
-			opds=zernike(pywfs->locfft->loc, 0, 0, 5, 0);
+			opds=zernike(pywfs->locfft->loc, 0, 2, 2, -5);
 			warning("Using zernike for pywfs gain testing\n");
 		}
-		writebin(opds, "pywfs_modal_opds");
+		writebin(opds, "pywfs_input_opds");
 		dmat* grad=0;
 		int nn=1;
-		dcell *atms=NULL;
 		dmat *atm=NULL;
-		const char *keywords=NULL;
-		const char *clopd="wfs0_opd_1.bin";
-		if(!zfexist("%s", clopd)){
-			clopd="../wfs0_opd_1.bin";
+		{
+			nn=40;
+			real r0=0.186;
+			real L0=30;
+			atm=genatm_loc(pywfs->locfft->loc, r0, L0, -11./3., 1);
 		}
-		if(zfexist("%s", clopd)){
-			info("Using %s as baseline atmosphere for pywfs zernike sensitivity testing\n", clopd);
-			atms=dcellread("%s", clopd);
-			atm=dref(P(atms, PN(atms)-1));
-			nn=2;
-			keywords="First column is without turbulence. Second column is with turbulence. ";
-		}else{
-			warning("Atmosphere is not avilable to read, do not use.\n");
-		}
-
-		zfarr *pupsave=zfarr_init2(0,0, keywords, "pywfs_modal_ints");
-		zfarr *grads=zfarr_init2(0,0, keywords, "pywfs_modal_grad");
+		
+		zfarr *pupsave=zfarr_init(nn,NY(opds), "pywfs_modal_ints");
+		zfarr *grads=zfarr_init(nn,NY(opds), "pywfs_modal_grad");
 		dmat *opd=dnew(NX(opds),1);
 
 		for(int im=0; im<NY(opds); im++){
@@ -862,9 +831,11 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 				//for(int posi=0; posi<pywfs->cfg->modulpos; posi++){
 					//((pywfs_cfg_t*)pywfs->cfg)->modulpos_i=posi+1;//for testing modulate subframe
 					dzero(opd);
-					dadd(&opd, 1, opdi, pow(2, j)*wve);
-					if(j>0 && atm){
-						dadd(&opd, 1, atm, 1);
+					if(j%2==1){
+						dadd(&opd, 1, opdi, wve);
+					}
+					if(atm){
+						dadd(&opd, 1, atm, (j/2)*0.05);
 					}
 					dzero(ints);
 					pywfs_ints(&ints, pywfs, opd, siglev);
@@ -878,11 +849,13 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		zfarr_close(pupsave);
 		zfarr_close(grads);
 		cellfree(ints);
+		dfree(grad);
 		dfree(opds);
-		dcellfree(atms); dfree(atm);
+		dfree(opd);
+		dfree(atm);
 	}else if(PYWFS_DEBUG==2){//Test linearity of a zenike mode with noise
 		real wve=20e-9;
-		dmat* opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 0, -parms->powfs[ipowfs].dither);
+		dmat* opds=zernike(pywfs->locfft->loc, 0, 0, 0, -5);
 		dmat* opdi=0;
 		dmat* ints=0, * grad=0;
 		dadd(&opdi, 0, opds, wve);
@@ -993,4 +966,3 @@ void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon
 		exit(0);
 	}
 }
-*/

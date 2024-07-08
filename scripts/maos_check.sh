@@ -3,6 +3,7 @@ if [ ! -f "./maos" ];then
 	echo "Please run in maos bin directory"
 	exit
 fi
+unset MAOS_PYWFS_DEBUG 
 D=30
 #Sanity check maos
 #NFIRAOS default
@@ -169,7 +170,7 @@ run_maos "LGS MCAO PCCD:  " -cmcao_lgs.conf tomo.precond=0 cn2.pair=[0 1 2 5] re
 
 run_maos "LGS MCAO SL:    " -cmcao_lgs.conf tomo.precond=0 cn2.pair=[0 1 2 5] recon.psd=1 powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0]
 
-run_maos "LGS MCAO NCPA:  " -cmcao_lgs.conf sim.noatm=1 ncpa.surf=["'rms=150;L0=20;D=60;SURFEVL=0;'"] sim.wspsd= powfs.noisy=[0] atm.r0z=10 powfs0_llt.fnsurf="'rms=150;mode=5;D=0.5;dx=1/64'" #should be close to 0.
+run_maos "LGS NCPA noatm: " -cmcao_lgs.conf sim.noatm=1 ncpa.surf=["'rms=150;L0=20;D=60;SURFEVL=0;'"] sim.wspsd= powfs.noisy=[0] atm.r0z=10 powfs0_llt.fnsurf="'rms=150;mode=5;D=0.5;dx=1/64'" #should be close to 0.
 
 if [ "$D" = 30 ];then
 run_maos "NFIRAOS LGS:    " -cnfiraos_lgs.conf

@@ -33,5 +33,4 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
   real deltah, real thresh);
 void wfspupmask(const parms_t *parms, loc_t *loc, dmat *amp, int iwfs);
 void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
-void pywfs_test(const parms_t *parms, const powfs_t *powfs, const recon_t *recon);
 #endif

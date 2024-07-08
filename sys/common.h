@@ -217,7 +217,7 @@ static inline int check_space(const char *endptr, const char *endstr){
 		T B=(T)FUN(str,&endptr); \
       if(endptr==str || check_space(endptr, endstr) || B>max || B<min){  \
         error("MAOS_"#A"={%s} is invalid. Must be within [%g, %g].\n", str, (double) min, (double) max);\
-      }else if(A!=B){dbg(#A" changed to %g\n", (double)A); A=B; } }
+      }else if(A!=B){dbg(#A" changed to %g\n", (double)B); A=B; } }
 
 #define READ_ENV_INT(A,min,max)	READ_ENV_NUM(A,min,max,int,   STR_TO_INT)
 #define READ_ENV_DBL(A,min,max)	READ_ENV_NUM(A,min,max,double,STR_TO_DBL)

@@ -803,8 +803,8 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 			GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
 		fi
 	else
-		AS_IF([test "$use_gtk_4" != "no"], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
-		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0, [gtk_ver="3"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0, [gtk_ver="3"], [gtk_ver="0"])]) #prefer gtk+3
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_4" != "no" ], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
 	fi
 	AS_IF([test "$gtk_ver" != "0"], [

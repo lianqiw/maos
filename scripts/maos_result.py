@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Helper routines to parse MAOS results g
+# Helper routines to parse MAOS results
 
 import numpy as np
 from numpy import nan
