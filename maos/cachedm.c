@@ -62,6 +62,7 @@ void prep_cachedm(sim_t* simu){
 	simu->cachedm_prop=mycalloc(parms->ndm, thread_t*);
 	simu->cachedm_propdata=mycalloc(parms->ndm, propdata_t);
 	propdata_t* cpropdata=simu->cachedm_propdata;
+	const int nthread=2;//operation is fast. use the same for both DMs.
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(simu->dmrealsq){
 			cpropdata[idm].mapin=P(simu->dmrealsq,idm);
@@ -76,7 +77,7 @@ void prep_cachedm(sim_t* simu){
 		cpropdata[idm].displacex1=0;
 		cpropdata[idm].displacey1=0;
 		cpropdata[idm].scale=1;
-		int nthread=2;//operation is fast
+		
 		simu->cachedm_prop[idm]=thread_prep(0, NY(cpropdata[idm].mapout),
 			nthread, prop, simu->cachedm_propdata+idm);
 	}
@@ -89,15 +90,8 @@ void prep_cachedm(sim_t* simu){
 void calc_cachedm(sim_t* simu){
 	if(simu->cachedm){
 		real tk_start=myclockd();
-		tp_counter_t group={0};
-		for(int idm=0; idm<simu->parms->ndm; idm++){
-			/*zero out the data. */
-			dzero((dmat*)P(simu->cachedm,idm));
-			thread_t *A=simu->cachedm_prop[idm];
-			/*do the multi-threaded ray tracing */
-			QUEUE_THREAD(&group, A, 1);
-		}
-		WAIT(&group, 1);
+		dcellzero((dcell*)simu->cachedm);
+		CALL_THREAD_ARR(simu->cachedm_prop, simu->parms->ndm, 1);
 		simu->tk_cache=myclockd()-tk_start;
 	}
 }

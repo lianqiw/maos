@@ -192,13 +192,29 @@ if(omp_in_parallel()){\
 if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
     for(long it=0; it<(A)->nthread; it++){\
-        if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+        if((A)[it].fun) (A)[it].fun((A)+it);\
     }\
 }else{\
 	DO_PRAGMA(omp parallel for default(shared))\
     for(long it=0; it<(A)->nthread; it++){\
-        if((A)[it].fun) (A)[it].fun((&(A)[it]));\
+        if((A)[it].fun) (A)[it].fun((A)+it);\
     }\
+}
+#define CALL_THREAD_ARR(A, nA, urgent)\
+if(omp_in_parallel()){\
+    DO_PRAGMA(omp taskloop collapse(2) default(shared) priority(urgent))\
+	for(long iA=0; iA<nA; iA++){\
+    	for(long it=0; it<A[0]->nthread; it++){\
+        	if(A[iA][it].fun) (A[iA])[it].fun(A[iA]+it);\
+    	}\
+	}\
+}else{\
+	DO_PRAGMA(omp parallel for collapse(2) default(shared))\
+    for(long iA=0; iA<nA; iA++){\
+    	for(long it=0; it<A[0]->nthread; it++){\
+        	if(A[iA][it].fun) (A[iA])[it].fun(A[iA]+it);\
+    	}\
+	}\
 }
 
 #else //using our thread_pool
@@ -230,7 +246,6 @@ dbg("tmin=%u, tmax=%u ms\n", (counter)->tmin, (counter)->tmax);(counter)->tmin=0
 })\
 
 #define CALL_THREAD(A, urgent)\
-({\
     if((A[0].nthread)>1){\
         tp_counter_t counter={0};\
         QUEUE_THREAD(&counter, A, urgent);\
@@ -238,7 +253,16 @@ dbg("tmin=%u, tmax=%u ms\n", (counter)->tmin, (counter)->tmax);(counter)->tmin=0
     } else{\
         (A)->fun(A);\
     }\
-})
 
+#define CALL_THREAD_ARR(A, nA, urgent)\
+	for(long iA=0; iA<nA; iA++){\
+		if((A[iA][0].nthread)>1){\
+			tp_counter_t counter={0};\
+			QUEUE_THREAD(&counter, A[iA], urgent);\
+			WAIT(&counter, urgent);\
+		} else{\
+			(A[iA])->fun(A[iA]);\
+		}\
+	}
 #endif //#if _OPENMP
 #endif //ifndef AOS_LIB_THREAD_H
