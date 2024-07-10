@@ -10,6 +10,5 @@ var powfs_8h =
     [ "free_powfs", "powfs_8h.html#a1a9c34e6fc651433c73473e0e039dc63", null ],
     [ "setup_shwfs_etf", "powfs_8h.html#a9e3f5ff1d656e52f5f1c2aa2f8db9c94", null ],
     [ "wfspupmask", "powfs_8h.html#ac2d609d5e539eeb17e1a57f6365a1c4f", null ],
-    [ "setup_pywfs", "powfs_8h.html#a594170ca70801ac3291e6213cdb38d62", null ],
-    [ "pywfs_test", "powfs_8h.html#ad4f48104808d3ed6858c4fcf09c94819", null ]
+    [ "setup_pywfs", "powfs_8h.html#a594170ca70801ac3291e6213cdb38d62", null ]
 ];

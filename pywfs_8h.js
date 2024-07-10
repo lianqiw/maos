@@ -55,5 +55,6 @@ var pywfs_8h =
     [ "pywfs_ints", "pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d", null ],
     [ "pywfs_mkg", "pywfs_8h.html#a54d180c17544b1e528115fa8160c75bf", null ],
     [ "pywfs_tt", "pywfs_8h.html#a91432268bc54e68b69b04e3f0ebc0875", null ],
-    [ "pywfs_simu", "pywfs_8h.html#a56a2705ae38d20c2541c4b3b47be4163", null ]
+    [ "pywfs_simu", "pywfs_8h.html#a56a2705ae38d20c2541c4b3b47be4163", null ],
+    [ "pywfs_test", "pywfs_8h.html#a8ccc1fa8060ae14a0aeb0c098b7f559d", null ]
 ];
