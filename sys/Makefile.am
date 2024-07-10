@@ -1,5 +1,4 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
-AM_LDFLAGS=$(LDOPTS)
+AM_CFLAGS=-I$(top_srcdir) 
 
 nobase_include_HEADERS=mem.h process.h scheduler.h sock.h sockio.h thread.h	\
  daemonize.h scheduler_client.h sys.h thread_pool.h misc.h hashlittle.h path.h	\

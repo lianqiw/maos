@@ -1,5 +1,5 @@
-AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) $(LDEXE)
+AM_CFLAGS=-I $(top_srcdir)
+AM_LDFLAGS=$(LDEXE)
 ICONS=icon-clear.png icon-draw.png icon-draw-small.png icon-finished.png icon-play.png icon-skip.png \
 icon-connect.png icon-error.png icon-monitor.png icon-save.png icon-waiting.png icon-cancel.png
 
@@ -11,7 +11,7 @@ PROGS=
 if USE_SCHEDULER
 PROGS+=../bin/scheduler
 ___bin_scheduler_SOURCES=scheduler.c
-___bin_scheduler_LDADD=../sys/libaosys.la #$(LDOPTS)
+___bin_scheduler_LDADD=../sys/libaosys.la 
 if HAS_LWS
 ___bin_scheduler_SOURCES+=scheduler_ws.c
 ___bin_scheduler_LDADD+=-lwebsockets
@@ -29,7 +29,7 @@ if USE_SCHEDULER
 PROGS+=../bin/monitor 
 ___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c resources.c mygtk.c
 ___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
-___bin_monitor_LDADD=../sys/libaosys.la $(GTK_LIBS) $(MAC_LIBS) #$(LDOPTS)
+___bin_monitor_LDADD=../sys/libaosys.la $(GTK_LIBS) $(MAC_LIBS) 
 if NOTIFY
 ___bin_monitor_CFLAGS+=$(NOTIFY_CFLAGS) -DWITH_NOTIFY=1
 ___bin_monitor_LDADD+=$(NOTIFY_LIBS)

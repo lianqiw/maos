@@ -104,12 +104,13 @@ int headless=0;//set to 1 when GTK cannot create window
     }
 	*/
 
-int scheduler_cmd_wrap(int ihost, int pid, int command){
+void scheduler_cmd_wrap(int ihost, int pid, int command){
 	int cmd[4]={MON_CMD, ihost, pid, command};
 	stwriteintarr(sock_main[1], cmd, 4);
-	int ans;
-	streadint(sock_main[1], &ans);
-	return ans;
+	//the following may block the GUI. 
+	//int ans;
+	//streadint(sock_main[1], &ans);
+	//return ans;
 }
 void add_host_wrap(int ihost){
 	int cmd[3]={MON_ADDHOST, ihost, 0};

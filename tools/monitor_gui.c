@@ -491,9 +491,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 		const char* hostn=g_value_get_string(&value);
 		int ihost=host2i(hostn);
 		g_value_unset(&value);
-		if(scheduler_cmd_wrap(ihost, pid, cmd)){
-			warning("Failed to %s the job\n", action);
-		}
+		scheduler_cmd_wrap(ihost, pid, cmd);
 	}
 }
 
@@ -668,7 +666,6 @@ static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x
 				dialog_confirm(cmds, "Kill %d?", pid);
 #else				
 				if(dialog_confirm("Kill %d?", pid)){
-					
 					scheduler_cmd_wrap(ihost, pid, CMD_KILL);
 				}
 #endif

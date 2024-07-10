@@ -1,5 +1,4 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir)
-AM_LDFLAGS=$(LDOPTS)
+AM_CFLAGS=-I$(top_srcdir)
 
 nobase_include_HEADERS=blas.h defs.h fft.h loc.h matbin.h mathdef.h matmath.h random.h spbin.h type.h zmath.h\
  cell.h cmath.h dmath.h lmath.h map.h mat.h mathmisc.h numtype.h smath.h sp.h zfarr.h 

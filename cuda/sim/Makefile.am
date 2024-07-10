@@ -1,5 +1,5 @@
-AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) $(LDCUDA)
+AM_CFLAGS=-I $(top_srcdir)
+AM_LDFLAGS=$(LDCUDA)
 #In the order of include:
 HEADER_LIB=cudata.h accphi.h gpu_sim.h  perf.h  wfs.h
 
@@ -10,7 +10,6 @@ if USE_CUDA
 lib_LTLIBRARIES=libcusim.la
 libcusim_la_SOURCES=$(SRCS) $(EXTRA_DIST)
 libcusim_la_LIBADD=../math/libcumath.la # $(LIBCUDA)
-libcusim_la_LDFLAGS=$(LDOPTS)
 endif
 
 #The following does the depency generation/tracking and verbosity right.

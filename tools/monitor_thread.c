@@ -234,7 +234,6 @@ static int test_jobs(proc_t *p, int flag){
 	}
 }
 static void save_all_jobs(){
-	char* fnall=NULL;
 	char* tm=strtime_pid();
 	for(int ihost=0; ihost<nhost; ihost++){
 		if(!pproc[ihost]) continue;
@@ -246,11 +245,6 @@ static void save_all_jobs(){
 		snprintf(fn, PATH_MAX, "%s/maos_%s_%s.wait", HOME, host, tm);
 		fp[1]=fopen(fn, "w");
 
-		if(fnall){
-			fnall=stradd(fnall, "\n", fn, NULL);
-		} else{
-			fnall=strdup(fn);
-		}
 		char* lastpath[2]={NULL,NULL};
 		for(proc_t* iproc=pproc[ihost]; iproc; iproc=iproc->next){
 			char* spath=iproc->path;
@@ -282,8 +276,6 @@ static void save_all_jobs(){
 		free(lastpath[0]);
 		free(lastpath[1]);
 	}
-	info("Jobs saved to \n%s", fnall);
-	free(fnall);
 	free(tm);
 }
 static int scheduler_cmd(int ihost, int pid, int command);
@@ -326,7 +318,8 @@ static int respond(int sock){
 		streadint(sock, &command);
 		//info_time("received command %d for relaying to scheduler\n", command);
 		int ans=scheduler_cmd(cmd[1], cmd[2], command);
-		stwriteint(sock, ans);
+		//stwriteint(sock, ans);
+		(void)ans;
 	}
 	break;
 	case MON_DRAWDAEMON://called by scheduler to open drawdaemon

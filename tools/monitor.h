@@ -79,7 +79,7 @@ int host2i(const char* hostn);
 void clear_job_wrap(int ihost, int flag);
 void kill_job_wrap(int ihost, int pid);
 void save_job_wrap();
-int scheduler_cmd_wrap(int ihost, int pid, int command);
+void scheduler_cmd_wrap(int ihost, int pid, int command);
 extern const char *mailto;
 extern int plot_enabled;
 extern int headless;

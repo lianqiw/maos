@@ -465,21 +465,25 @@ compile(){
 		cat $fnlog
 	fi
 }
-AS_IF([test "$enable_openmp" = "yes" -a "$system" = "apple"], [
+AS_IF([test "$system" = "apple"], [
 	#MACOS supports openmp with separate omp library
 	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
-	AS_IF([test "$has_omp" = "0" ], [
-		download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
-		unset ac_cv_lib_omp_omp_set_num_threads
-		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+	AS_IF([test "$enable_openmp" = "yes" ], [
+		AS_IF([test "$has_omp" = "0" ], [
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
+			unset ac_cv_lib_omp_omp_set_num_threads
+			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+		])
+		AS_IF([test "$has_omp" = "0" ], [
+			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
+			compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
+			unset ac_cv_lib_omp_omp_set_num_threads
+			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+		])
 	])
-	AS_IF([test "$has_omp" = "0" ], [
-		#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
-		compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
-		unset ac_cv_lib_omp_omp_set_num_threads
-		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+	AS_IF([test "$enable_openmp" != "no" ], [
+		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
 	])
-	AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
 ], [AS_IF([test "$enable_openmp" != "no"], [AC_OPENMP])]
 )
 
@@ -502,7 +506,7 @@ fi
 case $host_cpu in
 	*64)
 		chol_fun=cholmod_l_factorize
-		CFLAGS+=" -DDLONG"
+		AC_DEFINE(DLONG, [1], "Use long for sparse matrix index")
 	;;
 	*86|*32|arm)
 		CPPFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
@@ -629,9 +633,9 @@ fi
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then
-	compile ZLIB zlib.tar.bz2 #--static
+	compile ZLIB https://www.zlib.net/current/zlib.tar.gz
 	unset ac_cv_lib_z_gzopen
-	AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Invalid zlib])])
+	AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Please install zlib.])])
 fi
 
 #Check FFTW header and library. FFTW3 interface in MKL performs as good as FFTW3
@@ -960,7 +964,7 @@ if test "$with_cuda" != "no" ;then
 		LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
 	else
 		LDCUDA=
-		AC_MSG_NOTICE([CUDA library not found])
+		AC_MSG_NOTICE([CUDA toolkit not found])
 		with_cuda="no"
 	fi
 	AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA $LDCUDA])
@@ -1041,15 +1045,15 @@ if test "$with_cuda" != "no" ;then
 	AC_SUBST(NVCC)
 else
 	if test "$user_enabled_cuda" = "yes" ;then
-		AC_MSG_ERROR([Specified cuda directory $CUDADIR is not valid])
+		AC_MSG_NOTICE([Specified directory $CUDADIR does not contain CUDA toolkit.])
 	elif test "$user_enabled_cuda" = "no" ;then
-		AC_MSG_NOTICE(["User disabled cuda."])
+		AC_MSG_NOTICE([User disabled CUDA.])
 	else
-		AC_MSG_NOTICE(["Cannot compile with cuda. Please use --with-cuda=DIR to specify CUDA location to enable CUDA support"])
+		AC_MSG_NOTICE([CUDA toolkit is not found.])
 	fi
 	cudaver=
 fi
-AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], "Cuda version")
+AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], "CUDA version")
 AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
 AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 
@@ -1088,7 +1092,7 @@ AC_CONFIG_FILES( [Makefile
 	mex/Makefile
 ])
 
-LDOPTS+=" -no-fast-install -avoid-version"
+LDFLAGS+=" $LDOPTS -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
 #echo LIBS=$LIBS
@@ -1097,8 +1101,7 @@ AC_SUBST(ldsuffix)
 AC_SUBST(CN)
 AC_SUBST(LDAOS)
 CFLAGS+=" $OPTS $OPTS_CPU $OPENMP_CFLAGS"
-OPTS=""
-AC_SUBST(OPTS)
+AS_UNSET(OPTS)
 AC_SUBST(LDCHOL)
 AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
@@ -1108,38 +1111,35 @@ AC_SUBST(LDEXE_MAOS)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)
-AC_SUBST(LDOPTS)
 AC_SUBST(LDSO)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
 echo BIGENDIAN=$BIGENDIAN
 echo enable_allstatic=$enable_allstatic
-echo LAPCAK=$LAPACK
-echo CFLAGS=$CFLAGS
 echo CPPFLAGS=$CPPFLAGS
+echo CFLAGS=$CFLAGS
+echo LDFFT=$LDFFT
+echo LDCHOL=$LDCHOL
+echo LAPCAK=$LAPACK
+echo LDEXE=$LDEXE
 echo LDFLAGS=$LDFLAGS
-echo LDOPTS=$LDOPTS
-echo LDEXE_FULL=$LDEXE_FULL
+
 if test "$gtk_ver" != "0" ;then
-	echo "For GUI:"
-	echo "  DRAW_LIBS=$DRAW_LIBS"
-	echo "  GTK_LIBS=$GTK_LIBS"
+	echo "GTK_LIBS=$GTK_LIBS"
 fi
 if test "$with_cuda" != "no" ;then
-	echo "For CUDA:"
-	echo "  NVCC=$NVCC"
-	echo "  CUDAOPT=$CUDAOPT"
-	echo "  CCBINOPT=$CCBINOPT"
-	echo "  LIBCUDA=$LIBCUDA"
-	echo "  LDCUDA=$LDCUDA"
+	echo "NVCC=$NVCC"
+	#echo "CUDAOPT=$CUDAOPT"
+	#echo "CCBINOPT=$CCBINOPT"
+	#echo "LIBCUDA=$LIBCUDA"
+	echo "LDCUDA=$LDCUDA"
 fi
 if test "$with_matlab" != "no" ;then
-	echo "For MATLAB MEX Interface:"
-	echo "  MEXDIR=$MEXDIR"
-	echo "  LIBMEX=$LIBMEX"
-	echo "  LDMEX=$LDMEX"
-	echo "  MEXOPT=$MEXOPT"
+	echo "MEXDIR=$MEXDIR"
+	echo "LIBMEX=$LIBMEX"
+	echo "LDMEX=$LDMEX"
+	echo "MEXOPT=$MEXOPT"
 fi
 YESNO=("No" "Yes")
 echo
@@ -1166,5 +1166,5 @@ echo
 
 echo "*************************************************************************"
 echo "*** MAOS Documentation can be found at https://lianqiw.github.io/maos ***"
-echo "*** MAOS Source can be obtained at https://github.com/lianqiw/maos     ***"
+echo "*** MAOS Source can be obtained at https://github.com/lianqiw/maos    ***"
 echo "*************************************************************************"
