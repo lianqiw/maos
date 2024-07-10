@@ -38,6 +38,7 @@ var thread_8h =
     [ "WAIT", "thread_8h.html#afb9c2932d487e919bbec82544e9b961d", null ],
     [ "CALL", "thread_8h.html#ac484ce8461053d81b280ae84d3d2c110", null ],
     [ "CALL_THREAD", "thread_8h.html#a9020b285ee8e1e5342e481ae80f6152a", null ],
+    [ "CALL_THREAD_ARR", "thread_8h.html#a23d24728f786c3c99baae85dfde82b19", null ],
     [ "thread_fun", "thread_8h.html#a41f23d172c89ca8271cf0a6ebab9119f", null ],
     [ "thread_wrapfun", "thread_8h.html#a0af06632e1c10cee94ac065f958b63e7", null ],
     [ "thread_id", "thread_8h.html#a46d357a9305be4f48b8166cb27ec41ff", null ],

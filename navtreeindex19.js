@@ -1,5 +1,6 @@
 var NAVTREEINDEX19 =
 {
+"type_8h.html#structccell":[11,0,3,9,17],
 "type_8h.html#structcell":[11,0,3,9,16],
 "type_8h.html#structcmat":[11,0,3,9,3],
 "type_8h.html#structcsp":[11,0,3,9,9],
@@ -248,6 +249,5 @@ var NAVTREEINDEX19 =
 "zmath_8h.html#aabde1e3bc8237309ee414b097fb34c17":[11,0,3,11,260],
 "zmath_8h.html#aad2c7142ea11c9b00764e08db60c7def":[11,0,3,11,133],
 "zmath_8h.html#aae57dba32b7c9978be680145f9fa8717":[11,0,3,11,179],
-"zmath_8h.html#ab0065774e20461df3102cfbd2849d674":[11,0,3,11,165],
-"zmath_8h.html#ab1fde7b32f2fdd965c7ad994b96050d9":[11,0,3,11,224]
+"zmath_8h.html#ab0065774e20461df3102cfbd2849d674":[11,0,3,11,165]
 };
