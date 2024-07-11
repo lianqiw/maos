@@ -61,6 +61,7 @@ AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 die(){
 	shift
 	AC_MSG_ERROR(["Error:$@"])
+	return 1
 }
 #CPPFLAGS are for C/C++ preprocessor. Use it for -D, -I flags
 #CFLAGS are for C compiler
@@ -259,10 +260,12 @@ COMMON_CLANG+=" -Wno-sign-compare " #CLANG has false positive in detecting sign 
 #Set optimize flags for different compilers
 OPTIM_ALL="-g -O3 -mtune=native -ftree-vectorize -ffast-math -fno-finite-math-only"
 
-OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code.
 if test "$INTEL" = "1" ;then
-	OPTIM_CLANG+=" -fp-model=precise "
+	OPTIM_CLANG+=" -fp-model=precise"
+	#OPTIM_CLANGS+=" -Wno-error=recommended-option -Wno-recommended-option"
 	OPTS_CPU+=" -qopenmp-simd"
+else
+	OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code.
 fi
 
 DEBUG_ALL="-g3 -O0 -DDEBUG_TRACE" #-og
@@ -309,18 +312,11 @@ case "$host_os" in
 	*linux*)
 		AM_CONDITIONAL(LINUX, true)
 		LDRT=" -lrt" #need real time library.
-		#RUNPATH is not used for dlopen. RPATH is. disable-new-dtags uses RPATH instead of RUNPATH
+		#RUNPATH is not used for dlopen or secondary dependencies. RPATH is. disable-new-dtags uses RPATH instead of RUNPATH
+		#RUNPATH is searched after LD_LIBRARY_PATH while RPATH is searched before LD_LIBRARY_PATH. Both are before the default paths.
 		LDOPTS+=" -Wl,--no-as-needed,--disable-new-dtags" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
-		CFLAGS+=" -fPIC"
-		#The following are needed when no gnu extension is used.
-		#OPTS+=" -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L"
-		OPTS+=" -D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L"
-		if test "$INTEL" = "1" ;then
-			OPTS+=" -D_DEFAULT_SOURCE " #DEFAULT_SOURCE is needed for oneAPI clang
-		fi
-		if test "$enable_release" = "yes" ;then
-			OPTS+=" -D_GLIBC_2_10_SOURCE" #Does not seem to be effective
-		fi
+		CFLAGS+=" -fPIC" #position independent code
+		CFLAGS+=" -D_DEFAULT_SOURCE" #this is needed to compile libwebsockets and to use certain symbols
 		case ${host_cpu} in
 			aarch64|arm64)
 				libsuffix="arm64"
@@ -419,13 +415,9 @@ download(){
 	OUTDIR="$3"
 	if test "$enable_binary" = "no" -a -z "$4" ;then
 		echo "Download pre-built binary is disabled"
-		return
+		return 1
 	fi
 	mkdir -p ${DOWNLOAD_DIR} || die "failed to mkdir"
-	if test -f ${DOWNLOAD_DIR}/${fn} ;then
-		echo "Reusing downloaded ${DOWNLOAD_DIR}/${fn}"
-		extract "${fn}" "$OUTDIR"
-	fi
 	if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
 		case "$fn" in
 		http*)
@@ -437,10 +429,13 @@ download(){
 			;;
 		esac
 		echo $wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
-		$wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}"
+		$wget "$url" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" || return 1
+	fi
+	if test -f ${DOWNLOAD_DIR}/${fn} ;then
 		if ! extract "$fn" "$OUTDIR" ;then
 			AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 			rm -rf ${DOWNLOAD_DIR}/${fn}
+			return 1
 		fi
 	fi
 }
@@ -454,16 +449,27 @@ compile(){
 	rm -rf ${TMP_DIR}/$name
 	download $name $file ${TMP_DIR}/$name 1
 	fnlog=${TMP_DIR}/compile.log
-	echo "Compiling $name with CFLAGS=\"$CFLAGS\" CPPFLAGS=\"$CPPFLAGS\" LDFLAGS=\"$LDFLAGS\" \"$@\". Check $fnlog for details"
-	echo CFLAGS=$CFLAGS > $fnlog
-	if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -Wno-error"  && export CPPFLAGS="$CPPFLAGS" && export LDFLAGS="$LDFLAGS" && \
-		((./configure --libdir=${libdir} $@ --prefix=${ac_default_prefix} && make -j4 install) ||
-		 (mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${ac_default_prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install)))	>> $fnlog 2>&1 ;then
-		echo "Compiled $name successfully."
-	else
-		echo "Failed to compile $name. Please see $fnlog for details"
-		cat $fnlog
-	fi
+	fnlog2=${TMP_DIR}/compile_${name}.log
+	(
+		echo Compiling $name with $@.
+		cd ${TMP_DIR}/$name/* || return 1
+		export CFLAGS="$CFLAGS -O3 -Wno-error"  
+		export CPPFLAGS="$CPPFLAGS" 
+		ans=0
+		if test -f configure ;then
+			(./configure --enable-static --enable-shared --libdir=${libdir} $@ --prefix=${ac_default_prefix} && make -j4 install) > $fnlog2 2>&1|| ans=1
+		elif test -f CMakeLists.txt ;then
+		 	(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${ac_default_prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install) >$fnlog2 2>&1|| ans=1
+		else
+			echo "Unknown compile system." 
+			ans=1
+		fi
+		if test $ans = 0 ;then
+			echo "Compiled $name successfully."
+		else
+			echo "Failed to compile $name. Please check $fnlog and $fnlog2 for details." 
+		fi
+	) | tee -a $fnlog
 }
 AS_IF([test "$system" = "apple"], [
 	#MACOS supports openmp with separate omp library
@@ -492,7 +498,9 @@ AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp=0], [has_omp=1])
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
 AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
-
+if test "$INTEL" = 1 ;then
+	OPENMP_CFLAGS=${OPENMP_CFLAGS//-fopenmp/-qopenmp}
+fi
 AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
 	AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
@@ -506,7 +514,7 @@ fi
 case $host_cpu in
 	*64)
 		chol_fun=cholmod_l_factorize
-		AC_DEFINE(DLONG, [1], "Use long for sparse matrix index")
+		CPPFLAGS+=" -DDLONG" #enables long int for sparse matrix indexing to work with matrices larger than 4GB.
 	;;
 	*86|*32|arm)
 		CPPFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
@@ -660,12 +668,19 @@ else
 
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
-			FLAGS="--enable-threads --enable-static --enable-shared --disable-fortran "
+			FLAGS="--enable-threads --disable-fortran "
 			#if test "$has_omp" = "1" ;then //We use thread callback instead of openmp based implementation
 			#	FLAGS+=" --enable-openmp"
 			#fi
-			if test "$host_cpu" != "aarch64" ;then
-				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2"
+			if test "$host_cpu" = "aarch64" ;then
+				FLAGS+=" --enable-neon"
+				if test "$system" = "apple" ;then
+					FLAGS+=" --build=aarch64-apple-darwin"
+				else
+					FLAGS+=" --build=aarch64 "
+				fi
+			else
+				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2 --enable-avx512"
 			fi
 			compile FFTW fftw.tar.bz2 $FLAGS
 			compile FFTW fftw.tar.bz2 $FLAGS --enable-float
