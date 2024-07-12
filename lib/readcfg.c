@@ -652,8 +652,7 @@ dmat* readstr_dmat(int n, ///<[in]Number of elements requested
 	} else{
 		int nx, ny;
 		real* val=NULL;
-		real** pval=&val;
-		readstr_numarr((void**)pval, &nx, &ny, n, relax, M_REAL, key, fn);
+		readstr_numarr((void**)&val, &nx, &ny, n, relax, M_REAL, key, fn);
 		if(nx&&ny){
 			res=dnew_do(nx, ny, val, mem_new(val));
 		}

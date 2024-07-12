@@ -167,6 +167,7 @@ void cure1d(dmat** pphix,   /**<Output: opd*/
 			warning("Output array is too small, resize\n");
 			dresize(*pphix, nx+1, ny+1);
 		}
+		dzero(*pphix);
 	} else{
 		*pphix=dnew(nx+1, ny+1);//x chains: integration of gx along x
 	}
@@ -221,7 +222,7 @@ void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
 	dfree(gyt);
 }
 /**
-   An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid.
+   An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid.
 */
 void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 	dmat *grad=0;
@@ -254,6 +255,12 @@ void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 		}
 	}
 	cure(phix, gx, gy, saloc->dx);
+	if(!(*phix)->keywords){
+		char keywords[1024];
+		snprintf(keywords, sizeof(keywords), "dx=%g;dy=%g;ox=%g;oy=%g;", 
+			saloc->dx, saloc->dy, saloc->map->ox+saloc->dx*npad, saloc->map->oy+saloc->dy*npad);
+		(*phix)->keywords=strdup(keywords);
+	}
 	dfree(gx);
 	dfree(gy);
 	dfree(grad);

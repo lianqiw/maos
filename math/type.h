@@ -198,31 +198,31 @@ typedef struct loc_t{
    don't change the leading elements. so that pts_t can be used as loc_t.
 */
 typedef struct pts_t{
-    union{
-        dmat dmat[1];
-        loc_t loc[1];
-        struct{
-            M_ID id;
-            real* origx;    /**<The x origin of each subaperture. Contains memory for origy*/
-            long nsa;       /**<number of subapertures.*/
-            long two;       /**<Constant 2. to be binary compatble with rmat*/
-            char *keywords; /**<The keywords as a string*/
-            void *dummy_fp;   /**<unused padding to align with cell (fp)*/
-            void *dummy_fft;  /**<unused padding to align with cell (fft)*/
-            void *dummy_mem;  /**<unused padding to align with mat (mem)*/
-            void *dummy_async;/**<unused padding to align with mat (async)*/
-            real* origy; /**<The y origin of each subaperture*/
-            locstat_t* stat;/**<padding so that we can be casted to loc_t*/
-            map_t* map;    /**<treat pts_t as loc_t and compute the MAP*/
-            unsigned int *nref;     /**<Reference counting*/
+	union{
+		loc_t loc[1];
+		struct{
+			union{
+				dmat dmat[1];
+				struct{
+					M_ID id;
+					real* origx;    /**<The x origin of each subaperture. Contains memory for origy*/
+					long nsa;       /**<number of subapertures.*/
+					long two;       /**<Constant 2. to be binary compatble with rmat*/
+					char *keywords; /**<The keywords as a string*/
+				};
+			};
+	        real* origy; 		/**<The y origin of each subaperture*/
+            locstat_t* stat;	/**<padding so that we can be casted to loc_t*/
+            map_t* map;    		/**<treat pts_t as loc_t and compute the MAP*/
+            unsigned int *nref; /**<Reference counting*/
             union{
                 real dsa;    /**<side length of subaperture*/
                 real dsax;   /**<side length of subaperture*/
             };
-            real dsay;   /**<side length of subaperture*/
-            real dummy_ht; /**<Place holder*/
+            real dsay;   	 /**<side length of subaperture. */
+            real dummy_ht; 	 /**<Place holder*/
             real dummy_iac;  /**<Place holder*/
-            int npad;      /*padding when create map*/
+            int npad;      	 /**<padding when create map*/
 		};
 	};
 	//before this line same memory layout as loc_t
@@ -379,6 +379,10 @@ static inline int iscell(const void* id){
 	T loc_t S loc;\
 	T pts_t S pts
 
+#define types_anyloc(T,S)\
+	T loc_t S loc;\
+	T pts_t S pts
+
 #if defined(__cplusplus)//for cuda
 #define def_anyarray(T,S,C)\
 typedef union C{\
@@ -398,6 +402,12 @@ typedef union C{\
 	types_anydmat(T,S);\
 	C(T void* p):b(p){}\
 }C
+#define def_anyloc(T,S,C)\
+typedef union C{\
+	T void *b;\
+	types_anyloc(T,S);\
+	C(T void* p):b(p){}\
+}C
 #else
 #define def_anyarray(T,S,C)\
 typedef union __attribute__((__transparent_union__)){\
@@ -410,6 +420,10 @@ typedef union __attribute__((__transparent_union__)){\
 #define def_anydmat(T,S,C)\
 typedef union __attribute__((__transparent_union__)){\
 	types_anydmat(T,S);\
+}C
+#define def_anyloc(T,S,C)\
+typedef union __attribute__((__transparent_union__)){\
+	types_anyloc(T,S);\
 }C
 #endif
 
@@ -424,6 +438,10 @@ def_anycell(, **, panycell);
 def_anydmat(, *, anydmat);
 def_anydmat(const, *, const_anydmat);
 def_anydmat(, **, panydmat);
+
+def_anyloc(, *, anyloc);
+def_anyloc(const, *, const_anyloc);
+def_anyloc(, **, panyloc);
 //#endif
 
 /*A method to simulate operator overloading for indexing arrys*/

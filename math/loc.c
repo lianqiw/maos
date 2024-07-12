@@ -99,7 +99,7 @@ loc_t* locnew(long nloc, real dx, real dy){
 	loc->nloc=nloc;
 	loc->two=2;
 	if(!isnan(dx)) loc->dx=dx;
-	if(!isnan(dy)) loc->dy=dy;
+	if(!isnan(dy)) loc->dy=dy; else if(!isnan(dx)) loc->dy=dx;
 
 	return loc;
 }
@@ -151,8 +151,14 @@ uint32_t lochash(const loc_t* loc, uint32_t key){
 	return key;
 }
 /**
-   Create an vector to embed OPD into square array for FFT purpose. oversize is
-2 for fft.  */
+   Create an vector to embed OPD into a square array for FFT purpose. 
+   This is reverse operation from loc_create_map which maps 2d array indexing info loc indexing.
+   @param[out] nembed 	size of square array
+   @param[in] loc		irregular grid
+   @param[in] oversize	ratio of oversizing. 2 for FFT to achieve Nyquist sampling.
+   @param[in] fftpad	pad to size that is fast for FFT.
+   @return				embed has the same length of loc, contains 1d index into the squre array.
+  */
 lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad){
 	if(!loc) return NULL;
 	real xmin, xmax, ymin, ymax;
@@ -372,6 +378,9 @@ void loc_embed_do(anydmat _dest, const loc_t* loc, const_anydmat in, int add){
 }
 /**
   A convenient wrapper for loc_embed to be called by matlab or python
+  @param[in] loc	The location coordinate
+  @param[in] arr	The points defined on loc to be embeded to 2-d array. May have multiple vectors.
+  @return			The embeded 2-d array.
 */
 dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 	if(!loc||!arr) return NULL;
@@ -406,11 +415,10 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 */
 void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 	if(!pdest||!loc||!in) return;
-	map_t* map=loc->map;
-	if(!map){
+	if(!loc->map){
 		loc_create_map((loc_t*)loc);
-		map=loc->map;
 	}
+	map_t *map=loc->map;
 	if(!*pdest){
 		*pdest=dcellnew(map->nx, map->ny);
 	}
@@ -441,11 +449,11 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 		error("in and map doesn't agree: in is %ldx%ld, map is %ldx%ld\n",
 			in->nx, in->ny, map->nx, map->ny);
 	}
-	real* restrict pdest=P(dest)-1;//iphi count from 1
+	real* restrict pdest1=P(dest)-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
 		long iphi=P(map,i);
 		if(iphi>0){
-			pdest[iphi]=P(in,i);
+			pdest1[iphi]=P(in,i);
 		}
 	}
 }

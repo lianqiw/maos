@@ -21,7 +21,7 @@ MAOS.If not, see<http://www.gnu.org/licenses/>.
 #include "zernike.h"
 #include "turbulence.h"
 #include "misc.h"
-
+#include "cure.h"
 static double PYWFS_PSIZE=3; //Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2
 int PYWFS_DEBUG=0;//debugging implementation
 static int PYWFS_TT_DUAL=0;//average tip/tilt response along +/-
@@ -362,6 +362,10 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 /**
    Perform FFT over the complex PSF with additional phases caused by the
    pyramid. FFT on each quadrant of the PSF creates diffraction effects.
+   @param[in/out]ints	The intensity. Accumulate.
+   @param[in] pywfs		PYWFS parameters
+   @param[in] opd		The OPD
+   @param[in] siglev	The signal level.
 */
 void pywfs_ints(dmat **ints, const pywfs_t *pywfs, const dmat *opd, real siglev){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
@@ -779,7 +783,63 @@ void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *w
 	dfree(ints2);
 	if(free_pycfg) pycfg_free(pycfg);
 }
-
+/**
+ * PYWFS gain calibrate using measurements.
+ * The idea is as follows.
+ * With a given input OPD, the PWFS measures OPDR.
+ * Feed OPDR to PWFS, it measures OPDR2. Optionally add a fitting error to the input.
+ * Scale OPDR by alpha, it measures OPDR3.
+ * Iterate the alpha until OPDR3 has the same magnitude as OPDR.
+ * The final alpha is the gain adjustment.
+ * This does not quite work because the original input OPD and OPDR has different spatial frequency content.
+ * Most of OPD is not measurable.
+ */
+void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0){
+	dmat *ints=NULL;
+	dmat *grad2=NULL;
+	
+	dmat *opd2=dnew(pywfs->locfft->loc->nloc, 1);//resampled opdr onto locfft
+	dmat *opdr2=NULL;//2nd reconstructed OPD
+	real amp2r;
+	{	//compute measured OPDR and resample to input grid
+		dmat *opdr=NULL; //reconstructed OPD
+		cure_loc(&opdr, grad, pywfs->saloc);
+		map_t *opdr_map=d2map(opdr);//reference OPD into a map_t
+		amp2r=dsumsq(opdr);
+		prop_grid(opdr_map, pywfs->locfft->loc, P(opd2), 1, 0, 0, 1, 0, 0, 0);
+		//writebin(opdr, "opdr_in");
+		//writebin(opd2, "opd2_in");
+		dfree(opdr);
+		mapfree(opdr_map);
+	}
+		
+	real gaintot=1;
+	dmat *opd2fit=r0?genatm_loc(pywfs->locfft->loc, r0, 1, -11./3., 3):NULL;
+	dmat *opd2tot=NULL;
+	real siglev=pywfs->cfg->siglev;
+	for(int i=0; i<5; i++){
+		//compute PYWFS gain error with opdr and fix it
+		dzero(ints);
+		dadd(&opd2tot, 0, opd2, gaintot);
+		dadd(&opd2tot, 1, opd2fit, 1);
+		pywfs_ints(&ints, pywfs, opd2tot, siglev);
+		pywfs_grad(&grad2, pywfs, ints);
+		cure_loc(&opdr2, grad2, pywfs->saloc);
+		//writebin(opdr2, "opdr2_%d", i);
+		real gain=sqrt(amp2r/dsumsq(opdr2));//make the output agree with original opdr.
+		gaintot*=gain;
+		dbg("gain=%.3f, total gain adjustment is %.3f\n", gain, gaintot);
+	}
+	pywfs->gain*=gaintot;
+	dfree(ints);
+	dfree(grad2);
+	
+	dfree(opd2);
+	dfree(opdr2);
+	
+	dfree(opd2fit);
+	dfree(opd2tot);
+}
 extern int PYWFS_DEBUG;
 ///Test PYWFS implementation
 void pywfs_test(pywfs_t *pywfs){
@@ -961,6 +1021,19 @@ void pywfs_test(pywfs_t *pywfs){
 			dfree(grad);
 
 		}
+	}else if(PYWFS_DEBUG==4){//test automatic gain calibration 2nd version
+		dmat *ints=NULL;
+		dmat *grad=NULL;
+		real r0=0.2;
+		real L0=2;//smaller value to simulate residual
+		dmat *opd=genatm_loc(pywfs->locfft->loc, r0, L0, -11./3., 1);
+		pywfs_ints(&ints, pywfs, opd, siglev);
+		pywfs_grad(&grad, pywfs, ints);
+		pywfs_gain_calibrate(pywfs, grad, r0);
+		//writebin(opd, "opd_in");
+		dfree(ints);
+		dfree(grad);
+		dfree(opd);
 	}
 	if(PYWFS_DEBUG){
 		exit(0);

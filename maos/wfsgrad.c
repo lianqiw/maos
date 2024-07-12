@@ -920,6 +920,9 @@ void* wfsgrad_post(thread_t* info){
 			if(P(parms->save.grad, iwfs)){
 				zfarr_push(simu->save->gradcl[iwfs], isim, gradcl);
 			}
+			/*if(parms->powfs[ipowfs].type==WFS_PY && isim%100==99){
+				pywfs_gain_calibrate(simu->powfs[ipowfs].pywfs, gradcl, parms->atm.r0);
+			}*/
 		}
 	}//for iwfs
 	return NULL;

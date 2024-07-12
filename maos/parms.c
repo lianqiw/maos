@@ -911,7 +911,7 @@ static void readcfg_siglev(parms_t *parms){
 		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<NX(parms->powfs[ipowfs].siglevs); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			P(parms->powfs[ipowfs].siglevs,jwfs)=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+			P(parms->powfs[ipowfs].siglevs,jwfs)=parms->wfs[iwfs].siglev*MAX(1,parms->powfs[ipowfs].dtrat);
 		}
 		if(!siglev_shared){
 			parms->powfs[ipowfs].siglev=siglev_sum/parms->powfs[ipowfs].nwfs;//update to the average of all wfs in this powfs.
@@ -2015,9 +2015,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
-		if(powfsi->step<parms->sim.start 
-			|| (parms->sim.end>0 && powfsi->step>=parms->sim.end)
-			|| powfsi->dtrat==0){//powfs is disabled.
+		if(powfsi->dtrat<=0){
+			error("powfs[%d].dtrat=%d is invalid.\n", ipowfs, powfsi->dtrat);
+		}else if(powfsi->step<parms->sim.start 
+			|| (parms->sim.end>0 && powfsi->step>=parms->sim.end)){//powfs is disabled.
 			info("powfs %d is not used.\n", ipowfs);
 		}else if(powfsi->step>0){/*round step to be multiple of dtrat. */
 			powfsi->step=((powfsi->step+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
@@ -3119,7 +3120,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 /**
    postproc misc parameters.
 */
-static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
+static void setup_parms_postproc_misc(parms_t *parms, int override){
 	if(!disable_save&&parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
 		char fn[80];
@@ -3128,7 +3129,7 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 		parms->fdlock=lnew(parms->sim.nseed,1);
 		for(iseed=0; iseed<parms->sim.nseed; iseed++){
 			snprintf(fn,80,"Res_%ld.done",P(parms->sim.seeds,iseed));
-			if(exist(fn)&&!over_ride){
+			if(exist(fn)&&!override){
 				P(parms->fdlock,iseed)=-1;
 				warning("Skip seed %ld because %s exists.\n",P(parms->sim.seeds,iseed),fn);
 			} else{
@@ -3163,6 +3164,28 @@ static void setup_parms_postproc_misc(parms_t *parms,int over_ride){
 		info2("\n");
 		if(parms->sim.nseed>1&&parms->dither){
 			info("Some of the dither mode updates parameters will persist for different seeds.\n");
+		}
+	}
+	if(!disable_save){
+		if(parms->sim.nseed>0){
+			//Make symlink after simulation runs.
+			char fn[PATH_MAX];
+			snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+			//remove("maos_done.conf");
+			remove("maos_recent.conf");
+			mysymlink(fn, "maos_recent.conf");
+			//remove("run_done.log");
+			remove("run_recent.log");
+			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+			mysymlink(fn, "run_recent.log");
+		} else{
+			char fn[PATH_MAX];
+			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+			remove(fn);
+		}
+	}else{
+		if(parms->save.setup||parms->save.all||parms->sim.skysim||parms->evl.psfmean||parms->evl.psfhist){
+			error("Please specify -o DIR to enable saving to disk\n");
 		}
 	}
 	if(parms->save.ngcov>0&&parms->save.gcovp<10){
@@ -3479,7 +3502,7 @@ static void print_parms(const parms_t *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
+parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	info("Main config file is %s\n", mainconf);
 	char *config_path=find_config("maos");
 	/*Setup PATH and result directory so that the config_path is in the back of path */
@@ -3522,17 +3545,6 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	readcfg_misreg(parms);
 	readcfg_load(parms);
 
-	setup_parms_postproc_za(parms);
-	setup_parms_postproc_sim(parms);
-	setup_parms_postproc_wfs(parms);
-	setup_parms_postproc_dtref(parms);
-	setup_parms_postproc_dirs(parms);
-	setup_parms_postproc_atm(parms);
-	setup_parms_postproc_atm_size(parms);
-	setup_parms_postproc_dm(parms);
-	setup_parms_postproc_recon(parms);
-	setup_parms_postproc_misc(parms,over_ride);
-
 	/*
 	  Output all the readed parms to a single file that can be used to reproduce
 	  the same simulation.
@@ -3548,31 +3560,21 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int over_ride){
 	  Postprocess the parameters for integrity. The ordering of the following
 	  routines are critical.
 	*/
-	if(disable_save){
-		if(parms->save.setup||parms->save.all||parms->sim.skysim||parms->evl.psfmean||parms->evl.psfhist){
-			error("Please specify -o to enable saving to disk\n");
-		}
-	}
+	setup_parms_postproc_za(parms);
+	setup_parms_postproc_sim(parms);
+	setup_parms_postproc_wfs(parms);
+	setup_parms_postproc_dtref(parms);
+	setup_parms_postproc_dirs(parms);
+	setup_parms_postproc_atm(parms);
+	setup_parms_postproc_atm_size(parms);
+	setup_parms_postproc_dm(parms);
+	setup_parms_postproc_recon(parms);
+	setup_parms_postproc_misc(parms,override);
+	
 
 	if(parms->sim.nseed>0){
 		print_parms(parms);
-		if(!disable_save){
-			//Make symlink after simulation runs.
-			char fn[PATH_MAX];
-			snprintf(fn,PATH_MAX,"maos_%s_%ld.conf",HOST,(long)getpid());
-			//remove("maos_done.conf");
-			remove("maos_recent.conf");
-			mysymlink(fn,"maos_recent.conf");
-			//remove("run_done.log");
-			remove("run_recent.log");
-			snprintf(fn,PATH_MAX,"run_%s_%ld.log",HOST,(long)getpid());
-			mysymlink(fn,"run_recent.log");
-		}
 		print_mem("After setup_parms");
-	} else{
-		char fn[PATH_MAX];
-		snprintf(fn,PATH_MAX,"run_%s_%ld.log",HOST,(long)getpid());
-		remove(fn);
 	}
 	return parms;
 }

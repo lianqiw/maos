@@ -93,5 +93,6 @@ dmat* pywfs_mkg(pywfs_t *pywfs, const loc_t* ploc, const char *distortion,
 		const dmat *mod, const dmat *opdadd, real displacex,  real displacey);
 dmat *pywfs_tt(const pywfs_t *pywfs);
 void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *wvl, real siglev, loc_t *loc, const dmat *amp, const dmat *opd);
+void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0);
 void pywfs_test(pywfs_t *pywfs);
 #endif
