@@ -161,7 +161,7 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 			real displacex=thetax*ht;
 			real displacey=thetay*ht;
 			/*from DM to ploc (plocs) science beam */
-			P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
+			P(Hat,idm)=mkht(P(recon->aloc,idm), loc, displacex, displacey, 1., 0);
 			dspmuldiag(P(Hat,idm), amp, wt[ievl]);
 		}
 		dcellmm(&Wa, Hat, Hat, "nt", 1);
@@ -259,7 +259,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 				P(Hat,idm)=dspref(HatGround);
 			} else{
 			/*from DM to ploc (plocs) science beam */
-				P(Hat,idm)=mkhb(P(recon->aloc,idm), loc, displacex, displacey, 1.);
+				P(Hat,idm)=mkht(P(recon->aloc,idm), loc, displacex, displacey, 1., 0);
 				if(parms->dm[idm].isground){
 					HatGround=dspref(P(Hat,idm));
 				}

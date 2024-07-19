@@ -42,6 +42,7 @@ static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
+	int index;	  //Input order.
 	int priority;//Priority of the entry. -1: a replacement entry. 0: default, larger: higher priority
 	int flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
 	int prefix;  //whether this is prefix'ed entry.
@@ -57,7 +58,7 @@ static int changes_loaded=0;//whether changes.conf has been loaded.
 #define STRICT 1
 
 /**
-   trim the spaces before and after string.*/
+   trim the spaces before and after string. str is modified to skip leading spaces.*/
 static void strtrim(char** str){
 	if(!*str) return;
 	int iend;
@@ -144,19 +145,12 @@ static void print_key(const void* key, VISIT which, int level){
 	(void)level;
 	if((which==leaf||which==postorder) && store->flag!=-1){
 		if(fpout){
-			if(!store->priority){
-				fprintf(fpout, "#");
-			}
-			fprintf(fpout, "%s=", store->key);
-			if(store->data&&strcmp(store->data, "ignore")){
-				fprintf(fpout, "%s\n", store->data);
-			} else{
-				fprintf(fpout, "\n");
-			}
+			fprintf(fpout, "%s%s=%s\n", store->priority>0?"":"#", store->key, (store->data&&strcmp(store->data, "ignore"))?store->data:"");
+			
 		}
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
-				if(PERMISSIVE||!store->priority||store->prefix){
+				if(PERMISSIVE||store->priority>0||store->prefix){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
@@ -188,7 +182,7 @@ void erase_config(){
 	nused=0;
 	nstore=0;
 	changes_loaded=0;
-	//free(default_config); default_config=NULL;//do not replace default_config. the file containing __reset__ may not be full configuration.
+	free(default_config); default_config=NULL;
 }
 /**
    Save all configs to file and check for unused config options.
@@ -211,18 +205,20 @@ void close_config(const char* format, ...){
    a hash table. A key has a priority or 0 or higher. A new key with same or
    higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently.
  */
-void open_config(const char* config_in, /**<[in]The .conf file to read*/
+void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 	const char* prefix,    /**<[in]if not NULL, prefix the key with this.*/
-	int priority     /**<[in]Priorities of keys.*/
+	int priority,    /**<[in]Priorities of keys.*/
+	const int index		   /**<[in]Only when prefix is set. Initial entry index. */
 ){
 	if(!config_in) return;
 	if(!changes_loaded){//on first call, load changes.conf
 		changes_loaded=1;
-		open_config("changes.conf", NULL, -1);
+		open_config_full("changes.conf", NULL, -1, 0);
 	}
 	FILE* fd=NULL;
 	char* config_file=NULL;
 	char* config_dir=NULL;//directory for config_file
+	static int current_index=0;
 	if(check_suffix(config_in, ".conf")){
 		config_file=search_file(config_in);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
@@ -230,7 +226,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				dbg("Cannot open file %s for reading.\n", config_in);
 			}else if(!prefix){
 				error("Cannot open file %s for reading.\n", config_in);
-			}else{
+			}else if(default_config){
 				warning("Cannot open file %s for reading. Ignored (prefix=%s)\n", config_in, prefix);
 			}
 		}
@@ -238,6 +234,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		if(priority!=-1 && !default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
 			addpath2(-1, "%s", config_dir);
+			if(priority==1) priority=0;//default config has priority=0
 		}
 	} else{
 		config_file=strdup(config_in);
@@ -298,53 +295,36 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		}
 		char* eql=strchr(ssline, '=');
 		if(!eql){//no equal sign
-			if(check_suffix(ssline, ".conf")){
-				char* embeded=strextract(ssline);
-				if(strcmp(embeded, config_in)){
-					//info("Opening embeded {%s} from {%s}\n", config_in, embeded);
-					open_config(embeded, prefix, priority);
-				}else{
-					error("Recursive inclusion: %s include %s\n", config_in, embeded);
-				}
-				free(embeded);
-			} else if(!strcmp(ssline, "__reset__")){//usage deprecated 
-				/*if(nstore>0){
-					info("Replacing all existing input\n");
-					erase_config();
-				}
-				countnew=0;
-				countold=0;*/
-			} else if(!strcmp(ssline, "__default__")){//usage deprecated
-				//priority=0;//this file contains default setup.
-			} else if (!strcmp(ssline, "__changes__")){
-				priority=-1;//this file contains key changes
-			} else{
-				error("Input (%s) is not valid\n", ssline);
+			if(strlen(ssline)>2 && ssline[0]=='_'&&ssline[1]=='_'){
+				ssline[0]='\0';
+				continue;
+			}else if(!check_suffix(ssline, ".conf")){
+				error("Input (%s) is not valid.\n", ssline);
 			}
-			ssline[0]='\0';
-			continue;
 		}else if(eql==ssline){
 			error("Input (%s) should not start with =", ssline);
 		}
 		int append=0;
-		if(eql[-1]=='+'){
-			append=1;//append to key
-			eql[-1]='\0';
-		}else if(eql[-1]=='-'){
-			append=-1;//remove from key
-			eql[-1]='\0';
-		}
 		int replace=0;//this indicates a replacement entry
-		if(eql[1]=='='){
-			replace=1;
-			eql[1]=' ';
-			if(eql[2]=='>') eql[2]=' ';
+		if(eql){
+			if(eql[-1]=='+'){
+				append=1;//append to key
+				eql[-1]='\0';
+			}else if(eql[-1]=='-'){
+				append=-1;//remove from key
+				eql[-1]='\0';
+			}
+			if(eql[1]=='='){
+				replace=1;
+				eql[1]=' ';
+				if(eql[2]=='>') eql[2]=' ';
+			}
+			eql[0]='\0';
 		}
-		eql[0]='\0';
 		char* var0=ssline;
 		strtrim(&var0);
-		const char* var=var0;//so we can assign a const string to it in RENAME.
-		char* value=eql+1;
+		const char* var=eql?var0:"include";//key name
+		char* value=eql?(eql+1):var0; //key value
 		strtrim(&value);
 
 		if(!var||strlen(var)==0){
@@ -372,7 +352,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			char* embeded=strextract(value);
 			if(embeded){
 				if(strcmp(embeded, config_in)){
-					open_config(embeded, prefix, priority);
+					open_config_full(embeded, prefix, priority, index);
 				}else{
 					warning("Recursive inclusion: %s includes %s. Ignored.\n", config_in, embeded);
 				}
@@ -398,17 +378,22 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 				store->flag=0;
 			}
 			store->priority=priority;
+			if(prefix){
+				store->index=index;
+			}else if(priority!=-1){
+				store->index=++current_index;
+			}
 			void* entryfind=tfind(store, &MROOT, key_cmp);
 			if(entryfind && priority!=-1){/*key found, check whether it is renamed.*/
 				STORE_T* oldstore=*(STORE_T**)entryfind;
 				if(oldstore->flag==-1){//a replacement entry
-					if(oldstore->data && oldstore->data[0]!=0){
+					if(oldstore->data&&oldstore->data[0]!=0&&oldstore->data[0]!='('){
 						warning("%s has been renamed to %s.\n", store->key, oldstore->data);
 						free(store->key);
 						store->key=strdup(oldstore->data);
 						entryfind=tfind(store, &MROOT, key_cmp);//search again
 					}else{
-						warning("%s is no longer needed.\n", store->key);
+						warning("%s is no longer needed. %s\n", store->key, oldstore->data?oldstore->data:"");
 						free(store->key); store->key=NULL;
 						entryfind=NULL;
 					}
@@ -442,12 +427,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 						}else{
 							error("Invalid value: append=%d\n", append);
 						}
-						oldstore->priority=priority;
 					}
 				} else {//check if the values are identical
 					if(((oldstore->data==NULL||store->data==NULL)&&(oldstore->data!=store->data))||
 							((oldstore->data!=NULL&&store->data!=NULL)&&strcmp(oldstore->data, store->data))){
-						if(oldstore->priority>priority){//Entry with higher priority prevails.
+						if(oldstore->priority>priority || oldstore->index>store->index){//Entry with higher priority or entered layer prevails.
 							dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
 						} else{//Replace value if different.
 							if(priority>0){//Print if not default
@@ -455,13 +439,13 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 							}
 							free(oldstore->data);/*free old value */
 							oldstore->data=store->data; store->data=NULL;/*move pointer of new value. */
-							oldstore->priority=priority;
-							oldstore->flag=store->flag;
+							oldstore->priority=store->priority;
+							oldstore->index=store->index;
 						}
 					}
 				}
 				countold++;
-			}else if(store->key){/*new key */
+			}else if(store->key){/*key may be NULL if it is declared obsolete.*/
 				if(!tsearch(store, &MROOT, key_cmp)){
 					error("Error inserting to tree\n");
 				}
@@ -491,6 +475,12 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	free(config_dir);
 #undef MAXLN
 }
+void open_config(const char *config_in){
+	open_config_full(config_in, NULL, 1, 0);
+}
+void open_config_prefix(const char *config_in, const char *prefix, const char *prekey){
+	open_config_full(config_in, prefix, readcfg_peek_priority("%s",prekey), readcfg_peek_index("%s",prekey));
+}
 /**
    Get the record number of a key.
 
@@ -506,8 +496,10 @@ static const STORE_T* getrecord(char* key, int mark){
 	store.key=key;
 	if((found=tfind(&store, &MROOT, key_cmp))){
 		if(mark>0){
-			if((*(STORE_T**)found)->flag!=0){
-				error("This record %s is already read or not to be used.\n", key);
+			if((*(STORE_T**)found)->flag>0){
+				error("This record %s is already read.\n", key);
+			} else if((*(STORE_T **)found)->flag<0){
+				error("This record %s should not be read.\n", key);//it is a change record.
 			}
 			(*(STORE_T**)found)->flag=1;
 			nused++;
@@ -575,17 +567,19 @@ void readcfg_ignore(const char *format, ...){
 	}//else: silently ignore non-existant input.
 }
 /**
-   Check whether the record is overriden by user supplied conf files.
+   Return priority value of the record
 */
-int readcfg_peek_priority(const char* format, ...){
-	/*Check whether key exists */
+int readcfg_peek_priority(const char *format, ...){
 	format2key;
-	const STORE_T* store=getrecord(key, 0);
-	if(!store){
-		return 0;
-	} else{
-		return store->priority;
-	}
+	const STORE_T *store=getrecord(key, 0);
+	return store?store->priority:0;
+}/**
+   Return index value of the record
+*/
+int readcfg_peek_index(const char *format, ...){
+	format2key;
+	const STORE_T *store=getrecord(key, 0);
+	return store?store->index:0;
 }
 /**
    Obtain a string value from the key.

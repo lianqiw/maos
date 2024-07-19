@@ -159,7 +159,7 @@ static void test_accuracy(int argc, char** argv){
 
     phi_h=dnew(loc->nloc, 1);
     tic;
-    dsp* hfor=mkh(locin, loc, displacex, displacey, scale);
+    dsp* hfor=mkh(locin, loc, displacex, displacey, scale, 0);
     toc("mkh\t\t");
     dspmv(phi_h, hfor, dmat_cast(screen), 'n', -2);
     tic;
@@ -191,7 +191,7 @@ static void test_accuracy(int argc, char** argv){
     toc("grid  2stat, cubic\t");
     dsp* hforcubic;
     tic;
-    hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, cubic);
+    hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, 0, cubic);
     toc("mkh cubic \t\t");
     dspmv(phi_cubh, hforcubic, dmat_cast(screen), 'n', -2);
     tic;

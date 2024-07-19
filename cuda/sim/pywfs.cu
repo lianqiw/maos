@@ -306,7 +306,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	cuzero(ints, stream);
 	curadd(phiout, 1, phiout0, 1, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev);
-	pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
+	pywfs_grad(grad0, ints, cupowfs->saa(0), cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 	TIC;tic;
 	//cuwrite(grad0, stream, "grad0_gpu");
 	//cuwrite(ints, stream, "ints0_gpu");
@@ -340,7 +340,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		cuzero(ints, stream);
 		pywfs_ints(ints, phiout, cuwfs, siglev);
 		//cuwrite(ints, stream, "gpu_ints_%d", imod);
-		pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
+		pywfs_grad(grad, ints, cupowfs->saa(0), cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 		curadd(grad, 1, grad0, -1, stream);
 		curscale(grad, 1./poke, stream);
 		dmat* gradc=drefcols(ggd, imod, 1);

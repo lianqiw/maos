@@ -64,7 +64,7 @@ loc_t* locnew(long nloc, real dx, real dy);
 loc_t* locref(loc_t* in);
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy);
 void loc_calc_ptt(real* out, real* coeffout,
-	const loc_t* loc, const real ipcc,
+	const loc_t* loc, real ipcc,
 	const dmat* imcc, const real* amp, const real* opd);
 void loc_calc_mod(real* out, real* coeffout,
 	const dmat* mod, const real* amp, real* opd);
@@ -72,7 +72,7 @@ dmat* loc_mcc_ptt(const loc_t* loc, const real* amp);
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp);
 void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc);
 void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc);
-void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, dmat *imcc, int both);
+void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, const dmat *imcc, int both);
 real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor);
 void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
 	const real* amp, const real* opd);
@@ -86,9 +86,9 @@ loc_t* mkannloc(real D, real Din, real dx, real thres);
 void loc_create_stat_do(loc_t* loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t* loc);
-void loc_circle_add(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val);
-void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val);
-void loc_ellipse_add(dmat* phi, loc_t* loc, real cx, real cy,real rx, real ry, real val);
+void loc_circle_add(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val);
+void loc_circle_mul(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val);
+void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy,real rx, real ry, real val);
 void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout);
 void loc_reduce_spcell(loc_t* loc, dspcell* sp, int dim, int cont);
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont);
@@ -104,7 +104,7 @@ void locmean(real* xm, real* ym, const loc_t* loc);
 dmat *parse_poly(const char *_ps);
 loc_t* loctransform(const loc_t* loc, const char* ps);
 loc_t* loctransform2(const loc_t* loc, const dmat* coeff);
-loc_t* locshift(const loc_t* loc, real sx, real sy);
+void locshift(loc_t* loc, real sx, real sy);
 void loc_nxny(long* nx, long* ny, const loc_t* loc);
 
 void locresize(loc_t* loc, long nloc);

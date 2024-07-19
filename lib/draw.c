@@ -379,6 +379,7 @@ static int get_drawdaemon(){
 			draw_id=1;
 		}
 	}*/
+	LOCK(lock);
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id
 	while(!scheduler_socket(-1, &sock, draw_id)){
@@ -417,12 +418,13 @@ static int get_drawdaemon(){
 	
 	if(sock!=-1 && !draw_add(sock) && !socket_send_timeout(sock, 60)){
 		//prevent hang. too small timeout will prevent large data from passing through.
-		return 0;
 	}else{
 		draw_disabled=1;
+		sock=-1;
 		warning("Unable to open drawdaemon. Disable drawing.\n");
-		return 1;
 	}
+	UNLOCK(lock);
+	return sock==-1;
 }
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
@@ -449,6 +451,7 @@ void draw_final(int reuse){
 static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 	if(draw_disabled||ps->fd==-1||ps->pause) return 0;
 	if(!(draw_single==1 && ps->draw_single==1)) return 1;
+	LOCK(lock);
 	list_t* child=0;
 	list_search(&ps->list, &child, fig, 1);
 	int found=0;
@@ -473,6 +476,7 @@ static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 			}
 		}
 	}
+	UNLOCK(lock);
 	return ans;
 }
 
@@ -882,34 +886,48 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	dfree(opd0);
 	return 1;
 }
-static dmat* grad_prep(const dmat *gradin, int nsa, int trs){
+static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 	int ng=PN(gradin)/nsa;
 	dmat *grad=0;
-	if(trs&&ng==2){//remove tip/tilt
+	if((trs && ng==2) || saa){
 		grad=ddup(gradin);
-		reshape(grad, nsa, 2);
+	}else{
+		grad=dref(gradin); 
+	}
+	reshape(grad, nsa, 2);
+	if(saa){
+		for(int isa=0; isa<nsa; isa++){
+			if(P(saa, isa)<0.01){
+				P(grad, isa, 0)=NAN;
+				P(grad, isa, 1)=NAN;
+			}
+		}
+	}
+	if(trs&&ng==2){//remove tip/tilt
 		real gxm=0;
 		real gym=0;
 		for(int isa=0; isa<nsa; isa++){
-			gxm+=P(grad, isa, 0);
-			gym+=P(grad, isa, 1);
+			if(!saa || P(saa, isa)>0.1){
+				gxm+=P(grad, isa, 0);
+				gym+=P(grad, isa, 1);
+			}
 		}
 		gxm/=-nsa;
 		gym/=-nsa;
 		for(int isa=0; isa<nsa; isa++){
-			P(grad, isa, 0)+=gxm;
-			P(grad, isa, 1)+=gym;
+			if(!saa||P(saa, isa)>0.5){
+				P(grad, isa, 0)+=gxm;
+				P(grad, isa, 1)+=gym;
+			}
 		}
-		reshape(grad, NX(gradin), NY(gradin));
-	} else{
-		grad=dref(gradin);
 	}
+	reshape(grad, NX(gradin), NY(gradin));
 	return grad;
 }
 /**
    Plot gradients using CuReD
 */
-int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, int trs, real zlim,
+int drawgrad(const char* fig, loc_t* saloc, const dmat *saa, const dmat* gradin, int grad2opd, int trs, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -918,23 +936,24 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat* gradin, int grad2opd, in
 	long ng=PN(gradin)/nsa;
 	if(nsa<=4||ng!=2) grad2opd=0;
 
-	dmat *grad=grad_prep(gradin, nsa, trs);
+	dmat *grad=grad_prep(gradin, grad2opd?saa:NULL, nsa, trs);
 	dmat *phi=0;
+	
+	dmat *phix=dnew(0, 0);
+	dmat *phiy=dnew(0, 0);
+	dmat *gx=dnew_do(nsa, 1, P(grad), 0);
+	dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
+	loc_embed(phix, saloc, gx);
+	loc_embed(phiy, saloc, gy);
+	dfree(gx);
+	dfree(gy);
 	if(grad2opd){
-		cure_loc(&phi, grad, saloc);
+		cure(&phi, phix, phiy, saloc->dx);
 	}else{
-		dmat *phix=dnew(0, 0);
-		dmat *phiy=dnew(0, 0);
-		dmat *gx=dnew_do(nsa, 1, P(grad), 0);
-		dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
-		loc_embed(phix, saloc, gx);
-		loc_embed(phiy, saloc, gy);
 		phi=dcat(phix, phiy, 1);
-		dfree(gx);
-		dfree(gy);
-		dfree(phix);
-		dfree(phiy);
 	}
+	dfree(phix);
+	dfree(phiy);
 
 	//This is different from loc_embed. It removes the padding.
 	real offset=saloc->npad+(isfinite(saloc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 

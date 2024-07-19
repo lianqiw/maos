@@ -175,24 +175,32 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 				cupowfs[ipowfs].llt.loc=culoc_t(loc);
 			}
 			/*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
-			locfft_t* locfft=0;
+			locfft_t** plocfft=0;
+			int nlocfft=0;
 			if(powfs[ipowfs].pywfs){
-				locfft=powfs[ipowfs].pywfs->locfft;
+				plocfft=&powfs[ipowfs].pywfs->locfft;
+				nlocfft=1;
 			} else if(powfs[ipowfs].fieldstop){
-				locfft=powfs[ipowfs].fieldstop;
+				plocfft=powfs[ipowfs].fieldstop;
+				nlocfft=PN(powfs[ipowfs].amp);
 			}
-			if(locfft){
+			if(plocfft){
 				const int nwvl=parms->powfs[ipowfs].nwvl;
 				cupowfs[ipowfs].embed.init(nwvl, 1);
 				cupowfs[ipowfs].nembed.init(nwvl, 1);
-				if(locfft->fieldmask){
-					cupowfs[ipowfs].fieldstop=curcell(nwvl, 1);
+				if((*plocfft)->fieldmask){
+					cupowfs[ipowfs].fieldstop=curcell(nwvl, nlocfft);
 				}
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					cp2gpu(cupowfs[ipowfs].embed[iwvl], P(locfft->embed->p[iwvl]), powfs[ipowfs].loc->nloc, 1);
-					cupowfs[ipowfs].nembed[iwvl]=locfft->nembed->p[iwvl];
-					if(locfft->fieldmask){
-						cp2gpu(cupowfs[ipowfs].fieldstop[iwvl], locfft->fieldmask->p[iwvl]);
+					cp2gpu(cupowfs[ipowfs].embed[iwvl], P(plocfft[0]->embed->p[iwvl]), powfs[ipowfs].loc->nloc, 1);
+					cupowfs[ipowfs].nembed[iwvl]=plocfft[0]->nembed->p[iwvl];
+					if(plocfft[0]->fieldmask){
+						if(nwvl>1){
+							error("nwvl>1 case is not supported\n");
+						}
+						for(int iwfs=0; iwfs<PN(powfs[ipowfs].amp); iwfs++){
+							cp2gpu(cupowfs[ipowfs].fieldstop(iwvl,iwfs), plocfft[iwfs]->fieldmask->p[iwvl]);
+						}
 					}
 				}
 			}
@@ -228,13 +236,14 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 		const int nwvl=parms->powfs[ipowfs].nwvl;
 		const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-		const int nwfsp=parms->powfs[ipowfs].nwfs;
 		const int ndm=parms->ndm;
 		/*imcc for ztilt. */
 		cuwfs[iwfs].loc_dm.init(ndm, 1);
 		for(int idm=0; idm<ndm; idm++){
 			if(powfs[ipowfs].loc_dm){
-				cuwfs[iwfs].loc_dm[idm]=culoc_t(powfs[ipowfs].loc_dm->p[wfsind+idm*nwfsp]);
+				cuwfs[iwfs].loc_dm[idm]=culoc_t(P(powfs[ipowfs].loc_dm, wfsind, idm));
+			}else if(powfs[ipowfs].loc_tel){
+				cuwfs[iwfs].loc_dm[idm]=culoc_t(P(powfs[ipowfs].loc_tel, wfsind));
 			} else{
 				cuwfs[iwfs].loc_dm[idm]=culoc_t(powfs[ipowfs].loc);
 			}
@@ -265,7 +274,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 			cuwfs[iwfs].GS0=cusp(t, 1);
 		}
 		/*wfs amplitude map on loc */
-		cp2gpu(cuwfs[iwfs].amp, powfs[ipowfs].realamp->p[wfsind]);
+		cp2gpu(cuwfs[iwfs].amp, PR(powfs[ipowfs].amp, wfsind));
 		if(powfs[ipowfs].neasim){//neasim is the LL' decomposition of nea
 			dmat* neasim=PR(powfs[ipowfs].neasim, wfsind, 0);
 			if(neasim) cp2gpu(cuwfs[iwfs].neasim, neasim);

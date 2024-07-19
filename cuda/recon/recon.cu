@@ -69,10 +69,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 		} else{
 			dmrecon=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL);
 		}
-		dmrecon_vec.init(parms->ndm, 1);
-		for(int idm=0; idm<parms->ndm; idm++){
-			dmrecon_vec[idm]=dmrecon[idm].Vector();
-		}
+		dmrecon_vec=dmrecon.Vector();
 	}
 
 	if(parms->recon.alg==RECON_MVR&&(parms->gpu.tomo||parms->gpu.fit)
@@ -82,10 +79,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 		} else{
 			opdr=curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL);
 		}
-		opdr_vec.init(recon->npsr, 1);
-		for(int ips=0; ips<recon->npsr; ips++){
-			opdr_vec[ips]=opdr[ips].Vector();
-		}
+		opdr_vec=opdr.Vector();
 	}
 	gpu_print_mem("recon init");
 }

@@ -127,7 +127,7 @@ void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, in
 /**
    Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and
    PTTF is the pseudo inverse of it, weighted by subaperture noise.  It is not
-   diagonal if differential focus is removed. So cannot be in Tomo_nea*/
+   diagonal if differential focus is removed. So cannot be in Tomo_nea_gpt*/
 void TTFR(dcell* x, const dcell* TTF, const dcell* PTTF){
 	if(!TTF||!PTTF){
 		return;
@@ -141,7 +141,7 @@ void TTFR(dcell* x, const dcell* TTF, const dcell* PTTF){
 /**
    Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and
    PTTF is the pseudo inverse of it, weighted by subaperture noise.  It is not
-   diagonal if differential focus is removed. So cannot be in Tomo_nea*/
+   diagonal if differential focus is removed. So cannot be in Tomo_nea_gpt*/
 void TTFRt(dcell* x, const dcell* TTF, const dcell* PTTF){
 	if(!TTF||!PTTF){
 		return;
@@ -235,6 +235,7 @@ static void* Tomo_prop_do(Tomo_T *data){
 	while((iwfs=atomic_fetch_add(&data->iwfs, 1))<parms->nwfsr){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip) continue;
+		const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 		const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		dmat* xx=dnew(recon->ploc->nloc, 1);
 		const real hs=parms->wfs[iwfs].hs;
@@ -242,29 +243,42 @@ static void* Tomo_prop_do(Tomo_T *data){
 			if(parms->tomo.square&&!parms->dbg.tomo_hxw){
 			/*Do the ray tracing instead of using HXW. */
 				real ht=P(recon->ht, ips);
-				real displace[2];
-				displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
-				displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
-				if(parms->tomo.predict){
-					int ips0=P(parms->atmr.indps, ips);
-					displace[0]+=P(simu->atm, ips0)->vx*delay;
-					displace[1]+=P(simu->atm, ips0)->vy*delay;
-				}
 				real scale=1.-ht/hs;
 				if(scale<0) continue;
+				real dispx=parms->wfsr[iwfs].thetax*ht+(shwfs?scale*parms->wfsr[iwfs].misregx:0);
+				real dispy=parms->wfsr[iwfs].thetay*ht+(shwfs?scale*parms->wfsr[iwfs].misregy:0);
+				if(parms->tomo.predict){
+					int ips0=P(parms->atmr.indps, ips);
+					dispx+=P(simu->atm, ips0)->vx*delay;
+					dispy+=P(simu->atm, ips0)->vy*delay;
+				}
 				map_t xmap;/*make a temporary xmap for thread safety.*/
 				memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
 				xmap.p=P(P(data->xin, ips));
 				prop_grid_stat(&xmap, recon->ploc->stat, P(xx), 1,
-					displace[0], displace[1], scale, 0, 0, 0);
+					dispx, dispy, scale, 0, 0, 0);
 			} else{
 				dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 				dspmm(&xx, P(HXW, iwfs, ips), P(data->xin, ips), "nn", 1);
 			}
 		}
+		dmat *xxr=NULL;//for rotation misregistration
+		if(recon->wfsr[iwfs].misregc){
+			if(recon->pmap->nx*recon->pmap->ny==recon->ploc->nloc){//ploc is quare
+				xxr=dnew(recon->pmap->nx, recon->pmap->ny);//rotation
+				reshape(xx, xxr->nx, xxr->ny);	
+				dembed(xxr, xx, -recon->wfsr[iwfs].misregc);
+				reshape(xxr, recon->ploc->nloc, 1);
+			}else{
+				xxr=dnew(recon->ploc->nloc, 1);
+				prop_nongrid_rot(recon->ploc, P(xx), recon->ploc, P(xxr), 
+					1, 0, 0, 1, 0, 0, -recon->wfsr[iwfs].misregc);
+			}
+		}
 		/*Apply the gradient operation */
-		dspmm(&P(data->gg, iwfs), P(recon->GP, iwfs), xx, "nn", 1);
+		dspmm(&P(data->gg, iwfs), P(recon->GP, iwfs), xxr?xxr:xx, "nn", 1);
 		dfree(xx);
+		dfree(xxr);
 		/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
 	}
 	return NULL;
@@ -296,12 +310,29 @@ static void* Tomo_nea_gpt_do(Tomo_T *data){
 		/*Apply the gradient operation */
 		dspmm(&gg2, P(NEAI, iwfs, iwfs), P(data->gg, iwfs), "nn", 1);
 		dfree(P(data->gg, iwfs)); /*We reuse gg. */
-		dspmm(&P(data->gg, iwfs), P(recon->GP, iwfs), gg2, "tn", data->alpha);
+		dmat *ggr=NULL;//intermediate for rotation
+		dmat **pgg=recon->wfsr[iwfs].misregc?&ggr:&P(data->gg, iwfs);
+		dspmm(pgg, P(recon->GP, iwfs), gg2, "tn", data->alpha);
 		dfree(gg2);
+		if(recon->wfsr[iwfs].misregc){
+			if(recon->pmap->nx*recon->pmap->ny==recon->ploc->nloc){//ploc is quare
+				reshape(ggr, recon->pmap->nx, recon->pmap->ny);
+				P(data->gg, iwfs)=dnew(ggr->nx, ggr->ny);
+				dembed(P(data->gg, iwfs), ggr, recon->wfsr[iwfs].misregc);
+				reshape(P(data->gg, iwfs), recon->ploc->nloc, 1);
+			}else{
+				P(data->gg, iwfs)=dnew(recon->ploc->nloc, 1);
+				prop_nongrid_rot(recon->ploc, P(ggr), recon->ploc, P(P(data->gg, iwfs)), 
+					1, 0, 0, 1, 0, 0, recon->wfsr[iwfs].misregc);
+			}
+			dfree(ggr);
+		}
 	}
 	return NULL;
 }
-
+/**
+ * gg=NEAI*gg
+ */
 static void* Tomo_nea_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
 	const parms_t *parms=global->parms;
@@ -317,13 +348,15 @@ static void* Tomo_nea_do(Tomo_T *data){
 	return NULL;
 }
 
-/*Wrapp of Tomo_nea_do for multi-threads*/
-void Tomo_nea(Tomo_T* data, int nthread, int gpt){
-	//thread_t info[nthread];
-	//thread_prep(info, 0, NX(data->gg), nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
-	//CALL_THREAD(info, 1);
+/**
+ * Apply NEA weighting with optional Gp'
+ * gg = GP' * NEAI * gg;
+ */
+void Tomo_nea_gpt(Tomo_T* data, int nthread, int gpt){
+	
 	data->iwfs=0;
 	nthread=1;
+	/*Wrapp of Tomo_nea_do for multi-threads*/
 	if(gpt){
 		CALL(Tomo_nea_gpt_do, data, nthread, 1);
 	}else{
@@ -334,7 +367,7 @@ void Tomo_nea(Tomo_T* data, int nthread, int gpt){
    Speed up TomoL by gathering the third part of operations (GP') belonging to
    each WFS to facilitate threading. gg->xout.
 
-   xout = Cxx^-1 * xin + HXW * gg;
+   xout = Cxx^-1 * xin + HXW' * gg;
 */
 static void* Tomo_iprop_do(Tomo_T *data){
 	const recon_t* recon=data->recon;
@@ -355,19 +388,19 @@ static void* Tomo_iprop_do(Tomo_T *data){
 				if(!P(data->gg, iwfs)) continue;
 				const real hs=parms->wfs[iwfs].hs;
 				const int ipowfs=parms->wfs[iwfs].powfs;
-				real displace[2];
-				displace[0]=parms->wfsr[iwfs].thetax*ht+parms->wfsr[iwfs].misreg_x;
-				displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misreg_y;
+				const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
+				real scale=1.-ht/hs;
+				if(scale<0) continue;
+				real dispx=parms->wfsr[iwfs].thetax*ht+(shwfs?scale*parms->wfsr[iwfs].misregx:0);
+				real dispy=parms->wfsr[iwfs].thetay*ht+(shwfs?scale*parms->wfsr[iwfs].misregy:0);
 				if(parms->tomo.predict){
 					const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 					int ips0=P(parms->atmr.indps, ips);
-					displace[0]+=P(simu->atm, ips0)->vx*delay;
-					displace[1]+=P(simu->atm, ips0)->vy*delay;
+					dispx+=P(simu->atm, ips0)->vx*delay;
+					dispy+=P(simu->atm, ips0)->vy*delay;
 				}
-				real scale=1.-ht/hs;
-				if(scale<0) continue;
 				prop_grid_stat_transpose(&xmap, recon->ploc->stat, P(P(data->gg, iwfs)), 1,
-					displace[0], displace[1], scale, 0, 0, 0);
+					dispx, dispy, scale, 0, 0, 0);
 			}
 		} else{
 			dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
@@ -402,16 +435,13 @@ static void* Tomo_iprop_do(Tomo_T *data){
    Wrapper of Tomo_iprop_do
  */
 void Tomo_iprop(Tomo_T* data, int nthread){
-	//thread_t info[nthread];
-	//thread_prep(info, 0, NX(data->xout), nthread, Tomo_iprop_do, data);
-	//CALL_THREAD(info, 1);
 	data->ips=0;
 	nthread=1;
 	CALL(Tomo_iprop_do, data, nthread, 1);
 }
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and
-   saves memory.  The operation is the same as the Tomo_nea and Tomo_iprop in
+   saves memory.  The operation is the same as the Tomo_nea_gpt and Tomo_iprop in
    TomoL, so merge the implemenations.
 
    xout=HXW'*GP'*NEAI*(1-TTF*PTTF)*gin.
@@ -428,7 +458,7 @@ void TomoR(dcell** xout, const void* A,
 		*xout=dcellnew(recon->npsr, 1);
 	}
 	Tomo_T data={recon, alpha, NULL, gg, *xout, 1};
-	Tomo_nea(&data, recon->nthread, 1);
+	Tomo_nea_gpt(&data, recon->nthread, 1);
 	Tomo_iprop(&data, recon->nthread);
 	dcellfree(gg);
 	toc_tm("TomoR");
@@ -445,9 +475,9 @@ void TomoRt(dcell** gout, const void* A,
 	}
 	Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
 	Tomo_prop(&data, recon->nthread);
-	/*Using Tomo_nea followed by TTFRt is equilvaent as using TTFR followed by Tomo_nea.*/
+	/*Using Tomo_nea_gpt followed by TTFRt is equilvaent as using TTFR followed by Tomo_nea_gpt.*/
 	TTFR(*gout, recon->TTF, recon->PTTF);
-	Tomo_nea(&data, recon->nthread, 0);
+	Tomo_nea_gpt(&data, recon->nthread, 0);
 }
 
 /**
@@ -488,7 +518,7 @@ void TomoL(dcell** xout, const void* A,
 		/*Remove only focus in split tomography when splitlrt is set*/
 		TTFR(gg, recon->FF, recon->PFF);
 	}
-	Tomo_nea(&data, recon->nthread, 1);
+	Tomo_nea_gpt(&data, recon->nthread, 1);
 	Tomo_iprop(&data, recon->nthread);
 	/*
 	   square=1  square=0 (1 thread on T410s)
@@ -522,12 +552,11 @@ void FitR(dcell** xout, const void* A,
 			for(int ips=0; ips<parms->atm.nps; ips++){
 				const real ht=P(parms->atm.ht, ips)-fit->floc->ht;
 				real scale=1-ht/hs;
-				real displace[2];
 				if(scale<0) continue;
-				displace[0]=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
-				displace[1]=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
+				real dispx=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
+				real dispy=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
 				prop_grid(P(simu->atm, ips), fit->floc, P(P(xp, ifit)),
-					atmscale, displace[0], displace[1], scale, 1, 0, 0);
+					atmscale, dispx, dispy, scale, 1, 0, 0);
 			}
 			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
 				real tmp=P(simu->telws, isim);
@@ -547,12 +576,11 @@ void FitR(dcell** xout, const void* A,
 			for(int ips=0; ips<npsr; ips++){
 				const real ht=P(fit->xloc, ips)->ht-fit->floc->ht;
 				real scale=1-ht/hs;
-				real displace[2];
 				if(scale<0) continue;
-				displace[0]=P(fit->thetax, ifit)*ht;
-				displace[1]=P(fit->thetay, ifit)*ht;
+				real dispx=P(fit->thetax, ifit)*ht;
+				real dispy=P(fit->thetay, ifit)*ht;
 				prop_nongrid(P(fit->xloc, ips), P(P(xin, ips)), fit->floc,
-					P(P(xp, ifit)), 1, displace[0], displace[1], scale, 0, 0);
+					P(P(xp, ifit)), 1, dispx, dispy, scale, 0, 0);
 			}
 		}
 	}
@@ -604,7 +632,7 @@ dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 	for(long ig=0; ig<ng; ig++){
 		for(long isa=0; isa<nsa; isa++){
 			pp[isa+nsa*ig]=count;
-			if(ig==1 && ur){/*Cxy */
+			if(ig==1&&ur&&P(nea, isa, 2)){/*Cxy */
 				pi[count]=isa;
 				px[count]=P(nea, isa, 2);
 				count++;
@@ -614,7 +642,7 @@ dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 				px[count]=P(nea, isa, ig);
 				count++;
 			}
-			if(ig==0 && ll){/*Cyx */
+			if(ig==0&&ll&&P(nea, isa, 2)){/*Cyx */
 				pi[count]=isa+nsa;
 				px[count]=P(nea, isa, 2);
 				count++;
@@ -624,6 +652,8 @@ dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 	pp[nsa*ng]=count;
 	if(count>sanea->nzmax){
 		error("memory overflow\n");
+	}else if(count<sanea->nzmax){
+		dspsetnzmax(sanea, count);
 	}
 	return sanea;
 }
@@ -668,7 +698,7 @@ void nea_chol(dmat **pout, const dmat *in, const int ng){
 		for(int isa=0; isa<NX(in); isa++){
 		//Use temporary variable to handle the case that out and in is the same.
 			real a=sqrt(P(in, isa, 0));
-			real b=isxy?(P(in, isa, 2)/a):0;
+			real b=(isxy && a)?(P(in, isa, 2)/a):0;
 			real c=sqrt(P(in, isa, 1)-b*b);
 			P(out, isa, 0)=a;
 			P(out, isa, 1)=c;
@@ -719,14 +749,17 @@ void nea_inv(dmat **pout, const dmat *in, int ng, real scale){
 			double yy=P(in, isa, 1);
 			double xy=isxy?P(in, isa, 2):0;
 			double invdet=scale/(xx*yy-xy*xy);
-
-			P(out, isa, 0)=invdet*yy;
-			P(out, isa, 1)=invdet*xx;
-			if(isxy) P(out, isa, 2)=-invdet*xy;
+			if(isfinite(invdet)){
+				P(out, isa, 0)=invdet*yy;
+				P(out, isa, 1)=invdet*xx;
+				if(xy) P(out, isa, 2)=-invdet*xy;
+			}
 		}
 	} else{
 		for(int ig=0; ig<NX(in)*ng; ig++){
-			P(out, ig)=scale/P(in, ig);
+			if(P(in, ig)){
+				P(out, ig)=scale/P(in, ig);
+			}
 		}
 	}
 }
@@ -943,7 +976,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		P(hs, iwfs)=parms->wfs[iwfs].hs;
 	}
-	cn2est_t* cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat,
+	cn2est_t* cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saamax, parms->cn2.saat,
 		hs, ht, parms->cn2.keepht, parms->atmr.L0);
 	dfree(hs);
 	dfree(wfstheta);

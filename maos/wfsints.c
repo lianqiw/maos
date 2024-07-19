@@ -145,7 +145,7 @@ void* wfsints(thread_t* thread_data){
 			gy=gx+nsa;
 		}
 	}
-	real* realamp=P(P(powfs[ipowfs].realamp,wfsind));
+	real* amp=P(PR(powfs[ipowfs].amp,wfsind));
 	TIM0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
@@ -236,7 +236,7 @@ void* wfsints(thread_t* thread_data){
 			}
 			int ioffset=isa*saoffset;
 			/*embed amp/opd to complex wvf with a embedding factor of 2. */
-			cembed_wvf(wvf, P(opd)+ioffset,realamp+ioffset, nopd, nopd, P(parms->powfs[ipowfs].wvl,iwvl), 0);
+			cembed_wvf(wvf, P(opd)+ioffset,amp+ioffset, nopd, nopd, P(parms->powfs[ipowfs].wvl,iwvl), 0);
 			TIM(1);//1 is copy
 			if(use1d){ /*use 1d fft */
 				cfft2partial(wvf, notfy, -1);

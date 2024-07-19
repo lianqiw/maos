@@ -149,7 +149,7 @@ __global__ void map2loc_cubic(Real* restrict out, const Real* restrict in,
    Ray tracing of atm.
 */
 void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Real thetay,
-	Real mispx, Real mispy, Real dt, int isim, Real atmalpha0, cudaStream_t stream){
+	Real misregx, Real misregy, Real dt, int isim, Real atmalpha0, cudaStream_t stream){
 	cumapcell& cuatm=cudata->atm;
 	Real atmalpha=atmalpha0;
 	if(Z(fabs)(atmalpha)<EPS) return;
@@ -173,10 +173,10 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 		const Real ht=cuatm[ips].ht;
 		const Real vx=cuatm[ips].vx;
 		const Real vy=cuatm[ips].vy;
-		const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
-		const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
 		const Real scale=1.f-(ht-hc)/(hs-hc);
 		if(scale<0) continue;
+		const Real dispx=(ht*thetax+scale*misregx-vx*dt*isim-cuatm[ips].ox)/dx;
+		const Real dispy=(ht*thetay+scale*misregy-vy*dt*isim-cuatm[ips].oy)/dy;
 		const int nloc=loc.Nloc();
 
 #define COMM loc(),loc.Nloc(),scale/dx,scale/dy, dispx, dispy, atmalpha
@@ -231,24 +231,26 @@ void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
    properly accounted for. Use the other version if no distortion.
 */
 void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, int ndm,
-	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
 	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
-		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/(hs-hc), 0, stream);
+		const Real scale=1.-(ht-hc)/(hs-hc);
+		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
 	}
 }
 /**
    Ray tracing of dm.
 */
 void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
-	Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
 	const Real theta=RSS(thetax, thetay);
 	for(int idm=0; idm<ndm; idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
-		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+mispx, ht*thetay+mispy, 1.-(ht-hc)/(hs-hc), 0, stream);
+		const Real scale=1.-(ht-hc)/(hs-hc);
+		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
 	}/*idm */
 }
 /**

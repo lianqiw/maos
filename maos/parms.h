@@ -156,8 +156,10 @@ typedef struct powfs_cfg_t{
     dmat *wvlwts;  /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
 	real wvlmean;  /**<Average wavelength*/
     char *saloc;   /**<saloc override file*/
-    real misregx;  /**<offset of saloc from pupil illumination in unit of dsa*/
-    real misregy;  /**<offset of saloc from pupil illumination in unit of dsa*/
+	real misregx;  /**<misregistration wrt telescope pupil. shift along x */
+	real misregy;  /**<misregistration wrt telescope pupil. shift along y */
+	real misregc;  /**<misregistration wrt telescope pupil. camera is rotated CCW.*/
+	real misregrmax;  /**<Maximum misregistration for all wfs in this powfs. */
     char *amp;     /**<amplitude override file*/
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
@@ -296,6 +298,19 @@ typedef struct powfs_cfg_t{
     int commonfsm;   /**<Make FSM common for each powfs (LLT). Keep at 0. */
 }powfs_cfg_t;
 /**
+   contains input parmaeters for each wfsr for reconstruction
+*/
+typedef struct wfsr_cfg_t{
+	real thetax;  /**<x direction*/
+	real thetay;  /**<y direction*/
+	real misregx; /**<misregistration wrt telescope pupil: shift along x */
+	real misregy; /**<misregistration wrt telescope pupil. shift along y */
+	real misregc; /**<misregistration wrt telescope pupil. clocking error.*/
+	//real hc;    /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
+	real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
+	int powfs;    /**<powfs type*/
+}wfsr_cfg_t;
+/**
    contains input parmaeters for each wfs
 */
 typedef struct wfs_cfg_t{
@@ -303,9 +318,9 @@ typedef struct wfs_cfg_t{
     dmat *sabad;  /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     real thetax;  /**<x direction*/
     real thetay;  /**<y direction*/
-    real misreg_x;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs.*/
-    real misreg_y;/**<misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs.*/
-    real misreg_r;/**<misregistration wrt telescope pupil. This is pure rotation extracted from recon.distortion_tel2wfs.*/
+	real misregx; /**<misregistration wrt telescope pupil: shift along x */
+	real misregy; /**<misregistration wrt telescope pupil. shift along y */
+	real misregc; /**<misregistration wrt telescope pupil. clocking error.*/
     real hc;      /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
     real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
     real siglev; /**<Total signal value for all wavelength. if not specified in config, will use powfs.siglev*/
@@ -820,7 +835,7 @@ typedef struct parms_t{
     /*the following are pointers because there may be several*/
     powfs_cfg_t *powfs; /**<Array of wfs type*/
     wfs_cfg_t   *wfs;   /**<Array of wfs*/
-    wfs_cfg_t   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
+    wfsr_cfg_t   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
 			   per powfs in glao mode, otherwise same as wfs.*/
     //pywfs_cfg_t *pywfs; /**<Array of Pyramid WFS pywfs*/
     dm_cfg_t    *dm;    /**<Array of DM*/
@@ -842,7 +857,8 @@ typedef struct parms_t{
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
 
-    lmat *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    int *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+	char **fnlock;	 /**<Records the filename of the seed lock file. */
     int nlopowfs;    /**<Number of low order wfs types*/
     lmat *lopowfs;   /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/

@@ -39,6 +39,7 @@
 static void
 setup_recon_ploc(recon_t* recon, const parms_t* parms){
 	real dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
+	int square=parms->tomo.square;
 	if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 		warning("Loading ploc from %s\n", parms->load.ploc);
 		recon->ploc=locread("%s", parms->load.ploc);
@@ -47,80 +48,91 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 				recon->ploc->dx, dxr);
 		}
 	} else{
-	/*
-	  Create a circular PLOC with telescope diameter by calling
-	  create_metapupil with height of 0. We don't add any guard points. PLOC
-	  does not need to follow XLOC in FDPCG.*/
-		real guard=parms->tomo.guard*dxr;
 		map_t* pmap=0;
-		create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->tomo.square);
-		info("PLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(pmap), NY(pmap), dxr, parms->tomo.square?"":"not ");
+		real rmax=0;//additional guard band to accomodate misregistration.
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(rmax<parms->powfs[ipowfs].misregrmax) rmax=parms->powfs[ipowfs].misregrmax;
+		}
+		real guard=MAX(1, parms->tomo.guard)*dxr;
+		if(rmax) guard=MAX(guard,rmax); 
+		//an additional ring of guard points is needed if square is used.
+		create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, square);
+		info("PLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(pmap), NY(pmap), dxr, square?"":"not ");
 		recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
 		mapfree(pmap);
 	}
 	if(parms->save.setup){
 		locwrite(recon->ploc, "ploc");
 	}
-	loc_create_map_npad(recon->ploc, parms->tomo.square?0:1, 0, 0);
+	loc_create_map_npad(recon->ploc, square?0:1, 0, 0);
 	recon->pmap=recon->ploc->map;
 	loc_create_stat(recon->ploc);
 	if(parms->recon.distortion_tel2wfs){
+		//determine the misregistration in shift and rotation from distortion_tel2wfs.
 		real ploc_xm=0, ploc_ym=0;
-		int any_ploc=0;
+		locmean(&ploc_xm, &ploc_ym, recon->ploc);
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 			if(parms->recon.distortion_tel2wfs[iwfs]){
-				if(!recon->ploc_tel){
-					recon->ploc_tel=loccellnew(parms->nwfsr, 1);
-					locmean(&ploc_xm, &ploc_ym, recon->ploc);
-					any_ploc=1;
-				}
-				P(recon->ploc_tel, iwfs)=loctransform(recon->ploc, parms->recon.distortion_tel2wfs[iwfs]);
-				loc_t* ploc2=P(recon->ploc_tel, iwfs);
-				real xm, ym;
+				loc_t *ploc2=loctransform(recon->ploc, parms->recon.distortion_tel2wfs[iwfs]);
+				real xm=0, ym=0;
 				locmean(&xm, &ym, ploc2);
-				parms->wfsr[iwfs].misreg_x=xm-ploc_xm;
-				parms->wfsr[iwfs].misreg_y=ym-ploc_ym;
-				parms->wfsr[iwfs].misreg_r=loc_angle(recon->ploc, ploc2);
-				warning("ploc for wfs%d shifted by (%g, %g), and rotated by %g.\n", iwfs,
-					parms->wfsr[iwfs].misreg_x, parms->wfsr[iwfs].misreg_y,
-					parms->wfsr[iwfs].misreg_r);
+				locshift(ploc2, -xm, -ym);
+				parms->wfsr[iwfs].misregx+=xm-ploc_xm;
+				parms->wfsr[iwfs].misregy+=ym-ploc_ym;
+				parms->wfsr[iwfs].misregc+=loc_angle(recon->ploc, ploc2);
+				dbg("ploc for wfs%d shifted by (%g, %g), and rotated by %g CCW.\n", iwfs,
+					parms->wfsr[iwfs].misregx, parms->wfsr[iwfs].misregy, parms->wfsr[iwfs].misregc);
+				locfree(ploc2);
 			}
-		}
-		if(parms->save.setup&&any_ploc){
-			writebin(recon->ploc_tel, "ploc_tel");
-		}
-	}
-	if(0){
-		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-			parms->wfsr[iwfs].misreg_r=0.5/15;
-			warning("ploc for wfs%d is rotated by %g.\n", iwfs, parms->wfsr[iwfs].misreg_r);
 		}
 	}
 }
 /**
-   Create loc/amp that can be used to build GP. It has points on edge of subapertures. The amplitude depends on the distortion.
+   Create loc/amp that can be used to build GP. It has points on edge of
+   subapertures which is different from powfs.lo. The amplitude depends on the
+   distortion as we assume that the distortion can be extracted from dm to wfs
+   interaction matrix calibration.
+
+   gloc and the rotated version are centered around misregx and misregy so mkamp does not use misreg.
+   the returned gloc is defined at the WFS reference frame
 */
-static loc_t*
-make_gloc(dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
+
+void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
 	const int ipowfs=parms->wfsr[iwfsr].powfs;
 	real dx=parms->powfs[ipowfs].dx;
-	loc_t* gloc=mkannloc(parms->aper.d+1, 0, dx, 0);
+	if(!*pgloc){
+		real rmax=parms->powfs[ipowfs].misregrmax;
+		*pgloc=mkannloc(parms->aper.d+rmax*2+2*dx, 0, dx, 0);
+	}
+	
+	loc_t *gloc=*pgloc;
 	if(gamp){
+		if((parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfsr])||parms->wfsr[iwfsr].misregc){
+			if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfsr]){
+				gloc=loctransform(gloc, parms->distortion.tel2wfs[iwfsr]);
+			} else{//misregc is set. need to rotate grid, so duplicate it.
+				gloc=locdup(gloc);
+			}
+			if(parms->wfsr[iwfsr].misregc){
+				locrot(gloc, -parms->wfsr[iwfsr].misregc);
+			}
+		}
+		//now, gloc is transformed to telescoe pupil reference frame.
 		real dout=parms->aper.d;
 		real din=parms->aper.din;
 		map_t* ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
-		if(parms->dbg.gp_noamp==2){
+		if(parms->dbg.gp_noamp==2){//make telescope aperture larger.
 			dout+=1;
 			din=0;
 		}
-		loc_t* gloc2=0;
-		if(ampground&&parms->recon.distortion_tel2wfs&&parms->recon.distortion_tel2wfs[iwfsr]){
-			gloc2=loctransform(gloc, parms->recon.distortion_tel2wfs[iwfsr]);
+		if(*gamp) dfree(*gamp);
+		*gamp=mkamp(gloc, ampground, parms->wfsr[iwfsr].misregx-P(parms->aper.misreg, 0), 
+			parms->wfsr[iwfsr].misregy-P(parms->aper.misreg, 1), dout, din);
+	
+		if(gloc!=*pgloc){
+			locfree(gloc);//we do not return rotated or distorted gloc. 
 		}
-		*gamp=mkamp(gloc2?gloc2:gloc, ampground, -P(parms->aper.misreg, 0), -P(parms->aper.misreg, 1), dout, din);
-		locfree(gloc2);
 	}
-	return gloc;
 }
 
 /**
@@ -137,7 +149,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 				recon->floc->dx, dxr);
 		}
 	} else{
-		real guard=parms->tomo.guard*dxr;
+		real guard=MAX(1,parms->tomo.guard)*dxr;
 		map_t* fmap=0;
 		create_metapupil(&fmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 		info("FLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(fmap), NY(fmap), dxr, parms->fit.square?"":"not ");
@@ -174,7 +186,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 		}
 		mkw_annular(recon->floc, 0, 0, rin, rout, &(recon->W0), &(recon->W1));
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->W0, "W0");
 		writebin(recon->W1, "W1");
 	}
@@ -189,6 +201,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 */
 static void
 setup_recon_xloc(recon_t* recon, const parms_t* parms){
+	if(parms->sim.idealtomo) return;
 	const int npsr=recon->npsr;
 	long nin0=0;
 	if(parms->load.xloc){
@@ -206,19 +219,21 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		}
 	} else{
 		recon->xloc=loccellnew(npsr, 1);
-		info("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
+		info("Tomography grid xloc is %ssquare:\n", parms->tomo.square?"":"not ");
+		const real guard=P(recon->dx, 0)*MAX(parms->tomo.guard, 1);//use ground layer info as guard
 		/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
 		if(parms->tomo.nxbase){
 			nin0=parms->tomo.nxbase;
-		} else if(!parms->sim.idealtomo&&(parms->tomo.precond==1||parms->tomo.square==2)){
+		} else if(parms->tomo.precond==1||parms->tomo.square==2){
 			/*same square grid dimension in meter on all layers.*/
 			long nxmin=LONG_MAX, nymin=LONG_MAX;
 			long nxmax=0, nymax=0;
 			for(int ips=0; ips<npsr; ips++){
 				long nxi, nyi;
-				real dxr=P(recon->dx, ips);
-				create_metapupil(0, &nxi, &nyi, parms->dirs, parms->aper.d, P(recon->ht, ips), dxr, dxr, 0,
-					dxr*parms->tomo.guard, 0, 0, 0, 1);
+				const real ht=P(recon->ht, ips);
+				const real dxr=P(recon->dx, ips);
+				const real offset=ips==0?0:1./(ips+1);
+				create_metapupil(0, &nxi, &nyi, parms->dirs, parms->aper.d, ht, dxr, dxr, offset, guard, 0, 0, 0, 1);
 				nxi/=P(recon->os, ips);
 				nyi/=P(recon->os, ips);
 				if(nxmax<nxi) nxmax=nxi;
@@ -226,27 +241,32 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 				if(nxmin>nxi) nxmin=nxi;
 				if(nymin>nyi) nymin=nyi;
 			}
-			/*FFT grid Must be at least 1.5 times the smallest (on pupil) to avoid
-			 * severe aliasing penalty*/
-			long nx=MAX(nxmax, nxmin*1.5);
-			long ny=MAX(nymax, nymin*1.5);
-			nin0=nextfftsize(MAX(nx, ny));
-
-			while(parms->tomo.precond==1&&(nin0&1)){//FFT need even number
-				nin0=nextfftsize(nin0+1);
+			if(parms->tomo.precond==1){
+				/*FFT grid Must be at least 1.5 times the smallest (on pupil) to avoid
+			 		* severe aliasing penalty*/
+				long nx=MAX(nxmax, nxmin*1.5);
+				long ny=MAX(nymax, nymin*1.5);
+				long nn=MAX(nx,ny);
+				if(nn&1){
+					nn=nn+1;
+				}
+				nin0=nextfftsize(nn);
+			}else{
+				nin0=MAX(nxmax, nymax);
 			}
 		}
+
 		for(int ips=0; ips<npsr; ips++){
 			const real ht=P(recon->ht, ips);
-			real dxr=(parms->sim.idealtomo)?parms->atm.dx:P(recon->dx, ips);
-			const real guard=parms->tomo.guard*dxr;
-			long nin=nin0*P(recon->os, ips);
+			const real dxr=P(recon->dx, ips);
+			const long nin=nin0*P(recon->os, ips);
 			map_t* map=0;
-			create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, nin, nin, 0, parms->tomo.square);
+			const real offset=ips==0?0:1./(ips+1);
+			create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, offset, guard, nin, nin, 0, parms->tomo.square);
 			P(recon->xloc, ips)=map2loc(map, 0);
 			loc_create_stat(P(recon->xloc, ips));
-			info("    layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
-				ips, NX(map), NY(map), dxr, P(recon->xloc, ips)->nloc);
+			info("    layer %d: grid is %4ldx%4ld @ %.3f m, offset is %.2f, %5ld points\n",
+				ips, NX(map), NY(map), dxr, offset, P(recon->xloc, ips)->nloc);
 			mapfree(map);
 		}
 	}
@@ -255,7 +275,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		for(int ips=0; ips<npsr; ips++){
 			const real ht=P(recon->ht, ips);
 			real dxr=parms->atmr.dx/parms->fit.pos;
-			const real guard=parms->tomo.guard*dxr;
+			const real guard=MAX(1, parms->tomo.guard)*dxr;
 			create_metapupil(&P(recon->xcmap, ips), 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 			mem_unref(&P(recon->xcmap, ips)->mem);
 			P(recon->xcmap, ips)->mem=0;
@@ -470,69 +490,79 @@ setup_recon_amod(recon_t* recon, const parms_t* parms){
 	}
 }
 /**
-   Setup ray tracing operator from xloc to ploc for guide stars
+   Setup ray tracing operator from xloc to ploc for guide stars.
+   @param recon
+   @param parms
+   @param atm		If set, atm[].vx,vy will be used for predictive offsetting.
 */
 
-static void
-setup_recon_HXW(recon_t* recon, const parms_t* parms){
+void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 	loc_t* ploc=recon->ploc;
-	const int nwfs=parms->nwfsr;
+	const int nwfsr=parms->nwfsr;
 	const int npsr=recon->npsr;
-	if(parms->load.HXW){
+	if(parms->load.HXW && !atm){
 		warning("Loading saved HXW\n");
+		if(recon->HXW){
+			warning("recon->HXW already exists.\n");
+			cellfree(recon->HXW);
+		}
 		recon->HXW=dspcellread("%s", parms->load.HXW);
-		if(NX(recon->HXW)!=nwfs||NY(recon->HXW)!=npsr){
-			error("Wrong saved HXW\n");
+		if(NX(recon->HXW)!=nwfsr||NY(recon->HXW)!=npsr){
+			error("Loaded HXW has wrong cell size.\n");
 		}
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
 		int nploc=ploc->nloc;
 		for(int ips=0; ips<npsr; ips++){
 			int nloc=P(recon->xloc, ips)->nloc;
-			for(int iwfs=0; iwfs<nwfs; iwfs++){
+			for(int iwfs=0; iwfs<nwfsr; iwfs++){
 				if(!P(HXW, iwfs, ips)
 					||P(HXW, iwfs, ips)->nx!=nploc
 					||P(HXW, iwfs, ips)->ny!=nloc){
-					error("Wrong saved HXW\n");
+					error("Loaded HXW has wrong size.\n");
 				}
 			}
 		}
 	} else{
 		TIC;tic;
-		recon->HXW=dspcellnew(nwfs, npsr);
+		if(!recon->HXW) recon->HXW=dspcellnew(nwfsr, npsr);
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ipowfs=parms->wfsr[iwfs].powfs;
-
+		for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
+			int ipowfs=parms->wfsr[iwfsr].powfs;
+			int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 			if(parms->recon.split!=2&&parms->powfs[ipowfs].skip){
-			//don't need HXW for low order wfs that does not participate in tomography.
+				//don't need HXW for low order wfs that does not participate in tomography.
 				continue;
 			}
-			const real  hs=parms->wfs[iwfs].hs;
-			loc_t* loc=recon->ploc;
-			if(recon->ploc_tel&&P(recon->ploc_tel, iwfs)){
-				loc=P(recon->ploc_tel, iwfs);
-			}
+			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
+			const real hs=parms->wfsr[iwfsr].hs;
+			loc_t* loc=recon->ploc; //do not use ploc_tel. the rotation is handled in recon_utils.
 			for(int ips=0; ips<npsr; ips++){
 				const real  ht=P(recon->ht, ips);
 				const real  scale=1.-ht/hs;
-				const real dispx=parms->wfsr[iwfs].thetax*ht;
-				const real dispy=parms->wfsr[iwfs].thetay*ht;
-				P(HXW, iwfs, ips)=mkh(P(recon->xloc, ips), loc,
-					dispx, dispy, scale);
+				real dispx=parms->wfsr[iwfsr].thetax*ht+(shwfs?scale*parms->wfsr[iwfsr].misregx:0);
+				real dispy=parms->wfsr[iwfsr].thetay*ht+(shwfs?scale*parms->wfsr[iwfsr].misregy:0);
+				if(atm){//point ahead to reduce lag.
+					int ips2=P(parms->atmr.indps, ips);
+					dispx+=P(atm, ips2)->vx*delay;
+					dispy+=P(atm, ips2)->vy*delay;
+				}
+				cellfree(P(HXW, iwfsr, ips));
+				P(HXW, iwfsr, ips)=mkh(P(recon->xloc, ips), loc, dispx, dispy, scale, 0);
 			}
 		}
 		toc2("HXW");
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->HXW, "HXW");
 	}
-	recon->HXWtomo=dspcellnew(NX(recon->HXW), NY(recon->HXW));
+	if(!recon->HXWtomo) recon->HXWtomo=dspcellnew(NX(recon->HXW), NY(recon->HXW));
 	dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
 	dspcell* HXW=recon->HXW/*PDSPCELL*/;
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	for(int iwfs=0; iwfs<nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].skip){/*for tomography */
 			for(int ips=0; ips<npsr; ips++){
+				cellfree(P(HXWtomo, iwfs, ips));
 				P(HXWtomo, iwfs, ips)=dspref(P(HXW, iwfs, ips));
 			}
 		}
@@ -543,23 +573,23 @@ setup_recon_HXW(recon_t* recon, const parms_t* parms){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
+setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t *aper, const powfs_t *powfs){
 	loc_t* ploc=recon->ploc;
-	const int nwfs=parms->nwfsr;
-	recon->GP=dspcellnew(nwfs, 1);
+	const int nwfsr=parms->nwfsr;
+	recon->GP=dspcellnew(nwfsr, 1);
 	if(parms->load.GP){
 		warning("Loading saved GP\n");
 		dspcell* GPload=dspcellread("%s", parms->load.GP);
 		int assign=0;
-		if(NX(GPload)==nwfs){
+		if(NX(GPload)==nwfsr){
 			assign=1;
 		} else if(NX(GPload)==parms->npowfs){
 			assign=2;
 		} else{
 			error("GP loaded from %s has wrong size.\n", parms->load.GP);
 		}
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			const int ipowfs=parms->wfs[iwfs].powfs;
+		for(int iwfs=0; iwfs<nwfsr; iwfs++){
+			const int ipowfs=parms->wfsr[iwfs].powfs;
 			const long nsa=P(recon->saloc, ipowfs)->nloc;
 			P(recon->GP, iwfs)=dspref(P(GPload, assign==1?iwfs:ipowfs));
 			if(P(recon->GP, iwfs)->nx!=nsa*2||P(recon->GP, iwfs)->ny!=ploc->nloc){
@@ -569,27 +599,37 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t* aper){
 		}
 		dspcellfree(GPload);
 	} else{
-		int share_gp=1;
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			if(parms->recon.distortion_tel2wfs&&parms->recon.distortion_tel2wfs[iwfs]){
-				share_gp=0;
-			}
-		}
 		TIC;tic;
-OMP_FOR(NTHREAD)
-		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-			const int ipowfs=parms->wfsr[iwfs].powfs;
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].type!=WFS_SH) continue;
 			const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
-			if(parms->powfs[ipowfs].type!=WFS_PY){
-				dmat* gamp=0;
-				loc_t* gloc=make_gloc(&gamp, parms, aper, iwfs);
+			int share_gp=NX(powfs[ipowfs].amp)==1;
+			/*
+				During tomography operation, raytracing to ploc handles shift,
+				an rotation step handles clocking. Higher order distortion is
+				ignored. GP maps from ploc to saloc with no misregistration
+				needed. This mimimizes non-zeros in GP and enables matrix free
+				approach in the GPU.
+			*/
+	OMP_FOR(parms->powfs[ipowfs].nwfsr) 
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+				const int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
 				if(!share_gp||iwfs==iwfs0){
+					//create gloc that aligns with saloc edges. The GP created this way has fewer elements.
+					dmat* gamp=0;
+					loc_t *gloc=0;
+					shwfs_gloc_gamp(&gloc, &gamp, parms, aper, iwfs);
+					if(parms->plot.setup>1){
+						drawopd("Aperture", gloc, gamp, 0, "GP amplitude map", "x (m)", "y (m)", "gamp %d", iwfs);
+					}
 					dsp* gp=0;
 					if(parms->powfs[ipowfs].gtype_recon==GTYPE_G){//Average tilt
-						gp=mkg(ploc, gloc, gamp, P(recon->saloc, ipowfs), 1, 0, 0, 1);
+						gp=mkg(ploc, gloc, gamp, P(recon->saloc, ipowfs), 
+							PR(powfs[ipowfs].saa, jwfs), parms->powfs[ipowfs].saat,
+							1, 0, 0, 1);
 					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
 						dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc, ipowfs), 1, 1, 0, 0);
-						dsp* H=mkh(ploc, gloc, 0, 0, 1);
+						dsp* H=mkh(ploc, gloc, 0, 0, 1, 0);
 						gp=dspmulsp(ZS0, H, "nn");
 						dspfree(H);
 						dspfree(ZS0);
@@ -597,22 +637,20 @@ OMP_FOR(NTHREAD)
 						error("Invalid gtype_recon\n");
 					}
 					P(recon->GP, iwfs)=gp;
+					locfree(gloc);
+					dfree(gamp);
 				}
-				locfree(gloc);
-				dfree(gamp);
 			}
-		}
-		if(share_gp){
-			for(int iwfs=0; iwfs<nwfs; iwfs++){
-				const int ipowfs=parms->wfsr[iwfs].powfs;
-				const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
-				if(iwfs!=iwfs0){
+			//outside of OMP_FOR
+			if(share_gp){
+				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+					const int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
 					P(recon->GP, iwfs)=dspref(P(recon->GP, iwfs0));
 				}
 			}
 		}
 		toc2("GP");
-		if(parms->save.setup){
+		if(parms->save.recon){
 			writebin(recon->GP, "GP");
 		}
 	}
@@ -625,17 +663,17 @@ static void
 setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->nwfs==0) return;
 	loc_t* ploc=recon->ploc;
-	const int nwfs=parms->nwfsr;
+	const int nwfsr=parms->nwfsr;
 	const int ndm=parms->ndm;
 	if(parms->load.GA){
 		warning("Loading GA from %s\n", parms->load.GA);
 		recon->GA=dspcellread("%s", parms->load.GA);
-		if(NX(recon->GA)!=nwfs||NY(recon->GA)!=ndm)
+		if(NX(recon->GA)!=nwfsr||NY(recon->GA)!=ndm)
 			error("Wrong saved GA (%ldx%ld). Need (%dx%d)\n",
-				NX(recon->GA), NY(recon->GA), nwfs, ndm);
+				NX(recon->GA), NY(recon->GA), nwfsr, ndm);
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(recon->aloc, idm)->nloc;
-			for(int iwfs=0; iwfs<nwfs; iwfs++){
+			for(int iwfs=0; iwfs<nwfsr; iwfs++){
 				int ipowfs=parms->wfsr[iwfs].powfs;
 				if(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].lo){
 					continue;
@@ -649,26 +687,27 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 	} else{
 		TIC;tic;
-		recon->GA=dspcellnew(nwfs, ndm);
+		recon->GA=dspcellnew(nwfsr, ndm);
 		if(parms->recon.modal){
-			recon->GM=dcellnew(nwfs, ndm);
+			recon->GM=dcellnew(nwfsr, ndm);
 		}
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ipowfs=parms->wfsr[iwfs].powfs;
+		for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
+			int ipowfs=parms->wfsr[iwfsr].powfs;
 			if(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].lo){
 				continue;
 			}
 			/*if(parms->powfs[ipowfs].skip==2){//no need for TWFS [use for TWFS mode]
 				continue;
 			}*/
-			const real hs=parms->wfs[iwfs].hs;
+			const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
+			const real hs=parms->wfsr[iwfsr].hs;
 			const loc_t* saloc=P(recon->saloc, ipowfs);
 			for(int idm=0; idm<ndm; idm++){
 				const real  ht=parms->dm[idm].ht;
 				const real  scale=1.-ht/hs;
 				const loc_t* aloc=P(recon->aloc, idm);
-				const real dispx=parms->wfsr[iwfs].thetax*ht;
-				const real dispy=parms->wfsr[iwfs].thetay*ht;
+				const real dispx=parms->wfsr[iwfsr].thetax*ht+(shwfs?scale*parms->wfsr[iwfsr].misregx:0);
+				const real dispy=parms->wfsr[iwfsr].thetay*ht+(shwfs?scale*parms->wfsr[iwfsr].misregy:0);
 
 				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 					/*if(!parms->powfs[ipowfs].lo)*/
@@ -680,20 +719,20 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						}*/
 						if(!parms->recon.modal){
 							info("\nPyWFS from aloc to saloc directly\n");
-							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*nwfs],
+							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
 								0, opdadd, dispx, dispy);
-							P(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
+							P(recon->GA, iwfsr, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 							dfree(tmp);
 						} else{
 							info("\nPyWFS from amod to saloc directly\n");
 							//We compute the GM for full set of modes so that it is cached only once.
-							P(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*nwfs],
+							P(recon->GM, iwfsr, idm)=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
 								P(recon->amod, idm), opdadd, dispx, dispy);
 						}
 					}
 				} else{//SHWFS
-					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfs+idm*nwfs]:0;
-					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfs+idm*nwfs]:0;
+					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfsr+idm*nwfsr]:0;
+					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr]:0;
 					loc_t* loc=ploc;
 
 					if(input&&saloc->nloc>4){//there is distortion input
@@ -703,9 +742,9 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							warning_once("dm2wfs: determine distortion by fitting \n");
 							//First, simulate the poke matrix measurement process.
 							loc_t* loc2=loctransform(ploc, input);
-							dsp* H2=mkh(aloc, loc2, dispx, dispy, scale);
+							dsp* H2=mkh(aloc, loc2, dispx, dispy, scale, 0);
 							locfree(loc2);
-							dsp* GA2=dspmulsp(P(recon->GP, iwfs), H2, "nn"); //measured GA.
+							dsp* GA2=dspmulsp(P(recon->GP, iwfsr), H2, "nn"); //measured GA.
 							dspfree(H2);
 							dmat* calib2=loc_calib(GA2, aloc, saloc, dispx, dispy, scale, 2);
 							dshow(calib2, "dm2wfs calib fitting");
@@ -714,14 +753,20 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							dfree(calib2);
 						}
 					}
-					dsp* H=mkh(aloc, loc, dispx, dispy, scale);
-					P(recon->GA, iwfs, idm)=dspmulsp(P(recon->GP, iwfs), H, "nn");
-					dspfree(H);
+					/*if(parms->wfsr[iwfsr].misregc){//absorbed in mkht
+						if(loc==ploc){
+							loc=locdup(ploc);
+						}
+						locrot(loc, -parms->wfsr[iwfsr].misregc);
+					}*/
+					dsp *Ht=mkht(aloc, loc, dispx, dispy, scale, -parms->wfsr[iwfsr].misregc);
+					P(recon->GA, iwfsr, idm)=dspmulsp(P(recon->GP, iwfsr), Ht, "nt");
+					dspfree(Ht);
 					if(loc!=ploc){
 						locfree(loc);
 					}
 					if(parms->recon.modal){
-						dspmm(&P(recon->GM, iwfs, idm), P(recon->GA, iwfs, idm), P(recon->amod, idm), "nn", 1);
+						dspmm(&P(recon->GM, iwfsr, idm), P(recon->GA, iwfsr, idm), P(recon->amod, idm), "nn", 1);
 					}
 				}
 			}/*idm */
@@ -735,7 +780,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 					idm, P(recon->amod, idm)->ny, parms->recon.nmod);
 				dresize(P(recon->amod, idm), 0, parms->recon.nmod);
 				P(recon->anmod, idm)=P(recon->amod, idm)->ny;
-				for(int iwfs=0; iwfs<nwfs; iwfs++){
+				for(int iwfs=0; iwfs<nwfsr; iwfs++){
 					if(!P(recon->GM, iwfs, idm)) continue;
 					dresize(P(recon->GM, iwfs, idm), 0, parms->recon.nmod);
 				}
@@ -779,10 +824,10 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	/*Create GAlo that only contains GA for low order wfs */
 	recon->GAlo=cellnew(NX(recon->GA), NY(recon->GA));
 	recon->GAhi=dspcellnew(NX(recon->GA), NY(recon->GA));
-	if(parms->recon.modal) recon->GMhi=dcellnew(nwfs, ndm);
+	if(parms->recon.modal) recon->GMhi=dcellnew(nwfsr, ndm);
 
 	for(int idm=0; idm<ndm; idm++){
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
+		for(int iwfs=0; iwfs<nwfsr; iwfs++){
 			int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].lo
 				||(parms->recon.split&&parms->nlopowfs==0&&!parms->powfs[ipowfs].trs)){/*for low order wfs */
@@ -796,7 +841,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}
 		}
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->GA, "GA");
 		if(parms->recon.modal){
 			writebin(recon->amod, "amod");
@@ -864,7 +909,7 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
 		}
 		dfree(opd);
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->GFall, "GFall");
 	}
 }
@@ -910,7 +955,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 		dfree(opd);
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
+		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
 			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
 			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
@@ -950,7 +995,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 		info("RRlgs svd thres is %g\n", thres);
 		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, thres);
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->GRall, "twfs_GR");
 		if(recon->RRlgs) writebin(recon->RRlgs, "twfs_RRlgs");
 	}
@@ -974,7 +1019,7 @@ setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	for(int idm=0; idm<parms->ndm; idm++){
 		P(recon->DMPTT, idm)=dpinv(P(recon->DMTT, idm), 0);
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->DMTT, "DMTT");
 		writebin(recon->DMPTT, "DMPTT");
 	}
@@ -1021,7 +1066,7 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			dfree(TT);
 		}
 	}
-	if(parms->save.setup){
+	if(parms->save.recon){
 		writebin(recon->TT, "TT");
 	}
 }
@@ -1051,7 +1096,7 @@ setup_recon_FF(recon_t* recon, const parms_t* parms){
 			dfree(FF);
 		}
 	}
-	if(parms->save.setup && recon->FF){
+	if(parms->save.recon && recon->FF){
 		writebin(recon->FF, "FF");
 	}
 }
@@ -1214,7 +1259,8 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		P(recon->saloc, ipowfs)=locref(powfs[ipowfs].saloc);
 	}
-
+	recon->wfsr=parms->wfsr;
+	recon->nwfsr=parms->nwfsr;
 	recon->ngrad=lnew(parms->nwfsr, 1);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1235,7 +1281,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	/*Grid for DM fitting*/
 	setup_recon_floc(recon, parms);
 	/*Gradient operators*/
-	setup_recon_GP(recon, parms, aper);
+	setup_recon_GP(recon, parms, aper, powfs);
 	//TT Removal
 	setup_recon_TT(recon, parms, powfs);
 	//Global or Differential focus removal.
@@ -1286,7 +1332,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 		/*setup atm reconstruction layer grid */
 		setup_recon_xloc(recon, parms);
 		/*setup xloc/aloc to WFS grad */
-		setup_recon_HXW(recon, parms);
+		setup_recon_HXW(recon, parms, NULL);
 		setup_recon_GX(recon, parms);//uses HXW.
 		dspcellfree(recon->HXW);/*only keep HXWtomo for tomography */
 	}

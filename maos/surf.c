@@ -374,7 +374,7 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 			displace[0]=P(parms->ncpa.thetax, ievl)*ht;
 			displace[1]=P(parms->ncpa.thetay, ievl)*ht;
 			P(HA, ievl, idm)=mkh(P(recon->aloc, idm), recon->floc,
-				displace[0], displace[1], scale);
+				displace[0], displace[1], scale, 0);
 			const real theta=RSS(P(parms->ncpa.thetax, ievl), P(parms->ncpa.thetay, ievl));
 			dspscale(P(HA, ievl, idm), cos(theta*parms->dm[idm].dratio));
 		}
@@ -668,18 +668,15 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			if( parms->ncpa.ttr&&powfs[ipowfs].opdbias){
 			/*remove average tilt from opdbias and same amount from
 			  opdadd. Does not need to be very accurate.*/
-				dmat* mcc=loc_mcc_ptt(powfs[ipowfs].loc, P(powfs[ipowfs].amp));
-				dinvspd_inplace(mcc);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					if(P(powfs[ipowfs].opdbias, jwfs)){
 						real ptt[3]={0,0,0};
-						loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./P(mcc, 0), mcc,
-							P(powfs[ipowfs].amp), P(P(powfs[ipowfs].opdbias, jwfs)));
+						loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 0, NULL,
+							P(P(powfs[ipowfs].amp, jwfs)), P(P(powfs[ipowfs].opdbias, jwfs)));
 						loc_sub_ptt(P(powfs[ipowfs].opdbias, jwfs), ptt, powfs[ipowfs].loc);
 						loc_sub_ptt(P(powfs[ipowfs].opdadd, jwfs), ptt, powfs[ipowfs].loc);
 					}
 				}
-				dfree(mcc);
 			}
 		}//for ipowfs
 	}

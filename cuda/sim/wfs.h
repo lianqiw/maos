@@ -53,7 +53,7 @@ typedef struct cupowfs_t{
 	struct pywfs_t* pywfs;//points to powfs[ipowfs].pywfs
 	cuccell pyramid;
 	cucmat pynominal;
-	curmat saa;
+	curcell saa;
 	curmat pyoff; //pywfs->gradoff
 	curmat pixoffx;
 	curmat pixoffy;

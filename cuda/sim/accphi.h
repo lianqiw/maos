@@ -23,13 +23,13 @@
 void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
 	Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream);
 void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Real thetay,
-	Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream);
+	Real misregx, Real misregy, Real dt, int isim, Real atmalpha, cudaStream_t stream);
 void dm2loc(Real* phiout, const Array<culoc_t>& locarr, const cumapcell& cudm, int ndm,
 	Real hs, Real hc, Real thetax, Real thetay,
-	Real mispx, Real mispy, Real dmalpha, cudaStream_t stream);
+	Real misregx, Real misregy, Real dmalpha, cudaStream_t stream);
 void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
 	Real hs, Real hc, Real thetax, Real thetay,
-	Real mispx, Real mispy, Real dmalpha, cudaStream_t stream);
+	Real misregx, Real misregy, Real dmalpha, cudaStream_t stream);
 
 void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
 	const ngsmod_t* ngsmod, const real* mod,

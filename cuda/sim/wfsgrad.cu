@@ -138,11 +138,11 @@ mtche_do(Real* restrict grad, Real(*mtches)[2], const Real* restrict ints,
 	if(threadIdx.x<2){
 		if(sigmatch==1){/*normalize gradients according to siglev.*/
 			Real scale_isa=i0sum[isa]/g[2][0];
-			if(scale_isa>10 || scale_isa <= 0) scale_isa=1;
+			if(!(scale_isa<10 && scale_isa > 0)) scale_isa=1;
 			g[threadIdx.x][0]*=scale_isa;
-		} else if(sigmatch==2){
+		} else if(sigmatch==2){/*normalize gradients according to subaperture averaged siglev.*/
 			g[threadIdx.x][0]*=scale;
-		}
+		}//else: do not normalize
 		grad[isa+nsa*threadIdx.x]=g[threadIdx.x][0];
 	}
 }
@@ -161,13 +161,14 @@ mtche(Real* restrict grad, Real(*mtches)[2],
    Apply tCoG. /todo: replace atomicAdd by reduction.
 */
 __global__ static void
-tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
+tcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2, 
 	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real thres, Real bkgrnd, Real* srot){
 	__shared__ Real sum[3];
 	if(threadIdx.x<3&&threadIdx.y==0) sum[threadIdx.x]=0.f;
 	__syncthreads();//is this necessary?
 	int isa=blockIdx.x;
 	ints+=isa*nx*ny;
+	//loop can be replaced if block dimension matches nx, ny exactly.
 	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 		for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 			Real im=ints[ix+iy*nx]-bkgrnd;
@@ -180,9 +181,9 @@ tcog_do(Real* grad, const Real* restrict ints, Real siglev, Real* saa,
 	}
 	__syncthreads();
 	if(threadIdx.x==0&&threadIdx.y==0){
-		if(saa){
-			Real sum2=siglev*saa[isa];
-			/*if(sum[0]<sum2)*/ sum[0]=sum2;
+		if(scale2){
+			Real sum2=scale1*scale2[isa];
+			sum[0]=sum2; //replace intensity by constant.
 		}
 		if(sum[0]>thres){
 			Real gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;
@@ -369,8 +370,9 @@ static void wfsgrad_callback(cudaStream_t stream, cudaError_t status, void *data
 static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cuwfs, Array<cupowfs_t>& cupowfs,
 	const parms_t* parms, const powfs_t* powfs, sim_t* simu, int iwfs, int ipowfs, stream_t& stream){
 	const int nsa=powfs[ipowfs].saloc->nloc;
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	CUDA_CHECK_ERROR;
-	//cuzero(gradcalc, stream);//no need, mtche, tcog_do does not accumulate.
+	//gradcalc.Zero(stream);//(no need, mtche, tcog_do does not accumulate.)
 	const int totpix=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 	//static int last_phytype=-1;
 	const Real cogthres=parms->powfs[ipowfs].cogthres;
@@ -402,8 +404,8 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 		case 1://Use instantaneous intensity of each sa
 			break;
 		case 2://Use averaged instantaneous intensity.
-			scale1=cursum(ints.M(), stream)/powfs[ipowfs].saasum;
-			scale2=cupowfs[ipowfs].saa();
+			scale1=cursum(ints.M(), stream)/PR(powfs[ipowfs].saasum, wfsind);
+			scale2=cupowfs[ipowfs].saa.R(wfsind)();
 			break;
 		default:
 			error("Invalid sigmatch\n");
@@ -458,6 +460,8 @@ void *gpu_wfsgrad_queue(thread_t* info){
 		const int do_geom=!do_phy||save_gradgeom||do_pistatout;
 		const Real thetax=parms->wfs[iwfs].thetax;
 		const Real thetay=parms->wfs[iwfs].thetay;
+		const Real misregx=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregx:0;
+		const Real misregy=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0;
 		Real2* loc=cupowfs[ipowfs].loc();
 		/*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
 		stream_t& stream=cuwfs[iwfs].stream;
@@ -482,7 +486,8 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			}
 			if(simu->atm&&((!parms->sim.idealwfs&&!parms->powfs[ipowfs].lo)
 							||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
-				atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
+				atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 
+					misregx, misregy, parms->sim.dt, isim, 1, stream);
 			}
 			if(!parms->powfs[ipowfs].lo&&(parms->sim.idealwfs||parms->sim.wfsalias)){
 				Real alpha=parms->sim.idealwfs?1:-1;
@@ -508,7 +513,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			if(CL){
 				wait_dmreal(simu, isim);
 				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
-					hs, hc, thetax, thetay, 0, 0, -1, stream);
+					hs, hc, thetax, thetay, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, -1, stream);
 				Real ttx=0, tty=0;
 				if(simu->ttmreal){
 					ttx+=simu->ttmreal->p[0];
@@ -545,14 +550,14 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					error("Implement broadband case\n");
 				}
 				cu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed[0], cupowfs[ipowfs].nembed[0],
-					cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
+					cupowfs[ipowfs].fieldstop.R(0,wfsind), parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
 			}
 			if(save_opd){
 				zfarr_push_scale(simu->save->wfsopd[iwfs], isim, phiout, 1, stream);
 			}
 			if(parms->plot.run&&isim%parms->plot.run==0){
-				const dmat* realamp=powfs[ipowfs].realamp->p[wfsind];
-				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, realamp, 0,
+				const dmat* amp=PR(powfs[ipowfs].amp, wfsind);
+				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, amp, 0,
 					"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 			}
 			ctoc("opd");
@@ -609,7 +614,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					if(noisy){
 						if(parms->save.gradnf->p[iwfs]){
 							if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
-								pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
+								pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa.R(wfsind),
 									cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
 							} else{
 								shwfs_grad(gradcalc, cuwfs[iwfs].ints, cuwfs, cupowfs, parms, powfs, simu, iwfs, ipowfs, stream);
@@ -651,7 +656,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					}
 
 					if(parms->powfs[ipowfs].type==WFS_PY){
-						pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa,
+						pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa.R(wfsind),
 							cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs, stream);
 						//cuwrite(gradcalc, stream, "gradcalc"); exit(0);
 					} else{

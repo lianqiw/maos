@@ -57,40 +57,40 @@ static const real TOL=5.e-16;
   even if we do do_partial, we still not accounting for boundary pixels (some amp2 are missing)
   in this way, we assume the wavefront is flat in the boundary.
 */
-#define DO_CALC								\
-    if(do_partial){							\
-	BOUND0(alpha1);							\
-	BOUND1(alpha2);							\
-	BOUND0(beta1);							\
-	BOUND1(beta2);							\
-        if(alpha1>1.-TOL||alpha2<-TOL||beta1>1.-TOL||beta2<-TOL){	\
-	    valid=0;							\
-	}else{								\
-	    valid=1;							\
-	}								\
+#define DO_CALC\
+    if(do_partial){\
+	BOUND0(alpha1);\
+	BOUND1(alpha2);\
+	BOUND0(beta1);\
+	BOUND1(beta2);\
+        if(alpha1>1.-TOL||alpha2<-TOL||beta1>1.-TOL||beta2<-TOL){\
+	    valid=0;\
+	}else{\
+	    valid=1;\
+	}\
 	wtalpha[0]=(SQ(alpha2)-SQ(alpha1))*0.5-(CUBIC(alpha2)-CUBIC(alpha1))/3; \
-	wtalpha[1]=(CUBIC(1-alpha1)-CUBIC(1-alpha2))/3;			\
-	wtalpha[2]=(SQ(alpha2)-SQ(alpha1))*0.5;				\
-	wtalpha[3]=(alpha2-alpha1)-(SQ(alpha2)-SQ(alpha1))*0.5;		\
+	wtalpha[1]=(CUBIC(1-alpha1)-CUBIC(1-alpha2))/3;\
+	wtalpha[2]=(SQ(alpha2)-SQ(alpha1))*0.5;\
+	wtalpha[3]=(alpha2-alpha1)-(SQ(alpha2)-SQ(alpha1))*0.5;\
 	wtbeta[0]=(SQ(beta2)-SQ(beta1))*0.5-(CUBIC(beta2)-CUBIC(beta1))/3; \
-	wtbeta[1]=(CUBIC(1-beta1)-CUBIC(1-beta2))/3;			\
-	wtbeta[2]=(SQ(beta2)-SQ(beta1))*0.5;				\
-	wtbeta[3]=(beta2-beta1)-(SQ(beta2)-SQ(beta1))*0.5;		\
-    }									\
-    if (valid &&							\
-	DBLNZ(amp2[indy[0]][indx[0]]) &&				\
-	DBLNZ(amp2[indy[0]][indx[1]]) &&				\
-	DBLNZ(amp2[indy[1]][indx[0]]) &&				\
-	DBLNZ(amp2[indy[1]][indx[1]]) ){				\
-	weight[0]+=((wtbeta[0]*amp2[indy[0]][indx[0]]+			\
-		     wtbeta[1]*amp2[indy[1]][indx[0]])*wtalpha[2]+	\
-		    (wtbeta[0]*amp2[indy[0]][indx[1]]+			\
+	wtbeta[1]=(CUBIC(1-beta1)-CUBIC(1-beta2))/3;\
+	wtbeta[2]=(SQ(beta2)-SQ(beta1))*0.5;\
+	wtbeta[3]=(beta2-beta1)-(SQ(beta2)-SQ(beta1))*0.5;\
+    }\
+    if (valid &&\
+	DBLNZ(amp2[indy[0]][indx[0]]) &&\
+	DBLNZ(amp2[indy[0]][indx[1]]) &&\
+	DBLNZ(amp2[indy[1]][indx[0]]) &&\
+	DBLNZ(amp2[indy[1]][indx[1]]) ){\
+	weight[0]+=((wtbeta[0]*amp2[indy[0]][indx[0]]+\
+		     wtbeta[1]*amp2[indy[1]][indx[0]])*wtalpha[2]+\
+		    (wtbeta[0]*amp2[indy[0]][indx[1]]+\
 		     wtbeta[1]*amp2[indy[1]][indx[1]])*wtalpha[3])*dp1*signx; \
-	weight[1]+=((wtbeta[2]*amp2[indy[0]][indx[0]]+			\
-		     wtbeta[3]*amp2[indy[1]][indx[0]])*wtalpha[0]+	\
-		    (wtbeta[2]*amp2[indy[0]][indx[1]]+			\
+	weight[1]+=((wtbeta[2]*amp2[indy[0]][indx[0]]+\
+		     wtbeta[3]*amp2[indy[1]][indx[0]])*wtalpha[0]+\
+		    (wtbeta[2]*amp2[indy[0]][indx[1]]+\
 		     wtbeta[3]*amp2[indy[1]][indx[1]])*wtalpha[1])*dp1*signy; \
-	ampsum+=wtalpha[3]*wtbeta[3]*amp2[1][1];			\
+	ampsum+=wtalpha[3]*wtbeta[3]*amp2[1][1];\
     }
 /*
   dp1 above comes from the gradient.
@@ -100,22 +100,24 @@ typedef struct{
 	long i;
 	real x;
 }record_t;
-#define ADDWT(A,B,C,D)				\
-    iphi=loc_map_get(xloc->map, (A),(C));	\
+#define ADDWT(A,B,C,D)\
+    iphi=loc_map_get(xloc->map, (A),(C));\
     if(iphi>0) wtsum+=(B)*(D);
 
 /**
    Returns the transpose of a average gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.
  */
-dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
-	loc_t* ploc,     /**<the grid on the aperture plan*/
-	dmat* pamp,     /**<the amplitude on ploc*/
+dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
+	loc_t* ploc,     /**<the grid on the aperture plane*/
+	dmat* pamp,      /**<the amplitude on ploc*/
 	loc_t* saloc,    /**<Lower left origin of the subapertures*/
-	real scale,    /**<cone effect*/
-	real dispx,   /**<displacement due to beam angle (2 vector). similar as accphi routines*/
-	real dispy,    /**<displacement due to beam angle (2 vector). similar as accphi routines*/
-	int do_partial   /**<1: use points that are outside of by close to a subaperture. 0: do not use.*/
+	dmat *saa,	     /**<subaperture amplitude, normalized to max at 1.*/
+	real saat,		 /**<saa threshold to enable gradient operation. */
+	real scale,      /**<cone effect*/
+	real dispx,      /**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	real dispy,      /**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	int do_partial   /**<1: use points that are outside of but close to a subaperture. 0: do not use.*/
 ){
 /*
 
@@ -209,12 +211,12 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	int iphi;
 	real* amp=pamp?P(pamp):0;
 	if(!same&&amp){
-	/*
-	  Copy and modify amplitude map to fix boundry
-	  issues when propagate between two planes.  This
-	  generally applies to the case that XLOC is smaller
-	  than PLOC.
-	*/
+		/*
+		Copy and modify amplitude map to fix boundry
+		issues when propagate between two planes.  This
+		generally applies to the case that XLOC is smaller
+		than PLOC.
+		*/
 		ampcopy=mymalloc(ploc->nloc, real);
 		memcpy(ampcopy, amp, sizeof(real)*ploc->nloc);
 		for(ipix=0; ipix<ploc->nloc; ipix++){
@@ -261,6 +263,7 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		for(iw=0; iw<2; iw++){
 			pp[iw][isa]=count[iw];
 		}
+		if(saa && saat && P(saa,isa)<saat) continue;
 		/*center of subaperture when mapped onto PLOC MAP.*/
 		scx=saloc->locx[isa]*dp2+poffset[0];
 		scy=saloc->locy[isa]*dp2+poffset[1];
@@ -390,31 +393,31 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 								  This gradient is scaled by 1/scale in XLOC*/
 								if(!same)
 									wtsum/=scale;
-#define INTERP(A,B,C,D)							\
-    iphi=loc_map_get(xloc->map, A,C);	                                \
-    if(iphi>0){								\
-	iphi--;								\
-	/*Check whether we already have the weight for this point.*/	\
-	if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)>TOL){			\
-	    /*info("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/		\
-	    for(itmp=pp[iw][isa]; itmp<count[iw]; itmp++){		\
-		if(pi[iw][itmp]==iphi){					\
-		    px[iw][itmp]+=wt0;					\
-		    break;						\
-		}							\
-	    }								\
-	    if(itmp == count[iw]){/*not found*/				\
-		pi[iw][count[iw]]=iphi;					\
-		px[iw][count[iw]++]=wt0;				\
-	    }								\
-	}								\
-    }
+								#define INTERP(A,B,C,D)\
+								iphi=loc_map_get(xloc->map, A,C);\
+								if(iphi>0){\
+									iphi--;\
+									/*Check whether we already have the weight for this point.*/\
+									if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)>TOL){\
+										/*info("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/\
+										for(itmp=pp[iw][isa]; itmp<count[iw]; itmp++){\
+										if(pi[iw][itmp]==iphi){\
+											px[iw][itmp]+=wt0;\
+											break;\
+										}\
+									}\
+									if(itmp == count[iw]){/*not found*/\
+										pi[iw][count[iw]]=iphi;\
+										px[iw][count[iw]++]=wt0;\
+										}\
+									}\
+								}
 
 								INTERP(nplocx, 1-dplocx, nplocy, 1-dplocy);
 								INTERP(1+nplocx, dplocx, nplocy, 1-dplocy);
 								INTERP(nplocx, 1-dplocx, 1+nplocy, dplocy);
 								INTERP(1+nplocx, dplocx, 1+nplocy, dplocy);
-#undef INTERP
+								#undef INTERP
 							}
 						}
 					}
@@ -459,9 +462,9 @@ dsp* mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 /**
    Returns the transpose of mkgt()
  */
-dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc,
+dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, dmat *saa, real saat,
 	real scale, real dispx, real dispy, int do_partial){
-	dsp* GS0T=mkgt(xloc, ploc, amp, saloc, scale, dispx, dispy, do_partial);
+	dsp* GS0T=mkgt(xloc, ploc, amp, saloc, saa, saat, scale, dispx, dispy, do_partial);
 	dsp* GS0=dsptrans(GS0T);
 	dspfree(GS0T);
 	return GS0;

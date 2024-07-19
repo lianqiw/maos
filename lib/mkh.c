@@ -44,19 +44,26 @@
 
  */
 dsp* mkh(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale){
-	dsp* Hb=mkhb(locin, locout, displacex, displacey, scale);
+	real displacex, real displacey, real scale, real angle){
+	dsp* Hb=mkht(locin, locout, displacex, displacey, scale, angle);
 	dsp* H=dsptrans(Hb);
 	dspfree(Hb);
 	return H;
 }
 /**
-   Create transpose of mkh() result.
+   Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout.
+   @param locin		The input grid
+   @param locout	The target grid
+   @param displacex	Shift of the beam at the input grid along x 
+   @param displacey Shift of the beam at the input grid along y
+   @param scale		Scaling of the beam from target to input grid. (scale < 1 if beam is coming from a point source)
+   @param angle		Rotation of the target grid (Clock-wise) (applied before displacex and displacey).
+
 */
-dsp* mkhb(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale){
+dsp* mkht(const loc_t* locin, const loc_t* locout,
+	real displacex, real displacey, real scale, real angle){
 	if(locin->iac){
-		return mkhb_cubic(locin, locout, displacex, displacey, scale, locin->iac);
+		return mkht_cubic(locin, locout, displacex, displacey, scale, angle, locin->iac);
 	}
 	loc_create_map(locin);
 	dsp* hback;
@@ -71,6 +78,8 @@ dsp* mkhb(const loc_t* locin, const loc_t* locout,
 	displacey=(displacey-locin->map->oy)*dy_in1;
 	const real* px=locout->locx;
 	const real* py=locout->locy;
+	const real ct=cos(angle);
+	const real st=sin(angle);
 	/*-1 because we count from 1 in the map. */
 	map_t* map=locin->map;
 	//const int nxmin=locin->npad;
@@ -95,8 +104,10 @@ dsp* mkhb(const loc_t* locin, const loc_t* locout,
 			bi=hback->pi;
 			bx=hback->px;
 		}
-		fx[1]=myfma(px[iloc], dx_in2, displacex);
-		fy[1]=myfma(py[iloc], dy_in2, displacey);
+		real x2= ct*px[iloc]+st*py[iloc];
+		real y2=-st*px[iloc]+ct*py[iloc];
+		fx[1]=myfma(x2, dx_in2, displacex);
+		fy[1]=myfma(y2, dy_in2, displacey);
 		SPLIT(fx[1], fx[1], nplocx);
 		SPLIT(fy[1], fy[1], nplocy);
 		/*Limit the point to within active region*/
@@ -139,11 +150,11 @@ dsp* mkhb(const loc_t* locin, const loc_t* locout,
 	return hback;
 }
 /**
-   Transposes the result from mkhb_cubic.
+   Transposes the result from mkht_cubic.
  */
 dsp* mkh_cubic(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real cubic_iac){
-	dsp* Hb=mkhb_cubic(locin, locout, displacex, displacey, scale, cubic_iac);
+	real displacex, real displacey, real scale, real angle, real cubic_iac){
+	dsp* Hb=mkht_cubic(locin, locout, displacex, displacey, scale, angle, cubic_iac);
 	dsp* H=dsptrans(Hb);
 	dspfree(Hb);
 	return H;
@@ -151,10 +162,10 @@ dsp* mkh_cubic(const loc_t* locin, const loc_t* locout,
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
-dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real cubic_iac){
+dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
+	real displacex, real displacey, real scale, real angle, real cubic_iac){
 	if(!locin||!locout||!locin->nloc||!locout->nloc){
-		warning("mkhb_cubic input is empty.\n");
+		warning("mkht_cubic input is empty.\n");
 		return NULL;
 	}
 	dsp* hback;
@@ -172,6 +183,8 @@ dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
 	displacey=(displacey-map->oy)*dy_in1;
 	const real* px=locout->locx;
 	const real* py=locout->locy;
+	const real ct=cos(angle);
+	const real st=sin(angle);
 	/*-1 because we count from 1 in the map. */
 	/*cubic */
 	real fx[4], fy[4];
@@ -203,9 +216,10 @@ dsp* mkhb_cubic(const loc_t* locin, const loc_t* locout,
 			bi=hback->pi;
 			bx=hback->px;
 		}
-
-		dplocx=myfma(px[iloc], dx_in2, displacex);
-		dplocy=myfma(py[iloc], dy_in2, displacey);
+		real x2=ct*px[iloc]+st*py[iloc];
+		real y2=-st*px[iloc]+ct*py[iloc];
+		dplocx=myfma(x2, dx_in2, displacex);
+		dplocy=myfma(y2, dy_in2, displacey);
 		//outside of rectangular bounding active region .
 		if(dplocy<nymin||dplocy>nymax||dplocx<nxmin||dplocx>nxmax) continue;
 		SPLIT(dplocx, dplocx, nplocx);

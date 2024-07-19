@@ -314,7 +314,7 @@ void* prop(thread_t* data){
 		static int printed=0;				\
 		if(missing>0 && !printed) {			\
 			printed=1;						\
-			warning("%d out of %ld points not covered by input screen\n",	\
+			dbg("%d out of %ld points not covered by input screen\n",\
 				missing, (long)(ntot));		\
 			print_backtrace();				\
 		}									\
@@ -495,6 +495,37 @@ void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP){
 		RUNTIME_LINEAR;
 		dplocx=myfma(px[iloc], dx_in2, displacex);
 		dplocy=myfma(py[iloc], dy_in2, displacey);
+		//Boundary check is performed in LINEAR_ADD_NONGRID
+		SPLIT(dplocx, dplocx, nplocx);
+		SPLIT(dplocy, dplocy, nplocy);
+		nplocx1=nplocx+1;
+		nplocy1=nplocy+1;
+		LINEAR_ADD_NONGRID;
+	}
+	WARN_MISSING(end-start);
+}
+/**
+   Propagate OPD defines on locin to locout with rotation. locout is rotated by
+   theta CW which means OPD is rotated CCW by theta. alpha is the scaling of
+   data. displacex, displacy is the displacement of the center of the beam on
+   the input grid.  scale is the cone effect. See prop_grid() for definition of
+   other parameters.*/
+void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta){
+	if(locin->iac){
+		prop_nongrid_cubic(ARGIN_NONGRID2, ARGOUT_LOC2, ARG_PROP2, locin->iac, start, end);
+		return;
+	}
+	PREPIN_NONGRID(0);
+	PREPOUT_LOC;
+	real ct=cos(theta);//rotate coordinate CCW (points -CCW).
+	real st=sin(theta);
+//OMP_TASK_FOR(2)
+	for(long iloc=start; iloc<end; iloc++){
+		RUNTIME_LINEAR;
+		real x2=px[iloc]*ct+py[iloc]*st;
+		real y2=-px[iloc]*st+py[iloc]*ct;
+		dplocx=myfma(x2, dx_in2, displacex);
+		dplocy=myfma(y2, dy_in2, displacey);
 		//Boundary check is performed in LINEAR_ADD_NONGRID
 		SPLIT(dplocx, dplocx, nplocx);
 		SPLIT(dplocy, dplocy, nplocy);

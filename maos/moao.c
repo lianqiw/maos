@@ -83,7 +83,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 		recon->moao[imoao].aimcc=loc_mcc_ptt(P(recon->moao[imoao].aloc,0), NULL);
 		dinvspd_inplace(recon->moao[imoao].aimcc);
 		recon->moao[imoao].HA=dspcellnew(1, 1);
-		P(recon->moao[imoao].HA,0)=mkh(P(recon->moao[imoao].aloc,0), recon->floc, 0, 0, 1);
+		P(recon->moao[imoao].HA,0)=mkh(P(recon->moao[imoao].aloc,0), recon->floc, 0, 0, 1, 0);
 		if(parms->moao[imoao].actstuck){
 			recon->moao[imoao].actstuck=lcellnew(1, 1);
 			P(recon->moao[imoao].actstuck,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actstuck);

@@ -142,9 +142,8 @@ void free_parms(parms_t *parms){
 		free_powfs_cfg(&parms->powfs[ipowfs]);
 	}
 	free(parms->powfs); parms->npowfs=0;
-	if(parms->wfs!=parms->wfsr){
-		free(parms->wfsr); parms->nwfsr=0;
-	}
+	free(parms->wfsr); parms->nwfsr=0;
+	
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		dfree(parms->wfs[iwfs].wvlwts);
 		dfree(parms->wfs[iwfs].sabad);
@@ -218,21 +217,22 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat(n,1,#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
-    readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B);		\
+    if(readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B)){\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }
+    }}else{dbg("Empty array for powfs." #B"\n");}
+#define READ_POWFS_RELAX(A,B)					\
+    if(readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B)){\
+    for(int i=0; i<npowfs; i++){					\
+		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
+    }}else{dbg("Empty array for powfs." #B"\n");}
 #define READ_POWFS_MAT(A,B)						\
-    readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B);			\
+    if(readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B)){\
     for(int i=0; i<npowfs; i++){						\
 		parms->powfs[i].B = readstr_##A##mat(0,0,"powfs."#B, strtmp[i]);/*doesn't need ## in B*/ \
 		free(strtmp[i]); strtmp[i]=NULL;\
-    }
-#define READ_POWFS_RELAX(A,B)					\
-    readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B);	\
-    for(int i=0; i<npowfs; i++){					\
-		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }
+    }}//else{dbg("Empty array for powfs." #B"\n");}
+
 static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 	/*Convert pixtheta to radian and do senity check*/
 	real val=*theta;
@@ -293,6 +293,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(str,saloc);
 	READ_POWFS_RELAX(dbl,misregx);
 	READ_POWFS_RELAX(dbl,misregy);
+	READ_POWFS_RELAX(dbl,misregc);
 	READ_POWFS_RELAX(str,amp);
 	READ_POWFS_RELAX(str,piinfile);
 	READ_POWFS_RELAX(str,sninfile);
@@ -447,8 +448,7 @@ static void readcfg_powfs(parms_t *parms){
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
 #define READ_LLT(T,key) llt->key=readcfg_##T("%sllt."#key, prefix)
 #define READ_LLT_ARR(T,key) llt->key=readcfg_##T(0,0,"%sllt."#key, prefix)
-			//use priority-1 so that values specified as powfs0_llt. has priority over powfs.fnllt
-			open_config(powfsi->fnllt, prefix, readcfg_peek_priority("powfs.fnllt")-1);
+			open_config_prefix(powfsi->fnllt, prefix, "powfs.fnllt");
 			llt_cfg_t *llt=powfsi->llt=mycalloc(1, llt_cfg_t);
 			READ_LLT(dbl, d);
 			READ_LLT(dbl, widthp);
@@ -510,8 +510,7 @@ static void readcfg_powfs(parms_t *parms){
 			}
 			char prefix[60]={0};
 			snprintf(prefix, 60, "powfs%d_", ipowfs);
-			//use priority-1 so that values specified as powfs0_pywfs. has priority over powfs.pywfs
-			open_config(powfsi->pywfs, prefix, readcfg_peek_priority("powfs.pywfs")-1);
+			open_config_prefix(powfsi->pywfs, prefix, "powfs.pywfs");
 			pycfg=powfsi->pycfg=mycalloc(1, pywfs_cfg_t);
 #define READ_PYWFS(T,key) pycfg->key=readcfg_##T("%spywfs."#key, prefix)
 #define READ_PYWFS_MAT(T,key) pycfg->key=readcfg_##T##mat(0,0,"%spywfs."#key, prefix)
@@ -637,26 +636,31 @@ static void readcfg_powfs(parms_t *parms){
 	free(strtmp);
 }
 #define READ_WFS(A,B)					\
-    readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B);	\
+    if(readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B)){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }
+    }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_RELAX(A,B)				\
-    readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B);	\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }
+    }}else{dbg("Empty array for wfs." #B"\n");}
+#define READ_WFS_RELAX_SCALE(A,B,C,D)				\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)){\
+    for(i=0; i<nwfs; i++){				\
+		parms->wfs[i].C = D*(A##tmp[i]);			\
+    }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_DELTA(A,B,BD)				\
-    readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD);	\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD)){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = parms->powfs[parms->wfs[i].powfs].B+A##tmp[i];	\
-    }
+    }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_MAT(A,B)						\
-    readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B);	\
+    if(readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B)){\
     for(i=0; i<nwfs; i++){						\
 		parms->wfs[i].B = readstr_##A##mat(0,0,"wfs."#B,strtmp[i]); \
 		free(strtmp[i]); strtmp[i]=NULL;\
-    }
+    }}//else{dbg("Empty array for wfs." #B"\n");}
 /**
    Read in parameters of wfs, excluding signal level.
 */
@@ -674,10 +678,15 @@ static void readcfg_wfs(parms_t *parms){
 		parms->wfs[i].thetay*=AS2RAD;
 	}
 	READ_WFS_RELAX(dbl,fitwt);
-	READ_WFS_MAT(d,sabad);
+	READ_WFS_MAT(d, sabad);	
+	READ_WFS_RELAX(dbl, misregx);
+	READ_WFS_RELAX(dbl, misregy);
+	READ_WFS_RELAX(dbl, misregc);//read in as degree.
+
 	/*link wfs with powfs*/
 	int wfscount=0;
 	int ipowfs=0;
+	
 	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++,ipowfs++){
 		if(parms->powfs[kpowfs].nwfs==0){//no stars, remove
 			free_powfs_cfg(&parms->powfs[kpowfs]);
@@ -698,10 +707,6 @@ static void readcfg_wfs(parms_t *parms){
 				P(parms->powfs[ipowfs].wfs,count)=iwfs;
 				P(parms->powfs[ipowfs].wfsind,iwfs)=count;
 				count++;
-				if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
-					parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
-					parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
-				}
 			} else{
 				P(parms->powfs[ipowfs].wfsind,iwfs)=-1;/*not belong */
 			}
@@ -718,11 +723,62 @@ static void readcfg_wfs(parms_t *parms){
 		error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n",
 			parms->nwfs,wfscount);
 	}
+	
 	READ_WFS_DELTA(dbl,hs,delta_hs);
 	READ_WFS_DELTA(dbl,hc,delta_hc);
 	free(dbltmp);
 	free(inttmp);
 	free(strtmp);
+	rand_t stat;
+	int MISREG_SEQ=1;
+	READ_ENV_INT(MISREG_SEQ, 0, INFINITY);
+	seed_rand(&stat, MISREG_SEQ);
+	
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].astscale!=0&&parms->powfs[ipowfs].astscale!=1){//scale asterism
+			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
+			parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
+		}
+		if(parms->powfs[ipowfs].misregx||parms->powfs[ipowfs].misregy||parms->powfs[ipowfs].misregc){
+			if(parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy||parms->wfs[iwfs].misregc){
+				warning_once("When both wfs.misreg and powfs.misreg are set, the former is used\n");
+			} else{
+				if(iwfs==P(parms->powfs[ipowfs].wfs,0)){
+					dbg("powfs[%d].misreg=%6.2f %6.2f %7.2f is converted to\n", ipowfs, 
+					parms->powfs[ipowfs].misregx, parms->powfs[ipowfs].misregy, parms->powfs[ipowfs].misregc);
+				}
+				int do_rand=parms->powfs[ipowfs].nwfs>1 && MISREG_SEQ!=0;
+				parms->wfs[iwfs].misregx=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregx;
+				parms->wfs[iwfs].misregy=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregy;
+				parms->wfs[iwfs].misregc=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregc;
+			}
+		
+			dbg("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
+				iwfs, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, parms->wfs[iwfs].misregc);
+		}
+		if((parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy||parms->wfs[iwfs].misregc)&&parms->powfs[ipowfs].type!=WFS_SH){
+			warning("wfs.misreg is only used for Shack Hartmann WFS\n");
+		}
+		//parms->wfs[iwfs].misregx=wrap2range(parms->wfs[iwfs].misregx, -0.5, 0.5);
+		//parms->wfs[iwfs].misregy=wrap2range(parms->wfs[iwfs].misregy, -0.5, 0.5);
+		parms->wfs[iwfs].misregx*=parms->powfs[ipowfs].dsa;
+		parms->wfs[iwfs].misregy*=parms->powfs[ipowfs].dsa;
+		parms->wfs[iwfs].misregc*=M_PI/180;//convert degree to radian.
+		real rmax=sqrt(pow(parms->wfs[iwfs].misregx, 2)+pow(parms->wfs[iwfs].misregy,2));
+		if(parms->powfs[ipowfs].misregrmax<rmax){
+			parms->powfs[ipowfs].misregrmax=rmax;
+		}
+		/*
+		 * for simulation: raytracing of wfs.misreg and distortion.tel2fs is handled by powfs.loc_tel. amplitude effect is included in powfs.amp. 
+		 * for reconstruction: wfsr.misregx,y,c is handled by tomography ray trace and a rotation step. amplitude effect is included in gamp in GP. ploc aligns with valid subapertures. 
+		 * ploc (together with saloc, powfs.loc), is defined in the WFS reference frame. 
+		 * powfs.loc_tel is defined in the telescope pupil reference frame.
+		 * 
+		 * notice that misregistration is affected by the rotation.
+		 * notice that for ray tracing, misregistration need to be scaled by the cone effect.
+		 */
+	}
 }
 /**
  * Compute photon flux for a given magnitude.
@@ -777,8 +833,6 @@ static void readcfg_siglev(parms_t *parms){
 
 	const real cosz=cos(parms->sim.za);
 	const real secz=1./cosz;
-	//int powfs_siglev_override=readcfg_peek_priority("powfs.siglev");
-	//int powfs_wvlwts_override=readcfg_peek_priority("powfs.wvlwts");
 
 	int siglev_shared=1;//all wfs in this power share the same siglev and wvlwts.
 #define check_dimension(name, arr, size)\
@@ -1754,7 +1808,7 @@ static void readcfg_save(parms_t *parms){
 	READ_INT(save.mvmf);
 	READ_INT(save.mvm);
 }
-static void readcfg_misreg(parms_t *parms){
+static void readcfg_distortion(parms_t *parms){
 	readcfg_strarr(&parms->distortion.tel2wfs,parms->nwfs,1,"distortion.tel2wfs");
 	readcfg_strarr(&parms->distortion.dm2wfs,parms->ndm*parms->nwfs,1,"distortion.dm2wfs");
 	readcfg_strarr(&parms->distortion.dm2sci,parms->ndm*parms->evl.nevl,1,"distortion.dm2sci");
@@ -2112,7 +2166,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(parms->ilgspowfs==-1){
 				parms->ilgspowfs=ipowfs;
 			} else{
-				warning("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
+				dbg_once("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
 			}
 			double FC2EP=1;//factor for fc to ep conversion
 			READ_ENV_DBL(FC2EP, 0, INFINITY);
@@ -2614,7 +2668,7 @@ static void setup_parms_postproc_atm_size(parms_t *parms){
 	long nxout[nps],nyout[nps];
 	parms->atm.nxn=lnew(nps,1);
 	for(int ips=0; ips<nps; ips++){
-		double guard=MAX(parms->atm.dx*3,parms->tomo.guard*parms->atmr.dx);
+		double guard=parms->atm.dx*3;
 		create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs,parms->aper.d,P(parms->atm.ht,ips),
 			parms->atm.dx,parms->atm.dx,0.5,guard,0,0,0,1);
 		P(parms->atm.nxn,ips)=MAX(nxout[ips],nyout[ips]);
@@ -2831,7 +2885,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->recon.psol=0;
 		}
 	}
-
+	
 	if(parms->recon.split){
 		if(parms->nlopowfs==0){
 			if(parms->ntrpowfs>=parms->nhipowfs){
@@ -2874,13 +2928,13 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 
 	if(parms->recon.glao){
-		parms->wfsr=mycalloc(parms->npowfs,wfs_cfg_t);
+		parms->wfsr=mycalloc(parms->npowfs,wfsr_cfg_t);
 		parms->nwfsr=parms->npowfs;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->wfsr[ipowfs].thetax=0;
 			parms->wfsr[ipowfs].thetay=0;
 			parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
-			parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
+			//parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
 			parms->wfsr[ipowfs].powfs=ipowfs;
 			parms->powfs[ipowfs].nwfsr=1;
 			parms->powfs[ipowfs].wfsr=lnew(1,1);
@@ -2897,7 +2951,16 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		  P(parms->fit.wt,0)=1;
 		*/
 	} else{/*Use same information as wfs. */
-		parms->wfsr=parms->wfs;
+		parms->wfsr=mycalloc(parms->nwfs, wfsr_cfg_t);
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			parms->wfsr[iwfs].thetax=parms->wfs[iwfs].thetax;
+			parms->wfsr[iwfs].thetay=parms->wfs[iwfs].thetay;
+			parms->wfsr[iwfs].hs=parms->wfs[iwfs].hs;
+			parms->wfsr[iwfs].misregx=parms->wfs[iwfs].misregx;
+			parms->wfsr[iwfs].misregy=parms->wfs[iwfs].misregy;
+			parms->wfsr[iwfs].misregc=parms->wfs[iwfs].misregc;
+			parms->wfsr[iwfs].powfs=parms->wfs[iwfs].powfs;
+		}
 		parms->nwfsr=parms->nwfs;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
@@ -3195,12 +3258,12 @@ static void setup_parms_postproc_misc(parms_t *parms, int override){
 	if(parms->save.gcovp>parms->sim.end){
 		parms->save.gcovp=parms->sim.end;
 	}
-
-	if(parms->dbg.cmpgpu){
-		info("Make cpu code follow gpu implementations.\n");
-		parms->tomo.square=1;
+	if(!parms->tomo.square){
+		if(parms->dbg.cmpgpu){
+			info("Make tomo.square=1 to compare cpu code against gpu implementations.\n");
+			parms->tomo.square=1;
+		}
 	}
-
 	if(!parms->atm.frozenflow){
 		info("psfisim is set from %d to %d in openloop mode\n",parms->evl.psfisim,parms->sim.start);
 		parms->evl.psfisim=parms->sim.start;
@@ -3516,8 +3579,8 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 		addpath2(0, "%s/%s", config_path, "examples");
 		free(config_path); config_path=NULL;
 	}
-	open_config(mainconf,NULL,0);/*main .conf file. */
-	open_config(extraconf,NULL,1);
+	open_config(mainconf);/*main .conf file. */
+	open_config(extraconf);/*overriding .conf or lines*/
 	parms_t *parms=mycalloc(1,parms_t);
 	/*
 		Conversion of input (e.g., in units) should be done in readcfg_* not in postproc_* as the values might be used early on.
@@ -3542,7 +3605,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	readcfg_plot(parms);
 	readcfg_gpu(parms);
 	readcfg_save(parms);
-	readcfg_misreg(parms);
+	readcfg_distortion(parms);
 	readcfg_load(parms);
 
 	/*

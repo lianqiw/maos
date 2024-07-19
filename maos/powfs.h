@@ -21,8 +21,8 @@
 #define AOS_POWFS_H
 #include "common.h"
 powfs_t * setup_powfs_init(const parms_t *parms, aper_t *aper);
-void setup_powfs_misreg_tel(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
-void setup_powfs_misreg_dm(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void setup_powfs_amp(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void setup_powfs_misreg_dm(powfs_t *powfs, const parms_t *parms, int ipowfs);
 void setup_shwfs_phy(const parms_t *parms,  powfs_t *powfs);
 void setup_powfs_neasim(const parms_t *parms,  powfs_t *powfs);
 void setup_powfs_calib(const parms_t *parms, powfs_t *powfs);

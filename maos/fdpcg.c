@@ -346,7 +346,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	long pos=parms->tomo.pos;
 	const long* os=P(parms->atmr.os);
 	if(pos!=os[0]){
-		warning("pupil does not equal to ground layer over sampling. Debug required.\n");
+		dbg("ploc over sampling does not equal to ground layer over sampling.\n");
 	}
 	long* nx=P(recon->xnx);
 	long* ny=P(recon->xny);
@@ -363,11 +363,11 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 		}
 		nxtot+=nx[ips]*ny[ips];
 		if(os[ips]>pos){
-			warning("Layer %ld os is greater than ground\n", ips);
+			dbg("Layer %ld os is greater than ground\n", ips);
 		}
 	}
 	/*Subaperture selection operator */
-	csp* sel=fdpcg_saselect(nxp, nyp, dxp, saloc, P(powfs[hipowfs].saa));
+	csp* sel=fdpcg_saselect(nxp, nyp, dxp, saloc, P(powfs[hipowfs].saamax));
 	/*Gradient operator. */
 	cmat* gx=0, * gy=0;
 	fdpcg_g(&gx, &gy, nxp, nyp, dxp, saloc->dx);/*tested ok. */

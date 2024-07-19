@@ -118,7 +118,7 @@ void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_WRAP);
 void prop_nongrid    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP);
 void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_NOWRAP);
 void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP);
-
+void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta);
 /*
   A few cubic spline propagations.
 */

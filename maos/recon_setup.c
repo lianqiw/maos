@@ -69,7 +69,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 		if(parms->powfs[ipowfs].skip==3) continue;
 		const int nsa=powfs[ipowfs].saloc->nloc;
 		const int ng=parms->powfs[ipowfs].ng;
-		int ncol=(ng==2?3:ng);
+		
 		const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
 		dcell* saneac=0;//in unit of rad^2.
 
@@ -86,6 +86,18 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 			}else{
 				saneac=dcelldup(powfs[ipowfs].sanea);
 			}
+			for(int jwfs=0; jwfs<PN(saneac); jwfs++){
+				real saat=parms->powfs[ipowfs].saat; if(!saat) saat=0.3;
+				dmat *saa=PR(powfs[ipowfs].saa, jwfs);
+				for(int isa=0; isa<nsa; isa++){
+					real area=P(saa, isa);
+					if(area<saat){
+						for(int ig=0; ig<ng; ig++){
+							P(P(saneac, jwfs), isa, ig)*=1e4;
+						}
+					}
+				}
+			}
 		} else{
 			if(parms->powfs[ipowfs].neareconfile){
 				saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
@@ -94,18 +106,22 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 					nea_mm(&P(saneac,i), P(saneac,i), ng);
 				}
 			} else{
-				saneac=dcellnew(1, 1);
-				P(saneac,0)=dnew(nsa, ncol);
+				saneac=dcellnew(PN(powfs[ipowfs].saa), 1);
 				real neamas=parms->powfs[ipowfs].nearecon;
 				if(neamas<0.001||neamas > 2000){
 					warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
 				}
 				//convert from mill-arcsec to radian.
 				real nearad=pow(neamas*MAS2RAD, 2)/(parms->powfs[ipowfs].dtrat*parms->sim.dt/parms->sim.dtref);
-				for(int isa=0; isa<nsa; isa++){
-					P(P(saneac,0), isa, 0)=nearad/(P(powfs[ipowfs].saa, isa));
-					for(int ig=1; ig<ng; ig++){
-						P(P(saneac, 0), isa, ig)=P(P(saneac, 0), isa, 0);
+				for(int jwfs=0; jwfs<PN(powfs[ipowfs].saa); jwfs++){
+					P(saneac,jwfs)=dnew(nsa, ng);//in this mode, no x/y cross-coupling.
+					real saat=parms->powfs[ipowfs].saat; if(!saat) saat=0.3;
+					for(int isa=0; isa<nsa; isa++){
+						real area=P(P(powfs[ipowfs].saa, jwfs), isa);
+						real nearad2=nearad/(area>saat?area:1e-4);
+						for(int ig=0; ig<ng; ig++){
+							P(P(saneac, jwfs), isa, ig)=nearad2;
+						}
 					}
 				}
 			}
@@ -125,6 +141,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfsr,jwfs);
 			int iwfs0=P(parms->powfs[ipowfs].wfsr,0);
+			dmat *saa=PR(powfs[ipowfs].saa, jwfs);
 			lmat* samask=0;
 			if(parms->wfs[iwfs].sabad){
 				samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
@@ -151,7 +168,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 							P(sanea0, isa, iy)=neamin2;
 						}
 					}
-					if(P(powfs[ipowfs].saa, isa)>area_thres){
+					if(P(saa, isa)>area_thres){
 						for(int iy=0; iy<ng; iy++){
 							nea2_sum+=P(sanea0, isa, iy);
 							nea2_count++;
@@ -1323,7 +1340,7 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 			real dispx=P(parms->evl.thetax,ievl)*ht;
 			real dispy=P(parms->evl.thetay,ievl)*ht;
 			real scale=1-ht/P(parms->evl.hs,ievl);
-			dsp* Htmp=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale);
+			dsp* Htmp=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale, 0);
 			
 			/*if(parms->recon.modal){
 				dmat* Hdtmp=NULL;
@@ -1507,7 +1524,6 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	lfree(recon->ngrad);
 	locfree(recon->floc);
 	locfree(recon->ploc);
-	cellfree(recon->ploc_tel);
 	free(P(recon->amap));free(recon->amap);//data is referenced
 	cellfree(recon->amod);
 	cellfree(recon->anmod);

@@ -62,13 +62,18 @@ void addnoise_grad(dmat* grad, const dmat* neal, rand_t* srand){
 	real* restrict ggx=P(grad);
 	real* restrict ggy=ggx+nsa;
 	for(long isa=0; isa<nsa; isa++){
-	/*Preserve the random sequence. */
+		/*Preserve the random sequence. */
 		real n1=randn(srand);
 		real n2=randn(srand);
 		real errx=neax[isa]*n1;
 		real erry=neay[isa]*n2+neaxy[isa]*n1;/*cross term. */
-		ggx[isa]+=errx;
-		ggy[isa]+=erry;
+		//if(isfinite(neax[isa])&&isfinite(neay[isa])){
+			ggx[isa]+=errx;
+			ggy[isa]+=erry;
+		//}else{//zero out gradients if below threshold.
+		//	ggx[isa]=0;
+		//	ggy[isa]=0;
+		//}
 	}
 }
 /**

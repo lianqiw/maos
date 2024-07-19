@@ -1455,9 +1455,10 @@ if(theta==0){/*no rotation.*/ \
 	}\
 }
 /**
-   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
-   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
+   Embed a ninx*niny matrix in into A with optional rotation by theta CCW
+   (output points are rotated by theta -CCW) around the fft center. Used to rotate the PSF
+   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger
+   or smaller than B.
 */
 void X(embed)(X(mat)* restrict out, const X(mat)* restrict in, const R theta){
 	EMBED_OP(out, in, theta, );

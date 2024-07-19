@@ -190,8 +190,8 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	char* config_path=find_config("skyc");
 	addpath(config_path);
 	free(config_path);
-	open_config(arg->conf, NULL, 0);
-	open_config(arg->confcmd, NULL, 1);
+	open_config(arg->conf);
+	open_config(arg->confcmd);
 	remove(arg->confcmd);
 	PARMS_S* parms=mycalloc(1, PARMS_S);
 	parms->skyc.nthread=arg->nthread;

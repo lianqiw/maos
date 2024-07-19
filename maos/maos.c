@@ -107,7 +107,6 @@ static void* find_var(const char* name){
 	VAR_GET(recon,saloc),
 	VAR_GET(recon,ploc),
 	VAR_GET(recon,pmap),
-	VAR_GET(recon,ploc_tel),
 	VAR_GET(recon,xloc),
 	VAR_GET(recon,xmap),
 	VAR_GET(recon,xcmap),

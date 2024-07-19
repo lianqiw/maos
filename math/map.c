@@ -35,8 +35,8 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 	map->h=0;
 	map->dx=dx;
 	map->dy=dy;
-	map->ox=-map->nx/2*map->dx;
-	map->oy=-map->ny/2*map->dy;
+	map->ox=-(map->nx/2)*map->dx;
+	map->oy=-(map->ny/2)*map->dy;
 	map->vx=0;
 	map->vy=0;
 	map->iac=0;
@@ -127,76 +127,67 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 	int square    /**<[in] Full square/rectangular grid*/
 ){
 	const real R=D/2;
-	real minx=-R-guard, miny=-R-guard, maxx=R+guard, maxy=R+guard;
-	if(dirs){
-		if(dirs->nx<4||dirs->ny<=0){
-			error("dirs should have no less than 3 rows and positive number of cols.\n");
-		}
-		for(int idir=0; idir<dirs->ny; idir++){
-			real ht=ht0-P(dirs,3, idir);//hc
-			real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
-			real sx1=(P(dirs, 0, idir)*ht)-RR;
-			real sx2=(P(dirs, 0, idir)*ht)+RR;
-			real sy1=(P(dirs, 1, idir)*ht)-RR;
-			real sy2=(P(dirs, 1, idir)*ht)+RR;
-			//Need to work when ht<0;
-			if(sx1<minx) minx=sx1;
-			if(sx1>maxx) maxx=sx1;
-			if(sx2<minx) minx=sx2;
-			if(sx2>maxx) maxx=sx2;
-			if(sy1<miny) miny=sy1;
-			if(sy1>maxy) maxy=sy1;
-			if(sy2<miny) miny=sy2;
-			if(sy2>maxy) maxy=sy2;
-		}
-	}else{
-		if(ht0!=0){
+	real ox=0, oy=0;
+	long nx, ny;
+	{
+		real minx=-R-guard, miny=-R-guard, maxx=R+guard, maxy=R+guard;
+		if(dirs && ht0!=0){
+			if(dirs->nx<4||dirs->ny<=0){
+				error("dirs should have no less than 3 rows and positive number of cols.\n");
+			}
+			for(int idir=0; idir<dirs->ny; idir++){
+				real ht=ht0-P(dirs,3, idir);//hc
+				real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
+				real sx1=(P(dirs, 0, idir)*ht)-RR;
+				real sx2=(P(dirs, 0, idir)*ht)+RR;
+				real sy1=(P(dirs, 1, idir)*ht)-RR;
+				real sy2=(P(dirs, 1, idir)*ht)+RR;
+				//Need to work when ht<0;
+				if(sx1<minx) minx=sx1;
+				if(sx1>maxx) maxx=sx1;
+				if(sx2<minx) minx=sx2;
+				if(sx2>maxx) maxx=sx2;
+				if(sy1<miny) miny=sy1;
+				if(sy1>maxy) maxy=sy1;
+				if(sy2<miny) miny=sy2;
+				if(sy2>maxy) maxy=sy2;
+			}
+			//info("range is %g, %g; %g, %g\n", minx, maxx, miny, maxy);
+		}else if(ht0!=0){
 			error("if ht0 is 0, dirs must be set\n");
 		}
+		ox=floor(minx/dx)*dx;//round
+		nx=ceil((maxx-ox)/dx)+1;
+		oy=floor(miny/dx)*dx;
+		ny=ceil((maxy-oy)/dy)+1;
+		//info("ox=%g, oy=%g, nx=%ld, ny=%ld\n", ox, oy, nx, ny);
 	}
-	if(square){//if square, also make symmetric.
-		maxx=MAX(fabs(minx), fabs(maxx));
-		minx=-maxx;
-		maxy=MAX(fabs(miny), fabs(maxy));
-		miny=-maxy;
+	if(square){//make it a square grid.
+		ox=oy=MIN(ox,oy);
+		nx=ny=MAX(nx,ny);
 	}
 	/*ajust central point offset*/
-	{
-		offset=offset-floor(offset);//between 0 and 1
-		real mind=minx/dx;
-		real adjust=mind-floor(mind)-offset;
-		if(adjust<0){
-			adjust++;
-		}
-		minx-=adjust*dx;
-		mind=miny/dy;
-		adjust=mind-floor(mind)-offset;
-		if(adjust<0){
-			adjust++;
-		}
-		miny-=adjust*dy;
-	}
-	real ox=minx;
-	real oy=miny;
-	long nx=ceil((maxx-ox)/dx)+1;
-	long ny=ceil((maxy-oy)/dy)+1;
-
-	/*Make it square */
-	if(square){
-		ny=nx=(nx<ny)?ny:nx;
+	offset=offset-floor(offset);//between 0 and 1
+	if(offset){
+		ox-=offset*dx; nx++;
+		oy-=offset*dy; ny++;
 	}
 	if(pad){/*pad to power of 2 */
-		ninx=1<<iceil(log2((real)nx));
-		niny=1<<iceil(log2((real)ny));
+		long nx2=1<<iceil(log2((real)nx));
+		long ny2=1<<iceil(log2((real)ny));
+		ox-=(nx2-nx)/2*dx;
+		oy-=(ny2-ny)/2*dx;
+		nx=nx2;
+		ny=ny2;
 	}
-	if(ninx>1){
-		if(ninx+1<nx) warning("ninx=%ld is too small. need %ld\n", ninx, nx);
-		ox=ox-(ninx-nx)/2*dx;
+	if(ninx){
+		if(ninx<nx) warning("ninx=%ld is too small. need %ld\n", ninx, nx);
+		ox-=(ninx-nx)/2*dx;
 		nx=ninx;
 	}
-	if(niny>1){
-		if(niny+1<ny)  warning("niny=%ld is too small. need %ld\n", niny, ny);
-		oy=oy-(niny-ny)/2*dy;
+	if(niny){
+		if(niny<ny)  warning("niny=%ld is too small. need %ld\n", niny, ny);
+		oy-=(niny-ny)/2*dy;
 		ny=niny;
 	}
 	if(nxout)

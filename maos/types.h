@@ -80,14 +80,17 @@ typedef struct powfs_t{
     /*Parameters about subapertures. */
     loc_t *saloc;       /**<lower left corner of the subaperture*/
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
-    dmat *saa;          /**<Subaperture normalized area*/
-    real saasum;      /**<sum of saa*/
-    loc_t *loc;         /**<concatenated points for all subapertures.*/
-    dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
-    loccell *loc_dm;    /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
-    loccell *loc_tel;   /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
-    dcell *amp_tel;     /**<real amplitude map on loc_tel. used for gradient computing*/
-    dcell *saa_tel;        /**<mis-registered saa, if any*/
+	loc_t *loc;         /**<concatenated points for all subapertures.*/
+	loccell *loc_dm;    /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
+	loccell *loc_tel;   /**<distorted loc mapped onto pupil. size: (nwfs, 1). used for mkamp and ray trace. do not use in mkg*/
+
+	dcell *amp;     /**<The real (after misregisteration/distortion) amplitude map defined on loc. nx is powfs.nwfs or 1.*/
+	dcell *saa;     /**<The real (after misregisteration/distortion) subaperture area. same dimension as amp*/
+	dmat *sumamp;       /**<sum of amp*/
+	dmat *sumamp2;      /**<sum of amp.^2*/
+    dmat* saasum;       /**<sum of saa*/
+	dmat* saamax;		/**<Max of subaperture area across all wfs in this powfs. */
+	dmat *saamin;       /**<Min of subaperture area across all wfs in this powfs. */
     real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
     dcell *opdadd;      /**<opdadd includes both common and NCPA OPDS. It is used for ray tracing*/
@@ -127,14 +130,8 @@ typedef struct powfs_t{
     int pixpsay;        /**<number of detector pixels along y*/
     int notfx;          /**<PSF is extended to this side before computing OTF*/
     int notfy;          /**<PSF is extended to this side before computing OTF*/
-    int nsaimcc;         /**<number of saimcc*/
-    /*The following are a few convenient pointers. */
-    dcell*realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
-    dcell*realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
-    dmat *sumamp;       /**<sum of realamp*/
-    dmat *sumamp2;      /**<sum of realamp.^2*/
 
-    locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
+    locfft_t **fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     struct pywfs_t *pywfs;/**<For pyramid WFS*/
     struct fit_t *fit;  /**<Fit turbulence to lenslet grid. For aliasing computation.*/
 	//for petal mode mitigation using phase retrieval
@@ -272,10 +269,10 @@ typedef struct recon_t{
     dmat *wt;          /**<weight of the layers to to tomography. may get updated in cn2 estimation*/
     dmat *os;          /**<over sampling of the layers.*/
     dmat *dx;          /**<sampling in meter of the layers*/
+	wfsr_cfg_t *wfsr;  /**<references parms->wfsr */
     loccell *saloc;    /**<referenced from powfs.saloc*/
     loc_t *ploc;       /**<Grid on pupil for tomography*/
     map_t *pmap;       /**<square grid of ploc.*/
-    loccell *ploc_tel;   /**<Distorted ploc when mapped onto telescope pupil for each WFS*/
 
     loccell *xloc;      /**<reconstructed atmosphere grid.*/
     mapcell *xmap;      /**<The map of xloc (only if tomo.square is true)*/
@@ -386,7 +383,7 @@ typedef struct recon_t{
     int npsr;          /**<number of reconstructor phase screens.*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxxalg;        /**<records parms->tomo.cxxalg*/
-
+	int nwfsr;		   /**<references parms->nwfsr */
     //For Error PSD computation
     cell *Herr;      /**<Ray tracing from DM along science directions for a few points. dcell for modal control. sparse for zonal control*/
 }recon_t;

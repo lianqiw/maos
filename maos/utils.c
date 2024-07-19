@@ -16,9 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
-
 #include <search.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -34,6 +31,7 @@
 #include "../cuda/gpu.h"
 #endif
 #include "powfs.h"
+#include "sim_utils.h"
 /*
    A few utility routines
 */
@@ -457,31 +455,29 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 		plotloc("Aperture", parms, recon->floc, 0, "floc");
 		for(int idm=0; idm<parms->ndm; idm++){
 			real ht=parms->dm[idm].ht;
-			plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc%d", idm);
+			plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc %d", idm);
 		}
 		for(int ips=0; ips<recon->npsr; ips++){
 			const real ht=P(recon->ht,ips);
-			plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc%d", ips);
+			plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc %d", ips);
 		}
 	}
 	drawopd("Aperture", aper->locs, aper->amp1, 0, "Aperture Amplitude Map",
 		"x (m)", "y (m)", "aper");
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		drawopd("Aperture", powfs[ipowfs].loc, powfs[ipowfs].amp, 0,
-			"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d amp", ipowfs);
-		if(powfs[ipowfs].amp_tel){
-			for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
-				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp_tel,wfsind), 0,
-					"WFS Amplitude Map", "x (m)", "y (m)", "powfs %d tel2wfs", ipowfs);
-			}
+		for(int iamp=0; iamp<PN(powfs[ipowfs].amp); iamp++){
+			int iwfs=P(parms->powfs[ipowfs].wfs,iamp);
+			drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp,iamp), 0,
+				"WFS Amplitude Map", "x (m)", "y (m)", "amp %d", iwfs);
+		
+			drawopd("Aperture", powfs[ipowfs].saloc, P(powfs[ipowfs].saa,iamp), 0,
+				"WFS Subaperture Amplitude", "x (m)", "y (m)", "saa %d ", iwfs);
 		}
-		drawopd("Aperture", powfs[ipowfs].saloc, powfs[ipowfs].saa, 0,
-			"WFS Subaperture Amplitude", "x (m)", "y (m)", "powfs %d saa", ipowfs);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			if(powfs[ipowfs].gradncpa){
-				drawgrad("Goff", powfs[ipowfs].saloc, P(powfs[ipowfs].gradncpa,jwfs),
+				drawgrad("Goff", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].gradncpa, jwfs),
 					parms->plot.grad2opd, parms->powfs[ipowfs].trs, 0,
 					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
 			}
@@ -494,16 +490,16 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 /**
    Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).
 */
-dmat* mkamp(loc_t* loc, map_t* ampground, real misregx, real misregy, real D, real Din){
+dmat* mkamp(const loc_t* loc, const map_t* ampground, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
 	if(ampground){
 		prop_grid(ampground, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
 	}else{
 		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
 	}
-	if(misregx || misregy){//apply centered circular mask
+	/*if(misregx || misregy){//apply centered circular mask
 		loc_circle_mul(amp, loc, 0, 0, D*0.5, 0, 1);
-	}
+	}*/
 	return amp;
 }
 /**
@@ -701,7 +697,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 
 		gensei(&i0_new, NULL, NULL, NULL,
 			powfs[ipowfs].intstat->sepsf, powfs[ipowfs].dtf, powfs[ipowfs].etfprep,
-			powfs[ipowfs].realsaa, parms->powfs[ipowfs].radgx?powfs[ipowfs].srot:NULL,
+			powfs[ipowfs].saa, parms->powfs[ipowfs].radgx?powfs[ipowfs].srot:NULL,
 			parms->powfs[ipowfs].siglevs, parms->wfs[iwfs].wvlwts, NULL,
 			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].mtchstc);
 
@@ -992,6 +988,8 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	const real rne=parms->powfs[ipowfs].rne;
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
 	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const dmat *saa=PR(powfs[ipowfs].saa, wfsind);
+	const real saat=parms->powfs[ipowfs].saat;
 	dmat** mtche=NULL;
 	real* i0sum=NULL;
 	real i0sumg=0;
@@ -1032,13 +1030,14 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		break;
 	case 2:
-		sigtot=(i1sum/powfs[ipowfs].saasum);
+		sigtot=i1sum/PR(powfs[ipowfs].saasum, wfsind);
 		break;
 	}
 	const real cogthres=parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int isa=0; isa<nsa; isa++){
 		real geach[3]={0,0,1};
+		if(P(saa,isa)<saat) continue; //do not compute gradients for vignetted subapertures
 		switch(phytype){
 		case PTYPE_MF:{//matched filter
 			real scale=1.;
@@ -1049,7 +1048,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				scale=i0sum[isa]/dsum(ints[isa]);
 				//This happens for za=60, 75p profile randomly
 				//limit maximum scaling (randomly extremely low signal level)
-				if(scale <= 0 || scale>10) scale=1;
+				if(scale <= 0 || scale>10 || !isfinite(scale)) scale=1;
 				break;
 			case 2://match globally.
 				scale=i0sumg/i1sum;
@@ -1065,13 +1064,13 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				if(i0sum){
 					sumi=i0sum[isa];
 				} else{
-					sumi=sigtot*P(powfs[ipowfs].saa,isa);
+					sumi=sigtot*P(saa,isa);
 				}
 				break;
 			case 1://normalization use current intensity (usual method, non-linear)
 				break;
 			case 2://normalized use scaled current intensity (non-linear)
-				sumi=sigtot*P(powfs[ipowfs].saa,isa);
+				sumi=sigtot*P(saa,isa);
 				break;
 			}
 			dcog(geach, ints[isa], 0., 0., cogthres, cogoff, sumi);

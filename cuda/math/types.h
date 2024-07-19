@@ -239,7 +239,9 @@ public:
 	const T& operator ()(int ix, int iy)const{
 		return p[ix+nx*iy];
 	}
-
+	T& R(int ix, int iy=0){//relaxed indexing
+		return p[(nx==1?0:ix)+nx*(ny==1?0:iy)];
+	}
 	T* Col(int icol){
 		return p+nx*icol;
 	}
@@ -312,9 +314,10 @@ public:
 	using Parent::operator bool;
 	using Parent::init;
 	CellArray Vector()const{
-		CellArray tmp=*this;
-		tmp.nx=tmp.nx*tmp.ny;
-		tmp.ny=1;
+		CellArray tmp(this->N(), 1);
+		for(long i=0; i<this->N(); i++){
+			tmp[i]=(*this)[i].Vector();
+		}
 		return tmp;
 	}
 	CellArray trans(stream_t &stream);
@@ -375,7 +378,6 @@ public:
 	using Parent::N;
 	using Parent::operator bool;
 	using Parent::init;
-	using Parent::Vector;
 	#if CUDA_VERSION>10000
 	cudaDataType dtype();
 	#endif
@@ -432,11 +434,11 @@ private:
 	typedef NumArray<T, Dev> TMat;
 	typedef CellArray<NumArray<T, Dev> > Parent;
 	TMat m; /*contains the continuous data*/
+	Array<T *, Pinned>pm_cpu;/*contains the data pointer in each cell in gpu.*/
 protected:
 	using Parent::nx;
 	using Parent::ny;
 public:
-	Array<T*, Pinned>pm_cpu;/*contains the data pointer in each cell in gpu.*/
 	Array<T*, Gpu>pm;/*contains the data pointer in each cell in cpu.*/
 	using Parent::operator();
 	using Parent::p;
@@ -532,6 +534,16 @@ public:
 			pnew+=p[i].N();
 		}
 		p2pm(stream);
+	}
+	Cell Vector()const{
+		Cell tmp(this->N(), 1);
+		for(long i=0; i<this->N(); i++){
+			tmp[i]=(*this)[i].Vector();
+		}
+		tmp.pm=this->pm;
+		tmp.pm_cpu=this->pm_cpu;
+		tmp.m=this->m;
+		return tmp;
 	}
 };
 typedef class NumArray<int, Gpu>   cuimat;

@@ -379,8 +379,8 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 	dccell* sepsf=use_cache?fit_cache.sepsf:NULL;
 	if(!sepsf){
 		cccell* otf=NULL, * lotf=NULL;
-		otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].realamp,
-			NULL, powfs[ipowfs].realsaa, parms->powfs[ipowfs].wvl, r0, L0,
+		otf=genseotf(powfs[ipowfs].pts, powfs[ipowfs].amp,
+			NULL, powfs[ipowfs].saa, parms->powfs[ipowfs].wvl, r0, L0,
 			parms->powfs[ipowfs].embfac);
 		if(parms->powfs[ipowfs].llt){
 						//genselotf(parms, powfs, ipowfs);
@@ -388,7 +388,7 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 				NULL, NULL, parms->powfs[ipowfs].wvl, r0, L0, 
 				parms->powfs[ipowfs].embfac);
 		}
-		gensepsf(&sepsf, otf, lotf, powfs[ipowfs].realsaa,
+		gensepsf(&sepsf, otf, lotf, powfs[ipowfs].saa,
 			parms->powfs[ipowfs].wvl, powfs[ipowfs].notfx, powfs[ipowfs].notfy);
 		cellfree(otf);
 		cellfree(lotf);
@@ -403,7 +403,7 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 	}
 
 	sodium_fit(psodium, pgrad, pi0, pgx, pgy, i0in,
-		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].realsaa,
+		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].saa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
 		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
 		parms->powfs[ipowfs].llt->na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 

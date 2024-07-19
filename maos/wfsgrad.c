@@ -55,25 +55,31 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+	const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 	const real hs=parms->wfs[iwfs].hs;
+	const real misregx=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregx:0;
+	const real misregy=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0;
 	//hc is only useful for multi-sublayer raytracing
 	if(parms->sim.wfsalias==2||parms->sim.idealwfs==2){
-		loc_t* aloc=P(powfs[ipowfs].fit[jwfs].aloc, 0);
+		loc_t* aloc=P(powfs[ipowfs].fit[wfsind].aloc, 0);
 		dcell* wfsopd=dcellnew(1, 1); P(wfsopd, 0)=dnew(aloc->nloc, 1);
-		fit_t* fit=&powfs[ipowfs].fit[jwfs];
+		fit_t* fit=&powfs[ipowfs].fit[wfsind];
 		muv_solve(&wfsopd, &fit->FL, &fit->FR, 0);
-		prop_nongrid(aloc, P(P(wfsopd, 0)), powfs[ipowfs].loc, P(opd), alpha, 0, 0, 1, 0, 0);
+		loc_t *loc=powfs[ipowfs].loc;
+		if(powfs[ipowfs].loc_tel){
+			loc=P(powfs[ipowfs].loc_tel, wfsind);
+		}
+		prop_nongrid(aloc, P(P(wfsopd, 0)), loc, P(opd), alpha, misregx, misregy, 1, 0, 0);
 		dcellfree(wfsopd);
 	} else{
-		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 		for(int idm=0; idm<parms->ndm; idm++){
-			loc_t* loc=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):powfs[ipowfs].loc;
+			loc_t* loc=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			real dispx=ht*parms->wfs[iwfs].thetax;
-			real dispy=ht*parms->wfs[iwfs].thetay;
+			const real scale=1.-ht/hs;
+			real dispx=ht*parms->wfs[iwfs].thetax+scale*misregx;
+			real dispy=ht*parms->wfs[iwfs].thetay+scale*misregy;
 			//wfs is registered to pupil. wfs.hc only effects the cone effect.
-			real scale=1.-ht/hs;
+			
 			if(scale<0) continue;
 			prop_grid(P(simu->dmprojsq, idm), loc, P(opd),
 				alpha, dispx, dispy, scale, 0, 0, 0);
@@ -120,9 +126,10 @@ void plot_gradoff(sim_t *simu, int iwfs){
 			}
 		}else{
 			int ipowfs=parms->wfs[iwfs].powfs;
+			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 			int draw_single_save=draw_single;
 			draw_single=0;
-			drawgrad("Goff", simu->powfs[ipowfs].saloc, P(simu->gradoff, iwfs),
+			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
 				"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
 			draw_single=draw_single_save;
@@ -169,7 +176,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	const int do_phy=simu->wfsflags[ipowfs].do_phy;
 	const int do_pistat=simu->wfsflags[ipowfs].do_pistat;
 	const int do_geom=(!do_phy||save_gradgeom||do_pistat)&&parms->powfs[ipowfs].type==WFS_SH;
-	const dmat* realamp=powfs[ipowfs].realamp?P(powfs[ipowfs].realamp, wfsind):0;
+	const dmat* amp=PR(powfs[ipowfs].amp, wfsind);
 	dmat *gradcalc=NULL; //calculation output (geometric mode)
 	dmat** gradacc=&P(simu->gradacc, iwfs);//accumulation output (geometric mode)
 	dmat** gradout=&P(simu->gradcl, iwfs); //final output
@@ -290,14 +297,15 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 
 		if(parms->powfs[ipowfs].fieldstop>0&&parms->powfs[ipowfs].type==WFS_SH){
-			locfft_fieldstop(powfs[ipowfs].fieldstop, opd, parms->wfs[iwfs].wvlwts);
+			int jwfs=PN(powfs[ipowfs].amp)>1?wfsind:0;
+			locfft_fieldstop(powfs[ipowfs].fieldstop[jwfs], opd, parms->wfs[iwfs].wvlwts);
 		}
 
 		if(save_opd){
 			zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 		}
 		if(parms->plot.run&&isim%parms->plot.run==0){
-			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, realamp, parms->plot.opdmax,
+			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, amp, parms->plot.opdmax,
 				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
 		}
 		if(do_geom){
@@ -315,7 +323,7 @@ void* wfsgrad_iwfs(thread_t* info){
 			if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){ /*compute ztilt. */
 				pts_ztilt(&gradcalc, powfs[ipowfs].pts,
 					PR(powfs[ipowfs].saimcc, wfsind, 0),
-					P(realamp), P(opd));
+					P(amp), P(opd));
 			} else{/*G tilt */
 				dspmm(&gradcalc, PR(powfs[ipowfs].GS0, wfsind, 0), opd, "nn", 1);
 			}
@@ -1498,7 +1506,8 @@ void* wfsgrad(sim_t* simu){
 	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
-			drawgrad("Gcl", simu->powfs[ipowfs].saloc, P(simu->gradcl, iwfs),
+			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+			drawgrad("Gcl", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa,jwfs),P(simu->gradcl, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
 				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcl %d", iwfs);
 		}

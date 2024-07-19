@@ -254,9 +254,6 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	const char *key, /**<[in] the key that needs the value.*/
 	const char *data /**<[in] Input string*/
 ){
-	if(!data||strlen(data)==0){
-		return 0;
-	}
 	if(!ret){
 		warning("%s=%s: ret is not set\n", key, data);
 		return 0;
@@ -290,6 +287,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		} else{
 			*ret=calloc(len, size);
 		}
+	}
+	if(!data||strlen(data)==0){
+		return 0;
 	}
 	const char *startptr=data;
 	const char *endptr=0;//temporary pointer

@@ -35,12 +35,14 @@
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
 
-void   open_config (const char*fn, const char *prefix, int priority);
+void   open_config_prefix(const char*fn, const char *prefix, const char *prekey);
+void   open_config(const char *fn);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
 int    readcfg_peek_n(const char *format, ...) CHECK_ARG(1);
-int    readcfg_peek_priority(const char *format,...) CHECK_ARG(1);
+int    readcfg_peek_priority(const char *format, ...) CHECK_ARG(1);
+int    readcfg_peek_index(const char *format, ...) CHECK_ARG(1);
 void   readcfg_ignore(const char *format, ...) CHECK_ARG(1);
 
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);

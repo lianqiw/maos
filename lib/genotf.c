@@ -52,14 +52,10 @@ typedef struct GENOTF_T{
 static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 	loc_t* loc, const real* amp, const real* opdbias, real wvl,
 	const dmat* B, const T_VALID* pval){
-		{
-			real ampsum=dvecsum(amp, loc->nloc);
-			real ampmax;
-			dmaxmin(amp, loc->nloc, &ampmax, 0);
-			if(ampsum<=ampmax*0.1*sqrt((real)loc->nloc)){
-				warning("genotf_do: amplitude may be too sparse\n");
-			}
-		}
+		/*real ampmean=dvecsum(amp, loc->nloc)/loc->nloc;
+		if(ampmean<0.1){
+			dbg("genotf_do: amplitude is too sparse: ampmean=%g\n", ampmean);
+		}*/
 		long nloc=loc->nloc;
 		dmat *BP=ddup(B);/*duplicate since we need to modify it. */
 		if(pttr){/*remove p/t/t from both sides of the B matrix */

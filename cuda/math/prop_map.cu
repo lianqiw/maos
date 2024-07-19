@@ -468,9 +468,9 @@ void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, //outpu
 		const Real ht=in[ilayer].ht;
 		for(int idir=0; idir<ndir; idir++){
 			if(!dir[idir].skip){
-				const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx;
-				const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy;
 				const Real scale=1.f-ht/dir[idir].hs;
+				const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx*scale;
+				const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy*scale;
 				cugrid_t outscale=out.Scale(scale);
 				map2map_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
 					dispx, dispy, in[ilayer].cubic_cc);
@@ -500,7 +500,7 @@ void map2map::init_l2l(const cugridcell& out, const cugridcell& in){//input. lay
 	delete[] hdata_cpu;
 }
 /**
-   Rotate each OPD array by theta CCW around point (cx, cy)
+   Rotate each OPD array by theta CCW (dir=-1) or CW (dir=1) around point (cx, cy)
  */
 __global__ static void
 map_rot_do(Real* const* outs, const Real* const* ins, Real cx, Real cy, long nx, long ny, const Real* wfsrot, int dir){
@@ -529,7 +529,9 @@ map_rot_do(Real* const* outs, const Real* const* ins, Real cx, Real cy, long nx,
 		}
 	}
 }
-
+/**
+   Rotate each OPD array by theta CCW around point (cx, cy)
+ */
 void map_rot(curcell& out, const curcell& in, const curmat& wfsrot, int dir, stream_t& stream){
 	long nx=0;
 	long ny=0;
@@ -545,8 +547,8 @@ void map_rot(curcell& out, const curcell& in, const curmat& wfsrot, int dir, str
 			}
 		}
 	}
-	Real cx=nx/2-1;
-	Real cy=ny/2-1;
+	long cx=nx/2;//Fixed on 2024-07-18 
+	long cy=ny/2;
 	if(out.M()){
 		out.M().Zero(stream);
 	} else{

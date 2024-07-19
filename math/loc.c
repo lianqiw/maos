@@ -651,10 +651,18 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
    output coeffout in unit of radian like units.
 */
 void loc_calc_ptt_stride(real* rmsout, real* coeffout,
-	const loc_t* loc, const real ipcc,
+	const loc_t* loc, real ipcc,
 	const dmat* imcc, const real* amp, const real* opd, int stride){
-	if(!loc||!imcc||!opd) return;
-	assert(imcc->nx==imcc->ny&&imcc->nx==3);
+	if(!loc||!opd) return;
+	dmat *imcc_internal=NULL;
+	if(imcc){
+		assert(imcc->nx==imcc->ny&&imcc->nx==3);
+	}else{
+		dmat *mcc=loc_mcc_ptt(loc, amp);
+		ipcc=1./P(mcc,0,0);
+		imcc=imcc_internal=dpinv(mcc, NULL);
+		dfree(mcc);
+	}
 	const long nloc=loc->nloc;
 	const real* restrict locx=loc->locx;
 	const real* restrict locy=loc->locy;
@@ -693,6 +701,7 @@ void loc_calc_ptt_stride(real* rmsout, real* coeffout,
 		rmsout[1]=ptt-pis;/*TT */
 		rmsout[2]=tot-ptt;/*PTTR */
 	}
+	dfree(imcc_internal);
 }
 void loc_calc_ptt(real *rmsout, real *coeffout,
 	const loc_t *loc, const real ipcc,
@@ -783,17 +792,18 @@ OMP_TASK_FOR(4)
  * Project piston/tip/tilt from opd which may have multiple independent columns.
  * If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side.
  * */
-void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, dmat *imcc, int cov){
+void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, const dmat *imcc, int cov){
 	if(NX(opd)!=loc->nloc){
 		error("loc_remove_ptt: opd should have rows equal to loc->nloc and amplitude map size.\n");
 		return;
 	}
 	real ptt[3];
-	int free_imcc=0;
+	dmat *imcc_internal=NULL;
 	if(!imcc){
-		imcc=loc_mcc_ptt(loc, amp);
-		dinvspd_inplace(imcc);
-		free_imcc=1;
+		dmat *mcc=loc_mcc_ptt(loc, amp);
+		imcc=imcc_internal=dpinv(mcc, NULL);//more resilient to numerical errors than invspd
+		dfree(mcc);
+		//dinvspd_inplace(imcc);
 	}
 	for(int ic=0; ic<NY(opd); ic++){
 		loc_calc_ptt_stride(NULL, ptt, loc, 0, imcc, amp, PCOL(opd, ic),1);
@@ -811,9 +821,7 @@ void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, dmat *imcc, in
 			}
 		}
 	}
-	if(free_imcc){
-		dfree(imcc);
-	}
+	if(imcc_internal) dfree(imcc_internal);
 }
 
 /**
@@ -934,7 +942,7 @@ void loc_create_stat_do(loc_t* loc){
 /**
    Add a gray pixel circular map in phi using coordinates defined in loc, center
    defined using cx, cy, radius of r, and value of val */
-void loc_circle_add(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val){
+void loc_circle_add(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val){
 	if(!phi||!loc || PN(phi)!=loc->nloc){
 		warning("Invalid usage: requires phi, loc and compatible dimension.\n");
 		return;
@@ -982,7 +990,7 @@ void loc_circle_add(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, r
 /**
    Apply an annular mask in phi.
 */
-void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, real val){
+void loc_circle_mul(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val){
 	dmat *mask=dnew(loc->nloc,1);
 	loc_circle_add(mask, loc, cx, cy, r, rin, val);
 	dcwm(phi, mask);
@@ -991,7 +999,7 @@ void loc_circle_mul(dmat* phi, loc_t* loc, real cx, real cy, real r, real rin, r
 /**
    Create a gray pixel elliptical map in phi using coordinates defined in loc,
    center defined using cx, cy, radii of rx, ry, and value of val */
-void loc_ellipse_add(dmat* phi, loc_t* loc, real cx, real cy,
+void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy,
 	real rx, real ry, real val){
 	if(!phi||!loc) return;
 /*cx,cy,r are in unit of true unit, as in loc */
@@ -1290,7 +1298,7 @@ loc_t* pts2loc(pts_t* pts){
 }
 
 /**
-   Rotate the coordinates by theta (radian) CCW.
+   Rotate the coordinate by theta (radian) CCW which is equivalent to rotate the points by theta -CCW.
 */
 void locrot(loc_t* loc, const real theta){
 	if(!loc||!theta) return;
@@ -1300,8 +1308,8 @@ void locrot(loc_t* loc, const real theta){
 	real* x=loc->locx;
 	real* y=loc->locy;
 	for(int i=0; i<loc->nloc; i++){
-		real tmp=x[i]*ctheta-y[i]*stheta;
-		y[i]=x[i]*stheta+y[i]*ctheta;
+		real tmp=x[i]*ctheta+y[i]*stheta;
+		y[i]=-x[i]*stheta+y[i]*ctheta;
 		x[i]=tmp;
 	}
 }
@@ -1336,11 +1344,11 @@ real loc_angle(const loc_t* loc1, const loc_t* loc2){
 */
 void locstretch(loc_t* loc, const real theta, const real frac){
 	if(!loc) return;
-	locrot(loc, -theta);
+	locrot(loc, theta);
 	for(int i=0; i<loc->nloc; i++){
 		loc->locx[i]*=frac;
 	}
-	locrot(loc, theta);
+	locrot(loc, -theta);
 }
 
 /**
@@ -1582,16 +1590,14 @@ loc_t* loctransform(const loc_t* loc,
 }
 
 /**
-   Shift a loc coordinate
+   Shift a loc coordinate by sx and sy.
 */
-loc_t* locshift(const loc_t* loc, real sx, real sy){
-	if(!loc) return NULL;
-	loc_t* loc2=locnew(loc->nloc, loc->dx, loc->dy);
+void locshift(loc_t* loc, real sx, real sy){
+	if(!loc || (!sx && !sy)) return;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
-		loc2->locx[iloc]=loc->locx[iloc]+sx;
-		loc2->locy[iloc]=loc->locy[iloc]+sy;
+		loc->locx[iloc]+=sx;
+		loc->locy[iloc]+=sy;
 	}
-	return loc2;
 }
 /**
    Compute the size of a map that is used to build loc or can fully contain loc

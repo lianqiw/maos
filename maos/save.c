@@ -80,7 +80,8 @@ void save_gradol(sim_t* simu){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].psol||!P(simu->gradlastol,iwfs)) continue;
 		if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
-			drawgrad("Gpol", powfs[ipowfs].saloc, P(simu->gradlastol,iwfs),
+			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+			drawgrad("Gpol", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(simu->gradlastol,iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.opdmax,
 				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "Gpol %d", iwfs);
 		}
@@ -318,12 +319,12 @@ void save_dmreal(sim_t* simu){
 				dfree(tmp);
 			}
 
-			if(simu->cachedm){//use cachedm
+			/*if(simu->cachedm){//use cachedm
 				for(int idm=0; idm<parms->ndm; idm++){
 					drawmap("DM", P(simu->cachedm, idm), parms->plot.opdmax,
 						"DM OPD", "x (m)", "y (m)", "Real OPD %d", idm);
 				}
-			}
+			}*/
 			if(draw_current("DM", "Real OPD OA")){
 				dmat* opd=dnew(simu->aper->locs->nloc, 1);
 				for(int idm=0; idm<parms->ndm; idm++){

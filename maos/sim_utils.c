@@ -99,19 +99,20 @@ static mapcell* genatm_do(sim_t* simu){
 		for(int ips=0; ips<atm->nps; ips++){
 			P(screens, ips)=mapnew(nx, ny, dx, dx);
 			P(screens, ips)->h=P(atm->ht, ips);
+			if(!P(atm->wt, ips)) continue;
 			real dbgatm=P(parms->dbg.atm, ips*iratio);
 			if(dbgatm>0){//zernike mode
 				if(!psloc){
 					psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
 				}
-				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", dbgatm, strength*1e9);
+				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", dbgatm, P(atm->wt, ips)*strength*1e9);
 				dmat* opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
 				dmat* opd2=dref_reshape(opd, nx, ny);
 				dadd((dmat**)&P(screens, ips), 0, opd2, P(atm->wt, ips)*strength);
 				dfree(opd);
 				dfree(opd2);
 			} else if(dbgatm<0){//Fourier mode;
-				info2("Generating Testing Atmosphere Screen with Fourier mode %g, RMS~=%g nm\n", -dbgatm, strength*1e9);
+				info2("Generating Testing Atmosphere Screen with Fourier mode %g, RMS~=%g nm\n", -dbgatm, P(atm->wt, ips)*strength*1e9);
 
 				real kk=2*M_PI/dbgatm*dx;
 				long nn=MAX(nx, ny);
@@ -325,20 +326,21 @@ void setup_recon_HXW_predict(sim_t* simu){
 		if(!parms->powfs[ipowfs].skip){/*for tomography */
 			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 			const real hs=parms->wfs[iwfs].hs;
+			const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 			for(int ips=0; ips<npsr; ips++){
 				dspfree(P(HXWtomo, iwfs, ips));
 				real  ht=P(recon->ht, ips);
 				real  scale=1.-ht/hs;
 				real  displace[2];
-				displace[0]=parms->wfsr[iwfs].thetax*ht;
-				displace[1]=parms->wfsr[iwfs].thetay*ht;
+				displace[0]=parms->wfsr[iwfs].thetax*ht+(shwfs?parms->wfsr[iwfs].misregx:0);
+				displace[1]=parms->wfsr[iwfs].thetay*ht+(shwfs?parms->wfsr[iwfs].misregy:0);
 				if(parms->tomo.predict){
 					int ips0=P(parms->atmr.indps, ips);
 					displace[0]+=P(simu->atm, ips0)->vx*delay;
 					displace[1]+=P(simu->atm, ips0)->vy*delay;
 				}
 				P(HXWtomo, iwfs, ips)=mkh(P(recon->xloc, ips), ploc,
-					displace[0], displace[1], scale);
+					displace[0], displace[1], scale, 0);
 			}
 		}
 	}
@@ -1025,9 +1027,9 @@ static void init_simu_wfs(sim_t* simu){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
-			data->displacex0=ht*parms->wfs[iwfs].thetax;
-			data->displacey0=ht*parms->wfs[iwfs].thetay;
 			data->scale=1.-ht/hs;
+			data->displacex0=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
+			data->displacey0=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
 			data->alpha=1;
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
@@ -1049,10 +1051,9 @@ static void init_simu_wfs(sim_t* simu){
 		for(int idm=0; idm<parms->ndm; idm++){
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 			propdata_t* data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
-			int tot;
-			data->displacex0=ht*parms->wfs[iwfs].thetax;
-			data->displacey0=ht*parms->wfs[iwfs].thetay;
 			data->scale=1.-ht/hs;
+			data->displacex0=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
+			data->displacey0=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
 			const real theta=RSS(parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay);
 			data->alpha=-cos(theta*parms->dm[idm].dratio);/*remove dm contribution. */
 			data->wrap=0;
@@ -1067,8 +1068,9 @@ static void init_simu_wfs(sim_t* simu){
 				}
 			}
 			data->phiout=(dmat*)1;/*replace later in simulation */
-			if(powfs[ipowfs].loc_dm){/*misregistration. */
-				data->locout=P(powfs[ipowfs].loc_dm, wfsind, idm);
+			int tot;
+			if(powfs[ipowfs].loc_dm || powfs[ipowfs].loc_tel){/*distortion or rotation. */
+				data->locout=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
 				tot=data->locout->nloc;
 			} else if(parms->powfs[ipowfs].type==WFS_PY||powfs[ipowfs].saloc->nloc<NTHREAD){
 				data->locout=powfs[ipowfs].loc;
@@ -2175,7 +2177,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	for(int jpowfs=0; jpowfs<npowfs_ngs; jpowfs++){
 		int ipowfs=powfs_ngs[jpowfs];
 		locwrite(powfs[ipowfs].loc, "%s/powfs%d_loc", dirskysim, ipowfs);
-		writebin(powfs[ipowfs].amp, "%s/powfs%d_amp", dirskysim, ipowfs);
+		writebin(P(powfs[ipowfs].amp,0), "%s/powfs%d_amp", dirskysim, ipowfs);
 		locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc", dirskysim, ipowfs);
 		if(powfs[ipowfs].gradncpa){
 			int nsa=parms->powfs[ipowfs].order;

@@ -45,7 +45,7 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 			real displace[2];
 			displace[0]=P(fit->thetax,ifit)*ht;
 			displace[1]=P(fit->thetay,ifit)*ht;
-			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale);
+			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale, 0);
 		}
 	}
 	toc2("HXF");
@@ -73,8 +73,7 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			P(fit->HA, ifit, idm)=mkh(P(fit->aloc,idm), loc,
-				displace[0], displace[1], scale);
+			P(fit->HA, ifit, idm)=mkh(P(fit->aloc,idm), loc, displace[0], displace[1], scale, 0);
 			if(loc!=fit->floc){
 				locfree(loc);
 			}

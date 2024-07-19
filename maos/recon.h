@@ -38,6 +38,7 @@ void setup_recon_lsr(recon_t *recon, const parms_t *parms);
 void setup_recon_mvm(const parms_t *parms, recon_t *recon, powfs_t *powfs);
 void setup_recon_control(recon_t *recon, const parms_t *parms, powfs_t *powfs);
 void setup_recon_post(recon_t *recon, const parms_t *parms, const aper_t *aper);
+void setup_recon_HXW(recon_t *recon, const parms_t *parms, mapcell *atm);
 void free_recon(const parms_t *parms, recon_t *recon);
 void free_recon_unused(const parms_t *parms, recon_t *recon);
 

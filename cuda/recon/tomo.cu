@@ -36,9 +36,10 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 			GP->nx, GP->ny, saloc->nloc*2, ploc->nloc);
 	}
 	real pos=saloc->dx/ploc->dx;
-	if((fabs(pos-1)<1e-12||fabs(pos-2)<1e-12) 
-		&& fabs(fmod(ploc->locx[0]-saloc->locx[0],ploc->dx))<EPS
-		&& fabs(fmod(ploc->locy[0]-saloc->locy[0],ploc->dy))<EPS){//These well aligned cases are accelerated with matrix-free approach.
+	real xdiff=(ploc->locx[0]-saloc->locx[0])/ploc->dx;
+	real ydiff=(ploc->locy[0]-saloc->locy[0])/ploc->dy;
+	if((fabs(pos-1)<1e-7||fabs(pos-2)<1e-7) 
+		&& fabs(xdiff-round(xdiff))<EPS && fabs(ydiff-round(ydiff))<EPS){//These well aligned cases are accelerated with matrix-free approach.
 		dbg("GP uses matrix-free approach.\n");
 		dsp* GPt=dsptrans(GP);
 		const spint* pp=GPt->pp;
@@ -50,17 +51,17 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		const int np1=zmax+1;
 		const int np=np1*np1;
 		int nsa=saloc->nloc;
-		short2* partxy=(short2*)calloc(sizeof(short2), np*nsa);//need to zero memory
-		real dx1=1./ploc->dx;
-		real dy1=1./ploc->dy;
+		short2* partxy=mycalloc(np*nsa, short2);//need to zero memory
+		const real dx1=1./ploc->dx;
+		const real dy1=1./ploc->dy;
 		for(int ic=0; ic<GPt->ny; ic++){
 			int isa=(ic<nsa)?ic:(ic-nsa);
 			for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
-				int ix=pi[ir];
-				real lx=ploc->locx[ix];
-				real ly=ploc->locy[ix];
-				real sx=saloc->locx[isa];
-				real sy=saloc->locy[isa];
+				const int ix=pi[ir];
+				const real lx=ploc->locx[ix];
+				const real ly=ploc->locy[ix];
+				const real sx=saloc->locx[isa];
+				const real sy=saloc->locy[isa];
 				int zx=(int)round((lx-sx)*dx1);
 				int zy=(int)round((ly-sy)*dy1);
 				/**
@@ -88,7 +89,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		*GPscale=1./pxscale;
 		free(partxy);
 	} else{/*use sparse */
-		dbg("GP uses sparse matrix.\n");
+		dbg("GP uses sparse matrix: pos=%g, xdiff=%g, ydiff=%g.\n", pos, xdiff, ydiff);
 		GPf=cusp(GP, 1);
 	}
 }
@@ -150,8 +151,10 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 		dir[iwfs].hs=parms->wfsr[iwfs].hs;
 		dir[iwfs].thetax=parms->wfsr[iwfs].thetax;
 		dir[iwfs].thetay=parms->wfsr[iwfs].thetay;
-		dir[iwfs].misregx=parms->wfsr[iwfs].misreg_x;
-		dir[iwfs].misregy=parms->wfsr[iwfs].misreg_y;
+		if(parms->powfs[ipowfs].type==WFS_SH){
+			dir[iwfs].misregx=parms->wfsr[iwfs].misregx;
+			dir[iwfs].misregy=parms->wfsr[iwfs].misregy;
+		}
 		if(parms->tomo.predict){
 			dir[iwfs].delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		}
@@ -292,12 +295,12 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 
 		smat* wfsrot2=0;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			if(parms->wfsr[iwfs].misreg_r){
+			if(parms->wfsr[iwfs].misregc){
 				if(!wfsrot2){
 					wfsrot2=snew(2, nwfs);
 				}
-				P(wfsrot2, 0, iwfs)=cos(parms->wfsr[iwfs].misreg_r);
-				P(wfsrot2, 1, iwfs)=sin(parms->wfsr[iwfs].misreg_r);
+				P(wfsrot2, 0, iwfs)=cos(parms->wfsr[iwfs].misregc);
+				P(wfsrot2, 1, iwfs)=sin(parms->wfsr[iwfs].misregc);
 			}
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip){
@@ -644,22 +647,39 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	} else{
 		curscale(xout.M(), beta, stream);
 	}
+	static int count=0; count++;
 	ctoc_init(10);
+#define SAVE_TOMO 0
 	//xin to opdwfs
 	HX(xin, 1, stream);
 	ctoc("Hx");
+#if SAVE_TOMO
+	cuwrite(xin, stream, "tomo_L_xin_%d", count);
+	cuwrite(opdwfs, stream, "tomo_L_opdwfs_%d", count);
+#endif
 	//opdwfs to grad to ttf
 	do_gp(grad, opdwfs, lhs_nttf, stream);
+#if SAVE_TOMO
+	cuwrite(grad, stream, "tomo_L_grad_%d", count);
+	cuwrite(ttf, stream, "tomo_L_ttf_%d", count);
+#endif	
 	ctoc("Gp");
 	//grad and ttf to opdwfs
 	do_gpt(opdwfs, grad, lhs_nttf, stream);
 	ctoc("Gpt");
 	//opdwfs to xout
 	HXT(xout, alpha, stream);
+#if SAVE_TOMO
+	cuwrite(opdwfs, stream, "tomo_L_opdwfs2_%d", count);
+	cuwrite(xout, stream, "tomo_L_xout_%d", count);
+#endif
 	ctoc("HxT");
 	/*This could be in parallel to hx->forward, do_gp, do_gpt*/
 	gpu_laplacian_do<<<dim3(3, 3, grid->npsr), dim3(16, 16), 0, stream>>>
 		(lap(), xout.pm, xin.pm, nwfs, alpha);
+#if SAVE_TOMO
+	cuwrite(xout, stream, "tomo_L_xout2_%d", count);
+#endif
 	ctoc("L2");
 	ctoc_final("TomoL");
 	//overhead of TomoL is 27 micro-seconds (timing without synchornization).
