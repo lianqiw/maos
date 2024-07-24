@@ -605,7 +605,6 @@ void filter_dm(sim_t* simu){
 	} else{
 		filter_ol(simu);
 	}
-	save_dmreal(simu);
 
 #if USE_CUDA
 	if(simu->recon->moao){
@@ -628,4 +627,5 @@ void filter_dm(sim_t* simu){
 		pthread_cond_broadcast(&simu->dmreal_condr);
 		//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
 	}
+	save_dmreal(simu);
 }

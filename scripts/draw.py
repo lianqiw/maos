@@ -32,7 +32,8 @@ def coord2grid(x, **kargs):
         ix = np.zeros(x.shape)
         nx = 1
         dx = 1
-    xi = [round(xmin/dx)*dx, round(xmax/dx)*dx]
+    #xi = [round(xmin/dx)*dx, round(xmax/dx)*dx]
+    xi = [xmin, xmax]
     return (ix, nx, dx, xi)
 
 
@@ -97,6 +98,7 @@ def locembed(loc, opd, return_ext=0, **kargs):
     ims = np.empty(nframe, dtype=object)
     (ix, nx, dx, xi) = coord2grid(loc[0], **kargs)
     (iy, ny, dy, yi) = coord2grid(loc[1], **kargs)
+    
     for iframe in range(nframe):
         im = np.full((nx*ny),np.NaN)
         im[ix+iy*nx] = opd[iframe, :]
@@ -212,6 +214,7 @@ def draw(*args, **kargs):
                         arg0=arg0.T #transpose
                     nframe = arg0.shape[0]
             else:
+                nframe=0
                 print('unknown type, skip', type(arg0))
             if nframe==0:
                 continue
@@ -249,7 +252,7 @@ def draw(*args, **kargs):
                     stop=1
                 else:
                     draw(arg0[iframe], **kargs)
-
+            plt.gcf().tight_layout() #fix layout
 # Use as standalone script
 if __name__ == "__main__":
     from readbin import read

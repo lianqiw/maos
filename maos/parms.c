@@ -218,17 +218,17 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat(n,1,#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
-    if(readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B)){\
+    if(readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }}else{dbg("Empty array for powfs." #B"\n");}
 #define READ_POWFS_RELAX(A,B)					\
-    if(readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B)){\
+    if(readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }}else{dbg("Empty array for powfs." #B"\n");}
 #define READ_POWFS_MAT(A,B)						\
-    if(readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B)){\
+    if(readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){						\
 		parms->powfs[i].B = readstr_##A##mat(0,0,"powfs."#B, strtmp[i]);/*doesn't need ## in B*/ \
 		free(strtmp[i]); strtmp[i]=NULL;\
@@ -637,27 +637,27 @@ static void readcfg_powfs(parms_t *parms){
 	free(strtmp);
 }
 #define READ_WFS(A,B)					\
-    if(readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B)){\
+    if(readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
     }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_RELAX(A,B)				\
-    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)){\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
     }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_RELAX_SCALE(A,B,C,D)				\
-    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)){\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].C = D*(A##tmp[i]);			\
     }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_DELTA(A,B,BD)				\
-    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD)){\
+    if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = parms->powfs[parms->wfs[i].powfs].B+A##tmp[i];	\
     }}else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_MAT(A,B)						\
-    if(readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B)){\
+    if(readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){						\
 		parms->wfs[i].B = readstr_##A##mat(0,0,"wfs."#B,strtmp[i]); \
 		free(strtmp[i]); strtmp[i]=NULL;\
@@ -1763,14 +1763,14 @@ static void readcfg_save(parms_t *parms){
 	}
 	
 	if(parms->save.all){
-		parms->save.setup=parms->save.all;
-		parms->save.run=parms->save.all;
+		if(!parms->save.setup) parms->save.setup=parms->save.all;
+		if(!parms->save.run) parms->save.run=parms->save.all;
 	}
 	if(parms->save.setup>1){
-		parms->save.recon=parms->save.all;
-		parms->save.mvst=parms->save.all;
-		parms->save.ncpa=parms->save.all;
-		parms->save.fdpcg=parms->save.all;
+		if(!parms->save.recon) parms->save.recon=parms->save.setup;
+		if(!parms->save.mvst) parms->save.mvst=parms->save.setup;
+		if(!parms->save.ncpa) parms->save.ncpa=parms->save.setup;
+		if(!parms->save.fdpcg) parms->save.fdpcg=parms->save.setup;
 	}
 	if(parms->save.recon||parms->save.mvst||parms->save.ncpa||parms->save.fdpcg){
 		if(!parms->save.setup) parms->save.setup=1;
@@ -1781,10 +1781,10 @@ static void readcfg_save(parms_t *parms){
 		info("Saving RTC telemetry and OPDs.\n");
 	}
 	if(parms->save.run){
-		parms->save.gradoff=parms->save.run;
-		parms->save.extra=parms->save.run;
-		parms->save.dither=parms->save.all;
-		parms->save.dm=parms->save.run;
+		if(!parms->save.gradoff) parms->save.gradoff=parms->save.run;
+		if(!parms->save.extra) parms->save.extra=parms->save.run;
+		if(!parms->save.dither) parms->save.dither=parms->save.run;
+		if(!parms->save.dm) parms->save.dm=parms->save.run;
 		lset(parms->save.ints, parms->save.run);
 		lset(parms->save.grad, parms->save.run);
 		lset(parms->save.gradnf, parms->save.run);
@@ -1795,8 +1795,8 @@ static void readcfg_save(parms_t *parms){
 		/*The following are run time information that are only enabled with
 		save.run>1 or save.all>1 because they take a lot of disk space and slows
 		down the simulation dramatically.*/
-		parms->save.opdr=parms->save.run;
-		parms->save.evlopd=parms->save.run;
+		if(!parms->save.opdr) parms->save.opdr=parms->save.run;
+		if(!parms->save.evlopd) parms->save.evlopd=parms->save.run;
 		if(!parms->recon.glao) parms->save.opdx=parms->save.run;
 		lset(parms->save.wfsopd, parms->save.run);
 	}
@@ -1954,15 +1954,15 @@ static void setup_parms_postproc_sim(parms_t *parms){
 			parms->recon.alg=RECON_MVR;
 		}
 		if(parms->recon.split){
-			dbg2("idealtomo only works in integrated tomo mode. changed\n");
+			dbg2("idealtomo only works in integrated tomo mode. changed.\n");
 			parms->recon.split=0;
 		}
 		if(parms->recon.mvm){
-			dbg2("idealtomo cannot be used with recon.mvm. changed\n");
+			dbg2("idealtomo cannot be used with recon.mvm. changed.\n");
 			parms->recon.mvm=0;
 		}
 		if(parms->sim.closeloop==1){
-			dbg2("idealtomo works in open loop. changed.\n");
+			dbg2("idealtomo works in open loop only. changed.\n");
 			parms->sim.closeloop=0;
 		}
 		if(parms->recon.modal){
@@ -1971,13 +1971,19 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		}
 		if(parms->sim.wfsalias){
 			error("wfsalias and idealtomo conflicts\n");
+			parms->sim.wfsalias=0;
 		}
 		if(parms->sim.idealwfs){
 			error("idealwfs and idealtomo conflicts\n");
+			parms->sim.idealwfs=0;
 		}
 		if((parms->ncpa.nsurf||parms->ncpa.ntsurf)&&!parms->ncpa.calib){
-			warning("idealtomo require ncpa.calib to be enabled. changed.\n");
+			warning("idealtomo require ncpa.calib to be enabled when there are surfaces. changed.\n");
 			parms->ncpa.calib=1;
+		}
+		if(parms->evl.tomo){
+			error("idealtomo and evl.tomo cannot be used together.\n");
+			parms->evl.tomo=0;
 		}
 		parms->gpu.tomo=0;
 	}
@@ -3207,19 +3213,17 @@ static void setup_parms_postproc_misc(parms_t *parms, int override){
 						if(*p=='/') *p='!';
 					}
 				}
-				if(snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock",LOCKED,cwd,P(parms->sim.seeds,iseed))>=PATH_MAX){
-					dbg("overflow\n");
-				}
+				snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock",DIRLOCK,cwd,P(parms->sim.seeds,iseed));
 				parms->fdlock[iseed]=lock_file(fn,0);
 				if(parms->fdlock[iseed]<0){
 					warning("Skip seed %ld because it is already running.\n",
 						P(parms->sim.seeds,iseed));
 				} else{
 					cloexec(parms->fdlock[iseed]);
+					parms->fnlock[iseed]=mystrdup(fn);
 					if(jseed!=iseed){//remove gap in array.
 						P(parms->sim.seeds,jseed)=P(parms->sim.seeds,iseed);
 						parms->fdlock[jseed]=parms->fdlock[iseed];
-						parms->fnlock[jseed]=mystrdup(fn);
 					}
 					jseed++;
 				}

@@ -310,42 +310,7 @@ void genatm(sim_t* simu){
 		}
 	}
 }
-/**
-   Setup ray tracing operator from xloc to ploc, with predictive offsetting
-*/
-void setup_recon_HXW_predict(sim_t* simu){
-	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
-	loc_t* ploc=recon->ploc;
-	const int nwfs=parms->nwfsr;
-	const int npsr=recon->npsr;
-	TIC;tic;
-	dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(!parms->powfs[ipowfs].skip){/*for tomography */
-			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
-			const real hs=parms->wfs[iwfs].hs;
-			const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
-			for(int ips=0; ips<npsr; ips++){
-				dspfree(P(HXWtomo, iwfs, ips));
-				real  ht=P(recon->ht, ips);
-				real  scale=1.-ht/hs;
-				real  displace[2];
-				displace[0]=parms->wfsr[iwfs].thetax*ht+(shwfs?parms->wfsr[iwfs].misregx:0);
-				displace[1]=parms->wfsr[iwfs].thetay*ht+(shwfs?parms->wfsr[iwfs].misregy:0);
-				if(parms->tomo.predict){
-					int ips0=P(parms->atmr.indps, ips);
-					displace[0]+=P(simu->atm, ips0)->vx*delay;
-					displace[1]+=P(simu->atm, ips0)->vy*delay;
-				}
-				P(HXWtomo, iwfs, ips)=mkh(P(recon->xloc, ips), ploc,
-					displace[0], displace[1], scale, 0);
-			}
-		}
-	}
-	toc2("HXWtomo");
-}
+
 /**
    Propagate the atmosphere to closest xloc. skip wavefront sensing and
    reconstruction.

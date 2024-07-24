@@ -319,11 +319,12 @@ wfs.thetay=[]           #specify the y coordinate in arcsec
 
 \subsection sect-perfevl Point Spread Function
 
-Maos only computes RMS averaged wavefront errors by default, which are saved
-to \c Res_[seed].bin. When desired, PSFs computing can be enabled for some or all
-of the science evaluation directions. Modify \c evl.thetax , \c evl.thetay , and \c
-evl.wt to modify evaluation directions and relative weighting for field
-averaging. Use the following parameters to enable PSF computation.
+MAOS only computes RMS averaged wavefront errors by default, which are saved to
+\c Res_[seed].bin and c Resp_[seed].bin. When desired, PSFs computing can be
+enabled for some or all of the science evaluation directions. Modify \c
+evl.thetax , \c evl.thetay , and \c evl.wt to modify evaluation directions and
+relative weighting for field averaging. Notice that this will significantly slow
+down the simulation. Use the following parameters to enable PSF computation.
 ```
 maos evl.psfisim=20 evl.psfmean=1 # start averaging from step 20, save averaged PSF once in the end.
 maos evl.psfmean=1 evl.psfol=1   # also include open loop PSF

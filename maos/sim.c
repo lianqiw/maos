@@ -71,7 +71,7 @@ sim_t* maos_iseed(int iseed){
 		genatm(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 		if(parms->tomo.predict){
 			if(recon->HXWtomo){
-				setup_recon_HXW_predict(simu);
+				setup_recon_HXW(simu->recon, simu->parms, simu->atm);
 			}
 			if(parms->tomo.precond==1){
 				fdpcg_free(recon->fdpcg);

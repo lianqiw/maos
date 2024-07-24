@@ -70,10 +70,9 @@ void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream){
 void curscale(curmat &in, Real alpha, cudaStream_t stream){
 	if(!in) return;
 	if(alpha==0){
-		cuzero(in, stream);
+		in.Zero(stream);
 	} else if(Z(fabs)(alpha-(Real)1)>EPS){
-		int n=in.Nx()*in.Ny();
-		scale_do<<<DIM(n, 256), 0, stream>>>(in(), n, alpha);
+		scale_do<<<DIM(in.N(), 256), 0, stream>>>(in(), in.N(), alpha);
 	}
 }
 

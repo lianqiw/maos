@@ -55,7 +55,7 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 
 	int& ix0=shared.ix0[threadIdx.x];
 	int& iy0=shared.iy0[threadIdx.y];
-
+	//only update shared variables by a single thread
 	if(threadIdx.x==0&&threadIdx.y==0){
 		if(ndir==0){//layer to layer. caching mechanism
 			if(gridDim.z!=nps) return;
@@ -75,7 +75,7 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 		iy0=blockIdx.y*blockDim.y+threadIdx.y;
 	}
 	__syncthreads();//necessary here because otherwise different warps may modify the shared data.
-	for(int ii=0; ii<nn; ii++){
+	for(int ii=0; ii<nn; ii++){//number of screens to trace
 		map2map_t* datai;
 		int ips, idir;
 		if(ndir==0){//plane to plane. no direction
@@ -449,6 +449,16 @@ void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 	res->nx=nx;
 	res->ny=ny;
 	res->cc=cc?cc():NULL;
+	{
+		Real nxps2, nyps2;
+		Real fxps2=modff(offx2+dispx+(nx-1)*xratio, &nxps2);
+		Real fyps2=modff(offy2+dispy+(ny-1)*yratio, &nyps2);
+		if(offx1+nx>nxdir||offy1+ny>nydir||nxps2>=nxps-1||nyps2>=nyps-1){
+			info("input: offset=%d, %d, to %g+%g, %g+%g, size %d, %d\n", offx2, offy2, nxps2, fxps2, nyps2, fyps2, nxps, nyps);
+			info("output: offset=%d, %d, to %d, %d, size %d, %d\n", offx1, offy1, offx1+nx, offy1+ny, nxdir, nydir);
+			error("overflow\n");
+		}
+	}
 }
 
 /**

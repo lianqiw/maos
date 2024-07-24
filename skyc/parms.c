@@ -416,9 +416,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 						if(*p=='/') *p='!';
 					}
 				}
-				if(snprintf(fn, sizeof(fn), "%s/%s_skyc_%ld_%d.lock", LOCKED, cwd, maos_seed, parms->skyc.seed)>=PATH_MAX){
-					dbg("overflow\n");
-				}
+				snprintf(fn, sizeof(fn), "%s/%s_skyc_%ld_%d.lock", DIRLOCK, cwd, maos_seed, parms->skyc.seed);
 				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
 				parms->fdlock[i]=lock_file(fn, 0);
 				if(parms->fdlock[i]<0){
@@ -426,10 +424,10 @@ PARMS_S* setup_parms(const ARG_S* arg){
 				} else{
 					dbg("Lock file %s success.\n", fn);
 					cloexec(parms->fdlock[i]);
+					parms->fnlock[i]=strdup(fn);
 					if(nseed!=i){
 						parms->maos.seeds[nseed]=parms->maos.seeds[i];
 						parms->fdlock[nseed]=parms->fdlock[i];
-						parms->fnlock[nseed]=strdup(fn);
 					}
 					nseed++;
 				}

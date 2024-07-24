@@ -314,10 +314,16 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 				append=-1;//remove from key
 				eql[-1]='\0';
 			}
-			if(eql[1]=='='){
+			if(eql[1]=='='){//equivalent keys:old==new keys
 				replace=1;
 				eql[1]=' ';
-				if(eql[2]=='>') eql[2]=' ';
+				if(eql[2]=='>'){
+					eql[2]=' ';
+					replace=2;
+				}
+			}else if(eql[1]=='>'){//old=>new keys
+				replace=2;
+				eql[1]=' ';
 			}
 			eql[0]='\0';
 		}
@@ -388,7 +394,7 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 				STORE_T* oldstore=*(STORE_T**)entryfind;
 				if(oldstore->flag==-1){//a replacement entry
 					if(oldstore->data&&oldstore->data[0]!=0&&oldstore->data[0]!='('){
-						warning("%s has been renamed to %s.\n", store->key, oldstore->data);
+						if(replace==2) warning("%s has been renamed to %s.\n", store->key, oldstore->data);
 						free(store->key);
 						store->key=strdup(oldstore->data);
 						entryfind=tfind(store, &MROOT, key_cmp);//search again

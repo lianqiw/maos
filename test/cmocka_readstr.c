@@ -83,14 +83,14 @@ static void readstr_array(void **state){
 	free(ret);ret=NULL;
 
 	//Relaxed read type 1
-	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 10, 1, M_DBL, "test", "2/[2]"), 1);
+	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 10, 1, M_DBL, "test", "2/[2]"), 10);
 	assert_float_equal(ret[1],1,0.0001);
 	assert_float_equal(ret[9],1,0.0001);
 	assert_int_equal(nrow,10);
 	assert_int_equal(ncol,1);
 	free(ret);ret=NULL;
 	//Relaxed read type 2
-	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 10, 2, M_DBL, "test", "2/[1 2]"), 2);
+	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 10, 2, M_DBL, "test", "2/[1 2]"), 10);
 	assert_float_equal(ret[2],1,0.0001);
 	assert_float_equal(ret[9],1,0.0001);
 	assert_int_equal(nrow,10);
@@ -106,7 +106,7 @@ static void readstr_array(void **state){
 	free(ret);ret=NULL;
 
 	//If not enough data is available, a relaxed vector is read if relax is set but not 1. matrix dimension is not honored.
-	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 9, 2, M_DBL, "test", "3.2/[1/2*3+2*4/2 1*2 1+1*2 1-2; 1 2 3 -4]*2+1*2"), 8);
+	assert_int_equal(readstr_numarr((void **)&ret, &nrow, &ncol, 9, 2, M_DBL, "test", "3.2/[1/2*3+2*4/2 1*2 1+1*2 1-2; 1 2 3 -4]*2+1*2"), 9);
 	assert_int_equal(nrow,9);
 	assert_int_equal(ncol,1);
 	assert_float_equal(ret[8],ret[7],EPS);

@@ -225,7 +225,55 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 	if(endptr0) *endptr0=endptr;
 	return res*vmul+vadd;
 }
-
+/**
+ * @brief Append the array with new numbers or duplicate the last entry ndup times.
+ * 
+ * @param ret 	The vector for containing the numbers
+ * @param len 	Total number of elements requested (ret is pre-allocated). 0 means no limit (ret is no pre-allocated)
+ * @param type 	The date type of the vector in memory
+ * @param size	The data element size
+ * @param count The existing number of elements in the vector.
+ * @param res 	The number to append
+ * @param ndup 	Number of times to duplicate the last entry.
+ */
+int fill_num(void **ret, int len, int *nmax, int type, int size, int *count, double res, int nfill){
+	if(len>0 && *count+nfill>len){
+		warning("Needs %d numbers, but more are supplied.\n", len);
+		return -1;
+	}
+	for(int i=0; i<nfill; i++){
+		if(*count>=*nmax){
+			*ret=myrealloc(*ret, size*(*nmax)*2, char);
+			memset((char *)*ret+size*(*nmax), 0, size*(*nmax));
+			*nmax*=2;
+		}
+		/*assign the value to appropriate array. convert to int if necessary. */
+		switch(type){
+		case M_INT:
+			if(fabs(res-(int)res)>EPS){
+				warning("Floating point number supplied while integer is required.\n") ;
+			}
+			((int *)(*ret))[*count]=(int)res;
+			break;
+		case M_LONG:
+			if(fabs(res-(long)res)>EPS){
+				warning("Floating point number supplied while integer is required.\n");
+			}
+			((long *)(*ret))[*count]=(long)res;
+			break;
+		case M_DBL:
+			((double *)(*ret))[*count]=res;
+			break;
+		case M_FLT:
+			((float *)(*ret))[*count]=(float)res;
+			break;
+		default:
+			error("Invalid type");return -1;
+		}
+		(*count)++;
+	}
+	return 0;
+}
 /**
    Read numerical array from a string. if len is nonzero, *ret should be already allocated.
    NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab)
@@ -258,8 +306,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		warning("%s=%s: ret is not set\n", key, data);
 		return 0;
 	}
-	int nmax=10;
 	int size=0;/*size of each number */
+
 	switch(type){
 	case M_INT:
 		size=sizeof(int);
@@ -276,6 +324,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	default:
 		error("%s=%s: invalid type", key, data); return -1;
 	}
+	int nmax=10;
 	if(len==0){
 		if(!(*ret=calloc(nmax, size))){
 			error("%s=%s: failed to allocate memory for ret\n", key, data);return -1;
@@ -360,23 +409,15 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	int nrow=0;/*number of rows*/
 	int ncol=0;/*number of columns*/
 	int rowbegin=0;/*beginning of this row*/
+	double res=0;
 	/*Read in the array between [ and ]*/
 	while(startptr<endarr){
-		if(count>=nmax){
-			if(len){
-				warning("%s=%s: Needs %d numbers, but more are supplied.\n", key, data, len);return -1;
-			}
-			*ret=myrealloc(*ret, size*nmax*2, char);
-			memset((char*)*ret+size*nmax, 0, size*nmax);
-			nmax*=2;
-		}
 		/*parse the string for a floating point number.  */
-		double res=readstr_num(key, startptr, (char**)&endptr);
+		res=readstr_num(key, startptr, (char**)&endptr);
 		if(startptr==endptr){
-			warning("%s=%s: enable to parse a number at %s\n", key, data, startptr);
+			warning("%s=%s: unable to parse a number at %s\n", key, data, startptr);
 			break;
-		}
-		startptr=endptr;
+		}else startptr=endptr;
 		/*apply the factors appear before or after [] */
 		if(power==1){
 			res=fact*res;
@@ -385,37 +426,34 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 		res+=addval;
 		
-		/*assign the value to appropriate array. convert to int if necessary. */
-		switch(type){
-		case M_INT:
-			if(fabs(res-(int)res)>EPS){
-				error("%s=%s: floating point number supplied while integer is required.\n", key, data);return -1;
-			}
-			((int*)(*ret))[count]=(int)res;
-			break;
-		case M_LONG:
-			if(fabs(res-(long)res)>EPS){
-				error("%s=%s: floating point number supplied while integer is required.\n", key, data);return -1;
-			}
-			((long*)(*ret))[count]=(long)res;
-			break;
-		case M_DBL:
-			((double*)(*ret))[count]=res;
-			break;
-		case M_FLT:
-			((float*)(*ret))[count]=(float)res;
-			break;
-		default:
-			error("Invalid type");return -1;
+		if(fill_num(ret, len, &nmax, type, size, &count, res, 1)==-1){
+			warning("%s=%s: read failed\n", key, data);
+			return -1;
 		}
-		count++;
+		
 		if(startptr<endarr){//more data to read
-			if(!(startptr[0]==' '||startptr[0]==';'||startptr[0]==',')){
+			if(!(isspace(startptr[0])||startptr[0]=='@'|| startptr[0]==';'||startptr[0]==',')){
 				error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
 			}
 		}
 		/*process the number separators. */
-		while(startptr<endarr && startptr[0]==' ') startptr++;//continuous spaces are ignored
+		while(startptr<endarr && isspace(startptr[0])) startptr++;//continuous spaces are ignored
+		/*if the number is followed by @n, it is repeated n times. */
+		if(startptr[0]=='@'){
+			startptr++;
+			int nrep=strtol(startptr, (char **)&endptr, 10);
+			if(startptr==endptr){
+				nrep=0;
+				error("Failed to read an integer after @: %s\n", startptr); return -1;
+			} else{
+				startptr=endptr;
+				if(fill_num(ret, len, &nmax, type, size, &count, res, nrep-1)==-1){
+					warning("%s=%s: read failed\n", key, data);
+					return -1;
+				}
+			}
+		}
+		while(startptr<endarr&&isspace(startptr[0])) startptr++;//continuous spaces are ignored
 		if(startptr<endarr && startptr[0]==','){
 			startptr++; //a single coma is permitted
 		} else if(startptr<endarr && startptr[0]==';'){//; is used to separate into a new row
@@ -428,7 +466,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			rowbegin=count;
 			startptr++;
 		}
-		while(startptr<endarr && startptr[0]==' ') startptr++;//continuous spaces are ignored
+		while(startptr<endarr && isspace(startptr[0])) startptr++;//continuous spaces are ignored
 	}
 	if(startptr!=endarr){
 		error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
@@ -451,17 +489,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			error("%s=%s: require %d numbers, but got %d\n", key, data, len, count);return -1;
 		} else{//Fill the array with the last number
 			dbg3("%s=%s: fill %d to %d by value in %d\n", key, data, count, len, count-1);
-			for(int i=count; i<len; i++){
-				switch(type){
-				case M_INT:
-					((int *)(*ret))[i]=((int *)(*ret))[count-1];break;
-				case M_LONG:
-					((long *)(*ret))[i]=((long *)(*ret))[count-1];break;
-				case M_DBL:
-					((double *)(*ret))[i]=((double *)(*ret))[count-1];break;
-				case M_FLT:
-					((float *)(*ret))[i]=((float *)(*ret))[count-1];break;
-				}
+			if(fill_num(ret, len, &nmax, type, size, &count, res, len-count)==-1){
+				warning("%s=%s: read failed\n", key, data);
+				return -1;
 			}
 			if(nrow*ncol!=len){//vector
 				ncol=1;

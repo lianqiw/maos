@@ -27,7 +27,7 @@ except:
     import libaos as aos
 from libaos import read,write
 from readbin import readbin, headers
-from draw import draw, locembed
+from draw import draw, locembed, coord2grid
 from maos_result import maos_res, maos_res_tot, maos_res_hi, maos_res_each, maos_cumu
 #import maos_client
 def error(msg):

@@ -64,11 +64,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 	int isim=simu->reconisim;
 
 	if(parms->sim.idealtomo){
-		if(parms->evl.tomo){
-			atm2xloc(&simu->opdr, simu);
-		}else{
-			dcellfree(simu->opdr);
-		}
+		dcellfree(simu->opdr);
 	} else{	/*do tomography. */
 		int maxit=parms->tomo.maxit;
 		if(NX(parms->dbg.tomo_maxit)){
@@ -138,6 +134,7 @@ OMP_TASK_FOR(4)
 		dbg("gradol TTF: %g %g %g\n", P(P(junk, 0, 0), 0), P(P(junk, 0, 0), 1), P(P(junk, 0, 0), 2));
 		cellfree(junk);
 	}*/
+	save_gradol(simu);//must be here since gradol is only calculated in this file. 
 }
 static void recon_split_lo(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -395,7 +392,6 @@ void* reconstruct(sim_t* simu){
 	if(simu->gradlastcl){
 		if(parms->sim.closeloop){
 			calc_gradol(simu);
-			save_gradol(simu);//must be here since gradol is only calculated in this file. 
 		}
 		if(recon->cn2est){
 			cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
