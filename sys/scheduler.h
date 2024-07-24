@@ -144,6 +144,7 @@ enum{
     DRAW_PID,//24 followed by pid
     DRAW_ZLOG,//25 log scale for image.
 	DRAW_PATH,//26 directory used for saving files
+	DRAW_EXENAME,//27 executable that calls draw().
     DRAW_END=100,//data send is over. start drawing
     
     DRAW_ENTRY=9999 /*A new entry*/

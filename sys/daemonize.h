@@ -46,20 +46,20 @@ if((char*)NULL==(char*)fn_cache || !fn_cache[0]){\
   int retry_count=0;\
   char fn_lock[PATH_MAX];\
   char *slash=strchr(fn_cache, '/'); \
-  if(slash){*slash='\0'; mymkdir("%s/%s", CACHE, fn_cache);	*slash='_'; }\
-  snprintf(fn_lock, sizeof(fn_lock), "%s/%s.lock", LOCKED, fn_cache); \
+  if(slash){*slash='\0'; mymkdir("%s/%s", DIRCACHE, fn_cache);	*slash='_'; }\
+  snprintf(fn_lock, sizeof(fn_lock), "%s/%s.lock", DIRLOCK, fn_cache); \
   if(slash) *slash='/';\
   while(!var){\
-    if(zfexist("%s/%s",CACHE, fn_cache) && !exist(fn_lock)){\
-      zftouch("%s/%s",CACHE, fn_cache);\
-      dbg("Reading from %s/%s\n", CACHE, fn_cache);\
-      var=f_read("%s/%s",CACHE, fn_cache);\
+    if(zfexist("%s/%s",DIRCACHE, fn_cache) && !exist(fn_lock)){\
+      zftouch("%s/%s",DIRCACHE, fn_cache);\
+      dbg("Reading from %s/%s\n", DIRCACHE, fn_cache);\
+      var=f_read("%s/%s",DIRCACHE, fn_cache);\
     }else{\
       int fd=lock_file(fn_lock, 0);/*try lock*/ \
       if(fd>-1 || (retry_count++)>5){/*lock success or too many retries*/ \
         f_create; \
         if(fd>-1){\
-          f_write(var,"%s/%s",CACHE, fn_cache);\
+          f_write(var,"%s/%s",DIRCACHE, fn_cache);\
           remove(fn_lock);\
         }\
       }else{\

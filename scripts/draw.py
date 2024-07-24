@@ -69,6 +69,8 @@ def locembed(loc, opd, return_ext=0, **kargs):
         loc=loc.T
     if type(opd) is scipy.sparse._csr.csr_matrix:
         opd=opd.toarray()
+    elif type(opd)==type([]):
+        opd=np.array(opd)
     nloc = loc.shape[1]
     if iscell(opd): #cell
         ims = []

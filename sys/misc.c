@@ -458,7 +458,7 @@ char* mystrdup(const char* A){
  * @brief replaces snprintf to check for return and print a warning if there is truncation.
  * 
  */
-int mysnprintf(char* restrict str , size_t size, const char *restrict format, ...){
+int mysnprintf(char* restrict str, size_t size, const char *restrict format, ...){
 	va_list ap;
 	va_start(ap, format);
 	int n=vsnprintf(str, size, format, ap);
@@ -466,7 +466,7 @@ int mysnprintf(char* restrict str , size_t size, const char *restrict format, ..
 	if(n<0){
 		error("snprintf failed\n");
 	}else if(n>=(ssize_t)size){
-		warning("snprintf is truncated: %s\n", str);
+		warning("snprintf is truncated: %s (need %d, got %zu)\n", str, n, size);
 	}
 	return n;
 } 

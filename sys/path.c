@@ -180,10 +180,10 @@ maos, "skyc" for skyc.  */
 char* find_config(const char* name){
 	const char* maos_config_path=getenv("MAOS_CONFIG_PATH");
 	char* config_path=NULL;
-	if(!exist(config_path)&&EXEP[0]){
+	if(!exist(config_path)&&DIREXE[0]){
 	/*If not found, try the folder that contains the exe*/
 		free(config_path);
-		config_path=stradd(EXEP, "/config/", name, NULL);
+		config_path=stradd(DIREXE, "/config/", name, NULL);
 	}
 	if(!exist(config_path)&&maos_config_path){
 		config_path=stradd(maos_config_path, "/config/", name, NULL);
@@ -208,7 +208,7 @@ char* find_config(const char* name){
 		config_path=NULL;
 		warning("Unable to determine the path to the configuration files.\n");
 		warning("Tried %s/config/%s\n", SRCDIR, name);
-		warning("Tried %s/config/%s\n", EXEP, name);
+		warning("Tried %s/config/%s\n", DIREXE, name);
 		warning("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
 		warning("Please set env MAOS_CONFIG_PATH=/path/to/config");
 	}

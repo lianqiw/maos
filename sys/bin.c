@@ -214,7 +214,7 @@ static char* procfn(const char* fn, const char* mod){
 		/*if (check_suffix(fn2, ".gz")){
 			fn2[strlen(fn2)-3]='\0';
 			}*/
-		if(disable_save&&mystrcmp(fn2, CACHE)){
+		if(disable_save&&mystrcmp(fn2, DIRCACHE)){
 			//When saving is disabled, allow writing to cache folder.
 			{
 				static int printed=0;
@@ -333,7 +333,7 @@ file_t* zfopen(const char* fni, const char* mod){
 			perror("open for read");
 		} else{//file exist
 			fp->mode=0;
-			if(!mystrcmp(fn2, CACHE)){
+			if(!mystrcmp(fn2, DIRCACHE)){
 				utimes(fn2, NULL);
 			}
 		}
@@ -1225,7 +1225,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 			error("size cannot be zero when fn is NULL.\n"); return NULL;
 		}
 	} else{
-		if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, CACHE)){
+		if(rw&&disable_save&&!IS_SHM(fn)&&mystrcmp(fn, DIRCACHE)){
 			warning("Saving is disabled for %s\n", fn);
 			print_backtrace();
 			fn=NULL;

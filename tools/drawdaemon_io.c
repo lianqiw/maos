@@ -214,7 +214,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->zoomy=1;
 		drawdata->square=-1;
 		drawdata->gray=0;
-		drawdata->ticinside=1;
+		drawdata->ticinside=0;
 		drawdata->legendbox=1;
 		drawdata->legendcurve=1;
 		drawdata->legendoffx=1;
@@ -250,19 +250,29 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 /**
  * Replace common span of phases by ...
  */
-static void char_ellipsis(char *legends[], int npts){
-	if(!legends || npts<2 || noellipsis){
-		return;
+static char** char_ellipsis(char *legends[], int npts){
+	if(!legends || npts<1 || !legends[0]){
+		return NULL;
+	}
+	char **legends2=mycalloc(npts, char *);
+	for(int ipts=0; ipts<npts; ipts++){
+		if(legends[ipts]){
+			legends2[ipts]=strdup(legends[ipts]);
+		}
 	}
 	int slen=strlen(legends[0]);
+	if(npts<1 || slen<20){
+		return legends2;
+	}
+	
 	int cstart=-1;//start of common string
 	int clen=0;//length if common string
 	for(int is=0; is<slen; is++){
-		char c0=legends[0][is];
+		char c0=legends2[0][is];
 		int eq=1;
 		//check whether this position is common.
 		for(int ip=1; ip<npts; ip++){
-			if(c0!=legends[ip][is]){
+			if(c0!=legends2[ip][is]){
 				eq=0;break;
 			}
 		}
@@ -279,16 +289,17 @@ static void char_ellipsis(char *legends[], int npts){
 			if(clen>4){//turn to ellipsis 
 				for(int ip=0; ip<npts; ip++){
 					for(int j=cstart; j<cstart+3; j++){
-						legends[ip][j]='.';
+						legends2[ip][j]='.';
 					}
-					memmove(legends[ip]+cstart+3, legends[ip]+cstart+clen+1, strlen(legends[ip])-cstart-clen);
+					memmove(legends2[ip]+cstart+3, legends2[ip]+cstart+clen+1, strlen(legends2[ip])-cstart-clen);
 				}
 			}
-			is=cstart+3;
-			slen=strlen(legends[0]);
+			is=cstart+2;
+			slen=strlen(legends2[0]);
 			cstart=-1;
 		}
 	}
+	return legends2;
 }
 /**
  * Delete pages that are not updated between DRAW_INIT and DRAW_FINAL
@@ -316,12 +327,15 @@ static void drawdata_clear_older(float timclear){
     }
 int sock;//socket
 int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
+int client_pidold=-1; //old client PID.
 int keep_listen=1;//set to 0 to stop listening
 int draw_single=0;//whether client only wants to draw to the active tab.
 drawdata_t *drawdata=NULL;//current
 drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
-char *client_path=NULL;
+char *client_path=NULL;//received
+char *client_path_full=NULL;//with ~ expanded.
+char *client_exename=NULL;//client executable name.
 int npts=0;
 void *listen_draw(void *user_data){
 	char *str2=0;
@@ -364,7 +378,7 @@ void *listen_draw(void *user_data){
 			}
 		}
 		if(sock>=0){
-			g_timeout_add(5000, update_title, NULL);
+			g_timeout_add(2000, update_fpslabel, NULL);
 		}
 		draw_single=0;
 		char *fig=0;
@@ -533,6 +547,7 @@ void *listen_draw(void *user_data){
 					drawdata_clear_older(io_timeclear);
 				}
 				client_pid=0;
+				g_idle_add(update_title, NULL);
 				g_idle_add(finalize_gif, NULL);
 				break;
 			case DRAW_FLOAT:
@@ -590,6 +605,7 @@ void *listen_draw(void *user_data){
 			case DRAW_PID:
 			{
 				STREADINT(client_pid);
+				client_pidold=client_pid;
 			}
 			break;
 			case DRAW_ZLOG://flip zlog
@@ -598,10 +614,12 @@ void *listen_draw(void *user_data){
 			case DRAW_PATH:
 				STREADSTR(client_path);
 				if(client_path && client_path[0]=='~'){
-					char *tmp=stradd(HOME, client_path+1, NULL);
-					free(client_path);
-					client_path=tmp;
+					client_path_full=stradd(HOME, client_path+1, NULL);
 				}
+				g_idle_add(update_title, NULL);
+				break;
+			case DRAW_EXENAME:
+				STREADSTR(client_exename);
 				break;
 			case DRAW_END:
 			{
@@ -617,7 +635,7 @@ void *listen_draw(void *user_data){
 					}
 					drawdata->update_limit=1; //data range may be changed. recompute.
 					if(drawdata->legend){
-						char_ellipsis(drawdata->legend, npts);
+						drawdata->legend_ellipsis=char_ellipsis(drawdata->legend, npts);
 					}
 				}
 				if(drawdata->nx&&drawdata->ny){/*draw image */
@@ -671,8 +689,6 @@ void *listen_draw(void *user_data){
 			nlen=0;
 		}/*while */
 	}
-	free(client_hostname);client_hostname=NULL;
-	free(client_path); client_path=NULL;
 	dbg_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;

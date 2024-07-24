@@ -235,6 +235,13 @@ int draw_add(int sock){
 			close(sock); sock=-1;
 		}
 	}
+	if(sock!=-1&&EXENAME){
+		if(WRITECMDSTR(sock, DRAW_EXENAME, EXENAME)){
+			dbg("write DRAW_EXENAME failed\n");
+			close(sock);
+			sock=-1;
+		}
+	}
 	if(sock!=-1&&DIRSTART){
 		if(WRITECMDSTR(sock, DRAW_PATH, DIRSTART)){
 			dbg("write DRAW_PATH failed\n");

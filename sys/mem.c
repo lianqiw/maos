@@ -794,7 +794,7 @@ static __attribute__((destructor)) void deinit(){
 	void thread_pool_destroy();
 	thread_pool_destroy();
 	//remove files that are 365 days old.
-	remove_file_older(CACHE, 1, 30*24*3600);//1 month
+	remove_file_older(DIRCACHE, 1, 30*24*3600);//1 month
 	freepath();
 	free_hosts();
 	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){

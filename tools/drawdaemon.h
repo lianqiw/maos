@@ -41,6 +41,7 @@ struct drawdata_t{
 	char *xlabel;		//x axis label
 	char *ylabel;		//y axis label
 	char **legend;		//legends
+	char **legend_ellipsis;	//legends shortened
 	char *filename; 	//previous filename to save
 	char *filename_gif; //if set, save all new frames and convert to gif
 	struct drawdata_t *next;//form an linked list.
@@ -111,6 +112,7 @@ struct drawdata_t{
 	gint pwidth, pheight;/*size of pixmap.*/
 	GtkWidget** spins;/*used on the dialog to change limits. */
 	cairo_surface_t* cacheplot;/*cache the plot results so that we don't have to redraw during just panning. */
+	int cache_width, cache_height; /*width and height of cacheplot.*/
 	int pending;/*used by delayed_update_pixmap to limit rate of drawing. */
 	int width, height;/*width and height of the entire drawing area */
 
@@ -177,20 +179,16 @@ extern int fifopid;
 extern float lpf;
 extern int noellipsis; 	/*do not allow legend ellipsis.*/
 /*Spaces reserved for title, label, etc */
-#define SP_LEG 20/*space between image and legend */
-#define LEN_LEG 25 /*size of legend */
-
-extern float SP_XL;/*space on x, left */
-extern float SP_XR;/*space on x, right */
-extern float SP_YT;/*space on y, top */
-extern float SP_YB;/*space on y, buttom */
+extern int desc_font_size;
 extern PangoFontDescription* desc;
 extern pthread_mutex_t drawdata_mutex;
 extern int client_pid;
 extern char *client_hostname;
+extern char *client_path_full;
 extern char *client_path;
+extern char *client_exename;
 extern int keep_listen;
-extern int cumu;
+
 extern int hide_xlabel;
 extern int hide_ylabel;
 extern int hide_title;
@@ -215,5 +213,6 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
 gboolean update_title(gpointer data);
+gboolean update_fpslabel(gpointer label);
 gboolean finalize_gif();
 #endif

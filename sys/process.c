@@ -49,9 +49,10 @@ const char* HOME=NULL;
 const char* USER=NULL;
 char* HOST=NULL;
 char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
-char* CACHE=NULL;//Directory for caching files that are expensive to compute.
-char *LOCKED=NULL;//Directory for caching files that are expensive to compute.
-char* EXEP=NULL;/*absolute path of the exe.*/
+char* DIRCACHE=NULL;//Directory for caching files that are expensive to compute.
+char* DIRLOCK=NULL;//Directory for caching files that are expensive to compute.
+char* DIREXE=NULL;/*absolute path of the exe.*/
+char* EXENAME=NULL;/*name of the exe.*/
 char* DIRSTART=NULL;//Start up directory. HOME is replaced by ~
 /**
    Set the HOME, TEMP, USER names.
@@ -118,11 +119,11 @@ void init_process(void){
 	if(!HOME) HOME=TEMP;
 	mymkdir("%s/.aos/", HOME);
 	
-	CACHE=stradd(HOME, "/.aos/cache",NULL);
-	mymkdir("%s", CACHE);
+	DIRCACHE=stradd(HOME, "/.aos/cache",NULL);
+	mymkdir("%s", DIRCACHE);
 	
-	LOCKED=stradd(HOME, "/.aos/lock", NULL);
-	mymkdir("%s", LOCKED);
+	DIRLOCK=stradd(HOME, "/.aos/lock", NULL);
+	mymkdir("%s", DIRLOCK);
 
 	DIRSTART=mygetcwd();
 	if(!mystrcmp(DIRSTART, HOME)){
@@ -133,11 +134,14 @@ void init_process(void){
 		char exepath[PATH_MAX];
 		if(!get_job_progname(exepath, PATH_MAX, 0)){
 			char* tmp=strrchr(exepath, '/');
+			if(tmp){
+				EXENAME=mystrdup(tmp+1);
+			}
 			if(exepath[0]=='/'&&tmp){
 				*tmp=0;
-				EXEP=mystrdup(exepath);
+				DIREXE=mystrdup(exepath);
 			} else{
-				EXEP=mystrdup(DIRSTART);
+				DIREXE=mystrdup(DIRSTART);
 			}
 		}
 	}
@@ -175,9 +179,9 @@ void free_process(){
 	/*make sure free_process is called in the end. scheduler_connect_self
 	requires TEMP for backtrace printing*/
 	free(TEMP); TEMP=NULL;
-	free(CACHE); CACHE=NULL;
-	free(LOCKED); LOCKED=NULL;
-	free(EXEP); EXEP=NULL;
+	free(DIRCACHE); DIRCACHE=NULL;
+	free(DIRLOCK); DIRLOCK=NULL;
+	free(DIREXE); DIREXE=NULL;
 	free(DIRSTART); DIRSTART=NULL;
 	free(HOST); HOST=NULL;
 }

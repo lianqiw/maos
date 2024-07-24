@@ -233,7 +233,7 @@ mapcell* genscreen(genatm_t* data){
 	}
 	if(fnatm){
 		CACHE_FILE(in, fnatm, dcellread_mmap,
-					({zfarr*fc=zfarr_init(nlayer, 1, "%s/%s", CACHE,fnatm);
+					({zfarr*fc=zfarr_init(nlayer, 1, "%s/%s", DIRCACHE,fnatm);
 						genscreen_do(fc, data);
 						zfarr_close(fc);
 					}),

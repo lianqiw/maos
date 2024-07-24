@@ -73,7 +73,7 @@ static void (*init_threads())(int){
 #else
 	const char *libname="fftw";
 #endif
-	sprintf(fnwisdom, "%s/%s_wisdom%s", CACHE, libname, suffix);
+	sprintf(fnwisdom, "%s/%s_wisdom%s", DIRCACHE, libname, suffix);
 	load_wisdom();
 	return p_fftw_plan_with_nthreads;
 }
