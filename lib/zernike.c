@@ -371,11 +371,9 @@ dmat* KL_vonkarman(const loc_t* loc, int nmod, real L0){
 		kl=KL_vonkarman_do(loc, L0);
 	}else{
 		uint32_t key=lochash(loc, 0);
-		mymkdir("%s/KL", CACHE);
 		char fn[PATH_MAX];
-		snprintf(fn, sizeof(fn), "%s/KL/KL_vonkarman_%g_%ld_%u.bin", CACHE, L0, loc->nloc, key);
-		CACHE_FILE(kl, fn, ({kl=dread("%s", fn);}), ({kl=KL_vonkarman_do(loc, L0);}), 
-			({writebin(kl, "%s", fn);}));
+		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%u.bin", L0, loc->nloc, key);
+		CACHE_FILE(kl, fn, dread, ({kl=KL_vonkarman_do(loc, L0);}), writebin);
 	}
 	if(nmod>0&&nmod<loc->nloc){
 		//Take sub matrix

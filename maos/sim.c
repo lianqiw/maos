@@ -58,7 +58,7 @@ sim_t* maos_iseed(int iseed){
 	powfs_t* powfs=global->powfs;
 	aper_t* aper=global->aper;
 	recon_t* recon=global->recon;
-	if(parms->fdlock&&P(parms->fdlock, iseed)<0){
+	if(parms->fdlock&&parms->fdlock[iseed]<0){
 		warning("Another MAOS is already running. Skip seed %ld\n",
 			P(parms->sim.seeds, iseed));
 		return 0;
@@ -322,6 +322,7 @@ void maos_sim(){
 			rescount+=(nsim-isim0);
 		}
 		free_simu(simu);
+		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), simu->iseed, signal_caught==0);
 		global->simu=NULL;
 	}/*seed */
 

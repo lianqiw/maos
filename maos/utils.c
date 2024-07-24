@@ -206,7 +206,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	free(style);
 }
 /**
-   Rename the log files when simulation exits.
+   Rename the log files when simulation exits or when signal is caught.
 */
 void rename_file(int sig){
 	if(disable_save) return;
@@ -219,19 +219,9 @@ void rename_file(int sig){
 		remove("maos_done.conf");
 		mylink(fn, "maos_done.conf");
 	}
-	if(global&&global->parms&&global->parms->fdlock&&sig!=0){
-		char fn[80];
+	if(global&&global->parms&&global->parms->fdlock){
 		const parms_t* parms=global->parms;
-		for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){
-			if(P(parms->fdlock,iseed)>0){
-				close(P(parms->fdlock,iseed));
-				int seed=P(parms->sim.seeds,iseed);
-				snprintf(fn, 80, "Res_%d.lock", seed);
-				if(exist(fn)){
-					(void)remove(fn);
-				}
-			}
-		}
+		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), -1, sig==0);
 	}
 }
 /**

@@ -397,7 +397,8 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	if(parms->maos.nseed){
 		//skip unwanted seeds
 		parms->fdlock=mycalloc(parms->maos.nseed, int);
-		char fn[81];
+		parms->fnlock=mycalloc(parms->maos.nseed, char*);
+		char fn[PATH_MAX];
 		int nseed=0;
 		for(int i=0; i<parms->maos.nseed; i++){
 			long maos_seed=parms->maos.seeds[i];
@@ -407,6 +408,17 @@ PARMS_S* setup_parms(const ARG_S* arg){
 				warning("Will skip seed %ld because %s exist.\n", maos_seed, fn);
 			} else{
 				remove(fn);
+				char cwd[PATH_MAX];
+				if(!getcwd(cwd, PATH_MAX)){
+					cwd[0]='.'; cwd[1]='0';
+				} else{
+					for(char *p=cwd; p[0]; p++){
+						if(*p=='/') *p='!';
+					}
+				}
+				if(snprintf(fn, sizeof(fn), "%s/%s_skyc_%ld_%d.lock", LOCKED, cwd, maos_seed, parms->skyc.seed)>=PATH_MAX){
+					dbg("overflow\n");
+				}
 				snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
 				parms->fdlock[i]=lock_file(fn, 0);
 				if(parms->fdlock[i]<0){
@@ -417,6 +429,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 					if(nseed!=i){
 						parms->maos.seeds[nseed]=parms->maos.seeds[i];
 						parms->fdlock[nseed]=parms->fdlock[i];
+						parms->fnlock[nseed]=strdup(fn);
 					}
 					nseed++;
 				}

@@ -50,27 +50,19 @@ static char* create_fnatm(genatm_t* data){
 		key=hashlittle(P(data->r0logpsds), sizeof(real)*NX(data->r0logpsds), key);
 	}
 	char fnatm[PATH_MAX];
-	snprintf(fnatm, PATH_MAX, "%s/atm", CACHE);
-	if(!exist(fnatm)) mymkdir("%s", fnatm);
-	long avail=available_space(fnatm);
-	long need=NX(data)*NY(data)*data->nlayer*sizeof(real)+500000000;
-	if(avail<need){
-		return NULL;
-	}else{
-		const char* prefix=NULL;
-		if(fabs(data->slope+11./3.)<EPS){
-			prefix="vonkarman";
-		} else if(fabs(data->slope+4.)<EPS){
-			prefix="biharmonic";
-		} else if(data->slope==0){
-			prefix="fractal";
-		} else{
-			prefix="spect";
-		}
-		snprintf(fnatm, sizeof(fnatm), "%s/atm/%s_%ld_%ldx%ld_%g_%ud.bin",
-			CACHE, prefix, data->nlayer, NX(data), NY(data), data->dx, key);
-		return strdup(fnatm);
+	const char* prefix=NULL;
+	if(fabs(data->slope+11./3.)<EPS){
+		prefix="vonkarman";
+	} else if(fabs(data->slope+4.)<EPS){
+		prefix="biharmonic";
+	} else if(data->slope==0){
+		prefix="fractal";
+	} else{
+		prefix="spect";
 	}
+	snprintf(fnatm, sizeof(fnatm), "atm/%s_%ld_%ldx%ld_%g_%ud.bin",
+		prefix, data->nlayer, NX(data), NY(data), data->dx, key);
+	return strdup(fnatm);
 }
 
 /**
@@ -240,12 +232,12 @@ mapcell* genscreen(genatm_t* data){
 		fnatm=create_fnatm(data);
 	}
 	if(fnatm){
-		CACHE_FILE(in, fnatm, ({in=dcellread_mmap("%s", fnatm);}),
-					({zfarr*fc=zfarr_init(nlayer, 1, "%s", fnatm);
+		CACHE_FILE(in, fnatm, dcellread_mmap,
+					({zfarr*fc=zfarr_init(nlayer, 1, "%s/%s", CACHE,fnatm);
 						genscreen_do(fc, data);
 						zfarr_close(fc);
 					}),
-					{});
+					dummyfun);
 	}else{
 		genscreen_do(NULL, data);
 		in=data->screen; data->screen=0;

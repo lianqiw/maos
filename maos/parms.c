@@ -171,7 +171,8 @@ void free_parms(parms_t *parms){
 	free(parms->load.mvmi);
 	free(parms->load.mvmf);
 	free(parms->load.ncpa);
-	lfree(parms->fdlock);
+	free(parms->fdlock);
+	free(parms->fnlock);
 	lfree(parms->hipowfs);
 	lfree(parms->lopowfs);
 
@@ -3186,27 +3187,39 @@ static void setup_parms_postproc_recon(parms_t *parms){
 static void setup_parms_postproc_misc(parms_t *parms, int override){
 	if(!disable_save&&parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
-		char fn[80];
+		char fn[PATH_MAX];
 		int iseed=0;
 		int jseed=0;
-		parms->fdlock=lnew(parms->sim.nseed,1);
+		parms->fdlock=mycalloc(parms->sim.nseed, int);
+		parms->fnlock=mycalloc(parms->sim.nseed, char*);
 		for(iseed=0; iseed<parms->sim.nseed; iseed++){
-			snprintf(fn,80,"Res_%ld.done",P(parms->sim.seeds,iseed));
+			snprintf(fn,sizeof(fn),"Res_%ld.done",P(parms->sim.seeds,iseed));
 			if(exist(fn)&&!override){
-				P(parms->fdlock,iseed)=-1;
+				parms->fdlock[iseed]=-1;
 				warning("Skip seed %ld because %s exists.\n",P(parms->sim.seeds,iseed),fn);
 			} else{
 				remove(fn);
-				snprintf(fn,80,"Res_%ld.lock",P(parms->sim.seeds,iseed));
-				P(parms->fdlock,iseed)=lock_file(fn,0);
-				if(P(parms->fdlock,iseed)<0){
+				char cwd[PATH_MAX];
+				if(!getcwd(cwd, PATH_MAX)){
+					cwd[0]='.'; cwd[1]='0';
+				}else{
+					for(char *p=cwd; p[0]; p++){
+						if(*p=='/') *p='!';
+					}
+				}
+				if(snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock",LOCKED,cwd,P(parms->sim.seeds,iseed))>=PATH_MAX){
+					dbg("overflow\n");
+				}
+				parms->fdlock[iseed]=lock_file(fn,0);
+				if(parms->fdlock[iseed]<0){
 					warning("Skip seed %ld because it is already running.\n",
 						P(parms->sim.seeds,iseed));
 				} else{
-					cloexec(P(parms->fdlock,iseed));
-					if(jseed!=iseed){
+					cloexec(parms->fdlock[iseed]);
+					if(jseed!=iseed){//remove gap in array.
 						P(parms->sim.seeds,jseed)=P(parms->sim.seeds,iseed);
-						P(parms->fdlock,jseed)=P(parms->fdlock,iseed);
+						parms->fdlock[jseed]=parms->fdlock[iseed];
+						parms->fnlock[jseed]=mystrdup(fn);
 					}
 					jseed++;
 				}

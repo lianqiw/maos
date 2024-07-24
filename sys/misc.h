@@ -42,6 +42,7 @@ char *myabspath(const char *path);
 int mysymlink(const char *source, const char *dest);
 int mylink(const char* source, const char* dest);
 int exist(const char *fn);
+void touch(const char* format, ...) CHECK_ARG(1);
 int isdir(const char *fn);
 int isfile(const char *fn);
 int islink(const char*fn);
@@ -64,10 +65,13 @@ long available_space(const char* path);
   avoid reporting of unfreed mem.*/
 extern char* (*strdup0)(const char *);
 char *mystrdup(const char *A);
+int mysnprintf(char *restrict str, size_t size, const char *restrict format, ...) CHECK_ARG(3);
 #undef strdup
 #define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
 #undef strndup
 #define strndup mystrndup
+#undef snprintf
+#define snprintf mysnprintf /*our snprintf avoids the truncation error by checking the returned size. */
 typedef struct argopt_t{
     const char *name;    /**<The long name*/
     char key;      /**<The short name*/

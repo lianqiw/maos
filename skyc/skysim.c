@@ -639,12 +639,11 @@ void skysim(const PARMS_S* parms){
 			CALL(skysim_isky, simu, 4, 0);/*isky iteration. */
 		}
 		if(parms->skyc.dbgsky<0){
-			char fn[80];
-			char fnnew[80];
-			snprintf(fn, 80, "Res%d_%d.lock", seed_maos, parms->skyc.seed);
-			snprintf(fnnew, 80, "Res%d_%d.done", seed_maos, parms->skyc.seed);
-			(void)rename(fn, fnnew);
+			touch("Res%d_%d.done", seed_maos, parms->skyc.seed);
 			close(parms->fdlock[simu->status->iseed]);
+			remove(parms->fnlock[simu->status->iseed]); 
+			free(parms->fnlock[simu->status->iseed]); 
+			parms->fnlock[simu->status->iseed]=NULL;
 		}
 		dcellfree(simu->stars);
 		dfree(simu->res);

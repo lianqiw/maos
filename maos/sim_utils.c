@@ -1790,21 +1790,20 @@ void free_simu(sim_t* simu){
 	dcellfree(save->llt_fsmreal);
 	free(simu->wfsflags);
 	dfree(simu->winddir);
-	if(parms->fdlock){
-	/*release the lock and close the file. */
-		char fn[80];
-		char fnnew[80];
-		snprintf(fn, 80, "Res_%d.lock", simu->seed);
-		if(signal_caught){
-			(void)remove(fn);
-		} else{
-			snprintf(fnnew, 80, "Res_%d.done", simu->seed);
-			(void)rename(fn, fnnew);
-		}
-		close(P(parms->fdlock, simu->iseed));
-	}
 	free(simu->save);
 	free(simu);
+}
+void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success){
+	if(!fdlock) return;
+	for(long jseed=0; jseed<nseed; jseed++){
+		if(iseed<0 || iseed==jseed){
+			if(iseed>=0 && success){
+				touch("Res_%ld.done", seeds[iseed]);
+			}
+			close(fdlock[jseed]); fdlock[jseed]=0;
+			remove(fnlock[jseed]); free(fnlock[jseed]); fnlock[jseed]=NULL;
+		}
+	}
 }
 int compare_dbl2_ascend(const void *a, const void *b){
 	return (int)(((double *)a)[0]-((double *)b)[0]);
@@ -1996,7 +1995,8 @@ void print_progress(sim_t* simu){
 						"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
 				draw("Res", (plot_opts){ .dc=P(simu->plot_res, 4), .legend=parms->evl.wvlname},
 										"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
-			}else if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
+			}
+			if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
 				for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
 					int i=simu->plot_isim;
 					for(int ic=0; ic<2; ic++){//0: CL. 1: OL

@@ -251,7 +251,7 @@ fdpcg_g(cmat** gx, cmat** gy, long nx, long ny, real dx, real dsa){
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
 static csp*
-fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* dispx, real* dispy){
+fdpcg_prop_trans(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* dispx, real* dispy){
 	long nx2[nps], nx3[nps];
 	long ny2[nps], ny3[nps];
 	long noff[nps];
@@ -274,8 +274,6 @@ fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* disp
 	spint* pi=propt->pi;
 	comp* px=propt->px;
 	long count=0;
-	real cfr=2*M_PI;
-	comp cf=COMPLEX(0, cfr);
 	for(long iy=0; iy<nyp; iy++){
 		real fyg=(iy-nyp2)*dky;
 		for(long ix=0; ix<nxp; ix++){
@@ -283,16 +281,16 @@ fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* disp
 			long icol=ix+iy*nxp;
 			pp[icol]=count;
 			for(long ips=0; ips<nps; ips++){
-				long jx=((ix-nxp2)+nx3[ips])%nx[ips];/*map to layer ips. */
-				long jy=((iy-nyp2)+ny3[ips])%ny[ips];/*map to layer ips. */
+				long jx=((ix-nxp2)+nx3[ips])%nx[ips];/*map to layer ips with wrapping because FFT wraps around. */
+				long jy=((iy-nyp2)+ny3[ips])%ny[ips];/*wrapping improves performance (periodic boundary condition)*/
 				real fx=(jx-nx2[ips])*dkx;/*spatial frequency in plane ips. */
 				real fy=(jy-ny2[ips])*dky;
 				pi[count]=jx+jy*nx[ips]+noff[ips];
-				comp shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
+				comp shiftc=EXPI(-TWOPI*(fx*dispx[ips]+fy*dispy[ips]));//conjugate of shift
 				switch(nxp/nx[ips]){
 				case 0:
 				case 1:
-					px[count]=conj(shift);
+					px[count]=shiftc;
 					break;
 				case 2:
 				{
@@ -309,7 +307,7 @@ fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* disp
 				  *(1+0.5*shifty+0.5*conj(shifty)));
 				  //the following is equivalent.
 				  */
-					px[count]=conj(shift*(1+cos(cfr*(fxg*dx)))*(1+cos(cfr*(fyg*dx))))*0.5;
+					px[count]=shiftc*((1.+cos(TWOPI*(fxg*dx)))*(1.+cos(TWOPI*(fyg*dx)))*0.5);
 				}
 				break;
 				default:
@@ -321,9 +319,9 @@ fdpcg_prop(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real* disp
 	}
 	pp[nxp*nxp]=count;
 	/*we put conj above because csptrans applies a conjugation. */
-	csp* propf=csptrans(propt);
-	cspfree(propt);
-	return propf;
+	//csp* propf=csptrans(propt);
+	//cspfree(propt);
+	return propt;
 }
 
 /**
@@ -424,7 +422,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 		}
 		break;
 	}
-
+	//toc2("fdpcg_prepare:invspd");
 	/*make it sparse diagonal operator */
 	csp* Mhat=cspnewdiag(nxtot, invpsd, 1);
 	free(invpsd);
@@ -457,9 +455,9 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	cfree(gy);
 	cspfree(sel);
 	const real delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
-
+	//toc2("fdpcg_prepare: Mmid");
 	/* Mhat = Mhat + propx' * Mmid * propx */
-OMP_FOR(NTHREAD)
+OMP_FOR(parms->powfs[hipowfs].nwfsr)
 	for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
 		real dispx[nps];
 		real dispy[nps];
@@ -479,25 +477,26 @@ OMP_FOR(NTHREAD)
 				dispy[ips]+=P(atm,ips0)->vy*delay;
 			}
 		}
-		csp* propx=fdpcg_prop(nps, nxp, nyp, nx, ny, dxp, dispx, dispy);
+		csp* propxt=fdpcg_prop_trans(nps, nxp, nyp, nx, ny, dxp, dispx, dispy);
 		if(parms->save.fdpcg){
-			writebin(propx, "fdpcg_prop_wfs%d", iwfs);
+			writebin(propxt, "fdpcg_prop_trans_wfs%d", iwfs);
 		}
 		/*need to test this in spatial domain. */
-		cspscale(propx, 1./neai);/*prop is not real for off axis wfs. */
+		//cspscale(propxt, 1./neai); //absorbed below
+		/*prop is not real for off axis wfs. */
 		/*Compute propx'*Mmid*propx and add to Mhat; */
-		csp* tmp=cspmulsp(Mmid, propx, "nn");
-		csp* tmp2=cspmulsp(propx, tmp, "tn");
+		csp* tmp=cspmulsp(Mmid, propxt, "nt");
+		csp* tmp2=cspmulsp(propxt, tmp, "nn");
 		cspfree(tmp);
-		cspfree(propx);
+		cspfree(propxt);
 #pragma omp critical
-		cspadd(&Mhat, 1, tmp2, 1);
+		cspadd(&Mhat, 1, tmp2, 1./(neai*neai));
 		cspfree(tmp2);
 	}
 	cspfree(Mmid);
-	cspdroptol(Mhat, EPS);
-	cspsym(&Mhat);
-
+	//cspdroptol(Mhat, EPS); 
+	//cspsym(&Mhat);//uncommet if not good (2024-07-23)
+	//toc2("fdpcg_prepare: prop");
 	if(!needscale){  /*scale Mhat to avoid scaling FFT. */
 		cmat* sc=cnew(nxtot, 1);
 		comp* psc=P(sc);
@@ -535,7 +534,8 @@ OMP_FOR(NTHREAD)
 	if(parms->save.fdpcg){
 		writebin(perm, "fdpcg_perm");
 	}
-#if PRE_PERMUT == 1//Permutat the sparse matrix.
+	//toc2("fdpcg_prepare: perm");
+#if PRE_PERMUT == 1//Absorbes the permutation operation in the sparse matrix.
 	csp* Minvp=cspinvbdiag(Mhatp, bs);
 	csp* Minv=cspperm(Minvp, 1, P(perm), P(perm));/*revert permutation */
 	lfree(perm); perm=NULL;

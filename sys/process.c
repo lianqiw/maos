@@ -50,6 +50,7 @@ const char* USER=NULL;
 char* HOST=NULL;
 char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
 char* CACHE=NULL;//Directory for caching files that are expensive to compute.
+char *LOCKED=NULL;//Directory for caching files that are expensive to compute.
 char* EXEP=NULL;/*absolute path of the exe.*/
 char* DIRSTART=NULL;//Start up directory. HOME is replaced by ~
 /**
@@ -116,9 +117,13 @@ void init_process(void){
 	}
 	if(!HOME) HOME=TEMP;
 	mymkdir("%s/.aos/", HOME);
+	
 	CACHE=stradd(HOME, "/.aos/cache",NULL);
 	mymkdir("%s", CACHE);
 	
+	LOCKED=stradd(HOME, "/.aos/lock", NULL);
+	mymkdir("%s", LOCKED);
+
 	DIRSTART=mygetcwd();
 	if(!mystrcmp(DIRSTART, HOME)){
 		DIRSTART[0]='~';
@@ -171,6 +176,7 @@ void free_process(){
 	requires TEMP for backtrace printing*/
 	free(TEMP); TEMP=NULL;
 	free(CACHE); CACHE=NULL;
+	free(LOCKED); LOCKED=NULL;
 	free(EXEP); EXEP=NULL;
 	free(DIRSTART); DIRSTART=NULL;
 	free(HOST); HOST=NULL;

@@ -710,14 +710,11 @@ dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, cons
 	if(mod) key=dhash(mod, key);
 	if(opdadd) key=dhash(opdadd, key);
 	char fn[PATH_MAX-10];
-	mymkdir("%s/G/", CACHE);
-	snprintf(fn, sizeof(fn), "%s/G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2.bin", CACHE,
+	snprintf(fn, sizeof(fn), "G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2.bin", 
 		P(pywfs->locfft->nembed, 0), locin->nloc, NY(mod), pycfg->modulate*RAD2MAS, pycfg->modulpos,
 		locin->iac, displacex, displacey, 1., pycfg->poke*1e9, key);
 	dmat *gg=0;
-
-	CACHE_FILE(gg, fn, ({gg=dread("%s", fn);}), ({gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);}),
-		({writebin(gg, "%s", fn);}));
+	CACHE_FILE(gg, fn, dread, ({gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey);}), writebin);
 	if(distortion){
 		locfree(locfft);
 	}

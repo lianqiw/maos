@@ -38,24 +38,28 @@ pid_t launch_exe(const char *exepath, const char *cmd);
 char* find_exe(const char *name);
 int spawn_process(const char *exename, const char *arg, const char *path);
 extern int detached;
+#define dummyfun(A...)
 #define CACHE_FILE(var, fn_cache, f_read, f_create, f_write)\
 if((char*)NULL==(char*)fn_cache || !fn_cache[0]){\
   f_create;\
 }else{\
   int retry_count=0;\
-  char fn_lock[PATH_MAX+10];\
-  snprintf(fn_lock, sizeof fn_lock, "%s.lock", fn_cache);\
+  char fn_lock[PATH_MAX];\
+  char *slash=strchr(fn_cache, '/'); \
+  if(slash){*slash='\0'; mymkdir("%s/%s", CACHE, fn_cache);	*slash='_'; }\
+  snprintf(fn_lock, sizeof(fn_lock), "%s/%s.lock", LOCKED, fn_cache); \
+  if(slash) *slash='/';\
   while(!var){\
-    if(zfexist("%s",fn_cache) && !exist(fn_lock)){\
-      zftouch("%s",fn_cache);\
-      dbg("Reading from %s\n", fn_cache);\
-      f_read;\
+    if(zfexist("%s/%s",CACHE, fn_cache) && !exist(fn_lock)){\
+      zftouch("%s/%s",CACHE, fn_cache);\
+      dbg("Reading from %s/%s\n", CACHE, fn_cache);\
+      var=f_read("%s/%s",CACHE, fn_cache);\
     }else{\
       int fd=lock_file(fn_lock, 0);/*try lock*/ \
       if(fd>-1 || (retry_count++)>5){/*lock success or too many retries*/ \
         f_create; \
         if(fd>-1){\
-          f_write;\
+          f_write(var,"%s/%s",CACHE, fn_cache);\
           remove(fn_lock);\
         }\
       }else{\

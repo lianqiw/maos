@@ -106,15 +106,14 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	if(opdbias){
 		key=dcellhash(opdbias, key);
 	}
-	mymkdir("%s/SEOTF/", CACHE);
 	char fnotf[PATH_MAX];
-	snprintf(fnotf, sizeof(fnotf), "%s/SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dxi%g_em%d%s_%u_v4.bin",//v4: inverted opdbias sign to agree with simulation
-		CACHE, r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac, opdbias?"_ncpa":"", key);
+	snprintf(fnotf, sizeof(fnotf), "SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dxi%g_em%d%s_%u_v4.bin", //v4: inverted opdbias sign to agree with simulation
+		r0, L0, pts->dsa, pts->nsa, 1./pts->dx, embfac, opdbias?"_ncpa":"", key);
 	cccell *otf=0;
 
-	CACHE_FILE(otf, fnotf, ({otf=cccellread("%s", fnotf);}), 
+	CACHE_FILE(otf, fnotf, cccellread, 
 		({otf=genseotf_do(pts, amp, opdbias, saa, wvl, r0, L0, embfac);}),
-		({writebin(otf, "%s", fnotf);}));
+		writebin);
 	return otf;
 }
 /**

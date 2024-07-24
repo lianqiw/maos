@@ -405,28 +405,20 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 		//Cache the result
 		uint32_t key=0;
 		key=hashlittle(P(A), A->nx*A->ny*sizeof(T), key);
-		snprintf(fnsvd, sizeof fnsvd, "%s/.aos/cache/svd", HOME);
-		if(!exist(fnsvd)){
-			mymkdir("%s", fnsvd);
-		}
-		long avail=available_space(fnsvd);
-		long need=A->nx*A->ny*sizeof(T)*3;
-		if(avail>need){
-			do_cache=1;
-			snprintf(fnsvd, sizeof fnsvd, "%s/.aos/cache/svd/svd_%ld_%u.bin", HOME, A->nx, key);
-		}
+		do_cache=1;
+		snprintf(fnsvd, sizeof(fnsvd), "svd/svd_%ld_%u.bin", A->nx, key);
 	}
 	if(!do_cache){
 		X(svd)(U, Sdiag, VT, A);
 	} else{
 		cell* in=0;
-		CACHE_FILE(in, fnsvd, ({in=readbin("%s", fnsvd);}), 
+		CACHE_FILE(in, fnsvd, readbin, 
 				({X(svd)(U, Sdiag, VT, A);
 					in=cellnew(3, 1);
 					P(in,0)=(cell *)*U;
 					P(in,1)=(cell *)*Sdiag;
 					P(in,2)=(cell *)*VT;}),
-				({writecell(in, "%s", fnsvd);}));
+				writebin);
 		*U=X(mat_cast)(P(in,0)); P(in,0)=0;
 		*Sdiag=XR(mat_cast)(P(in,1)); P(in,1)=0;
 		*VT=X(mat_cast)(P(in,2)); P(in,2)=0;

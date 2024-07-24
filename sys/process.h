@@ -52,6 +52,7 @@ extern const char *USER;/*the user name */
 extern char* HOST;/*the host name */
 extern char* TEMP;/*the temporary folder */
 extern char* CACHE; /*the caching folder */
+extern char* LOCKED; /*the lock file folder*/
 extern char* EXEP;/*the exe path*/
 extern char* DIRSTART; /*the startup directory*/
 int get_ncpu(void);

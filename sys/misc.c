@@ -305,7 +305,17 @@ int exist(const char* fn){
 	struct stat buf;
 	return !stat(fn, &buf);
 }
-
+/*
+	Update the modification time of a file and create it if not exist.
+*/
+void touch(const char *format, ...){
+	format2fn;
+	if(!exist(fn)){
+		creat(fn, 0666);
+	}else{
+		utimes(fn, NULL);
+	}
+}
 /**
    Test whether fn is directory
 */
@@ -444,7 +454,22 @@ char* mystrdup(const char* A){
 		return B;
 	}
 }
-
+/**
+ * @brief replaces snprintf to check for return and print a warning if there is truncation.
+ * 
+ */
+int mysnprintf(char* restrict str , size_t size, const char *restrict format, ...){
+	va_list ap;
+	va_start(ap, format);
+	int n=vsnprintf(str, size, format, ap);
+	va_end(ap);	
+	if(n<0){
+		error("snprintf failed\n");
+	}else if(n>=(ssize_t)size){
+		warning("snprintf is truncated: %s\n", str);
+	}
+	return n;
+} 
 
 /**
    Remove files that are older than sec seconds in folder fndir. If sec==0,

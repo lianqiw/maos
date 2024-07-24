@@ -490,9 +490,9 @@ int print_backtrace_symbol(void* const* buffer, int size){
 	//disable memory debugging as this code may be called from within malloc_dbg
 //#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 #if __linux__ //mac does not have addr2line. //TODO: use atos
-	char cmdstr[PATH_MAX+40]={0};
+	char cmdstr[PATH_MAX]={0};
 	char add[24]={0};
-	char progname[PATH_MAX+20]={0};
+	char progname[PATH_MAX]={0};
 	if(get_job_progname(progname, sizeof progname, 0)){
 		dbg("Unable to get progname\n");
 		return ans;
@@ -509,13 +509,13 @@ int print_backtrace_symbol(void* const* buffer, int size){
 	if(MAOS_DISABLE_SCHEDULER||is_scheduler||connect_failed){
 		char line[200];
 		if(!call_addr2line(line, sizeof line, cmdstr)){
-			info3("%s\n", line);
+			dbg("%s\n", line);
 			if(strlen(line)){
 				ans=0;
 			}
 		} else{
 			char *prog=strrchr(cmdstr, '/');
-			info3("%s\n", prog?(prog+1):cmdstr);
+			dbg("%s\n", prog?(prog+1):cmdstr);
 		}
 	} else{
 #if MAOS_DISABLE_SCHEDULER == 0
@@ -534,7 +534,7 @@ int print_backtrace_symbol(void* const* buffer, int size){
 			} else if(streadint(sock, &len) || len>=PATH_MAX || stread(sock, line, len)){
 				dbg("read cmd failed\n");
 			} else{
-				info3(" %s\n", line);
+				dbg(" %s\n", line);
 				if(strlen(line)){
 					ans=0;
 				}
