@@ -475,32 +475,11 @@ pts</td>
 <p>records lower left-most point of each sa in a regular grid. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab95f31e26f993d6d7e0deeb6cd6f3c97"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-saa</td>
-<td class="fielddoc">
-<p>Subaperture normalized area </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="aa669ff19f38065772c2d987934faf6d3"></a>real</td>
-<td class="fieldname">
-saasum</td>
-<td class="fielddoc">
-<p>sum of saa </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a27f7558b977e039ba30c33ccfaffaa3a"></a><a class="el" href="type_8h.html#structloc__t">loc_t</a> *</td>
 <td class="fieldname">
 loc</td>
 <td class="fielddoc">
 <p>concatenated points for all subapertures. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a4a808aabd3694fbee42de89f11be3b7b"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-amp</td>
-<td class="fielddoc">
-<p>amplitude map defined on loc, max at 1. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ac5c9fed2d88f99f79c92e8d5b2934dc5"></a><a class="el" href="type_8h.html#structloccell">loccell</a> *</td>
@@ -514,21 +493,56 @@ loc_dm</td>
 <td class="fieldname">
 loc_tel</td>
 <td class="fielddoc">
-<p>distorted loc mapped onto pupil. size: (nwfs, 1) </p>
+<p>distorted loc mapped onto pupil. size: (nwfs, 1). used for mkamp and ray trace. do not use in mkg </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a52cd753f90a085c679e66a279e272cba"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a5c528e638e52af6ee768b03a7cc9d7b6"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-amp_tel</td>
+amp</td>
 <td class="fielddoc">
-<p>real amplitude map on loc_tel. used for gradient computing </p>
+<p>The real (after misregisteration/distortion) amplitude map defined on loc. nx is powfs.nwfs or 1. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a37f2d64931cb4c918609c7439c841dff"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a3424348fc5f9d08ed6ea4ed676197690"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-saa_tel</td>
+saa</td>
 <td class="fielddoc">
-<p>mis-registered saa, if any </p>
+<p>The real (after misregisteration/distortion) subaperture area. same dimension as amp </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab3f64c65fd8e4563771c922cc8ed2f37"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+sumamp</td>
+<td class="fielddoc">
+<p>sum of amp </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a94883ef7919c01b79ed74f9b80442cc1"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+sumamp2</td>
+<td class="fielddoc">
+<p>sum of amp.^2 </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a69188e9441c78d07d4783b6434c6d3eb"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+saasum</td>
+<td class="fielddoc">
+<p>sum of saa </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8578e71373788bc1845e1169245996f7"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+saamax</td>
+<td class="fielddoc">
+<p>Max of subaperture area across all wfs in this powfs. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aab4716d397bbe58f214e49f568cb360e"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
+<td class="fieldname">
+saamin</td>
+<td class="fielddoc">
+<p>Min of subaperture area across all wfs in this powfs. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a2256cf16f55dc3bb7e4ad97b4a42f044"></a>real</td>
@@ -741,42 +755,7 @@ notfy</td>
 <p>PSF is extended to this side before computing OTF </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a62ab8ffb3e2b5c582711b78ae4282604"></a>int</td>
-<td class="fieldname">
-nsaimcc</td>
-<td class="fielddoc">
-<p>number of saimcc </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="afdb18a9c057eaa8cf171acba721358a6"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
-<td class="fieldname">
-realamp</td>
-<td class="fielddoc">
-<p>The real (after misregisteration/distortion) amplitude map </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ad22014b1a4398c9b6ef2dbfa231d30f6"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
-<td class="fieldname">
-realsaa</td>
-<td class="fielddoc">
-<p>The real (after misregisteration/distortion) subaperture area </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="ab3f64c65fd8e4563771c922cc8ed2f37"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-sumamp</td>
-<td class="fielddoc">
-<p>sum of realamp </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a94883ef7919c01b79ed74f9b80442cc1"></a><a class="el" href="type_8h.html#structdmat">dmat</a> *</td>
-<td class="fieldname">
-sumamp2</td>
-<td class="fielddoc">
-<p>sum of realamp.^2 </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a5c2dbfabdadad397731b9edc16924f45"></a><a class="el" href="locfft_8h.html#structlocfft__t">locfft_t</a> *</td>
+<a id="a96244eca830680a2615effa8a4fec99c"></a><a class="el" href="locfft_8h.html#structlocfft__t">locfft_t</a> **</td>
 <td class="fieldname">
 fieldstop</td>
 <td class="fielddoc">
@@ -1583,6 +1562,13 @@ dx</td>
 <p>sampling in meter of the layers </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a8397ee4ded7b441d02e5d13cbafced6b"></a><a class="el" href="parms_8h.html#structwfsr__cfg__t">wfsr_cfg_t</a> *</td>
+<td class="fieldname">
+wfsr</td>
+<td class="fielddoc">
+<p>references parms-&gt;wfsr </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a49abc01a6ae50866f7b5faec1a369cbc"></a><a class="el" href="type_8h.html#structloccell">loccell</a> *</td>
 <td class="fieldname">
 saloc</td>
@@ -1602,13 +1588,6 @@ ploc</td>
 pmap</td>
 <td class="fielddoc">
 <p>square grid of ploc. </p>
-</td></tr>
-<tr><td class="fieldtype">
-<a id="a04e6ebf6299939af4ed105a58f50ac87"></a><a class="el" href="type_8h.html#structloccell">loccell</a> *</td>
-<td class="fieldname">
-ploc_tel</td>
-<td class="fielddoc">
-<p>Distorted ploc when mapped onto telescope pupil for each WFS </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ae4bf5a369b5b1126f91efef909dd6115"></a><a class="el" href="type_8h.html#structloccell">loccell</a> *</td>
@@ -2287,6 +2266,13 @@ nthread</td>
 cxxalg</td>
 <td class="fielddoc">
 <p>records parms-&gt;tomo.cxxalg </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a6e230a32575bc18dfa3af9909cca8989"></a>int</td>
+<td class="fieldname">
+nwfsr</td>
+<td class="fielddoc">
+<p>references parms-&gt;nwfsr </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="af4555b7c44a8fb404144f8033d72bee2"></a><a class="el" href="type_8h.html#structcell">cell</a> *</td>

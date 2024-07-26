@@ -103,16 +103,16 @@ $(document).ready(function(){initNavTree('mkg_8h.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af1846dbcd182cfe9ac7525f55901bcb4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8h.html#af1846dbcd182cfe9ac7525f55901bcb4">mkg</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *xloc, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *ploc, <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, real scale, real dispx, real dispy, int do_partial)</td></tr>
-<tr class="separator:af1846dbcd182cfe9ac7525f55901bcb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c948d7a9976361e86a4ef0920c7bb60"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8h.html#a2c948d7a9976361e86a4ef0920c7bb60">mkgt</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *xloc, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *ploc, <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, real scale, real dispx, real dispy, int do_partial)</td></tr>
-<tr class="separator:a2c948d7a9976361e86a4ef0920c7bb60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54ac874c6f6a0fd32027aea9e84187c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8h.html#a54ac874c6f6a0fd32027aea9e84187c1">mkg</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *xloc, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *ploc, <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, <a class="el" href="type_8h.html#structdmat">dmat</a> *saa, real saat, real scale, real dispx, real dispy, int do_partial)</td></tr>
+<tr class="separator:a54ac874c6f6a0fd32027aea9e84187c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a779ed9bba5ae5da86777ac41e663bf8d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8h.html#a779ed9bba5ae5da86777ac41e663bf8d">mkgt</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *xloc, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *ploc, <a class="el" href="type_8h.html#structdmat">dmat</a> *amp, <a class="el" href="type_8h.html#structloc__t">loc_t</a> *saloc, <a class="el" href="type_8h.html#structdmat">dmat</a> *saa, real saat, real scale, real dispx, real dispy, int do_partial)</td></tr>
+<tr class="separator:a779ed9bba5ae5da86777ac41e663bf8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains function that creates average gradient operator </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="af1846dbcd182cfe9ac7525f55901bcb4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1846dbcd182cfe9ac7525f55901bcb4">&#9670;&nbsp;</a></span>mkg()</h2>
+<a id="a54ac874c6f6a0fd32027aea9e84187c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a54ac874c6f6a0fd32027aea9e84187c1">&#9670;&nbsp;</a></span>mkg()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -140,6 +140,18 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
           <td class="paramname"><em>saloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>saa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>saat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -172,12 +184,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the transpose of <a class="el" href="mkg_8h.html#a2c948d7a9976361e86a4ef0920c7bb60">mkgt()</a> </p>
+<p>Returns the transpose of <a class="el" href="mkg_8h.html#a779ed9bba5ae5da86777ac41e663bf8d">mkgt()</a> </p>
 
 </div>
 </div>
-<a id="a2c948d7a9976361e86a4ef0920c7bb60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2c948d7a9976361e86a4ef0920c7bb60">&#9670;&nbsp;</a></span>mkgt()</h2>
+<a id="a779ed9bba5ae5da86777ac41e663bf8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a779ed9bba5ae5da86777ac41e663bf8d">&#9670;&nbsp;</a></span>mkgt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -205,6 +217,18 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
           <td class="paramname"><em>saloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>saa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>saat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -241,13 +265,15 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">xloc</td><td>the grid on which OPDs are defined </td></tr>
-    <tr><td class="paramname">ploc</td><td>the grid on the aperture plan </td></tr>
+    <tr><td class="paramname">ploc</td><td>the grid on the aperture plane </td></tr>
     <tr><td class="paramname">pamp</td><td>the amplitude on ploc </td></tr>
     <tr><td class="paramname">saloc</td><td>Lower left origin of the subapertures </td></tr>
+    <tr><td class="paramname">saa</td><td>subaperture amplitude, normalized to max at 1. </td></tr>
+    <tr><td class="paramname">saat</td><td>saa threshold to enable gradient operation. </td></tr>
     <tr><td class="paramname">scale</td><td>cone effect </td></tr>
     <tr><td class="paramname">dispx</td><td>displacement due to beam angle (2 vector). similar as accphi routines </td></tr>
     <tr><td class="paramname">dispy</td><td>displacement due to beam angle (2 vector). similar as accphi routines </td></tr>
-    <tr><td class="paramname">do_partial</td><td>1: use points that are outside of by close to a subaperture. 0: do not use. </td></tr>
+    <tr><td class="paramname">do_partial</td><td>1: use points that are outside of but close to a subaperture. 0: do not use. </td></tr>
   </table>
   </dd>
 </dl>

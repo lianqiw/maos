@@ -118,6 +118,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:structdither__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structpowfs__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structpowfs__cfg__t">powfs_cfg_t</a></td></tr>
 <tr class="separator:structpowfs__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:structwfsr__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structwfsr__cfg__t">wfsr_cfg_t</a></td></tr>
+<tr class="separator:structwfsr__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structwfs__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structwfs__cfg__t">wfs_cfg_t</a></td></tr>
 <tr class="separator:structwfs__cfg__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:structdm__cfg__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parms_8h.html#structdm__cfg__t">dm_cfg_t</a></td></tr>
@@ -1020,14 +1022,28 @@ saloc</td>
 <td class="fieldname">
 misregx</td>
 <td class="fielddoc">
-<p>offset of saloc from pupil illumination in unit of dsa </p>
+<p>misregistration wrt telescope pupil. shift along x </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="affa17d36ac1346eefe3619b40da0efca"></a>real</td>
 <td class="fieldname">
 misregy</td>
 <td class="fielddoc">
-<p>offset of saloc from pupil illumination in unit of dsa </p>
+<p>misregistration wrt telescope pupil. shift along y </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7788fc730ebe6ad481d33c7f9a8e14dd"></a>real</td>
+<td class="fieldname">
+misregc</td>
+<td class="fielddoc">
+<p>misregistration wrt telescope pupil. camera is rotated CCW. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad3bffc02a9431488037eefed0899afa5"></a>real</td>
+<td class="fieldname">
+misregrmax</td>
+<td class="fielddoc">
+<p>Maximum misregistration for all wfs in this powfs. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a3fe2f10062d01707ad74beb00d0b399e"></a>char *</td>
@@ -1865,6 +1881,81 @@ commonfsm</td>
 
 </div>
 </div>
+<a name="structwfsr__cfg__t" id="structwfsr__cfg__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#structwfsr__cfg__t">&#9670;&nbsp;</a></span>wfsr_cfg_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct wfsr_cfg_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>contains input parmaeters for each wfsr for reconstruction </p>
+</div><div id="dynsection-6" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-6-trigger" src="closed.png" alt="+"/> Collaboration diagram for wfsr_cfg_t:</div>
+<div id="dynsection-6-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-6-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="structwfsr__cfg__t__coll__graph.png" border="0" usemap="#wfsr__cfg__t_coll__map" alt="Collaboration graph"/></div>
+<map name="wfsr__cfg__t_coll__map" id="wfsr__cfg__t_coll__map">
+</map>
+</div>
+<table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a6b2778bfca3b1a1fb5e9bde62c64baee"></a>real</td>
+<td class="fieldname">
+thetax</td>
+<td class="fielddoc">
+<p>x direction </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a8e9fe237ac7ed9e0fb16c32425e0c14d"></a>real</td>
+<td class="fieldname">
+thetay</td>
+<td class="fielddoc">
+<p>y direction </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="acea6c9dd09ebfd30f21990df10a5504a"></a>real</td>
+<td class="fieldname">
+misregx</td>
+<td class="fielddoc">
+<p>misregistration wrt telescope pupil: shift along x </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae9204a09504c51cd97005dadc4322606"></a>real</td>
+<td class="fieldname">
+misregy</td>
+<td class="fielddoc">
+<p>misregistration wrt telescope pupil. shift along y </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a92ea8b6d38c0f4957bb27779ef273e0b"></a>real</td>
+<td class="fieldname">
+misregc</td>
+<td class="fielddoc">
+<p>misregistration wrt telescope pupil. clocking error. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a92b1b5064b7518874703e354af10cd89"></a>real</td>
+<td class="fieldname">
+hs</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a04b645f7f90d8c24f6b353b9207cc6cd"></a>int</td>
+<td class="fieldname">
+powfs</td>
+<td class="fielddoc">
+<p>height of star is wfs.hs=powfs.hs+wfs.delta_hs (input) powfs type </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a name="structwfs__cfg__t" id="structwfs__cfg__t"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#structwfs__cfg__t">&#9670;&nbsp;</a></span>wfs_cfg_t</h2>
 
@@ -1877,11 +1968,11 @@ commonfsm</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parmaeters for each wfs </p>
-</div><div id="dynsection-6" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-6-trigger" src="closed.png" alt="+"/> Collaboration diagram for wfs_cfg_t:</div>
-<div id="dynsection-6-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-7" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-7-trigger" src="closed.png" alt="+"/> Collaboration diagram for wfs_cfg_t:</div>
+<div id="dynsection-7-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-6-content" class="dyncontent" style="display:none;">
+<div id="dynsection-7-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structwfs__cfg__t__coll__graph.png" border="0" usemap="#wfs__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="wfs__cfg__t_coll__map" id="wfs__cfg__t_coll__map">
 </map>
@@ -1917,25 +2008,25 @@ thetay</td>
 <p>y direction </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a7ba546d77f1477dc4061771d51e6287a"></a>real</td>
+<a id="a6405d620a6c4e615f939644e025a2724"></a>real</td>
 <td class="fieldname">
-misreg_x</td>
+misregx</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs. </p>
+<p>misregistration wrt telescope pupil: shift along x </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a9c94e2684735dd3855e9bea993ad9056"></a>real</td>
+<a id="a5ccf127b2c5257145c785df960ce1a17"></a>real</td>
 <td class="fieldname">
-misreg_y</td>
+misregy</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure shift extracted from recon.distortion_tel2wfs. </p>
+<p>misregistration wrt telescope pupil. shift along y </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af8ad5aed8d91061bb5b1c4c93e38f0d1"></a>real</td>
+<a id="a0185f3785f69c2d6ba7b7db213d21021"></a>real</td>
 <td class="fieldname">
-misreg_r</td>
+misregc</td>
 <td class="fielddoc">
-<p>misregistration wrt telescope pupil. This is pure rotation extracted from recon.distortion_tel2wfs. </p>
+<p>misregistration wrt telescope pupil. clocking error. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a7c41560bed32d05c78942861a3782a89"></a>real</td>
@@ -1994,11 +2085,11 @@ powfs</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for each deformable mirror. </p>
-</div><div id="dynsection-7" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-7-trigger" src="closed.png" alt="+"/> Collaboration diagram for dm_cfg_t:</div>
-<div id="dynsection-7-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-8" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-8-trigger" src="closed.png" alt="+"/> Collaboration diagram for dm_cfg_t:</div>
+<div id="dynsection-8-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-7-content" class="dyncontent" style="display:none;">
+<div id="dynsection-8-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structdm__cfg__t__coll__graph.png" border="0" usemap="#dm__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="dm__cfg__t_coll__map" id="dm__cfg__t_coll__map">
 </map>
@@ -2178,11 +2269,11 @@ hyst_stroke</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contarins input parameters all evaluation directions. </p>
-</div><div id="dynsection-8" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-8-trigger" src="closed.png" alt="+"/> Collaboration diagram for evl_cfg_t:</div>
-<div id="dynsection-8-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-9" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-9-trigger" src="closed.png" alt="+"/> Collaboration diagram for evl_cfg_t:</div>
+<div id="dynsection-9-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-8-content" class="dyncontent" style="display:none;">
+<div id="dynsection-9-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structevl__cfg__t__coll__graph.png" border="0" usemap="#evl__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="evl__cfg__t_coll__map" id="evl__cfg__t_coll__map">
 </map>
@@ -2393,11 +2484,11 @@ moao</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for wavefront tomography. </p>
-</div><div id="dynsection-9" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-9-trigger" src="closed.png" alt="+"/> Collaboration diagram for tomo_cfg_t:</div>
-<div id="dynsection-9-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-10" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-10-trigger" src="closed.png" alt="+"/> Collaboration diagram for tomo_cfg_t:</div>
+<div id="dynsection-10-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-9-content" class="dyncontent" style="display:none;">
+<div id="dynsection-10-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structtomo__cfg__t__coll__graph.png" border="0" usemap="#tomo__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="tomo__cfg__t_coll__map" id="tomo__cfg__t_coll__map">
 </map>
@@ -2588,11 +2679,11 @@ splitlrt</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for deformable mirror fitting. </p>
-</div><div id="dynsection-10" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-10-trigger" src="closed.png" alt="+"/> Collaboration diagram for fit_cfg_t:</div>
-<div id="dynsection-10-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-11" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-11-trigger" src="closed.png" alt="+"/> Collaboration diagram for fit_cfg_t:</div>
+<div id="dynsection-11-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-10-content" class="dyncontent" style="display:none;">
+<div id="dynsection-11-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structfit__cfg__t__coll__graph.png" border="0" usemap="#fit__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="fit__cfg__t_coll__map" id="fit__cfg__t_coll__map">
 </map>
@@ -2783,11 +2874,11 @@ cgwarm</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for the least square reconstructor. </p>
-</div><div id="dynsection-11" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-11-trigger" src="closed.png" alt="+"/> Collaboration diagram for lsr_cfg_t:</div>
-<div id="dynsection-11-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-12" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-12-trigger" src="closed.png" alt="+"/> Collaboration diagram for lsr_cfg_t:</div>
+<div id="dynsection-12-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-11-content" class="dyncontent" style="display:none;">
+<div id="dynsection-12-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structlsr__cfg__t__coll__graph.png" border="0" usemap="#lsr__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="lsr__cfg__t_coll__map" id="lsr__cfg__t_coll__map">
 </map>
@@ -2894,11 +2985,11 @@ cgwarm</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for wavefront reconstruction. </p>
-</div><div id="dynsection-12" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-12-trigger" src="closed.png" alt="+"/> Collaboration diagram for recon_cfg_t:</div>
-<div id="dynsection-12-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-13" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-13-trigger" src="closed.png" alt="+"/> Collaboration diagram for recon_cfg_t:</div>
+<div id="dynsection-13-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-12-content" class="dyncontent" style="display:none;">
+<div id="dynsection-13-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structrecon__cfg__t__coll__graph.png" border="0" usemap="#recon__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="recon__cfg__t_coll__map" id="recon__cfg__t_coll__map">
 </map>
@@ -3091,11 +3182,11 @@ distortion_tel2wfs</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for simulation, like loop gain, seeds, etc. </p>
-</div><div id="dynsection-13" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-13-trigger" src="closed.png" alt="+"/> Collaboration diagram for sim_cfg_t:</div>
-<div id="dynsection-13-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-14" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-14-trigger" src="closed.png" alt="+"/> Collaboration diagram for sim_cfg_t:</div>
+<div id="dynsection-14-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-13-content" class="dyncontent" style="display:none;">
+<div id="dynsection-14-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structsim__cfg__t__coll__graph.png" border="0" usemap="#sim__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="sim__cfg__t_coll__map" id="sim__cfg__t_coll__map">
 </map>
@@ -3540,11 +3631,11 @@ dmadd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><div id="dynsection-14" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-14-trigger" src="closed.png" alt="+"/> Collaboration diagram for ncpa_cfg_t:</div>
-<div id="dynsection-14-summary" class="dynsummary" style="display:block;">
+<div class="textblock"></div><div id="dynsection-15" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-15-trigger" src="closed.png" alt="+"/> Collaboration diagram for ncpa_cfg_t:</div>
+<div id="dynsection-15-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-14-content" class="dyncontent" style="display:none;">
+<div id="dynsection-15-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structncpa__cfg__t__coll__graph.png" border="0" usemap="#ncpa__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="ncpa__cfg__t_coll__map" id="ncpa__cfg__t_coll__map">
 </map>
@@ -3658,11 +3749,11 @@ ntsurf</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Parameters for Cn square estimation. </p>
-</div><div id="dynsection-15" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-15-trigger" src="closed.png" alt="+"/> Collaboration diagram for cn2est_cfg_t:</div>
-<div id="dynsection-15-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-16" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-16-trigger" src="closed.png" alt="+"/> Collaboration diagram for cn2est_cfg_t:</div>
+<div id="dynsection-16-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-15-content" class="dyncontent" style="display:none;">
+<div id="dynsection-16-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structcn2est__cfg__t__coll__graph.png" border="0" usemap="#cn2est__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="cn2est__cfg__t_coll__map" id="cn2est__cfg__t_coll__map">
 </map>
@@ -3762,11 +3853,11 @@ saat</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for plotting during simulation. For debug purpose </p>
-</div><div id="dynsection-16" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-16-trigger" src="closed.png" alt="+"/> Collaboration diagram for plot_cfg_t:</div>
-<div id="dynsection-16-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-17" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-17-trigger" src="closed.png" alt="+"/> Collaboration diagram for plot_cfg_t:</div>
+<div id="dynsection-17-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-16-content" class="dyncontent" style="display:none;">
+<div id="dynsection-17-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structplot__cfg__t__coll__graph.png" border="0" usemap="#plot__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="plot__cfg__t_coll__map" id="plot__cfg__t_coll__map">
 </map>
@@ -3859,11 +3950,11 @@ psfmin</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for debugging. </p>
-</div><div id="dynsection-17" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-17-trigger" src="closed.png" alt="+"/> Collaboration diagram for dbg_cfg_t:</div>
-<div id="dynsection-17-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-18" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-18-trigger" src="closed.png" alt="+"/> Collaboration diagram for dbg_cfg_t:</div>
+<div id="dynsection-18-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-17-content" class="dyncontent" style="display:none;">
+<div id="dynsection-18-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structdbg__cfg__t__coll__graph.png" border="0" usemap="#dbg__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="dbg__cfg__t_coll__map" id="dbg__cfg__t_coll__map">
 </map>
@@ -4096,11 +4187,11 @@ recon_stuck</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>Configure GPU usage for different parts. </p>
-</div><div id="dynsection-18" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-18-trigger" src="closed.png" alt="+"/> Collaboration diagram for gpu_cfg_t:</div>
-<div id="dynsection-18-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-19" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-19-trigger" src="closed.png" alt="+"/> Collaboration diagram for gpu_cfg_t:</div>
+<div id="dynsection-19-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-18-content" class="dyncontent" style="display:none;">
+<div id="dynsection-19-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structgpu__cfg__t__coll__graph.png" border="0" usemap="#gpu__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="gpu__cfg__t_coll__map" id="gpu__cfg__t_coll__map">
 </map>
@@ -4179,11 +4270,11 @@ moao</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for each MOAO type. </p>
-</div><div id="dynsection-19" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-19-trigger" src="closed.png" alt="+"/> Collaboration diagram for moao_cfg_t:</div>
-<div id="dynsection-19-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-20" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-20-trigger" src="closed.png" alt="+"/> Collaboration diagram for moao_cfg_t:</div>
+<div id="dynsection-20-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-19-content" class="dyncontent" style="display:none;">
+<div id="dynsection-20-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structmoao__cfg__t__coll__graph.png" border="0" usemap="#moao__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="moao__cfg__t_coll__map" id="moao__cfg__t_coll__map">
 </map>
@@ -4289,11 +4380,11 @@ actstuck</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for reusing of saved variables. </p>
-</div><div id="dynsection-20" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-20-trigger" src="closed.png" alt="+"/> Collaboration diagram for load_cfg_t:</div>
-<div id="dynsection-20-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-21" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-21-trigger" src="closed.png" alt="+"/> Collaboration diagram for load_cfg_t:</div>
+<div id="dynsection-21-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-20-content" class="dyncontent" style="display:none;">
+<div id="dynsection-21-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structload__cfg__t__coll__graph.png" border="0" usemap="#load__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="load__cfg__t_coll__map" id="load__cfg__t_coll__map">
 </map>
@@ -4449,11 +4540,11 @@ ncpa</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>contains input parameters for saving variables. </p>
-</div><div id="dynsection-21" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-21-trigger" src="closed.png" alt="+"/> Collaboration diagram for save_cfg_t:</div>
-<div id="dynsection-21-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-22" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-22-trigger" src="closed.png" alt="+"/> Collaboration diagram for save_cfg_t:</div>
+<div id="dynsection-22-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-21-content" class="dyncontent" style="display:none;">
+<div id="dynsection-22-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structsave__cfg__t__coll__graph.png" border="0" usemap="#save__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="save__cfg__t_coll__map" id="save__cfg__t_coll__map">
 </map>
@@ -4727,11 +4818,11 @@ mvm</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="textblock"></div><div id="dynsection-22" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-22-trigger" src="closed.png" alt="+"/> Collaboration diagram for dist_cfg_t:</div>
-<div id="dynsection-22-summary" class="dynsummary" style="display:block;">
+<div class="textblock"></div><div id="dynsection-23" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-23-trigger" src="closed.png" alt="+"/> Collaboration diagram for dist_cfg_t:</div>
+<div id="dynsection-23-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-22-content" class="dyncontent" style="display:none;">
+<div id="dynsection-23-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structdist__cfg__t__coll__graph.png" border="0" usemap="#dist__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="dist__cfg__t_coll__map" id="dist__cfg__t_coll__map">
 </map>
@@ -4775,11 +4866,11 @@ dm2sci</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p>is a wrapper of all _CFG_T data types. </p>
-</div><div id="dynsection-23" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-23-trigger" src="closed.png" alt="+"/> Collaboration diagram for parms_t:</div>
-<div id="dynsection-23-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-24" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-24-trigger" src="closed.png" alt="+"/> Collaboration diagram for parms_t:</div>
+<div id="dynsection-24-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-23-content" class="dyncontent" style="display:none;">
+<div id="dynsection-24-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structparms__t__coll__graph.png" border="0" usemap="#parms__t_coll__map" alt="Collaboration graph"/></div>
 <map name="parms__t_coll__map" id="parms__t_coll__map">
 </map>
@@ -4857,7 +4948,7 @@ wfs</td>
 <p><a class="el" href="class_array.html">Array</a> of wfs </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a2dcb15240dc2739558d1eb27501d2bdc"></a><a class="el" href="parms_8h.html#structwfs__cfg__t">wfs_cfg_t</a> *</td>
+<a id="ac8c1d46cee6bf2413ec990cb4e35340d"></a><a class="el" href="parms_8h.html#structwfsr__cfg__t">wfsr_cfg_t</a> *</td>
 <td class="fieldname">
 wfsr</td>
 <td class="fielddoc">
@@ -4976,11 +5067,18 @@ nmoao</td>
 <p>Number of different MOAO type </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab769f09c29a9bb993bb9c2abffc847f9"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
+<a id="a0c1f7c4cf6a0f0b616872f0415cf2f5d"></a>int *</td>
 <td class="fieldname">
 fdlock</td>
 <td class="fielddoc">
 <p>Records the fd of the seed lock file. if -1 will skip the seed </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aae01e618d1351fecab216c115a24c9ad"></a>char **</td>
+<td class="fieldname">
+fnlock</td>
+<td class="fielddoc">
+<p>Records the filename of the seed lock file. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a9b1312a8deb1307eaf3dbffee42bc6ab"></a>int</td>
@@ -5152,11 +5250,11 @@ itwfssph</td>
       </table>
 </div><div class="memdoc">
 <div class="textblock"><p><a class="el" href="parms_8h.html#structarg__t">arg_t</a> is used for command line parsing. </p>
-</div><div id="dynsection-24" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
-  <img id="dynsection-24-trigger" src="closed.png" alt="+"/> Collaboration diagram for arg_t:</div>
-<div id="dynsection-24-summary" class="dynsummary" style="display:block;">
+</div><div id="dynsection-25" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-25-trigger" src="closed.png" alt="+"/> Collaboration diagram for arg_t:</div>
+<div id="dynsection-25-summary" class="dynsummary" style="display:block;">
 </div>
-<div id="dynsection-24-content" class="dyncontent" style="display:none;">
+<div id="dynsection-25-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structarg__t__coll__graph.png" border="0" usemap="#arg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="arg__t_coll__map" id="arg__t_coll__map">
 </map>
@@ -5274,7 +5372,7 @@ execmd</td>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>over_ride</em>&#160;</td>
+          <td class="paramname"><em>override</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

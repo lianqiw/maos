@@ -4,5 +4,5 @@ digraph "pts_t.__unnamed__.__unnamed__"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node553 [label="{pts_t.__unnamed__.\l__unnamed__\n|+ id\l+ origx\l+ nsa\l+ two\l+ keywords\l+ dummy_fp\l+ dummy_fft\l+ dummy_mem\l+ dummy_async\l+ origy\land 8 more...\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node553 [label="{pts_t.__unnamed__.\l__unnamed__\n|+ @32\l+ origy\l+ stat\l+ map\l+ nref\l+ @34\l+ dsay\l+ dummy_ht\l+ dummy_iac\l+ npad\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
 }

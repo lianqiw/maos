@@ -327,7 +327,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea </p>
+<p>Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea_gpt </p>
 
 </div>
 </div>
@@ -456,7 +456,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply tomography right hand operator without using assembled matrix. Fast and saves memory. The operation is the same as the Tomo_nea and Tomo_iprop in TomoL, so merge the implemenations.</p>
+<p>Apply tomography right hand operator without using assembled matrix. Fast and saves memory. The operation is the same as the Tomo_nea_gpt and Tomo_iprop in TomoL, so merge the implemenations.</p>
 <p>xout=HXW'<em>GP'*NEAI</em>(1-TTF*PTTF)*gin. </p>
 
 </div>

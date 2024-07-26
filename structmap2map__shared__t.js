@@ -4,7 +4,6 @@ var structmap2map__shared__t =
     [ "iy0", "structmap2map__shared__t.html#a5e2dbefc39d5af03a582a1902762b24a", null ],
     [ "stepx", "structmap2map__shared__t.html#a5ad2f1a30cd49c9128273f9256e9c534", null ],
     [ "stepy", "structmap2map__shared__t.html#a543cef42b3c3eb4d8096efb9303ce937", null ],
-    [ "nn", "structmap2map__shared__t.html#a383db69d7a1b9101fa34b344fcec87d9", null ],
     [ "nx", "structmap2map__shared__t.html#a0858ad9712a389e60e05496a1ee0bfec", null ],
     [ "ny", "structmap2map__shared__t.html#a9f235448469edbdce9b88421d4eb2780", null ],
     [ "ndirx", "structmap2map__shared__t.html#a953a8868e8f631fc7638c471ade7d549", null ],

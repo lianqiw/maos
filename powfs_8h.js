@@ -1,8 +1,8 @@
 var powfs_8h =
 [
     [ "setup_powfs_init", "powfs_8h.html#a1a564d0691f30cf50918b8c371a38d8e", null ],
-    [ "setup_powfs_misreg_tel", "powfs_8h.html#af73db6cefef80ad4855578d44bec2f9d", null ],
-    [ "setup_powfs_misreg_dm", "powfs_8h.html#a54fc7e790ae6161b15c2a69f6fbee260", null ],
+    [ "setup_powfs_amp", "powfs_8h.html#a87d4d0afeb6770b5ca0a23393665529f", null ],
+    [ "setup_powfs_misreg_dm", "powfs_8h.html#ab377315d3eaa9b9be9a3cdfadfa24b36", null ],
     [ "setup_shwfs_phy", "powfs_8h.html#ac94d189fbc564ff0a88e7740c23cd3ad", null ],
     [ "setup_powfs_neasim", "powfs_8h.html#a36b1526a9936b7bfd6256e5abbfe94a8", null ],
     [ "setup_powfs_calib", "powfs_8h.html#a33bf8889280bcb05fb321b5397ccb49e", null ],

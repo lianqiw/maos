@@ -4,8 +4,8 @@ digraph "powfs_t"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node70 [label="{powfs_t\n|+ amp_tel\l+ saa_tel\l+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node71 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +realamp\n+bkgrnd\n+srsa\n+sodiumprep\n+opdbias\n+realsaa\n+sodium\n+gradncpa\n+neasim\n+opdadd\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node70 [label="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node71 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +bkgrnd\n+saa\n+amp\n+srsa\n+sodiumprep\n+opdbias\n+sodium\n+gradncpa\n+neasim\n+opdadd\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node71 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdcell"];
   Node79 -> Node71 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
   Node79 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
@@ -35,7 +35,7 @@ digraph "powfs_t"
   Node82 -> Node96 [color="grey25",fontsize="10",style="solid",label=" +dx\n+dy" ,arrowhead="odiamond",fontname="Helvetica"];
   Node74 -> Node96 [color="grey25",fontsize="10",style="solid",label=" +nxsa\n+nysa" ,arrowhead="odiamond",fontname="Helvetica"];
   Node87 -> Node95 [color="grey25",fontsize="10",style="solid",label=" +loc" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node82 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +saasum\n+areascale" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node82 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +areascale" ,arrowhead="odiamond",fontname="Helvetica"];
   Node98 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +pywfs" ,arrowhead="odiamond",fontname="Helvetica"];
   Node98 [label="{pywfs_t\n||}",height=0.2,width=0.4,color="red",URL="$pywfs_8h.html#structpywfs__t"];
   Node85 -> Node98 [color="grey25",fontsize="10",style="solid",label=" +msaloc" ,arrowhead="odiamond",fontname="Helvetica"];
@@ -69,8 +69,8 @@ digraph "powfs_t"
   Node79 -> Node107 [color="grey25",fontsize="10",style="solid",label=" +i0sumsum\n+i0sum" ,arrowhead="odiamond",fontname="Helvetica"];
   Node101 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +sprint" ,arrowhead="odiamond",fontname="Helvetica"];
   Node100 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +fieldstop" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node74 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +notfx\n+notfy\n+pixpsax\n+pixpsay\n+nsaimcc" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node79 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +srsamax\n+sumamp2\n+sumamp\n+saa\n+amp\n+dtheta\n+pixoffx\n+pixoffy\n+focus" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node74 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +notfx\n+notfy\n+pixpsax\n+pixpsay" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node79 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +srsamax\n+sumamp2\n+sumamp\n+dtheta\n+saasum\n+pixoffx\n+pixoffy\n+saamax\n+focus\n+saamin\n..." ,arrowhead="odiamond",fontname="Helvetica"];
   Node96 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +pts" ,arrowhead="odiamond",fontname="Helvetica"];
   Node109 -> Node70 [color="grey25",fontsize="10",style="solid",label=" +fit" ,arrowhead="odiamond",fontname="Helvetica"];
   Node109 [label="{fit_t\n||}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structfit__t"];

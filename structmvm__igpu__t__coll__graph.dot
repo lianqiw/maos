@@ -11,7 +11,7 @@ digraph "mvm_igpu_t"
   Node3 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
   Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +recon" ,arrowhead="odiamond",fontname="Helvetica"];
   Node4 [label="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}",height=0.2,width=0.4,color="red",URL="$maos_2types_8h.html#structrecon__t"];
-  Node8 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +dither_md\n+cxxalg\n+dither_dtrat\n+nthread\n+npsr\n+dither_npoint\n+lowfs_gtilt" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node8 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +dither_md\n+cxxalg\n+dither_dtrat\n+nthread\n+npsr\n+nwfsr\n+dither_npoint\n+lowfs_gtilt" ,arrowhead="odiamond",fontname="Helvetica"];
   Node8 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
   Node13 -> Node4 [color="grey25",fontsize="10",style="solid",label=" +ht\n+W1\n+wt\n+MVM\n+neam\n+dx\n+os" ,arrowhead="odiamond",fontname="Helvetica"];
   Node13 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
@@ -19,15 +19,15 @@ digraph "mvm_igpu_t"
   Node15 [label="{long\n||}",height=0.2,width=0.4,color="black",URL="$classlong.html"];
   Node8 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +ntotact\n+load_mvmf\n+ntotgrad" ,arrowhead="odiamond",fontname="Helvetica"];
   Node13 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +residualfit\n+residual" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node50 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +mvmt" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node50 [label="{curmat &\n||}",height=0.2,width=0.4,color="grey75"];
+  Node51 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +mvmt" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node51 [label="{curmat &\n||}",height=0.2,width=0.4,color="grey75"];
   Node15 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +ntotxloc\n+ntotact\n+curp\n+ntotgrad" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node51 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +mvmc\n+residualfit\n+mvmi\n+residual" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node51 [label="{smat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structsmat"];
-  Node3 -> Node51 [color="grey25",fontsize="10",style="solid",label=" +p" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node15 -> Node51 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node52 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +parms" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node52 [label="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ step_lo\l+ itwfssph\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structparms__t"];
-  Node8 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +npowfs\n+nlgspowfs\n+nphypowfs\n+idmground\n+ntipowfs\n+ittpowfs\n+ilgspowfs\n+ndm\n+step_hi\n+itpowfs\n..." ,arrowhead="odiamond",fontname="Helvetica"];
-  Node13 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +dirs" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node52 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +mvmc\n+residualfit\n+mvmi\n+residual" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node52 [label="{smat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structsmat"];
+  Node3 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +p" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node15 -> Node52 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node53 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +parms" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node53 [label="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}",height=0.2,width=0.4,color="red",URL="$parms_8h.html#structparms__t"];
+  Node8 -> Node53 [color="grey25",fontsize="10",style="solid",label=" +npowfs\n+nlgspowfs\n+nphypowfs\n+fdlock\n+idmground\n+ntipowfs\n+ittpowfs\n+ilgspowfs\n+ndm\n+step_hi\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node13 -> Node53 [color="grey25",fontsize="10",style="solid",label=" +dirs" ,arrowhead="odiamond",fontname="Helvetica"];
 }

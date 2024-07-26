@@ -15,6 +15,7 @@ var maos_2recon_8h =
     [ "setup_recon_mvm", "maos_2recon_8h.html#adf3a2226f6dd77e250e122600b393c57", null ],
     [ "setup_recon_control", "maos_2recon_8h.html#afc86f8846fae4a788d8438004bed24f8", null ],
     [ "setup_recon_post", "maos_2recon_8h.html#ab2dc37ef9c7576927255d2cc7f52e0de", null ],
+    [ "setup_recon_HXW", "maos_2recon_8h.html#a1c5b4e0a4cbf262b533f64fd8b88b45a", null ],
     [ "free_recon", "maos_2recon_8h.html#a533fa88200e668fe0bce42af7f3e6794", null ],
     [ "free_recon_unused", "maos_2recon_8h.html#a9a15286be2826aa71cfca6227bb58f07", null ],
     [ "setup_recon_mvst", "maos_2recon_8h.html#a14b7a0beadfd04a65affccf99767892b", null ],

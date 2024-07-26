@@ -4,12 +4,12 @@ digraph "sim_save_t"
   bgcolor="transparent";
   edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
   node [fontname="Helvetica",fontsize="10",shape=record];
-  Node311 [label="{sim_save_t\n|+ wfspsfout\l+ evlpsfolmean\l+ evlpsfmean\l+ evlpsfhist\l+ evlopdcov\l+ evlopdmean\l+ evlopdcovol\l+ evlopdmeanol\l+ evlpsfmean_ngsr\l+ evlpsfhist_ngsr\land 22 more...\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
-  Node312 -> Node311 [color="grey25",fontsize="10",style="solid",label=" +fsmcmds\n+llt_fsmreal\n+fsmerrs" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node312 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdcell"];
-  Node320 -> Node312 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node320 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
-  Node320 -> Node311 [color="grey25",fontsize="10",style="solid",label=" +ttmreal" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node326 -> Node311 [color="grey25",fontsize="10",style="solid",label=" +psdol\n+gradcl\n+wfsopdol\n+dmproj\n+evlopdmean\l_ngsr\n+evlopdcov\l_ngsr\n+ztiltout\n+psdol_lo\n+wfslltopd\n+Mint_lo\n..." ,arrowhead="odiamond",fontname="Helvetica"];
-  Node326 [label="{zfarr\n||}",height=0.2,width=0.4,color="grey75"];
+  Node312 [label="{sim_save_t\n|+ wfspsfout\l+ evlpsfolmean\l+ evlpsfmean\l+ evlpsfhist\l+ evlopdcov\l+ evlopdmean\l+ evlopdcovol\l+ evlopdmeanol\l+ evlpsfmean_ngsr\l+ evlpsfhist_ngsr\land 22 more...\l|}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node313 -> Node312 [color="grey25",fontsize="10",style="solid",label=" +fsmcmds\n+llt_fsmreal\n+fsmerrs" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node313 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdcell"];
+  Node321 -> Node313 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node321 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structdmat"];
+  Node321 -> Node312 [color="grey25",fontsize="10",style="solid",label=" +ttmreal" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node327 -> Node312 [color="grey25",fontsize="10",style="solid",label=" +psdol\n+gradcl\n+wfsopdol\n+dmproj\n+evlopdmean\l_ngsr\n+evlopdcov\l_ngsr\n+ztiltout\n+psdol_lo\n+wfslltopd\n+Mint_lo\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node327 [label="{zfarr\n||}",height=0.2,width=0.4,color="grey75"];
 }

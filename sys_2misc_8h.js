@@ -11,6 +11,7 @@ var sys_2misc_8h =
     ] ],
     [ "strdup", "sys_2misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
     [ "strndup", "sys_2misc_8h.html#ad03229fc70e029be3fb59fe8dc7aef6f", null ],
+    [ "snprintf", "sys_2misc_8h.html#aa367b75c5aed883fef5befbdf04835a4", null ],
     [ "mydirname", "sys_2misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
     [ "check_suffix", "sys_2misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
     [ "copyfile", "sys_2misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd", null ],
@@ -26,6 +27,7 @@ var sys_2misc_8h =
     [ "mysymlink", "sys_2misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a", null ],
     [ "mylink", "sys_2misc_8h.html#a9867f2a8994e96bb38589f4ecdbc347a", null ],
     [ "exist", "sys_2misc_8h.html#a7bdca4cbc6b53e05e66455d9ffb8af2d", null ],
+    [ "touch", "sys_2misc_8h.html#aac1668c4eefe0f88215711c27c91596a", null ],
     [ "isdir", "sys_2misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8", null ],
     [ "isfile", "sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0", null ],
     [ "islink", "sys_2misc_8h.html#a40e09ee72707a692de2a42cea0b4963c", null ],
@@ -44,6 +46,7 @@ var sys_2misc_8h =
     [ "mypause", "sys_2misc_8h.html#a13def182b8c8d171bd529e29de5143c9", null ],
     [ "available_space", "sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9", null ],
+    [ "mysnprintf", "sys_2misc_8h.html#a9bd8555fd6d364ebf45f367645039713", null ],
     [ "parse_argopt", "sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
     [ "set_realtime", "sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
     [ "free_strarr", "sys_2misc_8h.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ]

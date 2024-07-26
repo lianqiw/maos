@@ -1,8 +1,9 @@
 var searchData=
 [
-  ['saa',['saa',['../pywfs_8h.html#a0f4db87d2d77f991038a62d055ff82b5',1,'pywfs_t::saa()'],['../maos_2types_8h.html#ab95f31e26f993d6d7e0deeb6cd6f3c97',1,'powfs_t::saa()']]],
-  ['saa_5ftel',['saa_tel',['../maos_2types_8h.html#a37f2d64931cb4c918609c7439c841dff',1,'powfs_t']]],
-  ['saasum',['saasum',['../maos_2types_8h.html#aa669ff19f38065772c2d987934faf6d3',1,'powfs_t']]],
+  ['saa',['saa',['../pywfs_8h.html#a0f4db87d2d77f991038a62d055ff82b5',1,'pywfs_t::saa()'],['../maos_2types_8h.html#a3424348fc5f9d08ed6ea4ed676197690',1,'powfs_t::saa()']]],
+  ['saamax',['saamax',['../maos_2types_8h.html#a8578e71373788bc1845e1169245996f7',1,'powfs_t']]],
+  ['saamin',['saamin',['../maos_2types_8h.html#aab4716d397bbe58f214e49f568cb360e',1,'powfs_t']]],
+  ['saasum',['saasum',['../maos_2types_8h.html#a69188e9441c78d07d4783b6434c6d3eb',1,'powfs_t']]],
   ['saat',['saat',['../pywfs_8h.html#a4ab597df2959f1b3fe747f9ec1a365b8',1,'pywfs_cfg_t::saat()'],['../parms_8h.html#a2b34b9f02cb4a834079e7dd858ed4015',1,'powfs_cfg_t::saat()'],['../parms_8h.html#a2ba0c45c581ca0ed44d1248f1d45482f',1,'cn2est_cfg_t::saat()']]],
   ['sabad',['sabad',['../parms_8h.html#a75568811134ed6c9cc6474c1bc9cb72b',1,'wfs_cfg_t']]],
   ['safill2d',['safill2d',['../parms_8h.html#a0f75793390e373c315e40cedf176d7a4',1,'powfs_cfg_t']]],

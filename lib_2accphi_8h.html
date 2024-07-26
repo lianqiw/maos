@@ -172,6 +172,8 @@ Functions</h2></td></tr>
 <tr class="separator:a0511af515d8deb01cca5c8e6841d0f49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1af371632703e1e74e5f2c3118151db4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a1af371632703e1e74e5f2c3118151db4">prop_nongrid_pts</a> (const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *locin, const real *phiin, const <a class="el" href="type_8h.html#structpts__t">pts_t</a> *pts, real *phiout, const real alpha, real displacex, real displacey, const real scale, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end)</td></tr>
 <tr class="separator:a1af371632703e1e74e5f2c3118151db4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7b460fb8d6ec56df5824982800c8616"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#ac7b460fb8d6ec56df5824982800c8616">prop_nongrid_rot</a> (const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *locin, const real *phiin, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *locout, real *phiout, const real alpha, real displacex, real displacey, const real scale, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end, real theta)</td></tr>
+<tr class="separator:ac7b460fb8d6ec56df5824982800c8616"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affce127f08535b2cc856824e2515990c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#affce127f08535b2cc856824e2515990c">prop_grid_cubic</a> (const <a class="el" href="type_8h.html#structmap__t">map_t</a> *mapin, const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *locout, real *phiout, const real alpha, real displacex, real displacey, const real scale, real cubic_iac, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end)</td></tr>
 <tr class="separator:affce127f08535b2cc856824e2515990c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71bf68fc6664d6813187a736cdaca333"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2accphi_8h.html#a71bf68fc6664d6813187a736cdaca333">prop_grid_map_cubic</a> (const <a class="el" href="type_8h.html#structmap__t">map_t</a> *mapin, <a class="el" href="type_8h.html#structmap__t">map_t</a> *mapout, const real alpha, real displacex, real displacey, const real scale, real cubic_iac, <a class="el" href="classlong.html">long</a> start, <a class="el" href="classlong.html">long</a> end)</td></tr>
@@ -1131,6 +1133,104 @@ index</td>
     <tr><td class="paramdir">[in]</td><td class="paramname">phiin</td><td>Input OPD defined in locin </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>coordinate of destination grid </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">phiout</td><td>OPD defined on locout </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>scaling of OPD </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">displacex</td><td>displacement of the ray </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">displacey</td><td>displacement of the ray </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>scaling of the beam diameter (cone) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>start index </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>end index </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac7b460fb8d6ec56df5824982800c8616"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7b460fb8d6ec56df5824982800c8616">&#9670;&nbsp;</a></span>prop_nongrid_rot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void prop_nongrid_rot </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>locin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const real *&#160;</td>
+          <td class="paramname"><em>phiin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>locout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real *&#160;</td>
+          <td class="paramname"><em>phiout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const real&#160;</td>
+          <td class="paramname"><em>alpha</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>displacex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>displacey</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const real&#160;</td>
+          <td class="paramname"><em>scale</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>end</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>theta</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Propagate OPD defines on locin to locout with rotation. locout is rotated by theta CW which means OPD is rotated CCW by theta. alpha is the scaling of data. displacex, displacy is the displacement of the center of the beam on the input grid. scale is the cone effect. See <a class="el" href="lib_2accphi_8h.html#a904e104dcec764baea15d99d269ad5a8">prop_grid()</a> for definition of other parameters. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">locin</td><td>Coordinate of iregular source grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">phiin</td><td>Input OPD defined in locin </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locout</td><td>Coordinate of irregular output grid </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phiout</td><td>Output OPD defined in locout </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>scaling of OPD </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">displacex</td><td>displacement of the ray </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">displacey</td><td>displacement of the ray </td></tr>

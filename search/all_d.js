@@ -24,7 +24,6 @@ var searchData=
   ['opdrhat',['opdrhat',['../maos_2types_8h.html#a4391530204b4d68608bf32f2a91b730d',1,'sim_t']]],
   ['opdrhatlast',['opdrhatlast',['../maos_2types_8h.html#a8c9f676f80ff757732b7bf41b899cb2a',1,'sim_t']]],
   ['opdx',['opdx',['../parms_8h.html#a553decf85f94aa8adf69977f9682e4e4',1,'plot_cfg_t::opdx()'],['../parms_8h.html#ab80cf3097e2b9763e07000ba7f10f938',1,'save_cfg_t::opdx()'],['../maos_2types_8h.html#a339e02dcb8013fd6f7ad18015f8ad171',1,'sim_t::opdx()']]],
-  ['open_5fconfig',['open_config',['../readcfg_8h.html#ac5df07be610c26bf72114091f95feb4b',1,'readcfg.c']]],
   ['order',['order',['../pywfs_8h.html#a4c5562283523e060cbd64b4168075576',1,'pywfs_cfg_t::order()'],['../parms_8h.html#ae10178a9b28ce9f3cd6c22d2c1323aa0',1,'powfs_cfg_t::order()'],['../parms_8h.html#ad797af78c1614e5e46aa692d782dc522',1,'dm_cfg_t::order()'],['../parms_8h.html#a7ce5a7e5353ced2fec3ac3c376cb4073',1,'moao_cfg_t::order()']]],
   ['os',['os',['../cn2est_8h.html#a111bffff3aa695200480f268920e3932',1,'cn2est_t::os()'],['../parms_8h.html#a389921eecc54edf5560bf425a2dcb262',1,'atmr_cfg_t::os()'],['../maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911',1,'recon_t::os()']]],
   ['over',['over',['../parms_8h.html#a98fad09a68cb05b822f9c1a3a0a74e71',1,'arg_t']]],

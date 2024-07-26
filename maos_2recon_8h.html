@@ -134,6 +134,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 <tr class="separator:afc86f8846fae4a788d8438004bed24f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2dc37ef9c7576927255d2cc7f52e0de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#ab2dc37ef9c7576927255d2cc7f52e0de">setup_recon_post</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper)</td></tr>
 <tr class="separator:ab2dc37ef9c7576927255d2cc7f52e0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c5b4e0a4cbf262b533f64fd8b88b45a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a1c5b4e0a4cbf262b533f64fd8b88b45a">setup_recon_HXW</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="type_8h.html#structmapcell">mapcell</a> *atm)</td></tr>
+<tr class="separator:a1c5b4e0a4cbf262b533f64fd8b88b45a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a533fa88200e668fe0bce42af7f3e6794"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a533fa88200e668fe0bce42af7f3e6794">free_recon</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
 <tr class="separator:a533fa88200e668fe0bce42af7f3e6794"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a15286be2826aa71cfca6227bb58f07"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2recon_8h.html#a9a15286be2826aa71cfca6227bb58f07">free_recon_unused</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
@@ -624,6 +626,48 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
       </table>
 </div><div class="memdoc">
 <p>A few further operations that needs MVM. </p>
+
+</div>
+</div>
+<a id="a1c5b4e0a4cbf262b533f64fd8b88b45a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c5b4e0a4cbf262b533f64fd8b88b45a">&#9670;&nbsp;</a></span>setup_recon_HXW()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_HXW </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td>
+          <td class="paramname"><em>atm</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setup ray tracing operator from xloc to ploc for guide stars. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">recon</td><td></td></tr>
+    <tr><td class="paramname">parms</td><td></td></tr>
+    <tr><td class="paramname">atm</td><td>If set, atm[].vx,vy will be used for predictive offsetting. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

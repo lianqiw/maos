@@ -12,7 +12,7 @@ var structcupowfs__t =
     [ "pywfs", "structcupowfs__t.html#acd7ca9f6491e29452c5b87d86e89f5dd", null ],
     [ "pyramid", "structcupowfs__t.html#aa5ae9c4add81e19de08a3bd8a90ecd14", null ],
     [ "pynominal", "structcupowfs__t.html#abfa9004221f4081e47029ffcd638b4f0", null ],
-    [ "saa", "structcupowfs__t.html#a3ad17a41fe0267419184b0ef189f2108", null ],
+    [ "saa", "structcupowfs__t.html#a4a8886365aa49e1492e997c742f389f5", null ],
     [ "pyoff", "structcupowfs__t.html#ad7eb61d5a8051f7fdcf73b0a62631a88", null ],
     [ "pixoffx", "structcupowfs__t.html#a1f382cbdcc81dbcfa945f051af10b794", null ],
     [ "pixoffy", "structcupowfs__t.html#a83a5828a6be1984100b269e6292e9b25", null ]

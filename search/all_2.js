@@ -347,7 +347,7 @@ var searchData=
   ['cutomo_5fgrid',['cutomo_grid',['../classcutomo__grid.html',1,'']]],
   ['cuwfs_5fbase',['cuwfs_base',['../classcuda__wfs_1_1cuwfs__base.html',1,'cuda_wfs']]],
   ['cuwfs_5finfo',['cuwfs_info',['../classcuda__wfs_1_1cuwfs__info.html',1,'cuda_wfs']]],
-  ['cuwfs_5ft',['cuwfs_t',['../classcuwfs__t.html',1,'cuwfs_t'],['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t']]],
+  ['cuwfs_5ft',['cuwfs_t',['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t'],['../classcuwfs__t.html',1,'cuwfs_t']]],
   ['cvecperm',['cvecperm',['../cmath_8h.html#a379334c2ea8abebb8df335a241c57f8f',1,'ctmp.c']]],
   ['cvecpermi',['cvecpermi',['../cmath_8h.html#a19a85280f9c37ee345f5eec0f8ca0274',1,'ctmp.c']]],
   ['cwritedata',['cwritedata',['../cmath_8h.html#aafc1ef87005c3b532eb7f6f9c7cdeb10',1,'ctmp.c']]],

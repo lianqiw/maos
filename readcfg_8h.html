@@ -109,8 +109,12 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ac5df07be610c26bf72114091f95feb4b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ac5df07be610c26bf72114091f95feb4b">open_config</a> (const char *fn, const char *prefix, int priority)</td></tr>
-<tr class="separator:ac5df07be610c26bf72114091f95feb4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf12b4b509f4a89bce6b14cbe171d758"><td class="memItemLeft" align="right" valign="top"><a id="acf12b4b509f4a89bce6b14cbe171d758"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config_prefix</b> (const char *fn, const char *prefix, const char *prekey)</td></tr>
+<tr class="separator:acf12b4b509f4a89bce6b14cbe171d758"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89ac80e13ba1f4ecc64e1a16f0002bfb"><td class="memItemLeft" align="right" valign="top"><a id="a89ac80e13ba1f4ecc64e1a16f0002bfb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (const char *fn)</td></tr>
+<tr class="separator:a89ac80e13ba1f4ecc64e1a16f0002bfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7985dcf84dcc547bc18df8a29b616d76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76">close_config</a> (const char *format,...)</td></tr>
 <tr class="separator:a7985dcf84dcc547bc18df8a29b616d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73c95aaed91c735a3fdc93701f6d964f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f">readcfg_peek</a> (const char *format,...)</td></tr>
@@ -119,6 +123,8 @@ Functions</h2></td></tr>
 <tr class="separator:a2e922a9c36a239462733acec6cd00827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23e6af091d96304ce76d92acc966c9cb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a23e6af091d96304ce76d92acc966c9cb">readcfg_peek_priority</a> (const char *format,...)</td></tr>
 <tr class="separator:a23e6af091d96304ce76d92acc966c9cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f5ea303a546c0dce7fb0e030a59b9a0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a1f5ea303a546c0dce7fb0e030a59b9a0">readcfg_peek_index</a> (const char *format,...)</td></tr>
+<tr class="separator:a1f5ea303a546c0dce7fb0e030a59b9a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d049e1fb1b83a7c3cd7b1d5866f43f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a3d049e1fb1b83a7c3cd7b1d5866f43f9">readcfg_ignore</a> (const char *format,...)</td></tr>
 <tr class="separator:a3d049e1fb1b83a7c3cd7b1d5866f43f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a36b85bb80ce8ab0ecdf6fd0762d4921d">readcfg_str</a> (const char *format,...)</td></tr>
@@ -160,49 +166,6 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="ac5df07be610c26bf72114091f95feb4b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5df07be610c26bf72114091f95feb4b">&#9670;&nbsp;</a></span>open_config()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void open_config </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>config_in</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>prefix</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>priority</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key has a priority or 0 or higher. A new key with same or higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">config_in</td><td>The .conf file to read </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">prefix</td><td>if not NULL, prefix the key with this. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priorities of keys. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="a7985dcf84dcc547bc18df8a29b616d76"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7985dcf84dcc547bc18df8a29b616d76">&#9670;&nbsp;</a></span>close_config()</h2>
 
@@ -315,7 +278,36 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check whether the record is overriden by user supplied conf files. </p>
+<p>Return priority value of the record </p>
+
+</div>
+</div>
+<a id="a1f5ea303a546c0dce7fb0e030a59b9a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f5ea303a546c0dce7fb0e030a59b9a0">&#9670;&nbsp;</a></span>readcfg_peek_index()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int readcfg_peek_index </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return index value of the record </p>
 
 </div>
 </div>

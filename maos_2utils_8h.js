@@ -10,7 +10,7 @@ var maos_2utils_8h =
     [ "apply_fieldstop", "maos_2utils_8h.html#ade5de6f5a62d132a95afb75a96a4e12c", null ],
     [ "display_server", "maos_2utils_8h.html#ae030a26a334f0d5202eb0369158eb68c", null ],
     [ "plot_setup", "maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822", null ],
-    [ "mkamp", "maos_2utils_8h.html#a83cb0a7d0009262a81f1c1019a49f949", null ],
+    [ "mkamp", "maos_2utils_8h.html#a3fc7e050306403f4c90b0b7936451182", null ],
     [ "maxapriori", "maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e", null ],
     [ "wfslinearity", "maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5", null ],
     [ "lgs_wfs_sph_psd", "maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10", null ],

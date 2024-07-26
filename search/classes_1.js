@@ -79,5 +79,5 @@ var searchData=
   ['cutomo_5fgrid',['cutomo_grid',['../classcutomo__grid.html',1,'']]],
   ['cuwfs_5fbase',['cuwfs_base',['../classcuda__wfs_1_1cuwfs__base.html',1,'cuda_wfs']]],
   ['cuwfs_5finfo',['cuwfs_info',['../classcuda__wfs_1_1cuwfs__info.html',1,'cuda_wfs']]],
-  ['cuwfs_5ft',['cuwfs_t',['../classcuwfs__t.html',1,'cuwfs_t'],['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t']]]
+  ['cuwfs_5ft',['cuwfs_t',['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t'],['../classcuwfs__t.html',1,'cuwfs_t']]]
 ];

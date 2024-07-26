@@ -6,10 +6,10 @@ var maos_2types_8h_structrecon__t =
     [ "wt", "maos_2types_8h.html#a51c7e2072fa479f634da82a824a12d52", null ],
     [ "os", "maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911", null ],
     [ "dx", "maos_2types_8h.html#ab29ccb6bb4774fe6517eb79079f77664", null ],
+    [ "wfsr", "maos_2types_8h.html#a8397ee4ded7b441d02e5d13cbafced6b", null ],
     [ "saloc", "maos_2types_8h.html#a49abc01a6ae50866f7b5faec1a369cbc", null ],
     [ "ploc", "maos_2types_8h.html#a47b81002d316b023928634e33d077c4c", null ],
     [ "pmap", "maos_2types_8h.html#a8a4f8413be5b9f89b91d522c40cf71ef", null ],
-    [ "ploc_tel", "maos_2types_8h.html#a04e6ebf6299939af4ed105a58f50ac87", null ],
     [ "xloc", "maos_2types_8h.html#ae4bf5a369b5b1126f91efef909dd6115", null ],
     [ "xmap", "maos_2types_8h.html#a705c052c959e6014780e68162b52f24b", null ],
     [ "xcmap", "maos_2types_8h.html#aade787f55b2a50462d46a49b472f7872", null ],
@@ -107,5 +107,6 @@ var maos_2types_8h_structrecon__t =
     [ "npsr", "maos_2types_8h.html#a9ca2bd9a33823a54ce58c20312b5e05c", null ],
     [ "nthread", "maos_2types_8h.html#a62a2826f0026371368a178ee77a560bc", null ],
     [ "cxxalg", "maos_2types_8h.html#a256eebe74763739433e397eb9a2e2ba0", null ],
+    [ "nwfsr", "maos_2types_8h.html#a6e230a32575bc18dfa3af9909cca8989", null ],
     [ "Herr", "maos_2types_8h.html#af4555b7c44a8fb404144f8033d72bee2", null ]
 ];

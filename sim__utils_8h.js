@@ -10,5 +10,5 @@ var sim__utils_8h =
     [ "save_skyc", "sim__utils_8h.html#a1cf70e1ccc621eb757ab8cc4ffbaee18", null ],
     [ "blend_screen_side", "sim__utils_8h.html#afc7ef7c79f36d7cb5f5f89fb928de22e", null ],
     [ "genatm", "sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c", null ],
-    [ "setup_recon_HXW_predict", "sim__utils_8h.html#aa458ca9d12ca97b2e0cf3bee606ae8fb", null ]
+    [ "remove_lock", "sim__utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20", null ]
 ];

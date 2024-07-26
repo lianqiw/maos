@@ -6,6 +6,8 @@ var parms_8h_structpowfs__cfg__t =
     [ "saloc", "parms_8h.html#a5670ab9fc69fa9ed4a053636a19f7867", null ],
     [ "misregx", "parms_8h.html#afd7eb74863493ba55fcfc788babbd42e", null ],
     [ "misregy", "parms_8h.html#affa17d36ac1346eefe3619b40da0efca", null ],
+    [ "misregc", "parms_8h.html#a7788fc730ebe6ad481d33c7f9a8e14dd", null ],
+    [ "misregrmax", "parms_8h.html#ad3bffc02a9431488037eefed0899afa5", null ],
     [ "amp", "parms_8h.html#a3fe2f10062d01707ad74beb00d0b399e", null ],
     [ "piinfile", "parms_8h.html#af0efc45bacceee721bd5d61db82ef00a", null ],
     [ "sninfile", "parms_8h.html#aa36290db2d198cc23e5518ca8c035cac", null ],

@@ -45,6 +45,7 @@ var lib_2accphi_8h =
     [ "prop_nongrid", "lib_2accphi_8h.html#a061421eb6d90e3ae21ae1d87919324d1", null ],
     [ "prop_nongrid_map", "lib_2accphi_8h.html#a0511af515d8deb01cca5c8e6841d0f49", null ],
     [ "prop_nongrid_pts", "lib_2accphi_8h.html#a1af371632703e1e74e5f2c3118151db4", null ],
+    [ "prop_nongrid_rot", "lib_2accphi_8h.html#ac7b460fb8d6ec56df5824982800c8616", null ],
     [ "prop_grid_cubic", "lib_2accphi_8h.html#affce127f08535b2cc856824e2515990c", null ],
     [ "prop_grid_map_cubic", "lib_2accphi_8h.html#a71bf68fc6664d6813187a736cdaca333", null ],
     [ "prop_grid_pts_cubic", "lib_2accphi_8h.html#ae9393ef5c59a7fc531b93b980d119709", null ],

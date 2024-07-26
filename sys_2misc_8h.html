@@ -116,6 +116,9 @@ Macros</h2></td></tr>
 <tr class="memitem:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memItemLeft" align="right" valign="top"><a id="ad03229fc70e029be3fb59fe8dc7aef6f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>strndup</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#adc66375416e374222e5f189632e3a08a">mystrndup</a></td></tr>
 <tr class="separator:ad03229fc70e029be3fb59fe8dc7aef6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa367b75c5aed883fef5befbdf04835a4"><td class="memItemLeft" align="right" valign="top"><a id="aa367b75c5aed883fef5befbdf04835a4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>snprintf</b>&#160;&#160;&#160;<a class="el" href="sys_2misc_8h.html#a9bd8555fd6d364ebf45f367645039713">mysnprintf</a> /*our snprintf avoids the truncation error by checking the returned size. */</td></tr>
+<tr class="separator:aa367b75c5aed883fef5befbdf04835a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -150,6 +153,9 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>myhostname</b
 <tr class="separator:a9867f2a8994e96bb38589f4ecdbc347a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bdca4cbc6b53e05e66455d9ffb8af2d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a7bdca4cbc6b53e05e66455d9ffb8af2d">exist</a> (const char *fn)</td></tr>
 <tr class="separator:a7bdca4cbc6b53e05e66455d9ffb8af2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac1668c4eefe0f88215711c27c91596a"><td class="memItemLeft" align="right" valign="top"><a id="aac1668c4eefe0f88215711c27c91596a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>touch</b> (const char *format,...)</td></tr>
+<tr class="separator:aac1668c4eefe0f88215711c27c91596a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fa8b5dc90e560f9b2c3909b134e69a8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8">isdir</a> (const char *fn)</td></tr>
 <tr class="separator:a8fa8b5dc90e560f9b2c3909b134e69a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a251424e05fad4be552824c5a51e94ce0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0">isfile</a> (const char *fn)</td></tr>
@@ -186,6 +192,10 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>myhostname</b
 <tr class="separator:aa8327247b00b74fe0f22822f797f5ec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59d2286a5bcaa20324a9e9a8c319c7e9"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a59d2286a5bcaa20324a9e9a8c319c7e9">mystrdup</a> (const char *A)</td></tr>
 <tr class="separator:a59d2286a5bcaa20324a9e9a8c319c7e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bd8555fd6d364ebf45f367645039713"><td class="memItemLeft" align="right" valign="top"><a id="a9bd8555fd6d364ebf45f367645039713"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a9bd8555fd6d364ebf45f367645039713">mysnprintf</a> (char *__restrict str, size_t size, const char *__restrict format,...)</td></tr>
+<tr class="memdesc:a9bd8555fd6d364ebf45f367645039713"><td class="mdescLeft">&#160;</td><td class="mdescRight">replaces snprintf to check for return and print a warning if there is truncation. <br /></td></tr>
+<tr class="separator:a9bd8555fd6d364ebf45f367645039713"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3349f67347d1f665a17bdd3a7c5bf5a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6">parse_argopt</a> (char *cmds, <a class="el" href="sys_2misc_8h.html#structargopt__t">argopt_t</a> *options)</td></tr>
 <tr class="separator:a3349f67347d1f665a17bdd3a7c5bf5a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af601376ec0a30149805fbc5e2c8e14cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sys_2misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd">set_realtime</a> (int icpu, int niceness)</td></tr>

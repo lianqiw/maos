@@ -8,6 +8,7 @@ var class_array =
     [ "Array", "class_array.html#a093411ed1c0c9cbbccd7423b0c3cdfe5", null ],
     [ "operator()", "class_array.html#a6281b4e77474abe0705a62822974660a", null ],
     [ "operator()", "class_array.html#a42169cea099261f13e729ee656081d1b", null ],
+    [ "R", "class_array.html#aa7dad707cd67ec67a33d702298fb754e", null ],
     [ "Col", "class_array.html#a143686e8f6223581ccb3c898367a40d9", null ],
     [ "Col", "class_array.html#ac016775319c7515be40cc315a307dbaf", null ],
     [ "Nx", "class_array.html#a41c00719f4536e02d544c372cc10cf30", null ],

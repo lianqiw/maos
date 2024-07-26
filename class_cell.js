@@ -11,6 +11,6 @@ var class_cell =
     [ "init", "class_cell.html#a8375b8f93fad1e994c72a72ec4387dd2", null ],
     [ "New", "class_cell.html#ab338d6db56a4b1bc0ad5ae92821fe59a", null ],
     [ "replace", "class_cell.html#a3f273d2f404385c7d16f19bc9ed98732", null ],
-    [ "pm_cpu", "class_cell.html#abbc95d836f618ae1a358fa4474d53413", null ],
+    [ "Vector", "class_cell.html#a336b62e499265dd117b4f18877a961f9", null ],
     [ "pm", "class_cell.html#a5c0442b26553c599a04b4155ab5a4b8c", null ]
 ];

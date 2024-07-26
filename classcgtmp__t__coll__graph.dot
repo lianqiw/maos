@@ -12,7 +12,7 @@ digraph "cgtmp_t"
   Node5 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +residual" ,arrowhead="odiamond",fontname="Helvetica"];
   Node5 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
   Node15 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +z0\n+Ap\n+r0\n+p0" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node15 [label="{Cell\< Real, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l}",height=0.2,width=0.4,color="red",URL="$class_cell.html"];
-  Node35 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +count\n+count_fail" ,arrowhead="odiamond",fontname="Helvetica"];
-  Node35 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node15 [label="{Cell\< Real, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l}",height=0.2,width=0.4,color="red",URL="$class_cell.html"];
+  Node31 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +count\n+count_fail" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node31 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
 }

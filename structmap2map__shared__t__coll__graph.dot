@@ -9,6 +9,6 @@ digraph "map2map_shared_t"
   Node2 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
   Node3 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +pps\n+pdir" ,arrowhead="odiamond",fontname="Helvetica"];
   Node3 [label="{Real *\n||}",height=0.2,width=0.4,color="grey75"];
-  Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny\n+iy0\n+ix0\n+nn\n+ndirx\n+ndiry\n+stepx\n+stepy\n+npsx\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny\n+iy0\n+ix0\n+ndirx\n+ndiry\n+stepx\n+stepy\n+npsx" ,arrowhead="odiamond",fontname="Helvetica"];
   Node4 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
 }

@@ -126,8 +126,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 <tr class="separator:ae030a26a334f0d5202eb0369158eb68c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa44e72b23d700b75cf33496fa5fd822"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822">plot_setup</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, const <a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon)</td></tr>
 <tr class="separator:aaa44e72b23d700b75cf33496fa5fd822"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83cb0a7d0009262a81f1c1019a49f949"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a83cb0a7d0009262a81f1c1019a49f949">mkamp</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, <a class="el" href="type_8h.html#structmap__t">map_t</a> *ampground, real misregx, real misregy, real D, real Din)</td></tr>
-<tr class="separator:a83cb0a7d0009262a81f1c1019a49f949"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fc7e050306403f4c90b0b7936451182"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a3fc7e050306403f4c90b0b7936451182">mkamp</a> (const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *loc, const <a class="el" href="type_8h.html#structmap__t">map_t</a> *ampground, real misregx, real misregy, real D, real Din)</td></tr>
+<tr class="separator:a3fc7e050306403f4c90b0b7936451182"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8fc39933f19be380f8a80c7665d049e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e">maxapriori</a> (real *g, const <a class="el" href="type_8h.html#structdmat">dmat</a> *ints, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, int iwfs, int isa, int noisy, real bkgrnd, real rne)</td></tr>
 <tr class="separator:ac8fc39933f19be380f8a80c7665d049e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4307931050dd0259e2369bf4591d65a5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5">wfslinearity</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const int iwfs)</td></tr>
@@ -265,7 +265,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Rename the log files when simulation exits. </p>
+<p>Rename the log files when simulation exits or when signal is caught. </p>
 
 </div>
 </div>
@@ -405,8 +405,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 
 </div>
 </div>
-<a id="a83cb0a7d0009262a81f1c1019a49f949"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a83cb0a7d0009262a81f1c1019a49f949">&#9670;&nbsp;</a></span>mkamp()</h2>
+<a id="a3fc7e050306403f4c90b0b7936451182"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3fc7e050306403f4c90b0b7936451182">&#9670;&nbsp;</a></span>mkamp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -414,13 +414,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
         <tr>
           <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* mkamp </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structloc__t">loc_t</a> *&#160;</td>
           <td class="paramname"><em>loc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structmap__t">map_t</a> *&#160;</td>
           <td class="paramname"><em>ampground</em>, </td>
         </tr>
         <tr>

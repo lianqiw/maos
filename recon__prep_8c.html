@@ -110,9 +110,13 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:abbe6bc8821493a9ed1ac71dac66b8916"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__prep_8c.html#abbe6bc8821493a9ed1ac71dac66b8916">shwfs_gloc_gamp</a> (<a class="el" href="type_8h.html#structloc__t">loc_t</a> **pgloc, <a class="el" href="type_8h.html#structdmat">dmat</a> **gamp, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, int iwfsr)</td></tr>
+<tr class="separator:abbe6bc8821493a9ed1ac71dac66b8916"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a137a442f111596a0429c7400dd902141"><td class="memItemLeft" align="right" valign="top"><a id="a137a442f111596a0429c7400dd902141"></a>
 <a class="el" href="classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>count_nonzero</b> (const <a class="el" href="type_8h.html#structlmat">lmat</a> *in)</td></tr>
 <tr class="separator:a137a442f111596a0429c7400dd902141"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c5b4e0a4cbf262b533f64fd8b88b45a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__prep_8c.html#a1c5b4e0a4cbf262b533f64fd8b88b45a">setup_recon_HXW</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, <a class="el" href="type_8h.html#structmapcell">mapcell</a> *atm)</td></tr>
+<tr class="separator:a1c5b4e0a4cbf262b533f64fd8b88b45a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1da2a8efe02e505b025aee27f4f02ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__prep_8c.html#af1da2a8efe02e505b025aee27f4f02ff">setup_recon_dither_dm</a> (<a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *recon, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="separator:af1da2a8efe02e505b025aee27f4f02ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5737f2c65941e6531e6111fe81299796"><td class="memItemLeft" align="right" valign="top"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__prep_8c.html#a5737f2c65941e6531e6111fe81299796">setup_recon_prep</a> (const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *aper, const <a class="el" href="maos_2types_8h.html#structpowfs__t">powfs_t</a> *powfs)</td></tr>
@@ -123,6 +127,96 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Setup grid and ray tracing operators regarding DM. This is independent of 1) WFS geometry or noise parameters 2) Tomography </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="abbe6bc8821493a9ed1ac71dac66b8916"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbe6bc8821493a9ed1ac71dac66b8916">&#9670;&nbsp;</a></span>shwfs_gloc_gamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void shwfs_gloc_gamp </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structloc__t">loc_t</a> **&#160;</td>
+          <td class="paramname"><em>pgloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> **&#160;</td>
+          <td class="paramname"><em>gamp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="maos_2types_8h.html#structaper__t">aper_t</a> *&#160;</td>
+          <td class="paramname"><em>aper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>iwfsr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create loc/amp that can be used to build GP. It has points on edge of subapertures which is different from powfs.lo. The amplitude depends on the distortion as we assume that the distortion can be extracted from dm to wfs interaction matrix calibration.</p>
+<p>gloc and the rotated version are centered around misregx and misregy so mkamp does not use misreg. the returned gloc is defined at the WFS reference frame </p>
+
+</div>
+</div>
+<a id="a1c5b4e0a4cbf262b533f64fd8b88b45a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c5b4e0a4cbf262b533f64fd8b88b45a">&#9670;&nbsp;</a></span>setup_recon_HXW()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setup_recon_HXW </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structrecon__t">recon_t</a> *&#160;</td>
+          <td class="paramname"><em>recon</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="type_8h.html#structmapcell">mapcell</a> *&#160;</td>
+          <td class="paramname"><em>atm</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setup ray tracing operator from xloc to ploc for guide stars. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">recon</td><td></td></tr>
+    <tr><td class="paramname">parms</td><td></td></tr>
+    <tr><td class="paramname">atm</td><td>If set, atm[].vx,vy will be used for predictive offsetting. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="af1da2a8efe02e505b025aee27f4f02ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af1da2a8efe02e505b025aee27f4f02ff">&#9670;&nbsp;</a></span>setup_recon_dither_dm()</h2>
 
