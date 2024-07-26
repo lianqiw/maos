@@ -368,7 +368,8 @@ __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* 
 
 /**
    The third grid dimension tells the wfs to handle.
-   Handles TTDF*GP
+   gout = GP*wfsopd    #if wfsopd is set
+   ttf = - PTTF * gout #if nttf is set
 */
 #define DIM_GP 128
 __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf){
@@ -465,8 +466,10 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout
 }
 /**
    Todo: Improve by removing atomic operation.
-   Handles GP'*nea*(1-TTDF)
-   Be carefulll about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
+   This functions two tasks:
+   1) gin=nea*(gin + ttf)
+   2) wfsopd = GP' * gin #if GP' is available.
+   Be carefull about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
 */
 __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Real* ttfin, Real* const* gin, int nttf){
 	const int iwfs=blockIdx.z;
@@ -498,7 +501,7 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 	const int nx=datai->nxp;
 	const short2* restrict pxy=datai->GPp;
 
-	if(!pxy||!map){
+	if(!pxy||!map){//No GP' operation
 		for(int isa=blockIdx.x*blockDim.x+threadIdx.x; isa<nsa; isa+=step){
 			int ix=saptr[isa][0];
 			int iy=saptr[isa][1];
@@ -510,7 +513,7 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 			g[isa]=cx*gx+cxy*gy;
 			g[isa+nsa]=cxy*gx+cy*gy;
 		}
-	} else if(pos==1){
+	} else if(pos==1){//Both GP' and NEA operation
 		for(int isa=blockIdx.x*blockDim.x+threadIdx.x; isa<nsa; isa+=step){
 			int ix=saptr[isa][0];
 			int iy=saptr[isa][1];
@@ -555,10 +558,10 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 }
 
 void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, stream_t& stream){
-	if(_opdwfs){
+	if(_opdwfs){//sparse based
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			if(GPp[iwfs]||!GP[iwfs]) continue;
-			cuzero(_grad[iwfs], stream);
+			cuzero(_grad[iwfs], stream);//no need to Zero using gpdata()
 			cuspmul(_grad[iwfs](), GP[iwfs], _opdwfs[iwfs](), 1, 'n', 1, stream);
 		}
 	}
@@ -577,7 +580,6 @@ void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& s
 	if(_opdwfs){//Does GP' for GP with sparse
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			if(GPp[iwfs]||!GP[iwfs]) continue;
-			cuzero(_opdwfs[iwfs], stream);
 			cuspmul(_opdwfs[iwfs](), GP[iwfs], _grad[iwfs](), 1, 't', 1, stream);
 		}
 	}
@@ -600,7 +602,7 @@ void cutomo_grid::HX(const curcell& xin, Real alpha, stream_t& stream){
 */
 void cutomo_grid::HXT(curcell& xout, Real alpha, stream_t& stream){
 	if(wfsrot){
-		map_rot(opdwfs2, opdwfs, wfsrot, 1, stream);
+		map_rot(opdwfs2, opdwfs, wfsrot, 1, stream);//map_rot zeros the output array
 		hx.backward(opdwfs2.pm, xout.pm, alpha, NULL, stream);
 	} else{
 		hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
@@ -647,13 +649,13 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	} else{
 		curscale(xout.M(), beta, stream);
 	}
-	static int count=0; count++;
 	ctoc_init(10);
 #define SAVE_TOMO 0
 	//xin to opdwfs
 	HX(xin, 1, stream);
 	ctoc("Hx");
 #if SAVE_TOMO
+	static int count=0; count++;
 	cuwrite(xin, stream, "tomo_L_xin_%d", count);
 	cuwrite(opdwfs, stream, "tomo_L_opdwfs_%d", count);
 #endif

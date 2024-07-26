@@ -17,6 +17,7 @@
 */
 
 #include "../math/math.h"
+#include "../math/prop_map.h"
 #include "gpu_test.h"
 /**
    \file test.cu
@@ -77,7 +78,7 @@ void gpu_map2map(cumap_t& out, const cumap_t& in, Real dispx, Real dispy, Real a
 	const Real* tmp[2]={out(), in()};
 	DO(cudaMemcpy(p, tmp, sizeof(Real*)*2, H2D));
 	map2map_do<<<dim3(4, 4, 1), dim3(WRAP_TX, 4), 0, 0>>>
-		(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
+		(wrap_gpu, p, p+1, 0, 1, 1, alpha, 0, trans);
 	DO(cudaMemcpy(&wrap, wrap_gpu(), sizeof(map2map_t), D2H));
 	if(wrap.reverse){
 		cudaFree(wrap.reverse);

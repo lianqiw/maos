@@ -52,7 +52,6 @@ typedef struct{
 	int iy0[WRAP_TX];
 	int stepx;
 	int stepy;
-	int nn;
 	int nx;
 	int ny;
 	int ndirx;
@@ -69,7 +68,7 @@ typedef struct{
 }map2map_shared_t;
 
 __global__ void map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss,
-	int ndir, int nps, Real alpha1, const Real* alpha2, char trans);
+	int ii, int ndir, int nps, Real alpha1, const Real* alpha2, char trans);
 
 void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& gi,
 	Real dispx, Real dispy, const curmat& cc);
@@ -111,15 +110,26 @@ public:
 	map2map():hdata(0), nlayer(0), ndir(0){};
 	void init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, const cugridcell& in, Real dt=0);
 	void init_l2l(const cugridcell& out, const cugridcell& in);
+	/*in forward() and backward(), map2map_do should not loop over layer
+	(forward) or directions (backward) because the offset may not be the same
+	for each layer or direction. If looping, different threads will handle the
+	same point for different layer or direction and race condition will occur.
+	Instead, we launch successive kernels that guarantees synchronization.
+	*/
 	//from in to out
 	void forward(Real* const* out, const Real* const* in, Real alpha, Real* wt, stream_t& stream){
-		map2map_do<<<dim3(4, 4, ndir==0?nlayer:ndir), dim3(WRAP_TX, 4), 0, stream>>>
-			(hdata, out, (Real* const*)in, ndir, nlayer, alpha, wt, 'n');
+		for(int ips=0; ips<nlayer; ips++){
+			map2map_do<<<dim3(4, 4, ndir==0?nlayer:ndir), dim3(WRAP_TX, 4), 0, stream>>>
+				(hdata, out, (Real* const*)in, ips, ndir, nlayer, alpha, wt, 'n');
+		}
 	}
 	//from out to in
 	void backward(const Real* const* out, Real* const* in, Real alpha, Real* wt, stream_t& stream){
-		map2map_do<<<dim3(4, 4, nlayer), dim3(WRAP_TX, 4), 0, stream>>>
-			(hdata, (Real* const*)out, in, ndir, nlayer, alpha, wt, 't');
+		//<<<gridDim, blockDim>>>	blockId is from 0 to gridDim. threadId is from 0 to blockDim.
+		for(int idir=0; idir<ndir; idir++){
+			map2map_do<<<dim3(4, 4, nlayer), dim3(WRAP_TX, 4), 0, stream>>>
+				(hdata, (Real* const*)out, in, idir, ndir, nlayer, alpha, wt, 't');
+		}
 	}
 	virtual ~map2map(){
 		deinit();

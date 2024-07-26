@@ -248,9 +248,46 @@ void cp2gpu(cusp& dest, const dsp* src, int tocsr);
 void cp2gpu(cusp& dest, const dspcell* src, int tocsr);
 void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr);
 void cp2gpu(curmat& dest, const loc_t* src);
-void cp2gpu(curcell& dest, const dcell* src);
+void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream);
+void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream);
+template <typename T>
+void cp2gpu(Cell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
+	const cell* src=src_.c;
+	if(!src){
+		dest.Zero();
+		return;
+	}
+	if(!dest){
+		long nc=src->nx*src->ny;
+		long nx[nc];
+		long ny[nc];
+		for(long i=0; i<nc; i++){
+			if(src->p[i]){
+				nx[i]=src->p[i]->nx;
+				ny[i]=src->p[i]->ny;
+			} else{
+				nx[i]=0;
+				ny[i]=0;
+			}
+		}
+		dest=Cell<T, Gpu>(src->nx, src->ny, nx, ny);
+	} else if(dest.Nx()!=src->nx||dest.Ny()!=src->ny){
+		error("Mismatch: %ldx%ld vs %ldx%ld\n",
+			dest.Nx(), dest.Ny(), src->nx, src->ny);
+	}
+	if(src->m){
+		//warning("cp2gpu: use m to M\n");
+		cp2gpu(dest.M(), src->m, stream);
+	} else{
+		for(int i=0; i<src->nx*src->ny; i++){
+			cp2gpu(dest[i], src->p[i], stream);
+		}
+	}
+}
+/*void cp2gpu(curcell &dest, const scell *src);
 void cp2gpu(cuccell& dest, const ccell* src);
-
+void cp2gpu(cuccell &dest, const zcell *src);
+*/
 void gpu_write(const Real* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
 void gpu_write(const Comp* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
 void gpu_write(const int* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);

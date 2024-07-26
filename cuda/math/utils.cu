@@ -128,11 +128,32 @@ void cp2gpu(curmat& dest, const loc_t* src){
 	cp2gpu(dest, (Real*)tmp, 2, src->nloc);
 	free(tmp);
 }
-
+void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream=0){
+	if(src_.c==0){
+		dest.Zero(stream);
+	}else if(src_.c->id==M_REAL){
+		cp2gpu(dest, src_.dm, stream);
+	}else if(src_.c->id==M_FLT){
+		cp2gpu(dest, src_.sm, stream);
+	}else{
+		error("Invalid");
+	}
+}
+void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream=0){
+	if(src_.c==0){
+		dest.Zero(stream);
+	}else if(src_.c->id==M_COMP){
+		cp2gpu(dest, src_.cm, stream);
+	}else if(src_.c->id==M_ZMP){
+		cp2gpu(dest, src_.zm, stream);
+	}else{
+		error("Invalid");
+	}
+}
 /**
    Convert dcell to curcell
 */
-void cp2gpu(curcell& dest, const dcell* src){
+/*void cp2gpu(curcell& dest, const dcell* src){
 	if(!src){
 		dest.Zero();
 		return;
@@ -163,10 +184,11 @@ void cp2gpu(curcell& dest, const dcell* src){
 			cp2gpu(dest[i], src->p[i]);
 		}
 	}
-}
+}*/
 /**
    Convert dcell to curcell. /todo: merge implementation with curcell by wraping CPU cell to GPU cell.
 */
+/*
 void cp2gpu(cuccell& dest, const ccell* src){
 	if(!src){
 		dest.Zero();
@@ -198,7 +220,7 @@ void cp2gpu(cuccell& dest, const ccell* src){
 			cp2gpu(dest[i], src->p[i]);
 		}
 	}
-}
+}*/
 __attribute__((weak)) int current_gpu(){
 	int igpu;
 	cudaGetDevice(&igpu);

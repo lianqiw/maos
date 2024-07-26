@@ -18,24 +18,40 @@
 
 #include "prop_map.h"
 
-/*
-  One kernel that handles multiple layers/directions, linear or cubic to enable fully parallelization across the full GPU.
+/**
+  One kernel that maximizes parallelism for map to map propagation, linear or
+  cubic to enable fully parallelization across the full GPU. 
+  
+  let XLOC be ps (phase screen) 
+  let WFS be dir (each WFS traces along a direction) 
+  There are three types of propagation:
+  - XLOC to WFS Forward: Propagate from XLOC to WFS (Parallel across each WFS). Launch successive kernels for each layer.
+  - WFS to XLOC Backward (Transpose): Propagate from WFS to XLOC (Parallel across each Layer). Launch successive kernels for
+  each direction.
+  - Layer to layer cache: Fully parallel. 
+  
+  @param data	Prepared parameters for the propagation
+  @param pdirs	Data pointers for each WFS dir (dir).
+  @param ppss	Data pointers for each XLOC layer (ps).
+  @param ii		The layer (forward) or direction (backward) to propagate
+  @param ndir	Number of directions
+  @param nps	Number of phase screens (XLOC)
+  @param alpha1	OPD value scaling factor
+  @param alpha2 Additional scaling defined on dir (layer weighting)
+  @param trans	Transpose operation (backward propagation).
 
-  Forward: Propagate from XLOC to WFS (Parallel across each WFS).
-  Backward (Transpose): Propagate from WFS to XLOC (Parallel across each Layer)
+  Do not separate the function branches because each layer/wfs combination may
+  use different branches.
 
-  let XLOC be ps (phase screen)
-  let WFS be dir (direction)
+  The output grid x/y is parallel with the input grid x/y axis. There cannot be rotation
+  or higher order distortion effects.
 
-  alpha2: additional scaling defined on dimension dir.
-
-  Do not separate the function branches because each layer/wfs combination may use different branches.
-
-  The output grid aligns with the input grid along x/y. There cannot be rotation or higher order distortion effects.
-
+  2024-07-25: Do not loop over layers (forward) or directions (backward) inside
+  the kernel because they may have different offset and therefore requires block
+  to block synchronization between loop steps (which is not possible).
 */
 __global__ void
-map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int nps, Real alpha1, const Real* alpha2, char trans){
+map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ii, int ndir, int nps, Real alpha1, const Real* alpha2, char trans){
 	/*Using shared memory to reduce register spill */
 	__shared__ map2map_shared_t shared;
 	int& stepx=shared.stepx;
@@ -49,24 +65,49 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 	int& nx=shared.nx;
 	int& ny=shared.ny;
 	int& npsx=shared.npsx;
-	int& nn=shared.nn;
 	Real*& pps=shared.pps;
 	Real*& pdir=shared.pdir;
 
 	int& ix0=shared.ix0[threadIdx.x];
 	int& iy0=shared.iy0[threadIdx.y];
-	//only update shared variables by a single thread
-	if(threadIdx.x==0&&threadIdx.y==0){
-		if(ndir==0){//layer to layer. caching mechanism
-			if(gridDim.z!=nps) return;
-			nn=1;
-		} else if(trans=='t'){
-			if(gridDim.z!=nps) return;
-			nn=ndir;
+
+	__syncthreads();//necessary here because otherwise different warps may modify the shared data.
+	map2map_t* datai;
+	int ips, idir;
+	if(ndir==0){//plane to plane. no direction. can go fully parallel
+		ips=idir=blockIdx.z;
+		datai=data+blockIdx.z;
+	} else{
+		if(trans=='t'){
+			ips=blockIdx.z;
+			idir=ii;
 		} else{
-			if(gridDim.z!=ndir) return;
-			nn=nps;
+			idir=blockIdx.z;
+			ips=ii;
 		}
+		datai=data+idir+ndir*ips;
+	}
+	const int match=Z(fabs)(datai->xratio-1.f)<EPS&&Z(fabs)(datai->yratio-1.f)<EPS;
+	if(!datai->cc&&trans=='t'&&match){
+		datai=datai->reverse;
+	}
+	if(datai->nx==0) return;//skip empty wfs
+	const Real alpha=alpha2?(alpha2[idir]*alpha1):alpha1;
+	const Real* cc=datai->cc;
+	if(threadIdx.x==0&&threadIdx.y==0){//only update shared variables by a single thread
+		stepx=blockDim.x*gridDim.x;
+		stepy=blockDim.y*gridDim.y;
+		dispx=datai->dispx;
+		dispy=datai->dispy;
+		xratio=datai->xratio;
+		yratio=datai->yratio;
+		ndirx=datai->nxdir;
+		ndiry=datai->nydir;
+		nx=datai->nx;
+		ny=datai->ny;
+		npsx=datai->nxps;
+		pdir=pdirs[idir]+datai->offdir;
+		pps=ppss[ips]+datai->offps;
 	}
 	if(threadIdx.y==0){
 		ix0=blockIdx.x*blockDim.x+threadIdx.x;
@@ -74,197 +115,116 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 	if(threadIdx.x==0){
 		iy0=blockIdx.y*blockDim.y+threadIdx.y;
 	}
-	__syncthreads();//necessary here because otherwise different warps may modify the shared data.
-	for(int ii=0; ii<nn; ii++){//number of screens to trace
-		map2map_t* datai;
-		int ips, idir;
-		if(ndir==0){//plane to plane. no direction
-			ips=idir=blockIdx.z;
-			datai=data+blockIdx.z;
+	__syncthreads();
+	if(!cc&&match){
+		/* Matched bilinear propagation.  Reverse propagation is converted
+			into forward ray tracing. But atomic operation is necessary
+			because different thead blocks may be handling different
+			directions that have different offset and therefore have
+			concurrent memory access
+
+			If different layers have different offset, even forward
+			propagation require atomic operation. The best way is to avoid
+			looping in the kernel.
+			*/
+
+		const Real dispx1=1.-dispx;
+		const Real dispy1=1.-dispy;
+
+		if(trans=='t'){
+			for(int iy=iy0; iy<ny; iy+=stepy){
+				for(int ix=ix0; ix<nx; ix+=stepx){
+					Real res=alpha*(+(pdir[ix+  iy*ndirx]*dispx1
+										+pdir[ix+1+iy*ndirx]*dispx)*dispy1
+									+(pdir[ix  +(iy+1)*ndirx]*dispx1
+										+pdir[ix+1+(iy+1)*ndirx]*dispx)*dispy);
+						pps[ix+iy*npsx]+=res;
+				}
+			}
 		} else{
-			if(trans=='t'){
-				ips=blockIdx.z;
-				idir=ii;
-			} else{
-				idir=blockIdx.z;
-				ips=ii;
-			}
-			datai=data+idir+ndir*ips;
-		}
-		const int match=Z(fabs)(datai->xratio-1.f)<EPS&&Z(fabs)(datai->yratio-1.f)<EPS;
-		if(!datai->cc&&trans=='t'&&match){
-			datai=datai->reverse;
-		}
-		if(datai->nx==0) continue;//skip empty wfs
-		const Real alpha=alpha2?(alpha2[idir]*alpha1):alpha1;
-		const Real* cc=datai->cc;
-		__syncthreads();//necessary here because different warps may be doing different ii.
-		if(threadIdx.x==0&&threadIdx.y==0){//only update shared variables by a single thread
-			stepx=blockDim.x*gridDim.x;
-			stepy=blockDim.y*gridDim.y;
-			dispx=datai->dispx;
-			dispy=datai->dispy;
-			xratio=datai->xratio;
-			yratio=datai->yratio;
-			ndirx=datai->nxdir;
-			ndiry=datai->nydir;
-			nx=datai->nx;
-			ny=datai->ny;
-			npsx=datai->nxps;
-			pdir=pdirs[idir]+datai->offdir;
-			pps=ppss[ips]+datai->offps;
-		}
-		__syncthreads();
-		if(!cc&&match){
-			/* Matched bilinear propagation.  Reverse propagation is converted
-			   into forward ray tracing. But atomic operation is necessary
-			   because different thead blocks may be handling different
-			   directions that have different offset and therefore have
-			   concurrent memory access*/
-
-			const Real dispx1=1.-dispx;
-			const Real dispy1=1.-dispy;
-
-			if(trans=='t'){
-				for(int iy=iy0; iy<ny; iy+=stepy){
-					for(int ix=ix0; ix<nx; ix+=stepx){
-						atomicAdd(&pps[ix+iy*npsx],
-							alpha*(+(pdir[ix+iy*ndirx]*dispx1
-								+pdir[ix+1+iy*ndirx]*dispx)*dispy1
-								+(pdir[ix+(iy+1)*ndirx]*dispx1
-									+pdir[ix+1+(iy+1)*ndirx]*dispx)*dispy));
-					}
-				}
-			} else{
-				for(int iy=iy0; iy<ny; iy+=stepy){
-					for(int ix=ix0; ix<nx; ix+=stepx){
-						pdir[ix+iy*ndirx]+=
-							alpha*(+(pps[ix+iy*npsx]*dispx1
-								+pps[ix+1+iy*npsx]*dispx)*dispy1
-								+(pps[ix+(iy+1)*npsx]*dispx1
-									+pps[ix+1+(iy+1)*npsx]*dispx)*dispy);
-					}
+			for(int iy=iy0; iy<ny; iy+=stepy){
+				for(int ix=ix0; ix<nx; ix+=stepx){
+					Real res=alpha*(+(pps[ix+iy*npsx]*dispx1
+							+pps[ix+1+iy*npsx]*dispx)*dispy1
+							+(pps[ix+(iy+1)*npsx]*dispx1
+								+pps[ix+1+(iy+1)*npsx]*dispx)*dispy);
+					pdir[ix+iy*ndirx]+=res;
 				}
 			}
-		} else if(cc){//cubic
-			if(trans=='t'){
-				if(Z(fabs)(xratio-0.5f)<EPS&&Z(fabs)(yratio-.5f)<EPS){
-					//do without atomic operations.
-					const int nxin=npsx;//ceil(nx*xratio)+1;
-					const int nyin=datai->nyps;//ceil(ny*xratio)+1;
-					const int xmaxdir=ndirx-datai->offdirx;
-					const int ymaxdir=ndiry-datai->offdiry;
-					const int xmindir=-datai->offdirx-1;
-					const int ymindir=-datai->offdiry-1;
-					int offx=0, offy=0;
-					Real tcx=dispx;
-					Real tcy=dispy;
-					if(tcx>=0.5){
-						offx=-1;
-						tcx-=0.5f;
-					}
-					if(tcy>=0.5){
-						offy=-1;
-						tcy-=0.5f;
-					}
+		}
+	} else if(cc){//cubic
+		if(trans=='t'){
+			if(Z(fabs)(xratio-0.5f)<EPS&&Z(fabs)(yratio-.5f)<EPS){
+				//do without atomic operations
+				const int nxin=npsx;//ceil(nx*xratio)+1;
+				const int nyin=datai->nyps;//ceil(ny*xratio)+1;
+				const int xmaxdir=ndirx-datai->offdirx;
+				const int ymaxdir=ndiry-datai->offdiry;
+				const int xmindir=-datai->offdirx-1;
+				const int ymindir=-datai->offdiry-1;
+				int offx=0, offy=0;
+				Real tcx=dispx;
+				Real tcy=dispy;
+				if(tcx>=0.5){
+					offx=-1;
+					tcx-=0.5f;
+				}
+				if(tcy>=0.5){
+					offy=-1;
+					tcy-=0.5f;
+				}
 
-					const Real tcx2=tcx+0.5f;
-					const Real tcy2=tcy+0.5f;
-					//Each thread has the same coefficients, so we use
-					// shared memory to store them to avoid spill.
-					Real* const& fx=(Real*)shared.fx;
-					Real* const& fy=(Real*)shared.fy;
-					if(threadIdx.x==0&&threadIdx.y==0){
-						fy[0]=(cc[3]+cc[4]*tcy)*tcy*tcy;
-						fy[1]=(cc[3]+cc[4]*tcy2)*tcy2*tcy2;
-						fy[2]=(cc[1]+cc[2]*(1-tcy))*(1-tcy)*(1-tcy)+cc[0];
-						fy[3]=(cc[1]+cc[2]*(1-tcy2))*(1-tcy2)*(1-tcy2)+cc[0];
-						fy[4]=(cc[1]+cc[2]*tcy)*tcy*tcy+cc[0];
-						fy[5]=(cc[1]+cc[2]*tcy2)*tcy2*tcy2+cc[0];
-						fy[6]=(cc[3]+cc[4]*(1-tcy))*(1-tcy)*(1-tcy);
-						fy[7]=(cc[3]+cc[4]*(1-tcy2))*(1-tcy2)*(1-tcy2);
+				const Real tcx2=tcx+0.5f;
+				const Real tcy2=tcy+0.5f;
+				//Each thread has the same coefficients, so we use
+				// shared memory to store them to avoid spill.
+				Real* const& fx=(Real*)shared.fx;
+				Real* const& fy=(Real*)shared.fy;
+				if(threadIdx.x==0&&threadIdx.y==0){
+					fy[0]=(cc[3]+cc[4]*tcy)*tcy*tcy;
+					fy[1]=(cc[3]+cc[4]*tcy2)*tcy2*tcy2;
+					fy[2]=(cc[1]+cc[2]*(1-tcy))*(1-tcy)*(1-tcy)+cc[0];
+					fy[3]=(cc[1]+cc[2]*(1-tcy2))*(1-tcy2)*(1-tcy2)+cc[0];
+					fy[4]=(cc[1]+cc[2]*tcy)*tcy*tcy+cc[0];
+					fy[5]=(cc[1]+cc[2]*tcy2)*tcy2*tcy2+cc[0];
+					fy[6]=(cc[3]+cc[4]*(1-tcy))*(1-tcy)*(1-tcy);
+					fy[7]=(cc[3]+cc[4]*(1-tcy2))*(1-tcy2)*(1-tcy2);
 
-						fx[0]=(cc[3]+cc[4]*tcx)*tcx*tcx;
-						fx[1]=(cc[3]+cc[4]*tcx2)*tcx2*tcx2;
-						fx[2]=(cc[1]+cc[2]*(1-tcx))*(1-tcx)*(1-tcx)+cc[0];
-						fx[3]=(cc[1]+cc[2]*(1-tcx2))*(1-tcx2)*(1-tcx2)+cc[0];
-						fx[4]=(cc[1]+cc[2]*tcx)*tcx*tcx+cc[0];
-						fx[5]=(cc[1]+cc[2]*tcx2)*tcx2*tcx2+cc[0];
-						fx[6]=(cc[3]+cc[4]*(1-tcx))*(1-tcx)*(1-tcx);
-						fx[7]=(cc[3]+cc[4]*(1-tcx2))*(1-tcx2)*(1-tcx2);
-					}
-					__syncthreads();
+					fx[0]=(cc[3]+cc[4]*tcx)*tcx*tcx;
+					fx[1]=(cc[3]+cc[4]*tcx2)*tcx2*tcx2;
+					fx[2]=(cc[1]+cc[2]*(1-tcx))*(1-tcx)*(1-tcx)+cc[0];
+					fx[3]=(cc[1]+cc[2]*(1-tcx2))*(1-tcx2)*(1-tcx2)+cc[0];
+					fx[4]=(cc[1]+cc[2]*tcx)*tcx*tcx+cc[0];
+					fx[5]=(cc[1]+cc[2]*tcx2)*tcx2*tcx2+cc[0];
+					fx[6]=(cc[3]+cc[4]*(1-tcx))*(1-tcx)*(1-tcx);
+					fx[7]=(cc[3]+cc[4]*(1-tcx2))*(1-tcx2)*(1-tcx2);
+				}
+				__syncthreads();
 
-					for(int my=iy0; my<nyin; my+=stepy){
-						const int ycent=2*my+offy;
-						for(int mx=ix0; mx<nxin; mx+=stepx){
-							Real sum=0;
-							const int xcent=2*mx+offx;
+				for(int my=iy0; my<nyin; my+=stepy){
+					const int ycent=2*my+offy;
+					for(int mx=ix0; mx<nxin; mx+=stepx){
+						Real sum=0;
+						const int xcent=2*mx+offx;
 #pragma unroll
-							for(int ky=-4; ky<4; ky++){
-								const int ky2=ky+ycent;
-								if(ky2>ymindir&&ky2<ymaxdir){
+						for(int ky=-4; ky<4; ky++){
+							const int ky2=ky+ycent;
+							if(ky2>ymindir&&ky2<ymaxdir){
 #pragma unroll
-									for(int kx=-4; kx<4; kx++){
-										const int kx2=kx+xcent;
-										Real wt;
-										if(kx2>xmindir&&kx2<xmaxdir&&(wt=fy[ky+4]*fx[kx+4])>EPS){
-											sum+=wt*pdir[(kx2)+(ky2)*ndirx];
-										}
-									}
-								}
-							}
-							//Need atomic because different layers have different offset.
-							if(nn>1){
-								atomicAdd(&pps[mx+my*npsx], sum*alpha);
-							} else{
-								pps[mx+my*npsx]+=sum*alpha;
-							}
-						}
-					}
-				} else{
-					const int xmaxps=npsx-datai->offpsx;
-					const int ymaxps=datai->nyps-datai->offpsy;
-					const int xminps=-datai->offpsx;
-					const int yminps=-datai->offpsy;
-					Real fy[4]; Real fx[4];
-					for(int my=iy0; my<ny; my+=stepy){
-						Real jy;
-						const Real y=Z(modf)(dispy+my*yratio, &jy);
-						const int iy=(int)jy;
-						fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));
-						fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);
-						fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));
-						fy[3]=y*y*(cc[3]+cc[4]*y);
-						for(int mx=ix0; mx<nx; mx+=stepx){
-							Real jx;
-							const Real x=Z(modf)(dispx+mx*xratio, &jx);
-							const int ix=(int)jx;
-							const Real value=pdir[mx+my*ndirx]*alpha;
-							//cc need to be in device memory for sm_13 to work.
-							//	if(threadIdx.x==0 && threadIdx.y==0){
-							fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));
-							fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);
-							fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));
-							fx[3]=x*x*(cc[3]+cc[4]*x);
-							//	}
-							//__syncthreads();
-							const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
-							const int ky1=(ymaxps-iy)<3?(ymaxps-iy):3;
-							for(int ky=ky0; ky<ky1; ky++){
-								int kx0=(xminps-ix)>-1?(xminps-ix):-1;
-								int kx1=(xmaxps-ix)<3?(xmaxps-ix):3;
-								for(int kx=kx0; kx<kx1; kx++){
+								for(int kx=-4; kx<4; kx++){
+									const int kx2=kx+xcent;
 									Real wt;
-									if((wt=fx[kx+1]*fy[ky+1])>EPS){
-										atomicAdd(&pps[(iy+ky)*npsx+(kx+ix)], wt*value);
+									if(kx2>xmindir&&kx2<xmaxdir&&(wt=fy[ky+4]*fx[kx+4])>EPS){
+										sum+=wt*pdir[(kx2)+(ky2)*ndirx];
 									}
 								}
 							}
 						}
+						//Need atomic because different layers have different offset.
+						pps[mx+my*npsx]+=sum*alpha;
 					}
 				}
-			} else{//CC, non trans
+			} else{
 				const int xmaxps=npsx-datai->offpsx;
 				const int ymaxps=datai->nyps-datai->offpsy;
 				const int xminps=-datai->offpsx;
@@ -282,11 +242,15 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 						Real jx;
 						const Real x=Z(modf)(dispx+mx*xratio, &jx);
 						const int ix=(int)jx;
-						Real sum=0;
+						const Real value=pdir[mx+my*ndirx]*alpha;
+						//cc need to be in device memory for sm_13 to work.
+						//	if(threadIdx.x==0 && threadIdx.y==0){
 						fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));
 						fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);
 						fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));
 						fx[3]=x*x*(cc[3]+cc[4]*x);
+						//	}
+						//__syncthreads();
 						const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 						const int ky1=(ymaxps-iy)<3?(ymaxps-iy):3;
 						for(int ky=ky0; ky<ky1; ky++){
@@ -294,60 +258,97 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ndir, int
 							int kx1=(xmaxps-ix)<3?(xmaxps-ix):3;
 							for(int kx=kx0; kx<kx1; kx++){
 								Real wt;
-								if((wt=fx[kx+1]*fy[ky+1])>EPS)
-									sum+=wt*pps[(iy+ky)*npsx+(kx+ix)];
+								if((wt=fx[kx+1]*fy[ky+1])>EPS){
+									atomicAdd(&pps[(iy+ky)*npsx+(kx+ix)], wt*value);
+								}
 							}
 						}
-						pdir[mx+my*ndirx]+=sum*alpha;
 					}
-				}
-			}/*else trans*/
-		} else if(trans=='t'){//linear, transpose
-			for(int iy=iy0; iy<ny; iy+=stepy){
-				Real jy;
-				const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
-				const int ky=(int)jy;
-				for(int ix=ix0; ix<nx; ix+=stepx){
-					Real jx;
-					const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
-					const int kx=(int)jx;
-					const Real temp=pdir[ix+iy*ndirx]*alpha;
-					Real wt;
-					if((wt=(1.f-fracx)*(1.f-fracy))>EPS)
-						atomicAdd(&pps[kx+ky*npsx], temp*wt);
-					if((wt=fracx*(1.f-fracy))>EPS)
-						atomicAdd(&pps[kx+1+ky*npsx], temp*wt);
-					if((wt=(1.f-fracx)*fracy)>EPS)
-						atomicAdd(&pps[kx+(ky+1)*npsx], temp*wt);
-					if((wt=fracx*fracy)>EPS)
-						atomicAdd(&pps[kx+1+(ky+1)*npsx], temp*wt);
 				}
 			}
-		} else{//linear, regular
-			for(int iy=iy0; iy<ny; iy+=stepy){
+		} else{//CC, non trans
+			const int xmaxps=npsx-datai->offpsx;
+			const int ymaxps=datai->nyps-datai->offpsy;
+			const int xminps=-datai->offpsx;
+			const int yminps=-datai->offpsy;
+			Real fy[4]; Real fx[4];
+			for(int my=iy0; my<ny; my+=stepy){
 				Real jy;
-				const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
-				const int ky=(int)jy;
-
-				for(int ix=ix0; ix<nx; ix+=stepx){
+				const Real y=Z(modf)(dispy+my*yratio, &jy);
+				const int iy=(int)jy;
+				fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));
+				fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);
+				fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));
+				fy[3]=y*y*(cc[3]+cc[4]*y);
+				for(int mx=ix0; mx<nx; mx+=stepx){
 					Real jx;
-					const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
-					const int kx=(int)jx;
-					Real tmp=0;
-					Real wt;
-					if((wt=1.f-fracy)>EPS){
-						tmp+=(pps[kx+ky*npsx]*(1.f-fracx)+
-							pps[kx+1+ky*npsx]*fracx)*wt;
+					const Real x=Z(modf)(dispx+mx*xratio, &jx);
+					const int ix=(int)jx;
+					Real sum=0;
+					fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));
+					fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);
+					fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));
+					fx[3]=x*x*(cc[3]+cc[4]*x);
+					const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
+					const int ky1=(ymaxps-iy)<3?(ymaxps-iy):3;
+					for(int ky=ky0; ky<ky1; ky++){
+						int kx0=(xminps-ix)>-1?(xminps-ix):-1;
+						int kx1=(xmaxps-ix)<3?(xmaxps-ix):3;
+						for(int kx=kx0; kx<kx1; kx++){
+							Real wt;
+							if((wt=fx[kx+1]*fy[ky+1])>EPS)
+								sum+=wt*pps[(iy+ky)*npsx+(kx+ix)];
+						}
 					}
-					if((wt=fracy)>EPS){
-						tmp+=(pps[kx+(ky+1)*npsx]*(1.f-fracx)+
-							pps[kx+1+(ky+1)*npsx]*fracx)*wt;
-					}
-					pdir[ix+iy*ndirx]+=alpha*tmp;
+					pdir[mx+my*ndirx]+=sum*alpha;
 				}
+			}
+		}/*else trans*/
+	} else if(trans=='t'){//linear, transpose
+		for(int iy=iy0; iy<ny; iy+=stepy){
+			Real jy;
+			const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
+			const int ky=(int)jy;
+			for(int ix=ix0; ix<nx; ix+=stepx){
+				Real jx;
+				const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
+				const int kx=(int)jx;
+				const Real temp=pdir[ix+iy*ndirx]*alpha;
+				Real wt;
+				if((wt=(1.f-fracx)*(1.f-fracy))>EPS)
+					atomicAdd(&pps[kx+ky*npsx], temp*wt);
+				if((wt=fracx*(1.f-fracy))>EPS)
+					atomicAdd(&pps[kx+1+ky*npsx], temp*wt);
+				if((wt=(1.f-fracx)*fracy)>EPS)
+					atomicAdd(&pps[kx+(ky+1)*npsx], temp*wt);
+				if((wt=fracx*fracy)>EPS)
+					atomicAdd(&pps[kx+1+(ky+1)*npsx], temp*wt);
 			}
 		}
-	}/*for*/
+	} else{//linear, regular
+		for(int iy=iy0; iy<ny; iy+=stepy){
+			Real jy;
+			const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
+			const int ky=(int)jy;
+
+			for(int ix=ix0; ix<nx; ix+=stepx){
+				Real jx;
+				const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
+				const int kx=(int)jx;
+				Real tmp=0;
+				Real wt;
+				if((wt=1.f-fracy)>EPS){
+					tmp+=(pps[kx+ky*npsx]*(1.f-fracx)+
+						pps[kx+1+ky*npsx]*fracx)*wt;
+				}
+				if((wt=fracy)>EPS){
+					tmp+=(pps[kx+(ky+1)*npsx]*(1.f-fracx)+
+						pps[kx+1+(ky+1)*npsx]*fracx)*wt;
+				}
+				pdir[ix+iy*ndirx]+=alpha*tmp;
+			}
+		}
+	}
 }
 /*
   Prepare data and copy to GPU so that one kernel (map2map_do) can handle multiple independent ray tracing without range checking.
