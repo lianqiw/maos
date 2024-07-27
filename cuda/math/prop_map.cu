@@ -71,7 +71,6 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ii, int n
 	int& ix0=shared.ix0[threadIdx.x];
 	int& iy0=shared.iy0[threadIdx.y];
 
-	__syncthreads();//necessary here because otherwise different warps may modify the shared data.
 	map2map_t* datai;
 	int ips, idir;
 	if(ndir==0){//plane to plane. no direction. can go fully parallel
@@ -480,6 +479,7 @@ void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, //outpu
 		for(int idir=0; idir<ndir; idir++){
 			if(!dir[idir].skip){
 				const Real scale=1.f-ht/dir[idir].hs;
+				if(scale<=0.01) continue;
 				const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx*scale;
 				const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy*scale;
 				cugrid_t outscale=out.Scale(scale);
