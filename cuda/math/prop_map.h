@@ -118,17 +118,27 @@ public:
 	*/
 	//from in to out
 	void forward(Real* const* out, const Real* const* in, Real alpha, Real* wt, stream_t& stream){
-		for(int ips=0; ips<nlayer; ips++){
-			map2map_do<<<dim3(4, 4, ndir==0?nlayer:ndir), dim3(WRAP_TX, 4), 0, stream>>>
-				(hdata, out, (Real* const*)in, ips, ndir, nlayer, alpha, wt, 'n');
+		if(ndir==0){
+			map2map_do<<<dim3(4, 4, nlayer), dim3(WRAP_TX, 4), 0, stream>>>
+				(hdata, out, (Real *const *)in, 0, ndir, nlayer, alpha, wt, 'n');
+		}else{
+			for(int ips=0; ips<nlayer; ips++){
+				map2map_do<<<dim3(4, 4, ndir), dim3(WRAP_TX, 4), 0, stream>>>
+					(hdata, out, (Real* const*)in, ips, ndir, nlayer, alpha, wt, 'n');
+			}
 		}
 	}
 	//from out to in
 	void backward(const Real* const* out, Real* const* in, Real alpha, Real* wt, stream_t& stream){
 		//<<<gridDim, blockDim>>>	blockId is from 0 to gridDim. threadId is from 0 to blockDim.
-		for(int idir=0; idir<ndir; idir++){
+		if(ndir==0){
 			map2map_do<<<dim3(4, 4, nlayer), dim3(WRAP_TX, 4), 0, stream>>>
-				(hdata, (Real* const*)out, in, idir, ndir, nlayer, alpha, wt, 't');
+				(hdata, (Real *const *)out, in, 0, ndir, nlayer, alpha, wt, 't');
+		}else{
+			for(int idir=0; idir<ndir; idir++){
+				map2map_do<<<dim3(4, 4, nlayer), dim3(WRAP_TX, 4), 0, stream>>>
+					(hdata, (Real* const*)out, in, idir, ndir, nlayer, alpha, wt, 't');
+			}
 		}
 	}
 	virtual ~map2map(){
