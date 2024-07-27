@@ -442,6 +442,15 @@ static void readcfg_powfs(parms_t *parms){
 		}
 		
 		if(isfinite(powfsi->hs)){//LGS
+			if(parms->sim.htel){
+				if(fabs(powfsi->hs-90e3)<2e3){//Only adjust Sodium LGS if it set to 90km+/- 2km
+					info("Adjust Sodium LGS range %g by telescope altitude %gm.\n", powfsi->hs, parms->sim.htel);
+					powfsi->hs-=parms->sim.htel;
+				}else{
+					dbg("Telescope altitude is not used.\n");
+					parms->sim.htel=0;
+				}
+			}
 			if(!powfsi->fnllt){
 				error("powfs%d is at finity range but LLT is not specified.\n", ipowfs);
 			}
@@ -737,7 +746,7 @@ static void readcfg_wfs(parms_t *parms){
 	
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].astscale!=0&&parms->powfs[ipowfs].astscale!=1){//scale asterism
+		if(parms->powfs[ipowfs].astscale!=1){//scale asterism
 			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
 			parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
 		}
@@ -1883,24 +1892,21 @@ static void setup_parms_postproc_za(parms_t *parms){
 	//Adjust LGS height by telescope altitude and sec(za)
 	//Adjust LGS signal level by cos(za)
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(!isinf(parms->powfs[ipowfs].hs)){//LGS
-			if(parms->sim.htel){
-				info("Adjust LGS range %g by telescope altitude %gm.\n", parms->powfs[ipowfs].hs, parms->sim.htel);
-			}
-			parms->powfs[ipowfs].hs=(parms->powfs[ipowfs].hs-parms->sim.htel)*secz;/*scale GS height. */
+		if(!isinf(parms->powfs[ipowfs].hs)){
+			
+			parms->powfs[ipowfs].hs*=secz;/*scale GS height. */
 			parms->powfs[ipowfs].siglev*=cosz;
 			dscale(parms->powfs[ipowfs].siglevs,cosz);
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);
-				parms->wfs[iwfs].hs=(parms->wfs[iwfs].hs-parms->sim.htel)*secz;
+				int iwfs=P(parms->powfs[ipowfs].wfs,indwfs);		
+				parms->wfs[iwfs].hs*=secz;
 				parms->wfs[iwfs].siglev*=cosz;
 			}
 		}
 	}
-
-	dadds(parms->evl.hs,-parms->sim.htel); dscale(parms->evl.hs,secz);
-	dadds(parms->ncpa.hs,-parms->sim.htel); dscale(parms->ncpa.hs,secz);
-	dadds(parms->fit.hs,-parms->sim.htel); dscale(parms->fit.hs,secz);
+	dscale(parms->evl.hs,secz);
+	dscale(parms->ncpa.hs,secz);
+	dscale(parms->fit.hs,secz);
 }
 /**
    Process simulation parameters to find incompatibility.
@@ -2432,9 +2438,10 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			P(parms->atmr.os,ips)=P(parms->atmr.os,parms->atmr.nps-1);
 		}
 		parms->atmr.nps=nps;
-	} else if((parms->recon.glao||parms->nhiwfs==1)
+	}/*else if((parms->recon.glao||parms->nhiwfs==1)
 		&&parms->recon.alg==RECON_MVR&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
-   		/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
+   		//GLAO or single high wfs mode. reconstruct only a single layer near the DM.
+		//Comment out because reconstructing into multiple layers can have better performance.
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 		dresize(parms->atmr.ht,1,1);
 		dresize(parms->atmr.wt,1,1);
@@ -2442,10 +2449,11 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
-	} else if(parms->npowfs>0){
+	}*/
+	else if(parms->npowfs>0){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-			if(P(parms->atmr.ht,ipsr)>parms->hipowfs_hsmax){
+			if(P(parms->atmr.ht,ipsr)>=parms->hipowfs_hsmax){
 				dbg("Tomography Layer %d is above high order guide star and therefore dropped.\n",ipsr);
 			} else{
 				P(parms->atmr.ht,ipsr2)=P(parms->atmr.ht,ipsr);
