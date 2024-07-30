@@ -127,7 +127,7 @@ static inline void gpu_set(int igpu){
     cudata=cudata_all[igpu];
 #endif
     if(cudata->reserve){
-	cudata->reserve.init();
+		cudata->reserve.init();//release reserve
     }
 }
 /**

@@ -61,12 +61,12 @@ w01_t::w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx){
 		W0new->nzmax=count;
 		//W0new is the transpose of W0p.
 		dsp* W0new2=dsptrans(W0new); dspfree(W0new);
-		W0p=cusp(W0new2, 1);
+		W0p=cusp(W0new2);
 		cp2gpu(W0f, full(), count2, 1);
 		dspfree(W0new2);
 		//cudaFreeHost(full);
 	} else{
-		W0p=cusp(R_W0, 1);
+		W0p=cusp(R_W0);
 	}
 }
 /**
@@ -139,7 +139,7 @@ void w01_t::apply(curcell& xout, const curcell& xin, stream_t& stream) const{
 			(xout.M()(), xin.M()(), W0f(), W0v, nxx, W1.Nx(), W0f.Nx());
 	}
 	if(W0p){
-		cuspmul(xout.M()(), W0p, xin.M()(), ndir, 'n', 1.f, stream);
+		cuspmul(xout.M(), W0p, xin.M(), ndir, 'n', 1.f, stream);
 	}
 }
 

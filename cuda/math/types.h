@@ -298,7 +298,6 @@ public:
 template <typename T>
 class CellArray:public Array<T, Cpu>{
 public:
-public:
 	typedef Array<T, Cpu> Parent;
 	using Parent::deinit;
 	using Parent::operator+;
@@ -378,9 +377,11 @@ public:
 	using Parent::N;
 	using Parent::operator bool;
 	using Parent::init;
-	#if CUDA_VERSION>10000
+#if CUDA_VERSION>10000
 	cudaDataType dtype();
-	#endif
+	mutable cusparseDnVecDescr_t vdesc=0;//for cuspmul
+	mutable cusparseDnMatDescr_t mdesc=0;//for cuspmul
+#endif
 	NumArray trans(stream_t &stream);
 	//using Parent::Copy;
 	NumArray():Parent(){};
@@ -390,6 +391,21 @@ public:
 	NumArray(const cmat *A);
 	NumArray(const smat *A);
 	NumArray(const zmat *A);
+#if CUDA_VERSION>10000
+	NumArray(const NumArray &in):Parent(in){}//don't copy vdesc, mdesc
+	NumArray &operator=(const NumArray &in){
+		if(this!=&in){
+			Parent::operator=(in);
+			vdesc=NULL;//don't copy vdesc, mdesc
+			mdesc=NULL;
+		}
+		return *this;
+	}
+	~NumArray(){
+		if(vdesc) {DO(cusparseDestroyDnVec(vdesc)); vdesc=NULL;}
+		if(mdesc) {DO(cusparseDestroyDnMat(mdesc)); mdesc=NULL;}
+	}
+#endif
 	NumArray Vector()const{
 		NumArray tmp=*this;
 		tmp.nx=tmp.nx*tmp.ny;
@@ -565,75 +581,91 @@ enum TYPE_SP{
 	SP_CSC,//compressed sparse column major. 
 	SP_CSR,//compressed sparse row major. 
 };
-class cusp{
-	int* p;
-	int* i;
-	Real* x;
-	int nx;
-	int ny;
-	int nzmax;
-	unsigned int* nref;
-	enum TYPE_SP type;
-#if CUDA_VERSION >= 10000
-	cusparseSpMatDescr_t desc;
+class cusp;
+/**
+ * @brief The content of cusp is moved into a separate struct so that reference can be done correctly.
+ * 
+ */
+struct cusp_ref{
+	friend class cusp;
+	friend void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncolvec, char trans, Real alpha, stream_t &stream);
+	Spint *p=NULL;
+	Spint *i=NULL;
+	Real *x=NULL;
+	long nx=0;
+	long ny=0;
+	long nzmax=0;
+	mutable void *bspmv=NULL; //buffer for spmv cuda-version 12.4 and 12.5 crash if a different buffer is used for spmv with the same matrix.
+	mutable void *bspmm=NULL; //buffer for spmm
+	mutable long nbspmm=0; //number of columns for the bspmm
+	enum TYPE_SP type=SP_CSC;
+	unsigned int count=1;
+#if CUDA_VERSION>=10000
+	cusparseSpMatDescr_t desc=NULL;
 #else
-	void* desc;
+	void *desc=NULL;
 #endif
+	~cusp_ref(){
+		if(count){
+			warning("Deleted while count is %d which should be 0\n", count);
+		}
+#if CUDA_VERSION >= 10000
+		if(desc) cusparseDestroySpMat(desc);
+#endif			
+		if(bspmv) cudaFree(bspmv);
+		if(bspmm) cudaFree(bspmm);
+
+		cudaFree(p);
+		cudaFree(i);
+		cudaFree(x);
+	}
+};
+class cusp{
+	cusp_ref *ref=NULL;
 public:
+	friend void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncolvec, char trans, Real alpha, stream_t &stream);
+	//The following operations assume the caller have checked that the cusp is not empty.
 	enum TYPE_SP Type()const{
-		return type;
+		return ref->type;
 	}
 	long Nx()const{
-		return nx;
+		return ref->nx;
 	}
 	long Ny()const{
-		return ny;
+		return ref->ny;
 	}
 	long Nzmax()const{
-		return nzmax;
+		return ref->nzmax;
 	}
-	int* Pp(){
-		return p;
+	Spint* Pp(){
+		return ref->p;
 	}
-	const int* Pp() const{
-		return p;
+	const Spint* Pp() const{
+		return ref->p;
 	}
-	int* Pi(){
-		return i;
+	Spint* Pi(){
+		return ref->i;
 	}
-	const int* Pi() const{
-		return i;
+	const Spint* Pi() const{
+		return ref->i;
 	}
 
 	Real* Px(){
-		return x;
+		return ref->x;
 	}
 	const Real* Px() const{
-		return x;
+		return ref->x;
 	}
-#if CUDA_VERSION >= 10000
-	cusparseSpMatDescr_t Desc() const{
-		return desc;
-	}
-#endif
-	cusp():p(0), i(0), x(0), nx(0), ny(0), nzmax(0), nref(0), type(SP_CSC), desc(0){}
+	cusp(){}
 	cusp(const dsp* in, int tocsr=0, int transp=0);
-	cusp(const cusp& in):p(in.p), i(in.i), x(in.x), nx(in.nx), ny(in.ny), nzmax(in.nzmax), nref(in.nref), type(in.type), desc(in.desc){
-		if(nref) nref[0]++;
+	cusp(const cusp& in):ref(in.ref){
+		if(ref) ref->count++;
 	}
 	cusp& operator=(const cusp& in){
-		if(this!=&in){
+		if(this!=&in && this->ref!=in.ref){
 			deinit();
-			p=in.p;
-			i=in.i;
-			x=in.x;
-			nx=in.nx;
-			ny=in.ny;
-			nzmax=in.nzmax;
-			nref=in.nref;
-			if(nref) nref[0]++;
-			type=in.type;
-			desc=in.desc;
+			ref=in.ref;
+			if(ref) ref->count++;
 		}
 		return *this;
 	}
@@ -641,22 +673,15 @@ public:
 		deinit();
 	}
 	void deinit(){
-		if(nref&&!atomic_sub_fetch(nref, 1)){
-#if CUDA_VERSION >= 10000
-			if(desc) cusparseDestroySpMat(desc);
-#endif
-			cudaFree(p);
-			cudaFree(i);
-			cudaFree(x);
-			myfree(nref);
+		if(ref && !atomic_sub_fetch(&ref->count, 1)){
+			delete ref;
 		}
-		p=0; i=0; x=0; nref=0;
 	}
 
 	void trans();/*covnert to CSR mode by transpose*/
 
 	operator bool()const{
-		return nx&&ny;
+		return ref && ref->nx&&ref->ny;
 	}
 };
 typedef CellArray<cusp> cuspcell;

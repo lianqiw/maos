@@ -93,7 +93,7 @@ void cumoao_t::L(curcell& xout, Real beta, const curcell& xin, Real alpha, strea
 		curmv(xout.M()(), 1, NW, dotNW(), 'n', alpha, stream);
 	}
 	if(actslave){
-		cuspmul(xout.M()(), actslave, xin.M()(), 1, 'n', alpha, stream);
+		cuspmul(xout.M(), actslave, xin.M(), 1, 'n', alpha, stream);
 	}
 }
 

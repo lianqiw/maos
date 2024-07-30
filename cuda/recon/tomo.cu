@@ -17,7 +17,7 @@
 */
 
 #define TIMING 0
-
+#define SAVE_TOMO 0
 #include "../sim/accphi.h"
 #include "../sim/cudata.h"
 #include "tomo.h"
@@ -90,7 +90,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		free(partxy);
 	} else{/*use sparse */
 		dbg("GP uses sparse matrix: pos=%g, xdiff=%g, ydiff=%g.\n", pos, xdiff, ydiff);
-		GPf=cusp(GP, 1);
+		GPf=cusp(GP);
 	}
 }
 static void
@@ -207,7 +207,6 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 				GPp[iwfs]=GPp[iwfs0];
 				GPscale[iwfs]=GPscale[iwfs0];
 				GP[iwfs]=GP[iwfs0];
-				saptr[iwfs]=saptr[iwfs0];
 			}
 			if(iwfs==iwfs0){
 				prep_saptr(saptr[iwfs], recon->saloc->p[ipowfs], recon->pmap);
@@ -279,7 +278,6 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		}
 		gpdata.init(nwfs, 1);
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
-		//delete [] GPDATA;
 	}
 
 	if(parms->tomo.precond==1){
@@ -558,20 +556,20 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 }
 
 void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, stream_t& stream){
-	if(_opdwfs){//sparse based
+	if(_opdwfs){//Sparse based is only needed when _opdwfs is set.
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			if(GPp[iwfs]||!GP[iwfs]) continue;
-			cuzero(_grad[iwfs], stream);//no need to Zero using gpdata()
-			cuspmul(_grad[iwfs](), GP[iwfs], _opdwfs[iwfs](), 1, 'n', 1, stream);
+			_grad[iwfs].Zero(stream);//sparse based, need to zero it first.
+			cuspmul(_grad[iwfs], GP[iwfs], _opdwfs[iwfs], 1, 'n', 1., stream);
 		}
 	}
 	cuzero(ttf, stream);
-	gpu_gp_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>>
+	gpu_gp_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>> //_opdwfs is initialized in the kernel.
 		(gpdata(), _grad.pm(), ttf(), _opdwfs?_opdwfs.pm():NULL, ptt2);
 }
 void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& stream){
 	if(_opdwfs){
-		cuzero(_opdwfs.M(), stream);
+		_opdwfs.Zero(stream);
 	}
 	//Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
 	gpu_gpt_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>>
@@ -579,8 +577,10 @@ void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& s
 
 	if(_opdwfs){//Does GP' for GP with sparse
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			if(GPp[iwfs]||!GP[iwfs]) continue;
-			cuspmul(_opdwfs[iwfs](), GP[iwfs], _grad[iwfs](), 1, 't', 1, stream);
+			if(!GPp[iwfs] && GP[iwfs]){
+				//info("wfs %d: opdwfs=%p, grad=%p\n", iwfs, _opdwfs[iwfs](), _grad[iwfs]());
+				cuspmul(_opdwfs[iwfs], GP[iwfs], _grad[iwfs], 1, 't', 1., stream);
+			}
 		}
 	}
 }
@@ -621,6 +621,13 @@ void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream
 	do_gp(_grad, curcell(), nttf, stream);
 	do_gpt(opdwfs, _grad, nttf, stream);
 	HXT(xout, alpha, stream);
+#if SAVE_TOMO
+	static int count=0; count++;
+	cuwrite(_grad, stream, "tomo_R_grad_%d", count);
+	cuwrite(ttf, stream, "tomo_R_gp_ttf_%d", count);
+	cuwrite(opdwfs, stream, "tomo_R_opdwfs_%d", count);
+	cuwrite(xout, stream, "tomo_R_xout_%d", count);
+#endif	
 }
 
 void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
@@ -650,7 +657,6 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 		curscale(xout.M(), beta, stream);
 	}
 	ctoc_init(10);
-#define SAVE_TOMO 0
 	//xin to opdwfs
 	HX(xin, 1, stream);
 	ctoc("Hx");

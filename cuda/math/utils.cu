@@ -71,8 +71,7 @@ void cp2gpu(cumapcell& dest, const mapcell* source){
 cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	int tocsr,        /**<0: Keep in CSC. 1: Convert to CSR */
 	int transp        /**<1: transpose*/
-)
-	:p(NULL), i(NULL), x(NULL), nx(0), ny(0), nzmax(0), nref(0), type(tocsr?SP_CSR:SP_CSC){
+){
 	if(!src_csc) return;
 	dsp* src_trans=0;
 	const dsp* src=0;
@@ -82,22 +81,23 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	} else{
 		src=src_csc;
 	}
-	nx=src_csc->nx;
-	ny=src_csc->ny;
-	nzmax=src->nzmax;
-	cp2gpu_dedup(&p, src->pp, src->ny+1, 1);
-	cp2gpu_dedup(&i, src->pi, src->nzmax, 1);
-	cp2gpu_dedup(&x, src->px, src->nzmax, 1);
-	nref=mymalloc(1, unsigned int);
-	nref[0]=1;
+	ref=new cusp_ref;
+	cp2gpu_dedup(&ref->p, src->pp, src->ny+1, 1);
+	cp2gpu_dedup(&ref->i, src->pi, src->nzmax, 1);
+	cp2gpu_dedup(&ref->x, src->px, src->nzmax, 1);
+	ref->nx=src_csc->nx;
+	ref->ny=src_csc->ny;
+	ref->nzmax=src->nzmax;
+	ref->type=tocsr?SP_CSR:SP_CSC;
+	ref->count=1;
 	if(src_trans){
 		dspfree(src_trans);
 	}
 
 #if CUDA_VERSION >= 10000
-	int nrow=(type==SP_CSR?nx:ny);
-	int ncol=(type==SP_CSR?ny:nx);
-	cusparseCreateCsr(&desc, nrow, ncol, nzmax, p, i, x, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
+	int nrow=(ref->type==SP_CSR?ref->nx:ref->ny);
+	int ncol=(ref->type==SP_CSR?ref->ny:ref->nx);
+	cusparseCreateCsr(&ref->desc, nrow, ncol, ref->nzmax, ref->p, ref->i, ref->x, CUSPARSE_INDEX, CUSPARSE_INDEX, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
 #endif
 }
 void cp2gpu(cusp& dest, const dspcell* srcc, int tocsr){

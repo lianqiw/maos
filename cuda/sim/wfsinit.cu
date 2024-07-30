@@ -270,8 +270,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 		}
 		/*GS0 for gtilt. */
 		if(powfs[ipowfs].GS0){
-			dsp* t=powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0];
-			cuwfs[iwfs].GS0=cusp(t, 1);
+			cuwfs[iwfs].GS0=cusp(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0]);
 		}
 		/*wfs amplitude map on loc */
 		cp2gpu(cuwfs[iwfs].amp, PR(powfs[ipowfs].amp, wfsind));

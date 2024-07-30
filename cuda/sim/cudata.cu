@@ -235,16 +235,17 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	  [2] is memory usage ratio percentage (100 is full)
 	*/
 	
-	long gpu_info[MAXGPU][3];//cuda index, and nvidia-smi index, and memory usage
+	long gpu_info[MAXGPU][4];//cuda index, and nvidia-smi index, and memory usage
 	int gpu_valid_count=0;
 	for(int ic=0; ic<MAXGPU; ic++){
 		cudaDeviceProp properties;
 		gpu_info[ic][0]=ic;//cuda-index
-		gpu_info[ic][1]=INT_MAX;//preset to disabled
+		gpu_info[ic][1]=0;//nvidia-smi reported index (order of pci bus id)
 		gpu_info[ic][2]=100;//preset to 100%
-		
+		gpu_info[ic][3]=0;//flag 0: unknown or not usable or disabled, 1: usable. 2: being used.
 		if(!cudaSetDevice(ic) &&!cudaGetDeviceProperties(&properties, ic)){
 			gpu_info[ic][1]=properties.pciBusID;//nvidia-smi order (pci index)
+			gpu_info[ic][3]=1;//mark usable
 			gpu_valid_count++;
 		}else{
 			warning("Error getting information for CUDA GPU %d, skip.\n", ic);
@@ -254,17 +255,17 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		goto end;
 	}
 	//sort to obtain [1] as nvidia-smi index
-	qsort(gpu_info, MAXGPU, sizeof(long)*3, (int(*)(const void *, const void *))cmp_long2_ascend);
+	qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void *, const void *))cmp_long2_ascend);
 	//check whether GPU is disabled by environment variable
 	for(int ig=0; ig<MAXGPU; ig++){
-		if(gpu_info[ig][1]!=INT_MAX){
-			gpu_info[ig][1]=ig;
+		gpu_info[ig][1]=ig;//PCI-id ordering. (nvidia-smi order)
+		if(gpu_info[ig][3]){
 			char tmp[64];
 			snprintf(tmp, sizeof(tmp), "MAOS_GPU_DISABLE_%d", ig);
 			const char *ctmp=NULL;
 			if((ctmp=getenv(tmp))&&ctmp[0]!='0'){
 				info("GPU %d is disabled by environment variable %s=%s\n", ig, tmp, ctmp);
-				gpu_info[ig][1]=INT_MAX;
+				gpu_info[ig][3]=0;
 			}
 		}
 	}
@@ -283,32 +284,42 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	 	*/
 		//sort by nvidia-smi (pcie) order
 		
-		for(int ig=0; ig<ngpu; ig++){
-			if(gpus[ig]>=MAXGPU){
-				warning("GPU %d does not exist\n", gpus[ig]);
-			}else if(gpu_info[gpus[ig]][1]==INT_MAX){
-				info("GPU %d is not usable.\n", gpus[ig]);
+		for(int ii=0; ii<ngpu; ii++){
+			int ig=gpus[ii];//user uses nvidia-smi ordering
+			if(ig>=MAXGPU){
+				warning("GPU %d does not exist\n", ig);
+			}else if(gpu_info[ig][3]==1){
+				info("GPU %d is not usable.\n", ig);
 			} else{
-				GPUS(NGPU, 0)=gpu_info[gpus[ig]][0];
-				GPUS(NGPU, 1)=gpus[ig];
+				GPUS(NGPU, 0)=gpu_info[ig][0];
+				GPUS(NGPU, 1)=gpu_info[ig][1];
+				gpu_info[ig][3]=2;//mark used.
 				NGPU++;
 			}
 		}
 	} else{//Sort and use least busy GPUs.
 		for(int ig=0; ig<MAXGPU; ig++){
 			int ic=gpu_info[ig][0];//cuda index
-			if(gpu_info[ig][1]!=INT_MAX){
+			if(gpu_info[ig][3]){
 				gpu_info[ig][2]=gpu_get_usage_percentage(ic, mem_minimum);
 			}
 		}
 		/*sort so that gpus with more available memory is in the front.*/
-		qsort(gpu_info, MAXGPU, sizeof(long)*3, (int(*)(const void*, const void*))cmp_long3_ascend);
+		qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void*, const void*))cmp_long3_ascend);
 		for(int ig=0; ig<ngpu; ig++){
-			if(gpu_info[ig][1]!=INT_MAX && gpu_info[ig][2]<100){
+			if(gpu_info[ig][3] && gpu_info[ig][2]<100){
 				GPUS(NGPU,0)=(int)gpu_info[ig][0];//cuda index
 				GPUS(NGPU,1)=(int)gpu_info[ig][1];//nvidia-smi index
+				gpu_info[ig][3]=2;//mark used
 				NGPU++;
 			}
+		}
+	}
+	for(int ig=0; ig<MAXGPU; ig++){
+		if(gpu_info[ig][3]==1){
+			dbg("GPU %ld is not used; reset its context.\n", gpu_info[ig][1]);
+			cudaSetDevice(gpu_info[ig][0]);
+			cudaDeviceReset();//releases context, frees memory.
 		}
 	}
 	if(NGPU){
@@ -317,6 +328,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 
 		info2("Using GPU");
 		for(int i=0; i<NGPU; i++){
+			//cudaInitDevice(GPUS(i, 0), 0, 0);//Does not seem to be necessary. cudaSetDevice does the same thing and more.
 			cudaSetDevice(GPUS(i,0));
 			cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
 			gpu_set(i);//set cudata

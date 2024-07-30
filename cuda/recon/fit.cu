@@ -218,7 +218,7 @@ void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, str
 	}
 	ctoc("NW");
 	if(actslave){
-		cuspmul(xout.M()(), actslave, xin.M()(), 1, 'n', alpha, stream);
+		cuspmul(xout.M(), actslave, xin.M(), 1, 'n', alpha, stream);
 	}
 	ctoc("SL");
 	ctoc_final("FitL");
