@@ -76,7 +76,7 @@ void cusolve_muv::Forward(curcell& out, Real beta, const curcell& in, Real alpha
 	} else{
 		curscale(out.M(), beta, stream);
 	}
-	cuspmul(out.M()(), M, in.M()(), 1, 'n', alpha, stream);
+	cuspmul(out.M(), M, in.M(), 1, 'n', alpha, stream);
 	if(U&&V){
 		curmv(Vx(), 0, V, in.M()(), 't', 1, stream);
 		curmv(out.M()(), 1, U, Vx(), 'n', -alpha, stream);
@@ -91,7 +91,7 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 	}
 
 	curscale(out.M(), beta, stream);
-	cuspmul(out.M()(), M, in.M()(), 1, 't', alpha, stream);
+	cuspmul(out.M(), M, in.M(), 1, 't', alpha, stream);
 	if(U&&V){
 		curmv(Vx(), 0, U, in.M()(), 't', 1, stream);
 		curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
@@ -116,7 +116,7 @@ void cusolve_muv::init(const muv_t* in){
 	for(int i=0; i<ny; i++){
 		nys[i]=inM->p[i*inM->nx]->ny;
 	}
-	M=cusp(Mc, 1);
+	M=cusp(Mc);
 	cp2gpu(U, Uc);
 	cp2gpu(V, Vc);
 	dspfree(Mc); dfree(Uc); dfree(Vc);
@@ -161,7 +161,7 @@ Real cusolve_cbs::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	return 0;
 }
 /*solve in place*/
-static __global__ void cuchol_solve_lower_do(Real* restrict y, Real* Cx, int* Cp, int* Ci, int n){
+static __global__ void cuchol_solve_lower_do(Real* restrict y, Real* Cx, Spint* Cp, Spint* Ci, int n){
 	int id=threadIdx.x;
 	int nd=blockDim.x;
 	extern __shared__ Real sb[];

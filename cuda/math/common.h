@@ -85,6 +85,13 @@ typedef float Real;
 #define MCU_REAL M_FLT
 #define MCU_COMP M_ZMP
 #endif
+#if defined (DLONG) && 0
+#define CUSPARSE_INDEX CUSPARSE_INDEX_64I
+typedef spint Spint;
+#else
+#define CUSPARSE_INDEX CUSPARSE_INDEX_32I //CUDA < 10.0 can only use integer indices
+typedef int Spint;
+#endif
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 typedef Real Real2[2];

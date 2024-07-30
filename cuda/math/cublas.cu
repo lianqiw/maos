@@ -25,11 +25,15 @@
 #include "cucmat.h"
 #include <cusolverDn.h>
 int NULL_STREAM=0;
+#if CUDA_VERSION < 10000
 static cusparseMatDescr_t spdesc=NULL;
+#endif
 static __attribute((constructor)) void init(){
+#if CUDA_VERSION < 10000
 	DO(cusparseCreateMatDescr(&spdesc));
 	cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(spdesc, CUSPARSE_INDEX_BASE_ZERO);
+#endif	
 	char *tmp=getenv("CUDA_LAUNCH_BLOCKING");
 	if(tmp){
 		int blocking=strtol(tmp, NULL, 10);
@@ -59,7 +63,7 @@ static const char *scsrmv_err[]={
 	Converted cuSparse generic API for CUDA version 11 which removed old API.
 */
 
-void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Real alpha, stream_t &stream){
+void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncolvec, char trans, Real alpha, stream_t &stream){
 	cusparseOperation_t opr;
 	int istrans=(trans=='t'||trans==1);
 	if(A.Type()==SP_CSC){
@@ -70,7 +74,7 @@ void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Rea
 	} else{
 		opr=CUSPARSE_OPERATION_NON_TRANSPOSE;
 	}
-	int ncol=0, nrow=0;
+	long ncol=0, nrow=0;
 	switch(A.Type()){
 	case SP_CSR:
 		nrow=A.Nx(); ncol=A.Ny(); break;
@@ -111,65 +115,75 @@ cusparseSpMM(cusparseHandle_t     handle,
 
 	*/
 	size_t bsize;
-	void *buffer;
-	size_t ny=istrans?ncol:nrow;
-	size_t nx=istrans?nrow:ncol;
+	long ny=istrans?ncol:nrow;
+	long nx=istrans?nrow:ncol;
 	if(ncolvec==1){
-		cusparseDnVecDescr_t xv, yv;
-		cusparseCreateDnVec(&xv, nx, (void *)x, CUDA_R);
-		cusparseCreateDnVec(&yv, ny, (void *)y, CUDA_R);
+		if(nx>x.N() || ny>y.N()){
+			error("Data overflows: nx=%ld, x.N=%ld, ny=%ld, y.N=%ld\n", nx, x.N(), ny, y.N());
+		}else if(nx<x.N() || ny<y.N()){
+			warning_once("Data mismatch: nx=%ld, x.N=%ld, ny=%ld, y.N=%ld\n", nx, x.N(), ny, y.N());
+		}
+		//info("x.p=%p, x.vdesc=%p, y.p=%p, y.vdesc=%p\n", x(), x.vdesc, y(), y.vdesc);
+		if(!x.vdesc) DO(cusparseCreateDnVec(&x.vdesc, nx, (void*)x(), CUDA_R));
+		if(!y.vdesc) DO(cusparseCreateDnVec(&y.vdesc, ny, (void*)y(), CUDA_R));
 		//info("A=%p, x=%p, size=%zd; y=%p, size=%zd\n", &A, x, nx, y, ny);
 #if CUDA_VERSION > 11010 
 		cusparseSpMVAlg_t alg=CUSPARSE_SPMV_ALG_DEFAULT;
 #else
 		cusparseSpMVAlg_t alg=CUSPARSE_MV_ALG_DEFAULT;
 #endif
-		DO(status=cusparseSpMV_bufferSize(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, &bsize));
-		DO(cudaMalloc(&buffer, bsize));
+		if(!A.ref->bspmv){
+			DO(status=cusparseSpMV_bufferSize(stream.sparse(), opr, &alpha, A.ref->desc, x.vdesc, &one, y.vdesc, CUDA_R, alg, &bsize));
+			DO(cudaMalloc(&A.ref->bspmv, bsize));
+		}
 #if CUDA_VERSION >= 12040
-		//DO(status=cusparseSpMV_preprocess(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
+		//DO(status=cusparseSpMV_preprocess(stream.sparse(), opr, &alpha, A.desc, x.vdesc, &one, y.vdesc, CUDA_R, alg, A.ref->bspmv));
 #endif
-		DO(status=cusparseSpMV(stream.sparse(), opr, &alpha, A.Desc(), xv, &one, yv, CUDA_R, alg, buffer));
-		//CUDA_SYNC_STREAM;
-		//For cuda-12.4 and 12.5, the call here results in the following error.
-		//error 700, an illegal memory access was encountered
-		//Use cuda-12.3 instead.
-		DO(cudaFree(buffer));
-		cusparseDestroyDnVec(yv);
-		cusparseDestroyDnVec(xv);
+		DO(status=cusparseSpMV(stream.sparse(), opr, &alpha, A.ref->desc, x.vdesc, &one, y.vdesc, CUDA_R, alg, A.ref->bspmv));
 	} else{
-		cusparseDnMatDescr_t Bm, Cm;
-		cusparseCreateDnMat(&Bm, nx, ncolvec, nx, (void *)x, CUDA_R, CUSPARSE_ORDER_COL);
-		cusparseCreateDnMat(&Cm, ny, ncolvec, ny, (void *)y, CUDA_R, CUSPARSE_ORDER_COL);
+		if(x.N()<ncolvec*nx){
+			error("x[%ldx%ld] is smaller than %ldx%ld\n", x.Nx(), x.Ny(), nx, ncolvec);
+		}else if(x.N()>ncolvec*nx){
+			warning_once("x[%ldx%ld] is larger than %ldx%ld\n", x.Nx(), x.Ny(), nx, ncolvec);
+		}
+		if(y.N()<ncolvec*ny){
+			error("y[%ldx%ld] is smaller than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
+		}else{
+			warning_once("y[%ldx%ld] is larger than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
+		}
+		if(!x.mdesc) DO(cusparseCreateDnMat(&x.mdesc, nx, ncolvec, nx,(void *)x(), CUDA_R, CUSPARSE_ORDER_COL));
+		if(!y.mdesc) DO(cusparseCreateDnMat(&y.mdesc, ny, ncolvec, ny,(void *)y(), CUDA_R, CUSPARSE_ORDER_COL));
 		cusparseOperation_t opB=CUSPARSE_OPERATION_NON_TRANSPOSE;
 #if CUDA_VERSION > 11010
 		cusparseSpMMAlg_t alg=CUSPARSE_SPMM_ALG_DEFAULT;
 #else
 		cusparseSpMMAlg_t alg=CUSPARSE_MM_ALG_DEFAULT;
 #endif
-		DO(status=cusparseSpMM_bufferSize(stream.sparse(), opr, opB, &alpha,  A.Desc(), Bm, &one, Cm, CUDA_R, alg, &bsize));
-		DO(cudaMalloc(&buffer, bsize));
+		if(x.Ny()>A.ref->nbspmm){
+			DO(status=cusparseSpMM_bufferSize(stream.sparse(), opr, opB, &alpha,  A.ref->desc, x.mdesc, &one, y.mdesc, CUDA_R, alg, &bsize));
+			if(A.ref->nbspmm) DO(cudaFree(A.ref->bspmm));
+			DO(cudaMalloc(&A.ref->bspmm, bsize));
+			info("A(%p).nbspmm was increased from %ld to %ld\n", &A, A.ref->nbspmm, x.Ny());
+			A.ref->nbspmm=x.Ny();
+			A.ref->bspmm=A.ref->bspmm;
+		}
 #if CUDA_VERSION >= 12040
-		//DO(status=cusparseSpMM_preprocess(stream.sparse(), opr, opB, &alpha, A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
+		//DO(status=cusparseSpMM_preprocess(stream.sparse(), opr, opB, &alpha, A.ref->desc, x.mdesc, &one, y.mdesc, CUDA_R, alg, A.bspmm));
 #endif
-		DO(status=cusparseSpMM(stream.sparse(), opr, opB, &alpha, A.Desc(), Bm, &one, Cm, CUDA_R, alg, buffer));
-		//CUDA_SYNC_STREAM;
-		DO(cudaFree(buffer));
-		cusparseDestroyDnMat(Bm);
-		cusparseDestroyDnMat(Cm);
+		DO(status=cusparseSpMM(stream.sparse(), opr, opB, &alpha, A.ref->desc, x.mdesc, &one, y.mdesc, CUDA_R, alg, A.ref->bspmm));
 	}
 #else		
 	if(ncolvec==1){
-		status=CUSP(csrmv)(stream.sparse(), opr,
+		DO(status=CUSP(csrmv)(stream.sparse(), opr,
 			nrow, ncol, A.Nzmax(), &alpha, spdesc,
-			A.Px(), A.Pp(), A.Pi(), x, &one, y);
+			A.Px(), A.Pp(), A.Pi(), x, &one, y));
 
 	} else{
 		int nleadx=istrans?nrow:ncol;
 		int nleady=istrans?ncol:nrow;
-		status=CUSP(csrmm)(stream.sparse(), opr,
+		DO(status=CUSP(csrmm)(stream.sparse(), opr,
 			nrow, ncolvec, ncol, A.Nzmax(), &alpha, spdesc,
-			A.Px(), A.Pp(), A.Pi(), x, nleadx, &one, y, nleady);
+			A.Px(), A.Pp(), A.Pi(), x, nleadx, &one, y, nleady));
 	}
 #endif
 	if(status!=0){

@@ -177,11 +177,11 @@ __global__ void sum_do(Real* restrict res, const Real* a, const int n){
   reduction again.
 */
 __global__ void sum2_do(Real* restrict res, const Real* a, const int n){
-	__shared__ Real sb[REDUCE_WRAP*REDUCE_STRIDE];
+	__shared__ Real ssb[REDUCE_WRAP*REDUCE_STRIDE];
 	const int idx=threadIdx.x;
 	const int wrap=idx/WRAP_SIZE; //which wrap
 	const int jdx=(WRAP_SIZE-1)&idx;//index within this wrap
-	volatile Real* s=sb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
+	volatile Real* s=ssb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
 	s[-16]=0;
 	//Read in vector from global mem
 	Real sum=0;
@@ -199,10 +199,10 @@ __global__ void sum2_do(Real* restrict res, const Real* a, const int n){
 	}
 	__syncthreads();//synchronize different wraps
 	if(idx<REDUCE_WRAP){//use a few threads for reduce
-		Real sum2=sb[REDUCE_STRIDE*idx+WRAP_SIZE/2+WRAP_SIZE-1];
+		Real sum2=ssb[REDUCE_STRIDE*idx+WRAP_SIZE/2+WRAP_SIZE-1];
 		//reuse sb for size of REDUCE_WRAP+REDUCE_WRAP/2;
-		sb[idx]=0;
-		volatile Real* s2=sb+REDUCE_WRAP/2+idx;
+		ssb[idx]=0;
+		volatile Real* s2=ssb+REDUCE_WRAP/2+idx;
 		s2[0]=sum2;
 #pragma unroll	
 		for(int i=0; i<REDUCE_WRAP_LOG2; i++){

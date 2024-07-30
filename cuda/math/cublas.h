@@ -22,7 +22,7 @@
 /**
  * \file cublas.h
 */
-void cuspmul(Real *y, const cusp &A, const Real *x, int ncol, char trans, Real alpha, stream_t &stream);
+void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncol, char trans, Real alpha, stream_t &stream);
 //int cusvd(curmat &U, curmat &S, curmat &VT, curmat &A);
 /**<
  * C=A*diag(x)

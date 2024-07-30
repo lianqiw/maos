@@ -523,7 +523,13 @@ void* gpu_perfevl_sync(thread_t* info){
 		PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuglobal->perf.ccb_ol[ievl]);
 		PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuglobal->perf.ccb_cl[ievl]);
 		if(ans1||ans2){
-			warning("Perfevl fails, redo\n");
+			static int status=0;
+			if(status>2){
+				error("Step %5d: Perfevl fails, quite after %d redos\n", isim, status);
+			}else{
+				warning("Step %5d: Perfevl fails, redo\n", isim);
+			}
+			status++;
 			gpu_perfevl_queue(info);
 			gpu_perfevl_sync(info);
 		}
