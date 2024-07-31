@@ -51,16 +51,16 @@ AC_PROG_INSTALL
 
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 LT_INIT([disable-shared, static]) #prefer static internal linking.
-AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
-AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
+AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR([Unknown Endianness]))
+AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], [Endianness])
 #AC_DEFINE_UNQUOTED means expand the $ variable
-AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
-AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
+AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], [SOURCE folder])
+AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],[BUILD folder])
 
 
 die(){
 	shift
-	AC_MSG_ERROR(["Error:$@"])
+	AC_MSG_ERROR([Error:$@])
 	return 1
 }
 #CPPFLAGS are for C/C++ preprocessor. Use it for -D, -I flags
@@ -105,12 +105,12 @@ case `$CC -v 2>&1` in
 		CN=GCC
 		AC_MSG_ERROR([Compiler $CC is unknown])
 esac
-AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], ["Whether MAOS is using C++ compiler"])
+AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], [Compile using C++ compiler])
 AM_CONDITIONAL(GCC, [test x$CN = xGCC])
 AM_CONDITIONAL(ICC, [test x$CN = xICC])
 AM_CONDITIONAL(CLANG, [test x$CN = xCLANG])
 CC_VERSION=$($CC -dumpversion)
-AC_DEFINE_UNQUOTED(COMPILER, ["$CN (v$CC_VERSION)"], ["Compiler"])
+AC_DEFINE_UNQUOTED(COMPILER, ["$CN (v$CC_VERSION)"], [Compiler name and version])
 
 if test -n "$CC_VERSION" ;then
 	major=${CC_VERSION%%.*}
@@ -183,7 +183,7 @@ AC_ARG_ENABLE(gcov, AS_HELP_STRING([--enable-gcov],[Enable gcov for code coverag
 AC_ARG_ENABLE(double, AS_HELP_STRING([--disable-double],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(single, AS_HELP_STRING([--enable-single],[Use single precision for CPU and cuda.]))
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]))
+AC_ARG_ENABLE(scheduler, AS_HELP_STRING([--disable-scheduler],[Disable built in scheduler]))
 AC_ARG_ENABLE(websockets, AS_HELP_STRING([--disable-websockets],[Disable websockets]))
 AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], [Prefer MKL]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR=])
@@ -224,17 +224,17 @@ if test "$enable_double" = "no" ;then
 fi
 if test "$enable_single" = "yes" ;then
 	if test "$cuda_double" = "yes" ;then
-		AC_MSG_ERROR(["cuda_double is only possible without --enable-single"])
+		AC_MSG_ERROR([cuda_double is only possible without --enable-single])
 	fi
 	if test "$with_matlab" != "no" ;then
-		AC_MSG_WARN(["MATLAB linking is only possible without --enable-single. Disabled mex."])
+		AC_MSG_WARN([MATLAB linking is only possible without --enable-single. Disabled mex.])
 		with_matlab=no
 	fi
 	enable_single=1
 else
 	enable_single=0
 fi
-AC_DEFINE_UNQUOTED(CPU_SINGLE, $enable_single, "Use single precision mode")
+AC_DEFINE_UNQUOTED(CPU_SINGLE, $enable_single, [Single precision CPU mode])
 AM_CONDITIONAL(GCOV, [ test x$enable_gcov = "xyes" ])
 if test x$enable_gcov = "xyes" ;then
 	OPTSprof+="  -fprofile-arcs -ftest-coverage --coverage"
@@ -281,10 +281,10 @@ DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-funct
 #always_inline causes inline to be done in debug mode.
 
 if test "x$enable_debug" = "xyes" ;then
-	AC_DEFINE(DEBUG,[1],["Debug the code"])
+	AC_DEFINE(DEBUG,[1],[Compile maos with debug information])
 	ccprefix=DEBUG
 else
-	AC_DEFINE(DEBUG,[0],["Do not debug"])
+	AC_DEFINE(DEBUG,[0],[Compile maos with optimization])
 	ccprefix=OPTIM
 fi
 AM_CONDITIONAL(DEBUG, [test "x$enable_debug" = "xyes"])
@@ -375,7 +375,7 @@ case "$host_os" in
 	*)
 		AC_MSG_ERROR([Unrecognized OS])
 esac
-AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
+AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], [Suffix of dynamic load library])
 libdir="${ac_default_prefix}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version .
 CPPFLAGS+=" -I${ac_default_prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
@@ -497,13 +497,13 @@ AS_IF([test "$system" = "apple"], [
 AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp=0], [has_omp=1])
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
 AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
-AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], ["Defined to 1 if Openmp is enabled"])
+AC_DEFINE_UNQUOTED(HAS_OPENMP,[$has_omp], [Openmp is enabled])
 if test "$INTEL" = 1 ;then
 	OPENMP_CFLAGS=${OPENMP_CFLAGS//-fopenmp/-qopenmp}
 fi
 AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
-	AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+	AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], [Disable built-in scheduler])
 	enable_websockets="no"
 fi
 
@@ -521,7 +521,7 @@ case $host_cpu in
 		chol_fun=cholmod_factorize
 	;;
 	*)
-		AC_MSG_ERROR(["Unknown host_cpu"])
+		AC_MSG_ERROR([Unknown host_cpu])
 	;;
 esac
 
@@ -529,10 +529,10 @@ LDEXE+="$LDRT " #-static #show that we prefer static linking.
 AM_CONDITIONAL(USE_STATIC, [test "x$enable_allstatic" = "xyes"])
 if test "x$enable_allstatic" = "xyes" ;then
 	LDEXE_MAOS="-all-static" #only all static linking for maos
-	AC_DEFINE(USE_STATIC, [1], "We are compling maos with static link")
+	AC_DEFINE(USE_STATIC, [1], [Comple maos with static linkage])
 	mkl="mkl-static mkl" #prefer static
 else
-	AC_DEFINE(USE_STATIC, [0], "We are compling maos with dynamic link")
+	AC_DEFINE(USE_STATIC, [0], [Comple maos with dynamic linkage])
 	mkl="mkl mkl-static" #prefer dynamic
 fi
 try_lapack="openblas openblas-serial pkg-config default-3 default"
@@ -686,7 +686,7 @@ else
 			compile FFTW fftw.tar.bz2 $FLAGS --enable-float
 			unset ac_cv_lib_fftw3_fftw_execute
 			AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
-			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR(["FFTW library or header is not available."]))
+			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR([FFTW library or header is not available.]))
 		fi
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
@@ -712,11 +712,11 @@ else
 	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT ])
 	LDFFT_MEX=$LDFFT
 fi
-AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], "Has FFTW3 threads support.")
-AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], [FFTW has thread support.])
+AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], [FFTW has single precision support.])
 AC_CHECK_LIB([m], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$LDFFT]) #since version 3.3.9
-AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], "Has fftw_threads_set_callpack support")
-AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR(["FFT single precision is not available for --disable-double"])])
+AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], [FFT has fftw_threads_set_callpack support])
+AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR([FFT single precision is not available for --disable-double])])
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
@@ -760,7 +760,7 @@ if test "$enable_websockets" != "no" ;then
 		fi
 	fi
 	if test "$has_lws" != "no" ;then
-		AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
+		AC_DEFINE(HAS_LWS, [1], [libwebsocket is available])
 	else
 		AC_MSG_NOTICE([libwebsockets library or header is not available])
 		enable_websockets="no"
@@ -787,7 +787,7 @@ if test "$enable_cmocka" != "no" ;then
 		fi
 	fi
 	if test "$enable_cmocka" != "no" ;then
-		AC_DEFINE(USE_CMOCKA, [1], "Enable unit testing with cmocka")
+		AC_DEFINE(USE_CMOCKA, [1], [Enable unit testing with cmocka])
 	fi
 fi
 AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
@@ -835,7 +835,7 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 	elif test "$gtk_ver" = "3" ;then
 		GTK_CFLAGS+=" -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
 	fi
-	AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], ["Mac integration"])
+	AC_DEFINE_UNQUOTED(MAC_INTEGRATION, [$has_mac], [Has GTK MAC integration])
 	#The following will substitute the variables name
 	#Reexport after updating
 	AC_SUBST(GTK_CFLAGS)
@@ -858,7 +858,7 @@ if test "$with_matlab" != "no" ;then
 	elif test -x "${MEXDIR}/bin/mex" ;then
 		MEXDIR="${MEXDIR}/bin"
 	else
-		AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
+		AC_MSG_ERROR([mex not found at $MEXDIR. Please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
 	fi
 	echo MEXDIR=$MEXDIR
 	MEXEXT="$($MEXDIR/mexext)"
@@ -950,16 +950,39 @@ if test "$with_cuda" != "no" ;then #test CUDA availability
 		cudaver="${cudaver/.}"
 		echo CUDA toolkit version is $cudaver
 		if test "$cudaver" -lt 90 ;then
-			cuarch=20 #<cuda-8.0 supports compute_20
+			cuarch=20 #minimum arch version supported.
 		elif test "$cudaver" -lt 110 ;then
-			cuarch=30 #compute_30 is the minimum version
+			cuarch=30
+		elif test "$cudaver" -lt 120 ;then
+			cuarch=35
 		else
-			cuarch=50 #compute_50 is the minimum version
+			cuarch=50
 		fi
-		if test $CN = GCC ;then
-			if test "$cudaver" -lt 80 -a "$CC_VERSION" -gt 49 ;then
-				AC_MSG_NOTICE([CUDA version $cudaver is not compatible with GCC $CC_VERSION])
-				with_cuda="no"
+		if test "$cudaver" -lt 60 ;then
+			cuarchmax=35 #maximum arch version supported.
+		elif test "$cudaver" -lt 80 ;then
+			cuarchmax=50
+		elif test "$cudaver" -lt 90 ;then
+			cuarchmax=60
+		elif test "$cudaver" -lt 100 ;then
+			cuarchmax=70
+		elif test "$cudaver" -lt 110 ;then
+			cuarchmax=75
+		elif test "$cudaver" -lt 120 ;then
+			cuarchmax=80
+		else
+			cuarchmax=90
+		fi
+		devarch=`nvidia-smi  --query-gpu=compute_cap --format=csv,noheader,nounits |sed  's/\.//g' |sort -n |head -1`
+		if test -n "$devarch" ; then
+		 	if test $devarch -lt $cuarch ;then
+				AC_MSG_ERROR([CUDA version supports compute capability $cuarch - $cuarchmax, but device is at $devarch])
+			elif test "$enable_release" != "yes" ;then
+				if test $devarch -gt $cuarchmax ;then
+					cuarch=$cuarchmax
+				else
+					cuarch=$devarch
+				fi
 			fi
 		fi
 	fi
@@ -1018,11 +1041,14 @@ if test "$with_cuda" != "no" ;then
 fi
 if test "$with_cuda" != "no" -a $CN = CLANG ;then #use clang to compile GPU code. Which is as fast as nvcc but more tolerant.
 	NVCC=$CC
+	if test $CC_VERSION -ge 50 ;then
+		CUDAOPT+=" --std=c++17" #fix __float128 error. see https://discourse.llvm.org/t/error-float128-is-not-supported-on-this-target/72397
+	fi
 	CUDAOPT+=" --cuda-gpu-arch=sm_${cuarch} $CCBINOPT --cuda-path=$CUDADIR"
 	CUDAOPT+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
 	CCBINOPT= #no need for this
 elif test "$with_cuda" != "no" ;then #Set nvcc flags
-	AC_MSG_NOTICE(["Use cuda in directory $CUDADIR"])
+	AC_MSG_NOTICE([Use cuda in directory $CUDADIR])
 	#NVCC+=" $CFLAGS_CPU"
 	if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
 		CCBIN="${CCBIN%% *}"
@@ -1049,9 +1075,9 @@ elif test "$with_cuda" != "no" ;then #Set nvcc flags
 fi
 if test "$with_cuda" != "no" ;then
 	if test "$cuda_double" = "yes" ;then
-		AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
+		cuda_double=1
 	else
-		AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
+		cuda_double=0		
 	fi
 	AC_SUBST(CUDAOPT)
 	AC_SUBST(CCBINOPT)
@@ -1059,6 +1085,7 @@ if test "$with_cuda" != "no" ;then
 	AC_SUBST(LDCUDA)
 	AC_SUBST(NVCC)
 else
+	cuda_double=0
 	if test "$user_enabled_cuda" = "yes" ;then
 		AC_MSG_NOTICE([Specified directory $CUDADIR does not contain CUDA toolkit.])
 	elif test "$user_enabled_cuda" = "no" ;then
@@ -1068,8 +1095,9 @@ else
 	fi
 	cudaver=
 fi
-AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], "CUDA version")
-AM_CONDITIONAL(CUDA_DOUBLE, [test "$with_cuda" != "no" -a "$cuda_double" = "yes" ])
+AC_DEFINE_UNQUOTED(CUDA_DOUBLE, [$cuda_double], [Use double precision mode in CUDA])
+AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], [CUDA version])
+AM_CONDITIONAL(CUDA_DOUBLE, [test "$cuda_double" = "1" ])
 AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 
 #Doxygen Features
@@ -1157,6 +1185,7 @@ if test "$with_matlab" != "no" ;then
 	echo "MEXOPT=$MEXOPT"
 fi
 YESNO=("No" "Yes")
+FP=("FP64" "FP32")
 echo
 echo Compiling options:
 echo
@@ -1168,8 +1197,8 @@ echo "Scheduler:       ${enable_scheduler:-yes}"
 echo "Coverage:        ${enable_gcov:-no}"
 echo "OpenMP:          ${YESNO[[$has_omp]]}"
 echo "FFTW Threads:    ${YESNO[[$fftw_threads]]}"
-echo "Single:          ${YESNO[[$enable_single]]}"
-echo "CUDA:            ${cudaver:-no} ${cudaver:+ (double: $cuda_double, arch: $cuarch)}"
+echo "Precision:       ${FP[[$enable_single]]}"
+echo "CUDA:            ${cudaver:-no} ${cudaver:+ (${FP[[1-$cuda_double]]}, arch: $cuarch)}"
 echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       ${enable_websockets:-yes}"
