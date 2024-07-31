@@ -56,8 +56,8 @@ var hierarchy =
     [ "cugrid_t", "classcugrid__t.html", [
       [ "cumap_t", "classcumap__t.html", null ]
     ] ],
-    [ "cullt_t", "structcullt__t.html", null ],
     [ "cuda_wfs::cullt_t", "classcuda__wfs_1_1cullt__t.html", null ],
+    [ "cullt_t", "structcullt__t.html", null ],
     [ "culoc_t", "classculoc__t.html", [
       [ "cupts_t", "classcupts__t.html", null ]
     ] ],
@@ -85,6 +85,7 @@ var hierarchy =
       [ "cutomo_grid", "classcutomo__grid.html", null ]
     ] ],
     [ "cusp", "classcusp.html", null ],
+    [ "cusp_ref", "structcusp__ref.html", null ],
     [ "cuda_wfs::cuwfs_base", "classcuda__wfs_1_1cuwfs__base.html", [
       [ "cuda_wfs::cupywfs_t", "classcuda__wfs_1_1cupywfs__t.html", null ],
       [ "cuda_wfs::cushwfs_t", "classcuda__wfs_1_1cushwfs__t.html", [
@@ -96,8 +97,8 @@ var hierarchy =
       ] ]
     ] ],
     [ "cuda_wfs::cuwfs_info", "classcuda__wfs_1_1cuwfs__info.html", null ],
-    [ "cuda_wfs::cuwfs_t", "classcuda__wfs_1_1cuwfs__t.html", null ],
     [ "cuwfs_t", "classcuwfs__t.html", null ],
+    [ "cuda_wfs::cuwfs_t", "classcuda__wfs_1_1cuwfs__t.html", null ],
     [ "dbg_cfg_t", "parms_8h.html#structdbg__cfg__t", null ],
     [ "dcccell", "type_8h.html#structdcccell", null ],
     [ "dccell", "type_8h.html#structdccell", null ],

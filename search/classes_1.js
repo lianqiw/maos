@@ -49,7 +49,7 @@ var searchData=
   ['cufit_5fgrid',['cufit_grid',['../classcufit__grid.html',1,'']]],
   ['cuglobal_5ft',['cuglobal_t',['../classcuglobal__t.html',1,'']]],
   ['cugrid_5ft',['cugrid_t',['../classcugrid__t.html',1,'']]],
-  ['cullt_5ft',['cullt_t',['../structcullt__t.html',1,'cullt_t'],['../classcuda__wfs_1_1cullt__t.html',1,'cuda_wfs::cullt_t']]],
+  ['cullt_5ft',['cullt_t',['../classcuda__wfs_1_1cullt__t.html',1,'cuda_wfs::cullt_t'],['../structcullt__t.html',1,'cullt_t']]],
   ['culoc_5ft',['culoc_t',['../classculoc__t.html',1,'']]],
   ['cumap_5ft',['cumap_t',['../classcumap__t.html',1,'']]],
   ['cumemcache_5ft',['cumemcache_t',['../classcumemcache__t.html',1,'']]],
@@ -76,8 +76,9 @@ var searchData=
   ['cusolve_5fr',['cusolve_r',['../classcusolve__r.html',1,'']]],
   ['cusolve_5fsparse',['cusolve_sparse',['../classcusolve__sparse.html',1,'']]],
   ['cusp',['cusp',['../classcusp.html',1,'']]],
+  ['cusp_5fref',['cusp_ref',['../structcusp__ref.html',1,'']]],
   ['cutomo_5fgrid',['cutomo_grid',['../classcutomo__grid.html',1,'']]],
   ['cuwfs_5fbase',['cuwfs_base',['../classcuda__wfs_1_1cuwfs__base.html',1,'cuda_wfs']]],
   ['cuwfs_5finfo',['cuwfs_info',['../classcuda__wfs_1_1cuwfs__info.html',1,'cuda_wfs']]],
-  ['cuwfs_5ft',['cuwfs_t',['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t'],['../classcuwfs__t.html',1,'cuwfs_t']]]
+  ['cuwfs_5ft',['cuwfs_t',['../classcuwfs__t.html',1,'cuwfs_t'],['../classcuda__wfs_1_1cuwfs__t.html',1,'cuda_wfs::cuwfs_t']]]
 ];

@@ -180,6 +180,13 @@ comp&#160;</td><td class="memItemRight" valign="bottom"><b>cvecsum</b> (const co
 <tr class="separator:ace6561d760353d0f9cc318f06a43dc30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a327f8f60e2150cfc3ff6fdf9e3f7fdd2"><td class="memItemLeft" align="right" valign="top">comp&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a327f8f60e2150cfc3ff6fdf9e3f7fdd2">csum</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
 <tr class="separator:a327f8f60e2150cfc3ff6fdf9e3f7fdd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27798d8582ca81cce96872b58fdc03d0"><td class="memItemLeft" align="right" valign="top"><a id="a27798d8582ca81cce96872b58fdc03d0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cnormalize_sum</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, comp sum)</td></tr>
+<tr class="separator:a27798d8582ca81cce96872b58fdc03d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af58a2e752d27e465c1a5e6cd14766d5b"><td class="memItemLeft" align="right" valign="top"><a id="af58a2e752d27e465c1a5e6cd14766d5b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#af58a2e752d27e465c1a5e6cd14766d5b">cnormalize_sumabs</a> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, real sum)</td></tr>
+<tr class="memdesc:af58a2e752d27e465c1a5e6cd14766d5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">normalize the sum of abs(A) to sum. <br /></td></tr>
+<tr class="separator:af58a2e752d27e465c1a5e6cd14766d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a206c417f3343c792996c2dcb89aceafe"><td class="memItemLeft" align="right" valign="top">comp&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a206c417f3343c792996c2dcb89aceafe">cmean</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
 <tr class="separator:a206c417f3343c792996c2dcb89aceafe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59964040fa3388adecaeefeb973c61f2"><td class="memItemLeft" align="right" valign="top">comp&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a59964040fa3388adecaeefeb973c61f2">ctrace</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
@@ -187,29 +194,25 @@ comp&#160;</td><td class="memItemRight" valign="bottom"><b>cvecsum</b> (const co
 <tr class="memitem:a47eb894229c4f51f50c86fd76debf1b5"><td class="memItemLeft" align="right" valign="top"><a id="a47eb894229c4f51f50c86fd76debf1b5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>csort</b> (<a class="el" href="type_8h.html#structcmat">cmat</a> *A, int ascend)</td></tr>
 <tr class="separator:a47eb894229c4f51f50c86fd76debf1b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad66aa8bfec3036b999fa079409899376"><td class="memItemLeft" align="right" valign="top"><a id="ad66aa8bfec3036b999fa079409899376"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cmaxmin</b> (const comp *__restrict p, <a class="el" href="classlong.html">long</a> N, real *max, real *min)</td></tr>
-<tr class="separator:ad66aa8bfec3036b999fa079409899376"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7142ebad67755d57a010aa2be22609d6"><td class="memItemLeft" align="right" valign="top"><a id="a7142ebad67755d57a010aa2be22609d6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cvecmaxmin</b> (const comp *__restrict p, <a class="el" href="classlong.html">long</a> N, real *max, real *min)</td></tr>
+<tr class="separator:a7142ebad67755d57a010aa2be22609d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc931b6cb271007ab9112b0a7bc673ee"><td class="memItemLeft" align="right" valign="top"><a id="adc931b6cb271007ab9112b0a7bc673ee"></a>
 comp&#160;</td><td class="memItemRight" valign="bottom"><b>cvecdot</b> (const comp *__restrict p1, const comp *__restrict p2, const real *__restrict p3, <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:adc931b6cb271007ab9112b0a7bc673ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d54dd0ad1200cdf1d2326feeba2f7b3"><td class="memItemLeft" align="right" valign="top"><a id="a1d54dd0ad1200cdf1d2326feeba2f7b3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cnormalize_sum</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nloc, comp norm)</td></tr>
-<tr class="separator:a1d54dd0ad1200cdf1d2326feeba2f7b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa56dbcdd04ce355f462cc441852bd814"><td class="memItemLeft" align="right" valign="top"><a id="aa56dbcdd04ce355f462cc441852bd814"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cnormalize_sumabs</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nloc, comp norm)</td></tr>
-<tr class="separator:aa56dbcdd04ce355f462cc441852bd814"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ab6d3ccbcaf884d3718f73f0a689b2b"><td class="memItemLeft" align="right" valign="top"><a id="a4ab6d3ccbcaf884d3718f73f0a689b2b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cnormalize_rms</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nx, comp norm)</td></tr>
-<tr class="separator:a4ab6d3ccbcaf884d3718f73f0a689b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad801717427d88c8809ad515688b1fd61"><td class="memItemLeft" align="right" valign="top"><a id="ad801717427d88c8809ad515688b1fd61"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cnormalize_max</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nloc, comp max)</td></tr>
-<tr class="separator:ad801717427d88c8809ad515688b1fd61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5853b8f390ba1727ac9ca5b39ac4753e"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a5853b8f390ba1727ac9ca5b39ac4753e">cmax</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
-<tr class="separator:a5853b8f390ba1727ac9ca5b39ac4753e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ef5c6b73b76adf8e54388be8e0d3aad"><td class="memItemLeft" align="right" valign="top"><a id="a9ef5c6b73b76adf8e54388be8e0d3aad"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cvecnormalize_sum</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nloc, comp norm)</td></tr>
+<tr class="separator:a9ef5c6b73b76adf8e54388be8e0d3aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8aceef112a0af72f40f6e40203cd2ad"><td class="memItemLeft" align="right" valign="top"><a id="aa8aceef112a0af72f40f6e40203cd2ad"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cvecnormalize_sumabs</b> (comp *__restrict p, <a class="el" href="classlong.html">long</a> nloc, comp norm)</td></tr>
+<tr class="separator:aa8aceef112a0af72f40f6e40203cd2ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5be754d664dc37f8869f1399a6d99faa"><td class="memItemLeft" align="right" valign="top"><a id="a5be754d664dc37f8869f1399a6d99faa"></a>
 real&#160;</td><td class="memItemRight" valign="bottom"><b>cvecmaxabs</b> (const comp *__restrict p, <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:a5be754d664dc37f8869f1399a6d99faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae50c2b739ca3ac0e27953b278464aced"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ae50c2b739ca3ac0e27953b278464aced">cmaxmin</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A, real *max, real *min)</td></tr>
+<tr class="separator:ae50c2b739ca3ac0e27953b278464aced"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5853b8f390ba1727ac9ca5b39ac4753e"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a5853b8f390ba1727ac9ca5b39ac4753e">cmax</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
+<tr class="separator:a5853b8f390ba1727ac9ca5b39ac4753e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8f925c7ca5671a1ebfaab2ce65e4827"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#ac8f925c7ca5671a1ebfaab2ce65e4827">cmaxabs</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
 <tr class="separator:ac8f925c7ca5671a1ebfaab2ce65e4827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a796c97f063f4138d33d2c9708e57d0f1"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a796c97f063f4138d33d2c9708e57d0f1">cmin</a> (const <a class="el" href="type_8h.html#structcmat">cmat</a> *A)</td></tr>
@@ -1477,6 +1480,41 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
       </table>
 </div><div class="memdoc">
 <p>compute the trace (sum of diagonal elements) </p>
+
+</div>
+</div>
+<a id="ae50c2b739ca3ac0e27953b278464aced"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae50c2b739ca3ac0e27953b278464aced">&#9670;&nbsp;</a></span>cmaxmin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cmaxmin </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structcmat">cmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>max</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>min</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>find the maximum and minimum value </p>
 
 </div>
 </div>

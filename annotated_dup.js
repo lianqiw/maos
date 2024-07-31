@@ -50,6 +50,7 @@ var annotated_dup =
     [ "cusolve_r", "classcusolve__r.html", "classcusolve__r" ],
     [ "cusolve_sparse", "classcusolve__sparse.html", "classcusolve__sparse" ],
     [ "cusp", "classcusp.html", "classcusp" ],
+    [ "cusp_ref", "structcusp__ref.html", "structcusp__ref" ],
     [ "cutomo_grid", "classcutomo__grid.html", "classcutomo__grid" ],
     [ "cuwfs_t", "classcuwfs__t.html", "classcuwfs__t" ],
     [ "dbg_cfg_t", "parms_8h.html#structdbg__cfg__t", "parms_8h_structdbg__cfg__t" ],

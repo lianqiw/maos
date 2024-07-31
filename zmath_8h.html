@@ -204,6 +204,12 @@ fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zvecsum</b> (cons
 <tr class="memitem:a69da5715fb9d3562919b48a30458e1e9"><td class="memItemLeft" align="right" valign="top"><a id="a69da5715fb9d3562919b48a30458e1e9"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zsum</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a69da5715fb9d3562919b48a30458e1e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a302ae045bc4fbfcbe031f82242908b1f"><td class="memItemLeft" align="right" valign="top"><a id="a302ae045bc4fbfcbe031f82242908b1f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_sum</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, fcomplex sum)</td></tr>
+<tr class="separator:a302ae045bc4fbfcbe031f82242908b1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2dd830eba295d8261c92ebbe81bc7a7"><td class="memItemLeft" align="right" valign="top"><a id="aa2dd830eba295d8261c92ebbe81bc7a7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_sumabs</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, float sum)</td></tr>
+<tr class="separator:aa2dd830eba295d8261c92ebbe81bc7a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bc45eaca826d8ced6b59ff1178dc3a9"><td class="memItemLeft" align="right" valign="top"><a id="a1bc45eaca826d8ced6b59ff1178dc3a9"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zmean</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a1bc45eaca826d8ced6b59ff1178dc3a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -213,30 +219,27 @@ fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>ztrace</b> (const
 <tr class="memitem:a1bad64a33e44b8d37f1535e506da6e71"><td class="memItemLeft" align="right" valign="top"><a id="a1bad64a33e44b8d37f1535e506da6e71"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>zsort</b> (<a class="el" href="type_8h.html#structzmat">zmat</a> *A, int ascend)</td></tr>
 <tr class="separator:a1bad64a33e44b8d37f1535e506da6e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa540a92253b1345ef6a9f4f19646349a"><td class="memItemLeft" align="right" valign="top"><a id="aa540a92253b1345ef6a9f4f19646349a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>zmaxmin</b> (const fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> N, float *max, float *min)</td></tr>
-<tr class="separator:aa540a92253b1345ef6a9f4f19646349a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1021c4b66f9ca52ee402c3c660cbff4"><td class="memItemLeft" align="right" valign="top"><a id="af1021c4b66f9ca52ee402c3c660cbff4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zvecmaxmin</b> (const fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> N, float *max, float *min)</td></tr>
+<tr class="separator:af1021c4b66f9ca52ee402c3c660cbff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca8ceba39a1e42a4a76c6ff20d117bb2"><td class="memItemLeft" align="right" valign="top"><a id="aca8ceba39a1e42a4a76c6ff20d117bb2"></a>
 fcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>zvecdot</b> (const fcomplex *__restrict p1, const fcomplex *__restrict p2, const float *__restrict p3, <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:aca8ceba39a1e42a4a76c6ff20d117bb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ce2fef103abd9be3874bf5b8b78de25"><td class="memItemLeft" align="right" valign="top"><a id="a1ce2fef103abd9be3874bf5b8b78de25"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_sum</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nloc, fcomplex norm)</td></tr>
-<tr class="separator:a1ce2fef103abd9be3874bf5b8b78de25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa192ed2205edaf7143ab136127d4a64c"><td class="memItemLeft" align="right" valign="top"><a id="aa192ed2205edaf7143ab136127d4a64c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_sumabs</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nloc, fcomplex norm)</td></tr>
-<tr class="separator:aa192ed2205edaf7143ab136127d4a64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae04f44cde8d356201e2b68958f386a57"><td class="memItemLeft" align="right" valign="top"><a id="ae04f44cde8d356201e2b68958f386a57"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_rms</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nx, fcomplex norm)</td></tr>
-<tr class="separator:ae04f44cde8d356201e2b68958f386a57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcab7e9191e48c2d7040be6156129f1c"><td class="memItemLeft" align="right" valign="top"><a id="afcab7e9191e48c2d7040be6156129f1c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>znormalize_max</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nloc, fcomplex max)</td></tr>
-<tr class="separator:afcab7e9191e48c2d7040be6156129f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25b65d7507b58df73915833f743aa842"><td class="memItemLeft" align="right" valign="top"><a id="a25b65d7507b58df73915833f743aa842"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>zmax</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
-<tr class="separator:a25b65d7507b58df73915833f743aa842"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cc3bf7f91b930809356e3ea2222ce0b"><td class="memItemLeft" align="right" valign="top"><a id="a1cc3bf7f91b930809356e3ea2222ce0b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zvecnormalize_sum</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nloc, fcomplex norm)</td></tr>
+<tr class="separator:a1cc3bf7f91b930809356e3ea2222ce0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc764daa082287aa89cc329073b34d36"><td class="memItemLeft" align="right" valign="top"><a id="afc764daa082287aa89cc329073b34d36"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zvecnormalize_sumabs</b> (fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> nloc, fcomplex norm)</td></tr>
+<tr class="separator:afc764daa082287aa89cc329073b34d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18c5688ba980b18f290c030fa6f2f78b"><td class="memItemLeft" align="right" valign="top"><a id="a18c5688ba980b18f290c030fa6f2f78b"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>zvecmaxabs</b> (const fcomplex *__restrict p, <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:a18c5688ba980b18f290c030fa6f2f78b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae821fe931ec037399a3afacbcc440073"><td class="memItemLeft" align="right" valign="top"><a id="ae821fe931ec037399a3afacbcc440073"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>zmaxmin</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A, float *max, float *min)</td></tr>
+<tr class="separator:ae821fe931ec037399a3afacbcc440073"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25b65d7507b58df73915833f743aa842"><td class="memItemLeft" align="right" valign="top"><a id="a25b65d7507b58df73915833f743aa842"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>zmax</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
+<tr class="separator:a25b65d7507b58df73915833f743aa842"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a827fe5f18aadf1df2c8bdfcf2c271dba"><td class="memItemLeft" align="right" valign="top"><a id="a827fe5f18aadf1df2c8bdfcf2c271dba"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>zmaxabs</b> (const <a class="el" href="type_8h.html#structzmat">zmat</a> *A)</td></tr>
 <tr class="separator:a827fe5f18aadf1df2c8bdfcf2c271dba"><td class="memSeparator" colspan="2">&#160;</td></tr>
