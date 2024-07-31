@@ -35,7 +35,7 @@
    to gradients to get DM commands.
  */
 static void
-setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Assembling LSR MVM in CPU\n");
 	dcell* MVM=NULL;
 	if(recon->LR.Mfun||parms->lsr.alg==1){
@@ -184,7 +184,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
    to gradients to get DM commands.
  */
 static void
-setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Assembling MVR MVM in CPU\n");
 	const int ndm=parms->ndm;
 	const int nwfs=parms->nwfsr;
@@ -227,7 +227,7 @@ setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, powfs_t* powfs){
    Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.
 */
 
-void setup_recon_mvm(const parms_t* parms, recon_t* recon, powfs_t* powfs){
+void setup_recon_mvm(const parms_t* parms, recon_t* recon, const powfs_t* powfs){
 	TIC;tic;
 	if(!parms->recon.mvm) return;
 	if(!recon->MVM){//GPU has not assembled the MVM.

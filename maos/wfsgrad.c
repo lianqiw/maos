@@ -1410,22 +1410,39 @@ void wfsgrad_twfs_recon(sim_t* simu){
 		dcellfree(Rmod);
 	}
 }
+static unsigned int petal_bg_status=0;//if set, indicates that the thread wfsgrad_peta_bg is finished
 /**
- * Reconstruct petal modes
+ * @brief Background profess to run the slow reconstruction process
+ * 
+ * @param simu 
+ * @return void* 
+ */
+void *wfsgrad_petal_bg(sim_t *simu){
+	const int nrep=8;
+	for(int ir=0; ir<2; ir++){
+		dmat *phib=ir==1?P(simu->petal_m, 0):NULL;//2nd step use first step as input.
+		petal_solve(NULL, &P(simu->petal_m, ir), simu->recon->petal[ir], P(simu->petal_i0, ir, 1), phib, nrep);
+	}
+	petal_bg_status=1;
+	return NULL;
+}
+/**
+ * Reconstruct petal modes. The function is now split into three parts:
+ * Part 1: accumuate i0 at every time step and set do_petal if a reconstruction is due.
+ * Part 2: launch a new thread to do the petal reconstruction.
+ * Part 3: join the thread and do post-processing to update the reference vectors.
 */
 void wfsgrad_petal_recon(sim_t *simu){
 	const parms_t *parms=simu->parms;
-	const powfs_t *powfs=simu->powfs;
 
 	if(!simu->petal_i0){
-		simu->petal_i0=dccellnew(2,1);
+		simu->petal_i0=dccellnew(2,2);//first column for accumulation, second column for storage
 	}
 	if(!simu->petal_m){
 		simu->petal_m=dcellnew(3,1);
 	}
 	int isim=simu->wfsisim;
-	const int nrep=8;
-
+	int do_petal=0;
 	for(int ir=0; ir<2; ir++){
 		int ipowfs=0;
 		if(ir==0&&parms->ittfpowfs!=-1){
@@ -1437,47 +1454,55 @@ void wfsgrad_petal_recon(sim_t *simu){
 		}
 		if(isim<parms->powfs[ipowfs].phystep || isim<parms->recon.petalstep) continue;
 		int iwfs=P(parms->powfs[ipowfs].wfs, 0);
-		dcelladd(&P(simu->petal_i0, ir), 1, P(simu->ints, iwfs), 1);
+		dcelladd(&P(simu->petal_i0, ir, 0), 1, P(simu->ints, iwfs), 1);
 		if((isim+1-parms->powfs[ipowfs].step)%parms->recon.petaldtrat==0){
-			//dcellscale(P(simu->petal_i0,ir), 1./parms->recon.petaldtrat);//normalization is not necessary
-			//info("i0 sum is %g\n", dcellsum(P(simu->petal_i0, ir)));
-			dmat *phib=ir==1?P(simu->petal_m, 0):NULL;
-			petal_solve(NULL, &P(simu->petal_m, ir), powfs[ipowfs].petal, P(simu->petal_i0, ir), phib, nrep);
+			//normalization is not necessary
+			if(parms->save.recon){
+				writebin(P(simu->petal_i0, ir, 0), "petal_i0_%d_%d", ir, isim);
+			}
 			/*if(parms->plot.run){
 				draw("Petal", (plot_opts){ .image=P(P(simu->petal_i0, ir), 0) }, "PSF of first subaperture", "x", "y", "powfs %d", ipowfs);
 			}*/
-			if(parms->save.recon){
-				writebin(P(simu->petal_i0,ir), "petal_i0_%d_%d", ir, isim);
-			}
-			dcellzero(P(simu->petal_i0, ir));
-			
-			if(ir==1){
-				dadds(P(simu->petal_m, 1), -dmean(P(simu->petal_m, 1)));//remove piston
-				dshow(P(simu->petal_m, 1), "Step%6d: petaling output", isim);
-				real rad2m=parms->powfs[parms->ittfpowfs].wvlmean/TWOPI;//radian to m
-				dscale(P(simu->petal_m, 1), rad2m);//convert to m
-				int idm=parms->idmground;
-				dcellzero(simu->dmtmp);
-				real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
-				dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
-				if(1){
-					warning_once("Remove p/t/t from dm petal offset.\n");
-					loc_remove_ptt(P(simu->dmtmp,idm), P(simu->recon->aloc,idm), NULL, NULL, 0);
-				}
-				for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
-					int jpowfs=parms->wfs[jwfs].powfs;
-					if(parms->powfs[jpowfs].lo) continue;
-					dspmm(&P(simu->gradoff,jwfs),P(simu->recon->GA,jwfs,idm), P(simu->dmtmp,idm), "nn", -gain);
-				}
-				if(parms->plot.run&&isim%parms->plot.run==0){
-					int draw_single_save=draw_single; draw_single=0;
-					drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
-					plot_gradoff(simu, -1);
-					draw_single=draw_single_save;
-				}
-				servo_add(simu->dmint, simu->dmtmp, gain);
-			}
+
+			dcelladd(&P(simu->petal_i0, ir, 1), 0, P(simu->petal_i0, ir, 0), 1);
+			dcellzero(P(simu->petal_i0, ir, 0));
+			do_petal=1;
 		}
+	}
+	static pthread_t thread=0;
+	static int petal_isim=0;
+	if(thread && (petal_bg_status>0 || do_petal || isim+1==parms->sim.end)){//join previous thread and finish up
+		void *ans;
+		pthread_join(thread, &ans); thread=0; petal_bg_status=0;
+		//post-processing petalling results
+		dadds(P(simu->petal_m, 1), -dmean(P(simu->petal_m, 1)));//remove piston
+		dshow(P(simu->petal_m, 1), "Step%6d (from %d): petal output:", isim, petal_isim);
+		real rad2m=parms->powfs[parms->ittfpowfs].wvlmean/TWOPI;//radian to m
+		dscale(P(simu->petal_m, 1), rad2m);//convert to m
+		int idm=parms->idmground;
+		dcellzero(simu->dmtmp);//this cannot be done in the thread as dmtmp is used by filter().
+		real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
+		dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
+		if(1){
+			warning_once("Remove p/t/t from dm petal offset.\n");
+			loc_remove_ptt(P(simu->dmtmp, idm), P(simu->recon->aloc, idm), NULL, NULL, 0);
+		}
+		for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
+			int jpowfs=parms->wfs[jwfs].powfs;
+			if(parms->powfs[jpowfs].lo) continue;
+			dspmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfs, idm), P(simu->dmtmp, idm), "nn", -gain);
+		}
+		if(parms->plot.run&&petal_isim%parms->plot.run==0){
+			int draw_single_save=draw_single; draw_single=0;
+			drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
+			plot_gradoff(simu, -1);
+			draw_single=draw_single_save;
+		}
+		servo_add(simu->dmint, simu->dmtmp, gain);
+	}
+	if(do_petal){//launch a thread to do the task
+		petal_isim=isim;
+		pthread_create(&thread, NULL, (thread_fun)wfsgrad_petal_bg, simu);
 	}
 }
 /**

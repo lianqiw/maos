@@ -199,9 +199,9 @@ typedef struct petal_t{
 /**
  * Free the petal_t array
 */
-void petal_free(petal_t *p, int nsa){
+void petal_free(petal_t *p){
 	if(!p) return;
-	if(!nsa) nsa=p->nsa;
+	int nsa=p->nsa;
 	if(!nsa) nsa=1;
 	for(int isa=0; isa<nsa; isa++){
 		dfree(p[isa].amp);
@@ -212,7 +212,13 @@ void petal_free(petal_t *p, int nsa){
 	}
 	free(p);
 }
-
+void petal_free_arr(petal_t **p, int np){
+	if(!p || !np) return;
+	for(int ip=0; ip<np; ip++){
+		petal_free(p[ip]);
+	}
+	free(p);
+}
 /**
  * Connect petal measurements by TTF quadrants.
  * @param mout	The petal measurements for the entire pupil
@@ -514,5 +520,5 @@ void petal_save(petal_t *petal, const char *format, ...){
 void petal_solve_wfs(dcell **phi1, dmat **mphi1, const dcell *ints, const dmat *phi1b, const loc_t *saloc, const dmat *amp, real pdtheta, real pixblur, real theta, int nrep, int withtt){
 	petal_t *petal=petal_setup(saloc, 1, amp, pdtheta, pixblur, theta, 16, withtt);
 	if(petal) petal_solve(phi1, mphi1, petal, ints, phi1b, nrep);
-	if(petal) petal_free(petal, petal->nsa);
+	if(petal) petal_free(petal);
 }

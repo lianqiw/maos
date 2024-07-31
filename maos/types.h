@@ -134,8 +134,6 @@ typedef struct powfs_t{
     locfft_t **fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     struct pywfs_t *pywfs;/**<For pyramid WFS*/
     struct fit_t *fit;  /**<Fit turbulence to lenslet grid. For aliasing computation.*/
-	//for petal mode mitigation using phase retrieval
-	petal_t *petal; /**<Petaling mode reconstruction tools*/
 }powfs_t;
 
 /**
@@ -294,7 +292,6 @@ typedef struct recon_t{
     lcell *actfloat;   /**<floating actuators*/
     lcell *actstuck;   /**<stuck actuators*/
     dcell *amod;       /**<ndmx1. Zernike/KL modes defined on aloc for modal control*/
-	dsp *apetal;      /**<Petal mode defined at the ground DM*/
     lmat *anmod;       /**<Sizeof of amod*/
 
     fit_t *fit;        /**<Holding data and parameters for DM fitting.*/
@@ -366,15 +363,18 @@ typedef struct recon_t{
     dcell* RRtwfs;     /**<Truth zernike modes reconstruction from twfs grads*/
     dcell* GRlgs;      /**<Truth zernike modes to gradient for LGS (sodium fit)*/
     dcell* RRlgs;      /**<Truth zernike modes reconstruction from LGS grad adjustments (sodium fit)*/
+	
+	//for petal mode mitigation using phase retrieval
+	petal_t **petal;   /**<Petaling mode reconstruction tools.*/
+	dsp *apetal;       /**<Petal mode defined at the ground DM*/
 
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
     int dither_dtrat;  /**<The dtrat of the powers that requests dithering*/
-    int dither_md;   /**<multi-mode dithering bin size in amod*/
+    int dither_md;     /**<multi-mode dithering bin size in amod*/
     dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
     dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
-    //dcell *dither_rm;  /**<The dither mode recon from dm modal error signal (ndm*ndm)*/
     ngsmod_t *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     cn2est_t *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
@@ -404,7 +404,7 @@ typedef struct sim_save_t{
     zfarr **evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
     zfarr **evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
     zfarr **evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
-    zfarr **ecovxx;     /**<the time history of xx used to calculate ecov.*/
+    zfarr **ecovxx;     	/**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
     zfarr *dmerr;
     zfarr *dmint;

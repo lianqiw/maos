@@ -1224,7 +1224,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
    MOAO is handled in setup_recon_moao().
 
 */
-void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	TIC;tic;
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
@@ -1276,7 +1276,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, powfs_t* powfs){
 
    The results are measurement noise dependent and may be updated during simulation.
    */
-void setup_recon_control(recon_t* recon, const parms_t* parms, powfs_t* powfs){
+void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Setup or update control matrix parameters.\n");
 	TIC;tic;
 	/*setup LGS tip/tilt/diff focus removal */
@@ -1376,9 +1376,42 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	locfree(eloc);
 }
 /**
+ * Petaling mode control
+*/
+void setup_recon_petal(recon_t *recon, const parms_t *parms, const powfs_t *powfs){
+	if(!parms->recon.petal) return;
+	recon->petal=mycalloc(2, petal_t*);
+	for(int ir=0; ir<2; ir++){
+		int ipowfs=0;
+		if(ir==0&&parms->ittfpowfs!=-1){
+			ipowfs=parms->ittfpowfs;
+		} else if(ir==1&&parms->ittpowfs!=-1){
+			ipowfs=parms->ittpowfs;
+		} else{
+			continue;
+		}
+		real nembed=2;
+		real dsa=powfs[ipowfs].pts->dsa;
+		real dtheta=parms->powfs[ipowfs].wvlmean/(nembed*dsa);
+		real pdtheta=parms->powfs[ipowfs].pixtheta/dtheta;
+		dbg("powfs[%d].pdtheta=%g\n", ipowfs, pdtheta);
+		if(fabs(pdtheta-1)>0.01){
+			warning("TODO: pdtheta!=1 requries resampling PSFs\n");
+		}
+		//only withtt only for t/t oiwfs unless petaltt>1. 
+		//enable it for TTF OIWFS sometimes results in a clocking gradient pattern.
+		int withtt=(parms->powfs[ipowfs].order==1||parms->recon.petaltt>1)?parms->recon.petaltt:0;
+		recon->petal[ir]=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, P(powfs[ipowfs].amp, 0),
+			pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, parms->recon.petalnpsf, withtt);
+		if(parms->save.setup){
+			petal_save(recon->petal[ir], "petal_%d", ir);
+		}
+	}
+}
+/**
    A few further operations that needs MVM.
  */
-void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
+void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper, const powfs_t *powfs){
 	TIC;tic;
 	if(parms->sim.ecnn){
 		recon->ecnn=setup_recon_ecnn(recon, parms, aper->locs, parms->evl.psfr);
@@ -1400,6 +1433,7 @@ void setup_recon_post(recon_t* recon, const parms_t* parms, const aper_t* aper){
 	if(parms->recon.petal){
 		int idm=parms->idmground;
 		recon->apetal=petal_mkh_loc(P(recon->aloc,idm), 6, parms->aper.rot);
+		setup_recon_petal(recon, parms, powfs);
 		if(parms->save.setup){
 			writebin(recon->apetal, "apetal");
 		}
@@ -1555,6 +1589,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	//cellfree(recon->GSF);
 	//cellfree(recon->RSF);
 	cellfree(recon->apetal);
+	petal_free_arr(recon->petal, 2);
 	free(recon);
 }
 

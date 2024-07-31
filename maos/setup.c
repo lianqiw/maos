@@ -194,7 +194,7 @@ void maos_setup(const parms_t* parms){
 #endif
 
 	if(!parms->sim.evlol){
-		setup_recon_post(recon, parms, aper);//needs MVM matrix
+		setup_recon_post(recon, parms, aper, powfs);//needs MVM matrix
 	}
 	if(parms->plot.setup){
 		plot_setup(parms, powfs, aper, recon);
