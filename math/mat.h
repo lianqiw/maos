@@ -52,17 +52,18 @@
     int X(flip)(X(mat)*A, int axis);\
     T X(vecsum)(const T*restrict p, long np) CHECK_UNUSED_RESULT;	\
     T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+	void X(normalize_sum)(X(mat) *A, T sum);			\
+	void X(normalize_sumabs)(X(mat) *A, R sum);		\
 	T X(mean)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     void X(sort)(X(mat) *A, int ascend);				\
-    void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
+    void X(vecmaxmin)(const T *restrict p, long N, R *max, R *min);	\
     T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n); \
-    void X(normalize_sum)(T *restrict p, long nloc, T norm);		\
-    void X(normalize_sumabs)(T *restrict p, long nloc, T norm);		\
-    void X(normalize_rms)(T *restrict p, long nx, T norm);\
-    void X(normalize_max)(T *restrict p, long nloc, T max);		\
-    R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
+    void X(vecnormalize_sum)(T *restrict p, long nloc, T norm);		\
+    void X(vecnormalize_sumabs)(T *restrict p, long nloc, T norm);		\
     R X(vecmaxabs)(const T *restrict p, long n) CHECK_UNUSED_RESULT;	\
+    void X(maxmin)(const X(mat) *A, R* max, R* min);			\
+    R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\

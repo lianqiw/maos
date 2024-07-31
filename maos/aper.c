@@ -125,7 +125,7 @@ aper_t* setup_aper(const parms_t* const parms){
 	/*Set the amp for plotting. */
 	aper->amp1=ddup(aper->amp);
 	/*normalize amp to sum to 1. */
-	dnormalize_sumabs(P(aper->amp), aper->locs->nloc, 1);
+	dnormalize_sum(aper->amp, 1);
 	aper->sumamp2=dsumsq(aper->amp);
 	aper->mcc=loc_mcc_ptt(aper->locs, P(aper->amp));
 	aper->ipcc=1./P(aper->mcc,0);/*piston inverse. should be 1 since amp is normlaized. */

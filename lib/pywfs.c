@@ -657,7 +657,7 @@ static dmat *pywfs_mkg_do(const pywfs_t *pywfs, const loc_t *locin, const loc_t 
 			//real radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
 			//real std=dstd(tmp);
 			real tmax, tmin;
-			dmaxmin(P(tmp), NX(tmp), &tmax, &tmin);
+			dmaxmin(tmp, &tmax, &tmin);
 			poke/=(tmax-tmin);//sqrt(radial);
 			dadd(&opdin, 0, tmp, poke);
 			dfree(tmp);

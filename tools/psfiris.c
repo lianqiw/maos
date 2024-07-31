@@ -254,7 +254,7 @@ int main(int argc, char* argv[]){
 	dmat* pamp=dnew(ploc->nloc, 1);
 	loc_circle_add(pamp, ploc, 0, 0, 15, 1.8, 1);
 	dmat* pwt=ddup(pamp);
-	dnormalize_sumabs(P(pwt), pwt->nx, 1);
+	dnormalize_sumabs(pwt, 1);
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);
 	for(int imod=0; imod<nmod; imod++){
 		for(int ialoc=0; ialoc<naloc; ialoc++){

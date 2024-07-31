@@ -140,14 +140,14 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 	const real* wt=P(parms->evl.wt);
 	const int ndm=parms->ndm;
 	loc_t* loc;
-	real* amp=NULL;
+	dmat* amp=NULL;
 	if(use_ploc){
 		loc=recon->floc;
-		amp=mycalloc(loc->nloc, real);
-		prop_nongrid_bin(aper->locs, P(aper->amp), loc, amp, 1, 0, 0, 1);
-		dnormalize_sumabs(amp, loc->nloc, 1);
+		amp=dnew(loc->nloc, 1);
+		prop_nongrid_bin(aper->locs, P(aper->amp), loc, P(amp), 1, 0, 0, 1);
+		dnormalize_sumabs(amp, 1);
 	} else{
-		amp=P(aper->amp);
+		amp=dref(aper->amp);
 		loc=aper->locs;
 	}
 	dspcell* Wa=NULL;
@@ -162,14 +162,12 @@ static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
 			real displacey=thetay*ht;
 			/*from DM to ploc (plocs) science beam */
 			P(Hat,idm)=mkht(P(recon->aloc,idm), loc, displacex, displacey, 1., 0);
-			dspmuldiag(P(Hat,idm), amp, wt[ievl]);
+			dspmuldiag(P(Hat,idm), P(amp), wt[ievl]);
 		}
 		dcellmm(&Wa, Hat, Hat, "nt", 1);
 		dspcellfree(Hat);
 	}
-	if(use_ploc){
-		free(amp);
-	}
+	dfree(amp);
 	return Wa;
 }
 /**
@@ -190,14 +188,14 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	loc_t* loc;
 	real* x, * y;
 	int nloc;
-	real* amp=NULL;
+	dmat* amp=NULL;
 	if(use_ploc){
 		loc=recon->floc;
-		amp=mycalloc(loc->nloc, real);
-		prop_nongrid_bin(aper->locs, P(aper->amp), loc, amp, 1, 0, 0, 1);
-		dnormalize_sumabs(amp, loc->nloc, 1);
+		amp=dnew(loc->nloc, 1);
+		prop_nongrid_bin(aper->locs, P(aper->amp), loc, P(amp), 1, 0, 0, 1);
+		dnormalize_sumabs(amp, 1);
 	} else{
-		amp=P(aper->amp);
+		amp=dref(aper->amp);
 		loc=aper->locs;
 	}
 	x=loc->locx;
@@ -208,8 +206,8 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	P(WHm,0)=dnew(nloc, nmod);
 	dmat* mod=P(WHm,0);
 	for(int iloc=0; iloc<nloc; iloc++){
-		P(mod, iloc, 0)=x[iloc]*amp[iloc];
-		P(mod, iloc, 1)=y[iloc]*amp[iloc];
+		P(mod, iloc, 0)=x[iloc]*P(amp, iloc);
+		P(mod, iloc, 1)=y[iloc]*P(amp, iloc);
 	}
 	const real MCC_fcp=ngsmod->aper_fcp;
 	/*dc component of the focus mod. subtract during evaluation. */
@@ -227,26 +225,26 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 				real yy=y[iloc]*y[iloc];
 				if(ngsmod->indps){
 					if(ngsmod->ahstfocus){//no focus mode at ps
-						P(mod, iloc, ngsmod->indps)=amp[iloc]
+						P(mod, iloc, ngsmod->indps)=P(amp, iloc)
 							*(-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
 					} else{
-						P(mod, iloc, ngsmod->indps)=amp[iloc]
+						P(mod, iloc, ngsmod->indps)=P(amp, iloc)
 							*(scale1*(xx+yy-MCC_fcp)
 								-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
 					}
-					P(mod, iloc, ngsmod->indps+1)=amp[iloc]
+					P(mod, iloc, ngsmod->indps+1)=P(amp, iloc)
 						*(scale1*(xx-yy)
 							-2.*hdm*scale*(thetax*x[iloc]-thetay*y[iloc]));
-					P(mod, iloc, ngsmod->indps+2)=amp[iloc]
+					P(mod, iloc, ngsmod->indps+2)=P(amp, iloc)
 						*(scale1*(xy)
 							-hdm*scale*(thetay*x[iloc]+thetax*y[iloc]));
 				}
 				if(ngsmod->indastig){
-					P(mod, iloc, ngsmod->indastig)=amp[iloc]*(xx-yy);
-					P(mod, iloc, ngsmod->indastig+1)=amp[iloc]*(xy);
+					P(mod, iloc, ngsmod->indastig)=P(amp, iloc)*(xx-yy);
+					P(mod, iloc, ngsmod->indastig+1)=P(amp, iloc)*(xy);
 				}
 				if(ngsmod->indfocus){ /*remove piston in focus */
-					P(mod, iloc, ngsmod->indfocus)=amp[iloc]*(xx+yy-MCC_fcp);
+					P(mod, iloc, ngsmod->indfocus)=P(amp, iloc)*(xx+yy-MCC_fcp);
 				}
 			}
 		}
@@ -275,9 +273,7 @@ static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
 	dcellmm(&Pngs, IMCC, HatWHm, "nt", 1);
 	dcellfree(IMCC);
 	dcellfree(WHm);
-	if(use_ploc){
-		free(amp);
-	}
+	dfree(amp);
 	dcellfree(HatWHm);
 	return Pngs;
 }

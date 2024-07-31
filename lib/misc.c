@@ -268,7 +268,7 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	//convert to metrix coordinate. Remove invalid apertures
 
 	real imax;//max of sub-image intensity
-	dmaxmin(PCOL(cg, 2), NX(cg), &imax, 0);
+	dvecmaxmin(PCOL(cg, 2), NX(cg), &imax, 0);
 	imax*=0.4;//threshold to keep
 	int jloc=0;
 	for(int iloc=0; iloc<NX(gloc); iloc++){

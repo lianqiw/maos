@@ -121,7 +121,7 @@ void X(free_content)(X(mat)* A){
 		//only need to initiate write when fp is set.
 		//if(A->fp) X(writedata)(A->fp, A, A->ny);//don't do this. 
 		if(A->async){//make sure entire data is written.
-			async_write(A->async, A->nx*A->ny*sizeof(T), 1);
+			async_write(A->async, PN(A)*sizeof(T), 1);
 			async_free(A->async); A->async=NULL;
 		}
 		if(A->fp) {zfclose(A->fp); A->fp=NULL;}
@@ -321,7 +321,7 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
 */
 void X(zero)(X(mat)* A){
 	if(A){
-		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
+		memset(P(A), 0, sizeof(T)*PN(A));
 	}
 }
 /**
@@ -346,7 +346,7 @@ int X(zerocol)(X(mat)* A, int icol){
  */
 uint32_t X(hash)(const X(mat)* A, uint32_t key){
 	if(check_mat(A)){
-		key=hashlittle(P(A), A->nx*A->ny*sizeof(T), key);
+		key=hashlittle(P(A), PN(A)*sizeof(T), key);
 	}
 	return key;
 }
@@ -386,7 +386,7 @@ X(mat)* X(trans)(const X(mat)* A){
 	if(!check_mat(A)) return NULL;
 	X(mat)* B=X(new)(A->ny, A->nx);
 	if(A->nx==1||A->ny==1){
-		memcpy(P(B), P(A), A->nx*A->ny*sizeof(T));
+		memcpy(P(B), P(A), PN(A)*sizeof(T));
 	} else{
 		for(int iy=0; iy<A->ny; iy++){
 			for(int ix=0; ix<A->nx; ix++){
@@ -401,7 +401,7 @@ X(mat)* X(trans)(const X(mat)* A){
 */
 void X(set)(X(mat)* A, const T val){
 	if(!check_mat(A)) return;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		P(A, i)=val;
 	}
 }
@@ -504,7 +504,7 @@ int X(flip)(X(mat)* A, int axis){
 T X(sum)(const X(mat)* A){
 	T v=0;
 	if(check_mat(A)){
-		v=X(vecsum)(P(A), A->nx*A->ny);
+		v=X(vecsum)(P(A), PN(A));
 	}
 	return v;
 }
@@ -549,15 +549,20 @@ void X(sort)(X(mat)* A, int ascend){
 	}
 }
 #endif
-
-
+/**
+   find the maximum and minimum value
+*/
+void X(maxmin)(const X(mat)*A, R*max, R*min){
+	if(!check_mat(A)) return ;
+	X(vecmaxmin)(P(A), PN(A), max, min);
+}
 /**
    find the maximum value
 */
 R X(max)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R max, min;
-	X(maxmin)(P(A), A->nx*A->ny, &max, &min);
+	X(vecmaxmin)(P(A), PN(A), &max, &min);
 	return max;
 }
 
@@ -567,7 +572,7 @@ R X(max)(const X(mat)* A){
 R X(min)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R max, min;
-	X(maxmin)(P(A), A->nx*A->ny, &max, &min);
+	X(vecmaxmin)(P(A), PN(A), &max, &min);
 	return min;
 }
 /**
@@ -575,7 +580,7 @@ R X(min)(const X(mat)* A){
 */
 R X(maxabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
-	return X(vecmaxabs)(P(A), A->nx*A->ny);
+	return X(vecmaxabs)(P(A), PN(A));
 }
 /**
    compute the sum of abs of all elements
@@ -583,7 +588,7 @@ R X(maxabs)(const X(mat)* A){
 R X(sumabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		out+=fabs(P(A, i));
 	}
 	return out;
@@ -594,7 +599,7 @@ R X(sumabs)(const X(mat)* A){
 R X(sumsq)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		out+=ABS2(P(A, i));
 	}
 	return out;
@@ -605,7 +610,7 @@ R X(sumsq)(const X(mat)* A){
 R X(sumdiffsq)(const X(mat)* A, const X(mat)* B){
 	if(!check_mat(A)||!check_mat(B)||!check_match(A, B)) return -1;
 	RD out=0;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		out+=ABS2(P(A, i)-P(B, i));
 	}
 	return (R)out;
@@ -726,7 +731,7 @@ int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
  */
 X(cell)* X(cell_cast)(const cell* A){
 	if(!iscell(A)) return NULL;
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(int i=0; i<PN(A); i++){
 		if(P(A, i)&&!ismat(P(A, i))){
 			warning("A[%d] is not mat, return NULL.\n", i);
 			return NULL;
@@ -742,14 +747,14 @@ X(cell)* X(cellnew2)(const X(cell)* A){
 	if(!A) return NULL;
 	X(cell)* out=X(cellnew)(A->nx, A->ny);
 	long tot=0;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		if(!isempty(P(A, i))){
 			tot+=P(A, i)->nx*P(A, i)->ny;
 		}
 	}
 	out->m=X(new)(tot, 1);
 	tot=0;
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(int i=0; i<PN(A); i++){
 		if(!isempty(P(A, i))){
 			P(out, i)=X(new_do)(P(A, i)->nx, P(A, i)->ny, P(out->m)+tot, out->m->mem);
 			tot+=P(A, i)->nx*P(A, i)->ny;
@@ -1120,7 +1125,7 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 T X(cellsum)(const X(cell)* A){
 	if(isempty(A)) return 0;
 	T v=0;
-	for(long i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<PN(A); i++){
 		v+=X(sum)(P(A, i));
 	}
 	return v;

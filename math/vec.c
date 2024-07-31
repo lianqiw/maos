@@ -36,7 +36,7 @@ T X(vecsum)(const T *restrict p, long nx){
 }
 /**
    normalize vector so that the sum is norm;*/
-void X(normalize_sum)(T *restrict p, long nx, T norm){
+void X(vecnormalize_sum)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     T ss=norm/X(vecdot)(p,NULL,NULL,nx);
     for(int i=0; i<nx; i++){
@@ -45,7 +45,7 @@ void X(normalize_sum)(T *restrict p, long nx, T norm){
 }
 /**
    normalize vector so that the sum of abs is norm;*/
-void X(normalize_sumabs)(T *restrict p, long nx, T norm){
+void X(vecnormalize_sumabs)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     TD ss=0;
     for (long i=0; i<nx; i++){
@@ -57,31 +57,9 @@ void X(normalize_sumabs)(T *restrict p, long nx, T norm){
     }
 }
 /**
-   normalize vector so that the rms is norm*/
-void X(normalize_rms)(T *restrict p, long nx, T norm){
-    if(!check_vec(p, nx)) return;
-    TD ss=0;
-    for(long i=0; i<nx; i++){
-        ss+=ABS2(p[i]);
-    }
-    ss=norm/sqrt(ss);
-    for(int i=0; i<nx; i++){
-        p[i]*=ss;
-    }
-}
-/**
-   normalize vector so that the max is max;*/
-void X(normalize_max)(T *restrict p, long nx, T max){
-    if(!check_vec(p,nx)) return;
-    T ss=max/X(vecmaxabs)(p, nx);
-    for(int i=0; i<nx; i++){
-		p[i]*=ss;
-    }
-}
-/**
    Compute max, min and sum. Has to handle NAN nicely. Complex values are
    converted into magnitude during comparison. */
-void X(maxmin)(const T *restrict p, long N, R *max, R *min){
+void X(vecmaxmin)(const T *restrict p, long N, R *max, R *min){
     if(!check_vec(p, N)) return; 
     R a,b;
     long i;
@@ -138,7 +116,7 @@ T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, lo
 R X(vecmaxabs)(const T*restrict p, long n){
     if(!check_vec(p, n)) return 0;
     R max,min;
-    X(maxmin)(p, n, &max, &min);
+    X(vecmaxmin)(p, n, &max, &min);
     max=fabs(max);
     min=fabs(min);
     return max>min?max:min;

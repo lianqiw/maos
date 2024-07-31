@@ -396,9 +396,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 			cfftshift(psd);
 			/*look for a way to obtain this automatically. */
 			const real eps=2.220446049250313e-16;
-			real max;
-			cmaxmin(P(psd), NX(psd)*NY(psd), &max, 0);
-			max=max*sqrt(eps);
+			real max=cmax(psd)*sqrt(eps);
 			for(long i=0; i<nx[ips]*ny[ips]; i++){
 				invpsd[offset+i]=creal(P(psd,i))+max;
 			}

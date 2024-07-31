@@ -340,7 +340,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 					P(recon->aloc, idm)->dx, parms->dm[idm].dx);
 			}
 			real max, min;
-			dmaxmin(P(recon->aloc, idm)->locx, P(recon->aloc, idm)->nloc, &max, &min);
+			dvecmaxmin(P(recon->aloc, idm)->locx, P(recon->aloc, idm)->nloc, &max, &min);
 			if(max-min<parms->aper.d){
 				warning("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n",
 					idm, max-min, parms->aper.d);

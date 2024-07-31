@@ -162,7 +162,7 @@ cn2est_t* cn2est_new(const dmat* wfspair, /**<2n*1 vector for n pair of WFS indi
 	long nhtsx[nwfspair];
 	long nhtsy[nwfspair];
 	real hmin, hmax;
-	dmaxmin(P(cn2est->htrecon), NX(cn2est->htrecon), &hmax, &hmin);
+	dmaxmin(cn2est->htrecon, &hmax, &hmin);
 	/*ovs is the over sampling factor in mc. need to be at least 2 to
 	  cover the non-zero PSD (sinc functions.)*/
 
@@ -562,7 +562,7 @@ void cn2est_est(cn2est_t* cn2est, int verbose){
 	dcellzero(cn2est->wtrecon);
 	dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
 	/*only 1 cell. norm to sum to 1. */
-	dnormalize_sumabs(P(P(cn2est->wtrecon,0)), P(cn2est->wtrecon,0)->nx, 1);
+	dnormalize_sumabs(P(cn2est->wtrecon,0), 1);
 	if(verbose){
 		info2("Mean : r0=%.4fm theta0=%.2f\" ", cn2est->r0m,
 			calc_aniso(cn2est->r0m, P(cn2est->wtrecon,0)->nx,

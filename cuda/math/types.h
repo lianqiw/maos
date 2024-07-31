@@ -716,8 +716,8 @@ public:
 			dx=in->dx;
 			dy=in->dy;
 			cp2gpu(p, in);
-			dmaxmin(in->locx, in->nloc, &xmax, &xmin);
-			dmaxmin(in->locy, in->nloc, &ymax, &ymin);
+			dvecmaxmin(in->locx, in->nloc, &xmax, &xmin);
+			dvecmaxmin(in->locy, in->nloc, &ymax, &ymin);
 		}
 	}
 };

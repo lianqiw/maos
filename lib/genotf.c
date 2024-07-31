@@ -313,8 +313,8 @@ dmat* mk2dcov(loc_t* loc, const dmat* amp, real ampthres, const dmat* cov, int n
 	long nloc=loc->nloc;
 	real* locx=loc->locx;
 	real* locy=loc->locy;
-	dmaxmin(locx, nloc, &xmax, &xmin);
-	dmaxmin(locy, nloc, &ymax, &ymin);
+	dvecmaxmin(locx, nloc, &xmax, &xmin);
+	dvecmaxmin(locy, nloc, &ymax, &ymin);
 	real dx1=1./loc->dx;
 	real dy1=1./loc->dy;
 	long ncovx=(long)round((xmax-xmin)*dx1)*2;

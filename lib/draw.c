@@ -994,7 +994,7 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	int nx=loc->map->nx-npad*2;
 	int ny=loc->map->ny-npad*2;
 	real ampthres;
-	dmaxmin(P(amp), loc->nloc, &ampthres, 0);
+	dvecmaxmin(P(amp), loc->nloc, &ampthres, 0);
 	ampthres*=0.5;
     dmat* opd0=dnew(nx,ny);
 	for(int iy=0; iy<ny; iy++){

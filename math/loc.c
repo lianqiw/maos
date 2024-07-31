@@ -162,8 +162,8 @@ uint32_t lochash(const loc_t* loc, uint32_t key){
 lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad){
 	if(!loc) return NULL;
 	real xmin, xmax, ymin, ymax;
-	dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
-	dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+	dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+	dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
 	const real dx_in1=1./loc->dx;
 	const real dy_in1=1./loc->dy;
 	long nx=(long)round((xmax-xmin)*dx_in1)+1;
@@ -224,8 +224,8 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 	}
 	((loc_t*)loc)->npad=npad;/*just record the information. */
 	real xmin, xmax, ymin, ymax;
-	dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
-	dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+	dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+	dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
 	/*padding the map. normally don't need. */
 	if(npad>0){
 		xmin-=npad*fabs(loc->dx);
@@ -563,8 +563,8 @@ loc_t* mkannloc(real D, real Din, real dx, real thres){
 real loc_diam(const loc_t* loc){
 	if(!loc) return 0;
 	real xmin, xmax, ymin, ymax;
-	dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
-	dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+	dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+	dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
 	return MAX(xmax-xmin, ymax-ymin);
 }
 /**
@@ -1606,8 +1606,8 @@ void locshift(loc_t* loc, real sx, real sy){
 void loc_nxny(long* nx, long* ny, const loc_t* loc){
 	if(!loc) return;
 	real xmax, xmin, ymax, ymin;
-	dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
-	dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+	dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+	dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
 	*nx=(long)round((xmax-xmin)/loc->dx)+1;
 	*ny=(long)round((ymax-ymin)/loc->dy)+1;
 }

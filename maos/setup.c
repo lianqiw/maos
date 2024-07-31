@@ -90,19 +90,21 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
-	#if USE_CUDA>100
+	
 	if(use_cuda){
-	extern void (*dsvd_ext)(dmat**U_, dmat**S_, dmat**Vt_, const dmat*A_);
-	extern void (*dsvd_pow_ext)(dmat*A_, real power, real thres);
-	extern void (*dgemm_ext)(dmat**out, const real beta, const dmat*A, const dmat*B, const char trans[2], const real alpha);
-	extern dmat *(*pywfs_mkg_ext)(const pywfs_t*pywfs, const loc_t*locin, const loc_t*locfft, const dmat*mod, real displacex, real displacey);
-	dbg("set dsvd_ext to gpu_dsvd\n");
-	dsvd_ext=gpu_dsvd;
-	dsvd_pow_ext=gpu_dsvd_pow;
-	dgemm_ext=gpu_dgemm;
-	pywfs_mkg_ext=gpu_pywfs_mkg;
+#if USE_CUDA>100
+		extern void (*dsvd_ext)(dmat**U_, dmat**S_, dmat**Vt_, const dmat*A_);
+		extern void (*dsvd_pow_ext)(dmat*A_, real power, real thres);
+		extern void (*dgemm_ext)(dmat**out, const real beta, const dmat*A, const dmat*B, const char trans[2], const real alpha);
+		
+		dbg("set dsvd_ext to gpu_dsvd\n");
+		dsvd_ext=gpu_dsvd;
+		dsvd_pow_ext=gpu_dsvd_pow;
+		dgemm_ext=gpu_dgemm;
+#endif		
+		extern dmat *(*pywfs_mkg_ext)(const pywfs_t*pywfs, const loc_t*locin, const loc_t*locfft, const dmat*mod, real displacex, real displacey);
+		pywfs_mkg_ext=gpu_pywfs_mkg;
 	}
-	#endif
 #endif
 	global->aper=aper=setup_aper(parms);
 	print_mem("After setup_aper");

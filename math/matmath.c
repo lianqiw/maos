@@ -24,7 +24,7 @@
 #include "defs.h"
 
 /*
-Math routines that are not included in mat.c
+	Math routines that are not applicable to integers and therefore not included in mat.c
 */
 /**
    scale each element of A by w.
@@ -40,7 +40,20 @@ void X(scale)(X(mat)* A, R w){
 		}
 	}
 }
-
+/**
+ * @brief normalize the sum of A to sum.
+ *
+ */
+void X(normalize_sum)(X(mat) *A, T sum){
+	if(A) X(scale)(A, sum/X(sum)(A));
+}
+/**
+ * @brief normalize the sum of abs(A) to sum.
+ *
+ */
+void X(normalize_sumabs)(X(mat) *A, R sum){
+	if(A) X(scale)(A, sum/X(sumabs)(A));
+}
 /**
  * Check for NaN in elements
  */

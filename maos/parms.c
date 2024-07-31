@@ -936,7 +936,7 @@ static void readcfg_siglev(parms_t *parms){
 						siglev_shared=0;
 					}
 				}
-				dnormalize_sum(P(parms->wfs[iwfs].wvlwts), PN(parms->wfs[iwfs].wvlwts), 1);
+				dnormalize_sum(parms->wfs[iwfs].wvlwts, 1);
 			}
 			if(fabs(parms->wfs[iwfs].siglev-parms->wfs[iwfs0].siglev)>EPS){
 				siglev_shared=0;
@@ -1338,7 +1338,7 @@ static void readcfg_evl(parms_t *parms){
 	real evl_fov=readcfg_dbl("evl.fov");
 	scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt,evl_fov);
 	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
-	dnormalize_sumabs(P(parms->evl.wt),parms->evl.nevl,1);
+	dnormalize_sumabs(parms->evl.wt, 1);
 	READ_DMAT_NMAX(evl.hs,parms->evl.nevl);
 	READ_LMAT_NMAX(evl.psf,parms->evl.nevl);
 	READ_LMAT_NMAX(evl.psfr,parms->evl.nevl);
@@ -1487,7 +1487,7 @@ static void readcfg_fit(parms_t *parms){
 			}
 		}
 	}
-	dnormalize_sumabs(P(parms->fit.wt), parms->fit.nfit, 1);
+	dnormalize_sumabs(parms->fit.wt, 1);
 	READ_DBL(fit.tikcr);
 	READ_DBL(fit.svdthres);
 	READ_INT(fit.actslave);
@@ -1637,7 +1637,7 @@ static void readcfg_ncpa(parms_t *parms){
 	dscale(parms->ncpa.thetax,1.*AS2RAD);
 	dscale(parms->ncpa.thetay,1.*AS2RAD);
 	if(parms->ncpa.wt){
-		dnormalize_sumabs(P(parms->ncpa.wt),parms->ncpa.ndir,1);
+		dnormalize_sumabs(parms->ncpa.wt, 1);
 	}
 	READ_INT(ncpa.preload);
 	READ_INT(ncpa.rmsci);
@@ -2467,8 +2467,8 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			dresize(parms->atmr.wt,ipsr2,1);
 		}
 	}
-	dnormalize_sumabs(P(parms->atm.wt),parms->atm.nps,1);
-	dnormalize_sumabs(P(parms->atmr.wt),parms->atmr.nps,1);
+	dnormalize_sumabs(parms->atm.wt, 1);
+	dnormalize_sumabs(parms->atmr.wt, 1);
 
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make

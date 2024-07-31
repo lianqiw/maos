@@ -424,7 +424,7 @@ static void lenslet_saspherical(const parms_t* parms, powfs_t* powfs, int ipowfs
 		for(int ix=0; ix<nxsa*nxsa; ix++){
 			P(ampw, ix)=1;
 		}
-		dnormalize_sumabs(P(ampw), NX(ampw)*NY(ampw), 1);
+		dnormalize_sumabs(ampw, 1);
 
 		real nx2=(nxsa-1)*0.5;
 		real fill1d=sqrt(parms->powfs[ipowfs].safill2d);

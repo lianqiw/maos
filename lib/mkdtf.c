@@ -438,7 +438,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 		}
 		for(long icol=1; icol<NY(prof); icol++){
 			real Nasum=dvecsum(PCOL(prof, icol), nxin);/*preserve sum of input profile */
-			dnormalize_sumabs(PCOL(out, icol), nxnew, Nasum);
+			dvecnormalize_sumabs(PCOL(out, icol), nxnew, Nasum);
 		}
 		dspfree(ht);
 		locfree(loc_in);
