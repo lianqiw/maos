@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classcuda__wfs_1_1cuwfs__base.html" title="cuda_wfs::cuwfs_base" alt="" coords="5,31,172,57"/>
+<area shape="rect" id="node2" href="$classcuda__wfs_1_1cupywfs__t.html" title="cuda_wfs::cupywfs_t" alt="" coords="220,5,377,32"/>
+<area shape="rect" id="node3" href="$classcuda__wfs_1_1cushwfs__t.html" title="cuda_wfs::cushwfs_t" alt="" coords="221,56,377,83"/>
+<area shape="rect" id="node4" href="$classcuda__wfs_1_1cushgeom__t.html" title="cuda_wfs::cushgeom_t" alt="" coords="425,31,596,57"/>
+<area shape="rect" id="node7" href="$classcuda__wfs_1_1cushphy__t.html" title="cuda_wfs::cushphy_t" alt="" coords="432,81,589,108"/>
+<area shape="rect" id="node5" href="$classcuda__wfs_1_1cushg__t.html" title="cuda_wfs::cushg_t" alt="" coords="644,5,785,32"/>
+<area shape="rect" id="node6" href="$classcuda__wfs_1_1cushz__t.html" title="cuda_wfs::cushz_t" alt="" coords="645,56,785,83"/>
+</map>

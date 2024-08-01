@@ -1,0 +1,13 @@
+<map id="cupowfs_t" name="cupowfs_t">
+<area shape="rect" id="node2" href="$class_num_array.html" title="{NumArray\&lt; Real, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="5,397,187,621"/>
+<area shape="rect" id="node3" href="$pywfs_8h.html#structpywfs__t" title="{pywfs_t\n||}" alt="" coords="211,470,285,547"/>
+<area shape="rect" id="node4" href="$class_array.html" title="{Array\&lt; int \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="309,397,443,621"/>
+<area shape="rect" id="node5" href="$class_num_array.html" title="{NumArray\&lt; Comp, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="467,397,658,621"/>
+<area shape="rect" id="node6" href="$class_cell.html" title="{Cell\&lt; Real, Gpu \&gt;\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l}" alt="" coords="682,389,822,628"/>
+<area shape="rect" id="node7" href="$class_cell.html" title="{Cell\&lt; int, Gpu \&gt;\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l}" alt="" coords="847,389,975,628"/>
+<area shape="rect" id="node8" href="$classcupts__t.html" title="{cupts_t\n||+ Dxsa()\l+ Nxsa()\l+ cupts_t()\l}" alt="" coords="1049,205,1143,312"/>
+<area shape="rect" id="node11" href="$structcullt__t.html" title="{cullt_t\n||}" alt="" coords="1135,470,1198,547"/>
+<area shape="rect" id="node9" href="$classculoc__t.html" title="{culoc_t\n||+ operator()()\l+ operator()()\l+ Nloc()\l+ Dx()\l+ Dy()\l+ culoc_t()\l}" alt="" coords="1040,5,1152,156"/>
+<area shape="rect" id="node10" href="$class_array.html" title="{Array\&lt; culoc_t \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="1222,397,1357,621"/>
+<area shape="rect" id="node12" href="$class_cell.html" title="{Cell\&lt; Comp, Gpu \&gt;\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l}" alt="" coords="1381,389,1531,628"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="fit_t" name="fit_t">
+<area shape="rect" id="node2" href="$type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="145,469,199,546"/>
+<area shape="rect" id="node12" href="$muv_8h.html#structmuv__t" title="{muv_t\n||}" alt="" coords="281,763,343,840"/>
+<area shape="rect" id="node4" href="$type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="259,145,315,223"/>
+<area shape="rect" id="node7" href="$type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="651,763,719,840"/>
+<area shape="rect" id="node8" href="$type_8h.html#structdsp" title="{dsp\n||}" alt="" coords="607,469,652,546"/>
+<area shape="rect" id="node11" href="$type_8h.html#structlcell" title="{lcell\n||}" alt="" coords="873,289,922,366"/>
+<area shape="rect" id="node10" href="$parms_8h.html#structfit__cfg__t" title="{fit_cfg_t\n|+ actextrap\l+ lrt_piston\l+ alg\l+ bgs\l+ maxit\l+ cachex\l|}" alt="" coords="401,432,500,583"/>
+<area shape="rect" id="node5" href="$type_8h.html#structloccell" title="{loccell\n||}" alt="" coords="744,763,808,840"/>
+<area shape="rect" id="node6" href="$type_8h.html#structloc__t" title="{loc_t\n||}" alt="" coords="811,469,864,546"/>
+</map>

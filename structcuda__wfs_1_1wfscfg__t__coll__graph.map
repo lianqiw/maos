@@ -1,0 +1,5 @@
+<map id="cuda_wfs::wfscfg_t" name="cuda_wfs::wfscfg_t">
+<area shape="rect" id="node2" href="$classstream__t.html" title="{stream_t\n||+ stream_t()\l+ init()\l+ ~stream_t()\l+ deinit()\l+ reset()\l+ sync()\l+ operator cudaStream_t()\l+ blas()\l+ sparse()\l+ dn()\l}" alt="" coords="5,314,201,523"/>
+<area shape="rect" id="node4" href="$maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="329,365,419,472"/>
+<area shape="rect" id="node5" href="$parms_8h.html#structparms__t" title="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}" alt="" coords="443,292,539,545"/>
+</map>

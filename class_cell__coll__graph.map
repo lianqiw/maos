@@ -1,0 +1,4 @@
+<map id="Cell&lt; T, Dev &gt;" name="Cell&lt; T, Dev &gt;">
+<area shape="rect" id="node2" href="$class_cell_array.html" title="{CellArray\&lt; NumArray\l\&lt; T, Dev \&gt; \&gt;\n||+ Vector()\l+ trans()\l+ CellArray()\l+ CellArray()\l+ CellArray()\l+ Zero()\l+ Copy()\l}" alt="" coords="5,27,168,207"/>
+<area shape="rect" id="node3" href="$class_array.html" title="{Array\&lt; T *, Gpu \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="193,5,333,229"/>
+</map>

@@ -1,0 +1,26 @@
+<map id="parms_t" name="parms_t">
+<area shape="rect" id="node2" href="$parms_8h.html#structload__cfg__t" title="{load_cfg_t\n|+ atm\l+ locs\l+ HXW\l+ mvmi\l|}" alt="" coords="620,619,710,740"/>
+<area shape="rect" id="node5" href="$parms_8h.html#structdist__cfg__t" title="{dist_cfg_t\n||}" alt="" coords="161,402,246,479"/>
+<area shape="rect" id="node6" href="$parms_8h.html#structsim__cfg__t" title="{sim_cfg_t\n|+ htel\l+ start\l+ end\l+ pause\l+ closeloop\l+ f0dm\l+ zetadm\l+ eptsph\l+ fcfocus\l+ fov\land 22 more...\l|}" alt="" coords="1218,567,1334,791"/>
+<area shape="rect" id="node8" href="$type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="986,217,1038,294"/>
+<area shape="rect" id="node9" href="$type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="3929,217,3985,294"/>
+<area shape="rect" id="node10" href="$parms_8h.html#structncpa__cfg__t" title="{ncpa_cfg_t\n||}" alt="" coords="2467,641,2559,718"/>
+<area shape="rect" id="node11" href="$parms_8h.html#structaper__cfg__t" title="{aper_cfg_t\n||}" alt="" coords="4765,641,4856,718"/>
+<area shape="rect" id="node16" href="$parms_8h.html#structpowfs__cfg__t" title="{powfs_cfg_t\n|+ misregx\l+ misregy\l+ misregrmax\l+ hs\l+ hc\l+ saat\l+ safill2d\l+ saspherical\l+ safocuspv\l+ nearecon\land 75 more...\l|}" alt="" coords="1450,567,1566,791"/>
+<area shape="rect" id="node17" href="$parms_8h.html#structevl__cfg__t" title="{evl_cfg_t\n|+ npsf\l+ nmod\l+ psfhist\l+ cov\l|}" alt="" coords="1694,619,1775,740"/>
+<area shape="rect" id="node18" href="$parms_8h.html#structrecon__cfg__t" title="{recon_cfg_t\n|+ alg\l+ glao\l+ split\l+ modal\l+ nmod\l+ psddtrat_hi\l+ psdnseg\l+ twfs_radonly\l+ petalnpsf\l|}" alt="" coords="1910,582,2031,777"/>
+<area shape="rect" id="node20" href="$parms_8h.html#structlsr__cfg__t" title="{lsr_cfg_t\n||}" alt="" coords="801,641,878,718"/>
+<area shape="rect" id="node12" href="$parms_8h.html#structtomo__cfg__t" title="{tomo_cfg_t\n|+ square\l+ cone\l+ guard\l+ piston_cr\l+ alg\l+ bgs\l+ maxit\l+ ninit\l+ splitlrt\l|}" alt="" coords="3468,582,3564,777"/>
+<area shape="rect" id="node13" href="$parms_8h.html#structdbg__cfg__t" title="{dbg_cfg_t\n|+ annular_W\l+ useopdr\l+ force\l+ pupmask\l+ wfslinearity\l+ nocgwarm\l+ test\l+ dmfullfov\l+ gp_noamp\l+ wfs_iac\l+ fullatm\l+ lo_blend\l+ ahst_keepfocus\l+ recon_stuck\l|}" alt="" coords="2697,545,2836,813"/>
+<area shape="rect" id="node14" href="$parms_8h.html#structfit__cfg__t" title="{fit_cfg_t\n|+ actextrap\l+ lrt_piston\l+ alg\l+ bgs\l+ maxit\l+ cachex\l|}" alt="" coords="4085,604,4184,755"/>
+<area shape="rect" id="node15" href="$parms_8h.html#structmoao__cfg__t" title="{moao_cfg_t\n||}" alt="" coords="4258,641,4357,718"/>
+<area shape="rect" id="node19" href="$parms_8h.html#structatmr__cfg__t" title="{atmr_cfg_t\n||}" alt="" coords="2860,641,2952,718"/>
+<area shape="rect" id="node21" href="$parms_8h.html#structwfsr__cfg__t" title="{wfsr_cfg_t\n||}" alt="" coords="2583,641,2672,718"/>
+<area shape="rect" id="node22" href="$parms_8h.html#structatm__cfg__t" title="{atm_cfg_t\n|+ wdrand\l+ ninit\l|}" alt="" coords="2976,633,3063,725"/>
+<area shape="rect" id="node23" href="$parms_8h.html#structgpu__cfg__t" title="{gpu_cfg_t\n||}" alt="" coords="2357,641,2442,718"/>
+<area shape="rect" id="node24" href="$parms_8h.html#structplot__cfg__t" title="{plot_cfg_t\n||}" alt="" coords="3263,641,3350,718"/>
+<area shape="rect" id="node25" href="$parms_8h.html#structsave__cfg__t" title="{save_cfg_t\n|+ extra\l+ all\l+ setup\l+ fdpcg\l+ atm\l+ run\l+ opdr\l+ opdx\l+ evlopd\l+ dither\land 9 more...\l|}" alt="" coords="1043,567,1151,791"/>
+<area shape="rect" id="node26" href="$parms_8h.html#structdm__cfg__t" title="{dm_cfg_t\n|+ dx\l+ dy\l+ offset\l+ iac\l|}" alt="" coords="4454,619,4537,740"/>
+<area shape="rect" id="node27" href="$parms_8h.html#structwfs__cfg__t" title="{wfs_cfg_t\n||}" alt="" coords="4634,641,4718,718"/>
+<area shape="rect" id="node28" href="$parms_8h.html#structcn2est__cfg__t" title="{cn2est_cfg_t\n||}" alt="" coords="4890,641,4994,718"/>
+</map>

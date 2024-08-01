@@ -1,0 +1,7 @@
+<map id="global_t" name="global_t">
+<area shape="rect" id="node2" href="$maos_2types_8h.html#structsim__t" title="{sim_t\n|+ wfsopd\l+ gradacc\l+ gradlastcl\l+ gradlastol\l+ cn2res\l+ gradoff\l+ gradoffacc\l+ gradoffdrift\l+ gradscale\l+ gradscale2\land 66 more...\l|}" alt="" coords="252,623,368,847"/>
+<area shape="rect" id="node3" href="$maos_2types_8h.html#structrecon__t" title="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}" alt="" coords="119,307,235,531"/>
+<area shape="rect" id="node5" href="$maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="5,365,95,472"/>
+<area shape="rect" id="node7" href="$parms_8h.html#structparms__t" title="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}" alt="" coords="409,292,505,545"/>
+<area shape="rect" id="node6" href="$maos_2types_8h.html#structaper__t" title="{aper_t\n||}" alt="" coords="529,380,592,457"/>
+</map>
