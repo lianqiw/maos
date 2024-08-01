@@ -101,7 +101,9 @@ function run_maos(){
 	bs=${b#0.}
 	as=${as/./} #%.*
 	bs=${bs/./}
-    if [ "$as" -gt 0 -a "$bs" -gt 0 ];then
+    if [ "$as" -eq "$bs" ];then #in case both are zero
+		diff=0
+	elif [ "$as" -gt 0 -a "$bs" -gt 0 ];then
 		diff=$(((as-bs)*200/(as+bs)))
 	else
 		diff=100
