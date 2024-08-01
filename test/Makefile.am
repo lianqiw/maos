@@ -1,7 +1,7 @@
 AM_CFLAGS=-I $(top_srcdir) -g -O0
 LDADD=../lib/libaos.la $(LDEXE_FULL) 
 
-bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
+bin_PROGRAMS=test_maos test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 	test_fft test_proj test_loc test_chol test_accphi	\
 	test_fd test_atm test_fractal test_fits
 #if USE_CUDA
@@ -16,6 +16,10 @@ LDADD+=-lcmocka
 endif
 
 TESTS=$(bin_PROGRAMS)
+
+test_maos:
+	@echo $(SRC_DIR)/scripts/maos_check.sh 5 > test_maos && chmod u+x test_maos
+CLEANFILES=test_maos
 
 clean-local:
 	@rm -rf *.bin *.fits
