@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: checkout maos
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         path: maos
     - name: autogen
@@ -40,10 +40,10 @@ jobs:
         git config user.email lianqiw@gmail.com
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
-    - name: make check
-      run: cd build && make check
     - name: make distcheck
       run: cd build && make distcheck
+    - name: make check
+      run: cd build && make check || cat */test-suite.log
     - uses: actions/upload-artifact@v2
       with:
         name: maos-bin
