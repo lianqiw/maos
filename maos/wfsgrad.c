@@ -107,13 +107,13 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 	if(simu->llt_ws&&P(simu->llt_ws, ipowfs)){
 		*ttx+=P(P(simu->llt_ws, ipowfs), isim, illt);//put all to x direction.
 	}
-	if(simu->llt_fsmreal&&P(simu->llt_fsmreal, ipowfs)){
-		*ttx+=P(P(simu->llt_fsmreal, ipowfs), 0, illt);
-		*tty+=P(P(simu->llt_fsmreal, ipowfs), 1, illt);
+	if(simu->ltpm_real&&P(simu->ltpm_real, ipowfs)){
+		*ttx+=P(P(simu->ltpm_real, ipowfs), 0, illt);
+		*tty+=P(P(simu->ltpm_real, ipowfs), 1, illt);
 
-		if(simu->save->llt_fsmreal){
-			P(P(simu->save->llt_fsmreal, ipowfs), 0,isim)=P(P(simu->llt_fsmreal, ipowfs), 0, illt);
-			P(P(simu->save->llt_fsmreal, ipowfs), 1,isim)=P(P(simu->llt_fsmreal, ipowfs), 1, illt);
+		if(simu->save->ltpm_real){
+			P(P(simu->save->ltpm_real, ipowfs), 0,isim)=P(P(simu->ltpm_real, ipowfs), 0, illt);
+			P(P(simu->save->ltpm_real, ipowfs), 1,isim)=P(P(simu->ltpm_real, ipowfs), 1, illt);
 		}
 	}
 }

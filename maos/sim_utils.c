@@ -514,7 +514,7 @@ static void init_simu_evl(sim_t* simu){
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
 	if(!disable_save&&parms->save.extra>1){
-		simu->timing=dnew_file(5, nsim, NULL, "%s/Timing_%d.bin", fnextra, seed);
+		simu->timing=dnew_file(5, nsim, "Simulation timing per time step", "%s/Timing_%d.bin", fnextra, seed);
 	}
 	//2021-07-2: do not use mmap to write file. It causes a lot of disk activity.
 	/*MMAP the main result file */
@@ -527,7 +527,7 @@ static void init_simu_evl(sim_t* simu){
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
 
-		simu->res=dcellnew_file(4, 1, nnx, nny, NULL, "Res_%d.bin", seed);
+		simu->res=dcellnew_file(4, 1, nnx, nny, "Field averaged open and closed loop WFE.", "Res_%d.bin", seed);
 		//Do not reference. Just assign. Don't free.
 		simu->ole=P(simu->res, 0);
 		//P(simu->res, 1) is no longer used.
@@ -537,7 +537,29 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	{/*USE async write for data that need to save at every time step */
-		const char* keywords="Results per direction: olmp; clmp; olep; clep";
+		char keywords[1024];
+		{
+			char *pk=keywords;
+			char *pkend=keywords+sizeof(keywords);
+			for(int j=0; j<2; j++){
+				char elem[16];
+				dmat *theta=j==0?parms->evl.thetax:parms->evl.thetay;
+				for(int i=-1; i<nevl+1; i++){
+					if(i==-1){
+						snprintf(elem, sizeof(elem), "evl.theta%s=[", j==0?"x":"y");
+					}else if(i==nevl){
+						snprintf(elem, sizeof(elem), "]; ");
+					}else{
+						snprintf(elem, sizeof(elem), " %.2f", P(theta, i)*RAD2AS);
+					}
+					int ne=strnlen(elem, sizeof(elem));
+					if(pk+ne<pkend){
+						memcpy(pk, elem, ne+1);
+						pk+=ne;
+					}
+				}
+			}
+		}
 		simu->resp=dcellnewsame_file(nevl, 4, nmod, nsim, keywords, "Resp_%d.bin", seed);
 
 		simu->olmp=dcellsub(simu->resp, 0, nevl, 0, 1);
@@ -546,14 +568,14 @@ static void init_simu_evl(sim_t* simu){
 		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
 
 		if(parms->recon.split){
-			simu->oleNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSm_%d.bin", fnextra, seed);
-			simu->oleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
+			simu->oleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSm_%d.bin", fnextra, seed);
+			simu->oleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
 			if(!parms->sim.evlol){
-				simu->clemp=dcellnewsame_file(nevl, 1, 3, nsim, NULL, "%s/Resclemp_%d.bin", fnextra, seed);
-				simu->cleNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSm_%d.bin", fnextra, seed);
-				simu->cleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, NULL, "%s/RescleNGSmp_%d.bin", fnextra, seed);
+				simu->clemp=dcellnewsame_file(nevl, 1, 3, nsim, keywords, "%s/Resclemp_%d.bin", fnextra, seed);
+				simu->cleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSm_%d.bin", fnextra, seed);
+				simu->cleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSmp_%d.bin", fnextra, seed);
 				if(parms->recon.split==1&&!parms->sim.fuseint){
-					simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, NULL, "%s/RescorrNGSm_%d.bin", fnextra, seed);
+					simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescorrNGSm_%d.bin", fnextra, seed);
 				}
 			}
 		}
@@ -879,8 +901,8 @@ static void init_simu_wfs(sim_t* simu){
 			}
 		}
 
-		simu->save->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmerr_%d.bin", fnextra, seed);
-		simu->save->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_%d.bin", fnextra, seed);
+		simu->save->fsmerrs=dcellnew_file(nwfs, 1, nnx, nny, "Uplink FSM error time history", "%s/Resfsmerr_%d.bin", fnextra, seed);
+		simu->save->fsmcmds=dcellnew_file(nwfs, 1, nnx, nny, "Uplink FSM demand time history", "%s/Resfsmcmd_%d.bin", fnextra, seed);
 	}
 
 	/* For sky coverage telemetry output */
@@ -1061,10 +1083,10 @@ static void init_simu_wfs(sim_t* simu){
 	}
 	if(parms->nlgspowfs){
 		simu->llt_ws=dcellnew(parms->npowfs, 1);//windshake t/t per LLT
-		simu->llt_fsmsho=mycalloc(parms->npowfs, sho_t*); //LLT common FSM SHO filter
-		simu->llt_fsmreal=dcellnew(parms->npowfs, 1);//LLT common FSM state
-		simu->llt_fsmcmd=dcellnew(parms->npowfs, 1);//LLT common FSM command
-		simu->llt_fsmlpf=dcellnew(parms->npowfs, 1);//LLT common FSM LPF
+		simu->ltpm_sho=mycalloc(parms->npowfs, sho_t*); //LLT common FSM SHO filter
+		simu->ltpm_real=dcellnew(parms->npowfs, 1);//LLT common FSM state
+		simu->ltpm_cmd=dcellnew(parms->npowfs, 1);//LLT common FSM command
+		simu->ltpm_lpf=dcellnew(parms->npowfs, 1);//LLT common FSM LPF
 		long nnx[parms->npowfs];
 		long nny[parms->npowfs];
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1079,10 +1101,10 @@ static void init_simu_wfs(sim_t* simu){
 					}
 					dfree(psdin);
 				}
-				//P(simu->llt_fsmcmd, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
-				//P(simu->llt_fsmreal, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
+				//P(simu->ltpm_cmd, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
+				//P(simu->ltpm_real, ipowfs)=dnew(2, parms->powfs[ipowfs].llt->nllt);
 				if(parms->powfs[ipowfs].llt->fcfsm){
-					simu->llt_fsmsho[ipowfs]=sho_new(parms->powfs[ipowfs].llt->fcfsm, 1);
+					simu->ltpm_sho[ipowfs]=sho_new(parms->powfs[ipowfs].llt->fcfsm, 1);
 				}
 				nnx[ipowfs]=2;
 				nny[ipowfs]=parms->sim.end;
@@ -1091,7 +1113,7 @@ static void init_simu_wfs(sim_t* simu){
 				nny[ipowfs]=0;
 			}
 		}
-		save->llt_fsmreal=dcellnew_file(parms->npowfs, 1, nnx, nny, NULL, "%s/Resfsmcmd_common_%d", fnextra, seed);
+		save->ltpm_real=dcellnew_file(parms->npowfs, 1, nnx, nny, "LLT center launch common path pointing mirror commands", "%s/Resltpm_%d", fnextra, seed);
 	}
 	if(parms->nlgspowfs){
 		simu->LGSfocus=dcellnew(parms->nwfs, 1);
@@ -1120,8 +1142,8 @@ static void init_simu_wfs(sim_t* simu){
 				nny2[iwfs]=0;
 			}
 		}
-		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, NULL, "%s/Reszoompos_%d.bin", fnextra, seed);
-		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx, nny2, NULL, "%s/Resfocuserrs_%d.bin", fnextra, seed);
+		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, "LGS Trombone position", "%s/Reszoompos_%d.bin", fnextra, seed);
+		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx, nny2, "LGS focus time history", "%s/Resfocuserrs_%d.bin", fnextra, seed);
 	}
 	if(parms->dither){
 		simu->dither=mycalloc(nwfs, dither_t*);
@@ -1132,7 +1154,7 @@ static void init_simu_wfs(sim_t* simu){
 				if(parms->powfs[ipowfs].dither>1){
 					//int nm=parms->powfs[ipowfs].dither_mode2?2:1;
 					int nm=NX(P(recon->dither_rg, iwfs, iwfs));
-					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, NULL, "%s/Resdithererr_wfs%d_%d", fnextra, iwfs, seed);
+					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, "Common path dithering time history", "%s/Resdithererr_wfs%d_%d", fnextra, iwfs, seed);
 				}
 			}
 		}
@@ -1154,14 +1176,14 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, NULL, "%s/Resditheramp_%d.bin", fnextra, seed);
+			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, "Dithering gain output", "%s/Resditheramp_%d.bin", fnextra, seed);
 		}
 	}
 	if(recon->cn2est){
 		int ncn2=(parms->sim.end-1)/parms->cn2.step;
 		long nnx[2]={ncn2, NX(recon->cn2est->htrecon)};
 		long nny[2]={1, ncn2};
-		simu->cn2res=dcellnew_file(2, 1, nnx, nny, NULL, "%s/Rescn2_%d.bin", fnextra, seed);
+		simu->cn2res=dcellnew_file(2, 1, nnx, nny, "Slodar output", "%s/Rescn2_%d.bin", fnextra, seed);
 	}
 	if(parms->itpowfs!=-1){
 		const int ipowfs=parms->itpowfs;
@@ -1285,7 +1307,7 @@ static void init_simu_dm(sim_t* simu){
 					nny[idm]=0;
 				}
 			}
-			simu->dmhist=dcellnew_file(parms->ndm, 1, nnx, nny, NULL, "%s/dmhist_%d.bin", fnextra, simu->seed);
+			simu->dmhist=dcellnew_file(parms->ndm, 1, nnx, nny, "DM position demand time history", "%s/dmhist_%d.bin", fnextra, simu->seed);
 		}
 	}
 	if(parms->recon.psd){
@@ -1307,7 +1329,7 @@ static void init_simu_dm(sim_t* simu){
 			}
 		}
 		if(parms->sim.lpttm>EPS){
-			save->ttmreal=dnew_file(2, nstep, NULL, "ttmreal_%d.bin", seed);
+			save->ttmreal=dnew_file(2, nstep, "Tip/tilt mirror demand time history", "ttmreal_%d.bin", seed);
 		}
 		save->dmint=zfarr_init(nstep, 1, "dmint_%d.bin", seed);
 		save->dmreal=zfarr_init(nstep, 1, "dmreal_%d.bin", seed);
@@ -1541,9 +1563,9 @@ void free_simu(sim_t* simu){
 	}
 	if(parms->nlgspowfs){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			sho_free(simu->llt_fsmsho[ipowfs]);
+			sho_free(simu->ltpm_sho[ipowfs]);
 		}
-		free(simu->llt_fsmsho);
+		free(simu->ltpm_sho);
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		for(int ips=0; ips<parms->atm.nps; ips++){
@@ -1749,10 +1771,10 @@ void free_simu(sim_t* simu){
 	zfarr_close_n(save->dm_wfs, nwfs);
 	dcellfree(save->fsmerrs);
 	dcellfree(save->fsmcmds);
-	dcellfree(simu->llt_fsmcmd);
-	dcellfree(simu->llt_fsmlpf);
-	dcellfree(simu->llt_fsmreal);
-	dcellfree(save->llt_fsmreal);
+	dcellfree(simu->ltpm_cmd);
+	dcellfree(simu->ltpm_lpf);
+	dcellfree(simu->ltpm_real);
+	dcellfree(save->ltpm_real);
 	free(simu->wfsflags);
 	dfree(simu->winddir);
 	free(simu->save);
@@ -1804,7 +1826,7 @@ void print_progress(sim_t* simu){
 				//writebin_async(simu->resdither, simu->perfisim+1);//column is different
 				writebin_async(simu->save->fsmerrs, simu->wfsisim+1);
 				writebin_async(simu->save->fsmcmds, simu->wfsisim+1);
-				writebin_async(simu->save->llt_fsmreal, simu->wfsisim+1);
+				writebin_async(simu->save->ltpm_real, simu->wfsisim+1);
 				if(parms->nlgspowfs){
 					writebin_async(simu->LGSfocusts, simu->wfsisim+1);
 					if(simu->zoompos_icol){

@@ -468,23 +468,23 @@ void filter_fsm(sim_t* simu){
 		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].llt->nllt==1&&parms->powfs[ipowfs].llt->fcfsm>0){
 			int remove=parms->powfs[ipowfs].llt->epfsm>0.25; //when gain is higher than 0.25, need to remove LLT_FSM position from FSM.
 			if(remove){//use frequency split offloading to LLT_FSM
-				dzero(P(simu->llt_fsmcmd, ipowfs));
+				dzero(P(simu->ltpm_cmd, ipowfs));
 				real scale=1./parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-					dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
+					dadd(&P(simu->ltpm_cmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
 					//remove position from previous step. (with time lag)
-					dadd(&P(simu->fsmcmd, iwfs), 1, P(simu->llt_fsmreal, ipowfs), -1);
+					dadd(&P(simu->fsmcmd, iwfs), 1, P(simu->ltpm_real, ipowfs), -1);
 				}
 			} else if(hasinput){//integrator based offloading to LLT_FSM
 				real scale=parms->powfs[ipowfs].llt->epfsm/parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-					dadd(&P(simu->llt_fsmcmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
+					dadd(&P(simu->ltpm_cmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
 				}
 			}
-			sho_step(&P(simu->llt_fsmreal, ipowfs), simu->llt_fsmsho[ipowfs],
-				P(simu->llt_fsmcmd, ipowfs), parms->sim.dt, 0);
+			sho_step(&P(simu->ltpm_real, ipowfs), simu->ltpm_sho[ipowfs],
+				P(simu->ltpm_cmd, ipowfs), parms->sim.dt, 0);
 		}
 	}
 

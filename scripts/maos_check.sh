@@ -1,9 +1,10 @@
 #!/bin/bash
-if [ ! -f "./maos" ];then
-	echo "Please run in maos bin directory"
+if [ ! -f "../bin/maos" ];then
+	echo "Please run in maos build directory"
 	exit
 fi
 unset MAOS_PYWFS_DEBUG 
+export MAOS_LOG_LEVEL=-1 #reduce log output
 D=30
 #Sanity check maos
 #NFIRAOS default
@@ -19,18 +20,20 @@ fi
 args+=" $@"
 
 has_gpu=0
-if nvidia-smi -i 0 >/dev/null 2>&1 ;then
-	case "$@" in
-		"-g-1" | "-G0")
-		has_gpu=0
-		ARCH=CPU
-		;;
-	*)
+
+case "$@" in
+  *-g-1* | *-G0*)
+	has_gpu=0
+	ARCH=CPU
+	;;
+  *)
+	if nvidia-smi -i 0 >/dev/null 2>&1 ;then
 		has_gpu=1
 		ARCH=GPU
+	fi
 		;;
-	esac
-fi
+esac
+
 case $D in
     2)
 		REF_GPU=(624.74 94.57 182.51 95.92 95.14 132.22 120.51 150.92 119.60 110.50 106.36 356.67 345.91 186.97 215.25 124.40 114.22 113.37 116.76 124.62 127.07 129.90 128.57 124.48 133.21 0.00) #2024-06-04 maxwell 2
@@ -62,19 +65,19 @@ else
 fi
 fnlog=maos_check_${D}.log #log of all
 fntmp=maos_check_${D}.tmp #log of current simulation
+fnerr=maos_check_${D}.err #err of current simulation
 fnres=maos_check_${D}.res #result summary
 #fnerr=maos_check_${D}.err
 
 echo $(date) > $fnlog
 #echo $(date) > $fnerr
-
+ans=0 #result code
 ii=0
 printf "%-20s   Res   Ref     %%\n" "D=${D}m" | tee $fnres
 function run_maos(){
 	aotype=$1
 	shift
-    cmd="./maos sim.end=100 $* $args > $fntmp 2>&1"
-	eval $cmd
+    ../bin/maos sim.end=100 $* $args >$fntmp 2>$fnerr
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]}
@@ -85,7 +88,7 @@ function run_maos(){
 		cat $fntmp >> $fnlog
 		RMS[ii]=000.00
 		a=0
-		ans=1
+		ans=$((ans+1)) #failed to run
 	fi
     
 	echo $aotype $* >> $fnlog
@@ -103,6 +106,9 @@ function run_maos(){
 	else
 		diff=100
     fi
+	if [ $diff -gt 5 -o $diff -lt -5 ];then
+		ans=$((ans+1)) #mark failure
+	fi
 	printf "%-20s %6.1f %6.1f %4d%%\n" "$aotype" "$a" "$b" "$diff" | tee -a $fnres
 	ii=$((ii+1)) 
 }
@@ -115,7 +121,6 @@ function run_maos_gpu(){
 		ii=$((ii+1)) 
 	fi
 }
-export MAOS_LOG_LEVEL=-1
 
 run_maos "Openloop:        " -cmcao_lgs.conf sim.evlol=1
 
@@ -177,4 +182,7 @@ run_maos "NFIRAOS LGS:    " -cnfiraos_lgs.conf
 run_maos_gpu "NFIRAOS PYWFS:" -cnfiraos_ngs.conf
 fi
 echo "REF_${ARCH}=(${RMS[*]}) #$(date +%Y-%m-%d) $HOSTNAME D=$D"
+if [ $ans -ne 0 ];then
+	echo "$ans tests failed"
+fi
 exit $ans

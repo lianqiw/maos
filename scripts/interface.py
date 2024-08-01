@@ -26,22 +26,21 @@
 #TODO: investigate whether CFFI is a better solution.
 import os
 #import sys
-from pdb import set_trace as keyboard
+#from pdb import set_trace as keyboard
 from ctypes import *
 #import json
 import numpy as np
 import scipy.sparse as sp
-from copy import deepcopy
-from warnings import warn
+#from copy import deepcopy
+#from warnings import warn
 aolib_so=os.environ.get('MAOS_AOLIB', 'aolib.so')
 try:
     lib=cdll.LoadLibrary(aolib_so)
 except:
     raise Exception('Load aolib.so failed from '+aolib_so)
-from readbin import headers
+from readbin import set_header
 
 def simplify(arr, do_stack=1, do_squeeze=0):
-    #'''simplify object array by removing singleton dimensions and stack into numeric array'''
     '''convert object array a[i,j][k,n]... to simple ndarray a[i,j,k,n,...]
         shape and singleton dimensions are preserved.
     '''
@@ -75,9 +74,9 @@ def simplify(arr, do_stack=1, do_squeeze=0):
                 pass
     return arr
 
+#obtain ctypes type information from MAOS id.
+#The value is (type, complex?, kind(0:dense, 1: sparse, 2: loc, 10: cell))
 id2ctype={
-    #obtain type information from MAOS id.
-    #The value is (type, is complex, kind(0:dense, 1: sparse, 2: loc, 10: cell))
     25600: (c_double,1,1), #M_CSP64
     25601: (c_double,0,1), #M_SP64
     25602: (c_double,0,0), #'M_DBL'
@@ -93,20 +92,27 @@ id2ctype={
     25633: (c_void_p,0,10),#MC_ANY
     222210: (c_double,0,2),#M_LOC64
 }
-#convert C array pointer to numpy array. Freeing C memory
+headers=[] #store the keyword from file
+def append_header(header):
+    '''append the cstr string header to global headers'''
+    if header:
+        headers.append(header.decode("utf-8"))
+
 def pt2py(pointer):
+    '''convert C array pointer to numpy array. Freeing C memory'''
     headers.clear()
     if bool(pointer):
         out=pointer.contents.as_array()
         pointer.contents.free()
     else:
         out=np.array([])
+    set_header(headers)
     return out
-def pt2py_header(pointer):
-    return (pt2py(pointer), deepcopy(headers))
+#def pt2py_header(pointer):
+#    return (pt2py(pointer), deepcopy(headers))
 #convert C vector to numpy array. Memory is copied.
 def as_array(arr, id, shape):
-    ''' convert C array arr to numpy based in id'''
+    ''' convert C array arr to numpy.array based on id'''
     (tt, iscomplex, issparse)=id2ctype.get(id)
     if tt is None:
         print("id2ctype: unknown type:", id)
@@ -123,8 +129,8 @@ def as_array(arr, id, shape):
             nparr2=np.copy(nparr)
         return nparr2
 
-#convert numpy array to any C array adaptively
 def py2cell(arr, tid=0):
+    '''convert numpy.array to C array adaptively (based on its type)'''
     if type(arr) is list:
         arr=np.asarray(arr)
     if sp.isspmatrix_csr(arr):
@@ -132,8 +138,8 @@ def py2cell(arr, tid=0):
     else:
         return cell(arr, tid)
 
-#convert numpy array to any C array pointer adaptively
 def py2cellref(arr, tid=0):
+    '''convert numpy array to C array pointer adaptively or output'''
     if arr is None:
         return None
     elif type(arr) is list:
@@ -147,8 +153,9 @@ def py2cellref(arr, tid=0):
             return byref(cell(arr,tid))
     else:
         return byref(arr)
+
 def arr2object(arr): 
-    '''convert arrays with more than 3 dimensions to object arrays'''
+    '''convert numpy number arrays with more than 3 dimensions to numpy object arrays'''
     if type(arr) is not np.ndarray:
         print('Unsupported data type')
         return arr
@@ -164,7 +171,9 @@ def arr2object(arr):
         for i in range(arr2.shape[0]):
             arr2[i]=arr2object(arr[i])
     return arr2
+
 class cell(Structure):
+    '''To interface numpy.array with C cell '''
     _fields_ = [ #fields compatible with C type of cell and mat
         ('id', c_uint32),
         ('p',  c_void_p),
@@ -262,12 +271,9 @@ class cell(Structure):
         except:
             print("id2ctype: unknown type", id);
             kind=-1
+        if kind==0 or kind==10:
+            append_header(self.header)
         if kind==0: #dense matrix
-            if self.header:
-                try:
-                    headers.append(self.header.decode("utf-8"))
-                except:
-                    pass
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csr)).contents.as_array()
@@ -294,6 +300,7 @@ class cell(Structure):
         lib.cellfree_do(byref(self)) #will fail if memory is not allocated by C
         
 class loc(Structure):
+    '''To interface numpy.array with C lob '''
     _fields_ = [
         ('id',   c_uint32),
         ('locx', c_void_p),
@@ -335,6 +342,7 @@ class loc(Structure):
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero
     def as_array(self): #convert form C to numpy. Memory is copied
+        append_header(self.header)
         if(self.locx):
             if self.id!=222210:
                 raise(Exception('Wrong type'))
@@ -345,7 +353,9 @@ class loc(Structure):
             raise(Exception("loc is empty"))
     def free(self):
         lib.cellfree_do(byref(self))
+
 class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just like arrays as numpy is row order
+    '''To interface numpy.array with C sparse array '''
     _fields_=[ #need to match C memory layout
         ('id', c_uint32),
         ('x', c_void_p),
@@ -382,6 +392,7 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             self.id=spdtype2id.get(np.float64)
 
     def as_array(self): #convert form C to numpy. Memory is copied
+        append_header(self.header)
         if self.nzmax>0:
             self.xp=as_array(self.x, self.id, (self.nzmax,))
             self.ip=as_array(self.i, 25603, (self.nzmax,))
@@ -391,7 +402,9 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             return sp.csr_matrix((self.nx,self.ny))
     def free(self):
         lib.cellfree_do(byref(self))
+
 def convert_fields(fields):
+    '''convert a C type keyword to ctypes type'''
     val2type={
         '*':c_void_p,
         'double':c_double,
@@ -407,8 +420,8 @@ def convert_fields(fields):
         newfields.append((key,val))
     return newfields
 
-#Create a ctypes class with field listed 
 def make_class(name, fields):
+    '''Dynaically create a ctypes class with field listed '''
     newfields=convert_fields(fields)
     class newclass(Structure):
         pass

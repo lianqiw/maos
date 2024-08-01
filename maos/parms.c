@@ -221,12 +221,12 @@ static inline int sum_dblarr(int n, real *a){
     if(readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }}else{dbg("Empty array for powfs." #B"\n");}
+    }}//else{dbg("Empty array for powfs." #B"\n");}
 #define READ_POWFS_RELAX(A,B)					\
     if(readcfg_##A##arr((&A##tmp), npowfs,1, "powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){					\
 		parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }}else{dbg("Empty array for powfs." #B"\n");}
+    }}//else{dbg("Empty array for powfs." #B"\n");}
 #define READ_POWFS_MAT(A,B)						\
     if(readcfg_strarr((&strtmp), npowfs, 1,"powfs."#B)==npowfs){\
     for(int i=0; i<npowfs; i++){						\
@@ -649,22 +649,22 @@ static void readcfg_powfs(parms_t *parms){
     if(readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }}else{dbg("Empty array for wfs." #B"\n");}
+    }}//else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_RELAX(A,B)				\
     if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = A##tmp[i];			\
-    }}else{dbg("Empty array for wfs." #B"\n");}
+    }}//else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_RELAX_SCALE(A,B,C,D)				\
     if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].C = D*(A##tmp[i]);			\
-    }}else{dbg("Empty array for wfs." #B"\n");}
+    }}//else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_DELTA(A,B,BD)				\
     if(readcfg_##A##arr((&A##tmp),nwfs,1,"wfs."#BD)==nwfs){\
     for(i=0; i<nwfs; i++){				\
 		parms->wfs[i].B = parms->powfs[parms->wfs[i].powfs].B+A##tmp[i];	\
-    }}else{dbg("Empty array for wfs." #B"\n");}
+    }}//else{dbg("Empty array for wfs." #B"\n");}
 #define READ_WFS_MAT(A,B)						\
     if(readcfg_strarr((&strtmp), nwfs, 1,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){						\

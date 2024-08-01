@@ -276,15 +276,15 @@ void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
 		}
 		
 		for(long ix=0; ix<(nx*ny); ix++){
-			int remove_header=0;
+			/*int remove_header=0;
 			if(A->keywords && !P(A,ix)->keywords){
 				P(A,ix)->keywords=A->keywords;
 				remove_header=1;
-			}
+			}*/
 			writedata_by_id(fp, P(A,ix), id2, ncol);
-			if(remove_header){
+			/*if(remove_header){
 				P(A,ix)->keywords=NULL;
-			}
+			}*/
 		}
 	}
 	break;

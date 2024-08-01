@@ -363,7 +363,7 @@ typedef struct recon_t{
     dcell* RRtwfs;     /**<Truth zernike modes reconstruction from twfs grads*/
     dcell* GRlgs;      /**<Truth zernike modes to gradient for LGS (sodium fit)*/
     dcell* RRlgs;      /**<Truth zernike modes reconstruction from LGS grad adjustments (sodium fit)*/
-	
+
 	//for petal mode mitigation using phase retrieval
 	petal_t **petal;   /**<Petaling mode reconstruction tools.*/
 	dsp *apetal;       /**<Petal mode defined at the ground DM*/
@@ -440,9 +440,9 @@ typedef struct sim_save_t{
     zfarr* psdol_lo;
     //
     zfarr* restwfs;    /**<Truth wfs output*/
-    dcell *fsmerrs;    /**< file to store fsmerr history*/
-    dcell *fsmcmds;    /**< file to store fsmcmd history*/
-    dcell *llt_fsmreal;    /**<file to store llt_fsmreal history*/
+    dcell* fsmerrs;    /**< file to store fsmerr history*/
+    dcell* fsmcmds;    /**< file to store fsmcmd history*/
+    dcell* ltpm_real; /**<file to store ltpm_real history*/
 }sim_save_t;
 /*
   data wrap for wfsints.
@@ -546,11 +546,12 @@ typedef struct sim_t{
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
     dcell *gradscale2; /**<Gain scaling for other dithering modes.*/
-    dcell *llt_ws;     /**<LLT uplink jitter*/
-    dcell *llt_fsmlpf;    /**<LLT common path pointing mirror LPF*/
-    dcell *llt_fsmcmd;    /**<LLT common path pointing mirror command*/
-    dcell *llt_fsmreal;    /**<LLT common path pointing mirror state after sho filtering*/
-    sho_t **llt_fsmsho; /**<LLT common path pointing mirror state*/
+    /*LLT*/
+    dcell *llt_ws;     /**<LLT uplink jitter (per LLT)*/
+    dcell *ltpm_lpf;  /**<For center launch only: LLT common path pointing mirror LPF*/
+    dcell *ltpm_cmd;  /**<For center launch only: LLT common path pointing mirror command*/
+    dcell *ltpm_real; /**<For center launch only: LLT common path pointing mirror state after sho filtering*/
+    sho_t** ltpm_sho; /**<For center launch only: LLT common path pointing mirror state*/
 	/*petaling mode*/
 	dccell *petal_i0;   /**<WFS accumulated i0.*/
 	dcell *petal_m;   /**<Petal estimator output.*/

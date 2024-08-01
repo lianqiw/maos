@@ -194,6 +194,13 @@ for funname in funcs: #loop over functions
     if len(prepout)>0 and prepout[-1]=='\n':
         prepout=prepout[0:-1]
     fundef+='def '+funname+'('+pyargin+'):'   #def function
+    #C definition as documentation
+    fundef+='\n    """'+funtype+' '+funname2+'('
+    for arg in funargs:
+        fundef+=arg[0]+' '+arg[1]+', '
+    if len(funargs)>0:
+        fundef=fundef[:-2]
+    fundef+=');"""'
     if funtype!='void':
         fundef+='\n    '+fun_arg          #C function return type
     if len(prepout)>0:

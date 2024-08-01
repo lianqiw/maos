@@ -1095,17 +1095,18 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				}
 				cairo_restore(cr);
 				//append cumulative average to end of legend.
-				if(drawdata->cumu&&legend[ipts]){
-					char *tmp=legend[ipts];
-					char val[20]={0};
-					snprintf(val, sizeof(val), " (%.2f)", y);
-					char *old=strstr(tmp, " (");
-					if(old){//remove old
+				if(legend[ipts]){
+					char* old=strstr(legend[ipts], " (");
+					if(old){//remove old value.
 						old[0]=0;
 					}
-
-					legend[ipts]=stradd(tmp, val, NULL);
-					free(tmp);
+					if(drawdata->cumu){//add cumulative rms to the end of legend 
+						char *tmp=legend[ipts];
+						char val[20]={0};
+						snprintf(val, sizeof(val), " (%.2f)", y);
+						legend[ipts]=stradd(tmp, val, NULL);
+						free(tmp);
+					}
 				}
 			}/*iptsy */
 #if DRAW_NEW == 1

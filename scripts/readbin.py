@@ -137,6 +137,7 @@ def readbin(file):
     return out
 
 def readbin_auto(fp, isfits, scan=0):
+    '''Wraps readbin_do to handle top level scanning of fits file'''
     err=0
     if scan or isfits:
         out=list()
@@ -178,25 +179,26 @@ def readbin_do(fp, isfits):
         
     if dname[0:2]=='MC': #cell array
         header_cell=header
-        header={}
-        header['global']=header_cell
-        if nx>0 and ny>0:
-            header['cell']=np.zeros((ny, nx), dtype=object)
-        #else:
-        #    return readbin_auto(fp, isfits, 1)
+        header=[]
+        header.append(header_cell)
+        #header={}
+        #header['global']=header_cell
+        #if nx>0 and ny>0:
+        #    header['cell']=np.zeros((ny, nx), dtype=object)
         out=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
             for ix in range(0, nx):
-                out[iy,ix], header['cell'][iy,ix], err=readbin_do(fp, isfits)
+                out[iy,ix], header_i, err=readbin_do(fp, isfits)
                 if err:
                     break
+                if len(header_i)>0:
+                    header.append(header_i)
             if err:
                 break
-    
         if ny==1:
             out=out[0,]
-            header['cell']=header['cell'][0,]
+            #header['cell']=header['cell'][0,]
     elif 'SP' in dname and nx>0 and ny>0: #sparse matrix
         datatype=np.dtype(dname2type[dname])
         nz=readvec(fp, np.dtype(np.int64), 1)[0]
@@ -327,6 +329,16 @@ def readbin_header(fp):
         header=np.array(header.split('\n'))
     return (magic, nx, ny, header)
 
+def header():
+    return headers
+def get_header():
+    return headers
+def set_header(header):
+    headers.clear()
+    if type(header) is list:
+        headers.extend(header)
+    else:
+        headers.append(header)
 if __name__ == '__main__':
     if len(sys.argv)>1:
         for fn in sys.argv[1:]:

@@ -40,7 +40,7 @@ float io_time2=0;//time the previous drawdata is receveid
 float io_timeclear=0;//plots
 int io_heartbeat=0;
 int session=1;//session counter
-int noellipsis=0; 	/*do not allow legend ellipsis.*/
+int noellipsis=1; 	/*do not allow legend ellipsis.*/
 PNEW2(drawdata_mutex);
 //This file does not link to math folder
 void fmaxmin(const float *p, long n, float *pmax, float *pmin){
