@@ -45,5 +45,5 @@ var maos_2types_8h_structsim__save__t =
     [ "restwfs", "maos_2types_8h.html#a52bae7f8a761a5049eed0a6f26a72cbf", null ],
     [ "fsmerrs", "maos_2types_8h.html#af34aa73f18f48d23702697d78e41c59d", null ],
     [ "fsmcmds", "maos_2types_8h.html#a1464b135e09709aefdcc383b76a71b67", null ],
-    [ "llt_fsmreal", "maos_2types_8h.html#ad5bde94ad58d45e432a8eed70e14643e", null ]
+    [ "ltpm_real", "maos_2types_8h.html#ad8c8136c23a6782aa7428a74776d1c5e", null ]
 ];

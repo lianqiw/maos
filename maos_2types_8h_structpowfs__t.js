@@ -44,6 +44,5 @@ var maos_2types_8h_structpowfs__t =
     [ "notfy", "maos_2types_8h.html#a91041be1f00651d08de6a94a6e2d77dd", null ],
     [ "fieldstop", "maos_2types_8h.html#a96244eca830680a2615effa8a4fec99c", null ],
     [ "pywfs", "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93", null ],
-    [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ],
-    [ "petal", "maos_2types_8h.html#a5c8c7ff63e454c0157c9a2b942ac4f5f", null ]
+    [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ]
 ];

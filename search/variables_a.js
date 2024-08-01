@@ -10,10 +10,6 @@ var searchData=
   ['lgsfocusts',['LGSfocusts',['../maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04',1,'sim_t']]],
   ['ll',['LL',['../maos_2types_8h.html#ab209612b1005f4f61a645eebf9a16543',1,'recon_t']]],
   ['llt',['llt',['../structcupowfs__t.html#a115e3915d7266c73537f40fbd527cc00',1,'cupowfs_t::llt()'],['../parms_8h.html#a176fda60e684602e4da9bd5382c42b0f',1,'powfs_cfg_t::llt()'],['../maos_2types_8h.html#a3ae7b8fc8e71e9e2caf9378614888191',1,'powfs_t::llt()']]],
-  ['llt_5ffsmcmd',['llt_fsmcmd',['../maos_2types_8h.html#ab741e0fb0719272d5df3f6fcae2c2e24',1,'sim_t']]],
-  ['llt_5ffsmlpf',['llt_fsmlpf',['../maos_2types_8h.html#abb513efba7438d4c8ffd085c6caae09d',1,'sim_t']]],
-  ['llt_5ffsmreal',['llt_fsmreal',['../maos_2types_8h.html#ad5bde94ad58d45e432a8eed70e14643e',1,'sim_save_t::llt_fsmreal()'],['../maos_2types_8h.html#ab6ea364f492acd1108a8e9f25989325e',1,'sim_t::llt_fsmreal()']]],
-  ['llt_5ffsmsho',['llt_fsmsho',['../maos_2types_8h.html#a27c193d659f780bb7c259018e25a70c3',1,'sim_t']]],
   ['llt_5fws',['llt_ws',['../maos_2types_8h.html#aae4ff04cd8d9cdbd57a7171851a7f52b',1,'sim_t']]],
   ['lltimcc',['lltimcc',['../classcuwfs__t.html#a28b47e2cdf7b0a5fc4b657ff13998fee',1,'cuwfs_t']]],
   ['lltncpa',['lltncpa',['../classcuwfs__t.html#abddedc77034bea1554d93f6b04af0d13',1,'cuwfs_t']]],
@@ -36,5 +32,9 @@ var searchData=
   ['lrt_5fpiston',['lrt_piston',['../parms_8h.html#a75ae08c2d06aa69701a4518c2273f51c',1,'fit_cfg_t']]],
   ['lrt_5fptt',['lrt_ptt',['../parms_8h.html#a1a37004e05a2c83250bab99920fba463',1,'moao_cfg_t']]],
   ['lrt_5ftt',['lrt_tt',['../parms_8h.html#a93a1ad8d5f81a5577dcec9040929e8bd',1,'fit_cfg_t']]],
-  ['lsr',['lsr',['../parms_8h.html#a194d37ea1666fdb14c0a7f212b8973fc',1,'gpu_cfg_t::lsr()'],['../parms_8h.html#a506146f961ec32ef1a7c43e20bfafb71',1,'parms_t::lsr()']]]
+  ['lsr',['lsr',['../parms_8h.html#a194d37ea1666fdb14c0a7f212b8973fc',1,'gpu_cfg_t::lsr()'],['../parms_8h.html#a506146f961ec32ef1a7c43e20bfafb71',1,'parms_t::lsr()']]],
+  ['ltpm_5fcmd',['ltpm_cmd',['../maos_2types_8h.html#af3ca06033fd58382c7636dc091c74b78',1,'sim_t']]],
+  ['ltpm_5flpf',['ltpm_lpf',['../maos_2types_8h.html#a9ac709ba7a2a11d720bdbe01e8b71a93',1,'sim_t']]],
+  ['ltpm_5freal',['ltpm_real',['../maos_2types_8h.html#ad8c8136c23a6782aa7428a74776d1c5e',1,'sim_save_t::ltpm_real()'],['../maos_2types_8h.html#a3e952b0172729566f022f9c54257b62c',1,'sim_t::ltpm_real()']]],
+  ['ltpm_5fsho',['ltpm_sho',['../maos_2types_8h.html#a6a384a6fed51764f8ee581c23ba57496',1,'sim_t']]]
 ];

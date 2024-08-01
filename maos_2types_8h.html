@@ -775,13 +775,6 @@ fit</td>
 <td class="fielddoc">
 <p>Fit turbulence to lenslet grid. For aliasing computation. </p>
 </td></tr>
-<tr><td class="fieldtype">
-<a id="a5c8c7ff63e454c0157c9a2b942ac4f5f"></a>petal_t *</td>
-<td class="fieldname">
-petal</td>
-<td class="fielddoc">
-<p>Petaling mode reconstruction tools </p>
-</td></tr>
 </table>
 
 </div>
@@ -1722,13 +1715,6 @@ amod</td>
 <p>ndmx1. Zernike/KL modes defined on aloc for modal control </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a3e411085201b1eb19aebd338801f1a75"></a><a class="el" href="type_8h.html#structdsp">dsp</a> *</td>
-<td class="fieldname">
-apetal</td>
-<td class="fielddoc">
-<p>Petal mode defined at the ground DM </p>
-</td></tr>
-<tr><td class="fieldtype">
 <a id="a70af1a69656b46e9fd9f810a2a115fe9"></a><a class="el" href="type_8h.html#structlmat">lmat</a> *</td>
 <td class="fieldname">
 anmod</td>
@@ -2177,6 +2163,20 @@ RRlgs</td>
 <p>Truth zernike modes reconstruction from LGS grad adjustments (sodium fit) </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="a0bf9e87fb2b7e2329747d5e2a9c264e6"></a>petal_t **</td>
+<td class="fieldname">
+petal</td>
+<td class="fielddoc">
+<p>Petaling mode reconstruction tools. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3e411085201b1eb19aebd338801f1a75"></a><a class="el" href="type_8h.html#structdsp">dsp</a> *</td>
+<td class="fieldname">
+apetal</td>
+<td class="fielddoc">
+<p>Petal mode defined at the ground DM </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a0315c8beee67362d7ab03b9bdc8660ea"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
 dither_m</td>
@@ -2595,11 +2595,11 @@ fsmcmds</td>
 <p>file to store fsmcmd history </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ad5bde94ad58d45e432a8eed70e14643e"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="ad8c8136c23a6782aa7428a74776d1c5e"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-llt_fsmreal</td>
+ltpm_real</td>
 <td class="fielddoc">
-<p>file to store llt_fsmreal history </p>
+<p>file to store ltpm_real history </p>
 </td></tr>
 </table>
 
@@ -3152,35 +3152,35 @@ gradscale2</td>
 <td class="fieldname">
 llt_ws</td>
 <td class="fielddoc">
-<p>LLT uplink jitter </p>
+<p>LLT uplink jitter (per LLT) </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="abb513efba7438d4c8ffd085c6caae09d"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a9ac709ba7a2a11d720bdbe01e8b71a93"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-llt_fsmlpf</td>
+ltpm_lpf</td>
 <td class="fielddoc">
-<p>LLT common path pointing mirror LPF </p>
+<p>For center launch only: LLT common path pointing mirror LPF </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab741e0fb0719272d5df3f6fcae2c2e24"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="af3ca06033fd58382c7636dc091c74b78"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-llt_fsmcmd</td>
+ltpm_cmd</td>
 <td class="fielddoc">
-<p>LLT common path pointing mirror command </p>
+<p>For center launch only: LLT common path pointing mirror command </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab6ea364f492acd1108a8e9f25989325e"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<a id="a3e952b0172729566f022f9c54257b62c"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
 <td class="fieldname">
-llt_fsmreal</td>
+ltpm_real</td>
 <td class="fielddoc">
-<p>LLT common path pointing mirror state after sho filtering </p>
+<p>For center launch only: LLT common path pointing mirror state after sho filtering </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a27c193d659f780bb7c259018e25a70c3"></a><a class="el" href="servo_8h.html#structsho__t">sho_t</a> **</td>
+<a id="a6a384a6fed51764f8ee581c23ba57496"></a><a class="el" href="servo_8h.html#structsho__t">sho_t</a> **</td>
 <td class="fieldname">
-llt_fsmsho</td>
+ltpm_sho</td>
 <td class="fielddoc">
-<p>LLT common path pointing mirror state </p>
+<p>For center launch only: LLT common path pointing mirror state </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a4b4215bb7179b9fd7b2c0d1a7fad18b3"></a><a class="el" href="type_8h.html#structdccell">dccell</a> *</td>

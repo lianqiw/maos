@@ -80,8 +80,7 @@ var maos_2types_8h =
       [ "notfy", "maos_2types_8h.html#a91041be1f00651d08de6a94a6e2d77dd", null ],
       [ "fieldstop", "maos_2types_8h.html#a96244eca830680a2615effa8a4fec99c", null ],
       [ "pywfs", "maos_2types_8h.html#aeb5b9028e45fb2109c6d262675a1ea93", null ],
-      [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ],
-      [ "petal", "maos_2types_8h.html#a5c8c7ff63e454c0157c9a2b942ac4f5f", null ]
+      [ "fit", "maos_2types_8h.html#a827fd1d16c178ce8418d15200b2b6bfa", null ]
     ] ],
     [ "ngsmod_t", "maos_2types_8h.html#structngsmod__t", [
       [ "hs", "maos_2types_8h.html#a228ce9878bfc10d67927f4a19be445f1", null ],
@@ -204,7 +203,6 @@ var maos_2types_8h =
       [ "actfloat", "maos_2types_8h.html#a89079d2ca016bf98fe39b7b6cfb1442b", null ],
       [ "actstuck", "maos_2types_8h.html#af7629c2ba044ec506e53b08d2ea61706", null ],
       [ "amod", "maos_2types_8h.html#a5be6b1c39e832a8c47b7c13ed96c5543", null ],
-      [ "apetal", "maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75", null ],
       [ "anmod", "maos_2types_8h.html#a70af1a69656b46e9fd9f810a2a115fe9", null ],
       [ "fit", "maos_2types_8h.html#abf86f7942b75f2bf4f943f3451574104", null ],
       [ "aimcc", "maos_2types_8h.html#a210b3d49c9db5c49f6efa7ac93fda8cd", null ],
@@ -269,6 +267,8 @@ var maos_2types_8h =
       [ "RRtwfs", "maos_2types_8h.html#a8fbe32ec1601595810f894d61d795330", null ],
       [ "GRlgs", "maos_2types_8h.html#abd36ea165120af1ecba440122ad018f6", null ],
       [ "RRlgs", "maos_2types_8h.html#ae9f39ba587807aed467fddf03162a7a7", null ],
+      [ "petal", "maos_2types_8h.html#a0bf9e87fb2b7e2329747d5e2a9c264e6", null ],
+      [ "apetal", "maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75", null ],
       [ "dither_m", "maos_2types_8h.html#a0315c8beee67362d7ab03b9bdc8660ea", null ],
       [ "dither_npoint", "maos_2types_8h.html#a2cdaa275b0021387e777775b3761a719", null ],
       [ "dither_dtrat", "maos_2types_8h.html#ac9a604bd35d64c4d1aa2916372cf84ae", null ],
@@ -331,7 +331,7 @@ var maos_2types_8h =
       [ "restwfs", "maos_2types_8h.html#a52bae7f8a761a5049eed0a6f26a72cbf", null ],
       [ "fsmerrs", "maos_2types_8h.html#af34aa73f18f48d23702697d78e41c59d", null ],
       [ "fsmcmds", "maos_2types_8h.html#a1464b135e09709aefdcc383b76a71b67", null ],
-      [ "llt_fsmreal", "maos_2types_8h.html#ad5bde94ad58d45e432a8eed70e14643e", null ]
+      [ "ltpm_real", "maos_2types_8h.html#ad8c8136c23a6782aa7428a74776d1c5e", null ]
     ] ],
     [ "wfsints_t", "maos_2types_8h.html#structwfsints__t", [
       [ "ints", "maos_2types_8h.html#acd20b2ed925bd5d1d81fb1a94ff43bfe", null ],
@@ -405,10 +405,10 @@ var maos_2types_8h =
       [ "gradscale", "maos_2types_8h.html#afbbeea9628533032448d257c526e5225", null ],
       [ "gradscale2", "maos_2types_8h.html#a13c26494ce3f580a13f280c22c7454e4", null ],
       [ "llt_ws", "maos_2types_8h.html#aae4ff04cd8d9cdbd57a7171851a7f52b", null ],
-      [ "llt_fsmlpf", "maos_2types_8h.html#abb513efba7438d4c8ffd085c6caae09d", null ],
-      [ "llt_fsmcmd", "maos_2types_8h.html#ab741e0fb0719272d5df3f6fcae2c2e24", null ],
-      [ "llt_fsmreal", "maos_2types_8h.html#ab6ea364f492acd1108a8e9f25989325e", null ],
-      [ "llt_fsmsho", "maos_2types_8h.html#a27c193d659f780bb7c259018e25a70c3", null ],
+      [ "ltpm_lpf", "maos_2types_8h.html#a9ac709ba7a2a11d720bdbe01e8b71a93", null ],
+      [ "ltpm_cmd", "maos_2types_8h.html#af3ca06033fd58382c7636dc091c74b78", null ],
+      [ "ltpm_real", "maos_2types_8h.html#a3e952b0172729566f022f9c54257b62c", null ],
+      [ "ltpm_sho", "maos_2types_8h.html#a6a384a6fed51764f8ee581c23ba57496", null ],
       [ "petal_i0", "maos_2types_8h.html#a4b4215bb7179b9fd7b2c0d1a7fad18b3", null ],
       [ "petal_m", "maos_2types_8h.html#addb063fbc8aafcda0d138759d96022fe", null ],
       [ "opdr", "maos_2types_8h.html#a54b13cbf92ab6e6ac20933c362fa9f61", null ],

@@ -1,5 +1,6 @@
 var NAVTREEINDEX16 =
 {
+"sockio_8h.html#ac7fb31521bed5d14292784874f15be50":[11,0,4,10,1],
 "sockio_8h.html#ad2364ca481e12db6b45009478899970f":[11,0,4,10,11],
 "sockio_8h.html#aec87592c4fbf2ad03b9cc5f1cd03fe2a":[11,0,4,10,2],
 "sockio_8h.html#af5b5729c3f83c162285183f0e169522c":[11,0,4,10,0,4],
@@ -248,6 +249,5 @@ var NAVTREEINDEX16 =
 "thread_8h.html#a33700c0c7d592f044f723cc1c285ae73":[11,0,4,11,0,0],
 "thread_8h.html#a34e2056b80f1aa8bd2424f6e75614606":[11,0,4,11,0,4],
 "thread_8h.html#a36c3446c1c6c86a0cd375beb6724bbab":[11,0,4,11,10],
-"thread_8h.html#a381c935ba92cfa06b2206dca05462064":[11,0,4,11,2],
-"thread_8h.html#a41f23d172c89ca8271cf0a6ebab9119f":[11,0,4,11,31]
+"thread_8h.html#a381c935ba92cfa06b2206dca05462064":[11,0,4,11,2]
 };

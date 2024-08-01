@@ -26,7 +26,7 @@ var searchData=
   ['perfisim',['perfisim',['../maos_2types_8h.html#ab1e55b22aa28121388770cca6dc2190d',1,'sim_t']]],
   ['perm',['perm',['../maos_2types_8h.html#ae619aa0067b469b498ed74e50a748c35',1,'fdpcg_t']]],
   ['permhf',['permhf',['../maos_2types_8h.html#a05d5f70b4d0b8d2b5cc2aa2266f35270',1,'fdpcg_t']]],
-  ['petal',['petal',['../maos_2types_8h.html#a5c8c7ff63e454c0157c9a2b942ac4f5f',1,'powfs_t']]],
+  ['petal',['petal',['../maos_2types_8h.html#a0bf9e87fb2b7e2329747d5e2a9c264e6',1,'recon_t']]],
   ['petal_5fi0',['petal_i0',['../maos_2types_8h.html#a4b4215bb7179b9fd7b2c0d1a7fad18b3',1,'sim_t']]],
   ['petal_5fm',['petal_m',['../maos_2types_8h.html#addb063fbc8aafcda0d138759d96022fe',1,'sim_t']]],
   ['petaldtrat',['petaldtrat',['../parms_8h.html#a0fca2bb965487d48e28b716229565ce1',1,'recon_cfg_t']]],
