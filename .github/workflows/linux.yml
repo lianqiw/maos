@@ -25,7 +25,7 @@ jobs:
         mkdir build
         cd build 
         ../maos/configure --enable-release --enable-doxygen
-        make distcheck
+        make
         PATH+=":$HOME/bin"
         make doc
     - name: checkout gh-pages 
@@ -43,15 +43,16 @@ jobs:
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
 #    - name: make distcheck
-#      run: cd build && make distcheck
-#    - name: make check
-#      run: cd build && make check
+#      run: cd build && make distcheck #make distcheck also runs make check. 
+    - name: test
+      run: cd build && make check
     - uses: actions/upload-artifact@v4
       with:
         name: maos-linux
         path: |
+          $HOME/.aos/include
+          $HOME/.aos/lib*
           build/bin/
-          build/test/*
-          !build/test/*.o
+          build/test/
+          !build/test/*.*
           !build/*/Makefile
-    

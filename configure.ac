@@ -377,7 +377,8 @@ case "$host_os" in
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], [Suffix of dynamic load library])
 libdir="${ac_default_prefix}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version .
+LDFLAGS+=" -L${libdir} "
+export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath here since it will be hard coded into 3rd library during compilation
 CPPFLAGS+=" -I${ac_default_prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
 
 extract(){
@@ -505,10 +506,6 @@ AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
 	AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], [Disable built-in scheduler])
 	enable_websockets="no"
-fi
-
-if test "$system" = "win" ;then
-	LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
 fi
 
 case $host_cpu in
@@ -1134,8 +1131,8 @@ AC_CONFIG_FILES( [Makefile
 	test/Makefile
 	mex/Makefile
 ])
-
-LDFLAGS+=" $LDOPTS -no-fast-install -avoid-version"
+#put rpath here to avoid using it when compiling 3rd party library
+LDFLAGS+=" $LDOPTS -Wl,-rpath,${libdir} -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
 #echo LIBS=$LIBS

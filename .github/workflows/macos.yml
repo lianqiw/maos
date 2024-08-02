@@ -24,17 +24,17 @@ jobs:
         cd build 
         ../maos/configure --enable-release 
         make
-        #xattr -d com.apple.quarantine bin/* test/* #fix developer verification issue
-        make check
-
-#    - name: make distcheck #make distcheck fails in macos because of make check with error Abort trap: 6
-#      run: cd build && make distcheck #make distcheck invokes configure, make and make check
+#    - name: make distcheck
+#      run: cd build && make distcheck #make distcheck also runs make check. 
+    - name: test
+      run: cd build && make check
     - uses: actions/upload-artifact@v4
       with:
         name: maos-macos
         path: |
+          $HOME/.aos/include
+          $HOME/.aos/lib*
           build/bin/
-          build/test/*
-          !build/test/*.o
+          build/test/
+          !build/test/*.*
           !build/*/Makefile
-    
