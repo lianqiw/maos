@@ -24,7 +24,7 @@ jobs:
       run: |
         mkdir build
         cd build 
-        ../maos/configure --enable-release --enable-doxygen
+        ../maos/configure --enable-release --enable-doxygen --prefix=../external
         make
         PATH+=":$HOME/bin"
         make doc
@@ -50,8 +50,7 @@ jobs:
       with:
         name: maos-linux
         path: |
-          $HOME/.aos/include
-          $HOME/.aos/lib*
+          external
           build/bin/
           build/test/
           !build/test/*.*

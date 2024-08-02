@@ -22,7 +22,7 @@ jobs:
       run: |
         mkdir build 
         cd build 
-        ../maos/configure --enable-release 
+        ../maos/configure --enable-release --prefix=../external
         make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
@@ -32,8 +32,7 @@ jobs:
       with:
         name: maos-macos
         path: |
-          $HOME/.aos/include
-          $HOME/.aos/lib*
+          external
           build/bin/
           build/test/
           !build/test/*.*
