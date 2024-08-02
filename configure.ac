@@ -7,10 +7,9 @@ AM_INIT_AUTOMAKE([1.9.6 foreign -Wall no-define subdir-objects ])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 #The URL where misc supportive libaries are located.
 BASEURL="https://github.com/lianqiw/files/raw/master/"
-#${prefix} takes value ac_default_prefix (set by AC_PREFIX_DEFAULT) if user does not supply --prefix=dir
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix #prefix is set too late in configure.ac by default
 export PATH+=":${prefix}/bin" #add to PATH for doxygen if downloaded
-libdir="${prefix}/lib${libsuffix}" #external library installation location
-export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath in configure since it will be hard coded into 3rd library during compilation
 SRC_DIR=$(cd "$srcdir" && pwd) #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 BUILD_DIR=$(pwd)
 TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
@@ -378,6 +377,8 @@ case "$host_os" in
 		AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], [Suffix of dynamic load library])
+libdir="${prefix}/lib${libsuffix}" #external library installation location
+export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath in configure since it will be hard coded into 3rd library during compilation
 LDFLAGS+=" -L${libdir} "
 CPPFLAGS+=" -I${prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
 

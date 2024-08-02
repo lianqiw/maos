@@ -27,9 +27,7 @@ jobs:
         echo "${prefix}/bin" >> $GITHUB_PATH
         mkdir build
     - name: configure
-      run: cd build && ../maos/configure --enable-release --prefix=$prefix
-    - name: make
-      run: cd build && make
+      run: cd build && ../maos/configure --enable-release --enable-doxygen --prefix=$prefix
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
@@ -46,6 +44,8 @@ jobs:
         git config user.email lianqiw@gmail.com
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
+    - name: make
+      run: cd build && make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
     - name: test
