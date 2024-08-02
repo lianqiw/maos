@@ -20,9 +20,9 @@ jobs:
       run: cd maos && ./autogen.sh
     - name: configure and make
       run: |
-        mkdir build 
-        cd build 
-        ../maos/configure --enable-release --prefix=../external
+        prefix=$(pwd)/external
+        mkdir build && cd build
+        ../maos/configure --enable-release --prefix=$prefix
         make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 

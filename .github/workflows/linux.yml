@@ -22,9 +22,9 @@ jobs:
       run: cd maos && ./autogen.sh
     - name: distcheck
       run: |
-        mkdir build
-        cd build 
-        ../maos/configure --enable-release --enable-doxygen --prefix=../external
+        prefix=$(pwd)/external
+        mkdir build && cd build
+        ../maos/configure --enable-release --prefix=$prefix
         make
         PATH+=":$HOME/bin"
         make doc
