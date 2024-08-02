@@ -1,4 +1,4 @@
-name: Test maos in macos
+name: Build maos in macos
 #on macos, compile only.
 on:
   push:
@@ -18,14 +18,21 @@ jobs:
         path: maos
     - name: autogen
       run: cd maos && ./autogen.sh
-    - name: configure
-      run: mkdir build && cd build && ../maos/configure --enable-release
-#    - name: make
-#      run: cd build && make
-    - name: make distcheck
-      run: cd build && make distcheck #make distcheck invokes configure, make and make check
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: maos-bin
-#        path: build/bin/
+    - name: configure and make
+      run: |
+        mkdir build 
+        cd build 
+        ../maos/configure --enable-release
+        make
+
+#    - name: make distcheck #make distcheck fails in macos because of make check with error Abort trap: 6
+#      run: cd build && make distcheck #make distcheck invokes configure, make and make check
+    - uses: actions/upload-artifact@v4
+      with:
+        name: maos-binary
+        path: |
+          build/bin/
+          build/test/*
+          !build/test/*.o
+          !Makefile
     

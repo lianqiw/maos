@@ -46,8 +46,12 @@ jobs:
 #      run: cd build && make distcheck
 #    - name: make check
 #      run: cd build && make check
-#    - uses: actions/upload-artifact@v4
-#      with:
-#        name: maos-bin
-#        path: build/bin/
+    - uses: actions/upload-artifact@v4
+      with:
+        name: maos-binary
+        path: |
+          build/bin/
+          build/test/*
+          !build/test/*.o
+          !Makefile
     
