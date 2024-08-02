@@ -1,5 +1,5 @@
-name: C/C++ CI
-
+name: build and test maos
+#buil/test maos and update documentation gh-pages
 on:
   push:
     branches: [ master ]
