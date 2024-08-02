@@ -24,8 +24,8 @@ jobs:
       run: cd build && make
     - name: make distcheck
       run: cd build && make distcheck
-    - name: make check
-      run: cd build && make check || cat */test-suite.log
+      #in macos, make distcheck invokes make check
+      #do not include `|| cat */test-suite.log` which got rid of the exit status
     - uses: actions/upload-artifact@v4
       with:
         name: maos-bin
