@@ -195,7 +195,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--enable-binary], [Enable downloading precompiled library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 #echo enable_openmp="$enable_openmp"
 #echo openmp_default="$openmp_default"
@@ -413,7 +413,7 @@ fi
 download(){
 	fn="$2"
 	OUTDIR="$3"
-	if test "$enable_binary" = "no" -a -z "$4" ;then
+	if test "$enable_binary" != "yes" -a -z "$4" ;then
 		echo "Download pre-built binary is disabled"
 		return 1
 	fi
@@ -556,7 +556,7 @@ function set_lapack(){
 	case $type in
 	mkl*)
 		if test "$type" = "mkl-download";then
-			download MKL "mkl${libsuffix}.tar.bz2" ${ac_default_prefix}
+			download MKL "mkl${libsuffix}.tar.bz2" ${ac_default_prefix} 1
 		fi
 		#First use MKL if available.
 		if test "$host_cpu" = "x86_64" ;then
@@ -585,7 +585,7 @@ function set_lapack(){
 		;;
 	blis*) #slow. use mkl instead.
 		if test "$type" = "blis-download"; then
-			download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
+			download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix} 1
 		fi
 		if test "$has_omp" = "0" ;then
 			LAPACK="-lblis "
@@ -1103,7 +1103,7 @@ AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
 	if ! which doxygen ;then
-		download DOXYGEN doxygen${libsuffix}.tar.bz2 ${ac_default_prefix}
+		download DOXYGEN doxygen${libsuffix}.tar.bz2 ${ac_default_prefix} 1
 	fi
 	PATH+=":${HOME}/bin"
 	if ! which latex ;then

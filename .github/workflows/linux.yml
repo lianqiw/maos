@@ -48,10 +48,10 @@ jobs:
 #      run: cd build && make check
     - uses: actions/upload-artifact@v4
       with:
-        name: maos-binary
+        name: maos-linux
         path: |
           build/bin/
           build/test/*
           !build/test/*.o
-          !Makefile
+          !build/*/Makefile
     
