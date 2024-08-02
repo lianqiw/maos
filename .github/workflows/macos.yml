@@ -1,0 +1,33 @@
+name: Test maos compilation in macos
+#on macos, compile only.
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    if: github.repository == 'lianqiw/maos'
+    runs-on: macos-latest
+    
+    steps:
+    - name: checkout maos
+      uses: actions/checkout@v4
+      with:
+        path: maos
+    - name: autogen
+      run: cd maos && ./autogen.sh
+    - name: configure
+      run: mkdir build && cd build && ../maos/configure --enable-release
+    - name: make
+      run: cd build && make
+    - name: make distcheck
+      run: cd build && make distcheck
+    - name: make check
+      run: cd build && make check || cat */test-suite.log
+    - uses: actions/upload-artifact@v4
+      with:
+        name: maos-bin
+        path: build/bin/
+    
