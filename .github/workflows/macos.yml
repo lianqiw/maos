@@ -18,13 +18,14 @@ jobs:
         path: maos
     - name: autogen
       run: cd maos && ./autogen.sh
-    - name: configure
+    - name: environment
       run: |
-        prefix=$(pwd)/external
-        PATH+=":${prefix}/bin"
-        LD_LIBRARY_PATH+=":${prefix}/lib*"
-        mkdir build && cd build
-        ../maos/configure --enable-release --prefix=$prefix
+        echo prefix=$(pwd)/external >> $GITHUB_ENV
+        echo LD_LIBRARY_PATH="${prefix}/lib*" >> $GITHUB_ENV
+        echo "${prefix}/bin" >> $GITHUB_PATH
+        mkdir build
+    - name: configure
+      run: cd build && ../maos/configure --enable-release --prefix=$prefix
     - name: make
       run: cd build && make
 #    - name: make distcheck
