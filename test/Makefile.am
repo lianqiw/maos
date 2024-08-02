@@ -19,7 +19,7 @@ TESTS=$(bin_PROGRAMS) test_maos
 
 test_maos:
 	@echo $(SRC_DIR)/scripts/maos_check.sh 5 > test_maos && chmod u+x test_maos
-CLEANFILES=test_maos maos_check.*
+CLEANFILES=test_maos maos_check_5.err maos_check_5.log maos_check_5.res maos_check_5.tmp
 
 clean-local:
 	@rm -rf *.bin *.fits
