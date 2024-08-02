@@ -1,4 +1,4 @@
-name: build and test maos
+name: Test maos in Linux and build documentation
 #buil/test maos and update documentation gh-pages
 on:
   push:
@@ -20,11 +20,11 @@ jobs:
         path: maos
     - name: autogen
       run: cd maos && ./autogen.sh
-    - name: configure
-      run: mkdir build && cd build && ../maos/configure --enable-release --enable-doxygen
-    - name: make
+    - name: distcheck
       run: |
+        mkdir build
         cd build 
+        ../maos/configure --enable-release --enable-doxygen
         make distcheck
         PATH+=":$HOME/bin"
         make doc

@@ -1,4 +1,4 @@
-name: Test maos compilation in macos
+name: Test maos in macos
 #on macos, compile only.
 on:
   push:
