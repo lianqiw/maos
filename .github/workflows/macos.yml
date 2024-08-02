@@ -24,7 +24,7 @@ jobs:
         mkdir build && cd build
         ../maos/configure --enable-release --prefix=$prefix
     - name: make
-        cd build && make
+      run: cd build && make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
     - name: test

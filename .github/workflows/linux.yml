@@ -26,8 +26,9 @@ jobs:
         mkdir build && cd build
         ../maos/configure --enable-release --prefix=$prefix
     - name: make
-        cd build && make
+      run: cd build && make
     - name: make doc
+      run: |
         PATH+=":$HOME/bin"
         make doc
     - name: checkout gh-pages 
