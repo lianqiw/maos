@@ -21,7 +21,7 @@ jobs:
     - name: environment
       run: |
         echo prefix=$(pwd)/external >> $GITHUB_ENV
-        echo LD_LIBRARY_PATH="${prefix}/lib*" >> $GITHUB_ENV
+        echo LD_LIBRARY_PATH+=":${prefix}/lib*" >> $GITHUB_ENV
         echo "${prefix}/bin" >> $GITHUB_PATH
         mkdir build
     - name: configure
@@ -30,8 +30,6 @@ jobs:
       run: cd build && make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
-    - name: test
-      run: cd build && make check
     - uses: actions/upload-artifact@v4
       with:
         name: maos-macos
@@ -43,3 +41,5 @@ jobs:
           build/test/
           !build/test/*.*
           !build/*/Makefile
+    - name: test #put test in the end so that artifacts are uploaded even if test fails
+      run: cd build && make check

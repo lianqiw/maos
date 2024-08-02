@@ -23,11 +23,13 @@ jobs:
     - name: environment
       run: |
         echo prefix=$(pwd)/external >> $GITHUB_ENV
-        echo LD_LIBRARY_PATH="${prefix}/lib*" >> $GITHUB_ENV
+        echo LD_LIBRARY_PATH+=":${prefix}/lib*" >> $GITHUB_ENV
         echo "${prefix}/bin" >> $GITHUB_PATH
         mkdir build
     - name: configure
       run: cd build && ../maos/configure --enable-release --enable-doxygen --prefix=$prefix
+    - name: make
+      run: cd build && make
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
@@ -37,19 +39,15 @@ jobs:
         path: doc
     - name: update doc and commit
       run: | 
-        cd  doc
+        cd doc
         rm -rf *
         cp -a ../build/doxygen-doc/html/* .
         git config user.name Lianqi Wang
         git config user.email lianqiw@gmail.com
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
-    - name: make
-      run: cd build && make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
-    - name: test
-      run: cd build && make check
     - uses: actions/upload-artifact@v4
       with:
         name: maos-linux
@@ -61,3 +59,5 @@ jobs:
           build/test/
           !build/test/*.*
           !build/*/Makefile
+    - name: test #put test in the end so that artifacts are uploaded even if test fails
+      run: cd build && make check
