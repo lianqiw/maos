@@ -1,7 +1,7 @@
 AM_CFLAGS=-I $(top_srcdir) -g -O0
 LDADD=../lib/libaos.la $(LDEXE_FULL) 
 
-bin_PROGRAMS=test_maos test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
+bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 	test_fft test_proj test_loc test_chol test_accphi	\
 	test_fd test_atm test_fractal test_fits
 #if USE_CUDA
@@ -14,8 +14,8 @@ bin_PROGRAMS+=cmocka_mat cmocka_matmath cmocka_locfft cmocka_blas \
 cmocka_readstr cmocka_threadpool cmocka_psd
 LDADD+=-lcmocka
 endif
-
-TESTS=$(bin_PROGRAMS)
+#list test_maos in TESTS instead of bin_PROGRAMS to avoid `make distcheck` error of no rule to make test_maos.c
+TESTS=$(bin_PROGRAMS) test_maos 
 
 test_maos:
 	@echo $(SRC_DIR)/scripts/maos_check.sh 5 > test_maos && chmod u+x test_maos
