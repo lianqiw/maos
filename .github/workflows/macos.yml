@@ -21,7 +21,7 @@ jobs:
     - name: environment
       run: |
         echo prefix=$(pwd)/external >> $GITHUB_ENV
-        echo LD_LIBRARY_PATH+=":${prefix}/lib*" >> $GITHUB_ENV
+        echo LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${prefix}/lib*" >> $GITHUB_ENV
         echo "${prefix}/bin" >> $GITHUB_PATH
         mkdir build
     - name: configure
@@ -42,4 +42,7 @@ jobs:
           !build/test/*.*
           !build/*/Makefile
     - name: test #put test in the end so that artifacts are uploaded even if test fails
-      run: cd build && make check
+      run: |
+        echo $PATH
+        echo $LD_LIBRARY_PATH
+        cd build && make check

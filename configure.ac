@@ -567,9 +567,9 @@ function set_lapack(){
 			LAPACK+=" -lmkl_sequential "
 		else
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
-				LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS" #OPENMP_CFLAGS was already in CFLAGS
+				LAPACK+=" -lmkl_intel_thread"
 			else #GCC or others. Notice that clang can work with either thread model.
-				LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+				LAPACK+=" -lmkl_gnu_thread"
 			fi
 		fi
 		LAPACK+=" -lmkl_core"
