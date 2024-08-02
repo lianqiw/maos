@@ -20,14 +20,12 @@ jobs:
       run: cd maos && ./autogen.sh
     - name: configure
       run: mkdir build && cd build && ../maos/configure --enable-release
-    - name: make
-      run: cd build && make
+#    - name: make
+#      run: cd build && make
     - name: make distcheck
-      run: cd build && make distcheck
-      #in macos, make distcheck invokes make check
-      #do not include `|| cat */test-suite.log` which got rid of the exit status
-    - uses: actions/upload-artifact@v4
-      with:
-        name: maos-bin
-        path: build/bin/
+      run: cd build && make distcheck #make distcheck invokes configure, make and make check
+#    - uses: actions/upload-artifact@v4
+#      with:
+#        name: maos-bin
+#        path: build/bin/
     
