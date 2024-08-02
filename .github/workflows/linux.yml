@@ -1,5 +1,5 @@
-name: Test maos in Linux and build documentation
-#buil/test maos and update documentation gh-pages
+name: Build and test maos in Linux
+#Also updates documentation with branch gh-pages
 on:
   push:
     branches: [ master ]
@@ -20,12 +20,14 @@ jobs:
         path: maos
     - name: autogen
       run: cd maos && ./autogen.sh
-    - name: distcheck
+    - name: configure
       run: |
         prefix=$(pwd)/external
         mkdir build && cd build
         ../maos/configure --enable-release --prefix=$prefix
-        make
+    - name: make
+        cd build && make
+    - name: make doc
         PATH+=":$HOME/bin"
         make doc
     - name: checkout gh-pages 

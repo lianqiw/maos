@@ -1,5 +1,5 @@
-name: Build maos in macos
-#on macos, compile only.
+name: Build and test maos in macos arm
+
 on:
   push:
     branches: [ master ]
@@ -18,12 +18,13 @@ jobs:
         path: maos
     - name: autogen
       run: cd maos && ./autogen.sh
-    - name: configure and make
+    - name: configure
       run: |
         prefix=$(pwd)/external
         mkdir build && cd build
         ../maos/configure --enable-release --prefix=$prefix
-        make
+    - name: make
+        cd build && make
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
     - name: test
