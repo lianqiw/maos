@@ -1134,9 +1134,7 @@ AC_CONFIG_FILES( [Makefile
 ])
 #put rpath here to avoid using it when compiling 3rd party library
 LDFLAGS+=" $LDOPTS -no-fast-install -avoid-version"
-if test "$enable_release" != "yes" ;then
-	LDFLAGS+=" -Wl,-rpath,${libdir}" #to run artifacts from github workflow, we cannot use rpath
-fi
+LDFLAGS+=" -Wl,-rpath,${libdir}" #to run artifacts from github workflow avoid using rpath
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
 #echo LIBS=$LIBS
