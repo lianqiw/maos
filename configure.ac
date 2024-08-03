@@ -579,7 +579,7 @@ function set_lapack(){
 			LAPACK=${LAPACK// /,}
 			LAPACK=${LAPACK//,,/,}
 		fi
-		LAPACK+=" -lpthread -ldl"
+		LAPACK+=" $OPENMP_CFLAGS -lpthread -ldl"
 		;;
 	blis*) #slow. use mkl instead.
 		if test "$type" = "blis-download"; then
