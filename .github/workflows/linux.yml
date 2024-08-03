@@ -1,0 +1,62 @@
+name: Build and test maos in Linux
+#Also updates documentation with branch gh-pages
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    if: github.repository == 'lianqiw/maos'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: setup graphviz
+      run: sudo apt-get install -y graphviz
+    - name: checkout maos
+      uses: actions/checkout@v4
+      with:
+        path: maos
+    - name: autogen
+      run: cd maos && ./autogen.sh
+    - name: configure and make
+      run: |
+        src=$(pwd)/maos
+        prefix=$(pwd)/external
+        PATH+=${prefix}/bin
+        mkdir build && cd build
+        $src/configure --enable-release --enable-doxygen --prefix=$prefix
+        make -j4
+    - name: make doc
+      run: cd build && make doc
+    - name: checkout gh-pages 
+      uses: actions/checkout@v4
+      with:
+        ref: gh-pages
+        path: doc
+    - name: update doc and commit
+      run: | 
+        cd doc
+        rm -rf *
+        cp -a ../build/doxygen-doc/html/* .
+        git config user.name Lianqi Wang
+        git config user.email lianqiw@gmail.com
+        git add .
+        git commit -m "Automatically updated" && git push || echo "no need to update doc"
+#    - name: make distcheck
+#      run: cd build && make distcheck #make distcheck also runs make check. 
+    - uses: actions/upload-artifact@v4
+      with:
+        name: maos-linux
+        path: |
+          external
+          build/config.h
+          build/config.log
+          build/bin/
+          build/test/
+          !build/test/*.*
+          !build/*/Makefile
+    - name: test #put test in the end so that artifacts are uploaded even if test fails
+      run: |
+        cd build && make check

@@ -8,7 +8,8 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 #The URL where misc supportive libaries are located.
 BASEURL="https://github.com/lianqiw/files/raw/master/"
 
-PATH+=":${ac_default_prefix}/bin"
+test "x$prefix" = xNONE && prefix=$ac_default_prefix #prefix is set too late in configure.ac by default
+export PATH+=":${prefix}/bin" #add to PATH for doxygen if downloaded
 SRC_DIR=$(cd "$srcdir" && pwd) #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 BUILD_DIR=$(pwd)
 TMP_DIR="${BUILD_DIR}/external" #temporary directory for compiling
@@ -195,7 +196,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Enable downloading precompiled library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 #echo enable_openmp="$enable_openmp"
 #echo openmp_default="$openmp_default"
@@ -376,9 +377,10 @@ case "$host_os" in
 		AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], [Suffix of dynamic load library])
-libdir="${ac_default_prefix}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${libdir} -Wl,-rpath,${libdir}" #-avoid-version .
-CPPFLAGS+=" -I${ac_default_prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
+libdir="${prefix}/lib${libsuffix}" #external library installation location
+export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath in configure since it will be hard coded into 3rd library during compilation
+LDFLAGS+=" -L${libdir} "
+CPPFLAGS+=" -I${prefix}/include " #use CPPFLAGS so that the preprocessor can also use it.
 
 extract(){
 	fn="$1"
@@ -457,9 +459,9 @@ compile(){
 		export CPPFLAGS="$CPPFLAGS" 
 		ans=0
 		if test -f configure ;then
-			(./configure --enable-static --enable-shared --libdir=${libdir} $@ --prefix=${ac_default_prefix} && make -j4 install) > $fnlog2 2>&1|| ans=1
+			(./configure --enable-static --enable-shared --prefix=${prefix} --libdir=${libdir} $@ && make -j4 install) > $fnlog2 2>&1|| ans=1
 		elif test -f CMakeLists.txt ;then
-		 	(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${ac_default_prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install) >$fnlog2 2>&1|| ans=1
+		 	(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install) >$fnlog2 2>&1|| ans=1
 		else
 			echo "Unknown compile system." 
 			ans=1
@@ -476,13 +478,13 @@ AS_IF([test "$system" = "apple"], [
 	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 	AS_IF([test "$enable_openmp" = "yes" ], [
 		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${ac_default_prefix}
+			download LIBOMP "libomp${libsuffix}.tar.bz2" ${prefix}
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
 		AS_IF([test "$has_omp" = "0" ], [
 			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
-			compile LIBOMP "libomp.tar.xz" ${ac_default_prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
+			compile LIBOMP "libomp.tar.xz" ${prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}
 			unset ac_cv_lib_omp_omp_set_num_threads
 			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
 		])
@@ -505,10 +507,6 @@ AM_CONDITIONAL(USE_SCHEDULER, [test "$enable_scheduler" != "no"])
 if test "$enable_scheduler" = "no" ;then
 	AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], [Disable built-in scheduler])
 	enable_websockets="no"
-fi
-
-if test "$system" = "win" ;then
-	LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
 fi
 
 case $host_cpu in
@@ -556,7 +554,7 @@ function set_lapack(){
 	case $type in
 	mkl*)
 		if test "$type" = "mkl-download";then
-			download MKL "mkl${libsuffix}.tar.bz2" ${ac_default_prefix}
+			download MKL "mkl${libsuffix}.tar.bz2" ${prefix} 1
 		fi
 		#First use MKL if available.
 		if test "$host_cpu" = "x86_64" ;then
@@ -569,9 +567,9 @@ function set_lapack(){
 			LAPACK+=" -lmkl_sequential "
 		else
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
-				LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS" #OPENMP_CFLAGS was already in CFLAGS
+				LAPACK+=" -lmkl_intel_thread"
 			else #GCC or others. Notice that clang can work with either thread model.
-				LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+				LAPACK+=" -lmkl_gnu_thread"
 			fi
 		fi
 		LAPACK+=" -lmkl_core"
@@ -585,7 +583,7 @@ function set_lapack(){
 		;;
 	blis*) #slow. use mkl instead.
 		if test "$type" = "blis-download"; then
-			download blis "blis${libsuffix}.tar.bz2" ${ac_default_prefix}
+			download blis "blis${libsuffix}.tar.bz2" ${prefix} 1
 		fi
 		if test "$has_omp" = "0" ;then
 			LAPACK="-lblis "
@@ -662,7 +660,7 @@ if test "$has_fftw" = "builtin";then
 else
 	if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
-		download FFTW "fftw${libsuffix}.tar.bz2" ${ac_default_prefix}
+		download FFTW "fftw${libsuffix}.tar.bz2" ${prefix}
 		unset ac_cv_lib_fftw3_fftw_execute
 		AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
 
@@ -721,7 +719,7 @@ AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR([FFT single precis
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
 if test "$has_chol" = "no" ;then
-	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${ac_default_prefix}
+	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${prefix}
 	unset ac_cv_lib_cholmod_${chol_fun}
 	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 
@@ -745,7 +743,7 @@ if test "$enable_websockets" != "no" ;then
 	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 	AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
 	if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
-		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${ac_default_prefix}
+		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${prefix}
 		unset ac_cv_lib_websockets_lws_service
 		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 
@@ -776,7 +774,7 @@ if test "$enable_cmocka" != "no" ;then
 		#include <stdint.h>
 		#include <setjmp.h>])
 	if test "$enable_cmocka" = "no" ;then
-		download CMOCKA cmocka${libsuffix}.tar.bz2 ${ac_default_prefix}
+		download CMOCKA cmocka${libsuffix}.tar.bz2 ${prefix}
 		unset ac_cv_lib_cmocka_mock_assert
 		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 
@@ -1103,9 +1101,9 @@ AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
 	if ! which doxygen ;then
-		download DOXYGEN doxygen${libsuffix}.tar.bz2 ${ac_default_prefix}
+		download DOXYGEN doxygen${libsuffix}.tar.bz2 ${prefix} 1
 	fi
-	PATH+=":${HOME}/bin"
+
 	if ! which latex ;then
 		$wget "https://yihui.org/gh/tinytex/tools/install-unx.sh" $wgetoutput - | sh
 	fi
@@ -1134,8 +1132,9 @@ AC_CONFIG_FILES( [Makefile
 	test/Makefile
 	mex/Makefile
 ])
-
+#put rpath here to avoid using it when compiling 3rd party library
 LDFLAGS+=" $LDOPTS -no-fast-install -avoid-version"
+LDFLAGS+=" -Wl,-rpath,${libdir}" #to run artifacts from github workflow avoid using rpath
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
 #echo LIBS=$LIBS

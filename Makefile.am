@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4 --install
 AM_MAKEFLAGS=--no-print-directory
-
+AM_DISTCHECK_CONFIGURE_FLAGS=--enable-release 
 SUBDIRS=sys math lib cuda maos skyc tools test mex
 
 # include doxygen definition.
