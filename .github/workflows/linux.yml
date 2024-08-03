@@ -24,7 +24,7 @@ jobs:
       run: |
         prefix=$(pwd)/external
         echo prefix=$prefix>> $GITHUB_ENV
-        echo LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${prefix}/lib*" >> $GITHUB_ENV
+        echo LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${prefix}/lib64" >> $GITHUB_ENV
         echo "${prefix}/bin" >> $GITHUB_PATH
         mkdir build
     - name: configure
