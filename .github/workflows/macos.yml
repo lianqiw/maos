@@ -24,7 +24,7 @@ jobs:
         prefix=$(pwd)/external
         PATH+=${prefix}/bin
         mkdir build && cd build
-        $(src)/configure --enable-release --prefix=$prefix
+        $src/configure --enable-release --prefix=$prefix
         make -j4
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
