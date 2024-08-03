@@ -459,7 +459,7 @@ compile(){
 		export CPPFLAGS="$CPPFLAGS" 
 		ans=0
 		if test -f configure ;then
-			(./configure --enable-static --enable-shared --prefix=${prefix} $@ && make -j4 install) > $fnlog2 2>&1|| ans=1
+			(./configure --enable-static --enable-shared --prefix=${prefix} --libdir=${libdir} $@ && make -j4 install) > $fnlog2 2>&1|| ans=1
 		elif test -f CMakeLists.txt ;then
 		 	(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install) >$fnlog2 2>&1|| ans=1
 		else
