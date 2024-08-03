@@ -27,8 +27,7 @@ jobs:
         PATH+=${prefix}/bin
         mkdir build && cd build
         $(src)/configure --enable-release --enable-doxygen --enable-binary --prefix=$prefix
-    - name: make
-      run: cd build && make
+        make -j4
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
