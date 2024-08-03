@@ -196,7 +196,7 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
-AC_ARG_ENABLE(binary, AS_HELP_STRING([--enable-binary], [Enable downloading precompiled library]))
+AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Enable downloading precompiled library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 #echo enable_openmp="$enable_openmp"
 #echo openmp_default="$openmp_default"
@@ -415,7 +415,7 @@ fi
 download(){
 	fn="$2"
 	OUTDIR="$3"
-	if test "$enable_binary" != "yes" -a -z "$4" ;then
+	if test "$enable_binary" = "no" -a -z "$4" ;then
 		echo "Download pre-built binary is disabled"
 		return 1
 	fi
