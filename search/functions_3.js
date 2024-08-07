@@ -143,7 +143,6 @@ var searchData=
   ['draw_5fadd',['draw_add',['../draw_8h.html#a6be0be645ac1bb71cbbce02ddaf959c8',1,'draw.c']]],
   ['draw_5fcurrent',['draw_current',['../draw_8h.html#adc80c25521f9db8258abbaf67cba49b0',1,'draw.c']]],
   ['draw_5ffinal',['draw_final',['../draw_8h.html#ab01d0d9c0f4f57ef56695fc9a7aa3efe',1,'draw.c']]],
-  ['draw_5fhelper',['draw_helper',['../draw_8h.html#a5e2f206b380b5b9a10b87b7d3d80ccc8',1,'draw.c']]],
   ['drawgrad',['drawgrad',['../draw_8h.html#a8a3c16ce1fe8b6d8f602ef57ad1a52c7',1,'draw.c']]],
   ['drawints',['drawints',['../draw_8h.html#aedaa6bb4db934b5d9d216654af18b8f5',1,'draw.c']]],
   ['drawloc',['drawloc',['../draw_8h.html#ab9f58d1807e52233e03d6df8d30af7e8',1,'draw.c']]],

@@ -1,5 +1,7 @@
 var NAVTREEINDEX16 =
 {
+"sockio_8h.html#aa4ce77a5c9b05e430798658fe328d4ec":[11,0,4,10,13],
+"sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d":[11,0,4,10,5],
 "sockio_8h.html#ac7fb31521bed5d14292784874f15be50":[11,0,4,10,1],
 "sockio_8h.html#ad2364ca481e12db6b45009478899970f":[11,0,4,10,11],
 "sockio_8h.html#aec87592c4fbf2ad03b9cc5f1cd03fe2a":[11,0,4,10,2],
@@ -247,7 +249,5 @@ var NAVTREEINDEX16 =
 "thread_8h.html#a230a4715e7482e66162f3bf1a95202a2":[11,0,4,11,19],
 "thread_8h.html#a23d24728f786c3c99baae85dfde82b19":[11,0,4,11,30],
 "thread_8h.html#a33700c0c7d592f044f723cc1c285ae73":[11,0,4,11,0,0],
-"thread_8h.html#a34e2056b80f1aa8bd2424f6e75614606":[11,0,4,11,0,4],
-"thread_8h.html#a36c3446c1c6c86a0cd375beb6724bbab":[11,0,4,11,10],
-"thread_8h.html#a381c935ba92cfa06b2206dca05462064":[11,0,4,11,2]
+"thread_8h.html#a34e2056b80f1aa8bd2424f6e75614606":[11,0,4,11,0,4]
 };

@@ -19,6 +19,7 @@ var classcurecon__t =
     [ "mvm", "classcurecon__t.html#a46f4d3d9c248012b9314d82595459f68", null ],
     [ "tomo_test", "classcurecon__t.html#afb8439d7c9d12317e6215521c6f3815a", null ],
     [ "fit_test", "classcurecon__t.html#a88618c5ed2037e34888ae4c159ea5a5d", null ],
+    [ "copy_opdr", "classcurecon__t.html#a1a180a8af16905e11bff005a2786669e", null ],
     [ "gpu_update_recon_control", "classcurecon__t.html#ab06b75a66366d4294a6d5e1d4f9b8478", null ],
     [ "gpu_update_recon_cn2", "classcurecon__t.html#aeb9c5d773c8820e2b6c05c5ff1c58f4d", null ],
     [ "grid", "classcurecon__t.html#a9bd713d23ad6f0f485d19c81c0aa569e", null ],

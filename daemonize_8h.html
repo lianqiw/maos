@@ -127,8 +127,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa7efd3a64d0b0853540f2403f926644a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9707696da35911195b46dff9db3531bc"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a9707696da35911195b46dff9db3531bc">find_exe</a> (const char *name)</td></tr>
 <tr class="separator:a9707696da35911195b46dff9db3531bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8862ff7564bee0fe564f283b1c263672"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672">spawn_process</a> (const char *exename, const char *arg, const char *path)</td></tr>
-<tr class="separator:a8862ff7564bee0fe564f283b1c263672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29e658343992b41840bc0b2f1d6d67df"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a29e658343992b41840bc0b2f1d6d67df">spawn_process</a> (const char *exename, const char *const *args, const char *path)</td></tr>
+<tr class="separator:a29e658343992b41840bc0b2f1d6d67df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Handling process creation. </p>
@@ -143,7 +143,7 @@ Functions</h2></td></tr>
           <td class="memname">int single_instance_daemonize </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>lockfolder_in</em>, </td>
+          <td class="paramname"><em>lockfolder</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -349,8 +349,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8862ff7564bee0fe564f283b1c263672"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8862ff7564bee0fe564f283b1c263672">&#9670;&nbsp;</a></span>spawn_process()</h2>
+<a id="a29e658343992b41840bc0b2f1d6d67df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29e658343992b41840bc0b2f1d6d67df">&#9670;&nbsp;</a></span>spawn_process()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -364,7 +364,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const char *&#160;</td>
+          <td class="paramtype">const char *const *&#160;</td>
           <td class="paramname"><em>args</em>, </td>
         </tr>
         <tr>

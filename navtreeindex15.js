@@ -1,5 +1,7 @@
 var NAVTREEINDEX15 =
 {
+"smath_8h.html#a074a1090b3ce0f608da55b99e2f264b5":[11,0,3,8,138],
+"smath_8h.html#a07c26df59c5ff15d6d367e436a62e8d5":[11,0,3,8,191],
 "smath_8h.html#a07c7b9e09830613fe2858ef104f4f4cd":[11,0,3,8,142],
 "smath_8h.html#a0812c2f2665574e9977f496f8accc6b2":[11,0,3,8,2],
 "smath_8h.html#a08dc436202e9d61194f4cfe85fffb23e":[11,0,3,8,156],
@@ -247,7 +249,5 @@ var NAVTREEINDEX15 =
 "sockio_8h.html#a70c5e49d5651e03eaf83f87fabc76c6f":[11,0,4,10,0,1],
 "sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d":[11,0,4,10,8],
 "sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f":[11,0,4,10,9],
-"sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339":[11,0,4,10,7],
-"sockio_8h.html#aa4ce77a5c9b05e430798658fe328d4ec":[11,0,4,10,13],
-"sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d":[11,0,4,10,5]
+"sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339":[11,0,4,10,7]
 };

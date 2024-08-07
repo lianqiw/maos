@@ -164,7 +164,7 @@ var searchData=
   ['sodium_5ffit',['sodium_fit',['../powfs__utils_8h.html#ad86ea5d181ec954223605dd5d857f940',1,'powfs_utils.c']]],
   ['sodium_5ffit_5fwrap',['sodium_fit_wrap',['../powfs__utils_8h.html#a78515cd482dfbcfc21ce21ad6a1275c7',1,'powfs_utils.c']]],
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
-  ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
+  ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a29e658343992b41840bc0b2f1d6d67df',1,'daemonize.c']]],
   ['spinv',['spinv',['../smath_8h.html#a67009bc4ed8b96a8080165fb0da35040',1,'stmp.c']]],
   ['sread_5fmmap',['sread_mmap',['../smath_8h.html#a327839514714faab26fdc51dff170dd8',1,'stmp.c']]],
   ['sreaddata',['sreaddata',['../smath_8h.html#a34f24ce33f4c2f938d90756d90e51bf3',1,'stmp.c']]],

@@ -236,7 +236,7 @@ var searchData=
   ['sodium_5ffit_5fwrap',['sodium_fit_wrap',['../powfs__utils_8h.html#a78515cd482dfbcfc21ce21ad6a1275c7',1,'powfs_utils.c']]],
   ['sodiumprep',['sodiumprep',['../maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f',1,'powfs_t']]],
   ['spatial_5fpsd',['spatial_psd',['../turbulence_8h.html#a003ba466f6608495ae22890661663e8e',1,'turbulence.c']]],
-  ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a8862ff7564bee0fe564f283b1c263672',1,'daemonize.c']]],
+  ['spawn_5fprocess',['spawn_process',['../daemonize_8h.html#a29e658343992b41840bc0b2f1d6d67df',1,'daemonize.c']]],
   ['spchol',['spchol',['../chol_8h.html#structspchol',1,'']]],
   ['spinv',['spinv',['../smath_8h.html#a67009bc4ed8b96a8080165fb0da35040',1,'stmp.c']]],
   ['split',['split',['../parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709',1,'recon_cfg_t']]],
