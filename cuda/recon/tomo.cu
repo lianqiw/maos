@@ -38,7 +38,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 	real pos=saloc->dx/ploc->dx;
 	real xdiff=(ploc->locx[0]-saloc->locx[0])/ploc->dx;
 	real ydiff=(ploc->locy[0]-saloc->locy[0])/ploc->dy;
-	if((fabs(pos-1)<1e-7||fabs(pos-2)<1e-7) 
+	if((fabs(pos-1)<EPS||fabs(pos-2)<EPS) 
 		&& fabs(xdiff-round(xdiff))<EPS && fabs(ydiff-round(ydiff))<EPS){//These well aligned cases are accelerated with matrix-free approach.
 		dbg("GP uses matrix-free approach.\n");
 		dsp* GPt=dsptrans(GP);
@@ -69,7 +69,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 				   with the subaperture edge, the coupled points are
 				   confined within the subaperture.
 				*/
-				if((zx<0||zx>zmax||zy<0||zy>zmax)&&fabs(px[ir])>1e-7){
+				if((zx<0||zx>zmax||zy<0||zy>zmax)&&fabs(px[ir])>EPS){
 					warning("isa=%d, G(%d, %d)=%g is not zero. ploc is at (%g,%g), saloc is at (%g, %g)\n", isa, zx, zy, px[ir], lx, ly, sx, sy);
 				}
 				if(zx<0) zx=0;

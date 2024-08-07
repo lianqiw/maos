@@ -93,7 +93,11 @@ typedef spint Spint;
 typedef int Spint;
 #endif
 #undef EPS
-#define EPS 1.e-5 //Float has limited, 6 digit, resolution.
+#if CUDA_DOUBLE && !CPU_SINGLE
+#define EPS 1.e-16
+#else
+#define EPS 1.e-6
+#endif
 typedef Real Real2[2];
 int mycudaFree(void* p);//Unreference deduplicated memory
 int mycudaMalloc(void** p, size_t size);

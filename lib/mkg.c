@@ -50,7 +50,7 @@
 #define FLOOR(A) (fabs(A-round(A))<TOL?(int)round(A):(int)floor(A))
 #define DBLNZ(A) (fabs(A)>TOL)
 
-static const real TOL=5.e-16;
+static const real TOL=10*EPS;
 #define OFF 1 /*0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach. */
 
 /*
@@ -252,7 +252,7 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 	real* restrict px[2];
 	long count[2];
 	for(iw=0; iw<2; iw++){
-		nzmax[iw]=nsa*(dsa/dx)*16;/*four row in each side. */
+		nzmax[iw]=nsa*pow(dsa/dx+3,2);
 		GS0t[iw]=dspnew(xloc->nloc, nsa, nzmax[iw]);
 		pp[iw]=GS0t[iw]->pp;
 		pi[iw]=GS0t[iw]->pi;
@@ -356,6 +356,7 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 					}
 					for(iw=0; iw<2; iw++){
 						if(count[iw]+4>nzmax[iw]){
+							dbg("Increasing size of GP.\n");
 							nzmax[iw]=nzmax[iw]*2;
 							dspsetnzmax(GS0t[iw], nzmax[iw]);
 							pp[iw]=GS0t[iw]->pp;
@@ -401,14 +402,14 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 									if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)>TOL){\
 										/*info("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/\
 										for(itmp=pp[iw][isa]; itmp<count[iw]; itmp++){\
-										if(pi[iw][itmp]==iphi){\
-											px[iw][itmp]+=wt0;\
-											break;\
+											if(pi[iw][itmp]==iphi){\
+												px[iw][itmp]+=wt0;\
+												break;\
+											}\
 										}\
-									}\
-									if(itmp == count[iw]){/*not found*/\
-										pi[iw][count[iw]]=iphi;\
-										px[iw][count[iw]++]=wt0;\
+										if(itmp == count[iw]){/*not found*/\
+											pi[iw][count[iw]]=iphi;\
+											px[iw][count[iw]++]=wt0;\
 										}\
 									}\
 								}
@@ -431,11 +432,19 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 			ampsum=0;
 		}
 		for(iw=0; iw<2; iw++){
+			int jj=pp[iw][isa];
 			for(int ii=pp[iw][isa]; ii<count[iw]; ii++){
 				px[iw][ii]*=ampsum;
+				if(fabs(px[iw][ii])>TOL){//<TOL after accumulation, remove.
+					if(jj!=ii){
+						px[iw][jj]=px[iw][ii];
+						pi[iw][jj]=pi[iw][ii];
+					}
+					jj++;
+				}
 			}
+			count[iw]=jj;
 		}
-			/*raise(SIGSEGV); */
 	}/*isa*/
 	for(iw=0; iw<2; iw++){
 		if(count[iw]>nzmax[iw]){

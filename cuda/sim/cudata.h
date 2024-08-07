@@ -75,6 +75,7 @@ public:
 
     cumapcell dmreal;/**<DM: array of cumap_t */
     cumapcell dmproj;/**<DM: array of cumap_t */
+	cumapcell opdr;  /**<Copied from curecon.opdr_map for evl.tomo */
     //int nps; /**<number of phase screens*/
     /*for perfevl */
     cuperf_t perf;

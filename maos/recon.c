@@ -78,14 +78,14 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 		}
 		TIC_tm; tic_tm;
 #if USE_CUDA
-		if(parms->gpu.tomo&&parms->ndm!=0){
+		if(parms->gpu.tomo){
 			gpu_tomo(simu, gradin);
 		} else
 #endif
 			P(P(simu->cgres,0),isim)=muv_solve(&simu->opdr, &recon->RL, &recon->RR, gradin);
 		toc_tm("Tomography");
 	}
-	if(parms->ndm>0 && !parms->evl.tomo){
+	if(parms->ndm>0){//we still do DM fitting in evl.tomo so that WFS works in closed loop.
 		TIC_tm; tic_tm;
 #if USE_CUDA
 		if(parms->gpu.fit){

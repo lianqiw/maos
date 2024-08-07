@@ -173,12 +173,9 @@ void X(fft_free_plan)(fft_t *fft){
 	}
 	free(fft);
 }
-static void fft_execute(FFTW(plan) plan){
-	FFTW(execute)(plan);
-}
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
-   the array. So do it before filling in data.
+   the array if FFTW_FLAGS is not FFTW_ESTIMATE. So do it before filling in data.
 */
 static void X(fft2plan)(X(mat)* A, int dir){
 	assert(abs(dir)==1&&A&&P(A));
@@ -249,7 +246,7 @@ void X(fft2)(X(mat)* A, int dir){
 	if(!A->fft||!A->fft->plan[dir+1]){
 		X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
 	}
-	fft_execute(A->fft->plan[dir+1]);
+	FFTW(execute)(A->fft->plan[dir+1]);
 }
 
 /**
@@ -283,7 +280,7 @@ void X(fft2partial)(X(mat)* A, int ncomp, int dir){
 	PLAN1D_T* plan1d=A->fft->plan1d[dir+1];
 	if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
 	for(int i=0; i<3; i++){
-		fft_execute(plan1d->plan[i]);
+		FFTW(execute)(plan1d->plan[i]);
 	}
 }
 
@@ -344,7 +341,7 @@ void XR(cell_fft2)(XR(cell)* dc, int dir){
 	if(!dc->fft||!dc->fft->plan[dir+1]){
 		XR(cell_fft2plan)(dc, dir);
 	}
-	fft_execute(dc->fft->plan[dir+1]);
+	FFTW(execute)(dc->fft->plan[dir+1]);
 }
 /**
    Create a fftw plan for 1d real to real FFT.
@@ -375,7 +372,7 @@ void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
  */
 void XR(fft1)(XR(mat)* A, int dir){
 	assert(A->fft&&abs(dir)==1);
-	fft_execute(A->fft->plan[dir+1]);
+	FFTW(execute)(A->fft->plan[dir+1]);
 }
 
 #endif //if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1) 

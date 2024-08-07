@@ -3689,10 +3689,6 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 			parms->gpu.tomo=0;/*no need tomo.*/
 			parms->fit.cachex=0;
 		}
-		if(parms->evl.tomo&&parms->gpu.evl){
-			warning("evl.tomo is not implemented in gpu. disable gpu.evl\n");
-			parms->gpu.evl=0;
-		}
 		if(parms->evl.rmax>1&&parms->gpu.evl){
 			warning("evl.rmax>1 is not implemented in gpu. disable gpu.evl\n");
 			parms->gpu.evl=0;
@@ -3746,6 +3742,10 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 			if(parms->gpu.tomo||parms->gpu.fit==2){
 				/*Tomography RHS in cuda always requrie full grid.*/
 				parms->tomo.square=1;
+			} 
+			if(parms->evl.tomo && !parms->tomo.square){
+				warning("evl.tomo without tomo.square is not implemented in gpu. disable gpu.evl\n");
+				parms->gpu.evl=0;
 			}
 			if(parms->gpu.fit==1&&!parms->fit.assemble){
 				info("\n\nGPU fitting=1 requries fit.assemble. Changed\n");

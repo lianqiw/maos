@@ -80,6 +80,11 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 			opdr=curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL);
 		}
 		opdr_vec=opdr.Vector();
+		opdr_map=cumapcell(recon->npsr, 1);
+		for(int i=0; i<recon->npsr; i++){
+			opdr_map[i]=cumap_t(grid->xmap[i], opdr[i]);
+		}
+		cudata->opdr=opdr_map;
 	}
 	gpu_print_mem("recon init");
 }
@@ -272,6 +277,15 @@ Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
 	}
 	cgstream.sync();
 	return cgres;
+}
+void curecon_t::copy_opdr(){
+	for(int igpu=0; igpu<NGPU; igpu++){
+		if(igpu!=cuglobal->recongpu){
+			gpu_set(igpu);
+			Copy(cudata->opdr, opdr_map);
+		}
+	}
+	gpu_set(cuglobal->recongpu);
 }
 Real curecon_t::fit(dcell** _dmrecon, dcell* _opdr){
 	if(_opdr){
@@ -589,6 +603,9 @@ void gpu_tomo(sim_t* simu, dcell* gradin){
 			||parms->evl.tomo);
 		simu->cgres->p[0]->p[simu->reconisim]=
 			curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, gradin);
+		if(parms->evl.tomo){
+			curecon->copy_opdr();//copy to all gpus
+		}
 	}
 }
 

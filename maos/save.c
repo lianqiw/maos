@@ -184,7 +184,7 @@ void save_recon(sim_t* simu){
 			zfarr_push(simu->save->opdr, simu->reconisim, simu->opdr);
 		}
 		if(parms->save.opdx||parms->plot.opdx){
-			dcell* opdx=simu->opdx;
+			dcell* opdx=NULL;
 			if(!opdx){
 				atm2xloc(&opdx, simu);
 			}
@@ -199,9 +199,7 @@ void save_recon(sim_t* simu){
 					}
 				}
 			}
-			if(!(parms->sim.idealtomo&&parms->evl.tomo)){
-				dcellfree(opdx);
-			}
+			dcellfree(opdx);
 		}
 	}
 	if(parms->save.dm&&(!parms->sim.closeloop||simu->reconisim>=0)){

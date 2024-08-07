@@ -793,6 +793,8 @@ public:
 			p=curmat(nx, ny);
 		}
 	}
+	cumap_t(cugrid_t &grid, curmat &pin):cugrid_t(grid), p(pin){
+	}
 	cumap_t& operator=(map_t* in){
 		if(in){
 			cugrid_t::operator=(in);
@@ -841,7 +843,6 @@ void Copy(NumArray<T, Dev> &out, const NumArray<T2, Dev2> &in, cudaStream_t stre
 	cp2gpu(out(), in(), in.Nx(), in.Ny(), stream);
 }
 static inline void Copy(cumap_t&out, const cumap_t &in, cudaStream_t stream=0){
-	out.cugrid_t::operator=(in);
 	out.Copy(in, stream);
 }
 

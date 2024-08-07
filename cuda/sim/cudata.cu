@@ -96,7 +96,38 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 		info("GPU%2d cudaGetDeviceProperties failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
 		return 0;
 	}else{
-		info("GPU%2d is %s with arch %d.%d, %.1fGB free, %.1fGB total device memory.\n", igpu, prop.name, prop.major, prop.minor, fr*9.3e-10, tot*9.3e-10);
+		info("GPU%2d is %s with arch %d.%d (%d%d%d%d), %.1fGB free, %.1fGB total device memory.\n", igpu, prop.name, prop.major, prop.minor, 
+			prop.pageableMemoryAccess, prop.concurrentManagedAccess, prop.managedMemory, prop.unifiedAddressing, fr*9.3e-10, tot*9.3e-10);
+		if(0){
+			dbg("PageableMemoryAccess=%d, concurrentManagedAccess=%d, managedMemory=%d, unifiedAddressing=%d\n",
+				prop.pageableMemoryAccess, prop.concurrentManagedAccess, prop.managedMemory, prop.unifiedAddressing);
+			if(prop.pageableMemoryAccessUsesHostPageTables){
+				dbg("hostNativeAtomicSupported=%d pageableMemoryAccessUsesHostPageTables=%d directManagedMemAccessFromHost=%d\n",
+					prop.hostNativeAtomicSupported, prop.pageableMemoryAccessUsesHostPageTables, prop.directManagedMemAccessFromHost);
+			}
+		}
+		/* About unified memory. There are three levels of support depending the cuda device capability.
+			Level 1: Capability<6 supports mangedMemory=1 but with concurrentManagedAccess=0. There are the following limitations:
+				1. Default visibility of cudaMallocManaged memory is with all GPUs. CPU cannot access it (segfault otherwise) while any kernel is not synchronized. 
+					When any kernel launches, all managed memory are migrated to the GPU.
+				2. call cudaMallocManaged initially with CPU visibility and then attach memory to a single stream. CPU can access after the stream is synchronized. 
+					When a kernel launches, only global and attached managed memory are migrated to the GPU.
+				Question: After synchronizing device or stream, and CPU access some unified memory, does ALL memory gets migrated to the CPU or only those pages that are accessed?
+			Level 2: GPUs with Capability >=6 introduces page faulting mechanism that automatically migrates pages between CPU and GPU and between GPUs. 
+				They have concurrentManagedAccess=1. However, only memory allocated by cudaMallocManaged allow unified access.
+				This is called managed memory with full support. Unified memory can be accessed concurrently by all CPUs and GPUs.
+				The memory is populated on first touch, just like system allocated memory.
+				Explicit Device or Stream Synchronization is still needed for data coherency.
+
+			Level 3: GPUs with Capability>=7.5 on Linux with HMM, and Nvidia open kernel module>=535 also have pageableMemoryAccess=1.
+				This is called full unified memory support. All memory is unified memory. There are two types:
+				1. Hardware coherent systems (NVIDIA Grace Hopper) offer a logically combined page table for both CPU and GPUs. 
+					They offer cache-line level coherence. No page fault is needed for concurrent access.
+				2. Software coherent systems uses separate logical page tables and uses page fault and migration to allow concurrent access. 
+					In this case, avoid frequent inter-leaved access to reduce page faulting. Explicit Device or Stream Synchronization is still needed for data coherency.
+
+			To improve the performance, data prefetching and data usage hints maybe helpful.
+		*/
 		if((long)fr>minimum){
 			return (long)((tot-fr)*100./tot);
 		} else{
@@ -338,6 +369,22 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			cudata->reserve.init(MEM_RESERVE, 1);
 		}
 		info2("\n");
+		for(int i=0; i<NGPU; i++){
+			gpu_set(i);
+			for(int j=0; j<NGPU; j++){
+				if(j!=i){
+					int peer;
+					DO(cudaDeviceCanAccessPeer(&peer, i, j));
+					if(peer){
+						DO(cudaDeviceEnablePeerAccess(j, 0));
+						if(i==0) dbg2("Enable peer to peer access\n");
+					} else{
+						if(i==0) dbg2("Does not support peer to peer access\n");
+						//Peer to peer access is not supported in Geforce RTX cards.
+					}
+				}
+			}
+		}
 		if(parms){
 			/*Assign task to gpu evenly based on empirical data to maximum GPU
 			 * usage. We first gather together all the tasks and assign a timing

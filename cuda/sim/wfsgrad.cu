@@ -498,7 +498,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					cp2gpu(phiout, opd);
 					dfree(opd);
 				} else{
-					dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
+					mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, 
 						hs, hc, thetax, thetay, 0, 0, alpha, stream);
 				}
 			}
@@ -512,7 +512,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			}
 			if(CL){
 				wait_dmreal(simu, isim);
-				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
+				mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal,
 					hs, hc, thetax, thetay, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, -1, stream);
 				Real ttx=0, tty=0;
 				if(simu->ttmreal){
@@ -535,7 +535,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					-1, stream);
 			}
 			if(imoao>-1){
-				dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
+				mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 
 					INFINITY, hc, 0, 0, 0, 0, -1, stream);
 			}
 

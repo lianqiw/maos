@@ -362,7 +362,7 @@ void* gpu_perfevl_queue(thread_t* info){
 			curset(iopdevl, 0, stream);
 		}
 		if(parms->sim.idealevl){
-			dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmproj, parms->ndm,
+			mapcell2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmproj, 
 				parms->evl.hs->p[ievl], 0, thetax, thetay, 0, 0, 1, stream);
 		} else if(simu->atm&&!parms->sim.wfsalias){
 			atm2loc(iopdevl(), cudata->perf.locs, parms->evl.hs->p[ievl], 0, thetax, thetay,
@@ -423,23 +423,29 @@ void* gpu_perfevl_queue(thread_t* info){
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						add2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->perf.psfol[iwvl], 1, stream);
 						cuzero(cudata->perf.psfol[iwvl]); //do not accumulate in gpu.
-					}
+					} 
 				}
 			}
 		}
 		if(parms->sim.evlol) continue;
 		if(parms->evl.tomo){
-			TO_IMPLEMENT;
+			if(parms->tomo.square){
+				mapcell2loc(iopdevl(), cudata->perf.locs, cudata->opdr, 
+					parms->evl.hs->p[ievl], 0, thetax, thetay,
+					0, 0, -1, stream);
+			}else{
+				TO_IMPLEMENT;
+			}
 		} else{
 			wait_dmreal(simu, simu->perfisim);
-			dm2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmreal, parms->ndm,
+			mapcell2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmreal, 
 				parms->evl.hs->p[ievl], 0, thetax, thetay,
 				0, 0, -1, stream);
 			if(simu->ttmreal){
 				curaddptt(iopdevl, cudata->perf.locs(), 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
 			}
 			if(imoao!=-1){
-				dm2loc(iopdevl(), cudata->perf.locs, cudata->dm_evl[ievl], 1,
+				mapcell2loc(iopdevl(), cudata->perf.locs, cudata->dm_evl[ievl], 
 					INFINITY, 0, 0, 0, 0, 0, -1, stream);
 			}
 		}

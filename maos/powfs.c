@@ -1292,7 +1292,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			writebin(llt->ncpa, "powfs%d_llt_ncpa", ipowfs);
 		}
 	}
-	if(parms->save.setup>1){
+	if(parms->save.setup>2){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			if(powfs[ipowfs].etfprep&&powfs[ipowfs].etfprep[iwvl].etf){
 				writebin(powfs[ipowfs].etfprep[iwvl].etf,

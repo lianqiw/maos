@@ -558,8 +558,6 @@ typedef struct sim_t{
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/
-    dcell *opdx;       /**<Ray tracing from atmosphere to xloc directly. Fixme:
-			  do layer by layer fitting instead?*/
     dcell *cgres;      /**<CG residuals for tomography and fit*/
     /*Only on split tomography*/
     dmat *clem;        /**<lgs/ngs mod error in split tomography*/

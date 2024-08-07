@@ -230,10 +230,10 @@ void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
    Ray tracing of dm. use a different loc for each dm. so that distortion can be
    properly accounted for. Use the other version if no distortion.
 */
-void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, int ndm,
+void mapcell2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
 	const Real theta=RSS(thetax, thetay);
-	for(int idm=0; idm<ndm; idm++){
+	for(int idm=0; idm<cudm.N(); idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
 		const Real scale=1.-(ht-hc)/(hs-hc);
@@ -243,10 +243,10 @@ void dm2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& cudm, 
 /**
    Ray tracing of dm.
 */
-void dm2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, int ndm,
+void mapcell2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm, 
 	Real hs, Real hc, Real thetax, Real thetay, Real misregx, Real misregy, Real alpha, cudaStream_t stream){
 	const Real theta=RSS(thetax, thetay);
-	for(int idm=0; idm<ndm; idm++){
+	for(int idm=0; idm<cudm.N(); idm++){
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
 		const Real scale=1.-(ht-hc)/(hs-hc);

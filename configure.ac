@@ -650,12 +650,16 @@ AC_CHECK_HEADERS([fftw3.h],[
 		AC_CHECK_LIB([m], [fftw_execute], [has_fftw="builtin"], [has_fftw="no"], [$LAPACK -lm])
 	])
 ], [has_fftw='no'])
-if test "$has_fftw" = "builtin" -a "$with_matlab" != "no" ;then
-	has_fftw=no #requires FFT for matlab
+if test "$has_fftw" = "builtin" ;then
+	if test "$with_matlab" != "no" ;then
+		has_fftw=no #requires FFT for matlab
+	else
+		has_fftw=no #2024-08-06: found errors in cfft2 using MKL FFTW interface. disable for now.
+	fi
 fi
 if test "$has_fftw" = "builtin";then
 	AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
-	AC_CHECK_LIB([m], [fftwf_execute],[has_fftwf=1] ,[has_fftwf=0])
+	AC_CHECK_LIB([m], [fftwf_execute],[has_fftwf=1] ,[has_fftwf=0],[$LAPACK -lm])
 	fftw_threads=1
 else
 	if test "$has_fftw" = "no" ;then #fftw does not exist in system.
@@ -1136,7 +1140,7 @@ AC_CONFIG_FILES( [Makefile
 LDFLAGS+=" $LDOPTS -no-fast-install -avoid-version"
 LDFLAGS+=" -Wl,-rpath,${libdir}" #to run artifacts from github workflow avoid using rpath
 LDEXE+=" -lz -lm -ldl"
-LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
+LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #Make sure LDFFT is before LAPACK to avoid MKL providing FFTW functions.
 #echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)

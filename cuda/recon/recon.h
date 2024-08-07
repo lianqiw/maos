@@ -36,6 +36,7 @@ private:
    
     curcell opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
     curcell opdr_vec; /**<Referencing opdr in vector form*/
+	cumapcell opdr_map;/**<Referencing opdr in cumap form */
     curcell tomo_rhs;
     curcell dmrecon;
     curcell dmrecon_vec;
@@ -115,6 +116,7 @@ public:
     void mvm(dcell **_dmerr, dcell *_gradin);
     void tomo_test(sim_t *simu);
     void fit_test(sim_t *simu);
+	void copy_opdr();
 };
 
 
