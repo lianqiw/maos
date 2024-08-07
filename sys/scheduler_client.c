@@ -170,7 +170,7 @@ const char *lookup_hostname(const char *hostaddr){
 	}
 	return hostaddr;
 }
-
+#if! MAOS_DISABLE_SCHEDULER
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.
 */
@@ -201,6 +201,7 @@ static void launch_scheduler(int retry){
 		sleep(1);
 	}
 }
+#endif
 int scheduler_connect(const char *hostname){
 #if MAOS_DISABLE_SCHEDULER
 	(void)hostname; return -1;
@@ -210,9 +211,12 @@ int scheduler_connect(const char *hostname){
 }
 /**
    To open a port and connect to scheduler in the local host*/
-static int scheduler_connect_self(int block){
-	char fn[PATH_MAX];
+int scheduler_connect_self(int block){
 	int sock=-1;
+#if MAOS_DISABLE_SCHEDULER
+	(void) block;
+#else
+	char fn[PATH_MAX];
 	int retry=block?100:2;
 	do{
 		if(TEMP[0]=='/'){//try local connection first.
@@ -229,10 +233,12 @@ static int scheduler_connect_self(int block){
 			retry--;
 		}
 	}while(sock<0 && retry>0);
+#endif	
 	return sock;
 }
-
+#if! MAOS_DISABLE_SCHEDULER
 static int psock=-1; //persistent socket for maos to scheduler connection
+#endif
 #define CATCH_ERR(A) if(A){psock=-1;}
 void scheduler_report_path(const char* path){
 #if MAOS_DISABLE_SCHEDULER
@@ -322,6 +328,7 @@ void scheduler_finish(int status){
 	close(psock);psock=-1;
 #endif	
 }
+#if !MAOS_DISABLE_SCHEDULER
 pthread_t cthread=0;
 static void* scheduler_connect_thread(void *data){
 	(void) data;
@@ -334,6 +341,7 @@ static void* scheduler_connect_thread(void *data){
 	dbg_time("finished with psock=%d.\n", psock);
 	return NULL;
 }
+#endif
 /**
    called by sim.c to report job status. Do not try to reconnect. */
 void scheduler_report(status_t* status){
