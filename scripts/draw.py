@@ -102,7 +102,7 @@ def locembed(loc, opd, return_ext=0, **kargs):
     (iy, ny, dy, yi) = coord2grid(loc[1], **kargs)
     
     for iframe in range(nframe):
-        im = np.full((nx*ny),np.NaN)
+        im = np.full((nx*ny),np.nan)
         im[ix+iy*nx] = opd[iframe, :]
         im.shape = (ny, nx)  # fixed 2020-10-09
         ims[iframe] = im

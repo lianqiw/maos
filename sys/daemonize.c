@@ -151,14 +151,11 @@ retry:
    if daemon_func is true, will fork and run it with argument
    daemon_arg. otherwise the routine returns.
 */
-int single_instance_daemonize(const char* lockfolder_in,
+int single_instance_daemonize(const char* lockfolder,
 	const char* progname, int version, void(*daemon_func)(void*), void* daemon_arg){
 	int fd=-1;
-	char* lockfolder=expand_filename(lockfolder_in);
 	char fnlock[PATH_MAX];
-	
 	snprintf(fnlock, PATH_MAX, "%s/%s.pid", lockfolder, progname);
-	free(lockfolder);
 	
 	fd=lock_file_version(fnlock, 0, version);//non-blocking lock
 	if(fd<0){
@@ -297,7 +294,7 @@ void daemonize(void){ /* Fork off the parent process */
  */
 pid_t launch_exe(const char* exepath, const char* cmd){
 	const char* exes[]={"maos", "skyc"}; int nexe=2;
-	const char* args=NULL;
+	const char* args[3]={NULL};
 	const char* exename=NULL;
 	char* cwd=NULL;
 	if(exepath){
@@ -332,22 +329,21 @@ pid_t launch_exe(const char* exepath, const char* cmd){
 		if(stexe){
 			exename=exe;
 			stexe[-1]='\0';
-			cwd=strdup(cmd2);
+			cwd=cmd2;
 			if(!exepath){
 				exepath=exe;//has to use shell.
 			}
-			args=stexe;
+			args[0]=exename;
+			args[1]=stexe+strlen(exe)+1;
 			break;
 		}
 	}
 	pid_t ans=-1;
-	if(args && (args=strstr(args, exename))){
-		args+=strlen(exename)+1;
+	if(args[0]){
 		ans=spawn_process(exepath, args, cwd);
 	} else{
 		warning("Unable to interpret %s\n", cmd);
 	}
-	free(cwd);
 	free(cmd2);
 	return ans;
 }
@@ -372,7 +368,7 @@ char* find_exe(const char* name){
 /**
    fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
 */
-int spawn_process(const char* exename, const char* args, const char* path){
+int spawn_process(const char *exename, const char *const *args, const char *path){
 	int pipfd[2];//pipe to obtain pid of grand child.
 	if(pipe(pipfd)){
 		warning("unable to create pipe\n");
@@ -392,9 +388,9 @@ int spawn_process(const char* exename, const char* args, const char* path){
 	} else{//child
 		//redirect stdout, stderr to /dev/null to avoid polluting parent output log.
 		//child will redirect it to their own file.
-		if(!freopen("/dev/null", "w", stdout) || !freopen("/dev/null", "w", stderr)){
+		/*if(!freopen("/dev/null", "w", stdout) || !freopen("/dev/null", "w", stderr)){
 			warning("redirect stdout or stderr to /dev/null failed\n");
-		}
+		}*/
 		close(pipfd[0]);
 		detached=1;
 		setenv("MAOS_DIRECT_LAUNCH", "1", 1);
@@ -412,9 +408,9 @@ int spawn_process(const char* exename, const char* args, const char* path){
 			//Do not use putenv as it does not copy the string
 			char* fn=find_exe(exename);
 			if(fn){
-				execl(fn, exename, args, NULL);
+				execv(fn, (char *const*)args);
 			} else{
-				execlp(exename, exename, args, NULL);
+				execvp(exename, (char* const*)args);
 			}
 			warning("exec failed to run %s\n", exename);
 			_exit(EXIT_FAILURE);

@@ -75,6 +75,7 @@ int main(int argc, char* argv[]){
 			warning("Error redirect stderr\n");
 		}
 		setbuf(stdout, NULL);
+		setbuf(stderr, NULL);
 		register_signal_handler(NULL);
 	}
 	
@@ -101,7 +102,15 @@ int main(int argc, char* argv[]){
 	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), &sock);
 #endif
 	//g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
-	if(argc<2){
+	if(argc>2){//2nd argument is draw_id
+		char *end;
+		extern int draw_id;
+		draw_id=strtol(argv[2], &end, 10);
+		if(argv[2]==end){
+			draw_id=0;
+		}
+		info_time("draw_id=%d\n",draw_id);
+	}else if(argc<2){
 		error("Usage: %s socket or hostname.\n", argv[0]);
 	}
 	thread_new(listen_draw, argv[1]);

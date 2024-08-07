@@ -36,7 +36,7 @@ void daemonize(void);
 void redirect(void);
 pid_t launch_exe(const char *exepath, const char *cmd);
 char* find_exe(const char *name);
-int spawn_process(const char *exename, const char *arg, const char *path);
+int spawn_process(const char *exename, const char *const* args, const char *path);
 extern int detached;
 #define dummyfun(A...)
 #define CACHE_FILE(var, fn_cache, f_read, f_create, f_write)\

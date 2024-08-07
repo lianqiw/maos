@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
 	TIC;tic;
 	arg_t* arg=parse_args(argc, argv);
 	/*use the parent pid so same bash session has the same drawdaemon. */
-	draw_id=2;//getsid(0)+2e6;/*variables in draw.c */
+	draw_id=DRAW_ID_RES;
 	draw_direct=1;/*launch drawdaemon directly, without going through server. */
 	draw_single=-1;//disable draw_single support.
 	char** path;

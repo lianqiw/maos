@@ -328,6 +328,7 @@ static void drawdata_clear_older(float timclear){
 int sock;//socket
 int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
 int client_pidold=-1; //old client PID.
+int draw_id=0; //1: maos, 2: drawres.
 int keep_listen=1;//set to 0 to stop listening
 int draw_single=0;//whether client only wants to draw to the active tab.
 drawdata_t *drawdata=NULL;//current
@@ -338,17 +339,19 @@ char *client_path_full=NULL;//with ~ expanded.
 char *client_exename=NULL;//client executable name.
 int npts=0;
 void *listen_draw(void *user_data){
-	char *str2=0;
-	sock=strtol((char *)user_data, &str2, 10);
-	if(str2!=user_data){//argument is a number
-		if(sock<0){
-			error("sock=%d is invalid\n", sock);
+	if(user_data){
+		char *str2=0;
+		sock=strtol((char *)user_data, &str2, 10);
+		if(str2!=user_data){//argument is a number
+			if(sock<0){
+				error("sock=%d is invalid\n", sock);
+			}
+			client_hostname=strdup(addr2name(socket_peer(sock)));
+		} else{//not a number, hostname
+			client_hostname=strdup((char *)user_data);
+			sock=-1;
 		}
-		client_hostname=strdup(addr2name(socket_peer(sock)));
-	} else{//not a number, hostname
-		client_hostname=strdup((char *)user_data);
-		sock=-1;
-	}
+	}//else: use previous information
 	while(keep_listen){
 		client_pid=-1;
 		if(sock<0&&client_hostname){
@@ -359,7 +362,7 @@ void *listen_draw(void *user_data){
 				mysleep(60);
 				continue;
 			}
-			int cmd[2]={CMD_DISPLAY, 0};
+			int cmd[2]={CMD_DRAWSER, -draw_id};
 			if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
 				warning_time("Failed to register sock in scheduler, retry in 60 seconds.\n");
 				close(sock);
@@ -367,8 +370,8 @@ void *listen_draw(void *user_data){
 				continue;
 			}
 		}
-
-		if(sock>=0){
+		g_idle_add(update_fpslabel, GINT_TO_POINTER(0));//run once
+		if(sock!=-1){
 			client_pid=0;
 			//we set socket timeout to check disconnection.
 			//server sends heartbeat every 10 seconds (since 2021-09-29).
@@ -376,9 +379,6 @@ void *listen_draw(void *user_data){
 				sock=-1;
 				warning("Set sock block and timout failed.\n");
 			}
-		}
-		if(sock>=0){
-			g_timeout_add(2000, update_fpslabel, NULL);
 		}
 		draw_single=0;
 		char *fig=0;
@@ -547,7 +547,6 @@ void *listen_draw(void *user_data){
 					drawdata_clear_older(io_timeclear);
 				}
 				client_pid=0;
-				g_idle_add(update_title, NULL);
 				g_idle_add(finalize_gif, NULL);
 				break;
 			case DRAW_FLOAT:
@@ -606,6 +605,7 @@ void *listen_draw(void *user_data){
 			{
 				STREADINT(client_pid);
 				client_pidold=client_pid;
+				g_timeout_add(2000, update_fpslabel, GINT_TO_POINTER(1));//will cancel when idle or disconnected
 			}
 			break;
 			case DRAW_ZLOG://flip zlog
@@ -689,6 +689,7 @@ void *listen_draw(void *user_data){
 			nlen=0;
 		}/*while */
 	}
+	g_idle_add(update_fpslabel, GINT_TO_POINTER(0));//run once
 	dbg_time("Stop listening.\n");
 	if(sock!=-1) close(sock);
 	sock=-1;

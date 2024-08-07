@@ -179,10 +179,8 @@ const char* myasctime(time_t at){
 	if(!at) at=time(NULL);
 	struct tm am;
 	localtime_r(&at, &am);
-	if(snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
-		am.tm_year+1900, am.tm_mon+1, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec)>=(int)sizeof(st)){
-		warning_once("snprintf truncated\n");
-	}
+	snprintf(st, sizeof(st), "%04d/%02d/%02d %02d:%02d:%02d",
+		am.tm_year+1900, am.tm_mon+1, am.tm_mday, am.tm_hour, am.tm_min, am.tm_sec);
 	return st;
 }
 /**

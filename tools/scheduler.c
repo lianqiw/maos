@@ -105,7 +105,8 @@ static int nused_cpu=0;//number of CPUs being used
 static int nused_gpu=0;//number of GPUs being used
 static time_t lasttime3=0;//every 3 seconds
 static time_t lasttime10=0;//every 10 seconds
-
+#define MAXSOCK 1024
+static const char* sockname[MAXSOCK]={0};//saving the client name of each socket
 static int nrun_handle(int cmd, int pid, int nthread, int ngpu){
 	switch(cmd){
 	case 0:
@@ -397,7 +398,7 @@ static void process_queue(void){
 		dbg_time("process_queue: no CPUs are available\n");
 		return;
 	}
-	dbg_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
+	dbg2_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
 	RUN_T* irun=running_get_by_status(S_WAIT);
 	if(irun){//There are jobs waiting.
 		if(irun->sock>0){//already connected.
@@ -428,11 +429,11 @@ static void process_queue(void){
 		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
 			static double lasttime2=0;
 			time_t thistime2=myclocki();
-			if(thistime>lasttime2+0.001){
+			if(thistime2>lasttime2+0.001){
 				lasttime2=thistime2;
 				irun=running_get_by_status(S_QUEUED);
 				if(!irun){
-					dbg_time("all jobs are done\n");
+					//dbg_time("all jobs are done\n");
 					all_done=1;
 					nrun_handle(3, 0, 0, 0);
 					counter=-1; //reset the counter
@@ -488,14 +489,17 @@ static int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
 	if(!irun||!irun->sock2||(stwriteintarr(irun->sock2, cmd2, 2)||stwritefd(irun->sock2, sock))){
-		warning_time("Unable to pass socket (%d) to maos (%d, %d)\n", sock, irun?irun->pid:-1, irun?irun->sock2:-1);
+		warning_time("Unable to pass socket %d to maos (%d, %d)\n", sock, irun?irun->pid:-1, irun?irun->sock2:-1);
 		stwriteint(sock, -1);//respond failure message.
 	} else{
-		dbg_time("Successfully passed socket (%d) to maos (%d, %d)\n", sock, irun->pid, irun->sock2);
+		dbg_time("Successfully passed socket %d to maos (%d, %d)\n", sock, irun->pid, irun->sock2);
 		stwriteint(sock, 0);//respond succeed
 	}
 	return -1;//do not keep this connection.
 }
+/*
+ Stores drawdaemon sockets
+ */
 typedef struct SOCKID_M{
 	int id;
 	int sock;
@@ -541,6 +545,7 @@ static void socket_remove(SOCKID_T*p){
 //retrieve socket from linked list based in id. 
 static int socket_get(int id){
 	int sock_save=-1;
+	dbg_time("Looking up socket with id %d\n", id);
 	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
 		p_next=p->next;//save so that socket_remove can be called
 		int badsock=0;
@@ -551,10 +556,13 @@ static int socket_get(int id){
 			} else if(sock_save==-1){
 				sock_save=p->sock; //valid match
 				dbg_time("Get socket %d with id %d\n", p->sock, p->id);
+				socket_remove(p);
 			}else{
-				continue;//check next socket for disconnection.
+				dbg_time("Skip socket %d with id %d\n", p->sock, p->id);
+				//check next socket for disconnection.
 			}
-			socket_remove(p);
+		}else{
+			dbg_time("Skip socket %d with id %d\n", p->sock, p->id);
 		}
 	}
 	if(sock_save==-1&&id!=0){
@@ -570,6 +578,26 @@ static void socket_heartbeat(){
 			dbg_time("Remove bad socket %d with id %d\n", p->sock, p->id);
 			socket_remove(p);
 		}
+	}
+}
+/*Close all connection upon scheduler exit.*/
+static void socket_close(){
+	for(SOCKID_T *p_next, *p=shead; p; p=p_next){
+		p_next=p->next;
+		close(p->sock);
+		socket_remove(p);
+	}
+}
+static void set_sockname(int sock, const char *name){
+	if(sock>-1&&sock<MAXSOCK){
+		sockname[sock]=name;
+	}
+}
+static const char* get_sockname(int sock){
+	if(sock>-1 && sock<MAXSOCK && sockname[sock]){
+		return sockname[sock];
+	}else{
+		return "";
 	}
 }
 
@@ -592,16 +620,16 @@ static int respond(int sock){
 		/*if(errno!=ESRCH && errno!=ENOENT){//timeout or closed
 			dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		}*/
-		dbg_time("(%d) read failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
-		goto end;
+		dbg_time("(%d:%s) connection lost or closed by client.\n", sock, get_sockname(sock)); return ret;
 	}else{
-		dbg2_time("respond %d got %d %d. \n", sock, cmd[0], cmd[1]);
+		dbg2_time("(%d:%s) cmd is %d %d. \n", sock, get_sockname(sock), cmd[0], cmd[1]);
 	}
 	pid=cmd[1];
 	//LOCK(mutex_sch);
 	switch(cmd[0]){
 	case CMD_START://1: Called by maos when job starts.
 	{
+		set_sockname(sock, "maos");
 		/* Data read. */
 		int nthread;
 		int ngpu;
@@ -629,10 +657,10 @@ static int respond(int sock){
 		irun->nthread=nthread;
 		irun->ngpu=ngpu;
 		if(waiting&0x1){
-			dbg_time("(%d) Job %d waiting to start with nused_cpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
+			dbg_time("(%d:%s) Job %d waiting to start with nused_cpu=%d, ngpu=%d\n", sock, get_sockname(sock), pid, nthread, ngpu);
 			irun->status.info=S_WAIT;
 		} else{/*no waiting, no need reply. */
-			dbg_time("(%d) Job %d started with nused_cpu=%d, ngpu=%d\n", sock, pid, nthread, ngpu);
+			dbg_time("(%d:%s) Job %d started with nused_cpu=%d, ngpu=%d\n", sock, get_sockname(sock), pid, nthread, ngpu);
 			irun->status.info=S_START;
 			nrun_add(pid, nthread, ngpu);
 		}
@@ -642,7 +670,7 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_FINISH://2: Called by MAOS when job finishes.
-		dbg_time("(%d) Job %d reports finished\n", sock, pid);
+		dbg_time("(%d:%s) Job %d reports finished\n", sock, get_sockname(sock), pid);
 		running_remove(pid, S_FINISH);
 		ret=0;//-1. Do not yet close. wait for client to close.
 		break;
@@ -650,7 +678,7 @@ static int respond(int sock){
 	{
 		RUN_T* irun=running_get_by_pid(pid);
 		if(!irun){/*started before scheduler is relaunched. */
-			dbg_time("(%d) pid=%d is running but not recorded.\n", sock, pid);
+			dbg_time("(%d:%s) pid=%d is running but not recorded.\n", sock, get_sockname(sock), pid);
 			irun=running_add(pid, sock);
 			if(!irun){
 				warning_time("scheduler: running_add %d failed. Exe already exited.\n", pid);
@@ -674,12 +702,13 @@ static int respond(int sock){
 	}
 	break;
 	case CMD_CRASH://4: called by MAOS when job crashes
-		dbg_time("(%d) Job %d reports crashed\n", sock, pid);
+		dbg_time("(%d:%s) Job %d reports crashed\n", sock, get_sockname(sock), pid);
 		running_remove(pid, S_CRASH);
 		ret=0;//-1; wait for client to close.
 		break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
+		set_sockname(sock, "monitor");
 		MONITOR_T* tmp=monitor_add(sock);
 		if(tmp){
 			if(pid>=0x8){//old scheme where scheduler_version at compiling is passed
@@ -689,32 +718,33 @@ static int respond(int sock){
 				tmp->plot=pid&(1<<1);
 			}
 		}
-		dbg_time("(%d) monitor from %s is connected.\n", sock, addr2name(socket_peer(sock)));
+		dbg_time("(%d:%s) monitor from %s is connected.\n", sock, get_sockname(sock), addr2name(socket_peer(sock)));
 	}
 	break;
 	case CMD_PATH://6: Called by MAOS to report the PATH.
 	{
+		set_sockname(sock, "maos");
 		RUN_T* irun=running_add(pid, sock);
 		if(!irun){
-			warning_time("(%d) running_add %d failed. Exe already exited.\n", sock, pid);
+			warning_time("(%d:%s) running_add %d failed. Exe already exited.\n", sock, get_sockname(sock), pid);
 			break;
 		}
 		if(irun->path0) free(irun->path0);
 		if(irun->path) free(irun->path);
 		if(streadstr(sock, &irun->path0)){
-			dbg_time("(%d) Job %d receiving path failed. \n", sock, pid);
+			dbg_time("(%d:%s) Job %d receiving path failed. \n", sock, get_sockname(sock), pid);
 			ret=-1;
 			break;
 		}
 		irun->path=remove_endl(irun->path0);
-		dbg_time("(%d) Job %d received path. \n", sock, pid);
+		dbg_time("(%d:%s) Job %d received path. \n", sock, get_sockname(sock), pid);
 		monitor_send(irun, irun->path);
 	}
 	break;
 	case CMD_KILL://7: Called by Monitor to kill a task.
 	{
 		RUN_T* irun=running_get_by_pid(pid);
-		warning_time("(%d) Received monitor command to kill %d\n", sock, pid);
+		warning_time("(%d:%s) Received monitor command to kill %d\n", sock, get_sockname(sock), pid);
 		if(irun){
 			if(irun->status.info!=S_QUEUED){
 				kill(pid, SIGTERM);
@@ -748,52 +778,56 @@ static int respond(int sock){
 		stwrite(sock, &cmd2, sizeof(cmd2));
 	}
 	break;
-	case CMD_SOCK://10:Called by draw() to cache or request a fd. Valid over UNIX socket only.
+	case CMD_DRAWCLI://10:Called by draw() to cache or request a fd. Valid over UNIX socket only.
 	{
-		if(pid>0){//receive sock from draw()
+		if(pid>0){//receive sock from draw() and save for later use
+			set_sockname(sock, "save drawdaemon");
 			int sock_save;
 			if(streadfd(sock, &sock_save)){
-				warning_time("(%d) receive socket for saving failed\n", sock);
+				warning_time("(%d:%s) receive socket for saving failed\n", sock, get_sockname(sock));
 				sock_save=-1;
 				ret=-1;
 			} else{
-				dbg_time("(%d) received socket %d for saving.\n", sock, sock_save);
+				dbg_time("(%d:%s) received socket %d for saving.\n", sock, get_sockname(sock), sock_save);
 				socket_save(sock_save, pid);
 			}
-		} else if(pid<0){//send existing sock to draw()
+		} else if(pid<0 && pid>-10000){//send existing sock to draw()
+			set_sockname(sock, "get drawdaemon");
 			int sock_save=socket_get(-pid);//drawdaemon with the same session id.
-			dbg_time("(%d) received socket request, sock_saved=%d\n", sock, sock_save);
+			dbg_time("(%d:%s) received socket request, sock_saved=%d\n", sock, get_sockname(sock), sock_save);
 
 			//cannot pass -1 as sock, so return a flag first. sock can be zero.
 			if(stwriteint(sock, sock_save>-1?0:-1)){
-				warning_time("(%d) send socket status failed.\n", sock);
+				warning_time("(%d:%s) send socket status failed.\n", sock, get_sockname(sock));
 				ret=-1;
 			}
 			if(sock_save>-1){
 				if(stwritefd(sock, sock_save)){
-					warning_time("(%d) send socket %d failed\n", sock, sock_save);
+					warning_time("(%d:%s) send socket %d failed\n", sock, get_sockname(sock), sock_save);
 					ret=-1;//close connection to draw()
 				} else{//socket is transferred to draw. we close it.
-					dbg_time("(%d) send socket %d from %s success\n", sock, sock_save, addr2name(socket_peer(sock_save)));
+					dbg_time("(%d:%s) send socket %d from %s success\n", sock, get_sockname(sock), sock_save, addr2name(socket_peer(sock_save)));
 				}
 				close(sock_save);
 			}
-		} else{//pid==0; request a drawdaemon using monitor. 
+		} else{//pid==0 or pid<10000; request a drawdaemon using monitor. 
+			set_sockname(sock, "open drawdaemon");
+			if(pid<-10000) pid+=10000;
 			MONITOR_T* pm=0;
 			for(pm=pmonitor; pm; pm=pm->next){
 				if(pm->plot){
-					int moncmd[3]={MON_DRAWDAEMON,0,0};
+					int moncmd[3]={MON_DRAWDAEMON,0,pid};
 					stwrite(pm->sock, moncmd, sizeof(moncmd));
 					scheduler_recv_wait=sock;
-					dbg_time("(%d) request monitor (%d) to start drawdaemon\n", sock, pm->sock);
+					dbg_time("(%d:%s) request monitor at %d to start drawdaemon\n", sock, get_sockname(sock), pm->sock);
 					break;
 				}
 			}
 			if(!pm){
 				//there is no available drawdameon. Need to create one by sending request to monitor.
-				warning_time("(%d) there is no monitor available to start drawdaemon\n", sock);
+				warning_time("(%d:%s) there is no monitor available to start drawdaemon\n", sock, get_sockname(sock));
 				if(stwriteint(sock, -1)){
-					warning_time("(%d) failed to respond to draw.\n", sock);
+					warning_time("(%d:%s) failed to respond to draw.\n", sock, get_sockname(sock));
 				}
 			}
 		}
@@ -802,47 +836,51 @@ static int respond(int sock){
 	case CMD_REMOVE://11: Called by Monitor to remove a finished job fron the list*/
 		runned_remove(pid);
 	break;
-	case CMD_DISPLAY://12: called by monitor enable connection of drawdaemon to draw().*/
-		dbg_time("(%d) CMD_DISPLAY for pid=%d\n", sock, pid);
-		if(pid<=0){//this is for pending scheduler_recv_socket
+	case CMD_DRAWSER://12: called by Drawdaemon/Monitor to provide drawdaemon to draw().*/
+		set_sockname(sock, "drawdaemon");
+		dbg_time("(%d:%s) drawdaemon for pid=%d from %s.\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
+		if(pid<=0){//this is for pending scheduler_recv_socket or a new idle connection
 			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
 				||stwritefd(scheduler_recv_wait, sock)){
 				int sock2=dup(sock);
 				if(scheduler_recv_wait!=-1){
-					dbg_time("(%d) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, scheduler_recv_wait, sock2);
+					dbg_time("(%d:%s) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, get_sockname(sock), scheduler_recv_wait, sock2);
 				}else{
-					dbg_time("(%d) No pending socket request, save socket as %d for future\n", sock, sock2);
+					dbg_time("(%d:%s) No pending drawdaemon request, save socket as %d for future\n", sock, get_sockname(sock), sock2);
 				}
 				socket_save(sock2, abs(pid));//duplicate socket and keep it 
+				set_sockname(sock2, "drawdaemon");
 				ret=-1;//prevent scheduler from listening to this socket.
 			} else{
-				dbg_time("(%d) passed sock to draw at %d\n", sock, scheduler_recv_wait);
+				dbg_time("(%d:%s) passed sock to draw at %d\n", sock, get_sockname(sock), scheduler_recv_wait);
 				ret=-1;//close socket on scheduler.
 			}
 			stwriteint(sock, 0);
 			scheduler_recv_wait=-1;
-		} else{
+		} else{//ask maos to start drawing with this drawdaemon
 			ret=maos_command(pid, sock, MAOS_DRAW);
 		}
 		break;
-	case CMD_MAOS://13: create a live link to maos.
-		dbg_time("(%d) pass command to maos %d\n", sock, pid);
+	case CMD_MAOSCLI://13:  for a maos client to create a client link to maos.
+		set_sockname(sock, "maos client");
+		dbg_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
 		ret=maos_command(pid, sock, MAOS_VAR);
 		break;
-	case CMD_MAOSDAEMON://14; called by maos to save a port to run maos_command
+	case CMD_MAOSSER://14: called by maos to save a port to run maos_command
 	{
+		set_sockname(sock, "maos server");
 		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
 			irun->sock2=sock;
-			dbg_time("(%d) maos socket is saved\n", sock);
+			dbg_time("(%d:%s) maos socket is saved\n", sock, get_sockname(sock));
 		} else{
-			warning_time("(%d) maos irun not found\n", sock);
+			warning_time("(%d:%s) maos irun not found\n", sock, get_sockname(sock));
 			ret=-1;
 		}
 	}
 	break;
 	case CMD_RESTART://15: Called by monitor to restart a job
-		dbg_time("(%d) restart job %d\n", sock, pid);
+		dbg_time("(%d:%s) restart job %d\n", sock, get_sockname(sock), pid);
 		runned_restart(pid);
 		break;
 	case CMD_KILLED://16: called by maos to indicate that job is cancelled or killed
@@ -853,18 +891,19 @@ static int respond(int sock){
 		break;
 	case CMD_LAUNCH://18: called from maos from another machine to start a job in this machine
 	{
+		set_sockname(sock, "job launcher");
 		char* exename=NULL;
 		char* execwd=NULL;
 		char* execmd=NULL;
 		if(pid>=2){
 			if(streadstr(sock, &exename)){
-				warning_time("(%d) Unable to read exename.\n", sock);
+				warning_time("(%d:%s) Unable to read exename.\n", sock, get_sockname(sock));
 				ret=-1;
 			}
 		}
 		if(ret!=-1&&pid>=3){//old method. should not be used.
 			if(streadstr(sock, &execwd)){
-				warning_time("(%d) Unable to read execwd.\n", sock);
+				warning_time("(%d:%s) Unable to read execwd.\n", sock, get_sockname(sock));
 				ret=-1;
 			}
 		}
@@ -884,7 +923,7 @@ static int respond(int sock){
 				queue_new_job(exename, execmd);
 			}
 		} else{
-			warning_time("(%d) Unable to read execmd\n", sock);
+			warning_time("(%d:%s) Unable to read execmd\n", sock, get_sockname(sock));
 			ret=-1;
 		}
 		if(stwriteint(sock, ret)){
@@ -896,20 +935,19 @@ static int respond(int sock){
 	}
 	break;
 	default:
-		warning_time("(%d) Invalid cmd: %x\n", sock, cmd[0]);
+		warning_time("(%d:%s) Invalid cmd: %x\n", sock, get_sockname(sock), cmd[0]);
 		ret=-1;
 	}
 	//job is finished. process the next job. don't wait for timeout
 	if((cmd[0]==CMD_KILLED||cmd[0]==CMD_FINISH||cmd[0]==CMD_CRASH)&&running){
 		process_queue();
 	}
-end:
 	if(ret){
 		RUN_T* irun=running_get_by_sock(sock);//is maos
 		if(irun&&irun->status.info<10){
 			//connection failed to a running maos job.
 			if(kill(irun->pid, 0)){
-				dbg_time("(%d) Job %d no longer exists, crashed?\n", sock, irun->pid);
+				dbg_time("(%d:%s) Job %d no longer exists, crashed?\n", sock, get_sockname(sock), irun->pid);
 				running_remove(irun->pid, S_CRASH);
 			}
 		}
@@ -918,7 +956,7 @@ end:
 #if HAS_LWS
 	ws_service(0);
 #endif
-	dbg_time("(%d) respond returns %d.\n", sock, ret);
+	if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
 	return ret;//ret=-1 will close the socket.
 }
 /*
@@ -1273,6 +1311,7 @@ int main(int argc, const char* argv[]){
 	listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
 	remove(slocal);
 	runned_remove(-1);
+	socket_close();
 	signal_caught=0;//enable printing memory debug information
 	exit(0);
 }

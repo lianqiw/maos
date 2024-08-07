@@ -1450,10 +1450,18 @@ static void togglebutton_toggle(GtkWidget* btn, void *data){
 	update_pixmap(get_current_drawdata());
 }
 
-static void toolbutton_stop(GtkWidget* btn){
+static void togglebutton_stop(GtkWidget* btn){
 	(void)btn;
-	keep_listen=0;//disable reconnection
-	close(sock); sock=-1;
+	if(toggle_button_get_active(btn)){
+		keep_listen=0;//disable reconnection
+		close(sock); sock=-1;//close connection
+		mysleep(0.001);//wait for listen_draw to quit.
+	}else{
+		if(!keep_listen){
+			keep_listen=1;//only modify keep_listen in this thread to avoid race condition.
+			thread_new(listen_draw, NULL);
+		}
+	}
 }
 static void togglebutton_pause(GtkWidget* btn){
 	if(sock==-1) return;
@@ -1463,10 +1471,11 @@ static void togglebutton_pause(GtkWidget* btn){
 		sock=-1;
 	}
 }
-static void togglebutton_play(GtkWidget* btn){
+static void toolbutton_refresh(GtkWidget* btn){
 	(void)btn;
-	if(sock==-1) return;
-	if(stwriteint(sock, DRAW_SINGLE)){
+	if(sock==-1){
+		
+	}else if(stwriteint(sock, DRAW_SINGLE)){//toggles DRAW_SINGLE in draw()
 		close(sock);
 		sock=-1;
 	}
@@ -1855,31 +1864,34 @@ static gboolean window_activate_focus(GtkWidget *window){
 	return FALSE;
 }
 #endif
-gboolean update_fpslabel(gpointer label){
-	if(!label) label=fpslabel;
-	gint ans=TRUE;//TRUE: keep running, false: delete.
-	float thistime=myclockd();
-	extern float io_time1;//receiving time for latest frame
-	extern float io_time2;//receiving time for previous frame or 0 if a different plot is received
-	//using static variable is problematic as this is called for different labels
+gboolean update_fpslabel(gpointer data){
+	gint repeat=GPOINTER_TO_INT(data);//TRUE: keep running, false: delete.
 	char newtext[64];
-	static float oldfps=0;
-	float fps=0;
 	if(client_pid==0){
-		gtk_label_set_text(GTK_LABEL(label), "idle");
+		snprintf(newtext, sizeof(newtext), "idle since %s", myasctime(0)+11);
+		gtk_label_set_text(GTK_LABEL(fpslabel), newtext);
+		repeat=FALSE;
 	}else if(client_pid<0){
-		gtk_label_set_text(GTK_LABEL(label), "disconnected");
-		ans=FALSE;
-	}else if(io_time1+10>thistime && io_time2+12>io_time1 && io_time1!=io_time2){//continuous update
-		fps=1./(io_time1-io_time2);
-		snprintf(newtext, sizeof(newtext), "%.1f Hz", fps);
+		snprintf(newtext, sizeof(newtext), "disconnected at %s", myasctime(0)+11);
+		gtk_label_set_text(GTK_LABEL(fpslabel), newtext);
+		repeat=FALSE;
 	}else{
-		newtext[0]=0;
-		fps=0;
-	}
-	if(fps!=oldfps){
-		gtk_label_set_text(GTK_LABEL(label), newtext);
-		oldfps=fps;
+		float thistime=myclockd();
+		extern float io_time1;//receiving time for latest frame
+		extern float io_time2;//receiving time for previous frame or 0 if a different plot is received
+		static float oldfps=0;
+		float fps=0;
+		if(io_time1+10>thistime && io_time2+100>io_time1 && io_time1!=io_time2){//continuous update
+			fps=1./(io_time1-io_time2);
+			snprintf(newtext, sizeof(newtext), "%.2f Hz", fps);
+		}else{
+			newtext[0]=0;
+			fps=0;
+		}
+		if(fps!=oldfps){
+			gtk_label_set_text(GTK_LABEL(fpslabel), newtext);
+			oldfps=fps;
+		}
 	}
 	/*if(io_time1+60<thistime){//60 seconds no update, check connectivity.
 		if(stwriteint(sock, DRAW_RESUME)){
@@ -1887,7 +1899,7 @@ gboolean update_fpslabel(gpointer label){
 			sock=-1;
 		}
 	}*/
-	return ans;
+	return repeat;
 }
 //Create a new toolbar item.
 #if GTK_MAJOR_VERSION < 4
@@ -2063,12 +2075,12 @@ GtkWidget* create_window(GtkWidget* window){
 	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL, NULL);
 
 #if GTK_MAJOR_VERSION<3
-	new_tool(toolbar, NULL, 1, "media-playback-start-ltr", NULL, G_CALLBACK(togglebutton_play), NULL);
+	new_tool(toolbar, NULL, 0, "view-refresh-symbolic", NULL, G_CALLBACK(toolbutton_refresh), NULL);
 #else
-	new_tool(toolbar, NULL, 1, "media-playback-start", NULL, G_CALLBACK(togglebutton_play), NULL);
+	new_tool(toolbar, NULL, 0, "view-refresh-symbolic", NULL, G_CALLBACK(toolbutton_refresh), NULL);
 #endif
 	new_tool(toolbar, NULL, 1, "media-playback-pause", NULL, G_CALLBACK(togglebutton_pause), NULL);
-	new_tool(toolbar, NULL, 0, "media-playback-stop", NULL, G_CALLBACK(toolbutton_stop), NULL);
+	new_tool(toolbar, NULL, 1, "media-playback-stop", NULL, G_CALLBACK(togglebutton_stop), NULL);
 	new_tool(toolbar, NULL, 0, "edit-copy", NULL, G_CALLBACK(topnb_detach_btn), topnb);
 	/*GtkWidget *sep=new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
 	gtk_widget_set_hexpand(sep, TRUE);*/

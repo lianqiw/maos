@@ -232,34 +232,8 @@ static int scheduler_connect_self(int block){
 	return sock;
 }
 
-/**
-   Started by maos to listen to the sock which connects to the
-   scheduler for commands.
-   It requires a new connection to the scheduler to avoid data racing.
-*/
-pthread_t scheduler_listen(thread_fun fun){
-	pthread_t ans=0;
-#if MAOS_DISABLE_SCHEDULER
-	(void) fun; 
-#else
-	if(!fun) return 0;
-	int	sock=scheduler_connect_self(0);
-
-	if(sock!=-1){
-		int cmd[2];
-		cmd[0]=CMD_MAOSDAEMON;
-		cmd[1]=getpid();
-		stwriteintarr(sock, cmd, 2);
-		ans=thread_new(fun, (void*)(long)sock);
-	} else{
-		warning_time("Failed to connect to scheduler\n");
-	}
-#endif
-	return ans;
-}
-
-static int psock=-1;
-
+static int psock=-1; //persistent socket for maos to scheduler connection
+#define CATCH_ERR(A) if(A){psock=-1;}
 void scheduler_report_path(const char* path){
 #if MAOS_DISABLE_SCHEDULER
 	(void)path;
@@ -282,11 +256,11 @@ void scheduler_report_path(const char* path){
 	int cmd[2];
 	cmd[0]=CMD_PATH;
 	cmd[1]=getpid();
-	stwriteintarr(psock, cmd, 2);
-	stwritestr(psock, path_save);
+	CATCH_ERR(stwriteintarr(psock, cmd, 2));
+	CATCH_ERR(stwritestr(psock, path_save));
 #endif	
 }
-#define CATCH_ERR(A) if(A){psock=-1;}
+
 
 /**
    Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set.
@@ -349,7 +323,7 @@ void scheduler_finish(int status){
 #endif	
 }
 pthread_t cthread=0;
-void* scheduler_connect_thread(void *data){
+static void* scheduler_connect_thread(void *data){
 	(void) data;
 	dbg_time("started.\n");
 	psock=scheduler_connect_self(1);
@@ -378,6 +352,33 @@ void scheduler_report(status_t* status){
 #endif
 }
 
+/**
+   Started by maos to listen to the sock which connects to the
+   scheduler for commands.
+   It requires a new connection to the scheduler to avoid data racing (?).
+*/
+pthread_t scheduler_listen(thread_fun fun){
+	pthread_t ans=0;
+#if MAOS_DISABLE_SCHEDULER
+	(void) fun;
+#else
+	if(!fun) return 0;
+	//int	sock=scheduler_connect_self(0);
+	if(psock<0){
+		psock=scheduler_connect_self(0);
+	}
+	if(psock!=-1){
+		int cmd[2];
+		cmd[0]=CMD_MAOSSER;
+		cmd[1]=getpid();
+		stwriteintarr(psock, cmd, 2);
+		ans=thread_new(fun, (void *)(long)psock);
+	} else{
+		warning_time("Failed to connect to scheduler\n");
+	}
+#endif
+	return ans;
+}
 /**
    Ask scheduler (maybe in another machine) to launch executable.
 */
@@ -410,35 +411,36 @@ int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
 	return ret;
 }
 /**
-   send a drawing sock to the scheduler for caching (1) or request a sock for drawing (-1)
+   send a drawing sock to the scheduler for caching (dir=1) or request a sock for drawing (dir=-1).
+   id should be between 1 and 9999.
 */
 int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;
 #if MAOS_DISABLE_SCHEDULER
 	(void)dir;(void)sfd;(void)id;
 #else
-	static int ssock=-1;
-	if(ssock==-1){
-		ssock=scheduler_connect_self(1);
-	}
+	int ssock=scheduler_connect_self(1);
 	if(ssock==-1 || !sfd){
 		return -1;
 	}
+	id=abs(id);
+	if(id>10000 || id==0) id=1;
 	if(dir==1&&*sfd!=-1){//send
-		int cmd[2]={CMD_SOCK, id==0?1:abs(id)};
+		int cmd[2]={CMD_DRAWCLI, id};
 		ans=(stwriteintarr(ssock, cmd, 2)||stwritefd(ssock, *sfd));
-	}else if(dir==-1){//recv
+	}else if(dir==-1 || dir==0){//recv
 		int ans2;
-		int cmd[2]={CMD_SOCK, id==0?0:-abs(id)};
+		int cmd[2]={CMD_DRAWCLI, dir==-1?(-id):(-10000-id)};
 		ans=(stwriteintarr(ssock, cmd, 2)||streadint(ssock, &ans2))||ans2;
 		if(!ans){
 			ans=streadfd(ssock, sfd);
 		}
+	}else{
+		dbg_time("invalid dir=%d\n", dir);
 	}
+	close(ssock);
 	if(ans){
 		dbg2_time("scheduler_socket operation for %s failed.\n", dir==1?"send":"receive");
-		close(ssock);
-		ssock=-1;
 	}
 #endif
 	return ans;

@@ -312,7 +312,7 @@ static int respond(int sock){
 		return -3;
 	}
 		break;
-	case MON_CMD://called by monitor main thread
+	case MON_CMD://called by monitor main thread. pid is process id. >0
 	{
 		int command;
 		streadint(sock, &command);
@@ -322,10 +322,10 @@ static int respond(int sock){
 		(void)ans;
 	}
 	break;
-	case MON_DRAWDAEMON://called by scheduler to open drawdaemon
+	case MON_DRAWDAEMON://called by scheduler to open drawdaemon. pid is 0 or negative
 	{
 		info_time("Received drawdaemon request\n");
-		scheduler_cmd(ihost, 0, CMD_DISPLAY);
+		scheduler_cmd(ihost, pid, CMD_DRAWSER);
 	}
 	break;
 	case MON_STATUS://called by scheduler to pass maos status
@@ -566,14 +566,17 @@ static int scheduler_display(int ihost, int pid){
 	  end of the port to drawdaemon so we can communicate with it.*/
 	int sock=scheduler_connect(hosts[ihost]);
 	if(sock==-1) return ans;
-	int cmd[2]={CMD_DISPLAY, pid};
+	int cmd[2]={CMD_DRAWSER, pid};//pid is positive if called by monitor, negative or 0 if called by scheduler
 
 	if(stwriteintarr(sock, cmd, 2)||streadintarr(sock, cmd, 1)||cmd[0]){
 		warning("Failed to pass sock to draw via scheduler.\n");
-	} else{
+	} else {
 		char arg1[20];
 		snprintf(arg1, 20, "%d", sock);
-		if(spawn_process("drawdaemon", arg1, NULL)<0){
+		char arg2[20];
+		snprintf(arg2, sizeof(arg2), "%d", pid>0?1:-pid);
+		const char *args[4]={"drawdaemon", arg1, arg2, NULL};
+		if(spawn_process("drawdaemon", args, NULL)<0){
 			warning("spawn drawdaemon failed\n");
 		} else{
 			ans=0;
@@ -588,7 +591,7 @@ static int scheduler_display(int ihost, int pid){
 static int scheduler_cmd(int ihost, int pid, int command){
 	if(ihost<0) return 0;
 	dbg2_time("Send %d to %s\n", command, hosts[ihost]);
-	if(command==CMD_DISPLAY){
+	if(command==CMD_DRAWSER){
 		return scheduler_display(ihost, pid);
 	} else{
 		int ans=-1;

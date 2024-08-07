@@ -32,7 +32,7 @@ PNEW(lock);
 #define MAXDRAW 1024
 #define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
 
-int draw_id=1;      //Client identification. Same draw_id reuses drawdaemon.
+int draw_id=DRAW_ID_MAOS;      //Client identification. Same draw_id reuses drawdaemon.
 int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
 static int sock_helper=-1;//socket of draw_helper
@@ -271,7 +271,7 @@ static void draw_remove(int fd, int reuse){
 			if(reuse){
 				stwriteint(p->fd, DRAW_FINAL);
 				dbg("send %d back to scheduler for reuse\n", p->fd);
-				scheduler_socket(1, &p->fd, draw_id?draw_id:1);
+				scheduler_socket(1, &p->fd, draw_id);
 			}
 			if(p->thread){
 				void *ans;
@@ -298,13 +298,14 @@ static void draw_remove(int fd, int reuse){
 	}
 }
 static int launch_drawdaemon(){
-	int sv2[2];
-	/*one end of sv2 will be passed back to draw_helper, the other end of sv2
-	  will be passed to drawdaemon.*/
+	int sv2[2];//socket pair for communication.
+	/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
 	if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
 		char arg1[20];
 		snprintf(arg1, 20, "%d", sv2[1]);
-		if(spawn_process("drawdaemon", arg1, NULL)<0){
+		const char *args[3]={"drawdaemon", arg1, NULL};
+		
+		if(spawn_process("drawdaemon", args, NULL)<0){
 			warning("spawn drawdaemon failed\n");
 			close(sv2[0]);
 			sv2[0]=-1;
@@ -322,7 +323,7 @@ static int launch_drawdaemon(){
 /**
    A helper routine that forks in the early stage to launch drawdaemon. Retired.
 */
-void draw_helper(void){
+/*void draw_helper(void){
 	if(draw_direct){
 		info("draw_direct=1, skip draw_helper\n");
 		return;
@@ -345,10 +346,10 @@ void draw_helper(void){
 		close(sv[1]);
 		warning("Fork failed. Return.\n");
 	}
-	if(pid){/*Parent */
+	if(pid){//Parent 
 		sock_helper=sv[0];
 		close(sv[1]);
-	} else{/*Child */
+	} else{//Child 
 		close(sv[0]);
 		int cmd;
 		while(!streadint(sv[1], &cmd)){
@@ -360,7 +361,7 @@ void draw_helper(void){
 		close(sv[1]);
 		_exit(0);//shall never return.
 	}
-}
+}*/
 /**
    Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
 */
@@ -380,12 +381,6 @@ static int get_drawdaemon(){
 		display=0;
 	}
 #endif
-	/*if(draw_id<=0){
-		draw_id=getsid(0);
-		if(draw_id<=0){
-			draw_id=1;
-		}
-	}*/
 	LOCK(lock);
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id
@@ -418,7 +413,7 @@ static int get_drawdaemon(){
 				}
 			}
 		} else{//no display is available. use scheduler to launch drawdaemon
-			scheduler_socket(-1, &sock, 0);
+			scheduler_socket(0, &sock, draw_id);
 			dbg("launch using scheduler: sock=%d\n", sock);
 		}
 	}

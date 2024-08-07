@@ -52,28 +52,26 @@ typedef struct status_t{
 }status_t;
 /*Commands handled by scheduler server. Do not modify existing values*/
 enum{
-    CMD_START=1,
-    CMD_FINISH,
-    CMD_STATUS,
-    CMD_CRASH,/*4 */
-    CMD_MONITOR,
-    CMD_PATH,/*6 */
-    CMD_KILL,
-    CMD_TRACE,/*8 */
-    CMD_PROBE,/*9 just for probe connection*/
-    CMD_SOCK,  /**<10 We are pass a socket*/
-    CMD_REMOVE,/**<11 Remove a job*/
-    CMD_DISPLAY,/**<12 Remote display for telemetry*/
-    CMD_MAOS, /*13 */
-    CMD_MAOSDAEMON, /*14 */
-    CMD_RESTART,/*15*/
-    CMD_KILLED,/*16*/
-    CMD_DUMMY,/*17. no action. for probing connection with no reply anticipated*/
-    CMD_LAUNCH,/*18*/
-    CMD_PAUSE,
-    CMD_RESUME,
+    CMD_START=1,/*1: called by maos to check whether it can start*/
+    CMD_FINISH, /*2: called by maos to report finishes*/
+    CMD_STATUS, /*3: called by maos to report status*/
+    CMD_CRASH,	/*4: called by maos te report crashes */
+    CMD_MONITOR,/*5: called by monitor upon connection*/
+    CMD_PATH,	/*6: called by maos to report job path */
+    CMD_KILL, 	/*7: called by monitor to kill a job*/
+    CMD_TRACE,	/*8: called by maos to do a backtrace */
+    CMD_PROBE,	/*9: called by monitor to probe connection*/
+    CMD_DRAWCLI,/*10: called by maos to save or request a drawdaemon socket*/
+    CMD_REMOVE, /*11: called by monitor to remove a job */
+    CMD_DRAWSER,/*12: called by monitor or drawdaemon to provide drawdaemon connection*/
+	CMD_MAOSCLI,/*13: for a maos client to create a client link to maos. */
+	CMD_MAOSSER,/*14: called by maos to save a port to run maos_command */
+	CMD_RESTART,/*15: called by monitor to restart a job*/
+	CMD_KILLED, /*16: called by maos to indicate that job is cancelled or killed*/
+    CMD_DUMMY,	/*17. no action. for probing connection with no reply anticipated*/
+	CMD_LAUNCH,	/*18: called from maos from another machine to start a job in this machine*/
 };
-/*Command handled by maos listener. Do not modify existing values.*/
+/*Command handled by maos built-in server. Do not modify existing values.*/
 enum{
     MAOS_SERVER=1,/*not used*/
     MAOS_DRAW=10, /*tell maos to start drawing with the received fd*/
@@ -149,5 +147,11 @@ enum{
     
     DRAW_ENTRY=9999 /*A new entry*/
 };
-#define scheduler_version 52
+enum {
+	DRAW_ID_MAOS=1,
+	DRAW_ID_RES,
+	DRAW_ID_BIN,
+	DRAW_ID_TOT
+};
+#define scheduler_version 53
 #endif

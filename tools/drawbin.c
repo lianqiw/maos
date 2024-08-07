@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 	/*use the parent pid so same bash session has the same drawdaemon. */
-	draw_id=2;//getsid(0)+1e6;
+	draw_id=DRAW_ID_BIN;//getsid(0)+1e6;
 	draw_direct=1;
 	draw_single=-1;//disable draw_single support;
 	/*launch scheduler if it is not already running. */
