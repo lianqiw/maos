@@ -53,7 +53,11 @@ void shwfs_grad(dmat **pgrad, dmat *ints[], const parms_t *parms, const powfs_t 
 dcell *dcellread_prefix(const char *file, const parms_t *parms, int ipowfs);
 
 /**
-   Create first order low pass filter coeffcient from cross over frequency and sampling rate.
+   Create first order low pass filter coeffcient $\alpha$ from cross over frequency $f_c$ and sampling rate $T_s$. With exponential smoothing we have
+   $$y[k] =\alpha u[k]+\left(1 - \alpha\right)y[k-1]\quad\text{where}\quad\alpha = 1 - e^{-\omega_{c} \cdot T_{s}}$$
+   The time constant $\tau$ is $1/\omega_{c}$ and the -3dB frequency is $\omega_{c}/(2\pi)$.
+   Can also be used for integrator based offloading with the desired corner frequency.
+   See also https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
 */
 static inline real fc2lp(real fc, real dt){
     if(fc*dt>=1){

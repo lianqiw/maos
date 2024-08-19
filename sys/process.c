@@ -122,7 +122,7 @@ void init_process(void){
 	DIRCACHE=stradd(HOME, "/.aos/cache",NULL);
 	mymkdir("%s", DIRCACHE);
 	
-	DIRLOCK=stradd(HOME, "/.aos/lock", NULL);
+	DIRLOCK=stradd(HOME, "/.aos/lock", NULL);//should be shared if job are distributed between different servers.
 	mymkdir("%s", DIRLOCK);
 
 	DIRSTART=mygetcwd();

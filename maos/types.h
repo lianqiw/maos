@@ -568,7 +568,7 @@ typedef struct sim_t{
     dcell *cleNGSmp;   /**<(M'*w*phi);*/
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
-    dmat *timing;      /**<Timing and memory using for each step*/
+    //dmat *timing;      /**<Timing and memory using for each step*/
 
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
 

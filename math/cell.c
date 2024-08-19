@@ -277,7 +277,7 @@ void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
 		
 		for(long ix=0; ix<(nx*ny); ix++){
 			/*int remove_header=0;
-			if(A->keywords && !P(A,ix)->keywords){
+			if(A->keywords && !P(A,ix)->keywords && zfisfits(fp)){
 				P(A,ix)->keywords=A->keywords;
 				remove_header=1;
 			}*/

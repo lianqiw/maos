@@ -39,7 +39,7 @@ fixlibtool:libtool
 	@sed 's/|-fopenmp|/|/g' libtool > libtool.new
 	@mv libtool.new libtool
 version.h:FORCE #non existent target will always run
-	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || echo $(VERSION)`\";" && \
+	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || (echo $(VERSION) && date +'%F %r %z') `\";" && \
 	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
 FORCE:
 bin/Makefile:Makefile

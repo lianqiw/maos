@@ -202,7 +202,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				wfs_propdata->phiout=opd;
 				if(parms->atm.dtrat>0){
 					int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-					real wt2=nps==1?0:((real)(isim%parms->atm.dtrat)/parms->atm.dtrat);//nps==1: no interpolation
+					real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%parms->atm.dtrat)/parms->atm.dtrat),2);//smoother interp with sin function
 					wfs_propdata->mapin=P(simu->atm, iframe);
 					wfs_propdata->alpha=ips==0?(1-wt2):wt2;
 					//if(iwfs==0) dbg("wfs: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, wfs_propdata->alpha);
@@ -368,7 +368,7 @@ void* wfsgrad_iwfs(thread_t* info){
 						map_t *atmi;
 						if(parms->atm.dtrat>0){
 							int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-							real wt2=nps==1?0:((real)(isim%parms->atm.dtrat)/parms->atm.dtrat);//nps==1: no interpolation
+							real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%parms->atm.dtrat)/parms->atm.dtrat),2);//nps==1: no interpolation
 							atmi=P(simu->atm, iframe);
 							atmscale=ips==0?(1-wt2):wt2;
 							//if(iwfs==0) dbg("lltopd: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, atmscale);

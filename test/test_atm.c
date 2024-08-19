@@ -46,5 +46,6 @@ int main(){
     data.nlayer=nlayer;
     data.slope=-11./3.;
     mapcell *map=genscreen(&data);
-    writebin(map, "atm.bin");
+    //writebin(map, "atm.bin");
+	(void)map;
 }

@@ -513,9 +513,9 @@ static void init_simu_evl(sim_t* simu){
 	sim_save_t* save=simu->save;
 	simu->evlopd=dcellnew(nevl, 1);
 	simu->perfevl_iground=parms->atm.iground;
-	if(!disable_save&&parms->save.extra>1){
+	/*if(!disable_save&&parms->save.extra>1){
 		simu->timing=dnew_file(5, nsim, "Simulation timing per time step", "%s/Timing_%d.bin", fnextra, seed);
-	}
+	}*/
 	//2021-07-2: do not use mmap to write file. It causes a lot of disk activity.
 	/*MMAP the main result file */
 	{
@@ -1657,7 +1657,7 @@ void free_simu(sim_t* simu){
 	dcellfree(simu->dm_wfs);
 	dcellfree(simu->dm_evl);
 	dcellfree(simu->res);
-	dfree(simu->timing);
+	//dfree(simu->timing);
 	dcellfree(simu->resp);
 	dcellfree(simu->olep);
 	dcellfree(simu->olmp);
@@ -1806,14 +1806,14 @@ void print_progress(sim_t* simu){
 	simu->status->other=simu->tk_cache;
 	simu->status->eval=simu->tk_eval;
 	simu->status->scale=1;
-	if(simu->timing){
+/*if(simu->timing){
 		P(simu->timing, 0, isim)=get_job_mem();
 		P(simu->timing, 1, isim)=simu->status->tot;
 		P(simu->timing, 2, isim)=simu->status->wfs;
 		P(simu->timing, 3, isim)=simu->status->recon;
 		P(simu->timing, 4, isim)=simu->status->eval;
 	}
-
+*/
 	real this_time=myclockd();
 	if(simu->res&&simu->res->fp){//save res periodically for plotting.
 		static real last_save_time=0;

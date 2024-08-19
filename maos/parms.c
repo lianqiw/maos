@@ -250,7 +250,7 @@ static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 		tmp="arcsecond";
 		*theta*=AS2RAD;/*convert form arcsec to radian. */
 	}
-	dbg("Assume %s=%g is in %s. \n", name, val, tmp);
+	dbg2("Assume %s=%g is in %s. \n", name, val, tmp);
 }
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
@@ -2181,11 +2181,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			} else{
 				dbg_once("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
 			}
-			double FC2EP=1;//factor for fc to ep conversion
-			READ_ENV_DBL(FC2EP, 0, INFINITY);
-			//llt->lpfsm=fc2lp(llt->fcfsm, parms->sim.dt*powfs->dtrat);//active only when high order wfs has output.
-			lltcfg->epfsm=FC2EP*lltcfg->fcfsm*parms->sim.dt*powfsi->dtrat;//2 gives slight overshoot
-			if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
+			if(lltcfg->fcfsm){
+				lltcfg->epfsm=fc2lp(lltcfg->fcfsm, parms->sim.dt*powfsi->dtrat);
+				if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
+			}
 		}
 		//Match TWFS to LGS POWFS
 		if(powfsi->skip==2){//TWFS
@@ -2337,8 +2336,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
 			if(powfsi->epfsm<0){
-				powfsi->epfsm=0;
-			}else if(!powfsi->epfsm){
 				real g=servo_optim_margin(parms->sim.dt,powfsi->dtrat,powfsi->alfsm,
 					M_PI/4,powfsi->f0fsm,powfsi->zetafsm);
 				powfsi->epfsm=g;
@@ -2517,14 +2514,14 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		if(fabs(P(parms->atm.ht,ips))<1.e-10){
 			if(parms->atm.iground==-1){
 				parms->atm.iground=ips;
-			} else{
+			} else if(!parms->atm.dtrat){
 				dbg("There are multiple ground atm layers (OK).\n");
 			}
 		}
 		if(P(parms->atm.ht,ips)<0){
 			warning("Layer %d height %g is below ground (OK).\n",ips,P(parms->atm.ht,ips));
 		}
-		if(ips>0&&fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<10){
+		if(ips>0&&!parms->atm.dtrat && fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<10){
 			warning("Layer %d at %gm is very close to layer %d at %gm (OK).\n",
 				ips,P(parms->atm.ht,ips),ips-1,P(parms->atm.ht,ips-1));
 		}
@@ -2802,8 +2799,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dt);//active at every time step. use dt
 
 		if(P(parms->sim.ephi, 0)<0){
-			P(parms->sim.ephi, 0)=0;
-		} else if(!P(parms->sim.ephi, 0)){
 			real g=0.5;
 			if(parms->npowfs>0){
 				g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi,
@@ -2813,8 +2808,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			info("sim.ephi is set to %g (auto)\n", g);
 		}
 		if(P(parms->sim.eplo, 0)<0){
-			P(parms->sim.eplo, 0)=0;
-		} else if(!P(parms->sim.eplo, 0)){
 			real g=0.5;
 			if(parms->npowfs>0){
 				servo_optim_margin(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo,

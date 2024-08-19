@@ -88,6 +88,7 @@ extern "C"{
 struct file_t{
 	char* fn;  /**<The disk file name*/
 	const char *msg; /**<Error message if any*/
+	char *gstr;/**<Top level keyword string for fits file. */
 	voidp gp;   /**<only used when gzipped*/
 	int isgzip;/**<Is the file zipped.*/
 	int isfits;/**<Is the file fits.*/
@@ -476,6 +477,7 @@ void zfclose(file_t* fp){
 		close(fp->fd);
 	}
 	//close(fp->fd);//keep fd open
+	free(fp->gstr);
 	free(fp->fn);
 	free(fp);
 	//UNLOCK(lock);
@@ -1047,7 +1049,9 @@ read_error_eof:
 void write_header(const header_t* header, file_t* fp){
 	if(fp->isfits){
 		if(header->magic!=MCC_ANY){
-			write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
+			write_fits_header(fp, header->str?header->str:fp->gstr, header->magic, 2, &header->nx, &header->ny);
+		}else if(header->str){
+			fp->gstr=strdup(header->str);//save global keyword to be used for each page
 		}
 	} else{
 		if(header->str){

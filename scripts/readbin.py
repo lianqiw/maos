@@ -337,7 +337,7 @@ def set_header(header):
     headers.clear()
     if type(header) is list:
         headers.extend(header)
-    else:
+    elif header is not None:
         headers.append(header)
 if __name__ == '__main__':
     if len(sys.argv)>1:

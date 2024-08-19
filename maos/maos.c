@@ -462,5 +462,5 @@ OMPTASK_SINGLE
 	info2("\n*** Simulation %s at %s in %s. ***\n\n", signal_caught?"Terminated":"Finished",myasctime(0), HOST);
 	free_arg(&arg);
 	scheduler_finish(signal_caught);
-	return 0;
+	return signal_caught;
 }

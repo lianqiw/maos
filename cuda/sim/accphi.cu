@@ -162,7 +162,7 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 		int ips;
 		if(atm_dtrat){
 			ips=wrap_seq(isim/atm_dtrat+jps, cudata->atm.N());
-			Real wt2=nps==1?0:((real)(isim%atm_dtrat)/atm_dtrat);//nps==1: no interpolation
+			Real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%atm_dtrat)/atm_dtrat),2);//nps==1: no interpolation
 			atmalpha=atmalpha0*(jps==0?(1-wt2):wt2);
 			//dbg("isim=%d, atmalpha=%g\n", isim, atmalpha);
 		}else{
