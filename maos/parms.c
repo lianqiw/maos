@@ -1179,6 +1179,7 @@ static void readcfg_atm(parms_t *parms){
 	READ_INT(atm.share);
 	READ_INT(atm.r0evolve);
 	READ_INT(atm.dtrat);
+	READ_INT(atm.interp);
 	READ_DMAT(atm.r0logpsdt);
 	READ_DMAT(atm.r0logpsds);
 	READ_DMAT_N(atm.size, 2);
@@ -1193,13 +1194,23 @@ static void readcfg_atm(parms_t *parms){
 		readcfg_ignore("atm.wddeg");
 	}
 	if(parms->atm.dtrat){
-		parms->atm.nps=2;//1: do not interpolate, 2: interpolate between two frames.
-		dresize(parms->atm.ht, parms->atm.nps, 1);
-		dresize(parms->atm.wt, parms->atm.nps, 1);
-		dresize(parms->atm.ws, parms->atm.nps, 1);
-		dresize(parms->atm.L0, parms->atm.nps, 1);
-		if(!parms->atm.wdrand)dresize(parms->atm.wddeg, parms->atm.nps, 1);
-		dset(parms->atm.ht, 0);
+		int nps=1;
+		if(parms->atm.interp>0 && parms->atm.interp<=2){
+			nps=2;//1: do not interpolate, 2: interpolate between two frames.
+		}else if(parms->atm.interp==3){
+			nps=4;//p-chip interpolation with four frames
+		}else{
+			error("Please implement\n");
+		}
+		if(parms->atm.nps!=nps){
+			parms->atm.nps=nps;
+			dresize(parms->atm.ht, parms->atm.nps, 1);
+			dresize(parms->atm.wt, parms->atm.nps, 1);
+			dresize(parms->atm.ws, parms->atm.nps, 1);
+			dresize(parms->atm.L0, parms->atm.nps, 1);
+			if(!parms->atm.wdrand)dresize(parms->atm.wddeg, parms->atm.nps, 1);
+			dset(parms->atm.ht, P(parms->atm.ht,0));
+		}
 	}
 }
 /**
@@ -1661,7 +1672,7 @@ static void readcfg_cn2(parms_t *parms){
 	READ_INT(cn2.psol);
 	READ_DBL(cn2.hmax);
 	READ_DBL(cn2.saat);
-	if(parms->cn2.pair&&(!NX(parms->cn2.pair)||parms->sim.noatm==1)){
+	if(parms->cn2.pair&&(!NX(parms->cn2.pair)||parms->sim.noatm==1||parms->atm.dtrat)){
 		dfree(parms->cn2.pair);
 	}
 	if(!parms->cn2.pair){/*we are not doing cn2 estimation. */
@@ -3187,43 +3198,45 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 }
 
-
-/**
-   postproc misc parameters.
-*/
-static void setup_parms_postproc_misc(parms_t *parms, int override){
-	if(!disable_save&&parms->sim.end>parms->sim.start){
-	/*Remove seeds that are already done. */
-		char fn[PATH_MAX];
+static void setup_parms_postproc_seeds(parms_t *parms, int override){
+	if(disable_save) return;//do not check if not saved
+	if(parms->sim.end>parms->sim.start){
+		/*Remove seeds that are already done. */
 		int iseed=0;
 		int jseed=0;
 		parms->fdlock=mycalloc(parms->sim.nseed, int);
-		parms->fnlock=mycalloc(parms->sim.nseed, char*);
+		parms->fnlock=mycalloc(parms->sim.nseed, char *);
+		char cwd[PATH_MAX];
+		if(!getcwd(cwd, PATH_MAX)){
+			cwd[0]='.'; cwd[1]='0';
+		} else{
+			for(char *p=cwd; p[0]; p++){
+				if(*p=='/') *p='!';
+			}
+		}
+
 		for(iseed=0; iseed<parms->sim.nseed; iseed++){
-			snprintf(fn,sizeof(fn),"Res_%ld.done",P(parms->sim.seeds,iseed));
-			if(exist(fn)&&!override){
-				parms->fdlock[iseed]=-1;
-				warning("Skip seed %ld because %s exists.\n",P(parms->sim.seeds,iseed),fn);
-			} else{
-				remove(fn);
-				char cwd[PATH_MAX];
-				if(!getcwd(cwd, PATH_MAX)){
-					cwd[0]='.'; cwd[1]='0';
-				}else{
-					for(char *p=cwd; p[0]; p++){
-						if(*p=='/') *p='!';
-					}
+			char fn[PATH_MAX];//may not be NFS shared
+			snprintf(fn, sizeof(fn), "Res_%ld.done", P(parms->sim.seeds, iseed));
+			if(exist(fn)){
+				if(override){
+					remove(fn);
+				} else{
+					parms->fdlock[iseed]=-1;
+					warning("Skip seed %ld because %s exists.\n", P(parms->sim.seeds, iseed), fn);
 				}
-				snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock",DIRLOCK,cwd,P(parms->sim.seeds,iseed));
-				parms->fdlock[iseed]=lock_file(fn,0);
+			}
+			if(!parms->fdlock[iseed]){
+				snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock", DIRLOCK, cwd, P(parms->sim.seeds, iseed));
+				parms->fdlock[iseed]=lock_file(fn, 0);
 				if(parms->fdlock[iseed]<0){
 					warning("Skip seed %ld because it is already running.\n",
-						P(parms->sim.seeds,iseed));
+						P(parms->sim.seeds, iseed));
 				} else{
 					cloexec(parms->fdlock[iseed]);
 					parms->fnlock[iseed]=mystrdup(fn);
 					if(jseed!=iseed){//remove gap in array.
-						P(parms->sim.seeds,jseed)=P(parms->sim.seeds,iseed);
+						P(parms->sim.seeds, jseed)=P(parms->sim.seeds, iseed);
 						parms->fdlock[jseed]=parms->fdlock[iseed];
 					}
 					jseed++;
@@ -3233,45 +3246,32 @@ static void setup_parms_postproc_misc(parms_t *parms, int override){
 		if(jseed!=parms->sim.nseed){
 			parms->sim.nseed=jseed;
 		}
-	}
+	}//if sim.end>sim.start
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	if(parms->sim.nseed<1){
+		remove(fn);
 		info2("There are no seed to run. Use -O to override. Exit\n");
-		return;
-	} else if(parms->sim.end>parms->sim.start){
-		info2("There are %d valid simulation seeds: ",parms->sim.nseed);
+	} else{
+		mysymlink(fn, "run_recent.log");
+		info2("There are %d valid simulation seeds: ", parms->sim.nseed);
 		for(int i=0; i<parms->sim.nseed; i++){
-			info2(" %ld",P(parms->sim.seeds,i));
+			info2(" %ld", P(parms->sim.seeds, i));
 		}
 		info2("\n");
-		if(parms->sim.nseed>1&&parms->dither){
-			info("Some of the dither mode updates parameters will persist for different seeds.\n");
-		}
 	}
-	if(!disable_save){
-		if(parms->sim.nseed>0){
-			//Make symlink after simulation runs.
-			char fn[PATH_MAX];
-			snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
-			//remove("maos_done.conf");
-			remove("maos_recent.conf");
-			mysymlink(fn, "maos_recent.conf");
-			//remove("run_done.log");
-			remove("run_recent.log");
-			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-			mysymlink(fn, "run_recent.log");
-		} else{
-			char fn[PATH_MAX];
-			snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-			remove(fn);
-		}
-	}else{
+}
+/**
+   postproc misc parameters.
+*/
+static void setup_parms_postproc_misc(parms_t *parms){
+	if(disable_save){
 		if(parms->save.setup||parms->save.all||parms->sim.skysim||parms->evl.psfmean||parms->evl.psfhist){
 			error("Please specify -o DIR to enable saving to disk\n");
 		}
 	}
 	if(parms->save.ngcov>0&&parms->save.gcovp<10){
-		warning("parms->save.gcovp=%d is too small. It may fill your disk!\n",
-			parms->save.gcovp);
+		warning("parms->save.gcovp=%d is too small. It may fill your disk!\n", parms->save.gcovp);
 	}
 	if(parms->save.gcovp>parms->sim.end){
 		parms->save.gcovp=parms->sim.end;
@@ -3352,18 +3352,19 @@ static void print_parms(const parms_t *parms){
 #define GREEN BLACK
 	info2("%sAperture%s is %g m with sampling 1/%g m\n",GREEN,BLACK,
 		parms->aper.d,1/parms->evl.dx);
-	real fgreen=calc_greenwood(parms->atm.r0z,parms->atm.nps,P(parms->atm.ws),P(parms->atm.wt));
-	real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
 	if(!parms->sim.noatm){
+		real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, P(parms->atm.ws), P(parms->atm.wt));
+		real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
+	
 		info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
 			GREEN,parms->sim.za*180./M_PI,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 		info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
 			fgreen,theta0z*RAD2AS);
-		if(parms->ndm==2){
+		if(parms->ndm>1 && isfinite(theta0z)){
 			real H1=parms->dm[0].ht;
 			real H2=parms->dm[1].ht;
 			real theta2z=calc_aniso2(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt),H1,H2);
-			info(", generalized is %.2f as\n",theta2z*RAD2AS);
+			info(", generalized aa is %.2f as\n",theta2z*RAD2AS);
 		} else{
 			info("\n");
 		}
@@ -3625,7 +3626,8 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	readcfg_save(parms);
 	readcfg_distortion(parms);
 	readcfg_load(parms);
-
+	
+	setup_parms_postproc_seeds(parms, override);
 	/*
 	  Output all the readed parms to a single file that can be used to reproduce
 	  the same simulation.
@@ -3636,6 +3638,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 		close_config("%s", fn);
+		mysymlink(fn, "maos_recent.conf");
 	}
 	/*
 	  Postprocess the parameters for integrity. The ordering of the following
@@ -3650,8 +3653,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	setup_parms_postproc_atm_size(parms);
 	setup_parms_postproc_dm(parms);
 	setup_parms_postproc_recon(parms);
-	setup_parms_postproc_misc(parms,override);
-	
+	setup_parms_postproc_misc(parms);
 
 	if(parms->sim.nseed>0){
 		print_parms(parms);

@@ -153,6 +153,7 @@ struct drawdata_t{
 	int cumu;/*plot cumulative mean. */
 	int cumuquad;/*make cumulative quadrature */
 	int cumuquadlast;
+	int cumuover;/*overlay cumulative plot on top of regular*/
 	/*icumu has to be float because it is used by the GtkSpin */
 	float icumu;/*plot cumulative mean from this time step if cumu!=0 */
 	float icumulast;/*plot cumulative mean from this time step if cumu!=0 */

@@ -715,17 +715,23 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 		dmulvec(pttrcoeff_out, aper->imcc, coeff, 1);
 	}
 	if(pttr_out){
-	/*compute TT removed wavefront variance as a side product */
+		/*compute TT removed wavefront variance as a side product */
 		real pis=aper->ipcc*coeff[0]*coeff[0];
 		real ptt=dwdot(coeff, aper->imcc, coeff);
 		pttr_out[0]=tot-pis;/*PR */
 		pttr_out[1]=ptt-pis;/*TT */
 		pttr_out[2]=tot-ptt;/*PTTR */
-		if(tot+1e-18<pis||tot+1e-18<ptt){//sanity check. allow round off error
-			warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
-			warning("coeff=%g,%g,%g,%g,%g,%g\n",
-			coeff[0], coeff[1], coeff[2], coeff[3], coeff[4], coeff[5]);
-			ans=1;
+		if(pttr_out[0]<0 || pttr_out[1]<0 || pttr_out[2]<0){
+			if(pttr_out[0]<-1e-6 || pttr_out[1]<-1e-6 || pttr_out[2]<-1e-6){
+				//allow round off error
+				warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
+				warning("coeff=%g,%g,%g,%g,%g,%g\n",
+				coeff[0], coeff[1], coeff[2], coeff[3], coeff[4], coeff[5]);
+				ans=1;
+			}
+			if(pttr_out[0]<0) pttr_out[0]=0;
+			if(pttr_out[1]<0) pttr_out[1]=0;
+			if(pttr_out[2]<0) pttr_out[2]=0;
 		}
 	}
 	/*don't use +=. need locking */

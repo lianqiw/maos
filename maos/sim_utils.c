@@ -1504,12 +1504,12 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		}
 		if(parms->recon.psd&&parms->save.extra){
 			if(parms->recon.psddtrat_hi){
-				save->psdcl=zfarr_init(0, 0, "%s/psdcl_%d.bin", fnextra, seed);
-				save->psdol=zfarr_init(0, 0, "%s/psdol_%d.bin", fnextra, seed);
+				save->psdcl=zfarr_init(0, 0, "%s/Respsdcl_hi_%d.bin", fnextra, seed);
+				save->psdol=zfarr_init(0, 0, "%s/Respsdol_hi_%d.bin", fnextra, seed);
 			}
 			if(parms->recon.psddtrat_lo){
-				save->psdcl_lo=zfarr_init(0, 0, "%s/psdcl_lo_%d.bin", fnextra, seed);
-				save->psdol_lo=zfarr_init(0, 0, "%s/psdol_lo_%d.bin", fnextra, seed);
+				save->psdcl_lo=zfarr_init(0, 0, "%s/Respsdcl_lo_%d.bin", fnextra, seed);
+				save->psdol_lo=zfarr_init(0, 0, "%s/Respsdol_lo_%d.bin", fnextra, seed);
 			}
 		}
 	}
@@ -1780,18 +1780,7 @@ void free_simu(sim_t* simu){
 	free(simu->save);
 	free(simu);
 }
-void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success){
-	if(!fdlock) return;
-	for(long jseed=0; jseed<nseed; jseed++){
-		if(iseed<0 || iseed==jseed){
-			if(iseed>=0 && success){
-				touch("Res_%ld.done", seeds[iseed]);
-			}
-			close(fdlock[jseed]); fdlock[jseed]=0;
-			remove(fnlock[jseed]); free(fnlock[jseed]); fnlock[jseed]=NULL;
-		}
-	}
-}
+
 int compare_dbl2_ascend(const void *a, const void *b){
 	return (int)(((double *)a)[0]-((double *)b)[0]);
 }

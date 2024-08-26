@@ -1541,27 +1541,26 @@ static void tool_property(GtkWidget* button, gpointer data){
 		}
 	}
 	drawdata->spins=spins;
-
+	hbox=gtk_hbox_new(FALSE, 0);
 	checkbtn=gtk_check_button_new_with_label("Make image square");
 	check_button_set_active(checkbtn, drawdata->square);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
-	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 
 	checkbtn=gtk_check_button_new_with_label("Show grids");
 	check_button_set_active(checkbtn, drawdata->grid);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
-	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
-
-	checkbtn=gtk_check_button_new_with_label("Show colorbar");
-	check_button_set_active(checkbtn, !hide_colorbar&&drawdata->p);
-	gtk_widget_set_sensitive(checkbtn, drawdata->p?1:0);
-	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_colorbar);
-	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 
 	checkbtn=gtk_check_button_new_with_label("Put tic inside");
 	check_button_set_active(checkbtn, drawdata->ticinside);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
-	box_append(GTK_BOX(vbox), checkbtn, FALSE, FALSE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
+	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	
+
+
 
 	hbox=gtk_hbox_new(FALSE, 0);
 
@@ -1609,32 +1608,46 @@ static void tool_property(GtkWidget* button, gpointer data){
 	check_button_set_active(checkbtn, drawdata->xylog[0]=='y'?1:0);
 	gtk_widget_set_sensitive(checkbtn, !drawdata->square);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_char), &drawdata->xylog[0]);
-	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
 	checkbtn=gtk_check_button_new_with_label("log(Y)");
 	check_button_set_active(checkbtn, drawdata->xylog[1]=='y'?1:0);
 	gtk_widget_set_sensitive(checkbtn, !drawdata->square);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_char), &drawdata->xylog[1]);
-	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
 	checkbtn=gtk_check_button_new_with_label("log(Value)");
 	check_button_set_active(checkbtn, drawdata->zlog);
 	gtk_widget_set_sensitive(checkbtn, drawdata->p?TRUE:FALSE);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->zlog);
-	box_append(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
+	checkbtn=gtk_check_button_new_with_label("Show colorbar");
+	check_button_set_active(checkbtn, !hide_colorbar&&drawdata->p);
+	gtk_widget_set_sensitive(checkbtn, drawdata->p?1:0);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_inv), &hide_colorbar);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+	
 	box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	hbox=gtk_hbox_new(FALSE, 0);
-	checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
+	checkbtn=gtk_check_button_new_with_label("Cumulative average (");
 	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
 	check_button_set_active(checkbtn, drawdata->cumu);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumu);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
 
-	checkbtn=gtk_check_button_new_with_label("quadrature ");
+	checkbtn=gtk_check_button_new_with_label("overlay ");
+	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
+	check_button_set_active(checkbtn, drawdata->cumuover);
+	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuover);
+	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
+	checkbtn=gtk_check_button_new_with_label("quadrature) from ");
 	gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
 	check_button_set_active(checkbtn, drawdata->cumuquad);
 	g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
 	box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
-	box_append(GTK_BOX(hbox), gtk_label_new(") from"), FALSE, FALSE, 0);
 
 	spin=gtk_spin_button_new_with_range(0, drawdata->limit[1], 1);
 	gtk_widget_set_sensitive(spin, (drawdata->npts>0));

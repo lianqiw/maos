@@ -469,7 +469,7 @@ def unembed(a,ratio=2):
     return center(a, ratio=1/ratio)
 
 def photon_flux(magnitude, wvls):
-    '''Claculate photon flux for magnitude at wavelength wvls'''
+    '''Claculate photon flux (photon/m^2) for magnitude at wavelength wvls'''
     Jy=1.51e7 #photons /sec / m^2 / dl_l
     name =  'UBVRIJHK'
     wvlc= np.array([0.36,0.44,0.55,0.64,0.79,1.26,1.60,2.22 ]) #center wavelength in micron

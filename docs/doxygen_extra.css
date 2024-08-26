@@ -24,7 +24,7 @@ h1.groupheader {
 }
 
 .title {
-	font-size: 200%;
+	font-size: 150%;
 	font-weight: bold;
 	margin: 10px 2px;
 }
@@ -42,4 +42,9 @@ h2.groupheader {
 
 h3.groupheader {
 	font-size: 100%;
+}
+/*code fragment*/
+div.fragment {
+	padding: 2 0 2 px;
+	border: 0px;
 }

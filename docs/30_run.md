@@ -261,20 +261,21 @@ Use the \c write mex routine, \c writebin.m, or \c aolib.writebin to write the b
 ```
 Or simply use fits format. Put the list of surface file names in key \c surf.
 ```
-   maos surf=['opd1.bin','opd2.bin', 'opd3.fits']
+   maos ncpa.surf=['opd1.bin','opd2.bin', 'opd3.fits']
 ```
 
 It is also possible to specify NCPA with inline configuration:
 ```
-maos surf=["'r0=0.1;slope=-4;SURFEVL=1;', 'r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0'"]
-maos surf=["'r0=0.1;slope=-4;L0=30;nx=2048;dx=1./64;SURFEVL=1;SURFWFS=0'"]
+maos ncpa.surf=["'r0=0.1;slope=-4;SURFEVL=1;', 'r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0'"]
+maos ncpa.surf=["'r0=0.1;slope=-4;L0=30;nx=2048;dx=1./64;SURFEVL=1;SURFWFS=0'"]
 ```
 The double quote is necessary here to group the single quoted entries together.
 
 The amplitude map of the telescope can be specified with
 `aper.fnamp=aper.bin` with a similar data format, with OPD replaced by
-amplitude map between 0 and 1. By default, NCPA are calibrated, use `sim.ncpa_method=0` to disable calibration
+amplitude map between 0 and 1. By default, NCPA are calibrated, use `ncpa.calib=0` to disable calibration
 
+<!---
 We can also setup one or more tilted M3 surfaces that are common to science
 fields and wavefront sensors. Put the list of surface files in key \c
 tsurf. Each surface file must contain a 2-d array with a header specifying
@@ -291,7 +292,7 @@ ftel  the telescope effective focal length
 fexit the distance between the exit pupil and the focus
 fsurf the distance between the center of the M3 surface and the focus.
 ```
-
+-->
 \subsection sect-wfs WFS Configuration
 
 The WFS configuration are mostly supplied in \c powfs, which applies to all

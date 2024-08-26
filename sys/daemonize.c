@@ -56,6 +56,9 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 			close(fd); fd=-1;
 		}else{//: success
 			dbg("Lock %s success.\n", fnlock);
+			char msg[128];
+			snprintf(msg, sizeof(msg), "Locked by %s:%d\n", HOST, PID);
+			write(fd, msg, strlen(msg)+1);
 		}
 	}
 	return fd;

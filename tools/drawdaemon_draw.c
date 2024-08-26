@@ -26,8 +26,8 @@
   2) Draw the cached surface to the real surface with zoom or displacement when user requests.
 */
 const double stroke_dot[2]={1,5};
-//const float stroke_dash[2]={10,10};
-//const float stroke_solid[2]={10,0};
+const double stroke_dash[2]={10,5};
+//const double stroke_solid[2]={10,0};
 
 int hide_xlabel=0;
 int hide_ylabel=0;
@@ -437,13 +437,14 @@ static void update_limit(drawdata_t *drawdata){
 	if(isinf(ymax0)) ymax0=1;
 	int limit_changed=0;
 	float ylimit=(ymax0-ymin0)*0.1;
-	if(drawdata->cumu!=drawdata->cumulast){
+	/*if(drawdata->cumu!=drawdata->cumulast){
 		drawdata->update_zoom=2;//limit is changed. reset zoom.
 		drawdata->limit[0]=xmin0;
 		drawdata->limit[1]=xmax0;
 		drawdata->limit[2]=ymin0;
 		drawdata->limit[3]=ymax0;
-	}else{
+	}else*/
+	{
 		if(drawdata->limit[0]!=xmin0){
 			drawdata->limit[0]=xmin0;
 			limit_changed=1;
@@ -841,6 +842,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		}
 		if(drawdata->title&&!hide_title){
 			pango_text(cr, layout, xoff+widthim/2, yoff-S_LBL, drawdata->title, 0.5, 1, 0);
+			if(drawdata->filename_gif){
+				char frame[100];
+				snprintf(frame, sizeof(frame), "<small>%d</small>", drawdata->frame_draw);
+				pango_text(cr, layout, xoff+widthim, yoff-S_LBL, frame, 1, 1, 0);
+			}
 		}
 		cairo_restore(cr);
 	}
@@ -972,7 +978,6 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				PARSE_STYLE(drawdata->style[0]);
 			}
 			/*computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim */
-			int icumu=(int)drawdata->icumu;
 			for(int ipts=0; ipts<drawdata->npts; ipts++){
 				const float *pts=drawdata->pts[ipts];
 				const int ptsnx=drawdata->ptsdim[ipts][0];
@@ -998,85 +1003,61 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 					ptsx=0;
 					ptsy=pts;
 				}
-				int ips0=0;
-				if(drawdata->cumu&&icumu<ptsnx){
-					ips0=icumu;
-				}
-				int ptstep=1;
+				int icumu=(int)drawdata->icumu;
+				if(icumu>=ptsnx) icumu=0;
+				int nlayer=(drawdata->cumu && drawdata->cumuover)?2:1;
 				float ix=0, iy=0, y=0, y_cumu=0;
-				if(connectpts){/*plot curves. */
-					int ips=ips0;
+				for(int ilayer=0; ilayer<nlayer; ilayer++){
+					int cumu=drawdata->cumu&&(!drawdata->cumuover || ilayer==1);
+					if(drawdata->cumuover && ilayer==1){
+						cairo_set_dash(cr, stroke_dash, 2, 0);
+					}
+					int ips=cumu?icumu:0;
+					int ptstep=1;
 					/*Draw first point */
 					/*don't do round here. */
 					ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx; if(!isfinite(ix)) ix=0;
-					iy=((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy; if(!isfinite(iy)) iy=0;
-					if(drawdata->cumuquad){
-						y_cumu=ptsy[ips]*ptsy[ips];
-					} else{
-						y_cumu=ptsy[ips];
+					iy=((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy; 
+					if(!isfinite(iy)) iy=0;
+					if(cumu){
+						if(drawdata->cumuquad){
+							y_cumu=ptsy[ips]*ptsy[ips];
+						} else{
+							y_cumu=ptsy[ips];
+						}
 					}
 					cairo_move_to(cr, ix, iy);
+					if(style){
+						draw_point(cr, ix, iy, style, sym_size, 1);
+					}
 					/*connect additional points. */
 					for(ips++; ips<ptsnx; ips+=ptstep){
 						ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx;		
-						y=ptsy[ips];if(!isfinite(y)) y=0;
-						if(drawdata->cumu){
+						y=ptsy[ips];
+						if(!isfinite(y)) y=0;
+						if(cumu){
 							if(drawdata->cumuquad){
 								y_cumu+=y*y;
-								y=sqrt(y_cumu/(ips-ips0+1));
+								y=sqrt(y_cumu/(ips-icumu+1));
 							} else{
 								y_cumu+=y;
-								y=y_cumu/(ips-ips0+1);
+								y=y_cumu/(ips-icumu+1);
 							}
 						}
 
 						iy=((ylog?log10(y):y)-centery)*scaley*zoomy+ncy;
-						cairo_line_to(cr, ix, iy);
-						/*if(ips%100==0){
-							cairo_stroke(cr);
-							cairo_move_to(cr, (ix), (iy));
-						}*/
-						/*if(!strcmp(drawdata->fig, "PSD")){
-							info("%g, %g\n", ix, iy);
-						}*/
+						if(connectpts){
+							cairo_line_to(cr, ix, iy);
+						}else{
+							cairo_move_to(cr, ix, iy);
+						}
+						if(style){
+							draw_point(cr, ix, iy, style, sym_size, 1);
+						}
 					}
 					cairo_stroke(cr);
 				}
-				if(!(connectpts&&style==5)){/*plot points. */
-					y_cumu=0;
-					for(int ips=ips0; ips<ptsnx; ips+=ptstep){
-						if(isinf(ptsy[ips])) continue;
-						/*Map the coordinate to the image */
-						if(ptsx){/*don't do round here. */
-							ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
-						} else{
-							ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
-						}
 
-						if(drawdata->cumu){
-							if(ptsy[ips]!=0){
-								if(drawdata->cumuquad){
-									y_cumu+=ptsy[ips]*ptsy[ips];
-									y=sqrt(y_cumu/(ips-ips0+1));
-								} else{
-									y_cumu+=ptsy[ips];
-									y=y_cumu/(ips-ips0+1);
-								}
-							}
-						} else{
-							y=ptsy[ips];
-						}
-						iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
-						draw_point(cr, ix, iy, style, sym_size, 1);
-						cairo_stroke(cr);/*stroke each point because color may change. */
-					}/*ipts */
-				}/*if */
-				/*if(!drawdata->style){
-				tic;
-				dbg("stroke");
-				cairo_stroke(cr);//stroke all together.
-				toc("stroke");
-				}*/
 				if(ptsnx>0 && drawdata->legendcurve){
 					char val[20]={0};
 					if(legend&&legend[ipts]&&connectpts){

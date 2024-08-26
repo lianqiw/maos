@@ -54,6 +54,7 @@ public:
     int recongpu;
     int atm_full;   /**<Indicate whether atm is loaded in full to GPU*/
 	int atm_dtrat;  /**saves parms->atm.dtrat;*/
+	int atm_interp; /**<saves parms->atm.interp */
 	int atm_nps;    /**<saves parms->atm.nps;*/
     cuperf_g perf;
     Array<cuwfs_t>wfs;

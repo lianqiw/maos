@@ -425,3 +425,70 @@ int wrap_seq(long index, long n){
 	if(index>=n) index=m-index;
 	return index;
 }
+
+/**
+ * wrap val to between low and high
+ * Notice the difference between remainder() and fmod().
+ * remainder(a,b) wraps a to [-b/2, b/2)
+ * fmod(a,b) wraps a to [-b,b)
+ * */
+real wrap2range(real val, real low, real high){
+	if(low==high){
+		return low;
+	}
+	real med=0.5*(low+high);
+	real range=fabs(high-low);
+	return remainder(val-med, range);
+}
+/**
+ * @brief compute p-chip interpolation weighting
+ * See https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+ * @param i index into p[], p[i] with i from -1 to 2
+ * @param u	fractional distance from i. between [0,1)
+ * @return real the weighting function
+ */
+real pchip_wt(int i, float u){
+	if(i<-1||i>2||u<0||u>1){
+		error("Invalid i=%d, u=%g\n", i, u);
+	}
+	real ans=0;
+	switch(i){
+	case -1:
+		ans=0.5*(u*u*(2-u)-u); break;
+	case 0:
+		ans=0.5*(u*u*(3*u-5)+2); break;
+	case 1:
+		ans=0.5*(u*u*(4-3*u)+u); break;
+	case 2:
+		ans=0.5*(u*u*(u-1)); break;
+	}
+	return ans;
+}
+/**
+ * @brief Compute dome seeing turbulence interpolation parameters
+ *
+ * @param wt 	Returned weight
+ * @param ips 	Current layer index
+ * @param isim 	Current simulation frame index
+ * @param dtrat Turbulence dtrat
+ * @param natm 	Turbulence frame count
+ * @param interp	Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip.
+ *
+ * @return int 	Turbulence frame to use
+ */
+int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp){
+	if(interp==3) ips=ips-1;
+	int iframe=wrap_seq(isim/dtrat+ips, natm);
+	if(interp<=0){
+		*wt=0;
+	} else{
+		*wt=(real)(isim%dtrat)/dtrat;
+		if(interp==2){
+			*wt=pow(sin(*wt*M_PI*0.5), 2);
+		} else if(interp==3){
+			*wt=pchip_wt(ips, *wt);
+		}
+	}
+	if(ips==0&&interp<3) *wt=1.-*wt;
+	return iframe;
+}

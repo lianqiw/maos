@@ -162,7 +162,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	/*output */
 	const int CL=parms->sim.closeloop;
 	const int nps=parms->atm.nps;
-	real atmscale=(simu->atmscale&&!parms->atm.dtrat)?P(simu->atmscale, isim):1;
+	const real atmscale=(simu->atmscale&&!parms->atm.dtrat)?P(simu->atmscale, isim):1;
 	const real dt=parms->sim.dt;
 	/*The following are truly constants for this powfs */
 	const int imoao=parms->powfs[ipowfs].moao;
@@ -201,10 +201,19 @@ void* wfsgrad_iwfs(thread_t* info){
 				propdata_t* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 				wfs_propdata->phiout=opd;
 				if(parms->atm.dtrat>0){
-					int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-					real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%parms->atm.dtrat)/parms->atm.dtrat),2);//smoother interp with sin function
-					wfs_propdata->mapin=P(simu->atm, iframe);
-					wfs_propdata->alpha=ips==0?(1-wt2):wt2;
+					real wt;
+					int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
+					/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(atm));
+					real wt2=0;
+					if(nps>1&&parms->atm.interp){
+						wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
+						if(parms->atm.interp==2){
+							wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
+						}
+						wfs_propdata->alpha=ips==0?(1-wt2):wt2;
+					}*/
+					wfs_propdata->alpha=atmscale*wt;
+					wfs_propdata->mapin=P(atm, iframe);
 					//if(iwfs==0) dbg("wfs: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, wfs_propdata->alpha);
 				}else{
 					wfs_propdata->displacex1=-P(atm, ips)->vx*dt*isim;
@@ -355,6 +364,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				}
 				const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
 				if(atm){/*LLT OPD */
+				real wt=1;
 					for(int ips=0; ips<nps; ips++){
 						const real hl=P(atm, ips)->h;
 						const real scale=1.-hl/hs;
@@ -367,10 +377,17 @@ void* wfsgrad_iwfs(thread_t* info){
 						real vy=0;
 						map_t *atmi;
 						if(parms->atm.dtrat>0){
-							int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-							real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%parms->atm.dtrat)/parms->atm.dtrat),2);//nps==1: no interpolation
-							atmi=P(simu->atm, iframe);
-							atmscale=ips==0?(1-wt2):wt2;
+							int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
+							/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(atm));
+							real wt2=0;
+							if(nps>1&&parms->atm.interp){
+								wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
+								if(parms->atm.interp==2){
+									wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
+								}
+								//atmscale=ips==0?(1-wt2):wt2;
+							}*/
+							atmi=P(atm, iframe);
 							//if(iwfs==0) dbg("lltopd: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, atmscale);
 						}else{
 							vx=P(atm, ips)->vx;
@@ -381,7 +398,7 @@ void* wfsgrad_iwfs(thread_t* info){
 						const real displacey=-vy*isim*dt+thetay*hl+oy;
 						
 						prop_grid_pts(atmi, powfs[ipowfs].llt->pts,
-							P(lltopd), atmscale, displacex, displacey,
+							P(lltopd), atmscale*wt, displacex, displacey,
 							scale, 1., 0, 0);
 					}
 				}

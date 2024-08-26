@@ -158,12 +158,19 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 		atmalpha*=cuglobal->atmscale->p[isim];
 	}
 	int nps=atm_dtrat?cuglobal->atm_nps:cudata->atm.N();
+	real wt=1;
 	for(int jps=0; jps<nps; jps++){
 		int ips;
 		if(atm_dtrat){
-			ips=wrap_seq(isim/atm_dtrat+jps, cudata->atm.N());
-			Real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%atm_dtrat)/atm_dtrat),2);//nps==1: no interpolation
-			atmalpha=atmalpha0*(jps==0?(1-wt2):wt2);
+			ips=atm_interp(&wt, jps, isim, atm_dtrat, cudata->atm.N(), cuglobal->atm_interp);
+			/*ips=wrap_seq(isim/atm_dtrat+jps, cudata->atm.N());
+			Real wt2=0;
+			if(nps>1&&atm_interp){
+				wt2=(real)(isim%atm_dtrat)/atm_dtrat;
+				if(atm_interp==2){
+					wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
+				}
+			}*/
 			//dbg("isim=%d, atmalpha=%g\n", isim, atmalpha);
 		}else{
 			ips=jps;
@@ -179,7 +186,7 @@ void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Re
 		const Real dispy=(ht*thetay+scale*misregy-vy*dt*isim-cuatm[ips].oy)/dy;
 		const int nloc=loc.Nloc();
 
-#define COMM loc(),loc.Nloc(),scale/dx,scale/dy, dispx, dispy, atmalpha
+#define COMM loc(),loc.Nloc(),scale/dx,scale/dy, dispx, dispy, atmalpha*wt
 		if(cuglobal->atm_full){
 			map2loc_linear_wrap<<<DIM(nloc, 256), 0, stream>>>
 				(phiout, cuatm[ips](), cuatm[ips].nx, cuatm[ips].ny, COMM);

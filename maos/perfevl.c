@@ -195,11 +195,20 @@ void* perfevl_ievl(thread_t* info){
 					propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
 					evl_propdata->phiout=iopdevl;
 					if(parms->atm.dtrat>0){
-						int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-						real wt2=nps==1?0:pow(sin(M_PI/2*(real)(isim%parms->atm.dtrat)/parms->atm.dtrat),2);//smoother interp with sin^2 function
+						real wt;
+						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(simu->atm), parms->atm.interp);
+						/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
+						real wt2=0;
+						if(nps>1&&parms->atm.interp){
+							wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
+							if(parms->atm.interp==2){
+								wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
+							}
+						}
+						evl_propdata->alpha=ips==0?(1-wt2):wt2;*/
+						evl_propdata->alpha=atmscale*wt;
 						evl_propdata->mapin=P(simu->atm, iframe);
-						evl_propdata->alpha=ips==0?(1-wt2):wt2;
-						//if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
+						if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
 					}else{
 						evl_propdata->displacex1=-P(simu->atm,ips)->vx*isim*dt;
 						evl_propdata->displacey1=-P(simu->atm,ips)->vy*isim*dt;

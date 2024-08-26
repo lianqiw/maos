@@ -301,7 +301,7 @@ int mylink(const char* source, const char* dest){
 int exist(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
-	return !stat(fn, &buf);
+	return !lstat(fn, &buf);
 }
 /*
 	Update the modification time of a file and create it if not exist.

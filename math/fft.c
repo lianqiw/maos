@@ -81,6 +81,9 @@ static void (*init_threads())(int){
 
 
 #if HAS_FFTW_CALLBACK
+//sometimes the callback function is not included in the header.
+typedef void callback_fun(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data);
+extern void fftw_threads_set_callback(callback_fun callback, void *callback_data);
 static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
 	(void)data;
 	//dbg("fft_task_callback: %d threads\n", njobs);

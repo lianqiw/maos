@@ -103,21 +103,18 @@ void init_process(void){
 			TEMP=stradd("/var/tmp/maos-",USER,NULL);
 		}else if (exist("/tmp")){
 			TEMP=stradd("/tmp/maos-", USER, NULL);
-		}else{
-			TEMP=stradd(HOME, "/.aos/tmp/", HOST, NULL);
 		}
+		HOME=TEMP;
 	}
 	//Create temporary folders
 	mymkdir("%s", TEMP);
-	{//preserve compatibility with old maos versions. Notice that it may be removed by automatic tmp cleanup.
+	/*{//preserve compatibility with old maos versions. Deprecated because the folder content may be removed by automatic tmp cleanup.
 		char TEMP2[100];
 		snprintf(TEMP2, sizeof(TEMP2), "/tmp/maos-%s", USER);
 		if(exist("/tmp") && !exist(TEMP2)){
 			mysymlink(TEMP, TEMP2);
 		}
-	}
-	if(!HOME) HOME=TEMP;
-	mymkdir("%s/.aos/", HOME);
+	}*/
 	
 	DIRCACHE=stradd(HOME, "/.aos/cache",NULL);
 	mymkdir("%s", DIRCACHE);

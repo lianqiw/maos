@@ -111,6 +111,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	map_t** atm=P(atmc);
 	const int nps=parms->atm.nps;
 	cuglobal->atm_dtrat=parms->atm.dtrat;
+	cuglobal->atm_interp=parms->atm.interp;
 	cuglobal->atm_nps=parms->atm.nps;
 	static int iseed0=-1;
 	if(iseed0!=iseed){

@@ -63,6 +63,7 @@ typedef struct atm_cfg_t{
     int share;    /**<0: disable sharing of atmosphere using file backend*/
     int r0evolve; /**<Evolve r0 according to r0logpsd*/
 	int dtrat;    /**<Only used if atm are loaded with frames that need to playback in time. */
+	int interp;   /**<Interpolation method when atm.dtrat>0. 0: stepwise(no interpolation), 1:linear, 2:sin^2.*/
 }atm_cfg_t;
 /**
    contains input parameters for the atmospheric reconstruction.  */

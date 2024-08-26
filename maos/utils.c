@@ -206,18 +206,76 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	free(style);
 }
 /**
+ * @brief Remove lock file and create Res_seed.done file when maos finishes a seed.
+ * 
+ * @param fdlock 
+ * @param fnlock 
+ * @param seeds 
+ * @param nseed 
+ * @param iseed 
+ * @param success 
+ */
+void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success){
+	if(!fdlock) return;
+	for(long jseed=0; jseed<nseed; jseed++){
+		if(iseed<0||iseed==jseed){
+			if(iseed>=0&&success){
+				touch("Res_%ld.done", seeds[iseed]);
+			}
+			close(fdlock[jseed]); fdlock[jseed]=0;
+			remove(fnlock[jseed]); free(fnlock[jseed]); fnlock[jseed]=NULL;
+		}
+	}
+}
+/**
+ * @brief Rename prefix_host_pid.suffix to prefix_done.suffix. 
+ * If already exists and count_in>=0 increment the counter and use prefix_done.counter.suffix as filename
+ * 
+ * @param prefix 
+ * @param suffix 
+ * @param count_in if >=0, do not increase
+ * @return int the counter
+ */
+int rename_done(const char *prefix, const char *suffix, int count_in){
+	char fn[PATH_MAX];
+	char fn2[PATH_MAX];
+	int count=count_in<0?0:count_in;
+	snprintf(fn, sizeof(fn), "%s_%s_%ld.%s", prefix, HOST, (long)getpid(), suffix);
+	if(!exist(fn)){
+		dbg("%s does not exist\n", fn);
+		return -1;
+	}
+	do{
+		if(count==0){
+			snprintf(fn2, sizeof(fn2), "%s_done.%s", prefix, suffix);
+		} else{
+			snprintf(fn2, sizeof(fn2), "%s_done.%d.%s", prefix, count, suffix);
+		}
+	} while(exist(fn2) && count_in<0 && (count=count+1));
+	if(rename(fn, fn2)){
+		dbg("Rename %s to %s failed\n", fn, fn2);
+	} else{
+		mysymlink(fn2, fn);
+	}
+	return count;
+}
+/**
    Rename the log files when simulation exits or when signal is caught.
 */
 void rename_file(int sig){
 	if(disable_save) return;
-	if(sig==0){
+	if(sig==0){//success
+		int count=rename_done("run", "log", -1);
+		if(count!=-1){
+			rename_done("maos", "conf", count);
+		}
+	}else{//killed or error
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-		remove("run_done.log");
-		mylink(fn, "run_done.log");//use hardlink to preserve the file
-		snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
-		remove("maos_done.conf");
-		mylink(fn, "maos_done.conf");
+		char fn2[PATH_MAX];
+		snprintf(fn2, PATH_MAX, "run_%s_%ld.err", HOST, (long)getpid());
+		(void)rename(fn, fn2);
+		mysymlink(fn2, "run_recent.log");
 	}
 	if(global&&global->parms&&global->parms->fdlock){
 		const parms_t* parms=global->parms;
@@ -229,10 +287,10 @@ void rename_file(int sig){
 */
 int maos_signal_handler(int sig){
 	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
-	if((sig==SIGTERM||sig==SIGINT)&&global&&global->setupdone==1){
+	/*if((sig==SIGTERM||sig==SIGINT)&&global&&global->setupdone==1){
 		info2("Will exit after finishing current time step\n");
 		return 1;
-	}else{
+	}else*/{
 		rename_file(sig);/*handles signal */
 		if(global&&global->parms&&global->parms->sim.mvmport){
 			mvm_client_close();
@@ -1175,19 +1233,4 @@ real average_powfs(dmat *A, lmat *wfsindex, int replace){
 		}
 	}
 	return avg;
-}
-
-/**
- * wrap val to between low and high
- * Notice the difference between remainder() and fmod().
- * remainder(a,b) wraps a to [-b/2, b/2)
- * fmod(a,b) wraps a to [-b,b)
- * */
-real wrap2range(real val, real low, real high){
-	if(low==high){
-		return low;
-	}
-	real med=0.5*(low+high);
-	real range=fabs(high-low);
-	return remainder(val-med, range);
 }

@@ -35,4 +35,7 @@ dmat *polyfit(const dmat *x, const dmat *y, int maxorder);
 dmat *polyval(const dmat *x, const dmat *coeff, int separate);
 real calc_dither_amp(dmat **res, const dmat *signal, long dtrat, long npoint, int detrend, int combine);
 int wrap_seq(long index, long n);
+real wrap2range(real val, real low, real high);
+real pchip_wt(int i, float u);
+int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp);
 #endif

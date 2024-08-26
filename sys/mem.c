@@ -795,6 +795,7 @@ static __attribute__((destructor)) void deinit(){
 	thread_pool_destroy();
 	//remove files that are 365 days old.
 	remove_file_older(DIRCACHE, 1, 30*24*3600);//1 month
+	remove_file_older(DIRLOCK, 1, 30*24*3600);//1 month
 	freepath();
 	free_hosts();
 	for(deinit_t *p1=deinit_head;p1;p1=deinit_head){
@@ -870,17 +871,19 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}else{
 		fatal_error_in_progress++;
 	}
-	if(iscrash(sig)){
-		if(siginfo&&siginfo->si_addr){
-			info("Memory location: %p\n", siginfo->si_addr);
+	if(sig!=SIGINT){
+		if(iscrash(sig)){
+			if(siginfo&&siginfo->si_addr){
+				info("Memory location: %p\n", siginfo->si_addr);
+			}
+			struct itimerval timer={{10,0},{10,0}};
+			if(setitimer(ITIMER_REAL, &timer, NULL)){
+				warning("Setitimer failed\n");
+			}
+			//It is not safe to call backtrace in SIGSEGV, to prevent hang, we set an alarm to force quit
 		}
-		struct itimerval timer={{10,0},{10,0}};
-		if(setitimer(ITIMER_REAL, &timer, NULL)){
-			warning("Setitimer failed\n");
-		}
-		//It is not safe to call backtrace in SIGSEGV, to prevent hang, we set an alarm to force quit
+		print_backtrace();
 	}
-	print_backtrace();
 	if(signal_handler){
 		dbg_time("Call signal_handler %p\n", signal_handler);
 		cancel_action=signal_handler(sig);

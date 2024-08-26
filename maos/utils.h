@@ -33,6 +33,7 @@ extern char _binary____config_tar_gz_end;
 void plotloc(const char *fig, const parms_t *parms, 
 	     loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);
 void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...) CHECK_ARG(4);
+void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success);
 void rename_file(int sig);
 int maos_signal_handler(int sig);
 arg_t* parse_args(int argc, const char *argv[]);
@@ -70,5 +71,5 @@ static inline real fc2lp(real fc, real dt){
 }
 real average_powfs(dmat* A, lmat* wfsindex, int replace);
 void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
-real wrap2range(real val, real low, real high);
+
 #endif
