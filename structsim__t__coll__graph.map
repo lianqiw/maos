@@ -1,8 +1,8 @@
 <map id="sim_t" name="sim_t">
 <area shape="rect" id="node2" href="$type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="2241,604,2295,681"/>
 <area shape="rect" id="node12" href="$type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="2291,1052,2351,1129"/>
-<area shape="rect" id="node13" href="$maos_2types_8h.html#structdither__t" title="{dither_t\n||}" alt="" coords="1867,1052,1939,1129"/>
-<area shape="rect" id="node14" href="$maos_2types_8h.html#structwfsints__t" title="{wfsints_t\n||}" alt="" coords="2101,1052,2182,1129"/>
+<area shape="rect" id="node13" href="$maos_2types_8h.html#structdither__t" title="{dither_t\n||}" alt="" coords="1868,1052,1940,1129"/>
+<area shape="rect" id="node14" href="$maos_2types_8h.html#structwfsints__t" title="{wfsints_t\n||}" alt="" coords="2102,1052,2183,1129"/>
 <area shape="rect" id="node19" href="$turbulence_8h.html#structgenatm__t" title="{genatm_t\n||}" alt="" coords="1161,1052,1245,1129"/>
 <area shape="rect" id="node24" href="$maos_2types_8h.html#structrecon__t" title="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}" alt="" coords="2413,979,2529,1203"/>
 <area shape="rect" id="node28" href="$maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="1533,1412,1622,1519"/>

@@ -146,6 +146,7 @@ var searchData=
   ['atm_2fatm_5farm75p_2econf',['atm/atm_arm75p.conf',['../atm_arm75p.html',1,'page34_conf']]],
   ['atm_5fcfg_5ft',['atm_cfg_t',['../parms_8h.html#structatm__cfg__t',1,'']]],
   ['atm_5ffull',['atm_full',['../classcuglobal__t.html#ad0cfd48d65a9bf467f2e0da452883f79',1,'cuglobal_t']]],
+  ['atm_5finterp',['atm_interp',['../classcuglobal__t.html#a05de0901eb609661891f2510ccbabeca',1,'cuglobal_t::atm_interp()'],['../lib_2misc_8h.html#a698c18f4e0938e730e6ead90f4b7a423',1,'atm_interp():&#160;misc.c']]],
   ['atm_2fatm_5fmk13n10p_2econf',['atm/atm_mk13n10p.conf',['../atm_mk13n10p.html',1,'page34_conf']]],
   ['atm_2fatm_5fmk13n15p_2econf',['atm/atm_mk13n15p.conf',['../atm_mk13n15p.html',1,'page34_conf']]],
   ['atm_2fatm_5fmk13n20p_2econf',['atm/atm_mk13n20p.conf',['../atm_mk13n20p.html',1,'page34_conf']]],

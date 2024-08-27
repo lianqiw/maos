@@ -22,7 +22,6 @@ var searchData=
   ['thread_5fprep',['thread_prep',['../thread_8h.html#a5abc03e87897fd9c0d49c0b837f9d98f',1,'thread.c']]],
   ['thread_5ft',['thread_t',['../thread_8h.html#structthread__t',1,'']]],
   ['tikcr',['tikcr',['../parms_8h.html#a6c1b7205193a5fa81e91492cd8e6e17c',1,'tomo_cfg_t::tikcr()'],['../parms_8h.html#ac972f92a5caada81c9d80b6a670f55ec',1,'fit_cfg_t::tikcr()'],['../parms_8h.html#a5ad53a56b7c779aa9a7f1078eb0f80ea',1,'lsr_cfg_t::tikcr()']]],
-  ['timing',['timing',['../maos_2types_8h.html#a374d88efacf68d09530a5bcb55980652',1,'sim_t']]],
   ['tk_5f0',['tk_0',['../maos_2types_8h.html#a4c36b819d751ab13f43747215bee9c53',1,'sim_t']]],
   ['tk_5fcache',['tk_cache',['../maos_2types_8h.html#a46a1d5f3e2b85b7925e468645f2c0ef0',1,'sim_t']]],
   ['tk_5feval',['tk_eval',['../maos_2types_8h.html#aa7cb64333230ec40e13cf209afcd0d47',1,'sim_t']]],

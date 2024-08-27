@@ -13,6 +13,7 @@ var searchData=
   ['pause',['pause',['../parms_8h.html#a301b7c751e28f1ed691e99f7548b3469',1,'sim_cfg_t::pause()'],['../maos_2types_8h.html#a14ef8a333a0e6595ec7c5856dee2d91a',1,'sim_t::pause()']]],
   ['pcg',['pcg',['../lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3',1,'pcg.c']]],
   ['pcg_2eh',['pcg.h',['../lib_2pcg_8h.html',1,'']]],
+  ['pchip_5fwt',['pchip_wt',['../lib_2misc_8h.html#a25f8efb8afacde9b737e6a9d9ce27c8a',1,'misc.c']]],
   ['pcol',['PCOL',['../type_8h.html#aedbdd989a69ced62e7db462fc0a02972',1,'type.h']]],
   ['pcolr',['PCOLR',['../type_8h.html#a16d2ae3e5519371c1d566bc9f8aa717c',1,'type.h']]],
   ['pdata',['pdata',['../muv_8h.html#a2d598b0a795894f80add449f78db3dbe',1,'muv_t']]],

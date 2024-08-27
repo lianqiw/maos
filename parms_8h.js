@@ -28,7 +28,8 @@ var parms_8h =
       [ "ninit", "parms_8h.html#a083a316e7771896dd5fa16fbc4f7038e", null ],
       [ "share", "parms_8h.html#afc6a5da1972b32b6abf232a4228b9cc9", null ],
       [ "r0evolve", "parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41", null ],
-      [ "dtrat", "parms_8h.html#a900f18d08f204e8188a7076858a8e1eb", null ]
+      [ "dtrat", "parms_8h.html#a900f18d08f204e8188a7076858a8e1eb", null ],
+      [ "interp", "parms_8h.html#a57f9fa2d2b1537752e517efc87d57a17", null ]
     ] ],
     [ "atmr_cfg_t", "parms_8h.html#structatmr__cfg__t", [
       [ "r0z", "parms_8h.html#aaaae1ac84c4c2a845200e043ba26dd11", null ],

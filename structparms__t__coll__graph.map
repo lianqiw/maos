@@ -16,7 +16,7 @@
 <area shape="rect" id="node15" href="$parms_8h.html#structmoao__cfg__t" title="{moao_cfg_t\n||}" alt="" coords="4258,641,4357,718"/>
 <area shape="rect" id="node19" href="$parms_8h.html#structatmr__cfg__t" title="{atmr_cfg_t\n||}" alt="" coords="2860,641,2952,718"/>
 <area shape="rect" id="node21" href="$parms_8h.html#structwfsr__cfg__t" title="{wfsr_cfg_t\n||}" alt="" coords="2583,641,2672,718"/>
-<area shape="rect" id="node22" href="$parms_8h.html#structatm__cfg__t" title="{atm_cfg_t\n|+ wdrand\l+ ninit\l|}" alt="" coords="2976,633,3063,725"/>
+<area shape="rect" id="node22" href="$parms_8h.html#structatm__cfg__t" title="{atm_cfg_t\n|+ wdrand\l+ ninit\l+ interp\l|}" alt="" coords="2976,626,3063,733"/>
 <area shape="rect" id="node23" href="$parms_8h.html#structgpu__cfg__t" title="{gpu_cfg_t\n||}" alt="" coords="2357,641,2442,718"/>
 <area shape="rect" id="node24" href="$parms_8h.html#structplot__cfg__t" title="{plot_cfg_t\n||}" alt="" coords="3263,641,3350,718"/>
 <area shape="rect" id="node25" href="$parms_8h.html#structsave__cfg__t" title="{save_cfg_t\n|+ extra\l+ all\l+ setup\l+ fdpcg\l+ atm\l+ run\l+ opdr\l+ opdx\l+ evlopd\l+ dither\land 9 more...\l|}" alt="" coords="1043,567,1151,791"/>

@@ -8,6 +8,7 @@ var classcuglobal__t =
     [ "recongpu", "classcuglobal__t.html#a1cd9a54925f3ab7c295f47e788fe93e9", null ],
     [ "atm_full", "classcuglobal__t.html#ad0cfd48d65a9bf467f2e0da452883f79", null ],
     [ "atm_dtrat", "classcuglobal__t.html#a7d3d4b79d55c877e718813582225c4e8", null ],
+    [ "atm_interp", "classcuglobal__t.html#a05de0901eb609661891f2510ccbabeca", null ],
     [ "atm_nps", "classcuglobal__t.html#a90b3c7e143ca62e7d0a05100126f04ea", null ],
     [ "perf", "classcuglobal__t.html#abfc904e2ee6e19bd03a1b7298bd693ad", null ],
     [ "wfs", "classcuglobal__t.html#a58b35d200f94baebbd0d7dc93f4cf265", null ],

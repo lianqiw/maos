@@ -99,6 +99,7 @@ var searchData=
   ['refp_3c_20t_20_2a_2c_20pinned_20_3e',['RefP&lt; T *, Pinned &gt;',['../class_ref_p.html',1,'']]],
   ['refp_3c_20t_2c_20cpu_20_3e',['RefP&lt; T, Cpu &gt;',['../class_ref_p.html',1,'']]],
   ['remove_5ffile_5folder',['remove_file_older',['../sys_2misc_8h.html#a25b56eea8d47545699946b02ffd09690',1,'misc.c']]],
+  ['remove_5flock',['remove_lock',['../maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20',1,'utils.c']]],
   ['rename_5ffile',['rename_file',['../maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490',1,'utils.c']]],
   ['res',['res',['../maos_2types_8h.html#aa958a6c81bbbc1d65de9de3732728be1',1,'sim_t']]],
   ['resdither',['resdither',['../maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f',1,'sim_t']]],

@@ -107,6 +107,9 @@ Functions</h2></td></tr>
 <tr class="separator:a1343345dedf6ae0d845b15b982f4ac48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb5045761ac37707beaf143c30f68b3b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b">plotdir</a> (const char *fig, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, real totfov, const char *format,...)</td></tr>
 <tr class="separator:abb5045761ac37707beaf143c30f68b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbb2e36f6ae7703736beb266a8ffcb20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20">remove_lock</a> (int *fdlock, char **fnlock, <a class="el" href="classlong.html">long</a> *seeds, <a class="el" href="classlong.html">long</a> nseed, <a class="el" href="classlong.html">long</a> iseed, int success)</td></tr>
+<tr class="memdesc:adbb2e36f6ae7703736beb266a8ffcb20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove lock file and .done file if maos fails.  <a href="#adbb2e36f6ae7703736beb266a8ffcb20">More...</a><br /></td></tr>
+<tr class="separator:adbb2e36f6ae7703736beb266a8ffcb20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af83a1d1fc29af913013c954d41d34490"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490">rename_file</a> (int sig)</td></tr>
 <tr class="separator:af83a1d1fc29af913013c954d41d34490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafb94bb8e11bc2169946336024d6b0fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#aafb94bb8e11bc2169946336024d6b0fc">maos_signal_handler</a> (int sig)</td></tr>
@@ -146,8 +149,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
 <tr class="separator:aa3c976283684c703e5ed8b35bfeac3b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06bf1e5a0ffb47990da4ee94056b0ddd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a06bf1e5a0ffb47990da4ee94056b0ddd">wfsgrad_llt_tt</a> (real *ttx, real *tty, <a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, int iwfs, int isim)</td></tr>
 <tr class="separator:a06bf1e5a0ffb47990da4ee94056b0ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b60d683c9be737576399efb2096b1f6"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#a5b60d683c9be737576399efb2096b1f6">wrap2range</a> (real val, real low, real high)</td></tr>
-<tr class="separator:a5b60d683c9be737576399efb2096b1f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a1343345dedf6ae0d845b15b982f4ac48"></a>
@@ -247,6 +248,71 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
       </table>
 </div><div class="memdoc">
 <p>ploted all the different beam directions as points. </p>
+
+</div>
+</div>
+<a id="adbb2e36f6ae7703736beb266a8ffcb20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbb2e36f6ae7703736beb266a8ffcb20">&#9670;&nbsp;</a></span>remove_lock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void remove_lock </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>fdlock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>fnlock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a> *&#160;</td>
+          <td class="paramname"><em>seeds</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>nseed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classlong.html">long</a>&#160;</td>
+          <td class="paramname"><em>iseed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>success</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Remove lock file and .done file if maos fails. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fdlock</td><td></td></tr>
+    <tr><td class="paramname">fnlock</td><td></td></tr>
+    <tr><td class="paramname">seeds</td><td></td></tr>
+    <tr><td class="paramname">nseed</td><td></td></tr>
+    <tr><td class="paramname">iseed</td><td></td></tr>
+    <tr><td class="paramname">success</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -860,41 +926,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
       </table>
 </div><div class="memdoc">
 <p>Compute tip/tilt for llt ray trace. </p>
-
-</div>
-</div>
-<a id="a5b60d683c9be737576399efb2096b1f6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b60d683c9be737576399efb2096b1f6">&#9670;&nbsp;</a></span>wrap2range()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">real wrap2range </td>
-          <td>(</td>
-          <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>val</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>low</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real&#160;</td>
-          <td class="paramname"><em>high</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>wrap val to between low and high Notice the difference between remainder() and fmod(). remainder(a,b) wraps a to [-b/2, b/2) fmod(a,b) wraps a to [-b,b) </p>
 
 </div>
 </div>

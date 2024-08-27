@@ -51,7 +51,6 @@ var maos_2types_8h_structsim__t =
     [ "cleNGSmp", "maos_2types_8h.html#a1fff8fd8a8bea927a611a35d9c0dcd6a", null ],
     [ "oleNGSmp", "maos_2types_8h.html#a624eee53399944b2595350d49e1e18ca", null ],
     [ "res", "maos_2types_8h.html#aa958a6c81bbbc1d65de9de3732728be1", null ],
-    [ "timing", "maos_2types_8h.html#a374d88efacf68d09530a5bcb55980652", null ],
     [ "resdither", "maos_2types_8h.html#a15a0fb4bca39bccb08cae37081b6f48f", null ],
     [ "dmpsol", "maos_2types_8h.html#ac189e162b7ee3e5f8f35a870fd74a501", null ],
     [ "dmtmp", "maos_2types_8h.html#a9d7b0ba4afd9d1cf333f8ec2485192db", null ],

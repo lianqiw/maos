@@ -119,6 +119,14 @@ Functions</h2></td></tr>
 <tr class="separator:a13c5edd8c559386a72b522f43e49e733"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2235242a9bac255b39560b25cf2e5dd4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a2235242a9bac255b39560b25cf2e5dd4">wrap_seq</a> (<a class="el" href="classlong.html">long</a> index, <a class="el" href="classlong.html">long</a> n)</td></tr>
 <tr class="separator:a2235242a9bac255b39560b25cf2e5dd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b60d683c9be737576399efb2096b1f6"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a5b60d683c9be737576399efb2096b1f6">wrap2range</a> (real val, real low, real high)</td></tr>
+<tr class="separator:a5b60d683c9be737576399efb2096b1f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a25f8efb8afacde9b737e6a9d9ce27c8a">pchip_wt</a> (int i, float u)</td></tr>
+<tr class="memdesc:a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute p-chip interpolation weighting See <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">https://en.wikipedia.org/wiki/Cubic_Hermite_spline</a>  <a href="#a25f8efb8afacde9b737e6a9d9ce27c8a">More...</a><br /></td></tr>
+<tr class="separator:a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a698c18f4e0938e730e6ead90f4b7a423"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lib_2misc_8h.html#a698c18f4e0938e730e6ead90f4b7a423">atm_interp</a> (real *wt, int ips, int isim, int dtrat, int natm, int interp)</td></tr>
+<tr class="memdesc:a698c18f4e0938e730e6ead90f4b7a423"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute dome seeing turbulence interpolation parameters.  <a href="#a698c18f4e0938e730e6ead90f4b7a423">More...</a><br /></td></tr>
+<tr class="separator:a698c18f4e0938e730e6ead90f4b7a423"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a4bf8970d027f919a7485a8e426415de6"></a>
@@ -530,6 +538,145 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 0 1 2 3 2 1 0 1 2 3 2 1 0 ... </p>
+
+</div>
+</div>
+<a id="a5b60d683c9be737576399efb2096b1f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b60d683c9be737576399efb2096b1f6">&#9670;&nbsp;</a></span>wrap2range()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real wrap2range </td>
+          <td>(</td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>low</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>high</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>wrap val to between low and high Notice the difference between remainder() and fmod(). remainder(a,b) wraps a to [-b/2, b/2) fmod(a,b) wraps a to [-b,b) </p>
+
+</div>
+</div>
+<a id="a25f8efb8afacde9b737e6a9d9ce27c8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25f8efb8afacde9b737e6a9d9ce27c8a">&#9670;&nbsp;</a></span>pchip_wt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real pchip_wt </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>u</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>compute p-chip interpolation weighting See <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">https://en.wikipedia.org/wiki/Cubic_Hermite_spline</a> </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i</td><td>index into p[], p[i] with i from -1 to 2 </td></tr>
+    <tr><td class="paramname">u</td><td>fractional distance from i. between [0,1) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>real the weighting function </dd></dl>
+
+</div>
+</div>
+<a id="a698c18f4e0938e730e6ead90f4b7a423"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a698c18f4e0938e730e6ead90f4b7a423">&#9670;&nbsp;</a></span>atm_interp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int atm_interp </td>
+          <td>(</td>
+          <td class="paramtype">real *&#160;</td>
+          <td class="paramname"><em>wt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ips</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>isim</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dtrat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>natm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>interp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute dome seeing turbulence interpolation parameters. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wt</td><td>Returned weight </td></tr>
+    <tr><td class="paramname">ips</td><td>Current layer index </td></tr>
+    <tr><td class="paramname">isim</td><td>Current simulation frame index </td></tr>
+    <tr><td class="paramname">dtrat</td><td>Turbulence dtrat </td></tr>
+    <tr><td class="paramname">natm</td><td>Turbulence frame count </td></tr>
+    <tr><td class="paramname">interp</td><td>Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>int Turbulence frame to use </dd></dl>
 
 </div>
 </div>

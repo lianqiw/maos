@@ -5,6 +5,7 @@ var searchData=
   ['parse_5fhost',['parse_host',['../scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62',1,'scheduler_client.c']]],
   ['parse_5fpoly',['parse_poly',['../loc_8h.html#a3076eea48b393539b5e299184ed886cf',1,'loc.c']]],
   ['pcg',['pcg',['../lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3',1,'pcg.c']]],
+  ['pchip_5fwt',['pchip_wt',['../lib_2misc_8h.html#a25f8efb8afacde9b737e6a9d9ce27c8a',1,'misc.c']]],
   ['perfevl',['perfevl',['../perfevl_8c.html#a799c7105d3e2ffd9cbcd7de50fbd16e7',1,'perfevl(sim_t *simu):&#160;perfevl.c'],['../sim_8h.html#a799c7105d3e2ffd9cbcd7de50fbd16e7',1,'perfevl(sim_t *simu):&#160;perfevl.c']]],
   ['perfevl_5fievl',['perfevl_ievl',['../perfevl_8c.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c'],['../sim_8h.html#a4222c173bf339c4f613587a6b5f8f73b',1,'perfevl_ievl(thread_t *info):&#160;perfevl.c']]],
   ['plot_5fsetup',['plot_setup',['../maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'utils.c']]],
