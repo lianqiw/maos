@@ -108,7 +108,7 @@ Functions</h2></td></tr>
 <tr class="memitem:abb5045761ac37707beaf143c30f68b3b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b">plotdir</a> (const char *fig, const <a class="el" href="parms_8h.html#structparms__t">parms_t</a> *parms, real totfov, const char *format,...)</td></tr>
 <tr class="separator:abb5045761ac37707beaf143c30f68b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbb2e36f6ae7703736beb266a8ffcb20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20">remove_lock</a> (int *fdlock, char **fnlock, <a class="el" href="classlong.html">long</a> *seeds, <a class="el" href="classlong.html">long</a> nseed, <a class="el" href="classlong.html">long</a> iseed, int success)</td></tr>
-<tr class="memdesc:adbb2e36f6ae7703736beb266a8ffcb20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove lock file and .done file if maos fails.  <a href="#adbb2e36f6ae7703736beb266a8ffcb20">More...</a><br /></td></tr>
+<tr class="memdesc:adbb2e36f6ae7703736beb266a8ffcb20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove lock file and create Res_seed.done file when maos finishes a seed.  <a href="#adbb2e36f6ae7703736beb266a8ffcb20">More...</a><br /></td></tr>
 <tr class="separator:adbb2e36f6ae7703736beb266a8ffcb20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af83a1d1fc29af913013c954d41d34490"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490">rename_file</a> (int sig)</td></tr>
 <tr class="separator:af83a1d1fc29af913013c954d41d34490"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -301,7 +301,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>display_server</b> (i
       </table>
 </div><div class="memdoc">
 
-<p>Remove lock file and .done file if maos fails. </p>
+<p>Remove lock file and create Res_seed.done file when maos finishes a seed. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fdlock</td><td></td></tr>
