@@ -255,7 +255,9 @@ int rename_done(const char *prefix, const char *suffix, int count_in){
 	if(rename(fn, fn2)){
 		dbg("Rename %s to %s failed\n", fn, fn2);
 	} else{
-		mysymlink(fn2, fn);
+		snprintf(fn, sizeof(fn), "%s_recent.%s", prefix, suffix);
+		remove(fn);
+		//mysymlink(fn2, fn);
 	}
 	return count;
 }

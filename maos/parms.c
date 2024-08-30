@@ -2508,10 +2508,13 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			P(parms->atmr.indps,ipsr)=-1;
 			for(int ips=0; ips<parms->atm.nps; ips++){
 				if(fabs(P(parms->atmr.ht,ipsr)-P(parms->atm.ht,ips))<1e-3){
-					if(P(parms->atmr.indps,ipsr)>-1){
-						warning("One ipsr is mapped to multiple ips\n");
+					if(P(parms->atmr.indps, ipsr)==-1){
+						P(parms->atmr.indps, ipsr)=ips;
+					}else{
+						if(!parms->atm.dtrat){
+							warning("One ipsr is mapped to multiple ips\n");
+						}
 					}
-					P(parms->atmr.indps,ipsr)=ips;
 				}
 			}
 		}
@@ -2532,7 +2535,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		if(P(parms->atm.ht,ips)<0){
 			warning("Layer %d height %g is below ground (OK).\n",ips,P(parms->atm.ht,ips));
 		}
-		if(ips>0&&!parms->atm.dtrat && fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<10){
+		if(ips>0 && !parms->atm.dtrat && fabs(P(parms->atm.ht,ips)-P(parms->atm.ht,ips-1))<10){
 			warning("Layer %d at %gm is very close to layer %d at %gm (OK).\n",
 				ips,P(parms->atm.ht,ips),ips-1,P(parms->atm.ht,ips-1));
 		}

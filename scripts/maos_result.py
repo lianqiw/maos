@@ -73,6 +73,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
                 res=res[0]
             if res is None or res.shape[0]==0:
                 continue
+            #determine result cell
             if name=="Res":
                 if res.shape[0]>3 and res[3].size>0: #split tomography
                     res=res[3]
@@ -91,6 +92,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
             else:
                 print('Invalid result')
                 continue
+            #determine valid simulation duration in steps
             n_valid=np.nonzero(res[:,0]>0)[0]
             if n_valid.size>0:
                 n_valid=n_valid[-1]             
@@ -105,16 +107,18 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
                 n2=round(iframe2*n_valid)
             else:
                 n2=iframe2
-            if n1 < n2 and n2 <= res.shape[0]:
+            if n1==0 and n2==0: #want time history
+                res=res.T
+                res.shape=(1,res.shape[0],res.shape[1])
+            elif n1 < n2 and n2 <= res.shape[0]:
                 res=res[n1:n2]
                 res=res.mean(0,keepdims=1)
             else:
-                res=res.T
-                res.shape=(1,res.shape[0],res.shape[1])
+                print('Invalid configuration for {}: n1={},n2={},n_valid={}'.format(fn, n1, n2, n_valid))
+                res=np.full(res.shape[1], np.nan)
             #if max(res[-1]).all()==0:
             #    print(fn, 'Incomplete result')
             #    continue #unfinished result
-    
             mres+=res*1e18
             nseed+=1
         if nseed>0:
