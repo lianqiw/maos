@@ -523,7 +523,11 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 	} else{
 		//if(sock!=-1) return sock;
 		struct sockaddr_in servername;
+		struct addrinfo hints={0};
+		hints.ai_family=AF_INET;
+		hints.ai_socktype=SOCK_STREAM;
 		for(int count=0; count<25; count++){
+			const char *hostaddr=NULL;
 			sock=socket(PF_INET, SOCK_STREAM, 0);
 			socket_nopipe(sock);
 			socket_send_timeout(sock, 60);//do not set recv timeout as client may rely on blocking read without using select()
@@ -534,35 +538,46 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 			if(!block){
 				socket_block(sock, 0);
 			}
-			int res;
-			struct addrinfo* result;
-			struct addrinfo hints={0};
-			hints.ai_family=AF_INET;
-			hints.ai_socktype=SOCK_STREAM;
+			int res=-1;
+			struct addrinfo* result=NULL;
 			char hoststr[512];
 			char portstr[32];
-			hostname=lookup_hostaddr(hostname);
-			const char* col=strchr(hostname, ':');
-			if(col&&strlen(col+1)>0){//port is part of hostname
-				size_t nn=col-hostname;
-				if(nn+1>sizeof(hoststr)) nn=sizeof(hoststr)-1;
-				strncpy(hoststr, hostname, nn); hoststr[nn]='\0';
-				nn=strlen(col+1);
-				if(nn+1>sizeof(portstr)) nn=sizeof(portstr)-1;
-				strncpy(portstr, col+1, nn); portstr[nn]='\0';
-			} else{
-				snprintf(hoststr, sizeof(hoststr), "%s", hostname);
-				snprintf(portstr, sizeof(portstr), "%d", port);
+			/*
+				When a host is specified as hostname=hostaddress:port
+				We first try hostname, if it fails, try hostaddress:port
+			 */
+			for(int lookup=0; lookup<2 && res<0; lookup++){
+				if(lookup==1){
+					hostaddr=lookup_hostaddr(hostname);
+					if(!hostaddr || !strcmp(hostaddr, hostname)) continue;
+				}else{
+					hostaddr=hostname;
+				}
+				dbg2_time("lookup=%d, hostaddr=%s\n", lookup, hostaddr);
+				const char* col=strchr(hostaddr, ':');
+				if(col&&strlen(col+1)>0){//port is part of hostaddr
+					size_t nn=col-hostaddr;
+					if(nn+1>sizeof(hoststr)) nn=sizeof(hoststr)-1;
+					strncpy(hoststr, hostaddr, nn); hoststr[nn]='\0';
+					nn=strlen(col+1);
+					if(nn+1>sizeof(portstr)) nn=sizeof(portstr)-1;
+					strncpy(portstr, col+1, nn); portstr[nn]='\0';
+				} else{
+					snprintf(hoststr, sizeof(hoststr), "%s", hostaddr);
+					snprintf(portstr, sizeof(portstr), "%d", port);
+				}
+				if((res=getaddrinfo(hoststr, portstr, &hints, &result))){
+					warning_time("getaddrinfo for %s failed with %d: %s\n", hostaddr, res, gai_strerror(res));
+					res=-1;
+				}else{
+					dbg2_time("connect to %s at %s: trying\n", hoststr, portstr);
+					res=connect(sock, result->ai_addr, sizeof(servername));
+					freeaddrinfo(result);result=NULL;
+					dbg2_time("connect to %s at %s: port=%d\n", hoststr, portstr, res);
+				}
 			}
-			if((res=getaddrinfo(hoststr, portstr, &hints, &result))){
-				warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
-				return -1;
-			}
-			res=connect(sock, result->ai_addr, sizeof(servername));
-			freeaddrinfo(result);
-			/* Give the socket the target hostname. */
 			if(res<0){
-				//warning_once("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
+				//warning_once("connect to %s at %d failed: %s\n", hostaddr, port, strerror(errno));
 				close(sock);
 				if(!block){
 					return -1;

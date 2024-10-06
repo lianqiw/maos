@@ -74,6 +74,7 @@ void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);
 gboolean update_progress(gpointer input);
+gboolean host_added_wrap(gpointer data);
 void kill_job(proc_t* p);
 int host2i(const char* hostn);
 void clear_job_wrap(int ihost, int flag);

@@ -49,7 +49,7 @@ static int notify_daemon=1;
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
-int sock_main[2]={0,0}; /*Used to talk to the thread that runs listen_host*/
+int sock_main[2]={0,0}; /*Write by GUI thread. Read by listen_host*/
 GdkPixbuf* icon_main=NULL;
 GdkPixbuf *icon_draw=NULL;
 GdkPixbuf* icon_finished=NULL;
@@ -363,7 +363,10 @@ gboolean update_title(gpointer data){
 	int npending=tmp>>20;
 	char tit[40];
 	if(hid<nhost){
-		snprintf(tit, 40, "%s (%d/%d)", hosts[hid], npending, nproc);
+		char *dot=strchr(hosts[hid], '.'); 
+		size_t offset=dot?(size_t)(dot-hosts[hid]):strlen(hosts[hid]);
+		memcpy(tit, hosts[hid], offset);
+		snprintf(tit+offset, 40-offset, " (%d/%d)", npending, nproc);
 	} else{
 		snprintf(tit, 40, "All");
 		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);
@@ -600,7 +603,11 @@ static void add_host_event(GtkButton* button, gpointer data){
 		}
 	}
 }
-
+gboolean host_added_wrap(gpointer data){
+	(void) data;
+	add_host_wrap(-1);//just wakeup respond() with noop.
+	return FALSE;//just run once.
+}
 void parse_icons(){
 #if GDK_MAJOR_VERSION < 3
 	gdk_color_parse("#EE0000", &red);

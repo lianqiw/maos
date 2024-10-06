@@ -94,11 +94,12 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 		}
 
 		char* eq=strchr(line, '=');
-		hostsaddr[nhost]=strdup(eq?(eq+1):line);
-		char *dot=strchr(line, '.');
-		size_t n0=strlen(line);
-		size_t n=MIN(dot?(size_t)(dot-line):n0, eq?(size_t)(eq-line):n0);
-		hosts[nhost]=strndup(line, n?n:n0);
+		hostsaddr[nhost]=eq?strdup(eq+1):strdup(line);
+		if(eq) *eq=0;//terminate hostname
+		//char *dot=strchr(line, '.');
+		//size_t n0=strlen(line);
+		//size_t n=MIN(dot?(size_t)(dot-line):n0, eq?(size_t)(eq-line):n0);
+		hosts[nhost]=strdup(line); //strndup(line, n?n:n0);
 		nhost++;
 		UNLOCK(mutex_hosts);
 	}
@@ -163,7 +164,7 @@ const char* lookup_hostaddr(const char* hostname){
 const char *lookup_hostname(const char *hostaddr){
 	if(hostaddr){
 		for(int ihost=0; ihost<nhost; ihost++){
-			if(!strcmp(hostsaddr[ihost], hostaddr)){
+			if(hostsaddr[ihost] && !strcmp(hostsaddr[ihost], hostaddr)){
 				return hosts[ihost];
 			}
 		}

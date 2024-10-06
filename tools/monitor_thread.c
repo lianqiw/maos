@@ -38,6 +38,7 @@ static proc_t** pproc;
 static int* nproc;
 static int* npending;
 static int* hsock;   //socket of each host
+static int* hsock_new;//newly established sock. 
 static time_t* htime;//last time having signal from each host.
 static time_t* hnotify;//last time notification for this server.
 extern int sock_main[2]; /*listens command from main*/
@@ -185,15 +186,20 @@ static void host_removed(int sock, int notify){
 		}
 	}
 }
-//connect to scheduler(host). The call is always from the thread running listen_host()
-static int add_host(int ihost){
+/** 
+	connect to scheduler(host). It runs in a new thread launched by the thread running listen_host().
+*/
+void* add_host_thread(void* phost){
+	int ihost=GPOINTER_TO_INT(phost);
 	if(ihost<0 || ihost>=nhost){
 		warning_time("Invalid ihost=%d\n", ihost);
-	}else if(hsock[ihost]>-1){
+	}else if(hsock[ihost]>-1 || hsock_new[ihost]>-1){
 		warning_time("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
+		dbg_time("trying %s\n", hosts[ihost]);
 		hsock[ihost]--;//make it -2 so no concurrent access.
 		int sock=scheduler_connect(hosts[ihost]);
+		dbg_time("connected %s at port %d\n", hosts[ihost], sock);
 		if(sock>-1){
 			int cmd[2];
 			cmd[0]=CMD_MONITOR;
@@ -203,15 +209,19 @@ static int add_host(int ihost){
 				close(sock);
 				sock=-1;
 			} else{
-				host_added(ihost, sock);
+				//we set hsock_new instead of hsock so that the main thread can take action
+				hsock_new[ihost]=sock;
+				g_idle_add(host_added_wrap, NULL);//trigger respond
 			}
 		}
 		if(sock<0){
 			info_time("Cannot reach %s\n", hosts[ihost]);
 			hsock[ihost]=-1;
 		}
+	}else{
+		dbg_time("hsock[%d]=%d, no action.\n", ihost, hsock[ihost]);
 	}
-	return hsock[ihost];
+	return GINT_TO_POINTER(hsock_new[ihost]);
 }
 
 static int test_jobs(proc_t *p, int flag){
@@ -457,7 +467,7 @@ static int respond(int sock){
 	break;
 	case MON_ADDHOST:
 		if(cmd[1]>-1&&cmd[1]<nhost){
-			add_host(cmd[1]);
+			thread_new(add_host_thread, GINT_TO_POINTER(cmd[1]));
 		} else if(cmd[1]==-2){//quit
 			info_time("respond: quit\n");
 			return -2;
@@ -482,8 +492,10 @@ void* listen_host(void* pmsock){
 	nproc=mycalloc(nhost+1, int);//total number of procs per host
 	npending=mycalloc(nhost+1, int);//pending procs per host
 	hsock=mycalloc(nhost+1, int);
+	hsock_new=mycalloc(nhost+1, int);
 	for(int i=0; i<=nhost; i++){
 		hsock[i]=-1;
+		hsock_new[i]=-1;
 	}
 	htime=mycalloc(nhost, time_t);
 	hnotify=mycalloc(nhost, time_t);
@@ -493,7 +505,7 @@ void* listen_host(void* pmsock){
 	int keep_listen=1;
 	while(keep_listen){
 		fd_set read_fd_set=active_fd_set;
-		struct timeval timeout={5,0};
+		struct timeval timeout={20,0};
 		if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout)<0){
 			perror("select");
 			continue;
@@ -513,11 +525,15 @@ void* listen_host(void* pmsock){
 		}
 		time_t ntime=myclocki();
 		for(int ihost=0; ihost<nhost; ihost++){
+			if(hsock_new[ihost]>=0){//newly established connection
+				host_added(ihost, hsock_new[ihost]);
+				hsock_new[ihost]=-1;
+			}
 			if(htime[ihost]){//only handle hosts that are ever connected
 				if(hsock[ihost]<0){//disconnected, trying to reconnect
-					if(ntime>htime[ihost]+60){//try every 600 seconds
+					if(hsock[ihost]==-1 && ntime>htime[ihost]+60){//try every 600 seconds
 						htime[ihost]=ntime;
-						add_host(ihost);//do not use _add_host_wrap. It will deadlock.
+						thread_new(add_host_thread, GINT_TO_POINTER(ihost));//do not use _add_host_wrap. It will deadlock.
 					}
 				} else if(htime[ihost]>0&&ntime>htime[ihost]+60){//no activity for 60 seconds. check host connection
 					info_time("no respond. probing server %s.\n", hosts[ihost]);

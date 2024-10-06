@@ -459,7 +459,7 @@ compile(){
 		export CPPFLAGS="$CPPFLAGS" 
 		ans=0
 		if test -f configure ;then
-			(./configure --enable-static --enable-shared --prefix=${prefix} --libdir=${libdir} $@ && make -j4 install) > $fnlog2 2>&1|| ans=1
+			(./configure --prefix=${prefix} --libdir=${libdir} $@ && make -j4 install) > $fnlog2 2>&1|| ans=1
 		elif test -f CMakeLists.txt ;then
 		 	(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $@ && make -j4 install) >$fnlog2 2>&1|| ans=1
 		else
@@ -533,7 +533,7 @@ else
 	AC_DEFINE(USE_STATIC, [0], [Comple maos with dynamic linkage])
 	mkl="mkl mkl-static" #prefer dynamic
 fi
-try_lapack="openblas openblas-serial pkg-config default-3 default"
+try_lapack="openblas openblas-0 openblas-serial openblas-serial-0 pkg-config default-3 default"
 if test x$mkl_avail = xyes; then
 	case $use_mkl in
 	yes) #prefer MKL
@@ -602,8 +602,18 @@ function set_lapack(){
 			LAPACK="-lopenblaso" #openblas has lapack built in
 		fi
 		;;
+	openblas-0)
+		if test "$has_omp" = "0" ;then
+			LAPACK="-l:libopenblasp.so.0"
+		else
+			LAPACK="-l:libopenblaso.so.0" #openblas has lapack built in
+		fi
+		;;
 	openblas-serial)
 		LAPACK="-lopenblas"
+		;;
+	openblas-serial-0)
+		LAPACK="-l:libopenblas.so.0"
 		;;
 	default)
 		LAPACK="-llapack -lblas"
