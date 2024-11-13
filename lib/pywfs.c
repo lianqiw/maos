@@ -20,7 +20,7 @@ MAOS.If not, see<http://www.gnu.org/licenses/>.
 #include "accphi.h"
 #include "zernike.h"
 #include "turbulence.h"
-#include "misc.h"
+#include "libmisc.h"
 #include "cure.h"
 static double PYWFS_PSIZE=3; //Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2
 int PYWFS_DEBUG=0;//debugging implementation

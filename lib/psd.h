@@ -19,7 +19,7 @@
 
 #ifndef AOS_LIB_PSD_H
 #define AOS_LIB_PSD_H
-#include "misc.h"
+
 /**
    \file psd.h
    Compute the PSD from a sequence.

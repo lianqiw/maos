@@ -110,10 +110,10 @@ def rms(*args, **kargs):
         arr=np.array(args[0])
     return np.sqrt(np.mean(np.real(arr*np.conj(arr)), **kargs))
 
-def styles(ii):
-    reset_color()
-    lines=['-','--','-.',':'];
-    return lines[np.mod(ii,len(lines))]
+#def styles(ii):
+#reset_color()
+#    lines=['-','--','-.',':']
+#    return lines[np.mod(ii,len(lines))]
 
 def reset_color():
     plt.gca().set_prop_cycle(None)

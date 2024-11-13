@@ -586,7 +586,7 @@ static void perfevl_save(sim_t* simu){
 				if(!simu->save->evlpsfmean[ievl]
 					||!P(simu->evlpsfmean,ievl)) continue;
 				for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-					free(P(pcl, iwvl, ievl)->keywords);
+					free(P(pcl, iwvl, ievl)->keywords);//update keywords for exposure time.
 					P(pcl, iwvl, ievl)->keywords=evl_keywords(simu->parms, simu->aper, ievl, iwvl, isim);
 					zfarr_push(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, P(pcl, iwvl, ievl));
 				}

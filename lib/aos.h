@@ -49,7 +49,7 @@
 #include "cn2est.h"
 #include "locfft.h"
 #include "zernike.h"
-#include "misc.h"
+#include "libmisc.h"
 #include "cure.h"
 #include "petal.h"
 #include "phase.h"

@@ -189,14 +189,14 @@ static char* procfn(const char* fn, const char* mod){
 	/*If there is no recognized suffix, add .bin in the end. */
 	if(mod[0]=='r'){
 		char* fnr=NULL;
-		if(!(fnr=search_file(fn2))){/*If does not exist. */
+		if(!(fnr=search_file(fn2, 1))){/*If does not exist. */
 			if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")
 				&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")){
 			 //Try adding suffix.
 				const char* suf[]={".bin",".fits",".bin.gz",".fits.gz"};
 				for(unsigned int is=0; is<4; is++){
 					strcat(fn2, suf[is]);
-					if(!(fnr=search_file(fn2))){
+					if(!(fnr=search_file(fn2, 1))){
 						fn2[strlen(fn2)-strlen(suf[is])]='\0';
 					} else{
 						break;

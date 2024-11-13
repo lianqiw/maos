@@ -20,7 +20,7 @@
 /**
    Miscellaneous routines.
 */
-#include "misc.h"
+#include "libmisc.h"
 #include "cure.h"
 /**
    add photon and read out noise.  pcalib part of bkgrnd is calibrated

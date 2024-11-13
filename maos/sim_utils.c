@@ -598,29 +598,13 @@ static void init_simu_evl(sim_t* simu){
 	}
 
 	if(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean){
-		char keywords[800];
-		keywords[0]='\0';
-		if(parms->evl.psfmean||parms->evl.psfhist){
-			for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-				char headeri[00];
-				int nembed=P(aper->embed->nembed, iwvl);
-				snprintf(headeri, sizeof(headeri), "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
-					P(parms->evl.wvl, iwvl),
-					P(parms->evl.wvl, iwvl)/(nembed*parms->evl.dx),
-					aper->sumamp2*nembed*nembed);
-				strncat(keywords, headeri, sizeof(keywords)-strlen(keywords)-1);
-			}
-		}
-		keywords[sizeof(keywords)-1]='\0';
 		//The saved PSF and COVs are padded by empty cells.
 		long nframepsf=parms->sim.end;
 		char strht[24];
 		if(parms->evl.psfmean&&!parms->sim.evlol){
 			simu->evlpsfmean=dcellnew(parms->evl.nwvl, nevl);
-			simu->evlpsfmean->keywords=strdup(keywords);
 			save->evlpsfmean=mycalloc(nevl, zfarr*);
 			simu->evlpsfmean_ngsr=dcellnew(parms->evl.nwvl, nevl);
-			simu->evlpsfmean_ngsr->keywords=strdup(keywords);
 			save->evlpsfmean_ngsr=mycalloc(nevl, zfarr*);
 		}
 		if(parms->evl.psfhist){
@@ -679,7 +663,6 @@ static void init_simu_evl(sim_t* simu){
 		if(parms->evl.psfol){
 			if(parms->evl.psfmean){
 				simu->evlpsfolmean=dcellnew(parms->evl.nwvl, 1);
-				simu->evlpsfolmean->keywords=strdup(keywords);
 				save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol" DIR_SUFFIX_OL);
 			}
 			if(parms->evl.cov){

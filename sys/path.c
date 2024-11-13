@@ -135,11 +135,16 @@ void freepath(void){
 }
 /**
    Try to find a file in path and return its absolute filename if exist, NULL
-otherwise.  */
-char* search_file(const char* fn){
+otherwise.  
+
+@param	fn			filename to search
+@param	current		search current folder
+
+*/
+char* search_file(const char* fn, int current){
 	if(!fn) return NULL;
 	char* fnout=NULL;
-	if(exist(fn)){
+	if(current && exist(fn)){
 		fnout=myabspath(fn);
 	} else{
 		PATH_T* ia;
@@ -160,20 +165,7 @@ char* search_file(const char* fn){
 	}
 	return fnout;
 }
-/**
-   Locate a file in path and return its absolute filename. Will emit error if
-   not found.
- */
-char* find_file(const char* fn){
-	char* fnout=search_file(fn);
-	if(!fnout||!exist(fnout)){
-		dbg("Looking for %s, found %s\n", fn, fnout);
-		printpath();
-		error("Unable to find file %s.\n", fn);
-		return NULL;
-	}
-	return fnout;
-}
+
 /**
    Find the directory that hold the configuration files. name is "maos" for
 maos, "skyc" for skyc.  */

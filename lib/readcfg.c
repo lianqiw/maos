@@ -220,7 +220,7 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 	char* config_dir=NULL;//directory for config_file
 	static int current_index=0;
 	if(check_suffix(config_in, ".conf")){
-		config_file=search_file(config_in);
+		config_file=search_file(config_in, 0);
 		if(!config_file||!(fd=fopen(config_file, "r"))){
 			if(priority<0){
 				dbg("Cannot open file %s for reading.\n", config_in);

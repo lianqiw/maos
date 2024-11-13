@@ -19,7 +19,7 @@
 
 #include "../math/mathdef.h"
 #include "psd.h"
-
+#include "libmisc.h"
 //#define W_J(i,N2) (1-pow((real)(i-N2)/(real)N2, 2))
 #define W_J(i,N2) 1
 

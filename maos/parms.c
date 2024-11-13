@@ -795,7 +795,7 @@ static void readcfg_wfs(parms_t *parms){
 */
 static real calc_flux(const dmat *bzero, real wvl, real thruput, real dsa, real dtref, real mag){
 	if(NX(bzero)!=2){
-		error("bzero dimension is %ldx%ld, should have two rows instead\n", NX(bzero), NY(bzero));
+		error("bzero dimension is %ldx%ld, nx must be 2.\n", NX(bzero), NY(bzero));
 	}
 	int iwvl2=0;
 	real wvldiff2=INFINITY;
@@ -894,7 +894,7 @@ static void readcfg_siglev(parms_t *parms){
 							as2=pow(parms->powfs[ipowfs].pixtheta*RAD2AS, 2);
 							break;
 						default:
-							error("Please implement\n");
+							error("Please implement this powfs.type.\n");
 						}
 						if(as2>1000){
 							error("incorrect input: Pixel equivalent area is %g arcsec^2 on sky.\n", as2);
@@ -1043,7 +1043,7 @@ static void readcfg_dm(parms_t *parms){
 		parms->dm[idm].order=ceil(parms->aper.d/parms->dm[idm].dx);
 		parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
 		if(parms->dm[idm].ar<=0){
-			error("ar must be positive\n");
+			error("dm.ar must be positive\n");
 		}
 	}
 	READ_DM_RELAX(dbl,guard);
@@ -1200,7 +1200,7 @@ static void readcfg_atm(parms_t *parms){
 		}else if(parms->atm.interp==3){
 			nps=4;//p-chip interpolation with four frames
 		}else{
-			error("Please implement\n");
+			error("atm.interp=%d is not supported.\n", parms->atm.interp);
 		}
 		if(parms->atm.nps!=nps){
 			parms->atm.nps=nps;
@@ -1234,7 +1234,7 @@ static void readcfg_atmr(parms_t *parms){
 		dcp(&parms->atmr.wt,parms->atm.wt);
 	} else{
 		if(NX(parms->atmr.wt)!=NX(parms->atmr.ht)){
-			error("atmr.wt length has to match atmr.ht\n");
+			error("atmr.wt length must match atmr.ht\n");
 		}
 	}
 	parms->atmr.nps=NX(parms->atmr.ht);
@@ -1257,7 +1257,7 @@ static void readcfg_aper(parms_t *parms){
 		parms->aper.d=dtmp[0];
 		break;
 	default:
-		error("aper.d contains %d elements. But only 1 or 2 elements expected.\n",nd);
+		error("aper.d contains %d elements. But only 1 or 2 elements are supported.\n",nd);
 	}
 	free(dtmp);
 
@@ -1470,7 +1470,7 @@ static void readcfg_fit(parms_t *parms){
 				parms->fit.nfit++;
 			}
 			if(nfit2!=parms->fit.nfit){
-				error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+				error("unexpected: nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
 			}
 		}
 		if(parms->dbg.dmfullfov>1){//Fit over the entire fov. Hurts performance.
@@ -1494,7 +1494,7 @@ static void readcfg_fit(parms_t *parms){
 				parms->fit.nfit++;
 			}
 			if(nfit2!=parms->fit.nfit){
-				error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+				error("unexpected: nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
 			}
 		}
 	}
@@ -1598,13 +1598,13 @@ static void readcfg_sim(parms_t *parms){
 		dresize(parms->sim.aphi,2,1);
 	}
 	if(NX(parms->sim.aphi)>2||NY(parms->sim.aphi)!=1){
-		error("Invalid use of aphi\n");
+		error("sim.aphi is invalid. Must have 1 or 2 entries.\n");
 	}
 	if(NX(parms->sim.aplo)==1){
 		dresize(parms->sim.aplo,2,1);
 	}
 	if(NX(parms->sim.aplo)>2||NY(parms->sim.aplo)!=1){
-		error("Invalid use of aplo\n");
+		error("sim.apli is invalid. Must have 1 or 2 entries.\n");
 	}
 	parms->sim.seeds=readcfg_lmat(0,0,"sim.seeds");
 	parms->sim.nseed=NX(parms->sim.seeds);
@@ -1778,7 +1778,7 @@ static void readcfg_save(parms_t *parms){
 	if(disable_save){
 		parms->save.extra=0;
 		if(parms->save.all||parms->save.setup||parms->save.setup){
-			error("please specify output directory\n");
+			error("Save is enabled. Please specify output directory.\n");
 		}
 	}
 	
@@ -2093,6 +2093,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
+		if(powfsi->dtrat==1 && powfsi->skip==2){
+			error("powfs[%d].dtrat=%d is invalid: truth wfs must have dtrat>1\n", ipowfs, powfsi->dtrat);
+		}
 		if(powfsi->dtrat<=0){
 			error("powfs[%d].dtrat=%d is invalid.\n", ipowfs, powfsi->dtrat);
 		}else if(powfsi->step<parms->sim.start 
@@ -2317,12 +2320,12 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 					if(parms->sim.dtrat_hi<0){
 						parms->sim.dtrat_hi=powfsi->dtrat;
 					} else if(parms->sim.dtrat_hi!=powfsi->dtrat){
-						error("We don't handle multiple framerate of the LO WFS yet\n");
+						error("powfs.dtrat is invalid: all high order WFS must have the same dtrat.\n");
 					}
 					if(parms->step_hi<0){
 						parms->step_hi=powfsi->step;
 					} else if(parms->step_hi!=powfsi->step){
-						error("Different high order WFS has different enabling step\n");
+						error("powfs.step is invalid: all high order WFS must have the same enabling step\n");
 					}
 					if(powfsi->noisy){
 						parms->sim.noisy_hi=1;

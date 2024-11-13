@@ -148,7 +148,7 @@ char* argv2str(int argc, const char* argv[], const char* delim){
    Print the content of a file.
 */
 void print_file(const char* fnin){
-	char* fn=search_file(fnin);
+	char* fn=search_file(fnin, 1);
 	if(!fn){
 		warning("%s not found\n", fnin);
 		return;
@@ -462,8 +462,8 @@ int mysnprintf(char* restrict str, size_t size, const char *restrict format, ...
 	int n=vsnprintf(str, size, format, ap);
 	va_end(ap);	
 	if(n<0){
-		error("snprintf failed\n");
-	}else if(n>=(ssize_t)size){
+		warning("snprintf failed with error %d\n", n);
+	}else if(n>(ssize_t)size){
 		warning("snprintf is truncated: %s (need %d, got %zu)\n", str, n, size);
 	}
 	return n;

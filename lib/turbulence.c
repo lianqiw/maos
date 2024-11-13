@@ -289,10 +289,10 @@ static real calc_r0(real rms, real L0, real slope){
 mapcell* genscreen_str(const char* keywords){
 	mapcell* surfs=NULL;
 	if(zfexist("%s",keywords)){
-		info2("Loading surface OPD from %s\n", keywords);
+		dbg("Loading surface OPD from %s\n", keywords);
 		surfs=mapcellread("%s", keywords);
 	} else{
-		info2("Generating surface OPD from %s\n", keywords);
+		dbg("Generating surface OPD from %s\n", keywords);
 		real r0=search_keyword_num(keywords, "r0");
 		real rmsnm=search_keyword_num(keywords, "rms");//in nm.
 		real mode=search_keyword_num(keywords, "mode");

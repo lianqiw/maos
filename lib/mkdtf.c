@@ -21,7 +21,7 @@
 #include "../math/mathdef.h"
 #include "mkdtf.h"
 #include "mkh.h"
-#include "misc.h"
+#include "libmisc.h"
 /**
 	Create a chess pattern on nominal that absorbes fftshift
 	fft[nominal*otf(peak in corner)] gives psf in center.
