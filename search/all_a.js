@@ -77,7 +77,6 @@ var searchData=
   ['loc_5fadd_5fptt',['loc_add_ptt',['../loc_8h.html#aa67d37dc351390ca94b64ea7da64949f',1,'loc.c']]],
   ['loc_5fangle',['loc_angle',['../loc_8h.html#a04242e38ce1be4dde205ea7bbeb98b04',1,'loc.c']]],
   ['loc_5fcalc_5fmod',['loc_calc_mod',['../loc_8h.html#a8df253e112de8cf6973422c38810ce67',1,'loc.c']]],
-  ['loc_5fcalib',['loc_calib',['../lib_2misc_8h.html#a58a22bed03d88e2f5f910880f7cec8e0',1,'misc.c']]],
   ['loc_5fcircle_5fadd',['loc_circle_add',['../loc_8h.html#aed201b3ccdadf27a51038f341b49ff5d',1,'loc.c']]],
   ['loc_5fcircle_5fmul',['loc_circle_mul',['../loc_8h.html#a0322cd7e00aedff8a29eb8f6b678df41',1,'loc.c']]],
   ['loc_5fcoord2ind',['loc_coord2ind',['../recon__utils_8h.html#ab8e6d5462056cea3258e7eb2d2fd612f',1,'recon_utils.c']]],

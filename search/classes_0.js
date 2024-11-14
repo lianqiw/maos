@@ -3,7 +3,7 @@ var searchData=
   ['aper_5fcfg_5ft',['aper_cfg_t',['../parms_8h.html#structaper__cfg__t',1,'']]],
   ['aper_5ft',['aper_t',['../maos_2types_8h.html#structaper__t',1,'']]],
   ['arg_5ft',['arg_t',['../parms_8h.html#structarg__t',1,'']]],
-  ['argopt_5ft',['argopt_t',['../sys_2misc_8h.html#structargopt__t',1,'']]],
+  ['argopt_5ft',['argopt_t',['../misc_8h.html#structargopt__t',1,'']]],
   ['array',['Array',['../class_array.html',1,'']]],
   ['array_3c_20areal_2c_20gpu_20_3e',['Array&lt; AReal, Gpu &gt;',['../class_array.html',1,'']]],
   ['array_3c_20array_3c_20culoc_5ft_20_3e_20_3e',['Array&lt; Array&lt; culoc_t &gt; &gt;',['../class_array.html',1,'']]],

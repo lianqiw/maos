@@ -161,7 +161,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning</b>(format, ...)&#160;&#160;&#160;logerr(-4, CYAN,     &quot;Warning(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__)</td></tr>
 <tr class="separator:a5d3ff0e9f81516a70ebb38e09b9ef34e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01167927cc103474971c102a622429bb"><td class="memItemLeft" align="right" valign="top"><a id="a01167927cc103474971c102a622429bb"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_time</b>(format, ...)&#160;&#160;&#160;logerr(-4, CYAN, &quot;[%s]Warning(%s:%d): &quot; format, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0),BASEFILE,__LINE__, ##__VA_ARGS__)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_time</b>(format, ...)&#160;&#160;&#160;logerr(-4, CYAN, &quot;[%s]Warning(%s:%d): &quot; format, <a class="el" href="misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0),BASEFILE,__LINE__, ##__VA_ARGS__)</td></tr>
 <tr class="separator:a01167927cc103474971c102a622429bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62dee209121f1ac5d2306b9f6234a1b5"><td class="memItemLeft" align="right" valign="top"><a id="a62dee209121f1ac5d2306b9f6234a1b5"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; warning(A);}})</td></tr>
@@ -170,7 +170,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info_line</b>(format, ...)&#160;&#160;&#160;logstd(-4,     &quot;Info(%s:%d): &quot; format ,BASEFILE,__LINE__,##__VA_ARGS__)</td></tr>
 <tr class="separator:a900f4a34f3fd50e06d9e3f6dbc1dbbed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af752dd4571ccba7677d3bda718be99c6"><td class="memItemLeft" align="right" valign="top"><a id="af752dd4571ccba7677d3bda718be99c6"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_time</b>(format, ...)&#160;&#160;&#160;logstd(-1, &quot;[%s]Info(%s:%d): &quot; format, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), BASEFILE,__LINE__,##__VA_ARGS__)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>info_time</b>(format, ...)&#160;&#160;&#160;logstd(-1, &quot;[%s]Info(%s:%d): &quot; format, <a class="el" href="misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), BASEFILE,__LINE__,##__VA_ARGS__)</td></tr>
 <tr class="separator:af752dd4571ccba7677d3bda718be99c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ca8e156af74e00cb46374435f5fb4b"><td class="memItemLeft" align="right" valign="top"><a id="a71ca8e156af74e00cb46374435f5fb4b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>info</b>(A...)&#160;&#160;&#160;logstd(-1, A)</td></tr>
@@ -203,7 +203,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; dbg(A);}})</td></tr>
 <tr class="separator:a85bf8b7e73023c82d5e3474af826f6cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memItemLeft" align="right" valign="top"><a id="a825b7a63a48fc88a5c00e7ffd20b739b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logdbg(level, YELLOW, &quot;[%s]%s: &quot; format, <a class="el" href="sys_2misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logdbg(level, YELLOW, &quot;[%s]%s: &quot; format, <a class="el" href="misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__)</td></tr>
 <tr class="separator:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c4f6455d41cb73b1d3f6d415b36565f"><td class="memItemLeft" align="right" valign="top"><a id="a6c4f6455d41cb73b1d3f6d415b36565f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_line</b>(format, ...)&#160;&#160;&#160;logdbg(0, YELLOW, &quot;Debug(%s:%d): &quot; format ,BASEFILE,__LINE__,##__VA_ARGS__)</td></tr>
@@ -227,7 +227,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>TIC</b>&#160;&#160;&#160;double tk</td></tr>
 <tr class="separator:a043fba147e9f9707cc6f201bedc9012b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3fb5a5a0838cf7bc55c3eb40a34cb942"><td class="memItemLeft" align="right" valign="top"><a id="a3fb5a5a0838cf7bc55c3eb40a34cb942"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>tic</b>&#160;&#160;&#160;tk=<a class="el" href="sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>tic</b>&#160;&#160;&#160;tk=<a class="el" href="misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()</td></tr>
 <tr class="separator:a3fb5a5a0838cf7bc55c3eb40a34cb942"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afaece5ad9cda01b33f134d1d6d8c3fb3"><td class="memItemLeft" align="right" valign="top"><a id="afaece5ad9cda01b33f134d1d6d8c3fb3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc</b>(format, ...)&#160;&#160;&#160;logstd(-1, format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
@@ -236,7 +236,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc2</b>(format, ...)&#160;&#160;&#160;dbg(format &quot; takes %.6f seconds.\n&quot;, ##__VA_ARGS__, myclockd()-tk)</td></tr>
 <tr class="separator:a977d0e7229a9c0a29efd9a697aeed163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fade71545b5da6ed1a62dfa2b8bacfa"><td class="memItemLeft" align="right" valign="top"><a id="a9fade71545b5da6ed1a62dfa2b8bacfa"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc3</b>&#160;&#160;&#160;(<a class="el" href="sys_2misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()-tk)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>toc3</b>&#160;&#160;&#160;(<a class="el" href="misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()-tk)</td></tr>
 <tr class="separator:a9fade71545b5da6ed1a62dfa2b8bacfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75dc4d92c560e081b6770b6e2c7fbec6"><td class="memItemLeft" align="right" valign="top"><a id="a75dc4d92c560e081b6770b6e2c7fbec6"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>format2fn</b></td></tr>

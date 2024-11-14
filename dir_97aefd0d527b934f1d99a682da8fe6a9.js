@@ -12,7 +12,6 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "kalman.h", "kalman_8h.html", "kalman_8h" ],
     [ "laplacian.h", "laplacian_8h.html", "laplacian_8h" ],
     [ "locfft.h", "locfft_8h.html", "locfft_8h" ],
-    [ "misc.h", "lib_2misc_8h.html", "lib_2misc_8h" ],
     [ "mkdtf.h", "mkdtf_8h.html", "mkdtf_8h" ],
     [ "mkg.h", "mkg_8h.html", "mkg_8h" ],
     [ "mkh.h", "mkh_8h.html", "mkh_8h" ],

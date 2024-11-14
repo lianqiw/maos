@@ -27,7 +27,7 @@ var searchData=
   ['reccati_5fcell',['reccati_cell',['../kalman_8h.html#a582c8e71c677f4502b2e7056a10bd124',1,'kalman.c']]],
   ['reconstruct',['reconstruct',['../maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f',1,'recon.c']]],
   ['redirect',['redirect',['../daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3',1,'daemonize.c']]],
-  ['remove_5ffile_5folder',['remove_file_older',['../sys_2misc_8h.html#a25b56eea8d47545699946b02ffd09690',1,'misc.c']]],
+  ['remove_5ffile_5folder',['remove_file_older',['../misc_8h.html#a25b56eea8d47545699946b02ffd09690',1,'misc.c']]],
   ['remove_5flock',['remove_lock',['../maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20',1,'utils.c']]],
   ['rename_5ffile',['rename_file',['../maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490',1,'utils.c']]],
   ['rmap_5fheader',['rmap_header',['../map_8h.html#a4e1764070cfa4ede067b006618d5bc6f',1,'map.c']]],

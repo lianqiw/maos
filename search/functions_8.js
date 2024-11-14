@@ -6,8 +6,8 @@ var searchData=
   ['init_5fprocess',['init_process',['../process_8h.html#a453c688586be0b4133d5cd3508985e41',1,'process.c']]],
   ['init_5fsimu',['init_simu',['../sim__utils_8h.html#a2edf7b3ebac7406567908bd36ed602c3',1,'sim_utils.c']]],
   ['invperm',['invperm',['../mathmisc_8h.html#a4fc7d93797b6932ee8fd6e4bd9037437',1,'mathmisc.c']]],
-  ['isdir',['isdir',['../sys_2misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8',1,'misc.c']]],
-  ['isfile',['isfile',['../sys_2misc_8h.html#a251424e05fad4be552824c5a51e94ce0',1,'misc.c']]],
-  ['islink',['islink',['../sys_2misc_8h.html#a40e09ee72707a692de2a42cea0b4963c',1,'misc.c']]],
-  ['issock',['issock',['../sys_2misc_8h.html#a3301c2cb79c61e97a1b84f92edb989ef',1,'misc.c']]]
+  ['isdir',['isdir',['../misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8',1,'misc.c']]],
+  ['isfile',['isfile',['../misc_8h.html#a251424e05fad4be552824c5a51e94ce0',1,'misc.c']]],
+  ['islink',['islink',['../misc_8h.html#a40e09ee72707a692de2a42cea0b4963c',1,'misc.c']]],
+  ['issock',['issock',['../misc_8h.html#a3301c2cb79c61e97a1b84f92edb989ef',1,'misc.c']]]
 ];

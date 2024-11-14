@@ -3,7 +3,7 @@ var hierarchy =
     [ "aper_cfg_t", "parms_8h.html#structaper__cfg__t", null ],
     [ "aper_t", "maos_2types_8h.html#structaper__t", null ],
     [ "arg_t", "parms_8h.html#structarg__t", null ],
-    [ "argopt_t", "sys_2misc_8h.html#structargopt__t", null ],
+    [ "argopt_t", "misc_8h.html#structargopt__t", null ],
     [ "atm_cfg_t", "parms_8h.html#structatm__cfg__t", null ],
     [ "atm_prep_t", "structatm__prep__t.html", null ],
     [ "atmr_cfg_t", "parms_8h.html#structatmr__cfg__t", null ],

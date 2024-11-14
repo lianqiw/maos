@@ -111,10 +111,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa95ac1be1b592e9a3d6761a8376b72b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07766b8acb6b809987722bd8f9bf2700"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a07766b8acb6b809987722bd8f9bf2700">printpath</a> (void)</td></tr>
 <tr class="separator:a07766b8acb6b809987722bd8f9bf2700"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25730e4c54130615ab7657ac89c39150"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a25730e4c54130615ab7657ac89c39150">find_file</a> (const char *fn)</td></tr>
-<tr class="separator:a25730e4c54130615ab7657ac89c39150"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e3cda5e813f058b64cceb451bf88e64"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a0e3cda5e813f058b64cceb451bf88e64">search_file</a> (const char *fn)</td></tr>
-<tr class="separator:a0e3cda5e813f058b64cceb451bf88e64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab48659486ff6472dc0f419d3bd0048e7"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#ab48659486ff6472dc0f419d3bd0048e7">search_file</a> (const char *fn, int current)</td></tr>
+<tr class="separator:ab48659486ff6472dc0f419d3bd0048e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4d7c608d3c193573c706d3dfd7e070c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#af4d7c608d3c193573c706d3dfd7e070c">freepath</a> (void)</td></tr>
 <tr class="separator:af4d7c608d3c193573c706d3dfd7e070c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a784b65d0a2c65638f3f35f7f9849ed29"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a784b65d0a2c65638f3f35f7f9849ed29">find_config</a> (const char *name)</td></tr>
@@ -215,27 +213,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a25730e4c54130615ab7657ac89c39150"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a25730e4c54130615ab7657ac89c39150">&#9670;&nbsp;</a></span>find_file()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char* find_file </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fn</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Locate a file in path and return its absolute filename. Will emit error if not found. </p>
-
-</div>
-</div>
-<a id="a0e3cda5e813f058b64cceb451bf88e64"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e3cda5e813f058b64cceb451bf88e64">&#9670;&nbsp;</a></span>search_file()</h2>
+<a id="ab48659486ff6472dc0f419d3bd0048e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab48659486ff6472dc0f419d3bd0048e7">&#9670;&nbsp;</a></span>search_file()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -244,12 +223,29 @@ Functions</h2></td></tr>
           <td class="memname">char* search_file </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fn</em></td><td>)</td>
+          <td class="paramname"><em>fn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>current</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise. </p>
+<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise. <br />
+ </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fn</td><td>filename to search </td></tr>
+    <tr><td class="paramname">current</td><td>search current folder </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

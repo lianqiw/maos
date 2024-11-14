@@ -60,8 +60,6 @@ var searchData=
   ['wfsr_5fcfg_5ft',['wfsr_cfg_t',['../parms_8h.html#structwfsr__cfg__t',1,'']]],
   ['widthp',['widthp',['../parms_8h.html#adbac1e0733ae702a61152b16b2663c15',1,'llt_cfg_t']]],
   ['winddir',['winddir',['../maos_2types_8h.html#aa3f1529a55c25f73a1fccc55a291075d',1,'sim_t']]],
-  ['wrap2range',['wrap2range',['../lib_2misc_8h.html#a5b60d683c9be737576399efb2096b1f6',1,'misc.c']]],
-  ['wrap_5fseq',['wrap_seq',['../lib_2misc_8h.html#a2235242a9bac255b39560b25cf2e5dd4',1,'misc.c']]],
   ['write_5fheader',['write_header',['../bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e',1,'bin.c']]],
   ['writearr',['writearr',['../bin_8h.html#a5cd5173c875b0dd21e5800d8dd5d3e7d',1,'bin.c']]],
   ['writebin',['writebin',['../cell_8h.html#ab1d9a9bae6eafd580462028dc872484c',1,'cell.h']]],

@@ -5,7 +5,7 @@ var searchData=
   ['map_2eh',['map.h',['../map_8h.html',1,'']]],
   ['mathdef_2eh',['mathdef.h',['../mathdef_8h.html',1,'']]],
   ['mathmisc_2eh',['mathmisc.h',['../mathmisc_8h.html',1,'']]],
-  ['misc_2eh',['misc.h',['../lib_2misc_8h.html',1,'(Global Namespace)'],['../sys_2misc_8h.html',1,'(Global Namespace)']]],
+  ['misc_2eh',['misc.h',['../misc_8h.html',1,'']]],
   ['mkdtf_2eh',['mkdtf.h',['../mkdtf_8h.html',1,'']]],
   ['mkg_2eh',['mkg.h',['../mkg_8h.html',1,'']]],
   ['mkh_2eh',['mkh.h',['../mkh_8h.html',1,'']]],

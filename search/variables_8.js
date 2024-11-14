@@ -45,7 +45,7 @@ var searchData=
   ['ipnk',['iPnk',['../cn2est_8h.html#adec362cfdb0ff98f576986c69fbb65f6',1,'cn2est_t']]],
   ['ipsr',['ipsr',['../parms_8h.html#a61c15c4338a59918a1603c440f058d36',1,'atm_cfg_t']]],
   ['iseed',['iseed',['../maos_2types_8h.html#a29a7a2bb4bbd0bec81fd1b0cd38966a8',1,'sim_t']]],
-  ['isfun',['isfun',['../sys_2misc_8h.html#af3550be4dbd55c6265f135971171b9d8',1,'argopt_t']]],
+  ['isfun',['isfun',['../misc_8h.html#af3550be4dbd55c6265f135971171b9d8',1,'argopt_t']]],
   ['isground',['isground',['../parms_8h.html#a111386ee98f97bf56186bed917aabc93',1,'dm_cfg_t']]],
   ['isref',['isref',['../maos_2types_8h.html#a4ade0ef1063bfd82b9c2544e30c32cc9',1,'fit_t']]],
   ['itpowfs',['itpowfs',['../parms_8h.html#acc65eaf74703886d896c004560af7494',1,'parms_t']]],

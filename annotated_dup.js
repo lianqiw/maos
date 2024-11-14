@@ -4,7 +4,7 @@ var annotated_dup =
     [ "aper_cfg_t", "parms_8h.html#structaper__cfg__t", "parms_8h_structaper__cfg__t" ],
     [ "aper_t", "maos_2types_8h.html#structaper__t", "maos_2types_8h_structaper__t" ],
     [ "arg_t", "parms_8h.html#structarg__t", "parms_8h_structarg__t" ],
-    [ "argopt_t", "sys_2misc_8h.html#structargopt__t", "sys_2misc_8h_structargopt__t" ],
+    [ "argopt_t", "misc_8h.html#structargopt__t", "misc_8h_structargopt__t" ],
     [ "Array", "class_array.html", "class_array" ],
     [ "atm_cfg_t", "parms_8h.html#structatm__cfg__t", "parms_8h_structatm__cfg__t" ],
     [ "atm_prep_t", "structatm__prep__t.html", "structatm__prep__t" ],

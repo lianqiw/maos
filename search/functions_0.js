@@ -12,8 +12,6 @@ var searchData=
   ['add_5fpsd',['add_psd',['../psd_8h.html#af7c7033580aa54cc4036bab52e0f9752',1,'psd.c']]],
   ['add_5fpsd2',['add_psd2',['../psd_8h.html#a88258084783ed5748c1fa3bbe9aa8b1f',1,'psd.c']]],
   ['addlow2dm',['addlow2dm',['../sim_8h.html#a722a80fbfae289e4c927d98427eee27b',1,'filter.c']]],
-  ['addnoise',['addnoise',['../lib_2misc_8h.html#a4bf8970d027f919a7485a8e426415de6',1,'misc.c']]],
-  ['addnoise_5fgrad',['addnoise_grad',['../lib_2misc_8h.html#a48f27901c57db366ade9713f9eabc688',1,'misc.c']]],
   ['addpath',['addpath',['../path_8h.html#a8539b4e587a7ea71221206e43f29ead5',1,'path.c']]],
   ['addpath2',['addpath2',['../path_8h.html#acb29962e960d55db5ecd8812f61a9441',1,'path.c']]],
   ['addr2name',['addr2name',['../sock_8h.html#aea2693b4a873c21f2c2d4835a56b2e3b',1,'sock.c']]],
@@ -23,11 +21,10 @@ var searchData=
   ['apply_5fl2',['apply_L2',['../recon__utils_8h.html#ab783a16cfb484ce0c36371e3161e1689',1,'recon_utils.c']]],
   ['apply_5flaplacian_5fmap',['apply_laplacian_map',['../laplacian_8h.html#ad50368f80512d243a668b1f4cd70e77a',1,'laplacian.c']]],
   ['applyw',['applyW',['../recon__utils_8h.html#a29875eda5bf6485bb6b3b5628da3e361',1,'recon_utils.c']]],
-  ['argv2str',['argv2str',['../sys_2misc_8h.html#a8a2802063b35fa082c7e9ca93153e44d',1,'misc.c']]],
+  ['argv2str',['argv2str',['../misc_8h.html#a8a2802063b35fa082c7e9ca93153e44d',1,'misc.c']]],
   ['async_5finit',['async_init',['../bin_8h.html#a097892c6434a429ee7a2b89ea712b05e',1,'bin.c']]],
   ['async_5fwrite',['async_write',['../bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13',1,'bin.c']]],
   ['atm2xloc',['atm2xloc',['../sim__utils_8h.html#a6140547e84ed40849518c002ff165382',1,'sim_utils.c']]],
-  ['atm_5finterp',['atm_interp',['../lib_2misc_8h.html#a698c18f4e0938e730e6ead90f4b7a423',1,'misc.c']]],
-  ['available_5fspace',['available_space',['../sys_2misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
+  ['available_5fspace',['available_space',['../misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
   ['average_5fpowfs',['average_powfs',['../maos_2utils_8h.html#aa3c976283684c703e5ed8b35bfeac3b8',1,'utils.c']]]
 ];
