@@ -454,13 +454,11 @@ OMPTASK_SINGLE
 			maos_sim();
 		}
 		if(plistener) pthread_cancel(plistener);
-		rename_file(signal_caught);
-		draw_final(1);
 	}
 	maos_reset();
 	free_parms(parms);
 	info2("\n*** Simulation %s at %s in %s. ***\n\n", signal_caught?"Terminated":"Finished",myasctime(0), HOST);
 	free_arg(&arg);
-	scheduler_finish(signal_caught);
+	maos_final(signal_caught);
 	return signal_caught;
 }

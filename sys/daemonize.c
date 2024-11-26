@@ -58,7 +58,10 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 			dbg("Lock %s success.\n", fnlock);
 			char msg[128];
 			snprintf(msg, sizeof(msg), "Locked by %s:%d\n", HOST, PID);
-			write(fd, msg, strlen(msg)+1);
+			size_t nmsg=strlen(msg)+1;
+			if(write(fd, msg, nmsg)!=(ssize_t)nmsg){
+				dbg("Failed to write message %s to file %s\n", msg, fnlock);
+			}
 		}
 	}
 	return fd;

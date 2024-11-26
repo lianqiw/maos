@@ -34,7 +34,7 @@ void plotloc(const char *fig, const parms_t *parms,
 	     loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);
 void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...) CHECK_ARG(4);
 void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success);
-void rename_file(int sig);
+void maos_final(int sig);
 int maos_signal_handler(int sig);
 arg_t* parse_args(int argc, const char *argv[]);
 void free_arg(arg_t** parg);

@@ -295,18 +295,21 @@ void update_zoom(drawdata_t* drawdata){
   The color follows RGB representation: (Since 2011-02-18)
   bits 32-25: Red. bits 24-17: Green. bits 16-9: Blue.
  */
-#define PARSE_STYLE(stylein)					\
-    {								\
+#define PARSE_STYLE(stylein)				\
+{											\
 	style=stylein & 0x7;					\
-	connectpts=(stylein&0x8)>>3;				\
-	color=(stylein&0xFFFFFF00)>>8;				\
-	sym_size=round(((stylein&0xF0)>>4));			\
+	connectpts=(stylein&0x8)>>3;			\
+	color=(stylein&0xFFFFFF00)>>8;			\
+	sym_size=round((stylein&0xF0)>>4);		\
 	if(style>5) style=0;					\
 	if(style==0) connectpts=1;				\
-    }
+}
 
 static inline void
-draw_point(cairo_t* cr, float ix, float iy, long style, float size, int rounding){
+draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx, int rounding){
+	if(zoomx>1 && size<20){
+		size*=sqrt(zoomx);
+	}
 	if(rounding){
 		ix=round(ix);
 		iy=round(iy);
@@ -973,7 +976,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				style=0;
 				connectpts=1;
 			}
-			float sym_size=round(4*sqrt(zoomx));
+			float sym_size=4;
 			if(drawdata->nstyle==1){
 				PARSE_STYLE(drawdata->style[0]);
 			}
@@ -1028,7 +1031,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 					}
 					cairo_move_to(cr, ix, iy);
 					if(style){
-						draw_point(cr, ix, iy, style, sym_size, 1);
+						draw_point(cr, ix, iy, style, sym_size, zoomx, 1);
 					}
 					/*connect additional points. */
 					for(ips++; ips<ptsnx; ips+=ptstep){
@@ -1052,7 +1055,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 							cairo_move_to(cr, ix, iy);
 						}
 						if(style){
-							draw_point(cr, ix, iy, style, sym_size, 1);
+							draw_point(cr, ix, iy, style, sym_size, zoomx, 1);
 						}
 					}
 					cairo_stroke(cr);
@@ -1234,7 +1237,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				set_color(cr, color);
 				float ix=symlen*0.5;
 				float iy=tall*0.5;
-				draw_point(cr, ix, iy, style, sym_size, 1);
+				draw_point(cr, ix, iy, style, sym_size, 1, 1);
 				cairo_stroke(cr);
 				if(connectpts){
 					cairo_move_to(cr, 0, tall*0.5);

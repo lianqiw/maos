@@ -264,7 +264,9 @@ int rename_done(const char *prefix, const char *suffix, int count_in){
 /**
    Rename the log files when simulation exits or when signal is caught.
 */
-void rename_file(int sig){
+void maos_final(int sig){
+	draw_final(1);
+	scheduler_finish(signal_caught);
 	if(disable_save) return;
 	if(sig==0){//success
 		int count=rename_done("run", "log", -1);
@@ -292,8 +294,9 @@ int maos_signal_handler(int sig){
 	/*if((sig==SIGTERM||sig==SIGINT)&&global&&global->setupdone==1){
 		info2("Will exit after finishing current time step\n");
 		return 1;
-	}else*/{
-		rename_file(sig);/*handles signal */
+	}else*/
+	{
+		maos_final(sig);/*handles signal */
 		if(global&&global->parms&&global->parms->sim.mvmport){
 			mvm_client_close();
 		}

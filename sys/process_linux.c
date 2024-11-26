@@ -292,73 +292,10 @@ double read_self_cpu(void){
 	return frac;
 }
 /**
-   parsing /proc/cpuinfo to find real number of physical cores, while
-   hyper-threading may be cheating us.*/
+   Return number of processors
+*/
 int get_ncpu(void){
-	int ncpu0=sysconf(_SC_NPROCESSORS_ONLN);
-	FILE* fp=fopen("/proc/cpuinfo", "r");
-#define nmax 4096
-	char line[1024];
-	int phyid[nmax]={0};/*record the list of physical cpu ids */
-	int coreid[nmax]={0};/*record the list of core ids */
-	int iphy=0, icore=0;
-	const char* s_phy="physical id"; /*records number of CPUs */
-	const char* s_core="core id";    /*should record number of cores per cpu */
-	const char* s_cores="cpu cores"; /*should record number of cores per cpu. */
-	int ncore=0;
-	while(fp&&fgets(line, 1024, fp)){
-		if(!mystrcmp(line, s_phy)){/*contains physical id */
-			int kphy;
-			char* ss=strchr(line, ':');
-			int jphy=strtol(ss+1, NULL, 10);
-			for(kphy=0; kphy<iphy; kphy++){
-				if(phyid[kphy]==jphy){
-					break;
-				}
-			}
-			if(kphy==iphy){
-				phyid[iphy]=jphy;
-				iphy++;
-				if(iphy>nmax){
-					error("Over flow. Please make nmax bigger\n");
-				}
-			}
-		}
-		if(!mystrcmp(line, s_core)){/*contains core id */
-			int kcore;
-			char* ss=strchr(line, ':');
-			int jcore=strtol(ss+1, NULL, 10);
-			for(kcore=0; kcore<icore; kcore++){
-				if(coreid[kcore]==jcore){
-					break;
-				}
-			}
-			if(kcore==icore){
-				coreid[icore]=jcore;
-				icore++;
-				if(icore>nmax){
-					error("Over flow\n");
-				}
-			}
-		}
-		if(!mystrcmp(line, s_cores)){/*contains cpu cores */
-			int mcore=strtol(strchr(line, ':')+1, NULL, 10);
-			if(ncore==0||ncore==mcore){
-				ncore=mcore;
-			} else{
-				warning("'cpu_core' Does not have a uniq number\n");
-			}
-		}
-	}
-	int ncpu1=iphy*(ncore>icore?icore:ncore);
-	fclose(fp);
-	int ncpu=ncpu0<ncpu1?ncpu0:ncpu1;
-	if(ncpu==0){
-		warning("Unable to obtain CPU count\n");
-		ncpu=4;
-	}
-	return ncpu;
-#undef nmax
+	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 #endif

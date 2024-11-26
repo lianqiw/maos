@@ -433,6 +433,7 @@ static int get_drawdaemon(){
 */
 void draw_final(int reuse){
 	//called from other threads, need to lock
+	if(!sock_draws) return;
 	LOCK(lock);
 	draw_remove(-1, reuse);
 	UNLOCK(lock);

@@ -116,7 +116,7 @@ ARG_S* parse_args(int argc, const char* argv[]){
 /**
    Rename the log files when simulation exits.
  */
-void rename_file(int sig){
+void maos_final(int sig){
 	if(sig==0){
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
@@ -133,7 +133,7 @@ void rename_file(int sig){
  */
 int skyc_signal_handler(int sig){
 	info("skyc: %s", strsignal(sig));
-	rename_file(sig);/*handles signal */
+	maos_final(sig);/*handles signal */
 	scheduler_finish(sig);
 	return 0;
 }

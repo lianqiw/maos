@@ -229,7 +229,7 @@ static void topnb_detach_btn(GtkWidget *btn, GtkWidget *topnb){
 static void update_toolbar(drawdata_t *drawdata){
 	if(!drawdata) drawdata=get_current_drawdata();
 	if(!drawdata) return;
-	int cumu_supported=!drawdata->p&&drawdata->npts>0;
+	int cumu_supported=!drawdata->p&&drawdata->npts>0&&!drawdata->square;
 	if(cur_menu_cumu){
 		toggle_button_set_active(cur_menu_cumu, drawdata->cumu);
 		gtk_widget_set_sensitive(cur_menu_cumu, cumu_supported);
