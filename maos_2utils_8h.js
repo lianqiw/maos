@@ -3,7 +3,7 @@ var maos_2utils_8h =
     [ "plotloc", "maos_2utils_8h.html#a1343345dedf6ae0d845b15b982f4ac48", null ],
     [ "plotdir", "maos_2utils_8h.html#abb5045761ac37707beaf143c30f68b3b", null ],
     [ "remove_lock", "maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20", null ],
-    [ "rename_file", "maos_2utils_8h.html#af83a1d1fc29af913013c954d41d34490", null ],
+    [ "maos_final", "maos_2utils_8h.html#a7b9e95fb45df2936ffc53d911f485c3b", null ],
     [ "maos_signal_handler", "maos_2utils_8h.html#aafb94bb8e11bc2169946336024d6b0fc", null ],
     [ "parse_args", "maos_2utils_8h.html#a669f9c0a37d07dde23e30d0fa4593e30", null ],
     [ "free_arg", "maos_2utils_8h.html#af165695540a14022995fcd8dc6dc7f3c", null ],
