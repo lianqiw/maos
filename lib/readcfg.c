@@ -150,7 +150,7 @@ static void print_key(const void* key, VISIT which, int level){
 		}
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
-				if(PERMISSIVE||store->priority>0||store->prefix){
+				if(PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
@@ -313,8 +313,7 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 			}else if(eql[-1]=='-'){
 				append=-1;//remove from key
 				eql[-1]='\0';
-			}
-			if(eql[1]=='='){//equivalent keys:old==new keys
+			}else if(eql[1]=='='){//equivalent keys:old==new keys
 				replace=1;
 				eql[1]=' ';
 				if(eql[2]=='>'){
@@ -395,9 +394,14 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 				if(oldstore->flag==-1){//a replacement entry
 					if(oldstore->data&&oldstore->data[0]!=0&&oldstore->data[0]!='('){
 						if(replace==2) warning("%s has been renamed to %s.\n", store->key, oldstore->data);
-						free(store->key);
-						store->key=strdup(oldstore->data);
-						entryfind=tfind(store, &MROOT, key_cmp);//search again
+						free(store->key);store->key=NULL;
+						if(strcmp(store->data, oldstore->data)){//this is not an replacement entry
+							store->key=strdup(oldstore->data);
+							entryfind=tfind(store, &MROOT, key_cmp);//search again
+						}else{
+							store->flag=-1;
+							entryfind=NULL;
+						}
 					}else{
 						warning("%s is no longer needed. %s\n", store->key, oldstore->data?oldstore->data:"");
 						free(store->key); store->key=NULL;

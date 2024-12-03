@@ -428,19 +428,21 @@ static void readcfg_powfs(parms_t *parms){
 			powfsi->dsa*=-parms->aper.d;
 		}else{
 			if(!powfsi->dsa){
-				if(powfsi->lo){
-					error("powfs[%d].dsa=%g must be set for LO powfs.\n", ipowfs, powfsi->dsa);
+				if(powfsi->lo || !parms->ndm){
+					error("powfs[%d].dsa must be set for LO powfs.\n", ipowfs);
 				} else{//Follow ground DM.
 					if(parms->ndm){
 						powfsi->dsa=parms->dm[0].dx;
 					} else{
-						powfsi->dsa=0.5;
+						error("powfs[%d].dsa must be set when there is no DM.\n", ipowfs);
 					}
 				}
 			}
 			powfsi->order=ceil(parms->aper.d/powfsi->dsa);
 		}
-		
+		if(powfsi->fieldstop){
+			convert_theta(&powfsi->fieldstop, "fieldstop", powfsi->wvlmean, parms->aper.d);
+		}
 		if(isfinite(powfsi->hs)){//LGS
 			if(parms->sim.htel){
 				if(fabs(powfsi->hs-90e3)<2e3){//Only adjust Sodium LGS if it set to 90km+/- 2km
@@ -551,7 +553,13 @@ static void readcfg_powfs(parms_t *parms){
 				error("PWFS must have phyusenea=1;\n");
 			}
 			powfsi->pixtheta=0;
+			powfsi->ng=pywfs_ng(pycfg); //number of gradients per subaperture
+			if(powfsi->sigmatch==-1){
+				powfsi->sigmatch=2;//global match
+			}
+			pycfg->sigmatch=powfsi->sigmatch;
 		}else{//SHWFS
+			powfsi->ng=2;
 			/*Adjust dx if the subaperture does not contain integer, even number of points.*/
 			{
 				int nx=2*(int)round(0.5*powfsi->dsa/powfsi->dx);
@@ -597,31 +605,17 @@ static void readcfg_powfs(parms_t *parms){
 			if(powfsi->cogoff<0){
 				powfsi->cogoff*=-powfsi->rne;
 			}
-		}
-		if(powfsi->fieldstop){
-			convert_theta(&powfsi->fieldstop, "fieldstop", powfsi->wvlmean, powfsi->dsa);
+			if(powfsi->sigmatch==-1){
+				powfsi->sigmatch=1;
+			}
+			if(powfsi->phytype_sim==2||powfsi->phytype_sim2==2){//COG
+				if((powfsi->cogthres||powfsi->cogoff)&&powfsi->sigmatch!=1){
+					error("When cogthres or cogoff is set, only sigmatch==1 is supported but is %d\n", powfsi->sigmatch);
+				}
+			}
 		}
 
-		powfsi->ng=pywfs_ng(pycfg); //number of gradients per subaperture
-		if(powfsi->sigmatch==-1){
-			if(powfsi->type==WFS_SH){//SHWFS
-				if(powfsi->phytype_sim==PTYPE_COG){//CoG
-					powfsi->sigmatch=1;
-				} else{//Others
-					powfsi->sigmatch=1;//global match is not good for matched filter
-				}
-			} else if(powfsi->type==WFS_PY){
-				powfsi->sigmatch=2;//global match
-			} else if(powfsi->usephy){
-				error("Please specify sigmatch\n");
-			}
-		}
-		if(powfsi->phytype_sim==2||powfsi->phytype_sim2==2){//COG
-			if((powfsi->cogthres||powfsi->cogoff)&&powfsi->sigmatch!=1){
-				error("When cogthres or cogoff is set, only sigmatch==1 is supported but is %d\n", powfsi->sigmatch);
-			}
-		}
-		if(pycfg) pycfg->sigmatch=powfsi->sigmatch;
+
 		/*
 		if(powfsi->fndither){
 			open_config(powfsi->fndither, prefix, 0);
@@ -746,7 +740,7 @@ static void readcfg_wfs(parms_t *parms){
 	
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].astscale!=1){//scale asterism
+		if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
 			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
 			parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
 		}
@@ -911,11 +905,14 @@ static void readcfg_siglev(parms_t *parms){
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					P(parms->wfs[iwfs].wvlwts, iwvl)/=siglev_mag;
 				}
+				dbg("wfs %d siglev %g is from magnitude\n", iwfs, parms->wfs[iwfs].siglev);
 			}else{//use supplied siglev and wvlwts
 				if(NX(wfs_siglev)==0||!P(wfs_siglev, iwfs)){
 					parms->wfs[iwfs].siglev=parms->powfs[ipowfs].siglev;
+					dbg("wfs %d siglev %g is from powfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
 				} else{
 					parms->wfs[iwfs].siglev=P(wfs_siglev,iwfs);
+					dbg("wfs %d siglev %g is from wfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
 				}
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					real wvlwti=1;
@@ -2349,7 +2346,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
-			if(powfsi->epfsm<0){
+			if(powfsi->epfsm<=0){
 				real g=servo_optim_margin(parms->sim.dt,powfsi->dtrat,powfsi->alfsm,
 					M_PI/4,powfsi->f0fsm,powfsi->zetafsm);
 				powfsi->epfsm=g;
@@ -2815,7 +2812,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		//moved from postproc_wfs to ensure initialization
 		parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dt);//active at every time step. use dt
 
-		if(P(parms->sim.ephi, 0)<0){
+		if(P(parms->sim.ephi, 0)<=0){
 			real g=0.5;
 			if(parms->npowfs>0){
 				g=servo_optim_margin(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi,
@@ -2824,7 +2821,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			P(parms->sim.ephi, 0)=g;
 			info("sim.ephi is set to %g (auto)\n", g);
 		}
-		if(P(parms->sim.eplo, 0)<0){
+		if(P(parms->sim.eplo, 0)<=0){
 			real g=0.5;
 			if(parms->npowfs>0){
 				servo_optim_margin(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo,
@@ -3615,10 +3612,10 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	readcfg_ncpa(parms);
 	readcfg_aper(parms);
 	readcfg_atm(parms);
-	readcfg_powfs(parms);
+	readcfg_dm(parms);
+	readcfg_powfs(parms);//depends on readcfg_dm results
 	readcfg_wfs(parms);
 	readcfg_siglev(parms);
-	readcfg_dm(parms);
 	readcfg_moao(parms);
 	readcfg_atmr(parms);
 	readcfg_tomo(parms);

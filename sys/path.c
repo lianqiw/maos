@@ -144,7 +144,9 @@ otherwise.
 char* search_file(const char* fn, int current){
 	if(!fn) return NULL;
 	char* fnout=NULL;
-	if(current && exist(fn)){
+	if(fn[0]=='/'){//absolute path
+		return exist(fn)?strdup(fn):NULL;
+	}else if(current && exist(fn)){//allow current path.
 		fnout=myabspath(fn);
 	} else{
 		PATH_T* ia;

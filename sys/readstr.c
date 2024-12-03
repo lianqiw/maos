@@ -235,10 +235,11 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
  * @param count The existing number of elements in the vector.
  * @param res 	The number to append
  * @param ndup 	Number of times to duplicate the last entry.
+ * @return -1 if invalid entry, -2 if more numbers are supplied, 0 if success.
  */
 int fill_num(void **ret, int len, int *nmax, int type, int size, int *count, double res, int nfill){
 	if(len>0 && *count+nfill>len){
-		warning("Needs %d numbers, but more are supplied.\n", len);
+		warning("Needs %d numbers, but %d are supplied.\n", len, *count+nfill);
 		return -2;
 	}
 	for(int i=0; i<nfill; i++){
