@@ -28,8 +28,20 @@
 #include <pango/pango.h>
 #define GTK_VERSION_AFTER(major,minor) (GTK_MAJOR_VERSION>major || (GTK_MAJOR_VERSION==major && GTK_MINOR_VERSION>=minor))
 #define GLIB_VERSION_AFTER(major,minor) (GLIB_MAJOR_VERSION>major || (GLIB_MAJOR_VERSION==major && GLIB_MINOR_VERSION>=minor))
-
-#if GTK_MAJOR_VERSION >2
+#if MAC_INTEGRATION //In newer GTK_MAJOR>3, using GtkApplication (with no support for dock icon) instead of this extension.
+#include <gtkosxapplication.h>
+#define USE_APPLICATION 0
+#elif GTK_MAJOR_VERSION>2
+#define USE_APPLICATION 1
+#else
+#define USE_APPLICATION 0
+#endif
+#if GTK_VERSION_AFTER(4,0)
+#define USE_TITLEBAR 1 //title bar in gtk3 makes it hard to resize window
+#else
+#define USE_TITLEBAR 0
+#endif
+#if GTK_VERSION_AFTER(3, 2)
 #define gtk_hbox_new(A,B) gtk_box_new(GTK_ORIENTATION_HORIZONTAL, B)
 #define gtk_vbox_new(A,B) gtk_box_new(GTK_ORIENTATION_VERTICAL, B)
 #define gtk_vseparator_new() gtk_separator_new(GTK_ORIENTATION_VERTICAL)
@@ -57,14 +69,14 @@
 #define G_VALUE_INIT {0,{{0}}}
 #endif
 
-
+//GtkWidget *button_new(int toggle, const char *iconname, GdkPixbuf *buf);
 #if GTK_MAJOR_VERSION<4 //gtk3 or gtk2
 #define box_append(box, child, expand, fill, padding) gtk_box_pack_start(GTK_BOX(box), child, expand, fill, padding)
 #define box_prepend(box, child, expand, fill, padding) gtk_box_pack_end(GTK_BOX(box), child, expand, fill, padding)
-#define button_new(iconname) gtk_button_new_from_icon_name(iconname, GTK_ICON_SIZE_BUTTON)
+//#define button_new(iconname) gtk_button_new_from_icon_name(iconname, GTK_ICON_SIZE_BUTTON)
 #define set_cursor(widget, cursor) gdk_window_set_cursor(gtk_widget_get_window(widget), cursor);
-#define toggle_button_set_active(widget, value) gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(widget),value)
-#define toggle_button_get_active(widget) gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(widget))
+#define toggle_button_set_active(widget, value) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget),value)
+#define toggle_button_get_active(widget) gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))
 #define scrolled_window_new() gtk_scrolled_window_new(NULL, NULL)
 #define window_new() gtk_window_new(GTK_WINDOW_TOPLEVEL)
 #define entry_set_text(entry, text) gtk_entry_set_text(GTK_ENTRY(entry), text)
@@ -80,7 +92,7 @@
 #define box_append(box, child, ...) gtk_box_append(GTK_BOX(box), child)
 #define box_prepend(box, child, ...) gtk_box_prepend(GTK_BOX(box), child)
 
-#define button_new(iconname)  gtk_button_new_from_icon_name(iconname)
+//#define button_new(iconname)  gtk_button_new_from_icon_name(iconname)
 #define set_cursor gtk_widget_set_cursor
 #define toggle_button_set_active(widget,value) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget),value)
 #define toggle_button_get_active(widget) gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))
@@ -93,6 +105,6 @@
 #define check_button_get_active(button) gtk_check_button_get_active(GTK_CHECK_BUTTON(button))
 #endif
 
-void new_toolbar_item(GtkWidget *toolbar, const char *iconname, GdkPixbuf *iconbuf, const char *cmdname, void(*func)(GtkButton *, gpointer data), int data);
+GtkWidget *new_toolbar_item(GtkWidget *toolbar, GtkWidget *item, int toggle, const char *iconname, GdkPixbuf *iconbuf, const char *cmdname, void(*func)(GtkWidget*, gpointer data), gpointer data);
 #endif
 

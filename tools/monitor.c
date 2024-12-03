@@ -39,9 +39,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "monitor.h"
-#if MAC_INTEGRATION //In newer GTK>3.6, using GtkApplication instead of this extension.
-#include <gtkosxapplication.h>
-#endif
+
+
 #if WITH_NOTIFY
 #include <libnotify/notify.h>
 static int notify_daemon=1;
@@ -62,7 +61,10 @@ GdkPixbuf* icon_skip=NULL;
 GdkPixbuf* icon_clear=NULL;
 GdkPixbuf* icon_connect=NULL;
 GtkWidget* notebook=NULL;
-GtkWidget** pages;
+GtkWidget** pages=NULL;
+#if GTK_MAJOR_VERSION<4
+GtkWidget** buttons=NULL;
+#endif
 GtkWidget* window=NULL;
 //static GtkWidget** tabs;
 static GtkWidget** titles;
@@ -84,7 +86,7 @@ GdkColor white;
 GdkColor color_even;
 GdkColor color_odd;
 #endif
-GtkWidget* toptoolbar;
+GtkWidget* toolbar;
 #if GTK_MAJOR_VERSION>=3
 #include "gtk3-css.h"
 #endif
@@ -407,30 +409,33 @@ void kill_job(int hid, int pid){
 	break;
 	}
 }*/
+void kill_all_jobs_do(const int this_host){
+	for(int ihost=0; ihost<nhost; ihost++){
+		if(this_host!=nhost&&ihost!=this_host){
+			continue;
+		}
+		kill_job_wrap(ihost, 0);
+	}
+}
 #if GTK_MAJOR_VERSION>=4
 void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
 	gtk_window_destroy(GTK_WINDOW(dialog));
 	int this_host=GPOINTER_TO_INT(data);
 	if(result){
-		for(int ihost=0; ihost<nhost; ihost++){
-			if(result==1&&ihost!=this_host){
-				continue;
-			}
-			kill_job_wrap(ihost, 0);
-		}
+		kill_all_jobs_do(this_host);
 	}
 }
 #endif
-void kill_all_jobs(GtkButton* btn, gpointer data){
+void kill_all_jobs(GtkWidget* btn, gpointer data){
 	(void)btn;
 	(void)data;
-	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook))-1;
+	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
-		"Kill all jobs on %s?", this_host==-1?"all servers":hosts[this_host]);
+		"Kill all jobs on %s?", this_host==nhost?"all servers":hosts[this_host]);
 	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
 #if GTK_MAJOR_VERSION>=4
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));
@@ -439,12 +444,7 @@ void kill_all_jobs(GtkButton* btn, gpointer data){
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy(dia);
 	if(result){
-		for(int ihost=0; ihost<nhost; ihost++){
-			if(this_host!=-1&&ihost!=this_host){
-				continue;
-			}
-			kill_job_wrap(ihost, 0);
-		}
+		kill_all_jobs_do(this_host);
 	}
 #endif
 }
@@ -528,10 +528,10 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	return TRUE;
 	}*/
 
-void clear_jobs(GtkButton* btn, gpointer flag){
+void clear_jobs(GtkWidget* btn, gpointer flag){
 	(void)btn;
-	int this_host=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook))-1;
-	if(this_host==-1){
+	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	if(this_host==nhost){
 		for(int ihost=0; ihost<nhost; ihost++){
 			clear_job_wrap(ihost, GPOINTER_TO_INT(flag));
 		}
@@ -540,7 +540,7 @@ void clear_jobs(GtkButton* btn, gpointer flag){
 	}
 }
 
-void save_all_jobs(GtkButton* btn, gpointer data){
+void save_all_jobs(GtkWidget* btn, gpointer data){
 	(void) btn;
 	(void) data;
 	save_job_wrap();
@@ -592,7 +592,7 @@ GtkWidget* monitor_new_progress(int vertical, int length){
 /*
   Try to connect to hosts in response to button click.
  */
-static void add_host_event(GtkButton* button, gpointer data){
+static void add_host_event(GtkWidget* button, gpointer data){
 	(void)button;
 	int ihost=GPOINTER_TO_INT(data);
 	if(ihost>-1&&ihost<nhost){
@@ -603,6 +603,26 @@ static void add_host_event(GtkButton* button, gpointer data){
 		}
 	}
 }
+#if USE_TITLEBAR
+static void switch_page(GtkWidget* button, gpointer data){
+	int ihost=GPOINTER_TO_INT(data);
+	int ihost_old=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	if(ihost==ihost_old){//keep active
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
+	}else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))){
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
+	#if GTK_MAJOR_VERSION<4
+		for(int jhost=0; jhost<=nhost; jhost++){
+			if(jhost!=ihost){
+				if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(buttons[jhost]))){
+					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(buttons[jhost]), FALSE);
+				}
+			}
+		}
+	#endif	
+	}
+}
+#endif
 gboolean host_added_wrap(gpointer data){
 	(void) data;
 	add_host_wrap(-1);//just wakeup respond() with noop.
@@ -656,25 +676,19 @@ void parse_provider(){
 #endif
 #endif
 }
-void notebook_switch_page(GtkNotebook *self, GtkWidget *page, guint page_num, gpointer user_data){
-	(void)user_data;
-	(void)page_num;
-	(void)page;
-	(void)self;
-	//gtk_widget_hide(textscroll);
-}
+
 void create_window(
-#if GTK_MAJOR_VERSION>=4
+#if USE_APPLICATION
 	GtkApplication* app,
 	gpointer        user_data
 #endif
 		  ){
-#if GTK_MAJOR_VERSION<4
-	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-#else
+#if USE_APPLICATION
 	window=gtk_application_window_new(app);
 	(void)user_data;
+#else
+	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 #endif	
 #if GTK_VERSION_AFTER(3, 14)
 #if GTK_VERSION_AFTER(4, 0)
@@ -683,42 +697,61 @@ void create_window(
 	GtkIconTheme *icon_theme=gtk_icon_theme_get_default();
 #endif
 	gtk_icon_theme_add_resource_path(icon_theme, "/maos/");
+	/*if(gtk_icon_theme_has_icon(icon_theme, "icon-monitor")!=1){
+		warning("gtk_icon_theme does not have icon-monitor\n");
+	}
+	if(gtk_icon_theme_has_icon(icon_theme, "video-display")!=1){
+		warning("gtk_icon_theme does not have video-display\n");
+	}*/
 	//gtk_window_set_icon_name(GTK_WINDOW(window), "icon-monitor");
-	gtk_window_set_default_icon_name("icon-monitor");//this does not work in macos as quartz backend does not support it. gtk3 enables dock icon with gtk-macos-integration
+	gtk_window_set_default_icon_name("icon-monitor");//this does not work in macos as quartz backend does not support it. 
 	//info_time("gtk_icon_theme_has_icon returned %d for icon-monitor\n", gtk_icon_theme_has_icon(icon_theme, "icon-monitor"));//test ok.
+	//gtk_window_set_icon_name(GTK_WINDOW(window), "video-display");
+	//icon_name is ignored on all non-x11 systems (wayland, windows, macos).
 #else
 	gtk_window_set_icon(GTK_WINDOW(window), icon_main);
 #endif
-	
-
+	gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
 	parse_provider();//requires window to be set
 	gtk_window_set_title(GTK_WINDOW(window), "MAOS Monitor");
-
-#if GTK_MAJOR_VERSION<4 && 0
-	toptoolbar=gtk_toolbar_new();
-	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar),GTK_ICON_SIZE_MENU);
-#else
-	toptoolbar=gtk_hbox_new(FALSE, 0);
-#endif
-	new_toolbar_item(toptoolbar,"computer", icon_connect, "Connect", add_host_event, -1);
-	new_toolbar_item(toptoolbar, NULL, NULL, NULL, NULL, 0);
-	new_toolbar_item(toptoolbar,"object-select",icon_finished,"Clear finished jobs",clear_jobs,-1);
-	new_toolbar_item(toptoolbar,"media-skip-forward",icon_skip,"Clear skipped jobs",clear_jobs,-2);
-	new_toolbar_item(toptoolbar,"dialog-error",icon_failed,"Clear crashed jobs",clear_jobs,-3);
-	new_toolbar_item(toptoolbar,"edit-clear-all",icon_clear,"Clear all jobs",clear_jobs,-4);
-	new_toolbar_item(toptoolbar,NULL,NULL,NULL,NULL,0);
-	new_toolbar_item(toptoolbar,"process-stop",icon_cancel,"Kill all jobs",kill_all_jobs,-1);
-	new_toolbar_item(toptoolbar,"media-floppy",icon_save,"Save jobs to file",save_all_jobs,-1);
-	new_toolbar_item(toptoolbar,NULL,NULL,NULL,NULL,0);
+#if USE_TITLEBAR
+	toolbar=gtk_header_bar_new();
 #if GTK_MAJOR_VERSION<4
-	gtk_widget_show_all(toptoolbar);
+	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(toolbar), TRUE);
+	gtk_header_bar_set_title(GTK_HEADER_BAR(toolbar), NULL);
+#else
+	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(toolbar), TRUE);
+#endif
+#else
+	//toolbar=gtk_toolbar_new();
+	//gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),GTK_ICON_SIZE_MENU);
+	toolbar=gtk_hbox_new(FALSE, 0);
+#endif
+	new_toolbar_item(toolbar, NULL, 0,"computer", icon_connect, "Connect", add_host_event, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	new_toolbar_item(toolbar, NULL, 0, "object-select", icon_finished, "Clear finished jobs", clear_jobs, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, "media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, GINT_TO_POINTER(-2));
+	new_toolbar_item(toolbar, NULL, 0, "dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, GINT_TO_POINTER(-3));
+	new_toolbar_item(toolbar, NULL, 0, "edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, GINT_TO_POINTER(-4));
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	new_toolbar_item(toolbar, NULL, 0, "process-stop", icon_cancel, "Kill all jobs", kill_all_jobs, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, "media-floppy", icon_save, "Save jobs to file", save_all_jobs, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+#if GTK_MAJOR_VERSION<4
+	gtk_widget_show_all(toolbar);
 #endif
 	notebook=gtk_notebook_new();
+#if USE_TITLEBAR
+	gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
+#else
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
+#endif
 	//gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
-
-	gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toptoolbar, GTK_PACK_START);
-
+#if USE_TITLEBAR
+	gtk_window_set_titlebar(GTK_WINDOW(window), toolbar);
+#else
+	gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toolbar, GTK_PACK_START);
+#endif
 	//gtk_widget_show(notebook);
 	//box_append(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 
@@ -764,11 +797,13 @@ void create_window(
 	//tabs=mycalloc(nhost+1, GtkWidget*);
 	pages=mycalloc(nhost+1, GtkWidget*);
 	titles=mycalloc(nhost+1, GtkWidget*);
-
+#if GTK_MAJOR_VERSION<4
+	buttons=mycalloc(nhost+1, GtkWidget*);
+#endif	
 	//cmdconnect=mycalloc(nhost+1, GtkWidget*);
 	//buffers=mycalloc(nhost+1, GtkTextBuffer*);
 
-
+	
 	prog_cpu=mycalloc(nhost, GtkWidget*);
 	//prog_mem=mycalloc(nhost,GtkWidget *);
 
@@ -776,72 +811,84 @@ void create_window(
 	pango_down=pango_attr_list_new();
 	pango_attr_list_insert(pango_down, pango_attr_foreground_new(0x88FF, 0x88FF, 0x88FF));
 	pango_attr_list_insert(pango_active, pango_attr_foreground_new(0x0000, 0x0000, 0x0000));
-
+#if GTK_MAJOR_VERSION>3 && USE_TITLEBAR
+	GtkWidget *lastbtn=NULL;
+#endif	
 	for(int ihost=0; ihost<=nhost; ihost++){//ihost==nhost is the include all tab
 		//char tit[40];
 		//snprintf(tit,40,"%s(0)",hosts[ihost]);
 		GtkWidget *eventbox=0;
-		{//create notebook header
-			titles[ihost]=gtk_label_new(NULL);
-			gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
-			GtkWidget* hbox0=gtk_hbox_new(FALSE, 0);
-			if(ihost<nhost){
-	#if GTK_MAJOR_VERSION>=3
-				prog_cpu[ihost]=monitor_new_progress(1, 4);
-				//prog_mem[ihost]=monitor_new_progress(1,4);
-	#else
-				prog_cpu[ihost]=monitor_new_progress(1, 16);
-				//prog_mem[ihost]=monitor_new_progress(1,16);
-	#endif
-				box_append(GTK_BOX(hbox0), prog_cpu[ihost], FALSE, FALSE, 1);
-				//modify_bg(prog_cpu[ihost], 2);
-				//modify_bg(prog_mem[ihost], 1);
-			}
-			gtk_box_set_homogeneous(GTK_BOX(hbox0), 0);
-	#if GTK_MAJOR_VERSION>=4
-			box_append(GTK_BOX(hbox0), titles[ihost], FALSE, TRUE, 0);
-			eventbox=hbox0;
-			gtk_widget_set_vexpand(hbox0, 0);
-			gtk_widget_set_hexpand(hbox0, 0);
-	#else
-			box_append(GTK_BOX(hbox0), titles[ihost], FALSE, TRUE, 0);
-			//gtk_widget_show_all(hbox0);
-
-			eventbox=gtk_event_box_new();
-			gtk_container_add(GTK_CONTAINER(eventbox), hbox0);
-			/*Put the box below an eventbox so that clicking on the progressbar
-			switches tab also.*/
-			gtk_widget_show_all(eventbox);
-			gtk_event_box_set_above_child(GTK_EVENT_BOX(eventbox), TRUE);
-			gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
-	#endif
+		//create notebook header
+		titles[ihost]=gtk_label_new(NULL);
+		gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
+		GtkWidget* hbox0=gtk_hbox_new(FALSE, 0);
+		if(ihost<nhost){
+#if GTK_MAJOR_VERSION>=3
+			prog_cpu[ihost]=monitor_new_progress(1, 4);
+			//prog_mem[ihost]=monitor_new_progress(1,4);
+#else
+			prog_cpu[ihost]=monitor_new_progress(1, 16);
+			//prog_mem[ihost]=monitor_new_progress(1,16);
+#endif
+			box_append(GTK_BOX(hbox0), prog_cpu[ihost], FALSE, FALSE, 1);
+			//modify_bg(prog_cpu[ihost], 2);
+			//modify_bg(prog_mem[ihost], 1);
 		}
+		gtk_box_set_homogeneous(GTK_BOX(hbox0), 0);
+		box_append(GTK_BOX(hbox0), titles[ihost], FALSE, TRUE, 0);
+#if USE_TITLEBAR
+		eventbox=gtk_toggle_button_new();
+#if GTK_MAJOR_VERSION>3
+		if(lastbtn){
+			gtk_toggle_button_set_group(GTK_TOGGLE_BUTTON(eventbox), GTK_TOGGLE_BUTTON(lastbtn));
+		}
+		lastbtn=eventbox;
+#endif		
+	#if GTK_MAJOR_VERSION<4
+		gtk_button_set_relief(GTK_BUTTON(eventbox), GTK_RELIEF_NONE);
+		gtk_container_add(GTK_CONTAINER(eventbox), hbox0);
+	#else
+		gtk_button_set_has_frame(GTK_BUTTON(eventbox), FALSE);
+		gtk_button_set_child(GTK_BUTTON(eventbox), hbox0);
+	#endif
+#else
+#if GTK_MAJOR_VERSION>=4
+		eventbox=hbox0;
+#else		
+		eventbox=gtk_event_box_new();//eventbox allows click but does not show click animation
+		gtk_event_box_set_above_child(GTK_EVENT_BOX(eventbox), TRUE);
+		gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox), FALSE);
+		gtk_container_add(GTK_CONTAINER(eventbox), hbox0);
+#endif		
+#endif			
+		/*Put the box below an eventbox so that clicking on the progressbar
+		switches tab also.*/
+#if GTK_MAJOR_VERSION<4
+		gtk_widget_show_all(eventbox);
+		buttons[ihost]=eventbox;
+#endif
 		//pages[ihost]=gtk_paned_new(GTK_ORIENTATION_VERTICAL);//gtk_vbox_new(FALSE, 0);
 		//gtk_paned_set_position(GTK_PANED(pages[ihost]), 500);
-		{//area for showing list of jobs
-			GtkWidget* page=new_page(ihost);
-
-			if(page){
-				GtkWidget* scroll=gtk_scrolled_window_new(
+		//area for showing list of jobs
+		GtkWidget* page=new_page(ihost);
+		GtkWidget* scroll=gtk_scrolled_window_new(
 #if GTK_MAJOR_VERSION<4
-					NULL, NULL
+			NULL, NULL
 #endif
-					);
-				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-				gtk_widget_set_size_request(scroll, -1, 300);
+			);
+		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+		gtk_widget_set_size_request(scroll, -1, 300);
 #if GTK_MAJOR_VERSION<4
-				gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
+		gtk_container_add(GTK_CONTAINER(scroll), page);//page is scrollable.
 #else
-				gtk_widget_set_hexpand(scroll, TRUE);//important
-				gtk_widget_set_vexpand(scroll, TRUE);
-				gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
+		gtk_widget_set_hexpand(scroll, TRUE);//important
+		gtk_widget_set_vexpand(scroll, TRUE);
+		gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
 #endif
-				//box_append(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
-				//gtk_paned_add1(GTK_PANED(pages[ihost]), scroll);
-				pages[ihost]=scroll;
-			}
-		}
+		//box_append(GTK_BOX(pages[ihost]), scroll, TRUE, TRUE, 0);
+		//gtk_paned_add1(GTK_PANED(pages[ihost]), scroll);
+		pages[ihost]=scroll;
 
 		/*if(ihost<nhost){
 			cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
@@ -851,21 +898,32 @@ void create_window(
 			box_append(GTK_BOX(hbox), cmdconnect[ihost], TRUE, FALSE, 0);
 			box_append(GTK_BOX(pages[ihost]), hbox, FALSE, FALSE, 0);
 		}*/
-		if(ihost<nhost){
-			gtk_notebook_append_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox);
-		} else{
-			gtk_notebook_insert_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox, 0);
-		}
+#if USE_TITLEBAR
+		new_toolbar_item(toolbar, eventbox, 1, NULL, NULL, "notebook", switch_page, GINT_TO_POINTER(ihost));
+		eventbox=0;
+#endif	
+		//if(ihost<nhost){
+		gtk_notebook_append_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox);
+		//} else{
+		//	gtk_notebook_insert_page(GTK_NOTEBOOK(notebook), pages[ihost], eventbox, 0);
+		//}
 		update_title(GINT_TO_POINTER(ihost));
 		//gtk_widget_show_all(pages[ihost]);
 	}
-	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
-	g_signal_connect(notebook, "switch-page", G_CALLBACK(notebook_switch_page), NULL);
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), nhost);
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(window);
 #else
 	gtk_window_present(GTK_WINDOW(window));
 #endif
+	//do it here to prevent memory error.
+	usage_cpu=mycalloc(nhost, double);
+	//usage_mem=mycalloc(nhost,double);
+	usage_cpu2=mycalloc(nhost, double);
+	//usage_mem2=mycalloc(nhost,double);
+	for(int ihost=0; ihost<nhost; ihost++){
+		add_host_wrap(ihost);
+	}
 	//gtk_widget_hide(textscroll);
 }
 
@@ -879,52 +937,65 @@ void print_help(const char *cmd){
 	);
 }
 int plot_enabled=1;
-int main(int argc, char* argv[]){
-	if(argc>1){
-		for(int i=1; i<argc; i++){
-			if(argv[i][0]=='-'){//start with -
-				const char* s=argv[i]+1;
-				if(s[0]=='-') s++;
-				const char* key="mailto";
-				const char* key2a="disable-plot";
-				const char* key2b="disable-draw";
-				if(!mystrcmp(s, key)){
-					s+=strlen(key);
-					while(s[0]==' ') s++;
-					if(s[0]=='=') s++;
-					while(s[0]==' ') s++;
-					if(s[0]){
-						mailto=mystrdup(s);
-					} else if(i+1<argc){
-						mailto=mystrdup(argv[i+1]);
-						i++;
-					} else{
-						warning("Invalid option: %s\n", argv[i]);
-					}
-					if(mailto){
-						info("Will send mail to %s for host disconnection or job crashing.\n", mailto);
-					}
-				} else if(!mystrcmp(s, key2a)|| !mystrcmp(s, key2b)){
-					plot_enabled=0;
-					warning("plot disabled\n");
-				} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
-						||(!mystrcmp(s, "help")&&(!s[4]||isspace(s[4])))
-						){
-					print_help(argv[0]);
-					return 0;
-				} else{
-					warning("Unknown options: %s\n", argv[i]);
-				}
-			} else if(isdigit((int)argv[i][0])){//port
-				extern int PORT;
-				PORT=strtol(argv[i], NULL, 10);
-			} else if(isalnum((int)argv[i][0])){//hostname
-				parse_host(argv[i]);
-			}
-		}
-	} else if(nhost==1){
+void handle_args(int argc, char *argv[]){
+	if(argc==1 && nhost==1){
 		print_help(argv[0]);
 	}
+	for(int i=1; i<argc; i++){
+		if(argv[i][0]=='-'){//start with -
+			const char *s=argv[i]+1;
+			if(s[0]=='-') s++;
+			const char *key="mailto";
+			const char *key2a="disable-plot";
+			const char *key2b="disable-draw";
+			if(!mystrcmp(s, key)){
+				s+=strlen(key);
+				while(s[0]==' ') s++;
+				if(s[0]=='=') s++;
+				while(s[0]==' ') s++;
+				if(s[0]){
+					mailto=mystrdup(s);
+				} else if(i+1<argc){
+					mailto=mystrdup(argv[i+1]);
+					i++;
+				} else{
+					warning("Invalid option: %s\n", argv[i]);
+				}
+				if(mailto){
+					info("Will send mail to %s for host disconnection or job crashing.\n", mailto);
+				}
+			} else if(!mystrcmp(s, key2a)||!mystrcmp(s, key2b)){
+				plot_enabled=0;
+				warning("plot disabled\n");
+			} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
+					||(!mystrcmp(s, "help")&&(!s[4]||isspace(s[4])))
+					){
+				print_help(argv[0]);
+				return;
+			} else{
+				warning("Unknown options: %s\n", argv[i]);
+			}
+		} else if(isdigit((int)argv[i][0])){//port
+			extern int PORT;
+			PORT=strtol(argv[i], NULL, 10);
+		} else if(isalnum((int)argv[i][0])){//hostname
+			parse_host(argv[i]);
+		}
+	}
+}
+#if USE_APPLICATION
+static int
+command_line(GApplication *application,
+			  GApplicationCommandLine *cmdline){
+	gchar **argv;
+	gint argc;
+	argv=g_application_command_line_get_arguments(cmdline, &argc);
+	handle_args(argc, argv);
+	g_application_activate(application);//this activates the GUI which calls create_window
+	return 0;
+}
+#endif
+int main(int argc, char* argv[]){
 	if(0){
 		char* fnlog=stradd(TEMP, "/monitor.log", NULL);
 		//info("Check %s for log.\n", fnlog);
@@ -941,8 +1012,8 @@ int main(int argc, char* argv[]){
 		gdk_threads_init();
 	}
 #endif
-#if GTK_MAJOR_VERSION<4
-	if(!gtk_init_check(&argc, &argv)){
+#if USE_APPLICATION==0
+	if(!gtk_init_check(&argc, &argv)){//check whether we can enable window
 		headless=1;
 		plot_enabled=0;
 		warning("Running in headless mode\n");
@@ -961,23 +1032,18 @@ int main(int argc, char* argv[]){
 	socket_nopipe(sock_main[0]);
 	socket_nopipe(sock_main[1]);
 	thread_new(listen_host, GINT_TO_POINTER(sock_main[0]));
-	for(int ihost=0; ihost<nhost; ihost++){
-		add_host_wrap(ihost);
-	}
+
 	if(!headless){
 		create_status_icon();
 #if MAC_INTEGRATION
-	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
+		GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+		gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	//g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
-	gtkosx_application_ready(theApp);
+		gtkosx_application_ready(theApp);
 #endif
 	}
-	usage_cpu=mycalloc(nhost, double);
-	//usage_mem=mycalloc(nhost,double);
-	usage_cpu2=mycalloc(nhost, double);
-	//usage_mem2=mycalloc(nhost,double);
-#if GTK_MAJOR_VERSION<4
+#if USE_APPLICATION==0
+	handle_args(argc, argv);
 	if(!headless){
 		create_window();
 		gtk_main();
@@ -987,7 +1053,9 @@ int main(int argc, char* argv[]){
 #else
 	GtkApplication* app;
 	int status;
-	app=gtk_application_new("maos.monitor", G_APPLICATION_DEFAULT_FLAGS);
+	//application id must contain a .
+	app=gtk_application_new("maos.monitor", G_APPLICATION_HANDLES_OPEN|G_APPLICATION_HANDLES_COMMAND_LINE|G_APPLICATION_NON_UNIQUE);
+	g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL);
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);

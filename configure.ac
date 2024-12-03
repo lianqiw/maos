@@ -825,9 +825,10 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 			GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
 		fi
 	else
+		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_4" = "yes" ], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
 		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_3" != "no" ], [PKG_CHECK_MODULES([GTK], gtk+-3.0, [gtk_ver="3"], [gtk_ver="0"])]) #prefer gtk+3
 		AS_IF([test "$gtk_ver" = "0" -a "$use_gtk_4" != "no" ], [PKG_CHECK_MODULES([GTK], gtk4, [gtk_ver="4"], [gtk_ver="0"])])
-		AS_IF([test "$gtk_ver" = "0" ],     [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
+		AS_IF([test "$gtk_ver" = "0" ],                         [PKG_CHECK_MODULES([GTK], gtk+-2.0 >= 2.2,    [gtk_ver="2"], [gtk_ver="0"])])
 	fi
 	AS_IF([test "$gtk_ver" != "0"], [
 		  PKG_CHECK_MODULES(DRAW,   cairo >= 1.4,    [has_cairo="1"], [has_cairo="0"])
@@ -1212,7 +1213,7 @@ echo "OpenMP:          ${YESNO[[$has_omp]]}"
 echo "FFTW Threads:    ${YESNO[[$fftw_threads]]}"
 echo "Precision:       ${FP[[$enable_single]]}"
 echo "CUDA:            ${cudaver:-no} ${cudaver:+ (${FP[[1-$cuda_double]]}, arch: $cuarch)}"
-echo "GTK version:     ${gtk_ver}"
+echo "GTK version:     ${gtk_ver}${has_mac:+ (with mac integration)}"
 
 echo "Websocket:       ${enable_websockets:-yes}"
 echo "MATLAB MEX:      $with_matlab"

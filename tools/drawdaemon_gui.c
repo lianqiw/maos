@@ -107,21 +107,52 @@ static const char* rc_string_notebook={
 #endif
 
 #endif
+
+static GtkWidget *get_topnb(GtkWidget *window){
+#if USE_TITLEBAR==0
+	GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
+	GList *list=gtk_container_get_children(GTK_CONTAINER(vbox));
+	GtkWidget* topnb=(GtkWidget *)list->next->data;
+	g_list_free(list);
+#elif GTK_MAJOR_VERSION<4
+	/*GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
+	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
+	GtkWidget* topnb=(GtkWidget*)list->next->data;
+	g_list_free(list);*/
+	GtkWidget *topnb=gtk_bin_get_child(GTK_BIN(window));
+#else
+	GtkWidget *topnb=gtk_window_get_child(GTK_WINDOW(window));
+#endif
+	return topnb;
+}
+static GtkWidget *get_toolbar(GtkWidget *window){
+#if USE_TITLEBAR==0
+	GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
+	GList *list=gtk_container_get_children(GTK_CONTAINER(vbox));
+	GtkWidget *toolbar=(GtkWidget *)list->data;
+	g_list_free(list);
+#else
+	/*GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
+	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
+	GtkWidget* toolbar=(GtkWidget*)list->data;
+	g_list_free(list);*/
+	GtkWidget *toolbar=gtk_window_get_titlebar(GTK_WINDOW(window));
+#endif
+	return toolbar;
+}
+
+static const char *topnb_label_get(GtkWidget *topnb, GtkWidget *subnb){
+	GtkWidget *label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), subnb);
+	return gtk_label_get_text(GTK_LABEL(label));
+}
+
 static void window_changed(GtkWidget* window){
 	//info("window_changed: %p\n", window);
 	curwindow=window;
 	cur_menu_cumu=g_object_get_data(G_OBJECT(window), "menu_cumu");
 	cur_menu_icumu=g_object_get_data(G_OBJECT(window), "menu_icumu");
 	cur_menu_zlog=g_object_get_data(G_OBJECT(window), "menu_zlog");
-#if GTK_MAJOR_VERSION>=4
-	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
-	curtopnb=gtk_widget_get_next_sibling(gtk_widget_get_first_child(vbox));
-#else
-	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(curwindow));
-	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
-	curtopnb=(GtkWidget*)list->next->data;
-	g_list_free(list);
-#endif
+	curtopnb=get_topnb(window);
 }
 /*Get the current page for notebook*/
 static GtkWidget* get_current_page(GtkWidget* notebook){
@@ -148,41 +179,7 @@ static drawdata_t* get_current_drawdata(void){
 		return NULL;
 	}
 }
-static GtkWidget* get_topnb(GtkWidget* window){
-#if GTK_MAJOR_VERSION>=4
-	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
-	GtkWidget* toolbar=gtk_widget_get_first_child(vbox);
-	GtkWidget* topnb=gtk_widget_get_next_sibling(toolbar);
-#else
-	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
-	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
-	GtkWidget* topnb=(GtkWidget*)list->next->data;
-	g_list_free(list);
-#endif
-	return topnb;
-}
-static GtkWidget* get_toolbar(GtkWidget* window){
-#if GTK_MAJOR_VERSION>=4
-	GtkWidget* vbox=gtk_window_get_child(GTK_WINDOW(window));
-	GtkWidget* toolbar=gtk_widget_get_first_child(vbox);
-#else
-	GtkWidget* vbox=gtk_bin_get_child(GTK_BIN(window));
-	GList* list=gtk_container_get_children(GTK_CONTAINER(vbox));
-	GtkWidget* toolbar=(GtkWidget*)list->data;
-	g_list_free(list);
-#endif
-	return toolbar;
-}
 
-static const char* topnb_label_get(GtkWidget* topnb, GtkWidget* subnb){
-#if GTK_MAJOR_VERSION>=4
-	GtkWidget *label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), subnb);
-#else
-	GtkWidget *label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), subnb);
-	//GtkWidget* label=gtk_bin_get_child(GTK_BIN(label2));
-#endif
-	return gtk_label_get_text(GTK_LABEL(label));
-}
 /**
  * Move a tab from one notebook topnb to another one topnb2
 */
@@ -212,7 +209,8 @@ static void move_tab_page(GtkWidget* topnb, int ipage, GtkWidget* topnb2){
 	g_object_unref(label);
 }
 
-static void topnb_detach_btn(GtkWidget *btn, GtkWidget *topnb){
+static void topnb_detach_btn(GtkWidget *btn, gpointer data){
+	GtkWidget *topnb=GTK_WIDGET(data);
 	(void)btn;
 	if(!curtopnb){
 		dbg_time("curtopnb is null\n");
@@ -295,7 +293,9 @@ static void update_pixmap(drawdata_t* drawdata){
 			drawdata->pwidth=width;
 			drawdata->pheight=height;
 	#if GTK_MAJOR_VERSION>=4
-			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+			int scale=gtk_widget_get_scale_factor(curwindow);
+			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width*scale, height*scale);
+			cairo_surface_set_device_scale(drawdata->pixmap, scale, scale);
 	#elif GTK_MAJOR_VERSION>=3
 			drawdata->pixmap=gdk_window_create_similar_surface
 			(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);
@@ -1131,7 +1131,7 @@ gboolean addpage(gpointer indata){
 		}
 	} else{
 		/*new tab inside the fig to contain the plot. */
-		drawdata->page=page=scrolled_window_new();
+		drawdata->page=page=gtk_drawing_area_new();
 		drawdata->subnb=subnb;
 		/*gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page),
 			GTK_POLICY_AUTOMATIC,
@@ -1139,7 +1139,7 @@ gboolean addpage(gpointer indata){
 		drawdata_t**drawdatawrap=mycalloc(1, drawdata_t*);
 		*drawdatawrap=drawdata;
 		g_object_set_data_full(G_OBJECT(page), "drawdatawrap", drawdatawrap, drawdatawrap_delete);
-		drawdata->drawarea=drawarea=gtk_drawing_area_new();
+		drawdata->drawarea=drawarea=page;
 
 #if GTK_VERSION_AFTER(3, 22)
 		gtk_widget_set_can_focus(drawarea, TRUE);//2.18
@@ -1197,6 +1197,7 @@ gboolean addpage(gpointer indata){
 			G_CALLBACK(drawarea_key_press), drawdatawrap);
 
 #endif
+/*
 #if GTK_MAJOR_VERSION>=4
 		gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(page), drawarea);//4.0
 #elif GTK_VERSION_AFTER(3, 8)
@@ -1204,6 +1205,7 @@ gboolean addpage(gpointer indata){
 #else
 		gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(page), drawarea);//old
 #endif
+*/
 		GtkWidget* button=subnb_label_new(drawdatawrap);
 		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page, button, jtab);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
@@ -1248,9 +1250,9 @@ static void file_saved(GObject *dialog, GAsyncResult *result, void *data){
 	}
 }
 #endif
-static void tool_save(GtkWidget* button){
+static void tool_save(GtkWidget* button, gpointer data){
 	drawdata_t *drawdata=get_current_drawdata();
-	(void)button;
+	(void)button;(void)data;
 #if GTK_VERSION_AFTER(4,10)
 	GtkFileDialog *dialog=gtk_file_dialog_new();
 	gtk_file_dialog_set_title(GTK_FILE_DIALOG(dialog), "Select a file to save");
@@ -1269,8 +1271,7 @@ static void tool_save(GtkWidget* button){
 		"_Cancel", GTK_RESPONSE_CANCEL,
 		"_Save", GTK_RESPONSE_ACCEPT,
 		NULL);
-	gtk_file_chooser_set_do_overwrite_confirmation
-	(GTK_FILE_CHOOSER(dialog), TRUE);
+	gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), TRUE);
 	if(drawdata->filename){
 		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), drawdata->filename);
 	} else if(client_path_full){
@@ -1434,7 +1435,7 @@ static void spin_icumu(GtkSpinButton* spin){
 }
 static void togglebutton_toggle(GtkWidget* btn, void *data){
 	int key=GPOINTER_TO_INT(data);
-	int val=toggle_button_get_active(btn);
+	int val=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
 	drawdata_t *drawdata=get_current_drawdata();
 	if(!drawdata) return;
 	switch(key){
@@ -1450,9 +1451,9 @@ static void togglebutton_toggle(GtkWidget* btn, void *data){
 	update_pixmap(get_current_drawdata());
 }
 
-static void togglebutton_stop(GtkWidget* btn){
-	(void)btn;
-	if(toggle_button_get_active(btn)){
+static void togglebutton_stop(GtkWidget* btn, gpointer data){
+	(void)btn; (void) data;
+	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn))){
 		keep_listen=0;//disable reconnection
 		close(sock); sock=-1;//close connection
 		mysleep(0.001);//wait for listen_draw to quit.
@@ -1463,16 +1464,17 @@ static void togglebutton_stop(GtkWidget* btn){
 		}
 	}
 }
-static void togglebutton_pause(GtkWidget* btn){
+static void togglebutton_pause(GtkWidget* btn, gpointer data){
+	(void) data;
 	if(sock==-1) return;
-	int cmd=toggle_button_get_active(btn)?DRAW_PAUSE:DRAW_RESUME;
+	int cmd=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn))?DRAW_PAUSE:DRAW_RESUME;
 	if(stwriteint(sock, cmd)){
 		close(sock);
 		sock=-1;
 	}
 }
-static void toolbutton_refresh(GtkWidget* btn){
-	(void)btn;
+static void toolbutton_refresh(GtkWidget* btn, gpointer data){
+	(void)btn; (void) data;
 	if(sock==-1){
 		
 	}else if(stwriteint(sock, DRAW_SINGLE)){//toggles DRAW_SINGLE in draw()
@@ -1915,68 +1917,6 @@ gboolean update_fpslabel(gpointer data){
 	return repeat;
 }
 //Create a new toolbar item.
-#if GTK_MAJOR_VERSION < 4
-GtkWidget *new_tool(GtkWidget *toolbar, GtkWidget *child, int toggle, const char *name, GdkPixbuf *iconbuf,
-	GCallback callback, gpointer user_data){
-	GtkToolItem* item=NULL;
-
-	if(child || name || iconbuf){
-		if(child){
-			item=gtk_tool_item_new();
-			gtk_container_add(GTK_CONTAINER(item), child);
-		} else{
-			if(toggle){
-				item=gtk_toggle_tool_button_new();
-			} else{
-				item=gtk_tool_button_new(NULL, name);
-			}
-			if(name){
-				gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), name);
-			}else{
-				GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
-				gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), image);
-			}
-		}
-	} else{
-		item=gtk_separator_tool_item_new();
-		gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(item), 0);
-	}
-
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
-	if(callback){
-		g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
-	}
-	return GTK_WIDGET(item);
-}
-#else
-GtkWidget *new_tool(GtkWidget *toolbar, GtkWidget *item, int toggle, const char *name, GdkPixbuf *iconbuf,
-	GCallback callback, gpointer user_data){
-	if(!item){
-		if(name || iconbuf){
-			if(!toggle){
-				item=button_new(name);
-			} else{
-				item=gtk_toggle_button_new();
-			}
-			if(name){
-				if(toggle) gtk_button_set_icon_name(GTK_BUTTON(item), name);
-			}else{
-				GtkWidget *image=gtk_image_new_from_pixbuf(iconbuf);
-				gtk_button_set_child(GTK_BUTTON(item), image);
-			}
-			gtk_button_set_has_frame(GTK_BUTTON(item), FALSE);
-		} else{
-			item=gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
-		}
-
-		if(callback){
-			g_signal_connect(item, toggle?"toggled":"clicked", G_CALLBACK(callback), user_data);
-		}
-	}
-	gtk_box_append(GTK_BOX(toolbar), item);
-	return item;
-}
-#endif
 /**
  * Create a new window with a topnb
 */
@@ -2006,6 +1946,7 @@ GtkWidget* create_window(GtkWidget* window){
 		}*/
 	}
 	gtk_window_set_default_size(GTK_WINDOW(window), 720, 600);//1050, 900);
+	gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
 	//gtk_window_stick(GTK_WINDOW(window));
 	curwindow=window;
 	windows=g_slist_append(windows, window);
@@ -2043,38 +1984,43 @@ GtkWidget* create_window(GtkWidget* window){
 	}
 #endif
 	GtkWidget *topnb=gtk_notebook_new();
-#if GTK_MAJOR_VERSION<4
-	GtkWidget* toolbar=gtk_toolbar_new();
+#if USE_TITLEBAR==0
+/*	GtkWidget* toolbar=gtk_toolbar_new();
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar), GTK_ICON_SIZE_MENU);
-	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);*/
+	GtkWidget *toolbar=gtk_hbox_new(0, 0);
 #else
-	//Toolbar is deprecated in GTK4. Use box instead
-	GtkWidget* toolbar=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_widget_set_hexpand(toolbar, TRUE);
+	GtkWidget* toolbar=gtk_header_bar_new();
+#if GTK_MAJOR_VERSION<4
+	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(toolbar), TRUE);
+	gtk_header_bar_set_title(GTK_HEADER_BAR(toolbar), NULL);
+#else
+	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(toolbar), TRUE);
 #endif
-	gtk_widget_set_sensitive(toolbar, FALSE);
-	new_tool(toolbar, NULL, 0, "document-save-as", NULL, G_CALLBACK(tool_save), NULL);
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
-	new_tool(toolbar, NULL, 0, "zoom-in", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(1));
-	new_tool(toolbar, NULL, 0, "zoom-fit-best", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(0));
-	new_tool(toolbar, NULL, 0, "zoom-out", NULL, G_CALLBACK(tool_zoom), GINT_TO_POINTER(-1));
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
-	new_tool(toolbar, NULL, 0, "document-properties", NULL, G_CALLBACK(tool_property), NULL);
+#endif
+	//gtk_widget_set_sensitive(toolbar, FALSE);
+	new_toolbar_item(toolbar, NULL, 0, "document-save-as", NULL, NULL, tool_save, NULL);
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
+	new_toolbar_item(toolbar, NULL, 0, "zoom-in", NULL, NULL, tool_zoom, GINT_TO_POINTER(1));
+	new_toolbar_item(toolbar, NULL, 0, "zoom-fit-best", NULL, NULL, tool_zoom, GINT_TO_POINTER(0));
+	new_toolbar_item(toolbar, NULL, 0, "zoom-out", NULL, NULL, tool_zoom, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
+	new_toolbar_item(toolbar, NULL, 0, "document-properties", NULL, NULL, tool_property, NULL);
 
 	//Log scale
-	GtkWidget *menu_zlog=new_tool(toolbar, NULL, 1, NULL, icon_log, G_CALLBACK(togglebutton_toggle), GINT_TO_POINTER(1));
+	GtkWidget *menu_zlog=new_toolbar_item(toolbar, NULL, 1, NULL, icon_log, NULL, togglebutton_toggle, GINT_TO_POINTER(1));
 	g_object_set_data(G_OBJECT(window), "menu_zlog", menu_zlog);
 	//Cumulative
-	GtkWidget *menu_cumu=new_tool(toolbar, NULL, 1, NULL, icon_avg, G_CALLBACK(togglebutton_toggle), GINT_TO_POINTER(2));
+	GtkWidget *menu_cumu=new_toolbar_item(toolbar, NULL, 1, NULL, icon_avg, NULL, togglebutton_toggle, GINT_TO_POINTER(2));
 	g_object_set_data(G_OBJECT(window), "menu_cumu", menu_cumu);
 
 	//Cumulative step
 	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 100);
 	g_signal_connect(menu_icumu, "value-changed", G_CALLBACK(spin_icumu), NULL);
-	new_tool(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL, NULL);
+	new_toolbar_item(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL, NULL, NULL);
 	g_object_set_data(G_OBJECT(window), "menu_icumu", menu_icumu);
 
-	new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
 #if GTK_VERSION_AFTER(4,10)
 	GtkFontDialog *fontdiag=gtk_font_dialog_new();
 	GtkWidget *fontsel=gtk_font_dialog_button_new(fontdiag);
@@ -2085,20 +2031,13 @@ GtkWidget* create_window(GtkWidget* window){
 	gtk_font_button_set_use_font(GTK_FONT_BUTTON(fontsel), TRUE);
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 #endif
-	new_tool(toolbar, fontsel, 0, "font-set", NULL, NULL, NULL);
+	new_toolbar_item(toolbar, fontsel, 0, "font-set", NULL, NULL, NULL, NULL);
+	new_toolbar_item(toolbar, NULL, 0, "view-refresh-symbolic", NULL, NULL, toolbutton_refresh, NULL);
+	new_toolbar_item(toolbar, NULL, 1, "media-playback-pause", NULL, NULL, togglebutton_pause, NULL);
+	new_toolbar_item(toolbar, NULL, 1, "media-playback-stop", NULL, NULL, togglebutton_stop, NULL);
+	new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, NULL, topnb_detach_btn, topnb);
+	new_toolbar_item(toolbar, NULL, 1, NULL, NULL, NULL, NULL, NULL); //separator
 
-#if GTK_MAJOR_VERSION<3
-	new_tool(toolbar, NULL, 0, "view-refresh-symbolic", NULL, G_CALLBACK(toolbutton_refresh), NULL);
-#else
-	new_tool(toolbar, NULL, 0, "view-refresh-symbolic", NULL, G_CALLBACK(toolbutton_refresh), NULL);
-#endif
-	new_tool(toolbar, NULL, 1, "media-playback-pause", NULL, G_CALLBACK(togglebutton_pause), NULL);
-	new_tool(toolbar, NULL, 1, "media-playback-stop", NULL, G_CALLBACK(togglebutton_stop), NULL);
-	new_tool(toolbar, NULL, 0, "edit-copy", NULL, G_CALLBACK(topnb_detach_btn), topnb);
-	/*GtkWidget *sep=new_tool(toolbar, NULL, 1, NULL, NULL, NULL); //separator
-	gtk_widget_set_hexpand(sep, TRUE);*/
-	GtkWidget* sep=new_tool(toolbar, NULL, 0, NULL, NULL, NULL, NULL); //separator
-	gtk_widget_set_hexpand(GTK_WIDGET(sep), TRUE);
 	if(!fpslabel){//create only for the main window.
 		fpslabel=gtk_label_new("");
 		/*
@@ -2109,7 +2048,7 @@ GtkWidget* create_window(GtkWidget* window){
 		gtk_misc_set_padding(GTK_MISC(fpslabel), 0, 0);
 		gtk_misc_set_alignment(GTK_MISC(fpslabel), 1, 0.5);
 	#endif*/
-		new_tool(toolbar, fpslabel, 0, "fps", NULL, NULL, NULL);
+		new_toolbar_item(toolbar, fpslabel, 0, "fps", NULL, NULL, NULL, NULL);
 	}
 	//gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
 #if GTK_VERSION_AFTER(2,24)
@@ -2122,20 +2061,29 @@ GtkWidget* create_window(GtkWidget* window){
 	g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_added), toolbar);
 	g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_removed), toolbar);
 	g_signal_connect_after(GTK_NOTEBOOK(topnb), "switch-page", G_CALLBACK(topnb_page_switch), toolbar);
-	GtkWidget* vbox=gtk_vbox_new(FALSE, 0);
+#if USE_TITLEBAR==0
+	GtkWidget *vbox=gtk_vbox_new(FALSE, 0);
 	gtk_box_set_homogeneous(GTK_BOX(vbox), FALSE);
 	box_append(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 	box_append(GTK_BOX(vbox), topnb, TRUE, TRUE, 0);
-#if GTK_MAJOR_VERSION<4
 	gtk_container_add(GTK_CONTAINER(window), vbox);
+#else
+	gtk_widget_set_vexpand(topnb, TRUE);
+	gtk_window_set_titlebar(GTK_WINDOW(window), toolbar);
+#if GTK_MAJOR_VERSION<4
+	gtk_container_add(GTK_CONTAINER(window), topnb);
+#else
+	gtk_window_set_child(GTK_WINDOW(window), topnb);
+#endif
+#endif	
+	
+#if GTK_MAJOR_VERSION<4
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_widget_add_events(GTK_WIDGET(window), GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
 	g_signal_connect(GTK_WIDGET(window), "event", G_CALLBACK(window_state), NULL);
 	gtk_widget_show_all(window);
 	//tool_font_set(GTK_FONT_BUTTON(fontsel));/*initialize. */
 #else
-	gtk_widget_set_vexpand(topnb, true);
-	gtk_window_set_child(GTK_WINDOW(window), vbox);
 	g_signal_connect(GTK_WINDOW(window), "activate-focus", G_CALLBACK(window_activate_focus), NULL);
 
 	//dnd

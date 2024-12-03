@@ -108,4 +108,11 @@ const gchar* all_style=
 "border-style:none;"
 "border-color:#000000;"
 "}\n"
+"headerbar{"
+"min-height:8px;"
+"border-width: 0px; margin: 0px; padding: 0px;"
+"}\n"
+"button .toggle {"
+"border-width: 0px; margin: 0px; padding: 0px;"
+"}\n"
 ;

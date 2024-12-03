@@ -314,23 +314,25 @@ int main(int argc, char* argv[]){
 				if(!ires||ires->nx<3||!ires->p){
 					continue;
 				}
-				int ind=0;
-				int indlo=0;
-				int indhi=0;
+				int indcl=0;
+				int indlo=-1;
+				int indhi=-1;
 				int indtt=-1;
 				int indfocus=-1;
 				if(P(ires, 3)&&P(ires, 3)->nx>0){/*split tomography. */
-					ind=3;//cell index for CL results
-					indlo=2;//total ngs
+					indcl=3;//cell index for CL results
 					indhi=0;//high
 					indtt=1;//tt
+					indlo=2;//low order total
 					if(P(ires, 3)->nx>3){
 						indfocus=3;
 					}
 				} else{
-					ind=2;//cell index for CL results
-					indlo=1;/*tt */
-					indhi=2;/*pttr */
+					indcl=2;//cell index for CL results
+					//0 is pr.
+					indlo=1;//low order
+					//indtt=1;//tt
+					indhi=2;//pttr 
 				}
 				long nstep=NY(P(ires, 0));//valid step;
 				for(long i=0; i<nstep; i++){
@@ -343,12 +345,12 @@ int main(int argc, char* argv[]){
 				}
 				dmat* tmp;
 				if(drawres_hi||drawres_tot){
-					tmp=dsub(P(ires, ind), indhi, 1, 0, nstep);
+					tmp=dsub(P(ires, indcl), indhi, 1, 0, nstep);
 					P(P(res, P_HI), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
 				}
 				if(drawres_lo||drawres_tot){
-					tmp=dsub(P(ires, ind), indlo, 1, 0, nstep);
+					tmp=dsub(P(ires, indcl), indlo, 1, 0, nstep);
 					fixnan(tmp);
 					P(P(res, P_LO), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
@@ -365,13 +367,13 @@ int main(int argc, char* argv[]){
 				}
 				if(drawres_lo){
 					if(indfocus>-1){
-						tmp=dsub(P(ires, ind), indfocus, 1, 0, nstep);
+						tmp=dsub(P(ires, indcl), indfocus, 1, 0, nstep);
 						fixnan(tmp);
 						P(P(res, P_F), ipath, iseed)=dtrans(tmp);
 						dfree(tmp);
 					}
 					if(indtt>-1){
-						tmp=dsub(P(ires, ind), indtt, 1, 0, nstep);
+						tmp=dsub(P(ires, indcl), indtt, 1, 0, nstep);
 						fixnan(tmp);
 						P(P(res, P_TT), ipath, iseed)=dtrans(tmp);
 						dfree(tmp);
@@ -383,9 +385,6 @@ int main(int argc, char* argv[]){
 						if(dmax(P(res, P_PS, ipath, iseed))<1e-24){//<1e-3 nm
 							dfree(P(res, P_PS, ipath, iseed));
 						}
-					}
-					if(!P(res, P_PS, ipath, iseed)&&!P(P(res, P_F), ipath, iseed)){
-						dfree(P(P(res, P_LO), ipath, iseed));//If there is only t/t, do not plot low order
 					}
 				}
 				if(drawres_ol){
