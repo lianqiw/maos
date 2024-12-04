@@ -24,7 +24,9 @@ const char *host=0;
 #if MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
+#if GTK_MAJOR_VERSION<4 || MAC_INTEGRATION
 GdkPixbuf* icon_main=NULL;
+#endif
 GdkPixbuf *icon_log=NULL;
 GdkPixbuf *icon_avg=NULL;
 #if GTK_MAJOR_VERSION>=4
@@ -90,10 +92,11 @@ int main(int argc, char* argv[]){
 #else
 	gtk_init();
 #endif
-
+#if GTK_MAJOR_VERSION<4 || MAC_INTEGRATION
 	icon_main=gdk_pixbuf_new_from_resource("/maos/icon-draw.png", NULL);
-	icon_log=gdk_pixbuf_new_from_resource("/maos/icon-log.png", NULL);
-	icon_avg=gdk_pixbuf_new_from_resource("/maos/icon-avg.png", NULL);
+#endif
+	icon_log=gdk_pixbuf_new_from_resource_at_scale("/maos/icon-log.png", -1, 16, 1, NULL);
+	icon_avg=gdk_pixbuf_new_from_resource_at_scale("/maos/icon-avg.png", -1, 16, 1, NULL);
 
 #if MAC_INTEGRATION
 	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);

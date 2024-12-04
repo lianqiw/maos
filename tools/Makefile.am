@@ -1,8 +1,7 @@
 AM_CFLAGS=-I $(top_srcdir)
 AM_LDFLAGS=$(LDEXE)
-ICONS=icon-clear.png icon-draw.png icon-draw-small.png icon-finished.png icon-play.png icon-skip.png \
-icon-connect.png icon-error.png icon-monitor.png icon-save.png icon-waiting.png icon-cancel.png
-
+ICONS=icon-avg.png icon-cancel.png icon-clear.png icon-connect.png icon-draw-small.png icon-draw.png icon-error.png \
+icon-finished.png icon-log.png icon-monitor.png icon-play.png icon-save.png icon-skip.png icon-waiting.png
 
 noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h resources.xml $(ICONS) 
 

@@ -1252,6 +1252,9 @@ static void file_saved(GObject *dialog, GAsyncResult *result, void *data){
 #endif
 static void tool_save(GtkWidget* button, gpointer data){
 	drawdata_t *drawdata=get_current_drawdata();
+	if(!drawdata){
+		dbg_time("drawdata is empty\n"); return;
+	}
 	(void)button;(void)data;
 #if GTK_VERSION_AFTER(4,10)
 	GtkFileDialog *dialog=gtk_file_dialog_new();
@@ -1957,7 +1960,6 @@ GtkWidget* create_window(GtkWidget* window){
 #else
 	gtk_window_set_icon_name(GTK_WINDOW(window), "computer");
 #endif
-	//g_object_unref(icon_main);
 	
 #if GTK_MAJOR_VERSION>=3
 	GtkCssProvider* provider_default=gtk_css_provider_new();
