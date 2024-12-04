@@ -2086,13 +2086,75 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->hipowfs_hsmax=0;
 	parms->hipowfs=lnew(parms->npowfs, 1);
 	parms->lopowfs=lnew(parms->npowfs, 1);
+	//first: process types of powfs that are not TWFS
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
+		if(powfsi->skip==2) continue;
+		if(powfsi->lo){
+			P(parms->lopowfs, parms->nlopowfs)=ipowfs;
+			parms->nlopowfs++;
+			parms->nlowfs+=powfsi->nwfs;
+			if(powfsi->trs==1){
+				error("Low order wfs should not be tilt removed\n");
+			}
+			if(powfsi->gtype_sim==GTYPE_G&&powfsi->type==WFS_SH){
+				warning("Low order powfs%d is using gtilt instead of ztilt in simulation. "
+					"This is not recommended.\n", ipowfs);
+			}
+			if(parms->powfs[ipowfs].order==2&&parms->ittfpowfs==-1){
+				parms->ittfpowfs=ipowfs;
+			}
+			if(parms->powfs[ipowfs].order==1&&parms->ittpowfs==-1){
+				parms->ittpowfs=ipowfs;
+			}
+		} else{
+			P(parms->hipowfs, parms->nhipowfs)=ipowfs;
+			parms->nhipowfs++;
+			parms->nhiwfs+=powfsi->nwfs;
+			if(powfsi->hs<parms->hipowfs_hsmin){
+				parms->hipowfs_hsmin=powfsi->hs;
+			}
+			if(powfsi->hs>parms->hipowfs_hsmax){
+				parms->hipowfs_hsmax=powfsi->hs;
+			}
+		}
+		if(powfsi->trs){
+			if(!powfsi->llt){
+				warning("powfs%d has tip/tilt removed but is not LGS.\n", ipowfs);
+			}
+			if(powfsi->lo){
+				warning("powfs%d has tip/tilt removed but is not high order.\n", ipowfs);
+			}
+			parms->ntrpowfs++;
+		} else{
+			if(powfsi->llt){
+				warning("powfs%d controls tip/tilt but is an LGS.\n", ipowfs);
+			}
+			parms->ntipowfs++;
+		}
+	}
+	//2nd: process TWFS and link to LGS WFS.
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
+		if(powfsi->skip!=2) continue;
+		if(powfsi->dtrat==1){
+			error("powfs[%d].dtrat=%d is invalid: truth wfs must have dtrat>1\n", ipowfs, powfsi->dtrat);
+		}
+		if(parms->itpowfs==-1){
+			parms->itpowfs=ipowfs;
+			if(parms->ilgspowfs!=-1){
+				info("powfs%d is Truth WFS for powfs%d\n", ipowfs, parms->ilgspowfs);
+			}
+		} else{
+			warning("powfs%d: Ignore additional TWFS\n", ipowfs);
+		}
+	}
+	//3rd: determine WFS and control loop parameters
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		pywfs_cfg_t *pycfg=powfsi->pycfg;
 		llt_cfg_t *lltcfg=powfsi->llt;
-		if(powfsi->dtrat==1 && powfsi->skip==2){
-			error("powfs[%d].dtrat=%d is invalid: truth wfs must have dtrat>1\n", ipowfs, powfsi->dtrat);
-		}
+
 		if(powfsi->dtrat<=0){
 			error("powfs[%d].dtrat=%d is invalid.\n", ipowfs, powfsi->dtrat);
 		}else if(powfsi->step<parms->sim.start 
@@ -2147,15 +2209,15 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 					NX(powfsi->qe),NY(powfsi->qe),pixpsax,pixpsay);
 			}
 		}
-
-		if(powfsi->dither<-1){
-			powfsi->dither*=-1;
-			if(powfsi->type==WFS_PY&&parms->recon.modal){
-				info("Enable 2nd dithering mode when dither is <-1 for pywfs.\n");
-				powfsi->dither_mmd=1;
-			}
-		}
 		if(powfsi->dither){
+			if(powfsi->dither<-1){
+				powfsi->dither*=-1;
+				if(powfsi->type==WFS_PY&&parms->recon.modal){
+					info("Enable 2nd dithering mode when dither is <-1 for pywfs.\n");
+					powfsi->dither_mmd=1;
+				}
+			}
+		
 			parms->dither=1;
 			if(powfsi->dither==-1){//no dithering, just collect i0
 				powfsi->dither_amp=0;
@@ -2197,57 +2259,13 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
 			}
 		}
-		//Match TWFS to LGS POWFS
-		if(powfsi->skip==2){//TWFS
-			parms->itpowfs=ipowfs;
-			if(parms->ilgspowfs!=-1){
-				info("powfs%d is Truth WFS for powfs%d\n",ipowfs,parms->ilgspowfs);
+		if(lltcfg||powfsi->dither==1){//has FSM
+			if(powfsi->epfsm<=0){
+				real g=servo_optim_margin(parms->sim.dt, powfsi->dtrat, powfsi->alfsm,
+					M_PI/4, powfsi->f0fsm, powfsi->zetafsm);
+				powfsi->epfsm=g;
+				info("powfs%d.epfsm is set to %g (auto)\n", ipowfs, g);
 			}
-			if(parms->powfs[ipowfs].dtrat==1){
-				warning("Truth WFS shall not output at every time step\n");
-			}
-		}
-		if(powfsi->lo){
-			P(parms->lopowfs,parms->nlopowfs)=ipowfs;
-			parms->nlopowfs++;
-			parms->nlowfs+=powfsi->nwfs;
-			if(powfsi->trs==1){
-				error("Low order wfs should not be tilt removed\n");
-			}
-			if(powfsi->gtype_sim==GTYPE_G&&powfsi->type==WFS_SH){
-				warning("Low order powfs%d is using gtilt instead of ztilt in simulation. "
-					"This is not recommended.\n",ipowfs);
-			}
-			if(parms->powfs[ipowfs].order==2 && parms->ittfpowfs==-1){
-				parms->ittfpowfs=ipowfs;
-			}
-			if(parms->powfs[ipowfs].order==1&&parms->ittpowfs==-1){
-				parms->ittpowfs=ipowfs;
-			}
-		} else{
-			P(parms->hipowfs,parms->nhipowfs)=ipowfs;
-			parms->nhipowfs++;
-			parms->nhiwfs+=powfsi->nwfs;
-			if(powfsi->hs<parms->hipowfs_hsmin){
-				parms->hipowfs_hsmin=powfsi->hs;
-			}
-			if(powfsi->hs>parms->hipowfs_hsmax){
-				parms->hipowfs_hsmax=powfsi->hs;
-			}
-		}
-		if(powfsi->trs){
-			if(!lltcfg){
-				warning("powfs%d has tip/tilt removed but is not LGS.\n", ipowfs);
-			}
-			if(powfsi->lo){
-				warning("powfs%d has tip/tilt removed but is not high order.\n", ipowfs);
-			}
-			parms->ntrpowfs++;
-		} else{
-			if(lltcfg){
-				warning("powfs%d controls tip/tilt but is an LGS.\n", ipowfs);
-			}
-			parms->ntipowfs++;
 		}
 
 		if(powfsi->usephy){
@@ -2260,8 +2278,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->siglev<=0 || dmin(powfsi->siglevs)<=0){
 				error("powfs%d: siglev must be positive\n", ipowfs);
 			}
-		}
-		if(!powfsi->usephy&&powfsi->bkgrndfn){
+		}else if(powfsi->bkgrndfn){
 			warning("powfs%d: there is sky background, but wfs is in geometric mode. The background is ignored.\n",ipowfs);
 		}
 		
@@ -2289,7 +2306,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->type==WFS_PY&&lltcfg){
 				error("Pyramid WFS is not available for LGS WFS\n");
 			}
-			if(powfsi->lo||(parms->nlopowfs==0&&!powfsi->trs)){//has t/t measurement.
+			if(powfsi->lo||!powfsi->trs){//has t/t measurement.
 				if(parms->sim.dtrat_lo<0){
 					parms->sim.dtrat_lo=powfsi->dtrat;
 				} else if(parms->sim.dtrat_lo<powfsi->dtrat){
@@ -2312,21 +2329,19 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 					parms->sim.noisy_lo=1;
 				}
 			}
-			if(!powfsi->lo){
-				if(!powfsi->skip){//participate in high order recon
-					if(parms->sim.dtrat_hi<0){
-						parms->sim.dtrat_hi=powfsi->dtrat;
-					} else if(parms->sim.dtrat_hi!=powfsi->dtrat){
-						error("powfs.dtrat is invalid: all high order WFS must have the same dtrat.\n");
-					}
-					if(parms->step_hi<0){
-						parms->step_hi=powfsi->step;
-					} else if(parms->step_hi!=powfsi->step){
-						error("powfs.step is invalid: all high order WFS must have the same enabling step\n");
-					}
-					if(powfsi->noisy){
-						parms->sim.noisy_hi=1;
-					}
+			if(!powfsi->lo && !powfsi->skip){//participate in high order recon
+				if(parms->sim.dtrat_hi<0){
+					parms->sim.dtrat_hi=powfsi->dtrat;
+				} else if(parms->sim.dtrat_hi!=powfsi->dtrat){
+					error("powfs.dtrat is invalid: all high order WFS must have the same dtrat.\n");
+				}
+				if(parms->step_hi<0){
+					parms->step_hi=powfsi->step;
+				} else if(parms->step_hi!=powfsi->step){
+					error("powfs.step is invalid: all high order WFS must have the same enabling step\n");
+				}
+				if(powfsi->noisy){
+					parms->sim.noisy_hi=1;
 				}
 			}
 		}
@@ -2345,15 +2360,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				warning("Pyramid WFS poke=%g m is out of the recommended range\n", pycfg->poke);
 			}
 		}
-		if(lltcfg||powfsi->dither==1){//has FSM
-			if(powfsi->epfsm<=0){
-				real g=servo_optim_margin(parms->sim.dt,powfsi->dtrat,powfsi->alfsm,
-					M_PI/4,powfsi->f0fsm,powfsi->zetafsm);
-				powfsi->epfsm=g;
-				info("powfs%d.epfsm is set to %g (auto)\n",ipowfs, g);
-			}
-		}
 	}//for ipowfs
+
 	lresize(parms->hipowfs, parms->nhipowfs, 1);
 	lresize(parms->lopowfs, parms->nlopowfs, 1);
 	if(parms->npowfs&&!parms->nhipowfs){
@@ -3351,16 +3359,15 @@ static void print_parms(const parms_t *parms){
 	"open",
 	"close"
 	};
-#undef GREEN
-#define GREEN BLACK
-	info2("%sAperture%s is %g m with sampling 1/%g m\n",GREEN,BLACK,
+
+	info2("Aperture is %g m with sampling 1/%g m\n",
 		parms->aper.d,1/parms->evl.dx);
 	if(!parms->sim.noatm){
 		real fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, P(parms->atm.ws), P(parms->atm.wt));
 		real theta0z=calc_aniso(parms->atm.r0z,parms->atm.nps,P(parms->atm.ht),P(parms->atm.wt));
 	
-		info2("%sTurbulence at %g degree zenith angle:%s r0=%gm, L0=%gm, %d layers.\n",
-			GREEN,parms->sim.za*180./M_PI,BLACK,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
+		info2("Turbulence at %g degree zenith angle: r0=%gm, L0=%gm, %d layers.\n",
+			parms->sim.za*180./M_PI,parms->atm.r0,P(parms->atm.L0,0),parms->atm.nps);
 		info("    Greenwood freq is %.1fHz, anisoplanatic angle is %.2f as",
 			fgreen,theta0z*RAD2AS);
 		if(parms->ndm>1 && isfinite(theta0z)){
@@ -3383,7 +3390,7 @@ static void print_parms(const parms_t *parms){
 		}
 	}
 	if(parms->recon.alg==RECON_MVR){
-		info2("%sReconstruction%s: r0=%gm L0=%gm. %d layers.%s\n",GREEN,BLACK,
+		info2("Reconstruction: r0=%gm L0=%gm. %d layers.%s\n",
 			parms->atmr.r0,parms->atmr.L0,
 			parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
 
@@ -3392,16 +3399,16 @@ static void print_parms(const parms_t *parms){
 				ips,P(parms->atmr.ht,ips),P(parms->atmr.wt,ips));
 		}
 	}
-	info2("%sThere are %d powfs%s\n",GREEN,parms->npowfs,BLACK);
+	info2("There are %d powfs\n",parms->npowfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		info("  powfs%d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
 			ipowfs,parms->powfs[ipowfs].order,(parms->powfs[ipowfs].llt?"L":"N"),
 			parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 		int lrt=(parms->recon.split&&parms->tomo.splitlrt);
 		if(parms->powfs[ipowfs].trs){
-			info("%s%s%sis removed in %s side in tomography.%s",GREEN,
+			info("%s%sis removed in %s side in tomography.",
 				parms->powfs[ipowfs].trs?"T/T ":"",parms->powfs[ipowfs].frs?"Focus ":"",
-				lrt?"both":"right hand",BLACK);
+				lrt?"both":"right hand");
 		}
 		info("\n");
 		if(parms->powfs[ipowfs].usephy){
@@ -3430,16 +3437,14 @@ static void print_parms(const parms_t *parms){
 				parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
 		}
 		if(parms->powfs[ipowfs].phystep>-1&&parms->powfs[ipowfs].phystep<parms->sim.end){
-			info("Physical optics start at %d with %s'%s'%s ",
-				parms->powfs[ipowfs].phystep,
-				parms->powfs[ipowfs].phytype_sim==PTYPE_MF?GREEN:RED,
-				phytype[parms->powfs[ipowfs].phytype_sim],BLACK);
+			info("Physical optics start at %d with '%s' ",
+				parms->powfs[ipowfs].phystep, phytype[parms->powfs[ipowfs].phytype_sim]);
 		}
 
 		if(parms->powfs[ipowfs].noisy){
-			info("%s(noisy)%s\n",GREEN,BLACK);
+			info("(noisy)\n");
 		} else{
-			info("%s(noise free)%s\n",RED,BLACK);
+			info("(noise free)\n");
 		}
 		if(parms->powfs[ipowfs].dither){
 			info("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
@@ -3448,7 +3453,7 @@ static void print_parms(const parms_t *parms){
 				parms->powfs[ipowfs].dither_ogskip,parms->powfs[ipowfs].dither_ograt);
 		}
 	}
-	info2("%sThere are %d wfs%s\n",GREEN,parms->nwfs,BLACK);
+	info2("There are %d wfs\n",parms->nwfs);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
 		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
@@ -3463,7 +3468,7 @@ static void print_parms(const parms_t *parms){
 			warning("wfs %d thetax or thetay appears too large\n", i);
 		}
 	}
-	info2("%sThere are %d DMs%s\n",GREEN,parms->ndm,BLACK);
+	info2("There are %d DMs\n",parms->ndm);
 	for(i=0; i<parms->ndm; i++){
 		info("  DM %d: at %g km, pitch %g m, offset %g, %g micron stroke, %g micron inter-actuator stroke.\n",
 			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
@@ -3478,7 +3483,7 @@ static void print_parms(const parms_t *parms){
 	}
 	if(parms->recon.alg==RECON_MVR){
 		if(!parms->sim.idealtomo){
-			info2("%sTomography%s is using ",GREEN,BLACK);
+			info2("Tomography is using ");
 			if(parms->tomo.bgs){
 				info2("Block Gauss Seidel with ");
 			}
@@ -3487,8 +3492,8 @@ static void print_parms(const parms_t *parms){
 				info2("Cholesky back solve ");
 				break;
 			case ALG_CG:
-				info2("CG, with %s%s%s preconditioner, %s%d%s iterations",
-					GREEN,tomo_precond[parms->tomo.precond],BLACK,GREEN,parms->tomo.maxit,BLACK);
+				info2("CG, with %s preconditioner, %d iterations",
+					tomo_precond[parms->tomo.precond],parms->tomo.maxit);
 				break;
 			case ALG_SVD:
 				info2("SVD direct solve ");
@@ -3510,7 +3515,7 @@ static void print_parms(const parms_t *parms){
 				error(", Invalid\n");
 			}
 		}
-		info2("%sDM Fitting %sis using ",GREEN,BLACK);
+		info2("DM Fitting is using ");
 		if(parms->fit.bgs){
 			info2("Block Gauss Seidel with ");
 		}
@@ -3519,8 +3524,8 @@ static void print_parms(const parms_t *parms){
 			info2("Cholesky back solve (CBS)\n");
 			break;
 		case ALG_CG:
-			info2("CG, with %s%s%s preconditioner, %s%d%s iterations\n",
-				GREEN,tomo_precond[parms->fit.precond],BLACK,GREEN,parms->fit.maxit,BLACK);
+			info2("CG, with %s preconditioner, %d iterations\n",
+				tomo_precond[parms->fit.precond],parms->fit.maxit);
 			break;
 		case ALG_SVD:
 			info2("SVD\n");
@@ -3531,7 +3536,7 @@ static void print_parms(const parms_t *parms){
 		default:
 			error("Invalid\n");
 		}
-		info2("%sThere are %d DM fitting directions%s\n",GREEN,parms->fit.nfit,BLACK);
+		info2("There are %d DM fitting directions\n",parms->fit.nfit);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*RAD2AS,
@@ -3544,7 +3549,7 @@ static void print_parms(const parms_t *parms){
 			warning("There are multiple DMs and science evaluation directions but only one DM fitting direction.\n");
 		}
 	} else if(parms->recon.alg==RECON_LSR){
-		info2("%sLeast square reconstructor%s is using ",GREEN,BLACK);
+		info2("Least square reconstructor is using ");
 		if(parms->tomo.bgs){
 			info2("Block Gauss Seidel with ");
 		}
@@ -3566,8 +3571,8 @@ static void print_parms(const parms_t *parms){
 		error("parms->recon.alg=%d is not supported.\n",parms->recon.alg);
 	}
 
-	info2("%sThere are %d evaluation directions%s at sampling 1/%g m.\n",
-		GREEN,parms->evl.nevl,BLACK,1./parms->evl.dx);
+	info2("There are %d evaluation directions at sampling 1/%g m.\n",
+		parms->evl.nevl,1./parms->evl.dx);
 	for(i=0; i<parms->evl.nevl; i++){
 		info("    Evl %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 			i,P(parms->evl.wt,i),P(parms->evl.thetax,i)*RAD2AS,
@@ -3577,10 +3582,9 @@ static void print_parms(const parms_t *parms){
 		}
 	}
 
-	info2("%sSimulation%s start at step %d, end at step %d, "
-		"with time step 1/%gs, %s%s loop%s.\n",
-		GREEN,BLACK,parms->sim.start,parms->sim.end,1./parms->sim.dt,
-		parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
+	info2("Simulation start at step %d, end at step %d, "
+		"with time step 1/%gs, %s loop.\n",
+		parms->sim.start,parms->sim.end,1./parms->sim.dt, closeloop[parms->sim.closeloop]);
 }
 
 /**

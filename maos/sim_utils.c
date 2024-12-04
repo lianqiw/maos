@@ -1884,12 +1884,12 @@ void print_progress(sim_t* simu){
 					}
 				}
 				simu->plot_res=dccellnew(5,1);
-				P(simu->plot_res, 0)=dcellnew_same(nline, 1, parms->sim.end, 1);
-				P(simu->plot_res, 1)=dcellnew_same(3, 1, parms->sim.end, 1);
+				P(simu->plot_res, 0)=dcellnew_same(nline, 1, parms->sim.end, 1);//CL vs time step for different modes
+				P(simu->plot_res, 1)=dcellnew_same(3, 1, parms->sim.end, 1);//OL vs time step
 				P(simu->plot_res, 2)=dcellnew_same(1, 1, parms->evl.nevl, 2);//CL vs dir WEF
 				P(simu->plot_res, 3)=dcellnew_same(1, 1, parms->evl.nevl, 1);//CL vs dir indexing
 				P(simu->plot_res, 4)=dcellnew_same(parms->evl.nwvl, 1, parms->evl.nevl, 2);//CL vs dir Strehl
-				{	// sort evaluation directions
+				if(parms->evl.nevl>1){	// sort evaluation directions
 					//\todo modularize this.
 					dmat *tmp=dnew(2, parms->evl.nevl);
 					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -1914,7 +1914,7 @@ void print_progress(sim_t* simu){
 				}
 				//dset(simu->plot_res->m, NAN);
 			}
-			if((draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))&&simu->perfisim>20){
+			if(simu->perfisim>20&&parms->evl.nevl>1&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
 				dcell *res=P(simu->plot_res, 2);
 				int istart=MAX(simu->perfisim-1000, 20);
 				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
