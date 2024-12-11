@@ -61,8 +61,8 @@ ARG_S* parse_args(int argc, const char* argv[]){
 	{"local",  'l',M_INT, 0, 0, &local, NULL},
 	{NULL, 0,0,0,0, NULL, NULL}
 	};
-	char* cmds=strnadd(argc-1, argv+1, " ");
-	parse_argopt(cmds, options);
+	arg->confcmd=strnadd(argc-1, argv+1, " ");
+	parse_argopt(arg->confcmd, options);
 	if(!host&&!arg->detach){//foreground running
 		arg->force=1;
 	} else if(local||getenv("MAOS_DIRECT_LAUNCH")){
@@ -91,20 +91,8 @@ ARG_S* parse_args(int argc, const char* argv[]){
 	} else{
 		NTHREAD=arg->nthread;
 	}
-	char fntmp[PATH_MAX];
-	snprintf(fntmp, PATH_MAX, "%s/skyc_%ld.conf", TEMP, (long)getpid());
-	FILE* fptmp=fopen(fntmp, "w");
-	if(cmds){
-		fputs(cmds, fptmp);
-		fclose(fptmp);
-		free(cmds); cmds=NULL;
-	}
-	arg->confcmd=strdup(fntmp);
 	if(!arg->dirout){
 		arg->dirout=strtime_pid();
-	}
-	if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
-		arg->conf=strdup("maos.conf");
 	}
 	addpath2(2, ".");
 	mymkdir("%s", arg->dirout);
@@ -116,7 +104,7 @@ ARG_S* parse_args(int argc, const char* argv[]){
 /**
    Rename the log files when simulation exits.
  */
-void maos_final(int sig){
+void skyc_final(int sig){
 	if(sig==0){
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
@@ -133,7 +121,7 @@ void maos_final(int sig){
  */
 int skyc_signal_handler(int sig){
 	info("skyc: %s", strsignal(sig));
-	maos_final(sig);/*handles signal */
+	skyc_final(sig);/*handles signal */
 	scheduler_finish(sig);
 	return 0;
 }

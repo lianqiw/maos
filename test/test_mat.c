@@ -53,7 +53,7 @@ static void test_hist(){
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin");
     dspcell *saneai=dspcellread("saneai.bin");
-    dcell *PTT=dcellpinv(TT,saneai);
+	dcell *PTT=dcellpinv(TT, saneai, 1e-14);
     //writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){

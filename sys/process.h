@@ -55,7 +55,9 @@ extern char* DIRCACHE; /*the caching folder */
 extern char* DIRLOCK; /*the lock file folder*/
 extern char* DIREXE;/*the exe path*/
 extern char* DIRSTART; /*the startup directory*/
+extern char* DIROUT; /*the result directory (set by maos)*/
 extern char *EXENAME;/*the name of the executable.*/
 int get_ncpu(void);
+void set_dirout(const char* dir);
 #define print_mem(A,...) info(A ":\t%.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
 #endif

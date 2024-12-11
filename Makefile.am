@@ -31,23 +31,20 @@ clear-doc:
 	@rm -rf doxygen-doc
 
 EXTRA_DIST = doxygen.cfg docs scripts config 
-BUILT_SOURCES=version.h bin/Makefile
+BUILT_SOURCES=bin/Makefile
 if LIBTOOL_FIX_OPENMP
 BUILT_SOURCES+=fixlibtool
 endif
 fixlibtool:libtool
 	@sed 's/|-fopenmp|/|/g' libtool > libtool.new
 	@mv libtool.new libtool
-version.h:FORCE #non existent target will always run
-	@str="static const char *GIT_VERSION=\"`cd $(srcdir) && git show -s --format='%h %ci' || (echo $(VERSION) && date +'%F %r %z') `\";" && \
-	if test ! -f version.h -o -n "`echo $$str | diff version.h -`" ;then echo $$str >version.h;fi
-FORCE:
+
 bin/Makefile:Makefile
 	@mkdir -p bin/
 	@echo -e "all:\n\t@+make --no-print-directory -C .." > bin/Makefile
 .ONESHELL:
 
-CLEANFILES=version.h bin/Makefile
+CLEANFILES=bin/Makefile
 
 clean-local:
 	-rm -rf external

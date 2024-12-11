@@ -271,7 +271,6 @@ Real curecon_t::tomo(dcell** _opdr, dcell** _gngsmvst,
 		cp2cpu(_opdr, opdr_vec, cgstream);
 	}
 	if(GXL){
-		dbg("computing ngsmvst\n");
 		curcellmm(gngsmvst, 0, GXL, opdr_vec, "nn", 1, cgstream);
 		add2cpu(_gngsmvst, 1, gngsmvst, 1, cgstream);
 	}

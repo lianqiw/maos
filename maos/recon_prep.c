@@ -149,7 +149,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 				recon->floc->dx, dxr);
 		}
 	} else{
-		real guard=MAX(1,parms->tomo.guard)*dxr;
+		real guard=MAX(1,parms->fit.guard)*dxr;
 		map_t* fmap=0;
 		create_metapupil(&fmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 		info("FLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(fmap), NY(fmap), dxr, parms->fit.square?"":"not ");
@@ -180,10 +180,14 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 			dbg("Define the W0/W1 on annular aperture instead of circular.\n");
 			rin=parms->aper.din/2;
 		}
-		{
+		if(0){
+			//have a large rout impact performance by using exterpolated information in tomography
+			//it is better to rely in actuator slaving or extrapolation instead.
 			rout=loc_diam(recon->floc)/2;
-			dbg("rout is set to floc radius %g\n", rout);
+		}else{
+			rout+=recon->floc->dx;//slight padding			
 		}
+		dbg("mkw: rout radius is %g m\n", rout);
 		mkw_annular(recon->floc, 0, 0, rin, rout, &(recon->W0), &(recon->W1));
 	}
 	if(parms->save.recon){
@@ -993,7 +997,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 		//to high threshold makes the filtering ill formed
 		const real thres=1e-14;
 		info("RRlgs svd thres is %g\n", thres);
-		recon->RRlgs=dcellpinv2(recon->GRlgs, NULL, thres);
+		recon->RRlgs=dcellpinv(recon->GRlgs, NULL, thres);
 	}
 	if(parms->save.recon){
 		writebin(recon->GRall, "twfs_GR");
@@ -1348,7 +1352,7 @@ void setup_recon_prep_ga(recon_t* recon, const parms_t* parms, const aper_t* ape
 	setup_recon_GF(recon, parms);//GF depends on GA.
 	setup_recon_GR(recon, parms);
 
-	if(parms->recon.split){
+	if(parms->recon.split||parms->evl.split){
 		ngsmod_prep(parms, recon, aper, powfs);
 	}
 	setup_recon_dmttr(recon, parms);

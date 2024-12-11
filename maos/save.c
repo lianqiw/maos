@@ -160,20 +160,18 @@ void save_recon(sim_t* simu){
 		}
 
 		if(simu->Merr_lo){
-			char fig[64];
-			int idm;
-			for(idm=0; idm<parms->ndm; idm++){
-				snprintf(fig, sizeof(fig), "Err Lo %d", idm);
-				if(draw_current("DM", fig)){
-					break;
+			int added=0;
+			for(int idm=0; idm<parms->ndm; idm++){
+				if(draw_current_format("DM", "Err Lo %d", idm)){
+					dcell* dmtmp=simu->dmtmp;
+					if(!added){
+						added=1;//add only once
+						dcellzero(dmtmp);
+						addlow2dm(&dmtmp, simu, simu->Merr_lo, 1);
+					}
+					drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
+						"DM Error Signal (Lo)", "x (m)", "y (m)", "Err Lo %d", idm);
 				}
-			}
-			if(idm<parms->ndm){//need plotting
-				dcell* dmtmp=simu->dmtmp;
-				dcellzero(dmtmp);
-				addlow2dm(&dmtmp, simu, simu->Merr_lo, 1);
-				drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
-					"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 			}
 			//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 		}
@@ -280,23 +278,22 @@ void save_dmreal(sim_t* simu){
 						"DM Integrator (Hi)", "x (m)", "y (m)", "Int %d", idm);
 				}
 			}
-			/*if(!parms->sim.fuseint && P(simu->Mint_lo->mint,0)){
-			dcell *dmlo=simu->dmtmp;
-			dcellzero(dmlo);
-			switch(simu->parms->recon.split){
-			case 1:
-				dcellmm(&dmlo, recon->ngsmod->Modes, P(simu->Mint_lo->mint,0), "nn", 1);
-				break;
-			case 2:
-				dcellmm(&dmlo, recon->MVModes, P(simu->Mint_lo->mint,0), "nn", 1);
-				break;
+			if(simu->Mint_lo&&!parms->sim.fuseint){
+				int added=0;
+				for(int idm=0; idm<parms->ndm; idm++){
+					if(draw_current_format("DM", "Int Lo %d", idm)){
+						dcell *dmtmp=simu->dmtmp;
+						if(!added){
+							added=1;//add only once
+							dcellzero(dmtmp);
+							addlow2dm(&dmtmp, simu, P(simu->Mint_lo->mintc, 0), 1);
+						}
+						drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
+							"DM Integrator (Lo)", "x (m)", "y (m)", "Int Lo %d", idm);
+					}
+				}
+				//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 			}
-			for(int idm=0; dmlo && idm<parms->ndm; idm++){
-				drawopd("DM",P(recon->aloc,idm), P(P(dmlo,idm)),parms->plot.opdmax,
-					"DM Integrator (Lo)","x (m)","y (m)",
-					"Int Lo %d",idm);
-			}
-			}*/
 		}
 		if(simu->dmreal){
 			for(int idm=0; idm<parms->ndm; idm++){
@@ -343,13 +340,12 @@ void save_dmreal(sim_t* simu){
 				dfree(opd);
 			}
 		}
-
-		for(int idm=0; idm<parms->ndm; idm++){
+		/*for(int idm=0; idm<parms->ndm; idm++){
 			if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
 				drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), parms->plot.opdmax,
 					"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 			}
-		}
+		}*/
 	}
 	if(parms->save.dm){
 		int isim=(parms->sim.closeloop?2:0)+simu->reconisim;

@@ -38,7 +38,6 @@
 #include "path.h"
 #include "bin.h"
 #include "scheduler_client.h"
-
 /**
    Obtain the dirname of a path. See mybasename().
 */
@@ -222,8 +221,8 @@ double myclockd(void){
 char* mygetcwd(void){
 	char cwd0[PATH_MAX];
 	if(!getcwd(cwd0, PATH_MAX)){
-		dbg("Error getting current directory\n");
-		cwd0[0]='.'; cwd0[1]=0;
+		dbg("Error getting current directory: %s\n", strerror(errno));
+		strncpy(cwd0, getenv("PWD"), PATH_MAX); cwd0[PATH_MAX-1]=0;
 	}
 	return strdup(cwd0);
 }
@@ -231,7 +230,7 @@ char* mygetcwd(void){
 Translate a path into absolute path. The caller shall free the returned string.
 */
 char *myabspath(const char *path){
-	if(!path) return 0;
+	if(!path) return mygetcwd();
 	if(path[0]=='/') return strdup(path);
 	char path2[PATH_MAX];
 	if(path[0]=='~' && path[1]=='/'){
@@ -244,25 +243,23 @@ char *myabspath(const char *path){
 				path+=1;
 			}
 		}
-		if(getcwd(path2, PATH_MAX)){
-			while(!mystrcmp(path, "../")){
-				char *tmp=strrchr(path2, '/');
-				if(tmp){
-					tmp[0]='\0';
-					path+=3;
-					while(path[0]=='/') path++;
-				}else{
-					error("Relative path `%s` has too many parent levels from `%s`\n", path, path2);
-					break;
-				}
+		if(!getcwd(path2, PATH_MAX)){
+			strncpy(path2, getenv("PWD"), PATH_MAX); path2[PATH_MAX-1]=0;
+		}
+		while(!mystrcmp(path, "../")){
+			char *tmp=strrchr(path2, '/');
+			if(tmp){
+				tmp[0]='\0';
+				path+=3;
+				while(path[0]=='/') path++;
+			}else{
+				error("Relative path `%s` has too many parent levels from `%s`\n", path, path2);
+				break;
 			}
-			if(path[0]!='\0'){
-				strncat(path2, "/", PATH_MAX-strlen(path2)-1);
-				strncat(path2, path, PATH_MAX-strlen(path2)-1);
-			}
-		}else{
-			warning("Error getting current directory\n");
-			snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
+		}
+		if(path[0]!='\0'){
+			strncat(path2, "/", PATH_MAX-strlen(path2)-1);
+			strncat(path2, path, PATH_MAX-strlen(path2)-1);
 		}
 	}
 	if(!exist(path2)){
@@ -278,7 +275,7 @@ int mysymlink(const char* source, const char* dest){
 	if(!exist(source)) ans=-1;
 	if(!ans && exist(dest)) ans=remove(dest);
 	if(!ans) ans=symlink(source, dest);
-	if(ans)	warning("Unable to symlink %s to %s\n", source, dest);
+	if(ans)	warning("Unable to symlink %s to %s: %s\n", source, dest, strerror(errno));
 	return ans;
 }
 /**
@@ -290,7 +287,7 @@ int mylink(const char* source, const char* dest){
 	if(!ans&&exist(dest)) ans=remove(dest);
 	if(!ans) ans=link(source, dest);
 	if(ans){
-		dbg("Unable to link %s to %s, copyfile instead\n", source, dest);
+		dbg("Unable to link %s to %s, try copyfile instead: %s\n", source, dest, strerror(errno));
 		ans=copyfile(source, dest);
 	}
 	return ans;
@@ -916,3 +913,50 @@ void free_strarr(char **str, int n){
 }
 #undef strdup
 char* (*strdup0)(const char*)=strdup;
+const int default_color_table[]={0x0000FF,
+			   0xFF0000,
+			   0x00FF00,
+			   0x009999,
+			   0x00FFFF,
+			   0x9900CC,
+			   0xFFCC00,
+			   0xFF00FF,
+			   0x000000,
+			   0x666666,
+};
+void print_version(void){
+	extern const char *GIT_VERSION;
+	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+	char exe[PATH_MAX];
+	if(!get_job_progname(exe, PATH_MAX, 0)){
+		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
+	} else{
+		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
+	}
+#ifdef __OPTIMIZE__
+#define OPT_STR "+O3"
+#else
+#define OPT_STR "+O0"
+#endif
+#if CPU_SINGLE
+#define CPU_FP "F32"
+#else
+#define CPU_FP "F64"
+#endif
+	info2(" CPU(" CPU_FP "," OPT_STR ")");
+#if USE_CUDA
+#if CUDA_DOUBLE
+#define GPU_FP "F64"
+#else
+#define GPU_FP "F32"
+#endif
+	info2(" with CUDA(v%d," GPU_FP ")\n", USE_CUDA);
+#else
+	info2(" w/o CUDA\n");
+#endif
+	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
+#if HAS_LWS
+	extern uint16_t PORT;
+	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
+#endif
+}

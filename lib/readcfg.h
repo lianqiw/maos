@@ -36,7 +36,7 @@
     va_end(ap)
 
 void   open_config_prefix(const char*fn, const char *prefix, const char *prekey);
-void   open_config(const char *fn);
+void   open_config(const char *fn, int priority);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);

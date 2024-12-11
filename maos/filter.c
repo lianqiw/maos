@@ -35,17 +35,10 @@
    Add low order NGS modes to DM actuator commands for AHST and MVST
  */
 void addlow2dm(dcell** dmval, const sim_t* simu, const dcell* low_val, real gain){
-	switch(simu->parms->recon.split){
-	case 0:
-		break;/*nothing to do. */
-	case 1:
-		dcellmm(dmval, simu->recon->ngsmod->Modes, low_val, "nn", gain);
-		break;
-	case 2:
+	if(simu->parms->recon.split==2){
 		dcellmm(dmval, simu->recon->MVModes, low_val, "nn", gain);
-		break;
-	default:
-		error("Not implemented\n");
+	}else{//ahst
+		dcellmm(dmval, simu->recon->ngsmod->Modes, low_val, "nn", gain);
 	}
 }
 static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long stuck2){
@@ -294,8 +287,8 @@ static void filter_cl(sim_t* simu){
 	//always run servo_filter even if dmerr is NULL.
 	int hiout=servo_filter(simu->dmint, dmerr);
 
-	if(parms->recon.split){
-	/*Low order in split tomography only. fused integrator*/
+	if(simu->Mint_lo && simu->Merr_lo){
+		/*Low order in split tomography only. fused integrator*/
 		if(servo_filter(simu->Mint_lo, simu->Merr_lo)&&parms->sim.fuseint){
 			/*accumulate to the main integrator. Use mpreint to properly account
 			 * for type II controler. Gain is already applied.*/
@@ -307,14 +300,9 @@ static void filter_cl(sim_t* simu){
 	/*The following are moved from the beginning to the end because the
 	  gradients are now from last step.*/
 	servo_output(simu->dmint, &simu->dmtmp);
-	if(parms->recon.split&&!parms->sim.fuseint){
-		dcell* Mtmp=0;
-		servo_output(simu->Mint_lo, &Mtmp);
-		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
-		dcellfree(Mtmp);
-	}
 	//dmpsol should not contain DM NCPA vector, which may not be recovered by reconstruction.
 	//for modal reconstruction, it should be before the conversion.
+	//for MVST, it should also be before low order integrator output.
 	if(parms->recon.psol){
 		dcellcp(&simu->dmpsol, simu->dmtmp);//dmpsol should be before extrapolation
 		if(parms->recon.psol&&recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
@@ -323,8 +311,15 @@ static void filter_cl(sim_t* simu){
 			act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
 		}
 	}
-	if(!parms->recon.modal && simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
-		//Extrapolate to edge actuators
+	if(simu->Mint_lo&&simu->Merr_lo&&!parms->sim.fuseint){
+		dcell* Mtmp=0;
+		servo_output(simu->Mint_lo, &Mtmp);
+		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
+		dcellfree(Mtmp);
+	}
+
+	if(!parms->recon.modal && simu->recon->actextrap && !parms->recon.psol){
+		//Extrapolate to edge actuators in LSR
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
 	} else{
@@ -628,4 +623,11 @@ void filter_dm(sim_t* simu){
 		//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
 	}
 	save_dmreal(simu);
+	//Record NGS mode correction time history
+	if(simu->corrNGSm&&P(simu->Mint_lo->mintc, 0)){
+		if(simu->reconisim+2<parms->sim.end){
+			real *pcorrNGSm=PCOL(simu->corrNGSm, simu->reconisim+2);
+			memcpy(pcorrNGSm, P(P(simu->Mint_lo->mintc, 0), 0), sizeof(real)*NX(simu->corrNGSm));
+		}
+	}
 }

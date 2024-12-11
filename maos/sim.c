@@ -37,10 +37,7 @@
 #include <numa.h>
 #endif
 extern int KEEP_MEM;
-real tk_setup=0;
-static real tk_0;//first seed simulation start time.
-static real tk_1;//current seed simulation start time.
-static real tk_atm=0;//first step end time.
+
 int sim_pipe[2]={0,0};
 /**
    \file sim.h
@@ -52,8 +49,6 @@ int sim_pipe[2]={0,0};
    \callgraph
  */
 sim_t* maos_iseed(int iseed){
-	if(iseed==0) tk_0=myclockd();
-	tk_1=myclockd();
 	const parms_t* parms=global->parms;
 	powfs_t* powfs=global->powfs;
 	aper_t* aper=global->aper;
@@ -64,6 +59,8 @@ sim_t* maos_iseed(int iseed){
 		return 0;
 	}
 	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
+	if(iseed==0) simu->tk_s0=myclockd();
+	simu->tk_si=myclockd();
 	global->simu=simu;
 	global->iseed=iseed;
 
@@ -100,17 +97,23 @@ void maos_isim(int isim){
 	sim_t* simu=global->simu;
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
-	int iseed=global->iseed;
 	int simstart=parms->sim.start;
 	int simend=parms->sim.end;
 	tp_counter_t group={0};
 	extern int NO_RECON, NO_WFS, NO_EVL;
 	if(isim==simstart+1){//skip slow first step.
-		tk_atm=myclockd();
+		simu->tk_i1=myclockd();
 	}
-	real ck_0=myclockd();//current step start time
-
-	sim_update_flags(simu, isim);
+	simu->tk_istart=myclockd();//step start time
+	simu->wfsisim=isim;
+	simu->perfisim=isim;
+	simu->status->isim=isim;
+	if(!parms->sim.closeloop){
+		simu->reconisim=isim;
+	} else{//work on gradients from last time step for parallelization.
+		simu->reconisim=isim-1;
+	}
+	update_wfsflags(simu);
 	if(!parms->atm.frozenflow){
 		//Do not put this one inside parallel single so that FFT can use parallel for
 		genatm(simu);
@@ -120,7 +123,7 @@ void maos_isim(int isim){
 #if USE_CUDA
 	if(parms->gpu.evl||parms->gpu.wfs){
 	/*may need to copy another part */
-		gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
+		gpu_atm2gpu(simu->atm, simu->atmscale, parms, simu->iseed, isim);
 	}
 #endif
 
@@ -149,7 +152,6 @@ void maos_isim(int isim){
 		draw_single=0;
 	}
 	if(PARALLEL==1){
-		simu->tk_0=myclockd();//step start time
 		/*
 		  We do the big loop in parallel to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
@@ -185,13 +187,13 @@ void maos_isim(int isim){
 			QUEUE(&group, wfsgrad, simu, 1, 0);
 		}
 		if(!NO_RECON){
-			//wait for all tasks to finish before modifying dmreal
+			//wait for all tasks to finish before modifying grad and dmreal
 			WAIT(&group, 0);
 			shift_grad(simu);/*before filter() */
 			filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		}
 		WAIT(&group, 0);
-	} else{/*do the big loop in serial mode. */
+	} else{/*PARALLEL=0: do the big loop in serial mode. */
 		if(parms->sim.closeloop){
 			if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
 			if(!NO_WFS)	wfsgrad(simu);/*output grads to gradcl, gradol */
@@ -226,20 +228,7 @@ void maos_isim(int isim){
 		simu->tomo_update=0;
 	}
 
-	real ck_end=myclockd();
-	long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
-	long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
-	if(isim==simstart){//first step, rough estimate.
-		simu->status->mean=ck_end-ck_0;
-		simu->status->rest=simu->status->mean*parms->sim.nseed*(simend-simstart);
-	} else{
-		simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
-			+(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
-		simu->status->mean=(ck_end-tk_atm)/(real)(isim-simstart);
-	}
-	simu->status->laps=(long)(ck_end-tk_setup);//total elapsed time
-	simu->status->tot=ck_end-ck_0;//total step time
-
+	simu->tk_iend=myclockd();
 	print_progress(simu);
 }
 
@@ -309,18 +298,33 @@ void maos_sim(){
 				}
 			}/*isim */
 		}
-		{
-			/*Compute average performance*/
-			const long nsim=simu->perfisim+1;
-			const long isim0=parms->sim.closeloop?MIN(MAX(20, nsim/5), nsim/2):0;
-			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
-			for(long i=isim0; i<nsim; i++){
-				for(long imod=0; imod<parms->evl.nmod; imod++){
-					P(restot, imod)+=P(cle, imod, i);
+		long isim0=0;
+		if(!parms->sim.evlol){//determine starting point
+			double sumc=0;
+			for(isim0=simend-1; isim0>1; isim0--){
+				sumc+=P(simu->cle, 0, isim0);
+				if((simend-isim0)>25 && P(simu->cle, 0, isim0-1)*(simend-isim0)>sumc*1.2){
+					break;
 				}
 			}
-			rescount+=(nsim-isim0);
 		}
+		/*Compute average performance*/
+		const long nsim=simu->perfisim+1;
+		//const long isim0=parms->sim.closeloop?MIN(MAX(20, nsim/5), nsim/2):0;
+		const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
+		for(long i=isim0; i<nsim; i++){
+			for(long imod=0; imod<parms->evl.nmod; imod++){
+				P(restot, imod)+=P(cle, imod, i);
+			}
+		}
+		rescount+=(nsim-isim0);
+
+		simu->status->clerrhi=sqrt(P(restot, 2)/rescount)*1e9;
+		simu->status->clerrlo=sqrt(P(restot, 1)/rescount)*1e9;
+		simu->status->tot=simu->status->mean;
+#if defined(__linux__) || defined(__APPLE__)
+		scheduler_report(simu->status);
+#endif
 		free_simu(simu);
 		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), simu->iseed, signal_caught==0);
 		global->simu=NULL;
@@ -330,6 +334,6 @@ void maos_sim(){
 	for(long imod=0; imod<parms->evl.nmod; imod++){
 		info3("%.2f ", sqrt(P(restot, imod)/rescount)*1e9);
 	}
-	info3(" nm.\n");
+	info3(" nm (%ld points).\n", rescount);
 	dfree(restot);
 }

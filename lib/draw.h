@@ -34,6 +34,7 @@ void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);
 int draw_current(const char* fig, const char* fn);
+int draw_current_format(const char *fig, const char *format, ...) CHECK_ARG(2);
 int plot_empty(int sock_draw,const char *fig,const char *fn);
 typedef struct {
   union{
@@ -52,6 +53,7 @@ typedef struct {
   const char* xylog;
   const dmat* cir;
   const char* const* const legend;
+  int always;//always draw (do not check for active panel)
 } plot_opts;
 
 int draw(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,

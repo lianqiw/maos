@@ -150,7 +150,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	int32_t* style=mycalloc(ngroup, int32_t);
 	int count=0;
 	legend[count]="Evaluation";
-	style[count]=(0xFF0000<<8)+(4<<4)+3;
+	style[count]=(0xFF0000<<8)|(4<<4)|3;
 	P(locs,count)=locnew(parms->evl.nevl, 0, 0);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		P(locs,count)->locx[ievl]=P(parms->evl.thetax,ievl)*RAD2AS;
@@ -158,7 +158,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	}
 	count++;
 	legend[count]="DM Fitting";
-	style[count]=(0xFF22DD<<8)+(4<<4)+3;
+	style[count]=(0xFF22DD<<8)|(4<<4)|3;
 	P(locs,count)=locnew(parms->fit.nfit, 0, 0);
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 		P(locs,count)->locx[ifit]=P(parms->fit.thetax,ifit)*RAD2AS;
@@ -166,7 +166,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	}
 	count++;
 	legend[count]="NCPA";
-	style[count]=(0x22FF00<<8)+(4<<4)+2;
+	style[count]=(0x22FF00<<8)|(4<<4)|2;
 	P(locs,count)=locnew( parms->ncpa.ndir, 0, 0);
 	for(int ifit=0; ifit< parms->ncpa.ndir; ifit++){
 		P(locs,count)->locx[ifit]=P(parms->ncpa.thetax,ifit)*RAD2AS;
@@ -183,13 +183,13 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
 		}
 		if(!isinf(parms->powfs[ipowfs].hs)){
-			style[count]=(0xFF8800<<8)+(4<<4)+2;
+			style[count]=(0xFF8800<<8)|(4<<4)|2;
 		} else if(!parms->powfs[ipowfs].lo){
-			style[count]=(0xFFFF00<<8)+(4<<4)+1;
+			style[count]=(0xFFFF00<<8)|(4<<4)|1;
 		} else if(parms->powfs[ipowfs].order>1){
-			style[count]=(0x0000FF<<8)+(4<<4)+4;
+			style[count]=(0x0000FF<<8)|(4<<4)|4;
 		} else{
-			style[count]=(0x0000FF<<8)+(4<<4)+1;
+			style[count]=(0x0000FF<<8)|(4<<4)|1;
 		}
 		count++;
 	}
@@ -385,13 +385,6 @@ arg_t* parse_args(int argc, const char* argv[]){
 	};
 	arg->confcmd=strnadd(argc-1, argv+1, " ");
 	parse_argopt(arg->confcmd, options);
-	if(!arg->conf){
-		arg->conf=getenv("MAOS_DEFAULT");//read here to avoid env different when launched by scheduler
-		if(!arg->conf){
-			arg->conf="default.conf";
-		}
-		if(arg->conf) arg->conf=mystrdup(arg->conf);
-	}
 	if(arg->conf&&arg->conf[0]!='/'&&exist(arg->conf)){
 		//make it absolute path to avoid recursive loading when maos_recent.conf is used
 		char *argconf=arg->conf;
@@ -458,8 +451,8 @@ arg_t* parse_args(int argc, const char* argv[]){
 			warning("When both -g and -G are supplied, -g takes priority.\n");
 		}
 	}
-
 	addpath2(2, ".");
+
 	if(arg->dirout){
 		mymkdir("%s", arg->dirout);
 		if(chdir(arg->dirout)){
@@ -469,6 +462,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 		//warning("Disable saving when no -o is supplied.\n");
 		disable_save=1;
 	}
+	set_dirout(NULL);
 	return arg;
 }
 /**
@@ -504,15 +498,23 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	draw_single=0;
 	plotdir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */
 	if(recon){
-		plotloc("Aperture", parms, recon->ploc, 0, "ploc");
-		plotloc("Aperture", parms, recon->floc, 0, "floc");
+		if(parms->plot.setup>1){
+			plotloc("Aperture", parms, recon->ploc, 0, "ploc");
+			plotloc("Aperture", parms, recon->floc, 0, "floc");
+		}
 		for(int idm=0; idm<parms->ndm; idm++){
 			real ht=parms->dm[idm].ht;
 			plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc %d", idm);
+			/*if(recon->actcpl){
+				drawopd("Aperture", P(recon->aloc, idm), P(recon->actcpl, idm), 0, 
+					"DM Actuator Coupling Factor", "x (m)", "y (m)", "actcpl %d", idm);
+			}*/
 		}
-		for(int ips=0; ips<recon->npsr; ips++){
-			const real ht=P(recon->ht,ips);
-			plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc %d", ips);
+		if(parms->plot.setup>1){
+			for(int ips=0; ips<recon->npsr; ips++){
+				const real ht=P(recon->ht,ips);
+				plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc %d", ips);
+			}
 		}
 	}
 	drawopd("Aperture", aper->locs, aper->amp1, 0, "Aperture Amplitude Map",
@@ -521,11 +523,14 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		for(int iamp=0; iamp<PN(powfs[ipowfs].amp); iamp++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,iamp);
-			drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp,iamp), 0,
-				"WFS Amplitude Map", "x (m)", "y (m)", "amp %d", iwfs);
-		
-			drawopd("Aperture", powfs[ipowfs].saloc, P(powfs[ipowfs].saa,iamp), 0,
-				"WFS Subaperture Amplitude", "x (m)", "y (m)", "saa %d ", iwfs);
+			if(parms->plot.setup>1){
+				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp,iamp), 0,
+					"WFS Amplitude Map", "x (m)", "y (m)", "amp wfs%d", iwfs);
+			}
+			if(powfs[ipowfs].saloc->nloc>4){
+				drawopd("Aperture", powfs[ipowfs].saloc, P(powfs[ipowfs].saa,iamp), 0,
+					"WFS Subaperture Amplitude", "x (m)", "y (m)", "saa wfs%d ", iwfs);
+			}
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
@@ -536,6 +541,9 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			}
 		}
 	}
+	/*if(recon->floc){
+		drawopd("Aperture", recon->floc, recon->W1, 0, "DM Fitting Amplitude Map", "x (m)", "y (m)", "W1");
+	}*/
 	draw_single=draw_single_save;
 }
 

@@ -449,7 +449,7 @@ typedef struct{
 gint cur_page=-1;
 menudata_t menudata[]={
 	{"Plot", "Plot", &icon_draw, CMD_DRAWSER},
-	{"Remove", "Remove", &icon_clear, CMD_REMOVE},
+	{"Clear", "Clear", &icon_clear, CMD_REMOVE},
 	{NULL, NULL, NULL, -1},
 	{"Kill", "Kill", &icon_failed, CMD_KILL},
 	{"Restart", "Restart", &icon_running, CMD_RESTART},

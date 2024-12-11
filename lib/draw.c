@@ -35,9 +35,9 @@ PNEW(lock);
 int draw_id=DRAW_ID_MAOS;      //Client identification. Same draw_id reuses drawdaemon.
 int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
-static int sock_helper=-1;//socket of draw_helper
-int listening=0;    //If set, listen_drawdaemon is listening to replies from drawdemon
 int draw_single=0;  //if ==1, only draw active frame and skip if line is busy. if ==-1, disable draw_single altogether. otherwise draw all frames.
+static int sock_helper=-1;//socket of draw_helper
+static int listening=0;    //If set, listen_drawdaemon is listening to replies from drawdemon
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -242,8 +242,8 @@ int draw_add(int sock){
 			sock=-1;
 		}
 	}
-	if(sock!=-1&&DIRSTART){
-		if(WRITECMDSTR(sock, DRAW_PATH, DIRSTART)){
+	if(sock!=-1&&(DIRSTART||DIROUT)){
+		if(WRITECMDSTR(sock, DRAW_PATH, DIROUT?DIROUT:DIRSTART)){
 			dbg("write DRAW_PATH failed\n");
 			close(sock);
 			sock=-1;
@@ -373,6 +373,8 @@ static int get_drawdaemon(){
 	if(draw_disabled){
 		return -1;
 	}
+	int DRAW_NOREUSE=0;
+	READ_ENV_INT(DRAW_NOREUSE, 0, 1);//if ==1, do not reuse previous drawdaemon
 #if __APPLE__
 	int display=1;
 #else
@@ -384,7 +386,7 @@ static int get_drawdaemon(){
 	LOCK(lock);
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id
-	while(!scheduler_socket(-1, &sock, draw_id)){
+	while(!DRAW_NOREUSE && !scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_INIT)){
 			dbg("received socket=%d is already closed.\n", sock);
@@ -516,6 +518,10 @@ int draw_current(const char* fig, const char* fn){
     }
 	return current;
 }
+int draw_current_format(const char *fig, const char *format,...){
+	format2fn;
+	return draw_current(fig, fn);
+}
 static inline int fwriteint(FILE* fbuf, int A){
 	if(fwrite(&A, sizeof(int), 1, fbuf)<1) return -1;
 	return 0;
@@ -558,13 +564,13 @@ end2:
 	free_default(buf);
 	return ans;
 }
-int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize){
+int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int always){
 	int ans=0;
 	for(sockinfo_t *ps=sock_draws, *ps_next=NULL; ps; ps=ps_next){
 		ps_next=ps->next;//draw_remove change ps node, so save info here;
 		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 		int sock_draw=ps->fd;
-		int needed_i=check_figfn(ps, fig, fn);
+		int needed_i=always?1:check_figfn(ps, fig, fn);
 		if(!needed_i){
 			continue;
 		}
@@ -619,8 +625,8 @@ int draw(const char* fig,    /**<Category of the figure*/
 	iframe++;
 	int ans=0;
 	if(!get_drawdaemon()){
-		int needed=0;
-		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
+		int needed=opts.always?1:0;
+		for(sockinfo_t *ps=sock_draws; needed!=1 && ps; ps=ps->next){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 			int needed_i=check_figfn(ps, fig, fn);
 			//dbg("%s %s: %d\n", fig, fn, needed_i);
@@ -791,7 +797,7 @@ end2:
 			}
 		}
 		if(bufsize&&!ans){
-			ans=send_buf(fig, fn, buf, bufsize);
+			ans=send_buf(fig, fn, buf, bufsize, opts.always);
 			free_default(buf);
 		}
 	}

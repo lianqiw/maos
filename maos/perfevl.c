@@ -125,9 +125,9 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 }
 /*computes the wavefront mode/error, and ngsmod. Same operation for OL/CL
   evaluations.*/
-#define PERFEVL_WFE(pclep, pclmp, cleNGSmp)				\
-    if(parms->recon.split){/*for split tomography */			\
-	dmat*  pcleNGSmp=P(cleNGSmp,ievl)/*PDMAT*/;			\
+#define PERFEVL_WFE(pclep, pclmp, cleNGSmp)			\
+if(parms->evl.split){/*for split tomography */	\
+	dmat*  pcleNGSmp=P(cleNGSmp,ievl);				\
 	/*compute the dot product of wavefront with NGS mode for that direction */ \
 	if(nmod==3){							\
 	    ngsmod_dot(PCOL(pclep,isim),PCOL(pclmp,isim), PCOL(pcleNGSmp,isim), \
@@ -137,13 +137,13 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 			    parms,recon->ngsmod,aper, P(iopdevl),ievl);	\
 	    loc_calc_mod(PCOL(pclep,isim),PCOL(pclmp,isim), aper->mod,P(aper->amp),P(iopdevl)); \
 	}								\
-    }else{/*for integrated tomography. */				\
+}else{/*for integrated tomography. */				\
 	if(nmod==3){							\
 	    loc_calc_ptt(PCOL(pclep,isim),PCOL(pclmp,isim), aper->locs, aper->ipcc, aper->imcc, P(aper->amp), P(iopdevl)); \
 	}else{								\
 	    loc_calc_mod(PCOL(pclep,isim),PCOL(pclmp,isim), aper->mod,P(aper->amp),P(iopdevl));	\
 	}								\
-    }									\
+}									\
 
 /**
    Performance evaluation for each direction in parallel mode.  */
@@ -415,16 +415,9 @@ static void perfevl_mean(sim_t* simu){
 	}
 
 
-	if(parms->recon.split){
-	/* convert cleNGSm into mode and put NGS mode WVE into clem. */
+	if(parms->evl.split){
+		/* convert cleNGSm into mode and put NGS mode WVE into clem. */
 		int nngsmod=recon->ngsmod->nmod;
-		//Record NGS mode correction time history
-		if(simu->corrNGSm&&P(simu->Mint_lo->mint,0)&&isim<parms->sim.end-1){
-			real* pcorrNGSm=PCOL(simu->corrNGSm,isim+1);
-			for(int imod=0; imod<nngsmod; imod++){
-				pcorrNGSm[imod]=P(P(P(simu->Mint_lo->mintc,0),0),imod);
-			}
-		}
 		//Compute dot product of NGS mode with OPD
 		real pcleNGSdot[nngsmod];
 		memset(pcleNGSdot, 0, sizeof(real)*nngsmod);
@@ -454,18 +447,20 @@ static void perfevl_mean(sim_t* simu){
 		dmulvec(pcleNGSm, recon->ngsmod->IMCC, pcleNGSdot, 1);
 		real* poleNGSm=PCOL(simu->oleNGSm, isim);
 		dmulvec(poleNGSm, recon->ngsmod->IMCC, poleNGSdot, 1);
-		if(simu->parms->tomo.ahst_idealngs==1){
-			//Magically remove NGS modes
-			tt=0;
-			ngs=0;
-			focus=0;
-		} else if(simu->parms->tomo.ahst_idealngs==2){
-			//Simulate close loop correction using ideal NGS mod.
-			simu->Merr_lo=simu->Merr_lo_store;
-			memcpy(P(P(simu->Merr_lo,0)), pcleNGSm, nngsmod*sizeof(real));
-			//Add current low order command to form PSOL measurement for skyc.
-			for(int imod=0; imod<nngsmod; imod++){
-				pcleNGSm[imod]+=P(P(P(simu->Mint_lo->mintc,0),0),imod);
+		if(parms->recon.split){
+			if(simu->parms->tomo.ahst_idealngs==1){
+				//Magically remove NGS modes
+				tt=0;
+				ngs=0;
+				focus=0;
+			} else if(simu->parms->tomo.ahst_idealngs==2){
+				//Simulate close loop correction using ideal NGS mod.
+				simu->Merr_lo=simu->Merr_lo_store;
+				memcpy(P(P(simu->Merr_lo,0)), pcleNGSm, nngsmod*sizeof(real));
+				//Add current low order command to form PSOL measurement for skyc.
+				for(int imod=0; imod<nngsmod; imod++){
+					pcleNGSm[imod]+=P(P(P(simu->Mint_lo->mintc,0),0),imod);
+				}
 			}
 		}
 		//Record NGS mode RMS error time history
@@ -546,8 +541,8 @@ static void perfevl_mean(sim_t* simu){
 #endif
 		}/*ideal ngs */
 	} else{/*if not split */
-		simu->status->clerrhi=sqrt(P(simu->cle,0,isim)*1e18);
-		simu->status->clerrlo=sqrt(P(simu->cle,1,isim)*1e18);
+		simu->status->clerrhi=sqrt(P(simu->cle,2,isim))*1e9;
+		simu->status->clerrlo=sqrt(P(simu->cle,1,isim))*1e9;
 	}/*if split */
 
 	if(parms->sim.noatm==0){
@@ -694,7 +689,7 @@ static void perfevl_save(sim_t* simu){
    \todo Write a standalone routine that can plot results, using techniques
    developped in drawdaemon.  */
 void* perfevl(sim_t* simu){
-	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
+	real tk_start=PARALLEL==1?simu->tk_istart:myclockd();
 	const parms_t* parms=simu->parms;
 	if(!parms->gpu.evl&&parms->evl.nevl>1){ //Cache the ground layer.
 		int ips=simu->perfevl_iground;

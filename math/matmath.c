@@ -1056,7 +1056,7 @@ X(mat)* X(linspace)(R min, R dx, long n){
 /**
    Check whether xin is linearly spaced
 */
-static int X(islinear)(const X(mat)* xin){
+static R X(islinear)(const X(mat)* xin){
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=(P(xin, 0));
@@ -1065,13 +1065,13 @@ static int X(islinear)(const X(mat)* xin){
 	if(fabs(xsep+xminl-P(xin, 1))>xsep*1.e-3){
 		return 0;
 	} else{
-		return 1;
+		return xsep;
 	}
 }
 /**
    Check whether xin is logrithmically spaced
 */
-static int X(islog)(const X(mat)* xin){
+static R X(islog)(const X(mat)* xin){
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=log10(P(xin, 0));
@@ -1081,7 +1081,7 @@ static int X(islog)(const X(mat)* xin){
 	if(isinf(xsep)||fabs(xsep+xminl-x1)>xsep*1.e-3){
 		return 0;
 	} else{
-		return 1;
+		return xsep;
 	}
 }
 /**

@@ -190,8 +190,15 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	char* config_path=find_config("skyc");
 	addpath(config_path);
 	free(config_path);
-	open_config(arg->conf);
-	open_config(arg->confcmd);
+	if(arg->conf){//specified by -c
+		open_config(arg->conf, 0);
+	}
+	if(arg->confcmd){//other options
+		open_config(arg->confcmd, 1);
+	}
+	if(!readcfg_peek("skyc.nsky")){
+		open_config("maos.conf", 0);//open default config
+	}
 	remove(arg->confcmd);
 	PARMS_S* parms=mycalloc(1, PARMS_S);
 	parms->skyc.nthread=arg->nthread;

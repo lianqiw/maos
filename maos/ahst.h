@@ -26,6 +26,7 @@ void ngsmod_setup(const parms_t *parms, recon_t *recon);
 void ngsmod_dot(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, const parms_t *parms, const ngsmod_t *ngsmod, const aper_t *aper, const real *opd, int ievl);
 int  ngsmod_dot_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff,  const ngsmod_t *ngsmod, const aper_t *aper,real thetax, real thetay);
 void ngsmod_free(ngsmod_t *ngsmod);
+void ngsmod_split(dcell **Merr, sim_t *simu, dcell *dmerr);
 void ngsmod_remove(sim_t *simu, dcell *dmerr);
 void ngsmod2science(dmat *iopd, const loc_t *loc, const ngsmod_t *ngsmod, real thetax, real thetay, const real *mod, real alpha);
 #endif

@@ -740,6 +740,9 @@ static void readcfg_wfs(parms_t *parms){
 	
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].astscale==0){
+			warning("powfs[%d].astscale=0 is ignored.\n", ipowfs);
+		}
 		if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
 			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;
 			parms->wfs[iwfs].thetay*=parms->powfs[ipowfs].astscale;
@@ -769,7 +772,7 @@ static void readcfg_wfs(parms_t *parms){
 		parms->wfs[iwfs].misregx*=parms->powfs[ipowfs].dsa;
 		parms->wfs[iwfs].misregy*=parms->powfs[ipowfs].dsa;
 		parms->wfs[iwfs].misregc*=M_PI/180;//convert degree to radian.
-		real rmax=sqrt(pow(parms->wfs[iwfs].misregx, 2)+pow(parms->wfs[iwfs].misregy,2));
+		real rmax=RSS(parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy);
 		if(parms->powfs[ipowfs].misregrmax<rmax){
 			parms->powfs[ipowfs].misregrmax=rmax;
 		}
@@ -1389,6 +1392,7 @@ static void readcfg_evl(parms_t *parms){
 	}
 	READ_INT(evl.tomo);
 	READ_INT(evl.moao);
+	READ_INT(evl.split);
 	/*it is never good to parallelize the evl ray tracing because it is already so fast */
 	parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
 }
@@ -1471,6 +1475,9 @@ static void readcfg_fit(parms_t *parms){
 			}
 		}
 		if(parms->dbg.dmfullfov>1){//Fit over the entire fov. Hurts performance.
+			if(!parms->sim.fov){
+				error("sim.fov is not specified\n");
+			}
 			int ndir=8;
 			int nfit2=parms->fit.nfit+ndir;
 			real rfov=parms->sim.fov*0.5;
@@ -1508,6 +1515,7 @@ static void readcfg_fit(parms_t *parms){
 	READ_INT(fit.bgs);
 	READ_INT(fit.precond);
 	READ_INT(fit.maxit);
+	READ_INT(fit.guard);
 	READ_INT(fit.square);
 	READ_INT(fit.assemble);
 	READ_INT(fit.pos);
@@ -1705,7 +1713,6 @@ static void readcfg_plot(parms_t *parms){
    Read in debugging parameters
 */
 static void readcfg_dbg(parms_t *parms){
-	READ_INT(dbg.wamethod);
 	READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0){ dfree(parms->dbg.atm); parms->dbg.atm=NULL; }
 	READ_INT(dbg.mvstlimit);
 	READ_INT(dbg.annular_W);
@@ -1945,11 +1952,6 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		if(parms->sim.fuseint){
 			info("Disabling sim.fuseint\n");
 			parms->sim.fuseint=0;
-		}
-		if(parms->tomo.ahst_wt==1){//gradient weighting not available.
-			/*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
-			dbg("When tomo.ahst_idealngs=1, ahst_wt need to be 3. Changed\n");
-			parms->tomo.ahst_wt=3;
 		}
 	}
 	if(NX(parms->dbg.tomo_maxit)){
@@ -2557,7 +2559,8 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			parms->atmr.hmax=P(parms->atmr.ht,ips);
 		}
 	}
-	if(parms->sim.closeloop){
+	if(parms->sim.closeloop && !parms->atm.frozenflow){
+		error("sim.closeloo=1 requires atm.frozenflow=1.\n");
 		parms->atm.frozenflow=1;
 	}
 
@@ -2870,10 +2873,15 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 	}
 	if(parms->recon.split){
-		if(!parms->nwfs||!parms->sim.closeloop || !parms->ndm || parms->evl.tomo){
+		if(!parms->nwfs||!parms->sim.closeloop || !parms->ndm || parms->evl.tomo||parms->sim.evlol){
 			parms->recon.split=0;
-			warning("Split tomography is not support or needed in current configuration. Changed.\n");
+			dbg("Split tomography is not support or needed in current configuration. Changed.\n");
 		}
+	}
+	if(parms->recon.split){
+		parms->evl.split=1;//force 1
+	}else if(parms->sim.evlol){
+		parms->evl.split=0;//force 0
 	}
 	if(parms->recon.glao&&parms->ndm!=1){
 		error("GLAO only works with 1 dm\n");
@@ -2928,8 +2936,19 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		if(parms->sim.skysim&&(parms->nhipowfs==0||parms->nlopowfs==0)){
 			error("There is only high or low order WFS. can not do skycoverage presimulation\n");
 		}
-		if(!parms->nlopowfs&&parms->tomo.ahst_wt==1){
-			dbg("When there is no lowfs. Change ahst_wt from 1 to 3\n");
+		if(parms->tomo.ahst_wt==1){
+			if(parms->tomo.ahst_idealngs||!parms->ntipowfs||P(parms->sim.eplo,0)<0.01){
+				dbg("Change tomo.ahst_wt from 1 to 3 when there is no NGS WFS control.\n");
+				parms->tomo.ahst_wt=3;
+			}
+		}
+		/*if(parms->ndm>2 && parms->tomo.ahst_wt!=4){
+			dbg("Change tomo.ahst_wt from %d to 4 when there are more than 2 DMs.\n", parms->tomo.ahst_wt);
+			parms->tomo.ahst_wt=4;
+		}*/
+	}else if(parms->evl.split){
+		if(parms->tomo.ahst_wt!=3){
+			dbg("Change tomo.ahst_wt from %d to 3 when there is no ahst control.\n", parms->tomo.ahst_wt);
 			parms->tomo.ahst_wt=3;
 		}
 	}
@@ -3026,7 +3045,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
 		warning("ahst split tomography does not have good NGS correction in open loop.\n");
 	}
-	if(parms->recon.split==2&&parms->sim.fuseint==1){
+	if(parms->recon.split==2&&parms->sim.fuseint){
 		warning("MVST Mode can only use separate integrator for the moment. Changed.\n");
 		parms->sim.fuseint=0;
 	}
@@ -3067,19 +3086,28 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 		/*Assign CG interations*/
 		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit==0){
-			int factor;
+			int maxit=4;//minimal 4 iterations is needed
 			if(parms->recon.mvm){
-				factor=parms->load.mvmi?1:25;//assembly mvm needs more steps
+				maxit*=parms->load.mvmi?1:25;//assembly mvm needs more steps
 			} else{
-				factor=parms->tomo.cgwarm?1:10;
+				maxit*=parms->tomo.cgwarm?1:10;
 			}
 			if(parms->tomo.precond==PCG_NONE){
-				factor*=10;//non-precond CG needs more steps
+				maxit*=10;//non-precond CG needs more steps
 			}
 			if(!parms->recon.split){
-				factor*=3;//integrated tomo needs more steps
+				maxit*=4;//integrated tomo needs more steps
 			}
-			parms->tomo.maxit=4*factor;
+			if(1){
+				//if meta pupil is much larger than the aperture, needs more iterations. 
+				//if atmr.dx is smaller than 0.5, also more iterations
+				real ratio=pow(1+parms->sim.fov*parms->atm.hmax/parms->aper.d,2);//meta pupil diameter
+				if(parms->atmr.dx<0.5){
+					ratio*=0.5/parms->atmr.dx;
+				}
+				maxit=ceil(maxit*ratio);
+			}
+			parms->tomo.maxit=maxit;
 			if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
 				warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 				parms->tomo.splitlrt=0;
@@ -3456,9 +3484,13 @@ static void print_parms(const parms_t *parms){
 	info2("There are %d wfs\n",parms->nwfs);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
-		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) arcsec, %3.0f km, siglev is %g",
-			i,parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
-			parms->wfs[i].thetay*RAD2AS,parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
+		const real rho=RSS(parms->wfs[i].thetax, parms->wfs[i].thetay)*RAD2AS;
+		real th=rho==0?0:atan2(parms->wfs[i].thetay, parms->wfs[i].thetax)*180/M_PI;
+		//if(th<0) th+=360;
+		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) (%5.1f, %4.0f°) arcsec, %3.0f km, siglev is %7.1f", i,
+			parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
+			parms->wfs[i].thetay*RAD2AS, rho, th, 
+			parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)",parms->wfs[i].sigsim);
 		}
@@ -3592,7 +3624,6 @@ static void print_parms(const parms_t *parms){
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
 parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
-	info("Main config file is %s\n", mainconf);
 	char *config_path=find_config("maos");
 	/*Setup PATH and result directory so that the config_path is in the back of path */
 	if(!config_path||!exist(config_path)){
@@ -3605,8 +3636,23 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 		addpath2(0, "%s/%s", config_path, "examples");
 		free(config_path); config_path=NULL;
 	}
-	open_config(mainconf);/*main .conf file. */
-	open_config(extraconf);/*overriding .conf or lines*/
+	if(mainconf){
+		open_config(mainconf, 0);/*user supplied main .conf file. */
+	}
+	if(extraconf && strlen(extraconf)){
+		open_config(extraconf, 1);/*overriding .conf or lines*/
+	}
+	if(!mainconf && //sanity check for completeness.
+		(!readcfg_peek("sim.skysim")||!readcfg_peek("save.evlopd")||
+			!readcfg_peek("atm.r0z")||!readcfg_peek("recon.psdnseg"))){
+		mainconf=getenv("MAOS_DEFAULT");
+		if(!mainconf){
+			mainconf="default.conf";
+		}
+		if(mainconf){
+			open_config(mainconf, 0);/*defailt main .conf file. */
+		}
+	}
 	parms_t *parms=mycalloc(1,parms_t);
 	/*
 		Conversion of input (e.g., in units) should be done in readcfg_* not in postproc_* as the values might be used early on.

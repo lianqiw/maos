@@ -40,6 +40,7 @@ typedef struct SERVO_CALC_T{
 	real a;
 	real T;
 	int type;
+	int keepnu;
 }SERVO_CALC_T;
 
 /*Compute phase between -2pi, and 0*/
@@ -154,29 +155,36 @@ static real gain_at_phase(real* fcross, /**<[out] Cross over frequency*/
 static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long dtrat, real al){
 	real Ts=dt*dtrat;
 	st->fny=0.5/Ts;
-	st->type=1;
-	real nu0=-3;
-	if(psdin){
-		nu0=log10(P(psdin, 0, 0)==0?P(psdin, 1, 0):P(psdin, 0, 0));
-	}
-	dmat *nu=st->nu=dlogspace(nu0, log10(0.5/dt), 1000);//must interpolate to log space. servo_calc_do depends on it.
-	if(psdin){
-		if(NY(psdin)!=2){
-			error("psdin should have two columns\n");
+	st->type=1;//integrator
+	if(st->keepnu && psdin){
+		st->nu=drefcols(psdin, 0, 1);
+		st->psd=drefcols(psdin, 1, 1);
+	}else{
+		real nu0=-3;
+		if(psdin){
+			nu0=log10(P(psdin, 0, 0)==0?P(psdin, 1, 0):P(psdin, 0, 0));
 		}
-		st->psd=dinterp1(psdin, 0, nu, NAN);
+		st->nu=dlogspace(nu0, log10(0.5/dt), 1000);//must interpolate to log space. servo_calc_do depends on it.
+		if(psdin){
+			if(NY(psdin)!=2){
+				error("psdin should have two columns\n");
+			}
+			st->psd=dinterp1(psdin, 0, st->nu, NAN);
+		}
+	}
+	if(psdin){
 		st->var_sig=psd_inte2(psdin);
 	}
 	comp pi2i=COMPLEX(0, TWOPI);
 	if(st->Hsys||st->Hwfs||st->Hint||st->s){
 		error("Already initialized\n");
 	}
-	st->Hsys=cnew(NX(nu), 1);
-	st->Hwfs=cnew(NX(nu), 1);
-	st->Hint=cnew(NX(nu), 1);
-	st->s=cnew(NX(nu), 1);
-	for(long i=0; i<NX(nu); i++){
-		comp s=P(st->s,i)=pi2i*P(nu,i);
+	st->Hsys=cnew(NX(st->nu), 1);
+	st->Hwfs=cnew(NX(st->nu), 1);
+	st->Hint=cnew(NX(st->nu), 1);
+	st->s=cnew(NX(st->nu), 1);
+	for(long i=0; i<NX(st->nu); i++){
+		comp s=P(st->s, i)=pi2i*P(st->nu, i);
 		comp zInv=cexp(-s*Ts);
 		comp Hint=P(st->Hint,i)=1./(1-zInv);
 		comp Hwfs, Hdac;
@@ -190,6 +198,10 @@ static void servo_calc_init(SERVO_CALC_T* st, const dmat* psdin, real dt, long d
 		comp Hlag=cexp(-s*dt*(1+al));/*lag due to readout/computation*/
 		comp Hmir=1;/*DM */
 		P(st->Hsys,i)=Hwfs*Hlag*Hdac*Hmir*Hint;
+	}
+	if(!P(st->nu,0)){
+		P(st->Hsys,0)=P(st->Hsys,1);
+		P(st->s,0)=P(st->s,1);
 	}
 }
 /**
@@ -435,7 +447,10 @@ real servo_optim_margin(real dt, long dtrat, real al, real pmargin, real f0, rea
    Only implemented for integrator.
  */
 dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, real sigma2n){
-	SERVO_CALC_T st; memset(&st, 0, sizeof(st));
+	if(fabs(gain)<1e-15){
+		return ddup(psdcl);
+	}
+	SERVO_CALC_T st=(SERVO_CALC_T){.keepnu=1}; //avoid interpolation
 	servo_calc_init(&st, psdcl, dt, dtrat, al);
 	const dmat* nu=st.nu;
 	const dmat* psd=st.psd;

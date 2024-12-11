@@ -366,9 +366,12 @@ gboolean update_title(gpointer data){
 	char tit[40];
 	if(hid<nhost){
 		char *dot=strchr(hosts[hid], '.'); 
-		size_t offset=dot?(size_t)(dot-hosts[hid]):strlen(hosts[hid]);
-		memcpy(tit, hosts[hid], offset);
-		snprintf(tit+offset, 40-offset, " (%d/%d)", npending, nproc);
+		size_t len=dot?(size_t)(dot-hosts[hid]):strlen(hosts[hid]);
+		memcpy(tit, hosts[hid], len);
+		tit[len]=0;
+		if(nproc>0){
+			snprintf(tit+len, 40-len, " (%d/%d)", npending, nproc);
+		}
 	} else{
 		snprintf(tit, 40, "All");
 		gtk_label_set_attributes(GTK_LABEL(titles[hid]), pango_active);

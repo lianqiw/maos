@@ -21,7 +21,6 @@
 #include "common.h"
 #include "sim_utils.h"
 #include "maos.h"
-#include "version.h"
 
 //PRINT_MACRO(USE_CUDA)
 /**
@@ -325,41 +324,7 @@ static void* maos_listener(void* psock){
 	}
 	return NULL;
 }
-void maos_version(void){
-	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-	char exe[PATH_MAX];
-	if(!get_job_progname(exe, PATH_MAX, 0)){
-		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
-	}else{
-		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
-	}
-#ifdef __OPTIMIZE__
-#define OPT_STR "+O3"
-#else
-#define OPT_STR "+O0"
-#endif
-#if CPU_SINGLE
-#define CPU_FP "F32"
-#else
-#define CPU_FP "F64"
-#endif
-	info2(" CPU(" CPU_FP "," OPT_STR ")");
-#if USE_CUDA
-#if CUDA_DOUBLE
-#define GPU_FP "F64"
-#else
-#define GPU_FP "F32"
-#endif
-	info2(" with CUDA(v%d," GPU_FP ")\n", USE_CUDA);
-#else
-	info2(" w/o CUDA\n");
-#endif
-	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
-#if HAS_LWS
-	extern uint16_t PORT;
-	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
-#endif
-}
+
 
 /**
    This is the standard entrance routine to the program.  It first calls
@@ -412,8 +377,13 @@ int main(int argc, const char* argv[]){
 	int ngpu;
 #if USE_CUDA
 	ngpu=arg->ngpu;
-	if(!ngpu) ngpu=0xFFFFFF;
-	else if(ngpu<0) ngpu=0;
+	if(!ngpu) ngpu=0xFFFFFF;//default is use as many GPU as possible.
+	else if(ngpu<0) ngpu=0;//no gpu is used.
+	else for(int ig=0; ig<ngpu; ig++){
+		if(arg->gpus[ig]<0){
+			ngpu=0;break;//gpu is disabled.
+		}
+	}
 #else
 	ngpu=0;
 #endif
@@ -422,7 +392,7 @@ int main(int argc, const char* argv[]){
 	}
 	info2("%s\n", arg->execmd);
 	if(arg->dirout) info2("Output folder is '%s'.\n", arg->dirout);
-	maos_version();
+	print_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
 	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
 

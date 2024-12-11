@@ -73,3 +73,16 @@ GtkWidget* new_toolbar_item(GtkWidget *toolbar, GtkWidget *item, int toggle, con
 #endif
 	return item;
 }
+GtkWidget *new_spin_button(const char *label, double value, double min, double max, double step, void(*func)(GtkWidget *, gpointer data), gpointer data){
+	GtkWidget *spin=gtk_spin_button_new_with_range(min, max, step);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), value);
+	g_signal_connect(spin, "value-changed", G_CALLBACK(func), data);
+	if(label){
+		GtkWidget *lbl=gtk_label_new(label);
+		GtkWidget *hbox=gtk_hbox_new(FALSE, 0);
+		box_append(GTK_BOX(hbox), lbl, FALSE, FALSE, 0);
+		box_append(GTK_BOX(hbox), spin, TRUE, TRUE, 0);
+		spin=hbox;
+	}
+	return spin;
+}

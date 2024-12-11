@@ -258,6 +258,48 @@ real psd_inte2(const dmat* psdin){
 	return psd_inte(nu, psd, n);
 }
 /**
+ * @brief Reverse cumulative sum of PSD
+ *
+ * @param psdin 	the input PSD
+ * @return dmat* 	sqrt of the reverse integration of PSD
+ */
+dmat *psd_reverse_cumu(const dmat *psdin, real scale){
+	int nx=NX(psdin);
+	dmat *cumu=dnew(NX(psdin), NY(psdin));
+	const real *nu=P(psdin);
+	real dlogf=(log(nu[nx-1])-log(nu[0]))/(nx-1);	
+	if((log(nu[1])-log(nu[0])-dlogf)<dlogf*1.e-4){//log spacing
+		info("log spacing\n");
+		for(int iy=1; iy<NY(psdin); iy++){
+			int ix=nx-1;
+			P(cumu, ix, iy)=P(psdin, ix, iy)*P(psdin, ix, 0)*dlogf;
+			for(ix=nx-2; ix>-1; ix--){
+				P(cumu, ix, iy)=P(cumu, ix+1, iy)+P(psdin, ix, iy)*P(psdin, ix, 0)*dlogf;
+			}
+		}
+	} else{
+		for(int iy=1; iy<NY(psdin); iy++){
+			int ix=nx-1;
+			P(cumu, ix, iy)=P(psdin, ix, iy)*(P(psdin, ix, 0)-P(psdin, ix-1, 0));
+			for(ix=nx-2; ix>-1; ix--){
+				P(cumu, ix, iy)=P(cumu, ix+1, iy)+P(psdin, ix, iy)*(P(psdin, ix+1, 0)-P(psdin, ix, 0));
+			}
+		}
+	}
+	for(int iy=1; iy<NY(psdin); iy++){
+		for(int ix=0; ix<NX(cumu); ix++){
+			P(cumu, ix, iy)=sqrt(P(cumu, ix, iy))*scale;
+		}
+	}
+	for(int ix=0; ix<NX(cumu); ix++){
+		P(cumu, ix, 0)=P(psdin, ix, 0);
+	}
+	//real inte=psd_inte2(psdin);
+	//info("psd integral is %g, cum[0] is %g\n", sqrt(inte)*1e9, P(cumu, 0, 1));
+	return cumu;
+}
+
+/**
  * Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input.
  * */
 dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstepin){
@@ -373,17 +415,35 @@ void add_psd2(dmat** pout, const dmat* in, real scale){
 	}
 }
 /**
-   Sum all the columns of PSDs (excluding first column), scaled by scale
+ * @brief Choose a mode from the PSD. The first column is frequency.
+ * @param psd	the input PSD
+ * @param im	index of the first mode. -1: sum all modes. 0 to ny(psd)-1.
+ * @param nm	number of modes.
+ * @param scale scaling fctor
 */
-void psd_sum(dmat* psd, real scale){
-	for(int ix=0; ix<NX(psd); ix++){
-		real tmp=0;
-		for(int iy=1; iy<NY(psd); iy++){
-			tmp+=P(psd, ix, iy);
+dmat* psd_select(const dmat* psd, int im, int nm, int keepdc, real scale){
+	int skip=(keepdc||P(psd,0)>0)?0:1;
+	dmat *psd2=dnew(psd->nx-skip, 2);
+	int jm=0;
+	if(im<0){//all modes
+		im=1;
+		jm=NY(psd);
+	}else{
+		im++;
+		if(nm<=0){
+			nm=1;
 		}
-		P(psd, ix, 1)=tmp*scale;
+		jm=MIN(im+nm, NY(psd));
 	}
-	dresize(psd, NX(psd), 2);
+	for(int ix=0; ix<NX(psd2); ix++){
+		real tmp=0;
+		for(int iy=im; iy<jm; iy++){
+			tmp+=P(psd, ix+skip, iy);
+		}
+		P(psd2, ix, 0)=P(psd, ix+skip, 0);
+		P(psd2, ix, 1)=tmp*scale;
+	}
+	return psd2;
 }
 /*
 	from a 2-d screen, compute 1-d PSD by radially averaging the 2-D psd assuming isotropy. 

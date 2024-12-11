@@ -147,7 +147,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	const int iwfs=info->start;
 	const parms_t* parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	//if(isim<parms->powfs[ipowfs].step) return;
+	if(isim<parms->powfs[ipowfs].step) return NULL;
 	assert(iwfs<parms->nwfs);
 	/*
 	  simu->gradcl is CL grad output (also for warm-restart of maxapriori
@@ -884,13 +884,13 @@ void* wfsgrad_post(thread_t* info){
 	//Postprocessing gradients
 	const int isim=simu->wfsisim;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		if(isim<parms->powfs[ipowfs].step) continue;
 #if USE_CUDA
 		if(parms->gpu.wfs){
 			gpu_wfsgrad_sync(simu, iwfs);
 		}
 #endif
-		const int ipowfs=parms->wfs[iwfs].powfs;
-		if(isim<parms->powfs[ipowfs].step) continue;
 		const int do_phy=simu->wfsflags[ipowfs].do_phy;
 		dmat* gradcl=P(simu->gradcl, iwfs);
 		/* copy fsmreal to output  */
@@ -1527,7 +1527,7 @@ void wfsgrad_petal_recon(sim_t *simu){
    It also includes operations on Gradients before tomography.
 */
 void* wfsgrad(sim_t* simu){
-	real tk_start=PARALLEL==1?simu->tk_0:myclockd();
+	real tk_start=PARALLEL==1?simu->tk_istart:myclockd();
 	const parms_t* parms=simu->parms;
 	if(parms->nwfs==0) return NULL;
 	// call the task in parallel and wait for them to finish. It may be done in CPU or GPU.

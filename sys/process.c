@@ -54,6 +54,7 @@ char* DIRLOCK=NULL;//Directory for caching files that are expensive to compute.
 char* DIREXE=NULL;/*absolute path of the exe.*/
 char* EXENAME=NULL;/*name of the exe.*/
 char* DIRSTART=NULL;//Start up directory. HOME is replaced by ~
+char *DIROUT=NULL;//The result directory (set by maos)
 /**
    Set the HOME, TEMP, USER names.
 */
@@ -123,10 +124,6 @@ void init_process(void){
 	mymkdir("%s", DIRLOCK);
 
 	DIRSTART=mygetcwd();
-	if(!mystrcmp(DIRSTART, HOME)){
-		DIRSTART[0]='~';
-		memmove(DIRSTART+1, DIRSTART+strlen(HOME), strlen(DIRSTART)-strlen(HOME)+1);
-	}
 	{/*PATH to executable*/
 		char exepath[PATH_MAX];
 		if(!get_job_progname(exepath, PATH_MAX, 0)){
@@ -142,7 +139,10 @@ void init_process(void){
 			}
 		}
 	}
-
+	if(!mystrcmp(DIRSTART, HOME)){
+		DIRSTART[0]='~';
+		memmove(DIRSTART+1, DIRSTART+strlen(HOME), strlen(DIRSTART)-strlen(HOME)+1);
+	}
 	NCPU=get_ncpu();
 	MAXTHREAD=(int)sysconf(_SC_NPROCESSORS_ONLN);
 #if _OPENMP
@@ -169,6 +169,14 @@ void init_process(void){
 #endif
 	PID=(int)getpid();
 }
+void set_dirout(const char *dir){
+	if(DIROUT) free(DIROUT);
+	DIROUT=myabspath(dir);
+	if(!mystrcmp(DIROUT, HOME)){
+		DIROUT[0]='~';
+		memmove(DIROUT+1, DIROUT+strlen(HOME), strlen(DIROUT)-strlen(HOME)+1);
+	}
+}
 /**
  * free memory
  * */
@@ -180,6 +188,7 @@ void free_process(){
 	free(DIRLOCK); DIRLOCK=NULL;
 	free(DIREXE); DIREXE=NULL;
 	free(DIRSTART); DIRSTART=NULL;
+	free(DIROUT); DIROUT=NULL;
 	free(HOST); HOST=NULL;
 }
 /**

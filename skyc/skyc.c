@@ -23,44 +23,11 @@
 #include "parms.h"
 #include "utils.h"
 #include "skysim.h"
-#include "version.h"
+
 /**
    \file skyc.c This file contains main routine about skycoverage.*/
 char* dirstart;
 
-void skyc_version(void){
-	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
-	char exe[PATH_MAX];
-	if(!get_job_progname(exe, PATH_MAX, 0)){
-		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
-	} else{
-		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
-	}
-#if CPU_SINGLE 
-	info2(" CPU(single)");
-#else
-	info2(" CPU(double)");
-#endif
-#if USE_CUDA
-#if CUDA_DOUBLE
-	info2(" +CUDA(real)");
-#else
-	info2(" +CUDA(single)");
-#endif
-#else
-	info2(" -CUDA");
-#endif
-#ifdef __OPTIMIZE__
-	info2(" +optimization.\n");
-#else
-	info2(" -optimization\n");
-#endif
-	info2("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
-#if HAS_LWS
-	extern uint16_t PORT;
-	info2("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
-#endif
-}
 /**
    The main(). It parses the command line, setup the parms, ask the scheduler
    for signal to proceed, and then starts skysim to do sky coverage.
@@ -77,7 +44,7 @@ int main(int argc, const char* argv[]){
 	}
 	info("%s\n", scmd);
 	info("Output folder is '%s'. %d threads\n", arg->dirout, arg->nthread);
-	skyc_version();
+	print_version();
 	/*register signal handler */
 	register_signal_handler(skyc_signal_handler);
 	/*
@@ -97,7 +64,8 @@ int main(int argc, const char* argv[]){
 		info("Simulation started at %s in %s.\n", myasctime(0), HOST);
 		THREAD_POOL_INIT(parms->skyc.nthread);
 		/*Loads the main software*/
-		OMPTASK_SINGLE skysim(parms);
+OMPTASK_SINGLE 
+		skysim(parms);
 	}
 	free(scmd);
 	free(arg->conf); 
@@ -107,7 +75,7 @@ int main(int argc, const char* argv[]){
 	free_parms(parms);parms=NULL;
 	free(dirsetup);
 	free(dirstart);
-	maos_final(0);
+	skyc_final(0);
 	scheduler_finish(signal_caught);
 	print_mem("End");
 	info("Simulation finished at %s in %s.\n", myasctime(0), HOST);

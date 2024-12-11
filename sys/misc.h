@@ -92,4 +92,7 @@ void parse_argopt(char *cmds, argopt_t *options);
 //int sem_lock(const char *key, int lock);
 void set_realtime(int icpu, int niceness);
 void free_strarr(char **str, int n);
+extern const int default_color_table[];
+#define default_color(i) default_color_table[i%11]
+void print_version(void);
 #endif

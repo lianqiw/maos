@@ -27,7 +27,7 @@
 */
 const double stroke_dot[2]={1,5};
 const double stroke_dash[2]={10,5};
-//const double stroke_solid[2]={10,0};
+const double stroke_solid[2]={10,0};
 
 int hide_xlabel=0;
 int hide_ylabel=0;
@@ -36,18 +36,6 @@ int hide_legend=0;
 int hide_colorbar=0;
 #define DRAW_NEW 1 //1: draw to a cache surface. speed up draging.
 
-int default_color_table[]={0x0000FF,
-			   0xFF0000,
-			   0x00FF00,
-			   0x009999,
-			   0x00FFFF,
-			   0x9900CC,
-			   0xFFCC00,
-			   0xFF00FF,
-			   0x000000,
-			   0x666666,
-};
-#define default_color(i) default_color_table[i%11]
 #define set_color(cr,color)				   \
     cairo_set_source_rgba(cr,				   \
 			  ((color>>16)&0xFF)/255.,	   \
@@ -188,7 +176,7 @@ void round_limit(float* xmin, float* xmax, int logscale){
 	//float oldmin=*xmin, oldmax=*xmax;
 	if(logscale){
 		if(*xmin<=0) *xmin=0.1;
-		if(*xmax<=0) *xmax=1;
+		if(*xmax<=0) *xmax=*xmin;
 		*xmin=log10(*xmin);
 		*xmax=log10(*xmax);
 	}
@@ -199,6 +187,7 @@ void round_limit(float* xmin, float* xmax, int logscale){
 		float tic1, dtic;
 		int ntic, order;
 		calc_tic(&tic1, &dtic, &ntic, &order, *xmax, *xmin, 12, logscale);
+		//info("xmin0=%g, xmax0=%g, tic1=%g, dtic=%g, ntic=%d\n", *xmin, *xmax, tic1, dtic, ntic);
 		float xmin0=tic1*pow(10, order);
 		float xmax0=(tic1+dtic*(ntic-1))*pow(10, order);
 #if 1
@@ -301,8 +290,8 @@ void update_zoom(drawdata_t* drawdata){
 	connectpts=(stylein&0x8)>>3;			\
 	color=(stylein&0xFFFFFF00)>>8;			\
 	sym_size=round((stylein&0xF0)>>4);		\
-	if(style>5) style=0;					\
-	if(style==0) connectpts=1;				\
+	if(style==0||style==7) connectpts=1;	\
+	cairo_set_dash(cr, style==7?stroke_dash:stroke_solid, 2, 0);\
 }
 
 static inline void
@@ -359,7 +348,7 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx,
 		cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
 		break;
 	default:
-		warning("Invalid style\n");
+		break;//treat as 0
 	}
 }
 /**
@@ -473,6 +462,12 @@ static void update_limit(drawdata_t *drawdata){
 	drawdata->update_limit=0;
 	//dbg_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, limit_changed);
 }
+/*static double get_scale(cairo_t* cr){
+	cairo_surface_t *sur=cairo_get_target(cr);
+	double xs, ys;
+	cairo_surface_get_device_scale(sur, &xs, &ys);
+	return (xs+ys)*0.5;
+}*/
 /**
    The master routine that draws in the cairo surface.
 
@@ -535,14 +530,11 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 			drawdata->zlim_changed=1;
 		}
 	}else{
-		if(drawdata->cumulast!=drawdata->cumu){
+		if(drawdata->cumulast!=drawdata->cumu
+			||(drawdata->cumu&&(drawdata->icumu!=drawdata->icumulast||drawdata->cumuquadlast!=drawdata->cumuquad))){
 			drawdata->drawn=0;
 			drawdata->update_limit=1;
-		}else if(drawdata->cumu){
-			if(drawdata->icumu!=drawdata->icumulast||drawdata->cumuquadlast!=drawdata->cumuquad){
-				drawdata->drawn=0;
-				drawdata->update_limit=1;
-			}
+			drawdata->update_zoom=2;//reset zoom
 		}
 		if(drawdata->update_limit){
 			update_limit(drawdata);
@@ -594,12 +586,12 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	
 	const float linewidth=MAX(1, round(font_size*0.08));
 	const float ticlength=(drawdata->ticinside?-1:1)*font_size*0.5;
-		const float W_CB=25;//width of colorbar
+	const float W_CB=25;//width of colorbar
 	const float S_CB=15;//separation between image and colorbar
 	const float W_CBL=font_size*3;//width of colorbar label
 	const float S_CBL=font_size*0.1; //separation between colorbar tic and text
 	const float H_LBL=font_size*1.3; //height of xlabel, ylabel or title
-	const float S_LBL=font_size*0.25; //separation at the top and bottom of label
+	const float S_LBL=font_size*0.4; //separation at the top and bottom of label
 	const float S_TIC=MAX(ticlength, 0)+S_LBL;
 	const float SP_XL=hide_ylabel?S_LBL:(S_LBL+H_LBL+S_LBL+H_LBL+S_TIC);
 	const float SP_YB=hide_xlabel?S_LBL:(S_LBL+H_LBL+S_LBL+H_LBL+S_TIC);
@@ -1012,7 +1004,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				float ix=0, iy=0, y=0, y_cumu=0;
 				for(int ilayer=0; ilayer<nlayer; ilayer++){
 					int cumu=drawdata->cumu&&(!drawdata->cumuover || ilayer==1);
-					if(drawdata->cumuover && ilayer==1){
+					if((drawdata->cumuover && ilayer==1)||style==7){
 						cairo_set_dash(cr, stroke_dash, 2, 0);
 					}
 					int ips=cumu?icumu:0;
@@ -1194,6 +1186,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 		float symlen=0;/*length of legend symbol */
 		int npts_valid=0;
 		/*first figure out the size required of longest legend entry. */
+		cairo_save(cr);
 		for(int ipts=0; ipts<npts; ipts++){
 			if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 			float legwidth, legheight;
@@ -1209,6 +1202,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 				tall=MAX(tall, sym_size*2);
 			}
 		}
+		cairo_restore(cr);
 		if(textlen){//legend is available
 			const float legmarin=3;/*margin inside of box */
 			const float legmarout=5;/*margin outside of box */

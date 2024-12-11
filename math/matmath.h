@@ -111,8 +111,7 @@
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv2)(const X(cell) *A, const_anyarray W, R thres);		\
-    X(cell)* X(cellpinv)(const X(cell) *A, const X(spcell) *W);		\
+    X(cell)* X(cellpinv)(const X(cell) *A, const_anyarray W, R thres);		\
     void X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\

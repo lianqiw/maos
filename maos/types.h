@@ -153,8 +153,10 @@ typedef struct ngsmod_t{
     dmat *MCCu;     /**<MCCu'*MCCu=MCC*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
     dccell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
-    dcell *Pngs;   /**<Reconstruct DM command to NGS modes with weighting specified by tomo.ahst_wt*/
+    dcell *Pngs;    /**<Reconstruct DM command to NGS modes with weighting specified by tomo.ahst_wt*/
     dcell *Modes;   /**<DM vector for the modes*/
+	dcell *Pngs2;   /**<Reconstruct DM command to Modes2*/
+	dcell *Modes2;   /**<DM vector for the modes (only for Pngs)*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     lmat *modvalid; /**<Flag of valid modes that has multi-rate control*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
@@ -665,7 +667,11 @@ typedef struct sim_t{
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
     dcell *dm_evl;   /**<moao DM command computed for science field*/
     //Timing
-    real tk_0;       /**<Start time of each isim*/
+	real tk_s0;		/**<first seed simulation start time.*/
+	real tk_si;		/**<current seed simulation start time.*/
+    real tk_istart;  /**<Start time of each isim*/
+	real tk_iend;    /**<End time of each isim*/
+	real tk_i1;		/**<2nd step start time*/
     real tk_eval;    /**<time spent in perfevl in this step*/
     real tk_recon;   /**<time spent in reconstruct in this step*/
     real tk_cache;   /**<time spent in cachedm in this step*/
@@ -744,4 +750,5 @@ typedef struct global_t{
     int setupdone;
 }global_t;
 void wait_dmreal(sim_t*simu, int isim);
+void post_dmreal(sim_t *simu);
 #endif

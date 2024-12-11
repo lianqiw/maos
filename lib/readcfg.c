@@ -42,7 +42,7 @@ static char* default_config=NULL;
 typedef struct STORE_T{
 	char* key;    //Name of the entry
 	char* data;   //Value of the entry
-	int index;	  //Input order.
+	int index;	  //Input order. Records entered later has more priority.
 	int priority;//Priority of the entry. -1: a replacement entry. 0: default, larger: higher priority
 	int flag;    //-1: a replacement entry. 0: not used. 1: used once. Others: error happens.
 	int prefix;  //whether this is prefix'ed entry.
@@ -150,7 +150,7 @@ static void print_key(const void* key, VISIT which, int level){
 		}
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
-				if(PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
+				if(!store->priority||PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
 					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
@@ -205,15 +205,17 @@ void close_config(const char* format, ...){
    a hash table. A key has a priority or 0 or higher. A new key with same or
    higher priority can override previous entry. priority is 0 for default configurations. -1 indicates optional configuration file that fails silently.
  */
-void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
-	const char* prefix,    /**<[in]if not NULL, prefix the key with this.*/
-	int priority,    /**<[in]Priorities of keys.*/
-	const int index		   /**<[in]Only when prefix is set. Initial entry index. */
+static void open_config_full(
+	const char* config_in,	/**<[in]The .conf file to read*/
+	const char* prefix, 	/**<[in]if not NULL, prefix the key with this.*/
+	int priority,    	/**<[in]Priorities of keys.*/
+	const int index,		/**<[in]Only when prefix is set. Initial entry index. */
+	const unsigned int level/**<[in]Embedding level */
 ){
 	if(!config_in) return;
 	if(!changes_loaded){//on first call, load changes.conf
 		changes_loaded=1;
-		open_config_full("changes.conf", NULL, -1, 0);
+		open_config_full("changes.conf", NULL, -1, 0, 0);
 	}
 	FILE* fd=NULL;
 	char* config_file=NULL;
@@ -226,32 +228,57 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 				dbg("Cannot open file %s for reading.\n", config_in);
 			}else if(!prefix){
 				error("Cannot open file %s for reading.\n", config_in);
-			}else if(default_config){
+			}else{
 				warning("Cannot open file %s for reading. Ignored (prefix=%s)\n", config_in, prefix);
 			}
 		}
 		config_dir=mydirname(config_file);
-		if(priority!=-1 && !default_config){//used in close_config to reproduce the simulation
+		if(priority==0 && !default_config){//used in close_config to reproduce the simulation
 			default_config=strdup(config_file);//use full path to avoid recursive inclusion when maos_recent.conf is used as the initial file.
+			//dbg("set default_config=%s\n", default_config);
 			addpath2(-1, "%s", config_dir);
-			if(priority==1) priority=0;//default config has priority=0
+			//if(priority==1) priority=0;//default config has priority=0
 		}
 	} else{
+		priority++;//make direct entries higher priority
+		while(config_in[0]!=0 && (config_in[0]=='/' || isspace((int)*config_in))){
+			config_in++;//skip leading space.
+		}
+		if(config_in[0]==0) return;
 		config_file=strdup(config_in);
 		parse_argopt(config_file, NULL);
 		char* end;
 		//Remove trailing space
-		for(end=config_file+strlen(config_file); end>=config_file; end--){
-			if(isspace((int)*end)) *end='\0';
+		for(end=config_file+strlen(config_file)-1; end>=config_file; end--){
+			if(isspace((int)*end)||*end=='\n') *end='\0';
 			else break;
 		}
 		if(end<config_file){
-			warning("config %s is empty\n", config_in);
+			dbg("config %s is empty\n", config_in);
 			free(config_file);
 			return;
 		}
 	}
-
+	if(prefix){
+		info("%s loaded with prefix %s\n", config_file, prefix);
+	}else if(!strcmp(config_in, "changes.conf")){
+		dbg("Loaded change records from changes.conf\n");
+	}else{
+		info_once("Loaded configurations:\n");
+		if(level<5 && fd){
+			char indent[20]={0}; 
+			if(level>1){
+				memset(indent, ' ', (level-1)*4);
+			}
+			if(level>0){
+				indent[(level-1)*4]='|';
+				indent[(level-1)*4+1]='_';
+				indent[(level-1)*4+2]='_';
+				indent[(level-1)*4+3]='_';
+			}
+			info("%s%s\n", indent, config_file);
+		}
+	}
 	char* sline=NULL;
 	int countnew=0;
 	int countold=0;
@@ -296,6 +323,14 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 		char* eql=strchr(ssline, '=');
 		if(!eql){//no equal sign
 			if(strlen(ssline)>2 && ssline[0]=='_'&&ssline[1]=='_'){
+				/*if(!strcmp(ssline, "__reset__")){
+					if(nstore){
+						info("Erasing all records.\n");
+						erase_config();
+					}
+					countnew=0;
+					countold=0;
+				}*/
 				ssline[0]='\0';
 				continue;
 			}else if(!check_suffix(ssline, ".conf")){
@@ -357,7 +392,7 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 			char* embeded=strextract(value);
 			if(embeded){
 				if(strcmp(embeded, config_in)){
-					open_config_full(embeded, prefix, priority, index);
+					open_config_full(embeded, prefix, fd?priority:priority-1, index, fd?level+1:level);
 				}else{
 					warning("Recursive inclusion: %s includes %s. Ignored.\n", config_in, embeded);
 				}
@@ -444,8 +479,8 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 						if(oldstore->priority>priority || oldstore->index>store->index){//Entry with higher priority or entered layer prevails.
 							dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
 						} else{//Replace value if different.
-							if(priority>0){//Print if not default
-								info("Overriding %-20s\t%10s --> %s\n", store->key, oldstore->data, store->data);
+							if(priority>oldstore->priority){//Print if not default
+								dbg("Overriding %-20s\t%10s --> %s\n", store->key, oldstore->data, store->data);
 							}
 							free(oldstore->data);/*free old value */
 							oldstore->data=store->data; store->data=NULL;/*move pointer of new value. */
@@ -460,7 +495,7 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 					error("Error inserting to tree\n");
 				}
 				countnew++;
-				if(store->flag!=-1){
+				if(store->flag!=-1 && !store->prefix){
 					nstore++;
 				}
 				store=NULL;//consumed by the tree.
@@ -473,11 +508,13 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 		}
 		ssline[0]='\0';
 	}
+	/*
 	if(strcmp(config_in, "changes.conf")){
 		info("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
 	}else{
 		dbg("loaded %3d (%3d new) records from '%s'\n", countnew+countold, countnew, fd?config_file:"command line");
-	}
+	}*/
+	(void)countnew; (void)countold;
 	if(fd){
 		fclose(fd);
 	}
@@ -485,11 +522,11 @@ void open_config_full(const char* config_in, /**<[in]The .conf file to read*/
 	free(config_dir);
 #undef MAXLN
 }
-void open_config(const char *config_in){
-	open_config_full(config_in, NULL, 1, 0);
+void open_config(const char *config_in, int priority){
+	open_config_full(config_in, NULL, priority, 0, 0);
 }
 void open_config_prefix(const char *config_in, const char *prefix, const char *prekey){
-	open_config_full(config_in, prefix, readcfg_peek_priority("%s",prekey), readcfg_peek_index("%s",prekey));
+	open_config_full(config_in, prefix, readcfg_peek_priority("%s",prekey), readcfg_peek_index("%s",prekey), 0);
 }
 /**
    Get the record number of a key.

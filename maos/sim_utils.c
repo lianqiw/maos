@@ -34,6 +34,7 @@
    Contains a few support functions for simulation.
 */
 extern int disable_save;
+real tk_setup;   /**<Start time of setup */
 static mapcell* genatm_do(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const atm_cfg_t* atm=&parms->atm;
@@ -90,17 +91,13 @@ static mapcell* genatm_do(sim_t* simu){
 		int ny=NY(atm);
 		screens=mapcellnew(atm->nps, 1);
 		real dx=atm->dx;
-		int iratio=0;
-		if(NX(parms->dbg.atm)>=atm->nps){
-			iratio=1;
-		}
 		loc_t* psloc=0;
 		const real strength=sqrt(1.0299*pow(parms->aper.d/atm->r0, 5./3.))*(0.5e-6/(2*M_PI));//PR WFE.
 		for(int ips=0; ips<atm->nps; ips++){
 			P(screens, ips)=mapnew(nx, ny, dx, dx);
 			P(screens, ips)->h=P(atm->ht, ips);
 			if(!P(atm->wt, ips)) continue;
-			real dbgatm=P(parms->dbg.atm, ips*iratio);
+			real dbgatm=PR(parms->dbg.atm, ips);
 			if(dbgatm>0){//zernike mode
 				if(!psloc){
 					psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
@@ -435,16 +432,8 @@ void sim_update_etf(sim_t* simu){
 /**
  * Update flags
  * */
-void sim_update_flags(sim_t* simu, int isim){
+void update_wfsflags(sim_t* simu){
 	const parms_t* parms=simu->parms;
-	simu->wfsisim=isim;
-	simu->perfisim=isim;
-	simu->status->isim=isim;
-	if(!parms->sim.closeloop){
-		simu->reconisim=isim;
-	} else{//work on gradients from last time step for parallelization.
-		simu->reconisim=isim-1;
-	}
 	if(!simu->wfsflags){
 		simu->wfsflags=mycalloc(parms->npowfs, wfsflags_t);
 	}
@@ -520,9 +509,9 @@ static void init_simu_evl(sim_t* simu){
 	/*MMAP the main result file */
 	{
 		int ahst_nmod=0;
-		if(parms->recon.split){
+		if(parms->evl.split){
 			ahst_nmod=3;
-			if(simu->recon->ngsmod->indfocus) ahst_nmod++;
+			if(parms->nlgspowfs) ahst_nmod++;//focus
 		}
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
@@ -567,17 +556,17 @@ static void init_simu_evl(sim_t* simu){
 		simu->olep=dcellsub(simu->resp, 0, nevl, 2, 1);
 		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
 
-		if(parms->recon.split){
+		if(parms->evl.split){
 			simu->oleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSm_%d.bin", fnextra, seed);
 			simu->oleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
 			if(!parms->sim.evlol){
 				simu->clemp=dcellnewsame_file(nevl, 1, 3, nsim, keywords, "%s/Resclemp_%d.bin", fnextra, seed);
 				simu->cleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSm_%d.bin", fnextra, seed);
 				simu->cleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSmp_%d.bin", fnextra, seed);
-				if(parms->recon.split==1&&!parms->sim.fuseint){
-					simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescorrNGSm_%d.bin", fnextra, seed);
-				}
 			}
+		}
+		if(parms->recon.split==1&&!parms->sim.fuseint&&!parms->sim.evlol){
+			simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescorrNGSm_%d.bin", fnextra, seed);
 		}
 	}
 	if(parms->sim.skysim){
@@ -1262,11 +1251,11 @@ static void init_simu_dm(sim_t* simu){
 		warning_once("Preload integrator with NCPA\n");
 		dcelladd(&P(simu->dmint->mint, 0), 1, recon->dm_ncpa, 1);
 	}
-	if(parms->recon.split){
-		simu->Merr_lo_store=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
-		simu->Merr_lo2=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
+	if(parms->recon.split||parms->evl.split>1){
+		simu->Merr_lo_store=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
+		simu->Merr_lo2=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
 		if(parms->sim.closeloop){
-			simu->Mint_lo=servo_new(simu->Merr_lo_store,
+			simu->Mint_lo=servo_new(NULL,
 				parms->sim.aplo, parms->sim.allo, parms->sim.dt, parms->sim.eplo);
 		}
 	}
@@ -1296,7 +1285,7 @@ static void init_simu_dm(sim_t* simu){
 	if(parms->recon.psd){
 		simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, P(recon->Herr, 0)->nx,
 			parms->recon.psddtrat_hi);
-		if(parms->recon.split){
+		if(parms->recon.split||parms->evl.split){
 			simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
 		}
 	}
@@ -1305,7 +1294,7 @@ static void init_simu_dm(sim_t* simu){
 	if(parms->save.dm){
 		save->dmerr=zfarr_init(nrstep, 1, "dmerr_%d.bin", seed);
 		save->dmrecon=zfarr_init(nrstep, 1, "dmrecon_%d.bin", seed);
-		if(parms->recon.split){
+		if(parms->recon.split||parms->evl.split>1){
 			save->Merr_lo=zfarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
 			if(!parms->sim.fuseint){
 				save->Mint_lo=zfarr_init(nstep, 1, "Mint_lo_%d.bin", seed);
@@ -1657,7 +1646,7 @@ void free_simu(sim_t* simu){
 	dfree(simu->zoomavg);
 	lfree(simu->zoomavg_count);
 	dfree(simu->zoomint);
-	if(parms->recon.split){
+	if(parms->evl.split){
 		dcellfree(simu->clemp);
 		dfree(simu->cleNGSm);
 		dfree(simu->oleNGSm);
@@ -1772,7 +1761,25 @@ int compare_dbl2_ascend(const void *a, const void *b){
 */
 void print_progress(sim_t* simu){
 	const int isim=simu->perfisim;
+	const int iseed=simu->iseed;
 	const parms_t* parms=simu->parms;
+	const int simstart=parms->sim.start;
+	const int simend=parms->sim.end;
+	long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
+	long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
+	if(isim==simstart){//first step, rough estimate.
+		simu->status->mean=simu->tk_iend-simu->tk_istart;
+		simu->status->rest=simu->status->mean*parms->sim.nseed*(simend-simstart);
+	} else{
+		simu->status->rest=(long)((simu->tk_iend-simu->tk_s0-(simu->tk_i1-simu->tk_si)*(iseed+1))/steps_done*steps_rest
+			+(simu->tk_i1-simu->tk_si)*(parms->sim.nseed-iseed-1));
+		simu->status->mean=(simu->tk_iend-simu->tk_i1)/(real)(isim-simstart);
+	}
+	simu->status->laps=(long)(simu->tk_iend-tk_setup);//total elapsed time
+	simu->status->tot=simu->tk_iend-simu->tk_istart;//total step time
+
+
+
 	simu->status->wfs=simu->tk_wfs;
 	simu->status->recon=simu->tk_recon;
 	simu->status->other=simu->tk_cache;
@@ -1791,11 +1798,11 @@ void print_progress(sim_t* simu){
 		static real last_save_time=0;
 		const real gap=isim<10000?10:60;
 		if(this_time>last_save_time+gap){
-			writebin_async(simu->res, simu->perfisim+1);
+			writebin_async(simu->res, isim+1);
 			if(parms->save.extra){
-				writebin_async(simu->resp, simu->perfisim+1);
-				//writebin_async(simu->restwfs, simu->perfisim+1);//column is different
-				//writebin_async(simu->resdither, simu->perfisim+1);//column is different
+				writebin_async(simu->resp, isim+1);
+				//writebin_async(simu->restwfs, isim+1);//column is different
+				//writebin_async(simu->resdither, isim+1);//column is different
 				writebin_async(simu->save->fsmerrs, simu->wfsisim+1);
 				writebin_async(simu->save->fsmcmds, simu->wfsisim+1);
 				writebin_async(simu->save->ltpm_real, simu->wfsisim+1);
@@ -1809,7 +1816,13 @@ void print_progress(sim_t* simu){
 			last_save_time=this_time;
 		}
 	}
-	if(this_time>simu->last_report_time+1||isim+1==parms->sim.end){
+	static int nstep=1;
+	if(isim%nstep==0||isim+1==parms->sim.end){
+		int nstep2=ceil(1./simu->status->mean);
+		if(nstep2>5){
+			nstep2=round(nstep2*0.1)*10;
+		}
+		if(nstep2>nstep) nstep=nstep2;
 	/*we don't print out or report too frequently. */
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
@@ -1828,7 +1841,7 @@ void print_progress(sim_t* simu){
 			const char *hoa="On axis  PR TT  Field RMS PR TT ";
 			const char *hsp="Split     HIGH   TT    LOW ";
 			const char *htm="    Timing ";
-			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->recon.split)?hsp:"", LOG_LEVEL<2?htm:"");
+			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->evl.split)?hsp:"", LOG_LEVEL<2?htm:"");
 		}
 		info2("Step %5d: OL%7.1f %6.1f",
 			isim,
@@ -1841,7 +1854,7 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->cle, 0, isim))*1e9,
 				mysqrt(P(simu->cle, 1, isim))*1e9
 			);
-			if(parms->recon.split){
+			if(parms->evl.split){
 				info2(" Split %7.1f %6.1f %6.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
@@ -1873,7 +1886,7 @@ void print_progress(sim_t* simu){
 				legs[nline++]="Total";
 				legs[nline++]="High Order";
 				legs[nline++]="Tip/Tilt";
-				if(parms->recon.split){
+				if(parms->evl.split){
 					if(simu->recon->ngsmod->indps){
 						legs[nline++]="Plate Scale";
 					} else if(simu->recon->ngsmod->indastig){
@@ -1914,16 +1927,16 @@ void print_progress(sim_t* simu){
 				}
 				//dset(simu->plot_res->m, NAN);
 			}
-			if(simu->perfisim>20&&parms->evl.nevl>1&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
+			if(isim>20&&parms->evl.nevl>1&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
 				dcell *res=P(simu->plot_res, 2);
-				int istart=MAX(simu->perfisim-1000, 20);
+				int istart=MAX(isim-1000, 20);
 				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 					int jevl=(int)P(P(P(simu->plot_res,3), 0), ievl);
 					P(P(res,0), ievl, 1)=0;
-					for(int i=istart; i<simu->perfisim; i++){
+					for(int i=istart; i<isim; i++){
 						P(P(res,0), ievl, 1)+=P(P(simu->clep, jevl),0,i);
 					}
-					P(P(res, 0), ievl, 1)=sqrt(P(P(res, 0), ievl, 1)/(simu->perfisim-istart))*1e9;
+					P(P(res, 0), ievl, 1)=sqrt(P(P(res, 0), ievl, 1)/(isim-istart))*1e9;
 				}
 				//check directions of the same radius and average them.
 				for(int ievl=0; ievl<parms->evl.nevl-1; ievl++){
@@ -1956,14 +1969,14 @@ void print_progress(sim_t* simu){
 										"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
 			}
 			if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
-				for(;simu->plot_isim<=simu->perfisim;simu->plot_isim++){
+				for(;simu->plot_isim<=isim;simu->plot_isim++){
 					int i=simu->plot_isim;
 					for(int ic=0; ic<2; ic++){//0: CL. 1: OL
 						dmat * cle=ic==0?simu->cle:simu->ole;
 						dcell* res=P(simu->plot_res,ic);
 					
 						P(P(res, 0), i)=sqrt(P(cle, 0, i))*1e9;//PR
-						if(parms->recon.split && ic==0){
+						if(parms->evl.split && ic==0){
 							dmat *tmp=simu->clem;
 							P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
 							P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT

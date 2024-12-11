@@ -22,6 +22,6 @@
 #include "skyc.h"
 ARG_S *parse_args(int argc, const char *argv[]);
 void prep_result_folder(ARG_S *arg);
-void maos_final(int sig);
+void skyc_final(int sig);
 int skyc_signal_handler(int sig);
 #endif

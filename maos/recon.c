@@ -160,8 +160,7 @@ static void recon_split_lo(sim_t* simu){
 			}
 		}
 	}
-	if(anyRngs){
-	/*Low order WFS has output */
+	if(anyRngs){/*Low order WFS has output */
 		simu->Merr_lo=simu->Merr_lo_store;
 		dcellzero(simu->Merr_lo);
 
@@ -253,7 +252,69 @@ static void recon_split_lo(sim_t* simu){
 		}
 	}
 }
-
+/**
+ * @brief Combine separate 6 NGS modes to TT, PS, Focus
+ * 
+ * @param psdall 
+ * @return void* 
+ */
+dmat *combine_ngs_psd(const dmat *psdall){
+	int ncol=NY(psdall)-1;
+	if(ncol!=6 && ncol!=5){
+		return dref(psdall);
+	}
+	dmat *psd=dnew(NX(psdall), ncol==6?4:3);
+	for(int ix=0; ix<NX(psd); ix++){
+		P(psd, ix, 0)=P(psdall, ix, 0);
+		P(psd, ix, 1)=P(psdall, ix, 1)+P(psdall, ix, 2);//TT
+		P(psd, ix, 2)=P(psdall, ix, 3)+P(psdall, ix, 4)+P(psdall, ix, 5);//PS
+		if(ncol==6) P(psd, ix, 3)=P(psdall, ix, 6);//Focus
+	}
+	return psd;
+}
+/**
+ * Convert each PSD mode into open loop PSD and plot both the PSDs and reverse cumulative integral of psd open loop
+ */
+static void plot_psd(const dmat *psdall, double dt, int dtrat, 
+	double al, const dmat *ep, const char *label, const char*modes[], int doplot, zfarr *save_cl, zfarr *save_ol){
+	if(!ep || NX(ep)!=1){
+		error("Please implement\n");
+		return;
+	}
+	int nmod=NY(psdall)-1;
+	dcell *psds=dcellnew(2*nmod, 1);
+	dcell *cums=dcellnew(nmod, 1);//only integrate OL PSD to indicate residual with correction bandwidth
+	char **legs=mycalloc(nmod*2, char*);
+	int32_t *style=mycalloc(nmod*2, int32_t);
+	
+	for(int imod=0; imod<nmod; imod++){
+		dmat *psd=psd_select(psdall, imod, 1, 0, 1);
+		dmat *psdol=servo_cl2ol(psd, dt, dtrat, al, PR(ep, 0, imod), 0);
+		if(save_cl) zfarr_push(save_cl, -1, psd);
+		if(save_ol) zfarr_push(save_ol, -1, psdol);
+		P(psds, imod)=dref(psd);//dsub(psd,  1,-1,0,-1); 
+		P(psds, imod+nmod)=dref(psdol);//dsub(psdol, 1, -1, 0, -1);
+		P(cums, imod)=psd_reverse_cumu(psdol, 1e9);
+		dfree(psdol);
+		dfree(psd);
+		char temp[1024]; 
+		snprintf(temp, sizeof(temp), "Closed Loop %s", modes?modes[imod]:""); legs[imod]=strdup(temp);
+		snprintf(temp, sizeof(temp), "Open Loop %s", modes?modes[imod]:""); legs[imod+nmod]=strdup(temp);
+		style[imod]=default_color(imod)<<8;   //solid  line
+		style[imod+nmod]=default_color(imod)<<8|7; //dashed line
+	}
+	if(doplot){
+		draw("PSD", (plot_opts){.dc=psds, .xylog="yy", .legend=(const char *const *)legs, .always=1, .style=(nmod==1)?NULL:style }, "", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD %s", label);
+		draw("PSD", (plot_opts){.dc=cums, .xylog="yy", .legend=(const char *const *)(legs+nmod), .always=1, .style=(nmod==1)?NULL:style }, "", "Frequency (Hz)", "PSD Reverse Cumulative Integral (nm)", "Cumu %s", label);
+	}
+	dcellfree(psds);
+	dcellfree(cums);
+	for(int imod=0; imod<2*nmod; imod++){
+		free(legs[imod]);
+	}
+	free(legs);
+	free(style);
+}
 /**
  * Servo gain optimization.
   * */
@@ -273,43 +334,33 @@ void recon_servo_update(sim_t* simu){
 				dfree(out);
 			}
 		}
-
 		if(iframe+1==dtrat){//ready for output.
-			dmat* psd=0;
+			dmat* psdall=0;
 			real dthi=parms->sim.dt*parms->sim.dtrat_hi;
 			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 				dmat* tmp=dtrans(P(simu->dmerrts, ievl));
 				dmat* psdi=psd1dt(tmp, parms->recon.psdnseg, dthi);
 				dfree(tmp);
-				dadd(&psd, 1, psdi, P(parms->evl.wt,ievl));
+				dadd(&psdall, 1, psdi, P(parms->evl.wt,ievl));
 				dfree(psdi);
 			}
 			dcellzero(simu->dmerrts);
-			//writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
-			//writebin(psd, "psdcli_%d", simu->reconisim);
-			//average all the PSDs
-			psd_sum(psd, 1./(psd->ny-1));
-			if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
-			//writebin(psd, "psdcl_%d_%d", simu->iseed, simu->reconisim);
+			dmat *psd=psd_select(psdall, -1, 1, 0, 1./(NY(psdall)-1));//average all points
+			dfree(psdall);
+			//if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
+			{//plot psd ol and cl before updating the gain
+				plot_psd(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep, "High", NULL,
+				parms->plot.run, simu->save->psdcl, simu->save->psdol);
+			}
 			if(NX(simu->dmint->ep)==1&&NY(simu->dmint->ep)==1){
 				dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
 				dcell* coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25,
 					parms->sim.f0dm, parms->sim.zetadm, 1, psdol, NULL);
 				const real g=parms->recon.psdservo_gain;
 				P(simu->dmint->ep,0)=P(simu->dmint->ep,0)*(1-g)+P(P(coeff,0),0)*g;
-				info("Step %5d updated high order loop gain: %.3f\n", simu->reconisim, P(simu->dmint->ep,0));
-				if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
+				info("Step %5d updated high order loop gain: %.3f (%ld points)\n", simu->reconisim, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
+				//if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
 				dcellfree(coeff);
-				if(parms->plot.run){//plot psd ol and cl
-					dcell *psds=dcellnew(2,1); 
-					P(psds,0)=dref(psd); P(psd,0,0)=P(psd,1,0); P(psd,0,1)=P(psd,1,1);//remove piston term.
-					P(psds,1)=dref(psdol);
-					int draw_single_save=draw_single; draw_single=0;
-					const char *legends[]={"Closed loop","Open Loop"};
-					draw("PSD", (plot_opts){.dc=psds, .xylog="yy", .legend=legends}, "High Order Closed PSDs", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD HI");
-					dcellfree(psds);
-					draw_single=draw_single_save;
-				}
 				dfree(psdol);
 			} else{
 				error("Please implement\n");
@@ -317,53 +368,60 @@ void recon_servo_update(sim_t* simu){
 			dfree(psd);
 		}
 	}
-	if(parms->recon.split&&simu->Merr_lo&&parms->recon.psddtrat_lo>0){//compute PSD on low order control
+	if((simu->Merr_lo||parms->evl.split)&&parms->recon.psddtrat_lo>0){//compute PSD on low order control
 		const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
 		const int dtrat=parms->recon.psddtrat_lo;
 		const int iframe=iacc%dtrat;
-		dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Merr_lo,0)), 1);
+		if(simu->Merr_lo){
+			dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Merr_lo,0)), 1);
+		}else if(!parms->recon.split && simu->dmerr){
+			dcellzero(simu->Mngs);
+			dcellmm(&simu->Mngs, recon->ngsmod->Pngs, simu->dmerr, "nn", 1);
+			dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Mngs, 0)), 1);
+		}
 		if(iframe+1==dtrat){
-			//writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
+			/*if(parms->save.dm){
+				writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
+			}*/
 			dmat* ts=dtrans(simu->Merrts);
 			dzero(simu->Merrts);
 			real dt=parms->sim.dt*parms->sim.dtrat_lo;
-			for(int icol=0; icol<NY(simu->Mint_lo->ep); icol++){
-				dmat* psd=NULL;
-				if(NY(simu->Mint_lo->ep)==1){//single gain 
-					psd=psd1dt(ts, parms->recon.psdnseg, dt);
-					psd_sum(psd, 1);
-				} else if(NY(simu->Mint_lo->ep)==NY(ts)){//a gain per mode
-					dmat* tsi=dsub(ts, 0, 0, icol, 1);
-					psd=psd1dt(tsi, parms->recon.psdnseg, dt);
-					dfree(tsi);
-				}else{
-					error("Please implement\n");
+			dmat* psdall=psd1dt(ts, parms->recon.psdnseg, dt);
+			{//plot psd ol and cl before updating the gain
+				dmat *psdngs=combine_ngs_psd(psdall);
+				const char *modes1[]={"Tip Tilt","Plate Scale","Focus"};
+				const char *modes2[]={"Tip","Tilt","PS1","PS2","PS3","Focus"};
+				const char **modes=NULL;
+				if(NY(psdngs)==6||NY(psdngs)==7){
+					modes=modes2;
+				}else if(NY(psdngs)<=4){
+					modes=modes1;
 				}
-				if(simu->save->psdcl_lo) zfarr_push(simu->save->psdcl_lo, -1, psd);
-				if(NX(simu->Mint_lo->ep)==1){//integrator
-					dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0,icol), 0);
-					if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
-					dcell *coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 0, 1, psdol, 0);
-					const real g=parms->recon.psdservo_gain;
-					P(simu->Mint_lo->ep,0,icol)=P(simu->Mint_lo->ep,0,icol)*(1.-g)+P(P(coeff,0),0)*g;
-					if(icol==0) info("Step %5d updated low order loop gain : %.3f\n", simu->reconisim, P(simu->Mint_lo->ep,0,icol));
-					if(parms->plot.run){//plot psd ol and cl
-						dcell *psds=dcellnew(2, 1);
-						P(psds, 0)=dref(psd);
-						P(psds, 1)=dref(psdol);
-						int draw_single_save=draw_single; draw_single=0;
-						const char *legends[]={"Closed loop","Open Loop"};
-						draw("PSD", (plot_opts){ .dc=psds, .xylog="yy", .legend=legends }, "Low Order Closed PSDs", "Frequency (Hz)", "PSD (rad<sup>2</sup>/Hz)", "PSD LO");
-						dcellfree(psds);
-						draw_single=draw_single_save;
-					}
-					dfree(psdol);
-					dcellfree(coeff);
-				} else{
-					error("Please implement\n");
-				}
-				dfree(psd);
+				dmat *ep=simu->Mint_lo?simu->Mint_lo->ep:simu->dmint->ep;
+				plot_psd(psdngs, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, ep, "Low", modes,
+					parms->plot.run, simu->save->psdcl_lo, simu->save->psdol_lo);
+				dfree(psdngs);
 			}
+			if(parms->recon.split){
+				for(int icol=0; icol<NY(simu->Mint_lo->ep); icol++){
+					dmat *psd=psd_select(psdall, NY(simu->Mint_lo->ep)==1?-1:icol, 1, 0, 1);
+					//if(simu->save->psdcl_lo) zfarr_push(simu->save->psdcl_lo, -1, psd);
+					if(NX(simu->Mint_lo->ep)==1){//integrator
+						dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, P(simu->Mint_lo->ep,0,icol), 0);
+						//if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
+						dcell *coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 0, 1, psdol, 0);
+						const real g=parms->recon.psdservo_gain;
+						P(simu->Mint_lo->ep,0,icol)=P(simu->Mint_lo->ep,0,icol)*(1.-g)+P(P(coeff,0),0)*g;
+						info("Step %5d updated low order mode %d loop gain : %.3f (%ld points)\n", simu->reconisim, icol, P(simu->Mint_lo->ep,0,icol), NY(simu->Merrts));
+						dfree(psdol);
+						dcellfree(coeff);
+					} else{
+						error("Please implement\n");
+					}
+					dfree(psd);
+				}
+			}
+			dfree(psdall);
 			dfree(ts);
 		}
 	}
@@ -376,7 +434,10 @@ void* reconstruct(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
 	int isim=simu->reconisim;
-	if(parms->sim.evlol || isim<0) return NULL;
+	if(parms->sim.evlol || isim<0) {
+		//dbg("reconstruct: evlol=%d, isim=%d. return\n",parms->sim.evlol, isim);
+		return NULL;
+	}
 	if(PARALLEL==2){
 		while(simu->wfsgrad_isim<simu->reconisim){
 			//dbg("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
@@ -388,16 +449,17 @@ void* reconstruct(sim_t* simu){
 		simu->wfsgrad_count++;
 		pthread_mutex_unlock(&simu->wfsgrad_mutex);
 	}
-	const int hi_output=(!parms->sim.closeloop||(isim+1-parms->step_hi)%parms->sim.dtrat_hi==0);
-	if(simu->gradlastcl){
-		if(parms->sim.closeloop){
-			calc_gradol(simu);
-		}
-		if(recon->cn2est){
-			cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
-		}//if cn2est 
-	}
+	const int hi_output=(!parms->sim.closeloop||((isim+1>parms->step_hi)&&(isim+1-parms->step_hi)%parms->sim.dtrat_hi==0));
 	if(hi_output){
+		if(simu->gradlastcl){
+			if(parms->sim.closeloop){
+				calc_gradol(simu);
+			}
+			if(recon->cn2est){
+				cn2est_isim(simu->cn2res, recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl, &simu->tomo_update);
+			}//if cn2est 
+		}
+	
 		simu->dmerr=simu->dmerr_store;
 		dcell* dmout=simu->dmrecon;//always output to dmrecon to enable warm restart.
 		dcell* gradin;
@@ -445,7 +507,7 @@ void* reconstruct(sim_t* simu){
 		}
 		if(parms->recon.psol){
 			//form error signal in PSOL mode
-			if(parms->recon.alg==0 && parms->fit.actextrap){
+			if(simu->recon->actextrap){
 				//extrapolate DM fitting result to float and edge actuators.
 				//If not enabled, extrapolate integrator output.
 				//Must be enabled if HA is altered by actextrap.
@@ -513,6 +575,9 @@ void* reconstruct(sim_t* simu){
 		}
 		if(parms->recon.split){
 			ngsmod_remove(simu, simu->dmerr);
+		}else if(parms->evl.split>1){//split ngs mode error from dmerr
+			simu->Merr_lo=simu->Merr_lo_store;
+			ngsmod_split(&simu->Merr_lo, simu, simu->dmerr);
 		}
 	}
 

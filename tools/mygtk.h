@@ -106,5 +106,5 @@
 #endif
 
 GtkWidget *new_toolbar_item(GtkWidget *toolbar, GtkWidget *item, int toggle, const char *iconname, GdkPixbuf *iconbuf, const char *cmdname, void(*func)(GtkWidget*, gpointer data), gpointer data);
+GtkWidget *new_spin_button(const char *label, double value, double min, double max, double step, void(*func)(GtkWidget *, gpointer data), gpointer data);
 #endif
-

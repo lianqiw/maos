@@ -131,154 +131,6 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 	return mcc;
 }
 /**
-   Compute NGS mode aperture weighting using science field.  Wa=Ha'*W*Ha where
-   Ha is from ALOC to PLOCS and W is the amplitude weighting in PLOCS when
-   use_ploc==0. Otherwise, Ha is from ALOC to PLOC and W is the amplitude
-   weighting in PLOC.  */
-static dspcell* ngsmod_Wa(const parms_t* parms, recon_t* recon,
-	const aper_t* aper, int use_ploc){
-	const real* wt=P(parms->evl.wt);
-	const int ndm=parms->ndm;
-	loc_t* loc;
-	dmat* amp=NULL;
-	if(use_ploc){
-		loc=recon->floc;
-		amp=dnew(loc->nloc, 1);
-		prop_nongrid_bin(aper->locs, P(aper->amp), loc, P(amp), 1, 0, 0, 1);
-		dnormalize_sumabs(amp, 1);
-	} else{
-		amp=dref(aper->amp);
-		loc=aper->locs;
-	}
-	dspcell* Wa=NULL;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(fabs(wt[ievl])<1.e-12) continue;
-		real thetax=P(parms->evl.thetax,ievl);
-		real thetay=P(parms->evl.thetay,ievl);
-		dspcell* Hat=dspcellnew(ndm, 1);
-		for(int idm=0; idm<ndm; idm++){
-			real ht=parms->dm[idm].ht;
-			real displacex=thetax*ht;
-			real displacey=thetay*ht;
-			/*from DM to ploc (plocs) science beam */
-			P(Hat,idm)=mkht(P(recon->aloc,idm), loc, displacex, displacey, 1., 0);
-			dspmuldiag(P(Hat,idm), P(amp), wt[ievl]);
-		}
-		dcellmm(&Wa, Hat, Hat, "nt", 1);
-		dspcellfree(Hat);
-	}
-	dfree(amp);
-	return Wa;
-}
-/**
-   compute NGS mode removal Pngs from LGS commands using aperture weighting. Pngs=(MCC)^-1 (Hm'*W*Ha).
-
-   2012-05-25: The NGS mode removal should be based on old five modes even if now focus on PS1 is merged with defocus mode
-*/
-static dcell* ngsmod_Pngs_Wa(const parms_t* parms, recon_t* recon,
-	const aper_t* aper, int use_ploc){
-
-	ngsmod_t* ngsmod=recon->ngsmod;
-	const real hdm=ngsmod->hdm;
-	const real scale=ngsmod->scale;
-	const real scale1=1.-scale;
-	const real* wt=P(parms->evl.wt);
-	const int ndm=parms->ndm;
-	const int nmod=ngsmod->nmod;
-	loc_t* loc;
-	real* x, * y;
-	int nloc;
-	dmat* amp=NULL;
-	if(use_ploc){
-		loc=recon->floc;
-		amp=dnew(loc->nloc, 1);
-		prop_nongrid_bin(aper->locs, P(aper->amp), loc, P(amp), 1, 0, 0, 1);
-		dnormalize_sumabs(amp, 1);
-	} else{
-		amp=dref(aper->amp);
-		loc=aper->locs;
-	}
-	x=loc->locx;
-	y=loc->locy;
-	nloc=loc->nloc;
-
-	dcell* WHm=dcellnew(1, 1);/* W_amp*Hm */
-	P(WHm,0)=dnew(nloc, nmod);
-	dmat* mod=P(WHm,0);
-	for(int iloc=0; iloc<nloc; iloc++){
-		P(mod, iloc, 0)=x[iloc]*P(amp, iloc);
-		P(mod, iloc, 1)=y[iloc]*P(amp, iloc);
-	}
-	const real MCC_fcp=ngsmod->aper_fcp;
-	/*dc component of the focus mod. subtract during evaluation. */
-	/*this is not precisely R^2/2 due to obscuration */
-	dcell* HatWHm=dcellnew(ndm, 1);
-	dsp* HatGround=NULL;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(fabs(wt[ievl])<1.e-12) continue;
-		real thetax=P(parms->evl.thetax,ievl);
-		real thetay=P(parms->evl.thetay,ievl);
-		if(nmod>2){
-			for(int iloc=0; iloc<nloc; iloc++){
-				real xx=x[iloc]*x[iloc];
-				real xy=x[iloc]*y[iloc];
-				real yy=y[iloc]*y[iloc];
-				if(ngsmod->indps){
-					if(ngsmod->ahstfocus){//no focus mode at ps
-						P(mod, iloc, ngsmod->indps)=P(amp, iloc)
-							*(-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
-					} else{
-						P(mod, iloc, ngsmod->indps)=P(amp, iloc)
-							*(scale1*(xx+yy-MCC_fcp)
-								-2.*hdm*scale*(thetax*x[iloc]+thetay*y[iloc]));
-					}
-					P(mod, iloc, ngsmod->indps+1)=P(amp, iloc)
-						*(scale1*(xx-yy)
-							-2.*hdm*scale*(thetax*x[iloc]-thetay*y[iloc]));
-					P(mod, iloc, ngsmod->indps+2)=P(amp, iloc)
-						*(scale1*(xy)
-							-hdm*scale*(thetay*x[iloc]+thetax*y[iloc]));
-				}
-				if(ngsmod->indastig){
-					P(mod, iloc, ngsmod->indastig)=P(amp, iloc)*(xx-yy);
-					P(mod, iloc, ngsmod->indastig+1)=P(amp, iloc)*(xy);
-				}
-				if(ngsmod->indfocus){ /*remove piston in focus */
-					P(mod, iloc, ngsmod->indfocus)=P(amp, iloc)*(xx+yy-MCC_fcp);
-				}
-			}
-		}
-		dspcell* Hat=dspcellnew(ndm, 1);
-		for(int idm=0; idm<ndm; idm++){
-			real ht=parms->dm[idm].ht;
-			real displacex=thetax*ht;
-			real displacey=thetay*ht;
-			if(parms->dm[idm].isground&&HatGround){
-				P(Hat,idm)=dspref(HatGround);
-			} else{
-			/*from DM to ploc (plocs) science beam */
-				P(Hat,idm)=mkht(P(recon->aloc,idm), loc, displacex, displacey, 1., 0);
-				if(parms->dm[idm].isground){
-					HatGround=dspref(P(Hat,idm));
-				}
-			}
-		}
-		dcellmm(&HatWHm, Hat, WHm, "nn", wt[ievl]);
-		dspcellfree(Hat);
-	}
-	dspfree(HatGround);
-	dcell* IMCC=dcellnew(1, 1);
-	P(IMCC,0)=dref(ngsmod->IMCC);
-	dcell* Pngs=NULL;
-	dcellmm(&Pngs, IMCC, HatWHm, "nt", 1);
-	dcellfree(IMCC);
-	dcellfree(WHm);
-	dfree(amp);
-	dcellfree(HatWHm);
-	return Pngs;
-}
-
-/**
    DM modes for all the low order modes, defined on DM grid. It uses ngsmod2dm
    to define the modes*/
 
@@ -316,8 +168,7 @@ static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
 */
-void ngsmod_prep(const parms_t* parms, recon_t* recon,
-	const aper_t* aper, const powfs_t* powfs){
+void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const powfs_t* powfs){
 	if(recon->ngsmod){
 		warning("Should only be called once\n");
 		return;
@@ -343,23 +194,25 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 			}
 		}
 	}
+	if(isnan(hs)){
+		hs=90e3;
+	}
 	ngsmod->nmod=2; //Basic tip/tilt mode.
-	if(!isinf(hs)){
-	//LGS WFS.
+	if(!isinf(hs)){	//LGS WFS.
 		if(ndm>1&&parms->evl.nevl>1){//Plate scale mode for multi-dm with fov
 			ngsmod->indps=ngsmod->nmod;
 			ngsmod->nmod+=3;
-		} else if(parms->nhiwfs>1){//Astigmatism for LTAO
+		} 
+		//Always enable focus when LGS WFS is present
+		ngsmod->indfocus=ngsmod->nmod;
+		ngsmod->nmod+=1;
+		if(ngsmod->nmod==3 && parms->nhiwfs>1){//Astigmatism for LTAO
 			ngsmod->indastig=ngsmod->nmod;
 			ngsmod->nmod+=2;
 		}
-		{//Always enable focus when LGS WFS is present
-			ngsmod->indfocus=ngsmod->nmod;
-			ngsmod->nmod+=1;
-		}
 	}
-	info("Low order modes: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indastig=%d\n", 
-		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indastig);
+	info("Low order modes: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indfocus=%d, indastig=%d\n", 
+		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indfocus, ngsmod->indastig);
 	ngsmod->hs=hs;
 	if(ndm>1){
 		ngsmod->hdm=parms->dm[ndm-1].ht;//last DM.
@@ -378,7 +231,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		}
 	}
 	dmat* MCCl=dchol(ngsmod->MCC);
-	ngsmod->MCCu=dtrans(MCCl); dfree(MCCl);
+	ngsmod->MCCu=dtrans(MCCl); dfree(MCCl);//convert mode to meter
 	if(parms->save.setup){
 		writebin(recon->ngsmod->MCC, "ahst_MCC");
 	}
@@ -401,24 +254,6 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		warning("Apply stuck actuators to ngs modes\n");
 		act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
 	}
-   /*if(recon->actfloat){
-	  We do extrapolation to float actuators, so no need to modify Pngs/Ptt.
-	  warning("Apply float actuators to Pngs, Ptt\n");
-	  act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
-	  }*/
-
-	/*if(parms->recon.modal==2){//convert Modes to space of amod
-		tic;
-		for(int idm=0; idm<parms->ndm; idm++){
-			dmat* proj=dpinv(P(recon->amod,idm), NULL);
-			dmat* tmp=0;
-			dmm(&tmp, 0, proj, P(ngsmod->Modes,idm), "nn", 1);
-			dfree(P(ngsmod->Modes,idm));
-			P(ngsmod->Modes,idm)=tmp;
-			dfree(proj);
-		}
-		toc2("converting amod to modal space:");
-	}*/
 	/*
 	  ngsmod to NGS gradient interaction matrix. Defined in modal space for modal control
 	*/
@@ -450,64 +285,56 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon,
 		}
 		info2("\n");
 	}
-	
 	/**
-
-	   Next, decouple LGS reconstruction from ngsmodes.
+	   To Decouple LGS reconstruction from ngsmodes.
 
 	   parms->tomo.ahst_wt control NGS modes removal from LGS DM commands
-	   if ahst_wt==1
-	   Rngs*GA*dmerr is zero
-	   if ahst_wt==2
-	   Doesn't perturb NGS modes in science direction.
-	   if ahst_wt==3
-	   Identity weighting.
+	   if ahst_wt==1: Rngs*GA*dmerr is zero
+	   if ahst_wt==2: Doesn't perturb NGS modes in science direction. Retired. use ahst_wt==3 instead.
+	   if ahst_wt==3: Identity weighting.
+	   if ahst_wt==4: if ndm=2. Move all 2nd order modes from upper DM to ground DM. if ndm==1, remove 2nd order modes.
 
+	   ahst_wt==1 is different from others as it considers aliasing errors of the NGS WFS.
+	   ahst_wt==2 or 3 is virtually identical. ahst_wt=3 is retired as of 12/11/2024 since it is similar to 3 and never used.
 	*/
-	if(parms->tomo.ahst_wt==0){
-		info("NGS mode is not removed from LGS reconstruction output (debug only).\n");
-	}else if(parms->tomo.ahst_wt==1){
-	//Do it in ngsmod_setup();
-	} else if(parms->tomo.ahst_wt==2){
-	/*Use science based weighting to isolate active meta pupil. */
-		if(parms->dbg.wamethod==0){
-			info("Wa using DM mode\n");
-
-			tic;
-			ngsmod->Wa=ngsmod_Wa(parms, recon, aper, 1);
-			/*
-			  Add tikhonov regularization. H is from aloc to some other loc.
-			  the eigen value of H'*amp*H is about 4/aloc->nloc.
-			*/
-			int nact=0;
-			for(int idm=0; idm<parms->ndm; idm++){
-				nact+=P(recon->aloc,idm)->nloc;
+	dcell *wts=NULL;
+	if(parms->tomo.ahst_wt>1){
+		wts=dcellnew(parms->ndm, 1);
+		for(int idm=0; idm<parms->ndm; idm++){
+			loc_t *aloc=P(recon->aloc, idm);
+			long nloc=aloc->nloc;
+			dmat *wt=P(wts,idm)=dnew(nloc, 1);
+			real r2max=pow(parms->aper.d*0.5, 2);
+			for(long i=0; i<PN(wt); i++){
+				real r2=aloc->locx[i]*aloc->locx[i]+aloc->locy[i]*aloc->locy[i];
+				P(wt, i)=r2<r2max?1:0;
 			}
-			real maxeig=4./nact;
-			dcelladdI(ngsmod->Wa, 1e-9*maxeig);
-
-			toc2("Wa");
-			ngsmod->Pngs=dcellpinv(ngsmod->Modes, ngsmod->Wa);
-			if(parms->save.setup){
-				writebin(ngsmod->Wa, "ahst_Wa");
-			}
-			cellfree(ngsmod->Wa);
-			toc2("Pngs");
-		} else{
-			dbg("Wa using science mode\n");
-			tic;
-			ngsmod->Pngs=ngsmod_Pngs_Wa(parms, recon, aper, 0);
-			toc2("Pngs_Wa");
 		}
-	} else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
-		ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL);
-	} else{
-		error("Invalid parms->tomo.ahst_wt=%d\n", parms->tomo.ahst_wt);
 	}
+	if(parms->tomo.ahst_wt>1){/*Identity weighting. */
+		ngsmod->Pngs=dcellpinv(ngsmod->Modes, wts, 1e-14);
+	}
+	if(parms->tomo.ahst_wt==4){
+		/*Remove 2nd order modes from the upper DM and place on ground DM with a scaling factor
+			which is handled by scaling the aperture D. This method works for more than 2 DMs.*/
+		ngsmod->Modes2=dcellnew(parms->ndm, parms->ndm);
+		for(int idm=0; idm<parms->ndm; idm++){
+			real ht=parms->dm[idm].ht;
+			real sc=1.-ht/ngsmod->hs;
+			P(ngsmod->Modes2, idm, idm)=zernike(P(recon->aloc, idm), -parms->aper.d*sc, 0, ngsmod->nmod==2?1:2, 0);
+			if(NY(P(ngsmod->Modes2, idm, idm))>ngsmod->nmod+1){//Modes2 include piston as an additional term
+				dresize(P(ngsmod->Modes2, idm, idm), NX(P(ngsmod->Modes2, idm, idm)), ngsmod->nmod+1);
+			}
+		}
+		ngsmod->Pngs2=dcellpinv(ngsmod->Modes2, wts, 1e-14);
+	}
+	dcellfree(wts);
 	if(parms->save.setup){
 		writebin(ngsmod->Modes, "ahst_Modes");
 		writebin(ngsmod->GM, "ahst_GM");
-		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs%d", parms->tomo.ahst_wt);
+		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs_wt%d", parms->tomo.ahst_wt);
+		if(ngsmod->Pngs2) writebin(ngsmod->Pngs2, "ahst_Pngs2_wt%d", parms->tomo.ahst_wt);
+		if(ngsmod->Modes2) writebin(ngsmod->Pngs, "ahst_Modes2");
 	}
 }
 /**
@@ -586,7 +413,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 			}
 		}
 	}
-	dcell* RM=dcellpinv(GM2, saneai);
+	dcell* RM=dcellpinv(GM2, saneai, 1e-14);
 	dcellfree(GM2);
 	if(!pmodvalid){
 		lfree(modvalid);
@@ -640,18 +467,13 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 			warning("ngsmod->lp2=%g\n", ngsmod->lp2);
 		}
 	}
-
 	if(parms->tomo.ahst_wt==1){
-		/*Use gradient weighting. */
 		dcellzero(ngsmod->Pngs);
-		dcellmm((cell**)&ngsmod->Pngs, P(ngsmod->Rngs,0), recon->GAlo, "nn", 1);
-		if(parms->save.setup){
-			writebin(ngsmod->Pngs, "ahst_Pngs%d", parms->tomo.ahst_wt);
-		}
+		dcellmm((cell **)&ngsmod->Pngs, P(ngsmod->Rngs, 0), recon->GAlo, "nn", 1);
 	}
-
 	if(parms->save.setup){
 		writebin(ngsmod->Rngs, "ahst_Rngs");
+		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs_wt%d", parms->tomo.ahst_wt);
 	}
 }
 /**
@@ -663,7 +485,7 @@ void ngsmod_dot(real* pttr_out, real* pttrcoeff_out,
 	const real* restrict amp=P(aper->amp);
 	const real* restrict locx=aper->locs->locx;
 	const real* restrict locy=aper->locs->locy;
-	double coeff[6]={0,0,0,0,0,0};//use double to enhance precision of accumulation
+	double coeff[6]={0,0,0,0,0,0};//always use double to enhance precision of accumulation
 	double tot=0; //use double for accumulation.
 	const int nmod=ngsmod->nmod;
 	if(nmod==2){
@@ -898,7 +720,9 @@ void ngsmod_free(ngsmod_t* ngsmod){
 	cellfree(ngsmod->GM);
 	cellfree(ngsmod->Rngs);
 	cellfree(ngsmod->Pngs);
+	cellfree(ngsmod->Pngs2);
 	cellfree(ngsmod->Modes);
+	cellfree(ngsmod->Modes2);
 	dfree(ngsmod->MCC);
 	dfree(ngsmod->MCCu);
 	cellfree(ngsmod->MCCP);
@@ -908,10 +732,17 @@ void ngsmod_free(ngsmod_t* ngsmod){
 	lfree(ngsmod->modvalid);
 	free(ngsmod);
 }
-
+/*
+	Split NGS mode error from dmerr 
+*/
+void ngsmod_split(dcell **Merr, sim_t *simu, dcell *dmerr){
+	const ngsmod_t *ngsmod=simu->recon->ngsmod;
+	dcellzero(*Merr);
+	dcellmm(Merr, simu->recon->ngsmod->Pngs, dmerr, "nn", 1);
+	dcellmm(&dmerr, ngsmod->Modes, *Merr, "nn", -1);
+}
 /**
-   remove NGS modes from LGS DM commands
-   if nmod==6: make sure the global focus mode is not removed from LGS result.
+   remove NGS modes from LGS DM commands. \todo handle 3 DM case.
 */
 void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	const recon_t* recon=simu->recon;
@@ -919,39 +750,52 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	if(!dmerr||!ngsmod->Pngs) return;
 	dcellzero(simu->Mngs);
-	dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
-	real* mngs=P(P(simu->Mngs,0));
-	if(ngsmod->indastig){//LTAO
-	//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
-	//Testing: remove LPF'ed focus/astigmatism from LGS DM command. 
-		if(!simu->ngsmodlpf){
-			simu->ngsmodlpf=dnew(3, 1);
+	if(parms->tomo.ahst_wt==4){//this is equivalent to ahst_wt=1 for 2 dms.
+		dcellmm(&simu->Mngs, ngsmod->Pngs2, dmerr, "nn", 1);
+		//if ndm==1, remove all 2nd order modes from ground DM since LGS cannot sense them properly
+		//if ndm>1 and ahst_keepfocus=0, remove focus from all DMs. LGS focus is not reliable
+		//merge 2nd order modes from upper DMs to ground DM.
+		const int im0=parms->ndm==1?ngsmod->nmod:(parms->dbg.ahst_keepfocus?3:4);
+		for(int im=im0; im<ngsmod->nmod; im++){
+			P(P(simu->Mngs, 0), im)=0;
+			for(int idm=1; idm<parms->ndm; idm++){
+				P(P(simu->Mngs, 0), im)-=P(P(simu->Mngs, idm), im);
+			}
 		}
-		const real lpfocus=parms->sim.lpfocushi;
-		info_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
-		P(simu->ngsmodlpf,0)=P(simu->ngsmodlpf,0)*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
-		P(simu->ngsmodlpf,1)=P(simu->ngsmodlpf,1)*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
-		P(simu->ngsmodlpf,2)=P(simu->ngsmodlpf,2)*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
-		mngs[ngsmod->indfocus]=P(simu->ngsmodlpf,0);
-		mngs[ngsmod->indastig]=P(simu->ngsmodlpf,1);
-		mngs[ngsmod->indastig+1]=P(simu->ngsmodlpf,2);
-	}
-	if(ngsmod->indfocus&&parms->sim.mffocus&&parms->dbg.ahst_keepfocus){
-	/*preserve LGS focus.
-	  2019-01-15: Let all focus mode be removed
-	  * actually improves performance.*/
-		const real scale=ngsmod->scale;
-		if(ngsmod->indps&&ngsmod->ahstfocus){
-			/* When ahstfocus is true, the first PS mode contains focus mode in
-			 * LGS WFS. Relocate this focus mode to the global focus mode to
-			 * preserve LGS measurements.*/
-			mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(scale-1);
-		} else{
-			/* When ahstfocus is false, the first PS mode does not create focus
-			 * mode in LGS WFS.*/
-			mngs[ngsmod->indfocus]=0;
+		dcellmm(&dmerr, ngsmod->Modes2, simu->Mngs, "nn", -1);//t/t are removed from all dms.
+	}else{
+		dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
+		real *mngs=P(P(simu->Mngs, 0));
+		if(ngsmod->indastig){//LTAO
+			//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
+			//Solution: remove LPF'ed focus/astigmatism from LGS DM command. 
+			const real lpfocus=parms->sim.lpfocushi;
+			if(lpfocus<1){
+				if(!simu->ngsmodlpf){
+					simu->ngsmodlpf=dnew(3, 1);
+				}
+				info_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
+				P(simu->ngsmodlpf,0)=P(simu->ngsmodlpf,0)*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
+				P(simu->ngsmodlpf,1)=P(simu->ngsmodlpf,1)*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
+				P(simu->ngsmodlpf,2)=P(simu->ngsmodlpf,2)*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
+				mngs[ngsmod->indfocus]=P(simu->ngsmodlpf,0);
+				mngs[ngsmod->indastig]=P(simu->ngsmodlpf,1);
+				mngs[ngsmod->indastig+1]=P(simu->ngsmodlpf,2);
+			}else{
+				info_once("Remove focus/astig from DM error signal.\n");
+			}
+		}else if(parms->dbg.ahst_keepfocus&&ngsmod->indfocus&&parms->sim.mffocus){
+			/*The LGS focus mode is filtered from gradient input to the reconstructor, so we do not remove it again here*/
+			if(ngsmod->indps&&ngsmod->ahstfocus){
+				/* When ahstfocus is true, the first PS mode contains focus mode in
+				* LGS WFS. Relocate this focus mode to the global focus mode to
+				* preserve LGS focus measurements.*/
+				mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(ngsmod->scale-1);
+			} else{
+				mngs[ngsmod->indfocus]=0;//preserve focus
+			}
 		}
+		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
 	}
-	dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
-
+	//dshow(P(simu->Mngs, 0), "Mngs");
 }
