@@ -97,7 +97,7 @@ void fresnel_prop(cmat** out, double* dxout, const cmat* in, double dxin, double
 double dgauss_width(dmat* A, double thres);
 void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, double thres);
 dmat* dpinv2(dmat*A, cell *wt, double svdthres);
-dcell* dcellpinv2(dcell *A, cell *wt, double svdthres);
+dcell* dcellpinv(dcell *A, cell *wt, double svdthres);
 double loc_remove_focus_grad(dmat *grad, const loc_t *saloc, double factor);
 dmat *psd2ts=psd2ts2(const dmat *psdin, int seed, real dt, int nstep);
 dmat *stfun=stfun_batch(const cell *psd, const dmat *amp);

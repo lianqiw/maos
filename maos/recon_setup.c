@@ -258,9 +258,9 @@ setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	cellfree(recon->PFF);
 	cellfree(recon->PTTF);
 
-	recon->PTT=dcellpinv(recon->TT, recon->saneai);
-	recon->PFF=dcellpinv(recon->FF, recon->saneai);
-	recon->PTTF=dcellpinv(recon->TTF, recon->saneai);
+	recon->PTT=dcellpinv(recon->TT, recon->saneai, 1e-14);
+	recon->PFF=dcellpinv(recon->FF, recon->saneai, 1e-14);
+	recon->PTTF=dcellpinv(recon->TTF, recon->saneai, 1e-14);
 	if(parms->save.setup){
 		writebin(recon->TTF, "TTF");
 		writebin(recon->PTT, "PTT");
@@ -900,7 +900,7 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 		real thres=1e-10;
 		info("RRtwfs svd threshold is %g\n", thres);
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai, thres);
+		recon->RRtwfs=dcellpinv(recon->GRtwfs, neai, thres);
 	}
 
 	if(parms->save.setup){
@@ -1302,6 +1302,10 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* po
 			}
 		}
 	}
+
+	if(parms->recon.alg==0||parms->sim.dmproj){
+		setup_recon_fit(recon, parms);
+	}
 	if(parms->recon.split){/*split tomography */
 		ngsmod_setup(parms, recon);
 		if(parms->recon.split==2&&parms->recon.alg==0){/*Need to be after fit */
@@ -1309,15 +1313,6 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* po
 		}
 	}
 
-	if(parms->recon.alg==0||parms->sim.dmproj){
-		setup_recon_fit(recon, parms);
-	}
-	if(recon->actcpl&&!recon->actextrap){
-		recon->actextrap=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres, 1);
-		if(parms->save.setup){
-			writebin(recon->actextrap, "actextrap");
-		}
-	}
 	toc2("setup_recon_control");
 }
 

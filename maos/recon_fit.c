@@ -95,7 +95,6 @@ OMP_TASK_FOR_COLLAPSE(2, NTHREAD)
 			HA*actextrap*a. We replace HA by HA*actextrap to take this into
 			account during DM fitting. 
 			This needs to be used with extrapolation on dmpsol.
-			/when lor enabled, the resulting matrix is much less sparse.
 		*/
 		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
 		info("Replacing HA by HA*fit->actextrap\n");

@@ -63,6 +63,7 @@ float font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 float lpf=1;//low pass filter the update. Set using dialog.
+int window_proportional=1;//resize window proportionally
 /*
   Routines in this file are about the GUI.
 */
@@ -1449,6 +1450,7 @@ static void togglebutton_toggle(GtkWidget* btn, void *data){
 		}break;
 	  case 2:
 		drawdata->cumu=val;
+		update_toolbar(drawdata);
 		break;
 	}
 	update_pixmap(get_current_drawdata());
@@ -1485,7 +1487,39 @@ static void toolbutton_refresh(GtkWidget* btn, gpointer data){
 		sock=-1;
 	}
 }
-
+static void set_window_size(GtkWidget *spin, gpointer data){
+	int type=GPOINTER_TO_INT(data);
+	int width, height;
+#if GTK_MAJOR_VERSION<4	
+	gtk_window_get_size(GTK_WINDOW(curwindow), &width, &height);
+#else
+	width=gtk_widget_get_width(curwindow);
+	height=gtk_widget_get_height(curwindow);
+#endif	
+	double ratio=(double)width/height;
+	switch(type){
+		case 1:
+			width=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin));	
+			if(window_proportional){
+				height=(int)round(width/ratio);
+			}
+			break;
+		case 2:
+			height=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin)); 
+			if(window_proportional){
+				width=(int)round(height*ratio);
+			}
+			break;
+		default:
+		break;
+	}
+	
+#if GTK_MAJOR_VERSION<4	
+	gtk_window_resize(GTK_WINDOW(curwindow), width, height);
+#else
+	gtk_widget_set_size_request(curwindow, width, height);
+#endif	
+}
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
 */
@@ -1739,7 +1773,28 @@ static void tool_property(GtkWidget* button, gpointer data){
 		box_append(GTK_BOX(hbox), spins[5], TRUE, TRUE, 0);
 		box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 	}
+	if(curwindow){//window size
+		int width, height;
+#if GTK_MAJOR_VERSION<4	
+		gtk_window_get_size(GTK_WINDOW(curwindow), &width, &height);
+#else
+		width=gtk_widget_get_width(curwindow);
+		height=gtk_widget_get_height(curwindow);
+#endif	
+		info_time("width=%d, height=%d\n", width, height);
+		hbox=gtk_hbox_new(FALSE, 0);
+		label=new_spin_button("Width", width, 100, 2800, 10, set_window_size, GINT_TO_POINTER(1));
+		box_append(GTK_BOX(hbox), label, TRUE,  TRUE, 0);
+		label=new_spin_button("Height", height, 100, 8000, 10, set_window_size, GINT_TO_POINTER(2));
+		box_append(GTK_BOX(hbox), label, TRUE,  TRUE, 0);
 
+		checkbtn=gtk_check_button_new_with_label("Proportional");
+		check_button_set_active(checkbtn, window_proportional);
+		g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &window_proportional);
+		box_append(GTK_BOX(hbox), checkbtn, FALSE, FALSE, 0);
+
+		box_append(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+	}
 #if GTK_VERSION_AFTER(4,10)
 	gtk_window_set_child(GTK_WINDOW(dialog), vbox);
 	gtk_window_present(GTK_WINDOW(dialog));
@@ -1897,7 +1952,6 @@ gboolean update_fpslabel(gpointer data){
 		float thistime=myclockd();
 		extern float io_time1;//receiving time for latest frame
 		extern float io_time2;//receiving time for previous frame or 0 if a different plot is received
-		static float oldfps=0;
 		float fps=0;
 		if(io_time1+10>thistime && io_time2+100>io_time1 && io_time1!=io_time2){//continuous update
 			fps=1./(io_time1-io_time2);
@@ -1906,10 +1960,7 @@ gboolean update_fpslabel(gpointer data){
 			newtext[0]=0;
 			fps=0;
 		}
-		if(fps!=oldfps){
-			gtk_label_set_text(GTK_LABEL(fpslabel), newtext);
-			oldfps=fps;
-		}
+		gtk_label_set_text(GTK_LABEL(fpslabel), newtext);
 	}
 	/*if(io_time1+60<thistime){//60 seconds no update, check connectivity.
 		if(stwriteint(sock, DRAW_RESUME)){
@@ -2017,7 +2068,7 @@ GtkWidget* create_window(GtkWidget* window){
 	g_object_set_data(G_OBJECT(window), "menu_cumu", menu_cumu);
 
 	//Cumulative step
-	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 100);
+	GtkWidget *menu_icumu=gtk_spin_button_new_with_range(0, 100000, 1);
 	g_signal_connect(menu_icumu, "value-changed", G_CALLBACK(spin_icumu), NULL);
 	new_toolbar_item(toolbar, menu_icumu, 0, "menu_icumu", NULL, NULL, NULL, NULL);
 	g_object_set_data(G_OBJECT(window), "menu_icumu", menu_icumu);

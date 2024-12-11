@@ -162,18 +162,19 @@ void save_recon(sim_t* simu){
 		if(simu->Merr_lo){
 			char fig[64];
 			int idm;
+			int added=0;
 			for(idm=0; idm<parms->ndm; idm++){
 				snprintf(fig, sizeof(fig), "Err Lo %d", idm);
 				if(draw_current("DM", fig)){
-					break;
+					dcell* dmtmp=simu->dmtmp;
+					if(!added){
+						added=1;
+						dcellzero(dmtmp);
+						addlow2dm(&dmtmp, simu, simu->Merr_lo, 1);
+					}
+					drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
+						"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 				}
-			}
-			if(idm<parms->ndm){//need plotting
-				dcell* dmtmp=simu->dmtmp;
-				dcellzero(dmtmp);
-				addlow2dm(&dmtmp, simu, simu->Merr_lo, 1);
-				drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
-					"DM Error Signal (Lo)", "x (m)", "y (m)", "%s", fig);
 			}
 			//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
 		}
@@ -343,13 +344,12 @@ void save_dmreal(sim_t* simu){
 				dfree(opd);
 			}
 		}
-
-		for(int idm=0; idm<parms->ndm; idm++){
+		/*for(int idm=0; idm<parms->ndm; idm++){
 			if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
 				drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), parms->plot.opdmax,
 					"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 			}
-		}
+		}*/
 	}
 	if(parms->save.dm){
 		int isim=(parms->sim.closeloop?2:0)+simu->reconisim;

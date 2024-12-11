@@ -690,7 +690,7 @@ static void memkey_init(){
 void *calloc_maos(size_t nbyte, size_t nelem){
 	void *p=calloc_default(nbyte, nelem);
 	if(!p){
-		error("calloc failed (%d): %s\n", errno, strerror(errno));
+		error("calloc for %ld bytes failed (%d): %s\n", nbyte*nelem, errno, strerror(errno));
 	}
 	if(memkey_len){
 		memkey_add(p, nbyte*nelem);
@@ -704,7 +704,7 @@ void *calloc_maos(size_t nbyte, size_t nelem){
 void *malloc_maos(size_t size){
 	void *p=malloc_default(size);
 	if(!p){
-		error("malloc failed (%d): %s\n", errno, strerror(errno));
+		error("malloc for %ld bytes failed (%d): %s\n", size, errno, strerror(errno));
 	}
 	if(memkey_len){
 		memkey_add(p, size);
@@ -723,7 +723,7 @@ void *realloc_maos(void *p0, size_t size){
 	}
 	void *p=realloc_default(p0, size);
 	if(!p){
-		error("realloc failed (%d): %s\n", errno, strerror(errno));
+		error("realloc for %ld bytes failed (%d): %s\n", size, errno, strerror(errno));
 	}
 	if(memkey_len){
 		memkey_add(p, size);

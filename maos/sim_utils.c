@@ -90,17 +90,13 @@ static mapcell* genatm_do(sim_t* simu){
 		int ny=NY(atm);
 		screens=mapcellnew(atm->nps, 1);
 		real dx=atm->dx;
-		int iratio=0;
-		if(NX(parms->dbg.atm)>=atm->nps){
-			iratio=1;
-		}
 		loc_t* psloc=0;
 		const real strength=sqrt(1.0299*pow(parms->aper.d/atm->r0, 5./3.))*(0.5e-6/(2*M_PI));//PR WFE.
 		for(int ips=0; ips<atm->nps; ips++){
 			P(screens, ips)=mapnew(nx, ny, dx, dx);
 			P(screens, ips)->h=P(atm->ht, ips);
 			if(!P(atm->wt, ips)) continue;
-			real dbgatm=P(parms->dbg.atm, ips*iratio);
+			real dbgatm=PR(parms->dbg.atm, ips);
 			if(dbgatm>0){//zernike mode
 				if(!psloc){
 					psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
@@ -520,9 +516,9 @@ static void init_simu_evl(sim_t* simu){
 	/*MMAP the main result file */
 	{
 		int ahst_nmod=0;
-		if(parms->recon.split){
+		if(parms->evl.split){
 			ahst_nmod=3;
-			if(simu->recon->ngsmod->indfocus) ahst_nmod++;
+			if(parms->nlgspowfs) ahst_nmod++;//focus
 		}
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
@@ -567,17 +563,17 @@ static void init_simu_evl(sim_t* simu){
 		simu->olep=dcellsub(simu->resp, 0, nevl, 2, 1);
 		simu->clep=dcellsub(simu->resp, 0, nevl, 3, 1);
 
-		if(parms->recon.split){
+		if(parms->evl.split){
 			simu->oleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSm_%d.bin", fnextra, seed);
 			simu->oleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/ResoleNGSmp_%d.bin", fnextra, seed);
 			if(!parms->sim.evlol){
 				simu->clemp=dcellnewsame_file(nevl, 1, 3, nsim, keywords, "%s/Resclemp_%d.bin", fnextra, seed);
 				simu->cleNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSm_%d.bin", fnextra, seed);
 				simu->cleNGSmp=dcellnewsame_file(nevl, 1, recon->ngsmod->nmod, nsim, keywords, "%s/RescleNGSmp_%d.bin", fnextra, seed);
-				if(parms->recon.split==1&&!parms->sim.fuseint){
-					simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescorrNGSm_%d.bin", fnextra, seed);
-				}
 			}
+		}
+		if(parms->recon.split==1&&!parms->sim.fuseint&&!parms->sim.evlol){
+			simu->corrNGSm=dnew_file(recon->ngsmod->nmod, nsim, keywords, "%s/RescorrNGSm_%d.bin", fnextra, seed);
 		}
 	}
 	if(parms->sim.skysim){
@@ -1296,7 +1292,7 @@ static void init_simu_dm(sim_t* simu){
 	if(parms->recon.psd){
 		simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, P(recon->Herr, 0)->nx,
 			parms->recon.psddtrat_hi);
-		if(parms->recon.split){
+		if(parms->recon.split||parms->evl.split){
 			simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
 		}
 	}
@@ -1657,7 +1653,7 @@ void free_simu(sim_t* simu){
 	dfree(simu->zoomavg);
 	lfree(simu->zoomavg_count);
 	dfree(simu->zoomint);
-	if(parms->recon.split){
+	if(parms->evl.split){
 		dcellfree(simu->clemp);
 		dfree(simu->cleNGSm);
 		dfree(simu->oleNGSm);
@@ -1809,7 +1805,13 @@ void print_progress(sim_t* simu){
 			last_save_time=this_time;
 		}
 	}
-	if(this_time>simu->last_report_time+1||isim+1==parms->sim.end){
+	static int nstep=1;
+	if(isim%nstep==0||isim+1==parms->sim.end){
+		int nstep2=ceil(1./simu->status->mean);
+		if(nstep2>5){
+			nstep2=round(nstep2*0.1)*10;
+		}
+		if(nstep2>nstep) nstep=nstep2;
 	/*we don't print out or report too frequently. */
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
@@ -1828,7 +1830,7 @@ void print_progress(sim_t* simu){
 			const char *hoa="On axis  PR TT  Field RMS PR TT ";
 			const char *hsp="Split     HIGH   TT    LOW ";
 			const char *htm="    Timing ";
-			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->recon.split)?hsp:"", LOG_LEVEL<2?htm:"");
+			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->evl.split)?hsp:"", LOG_LEVEL<2?htm:"");
 		}
 		info2("Step %5d: OL%7.1f %6.1f",
 			isim,
@@ -1841,7 +1843,7 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->cle, 0, isim))*1e9,
 				mysqrt(P(simu->cle, 1, isim))*1e9
 			);
-			if(parms->recon.split){
+			if(parms->evl.split){
 				info2(" Split %7.1f %6.1f %6.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
@@ -1873,7 +1875,7 @@ void print_progress(sim_t* simu){
 				legs[nline++]="Total";
 				legs[nline++]="High Order";
 				legs[nline++]="Tip/Tilt";
-				if(parms->recon.split){
+				if(parms->evl.split){
 					if(simu->recon->ngsmod->indps){
 						legs[nline++]="Plate Scale";
 					} else if(simu->recon->ngsmod->indastig){
@@ -1963,7 +1965,7 @@ void print_progress(sim_t* simu){
 						dcell* res=P(simu->plot_res,ic);
 					
 						P(P(res, 0), i)=sqrt(P(cle, 0, i))*1e9;//PR
-						if(parms->recon.split && ic==0){
+						if(parms->evl.split && ic==0){
 							dmat *tmp=simu->clem;
 							P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
 							P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT

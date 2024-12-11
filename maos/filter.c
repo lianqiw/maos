@@ -323,8 +323,8 @@ static void filter_cl(sim_t* simu){
 			act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
 		}
 	}
-	if(!parms->recon.modal && simu->recon->actextrap && !(parms->recon.psol && parms->fit.actextrap)){
-		//Extrapolate to edge actuators
+	if(!parms->recon.modal && simu->recon->actextrap && !parms->recon.psol){
+		//Extrapolate to edge actuators in LSR
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
 	} else{
@@ -628,4 +628,11 @@ void filter_dm(sim_t* simu){
 		//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
 	}
 	save_dmreal(simu);
+	//Record NGS mode correction time history
+	if(simu->corrNGSm&&P(simu->Mint_lo->mintc, 0)){
+		if(simu->reconisim+2<parms->sim.end){
+			real *pcorrNGSm=PCOL(simu->corrNGSm, simu->reconisim+2);
+			memcpy(pcorrNGSm, P(P(simu->Mint_lo->mintc, 0), 0), sizeof(real)*NX(simu->corrNGSm));
+		}
+	}
 }

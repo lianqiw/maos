@@ -100,6 +100,7 @@ int main(int argc, char* argv[]){
 	draw_id=DRAW_ID_RES;
 	draw_direct=1;/*launch drawdaemon directly, without going through server. */
 	draw_single=-1;//disable draw_single support.
+	int has_ahst=0;//where there are ahst results
 	char** path;
 	int npath;
 	if(arg->iarg<argc){
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]){
 	long* seed2=NULL;
 	/*Find all valid path and seeds. */
 	int jpath=0;
-	int restype=-1;
+	int restype=-1;//1: maos, 2: skyc
 	for(int ipath=0; ipath<npath; ipath++){
 		DIR* dir=opendir(path[ipath]);
 		if(!dir){
@@ -331,7 +332,7 @@ int main(int argc, char* argv[]){
 					indcl=2;//cell index for CL results
 					//0 is pr.
 					indlo=1;//low order
-					//indtt=1;//tt
+					indtt=1;//tt
 					indhi=2;//pttr 
 				}
 				long nstep=NY(P(ires, 0));//valid step;
@@ -344,12 +345,12 @@ int main(int argc, char* argv[]){
 					}
 				}
 				dmat* tmp;
-				if(drawres_hi||drawres_tot){
+				if(indhi!=-1 && (drawres_hi||drawres_tot)){
 					tmp=dsub(P(ires, indcl), indhi, 1, 0, nstep);
 					P(P(res, P_HI), ipath, iseed)=dtrans(tmp);
 					dfree(tmp);
 				}
-				if(drawres_lo||drawres_tot){
+				if(indlo!=-1 && (drawres_lo||drawres_tot)){
 					tmp=dsub(P(ires, indcl), indlo, 1, 0, nstep);
 					fixnan(tmp);
 					P(P(res, P_LO), ipath, iseed)=dtrans(tmp);
@@ -386,6 +387,9 @@ int main(int argc, char* argv[]){
 							dfree(P(res, P_PS, ipath, iseed));
 						}
 					}
+				}
+				if(indlo!=indtt){
+					has_ahst++;
 				}
 				if(drawres_ol){
 					tmp=dsub(P(ires, 0), 2, 1, 0, nstep);
@@ -430,35 +434,38 @@ int main(int argc, char* argv[]){
 			} else{
 				error("Invalid restype=%d\n", restype);
 			}
-		}
-	}
-	for(int im=0; im<NX(res); im++){
+		}//for seed
+	}//for path
+	for(int imod=0; imod<NX(res); imod++){//mode
 		for(int ipath=0; ipath<npath; ipath++){
 			int seedcount=0;
 			int nsim=0;
 			for(int iseed=0; iseed<nseed; iseed++){
-				dmat* resi=P(P(res, im), ipath, iseed);
+				dmat* resi=P(P(res, imod), ipath, iseed);
 				if(resi && NX(resi)){
-					dadd_relax(&P(P(resm, im), ipath), 1, resi, 1);
-					nsim=MIN(NX(P(P(resm, im), ipath)), NX(resi));
+					dadd_relax(&P(P(resm, imod), ipath), 1, resi, 1);
+					nsim=MIN(NX(P(P(resm, imod), ipath)), NX(resi));
 					seedcount++;
 				}
 			}
 			if(seedcount>0){
-				dscale(P(P(resm, im), ipath), 1./seedcount);
-				dresize(P(P(resm, im), ipath), nsim, NY(P(resm, im), ipath));
+				dscale(P(P(resm, imod), ipath), 1./seedcount);
+				dresize(P(P(resm, imod), ipath), nsim, NY(P(resm, imod), ipath));
 			}
 		}
 	}
-	for(int i=0; i<res->nx; i++){
-		if(dcellsum(P(res, i))==0){
-			dcellfree(P(res, i));
-			dcellfree(P(resm, i));
+	if(restype==1 && has_ahst==0){//no ahst results, TT and LOW are the same. 
+		dcellfree(P(res, P_LO));
+	}
+	for(int imod=0; imod<NX(res); imod++){
+		if(dcellsum(P(res, imod))==0){
+			dcellfree(P(res, imod));
+			dcellfree(P(resm, imod));
 		} else{
-			dcellcwpow(P(res, i), 0.5);
-			dcellscale(P(res, i), 1e9);
-			dcellcwpow(P(resm, i), 0.5);
-			dcellscale(P(resm, i), 1e9);
+			dcellcwpow(P(res, imod), 0.5);
+			dcellscale(P(res, imod), 1e9);
+			dcellcwpow(P(resm, imod), 0.5);
+			dcellscale(P(resm, imod), 1e9);
 		}
 	}
 	char* pathtag0[npath];

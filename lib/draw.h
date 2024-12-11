@@ -52,6 +52,7 @@ typedef struct {
   const char* xylog;
   const dmat* cir;
   const char* const* const legend;
+  int always;//always draw (do not check for active panel)
 } plot_opts;
 
 int draw(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,

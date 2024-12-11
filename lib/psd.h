@@ -32,11 +32,12 @@ dmat *psd_t2s(const dmat *psdt, real vmean);
 dmat *psd_s2t(const dmat *psdt, real vmean);
 real psd_inte(const real *nu, const real *psd, long n);
 real psd_inte2(const dmat *psdin);
+dmat *psd_reverse_cumu(const dmat *psdin, real scale);
 dmat* psd2ts(const dmat *psdin, rand_t *rstat, real dt, int nstep);
 dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstep);
 dmat* add_psd(const dmat *psd1, const dmat *psd2, real scale2);
 void add_psd2(dmat **out, const dmat *in, real scale);
-void psd_sum(dmat *psd, real scale);
+dmat *psd_select(const dmat *psd, int im, int jm, int keepdc, real scale);
 dmat *psd2d_aniso(const dmat *screen, real dx);
 dmat *psd2d(dmat** extra, const_anyarray screen, real dx);
 #endif

@@ -399,6 +399,7 @@ typedef struct evl_cfg_t{
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
+	int split;	    /**<evaluate split tomography low order*/
 }evl_cfg_t;
 
 /**
@@ -413,7 +414,7 @@ typedef struct tomo_cfg_t{
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxxalg;      /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
-    int guard;       /**<guard rings of reconstruction grid xloc*/
+    int guard;       /**<guard rings of reconstruction grid ploc and xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
     int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
     int piston_cr;   /**<single point piston constraint. */
@@ -468,6 +469,7 @@ typedef struct fit_cfg_t{
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int precond;     /**<Preconditioner. Not available.*/
     int maxit;       /**<max iterations. Usually 4 for CG*/
+	int guard;       /**<guard rings of reconstruction grid ploc*/
     int square;      /**<using square grid on DM and ploc.*/
     int assemble;    /**<force assemble fit matrix in CG*/
     int pos;         /**<over sampling of floc over aloc. for fitting. normally equal to tomo.pos*/
@@ -675,7 +677,6 @@ typedef struct plot_cfg_t{
    contains input parameters for debugging.
 */
 typedef struct dbg_cfg_t{
-    int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     lmat *tomo_maxit; /**<if not empty, will study these maxits in open loop*/

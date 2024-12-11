@@ -309,18 +309,33 @@ void maos_sim(){
 				}
 			}/*isim */
 		}
-		{
-			/*Compute average performance*/
-			const long nsim=simu->perfisim+1;
-			const long isim0=parms->sim.closeloop?MIN(MAX(20, nsim/5), nsim/2):0;
-			const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
-			for(long i=isim0; i<nsim; i++){
-				for(long imod=0; imod<parms->evl.nmod; imod++){
-					P(restot, imod)+=P(cle, imod, i);
+		long isim0=0;
+		if(!parms->sim.evlol){//determine starting point
+			double sumc=0;
+			for(isim0=simend-1; isim0>1; isim0--){
+				sumc+=P(simu->cle, 0, isim0);
+				if((simend-isim0)>25 && P(simu->cle, 0, isim0-1)*(simend-isim0)>sumc*1.2){
+					break;
 				}
 			}
-			rescount+=(nsim-isim0);
 		}
+		/*Compute average performance*/
+		const long nsim=simu->perfisim+1;
+		//const long isim0=parms->sim.closeloop?MIN(MAX(20, nsim/5), nsim/2):0;
+		const dmat* cle=parms->sim.evlol?simu->ole:simu->cle;
+		for(long i=isim0; i<nsim; i++){
+			for(long imod=0; imod<parms->evl.nmod; imod++){
+				P(restot, imod)+=P(cle, imod, i);
+			}
+		}
+		rescount+=(nsim-isim0);
+
+		simu->status->clerrhi=sqrt(P(restot, 2)/rescount)*1e9;
+		simu->status->clerrlo=sqrt(P(restot, 1)/rescount)*1e9;
+		simu->status->tot=simu->status->mean;
+#if defined(__linux__) || defined(__APPLE__)
+		scheduler_report(simu->status);
+#endif
 		free_simu(simu);
 		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), simu->iseed, signal_caught==0);
 		global->simu=NULL;
@@ -330,6 +345,6 @@ void maos_sim(){
 	for(long imod=0; imod<parms->evl.nmod; imod++){
 		info3("%.2f ", sqrt(P(restot, imod)/rescount)*1e9);
 	}
-	info3(" nm.\n");
+	info3(" nm (%ld points).\n", rescount);
 	dfree(restot);
 }

@@ -283,11 +283,11 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
 	}
 }
 #define PERFEVL_WFE_GPU(cc,ccb)						\
-    if((parms->recon.split && recon->ngsmod->nmod==2)			\
-       || (!parms->recon.split && parms->evl.nmod==3)){			\
+    if((parms->evl.split && recon->ngsmod->nmod==2)			\
+       || (!parms->evl.split && parms->evl.nmod==3)){			\
 	calc_ptt(cc, cudata->perf.locs(), nloc, iopdevl(), cudata->perf.amp, stream); \
 	DO(cudaMemcpyAsync(ccb, cc, 4*sizeof(Real), D2H, stream)); \
-    }else if(parms->recon.split){					\
+    }else if(parms->evl.split){					\
 	calc_ngsmod(cc, cudata->perf.locs(), nloc, iopdevl(), cudata->perf.amp, stream); \
 	DO(cudaMemcpyAsync(ccb, cc, 7*sizeof(Real), D2H, stream)); \
     }
@@ -297,7 +297,7 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
 	TO_IMPLEMENT;/*mode decomposition. */			\
     }												\
     int ans=0;										\
-    if(parms->recon.split){							\
+    if(parms->evl.split){							\
 	real *pcleNGSmp=PCOL(cleNGSmp->p[ievl], isim);	\
 	real coeff[6];/*convert precision*/				\
 	coeff[0]=ccb[1]; coeff[1]=ccb[2];				\

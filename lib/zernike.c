@@ -57,6 +57,7 @@ OMP_FOR(NTHREAD)
    if flag is >0, only radial mode is used.
    if flag is  0, all modes between rmin and rmax.
    if flag is <0, only generate mode -flag. rmin and rmax is irrelevant
+   set D to -|D| to avoid clipping points outside of D.
 */
 dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 	if(flag<0){

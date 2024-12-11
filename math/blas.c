@@ -136,7 +136,23 @@ X(mat)* X(inv)(const X(mat)* A){
 	X(inv_inplace)(out);
 	return out;
 }
-
+static void X(applyAtW)(X(mat)**pAtW, const X(mat)*A, const_anyarray W_){
+	if(!A) return;
+	const cell *W=W_.c;
+	if(ismat(W) && PN(W)==A->nx){//dense
+		const X(mat) *wt=(X(mat) *)W;
+		*pAtW=X(new)(A->ny, A->nx);
+		for(long iy=0; iy<A->ny; iy++){
+			for(long ix=0;ix<A->nx; ix++){
+				P(*pAtW, iy, ix)=P(A, ix, iy)*P(wt, ix);
+			}
+		}
+	}else if(NY(W)==NX(W)){
+		X(cellmm)(pAtW, A, W, "tn", 1);
+	}else{
+		error("Invalid format: A is %ldx%ld, W is %ldx%ld\n", NX(A), NY(A), NX(W), NY(W));
+	}
+}
 /**
    compute the pseudo inverse of matrix A with weigthing of full matrix W or
    sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
@@ -144,50 +160,32 @@ X(mat)* X(inv)(const X(mat)* A){
    thres is the threshold to truncate eigenvalues.
 */
 X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
-	const cell* W=W_.c;
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
-	/*Compute AtW=A'*W */
-	if(W){
-		if(ismat(W)){//dense
-			const X(mat)* wt=(X(mat)*)W;
-			if(wt->ny==wt->nx){
-				X(mm)(&AtW, 0, A, wt, "tn", 1);
-			} else if(PN(wt)==A->nx){
-				AtW=X(new)(A->ny, A->nx);
-				for(long iy=0; iy<A->ny; iy++){
-					for(long ix=0;ix<A->nx; ix++){
-						P(AtW, iy, ix)=P(A, ix, iy)*P(wt, ix);
-					}
-				}
-			} else{
-				error("Invalid format: A is %ldx%ld, W is %ldx%ld\n", NX(A),NY(A),NX(W),NY(W));
-			}
-		} else if(issp(W)){//sparse
-			const X(sp)* Wsp=X(sp_cast)(W);
-			X(mulsp)(&AtW, A, Wsp, "tn", 1);
-		} else{
-			error("Invalid data type :%u\n", W->id);
-		}
-	} else{
-		AtW=X(trans)(A);
-	}
 	/*Compute cc=A'*W*A */
-	X(mat)* cc=NULL;
-	X(mm) (&cc, 0, AtW, A, "nn", 1);
-	/*Compute inv of cc */
-	/*X(invspd_inplace)(cc); */
+	X(mat) *cc=NULL;
+	if(W_.c){/*Compute AtW=A'*W */
+		X(applyAtW)(&AtW, A, W_);
+		X(mm)(&cc, 0, AtW, A, "nn", 1);
+	}else{
+		X(mm)(&cc, 0, A, A, "tn", 1);
+	}
 	if(X(isnan(cc))){
 		writebin(cc, "cc_isnan");
 		writebin(A, "A_isnan");
 		writebin(AtW, "AtW_isnan");
-		writecell(W, "W_isnan");
+		writecell(W_.c, "W_isnan");
 	}
+	/*Compute inv of cc */
 	X(svd_pow)(cc, -1, thres);/*invert the matrix using SVD. safe with small eigen values. */
 	X(mat)* out=NULL;
 	/*Compute (A'*W*A)*A'*W */
-	X(mm) (&out, 0, cc, AtW, "nn", 1);
-	X(free)(AtW);
+	if(AtW){
+		X(mm) (&out, 0, cc, AtW, "nn", 1);
+		X(free)(AtW);
+	}else{
+		X(mm) (&out, 0, cc, A, "nt", 1);
+	}
 	X(free)(cc);
 	return out;
 }
@@ -518,39 +516,43 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
+X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const_anyarray W_,    /**<[in] The weighting matrix. dense or sparse*/
 	R thres          /**<[in] SVD inverse threshold*/
 	){
 	if(!A) return NULL;
-	X(cell)* wA=NULL;
+	X(cell)* AtW=NULL;
+	X(cell) *ata=NULL;
 	const cell *W=W_.c;
 	if(W){
-		if(NY(W)==NX(A)){
-			X(cellmm)(&wA, W, A, "nn", 1);
-		}else if(NX(A)==NX(W) && NY(A)==NY(W)){
-			wA=X(celldup)(A);
-			X(cellcwm)(wA, (X(cell)*)W);
+		if(NX(A)==NY(W) && NX(W)==NY(W) && NX(A)!=1){//matrix
+			X(cellmm)(&AtW, A, W, "tn", 1);
+		}else if(NX(A)==NX(W)){//component wise
+			AtW=X(cellnew)(NY(A), NX(A));
+			for(long iy=0; iy<NY(A); iy++){
+				for(long ix=0; ix<NX(A); ix++){
+					X(applyAtW)(&P(AtW,iy,ix),P(A,ix,iy),PR(W,ix,iy));
+				}
+			}
+			//X(cellcwm)(wA, (X(cell)*)W);
 		}else{
-			warning("W is invalid, ignore it\n");
+			error("W is in invalid format.\n");
 		}
+		X(cellmm)(&ata, AtW, A, "nn", 1);
+	}else{
+		X(cellmm)(&ata, A, A, "tn", 1);
 	}
-	if(!wA){
-		wA=X(cellref)(A);
-	}
-
-	X(cell)* ata=NULL;
-	X(cellmm)(&ata, wA, A, "tn", 1);
 	X(cellsvd_pow)(ata, -1, thres);
 	X(cell)* out=NULL;
-	X(cellmm)(&out, ata, wA, "nt", 1);
-	X(cellfree)(wA);
+	
+	if(AtW){
+		X(cellmm)(&out, ata, AtW, "nn", 1);
+		X(cellfree)(AtW);
+	}else{
+		X(cellmm)(&out, ata, A, "nt", 1);
+	}
 	X(cellfree)(ata);
 	return out;
-}
-X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const X(spcell)* W /**<[in] The weighting matrix. */){
-	return X(cellpinv2)(A, W?W:NULL, 1e-14);
 }
 
 /**
