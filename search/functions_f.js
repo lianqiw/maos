@@ -37,7 +37,6 @@ var searchData=
   ['scellnewsame_5ffile',['scellnewsame_file',['../smath_8h.html#a7fbba812d4e7755188e7d9916158e1c8',1,'stmp.c']]],
   ['scellnewsame_5fmmap',['scellnewsame_mmap',['../smath_8h.html#a9906381cae037f731e3fd063678c0251',1,'stmp.c']]],
   ['scellnorm',['scellnorm',['../smath_8h.html#a9cb28a81bde54d63d472bf305200b0cb',1,'stmp.c']]],
-  ['scellpinv',['scellpinv',['../smath_8h.html#a36ef8dec095edbc14c9975b87dda6d4b',1,'stmp.c']]],
   ['scellread_5fmmap',['scellread_mmap',['../smath_8h.html#abcc0c3300810cad45068098b74425321',1,'stmp.c']]],
   ['scellreduce',['scellreduce',['../smath_8h.html#a4e435d4e179f82e94b7fd990f9ce700e',1,'stmp.c']]],
   ['scellref',['scellref',['../smath_8h.html#a3044daefbaa37dd91cd42bcd304827ce',1,'stmp.c']]],

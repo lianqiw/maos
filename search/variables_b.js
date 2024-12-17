@@ -35,6 +35,7 @@ var searchData=
   ['moao',['moao',['../classcurecon__t.html#a8da644cfb7b7a190f875c7551146c841',1,'curecon_t::moao()'],['../parms_8h.html#acb481a7f5ebf8403cd6a720cf665cc72',1,'powfs_cfg_t::moao()'],['../parms_8h.html#a5733e87dde5676eb6a6cc0b239168cc4',1,'evl_cfg_t::moao()'],['../parms_8h.html#ae8f21ed056567f85faed8f9083953602',1,'gpu_cfg_t::moao()'],['../parms_8h.html#a53e4e0251c7116fad2392160f2c07018',1,'parms_t::moao()'],['../maos_2types_8h.html#ac5380ba23d9dd22537cdc88a049030b8',1,'recon_t::moao()']]],
   ['mod',['mod',['../maos_2types_8h.html#a82dd38e5da494d4da22c77b88eba376e',1,'aper_t']]],
   ['modes',['Modes',['../maos_2types_8h.html#ac7e1e3b45fbe7c2f170410b50462dbc9',1,'ngsmod_t']]],
+  ['modes2',['Modes2',['../maos_2types_8h.html#aa386fb42b9c334c4fbf000c874c05367',1,'ngsmod_t']]],
   ['modulate',['modulate',['../pywfs_8h.html#abf6b2eee87e4010d2b5a8a279690faf2',1,'pywfs_cfg_t']]],
   ['modulpos',['modulpos',['../pywfs_8h.html#acbd0d2bbccd50cfd8cb716021e376eee',1,'pywfs_cfg_t']]],
   ['modulpos_5fi',['modulpos_i',['../pywfs_8h.html#afe8fb8802e3775d894ca9c3d6ab36742',1,'pywfs_cfg_t']]],

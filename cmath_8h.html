@@ -476,10 +476,8 @@ comp&#160;</td><td class="memItemRight" valign="bottom"><b>ctrapz</b> (const <a 
 <tr class="separator:addb2ebf6b55726391b1ea6be0e210e2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72a43514eb1abfbe161f74f5a223f2f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a72a43514eb1abfbe161f74f5a223f2f5">ccellinvspd_each</a> (<a class="el" href="type_8h.html#structccell">ccell</a> *A)</td></tr>
 <tr class="separator:a72a43514eb1abfbe161f74f5a223f2f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa50bc99fdfab06b22e78039459df9194"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aa50bc99fdfab06b22e78039459df9194">ccellpinv2</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A, const_anyarray W, real thres)</td></tr>
-<tr class="separator:aa50bc99fdfab06b22e78039459df9194"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8292c4f7dda1db343ba7c9491567fcac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a8292c4f7dda1db343ba7c9491567fcac">ccellpinv</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A, const <a class="el" href="type_8h.html#structcspcell">cspcell</a> *W)</td></tr>
-<tr class="separator:a8292c4f7dda1db343ba7c9491567fcac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed81d98cf283050f5b0a49f29a96e8cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#aed81d98cf283050f5b0a49f29a96e8cd">ccellpinv</a> (const <a class="el" href="type_8h.html#structccell">ccell</a> *A, const_anyarray W, real thres)</td></tr>
+<tr class="separator:aed81d98cf283050f5b0a49f29a96e8cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb6865835c133924451eac6dfaec4144"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#afb6865835c133924451eac6dfaec4144">ccellsvd_pow</a> (<a class="el" href="type_8h.html#structccell">ccell</a> *A, real power, real thres)</td></tr>
 <tr class="separator:afb6865835c133924451eac6dfaec4144"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d486b90983f7fc7dfce3f64431c8df6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmath_8h.html#a0d486b90983f7fc7dfce3f64431c8df6">ccellcwpow</a> (<a class="el" href="type_8h.html#structccell">ccell</a> *A, real power)</td></tr>
@@ -3844,14 +3842,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
 
 </div>
 </div>
-<a id="aa50bc99fdfab06b22e78039459df9194"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa50bc99fdfab06b22e78039459df9194">&#9670;&nbsp;</a></span>ccellpinv2()</h2>
+<a id="aed81d98cf283050f5b0a49f29a96e8cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed81d98cf283050f5b0a49f29a96e8cd">&#9670;&nbsp;</a></span>ccellpinv()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structccell">ccell</a>* ccellpinv2 </td>
+          <td class="memname"><a class="el" href="type_8h.html#structccell">ccell</a>* ccellpinv </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -3881,41 +3879,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">W_</td><td>The weighting matrix. dense or sparse </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>SVD inverse threshold </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a8292c4f7dda1db343ba7c9491567fcac"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8292c4f7dda1db343ba7c9491567fcac">&#9670;&nbsp;</a></span>ccellpinv()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structccell">ccell</a>* ccellpinv </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structccell">ccell</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structcspcell">cspcell</a> *&#160;</td>
-          <td class="paramname"><em>W</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W</td><td>The weighting matrix. </td></tr>
   </table>
   </dd>
 </dl>

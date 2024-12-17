@@ -25,5 +25,6 @@ var parms_8h_structevl__cfg__t =
     [ "nevl", "parms_8h.html#a409f89d4f375f44c8d12fde411cee215", null ],
     [ "tomo", "parms_8h.html#a94488103f598bcc7e3b57efe77433b1d", null ],
     [ "indoa", "parms_8h.html#a1310f644d109168bdc986832854290e2", null ],
-    [ "moao", "parms_8h.html#a5733e87dde5676eb6a6cc0b239168cc4", null ]
+    [ "moao", "parms_8h.html#a5733e87dde5676eb6a6cc0b239168cc4", null ],
+    [ "split", "parms_8h.html#af88fc49a67c2a217cc65017dc2f6d125", null ]
 ];

@@ -13,5 +13,6 @@ var process_8h =
     [ "get_cpu_avail", "process_8h.html#a1c176fb9d3525328cc87386d587b156a", null ],
     [ "read_cpu_counter", "process_8h.html#a9c4709c0dd3a1116498f55e126e39e8b", null ],
     [ "read_self_cpu", "process_8h.html#a03994ae73698e7ec9c5f08e3321ab399", null ],
-    [ "get_ncpu", "process_8h.html#ac98d2202992eb71111685678bae4eb41", null ]
+    [ "get_ncpu", "process_8h.html#ac98d2202992eb71111685678bae4eb41", null ],
+    [ "set_dirout", "process_8h.html#ad4e774cdbb99440b5f5e4a80742411d2", null ]
 ];

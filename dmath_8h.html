@@ -442,10 +442,8 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
 <tr class="separator:abdecf8635a39266960e7121b54be57d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc0cce55471ddf4b189b5722f5f93790"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#acc0cce55471ddf4b189b5722f5f93790">dcellinvspd_each</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *A)</td></tr>
 <tr class="separator:acc0cce55471ddf4b189b5722f5f93790"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a020ba439ab24574669f2b4ed937842ce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a020ba439ab24574669f2b4ed937842ce">dcellpinv2</a> (const <a class="el" href="type_8h.html#structdcell">dcell</a> *A, const_anyarray W, real thres)</td></tr>
-<tr class="separator:a020ba439ab24574669f2b4ed937842ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f170ec0d7a1997af6d14ee120d1401a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a8f170ec0d7a1997af6d14ee120d1401a">dcellpinv</a> (const <a class="el" href="type_8h.html#structdcell">dcell</a> *A, const <a class="el" href="type_8h.html#structdspcell">dspcell</a> *W)</td></tr>
-<tr class="separator:a8f170ec0d7a1997af6d14ee120d1401a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a6af0aca95316036efcda18b7b2441c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a7a6af0aca95316036efcda18b7b2441c">dcellpinv</a> (const <a class="el" href="type_8h.html#structdcell">dcell</a> *A, const_anyarray W, real thres)</td></tr>
+<tr class="separator:a7a6af0aca95316036efcda18b7b2441c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34d9e4845e8a142fe494d49fa50ff586"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#a34d9e4845e8a142fe494d49fa50ff586">dcellsvd_pow</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *A, real power, real thres)</td></tr>
 <tr class="separator:a34d9e4845e8a142fe494d49fa50ff586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd4ea307c1932e5cd122dbaa28d2a4c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmath_8h.html#abd4ea307c1932e5cd122dbaa28d2a4c1">dcellcwpow</a> (<a class="el" href="type_8h.html#structdcell">dcell</a> *A, real power)</td></tr>
@@ -5016,14 +5014,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladd</b> (<a cl
 
 </div>
 </div>
-<a id="a020ba439ab24574669f2b4ed937842ce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a020ba439ab24574669f2b4ed937842ce">&#9670;&nbsp;</a></span>dcellpinv2()</h2>
+<a id="a7a6af0aca95316036efcda18b7b2441c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a6af0aca95316036efcda18b7b2441c">&#9670;&nbsp;</a></span>dcellpinv()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structdcell">dcell</a>* dcellpinv2 </td>
+          <td class="memname"><a class="el" href="type_8h.html#structdcell">dcell</a>* dcellpinv </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -5053,41 +5051,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dspcelladd</b> (<a cl
     <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">W_</td><td>The weighting matrix. dense or sparse </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>SVD inverse threshold </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a8f170ec0d7a1997af6d14ee120d1401a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f170ec0d7a1997af6d14ee120d1401a">&#9670;&nbsp;</a></span>dcellpinv()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="type_8h.html#structdcell">dcell</a>* dcellpinv </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdcell">dcell</a> *&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="type_8h.html#structdspcell">dspcell</a> *&#160;</td>
-          <td class="paramname"><em>W</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The matrix to pseudo invert </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W</td><td>The weighting matrix. </td></tr>
   </table>
   </dd>
 </dl>

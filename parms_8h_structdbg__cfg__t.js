@@ -1,6 +1,5 @@
 var parms_8h_structdbg__cfg__t =
 [
-    [ "wamethod", "parms_8h.html#a1bdf71f0b68a210e130fa366fec8cadc", null ],
     [ "mvstlimit", "parms_8h.html#a81e9fda8329dd27e93ea7b78b2277b5e", null ],
     [ "annular_W", "parms_8h.html#a245084e8fc72db2ad762ffd16e7328cb", null ],
     [ "tomo_maxit", "parms_8h.html#abdb406869547be985612c9f4e30af857", null ],
