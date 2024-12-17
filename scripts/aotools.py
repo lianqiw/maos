@@ -236,10 +236,10 @@ def grad_ttfr(grad, saloc):
     g2v=gv-mod@ptt
     g2v.shape=[2,nsa]
     return g2v
-def loc_zernike_proj(loc, rmin, rmax, radonly=0):
+def loc_zernike_proj(loc, rmin, rmax, radonly=0, D=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     #D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
-    mod=aos.zernike(loc, 0, rmin, rmax, radonly).T
+    mod=aos.zernike(loc, D, rmin, rmax, radonly).T
     rmod=np.linalg.pinv(mod)
     return mod, rmod
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
@@ -253,13 +253,29 @@ def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
     opd2=opd-mod@(rmod@opd)
     return opd2
-def mk2dloc(shape):
+
+def calc_roc_k(x, y, height):
+    '''compute radius of curvature and conic factor'''
+    rsq=x**2+y**2
+    rmax=sqrt(np.max(rsq))
+    def errfun(x):
+        '''compute conic surface height'''
+        cr=1/x[0] #curvature
+        k=x[1]
+        height2=rsq*cr/(1+sqrt(1-rsq*((1+k)*cr*cr)))
+        err=np.sum((height-height2)**2)
+        return err
+    x0=np.array([rmax*2,0])
+    x=scipy.optimize.minimize(errfun, x0).x
+    return x
+
+def mk2dloc(shape, dx=1):
     nx=shape[0]
     if len(shape)>1:
         ny=shape[1]
     else:
         ny=nx
-    return aos.mksqloc(ny, nx, 1, 1, -ny/2, -nx/2).reshape(2,nx*ny)
+    return aos.mksqloc(ny, nx, dx, dx, -ny*dx/2, -nx*dx/2).reshape(2,nx*ny)
 def mktt(amp):
     '''create piston/tip/tilt mode from amplitude map'''
     (nx,ny)=amp.shape
@@ -309,10 +325,8 @@ def read_many(fdin):
         except:
             print('Fail to read',fd)
             pass
-    try:
-        res=simplify(np.array(res, dtype=object))
-    except:
-        pass
+    
+    res=aos.simplify(np.array(res, dtype=object))
     return res,fds
 def read_many_dict(fdin):
     '''read many files together into a dictionary'''
@@ -368,20 +382,25 @@ def plot_cross(A, n=0, dx=1):
     n2=min((A.shape[0]+n)>>1,A.shape[0])
     print(n1,n2,A.shape[0]>>1)
     plot((np.arange(n1,n2)-(A.shape[0]>>1))*dx, A[n1:n2,A.shape[1]>>1])
-
-def plot_smooth(x,y,*args,**kargs):
-    from scipy.interpolate import make_interp_spline, BSpline
+def resample_fit(x, y, degree=3):
+    ff=np.poly1d(np.polyfit(x, y, degree))
+    ynew=ff(x)
+    return ynew
+def resample_spline(x,y,nx=200,degree=3):
+    '''Resample the data to new points'''
     ind=np.argsort(x)
     x=x[ind]
     y=y[ind]
     #define x as 200 equally spaced values between the min and max of original x
-    xnew = np.linspace(x.min(), x.max(), 200)
+    xnew = np.linspace(x[0], x[-1], nx)
     #define spline
-    spl = make_interp_spline(x, y, k=3, bc_type="natural")
-    y_smooth = spl(xnew)
-
-    #create smooth line chart
-    plt.plot(xnew, y_smooth, *args, **kargs)
+    spl = scipy.interpolate.make_interp_spline(x, y, k=degree, bc_type="natural")
+    ynew = spl(xnew)
+    return (xnew, ynew)
+def plot_smooth(x,y,*args,**kargs):
+    '''Create smooth line chart'''
+    xnew, ynew=resample_spline(x, y, 200, 3)
+    plt.plot(xnew, ynew, *args, **kargs)
 def radial_profile(data, nx=None):
     if nx is None:
         nx=data.shape[0]>>1
@@ -516,15 +535,15 @@ def calc_psd(v, dt=1, fold=1, axis=-1):
         f=np.arange(nstep)*df
         psd=af
     return(f,psd)
-def plot_psd_cumu(f, psd, plot_options='-'):
-    '''Plot the PSD cumulative integral from high to low'''
+def psd_reverse_cumu(f, psd):
+    '''Compute the PSD cumulative integral from high to low. first axis of psd must be the same as f'''
     fr=f[::-1]
     if psd.ndim==2:
         fr2=fr[:,None]
     else:
-        fr2=fr;
-    psdr=mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))
-    loglog(fr,psdr, plot_options)
+        fr2=fr
+        
+    return mysqrt(-cumtrapz(psd[::-1],fr2,axis=0,initial=0))[::-1]
 
 def cog(data, center=None):
     '''Center of gravity'''
@@ -896,3 +915,29 @@ def strehl(rms, wvl):
 def savefig(fn, *args, **kargs):
     plt.gcf().tight_layout() #fix layout
     plt.savefig(fn, *args, **kargs, bbox_inches='tight')
+
+def noll2zrn(mm,mv):
+    '''Convert noll's normalized zernike to code v standard non-normalized zernike
+        mm is noll mode index [start from 1]
+        mv is noll mode value
+        return zrn mode index and mode value with codev normalization
+    '''
+    rm=np.ceil((sqrt(8.*mm+1)-3)*0.5) #noll mode radial order
+    am=sqrt(2*(rm+1)) #none-radial order normalization
+    if np.max(mm)<56: #list of radial modes
+        indr=np.array([1,4,11,22,37])
+    else:
+        raise(Exception('Please implement'))
+    for indri in indr:
+        am[mm==indri]/=sqrt(2)
+    
+    if np.max(mm)<56: #convert noll mode to zrn modes
+        zmn=np.array([1, 2,3,  5,6,4,  9,8,10,7,  13,12,14,11,15,   18,19,17,20,16,21,  25,26,24,27,23,28,22,  33,32,34,31,35,30,36,29,
+                     41,40,42,39,43,38,44,37,45,  50,51,49,52,48,53,47,54,46,55])
+    else:
+        raise(Exception('Please implement'))
+    return zmn[mm-1], mv*am
+        
+def sumsq(vec):
+    '''return sum(vec*vec)'''
+    return np.sum(vec**2);
