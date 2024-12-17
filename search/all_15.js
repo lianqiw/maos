@@ -7,6 +7,7 @@ var searchData=
   ['w1',['W1',['../maos_2types_8h.html#a3024f14ac8cb0be7c6219ccfdbf5484f',1,'moao_t::W1()'],['../maos_2types_8h.html#a8c7520f0ac0db4ba04479e250acd7519',1,'fit_t::W1()'],['../maos_2types_8h.html#a70d72dae68689a1f60c20726e37fe832',1,'recon_t::W1()']]],
   ['wa',['Wa',['../maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61',1,'ngsmod_t']]],
   ['wait_5fdmreal',['wait_dmreal',['../maos_2types_8h.html#a3e28fa95260cac0d679efd17ea13b22e',1,'utils.c']]],
+  ['wamethod',['wamethod',['../parms_8h.html#a1bdf71f0b68a210e130fa366fec8cadc',1,'dbg_cfg_t']]],
   ['warm',['warm',['../muv_8h.html#a38ec5f82d89907f1b9455b38f6465343',1,'muv_t']]],
   ['wddeg',['wddeg',['../parms_8h.html#a57f5298ecf45e88da98c2d3fa20f058b',1,'atm_cfg_t']]],
   ['wdrand',['wdrand',['../parms_8h.html#a71396a5a017ea33af69f66cbd0725766',1,'atm_cfg_t']]],

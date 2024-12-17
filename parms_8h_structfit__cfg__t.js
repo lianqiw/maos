@@ -17,7 +17,6 @@ var parms_8h_structfit__cfg__t =
     [ "bgs", "parms_8h.html#a6a352da6dab6ef9ad69ec5a100430f04", null ],
     [ "precond", "parms_8h.html#ab2a845c3e048a51c73e4734f0e596fff", null ],
     [ "maxit", "parms_8h.html#a7c7f2b7b6ffa94243467f9d33797b27a", null ],
-    [ "guard", "parms_8h.html#ab5a4ba05c0a12a768a36af9224ad8395", null ],
     [ "square", "parms_8h.html#a1f08e7c6607bb58fb32b5c4121b93612", null ],
     [ "assemble", "parms_8h.html#a31fba635ec8522c3007bf2be5ea3649e", null ],
     [ "pos", "parms_8h.html#ab5cf37cf0ca916312899709f9026926c", null ],

@@ -12,8 +12,7 @@ var draw_8h =
       [ "ctype", "draw_8h.html#a63f75aca74bd384d75bc1e09e38cb0c5", null ],
       [ "xylog", "draw_8h.html#a8f4347b7177ff3defb0b85bc119afc7b", null ],
       [ "cir", "draw_8h.html#a39e73392f654aabf5c016415f4eb4d01", null ],
-      [ "legend", "draw_8h.html#ad1c20a974ff1d40d303b21785ad56b2c", null ],
-      [ "always", "draw_8h.html#a3d677ce628fabd1aef1d0724b299f7d6", null ]
+      [ "legend", "draw_8h.html#ad1c20a974ff1d40d303b21785ad56b2c", null ]
     ] ],
     [ "plot_opts.__unnamed__", "draw_8h.html#unionplot__opts_8____unnamed____", [
       [ "image", "draw_8h.html#a78805a221a988e79ef3f42d7c5bfd418", null ],

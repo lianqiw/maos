@@ -119,7 +119,6 @@ var searchData=
   ['moao_5ft',['moao_t',['../maos_2types_8h.html#structmoao__t',1,'']]],
   ['mod',['mod',['../maos_2types_8h.html#a82dd38e5da494d4da22c77b88eba376e',1,'aper_t']]],
   ['modes',['Modes',['../maos_2types_8h.html#ac7e1e3b45fbe7c2f170410b50462dbc9',1,'ngsmod_t']]],
-  ['modes2',['Modes2',['../maos_2types_8h.html#aa386fb42b9c334c4fbf000c874c05367',1,'ngsmod_t']]],
   ['modulate',['modulate',['../pywfs_8h.html#abf6b2eee87e4010d2b5a8a279690faf2',1,'pywfs_cfg_t']]],
   ['modulpos',['modulpos',['../pywfs_8h.html#acbd0d2bbccd50cfd8cb716021e376eee',1,'pywfs_cfg_t']]],
   ['modulpos_5fi',['modulpos_i',['../pywfs_8h.html#afe8fb8802e3775d894ca9c3d6ab36742',1,'pywfs_cfg_t']]],

@@ -12,7 +12,6 @@ var misc_8h =
     [ "strdup", "misc_8h.html#a9254b089d435892385cf14d0ab4a7a2d", null ],
     [ "strndup", "misc_8h.html#ad03229fc70e029be3fb59fe8dc7aef6f", null ],
     [ "snprintf", "misc_8h.html#aa367b75c5aed883fef5befbdf04835a4", null ],
-    [ "default_color", "misc_8h.html#a4852c9ffe1fa4272d4ccf0fc553d959c", null ],
     [ "mydirname", "misc_8h.html#a7eb606f7b007bd7d99f5063742df1b07", null ],
     [ "check_suffix", "misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
     [ "copyfile", "misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd", null ],
@@ -50,6 +49,5 @@ var misc_8h =
     [ "mysnprintf", "misc_8h.html#a9bd8555fd6d364ebf45f367645039713", null ],
     [ "parse_argopt", "misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
     [ "set_realtime", "misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
-    [ "free_strarr", "misc_8h.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ],
-    [ "print_version", "misc_8h.html#ac6230d495fc909bb61195c45f703d492", null ]
+    [ "free_strarr", "misc_8h.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ]
 ];
