@@ -3483,9 +3483,12 @@ static void print_parms(const parms_t *parms){
 	info2("There are %d wfs\n",parms->nwfs);
 	for(i=0; i<parms->nwfs; i++){
 		const int ipowfs=parms->wfs[i].powfs;
-		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) r=%7.1f arcsec, %3.0f km, siglev is %g", i,
+		const real rho=RSS(parms->wfs[i].thetax, parms->wfs[i].thetay)*RAD2AS;
+		real th=rho==0?0:atan2(parms->wfs[i].thetay, parms->wfs[i].thetax)*180/M_PI;
+		//if(th<0) th+=360;
+		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) (%5.1f, %4.0f°) arcsec, %3.0f km, siglev is %7.1f", i,
 			parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
-			parms->wfs[i].thetay*RAD2AS, RSS(parms->wfs[i].thetax,parms->wfs[i].thetay)*RAD2AS,
+			parms->wfs[i].thetay*RAD2AS, rho, th, 
 			parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)",parms->wfs[i].sigsim);
@@ -3632,9 +3635,23 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 		addpath2(0, "%s/%s", config_path, "examples");
 		free(config_path); config_path=NULL;
 	}
-	info("Main config file is %s\n", mainconf);
-	open_config(mainconf);/*main .conf file. */
-	open_config(extraconf);/*overriding .conf or lines*/
+	if(mainconf){
+		open_config(mainconf, 0);/*user supplied main .conf file. */
+	}
+	if(extraconf && strlen(extraconf)){
+		open_config(extraconf, 1);/*overriding .conf or lines*/
+	}
+	if(!mainconf && //sanity check for completeness.
+		(!readcfg_peek("sim.skysim")||!readcfg_peek("save.evlopd")||
+			!readcfg_peek("atm.r0z")||!readcfg_peek("recon.psdnseg"))){
+		mainconf=getenv("MAOS_DEFAULT");
+		if(!mainconf){
+			mainconf="default.conf";
+		}
+		if(mainconf){
+			open_config(mainconf, 0);/*defailt main .conf file. */
+		}
+	}
 	parms_t *parms=mycalloc(1,parms_t);
 	/*
 		Conversion of input (e.g., in units) should be done in readcfg_* not in postproc_* as the values might be used early on.

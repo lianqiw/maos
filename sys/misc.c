@@ -38,7 +38,6 @@
 #include "path.h"
 #include "bin.h"
 #include "scheduler_client.h"
-
 /**
    Obtain the dirname of a path. See mybasename().
 */
@@ -925,3 +924,39 @@ const int default_color_table[]={0x0000FF,
 			   0x000000,
 			   0x666666,
 };
+void print_version(void){
+	extern const char *GIT_VERSION;
+	info2("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+	char exe[PATH_MAX];
+	if(!get_job_progname(exe, PATH_MAX, 0)){
+		info2("BUILT: %s by %s on %s", BUILDDIR, COMPILER, myasctime(fmtime(exe)));
+	} else{
+		info2("BUILT: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);//__DATE__ and __TIME__ is only applicable to this specific file
+	}
+#ifdef __OPTIMIZE__
+#define OPT_STR "+O3"
+#else
+#define OPT_STR "+O0"
+#endif
+#if CPU_SINGLE
+#define CPU_FP "F32"
+#else
+#define CPU_FP "F64"
+#endif
+	info2(" CPU(" CPU_FP "," OPT_STR ")");
+#if USE_CUDA
+#if CUDA_DOUBLE
+#define GPU_FP "F64"
+#else
+#define GPU_FP "F32"
+#endif
+	info2(" with CUDA(v%d," GPU_FP ")\n", USE_CUDA);
+#else
+	info2(" w/o CUDA\n");
+#endif
+	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
+#if HAS_LWS
+	extern uint16_t PORT;
+	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
+#endif
+}
