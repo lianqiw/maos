@@ -2,7 +2,8 @@ name: Build and test maos in macos arm
 
 on:
   push:
-    branches: [ master ]
+    branches-ignore:
+    - gh-pages
   pull_request:
     branches: [ master ]
 
