@@ -862,14 +862,15 @@ void shift_grad(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(parms->nwfs==0||parms->sim.evlol||parms->sim.idealtomo) return;
 	if(PARALLEL==2){
+		pthread_mutex_lock(&simu->wfsgrad_mutex);
 		if(simu->wfsisim>0){
 			while(simu->wfsgrad_count<1){//not being consumed yet
-			//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
+				//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
 				pthread_cond_wait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex);
-				pthread_mutex_unlock(&simu->wfsgrad_mutex);
 			}
 			//dbg("ready: wfsgrad_count is ready: %d\n", simu->wfsgrad_count);
 		}
+		pthread_mutex_unlock(&simu->wfsgrad_mutex);
 	}
 	if(parms->recon.glao){
 		/* Average the gradients in GLAO mode. */
@@ -894,11 +895,13 @@ void shift_grad(sim_t* simu){
 		dcellcp(&simu->gradlastcl, simu->gradcl);
 	}
 	if(PARALLEL==2){
+		pthread_mutex_lock(&simu->wfsgrad_mutex);
 		//Signal recon wfsgrad is ready/
 		simu->wfsgrad_isim=simu->wfsisim;
 		simu->wfsgrad_count=0;//reset the counter
 		pthread_cond_broadcast(&simu->wfsgrad_condr);
 		//dbg("wfsgrad_isim is set to %d\n", simu->wfsgrad_isim);
+		pthread_mutex_unlock(&simu->wfsgrad_mutex);
 	}
 }
 

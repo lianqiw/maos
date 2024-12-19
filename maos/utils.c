@@ -1213,17 +1213,25 @@ dcell* dcellread_prefix(const char* file, const parms_t* parms, int ipowfs){
 void wait_dmreal(sim_t* simu, int isim){
 	if(PARALLEL==2){
 	//if(simu->dmreal_isim!=-1){
-		while(simu->dmreal_isim!=isim){
-			//if(simu->dmreal_isim+1!=isim){
-			//	error("dmreal_isim=%d, isim=%d\n", simu->dmreal_isim, isim);
-			//}
-			//dbg("waiting: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
+		pthread_mutex_lock(&simu->dmreal_mutex);
+		while(simu->dmreal_isim<isim){
+			//dbg("wait_dmreal waiting: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
 			pthread_cond_wait(&simu->dmreal_condr, &simu->dmreal_mutex);
 		}
-		//dbg("ready: dmreal_isim is %d need %d\n", simu->dmreal_isim, isim);
-		atomic_add_fetch(&simu->dmreal_count,1);
-		//}
 		pthread_mutex_unlock(&simu->dmreal_mutex);
+		if(simu->dmreal_isim>isim){
+			error("wait_dmreal: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
+		}
+	}
+}
+/**
+ * @brief Notify that we are done with dmreal
+ * 
+ * @param simu 
+ */
+void post_dmreal(sim_t *simu){
+	if(PARALLEL==2){
+		atomic_add_fetch(&simu->dmreal_count,1);
 		pthread_cond_signal(&simu->dmreal_condw);
 	}
 }

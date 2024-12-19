@@ -526,6 +526,7 @@ void* gpu_perfevl_sync(thread_t* info){
 		real* polep=PCOL(simu->olep->p[ievl], isim);
 		real* pclep=PCOL(simu->clep->p[ievl], isim);
 		CUDA_SYNC_STREAM;
+		post_dmreal(simu);
 		PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuglobal->perf.ccb_ol[ievl]);
 		PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuglobal->perf.ccb_cl[ievl]);
 		if(ans1||ans2){

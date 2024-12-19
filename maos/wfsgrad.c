@@ -263,7 +263,9 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 		TIM(1);
 		if(CL){
-			wait_dmreal(simu, simu->wfsisim);
+			if(PARALLEL==2){
+				wait_dmreal(simu, simu->wfsisim);
+			}
 			for(int idm=0; idm<parms->ndm; idm++){
 				thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 				propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
@@ -287,6 +289,9 @@ void* wfsgrad_iwfs(thread_t* info){
 			}
 			if(ptt[1]||ptt[2]){
 				loc_add_ptt(opd, ptt, powfs[ipowfs].loc);
+			}
+			if(PARALLEL==2){
+				post_dmreal(simu);
 			}
 		}
 		if(parms->powfs[ipowfs].skip&&parms->tomo.ahst_idealngs==1){

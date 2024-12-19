@@ -399,7 +399,7 @@ static void filter_cl(sim_t* simu){
 		}
 	}
 	if(PARALLEL==2){
-	//Wait until all clients has consumed the last dmreal
+		//Wait until all clients has consumed the last dmreal
 		if(simu->dmreal_isim!=-1){
 			unsigned int count=parms->evl.nevl;
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -407,16 +407,17 @@ static void filter_cl(sim_t* simu){
 					count+=parms->powfs[ipowfs].nwfs;
 				}
 			}
+			pthread_mutex_lock(&simu->dmreal_mutex);
 			while(simu->dmreal_count<count){
-			//dbg("waiting: dmreal_count is %d need %d\n", simu->dmreal_count, parms->evl.nevl + parms->nwfs);
+				//dbg("waiting: dmreal_count is %d need %d\n", simu->dmreal_count, count);
 				pthread_cond_wait(&simu->dmreal_condw, &simu->dmreal_mutex);
-				pthread_mutex_unlock(&simu->dmreal_mutex);
 			}
-			if(simu->dmreal_count>(unsigned int)(parms->evl.nevl+parms->nwfs)){
-				warning("error: dmreal_count is %u need %d\n", simu->dmreal_count, parms->evl.nevl+parms->nwfs);
+			pthread_mutex_unlock(&simu->dmreal_mutex);
+			if(simu->dmreal_count>count){
+				error("error: dmreal_count is %u need %d\n", simu->dmreal_count, count);
 			}
+			//dbg("ready: dmreal_count is %d need %d\n", simu->dmreal_count, count);
 		}
-		//dbg("ready: dmreal_count is %d\n", simu->dmreal_count);
 	}
 	/*hysteresis. */
 	if(simu->hyst){
@@ -616,10 +617,12 @@ void filter_dm(sim_t* simu){
 	simu->dmerr=0;
 	simu->Merr_lo=0;
 	if(PARALLEL==2){
-	//Signal perfevl and wfsgrad that dmreal is ready
+		//Signal perfevl and wfsgrad that dmreal is ready
+		pthread_mutex_lock(&simu->dmreal_mutex);
 		simu->dmreal_isim=simu->reconisim+2;
 		simu->dmreal_count=0;//reset the counter
 		pthread_cond_broadcast(&simu->dmreal_condr);
+		pthread_mutex_unlock(&simu->dmreal_mutex);
 		//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
 	}
 	save_dmreal(simu);

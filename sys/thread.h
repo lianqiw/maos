@@ -107,11 +107,13 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #endif
 #define OMP_FOR(nthread)    expect_level(0);DO_PRAGMA(omp parallel for default(shared) num_threads(nthread))
 #define OMP_FOR_COLLAPSE(n, nthread) expect_level(0);DO_PRAGMA(omp parallel for default(shared) collapse(n) num_threads(nthread))
+#define OMP(A) DO_PRAGMA(omp A)
 #else
 #define OMPTASK_SINGLE
 #define OMP_IN_PARALLEL 0
 #define OMP_FOR(n)
 #define OMP_FOR_COLLAPSE(n, nthread)
+#define OMP(A)
 #endif
 
 #if _OPENMP>=201511 //need further testing for speed

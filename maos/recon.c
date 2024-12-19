@@ -439,14 +439,17 @@ void* reconstruct(sim_t* simu){
 		return NULL;
 	}
 	if(PARALLEL==2){
+		pthread_mutex_lock(&simu->wfsgrad_mutex);
 		while(simu->wfsgrad_isim<simu->reconisim){
 			//dbg("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
 			//if(simu->wfsgrad_isim+1==simu->reconisim){
 			//}
 			pthread_cond_wait(&simu->wfsgrad_condr, &simu->wfsgrad_mutex);
 		}
+		if(simu->wfsgrad_isim>simu->reconisim){
+			error("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
+		}
 		//dbg("ready: wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
-		simu->wfsgrad_count++;
 		pthread_mutex_unlock(&simu->wfsgrad_mutex);
 	}
 	const int hi_output=(!parms->sim.closeloop||((isim+1>parms->step_hi)&&(isim+1-parms->step_hi)%parms->sim.dtrat_hi==0));
@@ -580,7 +583,11 @@ void* reconstruct(sim_t* simu){
 			ngsmod_split(&simu->Merr_lo, simu, simu->dmerr);
 		}
 	}
-
+	if(PARALLEL==2){
+		//dbg("ready: wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
+		atomic_add_fetch(&simu->wfsgrad_count,1);
+		pthread_cond_broadcast(&simu->wfsgrad_condw);
+	}
 	if(parms->recon.split){//low order reconstruction
 		recon_split_lo(simu);
 	}

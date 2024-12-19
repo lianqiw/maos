@@ -316,11 +316,11 @@ void* perfevl_ievl(thread_t* info){
 					CALL_THREAD(simu->evl_prop_dm[ind], 1);
 				}
 			}
-		
 			if(simu->ttmreal){
 				real ptt[3]={0, -P(simu->ttmreal,0), -P(simu->ttmreal,1)};
 				loc_add_ptt(iopdevl, ptt, aper->locs);
 			}
+			post_dmreal(simu);
 		}
 		TIM(4);
 		if(imoao>-1){

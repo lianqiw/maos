@@ -268,28 +268,39 @@ void maos_sim(){
 		numa_set_localalloc();
 #endif
 		if(PARALLEL==2){//event driven synchronization
-#pragma omp parallel
-#pragma omp sections
-			{
-#pragma omp section
-				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-					simu->perfisim=isim;
-					perfevl(simu);
-					print_progress(simu);
+			/*
+				There are two pairs of synchronization.
+				First pair: regarding update and consumption of dmreal, between filter and perfevl/wfsgrad.
+				Second pair: regarding update and consumption of wfsgrad, between shift_grad and reconstruct.
+				simulation index are used to indicate whether correct info is available.
+				counters are used to indicate consumption and reset when there is an update.
+			*/
+OMP(task)
+			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+				if(isim==simstart+1){//skip slow first step.
+					simu->tk_i1=myclockd();
 				}
-#pragma omp section
-				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-					simu->wfsisim=isim;
-					wfsgrad(simu);
-					shift_grad(simu);
-				}
-#pragma omp section
-				for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-					simu->reconisim=isim-1;
-					reconstruct(simu);
-					filter_dm(simu);
-				}
+				simu->tk_istart=myclockd();//step start time
+				simu->perfisim=isim;//info("call perfevl(%d)\n", isim);
+				simu->status->isim=isim;
+				perfevl(simu);
+				simu->tk_iend=myclockd();
+				print_progress(simu);
 			}
+OMP(task)
+			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+				simu->wfsisim=isim;//info("call wfsgrad(%d)\n", isim);
+				update_wfsflags(simu);
+				wfsgrad(simu);
+				shift_grad(simu);
+			}
+OMP(task)
+			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+				simu->reconisim=isim-1;//info("call reconstruct(%d)\n", isim);
+				reconstruct(simu);
+				filter_dm(simu);
+			}
+OMP(taskwait)
 		} else{
 			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 				maos_isim(isim);

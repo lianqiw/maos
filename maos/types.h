@@ -732,7 +732,7 @@ typedef struct sim_t{
     pthread_cond_t dmreal_condw;
     pthread_mutex_t dmreal_mutex;
     int wfsgrad_isim;//which isim this wfsgrad is from
-    int wfsgrad_count;//how many times this wfsgrad has been consumed.
+    unsigned int wfsgrad_count;//how many times this wfsgrad has been consumed.
     pthread_cond_t wfsgrad_condr;
     pthread_cond_t wfsgrad_condw;
     pthread_mutex_t wfsgrad_mutex;

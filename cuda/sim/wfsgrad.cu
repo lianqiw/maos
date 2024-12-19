@@ -700,6 +700,7 @@ void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	stream_t& stream=cuwfs[iwfs].stream;
 	CUDA_SYNC_STREAM;
+	post_dmreal(simu);
 	const int isim=simu->wfsisim;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
