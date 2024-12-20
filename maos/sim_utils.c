@@ -1838,10 +1838,10 @@ void print_progress(sim_t* simu){
 		const long lapsm=(laps-lapsh*3600)/60;
 		if(isim==parms->sim.start){
 			const char *hol="Step     #  Open Loop  PR TT  ";
-			const char *hoa="On axis  PR TT  Field RMS PR TT ";
-			const char *hsp="Split     HIGH   TT    LOW ";
-			const char *htm="    Timing ";
-			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->evl.split)?hsp:"", LOG_LEVEL<2?htm:"");
+			const char *hoa="On Axis PR    TT Field  PR     TT ";
+			const char *hsp="Split High     TT    Low    ";
+			const char *htm=" Timing ";
+			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->evl.split)?hsp:"", LOG_LEVEL<1?htm:"");
 		}
 		info2("Step %5d: OL%7.1f %6.1f",
 			isim,
@@ -1855,7 +1855,7 @@ void print_progress(sim_t* simu){
 				mysqrt(P(simu->cle, 1, isim))*1e9
 			);
 			if(parms->evl.split){
-				info2(" Split %7.1f %6.1f %6.1f",
+				info2(" ST %7.1f %6.1f %6.1f",
 					mysqrt(P(simu->clem, 0, isim))*1e9,
 					mysqrt(P(simu->clem, 1, isim))*1e9,
 					mysqrt(P(simu->clem, 2, isim))*1e9);
@@ -1866,7 +1866,7 @@ void print_progress(sim_t* simu){
 			}
 		}
 		if(LOG_LEVEL<1){//dbg is inactive
-			info2(" nm %6.3f s\n", status->tot*tkmean);
+			info2(" nm %6.3fs\n", status->mean*tkmean);
 		}else{
 			info2(" nm\n");
 		}

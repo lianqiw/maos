@@ -231,7 +231,43 @@ void maos_isim(int isim){
 	simu->tk_iend=myclockd();
 	print_progress(simu);
 }
-
+static void*perfevl_loop(sim_t *simu){
+	int simstart=simu->parms->sim.start;
+	int simend=simu->parms->sim.end;
+	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+		if(isim==simstart+1){//skip slow first step.
+			simu->tk_i1=myclockd();
+		}
+		simu->tk_istart=myclockd();//step start time
+		simu->perfisim=isim;//info("call perfevl(%d)\n", isim);
+		simu->status->isim=isim;
+		perfevl(simu);
+		simu->tk_iend=myclockd();
+		print_progress(simu);
+	}
+	return NULL;
+}
+static void *wfsgrad_loop(sim_t *simu){
+	int simstart=simu->parms->sim.start;
+	int simend=simu->parms->sim.end;
+	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+		simu->wfsisim=isim;//info("call wfsgrad(%d)\n", isim);
+		update_wfsflags(simu);
+		wfsgrad(simu);
+		shift_grad(simu);
+	}
+	return NULL;
+}
+static void *reconstruct_loop(sim_t *simu){
+	int simstart=simu->parms->sim.start;
+	int simend=simu->parms->sim.end;
+	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
+		simu->reconisim=isim-1;//info("call reconstruct(%d)\n", isim);
+		reconstruct(simu);
+		filter_dm(simu);
+	}
+	return NULL;
+}
 /**
    Closed loop simulation main loop.
 
@@ -275,32 +311,11 @@ void maos_sim(){
 				simulation index are used to indicate whether correct info is available.
 				counters are used to indicate consumption and reset when there is an update.
 			*/
-OMP(task)
-			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-				if(isim==simstart+1){//skip slow first step.
-					simu->tk_i1=myclockd();
-				}
-				simu->tk_istart=myclockd();//step start time
-				simu->perfisim=isim;//info("call perfevl(%d)\n", isim);
-				simu->status->isim=isim;
-				perfevl(simu);
-				simu->tk_iend=myclockd();
-				print_progress(simu);
-			}
-OMP(task)
-			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-				simu->wfsisim=isim;//info("call wfsgrad(%d)\n", isim);
-				update_wfsflags(simu);
-				wfsgrad(simu);
-				shift_grad(simu);
-			}
-OMP(task)
-			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
-				simu->reconisim=isim-1;//info("call reconstruct(%d)\n", isim);
-				reconstruct(simu);
-				filter_dm(simu);
-			}
-OMP(taskwait)
+			tp_counter_t group={0};
+			QUEUE(&group, perfevl_loop, simu, 1, 0);
+			QUEUE(&group, wfsgrad_loop, simu, 1, 0);
+			QUEUE(&group, reconstruct_loop, simu, 1, 0);
+			WAIT(&group, 0);
 		} else{
 			for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 				maos_isim(isim);

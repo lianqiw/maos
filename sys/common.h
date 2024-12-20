@@ -130,13 +130,12 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define dbg( A...) logdbg(0, YELLOW, A)//most important dbg
 #define dbg2(A...) logdbg(1, YELLOW, A)
 #define dbg3(A...) logdbg(2, YELLOW, A)//least important dbg
-#define dbg_once(A...) ({static int done=0; if(!done){done=1; dbg(A);}})
 #define logdbg_time(level, format, ...) logdbg(level, YELLOW, "[%s]%s: " format, myasctime(0), __func__, ##__VA_ARGS__)
 #define dbg_line(format,...) logdbg(0, YELLOW, "Debug(%s:%d): " format ,BASEFILE,__LINE__,##__VA_ARGS__)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)
-
+#define dbg_once(A...) ({static int done=0; if(!done){done=1; dbg_line(A);}})
 #ifndef assert
 #if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)

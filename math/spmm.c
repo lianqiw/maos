@@ -112,7 +112,7 @@ void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T 
 				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
 				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
 			}
-OMP_TASK_FOR(4)
+OMP_FOR(4)
 			for(long icol=0L; icol<A->ny; icol++){			
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
@@ -125,7 +125,7 @@ OMP_TASK_FOR(4)
 				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
 				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
 			}
-OMP_TASK_FOR(4)			
+OMP_FOR(4)			
 			for(long icol=0L; icol<A->ny; icol++){
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
@@ -171,7 +171,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 
 #define LOOP_TRANSA(ppy, yny, conjA, ppx, conjx)				\
 	{								\
-		OMP_TASK_FOR(4)\
+		OMP_FOR(4)\
 		for(long icol=0; icol<A->ny; icol++){\
 			for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){		\
 				for(long jcol=0; jcol<yny; jcol++){			\

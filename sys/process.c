@@ -49,6 +49,7 @@ const char* HOME=NULL;
 const char* USER=NULL;
 char* HOST=NULL;
 char* TEMP=NULL;//Do not put temp in /tmp as it is automatically cleaned by system.
+char* DIRBUILD=NULL;//Directory of build. Maybe different from BUILDDIR if symbolic links are used.
 char* DIRCACHE=NULL;//Directory for caching files that are expensive to compute.
 char* DIRLOCK=NULL;//Directory for caching files that are expensive to compute.
 char* DIREXE=NULL;/*absolute path of the exe.*/
@@ -124,6 +125,12 @@ void init_process(void){
 	mymkdir("%s", DIRLOCK);
 
 	DIRSTART=mygetcwd();
+	
+	chdir(BUILDDIR);
+	DIRBUILD=mygetcwd();
+	chdir(DIRSTART);
+	mystrrep(DIRSTART, DIRBUILD, BUILDDIR);
+	
 	{/*PATH to executable*/
 		char exepath[PATH_MAX];
 		if(!get_job_progname(exepath, PATH_MAX, 0)){
@@ -137,12 +144,13 @@ void init_process(void){
 			} else{
 				DIREXE=mystrdup(DIRSTART);
 			}
+			mystrrep(DIREXE, DIRBUILD, BUILDDIR);
 		}
 	}
-	if(!mystrcmp(DIRSTART, HOME)){
-		DIRSTART[0]='~';
-		memmove(DIRSTART+1, DIRSTART+strlen(HOME), strlen(DIRSTART)-strlen(HOME)+1);
-	}
+
+	mystrrep(DIRSTART, HOME, "~");
+	//dbg("DIRSTART=%s\n", DIRSTART);
+	
 	NCPU=get_ncpu();
 	MAXTHREAD=(int)sysconf(_SC_NPROCESSORS_ONLN);
 #if _OPENMP
@@ -172,10 +180,9 @@ void init_process(void){
 void set_dirout(const char *dir){
 	if(DIROUT) free(DIROUT);
 	DIROUT=myabspath(dir);
-	if(!mystrcmp(DIROUT, HOME)){
-		DIROUT[0]='~';
-		memmove(DIROUT+1, DIROUT+strlen(HOME), strlen(DIROUT)-strlen(HOME)+1);
-	}
+	mystrrep(DIROUT, DIRBUILD, BUILDDIR);
+	mystrrep(DIROUT, HOME, "~");
+	//dbg("DIROUT=%s\n", DIROUT);
 }
 /**
  * free memory

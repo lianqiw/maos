@@ -179,9 +179,9 @@ static void list_proc_append(proc_t *p){
 	char* sargs=NULL; //job arguments
 	if(spath){
 		const char* pos=NULL;
-		pos=strstr(spath, "/maos");
+		pos=strstr(spath, "/maos ");
 		if(!pos){
-			pos=strstr(spath, "/skyc");
+			pos=strstr(spath, "/skyc ");
 		}
 		if(pos){
 			sstart=(char*)malloc(pos-spath+1);//job start directory

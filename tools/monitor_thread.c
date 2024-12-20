@@ -129,7 +129,7 @@ static void proc_remove(int id, int pid){
 				pproc[id]=iproc->next;
 			}
 			nproc[id]--;
-
+			
 			if(!headless) {
 				g_idle_add((GSourceFunc)remove_entry, iproc->row);
 				delayed_update_title(id);

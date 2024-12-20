@@ -369,7 +369,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			cudata->reserve.init(MEM_RESERVE, 1);
 		}
 		info2("\n");
-		for(int i=0; i<NGPU; i++){
+		/*for(int i=0; i<NGPU; i++){
 			gpu_set(i);
 			for(int j=0; j<NGPU; j++){
 				if(j!=i){
@@ -384,7 +384,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 					}
 				}
 			}
-		}
+		}*/
 		if(parms){
 			/*Assign task to gpu evenly based on empirical data to maximum GPU
 			 * usage. We first gather together all the tasks and assign a timing

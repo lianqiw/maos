@@ -91,7 +91,9 @@ dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
 		D=D2;
 	}
 	if(fabs(D-D2)>(D2)*0.5){
-		warning("Specified diameter D=%g is smaller than half of loc D=%g\n", D, D2);
+		if(limitr){
+			warning("Specified diameter D=%g is smaller than half of loc D=%g\n", D, D2);
+		}
 	}
 
 	dmat* restrict opd=dnew(nloc, nmod);

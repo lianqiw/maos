@@ -72,6 +72,7 @@ int mysnprintf(char *restrict str, size_t size, const char *restrict format, ...
 #define strndup mystrndup
 #undef snprintf
 #define snprintf mysnprintf /*our snprintf avoids the truncation error by checking the returned size. */
+void mystrrep(char*str, const char *prefix, const char *substitute);
 typedef struct argopt_t{
     const char *name;    /**<The long name*/
     char key;      /**<The short name*/

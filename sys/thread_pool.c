@@ -408,15 +408,14 @@ static void *run_thread(void *data){
 }
 
 /**
- * Wait for jobs in the count to be done.
+ * Wait for jobs in the count to be done. Has the potential to deadlock if it
+ * calls do_job and the job inside calls pthread_cond_wait.
  */
 void thread_pool_wait(tp_counter_t *counter, int urgent){
 	while(counter->group){
-		//if urgent is true, do not do do_job(0) to prevent slow down
-		if(!do_job(urgent)){
-			//do not use cond waiting. The wakeup is not gauranteed.
-			mysleep(1e-6);
-		}
+		//if urgent is true, only do urgent jobs.
+		do_job(urgent);
+		//do not use cond waiting. The wakeup is not gauranteed.
 	}
 }
 /**

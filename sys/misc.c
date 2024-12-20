@@ -960,3 +960,16 @@ void print_version(void){
 	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
 #endif
 }
+void mystrrep(char *str, const char *prefix, const char *substitute){
+	if(!str || !prefix || !substitute) return;
+	size_t nsub=strlen(substitute);
+	size_t npre=strlen(prefix);
+	size_t nstr=strlen(str);
+	if(nstr<npre || nsub>npre){
+		return;
+	}
+	if(!mystrcmp(str, prefix)){
+		memcpy(str, substitute, nsub);
+		memmove(str+nsub, str+npre, nstr-npre+1);
+	}
+}

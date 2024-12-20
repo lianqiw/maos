@@ -309,31 +309,35 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 					int ithread=0;
 #ifdef _OPENMP
 					ithread=omp_get_thread_num();
-#endif									
-					cmat* etf=P(etf_cache, ithread);
+#endif		
+					cmat *etf=P(etf_cache, ithread);
 					real rsa=P(P(srsa,illt),isa);
 					real etf2sum=0;
-					czero(etf);
-					for(int icomp=etf0; icomp<etf1; icomp++){
-					/*peak in center */
-						const real itheta=P(thetas,icomp);
-						/*non linear mapping. changed from - to + on 2014-05-07.*/
-						const real ih=hs*rsa/(rsa+itheta*hs);
-						/*interpolating to get Na profile strenght. */
-						/*this is bilinear interpolation. not good. need to do averaging */
-						const real iih=(ih-hpmin)*dhp1;
-						const int iihf=ifloor(iih);
-						const real iihw=iih-iihf;
-						if(iihf<0||iihf>nhp-2){
-							P(etf,icomp)=0.;
-						} else{
-							real tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
-							/*neglected rsa1 due to renormalization. */
-							P(etf,icomp)=tmp;
-							etf2sum+=tmp;
+					if(!rsa){
+						cset(P(petf, isa, illt), 1);
+					}else{
+						czero(etf);
+						for(int icomp=etf0; icomp<etf1; icomp++){
+							/*peak in center */
+							const real itheta=P(thetas,icomp);
+							/*non linear mapping. changed from - to + on 2014-05-07.*/
+							const real ih=hs*rsa/(rsa+itheta*hs);
+							/*interpolating to get Na profile strenght. */
+							/*this is bilinear interpolation. not good. need to do averaging */
+							const real iih=(ih-hpmin)*dhp1;
+							const int iihf=ifloor(iih);
+							const real iihw=iih-iihf;
+							if(iihf<0||iihf>nhp-2){
+								P(etf,icomp)=0.;
+							} else{
+								real tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
+								/*neglected rsa1 due to renormalization. */
+								P(etf,icomp)=tmp;
+								etf2sum+=tmp;
+							}
 						}
 					}
-					if(fabs(etf2sum)>1.e-20){
+					if(etf2sum){
 						/*
 							Changed: We normalize the etf by sum(profile), so we can model
 							the variation of the intensity and meteor trails.
@@ -371,11 +375,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 							}
 						}
 						cfftshift(P(petf, isa, illt));/*peak in corner; */
-					} else{
-						warning_once("Wrong focus!\n");
-						cset(P(petf, isa, illt), 1);
 					}
-					
 				}//for isa
 			}//for illt.
 			ccellfree(etf_cache);
