@@ -12,7 +12,8 @@ var draw_8h =
       [ "ctype", "draw_8h.html#a63f75aca74bd384d75bc1e09e38cb0c5", null ],
       [ "xylog", "draw_8h.html#a8f4347b7177ff3defb0b85bc119afc7b", null ],
       [ "cir", "draw_8h.html#a39e73392f654aabf5c016415f4eb4d01", null ],
-      [ "legend", "draw_8h.html#ad1c20a974ff1d40d303b21785ad56b2c", null ]
+      [ "legend", "draw_8h.html#ad1c20a974ff1d40d303b21785ad56b2c", null ],
+      [ "always", "draw_8h.html#a3d677ce628fabd1aef1d0724b299f7d6", null ]
     ] ],
     [ "plot_opts.__unnamed__", "draw_8h.html#unionplot__opts_8____unnamed____", [
       [ "image", "draw_8h.html#a78805a221a988e79ef3f42d7c5bfd418", null ],
@@ -22,6 +23,7 @@ var draw_8h =
     [ "draw_add", "draw_8h.html#a6be0be645ac1bb71cbbce02ddaf959c8", null ],
     [ "draw_final", "draw_8h.html#ab01d0d9c0f4f57ef56695fc9a7aa3efe", null ],
     [ "draw_current", "draw_8h.html#adc80c25521f9db8258abbaf67cba49b0", null ],
+    [ "draw_current_format", "draw_8h.html#ab9039a2d7b1b79a450924760e45506a1", null ],
     [ "plot_empty", "draw_8h.html#a13d17abacae2b57cd668a6af4450cb67", null ],
     [ "draw", "draw_8h.html#a46d694cfaea0577fcfcf29458b650705", null ],
     [ "drawmap", "draw_8h.html#a2e8891182cfedf560ac3f65d8d11bd31", null ],

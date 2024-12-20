@@ -259,7 +259,7 @@ group</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wait for jobs in the count to be done. </p>
+<p>Wait for jobs in the count to be done. Has the potential to deadlock if it calls do_job and the job inside calls pthread_cond_wait. </p>
 
 </div>
 </div>

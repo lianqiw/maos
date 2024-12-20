@@ -1,7 +1,7 @@
 <map id="ngsmod_t" name="ngsmod_t">
 <area shape="rect" id="node2" href="$type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="185,300,239,377"/>
-<area shape="rect" id="node6" href="$type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="291,499,351,576"/>
+<area shape="rect" id="node6" href="$type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="303,504,363,581"/>
 <area shape="rect" id="node3" href="$type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="95,145,151,223"/>
-<area shape="rect" id="node5" href="$type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="375,499,443,576"/>
-<area shape="rect" id="node7" href="$type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="467,499,519,576"/>
+<area shape="rect" id="node5" href="$type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="387,504,455,581"/>
+<area shape="rect" id="node7" href="$type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="479,504,531,581"/>
 </map>

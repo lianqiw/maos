@@ -98,6 +98,8 @@ var maos_2types_8h =
       [ "Rngs", "maos_2types_8h.html#a2ccb26fdd3335f819cca66138403dcd1", null ],
       [ "Pngs", "maos_2types_8h.html#a3414ee3ec639f83ea2d8662a8631f61f", null ],
       [ "Modes", "maos_2types_8h.html#ac7e1e3b45fbe7c2f170410b50462dbc9", null ],
+      [ "Pngs2", "maos_2types_8h.html#a4b2f6641b8bdfa13a76f395bdcb27d0b", null ],
+      [ "Modes2", "maos_2types_8h.html#aa386fb42b9c334c4fbf000c874c05367", null ],
       [ "Wa", "maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61", null ],
       [ "modvalid", "maos_2types_8h.html#ac95732b78c8e53f041ef64893511a0ad", null ],
       [ "nmod", "maos_2types_8h.html#a2a7d25ddb63166f2a6b79689411ec1d6", null ],
@@ -491,7 +493,11 @@ var maos_2types_8h =
       [ "ngsmodlpf", "maos_2types_8h.html#a1d0b2ca0ca8550f4d87354b1ecf1d705", null ],
       [ "dm_wfs", "maos_2types_8h.html#a68aeddab4ca47520c7c4d1e9749412ec", null ],
       [ "dm_evl", "maos_2types_8h.html#ac00d08c6f1b5d98f593c1b43d77892cc", null ],
-      [ "tk_0", "maos_2types_8h.html#a4c36b819d751ab13f43747215bee9c53", null ],
+      [ "tk_s0", "maos_2types_8h.html#ab8fea91ccfb13cdee1e153fc1ec6d1ae", null ],
+      [ "tk_si", "maos_2types_8h.html#aa7e3a53ae2991cbfc00368aaf4cac338", null ],
+      [ "tk_istart", "maos_2types_8h.html#a6d170dd757c57fbfd8a7ed4d2d533011", null ],
+      [ "tk_iend", "maos_2types_8h.html#a29a34bc03809f1f60d3c854fb12160a7", null ],
+      [ "tk_i1", "maos_2types_8h.html#a9eb0c9e42f1c872654c746ba9262641b", null ],
       [ "tk_eval", "maos_2types_8h.html#aa7cb64333230ec40e13cf209afcd0d47", null ],
       [ "tk_recon", "maos_2types_8h.html#a0d6386858b19700d6d53b72ac9f31184", null ],
       [ "tk_cache", "maos_2types_8h.html#a46a1d5f3e2b85b7925e468645f2c0ef0", null ],
@@ -556,5 +562,6 @@ var maos_2types_8h =
       [ "setupdone", "maos_2types_8h.html#a50531e1c03e7b99016cf0e769615a8a6", null ]
     ] ],
     [ "CHECK_SAVE", "maos_2types_8h.html#a47895b22092692ba9ca782f61cc1d4b8", null ],
-    [ "wait_dmreal", "maos_2types_8h.html#a3e28fa95260cac0d679efd17ea13b22e", null ]
+    [ "wait_dmreal", "maos_2types_8h.html#a3e28fa95260cac0d679efd17ea13b22e", null ],
+    [ "post_dmreal", "maos_2types_8h.html#ac29208e8ac8c3195fa49efea9b4e7ae2", null ]
 ];

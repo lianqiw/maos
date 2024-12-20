@@ -119,6 +119,9 @@ Functions</h2></td></tr>
 <tr class="separator:a5c5d4d001360bd0401dcf2c402ae5243"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5e87903d1bd33428905018b070ea9eb"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#af5e87903d1bd33428905018b070ea9eb">psd_inte2</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin)</td></tr>
 <tr class="separator:af5e87903d1bd33428905018b070ea9eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79bafe8d88f0e11f9c1b7f5d0bfe16fe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a79bafe8d88f0e11f9c1b7f5d0bfe16fe">psd_reverse_cumu</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, real scale)</td></tr>
+<tr class="memdesc:a79bafe8d88f0e11f9c1b7f5d0bfe16fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reverse cumulative sum of PSD.  <a href="#a79bafe8d88f0e11f9c1b7f5d0bfe16fe">More...</a><br /></td></tr>
+<tr class="separator:a79bafe8d88f0e11f9c1b7f5d0bfe16fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adebf5816143086a79768e5837eb800ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#adebf5816143086a79768e5837eb800ae">psd2ts</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, <a class="el" href="structmt__state.html">rand_t</a> *rstat, real dt, int nstep)</td></tr>
 <tr class="separator:adebf5816143086a79768e5837eb800ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d26c57efba842fb9ef4fa48d7fa9aa2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a8d26c57efba842fb9ef4fa48d7fa9aa2">psd2ts2</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psdin, int seed, real dt, int nstep)</td></tr>
@@ -127,8 +130,9 @@ Functions</h2></td></tr>
 <tr class="separator:af7c7033580aa54cc4036bab52e0f9752"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88258084783ed5748c1fa3bbe9aa8b1f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a88258084783ed5748c1fa3bbe9aa8b1f">add_psd2</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> **out, const <a class="el" href="type_8h.html#structdmat">dmat</a> *in, real scale)</td></tr>
 <tr class="separator:a88258084783ed5748c1fa3bbe9aa8b1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a477fcfae5d98f1a042a4b11088149415"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a477fcfae5d98f1a042a4b11088149415">psd_sum</a> (<a class="el" href="type_8h.html#structdmat">dmat</a> *psd, real scale)</td></tr>
-<tr class="separator:a477fcfae5d98f1a042a4b11088149415"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7faabb64a46fbef89a3622774091e068"><td class="memItemLeft" align="right" valign="top"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a7faabb64a46fbef89a3622774091e068">psd_select</a> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *psd, int im, int jm, int keepdc, real scale)</td></tr>
+<tr class="memdesc:a7faabb64a46fbef89a3622774091e068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Choose a mode from the PSD. The first column is frequency.  <a href="#a7faabb64a46fbef89a3622774091e068">More...</a><br /></td></tr>
+<tr class="separator:a7faabb64a46fbef89a3622774091e068"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2b6995622274df67f8da20397d86b3a"><td class="memItemLeft" align="right" valign="top"><a id="aa2b6995622274df67f8da20397d86b3a"></a>
 <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>psd2d_aniso</b> (const <a class="el" href="type_8h.html#structdmat">dmat</a> *screen, real dx)</td></tr>
 <tr class="separator:aa2b6995622274df67f8da20397d86b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -375,6 +379,43 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a79bafe8d88f0e11f9c1b7f5d0bfe16fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79bafe8d88f0e11f9c1b7f5d0bfe16fe">&#9670;&nbsp;</a></span>psd_reverse_cumu()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* psd_reverse_cumu </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramname"><em>psdin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real&#160;</td>
+          <td class="paramname"><em>scale</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reverse cumulative sum of PSD. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">psdin</td><td>the input PSD </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>dmat* sqrt of the reverse integration of PSD </dd></dl>
+
+</div>
+</div>
 <a id="adebf5816143086a79768e5837eb800ae"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adebf5816143086a79768e5837eb800ae">&#9670;&nbsp;</a></span>psd2ts()</h2>
 
@@ -527,17 +568,35 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a477fcfae5d98f1a042a4b11088149415"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a477fcfae5d98f1a042a4b11088149415">&#9670;&nbsp;</a></span>psd_sum()</h2>
+<a id="a7faabb64a46fbef89a3622774091e068"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7faabb64a46fbef89a3622774091e068">&#9670;&nbsp;</a></span>psd_select()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void psd_sum </td>
+          <td class="memname"><a class="el" href="type_8h.html#structdmat">dmat</a>* psd_select </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="type_8h.html#structdmat">dmat</a> *&#160;</td>
           <td class="paramname"><em>psd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>im</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>keepdc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -552,7 +611,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Sum all the columns of PSDs (excluding first column), scaled by scale </p>
+
+<p>Choose a mode from the PSD. The first column is frequency. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">psd</td><td>the input PSD </td></tr>
+    <tr><td class="paramname">im</td><td>index of the first mode. -1: sum all modes. 0 to ny(psd)-1. </td></tr>
+    <tr><td class="paramname">nm</td><td>number of modes. </td></tr>
+    <tr><td class="paramname">scale</td><td>scaling fctor </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

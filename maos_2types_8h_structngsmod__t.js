@@ -15,6 +15,8 @@ var maos_2types_8h_structngsmod__t =
     [ "Rngs", "maos_2types_8h.html#a2ccb26fdd3335f819cca66138403dcd1", null ],
     [ "Pngs", "maos_2types_8h.html#a3414ee3ec639f83ea2d8662a8631f61f", null ],
     [ "Modes", "maos_2types_8h.html#ac7e1e3b45fbe7c2f170410b50462dbc9", null ],
+    [ "Pngs2", "maos_2types_8h.html#a4b2f6641b8bdfa13a76f395bdcb27d0b", null ],
+    [ "Modes2", "maos_2types_8h.html#aa386fb42b9c334c4fbf000c874c05367", null ],
     [ "Wa", "maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61", null ],
     [ "modvalid", "maos_2types_8h.html#ac95732b78c8e53f041ef64893511a0ad", null ],
     [ "nmod", "maos_2types_8h.html#a2a7d25ddb63166f2a6b79689411ec1d6", null ],

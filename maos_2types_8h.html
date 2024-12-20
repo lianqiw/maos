@@ -150,6 +150,9 @@ Macros</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a3e28fa95260cac0d679efd17ea13b22e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2types_8h.html#a3e28fa95260cac0d679efd17ea13b22e">wait_dmreal</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu, int isim)</td></tr>
 <tr class="separator:a3e28fa95260cac0d679efd17ea13b22e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac29208e8ac8c3195fa49efea9b4e7ae2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2types_8h.html#ac29208e8ac8c3195fa49efea9b4e7ae2">post_dmreal</a> (<a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="memdesc:ac29208e8ac8c3195fa49efea9b4e7ae2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that we are done with dmreal.  <a href="#ac29208e8ac8c3195fa49efea9b4e7ae2">More...</a><br /></td></tr>
+<tr class="separator:ac29208e8ac8c3195fa49efea9b4e7ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A few run time structs </p>
@@ -829,10 +832,10 @@ fit</td>
 <div class="center"><img src="structngsmod__t__coll__graph.png" border="0" usemap="#ngsmod__t_coll__map" alt="Collaboration graph"/></div>
 <map name="ngsmod__t_coll__map" id="ngsmod__t_coll__map">
 <area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="185,300,239,377"/>
-<area shape="rect" id="node6" href="type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="291,499,351,576"/>
+<area shape="rect" id="node6" href="type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="303,504,363,581"/>
 <area shape="rect" id="node3" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="95,145,151,223"/>
-<area shape="rect" id="node5" href="type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="375,499,443,576"/>
-<area shape="rect" id="node7" href="type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="467,499,519,576"/>
+<area shape="rect" id="node5" href="type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="387,504,455,581"/>
+<area shape="rect" id="node7" href="type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="479,504,531,581"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -941,6 +944,20 @@ Pngs</td>
 Modes</td>
 <td class="fielddoc">
 <p>DM vector for the modes </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a4b2f6641b8bdfa13a76f395bdcb27d0b"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+Pngs2</td>
+<td class="fielddoc">
+<p>Reconstruct DM command to Modes2 </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa386fb42b9c334c4fbf000c874c05367"></a><a class="el" href="type_8h.html#structdcell">dcell</a> *</td>
+<td class="fieldname">
+Modes2</td>
+<td class="fielddoc">
+<p>DM vector for the modes (only for Pngs) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a848ae29c5fa11f7f90178429e61abc61"></a><a class="el" href="type_8h.html#structdspcell">dspcell</a> *</td>
@@ -1378,15 +1395,15 @@ ninit</td>
 <div id="dynsection-9-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structfit__t__coll__graph.png" border="0" usemap="#fit__t_coll__map" alt="Collaboration graph"/></div>
 <map name="fit__t_coll__map" id="fit__t_coll__map">
-<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="145,469,199,546"/>
-<area shape="rect" id="node12" href="muv_8h.html#structmuv__t" title="{muv_t\n||}" alt="" coords="281,763,343,840"/>
+<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="145,476,199,553"/>
+<area shape="rect" id="node12" href="muv_8h.html#structmuv__t" title="{muv_t\n||}" alt="" coords="281,777,343,855"/>
 <area shape="rect" id="node4" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="259,145,315,223"/>
-<area shape="rect" id="node7" href="type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="651,763,719,840"/>
-<area shape="rect" id="node8" href="type_8h.html#structdsp" title="{dsp\n||}" alt="" coords="607,469,652,546"/>
+<area shape="rect" id="node7" href="type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="651,777,719,855"/>
+<area shape="rect" id="node8" href="type_8h.html#structdsp" title="{dsp\n||}" alt="" coords="607,476,652,553"/>
 <area shape="rect" id="node11" href="type_8h.html#structlcell" title="{lcell\n||}" alt="" coords="873,289,922,366"/>
-<area shape="rect" id="node10" href="parms_8h.html#structfit__cfg__t" title="{fit_cfg_t\n|+ actextrap\l+ lrt_piston\l+ alg\l+ bgs\l+ maxit\l+ cachex\l|}" alt="" coords="401,432,500,583"/>
-<area shape="rect" id="node5" href="type_8h.html#structloccell" title="{loccell\n||}" alt="" coords="744,763,808,840"/>
-<area shape="rect" id="node6" href="type_8h.html#structloc__t" title="{loc_t\n||}" alt="" coords="811,469,864,546"/>
+<area shape="rect" id="node10" href="parms_8h.html#structfit__cfg__t" title="{fit_cfg_t\n|+ actextrap\l+ nfit\l+ lrt_piston\l+ alg\l+ bgs\l+ maxit\l+ cachex\l|}" alt="" coords="401,432,500,597"/>
+<area shape="rect" id="node5" href="type_8h.html#structloccell" title="{loccell\n||}" alt="" coords="744,777,808,855"/>
+<area shape="rect" id="node6" href="type_8h.html#structloc__t" title="{loc_t\n||}" alt="" coords="811,476,864,553"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -1570,26 +1587,26 @@ FL</td>
 <div id="dynsection-10-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structrecon__t__coll__graph.png" border="0" usemap="#recon__t_coll__map" alt="Collaboration graph"/></div>
 <map name="recon__t_coll__map" id="recon__t_coll__map">
-<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="2003,369,2056,447"/>
+<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="2015,369,2068,447"/>
 <area shape="rect" id="node13" href="cn2est_8h.html#structcn2est__t" title="{cn2est_t\n||}" alt="" coords="2108,1010,2185,1087"/>
-<area shape="rect" id="node14" href="maos_2types_8h.html#structngsmod__t" title="{ngsmod_t\n||}" alt="" coords="2423,1010,2510,1087"/>
+<area shape="rect" id="node14" href="maos_2types_8h.html#structngsmod__t" title="{ngsmod_t\n||}" alt="" coords="2435,1010,2522,1087"/>
 <area shape="rect" id="node15" href="maos_2types_8h.html#structmoao__t" title="{moao_t\n||}" alt="" coords="1299,1010,1370,1087"/>
 <area shape="rect" id="node19" href="maos_2types_8h.html#structinvpsd__t" title="{invpsd_t\n||}" alt="" coords="1719,1010,1796,1087"/>
 <area shape="rect" id="node20" href="maos_2types_8h.html#structfractal__t" title="{fractal_t\n||}" alt="" coords="117,1010,193,1087"/>
-<area shape="rect" id="node22" href="muv_8h.html#structmuv__t" title="{muv_t\n||}" alt="" coords="2389,654,2451,731"/>
+<area shape="rect" id="node22" href="muv_8h.html#structmuv__t" title="{muv_t\n||}" alt="" coords="2401,654,2463,731"/>
 <area shape="rect" id="node24" href="maos_2types_8h.html#structfit__t" title="{fit_t\n||}" alt="" coords="985,1010,1031,1087"/>
-<area shape="rect" id="node3" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="2235,173,2291,250"/>
+<area shape="rect" id="node3" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="2247,173,2303,250"/>
 <area shape="rect" id="node10" href="type_8h.html#structdsp" title="{dsp\n||}" alt="" coords="1080,369,1125,447"/>
-<area shape="rect" id="node18" href="type_8h.html#structmap__t" title="{map_t\n||}" alt="" coords="3007,369,3070,447"/>
-<area shape="rect" id="node21" href="parms_8h.html#structwfsr__cfg__t" title="{wfsr_cfg_t\n||}" alt="" coords="2894,369,2983,447"/>
+<area shape="rect" id="node18" href="type_8h.html#structmap__t" title="{map_t\n||}" alt="" coords="3019,369,3082,447"/>
+<area shape="rect" id="node21" href="parms_8h.html#structwfsr__cfg__t" title="{wfsr_cfg_t\n||}" alt="" coords="2906,369,2995,447"/>
 <area shape="rect" id="node5" href="type_8h.html#structloccell" title="{loccell\n||}" alt="" coords="264,654,328,731"/>
 <area shape="rect" id="node23" href="maos_2types_8h.html#structfdpcg__t" title="{fdpcg_t\n||}" alt="" coords="447,1010,518,1087"/>
 <area shape="rect" id="node6" href="type_8h.html#structloc__t" title="{loc_t\n||}" alt="" coords="269,369,323,447"/>
 <area shape="rect" id="node8" href="type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="751,369,803,447"/>
 <area shape="rect" id="node16" href="type_8h.html#structlcell" title="{lcell\n||}" alt="" coords="774,654,823,731"/>
 <area shape="rect" id="node11" href="type_8h.html#structdspcell" title="{dspcell\n||}" alt="" coords="1446,654,1514,731"/>
-<area shape="rect" id="node12" href="type_8h.html#structcell" title="{cell\n||}" alt="" coords="2449,369,2495,447"/>
-<area shape="rect" id="node17" href="type_8h.html#structmapcell" title="{mapcell\n||}" alt="" coords="2889,654,2964,731"/>
+<area shape="rect" id="node12" href="type_8h.html#structcell" title="{cell\n||}" alt="" coords="2461,369,2507,447"/>
+<area shape="rect" id="node17" href="type_8h.html#structmapcell" title="{mapcell\n||}" alt="" coords="2901,654,2976,731"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -3002,30 +3019,30 @@ ogout</td>
 <div id="dynsection-15-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structsim__t__coll__graph.png" border="0" usemap="#sim__t_coll__map" alt="Collaboration graph"/></div>
 <map name="sim__t_coll__map" id="sim__t_coll__map">
-<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="2241,604,2295,681"/>
-<area shape="rect" id="node12" href="type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="2291,1052,2351,1129"/>
-<area shape="rect" id="node13" href="maos_2types_8h.html#structdither__t" title="{dither_t\n||}" alt="" coords="1868,1052,1940,1129"/>
-<area shape="rect" id="node14" href="maos_2types_8h.html#structwfsints__t" title="{wfsints_t\n||}" alt="" coords="2102,1052,2183,1129"/>
-<area shape="rect" id="node19" href="turbulence_8h.html#structgenatm__t" title="{genatm_t\n||}" alt="" coords="1161,1052,1245,1129"/>
-<area shape="rect" id="node24" href="maos_2types_8h.html#structrecon__t" title="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}" alt="" coords="2413,979,2529,1203"/>
-<area shape="rect" id="node28" href="maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="1533,1412,1622,1519"/>
-<area shape="rect" id="node29" href="maos_2types_8h.html#structaper__t" title="{aper_t\n||}" alt="" coords="1650,1052,1713,1129"/>
-<area shape="rect" id="node31" href="maos_2types_8h.html#structsim__save__t" title="{sim_save_t\n|+ wfspsfout\l+ evlpsfolmean\l+ evlpsfmean\l+ evlpsfhist\l+ evlopdcov\l+ evlopdmean\l+ evlopdcovol\l+ evlopdmeanol\l+ evlpsfmean_ngsr\l+ evlpsfhist_ngsr\land 22 more...\l|}" alt="" coords="2553,979,2703,1203"/>
-<area shape="rect" id="node4" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="1852,202,1908,279"/>
-<area shape="rect" id="node15" href="type_8h.html#structccell" title="{ccell\n||}" alt="" coords="2747,202,2799,279"/>
-<area shape="rect" id="node16" href="type_8h.html#structcccell" title="{cccell\n||}" alt="" coords="2992,604,3051,681"/>
-<area shape="rect" id="node18" href="type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="2671,202,2723,279"/>
-<area shape="rect" id="node22" href="type_8h.html#structrmapcell" title="{rmapcell\n||}" alt="" coords="3298,202,3377,279"/>
-<area shape="rect" id="node25" href="type_8h.html#structmapcell" title="{mapcell\n||}" alt="" coords="3077,373,3152,450"/>
-<area shape="rect" id="node26" href="structstatus__t.html" title="{status_t\n||}" alt="" coords="633,604,708,681"/>
-<area shape="rect" id="node30" href="parms_8h.html#structparms__t" title="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}" alt="" coords="1069,516,1165,769"/>
-<area shape="rect" id="node8" href="lib_2accphi_8h.html#structpropdata__t" title="{propdata_t\n||}" alt="" coords="466,604,558,681"/>
-<area shape="rect" id="node10" href="servo_8h.html#structservo__t" title="{servo_t\n||}" alt="" coords="225,604,295,681"/>
+<area shape="rect" id="node2" href="type_8h.html#structdcell" title="{dcell\n||}" alt="" coords="2239,604,2292,681"/>
+<area shape="rect" id="node12" href="type_8h.html#structdccell" title="{dccell\n||}" alt="" coords="2289,1067,2349,1144"/>
+<area shape="rect" id="node13" href="maos_2types_8h.html#structdither__t" title="{dither_t\n||}" alt="" coords="1865,1067,1937,1144"/>
+<area shape="rect" id="node14" href="maos_2types_8h.html#structwfsints__t" title="{wfsints_t\n||}" alt="" coords="2099,1067,2181,1144"/>
+<area shape="rect" id="node19" href="turbulence_8h.html#structgenatm__t" title="{genatm_t\n||}" alt="" coords="1158,1067,1242,1144"/>
+<area shape="rect" id="node24" href="maos_2types_8h.html#structrecon__t" title="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}" alt="" coords="2410,993,2526,1217"/>
+<area shape="rect" id="node28" href="maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="1530,1427,1619,1533"/>
+<area shape="rect" id="node29" href="maos_2types_8h.html#structaper__t" title="{aper_t\n||}" alt="" coords="1647,1067,1710,1144"/>
+<area shape="rect" id="node31" href="maos_2types_8h.html#structsim__save__t" title="{sim_save_t\n|+ wfspsfout\l+ evlpsfolmean\l+ evlpsfmean\l+ evlpsfhist\l+ evlopdcov\l+ evlopdmean\l+ evlopdcovol\l+ evlopdmeanol\l+ evlpsfmean_ngsr\l+ evlpsfhist_ngsr\land 22 more...\l|}" alt="" coords="2551,993,2700,1217"/>
+<area shape="rect" id="node4" href="type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="1849,202,1905,279"/>
+<area shape="rect" id="node15" href="type_8h.html#structccell" title="{ccell\n||}" alt="" coords="2745,202,2797,279"/>
+<area shape="rect" id="node16" href="type_8h.html#structcccell" title="{cccell\n||}" alt="" coords="2989,604,3048,681"/>
+<area shape="rect" id="node18" href="type_8h.html#structlmat" title="{lmat\n||}" alt="" coords="2669,202,2721,279"/>
+<area shape="rect" id="node22" href="type_8h.html#structrmapcell" title="{rmapcell\n||}" alt="" coords="3295,202,3374,279"/>
+<area shape="rect" id="node25" href="type_8h.html#structmapcell" title="{mapcell\n||}" alt="" coords="3073,373,3148,450"/>
+<area shape="rect" id="node26" href="structstatus__t.html" title="{status_t\n||}" alt="" coords="631,604,705,681"/>
+<area shape="rect" id="node30" href="parms_8h.html#structparms__t" title="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}" alt="" coords="1067,516,1163,769"/>
+<area shape="rect" id="node8" href="lib_2accphi_8h.html#structpropdata__t" title="{propdata_t\n||}" alt="" coords="463,604,555,681"/>
+<area shape="rect" id="node10" href="servo_8h.html#structservo__t" title="{servo_t\n||}" alt="" coords="222,604,293,681"/>
 <area shape="rect" id="node11" href="servo_8h.html#structsho__t" title="{sho_t\n||}" alt="" coords="145,202,202,279"/>
-<area shape="rect" id="node6" href="classlong.html" title="{long\n||}" alt="" coords="2805,5,2856,83"/>
-<area shape="rect" id="node7" href="thread_8h.html#structthread__t" title="{thread_t\n||}" alt="" coords="3527,835,3603,913"/>
-<area shape="rect" id="node17" href="maos_2types_8h.html#structwfsflags__t" title="{wfsflags_t\n||}" alt="" coords="331,1269,419,1346"/>
-<area shape="rect" id="node20" href="structmt__state.html" title="{mt_state\n||}" alt="" coords="776,604,856,681"/>
+<area shape="rect" id="node6" href="classlong.html" title="{long\n||}" alt="" coords="2803,5,2853,83"/>
+<area shape="rect" id="node7" href="thread_8h.html#structthread__t" title="{thread_t\n||}" alt="" coords="3525,843,3601,920"/>
+<area shape="rect" id="node17" href="maos_2types_8h.html#structwfsflags__t" title="{wfsflags_t\n||}" alt="" coords="328,1283,416,1361"/>
+<area shape="rect" id="node20" href="structmt__state.html" title="{mt_state\n||}" alt="" coords="773,604,853,681"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -3867,11 +3884,39 @@ dm_evl</td>
 <p>moao DM command computed for science field </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a4c36b819d751ab13f43747215bee9c53"></a>real</td>
+<a id="ab8fea91ccfb13cdee1e153fc1ec6d1ae"></a>real</td>
 <td class="fieldname">
-tk_0</td>
+tk_s0</td>
+<td class="fielddoc">
+<p>first seed simulation start time. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa7e3a53ae2991cbfc00368aaf4cac338"></a>real</td>
+<td class="fieldname">
+tk_si</td>
+<td class="fielddoc">
+<p>current seed simulation start time. </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a6d170dd757c57fbfd8a7ed4d2d533011"></a>real</td>
+<td class="fieldname">
+tk_istart</td>
 <td class="fielddoc">
 <p>Start time of each isim </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a29a34bc03809f1f60d3c854fb12160a7"></a>real</td>
+<td class="fieldname">
+tk_iend</td>
+<td class="fielddoc">
+<p>End time of each isim </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9eb0c9e42f1c872654c746ba9262641b"></a>real</td>
+<td class="fieldname">
+tk_i1</td>
+<td class="fielddoc">
+<p>2nd step start time </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aa7cb64333230ec40e13cf209afcd0d47"></a>real</td>
@@ -4248,7 +4293,7 @@ wfsgrad_mutex</td>
 <div id="dynsection-16-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="structglobal__t__coll__graph.png" border="0" usemap="#global__t_coll__map" alt="Collaboration graph"/></div>
 <map name="global__t_coll__map" id="global__t_coll__map">
-<area shape="rect" id="node2" href="maos_2types_8h.html#structsim__t" title="{sim_t\n|+ wfsopd\l+ gradacc\l+ gradlastcl\l+ gradlastol\l+ cn2res\l+ gradoff\l+ gradoffacc\l+ gradoffdrift\l+ gradscale\l+ gradscale2\land 64 more...\l|}" alt="" coords="252,623,368,847"/>
+<area shape="rect" id="node2" href="maos_2types_8h.html#structsim__t" title="{sim_t\n|+ wfsopd\l+ gradacc\l+ gradlastcl\l+ gradlastol\l+ cn2res\l+ gradoff\l+ gradoffacc\l+ gradoffdrift\l+ gradscale\l+ gradscale2\land 66 more...\l|}" alt="" coords="252,623,368,847"/>
 <area shape="rect" id="node3" href="maos_2types_8h.html#structrecon__t" title="{recon_t\n|+ xmcc\l+ amod\l+ L2save\l+ HXWtomo\l+ GXL\l+ MVRngs\l+ MVFM\l+ GM\l+ GMhi\l+ TT\land 22 more...\l|}" alt="" coords="119,307,235,531"/>
 <area shape="rect" id="node5" href="maos_2types_8h.html#structpowfs__t" title="{powfs_t\n|+ srot\l+ bkgrndc\l+ sanea\l|}" alt="" coords="5,365,95,472"/>
 <area shape="rect" id="node7" href="parms_8h.html#structparms__t" title="{parms_t\n|+ nwfs\l+ nwfsr\l+ nmoao\l+ nlopowfs\l+ nhipowfs\l+ ntrpowfs\l+ nlowfs\l+ nhiwfs\l+ dither\l+ ittfpowfs\l+ itpowfs\l+ step_lo\l+ itwfssph\l|}" alt="" coords="409,292,505,545"/>
@@ -4330,6 +4375,32 @@ setupdone</td>
       </table>
 </div><div class="memdoc">
 <p>Wait for dmreal to be available in event driven simulation. </p>
+
+</div>
+</div>
+<a id="ac29208e8ac8c3195fa49efea9b4e7ae2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac29208e8ac8c3195fa49efea9b4e7ae2">&#9670;&nbsp;</a></span>post_dmreal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void post_dmreal </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="maos_2types_8h.html#structsim__t">sim_t</a> *&#160;</td>
+          <td class="paramname"><em>simu</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Notify that we are done with dmreal. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">simu</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

@@ -199,9 +199,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a2e51e36b584b061b950ce05578aee507"><td class="memItemLeft" align="right" valign="top"><a id="a2e51e36b584b061b950ce05578aee507"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3</b>(A...)&#160;&#160;&#160;logdbg(2, YELLOW, A)</td></tr>
 <tr class="separator:a2e51e36b584b061b950ce05578aee507"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85bf8b7e73023c82d5e3474af826f6cb"><td class="memItemLeft" align="right" valign="top"><a id="a85bf8b7e73023c82d5e3474af826f6cb"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; dbg(A);}})</td></tr>
-<tr class="separator:a85bf8b7e73023c82d5e3474af826f6cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memItemLeft" align="right" valign="top"><a id="a825b7a63a48fc88a5c00e7ffd20b739b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg_time</b>(level,  format, ...)&#160;&#160;&#160;logdbg(level, YELLOW, &quot;[%s]%s: &quot; format, <a class="el" href="misc_8h.html#a030dadf39323e7b7688b459b8a4821d8">myasctime</a>(0), __func__, ##__VA_ARGS__)</td></tr>
 <tr class="separator:a825b7a63a48fc88a5c00e7ffd20b739b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -217,6 +214,9 @@ Macros</h2></td></tr>
 <tr class="memitem:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memItemLeft" align="right" valign="top"><a id="af4d4cf56c4bf1313fb881373e3f58caa"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg3_time</b>(A...)&#160;&#160;&#160;logdbg_time(2, A)</td></tr>
 <tr class="separator:af4d4cf56c4bf1313fb881373e3f58caa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85bf8b7e73023c82d5e3474af826f6cb"><td class="memItemLeft" align="right" valign="top"><a id="a85bf8b7e73023c82d5e3474af826f6cb"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>dbg_once</b>(A...)&#160;&#160;&#160;({static int done=0; if(!done){done=1; dbg_line(A);}})</td></tr>
+<tr class="separator:a85bf8b7e73023c82d5e3474af826f6cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a742396b7da9970f25d52858fa166fc6f"><td class="memItemLeft" align="right" valign="top"><a id="a742396b7da9970f25d52858fa166fc6f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>assert</b>(A)</td></tr>
 <tr class="separator:a742396b7da9970f25d52858fa166fc6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
