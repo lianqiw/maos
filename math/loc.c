@@ -458,7 +458,7 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 	}
 }
 /**
-   Convert a map to a loc that collects all positive entries. */
+   Convert a map to a loc that collects all positive entries while keep each row continuous*/
 loc_t* map2loc(map_t* map, real thres){
 	if(!map) return NULL;
 	const real dx=map->dx;
@@ -474,8 +474,21 @@ loc_t* map2loc(map_t* map, real thres){
 	loc_t* loc=locnew(nx*ny, dx, dy);
 	long count=0;
 	for(iy=0; iy<ny; iy++){
+		int istart=-1,iend=-1;
 		for(ix=0; ix<nx; ix++){
 			if(P(map, ix, iy)>thres){
+				istart=ix;
+				break;
+			}
+		}
+		for(ix=nx-1; ix>-1; ix--){
+			if(P(map, ix, iy)>thres){
+				iend=ix;
+				break;
+			}
+		}
+		if(istart!=-1){
+			for(ix=istart; ix<=iend; ix++){
 				loc->locx[count]=ix*dx+ox;
 				loc->locy[count]=iy*dy+oy;
 				count++;

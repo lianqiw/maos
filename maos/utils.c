@@ -401,7 +401,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 			/*being lanuched by scheduler. We are already detached, so don't daemonize again.*/
 			dbg3("Launched locally by scheduler.\n");
 			arg->detach=0;
-			arg->force=0;
+			arg->force=1;//no need to check resource
 			detached=1;
 			//no need to report PATH since we are started by scheduler
 		} else{

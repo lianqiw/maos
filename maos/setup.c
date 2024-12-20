@@ -127,9 +127,11 @@ void maos_setup(const parms_t* parms){
 		print_mem("After setup_powfs_init");
 		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c
 		global->recon=recon=setup_recon_prep(parms, aper, powfs);
+		print_mem("After setup_recon_prep");
 		//pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
 		setup_surf(parms, aper, powfs, recon);
+		print_mem("After setup_surf");
 		//set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()
 		setup_shwfs_phy(parms, powfs);
 		//setup gradient noise during simulation.
@@ -141,6 +143,7 @@ void maos_setup(const parms_t* parms){
 			gpu_wfsgrad_init(parms, powfs);//needed by pywfs_mkg
 		}
 #endif
+		print_mem("After setup_powfs");
 		//creates DM to WFS IA. needs GPU for pwfs. create amod for modal control.
 		setup_recon_prep_ga(recon, parms, aper, powfs);
 
@@ -238,7 +241,8 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	cuda_dedup=0;
 #endif
-	toc2("Presimulation");
+	toc2("Setup");
+	print_mem("Setup");
 }
 
 /**

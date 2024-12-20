@@ -68,15 +68,19 @@ aper_t* setup_aper(const parms_t* const parms){
 				aper->locs->dx, parms->evl.dx);
 		}
 	} else{/* locs act as a pupil mask. no points outside will be evaluated. */
-		map_t* smap=0;
-		create_metapupil(&smap, 0, 0, parms->dirs, parms->aper.d, 0, parms->evl.dx, parms->evl.dx, 0, 0.5, 0, 0, 0, 0);
-		aper->locs=map2loc(smap, 0);
-		mapfree(smap);
+		if(aper->ampground && fabs(parms->evl.dx-aper->ampground->dx)<EPS){
+			aper->locs=map2loc(aper->ampground, 0);
+		}else{
+			map_t* smap=0;
+			create_metapupil(&smap, 0, 0, parms->dirs, parms->aper.d, 0, parms->evl.dx, parms->evl.dx, 0, parms->evl.dx, 0, 0, 0, 0);
+			aper->locs=map2loc(smap, 0);
+			mapfree(smap);
+		}
 	}
 	if(!aper->amp){
 		/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
-		aper->amp=mkamp(aper->locs, aper->ampground,
-			-P(parms->aper.misreg,0), -P(parms->aper.misreg,1),
+		aper->amp=mkamp(aper->locs, aper->ampground, 
+			-P(parms->aper.misreg, 0), -P(parms->aper.misreg, 1),
 			parms->aper.d, parms->aper.din);
 	}
 	if(parms->aper.pupmask){
@@ -84,13 +88,14 @@ aper_t* setup_aper(const parms_t* const parms){
 		if(!mask){
 			error("Failed to load pupil mask from %s\n", parms->aper.pupmask);
 		}else{
+			//aper.miserg is between the telescope pupil and the pupil mask in the instrument.
 			info("Loaded pupil mask from %s\n", parms->aper.pupmask);
 		 	if(parms->aper.rot){
 				warning("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
 				dmaprot(mask, parms->aper.rot);
 			}
 			dmat* ampmask=dnew(aper->locs->nloc, 1);
-			prop_grid_stat(mask, aper->locs->stat, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
+			prop_grid(mask, aper->locs, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
 			dcwm(aper->amp, ampmask);
 			dfree(ampmask);
 			mapfree(mask);

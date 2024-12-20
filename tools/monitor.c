@@ -203,7 +203,7 @@ gboolean host_down(gpointer data){
 */
 int host2i(const char *hostn){
 	for(int ihost=0; ihost<nhost; ihost++){
-		if(!strcmp(hosts[ihost], hostn)){
+		if(!strcmp(hostshort[ihost], hostn)){
 			return ihost;
 		}
 	}
@@ -365,12 +365,10 @@ gboolean update_title(gpointer data){
 	int npending=tmp>>20;
 	char tit[40];
 	if(hid<nhost){
-		char *dot=strchr(hosts[hid], '.'); 
-		size_t len=dot?(size_t)(dot-hosts[hid]):strlen(hosts[hid]);
-		memcpy(tit, hosts[hid], len);
-		tit[len]=0;
 		if(nproc>0){
-			snprintf(tit+len, 40-len, " (%d/%d)", npending, nproc);
+			snprintf(tit, 40, "%s (%d/%d)", hostshort[hid], npending, nproc);
+		}else{
+			snprintf(tit, 40, "%s", hostshort[hid]);
 		}
 	} else{
 		snprintf(tit, 40, "All");
@@ -438,7 +436,7 @@ void kill_all_jobs(GtkWidget* btn, gpointer data){
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
-		"Kill all jobs on %s?", this_host==nhost?"all servers":hosts[this_host]);
+		"Kill all jobs on %s?", this_host==nhost?"all servers":hostshort[this_host]);
 	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
 #if GTK_MAJOR_VERSION>=4
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));

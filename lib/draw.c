@@ -629,16 +629,18 @@ int draw(const char* fig,    /**<Category of the figure*/
 		for(sockinfo_t *ps=sock_draws; needed!=1 && ps; ps=ps->next){
 			/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 			int needed_i=check_figfn(ps, fig, fn);
-			//dbg("%s %s: %d\n", fig, fn, needed_i);
 			if(needed_i){
+				//dbg("%s %s: %d\n", fig, fn, needed_i);
 				if(!needed||needed==3){
 					needed=needed_i;
 				}
 			}
 		}
+		
 		char* buf=0;
 		size_t bufsize=0;
 		if(needed){
+			//dbg("%s %s: %d %d\n", fig, fn, opts.always, needed);
 			//When using UDP, we need to serialize the data instead of writing like a FILE
 			//Use open_memstream to serialize and f_openmem for de-serialize
 			//To be able to handle the data in forward/backward compatible way,

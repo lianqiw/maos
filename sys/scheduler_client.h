@@ -28,6 +28,7 @@
 #include <stdint.h>
 extern int nhost;
 extern char **hosts;
+extern char **hostshort;
 /*hosts*/
 void parse_host(const char *line);
 void free_hosts();

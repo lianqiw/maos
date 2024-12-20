@@ -97,7 +97,7 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 			This needs to be used with extrapolation on dmpsol.
 		*/
 		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
-		info("Replacing HA by HA*fit->actextrap\n");
+		dbg("Replacing HA by HA*fit->actextrap\n");
 		dspcell *HA2=0;
 		dcellmm(&HA2, fit->HA, fit->actextrap, "nn", 1);
 		dspcellfree(fit->HA);
@@ -138,7 +138,7 @@ setup_fit_lrt(fit_t* fit){
 	}
 	int inw=0;/*current column */
 	if(fit->flag.lrt_piston){
-		info("Adding piston cr to fit matrix\n");
+		info("Adding piston constraint to fit matrix\n");
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
 			real* p=P(P(fit->NW,idm))+(inw+idm)*nloc;
@@ -153,7 +153,7 @@ setup_fit_lrt(fit_t* fit){
 	}
 	if(fit->flag.lrt_tt){
 		real factor=0;
-		info("Adding TT cr on upper DMs to fit matrix.\n");
+		info("Adding TT constraint on upper DMs to fit matrix.\n");
 		factor=fitscl*2./loc_diam(P(fit->aloc,0));
 		for(int idm=1; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
@@ -171,7 +171,7 @@ setup_fit_lrt(fit_t* fit){
 		inw+=2*(ndm-1);
 	}
 	if(fit->flag.actslave){
-		TIC;tic;
+		//TIC;tic;
 		fit->actslave=slaving(fit->aloc, fit->actcpl,
 			global->parms->dbg.recon_stuck?fit->actstuck:0,
 			fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc, 1);
@@ -183,7 +183,7 @@ setup_fit_lrt(fit_t* fit){
 			dspcelladd(&fit->actslave, 1, actslave2, 1);
 			cellfree(actslave2);
 		}
-		toc2("slaving");
+		//toc2("slaving");
 	}
 	cellfree(actcpl);
 }
@@ -208,12 +208,12 @@ setup_fit_matrix(fit_t* fit){
 	dspcell* HA=fit->HA;
 	dspcell* HAT=dspcelltrans(HA);
 
-	print_mem("Before assembling fit matrix");
+	//print_mem("Before assembling fit matrix");
 	/*Assemble Fit matrix. */
 	if(!fit->FR.M&&fit->flag.assemble){
 		if(fit->HXF){//not idealtomo.
 			const int npsr=NX(fit->xloc);
-			info("Building fit->FR\n");
+			dbg("Building fit->FR\n");
 			fit->FR.M=cellnew(ndm, npsr);
 			dspcell* FRM=(dspcell*)fit->FR.M;
 			dspcell* HXF=fit->HXF;
@@ -266,7 +266,7 @@ setup_fit_matrix(fit_t* fit){
 	}
 
 	if(!fit->FL.M){
-		info("Building fit->FL\n");//TIC;tic;
+		dbg("Building fit->FL\n");//TIC;tic;
 		fit->FL.M=cellnew(ndm, ndm);
 		dspcell* FLM=(dspcell*)fit->FL.M;
 		for(int idm=0; idm<ndm; idm++){
@@ -289,8 +289,8 @@ setup_fit_matrix(fit_t* fit){
 				nact+=P(fit->aloc,idm)->nloc;
 			}
 			real maxeig=4./nact;
-			info("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
-			info("The maximum eigen value is estimated to be around %.1e\n", maxeig);
+			dbg("Adding tikhonov constraint of %.1e to FLM\n", tikcr);
+			dbg("The maximum eigen value is estimated to be around %.1e\n", maxeig);
 			dcelladdI(fit->FL.M, tikcr*maxeig);
 			//toc("addI done...");
 		}
@@ -308,7 +308,7 @@ setup_fit_matrix(fit_t* fit){
 			//toc("slaving done...");
 		}
 		/*dspcellsym(fit->FL.M); */
-		info("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);
+		dbg("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);
 	}
 	dspcellfree(HAT);
 	if(fit->flag.alg==0||fit->flag.alg==2){
@@ -328,10 +328,10 @@ setup_fit_matrix(fit_t* fit){
 			dcellfree(fit->FL.U);
 			dcellfree(fit->FL.V);
 		}
-		print_mem("After cholesky/svd on matrix");
+		//print_mem("After cholesky/svd on matrix");
 	}
 
-	print_mem("After assemble fit matrix");
+	//print_mem("After assemble fit matrix");
 }
 /**
    A generic DM fitting routine.

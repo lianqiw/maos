@@ -74,6 +74,7 @@ void wait_cpu(int nthread){
 
 uint16_t PORT=0;
 char** hosts=0;
+char** hostshort=0;
 static char** hostsaddr=0;
 int nhost=0;
 PNEW(mutex_hosts);
@@ -90,16 +91,19 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 		if(memhost<(size_t)(nhost+1)){
 			memhost+=10;
 			hosts=realloc(hosts, memhost*sizeof(char*));
+			hostshort=realloc(hosts, memhost*sizeof(char *));
 			hostsaddr=realloc(hostsaddr, memhost*sizeof(char*));
 		}
 
-		char* eq=strchr(line, '=');
+		const char* eq=strchr(line, '=');
 		hostsaddr[nhost]=eq?strdup(eq+1):strdup(line);
-		if(eq) *eq=0;//terminate hostname
-		//char *dot=strchr(line, '.');
-		//size_t n0=strlen(line);
-		//size_t n=MIN(dot?(size_t)(dot-line):n0, eq?(size_t)(eq-line):n0);
-		hosts[nhost]=strdup(line); //strndup(line, n?n:n0);
+		if(!eq) eq=line+strlen(line);
+		const char *dot=strchr(line, '.');
+		if(dot>eq||!dot){
+			dot=eq;
+		}
+		hosts[nhost]=strndup(line, eq-line); 
+		hostshort[nhost]=strndup(line, dot-line);
 		nhost++;
 		UNLOCK(mutex_hosts);
 	}
@@ -363,8 +367,7 @@ void scheduler_report(status_t* status){
 
 /**
    Started by maos to listen to the sock which connects to the
-   scheduler for commands.
-   It requires a new connection to the scheduler to avoid data racing (?).
+   scheduler for commands. It reuses existing connection.
 */
 pthread_t scheduler_listen(thread_fun fun){
 	pthread_t ans=0;
@@ -372,7 +375,7 @@ pthread_t scheduler_listen(thread_fun fun){
 	(void) fun;
 #else
 	if(!fun) return 0;
-	//int	sock=scheduler_connect_self(0);
+	//int	sock=scheduler_connect_self(0);//enable if do not want to reuse connection
 	if(psock<0){
 		psock=scheduler_connect_self(0);
 	}

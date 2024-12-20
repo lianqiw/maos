@@ -33,12 +33,14 @@ jobs:
       with:
         name: maos-macos
         path: |
-          external
           build/config.h
           build/config.log
           build/bin/
           build/test/
-          !build/test/*.*
+          !build/test/*.bin
+          !build/test/*.fits
+          !build/test/*.o
+          !build/test/*.trs
           !build/*/Makefile
     - name: test #put test in the end so that artifacts are uploaded even if test fails
       run: |

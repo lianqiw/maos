@@ -126,7 +126,7 @@ void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const ape
 			din=0;
 		}
 		if(*gamp) dfree(*gamp);
-		*gamp=mkamp(gloc, ampground, parms->wfsr[iwfsr].misregx-P(parms->aper.misreg, 0), 
+		*gamp=mkamp(gloc, ampground, parms->wfsr[iwfsr].misregx-P(parms->aper.misreg,0), 
 			parms->wfsr[iwfsr].misregy-P(parms->aper.misreg, 1), dout, din);
 	
 		if(gloc!=*pgloc){

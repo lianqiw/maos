@@ -1767,8 +1767,9 @@ void print_progress(sim_t* simu){
 	const int simend=parms->sim.end;
 	long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
 	long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
+	simu->status->tot=simu->tk_iend-simu->tk_istart;//total step time
 	if(isim==simstart){//first step, rough estimate.
-		simu->status->mean=simu->tk_iend-simu->tk_istart;
+		simu->status->mean=simu->status->tot;
 		simu->status->rest=simu->status->mean*parms->sim.nseed*(simend-simstart);
 	} else{
 		simu->status->rest=(long)((simu->tk_iend-simu->tk_s0-(simu->tk_i1-simu->tk_si)*(iseed+1))/steps_done*steps_rest
@@ -1776,9 +1777,6 @@ void print_progress(sim_t* simu){
 		simu->status->mean=(simu->tk_iend-simu->tk_i1)/(real)(isim-simstart);
 	}
 	simu->status->laps=(long)(simu->tk_iend-tk_setup);//total elapsed time
-	simu->status->tot=simu->tk_iend-simu->tk_istart;//total step time
-
-
 
 	simu->status->wfs=simu->tk_wfs;
 	simu->status->recon=simu->tk_recon;
@@ -1818,11 +1816,13 @@ void print_progress(sim_t* simu){
 	}
 	static int nstep=1;
 	if(isim%nstep==0||isim+1==parms->sim.end){
-		int nstep2=ceil(1./simu->status->mean);
-		if(nstep2>5){
-			nstep2=round(nstep2*0.1)*10;
+		if(isim>2){
+			int nstep2=ceil(1./simu->status->tot);
+			if(nstep2>5){
+				nstep2=round(nstep2*0.1)*10;
+			}
+			if(nstep2>nstep) nstep=nstep2;
 		}
-		if(nstep2>nstep) nstep=nstep2;
 	/*we don't print out or report too frequently. */
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)

@@ -88,6 +88,74 @@ sim_t* maos_iseed(int iseed){
 	return simu;
 }
 /**
+	Prepare before each isim
+*/
+void prepare_isim(sim_t *simu){
+	int isim=simu->perfisim;
+	const parms_t *parms=simu->parms;
+	recon_t *recon=simu->recon;
+
+	if(!parms->atm.frozenflow){
+		//Do not put this one inside parallel single so that FFT can use parallel for
+		genatm(simu);
+		/*re-seed the atmosphere in case atm is loaded from shm/file */
+		seed_rand(simu->atm_rand, lrand(simu->init_rand));
+	}
+#if USE_CUDA
+	if(parms->gpu.evl||parms->gpu.wfs){
+	/*may need to copy another part */
+		gpu_atm2gpu(simu->atm, simu->atmscale, parms, simu->iseed, isim);
+	}
+#endif
+	update_wfsflags(simu);
+	sim_update_etf(simu);
+	if(parms->sim.dmproj){
+		/* temporarily disable FR.M so that Mfun is used.*/
+		cell *FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
+		muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
+		recon->fit->FR.M=FRM;/*set FR.M back*/
+		save_dmproj(simu);
+		if(!parms->fit.square){
+			/* Embed DM commands to a square array for fast ray tracing */
+			for(int idm=0; idm<parms->ndm; idm++){
+				loc_embed(P(simu->dmprojsq, idm), P(recon->aloc, idm), P(simu->dmproj, idm));
+			}
+		}
+#if USE_CUDA
+		if(parms->gpu.evl||parms->gpu.wfs){
+			gpu_dmproj2gpu(simu->dmprojsq);
+		}
+#endif
+	}
+	if(!simu->pause&&parms->sim.end>10+parms->sim.start&&parms->sim.dtrat_hi+isim<parms->sim.end&&!signal_caught){
+		draw_single=1;//Only draw active frame.
+	} else{
+		draw_single=0;
+	}
+}
+/**
+ * @brief Post process each isim
+ * 
+ */
+void postproc_isim(sim_t *simu){
+	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
+		if(simu->tomo_update==1){//Only update cn2 regularization term
+			setup_recon_update_cn2(simu->recon, simu->parms);
+			//Already updates GPU in this routine
+		} else{//Also update noise in reconstructor.
+			setup_recon_control(simu->recon, simu->parms, simu->powfs);
+			dcellzero(simu->opdr);//zero out warm restart data. [optional in CPU, essential in GPU.]
+#if USE_CUDA
+			if(simu->parms->gpu.tomo){
+				gpu_update_recon_control(simu->parms, simu->recon);
+			}
+#endif
+		}
+		simu->tomo_update=0;
+	}
+}
+
+/**
    Simulation for each time step.
 
    Callable from matlab.
@@ -96,9 +164,7 @@ sim_t* maos_iseed(int iseed){
 void maos_isim(int isim){
 	sim_t* simu=global->simu;
 	const parms_t* parms=simu->parms;
-	recon_t* recon=simu->recon;
 	int simstart=parms->sim.start;
-	int simend=parms->sim.end;
 	tp_counter_t group={0};
 	extern int NO_RECON, NO_WFS, NO_EVL;
 	if(isim==simstart+1){//skip slow first step.
@@ -113,44 +179,7 @@ void maos_isim(int isim){
 	} else{//work on gradients from last time step for parallelization.
 		simu->reconisim=isim-1;
 	}
-	update_wfsflags(simu);
-	if(!parms->atm.frozenflow){
-		//Do not put this one inside parallel single so that FFT can use parallel for
-		genatm(simu);
-		/*re-seed the atmosphere in case atm is loaded from shm/file */
-		seed_rand(simu->atm_rand, lrand(simu->init_rand));
-	}
-#if USE_CUDA
-	if(parms->gpu.evl||parms->gpu.wfs){
-	/*may need to copy another part */
-		gpu_atm2gpu(simu->atm, simu->atmscale, parms, simu->iseed, isim);
-	}
-#endif
-
-	sim_update_etf(simu);
-	if(parms->sim.dmproj){
-		/* temporarily disable FR.M so that Mfun is used.*/
-		cell* FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
-		muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
-		recon->fit->FR.M=FRM;/*set FR.M back*/
-		save_dmproj(simu);
-		if(!parms->fit.square){
-			/* Embed DM commands to a square array for fast ray tracing */
-			for(int idm=0; idm<parms->ndm; idm++){
-				loc_embed(P(simu->dmprojsq,idm), P(recon->aloc,idm), P(simu->dmproj,idm));
-			}
-		}
-#if USE_CUDA
-		if(parms->gpu.evl||parms->gpu.wfs){
-			gpu_dmproj2gpu(simu->dmprojsq);
-		}
-#endif
-	}
-	if(!simu->pause && parms->sim.end>10+parms->sim.start && parms->sim.dtrat_hi+isim<simend && !signal_caught){
-		draw_single=1;//Only draw active frame.
-	} else{
-		draw_single=0;
-	}
+	prepare_isim(simu);
 	if(PARALLEL==1){
 		/*
 		  We do the big loop in parallel to make better use the
@@ -212,22 +241,6 @@ void maos_isim(int isim){
 			if(!NO_EVL) perfevl(simu);
 		}
 	}
-	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
-		if(simu->tomo_update==1){//Only update cn2 regularization term
-			setup_recon_update_cn2(simu->recon, simu->parms);
-			//Already updates GPU in this routine
-		} else{//Also update noise in reconstructor.
-			setup_recon_control(simu->recon, simu->parms, simu->powfs);
-			dcellzero(simu->opdr);//zero out warm restart data. [optional in CPU, essential in GPU.]
-#if USE_CUDA
-			if(parms->gpu.tomo){
-				gpu_update_recon_control(parms, recon);
-			}
-#endif
-		}
-		simu->tomo_update=0;
-	}
-
 	simu->tk_iend=myclockd();
 	print_progress(simu);
 }
@@ -238,6 +251,12 @@ static void*perfevl_loop(sim_t *simu){
 		if(isim==simstart+1){//skip slow first step.
 			simu->tk_i1=myclockd();
 		}
+#if USE_CUDA
+		if(simu->parms->gpu.evl||simu->parms->gpu.wfs){
+		/*may need to copy another part */
+			gpu_atm2gpu(simu->atm, simu->atmscale, simu->parms, simu->iseed, isim);
+		}
+#endif
 		simu->tk_istart=myclockd();//step start time
 		simu->perfisim=isim;//info("call perfevl(%d)\n", isim);
 		simu->status->isim=isim;
@@ -252,7 +271,7 @@ static void *wfsgrad_loop(sim_t *simu){
 	int simend=simu->parms->sim.end;
 	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
 		simu->wfsisim=isim;//info("call wfsgrad(%d)\n", isim);
-		update_wfsflags(simu);
+		prepare_isim(simu);
 		wfsgrad(simu);
 		shift_grad(simu);
 	}
@@ -265,6 +284,7 @@ static void *reconstruct_loop(sim_t *simu){
 		simu->reconisim=isim-1;//info("call reconstruct(%d)\n", isim);
 		reconstruct(simu);
 		filter_dm(simu);
+		postproc_isim(simu);
 	}
 	return NULL;
 }

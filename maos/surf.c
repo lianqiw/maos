@@ -211,26 +211,24 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		if(!surfs) continue;
 		for(int isurf2=0; isurf2<PN(surfs); isurf2++){
 			map_t* surf=P(surfs, isurf2);
-			if(parms->plot.setup){
-				draw("Surf", (plot_opts){ .image=surf->dmat}, "Surface", "x", "y", "surf %d %d", isurf, isurf2);
+			if(parms->plot.setup>1){
+				draw("Surf", (plot_opts){.image=surf->dmat}, "Surface", "x", "y", "surf %d %d", isurf, isurf2);
 			}
 			//writebin((dmat*)surf, "surf_%d", isurf);
 			const char* strname=search_keyword(surf->keywords, "SURFNAME");
 			const char* strevl=search_keyword(surf->keywords, "SURFEVL");
 			const char* strwfs=search_keyword(surf->keywords, "SURFWFS");
 			const char* stropdx=search_keyword(surf->keywords, "SURFOPDX");
-			if(strname&&(!strcmp(strname, "M1"))){
-				if(fabs(P(parms->aper.misreg, 0))>EPS||fabs(P(parms->aper.misreg, 1))>EPS){
-					warning("M1 surface ox, oy is adjusted by aper.misreg\n");
-				}
-				surf->ox+=P(parms->aper.misreg,0);
-				surf->oy+=P(parms->aper.misreg,1);
-			}
 			//pupil rotation. rotate the surface directly
 			if(strname&&(!strcmp(strname, "M1")||!strcmp(strname, "M2"))){
 				if(parms->aper.rot){
 					dmaprot(surf, parms->aper.rot);
 				}
+			}
+			//pupil misregistration
+			if(strname&&(!strcmp(strname, "M1"))){
+				surf->ox+=P(parms->aper.misreg,0);
+				surf->oy+=P(parms->aper.misreg,1);
 			}
 			int evlct=0;
 			int ncover=0;//NCPA if 1, CPA if 2

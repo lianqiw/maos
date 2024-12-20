@@ -221,7 +221,7 @@ static void list_proc_append(proc_t *p){
 	gtk_list_store_set(listall, &iter,
 		COL_DATE, sdate,
 		COL_TIME, p->status.timstart,
-		COL_HOST, hosts[p->hid],
+		COL_HOST, hostshort[p->hid],
 		COL_PID, spid,
 		COL_FULL, spath?spath:" ",
 		COL_TOOLTIP, stooltip?stooltip:"",
@@ -756,7 +756,7 @@ GtkWidget* new_page(int ihost){
 	}
 	lists[ihost]=gtk_tree_model_filter_new(GTK_TREE_MODEL(listall), NULL);
 	if(ihost<nhost){
-		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_host, hosts[ihost], NULL);
+		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_host, hostshort[ihost], NULL);
 	} else{
 		gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(lists[ihost]), filter_status, NULL, NULL);
 	}

@@ -101,6 +101,9 @@ static dmat* wfsamp2saa(dmat* wfsamp, long npsa){
 	}
 	return saa;
 }
+/**
+	Compute saa[isa]=max(P(P(saa, iwfs), isa)) for iwfs. Set alpha to -1 to compute minimum
+*/
 dmat *dcellmax_each(dcell *saa, real alpha){
 	if(!saa) return NULL;
 	if(PN(saa)==1) return dref(P(saa,0));
@@ -255,7 +258,7 @@ sa_reduce(powfs_t* powfs, int ipowfs, real saat){
 static void
 setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 	aper_t* aper, int ipowfs){
-	TIC;tic;
+	//TIC;tic;
 	free_powfs_geom(powfs, ipowfs);
 	/*order of the system. 60 for TMT */
 	const int order=parms->powfs[ipowfs].order;
@@ -279,7 +282,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 	if(fabs(dsa-nxsa*dx)>EPS){
 		warning("nx=%d,dsa=%f,dx=%f not agree\n", nxsa, dsa, dx);
 	}
-	info("There are %d points in each subaperture of %gm.\n", nxsa, dsa);
+	dbg("There are %dx%d points in each subaperture of %gm.\n", nxsa, nxsa, dsa);
 	const int npsa=nxsa*nxsa;/*Total Number of OPD points. */
 	if(parms->powfs[ipowfs].saloc){
 		powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
@@ -459,7 +462,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 			}
 		}
 	}
-	toc2("setup_shwfs_geom");
+	//toc2("setup_shwfs_geom");
 }
 /**
    Setup telescope to WFS pupil misregistration.
@@ -502,7 +505,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
  */
 void
 setup_powfs_amp(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
-	TIC;tic;
+	//TIC;tic;
 	int multi=0;//Determine wheather each wfs has different amplitude
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -549,7 +552,7 @@ OMP_FOR(nwfsp)
 			parms->wfs[iwfs].misregx-P(parms->aper.misreg,0), parms->wfs[iwfs].misregy-P(parms->aper.misreg,1),
 			parms->aper.d, parms->aper.din);
 	}
-	toc2("setup_pows_amp");
+	//toc2("setup_pows_amp");
 }
 /**
    setup DM to WFS misregistration.
@@ -639,7 +642,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 		dcell* nea=0;
 		//if(parms->powfs[ipowfs].neaphy || parms->powfs[ipowfs].phystep>-1){
 		if(powfs[ipowfs].sanea){
-			info("Use sanea to derive neasim\n");
+			dbg2("powfs%d: use sanea to derive neasim\n", ipowfs);
 			nea=dcelldup(powfs[ipowfs].sanea);
 			for(int ii=0; ii<NX(nea); ii++){
 				nea_chol(&P(nea, ii), P(nea, ii),ng);
@@ -651,6 +654,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				file=parms->powfs[ipowfs].neareconfile;
 			}
 			if(file){
+				dbg2("powfs%d: read neasim from file %s\n", ipowfs, file);
 				nea=dcellread_prefix(file, parms, ipowfs);
 			}
 		}
@@ -661,7 +665,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 		} else{
 			int nnea=PN(powfs[ipowfs].amp);
 			nea=dcellnew(nnea, 1);
-			
+			dbg2("powfs%d: generate neasim from powfs.neasim.\n", ipowfs);
 			for(int jwfs=0; jwfs<nnea; jwfs++){
 				real nea_rad;
 				if(parms->powfs[ipowfs].neasim<0){

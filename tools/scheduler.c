@@ -250,7 +250,7 @@ static void runned_restart(int pid){
 static RUN_T* running_add(int pid, int sock){
 	RUN_T* irun;
 	if((irun=running_get_by_pid(pid))){
-		dbg_time("PID %d is already in running.\n", pid); /*create the node */
+		//dbg_time("PID %d is already in running.\n", pid); /*create the node */
 		if(irun->sock!=sock) irun->sock=sock;
 		return irun;
 	} else{
@@ -296,7 +296,7 @@ static void running_remove(int pid, int status){
 			}
 			irun->status.timlast=myclocki();
 			irun->status.info=status;
-			dbg_time("remove job %d with status %d\n", pid, irun->status.info);
+			//dbg_time("remove job %d with status %d\n", pid, irun->status.info);
 			monitor_send(irun, NULL);
 			runned_add(irun);
 			break;
@@ -381,6 +381,7 @@ static void check_jobs(void){
  examine the process queue to start routines once CPU is available.
 */
 static void process_queue(void){
+	//dbg_time("process_queue: enter\n");
 	if(!running) return;
 	static time_t lasttime=0;
 	time_t thistime=myclocki();
@@ -393,16 +394,12 @@ static void process_queue(void){
 		//dbg_time("process_queue: enough jobs are running\n");
 		return;
 	}
-	int avail=get_cpu_avail();
-	if(avail<1){
-		dbg_time("process_queue: no CPUs are available\n");
-		return;
-	}
-	dbg2_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
+	//dbg2_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
 	RUN_T* irun=running_get_by_status(S_WAIT);
 	if(irun){//There are jobs waiting.
 		if(irun->sock>0){//already connected.
 			int nthread=irun->nthread;
+			int avail=get_cpu_avail();
 			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
 				&&(!NGPU||!irun->ngpu||nrun_get(1)+irun->ngpu<=NGPU)){//resource available to star the job
 				irun->last_time=myclocki();
@@ -426,20 +423,20 @@ static void process_queue(void){
 			}
 		}
 	} else{
-		if(avail>1&&nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
-			static double lasttime2=0;
-			time_t thistime2=myclocki();
-			if(thistime2>lasttime2+0.001){
-				lasttime2=thistime2;
+		if(nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
+			//static double lasttime2=0;
+			//time_t thistime2=myclocki();
+			//if(thistime2>lasttime2+0.001){//wait 1ms for job to connect.
+				//lasttime2=thistime2;
 				irun=running_get_by_status(S_QUEUED);
 				if(!irun){
-					//dbg_time("all jobs are done\n");
+					dbg_time("all jobs are done\n");
 					all_done=1;
 					nrun_handle(3, 0, 0, 0);
 					counter=-1; //reset the counter
 				} else{
 					int pid;
-					irun->last_time=thistime2;
+					irun->last_time=myclocki();
 					irun->status.timlast=myclocki();
 					if((pid=launch_exe(irun->exe, irun->path0))<0){
 						dbg_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
@@ -453,7 +450,9 @@ static void process_queue(void){
 						irun->pid=pid;
 					}
 				}
-			}
+			//}
+		}else{
+			dbg_time("no resource available. nused_cpu=%d, ngpu=%d.\n", nrun_get(0), nrun_get(1));
 		}
 	}
 }
@@ -589,8 +588,13 @@ static void socket_close(){
 	}
 }
 static void set_sockname(int sock, const char *name){
-	if(sock>-1&&sock<MAXSOCK){
+	if(sock>-1&&sock<MAXSOCK&&!sockname[sock]){
 		sockname[sock]=name;
+	}
+}
+static void unset_sockname(int sock){
+	if(sock>-1&&sock<MAXSOCK){
+		sockname[sock]=NULL;
 	}
 }
 static const char* get_sockname(int sock){
@@ -620,7 +624,9 @@ static int respond(int sock){
 		/*if(errno!=ESRCH && errno!=ENOENT){//timeout or closed
 			dbg_time("read %d failed (%d): %s,ret=%d\n", sock, errno, strerror(errno), ret);
 		}*/
-		dbg_time("(%d:%s) connection lost or closed by client.\n", sock, get_sockname(sock)); return ret;
+		//dbg_time("(%d:%s) connection lost or closed by client.\n", sock, get_sockname(sock)); 
+		unset_sockname(sock);
+		return ret;
 	}else{
 		dbg2_time("(%d:%s) cmd is %d %d. \n", sock, get_sockname(sock), cmd[0], cmd[1]);
 	}
@@ -956,7 +962,7 @@ static int respond(int sock){
 #if HAS_LWS
 	ws_service(0);
 #endif
-	if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
+	//if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
 	return ret;//ret=-1 will close the socket.
 }
 /*

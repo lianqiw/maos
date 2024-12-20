@@ -1965,8 +1965,11 @@ static void setup_parms_postproc_sim(parms_t *parms){
 		parms->sim.end=NX(parms->dbg.tomo_maxit);
 	}
 	if(parms->sim.idealtomo){
+		if(parms->recon.glao){
+			error("idealtomo and recon.glao conflicts\n");
+		}
 		if(parms->recon.alg!=RECON_MVR){
-			dbg2("idealtomo only works in recon.alg=0 mode. changed\n");
+			error("idealtomo only works in minimum variance reconstruction (recon.alg=0) mode.\n");
 			parms->recon.alg=RECON_MVR;
 		}
 		if(parms->recon.split){
@@ -2456,7 +2459,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			P(parms->atmr.os,ips)=P(parms->atmr.os,parms->atmr.nps-1);
 		}
 		parms->atmr.nps=nps;
-	}/*else if((parms->recon.glao||parms->nhiwfs==1)
+	}else if((parms->recon.glao)
 		&&parms->recon.alg==RECON_MVR&&NX(parms->atmr.ht)>1&&!parms->sim.idealtomo){
    		//GLAO or single high wfs mode. reconstruct only a single layer near the DM.
 		//Comment out because reconstructing into multiple layers can have better performance.
@@ -2467,7 +2470,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
-	}*/
+	}
 	else if(parms->npowfs>0){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
@@ -2533,7 +2536,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 	  Find ground turbulence layer. The ray tracing can be shared between different directions.
 	*/
 	parms->atm.iground=-1;
-	parms->atm.hmax=-INFINITY;
+	parms->atm.hmax=0;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 		if(fabs(P(parms->atm.ht,ips))<1.e-10){
 			if(parms->atm.iground==-1){
@@ -2553,7 +2556,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 			parms->atm.hmax=P(parms->atm.ht,ips);
 		}
 	}
-	parms->atmr.hmax=-INFINITY;
+	parms->atmr.hmax=0;
 	for(int ips=0; ips<parms->atmr.nps; ips++){
 		if(parms->atmr.hmax<P(parms->atmr.ht,ips)){
 			parms->atmr.hmax=P(parms->atmr.ht,ips);
@@ -3098,13 +3101,14 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			if(!parms->recon.split){
 				maxit*=4;//integrated tomo needs more steps
 			}
-			if(1){
+			if(parms->ndm>1){
 				//if meta pupil is much larger than the aperture, needs more iterations. 
 				//if atmr.dx is smaller than 0.5, also more iterations
-				real ratio=pow(1+parms->sim.fov*parms->atm.hmax/parms->aper.d,2);//meta pupil diameter
+				real ratio=pow(1+parms->sim.fov*parms->atmr.hmax/parms->aper.d,2);//meta pupil diameter
 				if(parms->atmr.dx<0.5){
 					ratio*=0.5/parms->atmr.dx;
 				}
+				if(ratio>10) ratio=10;//limit maximum value.
 				maxit=ceil(maxit*ratio);
 			}
 			parms->tomo.maxit=maxit;

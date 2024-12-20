@@ -940,4 +940,63 @@ def noll2zrn(mm,mv):
         
 def sumsq(vec):
     '''return sum(vec*vec)'''
-    return np.sum(vec**2);
+    return np.sum(vec**2)
+def simpson_wt(nx):
+    '''1d simpson weight'''
+    import fractions
+    wt1=np.ones((nx),dtype=int)
+    if nx%2==1: #odd number. 1/3 rule
+        wt1[1:-1:2]=4
+        wt1[2:-1:2]=2
+    else: #even number. 3/8 rule
+        wt1[1:-1:3]=3
+        wt1[2:-1:3]=3
+        wt1[3:-1:3]=2
+    ss=int(np.sum(wt1))
+    return np.array([fractions.Fraction(wt,ss) for wt in wt1]).reshape(nx,1)
+def arr2str(xx):
+    import fractions
+    return ' '.join(['{}'.format(fractions.Fraction('{}'.format(x))) for x in xx])
+
+def simpson(nx=3,fov=1):
+    '''return thetax, thetay, and wt for simpson weighting of nx*nx grid. nx should be odd'''
+    x=np.arange(-(nx-1)/2,(nx-1)/2+1)*(fov/(nx-1))
+    x.shape=(nx,1)
+    xx=x@np.ones((1,nx))
+    yy=xx.T.copy()
+    wt1=simpson_wt(nx)
+    wt=wt1@wt1.T
+   
+    print('thetax=[',' '.join(['{:g}'.format(round(i,4)) for i in xx.flat]),']',sep='')
+    print('thetay=[',' '.join(['{:g}'.format(round(i,4)) for i in yy.flat]),']',sep='')
+    print('wt=[',' '.join(['{}'.format(i) for i in wt.flat]),']',sep='')
+    #print('wt=[',arr2str(wt.flat),']',sep='')
+    print(np.sum(wt))
+    figure()
+    draw(np.c_[xx.flat,yy.flat],wt.astype(float))
+    
+def simpson_cir(nr=2,fov=1,ntheta=8):
+    '''return thetax, thetay, and wt for simpson weighting of polar coordinate grid.'''
+    rs=np.sqrt(np.arange(1,nr)/(nr-1)).reshape(nr-1,1)@np.ones((1,ntheta))*(fov/2)
+    thetas=np.ones((nr-1,1))@(np.arange(0,ntheta).reshape(1,ntheta)/(ntheta)*2*np.pi)
+    #print(rs)
+    #print(thetas)
+    xx=rs*np.cos(thetas)
+    yy=rs*np.sin(thetas)
+    wtr=simpson_wt(nr)
+    wtt=simpson_wt(ntheta+1); wtt[-1]+=wtt[0]; wtt=wtt[1:]; #circular connected
+    wt=wtr[1:]@wtt.T
+    xx=np.r_[0,xx.flat]
+    yy=np.r_[0,yy.flat]
+    wt=np.r_[wtr[0],wt.flat]
+    #print(wt)
+    wt=wt/np.sum(wt)
+    print('thetax=[',' '.join(['{:g}'.format(round(i,4)) for i in xx.flat]),']',sep='')
+    print('thetay=[',' '.join(['{:g}'.format(round(i,4)) for i in yy.flat]),']',sep='')
+    print('wt=[',' '.join(['{}'.format(i) for i in wt.flat]),']',sep='')
+    #print('wt=[',' '.join(['1/{:g}'.format(round(1./i,2)) for i in wt.flat]),']',sep='')
+    #print('wt=[',arr2str(wt.flat),']',sep='')
+    print(np.sum(wt))
+    figure()
+    draw(np.c_[xx.flat,yy.flat],wt.astype(float),dx=0.02)
+    #plt.colorbar(plt.gca().tricontourf(xx.flat,yy.flat,wt.flat))

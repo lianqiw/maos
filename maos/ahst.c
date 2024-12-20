@@ -347,7 +347,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	if(NY(GM)!=1){
 		error("To be implemented\n");
 	}
-	dbg("Rngs is using wfs ");
+	info("Low order reconstruction uses wfs ");
 	dcell* GM2=dcellnew(NX(GM), NY(GM));
 	int nmod=0, ntt=0, nttf=0;
 	for(int iwfs=0; iwfs<NX(GM); iwfs++){
