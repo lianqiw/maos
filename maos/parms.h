@@ -349,6 +349,8 @@ typedef struct dm_cfg_t{
 		       - 1/2 means no one in the center.*/
     real iac;     /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     real histbin; /**<The bin width for histogram.*/
+	real nmod;    /**<Maximum number of modes to control in modal controller*/
+
     int histn;      /**<Number of bins in histogram.*/
     int hist;       /**<Compute histogram of commands of each actuator*/
     int order;      /**<Nominal order of the DM within telescope clear subaperture*/
@@ -514,7 +516,6 @@ typedef struct recon_cfg_t{
 						- 1: adhoc split tomography
 						- 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int modal;       /**-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes*/
-    int nmod;        /**<Maximum number of modes to control in modal controller*/
     int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
     int mvm;         /**<Use the various algorithms recon.alg to assemble a control
 						matrix to multiply to gradients to get DM commands. If

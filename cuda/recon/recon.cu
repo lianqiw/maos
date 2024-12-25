@@ -62,16 +62,18 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	if(((parms->recon.alg==RECON_MVR&&parms->gpu.fit)||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==RECON_LSR&&parms->gpu.lsr)
 		){
-		if(parms->recon.alg==RECON_MVR&&parms->fit.square){
+		if(parms->recon.modal){
+			dmrecon=curcell(parms->ndm, 1, P(recon->anmod), (long *)NULL);
+		}else if(parms->recon.alg==RECON_MVR&&parms->fit.square){
 			dmrecon=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
-		} else if(parms->recon.modal){
-			dmrecon=curcell(parms->ndm, 1, P(recon->anmod), (long*)NULL);
 		} else{
 			dmrecon=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL);
 		}
 		dmrecon_vec=dmrecon.Vector();
 	}
-
+	if(parms->recon.modal){
+		cp2gpu(amod, recon->amod);
+	}
 	if(parms->recon.alg==RECON_MVR&&(parms->gpu.tomo||parms->gpu.fit)
 		&&!parms->sim.idealtomo&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
 		if(parms->tomo.square){
@@ -230,6 +232,12 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 		}
 		gpu_set(cuglobal->recongpu);
 	}
+	if(parms->recon.alg==RECON_MVR&&parms->fit.square){
+		dmrecon_zonal=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
+	} else{
+		dmrecon_zonal=curcell(parms->ndm, 1, P(recon->anloc), (long *)NULL);
+	}
+	dmrecon_zonal_vec=dmrecon_zonal.Vector();
 }
 void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	dbg("update turbulence profile.\n");
@@ -305,9 +313,17 @@ Real curecon_t::moao_recon(dcell* _dmrecon, dcell* _opdr){
 	if(_opdr){
 		cp2gpu(opdr_vec, _opdr);
 	}
+	curcell dmin=dmrecon;
+	if(amod){
+		curcellmm(dmrecon_zonal_vec, 0, amod, dmrecon, "nn", 1, cgstream);
+		/*for(int idm=0; idm<dmrecon.Nx(); idm++){
+			curmv(dmrecon_zonal_vec(idm), 0., amod(idm,idm), dmrecon(idm), 'n', 1, cgstream);
+		}*/
+		dmin=dmrecon_zonal;
+	}
 	for(int imoao=0; imoao<nmoao; imoao++){
 		if(!moao[imoao]) continue;
-		moao[imoao]->moao_solve(dm_moao[imoao], opdr, dmrecon, cgstream);
+		moao[imoao]->moao_solve(dm_moao[imoao], opdr, dmin, cgstream);
 	}
 	return 0;
 }

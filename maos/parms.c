@@ -1112,6 +1112,7 @@ static void readcfg_dm(parms_t *parms){
 	READ_DM_RELAX(dbl,hyst_stroke);
 	READ_DM_MAT(d,actfloat);
 	READ_DM_MAT(d,actstuck);
+	READ_DM_RELAX(dbl, nmod)
 	free(strtmp);
 	free(inttmp);
 	free(dbltmp);
@@ -1547,15 +1548,6 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.split);
 	READ_INT(recon.mvm);
 	READ_INT(recon.modal);
-	real nmod=readcfg_dbl("recon.nmod");
-	if(parms->recon.modal){
-		if(nmod==0) nmod=1;
-		if(nmod<=1){
-			nmod*=pow(parms->ndm>0?parms->dm[0].order:parms->aper.d*2,2)*M_PI/4;
-			dbg("recon.nmod=%d\n", (int)nmod);
-		}
-		parms->recon.nmod=(int)nmod;
-	}
 	READ_INT(recon.psol);
 	READ_DBL(recon.poke);
 	parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
@@ -2889,10 +2881,10 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	if(parms->recon.glao&&parms->ndm!=1){
 		error("GLAO only works with 1 dm\n");
 	}
-	if(parms->recon.alg==RECON_MVR&&parms->recon.modal){
+	/*if(parms->recon.alg==RECON_MVR&&parms->recon.modal){
 		error("Modal control is not supported yet with MV reconstructor. Consider change to LSR reconstructor or disable modal control.\n");
 		parms->recon.modal=0;
-	}
+	}*/
 	if(parms->recon.alg==RECON_LSR){
 		if(parms->recon.split==2){
 			error("MVST does not work with least square reconstructor.\n");
@@ -3019,23 +3011,32 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
 		}
 	}
-	if(parms->tomo.alg==-1){//default to CG
-		parms->tomo.alg=ALG_CG;
-	}
-	if(parms->tomo.alg==ALG_CG){
-		if(parms->nhipowfs>1){
-			if(parms->tomo.precond==PCG_FD){
-				info("Disable FDPCG when there are multiple high order powfs.\n");
-				parms->tomo.precond=PCG_NONE;
-			}
-		}else if(parms->tomo.precond==-1){
-			parms->tomo.precond=PCG_FD;
+	if(parms->recon.alg==0){//MVM: tomo+fit
+		if(parms->tomo.alg==-1){//default to CG
+			parms->tomo.alg=ALG_CG;
 		}
-	}else{
-		parms->tomo.precond=PCG_NONE;
-	}
-	if(parms->fit.alg==-1){
-		parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS.
+		if(parms->tomo.alg==ALG_CG){
+			if(parms->nhipowfs>1){
+				if(parms->tomo.precond==PCG_FD){
+					info("Disable FDPCG when there are multiple high order powfs.\n");
+					parms->tomo.precond=PCG_NONE;
+				}
+			}else if(parms->tomo.precond==-1){
+				parms->tomo.precond=PCG_FD;
+			}
+		}else{
+			parms->tomo.precond=PCG_NONE;
+		}
+		if(parms->fit.alg==-1){
+			if(parms->recon.modal){
+				parms->fit.alg=ALG_CG;
+			}else{
+				parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS or SVD.
+			}
+		}else if(parms->recon.modal && parms->fit.alg==ALG_CBS){
+			warning("recon.modal cannot work with CBS. Change to SVD.\n");
+			parms->fit.alg=ALG_SVD;
+		}
 	}
 	if(parms->atm.frozenflow&&!parms->dbg.nocgwarm){
 		parms->fit.cgwarm=1;
@@ -3366,7 +3367,30 @@ static void setup_parms_postproc_misc(parms_t *parms){
 		}
 	}
 }
-
+static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
+	if(bgs){
+		info2("Block Gauss Seidel with ");
+	}
+	switch(alg){
+	case ALG_CBS:
+		info2("Cholesky back solve ");
+		break;
+	case ALG_CG:
+		info2("CG%d ", maxit);
+		switch(precond){
+			case 0:	break;
+			case 1:	info2("with Fourier Domain preconditioner "); break;
+			default: info2("Unknown preconditioner "); break;
+		}
+		break;
+	case ALG_SVD:
+		info2("SVD with threshold %g ", svdthres);
+		break;
+	default:
+		error("Invalid algorithm\n");
+	}
+	info2("\n");
+}
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
@@ -3380,11 +3404,6 @@ static void print_parms(const parms_t *parms){
 	"Maximum a posteriori tracing (MAP)",
 	"correlation (peak first)",
 	"correlation (sum first)",
-	"Invalid"
-	};
-	const char *const tomo_precond[]={
-	"No",
-	"Fourer Domain",
 	"Invalid"
 	};
 	const char *const closeloop[]={
@@ -3520,26 +3539,7 @@ static void print_parms(const parms_t *parms){
 	if(parms->recon.alg==RECON_MVR){
 		if(!parms->sim.idealtomo){
 			info2("Tomography is using ");
-			if(parms->tomo.bgs){
-				info2("Block Gauss Seidel with ");
-			}
-			switch(parms->tomo.alg){
-			case ALG_CBS:
-				info2("Cholesky back solve ");
-				break;
-			case ALG_CG:
-				info2("CG, with %s preconditioner, %d iterations",
-					tomo_precond[parms->tomo.precond],parms->tomo.maxit);
-				break;
-			case ALG_SVD:
-				info2("SVD direct solve ");
-				break;
-			case ALG_BGS:
-				info2("Block Gauss Seidel ");
-				break;
-			default:
-				error("Invalid\n");
-			}
+			print_alg(parms->tomo.bgs, parms->tomo.alg, parms->tomo.maxit, parms->tomo.precond, parms->tomo.svdthres);
 			switch(parms->recon.split){
 			case 0:
 				info2(", integrated tomo.\n");break;
@@ -3552,26 +3552,8 @@ static void print_parms(const parms_t *parms){
 			}
 		}
 		info2("DM Fitting is using ");
-		if(parms->fit.bgs){
-			info2("Block Gauss Seidel with ");
-		}
-		switch(parms->fit.alg){
-		case ALG_CBS:
-			info2("Cholesky back solve (CBS)\n");
-			break;
-		case ALG_CG:
-			info2("CG, with %s preconditioner, %d iterations\n",
-				tomo_precond[parms->fit.precond],parms->fit.maxit);
-			break;
-		case ALG_SVD:
-			info2("SVD\n");
-			break;
-		case ALG_BGS:
-			info2("Block Gauss Seidel (BGS)\n");
-			break;
-		default:
-			error("Invalid\n");
-		}
+		
+		print_alg(parms->fit.bgs,parms->fit.alg, parms->fit.maxit, parms->fit.precond, parms->fit.svdthres);
 		info2("There are %d DM fitting directions\n",parms->fit.nfit);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
@@ -3586,23 +3568,7 @@ static void print_parms(const parms_t *parms){
 		}
 	} else if(parms->recon.alg==RECON_LSR){
 		info2("Least square reconstructor is using ");
-		if(parms->tomo.bgs){
-			info2("Block Gauss Seidel with ");
-		}
-		switch(parms->lsr.alg){
-		case ALG_CBS:
-			info2("Cholesky back solve (CBS)");
-			break;
-		case ALG_CG:
-			info2("CG%d",parms->tomo.maxit);
-			break;
-		case ALG_SVD:
-			info2("SVD");
-			break;
-		default:
-			error("Invalid\n");
-		}
-		info2("\n");
+		print_alg(parms->lsr.bgs, parms->lsr.alg, parms->lsr.maxit, 0, parms->lsr.svdthres);
 	} else{
 		error("parms->recon.alg=%d is not supported.\n",parms->recon.alg);
 	}

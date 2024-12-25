@@ -108,7 +108,6 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 static void calc_gradol(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
-	dspcell* GA=recon->GA/*PDSPCELL*/;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].psol){
 			if((simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){/*Has output. */
@@ -118,7 +117,7 @@ OMP_TASK_FOR(4)
 					int iwfs=parms->recon.glao?ipowfs:P(parms->powfs[ipowfs].wfs,indwfs);
 					dcp(&P(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
 					for(int idm=0; idm<parms->ndm&&P(simu->wfspsol,ipowfs); idm++){
-						dspmm(&P(simu->gradlastol,iwfs), P(GA, iwfs, idm),
+						dcellmm(&P(simu->gradlastol,iwfs), P(recon->GA, iwfs, idm),
 							P(P(simu->wfspsol,ipowfs),idm), "nn", 1);
 					}
 				}
@@ -357,8 +356,9 @@ void recon_servo_update(sim_t* simu){
 				dcell* coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25,
 					parms->sim.f0dm, parms->sim.zetadm, 1, psdol, NULL);
 				const real g=parms->recon.psdservo_gain;
-				P(simu->dmint->ep,0)=P(simu->dmint->ep,0)*(1-g)+P(P(coeff,0),0)*g;
-				info("Step %5d updated high order loop gain: %.3f (%ld points)\n", simu->reconisim, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
+				const real oldep=P(simu->dmint->ep, 0);
+				P(simu->dmint->ep,0)=oldep*(1-g)+P(P(coeff,0),0)*g;
+				info("Step %5d updated HO loop gain: %5.3f->%5.3f (%ld points)\n", simu->reconisim, oldep, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
 				//if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
 				dcellfree(coeff);
 				dfree(psdol);
@@ -411,8 +411,9 @@ void recon_servo_update(sim_t* simu){
 						//if(simu->save->psdol_lo) zfarr_push(simu->save->psdol_lo, -1, psdol);
 						dcell *coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_lo, parms->sim.allo, M_PI*0.25, 0, 0, 1, psdol, 0);
 						const real g=parms->recon.psdservo_gain;
-						P(simu->Mint_lo->ep,0,icol)=P(simu->Mint_lo->ep,0,icol)*(1.-g)+P(P(coeff,0),0)*g;
-						info("Step %5d updated low order mode %d loop gain : %.3f (%ld points)\n", simu->reconisim, icol, P(simu->Mint_lo->ep,0,icol), NY(simu->Merrts));
+						const real oldep=P(simu->Mint_lo->ep, 0, icol);
+						P(simu->Mint_lo->ep,0,icol)=oldep*(1.-g)+P(P(coeff,0),0)*g;
+						info("Step %5d updated LO loop gain: %5.3f->%5.3f (%ld points)\n", simu->reconisim, oldep, P(simu->Mint_lo->ep,0,icol), NY(simu->Merrts));
 						dfree(psdol);
 						dcellfree(coeff);
 					} else{
@@ -444,7 +445,10 @@ void* reconstruct(sim_t* simu){
 			//dbg("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
 			//if(simu->wfsgrad_isim+1==simu->reconisim){
 			//}
-			pthread_cond_wait(&simu->wfsgrad_condr, &simu->wfsgrad_mutex);
+			struct timespec ts;
+			clock_gettime(CLOCK_REALTIME, &ts);
+			ts.tv_nsec+=1e6;
+			pthread_cond_timedwait(&simu->wfsgrad_condr, &simu->wfsgrad_mutex, &ts);
 		}
 		if(simu->wfsgrad_isim>simu->reconisim){
 			error("waiting wfsgrad_isim is %d need %d\n", simu->wfsgrad_isim, simu->reconisim);
@@ -505,7 +509,7 @@ void* reconstruct(sim_t* simu){
 				error("recon.alg=%d is not recognized\n", parms->recon.alg);
 			}
 		}
-		if(!parms->recon.modal&&simu->dmrecon!=simu->dmerr){
+		if(simu->dmrecon!=simu->dmerr){
 			dcellcp(&simu->dmerr, simu->dmrecon);/*keep dmrecon for warm restart */
 		}
 		if(parms->recon.psol){
@@ -557,7 +561,7 @@ void* reconstruct(sim_t* simu){
 						}
 						for(int id=0; id<nd; id++){//index of dithered mode
 							const int jm=md*id;//DM mode of dithered mode. 
-							const int jm2=(id+1==nd)?(parms->recon.nmod):(jm+md);
+							const int jm2=(id+1==nd&&recon->anmod)?P(recon->anmod, idm):(jm+md);
 							const real scale0=P(gs2, id)/gs1;
 							const real dscale1=scale0-P(gs2, MIN(nd-1, id+1))/gs1;
 							if(print) info(" %4.2f", scale0);
@@ -570,10 +574,6 @@ void* reconstruct(sim_t* simu){
 						}
 					}
 				}
-			}
-			//convert to zonal space
-			for(int idm=0; idm<NX(simu->dmtmp); idm++){
-				dmm(&P(simu->dmerr, idm), 0, P(simu->recon->amod, idm), P(simu->dmrecon, idm), "nn", 1);
 			}
 		}
 		if(parms->recon.split){

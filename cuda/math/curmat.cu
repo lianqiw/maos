@@ -101,11 +101,11 @@ void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 	if(trans[1]=='n'||trans[0]=='N'){
 		ny=B.Ny();
 		bz=1; by=B.Nx();
-		if(nz!=B.Nx()) error("miX(mat)ch\n");
+		if(nz!=B.Nx()) error("mismatch\n");
 	} else{
 		ny=B.Nx();
 		by=1; bz=B.Nx();
-		if(nz!=B.Ny()) error("miX(mat)ch\n");
+		if(nz!=B.Ny()) error("mismatch\n");
 	}
 	if(!C){
 		C=curcell(nx, ny);

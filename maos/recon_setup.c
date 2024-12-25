@@ -979,7 +979,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	cellfree(recon->MVFM);
 
 	dcellfree(recon->GXL);
-	dcelladdsp(&recon->GXL, 1, recon->GXlo, 1);
+	dcelladd(&recon->GXL, 1, recon->GXlo, 1);
 	//NEA of low order WFS.
 	dcell* neailo=dcellnew(parms->nwfsr, parms->nwfsr);
 	dcell* nealo=dcellnew(parms->nwfsr, parms->nwfsr);
@@ -1277,7 +1277,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs
    The results are measurement noise dependent and may be updated during simulation.
    */
 void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
-	info("Setup or update control matrix parameters.\n");
+	info("Compute control matrix parameters.\n");
 	TIC;tic;
 	/*setup LGS tip/tilt/diff focus removal */
 	setup_recon_TTFR(recon, parms);
@@ -1337,14 +1337,14 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 			real scale=1-ht/P(parms->evl.hs,ievl);
 			dsp* Htmp=mkh(P(recon->aloc,idm), eloc, dispx, dispy, scale, 0);
 			
-			/*if(parms->recon.modal){
+			if(parms->recon.modal){
 				dmat* Hdtmp=NULL;
-				dspmm(&Hdtmp, Htmp, P(recon->amod, idm), "nn", 1);
+				dspmm(&Hdtmp, Htmp, P(recon->amod, idm, idm), "nn", 1);
 				dspfree(Htmp);
 				P(recon->Herr, ievl, idm)=(cell*)Hdtmp;
-			}else{*/
+			}else{
 				P(recon->Herr, ievl, idm)=(cell*)Htmp;
-			//}
+			}
 		}
 	}
 	if(parms->recon.psd==2){//don't use sigmanhi by default
@@ -1487,6 +1487,7 @@ void free_recon_unused(const parms_t* parms, recon_t* recon){
 			dfree(recon->MVM);//keep GPU copy.
 		}
 	}
+	cellfree(recon->amodpinv);
 }
 /**
    Free the recon struct.
@@ -1512,8 +1513,6 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->GA);
 	cellfree(recon->GAlo);
 	cellfree(recon->GAhi);
-	cellfree(recon->GM);
-	cellfree(recon->GMhi);
 	dcellfree(recon->GXL);
 	dspcellfree(recon->L2);
 	dspcellfree(recon->L2save);
@@ -1555,6 +1554,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	locfree(recon->ploc);
 	free(P(recon->amap));free(recon->amap);//data is referenced
 	cellfree(recon->amod);
+	cellfree(recon->amodpinv);
 	cellfree(recon->anmod);
 	cellfree(recon->acmap);
 	cellfree(recon->aloc);

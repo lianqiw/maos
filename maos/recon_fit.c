@@ -58,7 +58,7 @@ static void
 setup_fit_HA(fit_t* fit){
 	const int nfit=NX(fit->thetax);
 	const int ndm=NX(fit->aloc);
-	fit->HA=dspcellnew(nfit, ndm);
+	fit->HA=cellnew(nfit, ndm);
 	TIC;tic;
 OMP_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
@@ -73,37 +73,45 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			P(fit->HA, ifit, idm)=mkh(P(fit->aloc,idm), loc, displace[0], displace[1], scale, 0);
+			dsp *ha=mkh(P(fit->aloc,idm), loc, displace[0], displace[1], scale, 0);
+			if(fit->modal){
+				dspmm((dmat**)&P(fit->HA, ifit, idm), ha, P(fit->amod, idm, idm), "nn", 1);
+				dspfree(ha);
+			}else{
+				P(fit->HA, ifit, idm)=(cell*)ha;
+			}
 			if(loc!=fit->floc){
 				locfree(loc);
 			}
 		}
 	}
 	toc2("HA");
-	fit->actcpl=genactcpl(fit->HA, fit->W1);
-	if(fit->actfloat){//zero coupling for floating actuators. Do not zero for sutck actuators.
-		act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
-	}
-	if(global->parms->dbg.recon_stuck){
-		act_stuck(fit->aloc, fit->HA, fit->actstuck);
-	}
+	if(!fit->modal){
+		fit->actcpl=genactcpl(fit->HA, fit->W1);
+		if(fit->actfloat){//zero coupling for floating actuators. Do not zero for sutck actuators.
+			act_stuck(fit->aloc, fit->actcpl, fit->actfloat);
+		}
+		if(global->parms->dbg.recon_stuck){
+			act_stuck(fit->aloc, fit->HA, fit->actstuck);
+		}
 
-	if(fit->flag.actextrap){
-		/*
-			DM fitting output a is extrapolated to edge actuators by
-			actextrap*a. The corresponding ray tracing from DM would be
-			HA*actextrap*a. We replace HA by HA*actextrap to take this into
-			account during DM fitting. 
-			This needs to be used with extrapolation on dmpsol.
-		*/
-		fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
-		dbg("Replacing HA by HA*fit->actextrap\n");
-		dspcell *HA2=0;
-		dcellmm(&HA2, fit->HA, fit->actextrap, "nn", 1);
-		dspcellfree(fit->HA);
-		fit->HA=HA2;
-	} else if(fit->actfloat){//avoid commanding floating actuators
-		act_float(fit->aloc, &fit->HA, NULL, fit->actfloat);
+		if(fit->flag.actextrap){
+			/*
+				DM fitting output a is extrapolated to edge actuators by
+				actextrap*a. The corresponding ray tracing from DM would be
+				HA*actextrap*a. We replace HA by HA*actextrap to take this into
+				account during DM fitting. 
+				This needs to be used with extrapolation on dmpsol.
+			*/
+			fit->actextrap=act_extrap(fit->aloc, fit->actcpl, fit->flag.actthres, 0);
+			dbg("Replacing HA by HA*fit->actextrap\n");
+			cell *HA2=0;
+			dcellmm(&HA2, fit->HA, fit->actextrap, "nn", 1);
+			cellfree(fit->HA);
+			fit->HA=HA2;
+		} else if(fit->actfloat){//avoid commanding floating actuators
+			act_float(fit->aloc, (dspcell**)&fit->HA, NULL, fit->actfloat);
+		}
 	}
 }
 /**
@@ -142,9 +150,9 @@ setup_fit_lrt(fit_t* fit){
 		for(int idm=0; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
 			real* p=P(P(fit->NW,idm))+(inw+idm)*nloc;
-			const real* cpl=P(P(actcpl,idm));
+			const real* cpl=actcpl?P(P(actcpl,idm)):NULL;
 			for(int iloc=0; iloc<nloc; iloc++){
-				if(cpl[iloc]>0.1){ //don't count floating or stuck actuators
+				if(!cpl || cpl[iloc]>0.1){ //don't count floating or stuck actuators
 					p[iloc]=fitscl;
 				}
 			}
@@ -180,7 +188,7 @@ setup_fit_lrt(fit_t* fit){
 			dspcell* actslave2=slaving(fit->aloc, fit->actcpl,
 				global->parms->dbg.recon_stuck?fit->actstuck:0,
 				fit->actfloat, fit->flag.actthres, 1./fit->floc->nloc, 2);
-			dspcelladd(&fit->actslave, 1, actslave2, 1);
+			dcelladd(&fit->actslave, 1, actslave2, 1);
 			cellfree(actslave2);
 		}
 		//toc2("slaving");
@@ -205,9 +213,7 @@ setup_fit_matrix(fit_t* fit){
 	const int ndm=NX(fit->aloc);
 	if(ndm==0) return;
 
-	dspcell* HA=fit->HA;
-	dspcell* HAT=dspcelltrans(HA);
-
+	cell* HA=fit->HA;
 	//print_mem("Before assembling fit matrix");
 	/*Assemble Fit matrix. */
 	if(!fit->FR.M&&fit->flag.assemble){
@@ -223,7 +229,7 @@ setup_fit_matrix(fit_t* fit){
 					if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 					dsp* tmp=dspmulsp(fit->W0, P(HXF, ifit, ips), "nn");
 					for(int idm=0; idm<ndm; idm++){
-						dspmulsp2(&P(FRM, idm, ips), P(HAT, idm, ifit), tmp, "nn",
+						dcellmm(&P(FRM, idm, ips), P(HA, ifit, idm), tmp, "tn",
 							P(fit->wt,ifit));
 					}
 					dspfree(tmp);
@@ -252,15 +258,15 @@ setup_fit_matrix(fit_t* fit){
 		/*Always need FR.U as it is used to do FL.U, FL.V */
 		fit->FR.U=dcellnew(ndm, 1);
 		dmat** FRU=P(fit->FR.U);
-		dmat frui={0};
+		dmat frui={0}; dmat *pfrui=&frui;
 		for(int idm=0; idm<ndm; idm++){
-			int nloc=P(fit->aloc,idm)->nloc;
-			FRU[idm]=dnew(nloc, nfit);
+			int nx=NY(P(HA,0,idm));
+			FRU[idm]=dnew(nx, nfit);
 			for(int ifit=0; ifit<nfit; ifit++){
 			/*notice the sqrt. */
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
 				dcols(&frui, FRU[idm], ifit, 1);
-				dspmv(&frui, P(HA, ifit, idm), fit->W1, 't', sqrt(P(fit->wt,ifit)));
+				dcellmm(&pfrui, P(HA, ifit, idm), fit->W1, "tn", sqrt(P(fit->wt,ifit)));
 			}
 		}
 	}
@@ -268,15 +274,15 @@ setup_fit_matrix(fit_t* fit){
 	if(!fit->FL.M){
 		dbg("Building fit->FL\n");//TIC;tic;
 		fit->FL.M=cellnew(ndm, ndm);
-		dspcell* FLM=(dspcell*)fit->FL.M;
 		for(int idm=0; idm<ndm; idm++){
 			for(int ifit=0; ifit<nfit; ifit++){
 				if(fabs(P(fit->wt,ifit))<1.e-12) continue;
-				dsp* tmp=dspmulsp(fit->W0, P(HA, ifit, idm), "nn");
+				cell*tmp=NULL;
+				dcellmm(&tmp, fit->W0, P(fit->HA, ifit, idm), "nn", 1);
 				for(int jdm=0; jdm<ndm; jdm++){
-					dspmulsp2(&P(FLM, jdm, idm), P(HAT, jdm, ifit), tmp, "nn", P(fit->wt,ifit));
+					dcellmm(&P(fit->FL.M, jdm, idm), P(fit->HA, ifit, jdm), tmp, "tn", P(fit->wt,ifit));
 				}
-				dspfree(tmp);
+				cellfree(tmp);
 			}
 		}
 		//toc("FLM done...");
@@ -310,7 +316,6 @@ setup_fit_matrix(fit_t* fit){
 		/*dspcellsym(fit->FL.M); */
 		dbg("DM Fit number of Low rank terms: %ld in LHS\n", P(fit->FL.U,0)->ny);
 	}
-	dspcellfree(HAT);
 	if(fit->flag.alg==0||fit->flag.alg==2){
 		if(fit->flag.alg==0&&fabs(fit->flag.tikcr)<1.e-14){
 			warning("tickcr=%g is too small, chol may fail.\n", fit->flag.tikcr);
@@ -342,8 +347,9 @@ void setup_fit(fit_t* fit, int idealtomo){
 		fit->HXF=setup_fit_HXF(fit);
 	}
 	setup_fit_HA(fit);
-	setup_fit_lrt(fit);
-
+	if(!fit->modal){
+		setup_fit_lrt(fit);
+	}
 	/*always assemble fit matrix, faster if many directions */
 	if(fit->flag.assemble||fit->flag.alg!=1){
 		setup_fit_matrix(fit);
@@ -390,6 +396,9 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 	fit->xloc=recon->xloc;
 	fit->floc=recon->floc;
 	fit->aloc=recon->aloc;
+	fit->amod=recon->amod;
+	fit->modal=parms->recon.modal;
+
 	fit->W0=recon->W0;
 	fit->W1=recon->W1;
 

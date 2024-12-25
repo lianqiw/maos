@@ -234,6 +234,7 @@ typedef struct fit_t{
     loccell *xloc;     /**<Input grid for DM fitting*/
     loc_t   *floc;     /**<intermediate pupil plane grid. */
     loccell *aloc;     /**<Destination grid (DM actuator)*/
+	dcell *amod;	   /**<recon->amod.*/
     dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/
     dmat *thetax;      /**<DM fitting directions*/
@@ -247,9 +248,10 @@ typedef struct fit_t{
     fit_cfg_t flag;
     int notrecon;      /**<Not for reconstruction*/
     int isref;         /**<Do not free generated data if isref is set*/
+	int modal;		   /**<Modal reconstruction*/
     //Generated data
     dspcell *HXF;      /**<ray tracing propagator from xloc to floc for fitting directions.*/
-    dspcell *HA;       /**<ray tracing from aloc to floc for fitting directions.*/
+    cell *HA;       /**<ray tracing from aloc or amod to floc for fitting directions.*/
     dcell *actcpl;
     dspcell* actextrap; /**<actuator interpolation*/
     dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
@@ -294,6 +296,7 @@ typedef struct recon_t{
     lcell *actfloat;   /**<floating actuators*/
     lcell *actstuck;   /**<stuck actuators*/
     dcell *amod;       /**<ndmx1. Zernike/KL modes defined on aloc for modal control*/
+	dcell *amodpinv;   /**<Pinv of amod */
     lmat *anmod;       /**<Sizeof of amod*/
 
     fit_t *fit;        /**<Holding data and parameters for DM fitting.*/
@@ -318,11 +321,11 @@ typedef struct recon_t{
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
     dcell *MVGM;       /**<NGS WFS gradient operator from MVST Modes.*/
     dcell *MVFM;       /**<NGS Focus reconstructed from MVST Modes.*/
-    dspcell *GA;        /**<actuator to wfs grad.*/
+    cell *GA;        	/**<actuator or modes to wfs grad.*/
     cell *GAlo;         /**<GA or GM of low order WFS.*/
-    dspcell *GAhi;      /**<GA of high order WFS.*/
-    dcell *GM;          /**<GM for all WFS.*/
-    dcell *GMhi;        /**<GM for high order WFS.*/
+    cell *GAhi;      	/**<GA of high order WFS.*/
+    //dcell *GM;          /**<GM for all WFS.*/
+    //dcell *GMhi;        /**<GM for high order WFS.*/
     dspcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/

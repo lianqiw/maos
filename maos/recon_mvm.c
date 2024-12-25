@@ -92,7 +92,7 @@ setup_recon_lsr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		if(P(recon->LR.M,0)->id==M_REAL){
 			LR=(dcell*)recon->LR.M;
 		} else{
-			dcelladdsp(&LR, 1, dspcell_cast(recon->LR.M), 1);
+			dcelladd(&LR, 1, recon->LR.M, 1);
 		}
 		if(recon->LR.U&&recon->LR.V){
 			dcellmm(&LR, recon->LR.U, recon->LR.V, "nt", -1);

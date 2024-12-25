@@ -24,7 +24,7 @@
    \file slaving.h
    Routines to compute interpolation matrices for stuck and floating actuators.
 */
-dcell *genactcpl(const dspcell *HA, const dmat *W1);
+dcell *genactcpl(const_anyarray HA, const dmat *W1);
 dspcell *slaving(loccell *aloc, const dcell *actcpl, const lcell *actstuck, const lcell *actfloat, real thres, real scale, int mode);
 void act_stuck(loccell *aloc, anyarray HA, const lcell *stuck);
 void act_zero(loccell *aloc, const dcell *HB, const lcell *dead);

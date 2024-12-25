@@ -21,7 +21,7 @@
 #ifndef AOS_AHST_H
 #define AOS_AHST_H
 
-void ngsmod_prep(const parms_t *parms, recon_t *recon,  const aper_t *aper, const powfs_t* powfs);
+void ngsmod_prep(const parms_t *parms, recon_t *recon,  const aper_t *aper);
 void ngsmod_setup(const parms_t *parms, recon_t *recon);
 void ngsmod_dot(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, const parms_t *parms, const ngsmod_t *ngsmod, const aper_t *aper, const real *opd, int ievl);
 int  ngsmod_dot_post(real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff,  const ngsmod_t *ngsmod, const aper_t *aper,real thetax, real thetay);

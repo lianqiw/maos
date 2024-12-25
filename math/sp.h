@@ -59,8 +59,6 @@
     X(sp) *X(spadd2)(const X(sp) *A, T a, const X(sp)*B,T b) CHECK_UNUSED_RESULT; \
     void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta);		\
     void X(celladd)(panyarray pA, R ac, const_anyarray B, R bc);\
-    void X(celladdsp)(X(cell)** pA, R ac, const X(spcell)* B, R bc);\
-    void X(spcelladd)(X(spcell)** pA, R ac, const X(spcell)* B, R bc);\
     void X(spaddI)(X(sp) *A0, T alpha);					\
     void X(celladdI)(anyarray A, T alpha);\
     X(sp) *X(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\

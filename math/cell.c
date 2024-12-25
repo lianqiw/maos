@@ -84,7 +84,26 @@ void cellinit2(panyarray A_, const_anyarray B_){
 		}
 	}
 }
-
+/**
+ * @brief Construct a reference base on type.
+ * 
+ */
+cell* cellref(anyarray in){
+	if(!in.c) return NULL;
+	switch(in.c->id){
+		case M_DBL: return (cell*)dref(in.dm); break;
+		case M_CMP: return (cell*)cref(in.cm); break;
+		case M_FLT: return (cell*)sref(in.sm); break;
+		case M_ZMP: return (cell*)zref(in.zm); break;
+		case M_LONG: return (cell*)lref(in.lm); break;
+		case M_DSP: return (cell*)dspref(in.ds); break;
+		case M_CSP: return (cell*)cspref(in.cs); break;
+		case M_SSP: return (cell*)sspref(in.ss); break;
+		case M_ZSP: return (cell*)zspref(in.zs); break;
+		default:error("Unknown id: %u\n", in.c->id);
+		return NULL;
+	}
+}
 /**
    Obtain the dimensions.
 */
@@ -167,7 +186,22 @@ void cellresize(anyarray A_, long nx, long ny){
 	A->ny=ny;
 }
 
-
+/**Check whether the cell has only diagonal entries.
+ */
+int cell_is_diag(const_anyarray A_){
+	const cell *A=A_.c;
+	if(!iscell(A)) return 0;
+	for(int iy=0; iy<NY(A); iy++){
+		for(int ix=0; ix<NX(A); ix++){
+			if(ix!=iy){//off diagonal should be empty.
+				if(P(A, ix, iy) && PN(A, ix, iy)){
+					return 0;
+				}
+			}
+		}
+	}
+	return 1;
+}
 /**
    free a mat or cell object.
 */
@@ -333,7 +367,7 @@ void write_by_id(const_anyarray A, M_ID id, const char* format, ...){
  * */
 void writecell_async(const_anyarray A, long ncol){
 	if(ncol==0){
-		warning("writecell_async shall not be called with ncol=0, aborted.\n");
+		dbg("writecell_async should not be called with ncol=0.\n");
 	}else{
 		writedata_by_id(NULL, A, 0, ncol);
 	}

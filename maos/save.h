@@ -25,3 +25,5 @@ void save_gradol(sim_t *simu);
 void save_recon(sim_t *simu);
 void save_dmproj(sim_t *simu);
 void save_dmreal(sim_t *simu);
+void draw_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type);
+void draw_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type);

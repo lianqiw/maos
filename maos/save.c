@@ -99,15 +99,37 @@ void save_gradol(sim_t* simu){
 		}
 	}
 }
-//Convert the DM command from modal space if needed. The returned dmat should be freed.
-static dmat* convert_dm(const recon_t* recon, dmat* in, int idm){
-	dmat* out=NULL;
-	if(recon->amod && P(recon->amod,idm)){
-		dmm(&out, 0, P(recon->amod,idm), in, "nn", 1);
-	} else{
-		out=dref(in);
+
+void draw_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type){
+	if(!ac) return;
+	for(int idm=0; idm<NX(ac); idm++){
+		if(!draw_current_format("DM", "%s %d", type, idm)) continue;
+		dmat *dmc=NULL;
+		if(recon->amod && modal){
+			dmm(&dmc, 0, P(recon->amod, idm, idm), P(ac,idm), "nn", 1);
+		}else{
+			dmc=dref(P(ac,idm));
+		}
+		drawopd("DM", P(recon->aloc, idm), dmc, parms->plot.opdmax, title, "x (m)", "y (m)", "%s %d", type, idm);
+		dfree(dmc);
 	}
-	return out;
+}
+void draw_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type){
+	if(!simu||!merr) return;
+	int added=0;
+	for(int idm=0; idm<NX(simu->dmtmp); idm++){
+		if(draw_current_format("DM", "%s %d", type, idm)){
+			if(!added){
+				added=1;//add only once
+				dcellzero(simu->dmtmp);
+				addlow2dm(&simu->dmtmp, simu, merr, 1);
+				break;
+			}
+		}
+	}
+	if(added){
+		draw_dm(simu->parms, simu->recon, simu->dmtmp, 1, title, type);
+	}
 }
 /**
    Plot and save reconstruction data.
@@ -133,22 +155,10 @@ void save_recon(sim_t* simu){
 					"MOAO DM Command", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
-		for(int idm=0; parms->recon.alg==0&&simu->dmrecon&&idm<parms->ndm; idm++){
-			if(P(simu->dmrecon,idm)){
-				dmat* tmp=convert_dm(recon, P(simu->dmrecon,idm), idm);
-				drawopd("DM", P(recon->aloc,idm), tmp, parms->plot.opdmax,
-				"DM Fitting Output", "x (m)", "y (m)", "Fit %d", idm);
-				dfree(tmp);
-			}
+		if(parms->recon.alg==0&&simu->dmrecon){
+			draw_dm(parms, recon, simu->dmrecon, 1, "DM Fitting Output", "Fit");
 		}
-
-		for(int idm=0; simu->dmerr&&idm<parms->ndm; idm++){
-			if(P(simu->dmerr,idm)){
-				drawopd("DM", P(recon->aloc, idm), P(simu->dmerr, idm), parms->plot.opdmax,
-					"DM Error Signal (Hi)", "x (m)", "y (m)",
-					"Err Hi %d", idm);
-			}
-		}
+		draw_dm(parms, recon, simu->dmerr, 1, "DM Error Signal (Hi)", "Err Hi");
 
 		if(parms->recon.alg==0&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
@@ -158,23 +168,7 @@ void save_recon(sim_t* simu){
 				}
 			}
 		}
-
-		if(simu->Merr_lo){
-			int added=0;
-			for(int idm=0; idm<parms->ndm; idm++){
-				if(draw_current_format("DM", "Err Lo %d", idm)){
-					dcell* dmtmp=simu->dmtmp;
-					if(!added){
-						added=1;//add only once
-						dcellzero(dmtmp);
-						addlow2dm(&dmtmp, simu, simu->Merr_lo, 1);
-					}
-					drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
-						"DM Error Signal (Lo)", "x (m)", "y (m)", "Err Lo %d", idm);
-				}
-			}
-			//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
-		}
+		draw_dm_lo(simu, simu->Merr_lo, "DM Error Signal (Lo)", "Err Lo");
 	}
 	if(parms->recon.alg==0&&!parms->sim.idealtomo&&!parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
@@ -255,13 +249,8 @@ void save_dmproj(sim_t* simu){
 	if(parms->save.dm){
 		zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
 	}
-	if(parms->plot.run&&simu->dmproj&&simu->reconisim%parms->plot.run==0){
-		for(int idm=0; idm<parms->ndm; idm++){
-			if(P(simu->dmproj,idm)){
-				drawopd("DM", P(recon->aloc,idm), P(simu->dmproj,idm), parms->plot.opdmax,
-					"ATM to DM Projection (Hi)", "x (m)", "y (m)", "Proj Hi %d", idm);
-			}
-		}
+	if(parms->plot.run&&simu->dmproj&&simu->reconisim>0&&simu->reconisim%parms->plot.run==0){
+		draw_dm(parms, recon, simu->dmproj, 0, "ATM to DM Projection (Hi)", "Proj Hi");
 	}
 }
 /**
@@ -270,38 +259,20 @@ void save_dmproj(sim_t* simu){
 void save_dmreal(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
-	if(parms->plot.run&&simu->reconisim%parms->plot.run==0){
+	if(parms->plot.run&&simu->reconisim>=0 && simu->reconisim%parms->plot.run==0){
 		if(parms->sim.closeloop){
-			for(int idm=0; idm<parms->ndm; idm++){
-				if(P(P(simu->dmint->mint,0),idm)){
-					drawopd("DM", P(recon->aloc, idm), P(P(simu->dmint->mintc, 0), idm), parms->plot.opdmax,
-						"DM Integrator (Hi)", "x (m)", "y (m)", "Int %d", idm);
-				}
-			}
+			draw_dm(parms, recon, P(simu->dmint->mintc, 0), 1, "DM Integrator (Hi)", "Int");
 			if(simu->Mint_lo&&!parms->sim.fuseint){
-				int added=0;
-				for(int idm=0; idm<parms->ndm; idm++){
-					if(draw_current_format("DM", "Int Lo %d", idm)){
-						dcell *dmtmp=simu->dmtmp;
-						if(!added){
-							added=1;//add only once
-							dcellzero(dmtmp);
-							addlow2dm(&dmtmp, simu, P(simu->Mint_lo->mintc, 0), 1);
-						}
-						drawopd("DM", P(recon->aloc, idm), P(dmtmp, idm), parms->plot.opdmax,
-							"DM Integrator (Lo)", "x (m)", "y (m)", "Int Lo %d", idm);
-					}
-				}
-				//draw("DM", 1, NULL, simu->Merr_lo, NULL, NULL, "nn", NULL, NULL, "DM Error Signal (Lo)", "NGS Modes", "NGS Mode Strength", "Err lo");
+				draw_dm_lo(simu, P(simu->Mint_lo->mintc,0), "DM Integrator (Lo)", "Int Lo");
 			}
 		}
 		if(simu->dmreal){
-			for(int idm=0; idm<parms->ndm; idm++){
-				if(P(simu->dmreal,idm)){
-					drawopd("DM", P(recon->aloc,idm), P(simu->dmreal,idm), parms->plot.opdmax,
-						"DM Command", "x (m)", "y (m)", "Real %d", idm);
-				}
-			}
+			//draw_dm(parms, recon, simu->dmcmd, "DM Command", "Cmd");
+			draw_dm(parms, recon, simu->dmreal, 0, "DM Command", "Real");
+			/*for(int idm=0; idm<parms->ndm; idm++){
+				drawmap("DM", P(simu->dmrealsq, idm), parms->plot.opdmax,
+					"DM Real Square", "x (m)", "y (m)", "dmrealsq %d", idm);
+			}*/
 			if(simu->ttmreal&&draw_current("DM", "Real TTM")){
 				int idm=0;
 				real ptt[3]={0,0,0};

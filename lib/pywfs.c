@@ -288,7 +288,7 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 	} else{//Pad the grid to avoid missing significant pixels (subapertures).
 		long order2=ceil(order)+2*MAX(0, ceil(pycfg->pupelong));
 		if(order2>order){
-			warning("order=%ld, order2=%ld.\n", order, order2);
+			dbg("Elongated pupil: order %ld increased to %ld.\n", order, order2);
 		}
 		//Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
 		pywfs->saloc=mksqloc(order2, order2, dsa, dsa,

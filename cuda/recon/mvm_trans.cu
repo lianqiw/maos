@@ -67,21 +67,22 @@ static void* mvm_trans_igpu(thread_t* info){
 	cudaMemcpy(eye2(), eye2c, sizeof(Real)*2, H2D);
 	//const int nwfs=parms->nwfsr;
 	const int ndm=parms->ndm;
+	const lmat *anmod=parms->recon.modal?recon->anmod:recon->anloc;
 	/*fit*/
 	const Real* FLI=data->FLI;
 	if(!FLI&&!load_mvmf){
-		if(parms->fit.square){
+		if(parms->fit.square && !parms->recon.modal){
 			eyec=curcell(ndm, 1, P(recon->anx), P(recon->any));
-		} else{
-			eyec=curcell(ndm, 1, P(recon->anloc), (long*)0);
+		}else{
+			eyec=curcell(ndm, 1, P(anmod), (long*)0);
 		}
 	}
 	curcell dmrecon;
 	if(!load_mvmf){
-		if(parms->fit.square){
+		if(parms->fit.square&&!parms->recon.modal){
 			dmrecon=curcell(grid->ndm, 1, grid->anx, grid->any);
-		} else{
-			dmrecon=curcell(grid->ndm, 1, P(recon->anloc), (long*)0);
+		}else{
+			dmrecon=curcell(grid->ndm, 1, P(anmod), (long*)0);
 		}
 	}
 	curcell opdx(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmf?1L:0L));
@@ -179,8 +180,9 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 	int ntotgrad=0;
 	int ntotxloc=0;
 	const int ndm=parms->ndm;
+	const lmat *anmod=parms->recon.modal?recon->anmod:recon->anloc;
 	for(int idm=0; idm<ndm; idm++){
-		ntotact+=recon->anloc->p[idm];
+		ntotact+=anmod->p[idm];
 	}
 	for(int ips=0; ips<recon->npsr; ips++){
 		ntotxloc+=recon->xloc->p[ips]->nloc;
@@ -194,11 +196,11 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 		long(*curp)[2]=(long(*)[2])malloc(ntotact*2*sizeof(long));
 		int nact=0;
 		for(int idm=0; idm<ndm; idm++){
-			for(int iact=0; iact<recon->anloc->p[idm]; iact++){
+			for(int iact=0; iact<anmod->p[idm]; iact++){
 				curp[nact+iact][0]=idm;
 				curp[nact+iact][1]=iact;
 			}
-			nact+=recon->anloc->p[idm];
+			nact+=anmod->p[idm];
 		}
 
 		X(mat)* residual=NULL;

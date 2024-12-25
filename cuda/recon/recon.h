@@ -40,16 +40,17 @@ private:
     curcell tomo_rhs;
     curcell dmrecon;
     curcell dmrecon_vec;
+	curcell dmrecon_zonal;//if dmrecon is modal, convert to zonal.
+	curcell dmrecon_zonal_vec;//if dmrecon is modal, convert to zonal.
     curcell fit_rhs;
     stream_t cgstream;
     curcell opdr_save;/*for debugging*/
     curcell dmrecon_save;/*for debugging*/
-
     curcell GXL;
 
     curcell gngsmvst;
     curcell deltafocus;
-    
+    curcell amod;//if modal control, DM modes.
 public:
     int nmoao;
     cumoao_t **moao;/**<moao configurations for GPU*/
