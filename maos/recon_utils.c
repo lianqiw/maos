@@ -866,7 +866,10 @@ void shift_grad(sim_t* simu){
 		if(simu->wfsisim>0){
 			while(simu->wfsgrad_count<1){//not being consumed yet
 				//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
-				pthread_cond_wait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex);
+				struct timespec ts;
+				clock_gettime(CLOCK_REALTIME, &ts);
+				ts.tv_nsec+=1e6;
+				pthread_cond_timedwait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex, &ts);
 			}
 			//dbg("ready: wfsgrad_count is ready: %d\n", simu->wfsgrad_count);
 		}

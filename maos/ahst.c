@@ -163,12 +163,31 @@ static dcell* ngsmod_dm(const parms_t* parms, recon_t* recon){
 	dcellfree(dmt);
 	return mod;
 }
-
+/**
+ * @brief Convert NGS modes to modal space
+ * 
+ * @param Modes 
+ * @param amodpinv 
+ * @return * Convert** 
+ */
+void mode2modal(dcell *Modes, const dcell *amodpinv){
+	if(!Modes||!amodpinv) return;
+	for(int idm=0; idm<NX(Modes); idm++){
+		for(int iy=0; iy<NY(Modes); iy++){
+			dmat *tmp=P(Modes, idm, iy);
+			if(tmp){
+				P(Modes, idm, iy)=NULL;
+				dcellmm(&P(Modes, idm, iy), P(amodpinv, idm, idm), tmp, "nn", 1);
+				cellfree(tmp);
+			}
+		}
+	}
+}
 /**
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
 */
-void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const powfs_t* powfs){
+void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	if(recon->ngsmod){
 		warning("Should only be called once\n");
 		return;
@@ -250,12 +269,16 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const
 	}
 	/*the ngsmodes defined on the DM.*/
 	ngsmod->Modes=ngsmod_dm(parms, recon);
+	if(parms->recon.modal){
+		mode2modal(ngsmod->Modes, recon->amodpinv);
+	}
 	if(recon->actstuck&&!parms->recon.modal&&parms->dbg.recon_stuck){
 		warning("Apply stuck actuators to ngs modes\n");
 		act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
 	}
 	/*
-	  ngsmod to NGS gradient interaction matrix. Defined in modal space for modal control
+	  ngsmod to NGS gradient interaction matrix. In modal control, the Modes are
+	  defined in actuator space, but GA is in modal space for skip==0 WFS.
 	*/
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		ngsmod->GM=dcellnew(parms->nwfsr, 1);
@@ -264,18 +287,9 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const
 			if(parms->powfs[ipowfs].skip!=3 
 				&&(parms->powfs[ipowfs].lo||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				for(int idm=0; idm<parms->ndm; idm++){
-					if(parms->powfs[ipowfs].type==WFS_SH/*/ || parms->recon.modal==2*/){//shwfs or modal control
-						dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
-					} else{//pwfs
-						real  ht=parms->dm[idm].ht;
-						real  dispx=0, dispy=0;
-						dispx=parms->wfsr[iwfs].thetax*ht;
-						dispy=parms->wfsr[iwfs].thetay*ht;
-						dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, P(recon->aloc,idm),
-							parms->distortion.dm2wfs[iwfs+idm*parms->nwfs],
-							P(ngsmod->Modes, idm), 0, dispx, dispy);
-						dadd(&P(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
-					}
+					dmat *mode=dref(P(ngsmod->Modes, idm));
+					dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
+					dfree(mode);
 				}
 			}
 		}
@@ -298,7 +312,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const
 	   ahst_wt==2 or 3 is virtually identical. ahst_wt=3 is retired as of 12/11/2024 since it is similar to 3 and never used.
 	*/
 	dcell *wts=NULL;
-	if(parms->tomo.ahst_wt>1){
+	if(!parms->recon.modal && parms->tomo.ahst_wt>1){
 		wts=dcellnew(parms->ndm, 1);
 		for(int idm=0; idm<parms->ndm; idm++){
 			loc_t *aloc=P(recon->aloc, idm);
@@ -326,6 +340,9 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const
 				dresize(P(ngsmod->Modes2, idm, idm), NX(P(ngsmod->Modes2, idm, idm)), ngsmod->nmod+1);
 			}
 		}
+		if(parms->recon.modal){
+			mode2modal(ngsmod->Modes2, recon->amodpinv);
+		}
 		ngsmod->Pngs2=dcellpinv(ngsmod->Modes2, wts, 1e-14);
 	}
 	dcellfree(wts);
@@ -334,7 +351,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper, const
 		writebin(ngsmod->GM, "ahst_GM");
 		if(ngsmod->Pngs) writebin(ngsmod->Pngs, "ahst_Pngs_wt%d", parms->tomo.ahst_wt);
 		if(ngsmod->Pngs2) writebin(ngsmod->Pngs2, "ahst_Pngs2_wt%d", parms->tomo.ahst_wt);
-		if(ngsmod->Modes2) writebin(ngsmod->Pngs, "ahst_Modes2");
+		if(ngsmod->Modes2) writebin(ngsmod->Modes2, "ahst_Modes2");
 	}
 }
 /**
@@ -469,7 +486,7 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	}
 	if(parms->tomo.ahst_wt==1){
 		dcellzero(ngsmod->Pngs);
-		dcellmm((cell **)&ngsmod->Pngs, P(ngsmod->Rngs, 0), recon->GAlo, "nn", 1);
+		dcellmm((cell **)&ngsmod->Pngs, P(ngsmod->Rngs, 0), recon->GAlo, "nn", 1); 
 	}
 	if(parms->save.setup){
 		writebin(ngsmod->Rngs, "ahst_Rngs");

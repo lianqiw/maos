@@ -94,14 +94,23 @@ def mysqrt(x):
         return -np.sqrt(-x)
     else:
         return np.sqrt(x)
+    
+def sumsq(vec, **kargs):
+    '''return sum(vec*conj(vec))'''
+    return np.real(np.sum(vec*np.conj(vec), **kargs))
+
+def sumabs(vec, **kargs):
+    '''return sum(abs(vec))'''
+    return np.sum(np.abs(vec), **kargs)
 
 def rss(*args, **kargs):
-    '''compute rss of input'''
+    '''compute rss of input. negative values are treated as subtraction'''
     if len(args)>1:
         arr=np.array(args)
     else:
         arr=np.array(args[0])
     return mysqrt(np.sum(np.real(np.sign(arr)*arr*np.conj(arr)), **kargs))
+
 def rms(*args, **kargs):
     '''compute rms of input'''
     if len(args)>1:
@@ -938,9 +947,6 @@ def noll2zrn(mm,mv):
         raise(Exception('Please implement'))
     return zmn[mm-1], mv*am
         
-def sumsq(vec):
-    '''return sum(vec*vec)'''
-    return np.sum(vec**2)
 def simpson_wt(nx):
     '''1d simpson weight'''
     import fractions

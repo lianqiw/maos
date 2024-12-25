@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-
+#include <time.h>
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>
@@ -1215,8 +1215,11 @@ void wait_dmreal(sim_t* simu, int isim){
 	//if(simu->dmreal_isim!=-1){
 		pthread_mutex_lock(&simu->dmreal_mutex);
 		while(simu->dmreal_isim<isim){
+			struct timespec ts;
+			clock_gettime(CLOCK_REALTIME, &ts);
+			ts.tv_nsec+=1e6;
 			//dbg("wait_dmreal waiting: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
-			pthread_cond_wait(&simu->dmreal_condr, &simu->dmreal_mutex);
+			pthread_cond_timedwait(&simu->dmreal_condr, &simu->dmreal_mutex, &ts);
 		}
 		pthread_mutex_unlock(&simu->dmreal_mutex);
 		if(simu->dmreal_isim>isim){

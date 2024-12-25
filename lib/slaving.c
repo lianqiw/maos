@@ -24,17 +24,18 @@
    Compute the actuator coupling coefficient to be used to identify non-coupled
    actuators. W1 is optional weighting function. The max value is 1.
 */
-dcell* genactcpl(const dspcell* HA, const dmat* W1){
+dcell* genactcpl(const_anyarray HA_, const dmat* W1){
+	const cell *HA=HA_.c;
 	int ndm=NY(HA);
 	dcell* actcplc=dcellnew(ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 		for(int ifit=0; ifit<NX(HA); ifit++){
-			dsp* ha=P(HA, ifit, idm);
+			cell* ha=P(HA, ifit, idm);
 			if(!ha) continue;
 			if(W1){
-				dspmm(&P(actcplc,idm), ha, W1, "tn", 1);
+				dcellmm(&P(actcplc,idm), ha, W1, "tn", 1);
 			} else{
-				dmat* tmp=dspsumabs(ha, 1);
+				dmat* tmp=dspsumabs(dsp_cast(ha), 1);
 				reshape(tmp, NY(tmp), 1);
 				dadd(&P(actcplc,idm), 1, tmp, 1);
 				dfree(tmp);
@@ -610,7 +611,7 @@ void act_float(loccell* aloc, 	///<coordinate of actuators
 		free(neighbor);
 	}/*idm */
 	if(HA){
-		dspcelladd(HA, 1, dHA, 1);
+		dcelladd(HA, 1, dHA, 1);
 		dspcellfree(dHA);
 	}
 }

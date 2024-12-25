@@ -221,7 +221,15 @@ void moao_recon(sim_t* simu){
 	const int nevl=parms->evl.nevl;
 	dcell* dmcommon=NULL;
 	if(1){/*Take High order fitting result */
-		dcellcp(&dmcommon, simu->dmrecon);
+		if(parms->recon.modal){
+			/*dmcommon=dcellnew(parms->ndm, 1);
+			for(int idm=0; idm<parms->ndm; idm++){
+				dcellmm(&P(dmcommon, idm), P(recon->amod, idm), P(simu->dmrecon,idm), "nn", 1);
+			}*/
+			dcellmm(&dmcommon, recon->amod, simu->dmrecon, "nn", 1);
+		}else{
+			dcellcp(&dmcommon, simu->dmrecon);
+		}
 	} else{/*Take integrator output, remove NGS modes if any. */
 		if(parms->sim.closeloop){
 			if(parms->sim.fuseint){

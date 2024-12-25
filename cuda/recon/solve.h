@@ -76,6 +76,7 @@ public:
 
 class cusolve_muv:public nonCopyable{
     cusp M;
+	curmat Md;//use instead of M if dense
     curmat U;
     curmat V;
     curmat Vx;

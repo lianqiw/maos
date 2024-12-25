@@ -731,10 +731,12 @@ int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
  */
 X(cell)* X(cell_cast)(const cell* A){
 	if(!iscell(A)) return NULL;
-	for(int i=0; i<PN(A); i++){
-		if(P(A, i)&&!ismat(P(A, i))){
-			warning("A[%d] is not mat, return NULL.\n", i);
-			return NULL;
+	for(long iy=0; iy<NY(A); iy++){
+		for(long ix=0; ix<NX(A); ix++){
+			if(P(A, ix, iy)&&!ismat(P(A, ix, iy))){
+				info("A(%ld,%ld) is not mat, return NULL.\n", ix, iy);
+				return NULL;
+			}
 		}
 	}
 	return (X(cell)*)A;

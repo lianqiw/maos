@@ -16,7 +16,8 @@ else:
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))
 simu_all=list()
-
+headerlist=glob.glob(srcdir+'/math/loc.h')
+headerlist=glob.glob(srcdir+'/math/map.h')
 headerlist=glob.glob(srcdir+'/lib/*.h')
 headerlist.append(srcdir+'/sys/scheduler.h')
 headerlist.append(srcdir+'/mex/aolib.h')

@@ -62,6 +62,10 @@ dsp* mkh(const loc_t* locin, const loc_t* locout,
 */
 dsp* mkht(const loc_t* locin, const loc_t* locout,
 	real displacex, real displacey, real scale, real angle){
+	if(!locin||!locout||!locin->nloc||!locout->nloc){
+		dbg("mkht input is empty.\n");
+		return NULL;
+	}
 	if(locin->iac){
 		return mkht_cubic(locin, locout, displacex, displacey, scale, angle, locin->iac);
 	}
@@ -161,12 +165,15 @@ dsp* mkh_cubic(const loc_t* locin, const loc_t* locout,
 }
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
-   influence function that can reproduce piston/tip/tilt.  */
+   influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac==0*/
 dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
 	real displacex, real displacey, real scale, real angle, real cubic_iac){
 	if(!locin||!locout||!locin->nloc||!locout->nloc){
-		warning("mkht_cubic input is empty.\n");
+		dbg("mkht_cubic input is empty.\n");
 		return NULL;
+	}
+	if(cubic_iac<=0){
+		return mkht(locin, locout, displacex, displacey, scale, angle);
 	}
 	dsp* hback;
 	real dplocx, dplocy;
@@ -263,14 +270,14 @@ dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
 			for(long ip=bp[iloc]; ip<count; ip++){
 				bx[count]*=wtsum;
 			}
-			warning("Scale weight by 1+%20g\n", wtsum-1);
+			dbg("Scale weight by 1+%20g\n", wtsum-1);
 		}
 	}/*for */
 	bp[locout->nloc]=count;
 	dspsetnzmax(hback, count);
 	dspdroptol(hback, EPS);
 	if(missing>0){
-		warning("%d points not covered by input screen\n", missing);
+		dbg("%d points not covered by input screen\n", missing);
 	}
 	return hback;
 }

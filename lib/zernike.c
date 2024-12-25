@@ -21,10 +21,11 @@
 #include "zernike.h"
 #include "accphi.h"
 #include "turbulence.h"
+#include "mkh.h"
 /**
-   Generating Zernike Rnm for radial order ir, azimuthal or im.  used by loc_zernike.
+   Generating Zernike Rnm for radial order ir, azimuthal or im.  used by zernike().
    */
-dmat* zernike_Rnm(const dmat* locr, int ir, int im){
+static dmat* zernike_Rnm(const dmat* locr, int ir, int im){
 	if(ir<0||im < 0||im>ir||(ir-im)%2!=0)
 		error("Invalid ir, im (%d, %d)\n", ir, im);
 	const long nloc=NX(locr)*NY(locr);
@@ -60,6 +61,7 @@ OMP_FOR(NTHREAD)
    set D to -|D| to avoid clipping points outside of D.
 */
 dmat* zernike(const loc_t* loc, real D, int rmin, int rmax, int flag){
+	if(!loc) return NULL;
 	if(flag<0){
 		rmin=ceil((sqrt(8.*(-flag)+1)-3)*0.5);
 		rmax=rmin;
@@ -252,13 +254,31 @@ dmat* zernike_cov_kolmogorov(int nr){
 }
 
 /**
-   Compute covariance matrix of zernike modes in von Karman turbulence
+   Compute covariance matrix of modes in von Karman turbulence.
+   @param loc   The location grid
+   @param modz  The modal matrix (zernike or zonal)
+   @param L0    The outer scale
+   @returns     The mode coefficient covariance matrix
+
+   The turbulence OPD y can be expressed as \f$y=M*x\f$ where \f$x\f$ is the
+   modal coefficient and \f$M\f$ is the modal matrix (parameter modz). The OPD
+   covariance \f$<yy'>\f$ can be expressed as followes: \f$<yy'>=M*<xx'>*M'\f$
+   where \f$<xx'>\f$ is the modal coefficient covariance matrix. We have
+   \f$M'<yy'>M=(M'M)<xx'>(M'M)=CC<xx'>CC\f$ where \f$CC=(M'M)\f$. Therefore
+   \f$<xx'>=CC^{-1} M'<yy'>M CC^{-1}\f$
+
+   The function first computes \f$DD=M'<yy'>M\f$ with \f$DD[i,j]=\sum_{k,m}
+   M[k,i]*yy[k,m]*M[m,j]\f$ which can be expressed in Fourier domain as
+   \f$DD=\sum_{k',m'} Mhat[k',i] Mhat[m',j] \Phi[k',m']\f$ where \f$\Phi\f$ is
+   the turbulence power spectrum. 
+
+   For modes \f$M\f$ defined on the DM, its influence function should be
+   includes. \f$<yy'>=H*M*<xx'>*M'H'\f$. 
 */
-dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
-	const dmat* modz, /**<Zernike modes*/
-	real L0 /**<Outer scale*/){
+dmat* cov_vonkarman(const loc_t* loc, const dmat* modz,	real L0){
+	if(!loc|| !modz) return NULL;
 	dmat* CC=0;
-	dmm(&CC, 1, modz, modz, "tn", 1);//the covariance of the modes
+	dmm(&CC, 1, modz, modz, "tn", 1);
 	long nembed=0;
 	lmat* embed=loc_create_embed(&nembed, loc, 2, 0);
 	int nmod=NY(modz);
@@ -282,7 +302,7 @@ dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
 			for(long ip=0; ip<nembed*nembed; ip++){
 				tmp+=creal(P(P(spect,ic),ip)*conj(P(P(spect,id),ip)))*P(turbspec,ip);
 			}
-			P(DD, ic, id)=P(DD, id, ic)=tmp;//*scale;
+			P(DD, ic, id)=P(DD, id, ic)=tmp;
 		}
 	}
 	dmat* CCi=dpinv(CC, 0);
@@ -298,57 +318,82 @@ dmat* cov_vonkarman(const loc_t* loc, /**<The location grid*/
 }
 
 /**
-   Diagnolize the covariance matrix and transform the mode.
+	Diagnolize the covariance matrix and transform the mode.
+	Random vector is expressed as y=mod*x. Its covariance is 
+	<yy'>=mod*<x*x'>*mod=mod*cov*mod'; 
+	The covariance of the coefficient x can be decomposed with svd: cov=U*S*V'. So we have
+	<yy'>=mod*<x*x'>*mod=mod*U*S*v'*mod'; Refine the bases with KL=mod*U, we have
+	<yy'>=KL*S*KL' where the covariance of coefficient is diagonal S.
+	returns the diagnolized mode and the covariance of each modal coefficient.
 */
-dmat* cov_diagnolize(const dmat* mod, /**<Input mode*/
+dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
 	const dmat* cov  /**<Covariance of modes*/
 ){
+	if(!mod || !cov) return NULL;
 	dmat* U=0, * Vt=0, * S=0;
 	dsvd(&U, &S, &Vt, cov);
 	dmat* kl=0;
 	dmm(&kl, 0, mod, U, "nn", 1);
-	if(1){
+	
 	//Drop modes with infinitesimal strength
-		real ssmax=P(S,0);
-		real thres=ssmax*1e-10;
-		long count=0;
-		for(long i=S->nx-1; i>0; i--){
-			if(P(S,i)<thres){
-				count++;
-			} else{
-				break;
-			}
-		}
-		if(count>0){
-			dbg("Drop %ld last columns.\n", count);
-			dmat* kl2=dsub(kl, 0, 0, 0, kl->ny-count);
-			dfree(kl);
-			kl=kl2;
+	real thres=P(S, 0)*1e-10;
+	long count=1;
+	for(long i=S->nx-2; i>0; i--){
+		if(P(S,i)<thres){
+			count++;
+		} else{
+			break;
 		}
 	}
+	
+	dbg("Drop %ld last columns.\n", count);
+	dresize(kl, NX(kl), NY(kl)-count);
 	dfree(U);
 	dfree(Vt);
-	dfree(S);
-	return kl;
+	dcell *res=dcellnew(2,1);
+	P(res,0)=kl;
+	P(res,1)=S;
+	return res;
 }
 
 /**
    see KL_vonkarman()
  */
-static dmat* KL_vonkarman_do(const loc_t* loc, real L0){
-	dmat* modz=dnew(loc->nloc, loc->nloc);
+static dcell* KL_vonkarman_do(const loc_t* loc, real iac, real L0){
+	if(!loc) return NULL;
+	dcell *kl=NULL;
+	dmat *modz=NULL;
+	dmat *cov=NULL;
+	modz=dnew(loc->nloc, loc->nloc);
 	real val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
 	daddI(modz, val);
 	dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
-	dmat* cov=cov_vonkarman(loc, modz, L0);
-	dmat* kl=cov_diagnolize(modz, cov);
+	if(iac<=0){//not cubic
+		dbg("KL_vonkarman_do: bilinear influence function\n");
+		cov=cov_vonkarman(loc, modz, L0);
+	}else{//handle cubic influence function with over sampling
+		dbg("KL_vonkarman_do: bicubic influence function\n");
+		real xmin, xmax, ymin, ymax;
+		dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+		dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
+		/*real dx=loc->dx*0.5;
+		real dy=loc->dy*0.5;
+		loc_t *ploc=mksqloc((xmax-xmin+2*loc->dx)/dx+1, (ymax-ymin+loc->dy*2)/dy+1, dx, dy, xmin-loc->dx, ymin-loc->dy);*/
+		dsp *h=mkh_cubic(loc, loc, 0, 0, 1, 0, iac);
+		dmat *modu=NULL;
+		dcellmm(&modu, h, modz, "nn", 1);//convert to dense modal matrix.
+		dspfree(h);
+		cov=cov_vonkarman(loc, modu, L0);
+		//locfree(ploc);
+	}
+	kl=cov_diagnolize(modz, cov);
 	dfree(modz);
 	dfree(cov);
 	return kl;
 }
 /**
-   Create Karhunen-Loeve modes for which each mode is statistically independent
-   in von Karman spectrum.
+   Create Karhunen-Loeve modes for which each mode coefficient is statistically
+   independent in von Karman spectrum.
 
    The original method is to compute covariance of zernike modes in von Karman
    spectrum and diagnolize the covariance matrix. But this methods suffers for
@@ -365,31 +410,38 @@ static dmat* KL_vonkarman_do(const loc_t* loc, real L0){
    straightforward to generate.
 
    In theory, the KL modes computes should be independent on the starting mode,
-   as long as the modes span the whole vector space for the coordinate.
+   as long as the modes are independent and span the whole vector space for the
+   coordinate.
 */
-dmat* KL_vonkarman(const loc_t* loc, int nmod, real L0){
+dcell* KL_vonkarman_full(const loc_t* loc, real iac, real L0){
 	if(!loc) return 0;
-	dmat *kl=0;
+	dcell *res=0;
 	if(loc->nloc<500){
-		kl=KL_vonkarman_do(loc, L0);
+		res=KL_vonkarman_do(loc, iac, L0);
 	}else{
 		uint32_t key=lochash(loc, 0);
 		char fn[PATH_MAX];
-		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%u.bin", L0, loc->nloc, key);
-		CACHE_FILE(kl, fn, dread, ({kl=KL_vonkarman_do(loc, L0);}), writebin);
+		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%g_%u.bin", L0, loc->nloc, iac, key);
+		CACHE_FILE(res, fn, dcellread, ({res=KL_vonkarman_do(loc, iac, L0);}), writebin);
 	}
-	if(nmod>0&&nmod<loc->nloc){
-		//Take sub matrix
-		dmat* klorig=kl;
-		kl=dsub(klorig, 0, 0, 0, nmod);
-		dfree(klorig);
-	}
+	return res;
+}
+/*A convenient wrapper for simplified useage.*/
+dmat *KL_vonkarman(const loc_t *loc, real L0){
+	if(!loc) return NULL;
+	//Note 2025-01-06: KL modal matrix with cubic influenction function needs further
+	//optimization. In current implementation, it does not perform as well as linear
+	//version and needs more mode truncation in PWFS 2xDM case.
+	dcell *res=KL_vonkarman_full(loc, 0, L0);
+	dmat *kl=P(res, 0);P(res, 0)=NULL;
+	dcellfree(res);
 	return kl;
 }
 /**
    Generate FFT mode with period.
  */
 dmat* fft_mode(const loc_t* loc, real D, real px, real py){
+	if(!loc) return NULL;
 	dmat* opd=dnew(loc->nloc, 1);
 	real tx=2*M_PI*px/D;
 	real ty=2*M_PI*py/D;

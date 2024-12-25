@@ -70,20 +70,22 @@ repeat:
 }
 
 void cusolve_muv::Forward(curcell& out, Real beta, const curcell& in, Real alpha, stream_t& stream){
-	if(!M) error("M Can not be empty\n");
 	if(!out){
 		out=curcell(nx, 1, nxs, (int*)NULL);
 	} else{
 		curscale(out.M(), beta, stream);
 	}
-	cuspmul(out.M(), M, in.M(), 1, 'n', alpha, stream);
+	if(M){
+		cuspmul(out.M(), M, in.M(), 1, 'n', alpha, stream);
+	}else{
+		cugemm(out.M(), (Real)1, Md, in.M(), "nn", alpha, stream);
+	}
 	if(U&&V){
 		curmv(Vx(), 0, V, in.M()(), 't', 1, stream);
 		curmv(out.M()(), 1, U, Vx(), 'n', -alpha, stream);
 	}
 }
 void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, stream_t& stream){
-	if(!M) error("M Can not be empty\n");
 	if(!out){
 		out=curcell(ny, 1, nys, (int*)NULL);
 	} else{
@@ -91,7 +93,11 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 	}
 
 	curscale(out.M(), beta, stream);
-	cuspmul(out.M(), M, in.M(), 1, 't', alpha, stream);
+	if(M){
+		cuspmul(out.M(), M, in.M(), 1, 't', alpha, stream);
+	}else{
+		cugemm(out.M(), (Real)1, Md, in.M(), "tn", alpha, stream);
+	}
 	if(U&&V){
 		curmv(Vx(), 0, U, in.M()(), 't', 1, stream);
 		curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
@@ -102,25 +108,31 @@ void cusolve_muv::init(const muv_t* in){
 		dbg("in or in.M is empty, do nothing\n");
 		return;
 	}
-	dspcell* inM=dspcell_cast(in->M);
-	dsp* Mc=dspcell2sp(inM);
-	dmat* Uc=dcell2m(in->U);
+	dspcell *inM=NULL;
+	if((inM=dspcell_cast(in->M))){
+		dsp* Mc=dspcell2sp(inM);
+		M=cusp(Mc);
+		dspfree(Mc); 
+	}else{
+		dmat *MM=dcell2m(in->M);
+		cp2gpu(Md, MM); dfree(MM);
+	}
+	dmat *Uc=dcell2m(in->U);
+	cp2gpu(U, Uc);dfree(Uc); 
 	dmat* Vc=dcell2m(in->V);
-	nx=inM->nx;
-	ny=inM->ny;
+	cp2gpu(V, Vc);dfree(Vc);
+	Vx=curmat(V.Ny(), 1);
+	
+	nx=in->M->nx;
+	ny=in->M->ny;
 	nxs=new int[nx];
 	nys=new int[ny];
 	for(int i=0; i<nx; i++){
-		nxs[i]=inM->p[i]->nx;
+		nxs[i]=in->M->p[i]->nx;
 	}
 	for(int i=0; i<ny; i++){
-		nys[i]=inM->p[i*inM->nx]->ny;
+		nys[i]=in->M->p[i*in->M->nx]->ny;
 	}
-	M=cusp(Mc);
-	cp2gpu(U, Uc);
-	cp2gpu(V, Vc);
-	dspfree(Mc); dfree(Uc); dfree(Vc);
-	Vx=curmat(V.Ny(), 1);
 }
 
 cusolve_sparse::cusolve_sparse(int _maxit, int _cgwarm, muv_t* _R, muv_t* _L)

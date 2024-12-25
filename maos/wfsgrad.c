@@ -1512,7 +1512,7 @@ void wfsgrad_petal_recon(sim_t *simu){
 		for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 			int jpowfs=parms->wfs[jwfs].powfs;
 			if(parms->powfs[jpowfs].lo) continue;
-			dspmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfs, idm), P(simu->dmtmp, idm), "nn", -gain);
+			dcellmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfs, idm), P(simu->dmtmp, idm), "nn", -gain);
 		}
 		if(parms->plot.run&&petal_isim%parms->plot.run==0){
 			int draw_single_save=draw_single; draw_single=0;

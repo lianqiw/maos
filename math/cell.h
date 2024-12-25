@@ -30,10 +30,12 @@ cell* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
 static inline cell* cell_cast(const void* A){
 	return iscell(A)?(cell*)A:0;
 }
+cell *cellref(anyarray in);
 void cellinit(panyarray A, long nx, long ny);
 void cellinit2(panyarray A, const_anyarray B);
 void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys);
 void cellresize(anyarray in, long nx, long ny);
+int cell_is_diag(const_anyarray A);
 /*!free a cell array and zero the pointer.*/
 #define cellfree(A) if(A){cellfree_do(A); A=NULL;}
 

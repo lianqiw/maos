@@ -41,11 +41,10 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	const int ndm=parms->ndm;
 	const int nwfs=parms->nwfsr;
 	cell* GAlsr;
-	cell* GAM=parms->recon.modal?(cell*)recon->GM:(cell*)recon->GA;
 	if(parms->recon.split){ //high order wfs only in split mode. 
-		GAlsr=parms->recon.modal?(cell*)recon->GMhi:(cell*)recon->GAhi;
+		GAlsr=recon->GAhi;
 	} else{ //all wfs in integrated mode. 
-		GAlsr=GAM;
+		GAlsr=recon->GA;
 	}
 	info("Building recon->LR\n");
 	int free_GAlsr=0;
@@ -54,7 +53,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 		if(tmp->nzmax>NX(tmp)*NY(tmp)*0.2){//not very sparse
 			dcell *tmp2=NULL;
 			free_GAlsr=1;
-			dcelladdsp(&tmp2, 1, dspcell_cast(GAlsr), 1);
+			dcelladd(&tmp2, 1, GAlsr, 1);
 			GAlsr=(cell*)tmp2;
 		}
 	}
@@ -73,7 +72,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(recon->LR.U&&(parms->recon.split!=1 || parms->lsr.splitlrt)){
 		recon->LL.U=dcelldup(recon->LR.U);
 		dcell* GPTTDF=NULL;
-		dcellmm(&GPTTDF, GAM, recon->LR.V, "tn", 1);
+		dcellmm(&GPTTDF, recon->GA, recon->LR.V, "tn", 1);
 		recon->LL.V=dcelldup(GPTTDF);
 		dcellfree(GPTTDF);
 	}
@@ -81,7 +80,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	if(parms->recon.modal){
 		real strength=1;
 		for(int idm=0; idm<ndm; idm++){
-			strength*=dnorm(P(recon->amod,idm));
+			strength*=dnorm(P(recon->amod,idm,idm));
 		}
 		strength=pow(strength, 2./ndm);
 		maxeig*=strength;
@@ -169,7 +168,7 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 			}
 			for(int idm=0; idm<ndm; idm++){
 				dspfull(&P(ULo, idm, iwfs), (dsp*)P(recon->LR.M, idm, iwfs), 'n', -1);
-				dspfull(&P(VLo, idm, iwfs), (dsp*)P(GAM, iwfs, idm), 't', 1);
+				dspfull(&P(VLo, idm, iwfs), (dsp*)P(recon->GA, iwfs, idm), 't', 1);
 			}
 		}
 

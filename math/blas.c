@@ -560,9 +560,15 @@ X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
    X(mat), do the power, and convert back to block matrix.
 */
 void X(cellsvd_pow)(X(cell)* A, R power, R thres){
-	X(mat)* Ac=X(cell2m)(A);
-	X(svd_pow)(Ac, power, thres);
-	X(2cell)(&A, Ac, NULL);
-	X(celldropzero)(A, 0);
-	X(free)(Ac);
+	if(cell_is_diag(A)){
+		for(int iy=0; iy<MIN(NX(A),NY(A)); iy++){
+			X(svd_pow)(P(A,iy,iy), power, thres);
+		}
+	}else{
+		X(mat)* Ac=X(cell2m)(A);
+		X(svd_pow)(Ac, power, thres);
+		X(2cell)(&A, Ac, NULL);
+		X(celldropzero)(A, 0);
+		X(free)(Ac);
+	}
 }

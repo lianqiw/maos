@@ -131,8 +131,6 @@ static void* find_var(const char* name){
 	VAR_GET(recon,GA),
 	VAR_GET(recon,GAlo),
 	VAR_GET(recon,GAhi),
-	VAR_GET(recon,GM),
-	VAR_GET(recon,GMhi),
 	VAR_GET(recon,HA_ncpa),
 	{NULL, NULL}
 	};

@@ -317,14 +317,17 @@ static void filter_cl(sim_t* simu){
 		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
 		dcellfree(Mtmp);
 	}
-
-	if(!parms->recon.modal && simu->recon->actextrap && !parms->recon.psol){
+	if(parms->recon.modal){//convert to zonal space
+		dcellzero(simu->dmcmd);
+		dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
+	}else if(simu->recon->actextrap && !parms->recon.psol){
 		//Extrapolate to edge actuators in LSR
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
-	} else{
+	} else {
 		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
+	//always in zonal space following this.
 	if(simu->ttmreal){
 		ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
 	}
@@ -353,7 +356,7 @@ static void filter_cl(sim_t* simu){
 		}
 	}
 	//Need to clip
-	if(parms->sim.dmclip||parms->sim.dmclipia||recon->actstuck){
+	if(!parms->recon.modal&&(parms->sim.dmclip||parms->sim.dmclipia||recon->actstuck)){
 		int feedback=(parms->sim.dmclip||parms->sim.dmclipia)||(recon->actstuck&&parms->dbg.recon_stuck);
 		if(feedback){
 			dcellcp(&simu->dmtmp2, simu->dmcmd);
@@ -409,8 +412,11 @@ static void filter_cl(sim_t* simu){
 			}
 			pthread_mutex_lock(&simu->dmreal_mutex);
 			while(simu->dmreal_count<count){
+				struct timespec ts;
+				clock_gettime(CLOCK_REALTIME, &ts);
+				ts.tv_nsec+=1e6;
 				//dbg("waiting: dmreal_count is %d need %d\n", simu->dmreal_count, count);
-				pthread_cond_wait(&simu->dmreal_condw, &simu->dmreal_mutex);
+				pthread_cond_timedwait(&simu->dmreal_condw, &simu->dmreal_mutex, &ts);
 			}
 			pthread_mutex_unlock(&simu->dmreal_mutex);
 			if(simu->dmreal_count>count){
@@ -513,12 +519,22 @@ static void filter_ol(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	assert(!parms->sim.closeloop);
 	if(simu->dmerr&&P(parms->sim.ephi,0)>0){
-		dcellcp(&simu->dmcmd, simu->dmerr);
+		dcellcp(&simu->dmtmp, simu->dmerr);
 	} else{
-		dcellzero(simu->dmcmd);
+		dcellzero(simu->dmtmp);
 	}
 	if(simu->Merr_lo&&P(parms->sim.eplo,0)>0){
-		addlow2dm(&simu->dmcmd, simu, simu->Merr_lo, 1);
+		addlow2dm(&simu->dmtmp, simu, simu->Merr_lo, 1);
+	}
+	//Extrapolate to edge actuators
+	if(parms->recon.modal){
+		dcellzero(simu->dmcmd);
+		dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
+	}else if(simu->recon->actextrap&&!(parms->recon.psol&&parms->fit.actextrap)){
+		dcellzero(simu->dmcmd);
+		dcellmm((cell**)&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
+	}else{
+		dcellcp(&simu->dmcmd, simu->dmtmp);
 	}
 	if(simu->recon->dm_ncpa){
 		warning_once("Add NCPA after integrator\n");
@@ -528,14 +544,8 @@ static void filter_ol(sim_t* simu){
 		info_once("Add injected DM offset vector\n");
 		int icol=(simu->reconisim+1)%NY(parms->dbg.dmoff);
 		for(int idm=0; idm<parms->ndm; idm++){
-			dadd(&P(simu->dmcmd,idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
+			dadd(&P(simu->dmcmd, idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
 		}
-	}
-	//Extrapolate to edge actuators
-	if(simu->recon->actextrap&&!parms->recon.modal&&!(parms->recon.psol&&parms->fit.actextrap)){
-		dcellcp(&simu->dmtmp2, simu->dmcmd);
-		dcellzero(simu->dmcmd);
-		dcellmm((cell**)&simu->dmcmd, simu->recon->actextrap, simu->dmtmp2, "nn", 1);
 	}
 	if(simu->ttmreal){
 		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);

@@ -311,16 +311,14 @@ X(spcell)* X(spcellref)(const X(spcell)* A){
    cast a cell object to X(spcell) after checking
  */
 X(spcell)* X(spcell_cast)(const cell* A){
-	if(!A) return 0;
-	int err=0;
-	for(int i=0; i<A->nx*A->ny; i++){
-		if(P(A,i)&&!issp(P(A,i))){
-			warning("A[%d] is not sparse\n", i);
-			err++;
+	if(!A) return NULL;
+	for(long iy=0; iy<NY(A); iy++){
+		for(long ix=0; ix<NX(A); ix++){
+			if(P(A,ix, iy)&&!issp(P(A,ix, iy))){
+				info("A(%ld,%ld) is not sparse, return NULL.\n", ix,iy);
+				return NULL;
+			}
 		}
-	}
-	if(err){
-		print_backtrace();
 	}
 	return (X(spcell)*)A;
 }
@@ -721,13 +719,16 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 		for(long iy=0; iy<A->ny; iy++){
 			if(P(A, ix, iy)){
 				if(!issp(P(A, ix, iy))){
-					error("Not every cell is sparse\n");
+					X(mat) *tmp=X(mat_cast)(P(A, ix, iy));
+					P(A, ix, iy)=X(2sp)(tmp, 1e-12);
+					warning("A(%ld,%ld) is not sparse, trying to convert. Fill factor is %.2f.\n", 
+						ix, iy, (R)P(A,ix,iy)->nzmax/PN(A,ix,iy));
 				}
 				if(!nnx[ix]){
 					nnx[ix]=P(A, ix, iy)->nx;
 					nx+=P(A, ix, iy)->nx;
 				} else if(nnx[ix]!=P(A, ix, iy)->nx){
-					error("block (%ld, %ld) has wrong number of rows. expect %ld got %ld\n",
+					error("A(%ld, %ld) has wrong number of rows. expect %ld got %ld\n",
 					ix, iy, nnx[ix], P(A, ix, iy)->nx);
 				}
 			}
@@ -816,12 +817,12 @@ X(mat)* X(spsum)(const X(sp)* A, int dim){
 }
 /**
  * Sum abs of elements of sparse array along dimension dim*/
-X(mat)* X(spsumabs)(const X(sp)* A, int col){
+X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 	if(!A) return 0;
 	assert_sp(A);
 	X(mat)* v=NULL;
 	T* p;
-	switch(col){
+	switch(axis){
 	case 1:/*sum along col */
 		v=X(new)(1, A->ny);
 		p=P(v);
@@ -955,7 +956,7 @@ void X(spsym)(X(sp)** A){
 */
 void X(spcellsym)(X(spcell)** A){
 	X(spcell)* B=X(spcelltrans)(*A);
-	X(spcelladd)(A, 1, B, 1);
+	X(celladd)(A, 1, B, 1);
 	X(spcellfree)(B);
 	X(spcellscale)(*A, 0.5);
 	X(spcelldroptol)(*A, EPS);
