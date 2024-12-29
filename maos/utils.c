@@ -238,6 +238,7 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
  */
 int rename_done(const char *prefix, const char *suffix, int count_in){
 	char fn[PATH_MAX];
+	char fn1[PATH_MAX];
 	char fn2[PATH_MAX];
 	int count=count_in<0?0:count_in;
 	snprintf(fn, sizeof(fn), "%s_%s_%ld.%s", prefix, HOST, (long)getpid(), suffix);
@@ -252,12 +253,18 @@ int rename_done(const char *prefix, const char *suffix, int count_in){
 			snprintf(fn2, sizeof(fn2), "%s_done.%d.%s", prefix, count, suffix);
 		}
 	} while(exist(fn2) && count_in<0 && (count=count+1));
-	if(rename(fn, fn2)){
+	snprintf(fn1, sizeof(fn1), "%s_done.%s", prefix, suffix);
+	if(count>0){
+		if(rename(fn1, fn2)){
+			dbg("Rename %s to %s failed\n", fn1, fn2);
+		}
+	}
+	if(rename(fn, fn1)){
 		dbg("Rename %s to %s failed\n", fn, fn2);
 	} else{
 		snprintf(fn, sizeof(fn), "%s_recent.%s", prefix, suffix);
 		remove(fn);
-		//mysymlink(fn2, fn);
+		mysymlink(fn1, fn);
 	}
 	return count;
 }

@@ -857,14 +857,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	info("\nSignal caught: %s (%d)\n", strsignal(sig), sig);
 	//sync();
 	int cancel_action=0;
-	/*
-	{
-		struct sigaction act={0};
-		act.sa_handler=SIG_DFL;
-		sigaction(sig, &act, 0);//prevent recursive call of handler
-		sync();
-	}
-	*/
+
 	if(fatal_error_in_progress){
 		info("Signal handler is already in progress. Force quit without cleanup.\n");
 		raise(SIGTERM);
@@ -914,7 +907,7 @@ int dummy_signal_handler(int sig){
 void register_signal_handler(int (*func)(int)){
 	struct sigaction act={0};
 	act.sa_sigaction=default_signal_handler;
-	act.sa_flags=SA_SIGINFO;
+	act.sa_flags=SA_SIGINFO|SA_RESETHAND;//SA_RESETHAND resets the handler to default after one shot
 	sigaction(SIGBUS, &act, 0);
 	sigaction(SIGILL, &act, 0);
 	sigaction(SIGSEGV, &act, 0);
