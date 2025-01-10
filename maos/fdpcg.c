@@ -555,8 +555,6 @@ OMP_FOR(parms->powfs[hipowfs].nwfsr)
 	if(parms->save.fdpcg){
 		writebin(fdpcg->Mbinv, "fdpcg_Mhatb");
 	}
-	real svd_thres=1e-7;
-	dbg("fdpcg svd threshold is %g\n", svd_thres);
 OMP_FOR(NTHREAD)
 	for(long ib=0; ib<NX(fdpcg->Mbinv); ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
@@ -564,7 +562,7 @@ OMP_FOR(NTHREAD)
 	  problem in GPU code causing a lot of pistion to accumulate and
 	  diverges the pcg. Use svd to truncate smaller eigen values.
 	*/
-		csvd_pow(P(fdpcg->Mbinv,ib), -1, svd_thres);
+		csvd_pow2(P(fdpcg->Mbinv,ib), -1, 1e-7,0);
 	}
 	if(parms->save.fdpcg){
 		writebin(fdpcg->Mbinv, "fdpcg_Minvb");

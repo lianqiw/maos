@@ -486,7 +486,7 @@ setup_recon_amod(recon_t* recon, const parms_t* parms){
 		}
 		break;
 		case 1://Karhunen loeve. Don't limit number of modes here to make caching of G_M right.
-			P(recon->amod, idm, idm)=KL_vonkarman(P(recon->aloc, idm), parms->atmr.L0);
+			P(recon->amod, idm, idm)=KL_vonkarman(P(recon->aloc, idm), idm==parms->idmground?0:1, parms->atmr.L0);
 			break;
 		default:
 			error("Invalid recon.modal");
@@ -795,7 +795,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				}
 			}
 		}
-		recon->amodpinv=dcellpinv(recon->amod, NULL, EPS);
+		recon->amodpinv=dcellpinv(recon->amod, NULL);
 	}
 	if(!parms->recon.modal){
 		if(recon->actstuck&&parms->recon.alg==1&&parms->dbg.recon_stuck){
@@ -1001,9 +1001,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(recon->GRlgs){
 		//2021-10-15: Since we are not selecting modes, there is no need for high threshold
 		//to high threshold makes the filtering ill formed
-		const real thres=1e-14;
-		info("RRlgs svd thres is %g\n", thres);
-		recon->RRlgs=dcellpinv(recon->GRlgs, NULL, thres);
+		recon->RRlgs=dcellpinv(recon->GRlgs, NULL);
 	}
 	if(parms->save.recon){
 		writebin(recon->GRall, "twfs_GR");

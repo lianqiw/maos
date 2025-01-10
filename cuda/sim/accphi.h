@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_ACCPHI_H
 #define AOS_CUDA_ACCPHI_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "gpu_sim.h"
 void map2loc(const cumap_t& map, const culoc_t& loc, Real* phiout,
 	Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream);

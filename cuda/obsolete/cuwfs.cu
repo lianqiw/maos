@@ -116,7 +116,7 @@ void cushgeom_t::addnoise(){
 void cushgeom_t::acc(curmat* opd){
 	if(P(gradcalc)!=P(gradacc)){
 		calcg(opd, 1);
-		curadd(&gradacc, 1, gradcalc, 1.f/(Real)dtrat, stream);
+		Add(&gradacc, 1, gradcalc, 1.f/(Real)dtrat, stream);
 	} else{
 		calcg(opd, 1.f/(Real)dtrat);
 	}

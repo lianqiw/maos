@@ -18,7 +18,6 @@
 
 #include "utils.h"
 #include "curmat.h"
-#include "cucmat.h"
 #include <pthread.h>
 const char* cufft_str[]={
 	"success",
@@ -114,148 +113,33 @@ void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr){
 		dest[i]=cusp(src->p[i], tocsr);
 	}
 }
-
-
-/**
-   Convert a source loc_t to device memory. row vector is used.
-*/
-void cp2gpu(curmat& dest, const loc_t* src){
-	Real2* tmp=(Real2*)malloc(src->nloc*sizeof(Real2));
-	for(int iloc=0; iloc<src->nloc; iloc++){
-		tmp[iloc][0]=(Real)src->locx[iloc];
-		tmp[iloc][1]=(Real)src->locy[iloc];
-	}
-	cp2gpu(dest, (Real*)tmp, 2, src->nloc);
-	free(tmp);
-}
-void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream=0){
+void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream){
 	if(src_.c==0){
 		dest.Zero(stream);
-	}else if(src_.c->id==M_REAL){
-		cp2gpu(dest, src_.dm, stream);
-	}else if(src_.c->id==M_FLT){
-		cp2gpu(dest, src_.sm, stream);
+	}else if((src_.c->id&M_DBL)==M_DBL){
+		cp2gpu(dest, src_.dm->p, src_.c->nx, src_.c->ny, stream);
+	}else if((src_.c->id&M_FLT)==M_FLT){
+		cp2gpu(dest, src_.sm->p, src_.c->nx, src_.c->ny, stream);
 	}else{
-		error("Invalid");
+		error("Invalid: id=%u\n", src_.c->id);
 	}
 }
-void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream=0){
+void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream){
 	if(src_.c==0){
 		dest.Zero(stream);
-	}else if(src_.c->id==M_COMP){
-		cp2gpu(dest, src_.cm, stream);
-	}else if(src_.c->id==M_ZMP){
-		cp2gpu(dest, src_.zm, stream);
+	}else if((src_.c->id&M_CMP)==M_CMP){
+		cp2gpu(dest, src_.cm->p, src_.c->nx, src_.c->ny, stream);
+	}else if((src_.c->id&M_ZMP)==M_ZMP){
+		cp2gpu(dest, src_.zm->p, src_.c->nx, src_.c->ny, stream);
 	}else{
-		error("Invalid");
+		error("Invalid: id=%u\n", src_.c->id);
 	}
 }
-/**
-   Convert dcell to curcell
-*/
-/*void cp2gpu(curcell& dest, const dcell* src){
-	if(!src){
-		dest.Zero();
-		return;
-	}
-	if(!dest){
-		long nc=src->nx*src->ny;
-		long nx[nc];
-		long ny[nc];
-		for(long i=0; i<nc; i++){
-			if(src->p[i]){
-				nx[i]=src->p[i]->nx;
-				ny[i]=src->p[i]->ny;
-			} else{
-				nx[i]=0;
-				ny[i]=0;
-			}
-		}
-		dest=curcell(src->nx, src->ny, nx, ny);
-	} else if(dest.Nx()!=src->nx||dest.Ny()!=src->ny){
-		error("Mismatch: %ldx%ld vs %ldx%ld\n",
-			dest.Nx(), dest.Ny(), src->nx, src->ny);
-	}
-	if(src->m){
-		//warning("cp2gpu: use m to M\n");
-		cp2gpu(dest.M(), src->m);
-	} else{
-		for(int i=0; i<src->nx*src->ny; i++){
-			cp2gpu(dest[i], src->p[i]);
-		}
-	}
-}*/
-/**
-   Convert dcell to curcell. /todo: merge implementation with curcell by wraping CPU cell to GPU cell.
-*/
-/*
-void cp2gpu(cuccell& dest, const ccell* src){
-	if(!src){
-		dest.Zero();
-		return;
-	}
-	if(!dest){
-		long nc=src->nx*src->ny;
-		long nx[nc];
-		long ny[nc];
-		for(long i=0; i<nc; i++){
-			if(src->p[i]){
-				nx[i]=src->p[i]->nx;
-				ny[i]=src->p[i]->ny;
-			} else{
-				nx[i]=0;
-				ny[i]=0;
-			}
-		}
-		dest=cuccell(src->nx, src->ny, nx, ny);
-	} else if(dest.Nx()!=src->nx||dest.Ny()!=src->ny){
-		error("Mismatch: %ldx%ld vs %ldx%ld\n",
-			dest.Nx(), dest.Ny(), src->nx, src->ny);
-	}
-	if(src->m){
-		//warning("cp2gpu: use m to M\n");
-		cp2gpu(dest.M(), src->m);
-	}else{
-		for(int i=0; i<src->nx*src->ny; i++){
-			cp2gpu(dest[i], src->p[i]);
-		}
-	}
-}*/
+
 __attribute__((weak)) int current_gpu(){
 	int igpu;
 	cudaGetDevice(&igpu);
 	return igpu;
-}
-/*
-  Write Real on gpu to file
-*/
-void gpu_write(const Real* p, long nx, long ny, const char* format, ...){
-	format2fn;
-	Real* tmp=(Real*)malloc(nx*ny*sizeof(Real));
-	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Real), D2H));
-	writearr(fn, 1, sizeof(Real), MCU_REAL, NULL, p, nx, ny);
-	free(tmp);
-}
-
-/*
-  Write Real on gpu to file
-*/
-void gpu_write(const Comp* p, long nx, long ny, const char* format, ...){
-	format2fn;
-	Comp* tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
-	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), D2H));
-	writearr(fn, 1, sizeof(Comp), MCU_COMP, NULL, p, nx, ny);
-	free(tmp);
-}
-/*
-  Write Real on gpu to file
-*/
-void gpu_write(const int* p, long nx, long ny, const char* format, ...){
-	format2fn;
-	int* tmp=(int*)malloc(nx*ny*sizeof(int));
-	DO(cudaMemcpy(tmp, p, nx*ny*sizeof(int), D2H));
-	writearr(fn, 1, sizeof(int), M_INT32, NULL, tmp, nx, ny);
-	free(tmp);
 }
 template <typename T, typename R, typename S>
 void scale_add(T* p1, R alpha, const S* p2, R beta, long n){
@@ -406,7 +290,7 @@ void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
 }
 #endif
 #define cp2cpu_cell(S, T)						\
-void cp2cpu(S##cell **out, const Cell<T, Gpu> &in, cudaStream_t stream){ \
+void cp2cpu(S##cell **out, const NumCell<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in){							\
 	    if(*out) S##cellzero(*out);					\
 	    return;							\
@@ -510,11 +394,13 @@ void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, i
 int mycudaFree(void* pp){
 	if(!pp) return 0;
 	int tofree=1;
-	lock_t tmp(cumemcache.memmutex);
-	std::map<void*, int>::iterator it=cumemcache.memcount.find(pp);
-	if(it!=cumemcache.memcount.end()){
-		it->second--;
-		tofree=!(it->second);
+	{
+		lock_t tmp(cumemcache.mutex_hash);
+		std::map<void*, int>::iterator it=cumemcache.memcount.find(pp);
+		if(it!=cumemcache.memcount.end()){
+			it->second--;
+			tofree=!(it->second);
+		}
 	}
 	if(tofree){
 		return cudaFree(pp);

@@ -60,8 +60,8 @@ class cutomo_grid:public cusolve_r, public cusolve_cg{
 	curcell neai;
 	curcell PTTF;  /**< Global tip/tilt and optionally focus*/
 	curcell PFF;  /**<Focal removal*/
-	Cell<int, Gpu> saptr;
-	Cell<short2, Gpu> GPp;
+	NumCell<int, Gpu> saptr;
+	NumCell<short2, Gpu> GPp;
 	Array<Real> GPscale;
 	cuspcell GP;
 	int nttf;		/**<Number of modes in TTF projection (2 for TT only and 3 with focus)*/

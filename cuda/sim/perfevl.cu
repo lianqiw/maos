@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "accphi.h"
 #include "cudata.h"
 #include "perf.h"
@@ -316,16 +316,16 @@ static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
 			cugemm(opdcov, (Real)1, iopdevl, iopdevl, "nt", (Real)1, stream);
 		}
 		if(do_opdmean){
-			curadd(opdmean, 1, iopdevl, 1, stream);
+			Add(opdmean, (Real)1., iopdevl, (Real)1., stream);
 		}
 	} else{//accumulate in CPU to save GPU memory.
 		dmat* tmp=NULL;
 		cp2cpu(&tmp, iopdevl, stream);
 		if(do_cov){
-			dmm(opdcov_cpu, 1, tmp, tmp, "nt", 1);
+			dmm(opdcov_cpu, (Real)1, tmp, tmp, "nt", 1);
 		}
 		if(do_opdmean){
-			dadd(opdmean_cpu, 1, tmp, 1);
+			dadd(opdmean_cpu, (Real)1, tmp, (Real)1);
 		}
 		dfree(tmp);
 	}
@@ -357,9 +357,9 @@ void* gpu_perfevl_queue(thread_t* info){
 		curmat& iopdevl=cuglobal->perf.opd[ievl];
 		// iopdevl must be in device memory. 6 times slower if in host memory.
 		if(cuglobal->perf.surf&&cuglobal->perf.surf[ievl]){
-			cucp(iopdevl, cuglobal->perf.surf[ievl], stream);
+			Copy(iopdevl, cuglobal->perf.surf[ievl], stream);
 		} else{
-			curset(iopdevl, 0, stream);
+			iopdevl.Zero(stream);
 		}
 		if(parms->sim.idealevl){
 			mapcell2loc(iopdevl(), cudata->perf.locs_dm[ievl], cudata->dmproj, 
@@ -393,7 +393,7 @@ void* gpu_perfevl_queue(thread_t* info){
 			curmat opdcopy;
 			curmv(cuglobal->perf.coeff[ievl](), 0, cudata->perf.imcc,
 				cuglobal->perf.cc_ol[ievl](), 'n', 1, stream);
-			cucp(opdcopy, iopdevl, stream);
+			Copy(opdcopy, iopdevl, stream);
 			if(parms->evl.pttr->p[ievl]){//remove piston/tip/tilt
 				curaddptt(opdcopy, cudata->perf.locs(), cuglobal->perf.coeff[ievl](), -1, -1, -1, stream);
 				warning_once("Removing piston/tip/tilt from OPD.\n");

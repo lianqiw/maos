@@ -27,7 +27,7 @@ dmat* zernike(const loc_t *loc, real D, int rmin, int rmax, int flag);
 dmat *zernike_cov_kolmogorov(int nr);
 dmat *cov_vonkarman(const loc_t *loc, const dmat *modz, real L0);
 dcell *cov_diagnolize(const dmat *mz, const dmat *cov);
-dcell *KL_vonkarman_full(const loc_t *loc, real iac, real L0);
-dmat *KL_vonkarman(const loc_t *loc, real L0);
+dcell *KL_vonkarman_full(const loc_t *loc, int ttr, real iac, real L0);
+dmat *KL_vonkarman(const loc_t *loc, int ttr, real L0);
 dmat *fft_mode(const loc_t *loc, real D, real px, real py);
 #endif

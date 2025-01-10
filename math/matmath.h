@@ -51,8 +51,8 @@
     X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv2)(const X(mat) *A, const_anyarray W, R thres) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv)(const X(mat) *A, const_anyarray W) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv2)(const X(mat) *A, const_anyarray W, R thres1, R thres2) CHECK_UNUSED_RESULT; \
+	inline X(mat) *X(pinv)(const X(mat) *A, const_anyarray W){return X(pinv2)(A, W, 1e-7, 1e-3);}; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     int X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
 	int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val); \
@@ -72,7 +72,8 @@
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
     void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
     void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
-    void X(svd_pow)(X(mat) *A, R power, R thres);			\
+    void X(svd_pow2)(X(mat) *A, R power, R thres1, R thres2);			\
+	inline void X(svd_pow)(X(mat) *A, R power){return X(svd_pow2)(A,power,1e-7,1e-3);}	\
     void X(expm)(X(mat) **out, R alpha, const X(mat) *A, R beta);	\
     void X(polyval)(X(mat) *A, XR(mat)*p);				\
     void X(addI)(X(mat) *A, T val);					\
@@ -88,9 +89,9 @@
     X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
     void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);	\
     void X(histfill)(X(mat) **out, const X(mat)* A, R center, R spacing, int n); \
-    X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);			\
-    X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);	\
-    X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);		\
+    X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y) CHECK_UNUSED_RESULT;			\
+    X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew) CHECK_UNUSED_RESULT;	\
+    X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew) CHECK_UNUSED_RESULT;		\
     void X(cwlog10)(X(mat) *A);						\
     void X(cwlog)(X(mat) *A);						\
     void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
@@ -99,7 +100,8 @@
     void X(gauss_fit)(R*mr, R*ma, R*mb, R*theta, X(mat)*A, R thres);\
     R X(gauss_width)(X(mat)*A, R thres);\
     R X(fwhm_gauss)(X(mat) *A);\
-    X(mat) *X(enc)(const X(mat) *A, const X(mat) *dvec, int type, int nthread);	typedef T (*X(minsearch_fun))(const T *x, void *info);		\
+    X(mat) *X(enc)(const X(mat) *A, const X(mat) *dvec, int type, int nthread) CHECK_UNUSED_RESULT;	\
+	typedef T (*X(minsearch_fun))(const T *x, void *info);		\
     int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info); \
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
@@ -108,18 +110,20 @@
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(celldot)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\
-    X(cell)* X(cellinvspd)(X(cell) *A);					\
-    X(cell)* X(cellinv)(X(cell) *A);					\
-    X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv)(const X(cell) *A, const_anyarray W, R thres);		\
-    void X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
+    X(cell)* X(cellinvspd)(X(cell) *A) CHECK_UNUSED_RESULT; \
+    X(cell)* X(cellinv)(X(cell) *A) CHECK_UNUSED_RESULT;	\
+    X(cell)* X(cellinvspd_each)(X(cell) *A) CHECK_UNUSED_RESULT;	\
+    X(cell)* X(cellpinv2)(const X(cell) *A, const_anyarray W, R thres1, R thres2) CHECK_UNUSED_RESULT; 	\
+	inline X(cell)* X(cellpinv)(const X(cell) *A, const_anyarray W){return X(cellpinv2)(A,W,1e-7,1e-3);}\
+    void X(cellsvd_pow2)(X(cell) *A, R power, R thres1, R thres2);\
+	inline void X(cellsvd_pow)(X(cell) *A, R power){X(cellsvd_pow2)(A,power,1e-7,1e-3);}\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\
     R X(celldiff)(const X(cell) *A, const X(cell) *B);			\
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
-    X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
-    X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);		\
-    X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
+    X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT;	\
+    X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z) CHECK_UNUSED_RESULT;	\
+    X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew) CHECK_UNUSED_RESULT;\
 	void X(maprot)(anyarray A_, real theta);
 
 /*The following are only useful for cmat */

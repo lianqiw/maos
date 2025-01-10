@@ -283,7 +283,7 @@ void sodium_fit(
 			writebin(atb, "sodium_atb_%d_%d", count, irep);
 			if(count==0&&irep==0) writebin(i0m, "sodium_i0m_%d_%d", count, irep);
 		}
-		dcellsvd_pow(ata, -1, svdthres);
+		dcellsvd_pow2(ata, -1, svdthres, 1e-3);
 		dcellzero(res);
 		dcellmm(&res, ata, atb, "nn", 1);
 		real scale=1./dcellsum(res);//make sure nai sum to 1.

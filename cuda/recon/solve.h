@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_SOLVE_H
 #define AOS_CUDA_SOLVE_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "pcg.h"
 
 class cusolve_r{/*Interface for RHS*/

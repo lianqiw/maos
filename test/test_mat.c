@@ -53,7 +53,7 @@ static void test_hist(){
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin");
     dspcell *saneai=dspcellread("saneai.bin");
-	dcell *PTT=dcellpinv(TT, saneai, 1e-14);
+	dcell *PTT=dcellpinv(TT, saneai);
     //writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
@@ -173,11 +173,11 @@ static void test_svd(void){
     }else{
 	//writebin(A,"A.bin");
 	tic;
-	dsvd_pow(A, -1, 1e-15);
+	dsvd_pow(A, -1);
 	toc("dsvd_pow");
 	//writebin(A,"AI.bin");
 	tic;
-	dsvd_pow(A, -1, 1e-15);
+	dsvd_pow(A, -1);
 	toc("dsvd_pow svd");
 	//writebin(A,"A2.bin");
     }
@@ -195,7 +195,7 @@ static void test_psd1d(){
 }
 static void test_svd2(void){
     cmat *A=cread("SVD.bin");
-    csvd_pow(A, -1, 1.e-7);
+    csvd_pow(A, -1);
     //writebin(A, "SVDI");
 }
 static void test_kalman(){

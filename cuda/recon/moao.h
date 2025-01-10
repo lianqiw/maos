@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_MOAO_H
 #define AOS_CUDA_MOAO_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "solve.h"
 #include "recon_geom.h"
 

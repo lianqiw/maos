@@ -17,7 +17,7 @@
 */
 
 #include <unistd.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "gpu_test.h"
 
 /**

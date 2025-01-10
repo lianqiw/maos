@@ -18,7 +18,7 @@
 
 #define TIMING 0
 #include <curand_kernel.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "accphi.h"
 #include "wfs.h"
 #include "cudata.h"
@@ -480,7 +480,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			const Real hs=(nhs>1?(ihs-(nhs-1)*0.5):0)*dhs+parms->wfs[iwfs].hs;
 			const Real hc=nhs>1?(parms->wfs[iwfs].hc*(1.-hs/parms->wfs[iwfs].hs)):0;//effective hc
 			if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
-				cucp(phiout, cuwfs[iwfs].opdadd, stream);
+				Copy(phiout, cuwfs[iwfs].opdadd, stream);
 			} else{
 				cuzero(phiout, stream);
 			}
@@ -589,7 +589,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 						cuspmul(gradref, cuwfs[iwfs].GS0, phiout, 1, 'n', ratio, stream);
 					}
 					if(gradacc()!=gradref()){
-						curadd(gradacc, 1, gradref, 1.f/(dtrat*nhs), stream);
+						Add(gradacc, (Real)1, gradref, (Real)1.f/(dtrat*nhs), stream);
 					}
 				}
 				if(parms->powfs[ipowfs].psfout){

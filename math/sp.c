@@ -315,7 +315,7 @@ X(spcell)* X(spcell_cast)(const cell* A){
 	for(long iy=0; iy<NY(A); iy++){
 		for(long ix=0; ix<NX(A); ix++){
 			if(P(A,ix, iy)&&!issp(P(A,ix, iy))){
-				info("A(%ld,%ld) is not sparse, return NULL.\n", ix,iy);
+				dbg("A(%ld,%ld) is not sparse, return NULL.\n", ix,iy);
 				return NULL;
 			}
 		}
@@ -721,7 +721,7 @@ X(sp)* X(spcell2sp)(const X(spcell)* A){
 				if(!issp(P(A, ix, iy))){
 					X(mat) *tmp=X(mat_cast)(P(A, ix, iy));
 					P(A, ix, iy)=X(2sp)(tmp, 1e-12);
-					warning("A(%ld,%ld) is not sparse, trying to convert. Fill factor is %.2f.\n", 
+					dbg("A(%ld,%ld) is not sparse, trying to convert. Fill factor is %.2f.\n", 
 						ix, iy, (R)P(A,ix,iy)->nzmax/PN(A,ix,iy));
 				}
 				if(!nnx[ix]){

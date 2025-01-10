@@ -335,19 +335,18 @@ dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
 	dmat* kl=0;
 	dmm(&kl, 0, mod, U, "nn", 1);
 	
-	//Drop modes with infinitesimal strength
-	real thres=P(S, 0)*1e-10;
-	long count=1;
-	for(long i=S->nx-2; i>0; i--){
-		if(P(S,i)<thres){
-			count++;
-		} else{
+	//Drop modes after a sudden drop in strength of over 100x.
+	long i;
+	for(i=0; i<S->nx-1; i++){
+		if(P(S,i+1)<P(S,i)*1e-2){
 			break;
 		}
 	}
-	
-	dbg("Drop %ld last columns.\n", count);
-	dresize(kl, NX(kl), NY(kl)-count);
+	i++;
+	if(i<S->nx){
+		dbg("Drop %ld last columns.\n", S->nx-i);
+		dresize(kl, NX(kl), i);
+	}
 	dfree(U);
 	dfree(Vt);
 	dcell *res=dcellnew(2,1);
@@ -359,7 +358,7 @@ dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
 /**
    see KL_vonkarman()
  */
-static dcell* KL_vonkarman_do(const loc_t* loc, real iac, real L0){
+static dcell* KL_vonkarman_do(const loc_t* loc, int ttr, real iac, real L0){
 	if(!loc) return NULL;
 	dcell *kl=NULL;
 	dmat *modz=NULL;
@@ -368,8 +367,17 @@ static dcell* KL_vonkarman_do(const loc_t* loc, real iac, real L0){
 	real val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
 	daddI(modz, val);
 	dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
+	if(ttr){
+		loc_remove_ptt(modz, loc, NULL, NULL, 0);
+		/*const dmat *tt=DMAT(loc);
+		dmat *ptt=dpinv(tt, NULL, 1e-7);
+		dmat *tmp=NULL;
+		dmm(&tmp, 0, ptt, modz, "nn", 1);
+		dmm(&modz, 1, tt, tmp, "nn", -1);
+		dfree(ptt);
+		dfree(tmp);*/
+	}
 	if(iac<=0){//not cubic
-		dbg("KL_vonkarman_do: bilinear influence function\n");
 		cov=cov_vonkarman(loc, modz, L0);
 	}else{//handle cubic influence function with over sampling
 		dbg("KL_vonkarman_do: bicubic influence function\n");
@@ -413,26 +421,26 @@ static dcell* KL_vonkarman_do(const loc_t* loc, real iac, real L0){
    as long as the modes are independent and span the whole vector space for the
    coordinate.
 */
-dcell* KL_vonkarman_full(const loc_t* loc, real iac, real L0){
+dcell *KL_vonkarman_full(const loc_t *loc, int ttr, real iac, real L0){
 	if(!loc) return 0;
 	dcell *res=0;
 	if(loc->nloc<500){
-		res=KL_vonkarman_do(loc, iac, L0);
+		res=KL_vonkarman_do(loc, ttr, iac, L0);
 	}else{
 		uint32_t key=lochash(loc, 0);
 		char fn[PATH_MAX];
-		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%g_%u.bin", L0, loc->nloc, iac, key);
-		CACHE_FILE(res, fn, dcellread, ({res=KL_vonkarman_do(loc, iac, L0);}), writebin);
+		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%d_%g_%u.bin", L0, loc->nloc, ttr, iac, key);
+		CACHE_FILE(res, fn, dcellread, ({res=KL_vonkarman_do(loc, ttr, iac, L0);}), writebin);
 	}
 	return res;
 }
 /*A convenient wrapper for simplified useage.*/
-dmat *KL_vonkarman(const loc_t *loc, real L0){
+dmat *KL_vonkarman(const loc_t *loc, int ttr, real L0){
 	if(!loc) return NULL;
 	//Note 2025-01-06: KL modal matrix with cubic influenction function needs further
 	//optimization. In current implementation, it does not perform as well as linear
 	//version and needs more mode truncation in PWFS 2xDM case.
-	dcell *res=KL_vonkarman_full(loc, 0, L0);
+	dcell *res=KL_vonkarman_full(loc, ttr, 0, L0);
 	dmat *kl=P(res, 0);P(res, 0)=NULL;
 	dcellfree(res);
 	return kl;

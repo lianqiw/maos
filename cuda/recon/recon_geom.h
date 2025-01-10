@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_RECON_GEOM_H
 #define AOS_CUDA_RECON_GEOM_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "../../maos/parms.h"
 #include "../../maos/types.h"
 

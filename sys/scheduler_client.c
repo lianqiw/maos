@@ -91,7 +91,7 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 		if(memhost<(size_t)(nhost+1)){
 			memhost+=10;
 			hosts=realloc(hosts, memhost*sizeof(char*));
-			hostshort=realloc(hosts, memhost*sizeof(char *));
+			hostshort=realloc(hostshort, memhost*sizeof(char *));
 			hostsaddr=realloc(hostsaddr, memhost*sizeof(char*));
 		}
 
@@ -103,7 +103,8 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 			dot=eq;
 		}
 		hosts[nhost]=strndup(line, eq-line); 
-		hostshort[nhost]=strndup(line, dot-line);
+		hostshort[nhost]=isdigit((int)line[0])?strndup(line, eq-line):strndup(line, dot-line);
+		//dbg("host=%s, hostshort=%s, hostaddr=%s\n", hosts[nhost], hostshort[nhost], hostsaddr[nhost]);
 		nhost++;
 		UNLOCK(mutex_hosts);
 	}

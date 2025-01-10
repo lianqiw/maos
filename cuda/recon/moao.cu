@@ -82,7 +82,7 @@ void cumoao_t::L(curcell& xout, Real beta, const curcell& xin, Real alpha, strea
 	if(!xout){
 		xout=curcell(1, 1, amap[0].nx, amap[0].ny);
 	} else{
-		curscale(xout.M(), beta, stream);
+		Scale(xout.M(), beta, stream);
 	}
 	cuzero(opdfit.M(), stream);
 	ha.forward(opdfit.pm, xin.pm, 1, NULL, stream);

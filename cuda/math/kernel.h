@@ -75,10 +75,64 @@ __device__ static inline Real CABS2(Comp r){
 	const Real b=Z(cuCimag)(r);
 	return a*a+b*b;
 }
+template <typename T>
+__global__ void set_do(T *a, T alpha, int n){
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		a[i]=alpha;
+	}
+}
+template <typename T, typename S>
+__global__ void scale_do(T *restrict in, int n, S alpha){
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		in[i]*=alpha;
+	}
+}
+/**
+   add a vector to another, scaled by alpha and beta. all in device memory.
+   a=a*(*alpha1)*alpha2+b*(*beta1)*beta2;
+*/
+template <typename T>
+__global__ void add_do(T *restrict a, T *alpha1, T alpha2,
+	const T *restrict b, T *beta1, T beta2, int n){
+	T alpha=alpha1?(*alpha1*alpha2):alpha2;
+	T beta=beta1?(*beta1*beta2):beta2;
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		a[i]=a[i]*alpha+b[i]*beta;
+	}
+}
+template <typename T>
+__global__ void add_do(T *restrict a, const T *restrict b, T *beta1, T beta2, int n){
+	T beta=beta1?(*beta1*beta2):beta2;
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		a[i]+=b[i]*beta;
+	}
+}
+template <typename T>
+__global__ void add_do(T *restrict a, T *alpha1, T alpha2, const T *restrict b, int n){
+	T alpha=alpha1?(*alpha1*alpha2):alpha2;
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		a[i]=a[i]*alpha+b[i];
+	}
+}
 
-__global__ void set_do(Real* a, Real alpha, int n);
-__global__ void scale_do(Real* restrict in, int n, Real alpha);
-__global__ void scale_do(Comp* restrict in, int n, Real alpha);
+/**
+Add a scalar to a vector.
+*/
+template <typename T>
+__global__ void add_do(T *vec, T beta, int n){
+	const int step=blockDim.x*gridDim.x;
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
+		vec[i]+=beta;
+	}
+}
+//__global__ void set_do(Real* a, Real alpha, int n);
+//__global__ void scale_do(Real* restrict in, int n, Real alpha);
+//__global__ void scale_do(Comp* restrict in, int n, Real alpha);
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real pis, Real tx, Real ty);
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real* ptt, Real pis, Real tx, Real ty);
 __global__ void add_focus_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real focus);
@@ -88,11 +142,6 @@ __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 	Real astig1, Real astig2, Real focus,
 	Real thetax, Real thetay, Real scale, Real ht, Real alpha);
 
-__global__ void add_do(Real* vec, Real beta, int n);
-__global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2, const Real* restrict b, int n);
-__global__ void add_do(Real* restrict a, const Real* restrict b, Real* beta1, Real beta2, int n);
-__global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2,
-	const Real* restrict b, Real* beta1, Real beta2, int n);
 
 __global__ void addcabs2_do(Real *restrict a, Real alpha, const Comp *restrict b, Real beta, int n);
 __global__ void addcabs2_do(Real *restrict a, const Comp *restrict b, Real beta, int n);
@@ -135,9 +184,16 @@ __global__ void corner2center_abs2_atomic_do(Real* restrict out, int noutx, int 
 __global__ void fftshift_do(Comp* wvf, const int nx, const int ny);
 __global__ void add_tilt_do(Real* opd, int nx, int ny, Real ox, Real oy, Real dx, Real ttx, Real tty);
 template<typename D, typename F>
-__global__ void cwm_do(D* dest, F* from, long n){
-	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
+__global__ void cwm_do(D *dest, const F *from, long n){
+	for(long i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
 		dest[i]*=from[i];
+	}
+}
+template<typename D, typename F>
+__global__ void copy_do(D *dest, const F *from, long n){
+	for(long i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
+		//dest[i]=(D)from[i];
+		type_convert(dest[i], from[i]);
 	}
 }
 
@@ -148,14 +204,62 @@ __global__ void mvm_do(const Real* restrict mvm, Real* restrict a, const Real* r
 __global__ void multimv_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, int nact, int ng);
 
 template<typename T>
-__global__ void pow_do(T *restrict S, long n, T power, T thres){
-	const int step=blockDim.x*gridDim.x;
-	T thres2=fabs(thres*S[0]);
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		if(S[i]>thres2){
+__global__ void singular_pow(T *restrict S, int n, T power, int& nstop){
+	if(threadIdx.x==0 && blockIdx.x==0){
+		printf("gpu: crop at %d out of %d\n", nstop, n);
+	}
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
+		if(i<nstop){
 			S[i]=pow(S[i], power);
 		} else{
 			S[i]=0;
+		}
+	}
+}
+/**
+	Determine the index to stop compute*/
+template<typename T>
+__global__ void singular_gap(T *restrict S, int n, int &nstop, T thres1, T thres2){
+	extern __shared__ int nb[];//index 
+	nb[threadIdx.x]=n;
+	thres1*=S[0];
+	//First, find the index where S[i]>S[i-1]*thres2 is no longer true
+	//First, use shared memory to process for each element
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
+		if(i>0 && (S[i]<thres1 || S[i]<S[i-1]*thres2)){
+			if(nb[threadIdx.x]>i){
+				nb[threadIdx.x]=i;
+			}
+			//printf("nb[%d]=%d, i=%ld\n", threadIdx.x, nb[threadIdx.x], i);
+			break;
+		}
+	}
+	//Then reduce all threads within each block
+	for(int step=(blockDim.x>>1);step>0;step>>=1){
+		__syncthreads();
+		if(threadIdx.x<step){
+			if(nb[threadIdx.x]>nb[threadIdx.x+step]){
+				nb[threadIdx.x]=nb[threadIdx.x+step];
+				//printf("nb[%d]=%d\n", threadIdx.x, nb[threadIdx.x]);
+			}
+		}
+	}
+	if(threadIdx.x==0){
+		atomicMin(&nstop, nb[threadIdx.x]);
+	}
+}
+
+/*Transpose a matrix in naive way. Faster way is to use shared memory and handle
+  a block each time.*/
+template <typename T>
+__global__ void transpose(T *restrict out, const T *restrict in, int nx, int ny){
+	const int stepx=blockDim.x*gridDim.x;
+	const int stepy=blockDim.y*gridDim.y;
+	const int ix0=threadIdx.x+blockDim.x*blockIdx.x;
+	const int iy0=threadIdx.y+blockDim.y*blockIdx.y;
+	for(int iy=iy0; iy<ny; iy+=stepy){
+		for(int ix=ix0; ix<nx; ix+=stepx){
+			out[iy+ix*ny]=in[ix+iy*nx];
 		}
 	}
 }
