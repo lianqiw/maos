@@ -19,7 +19,7 @@
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
 #include <cufft.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "gpu_sim.h"
 #define RAND_BLOCK 8
 #define RAND_THREAD 256
@@ -45,7 +45,7 @@ typedef struct cupowfs_t{
 	culoc_t loc;       /**<location of OPD points. for reconstruction purpose only.*/
 	culoc_t saloc;     /**<location of subaperture lower left corner*/
 	Array<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
-	Cell<int, Gpu>embed;    /**<embed for field stop computation*/
+	NumCell<int, Gpu>embed;    /**<embed for field stop computation*/
 	Array<int> nembed; /**<grid dimension for embed*/
 	curcell fieldstop; /**<mask for field stop computation*/
 	cullt_t llt;       /**<Laser launch telescope*/

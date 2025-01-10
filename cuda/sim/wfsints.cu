@@ -20,7 +20,7 @@
 #define TIMING 0
 
 #include <curand_kernel.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "accphi.h"
 #include "wfs.h"
 #include "cudata.h"
@@ -321,7 +321,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 		int nlx=powfs[ipowfs].llt->pts->nxsa;
 		lltopd=cuwfs[iwfs].lltopd;
 		if(cuwfs[iwfs].lltncpa){
-			cucp(lltopd, cuwfs[iwfs].lltncpa, stream);
+			Copy(lltopd, cuwfs[iwfs].lltncpa, stream);
 		} else{
 			cuzero(lltopd, stream);
 		}
@@ -411,7 +411,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			if(nwvf!=notfx||notfx!=notfy){//need to embed/crop uplink PSF
 				if(islotf){///*Turn to PSF. peak in corner*/
 					islotf=0; CUFFT(cuwfs[iwfs].lltplan_lotfc2, lotfc2, CUFFT_FORWARD);
-					cucscale(lotfc2, 1./((Real)nwvf*nwvf), stream);
+					Scale(lotfc2, 1./((Real)nwvf*nwvf), stream);
 				}
 				lotfc=cuwfs[iwfs].lltotfc;
 				lotfc.Zero(stream);
@@ -442,7 +442,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				sa_cpcorner_do<<<ksa, dim3(16, 16), 0, stream>>>
 					(psf, notfx, notfy, wvf, nwvf, nwvf);
 			}
-			//gpu_write(psf, notf, notf*ksa, "psf_out_1");
 			ctoc("psf");//1.1ms
 			if(wvfout){
 				cuzero(cuwfs[iwfs].psfout, stream);
@@ -454,7 +453,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			/* abs2 part to real, peak in corner */
 			sa_abs2real_do<<<ksa, dim3(16, 16), 0, stream>>>(psf, notfx, notfy, 1);
 			ctoc("abs2real");//0.8ms
-			//gpu_write(psf, notf, notf*ksa, "psf_out_2");
 			
 			/* turn to otf. peak in corner */
 			CUFFT(cuwfs[iwfs].plan_psf, psf, CUFFT_FORWARD);
@@ -479,7 +477,6 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				ctoc("ccwm with lotfc");//0.66 ms
 			}
 			
-			//gpu_write(psf, notf, notf*ksa, "psf_out_3");
 			if(ints){
 				/*now we have otf. multiply with etf, dtf. */
 				if(wt2){

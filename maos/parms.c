@@ -3387,10 +3387,10 @@ static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 		info2("SVD with threshold %g ", svdthres);
 		break;
 	default:
-		error("Invalid algorithm\n");
+		info2("Invalid algorithm ");
 	}
-	info2("\n");
 }
+
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
@@ -3554,7 +3554,7 @@ static void print_parms(const parms_t *parms){
 		info2("DM Fitting is using ");
 		
 		print_alg(parms->fit.bgs,parms->fit.alg, parms->fit.maxit, parms->fit.precond, parms->fit.svdthres);
-		info2("There are %d DM fitting directions\n",parms->fit.nfit);
+		info2("\nThere are %d DM fitting directions\n",parms->fit.nfit);
 		for(i=0; i<parms->fit.nfit; i++){
 			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*RAD2AS,
@@ -3569,6 +3569,7 @@ static void print_parms(const parms_t *parms){
 	} else if(parms->recon.alg==RECON_LSR){
 		info2("Least square reconstructor is using ");
 		print_alg(parms->lsr.bgs, parms->lsr.alg, parms->lsr.maxit, 0, parms->lsr.svdthres);
+		info2("\n");
 	} else{
 		error("parms->recon.alg=%d is not supported.\n",parms->recon.alg);
 	}

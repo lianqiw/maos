@@ -20,7 +20,7 @@
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <errno.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "../sim/cudata.h"
 #include "gpu_test.h"
 #if !USE_CPP

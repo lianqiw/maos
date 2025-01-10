@@ -22,26 +22,6 @@
    A few kernels.
 */
 
-__global__ void set_do(Real* a, Real alpha, int n){
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		a[i]=alpha;
-	}
-}
-__global__ void scale_do(Real* restrict in, int n, Real alpha){
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		in[i]*=alpha;
-	}
-}
-__global__ void scale_do(Comp* restrict in, int n, Real alpha){
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		in[i].x*=alpha;
-		in[i].y*=alpha;
-	}
-}
-
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2],
 	int n, Real pis, Real tx, Real ty){
 	const int step=blockDim.x*gridDim.x;
@@ -90,45 +70,7 @@ __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 			+astig2*(xy));
 	}
 }
-/**
-   add a vector to another, scaled by alpha and beta. all in device memory.
-   a=a*alpha+b*beta;
-*/
-__global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2,
-	const Real* restrict b, Real* beta1, Real beta2, int n){
-	Real alpha=alpha1?(*alpha1*alpha2):alpha2;
-	Real beta=beta1?(*beta1*beta2):beta2;
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		a[i]=a[i]*alpha+b[i]*beta;
-	}
-}
 
-__global__ void add_do(Real* restrict a, const Real* restrict b, Real* beta1, Real beta2, int n){
-	Real beta=beta1?(*beta1*beta2):beta2;
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		a[i]+=b[i]*beta;
-	}
-}
-__global__ void add_do(Real* restrict a, Real* alpha1, Real alpha2, const Real* restrict b, int n){
-	Real alpha=alpha1?(*alpha1*alpha2):alpha2;
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		a[i]=a[i]*alpha+b[i];
-	}
-}
-
-/**
- * vec+=beta
-   add a beta to a vector.
-*/
-__global__ void add_do(Real* vec, Real beta, int n){
-	const int step=blockDim.x*gridDim.x;
-	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		vec[i]+=beta;
-	}
-}
 /**
 	a=a*alpha+b*beta
 */
@@ -421,7 +363,7 @@ __global__ void add_tilt_do(Real* opd, int nx, int ny, Real ox, Real oy, Real dx
 */
 
 template <>
-__global__ void cwm_do(Comp* dest, Real* from, long n){
+__global__ void cwm_do(Comp* dest, const Real* from, long n){
 	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
 		dest[i].x*=from[i];
 		dest[i].y*=from[i];

@@ -193,10 +193,10 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	}
 	{
 		//dbg("Copying GP\n");
-		GPp=Cell<short2, Gpu>(nwfs, 1);
+		GPp=NumCell<short2, Gpu>(nwfs, 1);
 		GP=cuspcell(nwfs, 1);
 		GPscale.init(nwfs, 1);
-		saptr=Cell<int, Gpu>(nwfs, 1);
+		saptr=NumCell<int, Gpu>(nwfs, 1);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			const int ipowfs=parms->wfsr[iwfs].powfs;
 			const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
@@ -654,7 +654,7 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	if(!xout){
 		xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
 	} else{
-		curscale(xout.M(), beta, stream);
+		Scale(xout.M(), beta, stream);
 	}
 	ctoc_init(10);
 	//xin to opdwfs

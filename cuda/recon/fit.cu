@@ -171,7 +171,7 @@ void cufit_grid::R(curcell& xout, Real beta, curcell& xin, Real alpha, stream_t&
 	if(!xout){
 		xout=curcell(grid->ndm, 1, grid->anx, grid->any);
 	} else{
-		curscale(xout.M(), beta, stream);
+		Scale(xout.M(), beta, stream);
 	}
 	do_hxp(xin, stream);//xin->opdfit. 153 us
 	//cuwrite(opdfit, stream, "GPU_FitR_x1");
@@ -192,7 +192,7 @@ void cufit_grid::Rt(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	if(!xout){
 		xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
 	} else{
-		curscale(xout.M(), beta, stream);
+		Scale(xout.M(), beta, stream);
 	}
 	do_ha(xin, stream);
 	grid->W01.apply(opdfit2, opdfit, stream);
@@ -204,7 +204,7 @@ void cufit_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, str
 	if(!xout){
 		xout=curcell(ndm, 1, grid->anx, grid->any);
 	} else{
-		curscale(xout.M(), beta, stream);
+		Scale(xout.M(), beta, stream);
 	}
 	do_ha(xin, stream);//112 us
 	ctoc("HA");

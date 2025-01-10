@@ -19,7 +19,7 @@
 #ifndef AOS_CUDA_DATA_H
 #define AOS_CUDA_DATA_H
 #include <map>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "../recon/recon.h"
 #include "perf.h"
 #include "wfs.h"

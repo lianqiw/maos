@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <curand_kernel.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "accphi.h"
 #include "wfs.h"
 #include "cudata.h"

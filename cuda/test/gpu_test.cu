@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "../math/prop_map.h"
 #include "gpu_test.h"
 /**

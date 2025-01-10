@@ -20,27 +20,17 @@
 #define AOS_CUDA_CURMAT_H
 #include "types.h"
 #include "kernel.h"
-#include "cubin.h"
-#define curcellcp    cucellcp<Real>
 
-void curset(curmat &A, Real alpha, cudaStream_t stream);
 void curshow(curmat &A, cudaStream_t stream);
-void curadd(curmat &out,Real alpha,const curmat &in,Real beta,cudaStream_t stream);
 void curaddcabs2(curmat &out, Real alpha, const cucmat &in, Real beta, cudaStream_t stream);
 void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream);
-void curscale(curmat &in, Real alpha, cudaStream_t stream);
 void curmv(Real *c, Real alpha, const curmat &A, const Real *b, 
 	   char trans, Real beta, stream_t &stream);
 void curcellmm(curcell &C0, Real alpha, const curcell &A, const curcell &B, 
 	       const char trans[2], const Real beta, stream_t &stream);
 void curcelladd(curcell &A, Real beta, const curcell &B, Real alpha, cudaStream_t stream);
-__global__ void add_do(Real *vec, Real *palpha, Real beta, int n);
-__global__ void add_do(Real *restrict a, const Real * b, const Real *restrict b_sc1, Real b_sc2, int n);
-void curadd(curmat &out, const curmat &in, Real *alpha, Real alpha2, cudaStream_t stream);
-void curadd(curmat &out, Real *beta, const curmat &in, cudaStream_t stream);
 void curcelladd(curcell &A, const curcell &B, Real* alpha, Real alpha2, cudaStream_t stream);
 void curcelladd(curcell &A, Real* beta, const curcell &B, cudaStream_t stream);
-void curadd(curmat &A, Real beta, cudaStream_t stream);
 
 /**
    Routine that does reduction.
@@ -62,6 +52,4 @@ static inline void curaddptt(curmat &opd, Real (*loc)[2], Real pis, Real tx, Rea
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real *ptt, Real pis, Real tx, Real ty,  cudaStream_t stream){
     add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), ptt, pis, tx, ty);
 }
-void cucscale(cucmat &in, Real Alpha, cudaStream_t stream);
-
 #endif

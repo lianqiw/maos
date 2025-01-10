@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_PCG_H
 #define AOS_CUDA_PCG_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 
 /**
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.

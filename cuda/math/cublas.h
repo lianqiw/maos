@@ -18,7 +18,7 @@
 #ifndef AOS_CUDA_CUBLAS_H
 #define AOS_CUDA_CUBLAS_H
 #include <typeinfo>
-#include "types.h"
+#include "utils.h"
 /**
  * \file cublas.h
 */
@@ -41,6 +41,12 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 template<typename T>
 void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<T, Gpu>Sd, stream_t &stream){
     DO(cublasGdgmm(stream.blas(), CUBLAS_SIDE_RIGHT, A.Nx(), A.Ny(), A(), A.Nx(), Sd(), 1, C(), C.Nx()));
+}
+template<typename T, typename TS>
+void cudgmm(NumArray<T, Gpu>C, NumArray<T, Gpu>A, NumArray<TS, Gpu>Sd, stream_t &stream){
+	NumArray<T, Gpu>Sd2;
+	Copy(Sd2, Sd, stream);
+	DO(cublasGdgmm(stream.blas(), CUBLAS_SIDE_RIGHT, A.Nx(), A.Ny(), A(), A.Nx(), Sd2(), 1, C(), C.Nx()));
 }
 /**
  * C=alpha*op(A)*op(B)+beta*C
@@ -107,8 +113,8 @@ void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArr
 			error("Unknown error happened: %d\n", (int) status); break;\
 	}\
 
-template<typename T>
-int cusvd(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &Vt, NumArray<T, Gpu> &A, stream_t &stream){
+template<typename T, typename R>
+int cusvd(NumArray<T, Gpu> &U, NumArray<R, Gpu> &S, NumArray<T, Gpu> &Vt, NumArray<T, Gpu> &A, stream_t &stream){
     cusolverDnParams_t params; cusolverDnCreateParams(&params);
     cusolverStatus_t status;
     S.init(MIN(A.Nx(), A.Ny()), 1);
@@ -153,8 +159,8 @@ int cusvd(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &Vt, NumArr
  * output parameter h_err_sigma is the magnitude of this perturbation. In other
  * words, h_err_sigma shows the accuracy of SVD.
  * */
-template<typename T>
-int cusvdp(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &V, NumArray<T, Gpu> &A, stream_t &stream){
+template<typename T, typename TS>
+int cusvdp(NumArray<T, Gpu> &U, NumArray<TS, Gpu> &S, NumArray<T, Gpu> &V, NumArray<T, Gpu> &A, stream_t &stream){
     cusolverDnParams_t params; cusolverDnCreateParams(&params);
     cusolverEigMode_t jobz=CUSOLVER_EIG_MODE_VECTOR;
     cusolverStatus_t status;
@@ -192,14 +198,26 @@ int cusvdp(NumArray<T, Gpu> &U, NumArray<T, Gpu> &S, NumArray<T, Gpu> &V, NumArr
  * Use SVD decomposition to compute power (usually inverse) of A. 
  * A=U*S*Vt --> A^-1 = Vt'*S^-1*U'
  * */
-template<typename T>
-int cusvd_pow(NumArray<T, Gpu> &A, T power, T thres, stream_t &stream){
-    NumArray<Real, Gpu> U, S, Vt;//match Gpu precision
+template<typename T, typename ST>
+int cusvd_pow(NumArray<T, Gpu> &A, ST power, ST thres1, ST thres2, stream_t &stream){
+    NumArray<T, Gpu> U, Vt;
+	NumArray<ST, Gpu> S;
     cusvd(U, S, Vt, A, stream);
-    pow_do<<<DIM(S.N(), 256), 0, stream>>>(S(), S.N(), power, thres);
+	int nstop=S.N();
+	singular_gap<<<REDUCE(S.N()), DIM_REDUCE*sizeof(int), stream>>>
+		(S(), S.N(), nstop, thres1, thres2);
+	//if(nstop<S.N()){
+	//CUDA_SYNC_STREAM;
+	//dbg("gpu: crop at %d out of %ld singular values, thres=%g, %g\n", nstop, S.N(), thres1, thres2);
+	//}
+	singular_pow<<<DIM(S.N(), 256), 0, stream>>>(S(), S.N(), power, nstop);
     //U=U*S
-    cudgmm(U, U, S, stream);
-    cugemm(A, (Real)0, Vt, U, "tt", (Real)1, stream);
+   	cudgmm(U, U, S, stream);
+	T alpha, beta;
+	ST alpha2=0, beta2=1;
+	type_convert(alpha, alpha2);
+	type_convert(beta, beta2);
+    cugemm(A, alpha, Vt, U, "tt", beta, stream);
     return 0;
 }
 #endif

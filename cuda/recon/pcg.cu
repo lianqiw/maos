@@ -128,7 +128,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 		if(k%500==0){/*initial or re-start every 500 steps*/
 			ctoc("prep");
 			/*computes r0=b-A*x0 */
-			curcellcp(r0, b, stream);/*r0=b; */
+			Copy(r0, b, stream);/*r0=b; */
 			ctoc("cp");
 			(*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */
 			CUDA_CHECK_ERROR;
@@ -141,7 +141,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 				z0=r0;
 			}
 			ctoc("Mmul");
-			curcellcp(p0, z0, stream);
+			Copy(p0, z0, stream);
 			ctoc("cp");
 			curcellinn_add(rkzk+0, r0, z0, stream);//9
 			ctoc("inn");

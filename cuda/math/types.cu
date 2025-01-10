@@ -17,7 +17,7 @@
 */
 
 #include "types.h"
-
+#include "utils.h"
 //Only specialize valid convertors.
 //cpu code defines real, comp, dmat, cmat for double or signle precision accourding to CPU_SINGLE
 template <>
@@ -81,5 +81,22 @@ curmat iac2cc(Real iac){
 		return res;
 	} else{
 		return curmat();
+	}
+}
+culoc_t::culoc_t(const loc_t *in):dx(0), dy(0){
+	if(in){
+		dx=in->dx;
+		dy=in->dy;
+		{//Notice there is a transpose operation.
+			Real2 *tmp=(Real2 *)malloc(in->nloc*sizeof(Real2));
+			for(int iloc=0; iloc<in->nloc; iloc++){
+				tmp[iloc][0]=(Real)in->locx[iloc];
+				tmp[iloc][1]=(Real)in->locy[iloc];
+			}
+			cp2gpu(p, (Real *)tmp, 2, in->nloc);
+			free(tmp);
+		}	
+		dvecmaxmin(in->locx, in->nloc, &xmax, &xmin);
+		dvecmaxmin(in->locy, in->nloc, &ymax, &ymin);
 	}
 }

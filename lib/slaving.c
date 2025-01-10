@@ -885,7 +885,7 @@ dsp *act_extrap_each(loc_t *aloc,
 	//writebin(Hr, "Hr");
 	//step2: project 
 	dmat *Mz=zernike(aloc, loc_diam(aloc), 1, 3, 0);//Modes
-	dmat *Md=dpinv2(Mz, mask, 1e-12);//projector
+	dmat *Md=dpinv(Mz, mask);//projector
 	//writebin(mask, "mask");
 	dfree(mask);
 	dmat *MMp=NULL;//MMp=1-Mz*Md. //removal projector

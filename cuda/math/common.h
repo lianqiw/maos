@@ -157,7 +157,40 @@ static inline __host__ __device__ double2& operator*=(double2& a, const double b
 	a.y*=b;
 	return a;
 }
-
+template<typename M, typename N>
+__device__ __host__ void type_convert(M& out, const N in){
+	out=static_cast<M>(in);
+}
+template<>
+__device__ __host__ inline void type_convert<float2, double2>(float2& out, const double2 in){
+	out.x=static_cast<float>(in.x);
+	out.y=static_cast<float>(in.y);
+}
+template<>
+__device__ __host__ inline void type_convert<double2, float2>(double2 &out, const float2 in){
+	out.x=static_cast<double>(in.x);
+	out.y=static_cast<double>(in.y);
+}
+template<>
+__device__ __host__ inline void type_convert<float2, float>(float2& out, const float in){
+	out.x=in;
+	out.y=0;
+}
+template<>
+__device__ __host__ inline void type_convert<float2, double>(float2 &out, const double in){
+	out.x=in;
+	out.y=0;
+}
+template<>
+__device__ __host__ inline void type_convert<double2, float>(double2 &out, const float in){
+	out.x=in;
+	out.y=0;
+}
+template<>
+__device__ __host__ inline void type_convert<double2, double>(double2 &out, const double in){
+	out.x=in;
+	out.y=0;
+}
 extern int NULL_STREAM;
 #if DEBUG
 #define CUDA_CHECK_ERROR DO(cudaGetLastError())

@@ -18,33 +18,27 @@
 
 
 #include "curmat.h"
-#include "cucmat.h"
 #include "utils.h"
+#include "cublas.h"
 #include "kernel.h"
-
-void curset(curmat& A, Real alpha, cudaStream_t stream){
-	if(A&&A()){
-		set_do<<<DIM(A.Nx()*A.Ny(), 256), 0, stream>>>(A(), alpha, A.Nx()*A.Ny());
-	}
-}
 
 /**
    out=out*beta+in*alpha;
 */
-void curadd(curmat& out, Real alpha, const curmat& in, Real beta, cudaStream_t stream){
+/*void Add(curmat& out, Real alpha, const curmat& in, Real beta, cudaStream_t stream){
 	if(!in) return;
 	if(!out||alpha==0){
-		cucp(out, in, stream);
+		Copy(out, in, stream);
 		if(Z(fabs)(beta-(Real)1)>EPS){
-			scale_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-				(out(), in.Nx()*in.Ny(), beta);
+			scale_do<<<DIM(in.N(), 256), 0, stream>>>
+				(out(), in.N(), beta);
 		}
 	} else{
 		assert(in.N()==out.N());
-		add_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-			(out(), NULL, alpha, in(), NULL, beta, in.Nx()*in.Ny());
+		add_do<<<DIM(in.N(), 256), 0, stream>>>
+			(out(), (Real *)NULL, alpha, in(), (Real *)NULL, beta, in.N());
 	}
-}
+}*/
 /**
    out=out*beta+abs2(in)*alpha;
 */
@@ -54,8 +48,8 @@ void curaddcabs2(curmat& out, Real alpha, const cucmat& in, Real beta, cudaStrea
 	} else if(alpha==0){
 		cuzero(out, stream);
 	}
-	addcabs2_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-		(out(), alpha, in(), beta, in.Nx()*in.Ny());
+	addcabs2_do<<<DIM(in.N(), 256), 0, stream>>>
+		(out(), alpha, in(), beta, in.N());
 }
 /**
    out=out+abs2(in)*alpha;
@@ -64,10 +58,10 @@ void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream){
 	if(!out){
 		out=curmat(in.Nx(), in.Ny());
 	}
-	addcabs2_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-		(out(), in(), beta, in.Nx()*in.Ny());
+	addcabs2_do<<<DIM(in.N(), 256), 0, stream>>>
+		(out(), in(), beta, in.N());
 }
-void curscale(curmat &in, Real alpha, cudaStream_t stream){
+void Scale(curmat &in, Real alpha, cudaStream_t stream){
 	if(!in) return;
 	if(alpha==0){
 		in.Zero(stream);
@@ -128,27 +122,7 @@ void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 		}
 	}
 }
-/*Transpose a matrix in naive way. Faster way is to use shared memory and handle
-  a block each time.*/
-__global__ void transpose(Real* restrict out, const Real* restrict in, int nx, int ny){
-	const int stepx=blockDim.x*gridDim.x;
-	const int stepy=blockDim.y*gridDim.y;
-	const int ix0=threadIdx.x+blockDim.x*blockIdx.x;
-	const int iy0=threadIdx.y+blockDim.y*blockIdx.y;
-	for(int iy=iy0; iy<ny; iy+=stepy){
-		for(int ix=ix0; ix<nx; ix+=stepx){
-			out[iy+ix*ny]=in[ix+iy*nx];
-		}
-	}
-}
-/*Transpose a matrix*/
-template <>
-curmat curmat::trans(stream_t& stream){
-	curmat B=curmat(ny, nx);
-	transpose<<<dim3(16, 16), dim3(16, 16), 0, stream>>>
-		(B(), p, nx, ny);
-	return B;
-}
+
 
 /*
   A=A*beta+B*alpha;
@@ -161,18 +135,18 @@ void curcelladd(curcell& A, Real beta, const curcell& B, Real alpha, cudaStream_
 		assert(A.Nx()==B.Nx()&&A.Ny()==B.Ny());
 	}
 	if(A.M()&&B.M()){
-		curadd(A.M(), beta, B.M(), alpha, stream);
+		Add(A.M(), beta, B.M(), alpha, stream);
 	} else{
 		for(int i=0; i<B.Nx()*B.Ny(); i++){
-			curadd(A[i], beta, B[i], alpha, stream);
+			Add(A[i], beta, B[i], alpha, stream);
 		}
 	}
 }
-
-void curadd(curmat& A, Real beta, cudaStream_t stream){
+/*
+void Add(curmat& A, Real beta, cudaStream_t stream){
 	const int n=A.Nx()*A.Ny();
 	add_do<<<DIM(n, 256), 0, stream>>>(A(), beta, n);
-}
+}*/
 /**
    add a vector to another, scaled by alpha and beta. all in device memory.
    a=a+b*alpha*beta;
@@ -181,13 +155,13 @@ void curadd(curmat& A, Real beta, cudaStream_t stream){
 /**
    out=out+in*alpha; beta, alpha lives in device memory.
 */
-void curadd(curmat& out, const curmat& in, Real* alpha, Real alpha2, cudaStream_t stream){
+/*void Add(curmat& out, const curmat& in, Real* alpha, Real alpha2, cudaStream_t stream){
 	if(!out){
 		out=curmat(in.Nx(), in.Ny());
 	}
-	add_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-		(out(), in(), alpha, alpha2, in.Nx()*in.Ny());
-}
+	add_do<<<DIM(in.N(), 256), 0, stream>>>
+		(out(), in(), alpha, alpha2, in.N());
+}*/
 
 
 /**
@@ -201,10 +175,10 @@ void curcelladd(curcell& A, const curcell& B, Real* alpha, Real alpha2, cudaStre
 		assert(A.Nx()==B.Nx()&&A.Ny()==B.Ny());
 	}
 	if(A.M()&&B.M()){
-		curadd(A.M(), B.M(), alpha, alpha2, stream);
+		Add(A.M(), B.M(), alpha, alpha2, stream);
 	} else{
 		for(int i=0; i<B.N(); i++){
-			curadd(A[i], B[i], alpha, alpha2, stream);
+			Add(A[i], B[i], alpha, alpha2, stream);
 		}
 	}
 }
@@ -212,13 +186,13 @@ void curcelladd(curcell& A, const curcell& B, Real* alpha, Real alpha2, cudaStre
 /**
    out=out*beta+in; beta, alpha lives in device memory.
 */
-void curadd(curmat& out, Real* alpha1, const curmat& in, cudaStream_t stream){
+/*void Add(curmat& out, Real* alpha1, const curmat& in, cudaStream_t stream){
 	if(!out){
 		out=curmat(in.Nx(), in.Ny());
 	}
-	add_do<<<DIM(in.Nx()*in.Ny(), 256), 0, stream>>>
-		(out(), alpha1, 1.f, in(), in.Nx()*in.Ny());
-}
+	add_do<<<DIM(in.N(), 256), 0, stream>>>
+		(out(), alpha1, 1.f, in(), in.N());
+}*/
 
 /**
    A=A*alpha1+B*alpha; alpha1, alpha lives in device memory.
@@ -231,10 +205,10 @@ void curcelladd(curcell& A, Real* alpha1, const curcell& B, cudaStream_t stream)
 		assert(A.Nx()==B.Nx()&&A.Ny()==B.Ny());
 	}
 	if(A.M()&&B.M()){
-		curadd(A.M(), alpha1, B.M(), stream);
+		Add(A.M(), alpha1, B.M(), stream);
 	} else{
 		for(int i=0; i<B.Nx()*B.Ny(); i++){
-			curadd(A[i], alpha1, B[i], stream);
+			Add(A[i], alpha1, B[i], stream);
 		}
 	}
 }
@@ -336,10 +310,10 @@ Real curcellmaxabs(const curcell& a, cudaStream_t stream){
 void curcellscale(curcell& A, Real alpha, cudaStream_t stream){
 	if(!A) return;
 	if(A.M()){
-		curscale(A.M(), alpha, stream);
+		Scale(A.M(), alpha, stream);
 	} else{
 		for(int i=0; i<A.Nx()*A.Ny(); i++){
-			curscale(A[i], alpha, stream);
+			Scale(A[i], alpha, stream);
 		}
 	}
 }
@@ -351,7 +325,7 @@ void cucscale(cucmat& in, Real alpha, cudaStream_t stream){
 	if(alpha==0){
 		cuzero(in, stream);
 	} else if(Z(fabs)(alpha-1.f)>EPS){
-		int n=in.Nx()*in.Ny();
+		int n=in.N();
 		scale_do<<<DIM(n, 256), 0, stream>>>(in(), n, alpha);
 	}
 }

@@ -160,8 +160,8 @@ static void host_added(int ihost, int sock){
 		socket_recv_timeout(sock, 60); //when use select, enable read timeout to avoid hang
 		FD_SET(sock, &active_fd_set);
 		if(!headless) g_idle_add(host_up, GINT_TO_POINTER(ihost));
+		info_time("connected to %s at port %d\n", hosts[ihost], sock);
 	}
-	info_time("connected to %s\n", hosts[ihost]);
 }
 
 /*remove the host upon disconnection*/
@@ -525,7 +525,7 @@ void* listen_host(void* pmsock){
 		}
 		time_t ntime=myclocki();
 		for(int ihost=0; ihost<nhost; ihost++){
-			if(hsock_new[ihost]>=0){//newly established connection
+			if(hsock_new[ihost]>-1){//newly established connection
 				host_added(ihost, hsock_new[ihost]);
 				hsock_new[ihost]=-1;
 			}

@@ -24,7 +24,6 @@
 #include "types.h"
 #include "cublas.h"
 #include "kernel.h"
-#include "cucmat.h"
 #include "curmat.h"
 class lock_t{
 	pthread_mutex_t& mutex;
@@ -39,13 +38,17 @@ public:
 };
 class cumemcache_t{
 	public:
-	std::map<uint64_t, void *> memhash;/*For reuse constant GPU memory.*/
-	std::map<void *, int> memcount; /*Store count of reused memory*/
-	void *memcache;/*For reuse temp array for type conversion.*/
-	long nmemcache;
-	pthread_mutex_t memmutex;
-	cumemcache_t() :memcache(NULL), nmemcache(0){
-		pthread_mutex_init(&memmutex, 0);
+	std::map<uint64_t, void *> memhash;/*hash is mapped to memory address*/
+	std::map<void *, int> memcount; /*Store usage count of memory*/
+	pthread_mutex_t mutex_hash;
+	long nsave=0;
+	void *memcache=NULL;/*For reuse temp array for type conversion.*/
+	long nmemcache=0;
+	pthread_mutex_t mutex_cache;
+	
+	cumemcache_t(){
+		pthread_mutex_init(&mutex_cache, 0);
+		pthread_mutex_init(&mutex_hash, 0);
 	}
 	~cumemcache_t(){
 		free(memcache); memcache=NULL; nmemcache=0;
@@ -53,60 +56,29 @@ class cumemcache_t{
 };
 extern cumemcache_t cumemcache;
 extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
-/**
-   Without type conversion. Enable asynchrous transfer. It is asynchrous only if
-   called allocated pinned memory.
-*/
 
 template<typename M, typename N>
-void type_convert(M* out, const N* in, long nx){
+void type_convert(M *out, const N *in, long nx){
 	for(int i=0; i<nx; i++){
-		out[i]=static_cast<M>(in[i]);
-	}
-}
-template<>
-inline void type_convert<float2, double2>(float2* out, const double2* in, long nx){
-	for(int i=0; i<nx; i++){
-		out[i].x=static_cast<float>(in[i].x);
-		out[i].y=static_cast<float>(in[i].y);
-	}
-}
-template<>
-inline void type_convert<double2, float2>(double2* out, const float2* in, long nx){
-	for(int i=0; i<nx; i++){
-		out[i].x=static_cast<double>(in[i].x);
-		out[i].y=static_cast<double>(in[i].y);
+		type_convert(out[i], in[i]);
 	}
 }
 
 template<typename M, typename N>
 void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
-	/*{
-		static int same_size=0, size_last=0;
-		if(size_last==nx*ny*sizeof(N)){
-			same_size++;
-			if(same_size==10){
-				error("cp2gpu: %d copies to GPU of size %ld KiB\n", same_size, size_last>>10);
-			}
-		}else{
-			same_size=0;
-		}
-		dbg("cp2gpu: %d copies to GPU of size %ld KiB\n", same_size, size_last>>10);
-		size_last=nx*ny*sizeof(N);
-	}*/
 	M* from=0;
 	int free_from=0;
 	if(cumemcache.memcount.count(dest)&&cumemcache.memcount[dest]>1){
 		error("Should not copy to deduped pointer %p. Count=%d\n", dest,
 			cumemcache.memcount[dest]);
 	}
-	if(sizeof(M)!=sizeof(N)){
+	if(sizeof(M)!=sizeof(N)){//use cache memory for type conversion
 		long memsize=nx*ny*sizeof(M);
 		if(memsize>20000000){//Too large. Don't cache.
 			from=(M*)malloc(memsize);
 			free_from=1;
 		} else{
-			LOCK(cumemcache.memmutex);
+			LOCK(cumemcache.mutex_cache);
 			if(cumemcache.nmemcache<memsize){
 				cumemcache.nmemcache=memsize;
 				/*dbg("GPU%d: Enlarge mem cache to %ld: %p->",
@@ -122,14 +94,17 @@ void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	} else{
 		from=(M*)(src);
 	}
+	//since we are not using pinned memory, memcpyAsync is sync to host code.
 	DO(cudaMemcpyAsync(dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
-	if(free_from){
-		if(stream!=0){
-			CUDA_SYNC_STREAM;
+	if(sizeof(M)!=sizeof(N)){
+		if(free_from){
+			if(stream!=0){
+				CUDA_SYNC_STREAM;
+			}
+			free(from);
+		} else {
+			UNLOCK(cumemcache.mutex_cache);
 		}
-		free(from);
-	} else if(sizeof(M)!=sizeof(N)){
-		UNLOCK(cumemcache.memmutex);
 	}
 }
 /*Convert and copy CPU data to GPU with deduplication if cuda_dedup is set.*/
@@ -143,17 +118,18 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 	int skip_copy=0;
 	int record_mem=0;
 	if(cuda_dedup&&!*dest){
-		key=hashlittle(src, nx*ny*sizeof(N), nx*ny);
 		int igpu;
 		cudaGetDevice(&igpu);
-		key=hashlittle(&igpu, sizeof(int), key);//put GPU index as part of fingerprint.
-		lock_t tmp(cumemcache.memmutex);
+		key=hashlittle(src, nx*ny*sizeof(N), nx*ny);
+		key=hashlittle(&igpu, sizeof(int), key);//put GPU index as part of fingerprint.	
+		lock_t tmp(cumemcache.mutex_hash);
 		if(cumemcache.memhash.count(key)){
 			*dest=(M*)cumemcache.memhash[key];
 			if(cumemcache.memcount[*dest]){//valid memory
 				cumemcache.memcount[*dest]++;
 				skip_copy=1;//no need to copy again
-				//dbg("cp2gpu_dedup: increase reference to data: %p\n", *dest);
+				cumemcache.nsave+=nx*ny*sizeof(N);
+				//dbg("cp2gpu_dedup: increase reference to data: %p, memory saved is %ld MB.\n", *dest, cumemcache.nsave>>20);
 			} else{
 				cumemcache.memhash.erase(key);
 				cumemcache.memcount.erase(*dest);
@@ -163,7 +139,7 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 		}
 	} else if(!cuda_dedup&&*dest){
 		//Avoid overriding previously referenced memory
-		lock_t tmp(cumemcache.memmutex);
+		lock_t tmp(cumemcache.mutex_hash);
 		if(cumemcache.memcount.count(*dest)&&cumemcache.memcount[*dest]>1){
 			warning("cp2gpu_dedup: deferencing data: %p\n", *dest);
 			cumemcache.memcount[*dest]--;
@@ -180,7 +156,7 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 	}
 	if(record_mem){
 		//dbg("cp2gpu_dedup: record reference to data: %p\n", *dest);
-		lock_t tmp(cumemcache.memmutex);
+		lock_t tmp(cumemcache.mutex_hash);
 		cumemcache.memhash[key]=*dest;
 		cumemcache.memcount[*dest]=1;
 	}
@@ -204,54 +180,15 @@ static inline void cp2gpu_dedup(Real** dest, const dmat* src, cudaStream_t strea
 	if(!src) return;
 	cp2gpu_dedup(dest, src->p, src->nx, src->ny, stream);
 }
-//#if CPU_SINGLE==0
-/*template <typename T, typename S>
-static inline void cp2gpu(NumArray<T, Gpu>& dest, NumArray<S, Cpu>& src, cudaStream_t stream=0){
-	cp2gpu(dest, src(), src.Nx(), src.ny(), stream);
-}*/
-static inline void cp2gpu(curmat& dest, const dmat* src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cucmat &dest, const cmat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(curmat &dest, const smat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cucmat &dest, const zmat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-#if CPU_SINGLE==0
-static inline void cp2gpu(cudmat &dest, const dmat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cuzmat &dest, const cmat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cudmat &dest, const smat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-static inline void cp2gpu(cuzmat &dest, const zmat *src, cudaStream_t stream=0){
-	if(!src) return;
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-#endif
 void cp2gpu(cumapcell& dest, const mapcell* source);
 void cp2gpu(cusp& dest, const dsp* src, int tocsr);
 void cp2gpu(cusp& dest, const dspcell* src, int tocsr);
 void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr);
-void cp2gpu(curmat& dest, const loc_t* src);
-void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream);
-void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream);
+//void cp2gpu(curmat& dest, const loc_t* src);
+void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream=0);
+void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream=0);
 template <typename T>
-void cp2gpu(Cell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
+void cp2gpu(NumCell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 	const cell* src=src_.c;
 	if(!src){
 		dest.Zero();
@@ -270,7 +207,7 @@ void cp2gpu(Cell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 				ny[i]=0;
 			}
 		}
-		dest=Cell<T, Gpu>(src->nx, src->ny, nx, ny);
+		dest=NumCell<T, Gpu>(src->nx, src->ny, nx, ny);
 	} else if(dest.Nx()!=src->nx||dest.Ny()!=src->ny){
 		error("Mismatch: %ldx%ld vs %ldx%ld\n",
 			dest.Nx(), dest.Ny(), src->nx, src->ny);
@@ -284,13 +221,6 @@ void cp2gpu(Cell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 		}
 	}
 }
-/*void cp2gpu(curcell &dest, const scell *src);
-void cp2gpu(cuccell& dest, const ccell* src);
-void cp2gpu(cuccell &dest, const zcell *src);
-*/
-void gpu_write(const Real* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
-void gpu_write(const Comp* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
-void gpu_write(const int* p, long nx, long ny, const char* format, ...) CHECK_ARG(4);
 void add2cpu(float* restrict* dest,Real alpha, Real* src, Real beta, long n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(smat** out, float alpha, const curmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void add2cpu(zmat** out, float alpha, const cucmat& in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);

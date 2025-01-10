@@ -28,51 +28,81 @@
 /**
  * Compute svd
  * */
-void gpu_dsvd(dmat **U_, dmat **S_, dmat **Vt_, const dmat *A_){
-  int cuda_dedup_save=cuda_dedup; cuda_dedup=0;
-  //NumArray<real, Gpu> U, S, Vt, A;//match cpu precision (double is slow)
-  NumArray<Real, Gpu> U, S, Vt, A;//match GPU precision
-  stream_t stream;
-  cp2gpu(A, A_, stream);
-  cusvd(U, S, Vt, A, stream); 
-  cp2cpu(U_, U, stream);
-  cp2cpu(S_, S, stream);
-  //dmat *V_=NULL, *Vt2=NULL;
-	//cp2cpu(&V_, V);
-  //Vt2=dtrans(V_); dfree(V_);
-  cp2cpu(Vt_, Vt, stream);
-  //dfree(Vt2);
-  cuda_dedup=cuda_dedup_save;
+#define GPU_SVD(X,R,TG)\
+void gpu_##X##svd(X##mat **U_, R##mat **S_, X##mat **Vt_, const X##mat *A_){\
+	int cuda_dedup_save=cuda_dedup; cuda_dedup=0;\
+	NumArray<TG, Gpu> U, Vt, A;\
+	NumArray<Real, Gpu> S;\
+	stream_t stream;\
+	cp2gpu(A, A_, stream);\
+	cusvd(U, S, Vt, A, stream);\
+	cp2cpu(U_, U, stream);\
+	cp2cpu(S_, S, stream);\
+	cp2cpu(Vt_, Vt, stream);\
+	cuda_dedup=cuda_dedup_save;\
 }
+GPU_SVD(d, d, Real);
+GPU_SVD(c, d, Comp);
+GPU_SVD(s, s, Real);
+GPU_SVD(z, s, Comp);
+
 /**
  * Invert matrix (pow=-1) or raise power of a matrix with svd.
  * */
-void gpu_dsvd_pow(dmat *A_, real pow, real thres){
-  if(thres<0){
-    error("negative thres is not supported\n");
-  }
-  int cuda_dedup_save=cuda_dedup; cuda_dedup=0;
-  NumArray<Real, Gpu> A;//match GPU precision
-  stream_t stream;
-  cp2gpu(A, A_, stream);
-  cusvd_pow(A, (Real)pow, (Real)thres, stream);
-  cp2cpu(&A_, A, stream);
-  cuda_dedup=cuda_dedup_save;
+#define GPU_SVD_POW(X,TG, RG)\
+void gpu_##X##svd_pow(X##mat *A_, real pow, real thres1, real thres2){\
+	int cuda_dedup_save=cuda_dedup; cuda_dedup=0;\
+	NumArray<TG, Gpu> A;\
+	stream_t stream;\
+	cp2gpu(A, A_, stream);\
+	cusvd_pow(A, (RG)pow, (RG)thres1, (RG)thres2, stream);\
+	cp2cpu(&A_, A, stream);\
+	cuda_dedup=cuda_dedup_save;\
 }
+GPU_SVD_POW(d, Real, Real)
+GPU_SVD_POW(c, Comp, Real)
+GPU_SVD_POW(s, Real, Real)
+GPU_SVD_POW(z, Comp, Real)
+
 /**
  * matrix multplication in gpu
  */
-void gpu_dgemm(dmat **C_, const real beta, const dmat *A_, const dmat *B_, const char trans[2], const real alpha){
-  int cuda_dedup_save=cuda_dedup; cuda_dedup=0;
-  NumArray<Real, Gpu>A,B,C;
-  stream_t stream;
-  cp2gpu(A, A_, stream);
-  cp2gpu(B, B_, stream);
-  if(*C_) cp2gpu(C, *C_, stream); 
-  cugemm(C, (Real)beta, A, B, trans, (Real)alpha, stream);
-  cp2cpu(C_,C,stream);
-  cuda_dedup=cuda_dedup_save;
+#define GPU_GEMM(X,TC,TG)\
+void gpu_##X##gemm(X##mat **C_, TC beta, const X##mat *A_, const X##mat *B_, const char trans[2], TC alpha){\
+	int cuda_dedup_save=cuda_dedup; cuda_dedup=0;\
+	NumArray<TG, Gpu>A, B, C;\
+	stream_t stream;\
+	cp2gpu(A, A_, stream);\
+	cp2gpu(B, B_, stream);\
+	if(*C_) cp2gpu(C, *C_, stream);\
+	TG beta2, alpha2;\
+	type_convert(&beta2, &beta, 1);\
+	type_convert(&alpha2, &alpha, 1);\
+	cugemm(C, beta2, A, B, trans, alpha2, stream);\
+	cp2cpu(C_, C, stream);\
+	cuda_dedup=cuda_dedup_save;\
 }
+GPU_GEMM(d, double, Real);
+GPU_GEMM(c, dcomplex, Comp);
+GPU_GEMM(s, float, Real);
+GPU_GEMM(z, fcomplex, Comp);
+
+void gpu_ext_assign(){
+#define CPU_ASSIGN(X,R,T)\
+	extern void (*X##svd_ext)(X##mat **U, R##mat **S, X##mat **Vt, const X##mat *A);\
+	extern void (*X##svd_pow_ext)(X##mat *A_, real pow, real thres1, real thres2);\
+	extern void (*X##gemm_ext)(X##mat **out, T beta, const X##mat *A, const X##mat *B, const char trans[2], T alpha);\
+	X##svd_ext=gpu_##X##svd;\
+	X##svd_pow_ext=gpu_##X##svd_pow;\
+	X##gemm_ext=gpu_##X##gemm;
+
+	dbg("Using GPU for svd, svd_pow and gemm of large arrays.\n");
+	CPU_ASSIGN(d, d, double);
+	CPU_ASSIGN(c, d, dcomplex);
+	CPU_ASSIGN(s, s, float);
+	CPU_ASSIGN(z, s, fcomplex);
+}
+
 void gpu_dgemm_test(){
 	dmat *A=dnew(2000, 2000);
 	dmat *B=dref(A);

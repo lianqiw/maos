@@ -92,15 +92,7 @@ function run_maos(){
 	if [ x$b = 'xerror' -o x$b = x ];then
 		b=0
 	fi
-	as=${a#0.}
-	bs=${b#0.}
-	as=${as%.*} 
-	bs=${bs%.*}
-    if [ "$as" -eq "$bs" ];then #in case both are zero
-		diff=0
-	else
-		diff=$(((as-bs)*200/(as+bs)))
-    fi
+	diff=$(echo "200*($a-$b)/($a+$b)" | bc)
 	if [ $diff -gt 10 -o $diff -lt -10 ];then
 		ans=$((ans+1)) #mark failure
 	fi

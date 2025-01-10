@@ -27,8 +27,8 @@
 //#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 //If an external declaration is marked weakandthat symbol does not exist during linking(possibly dynamic) the address of the symbol will evaluate to NULL.
 void (*X(svd_ext))(X(mat) **U_, XR(mat) **S_, X(mat) **Vt_, const X(mat) *A_)=NULL;
-void (*X(svd_pow_ext))(X(mat) *A_, real power, real thres)=NULL;
-void (*X(gemm_ext))(X(mat) **out, const real beta, const X(mat) *A, const X(mat) *B, const char trans[2], const real alpha)=NULL;
+void (*X(svd_pow_ext))(X(mat) *A_, real power, real thres1, real thres2)=NULL;
+void (*X(gemm_ext))(X(mat) **out, T beta, const X(mat) *A, const X(mat) *B, const char trans[2], T alpha)=NULL;
 //#endif
 /**
    compute matrix product using blas dgemm.;
@@ -37,13 +37,13 @@ void (*X(gemm_ext))(X(mat) **out, const real beta, const X(mat) *A, const X(mat)
 void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	const char trans[2], const T alpha){
 	if(!A||!B||A->nx==0||B->nx==0) return;
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-	if(dgemm_ext&&NX(A)>500&&NY(A)>500&&NY(B)>100){
-		dbg_once("Using external routine for dmm of size %ldx%ldx%ld\n", NX(A), NY(A), NY(B));
-		dgemm_ext(C0,beta,A,B,trans,alpha);
+//#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(X(gemm_ext)&&NX(A)>500&&NY(A)>500&&NY(B)>100){
+		//dbg_once("Using external routine for dmm of size %ldx%ldx%ld\n", NX(A), NY(A), NY(B));
+		X(gemm_ext)(C0,beta,A,B,trans,alpha);
 		return;
 	}
-#endif
+//#endif
 	ptrdiff_t m, n, k, lda, ldb, ldc, k2;
 	if(trans[0]=='T'||trans[0]=='t'||trans[0]=='C'||trans[0]=='c'){
 		m=A->ny; k=A->nx;
@@ -159,7 +159,7 @@ static void X(applyAtW)(X(mat)**pAtW, const X(mat)*A, const_anyarray W_){
    for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
    thres is the threshold to truncate eigenvalues.
 */
-X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
+X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres1, R thres2){
 	if(!A) return NULL;
 	X(mat)* AtW=NULL;
 	/*Compute cc=A'*W*A */
@@ -177,7 +177,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
 		writecell(W_.c, "W_isnan");
 	}
 	/*Compute inv of cc */
-	X(svd_pow)(cc, -1, thres);/*invert the matrix using SVD. safe with small eigen values. */
+	X(svd_pow2)(cc, -1, thres1, thres2);/*invert the matrix using SVD. safe with small eigen values. */
 	X(mat)* out=NULL;
 	/*Compute (A'*W*A)*A'*W */
 	if(AtW){
@@ -188,13 +188,6 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres){
 	}
 	X(free)(cc);
 	return out;
-}
-
-/**
-   A convenient wrapper.
- */
-X(mat)* X(pinv)(const X(mat)* A, const_anyarray W){
-	return X(pinv2)(A, W, 1e-14);
 }
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
@@ -311,7 +304,7 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	}
 //#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 	if(NX(A)>500&&X(svd_ext)){
-		dbg_once("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
+		//dbg_once("Using external routine for dsvd of size %ldx%ld\n", NX(A), NY(A));
 		X(svd_ext)(U, Sdiag, VT, A);
 		return;
 	} 
@@ -429,37 +422,37 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
-void X(svd_pow)(X(mat)* A, /**<[in/out] The matrix*/
+void X(svd_pow2)(X(mat)* A, /**<[in/out] The matrix*/
 	R power, /**<[in] power of eigen values. usually -1 for inverse*/ 
-	R thres /**<[in] SVD inverse threshold*/
+	R thres1, /**<[in] SVD inverse absolute threshold*/
+	R thres2 /**<[in] SVD inverse relative threshold*/
 	){
 	if(isempty(A)) return;
-#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
-	if(NX(A)>500&&dsvd_pow_ext){
-		dbg_once("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));
-		dsvd_pow_ext(A, power, thres);
+//#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
+	if(NX(A)>500&&X(svd_pow_ext)){
+		//dbg_once("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));
+		X(svd_pow_ext)(A, power, thres1, thres2);
 		return;
 	}
-#endif
+//#endif
 	XR(mat)* Sdiag=NULL;
 	X(mat)* U=NULL;
 	X(mat)* VT=NULL;
 	X(svd)(&U, &Sdiag, &VT, A);
 
 	/*eigen values below the threshold will not be used. the first is the biggest. */
-	R maxeig=fabs(P(Sdiag,0));
-	R thres0=fabs(thres)*maxeig;
-	for(long i=0; i<Sdiag->nx; i++){
-		if(fabs(P(Sdiag,i))>thres0){/*only do with  */
-			if(thres<0){/*compare adjacent eigenvalues*/
-				thres0=P(Sdiag,i)*(-thres);
-			}
+	R maxeig=P(Sdiag,0);
+	R thres10=fabs(thres1)*maxeig;
+	R thres20=(thres2)*maxeig;
+	for(long i=0; i<NX(Sdiag); i++){
+		if((!thres1 || P(Sdiag, i)>thres10) && (!thres2 || P(Sdiag, i)>thres20)){
+			thres20=P(Sdiag,i)*(thres2);
 			P(Sdiag,i)=pow(P(Sdiag,i), power);
 		} else{
-			for(int j=i; j<Sdiag->nx; j++){
-				P(Sdiag,j)=0;
+			//dbg("cpu: crop at %ld out of %ld singular values. Values are %g %g %g %g. Thresholds are %g, %g\n", i, NX(Sdiag), maxeig, pow(P(Sdiag, i-2), 1./power),pow(P(Sdiag, i-1),1./power), P(Sdiag, i), thres1, thres2);
+			for(; i<NX(Sdiag); i++){
+				P(Sdiag,i)=0;
 			}
-			//long skipped=Sdiag->nx-i;
 			break;
 		}
 	}
@@ -516,9 +509,10 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
+X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	const_anyarray W_,    /**<[in] The weighting matrix. dense or sparse*/
-	R thres          /**<[in] SVD inverse threshold*/
+	R thres1,          /**<[in] SVD absolute inverse threshold*/
+	R thres2         /**<[in] SVD relative inverse threshold*/
 	){
 	if(!A) return NULL;
 	X(cell)* AtW=NULL;
@@ -542,7 +536,7 @@ X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	}else{
 		X(cellmm)(&ata, A, A, "tn", 1);
 	}
-	X(cellsvd_pow)(ata, -1, thres);
+	X(cellsvd_pow2)(ata, -1, thres1, thres2);
 	X(cell)* out=NULL;
 	
 	if(AtW){
@@ -559,14 +553,14 @@ X(cell)* X(cellpinv)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-void X(cellsvd_pow)(X(cell)* A, R power, R thres){
+void X(cellsvd_pow2)(X(cell)* A, R power, R thres1, R thres2){
 	if(cell_is_diag(A)){
 		for(int iy=0; iy<MIN(NX(A),NY(A)); iy++){
-			X(svd_pow)(P(A,iy,iy), power, thres);
+			X(svd_pow2)(P(A,iy,iy), power, thres1, thres2);
 		}
 	}else{
 		X(mat)* Ac=X(cell2m)(A);
-		X(svd_pow)(Ac, power, thres);
+		X(svd_pow2)(Ac, power, thres1, thres2);
 		X(2cell)(&A, Ac, NULL);
 		X(celldropzero)(A, 0);
 		X(free)(Ac);

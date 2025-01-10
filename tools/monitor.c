@@ -976,13 +976,25 @@ void handle_args(int argc, char *argv[]){
 			} else{
 				warning("Unknown options: %s\n", argv[i]);
 			}
-		} else if(isdigit((int)argv[i][0])){//port
-			extern int PORT;
-			PORT=strtol(argv[i], NULL, 10);
-		} else if(isalnum((int)argv[i][0])){//hostname
-			parse_host(argv[i]);
+		} else {
+			char *endl;
+			const char *endargi=argv[i]+strlen(argv[i]);
+			int temp=strtol(argv[i], &endl, 10);
+			if(endl==endargi){//argument is port
+				extern int PORT;
+				PORT=temp;
+			}else{
+				parse_host(argv[i]);
+			}
 		}
 	}
+	register_signal_handler(NULL);
+	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
+		error("failed to create socketpair\n");
+	}
+	socket_nopipe(sock_main[0]);
+	socket_nopipe(sock_main[1]);
+	thread_new(listen_host, GINT_TO_POINTER(sock_main[0]));//must be after parse_host
 }
 #if USE_APPLICATION
 static int
@@ -1026,13 +1038,6 @@ int main(int argc, char* argv[]){
 	}
 #endif
 	parse_icons();
-	register_signal_handler(NULL);
-	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
-		error("failed to create socketpair\n");
-	}
-	socket_nopipe(sock_main[0]);
-	socket_nopipe(sock_main[1]);
-	thread_new(listen_host, GINT_TO_POINTER(sock_main[0]));
 
 	if(!headless){
 		create_status_icon();

@@ -326,7 +326,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 		}
 	}
 	if(parms->tomo.ahst_wt>1){/*Identity weighting. */
-		ngsmod->Pngs=dcellpinv(ngsmod->Modes, wts, 1e-14);
+		ngsmod->Pngs=dcellpinv(ngsmod->Modes, wts);
 	}
 	if(parms->tomo.ahst_wt==4){
 		/*Remove 2nd order modes from the upper DM and place on ground DM with a scaling factor
@@ -343,7 +343,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 		if(parms->recon.modal){
 			mode2modal(ngsmod->Modes2, recon->amodpinv);
 		}
-		ngsmod->Pngs2=dcellpinv(ngsmod->Modes2, wts, 1e-14);
+		ngsmod->Pngs2=dcellpinv(ngsmod->Modes2, wts);
 	}
 	dcellfree(wts);
 	if(parms->save.setup){
@@ -430,7 +430,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 			}
 		}
 	}
-	dcell* RM=dcellpinv(GM2, saneai, 1e-14);
+	dcell* RM=dcellpinv(GM2, saneai);
 	dcellfree(GM2);
 	if(!pmodvalid){
 		lfree(modvalid);

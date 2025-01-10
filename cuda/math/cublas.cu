@@ -20,10 +20,9 @@
  * 
  * Wraps cuda cusparse, cusolver routines
  * */
+#include <cusolverDn.h>
 #include "cublas.h"
 #include "curmat.h"
-#include "cucmat.h"
-#include <cusolverDn.h>
 int NULL_STREAM=0;
 #if CUDA_VERSION < 10000
 static cusparseMatDescr_t spdesc=NULL;
@@ -207,6 +206,21 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 	return cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
 template<>
+cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+						  int m, int n,
+						  const float2 *A, int lda,
+						  const float2 *x, int incx,
+						  float2 *C, int ldc){
+	return cublasCdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
+}
+cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+						  int m, int n,
+						  const double2 *A, int lda,
+						  const double2 *x, int incx,
+						  double2 *C, int ldc){
+	return cublasZdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
+}
+template<>
 cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   cublasOperation_t transa, cublasOperation_t transb,
 						   int m, int n, int k,
@@ -227,4 +241,27 @@ cublasStatus_t cublasGgemm(cublasHandle_t handle,
 						   const double *beta,
 						   double *C, int ldc){
 	return cublasDgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+}
+
+template<>
+cublasStatus_t cublasGgemm(cublasHandle_t handle,
+						   cublasOperation_t transa, cublasOperation_t transb,
+						   int m, int n, int k,
+						   const float2 *alpha,
+						   const float2 *A, int lda,
+						   const float2 *B, int ldb,
+						   const float2 *beta,
+						   float2 *C, int ldc){
+	return cublasCgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+}
+template<>
+cublasStatus_t cublasGgemm(cublasHandle_t handle,
+						   cublasOperation_t transa, cublasOperation_t transb,
+						   int m, int n, int k,
+						   const double2 *alpha,
+						   const double2 *A, int lda,
+						   const double2 *B, int ldb,
+						   const double2 *beta,
+						   double2 *C, int ldc){
+	return cublasZgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }

@@ -73,7 +73,7 @@ void cusolve_muv::Forward(curcell& out, Real beta, const curcell& in, Real alpha
 	if(!out){
 		out=curcell(nx, 1, nxs, (int*)NULL);
 	} else{
-		curscale(out.M(), beta, stream);
+		Scale(out.M(), beta, stream);
 	}
 	if(M){
 		cuspmul(out.M(), M, in.M(), 1, 'n', alpha, stream);
@@ -89,10 +89,10 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 	if(!out){
 		out=curcell(ny, 1, nys, (int*)NULL);
 	} else{
-		curscale(out.M(), beta, stream);
+		Scale(out.M(), beta, stream);
 	}
 
-	curscale(out.M(), beta, stream);
+	Scale(out.M(), beta, stream);
 	if(M){
 		cuspmul(out.M(), M, in.M(), 1, 't', alpha, stream);
 	}else{

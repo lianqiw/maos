@@ -18,7 +18,7 @@
 
 #define TIMING 0
 
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "accphi.h"
 #include <curand_kernel.h>
 #include "wfs.h"
@@ -190,7 +190,7 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 			(wvf, wvf.Nx(), wvf.Ny());
 		ctoc("shift");
 		const Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
-		cucscale(wvf, otfnorm, stream);
+		Scale(wvf, otfnorm, stream);
 		ctoc("scale");
 		if(global->setupdone && global->parms->plot.run){
 			cucdraw_gpu("Ints", wvf, 1, stream, 1, "PWFS PSF", "x", "y", "wfs %d focus", pywfs->iwfs0);
@@ -304,7 +304,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	curmat grad(nsa*ng, 1);
 	curmat grad0(nsa*ng, 1);
 	cuzero(ints, stream);
-	curadd(phiout, 1, phiout0, 1, stream);
+	Add(phiout, (Real)1, phiout0, (Real)1, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev);
 	pywfs_grad(grad0, ints, cupowfs->saa(0), cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 	TIC;tic;
@@ -333,7 +333,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		CUDA_SYNC_STREAM;
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);
-		cucp(phiout, phiout0, stream);
+		Copy(phiout, phiout0, stream);
 		mapcell2loc(phiout, culocout, cumapin, pywfs->cfg->hs, pywfs->cfg->hc, displacex, displacey, 0, 0, 1, stream);
 		//cuwrite(cumapin[0].p, stream, "gpu_cumapin_%d", imod);
 		//cuwrite(phiout, stream, "gpu_phiout_%d", imod);
@@ -341,8 +341,8 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		pywfs_ints(ints, phiout, cuwfs, siglev);
 		//cuwrite(ints, stream, "gpu_ints_%d", imod);
 		pywfs_grad(grad, ints, cupowfs->saa(0), cuwfs.isum, cupowfs->pyoff, pywfs, stream);
-		curadd(grad, 1, grad0, -1, stream);
-		curscale(grad, 1./poke, stream);
+		Add(grad, (Real)1, grad0, (Real)-1, stream);
+		Scale(grad, (Real)1./poke, stream);
 		dmat* gradc=drefcols(ggd, imod, 1);
 		cp2cpu(&gradc, grad, stream);
 		if(imod%((nmod+9)/10)==0){

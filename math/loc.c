@@ -671,10 +671,9 @@ void loc_calc_ptt_stride(real* rmsout, real* coeffout,
 	if(imcc){
 		assert(imcc->nx==imcc->ny&&imcc->nx==3);
 	}else{
-		dmat *mcc=loc_mcc_ptt(loc, amp);
-		ipcc=1./P(mcc,0,0);
-		imcc=imcc_internal=dpinv(mcc, NULL);
-		dfree(mcc);
+		imcc=imcc_internal=loc_mcc_ptt(loc, amp);
+		ipcc=1./P(imcc_internal,0,0);
+		dsvd_pow(imcc_internal, -1);
 	}
 	const long nloc=loc->nloc;
 	const real* restrict locx=loc->locx;
@@ -813,10 +812,8 @@ void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, const dmat *im
 	real ptt[3];
 	dmat *imcc_internal=NULL;
 	if(!imcc){
-		dmat *mcc=loc_mcc_ptt(loc, amp);
-		imcc=imcc_internal=dpinv(mcc, NULL);//more resilient to numerical errors than invspd
-		dfree(mcc);
-		//dinvspd_inplace(imcc);
+		imcc=imcc_internal=loc_mcc_ptt(loc, amp);
+		dsvd_pow(imcc_internal, -1);//more resilient to numerical errors than invspd
 	}
 	for(int ic=0; ic<NY(opd); ic++){
 		loc_calc_ptt_stride(NULL, ptt, loc, 0, imcc, amp, PCOL(opd, ic),1);

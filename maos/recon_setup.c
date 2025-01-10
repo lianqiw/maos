@@ -258,9 +258,9 @@ setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 	cellfree(recon->PFF);
 	cellfree(recon->PTTF);
 
-	recon->PTT=dcellpinv(recon->TT, recon->saneai, 1e-14);
-	recon->PFF=dcellpinv(recon->FF, recon->saneai, 1e-14);
-	recon->PTTF=dcellpinv(recon->TTF, recon->saneai, 1e-14);
+	recon->PTT=dcellpinv(recon->TT, recon->saneai);
+	recon->PFF=dcellpinv(recon->FF, recon->saneai);
+	recon->PTTF=dcellpinv(recon->TTF, recon->saneai);
 	if(parms->save.setup){
 		writebin(recon->TTF, "TTF");
 		writebin(recon->PTT, "PTT");
@@ -897,10 +897,8 @@ setup_recon_twfs(recon_t* recon, const parms_t* parms){
 	//need to set a threshold to avoid other modes reconstruct to spherical modes.
 	
 	if(recon->GRtwfs){
-		real thres=1e-10;
-		info("RRtwfs svd threshold is %g\n", thres);
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv(recon->GRtwfs, neai, thres);
+		recon->RRtwfs=dcellpinv(recon->GRtwfs, neai);
 	}
 
 	if(parms->save.setup){

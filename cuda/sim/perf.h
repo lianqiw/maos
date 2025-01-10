@@ -18,7 +18,7 @@
 
 #ifndef AOS_CUDA_PERF_H
 #define AOS_CUDA_PERF_H
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "gpu_sim.h"
 
 /**

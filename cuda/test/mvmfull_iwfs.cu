@@ -18,7 +18,7 @@
 
 #include <unistd.h>
 #include <errno.h>
-#include "../math/math.h"
+#include "../math/cumath.h"
 #include "gpu_test.h"
 
 /**

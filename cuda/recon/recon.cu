@@ -339,12 +339,12 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			if(wfsgpu) gpu_set(wfsgpu[iwfs]);
 			stream_t stream;
 			if(wfsgpu&&wfsgpu[iwfs]!=cuglobal->recongpu){
-				cucp(temp, dm_wfs[iwfs], stream);
+				Copy(temp, dm_wfs[iwfs], stream);
 			} else{
 				temp=dm_wfs[iwfs];
 			}
 			Real g=moao_gwfs->p[iwfs];
-			curadd(cudata->dm_wfs[iwfs][0], 1-g, temp, g, stream);
+			Add(cudata->dm_wfs[iwfs][0].p, (Real)(1.-g), temp, g, stream);
 			if(!wfsgpu||(_dm_wfs&&_dm_wfs->p[iwfs])){//gpu.moao implies fit.square=1
 				cp2cpu(&_dm_wfs->p[iwfs], cudata->dm_wfs[iwfs][0], stream);
 			}
@@ -358,12 +358,12 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			stream_t stream;
 			curmat temp;
 			if(cuglobal->evlgpu&&cuglobal->evlgpu[ievl]!=cuglobal->recongpu){
-				cucp(temp, dm_evl[ievl], stream);
+				Copy(temp, dm_evl[ievl], stream);
 			} else{
 				temp=dm_evl[ievl];
 			}
 			Real g=moao_gevl->p[ievl];
-			curadd(cudata->dm_evl[ievl][0], 1-g, temp, g, stream);
+			Add(cudata->dm_evl[ievl][0].p, 1-g, temp, g, stream);
 			if(!cuglobal->evlgpu||(_dm_evl&&_dm_evl->p[ievl])){
 				cp2cpu(&_dm_evl->p[ievl], cudata->dm_evl[ievl][0], stream);
 			}
