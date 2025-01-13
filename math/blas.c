@@ -428,6 +428,7 @@ void X(svd_pow2)(X(mat)* A, /**<[in/out] The matrix*/
 	R thres2 /**<[in] SVD inverse relative threshold*/
 	){
 	if(isempty(A)) return;
+	//dbg("svd_pow: thresholds are %g, %g\n", thres1, thres2);
 //#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
 	if(NX(A)>500&&X(svd_pow_ext)){
 		//dbg_once("Using external routine for dsvd_pow of size %ldx%ld\n", NX(A), NY(A));

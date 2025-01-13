@@ -1,4 +1,4 @@
-name: Build and test maos in macos arm
+name: CI in macos
 
 on:
   push:
@@ -29,19 +29,24 @@ jobs:
         make -j4
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: maos-macos
-        path: |
-          build/config.h
-          build/config.log
-          build/bin/
-          build/test/
-          !build/test/*.bin
-          !build/test/*.fits
-          !build/test/*.o
-          !build/test/*.trs
-          !build/*/Makefile
     - name: test #put test in the end so that artifacts are uploaded even if test fails
       run: |
         cd build && make check
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: maos-macos
+        retention-days: 30
+        path: |
+          build/config.h
+          build/config.log
+          build/test/*.log
+          build/test/maos_check_*.*
+          #build/bin/
+          #build/test/
+          #!build/test/*.bin
+          #!build/test/*.fits
+          #!build/test/*.o
+          #!build/test/*.trs
+          #!build/*/Makefile
+
