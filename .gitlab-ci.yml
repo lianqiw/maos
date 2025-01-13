@@ -1,5 +1,5 @@
 #image: registry.gitlab.com/lianqiw/maos
-image: gcc:8
+image: gcc
 build:
   stage: build
   # instead of calling g++ directly you can also use some build toolkit like make

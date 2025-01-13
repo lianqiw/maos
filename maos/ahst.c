@@ -287,9 +287,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 			if(parms->powfs[ipowfs].skip!=3 
 				&&(parms->powfs[ipowfs].lo||(parms->recon.split && !parms->powfs[ipowfs].trs))){
 				for(int idm=0; idm<parms->ndm; idm++){
-					dmat *mode=dref(P(ngsmod->Modes, idm));
 					dcellmm(&P(ngsmod->GM, iwfs), P(recon->GAlo, iwfs, idm), P(ngsmod->Modes, idm), "nn", 1);
-					dfree(mode);
 				}
 			}
 		}

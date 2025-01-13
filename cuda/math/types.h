@@ -200,7 +200,7 @@ public:
 	void init(long n=0, T* pin=0, int own=1){
 		if(p){
 			if(n0==n&&p==(T *)p0&&!pin){//same data size already exists. no action.
-				dbg("Same size data already exists, no action.\n");
+				//dbg("Same size data already exists, no action.\n");
 				return;
 			}else{
 				deinit();//destroy old data
@@ -430,7 +430,7 @@ public:
 	/*virtual void Copy(const CellArray &in, cudaStream_t stream=0){
 		if(this!=&in){
 			if(!in){
-				warning("Copying from empty input, no action is taken.\n");
+				dbg("Copying from empty input, no action is taken.\n");
 			} else{
 				if(this->N()!=in.N()){
 					if(NRef()>1){
@@ -542,7 +542,7 @@ public:
 	void Copy(const NumArray<S, Dev> &in, cudaStream_t stream=0){
 		if((void*)this!=(void*)&in){
 			if(!in){
-				warning("Copying from empty input, no action.\n");
+				dbg("Copying from empty input, no action.\n");
 				this->Zero(stream);
 			} else{
 				if(this->N()!=in.N()){

@@ -1,4 +1,4 @@
-name: Build and test maos in Linux
+name: CI in Linux
 #Also updates documentation with branch gh-pages
 on:
   push:
@@ -49,19 +49,23 @@ jobs:
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
 #    - name: make distcheck
 #      run: cd build && make distcheck #make distcheck also runs make check. 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: maos-linux
-        path: |
-          build/config.h
-          build/config.log
-          build/bin/
-          build/test/
-          !build/test/*.bin
-          !build/test/*.fits
-          !build/test/*.o
-          !build/test/*.trs
-          !build/*/Makefile
     - name: test #put test in the end so that artifacts are uploaded even if test fails
       run: |
         cd build && make check
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: maos-linux
+        retention-days: 30
+        path: |
+          build/config.h
+          build/config.log
+          build/test/*.log
+          build/test/maos_check_*.*
+          #build/bin/
+          #build/test/
+          #!build/test/*.bin
+          #!build/test/*.fits
+          #!build/test/*.o
+          #!build/test/*.trs
+          #!build/*/Makefile
