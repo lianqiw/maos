@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['readme',['README',['../md__r_e_a_d_m_e.html',1,'']]],
   ['run_20simulations',['Run simulations',['../page30_run.html',1,'']]],
   ['r0',['r0',['../cn2est_8h.html#aaff2ae6180b96170c04dfe43ad373002',1,'cn2est_t::r0()'],['../turbulence_8h.html#ab7b25fe17d4339073cad47008f1039f1',1,'genatm_t::r0()'],['../parms_8h.html#a45bc0b262fccf8d0f999e883aaafcd2a',1,'atm_cfg_t::r0()'],['../parms_8h.html#a6aed0844eb8c9289898578368061557f',1,'atmr_cfg_t::r0()'],['../parms_8h.html#aa85f8c47b938f774ac7f6cd9dcaf21d6',1,'powfs_cfg_t::r0()'],['../maos_2types_8h.html#af7a5f8e50f4563cc32d002b94f551906',1,'fractal_t::r0()'],['../maos_2types_8h.html#ad29c344193be03df8d9085997bb8f128',1,'recon_t::r0()']]],
   ['r0evolve',['r0evolve',['../parms_8h.html#a0fadb367b3a04583f926edfac5ec0c41',1,'atm_cfg_t']]],

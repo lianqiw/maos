@@ -121,6 +121,7 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Development", "page90_devel.html", "page90_devel" ],
+    [ "README", "md__r_e_a_d_m_e.html", null ],
     [ "Todo List", "todo.html", null ],
     [ "Data Structures", "annotated.html", [
       [ "Data Structures", "annotated.html", "annotated_dup" ],
@@ -156,17 +157,17 @@ var NAVTREEINDEX =
 "maos_2recon_8h.html#a3f2768cd129f8ee65be72b2a4741ab91",
 "maos_2types_8h.html#a6f5dba879aea21396a811f9a7d3253bd",
 "maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95",
-"misc_8h.html#aa606bb2fcaf8c97e7428bb541dc62a8e",
-"parms_8h.html#a02fd9af1c45be163127f3d5083780798",
-"parms_8h.html#a68f83e1a2074710313580b7b171861f8",
-"parms_8h.html#ac62efa0b89a07dfaef1c6d9417e3a538",
-"process_8h.html#ab669b7d706b102f1f5cc460624f626b3",
-"sim_8h.html#a622d82c9ae0920ac6c92085f5178ae28",
-"smath_8h.html#aefc184938818d88f3953982c1c1ae292",
-"thread_8h.html#a69ae147f21aa19b9e8528cf665c8c143",
-"type_8h.html#a6d4592e46b38cadc72d36e1803852064",
-"type_8h.html#aeb4847d36e6114a213cea349d28b21ed",
-"zmath_8h.html#a93ffc9078e81536bb2ccbd3fc74c467a"
+"misc_8h.html#aa367b75c5aed883fef5befbdf04835a4",
+"parms_8h.html#a0185f3785f69c2d6ba7b7db213d21021",
+"parms_8h.html#a68b3246948f5391cf11cba0ce5245d88",
+"parms_8h.html#ac61a8d956b15cb9fdce6b860e89ef272",
+"process_8h.html#a9c4709c0dd3a1116498f55e126e39e8b",
+"sim_8h.html#a4222c173bf339c4f613587a6b5f8f73b",
+"smath_8h.html#aeee30e5c2c5f76cb95bb8f0eb895d302",
+"thread_8h.html#a662929086396591a2ce1ad15f451c4e7",
+"type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1",
+"type_8h.html#aeb40fac426ae3bc474f3edb78bef3844",
+"zmath_8h.html#a93af368d364cb2820e618f1f35931e26"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
