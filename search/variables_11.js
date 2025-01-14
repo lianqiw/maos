@@ -41,7 +41,7 @@ var searchData=
   ['sninfile',['sninfile',['../parms_8h.html#aa36290db2d198cc23e5518ca8c035cac',1,'powfs_cfg_t']]],
   ['sodium',['sodium',['../maos_2types_8h.html#a625fa37c8d1de10a5924d4f578dd84a8',1,'powfs_t']]],
   ['sodiumprep',['sodiumprep',['../maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f',1,'powfs_t']]],
-  ['split',['split',['../parms_8h.html#af88fc49a67c2a217cc65017dc2f6d125',1,'evl_cfg_t::split()'],['../parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709',1,'recon_cfg_t::split()']]],
+  ['split',['split',['../parms_8h.html#a0a35373a4ca8d2d1edc8f7787305b709',1,'recon_cfg_t']]],
   ['splitlrt',['splitlrt',['../parms_8h.html#a35ae681e33f2bebd3a0496030523a279',1,'tomo_cfg_t::splitlrt()'],['../parms_8h.html#ae4f621a7bdd9ab737eabbb4bd87bfeef',1,'lsr_cfg_t::splitlrt()']]],
   ['sprint',['sprint',['../maos_2types_8h.html#aee822f9ee67a2f166e0066db6c286491',1,'powfs_t']]],
   ['square',['square',['../parms_8h.html#a6830b5fcefee69abc31ee4b4472fdbd8',1,'tomo_cfg_t::square()'],['../parms_8h.html#a1f08e7c6607bb58fb32b5c4121b93612',1,'fit_cfg_t::square()'],['../maos_2types_8h.html#a83f9ea26cc6a08cdefd6c38bd758a1e8',1,'fdpcg_t::square()'],['../maos_2types_8h.html#ad43f78a131f1bb63dab04c5fb2a06ebe',1,'invpsd_t::square()']]],

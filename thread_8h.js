@@ -30,7 +30,6 @@ var thread_8h =
     [ "OMP_IN_PARALLEL", "thread_8h.html#a230a4715e7482e66162f3bf1a95202a2", null ],
     [ "OMP_FOR", "thread_8h.html#a82d3687cb27dfe9ee3d7ed0bd3ac2586", null ],
     [ "OMP_FOR_COLLAPSE", "thread_8h.html#af88353d51b9126028ca867788b525b89", null ],
-    [ "OMP", "thread_8h.html#a64628ba8094cc10856952ad57713c989", null ],
     [ "OMP_TASK_FOR", "thread_8h.html#a1628cee339d0340bd8ff692035f135fa", null ],
     [ "OMP_TASK_FOR_COLLAPSE", "thread_8h.html#a8effac8c329e233d5fa38ce3c90c6921", null ],
     [ "THREAD_POOL_INIT", "thread_8h.html#a69ae147f21aa19b9e8528cf665c8c143", null ],

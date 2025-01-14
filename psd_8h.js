@@ -8,12 +8,11 @@ var psd_8h =
     [ "psd_s2t", "psd_8h.html#aefc4d4a08d2182ce848ea27ac402d85e", null ],
     [ "psd_inte", "psd_8h.html#a5c5d4d001360bd0401dcf2c402ae5243", null ],
     [ "psd_inte2", "psd_8h.html#af5e87903d1bd33428905018b070ea9eb", null ],
-    [ "psd_reverse_cumu", "psd_8h.html#a79bafe8d88f0e11f9c1b7f5d0bfe16fe", null ],
     [ "psd2ts", "psd_8h.html#adebf5816143086a79768e5837eb800ae", null ],
     [ "psd2ts2", "psd_8h.html#a8d26c57efba842fb9ef4fa48d7fa9aa2", null ],
     [ "add_psd", "psd_8h.html#af7c7033580aa54cc4036bab52e0f9752", null ],
     [ "add_psd2", "psd_8h.html#a88258084783ed5748c1fa3bbe9aa8b1f", null ],
-    [ "psd_select", "psd_8h.html#a7faabb64a46fbef89a3622774091e068", null ],
+    [ "psd_sum", "psd_8h.html#a477fcfae5d98f1a042a4b11088149415", null ],
     [ "psd2d_aniso", "psd_8h.html#aa2b6995622274df67f8da20397d86b3a", null ],
     [ "psd2d", "psd_8h.html#ae338c7401af52bf2228af2e482a5daec", null ]
 ];

@@ -2,7 +2,7 @@ var readcfg_8h =
 [
     [ "format2key", "readcfg_8h.html#a0258dd21e9b70280d7b8fd9de5614c76", null ],
     [ "open_config_prefix", "readcfg_8h.html#acf12b4b509f4a89bce6b14cbe171d758", null ],
-    [ "open_config", "readcfg_8h.html#ac7f7925edc9875dac2770938ecca4d21", null ],
+    [ "open_config", "readcfg_8h.html#a89ac80e13ba1f4ecc64e1a16f0002bfb", null ],
     [ "close_config", "readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76", null ],
     [ "readcfg_peek", "readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f", null ],
     [ "readcfg_peek_n", "readcfg_8h.html#a2e922a9c36a239462733acec6cd00827", null ],

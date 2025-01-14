@@ -53,7 +53,6 @@ var searchData=
   ['plot_5fres',['plot_res',['../maos_2types_8h.html#a161f76b8a5c30480adab5d6c44657ad5',1,'sim_t']]],
   ['pmap',['pmap',['../maos_2types_8h.html#a8a4f8413be5b9f89b91d522c40cf71ef',1,'recon_t']]],
   ['pngs',['Pngs',['../maos_2types_8h.html#a3414ee3ec639f83ea2d8662a8631f61f',1,'ngsmod_t']]],
-  ['pngs2',['Pngs2',['../maos_2types_8h.html#a4b2f6641b8bdfa13a76f395bdcb27d0b',1,'ngsmod_t']]],
   ['pnk',['Pnk',['../cn2est_8h.html#a742aa5a993650df584a3c505336266d5',1,'cn2est_t']]],
   ['poke',['poke',['../pywfs_8h.html#acdb71e37bc278e2caeabf8d6defb0288',1,'pywfs_cfg_t::poke()'],['../parms_8h.html#a5c184980785a17c9ef1b72ab7e01b530',1,'recon_cfg_t::poke()']]],
   ['pos',['pos',['../parms_8h.html#a424244856d28a8a84c51b90a03ed47a8',1,'tomo_cfg_t::pos()'],['../parms_8h.html#ab5cf37cf0ca916312899709f9026926c',1,'fit_cfg_t::pos()'],['../type_8h.html#a7676822d04c6cb458674de1d134f744f',1,'locstatcol_t::pos()']]],
