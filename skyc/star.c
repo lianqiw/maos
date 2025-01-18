@@ -680,7 +680,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 					for(int isa=0; isa<nsa; isa++){
 					/*dbg("Scaling WVF isa %d iwvl %d with %g\n", isa, iwvl, P(scale,isa,iwvl)); */
 						for(long istep=0; istep<stari->nstep; istep++){
-							if(P(pwvfout[istep])){
+							if(pwvfout[istep]){
 								cscale(P(pwvfout[istep],isa,iwvl), P(scale, isa, iwvl));
 							}
 						}/*istep */

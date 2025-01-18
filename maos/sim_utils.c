@@ -1283,9 +1283,11 @@ static void init_simu_dm(sim_t* simu){
 		}
 	}
 	if(parms->recon.psd){
-		simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, P(recon->Herr, 0)->nx,
-			parms->recon.psddtrat_hi);
-		if(parms->recon.split||parms->evl.split){
+		if(parms->recon.psddtrat_hi){
+			simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, P(recon->Herr, 0)->nx,
+				parms->recon.psddtrat_hi);
+		}
+		if((parms->recon.split||parms->evl.split)&&parms->recon.psddtrat_lo){
 			simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
 		}
 	}

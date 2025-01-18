@@ -164,8 +164,7 @@ static void recon_split_lo(sim_t* simu){
 		dcellzero(simu->Merr_lo);
 
 		switch(parms->recon.split){
-		case 1:
-			if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
+		case 1:	{//Low order NGS recon.
 				dcell* tmp=0;
 				ngsmod_t* ngsmod=recon->ngsmod;
 				for(int iRngs=0; iRngs<2; iRngs++){
@@ -358,7 +357,8 @@ void recon_servo_update(sim_t* simu){
 				const real g=parms->recon.psdservo_gain;
 				const real oldep=P(simu->dmint->ep, 0);
 				P(simu->dmint->ep,0)=oldep*(1-g)+P(P(coeff,0),0)*g;
-				info("Step %5d updated HO loop gain: %5.3f->%5.3f (%ld points)\n", simu->reconisim, oldep, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
+				info("Step %5d updated HO loop gain: %5.3f->%5.3f (%ld points)\n", 
+					simu->reconisim, oldep, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
 				//if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
 				dcellfree(coeff);
 				dfree(psdol);
@@ -588,7 +588,7 @@ void* reconstruct(sim_t* simu){
 		atomic_add_fetch(&simu->wfsgrad_count,1);
 		pthread_cond_broadcast(&simu->wfsgrad_condw);
 	}
-	if(parms->recon.split){//low order reconstruction
+	if(parms->recon.split && !parms->tomo.ahst_idealngs){//low order reconstruction
 		recon_split_lo(simu);
 	}
 	if(parms->recon.psd&&parms->sim.closeloop){

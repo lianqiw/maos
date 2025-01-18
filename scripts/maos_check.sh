@@ -55,8 +55,10 @@ esac
 echo "Using $ARCH"
 if [ "$ARCH" = GPU ];then
 	REF=(${REF_GPU[@]})
+	REF2=(${REF_CPU[@]})
 else
 	REF=(${REF_CPU[@]})
+	REF2=(${REF_GPU[@]})
 fi
 fnlog=maos_check_${D}.log #log of all
 fntmp=maos_check_${D}.tmp #log of current simulation
@@ -68,7 +70,7 @@ echo $(date) > $fnlog
 #echo $(date) > $fnerr
 ans=0 #result code
 ii=0
-printf "%-20s    Res    Ref  Diff\n" "D=${D}m" | tee $fnres
+printf "%-20s    Res    Ref  Diff Diff2\n" "D=${D}m" | tee $fnres
 function run_maos(){
 	aotype=$1
 	shift
@@ -88,15 +90,14 @@ function run_maos(){
     
 	echo $aotype $* >> $fnlog
 	cat $fntmp >> $fnlog
-    b=${REF[$ii]}
-	if [ x$b = 'xerror' -o x$b = x ];then
-		b=0
-	fi
+    b=${REF[$ii]:-0}
+    b2=${REF2[$ii]:-0}
 	diff=$(echo "200*($a-$b)/($a+$b+1)" | bc)
+	diff2=$(echo "200*($a-$b2)/($a+$b2+1)" | bc)
 	if [ $diff -gt 10 -o $diff -lt -10 ];then
 		ans=$((ans+1)) #mark failure
 	fi
-	printf "%-20s %6.1f %6.1f %4d%%\n" "$aotype" "$a" "$b" "$diff" | tee -a $fnres
+	printf "%-20s %6.1f %6.1f %4d%% %4d%%\n" "$aotype" "$a" "$b" "$diff" "$diff2"| tee -a $fnres
 	ii=$((ii+1)) 
 }
 function run_maos_gpu(){

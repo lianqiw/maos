@@ -722,11 +722,13 @@ void *realloc_maos(void *p0, size_t size){
 		memkey_del(p0);
 	}
 	void *p=realloc_default(p0, size);
-	if(!p){
-		error("realloc for %ld bytes failed (%d): %s\n", size, errno, strerror(errno));
-	}
-	if(memkey_len){
-		memkey_add(p, size);
+	if(size){
+		if(!p){
+			error("realloc for %ld bytes failed (%d): %s\n", size, errno, strerror(errno));
+		}
+		if(memkey_len){
+			memkey_add(p, size);
+		}
 	}
 	if(MEM_VERBOSE){
 		info("%p %s realloc with %zu bytes\n", p, funtrace, size);

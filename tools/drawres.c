@@ -305,13 +305,7 @@ int main(int argc, char* argv[]){
 			}
 			if(!zfexist("%s", fn)) continue;
 			if(restype==1){//MAOS results.
-				dcell* ires=NULL;
-				file_t *fp=zfopen(fn,"rb");
-				if(fp){
-					ires=dcellreaddata(fp, NULL);
-					///dcellread("%s", fn);
-					zfclose(fp);
-				}
+				dcell* ires=dcellread("%s", fn);
 				if(!ires||ires->nx<3||!ires->p){
 					continue;
 				}
