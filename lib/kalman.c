@@ -820,7 +820,7 @@ void kalman_write(kalman_t* kalman, const char* format, ...){
 #define WRITE_KEY(fp, str, key)			\
 	tmp=str->key->keywords;			\
 	str->key->keywords=(char*)#key;		\
-	writedata_by_id(fp, (cell*)str->key,0, 0);	\
+	writedata(fp, (cell*)str->key, 0);	\
 	str->key->keywords=tmp;
 
 		WRITE_KEY(fp, kalman, Ad);

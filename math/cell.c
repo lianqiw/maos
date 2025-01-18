@@ -209,7 +209,9 @@ void cellfree_do(anyarray A_){
 	cell* A=A_.c;
 	if(!A) return;
 	M_ID id=A->id;
-	switch(id){
+	if(id==M_LOC){
+		locfree_do((loc_t*)A);
+	}else switch(id&0xFFFF){
 	case MCC_ANY:{
 		cell* dc=A;
 		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
@@ -243,8 +245,6 @@ void cellfree_do(anyarray A_){
 		zfree_do((zmat*)A);break;
 	case M_LONG:
 		lfree_do((lmat*)A);break;
-	case M_LOC:
-		locfree_do((loc_t*)A);break;
 	case M_DSP:
 		dspfree_do((dsp*)A);break;
 	case M_SSP:
@@ -262,66 +262,34 @@ void cellfree_do(anyarray A_){
  * ncol: 0: normal writing. -1: initialize async data. >0: async writing.
  * 	
  * */
-void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
+void writedata(file_t* fp, const_anyarray A_, long ncol){
 	const cell* A=A_.c;
 	if(fp&&ncol>0){
 		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
 		return;
 	}
-	if(A){
-		if(!id){
-			id=A->id;
-		} else if(id!=MCC_ANY){
-			M_ID id2=A->id;
-			if((id&id2)!=id&&(id&id2)!=id2){
-				warning("write as %x, data is %x, mismatch\n", id, id2);
-				id=id2;
-			}
-		}
-	} else if(!id){
-		id=MCC_ANY;//default for empty array
-	}
+	M_ID id=A?A->id:MCC_ANY;
+
 	switch(id){
+	case M_MAP:
+		map_header((map_t*)A_.map); break;
+	case M_RMAP:
+		rmap_header((rmap_t*)A_.rmap); break;
+	case M_LOC:
+		loc_header((loc_t*)A_.loc); break;
+	default:
+	}
+
+	switch(id&0xFFFF){
 	case MCC_ANY:{//write cell
-		long nx=0;
-		long ny=0;
-		if(A){
-			nx=A->nx;
-			ny=A->ny;
-		}
-		M_ID id2=0;//determine id first for non-empty cell
-		
-		if(nx&&ny){
-			for(long ix=0; ix<(nx*ny); ix++){
-				if(P(A,ix)){
-					if(!id2) id2=P(A,ix)->id;
-					else if(id2!=P(A, ix)->id){
-						warning("cell (%ld) has different id (%u) than others (%u)\n", ix, P(A,ix)->id, id2);
-					}
-				}
-			}
-			if(!id2){//empty cell
-				nx=0; ny=0;
-			}
-		}
-		if(ncol<=0){
-			header_t header={MCC_ANY, nx, ny, A?A->keywords:NULL};
+		if(ncol<=0){//not async write.
+			header_t header={MCC_ANY, A?A->nx:0, A?A->ny:0, A?A->keywords:NULL};
 			write_header(&header, fp);
 		}
-		
-		for(long ix=0; ix<(nx*ny); ix++){
-			/*int remove_header=0;
-			if(A->keywords && !P(A,ix)->keywords && zfisfits(fp)){
-				P(A,ix)->keywords=A->keywords;
-				remove_header=1;
-			}*/
-			writedata_by_id(fp, P(A,ix), id2, ncol);
-			/*if(remove_header){
-				P(A,ix)->keywords=NULL;
-			}*/
+		for(long ix=0; ix<PN(A); ix++){
+			writedata(fp, P(A,ix), ncol);
 		}
-	}
-	break;
+	}break;
 	case M_DBL:
 		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_CMP:
@@ -332,14 +300,6 @@ void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
 		zwritedata(fp, (zmat*)A, ncol);break;
 	case M_LONG:
 		lwritedata(fp, (lmat*)A, ncol);break;
-	case M_LOC:
-		locwritedata(fp, (loc_t*)A);break;
-	case M_MAP:
-		map_header((map_t*)A);
-		dwritedata(fp, (dmat*)A, ncol);break;
-	case M_RECTMAP:
-		rmap_header((rmap_t*)A);
-		dwritedata(fp, (dmat*)A, ncol);break;
 	case M_DSP:
 		dspwritedata(fp, (dsp*)A);break;
 	case M_SSP:
@@ -353,12 +313,12 @@ void writedata_by_id(file_t* fp, const_anyarray A_, M_ID id, long ncol){
 	}
 }
 
-void write_by_id(const_anyarray A, M_ID id, const char* format, ...){
+void writebin(const_anyarray A, const char* format, ...){
 	format2fn;
 	if(!fn) return;
 	file_t* fp=zfopen(fn, "wb");
 	if(!fp) return;
-	writedata_by_id(fp, A, id, 0);
+	writedata(fp, A, 0);
 	zfclose(fp);
 }
 
@@ -369,7 +329,7 @@ void writecell_async(const_anyarray A, long ncol){
 	if(ncol==0){
 		dbg("writecell_async should not be called with ncol=0.\n");
 	}else{
-		writedata_by_id(NULL, A, 0, ncol);
+		writedata(NULL, A, ncol);
 	}
 }
 /**
@@ -382,82 +342,87 @@ void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...
 		free(Ac->keywords);
 		Ac->keywords=strdup(keywords);
 	}
-	write_by_id(Ac, M_0, "%s", fn);
+	writebin(Ac, "%s", fn);
 }
-/**
- * Read basic array. Not cell. header is already read from file
- * */
-static void *readdata_mat(file_t*fp, M_ID id, header_t *header){
-	//dbg("calling readdata_mat with dimension %ldx%ld\n", header->nx, header->ny);
-	void *out;
-	if(!id) id=header->magic;
-	switch(id){
-	case M_DBL:
-		out=dreaddata(fp, header);break;
-	case M_FLT:
-		out=sreaddata(fp, header);break;
-	case M_CMP:
-		out=creaddata(fp, header);break;
-	case M_ZMP:
-		out=zreaddata(fp, header);break;
-	case M_LONG:
-		out=lreaddata(fp, header);break;
-	case M_LOC64: case M_LOC32:
-		out=locreaddata(fp, header); break;
-	case M_MAP64: case M_MAP32:
-	{
-		dmat *tmp=dreaddata(fp, header);
-		out=d2map(tmp);
-		dfree(tmp);
-	}
-	break;
-	case M_RECTMAP64: case M_RECTMAP32:
-	{
-		dmat *tmp=dreaddata(fp, header);
-		out=d2rmap(tmp);
-		dfree(tmp);
-	}
-	break;
-	case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
-		out=dspreaddata(fp, header);break;
-	case M_SSP32: case M_SSP64:
-		out=sspreaddata(fp, header);break;
-	case M_CSP32: case M_CSP64:
-		out=cspreaddata(fp, header);break;
-	case M_ZSP64: case M_ZSP32:
-		out=zspreaddata(fp, header);break;
-	default:
-		warning("data type id=%ux not supported\n", id);
-		out=NULL;
-	}
-	return out;
-}
+
 /*
-	read cell. do not scan.  header is already read from file
-	id is intended only for the fundamental data
+	Read a block which may be cell array or basic arrys. do not scan.  id is
+	intended only for the fundamental data. header is read first if header==0 or header->magic==0.
 */
-static cell *readdata_cell(file_t *fp, M_ID id, header_t *header){
+cell *readdata(file_t *fp, M_ID id, header_t *header){
+	header_t header2={0,0,0,0};
+	if(!header){//header is not yet read
+		header=&header2;
+	}
+	if(!header->magic){
+		if(read_header(header, fp)) return NULL;
+	}
+	if(!header->nx || !header->ny) return NULL;
 	long nx=header->nx;
 	long ny=header->ny;
+	cell *res=NULL;
 	//dbg("calling readdata_cell with dimension %ldx%ld\n", nx, ny);
-	cell *dcout=cellnew(nx, ny);
-	dcout->keywords=header->str; header->str=0;
-	header_t headerc={0,0,0,0};
-	int ans=0;
-	
-	for(long i=0; i<nx*ny; i++){
-		if((ans=read_header(&headerc, fp))){
-			dbg3("read_header failed:%s, err=%d, i=%ld\n", zfname(fp), ans, i);
-			break;
+	if(iscell(&header->magic)){
+		cell *dcout=cellnew(nx, ny);
+		dcout->keywords=header->str; header->str=0;
+		header_t headerc={0,0,0,0};
+		int ans=0;
+		
+		for(long i=0; i<nx*ny; i++){
+			if((ans=read_header(&headerc, fp))){
+				dbg3("read_header failed:%s, err=%d, i=%ld\n", zfname(fp), ans, i);
+				break;
+			}
+			//Avoid calling readdata_auto to avoid scan. 
+			P(dcout, i)=readdata(fp, id, &headerc);
 		}
-		//Avoid calling readdata_by_id to avoid scan. 
-		if(iscell(&headerc.magic)){
-			P(dcout, i)=readdata_cell(fp, id, &headerc);
+		res=dcout;
+	}else{
+		void *out=NULL;
+		if(id==M_LOC){
+			out=locreaddata(fp, header); 
 		}else{
-			P(dcout, i)=readdata_mat(fp, id, &headerc);
+			if(!id) id=header->magic;
+			switch(id&0xFFFF){
+			case M_DBL:
+				out=dreaddata(fp, header);break;
+			case M_FLT:
+				out=sreaddata(fp, header);break;
+			case M_CMP:
+				out=creaddata(fp, header);break;
+			case M_ZMP:
+				out=zreaddata(fp, header);break;
+			case M_LONG:
+				out=lreaddata(fp, header);break;
+			case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
+				out=dspreaddata(fp, header);break;
+			case M_SSP32: case M_SSP64:
+				out=sspreaddata(fp, header);break;
+			case M_CSP32: case M_CSP64:
+				out=cspreaddata(fp, header);break;
+			case M_ZSP64: case M_ZSP32:
+				out=zspreaddata(fp, header);break;
+			default:
+				warning("data type id=%ux not supported\n", id);
+				out=NULL;
+			}
+		}
+		switch(id){
+		case M_MAP:{
+			res=(cell*)d2map(out);
+			dfree(out);
+			out=res;
+			}break;
+		case M_RMAP:{
+			res=(cell*)d2rmap(out);
+			dfree(out);
+			out=res;
+			}break;
+		default:
+			res=(cell*)out;
 		}
 	}
-	return dcout;
+	return res;
 }
 //scan file for next set of data. first header is already read.
 static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
@@ -466,7 +431,7 @@ static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	void **tmp=mymalloc(maxlen, void *);
 	int nx=0;
 	do{
-		void *tmp2=iscell(&header->magic)?readdata_cell(fp, id, header):readdata_mat(fp, id, header);
+		void *tmp2=readdata(fp, id, header);
 		free(header->str);header->str=0;
 		if(tmp2){
 			if(nx>=maxlen){
@@ -487,7 +452,7 @@ static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	return dcout;
 }
 /**
- * Read data from file. level indicate intension, which may not match the file, in which case conversion is done.
+ * Read data from file. level indicate intention, which may not match the file, in which case conversion is done.
  * Usage: level=0: array of fundamental data. 
  * 		  level=1: cell of fundamental data. 
  * 		  level>1: cell of cell ...
@@ -497,10 +462,12 @@ static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
  * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
  * 
  * There are two cases the file may be scanned to real all data, only at the top level though
- * 1. Found array of fundamental data by level is not 0. Used to wrap mat to cell or read fits file extension
+ * 1. Found array of fundamental data but level is not 0. Used to wrap mat to cell or read fits file extension
  * 2. Found cell array with zero dimension. 
+ * 
+ * Function should be called at the top level only (right after opening file or socket)
  */
-cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
+static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 	//dbg("level=%d\n", level);
 	header_t header2={0,0,0,0};
 	if(!header){
@@ -515,15 +482,14 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	
 	if(!iscell(&header->magic)){//data is not cell
 		if(level==0||level<-1){// and no scan is desired
-			out=readdata_mat(fp, id, header);
+			out=readdata(fp, id, header);
 		}else{//want to scan or want cell array
 			out=readdata_scan(fp, id, header);
 		}
 	}else if(header->nx && header->ny){//cell with deterministic size
-		out=readdata_cell(fp, id, header);
-	}else if(!read_header(header, fp)){
+		out=readdata(fp, id, header);
+	}else if(!read_header(header, fp)){//cell with unknown size (0). scan. 
 		out=readdata_scan(fp, id, header);
-		//error("unhandled: fn=%s level=%d, magic=%x, nx=%ld, ny=%ld\n", zfname(fp), level, header->magic, (long)header->nx, (long)header->ny);
 	}
 	
 	if(level==0){//want mat, but found cell
@@ -553,26 +519,28 @@ cell* readdata_by_id(file_t* fp, M_ID id, int level, header_t* header){
 	return (cell*)out;
 }
 
-cell* read_by_id(M_ID id, int level, const char* format, ...){
+cell* readbin_id(M_ID id, int level, const char* format, ...){
 	format2fn;
 	file_t* fp;
 	if(!fn||!(fp=zfopen(fn, "rb"))){
 		dbg("Unable to read from file %s (empty).\n", fn);
 		return NULL;
 	}
-	
-	cell* out=readdata_by_id(fp, id, level, 0);
+	cell* out=readdata_auto(fp, id, level, 0);
 	zfclose(fp);
 	return out;
 }
-
+cell* readbin(const char* format, ...){
+	format2fn;
+	return readbin_id(M_0, -1, "%s", fn);
+}
 /**
    A generic routine for reading data from socket. User need to cast the result.
    We dup the fd to avoid close it after read.
  */
 cell* readsock(int sock){
 	file_t* fp=zfdopen(dup(sock));
-	cell* out=fp?readdata_by_id(fp, 0, -1, 0):NULL;
+	cell* out=fp?readdata_auto(fp, 0, -1, 0):NULL;
 	zfclose(fp);
 	return out;
 }
@@ -582,6 +550,6 @@ cell* readsock(int sock){
  */
 void writesock(const_anyarray A, int sock){
 	file_t* fp=zfdopen(dup(sock));
-	if(fp) writedata_by_id(fp, A, 0, 0);
+	if(fp) writedata(fp, A, 0);
 	zfclose(fp);
 }

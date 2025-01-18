@@ -325,7 +325,7 @@ setup_fit_matrix(fit_t* fit){
 		} else{
 			muv_direct_prep(&(fit->FL), (fit->flag.alg==2)*fit->flag.svdthres);
 			if(0){
-				writecell(fit->FL.M, "FLM");
+				writebin(fit->FL.M, "FLM");
 				writebin(fit->FL.U, "FLU");
 				writebin(fit->FL.V, "FLV");
 			}
@@ -438,11 +438,11 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 		if(fit->actextrap) writebin(fit->actextrap, "fit_actextrap");
 	}
 	if(parms->save.recon){
-		writecell(fit->FR.M, "FRM");
+		writebin(fit->FR.M, "FRM");
 		writebin(fit->FR.V, "FRV");
 		writebin(fit->FR.U, "FRU");
 
-		writecell(fit->FL.M, "FLM");
+		writebin(fit->FL.M, "FLM");
 		writebin(fit->FL.U, "FLU");
 		writebin(fit->FL.V, "FLV");
 		if(fit->FL.C){

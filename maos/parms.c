@@ -423,7 +423,7 @@ static void readcfg_powfs(parms_t *parms){
 			powfsi->order=(int)(-powfsi->dsa);
 			powfsi->dsa=parms->aper.d/powfsi->order;
 		}else if(powfsi->dsa<0){//In unit of aper.d
-			warning("powfs.dsa=[-1/order] is deprecated. Please use powfs.dsa=[-order] instead.\n");
+			//dbg("powfs.dsa=[-1/order] is deprecated. Please use powfs.dsa=[-order] instead.\n");
 			powfsi->order=ceil(-1./powfsi->dsa);
 			powfsi->dsa*=-parms->aper.d;
 		}else{
@@ -741,7 +741,7 @@ static void readcfg_wfs(parms_t *parms){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].astscale==0){
-			warning("powfs[%d].astscale=0 is ignored.\n", ipowfs);
+			dbg_once("powfs.astscale=0 is ignored.\n");
 		}
 		if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
 			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;

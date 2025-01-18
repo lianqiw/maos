@@ -184,18 +184,18 @@ static inline fcomplex cpowf(fcomplex x, fcomplex z){
 typedef float real;
 typedef fcomplex comp;
 #define M_REAL M_FLT
-#define M_LOC M_LOC32
-#define M_MAP M_MAP32
-#define M_RECTMAP M_RECTMAP32
+#define M_LOC  M_LOC32
+#define M_MAP  M_MAP32
+#define M_RMAP M_RMAP32
 #define M_COMP M_ZMP
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #else //run CPU code with double
 typedef double real;
 typedef dcomplex comp;
 #define M_REAL M_DBL
-#define M_LOC M_LOC64
-#define M_MAP M_MAP64
-#define M_RECTMAP M_RECTMAP64
+#define M_LOC  M_LOC64
+#define M_MAP  M_MAP64
+#define M_RMAP M_RMAP64
 #define M_COMP M_CMP
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif

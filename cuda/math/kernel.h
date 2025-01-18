@@ -205,9 +205,9 @@ __global__ void multimv_do(const Real* restrict mvm, Real* restrict a, const Rea
 
 template<typename T>
 __global__ void singular_pow(T *restrict S, int n, T power, int& nstop){
-	if(threadIdx.x==0 && blockIdx.x==0){
+	/*if(threadIdx.x==0 && blockIdx.x==0){
 		printf("gpu: crop at %d out of %d\n", nstop, n);
-	}
+	}*/
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
 		if(i<nstop){
 			S[i]=pow(S[i], power);

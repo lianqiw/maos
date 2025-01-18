@@ -558,7 +558,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			if(parms->plot.run&&isim%parms->plot.run==0){
 				const dmat* amp=PR(powfs[ipowfs].amp, wfsind);
 				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, amp, 0,
-					"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
+					"WFS OPD", "x (m)", "y (m)", "WFS %2d", iwfs);
 			}
 			ctoc("opd");
 			if(parms->powfs[ipowfs].type==WFS_PY){

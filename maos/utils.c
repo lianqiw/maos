@@ -524,7 +524,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			}
 		}
 	}
-	drawopd("Aperture", aper->locs, aper->amp1, 0, "Aperture Amplitude Map",
+	drawopd("Aperture", aper->locs, aper->amp1, 0, "Performance Evaluation Amplitude Map",
 		"x (m)", "y (m)", "aper");
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

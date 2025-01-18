@@ -86,75 +86,75 @@ void fft_threads(long nx, long ny);
 #define zspfree(A)     if(A){zspfree_do(A); A=NULL;}
 #define zspcellfree(A) if(A){cellfree_do(A); A=NULL;}
 
-#define mapwrite(out, A...) write_by_id(out?out:NULL, M_MAP, A)
-#define mapread(A...)    (map_t*)read_by_id(M_MAP, 0, A)
+#define mapwrite(out, A...) writebin(out, A)
+#define mapread(A...)    (map_t*)readbin_id(M_MAP, 0, A)
 
-#define mapcellread(A...) (mapcell*)read_by_id(M_MAP, 1, A)
+#define mapcellread(A...) (mapcell*)readbin_id(M_MAP, 1, A)
 #define mapcellnew (mapcell*)cellnew
 #define mapccellnew (mapccell*)cellnew
 
-#define rmapread(A...)    (rmap_t*)read_by_id(M_RECTMAP, 0, A)
-#define rmapwrite(out, A...)   write_by_id(out?out:NULL, M_RECTMAP, A)
+#define rmapread(A...)    (rmap_t*)readbin_id(M_RMAP, 0, A)
+#define rmapwrite(out, A...)   writebin(out, A)
 #define rmapcellnew  (rmapcell*)cellnew
 #define rmapccellnew (rmapccell*)cellnew
 
-#define locwrite(out, A...) write_by_id(out?out:NULL, M_LOC, A)
-#define locread(A...)    (loc_t*)read_by_id(M_LOC, 0, A)
-#define loccellread(A...) (loccell*)read_by_id(M_LOC, 1, A)
+#define locwrite(out, A...) writebin(out, A)
+#define locread(A...)    (loc_t*)readbin_id(M_LOC, 0, A)
+#define loccellread(A...) (loccell*)readbin_id(M_LOC, 1, A)
 #define loccellnew (loccell*)cellnew
 #define locccellnew (locccell*)cellnew
 /* Read needs type checking, so don't use readbin*/
 /**read a dmat*/
-#define dread(A...)    dmat_cast(read_by_id(M_REAL, 0, A))
+#define dread(A...)    dmat_cast(readbin_id(M_REAL, 0, A))
 #define dcellnew (dcell*)cellnew
 #define dccellnew (dccell*)cellnew
-#define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_REAL, 1, header))
-#define dcellread(A...) (dcell*)read_by_id(M_REAL, 1, A)
-#define dccellread(A...) (dccell*)read_by_id(M_REAL, 2, A)
-#define dcccellread(A...) (dcccell*)read_by_id(M_REAL, 3, A)
+#define dcellreaddata(fp, header) dcell_cast(readdata(fp, M_REAL, header))
+#define dcellread(A...) (dcell*)readbin_id(M_REAL, 1, A)
+#define dccellread(A...) (dccell*)readbin_id(M_REAL, 2, A)
+#define dcccellread(A...) (dcccell*)readbin_id(M_REAL, 3, A)
 /**read a smat*/
-#define sread(A...)    smat_cast(read_by_id(M_FLT, 0, A))
+#define sread(A...)    smat_cast(readbin_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
 #define sccellnew (sccell*)cellnew
-#define scellreaddata(fp, header) scell_cast(readdata_by_id(fp, M_FLT, 1, header))
-#define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
-#define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
-#define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
+#define scellreaddata(fp, header) scell_cast(readdata(fp, M_FLT, header))
+#define scellread(A...) (scell*)readbin_id(M_FLT, 1, A)
+#define sccellread(A...) (sccell*)readbin_id(M_FLT, 2, A)
+#define scccellread(A...) (scccell*)readbin_id(M_FLT, 3, A)
 /**read a cmat*/
-#define cread(A...)    cmat_cast(read_by_id(M_COMP, 0, A))
+#define cread(A...)    cmat_cast(readbin_id(M_COMP, 0, A))
 #define ccellnew (ccell*)cellnew
 #define cccellnew (cccell*)cellnew
-#define ccellreaddata(fp, header) ccell_cast(readdata_by_id(fp, M_COMP, 1, header))
-#define ccellread(A...) (ccell*)read_by_id(M_COMP, 1, A)
-#define cccellread(A...) (cccell*)read_by_id(M_COMP, 2, A)
-#define ccccellread(A...) (ccccell*)read_by_id(M_COMP, 3, A)
+#define ccellreaddata(fp, header) ccell_cast(readdata(fp, M_COMP, header))
+#define ccellread(A...) (ccell*)readbin_id(M_COMP, 1, A)
+#define cccellread(A...) (cccell*)readbin_id(M_COMP, 2, A)
+#define ccccellread(A...) (ccccell*)readbin_id(M_COMP, 3, A)
 /**read a cmat*/
-#define zread(A...)    zmat_cast(read_by_id(M_ZMP, 0, A))
+#define zread(A...)    zmat_cast(readbin_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew
 #define zccellnew (zccell*)cellnew
-#define zcellreaddata(fp, header) zcell_cast(readdata_by_id(fp, M_ZMP, 1, header))
-#define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
-#define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
-#define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
+#define zcellreaddata(fp, header) zcell_cast(readdata(fp, M_ZMP, header))
+#define zcellread(A...) (zcell*)readbin_id(M_ZMP, 1, A)
+#define zccellread(A...) (zccell*)readbin_id(M_ZMP, 2, A)
+#define zcccellread(A...) (zcccell*)readbin_id(M_ZMP, 3, A)
 /**read a lmat*/
-#define lread(A...) lmat_cast(read_by_id(M_LONG, 0, A))
+#define lread(A...) lmat_cast(readbin_id(M_LONG, 0, A))
 #define lcellnew (lcell*)cellnew
 #define lccellnew (lccell*)cellnew
-#define lcellreaddata(fp, header) lcell_cast(readdata_by_id(fp, M_LONG, 1, header))
-#define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
-#define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
-#define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
+#define lcellreaddata(fp, header) lcell_cast(readdata(fp, M_LONG, header))
+#define lcellread(A...) (lcell*)readbin_id(M_LONG, 1, A)
+#define lccellread(A...) (lccell*)readbin_id(M_LONG, 2, A)
+#define lcccellread(A...) (lcccell*)readbin_id(M_LONG, 3, A)
 
 /**read a dsp*/
-#define dspread(A...) dsp_cast(read_by_id(M_DSP, 0, A))
-#define dspcellread(A...) dspcell_cast(read_by_id(M_DSP, 1, A))
-#define sspread(A...) ssp_cast(read_by_id(M_SSP, 0, A))
-#define sspcellread(A...) sspcell_cast(read_by_id(M_SSP, 1, A))
+#define dspread(A...) dsp_cast(readbin_id(M_DSP, 0, A))
+#define dspcellread(A...) dspcell_cast(readbin_id(M_DSP, 1, A))
+#define sspread(A...) ssp_cast(readbin_id(M_SSP, 0, A))
+#define sspcellread(A...) sspcell_cast(readbin_id(M_SSP, 1, A))
 /**read a zsp*/
-#define cspread(A...) csp_cast(read_by_id(M_CSP, 0, A))
-#define cspcellread(A...) cspcell_cast(read_by_id(M_CSP, 1, A))
-#define zspread(A...) zsp_cast(read_by_id(M_ZSP, 0, A))
-#define zspcellread(A...) zspcell_cast(read_by_id(M_ZSP, 1, A))
+#define cspread(A...) csp_cast(readbin_id(M_CSP, 0, A))
+#define cspcellread(A...) cspcell_cast(readbin_id(M_CSP, 1, A))
+#define zspread(A...) zsp_cast(readbin_id(M_ZSP, 0, A))
+#define zspcellread(A...) zspcell_cast(readbin_id(M_ZSP, 1, A))
 #define dspcellnew (dspcell*)cellnew
 #define dspccellnew (dspccell*)cellnew
 #define cspcellnew (cspcell*)cellnew

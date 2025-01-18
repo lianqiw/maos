@@ -654,7 +654,7 @@ void gpu_perfevl_save(sim_t* simu){
 				cudaStream_t stream=cudata->perf_stream;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					curmat& pp=cuglobal->perf.psfcl[iwvl+nwvl*ievl];
-					if(!pp.keywords.length()){
+					if(1){//update keywords for the exposure time
 						char *tmp=evl_keywords(simu->parms, simu->aper, ievl, iwvl, isim);
 						pp.keywords=tmp;
 						free(tmp);
@@ -670,7 +670,7 @@ void gpu_perfevl_save(sim_t* simu){
 				cudaStream_t stream=cudata->perf_stream;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					curmat& pp=cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl];
-					if(!pp.keywords.length()){
+					if(1){//update keywords for the exposure time
 						char *tmp=evl_keywords(simu->parms, simu->aper, ievl, iwvl, isim);
 						pp.keywords=tmp;
 						free(tmp);

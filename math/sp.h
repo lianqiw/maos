@@ -25,7 +25,7 @@
 #endif
 #include "random.h"
 
-#define AOS_SP_DEF(X,T,R,RI)						\
+#define AOS_SP_DEF(X,T,R,RC)						\
     X(sp)* X(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;	\
     X(sp) *X(spref)(X(sp) *A) CHECK_UNUSED_RESULT;			\
     X(sp) *X(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
@@ -46,7 +46,7 @@
     X(mat) *X(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
     void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);		\
     void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T alpha);\
-    void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, R alpha); \
+    void X(spmulcreal)(T *restrict y, const X(sp) *A, const RC * restrict x, R alpha); \
     void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const T alpha); \
     void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2], const T alpha); \
     T X(spwdot)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;	\
@@ -70,6 +70,7 @@
     X(sp) *X(spcell2sp)(const X(spcell) *A) CHECK_UNUSED_RESULT;	\
     X(mat) *X(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;	\
     X(mat) *X(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;	\
+	R X(sptrace)(const X(sp) *A, R power);	\
     void X(spclean)(X(sp) *A);						\
     void X(spdroptol)(X(sp) *A, R thres);				\
     void X(spcelldroptol)(X(spcell) *A, R thres);			\

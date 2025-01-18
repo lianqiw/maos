@@ -131,7 +131,7 @@ void plot_gradoff(sim_t *simu, int iwfs){
 			draw_single=0;
 			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-				"WFS Offset", "x (m)", "y (m)", "Goff %d", iwfs);
+				"WFS Offset", "x (m)", "y (m)", "WFS %2d", iwfs);
 			draw_single=draw_single_save;
 		}
 	}
@@ -320,7 +320,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 		if(parms->plot.run&&isim%parms->plot.run==0){
 			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, amp, parms->plot.opdmax,
-				"WFS OPD", "x (m)", "y (m)", "WFS %d", iwfs);
+				"WFS OPD", "x (m)", "y (m)", "WFS %2d", iwfs);
 		}
 		if(do_geom){
 			/* Now Geometric Optics gradient calculations. if dtrat==1, we compute
@@ -910,7 +910,7 @@ void* wfsgrad_post(thread_t* info){
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
 				if(do_phy){
 					drawints("Ints", simu->powfs[ipowfs].saloc, P(simu->ints, iwfs), 0,
-						"WFS Subaperture Images", "x", "y", "wfs %d", iwfs);
+						"WFS Subaperture Images", "x", "y", "WFS %2d", iwfs);
 				}
 			}
 
@@ -1556,7 +1556,7 @@ void* wfsgrad(sim_t* simu){
 			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa,jwfs),P(simu->gradcl, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "Gcl %d", iwfs);
+				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "WFS %d", iwfs);
 		}
 	}
 	//todo: split filter_fsm to per WFS.

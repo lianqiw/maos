@@ -598,11 +598,11 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 		info("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr, nll);
 		if(parms->save.recon){
-			writecell(recon->RR.M, "tomo_RRM");
+			writebin(recon->RR.M, "tomo_RRM");
 			writebin(recon->RR.U, "tomo_RRU");
 			writebin(recon->RR.V, "tomo_RRV");
 
-			writecell(recon->RL.M, "tomo_RLM.bin");/*disable compression */
+			writebin(recon->RL.M, "tomo_RLM.bin");/*disable compression */
 			writebin(recon->RL.U, "tomo_RLU");
 			writebin(recon->RL.V, "tomo_RLV");
 		}
@@ -1363,7 +1363,7 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 		dcellfree(ecnn);
 	}
 	if(parms->save.setup){
-		writecell(recon->Herr, "psd_Herr");
+		writebin(recon->Herr, "psd_Herr");
 		writebin(eloc, "psd_eloc.bin");
 	}
 	locfree(eloc);

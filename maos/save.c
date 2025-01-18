@@ -83,7 +83,7 @@ void save_gradol(sim_t* simu){
 			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 			drawgrad("Gpol", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(simu->gradlastol,iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.opdmax,
-				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "Gpol %d", iwfs);
+				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "WFS %2d", iwfs);
 		}
 		if(simu->save->gradol[iwfs]&&(simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){
 			zfarr_push(simu->save->gradol[iwfs], simu->reconisim, P(simu->gradlastol,iwfs));
@@ -145,7 +145,7 @@ void save_recon(sim_t* simu){
 				int imoao=parms->powfs[ipowfs].moao;
 				if(imoao<0) continue;
 				drawopd("DM", P(recon->moao[imoao].aloc, 0), P(simu->dm_wfs, iwfs), parms->plot.opdmax,
-					"MOAO DM Command", "x(m)", "y(m)", "WFS %d", iwfs);
+					"MOAO DM Command", "x(m)", "y(m)", "WFS %2d", iwfs);
 			}
 		}
 		if(simu->dm_evl){

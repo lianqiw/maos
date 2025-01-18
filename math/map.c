@@ -50,6 +50,7 @@ map_t* mapnew2(map_t* A){
 	if(!check_nonempty(A)) return NULL;
 	map_t* map=mycalloc(1, map_t);
 	dinit((dmat**)&map, A->nx, A->ny);
+	map->id=M_MAP;
 	map->h=A->h;
 	map->dx=A->dx;
 	map->dy=A->dy;
@@ -306,6 +307,7 @@ rmap_t* d2rmap(const dmat* in){
 	if(!in->keywords){
 		error("this dmat has no header\n");
 	}
+	map->id=M_RMAP;
 	const char *keywords=in->keywords;
 	map->ox=search_keyword_num(keywords, "ox");
 	map->oy=search_keyword_num(keywords, "oy");
@@ -340,22 +342,23 @@ rmap_t** dcell2rmap(int* nlayer, const dcell* in){
 	convert fields to keyword string
 */
 void map_header(map_t* map){
-	if(map&&!map->keywords){
-		char keywords[1024];
-		snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
-			map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
-		map->keywords=strdup(keywords);
-	}
+	if(!map) return;
+	if(map->keywords) free(map->keywords);
+	
+	char keywords[1024];
+	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+		map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
+	map->keywords=strdup(keywords);
 }
 
 /**
  * convert fields to keyword string
 */
 void rmap_header(rmap_t* map){
-	if(map&&!map->keywords){
-		char keywords[1024];
-		snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\ntxdeg=%.15g\ntydeg=%.15g\nftel=%.15g\nfexit=%.15g\nfsurf=%.15g\n",
-			map->ox, map->oy, map->dx, map->dy, map->txdeg, map->tydeg, map->ftel, map->fexit, map->fsurf);
-		map->keywords=strdup(keywords);
-	}
+	if(!map) return;
+	if(map->keywords) free(map->keywords);
+	char keywords[1024];
+	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\ntxdeg=%.15g\ntydeg=%.15g\nftel=%.15g\nfexit=%.15g\nfsurf=%.15g\n",
+		map->ox, map->oy, map->dx, map->dy, map->txdeg, map->tydeg, map->ftel, map->fexit, map->fsurf);
+	map->keywords=strdup(keywords);
 }
