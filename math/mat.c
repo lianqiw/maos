@@ -734,7 +734,7 @@ X(cell)* X(cell_cast)(const cell* A){
 	for(long iy=0; iy<NY(A); iy++){
 		for(long ix=0; ix<NX(A); ix++){
 			if(P(A, ix, iy)&&!ismat(P(A, ix, iy))){
-				info("A(%ld,%ld) is not mat, return NULL.\n", ix, iy);
+				dbg("A(%ld,%ld) is not mat, return NULL.\n", ix, iy);
 				return NULL;
 			}
 		}
