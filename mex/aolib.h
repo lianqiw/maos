@@ -21,9 +21,9 @@
   This file is parsed by lib2mex.py. The content here does not necessarily adhere to C standard.
  */
 /*dmat* karhunen_loeve=KL_vonkarman(dmat **cov, const loc_t*loc, double L0);*/
-cell* read=read_by_id(0, -1, const char* fn);
+cell* read=readbin(const char* fn);
 cell* readsock(int sock);
-void  write=write_by_id(const cell*dc, 0, const char* fn);
+void  write=writebin(const cell*dc, const char* fn);
 void  write_header=writebin_header(const cell*dc, const char* keywords, const char* fn);
 void  writesock(const cell* dc, int sock);
 double dtrapz(const dmat* x, const dmat* y);

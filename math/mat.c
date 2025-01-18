@@ -102,7 +102,7 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out&&fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out, 0, -1);
+		writedata(out->fp, out, -1);
 		//out->async=async_init(out->fp, sizeof(T), M_T, out->keywords, P(out), out->nx, out->ny);
 	}
 	return out;
@@ -809,7 +809,7 @@ X(cell)* X(cellnew_file)(long nx, long ny, long* nnx, long* nny,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out, 0, -1);
+		writedata(out->fp, out, -1);
 	}
 	return out;
 }
@@ -826,7 +826,7 @@ X(cell)* X(cellnewsame_file)(long nx, long ny, long mx, long my,
 	if(disable_save&&!IS_SHM(fn))fn=NULL;
 	if(out && fn) {
 		out->fp=zfopen(fn, "w");
-		writedata_by_id(out->fp, out, 0, -1);
+		writedata(out->fp, out, -1);
 	}
 	return out;
 }

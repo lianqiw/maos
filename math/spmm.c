@@ -77,7 +77,7 @@ typedef struct sp_thread_t{
 /**
  * Multiply a sparse matrix with the real part of a complex vector: y=y+A*creal(x)*alpha
  */
-void X(spmulcreal)(T* restrict y, const X(sp)* A, const RI* restrict x, R alpha){
+void X(spmulcreal)(T* restrict y, const X(sp)* A, const RC* restrict x, R alpha){
 	if(A&&x&&y){
 		for(long icol=0; icol<A->ny; icol++){
 			for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){

@@ -122,19 +122,11 @@ loc_t* locref(loc_t* in){
    Create a pts with nsa, dsa, nx, dx
 */
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy){
-	pts_t* pts=mycalloc(1, pts_t);
-	pts->id=M_LOC;
-	pts->origx=mycalloc(nsa*2, real);
-	pts->origy=pts->origx+nsa;
-	pts->two=2;
-	pts->dsax=dsax;
-	pts->dsay=dsay;
-	pts->nref=mycalloc(1, unsigned int);pts->nref[0]=1;
+	pts_t* pts=myrealloc(locnew(nsa, dsax, dsay), 1, pts_t);
 	pts->nxsa=nxsa;
 	pts->nysa=nysa;
 	pts->dx=dx;
 	pts->dy=dy;
-	pts->nsa=nsa;
 	if(dx!=dy || dsax != dsay || nxsa!=nysa){
 		warning("please double check non-square grid\n");
 	}
@@ -1808,21 +1800,11 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }
-/**
-   Write the actual data to file pointer.
-*/
-void locwritedata(file_t* fp, const loc_t* loc){
-	if(!fp||!loc) return;
+
+void loc_header(loc_t *loc){
+	if(!loc) return;
+	if(loc->keywords) free(loc->keywords);
 	char str[120];
 	snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
-	header_t header={M_REAL, 0, 0, str};
-	if(loc){
-		header.nx=loc->nloc;
-		header.ny=2;
-	}
-	write_header(&header, fp);
-	if(loc){
-		zfwrite(loc->locx, sizeof(real), loc->nloc, fp);
-		zfwrite(loc->locy, sizeof(real), loc->nloc, fp);
-	}
+	loc->keywords=strdup(str);
 }

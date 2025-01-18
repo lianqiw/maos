@@ -174,7 +174,7 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres1, R thres2){
 		writebin(cc, "cc_isnan");
 		writebin(A, "A_isnan");
 		writebin(AtW, "AtW_isnan");
-		writecell(W_.c, "W_isnan");
+		writebin(W_, "W_isnan");
 	}
 	/*Compute inv of cc */
 	X(svd_pow2)(cc, -1, thres1, thres2);/*invert the matrix using SVD. safe with small eigen values. */

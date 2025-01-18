@@ -215,7 +215,6 @@ static void* maos_var(void* psock){
 	int cmd[2];
 	int sock=(int)(long)psock;
 	socket_recv_timeout(sock, 0);//make sure it blocks when no data is readable
-	file_t *fp=zfdopen(dup(sock));//duplicate socket to avoid closing it.
 	dbg("started\n");
 	while(!streadintarr(sock, cmd, 2)){
 		dbg("cmd=%d, %d\n", cmd[0], cmd[1]);
@@ -229,11 +228,10 @@ static void* maos_var(void* psock){
 				dbg("request[%d] %s %p\n", cmd[1], name, var);
 				{
 					if(cmd[1]==1){//client to get
-						writedata(fp, var);
-						int magic=M_EOD;
-						zfwrite(&magic, sizeof(uint32_t), 1, fp);
+						writesock(var, sock);
+						stwriteint(sock, M_EOD);
 					} else if(cmd[1]==2){//client to put
-						cell* newdata=readdata(fp);
+						cell* newdata=readsock(sock);
 						dcelladd(&var, 0, newdata, 1);
 					} else{
 						warning("unknown operation %d\n", cmd[1]);
@@ -262,7 +260,6 @@ static void* maos_var(void* psock){
 		}//switch
 	}//while
 	dbg("client closed\n");
-	zfclose(fp);
 	close(sock);
 	return NULL;
 }

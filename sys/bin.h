@@ -33,40 +33,41 @@
    file. The routines can also operate on .fits files.
  */
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
-typedef enum M_ID{
-  M_0      =0x0,     /*undefined*/
-	M_CSP64  =0x6400,  /*sparse complex */
-	M_DSP64  =0x6401,  /*sparse double*/
+typedef enum M_ID{//last 2 bytes
+  	M_0      =0x0,     /*undefined*/
 	M_DBL    =0x6402,  /*double */
 	M_INT64  =0x6403,  /*int 64 array */
 	M_CMP    =0x6404,  /*complex array */
 	M_INT32  =0x6405,  /*int 32 array */
-	M_CSP32  =0x6406,  /*sparse complex with 32 bit integer */
-	M_DSP32  =0x6407,  /*sparse double  with 32 bit integer*/
+	
 	M_FLT    =0x6408,  /*single precision float. */
 	M_ZMP    =0x6409,  /*single precision complex */
 	M_INT8   =0x640A,  /*int 8  array */
 	M_INT16  =0x640B,  /*int 16 array */
 
-  //From 0x6410 to 0x6424 are cell arrays that are not longer used except 0x6421
+	//From 0x6410 to 0x6424 are cell arrays that are not longer used except 0x6421
 	MCC_ANY  =0x6421,  /*cell of any thing */
 
-	M_SSP64  =0x6430,  /*single precision float + int64 */
-	M_SSP32  =0x6431,  /*single precision float + int32 */
-	M_ZSP64  =0x6432,  /*single precision complex + int64 */
-	M_ZSP32  =0x6433,  /*single precision complex + int32 */
+	M_CSP64  =0x6400,  /*sparse double precision complex with int64 index*/
+	M_DSP64  =0x6401,  /*sparse double precision float   with int64 index*/
+	M_CSP32  =0x6406,  /*sparse double precision complex with int32 index*/
+	M_DSP32  =0x6407,  /*sparse double precision float   with int32 index*/
+	M_ZSP64  =0x6432,  /*sparse single precision complex with int64 index*/
+	M_SSP64  =0x6430,  /*sparse single precision float   with int64 index*/
+	M_ZSP32  =0x6433,  /*sparse single precision complex with int32 index*/
+	M_SSP32  =0x6431,  /*sparse single precision float   with int32 index*/
 
 	M_COMMENT=0x6500,  /*data comments. */
 	M_SKIP   =0x6600,   /*the padding of magic number. */
 
-	M_MAP32     =0x016408, /*map_t, compatible with M_FLT*/
-  M_RECTMAP32 =0x026408, /*map_t, compatible with M_FLT*/
-  M_LOC32     =0x036408, /*loc_t with float data*/
+	M_MAP32  =0x016408, /*map_t, compatible with M_FLT*/
+  	M_RMAP32 =0x026408, /*map_t, compatible with M_FLT*/
+  	M_LOC32  =0x036408, /*loc_t with float data*/
 
-  M_MAP64     =0x016402, /*map_t, compatible with M_DBL*/
-  M_RECTMAP64 =0x026402, /*map_t, compatible with M_DBL*/
-  M_LOC64     =0x036402, /*loc_t with double data*/
-  M_EOD       =0x64FF    /*Indicate end of valid data */
+  	M_MAP64  =0x016402, /*map_t, compatible with M_DBL*/
+  	M_RMAP64 =0x026402, /*map_t, compatible with M_DBL*/
+  	M_LOC64  =0x036402, /*loc_t with double data*/
+  	M_EOD    =0x64FF    /*Indicate end of valid data */
 }M_ID;
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32

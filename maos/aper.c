@@ -51,7 +51,7 @@ aper_t* setup_aper(const parms_t* const parms){
 			}
 		}
 		if(parms->aper.rot){
-			warning("Pupil is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+			info("Pupil is rotated by %g deg\n", parms->aper.rot*180./M_PI);
 			dmaprot(aper->ampground, parms->aper.rot);
 		}
 	}
@@ -91,7 +91,7 @@ aper_t* setup_aper(const parms_t* const parms){
 			//aper.miserg is between the telescope pupil and the pupil mask in the instrument.
 			info("Loaded pupil mask from %s\n", parms->aper.pupmask);
 		 	if(parms->aper.rot){
-				warning("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+				dbg("Pupil mask is rotated by %g deg\n", parms->aper.rot*180./M_PI);
 				dmaprot(mask, parms->aper.rot);
 			}
 			dmat* ampmask=dnew(aper->locs->nloc, 1);

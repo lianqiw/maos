@@ -83,11 +83,11 @@ void zfarr_push(zfarr* ca, int i, const_anyarray A_){
 		}
 	}
 	while(i>0 && ca->cur<i && ca->tot){//fill blank
-		writedata_by_id(ca->fp, 0, ca->id, 0);
+		writedata(ca->fp, 0, 0);
 		ca->cur++;
 	}
 	if(A || ca->tot){
-		writedata_by_id(ca->fp, A, ca->id, 0);
+		writedata(ca->fp, A, 0);
 		ca->cur++;
 	}
 }

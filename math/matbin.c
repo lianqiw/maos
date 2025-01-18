@@ -35,6 +35,8 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 			}else{
 				dbg("%s: async is already initialized or A=%p is empty\n", zfname(fp), A);
 			}
+		}else{
+			dbg("Invalid usage: when ncol==-1, A should not be null.\n");
 		}
 	}else if(A && ncol>0 && A->async){//write async data
 		long nx=A->nx;

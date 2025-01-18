@@ -96,7 +96,7 @@
 #if !defined(COMP_SINGLE) && CPU_SINGLE == 0
 #define R double
 #define RD double
-#define RI dcomplex
+#define RC dcomplex
 #define FFTW(A) fftw_##A
 
 /*Double Real*/
@@ -140,7 +140,7 @@
 /*Single Precision*/
 #define R float
 #define RD double
-#define RI fcomplex
+#define RC fcomplex
 #define FFTW(A) fftwf_##A
 /*Float */
 #ifndef COMP_COMPLEX
@@ -210,7 +210,7 @@ static inline int issp(const void* id){
 #define ABS2(A) REAL((A)*CONJ(A))
 
 static inline int ismat(const void* id){
-	return id?(*((const M_ID*)id)&M_T)==M_T:0;
+	return id?(*(const uint16_t*)id==M_T):0;
 }
 //Check that A is valid and has mat type and has non zero size.
 #define check_mat1(A) ((A)?(check(ismat(A))?1:(error("type id mismatch, got %x, expect %x\n", *(M_ID*)A, M_T),0)):0)

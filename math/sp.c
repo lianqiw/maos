@@ -52,7 +52,7 @@ static void X(spfree_content)(X(sp)* sp){
 	if(!sp) return;
 	assert(issp(sp));
 	if(sp->fp){
-		writedata_by_id(sp->fp, sp, 0, 0);
+		writedata(sp->fp, sp, 0);
 		zfclose(sp->fp);
 		sp->fp=NULL;
 	}
@@ -845,6 +845,27 @@ X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 		error("Invalid\n");
 	}
 	return v;
+}
+/**
+ * @brief Compute the sum of diagonal items (trace) with power.
+ * 
+ */
+R X(sptrace)(const X(sp)*A, R power){
+	if(!A) return 0;
+	assert_sp(A);
+	R sum=0;
+	for(int icol=0; icol<A->ny; icol++){
+		for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
+			if(A->pi[irow]==icol && A->px[irow]!=0){
+#ifdef COMP_COMPLEX				
+				sum+=pow(ABS2(A->px[irow]), power*0.5);
+#else
+				sum+=pow(A->px[irow], power);
+#endif				
+			}
+		}
+	}
+	return sum;
 }
 /**
    Clean up a sparse array by dropping zeros*/

@@ -89,12 +89,9 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 }
 /**
    Create loc/amp that can be used to build GP. It has points on edge of
-   subapertures which is different from powfs.lo. The amplitude depends on the
+   subapertures which is different from powfs.loc. The amplitude depends on the
    distortion as we assume that the distortion can be extracted from dm to wfs
    interaction matrix calibration.
-
-   gloc and the rotated version are centered around misregx and misregy so mkamp does not use misreg.
-   the returned gloc is defined at the WFS reference frame
 */
 
 void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
@@ -610,11 +607,11 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t *aper, const p
 			const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
 			int share_gp=NX(powfs[ipowfs].amp)==1;
 			/*
-				During tomography operation, raytracing to ploc handles shift,
-				an rotation step handles clocking. Higher order distortion is
-				ignored. GP maps from ploc to saloc with no misregistration
-				needed. This mimimizes non-zeros in GP and enables matrix free
-				approach in the GPU.
+				During tomography operation, raytracing to ploc handles shift, a
+				rotation step handles clocking. Higher order distortion is
+				ignored. GP maps from ploc to saloc with no misregistration.
+				This mimimizes non-zeros in GP and enables matrix free approach
+				in the GPU.
 			*/
 	OMP_FOR(parms->powfs[ipowfs].nwfsr) 
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
@@ -938,25 +935,25 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
 	const int zradonly=parms->recon.twfs_radonly;
 	dbg("twfs mode is %s from order %d to %d on %d layers.\n", zradonly?"radial":"all modes", rmin, rmax, nlayer);
-	for(int ilayer=0; ilayer<nlayer; ilayer++){
-		const loc_t* loc=P(recon->aloc, ilayer);
+	for(int idm=0; idm<nlayer; idm++){
+		const loc_t* loc=P(recon->aloc, idm);
 		int rmin2=rmin;
-		if(ilayer>0 && rmin2<3){//don't place those on upper layer.
+		if(idm>0 && rmin2<3){//don't place those on upper layer.
 			rmin2=3;
 		}
 		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
 		dmat* opd=zernike(loc, -parms->aper.d, rmin2, rmax, zradonly);
 		if(parms->recon.modal){
 			dmat *opd2=NULL;
-			dcellmm(&opd2, P(recon->amodpinv, ilayer, ilayer), opd, "nn", 1);
+			dcellmm(&opd2, P(recon->amodpinv, idm, idm), opd, "nn", 1);
 			dfree(opd); opd=opd2;
 		}
 		OMP_FOR(8)
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
-				if(P(recon->GA, iwfs, ilayer)){
-					dcellmm(&P(recon->GRall, iwfs, ilayer), P(recon->GA, iwfs, ilayer), opd, "nn", 1);
+				if(P(recon->GA, iwfs, idm)){
+					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfs, idm), opd, "nn", 1);
 				}else{
 					error("Please implement without GA\n");
 				}

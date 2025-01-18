@@ -151,15 +151,15 @@ static void print_key(const void* key, VISIT which, int level){
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
 				if(!store->priority||PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
-					warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+					warning("%s is not recognized, value is %s\n", store->key, store->data);
 				} else{
-					error("key \"%s\" is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
+					error("%s is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
 			} else if(store->flag>1){
 				if(PERMISSIVE){
-					warning("Key %s is used %d times\n", store->key, store->flag);
+					warning("%s is used %d times\n", store->key, store->flag);
 				} else{
-					error("Key %s is used %d times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->flag);
+					error("%s is used %d times. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->flag);
 				}
 			}
 		}
@@ -230,6 +230,7 @@ static void open_config_full(
 				error("Cannot open file %s for reading.\n", config_in);
 			}else{
 				warning("Cannot open file %s for reading. Ignored (prefix=%s)\n", config_in, prefix);
+				return;
 			}
 		}
 		config_dir=mydirname(config_file);
@@ -438,7 +439,7 @@ static void open_config_full(
 							entryfind=NULL;
 						}
 					}else{
-						warning("%s is no longer needed. %s\n", store->key, oldstore->data?oldstore->data:"");
+						warning("%s is no longer needed %s.\n", store->key, oldstore->data?oldstore->data:"");
 						free(store->key); store->key=NULL;
 						entryfind=NULL;
 					}
@@ -544,9 +545,9 @@ static const STORE_T* getrecord(char* key, int mark){
 	if((found=tfind(&store, &MROOT, key_cmp))){
 		if(mark>0){
 			if((*(STORE_T**)found)->flag>0){
-				error("This record %s is already read.\n", key);
+				error("%s is already used.\n", key);
 			} else if((*(STORE_T **)found)->flag<0){
-				error("This record %s should not be read.\n", key);//it is a change record.
+				error("%s should not be used.\n", key);//it is a change record.
 			}
 			(*(STORE_T**)found)->flag=1;
 			nused++;
@@ -560,7 +561,7 @@ static const STORE_T* getrecord(char* key, int mark){
 			return refed;
 		}
 	} else if(mark){
-		warning("Record %s not found\n", key);
+		warning("%s not found\n", key);
 	}
 	return found?(*(STORE_T**)found):0;
 }
@@ -651,7 +652,7 @@ lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	int nx, ny;
 	char *data;
 	if(!(data=getrecord_data(key, 1))){
-		warning("Record for %s not found, assume 0.\n", key);
+		//warning("%s not found, assume 0.\n", key);
 		return NULL;
 	}
 	readstr_numarr((void**)&val, &nx, &ny, n, relax, M_LONG, key, data);
@@ -742,7 +743,7 @@ int readcfg_int(const char* format, ...){
 	char* endstr;
 	real ans=0;
 	if(!(val=getrecord_data(key, 1))){
-		warning("Record for %s not found, assume 0.\n", key);
+		//warning("%s not found, assume 0.\n", key);
 		ans=0;
 	}else if(isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
@@ -758,7 +759,7 @@ real readcfg_dbl(const char* format, ...){
 	char *endstr;
 	real ans=0;
 	if(!(data=getrecord_data(key, 1))){
-		warning("Record for %s not found, assume 0.\n", key);
+		//warning("%s not found, assume 0.\n", key);
 		ans=0;
 	}else if(isnan(ans=readstr_num(key, data, &endstr))||endstr[0]!='\0'){
 		error("Invalid data: %s=%s\n", key, data);

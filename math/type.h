@@ -47,12 +47,12 @@ typedef enum CEMBED{
   partition. */
 
 #define ARR(T)								                \
-    M_ID id;   /**< to identify the array type.*/	        \
-    T *restrict p; /**<The data pointer*/				    \
-    long nx;       /**< number of rows */				    \
-    long ny;       /**< number of columns */				\
-    char *keywords;/**<The keywords as a string*/			\
-    file_t *fp;    /**<Opened file to be saved to*/         \
+    M_ID id;        /**<to identify the array type.*/	    \
+    T *restrict p; 	/**<The data pointer*/				    \
+    long nx;       	/**<number of rows */				    \
+    long ny;       	/**<number of columns */				\
+    char *keywords;	/**<The keywords as a string*/			\
+    file_t *fp;    	/**<Opened file to be saved to*/        \
     struct fft_t* fft /**<For FFT plan*/
 
 
@@ -508,7 +508,7 @@ static inline long index_col(long iy, long nx, long ny){
 #define PR2(A,ix,iy) P2((A), ((A)->nx==1?0:ix), ((A)->ny==1?0:iy))
 #define PR(...) P_GET3(_0,__VA_ARGS__,PR2,PR1,P0)(__VA_ARGS__)
 #define PCOLR(A,iy) PCOL((A),((A)->ny==1?0:iy))
-
+#define PRR(A,...)	((A)?(PR(A,__VA_ARGS__)):0) //return 0 if A is NULL
 //Return Number of elements
 #define PN0(A)       ((A)?((A)->nx*(A)->ny):0)
 #define NX0(A)       ((A)?(A)->nx:0)

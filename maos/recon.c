@@ -165,65 +165,65 @@ static void recon_split_lo(sim_t* simu){
 
 		switch(parms->recon.split){
 		case 1:	{//Low order NGS recon.
-				dcell* tmp=0;
-				ngsmod_t* ngsmod=recon->ngsmod;
-				for(int iRngs=0; iRngs<2; iRngs++){
-					//For multi-rate control, iRngs=0 is slower loop and iRngs=1 is the faster loop
-					if(!enRngs[iRngs]) continue;
-					dcell** merr;//reconstruction output
-					if((ngsmod->lp2>=0&&iRngs==1)||(ngsmod->lp2<0&&iRngs==0)){
-						merr=&tmp; //output to separate array to handle LPF or TWFS
-						dcellzero(tmp);
-					} else{
-						merr=&simu->Merr_lo;
-					}
-					dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
-					//dshow(P(*merr,0), "merr");
-					if(iRngs==0){
-						dcellscale(*merr, parms->dbg.eploscale);
-					}
-					if(iRngs==1&&ngsmod->lp2>=0){ //Do LHF on measurements
-						if(ngsmod->lp2>0){//HPF
-							real* valpf=P(P(simu->Merr_lo2,0));
-							real* val=P(P(tmp,0));
-							for(int imod=0; imod<ngsmod->nmod; imod++){
-								if(imod==ngsmod->indfocus){//there is no need to blend focus.
-									continue;
-								}
-								valpf[imod]=valpf[imod]*(1.-ngsmod->lp2)+val[imod]*ngsmod->lp2;
-								val[imod]-=valpf[imod];
-							}
-						}
-						if(ngsmod->lp2>0||(ngsmod->lp2==0&&!enRngs[0])){
-							dcelladd(&simu->Merr_lo, 1, tmp, 1);
-						}
-					} else if(ngsmod->lp2<0){//Use slower as Truth WFS mode by mode
+			dcell* tmp=0;
+			ngsmod_t* ngsmod=recon->ngsmod;
+			for(int iRngs=0; iRngs<2; iRngs++){
+				//For multi-rate control, iRngs=0 is slower loop and iRngs=1 is the faster loop
+				if(!enRngs[iRngs]) continue;
+				dcell** merr;//reconstruction output
+				if((ngsmod->lp2>=0&&iRngs==1)||(ngsmod->lp2<0&&iRngs==0)){
+					merr=&tmp; //output to separate array to handle LPF or TWFS
+					dcellzero(tmp);
+				} else{
+					merr=&simu->Merr_lo;
+				}
+				dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
+				//dshow(P(*merr,0), "merr");
+				if(iRngs==0){
+					dcellscale(*merr, parms->dbg.eploscale);
+				}
+				if(iRngs==1&&ngsmod->lp2>=0){ //Do LHF on measurements
+					if(ngsmod->lp2>0){//HPF
+						real* valpf=P(P(simu->Merr_lo2,0));
+						real* val=P(P(tmp,0));
 						for(int imod=0; imod<ngsmod->nmod; imod++){
-							if(P(ngsmod->modvalid, imod)){//Modes that has multi-rates
-								if(iRngs==0){//Accumulate Truth mode offset
-									P(P(simu->Merr_lo2,0),imod)+=P(P(tmp,0),imod)*(0.5/parms->dbg.eploscale);
-								} else{//Apply truth mode offset.
-									P(P(simu->Merr_lo,0),imod)+=P(P(simu->Merr_lo2,0),imod);
-								}
-							} else if(iRngs==0){//direct output. Avoid real integrator as above.
-								P(P(simu->Merr_lo,0),imod)=P(P(tmp,0),imod);
+							if(imod==ngsmod->indfocus){//there is no need to blend focus.
+								continue;
 							}
+							valpf[imod]=valpf[imod]*(1.-ngsmod->lp2)+val[imod]*ngsmod->lp2;
+							val[imod]-=valpf[imod];
 						}
 					}
-					//dshow(P(*merr, 0), "merr");
-				}//for iRngs
-				dcellfree(tmp);
-
-				if(parms->sim.mffocus&&ngsmod->indfocus&&parms->sim.lpfocushi<1){ //Do LPF on focus.
-					const real lpfocus=parms->sim.lpfocuslo;
-					real ngsfocus=P(P(simu->Merr_lo,0),ngsmod->indfocus);
-					if(ngsfocus){//there is output
-						simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-						P(P(simu->Merr_lo,0),ngsmod->indfocus)=simu->ngsfocuslpf;
+					if(ngsmod->lp2>0||(ngsmod->lp2==0&&!enRngs[0])){
+						dcelladd(&simu->Merr_lo, 1, tmp, 1);
+					}
+				} else if(ngsmod->lp2<0){//Use slower as Truth WFS mode by mode
+					for(int imod=0; imod<ngsmod->nmod; imod++){
+						if(P(ngsmod->modvalid, imod)){//Modes that has multi-rates
+							if(iRngs==0){//Accumulate Truth mode offset
+								P(P(simu->Merr_lo2,0),imod)+=P(P(tmp,0),imod)*(0.5/parms->dbg.eploscale);
+							} else{//Apply truth mode offset.
+								P(P(simu->Merr_lo,0),imod)+=P(P(simu->Merr_lo2,0),imod);
+							}
+						} else if(iRngs==0){//direct output. Avoid real integrator as above.
+							P(P(simu->Merr_lo,0),imod)=P(P(tmp,0),imod);
+						}
 					}
 				}
-			}//else: there is ideal NGS correction done in perfevl. 
-			break;
+				//dshow(P(*merr, 0), "merr");
+			}//for iRngs
+			dcellfree(tmp);
+
+			if(parms->sim.mffocus&&ngsmod->indfocus&&parms->sim.lpfocushi<1){ //Do LPF on focus.
+				const real lpfocus=parms->sim.lpfocuslo;
+				real ngsfocus=P(P(simu->Merr_lo,0),ngsmod->indfocus);
+				if(ngsfocus){//there is output
+					simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
+					P(P(simu->Merr_lo,0),ngsmod->indfocus)=simu->ngsfocuslpf;
+				}
+			}
+		}//else: there is ideal NGS correction done in perfevl. 
+		break;
 		case 2:{
 			/*A separate integrator for low order is required. Use it to form error signal*/
 			dcelladd(&simu->gradlastol, 1, simu->gngsmvst, -1);
@@ -244,7 +244,7 @@ static void recon_split_lo(sim_t* simu){
 				dcellfree(tmp);
 			}
 		}
-			  break;
+		break;
 		default:
 			error("Invalid parms->recon.split: %d\n", parms->recon.split);
 		}

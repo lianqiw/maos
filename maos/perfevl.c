@@ -565,7 +565,7 @@ static void perfevl_mean(sim_t* simu){
 }
 /**
    Save telemetry.
-   2015-08-19: Changed psfmean to non-cumulative average.
+   PSFs are cumulatively averaged.
 */
 static void perfevl_save(sim_t* simu){
 	const parms_t* parms=simu->parms;
