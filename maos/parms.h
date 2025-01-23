@@ -766,6 +766,7 @@ typedef struct load_cfg_t{
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
     char *ncpa;      /**<Load ncpa from this path. saved by save.ncpa*/
+	char *saneai;    /**<load subaperture NEA inverse from file for wavefront reconstruction */
 }load_cfg_t;
 /**
    contains input parameters for saving variables.

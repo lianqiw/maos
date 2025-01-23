@@ -62,9 +62,26 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 	dspcell* saneai=recon->saneai=dspcellnew(nwfs, nwfs);//The inverse of sanea
 	dfree(recon->neam);
 	recon->neam=dnew(parms->nwfsr, 1);
-	real neam_hi=0;
-	int count_hi=0;
-	info2("Recon NEA: ");
+	if(parms->load.saneai){//load from file.
+		recon->saneai=dspcellread("%s", parms->load.saneai);
+		int mismatch=0;
+		if(NX(recon->saneai)!=parms->nwfs){
+			mismatch=1;
+		}else{
+			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+				const int ipowfs=parms->wfsr[iwfs].powfs;
+				const int nsa=powfs[ipowfs].saloc->nloc;
+				if(NX(recon->saneai, iwfs, iwfs)!=nsa*2){
+					mismatch=1;
+				}
+				real avg=dsptrace(P(recon->saneai, iwfs, iwfs), -1)/(2*nsa);
+				P(recon->neam, iwfs)=sqrt(avg);
+			}
+		}
+		if(mismatch){
+			error("load.saneai has wrong dimensions\n");
+		}
+	}else{//compute
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
 		const int nsa=powfs[ipowfs].saloc->nloc;
@@ -180,7 +197,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				nea_inv(&sanea0i, sanea0, ng, TOMOSCALE);//without TOMOSCALE, it overflows in float mode
 				
 				real nea_mean=sqrt(nea2_sum/nea2_count);
-				P(recon->neam,iwfs)=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
+				P(recon->neam,iwfs)=nea_mean/sqrt(TOMOSCALE);//saneai is scaled by TOMOSALE. 
 				if(nea_mean>neathres
 					&&parms->powfs[ipowfs].usephy
 					&&parms->powfs[ipowfs].order<=2
@@ -205,17 +222,13 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				P(recon->neam,iwfs)=P(recon->neam,iwfs0);
 			}
 			lfree(samask);
-
-			if(!parms->powfs[ipowfs].lo){
-				neam_hi+=pow(P(recon->neam,iwfs), 2);
-				count_hi++;
-			}
 		}/*iwfs*/
 		dcellfree(saneac);
 	}/*ipowfs */
-
-	recon->neamhi=sqrt(neam_hi/count_hi);
-	
+	}
+	info2("Recon NEA: ");
+	real neam_hi=0;
+	int count_hi=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
@@ -237,14 +250,19 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 			} else{
 				neatype="geom";
 			}
-			info2("%s(%.2f) ", neatype, P(recon->neam,iwfs)*RAD2MAS*(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE)));
+			info2("%s(%.2f) ", neatype, P(recon->neam,iwfs)*RAD2MAS*sqrt(TOMOSCALE));
+			if(!parms->powfs[ipowfs].lo){
+				neam_hi+=pow(P(recon->neam,iwfs), 2);
+				count_hi++;
 		}
 	}
+	}
+	recon->neamhi=sqrt(neam_hi/count_hi);
 	info2(" mas\n");
 	if(parms->save.setup){
-		writebin(recon->sanea, "sanea");
-		writebin(recon->saneai, "saneai");
-		writebin(recon->saneal, "saneal");
+		//writebin(recon->sanea, "sanea");//used for mvst
+		writebin(recon->saneai, "saneai");//used for reconstruction
+		//writebin(recon->saneal, "saneal");//used for ecnn
 	}
 }
 

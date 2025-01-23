@@ -171,6 +171,7 @@ void free_parms(parms_t *parms){
 	free(parms->load.mvmi);
 	free(parms->load.mvmf);
 	free(parms->load.ncpa);
+	free(parms->load.saneai);
 	free(parms->fdlock);
 	free(parms->fnlock);
 	lfree(parms->hipowfs);
@@ -1856,6 +1857,7 @@ static void readcfg_load(parms_t *parms){
 	READ_INT(load.fit);
 	READ_INT(load.W);
 	READ_STR(load.ncpa);
+	READ_STR(load.saneai);
 }
 /**
    Scaling necessary values for non-zero zenith angle (za).
