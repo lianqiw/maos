@@ -752,6 +752,5 @@ typedef struct global_t{
     int iseed;
     int setupdone;
 }global_t;
-void wait_dmreal(sim_t*simu, int isim);
-void post_dmreal(sim_t *simu);
+
 #endif

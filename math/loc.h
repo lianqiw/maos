@@ -115,4 +115,5 @@ void loc_dxdy(loc_t* loc);
 loc_t* d2loc(const dmat* A);
 loc_t* locreaddata(file_t* fp, header_t* header);
 void loc_header(loc_t *loc);
+lmat* loc_coord2ind(loc_t *aloc, dmat *dead);
 #endif

@@ -49,7 +49,7 @@
 #define TIM1
 #endif
 /**
-   Propagate atm onto WFS subaperture grid, and then to fine lenslet grid.
+   Propagate only controllable component of turbulence to WFS.
 */
 void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const parms_t* parms=simu->parms;
@@ -61,6 +61,7 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const real misregy=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0;
 	//hc is only useful for multi-sublayer raytracing
 	if(parms->sim.wfsalias==2||parms->sim.idealwfs==2){
+		//project turbulence onto lenslet array grid (per direction ideal)
 		loc_t* aloc=P(powfs[ipowfs].fit[wfsind].aloc, 0);
 		dcell* wfsopd=dcellnew(1, 1); P(wfsopd, 0)=dnew(aloc->nloc, 1);
 		fit_t* fit=&powfs[ipowfs].fit[wfsind];
@@ -72,6 +73,7 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 		prop_nongrid(aloc, P(P(wfsopd, 0)), loc, P(opd), alpha, misregx, misregy, 1, 0, 0);
 		dcellfree(wfsopd);
 	} else{
+		//project tubulence onto DM grid (global ideal)
 		for(int idm=0; idm<parms->ndm; idm++){
 			loc_t* loc=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
@@ -114,25 +116,6 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 		if(simu->save->ltpm_real){
 			P(P(simu->save->ltpm_real, ipowfs), 0,isim)=P(P(simu->ltpm_real, ipowfs), 0, illt);
 			P(P(simu->save->ltpm_real, ipowfs), 1,isim)=P(P(simu->ltpm_real, ipowfs), 1, illt);
-		}
-	}
-}
-void plot_gradoff(sim_t *simu, int iwfs){
-	const parms_t *parms=simu->parms;
-	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
-		if(iwfs<0){
-			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
-				plot_gradoff(simu, iwfs);
-			}
-		}else{
-			int ipowfs=parms->wfs[iwfs].powfs;
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-			int draw_single_save=draw_single;
-			draw_single=0;
-			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),
-				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-				"WFS Offset", "x (m)", "y (m)", "WFS %2d", iwfs);
-			draw_single=draw_single_save;
 		}
 	}
 }
@@ -296,7 +279,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 		if(parms->powfs[ipowfs].skip&&parms->tomo.ahst_idealngs==1){
 			//apply ideal NGS modes to NGS WFS
-			ngsmod2science(opd, powfs[ipowfs].loc, recon->ngsmod,
+			ngsmod_opd(opd, powfs[ipowfs].loc, recon->ngsmod,
 				parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
 				PCOL(simu->cleNGSm, isim), -1);
 		}
@@ -1278,7 +1261,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					}
 				}
 
-				if(!parms->powfs[ipowfs].lo&&parms->recon.alg==0){//no need to update LSR.
+				if(!parms->powfs[ipowfs].lo&&parms->recon.alg==RECON_MVR){//no need to update LSR.
 					simu->tomo_update=2;
 				}
 				if(parms->powfs[ipowfs].dither_gdrift>0&&parms->powfs[ipowfs].dither==1){

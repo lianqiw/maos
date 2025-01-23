@@ -23,7 +23,7 @@ void TomoR(dcell **xout, const void *A,
     const recon_t *recon=(const recon_t *)A;
     dcell *x2=NULL;
     dcellcp(&x2, xin);
-    TTFR(x2, recon->TTF, recon->PTTF);
+    remove_mode(x2, recon->TTF, recon->PTTF);
     dcell *x3=NULL;
     dspcellmulmat_thread(&x3,recon->saneai, x2, 1,recon->nthread);
     sptcellmulmat_thread(xout,recon->G0tomo,x3,alpha,recon->nthread);
@@ -36,7 +36,7 @@ void TomoL(dcell **xout, const void *A,
     const recon_t *recon=(const recon_t *)A;
     dcell *gg=NULL;
     dspcellmulmat_thread(&gg, recon->G0tomo, xin, 1.,recon->nthread);
-    TTFR(gg, recon->TTF, recon->PTTF);
+    remove_mode(gg, recon->TTF, recon->PTTF);
     dcell *gg2=NULL;
     dspcellmulmat_thread(&gg2, recon->saneai, gg,1,recon->nthread);
     sptcellmulmat_thread(xout,recon->G0tomo,gg2,alpha,recon->nthread);

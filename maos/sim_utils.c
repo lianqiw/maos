@@ -462,6 +462,62 @@ void update_wfsflags(sim_t* simu){
 		}
 	}
 }
+
+/**
+   Shift gradient when new gradients are ready (in the end of parallel section
+   in sim in CL or wfsgrad in OL). Do not execute in parallel with other
+   routines. In GLAO mode, also averaged gradients from the same type of powfs.
+*/
+void shift_grad(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	if(parms->nwfs==0||parms->sim.evlol||parms->sim.idealtomo) return;
+	if(PARALLEL==2){
+		pthread_mutex_lock(&simu->wfsgrad_mutex);
+		if(simu->wfsisim>0){
+			while(simu->wfsgrad_count<1){//not being consumed yet
+				//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
+				struct timespec ts;
+				clock_gettime(CLOCK_REALTIME, &ts);
+				ts.tv_nsec+=1e6;
+				pthread_cond_timedwait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex, &ts);
+			}
+			//dbg("ready: wfsgrad_count is ready: %d\n", simu->wfsgrad_count);
+		}
+		pthread_mutex_unlock(&simu->wfsgrad_mutex);
+	}
+	if(parms->recon.glao){
+		/* Average the gradients in GLAO mode. */
+		if(simu->gradlastcl){
+			dcellzero(simu->gradlastcl);
+		} else{
+			long nnx[parms->nwfsr];
+			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+				int ipowfs=parms->wfsr[iwfs].powfs;
+				nnx[iwfs]=simu->powfs[ipowfs].saloc->nloc*2;
+			}
+			simu->gradlastcl=dcellnew3(parms->nwfsr, 1, nnx, NULL);
+		}
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			const real scale=1./parms->powfs[ipowfs].nwfs;
+			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfs, indwfs);
+				dadd(&P(simu->gradlastcl, ipowfs), 1., P(simu->gradcl, iwfs), scale);
+			}
+		}
+	} else{
+		dcellcp(&simu->gradlastcl, simu->gradcl);
+	}
+	if(PARALLEL==2){
+		pthread_mutex_lock(&simu->wfsgrad_mutex);
+		//Signal recon wfsgrad is ready/
+		simu->wfsgrad_isim=simu->wfsisim;
+		simu->wfsgrad_count=0;//reset the counter
+		pthread_cond_broadcast(&simu->wfsgrad_condr);
+		//dbg("wfsgrad_isim is set to %d\n", simu->wfsgrad_isim);
+		pthread_mutex_unlock(&simu->wfsgrad_mutex);
+	}
+}
+
 /**
    use random number dirived from input seed to seed other stream.  necessary to
    have independant streams for different wfs in threading routines to avoid
@@ -1463,7 +1519,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		if(!parms->sim.idealtomo){
 			init_simu_wfs(simu);
 		}
-		if(parms->recon.alg==0){
+		if(parms->recon.alg==RECON_MVR){
 			int nstep=parms->sim.end;
 			if(parms->save.opdr){
 				save->opdr=zfarr_init(nstep-1, 1, "opdr_%d.bin", seed);

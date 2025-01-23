@@ -357,8 +357,7 @@ void FitL_NCPA(dcell** xout, const void* A,
 static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	const int nevl= parms->ncpa.ndir;
 	const int ndm=parms->ndm;
-	recon->HA_ncpa=dspcellnew(nevl, ndm);
-	dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
+	dspcell* HA=recon->HA_ncpa=dspcellnew(nevl, ndm);
 	TIC;tic;
 	for(int ievl=0; ievl<nevl; ievl++){
 		real hs=P(parms->ncpa.hs, ievl);

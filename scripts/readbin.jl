@@ -73,11 +73,11 @@ function cell2array(x::Ptr{cell})::Any
     
     res
 end
-if haskey(ENV, "MAOS_AOLIB")
-    const aolib=ENV["MAOS_AOLIB"]
-else
-    const aolib="./aolib"
-end
+const aolib=if haskey(ENV, "MAOS_AOLIB")
+        ENV["MAOS_AOLIB"]
+    else
+        "./aolib"
+    end
 "Read bin files"
 function readbin(fn::String)::Any
     x=@ccall aolib.readbin(fn::Cstring)::Ptr{cell};

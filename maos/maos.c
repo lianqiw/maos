@@ -368,6 +368,7 @@ int main(int argc, const char* argv[]){
 	} else{
 		redirect();
 	}
+	register_signal_handler(maos_signal_handler);
 	/*Launch the scheduler if it is not running and report about our process */
 	int ngpu;
 #if USE_CUDA
@@ -392,7 +393,7 @@ int main(int argc, const char* argv[]){
 	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
 
 	if(parms->sim.nseed>0){
-		register_signal_handler(maos_signal_handler);
+		
 		scheduler_start(NTHREAD, ngpu, !arg->force);
 		//Launches a thread to wait for scheduler commands.
 		pthread_t plistener;

@@ -40,7 +40,6 @@ arg_t* parse_args(int argc, const char *argv[]);
 void free_arg(arg_t** parg);
 char *evl_keywords(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
 void apply_fieldstop(dmat *opd, const dmat *amp, const lmat *embed, long nembed, const dmat* fieldstop, real wvl);
-void display_server(int sock);
 void plot_setup(const parms_t *parms, const powfs_t *powfs, const aper_t *aper, const recon_t *recon);
 dmat *mkamp(const loc_t *loc, const map_t *ampground, real misregx, real misregy, real D, real Din);
 void maxapriori(real *g, const dmat *ints, const parms_t *parms, 
@@ -51,7 +50,7 @@ void lgs_wfs_sph_psd(const parms_t *parms, powfs_t *powfs, recon_t *recon, const
 real wfsfocusadj(sim_t *simu, int iwfs);
 void dither_position(real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam);   
 void shwfs_grad(dmat **pgrad, dmat *ints[], const parms_t *parms, const powfs_t *powfs, int iwfs, int phytype);
-dcell *dcellread_prefix(const char *file, const parms_t *parms, int ipowfs);
+dcell *readwfs(const char *file, const parms_t *parms, int ipowfs);
 
 /**
    Create first order low pass filter coeffcient $\alpha$ from cross over frequency $f_c$ and sampling rate $T_s$. With exponential smoothing we have
@@ -69,7 +68,8 @@ static inline real fc2lp(real fc, real dt){
         return 0;
     }
 }
-real average_powfs(dmat* A, lmat* wfsindex, int replace);
+real average_powfs(dmat* vec, lmat* wfs, int replace);
 void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
-
+void wait_dmreal(sim_t*simu, int isim);
+void post_dmreal(sim_t *simu);
 #endif

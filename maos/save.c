@@ -155,12 +155,12 @@ void save_recon(sim_t* simu){
 					"MOAO DM Command", "x(m)", "y(m)", "Evl %d", ievl);
 			}
 		}
-		if(parms->recon.alg==0&&simu->dmrecon){
+		if(parms->recon.alg==RECON_MVR&&simu->dmrecon){
 			draw_dm(parms, recon, simu->dmrecon, 1, "DM Fitting Output", "Fit");
 		}
 		draw_dm(parms, recon, simu->dmerr, 1, "DM Error Signal (Hi)", "Err Hi");
 
-		if(parms->recon.alg==0&&simu->opdr){
+		if(parms->recon.alg==RECON_MVR&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
 					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), parms->plot.opdmax,
@@ -170,7 +170,7 @@ void save_recon(sim_t* simu){
 		}
 		draw_dm_lo(simu, simu->Merr_lo, "DM Error Signal (Lo)", "Err Lo");
 	}
-	if(parms->recon.alg==0&&!parms->sim.idealtomo&&!parms->recon.glao){
+	if(parms->recon.alg==RECON_MVR&&!parms->sim.idealtomo&&!parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
 		if(parms->save.opdr){
 			zfarr_push(simu->save->opdr, simu->reconisim, simu->opdr);
@@ -335,4 +335,57 @@ void save_dmreal(sim_t* simu){
 			}
 		}
 	}
+}
+
+void plot_gradoff(sim_t *simu, int iwfs){
+	const parms_t *parms=simu->parms;
+	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
+		if(iwfs<0){
+			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
+				plot_gradoff(simu, iwfs);
+			}
+		}else{
+			int ipowfs=parms->wfs[iwfs].powfs;
+			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+			int draw_single_save=draw_single;
+			draw_single=0;
+			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),
+				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
+				"WFS Offset", "x (m)", "y (m)", "WFS %2d", iwfs);
+			draw_single=draw_single_save;
+		}
+	}
+}
+void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
+	dmat* psftemp=NULL;
+	const char* title, * tab;
+	for(int iwvl=0; iwvl<NX(psf2s); iwvl++){
+		switch(type){
+			case 2:
+				title="Science Diffraction Limited PSF";
+				tab="DL";
+				break;
+			case 1:
+				title="Science Closed Loop PSF";
+				tab="CL";
+				break;
+			case 0:
+				title="Science Open Loop PSF";
+				tab="OL";
+				break;
+			default:
+				title="PSF";
+				tab="PSF";
+		}
+		char tabname[64];
+		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
+		if(draw_current(psfname, tabname)){
+			if(psftemp&&NX(psftemp)!=P(psf2s,iwvl)->nx){
+				dfree(psftemp);
+			}
+			cabs22d(&psftemp, 0, P(psf2s,iwvl), 1);
+			draw(psfname, (plot_opts){.image=psftemp,.zlog=zlog,.zlim={psfmin,1}},title, "x", "y", "%s", tabname);
+		}
+	}
+	dfree(psftemp);
 }

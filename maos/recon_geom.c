@@ -26,7 +26,7 @@
 #undef GREEN
 #define GREEN BLACK
 /**
-   \file recon_prep.c
+   \file recon_geom.c
 
    Setup grid and ray tracing operators regarding DM. This is independent of
    1) WFS geometry or noise parameters
@@ -94,7 +94,7 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
    interaction matrix calibration.
 */
 
-void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const aper_t* aper, int iwfsr){
+void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const map_t* aper, int iwfsr){
 	const int ipowfs=parms->wfsr[iwfsr].powfs;
 	real dx=parms->powfs[ipowfs].dx;
 	if(!*pgloc){
@@ -117,7 +117,7 @@ void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const ape
 		//now, gloc is transformed to telescoe pupil reference frame.
 		real dout=parms->aper.d;
 		real din=parms->aper.din;
-		map_t* ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
+		const map_t* ampground=parms->dbg.gp_noamp>0?0:aper;
 		if(parms->dbg.gp_noamp==2){//make telescope aperture larger.
 			dout+=1;
 			din=0;
@@ -558,14 +558,12 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 		writebin(recon->HXW, "HXW");
 	}
 	if(!recon->HXWtomo) recon->HXWtomo=dspcellnew(NX(recon->HXW), NY(recon->HXW));
-	dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
-	dspcell* HXW=recon->HXW/*PDSPCELL*/;
 	for(int iwfs=0; iwfs<nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].skip){/*for tomography */
 			for(int ips=0; ips<npsr; ips++){
-				cellfree(P(HXWtomo, iwfs, ips));
-				P(HXWtomo, iwfs, ips)=dspref(P(HXW, iwfs, ips));
+				cellfree(P(recon->HXWtomo, iwfs, ips));
+				P(recon->HXWtomo, iwfs, ips)=dspref(P(recon->HXW, iwfs, ips));
 			}
 		}
 	}
@@ -575,7 +573,7 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t *aper, const powfs_t *powfs){
+setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const powfs_t *powfs){
 	loc_t* ploc=recon->ploc;
 	const int nwfsr=parms->nwfsr;
 	recon->GP=dspcellnew(nwfsr, 1);
@@ -661,8 +659,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const aper_t *aper, const p
 /**
    Setup gradient operator form aloc for wfs by using GP.
 */
-static void
-setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
+void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	if(parms->nwfs==0) return;
 	loc_t* ploc=recon->ploc;
 	const int nwfsr=parms->nwfsr;
@@ -795,7 +792,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		recon->amodpinv=dcellpinv(recon->amod, NULL);
 	}
 	if(!parms->recon.modal){
-		if(recon->actstuck&&parms->recon.alg==1&&parms->dbg.recon_stuck){
+		if(recon->actstuck&&parms->recon.alg==RECON_LSR&&parms->dbg.recon_stuck){
 		/*This is need for LSR reconstructor to skip stuck actuators.  GA is
 		  also used to form PSOL gradients, but that one doesn't need this
 		  modification because actuator extropolation was already applied.*/
@@ -807,7 +804,7 @@ setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			act_stuck(recon->aloc, recon->GA, recon->actstuck);
 
 		}
-		if(parms->recon.alg==1){//LSR.
+		if(parms->recon.alg==RECON_LSR){//LSR.
 			recon->actcpl=genactcpl(recon->GA, 0);
 			if(parms->save.setup){
 				writebin(recon->actcpl, "lsr_actcpl");
@@ -859,33 +856,28 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 	const int nwfs=parms->nwfsr;
 	const int npsr=recon->npsr;
 	recon->GX=dspcellnew(nwfs, npsr);
-	dspcell* GX=recon->GX/*PDSPCELL*/;
-	dspcell* HXW=recon->HXW/*PDSPCELL*/;
+
 	TIC;tic;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
+		/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 		for(int ips=0; ips<npsr; ips++){
-			P(GX, iwfs, ips)=dspmulsp(P(recon->GP, iwfs), P(HXW, iwfs, ips), "nn");
+			P(recon->GX, iwfs, ips)=dspmulsp(P(recon->GP, iwfs), P(recon->HXW, iwfs, ips), "nn");
 		}/*ips */
 	}
 	toc2("GX");
-	recon->GXtomo=dspcellnew(NX(recon->GX), NY(recon->GX));
-	dspcell* GXtomo=recon->GXtomo/*PDSPCELL*/;
-
-	recon->GXlo=dspcellnew(NX(recon->GX), NY(recon->GX));
-	dspcell* GXlo=recon->GXlo/*PDSPCELL*/;
-
-	int nlo=parms->nlopowfs;
+	recon->GXtomo=dspcellnew(nwfs, npsr);
+	recon->GXlo=dspcellnew(nwfs, npsr);
+	
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		for(int ips=0; ips<npsr; ips++){
 			if(!parms->powfs[ipowfs].skip){/*for tomography */
-				P(GXtomo, iwfs, ips)=dspref(P(GX, iwfs, ips));
+				P(recon->GXtomo, iwfs, ips)=dspref(P(recon->GX, iwfs, ips));
 			}
-			if(parms->powfs[ipowfs].lo
-				||(parms->recon.split&&nlo==0&&!parms->powfs[ipowfs].trs)){
-			 /*for low order wfs or extracted t/t for high order ngs wfs.*/
-				P(GXlo, iwfs, ips)=dspref(P(GX, iwfs, ips));
+			if(parms->recon.split==2 && 
+				(parms->powfs[ipowfs].lo ||(parms->nlopowfs==0&&!parms->powfs[ipowfs].trs))){
+			 	/*for low order wfs or extracted t/t for high order ngs wfs. used by MVST*/
+				P(recon->GXlo, iwfs, ips)=dspref(P(recon->GX, iwfs, ips));
 			}
 		}
 	}/*iwfs */
@@ -894,8 +886,7 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 /**
    From focus mode to gradients. This acts on WFS, not WFSR.
  */
-static void
-setup_recon_GF(recon_t* recon, const parms_t* parms){
+void setup_recon_GF(recon_t* recon, const parms_t* parms){
 	/*Create GFall: Focus mode -> WFS grad. This is model*/
 	recon->GFall=dcellnew(parms->nwfs, 1);
 	recon->GFngs=dcellnew(parms->nwfs, 1);
@@ -918,8 +909,7 @@ setup_recon_GF(recon_t* recon, const parms_t* parms){
 /**
    From radial order modes to gradients.
  */
-static void
-setup_recon_GR(recon_t* recon, const parms_t* parms){
+void setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
 		return;
 	}
@@ -1008,7 +998,7 @@ setup_recon_GR(recon_t* recon, const parms_t* parms){
 /**
    Tilt removal from DM command. Used by filter.c
  */
-static void
+static void 
 setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 	recon->DMTT=dcellnew(parms->ndm, 1);
 	recon->DMPTT=dcellnew(parms->ndm, 1);
@@ -1035,8 +1025,8 @@ setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 
 static void
 setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
-	int nwfs=parms->nwfsr;
-	recon->TT=dcellnew(nwfs, nwfs);
+	int nwfsr=parms->nwfsr;
+	//recon->TT=dcellnew(nwfsr, nwfsr);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].trs
 			||(parms->recon.split&&!parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].skip)
@@ -1060,13 +1050,11 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			} else{
 				error("Invalid powfs.type\n");
 			}
-			if(parms->recon.glao){
-				P(recon->TT, ipowfs, ipowfs)=ddup(TT);
-			} else{
-				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-					P(recon->TT, iwfs, iwfs)=ddup(TT);
-				}
+			if(!recon->TT) recon->TT=dcellnew(nwfsr, nwfsr);
+			dbg("powfs %d has tip/tilt mode in recon->TT\n", ipowfs);
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
+				P(recon->TT, iwfs, iwfs)=dref(TT);
 			}
 			dfree(TT);
 		}
@@ -1253,7 +1241,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 
    This can be used to do NCPA calibration.
  */
-recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
+recon_t* setup_recon_prep(const parms_t* parms, const map_t* aper, const powfs_t* powfs){
 	info("\n%sSetting up reconstructor geometry.%s\n\n", GREEN, BLACK);
 	recon_t* recon=mycalloc(1, recon_t);
 	if(parms->cn2.pair&&NX(parms->cn2.pair)>0&&!recon->cn2est){
@@ -1275,29 +1263,28 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 	}
 	/*to be used in tomography. */
 	recon->nthread=NTHREAD;
-	/*setup pupil coarse grid for gradient operator*/
-	setup_recon_ploc(recon, parms);
-	/*setup DM actuator grid */
-	setup_recon_aloc(recon, parms);
+	setup_recon_ploc(recon, parms);//Pupil coarse grid for gradient operator
+	setup_recon_aloc(recon, parms);//DM actuator grid 
+	setup_recon_dmttr(recon, parms);//DM command tip/tilt removal operator.
 	if(parms->recon.modal){
-		//DM modal control matrix.
-		setup_recon_amod(recon, parms);
+		setup_recon_amod(recon, parms);//DM modal control matrix.
 	}
-	/*Grid for DM fitting*/
-	setup_recon_floc(recon, parms);
-	/*Gradient operators*/
-	setup_recon_GP(recon, parms, aper, powfs);
-	//TT Removal
-	setup_recon_TT(recon, parms, powfs);
-	//Global or Differential focus removal.
-	setup_recon_FF(recon, parms);
+	setup_recon_floc(recon, parms);//Coarse grid for DM fitting and NCPA calibration.
+	setup_recon_GP(recon, parms, aper, powfs);//Ploc to gradient operator
+	setup_recon_TT(recon, parms, powfs);//gradient tip/tilt removal
+	setup_recon_FF(recon, parms);//gradient focus removal
+	if(recon->FF || recon->TT){
+		recon->TTF=dcellnew(parms->nwfsr, parms->nwfsr);
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+			int ipowfs=parms->wfsr[iwfs].powfs;
+			//only include TT if trs for reconstruction.
+			dmat *TT=parms->powfs[ipowfs].trs?P(recon->TT, iwfs, iwfs):NULL;
+			dmat *FF=recon->FF?P(recon->FF, iwfs, iwfs):NULL;
+			P(recon->TTF, iwfs, iwfs)=dcat(TT, FF, 2);
+		}
+	}
 
-	if(recon->FF){
-		recon->TTF=dcellcat_each(recon->TT, recon->FF, 2);
-	} else{
-		recon->TTF=dcellref(recon->TT);
-	}
-	if(parms->recon.alg==0&&!parms->sim.idealtomo){//tomography parameters
+	if(parms->recon.alg==RECON_MVR&&!parms->sim.idealtomo){//tomography parameters
 		if(parms->cn2.tomo&&recon->cn2est){
 			/*Use cn2 estimation results for tomography. Use its ht to build
 			  reconstructor matrices.*/
@@ -1344,17 +1331,4 @@ recon_t* setup_recon_prep(const parms_t* parms, const aper_t* aper, const powfs_
 
 	return recon;
 }
-/**
-   That may depend on GPU data.
- */
-void setup_recon_prep_ga(recon_t* recon, const parms_t* parms, const aper_t* aper, const powfs_t* powfs){
-	info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
-	setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
-	setup_recon_GF(recon, parms);//GF depends on GA.
-	setup_recon_GR(recon, parms);
 
-	if(parms->recon.split||parms->evl.split){
-		ngsmod_prep(parms, recon, aper);
-	}
-	setup_recon_dmttr(recon, parms);
-}

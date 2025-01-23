@@ -20,8 +20,9 @@
 #ifndef AOS_POWFS_H
 #define AOS_POWFS_H
 #include "common.h"
-powfs_t * setup_powfs_init(const parms_t *parms, aper_t *aper);
-void setup_powfs_amp(powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+powfs_t * setup_powfs_init(const parms_t *parms, map_t *aper);
+void setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, int ipowfs);
+void setup_powfs_amp(powfs_t *powfs, const parms_t *parms, const map_t *aper, const dmat *misreg, int ipowfs);
 void setup_powfs_misreg_dm(powfs_t *powfs, const parms_t *parms, int ipowfs);
 void setup_shwfs_phy(const parms_t *parms,  powfs_t *powfs);
 void setup_powfs_neasim(const parms_t *parms,  powfs_t *powfs);
@@ -29,8 +30,7 @@ void setup_powfs_calib(const parms_t *parms, powfs_t *powfs);
 void free_powfs_unused(const parms_t *parms, powfs_t *powfs);
 void free_powfs(const parms_t *parms, powfs_t *powfs);
 //void test_powfs(const parms_t *parms, powfs_t *powfs);
-void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, 
-  real deltah, real thresh);
+void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, real deltah, real thresh);
 void wfspupmask(const parms_t *parms, loc_t *loc, dmat *amp, int iwfs);
-void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs);
+void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, map_t *aper, int ipowfs);
 #endif

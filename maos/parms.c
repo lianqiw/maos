@@ -2487,7 +2487,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 
 	/*
 	  We don't drop weak turbulence layers in reconstruction. Instead, we make
-	  it as least parms->tomo.minwt in setup_recon_tomo_prep
+	  it as least parms->tomo.minwt in setup_recon_tomo_reg
 	*/
 	if(!parms->recon.glao){
 	/*Assign each turbulence layer to a corresponding reconstructon layer. Used
@@ -2676,18 +2676,19 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 		error("count=%d, ndir=%d\n",count,ndir);
 	}
 	dresize(parms->dirs,4,count);
-	real rmax2=0;
+	real rmax=0;
 	for(int ic=0; ic<count; ic++){
 		real x=P(parms->dirs,0,ic);
 		real y=P(parms->dirs,1,ic);
-		real r2=x*x+y*y;
-		if(r2>rmax2) rmax2=r2;
+		real r=sqrt(x*x+y*y);
+		if(isfinite(P(parms->dirs, 2, ic))){//cone effect
+			r-=parms->aper.d/(P(parms->dirs, 2, ic)*2);
 	}
-	real fov=2*sqrt(rmax2);
+		if(r>rmax) rmax=r;
+	}
+	real fov=2*rmax;
 	if(parms->sim.fov<fov){
-		if(parms->dbg.dmfullfov&&parms->sim.fov>0){
 			dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,fov*RAD2AS);
-		}
 		parms->sim.fov=fov;
 	}
 }
@@ -3013,7 +3014,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
 		}
 	}
-	if(parms->recon.alg==0){//MVM: tomo+fit
+	if(parms->recon.alg==RECON_MVR){//MVM: tomo+fit
 		if(parms->tomo.alg==-1){//default to CG
 			parms->tomo.alg=ALG_CG;
 		}
@@ -3091,7 +3092,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			error("parms->fit.lrt_tt=%d is invalid\n",parms->fit.lrt_tt);
 		}
 		/*Assign CG interations*/
-		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit==0){
+		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit<=0){
 			int maxit=4;//minimal 4 iterations is needed
 			if(parms->recon.mvm){
 				maxit*=parms->load.mvmi?1:25;//assembly mvm needs more steps
@@ -3107,7 +3108,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			if(parms->ndm>1){
 				//if meta pupil is much larger than the aperture, needs more iterations. 
 				//if atmr.dx is smaller than 0.5, also more iterations
-				real ratio=pow(1+parms->sim.fov*parms->atmr.hmax/parms->aper.d,2);//meta pupil diameter
+				real ratio=pow(1+parms->sim.fov*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
 				if(parms->atmr.dx<0.5){
 					ratio*=0.5/parms->atmr.dx;
 				}
@@ -3126,7 +3127,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 
 	/*DM Fitting related. fit parameters are also used for dmproj.*/
-	if(parms->fit.alg==ALG_CG&&parms->fit.maxit==0){
+	if(parms->fit.alg==ALG_CG&&parms->fit.maxit<=0){
 		int factor;
 		factor=parms->fit.cgwarm?1:10;
 		parms->fit.maxit=10*factor;
@@ -3144,7 +3145,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		info2("lsr.actslave>1 disables lsr.tikcr\n");
 		parms->lsr.tikcr=0;
 		}*/
-		if(parms->lsr.alg==1&&parms->lsr.maxit==0){
+		if(parms->lsr.alg==1&&parms->lsr.maxit<=0){
 			int factor;
 			factor=parms->lsr.cgwarm?1:10;
 			parms->lsr.maxit=30*factor;
@@ -3618,13 +3619,7 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 	if(!mainconf && //sanity check for completeness.
 		(!readcfg_peek("sim.skysim")||!readcfg_peek("save.evlopd")||
 			!readcfg_peek("atm.r0z")||!readcfg_peek("recon.psdnseg"))){
-		mainconf=getenv("MAOS_DEFAULT");
-		if(!mainconf){
-			mainconf="default.conf";
-		}
-		if(mainconf){
-			open_config(mainconf, 0);/*defailt main .conf file. */
-		}
+		open_config("default.conf", 0);/*updates to this file is not tracked by git. */
 	}
 	parms_t *parms=mycalloc(1,parms_t);
 	/*

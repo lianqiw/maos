@@ -381,6 +381,7 @@ void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char t
 		mm_t D=parse_trans(A, B, trans);
 		cellinit(C0, D.nx, D.ny);
 		cell* C=*C0;
+OMP_FOR_COLLAPSE(2, 8)
 		for(int iy=0; iy<D.ny; iy++){
 			for(int ix=0; ix<D.nx; ix++){
 				for(int iz=0; iz<D.nz; iz++){
@@ -444,9 +445,9 @@ void X(celladdI)(anyarray A_, T alpha){
 	cell* A=A_.c;
 	if(!A) return;
 	assert(A->nx==A->ny);
+OMP_FOR(8)
 	for(int ii=0; ii<A->ny; ii++){
 		if(!P(A, ii, ii)){
-			continue;
 		} else if(ismat(P(A, ii, ii))){
 			X(addI)(X(mat_cast)(P(A, ii, ii)), alpha);
 		} else if(issp(P(A, ii, ii))){
@@ -479,6 +480,7 @@ void X(celladd)(panyarray pA_, R ac, const_anyarray B_, R bc){
 	if(iscell(B)){//cell
 		cellinit2(pA, B);
 		cell* A=*pA;
+OMP_FOR(8)
 		for(int i=0; i<B->nx*B->ny; i++){
 			X(celladd)(&P(A,i), ac, P(B,i), bc);
 		}
@@ -526,6 +528,7 @@ void X(cellscale)(anyarray A_, R w){
 	if(!A) {
 		return;
 	}else if(iscell(A)){
+OMP_FOR(8)
 		for(int i=0; i<A->nx*A->ny; i++){
 			X(cellscale)(P(A,i), w);
 		}

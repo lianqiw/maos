@@ -231,7 +231,7 @@ void setup_recon_mvm(const parms_t* parms, recon_t* recon, const powfs_t* powfs)
 	TIC;tic;
 	if(!parms->recon.mvm) return;
 	if(!recon->MVM){//GPU has not assembled the MVM.
-		if(parms->recon.alg==0){
+		if(parms->recon.alg==RECON_MVR){
 			setup_recon_mvr_mvm(recon, parms, powfs);
 		} else{
 			setup_recon_lsr_mvm(recon, parms, powfs);

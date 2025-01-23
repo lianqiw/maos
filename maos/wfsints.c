@@ -40,7 +40,7 @@
  * out=out*A*(B*wtb+C*wtc)
  * A, B and C are optional except that when C is present, B must be.
 */
-void apply_dtf_etf(cmat *out, dmat *A, cmat *B, real wtb, cmat *C, real wtc){
+static void apply_dtf_etf(cmat *out, dmat *A, cmat *B, real wtb, cmat *C, real wtc){
 	if(C){
 		if(A){
 			for(long i=0; i<PN(out); i++){
