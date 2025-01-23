@@ -1,17 +1,17 @@
 #2023-07-14: PYWFS as TTF for LGS AO
 
-mags=(12 13 14 15 16 17 18 19 20 21 22 )
+mags=(12 13 14 15 16 17 18 19 20 21 22 ) #PWFS NGS magnitude
 dtratss=(1 1 1 1 1 2 4 8 16 64 80) #sampling duration of TTF PWFS over LGS WFS. determined by simulation.
 imag0=0 #starting magnitude index
 imag1=${#mags[*]} #ending magnitude index
 lmag=7.65 #LGS magnitude
-fov=1 #science FoV
-profs="25 50 75"
-zas="0 30 45 60"
+fov=1 #science FoV (diameter)
+profs="25 50 75" #turbulence profile percentile
+zas="0 30 45 60" #zenith angle
 
 maos="maos -d"
-fd="mcao_pyttf"
-if true; then #testing
+fd="mcao_pyttf" #output folder name
+if true; then #testing with reduced parameter set
 	profs="50"
 	zas="0"
 	maos="maos"

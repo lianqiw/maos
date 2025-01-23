@@ -537,3 +537,81 @@ void free_powfs_fit(powfs_t* powfs, const parms_t* parms){
 		free_fit(powfs[ipowfs].fit, parms->powfs[ipowfs].nwfs);
 	}
 }
+
+
+/**
+   Apply fit right hand side matrix in CG mode without using assembled matrix.
+   Slow. don't use. Assembled matrix is faster because of multiple directions.
+*/
+void FitR(dcell** xout, const void* A,
+	const dcell* xin, const real alpha){
+	const fit_t* fit=(const fit_t*)A;
+	const int nfit=NX(fit->thetax);
+	dcell* xp=dcellnew(nfit, 1);
+
+	if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
+		const parms_t* parms=global->parms;
+		sim_t* simu=global->simu;
+		int isim=fit->notrecon?simu->wfsisim:simu->reconisim;
+		const real atmscale=simu->atmscale?P(simu->atmscale, isim):1;
+		for(int ifit=0; ifit<nfit; ifit++){
+			real hs=P(fit->hs, ifit);
+			P(xp, ifit)=dnew(fit->floc->nloc, 1);
+			for(int ips=0; ips<parms->atm.nps; ips++){
+				const real ht=P(parms->atm.ht, ips)-fit->floc->ht;
+				real scale=1-ht/hs;
+				if(scale<0) continue;
+				real dispx=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
+				real dispy=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
+				prop_grid(P(simu->atm, ips), fit->floc, P(P(xp, ifit)),
+					atmscale, dispx, dispy, scale, 1, 0, 0);
+			}
+			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
+				real tmp=P(simu->telws, isim);
+				real angle=simu->winddir?P(simu->winddir, 0):0;
+				real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+				loc_add_ptt(P(xp, ifit), ptt, fit->floc);
+			}*/
+			//No need to utilize ncpa.surf or ncpa.tsurf if ncpa.calib=1
+		}
+	} else if(fit->HXF){
+		dcellmm(&xp, fit->HXF, xin, "nn", 1.);
+	} else{/*Do the ray tracing from xloc to ploc */
+		const int npsr=NX(fit->xloc);
+		for(int ifit=0; ifit<nfit; ifit++){
+			real hs=P(fit->hs, ifit);
+			P(xp, ifit)=dnew(fit->floc->nloc, 1);
+			for(int ips=0; ips<npsr; ips++){
+				const real ht=P(fit->xloc, ips)->ht-fit->floc->ht;
+				real scale=1-ht/hs;
+				if(scale<0) continue;
+				real dispx=P(fit->thetax, ifit)*ht;
+				real dispy=P(fit->thetay, ifit)*ht;
+				prop_nongrid(P(fit->xloc, ips), P(P(xin, ips)), fit->floc,
+					P(P(xp, ifit)), 1, dispx, dispy, scale, 0, 0);
+			}
+		}
+	}
+	applyW(xp, fit->W0, fit->W1, P(fit->wt));
+	dcellmm(xout, fit->HA, xp, "tn", alpha);
+	dcellfree(xp);
+}
+/**
+   Apply fit left hand side matrix in CG mode without using assembled
+   matrix. Slow. don't use. Assembled matrix is faster because of multiple
+   directions.  */
+void FitL(dcell** xout, const void* A,
+	const dcell* xin, const real alpha){
+	const fit_t* fit=(const fit_t*)A;
+	dcell* xp=NULL;
+	dcellmm(&xp, fit->HA, xin, "nn", 1.);
+	applyW(xp, fit->W0, fit->W1, P(fit->wt));
+	dcellmm(xout, fit->HA, xp, "tn", alpha);
+	dcellfree(xp);xp=NULL;
+	dcellmm(&xp, fit->NW, xin, "tn", 1);
+	dcellmm(xout, fit->NW, xp, "nn", alpha);
+	dcellfree(xp);
+	if(fit->actslave){
+		dcellmm(xout, fit->actslave, xin, "nn", alpha);
+	}
+}

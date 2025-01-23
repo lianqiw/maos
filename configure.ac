@@ -1077,7 +1077,9 @@ elif test "$with_cuda" != "no" ;then #Set nvcc flags
 	#set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
 	CUDAOPT+=" -lineinfo "
 	CUDAOPT+=" -Wno-deprecated-gpu-targets"
-	CUDAOPT+=" -arch=compute_$cuarch"
+	if test "$enable_release" = "yes" ;then
+		CUDAOPT+=" -arch=sm_$cuarch"
+	fi
 	#CUDAOPT+="-Xptxas=-v -dlcm=cg"
 	#To specify multiple architectures, use
 	#CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"

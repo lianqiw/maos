@@ -38,7 +38,8 @@
 /**
  * Return type of wfs
 */
-const char *powfs_legend(const parms_t *parms, int ipowfs){
+static const char *
+powfs_legend(const parms_t *parms, int ipowfs){
 	const char *const legwfs[]={
 	"LGS WFS",
 	"NGS WFS",
@@ -947,8 +948,6 @@ real wfsfocusadj(sim_t* simu, int iwfs){
 }
 /**
    Expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
-
-
 */
 
 void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int isim, real deltam){
@@ -1191,28 +1190,28 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 /**
    Read cell array from file specified by whole name or prefix.
 */
-dcell* dcellread_prefix(const char* file, const parms_t* parms, int ipowfs){
-	dcell* nea=0;
+dcell* readwfs(const char* file, const parms_t* parms, int ipowfs){
+	dcell* res=0;
 	int iwfs0=P(parms->powfs[ipowfs].wfs,0);
 	if(!file){
-		return nea;
+		return res;
 	} else if(zfexist("%s_powfs%d.bin", file, ipowfs)){
 	//info2("using %s_powfs%d.bin\n", file, ipowfs);
-		nea=dcellread("%s_powfs%d.bin", file, ipowfs);
+		res=dcellread("%s_powfs%d.bin", file, ipowfs);
 	} else if(zfexist("%s_wfs%d.bin", file, iwfs0)){
-		nea=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-		for(int jwfs=0; jwfs<NX(nea); jwfs++){
+		res=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		for(int jwfs=0; jwfs<NX(res); jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 			//info2("using %s_wfs%d.bin\n", file, iwfs);
-			P(nea,jwfs)=dread("%s_wfs%d.bin", file, iwfs);
+			P(res,jwfs)=dread("%s_wfs%d.bin", file, iwfs);
 		}
 	} else if(zfexist("%s",file)){
 	//info2("using %s\n", file);
-		nea=dcellread("%s", file);
+		res=dcellread("%s", file);
 	} else{
 		error("%s_powfs%d.bin or %s_wfs%d.bin not found\n", file, ipowfs, file, iwfs0);
 	}
-	return nea;
+	return res;
 }
 /**
    Wait for dmreal to be available in event driven simulation.
@@ -1247,20 +1246,25 @@ void post_dmreal(sim_t *simu){
 }
 
 /**
-* average per powfs. replace the content when replace is set.
-* */
-real average_powfs(dmat *A, lmat *wfsindex, int replace){
+ * @brief average vector for wfs belonging to a powfs. replace the content when replace is set.
+ * 
+ * @param vec	The value containing the values
+ * @param wfs 	The index of wfs belongs to a powfs
+ * @param replace replace the content when replace is set.
+ * @return real The average for this powfs.
+ */
+real average_powfs(dmat *vec, lmat *wfs, int replace){
 	real avg=0;
-	int nwfs=NX(wfsindex);
+	int nwfs=NX(wfs);
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
-		int iwfs=P(wfsindex,jwfs);
-		avg+=P(A, iwfs);
+		int iwfs=P(wfs,jwfs);
+		avg+=P(vec, iwfs);
 	}
 	avg/=nwfs;
 	if(replace){
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
-			int iwfs=P(wfsindex,jwfs);
-			P(A, iwfs)=avg;
+			int iwfs=P(wfs,jwfs);
+			P(vec, iwfs)=avg;
 		}
 	}
 	return avg;

@@ -24,6 +24,7 @@
 void atm2xloc(dcell **opdx, const sim_t *simu);
 void sim_update_etf(sim_t *simu);
 void update_wfsflags(sim_t *simu);
+void shift_grad(sim_t *simu);
 void seeding(sim_t *simu);
 sim_t* init_simu(const parms_t *parms,powfs_t *powfs, aper_t *aper,recon_t *recon,int iseed);
 void free_simu(sim_t *simu);

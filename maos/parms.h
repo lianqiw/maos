@@ -87,8 +87,7 @@ typedef struct aper_cfg_t{
     real d;     /**<Telescope aperture diameter*/
     real din;   /**<Telescope inner blocking diameter*/
     real rot;	/**<pupil rotation*/
-    dmat *misreg;  /**<Misregistration of the telescope pupil. 2x1
-                    The intersection between the misregistered pupil (aper.d or fnamp) and a centered aper.d defines the actual pupil.*/
+    dmat *misreg;  /**<Calibrated misregistration of the telescope pupil. 2x1*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0)*/
     char *pupmask;/**<The pupil cold stop*/
 }aper_cfg_t;

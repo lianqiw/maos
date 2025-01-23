@@ -23,11 +23,8 @@
 #include "ahst.h"
 #include "sim.h"
 /**
-  \file maos.h
+  \file setup.c
   Sets up maos simulation.
-
-  The main() is separated  into main.c so that maos.c can be a part of libaos.la which is callable by
-	MATLAB.
 */
 
 global_t* global=NULL;//record for convenient access. It enables calling maos from matlab
@@ -116,10 +113,10 @@ void maos_setup(const parms_t* parms){
 	}
 #endif
 	if(!parms->sim.evlol){
-		global->powfs=powfs=setup_powfs_init(parms, aper);
+		global->powfs=powfs=setup_powfs_init(parms, aper->ampground);
 		print_mem("After setup_powfs_init");
 		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c
-		global->recon=recon=setup_recon_prep(parms, aper, powfs);
+		global->recon=recon=setup_recon_prep(parms, aper->ampground, powfs);
 		print_mem("After setup_recon_prep");
 		//pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
@@ -138,14 +135,21 @@ void maos_setup(const parms_t* parms){
 #endif
 		print_mem("After setup_powfs");
 		//creates DM to WFS IA. needs GPU for pwfs. create amod for modal control.
-		setup_recon_prep_ga(recon, parms, aper, powfs);
-
-		//assemble noise equiva angle inverse from powfs information
+		
+		info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
+		setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
+		setup_recon_GF(recon, parms);//GF depends on GA.
+		setup_recon_GR(recon, parms);
+		if(parms->recon.split||parms->evl.split){
+			ngsmod_prep(parms, recon, aper);//needs GA
+		}
+		//assemble subaperture noise equivalent angle (SANEA) from powfs information
+		//The following solvers needs SANEA
 		setup_recon_saneai(recon, parms, powfs);
 		setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 		if(!NO_RECON){
 			setup_recon_control(recon, parms, powfs);
-			if(parms->recon.alg==0&&parms->nmoao){
+			if(parms->recon.alg==RECON_MVR&&parms->nmoao){
 				setup_recon_moao(recon, parms);
 			}
 		}
@@ -190,13 +194,12 @@ void maos_setup(const parms_t* parms){
 		gpu_perfevl_init(parms, aper);
 	}
 	if(parms->gpu.wfs&&powfs){
-	//gpu_wfsgrad_init(parms, powfs); //moved to above
 		gpu_wfssurf2gpu(parms, powfs);
 	}
 #endif
 
 	if(!parms->sim.evlol){
-		setup_recon_post(recon, parms, aper, powfs);//needs MVM matrix
+		setup_recon_misc(recon, parms, aper->locs, powfs);//needs MVM matrix
 	}
 	if(parms->plot.setup){
 		plot_setup(parms, powfs, aper, recon);

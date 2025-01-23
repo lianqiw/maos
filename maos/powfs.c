@@ -120,7 +120,8 @@ dmat *dcellmax_each(dcell *saa, real alpha){
 	return saamax;
 }
 /**
-   Creates WFS pupil mask.
+   Creates WFS pupil mask that is composed of the meta pupil of high order WFS at height hmax*0.7.
+   Not used.
  */
 void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	long nloc=loc->nloc;
@@ -256,8 +257,7 @@ sa_reduce(powfs_t* powfs, int ipowfs, real saat){
 
 */
 static void
-setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
-	aper_t* aper, int ipowfs){
+setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
 	//TIC;tic;
 	free_powfs_geom(powfs, ipowfs);
 	/*order of the system. 60 for TMT */
@@ -339,7 +339,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 	/*Calculate the amplitude for each subaperture OPD point by ray tracing from
 	  the pupil amplitude map. Pupil distortion is accounted for.*/
 	powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
-	
+	setup_powfs_misreg_tel(powfs, parms, ipowfs);
 	if(parms->powfs[ipowfs].amp){
 		powfs[ipowfs].amp=dcellread("%s", parms->powfs[ipowfs].amp);
 		if(NX(P(powfs[ipowfs].amp,0))!=powfs[ipowfs].loc->nloc){
@@ -347,7 +347,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 				parms->powfs[ipowfs].amp, powfs[ipowfs].loc->nloc, NX(P(powfs[ipowfs].amp,0)));
 		}
 	} else{
-		setup_powfs_amp(powfs, parms, aper, ipowfs);
+		setup_powfs_amp(powfs, parms, aper, parms->aper.misreg, ipowfs);
 	}
 
 	/*The threashold for normalized area (by areafulli) to keep subaperture. */
@@ -503,8 +503,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms,
 
 
  */
-void
-setup_powfs_amp(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
+void setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	//TIC;tic;
 	int multi=0;//Determine wheather each wfs has different amplitude
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -529,8 +528,6 @@ setup_powfs_amp(powfs_t* powfs, const parms_t* parms, aper_t* aper, int ipowfs){
 	if((multi & 1)){
 		powfs[ipowfs].loc_tel=(loccell*)cellnew(nwfsp, 1);
 	}
-	powfs[ipowfs].amp=dcellnew(nwfsp, 1);
-		
 OMP_FOR(nwfsp)
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
 		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -548,11 +545,28 @@ OMP_FOR(nwfsp)
 				locrot(loc, -parms->wfs[iwfs].misregc);
 			}
 		}
-		P(powfs[ipowfs].amp, jwfs)=mkamp(loc, aper->ampground,
-			parms->wfs[iwfs].misregx-P(parms->aper.misreg,0), parms->wfs[iwfs].misregy-P(parms->aper.misreg,1),
+	}
+}
+void setup_powfs_amp(powfs_t* powfs, const parms_t* parms, const map_t* aper, const dmat *amisreg, int ipowfs){
+	int has_misreg=0;
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		if(parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy){
+			has_misreg=1;break;
+		}
+	}
+	const int nwfsp=(powfs[ipowfs].loc_tel || has_misreg)?parms->powfs[ipowfs].nwfs:1;
+	cellfree(powfs[ipowfs].amp);
+	powfs[ipowfs].amp=dcellnew(nwfsp, 1);
+
+OMP_FOR(nwfsp)
+	for(int jwfs=0; jwfs<nwfsp; jwfs++){
+		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		loc_t *loc=powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, jwfs):powfs[ipowfs].loc;
+		P(powfs[ipowfs].amp, jwfs)=mkamp(loc, aper,
+			parms->wfs[iwfs].misregx-PRR(amisreg,0), parms->wfs[iwfs].misregy-PRR(amisreg,1),
 			parms->aper.d, parms->aper.din);
 	}
-	//toc2("setup_pows_amp");
 }
 /**
    setup DM to WFS misregistration.
@@ -655,7 +669,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 			}
 			if(file){
 				dbg2("powfs%d: read neasim from file %s\n", ipowfs, file);
-				nea=dcellread_prefix(file, parms, ipowfs);
+				nea=readwfs(file, parms, ipowfs);
 			}
 		}
 		if(nea){
@@ -1652,12 +1666,13 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
    - Handle misregistration externally. Different misregisration is used in simulation and reconstruction.
    - ...
 */
-void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, aper_t *aper, int ipowfs){
+void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms, map_t *aper, int ipowfs){
 	pywfs_free(powfs[ipowfs].pywfs);
 	//map_t *map=0;
 	//create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
 	powfs[ipowfs].loc=mkannloc(parms->aper.d, 0, pycfg->dx, 0);
-	setup_powfs_amp(powfs, parms, aper, ipowfs);
+	setup_powfs_misreg_tel(powfs, parms, ipowfs);
+	setup_powfs_amp(powfs, parms, aper, parms->aper.misreg, ipowfs);
 	loc_reduce(powfs[ipowfs].loc, P(powfs[ipowfs].amp,0), EPS, 0, NULL);
 	if(parms->powfs[ipowfs].nwfs>1){
 		error("Please update usage of amp if there are multiple Pyramid WFS in this powfs.\n");
@@ -1710,7 +1725,7 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
    setup here.  \callgraph */
-powfs_t* setup_powfs_init(const parms_t* parms, aper_t* aper){
+powfs_t* setup_powfs_init(const parms_t* parms, map_t* aper){
 	TIC;tic;
 	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

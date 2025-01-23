@@ -47,6 +47,9 @@
 #define TIM(A)
 #endif
 extern int KEEP_MEM;
+/**
+   Propagate only controllable component of turbulence to evaluation grid.
+*/
 static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 	const parms_t* parms=simu->parms;
 	const aper_t* aper=simu->aper;
@@ -66,39 +69,6 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 			alpha, dispx, dispy, scale, 0,
 			0, 0);
 	}
-}
-void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
-	dmat* psftemp=NULL;
-	const char* title, * tab;
-	for(int iwvl=0; iwvl<NX(psf2s); iwvl++){
-		switch(type){
-			case 2:
-				title="Science Diffraction Limited PSF";
-				tab="DL";
-				break;
-			case 1:
-				title="Science Closed Loop PSF";
-				tab="CL";
-				break;
-			case 0:
-				title="Science Open Loop PSF";
-				tab="OL";
-				break;
-			default:
-				title="PSF";
-				tab="PSF";
-		}
-		char tabname[64];
-		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
-		if(draw_current(psfname, tabname)){
-			if(psftemp&&NX(psftemp)!=P(psf2s,iwvl)->nx){
-				dfree(psftemp);
-			}
-			cabs22d(&psftemp, 0, P(psf2s,iwvl), 1);
-			draw(psfname, (plot_opts){.image=psftemp,.zlog=zlog,.zlim={psfmin,1}},title, "x", "y", "%s", tabname);
-		}
-	}
-	dfree(psftemp);
 }
 
 static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* psfname,
@@ -508,7 +478,7 @@ static void perfevl_mean(sim_t* simu){
 					{
 
 						dmat* iopdevl=P(simu->evlopd,ievl);
-						ngsmod2science(iopdevl, aper->locs, recon->ngsmod,
+						ngsmod_opd(iopdevl, aper->locs, recon->ngsmod,
 							P(parms->evl.thetax,ievl), P(parms->evl.thetay,ievl),
 							pcleNGSm, -1);
 						if(parms->plot.run&&isim%parms->plot.run==0){

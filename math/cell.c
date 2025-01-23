@@ -277,7 +277,8 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 		rmap_header((rmap_t*)A_.rmap); break;
 	case M_LOC:
 		loc_header((loc_t*)A_.loc); break;
-	default:
+	default: 
+		break;
 	}
 
 	switch(id&0xFFFF){

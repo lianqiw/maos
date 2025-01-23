@@ -5,7 +5,7 @@ nobase_include_HEADERS=common.h maos.h parms.h types.h utils.h powfs.h \
 	aper.h recon.h  sim.h fdpcg.h powfs_utils.h	ahst.h sim_utils.h surf.h save.h mvm_client.h moao.h \
 	recon_utils.h 
 SRCS=setup.c parms.c utils.c powfs.c aper.c	sim.c fdpcg.c wfsgrad.c perfevl.c wfsints.c	\
-    recon_setup.c recon_prep.c recon_fit.c recon_lsr.c recon_mvm.c recon.c recon_utils.c\
+    recon_setup.c recon_geom.c recon_fit.c recon_tomo.c recon_mvst.c recon_lsr.c recon_mvm.c recon.c recon_utils.c\
     powfs_utils.c cachedm.c filter.c ahst.c sim_utils.c surf.c		\
     moao.c save.c mvm_client.c
 

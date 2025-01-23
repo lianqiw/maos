@@ -1808,3 +1808,35 @@ void loc_header(loc_t *loc){
 	snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
 	loc->keywords=strdup(str);
 }
+
+/**
+   Parse the input dead actuator location to actuator indices based on aloc.
+   2015-03-30: build a mask for dead actuators based on coordinate.
+*/
+lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
+	dmat* dead /**<[in] n*2 or n*3 matrix containing dead actuators*/
+){
+	if(NY(dead)==1 && NX(dead)>1){
+		dead->ny=dead->nx;
+		dead->nx=1;
+	}
+	if(NY(dead)!=2&&NY(dead)!=3){
+		error("dead must contain 2 or 3 columns of data. %ldx%ld\n", NX(dead), NY(dead));
+	}
+	loc_create_map(aloc);
+	map_t* map=aloc->map;
+	real ox=aloc->map->ox;
+	real oy=aloc->map->oy;
+	real dx1=1./aloc->dx;
+	dmat* ps=dead/*PDMAT*/;
+	lmat* out=lnew(aloc->nloc, 1);
+	for(long jact=0; jact<NX(dead); jact++){
+		long mapx=(long)round((P(ps, jact, 0)-ox)*dx1);
+		long mapy=(long)round((P(ps, jact, 1)-oy)*dx1);
+		long iact=loc_map_get(map, mapx, mapy)-1;
+		if(iact>=0){
+			P(out, iact)=(NY(dead)==3?P(ps, jact, 2)*1e9:1);//integer in nm.
+		}
+	}
+	return out;
+}

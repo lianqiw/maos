@@ -335,7 +335,7 @@ def read_many(fdin):
             print('Fail to read',fd)
             pass
     
-    res=aos.simplify(np.array(res, dtype=object))
+    res=aos.simplify(np.array(res))
     return res,fds
 def read_many_dict(fdin):
     '''read many files together into a dictionary'''

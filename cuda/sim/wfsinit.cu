@@ -453,6 +453,16 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 	}
 	gpu_print_mem("wfs init");
 }
+/*
+void gpu_wfs_update_amp(const parms_t* parms, powfs_t* powfs){
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, wfsind);
+			cp2gpu(cuwfs[iwfs].amp, PR(powfs[ipowfs].amp, wfsind));
+		}
+	}
+}*/
+
 void gpu_wfs_init_sim(const parms_t* parms, powfs_t* powfs){
 	int* wfsgpu=cuglobal->wfsgpu();
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

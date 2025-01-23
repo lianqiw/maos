@@ -25,15 +25,9 @@
 void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, real alpha);
 void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb);
 void apply_fractal(dcell **xout, const void *extra, const dcell *xin, real alpha, int xb, int yb);
-void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
+void remove_mode(dcell *x, const dcell *M, const dcell *PM);
 void applyW(dcell *xin, const dsp *W0, const dmat *W1, const real *wt);
-dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, const dmat *W1, const dmat *wt);
-void TomoR(dcell **xout, const void *A, const dcell *xin, const real alpha);
-void TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha);
-void TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha);
-
-void FitL(dcell **xout, const void *A, const dcell *xin, const real alpha);
-void FitR(dcell **xout, const void *A, const dcell *xin, const real alpha);
+dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0, const dmat* W1, const dmat* wt);
 
 dsp *nea2sp(dmat *nea, int ll, int ur, int ng);
 void nea_chol(dmat **pout, const dmat *in, int ng);
@@ -42,8 +36,6 @@ void nea_mm(dmat **pout, const dmat *in, int ng);
 void nea_check(dmat *nea, int nsa, int ng);
 
 void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
-void shift_grad(sim_t *simu);
-lmat* loc_coord2ind(loc_t *aloc, dmat *dead);
 cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);
 void cn2est_isim(dcell *cn2res, recon_t *recon, const parms_t *parms, const dcell *grad, int *tomo_update);
 
