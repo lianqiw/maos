@@ -1,5 +1,4 @@
-#files=$(ls ../maos/*.[ch] ../sys/*.[ch] ../lib/*.[ch] ../math/*.[ch] ../skyc/*.[ch] ../tools/*.[ch] ../mex/*.[ch] ../cuda/*.[ch] ../cuda/*.cu)
-files=$(ls ../*/*.[ch] ../cuda/*.cu ../*/*.[ch]pp)
+files=$(find ../* -name \*.h -o -name \*.cu -o -name \*.c)
 	
 for file in $files;do
     if grep -q Copyright $file;then
@@ -18,8 +17,7 @@ for file in $files;do
     if ! grep -q lianqiw-at-tmt-dot-org $file; then
 	echo Updated copyright information from $file
 	cat copy >$file.new 
-	echo     >>$file.new
-	cat $file>>$file.new
+	awk 'NF {p=1} p' $file>>$file.new
 	mv $file.new $file
     fi
 done

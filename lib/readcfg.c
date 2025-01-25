@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2025 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,9 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
-
 /*
   read the config file, parse the tokens and store into a binary tree.
   then user can query tokens using read_int, read_real, or read_array
