@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2025 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,9 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
-
 /*
   2009-11-26: changed to rotate OTF instead of psf to comply with the approach
   in wfsints.  this gives slightly larger intensity because max value of OTF is

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2024 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2025 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,8 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
 /*
   This file contains the code of an unsuccess attempt to unwrap the wavefront for interpolation. It failed because for partially compensated turbulence, the OPD between neighboring pixels (in such coarsely sampled pupil function) may be very large.
 */
