@@ -182,6 +182,13 @@ void maos_setup(const parms_t* parms){
 #endif
 		setup_recon_mvm(parms, recon, powfs);//use cpu to compute mvm or do the saving
 	}
+
+	if(parms->aper.misregu && (P(parms->aper.misregu,0) || P(parms->aper.misregu,1))){
+		//Setup un-calibrated misregistration
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			setup_powfs_amp(powfs, parms, aper->ampground, parms->aper.misregu, ipowfs);
+		}
+	}
 #if USE_CUDA
 	//setup_recon first because MVM assembly and transpose uses a lot of memory.
 	if(parms->gpu.wfs&&powfs&&!has_pywfs){

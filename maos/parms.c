@@ -178,6 +178,7 @@ void free_parms(parms_t *parms){
 	lfree(parms->lopowfs);
 
 	dfree(parms->aper.misreg);
+	dfree(parms->aper.misregu);
 	free_strarr(parms->distortion.tel2wfs,parms->nwfs);
 	free_strarr(parms->distortion.dm2wfs,parms->ndm*parms->nwfs);
 	free_strarr(parms->distortion.dm2sci,parms->ndm*parms->evl.nevl);
@@ -1270,6 +1271,7 @@ static void readcfg_aper(parms_t *parms){
 	}
 	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
 	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
+	parms->aper.misregu=readcfg_dmat(2, 0, "aper.misregu");
 	READ_STR(aper.fnamp);
 	READ_STR(aper.pupmask);
 }
@@ -2683,12 +2685,12 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 		real r=sqrt(x*x+y*y);
 		if(isfinite(P(parms->dirs, 2, ic))){//cone effect
 			r-=parms->aper.d/(P(parms->dirs, 2, ic)*2);
-	}
+		}
 		if(r>rmax) rmax=r;
 	}
 	real fov=2*rmax;
 	if(parms->sim.fov<fov){
-			dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,fov*RAD2AS);
+		dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,fov*RAD2AS);
 		parms->sim.fov=fov;
 	}
 }
