@@ -149,9 +149,6 @@ spchol* chol_factorize(const dsp* A_in){
 	int success=0;
 	cholmod_sparse* A=dsp2chol(A_in);//borrows content.
 	out->L=MOD(analyze)(A, out->c);
-	if(out->c->dtype!=A->dtype){
-		error("dtype mismatch: %d and %d\n", out->c->dtype, A->dtype);
-	}
 	if(out->L){
 		success=MOD(factorize)(A, out->L, out->c);
 	}
