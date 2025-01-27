@@ -2873,7 +2873,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	if(parms->recon.split){
 		if(!parms->nwfs||!parms->sim.closeloop || !parms->ndm || parms->evl.tomo||parms->sim.evlol){
 			parms->recon.split=0;
-			dbg("Split tomography is not support or needed in current configuration. Changed.\n");
+			dbg("Split tomography is not support in current configuration. Changed.\n");
 		}
 	}
 	if(parms->recon.split){
@@ -3156,7 +3156,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 	}
 	if(parms->sim.mffocus>0){
 		if(!parms->recon.split||!parms->nlgspowfs){
-			info("Focus blending is only implemented for LGS in split tomography. Changed.\n");
+			dbg("Focus blending is only implemented for LGS in split tomography. Changed.\n");
 			parms->sim.mffocus=0;
 		}
 	}
@@ -3372,25 +3372,25 @@ static void setup_parms_postproc_misc(parms_t *parms){
 }
 static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 	if(bgs){
-		info2("Block Gauss Seidel with ");
+		info2("Block Gauss Seidel (BGS) with");
 	}
 	switch(alg){
 	case ALG_CBS:
-		info2("Cholesky back solve ");
+		info2("Cholesky Back Solve (CBS)");
 		break;
 	case ALG_CG:
-		info2("CG%d ", maxit);
+		info2("CG%d", maxit);
 		switch(precond){
-			case 0:	break;
-			case 1:	info2("with Fourier Domain preconditioner "); break;
-			default: info2("Unknown preconditioner "); break;
+			case 0:	info2("with no preconditioner"); break;
+			case 1:	info2("with Fourier Domain preconditioner"); break;
+			default: info2("Unknown preconditioner"); break;
 		}
 		break;
 	case ALG_SVD:
-		info2("SVD with threshold %g ", svdthres);
+		info2("SVD with threshold %g", svdthres);
 		break;
 	default:
-		info2("Invalid algorithm ");
+		info2("Invalid algorithm");
 	}
 }
 

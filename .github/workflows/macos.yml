@@ -5,15 +5,16 @@ on:
     branches-ignore:
     - gh-pages
   pull_request:
-    branches: [ master ]
+    branches-ignore:
+    - gh-pages
 
 jobs:
   build:
     if: github.repository == 'lianqiw/maos'
     runs-on: macos-latest
-    
+
     steps:
-    - name: checkout maos
+    - name: checkout
       uses: actions/checkout@v4
       with:
         path: maos
@@ -27,11 +28,8 @@ jobs:
         mkdir build && cd build
         $src/configure --enable-release --disable-binary --prefix=$prefix
         make -j4
-#    - name: make distcheck
-#      run: cd build && make distcheck #make distcheck also runs make check. 
-    - name: test #put test in the end so that artifacts are uploaded even if test fails
-      run: |
-        cd build && make check
+    - name: make check
+      run: cd build && make check
     - uses: actions/upload-artifact@v4
       if: always()
       with:

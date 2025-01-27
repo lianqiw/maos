@@ -123,10 +123,8 @@ void init_process(void){
 	mymkdir("%s", DIRLOCK);
 
 	DIRSTART=mygetcwd();
-	
-	chdir(BUILDDIR);
-	DIRBUILD=mygetcwd();
-	chdir(DIRSTART);
+	DIRBUILD=myabspath(BUILDDIR);
+
 	mystrrep(DIRSTART, DIRBUILD, BUILDDIR);
 	
 	{/*PATH to executable*/

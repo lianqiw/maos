@@ -70,10 +70,11 @@ echo $(date) > $fnlog
 #echo $(date) > $fnerr
 ans=0 #result code
 ii=0
-printf "%-20s    Res    Ref   Ref2     %%     %%\n" "D=${D}m" | tee $fnres
+printf "%-20s    Res    Ref   Ref2     %%     %%   time\n" "D=${D}m" | tee $fnres
 function run_maos(){
 	aotype=$1
 	shift
+	s_start=`date +%s`
     eval "../bin/maos sim.end=100 $* $args >$fntmp 2>$fnerr"
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
@@ -87,7 +88,8 @@ function run_maos(){
 		a=0
 		ans=$((ans+1)) #failed to run
 	fi
-    
+    s_end=`date +%s`
+	s_diff=$((s_end-s_start))
 	echo $aotype $* >> $fnlog
 	cat $fntmp >> $fnlog
     b=${REF[$ii]:-0}
@@ -97,7 +99,7 @@ function run_maos(){
 	if [ $diff -gt 10 -o $diff -lt -10 ];then
 		ans=$((ans+1)) #mark failure
 	fi
-	printf "%-20s %6.1f %6.1f %6.1f %5.1f %5.1f\n" "$aotype" "$a" "$b" "$b2" "$diff" "$diff2"| tee -a $fnres
+	printf "%-20s %6.1f %6.1f %6.1f %5.1f %5.1f %5.1f\n" "$aotype" "$a" "$b" "$b2" "$diff" "$diff2" "$s_diff"| tee -a $fnres
 	ii=$((ii+1)) 
 }
 function run_maos_gpu(){
@@ -105,7 +107,7 @@ function run_maos_gpu(){
 		run_maos "$@"
 	else
 		printf "%-20s   skipped in CPU mode.\n" "$1" | tee -a $fnres
-		RMS[ii]=0
+		RMS[ii]=000.00
 		ii=$((ii+1)) 
 	fi
 }
