@@ -597,10 +597,12 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 		dspcellfree(GPload);
 	} else{
 		TIC;tic;
+		int any=0;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].type!=WFS_SH) continue;
 			const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
 			int share_gp=NX(powfs[ipowfs].amp)==1;
+			any++;
 			/*
 				During tomography operation, raytracing to ploc handles shift, a
 				rotation step handles clocking. Higher order distortion is
@@ -646,9 +648,11 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 				}
 			}
 		}
-		toc2("GP");
-		if(parms->save.recon){
-			writebin(recon->GP, "GP");
+		if(any){
+			toc2("GP");
+			if(parms->save.recon){
+				writebin(recon->GP, "GP");
+			}
 		}
 	}
 }
@@ -711,13 +715,13 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							opdadd=P(powfs[ipowfs].opdadd, wfsind);
 						}*/
 						if(!parms->recon.modal){
-							info("\nPyWFS from aloc to saloc directly\n");
+							info("PyWFS mkg from aloc to saloc\n");
 							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
 								0, opdadd, dispx, dispy);
 							P(recon->GA, iwfsr, idm)=(cell*)d2sp(tmp, dmaxabs(tmp)*1e-6);
 							dfree(tmp);
 						} else{
-							info("\nPyWFS from amod to saloc directly\n");
+							info("PyWFS mkg from amod to saloc\n");
 							//We compute the GM for full set of modes so that it is cached only once.
 							P(recon->GA, iwfsr, idm)=(cell*)pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
 								P(recon->amod, idm, idm), opdadd, dispx, dispy);
@@ -1239,7 +1243,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
    This can be used to do NCPA calibration.
  */
 recon_t* setup_recon_prep(const parms_t* parms, const map_t* aper, const powfs_t* powfs){
-	info("\n%sSetting up reconstructor geometry.%s\n\n", GREEN, BLACK);
+	info("\n%sSetting up reconstruction geometry.%s\n\n", GREEN, BLACK);
 	recon_t* recon=mycalloc(1, recon_t);
 	if(parms->cn2.pair&&NX(parms->cn2.pair)>0&&!recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */

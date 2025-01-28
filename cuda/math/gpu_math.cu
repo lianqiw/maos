@@ -86,8 +86,24 @@ GPU_GEMM(c, dcomplex, Comp);
 GPU_GEMM(s, float, Real);
 GPU_GEMM(z, fcomplex, Comp);
 
+#define GPU_FFT(X, TG, FFT_T)\
+void gpu_##X##fft2(X##mat *A_, int direction){\
+	int cuda_dedup_save=cuda_dedup; cuda_dedup=0;\
+	NumArray<TG, Gpu>A;\
+	stream_t stream;\
+	cp2gpu(A, A_, stream);\
+	cufftHandle plan;\
+	DO(cufftPlan2d(&plan, A.Nx(), A.Ny(), FFT_T));\
+	CUFFT(plan, A(), direction==1?CUFFT_FORWARD:CUFFT_INVERSE);\
+	cp2cpu(&A_, A, stream);\
+	cufftDestroy(plan);\
+	cuda_dedup=cuda_dedup_save;\
+}
+GPU_FFT(c, Comp, CUFFT_C2C);
+GPU_FFT(z, Comp, CUFFT_C2C);
+
 void gpu_ext_assign(){
-#define CPU_ASSIGN(X,R,T)\
+#define CPU_ASSIGN_BLAS(X,R,T)\
 	extern void (*X##svd_ext)(X##mat **U, R##mat **S, X##mat **Vt, const X##mat *A);\
 	extern void (*X##svd_pow_ext)(X##mat *A_, real pow, real thres1, real thres2);\
 	extern void (*X##gemm_ext)(X##mat **out, T beta, const X##mat *A, const X##mat *B, const char trans[2], T alpha);\
@@ -95,11 +111,17 @@ void gpu_ext_assign(){
 	X##svd_pow_ext=gpu_##X##svd_pow;\
 	X##gemm_ext=gpu_##X##gemm;
 
-	dbg("Using GPU for svd, svd_pow and gemm of large arrays.\n");
-	CPU_ASSIGN(d, d, double);
-	CPU_ASSIGN(c, d, dcomplex);
-	CPU_ASSIGN(s, s, float);
-	CPU_ASSIGN(z, s, fcomplex);
+	dbg("Using GPU for fft2, svd, svd_pow and gemm of large arrays.\n");
+	CPU_ASSIGN_BLAS(d, d, double);
+	CPU_ASSIGN_BLAS(c, d, dcomplex);
+	CPU_ASSIGN_BLAS(s, s, float);
+	CPU_ASSIGN_BLAS(z, s, fcomplex);
+
+#define CPU_ASSIGN_FFT(X)\
+	extern void (*X##fft2_ext)(X##mat *A, int direction);\
+	X##fft2_ext=gpu_##X##fft2
+	CPU_ASSIGN_FFT(c);
+	CPU_ASSIGN_FFT(z);
 }
 
 void gpu_dgemm_test(){

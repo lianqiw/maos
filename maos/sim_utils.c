@@ -207,7 +207,7 @@ void genatm(sim_t* simu){
 		dfree(simu->winddir);
 	}
 	if(simu->parms->sim.noatm){
-		warning("sim.noatm flag is on. will not generate atmoshere\n");
+		info("sim.noatm flag is on. will not generate atmoshere\n");
 		return;
 	}
 	info("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
