@@ -178,9 +178,9 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 		} else if(pycfg->fieldstop && isfinite(pycfg->fieldstop)){//Limit fov per wvl
 			nstop=ceil(pycfg->fieldstop/dtheta*0.5)*2;
 			if(nstop>npsf){
-				warning("field stop is not effective (bigger than PSF size).\n");
+				warning("field stop (%g\") is bigger than PSF size (%g\").\n", pycfg->fieldstop*RAD2AS, dtheta*RAD2AS*npsf);
 			}
-			dbg("fieldstop is %g\", dtheta is %g\", nstop is %d\n", pycfg->fieldstop*RAD2AS, dtheta*RAD2AS, nstop);
+			dbg("fieldstop is %g\", dtheta is %g\", nstop is %d, npsf is %ld\n", pycfg->fieldstop*RAD2AS, dtheta*RAD2AS, nstop, npsf);
 		}
 		const long skip=notf>nstop?(notf-nstop)/2:0;
 		const real radius2=nstop*nstop*0.25;

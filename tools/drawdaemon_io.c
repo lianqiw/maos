@@ -472,10 +472,25 @@ void *listen_draw(void *user_data){
 				drawdata->ptsdim[ipts][1]=nptsy;
 				if(nptsx*nptsy>0){
 					STREADFLT(drawdata->pts[ipts], nptsx*nptsy);
-					if(nptsx>50){
-						if(!drawdata->icumu||drawdata->icumu>nptsx){
-							drawdata->icumu=nptsx/5;
+
+#define FIND_ICUMU(T)\
+	T sumc=0; T *p=(T*)drawdata->pts[ipts];\
+		for(isim0=nptsx-1; isim0>1; isim0--){\
+			sumc+=p[isim0];\
+			if((nptsx-isim0)>25 && p[isim0-1]*(nptsx-isim0)>sumc*1.2){\
+				break;\
+			}\
+		}
+					if(!drawdata->icumu||drawdata->icumu>nptsx){
+						int isim0=0;
+						if(byte_float==4){
+							FIND_ICUMU(float);
+						}else if(byte_float==8){
+							FIND_ICUMU(double);
+						}else{
+							isim0=nptsx/5;
 						}
+						drawdata->icumu=isim0;
 					}
 				}
 				//info("%s %s: %dx%d\n", drawdata->fig, drawdata->name, nptsx, nptsy);

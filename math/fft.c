@@ -236,17 +236,21 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	plan1d->ncomp=ncomp;
 	dbg3("Plan %p created\n", A->fft->plan1d[dir+1]);
 }
-
+void (*X(fft2_ext))(X(mat)* A, int dir)=NULL;
 /**
    Do 2d FFT transforms.
 */
 void X(fft2)(X(mat)* A, int dir){
 	assert(abs(dir)==1); assert(A&&P(A));
-	/*do 2d FFT on A. */
-	if(!A->fft||!A->fft->plan[dir+1]){
-		X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
+	if(X(fft2_ext) && NX(A)>1024){
+		X(fft2_ext)(A, dir);
+	}else{
+		/*do 2d FFT on A. */
+		if(!A->fft||!A->fft->plan[dir+1]){
+			X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
+		}
+		FFTW(execute)(A->fft->plan[dir+1]);
 	}
-	FFTW(execute)(A->fft->plan[dir+1]);
 }
 
 /**

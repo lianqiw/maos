@@ -3717,14 +3717,14 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 			}
 			if(parms->gpu.tomo&&parms->tomo.cxxalg!=0){
 				parms->gpu.tomo=0;
-				warning("\n\nGPU reconstruction is only available for tomo.cxxalg==0. Disable GPU Tomography.\n");
+				warning("GPU reconstruction is only available for tomo.cxxalg==0. Disable GPU Tomography.\n");
 			}
 			if(parms->gpu.tomo&&parms->tomo.alg>2){
 				parms->gpu.tomo=0;
-				warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
+				warning("GPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
 			}
 			if(parms->gpu.fit&&parms->fit.alg>2){
-				warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
+				warning("GPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
 				parms->gpu.fit=0;
 			}
 			if(parms->sim.idealtomo&&parms->gpu.fit){
@@ -3764,7 +3764,7 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 				parms->gpu.evl=0;
 			}
 			if(parms->gpu.fit==1&&!parms->fit.assemble){
-				info("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
+				info("GPU fitting=1 requries fit.assemble. Changed\n");
 				parms->fit.assemble=1;
 			}
 			if(parms->gpu.fit==2&&!parms->fit.square){
