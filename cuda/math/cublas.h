@@ -126,7 +126,7 @@ int cusvd(NumArray<T, Gpu> &U, NumArray<R, Gpu> &S, NumArray<T, Gpu> &Vt, NumArr
     CHECK(status);
     //Allocate work space
     RefP<char, Gpu> tmpDevice(wDevice);
-    RefP<char, Cpu> tmpHost(wHost);
+    RefP<char> tmpHost(wHost);
     RefP<int, Gpu>tmpans(1);
     int ans;
     status=cusolverDnXgesvd(stream.dn(), params, 'A', 'A', A.Nx(), A.Ny(),
@@ -174,7 +174,7 @@ int cusvdp(NumArray<T, Gpu> &U, NumArray<TS, Gpu> &S, NumArray<T, Gpu> &V, NumAr
     CHECK(status);
     //Allocate work space
     RefP<char, Gpu> tmpDevice(wDevice);
-    RefP<char, Cpu> tmpHost(wHost);
+    RefP<char> tmpHost(wHost);
     int ans;
     RefP<int, Gpu>tmpans(1);
     double h_err_sigma;

@@ -22,15 +22,13 @@ jobs:
       with:
         path: maos
     - name: autogen
-      run: cd maos && ./autogen.sh
-    - name: configure and make
       run: |
-        src=$(pwd)/maos
-        prefix=$(pwd)/external
-        PATH+=${prefix}/bin
+        cd maos && ./autogen.sh
+    - name: configure
+      run: |
         mkdir build && cd build
-        $src/configure --enable-release --enable-doxygen --prefix=$prefix
-        make -j4
+        ../maos/configure --enable-release --enable-doxygen --prefix=$(pwd)/../external
+        make -j8
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
@@ -49,14 +47,21 @@ jobs:
         git config user.email lianqiw@gmail.com
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
-    - name: make distcheck
-      run: cd build && make distcheck #make distcheck also runs make check. 
+    - name: clang
+      run: |
+        mkdir clang && cd clang
+        ../maos/configure --enable-release --prefix=$(pwd)/../external CC=clang
+        make -j8
+    - name: make check
+      run: cd build && make check #make distcheck also runs make check. 
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: maos-linux
         retention-days: 30
         path: |
+          clang/config.h
+          clang/config.log
           build/config.h
           build/config.log
           build/test/*.log

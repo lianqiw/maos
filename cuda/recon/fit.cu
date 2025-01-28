@@ -60,20 +60,20 @@ cufit_grid::cufit_grid(const parms_t* parms, const recon_t* recon, const curecon
 		cp2gpu(actslave, recon->fit->actslave, 1);
 	}
 	if(parms->fit.cachedm){
-		long acnx[ndm], acny[ndm];
+		NumArray<long> acnx(ndm), acny(ndm);
 		for(int idm=0; idm<ndm; idm++){
 			acnx[idm]=acmap[idm].nx;
 			acny[idm]=acmap[idm].ny;
 		}
-		dmcache=curcell(ndm, 1, acnx, acny);
+		dmcache=curcell(ndm, 1, acnx(), acny());
 	}
 	if(parms->fit.cachex){
-		long xcnx[npsr], xcny[npsr];
+		NumArray<long>xcnx(npsr), xcny(npsr);
 		for(int ips=0; ips<npsr; ips++){
 			xcnx[ips]=grid->xcmap[ips].nx;
 			xcny[ips]=grid->xcmap[ips].ny;
 		}
-		xcache=curcell(npsr, 1, xcnx, xcny);
+		xcache=curcell(npsr, 1, xcnx(), xcny());
 	}
 	cp2gpu(fitwt, recon->fit->wt);
 

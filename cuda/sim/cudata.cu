@@ -264,18 +264,17 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	  [1] is PCI bus id. = INT_MAX if disabled
 	  [2] is memory usage ratio percentage (100 is full)
 	*/
-	
-	long gpu_info[MAXGPU][4];//cuda index, and nvidia-smi index, and memory usage
+	NumArray<long>gpu_info(4, MAXGPU);//cuda index, and nvidia-smi index, and memory usage
 	int gpu_valid_count=0;
 	for(int ic=0; ic<MAXGPU; ic++){
 		cudaDeviceProp properties;
-		gpu_info[ic][0]=ic;//cuda-index
-		gpu_info[ic][1]=0;//nvidia-smi reported index (order of pci bus id)
-		gpu_info[ic][2]=100;//preset to 100%
-		gpu_info[ic][3]=0;//flag 0: unknown or not usable or disabled, 1: usable. 2: being used.
+		gpu_info(0,ic)=ic;//cuda-index
+		gpu_info(1,ic)=0;//nvidia-smi reported index (order of pci bus id)
+		gpu_info(2,ic)=100;//preset to 100%
+		gpu_info(3,ic)=0;//flag 0: unknown or not usable or disabled, 1: usable. 2: being used.
 		if(!cudaSetDevice(ic) &&!cudaGetDeviceProperties(&properties, ic)){
-			gpu_info[ic][1]=properties.pciBusID;//nvidia-smi order (pci index)
-			gpu_info[ic][3]=1;//mark usable
+			gpu_info(1,ic)=properties.pciBusID;//nvidia-smi order (pci index)
+			gpu_info(3,ic)=1;//mark usable
 			gpu_valid_count++;
 		}else{
 			warning("Error getting information for CUDA GPU %d, skip.\n", ic);
@@ -288,14 +287,14 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void *, const void *))cmp_long2_ascend);
 	//check whether GPU is disabled by environment variable
 	for(int ig=0; ig<MAXGPU; ig++){
-		gpu_info[ig][1]=ig;//PCI-id ordering. (nvidia-smi order)
-		if(gpu_info[ig][3]){
+		gpu_info(1,ig)=ig;//PCI-id ordering. (nvidia-smi order)
+		if(gpu_info(3,ig)){
 			char tmp[64];
 			snprintf(tmp, sizeof(tmp), "MAOS_GPU_DISABLE_%d", ig);
 			const char *ctmp=NULL;
 			if((ctmp=getenv(tmp))&&ctmp[0]!='0'){
 				info("GPU %d is disabled by environment variable %s=%s\n", ig, tmp, ctmp);
-				gpu_info[ig][3]=0;
+				gpu_info(3,ig)=0;
 			}
 		}
 	}
@@ -318,37 +317,37 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			int ig=gpus[ii];//user uses nvidia-smi ordering
 			if(ig>=MAXGPU){
 				warning("GPU %d does not exist\n", ig);
-			}else if(gpu_info[ig][3]==1){
+			}else if(gpu_info(3,ig)==1){
 				info("GPU %d is not usable.\n", ig);
 			} else{
-				GPUS(NGPU, 0)=gpu_info[ig][0];
-				GPUS(NGPU, 1)=gpu_info[ig][1];
-				gpu_info[ig][3]=2;//mark used.
+				GPUS(NGPU, 0)=gpu_info(0,ig);
+				GPUS(NGPU, 1)=gpu_info(1,ig);
+				gpu_info(3,ig)=2;//mark used.
 				NGPU++;
 			}
 		}
 	} else{//Sort and use least busy GPUs.
 		for(int ig=0; ig<MAXGPU; ig++){
-			int ic=gpu_info[ig][0];//cuda index
-			if(gpu_info[ig][3]){
-				gpu_info[ig][2]=gpu_get_usage_percentage(ic, mem_minimum);
+			int ic=gpu_info(0,ig);//cuda index
+			if(gpu_info(3,ig)){
+				gpu_info(2,ig)=gpu_get_usage_percentage(ic, mem_minimum);
 			}
 		}
 		/*sort so that gpus with more available memory is in the front.*/
 		qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void*, const void*))cmp_long3_ascend);
 		for(int ig=0; ig<ngpu; ig++){
-			if(gpu_info[ig][3] && gpu_info[ig][2]<100){
-				GPUS(NGPU,0)=(int)gpu_info[ig][0];//cuda index
-				GPUS(NGPU,1)=(int)gpu_info[ig][1];//nvidia-smi index
-				gpu_info[ig][3]=2;//mark used
+			if(gpu_info(3,ig) && gpu_info(2,ig)<100){
+				GPUS(NGPU,0)=(int)gpu_info(0,ig);//cuda index
+				GPUS(NGPU,1)=(int)gpu_info(1,ig);//nvidia-smi index
+				gpu_info(3,ig)=2;//mark used
 				NGPU++;
 			}
 		}
 	}
 	for(int ig=0; ig<MAXGPU; ig++){
-		if(gpu_info[ig][3]==1){
-			dbg("GPU %ld is not used; reset its context.\n", gpu_info[ig][1]);
-			cudaSetDevice(gpu_info[ig][0]);
+		if(gpu_info(3,ig)==1){
+			dbg("GPU %ld is not used; reset its context.\n", gpu_info(1,ig));
+			cudaSetDevice(gpu_info(0,ig));
 			cudaDeviceReset();//releases context, frees memory.
 		}
 	}
@@ -437,7 +436,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				count++;
 			}
 			qsort(tasks, count, sizeof(task_t), (int(*)(const void*, const void*))task_cmp);
-			float timtot[NGPU];
+			NumArray<float>timtot(NGPU);
 			for(int igpu=0; igpu<NGPU; igpu++){
 				timtot[igpu]=0;
 			}
@@ -455,16 +454,14 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				dbg3("%s --> GPU %d\n", tasks[it].name, GPUS(*tasks[it].dest,1));
 			}
 			free(tasks);
-
-			{
-				info("Use %d GPUs for%s%s%s%s%s\n", NGPU,
-					parms->gpu.wfs?" WFS":"",
-					parms->gpu.lsr?" LSR":"",
-					parms->gpu.tomo?" Tomo":"",
-					parms->gpu.fit?" Fit":"",
-					parms->gpu.evl?" Evl":""
-				);
-			}
+			
+			info("Use %d GPUs for%s%s%s%s%s\n", NGPU,
+				parms->gpu.wfs?" WFS":"",
+				parms->gpu.lsr?" LSR":"",
+				parms->gpu.tomo?" Tomo":"",
+				parms->gpu.fit?" Fit":"",
+				parms->gpu.evl?" Evl":""
+			);
 		}
 	}
 end:

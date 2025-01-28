@@ -3372,7 +3372,7 @@ static void setup_parms_postproc_misc(parms_t *parms){
 }
 static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 	if(bgs){
-		info2("Block Gauss Seidel (BGS) with");
+		info2("Block Gauss Seidel (BGS) with ");
 	}
 	switch(alg){
 	case ALG_CBS:
@@ -3381,9 +3381,9 @@ static void print_alg(int bgs, int alg, int maxit, int precond, real svdthres){
 	case ALG_CG:
 		info2("CG%d", maxit);
 		switch(precond){
-			case 0:	info2("with no preconditioner"); break;
-			case 1:	info2("with Fourier Domain preconditioner"); break;
-			default: info2("Unknown preconditioner"); break;
+			case 0:	info2(" with no preconditioner"); break;
+			case 1:	info2(" with Fourier Domain preconditioner"); break;
+			default: info2(" Unknown preconditioner"); break;
 		}
 		break;
 	case ALG_SVD:

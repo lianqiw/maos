@@ -166,9 +166,9 @@ void mvm_test(int igpu){
 	cp2gpu(cumvmt, mvmt);
 	cp2gpu(cux, x);
 	cuy.init(M, 1);
-	stream_t stream[nstream];
+	Array<stream_t> stream(nstream);
 	int nevent=nstream*2;
-	event_t event[nevent];
+	Array<event_t> event(nevent);
 	Real one=1.;
 	//cuwrite(cuy, stream, "y0");
 	Real tm;

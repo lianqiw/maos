@@ -20,31 +20,31 @@
 //Only specialize valid convertors.
 //cpu code defines real, comp, dmat, cmat for double or signle precision accourding to CPU_SINGLE
 template <>
-NumArray<real, Cpu>::NumArray(const dmat *A){
+NumArray<real>::NumArray(const dmat *A){
 	if(PN(A)){
-		NumArray<real, Cpu> temp(NX(A), NY(A), (real *)P(A), 0);//weak reference
+		NumArray<real> temp(NX(A), NY(A), (real *)P(A), 0);//weak reference
 		*this=temp;//move data over.
 	}
 }
 template <>
-NumArray<comp, Cpu>::NumArray(const cmat *A){
+NumArray<comp>::NumArray(const cmat *A){
 	if(PN(A)){
-		NumArray<comp, Cpu> temp(NX(A), NY(A), (comp*)P(A), 0);//weak reference
+		NumArray<comp> temp(NX(A), NY(A), (comp*)P(A), 0);//weak reference
 		*this=temp;//move data over.
 	}
 }
 //Single precision
 template <>
-NumArray<float, Cpu>::NumArray(const smat *A){
+NumArray<float>::NumArray(const smat *A){
 	if(PN(A)){
-		NumArray<float, Cpu> temp(NX(A), NY(A), (float *)P(A), 0);//weak reference
+		NumArray<float> temp(NX(A), NY(A), (float *)P(A), 0);//weak reference
 		*this=temp;//move data over.
 	}
 }
 template <>
-NumArray<fcomplex, Cpu>::NumArray(const zmat *A){
+NumArray<fcomplex>::NumArray(const zmat *A){
 	if(PN(A)){
-		NumArray<fcomplex, Cpu> temp(NX(A), NY(A), (fcomplex *)P(A), 0);//weak reference
+		NumArray<fcomplex> temp(NX(A), NY(A), (fcomplex *)P(A), 0);//weak reference
 		*this=temp;//move data over.
 	}
 }

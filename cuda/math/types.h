@@ -187,14 +187,14 @@ public:
 /**
    RefP is a reference counting for pointers.
 */
-template <typename T, template<typename> class Dev>
+template <typename T, template<typename> class Dev=Cpu>
 class RefP{
 protected:
-	T* p;  //The memory address being used.
+	T* p=0;  //The memory address being used.
 private:
-	Dev<T>* p0; //The allocated memory address. p>=p0;
-	long n0; //the allocated memory length.
-	unsigned int* nref;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
+	Dev<T>* p0=0; //The allocated memory address. p>=p0;
+	long n0=0; //the allocated memory length.
+	unsigned int* nref=0;  //The reference counter. Delete p0 only if nref is valid and has value of 1.
 public:
 	void init(long n=0, T* pin=0, int own=1){
 		if(p){
@@ -236,12 +236,12 @@ public:
 	}
 
 	//Constructors and related
-	RefP():p(0), p0(0), nref(0), n0(0){}
-	explicit RefP(long n, T* pin=0, int own=1):p(0), p0(0), nref(0), n0(0){
+	RefP(){}
+	explicit RefP(long n, T* pin=0, int own=1){
 		init(n, pin, own);
 	}
 	//Create a new pointer with offset for p.
-	RefP(const RefP& pin, long offset=0):p(pin.p+offset), p0(pin.p0), nref(pin.nref), n0(0){
+	RefP(const RefP& pin, long offset=0):p(pin.p+offset), p0(pin.p0), nref(pin.nref){
 		if(nref) atomic_add_fetch(nref, 1);
 	}
 	/*
@@ -290,12 +290,12 @@ public:
 	bool operator==(const RefP& in){
 		return p==in.p;
 	}
-	T* operator+(int i){
+	/*T* operator+(int i){
 		return p+i;
 	}
 	const T* operator+(int i)const{
 		return p+i;
-	}
+	}*/
 };
 	
 /**
@@ -307,13 +307,13 @@ template <typename T, template<typename> class Dev=Cpu>
 class Array:private RefP<T, Dev>{
 	typedef RefP<T, Dev> Parent;
 protected:
-	long nx;
-	long ny;
+	long nx=0;
+	long ny=0;
 	using Parent::p;
 public:
 	string keywords;
 	using Parent::deinit;
-	using Parent::operator+;
+	//using Parent::operator+;
 	using Parent::operator T*;
 	using Parent::operator const T*;
 	using Parent::operator();
@@ -348,7 +348,7 @@ public:
 	long N()const{
 		return nx*ny;
 	}
-	operator bool()const{
+	explicit operator bool()const{
 		return (nx&&ny);
 	}
 
@@ -358,7 +358,7 @@ public:
 		Parent::init(nxi*nyi);
 	}
 	//Constructors 
-	Array():Parent(0,NULL,1),nx(0),ny(0){}
+	Array(){}
 	Array(long nxi, long nyi=1, T* pi=NULL, int own=1)
 		:Parent(nxi*nyi, pi, own), nx(nxi), ny(nyi){}
 
@@ -395,7 +395,7 @@ protected:
 public:
 	using Parent::keywords;
 	using Parent::deinit;
-	using Parent::operator+;
+	//using Parent::operator+;
 	using Parent::operator T *;
 	using Parent::operator const T *;
 	using Parent::operator();
@@ -463,7 +463,7 @@ public:
 };
 
 ///Only for array of numerical data.
-template <typename T, template<typename> class Dev>
+template <typename T, template<typename> class Dev=Cpu>
 class NumArray:public Array<T, Dev>{
 #if __cpp_static_assert >= 200410L
 	static_assert(sizeof(T)<=16, "NumArray can only be used with numerical data");
@@ -476,7 +476,7 @@ protected:
 public:
 	using Parent::keywords;
 	using Parent::deinit;
-	using Parent::operator+;
+	//using Parent::operator+;
 	using Parent::operator T *;
 	using Parent::operator const T *;
 	using Parent::operator();
@@ -574,7 +574,7 @@ public:
    NumCell is a special Array of array of numerical data that can store multiple Arrays of numerical data in continuous region.
 */
 
-template <typename T, template<typename> class Dev>
+template <typename T, template<typename> class Dev=Cpu>
 class NumCell:public CellArray<NumArray<T, Dev> >{
 private:
 	typedef NumArray<T, Dev> TMat;
@@ -664,13 +664,13 @@ public:
 		if(!m){
 			return NumCell(nx, ny);
 		} else{
-			long mx[nx*ny];
-			long my[nx*ny];
+			NumArray<long>mx(nx*ny);
+			NumArray<long>my(nx*ny);
 			for(long i=0; i<nx*ny; i++){
 				mx[i]=p[i].Nx();
 				my[i]=p[i].Ny();
 			}
-			return NumCell(nx, ny, mx, my);
+			return NumCell(nx, ny, mx(), my());
 		}
 	}
 
@@ -725,8 +725,8 @@ typedef class NumArray<real, Gpu>   cudmat;//same dtype as cpu dmat
 typedef class NumArray<comp, Gpu>   cuzmat;//same dtype as cpu cmat
 typedef class NumCell<Real, Gpu>  curcell;
 typedef class NumCell<Comp, Gpu>  cuccell;
-typedef class NumArray<real, Cpu>   crmat;//equivalent to rmat in c
-typedef class NumArray<comp, Cpu>   ccmat;//equivalent to cmat in c
+typedef class NumArray<real>   crmat;//equivalent to rmat in c
+typedef class NumArray<comp>   ccmat;//equivalent to cmat in c
 
 template <typename T>
 class dtype{
@@ -836,7 +836,7 @@ public:
 
 	void trans();/*covnert to CSR mode by transpose*/
 
-	operator bool()const{
+	explicit operator bool()const{
 		return ref && ref->nx&&ref->ny;
 	}
 	void Copy(const cusp& in, cudaStream_t stream=0){
@@ -929,7 +929,7 @@ public:
 		tmp.dy*=sc;
 		return tmp;
 	}
-	operator bool(){
+	explicit operator bool(){
 		return nx&&ny;
 	}
 };
@@ -1010,7 +1010,7 @@ void Copy(NumArray<T, Dev> &out, const NumArray<T2, Dev2> &in, cudaStream_t stre
 	cp2gpu(out(), in(), in.Nx(), in.Ny(), stream);
 }*/
 template <typename T, typename T2>
-void Copy(NumArray<T, Gpu> &out, const NumArray<T2, Cpu> &in, cudaStream_t stream=0){
+void Copy(NumArray<T, Gpu> &out, const NumArray<T2> &in, cudaStream_t stream=0){
 	cp2gpu(out(), in(), in.Nx(), in.Ny(), stream);
 }
 /*static inline void Copy(cumap_t&out, const cumap_t &in, cudaStream_t stream=0){
