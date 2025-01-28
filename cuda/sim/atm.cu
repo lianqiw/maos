@@ -61,22 +61,21 @@ static void* atm_prep(atm_prep_t* data){
 	} else{
 		my=ny0;
 	}
-	typedef Real pout_t[nx0];
-	pout_t* pout=(pout_t*)data->next_atm;
+	
 	for(int iy=0; iy<my; iy++){
 		for(int ix=0; ix<mx; ix++){
-			pout[iy][ix]=(Real)P(atm, ix+offx, iy+offy);
+			data->next_atm(ix,iy)=(Real)P(atm, ix+offx, iy+offy);
 		}
 		for(int ix=mx; ix<nx0; ix++){
-			pout[iy][ix]=(Real)P(atm, ix+offx-nxi, iy+offy);
+			data->next_atm(ix,iy)=(Real)P(atm, ix+offx-nxi, iy+offy);
 		}
 	}
 	for(int iy=my; iy<ny0; iy++){
 		for(int ix=0; ix<mx; ix++){
-			pout[iy][ix]=(Real)P(atm, ix+offx, iy+offy-nyi);
+			data->next_atm(ix,iy)=(Real)P(atm, ix+offx, iy+offy-nyi);
 		}
 		for(int ix=mx; ix<nx0; ix++){
-			pout[iy][ix]=(Real)P(atm, ix+offx-nxi, iy+offy-nyi);
+			data->next_atm(ix,iy)=(Real)P(atm, ix+offx-nxi, iy+offy-nyi);
 		}
 	}
 	//toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
@@ -229,8 +228,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		for(int ips=0; ips<nps; ips++){
 			if(prep_data[ips].next_atm){
 				warning("next_atm is not empty\n");
-				free(prep_data[ips].next_atm);
-				prep_data[ips].next_atm=NULL;
+				prep_data[ips].next_atm.deinit();
 			}
 			prep_data[ips].isim_next=isim;/*right now. */
 		}
@@ -239,7 +237,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	/*Load atmosphere to Real memory in advance. This takes time if atm is stored in file.*/
 		if(isim+100>prep_data[ips].isim_next&&!prep_data[ips].next_atm){
 			const int nxni=parms->atm.nxn->p[ips];
-			prep_data[ips].next_atm=(Real*)malloc(sizeof(Real)*nx0*ny0);
+			prep_data[ips].next_atm.init(nx0, ny0);
 			const int margin=1;//to avoid going out of range due to interpolation.
 			//Compute the origin of the subset phase screen to be copied to GPU.
 			if(atm[ips]->vx>0){/*align right */
@@ -284,10 +282,10 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 				cumapcell& cuatm=cudata->atm;
 				cuatm[ips].ox=prep_data[ips].ox;
 				cuatm[ips].oy=prep_data[ips].oy;
-				DO(cudaMemcpy(cuatm[ips](), prep_data[ips].next_atm,
+				DO(cudaMemcpy(cuatm[ips](), prep_data[ips].next_atm(),
 					nx0*ny0*sizeof(Real), H2D));
 			}/*for im */
-			free(prep_data[ips].next_atm);prep_data[ips].next_atm=0;
+			prep_data[ips].next_atm.deinit();
 			/*Update next_isim. */
 			long isim1, isim2;
 			const int nxni=parms->atm.nxn->p[ips];

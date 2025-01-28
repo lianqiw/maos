@@ -40,7 +40,7 @@ typedef struct{
     map_t *atm;
     Real ox;
     Real oy;
-    Real *next_atm;
+    NumArray<Real> next_atm;
     pthread_t threads;
 }atm_prep_t;
 //Global data independent of GPU

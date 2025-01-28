@@ -49,7 +49,7 @@ cufdpcg_t::cufdpcg_t(fdpcg_t* fdpcg, const curecon_geom* _grid)
 	int nps=grid->npsr;
 	int count=0;
 	int osi=-1;
-	int start[nps];
+	NumArray<int> start(nps);
 	for(int ips=0; ips<nps; ips++){
 	/*group layers with the same os together in a batch fft.*/
 		if(osi!=grid->xnx[ips]){

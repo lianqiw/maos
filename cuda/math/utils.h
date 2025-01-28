@@ -195,8 +195,8 @@ void cp2gpu(NumCell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 	}
 	if(!dest){
 		long nc=src->nx*src->ny;
-		long nx[nc];
-		long ny[nc];
+		NumArray<long> nx(nc);
+		NumArray<long> ny(nc);
 		for(long i=0; i<nc; i++){
 			if(src->p[i]){
 				nx[i]=src->p[i]->nx;
@@ -206,7 +206,7 @@ void cp2gpu(NumCell<T, Gpu>& dest, const_anycell src_, cudaStream_t stream=0){
 				ny[i]=0;
 			}
 		}
-		dest=NumCell<T, Gpu>(src->nx, src->ny, nx, ny);
+		dest=NumCell<T, Gpu>(src->nx, src->ny, nx(), ny());
 	} else if(dest.Nx()!=src->nx||dest.Ny()!=src->ny){
 		error("Mismatch: %ldx%ld vs %ldx%ld\n",
 			dest.Nx(), dest.Ny(), src->nx, src->ny);

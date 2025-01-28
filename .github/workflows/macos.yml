@@ -19,15 +19,13 @@ jobs:
       with:
         path: maos
     - name: autogen
-      run: cd maos && ./autogen.sh
+      run: |
+        cd maos && ./autogen.sh
     - name: configure and make
       run: |
-        src=$(pwd)/maos
-        prefix=$(pwd)/external
-        PATH+=${prefix}/bin
         mkdir build && cd build
-        $src/configure --enable-release --disable-binary --prefix=$prefix
-        make -j4
+        ../maos/configure --enable-release --disable-binary --prefix=$(pwd)/../external
+        make -j8
     - name: make check
       run: cd build && make check
     - uses: actions/upload-artifact@v4

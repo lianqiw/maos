@@ -160,7 +160,7 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 	}
 	hx.init_l2d(grid->pmap, dir, nwfs, grid->xmap);
 	delete[] dir;
-	lap_t lapc[recon->npsr];
+	Array<lap_t>lapc(recon->npsr);
 	for(int ips=0; ips<recon->npsr; ips++){
 		Real tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap->p[ips]->dx)*0.25f;
 		lapc[ips].nxps=recon->xmap->p[ips]->nx;
@@ -236,7 +236,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 	init_hx(parms, recon);
 
 	{
-		Array<gpu_gp_t, Cpu> GPDATA(nwfs, 1);
+		Array<gpu_gp_t> GPDATA(nwfs, 1);
 		//gpu_gp_t *GPDATA=new gpu_gp_t[nwfs];
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -288,7 +288,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		//dbg("init runtime temporary data\n");
 		int nxp=recon->pmap->nx;
 		int nyp=recon->pmap->ny;
-		int nxpw[nwfs], nypw[nwfs], ngw[nwfs];
+		NumArray<int> nxpw(nwfs), nypw(nwfs), ngw(nwfs);
 
 		smat* wfsrot2=0;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -311,13 +311,13 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			}
 		}
 		if(wfsrot2){
-			opdwfs2=curcell(nwfs, 1, nxpw, nypw);
+			opdwfs2=curcell(nwfs, 1, nxpw(), nypw());
 			cp2gpu(wfsrot, wfsrot2);
 			sfree(wfsrot2);
 		}
-		opdwfs=curcell(nwfs, 1, nxpw, nypw);
+		opdwfs=curcell(nwfs, 1, nxpw(), nypw());
 
-		grad=curcell(nwfs, 1, ngw, (int*)NULL);
+		grad=curcell(nwfs, 1, ngw(), (int*)NULL);
 		ttf=curmat(nttf,nwfs);
 	}
 }
