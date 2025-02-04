@@ -2686,10 +2686,10 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 		}
 		if(r>rmax) rmax=r;
 	}
-	real fov=2*rmax;
-	if(parms->sim.fov<fov){
-		dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,fov*RAD2AS);
-		parms->sim.fov=fov;
+	parms->sim.foveff=2*rmax;
+	if(parms->sim.fov<parms->sim.foveff){
+		dbg("sim.fov=%g is less than actual fov=%g. Changed\n",parms->sim.fov*RAD2AS,parms->sim.foveff*RAD2AS);
+		parms->sim.fov=parms->sim.foveff;
 	}
 }
 /**
@@ -3032,7 +3032,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 		if(parms->fit.alg==-1){
 			if(parms->recon.modal){
-				parms->fit.alg=ALG_CG;
+				parms->fit.alg=parms->recon.mvm?ALG_SVD:ALG_CG;
 			}else{
 				parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS or SVD.
 			}
@@ -3108,7 +3108,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			if(parms->ndm>1){
 				//if meta pupil is much larger than the aperture, needs more iterations. 
 				//if atmr.dx is smaller than 0.5, also more iterations
-				real ratio=pow(1+parms->sim.fov*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
+				real ratio=pow(1+parms->sim.foveff*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
 				if(parms->atmr.dx<0.5){
 					ratio*=0.5/parms->atmr.dx;
 				}
