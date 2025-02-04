@@ -398,7 +398,9 @@ int mycudaFree(void* pp){
 		std::map<void*, int>::iterator it=cumemcache.memcount.find(pp);
 		if(it!=cumemcache.memcount.end()){
 			it->second--;
-			tofree=!(it->second);
+			if((tofree=!(it->second))){
+				cumemcache.memcount.erase(it);
+			}
 		}
 	}
 	if(tofree){

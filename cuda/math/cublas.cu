@@ -146,7 +146,7 @@ cusparseSpMM(cusparseHandle_t     handle,
 		}
 		if(y.N()<ncolvec*ny){
 			error("y[%ldx%ld] is smaller than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
-		}else{
+		}else if(y.N()>ncolvec*ny){
 			warning_once("y[%ldx%ld] is larger than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
 		}
 		if(!x.mdesc) DO(cusparseCreateDnMat(&x.mdesc, nx, ncolvec, nx,(void *)x(), CUDA_R, CUSPARSE_ORDER_COL));

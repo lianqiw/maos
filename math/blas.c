@@ -188,6 +188,14 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres1, R thres2){
 	return out;
 }
 /**
+ * @brief Wrap dpinv2 with default parameters.
+ * 
+ */
+X(mat) *X(pinv)(const X(mat) *A, const_anyarray W){
+	return X(pinv2)(A, W, 1e-7, 1e-3);
+}
+
+/**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
    Larger scaling is more accurate but slower. Tested against matlab expm
 
@@ -465,7 +473,13 @@ void X(svd_pow2)(X(mat)* A, /**<[in/out] The matrix*/
 	X(free)(VT);
 	XR(free)(Sdiag);
 }
-
+/**
+ * @brief Wrap svd_pow with default parameters.
+ * 
+ */
+void X(svd_pow)(X(mat) *A, R power){
+	return X(svd_pow2)(A,power,1e-7,1e-3);
+}	
 /**
    Inplace Invert a SPD matrix. It is treated as a block matrix
 */
@@ -547,7 +561,13 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	X(cellfree)(ata);
 	return out;
 }
-
+/**
+ * @brief Wrap cellpinv2 with default parameters
+ * 
+ */
+X(cell)* X(cellpinv)(const X(cell) *A, const_anyarray W){
+	return X(cellpinv2)(A,W,1e-7,1e-3);
+}
 /**
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
@@ -564,4 +584,11 @@ void X(cellsvd_pow2)(X(cell)* A, R power, R thres1, R thres2){
 		X(celldropzero)(A, 0);
 		X(free)(Ac);
 	}
+}
+/**
+ * @brief wrap cellsvd_pow2.
+ * 
+ */
+void X(cellsvd_pow)(X(cell) *A, R power){
+	X(cellsvd_pow2)(A,power,1e-7,1e-3);
 }

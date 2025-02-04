@@ -576,7 +576,8 @@ typedef struct sim_cfg_t{
     real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
     real fcttm;    /**<cross over frequency of tip/tilt split. 0 to disable ttm.*/
     real fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    real fov;      /**<The diameter of total fov in arcsec*/
+    real fov;      /**<User specified fov diameter*/
+	real foveff;   /**<The effective fov diameter */
     int focus2tel;   /**<Offload focus to telescope*/
     real epfocus2tel;/*Gain for telescope focus control*/
     int mffocus;     /**<method for focus blending between LGS and LO NGS

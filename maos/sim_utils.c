@@ -565,7 +565,9 @@ static void init_simu_evl(sim_t* simu){
 		int ahst_nmod=0;
 		if(parms->evl.split){
 			ahst_nmod=3;
-			if(parms->nlgspowfs) ahst_nmod++;//focus
+			if(recon->ngsmod->indfocus){
+				ahst_nmod++;//focus
+			}
 		}
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
@@ -1479,7 +1481,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	fnextra=parms->save.extra?"extra":"-";
 	if(parms->sim.wspsd){
 		if(parms->sim.idealtomo){
-			warning("sim.idealtomo is not yet implemented for sim.wspsd. Ignored\n");
+			warning("sim.wspsd is not supported when sim.idealtomo=1. Ignored\n");
 		}else{
 			/* Telescope wind shake added to TT input. */
 			info("Converting windshake PSD to time series.\n");
