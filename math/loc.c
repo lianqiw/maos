@@ -19,22 +19,6 @@
 #include "loc.h"
 #include "map.h"
 
-/**
-   Free pts_t data
-*/
-void ptsfree_do(pts_t* pts){
-	if(pts&&pts->nref&&!atomic_sub_fetch(pts->nref, 1)){
-		if(pts->origx){
-			free(pts->origx);
-			free(pts->origy);
-		}
-		if(pts->map){
-			mapfree(pts->map);
-		}
-		free(pts->nref);
-	}
-	free(pts);
-}
 
 /**
    Free the MAP in loc_t
@@ -58,68 +42,56 @@ void loc_free_stat(loc_t* loc){
 /**
    Free loc_t data.
  */
-void locfree_do(loc_t* loc){
-	if(loc&&loc->nref&&!atomic_sub_fetch(loc->nref,1)){
+void locfree_do(cell* p){
+	if(p && p->id==M_LOC){
+		loc_t *loc=(loc_t*)p;
 		loc_free_stat(loc);
 		loc_free_map(loc);
-		free(loc->locx);
-		//free(loc->locy);
-		free(loc->nref);
-		free(loc);
 	}
 }
 
 /**
-   Free loc_t array
-*/
-void locarrfree_do(loc_t** loc, int nloc){
-	if(!loc) return;
-	for(int iloc=0; iloc<nloc; iloc++){
-		locfree(loc[iloc]);
-	}
-	free(loc);
+ * @brief Convert a dmat to loc_t object
+ * 
+ * @param A 	Input array to be changed in place.
+ * @return loc_t* 
+ */
+loc_t* loc_convert(dmat* A){
+	if(!A || A->id!=M_REAL) return NULL;
+	loc_t* loc=myrealloc2(A, dmat, loc_t);
+	loc->id=M_LOC;
+	loc->locy=loc->locx+loc->nloc;
+	loc->dmat->deinit=locfree_do;
+	loc->dmat->make_keywords=loc_keywords;
+	return loc;
 }
 
 /**
    Create a loc with nloc elements.
 */
 loc_t* locnew(long nloc, real dx, real dy){
-	loc_t* loc=mycalloc(1, loc_t);
-	loc->id=M_LOC;
-	if(nloc>0){
-		loc->locx=mycalloc(nloc*2, real);
-		loc->locy=loc->locx+nloc;
-		//loc->locx=mycalloc(nloc, real);
-		//loc->locy=mycalloc(nloc, real);
-		loc->nref=mycalloc(1, unsigned int); loc->nref[0]=1;
-	}
-	loc->nloc=nloc;
-	loc->two=2;
-	if(!isnan(dx)) loc->dx=dx;
-	if(!isnan(dy)) loc->dy=dy; else if(!isnan(dx)) loc->dy=dx;
-
+	loc_t* loc=loc_convert(dnew(nloc, 2));
+	loc->dx=dx;
+	loc->dy=dy?dy:dx;
 	return loc;
 }
 /**
-   Reference an existing loc
+   Reference an existing loc. map and stat are not referenced.
  */
 loc_t* locref(loc_t* in){
 	if(!in) return NULL;
-	//loc_t* out=mycalloc(1, loc_t);
-	//memcpy(out, in, sizeof(loc_t));
-	if(in->nref){
-		atomic_add_fetch(in->nref,1);
-		return in;
-	}else{
-		error("Invalid: in->nref is NULL\n");
-		return NULL;
-	}
+	loc_t *loc=loc_convert(dref(in->dmat));
+	loc->dx=in->dx;
+	loc->dy=in->dy;
+	loc->ht=in->ht;
+	loc->iac=in->iac;
+	return loc;
 }
 /**
    Create a pts with nsa, dsa, nx, dx
 */
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy){
-	pts_t* pts=myrealloc(locnew(nsa, dsax, dsay), 1, pts_t);
+	pts_t* pts=myrealloc2(locnew(nsa, dsax, dsay), loc_t, pts_t);
 	pts->nxsa=nxsa;
 	pts->nysa=nysa;
 	pts->dx=dx;
@@ -134,8 +106,7 @@ pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, rea
  */
 uint32_t lochash(const loc_t* loc, uint32_t key){
 	if(loc){
-		key=hashlittle(loc->locx, loc->nloc*sizeof(real), key);
-		key=hashlittle(loc->locy, loc->nloc*sizeof(real), key);
+		key=dhash(loc->dmat, key);
 	}
 	return key;
 }
@@ -240,7 +211,7 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 	loc->map->iac=loc->iac;
 	loc->map->ox=xmin;
 	loc->map->oy=ymin;
-	dmat* pmap=(dmat*)loc->map;
+	dmat* pmap=DMAT(loc->map);
 	const real* locx=loc->locx;
 	const real* locy=loc->locy;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
@@ -448,7 +419,7 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 }
 /**
    Convert a map to a loc that collects all positive entries while keep each row continuous*/
-loc_t* map2loc(map_t* map, real thres){
+loc_t* loc_from_map(map_t* map, real thres){
 	if(!map) return NULL;
 	const real dx=map->dx;
 	const real dy=map->dy;
@@ -485,8 +456,8 @@ loc_t* map2loc(map_t* map, real thres){
 		}
 	}
 	if(!count){
-		warning("map2loc: there are 0 points.\n");
-		writebin(map, "map2loc");
+		warning("loc_from_map: there are 0 points.\n");
+		writebin(map, "loc_from_map");
 		print_backtrace();
 	}
 	locresize(loc, count);
@@ -516,7 +487,7 @@ loc_t* mk1dloc(real x0, real dx, long nx){
 }
 /**
    Create a loc array that covers the map_t. Notice that it is different from
-   map2loc which only covers valid (value>0) regions.
+   loc_from_map which only covers valid (value>0) regions.
 */
 loc_t* mksqloc_map(const map_t* map){
 	if(!map) return NULL;
@@ -553,7 +524,7 @@ loc_t* mkannloc(real D, real Din, real dx, real thres){
 	if(Din>0&&Din<D){
 		mapcircle(xy, Din/2, -1);
 	}
-	loc_t* loc=map2loc(xy, thres);
+	loc_t* loc=loc_from_map(xy, thres);
 	mapfree(xy);
 	return loc;
 }
@@ -1557,7 +1528,7 @@ loc_t* loctransform(const loc_t* loc,
 		if(input_type==1){
 			coeff=dread("%s", polycoeff);
 		} else if(input_type==2){
-			coeff=(dmat*)polycoeff;
+			coeff=dmat_cast((cell*)polycoeff);
 		}
 		if(coeff->ny==4){
 			locm=loctransform2(loc, coeff);
@@ -1617,15 +1588,8 @@ void locresize(loc_t* loc, long nloc){
 	if(!loc || loc->nloc==nloc) return;
 	loc_free_map(loc);
 	loc_free_stat(loc);
-	if(nloc>loc->nloc){//expand size
-		loc->locx=myrealloc(loc->locx, nloc*2, real);
-		memmove(loc->locx+nloc, loc->locx+loc->nloc, loc->nloc*sizeof(real));
-	}else{//reduce size
-		memmove(loc->locx+nloc, loc->locx+loc->nloc, nloc*sizeof(real));
-		loc->locx=myrealloc(loc->locx, nloc*2, real);
-	}
+	dresize(loc->dmat, nloc, 2);
 	loc->locy=loc->locx+nloc;
-	loc->nloc=nloc;
 }
 
 
@@ -1765,7 +1729,7 @@ loc_t* d2loc(const dmat *A){
 /**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
-loc_t* locreaddata(file_t* fp, header_t* header){
+/*loc_t* locreaddata(file_t* fp, header_t* header){
 	if(!fp) return NULL;
 	header_t header2={0};
 	if(!header){
@@ -1796,14 +1760,17 @@ loc_t* locreaddata(file_t* fp, header_t* header){
 	}
 	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
-}
+}*/
 
-void loc_header(loc_t *loc){
-	if(!loc) return;
-	if(loc->keywords) free(loc->keywords);
-	char str[120];
-	snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
-	loc->keywords=strdup(str);
+void loc_keywords(cell *p){
+	if(!p) return;
+	if(p->id==M_LOC){
+		loc_t *loc=(loc_t*)p;
+		if(loc->keywords) free(loc->keywords);
+		char str[120];
+		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
+		loc->keywords=strdup(str);
+	}
 }
 
 /**

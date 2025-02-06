@@ -16,19 +16,40 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "map.h"
-#define check_nonempty(A) (A?(A->nx?(A->ny?1:0):0):0)
-static void map_keywords(map_t *map){
-	if(!map || map->keywords) return;
-	char keywords[1024];
-	snprintf(keywords, sizeof(keywords), "dx=%g; dy=%g; ox=%g; oy=%g;", map->dx, map->dy, map->ox, map->oy);
-	map->keywords=strdup(keywords);
+/**
+ * @brief Convert a dmat to map object. Ensure that the type is properly initialized
+ * 
+ * @param A 	input dmat object. will be changed in place.
+ * @return map_t* 
+ */
+map_t* map_convert(dmat *A){
+	if(!A || A->id!=M_REAL) return NULL;
+	map_t* map=myrealloc2(A, dmat, map_t);
+	map->id=M_MAP;
+	map->make_keywords=map_make_keywords;
+	if(map->keywords) map_parse_keywords(map); 
+	return map;
+}
+
+/**
+ * @brief Convert a dmat to rmap object. Ensure that the type is properly initialized
+ * 
+ * @param A 	input dmat object. will be changed in place.
+ * @return map_t* 
+ */
+rmap_t* rmap_convert(dmat* A){
+	if(!A || A->id!=M_REAL) return NULL;
+	rmap_t* map=myrealloc2(A, dmat, rmap_t);
+	map->id=M_RMAP;
+	map->make_keywords=rmap_make_keywords;
+	if(map->keywords) rmap_parse_keywords(map);
+	return map;
 }
 /**
    create a new map_t object.
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
-	map_t* map=mycalloc(1, map_t);
-	dinit((dmat**)&map, nx, ny);
+	map_t* map=map_convert(dnew(nx, ny));
 	map->h=0;
 	map->dx=dx;
 	map->dy=dy;
@@ -37,36 +58,34 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 	map->vx=0;
 	map->vy=0;
 	map->iac=0;
-	map_keywords(map);
+	map->dratio=0;
 	return map;
 }
 /**
    ceate a new map_t object from existing one. P is left empty.
 */
 map_t* mapnew2(map_t* A){
-	if(!check_nonempty(A)) return NULL;
-	map_t* map=mycalloc(1, map_t);
-	dinit((dmat**)&map, A->nx, A->ny);
-	map->id=M_MAP;
+	if(isempty(A)) return NULL;
+	map_t* map=mapnew(A->nx, A->ny, A->dx, A->dy);
 	map->h=A->h;
-	map->dx=A->dx;
-	map->dy=A->dy;
 	map->ox=A->ox;
 	map->oy=A->oy;
 	map->vx=A->vx;
 	map->vy=A->vy;
 	map->iac=A->iac;
-	map_keywords(map);
+	map->dratio=A->dratio;
 	return map;
 }
-map_t* mapref(map_t* in){
-	if(!check_nonempty(in)) return NULL;
-	map_t* out=mycalloc(1, map_t);
-	memcpy(out, in, sizeof(map_t));
-	if(in->keywords) out->keywords=strdup(in->keywords);
-	out->mem=mem_ref(in->mem);
-	out->fp=NULL;
-	out->fft=NULL;
+map_t* mapref(const map_t* in){
+	if(isempty(in)) return NULL;
+	map_t* out=map_convert(dref(in->dmat));
+	memcpy((char*)out+sizeof(dmat), (char*)in+sizeof(dmat), sizeof(map_t)-sizeof(dmat));
+	return out;
+}
+map_t* mapdup(const map_t* in){
+	if(isempty(in)) return NULL;
+	map_t* out=map_convert(ddup(in->dmat));
+	memcpy((char*)out+sizeof(dmat), (char*)in+sizeof(dmat), sizeof(map_t)-sizeof(dmat));
 	return out;
 }
 
@@ -74,15 +93,15 @@ map_t* mapref(map_t* in){
    Create a circular aperture on map_t.
 */
 void mapcircle(map_t* map, real r, real val){
-	if(!check_nonempty(map)) return;
-	dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
+	if(isempty(map)) return;
+	dcircle(DMAT(map), (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
 
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
 void map_d_din(map_t* map, real* d, real* din){
-	if(!check_nonempty(map)||!d||!din) return;
+	if(isempty(map)||!d||!din) return;
 	real r2min=INFINITY, r2max=0;
 	for(long iy=0; iy<map->ny; iy++){
 		real y=iy*map->dy+map->oy;
@@ -197,7 +216,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		(*mapout)->ox=ox;
 		(*mapout)->oy=oy;
 		(*mapout)->h=ht0;
-		dmat* dmap=(dmat*)(*mapout);
+		dmat* dmap=DMAT((*mapout));
 		if(square){/**Only want square grid*/
 			dset(dmap, 1);
 		} else{/*Want non square grid*/
@@ -220,8 +239,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 }
 
 /**
-   convert a dmat to map_t.
-
+   parse keywords for map_t. 
    keywords are used to specify parameters:
    - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),
    - layer heiht (default to 0),
@@ -229,12 +247,9 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
    - origin (ox, oy; will use nx/2*dx or ny/2*dy if not specified)
    - for DM grid only: inter-actuator-coupling (iac)
 */
-map_t* d2map(const dmat* in){
-	if(!check_nonempty(in)) return NULL;
-	dmat *tmp=dref(in);
-	map_t* map=myrealloc(tmp, 1, map_t);
-	memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
-	char* keywords=in->keywords;
+void map_parse_keywords(map_t* map){
+	if(!map || map->id!=M_MAP || !map->keywords) return;
+	const char* keywords=map->keywords;
 	map->iac=0;
 	map->ox=search_keyword_num(keywords, "ox");
 	map->oy=search_keyword_num(keywords, "oy");
@@ -266,27 +281,10 @@ map_t* d2map(const dmat* in){
 		map->oy=(-map->ny/2+offset)*map->dy;
 		dbg2("oy is not specified. set to %g\n", map->oy);
 	}
-	return map;
 }
 
 /**
- * convert a mmap'ed dcell to map_t array
- */
-mapcell* dcell2map(const dcell* in){
-	if(!check_nonempty(in)) return NULL;
-	mapcell* map=(mapcell*)cellnew(in->nx, in->ny);
-	for(long i=0; i<in->nx*in->ny; i++){
-		if(!P(in,i)->keywords&&in->keywords){
-			P(in,i)->keywords=strdup(in->keywords);
-		}
-		P(map,i)=d2map(P(in,i));
-	}
-	return map;
-}
-
-
-/**
-    convert a dmat to rmap_t.
+    Parse keywords for rmap_t.
 
   	keywords are used to specify parameters:
     - the sampling (dx or D; strong recommended; default to 1/64; also specify dy if spacing is different.),
@@ -296,16 +294,9 @@ mapcell* dcell2map(const dcell* in){
 	- fexit: distance from exit pupil to focus
 	- fsurf  distance from surface to focu
 */
-rmap_t* d2rmap(const dmat* in){
-	if(!check_nonempty(in)) return NULL;
-	dmat *tmp=dref(in);
-	rmap_t* map=myrealloc(tmp, 1, rmap_t);
-	memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
-	if(!in->keywords){
-		error("this dmat has no header\n");
-	}
-	map->id=M_RMAP;
-	const char *keywords=in->keywords;
+void rmap_parse_keywords(rmap_t* map){
+	if(!map || map->id!=M_RMAP || !map->keywords) return;
+	const char *keywords=map->keywords;
 	map->ox=search_keyword_num(keywords, "ox");
 	map->oy=search_keyword_num(keywords, "oy");
 	map->dx=search_keyword_num(keywords, "dx");
@@ -316,32 +307,17 @@ rmap_t* d2rmap(const dmat* in){
 	map->fexit=search_keyword_num(keywords, "fexit");
 	map->fsurf=search_keyword_num(keywords, "fsurf");
 	if(isnan(map->ox)||isnan(map->oy)||isnan(map->dx)||isnan(map->dy)||isnan(map->fsurf)){
-		error("header is needed to convert dmat to map_t\n");
+		error("valid header is needed to construct rmap_t\n");
 	}
-	return map;
 }
-
-/**
- * convert a mmap'ed dcell to map_t array
- */
-rmap_t** dcell2rmap(int* nlayer, const dcell* in){
-	if(!check_nonempty(in)) return NULL;
-	*nlayer=in->nx*in->ny;
-	rmap_t** map=mycalloc(in->nx*in->ny, rmap_t*);
-	for(long i=0; i<in->nx*in->ny; i++){
-		map[i]=d2rmap(P(in,i));
-	}
-	return map;
-}
-
 
 /**
 	convert fields to keyword string
 */
-void map_header(map_t* map){
-	if(!map) return;
+void map_make_keywords(cell* p){
+	if(!p || p->id!=M_MAP) return;
+	map_t *map=(map_t *)p;
 	if(map->keywords) free(map->keywords);
-	
 	char keywords[1024];
 	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 		map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
@@ -351,11 +327,77 @@ void map_header(map_t* map){
 /**
  * convert fields to keyword string
 */
-void rmap_header(rmap_t* map){
-	if(!map) return;
+void rmap_make_keywords(cell* p){
+	if(!p || p->id!=M_RMAP) return;
+	rmap_t* map=(rmap_t*)p;
 	if(map->keywords) free(map->keywords);
 	char keywords[1024];
 	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\ntxdeg=%.15g\ntydeg=%.15g\nftel=%.15g\nfexit=%.15g\nfsurf=%.15g\n",
 		map->ox, map->oy, map->dx, map->dy, map->txdeg, map->tydeg, map->ftel, map->fexit, map->fsurf);
 	map->keywords=strdup(keywords);
+}
+
+/**
+   blend atm1 with atm2 according to wind direction angle and required
+   overlapping region of at least overx*overy. Not used.
+*/
+
+void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
+	const long nx=NX(atm1);
+	const long ny=NY(atm1);
+	int ca=0;
+	if(atm1->vx>EPS){
+		ca=-1;/*reverse sign of vx */
+	} else if(atm1->vx<-EPS){
+		ca=1;
+	}
+	int sa=0;
+	if(atm1->vy>EPS){
+		sa=-1;/*reverse sign of vy */
+	} else if(atm1->vy<-EPS){
+		sa=1;
+	}
+	long rr;
+	long offx=nx-overx;
+	long offy=(ny-overy)*nx;
+	if(ca==0){/*along y. */
+		rr=ny-overy;/*distance between the origins. */
+		atm2->oy=atm1->oy+rr*sa*atm1->dx;
+		atm2->ox=atm1->ox;
+		real wty=sa<0?1:0;
+		real* p1=P(atm1)+(1-(long)wty)*offy;
+		real* p2=P(atm2)+(long)wty*offy;
+		real(*pp1)[nx]=(real(*)[nx])p1;
+		real(*pp2)[nx]=(real(*)[nx])p2;
+		real overyd=(real)overy;
+		for(long iy=0; iy<overy; iy++){
+			real wt1=fabs(wty-(real)(iy+1)/overyd);
+			for(long ix=0; ix<nx; ix++){
+				pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
+				pp2[iy][ix]=pp1[iy][ix];
+			}
+		}
+	} else if(sa==0){
+		rr=nx-overx;/*distance between the origins. */
+		atm2->ox=atm1->ox+rr*ca*atm1->dx;
+		atm2->oy=atm1->oy;
+		real wtx=ca<0?1:0;
+		real* p1=P(atm1)+(1-(long)wtx)*offx;
+		real* p2=P(atm2)+(long)wtx*offx;
+		real(*pp1)[nx]=(real(*)[nx])p1;
+		real(*pp2)[nx]=(real(*)[nx])p2;
+		real wts[overx];
+		real overxd=(real)overx;
+		for(long ix=0; ix<overx; ix++){
+			wts[ix]=fabs(wtx-(real)(ix+1)/overxd);
+		}
+		for(long iy=0; iy<ny; iy++){
+			for(long ix=0; ix<overx; ix++){
+				pp1[iy][ix]=(1-wts[ix])*pp1[iy][ix]+wts[ix]*pp2[iy][ix];
+				pp2[iy][ix]=pp1[iy][ix];
+			}
+		}
+	} else{
+		error("We do not support this wind direction: ca=%d, sa=%d\n", ca, sa);
+	}
 }

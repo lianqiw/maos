@@ -26,6 +26,7 @@ extern "C"{
   void *calloc_maos(size_t, size_t);
   void *malloc_maos(size_t);
   void *realloc_maos(void *, size_t);
+  void *realloc2_maos(void *, size_t, size_t);
   void  free_maos(void *);
   extern void *(*calloc_default)(size_t, size_t);
   extern void *(*malloc_default)(size_t);
@@ -48,6 +49,7 @@ extern void  (*free_default)(void *);
 #define mycalloc(nelem, type)     (type*)(funtrace_set, calloc_maos(nelem, sizeof(type)))
 #define mymalloc(nelem, type)     (type*)(funtrace_set, malloc_maos(nelem*sizeof(type)))
 #define myrealloc(p, nelem, type) (type*)(funtrace_set, realloc_maos(p, nelem*sizeof(type)))
+#define myrealloc2(p, oldtype, newtype) (newtype*)(funtrace_set, realloc2_maos(p, sizeof(oldtype), sizeof(newtype)))
 #define myfree(p) if(p) free_maos(p)
 
 #if !defined(IN_MEM_C) && !defined(AOS_CUDA_H)

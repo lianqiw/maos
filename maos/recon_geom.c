@@ -55,7 +55,7 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 		//an additional ring of guard points is needed if square is used.
 		create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, square);
 		info("PLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(pmap), NY(pmap), dxr, square?"":"not ");
-		recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
+		recon->ploc=loc_from_map(pmap, 0);/*convert map_t to loc_t */
 		mapfree(pmap);
 	}
 	if(parms->save.setup){
@@ -147,7 +147,7 @@ setup_recon_floc(recon_t* recon, const parms_t* parms){
 		map_t* fmap=0;
 		create_metapupil(&fmap, 0, 0, parms->dirs, parms->aper.d, 0, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 		info("FLOC is %ldx%ld, with sampling of %.2fm (%ssquare)\n", NX(fmap), NY(fmap), dxr, parms->fit.square?"":"not ");
-		recon->floc=map2loc(fmap, 0);/*convert map_t to loc_t */
+		recon->floc=loc_from_map(fmap, 0);/*convert map_t to loc_t */
 		mapfree(fmap);
 		/*Do not restrict fmap to within active pupil. */
 	}
@@ -261,7 +261,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			map_t* map=0;
 			const real offset=ips==0?0:1./(ips+1);
 			create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, offset, guard, nin, nin, 0, parms->tomo.square);
-			P(recon->xloc, ips)=map2loc(map, 0);
+			P(recon->xloc, ips)=loc_from_map(map, 0);
 			loc_create_stat(P(recon->xloc, ips));
 			info("    layer %d: grid is %4ldx%4ld @ %.3f m, offset is %.2f, %5ld points\n",
 				ips, NX(map), NY(map), dxr, offset, P(recon->xloc, ips)->nloc);
@@ -365,7 +365,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 			} else{
 				create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dx, dy, offset, guard, 0, 0, 0, parms->fit.square);
 			}
-			P(recon->aloc, idm)=map2loc(map, 0);
+			P(recon->aloc, idm)=loc_from_map(map, 0);
 			info("    DM %d: grid is %ld x %ld, %ld points\n", idm, NX(map), NY(map), P(recon->aloc, idm)->nloc);
 			mapfree(map);
 		}

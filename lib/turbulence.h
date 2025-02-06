@@ -37,7 +37,7 @@ typedef struct genatm_t{
     long ninit;      /**<In Fractal method, the size of initial screen*/
     long share;      /**<Use file backend for sharing of atmosphere*/
     dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
-    dcell *screen;  /**<The destination screen pointer*/
+    mapcell *screen;  /**<The destination screen pointer*/
 }genatm_t;
 map_t *genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed);
 dmat *genatm_loc(loc_t *loc, real r0, real L0, real slope, int seed);

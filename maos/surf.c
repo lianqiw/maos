@@ -211,7 +211,6 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			if(parms->plot.setup>1){
 				draw("Surf", (plot_opts){.image=surf->dmat}, "Surface", "x", "y", "surf %d %d", isurf, isurf2);
 			}
-			//writebin((dmat*)surf, "surf_%d", isurf);
 			const char* strname=search_keyword(surf->keywords, "SURFNAME");
 			const char* strevl=search_keyword(surf->keywords, "SURFEVL");
 			const char* strwfs=search_keyword(surf->keywords, "SURFWFS");

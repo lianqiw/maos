@@ -734,6 +734,13 @@ void *realloc_maos(void *p0, size_t size){
 	funtrace_unset;
 	return p;
 }
+void *realloc2_maos(void *p0, size_t oldsize, size_t newsize){//zero out newly allocated segment
+	void* pnew=realloc_maos(p0, newsize);
+	if(newsize>oldsize){
+		memset((char*)pnew+oldsize, 0, newsize-oldsize);
+	}
+	return pnew;
+}
 void free_maos(void *p){
 	size_t size=0;
 	if(memkey_len && p){

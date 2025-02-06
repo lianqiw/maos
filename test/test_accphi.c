@@ -65,7 +65,7 @@ static void test_accuracy(int argc, char** argv){
     real dx=1/64.;
     real dsa=0.5;
     map_t* screen=mapnew(D2/dx, D2/dx, dx, dx);
-    dset((dmat*)screen, 1);
+    dset(DMAT(screen), 1);
     dmat* tmp=dnew(screen->nx, 1);
     for(long ix=0; ix<screen->nx; ix++){
         P(tmp, ix)=sin((real)ix/screen->nx*2*M_PI);
@@ -96,7 +96,7 @@ static void test_accuracy(int argc, char** argv){
 
 
     map_t* screen2=mapnew2(locin->map);
-    dset((dmat*)screen2, NAN);
+    dset(DMAT(screen2), NAN);
     loc_embed(screen2, locin, screen);
 
     dmat *phi_h=NULL, *phi_cubh=NULL;

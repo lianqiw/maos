@@ -129,7 +129,7 @@ void* perfevl_ievl(thread_t* info){
 		if(!info->thread_data){
 			info->thread_data=dnew(aper->locs->nloc, 1);
 		}
-		iopdevl=(dmat*)info->thread_data;
+		iopdevl=dmat_cast(info->thread_data);
 	}
 	for(int ievl=info->start; ievl<info->end; ievl++){
 		const int do_psf_cov=(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean)

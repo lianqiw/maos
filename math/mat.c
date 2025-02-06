@@ -108,8 +108,8 @@ X(mat)* X(new_file)(long nx, long ny, const char* keywords, const char* format, 
 /**
    check and cast an object to matrix
  */
-X(mat)* X(mat_cast)(const void* A){
-	return ismat(A)?(X(mat)*)A:NULL;
+X(mat)* X(mat_cast)(const_anyarray A){
+	return ismat(A.c)?(X(mat)*)A.c:NULL;
 }
 /**
    free content of a matrix object.
@@ -124,7 +124,7 @@ void X(free_content)(X(mat)* A){
 		}
 		if(A->fp) {zfclose(A->fp); A->fp=NULL;}
 		mem_unref(&A->mem);//takes care of freeing memory.
-		
+		if(A->deinit) A->deinit((cell*)A);//for derived types
 #ifndef COMP_LONG
 		if(A->fft) {X(fft_free_plan)(A->fft); A->fft=NULL;}
 #endif
@@ -249,7 +249,20 @@ int X(resize)(X(mat)* A, long nx, long ny){
 			if(nx*ny>PN(A)){
 				memset(P(A)+PN(A), 0, (nx*ny-PN(A))*sizeof(T));
 			}
-		} else{/*copy memory to preserve data*/
+		} else {//move memory content
+			long nymin=MIN(ny, A->ny);
+			if(A->nx<nx){//expand row count
+				P(A)=myrealloc(P(A), nx*ny, T);//expand memory size
+				for(int icol=nymin-1; icol>0; icol--){
+					memmove(P(A)+icol*nx, P(A)+icol*A->nx, A->nx*sizeof(T));
+				}
+			}else{//reduce row count
+				for(int icol=1; icol<nymin; icol++){
+					memmove(P(A)+icol*nx, P(A)+icol*A->nx, nx*sizeof(T));
+				}
+				P(A)=myrealloc(P(A), nx*ny, T);//reduce memory size
+			}
+		} /*else{//
 			T* p=mycalloc(nx*ny, T);
 			if(!p){
 				error("malloc for %ldx%ld of size %ld failed.\n", nx, ny, sizeof(T));
@@ -262,7 +275,7 @@ int X(resize)(X(mat)* A, long nx, long ny){
 			}
 			free(P(A));
 			P(A)=p;
-		}
+		}*/
 		if(A->mem){
 			mem_replace(A->mem, P(A));
 		} else{
@@ -1141,15 +1154,3 @@ X(mat)* X(cellsum_each)(const X(cell)* A){
 	}
 	return B;
 }
-/**
-   Compute the hashlittle
- */
-uint32_t X(cellhash)(const X(cell)* A, uint32_t key){
-	if(iscell(A)){
-		for(long i=0; i<PN(A); i++){
-			key=X(hash)(P(A,i), key);
-		}
-	}
-	return key;
-}
-

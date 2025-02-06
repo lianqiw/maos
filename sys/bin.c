@@ -1147,9 +1147,13 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 /**
    Unreference the mmaped memory. When the reference drops to zero free or unmap it.
 */
-void mem_unref(mem_t** pin){
+unsigned int mem_unref(mem_t** pin){
+	if(!pin) return 0;
 	mem_t* in=*pin;
-	if(in&&!atomic_sub_fetch(&(in->nref), 1)){//deallocate
+	if(!in) return 0;
+	*pin=0;//this is important to avoid dangling pointer.
+	unsigned int nref=0;
+	if(!(nref=atomic_sub_fetch(&(in->nref), 1))){//deallocate
 		switch(in->kind){
 		case 0:
 			free(in->mem);
@@ -1166,7 +1170,7 @@ void mem_unref(mem_t** pin){
 		}
 		free(in);
 	}
-	*pin=0;//this is important to avoid dangling pointer.
+	return nref;
 }
 /**
    Create a mem_t object.

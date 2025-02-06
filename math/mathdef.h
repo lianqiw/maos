@@ -46,8 +46,6 @@ void fft_threads(long nx, long ny);
 #define lnew(nx, ny) (funtrace_set,lnew_do(nx,ny,NULL,0));funtrace_unset
 */
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
-#define A A
-//#define A ((A)?(A)->cell:(cell*)0)
 #define DMAT(A) ((A)?(A)->dmat:(dmat*)0)
 #define LOC(A)  ((A)?(A)->loc:(loc_t*)0)
 #define abs2(A)      ((A)*(A))
@@ -84,23 +82,6 @@ void fft_threads(long nx, long ny);
 #define zspfree(A)     if(A){zspfree_do(A); A=NULL;}
 #define zspcellfree(A) if(A){cellfree_do(A); A=NULL;}
 
-#define mapwrite(out, A...) writebin(out, A)
-#define mapread(A...)    (map_t*)readbin_id(M_MAP, 0, A)
-
-#define mapcellread(A...) (mapcell*)readbin_id(M_MAP, 1, A)
-#define mapcellnew (mapcell*)cellnew
-#define mapccellnew (mapccell*)cellnew
-
-#define rmapread(A...)    (rmap_t*)readbin_id(M_RMAP, 0, A)
-#define rmapwrite(out, A...)   writebin(out, A)
-#define rmapcellnew  (rmapcell*)cellnew
-#define rmapccellnew (rmapccell*)cellnew
-
-#define locwrite(out, A...) writebin(out, A)
-#define locread(A...)    (loc_t*)readbin_id(M_LOC, 0, A)
-#define loccellread(A...) (loccell*)readbin_id(M_LOC, 1, A)
-#define loccellnew (loccell*)cellnew
-#define locccellnew (locccell*)cellnew
 /* Read needs type checking, so don't use readbin*/
 /**read a dmat*/
 #define dread(A...)    dmat_cast(readbin_id(M_REAL, 0, A))

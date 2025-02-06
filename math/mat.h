@@ -25,7 +25,7 @@
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
     X(mat) *X(new_file)(long nx, long ny, const char* keywords, const char* format, ...) CHECK_ARG(4);\
     X(mat) *X(new_do)(long nx, long ny, T*p, mem_t *mem) CHECK_UNUSED_RESULT; \
-    X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
+    X(mat) *X(mat_cast)(const_anyarray A) CHECK_UNUSED_RESULT;		\
     int X(init)(X(mat)**A, long nx, long ny) ;				\
     void X(free_content)(X(mat) *A);						\
     void X(free_do)(X(mat) *A);						\
@@ -89,6 +89,5 @@
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
     X(mat) *X(cell_col)(X(cell) *input, long icol);			\
     T X(cellsum)(const X(cell) *A);\
-    X(mat)* X(cellsum_each)(const X(cell) *A);\
-    uint32_t X(cellhash)(const X(cell)* A, uint32_t key) CHECK_UNUSED_RESULT;	
+    X(mat)* X(cellsum_each)(const X(cell) *A);
 #endif

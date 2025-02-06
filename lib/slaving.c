@@ -406,7 +406,7 @@ void act_stuck(loccell* aloc, anyarray HA_, const lcell* stuck){
 		for(int ifit=0; ifit<nfit; ifit++){
 			cell* HAi=nfit==1?P(HA,idm):P(HA,ifit,idm);
 			if(HAi->id==M_REAL){//dense
-				dmat* hb=(dmat*)HAi;
+				dmat* hb=dmat_cast(HAi);
 				if(NX(hb)>1&&NY(hb)==P(aloc,idm)->nloc){
 					//modifying interaction matrix
 					for(int iact=0; iact<nact; iact++){

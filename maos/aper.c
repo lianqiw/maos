@@ -66,11 +66,11 @@ aper_t* setup_aper(const parms_t* const parms){
 		}
 	} else{/* locs act as a pupil mask. no points outside will be evaluated. */
 		if(aper->ampground && fabs(parms->evl.dx-aper->ampground->dx)<EPS){
-			aper->locs=map2loc(aper->ampground, 0);
+			aper->locs=loc_from_map(aper->ampground, 0);
 		}else{
 			map_t* smap=0;
 			create_metapupil(&smap, 0, 0, parms->dirs, parms->aper.d, 0, parms->evl.dx, parms->evl.dx, 0, parms->evl.dx, 0, 0, 0, 0);
-			aper->locs=map2loc(smap, 0);
+			aper->locs=loc_from_map(smap, 0);
 			mapfree(smap);
 		}
 	}

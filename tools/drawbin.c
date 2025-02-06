@@ -91,8 +91,8 @@ int main(int argc, char* argv[]){
 	dmat* p1_save=0;
 	for(long iy=my; iy<ny; iy++){
 		for(long ix=mx; ix<nx; ix++){
-			dmat *p1=(dmat*)PR(arg1, ix, iy);
-			dmat *p2=arg2?(dmat*)PR(arg2, ix, iy):NULL;
+			dmat *p1=PR(arg1, ix, iy);
+			dmat *p2=arg2?PR(arg2, ix, iy):NULL;
 			if(!p1 || (!p2 && (ix>=NX(arg1) || iy>=NY(arg1)))) continue;
 			loc_t* loc=0;
 			if(NY(p1)==2&&NX(p1)>2){//first parameter is loc
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
 						locfree(loc);
 					}
 				}else if(p1->nx>1 && p1->ny>1){//map
-					map_t* data=d2map(p1);
+					map_t* data=map_convert(dref(p1));
 					drawmap("map", data, 0, title1, "x", "y", "%s[%02d]", figname, id++);
 					mapfree(data);
 				}else{

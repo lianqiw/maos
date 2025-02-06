@@ -354,9 +354,9 @@ petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta,
 		real ox=nsa>1?saloc->locx[isa]/dx:-(nx/2-0.5);
 		real oy=nsa>1?saloc->locy[isa]/dx:-(ny/2-0.5);
 		//info("isa %d: ox=%g, oy=%g, dx=%g, dy=%g\n", isa, ox, oy, saloc->dx, saloc->dy);
-		dmat *ampi=nsa>1?dsub(amp, isa*nloc, nloc, 0, 1):(dmat*)amp;
+		dmat *ampi=nsa>1?dsub(amp, isa*nloc, nloc, 0, 1):dref(amp);
 		petal_setup_sa(&petal[isa], ampi, -ox, -oy, 6, pdtheta, pixblur, theta, npsf, nsa, withtt); 
-		if(nsa>1) dfree(ampi);
+		dfree(ampi);
 		/*writebin(petal[isa].mod, "mode_%d", isa);
 		writebin(petal[isa].rmod, "rmode_%d", isa);
 		writebin(petal[isa].amp, "amp_%d", isa);*/
@@ -419,7 +419,7 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	dmat *phi1b2=NULL;
 	if(phi1b){
 		if(PN(phi1b)==PN(petal->amp)){
-			phi1b2=(dmat*)phi1b;
+			phi1b2=dref(phi1b);
 		}else if(PN(phi1b)==petal->npetal){
 			dspmm(&phi1b2, petal->hpetal, phi1b, "nn", 1);
 		}else{
@@ -445,7 +445,7 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	}
 	dfree(mphi1t);
 	dfree(amp2);
-	if(phi1b2!=phi1b) dfree(phi1b2);
+	dfree(phi1b2);
 }
 /**
  * Phase retrieval setup and reconstruction of petal measurements from PSFs for all subapertures of a WFS.
@@ -471,13 +471,11 @@ void petal_solve(dcell **phi1, dmat **mphi1, const petal_t *petal, const dcell *
 	//if(mphi1) dinit(mphi1, petal->npetal, nsa>1?(nsa+1):1);
 	//info("solve_sa wfs. amp is %ld, nsa is %ld, nloc is %ld.\n", PN(amp), nsa, nloc);
 	for(long isa=0; isa<nsa; isa++){
-		dmat *phi1bi=phi1b?(nsa>1?dsub(phi1b, isa*nloc, nloc, 0, 1):(dmat*)phi1b):NULL;
-		dmat *mvali=nsa>1?drefcols(mval, isa, 1):mval;
+		dmat *phi1bi=phi1b?(nsa>1?dsub(phi1b, isa*nloc, nloc, 0, 1):dref(phi1b)):NULL;
+		dmat *mvali=nsa>1?drefcols(mval, isa, 1):dref(mval);
 		petal_solve_sa(phi1?&P(*phi1,isa):NULL, &mvali, &petal[isa], P(ints, isa), phi1bi, nrep);
-		if(nsa>1){
-			dfree(phi1bi); 
-			dfree(mvali);
-		}
+		dfree(phi1bi); 
+		dfree(mvali);
 	}
 	if(mphi1){
 		if(nsa>1){
