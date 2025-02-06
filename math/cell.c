@@ -57,7 +57,8 @@ void cellinit2(panyarray A_, const_anyarray B_){
 	cell** A=A_.c;
 	if(!iscell(B)){
 		error("Invalid usage. B must be cell\n");
-	}if(*A){
+	}
+	if(*A){
 		cellinit(A, B->nx, B->ny);
 	} else if(iscell(B)){
 		M_ID magic=0;
@@ -86,9 +87,18 @@ void cellinit2(panyarray A_, const_anyarray B_){
  * @brief Construct a reference base on type.
  * 
  */
-cell* cellref(anyarray in){
+cell* cellref(const_anyarray in){
 	if(!in.c) return NULL;
-	switch(in.c->id){
+	if(iscell(in.c)){
+		const cell *A=in.c;
+		cell *out=cellnew(A->nx, A->ny);
+		for(long i=0; i<PN(A); i++){
+			P(out, i)=cellref(P(A, i));
+		}
+		if(A->keywords) out->keywords=strdup(A->keywords);
+		if(A->m) out->m=cellref(A->m);
+		return out;
+	}else switch(in.c->id){
 		case M_DBL: return (cell*)dref(in.dm); break;
 		case M_CMP: return (cell*)cref(in.cm); break;
 		case M_FLT: return (cell*)sref(in.sm); break;
@@ -102,6 +112,41 @@ cell* cellref(anyarray in){
 		return NULL;
 	}
 }
+uint32_t cellhash(const_anyarray in, uint32_t key){
+	if(!in.c) return key;
+	if(iscell(in.c)){
+		const cell *A=in.c;
+		for(long i=0; i<PN(A); i++){
+			key=cellhash(P(A,i), key);
+		}
+	}else switch(in.c->id&0xFFFF){
+		case M_DBL: key=dhash(in.dm, key); break;
+		case M_CMP: key=chash(in.cm, key); break;
+		case M_FLT: key=shash(in.sm, key); break;
+		case M_ZMP: key=zhash(in.zm, key); break;
+		default: 
+			warning("Hash is skipped: to implement\n");
+	}
+	return key;
+}
+/**
+ * @brief Convert elements of cell array
+ * 
+ */
+cell *cellconvert(cell *A, cell* (*fun_convert)(cell*)){
+	if(!A) return NULL;
+	cell *out;
+	if(iscell(A)){
+		out=cellnew(A->nx, A->ny);
+		for(long i=0; i<PN(A); i++){
+			P(out, i)=cellconvert(P(A,i), fun_convert);
+		}
+	}else{
+		out=fun_convert(A);
+	}
+	return out;
+}
+
 /**
    Obtain the dimensions.
 */
@@ -109,7 +154,7 @@ void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys){
 	const cell* A=A_.c;
 	*nx=0;
 	*ny=0;
-	if(!A || !A->nx || !A->ny){
+	if(!A || !iscell(A) || !A->nx || !A->ny){
 		*nxs=*nys=NULL;
 		return;
 	} 
@@ -207,19 +252,13 @@ void cellfree_do(anyarray A_){
 	cell* A=A_.c;
 	if(!A) return;
 	M_ID id=A->id;
-	if(id==M_LOC){
-		locfree_do((loc_t*)A);
-	}else switch(id&0xFFFF){
+	switch(id&0xFFFF){
 	case MCC_ANY:{
 		cell* dc=A;
-		//if(dc->fp) writebin_async(dc, 0);//don't do this. only cells need to finish sync
-		//do not close for yet for individual cells may need to do synchronization.
-		if(P(dc)){
-			for(int ix=0; ix<PN(dc); ix++){
-				cellfree_do(P(dc,ix));
-			}
-			free(P(dc));P(dc)=0;
+		for(int ix=0; ix<PN(dc); ix++){
+			cellfree_do(P(dc,ix));
 		}
+		free(P(dc));P(dc)=0;
 		if(dc->keywords){
 			free(dc->keywords); dc->keywords=NULL;		
 		}
@@ -234,23 +273,23 @@ void cellfree_do(anyarray A_){
 		free(dc);
 	}break;
 	case M_DBL:
-		dfree_do((dmat*)A);break;
+		dfree_do(A_.dm);break;
 	case M_CMP:
-		cfree_do((cmat*)A);break;
+		cfree_do(A_.cm);break;
 	case M_FLT:
-		sfree_do((smat*)A);break;
+		sfree_do(A_.sm);break;
 	case M_ZMP:
-		zfree_do((zmat*)A);break;
+		zfree_do(A_.zm);break;
 	case M_LONG:
-		lfree_do((lmat*)A);break;
+		lfree_do(A_.lm);break;
 	case M_DSP:
-		dspfree_do((dsp*)A);break;
+		dspfree_do(A_.ds);break;
 	case M_SSP:
-		sspfree_do((ssp*)A);break;
+		sspfree_do(A_.ss);break;
 	case M_CSP:
-		cspfree_do((csp*)A);break;
+		cspfree_do(A_.cs);break;
 	case M_ZSP:
-		zspfree_do((zsp*)A);break;
+		zspfree_do(A_.zs);break;
 	default:
 		warning("Unknown id=%x, A=%p\n", id, A);
 		print_backtrace();
@@ -261,54 +300,40 @@ void cellfree_do(anyarray A_){
  * 	
  * */
 void writedata(file_t* fp, const_anyarray A_, long ncol){
-	const cell* A=A_.c;
 	if(fp&&ncol>0){
 		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
 		return;
 	}
-	M_ID id=A?A->id:MCC_ANY;
-
-	switch(id){
-	case M_MAP:
-		map_header((map_t*)A_.map); break;
-	case M_RMAP:
-		rmap_header((rmap_t*)A_.rmap); break;
-	case M_LOC:
-		loc_header((loc_t*)A_.loc); break;
-	default: 
-		break;
-	}
-
-	switch(id&0xFFFF){
-	case MCC_ANY:{//write cell
+	if(!A_.c || iscell(A_.c)){//empty data is treated as cell
+		const cell* A=A_.c;
 		if(ncol<=0){//not async write.
-			header_t header={MCC_ANY, A?A->nx:0, A?A->ny:0, A?A->keywords:NULL};
+			header_t header={MCC_ANY, NX(A), NY(A), A?A->keywords:NULL};
 			write_header(&header, fp);
 		}
 		for(long ix=0; ix<PN(A); ix++){
 			writedata(fp, P(A,ix), ncol);
 		}
-	}break;
-	case M_DBL:
-		dwritedata(fp, (dmat*)A, ncol);break;
-	case M_CMP:
-		cwritedata(fp, (cmat*)A, ncol);break;
-	case M_FLT:
-		swritedata(fp, (smat*)A, ncol);break;
-	case M_ZMP:
-		zwritedata(fp, (zmat*)A, ncol);break;
-	case M_LONG:
-		lwritedata(fp, (lmat*)A, ncol);break;
-	case M_DSP:
-		dspwritedata(fp, (dsp*)A);break;
-	case M_SSP:
-		sspwritedata(fp, (ssp*)A);break;
-	case M_CSP:
-		cspwritedata(fp, (csp*)A);break;
-	case M_ZSP:
-		zspwritedata(fp, (zsp*)A);break;
-	default:
-		error("Unknown id=%u\n", id);
+	}else switch(A_.c->id&0xFFFF){
+		case M_DBL:
+			dwritedata(fp, A_.dm, ncol);break;
+		case M_CMP:
+			cwritedata(fp, A_.cm, ncol);break;
+		case M_FLT:
+			swritedata(fp, A_.sm, ncol);break;
+		case M_ZMP:
+			zwritedata(fp, A_.zm, ncol);break;
+		case M_LONG:
+			lwritedata(fp, A_.lm, ncol);break;
+		case M_DSP:
+			dspwritedata(fp, A_.ds);break;
+		case M_SSP:
+			sspwritedata(fp, A_.ss);break;
+		case M_CSP:
+			cspwritedata(fp, A_.cs);break;
+		case M_ZSP:
+			zspwritedata(fp, A_.zs);break;
+		default:
+			error("Unknown id=%u\n", A_.c->id);
 	}
 }
 
@@ -378,48 +403,33 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 		res=dcout;
 	}else{
 		void *out=NULL;
-		if(id==M_LOC){
-			out=locreaddata(fp, header); 
-		}else{
-			if(!id) id=header->magic;
-			switch(id&0xFFFF){
-			case M_DBL:
-				out=dreaddata(fp, header);break;
-			case M_FLT:
-				out=sreaddata(fp, header);break;
-			case M_CMP:
-				out=creaddata(fp, header);break;
-			case M_ZMP:
-				out=zreaddata(fp, header);break;
-			case M_LONG:
-				out=lreaddata(fp, header);break;
-			case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
-				out=dspreaddata(fp, header);break;
-			case M_SSP32: case M_SSP64:
-				out=sspreaddata(fp, header);break;
-			case M_CSP32: case M_CSP64:
-				out=cspreaddata(fp, header);break;
-			case M_ZSP64: case M_ZSP32:
-				out=zspreaddata(fp, header);break;
-			default:
-				warning("data type id=%ux not supported\n", id);
-				out=NULL;
-			}
-		}
-		switch(id){
-		case M_MAP:{
-			res=(cell*)d2map(out);
-			dfree(out);
-			out=res;
-			}break;
-		case M_RMAP:{
-			res=(cell*)d2rmap(out);
-			dfree(out);
-			out=res;
-			}break;
+		
+		if(!id) id=header->magic;
+		switch(id&0xFFFF){
+		case M_DBL:
+			out=dreaddata(fp, header);break;
+		case M_FLT:
+			out=sreaddata(fp, header);break;
+		case M_CMP:
+			out=creaddata(fp, header);break;
+		case M_ZMP:
+			out=zreaddata(fp, header);break;
+		case M_LONG:
+			out=lreaddata(fp, header);break;
+		case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
+			out=dspreaddata(fp, header);break;
+		case M_SSP32: case M_SSP64:
+			out=sspreaddata(fp, header);break;
+		case M_CSP32: case M_CSP64:
+			out=cspreaddata(fp, header);break;
+		case M_ZSP64: case M_ZSP32:
+			out=zspreaddata(fp, header);break;
 		default:
-			res=(cell*)out;
+			warning("data type id=%ux not supported\n", id);
+			out=NULL;
 		}
+	
+		res=out;
 	}
 	return res;
 }
@@ -427,15 +437,15 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	cell *dcout=0;
 	int maxlen=10;
-	void **tmp=mymalloc(maxlen, void *);
+	cell **tmp=mymalloc(maxlen, cell*);
 	int nx=0;
 	do{
-		void *tmp2=readdata(fp, id, header);
+		cell *tmp2=readdata(fp, id, header);
 		free(header->str);header->str=0;
 		if(tmp2){
 			if(nx>=maxlen){
 				maxlen*=2;
-				tmp=myrealloc(tmp, maxlen, void *);
+				tmp=myrealloc(tmp, maxlen, cell*);
 			}
 			tmp[nx++]=tmp2;
 		} else{
@@ -445,7 +455,7 @@ static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	
 	if(nx>0){
 		dcout=cellnew(nx, 1);
-		memcpy(P(dcout), tmp, sizeof(void *)*nx);
+		memcpy(P(dcout), tmp, sizeof(cell*)*nx);
 	}
 	free(tmp);
 	return dcout;

@@ -93,12 +93,12 @@ static void* psfiris_do(thread_t* info){
 	cfree(P(otf0,0));
 	cfree(P(otf2,0));
 
-	dfftshift((dmat*)otf_fine);/*peak in corner*/
+	dfftshift(DMAT(otf_fine));/*peak in corner*/
 	ccpd(&otf, P(psf_lgs,iwvl));
 	dfree(P(psf_lgs,iwvl));
 	cfftshift(otf);
 	cfft2(otf, 1);
-	ccwmd(otf, (dmat*)otf_fine);
+	ccwmd(otf, DMAT(otf_fine));
 	mapfree(otf_fine);
 	double sumpsf=creal(P(otf,0));
 	double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9, 2))/(notf2*notf2);

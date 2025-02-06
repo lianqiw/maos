@@ -140,10 +140,9 @@ void m3proj(const rmap_t* tsurf, dmat* opd, const loc_t* locout, real thetax, re
 dmat* m3proj2(dmat* mapin_0, const char* keywords, const loc_t* locout, real thetax, real thetay, real hs){
 	free(mapin_0->keywords);
 	mapin_0->keywords=strdup(keywords);
-	rmap_t* mapin=d2rmap(mapin_0);
+	rmap_t* mapin=rmap_convert(dref(mapin_0));
 	dmat* opd=dnew(locout->nloc, 1);
 	m3proj(mapin, opd, locout, thetax, thetay, hs);
 	cellfree(mapin);
-	cellfree(mapin_0);
 	return opd;
 }

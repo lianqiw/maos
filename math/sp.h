@@ -24,7 +24,7 @@
 
 #define AOS_SP_DEF(X,T,R,RC)						\
     X(sp)* X(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;	\
-    X(sp) *X(spref)(X(sp) *A) CHECK_UNUSED_RESULT;			\
+    X(sp) *X(spref)(const X(sp) *A) CHECK_UNUSED_RESULT;			\
     X(sp) *X(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
     X(sp) *X(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;		\
     X(sp) *X(spnewrandu)(long nx, long ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT; \

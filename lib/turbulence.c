@@ -76,16 +76,11 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	long nx=data->nx;
 	long ny=data->ny;
 	real dx=data->dx;
-	dcell* dc=dcellnew_same(2, 1, nx, ny);
+	mapcell* dc=mapcellnew(2,1);
+	P(dc,0)=mapnew(nx,ny,dx,dx);
+	P(dc,1)=mapnew(nx,ny,dx,dx);
 	real* restrict p1=P(P(dc, 0));
 	real* restrict p2=P(P(dc, 1));
-	char keywords[1024];
-	real ox=-nx/2*dx;
-	real oy=-ny/2*dx;
-	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
-		ox, oy, dx, 0., 0., 0.);
-	P(dc, 0)->keywords=strdup(keywords);
-	P(dc, 1)->keywords=strdup(keywords);
 	//For create spatially varying r0
 	dmat* spect2=0;
 	dcell* dc2=0;//for scaling.
@@ -107,13 +102,13 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		seed_rand(&rstat2, rstat->statevec[0]);
 		//writebin(spect2, "spect_r0log");
 	}
-	dmat* prev_screen=0;
-	dmat* this_screen=0;
+	map_t* prev_screen=0;
+	map_t* this_screen=0;
 	dmat* prev_scale=0;
 	dmat* this_scale=0;
 	dmat* spect=0;
 	if(!fc){//output to screen
-		data->screen=dcellnew(nlayer,1);
+		data->screen=mapcellnew(nlayer,1);
 	}
 	real L0=0;
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
@@ -130,7 +125,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 				p2[i]=randn(rstat)*P(spect, i);/*imag */
 			}
 			tk2=myclockd();
-			dcell_fft2(dc, -1);
+			dcell_fft2((dcell*)dc, -1);
 			this_screen=P(dc, 0);
 			if(ilayer+1<nlayer&&fabs(data->L0[ilayer+1]-L0)<EPS){//matched L0.
 				prev_screen=P(dc, 1);
@@ -138,7 +133,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 		} else{
 			this_screen=prev_screen; prev_screen=0;
 		}
-		dscale(this_screen, sqrt(wt[ilayer]));
+		dscale(this_screen->dmat, sqrt(wt[ilayer]));
 
 		if(dc2){
 			if(!prev_scale){
@@ -154,20 +149,20 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 			} else{
 				this_scale=prev_scale; prev_scale=0;
 			}
-			dcwm(this_screen, this_scale);
+			dcwm(this_screen->dmat, this_scale);
 		}
 		real tk3=myclockd();
 		if(fc){/*save to file. */
 			zfarr_push(fc, ilayer, this_screen);
 		} else{
-			dcp(&P(data->screen, ilayer), this_screen);
+			P(data->screen, ilayer)=mapdup(this_screen);
 		}
 		real tk4=myclockd();
 		dbg("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n",
 			ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy", tk4-tk3);
 	}
-	dcellfree(dc);
-	dcellfree(dc2);
+	cellfree(dc);
+	cellfree(dc2);
 	dfree(spect2);
 	dfree(spect);
 }
@@ -178,34 +173,29 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 static void fractal_screen_do(zfarr* fc, genatm_t* data){
 	const long nx=NX(data);
 	const long ny=NY(data);
-	char keywords[1024];
-	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
-		-data->nx/2*data->dx, -data->ny/2*data->dx, data->dx, 0., 0., 0.);
 	if(fc){
-		dmat* screen=dnew(NX(data), NY(data));
-		screen->keywords=strdup(keywords);
+		map_t* screen=mapnew(data->nx, data->ny, data->dx, data->dx);
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
-			drandn(screen, 1, data->rstat);
+			drandn(screen->dmat, 1, data->rstat);
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-			fractal_do(screen, data->dx, r0i, data->L0[ilayer], data->ninit);
+			fractal_do(screen->dmat, data->dx, r0i, data->L0[ilayer], data->ninit);
 			//remove_piston(P(screen), nx*ny);
-			dadds(screen, -dsum(screen)/(nx*ny));
+			dadds(screen->dmat, -dsum(screen->dmat)/(nx*ny));
 			zfarr_push(fc, ilayer, screen);
 		}
-		dfree(screen);
+		cellfree(screen);
 	} else{
-		data->screen=dcellnew(data->nlayer, 1);
-		dmat** screen=P(data->screen);
+		data->screen=mapcellnew(data->nlayer, 1);
 		for(int ilayer=0; ilayer<data->nlayer; ilayer++){
-			drandn(screen[ilayer], 1, data->rstat);
-			screen[ilayer]->keywords=strdup(keywords);
+			P(data->screen, ilayer)=mapnew(data->nx, data->ny, data->dx, data->dx);
+			drandn(P(data->screen, ilayer)->dmat, 1, data->rstat);
 		}
 OMP_FOR(NTHREAD)
 		for(long ilayer=0; ilayer<data->nlayer; ilayer++){
 			real r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-			fractal_do(screen[ilayer], data->dx, r0i, data->L0[ilayer], data->ninit);
-			//remove_piston(P(screen[ilayer]), nx*ny);
-			dadds(screen[ilayer], -dsum(screen[ilayer])/(nx*ny));
+			fractal_do(P(data->screen, ilayer)->dmat, data->dx, r0i, data->L0[ilayer], data->ninit);
+			//remove_piston(P(P(screen, ilayer)), nx*ny);
+			dadds(P(data->screen, ilayer)->dmat, -dsum(P(data->screen, ilayer)->dmat)/(nx*ny));
 		}
 	}
 }
@@ -222,7 +212,6 @@ static void genscreen_do(zfarr* fc, genatm_t* data){
  * used.
  */
 mapcell* genscreen(genatm_t* data){
-	dcell *in=NULL;
 	mapcell *screen=NULL;
 	long nlayer=data->nlayer;
 	char* fnatm=NULL;
@@ -230,7 +219,7 @@ mapcell* genscreen(genatm_t* data){
 		fnatm=create_fnatm(data);
 	}
 	if(fnatm){
-		CACHE_FILE(in, fnatm, dcellread_mmap,
+		CACHE_FILE(screen, fnatm, mapcellread_mmap,
 					({zfarr*fc=zfarr_init(nlayer, 1, "%s/%s", DIRCACHE,fnatm);
 						genscreen_do(fc, data);
 						zfarr_close(fc);
@@ -238,10 +227,8 @@ mapcell* genscreen(genatm_t* data){
 					dummyfun);
 	}else{
 		genscreen_do(NULL, data);
-		in=data->screen; data->screen=0;
+		screen=data->screen; data->screen=0;
 	}
-	screen=dcell2map(in);
-	cellfree(in);
 	free(fnatm);fnatm=0;
 	return screen;
 }

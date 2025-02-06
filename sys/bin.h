@@ -137,7 +137,7 @@ long writearr(const void *fpn, const int isfile, const size_t size, const uint32
 	      const char *keywords, const void *p, const uint64_t nx, const uint64_t ny);
 typedef struct mem_t mem_t;
 struct mem_t *mem_new(void *p)__attribute__((warn_unused_result));
-void mem_unref(mem_t **in);
+unsigned int mem_unref(mem_t **in);
 mem_t*mem_ref(mem_t *in)__attribute__((warn_unused_result));
 void mem_replace(mem_t *in, void *p);
 int mem_nref(const mem_t *in);

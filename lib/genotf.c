@@ -255,13 +255,12 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 	/*creating pairs of points that both exist with given separation*/
 	T_VALID* pval=gen_pval(npsfx, npsfy, loc);/*returns T_VALID array. */
 	/* Generate the B matrix. */
-	dmat* B;
-	if(cov){
-		B=(dmat*)cov;
-	} else{
+	dmat* B=NULL;
+	if(!cov){
 		dmat* sep=loc_sep(loc);
 		B=turbcov(sep, 0, r0, l0);
 		dfree(sep);
+		cov=B;
 	}
 	cmat* otffull=NULL;
 	const long nloc=loc->nloc;
@@ -278,18 +277,18 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 			}
 		}
 		if(isafull>0){
-			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?P(amp)+isafull*nloc:NULL, NULL, wvl, B, pval);
+			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?P(amp)+isafull*nloc:NULL, NULL, wvl, cov, pval);
 		}
 	}
 	if(!*potf){
 		*potf=ccellnew_same(nsa,1,npsfx,npsfy);
 	}
-	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, B, pval, isafull, otffull};
+	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, cov, pval, isafull, otffull};
 	thread_t* tdata=thread_prep(0, nsa, NCPU, genotf_wrap, &data);
 	CALL_THREAD(tdata, 1);
 	free(tdata);
 	cfree(otffull);
-	if(!cov) dfree(B);
+	dfree(B);
 	free(pval[0].loc);
 	free(pval);
 }

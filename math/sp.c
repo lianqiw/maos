@@ -71,7 +71,7 @@ void X(spfree_do)(X(sp)* sp){
 /**
    reference a sparse object.
 */
-X(sp)* X(spref)(X(sp)* A){
+X(sp)* X(spref)(const X(sp)* A){
 	if(!A) return NULL;
 	assert_sp(A);
 	X(sp)* out=mycalloc(1, X(sp));

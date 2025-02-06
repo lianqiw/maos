@@ -65,8 +65,8 @@ static cccell* genseotf_do(const pts_t* pts,
 		for(int iotf=0; iotf<notf; iotf++){
 			dmat* opdi=opdbias?P(opdbias, iotf):NULL;
 			real thres=opdi?1:(1-1e-10);
-			const dmat* ampi=iscell(amp)?PR((dcell*)amp, iotf, 1):(dmat*)amp;
-			const dmat* saai=iscell(saa)?PR((dcell*)saa, iotf, 1):(dmat*)saa;
+			const dmat* ampi=dmat_cast(iscell(amp)?PR(amp, iotf, 1):amp);
+			const dmat* saai=dmat_cast(iscell(saa)?PR(saa, iotf, 1):saa);
 			//OTFs are always generated with native sampling. It is upsampled at gensepsf if necessary.
 			genotf(&P(otf, iotf, iwvl), loc, ampi, opdi, saai,
 				thres, P(wvl, iwvl), NULL, r0, L0, npsfx, npsfy, nsa, 1);
@@ -91,17 +91,13 @@ cccell* genseotf(const pts_t* pts, /**<[in]subaperture low left coordinate*/
 	const cell *amp=amp_.c;
 	const cell *saa=saa_.c;
 	if(amp){
-		if(iscell(amp)){
-			key=dcellhash((dcell*)amp, key);
-		} else{
-			key=dhash((dmat*)amp, key);
-		}
+		key=cellhash(amp, key);
 	}
 	if(wvl){
-		key=dhash(wvl, key);
+		key=cellhash(wvl, key);
 	}
 	if(opdbias){
-		key=dcellhash(opdbias, key);
+		key=cellhash(opdbias, key);
 	}
 	char fnotf[PATH_MAX];
 	snprintf(fnotf, sizeof(fnotf), "SEOTF/SEOTF_r0_%g_L0%g_dsa%g_nsa%ld_dxi%g_em%d%s_%u_v4.bin", //v4: inverted opdbias sign to agree with simulation
@@ -165,7 +161,7 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 	dmat *sepsftmp=0;
 	const cell *saa=saa_.c;
 	for(int isepsf=0; isepsf<nsepsf; isepsf++){
-		const dmat* saai=saa?(iscell(saa)?PR((dcell*)saa, isepsf, 1):(dmat*)saa):NULL;
+		const dmat* saai=saa?dmat_cast(iscell(saa)?PR(saa, isepsf, 1):saa):NULL;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			P(sepsfs, isepsf, iwvl)=dcellnew_same(nsa, 1, npsfx, npsfy);
 			const ccell* otf=PR(otfs, isepsf, iwvl);

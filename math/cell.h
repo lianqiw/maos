@@ -28,7 +28,9 @@ cell* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
 static inline cell* cell_cast(const void* A){
 	return iscell(A)?(cell*)A:0;
 }
-cell *cellref(anyarray in);
+cell *cellref(const_anyarray in);
+uint32_t cellhash(const_anyarray A, uint32_t key) CHECK_UNUSED_RESULT;
+cell *cellconvert(cell *A, cell* (*fun_convert)(cell*));
 void cellinit(panyarray A, long nx, long ny);
 void cellinit2(panyarray A, const_anyarray B);
 void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys);

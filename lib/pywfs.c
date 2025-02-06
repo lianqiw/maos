@@ -149,15 +149,15 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 	if(!loc){
 		loc=mkannloc(pycfg->D, 0, pycfg->dx, 0);
 	}
-	if(!amp){
-		amp=dnew(loc->nloc, 1);
-		dset((dmat*)amp, 1);
+	if(amp){
+		pywfs->amp=dref(amp);
+	}else{
+		pywfs->amp=dnew(loc->nloc, 1);
+		dset(pywfs->amp, 1);
 	}
 	pywfs->loc=locref(loc);
-	pywfs->amp=dref(amp);
-
 	int nwvl=NX(pycfg->wvl);
-	pywfs->locfft=locfft_init(loc, amp, pycfg->wvl, 0, PYWFS_PSIZE, 0);
+	pywfs->locfft=locfft_init(loc, pywfs->amp, pycfg->wvl, 0, PYWFS_PSIZE, 0);
 
 	long npsf=P(pywfs->locfft->nembed, 0);//size of PSF at the Pyramid tip.
 	pywfs->gain=1;
@@ -801,12 +801,9 @@ void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0){
 	{	//compute measured OPDR and resample to input grid
 		dmat *opdr=NULL; //reconstructed OPD
 		cure_loc(&opdr, grad, pywfs->saloc);
-		map_t *opdr_map=d2map(opdr);//reference OPD into a map_t
 		amp2r=dsumsq(opdr);
+		map_t *opdr_map=map_convert(opdr);opdr=NULL;//reference OPD into a map_t
 		prop_grid(opdr_map, pywfs->locfft->loc, P(opd2), 1, 0, 0, 1, 0, 0, 0);
-		//writebin(opdr, "opdr_in");
-		//writebin(opd2, "opd2_in");
-		dfree(opdr);
 		mapfree(opdr_map);
 	}
 		

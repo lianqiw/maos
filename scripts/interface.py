@@ -182,8 +182,10 @@ class cell(Structure):
         ('header', c_char_p),
         ('dummy_fp', c_void_p),
         ('dummy_fft', c_void_p),
-        ('dummy_mem', c_void_p),
-        ('dummy_async', c_void_p),
+        ('dummy_1', c_void_p),
+        ('dummy_2', c_void_p),
+        ('dummy_3', c_void_p),
+        ('dummy_4', c_void_p),
         ]
  
     def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
@@ -309,12 +311,13 @@ class loc(Structure):
         ('header',c_void_p),
         ('dummy_fp',c_void_p),
         ('dummy_fft',c_void_p),
-        ('dummy_mem',c_void_p),
-        ('dummy_async',c_void_p),
+        ('dummy_1',c_void_p),
+        ('dummy_2',c_void_p),
+        ('dummy_3',c_void_p),
+        ('dummy_4',c_void_p), #up to here. follow cell memory layout.
         ('locy', c_void_p),
         ('locstat_t', c_void_p),
         ('map',  c_void_p),
-        ('nref', c_void_p),
         ('dx',   c_double),
         ('dy',   c_double),
         ('ht',   c_double),

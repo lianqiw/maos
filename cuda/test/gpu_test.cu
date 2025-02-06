@@ -91,13 +91,12 @@ void test_prop(){
 	map_t* mapout=mapnew(200, 200, 0.1, 0.1);
 	rand_t rstat;
 	seed_rand(&rstat, 1);
-	drandn((dmat*)mapin, 1, &rstat);
-	//dset((dmat*)mapin, 1);
+	drandn(mapin->dmat, 1, &rstat);
 	mapin->iac=0.3;
 	writebin(mapin, "prop_mapin_cpu");
 	cumap_t cumapin; cumapin=mapin;
 	cumap_t cumapout; cumapout=mapout;
-	cp2gpu(cumapin.p, (dmat*)mapin);
+	cp2gpu(cumapin.p, mapin->dmat);
 	cuwrite(cumapin.p, 0, "prop_mapin");
 	Real alpha=1;
 	Real dispx=0;

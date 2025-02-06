@@ -37,15 +37,15 @@ static void test_accuracy(){
     }
     mapwrite(atm, "atm_rand.bin");
     mapwrite(atm2, "atm2_rand.bin");
-    fractal_do((dmat*)atm, dx, r0,L0,ninit);
+    fractal_do(DMAT(atm), dx, r0,L0,ninit);
     mapwrite(atm, "atm_frac.bin");
-    fractal_inv((dmat*)atm, dx, r0,L0,ninit);
+    fractal_inv(DMAT(atm), dx, r0,L0,ninit);
     mapwrite(atm, "atm_frac_inv.bin");
 
 
-    fractal_trans((dmat*)atm2, dx, r0,L0,ninit);
+    fractal_trans(DMAT(atm2), dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_trans.bin");
-    fractal_inv_trans((dmat*)atm2, dx, r0,L0,ninit);
+    fractal_inv_trans(DMAT(atm2), dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_inv_trans.bin");
 
     /*
@@ -82,8 +82,8 @@ static void test_cov(){/*not good */
     dmat *atmhattot=dnew((N+1)*3,(N+1)*3);
     //cfft2plan(atmhat,-1);
     //cfft2plan(atmhat, 1);
-    dset((dmat*)atm,1);
-    cembedd(atmhat, (dmat*)atm, 0);
+    dset(DMAT(atm),1);
+    cembedd(atmhat, DMAT(atm), 0);
     cfft2(atmhat, -1);
     cabs22d(&atmhattot, 1, atmhat, 1);
     ccpd(&atmhat, atmhattot);
@@ -101,9 +101,9 @@ static void test_cov(){/*not good */
 	for(long j=0; j<nx*ny; j++){
 	    P(atm,j)=randn(&rstat);
 	}
-	fractal_do((dmat*)atm, dx, r0,L0,ninit);
+	fractal_do(DMAT(atm), dx, r0,L0,ninit);
 	/*mapwrite(atm, "atm_%ld.bin", i); */
-	cembedd(atmhat, (dmat*)atm, 0);
+	cembedd(atmhat, DMAT(atm), 0);
 	cfft2(atmhat, -1);
 	cabs22d(&atmhattot, 1, atmhat, 1);
 
@@ -132,14 +132,14 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     long nframe=1000000;
     seed_rand(&rstat, seed);
     map_t *atm=mapnew(nx, ny, dx, dx);
-    dmat *vec=dref_reshape((dmat*)atm, N*N, 1);
+    dmat *vec=dref_reshape(DMAT(atm), N*N, 1);
     dmat *cov=NULL;
     for(long i=0; i<nframe; i++){
 	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    P(atm,j)=randn(&rstat);
 	}
-	fractal_do((dmat*)atm, dx, r0,L0,ninit);
+	fractal_do(DMAT(atm), dx, r0,L0,ninit);
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -160,13 +160,13 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
     map_t *atm=mapnew(nx, ny, dx,dx);
     dmat *vec=dnew(4,1);
     dmat *cov=NULL;
-    dmat* pp=(dmat*)atm;
+    dmat* pp=DMAT(atm);
     for(long i=0; i<nframe; i++){
 	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    P(atm,j)=randn(&rstat);
 	}
-	fractal_do((dmat*)atm, dx, r0,L0,ninit);
+	fractal_do(DMAT(atm), dx, r0,L0,ninit);
 	P(vec,0)=P(pp,ofx+0,ofy+0);
 	P(vec,1)=P(pp,ofx+1,ofy+0);
 	P(vec,2)=P(pp,ofx+0,ofy+1);
@@ -203,9 +203,9 @@ static void test_stfun(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		P(atm,j)=randn(&rstat);
 	    }
-	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
-	    stfun_push(data, (dmat*)atm);
-	    zfarr_push(save, i, (dmat*)atm);
+	    fractal_do(DMAT(atm), dx, r0,L0,ninit);
+	    stfun_push(data, DMAT(atm));
+	    zfarr_push(save, i, DMAT(atm));
 	    if(i%100==0)
 		dbg("%ld of %ld\n", i, nframe);
 	}
@@ -268,7 +268,7 @@ static void test_psd(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		P(atm,j)=randn(&rstat);
 	    }
-	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
+	    fractal_do(DMAT(atm), dx, r0,L0,ninit);
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
@@ -351,8 +351,8 @@ static void test_cxx(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		P(atm,j)=randn(&rstat);
 	    }
-	    fractal_do((dmat*)atm, dx, r0, L0, ninit);
-	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
+	    fractal_do(DMAT(atm), dx, r0, L0, ninit);
+	    dmat *sec=dsub(DMAT(atm), 0, nx, 0, ny);
 	    dmat *atmvec=dref_reshape(sec, nx*ny, 1);
 	    dmm(&cxx,1, atmvec,atmvec,"nt",1);
 	    dfree(atmvec);

@@ -171,7 +171,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		iastroked=iastroke*1.414;//for diagonal separation.
 		if(!parms->fit.square){
 			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), dm);
-			dmr=(dmat*)P(simu->dmrealsq,idm);
+			dmr=DMAT(P(simu->dmrealsq,idm));
 		} else{
 			dmr=dm;
 		}
@@ -181,7 +181,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		int count=0, trials=0;
 		do{
 			count=0;
-			dmat* map=(dmat*)P(recon->amap,idm)/*PDMAT*/;
+			dmat* map=DMAT(P(recon->amap,idm));
 			for(int iy=0; iy<P(recon->any,idm)-1; iy++){
 				for(int ix=0; ix<nx-1; ix++){
 					int iact1=P(map, ix, iy);

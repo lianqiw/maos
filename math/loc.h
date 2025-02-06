@@ -23,7 +23,16 @@
    \file loc.h
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
-
+loc_t* loc_convert(dmat* A);
+#define locwrite(out, A...) writebin(out, A)
+#define locread(A...)    loc_convert(dmat_cast(readbin_id(M_LOC, 0, A)))
+#define loccellread(A...) (loccell*)cellconvert(readbin_id(M_LOC, 1, A), (cell*(*)(cell*))loc_convert)
+#define loccellnew (loccell*)cellnew
+#define locccellnew (locccell*)cellnew
+#define loccellfree(A) cellfree(A) //if(A){cellfree_do((cell*)A); A=NULL;};
+#define locfree(A) cellfree(A) //if(A){cellfree_do((cell*)A);A=NULL;}
+#define ptsfree(A) cellfree(A) //if(A){cellfree_do((cell*)A);A=NULL;}
+//#define loccellwrite(A,B...) cellwrite((cell*)A,B)
 lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad);
 void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny);
 void loc_create_map(const loc_t* loc);
@@ -46,15 +55,11 @@ static inline void loc_embed_add(anydmat dest, const loc_t *loc, const_anydmat i
 dcell* loc_embed2(const loc_t* loc, const dmat* arr);
 void loc_embed_cell(dcell** dest, const loc_t* loc, const dcell* in);
 void loc_extract(dmat* dest, const loc_t* loc, map_t* in);
-loc_t* map2loc(map_t* amp, real thres);
+loc_t* loc_from_map(map_t* amp, real thres);
 
 void loc_free_map(loc_t* loc);
+void locfree_do(cell* loc);
 
-void locfree_do(loc_t* loc);
-#define locfree(A) if(A){locfree_do(A);A=NULL;}
-#define ptsfree(A) if(A){locfree_do((loc_t*)A);A=NULL;}
-void locarrfree_do(loc_t** loc, int nloc);
-#define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
 real loc_diam(const loc_t* loc);
 int loccenter(const loc_t* loc);
 loc_t* locnew(long nloc, real dx, real dy);
@@ -111,6 +116,6 @@ void cembed_locstat(cmat** out, real alpha, loc_t* loc, real* oin, real beta, in
 void loc_dxdy(loc_t* loc);
 loc_t* d2loc(const dmat* A);
 loc_t* locreaddata(file_t* fp, header_t* header);
-void loc_header(loc_t *loc);
+void loc_keywords(cell *loc);
 lmat* loc_coord2ind(loc_t *aloc, dmat *dead);
 #endif

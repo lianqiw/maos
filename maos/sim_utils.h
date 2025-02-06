@@ -27,6 +27,5 @@ sim_t* init_simu(const parms_t *parms,powfs_t *powfs, aper_t *aper,recon_t *reco
 void free_simu(sim_t *simu);
 void print_progress(sim_t *simu);
 void save_skyc(powfs_t *powfs, recon_t *recon, const parms_t *parms);
-void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy);
 void genatm(sim_t *simu);
 #endif

@@ -58,14 +58,18 @@ typedef struct S{\
 	ARR(struct T*);\
 	struct T* m; \
 	void *dummy1;/*pad the size to agree with MATARR*/ \
+	void *dummy2;/*pad the size to agree with MATARR*/ \
+	void *dummy3;/*pad the size to agree with MATARR*/ \
 }S;
-
+CELLDEF(cell, cell);
 
 #define MATARR(T,S) \
 struct S{\
 	ARR(T);\
 	mem_t *mem;   /**< Memory management*/	\
 	async_t *async; /**<async io*/\
+	void (*deinit)(cell *p);/**<for derived type to free additional field*/\
+	void (*make_keywords)(cell *p);/**<For derived type to update keywords*/\
 }
 
 #define MATDEF(T,S) typedef MATARR(T,S) S
@@ -181,7 +185,6 @@ typedef struct loc_t{
 		real* locy;  /**< y coordinates of each point*/
 		locstat_t* stat;/**<points to column statistics*/
 		map_t* map;    /**< point to the map used for identifying neihboring points.*/
-		unsigned int *nref;    /**<Reference counting*/
 		real dx;     /**< Sampling along x*/
 		real dy;     /**< Sampling along y*/
 		real ht;     /**< Conjugation height of the loc grid.*/
@@ -211,7 +214,6 @@ typedef struct pts_t{
 	        real* origy; 		/**<The y origin of each subaperture*/
             locstat_t* stat;	/**<padding so that we can be casted to loc_t*/
             map_t* map;    		/**<treat pts_t as loc_t and compute the MAP*/
-            unsigned int *nref; /**<Reference counting*/
             union{
                 real dsa;    /**<side length of subaperture*/
                 real dsax;   /**<side length of subaperture*/
@@ -229,7 +231,6 @@ typedef struct pts_t{
 	real dx;     /**<sampling of points in each subaperture*/
 	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
-CELLDEF(cell, cell);
 CELLDEF(cmat, ccell);
 CELLDEF(zmat, zcell);
 CELLDEF(dmat, dcell);
