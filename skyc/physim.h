@@ -19,10 +19,10 @@
 #define SKYC_SIM_H
 real calc_rms(const dmat *mideal, const dmat *mcc, int istep0);
 void ngsmod2wvf(cmat *wvf, real wvl, const dmat *modm,
-		const POWFS_S *powfs, int isa, real thetax, real thetay, 
-		const PARMS_S *parms);
+		const powfs_s *powfs, int isa, real thetax, real thetay, 
+		const parms_s *parms);
 dmat* physim(dmat **mres, const dmat *mideal, const dmat *mideal_oa, real ngsol,
-		 ASTER_S *aster, const POWFS_S *powfs, const PARMS_S *parms, 
+		 aster_s *aster, const powfs_s *powfs, const parms_s *parms, 
 		 int idtrat, int noisy, int phystart);
-void skysim_save(const SIM_S *simu, const ASTER_S *aster, const real *ipres, int selaster, int seldtrat, int isky);
+void skysim_save(const sim_s *simu, const aster_s *aster, const real *ipres, int selaster, int seldtrat, int isky);
 #endif

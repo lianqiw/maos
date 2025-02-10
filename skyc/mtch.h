@@ -19,7 +19,7 @@
 #define SKYC_MTCH_H
 #include "skyc.h"
 #include "types.h"
-void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf, int deriv);
+void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, dtf_s *dtf, int deriv);
 void genmtch(dcell **mtche, dmat **sanea,
 	     dcell *i0, dcell *gx, dcell *gy, real pixtheta, 
 	     real rne, real bkgrnd, int cr);

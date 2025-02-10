@@ -19,6 +19,6 @@
 #define SKYC_SKYSIM_H
 #include "parms.h"
 #include "types.h"
-void skysim(const PARMS_S *parms);
+void skysim(const parms_s *parms);
 
 #endif

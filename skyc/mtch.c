@@ -26,7 +26,7 @@
    PSF.
    \todo merge this file with maos/mtch.c and put in lib folder.
 */
-void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, DTF_S* dtf, int deriv){
+void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, dtf_s* dtf, int deriv){
 	cmat* otf=cnew(psf->nx, psf->ny);
 	cmat* otfsave=0;
 	ccpd(&otf, psf);//loaded psf has peak in corner 

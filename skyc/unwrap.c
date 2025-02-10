@@ -146,8 +146,8 @@ static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phir
 }
 
 static void convert_wvf(GENPISTAT_S* data){
-	const PARMS_S* parms=data->parms;
-	/*POWFS_S *powfs=data->powfs; */
+	const parms_s* parms=data->parms;
+	/*powfs_s *powfs=data->powfs; */
 	long icase=0;
 	/*Do not run this function. */
 	return;

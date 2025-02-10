@@ -25,7 +25,7 @@
 /**
    Setup the detector transfer functions. See maos/setup_powfs.c
  */
-static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
+static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		const int ncomp=parms->maos.ncomp[ipowfs];
@@ -41,7 +41,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 		const real pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
 		const real pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
 		loc_t* loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pixtheta, pxo, pyo);
-		powfs[ipowfs].dtf=mycalloc(parms->maos.nwvl, DTF_S);
+		powfs[ipowfs].dtf=mycalloc(parms->maos.nwvl, dtf_s);
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 			const real wvl=parms->maos.wvl[iwvl];
 			const real dtheta=wvl/(dxsa*embfac);
@@ -149,7 +149,7 @@ static void setup_powfs_dtf(POWFS_S* powfs, const PARMS_S* parms){
 /**
    Read in the WFS grid and amplitude map.
  */
-static void read_powfs_locamp(POWFS_S* powfs, const PARMS_S* parms){
+static void read_powfs_locamp(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		powfs[ipowfs].loc=locread("%s", parms->maos.fnwfsloc[ipowfs]);
@@ -182,9 +182,9 @@ static void read_powfs_locamp(POWFS_S* powfs, const PARMS_S* parms){
 	}
 }
 /**
-   Setup POWFS_S struct.
+   Setup powfs_s struct.
 */
-void setup_powfs(POWFS_S* powfs, const PARMS_S* parms){
+void setup_powfs(powfs_s* powfs, const parms_s* parms){
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		powfs[ipowfs].ipowfs=ipowfs;
 		powfs[ipowfs].nxwvf=parms->maos.ncomp[ipowfs]/parms->maos.embfac[ipowfs];
@@ -196,7 +196,7 @@ void setup_powfs(POWFS_S* powfs, const PARMS_S* parms){
 /**
    Release memory.
  */
-void free_powfs(POWFS_S* powfs, const PARMS_S* parms){
+void free_powfs(powfs_s* powfs, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){

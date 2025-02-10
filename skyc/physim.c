@@ -41,11 +41,11 @@ real calc_rms(const dmat* mod, const dmat* mcc, int istep0){
 void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 	real wvl,           /**<[in] the wavelength*/
 	const dmat* modm,     /**<[in] the NGS mode vector*/
-	const POWFS_S* powfs,       /**<[in] the powfs configuration*/
+	const powfs_s* powfs,       /**<[in] the powfs configuration*/
 	int isa,              /**<[in] index of subaperture*/
 	real thetax,        /**<[in] direction of WFS*/
 	real thetay,        /**<[in] direction of WFS*/
-	const PARMS_S* parms  /**<[in] the parms*/
+	const parms_s* parms  /**<[in] the parms*/
 ){
 	const real* mod=P(modm);
 	const real wvk=TWOPI/wvl;
@@ -108,8 +108,8 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
    - 2: only poisson noise.
 */
 dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
-	ASTER_S* aster, const POWFS_S* powfs,
-	const PARMS_S* parms, int idtratc, int noisy, int phystart){
+	aster_s* aster, const powfs_s* powfs,
+	const parms_s* parms, int idtratc, int noisy, int phystart){
 	const int dtratc=P(parms->skyc.dtrats,idtratc);
 	int hasphy;
 	if(phystart>-1&&phystart<aster->nstep){
@@ -517,8 +517,8 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 
 /**
    Save NGS WFS and other information for later use in MAOS simulations.*/
-void skysim_save(const SIM_S* simu, const ASTER_S* aster, const real* ipres, int selaster, int seldtrat, int isky){
-	const PARMS_S* parms=simu->parms;
+void skysim_save(const sim_s* simu, const aster_s* aster, const real* ipres, int selaster, int seldtrat, int isky){
+	const parms_s* parms=simu->parms;
 	const int nwvl=parms->maos.nwvl;
 	char path[PATH_MAX-100];
 	snprintf(path, sizeof(path), "Res%d_%d_maos/sky%d", simu->seed_maos, parms->skyc.seed, isky);
