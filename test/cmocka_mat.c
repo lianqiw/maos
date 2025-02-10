@@ -78,18 +78,22 @@ void mat_basic(void **state){
     assert_int_equal(NX(a), 4);
     assert_int_equal(NY(a), 5);
     assert_int_equal(mem_nref(a->mem), 1);
-    assert_int_equal(dresize(a, 6, 0), 0);//resize with dimension 0 perserves
+    assert_int_equal(dresize(a, 6, -1), 0);//resize with dimension -1 perserves
     assert_int_equal(NX(a), 6);
     assert_int_equal(NY(a), 5);
     assert_int_equal(mem_nref(a->mem), 1);
-    assert_int_equal(dresize(a, 6, 0), 0);//resize with dimension 0 perserves
+    assert_int_equal(dresize(a, 6, -1), 0);//resize with dimension -1 perserves
     assert_int_equal(NX(a), 6);
     assert_int_equal(NY(a), 5);
     assert_int_equal(mem_nref(a->mem), 1);
-    assert_int_equal(dresize(a, 0, 0), 0);//resize with dimension 0 perserves
+    assert_int_equal(dresize(a, -1, -1), 0);//resize with dimension -1 perserves
     assert_int_equal(NX(a), 6);
     assert_int_equal(NY(a), 5);
-    assert_int_equal(mem_nref(a->mem), 1);
+	assert_int_equal(dresize(a, 0, 0), 0);//resize with both dimension 0 frees
+    assert_int_equal(NX(a), 0);
+    assert_int_equal(NY(a), 0);
+	assert_null(P(a));
+    assert_int_equal(mem_nref(a->mem), 0);
     dfree(a);
     assert_int_equal(dresize(a, 6, 0), 0);//resize NULL with dimension 0 is ok
     assert_null(a);

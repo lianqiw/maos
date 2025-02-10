@@ -2126,7 +2126,6 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	fprintf(fp, "]\n");
 
 	fprintf(fp, "include=\"skyc.conf\"\n");
-	fprintf(fp, "include=\"skyc_za%g.conf\"\n", zadeg);
 	fprintf(fp, "maos.wddeg=[");
 	for(int ips=0; ips<parms->atm.nps; ips++){
 		fprintf(fp, "%.2f ", parms->atm.wddeg?P(parms->atm.wddeg, ips):0);

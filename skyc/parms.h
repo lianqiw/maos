@@ -109,7 +109,7 @@ typedef struct SKYC_S{
 			imperrnm(theta)=sqrt(imperrnm^2+imperrnmb^2*theta^2). The
 			location in fov, theta, is normalized by patfov/2*/
     /** The following are vectors for each powfs; */
-    int *nwfsmax;    /**<maximum # of wfs for each powfs*/
+    lmat *nwfsmax;    /**<maximum # of wfs for each powfs*/
     int  nwfstot;    /**<Sum of nwfsmax*/
     real *pixtheta;/**<size of WFS ccd pixel.*/
     real *pixblur; /**<blurring of pixels.*/

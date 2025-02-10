@@ -102,7 +102,8 @@ typedef struct STAR_S{
 /**
    asterism dependent data.*/
 typedef struct ASTER_S{
-    int iaster;        /**<index of aster*/
+    int iaster;        /**<index of aster for this sky*/
+	int iaster_all;	   /**<index of aster for all sky */
     int nstep;         /**<number of time steps available*/
     int tsa;           /**<total number of subapertures.*/
     int nwfs;          /**<number of WFS.*/
@@ -129,6 +130,9 @@ typedef struct ASTER_S{
     long *ngs;         /**<number of gradients for each wfs*/
     dcell *phyRes;      /**<Wavefront variance result from physical optics simulations.*/
     dcell *phyMRes;     /**<Residual modes from physical optics simulation*/
+	//the following are for the best dtrat
+	real phyResbest;	/**<Best PO performance */
+	int idtratbest;		/**<idtrat for the best PO performance */
 }ASTER_S;
 /**
    A few simulation parameters.*/
@@ -152,13 +156,10 @@ typedef struct SIM_S{
 			  - Residual wind shake (if separately estimated)
 			  - 0
 		       */
-    dmat *res_oa;      /**<residual error on axis 5*nsky. in the same format as res*/
     dmat *res_geom;      /**<residual error estimated from servo analysis. in the same foramt as res*/
     dmat *res_aster;   /**<Performance and parameter of all asterisms evaluated.*/
     unsigned int res_iaster;   /**<counter for res_aster*/
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
-    dcell *sel;        /**<selected stars for each star field.*/
-    dmat *fss;         /**<optimal sampling freq for each star field*/
     dcell *gain;       /**<optimal gains for each star field.*/
     dcell *psds;        /**<PSD of All (gsplit=0) or Each mode (gsplit=1)*/
     dmat *gain_x;      /**<The sampled sigma in m2*/

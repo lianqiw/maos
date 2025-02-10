@@ -57,7 +57,7 @@ static void setup_parms_skyc(PARMS_S* parms){
 	READ_INT(skyc.maxaster);
 	READ_INT(skyc.maxdtrat);
 	READ_INT(skyc.maxstar);
-	readcfg_intarr(&parms->skyc.nwfsmax, parms->skyc.npowfs, 0,"skyc.nwfsmax");
+	parms->skyc.nwfsmax=readcfg_lmat(parms->skyc.npowfs, 0,"skyc.nwfsmax");
 	readcfg_dblarr(&parms->skyc.pixtheta, parms->skyc.npowfs,0, "skyc.pixtheta");
 	readcfg_dblarr(&parms->skyc.pixblur, parms->skyc.npowfs,0, "skyc.pixblur");
 	readcfg_intarr(&parms->skyc.pixpsa, parms->skyc.npowfs,0, "skyc.pixpsa");
@@ -392,7 +392,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 	}
 	parms->skyc.nwfstot=0;
 	for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
-		parms->skyc.nwfstot+=parms->skyc.nwfsmax[ipowfs];
+		parms->skyc.nwfstot+=P(parms->skyc.nwfsmax, ipowfs);
 	}
 	info("There are %d MAOS PSF seeds: ", parms->maos.nseed);
 	for(int i=0; i<parms->maos.nseed; i++){
@@ -465,6 +465,7 @@ void free_parms(PARMS_S* parms){
 	dfree(parms->skyc.fss);
 	dfree(parms->skyc.wvlwt);
 	dfree(parms->skyc.rnefs);
+	lfree(parms->skyc.nwfsmax);
 	dfree(parms->maos.mcc);
 	dfree(parms->maos.mcc_oa);
 	dfree(parms->maos.mcc_tt);

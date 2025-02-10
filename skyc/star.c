@@ -693,8 +693,9 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 	return nstep;
 }
 static int sortfun_snr(const STAR_S *p1, const STAR_S *p2){
-	real s1=P(p1->pistat[0].snr, 0);
-	real s2=P(p2->pistat[0].snr, 0);
+	int ix=NX(p1->pistat[0].snr)-1;
+	real s1=P(p1->pistat[0].snr, ix);
+	real s2=P(p2->pistat[0].snr, ix);
 	return s1<s2?1:-1; //-1: keep order. 1: reverse order
 }
 /**

@@ -247,7 +247,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				real res_ngs=dwdot(P(merr), parms->maos.mcc, P(merr));
 				if(res_ngs>ngsol*100){
 					//dfree(res); res=NULL;
-					dbg("Loop is diverging at step %d\n", istep);
+					//dbg("Loop is diverging at step %d\n", istep);
 					divergence=1;
 					break;
 				}

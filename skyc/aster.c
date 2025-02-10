@@ -27,158 +27,56 @@
    Routines to handle asterisms.
  */
 /**
-   Computes the number of possibilities of selection k items from n items \f$C_n^k\f$:
-   factorial(n)/(factorial(k)*factorial(n-k));
-*/
-static long comb_select(long n, long k){
-	return (long)round(factorial(n-k+1, n)/factorial(1, k));
-}
-/**
-   initialize an initial combination composed a vector of non-negative numbers 0,1,2,...
-*/
-static int* comb_init(long k){
-	int* comb=mycalloc(k, int);
-	for(int i=0; i<k; i++){
-		comb[i]=i;
-	}
-	return comb;
-}
-/**
-   Find the next combination of selecting k from n. 
- */
-static int comb_next(int* comb, long n, long k){
-	if(n<1||k<1){
-		return 0;
-	}
-	int i=k-1;
-	comb[i]++;/*increment to next */
-	while(comb[i]+k>=n+i+1&&i>0){/*out of range, increment previous one */
-		i--;
-		comb[i]++;
-	}
-	if(comb[0]+k>n){
-		return 0;/*no more */
-	}
-	for(i=i+1; i<k; i++){
-		comb[i]=comb[i-1]+1;
-	}
-	return 1;
-}
-
-/**
    Create combination of stars to form asterism. It has the option to put TTF
    always on the brightest for testing purpose.  */
 ASTER_S* setup_aster_comb(int* naster, const STAR_S* star, int nstar, const PARMS_S* parms){
 	if(!star || !nstar){
 		*naster=0;
 		return NULL;
-	} else if(parms->skyc.keeporder){
-		/*Use the same order as input stars. For testing purpose*/
-		ASTER_S* aster=mycalloc(1, ASTER_S);
-		*naster=1;
-		int npowfs=parms->maos.npowfs;
-		int nleft=nstar;
-		int stars[npowfs];//number of stars assigned to each powfs
-		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-			stars[ipowfs]=MIN(nleft, parms->skyc.nwfsmax[ipowfs]);
-			nleft-=stars[ipowfs];
-		}
-		if(nleft>0){
-			warning("skyc.keeporder is set, but there are more stars than needed, dropped the extra\n");
-		}
-		int ntot=nstar-nleft;
-		aster[0].nwfs=ntot;
-		aster[0].wfs=mycalloc(ntot, WFS_S);
-		aster[0].iaster=0;
-		int count=0;
-		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-			for(int istar=0; istar<stars[ipowfs]; istar++){
-				aster[0].wfs[count].ipowfs=ipowfs;
-				aster[0].wfs[count].istar=count;
-				count++;
-			}
-		}
-		return aster;
 	}
+	int flag=parms->skyc.keeporder?0:(parms->skyc.ttfbrightest?2:1);
+	int npowfs=parms->maos.npowfs;
+	lmat *starvalid=lnew(nstar, npowfs);
+	for(int istar=0; istar<nstar; istar++){
+		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+			P(starvalid, istar, ipowfs)=star[istar].use[ipowfs];
+		}
+	}
+	lmat *comb=comb_stars(parms->skyc.nwfsmax, starvalid, flag);
+	*naster=NY(comb);
+	int nwfstot=NX(comb);
+	ASTER_S *aster=mycalloc(*naster, ASTER_S);
+	for(int iaster=0; iaster<*naster; iaster++){
+		aster[iaster].nwfs=nwfstot;
+		aster[iaster].wfs=mycalloc(nwfstot, WFS_S);
+		aster[iaster].iaster=iaster;
+		int iwfs=0;
+		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+			for(int jwfs=0; jwfs<P(parms->skyc.nwfsmax, ipowfs); jwfs++){
+				if(iwfs<nwfstot){
+					int istar=P(comb, iwfs, iaster);
+					aster[iaster].wfs[iwfs].ipowfs=ipowfs;
+					aster[iaster].wfs[iwfs].istar=istar;
+					aster[iaster].wfs[iwfs].thetax=star[istar].thetax;
+					aster[iaster].wfs[iwfs].thetay=star[istar].thetay;
+					/*Magnitude */
+					aster[iaster].wfs[iwfs].mags=star[istar].mags;//do not free
+					/*Signal Level */
+					aster[iaster].wfs[iwfs].siglev=P(star[istar].siglev,ipowfs);//do not free
+					aster[iaster].wfs[iwfs].siglevtot=P(star[istar].siglevtot,ipowfs);
+					aster[iaster].wfs[iwfs].bkgrnd=P(star[istar].bkgrnd,ipowfs);
 
-	int ncomb=1;
-	ASTER_S* aster;
-	int npowfs=parms->skyc.npowfs;
-	int nwfs[npowfs];
-	int nleft;
-	int nwfstot=0;
-	nleft=nstar;
-	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-		if(nleft>=parms->skyc.nwfsmax[ipowfs]){
-			nwfs[ipowfs]=parms->skyc.nwfsmax[ipowfs];
-		} else{
-			nwfs[ipowfs]=nleft;
-		}
-		nwfstot+=nwfs[ipowfs];
-		ncomb*=comb_select(nleft, nwfs[ipowfs]);
-		nleft-=nwfs[ipowfs];
-	}
-	if(parms->skyc.ttfbrightest){
-		if(parms->maos.msa[0]==2){
-			ncomb/=comb_select(nwfstot, nwfs[0]);
-		} else{
-			error("Please revise when wfs[0] is not TTF\n");
-		}
-	}
-	
-	aster=mycalloc(ncomb, ASTER_S);
-	int count=0;
-	int* comb=comb_init(nwfstot);//select nwfstot stars from all available stars
-	do{
-		if(npowfs==1){
-			aster[count].nwfs=nwfs[0];
-			aster[count].wfs=mycalloc(nwfs[0], WFS_S);
-			aster[count].iaster=count;
-			int skip=0;
-			for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
-				aster[count].wfs[iwfs].ipowfs=0;
-				aster[count].wfs[iwfs].istar=comb[iwfs];
-				if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
-					skip=1;
+					/*Pixel intensity statistics. */
+					aster[iaster].wfs[iwfs].pistat=&star[istar].pistat[ipowfs];
 				}
+				iwfs++;
 			}
-			if(!skip) count++; else free(aster[count].wfs);
-		} else if(npowfs==2){
-			int mask[nwfstot];//mask stars that are selected already.
-			int* comb2=comb_init(nwfs[0]);//select nwfs[0] from nwfstot for the first ipowfs.
-			do{
-				int skip=0;
-				memset(mask, 0, sizeof(int)*nwfstot);
-				aster[count].nwfs=nwfstot;
-				aster[count].wfs=mycalloc(nwfstot, WFS_S);
-				aster[count].iaster=count;
-				for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
-					aster[count].wfs[iwfs].ipowfs=0;
-					aster[count].wfs[iwfs].istar=comb[comb2[iwfs]];
-					if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
-						skip=1;
-					}
-					mask[comb2[iwfs]]=1;
-				}
-				int jstar=0;
-				for(int iwfs=0; iwfs<nwfs[1]; iwfs++){
-					aster[count].wfs[iwfs+nwfs[0]].ipowfs=1;
-					while(mask[jstar]) jstar++;
-					aster[count].wfs[iwfs+nwfs[0]].istar=comb[jstar];
-					if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
-						skip=1;
-					}
-					mask[jstar]=1;
-				}
-				if(!skip) count++; else free(aster[count].wfs);
-			} while(comb_next(comb2, nwfstot, nwfs[0])&&!parms->skyc.ttfbrightest);
-			free(comb2);
 		}
-	} while(comb_next(comb, nstar, nwfstot));
-	free(comb);
-	*naster=count;
+	}
+	lfree(comb);
+	lfree(starvalid);
 	if(parms->skyc.verbose){
-		info("Number of stars: %d, number of asterisms: %d\n", nstar, count);
+		info("Number of stars: %d, number of asterisms: %d\n", nstar, *naster);
 	}
 	return aster;
 }
@@ -202,34 +100,11 @@ void setup_aster_gm(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
 	*/
 	aster->gm=dcell2m(aster->g);
 }
-/**
-   Copy information from star struct STAR_S to stars in asterism ASTER_S.
-*/
-void setup_aster_copystar(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
-	(void)parms;
-	int nwfs=aster->nwfs;
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		const int ipowfs=aster->wfs[iwfs].ipowfs;
-		const int istar=aster->wfs[iwfs].istar;
-		/*Coordinate */
-		aster->wfs[iwfs].thetax=star[istar].thetax;
-		aster->wfs[iwfs].thetay=star[istar].thetay;
-		/*Magnitude */
-		aster->wfs[iwfs].mags=star[istar].mags;//do not free
-		/*Signal Level */
-		aster->wfs[iwfs].siglev=P(star[istar].siglev,ipowfs);//do not free
-		aster->wfs[iwfs].siglevtot=P(star[istar].siglevtot,ipowfs);
-		aster->wfs[iwfs].bkgrnd=P(star[istar].bkgrnd,ipowfs);
 
-		/*Pixel intensity statistics. */
-		aster->wfs[iwfs].pistat=&star[istar].pistat[ipowfs];
-	}
-}
 /**
    Copy time history of complex pupil function from STAR_S to ASTER_S.
  */
-void setup_aster_wvf(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
-	(void)parms;
+void setup_aster_wvf(ASTER_S* aster, STAR_S* star){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const int istar=aster->wfs[iwfs].istar;
@@ -239,8 +114,7 @@ void setup_aster_wvf(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
 /**
    Copy time history of complex pupil function from STAR_S to ASTER_S.
  */
-void setup_aster_ztilt(ASTER_S* aster, STAR_S* star, const PARMS_S* parms){
-	(void)parms;
+void setup_aster_ztilt(ASTER_S* aster, STAR_S* star){
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const int istar=aster->wfs[iwfs].istar;
@@ -365,12 +239,10 @@ static dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask, lmat** pm
 	}
 	return ggm;
 }
-/*
-  For the multirate case, setup the dtrat of each WFS.
-
-  2019-01-28: First version: Set each WFS to the fastest speed while achiving skyc.snrmin
-
-  Try to merge with setup_aster_kalman_multirate.
+/**
+  	For the multirate case, setup the dtrat of each WFS.
+	- First, the fastest rate of each wfs is computed based on snr threshold.
+	- If skyc.ttffastest is set, the fast rate is forced to be the TTF OIWFS rate. Otherwise, it is set to the fastest OIWFS.
 */
 static void
 setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
@@ -380,7 +252,7 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 	aster->idtrats=lnew(aster->nwfs, 1);
 	aster->dtrats=lnew(aster->nwfs, 1);
 	int idtrat_fast=0;
-	real snr_fast=0;
+	//real snr_fast=0;
 	int idtrat_slow=parms->skyc.ndtrat;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int idtrat;
@@ -398,21 +270,25 @@ setup_aster_servo_multirate(ASTER_S* aster, const PARMS_S* parms){
 		int isttf=parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1;
 		if((parms->skyc.ttffastest&&isttf)||(!parms->skyc.ttffastest &&idtrat>idtrat_fast)){
 			idtrat_fast=idtrat;
-			snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
+			//snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
 			if(idtrat_slow==parms->skyc.ndtrat) idtrat_slow=idtrat;
 		}
 		if(idtrat<idtrat_slow){
-			real snr=P(aster->wfs[iwfs].pistat->snr, idtrat);
-			if(!isttf && idtrat+2 >= idtrat_fast && (snr_fast-snr)<5 && snr>3){
+			//real snr2=P(aster->wfs[iwfs].pistat->snr, idtrat_fast);
+			//if(!isttf && idtrat+2 >= idtrat_fast && snr2>3){
 				//We speed up TT wfs that is slower than fast WFS to the fast rate under the following conditions:
+				//The difference in frequency is no more than 4 times.
+				//snr is better than 3
+				//snr is better than snr_fast-5
 				//We don't speed up TTF wfs as it will degrade focus correction too much.
-				idtrat=P(aster->idtrats, iwfs)=idtrat_fast;
-			}
+			//	idtrat=P(aster->idtrats, iwfs)=idtrat_fast;
+			//}
 			//info("aster %d snr=%g %g\n", aster->iaster, snr_fast, snr);
 			idtrat_slow=idtrat;
 		}
 	}
-	int idtrat_fast2=MAX(2, idtrat_fast);
+	int idtrat_fast2=MAX(3, idtrat_fast);//force fast loop to be faster than dtrat=8
+	//We use only two rates: a faster rate for tip/tilt(/focus) control and a slower rate for focus/ps control.
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		//force fast loop to be faster than dtrat=16
 		if(P(aster->idtrats, iwfs)>=idtrat_fast){
@@ -949,7 +825,6 @@ int setup_aster_select(real* result, ASTER_S* aster, int naster, STAR_S* star,
    Free the ASTER_S array.
  */
 void free_aster(ASTER_S* aster, int naster, const PARMS_S* parms){
-	(void)parms;
 	for(int iaster=0; iaster<naster; iaster++){
 		int ndtrat=parms->skyc.ndtrat;
 		if(aster[iaster].kalman){
