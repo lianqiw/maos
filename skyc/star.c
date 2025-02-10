@@ -29,14 +29,14 @@
 /**
    Create "star" data array from star information.
 */
-static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
+static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 	if(!coord){
 		return NULL;/*there are no stars available. */
 	}
 	int nstar=coord->ny;
 	dmat* pc=coord;
 	int nwvl=parms->maos.nwvl;
-	STAR_S* star=mycalloc(nstar, STAR_S);
+	star_s* star=mycalloc(nstar, star_s);
 	real ngsgrid=parms->maos.ngsgrid*AS2RAD;
 	real r2=pow(parms->skyc.patfov*AS2RAD/2., 2);
 	real keepout=pow(parms->skyc.keepout*AS2RAD, 2);
@@ -97,7 +97,7 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 	if(jstar<nstar){
 	/*warning("%d stars dropped\n", nstar-jstar); */
 		coord->ny=jstar;
-		star=myrealloc(star, jstar, STAR_S);
+		star=myrealloc(star, jstar, star_s);
 	}
 	return star;
 }
@@ -105,14 +105,14 @@ static STAR_S* setup_star_create(const PARMS_S* parms, dmat* coord){
 /**
    Read in pistat information, used to compute matched filter, and SANEA.
 */
-static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int seed){
-	const PARMS_S* parms=simu->parms;
+static void setup_star_read_pistat(sim_s* simu, star_s* star, int nstar, int seed){
+	const parms_s* parms=simu->parms;
 	const int npowfs=parms->maos.npowfs;
 	const int nwvl=parms->maos.nwvl;
 	const real ngsgrid=parms->maos.ngsgrid;
 	for(int istar=0; istar<nstar; istar++){
-		STAR_S* stari=&star[istar];
-		stari->pistat=mycalloc(npowfs, PISTAT_S);
+		star_s* stari=&star[istar];
+		stari->pistat=mycalloc(npowfs, pistat_s);
 		const real thetax=stari->thetax*RAD2AS;/*in as */
 		const real thetay=stari->thetay*RAD2AS;
 		real thxnorm=thetax/ngsgrid;
@@ -221,7 +221,7 @@ static void setup_star_read_pistat(SIM_S* simu, STAR_S* star, int nstar, int see
 /**
    Compute Signal level
 */
-static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
+static void setup_star_siglev(const parms_s* parms, star_s* star, int nstar){
 	const long npowfs=parms->maos.npowfs;
 	const long nwvl=parms->maos.nwvl;
 	const real r2=pow(parms->skyc.patfov*AS2RAD/2., 2);
@@ -270,7 +270,7 @@ static void setup_star_siglev(const PARMS_S* parms, STAR_S* star, int nstar){
 /**
    Setup matched filter for stars.
  */
-static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, int nstar, dccell* nonlin){
+static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, int nstar, dccell* nonlin){
 	const long nwvl=parms->maos.nwvl;
 	const long npowfs=parms->maos.npowfs;
 	dmat* rnefs=parms->skyc.rnefs;
@@ -289,7 +289,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
 			const real pixtheta=parms->skyc.pixtheta[ipowfs];
 			//size of PSF
 			const real sigma_theta=parms->skyc.wvlmean/parms->maos.dxsa[ipowfs];
-			PISTAT_S* pistat=&star[istar].pistat[ipowfs];
+			pistat_s* pistat=&star[istar].pistat[ipowfs];
 			pistat->i0=dcellnew(nsa, nwvl);
 			pistat->gx=dcellnew(nsa, nwvl);
 			pistat->gy=dcellnew(nsa, nwvl);
@@ -405,7 +405,7 @@ static void setup_star_mtch(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, 
    Compute Modal to gradient operator using average gradients. Similar to Z tilt
    since the mode is low order
  */
-static void setup_star_gm(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, int nstar){
+static void setup_star_gm(const parms_s* parms, powfs_s* powfs, star_s* star, int nstar){
 	const long npowfs=parms->maos.npowfs;
 	const real hc=parms->maos.hc;
 	const real hs=parms->maos.hs;
@@ -458,12 +458,12 @@ static void setup_star_gm(const PARMS_S* parms, POWFS_S* powfs, STAR_S* star, in
 		}
 	}
 }
-long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int seed){
+long setup_star_read_ztilt(star_s* star, int nstar, const parms_s* parms, int seed){
 	const real ngsgrid=parms->maos.ngsgrid;
 	long nstep=0;
 	TIC;tic;
 	for(int istar=0; istar<nstar; istar++){
-		STAR_S* stari=&star[istar];
+		star_s* stari=&star[istar];
 		int npowfs=parms->maos.npowfs;
 		stari->ztiltout=dcellnew(npowfs, 1);
 		const real thetax=stari->thetax*RAD2AS;/*in as */
@@ -575,13 +575,13 @@ long setup_star_read_ztilt(STAR_S* star, int nstar, const PARMS_S* parms, int se
 
 /**
    Read in asterism WFS wvf.*/
-long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed){
+long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed){
 	const real ngsgrid=parms->maos.ngsgrid;
 	const int nwvl=parms->maos.nwvl;
 	long nstep=0;
 	TIC;tic;
 	for(int istar=0; istar<nstar; istar++){
-		STAR_S* stari=&star[istar];
+		star_s* stari=&star[istar];
 		int npowfs=parms->maos.npowfs;
 		stari->wvfout=mycalloc(npowfs, ccell**);
 		const real thetax=stari->thetax*RAD2AS;/*in as */
@@ -600,7 +600,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 				continue;
 			}
 			char* fnwvf[2][2]={{NULL,NULL},{NULL,NULL}};
-			PISTAT_S* pistati=&stari->pistat[ipowfs];
+			pistat_s* pistati=&stari->pistat[ipowfs];
 
 			/*info("Reading PSF for (%5.1f, %5.1f), ipowfs=%d\n",thetax,thetay,ipowfs); */
 			real wtsum=0;
@@ -692,7 +692,7 @@ long setup_star_read_wvf(STAR_S* star, int nstar, const PARMS_S* parms, int seed
 	//close(fd);
 	return nstep;
 }
-static int sortfun_snr(const STAR_S *p1, const STAR_S *p2){
+static int sortfun_snr(const star_s *p1, const star_s *p2){
 	int ix=NX(p1->pistat[0].snr)-1;
 	real s1=P(p1->pistat[0].snr, ix);
 	real s2=P(p2->pistat[0].snr, ix);
@@ -703,13 +703,13 @@ static int sortfun_snr(const STAR_S *p1, const STAR_S *p2){
    intensitys.  Check for star PSF size. If it is larger than 5, we don't use
    the star because the PSF is too broad.
 */
-STAR_S* setup_star(int* nstarout, SIM_S* simu, dmat* stars, int seed){
-	const PARMS_S* parms=simu->parms;
-	POWFS_S* powfs=simu->powfs;
+star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
+	const parms_s* parms=simu->parms;
+	powfs_s* powfs=simu->powfs;
 	if(!stars){
 		return NULL;
 	}
-	STAR_S* star=setup_star_create(parms, stars);
+	star_s* star=setup_star_create(parms, stars);
 	int nstar=stars->ny;
 	const int npowfs=parms->maos.npowfs;
 	setup_star_read_pistat(simu, star, nstar, seed);
@@ -729,24 +729,24 @@ STAR_S* setup_star(int* nstarout, SIM_S* simu, dmat* stars, int seed){
 			free_istar(star+istar, parms);
 		} else{
 			if(jstar!=istar){
-				memcpy(&star[jstar], &star[istar], sizeof(STAR_S));
+				memcpy(&star[jstar], &star[istar], sizeof(star_s));
 			}
 			jstar++;
 		}
 	}
 	if(jstar!=nstar){
 		nstar=jstar;
-		star=myrealloc(star, jstar, STAR_S);
+		star=myrealloc(star, jstar, star_s);
 	}
 	//sort stars to have descending snr order.
-	qsort(star, jstar, sizeof(STAR_S), (int(*)(const void *, const void *))sortfun_snr);
+	qsort(star, jstar, sizeof(star_s), (int(*)(const void *, const void *))sortfun_snr);
 	*nstarout=nstar;
 	if(parms->skyc.verbose){
 		info("There are %d stars usable from %d stars\n", jstar, nstar);
 	}
 	return star;
 }
-void free_istar(STAR_S* star, const PARMS_S* parms){
+void free_istar(star_s* star, const parms_s* parms){
 	const int npowfs=parms->maos.npowfs;
 	free_pistat(star->pistat, npowfs, parms);
 	if(star->wvfout){
@@ -771,9 +771,9 @@ void free_istar(STAR_S* star, const PARMS_S* parms){
 	dfree(star->minidtrat);
 }
 /**
-   Free array of STAR_S.
+   Free array of star_s.
  */
-void free_star(STAR_S* stars, int nstar, const PARMS_S* parms){
+void free_star(star_s* stars, int nstar, const parms_s* parms){
 	for(int istar=0; istar<nstar; istar++){
 		free_istar(stars+istar, parms);
 	}
@@ -782,7 +782,7 @@ void free_star(STAR_S* stars, int nstar, const PARMS_S* parms){
 /**
    Free pixel intensities.
  */
-void free_pistat(PISTAT_S* pistat, int npistat, const PARMS_S* parms){
+void free_pistat(pistat_s* pistat, int npistat, const parms_s* parms){
 	if(!pistat) return;
 	for(int ipistat=0; ipistat<npistat; ipistat++){
 		dcellfree(pistat[ipistat].psf);

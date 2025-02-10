@@ -43,8 +43,8 @@ static void print_usage(void){
 /**
    Parse command line arguments argc, argv
  */
-ARG_S* parse_args(int argc, const char* argv[]){
-	ARG_S* arg=mycalloc(1, ARG_S);
+arg_s* parse_args(int argc, const char* argv[]){
+	arg_s* arg=mycalloc(1, arg_s);
 	char* host=NULL; int local=0;
 	argopt_t options[]={
 	{"help",  'h', M_INT, 0, 1, (void*)print_usage, NULL},

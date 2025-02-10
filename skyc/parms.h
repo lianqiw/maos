@@ -26,7 +26,7 @@
    pre-processing. Some of the parameters are to be exported by MAOS. The rest
    are to be supplied by the end user.  */
 
-typedef struct MAOS_S{
+typedef struct maos_s{
     real r0z;    /**<Fried parameter, used to read in PSD information.*/
     real dt;     /**<simulation period time. 1/800*/
     real zadeg;  /**<Zenith angle in degree*/
@@ -69,12 +69,12 @@ typedef struct MAOS_S{
     int indps;       /**<Index of plate scale mode. 0: disable*/
     int indastig;    /**<Index of astigmatism mode. 0: disable*/
     char *fnrange;   /**<sodium range time series. forward to maos.*/
-}MAOS_S;
+}maos_s;
 
 /**
    Contains parameters for skycoverage.
 */
-typedef struct SKYC_S{
+typedef struct skyc_s{
     ZB_S zb;         /**<Sky background and zero magnitude flux*/
     int verbose;     /**<be verbose at output.*/
     //int reest;       /**<reestimate the error after gain estimation.*/
@@ -98,7 +98,7 @@ typedef struct SKYC_S{
     int ttfbrightest;/**<make ttf the brightest always.*/
     int ttffastest; /**<make ttf the fastest always in multirate.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
-    int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/
+    int npowfs;      /**<number of powfs, has to match maos_s.npowfs*/
     real lat;      /**<Galactic latitude*/
     real lon;      /**<Galactic longitude.*/
     real catscl;   /**<Scale the catlog star count*/
@@ -162,20 +162,20 @@ typedef struct SKYC_S{
     real snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
     int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
     int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
-}SKYC_S;
+}skyc_s;
 /**
    Parameters for skycoverage.
  */
-typedef struct PARMS_S{
-    MAOS_S maos;     /**<parameters exported by maos*/
-    SKYC_S skyc;     /**<parameters supplied by user*/
+typedef struct parms_s{
+    maos_s maos;     /**<parameters exported by maos*/
+    skyc_s skyc;     /**<parameters supplied by user*/
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
 	char **fnlock;   /**<Records the filename of the seed lock file. if -1 will skip the seed*/
-}PARMS_S;
+}parms_s;
 /**
-   ARG_S is used for command line parsing.
+   arg_s is used for command line parsing.
 */
-typedef struct ARG_S{
+typedef struct arg_s{
     int detach;      /**<Detach from the command line and run in background*/
     int override;    /**<Override result even if Res?_?.done exist*/
     int force;       /**<For start, bypassing scheduler*/
@@ -183,8 +183,8 @@ typedef struct ARG_S{
     char *dirout;    /**<Result output directory*/
     char *conf;      /**master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;
-}ARG_S;
+}arg_s;
 
-PARMS_S *setup_parms(const ARG_S *arg);
-void free_parms(PARMS_S *parms);
+parms_s *setup_parms(const arg_s *arg);
+void free_parms(parms_s *parms);
 #endif

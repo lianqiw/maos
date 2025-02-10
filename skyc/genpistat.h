@@ -17,7 +17,7 @@
 */
 #ifndef SKYC_GENPISTAT_H
 #define SKYC_GENPISTAT_H
-void genpistat(const PARMS_S *parms, POWFS_S *powfs);
-void prep_bspstrehl(SIM_S *simu);
-dccell* wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed);
+void genpistat(const parms_s *parms, powfs_s *powfs);
+void prep_bspstrehl(sim_s *simu);
+dccell* wfs_nonlinearity(const parms_s *parms, powfs_s *powfs, long seed);
 #endif

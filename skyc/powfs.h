@@ -17,6 +17,6 @@
 */
 #ifndef SKYC_SETUP_POWFS_H
 #define SKYC_SETUP_POWFS_H
-void setup_powfs(POWFS_S *powfs, const PARMS_S* parms);
-void free_powfs(POWFS_S *powfs, const PARMS_S* parms);
+void setup_powfs(powfs_s *powfs, const parms_s* parms);
+void free_powfs(powfs_s *powfs, const parms_s* parms);
 #endif

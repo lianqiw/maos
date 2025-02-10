@@ -30,7 +30,7 @@
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_MAT(A) parms->A = readcfg_dmat(0,0,#A) /*read a key with real array. */
 
-static void setup_parms_skyc(PARMS_S* parms){
+static void setup_parms_skyc(parms_s* parms){
 	READ_INT(skyc.dbg);
 	READ_INT(skyc.dbgsky);
 	READ_INT(skyc.dbgaster);
@@ -110,7 +110,7 @@ static void setup_parms_skyc(PARMS_S* parms){
 /**
    Setup infromation output from maos run.
 */
-static void setup_parms_maos(PARMS_S* parms){
+static void setup_parms_maos(parms_s* parms){
 	READ_DBL(maos.r0z);
 	READ_DBL(maos.dt);
 	READ_DBL(maos.zadeg); parms->maos.za=parms->maos.zadeg*M_PI/180.;
@@ -183,7 +183,7 @@ static void setup_parms_maos(PARMS_S* parms){
 	}
 }
 
-PARMS_S* setup_parms(const ARG_S* arg){
+parms_s* setup_parms(const arg_s* arg){
 	/*Setup PATH and result directory */
 	char* config_path=find_config("skyc");
 	addpath(config_path);
@@ -198,7 +198,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 		open_config("maos.conf", 0);//open default config
 	}
 	remove(arg->confcmd);
-	PARMS_S* parms=mycalloc(1, PARMS_S);
+	parms_s* parms=mycalloc(1, parms_s);
 	parms->skyc.nthread=arg->nthread;
 	setup_parms_maos(parms);
 	setup_parms_skyc(parms);
@@ -455,7 +455,7 @@ PARMS_S* setup_parms(const ARG_S* arg){
 /**
    Free the data in parms.
 */
-void free_parms(PARMS_S* parms){
+void free_parms(parms_s* parms){
 	dfree(parms->skyc.psd_ngs);
 	dfree(parms->skyc.psd_tt);
 	dfree(parms->skyc.psd_ws);

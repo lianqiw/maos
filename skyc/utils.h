@@ -18,8 +18,8 @@
 #ifndef SKYC_UTILS_H
 #define SKYC_UTILS_H
 #include "skyc.h"
-ARG_S *parse_args(int argc, const char *argv[]);
-void prep_result_folder(ARG_S *arg);
+arg_s *parse_args(int argc, const char *argv[]);
+void prep_result_folder(arg_s *arg);
 void skyc_final(int sig);
 int skyc_signal_handler(int sig);
 #endif

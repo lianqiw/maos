@@ -31,15 +31,15 @@ typedef struct GENPISTAT_S{
 	long4* cases;
 	unsigned int icase;
 	pthread_mutex_t mutex_read;/*don't let them read in the same time. */
-	const PARMS_S* parms;
-	POWFS_S* powfs;
+	const parms_s* parms;
+	powfs_s* powfs;
 	real ngsgrid;
 	dcell* unwrap;/*matrix that does unwraping. */
 }GENPISTAT_S;
 
 static void* calc_pistat(GENPISTAT_S* data){
-	const PARMS_S* parms=data->parms;
-	POWFS_S* powfs=data->powfs;
+	const parms_s* parms=data->parms;
+	powfs_s* powfs=data->powfs;
 	int icase=0;
 	const int ndtrat=9;
 	dmat* dtrats=dnew(ndtrat, 1);
@@ -210,7 +210,7 @@ static void* calc_pistat(GENPISTAT_S* data){
 	return NULL;
 }
 
-void genpistat(const PARMS_S* parms, POWFS_S* powfs){
+void genpistat(const parms_s* parms, powfs_s* powfs){
 	real patfov=parms->skyc.patfov;
 	real ngsgrid=parms->maos.ngsgrid;
 	long ng=ceil(patfov/2/ngsgrid);
@@ -255,8 +255,8 @@ void genpistat(const PARMS_S* parms, POWFS_S* powfs){
 /**
    Read in the average pixel intensities on the ngs grid
 */
-void prep_bspstrehl(SIM_S* simu){
-	const PARMS_S* parms=simu->parms;
+void prep_bspstrehl(sim_s* simu){
+	const parms_s* parms=simu->parms;
 	real patfov=parms->skyc.patfov;
 	real ngsgrid=parms->maos.ngsgrid;
 	long ng=ceil(patfov/2/ngsgrid);
@@ -323,7 +323,7 @@ void prep_bspstrehl(SIM_S* simu){
 }
 #include "mtch.h"
 /**Determine WFS nonlinearity.*/
-dccell* wfs_nonlinearity(const PARMS_S* parms, POWFS_S* powfs, long seed){
+dccell* wfs_nonlinearity(const parms_s* parms, powfs_s* powfs, long seed){
 	const int npowfs=parms->maos.npowfs;
 	const int nwvl=parms->maos.nwvl;
 	real patfov=parms->skyc.patfov;

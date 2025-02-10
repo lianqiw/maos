@@ -17,10 +17,10 @@
 */
 #ifndef SKYC_SETUP_STARS_H
 #define SKYC_SETUP_STARS_H
-STAR_S *setup_star(int *nstarout,SIM_S* simu, dmat *stars, int seed);
-void free_istar(STAR_S *star, const PARMS_S *parms);
-void free_star(STAR_S *star, int nstar, const PARMS_S *parms);
-long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed);
-long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int seed);
-void free_pistat(PISTAT_S *pistat, int npistat, const PARMS_S *parms);
+star_s *setup_star(int *nstarout,sim_s* simu, dmat *stars, int seed);
+void free_istar(star_s *star, const parms_s *parms);
+void free_star(star_s *star, int nstar, const parms_s *parms);
+long setup_star_read_wvf(star_s *star, int nstar, const parms_s *parms, int seed);
+long setup_star_read_ztilt(star_s *star, int nstar, const parms_s *parms, int seed);
+void free_pistat(pistat_s *pistat, int npistat, const parms_s *parms);
 #endif

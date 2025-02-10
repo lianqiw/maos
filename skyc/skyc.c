@@ -33,7 +33,7 @@ char* dirstart;
 int main(int argc, const char* argv[]){
 	dirstart=mygetcwd();
 	char* scmd=argv2str(argc, argv, " ");
-	ARG_S* arg=parse_args(argc, argv);
+	arg_s* arg=parse_args(argc, argv);
 	/*In detach mode send to background and disable drawing*/
 	if(arg->detach){
 		daemonize();
@@ -53,7 +53,7 @@ int main(int argc, const char* argv[]){
 	scheduler_report_path(scmd);
 	/*setting up parameters before asking scheduler to check for any errors. */
 	dirsetup=stradd("setup", NULL);
-	PARMS_S* parms=setup_parms(arg);
+	parms_s* parms=setup_parms(arg);
 	if(parms->maos.nseed){
 		if(parms->skyc.dbg){
 			mymkdir("%s", dirsetup);

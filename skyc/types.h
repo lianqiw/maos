@@ -26,16 +26,16 @@
 */
 /**
    Detector transfer function */
-typedef struct DTF_S{ 
+typedef struct dtf_s{ 
     cmat *nominal;     /**<The FFT of the pixel functions*/
     dsp *si;           /**<The pixel selection*/
     cmat *U;           /**<Special frequency vector along x*/
-}DTF_S;
+}dtf_s;
 /**
    Struct for POWFS*/
-typedef struct POWFS_S{
+typedef struct powfs_s{
     int     ipowfs;    /**<Which ipowfs this is*/
-    DTF_S  *dtf;       /**<array of dtf for each wvl*/
+    dtf_s  *dtf;       /**<array of dtf for each wvl*/
     loc_t  *loc;       /**<explicit pts in a regular grid. */
     dmat   *amp;       /**<amplitude map defined on loc*/
     real *locxamp;   /**<dot(loc->locx,amp);*/
@@ -43,10 +43,10 @@ typedef struct POWFS_S{
     loc_t  *saloc;     /**<subaperture location*/
     real dxwvf;      /**<sampling for the wvf.*/
     int    nxwvf;      /**<number of points each subaps*/
-}POWFS_S;
+}powfs_s;
 /**
    Struct for pixel intensity statistics*/
-typedef struct PISTAT_S{
+typedef struct pistat_s{
     dcell *psf;        /**<short exposure PSF*/
     dcell *neaspec;    /**<noise equivalent angle due to spec noise*/
     dcell *i0;         /**<normalized pixel intensity, doesn't contain siglev*/
@@ -60,10 +60,10 @@ typedef struct PISTAT_S{
     dcell *sanea0;     /**<noise equivalent angle due to photon noise alone*/
     dmat  *scale;      /**<extra scaling factor for pistat and psf due to bicubic spline on strehl*/
     dmat  *snr;        /**<signal to noise ratio*/
-}PISTAT_S;
+}pistat_s;
 /**
    Struct for WFS*/
-typedef struct WFS_S{
+typedef struct wfs_s{
     int ipowfs;        /**<type of powfs for each wfs.*/
     int istar;         /**<index to star;*/
     real thetax;     /**<location of wfs*/
@@ -75,14 +75,14 @@ typedef struct WFS_S{
     ccell **wvfout;    /**<complex wavefront output from maos run*/
     dmat *ztiltout;   /**<ztilt out from maos run*/
     dmat *goff;        /**<gradient offset for ncpa calibration*/
-    PISTAT_S *pistat;  /**<information about pixel intensities. first got from
+    pistat_s *pistat;  /**<information about pixel intensities. first got from
 			  star_t, then updated.*/
-}WFS_S;
+}wfs_s;
 
 /**
    Data for each available star.
 */
-typedef struct STAR_S{
+typedef struct star_s{
     real thetax;     /**<star location*/
     real thetay;     /**<star location*/
     dmat  *mags;       /**<star magnitude at each wavelength*/
@@ -91,24 +91,24 @@ typedef struct STAR_S{
     dmat  *siglevtot;  /**<total signal level of size npowfs*1*/
     dmat  *bkgrnd;     /**<pixel background of size npowfs*1*/
     int   *use;        /**<whether this star is used in phy simulations, of size npowfs*1*/
-    PISTAT_S *pistat;  /**<pixel intensity statstics npowf*1*/
+    pistat_s *pistat;  /**<pixel intensity statstics npowf*1*/
     dcell *g;          /**<gradient operator of size npowfs*1*/
     ccell ***wvfout;   /**<complex wavefront output from maos run, of size npowfs*1*/
     dcell *ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
     dcell *goff;       /**<gradient offset for NCPA calibration.*/
     int   nstep;       /**<number of time steps available.*/
     dmat* minidtrat;   /**<prefered dtrat for minimum snr*/
-}STAR_S;
+}star_s;
 /**
    asterism dependent data.*/
-typedef struct ASTER_S{
+typedef struct aster_s{
     int iaster;        /**<index of aster for this sky*/
 	int iaster_all;	   /**<index of aster for all sky */
     int nstep;         /**<number of time steps available*/
     int tsa;           /**<total number of subapertures.*/
     int nwfs;          /**<number of WFS.*/
     int use;           /**<use this asterism for further physical optics simulation.*/
-    WFS_S *wfs;        /**<list of wfs for this asterism*/
+    wfs_s *wfs;        /**<list of wfs for this asterism*/
     dcell *g;          /**<NGS mode to grad operator*/
     dmat *gm;          /**<matrix version of g.*/
     lmat *mdirect;     /**<in multirate mode, directly output such modes for slower mode*/
@@ -119,46 +119,36 @@ typedef struct ASTER_S{
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
-    int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
-    real mresest;    /**<miminum rms on servo restimation.*/
+    real minest;    /**<miminum rms on servo restimation.*/
     rand_t rand;       /**<random stream*/
-    int idtratmin;     /**<minimum index of dtrat allowed*/
-    int idtratmax;     /**<maximum index of dtrat allowed*/
     kalman_t**kalman;
-    lmat *idtrats;
-    lmat *dtrats;
+    lmat *idtrats;	   /**<idtrat of each wfs*/
+    lmat *dtrats;	   /**<dtrat of each wfs */
     long *ngs;         /**<number of gradients for each wfs*/
-    dcell *phyRes;      /**<Wavefront variance result from physical optics simulations.*/
-    dcell *phyMRes;     /**<Residual modes from physical optics simulation*/
-	//the following are for the best dtrat
-	real phyResbest;	/**<Best PO performance */
-	int idtratbest;		/**<idtrat for the best PO performance */
-}ASTER_S;
+    dcell *phyres;      /**<Wavefront variance result from physical optics simulations.*/
+    dcell *phymres;     /**<Residual modes from physical optics simulation*/
+	real minphyres;	/**<Best PO performance (at idtratphy) */
+	int idtratphy;		/**<idtrat for the best PO performance */
+	int idtratmin;     /**<minimum index of dtrat allowed*/
+    int idtratmax;     /**<maximum index of dtrat allowed*/
+	int idtratest;     /**<dtrat of minimum rms in OL estimation.*/
+}aster_s;
 /**
    A few simulation parameters.*/
-typedef struct SIM_S{
-    const PARMS_S *parms; /**<input parameters*/
-    POWFS_S *powfs;    /**<structs about POWFS*/
+typedef struct sim_s{
+    const parms_s *parms; /**<input parameters*/
+    powfs_s *powfs;    /**<structs about POWFS*/
     dcell *stars;      /**<randomly generated star fields.*/
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
     real varol;      /**<open loop error*/
     status_t *status;  /**<to report status to the scheduler*/
-    STAR_S *star;      /**<STAR_S*/
-    int iseed;         /**<Current seed index*/
-    int seed_maos;     /**<Current MAOS seed to read in PSF*/
-    int nstep;         /**<Number of steps*/
-    rand_t rand;       /**<Random stream*/
-    dmat *res;         /**<residual error. 5*nsky. 
-			  - Total
-			  - NGS mode
-			  - TT mode
-			  - Residual wind shake (if separately estimated)
-			  - 0
-		       */
-    dmat *res_geom;      /**<residual error estimated from servo analysis. in the same foramt as res*/
+
+    rand_t rand;       /**<Random stream used to generate stars and time series from psds.*/
+    dmat *res;         /**<final residual error for saving. 5*nsky. Total WFE, NGS mode, TT mode, wind shake (if separately estimated), estimated. */
+    //dmat *res_est;     /**<residual error estimated from servo analysis. in the same foramt as res*/
     dmat *res_aster;   /**<Performance and parameter of all asterisms evaluated.*/
-    unsigned int res_iaster;   /**<counter for res_aster*/
+    
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
     dcell *gain;       /**<optimal gains for each star field.*/
     dcell *psds;        /**<PSD of All (gsplit=0) or Each mode (gsplit=1)*/
@@ -166,14 +156,19 @@ typedef struct SIM_S{
     dcccell *gain_pre; /**<TypeII gain and result of different sigman and different dtrat*/
     dcell ***bspstrehl;/**<Coeffiecients of bicubic spline fit of Strehl on the grid.*/
     dmat *bspstrehlxy; /**<Coordinate of the grid.*/
-    unsigned int isky;          /**<current star field being evaluated*/
-    int isky_start;    /**<first star field to evaluate*/
-    int isky_end;      /**<last star field to evalaute (exclusive)*/
+
     real tk_0;       /**<initial star time*/
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
     dmat *sdecoeff;    /**<sde coefficient*/
     dcell *psdi;        /**<PSD of each mode computed from time series*/
     dccell *nonlin;     /**<nonlinearity*/
     dmat *neaspec_dtrats;
-}SIM_S;
+	unsigned int res_iaster;   /**<counter for res_aster*/
+	unsigned int isky; /**<current star field being evaluated*/
+    unsigned int isky_start;    /**<first star field to evaluate*/
+    unsigned int isky_end;      /**<last star field to evalaute (exclusive)*/
+	unsigned int iseed;         /**<Current seed index*/
+    int seed_maos;     /**<Current MAOS seed to read in PSF*/
+    unsigned int nstep;         /**<Number of steps*/
+}sim_s;
 #endif
