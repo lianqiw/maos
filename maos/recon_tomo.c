@@ -440,7 +440,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs
 			break;
 		case 1:
 			recon->RL.pfun=fdpcg_precond;
-			recon->RL.pdata=(void*)recon;
+			recon->RL.pdata=recon;
 			break;
 		default:
 			error("Invalid tomo.precond");

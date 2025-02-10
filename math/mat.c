@@ -224,21 +224,31 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
    - 0 in dimension preserves original value.
 */
 int X(resize)(X(mat)* A, long nx, long ny){
-	if(!nx && !ny){
-		return 0;
-	}else if(!A) {
+	if(A){
+		if(!nx && !ny){
+			X(free_content)(A);
+		}
+		if(!ismat(A)){
+			error("Incorrect type: id=%d, cancelled\n", A->id);
+			return -1;
+		}
+	}else{
 		if(!nx || !ny){
 			return 0;
 		}else{
 			error("Trying to resize NULL array to %ldx%ld, cancelled.\n", nx, ny);
 			return -1;
 		}
-	}else if(!ismat(A)){
-		error("Incorrect type: id=%d, cancelled\n", A->id);
-		return -1;
 	}
-	if(!nx) nx=A->nx;
-	if(!ny) ny=A->ny;
+
+	if(nx<=0){
+		if(nx==0) warning("usage nx=0 is deprecated\n");
+		nx=A->nx;
+	}
+	if(ny<=0){
+		if(ny==0) warning("usage ny=0 is deprecated\n");
+		ny=A->ny;
+	}
 	if(P(A) && mem_nref(A->mem)!=1){
 		error("Resizing referenced matrix or weak reference is invalid. Cancelled.\n");
 		return -1;

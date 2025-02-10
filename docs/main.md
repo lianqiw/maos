@@ -17,6 +17,7 @@ following links for relevant information.
 - \ref page40_results
 - \ref page43_nfiraos 
 - \ref algorithm
+- \ref skycoverage
 - \ref page90_devel
 
 <a href="https://github.com/downloads/lianqiw/files/maos_gpu.pdf">AO4ELT2 Paper on MAOS</a>
