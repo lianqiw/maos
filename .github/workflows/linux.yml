@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: setup environment #install all external libraryes to avoid distcheck failure
-      run: sudo apt-get install -y graphviz libfftw3-dev libsuitesparse-dev libcmocka-dev
+      run: sudo apt-get install -y libfftw3-dev libsuitesparse-dev libcmocka-dev libopenblas-openmp-dev graphviz doxygen texlive-latex-base
       continue-on-error: true
     - name: checkout
       uses: actions/checkout@v4
@@ -24,21 +24,22 @@ jobs:
     - name: autogen
       run: |
         cd maos && ./autogen.sh
-    - name: configure
+    - name: configure and make
       run: |
         mkdir build && cd build
         ../maos/configure --enable-release --enable-doxygen --prefix=$(pwd)/../external
         make -j8
+        make check
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
-      if: github.ref == 'ref/head/master'
+      if: github.ref == 'refs/heads/master'
       uses: actions/checkout@v4
       with:
         ref: gh-pages
         path: doc
     - name: update doc and commit
-      if: github.ref == 'ref/head/master'
+      if: github.ref == 'refs/heads/master'
       run: | 
         cd doc
         rm -rf *
@@ -47,29 +48,20 @@ jobs:
         git config user.email lianqiw@gmail.com
         git add .
         git commit -m "Automatically updated" && git push || echo "no need to update doc"
-    - name: clang
+    - name: clang make
       run: |
         mkdir clang && cd clang
         ../maos/configure --enable-release --prefix=$(pwd)/../external CC=clang
         make -j8
-    - name: make check
-      run: cd build && make check #make distcheck also runs make check. 
+        make check
+    - name: maos result check
+      run: cd build/bin && ../../maos/scripts/maos_check.sh 5
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: maos-linux
         retention-days: 30
         path: |
-          clang/config.h
-          clang/config.log
-          build/config.h
-          build/config.log
+          */config.*
           build/test/*.log
-          build/test/maos_check_*.*
-          #build/bin/
-          #build/test/
-          #!build/test/*.bin
-          #!build/test/*.fits
-          #!build/test/*.o
-          #!build/test/*.trs
-          #!build/*/Makefile
+          build/bin/maos_check_*.*

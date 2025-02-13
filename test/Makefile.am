@@ -14,12 +14,9 @@ bin_PROGRAMS+=cmocka_mat cmocka_matmath cmocka_locfft cmocka_blas \
 cmocka_readstr cmocka_threadpool cmocka_psd
 LDADD+=-lcmocka
 endif
-#list test_maos in TESTS instead of bin_PROGRAMS to avoid `make distcheck` error of no rule to make test_maos.c
-TESTS=$(bin_PROGRAMS) test_maos 
+TESTS=$(bin_PROGRAMS)
 
-test_maos:
-	@echo $(SRC_DIR)/scripts/maos_check.sh 5 > test_maos && chmod u+x test_maos
-CLEANFILES=test_maos maos_check_GPU_5.all maos_check_GPU_5.res maos_check_GPU_5.cur \
+CLEANFILES=maos_check_GPU_5.all maos_check_GPU_5.res maos_check_GPU_5.cur \
 	maos_check_CPU_5.all maos_check_CPU_5.res maos_check_CPU_5.cur 
 clean-local:
 	@rm -rf *.bin *.fits
