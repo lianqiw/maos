@@ -74,7 +74,7 @@ function run_maos(){
 	aotype=$1
 	shift
 	s_start=`date +%s`
-    ../bin/maos sim.end=100 $* $args >$fntmp 2>&1
+    eval "../bin/maos sim.end=100 $* $args" >$fntmp 2>&1
     if [ $? -eq 0 ];then
 		RMS[ii]=$(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)
 		a=${RMS[$ii]}
