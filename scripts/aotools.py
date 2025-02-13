@@ -375,13 +375,15 @@ def svd_pinv(mod, thres=0, tikcr=0):
 
 def plot_cdf(y, *args, **kargs):
     '''plot cumulative distribution function. Take absolute value times 2 if abs is set'''
-    n=y.size
+    n=y.shape[0]
     x=np.arange(n)/(n-1)
     if 'abs' in kargs and kargs['abs']:
         y=np.abs(y)*2
-    plot(np.sort(y.flat), x, *args, **kargs)
+    if kargs.pop('reverse', 0):
+        x=x[::-1]
+    plot(np.sort(y,axis=0), x, *args, **kargs)
     ylim(0,1)
-
+    ylabel('Cumulative Probability')
 def plot_cross(A, n=0, dx=1):
     '''Plot a cross section'''
     if n==0 or n is None:
@@ -1006,3 +1008,38 @@ def simpson_cir(nr=2,fov=1,ntheta=8):
     figure()
     draw(np.c_[xx.flat,yy.flat],wt.astype(float),dx=0.02)
     #plt.colorbar(plt.gca().tricontourf(xx.flat,yy.flat,wt.flat))
+
+def servo_Hol(fs, dt, dtrat, gain, rtcdelay=1):
+    '''Compute the open loop servo transfer function of an AO system with integrator control'''
+    s=2j*np.pi*fs
+    Ts=dt*dtrat #sampling period
+    zinv=exp(-s*Ts) #z^-1
+    Hwfs=(1-zinv)/(Ts*s) #WFS integration
+    Hwfs[fs==0]=0
+    Hdac=Hwfs #DM zero order hold
+    Hlag=exp(-s*dt*rtcdelay) #Read out, processing delay
+    Hint=1/(1-zinv) #integrator
+    Hint[fs==0]=1 
+    Hmir=1 #DM dynamic response. 
+    Hol=Hwfs*Hlag*Hdac*Hmir*Hint
+
+    if gain<=0: #maximize gain while keep phase margin
+        ph=np.unwrap(np.angle(Hol)) #phase
+        ind=np.where(ph<=-np.pi*0.75)[0] #45 degree phase margin
+        if len(ind)>0:
+            gain=1/abs(Hol[ind[0]])
+        else:
+            gain=1/abs(Hol[-1])
+    
+    Hol*=gain
+    return Hol
+def bode_plot(fs, H):
+    '''Bode plot'''
+    subplot(2,1,1)
+    semilogx(fs, 20*np.log10(abs(H)))
+    xlabel('Frequency (Hz)')
+    ylabel('Magnitude (dB)')
+    subplot(2,1,2)
+    semilogx(fs, np.unwrap(np.angle(H))*180/np.pi)
+    xlabel('Frequency (Hz)')
+    ylabel('Phase (degree)')
