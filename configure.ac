@@ -1126,7 +1126,7 @@ if test "$enable_doxygen" = "yes" ;then
 		download DOXYGEN doxygen${libsuffix}.tar.bz2 ${prefix} 1
 	fi
 
-	if ! which latex ;then
+	if ! which pdflatex ;then
 		$wget "https://yihui.org/gh/tinytex/tools/install-unx.sh" $wgetoutput - | sh
 	fi
 fi
