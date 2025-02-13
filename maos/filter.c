@@ -225,8 +225,13 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 }
 
 /**
-   Update DM command for next cycle using info from last cycle (two cycle delay)
-in closed loop mode */
+   Update DM command for next cycle using info from last cycle (two cycle delay) in closed loop mode 
+	for step running at isim:
+		reconstructor uses gradients exposure at step isim-1
+		dmpsol and dmreal output is for step isim+1
+		wfspsol output is for DM shape at step isim. Uses for reconstruction at the next timestep.
+
+*/
 static void filter_cl(sim_t* simu){
 	/*
 	  2009-11-02: Moved to the end of isim loop to update

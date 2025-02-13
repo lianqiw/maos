@@ -211,7 +211,7 @@ static inline int check_space(const char *endptr, const char *endstr){
       const char *str=getenv("MAOS_"#A);\
       const char *endstr=str+strlen(str);\
 		T B=(T)FUN(str,&endptr); \
-      if(endptr==str || check_space(endptr, endstr) || B>max || B<min){  \
+      if(endptr==str || check_space(endptr, endstr) || (max>min && B>max) || B<min){  \
         error("MAOS_"#A"={%s} is invalid. Must be within [%g, %g].\n", str, (double) min, (double) max);\
       }else if(A!=B){dbg(#A" changed to %g\n", (double)B); A=B; } }
 
@@ -221,6 +221,6 @@ static inline int check_space(const char *endptr, const char *endstr){
 #define DEF_ENV_FLAG(A,default_val)			\
     static int A=default_val;				\
     static __attribute__((constructor)) void init(){\
-		READ_ENV_INT(A, 0, 1);				\
+		READ_ENV_INT(A, 0, INT_MAX);\
     }
 #endif
