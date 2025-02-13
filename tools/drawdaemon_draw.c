@@ -63,7 +63,7 @@ static float myceil(float a){
 }
 static void pango_scale_fontsize(PangoLayout* layout, float fontscale){
 	pango_font_description_set_size(desc, desc_font_size*fontscale);//use smaller font size for legends.
-	pango_layout_set_font_description(layout, desc);
+	pango_layout_set_font_description(layout, desc);//needed
 }
 /**
  * determine text size

@@ -58,8 +58,8 @@ char* font_name=NULL;
 const char *font_name_default="Arial Regular 12";
 char **pfilename_gif=NULL;
 float font_size;
-cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
-cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
+//cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
+//cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 float lpf=1;//low pass filter the update. Set using dialog.
 int window_proportional=1;//resize window proportionally
 /*
@@ -1808,12 +1808,12 @@ static void tool_property(GtkWidget* button, gpointer data){
 }
 
 
-void font_set_desc(){
+void desc_updated(){
 	font_name_version++;/*tell every expose event to update the figure. */
 	if(font_name) free(font_name);
 	font_name=strdup(pango_font_description_get_family(desc));
 
-	PangoStyle style=pango_font_description_get_style(desc);
+	/*PangoStyle style=pango_font_description_get_style(desc);
 	switch(style){
 	case PANGO_STYLE_NORMAL:
 		font_style=CAIRO_FONT_SLANT_NORMAL;
@@ -1824,13 +1824,14 @@ void font_set_desc(){
 	case PANGO_STYLE_ITALIC:
 		font_style=CAIRO_FONT_SLANT_ITALIC;
 		break;
-	}
+	}*/
+	/*
 	PangoWeight weight=pango_font_description_get_weight(desc);
 	if(weight<=500){
 		font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 	} else{
 		font_weight=CAIRO_FONT_WEIGHT_BOLD;
-	}
+	}*/
 	desc_font_size=pango_font_description_get_size(desc);
 	/*get font_size in device unit (dots, pixels); */
 	if(pango_font_description_get_size_is_absolute(desc)){
@@ -1847,30 +1848,25 @@ void font_set_desc(){
 	}
 	delayed_update_pixmap(get_current_drawdata());
 }
-void font_set(const char *font_name_new){
-	if(!font_name_new) font_name_new=font_name_default;
-	if(desc) pango_font_description_free(desc);
-	desc=pango_font_description_from_string(font_name_new);
-	font_set_desc();
-}
 
+static void tool_font_set(GtkWidget *btn){
+	if(!desc) desc=pango_font_description_new();
+	PangoFontDescription* desc2;
 #if GTK_MAJOR_VERSION > 3
-static void tool_font_set(GtkFontDialogButton *btn){
-	//info("tool_font_set\n");
-	if(desc) pango_font_description_free(desc);
-	desc=gtk_font_dialog_button_get_font_desc(btn);
-	font_set_desc();
-}
+	//do not free desc. it belongs to the widget
+	desc2=gtk_font_dialog_button_get_font_desc(GTK_FONT_DIALOG_BUTTON(btn));
+#elif GTK_VERSION_AFTER(3,2)
+	desc2=gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(btn));
 #else
-static void tool_font_set(GtkFontButton *btn){
-#if GTK_MAJOR_VERSION >=3
-	const char *font_name_new=gtk_font_chooser_get_font(GTK_FONT_CHOOSER(btn));
-#else
-	const char *font_name_new=gtk_font_button_get_font_name(btn);
-#endif
-	font_set(font_name_new);
+	desc2=pango_font_description_from_string(gtk_font_button_get_font_name(GTK_FONT_BUTTON(btn)));
+#endif	
+	pango_font_description_set_family(desc, pango_font_description_get_family(desc2));
+	pango_font_description_set_size(desc, pango_font_description_get_size(desc2));
+#if !GTK_VERSION_AFTER(3,2)
+	pango_font_description_free(desc2);
+#endif	
+	desc_updated();
 }
-#endif
 
 #if GTK_MAJOR_VERSION>=3
 static gboolean close_window(GtkWidget* window, GdkEvent* event)
@@ -2076,12 +2072,14 @@ GtkWidget* create_window(GtkWidget* window){
 	GtkFontDialog *fontdiag=gtk_font_dialog_new();
 	GtkWidget *fontsel=gtk_font_dialog_button_new(fontdiag);
 	gtk_font_dialog_button_set_font_features(GTK_FONT_DIALOG_BUTTON(fontsel), font_name_default);
+	//gtk_font_dialog_button_set_use_font(GTK_FONT_DIALOG_BUTTON(fontsel), TRUE);
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "notify::font-desc", G_CALLBACK(tool_font_set), fontsel);
 #else
 	GtkWidget* fontsel=gtk_font_button_new_with_font(font_name_default);
 	gtk_font_button_set_use_font(GTK_FONT_BUTTON(fontsel), TRUE);
 	g_signal_connect(GTK_FONT_BUTTON(fontsel), "font-set", G_CALLBACK(tool_font_set), NULL);
 #endif
+	tool_font_set(fontsel);
 	new_toolbar_item(toolbar, fontsel, 0, "font-set", NULL, NULL, NULL, NULL);
 	new_toolbar_item(toolbar, NULL, 0, "view-refresh-symbolic", NULL, NULL, toolbutton_refresh, NULL);
 	new_toolbar_item(toolbar, NULL, 1, "media-playback-pause", NULL, NULL, togglebutton_pause, NULL);
@@ -2144,7 +2142,7 @@ GtkWidget* create_window(GtkWidget* window){
 	//gtk_widget_add_controller(GTK_WIDGET(topnb), GTK_EVENT_CONTROLLER(drag_src));
 
 #endif
-	font_set(font_name_default);
+	//font_set(font_name_default);
 
 #if GTK_MAJOR_VERSION<4
 	g_signal_connect(window, "delete-event", G_CALLBACK(close_window), NULL);

@@ -43,8 +43,8 @@ GtkWidget *tool_button_new(int toggle, const char *name, GdkPixbuf *buf){
 #endif
 	} else{
 		item=gtk_vseparator_new();
-		gtk_widget_set_opacity(item, 0);
 #if GTK_MAJOR_VERSION>=3
+		gtk_widget_set_opacity(item, 0);
 		gtk_widget_set_hexpand(item, toggle);
 #endif
 	}

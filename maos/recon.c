@@ -113,9 +113,10 @@ OMP_TASK_FOR(4)
 				for(long indwfs=0; indwfs<nindwfs; indwfs++){			
 					int iwfs=parms->recon.glao?ipowfs:P(parms->powfs[ipowfs].wfs,indwfs);
 					dcp(&P(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
-					for(int idm=0; idm<parms->ndm&&P(simu->wfspsol,ipowfs); idm++){
+					dcell *dmpsol=P(simu->wfspsol,ipowfs);
+					for(int idm=0; idm<parms->ndm&&dmpsol; idm++){
 						dcellmm(&P(simu->gradlastol,iwfs), P(recon->GA, iwfs, idm),
-							P(P(simu->wfspsol,ipowfs),idm), "nn", 1);
+							P(dmpsol,idm), "nn", 1);
 					}
 				}
 			}
