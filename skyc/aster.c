@@ -245,7 +245,7 @@ static dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask, lmat** pm
 	- If skyc.ttffastest is set, the fast rate is forced to be the TTF OIWFS rate. Otherwise, it is set to the fastest OIWFS.
 */
 static void
-setup_aster_servo_multirate(aster_s* aster, const parms_s* parms){
+setup_aster_dtrat_multirate(aster_s* aster, const parms_s* parms){
 	const int ndtrat=parms->skyc.ndtrat;
 	lfree(aster->idtrats);
 	lfree(aster->dtrats);
@@ -299,6 +299,9 @@ setup_aster_servo_multirate(aster_s* aster, const parms_s* parms){
 		}
 		P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, P(aster->idtrats, iwfs));
 	}
+	aster->idtratest=idtrat_fast2;
+	aster->idtratmin=idtrat_fast2;
+	aster->idtratmax=idtrat_fast2+1;
 }
 
 /**
@@ -330,7 +333,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 
 	if(multirate){
 		ncase=(1<<aster->nwfs)-1;
-		setup_aster_servo_multirate(aster, parms);
+		setup_aster_dtrat_multirate(aster, parms);
 		int min_idtrat=parms->skyc.ndtrat;
 		//Find the dtrat of the slowest WFS
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -492,6 +495,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	if(multirate){//for setup_aster_select() to use.
 		P(pres_ngs, 0, 0)=resngs_multi;
 		
+		aster->minest=P(aster->res_ngs, 0, 0);
 		for(int imod=0; imod<nmod; imod++){
 			if(aster->mdirect && P(aster->mdirect, imod)){//mode only measured by slow loop. Use the slow loop gain.
 				P(P(aster->gain, icase_fast), imod)=P(P(aster->gain, icase_slow), imod);
@@ -610,7 +614,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		}
 		setup_aster_kalman_multirate(aster, parms, idtrat_min);
 		if(parms->skyc.verbose) info("selected\n");
-		P(aster->res_ngs,0)=resmin;
+		aster->minest=P(aster->res_ngs,0,0)=resmin;
 		aster->kalman[0]=kalman_min;
 		if(parms->skyc.dbg){
 			kalman_write(aster->kalman[0], "%s/aster%d_kalman_%g", dirsetup, aster->iaster, P(parms->skyc.dtrats,idtrat_min));
@@ -619,7 +623,6 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		if(aster->neam) cellfree(aster->neam);
 		aster->neam=dccellnew(ndtrat, 1);
 		aster->res_ngs=dnew(ndtrat, 3);
-		dmat* pres_ngs=aster->res_ngs;
 		aster->kalman=mycalloc(ndtrat, kalman_t*);
 		lmat* dtrats=lnew(aster->nwfs, 1);
 		for(int idtrat=0; idtrat<ndtrat; idtrat++){
@@ -650,7 +653,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 			dfree(res);
 #endif
 		//toc2("estimate");
-			P(pres_ngs, idtrat, 0)=rms;
+			P(aster->res_ngs, idtrat, 0)=rms;
 			if(parms->skyc.dbg){
 				kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%d", dirsetup, aster->iaster, dtrat);
 			}
@@ -658,11 +661,78 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		lfree(dtrats);
 	}
 }
+static void select_dtrat(aster_s* aster, int maxdtrat, real maxerror){
+	const real wvfmargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
+	aster->idtratest=-1;//idtrat at astermin
+	aster->minest=maxerror;
+	const int ndtrat=NX(aster->res_ngs);
+		for(int idtrat=0; idtrat<ndtrat; idtrat++){
+		real wfv=P(aster->res_ngs, idtrat, 0);
+		if(wfv<aster->minest){
+			aster->idtratest=idtrat;
+			aster->minest=wfv;
+			}
+		}
+	if(aster->idtratest!=-1){
+		if(maxdtrat>1){
+			real thres=MIN(aster->minest+wvfmargin, maxerror);//threshold at low freq end
+			real thres2=MIN(aster->minest+wvfmargin, maxerror);//threshold at high freq end
+					/*Find upper and skymin good dtrats. */
+			for(int idtrat=aster->idtratest; idtrat<ndtrat; idtrat++){
+				if(P(aster->res_ngs, idtrat, 0)<thres){
+					aster->idtratmax=idtrat+1;
+						} else{
+							break;
+						}
+					}
+			for(int idtrat=aster->idtratest; idtrat>=0; idtrat--){
+				if(P(aster->res_ngs, idtrat, 0)<thres2){
+					aster->idtratmin=idtrat;
+						} else{
+							break;
+						}
+					}
+					//2018-02-28: changed to prefer high frame rate
+			if(aster->idtratmax>aster->idtratmin+maxdtrat+1){
+				aster->idtratmin=aster->idtratmax-(maxdtrat+1);
+			}
+		}else{//only evaluate at the best frame rate.
+			aster->idtratmin=aster->idtratest;
+			aster->idtratmax=aster->idtratmin+1;
+					}
+	}
+}
 void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 	if(parms->skyc.servo<0){
 		setup_aster_kalman(simu, aster, parms);
 	} else{
 		setup_aster_servo(simu, aster, parms);
+	}
+	if(!parms->skyc.multirate){
+		select_dtrat(aster, parms->skyc.maxdtrat, parms->skyc.phytype==1?0.5*simu->varol:INFINITY);
+			}
+			if(parms->skyc.verbose){
+		if(!parms->skyc.multirate){
+			info("aster%3d stars=(", aster->iaster);
+			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+				info(" %2d", aster->wfs[iwfs].istar);
+				}
+				info("), dtrats=(%2d,%2d,%2d), res= %.2f nm\n",
+				(int)P(parms->skyc.dtrats,aster->idtratmin),
+				(int)P(parms->skyc.dtrats,aster->idtratest),
+				(int)P(parms->skyc.dtrats,aster->idtratmax-1),
+				sqrt(aster->minest)*1e9);
+		} else{//multirate
+			info("aster%2d, dtrats=(", aster->iaster);
+			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+				info(" %2ld", P(aster->dtrats,iwfs));
+				}
+				info("), stars=(");
+			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+				info(" %2d", aster->wfs[iwfs].istar);
+				}
+			info("), est=%.2f nm\n", sqrt(aster->minest)*1e9);
+		}
 	}
 }
 /**
@@ -675,98 +745,20 @@ static int sortdbl(const real* a, const real* b){
    Select a few asterisms that have decent performance (less than maxerror) */
 int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 	real maxerror, const parms_s* parms){
-
-	int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
-	dmat* res=dnew(ndtrat, naster);
 	dmat* imin=dnew(2, naster);//record best performance of each asterism.
-	for(int iaster=0; iaster<naster; iaster++){
-		P(imin, 0, iaster)=INFINITY;
-		P(imin, 1, iaster)=iaster;
-	}
 	int iastermin=-1;//index of asterism giving best answer
 	real skymin=INFINITY;//minimum of this field.
-	const real wvfmargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
-
+	//select the asterism with the best performance
 	for(int iaster=0; iaster<naster; iaster++){
-		aster[iaster].idtratest=-1;//idtrat at astermin
-		if(parms->skyc.dbgaster>-1&&iaster!=parms->skyc.dbgaster){
+		P(imin, 1, iaster)=iaster;
+		if((parms->skyc.dbgaster>-1&&iaster!=parms->skyc.dbgaster)||aster[iaster].use==-1){
+			P(imin, 0, iaster)=INFINITY;
 			continue;
-		}
-		if(aster[iaster].use==-1){
-			continue;
-		}
-		real astermin=maxerror;//minimum of this asterism.
-		for(int idtrat=0; idtrat<ndtrat; idtrat++){
-			/*should not add res_ws here since res_ngs already includes that.*/
-			real wfv=P(aster[iaster].res_ngs, idtrat, 0);
-			P(res, idtrat, iaster)=wfv;
-			if(wfv<astermin){
-				astermin=wfv;
-				aster[iaster].idtratest=idtrat;
-				aster[iaster].minest=wfv;
 			}
-		}
-		P(imin, 0, iaster)=astermin;
+		real astermin=P(imin, 0, iaster)=aster[iaster].minest;//minimum of this asterism.
 		if(astermin<skymin){
 			iastermin=iaster;
 			skymin=astermin;
-		}
-		if(!parms->skyc.multirate){
-			if(aster[iaster].idtratest!=-1){
-				if(parms->skyc.maxdtrat>1){
-					/*This is variance. allow a threshold */
-					real thres=MIN(astermin+wvfmargin, maxerror);//threshold at low freq end
-					real thres2=MIN(astermin+wvfmargin, maxerror);//threshold at high freq end
-					/*Find upper and skymin good dtrats. */
-					for(int idtrat=aster[iaster].idtratest; idtrat<ndtrat; idtrat++){
-						if(P(res, idtrat, iaster)<thres){
-							aster[iaster].idtratmax=idtrat+1;
-						} else{
-							break;
-						}
-					}
-					for(int idtrat=aster[iaster].idtratest; idtrat>=0; idtrat--){
-						if(P(res, idtrat, iaster)<thres2){
-							aster[iaster].idtratmin=idtrat;
-						} else{
-							break;
-						}
-					}
-					//2018-02-28: changed to prefer high frame rate
-					if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat+1){
-						aster[iaster].idtratmin=aster[iaster].idtratmax-(parms->skyc.maxdtrat+1);
-					}
-				} else{
-					aster[iaster].idtratmin=aster[iaster].idtratest;
-					aster[iaster].idtratmax=aster[iaster].idtratmin+1;
-				}
-			}
-			if(parms->skyc.verbose){
-				info("aster%3d stars=(", iaster);
-				for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-					info(" %2d", aster[iaster].wfs[iwfs].istar);
-				}
-				info("), dtrats=(%2d,%2d,%2d), res= %.2f nm\n",
-					(int)P(parms->skyc.dtrats,aster[iaster].idtratmin),
-					(int)P(parms->skyc.dtrats,aster[iaster].idtratest),
-					(int)P(parms->skyc.dtrats,aster[iaster].idtratmax-1),
-					sqrt(P(res, aster[iaster].idtratest, iaster))*1e9);
-			}
-		} else{//multirate
-			aster[iaster].idtratest=lmax(aster[iaster].idtrats);
-			aster[iaster].idtratmin=lmax(aster[iaster].idtrats);
-			aster[iaster].idtratmax=aster[iaster].idtratmin+1;
-			if(parms->skyc.verbose){
-				info("aster%2d, dtrats=(", iaster);
-				for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-					info(" %2ld", P(aster[iaster].dtrats,iwfs));
-				}
-				info("), stars=(");
-				for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-					info(" %2d", aster[iaster].wfs[iwfs].istar);
-				}
-				info("), est=%.2f nm\n", sqrt(P(res, 0, iaster))*1e9);
-			}
 		}
 	}
 	if(parms->skyc.dbgsky>-1){
@@ -782,14 +774,13 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 	//Mark asterisms and stars to be evaluated further.
 	int count=0;
 	if(skymin<maxerror){
-		real thres=parms->skyc.multirate?maxerror:MIN(skymin+wvfmargin, maxerror);
 		int taster=naster;
 		if(parms->skyc.maxaster>0&&naster>parms->skyc.maxaster){
 			taster=parms->skyc.maxaster;
 		}
 		qsort(P(imin), naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
 		for(int jaster=0; jaster<taster; jaster++){
-			if(P(imin, 0, jaster)>thres && naster>3) continue;
+			if(P(imin, 0, jaster)>maxerror && naster>3) continue;
 			int iaster=(int)P(imin, 1, jaster);
 			if(aster[iaster].idtratest==-1) continue;
 			count++;
@@ -814,10 +805,6 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 		info("Minimum is found at aster %g at %.1f Hz: %.2f nm. Will evaluate %d asterisms.\n",
 			result[1], result[2], sqrt(result[0])*1e9, count);
 	}
-	if(parms->skyc.dbg){
-		writebin(res, "%s/aster_resol", dirsetup);
-	}
-	dfree(res);
 	dfree(imin);
 	return count;
 }

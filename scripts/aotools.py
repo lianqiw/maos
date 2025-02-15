@@ -323,7 +323,13 @@ def opd_loc_remove_focus(opd, loc):
     return opd_loc_remove_zernike(2,2,1)
 def read_many(fdin):
     '''read many files together'''
-    fds2=natsorted(glob.glob(fdin,recursive=1))
+    if type(fdin) is list:
+        fns=[]
+        for fdini in fdin:
+            fns+=glob.glob(fdini,recursive=1)
+    else:
+        fns=glob.glob(fdin,recursive=1)
+    fds2=natsorted(fns)
     fds=[]
     res=[]
     for fd in fds2:
