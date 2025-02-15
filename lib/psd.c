@@ -391,6 +391,11 @@ dmat* add_psd(const dmat* psd1, const dmat* psd2, real scale2){
 void add_psd2(dmat** pout, const dmat* in, real scale){
 	if(!*pout){
 		*pout=ddup(in);
+		if(scale!=1){
+			for(long i=0; i<NX(in); i++){
+				P(*pout, i, 1)*=scale;
+			}
+		}
 	} else{
 		dmat* out=*pout;
 		real* p1=PCOL(out, 1);

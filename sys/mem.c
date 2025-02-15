@@ -104,7 +104,7 @@ static void memkey_init(int enabled){
 		memfree=0;
 		memkey_maxadd=0;
 		memkey_maxdel=0;
-		memkey_len=0x1FFFFF;
+		memkey_len=0x1FFFFFF;
 		dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
 		memkey_all=calloc_default(memkey_len+1, sizeof(memkey_t));
 		memkey_thres=memkey_len>>1;

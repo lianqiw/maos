@@ -97,7 +97,7 @@ static void* skysim_isky(sim_s* simu){
 	const int noisy=parms->skyc.noisy;
 	const int seed_maos=simu->seed_maos;
 	
-	int nstep;
+	int nstep=parms->maos.nstep;
 
 	while((isky=atomic_fetch_add(&simu->isky, 1))<simu->isky_end){
 		real tk_1=myclockd();
@@ -143,7 +143,9 @@ static void* skysim_isky(sim_s* simu){
 		if(!parms->skyc.estimate){
 			/*Read in physical optics data (wvf) */
 			setup_star_read_ztilt(star, nstar, parms, seed_maos);
-			nstep=setup_star_read_wvf(star, nstar, parms, seed_maos);
+			if(parms->skyc.phystart>=0 && parms->skyc.phystart<parms->maos.nstep){
+				nstep=setup_star_read_wvf(star, nstar, parms, seed_maos);
+			}
 			tk_3=myclockd();
 			//Now begin time domain Physical Optics Simulations.
 OMP_TASK_FOR(4)
@@ -168,7 +170,9 @@ OMP_TASK_FOR(4)
 					}
 				}
 				setup_aster_ztilt(asteri, star);
-				setup_aster_wvf(asteri, star);//Assign wvf from star to aster 
+				if(parms->skyc.phystart>=0 && parms->skyc.phystart<parms->maos.nstep){
+					setup_aster_wvf(asteri, star);//Assign wvf from star to aster 
+				}
 				/*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 				//setup_aster_controller(simu, asteri, parms);
 				asteri->phyres=dcellnew(asteri->idtratmax, 1);
@@ -268,32 +272,32 @@ skip1:;
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
 				dcp(&P(simu->gain,isky), P(aster[sky_iaster].gain,sky_idtrat));
 			}
+			real tk_4=myclockd();
+			LOCK(simu->mutex_status);
+			simu->status->isim=isky;
+			simu->status->tot=tk_4-tk_1;/*per step */
+			simu->status->laps=tk_4-simu->tk_0;
+			int nsky_tot=simu->isky_end-simu->isky_start;
+			int nsky_left=simu->isky_end-simu->isky-1+nsky_tot*(parms->maos.nseed-simu->iseed-1);
+			int nsky_laps=simu->isky-simu->isky_start+1+nsky_tot*simu->iseed;
+			simu->status->rest=simu->status->laps*nsky_left/nsky_laps;
+			simu->status->clerrlo=sqrt(P(simu->res, 1, isky))*1e9;
+			simu->status->clerrhi=sqrt(P(simu->res, 0, isky))*1e9;
+			scheduler_report(simu->status);
+			UNLOCK(simu->mutex_status);
+			//long totm=(long)floor(simu->status->tot/60.);
+			//long tots=(long)simu->status->tot-totm*60;
+			long laps_h=simu->status->laps/3600;
+			long laps_m=simu->status->laps/60-laps_h*60;
+			long rest_h=simu->status->rest/3600;
+			long rest_m=simu->status->rest/60-rest_h*60;
+			info("Field%4d,%3d stars %3d/%-3d, %3.0f Hz:%6.1f nm, "
+				"Load%3.0fs, Phy%3.0fs, Used%2ld:%02ld, Left%2ld:%02ld\n",
+				isky, nstar, sky_iaster, naster, P(parms->skyc.fss, sky_idtrat), sqrt(sky_min)*1e9,
+				tk_3-tk_2, tk_4-tk_3, laps_h, laps_m, rest_h, rest_m);
 		}
 		free_aster(aster, naster, parms);
 		free_star(star, nstar, parms);
-		real tk_4=myclockd();
-		LOCK(simu->mutex_status);
-		simu->status->isim=isky;
-		simu->status->tot=tk_4-tk_1;/*per step */
-		simu->status->laps=tk_4-simu->tk_0;
-		int nsky_tot=simu->isky_end-simu->isky_start;
-		int nsky_left=simu->isky_end-simu->isky-1+nsky_tot*(parms->maos.nseed-simu->iseed-1);
-		int nsky_laps=simu->isky-simu->isky_start+1+nsky_tot*simu->iseed;
-		simu->status->rest=simu->status->laps*nsky_left/nsky_laps;
-		simu->status->clerrlo=sqrt(P(simu->res, 1, isky))*1e9;
-		simu->status->clerrhi=sqrt(P(simu->res, 0, isky))*1e9;
-		scheduler_report(simu->status);
-		UNLOCK(simu->mutex_status);
-		//long totm=(long)floor(simu->status->tot/60.);
-		//long tots=(long)simu->status->tot-totm*60;
-		long laps_h=simu->status->laps/3600;
-		long laps_m=simu->status->laps/60-laps_h*60;
-		long rest_h=simu->status->rest/3600;
-		long rest_m=simu->status->rest/60-rest_h*60;
-		info("Field%4d,%3d stars %3d/%-3d, %3.0f Hz:%6.1f nm, "
-			"Load%3.0fs, Phy%3.0fs, Used%2ld:%02ld, Left%2ld:%02ld\n",
-			isky, nstar, sky_iaster, naster, P(parms->skyc.fss, sky_idtrat), sqrt(sky_min)*1e9,
-			tk_3-tk_2, tk_4-tk_3, laps_h, laps_m, rest_h, rest_m);
 	}/*while isky*/
 	return NULL;
 }
@@ -374,9 +378,8 @@ static void skysim_calc_psd(sim_s* simu){
 		simu->psds=dcellnew(npsd, 1);
 		for(int im=0; im<x->ny; im++){
 			dmat* xi=dsub(x, 20, 0, im, 1);
-			dscale(xi, sqrt(P(MCC, im, im)));/*convert to unit of m.*/
 			dmat* psdi=psd1dt(xi, 1, parms->maos.dt);
-			add_psd2(&P(simu->psds,im*iratio), psdi, 1);
+			add_psd2(&P(simu->psds,im*iratio), psdi, P(MCC, im, im));//convert from rad^2 to m^2
 			var_all+=psd_inte2(psdi);
 			dfree(xi);
 			dfree(psdi);
@@ -421,7 +424,7 @@ static void skysim_calc_psd(sim_s* simu){
 		simu->varol+=var_ws;//testing
 
 		//add windshake PSD to ngs/tt. 
-		int im_ws=parms->skyc.addws<=1?0:1;
+		int im_ws=0;
 		add_psd2(&P(simu->psds, im_ws), parms->skyc.psd_ws, 1); //all in m^2 unit.
 	}
 	if(parms->skyc.dbg||1){
@@ -469,11 +472,11 @@ static void skysim_prep_sde(sim_s* simu){
 		dmat* xi=dsub(x, 20, 0, im, 1);
 		P(simu->psdi,im)=psd1dt(xi, 1, parms->maos.dt);
 		dfree(xi);
-		int im_ws=parms->skyc.addws<=1?0:1;
+		int im_ws=0;
 		if(parms->skyc.psd_ws && im==im_ws){
 			//add windshake on first mode only
 			//2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
-			add_psd2(&P(simu->psdi,im), parms->skyc.psd_ws, 1./sqrt(P(parms->maos.mcc, 0, 0)));
+			add_psd2(&P(simu->psdi,im), parms->skyc.psd_ws, 1./P(parms->maos.mcc, im, im));
 		}
 		dmat* coeff=sde_fit(P(simu->psdi,im), NULL, parms->skyc.sdetmax, 0);
 		if(P(coeff, 0, 0)>100&&parms->skyc.sdetmax){
@@ -528,18 +531,7 @@ void skysim(const parms_s* parms){
 		if(parms->skyc.neanonlin&&parms->skyc.phytype==1){
 			simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
 		}
-		skysim_read_mideal(simu);
-		simu->varol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
-		info("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
-		if(parms->skyc.servo<0){//LQG
-			skysim_prep_sde(simu);
-		} else{
-			skysim_calc_psd(simu);
-			if(parms->skyc.interpg){
-				skysim_prep_gain(simu);
-			}
-		}
-		/*generate star fields. */
+		/*generate star fields. moved to here to avoid seed being perturbed*/
 		if(parms->skyc.stars){
 			info("Loading stars from %s\n", parms->skyc.stars);
 			if(zfexist("%s", parms->skyc.stars)){
@@ -567,10 +559,25 @@ void skysim(const parms_s* parms){
 		}
 		sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
 		writebin(simu->stars, "Res%d_%d_stars", simu->seed_maos, parms->skyc.seed);
-		if(parms->skyc.addws){
-			skysim_update_mideal(simu);
-		}
+
+		skysim_read_mideal(simu);
 		writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
+		simu->varol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
+		info("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
+		if(parms->skyc.servo<0){//LQG
+			skysim_prep_sde(simu);
+		} else{
+			skysim_calc_psd(simu);
+			if(parms->skyc.interpg){
+				skysim_prep_gain(simu);
+			}
+		}
+		if(parms->skyc.addws&&parms->skyc.psd_ws){
+			//Note: it is better to add ws/vib PSD directly to the PSD rather
+			// than determine the full PSD from modified time series because 
+			//of noise in the PSD and the sde_fit will not be able to work well.
+			skysim_update_mideal(simu);//add wind shake / vib time series
+		}
 		int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
 		simu->res=dnew_mmap(9, nsky, NULL, "Res%d_%d", seed_maos, parms->skyc.seed);//Total, ATM NGS, ATM TT, WS, 0
 		if(!parms->skyc.estimate){

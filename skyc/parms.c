@@ -239,6 +239,10 @@ parms_s* setup_parms(const arg_s* arg){
 		dfree(parms->skyc.dtrats);
 		parms->skyc.dtrats=dref(parms->skyc.dtrats_mr);
 		parms->skyc.snrmin=dmin(parms->skyc.snrmin_mr);
+		if(!parms->skyc.gsplit){
+			warning("multirate control requires skyc.gsplit=1. changed\n");
+			parms->skyc.gsplit=1;
+		}
 	}
 	dfree(parms->skyc.dtrats_mr);
 	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;

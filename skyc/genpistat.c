@@ -203,7 +203,7 @@ static void* calc_pistat(GENPISTAT_S* data){
 			dcellfree(neaspec);
 			dcellfreearr(avgpsf, nwvl);
 			dfree(phygrad);
-			toc2("Processing %s:", fnwvf);
+			toc2("Processing wvfout_seed%ld_sa%ld_x%g_y%g", seed, msa, thetax, thetay);
 		}/*if exist */
 	}
 	dfree(dtrats);
@@ -388,7 +388,7 @@ dccell* wfs_nonlinearity(const parms_s* parms, powfs_s* powfs, long seed){
 						if(!zfexist("%s",fnpistat)){
 							error("%s doesn't exist\n", fnpistat);
 						} else{
-							info("reading %s\n", fnpistat);
+							//info("reading %s\n", fnpistat);
 							dcell* pistat=dcellread("%s", fnpistat);
 							dcelladd(&avgpi, 1, pistat, 1);
 							dcellfree(pistat);

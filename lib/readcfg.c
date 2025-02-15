@@ -227,8 +227,8 @@ static void open_config_full(
 				error("Cannot open file %s for reading.\n", config_in);
 			}else{
 				warning("Cannot open file %s for reading. Ignored (prefix=%s)\n", config_in, prefix);
-				return;
 			}
+			return;
 		}
 		config_dir=mydirname(config_file);
 		if(priority==0 && !default_config){//used in close_config to reproduce the simulation
