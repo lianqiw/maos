@@ -167,7 +167,8 @@ typedef struct sim_s{
 	unsigned int isky; /**<current star field being evaluated*/
     unsigned int isky_start;    /**<first star field to evaluate*/
     unsigned int isky_end;      /**<last star field to evalaute (exclusive)*/
-	unsigned int iseed;         /**<Current seed index*/
+    unsigned int isky_print;    /**<printed isky*/
+    unsigned int iseed;         /**<Current seed index*/
     int seed_maos;     /**<Current MAOS seed to read in PSF*/
     unsigned int nstep;         /**<Number of steps*/
 }sim_s;

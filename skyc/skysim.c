@@ -85,7 +85,11 @@
 #include "star.h"
 #include "utils.h"
 #include "nafocus.h"
-
+static void res_set_all(dmat *res, int isky, real varol){
+	P(res, 0, isky)=varol;
+	P(res, 4, isky)=varol;
+	P(res, 5, isky)=varol;
+}
 /**
    The actual work horse that does the physical optics time domain simulation.
 */
@@ -107,7 +111,8 @@ static void* skysim_isky(sim_s* simu){
 		int naster;
 		aster_s* aster=setup_aster_comb(&naster, star, nstar, parms);
 		if(!aster||!naster){
-			info("Field%4d,  0 stars\n", isky);
+			//info("Field%4d,  0 stars\n", isky);
+			res_set_all(simu->res, isky, simu->varol);
 			continue;
 		}
 		if(parms->skyc.dbgaster>=naster){
@@ -134,8 +139,6 @@ static void* skysim_isky(sim_s* simu){
 		real res_geom[3]={0,0,0};
 		setup_aster_select(res_geom, aster, naster, star,
 			parms->skyc.phytype==1?0.5*simu->varol:INFINITY, parms);
-		real tk_2=myclockd();
-		real tk_3=tk_2;
 		real sky_min=simu->varol;//best result for this sky field
 		int sky_iaster=-1;//selected asterism index for this sky field
 		int sky_idtrat=-1;//idtrat for selected asterism for this sky field
@@ -146,7 +149,6 @@ static void* skysim_isky(sim_s* simu){
 			if(parms->skyc.phystart>=0 && parms->skyc.phystart<parms->maos.nstep){
 				nstep=setup_star_read_wvf(star, nstar, parms, seed_maos);
 			}
-			tk_3=myclockd();
 			//Now begin time domain Physical Optics Simulations.
 OMP_TASK_FOR(4)
 			for(int iaster=0; iaster<naster; iaster++){
@@ -256,22 +258,25 @@ skip1:;
 					if(parms->skyc.save){
 						skysim_save(simu, aster, PCOL(simu->res, isky), sky_iaster, sky_idtrat, isky);
 					}
+				}else{
+					warning("Unexpected.\n");
 				}
 				dcp(&P(simu->mres,isky), P(asteri->phymres, sky_idtrat));
+			}else{
+				res_set_all(simu->res, isky, simu->varol);
 			}
 		} else{//If(skyc.estimate)
 			sky_min=res_geom[0];
 			sky_iaster=res_geom[1];
 			sky_idtrat=aster[sky_iaster].idtratest;
-			P(simu->res, 0, isky)=sky_min;
-			P(simu->res, 4, isky)=sky_min;
-			P(simu->res, 5, isky)=sky_min;
+			res_set_all(simu->res, isky, sky_min);
 			P(simu->res, 7, isky)=P(parms->skyc.fss, sky_idtrat);
 		}//If(skyc.estimate)
 		if(sky_iaster!=-1){
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
 				dcp(&P(simu->gain,isky), P(aster[sky_iaster].gain,sky_idtrat));
 			}
+		
 			real tk_4=myclockd();
 			LOCK(simu->mutex_status);
 			simu->status->isim=isky;
@@ -284,17 +289,20 @@ skip1:;
 			simu->status->clerrlo=sqrt(P(simu->res, 1, isky))*1e9;
 			simu->status->clerrhi=sqrt(P(simu->res, 0, isky))*1e9;
 			scheduler_report(simu->status);
-			UNLOCK(simu->mutex_status);
 			//long totm=(long)floor(simu->status->tot/60.);
 			//long tots=(long)simu->status->tot-totm*60;
 			long laps_h=simu->status->laps/3600;
 			long laps_m=simu->status->laps/60-laps_h*60;
 			long rest_h=simu->status->rest/3600;
 			long rest_m=simu->status->rest/60-rest_h*60;
-			info("Field%4d,%3d stars %3d/%-3d, %3.0f Hz:%6.1f nm, "
-				"Load%3.0fs, Phy%3.0fs, Used%2ld:%02ld, Left%2ld:%02ld\n",
-				isky, nstar, sky_iaster, naster, P(parms->skyc.fss, sky_idtrat), sqrt(sky_min)*1e9,
-				tk_3-tk_2, tk_4-tk_3, laps_h, laps_m, rest_h, rest_m);
+			
+			while(simu->isky_print<simu->isky_end && P(simu->res, 0, simu->isky_print)){
+				info("Field%4d, %3.0f Hz %6.1f nm, Used%2ld:%02ld, Left%2ld:%02ld\n",
+					simu->isky_print, P(simu->res, 7, simu->isky_print), sqrt(P(simu->res, 0, simu->isky_print))*1e9,
+					laps_h, laps_m, rest_h, rest_m);
+				simu->isky_print++;
+			}
+			UNLOCK(simu->mutex_status);
 		}
 		free_aster(aster, naster, parms);
 		free_star(star, nstar, parms);
@@ -591,7 +599,6 @@ void skysim(const parms_s* parms){
 		}
 		simu->mres=dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,
 			NULL, "Res%d_%d_mres", seed_maos, parms->skyc.seed);
-		dset(simu->res, simu->varol);
 		simu->isky_start=parms->skyc.start;
 		simu->isky_end=nsky;
 		if(parms->skyc.dbgsky>-1){
@@ -603,6 +610,7 @@ void skysim(const parms_s* parms){
 
 		if(simu->isky_start<simu->isky_end){
 			simu->isky=simu->isky_start;
+			simu->isky_print=simu->isky_start;
 			CALL(skysim_isky, simu, 4, 0);/*isky iteration. */
 		}
 		if(parms->skyc.dbgsky<0){

@@ -77,7 +77,7 @@ static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 					star[kstar].thetax=star[jstar].thetax;
 					star[kstar].thetay=star[jstar].thetay;
 				}
-				dbg("Star %d is too close to %d. Keep brightest.\n", jstar, kstar);
+				dbg2("Star %d is too close to %d. Keep brightest.\n", jstar, kstar);
 				skip=1;
 				break;
 			}
