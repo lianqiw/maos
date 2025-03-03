@@ -326,13 +326,12 @@ def read_many(fdin):
     if type(fdin) is list:
         fns=[]
         for fdini in fdin:
-            fns+=glob.glob(fdini,recursive=1)
+            fns+=natsorted(glob.glob(fdini,recursive=1))
     else:
-        fns=glob.glob(fdin,recursive=1)
-    fds2=natsorted(fns)
+        fns=natsorted(glob.glob(fdin,recursive=1))
     fds=[]
     res=[]
-    for fd in fds2:
+    for fd in fns:
         try:
             tmp=readbin(fd)
             fds.append(fd)

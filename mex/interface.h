@@ -356,7 +356,7 @@ static inline kalman_t *mx2kalman(const mxArray*A){
     kalman->Ad=mx2d(mxGetField(A,0,"Ad"));
     kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
     kalman->AdM=mx2d(mxGetField(A,0,"AdM"));
-    kalman->FdM=mx2d(mxGetField(A,0,"FdM"));
+    kalman->BM=mx2d(mxGetField(A,0,"BM"));
     kalman->M=mx2dcell(mxGetField(A,0,"M"));
     kalman->P=mx2d(mxGetField(A,0,"P"));
     kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
@@ -367,13 +367,13 @@ static inline kalman_t *mx2kalman(const mxArray*A){
 }
 static inline mxArray* kalman2mx(kalman_t *kalman){
     const int nfield=12;
-    const char *fieldnames[]={"Ad","Cd","AdM","FdM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
+    const char *fieldnames[]={"Ad","Cd","AdM","BM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
     mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
     int pos=0;
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Ad));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Cd));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->AdM));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->FdM));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->BM));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Qn));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Rn));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->M));

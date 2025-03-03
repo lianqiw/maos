@@ -411,6 +411,8 @@ def convert_fields(fields):
     val2type={
         '*':c_void_p,
         'double':c_double,
+        'real':c_double,
+        'float':c_float,
         'long':c_long,
         'int':c_int,
     }
@@ -432,10 +434,16 @@ def make_class(name, fields):
             out=dict()
             for ff in self._fields_:
                 #convert C pointers to POINTER then to array
-                if ff[1] is c_void_p:
-                    exec('out[\''+ff[0]+'\']=cast(self.'+ff[0]+',POINTER(cell)).contents.as_array()')
+                field=eval("self.{}".format(ff[0]))
+                if field is not None:
+                    if ff[1] is c_void_p:
+                        out[ff[0]]=cast(field,POINTER(cell)).contents.as_array()
+                        #exec('out[\''+ff[0]+'\']=cast(self.'+ff[0]+',POINTER(cell)).contents.as_array()')
+                    else:
+                        out[ff[0]]=field
                 else:
-                    exec('out[\''+ff[0]+'\']=self.'+ff[0])
+                    out[ff[0]]=None
+            out['struct']=self
             return out
         def free(self):
             print('to implement: free');

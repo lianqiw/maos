@@ -245,7 +245,7 @@ static dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask, lmat** pm
 	- If skyc.ttffastest is set, the fast rate is forced to be the TTF OIWFS rate. Otherwise, it is set to the fastest OIWFS.
 */
 static void
-setup_aster_dtrat_multirate(aster_s* aster, const parms_s* parms){
+setup_aster_multirate(aster_s* aster, const parms_s* parms){
 	const int ndtrat=parms->skyc.ndtrat;
 	lfree(aster->idtrats);
 	lfree(aster->dtrats);
@@ -287,7 +287,7 @@ setup_aster_dtrat_multirate(aster_s* aster, const parms_s* parms){
 			idtrat_slow=idtrat;
 		}
 	}
-	int idtrat_fast2=MAX(3, idtrat_fast);//force fast loop to be faster than dtrat=8
+	int idtrat_fast2=MAX(parms->skyc.servo>0?3:0, idtrat_fast);//force fast loop to be faster than dtrat=8
 	//We use only two rates: a faster rate for tip/tilt(/focus) control and a slower rate for focus/ps control.
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		//force fast loop to be faster than dtrat=16
@@ -327,8 +327,6 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	int max_idtrat=0;
 	int icase_fast=-1;//fast loop index into case_valid, pgm, gain, etc.
 	if(multirate){
-		ncase=(1<<aster->nwfs)-1;
-		setup_aster_dtrat_multirate(aster, parms);
 		int min_idtrat=parms->skyc.ndtrat;
 		//Find the dtrat of the slowest WFS
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -340,6 +338,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 				max_idtrat=idtrat;
 			}
 		}
+		ncase=(1<<aster->nwfs)-1;
 		case_valid=lnew(ncase, 1);
 		int count=0;
 		//Loop over to find all possible WFS combinations
@@ -532,148 +531,42 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	dfree(gm);
 	lfree(case_valid);
 }
-/**
-   Setup the dtrat of other WFS. Not allowed to be faster than the first wfs (consider revise).
-*/
-static void setup_aster_kalman_multirate(aster_s* aster, const parms_s* parms, int idtrat_wfs0){
-	if(parms->skyc.verbose){
-		info("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster,
-			(int)P(parms->skyc.dtrats,idtrat_wfs0));
+/**Place sanea**2 to diagonal of neam */
+static void set_diag_pow2(dmat **pneam, dmat *sanea){
+	int ng=PN(sanea);
+	dinit(pneam, ng, ng);
+	for(int ig=0; ig<ng; ig++){
+		P(*pneam,ig,ig)=pow(P(sanea,ig), 2);
 	}
-	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int idtrat=idtrat_wfs0;
-		if(iwfs>0){
-			/*don't allow snr to fall below 3.*/
-			while(idtrat>0&&(P(aster->wfs[iwfs].pistat->snr,idtrat)<3
-				||(int)P(parms->skyc.dtrats,idtrat)%(int)P(aster->dtrats,0)!=0)){
-				idtrat--;
-			}
-		}
-		P(aster->idtrats,iwfs)=idtrat;
-		P(aster->dtrats,iwfs)=P(parms->skyc.dtrats,idtrat);
-		int ng=P(aster->g,iwfs)->nx;
-		if(idtrat>-1){
-			for(int ig=0; ig<ng; ig++){
-				P(P(P(aster->neam,0), iwfs, iwfs),ig,ig)=
-					pow(P(P(aster->wfs[iwfs].pistat->sanea,idtrat),ig), 2);
-			}
-		} else{//no star available
-			dset(P(P(aster->neam,0), iwfs, iwfs), 0);
-		}
-		if(parms->skyc.verbose){
-			info("%3d ", (int)P(parms->skyc.dtrats,idtrat));
-		}
-	}//for iwfs
 }
 
 static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms){
-	int ndtrat=parms->skyc.ndtrat;
-	if(parms->skyc.multirate){
-		aster->res_ngs=dnew(1, 1);
-		//assemble neam
-		if(aster->neam) error("neam is already set?\n");
-		aster->neam=dccellnew(1, 1);
-		P(aster->neam,0)=dcellnew(aster->nwfs, aster->nwfs);
+	int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
+	aster->neam=dccellnew(ndtrat, 1);
+	aster->res_ngs=dnew(ndtrat, 3);
+	aster->kalman=mycalloc(ndtrat, kalman_t*);
+	lmat* dtrats=parms->skyc.multirate?aster->dtrats:lnew(aster->nwfs, 1);	
+	for(int idtrat=0; idtrat<ndtrat; idtrat++){
+		P(aster->neam,idtrat)=dcellnew(aster->nwfs, aster->nwfs);
+		if(!parms->skyc.multirate) lset(dtrats, P(parms->skyc.dtrats,idtrat));
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			int ng=P(aster->g,iwfs)->nx;
-			P(P(aster->neam,0), iwfs, iwfs)=dnew(ng, ng);
+			int idtrat_wfs=parms->skyc.multirate?P(aster->idtrats, iwfs):idtrat;
+			set_diag_pow2(&P(P(aster->neam,idtrat), iwfs, iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat_wfs));
 		}
-		aster->dtrats=lnew(aster->nwfs, 1);
-		aster->idtrats=lnew(aster->nwfs, 1);
-		int wfs0_min=0, wfs0_max=0;
-		pistat_s* pistat0=aster->wfs[0].pistat;//&star[aster->wfs[0].istar].pistat[aster->wfs[0].ipowfs];
-		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-			if(P(pistat0->snr,idtrat)>=P(parms->skyc.snrmin_mr,idtrat)){
-				if(wfs0_min==0){
-					wfs0_min=idtrat;
-				}
-				wfs0_max=idtrat;
-			}
-		}
-		aster->kalman=mycalloc(1, kalman_t*);
-		real resmin=INFINITY;
-		kalman_t* kalman_min=0;
-		int idtrat_min=0;
-		//Try progressively lower sampling frequencies until performance starts to degrades
-		for(int idtrat_limit=wfs0_max; idtrat_limit>wfs0_min; idtrat_limit--){
-			setup_aster_kalman_multirate(aster, parms, idtrat_limit);//setup aster->dtrats and aster->neam
-			aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, P(aster->neam,0), 0);
-			dmat* rests=0;
-#define USE_SIM 0 //ztiltout is not available here.
-#if USE_SIM   //more accurate
-			dmat* res=physim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
-				aster, 0, parms, -1, 1, -1);
-			real res0=res?P(res,0):simu->varol;
-			dfree(res);
-#else
-			rests=kalman_test(aster->kalman[0], simu->mideal);
-			real res0=calc_rms(rests, parms->maos.mcc, parms->skyc.evlstart);
-#endif
-			if(parms->skyc.dbg){
-				writebin(rests, "isky%d_iaster%d_dtrat%d_rest", simu->isky, aster->iaster, idtrat_limit);
-			}
-			if(parms->skyc.verbose) info("res0=%g, resmin=%g\n", sqrt(res0)*1e9, sqrt(resmin)*1e9);
-			dfree(rests);
-			if(res0<resmin-100e-18){//better by 10 nm
-				resmin=res0;
-				kalman_free(kalman_min);
-				kalman_min=aster->kalman[0];
-				aster->kalman[0]=0;
-				idtrat_min=idtrat_limit;
-			} else{
-				kalman_free(aster->kalman[0]);aster->kalman[0]=0;
-				if(!isinf(resmin)&&res0>resmin*2){//stop trying.
-					break;
-				}
-			}
-		}
-		setup_aster_kalman_multirate(aster, parms, idtrat_min);
-		if(parms->skyc.verbose) info("selected\n");
-		aster->minest=P(aster->res_ngs,0,0)=resmin;
-		aster->kalman[0]=kalman_min;
-		if(parms->skyc.dbg){
-			kalman_write(aster->kalman[0], "%s/aster%d_kalman_%g", dirsetup, aster->iaster, P(parms->skyc.dtrats,idtrat_min));
-		}
-	} else{
-		if(aster->neam) cellfree(aster->neam);
-		aster->neam=dccellnew(ndtrat, 1);
-		aster->res_ngs=dnew(ndtrat, 3);
-		aster->kalman=mycalloc(ndtrat, kalman_t*);
-		lmat* dtrats=lnew(aster->nwfs, 1);
-		for(int idtrat=0; idtrat<ndtrat; idtrat++){
-			//assemble neam
-			//TIC;tic;
-			P(aster->neam,idtrat)=dcellnew(aster->nwfs, aster->nwfs);
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				dmat* tmp=ddup(P(aster->wfs[iwfs].pistat->sanea,idtrat));/*in rad */
-				dcwpow(tmp, 2);
-				dsp* tmp2=dspnewdiag(tmp->nx, P(tmp), 1);
-				dspfull(&P(P(aster->neam,idtrat), iwfs, iwfs), tmp2, 'n', 1);
-				dfree(tmp); dspfree(tmp2);
-			}
-
-			int dtrat=P(parms->skyc.dtrats,idtrat);
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				P(dtrats,iwfs)=dtrat;
-			}
-			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
-			//toc2("kalman");
-#if USE_SIM 
-			dmat* res=physim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
-			real rms=res?P(res,0):simu->varol;
-			dfree(res);
-#else
-			dmat* res=kalman_test(aster->kalman[idtrat], simu->mideal);
-			real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
-			dfree(res);
-#endif
+		aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
+		dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal);//determine the residual
+		real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
+		dfree(res);
 		//toc2("estimate");
-			P(aster->res_ngs, idtrat, 0)=rms;
-			if(parms->skyc.dbg){
-				kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%d", dirsetup, aster->iaster, dtrat);
-			}
+		P(aster->res_ngs, idtrat, 0)=rms;
+		if(parms->skyc.dbg){
+			kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%d", dirsetup, aster->iaster, idtrat);
 		}
+	}
+	if(!parms->skyc.multirate){
 		lfree(dtrats);
+	}else{
+		aster->minest=P(aster->res_ngs,0,0);
 	}
 }
 static void select_dtrat(aster_s* aster, int maxdtrat, real maxerror){
@@ -689,7 +582,7 @@ static void select_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 		}
 	}
 	if(aster->idtratest!=-1){
-		if(maxdtrat>1){
+		if(maxdtrat>1 && ndtrat>1){
 			real thres=MIN(aster->minest+wvfmargin, maxerror);//threshold at low freq end
 			real thres2=MIN(aster->minest+wvfmargin, maxerror);//threshold at high freq end
 			/*Find upper and skymin good dtrats. */
@@ -718,13 +611,16 @@ static void select_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	}
 }
 void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
+	if(parms->skyc.multirate){
+		setup_aster_multirate(aster, parms);
+	}
 	if(parms->skyc.servo<0){
 		setup_aster_kalman(simu, aster, parms);
 	} else{
 		setup_aster_servo(simu, aster, parms);
 	}
 	if(!parms->skyc.multirate){
-		select_dtrat(aster, parms->skyc.maxdtrat, parms->skyc.phytype==1?0.5*simu->varol:INFINITY);
+	select_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
 	if(parms->skyc.verbose){
 		if(!parms->skyc.multirate){
