@@ -554,7 +554,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 			set_diag_pow2(&P(P(aster->neam,idtrat), iwfs, iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat_wfs));
 		}
 		aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
-		dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal);//determine the residual
+		dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal, 0);//determine the residual
 		real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
 		dfree(res);
 		//toc2("estimate");

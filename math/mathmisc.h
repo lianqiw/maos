@@ -23,6 +23,8 @@
    A few math routines
 */
 long double factorial(long n1, long n2);
+long calc_gcd(long a, long b);
+long calc_lcm(long a, long b);
 #define sinc(x) ((x)!=0?(sin(M_PI*x)/(M_PI*x)):1)
 //void invsq(long n, double *restrict A);
 #define mysqrt(A) (A<0?-sqrt(-A):sqrt(A))

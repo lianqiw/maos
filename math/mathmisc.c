@@ -39,6 +39,36 @@ long double factorial(long n1, long n2){
 }
 
 /**
+ * @brief Compute the greatest common divider
+ * 
+ * @param a 	The larger value
+ * @param b 	The smaller value
+ * @return long The result
+ */
+long calc_gcd(long a, long b){
+	if(a==b || b==0){
+		return a;
+	}else if(a>b){
+		return calc_gcd(b, a%b);
+	}else{
+		return calc_gcd(b, a);
+	}
+}
+/**
+ * @brief Compute the least common multiplier
+ * 
+ * @param a 
+ * @param b 
+ * @return long 
+ */
+long calc_lcm(long a, long b){
+	if(a==0&&b==0){
+		return 0;
+	}else{
+		return a*(b/calc_gcd(a,b));
+	}
+}
+/**
    Reverse an permution vector.
    A=B(p) <==> A(pi)=B
 */

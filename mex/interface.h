@@ -353,35 +353,39 @@ cell *mx2cell(const mxArray*A){
 
 static inline kalman_t *mx2kalman(const mxArray*A){
     kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
-    kalman->Ad=mx2d(mxGetField(A,0,"Ad"));
-    kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
-    kalman->AdM=mx2d(mxGetField(A,0,"AdM"));
+	kalman->AdM=mx2d(mxGetField(A,0,"AdM"));
     kalman->BM=mx2d(mxGetField(A,0,"BM"));
-    kalman->M=mx2dcell(mxGetField(A,0,"M"));
-    kalman->P=mx2d(mxGetField(A,0,"P"));
+	kalman->Qn=mx2d(mxGetField(A,0,"Qn"));
     kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
-    kalman->dtrat=mx2l(mxGetField(A,0,"dtrat"));
+	kalman->dtrat=mx2l(mxGetField(A,0,"dtrat"));
+
+	kalman->Ad=mx2dcell(mxGetField(A,0,"Ad"));
+    kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
     kalman->Gwfs=mx2dcell(mxGetField(A,0,"Gwfs"));
-    kalman->Rwfs=mx2dcell(mxGetField(A,0,"Rwfs"));
+    kalman->sanea=mx2dcell(mxGetField(A,0,"sanea"));
+	kalman->M=mx2dcell(mxGetField(A,0,"M"));
+    kalman->P=mx2dcell(mxGetField(A,0,"P"));
     return kalman;
 }
 static inline mxArray* kalman2mx(kalman_t *kalman){
     const int nfield=12;
-    const char *fieldnames[]={"Ad","Cd","AdM","BM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
+    const char *fieldnames[]={"AdM","BM","Qn","dthi", "dtrat", "Ad","Cd","Gwfs","sanea","Rn","M","P"};
     mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
     int pos=0;
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Ad));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Cd));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->AdM));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->BM));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Qn));
+    mxSetFieldByNumber(A, 0, pos++, mxCreateDoubleScalar(kalman->dthi));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->dtrat));
+	
+	mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Ad));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Cd));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Gwfs));
+	mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->sanea));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Rn));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->M));
     mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->P));
-    mxSetFieldByNumber(A, 0, pos++, mxCreateDoubleScalar(kalman->dthi));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->dtrat));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Gwfs));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Rwfs));
+    
     if(pos!=nfield){
 	error("Invalid number of elements\n");
     }

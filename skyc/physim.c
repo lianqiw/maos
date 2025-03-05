@@ -404,7 +404,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					dcp(&mreal, P(P(st2t->mintc,0),0));
 				}
 			} else{//LQG control
-				kalman_output(kalman, &mreal, 0, 1);
+				kalman_output(kalman, &mreal, 0, 1, 0);
 			}
 			if(parms->skyc.servo<0){//LQG control
 				int indk=0;
@@ -418,7 +418,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					}
 				}
 				if(indk){
-					kalman_update(kalman, gradout->m, indk-1);
+					kalman_update(kalman, gradout->m, 0);
 				}
 			} else{
 				if(pmerrm){
