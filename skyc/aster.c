@@ -551,7 +551,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		if(!parms->skyc.multirate) lset(dtrats, P(parms->skyc.dtrats,idtrat));
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			int idtrat_wfs=parms->skyc.multirate?P(aster->idtrats, iwfs):idtrat;
-			set_diag_pow2(&P(P(aster->neam,idtrat), iwfs, iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat_wfs));
+			set_diag_pow2(&P(P(aster->neam, idtrat), iwfs, iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat_wfs));
 		}
 		aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, P(aster->neam,idtrat), 0);
 		dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal, 0);//determine the residual
@@ -620,7 +620,7 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 		setup_aster_servo(simu, aster, parms);
 	}
 	if(!parms->skyc.multirate){
-	select_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
+		select_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
 	if(parms->skyc.verbose){
 		if(!parms->skyc.multirate){

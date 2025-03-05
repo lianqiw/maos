@@ -418,7 +418,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					}
 				}
 				if(indk){
-					kalman_update(kalman, gradout->m, 0);
+					kalman_update(kalman, gradout, 0);
 				}
 			} else{
 				if(pmerrm){

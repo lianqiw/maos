@@ -121,7 +121,7 @@ typedef struct aster_s{
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     real minest;    /**<miminum rms on servo restimation.*/
     rand_t rand;       /**<random stream*/
-    kalman_t**kalman;
+    kalman_t **kalman;	/**<Kalman filter for LQG controller. */
     lmat *idtrats;	   /**<idtrat of each wfs*/
     lmat *dtrats;	   /**<dtrat of each wfs */
     long *ngs;         /**<number of gradients for each wfs*/

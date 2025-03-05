@@ -570,6 +570,9 @@ static void servo_init(servo_t* st, const anyarray merr_){
    Update servo parameters
 */
 static void servo_update_ep(servo_t* st, const dmat* ep){
+	if(!ep){
+		error("ep cannot be null\n");
+	}
 	dfree(st->ep);
 	if(NX(ep)!=3){//type I
 		st->ep=ddup(ep);
