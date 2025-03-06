@@ -428,16 +428,19 @@ void X(set)(X(mat)* A, const T val){
 }
 
 /**
-   display a matrix.
+   display a matrix. use stderr show that jupyterlab can show the output.
 */
 void X(show)(const X(mat)* A, const char* format, ...){
 	format2fn;
+	if(!check_mat(A)){
+		warning("Invalid: %s is not matrix.", fn);
+		return;
+	}
 	if(PN(A)>20){
 		info("Displaying content of %s (%ldx%ld):\n", fn, NX(A), NY(A));
 	}else{
 		info("%s:", fn);//display inline
 	}
-	if(!check_mat(A)) return;
 	int colmax=10;
 	int rowmax=10;
 	//int iset, i, j;
@@ -568,6 +571,33 @@ void X(sort)(X(mat)* A, int ascend){
 		qsort(PCOL(A, i), A->nx, sizeof(R),
 			(int(*)(const void*, const void*))(ascend?sort_ascend:sort_descend));
 	}
+}
+
+/**
+ * @brief Find unique values and sort from small to large
+ * 
+ * @param input 	input array
+ * @param ascend	sorting direction
+ * @return X(mat)*  unique values
+ */
+X(mat) *X(unique)(const X(mat) *input, int ascend){
+	X(mat) *output=X(new)(PN(input), 1);//unique dtrats
+	int nout=0;
+	for(int ix=0; ix<PN(input); ix++){
+		int found=0;
+		for(int jx=0; jx<nout; jx++){
+			if(P(output,jx)==P(input,ix)){
+				found=1; break;
+			}
+		}
+		if(!found){
+			P(output,nout)=P(input,ix);
+			nout++;
+		}
+	}
+	X(resize)(output, nout, 1);
+	X(sort)(output, ascend);//from fast to slow
+	return output;
 }
 #endif
 /**

@@ -166,7 +166,7 @@ OMP_TASK_FOR(4)
 				}
 
 				if(parms->skyc.verbose){
-					info("Aster %d, estimate is %.2fnm. ", iaster,sqrt(asteri->minest)*1e9);//, P(parms->skyc.fss, asteri->idtratest));
+					info("Aster %d, estimate is %.1fnm at %.0fhz. ", iaster,sqrt(asteri->minest)*1e9, P(parms->skyc.fss, asteri->idtratest));
 					if(!parms->skyc.multirate){
 						info("Try %.1f to %.1f Hz. \n",P(parms->skyc.fss, asteri->idtratmin), P(parms->skyc.fss, asteri->idtratmax-1));
 					}
@@ -196,7 +196,7 @@ OMP_TASK_FOR(4)
 						/*Add windshake contribution. */
 						real thisVar=P(ires, 0)+resadd;
 						if(parms->skyc.verbose){
-							info("sim:%4.0f Hz:%6.1f nm.", P(parms->skyc.fss, idtrat),	sqrt(thisVar)*1e9);
+							info("%.0f Hz:%.1f nm.", P(parms->skyc.fss, idtrat), sqrt(thisVar)*1e9);
 						}
 						if(thisVar<asteri->minphyres){
 							asteri->minphyres=thisVar;
@@ -258,8 +258,6 @@ skip1:;
 					if(parms->skyc.save){
 						skysim_save(simu, aster, PCOL(simu->res, isky), sky_iaster, sky_idtrat, isky);
 					}
-				}else{
-					warning("Unexpected.\n");
 				}
 				dcp(&P(simu->mres,isky), P(asteri->phymres, sky_idtrat));
 			}else{
@@ -349,8 +347,8 @@ static void skysim_update_mideal(sim_s* simu){
 	const parms_s* parms=simu->parms;
 	if(parms->skyc.addws&&parms->skyc.psd_ws){
 		/*Add ws to mideal. After genstars so we don't purturb it. */
-		int im=parms->skyc.addws<=1?0:1;
-		info("Add wind shake time series to mideal mode %d\n", im);
+		int im_ws=parms->skyc.addws==1?0:1;
+		info("Add wind shake time series to mideal mode %d\n", im_ws);
 		dmat* telws=psd2ts(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
 		real alpha=1./sqrt(P(parms->maos.mcc, 0, 0));
@@ -359,8 +357,8 @@ static void skysim_update_mideal(sim_s* simu){
 		dmat* pm2=simu->mideal_oa;
 		
 		for(long i=0; i<simu->mideal->ny; i++){
-			P(pm1, im, i)+=P(telws,i);
-			P(pm2, im, i)+=P(telws,i);
+			P(pm1, im_ws, i)+=P(telws,i);
+			P(pm2, im_ws, i)+=P(telws,i);
 		}
 		dfree(telws);
 	}
@@ -432,7 +430,7 @@ static void skysim_calc_psd(sim_s* simu){
 		simu->varol+=var_ws;//testing
 
 		//add windshake PSD to ngs/tt. 
-		int im_ws=0;
+		int im_ws=parms->skyc.addws==1?0:1;
 		add_psd2(&P(simu->psds, im_ws), parms->skyc.psd_ws, 1); //all in m^2 unit.
 	}
 	if(parms->skyc.dbg||1){
@@ -456,11 +454,11 @@ static void skysim_prep_gain(sim_s* simu){
 				dtrat, 0, parms->skyc.pmargin, 0, 0, servotype, P(simu->psds, ip), sigma2);
 		}
 	}
-	writebin(simu->gain_pre, "gain_pre.bin");
-	writebin(simu->gain_x, "gain_x.bin");
 	toc2("servo_optim");
 	simu->gain_x=dref(sigma2);
 	dfree(sigma2);
+	writebin(simu->gain_pre, "gain_pre.bin");
+	writebin(simu->gain_x, "gain_x.bin");
 }
 
 static void skysim_prep_sde(sim_s* simu){
@@ -472,39 +470,26 @@ static void skysim_prep_sde(sim_s* simu){
 	  Do not scale the time series by MCC. We are working in "radian space" for
 	  kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
 	*/
-	dmat* x=dtrans(simu->mideal);
-	simu->psdi=dcellnew(x->ny, 1);
-	simu->sdecoeff=dnew(3, x->ny);
-	dmat* pcoeff=simu->sdecoeff;
-	for(int im=0; im<x->ny; im++){
-		dmat* xi=dsub(x, 20, 0, im, 1);
-		P(simu->psdi,im)=psd1dt(xi, 1, parms->maos.dt);
-		dfree(xi);
-		int im_ws=0;
-		if(parms->skyc.psd_ws && im==im_ws){
-			//add windshake on first mode only
-			//2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
-			add_psd2(&P(simu->psdi,im), parms->skyc.psd_ws, 1./P(parms->maos.mcc, im, im));
-		}
-		dmat* coeff=sde_fit(P(simu->psdi,im), NULL, parms->skyc.sdetmax, 0);
+	simu->sdecoeff=dnew(3, parms->maos.nmod);
+	for(int im=0; im<parms->maos.nmod; im++){
+		dmat* coeff=sde_fit(P(simu->psds,im), NULL, parms->skyc.sdetmax, 0);
 		if(P(coeff, 0, 0)>100&&parms->skyc.sdetmax){
 			dfree(coeff);
-			coeff=sde_fit(P(simu->psdi,im), NULL, 0, 0);
+			coeff=sde_fit(P(simu->psds,im), NULL, 0, 0);
 			if(P(coeff, 0, 0)>100){
 				warning("sde_fit returns unsuitable values\n");
 			}
 		}
+		P(coeff,2)/=sqrt(P(parms->maos.mcc, im, im));//convert from m to rad
 		if(coeff->ny>1){
 			error("Please handle this case\n");
 		}
-		memcpy(PCOL(pcoeff, im), P(coeff), coeff->nx*sizeof(real));
+		memcpy(PCOL(simu->sdecoeff, im), P(coeff), coeff->nx*sizeof(real));
 		dfree(coeff);
 	}
 
-	dfree(x);
 	if(parms->skyc.dbg||1){
 		writebin(simu->sdecoeff, "coeff");
-		writebin(simu->psdi, "psds_rad2.bin");
 	}
 }
 /**
@@ -569,16 +554,16 @@ void skysim(const parms_s* parms){
 		writebin(simu->stars, "Res%d_%d_stars", simu->seed_maos, parms->skyc.seed);
 
 		skysim_read_mideal(simu);
-		writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
+		
 		simu->varol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
 		info("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
+		
+		skysim_calc_psd(simu);
+		if(parms->skyc.interpg){
+			skysim_prep_gain(simu);
+		}
 		if(parms->skyc.servo<0){//LQG
 			skysim_prep_sde(simu);
-		} else{
-			skysim_calc_psd(simu);
-			if(parms->skyc.interpg){
-				skysim_prep_gain(simu);
-			}
 		}
 		if(parms->skyc.addws&&parms->skyc.psd_ws){
 			//Note: it is better to add ws/vib PSD directly to the PSD rather
@@ -586,6 +571,7 @@ void skysim(const parms_s* parms){
 			//of noise in the PSD and the sde_fit will not be able to work well.
 			skysim_update_mideal(simu);//add wind shake / vib time series
 		}
+		writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
 		int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
 		simu->res=dnew_mmap(9, nsky, NULL, "Res%d_%d", seed_maos, parms->skyc.seed);//Total, ATM NGS, ATM TT, WS, 0
 		if(!parms->skyc.estimate){
@@ -622,15 +608,16 @@ void skysim(const parms_s* parms){
 		}
 		dcellfree(simu->stars);
 		dfree(simu->res);
-		dresize(simu->res_aster, NX(simu->res_aster), simu->res_iaster);
-		writebin(simu->res_aster, "Res%d_%d_aster", seed_maos, parms->skyc.seed);
+		if(simu->res_iaster>0){
+			dresize(simu->res_aster, NX(simu->res_aster), simu->res_iaster);
+			writebin(simu->res_aster, "Res%d_%d_aster", seed_maos, parms->skyc.seed);
+		}
 		dfree(simu->res_aster);
 		dcellfree(simu->gain);
 		dcellfree(simu->mres);
 		dfree(simu->mideal);
 		dfree(simu->mideal_oa);
 		dcellfree(simu->psds);
-		dcellfree(simu->psdi);
 		dfree(simu->sdecoeff);
 		/*Free the data used to do bicubic spline. */
 		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){

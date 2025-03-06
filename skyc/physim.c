@@ -98,39 +98,41 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 	}
 }
 
-
 /**
-   Time domain physical simulation.
-
-   noisy:
-   - 0: no noise at all;
-   - 1: poisson and read out noise.
-   - 2: only poisson noise.
-*/
+ * @brief Time domain physical simulation.
+ * 
+ * @param mresout 	Residual mode output
+ * @param mideal 	Input mode
+ * @param mideal_oa Input mode for on axis (?).
+ * @param ngsol 	Open loop RMS WFE.
+ * @param aster 	Asterism Parameters
+ * @param powfs 	POWFS parameters
+ * @param parms 	Parameters
+ * @param idtratc 	multirate=0: common rate index. multirate=1: fastest rate index.
+ * @param noisy 	0: noise free. 1: poisson and ron. 2: only poisson noise (testing)
+ * @param phystart 	time step to start physical optics simulation
+ * @return dmat* 	Residual RMS WFE.
+ */
 dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
-	aster_s* aster, const powfs_s* powfs,
-	const parms_s* parms, int idtratc, int noisy, int phystart){
+	aster_s* aster, const powfs_s* powfs, const parms_s* parms, int idtratc, int noisy, int phystart){
 	const int dtratc=P(parms->skyc.dtrats,idtratc);
-	int hasphy;
-	if(phystart>-1&&phystart<aster->nstep){
-		hasphy=1;
-	} else{
-		hasphy=0;
-	}
+	const int hasphy=(phystart>-1&&phystart<aster->nstep)?1:0;//whether physical optics is enabled
+		
 	const int nmod=mideal->nx;
-	dmat* res=dnew(6, 1);/*Results. 1-2: NGS and TT modes.,
-			  3-4:On axis NGS and TT modes,
-			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
-	dmat* mreal=NULL;/*modal correction at this step. */
+	dmat* res=dnew(6, 1);/*Results. 
+							1-2: NGS and TT modes.,
+							3-4: On axis NGS and TT modes,
+							4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
+	dmat* mreal=NULL;	/*modal correction at this step. */
 	dmat* merr=dnew(nmod, 1);/*modal error */
-	dcell* merrm=dcellnew(1, 1); P(merrm,0)=dnew(nmod, 1);
-	dcell* pmerrm=NULL;
-	const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;
-	dmat* mres=dnew(nmod, nstep);
-	dmat* rnefs=parms->skyc.rnefs;
-	dcell* zgradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
+	dmat* merrm=dnew(nmod, 1);//reconstruction error signal
+	dmat* pmerrm=NULL;//set to merrm when there is output
+	const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;//number of simulation steps
+	dmat* mres=dnew(nmod, nstep);//residual mode history
+	dmat* rnefs=parms->skyc.rnefs;//read out noise at each sampling frequency
+	dcell* zgradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);//zernike gradient accumulation
 	dcell* gradout=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
-	dcell *gradavg=dcellnew3(aster->nwfs, 1, aster->ngs, 0);//for multirate
+	dcell *gradslow=dcellnew3(aster->nwfs, 1, aster->ngs, 0);//for multirate slow rate
 	dmat* gradsave=0;
 	if(parms->skyc.dbg){
 		gradsave=dnew(aster->tsa*2, nstep);
@@ -138,48 +140,38 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 
 	servo_t* st2t=0;
 	kalman_t* kalman=0;
-	dcell* mpsol=0;
 	int multirate=parms->skyc.multirate;
-	dmat* moffsetint=0;
-	dmat* moffseterr=0;
-	int ind_fast=0;//index into gain and pgm for faster loop in multirate
-	if(multirate) {
-		moffsetint=dnew(nmod, 1);
-		moffseterr=dnew(nmod, 1);
-	}
+	dmat* moffsetcmd=0;
+	dmat* mreal_slow=0;
+	dcell* merr_slow=0;
+	int indk_fast=0;//index into gain and pgm for faster loop in multirate
 	int divergence=0;
-	int dtrat_slow=0;//dtrat of slow loop
+	int dtrat_slow=dtratc;//dtrat of slow loop
+	servo_t* st_slow=NULL;
+	if(multirate) {
+		moffsetcmd=dnew(nmod, 1);
+		merr_slow=dcellnew_same(1,1,nmod, 1);
+	
+		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+			if(P(aster->idtrats, iwfs)==idtratc){//active wfs at fastest rate
+				indk_fast |= (1<<iwfs);
+			}else{
+				dtrat_slow=P(aster->dtrats,iwfs);
+			}
+		}
+		if(dtrat_slow!=dtratc){
+			st_slow=servo_new(P(merr_slow,0), NULL, 0, parms->maos.dt*dtrat_slow, P(aster->gain, (1<<aster->nwfs)-2));
+			//dshow(st_slow->ep, "slow ep");
+		}
+	}
+
 	//aster->dtrats is only set in multirate case. dtrat of each wfs in the asterism
 	if(parms->skyc.servo>0){
-		if(multirate){//only supports integrator
-			//dmat* gtmp=dnew(1, 1); P(gtmp,0)=1;
-			int indk=0;
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				if(P(aster->idtrats, iwfs)==idtratc){//active wfs at fastest rate
-					indk |= (1<<iwfs);
-				}else{
-					dtrat_slow=P(aster->dtrats,iwfs);
-				}
-			}
-			ind_fast=indk-1;
-			//dbg("using gain[%d]\n", indk-1);
-			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, ind_fast));
-			//dfree(gtmp);
-			//dbg("ind_fast=%d\n", ind_fast);
-		} else{
-			st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, idtratc));
-		}
+		st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, multirate?(indk_fast-1):idtratc));
 	} else{
-		if(multirate){
-			kalman=aster->kalman[0];
-		} else{
-			kalman=aster->kalman[idtratc];
-		}
+		kalman=aster->kalman[multirate?0:idtratc];
 	}
-	if(kalman){
-		kalman_init(kalman);
-		mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
-	}
+	
 	const long nwvl=parms->maos.nwvl;
 	dcell** psf=0, ** mtche=0, ** ints=0, ** i0s=0;
 	ccell* wvf=0, * wvfc=0, * otf=0;
@@ -226,6 +218,9 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		} else{
 			servo_reset(st2t);
 		}
+		if(st_slow){
+			servo_reset(st_slow);
+		}
 		dcellzero(zgradc);
 		dcellzero(gradout);
 		if(ints){
@@ -234,15 +229,11 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 			}
 		}
 		for(int istep=0; istep<nstep; istep++){
+			//if(istep<1000) dshow(mreal, "mreal total");
 			memcpy(P(merr), PCOL(mideal, istep), nmod*sizeof(real));
 			dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
 			memcpy(PCOL(mres, istep), P(merr), sizeof(real)*nmod);
-			if(mpsol){//collect averaged modes for PSOL.
-				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-					dadd(&P(mpsol,iwfs), 1, mreal, 1);
-				}
-			}
-			pmerrm=0;
+			pmerrm=NULL;
 			if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 				real res_ngs=dwdot(P(merr), parms->maos.mcc, P(merr));
 				if(res_ngs>ngsol*100){
@@ -251,34 +242,32 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					divergence=1;
 					break;
 				}
-				{
-					P(res,0)+=res_ngs;
-					P(res,1)+=dwdot(P(merr), parms->maos.mcc_tt, P(merr));
-					real dot_oa=dwdot(P(merr), parms->maos.mcc_oa, P(merr));
-					real dot_res_ideal=dwdot(P(merr), parms->maos.mcc_oa, PCOL(mideal, istep));
-					real dot_res_oa=0;
-					for(int imod=0; imod<nmod; imod++){
-						dot_res_oa+=P(merr,imod)*P(mideal_oa, imod, istep);
-					}
-					P(res,2)+=dot_oa-2*dot_res_ideal+2*dot_res_oa;
-					P(res,4)+=dot_oa;
+				//field averaged performance
+				P(res,0)+=res_ngs;
+				P(res,1)+=dwdot(P(merr), parms->maos.mcc_tt, P(merr));
+				real dot_oa=dwdot(P(merr), parms->maos.mcc_oa, P(merr));
+				real dot_res_ideal=dwdot(P(merr), parms->maos.mcc_oa, PCOL(mideal, istep));
+				real dot_res_oa=0;
+				for(int imod=0; imod<nmod; imod++){
+					dot_res_oa+=P(merr,imod)*P(mideal_oa, imod, istep);
 				}
-				{
-					real dot_oa_tt=dwdot(P(merr), parms->maos.mcc_oa_tt, P(merr));
-					/*Notice that mcc_oa_tt2 is 2x5 marix. */
-					real dot_res_ideal_tt=dwdot(P(merr), parms->maos.mcc_oa_tt2, PCOL(mideal, istep));
-					real dot_res_oa_tt=0;
-					for(int imod=0; imod<2; imod++){
-						dot_res_oa_tt+=P(merr,imod)*P(mideal_oa, imod, istep);
-					}
-					P(res,3)+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
-					P(res,5)+=dot_oa_tt;
+				P(res,2)+=dot_oa-2*dot_res_ideal+2*dot_res_oa;
+				P(res,4)+=dot_oa;
+				//on axis performance
+				real dot_oa_tt=dwdot(P(merr), parms->maos.mcc_oa_tt, P(merr));
+				/*Notice that mcc_oa_tt2 is 2x5 marix. */
+				real dot_res_ideal_tt=dwdot(P(merr), parms->maos.mcc_oa_tt2, PCOL(mideal, istep));
+				real dot_res_oa_tt=0;
+				for(int imod=0; imod<2; imod++){
+					dot_res_oa_tt+=P(merr,imod)*P(mideal_oa, imod, istep);
 				}
+				P(res,3)+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
+				P(res,5)+=dot_oa_tt;
 			}//if evl
-
-			if(istep<phystart||phystart<0){
-				/*Ztilt, noise free simulation for acquisition. */
+			int indk=0;//mark wfs output.
+			if(istep<phystart||phystart<0){//Geometric WFS. Ztilt
 				dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
+#if 1 //testing
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 					const int ipowfs=aster->wfs[iwfs].ipowfs;
 					const long ng=parms->maos.nsa[ipowfs]*2;
@@ -286,24 +275,25 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 						P(P(zgradc, iwfs), ig)+=P(aster->wfs[iwfs].ztiltout, ig, istep);
 					}
 				}
-
+#endif
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 					int dtrati=(multirate?P(aster->dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
+						indk|=1<<iwfs;//has output
 						dadd(&P(gradout,iwfs), 0, P(zgradc,iwfs), 1./dtrati);
 						dzero(P(zgradc,iwfs));
 						if(noisy){
 							int idtrati=(multirate?P(aster->idtrats,iwfs):idtratc);
 							dmat* nea=P(aster->wfs[iwfs].pistat->sanea,idtrati);
+							//if((istep+1)==dtrati) dshow(nea, "nea[%d]", iwfs);
 							for(int i=0; i<nea->nx; i++){
 								P(P(gradout,iwfs),i)+=P(nea,i)*randn(&aster->rand);
 							}
 						}
-						pmerrm=merrm;//record output.
+						pmerrm=merrm;//need reconstructor output.
 					}
 				}
-			} else{
-				/*Accumulate PSF intensities*/
+			} else{//Physical Optics WFS. Accumulate PSF intensities
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 					const real thetax=aster->wfs[iwfs].thetax;
 					const real thetay=aster->wfs[iwfs].thetay;
@@ -315,11 +305,9 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 						for(long isa=0; isa<nsa; isa++){
 							ccp(&P(wvfc,iwfs), P(wvfout, isa, iwvl));
 							/*Apply NGS mode error to PSF. */
-							ngsmod2wvf(P(wvfc,iwfs), wvl, merr, powfs+ipowfs, isa,
-								thetax, thetay, parms);
+							ngsmod2wvf(P(wvfc,iwfs), wvl, merr, powfs+ipowfs, isa, thetax, thetay, parms);
 							cembed(P(wvf,iwfs), P(wvfc,iwfs), 0);
-							cfft2(P(wvf,iwfs), -1);
-							/*peak in corner. */
+							cfft2(P(wvf,iwfs), -1); /*peak in corner. */
 							cabs22d(&P(psf[iwfs],isa,iwvl), 1., P(wvf,iwfs), 1.);
 						}/*isa */
 					}/*iwvl */
@@ -328,16 +316,15 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				/*Form detector image from accumulated PSFs*/
 				real igrad[2];
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-					int dtrati=dtratc, idtrat=idtratc;
-					if(multirate){//multirate
-						idtrat=P(aster->idtrats,iwfs);
-						dtrati=P(aster->dtrats,iwfs);
-					}
-					if((istep+1)%dtrati==0){/*has output */
+					const int dtrati=multirate?P(aster->dtrats,iwfs):dtratc;
+					const int idtrat=multirate?P(aster->idtrats,iwfs):idtratc;
+					if((istep+1)%dtrati==0){/*WFS has output */
+						indk|=1<<iwfs;//has output
 						dcellzero(ints[iwfs]);
 						const int ipowfs=aster->wfs[iwfs].ipowfs;
 						const long nsa=parms->maos.nsa[ipowfs];
 						for(long isa=0; isa<nsa; isa++){
+							//Compute subaperture image
 							for(long iwvl=0; iwvl<nwvl; iwvl++){
 								real siglev=P(aster->wfs[iwfs].siglev,iwvl);
 								ccpd(&P(otf,iwfs), P(psf[iwfs],isa,iwvl));
@@ -348,16 +335,13 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 									P(P(otf,iwfs)), siglev);
 							}
 
-							/*Add noise and apply matched filter. */
-#if _OPENMP
-#pragma omp critical 
-#endif
+							//Add noise 
 							switch(noisy){
 							case 0:/*no noise at all. */
 								break;
 							case 1:/*both poisson and read out noise. */
 							{
-								real bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
+								const real bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
 								addnoise(P(ints[iwfs],isa), &aster->rand, bkgrnd, bkgrnd, 0, 0, 0, P(rnefs, idtrat, ipowfs), parms->skyc.excess);
 							}
 							break;
@@ -367,10 +351,10 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							default:
 								error("Invalid noisy\n");
 							}
-
+							//Compute gradients
 							igrad[0]=0;
 							igrad[1]=0;
-							real pixtheta=parms->skyc.pixtheta[ipowfs];
+							const real pixtheta=parms->skyc.pixtheta[ipowfs];
 
 							switch(parms->skyc.phytype){
 							case 1:
@@ -393,79 +377,97 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							P(P(gradout,iwfs),isa)=igrad[0];
 							P(P(gradout,iwfs),isa+nsa)=igrad[1];
 						}/*isa */
-						pmerrm=merrm;
+						pmerrm=merrm; //mark need output
 						dcellzero(psf[iwfs]);/*reset accumulation.*/
 					}/*if iwfs has output*/
 				}/*for wfs*/
 			}/*if phystart */
 			//output to mreal after using it to ensure two cycle delay.
 			if(st2t){//Type I or II control.
-				if(P(st2t->mint,0)){//has output.
+				/*if(P(st2t->mint,0)){//has output.
 					dcp(&mreal, P(P(st2t->mintc,0),0));
-				}
+				}*/
+				servo_output(st2t, &mreal);
 			} else{//LQG control
-				kalman_output(kalman, &mreal, 0, 1, 0);
+#if 1
+				kalman_output(kalman, &mreal, 1, 0.5, 0);//kalman output with integrator
+#else
+				kalman_output(kalman, &mreal, 0, 1, 0);//kalman direct output
+#endif				
+				//if(istep<1000) dshow(mreal, "mreal kalman hi");
 			}
-			if(parms->skyc.servo<0){//LQG control
-				int indk=0;
-				//Form PSOL grads and obtain index to LQG M
-				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-					int dtrati=(multirate?P(aster->dtrats,iwfs):dtratc);
-					if((istep+1)%dtrati==0){
-						indk|=1<<iwfs;
-						dmm(&P(gradout,iwfs), 1, P(aster->g,iwfs), P(mpsol,iwfs), "nn", 1./dtrati);
-						dzero(P(mpsol,iwfs));
+			if(st_slow){
+				servo_output(st_slow, &mreal_slow);
+				/*if(istep<100){
+					dshow(mreal, "mreal");
+					dshow(mreal_slow, "mreal_slow");
+					dshow(moffsetcmd, "moffset");
+					lshow(aster->mdirect, "mdirect");
+				}*/
+				for(int imod=0; imod<nmod; imod++){
+					if(aster->mdirect && P(aster->mdirect, imod)){//directly output modes not controlled by the faster loop
+						P(mreal, imod)=P(mreal_slow, imod);//directly add to corrector (temporary solution)
+					}else{
+						P(moffsetcmd, imod)=P(mreal_slow, imod);//use as offset
 					}
 				}
-				if(indk){
-					kalman_update(kalman, gradout, 0);
-				}
-			} else{
-				if(pmerrm){
-					if(!multirate){//single rate
-						dmm(&P(merrm,0), 0, P(aster->pgm,idtratc), gradout->m, "nn", 1);
-					} else{
-						int indk=0;
-						for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-							if((istep+1)%P(aster->dtrats, iwfs)==0){
-								indk|=1<<iwfs;
-								dadd(&P(gradavg, iwfs), 1, P(gradout, iwfs), 1);
-								//if(istep<100) info("step %d accumulating wfs %d\n", istep, iwfs);
-							}
-						}
-						dzero(P(merrm, 0));
+			}
+			if(indk){//has output
+				if(multirate && dtratc!=dtrat_slow){
+					for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+						if((istep+1)%P(aster->dtrats, iwfs)==0){
+							dadd(&P(gradslow, iwfs), 1, P(gradout, iwfs), P(aster->dtrats, iwfs)/(real)dtrat_slow);
 						
-						if(indk!=(ind_fast+1)){//slower loop when there is faster loop
-							//slower loop (all wfs active) runs a cascaded integrator as offset to the faster loop
+							if(P(aster->dtrats, iwfs)!=dtrat_slow){//fast WFS.
+								dmm(&P(gradout, iwfs), 1, P(aster->g, iwfs), moffsetcmd, "nn", 1);//apply offset to gradients
+							}
+						}
+					}
+				}
+				//fast rate always have output
+				if(st2t){
+					dmm(&merrm, 0, P(aster->pgm, indk_fast?(indk_fast-1):idtratc), gradout->m, "nn", 1);
+					//dadd(&merrm, 1, moffsetint, 1);//apply offset to modes
+				}else{
+					kalman_update(kalman, gradout, 0);//it changes cl gradout to psol gradout
+				}
+				
+				if(multirate && indk!=(indk_fast)){//slower loop has output when there is faster loop
+					//slower loop (all wfs active) runs a cascaded integrator as offset to the faster loop
+					/*if(istep+1==dtrat_slow){
+						dshow(P(aster->pgm, indk-1), "pgm");
+						if(kalman){
 							for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-								real avgf=(real)P(aster->dtrats, iwfs)/(real)dtrat_slow;
-								//if(istep<100) info("step %d iwfs %d scaled by %g\n", istep, iwfs, avgf);
-								dscale(P(gradavg, iwfs), avgf);
+								dshow(P(P(kalman->Rlsq, 1),iwfs), "Rlsq[%d]", iwfs);
 							}
-							dmm(&moffseterr, 0, P(aster->pgm,indk-1), gradavg->m, "nn", 1);
-							dzero(gradavg->m);
-							for(int imod=0; imod<nmod; imod++){
-								if(aster->mdirect && P(aster->mdirect, imod)){//directly output modes not controlled by the faster loop
-									P(P(merrm,0),imod)=P(moffseterr,imod);
-									//if(istep<100) info("step %d copying slow to fast mode %d\n", istep, imod);
-								}else if (imod!=5){//temporary: skip focus
-									P(moffsetint, imod)+=P(moffseterr, imod)*P(P(aster->gain, indk-1), imod)*0.15;//todo: optimize the gain
-								}
-							}
-							//if(istep<100) dshow(P(merrm, 0), "merrm");
-							//if(istep<100) dshow(moffseterr, "moffseterr");
-							//warning("step %d: slow loop\n", istep);
 						}
-						if((indk & (ind_fast+1))){//only when fast WFS is active
-							dmm(&P(merrm,0), 1, P(aster->pgm,ind_fast), gradout->m, "nn", 1);
-							dadd(&P(merrm, 0), 1, moffsetint, 1);
-							//if(istep<100) info("step %d: fast loop\n", istep);
+					}*/
+					if(st2t || st_slow){
+						dmm(&P(merr_slow,0), 0, P(aster->pgm, indk-1), gradslow->m, "nn", 1);
+					}else{
+						if(1){//use integrator instead of kalman filter for the slow loop
+							dcellzero(merr_slow);
+							dcellmm(&merr_slow, P(kalman->Rlsq, 1), gradslow, "nn", 1);
+						}else{
+							kalman_update(kalman, gradslow, 1);//it change gradslow to psol
+							dzero(P(merr_slow,0));
+							kalman_output(kalman, &P(merr_slow,0), 1, 0.5, 1);
 						}
 					}
-					if(zfmerr && irep==0){
-						zfarr_push(zfmerr, istep, P(merrm, 0));
-					}
-				}//if pmerrm
+					dzero(gradslow->m);
+					servo_filter(st_slow, P(merr_slow, 0));
+					
+					//if(istep<100) dshow(merrm, "merrm");
+					//if(istep<1000) dshow(P(moffseterr, 0), "moffseterr");
+					//if(istep<1000) dshow(moffsetint, "moffsetint");
+					//warning("step %d: slow loop\n", istep);
+				}
+				
+				if(zfmerr && irep==0){
+					zfarr_push(zfmerr, istep, merrm);
+				}
+			}//if has output
+			if(st2t){
 				servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 			}
 			if(parms->skyc.dbg){
@@ -481,14 +483,14 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		zfarr_close(zfmerr);
 	}
 	dfree(mreal);
-	dcellfree(mpsol);
 	dfree(merr);
 	dcellfree(merrm);
 	dcellfree(zgradc);
 	dcellfree(gradout);
-	dcellfree(gradavg);
-	dcellfree(moffsetint);
-	dcellfree(moffseterr);
+	dcellfree(gradslow);
+	dcellfree(moffsetcmd);
+	dcellfree(merr_slow);
+	cellfree(mreal_slow);
 	dfree(gradsave);
 	dfree(corr);
 	if(hasphy){

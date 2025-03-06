@@ -204,7 +204,7 @@ static void test_kalman(){
     dcell *Rwfs=dcellread("Rwfs");
     lmat *dtrat_wfs=lread("dtrat_wfs");
     dmat *proj=dread("Proj");
-    kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, Gwfs, Rwfs, proj);
+    kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, NULL, Gwfs, Rwfs, proj);
     //writebin(k->Ad, "mex_Ad");
     //writebin(k->Cd, "mex_Cd");
     //writebin(k->M, "mex_M");

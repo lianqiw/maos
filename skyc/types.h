@@ -115,7 +115,7 @@ typedef struct aster_s{
     /*The following are for each dtrat */
     dcell *pgm;        /**<mode reconstructor */
     dcell *gain;       /**<type II gain vector*/
-    dccell *neam;        /**<measurement error covariance matrix (full matrix with values in diagonal)*/
+    //dccell *neam;        /**<measurement error covariance matrix (full matrix with values in diagonal)*/
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
@@ -160,7 +160,6 @@ typedef struct sim_s{
     real tk_0;       /**<initial star time*/
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
     dmat *sdecoeff;    /**<sde coefficient*/
-    dcell *psdi;        /**<PSD of each mode computed from time series*/
     dccell *nonlin;     /**<nonlinearity*/
     dmat *neaspec_dtrats;
 	unsigned int res_iaster;   /**<counter for res_aster*/

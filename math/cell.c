@@ -530,7 +530,7 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 
 cell* readbin_id(M_ID id, int level, const char* format, ...){
 	format2fn;
-	file_t* fp;
+	file_t* fp=NULL;
 	if(!fn||!(fp=zfopen(fn, "rb"))){
 		dbg("Unable to read from file %s (empty).\n", fn);
 		return NULL;

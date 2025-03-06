@@ -449,48 +449,22 @@ static dmat* calc_Qn(dmat *Ac, const dmat *Sigma_ep, real dT, int nsec){
 	dfree(expAj);
 	return Qn;
 }
-/**
- * @brief Fine unique dtrats and sort from small to large
- * 
- * @param dtrat_wfs 	dtrat for WFS
- * @return lmat* 
- */
-static lmat *unique_dtrats(const lmat *dtrat_wfs){
-	int nwfs=NX(dtrat_wfs);
-	lmat *dtrats=lnew(nwfs, 1);//unique dtrats
-	int ndtrat=0;
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int found=0;
-		if(!P(dtrat_wfs,iwfs)){
-			error("dtrat_wfs[%d]=0\n", iwfs);
-		}
-		for(int jdtrat=0; jdtrat<ndtrat; jdtrat++){
-			if(P(dtrats,jdtrat)==P(dtrat_wfs,iwfs)){
-				found=1; break;
-			}
-		}
-		if(!found){
-			P(dtrats,ndtrat)=P(dtrat_wfs,iwfs);
-			ndtrat++;
-		}
-	}
-	lresize(dtrats, ndtrat, 1);
-	lsort(dtrats, 1);//from fast to slow
-	return dtrats;
-}
+
 /**
  * @brief Kalman filter based on SDE model
  * 
  * @param coeff 	SDE coefficients
  * @param dthi 		High order loop frequency
- * @param dtrat_wfs 	WFS dtrat over high order loop. Each wfs may have a different rate. But there should be only 2 rates
+ * @param dtrat_wfs WFS dtrat over high order loop. Each wfs may have a different rate. But there should be only 2 rates
+ * @param mdirect	Mode indices that are directly controlled by the slower loop.
  * @param Gwfs 		WFS measurement from modes. Can be identity if reconstructor is already applied.
- * @param sanea 		WFS measurement noise covariance for each dtrat.
+ * @param Cnn 		WFS measurement noise covariance in radian^2. nwfs*ndtrat.
  * @param Proj 		Project modes in statespace to DM/correction space. Can be identity or NULL.
+ 
  * @return kalman_t* 
  */
-kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs, 
-	const dcell *Gwfs, const dcell *sanea, const dmat *Proj){
+kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,const lmat *mdirect,
+	const dcell *Gwfs, const dcell *Cnn, const dmat *Proj){
 	int nblock=NY(coeff);
 	int order=coeff->nx-1;
 	/*Ac is block diagonal matrix for continuous domain state evolution.
@@ -531,7 +505,7 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,
 		error("dtrat_wfs should have size %ldx1\n", NX(dtrat_wfs));
 	}
 	kalman_t* res=mycalloc(1, kalman_t);
-	res->dtrats=unique_dtrats(dtrat_wfs);
+	res->dtrats=lunique(dtrat_wfs, 1);
 	int ndtrat=PN(res->dtrats); //(1<<(NX(dtrat_wfs)))-1;
 	if(ndtrat>2){
 		error("More than two rates are not yet implemented.\n");
@@ -544,9 +518,9 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,
 	res->dthi=dthi;
 	res->dtrat_wfs=ldup(dtrat_wfs);
 	res->Gwfs=dcelldup(Gwfs);//Used for simulation. Do not change.
-	res->sanea=dcelldup(sanea);//WFS measurement noise due to photon and read out noise
+	res->Cnn=dcelldup(Cnn);//WFS measurement noise due to photon and read out noise
 	res->Qn=calc_Qn(Ac, Sigma_ep, dthi*dtrat_min, dtrat_min*10);//for fast rate
-	
+	res->mdirect=mdirect?lref(mdirect):NULL;
 	dexpm(&res->AdM, 0, Ac, dthi); /*discrete state propagation at dthi*/
 	//Compute BM=Pd*[1-exp(-Ac*dthi)]*Ac^-1/dthi.
 	dmat* QM=NULL;
@@ -563,12 +537,6 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,
 	/*Loop over first set of steps to find needed kalman filter.*/
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 		int dtrat=P(res->dtrats, idtrat);
-		int indk=0;
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			if(dtrat%P(dtrat_wfs,iwfs)==0){
-				indk|=1<<iwfs;/*this is how we compute the index into kalman*/
-			}
-		}
 		if(P(res->Cd,idtrat)) continue;//case already done
 		dmat* Sigma_zeta=0;//covariance of state noise integrated over WFS exposure time
 		dmat* Radd=0;
@@ -592,35 +560,46 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,
 		dmm3(&Radd, 1, Pd, Sigma_zeta, Pd, "nnt", 1);//Radd = Pd * Sigma_zeta * Pd': state noise in WFS
 		calc_Q(&Qwfs, Ac, AcI, dT);//Qwfs = (1-exp(-Ac*dT))*Ac^-1 / dT: state averaging vector. 
 
-		/*compute Rn=Gwfs*Radd*Gwfs'+sanea */
+		/*compute Rn=Gwfs*Radd*Gwfs'+Cnn */
 		dcell* Rn=dcellnew(nwfs, nwfs);//WFS measurement noise (photon/rne + state noise)
 		dcell* Cd=dcellnew(nwfs, 1);//State to WFS measurement discrete.
 		dexpm(&P(res->Ad, idtrat), 0, Ac, dthi*dtrat);  /*discrete state propagation at dT*/
 		dcell *GwfsU=dcellnew(nwfs, 1);
+		dcell *neai=dcellnew(nwfs, nwfs);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			dmat* Gwfsi=0;//Use for reconstruction. 
-			if(indk==1&&nmod==12&&KALMAN_IN_SKYC){
-				/*Special case for sky coverage with single WFS, make 3rd column zero*/
-				Gwfsi=ddup(P(Gwfs,iwfs));
-				memset(PCOL(Gwfsi, 2), 0, NX(Gwfsi)*sizeof(real));
-			} else{
-				Gwfsi=dref(P(Gwfs,iwfs));
-			}
-			P(Cd,iwfs)=dnew(NX(Gwfsi), NY(Ac));
-			P(Rn, iwfs, iwfs)=dnew(NX(Gwfsi), NX(Gwfsi));
+			int ng=NX(P(Gwfs, iwfs));
+			P(Cd,iwfs)=dnew(ng, nmod);
+			P(Rn, iwfs, iwfs)=dnew(ng, ng);
 			if(dtrat%P(dtrat_wfs,iwfs)==0){
+				dmat* Gwfsi=0;//Use for reconstruction. 
+				if(idtrat==0 && mdirect && lsum(mdirect)>0){
+					Gwfsi=ddup(P(Gwfs,iwfs));
+					for(int im=0; im<NY(Gwfsi); im++){
+						if(P(mdirect, im)){//only controlled by slow loop
+							dzerocol(Gwfsi, im);
+						}
+					}
+				} else{
+					Gwfsi=dref(P(Gwfs,iwfs));
+				}
+				P(GwfsU, iwfs)=Gwfsi; 
 				dmm3(&P(Cd,iwfs), 0, Gwfsi, Pd, Qwfs, "nnn", 1);//Cd=Gwfs*Pd*Qwfs
 				dmm3(&P(Rn, iwfs, iwfs), 0, Gwfsi, Radd, Gwfsi, "nnt", 1);//Rn=Gwfsi*Radd*Gwfsi'
-				dadd(&P(Rn, iwfs, iwfs), 1, P(sanea, iwfs, iwfs), sqrt((real)P(dtrat_wfs, iwfs)/dtrat));
-				P(GwfsU, iwfs)=Gwfsi; 
+				if(P(Cnn, iwfs, idtrat)){
+					dadd(&P(Rn, iwfs, iwfs), 1, P(Cnn, iwfs, idtrat), sqrt((real)P(dtrat_wfs, iwfs)/dtrat));
+					P(neai, iwfs, iwfs)=dnew(ng, ng);
+					for(int ig=0; ig<ng; ig++){
+						P(P(neai, iwfs, iwfs), ig, ig)=1./P(P(Cnn, iwfs, idtrat), ig, ig); //in radian^-2 for weighting
+					}
+					//dshow(P(neai, iwfs, iwfs), "neai");
+				}
 			}
-			//dfree(Gwfsi);
 		}
-		warning_once("Todo: make sanea per dtrat\n");
 		P(res->Rn,idtrat)=dcell2m(Rn); dcellfree(Rn);
 		P(res->Cd,idtrat)=dcell2m(Cd); dcellfree(Cd);
-		P(res->Rlsq, idtrat)=dcellpinv(GwfsU, dcellsum(res->sanea)>0?res->sanea:0);
+		P(res->Rlsq, idtrat)=dcellpinv(GwfsU, neai);
 		dcellfree(GwfsU);
+		dcellfree(neai);
 		dmat *Sigma_infty=0;//Sigma_infty, estimation error covariance. convert to error in modes.
 		P(res->M, idtrat)=reccati(&Sigma_infty, P(res->Ad,idtrat), res->Qn, P(res->Cd, idtrat), P(res->Rn, idtrat));
 		dmm3(&P(res->P, idtrat), 0, Pd, Sigma_infty, Pd, "nnt", 1);
@@ -645,11 +624,12 @@ void kalman_free(kalman_t* kalman){
 	dfree(kalman->Qn);
 	lfree(kalman->dtrat_wfs);
 	lfree(kalman->dtrats);
+	lfree(kalman->mdirect);
 
 	cellfree(kalman->Ad);
 	cellfree(kalman->Cd);
 	cellfree(kalman->Gwfs);
-	cellfree(kalman->sanea);
+	cellfree(kalman->Cnn);
 	cellfree(kalman->Rn);
 	cellfree(kalman->M);
 	cellfree(kalman->P);
@@ -658,6 +638,7 @@ void kalman_free(kalman_t* kalman){
 	cellfree(kalman->xhat);
 	cellfree(kalman->xhat2);
 	cellfree(kalman->xhat3);
+	cellfree(kalman->xout);
 	cellfree(kalman->psol);
 	free(kalman);
 }
@@ -668,10 +649,12 @@ void kalman_init(kalman_t* kalman){
 		kalman->xhat=dcellnew_same(NX(kalman->M),1, nx, 1);
 		kalman->xhat2=dcellnew_same(NX(kalman->M),1, nx, 1);
 		kalman->xhat3=dnew(nx, 1);
+		kalman->xout=dcellnew(2,1);
 	} else{
 		dcellzero(kalman->xhat);
 		dcellzero(kalman->xhat2);
 		dzero(kalman->xhat3);
+		dcellzero(kalman->xout);
 		dcellfree(kalman->psol);
 	}
 }
@@ -708,20 +691,36 @@ void kalman_update(kalman_t* kalman, dcell* meas, int idtrat){
    out=out*alpha+(BM*xhat2-psol)*beta
 */
 void kalman_output(kalman_t* kalman, dmat** out, real alpha, real beta, int idtrat){
-	dcp(&kalman->xhat3, P(kalman->xhat2, idtrat));
-	dmm(&P(kalman->xhat2, idtrat), 0, kalman->AdM, kalman->xhat3, "nn", 1);//xhat2 is x_k+2/M for u_k+1/m
-	if(idtrat==0&&(alpha==1||beta==1)&&*out){//if we are running integrator, save PSOL.
+	if(idtrat==0&&(alpha==1||beta==1)&&*out){//save PSOL.
 		if(!kalman->psol) kalman->psol=dcellnew(1,1);
 		dcp(&P(kalman->psol, 0), *out);
 	}
-	dmm(out, alpha, kalman->BM, P(kalman->xhat2, idtrat), "nn", beta);
-	if(alpha==1){
-		if(kalman->psol) dadd(out, 1, P(kalman->psol, 0), -beta);//somehow this is better than use previous psol.
+	dcp(&kalman->xhat3, P(kalman->xhat2, idtrat));
+	dmm(&P(kalman->xhat2, idtrat), 0, kalman->AdM, kalman->xhat3, "nn", 1);//xhat2 is x_k+2/M for u_k+1/m
+	dmm(&P(kalman->xout, idtrat), 0, kalman->BM, P(kalman->xhat2, idtrat), "nn", 1);
+	if(alpha==1 && kalman->psol){
+		dadd(&P(kalman->xout, idtrat), 1, P(kalman->psol, 0), -1);//form closed loop signal
+	}
+	if(!*out){
+		*out=dnew(NX(kalman->xout, idtrat), 1);
+	}
+	for(int im=0; im<NX(kalman->xout, idtrat); im++){
+		int slow=kalman->mdirect && P(kalman->mdirect, im);
+		if(!(idtrat==0 && slow)){
+		//if((idtrat==0 && !slow) || (idtrat==1 && slow)){
+			P(*out, im)=P(*out, im)*alpha+P(P(kalman->xout, idtrat), im)*beta;//direct output
+		//}else if(idtrat==1 && !slow){
+		//	P(*out, im)=P(*out, im)*alpha+P(P(kalman->xout, idtrat), im)*beta; //offset signal.
+		}
 	}
 }
 /**
    Test the performance of kalman filter (LQG controller). Derived from servo_test()
    Gwfs2 is a different gradient interaction matrix to model the aliasing in system
+   flag controlls the servo type:
+   0: both LQG
+   1: both integrator
+   2: LQG (fast) + integrator (slow)
 */
 dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int flag){
 	if(NX(input)>1 && NY(input)==1){/*single mode. each column is for a mode.*/
@@ -730,33 +729,35 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	const dcell* Gwfs=kalman->Gwfs;
 	const int nwfs=NX(Gwfs);
 	dcell* rmsn=dcellnew(nwfs, 1);
-	dcell* noise=dcellnew(nwfs, 1);
 	long ngs[nwfs];
-	int dtrat_slow=P(kalman->dtrat_wfs, 0);
-	int dtrat_fast=P(kalman->dtrat_wfs, 0);
+	int dtrat_fast=P(kalman->dtrats, 0);
+	int dtrat_slow=P(kalman->dtrats, PN(kalman->dtrats)>1?1:0);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ng=P(Gwfs,iwfs)->nx;
-		if(dsumsq(P(kalman->sanea, iwfs, iwfs))>0){
-			P(rmsn,iwfs)=dchol(P(kalman->sanea, iwfs, iwfs));
-			P(noise,iwfs)=dnew(ng, 1);
+		int idtrat=(P(kalman->dtrat_wfs, iwfs)==dtrat_fast)?0:1;
+		if(dsumsq(P(kalman->Cnn, iwfs, idtrat))>0){
+			P(rmsn, iwfs)=dnew(ng, 1);
+			for(int ig=0; ig<ng; ig++){
+				P(P(rmsn,iwfs), ig)=sqrt(P(P(kalman->Cnn, iwfs, idtrat),ig,ig));
+			}
 		}
+		//dshow(P(rmsn, iwfs), "rmsn[%d]", iwfs);
 		ngs[iwfs]=ng;
-		dtrat_slow=MAX(dtrat_slow, P(kalman->dtrat_wfs, iwfs));
-		dtrat_fast=MIN(dtrat_fast, P(kalman->dtrat_wfs, iwfs));
 	}
 	dcell* acc=dcellnew3(nwfs, 1, ngs, 0);//measurement accumulation
 	dcell* meas_fast=dcellnew3(nwfs, 1, ngs, 0);//measurement at fast rate
 	dcell* meas_slow=dcellnew3(nwfs, 1, ngs, 0);//measurement at slow rate
-	//int nmod=NX(input);
+	const int nmod=NX(input);
 	dmat* mres=ddup(input);
 	kalman_init(kalman);
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	dcell *outc=dcellnew(1,1); 
 	dmat *outi=P(outc,0)=dnew_do(NX(mres), 1, (void*)1, 0);//used to wrap column of output
-	dcell *corr=dcellnew_same(1,1,NX(input), 1);//corrector status
-	dcell *merr_fast=dcellnew(1,1);//fast rate error signal
-	dcell *corr_slow=dcellnew(1,1);//slow rate correction status
+	dcell *corr		=dcellnew_same(1,1 ,nmod, 1);//corrector status
+	dcell *merr_fast=dcellnew_same(1,1, nmod, 1);//fast rate error signal
+	dcell *corr_slow=dcellnew_same(1,1, nmod, 1);//slow rate correction status
+	dcell *merr_slow=dcellnew_same(1,1, nmod, 1);//slow rate error signal
 	real gain=0.5;
 	int ndtrat=PN(kalman->M);
 	int has_output=0;
@@ -773,11 +774,28 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 		if(!int_fast){
 			//handles PSOL saving and usage automatically in LQG integrator mode.
 			kalman_output(kalman, &P(corr, 0), 1, gain, 0);//always output fast loop. PSOL estimate
+			/*if(ndtrat>1 && !int_slow){
+				kalman_output(kalman, &P(corr, 0), 1, gain, 1);
+			}*/
 		}else if(has_output){
 			dadd(&P(corr, 0), 1, P(merr_fast, 0), gain); 
-			has_output=0; //for next step
+			has_output=0; 
 		}
-
+		if((!int_fast && int_slow) || has_output){
+			/*if(ndtrat>1 && P(corr_slow,0)){
+				dadd(&P(corr, 0), 1, P(corr_slow, 0), gain);
+				dshow(P(corr_slow, 0), "merr_slow");
+			}*/
+			
+		}
+		/*if(kalman->mdirect && P(corr_slow, 0)){
+			for(int i=0; i<NX(kalman->mdirect); i++){
+				if(P(kalman->mdirect, i)){
+					P(P(corr, 0), i)=P(P(corr_slow, 0),i);
+				}
+			}
+			has_output=0; //for next step
+		}*/
 		int indk=0;
 
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -786,13 +804,8 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 				indk|=1<<iwfs;//mark available WFS
 				//Average the measurement and zer out the averager.
 				dadd(&P(meas_fast,iwfs), 0, P(acc,iwfs), 1./dtrat_wfs); dzero(P(acc,iwfs));
-				if(P(rmsn,iwfs)){//Add noise
-					drandn(P(noise,iwfs), 1, &rstat);
-					if(P(rmsn,iwfs)->nx>1){
-						dmm(&P(meas_fast,iwfs), 1, P(rmsn,iwfs), P(noise,iwfs), "nn", 1);
-					} else{
-						dadd(&P(meas_fast,iwfs), 1, P(noise,iwfs), P(P(rmsn,iwfs),0));
-					}
+				for(int ig=0; ig<NX(P(meas_fast,iwfs)); ig++){
+					P(P(meas_fast,iwfs), ig)+=randn(&rstat)*PR(P(rmsn, iwfs), ig);
 				}
 				if(ndtrat>1){
 					dadd(&P(meas_slow, iwfs), 1, P(meas_fast, iwfs), (float)dtrat_wfs/dtrat_slow);//accumulate to the slow rate
@@ -803,9 +816,9 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 		if(indk){
 			int idtrat=(indk+1)==(1<<nwfs)?(ndtrat-1):0;//0: fast rate, 1: slow rate
 			{//fast rate loop always have output
-				if(ndtrat>1 && P(corr_slow,0)){//use slow as offset to fast loop
+				if(ndtrat>1){//use slow as offset to fast loop
 					for(int iwfs=0; iwfs<nwfs; iwfs++){
-						if(dtrat_fast==P(kalman->dtrat_wfs,iwfs)){
+						if(dtrat_fast==P(kalman->dtrat_wfs,iwfs)){//fast WFS
 							dcellmm(&P(meas_fast, iwfs), P(Gwfs, iwfs), P(corr_slow, 0), "nn", 1);
 						}
 					}
@@ -820,10 +833,22 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 			}
 			if(idtrat!=0){//slow loop has output
 				if(int_slow){
-					dcellmm(&corr_slow, P(kalman->Rlsq, idtrat), meas_slow, "nn", 0.5);//accumulate
+					dcellzero(merr_slow);
+					dcellmm(&merr_slow, P(kalman->Rlsq, idtrat), meas_slow, "nn", 1);
+					for(int i=0; i<nmod; i++){
+						if(kalman->mdirect && P(kalman->mdirect, i)){
+							if(int_fast){
+								P(P(merr_fast, 0), i)=P(P(merr_slow, 0), i)*0.2;//direct control
+							}else{
+								P(P(corr, 0), i)+=P(P(merr_slow, 0),i)*0.1;//direct control
+							}
+						}else{
+							P(P(corr_slow, 0), i)+=P(P(merr_slow, 0),i)*0.1;//offset
+						}
+					}
 				}else{
 					kalman_update(kalman, meas_slow, idtrat);//slow loop has update
-					kalman_output(kalman, &P(corr_slow, 0), 1, 0.5, idtrat);
+					kalman_output(kalman, &P(corr_slow, 0), 1, 0.1, idtrat);
 				}
 				dzero(meas_slow->m);
 			}
@@ -832,7 +857,6 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	dcellfree(rmsn);
 	dcellfree(meas_fast);
 	dcellfree(acc);
-	dcellfree(noise);
 	dfree(outi);
 	cellfree(merr_fast);
 	cellfree(corr_slow);
@@ -841,15 +865,22 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 dmat* kalman_test2(const dmat* coeff, /**<SDE coefficients*/
 	const real dthi, /**<Loop frequency*/
 	const lmat* dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
+	const lmat* mdirect,
 	const dcell* Gwfs,  /**<WFS measurement from modes. Can be identity*/
-	const dcell* sanea,  /**<WFS measurement noise covariance*/
+	const dcell* Cnn,  /**<WFS measurement noise covariance in radian^2*/
 	const dmat* Proj,
 	const dcell *Gwfs2, 
 	const dmat* input,
 	int flag
 ){
-	kalman_t *kalman=sde_kalman(coeff, dthi, dtrat_wfs, Gwfs, sanea, Proj);
+	kalman_t *kalman=sde_kalman(coeff, dthi, dtrat_wfs, mdirect, Gwfs, Cnn, Proj);
 	dmat* res=kalman_test(kalman, Gwfs2, input, flag);
+	kalman_free(kalman);
+	return res;
+}
+dmat* kalman_test3(const dmat* input, int flag, const char* fn){
+	kalman_t *kalman=kalman_read("%s", fn);
+	dmat* res=kalman_test(kalman, NULL, input, flag);
 	kalman_free(kalman);
 	return res;
 }
@@ -860,28 +891,60 @@ void kalman_write(kalman_t* kalman, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
 	if(kalman){
-		header_t header={MCC_ANY, 12, 1, (char*)"type=struct"};
+		header_t header={MCC_ANY, 15, 1, (char*)"type=struct"};
 		write_header(&header, fp);
 		char* tmp;
-#define WRITE_KEY(fp, str, key)			\
-			tmp=str->key->keywords;			\
-			str->key->keywords=(char*)#key;		\
+#define WRITE_KEY(fp, str, key)	if(str->key){\
+			tmp=str->key->keywords;		\
+			str->key->keywords=(char*)#key;\
 			writedata(fp, (cell*)str->key, 0);	\
-			str->key->keywords=tmp;
+			str->key->keywords=tmp;\
+		}else writedata(fp, NULL,0);
 
 		WRITE_KEY(fp, kalman, AdM);
 		WRITE_KEY(fp, kalman, BM);
 		WRITE_KEY(fp, kalman, Qn);
+
 		WRITE_KEY(fp, kalman, dtrat_wfs);
 		WRITE_KEY(fp, kalman, dtrats);
+		WRITE_KEY(fp, kalman, mdirect);
+
 		WRITE_KEY(fp, kalman, Ad);
 		WRITE_KEY(fp, kalman, Cd);
 		WRITE_KEY(fp, kalman, Gwfs);
-		WRITE_KEY(fp, kalman, sanea);
+		WRITE_KEY(fp, kalman, Cnn);
 		WRITE_KEY(fp, kalman, Rn);
 		WRITE_KEY(fp, kalman, M);
 		WRITE_KEY(fp, kalman, P);
+		WRITE_KEY(fp, kalman, Rlsq);
 		writearr(fp, 0, sizeof(real), M_REAL, "dthi", &kalman->dthi, 1, 1);
 	}
 	zfclose(fp);
+}
+
+kalman_t* kalman_read(const char* format, ...){
+	format2fn;
+	cell *tmp=readbin("%s", fn);
+	kalman_t *kalman=mycalloc(1, kalman_t);
+	int ic=0;
+	kalman->AdM=dmat_cast(tmp->p[ic++]);
+	kalman->BM=dmat_cast(tmp->p[ic++]);
+	kalman->Qn=dmat_cast(tmp->p[ic++]);
+	kalman->dtrat_wfs=lmat_cast(tmp->p[ic++]);
+	kalman->dtrats=lmat_cast(tmp->p[ic++]);
+	kalman->mdirect=lmat_cast(tmp->p[ic++]);
+	kalman->Ad=dcell_cast(tmp->p[ic++]);
+	kalman->Cd=dcell_cast(tmp->p[ic++]);
+	kalman->Gwfs=dcell_cast(tmp->p[ic++]);
+	kalman->Cnn=dcell_cast(tmp->p[ic++]);
+	kalman->Rn=dcell_cast(tmp->p[ic++]);
+	kalman->M=dcell_cast(tmp->p[ic++]);
+	kalman->P=dcell_cast(tmp->p[ic++]);
+	kalman->Rlsq=(dccell*)tmp->p[ic++];
+	kalman->dthi=dmat_cast(tmp->p[ic++])->p[0];
+	if(ic!=PN(tmp)){
+		error("kalman_t: read and write Mismatch\n");
+	}
+	kalman_init(kalman);
+	return kalman;
 }

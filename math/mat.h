@@ -66,6 +66,7 @@
     R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(sumdiffsq)(const X(mat)*A, const X(mat)*B) CHECK_UNUSED_RESULT;	\
+	X(mat) *X(unique)(const X(mat) *input, int ascend) CHECK_UNUSED_RESULT;\
     void X(fftshift)(X(mat) *A);					\
     int X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
     int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy);\

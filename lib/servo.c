@@ -365,20 +365,12 @@ dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zet
 	if(!pmargin) pmargin=M_PI/4;
 	SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(SERVO_CALC_T));
 	servo_calc_init(&st, psdin, dt, dtrat, al);
-	st.type=servo_type;
+	st.type=servo_type==2?2:1;
 	st.pmargin=pmargin;
 	if(f0>0){
 		servo_calc_sho(&st, f0, zeta);
 	}
-	int ng=1;
-	switch(servo_type){
-	case 1:
-		ng=1;break;
-	case 2:
-		ng=3; break;
-	default:
-		error("Invalid servo_type=%d\n", servo_type);
-	}
+	const int ng=st.type==2?3:1;
 	if(!psdin) sigma2n=NULL;
 	dcell* gm=dcellnew(sigma2n?NX(sigma2n):1, sigma2n?NY(sigma2n):1);
 	if(psdin){//minimize total error.
@@ -391,7 +383,7 @@ dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zet
 			servo_calc_do(&st, g0);
 			P(gm,ins)=dnew(ng+2, 1);
 			P(P(gm,ins),0)=st.g;
-			if(servo_type==2){
+			if(st.type==2){
 				P(P(gm,ins),1)=st.a;
 				P(P(gm,ins),2)=st.T;
 			}
@@ -483,8 +475,8 @@ dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, re
 real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, real al, const dmat* gain, int servo_type){
 	SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(st));
 	servo_calc_init(&st, psdin, dt, dtrat, al);
-	st.type=servo_type;
-	switch(servo_type){
+	st.type=servo_type==2?2:1;
+	switch(st.type){
 	case 1:
 		st.g=P(gain,0);
 		break;

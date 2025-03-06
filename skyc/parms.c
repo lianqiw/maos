@@ -225,15 +225,9 @@ parms_s* setup_parms(const arg_s* arg){
 		parms->skyc.maxdtrat=parms->skyc.ndtrat;
 	}
 	if(parms->maos.ahstfocus){
-		if(parms->skyc.addws==-1){//auto
-			parms->skyc.addws=1;
-		}
 		if(parms->maos.nmod<=5){
 			error("Conflicted parameters: maos.nmod should be >5 when maos.ahstfocus=1\n");
 		}
-	}
-	if(parms->skyc.servo<0){
-		parms->skyc.addws=1;
 	}
 	if(parms->skyc.multirate){
 		dfree(parms->skyc.dtrats);
@@ -246,15 +240,28 @@ parms_s* setup_parms(const arg_s* arg){
 	}
 	dfree(parms->skyc.dtrats_mr);
 	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
-	if(parms->skyc.addws==-1){
-		parms->skyc.addws=1;
-	}
+	
 	if(!parms->skyc.psd_ws){
 		parms->skyc.addws=0;
+	}else{
+		if(parms->skyc.addws<0){
+			parms->skyc.addws=1;
+		}
+		if(parms->skyc.addws<1 && parms->skyc.servo<0){
+			parms->skyc.addws=1;
+		}
 	}
 	switch(parms->skyc.servo){
 	case -1://LQG
-		parms->skyc.ngain=0;
+		parms->skyc.ngain=1;
+		if(!parms->skyc.gsplit){
+			warning("LQG control requires skyc.gsplit=1. changed\n");
+			parms->skyc.gsplit=1;
+		}
+		if(!parms->skyc.psdcalc){
+			warning("LQG control requirs skyc.psdcalc=1. changed\n");
+			parms->skyc.psdcalc=1;
+		}
 		break;
 	case 1:
 		parms->skyc.ngain=1;
