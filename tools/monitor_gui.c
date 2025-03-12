@@ -186,6 +186,7 @@ static void list_proc_append(proc_t *p){
 			memcpy(sstart, spath, pos-spath);
 			sstart[pos-spath]='\0';
 			sargs=strdup(pos+1);//job arguments. 
+			//Move output directory to the end of sargs
 			char* tmp=sargs;
 			while((tmp=strstr(tmp, " -o"))){
 				char* pos2=tmp+3;//start of output directory
@@ -805,7 +806,7 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
-	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Path", "text", COL_PATH, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Dir", "text", COL_PATH, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Args", "text", COL_ARGS, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));

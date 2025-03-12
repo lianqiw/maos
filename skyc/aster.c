@@ -232,24 +232,12 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 		int isttf=parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1;
 		if((parms->skyc.ttffastest&&isttf)||(!parms->skyc.ttffastest &&idtrat>idtrat_fast)){
 			idtrat_fast=idtrat;
-			//snr_fast=P(aster->wfs[iwfs].pistat->snr, idtrat);
-			if(idtrat_slow==parms->skyc.ndtrat) idtrat_slow=idtrat;
 		}
 		if(idtrat<idtrat_slow){
-			//real snr2=P(aster->wfs[iwfs].pistat->snr, idtrat_fast);
-			//if(!isttf && idtrat+2 >= idtrat_fast && snr2>3){
-				//We speed up TT wfs that is slower than fast WFS to the fast rate under the following conditions:
-				//The difference in frequency is no more than 4 times.
-				//snr is better than 3
-				//snr is better than snr_fast-5
-				//We don't speed up TTF wfs as it will degrade focus correction too much.
-			//	idtrat=P(aster->idtrats, iwfs)=idtrat_fast;
-			//}
-			//info("aster %d snr=%g %g\n", aster->iaster, snr_fast, snr);
 			idtrat_slow=idtrat;
 		}
 	}
-	int idtrat_fast2=MAX(parms->skyc.servo>0?3:3, idtrat_fast);//force fast loop to be faster than dtrat=8
+	int idtrat_fast2=MAX(3, idtrat_fast);//force fast loop to be faster than dtrat=8
 	//We use only two rates: a faster rate for tip/tilt(/focus) control and a slower rate for focus/ps control.
 	int fast_nttf=0;
 	int fast_ntt=0;
@@ -422,7 +410,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 			}
 		}
 		P(aster->sigman,icase)=calc_recon_error(P(aster->pgm,icase), nea->m, parms->maos.mcc);
-		if(parms->skyc.dbg){
+		if(parms->skyc.dbg>2){
 			writebin(nea, "%s/aster%d_nea%d", dirsetup, aster->iaster, icase);
 		}
 		//look gain optimization.
@@ -511,7 +499,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 			}
 		}
 	}
-	if(parms->skyc.dbg){
+	if(parms->skyc.dbg>3){
 		writebin(gm, "%s/aster%d_gm", dirsetup, aster->iaster);
 		writebin(aster->pgm, "%s/aster%d_pgm", dirsetup, aster->iaster);
 		writebin(aster->sigman, "%s/aster%d_sigman", dirsetup, aster->iaster);
@@ -535,7 +523,9 @@ static void set_diag_pow2(dmat **pneam, dmat *sanea){
 
 static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms){
 	int ndtrat=parms->skyc.multirate?1:parms->skyc.ndtrat;
-	aster->res_ngs=dnew(ndtrat, 3);
+	if(!aster->res_ngs){
+		aster->res_ngs=dnew(ndtrat, 3);
+	}
 	aster->kalman=mycalloc(ndtrat, kalman_t*);
 	lmat* dtrats=parms->skyc.multirate?aster->dtrats:lnew(aster->nwfs, 1);	
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
@@ -628,29 +618,24 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 	if(!parms->skyc.multirate){
 		select_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
-	if(parms->skyc.verbose){
-		if(!parms->skyc.multirate){
-			info("aster%3d stars=(", aster->iaster);
+	/*if(parms->skyc.verbose){
+		info("aster%3d stars=(", aster->iaster);
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				info(" %2d", aster->wfs[iwfs].istar);
 			}
-			info("), dtrats=(%2d,%2d,%2d), res= %.2f nm\n",
-				(int)P(parms->skyc.dtrats,aster->idtratmin),
-				(int)P(parms->skyc.dtrats,aster->idtratest),
-				(int)P(parms->skyc.dtrats,aster->idtratmax-1),
-				sqrt(aster->minest)*1e9);
-		} else{//multirate
-			info("aster%2d, dtrats=(", aster->iaster);
+		if(!parms->skyc.multirate){
+			info("), dtrats=(%2d:%2d:%2d",
+			(int)P(parms->skyc.dtrats,aster->idtratmin),
+			(int)P(parms->skyc.dtrats,aster->idtratest),
+			(int)P(parms->skyc.dtrats,aster->idtratmax-1));
+		}else{//multirate
+			info("), dtrats=(");
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				info(" %2ld", P(aster->dtrats,iwfs));
 			}
-			info("), stars=(");
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				info(" %2d", aster->wfs[iwfs].istar);
-			}
-			info("), est=%.2f nm\n", sqrt(aster->minest)*1e9);
 		}
-	}
+		info("), est=%3.0f nm\n", sqrt(aster->minest)*1e9);
+	}*/
 }
 /**
    for sort incrementally.

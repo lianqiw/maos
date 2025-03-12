@@ -210,7 +210,7 @@ static void setup_star_read_pistat(sim_s* simu, star_s* star, int nstar, int see
 					stari->use[ipowfs]=-1;
 				}
 			}
-			if(parms->skyc.dbg){
+			if(parms->skyc.dbg>2){
 				writebin(avgpsf, "%s/star%d_ipowfs%d_avgpsf", dirsetup, istar, ipowfs);
 				writebin(stari->pistat[ipowfs].neaspec, "%s/star%d_ipowfs%d_pistat_neaspec", dirsetup, istar, ipowfs);
 			}
@@ -250,19 +250,6 @@ static void setup_star_siglev(const parms_s* parms, star_s* star, int nstar){
 				NULL,
 				imperrnm,
 				P(rnefs, parms->skyc.ndtrat-1, ipowfs));
-			if(parms->skyc.verbose&&parms->maos.nsa[ipowfs]==1){
-				info("star %d at (%5.1f %5.1f)", istar,
-					star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
-				info(" bkgrnd=%5.2f, mag=[", P(star[istar].bkgrnd,ipowfs));
-				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-					info("%5.2f ", P(star[istar].mags,iwvl));
-				}
-				info("] siglev=[");
-				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-					info("%6.1f ", P(P(star[istar].siglev,ipowfs),iwvl));
-				}
-				info("]\n");
-			}
 		}
 	}
 }
@@ -325,7 +312,7 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 				}
 
 			}
-			if(parms->skyc.dbg){
+			if(parms->skyc.dbg>2){
 				writebin(pistat->i0s, "%s/star%d_ipowfs%d_i0s", dirsetup, istar, ipowfs);
 			}
 
@@ -344,7 +331,7 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 				genmtch(&pistat->mtche[idtrat], &P(pistat->sanea,idtrat),
 					i0s, gxs, gys, pixtheta, P(rnefs, idtrat, ipowfs),
 					P(star[istar].bkgrnd,ipowfs)*dtrat, parms->skyc.mtchcr);
-				if(parms->skyc.dbg){
+				if(parms->skyc.dbg>2){
 					writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d", dirsetup, istar, ipowfs, dtrat);
 					writebin(P(pistat->sanea,idtrat), "%s/star%d_ipowfs%d_sanea0_dtrat%d", dirsetup, istar, ipowfs, dtrat);
 				}
@@ -367,7 +354,7 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 							+pow(P(P(star[istar].pistat[ipowfs].neaspec,i),idtrat), 2));
 					}
 				}
-				if(parms->skyc.dbg){
+				if(parms->skyc.dbg>2){
 					writebin(P(pistat->sanea, idtrat), "%s/star%d_ipowfs%d_sanea_dtrat%d", dirsetup, istar, ipowfs, dtrat);
 				}
 				//real nea=sqrt(dsumsq(P(pistat->sanea, idtrat))/2/nsa);//original version. averaged all subapertures
@@ -383,21 +370,21 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 			}//for idtrat
 			if(P(star[istar].minidtrat,ipowfs)==-1){
 				star[istar].use[ipowfs]=-1;
-				if(parms->skyc.verbose){
-					info("star %2d, powfs %1d: skipped\n", istar, ipowfs);
-				}
-			} else{
-				if(parms->skyc.verbose){
-					int idtrat=(int)P(star[istar].minidtrat,ipowfs);
-					info("star %2d, powfs %1d: min dtrat=%3d, snr=%4.1f\n", istar, ipowfs,
-						(int)P(parms->skyc.dtrats,idtrat), P(pistat->snr,idtrat));
-					  //writebin(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
-					  //dirsetup,istar,ipowfs);
-				}
 			}/*idtrat */
 			dcellfree(i0s);
 			dcellfree(gxs);
 			dcellfree(gys);
+			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
+			if(parms->skyc.verbose && idtrat>=0){
+				info("star %d at (%3.0f, %3.0f)", istar,
+					star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
+				info(" bkgrnd=%5.2f, mag=[", P(star[istar].bkgrnd,ipowfs));
+				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
+					info("%4.1f ", P(star[istar].mags,iwvl));
+				}
+				info("] siglev=%5.0f snr=%2.0f dtrat=%2.0f powfs=%d%s\n",  dsum(P(star[istar].siglev,ipowfs)), 
+					idtrat>=0?P(pistat->snr,idtrat):0, idtrat>=0?P(parms->skyc.dtrats,idtrat):0, ipowfs, idtrat<0?" (skipped)":"");
+			}
 		}/*for ipowfs */
 	}/*for istar */
 }
@@ -453,7 +440,7 @@ static void setup_star_gm(const parms_s* parms, powfs_s* powfs, star_s* star, in
 				}
 			}
 		}
-		if(parms->skyc.dbg){
+		if(parms->skyc.dbg>2){
 			writebin(star[istar].g, "%s/star%d_g", dirsetup, istar);
 		}
 	}
@@ -741,9 +728,9 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 	//sort stars to have descending snr order.
 	qsort(star, jstar, sizeof(star_s), (int(*)(const void *, const void *))sortfun_snr);
 	*nstarout=nstar;
-	if(parms->skyc.verbose){
+	/*if(parms->skyc.verbose){
 		info("There are %d stars usable from %d stars\n", jstar, nstar);
-	}
+	}*/
 	return star;
 }
 void free_istar(star_s* star, const parms_s* parms){
