@@ -472,8 +472,20 @@ static void skysim_prep_sde(sim_s* simu){
 	*/
 	simu->sdecoeff=dnew(3, parms->maos.nmod);
 	for(int im=0; im<parms->maos.nmod; im++){
-		dmat* coeff=sde_fit(P(simu->psds,im), NULL, parms->skyc.sdetmax, 0);
-		if(P(coeff, 0, 0)>100&&parms->skyc.sdetmax){
+		real tmax=parms->skyc.sdetmax;
+		if(im<2){
+			int im_ws=-1;
+			if(parms->skyc.addws&&parms->skyc.psd_ws){
+				im_ws=parms->skyc.addws==1?0:1;
+			}
+			if(im==im_ws){
+				tmax*=0.2;//when there is vibration, reduce the time.
+			}else{
+				tmax*=2;
+			}
+		}
+		dmat* coeff=sde_fit(P(simu->psds,im), NULL, tmax, 0);
+		if(P(coeff, 0, 0)>100&&tmax){
 			dfree(coeff);
 			coeff=sde_fit(P(simu->psds,im), NULL, 0, 0);
 			if(P(coeff, 0, 0)>100){
