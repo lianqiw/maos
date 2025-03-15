@@ -55,9 +55,9 @@ void sde_psd(dmat** psd, const dmat* f, const real* coeff, int ncoeff, int nmod)
 	if(order==2){//special version for order 2. faster.
 		real twopi=2*M_PI;
 		for(int im=0; im<nmod; im++){
-			real c1sq=pow(coeff[0+im*3], 2);
-			real c2=coeff[1+im*3];
-			real sigma2=pow(coeff[2+im*3], 2);
+			real c1sq=pow(coeff[0+im*3], 2);//c1 is 2*zeta*omega0: damping
+			real c2=coeff[1+im*3]; 			//c2 is omega0^2: resonance
+			real sigma2=pow(coeff[2+im*3], 2);//strength
 			real* pp;
 			if(NY(ppsd)==nmod){//seperate
 				pp=PCOL(ppsd, im);
@@ -143,7 +143,7 @@ static real sde_diff(const real* coeff, void* pdata){
 			diff=0;
 #define METHOD 1
 #if METHOD==1
-			for(long i=0; i<data->ncov; i++){
+			for(long i=1; i<data->ncov; i++){
 				real val1=P(data->psdcov_in,i);
 				real val2=P(data->psdcov_sde,i);
 				diff+=pow(val1-val2, 2);
@@ -151,7 +151,7 @@ static real sde_diff(const real* coeff, void* pdata){
 			diff=diff/((abs2(P(data->psdcov_in,0)+P(data->psdcov_sde,0)))*data->ncov);
 #elif METHOD==2
 			real scale=P(data->psdcov_in,0)/P(data->psdcov_sde,0);
-			for(long i=0; i<data->ncov; i++){
+			for(long i=1; i<data->ncov; i++){
 				real val1=P(data->psdcov_in,i);
 				real val2=P(data->psdcov_sde,i);
 				diff+=pow(val1-val2*scale, 2);
@@ -198,10 +198,11 @@ static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dm
 	}
 }
 /**
-   Fit a PSD with SDE model. Use initial guess from coeff0 and return final
-   answer in the same format.
+   Fit a PSD with SDE model. Use initial guess from coeff and return final
+   answer in the same format. Functions returns difference in PSD to indicate residual
 */
-static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
+static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int print){
+	if(!pcoeff) error("pcoeff must not be NULL\n");
 	if(NY(psdin)!=2){
 		error("psd must contain nu and psd\n");
 	}
@@ -253,20 +254,31 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 		var_in=dtrapz(freq, psdcov_in);
 		norm_in=dnorm(psdcov_in);
 	}
-	int ncoeff=NX(coeff0);
-	int nmod=NY(coeff0);
-	dmat* coeff=dnew(ncoeff, nmod);dcp(&coeff, coeff0);
+	if(!*pcoeff){
+		*pcoeff=dnew(3,1);
+	}
+	if(!P(*pcoeff, 0)||!P(*pcoeff, 1)){
+		P(*pcoeff, 0)=1;
+		P(*pcoeff, 1)=1;
+	}
+	dmat *coeff=*pcoeff;
+	int ncoeff=NX(coeff);
+	int nmod=NY(coeff);
 	//Scale to make sure total energy is preserved.
 	sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
 
 	sde_fit_t data={df, freq, psdcov_in, psdcov_sde, norm_in, 0, ncoeff, nmod, ncov};
-	real diff0=sde_diff(P(coeff), &data);
+	//real diff0=sde_diff(P(coeff), &data);
 	real tol=1e-10;
 	int nmax=2000;
 	dminsearch(P(coeff), ncoeff*nmod, tol, nmax, sde_diff, &data);
 	//Do not scale coeff after the solution.
 	real diff1=sde_diff(P(coeff), &data);
-	info2("sde_fit: %d interations: %g->%g.\n", data.count, diff0, diff1);
+	if(print){
+		real zeta=P(coeff,0)/sqrt(P(coeff,1))/2;
+		real f0=P(coeff,0)/(2*zeta*2*M_PI);
+		info("sde_fit_auto: tmax=%4.2f, f0=%4.1f, zeta=%4.2f, diff=%g.\n", tmax_fit, f0, zeta, diff1);
+	}
 	//Scale to make sure total energy is preserved.
 	/*
 	  if(diff1>0.2 && diff1>diff0*0.75){
@@ -287,7 +299,7 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 	dfree(freq);
 	dfree(psdcov_in);
 	dfree(psdcov_sde);
-	return coeff;
+	return diff1;
 }
 
 /**
@@ -304,19 +316,20 @@ static dmat* sde_fit_do(const dmat* psdin, const dmat* coeff0, real tmax_fit){
 /**
    If coeff0 is not null, use it immediately, otherwise, do vibration identification
  */
-dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
-	if(coeff0){
-		return sde_fit_do(psdin, coeff0, tmax_fit);
+real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
+	if(!pcoeff) error("pcoeff must not be NULL\n");
+	if(!vibid){
+		return sde_fit_do(pcoeff, psdin, tmax_fit, 1);
 	} else{
-	//Do vibration identification
+		//Do vibration identification
 		dmat* vibs=vibid?psd_vibid(psdin):NULL;
 		dcell* coeffs=dcellnew(1, vibs?(1+NY(vibs)):1);
-		dmat* coeffi=dnew(3, 1);
+		
 		dmat* psd2=ddup(psdin);
 		if(vibs&&NY(vibs)>0){
-			dbg("\nnvib=%ld\n", NY(vibs));
+			info("\nnvib=%ld\n", NY(vibs));
 			for(int ivib=0; ivib<NY(vibs); ivib++){
-				real fi=P(vibs,ivib*4+0);
+				real omegai=2*M_PI*P(vibs,ivib*4+0);
 				int i1=P(vibs,ivib*4+2);
 				int i2=P(vibs,ivib*4+3)+1;
 				if(i2-i1<3){
@@ -324,11 +337,12 @@ dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
 					i1--;
 				}
 				dmat* psdi=dsub(psdin, i1, i2-i1, 0, 0);//extract peak
-				P(coeffi,0)=1;
-				P(coeffi,1)=pow(2*M_PI*fi, 2);
-				P(coeffi,2)=0;//sde_fit_do will figure it out.
-				P(coeffs,ivib)=sde_fit_do(psdi, coeffi, tmax_fit);
-				if(fabs(sqrt(P(coeffi,1))-sqrt(P(P(coeffs,ivib),1)))>2*M_PI){
+				dmat* coeffi=P(coeffs,ivib)=dnew(3, 1);
+
+				P(coeffi,0)=2*omegai*0.1;
+				P(coeffi,1)=omegai*omegai;
+				real diff=sde_fit_do(&coeffi, psdi, tmax_fit, 1);
+				if(diff>1e-4 || fabs(sqrt(P(coeffi,1))-sqrt(P(P(coeffs,ivib),1)))>2*M_PI){
 					warning("Fitting failed for %d, Freq=%g, %g\n", ivib,
 						sqrt(P(coeffi,1))/(2*M_PI), sqrt(P(P(coeffs,ivib),1))/(2*M_PI));
 					writebin(psdi, "psdi_%d", ivib);
@@ -339,6 +353,7 @@ dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
 						warning("Use input\n");
 					}
 				}
+				dfree(psdi);
 				real* psd2p=PCOL(psd2, 1);
 				for(int i=i1; i<i2; i++){//replace the peak by a linear interpolation
 					psd2p[i]=(psd2p[i1-1]*(i2+1-i)+psd2p[i2+1]*(i-(i1-1)))/(i2-i1+2);
@@ -346,18 +361,57 @@ dmat* sde_fit(const dmat* psdin, const dmat* coeff0, real tmax_fit, int vibid){
 			}
 			dfree(vibs);
 		}
-		P(coeffi,0)=1;
-		P(coeffi,1)=1;
-		P(coeffi,2)=0;//sde_fit_do will figure it out.
-		P(coeffs,coeffs->ny-1)=sde_fit_do(psd2, coeffi, tmax_fit);
-		dfree(coeffi);
+		dmat* coeffi=P(coeffs, coeffs->ny-1)=dnew(3, 1);
+		real diff=sde_fit_do(&coeffi, psd2, tmax_fit, 1);
+		
 		dfree(psd2);
-		dmat* coeff=dcell2m(coeffs);
+		*pcoeff=dcell2m(coeffs);
 		dcellfree(coeffs);
-		return coeff;
+		return diff;
 	}
 }
-
+/**
+ * @brief Fit PSD to SHO by maximum the damping ratio while keeping it less than
+ * 5. Does not support vibration identification which have different damping
+ * characteristics.
+ *
+ * @param psdin     The input PSD
+ * @return dmat*    The SHO coefficients
+ */
+real sde_fit_auto(dmat **pcoeff, const dmat* psdin, real tfit){
+	if(NY(psdin)!=2){
+		error("psdin is in the wrong format\n");
+	}
+	real fmax=P(psdin, NX(psdin)-1, 0);
+	if(!tfit) tfit=0.2;
+	real zeta_best=0;//record the best zeta
+	real diff_best=0;
+	real tfit_best=0;
+	dmat *coeff=dnew(3,1);
+	//maximize the damping while keeping it below 5.
+	for(int i=0; i<10; i++){
+		P(coeff, 0)=1;
+		P(coeff, 1)=1;
+		real diff=sde_fit_do(&coeff, psdin, tfit, 0);
+		real zeta=P(coeff,0)/sqrt(P(coeff,1))/2;
+		real f0=sqrt(P(coeff, 1))/2/M_PI;
+		if(zeta>zeta_best && zeta<2 && f0<fmax){
+			zeta_best=zeta;
+			diff_best=diff;
+			tfit_best=tfit;
+			dcp(pcoeff, coeff);
+		}
+		//info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%g (%d).\n", tfit, f0, zeta, diff, tfit==tfit_best);
+		tfit*=2;
+	}
+	dfree(coeff);
+	if(!zeta_best){
+		error("Fitting failed\n");
+	}
+	real f0=sqrt(P(*pcoeff, 1))/2/M_PI;
+	info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%g (final).\n", tfit_best, f0, zeta_best, diff_best);
+	return diff_best;
+}
 /**
    Compute the reccati equation.
  */

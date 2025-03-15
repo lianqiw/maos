@@ -241,9 +241,7 @@ parms_s* setup_parms(const arg_s* arg){
 	dfree(parms->skyc.dtrats_mr);
 	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
 	
-	if(!parms->skyc.psd_ws){
-		parms->skyc.addws=0;
-	}else{
+	if(parms->skyc.psd_ws){
 		if(parms->skyc.addws<0){
 			parms->skyc.addws=1;
 		}

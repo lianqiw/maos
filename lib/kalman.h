@@ -22,7 +22,10 @@
 #define AOS_LIB_KALMAN_H
 
 #include "../math/mathdef.h"
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, real tmax_fit, int vibid);
+real sde_fit(dmat **pcoeff, const dmat *psdin, real tmax_fit, int vibid);
+real sde_fit_auto(dmat **pcoeff, const dmat *psdin, real tfit);
+void sde_psd(dmat **psd, const dmat *f, const real *coeff, int ncoeff, int nmod);
+dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 typedef struct{
     dmat *AdM; /**<discrete state propagation at dthi*/
     dmat *BM; /**<From discrete state to averaged mode for dthi*/
@@ -64,6 +67,4 @@ void kalman_update(kalman_t *kalman, dcell *meas, int idtrat);
 void kalman_output(kalman_t *kalman, dmat **out, real alpha, real beta, int idtrat);
 void kalman_write(kalman_t *kalman, const char *format, ...) CHECK_ARG(2);
 kalman_t* kalman_read(const char* format, ...)  CHECK_ARG(1);
-void sde_psd(dmat **psd, const dmat *f, const real *coeff, int ncoeff, int nmod);
-dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 #endif

@@ -300,7 +300,7 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 					psf2i0gxgy(P(i0, isa, iwvl), P(gx, isa, iwvl), P(gy, isa, iwvl),
 						P(psf, isa, iwvl), powfs[ipowfs].dtf+iwvl, !parms->skyc.mtchfft);
 					if(parms->skyc.mtchfft){
-						dbg_once("Using derivative by FFT\n");
+						info_once("Using derivative by FFT\n");
 						P(gx, isa, iwvl)=derive_by_fft(P(i0, isa, iwvl), 0);
 						P(gy, isa, iwvl)=derive_by_fft(P(i0, isa, iwvl), M_PI/2);
 						dscale(P(gx, isa, iwvl), 1./pixtheta);
@@ -481,11 +481,11 @@ long setup_star_read_ztilt(star_s* star, int nstar, const parms_s* parms, int se
 					}
 					fnztilt[iy][ix]=myalloca(PATH_MAX, char);
 					if(parms->skyc.usephygrad){
-						dbg_once("Using phygrad\n");
+						info_once("Using phygrad\n");
 						snprintf(fnztilt[iy][ix], PATH_MAX, "%s/phygrad/phygrad_seed%d_sa%d_x%g_y%g",
 							dirstart, seed, msa, thx, thy);
 					} else{
-						dbg_once("Using ztilt out\n");
+						info_once("Using ztilt out\n");
 						snprintf(fnztilt[iy][ix], PATH_MAX, "%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 							dirstart, seed, msa, thx, thy);
 					}

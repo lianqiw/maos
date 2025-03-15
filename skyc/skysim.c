@@ -499,26 +499,8 @@ static void skysim_prep_sde(sim_s* simu){
 	*/
 	simu->sdecoeff=dnew(3, parms->maos.nmod);
 	for(int im=0; im<parms->maos.nmod; im++){
-		real tmax=parms->skyc.sdetmax;
-		if(im<2){
-			int im_ws=-1;
-			if(parms->skyc.addws&&parms->skyc.psd_ws){
-				im_ws=parms->skyc.addws==1?0:1;
-			}
-			if(im==im_ws){
-				tmax*=0.2;//when there is vibration, reduce the time.
-			}else{
-				tmax*=2;
-			}
-		}
-		dmat* coeff=sde_fit(P(simu->psds,im), NULL, tmax, 0);
-		if(P(coeff, 0, 0)>100&&tmax){
-			dfree(coeff);
-			coeff=sde_fit(P(simu->psds,im), NULL, 0, 0);
-			if(P(coeff, 0, 0)>100){
-				warning("sde_fit returns unsuitable values\n");
-			}
-		}
+		dmat* coeff=NULL;
+		sde_fit_auto(&coeff, P(simu->psds,im), parms->skyc.sdetmax);//does not support vibration identification (yet)
 		P(coeff,2)/=sqrt(P(parms->maos.mcc, im, im));//convert from m to rad
 		if(coeff->ny>1){
 			error("Please handle this case\n");
@@ -526,9 +508,9 @@ static void skysim_prep_sde(sim_s* simu){
 		memcpy(PCOL(simu->sdecoeff, im), P(coeff), coeff->nx*sizeof(real));
 		dfree(coeff);
 	}
-
+	dshow(simu->sdecoeff, "sde_coeff");
 	if(parms->skyc.dbg||1){
-		writebin(simu->sdecoeff, "coeff");
+		writebin(simu->sdecoeff, "sde_coeff");
 	}
 }
 /**
