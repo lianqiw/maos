@@ -40,6 +40,7 @@
     void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
     void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha); \
     void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha); \
+	void X(mm3)(X(mat) **pout, T beta, const X(mat) *A, const X(mat) *B, const X(mat) *C, const char trans[4], T alpha);\
     void X(invspd_inplace)(X(mat) *A);					\
     X(mat)* X(invspd)(const X(mat) *A) CHECK_UNUSED_RESULT;		\
     void X(inv_inplace)(X(mat)*A);					\

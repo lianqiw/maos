@@ -445,27 +445,27 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 }
 
 /**
- * @brief Compute the reccati equation.
- * 
- * @param Pout  [Output] The Sigma_infty: Estimation error covariance matrix
+ * @brief Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.
+ * @param Kinf  [Out] Asymptotic Kalman gain K_\infty
+ * @param Pout  [Out] The Sigma_infty: Estimation error covariance matrix
  * @param A 	Block diagonal stage evolution matrix
  * @param Qn 	Discrete state noise covariance
  * @param C 	Measurement interaction matrix
  * @param Rn 	Measurement error covariance matrix
- * @return dmat* Asymptotic Kalman gain K_\infty
+ * @return diff	Converegence indicator
  */
-dmat* reccati(dmat** Pout, const dmat* A, const dmat* Qn, const dmat* C, const dmat* Rn){
-	real diff=1, diff2=1, lastdiff=INFINITY;
+real reccati(dmat**Kinf, dmat** Pout, const dmat* A, const dmat* Qn, const dmat* C, const dmat* Rn){
+	real diff=100;
 	dmat* P2=dnew(NX(A), NY(A)); daddI(P2, P(Qn,0));//Initialize P to identity
 	dmat* AP=0, * CP=0, * P=0, * CPAt=0, * CCinv=0, * APCt=0, * tmp=0;
 	int count=0;
-	real thres=1e-14;
+	real thres=1e-14;//threshold for the diff: ||P-P2||/||P||
 	const int maxcount=10000;
-	while(diff>thres&&diff2>thres&&count++<maxcount){
+	while(diff>thres&&count++<maxcount){
 		//Compute Sigma_infty aka P
 		//P=(A*P*A')-(A*P*C')*(C*P*C'+Rn)^-1*(C*P*A')+Qn
 		//Notice that P may not be symmetric due to round off errors.
-		dcp(&P, P2);//same old result
+		dcp(&P, P2);//save old result
 		dmm(&AP, 0, A, P, "nn", 1);
 		dmm(&CP, 0, C, P, "nn", 1);
 		dmm(&CPAt, 0, CP, A, "nt", 1);
@@ -480,18 +480,16 @@ dmat* reccati(dmat** Pout, const dmat* A, const dmat* Qn, const dmat* C, const d
 		diff=dsumsq(P);
 		dadd(&P, 1, P2, -1);
 		diff=sqrt(dsumsq(P)/diff);
-		diff2=fabs(diff-lastdiff);
-		lastdiff=diff;
+		if(diff>0.1 && count>100){
+			dbg("count=%d, diff=%g. not converging, break.\n", count, diff);
+			break;
+		}
 	}
-	if(count>=maxcount){
-		warning_once("recatti: count=%d, diff=%g, diff2=%g, thres=%g\n", count, diff, diff2, thres);
-	}
-	dmat* Kinf=0;//Kalman gain K_\infty
-	dmm(&Kinf, 0, CP, CCinv, "tn", 1);
+	dmm(Kinf, 0, CP, CCinv, "tn", 1);
 	if(Pout) dcp(Pout, P2);
 	dfree(AP);dfree(CP); dfree(P); dfree(P2);
 	dfree(CPAt); dfree(CCinv); dfree(APCt); dfree(tmp);
-	return Kinf;
+	return diff;
 }
 
 /**
@@ -511,16 +509,6 @@ static void calc_Q(dmat **pQ, dmat *Ac, dmat *AcI, real dT){
 	dfree(tmp);
 }
 
-/**
- * @brief Compute 3 matrix multipliation: out=out*alpha+beta*op(A)*op(B)*op(C)
- */
-static void dmm3(dmat **pout, real alpha, const dmat *A, const dmat *B, const dmat *C, const char trans[4], real beta){
-	dmat *tmp=0;
-	dmm(&tmp, 0, A, B, trans, 1);
-	char trans2[3]; trans2[0]='n'; trans2[1]=trans[2]; trans2[2]=0;
-	dmm(pout, alpha, tmp, C, trans2, beta);
-	dfree(tmp);
-}
 /**
  * @brief Compute the discrete state noise covariance from continuous state noise covariance
  * Sigma_kappa: Qn=\int_ti exp(Ac*ti)*Sigma_ep*exp(Ac'*ti) 
@@ -627,6 +615,7 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	res->M=dcellnew(ndtrat, 1);
 	res->P=dcellnew(ndtrat, 1);//State residual
 	res->Rlsq=dccellnew(ndtrat, 1); //for least square reconstruction (testing)
+	int failed=0;
 	/*Loop over first set of steps to find needed kalman filter.*/
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 		int dtrat=P(res->dtrats, idtrat);
@@ -694,8 +683,12 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 		dcellfree(GwfsU);
 		dcellfree(neai);
 		dmat *Sigma_infty=0;//Sigma_infty, estimation error covariance. convert to error in modes.
-		P(res->M, idtrat)=reccati(&Sigma_infty, P(res->Ad,idtrat), res->Qn, P(res->Cd, idtrat), P(res->Rn, idtrat));
+		real diff=reccati(&P(res->M, idtrat), &Sigma_infty, P(res->Ad,idtrat), res->Qn, P(res->Cd, idtrat), P(res->Rn, idtrat));
 		dmm3(&P(res->P, idtrat), 0, Pd, Sigma_infty, Pd, "nnt", 1);
+		if(diff>0.1){//not converging. mark failed.
+			failed=1;
+		}
+		//info("trace(P)=%g\n", dtrace(P(res->P, idtrat)));
 		dfree(Sigma_infty);
 		dfree(Qwfs);
 		dfree(Sigma_zeta);
@@ -706,7 +699,10 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	dfree(AcI);
 	dfree(Pd);
 	dfree(Sigma_ep);
-	
+	if(failed){
+		kalman_free(res);
+		res=NULL;
+	}
 	return res;
 }
 /**free the struct*/

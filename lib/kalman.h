@@ -53,7 +53,7 @@ typedef struct{
 	dcell *xout;/**<output */
 	dcell *psol;/**<current correction for psol */
 }kalman_t;
-dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
+real reccati(dmat **Kinf, dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 //dcell* reccati_mr(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
 kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs, const lmat *mdirect, 
 	const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);

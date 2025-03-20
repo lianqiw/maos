@@ -66,6 +66,16 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 		P(A), &lda, P(B), &ldb, &beta, P(C), &ldc);
 }
 
+/**
+ * @brief Compute 3 matrix multipliation: out=out*alpha+beta*op(A)*op(B)*op(C)
+ */
+void X(mm3)(X(mat) **pout, T beta, const X(mat) *A, const X(mat) *B, const X(mat) *C, const char trans[4], T alpha){
+	X(mat) *tmp=0;
+	X(mm)(&tmp, 0, A, B, trans, 1);
+	char trans2[3]; trans2[0]='n'; trans2[1]=trans[2]; trans2[2]=0;
+	X(mm)(pout, beta, tmp, C, trans2, alpha);
+	X(free)(tmp);
+}
 
 /**
    inplace invert a small square SPD matrix using lapack dposv_, usually

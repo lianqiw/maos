@@ -527,29 +527,40 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 	}
 	aster->kalman=mycalloc(ndtrat, kalman_t*);
 	lmat* dtrats=parms->skyc.multirate?aster->dtrats:lnew(aster->nwfs, 1);	
+	dcell *neam=NULL; 
+	int skip=0;
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
-		dcell *neam=NULL; 
 		if(!parms->skyc.multirate){
-			neam=dcellnew(aster->nwfs, 1);
+			if(!neam) neam=dcellnew(aster->nwfs, 1);
 			lset(dtrats, P(parms->skyc.dtrats,idtrat));
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				set_diag_pow2(&P(neam, iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat));
 			}
 		}else{
 			lmat *idtrats=lunique(aster->idtrats, 0);
-			neam=dcellnew(aster->nwfs, PN(idtrats));
+			if(!neam) neam=dcellnew(aster->nwfs, PN(idtrats));
 			for(int i=0; i<PN(idtrats); i++){
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 					set_diag_pow2(&P(neam, iwfs, i), P(aster->wfs[iwfs].pistat->sanea, P(idtrats, i)));
 				}
 			}
 		}
-		aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->mdirect, aster->g, neam, 0);
-		dcellfree(neam);
-		if(!parms->skyc.multirate){//in multirate, use servo result
+		if(!skip){
+			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->mdirect, aster->g, neam, 0);
+		}
+		if(!aster->kalman[idtrat]){//failed to converge
+			P(aster->res_ngs, idtrat, 0)=simu->varol;
+		}else if(!parms->skyc.multirate){//in multirate, use servo result
+#if 0
 			dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal, 0);//determine the residual
 			real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
 			dfree(res);
+#else
+			dmat *tmp=0;
+			dmm(&tmp, 0, aster->kalman[idtrat]->P->p[0], parms->maos.mcc, "nn", 1);
+			real rms=dtrace(tmp);
+			dfree(tmp);
+#endif			
 			//toc2("estimate");
 			P(aster->res_ngs, idtrat, 0)=rms;
 		}
@@ -557,6 +568,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 			kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%ld", dirsetup, aster->iaster, lmin(dtrats));
 		}
 	}
+	dcellfree(neam);
 	if(!parms->skyc.multirate){
 		lfree(dtrats);
 	}else{
