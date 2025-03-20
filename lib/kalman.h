@@ -29,7 +29,6 @@ dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 typedef struct{
     dmat *AdM; /**<discrete state propagation at dthi*/
     dmat *BM; /**<From discrete state to averaged mode for dthi*/
-	dmat *Qn;  /**<Covariance of the process noise term e_k*/
 
     lmat *dtrat_wfs;/**<WFS sampling period over dthi*/
 	lmat *dtrats;/**<uniq dtrats */
@@ -42,7 +41,7 @@ typedef struct{
     dcell *Cnn;/**<WFS measurement noise covariance due to photon and RoN.*/
     dcell *Rn;  /**<Total WFS measurement error due to signal evolution and Rwfs. */
 	dcell *M;  /**<M is innovation gain.*/
-    dcell *P;  /**<Error covariance matrix*/
+    dcell *P;  /**<Sigma_infty: Error covariance matrix*/
 	dccell *Rlsq; /**<least squares reconstructor */
 
     real dthi;/**<Sampling period of control loop*/
@@ -56,11 +55,11 @@ typedef struct{
 real reccati(dmat **Kinf, dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 //dcell* reccati_mr(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
 kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs, const lmat *mdirect, 
-	const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
+	const dcell *Gwfs, const dcell *Cnn, const dmat *Proj);
 void kalman_free(kalman_t *kalman);
-dmat *kalman_test(kalman_t *kalman, const dcell *Gwfs2, const dmat *input, int flag);
+dmat *kalman_test(kalman_t *kalman, const dcell *goff, const dmat *input, int flag);
 dmat* kalman_test2(const dmat *coeff, const real dthi, const lmat* dtrat, const lmat* mdirect,
-	const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj, const dcell *Gwfs2, const dmat *input, int flag);
+	const dcell *Gwfs, const dcell *Cnn, const dmat *Proj, const dcell *goff, const dmat *input, int flag);
 dmat* kalman_test3(const dmat* input, int flag, const char* fn);
 void kalman_init(kalman_t *kalman);
 void kalman_update(kalman_t *kalman, dcell *meas, int idtrat);

@@ -138,18 +138,18 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		gradsave=dnew(aster->tsa*2, nstep);
 	}
 
-	servo_t* st2t=0;
+	servo_t* st_fast=0;
 	kalman_t* kalman=0;
 	int multirate=parms->skyc.multirate;
-	dmat* moffsetcmd=0;
-	dmat* mreal_slow=0;
+	dmat* mreal_offset=0;//output of slow loop used for fast loop offset
+	dmat* mreal_slow=0;//servo output of slow loop
 	dcell* merr_slow=0;
 	int indk_fast=0;//index into gain and pgm for faster loop in multirate
 	int divergence=0;
 	int dtrat_slow=dtratc;//dtrat of slow loop
 	servo_t* st_slow=NULL;
 	if(multirate) {
-		moffsetcmd=dnew(nmod, 1);
+		mreal_offset=dnew(nmod, 1);
 		merr_slow=dcellnew_same(1,1,nmod, 1);
 		mreal_slow=dnew(nmod, 1);
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -159,14 +159,16 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				dtrat_slow=P(aster->dtrats,iwfs);
 			}
 		}
-		if(dtrat_slow!=dtratc){
+		if(dtrat_slow!=dtratc&&parms->skyc.servo>0){
 			st_slow=servo_new(P(merr_slow,0), NULL, 0, parms->maos.dt*dtrat_slow, P(aster->gain, (1<<aster->nwfs)-2));
+			//lshow(aster->mdirect, "mdirect");
+			//dshow(P(aster->gain, (1<<aster->nwfs)-2), "gain_slow");
 		}
 	}
 
 	//aster->dtrats is only set in multirate case. dtrat of each wfs in the asterism
 	if(parms->skyc.servo>0){
-		st2t=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, multirate?(indk_fast-1):idtratc));
+		st_fast=servo_new(merrm, NULL, 0, parms->maos.dt*dtratc, P(aster->gain, multirate?(indk_fast-1):idtratc));
 	} else{
 		kalman=aster->kalman[multirate?0:idtratc];
 	}
@@ -215,7 +217,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		if(kalman){
 			kalman_init(kalman);
 		} else{
-			servo_reset(st2t);
+			servo_reset(st_fast);
 		}
 		if(st_slow){
 			servo_reset(st_slow);
@@ -291,6 +293,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					}
 				}
 			} else{//Physical Optics WFS. Accumulate PSF intensities
+				real igrad[2];
 				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 					const real thetax=aster->wfs[iwfs].thetax;
 					const real thetay=aster->wfs[iwfs].thetay;
@@ -308,18 +311,12 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							cabs22d(&P(psf[iwfs],isa,iwvl), 1., P(wvf,iwfs), 1.);
 						}/*isa */
 					}/*iwvl */
-				}/*iwfs */
-
-				/*Form detector image from accumulated PSFs*/
-				real igrad[2];
-				for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+					/*Form detector image from accumulated PSFs*/
 					const int dtrati=multirate?P(aster->dtrats,iwfs):dtratc;
 					const int idtrat=multirate?P(aster->idtrats,iwfs):idtratc;
 					if((istep+1)%dtrati==0){/*WFS has output */
 						indk|=1<<iwfs;//has output
 						dcellzero(ints[iwfs]);
-						const int ipowfs=aster->wfs[iwfs].ipowfs;
-						const long nsa=parms->maos.nsa[ipowfs];
 						for(long isa=0; isa<nsa; isa++){
 							//Compute subaperture image
 							for(long iwvl=0; iwvl<nwvl; iwvl++){
@@ -380,85 +377,66 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				}/*for wfs*/
 			}/*if phystart */
 			//output to mreal after using it to ensure two cycle delay.
-			if(st2t){//Type I or II control.
-				/*if(P(st2t->mint,0)){//has output.
-					dcp(&mreal, P(P(st2t->mintc,0),0));
-				}*/
-				servo_output(st2t, &mreal);
+			if(st_fast){//Type I or II control.
+				servo_output(st_fast, &mreal);
 			} else{//LQG control
-#if 1
-				kalman_output(kalman, &mreal, 1, 0.5, 0);//kalman output with integrator
-#else
-				kalman_output(kalman, &mreal, 0, 1, 0);//kalman direct output
-#endif				
-				//if(istep<1000) dshow(mreal, "mreal kalman hi");
+				kalman_output(kalman, &mreal, 1, 0.5, 0);//kalman output with integrator (better than direct output)
 			}
-			if(st_slow){
-				servo_output(st_slow, &mreal_slow);
-				/*if(istep<100){
-					dshow(mreal, "mreal");
-					dshow(mreal_slow, "mreal_slow");
-					dshow(moffsetcmd, "moffset");
-					lshow(aster->mdirect, "mdirect");
-				}*/
-				for(int imod=0; imod<nmod; imod++){
-					if(aster->mdirect && P(aster->mdirect, imod)){//directly output modes not controlled by the faster loop
-						P(mreal, imod)=P(mreal_slow, imod);//directly add to corrector (temporary solution)
+			if(dtrat_slow!=dtratc){//there is a slow loop
+				if(st_slow){
+					servo_output(st_slow, &mreal_slow);
+				}else{
+					kalman_output(kalman, &mreal_slow, 1, 0.5, 1);
+				}
+				for(int i=0; i<nmod; i++){
+					if(aster->mdirect && P(aster->mdirect, i)){//directly output modes not controlled by the faster loop
+						P(mreal, i)=P(mreal_slow, i);//directly add to corrector (temporary solution)
 					}else{
-						P(moffsetcmd, imod)=P(mreal_slow, imod);//use as offset
+						P(mreal_offset, i)=P(mreal_slow, i);//use as offset
 					}
 				}
 			}
 			if(indk){//has output
-				if(multirate && dtratc!=dtrat_slow){
+				if(dtratc!=dtrat_slow){
 					for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 						if((istep+1)%P(aster->dtrats, iwfs)==0){
 							dadd(&P(gradslow, iwfs), 1, P(gradout, iwfs), P(aster->dtrats, iwfs)/(real)dtrat_slow);
 						
 							if(P(aster->dtrats, iwfs)!=dtrat_slow){//fast WFS.
-								dmm(&P(gradout, iwfs), 1, P(aster->g, iwfs), moffsetcmd, "nn", 1);//apply offset to gradients
+								dmm(&P(gradout, iwfs), 1, P(aster->g, iwfs), mreal_offset, "nn", 1);//apply offset to gradients
 							}
 						}
 					}
 				}
 				//fast rate always have output
-				if(st2t){
-					dmm(&merrm, 0, P(aster->pgm, indk_fast?(indk_fast-1):idtratc), gradout->m, "nn", 1);
-					//dadd(&merrm, 1, moffsetcmd, 1);//apply offset to modes
+				if(st_fast){
+					dmm(&merrm, 0, P(aster->pgm, multirate?(indk_fast-1):idtratc), gradout->m, "nn", 1);
+					//dadd(&merrm, 1, moffsetcmd, 1);//apply offset to modes instead of gradients
 				}else{
 					kalman_update(kalman, gradout, 0);//it changes cl gradout to psol gradout
 				}
 
 				if(multirate && indk!=(indk_fast)){//slower loop has output when there is faster loop
 					//slower loop (all wfs active) runs a cascaded integrator as offset to the faster loop
-					if(st2t || st_slow){
-						dmm(&P(merr_slow,0), 0, P(aster->pgm, indk-1), gradslow->m, "nn", 1);
-					}else{
-						if(1){//use integrator instead of kalman filter for the slow loop
+					if(st_slow){
+						if(st_fast){//Both loops are integrator
+							dmm(&P(merr_slow,0), 0, P(aster->pgm, indk-1), gradslow->m, "nn", 1);
+						}else{//Fast loop is LQG. pgm not available.
 							dcellzero(merr_slow);
 							dcellmm(&merr_slow, P(kalman->Rlsq, 1), gradslow, "nn", 1);
-						}else{
-							kalman_update(kalman, gradslow, 1);//it change gradslow to psol
-							dzero(P(merr_slow,0));
-							kalman_output(kalman, &P(merr_slow,0), 1, 0.5, 1);
 						}
+						servo_filter(st_slow, P(merr_slow, 0));
+					}else{
+						kalman_update(kalman, gradslow, 1);//it change gradslow to psol
 					}
 					dzero(gradslow->m);
-					if(st_slow){
-						servo_filter(st_slow, P(merr_slow, 0));
-					}
-					//if(istep<100) dshow(merrm, "merrm");
-					//if(istep<1000) dshow(P(moffseterr, 0), "moffseterr");
-					//if(istep<1000) dshow(moffsetint, "moffsetint");
-					//warning("step %d: slow loop\n", istep);
 				}
-
 				if(zfmerr && irep==0){
 					zfarr_push(zfmerr, istep, merrm);
 				}
 			}//if has output
-			if(st2t){
-				servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
+			if(st_fast){
+				servo_filter(st_fast, pmerrm);//do even if merrm is zero. to simulate additional latency
 			}
 			if(parms->skyc.dbg>1){
 				memcpy(PCOL(gradsave, istep), P(gradout->m), sizeof(real)*gradsave->nx);
@@ -480,7 +458,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	dcellfree(zgradc);
 	dcellfree(gradout);
 	dcellfree(gradslow);
-	dcellfree(moffsetcmd);
+	dcellfree(mreal_offset);
 	dcellfree(merr_slow);
 	cellfree(mreal_slow);
 	dfree(gradsave);
@@ -494,7 +472,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		free(mtche);
 		free(i0s);
 	}
-	servo_free(st2t);
+	servo_free(st_fast);
 	/*dfree(mres); */
 	if(mresout){
 		*mresout=mres;
