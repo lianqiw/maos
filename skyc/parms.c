@@ -82,9 +82,14 @@ static void setup_parms_skyc(parms_s* parms){
 	/*readcfg_dblarr_nmax(&parms->skyc.zb.qe, parms->maos.nwvl, "skyc.zb.qe");
 	readcfg_dblarr_nmax(&parms->skyc.zb.thruput, parms->maos.nwvl, "skyc.zb.thruput");
 	readcfg_dblarr_nmax(&parms->skyc.zb.excessbkgrnd, parms->maos.nwvl, "skyc.zb.excessbkgrnd");*/
-	parms->skyc.dtrats=readcfg_dmat(0,0,"skyc.dtrats");
-	parms->skyc.dtrats_mr=readcfg_dmat(0,0,"skyc.dtrats_mr");
-	parms->skyc.snrmin_mr=readcfg_dmat(PN(parms->skyc.dtrats_mr),1,"skyc.snrmin_mr");
+	READ_INT(skyc.multirate);
+	parms->skyc.dtrats=readcfg_dmat(0,0,parms->skyc.multirate?"skyc.dtrats_mr":"skyc.dtrats");
+	readcfg_ignore(parms->skyc.multirate?"skyc.dtrats":"skyc.dtrats_mr");
+	if(parms->skyc.multirate){
+		parms->skyc.snrmin_mr=readcfg_dmat(PN(parms->skyc.dtrats),1,"skyc.snrmin_mr");
+	}else{
+		readcfg_ignore("skyc.snrmin_mr");
+	}
 	READ_INT(skyc.seed);
 	READ_INT(skyc.navg);
 	READ_INT(skyc.servo);
@@ -100,8 +105,7 @@ static void setup_parms_skyc(parms_s* parms){
 	READ_DBL(skyc.pmargin);
 	READ_INT(skyc.psdcalc);
 	READ_DBL(skyc.sdetmax);
-
-	READ_INT(skyc.multirate);
+	
 	READ_DBL(skyc.snrmin);
 	READ_INT(skyc.usephygrad);
 
@@ -230,15 +234,12 @@ parms_s* setup_parms(const arg_s* arg){
 		}
 	}
 	if(parms->skyc.multirate){
-		dfree(parms->skyc.dtrats);
-		parms->skyc.dtrats=dref(parms->skyc.dtrats_mr);
 		parms->skyc.snrmin=dmin(parms->skyc.snrmin_mr);
 		if(!parms->skyc.gsplit){
 			warning("multirate control requires skyc.gsplit=1. changed\n");
 			parms->skyc.gsplit=1;
 		}
 	}
-	dfree(parms->skyc.dtrats_mr);
 	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
 	
 	if(parms->skyc.psd_ws){
