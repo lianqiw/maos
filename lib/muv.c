@@ -269,6 +269,9 @@ void muv_direct_diag_prep(muv_t* A, real svd){
    already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.*/
 
 void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
+	if(xin->id!=M_REAL){
+		error("xin is invalid\n");
+	}
 	dmat* dotpt=NULL;
 	if(A->Up&&A->Vp){
 		dmm(&dotpt, 0, A->Vp, xin, "tn", -1);

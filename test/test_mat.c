@@ -244,10 +244,17 @@ static void test_mm(){
     dset(P(A,0),1);
     P(B,0)=dnew(4,5);
     dset(P(B,0),1);
-    dcell *C=(dcell*)dcellmm2(A,B,"nn");
+    dcell *C=NULL;
+	dcellmm(&C, A, B, "nn", 1);
+	dcellmm(&C, P(A,0), B, "nn", 1);
+	dcellmm(&C, P(A,0), P(B,0), "nn", 1);
+	dmat *C2=NULL;
+	dcellmm(&C2, P(A,0), B, "nn", 1);
+	dcellmm(&C2, P(A,0), P(B,0), "nn", 1);
     //writebin(A, "A");
     //writebin(B, "B");
-    writebin(C, "C");
+    //writebin(C, "C");
+
     exit(0);
 }
 void test_sho(){

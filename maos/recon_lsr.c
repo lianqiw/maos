@@ -47,10 +47,10 @@ void setup_recon_lsr(recon_t* recon, const parms_t* parms){
 	int free_GAlsr=0;
 	if(P(GAlsr,0)->id!=M_REAL){//Convert low sparsity matrices to full. sparse matrix mul are too slow.
 		dsp* tmp=dsp_cast(P(GAlsr,0));
-		if(tmp->nzmax>NX(tmp)*NY(tmp)*0.2){//not very sparse
+		if(tmp && tmp->nzmax>NX(tmp)*NY(tmp)*0.2){//not very sparse
 			dcell *tmp2=NULL;
 			free_GAlsr=1;
-			dcelladd(&tmp2, 1, GAlsr, 1);
+			dspcellfull(&tmp2, dspcell_cast(GAlsr), 'n', 1);
 			GAlsr=(cell*)tmp2;
 		}
 	}

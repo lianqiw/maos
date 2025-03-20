@@ -221,11 +221,13 @@ X(mat)* X(sub)(const X(mat)* in, long sx, long nx, long sy, long ny){
 /**
    Resize a matrix by adding or removing columns or rows. Data is kept whenever
    possible.
-   - 0 in dimension preserves original value.
+   - -1 in dimension preserves original value.
+   - 0 in dimension will free array.
 */
 int X(resize)(X(mat)* A, long nx, long ny){
 	if(A){
-		if(!nx && !ny){
+		if(!nx || !ny){
+			dbg("nx=%ld, ny=%ld will free array\n", nx, ny);
 			X(free_content)(A);
 		}
 		if(!ismat(A)){
@@ -241,12 +243,10 @@ int X(resize)(X(mat)* A, long nx, long ny){
 		}
 	}
 
-	if(nx<=0){
-		if(nx==0) warning("usage nx=0 is deprecated\n");
+	if(nx<0){
 		nx=A->nx;
 	}
-	if(ny<=0){
-		if(ny==0) warning("usage ny=0 is deprecated\n");
+	if(ny<0){
 		ny=A->ny;
 	}
 	if(P(A) && mem_nref(A->mem)!=1){
@@ -436,13 +436,13 @@ void X(show)(const X(mat)* A, const char* format, ...){
 		warning("Invalid: %s is not matrix.", fn);
 		return;
 	}
-	if(PN(A)>20){
+	if(PN(A)>20 || (NX(A)>1 && NY(A)>1)){
 		info("Displaying content of %s (%ldx%ld):\n", fn, NX(A), NY(A));
 	}else{
 		info("%s:", fn);//display inline
 	}
 	int colmax=10;
-	int rowmax=10;
+	int rowmax=20;
 	//int iset, i, j;
 	int nset=1;//(A->ny+colmax-1)/colmax;
 	for(int iset=0; iset<nset; iset++){

@@ -783,10 +783,10 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			if(nmod>0 && nmod<P(recon->amod, idm, idm)->ny){
 				info("DM %d:Reduce number of controlled modes from %ld to %g\n",
 					idm, P(recon->amod, idm, idm)->ny, nmod);
-				dresize(P(recon->amod, idm, idm), 0, nmod);
+				dresize(P(recon->amod, idm, idm), -1, nmod);
 				P(recon->anmod, idm)=nmod;
 				for(int iwfs=0; iwfs<nwfsr; iwfs++){
-					dresize(dmat_cast(P(recon->GA, iwfs, idm)), 0, nmod);
+					dresize(dmat_cast(P(recon->GA, iwfs, idm)), -1, nmod);
 				}
 			}
 		}

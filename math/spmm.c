@@ -374,7 +374,19 @@ void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char t
 	const cell *A=A_.c;
 	const cell *B=B_.c;
 	if(!A||!B) return;
-	if(iscell(A)&&iscell(B)){//multiplication of cells.
+	if(iscell(A)!=iscell(B) || (*C0 && iscell(A)!=iscell(*C0))){
+		if(iscell(A) && PN(A)==1){
+			A=P(A,0);
+		}
+		if(iscell(B) && PN(B)==1){
+			B=P(B,0);
+		}
+		cell *C=NULL;
+		if(*C0 && iscell(*C0) && PN(*C0)==1){
+			C=P(*C0, 0);
+		}
+		return X(cellmm)(C?&C:C0, A, B, trans, alpha);
+	}else if(iscell(A)&&iscell(B)){//multiplication of cells.
 		mm_t D=parse_trans(A, B, trans);
 		cellinit(C0, D.nx, D.ny);
 		cell* C=*C0;
@@ -468,13 +480,18 @@ void X(celladd)(panyarray pA_, R ac, const_anyarray B_, R bc){
 		return; 
 	}
 	if(!B){
-		if(ac==1){
-			return;//no operation
+		if(ac!=1){
+			X(cellscale)(*pA, ac);
 		}
-		X(cellscale)(*pA, ac);
+		return;
 	}
-	
-	if(iscell(B)){//cell
+	if(iscell(B) && PN(B)==1 && *pA && !iscell(*pA)){
+		B=P(B, 0);//convert single cell to num array if A is num array
+	}else if(!iscell(B) && iscell(*pA)){
+		X(celladd)(&P(*pA, 0), ac, B, bc);
+		return;
+	}
+	if(iscell(B)){//cell add to cell
 		cellinit2(pA, B);
 		cell* A=*pA;
 OMP_FOR(8)
@@ -482,25 +499,27 @@ OMP_FOR(8)
 			X(celladd)(&P(A,i), ac, P(B,i), bc);
 		}
 	} else{//non cell
-		if(!*pA||ismat(*pA)){//A is dense
-			if(ismat(B)){//Add dense to dense
+		if(ismat(B)){//Add dense to dense
+			if(!*pA||ismat(*pA)){//A is dense
 				X(add)((X(mat)**)pA, ac, (X(mat)*)B, bc);
-			} else{//add sparse to dense
-				if(ac!=1){
-					X(scale)((X(mat*))*pA, ac);
-				}
-				X(spfull)((X(mat)**)(pA), (X(sp)*)B, 'n', bc);
+			}else{
+				error("Unsupported A (id=%u) for dense B (id=%u)\n", (*pA)->id, B->id);
 			}
-		} else if(issp(*pA)){
-			if(issp(B)){//add sparse to sparse
+		}else if(issp(B)){
+			if(!*pA){
+				error("Ambiguity operation. Please initialize A first.\n");
+			}else if(ismat(*pA)){//add sparse to dense
+				if(ac!=1) X(scale)((X(mat*))*pA, ac);
+				X(spfull)((X(mat)**)(pA), (X(sp)*)B, 'n', bc);
+			} else if(issp(*pA)){//add sparse to sparse
 				X(sp)* tmp=X(spadd2)((X(sp)*)(*pA), ac, (X(sp)*)B, bc);
 				X(spmove)((X(sp)*)(*pA), (X(sp)*)tmp);
 				free(tmp);
 			} else{
-				error("Adding dense to sparse matrix is not supported.\n");
+				error("Unsupported A (id=%u) for sparse B (id=%u)\n", (*pA)->id, B->id);
 			}
 		} else{
-			error("Invalid operand\n");
+			error("Invalid operand B (id=%u\n", B->id);
 		}
 	}
 }
