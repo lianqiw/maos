@@ -78,7 +78,7 @@ def parse_func(srcdir, files):
     for ln in lines:
         if ln[0:6]=='extern':
             pass
-        ln=ln.replace('const','')
+        ln=ln.replace('const_','').replace('const','')
         end=0
         while True:
             funname=''

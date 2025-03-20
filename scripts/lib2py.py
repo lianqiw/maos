@@ -57,6 +57,11 @@ aotype2py={
 }
 #process variable type
 def handle_type(argtype, argname):
+    if argtype=='anyarray':
+        argtype='cell*'
+    elif argtype=='panyarray':
+        argtype='cell**'
+
     if (len(argtype)>3 and argtype[-3:]=='***') or argname.count('[')>0: #known
         return ('Unknown','Unknown','Unknown')
     elif argtype[-2:]=='**': #output

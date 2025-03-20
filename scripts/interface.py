@@ -38,7 +38,7 @@ try:
     lib=cdll.LoadLibrary(aolib_so)
 except:
     raise Exception('Load aolib.so failed from '+aolib_so)
-from readbin import set_header
+from readbin import set_header, convert_output
 
 def simplify(arr, do_stack=1, do_squeeze=0):
     '''convert object array a[i,j][k,n]... to simple ndarray a[i,j,k,n,...]
@@ -92,22 +92,20 @@ id2ctype={
     25633: (c_void_p,0,10),#MC_ANY
     222210: (c_double,0,2),#M_LOC64
 }
-headers=[] #store the keyword from file
-def append_header(header):
-    '''append the cstr string header to global headers'''
-    if header:
-        headers.append(header.decode("utf-8"))
 
 def pt2py(pointer):
     '''convert C array pointer to numpy array. Freeing C memory'''
+    headers=[]
     headers.clear()
     if bool(pointer):
-        out=pointer.contents.as_array()
+        out=pointer.contents.as_array(headers)
         pointer.contents.free()
     else:
         out=np.array([])
+    if len(headers)==1:
+        headers=headers[0]
     set_header(headers)
-    return out
+    return convert_output(out)
 #def pt2py_header(pointer):
 #    return (pt2py(pointer), deepcopy(headers))
 #convert C vector to numpy array. Memory is copied.
@@ -267,15 +265,15 @@ class cell(Structure):
         else:
             return (self.nx,) #last , is necessary
 
-    def as_array(self): #convert form C to numpy. Memory is copied
+    def as_array(self, headers): #convert form C to numpy. Memory is copied
         try:
             (tt, iscomplex, kind)=id2ctype.get(self.id)
         except:
             print("id2ctype: unknown type", id);
             kind=-1
-        if kind==0 or kind==10:
-            append_header(self.header)
         if kind==0: #dense matrix
+            if self.header:
+                headers.append(self.header.decode('ascii'))
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
             return cast(addressof(self), POINTER(csr)).contents.as_array()
@@ -284,16 +282,23 @@ class cell(Structure):
         elif kind==10: #cell
             res=np.empty(self.shape(1), dtype=object)
             parr=cast(self.p, POINTER(c_void_p))
+            headerc=[]
+            if self.header:
+                headerc.append(self.header.decode('ascii'))
             for iy in range(self.ny):
                 for ix in range(self.nx):
                     address=parr[ix+self.nx*iy]
                     if address is not None:
                         pp=cast(int(address), POINTER(cell))
-                        res[iy, ix]=pp.contents.as_array() #recursive
+                        res[iy, ix]=pp.contents.as_array(headerc) #recursive
                     else:
                         res[iy, ix]=np.array([])
             if self.ny==1:
                 res=res[0,]
+            if len(headerc)==1:
+                headerc=headerc[0]
+            if headerc:
+                headers.append(headerc)
             return simplify(res)
         else:
             print('as_array: Unknown data, id='+ str(self.id))
@@ -344,8 +349,8 @@ class loc(Structure):
                 self.dy=min(dlocy[dlocy>0])
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero
-    def as_array(self): #convert form C to numpy. Memory is copied
-        append_header(self.header)
+    def as_array(self, headers): #convert form C to numpy. Memory is copied
+        headers.append(self.header)
         if(self.locx):
             if self.id!=222210:
                 raise(Exception('Wrong type'))
@@ -394,8 +399,8 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
         else:
             self.id=spdtype2id.get(np.float64)
 
-    def as_array(self): #convert form C to numpy. Memory is copied
-        append_header(self.header)
+    def as_array(self, headers): #convert form C to numpy. Memory is copied
+        headers.append(self.header)
         if self.nzmax>0:
             self.xp=as_array(self.x, self.id, (self.nzmax,))
             self.ip=as_array(self.i, 25603, (self.nzmax,))

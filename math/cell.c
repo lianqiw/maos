@@ -381,7 +381,11 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 	if(!header->magic){
 		if(read_header(header, fp)) return NULL;
 	}
-	if(!header->nx || !header->ny) return NULL;
+	if(!header->nx || !header->ny){
+		if(!header->str){
+			return NULL;
+		}
+	}
 	long nx=header->nx;
 	long ny=header->ny;
 	cell *res=NULL;

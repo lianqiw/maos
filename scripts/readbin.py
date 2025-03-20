@@ -85,6 +85,23 @@ def readvec(fp, datatype, nxy):#enable read from socket and file
     else:#for socket reading, or gzip
         return np.frombuffer(fp.read(nxy*datatype.itemsize), dtype=datatype)
 headers=[] #global variable
+
+def convert_output(input):
+    '''Convert array to dictionary if necessary'''
+    if len(headers)>0 and headers[0]=='type=struct' and len(headers)==input.size+1:
+        out={}
+        for ic in range(input.size):
+            if len(headers)>ic+1:
+                key=headers[ic+1]
+            else:
+                key='key_{}'.format(ic)
+            while type(key) is list:
+                key=key[0]
+            out[key]=input[ic]
+        return out
+    else:
+        return input
+    
 def readbin(file):
     headers.clear()
     isfits=False
@@ -134,7 +151,7 @@ def readbin(file):
             print("readbin failed:", file, error)
         finally:
             fp.close()
-    return out
+    return convert_output(out)
 
 def readbin_auto(fp, isfits, scan=0):
     '''Wraps readbin_do to handle top level scanning of fits file'''
@@ -178,7 +195,7 @@ def readbin_do(fp, isfits):
             raise ValueError("Invalid magic number {} at {}".format(magic, fp.tell()))
         
     if dname[0:2]=='MC': #cell array
-        header_cell=header
+        header_cell=header #top level header
         header=[]
         header.append(header_cell)
         #header={}
