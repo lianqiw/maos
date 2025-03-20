@@ -497,16 +497,9 @@ static void skysim_prep_sde(sim_s* simu){
 	  Do not scale the time series by MCC. We are working in "radian space" for
 	  kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
 	*/
-	simu->sdecoeff=dnew(3, parms->maos.nmod);
+	sde_fit_auto(&simu->sdecoeff, simu->psds, parms->skyc.sdetmax);
 	for(int im=0; im<parms->maos.nmod; im++){
-		dmat* coeff=NULL;
-		sde_fit_auto(&coeff, P(simu->psds,im), parms->skyc.sdetmax);//does not support vibration identification (yet)
-		P(coeff,2)/=sqrt(P(parms->maos.mcc, im, im));//convert from m to rad
-		if(coeff->ny>1){
-			error("Please handle this case\n");
-		}
-		memcpy(PCOL(simu->sdecoeff, im), P(coeff), coeff->nx*sizeof(real));
-		dfree(coeff);
+		P(simu->sdecoeff,2,im)/=sqrt(P(parms->maos.mcc, im, im));//convert from m to rad
 	}
 	dshow(simu->sdecoeff, "sde_coeff");
 	if(parms->skyc.dbg||1){

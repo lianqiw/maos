@@ -23,7 +23,7 @@
 
 #include "../math/mathdef.h"
 real sde_fit(dmat **pcoeff, const dmat *psdin, real tmax_fit, int vibid);
-real sde_fit_auto(dmat **pcoeff, const dmat *psdin, real tfit);
+real sde_fit_auto(dmat **pcoeff, const_anyarray psdin, real tfit);
 void sde_psd(dmat **psd, const dmat *f, const real *coeff, int ncoeff, int nmod);
 dmat *sde_psd2(const dmat *ff, const dmat *coeff);
 typedef struct{

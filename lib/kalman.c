@@ -269,7 +269,7 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
 
 	sde_fit_t data={df, freq, psdcov_in, psdcov_sde, norm_in, 0, ncoeff, nmod, ncov};
 	//real diff0=sde_diff(P(coeff), &data);
-	real tol=1e-10;
+	real tol=1e-8;
 	int nmax=2000;
 	dminsearch(P(coeff), ncoeff*nmod, tol, nmax, sde_diff, &data);
 	//Do not scale coeff after the solution.
@@ -277,7 +277,7 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
 	if(print){
 		real zeta=P(coeff,0)/sqrt(P(coeff,1))/2;
 		real f0=P(coeff,0)/(2*zeta*2*M_PI);
-		info("sde_fit_auto: tmax=%4.2f, f0=%4.1f, zeta=%4.2f, diff=%g.\n", tmax_fit, f0, zeta, diff1);
+		info("sde_fit_auto: tmax=%4.2f, f0=%4.1f, zeta=%4.2f, diff=%.2e.\n", tmax_fit, f0, zeta, diff1);
 	}
 	//Scale to make sure total energy is preserved.
 	/*
@@ -378,10 +378,9 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
  * @param psdin     The input PSD
  * @return dmat*    The SHO coefficients
  */
-real sde_fit_auto(dmat **pcoeff, const dmat* psdin, real tfit){
-	if(NY(psdin)!=2){
-		error("psdin is in the wrong format\n");
-	}
+real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
+	if(!iscell(psdin_.dc) && NY(psdin_.dm)==2){//single PSD
+		dmat *psdin=dmat_cast(psdin_.dm);
 	real fmax=P(psdin, NX(psdin)-1, 0);
 	if(!tfit) tfit=0.2;
 	real zeta_best=0;//record the best zeta
@@ -409,11 +408,51 @@ real sde_fit_auto(dmat **pcoeff, const dmat* psdin, real tfit){
 		error("Fitting failed\n");
 	}
 	real f0=sqrt(P(*pcoeff, 1))/2/M_PI;
-	info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%g (final).\n", tfit_best, f0, zeta_best, diff_best);
+		info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%.2e.\n", tfit_best, f0, zeta_best, diff_best);
 	return diff_best;
+	}else{
+		int npsd=0;
+		if(iscell(psdin_.dc)){//cell array of PSDs
+			npsd=PN(psdin_.dc);
+		}else if(NY(psdin_.dm)>2){//each column beyond first one is a PSD.
+			npsd=NY(psdin_.dm)-1;
+		}else{
+			error("Invalid input for.\n");
+		}
+		dcell* coeff=dcellnew(1, npsd);
+		real diff_worst=0;
+		dmat* psd=NULL;
+		for(int ipsd=0; ipsd<npsd; ipsd++){
+			if(iscell(psdin_.dc)){
+				psd=P(psdin_.dc, ipsd);
+			}else{
+				if(!psd){
+					psd=dnew(NX(psdin_.dm), 2);
+					memcpy(PCOL(psd,0), PCOL(psdin_.dm, 0), NX(psdin_.dm)*sizeof(real));
+				}
+				memcpy(PCOL(psd,1), PCOL(psdin_.dm, 1+ipsd), NX(psdin_.dm)*sizeof(real));
+			}
+			real diff=sde_fit_auto(&P(coeff, ipsd), psd, tfit);
+			if(diff>diff_worst) diff_worst=diff;
+		}
+		if(!iscell(psdin_.dc)){
+			dfree(psd);
+		}
+		*pcoeff=dcell2m(coeff);
+		dcellfree(coeff);
+		return diff_worst;
+	}
 }
+
 /**
-   Compute the reccati equation.
+ * @brief Compute the reccati equation.
+ * 
+ * @param Pout  [Output] The Sigma_infty: Estimation error covariance matrix
+ * @param A 	Block diagonal stage evolution matrix
+ * @param Qn 	Discrete state noise covariance
+ * @param C 	Measurement interaction matrix
+ * @param Rn 	Measurement error covariance matrix
+ * @return dmat* Asymptotic Kalman gain K_\infty
  */
 dmat* reccati(dmat** Pout, const dmat* A, const dmat* Qn, const dmat* C, const dmat* Rn){
 	real diff=1, diff2=1, lastdiff=INFINITY;

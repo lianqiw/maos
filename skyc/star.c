@@ -374,17 +374,6 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 			dcellfree(i0s);
 			dcellfree(gxs);
 			dcellfree(gys);
-			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
-			if(parms->skyc.verbose && idtrat>=0){
-				info("star %d at (%3.0f, %3.0f)", istar,
-					star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
-				info(" bkgrnd=%5.2f, mag=[", P(star[istar].bkgrnd,ipowfs));
-				for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-					info("%4.1f ", P(star[istar].mags,iwvl));
-				}
-				info("] siglev=%5.0f snr=%2.0f dtrat=%2.0f powfs=%d%s\n",  dsum(P(star[istar].siglev,ipowfs)), 
-					idtrat>=0?P(pistat->snr,idtrat):0, idtrat>=0?P(parms->skyc.dtrats,idtrat):0, ipowfs, idtrat<0?" (skipped)":"");
-			}
 		}/*for ipowfs */
 	}/*for istar */
 }
@@ -685,6 +674,25 @@ static int sortfun_snr(const star_s *p1, const star_s *p2){
 	real s2=P(p2->pistat[0].snr, ix);
 	return s1<s2?1:-1; //-1: keep order. 1: reverse order
 }
+static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
+	if(!nstar) return;
+	int npowfs=NX(star[0].minidtrat);
+	int nwvl=NX(star[0].mags);
+	for(int istar=0; istar<nstar; istar++){
+		info("star %d at (%3.0f,%3.0f)\" mag=[", istar, star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+			info("%4.1f%s", P(star[istar].mags,iwvl),iwvl+1<nwvl?",":"], ");
+		}
+		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
+			if(idtrat>=0){
+				pistat_s* pistat=&star[istar].pistat[ipowfs];
+				int nsa=NX(pistat->i0);
+				info("%s: snr=%4.1f at dtrat=%2.0f%s", nsa==1?"TT":"TTF", P(pistat->snr,idtrat), P(dtrats,idtrat),ipowfs+1==npowfs?"\n":", ");
+			}
+		}
+	}
+}
 /**
    setup "star" data array from star information and read in average pixel
    intensitys.  Check for star PSF size. If it is larger than 5, we don't use
@@ -728,9 +736,9 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 	//sort stars to have descending snr order.
 	qsort(star, jstar, sizeof(star_s), (int(*)(const void *, const void *))sortfun_snr);
 	*nstarout=nstar;
-	/*if(parms->skyc.verbose){
-		info("There are %d stars usable from %d stars\n", jstar, nstar);
-	}*/
+	if(parms->skyc.verbose){
+		print_stars(star, nstar, parms->skyc.dtrats);
+	}
 	return star;
 }
 void free_istar(star_s* star, const parms_s* parms){

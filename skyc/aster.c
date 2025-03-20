@@ -423,18 +423,16 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		const int servotype=parms->skyc.servo==2?2:1;
 		const int ng=parms->skyc.ngain;//number of gain parameters
 		dmat* pgain=P(aster->gain,icase)=dnew(ng, nmod);
+		dmat* sigma=dnew(1,1);
 		for(int ipsd=0; ipsd<simu->psds->nx; ipsd++){//npsd=1 is gsplit=0
-			real sigma=P(P(aster->sigman,icase),parms->skyc.gsplit?ipsd:nmod);
+			P(sigma, 0)=P(P(aster->sigman,icase),parms->skyc.gsplit?ipsd:nmod);
 			real pg[ng+2];
 			if(parms->skyc.interpg){//LUT with noise level use pre-determined gain 
-				interp_gain(pg, P(P(simu->gain_pre,idtrat),ipsd), simu->gain_x, sigma);
+				interp_gain(pg, P(P(simu->gain_pre,idtrat),ipsd), simu->gain_x, P(sigma, 0));
 			} else{
-				dmat* sigma2=dnew(1, 1);
-				P(sigma2,0)=sigma;
-				dcell *tmp=servo_optim(parms->maos.dt, P(parms->skyc.dtrats, idtrat), 0, parms->skyc.pmargin, 0, 0, servotype, P(simu->psds, ipsd), sigma2);
+				dcell *tmp=servo_optim(parms->maos.dt, P(parms->skyc.dtrats, idtrat), 0, parms->skyc.pmargin, 0, 0, servotype, P(simu->psds, ipsd), sigma);
 				memcpy(pg, P(P(tmp,0)), (ng+2)*sizeof(real));
 				dcellfree(tmp);
-				dfree(sigma2);
 			}
 			memcpy(PCOL(pgain, ipsd), pg, sizeof(real)*ng);
 			if(multirate){
@@ -459,6 +457,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 				res_ngsn+=pg[ng+1];
 			}
 		}//for ipsd
+		dfree(sigma);
 		if(simu->psds->nx < nmod){
 			warning_once("Use gain of mode 0 for modes with no PSD\n");
 			for(int imod=simu->psds->nx; imod<nmod; imod++){
@@ -555,7 +554,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 			P(aster->res_ngs, idtrat, 0)=rms;
 		}
 		if(parms->skyc.dbg){
-			kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%d", dirsetup, aster->iaster, idtrat);
+			kalman_write(aster->kalman[idtrat], "%s/aster%d_kalman_%ld", dirsetup, aster->iaster, lmin(dtrats));
 		}
 	}
 	if(!parms->skyc.multirate){
@@ -564,7 +563,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		//aster->minest=P(aster->res_ngs,0,0);
 	}
 }
-static void select_dtrat(aster_s* aster, int maxdtrat, real maxerror){
+static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	const real wvfmargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
 	aster->idtratest=-1;//idtrat at astermin
 	aster->minest=maxerror;
@@ -616,9 +615,9 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 		setup_aster_kalman(simu, aster, parms);
 	}
 	if(!parms->skyc.multirate){
-		select_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
+		select_aster_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
-	/*if(parms->skyc.verbose){
+	if(parms->skyc.verbose){
 		info("aster%3d stars=(", aster->iaster);
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				info(" %2d", aster->wfs[iwfs].istar);
@@ -635,7 +634,7 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 			}
 		}
 		info("), est=%3.0f nm\n", sqrt(aster->minest)*1e9);
-	}*/
+	}
 }
 /**
    for sort incrementally.
