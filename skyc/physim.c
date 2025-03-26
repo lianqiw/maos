@@ -159,7 +159,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				dtrat_slow=P(aster->dtrats,iwfs);
 			}
 		}
-		if(dtrat_slow!=dtratc&&parms->skyc.servo>0){
+		if(dtrat_slow!=dtratc&&(parms->skyc.servo!=-1)){
 			st_slow=servo_new(P(merr_slow,0), NULL, 0, parms->maos.dt*dtrat_slow, P(aster->gain, (1<<aster->nwfs)-2));
 			//lshow(aster->mdirect, "mdirect");
 			//dshow(P(aster->gain, (1<<aster->nwfs)-2), "gain_slow");

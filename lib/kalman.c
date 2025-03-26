@@ -809,15 +809,7 @@ void kalman_output(kalman_t* kalman, dmat** out, real alpha, real beta, int idtr
 	if(!*out){
 		*out=dnew(NX(kalman->xout, idtrat), 1);
 	}
-	for(int im=0; im<NX(kalman->xout, idtrat); im++){
-		int slow=kalman->mdirect && P(kalman->mdirect, im);
-		if(!(idtrat==0 && slow)){
-		//if((idtrat==0 && !slow) || (idtrat==1 && slow)){
-			P(*out, im)=P(*out, im)*alpha+P(P(kalman->xout, idtrat), im)*beta;//direct output
-		//}else if(idtrat==1 && !slow){
-		//	P(*out, im)=P(*out, im)*alpha+P(P(kalman->xout, idtrat), im)*beta; //offset signal.
-		}
-	}
+	dadd(out, alpha, P(kalman->xout, idtrat), beta);
 }
 /**
    Test the performance of kalman filter (LQG controller). Derived from servo_test()

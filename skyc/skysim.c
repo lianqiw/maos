@@ -116,7 +116,7 @@ static void* skysim_isky(sim_s* simu){
 			continue;
 		}
 		if(parms->skyc.dbgaster>=naster){
-			error("skyc.dbgaster=%d, but naster=%d\n", parms->skyc.dbgaster, naster);
+			warning("skyc.dbgaster=%d, but naster=%d\n", parms->skyc.dbgaster, naster);
 		}
 		/*
 		  We first estimate the matched filter, reconstructor, and servo
@@ -128,7 +128,7 @@ static void* skysim_isky(sim_s* simu){
 		for(int iaster=0; iaster<naster; iaster++){
 			if(parms->skyc.dbgaster<0||iaster==parms->skyc.dbgaster){
 				/*Parallelizing over aster gives same random stream. */
-				seed_rand(&asters[iaster].rand, parms->skyc.seed+iaster+40);
+				seed_rand(&asters[iaster].rand, parms->skyc.seed+iaster+isky+40);
 				/*setup mode to gradient operator. */
 				setup_aster_gm(&asters[iaster], star, parms);
 				/*Compute the reconstructor, nea, sigman and optimize controller. */
@@ -184,54 +184,22 @@ OMP_TASK_FOR(4)
 					P(asteri->phyres,idtrat)=physim(&P(asteri->phymres,idtrat),
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
-				}
-				for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++){
-					/*focus and windshake residual; */
-					real resadd=0;
+					if(P(asteri->phyres,idtrat)){
 					if(!parms->skyc.addws && parms->skyc.psd_ws){
-						resadd+=P(asteri->res_ws,idtrat);
+							P(P(asteri->phyres,idtrat), 0)+=P(asteri->res_ws,idtrat);
 					}
-					dmat* ires;
-					if((ires=P(asteri->phyres,idtrat))){
-						/*Add windshake contribution. */
-						resadd+=P(ires, 0);
-						if(resadd<asteri->minphyres){
-							asteri->minphyres=resadd;
+						if(P(P(asteri->phyres,idtrat), 0)<asteri->minphyres){
+							asteri->minphyres=P(P(asteri->phyres,idtrat), 0);
 							asteri->idtratphy=idtrat;
 						}
-					}else{
-						resadd=simu->varol;
 					}
-					if(parms->skyc.verbose){
-						//int sstmp[3]={0,0,0};
-						real sxtmp[3]={0,0,0};
-						real sytmp[3]={0,0,0};
-						int dttmp[3]={0,0,0};
-						int nwfs=MIN(3, asteri->nwfs);
-						real snrtmp[3]={0,0,0};
-						for(int iwfs=0; iwfs<nwfs; iwfs++){
-							//sstmp[iwfs]=asteri->wfs[iwfs].istar;
-							sxtmp[iwfs]=star[asteri->wfs[iwfs].istar].thetax*206265;
-							sytmp[iwfs]=star[asteri->wfs[iwfs].istar].thetay*206265;
-						}
-						for(int iwfs=0; iwfs<nwfs; iwfs++){
-							int idtmp=parms->skyc.multirate?P(asteri->idtrats, iwfs):idtrat;
-							dttmp[iwfs]=P(parms->skyc.dtrats, idtmp);
-							snrtmp[iwfs]=P(asteri->wfs[iwfs].pistat->snr, idtmp);
-						}
-						info("ast%3d: dtrat=(%2d %2d %2d) stars=(%3.0f,%3.0f) (%3.0f,%3.0f) (%3.0f,%3.0f) snr=(%2.0f %2.0f %2.0f), est=%3.0f phy=%3.0f nm\n",
-							asteri->iaster, dttmp[0], dttmp[1], dttmp[2], 
-							sxtmp[0],sytmp[0],sxtmp[1],sytmp[1],sxtmp[2],sytmp[2],
-							snrtmp[0], snrtmp[1], snrtmp[2],
-							sqrt(P(asteri->res_ngs, parms->skyc.multirate?0:idtrat))*1e9, sqrt(resadd)*1e9);
 					}
-				}
-				if(simu->res_aster){//collect statistics of all asterisms
+				if(asteri->minphyres<simu->varol && simu->res_aster){//collect statistics of all asterisms
 					int res_iaster=atomic_fetch_add(&simu->res_iaster, 1);
 					asteri->iaster_all=res_iaster;
 					if(res_iaster<NY(simu->res_aster)){
 						real *p=PCOL(simu->res_aster, res_iaster);
-						*(p++)=asteri->minphyres?asteri->minphyres:simu->varol;//phy result
+						*(p++)=asteri->minphyres;//phy result
 						*(p++)=asteri->minest;//estimate
 						*(p++)=isky;
 						*(p++)=asteri->nwfs;
@@ -252,13 +220,39 @@ OMP_TASK_FOR(4)
 				}
 skip1:;
 			}//for iaster
-			//find the best asterism
 			for(int iaster=0; iaster<naster; iaster++){
 				aster_s* asteri=&asters[iaster];
+				//find the best asterism
 				if(asteri->minphyres<sky_min||parms->skyc.dbgaster==iaster){
 					sky_iaster=iaster;
 					sky_min=asteri->minphyres;
 				}
+				if(parms->skyc.verbose){//print outside of parallel region
+					for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++){
+						int sstmp[3]={0,0,0};
+						//real sxtmp[3]={0,0,0};
+						//real sytmp[3]={0,0,0};
+						int dttmp[3]={0,0,0};
+						int nwfs=MIN(3, asteri->nwfs);
+						real snrtmp[3]={0,0,0};
+						for(int iwfs=0; iwfs<nwfs; iwfs++){
+							sstmp[iwfs]=asteri->wfs[iwfs].istar;
+							//sxtmp[iwfs]=star[asteri->wfs[iwfs].istar].thetax*206265;
+							//sytmp[iwfs]=star[asteri->wfs[iwfs].istar].thetay*206265;
+						}
+						for(int iwfs=0; iwfs<nwfs; iwfs++){
+							int idtmp=parms->skyc.multirate?P(asteri->idtrats, iwfs):idtrat;
+							dttmp[iwfs]=P(parms->skyc.dtrats, idtmp);
+							snrtmp[iwfs]=P(asteri->wfs[iwfs].pistat->snr, idtmp);
+						}
+						real phyres=(asteri->phyres&&P(asteri->phyres,idtrat))?P(P(asteri->phyres,idtrat), 0):simu->varol;
+						info("ast%3d: dtrat=(%2d %2d %2d) stars=(%d %d %d) snr=(%4.1f %4.1f %4.1f) est %6.1f phy %6.1f nm\n",
+							asteri->iaster, dttmp[0], dttmp[1], dttmp[2], sstmp[0], sstmp[1], sstmp[2],
+							snrtmp[0], snrtmp[1], snrtmp[2],
+							sqrt(P(asteri->res_ngs, parms->skyc.multirate?0:idtrat))*1e9, sqrt(phyres)*1e9);
+					}
+				}
+
 			}
 			if(sky_iaster!=-1 && asters[sky_iaster].phyres){
 				aster_s* asteri=&asters[sky_iaster];
@@ -277,6 +271,7 @@ skip1:;
 					P(simu->res, 6, isky)=P(phymin,3);/*ATM Tip/tilt Error for on axis only. */
 					P(simu->res, 7, isky)=P(parms->skyc.fss, sky_idtrat);
 					P(simu->res, 8, isky)=asteri->iaster_all;//index to res_aster
+					P(simu->res, 9, isky)=sky_iaster;
 					if(parms->skyc.save){
 						skysim_save(simu, asteri, PCOL(simu->res, isky), sky_iaster, sky_idtrat, isky);
 					}
@@ -291,6 +286,7 @@ skip1:;
 			sky_idtrat=asters[sky_iaster].idtratest;
 			res_set_all(simu->res, isky, sky_min);
 			P(simu->res, 7, isky)=P(parms->skyc.fss, sky_idtrat);
+			P(simu->res, 9, isky)=sky_iaster;
 		}//If(skyc.estimate)
 		if(sky_iaster!=-1){
 			if(parms->skyc.servo>0&&!parms->skyc.multirate){
@@ -322,8 +318,11 @@ skip1:;
 				for(int i=0; i<MIN(3,p[3]); i++){
 					freqs[i]=p[4+(4+parms->maos.nwvl)*i];
 				}
-				info("Field%4d, %3.0f %3.0f %3.0f Hz %6.1f nm, Used%2ld:%02ld, Left%2ld:%02ld\n",
-					simu->isky_print, freqs[0], freqs[1], freqs[2], sqrt(P(simu->res, 0, simu->isky_print))*1e9,
+				int sky_iaster2=P(simu->res, 9, simu->isky_print);
+				info("Field%4d (%2d): %3.0f %3.0f %3.0f Hz, Est %6.1f, Phy %6.1f nm. Used%2ld:%02ld Left%2ld:%02ld\n",
+					simu->isky_print, sky_iaster2, freqs[0], freqs[1], freqs[2], 
+					sqrt(P(simu->res, 4, simu->isky_print))*1e9,
+					sqrt(P(simu->res, 0, simu->isky_print))*1e9,
 					laps_h, laps_m, rest_h, rest_m);
 				simu->isky_print++;
 			}
@@ -587,7 +586,7 @@ void skysim(const parms_s* parms){
 		}
 		writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
 		int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
-		simu->res=dnew_mmap(9, nsky, NULL, "Res%d_%d%s", seed_maos, parms->skyc.seed, parms->skyc.dbg?"dbg":"");//Total, ATM NGS, ATM TT, WS, 0
+		simu->res=dnew_mmap(10, nsky, NULL, "Res%d_%d%s", seed_maos, parms->skyc.seed, parms->skyc.dbg?"dbg":"");//Total, ATM NGS, ATM TT, WS, 0
 		if(!parms->skyc.estimate){
 			simu->res_aster=dnew(4+(4+parms->maos.nwvl)*parms->skyc.nwfstot, nsky*parms->skyc.maxaster);//result for all asterisms that have PO results
 		}

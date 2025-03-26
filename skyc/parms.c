@@ -251,6 +251,7 @@ parms_s* setup_parms(const arg_s* arg){
 		}
 	}
 	switch(parms->skyc.servo){
+	case -2:
 	case -1://LQG
 		parms->skyc.ngain=1;
 		if(!parms->skyc.gsplit){

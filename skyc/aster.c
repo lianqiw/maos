@@ -278,6 +278,9 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 			warning("there is no fast WFS\n");
 		}
 	}
+	if(parms->skyc.dbgaster!=-1){
+		lshow(aster->mdirect, "mdirect");
+	}
 	aster->idtratest=idtrat_fast2;
 	aster->idtratmin=idtrat_fast2;
 	aster->idtratmax=idtrat_fast2+1;
@@ -589,8 +592,8 @@ static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	}
 	if(aster->idtratest!=-1){
 		if(maxdtrat>1 && ndtrat>1){
-			real thres=MIN(aster->minest+wvfmargin, maxerror);//threshold at low freq end
-			real thres2=MIN(aster->minest+wvfmargin, maxerror);//threshold at high freq end
+			real thres=MIN(aster->minest*2+wvfmargin, maxerror);//threshold at low freq end
+			real thres2=MIN(aster->minest*2+wvfmargin, maxerror);//threshold at high freq end
 			/*Find upper and skymin good dtrats. */
 			for(int idtrat=aster->idtratest; idtrat<ndtrat; idtrat++){
 				if(P(aster->res_ngs, idtrat, 0)<thres){
@@ -629,7 +632,7 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 	if(!parms->skyc.multirate){
 		select_aster_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
-	if(parms->skyc.verbose){
+	/*if(parms->skyc.verbose){
 		info("aster%3d stars=(", aster->iaster);
 			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 				info(" %2d", aster->wfs[iwfs].istar);
@@ -646,7 +649,7 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 			}
 		}
 		info("), est=%3.0f nm\n", sqrt(aster->minest)*1e9);
-	}
+	}*/
 }
 /**
    for sort incrementally.

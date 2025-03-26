@@ -679,9 +679,9 @@ static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 	int npowfs=NX(star[0].minidtrat);
 	int nwvl=NX(star[0].mags);
 	for(int istar=0; istar<nstar; istar++){
-		info("star %d at (%3.0f,%3.0f)\" mag=[", istar, star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
+		info("star %d at (%3.0f %3.0f)\" mag=(", istar, star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			info("%4.1f%s", P(star[istar].mags,iwvl),iwvl+1<nwvl?",":"], ");
+			info("%4.1f%s", P(star[istar].mags,iwvl),iwvl+1<nwvl?" ":"), ");
 		}
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
