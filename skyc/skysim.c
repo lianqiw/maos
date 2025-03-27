@@ -245,7 +245,7 @@ skip1:;
 							dttmp[iwfs]=P(parms->skyc.dtrats, idtmp);
 							snrtmp[iwfs]=P(asteri->wfs[iwfs].pistat->snr, idtmp);
 						}
-						real phyres=(asteri->phyres&&P(asteri->phyres,idtrat))?P(P(asteri->phyres,idtrat), 0):simu->varol;
+						real phyres=(asteri->phyres&&P(asteri->phyres,idtrat))?P(P(asteri->phyres,idtrat), 0):INFINITY;
 						info("ast%3d: dtrat=(%2d %2d %2d) stars=(%d %d %d) snr=(%4.1f %4.1f %4.1f) est %6.1f phy %6.1f nm\n",
 							asteri->iaster, dttmp[0], dttmp[1], dttmp[2], sstmp[0], sstmp[1], sstmp[2],
 							snrtmp[0], snrtmp[1], snrtmp[2],

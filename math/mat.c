@@ -441,7 +441,7 @@ void X(show)(const X(mat)* A, const char* format, ...){
 	}else{
 		info("%s:", fn);//display inline
 	}
-	int colmax=10;
+	int colmax=12;
 	int rowmax=20;
 	//int iset, i, j;
 	int nset=1;//(A->ny+colmax-1)/colmax;

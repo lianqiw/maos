@@ -125,12 +125,12 @@ void setup_aster_ztilt(aster_s* aster, star_s* star){
 	}
 }
 /**
-  Estimate wavefront error propagated from measurement error. pgm is the reconstructor. ineam is the
-  error inverse.
+  Estimate wavefront error propagated from measurement error. 
+  pgm is the reconstructor. neam is the error covariance.
   trace(Mcc*(pgm*neam*pgm'))
 */
 static dmat* calc_recon_error(const dmat* pgm,   /**<[in] the reconstructor*/
-	const dmat* neam,/**<[in] the inverse of error covariance matrix*/
+	const dmat* neam,/**<[in] the measurement error covariance matrix*/
 	const dmat* mcc   /**<[in] NGS mode covariance matrix.*/
 ){
 	dmat* psp=NULL;
@@ -237,12 +237,21 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 			idtrat_slow=idtrat;
 		}
 	}
-	int idtrat_fast2=MAX(3, idtrat_fast);//force fast loop to be faster than dtrat=8
+	int idtrat_fast2=MAX(2, idtrat_fast);//force fast loop to be faster than dtrat=8
+	if(idtrat_slow>0 && idtrat_slow+1==idtrat_fast2){
+		//dbg("aster %d: idtrat_slow and idtrat_fast too close. Slow idtrat_slow by 1.\n", aster->iaster);
+		idtrat_slow--;
+	}
 	//We use only two rates: a faster rate for tip/tilt(/focus) control and a slower rate for focus/ps control.
 	int fast_nttf=0;
 	int fast_ntt=0;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		//force fast loop to be faster than dtrat=16
+		if(P(aster->idtrats, iwfs)+1==idtrat_fast){
+			if(P(aster->wfs[iwfs].pistat->snr,idtrat_fast)>=3){
+				P(aster->idtrats, iwfs)=idtrat_fast;
+			}
+		}
 		if(P(aster->idtrats, iwfs)>=idtrat_fast){
 			P(aster->idtrats, iwfs)=idtrat_fast2;
 			if(parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1){
@@ -250,8 +259,7 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 			}else{
 				fast_ntt++;
 			}
-		}
-		if(P(aster->idtrats, iwfs)<idtrat_fast){
+		}else{
 			P(aster->idtrats, iwfs)=idtrat_slow;
 		}
 		P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, P(aster->idtrats, iwfs));
@@ -358,7 +366,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	aster->gain=dcellnew(ncase, 1);
 	aster->res_ws=dnew(multirate?1:ncase, 1);
 	aster->res_ngs=dnew(multirate?1:ncase, 3);
-	dmat* gm=multirate?0:setup_aster_mask_gm(aster->g, NULL, NULL);//no mask
+	dmat* gm=multirate?0:dcell2m(aster->g);
 	const long nmod=parms->maos.nmod;
 	
 	dcell* nea=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
@@ -409,7 +417,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		//Noise propagation
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			if(!mask || P(mask,iwfs)){
-				dcwpow(P(nea,iwfs), -1);//in radian.
+				dcwpow(P(nea,iwfs), -1);//in radian^2.
 			}
 		}
 		P(aster->sigman,icase)=calc_recon_error(P(aster->pgm,icase), nea->m, parms->maos.mcc);

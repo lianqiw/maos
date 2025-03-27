@@ -123,7 +123,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 							1-2: NGS and TT modes.,
 							3-4: On axis NGS and TT modes,
 							4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
-	dmat* mreal=NULL;	/*modal correction at this step. */
+	dmat* mreal=dnew(nmod,1);	/*modal correction at this step. */
 	dmat* merr=dnew(nmod, 1);/*modal error */
 	dmat* merrm=dnew(nmod, 1);//reconstruction error signal
 	dmat* pmerrm=NULL;//set to merrm when there is output
@@ -141,7 +141,6 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	servo_t* st_fast=0;
 	kalman_t* kalman=0;
 	int multirate=parms->skyc.multirate;
-	dmat* mreal_offset=0;//output of slow loop used for fast loop offset
 	dmat* mreal_slow=0;//servo output of slow loop
 	dcell* merr_slow=0;
 	int indk_fast=0;//index into gain and pgm for faster loop in multirate
@@ -149,7 +148,6 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	int dtrat_slow=dtratc;//dtrat of slow loop
 	servo_t* st_slow=NULL;
 	if(multirate) {
-		mreal_offset=dnew(nmod, 1);
 		merr_slow=dcellnew_same(1,1,nmod, 1);
 		mreal_slow=dnew(nmod, 1);
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -389,10 +387,8 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					kalman_output(kalman, &mreal_slow, 1, 0.5, 1);
 				}
 				for(int i=0; i<nmod; i++){
-					if(aster->mdirect && P(aster->mdirect, i)){//directly output modes not controlled by the faster loop
+					if((aster->mdirect && P(aster->mdirect, i))){//directly output modes not controlled by the faster loop
 						P(mreal, i)=P(mreal_slow, i);//directly add to corrector (temporary solution)
-					}else{
-						P(mreal_offset, i)=P(mreal_slow, i);//use as offset
 					}
 				}
 			}
@@ -402,8 +398,8 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 						if((istep+1)%P(aster->dtrats, iwfs)==0){
 							dadd(&P(gradslow, iwfs), 1, P(gradout, iwfs), P(aster->dtrats, iwfs)/(real)dtrat_slow);
 						
-							if(P(aster->dtrats, iwfs)!=dtrat_slow){//fast WFS.
-								dmm(&P(gradout, iwfs), 1, P(aster->g, iwfs), mreal_offset, "nn", 1);//apply offset to gradients
+							if(P(aster->dtrats, iwfs)!=dtrat_slow){//fast WFS. use all modes.	
+								dmm(&P(gradout, iwfs), 1, P(aster->g, iwfs), mreal_slow, "nn", 1);//apply offset to gradients
 							}
 						}
 					}
@@ -458,7 +454,6 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	dcellfree(zgradc);
 	dcellfree(gradout);
 	dcellfree(gradslow);
-	dcellfree(mreal_offset);
 	dcellfree(merr_slow);
 	cellfree(mreal_slow);
 	dfree(gradsave);

@@ -668,12 +668,12 @@ long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed
 	//close(fd);
 	return nstep;
 }
-static int sortfun_snr(const star_s *p1, const star_s *p2){
+/*static int sortfun_snr(const star_s *p1, const star_s *p2){
 	int ix=NX(p1->pistat[0].snr)-1;
 	real s1=P(p1->pistat[0].snr, ix);
 	real s2=P(p2->pistat[0].snr, ix);
 	return s1<s2?1:-1; //-1: keep order. 1: reverse order
-}
+}*/
 static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 	if(!nstar) return;
 	int npowfs=NX(star[0].minidtrat);
@@ -734,7 +734,7 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 		star=myrealloc(star, jstar, star_s);
 	}
 	//sort stars to have descending snr order.
-	qsort(star, jstar, sizeof(star_s), (int(*)(const void *, const void *))sortfun_snr);
+	//qsort(star, jstar, sizeof(star_s), (int(*)(const void *, const void *))sortfun_snr);
 	*nstarout=nstar;
 	if(parms->skyc.verbose){
 		print_stars(star, nstar, parms->skyc.dtrats);
