@@ -394,10 +394,13 @@ parms_s* setup_parms(const arg_s* arg){
 		}
 		parms->skyc.dbg=1;
 		parms->skyc.nthread=1;
-		parms->skyc.interpg=0;
 	}
-	if(parms->skyc.nsky<20){
+	if(parms->skyc.interpg==-1){
+		if(parms->skyc.dbg||parms->skyc.dbgsky>-1||parms->skyc.nsky<20){
 		parms->skyc.interpg=0;
+		}else{
+			parms->skyc.interpg=1;
+		}
 	}
 	if(arg->detach){
 		parms->skyc.verbose=0;
