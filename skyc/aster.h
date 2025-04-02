@@ -23,8 +23,7 @@ aster_s *setup_aster_comb(int *naster, const star_s *star, int nstar, const parm
 aster_s *setup_aster_sample(void);
 void setup_aster(aster_s *aster, powfs_s *powfs, const parms_s *parms, sim_s *simu);
 void free_aster(aster_s *aster, int naster, const parms_s *parms);
-void setup_aster_gm(aster_s *aster, star_s *star, const parms_s *parms);
-void setup_aster_controller(sim_s *simu, aster_s *aster, const parms_s *parms);
+void setup_aster_controller(sim_s *simu, aster_s *aster, star_s *star, const parms_s *parms);
 void setup_aster_read(aster_s *aster, const parms_s *parms, int seed);
 int  setup_aster_select(real *result, aster_s *aster, int naster, star_s *star, real maxerror, const parms_s *parms);
 void setup_aster_wvf(aster_s *aster, star_s *star);

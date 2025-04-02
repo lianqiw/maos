@@ -223,4 +223,6 @@ static inline int check_space(const char *endptr, const char *endstr){
     static __attribute__((constructor)) void init(){\
 		READ_ENV_INT(A, 0, INT_MAX);\
     }
+
+#define FREE(A) if(A){free(A); A=NULL;}
 #endif

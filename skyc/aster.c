@@ -50,6 +50,7 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 		aster[iaster].nwfs=nwfstot;
 		aster[iaster].wfs=mycalloc(nwfstot, wfs_s);
 		aster[iaster].iaster=iaster;
+		aster[iaster].use=1;
 		int iwfs=0;
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 			for(int jwfs=0; jwfs<P(parms->skyc.nwfsmax, ipowfs); jwfs++){
@@ -57,6 +58,7 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 					int istar=P(comb, iwfs, iaster);
 					aster[iaster].wfs[iwfs].ipowfs=ipowfs;
 					aster[iaster].wfs[iwfs].istar=istar;
+					aster[iaster].wfs[iwfs].use=1;
 					aster[iaster].wfs[iwfs].thetax=star[istar].thetax;
 					aster[iaster].wfs[iwfs].thetay=star[istar].thetay;
 					/*Magnitude */
@@ -81,24 +83,64 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 	return aster;
 }
 /**
+ * @brief Mask modes that are not controlled by the loop.
+ * 
+ * @param parms supplies indps, indastig, indfocus information
+ * @param nttf 	number of ttf wfs
+ * @param ntt 	number of tt wfs
+ * @return lmat* 
+ */
+static void mode_mask(lmat**pmdirect, const parms_s *parms, int nttf, int ntt){
+	if(!pmdirect){
+		warning("pmdirect shall be set\n");
+		return;
+	}
+	const int indps=parms->maos.indps;
+	const int indastig=parms->maos.indastig;
+	const int indfocus=parms->maos.indfocus;
+	const int nmod=2+(indps?3:0)+(indastig?2:0)+(indfocus?1:0);
+	if(!*pmdirect){
+		*pmdirect=lnew(nmod,1);
+	}
+	lmat *mdirect=*pmdirect;
+	if(nttf>0){
+		if(nttf+ntt==1 && indps){//single nttf can not control PS1
+			P(mdirect, indps)=1;//TTF controls focus instead of magnification plate scale
+		}//else: fast controls all modes
+	}else{//fast includes only TT wfs. 
+		if(indfocus){
+			P(mdirect, indfocus)=1;//TT cannot control focus
+		}
+		if(ntt<3&&indps){//1 or 2 TT OIWFS cannot control ALL PS modes.
+			P(mdirect, indps)=1;
+		}
+		if(ntt<2&&indps){//1 TT cannot control any PS mode.
+			P(mdirect, indps+1)=1;
+			P(mdirect, indps+2)=1;
+		}
+		if(ntt<1){
+			lset(mdirect, 1);
+			warning("there is no fast WFS\n");
+		}
+	}
+}
+/**
    Compute Modal to gradient operator by copying from the stars. Using average
 gradients. Similar to Z tilt since the mode is low order */
-void setup_aster_gm(aster_s* aster, star_s* star, const parms_s* parms){
+static void setup_aster_g(aster_s* aster, star_s* star, const parms_s* parms){
 	aster->g=dcellnew(aster->nwfs, 1);
-	aster->ngs=mycalloc(aster->nwfs, long);
+	aster->ngrad=mycalloc(aster->nwfs, long);
 	aster->tsa=0;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int istar=aster->wfs[iwfs].istar;
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
-		const long nsa=parms->maos.nsa[ipowfs];
+		const long nsa=parms->maos.nsa[ipowfs];	
+		//aster->g is also used for simulation. Do not zero columns here.
 		P(aster->g,iwfs)=ddup(P(star[istar].g,ipowfs));
 		aster->tsa+=nsa;
-		aster->ngs[iwfs]=nsa*2;
+		aster->ngrad[iwfs]=nsa*2;
 	}
-	/*
-	  aster->g is also used for simulation. Do not zero columns here.
-	*/
-	aster->gm=dcell2m(aster->g);
+
 }
 
 /**
@@ -177,29 +219,59 @@ static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 	}
 	memcpy(out, P(P(gain,ig)), sizeof(real)*P(gain,ig)->nx);
 }
+static void mask_gm(dmat *ggm, const lmat *mblind){
+	if(!mblind) return;
+	for(int imod=0; imod<NY(ggm); imod++){
+		if(P(mblind,imod)){
+			dzerocol(ggm, imod);
+		}
+	}
+}
 /**
  * Select GM using WFS mask. Also compute direct mode mask (mdirect) if pmdirect is set.
  * direct mode are modes that are only sensed by the slower loop and therefore directly fed into the integrator.
+*  @param mdirect	Modes controlled by slower loop.
+ * @param rmblind	Compute and remove blind modes 
  * */
-static dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask, lmat* mdirect){
+static dmat* setup_aster_gm_mask(lmat** mblind, const parms_s* parms, const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
-	dcell* gm=dcelldup(gm_in);
-	int nwfs=gm->nx; assert(gm->ny==1);
-	int nmod=P(gm,0)->ny;
+	dcell* gm=dcellnew(gm_in->nx, 1);
+	int nwfs=gm->nx; 
+	int nttf=0;
+	int ntt=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(mask&&!P(mask,iwfs)){
-			dzero(P(gm, iwfs));
-		} 
-	}
-	dmat* ggm=dcell2m(gm); dcellfree(gm);
-	if(mdirect){
-		for(int imod=0; imod<nmod; imod++){
-			if(P(mdirect, imod)){
-				dzerocol(ggm, imod);
+			P(gm, iwfs)=dnew(NX(gm_in, iwfs), NY(gm_in, iwfs));
+		} else{
+			P(gm, iwfs)=dref(P(gm_in, iwfs));
+			if(NX(gm_in, iwfs)>2){
+				nttf++;
+			}else{
+				ntt++;
 			}
 		}
 	}
+	dmat* ggm=dcell2m(gm); dcellfree(gm);
+	if(mblind){
+		mode_mask(mblind, parms, nttf, ntt);
+	}
 	return ggm;
+}
+//Remove WFS that is marked unused.
+static void aster_remove_wfs(aster_s *aster){
+	int iwfs=0;
+	for(int jwfs=0; jwfs<aster->nwfs; jwfs++){
+		if(iwfs!=jwfs){
+			aster->wfs[iwfs]=aster->wfs[jwfs];
+		}
+		if(aster->wfs[iwfs].use){
+			iwfs++;
+		}
+	}
+	if(aster->nwfs!=iwfs){
+		dbg_once("nwfs reduced from %d to %d\n", aster->nwfs, iwfs);
+	}
+	aster->nwfs=iwfs;
 }
 /**
   	For the multirate case, setup the dtrat of each WFS.
@@ -209,13 +281,8 @@ static dmat* setup_aster_mask_gm(const dcell* gm_in, const lmat* mask, lmat* mdi
 static void
 setup_aster_multirate(aster_s* aster, const parms_s* parms){
 	const int ndtrat=parms->skyc.ndtrat;
-	lfree(aster->idtrats);
-	lfree(aster->dtrats);
-	aster->idtrats=lnew(aster->nwfs, 1);
-	aster->dtrats=lnew(aster->nwfs, 1);
 	int idtrat_fast=0;
 	//real snr_fast=0;
-	int idtrat_slow=parms->skyc.ndtrat;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int idtrat;
 		for(idtrat=ndtrat-1; idtrat>=0; idtrat--){
@@ -225,79 +292,92 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 			}
 		}
 		if(idtrat==-1){
-			warning("Invalid asterism: wfs%d idtrat=%d\n", iwfs, idtrat);
-			idtrat=0;
+			warning_once("iwfs=%d idtrat=%d\n", iwfs, idtrat);
+			continue;
 		}
 		int isttf=parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1;
 		if((parms->skyc.ttffastest&&isttf)||(!parms->skyc.ttffastest &&idtrat>idtrat_fast)){
 			idtrat_fast=idtrat;
 		}
-
+		//if(parms->skyc.dbg) info("iwfs=%d, idtrat=%d, idtrat_fast=%d\n", iwfs, idtrat, idtrat_fast);
+	}
+	int idtrat_slow=-1;
+	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		int idtrat;
 		for(idtrat=ndtrat-1; idtrat>=0; idtrat--){
 			//select highest idtrat that meets snrmin_slow for each WFS.
 			if(P(aster->wfs[iwfs].pistat->snr,idtrat)>=P(parms->skyc.snrmin_slow,idtrat)){
 				break;
 			}
 		}
-		if(idtrat<idtrat_slow){
+		if(idtrat==-1){
+			warning_once("iwfs=%d idtrat=%d\n", iwfs, idtrat);
+			continue;
+		}
+		if(idtrat_slow==-1){
+			idtrat_slow=idtrat;
+		}else if(idtrat<idtrat_slow){
 			idtrat_slow=idtrat;
 		}
-		//info("iwfs=%d, idtrat=%d, idtrat_slow=%d, idtrat_fast=%d\n", iwfs, idtrat, idtrat_slow, idtrat_fast);
+		//if(parms->skyc.dbg) info("iwfs=%d, idtrat=%d, idtrat_slow=%d\n", iwfs, idtrat, idtrat_slow);
 	}
 	int idtrat_fast2=MAX(0, idtrat_fast);//force fast loop to be faster than dtrat=8
 	//make sure dtrat_slow is multiple of dtrat_fast2
-	int idtrat_slow2=idtrat_slow;
-	while((int)P(parms->skyc.dtrats, idtrat_slow)%(int)P(parms->skyc.dtrats, idtrat_fast2)!=0){
-		if(idtrat_slow>0){
-		idtrat_slow--;
-		}else if(idtrat_fast2>0){
-			idtrat_fast2--;
-			idtrat_slow=idtrat_slow2;
-		}else{
-			warning("idtrat_slow=%d, idtrat_fast=%d, disable asterism.\n", idtrat_slow, idtrat_fast);
-			aster->use=0;
-			return;
-			break;
+	int idtrat_slow2=MAX(0, idtrat_slow);
+	
+	idtrat_slow=idtrat_slow2;
+	if(idtrat_slow!=idtrat_fast2){
+		while((int)P(parms->skyc.dtrats, idtrat_slow)%(int)P(parms->skyc.dtrats, idtrat_fast2)!=0){
+			if(idtrat_slow>0){
+				idtrat_slow--;
+			}else if(idtrat_fast2>0){
+				idtrat_fast2--;
+				idtrat_slow=idtrat_slow2;
+			}else{
+				warning_once("idtrat_slow=%d, idtrat_fast=%d, disable asterism.\n", idtrat_slow, idtrat_fast);
+				aster->use=0;
+				return;
+				break;
+			}
 		}
 	}
+	//if(parms->skyc.dbg) info("idtrat_fast2=%d, idtrat_slow=%d\n", idtrat_fast2, idtrat_slow);
 	//We use only two rates: a faster rate for tip/tilt(/focus) control and a slower rate for focus/ps control.
 	int fast_nttf=0;
 	int fast_ntt=0;
+	int nwfs_unused=0;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		if(P(aster->wfs[iwfs].pistat->snr,idtrat_fast)>=P(parms->skyc.snrmin_fast,idtrat_fast)){
-			P(aster->idtrats, iwfs)=idtrat_fast2;
+			aster->wfs[iwfs].idtrat=idtrat_fast2;
 			if(parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1){
 				fast_nttf++;
 			}else{
 				fast_ntt++;
 			}
 		}else{
-			P(aster->idtrats, iwfs)=idtrat_slow;
+			if(P(aster->wfs[iwfs].pistat->snr,idtrat_slow)>=P(parms->skyc.snrmin_slow,idtrat_slow) && (idtrat_slow!=idtrat_fast)){
+				aster->wfs[iwfs].idtrat=idtrat_slow;
+			}else{
+				aster->wfs[iwfs].use=0;
+				aster->wfs[iwfs].idtrat=-1;
+				nwfs_unused++;
+			}
 		}
+	}
+	if(nwfs_unused){
+		aster_remove_wfs(aster);
+	}
+	aster->idtrats=lnew(aster->nwfs, 1);
+	aster->dtrats=lnew(aster->nwfs, 1);
+	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		P(aster->idtrats, iwfs)=aster->wfs[iwfs].idtrat;
 		P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, P(aster->idtrats, iwfs));
 	}
-	const int nmod=parms->maos.nmod;
-	aster->mdirect=lnew(nmod,1);//a mode is set to 1 if it is directly controlled by the slow mode.
-	if(fast_nttf>0){
-		if(fast_nttf+fast_ntt==1 && nmod==6){
-			P(aster->mdirect,2)=1;//TTF controls focus instead of magnification plate scale
-		}//else: fast controls all modes
-	}else{//fast includes only TT wfs
-		if(nmod>5){
-			P(aster->mdirect,5)=1;//TT cannot control focus
-		}
-		if(fast_ntt<3&&nmod>=5){//1 or 2 TT OIWFS cannot control ALL PS modes.
-			P(aster->mdirect, 2)=1;
-		}
-		if(fast_ntt<2&&nmod>=5){//1 TT cannot control any PS mode.
-			P(aster->mdirect, 3)=1;
-			P(aster->mdirect, 4)=1;
-		}
-		if(fast_ntt<1){
-			lset(aster->mdirect, 1);
-			warning("there is no fast WFS\n");
-		}
-	}
+	
+	//info("fast_nttf=%d, fast_ntt=%d, nslow=%d\n", fast_nttf, fast_ntt, nslow);
+	mode_mask(&aster->mdirect, parms, fast_nttf, fast_ntt);//a mode is set to 1 if it is directly controlled by the slow mode.
+	
+	//aster->mdirect=lnew(parms->maos.nmod,1);
 	if(parms->skyc.dbgaster!=-1){
 		lshow(aster->mdirect, "mdirect");
 	}
@@ -305,7 +385,27 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 	aster->idtratmin=idtrat_fast2;
 	aster->idtratmax=idtrat_fast2+1;
 }
-
+/**
+ * @brief Compute reconstructor that is insensitive to mblind modes
+ * 
+ * @param gm 
+ * @param nea 
+ * @param mblind 
+ */
+static dmat* recon_mblind(const dmat* gm, const dmat* nea, const lmat *mblind){
+	//old method:
+	dmat *gmzero;
+	if(mblind){
+		gmzero=ddup(gm);
+		mask_gm(gmzero, mblind);
+	}else{
+		gmzero=dref(gm);
+	}
+	//dshow(gmzero, "gmzero");
+	dmat *res=dpinv(gmzero, nea);
+	dfree(gmzero);
+	return res;
+}
 /**
 
    Setup the least squares reconstructor and controller.
@@ -325,43 +425,24 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms){
 	const int multirate=parms->skyc.multirate;
 	int ncase=0;
-	lmat* case_valid=0;
-	int max_idtrat=0;
-	int icase_fast=-1;//fast loop index into case_valid, pgm, gain, etc.
+	int fast_idtrat=0;//for multirate fast loop
+	int slow_idtrat=0;//for multirate slow loop
+	const int icase_fast=0;//fast loop index into case_valid, pgm, gain, etc.
 	if(multirate){
-		int min_idtrat=parms->skyc.ndtrat;
+		slow_idtrat=parms->skyc.ndtrat;
 		//Find the dtrat of the slowest WFS
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			int idtrat=P(aster->idtrats,iwfs);
-			if(min_idtrat>idtrat){
-				min_idtrat=idtrat;
-			}
-			if(max_idtrat<idtrat){
-				max_idtrat=idtrat;
-			}
-		}
-		ncase=(1<<aster->nwfs)-1;
-		case_valid=lnew(ncase, 1);
-		int count=0;
-		//Loop over to find all possible WFS combinations
-		for(int isim=1; isim<=P(parms->skyc.dtrats,min_idtrat); isim++){
-			int indk=0; 
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				if((isim%P(aster->dtrats,iwfs))==0){
-					indk|=(1<<iwfs);
+			if(idtrat!=-1){
+				if(slow_idtrat>idtrat){
+					slow_idtrat=idtrat;
 				}
-			}
-			if(indk && !P(case_valid,indk-1)){
-				P(case_valid,indk-1)=indk;
-				count++;
-				if(icase_fast==-1){
-					icase_fast=indk-1;//first valid case is the fastest
+				if(fast_idtrat<idtrat){
+					fast_idtrat=idtrat;
 				}
 			}
 		}
-		if(count>2){
-			warning("count=%d > 2 is not handled\n", count);
-		}
+		ncase=slow_idtrat==fast_idtrat?1:2;
 	} else{
 		ncase=parms->skyc.ndtrat;
 	}
@@ -378,30 +459,28 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 	aster->gain=dcellnew(ncase, 1);
 	aster->res_ws=dnew(multirate?1:ncase, 1);
 	aster->res_ngs=dnew(multirate?1:ncase, 3);
-	dmat* gm=multirate?0:dcell2m(aster->g);
+	lmat* mblind=NULL;
+	dmat* gmfull=setup_aster_gm_mask(&mblind, parms, aster->g, NULL);
+	dmat* gmfast=NULL;
 	const long nmod=parms->maos.nmod;
 	
-	dcell* nea=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
-	lmat* mask=multirate?lnew(aster->nwfs, 1):0;
+	dcell* nea=dcellnew3(aster->nwfs, 1, aster->ngrad, 0);
+	lmat* fast_mask=multirate?lnew(aster->nwfs, 1):0;
 	real res_ngs=0;/*residual error due to signal after servo rejection. */
 	real res_ngsn=0;/*residual error due to noise. */
 	for(int icase=0; icase<ncase; icase++){
 		//We need to build the reconstructor for each valid case.
 		//Assemble the measurement error covariance matrix
-		if(multirate && !P(case_valid,icase)){
-			continue;//invalid case
-		}
 		int idtrat;
 		if(multirate){//for multirate, idtrat is the slowest of all active WFS
-			idtrat=-1;
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				if((icase+1)&(1<<iwfs)){
-					if(idtrat==-1||idtrat>P(aster->idtrats, iwfs)){
-						idtrat=P(aster->idtrats,iwfs);//of the fast loop
+			idtrat=icase==icase_fast?fast_idtrat:slow_idtrat;
+			if(icase==icase_fast){//fast loop may have subset of WFS
+				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+					if(P(aster->idtrats, iwfs)==idtrat){
+						P(fast_mask, iwfs)=1;//has output for fast loop
+					}else{
+						P(fast_mask, iwfs)=0;//does not have output
 					}
-					P(mask, iwfs)=1;//has output
-				}else{
-					P(mask, iwfs)=0;//does not have output
 				}
 			}
 		}else{
@@ -409,30 +488,98 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		}
 		//for multrate, we use sanea at the slower rate for fast WFS due to averaging.
 		//info("aster %d: icase=%d, idtrat=%d\n", aster->iaster, icase, idtrat);
-
+		//Since we masked gm, no need to mask NEA.
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			if(!mask || P(mask, iwfs)){
-				dcp(&P(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea,idtrat));
-				dcwpow(P(nea,iwfs), -2);//in radian^-2
-			}else{
-				dzero(P(nea, iwfs));
-			}
+			dcp(&P(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat));
+			dcwpow(P(nea,iwfs), -2);//in radian^-2
 		}
 		//dshow(nea->m, "nea");
 		if(multirate){
-			dfree(gm);
-			//zero out GM for modes not measured by the faster loop. True even if there is no slow loop.
-			gm=setup_aster_mask_gm(aster->g, mask, icase==icase_fast?aster->mdirect:NULL);
-		}
-		P(aster->pgm,icase)=dpinv(gm, nea->m);
-
-		//Noise propagation
-		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			if(!mask || P(mask,iwfs)){
-				dcwpow(P(nea,iwfs), -1);//in radian^2.
+			if(icase==icase_fast){
+				if(parms->skyc.dbg) lshow(aster->mdirect, "mdirect");
+				//zero out GM for modes not measured by the faster loop. 
+				gmfast=setup_aster_gm_mask(&aster->mdirect, parms, aster->g, fast_mask);
+				P(aster->pgm,icase)=recon_mblind(gmfast, nea->m, aster->mdirect);
+				if(ncase>=1){//do not control highly aliased modes in the fast loop when there is a slow loop.
+					dmat *aliased=NULL;
+					real factor=ncase>1?1:5;
+					int nr=0;
+					dmm(&aliased, 0, P(aster->pgm, icase), P(aster->pgm, icase), "nt", 1);
+					if(parms->skyc.dbg) dshow(aliased, "aliased");
+					if(parms->maos.indps){
+						real sum1=0,sum2=0;
+						for(int i=parms->maos.indps; i<parms->maos.indps+3; i++){
+							if(P(aster->mdirect, i)) continue;
+							for(int j=0; j<i; j++){
+								sum1+=fabs(P(aliased, j, i));
+							}
+							sum2+=fabs(P(aliased, i, i));
+						}
+						if(parms->skyc.dbg) info("sum1=%g, sum2=%g, ratio=%g\n", sum1, sum2, sum1/sum2);
+						if(sum1>sum2*factor){
+							for(int i=parms->maos.indps; i<parms->maos.indps+3; i++){
+								if(!P(aster->mdirect, i)){
+									P(aster->mdirect, i)=1;
+									nr++;
+									//warning_once("mode %d is zeroed due to aliasing\n", i);
+								}
+							}
+						}
+					}
+					dfree(aliased);
+					if(nr){
+						if(parms->skyc.dbg) lshow(aster->mdirect, "mdirect_aliased");
+						dfree(P(aster->pgm,icase));
+						P(aster->pgm,icase)=recon_mblind(gmfast, nea->m, aster->mdirect);
+						//dshow(gmfast, "gmfast");
+						//dshow(P(aster->pgm, icase), "pgmfast");
+					}
+				}
+				
+			}else{//slow loop
+				//Setup modes controlled by slow loop that is not measured correctly by the fast loop
+				//Mslow=(I-Gfast*Gfast^-1)
+				//Must use non-filtered gmfast
+				//dmat *gmfast=setup_aster_gm_mask(parms, aster->g, fast_mask);
+				//dmat *rgmfast=dpinv(gmfast, nea->m);
+				dmat *Mslow=dnew(nmod, nmod); 
+				daddI(Mslow, 1);
+				dmm(&Mslow, 1, P(aster->pgm,icase_fast), gmfast, "nn", -1);
+				//for(int i=0; i<PN(Mslow); i++){
+					//if(P(Mslow, i)<1e-7) P(Mslow, i)=0;
+				//}
+				if(parms->skyc.dbg){
+					dshow(Mslow, "aster%d_M_slow", aster->iaster);
+					//dshow(Mslow, "aster%d_M_slow", aster->iaster);
+					//dshow(gmfast, "gm_fast");
+					//dshow(gmfull, "gmfull");
+					//dshow(pgmslow, "pgmslow");
+					//dshow(P(aster->pgm, icase_fast), "pgm_fast");
+				}
+				dmat *gmslow=NULL;
+				dmm(&gmslow, 0, gmfull, Mslow, "nn", 1);
+				dmat *pgmslow=dpinv(gmslow, nea->m);
+				dmm(&P(aster->pgm,icase), 0, Mslow, pgmslow, "nn", 1);
+				//dfree(gmfast);
+				//dfree(rgmfast);
+				dfree(Mslow);
+				dfree(gmslow);
+				dfree(pgmslow);
 			}
+		}else{
+			P(aster->pgm,icase)=recon_mblind(gmfull, nea->m, mblind);
+		}
+		
+		//Compute noise propagation
+		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+			dcwpow(P(nea,iwfs), -1);//in radian^2.
 		}
 		P(aster->sigman,icase)=calc_recon_error(P(aster->pgm,icase), nea->m, parms->maos.mcc);
+		if(parms->skyc.dbg){
+			//dshow(P(aster->pgm, icase), "pgm_%d", idtrat);
+			//dshow(nea->m, "nea_%d", idtrat);
+			dshow(P(aster->sigman, icase), "aster%d_sigman_%.0f", aster->iaster, P(parms->skyc.dtrats, idtrat));
+		}
 		if(parms->skyc.dbg>2){
 			writebin(nea, "%s/aster%d_nea%d", dirsetup, aster->iaster, icase);
 		}
@@ -449,7 +596,9 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		dmat* sigma=dnew(1,1);
 		for(int ipsd=0; ipsd<simu->psds->nx; ipsd++){//npsd=1 is gsplit=0
 			P(sigma, 0)=P(P(aster->sigman,icase),parms->skyc.gsplit?ipsd:nmod);
+			if(!P(sigma, 0)) continue;//not used
 			real pg[ng+2];
+			//For the slow loop, not the FULL PSD is in affect. How do we reduce the gain accordingly?
 			if(parms->skyc.interpg){//LUT with noise level use pre-determined gain 
 				interp_gain(pg, P(P(simu->gain_pre,idtrat),ipsd), simu->gain_x, P(sigma, 0));
 			} else{
@@ -457,29 +606,32 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 				memcpy(pg, P(P(tmp,0)), (ng+2)*sizeof(real));
 				dcellfree(tmp);
 			}
-			memcpy(PCOL(pgain, ipsd), pg, sizeof(real)*ng);
 			if(multirate){
-				if(icase+1!=ncase){//this is faster loop
+				if(icase==icase_fast){//this is faster loop
 					if(!P(aster->mdirect, ipsd)){//mode driven only by fast loop
 						res_ngs+=pg[ng];
 						res_ngsn+=pg[ng+1];
-						//info("aster %d mode %d fast\n", aster->iaster, ipsd);
 					}
-				}else{//slow loop or all loops if only 1 rate.
-					if(aster->mdirect&&!P(aster->mdirect, ipsd)){//there is mode driven by fast loop
+				}else{//slow loop
+					if(!P(aster->mdirect, ipsd)){//mainly driven by fast loop
+						//slower loop is not expriencing the full PSD. reduce the gain.
+						pg[0]*=0.5;
+						pg[ng+1]*=0.5;
 						res_ngsn+=pg[ng+1];//only count noise propation
-						//info("aster %d mode %d slow noisy only\n", aster->iaster, ipsd);
-					}else{//driven by sloper loop
+					}else{//mainly driven by slower loop
 						res_ngs+=pg[ng];
 						res_ngsn+=pg[ng+1];
-						//info("aster %d mode %d slow\n", aster->iaster, ipsd);
 					}
 				}
 			}else{
 				res_ngs+=pg[ng];
 				res_ngsn+=pg[ng+1];
 			}
+			memcpy(PCOL(pgain, ipsd), pg, sizeof(real)*ng);
 		}//for ipsd
+		if(parms->skyc.dbgaster!=-1){
+			info("aster %d idtrat %d, est %6.1f signal %6.1f noise %6.1f nm\n", aster->iaster, idtrat, sqrt(res_ngs+res_ngsn)*1e9, sqrt(res_ngs)*1e9, sqrt(res_ngsn)*1e9);
+		}
 		dfree(sigma);
 		if(simu->psds->nx < nmod){
 			warning_once("Use gain of mode 0 for modes with no PSD\n");
@@ -502,27 +654,55 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 				parms->maos.dt, P(parms->skyc.dtrats,idtrat), 0, g_tt, servotype);
 			dfree(g_tt);
 		}
-	}//for dtrat
+		if(parms->skyc.dbgaster!=-1){
+			//dshow(gmfull, "gmfull_%d", icase);
+			//dshow(P(aster->pgm,icase), "pgm_%d", icase);
+			dshow(P(aster->gain, icase), "gain_%.0f", P(parms->skyc.dtrats, idtrat));
+			//dshow(P(aster->sigman, icase), "sigman_%d", icase);
+			//dshow(nea->m, "nea_%d", icase);
+		}
+	}//for icase
 	dcellfree(nea);
-	lfree(mask);
+	lfree(mblind);
+	lfree(fast_mask);
 	if(multirate){//for setup_aster_select() to use.
 		P(aster->res_ngs, 0, 0)=res_ngs+res_ngsn;/*error due to signal and noise */
 		P(aster->res_ngs, 0, 1)=res_ngs;/*error due to signal */
 		P(aster->res_ngs, 0, 2)=res_ngsn;/*error due to noise propagation. */
 		
 		aster->minest=P(aster->res_ngs, 0, 0);
-		if(icase_fast!=icase_slow){//there is no slow loop
-			for(int imod=0; imod<nmod; imod++){
-				if(P(aster->mdirect, imod)){//mode only measured by slow loop. Use the slow loop gain.
-					P(P(aster->gain, icase_fast), imod)=P(P(aster->gain, icase_slow), imod);
-				}else{
-					P(P(aster->gain, icase_slow), imod)*=0.15;//avoid gain >1 to help stability. the indirect slow loop does not need as much gain because the fast loop is doing the main correction.
+
+		if(icase_fast!=icase_slow){//there is slow loop. make gains equal.
+			//Average the gain for different modes so that the control output is invisible to fast loop.
+			int n=nmod;
+			if(parms->maos.indfocus==n-1 && P(aster->mdirect, n-1)){//focus is by the slow loop and is already blind to the fast loop
+				n--;
+			}
+			real gsum=0;
+			//real gmax=0;
+			//real gmin=1;
+			real gct=0;
+			for(int i=0; i<n; i++){
+				if(P(aster->mdirect, i)){
+					gsum+=P(P(aster->gain, icase_slow), i);
+					//gmax=MAX(gmax, P(P(aster->gain, icase_slow), i));
+					//gmin=MIN(gmin, P(P(aster->gain, icase_slow), i));
+					gct+=1;
 				}
+			}
+			if(gct>0){
+				gsum/=gct;
+				for(int i=0; i<n; i++){
+					P(P(aster->gain, icase_slow), i)=gsum;
+				}
+			}
+			if(parms->skyc.dbg){
+				dshow(P(aster->gain, icase_slow), "gain_slow");
 			}
 		}
 	}
 	if(parms->skyc.dbg>3){
-		writebin(gm, "%s/aster%d_gm", dirsetup, aster->iaster);
+		writebin(gmfull, "%s/aster%d_gm", dirsetup, aster->iaster);
 		writebin(aster->pgm, "%s/aster%d_pgm", dirsetup, aster->iaster);
 		writebin(aster->sigman, "%s/aster%d_sigman", dirsetup, aster->iaster);
 		writebin(aster->gain, "%s/aster%d_gain", dirsetup, aster->iaster);
@@ -531,8 +711,8 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		}
 		writebin(aster->res_ngs, "%s/aster%d_res_ngs", dirsetup, aster->iaster);
 	}
-	dfree(gm);
-	lfree(case_valid);
+	dfree(gmfull);
+	dfree(gmfast);
 }
 /**Place sanea**2 to diagonal of neam */
 static void set_diag_pow2(dmat **pneam, dmat *sanea){
@@ -567,24 +747,18 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 					set_diag_pow2(&P(neam, iwfs, i), P(aster->wfs[iwfs].pistat->sanea, P(idtrats, i)));
 				}
 			}
+			lfree(idtrats);
 		}
 		if(!skip){
 			aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->mdirect, aster->g, neam, 0);
 		}
 		if(!aster->kalman[idtrat]){//failed to converge
 			P(aster->res_ngs, idtrat, 0)=simu->varol;
-		}else if(!parms->skyc.multirate){//in multirate, use servo result
-#if 0
-			dmat* res=kalman_test(aster->kalman[idtrat], NULL, simu->mideal, 0);//determine the residual
-			real rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
-			dfree(res);
-#else
+		}else{//in multirate, use servo result
 			dmat *tmp=0;
-			dmm(&tmp, 0, aster->kalman[idtrat]->P->p[0], parms->maos.mcc, "nn", 1);
+			dmm(&tmp, 0, P(aster->kalman[idtrat]->P, 0), parms->maos.mcc, "nn", 1);
 			real rms=dtrace(tmp);
 			dfree(tmp);
-#endif			
-			//toc2("estimate");
 			P(aster->res_ngs, idtrat, 0)=rms;
 		}
 		if(parms->skyc.dbg){
@@ -612,8 +786,7 @@ static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	}
 	if(aster->idtratest!=-1){
 		if(maxdtrat>1 && ndtrat>1){
-			real thres=MIN(aster->minest*2+wvfmargin, maxerror);//threshold at low freq end
-			real thres2=MIN(aster->minest*2+wvfmargin, maxerror);//threshold at high freq end
+			real thres=MIN(aster->minest*2+wvfmargin, maxerror);//threshold
 			/*Find upper and skymin good dtrats. */
 			for(int idtrat=aster->idtratest; idtrat<ndtrat; idtrat++){
 				if(P(aster->res_ngs, idtrat, 0)<thres){
@@ -623,28 +796,33 @@ static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 				}
 			}
 			for(int idtrat=aster->idtratest; idtrat>=0; idtrat--){
-				if(P(aster->res_ngs, idtrat, 0)<thres2){
+				if(P(aster->res_ngs, idtrat, 0)<thres){
 					aster->idtratmin=idtrat;
 				} else{
 					break;
 				}
 			}
 			//2018-02-28: changed to prefer high frame rate
-			if(aster->idtratmax>aster->idtratmin+maxdtrat+1){
-				aster->idtratmin=aster->idtratmax-(maxdtrat+1);
-			}
+			//if(aster->idtratmax>aster->idtratmin+maxdtrat+1){
+				//aster->idtratmin=aster->idtratmax-(maxdtrat+1);
+			//}
 		}else{//only evaluate at the best frame rate.
 			aster->idtratmin=aster->idtratest;
 			aster->idtratmax=aster->idtratmin+1;
 		}
 	}
 }
-void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
+void setup_aster_controller(sim_s* simu, aster_s* aster, star_s *star, const parms_s* parms){
 	if(parms->skyc.multirate){
-		setup_aster_multirate(aster, parms);
+		setup_aster_multirate(aster, parms);//this may alter the number of wfs.
 	}
-	if(parms->skyc.servo>0 || parms->skyc.multirate){
-		setup_aster_servo(simu, aster, parms);//needs this in LQG multirate mode.
+	setup_aster_g(aster, star, parms);//after setup_aster_multirate as it may alter the number of wfs.
+	if(!aster->use){
+		aster->minest=simu->varol;
+		return;
+	}
+	if(parms->skyc.servo>0 || parms->skyc.servo==-2){
+		setup_aster_servo(simu, aster, parms);//may use this in LQG multirate mode.
 	}
 	if(parms->skyc.servo<0){
 		setup_aster_kalman(simu, aster, parms);
@@ -652,24 +830,6 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, const parms_s* parms){
 	if(!parms->skyc.multirate){
 		select_aster_dtrat(aster, parms->skyc.maxdtrat, simu->varol);
 	}
-	/*if(parms->skyc.verbose){
-		info("aster%3d stars=(", aster->iaster);
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				info(" %2d", aster->wfs[iwfs].istar);
-			}
-		if(!parms->skyc.multirate){
-			info("), dtrats=(%2d:%2d:%2d",
-			(int)P(parms->skyc.dtrats,aster->idtratmin),
-			(int)P(parms->skyc.dtrats,aster->idtratest),
-			(int)P(parms->skyc.dtrats,aster->idtratmax-1));
-		}else{//multirate
-			info("), dtrats=(");
-			for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-				info(" %2ld", P(aster->dtrats,iwfs));
-			}
-		}
-		info("), est=%3.0f nm\n", sqrt(aster->minest)*1e9);
-	}*/
 }
 /**
    for sort incrementally.
@@ -687,7 +847,7 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 	//select the asterism with the best performance
 	for(int iaster=0; iaster<naster; iaster++){
 		P(imin, 1, iaster)=iaster;
-		if((parms->skyc.dbgaster>-1&&iaster!=parms->skyc.dbgaster)||aster[iaster].use==-1){
+		if((parms->skyc.dbgaster>-1&&iaster!=parms->skyc.dbgaster)||!aster[iaster].use){
 			P(imin, 0, iaster)=INFINITY;
 			continue;
 		}
@@ -711,7 +871,7 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 	int count=0;
 	if(skymin<maxerror){
 		int taster=naster;
-		if(parms->skyc.maxaster>0&&naster>parms->skyc.maxaster){
+		if(!parms->skyc.multirate && parms->skyc.maxaster>0&&naster>parms->skyc.maxaster){
 			taster=parms->skyc.maxaster;
 		}
 		qsort(P(imin), naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
@@ -720,7 +880,7 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 			int iaster=(int)P(imin, 1, jaster);
 			if(aster[iaster].idtratest==-1) continue;
 			count++;
-			aster[iaster].use=1;/*mark as valid. */
+			aster[iaster].use=2;/*mark as valid for physical optics simulation. */
 			char temp1[1024]; temp1[0]='\0';
 			for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
 				int istar=aster[iaster].wfs[iwfs].istar;
@@ -769,10 +929,9 @@ void free_aster(aster_s* aster, int naster, const parms_s* parms){
 
 		free(aster[iaster].wfs);
 		dcellfree(aster[iaster].g);
-		dfree(aster[iaster].gm);
 		lfree(aster[iaster].dtrats);
 		lfree(aster[iaster].idtrats);
-		free(aster[iaster].ngs);
+		free(aster[iaster].ngrad);
 		dcellfree(aster[iaster].phyres);
 		dcellfree(aster[iaster].phymres);
 		lfree(aster[iaster].mdirect);

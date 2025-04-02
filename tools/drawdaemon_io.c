@@ -154,7 +154,6 @@ void *listen_udp(void *dummy){
 }
 void drawdata_free_input(drawdata_t *drawdata){
 	/*Only free the input received via fifo from draw.c */
-#define FREE(A) free(A); A=NULL;
 	FREE(drawdata->p);
 	FREE(drawdata->p0);
 	FREE(drawdata->p1);

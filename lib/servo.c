@@ -561,7 +561,7 @@ static void servo_init(servo_t* st, const anyarray merr_){
 /**
    Update servo parameters
 */
-static void servo_update_ep(servo_t* st, const dmat* ep){
+static void servo_convert_ep(servo_t* st, const dmat* ep){
 	if(!ep){
 		error("ep cannot be null\n");
 	}
@@ -601,7 +601,7 @@ servo_t* servo_new(anyarray merr, const dmat* ap, real al, real dt, const dmat* 
 	st->alint=(int)floor(al);
 	st->alfrac=al-floor(al);
 	st->merrhist=cellnew(st->alint+1, 1);
-	servo_update_ep(st, ep);
+	if(ep) servo_convert_ep(st, ep);
 	servo_init(st, merr);
 	return st;
 }
@@ -610,7 +610,7 @@ servo_t* servo_new(anyarray merr, const dmat* ap, real al, real dt, const dmat* 
  * */
 servo_t *servo_new_scalar(anyarray merr, real ap, real al, real dt, real ep){
 	dmat *ap2=dnew(1,1); P(ap2,0)=ap;
-	dmat *ep2=dnew(1,1); P(ep2,0)=ep;
+	dmat *ep2=ep?dnew(1,1):NULL; if(ep) P(ep2,0)=ep;
 	servo_t *st=servo_new(merr, ap2, al, dt, ep2);
 	dfree(ap2); dfree(ep2); 
 	return st;
@@ -700,7 +700,9 @@ int servo_filter(servo_t* st, const anyarray _merr){
 	if(!st->mint){
 		error("servo_t must be created using servo_new()\n");
 	}
-	switch(NX(st->ep)){
+	if(!st->ep){//ep is externally handled
+		dcelladd(&st->mpreint, 0, merr, 1);
+	}else switch(NX(st->ep)){
 	case 1://type I
 		if(NY(st->ep)==1){//single gain
 			dcelladd(&st->mpreint, 0, merr, P(st->ep,0));//just record what is added.

@@ -44,6 +44,7 @@
     X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;		\
     void X(set)(X(mat) *A, const T val);				\
     void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);	\
+	void X(show_diag)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
     void X(vecperm)(X(mat) * out, const X(mat) *in, const long *perm);	\
     void X(vecpermi)(X(mat) *out, const X(mat) *in, const long *perm);	\
     int X(flip)(X(mat)*A, int axis);\

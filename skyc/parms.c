@@ -20,11 +20,6 @@
 #include "skyc.h"
 #include "parms.h"
 #include "nafocus.h"
-#undef malloc
-#undef calloc
-#undef free
-#undef realloc
-
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
@@ -193,7 +188,7 @@ parms_s* setup_parms(const arg_s* arg){
 	/*Setup PATH and result directory */
 	char* config_path=find_config("skyc");
 	addpath(config_path);
-	free(config_path);
+	FREE(config_path);
 	if(arg->conf){//specified by -c
 		open_config(arg->conf, 0);
 	}
@@ -386,7 +381,9 @@ parms_s* setup_parms(const arg_s* arg){
 		info("Variance of the gradients in stored PSF is added to NEA\n");
 	}
 	info("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
-
+	if(parms->skyc.dbgsky>=parms->skyc.nsky){
+		error("skyc.dbgsky=%d should be less than skyc.nsky=%d\n", parms->skyc.dbgsky, parms->skyc.nsky);
+	}
 	if(parms->skyc.dbg||parms->skyc.dbgsky>-1){
 		dbg("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
 		if(parms->skyc.verbose<1){
@@ -397,7 +394,7 @@ parms_s* setup_parms(const arg_s* arg){
 	}
 	if(parms->skyc.interpg==-1){
 		if(parms->skyc.dbg||parms->skyc.dbgsky>-1||parms->skyc.nsky<20){
-		parms->skyc.interpg=0;
+			parms->skyc.interpg=0;
 		}else{
 			parms->skyc.interpg=1;
 		}
@@ -471,30 +468,52 @@ parms_s* setup_parms(const arg_s* arg){
    Free the data in parms.
 */
 void free_parms(parms_s* parms){
-	dfree(parms->skyc.psd_ngs);
-	dfree(parms->skyc.psd_tt);
-	dfree(parms->skyc.psd_ws);
-	dfree(parms->skyc.psd_ps);
+	lfree(parms->skyc.nwfsmax);
+	FREE(parms->skyc.pixtheta);
+	FREE(parms->skyc.pixblur);
+	FREE(parms->skyc.pixpsa);
+	FREE(parms->skyc.pixguard);
+	FREE(parms->skyc.pixoffx);
+	FREE(parms->skyc.pixoffy);
+	free_strarr(parms->skyc.fnpsf1, parms->skyc.npowfs);parms->skyc.fnpsf1=NULL;
+	dfree(parms->skyc.zb.wvl);
+	dfree(parms->skyc.zb.qe);
+	dfree(parms->skyc.zb.thruput);
+	dfree(parms->skyc.zb.excessbkgrnd);
+	dfree(parms->skyc.zb.Z);
+	dfree(parms->skyc.zb.B);
 	dfree(parms->skyc.dtrats);
 	dfree(parms->skyc.snrmin_fast);
 	dfree(parms->skyc.snrmin_slow);
-	free(parms->skyc.stars);parms->skyc.stars=NULL;
+	
+	dfree(parms->skyc.psd_ws);
+	FREE(parms->skyc.stars);
+	//the following are computed
 	dfree(parms->skyc.fss);
 	dfree(parms->skyc.wvlwt);
 	dfree(parms->skyc.rnefs);
-	lfree(parms->skyc.nwfsmax);
+	
+	FREE(parms->maos.seeds);
+	FREE(parms->maos.wvl);
+	FREE(parms->maos.msa);
+	FREE(parms->maos.nsa);
+	FREE(parms->maos.ncomp);
+	FREE(parms->maos.embfac);
+	FREE(parms->maos.dxsa);
+	free_strarr(parms->maos.fnwfsloc, parms->maos.npowfs);parms->maos.fnwfsloc=NULL;
+	free_strarr(parms->maos.fnwfsamp, parms->maos.npowfs);parms->maos.fnwfsamp=NULL;
+	free_strarr(parms->maos.fnsaloc, parms->maos.npowfs);parms->maos.fnsaloc=NULL;
 	dfree(parms->maos.mcc);
 	dfree(parms->maos.mcc_oa);
 	dfree(parms->maos.mcc_tt);
 	dfree(parms->maos.mcc_oa_tt);
 	dfree(parms->maos.mcc_oa_tt2);
-	free(parms->maos.msa);parms->maos.msa=NULL;
-	free(parms->maos.nsa);parms->maos.nsa=NULL;
-	free(parms->maos.ncomp);parms->maos.ncomp=NULL;
-	free(parms->maos.embfac);parms->maos.embfac=NULL;
-	free(parms->maos.dxsa);parms->maos.dxsa=NULL;
-	free_strarr(parms->maos.fnwfsloc, parms->maos.npowfs);parms->maos.fnwfsloc=NULL;
-	free_strarr(parms->maos.fnwfsamp, parms->maos.npowfs);parms->maos.fnwfsamp=NULL;
-	free_strarr(parms->maos.fnsaloc, parms->maos.npowfs);parms->maos.fnsaloc=NULL;
+	FREE(parms->maos.fnmideal);
+	FREE(parms->maos.fnmidealp);
+	FREE(parms->maos.fnrange);
+	FREE(parms->maos.wddeg);
+	//the following are allocated
+	FREE(parms->fdlock);
+	FREE(parms->fnlock);
 	free(parms);
 }

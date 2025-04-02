@@ -651,6 +651,21 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 			dmm3(&Sigma_zeta, 1, TQj, Sigma_ep, TQj, "nnt", dT2/(dT*dT));
 		}
 		dfree(TQj);dfree(expAjn);
+		dcell *Mproj=NULL;
+		if(mdirect){
+			Mproj=dcellnew_same(1, 1, nmod, nmod);
+			if(idtrat==0){//fast loop
+				for(int i=0; i<nmod; i++){
+					P(P(Mproj,0),i,i)=P(mdirect,i)?0:1;
+				}
+			}else{
+				dcellmm(&Mproj, P(res->Rlsq, 0), Gwfs, "nn", -1);
+				daddI(P(Mproj, 0), 1);
+				//writebin(P(res->Rlsq, 0), "Rlsq0");
+				//writebin(Gwfs, "Gwfs0");
+			}
+			//dshow(P(Mproj, 0), "Mproj_%d", idtrat);
+		}
 		dmm3(&Radd, 1, Pd, Sigma_zeta, Pd, "nnt", 1);//Radd = Pd * Sigma_zeta * Pd': state noise in WFS
 		calc_Q(&Qwfs, Ac, AcI, dT);//Qwfs = (1-exp(-Ac*dT))*Ac^-1 / dT: state averaging vector. 
 		dmat *Qn=calc_Qn(Ac, Sigma_ep, dthi*dtrat, dtrat*10);
@@ -666,13 +681,8 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 			P(Rn, iwfs, iwfs)=dnew(ng, ng);
 			if(dtrat%P(dtrat_wfs,iwfs)==0){
 				dmat* Gwfsi=0;//Use for reconstruction. 
-				if(idtrat==0 && mdirect && lsum(mdirect)>0){
-					Gwfsi=ddup(P(Gwfs,iwfs));
-					for(int im=0; im<NY(Gwfsi); im++){
-						if(P(mdirect, im)){//only controlled by slow loop
-							dzerocol(Gwfsi, im);
-						}
-					}
+				if(Mproj){
+					dmm(&Gwfsi, 0, P(Gwfs, iwfs), P(Mproj,0), "nn", 1);
 				} else{
 					Gwfsi=dref(P(Gwfs,iwfs));
 				}
@@ -692,6 +702,12 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 		P(res->Rn,idtrat)=dcell2m(Rn); dcellfree(Rn);
 		P(res->Cd,idtrat)=dcell2m(Cd); dcellfree(Cd);
 		P(res->Rlsq, idtrat)=dcellpinv(GwfsU, neai);
+		if(Mproj){
+			dcell *tmp=P(res->Rlsq, idtrat);
+			P(res->Rlsq,idtrat)=NULL;
+			dcellmm(&P(res->Rlsq,idtrat), Mproj, tmp, "nn", 1);
+			dcellfree(tmp);
+		}
 		dcellfree(GwfsU);
 		dcellfree(neai);
 		dmat *Sigma_infty=0;//Sigma_infty, estimation error covariance. convert to error in modes.
@@ -706,7 +722,8 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 		dfree(Sigma_zeta);
 		dfree(Radd);
 		dfree(Qn);
-	}
+		cellfree(Mproj);
+	}//for idtrat
 
 	dfree(Ac);
 	dfree(AcI);

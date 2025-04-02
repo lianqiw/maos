@@ -144,11 +144,7 @@ typedef struct skyc_s{
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/
     int gsplit;      /**<use separate gains for tip/tilt and plate scale modes*/
-    dmat *psd_ngs;   /**<PSD of NGS(tip/tilt + plate scale) modes*/
-    dmat *psd_tt;    /**<PSD of Tip/tilt modes*/
-    dmat *psd_ps;    /**<PSD of plate scale modes*/
     dmat *psd_ws;    /**<PSD of windshake*/
-    dmat *psd_focus; /**<PSD of residual focus due to sodium layer variation, propagated by LGS WFS*/
     
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/

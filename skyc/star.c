@@ -360,7 +360,8 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 				//real nea=sqrt(dsumsq(P(pistat->sanea, idtrat))/2/nsa);//original version. averaged all subapertures
 				//real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/2)/(nsa);// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
 				//real nea=sqrt(dsumsq(P(pistat->sanea, idtrat)))/(nsa*2)*(nsa==1?2:5);// /2 to separate x/y. tt estimate 2 mode, ttf estimate 5 mode.
-				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/2)/(nsa==1?1:2.5);// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
+				//real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/(2*(nsa==1?1:2.5)));// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
+				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/(2*(nsa*nsa)));// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
 				real snr=sigma_theta/nea;
 				P(pistat->snr,idtrat)=snr;
 				real snrmin=parms->skyc.multirate?P(parms->skyc.snrmin_fast, idtrat):parms->skyc.snrmin;
@@ -649,14 +650,15 @@ static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			info("%4.1f%s", P(star[istar].mags,iwvl),iwvl+1<nwvl?" ":"), ");
 		}
-		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+		for(int ipowfs=npowfs-1; ipowfs>=0; ipowfs--){
 			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
 			if(idtrat>=0){
 				pistat_s* pistat=&star[istar].pistat[ipowfs];
 				int nsa=NX(pistat->i0);
-				info("%s: snr=%4.1f at dtrat=%2.0f%s", nsa==1?"TT":"TTF", P(pistat->snr,idtrat), P(dtrats,idtrat),ipowfs+1==npowfs?"\n":", ");
+				info("%s: snr=%4.1f at dtrat=%2.0f%s", nsa==1?"TT":"TTF", P(pistat->snr,idtrat), P(dtrats,idtrat),ipowfs==0?"":", ");
 			}
 		}
+		info("\n");
 	}
 }
 /**

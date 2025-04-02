@@ -2134,7 +2134,11 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	fprintf(fp, "maos.nstep=%d\n", parms->sim.end);
 	fprintf(fp, "maos.ahstfocus=%d\n", parms->tomo.ahst_focus);
 	fprintf(fp, "maos.mffocus=%d\n", parms->sim.mffocus);
-	fprintf(fp, "maos.fnrange=%s\n", parms->powfs[P(parms->hipowfs, 0)].llt->fnrange);
+	if(parms->powfs[P(parms->hipowfs, 0)].llt->fnrange){
+		fprintf(fp, "maos.fnrange=%s\n", parms->powfs[P(parms->hipowfs, 0)].llt->fnrange);
+	}else{
+		fprintf(fp, "maos.fnrange=\n");
+	}
 	fprintf(fp, "maos.indps=%d\n", recon->ngsmod->indps);
 	fprintf(fp, "maos.indastig=%d\n", recon->ngsmod->indastig);
 	fprintf(fp, "maos.indfocus=%d\n", recon->ngsmod->indfocus);

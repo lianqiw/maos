@@ -65,6 +65,8 @@ typedef struct pistat_s{
 typedef struct wfs_s{
     int ipowfs;        /**<type of powfs for each wfs.*/
     int istar;         /**<index to star;*/
+	int use;		 /**<whether this wfs is used. */
+	int idtrat;		 /**<idtrat of this wfs.  */
     real thetax;     /**<location of wfs*/
     real thetay;     /**<location of wfs*/
     dmat *mags;        /**<magnitude in each band*/
@@ -107,23 +109,27 @@ typedef struct aster_s{
     int tsa;           /**<total number of subapertures.*/
     int nwfs;          /**<number of WFS.*/
     int use;           /**<use this asterism for further physical optics simulation.*/
+	lmat *mdirect;     /**<in multirate mode, directly output such modes for slower mode*/
+	//The following are wfs dependent
     wfs_s *wfs;        /**<list of wfs for this asterism*/
+	lmat *idtrats;	   /**<idtrat of each wfs*/
+    lmat *dtrats;	   /**<dtrat of each wfs */   
+
     dcell *g;          /**<NGS mode to grad operator*/
-    dmat *gm;          /**<matrix version of g.*/
-    lmat *mdirect;     /**<in multirate mode, directly output such modes for slower mode*/
+	long *ngrad;         /**<number of gradients for each wfs*/
     /*The following are for each dtrat */
     dcell *pgm;        /**<mode reconstructor */
     dcell *gain;       /**<type II gain vector*/
-    //dccell *neam;        /**<measurement error covariance matrix (full matrix with values in diagonal)*/
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
+	kalman_t **kalman;	/**<Kalman filter for LQG controller. */
+    
+
+	//the following are results
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     real minest;    /**<miminum rms on servo restimation.*/
     rand_t rand;       /**<random stream*/
-    kalman_t **kalman;	/**<Kalman filter for LQG controller. */
-    lmat *idtrats;	   /**<idtrat of each wfs*/
-    lmat *dtrats;	   /**<dtrat of each wfs */
-    long *ngs;         /**<number of gradients for each wfs*/
+
     dcell *phyres;      /**<Wavefront variance result from physical optics simulations.*/
     dcell *phymres;     /**<Residual modes from physical optics simulation*/
 	real minphyres;	/**<Best PO performance (at idtratphy) */

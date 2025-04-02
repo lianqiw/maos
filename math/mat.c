@@ -428,7 +428,7 @@ void X(set)(X(mat)* A, const T val){
 }
 
 /**
-   display a matrix. use stderr show that jupyterlab can show the output.
+   display a matrix. 
 */
 void X(show)(const X(mat)* A, const char* format, ...){
 	format2fn;
@@ -467,6 +467,30 @@ void X(show)(const X(mat)* A, const char* format, ...){
 			}
 		}
 	}
+}
+/**
+   display diagonal of a matrix. 
+*/
+void X(show_diag)(const X(mat)* A, const char* format, ...){
+	format2fn;
+	if(!check_mat(A)){
+		warning("Invalid: %s is not matrix.", fn);
+		return;
+	}
+	info("%s diagonal:", fn);//display inline
+	int n=MIN(NX(A), NY(A));
+	int ns=MIN(n, 6);
+	for(int i=0; i<ns; i++){
+		PRINT(P(A,i,i));
+	}
+	if(n>ns*2){
+		info("...");
+		ns=n-ns;
+	}
+	for(int i=ns; i<n; i++){
+		PRINT(P(A,i,i));
+	}
+	info("\n");
 }
 /**
    Permute the vector so that
