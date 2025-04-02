@@ -38,11 +38,10 @@ typedef struct powfs_s{
     dtf_s  *dtf;       /**<array of dtf for each wvl*/
     loc_t  *loc;       /**<explicit pts in a regular grid. */
     dmat   *amp;       /**<amplitude map defined on loc*/
-    real *locxamp;   /**<dot(loc->locx,amp);*/
-    real *locyamp;   /**<dot(loc->locy,amp);*/
+	dmat   *sacent;	   /**<Amplituded weighted average of locx and locy */
     loc_t  *saloc;     /**<subaperture location*/
-    real dxwvf;      /**<sampling for the wvf.*/
-    int    nxwvf;      /**<number of points each subaps*/
+    real 	dxwvf;      /**<sampling for the wvf.*/
+    int   	nxwvf;      /**<number of points each subaps*/
 }powfs_s;
 /**
    Struct for pixel intensity statistics*/

@@ -476,4 +476,57 @@ dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, dmat *saa, real saat
 	return GS0;
 }
 #endif
+/**
+ * @brief Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography
+ * 
+ * @param sacent 	Amplitude weighted center coordinate of each subaperture (nsa*2)
+ * @param thetax 	angular coordinate of NGS
+ * @param thetay 	angular coordinate of NGS
+ * @param hc 		upper DM conjugation range (for MCAO)
+ * @param hs 		LGS range
+ * @param indps 	Plate scale mode index (0 or 2) (for MCAO)
+ * @param indastig  Astigmatism mode index (0 or 2) (for LTAO)
+ * @param indfocus  Focus mode index (0 or indps+3 or indastig+2
+ * @param ahstfocus =1: no focus mode in first PS mode in science OPD.
+ * @return dmat 
+ */
+dmat* mkg_ngs(dmat *sacent, real thetax, real thetay, real hc, real hs, int indps, int indastig, int indfocus, int ahstfocus){
+	if(!sacent) error("sacent must be specified as a nsa*2 matrix\n");
+	const int nsa=NX(sacent);
+	const int nmod=2+(indps?3:0)+(indastig?2:0)+(indfocus?1:0);
+	const real scale=pow(1.-hc/hs, -2);
+	const real scale1=1.-scale;
+	dmat *pg=dnew(nsa*2, nmod);
+	if(indps+3>nmod || indastig+2>nmod || indfocus+1>nmod){
+		error("indps=%d, indastig=%d or indfocus=%d is incorrect\n", indps, indastig, indfocus);
+	}
+	for(long isa=0; isa<nsa; isa++){
+		const real xm=P(sacent,isa,0);/*dot of x with amp. */
+		const real ym=P(sacent,isa,1);
+
+		P(pg, isa, 0)=1.;//tip
+		P(pg, isa+nsa, 1)=1.;//tilt
+		if(indps){
+			//if ahstfocus==1, first PS mode has no focus component in science.
+			P(pg, isa, indps)=(ahstfocus?0:scale1*2*xm)-2*thetax*hc*scale;
+			P(pg, isa+nsa, indps)=(ahstfocus?0:scale1*2*ym)-2*thetay*hc*scale;
+			
+			P(pg, isa, indps+1)=(scale1*2*xm-2*thetax*hc*scale);
+			P(pg, isa+nsa, indps+1)=(-scale1*2*ym+2*thetay*hc*scale);
+			P(pg, isa, indps+2)=(scale1*ym-thetay*hc*scale);
+			P(pg, isa+nsa, indps+2)=(scale1*xm-thetax*hc*scale);
+		}
+		if(indastig){
+			P(pg, isa, indastig)=(2*xm);//d(x^2-y^2)/dx
+			P(pg, isa+nsa, indastig)=(-2*ym);
+			P(pg, isa, indastig+1)=(ym);//d(xy)/dx
+			P(pg, isa+nsa, indastig+1)=(xm);
+		}
+		if(indfocus){
+			P(pg, isa, indfocus)=xm*2;
+			P(pg, isa+nsa, indfocus)=ym*2;
+		}
+	}
+	return pg;
+}
 

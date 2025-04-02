@@ -385,49 +385,15 @@ static void setup_star_gm(const parms_s* parms, powfs_s* powfs, star_s* star, in
 	const long npowfs=parms->maos.npowfs;
 	const real hc=parms->maos.hc;
 	const real hs=parms->maos.hs;
-	const real scale=pow(1.-hc/hs, -2);
-	const real scale1=1.-scale;
-	const int nmod=parms->maos.nmod;
+
 	for(int istar=0; istar<nstar; istar++){
 		star[istar].g=dcellnew(npowfs, 1);
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-			const long nsa=parms->maos.nsa[ipowfs];
 			const real thetax=star[istar].thetax;
 			const real thetay=star[istar].thetay;
-			P(star[istar].g,ipowfs)=dnew(nsa*2, nmod);
-			dmat* pg=P(star[istar].g,ipowfs);
-			for(long isa=0; isa<nsa; isa++){
-				const real xm=powfs[ipowfs].locxamp[isa];/*dot of x with amp. */
-				const real ym=powfs[ipowfs].locyamp[isa];
-
-				P(pg, isa, 0)=1.;//tip
-				P(pg, isa+nsa, 1)=1.;//tilt
-				if(parms->maos.indps){
-					int indps=parms->maos.indps;
-					if(parms->maos.ahstfocus){/*PS1 mode has no global focus*/
-						P(pg, isa, indps)=(-2*thetax*hc*scale);
-						P(pg, isa+nsa, indps)=(-2*thetay*hc*scale);
-					} else{
-						P(pg, isa, indps)=(scale1*2*xm-2*thetax*hc*scale);
-						P(pg, isa+nsa, indps)=(scale1*2*ym-2*thetay*hc*scale);
-					}
-					P(pg, isa, indps+1)=(scale1*2*xm-2*thetax*hc*scale);
-					P(pg, isa+nsa, indps+1)=(-scale1*2*ym+2*thetay*hc*scale);
-					P(pg, isa, indps+2)=(scale1*ym-thetay*hc*scale);
-					P(pg, isa+nsa, indps+2)=(scale1*xm-thetax*hc*scale);
-				}
-				if(parms->maos.indastig){
-					const int indastig=parms->maos.indastig;
-					P(pg, isa, indastig+1)=(2*xm);//d(x^2-y^2)/dx
-					P(pg, isa+nsa, indastig+1)=(-2*ym);
-					P(pg, isa, indastig+2)=(ym);
-					P(pg, isa+nsa, indastig+2)=(xm);
-				}
-				if(parms->maos.indfocus){
-					P(pg, isa, parms->maos.indfocus)=xm*2;
-					P(pg, isa+nsa, parms->maos.indfocus)=ym*2;
-				}
-			}
+			
+			P(star[istar].g,ipowfs)=mkg_ngs(powfs[ipowfs].sacent, thetax, thetay, hc, hs, 
+				parms->maos.indps, parms->maos.indastig, parms->maos.indfocus, parms->maos.ahstfocus);	
 		}
 		if(parms->skyc.dbg>2){
 			writebin(star[istar].g, "%s/star%d_g", dirsetup, istar);

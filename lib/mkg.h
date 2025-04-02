@@ -23,7 +23,9 @@
    Contains function that creates average gradient operator
 */
 dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, dmat *saa, real saat,
-	 real scale, real dispx, real dispy, int do_partial);
+	real scale, real dispx, real dispy, int do_partial);
 dsp *mkgt(loc_t *xloc, loc_t *ploc, dmat *amp, loc_t *saloc, dmat *saa, real saat,
-	  real scale, real dispx, real dispy, int do_partial);
+	real scale, real dispx, real dispy, int do_partial);
+dmat* mkg_ngs(dmat *sacent, real thetax, real thetay, real hc, real hs, 
+	int indps, int indastig, int indfocus, int ahstfocus);
 #endif

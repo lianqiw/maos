@@ -164,8 +164,7 @@ static void read_powfs_locamp(powfs_s* powfs, const parms_s* parms){
 		if(loc->nloc!=nsa*ptspsa){
 			error("loc %ld does not divide to %ld sa\n", loc->nloc, nsa);
 		}
-		powfs[ipowfs].locxamp=mycalloc(nsa, real);
-		powfs[ipowfs].locyamp=mycalloc(nsa, real);
+		powfs[ipowfs].sacent=dnew(nsa, 2);
 		for(long isa=0; isa<nsa; isa++){
 			const real* iamp=P(amp)+isa*ptspsa;
 			const real* locx=loc->locx+isa*ptspsa;
@@ -176,8 +175,8 @@ static void read_powfs_locamp(powfs_s* powfs, const parms_s* parms){
 				locxamp+=iamp[iloc]*locx[iloc];
 				locyamp+=iamp[iloc]*locy[iloc];
 			}
-			powfs[ipowfs].locxamp[isa]=locxamp/ampsum;
-			powfs[ipowfs].locyamp[isa]=locyamp/ampsum;
+			P(powfs[ipowfs].sacent, isa, 0)=locxamp/ampsum;
+			P(powfs[ipowfs].sacent, isa, 1)=locyamp/ampsum;
 		}
 	}
 }
@@ -208,7 +207,6 @@ void free_powfs(powfs_s* powfs, const parms_s* parms){
 		locfree(powfs[ipowfs].loc);
 		locfree(powfs[ipowfs].saloc);
 		dfree(powfs[ipowfs].amp);
-		free(powfs[ipowfs].locxamp);
-		free(powfs[ipowfs].locyamp);
+		dfree(powfs[ipowfs].sacent);
 	}
 }
