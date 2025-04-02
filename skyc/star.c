@@ -363,7 +363,7 @@ static void setup_star_mtch(const parms_s* parms, powfs_s* powfs, star_s* star, 
 				real nea=sqrt(dsumsq(P(pistat->sanea,idtrat))/2)/(nsa==1?1:2.5);// /2 to separate x/y. nsa is outside of sqrt(). averging sa to get tip/tilt
 				real snr=sigma_theta/nea;
 				P(pistat->snr,idtrat)=snr;
-				real snrmin=parms->skyc.multirate?P(parms->skyc.snrmin_mr, idtrat):parms->skyc.snrmin;
+				real snrmin=parms->skyc.multirate?P(parms->skyc.snrmin_fast, idtrat):parms->skyc.snrmin;
 				if(snr>=snrmin){
 					P(star[istar].minidtrat,ipowfs)=idtrat;
 				}

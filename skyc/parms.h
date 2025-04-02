@@ -138,7 +138,8 @@ typedef struct skyc_s{
     int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/
     int ndtrat;      /**<number of dtrat*/
     dmat *dtrats;     /**<ratio between NGS and LGS WFS sampling period. use dmat due to interp1 calling*/
-    dmat *snrmin_mr; /**<#minimum snr to select each dtrats_mr. balances servo lag error vs noise propagation*/
+    dmat *snrmin_fast; /**<#minimum snr to select each dtrats_mr. balances servo lag error vs noise propagation*/
+	dmat *snrmin_slow; /**<#minimum snr to select each dtrats_mr. balances servo lag error vs noise propagation*/
     dmat *fss;       /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/
