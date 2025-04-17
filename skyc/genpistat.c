@@ -72,7 +72,7 @@ static void* calc_pistat(GENPISTAT_S* data){
 
 		if(zfexist("%s",fnwvf)&&(!zfexist("%s",fnpistat)||!zfexist("%s",fnphygrad)||!zfexist("%s",fnneaspec))){
 			dmat* mapply=dnew(2, 1);
-			TIC;tic;
+			//TIC;tic;
 			file_t* fp_wvf=zfopen(fnwvf, "rb");
 			header_t header={0,0,0,0};
 			read_header(&header, fp_wvf);
@@ -203,7 +203,7 @@ static void* calc_pistat(GENPISTAT_S* data){
 			dcellfree(neaspec);
 			dcellfreearr(avgpsf, nwvl);
 			dfree(phygrad);
-			toc2("Processing wvfout_seed%ld_sa%ld_x%g_y%g", seed, msa, thetax, thetay);
+			//toc2("Processing wvfout_seed%ld_sa%ld_x%g_y%g", seed, msa, thetax, thetay);
 		}/*if exist */
 	}
 	dfree(dtrats);
@@ -214,6 +214,7 @@ void genpistat(const parms_s* parms, powfs_s* powfs){
 	real patfov=parms->skyc.patfov;
 	real ngsgrid=parms->maos.ngsgrid;
 	long ng=ceil(patfov/2/ngsgrid);
+	TIC;tic;
 	info("Genpistat..");
 	GENPISTAT_S* data=mycalloc(1, GENPISTAT_S);
 	data->parms=parms;
@@ -246,8 +247,7 @@ void genpistat(const parms_s* parms, powfs_s* powfs){
 	data->ncase=count;
 	data->cases=myrealloc(data->cases, data->ncase, long4);
 	CALL(calc_pistat, data, parms->skyc.nthread, 0);
-	info("done\n");
-
+	toc2("done");
 	dcellfree(data->unwrap);
 	free(data->cases);
 	free(data);

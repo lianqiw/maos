@@ -89,7 +89,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	real navg0=M_PI*pow(fov/2./3600., 2)/cat_fov*ntot;
 	if(catscl>0){//regular sky coverage sim
 		real navg=navg0*catscl;
-		info("Average number of stars: %g, after scaled by %g\n", navg, catscl);
+		info("Average number of stars in patrol fov: %g, after scaled by %g\n", navg, catscl);
 		/*generate nstart && magnitude according to distribution.*/
 		for(long isky=0; isky<nsky; isky++){
 			long nstar=randp(rstat, navg);

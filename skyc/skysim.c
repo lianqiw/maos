@@ -87,8 +87,11 @@
 #include "nafocus.h"
 static void res_set_all(dmat *res, int isky, real varol){
 	P(res, 0, isky)=varol;
+	P(res, 1, isky)=varol;
+	P(res, 2, isky)=varol*0.707;
 	P(res, 4, isky)=varol;
 	P(res, 5, isky)=varol;
+	P(res, 6, isky)=P(res, 2, isky);
 	P(res, 8, isky)=-1;
 }
 /**

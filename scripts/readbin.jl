@@ -3,6 +3,9 @@ module Readbin
 export readbin, readmany
 import SparseArrays
 import Glob
+import NaturalSort #for natural sorting
+import RecursiveArrayTools #convert array of array to higher dimensional array
+
 "C struct for numeric and object arrays"
 struct cell
     id::UInt32; id2::UInt32; p::Ptr{Ptr{Cvoid}}; nx::Int; ny::Int; keywords::Cstring;
@@ -88,9 +91,14 @@ end
 "Read many bin files and return the result in a big array"
 function readmany(fns::String)::Any
     res=[]
-    fnall=Glob.glob(fns)
+    fnall=sort(Glob.glob(fns),lt=NaturalSort.natural)
     for fn in fnall
         append!(res, [readbin(fn)])
+    end
+    try
+        res=convert(Array, RecursiveArrayTools.VectorOfArray(res))
+    catch e
+        println("readmany: unable to convert")
     end
     res,fnall
 end

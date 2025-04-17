@@ -389,7 +389,7 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 		real tfit_best=0;
 		dmat *coeff=dnew(3,1);
 		//maximize the damping while keeping it below 5.
-		for(int i=0; i<10; i++){
+		for(int i=0; i<20; i++){
 			P(coeff, 0)=1;
 			P(coeff, 1)=1;
 			real diff=sde_fit_do(&coeff, psdin, tfit, 0);
@@ -402,7 +402,7 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 				dcp(pcoeff, coeff);
 			}
 			//info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%g (%d).\n", tfit, f0, zeta, diff, tfit==tfit_best);
-			tfit*=2;
+			tfit*=1.414;
 		}
 		dfree(coeff);
 		if(!zeta_best){
@@ -482,7 +482,7 @@ real reccati(dmat**Kinf, dmat** Pout, const dmat* A, const dmat* Qn, const dmat*
 		dadd(&P, 1, P2, -1);
 		diff=sqrt(dsumsq(P)/diff);
 		if(diff>0.1 && count>100){
-			dbg("count=%d, diff=%g. not converging, break.\n", count, diff);
+			info_once("reccati: count=%d, diff=%g. not converging, break. (shown once)\n", count, diff);
 			break;
 		}
 	}
