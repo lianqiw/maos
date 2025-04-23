@@ -1,0 +1,10 @@
+<map id="ncpa_cfg_t" name="ncpa_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="42,349,126,415"/>
+<area shape="rect" id="Node000002" href="$d3/d27/structdmat.html" title=" " alt="" coords="71,133,119,199"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,199,88,223,85,333,80,333,83,222,86,198"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,5,48,71"/>
+<area shape="poly" id="edge4_Node000001_Node000006" title=" " alt="" coords="25,71,20,134,18,166,20,198,39,270,64,333,59,335,34,271,15,199,12,166,15,133,20,71"/>
+<area shape="poly" id="edge2_Node000002_Node000006" title=" " alt="" coords="46,70,72,118,68,120,41,72"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="153,133,183,199"/>
+<area shape="poly" id="edge3_Node000001_Node000009" title=" " alt="" coords="170,199,163,260,154,294,141,327,134,337,130,335,136,324,149,292,158,259,165,198"/>
+</map>

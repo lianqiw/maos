@@ -1,3 +1,17 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classcuda__wfs_1_1cuwfs__info.html" title="cuda_wfs::cuwfs_info" alt="" coords="5,5,167,32"/>
+<area shape="rect" id="Node000000" href="$dd/d45/class_cpu.html" title=" " alt="" coords="5,153,91,179"/>
+<area shape="rect" id="Node000001" href="$df/db5/class_pinned.html" title=" " alt="" coords="145,5,281,31"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="59,139,90,89,112,63,137,40,158,28,161,33,140,44,116,66,94,92,64,142"/>
+<area shape="rect" id="Node000002" href="$df/db5/class_pinned.html" title=" " alt="" coords="155,55,270,80"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="69,142,100,115,137,89,163,78,165,82,140,94,103,119,73,146"/>
+<area shape="rect" id="Node000003" href="$df/db5/class_pinned.html" title=" " alt="" coords="150,104,275,129"/>
+<area shape="poly" id="edge3_Node000000_Node000003" title=" " alt="" coords="103,147,168,127,170,132,105,152"/>
+<area shape="rect" id="Node000004" href="$df/db5/class_pinned.html" title=" " alt="" coords="140,153,285,179"/>
+<area shape="poly" id="edge4_Node000000_Node000004" title=" " alt="" coords="104,163,140,163,140,169,104,169"/>
+<area shape="rect" id="Node000005" href="$df/db5/class_pinned.html" title=" " alt="" coords="151,203,275,228"/>
+<area shape="poly" id="edge5_Node000000_Node000005" title=" " alt="" coords="105,180,170,200,168,205,103,185"/>
+<area shape="rect" id="Node000006" href="$df/db5/class_pinned.html" title=" " alt="" coords="139,252,287,277"/>
+<area shape="poly" id="edge6_Node000000_Node000006" title=" " alt="" coords="74,187,104,213,140,237,168,250,166,254,137,242,101,217,71,191"/>
+<area shape="rect" id="Node000007" href="$df/db5/class_pinned.html" title=" " alt="" coords="161,301,265,327"/>
+<area shape="poly" id="edge7_Node000000_Node000007" title=" " alt="" coords="64,189,95,239,116,264,140,286,163,299,160,304,137,291,112,268,90,242,59,192"/>
 </map>

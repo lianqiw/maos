@@ -1,0 +1,7 @@
+<map id="load_cfg_t" name="load_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="26,280,107,425"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,48,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="26,71,22,155,24,206,31,256,32,264,27,265,25,256,19,206,17,155,21,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="93,5,123,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="106,71,81,264,76,264,101,71"/>
+</map>

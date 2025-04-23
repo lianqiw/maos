@@ -1,5 +1,0 @@
-<map id="cgtmp_t" name="cgtmp_t">
-<area shape="rect" id="node2" href="$class_num_array.html" title="{NumArray\&lt; Real, Pinned \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="5,13,204,237"/>
-<area shape="rect" id="node3" href="$class_num_array.html" title="{NumArray\&lt; Real, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="229,13,410,237"/>
-<area shape="rect" id="node5" href="$class_cell.html" title="{Cell\&lt; Real, Gpu \&gt;\n||+ M()\l+ M()\l+ p2pm()\l+ Cell()\l+ Cell()\l+ Cell()\l+ Cell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l}" alt="" coords="509,5,649,244"/>
-</map>

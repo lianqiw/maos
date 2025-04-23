@@ -1,0 +1,9 @@
+<map id="recon_cfg_t" name="recon_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="114,280,227,485"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,64,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="35,71,38,157,47,207,62,255,81,288,105,318,101,321,77,291,58,257,41,208,33,157,30,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="155,5,186,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="173,71,173,264,168,264,168,71"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="256,5,299,71"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="280,71,273,156,265,207,251,257,237,287,233,285,245,255,259,206,268,156,274,71"/>
+</map>

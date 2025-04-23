@@ -1,0 +1,7 @@
+<map id="tomo_cfg_t" name="tomo_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="43,280,131,505"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,64,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="34,71,31,155,32,205,39,256,41,268,36,269,33,256,27,206,25,155,29,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="123,5,154,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="137,71,112,256,111,264,106,263,107,256,132,71"/>
+</map>

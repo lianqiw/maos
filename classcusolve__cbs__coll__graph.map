@@ -1,7 +1,0 @@
-<map id="cusolve_cbs" name="cusolve_cbs">
-<area shape="rect" id="node2" href="$classcusolve__l.html" title="{cusolve_l\n||+ solve()\l+ ~cusolve_l()\l}" alt="" coords="5,71,124,163"/>
-<area shape="rect" id="node3" href="$classnon_copyable.html" title="{nonCopyable\n||# nonCopyable()\l}" alt="" coords="148,79,280,156"/>
-<area shape="rect" id="node4" href="$class_num_array.html" title="{NumArray\&lt; Real, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="305,5,486,229"/>
-<area shape="rect" id="node5" href="$class_num_array.html" title="{NumArray\&lt; int, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="511,5,680,229"/>
-<area shape="rect" id="node6" href="$classcusp.html" title="{cusp\n||+ Type()\l+ Nx()\l+ Ny()\l+ Nzmax()\l+ Pp()\l+ Pp()\l+ Pi()\l+ Pi()\l+ Px()\l+ Px()\land 8 more...\l}" alt="" coords="704,5,812,229"/>
-</map>

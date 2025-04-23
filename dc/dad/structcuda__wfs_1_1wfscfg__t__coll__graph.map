@@ -1,0 +1,13 @@
+<map id="cuda_wfs::wfscfg_t" name="cuda_wfs::wfscfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="168,648,306,713"/>
+<area shape="rect" id="Node000002" href="$d4/d38/parms_8h.html#d4/d51/structparms__t" title=" " alt="" coords="115,280,215,585"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,585,189,623,195,634,190,636,184,625,171,587"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="150,5,180,71"/>
+<area shape="poly" id="edge5_Node000001_Node000011" title=" " alt="" coords="152,62,97,152,66,215,37,286,17,362,8,439,10,477,16,514,28,550,46,584,67,609,93,630,122,646,153,658,151,663,120,651,90,634,63,613,41,587,23,552,11,515,5,478,3,439,11,361,32,284,61,213,93,149,147,60"/>
+<area shape="poly" id="edge2_Node000002_Node000011" title=" " alt="" coords="168,71,168,264,162,264,162,71"/>
+<area shape="rect" id="Node000044" href="$d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t" title=" " alt="" coords="239,380,344,485"/>
+<area shape="poly" id="edge4_Node000044_Node000011" title=" " alt="" coords="182,42,219,60,238,75,254,93,271,126,284,160,299,232,304,302,302,364,297,363,299,303,294,233,279,162,266,128,249,96,234,79,216,65,179,47"/>
+<area shape="poly" id="edge3_Node000001_Node000044" title=" " alt="" coords="283,486,250,633,245,632,277,485"/>
+<area shape="rect" id="Node000071" href="$dc/de6/classstream__t.html" title=" " alt="" coords="368,310,556,555"/>
+<area shape="poly" id="edge6_Node000001_Node000071" title=" " alt="" coords="384,557,359,587,336,608,312,626,294,640,291,636,309,622,333,604,355,583,380,554"/>
+</map>

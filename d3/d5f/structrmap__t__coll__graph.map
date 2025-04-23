@@ -1,0 +1,7 @@
+<map id="rmap_t" name="rmap_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="103,251,163,316"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,140,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,70,124,234,118,235,78,72"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="165,5,223,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="195,71,187,144,179,186,167,228,164,237,159,235,162,226,174,185,182,143,190,70"/>
+</map>

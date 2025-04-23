@@ -1,9 +1,0 @@
-<map id="Pinned&lt; T &gt;" name="Pinned&lt; T &gt;">
-<area shape="rect" id="node3" href="$class_pinned.html" title="{Pinned\&lt; int *\&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="5,331,163,423"/>
-<area shape="rect" id="node4" href="$class_pinned.html" title="{Pinned\&lt; Comp *\&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="187,331,344,423"/>
-<area shape="rect" id="node5" href="$class_pinned.html" title="{Pinned\&lt; T *\&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="368,331,525,423"/>
-<area shape="rect" id="node6" href="$class_pinned.html" title="{Pinned\&lt; short2 *\&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="549,331,707,423"/>
-<area shape="rect" id="node7" href="$class_pinned.html" title="{Pinned\&lt; Real *\&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="731,331,888,423"/>
-<area shape="rect" id="node8" href="$class_pinned.html" title="{Pinned\&lt; Real \&gt;\n||+ operator new[]()\l+ operator delete[]()\l}" alt="" coords="912,331,1069,423"/>
-<area shape="rect" id="node2" href="$class_cpu.html" title="{Cpu\&lt; T \&gt;\n||+ operator new[]()\l+ operator delete[]()\l+ Zero()\l+ Copy()\l}" alt="" coords="459,5,616,127"/>
-</map>

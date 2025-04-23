@@ -1,8 +1,0 @@
-<map id="cuglobal_t" name="cuglobal_t">
-<area shape="rect" id="node2" href="$class_num_array.html" title="{NumArray\&lt; Real, Gpu \&gt;\n|+ p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 10 more...\l}" alt="" coords="5,307,187,531"/>
-<area shape="rect" id="node3" href="$class_array.html" title="{Array\&lt; int \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="201,5,335,229"/>
-<area shape="rect" id="node8" href="$classcuperf__g.html" title="{cuperf_g\n|+ surf\l|}" alt="" coords="322,380,401,457"/>
-<area shape="rect" id="node5" href="$class_array.html" title="{Array\&lt; cuwfs_t \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="557,307,694,531"/>
-<area shape="rect" id="node6" href="$type_8h.html#structdmat" title="{dmat\n||}" alt="" coords="719,380,775,457"/>
-<area shape="rect" id="node7" href="$class_array.html" title="{Array\&lt; atm_prep_t \&gt;\n|+ p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 11 more...\l}" alt="" coords="799,307,961,531"/>
-</map>

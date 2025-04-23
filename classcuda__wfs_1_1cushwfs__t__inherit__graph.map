@@ -1,5 +1,0 @@
-<map id="cuda_wfs::cushwfs_t" name="cuda_wfs::cushwfs_t">
-<area shape="rect" id="node3" href="$classcuda__wfs_1_1cushgeom__t.html" title="{cuda_wfs::cushgeom_t\n|# gradacc\l# gradcalc\l# nea\l|+ cushgeom_t()\l+ initsim()\l+ addnoise()\l+ output()\l+ calcg()\l+ acc()\l}" alt="" coords="5,403,176,583"/>
-<area shape="rect" id="node4" href="$classcuda__wfs_1_1cushphy__t.html" title="{cuda_wfs::cushphy_t\n||+ cushphy_t()\l+ ~cushphy_t()\l+ initsim()\l+ acc()\l+ addnoise()\l+ output()\l}" alt="" coords="200,417,357,568"/>
-<area shape="rect" id="node2" href="$classcuda__wfs_1_1cuwfs__base.html" title="{cuda_wfs::cuwfs_base\n|# rand\l# stream\l# dtrat\l|+ cuwfs_base()\l+ seeding()\l+ initsim()\l+ acc()\l+ addnoise()\l+ output()\l}" alt="" coords="101,5,267,185"/>
-</map>

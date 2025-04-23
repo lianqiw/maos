@@ -1,0 +1,7 @@
+<map id="plot_cfg_t" name="plot_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="33,221,112,287"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,36,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="17,71,13,131,16,164,24,196,30,207,25,209,20,198,11,165,8,131,12,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="95,5,154,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="123,72,114,131,98,198,95,207,90,205,93,197,108,130,118,71"/>
+</map>

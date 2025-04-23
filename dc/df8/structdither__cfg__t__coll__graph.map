@@ -1,0 +1,7 @@
+<map id="dither_cfg_t" name="dither_cfg_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="23,221,114,287"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,36,71"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="17,71,14,131,16,164,25,196,29,207,24,209,19,198,11,165,8,131,12,71"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="89,5,147,71"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="116,72,106,131,91,198,89,206,84,205,86,197,101,130,111,71"/>
+</map>
