@@ -1072,9 +1072,8 @@ static void
 setup_recon_FF(recon_t* recon, const parms_t* parms){
 	int nwfs=parms->nwfsr;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs>0
+		if(parms->powfs[ipowfs].nwfsr>0
 			&& !parms->powfs[ipowfs].skip
-			&& parms->powfs[ipowfs].llt
 			&& parms->powfs[ipowfs].frs){
 			const int nsa=P(recon->saloc, ipowfs)->nloc;
 			dmat* FF=dnew(nsa*2, 1);
@@ -1083,8 +1082,8 @@ setup_recon_FF(recon_t* recon, const parms_t* parms){
 			memcpy(P(FF)+nsa, P(recon->saloc, ipowfs)->locy, sizeof(real)*nsa);
 			if(!recon->FF) recon->FF=dcellnew(nwfs, nwfs);
 			dbg("powfs %d has focus mode in recon->FF\n", ipowfs);
-			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
 				P(recon->FF, iwfs, iwfs)=dref(FF);
 			}
 			dfree(FF);

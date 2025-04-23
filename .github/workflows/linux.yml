@@ -33,17 +33,18 @@ jobs:
     - name: make doc
       run: cd build && make doc
     - name: checkout gh-pages 
-      if: github.ref == 'refs/heads/master'
+      #if: github.ref == 'refs/heads/master'
       uses: actions/checkout@v4
       with:
         ref: gh-pages
         path: doc
     - name: update doc and commit
-      if: github.ref == 'refs/heads/master'
+      #if: github.ref == 'refs/heads/master'
       run: | 
         cd doc
         rm -rf *
         cp -a ../build/doxygen-doc/html/* .
+        find . -name \*.map -delete -o -name \*.md5 -delete
         git config user.name Lianqi Wang
         git config user.email lianqiw@gmail.com
         git add .

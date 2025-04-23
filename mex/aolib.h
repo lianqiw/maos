@@ -26,6 +26,7 @@ void  write_header=writebin_header(const cell*dc, const char* keywords, const ch
 void  writesock(const cell* dc, int sock);
 double dtrapz(const dmat* x, const dmat* y);
 void dsvd_pow(dmat*A, double power);
+void dsvd_pow2(dmat*A, double power, real thres1, real thres2);
 void dcellmm(cell **C, const cell*A, const cell*B, const char* trans, double alpha);
 dmat* denc(dmat* psf, dmat* dvec, int type, int nthread);
 void dcircle(dmat* A,double cx, double cy, double dx, double dy, double r, double val);
@@ -36,7 +37,9 @@ void rmpath(const char* path);
 double dgauss_width(dmat* A, double thres);
 void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, double thres);
 dmat* dpinv(dmat*A, cell *wt);
+dmat* dpinv2(dmat*A, cell *wt, double thres1, double thres2);
 dcell* dcellpinv(dcell *A, cell *wt);
+dcell* dcellpinv2(dcell *A, cell *wt, double thres1, double thres2);
 void dembed(dmat*out, dmat*in, double theta);
 void dshift2center(dmat *A, real offx, real offy);
 dmat *dcell2m(dcell*A);

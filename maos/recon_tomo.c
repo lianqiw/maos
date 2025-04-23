@@ -273,7 +273,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		/*Symmetricize, remove values below 1e-15*max and sort RLM (optional). */
 		/*dspcellsym(recon->RL.M); */
 
-		/*Low rank terms for low order wfs. Only in Integrated tomography. */
+		/*Left hand side low rank terms for low order wfs. Only in Integrated tomography. */
 		dcell* ULo=NULL;
 		dcell* VLo=NULL; 
 		if(!parms->recon.split){
@@ -292,7 +292,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 				}
 			}
 		}
-		if(parms->recon.split!=1 || parms->tomo.splitlrt==2){//require low rank term in LHS
+		if(parms->recon.split!=1 || parms->tomo.splitlrt==2){//Full low rank term in LHS
 			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 			dcell* GPTTDF=NULL;
 			dcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
@@ -300,7 +300,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			dcellfree(GPTTDF);
 		} else if(parms->tomo.splitlrt && recon->FF){
 			//include removal focus low rank term in LHS, not tip/tilt
-			//Including tip/tilt in LHS causing rank deficiency.
+			//Including tip/tilt in LHS causes rank deficiency.
 			dcellmm(&recon->RL.U, recon->RR.M, recon->FF, "nn", 1);
 			dcellmm(&recon->RL.V, recon->GX, recon->PFF, "tt", 1);
 		} else{

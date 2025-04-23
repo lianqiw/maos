@@ -22,7 +22,7 @@
 //jmp_buf exception_return;
 
 static __attribute__((constructor)) void init(){
-	fprintf(stderr, "aolib loaded\n");
+	fprintf(stdout, "aolib loaded\n");
 	register_signal_handler(dummy_signal_handler);
 	//function that calls setjmp() cannot return before you call longjmp().
 	//if(setjmp(exception_return)){
@@ -31,5 +31,5 @@ static __attribute__((constructor)) void init(){
 	//default_signal_handler(SIGUSR2, 0, 0);
 }
 static __attribute__((destructor)) void deinit(){
-	fprintf(stderr, "aolib unloaded\n");
+	fprintf(stdout, "aolib unloaded\n");
 }

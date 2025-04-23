@@ -761,7 +761,7 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	}else{
 		dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
 		real *mngs=P(P(simu->Mngs, 0));
-		if(ngsmod->indastig){//LTAO
+		if(ngsmod->indastig&&parms->sim.mffocus){//LTAO
 			//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
 			//Solution: remove LPF'ed focus/astigmatism from LGS DM command. 
 			const real lpfocus=parms->sim.lpfocushi;

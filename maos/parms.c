@@ -211,11 +211,10 @@ static inline int sum_dblarr(int n, real *a){
 #define READ_DBL_SCALE(A,B,C) parms->A = readcfg_dbl(#B)*(C) /*read a key with real value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(0,0,#A) /*read a key with dmat. */
-#define READ_DMAT_N(A,n) parms->A= readcfg_dmat(n,0,#A) /*read a key with dmat. */
-#define READ_DMAT_NMAX(A,n) parms->A= readcfg_dmat(n,1,#A) /*read a key with dmat. */
+#define READ_DMAT_N(A,n,relax) parms->A= readcfg_dmat(n,relax,#A) /*read a key with dmat. */
 #define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(0,0,#A) /*read a key with lmat. */
-#define READ_LMAT_NMAX(A,n) parms->A= readcfg_lmat(n,1,#A) /*read a key with lmat. */
+#define READ_LMAT_N(A,n,relax) parms->A= readcfg_lmat(n,relax,#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
     if(readcfg_##A##arr((&A##tmp), npowfs,0, "powfs."#B)==npowfs){\
@@ -258,7 +257,7 @@ static void convert_theta(real *theta, const char *name, real wvl, real dsa){
 */
 static void readcfg_powfs(parms_t *parms){
 	int   npowfs;
-	parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
+	parms->npowfs=npowfs=readcfg_peek_n("powfs.type");
 	parms->powfs=mycalloc(parms->npowfs,powfs_cfg_t);
 	int *inttmp=NULL;
 	real *dbltmp=NULL;
@@ -825,11 +824,11 @@ static void readcfg_siglev(parms_t *parms){
 		powfs_wvl_tot+=nwvl;
 	}
 
-	dmat *powfs_wvlwts=readcfg_dmat(powfs_wvl_tot, 1, "powfs.wvlwts");
-	dmat *powfs_mag =readcfg_dmat(powfs_wvl_tot, 1, "powfs.mag");
-	dmat *powfs_magb=readcfg_dmat(powfs_wvl_tot, 1, "powfs.magbkgrnd");
-	dmat *telthruput=readcfg_dmat(powfs_wvl_tot, 1, "powfs.telthruput");
-	dmat *atmthruput=readcfg_dmat(powfs_wvl_tot, 1, "powfs.atmthruput");
+	dmat *powfs_wvlwts=readcfg_dmat(powfs_wvl_tot, 2, "powfs.wvlwts");
+	dmat *powfs_mag =readcfg_dmat(powfs_wvl_tot, 2, "powfs.mag");
+	dmat *powfs_magb=readcfg_dmat(powfs_wvl_tot, 2, "powfs.magbkgrnd");
+	dmat *telthruput=readcfg_dmat(powfs_wvl_tot, 2, "powfs.telthruput");
+	dmat *atmthruput=readcfg_dmat(powfs_wvl_tot, 2, "powfs.atmthruput");
 	//specified for wfs overrides numbers set in powfs.
 	dmat *wfs_siglev=readcfg_dmat(0, 0, "wfs.siglev");
 	dmat *wfs_wvlwts=readcfg_dmat(0, 0, "wfs.wvlwts");
@@ -1183,14 +1182,14 @@ static void readcfg_atm(parms_t *parms){
 	READ_INT(atm.interp);
 	READ_DMAT(atm.r0logpsdt);
 	READ_DMAT(atm.r0logpsds);
-	READ_DMAT_N(atm.size, 2);
+	READ_DMAT_N(atm.size, 2, 0);
 	READ_DMAT(atm.ht);
 	parms->atm.nps=NX(parms->atm.ht);
-	READ_DMAT_N(atm.wt, parms->atm.nps);
-	READ_DMAT_N(atm.ws, parms->atm.nps);
-	READ_DMAT_NMAX(atm.L0, parms->atm.nps);
+	READ_DMAT_N(atm.wt, parms->atm.nps, 0);
+	READ_DMAT_N(atm.ws, parms->atm.nps, 0);
+	READ_DMAT_N(atm.L0, parms->atm.nps, 1);
 	if(!parms->atm.wdrand){
-		READ_DMAT_NMAX(atm.wddeg, parms->atm.nps);
+		READ_DMAT_N(atm.wddeg, parms->atm.nps, 1);
 	}else{
 		readcfg_ignore("atm.wddeg");
 	}
@@ -1294,7 +1293,7 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		int nx=round(fov/30.)*2+1; //need sufficient sampling of the focal plane
 		if(nx<3) nx=3;
 		int np=nx*nx;
-		warning("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
+		info("maxxy=0, will make a square field with %dx%d points.\n", nx, nx);
 
 		dresize(thetax, nx, nx);
 		dresize(thetay, nx, nx);
@@ -1316,7 +1315,7 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		reshape(wt, np, 1);
 	}else{
 		if(fabs(maxxy-0.5)>EPS){
-			warning("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
+			info("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
 			fov=fov/(2*maxxy);
 		}
 		dscale(thetax,fov);
@@ -1347,15 +1346,15 @@ const char *wvl2name(real wvl){
 static void readcfg_evl(parms_t *parms){
 	READ_DMAT(evl.thetax);
 	READ_DMAT(evl.thetay);
-	READ_DMAT_NMAX(evl.wt,NX(parms->evl.thetax));
+	READ_DMAT_N(evl.wt,NX(parms->evl.thetax), 1);
 	real evl_fov=readcfg_dbl("evl.fov");
 	scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt,evl_fov);
 	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
 	dnormalize_sumabs(parms->evl.wt, 1);
-	READ_DMAT_NMAX(evl.hs,parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psf,parms->evl.nevl);
-	READ_LMAT_NMAX(evl.psfr,parms->evl.nevl);
-	READ_LMAT_NMAX(evl.pttr,parms->evl.nevl);
+	READ_DMAT_N(evl.hs,parms->evl.nevl, 1);
+	READ_LMAT_N(evl.psf,parms->evl.nevl,1);
+	READ_LMAT_N(evl.psfr,parms->evl.nevl,1);
+	READ_LMAT_N(evl.pttr,parms->evl.nevl,1);
 	READ_DMAT(evl.wvl);
 	parms->evl.nwvl=NX(parms->evl.wvl);
 	parms->evl.wvlname=mycalloc(parms->evl.nwvl, const char*);
@@ -1640,9 +1639,9 @@ static void readcfg_ncpa(parms_t *parms){
 	READ_INT(ncpa.ttr);
 	READ_DMAT(ncpa.thetax);
 	parms->ncpa.ndir=NX(parms->ncpa.thetax);
-	READ_DMAT_NMAX(ncpa.thetay, parms->ncpa.ndir);
-	READ_DMAT_NMAX(ncpa.wt, parms->ncpa.ndir);
-	READ_DMAT_NMAX(ncpa.hs, parms->ncpa.ndir);
+	READ_DMAT_N(ncpa.thetay, parms->ncpa.ndir,1);
+	READ_DMAT_N(ncpa.wt, parms->ncpa.ndir,1);
+	READ_DMAT_N(ncpa.hs, parms->ncpa.ndir,1);
 	dscale(parms->ncpa.thetax,1.*AS2RAD);
 	dscale(parms->ncpa.thetay,1.*AS2RAD);
 	if(parms->ncpa.wt){
@@ -2372,10 +2371,43 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	dbg("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2,parms->sim.dtrat_lof);
 	parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
 	parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
+
+	if(parms->sim.mffocus==-1){
+		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
+		dbg("Focus blending is automatically enabled when there is LGS.\n");
+	}else if(parms->sim.mffocus>0 && !parms->nlgspowfs){
+		dbg("Focus blending is only needed when there is LGS. Changed.\n");
+		parms->sim.mffocus=0;
+	}
+
+	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
+		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
+	}
+	
 	if(parms->sim.fcfocus<0){
 		parms->sim.fcfocus=0.1/parms->sim.dtlo;
 	}
-
+	
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(!parms->powfs[ipowfs].frs){
+			if(parms->sim.mffocus && isinf(parms->sim.fcfocus) && !isinf(parms->powfs[ipowfs].hs)){
+				//focus is removed from LGS measurement. Need to activate frs flag
+				warning("powfs%d frs should be set for LGS when sim.mffocus=%d and sim.fcfocus=%g, changed.\n", 
+					ipowfs, parms->sim.mffocus, parms->sim.fcfocus);
+				parms->powfs[ipowfs].frs=1;
+			}
+		}
+		if(parms->powfs[ipowfs].frs){
+			if(isinf(parms->powfs[ipowfs].hs) || !parms->powfs[ipowfs].llt){
+				warning("powfs%d frs is set but hs is inf or llt is not set\n", ipowfs);
+			}
+			if(parms->recon.split && 
+				((parms->recon.alg==RECON_MVR && !parms->tomo.splitlrt)
+				||(parms->recon.alg==RECON_LSR && !parms->lsr.splitlrt))){
+				warning("powfs%d frs is set but splitlrt is not set in split reconstruction.\n", ipowfs);
+			}
+		}
+	}
 	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 }
@@ -2778,11 +2810,11 @@ static void setup_parms_postproc_dm(parms_t *parms){
 	if(parms->sim.cachedm){
 		if(parms->evl.nevl<2&&parms->nwfs<2){
 			parms->sim.cachedm=0;
-			warning("sim.cachedm disabled for SCAO\n");
+			dbg("sim.cachedm disabled for SCAO\n");
 		}
 		if(parms->dbg.cmpgpu){
 			parms->sim.cachedm=0;
-			warning("sim.cachedm disabled when comparing CPU against GPU\n");
+			dbg("sim.cachedm disabled when comparing CPU against GPU\n");
 		}
 	}
 	for(int i=0; i<parms->ndm; i++){
@@ -3105,21 +3137,21 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			if(!parms->recon.split){
 				maxit*=4;//integrated tomo needs more steps
 			}
-			if(parms->ndm>1){
+			{
 				//if meta pupil is much larger than the aperture, needs more iterations. 
 				//if atmr.dx is smaller than 0.5, also more iterations
-				real ratio=pow(1+parms->sim.foveff*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
+				real ratio=parms->ndm==1?1:pow(1+parms->sim.foveff*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
 				if(parms->atmr.dx<0.5){
-					ratio*=0.5/parms->atmr.dx;
+					ratio*=0.5/parms->atmr.dx;//grid size ratio
 				}
 				if(ratio>10) ratio=10;//limit maximum value.
 				maxit=ceil(maxit*ratio);
 			}
 			parms->tomo.maxit=maxit;
-			if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
-				warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
-				parms->tomo.splitlrt=0;
-			}
+		}
+		if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
+			warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
+			parms->tomo.splitlrt=0;
 		}
 		if(parms->tomo.bgs&&parms->tomo.precond){
 			error("Please implement the preconditioner for each block for BGS.\n");
@@ -3151,25 +3183,13 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->lsr.maxit=30*factor;
 		}
 	}
-	if(parms->sim.mffocus==-1){
-		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
-	}
-	if(parms->sim.mffocus>0){
-		if(!parms->recon.split||!parms->nlgspowfs){
-			dbg("Focus blending is only implemented for LGS in split tomography. Changed.\n");
-			parms->sim.mffocus=0;
-		}
-	}
-
-	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
-		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
-	}
-	if(parms->tomo.ahst_focus){
+	
+	/*if(parms->tomo.ahst_focus){
 		if(parms->recon.split!=1||!parms->sim.mffocus){
 			parms->tomo.ahst_focus=0;//no need ahst_focus
 			dbg("Disable tomo.ahst_focus.\n");
 		}
-	}
+	}*/
 
 	if(!parms->recon.mvm){
 		if(parms->tomo.alg!=ALG_CG&&parms->load.mvmi){
@@ -3270,14 +3290,14 @@ static void setup_parms_postproc_seeds(parms_t *parms, int override){
 					remove(fn);
 				} else{
 					parms->fdlock[iseed]=-1;
-					warning("Skip seed %ld because %s exists.\n", P(parms->sim.seeds, iseed), fn);
+					info("Skip seed %ld because %s exists.\n", P(parms->sim.seeds, iseed), fn);
 				}
 			}
 			if(!parms->fdlock[iseed]){
 				snprintf(fn, sizeof(fn), "%s/%s_maos_%ld.lock", DIRLOCK, cwd, P(parms->sim.seeds, iseed));
 				parms->fdlock[iseed]=lock_file(fn, 0);
 				if(parms->fdlock[iseed]<0){
-					warning("Skip seed %ld because it is already running.\n",
+					info("Skip seed %ld because it is already running.\n",
 						P(parms->sim.seeds, iseed));
 				} else{
 					cloexec(parms->fdlock[iseed]);
@@ -3455,16 +3475,9 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("There are %d powfs\n",parms->npowfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		info("  powfs%d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
+		info("  powfs%d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%.\n",
 			ipowfs,parms->powfs[ipowfs].order,(parms->powfs[ipowfs].llt?"L":"N"),
 			parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
-		int lrt=(parms->recon.split&&parms->tomo.splitlrt);
-		if(parms->powfs[ipowfs].trs){
-			info("%s%sis removed in %s side in tomography.",
-				parms->powfs[ipowfs].trs?"T/T ":"",parms->powfs[ipowfs].frs?"Focus ":"",
-				lrt?"both":"right hand");
-		}
-		info("\n");
 		if(parms->powfs[ipowfs].usephy){
 			if(parms->powfs[ipowfs].type==WFS_SH){
 				info("    CCD image is %dx%d @ %gx%g mas, blur %g%% (sigma), %gHz, ",
@@ -3528,16 +3541,10 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("There are %d DMs\n",parms->ndm);
 	for(i=0; i<parms->ndm; i++){
-		info("  DM %d: at %g km, pitch %g m, offset %g, %g micron stroke, %g micron inter-actuator stroke.\n",
+		info("    DM %d: at %g km, pitch %g m, offset %g, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
 			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
-			parms->dm[i].offset,
+			parms->dm[i].offset, parms->dm[i].iac,
 			fabs(P(parms->dm[i].stroke, 0))*1e6, fabs(parms->dm[i].iastroke)*1e6);
-		if(parms->dm[i].iac){
-			info("    Normalized cubic influence function with inter-actuator coupling of %g\n",
-				parms->dm[i].iac);
-		} else{
-			info("    Bilinear influence function.\n");
-		}
 	}
 	if(parms->recon.alg==RECON_MVR){
 		if(!parms->sim.idealtomo){
@@ -3552,6 +3559,22 @@ static void print_parms(const parms_t *parms){
 				info2(", minimum variance split tomo\n"); break;
 			default:
 				error(", Invalid\n");
+			}
+		}
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].lo
+				&& (parms->powfs[ipowfs].trs||parms->powfs[ipowfs].frs)){
+				info("    Tomography low rank terms include ");
+				if(parms->powfs[ipowfs].trs){
+					int lrt=(!parms->recon.split||parms->tomo.splitlrt==2);
+					info("tip/tilt (%s) ", lrt?"L/R":"R");
+				}
+				if(parms->powfs[ipowfs].frs){
+					int lrt=(!parms->recon.split||parms->tomo.splitlrt);
+					info("focus (%s) ", lrt?"L/R":"R");
+				}
+				info("for high order WFS.\n");
+				break;
 			}
 		}
 		info2("DM Fitting is using ");

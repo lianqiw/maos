@@ -1042,16 +1042,19 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	if(!parms->powfs[ipowfs].llt||!parms->powfs[ipowfs].llt->fnrange) return;
 	char* fnrange=parms->powfs[ipowfs].llt->fnrange;
-	warning("loading sodium range variation from %s\n", fnrange);
+	info("Loading sodium range variation from %s\n", fnrange);
 	if(powfs[ipowfs].focus) dfree(powfs[ipowfs].focus);
 	powfs[ipowfs].focus=dread("%s", fnrange);
-	if(NY(powfs[ipowfs].focus)!=1&&NY(powfs[ipowfs].focus)!=parms->powfs[ipowfs].nwfs){
-		error("fnrange has wrong format. Must be column vectors of 1 or %d columns\n",
+	if(NY(powfs[ipowfs].focus)!=1){
+		if(NY(powfs[ipowfs].focus)>parms->powfs[ipowfs].nwfs){
+			dresize(powfs[ipowfs].focus, -1, parms->powfs[ipowfs].nwfs);
+		}else if(NY(powfs[ipowfs].focus)<parms->powfs[ipowfs].nwfs){
+			error("fnrange has wrong columns which should be 1 or >=%d columns\n",
 			parms->powfs[ipowfs].nwfs);
+		}
 	}
-	/*(D/h)^2/(16*sqrt(3)) convert from range to WFE in m but here we want
-	  focus mode, so just do 1/(2*h^2).*/
-	/*1./cos() is for zenith angle adjustment of the range.*/
+	/*The focus wavefront is dh/(2*h^2)*r^2. The RMS WFE is dh*(D/h)^2/(16*sqrt(3))*/
+	/*1./cos() is for zenith angle adjustment of the range. hs was already scaled in parms*/
 	real range2focus=0.5*pow(1./parms->powfs[ipowfs].hs, 2)*(1./cos(parms->sim.za));
 	dscale(powfs[ipowfs].focus, range2focus);
 	if(parms->save.setup){
