@@ -129,6 +129,7 @@ $(document).ready(function(){initNavTree('df/d16/powfs_common.html','../../'); i
 <div class="line">#powfs.hs   = []  #Guide star elevation above sea level. 90e3 for LGS. inf for NGS. Distance to telescope is ajusted by sim.htel and sim.zadeg. </div>
 <div class="line">#powfs.fnllt= []  #File for configuration of laser launch telescope. </div>
 <div class="line">#powfs.trs  = []  #tilt remove flag. 1 for LGS. 0 for NGS</div>
+<div class="line">#powfs.frs  = [] #Focus removal flag. 1 for LGS, 0 for NGS. 1 requires recon.splitlrt=1 to perform well. default is 0</div>
 <div class="line">#powfs.lo   = []  #low order flag. 1 for T/T or T/T/F WFS. 0 for LGS and high order NGS</div>
 <div class="line"> </div>
 <div class="line">#powfs.skip     = [] # 1: do not use this WFS in reconstruction. 2: Use as truth WFS. </div>
@@ -139,7 +140,6 @@ $(document).ready(function(){initNavTree('df/d16/powfs_common.html','../../'); i
 <div class="line">#Used for wavefront reconstruction </div>
 <div class="line">#powfs.nearecon        #Full SA NEA used for reconstruction in mas defined at sim.dtrat. Scaled by maos using SAA and dtrat. Only effective in geometric wfs mode (powfs.phystep=[-1]) or when powfs.phyusenea=[1]</div>
 <div class="line">powfs.neareconfile=[&quot;&quot;] #file contains NEA for reconstruction for each SA in radian at sim.dt*powfs.dtrat. Will supersede powfs.nearecon if set. File name takes the same format as piinfile.</div>
-<div class="line">powfs.frs       = [0]  #Global focus removal flag. 1 for LGS, 0 for NGS. 1 requires recon.splitlrt=1 to perform well. default is 0</div>
 <div class="line">powfs.ncpa      = [] #Additional NCPA opd for each powfs. 2xn; first row is rms in meter (randomized if negative), second row is zernike mode or negative for power law.</div>
 <div class="line">powfs.ncpa_method=[-1] #Method to correct ncpa; 0: do nothing. 1: apply gradient bias using bias OPD. 2: apply bias according to i0 (with bias OPD). -1: auto=&gt;1 for cog, 2 for mtch.</div>
 <div class="line"> </div>

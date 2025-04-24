@@ -1,7 +1,0 @@
-<map id="map2map_shared_t" name="map2map_shared_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,251,148,316"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="23,5,53,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="35,71,31,143,33,185,42,226,45,235,41,237,37,227,28,186,25,143,30,70"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="95,5,138,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="115,72,90,227,89,235,83,234,85,226,109,71"/>
-</map>

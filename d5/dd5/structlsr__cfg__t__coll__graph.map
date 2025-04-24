@@ -1,9 +1,0 @@
-<map id="lsr_cfg_t" name="lsr_cfg_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="104,221,173,287"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,64,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="35,71,40,132,48,165,62,196,75,212,92,226,89,230,72,216,58,199,43,167,35,133,30,71"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="117,5,160,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="141,71,141,205,136,205,136,71"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="203,5,234,71"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="221,72,213,132,205,166,192,199,185,209,181,207,187,196,199,164,208,131,215,71"/>
-</map>

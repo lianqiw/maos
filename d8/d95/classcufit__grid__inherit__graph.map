@@ -1,7 +1,0 @@
-<map id="cufit_grid" name="cufit_grid">
-<area shape="rect" id="Node000001" title=" " alt="" coords="71,219,193,644"/>
-<area shape="rect" id="Node000002" href="$df/d37/classcusolve__r.html" title=" " alt="" coords="5,35,117,141"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="77,154,91,218,85,219,72,155"/>
-<area shape="rect" id="Node000003" href="$de/d5d/classcusolve__cg.html" title=" " alt="" coords="142,5,263,171"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="186,185,179,219,173,218,180,183"/>
-</map>

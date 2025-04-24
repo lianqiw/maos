@@ -1,9 +1,0 @@
-<map id="cusolve_l" name="cusolve_l">
-<area shape="rect" id="Node000001" title=" " alt="" coords="153,5,263,91"/>
-<area shape="rect" id="Node000002" href="$d4/d35/classcusolve__cbs.html" title=" " alt="" coords="5,139,123,344"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="166,103,137,140,125,156,121,153,133,137,162,100"/>
-<area shape="rect" id="Node000003" href="$de/d5d/classcusolve__cg.html" title=" " alt="" coords="147,159,269,324"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="211,104,211,158,205,158,205,104"/>
-<area shape="rect" id="Node000008" href="$de/dda/classcusolve__mvm.html" title=" " alt="" coords="293,189,422,294"/>
-<area shape="poly" id="edge3_Node000001_Node000008" title=" " alt="" coords="253,100,283,137,322,187,317,190,279,140,249,103"/>
-</map>

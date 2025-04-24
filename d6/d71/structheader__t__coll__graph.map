@@ -1,9 +1,0 @@
-<map id="header_t" name="header_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="163,148,233,213"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,140,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="102,69,149,122,160,134,156,138,145,126,98,73"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="165,5,231,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="201,71,201,131,195,131,195,71"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="255,5,298,71"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="265,72,238,125,232,135,227,133,233,123,260,70"/>
-</map>

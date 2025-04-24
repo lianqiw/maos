@@ -1,8 +1,0 @@
-<map id="cumap_t" name="cumap_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="8,568,205,813"/>
-<area shape="rect" id="Node000002" href="$d5/d0d/classcugrid__t.html" title=" " alt="" coords="119,393,244,519"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="160,532,148,569,143,567,155,531"/>
-<area shape="rect" id="Node000005" href="$d0/d44/class_num_array.html" title=" " alt="" coords="5,5,179,331"/>
-<area shape="poly" id="edge3_Node000001_Node000005" title=" " alt="" coords="84,331,82,424,85,519,88,552,83,552,80,519,77,424,79,331"/>
-<area shape="poly" id="edge2_Node000002_Node000005" title=" " alt="" coords="145,330,160,377,155,379,140,332"/>
-</map>

@@ -1,7 +1,0 @@
-<map id="lap_t" name="lap_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="36,163,83,228"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,36,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="19,71,19,104,25,138,30,151,25,153,19,139,13,104,14,71"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="77,5,119,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="93,72,74,147,69,146,87,70"/>
-</map>

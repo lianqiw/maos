@@ -1,9 +1,0 @@
-<map id="task_t" name="task_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="87,133,142,199"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,48,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="37,70,54,108,76,132,72,136,50,111,32,72"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="99,5,130,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="117,71,117,117,112,117,112,71"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="168,5,211,71"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="181,72,162,111,154,123,150,120,158,108,176,70"/>
-</map>

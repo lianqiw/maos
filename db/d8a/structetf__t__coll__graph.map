@@ -1,9 +1,0 @@
-<map id="etf_t" name="etf_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="81,148,125,213"/>
-<area shape="rect" id="Node000002" href="$df/def/type_8h.html#d8/d42/structccell" title=" " alt="" coords="5,5,49,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="42,70,67,123,74,135,70,138,62,125,37,72"/>
-<area shape="rect" id="Node000017" title=" " alt="" coords="74,5,133,71"/>
-<area shape="poly" id="edge2_Node000001_Node000017" title=" " alt="" coords="106,71,106,131,101,131,101,71"/>
-<area shape="rect" id="Node000010" title=" " alt="" coords="157,5,188,71"/>
-<area shape="poly" id="edge3_Node000001_Node000010" title=" " alt="" coords="164,72,142,125,136,135,131,133,137,123,159,70"/>
-</map>

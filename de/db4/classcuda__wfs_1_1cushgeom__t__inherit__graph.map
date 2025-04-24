@@ -1,9 +1,0 @@
-<map id="cuda_wfs::cushgeom_t" name="cuda_wfs::cushgeom_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="69,179,232,384"/>
-<area shape="rect" id="Node000004" href="$d5/d5c/classcuda__wfs_1_1cushg__t.html" title=" " alt="" coords="5,432,139,517"/>
-<area shape="poly" id="edge2_Node000001_Node000004" title=" " alt="" coords="106,398,92,433,87,431,101,396"/>
-<area shape="rect" id="Node000005" href="$df/d79/classcuda__wfs_1_1cushz__t.html" title=" " alt="" coords="163,432,295,517"/>
-<area shape="poly" id="edge3_Node000001_Node000005" title=" " alt="" coords="200,396,215,431,210,433,195,398"/>
-<area shape="rect" id="Node000002" href="$da/d4f/classcuda__wfs_1_1cushwfs__t.html" title=" " alt="" coords="77,5,225,131"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="153,144,153,178,148,178,148,144"/>
-</map>

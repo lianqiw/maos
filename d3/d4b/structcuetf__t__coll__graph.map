@@ -1,9 +1,0 @@
-<map id="cuetf_t" name="cuetf_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="185,393,269,459"/>
-<area shape="rect" id="Node000002" href="$d0/d44/class_num_array.html" title=" " alt="" coords="5,5,188,331"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="170,330,191,368,197,378,193,381,186,371,166,332"/>
-<area shape="rect" id="Node000010" title=" " alt="" coords="212,135,243,201"/>
-<area shape="poly" id="edge2_Node000001_Node000010" title=" " alt="" coords="230,201,230,377,225,377,225,201"/>
-<area shape="rect" id="Node000011" title=" " alt="" coords="267,135,326,201"/>
-<area shape="poly" id="edge3_Node000001_Node000011" title=" " alt="" coords="299,201,293,279,284,326,270,370,265,380,260,378,265,368,279,324,288,279,294,200"/>
-</map>

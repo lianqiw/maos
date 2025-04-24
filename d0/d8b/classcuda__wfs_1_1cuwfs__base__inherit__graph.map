@@ -1,7 +1,0 @@
-<map id="cuda_wfs::cuwfs_base" name="cuda_wfs::cuwfs_base">
-<area shape="rect" id="Node000001" title=" " alt="" coords="87,5,246,211"/>
-<area shape="rect" id="Node000002" href="$dc/d6b/classcuda__wfs_1_1cupywfs__t.html" title=" " alt="" coords="5,289,155,354"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,225,95,290,90,288,117,223"/>
-<area shape="rect" id="Node000003" href="$da/d4f/classcuda__wfs_1_1cushwfs__t.html" title=" " alt="" coords="179,259,327,384"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="216,222,230,257,226,259,211,225"/>
-</map>

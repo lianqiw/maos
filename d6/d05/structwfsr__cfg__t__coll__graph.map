@@ -1,7 +1,0 @@
-<map id="wfsr_cfg_t" name="wfsr_cfg_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="42,207,123,272"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,64,71"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="32,71,29,124,31,154,39,182,43,192,38,194,33,184,26,155,23,125,26,71"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="115,5,146,71"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="128,71,104,183,101,192,96,191,99,182,123,70"/>
-</map>
