@@ -759,6 +759,7 @@ void free_recon_unused(const parms_t* parms, recon_t* recon){
 	*/
 	dspcellfree(recon->GX);
 	dspcellfree(recon->GXtomo);/*we use HXWtomo instead. faster */
+	dspcellfree(recon->GXhi);/*we use HXWtomo instead. faster */
 	if(!(parms->cn2.tomo&&parms->recon.split==2)){/*mvst needs GXlo when updating. */
 		dspcellfree(recon->GXlo);
 	}
@@ -798,6 +799,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	dspcellfree(recon->GX);
 	dspcellfree(recon->GXlo);
 	dspcellfree(recon->GXtomo);
+	dspcellfree(recon->GXhi);
 	dspcellfree(recon->GP);
 	cellfree(recon->GA);
 	cellfree(recon->GAlo);

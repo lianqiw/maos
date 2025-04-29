@@ -225,7 +225,18 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 
 		info("Building recon->RL\n"); /*left hand side matrix */
-		dcellmm(&recon->RL.M, recon->RR.M, recon->GXtomo, "nn", 1);
+		cell *GtC_hi=cellnew(npsr, parms->nwfsr);
+		//RL.M only contains high order WFS even in split=0 case.
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+			int ipowfs=parms->wfsr[iwfs].powfs;
+			if(!parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip){
+				for(int ipsr=0; ipsr<npsr; ipsr++){
+					P(GtC_hi, ipsr, iwfs)=cellref(P(recon->RR.M, ipsr, iwfs));
+				}
+			}
+		}
+		dcellmm(&recon->RL.M, GtC_hi, recon->GXhi, "nn", 1);
+		cellfree(GtC_hi);
 		dspcell* RLM=dspcell_cast(recon->RL.M);
 		if(parms->tomo.piston_cr){
 			/*single point piston constraint. no need tikholnov.*/

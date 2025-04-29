@@ -867,12 +867,16 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
 	}
 	toc2("GX");
 	recon->GXtomo=dspcellnew(nwfs, npsr);
+	recon->GXhi=dspcellnew(nwfs, npsr);
 	recon->GXlo=dspcellnew(nwfs, npsr);
 	
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		for(int ips=0; ips<npsr; ips++){
 			if(!parms->powfs[ipowfs].skip){/*for tomography */
+				if(!parms->powfs[ipowfs].lo){
+					P(recon->GXhi, iwfs, ips)=dspref(P(recon->GX, iwfs, ips));
+				}	
 				P(recon->GXtomo, iwfs, ips)=dspref(P(recon->GX, iwfs, ips));
 			}
 			if(parms->recon.split==2 && 

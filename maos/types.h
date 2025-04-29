@@ -311,7 +311,8 @@ typedef struct recon_t{
     dspcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
     dspcell *HXWtomo;   /**<Like GXtomo*/
     dspcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
-    dspcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
+    dspcell *GXtomo;    /**<GX for tomography right hand side. excluding NGS in split tomography*/
+	dspcell *GXhi;      /**<GX for high order WFS.*/
     dspcell *GXlo;      /**<GX for low order WFs*/
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
     dcell *MVRngs;     /**<NGS recon for MV split tomography*/

@@ -177,6 +177,15 @@ void muv_direct_prep(muv_t* A, real svd){
 	if(use_svd){/*Do SVD */
 		dfree(A->MI);
 		A->MI=dcell2m(A->M);
+		if(A->U && A->V){//absorb info M. no need for separate low rank.
+			dmat* U=dcell2m(A->U);
+			dmat* V=dcell2m(A->V);
+			cellfree(A->U);
+			cellfree(A->V);
+			dmm(&A->MI, 1, U, V, "nt", -1); 
+			dfree(U);
+			dfree(V);
+		}
 		info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", NX(A->MI), NY(A->MI));
 		dsvd_pow2(A->MI, -1, fabs(svd)<1?svd:2e-4, 1e-4);
 	} else{/*Do Cholesky decomposition. */
