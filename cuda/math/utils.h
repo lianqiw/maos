@@ -38,7 +38,7 @@ public:
 class cumemcache_t{
 	public:
 	std::map<uint64_t, void *> memhash;/*hash is mapped to memory address*/
-	std::map<void *, int> memcount; /*Store usage count of memory*/
+	std::map<void *, uint32_t[2]> memcount; /*Store usage count of memory*/
 	pthread_mutex_t mutex_hash;
 	long nsave=0;
 	void *memcache=NULL;/*For reuse temp array for type conversion.*/
@@ -67,9 +67,9 @@ template<typename M, typename N>
 void cp2gpu(M* dest, const N* src, long nx, long ny, cudaStream_t stream=0){
 	M* from=0;
 	int free_from=0;
-	if(cumemcache.memcount.count(dest)&&cumemcache.memcount[dest]>1){
+	if(cumemcache.memcount.count(dest)&&cumemcache.memcount[dest][0]>1){
 		error("Should not copy to deduped pointer %p. Count=%d\n", dest,
-			cumemcache.memcount[dest]);
+			cumemcache.memcount[dest][0]);
 	}
 	if(sizeof(M)!=sizeof(N)){//use cache memory for type conversion
 		long memsize=nx*ny*sizeof(M);
@@ -113,7 +113,7 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 		error("src=null\n");
 	}
 	//dbg("cp2gpu_dedup: copy %p to GPU.\n", src);
-	uint64_t key=0;
+	uint32_t key=0;
 	int skip_copy=0;
 	lock_t tmp(cumemcache.mutex_hash, ((cuda_dedup&&!*dest) || (!cuda_dedup&&*dest)));
 	if(cuda_dedup&&!*dest){
@@ -123,13 +123,14 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 		key=hashlittle(&igpu, sizeof(int), key);//put GPU index as part of fingerprint.	
 		if(cumemcache.memhash.count(key)){//memory is already in the correct gpu
 			*dest=(M*)cumemcache.memhash[key];//memory address
-			if(cumemcache.memcount.count(*dest) && cumemcache.memcount[*dest]>0){//sanity check
-				cumemcache.memcount[*dest]++;
+			if(cumemcache.memcount.count(*dest) && cumemcache.memcount[*dest][0]>0){//sanity check
+				cumemcache.memcount[*dest][0]++;
 				skip_copy=1;//no need to copy again
 				cumemcache.nsave+=nx*ny*sizeof(N);
 				//dbg("cp2gpu_dedup: increase reference to data: %p, memory saved is %ld MB.\n", *dest, cumemcache.nsave>>20);
 			} else{
-				warning("cp2gpu_dedup: erase invalid deduplicated data: %p (exist=%d, count=%d, size is %ld)\n", *dest, (int)cumemcache.memcount.count(*dest), cumemcache.memcount[*dest], nx*ny*sizeof(N));
+				warning("cp2gpu_dedup: erase invalid deduplicated data: %p (key=%x, exist=%d, count=%d, size is %ld)\n", 
+					*dest, key, (int)cumemcache.memcount.count(*dest), cumemcache.memcount[*dest][0], nx*ny*sizeof(N));
 				cumemcache.memhash.erase(key);
 				cumemcache.memcount.erase(*dest);
 				*dest=0;
@@ -138,9 +139,9 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 	} else if(!cuda_dedup&&*dest){
 		//Avoid overriding previously deduplicate memory
 		if(cumemcache.memcount.count(*dest)){
-			if(cumemcache.memcount[*dest]>1){
-				warning("cp2gpu_dedup: allocate new memory for deduplicated data: %p (count=%d)\n", *dest, cumemcache.memcount[*dest]);
-				cumemcache.memcount[*dest]--;
+			if(cumemcache.memcount[*dest][0]>1){
+				warning("cp2gpu_dedup: allocate new memory for deduplicated data: %p (count=%d)\n", *dest, cumemcache.memcount[*dest][0]);
+				cumemcache.memcount[*dest][0]--;
 				*dest=0;
 			}else{
 				warning("cp2gpu_dedup: reuse memory for singular deduplicated data: %p\n", *dest);
@@ -153,7 +154,12 @@ void cp2gpu_dedup(M** dest, const N* src, long nx, long ny, cudaStream_t stream=
 		*dest=(M*)new Gpu<M>[nx*ny];
 		if(cuda_dedup){
 			cumemcache.memhash[key]=*dest;
-			cumemcache.memcount[*dest]=1;
+			/*if(nx*ny*sizeof(N)==149448){
+				info("key=%x, malloc %p\n", key, *dest);
+				print_backtrace();
+			}*/
+			cumemcache.memcount[*dest][0]=1;
+			cumemcache.memcount[*dest][1]=key;
 		}
 	}
 	if(!skip_copy){

@@ -211,27 +211,22 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		}
 	} else{
 		info("Building recon->RR\n");
-		dspcell* GX=recon->GX/*PDSPCELL*/;
 		const dspcell* saneai=recon->saneai;
 		/*
 		  Reconstruction Right hand side matrix. In split tomography mode, low
 		  order NGS are skipped. recon->GXtomo contains GXs that only
 		  participate in tomography.
 		*/
-		dspcell* GXtomoT=dspcelltrans(recon->GXtomo);
-		dcellmm(&recon->RR.M,GXtomoT, saneai, "nn", 1);
-		dspcell* RRM=(dspcell*)recon->RR.M/*PDSPCELL*/;
-		/*
-		  Tip/tilt and diff focus removal low rand terms for LGS WFS.
-		*/
+		dcellmm(&recon->RR.M, recon->GXtomo, saneai, "tn", 1);
 		if(recon->TTF){
+			//Tip/tilt and diff focus removal low rand terms for LGS WFS.
 			dcellmm(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
 			recon->RR.V=dcelltrans(recon->PTTF);
 		}
 
 		info("Building recon->RL\n"); /*left hand side matrix */
 		dcellmm(&recon->RL.M, recon->RR.M, recon->GXtomo, "nn", 1);
-		dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
+		dspcell* RLM=dspcell_cast(recon->RL.M);
 		if(parms->tomo.piston_cr){
 			/*single point piston constraint. no need tikholnov.*/
 			info("Adding ZZT to RLM\n");
@@ -269,45 +264,31 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			recon->RL.extra=recon->fractal;
 			recon->RL.exfun=apply_fractal;
 		}
-
 		/*Symmetricize, remove values below 1e-15*max and sort RLM (optional). */
 		/*dspcellsym(recon->RL.M); */
-
-		/*Left hand side low rank terms for low order wfs. Only in Integrated tomography. */
-		dcell* ULo=NULL;
-		dcell* VLo=NULL; 
+		if(recon->TTF_LHS || recon->PTTF_LHS){
+			dcellmm(&recon->RL.U, recon->RR.M, recon->TTF_LHS, "nn", 1);
+			dcellmm(&recon->RL.V, recon->GX, recon->PTTF_LHS, "tt", 1);
+		}
 		if(!parms->recon.split){
-			ULo=dcellnew(npsr, nwfs);
-			VLo=dcellnew(npsr, nwfs);
+			/*Left hand side low rank terms for low order wfs. Only in left hand side for integrated tomography. */
+			dcell* ULo=dcellnew(npsr, nwfs);
+			dcell* VLo=dcellnew(npsr, nwfs);
 			for(int iwfs=0; iwfs<nwfs; iwfs++){
 				int ipowfs=parms->wfsr[iwfs].powfs;
-				if(parms->powfs[ipowfs].skip){
-					continue;
-				}
-				if(parms->powfs[ipowfs].lo){
+				if(!parms->powfs[ipowfs].skip && parms->powfs[ipowfs].lo){
 					for(int ips=0; ips<npsr; ips++){
-						dspfull(&P(ULo, ips, iwfs), P(RRM, ips, iwfs), 'n', -1);
-						dspfull(&P(VLo, ips, iwfs), P(GX, iwfs, ips), 't', 1);
+						dspfull(&P(ULo, ips, iwfs), dsp_cast(P(recon->RR.M, ips, iwfs)), 'n', -1);
+						dspfull(&P(VLo, ips, iwfs), P(recon->GX, iwfs, ips), 't', 1);
 					}
 				}
 			}
+			dcellcat2(&recon->RL.U, ULo, 2);
+			dcellcat2(&recon->RL.V, VLo, 2);
+		
+			dcellfree(ULo);
+			dcellfree(VLo);
 		}
-		if(parms->recon.split!=1 || parms->tomo.splitlrt==2){//Full low rank term in LHS
-			recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
-			dcell* GPTTDF=NULL;
-			dcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
-			recon->RL.V=dcellcat(GPTTDF, VLo, 2);
-			dcellfree(GPTTDF);
-		} else if(parms->tomo.splitlrt && recon->FF){
-			//include removal focus low rank term in LHS, not tip/tilt
-			//Including tip/tilt in LHS causes rank deficiency.
-			dcellmm(&recon->RL.U, recon->RR.M, recon->FF, "nn", 1);
-			dcellmm(&recon->RL.V, recon->GX, recon->PFF, "tt", 1);
-		} else{
-			info("Skipping RL Low rank terms in split tomography\n");
-		}
-		dcellfree(ULo);
-		dcellfree(VLo);
 		/*Remove empty cells. */
 		//dcelldropempty(&recon->RR.U,2);
 		//dcelldropempty(&recon->RR.V,2);
@@ -315,8 +296,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 		dcelldropempty(&recon->RL.V, 2);
 
 		if(recon->RL.U){
-			/* balance UV. may not be necessary. Just to compare well against
-			   laos. */
+			/* balance UV. may not be necessary. Just to compare well against laos. */
 			real r0=recon->r0;
 			real dx=P(recon->xloc,0)->dx;
 			real val=laplacian_coef(r0, 1, dx);/*needs to be a constant */
@@ -349,8 +329,7 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 			writebin(recon->RL.U, "tomo_RLU");
 			writebin(recon->RL.V, "tomo_RLV");
 		}
-		dspcellfree(GXtomoT);
-	}
+			}
 	if((parms->tomo.alg==0||parms->tomo.alg==2)&&parms->tomo.bgs){
 	/* We need cholesky decomposition in CBS or MVST method. */
 		muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
@@ -415,6 +394,24 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
 	setup_recon_tomo_reg(recon, parms);
+	if(!parms->recon.split || parms->tomo.splitlrt){
+		//Tomography low rank term
+		int full=(!parms->recon.split||parms->tomo.splitlrt==2);
+		recon->TTF_LHS=dcellref(full?recon->TTF:recon->FF);
+		recon->PTTF_LHS=dcellref(full?recon->PTTF:recon->PFF);
+		if(parms->recon.split){
+			//To avoid rank deficienciy in AHST, we do not remove the modes in the first wfs.
+			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+				if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].skip){
+					int iwfs=P(parms->powfs[ipowfs].wfsr, 0);
+					if(recon->TTF_LHS) dfree(P(recon->TTF_LHS, iwfs, iwfs));
+					if(recon->PTTF_LHS) dfree(P(recon->PTTF_LHS, iwfs, iwfs));
+				}
+			}
+		}
+	}else{
+		info("No low rank terms in tomography left hand side.\n");
+	}
 	if(parms->tomo.assemble||parms->recon.split==2){
 	/*assemble the matrix only if not using CG CG apply the
 	  individual matrices on fly to speed up and save memory. */
@@ -768,13 +765,14 @@ void TomoL(dcell** xout, const void* A,
 
 	Tomo_prop(&data, recon->nthread);
 
-	if(parms->recon.split!=1||parms->tomo.splitlrt==2){
-		/*Remove global Tip/Tilt, focus only in integrated tomography.*/
+	/*if(parms->recon.split!=1||parms->tomo.splitlrt==2){
+		//Remove global Tip/Tilt, focus only in integrated tomography.
 		remove_mode(gg, recon->TTF, recon->PTTF);
 	} else if(parms->tomo.splitlrt){
-		/*Remove only focus in split tomography when splitlrt is set*/
+		//Remove only focus in split tomography when splitlrt is set
 		remove_mode(gg, recon->FF, recon->PFF);
-	}
+	}*/
+	remove_mode(gg, recon->TTF_LHS, recon->PTTF_LHS);
 	Tomo_nea_gpt(&data, recon->nthread, 1);
 	Tomo_iprop(&data, recon->nthread);
 	/*

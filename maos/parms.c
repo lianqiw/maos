@@ -3149,10 +3149,10 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			}
 			parms->tomo.maxit=maxit;
 		}
-		if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
+		/*if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
 			warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 			parms->tomo.splitlrt=0;
-		}
+		}*/
 		if(parms->tomo.bgs&&parms->tomo.precond){
 			error("Please implement the preconditioner for each block for BGS.\n");
 		}
@@ -3541,7 +3541,7 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("There are %d DMs\n",parms->ndm);
 	for(i=0; i<parms->ndm; i++){
-		info("    DM %d: at %g km, pitch %g m, offset %g, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
+		info("    DM %d: at %4.1f km, pitch %g m, offset %3.1f, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
 			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
 			parms->dm[i].offset, parms->dm[i].iac,
 			fabs(P(parms->dm[i].stroke, 0))*1e6, fabs(parms->dm[i].iastroke)*1e6);
@@ -3564,7 +3564,7 @@ static void print_parms(const parms_t *parms){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].lo
 				&& (parms->powfs[ipowfs].trs||parms->powfs[ipowfs].frs)){
-				info("    Tomography low rank terms include ");
+				info("    low rank term includes ");
 				if(parms->powfs[ipowfs].trs){
 					int lrt=(!parms->recon.split||parms->tomo.splitlrt==2);
 					info("tip/tilt (%s) ", lrt?"L/R":"R");

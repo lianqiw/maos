@@ -39,7 +39,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 	real ydiff=(ploc->locy[0]-saloc->locy[0])/ploc->dy;
 	if((fabs(pos-1)<EPS||fabs(pos-2)<EPS) 
 		&& fabs(xdiff-round(xdiff))<EPS && fabs(ydiff-round(ydiff))<EPS){//These well aligned cases are accelerated with matrix-free approach.
-		dbg("GP uses matrix-free approach.\n");
+		dbg("GP uses matrix-free approach: pos=%g, xdiff=%g, ydiff=%g.\n", pos, xdiff, ydiff);
 		dsp* GPt=dsptrans(GP);
 		const spint* pp=GPt->pp;
 		const spint* pi=GPt->pi;
@@ -179,7 +179,7 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
-	grid(_grid), nttf(0), lhs_nttf(0), nwfs(0){
+	grid(_grid), rhs_nttf(0), lhs_nttf(0), lhs_skip0(0), nwfs(0){
 	nwfs=parms->nwfsr;
 	if(!parms->tomo.square){
 		error("cutomo_grid requires parms->tomo.square=1.\n");
@@ -249,18 +249,24 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].saptr=(int(*)[2])saptr[iwfs]();
 			GPDATA[iwfs].GPp=(short2*)GPp[iwfs]();
 			GPDATA[iwfs].GPscale=GPscale[iwfs];
-			if(parms->powfs[ipowfs].trs){
+			if(parms->powfs[ipowfs].trs || parms->powfs[ipowfs].frs){
 				GPDATA[iwfs].PTTF=PTTF(iwfs, iwfs)();
-				if(!nttf) nttf=PTTF(iwfs, iwfs).Nx();
-				else if(nttf!=PTTF(iwfs, iwfs).Nx()){
-					error("PTTF for different WFS does not match: %d vs %ld\n", nttf, PTTF(iwfs, iwfs).Nx());
+				if(!rhs_nttf) rhs_nttf=PTTF(iwfs, iwfs).Nx();
+				else if(rhs_nttf!=PTTF(iwfs, iwfs).Nx()){
+					error("PTTF for different WFS does not match: %d vs %ld\n", rhs_nttf, PTTF(iwfs, iwfs).Nx());
 				}
-			}
-			if(parms->recon.split==1&&parms->tomo.splitlrt==1&&parms->powfs[ipowfs].frs){
-				GPDATA[iwfs].PFF=PFF(iwfs, iwfs)();
-				if(!lhs_nttf) lhs_nttf=PFF(iwfs, iwfs).Nx();
-				else if(lhs_nttf!=PFF(iwfs, iwfs).Nx()){
-					error("PTTF for different WFS does not match: %d vs %ld\n", nttf, PTTF(iwfs, iwfs).Nx());
+				
+				if(parms->recon.split==1&&parms->tomo.splitlrt==1&&parms->powfs[ipowfs].frs){
+					GPDATA[iwfs].PFF=PFF(iwfs, iwfs)();
+					if(!lhs_nttf) lhs_nttf=PFF(iwfs, iwfs).Nx();
+					else if(lhs_nttf!=PFF(iwfs, iwfs).Nx()){
+						error("PTTF for different WFS does not match: %d vs %ld\n", rhs_nttf, PTTF(iwfs, iwfs).Nx());
+					}
+				}else if(!parms->recon.split || parms->tomo.splitlrt==2){
+					lhs_nttf=rhs_nttf;
+				}
+				if(parms->recon.split && parms->tomo.splitlrt){
+					if(!lhs_skip0) lhs_skip0=1+iwfs;
 				}
 			}
 			GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs]();
@@ -272,9 +278,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 			GPDATA[iwfs].oxp=recon->pmap->ox;
 			GPDATA[iwfs].oyp=recon->pmap->oy;
 		}
-		if(!lhs_nttf){
-			lhs_nttf=(!parms->recon.split||(parms->tomo.splitlrt==2&&parms->recon.mvm!=2))?nttf:0;
-		}
+		info("GPU tomography: lhs_skip0=%d, lhs_nttf=%d, rhs_nttf=%d\n", lhs_skip0, lhs_nttf, rhs_nttf);
 		gpdata.init(nwfs, 1);
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
 	}
@@ -318,7 +322,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		opdwfs=curcell(nwfs, 1, nxpw(), nypw());
 
 		grad=curcell(nwfs, 1, ngw(), (int*)NULL);
-		ttf=curmat(nttf,nwfs);
+		ttf=curmat(rhs_nttf,nwfs);
 	}
 }
 
@@ -369,7 +373,7 @@ __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* 
    ttf = - PTTF * gout #if nttf is set
 */
 #define DIM_GP 128
-__global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf){
+__global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf, int skip0){
 	__shared__ Real ggf[3][DIM_GP];
 	//__shared__ Real gy[DIM_GP];
 	//__shared__ Real gf[DIM_GP];
@@ -436,7 +440,7 @@ __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout
 	}
 	/* Global TT, Focus projection. Make sure  each thread handle the same
 	subaperture as previous gradient operation to avoid synchronization issue.*/
-	if(datai->PTTF&&nttf){//npttf has number of modes
+	if(datai->PTTF&&nttf&&(!skip0 || iwfs+1!=skip0)){//npttf has number of modes
 		Real *PTTF=(nttf==1)?datai->PFF:datai->PTTF;
 		for(int im=0; im<nttf; im++){
 			ggf[im][threadIdx.x]=0;
@@ -554,7 +558,7 @@ __global__ static void gpu_gpt_do(gpu_gp_t* data, Real* const* wfsopd, const Rea
 	}
 }
 
-void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, stream_t& stream){
+void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, int skip0, stream_t& stream){
 	if(_opdwfs){//Sparse based is only needed when _opdwfs is set.
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			if(GPp[iwfs]||!GP[iwfs]) continue;
@@ -564,7 +568,7 @@ void cutomo_grid::do_gp(curcell& _grad, const curcell& _opdwfs, int ptt2, stream
 	}
 	cuzero(ttf, stream);
 	gpu_gp_do<<<dim3(24, 1, nwfs), dim3(DIM_GP, 1), 0, stream>>> //_opdwfs is initialized in the kernel.
-		(gpdata(), _grad.pm(), ttf(), _opdwfs?_opdwfs.pm():NULL, ptt2);
+		(gpdata(), _grad.pm(), ttf(), _opdwfs?_opdwfs.pm():NULL, ptt2, skip0);
 }
 void cutomo_grid::do_gpt(curcell& _opdwfs, curcell& _grad, int ptt2, stream_t& stream){
 	if(_opdwfs){
@@ -617,8 +621,8 @@ void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream
 	} else{
 		curcellscale(xout, beta, stream);
 	}
-	do_gp(_grad, curcell(), nttf, stream);
-	do_gpt(opdwfs, _grad, nttf, stream);
+	do_gp(_grad, curcell(), rhs_nttf, 0, stream);
+	do_gpt(opdwfs, _grad, rhs_nttf, stream);
 	HXT(xout, alpha, stream);
 #if SAVE_TOMO
 	static int count=0; count++;
@@ -636,9 +640,9 @@ void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, s
 		curcellscale(gout, beta, stream);
 	}
 	HX(xin, alpha, stream);
-	do_gp(gout, opdwfs, nttf, stream);
+	do_gp(gout, opdwfs, rhs_nttf, 0, stream);
 	curcell dummy;
-	do_gpt(dummy, gout, nttf, stream);
+	do_gpt(dummy, gout, rhs_nttf, stream);
 }
 
 /*
@@ -665,7 +669,7 @@ void cutomo_grid::L(curcell& xout, Real beta, const curcell& xin, Real alpha, st
 	cuwrite(opdwfs, stream, "tomo_L_opdwfs_%d", count);
 #endif
 	//opdwfs to grad to ttf
-	do_gp(grad, opdwfs, lhs_nttf, stream);
+	do_gp(grad, opdwfs, lhs_nttf, lhs_skip0, stream);
 #if SAVE_TOMO
 	cuwrite(grad, stream, "tomo_L_grad_%d", count);
 	cuwrite(ttf, stream, "tomo_L_ttf_%d", count);

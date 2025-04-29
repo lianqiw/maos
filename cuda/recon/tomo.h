@@ -63,14 +63,15 @@ class cutomo_grid:public cusolve_r, public cusolve_cg{
 	NumCell<short2, Gpu> GPp;
 	Array<Real> GPscale;
 	cuspcell GP;
-	int nttf;		/**<Number of modes in TTF projection (2 for TT only and 3 with focus)*/
-	int lhs_nttf;   /**<LHS flag for L(). =0 or nttf*/
-	int nwfs;
+	int rhs_nttf=0;		/**<Number of modes in TTF projection (2 for TT only and 3 with focus)*/
+	int lhs_nttf=0;   /**<LHS flag for L(). =0 or nttf*/
+	int lhs_skip0=0;	/**<LHS skip powfs[0].wfs[0] to avoid rank deficiency */
+	int nwfs=0;
 	map2map hx;
 	Array<gpu_gp_t, Gpu>gpdata;
 	Array<lap_t, Gpu> lap;
 
-	void do_gp(curcell& grad, const curcell& opdwfs, int ptt, stream_t& stream);
+	void do_gp(curcell& grad, const curcell& opdwfs, int ptt, int skip0, stream_t& stream);
 	void do_gpt(curcell& opdwfs, curcell& grad, int ptt, stream_t& stream);
 public:
 	cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid);

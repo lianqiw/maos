@@ -330,6 +330,8 @@ typedef struct recon_t{
     dcell *PFF;        /**<pinv of FF. to use in RTC.*/
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
+	dcell *TTF_LHS;    /**<Concatenation of TT and DF for tomography left hand side*/
+	dcell *PTTF_LHS;   /**<pinv of TTF for tomography left hand side*/
     dspcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *DMTT;       /**<DM tip/tilt mode.*/
     dcell *DMPTT;      /**<DM tip/tilt reconstructor.*/

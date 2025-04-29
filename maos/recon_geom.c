@@ -528,7 +528,7 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 		for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
 			int ipowfs=parms->wfsr[iwfsr].powfs;
 			int shwfs=parms->powfs[ipowfs].type==WFS_SH;
-			if(parms->recon.split!=2&&parms->powfs[ipowfs].skip){
+			if(parms->powfs[ipowfs].skip==2 || (parms->recon.split!=2&&parms->powfs[ipowfs].skip==1)){
 				//don't need HXW for low order wfs that does not participate in tomography.
 				continue;
 			}
@@ -661,7 +661,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
    Setup gradient operator form aloc for wfs by using GP.
 */
 void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
-	if(parms->nwfs==0) return;
+	if(parms->nwfsr==0) return;
 	loc_t* ploc=recon->ploc;
 	const int nwfsr=parms->nwfsr;
 	const int ndm=parms->ndm;
@@ -888,21 +888,20 @@ setup_recon_GX(recon_t* recon, const parms_t* parms){
    From focus mode to gradients. This acts on WFS, not WFSR.
  */
 void setup_recon_GF(recon_t* recon, const parms_t* parms){
-	/*Create GFall: Focus mode -> WFS grad. This is model*/
 	recon->GFall=dcellnew(parms->nwfs, 1);
 	recon->GFngs=dcellnew(parms->nwfs, 1);
-	{
-		dmat* opd=dnew(recon->ploc->nloc, 1);
-		loc_add_focus(opd, recon->ploc, 1);
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			const int ipowfs=parms->wfs[iwfs].powfs;
-			dspmm(&P(recon->GFall, iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
-			if(parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].llt){
-				P(recon->GFngs, iwfs)=dref(P(recon->GFall, iwfs));
-			}
+	
+	dmat* opd=dnew(recon->ploc->nloc, 1);
+	loc_add_focus(opd, recon->ploc, 1);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		dspmm(&P(recon->GFall, iwfs), P(recon->GP, parms->recon.glao?ipowfs:iwfs), opd, "nn", 1);
+		if(parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].llt){
+			P(recon->GFngs, iwfs)=dref(P(recon->GFall, iwfs));
 		}
-		dfree(opd);
 	}
+	dfree(opd);
+
 	if(parms->save.recon){
 		writebin(recon->GFall, "GFall");
 	}

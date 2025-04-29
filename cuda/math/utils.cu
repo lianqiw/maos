@@ -395,10 +395,12 @@ int mycudaFree(void* pp){
 	int tofree=1;
 	{
 		lock_t tmp(cumemcache.mutex_hash);
-		std::map<void*, int>::iterator it=cumemcache.memcount.find(pp);
+		std::map<void*, uint32_t[2]>::iterator it=cumemcache.memcount.find(pp);
 		if(it!=cumemcache.memcount.end()){
-			it->second--;
-			if((tofree=!(it->second))){
+			it->second[0]--;
+			if((tofree=!(it->second[0]))){
+				//dbg("memhash.erase %x\n", it->second[1]);
+				cumemcache.memhash.erase(it->second[1]);
 				cumemcache.memcount.erase(it);
 			}
 		}
