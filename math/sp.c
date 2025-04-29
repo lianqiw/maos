@@ -550,12 +550,13 @@ void X(spadd)(X(sp)** A0, T alpha, const X(sp)* B, T beta){
 /**
    Add alpha times identity to a sparse matrix.
    If X(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)
+   Assume the the sparse array is sported correctly.
 */
-void X(spaddI)(X(sp)* A, T alpha){
-	X(spsort)(A);//make sure it is sorted correctly.
+X(sp)* X(spaddI)(const X(sp)* A, T alpha){
+	if(!A) return NULL;
 	//First check for missing diagonal elements
 	long nm=MIN(A->nx, A->ny);
-	long missing=0;
+	long nmissing=0;
 	for(long icol=0; icol<nm; icol++){
 		int found=0;
 		for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
@@ -564,39 +565,42 @@ void X(spaddI)(X(sp)* A, T alpha){
 				break;
 			}
 		}
-		if(!found) missing++;
+		if(!found) nmissing++;
 	}
 	long nzmax=A->pp[A->ny];
-	if(missing){//expanding storage
-		A->px=myrealloc(A->px, (nzmax+missing), T);
-		A->pi=myrealloc(A->pi, (nzmax+missing), spint);
-	}
-	missing=0;
+	X(sp)* out=X(spnew)(A->nx, A->ny, nzmax+nmissing);
+	long missing=0;
 	for(long icol=0; icol<A->ny; icol++){
-		A->pp[icol]+=missing;
+		out->pp[icol]=A->pp[icol]+missing;
 		int found=0;
-		long ix=0;
-		if(icol<nm){
-			for(ix=A->pp[icol]; ix<A->pp[icol+1]+missing; ix++){
-				if(A->pi[ix]==icol){
-					found=1;
-					A->px[ix]+=alpha;
-					break;
-				} else if(A->pi[ix]>icol){ //insertion place
-					break;
-				}
-			}
-			if(!found){
-				memmove(A->px+ix+1, A->px+ix, sizeof(T)*(nzmax+missing-ix));
-				memmove(A->pi+ix+1, A->pi+ix, sizeof(spint)*(nzmax+missing-ix));
-				A->pi[ix]=icol;
-				A->px[ix]=alpha;
+		long ix;
+		for(ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
+			//copy over
+			out->px[ix+missing]=A->px[ix];
+			out->pi[ix+missing]=A->pi[ix];
+			if(A->pi[ix]==icol){
+				found=1;
+				out->px[ix+missing]+=alpha;
+			} else if(A->pi[ix]>icol && !found){//insert. implies missing>0
+				found=1;
+				out->px[ix+missing]=alpha;
+				out->pi[ix+missing]=icol;
 				missing++;
+				out->px[ix+missing]=A->px[ix];
+				out->pi[ix+missing]=A->pi[ix];
 			}
 		}
+		if(!found){
+			out->px[ix+missing]=alpha;
+			out->pi[ix+missing]=icol;
+			missing++;
+		}
 	}
-	A->pp[A->ny]+=missing;
-	A->nzmax=A->pp[A->ny];
+	out->pp[A->ny]=A->pp[A->ny]+missing;
+	if(missing!=nmissing){
+		error("missing=%ld, should equal to nmissing=%ld\n", missing, nmissing);
+	}
+	return out;
 }
 /**
  * Transpose a sparse array*/

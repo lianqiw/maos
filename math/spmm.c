@@ -460,7 +460,9 @@ OMP_FOR(8)
 		} else if(ismat(P(A, ii, ii))){
 			X(addI)(X(mat_cast)(P(A, ii, ii)), alpha);
 		} else if(issp(P(A, ii, ii))){
-			X(spaddI)(X(sp_cast)(P(A, ii, ii)), alpha);
+			X(sp)* tmp=X(spaddI)(X(sp_cast)(P(A, ii, ii)), alpha);
+			cellfree(P(A,ii,ii));
+			P(A,ii,ii)=(cell*)tmp;
 		} else{
 			error("Invalid id=%u", P(A, ii, ii)->id);
 		}

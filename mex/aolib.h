@@ -43,3 +43,4 @@ dcell* dcellpinv2(dcell *A, cell *wt, double thres1, double thres2);
 void dembed(dmat*out, dmat*in, double theta);
 void dshift2center(dmat *A, real offx, real offy);
 dmat *dcell2m(dcell*A);
+dsp *dspaddI(dsp*A, double alpha);

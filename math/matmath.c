@@ -1745,70 +1745,59 @@ X(cell)* X(celldup)(const X(cell)* in){
 	X(cellcp)(&out, in);
 	return out;
 }
-
 /**
    concatenate two cell matrices along dimenstion 'dim'.
 */
 X(cell)* X(cellcat)(const X(cell)* A, const X(cell)* B, int dim){
 	if(!A){
-		if(!B){
-			return NULL;
-		} else{
-			return X(celldup)(B);
-		}
-	} else if(!B){
-		return X(celldup)(A);
+		if(B) return X(celldup)(B); 
+		else return NULL;
+	}		
+	X(cell)* out=X(celldup)(A);
+	X(cellcat2)(&out, B, dim);
+	return out;
+}
+/**
+   concatenate two cell matrices along dimenstion 'dim'.
+*/
+void X(cellcat2)(X(cell)** pA, const X(cell)* B, int dim){
+	if(!B) return;
+	if(!pA){error("A must not be NULL\n"); return;}
+	if(!*pA){*pA=X(celldup)(B);	return; }
+	X(cell)*A=*pA;
+	if(A->m){
+		warning("cellcat2 require A->m to be unset. freed.");
+		X(free)(A->m);
 	}
-
-	X(cell)* out=NULL;
-
-	if(dim==1){
-	/*along x. */
+	if(dim==1){/*along x. */
 		if(A->ny!=B->ny){
 			error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
 		}
-		out=X(cellnew)(A->nx+B->nx, A->ny);
+		int xoff=A->nx;
+		cellresize(A, NX(A)+NX(B),NY(A));
 		for(long iy=0; iy<A->ny; iy++){
-			for(long ix=0; ix<A->nx; ix++){
-				P(out, ix, iy)=X(dup)(P(A, ix, iy));
-			}
 			for(long ix=0; ix<B->nx; ix++){
-				P(out, ix+A->nx, iy)=X(dup)(P(B, ix, iy));
+				P(A, ix+xoff, iy)=X(dup)(P(B, ix, iy));
 			}
 		}
-	} else if(dim==2){
-	/*along y. */
+	} else if(dim==2){/*along y. */
 		if(A->nx!=B->nx){
 			error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
 		}
-		out=X(cellnew)(A->nx, A->ny+B->ny);
-		for(long iy=0; iy<A->ny; iy++){
-			for(long ix=0; ix<A->nx; ix++){
-				P(out, ix, iy)=X(dup)(P(A, ix, iy));
-			}
-		}
+		int yoff=A->ny;
+		cellresize(A, NX(A), NY(A)+NY(B));
 		for(long iy=0; iy<B->ny; iy++){
 			for(long ix=0; ix<B->nx; ix++){
-				P(out, ix, iy+A->ny)=X(dup)(P(B, ix, iy));
+				P(A, ix, iy+yoff)=X(dup)(P(B, ix, iy));
 			}
 		}
 	} else{
 		error("Invalid dim\n");
 	}
-	return out;
 }
 
-/**
-   concatenate two cell matrices along dimenstion 'dim'.
-*/
-void X(cellcat2)(X(cell)** A, const X(cell)* B, int dim){
-	if(!B) return;
-	X(cell)* Anew=X(cellcat)(*A, B, dim);
-	X(cellfree)(*A);
-	*A=Anew;
-}
 /**
    concatenate coresponding elements of each X(cell). They must
    have the same shape.

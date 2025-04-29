@@ -131,7 +131,7 @@ def py2cell(arr, tid=0):
     '''convert numpy.array to C array adaptively (based on its type)'''
     if type(arr) is list:
         arr=np.asarray(arr)
-    if sp.isspmatrix_csr(arr):
+    if sp.issparse(arr):
         return csr(arr, tid)
     else:
         return cell(arr, tid)
@@ -142,7 +142,7 @@ def py2cellref(arr, tid=0):
         return None
     elif type(arr) is list:
         arr = np.asarray(arr)
-    if sp.isspmatrix_csr(arr):
+    if sp.issparse(arr):
         return byref(csr(arr,tid))
     elif type(arr) is np.ndarray:        
         if arr.size==0:
@@ -276,9 +276,9 @@ class cell(Structure):
                 headers.append(self.header.decode('ascii'))
             return as_array(self.p, self.id, self.shape(0))
         elif kind==1: #sparse matrix
-            return cast(addressof(self), POINTER(csr)).contents.as_array()
+            return cast(addressof(self), POINTER(csr)).contents.as_array(headers)
         elif kind==2: #loc
-            return cast(addressof(self), POINTER(loc)).contents.as_array()
+            return cast(addressof(self), POINTER(loc)).contents.as_array(headers)
         elif kind==10: #cell
             res=np.empty(self.shape(1), dtype=object)
             parr=cast(self.p, POINTER(c_void_p))
@@ -383,21 +383,31 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             np.complex64: 0x6406,
             np.complex128:0x6400,
         }
-        if arr is not None and sp.isspmatrix_csr(arr):
+        if arr is None:
+            self.id=spdtype2id.get(np.float64)
+        elif sp.issparse(arr):
+            if arr.dtype.type in (np.int32, np.int64):
+                arr=arr.astype(np.float64)
             self.id=spdtype2id.get(arr.dtype.type)
             if  tid !=0 and tid !=0x6421 and self.id != tid:
                 raise(Exception('data mismatch want {}, got {}'.format(self.id, tid)))
-            #save subarrays
+            if not arr.format in ('csr','csc'):
+                print('Sparse format {} is not supported; will convert to csr'.format(arr.format))
+                arr=arr.tocsr()
+            if arr.format=='csr':
+                self.ny, self.nx=arr.shape #python csr is maos csc transposed
+            elif arr.format=='csc':
+                self.nx, self.ny=arr.shape 
+            #save subarrays to avoid being GC'ed.
             self.xp=arr.data
             self.ip=arr.indices.astype(np.long)
             self.pp=arr.indptr.astype(np.long) #p
             self.x=self.xp.ctypes.data_as(c_void_p) #data
             self.i=self.ip.ctypes.data_as(c_void_p) #row index
             self.p=self.pp.ctypes.data_as(c_void_p)
-            self.ny, self.nx=arr.shape #Fortran order
             self.nzmax=self.pp[-1]
         else:
-            self.id=spdtype2id.get(np.float64)
+            raise(Exception('Invalid conversion to csr'))
 
     def as_array(self, headers): #convert form C to numpy. Memory is copied
         headers.append(self.header)
@@ -405,9 +415,9 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             self.xp=as_array(self.x, self.id, (self.nzmax,))
             self.ip=as_array(self.i, 25603, (self.nzmax,))
             self.pp=as_array(self.p, 25603, (self.ny+1,))
-            return sp.csr_matrix((self.xp, self.ip, self.pp), shape=(self.ny, self.nx))
+            return sp.csr_array((self.xp, self.ip, self.pp), shape=(self.ny, self.nx))
         else:
-            return sp.csr_matrix((self.nx,self.ny))
+            return sp.csr_array((self.nx,self.ny))
     def free(self):
         lib.cellfree_do(byref(self))
 
