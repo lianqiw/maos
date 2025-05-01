@@ -44,18 +44,19 @@ public:
 
 class curecon_geom:public nonCopyable{
 public:
-	int npsr, ndm;
-	int delay, reconisim;
-	cugridcell xmap;/*Grid of xmap*/
-	cugridcell xcmap;
-	cugridcell amap;
+	int npsr=0, ndm=0;
+	int delay=0, reconisim=0;
+	Real dt=0;
+	long* anx=0, *any=0;/*do not free*/
+	long* anloc=0, *ngrad=0;/*do not free*/
+	long* xnx=0, *xny=0;/*do not free*/
 	cugrid_t pmap; /*Pupil map for tomo*/
 	cugrid_t fmap; /*Pupil map for fit*/
+	cugridcell amap;
+	cugridcell xmap;/*Grid of xmap*/
+	cugridcell xcmap;
 	w01_t W01;    /**< The aperture weighting defined on floc*/
-	long* xnx, *xny;/*do not free*/
-	long* anx, *any;/*do not free*/
-	long* anloc, *ngrad;/*do not free*/
-	Real dt;
+	
 	curecon_geom(const parms_t* parms, const recon_t* recon);
 	~curecon_geom(){}
 };

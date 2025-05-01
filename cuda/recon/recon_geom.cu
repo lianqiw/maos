@@ -143,13 +143,19 @@ void w01_t::apply(curcell& xout, const curcell& xin, stream_t& stream) const{
 }
 
 curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
-	:npsr(0), ndm(0), delay(0), reconisim(0),
-	W01(recon->W0, recon->W1, recon->fmap->nx), xnx(0), xny(0), anx(0), any(0), anloc(0), ngrad(0), dt(0){
-	dbg("update reconstructor geometry.\n");
-	ndm=parms->ndm;
-	npsr=parms->sim.idealtomo?parms->atm.nps:recon->npsr;
-	pmap=recon->pmap;
-	fmap=recon->fmap;
+	:npsr(parms->sim.idealtomo?parms->atm.nps:recon->npsr),
+	ndm(parms->ndm), 
+	delay(2), 
+	reconisim(0), 
+	dt(parms->sim.dt), 
+	anx(P(recon->anx)),
+	any(P(recon->any)),
+	anloc(P(recon->anloc)),
+	ngrad(P(recon->ngrad)),
+	pmap(recon->pmap), 
+	fmap(recon->fmap),
+	W01(recon->W0, recon->W1, recon->fmap->nx){
+	dbg("cuda reconstructor geometry.\n");
 	/*Setup various grid*/
 	amap=cugridcell(ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
@@ -169,12 +175,8 @@ curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 			xcmap[ipsr]=(recon->xcmap->p[ipsr]);
 		}
 	}
-	anx=P(recon->anx);
-	any=P(recon->any);
-	anloc=P(recon->anloc);
-	ngrad=P(recon->ngrad);
-	dt=parms->sim.dt;
-	delay=2;//2 frame delay
+
+	
 }
 
 

@@ -84,8 +84,8 @@ static void* mvm_trans_igpu(thread_t* info){
 			dmrecon=curcell(grid->ndm, 1, P(anmod), (long*)0);
 		}
 	}
-	curcell opdx(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmf?1L:0L));
-	curcell opdr(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)(mvmi?1L:0L));
+	curcell opdx=new_opdr(parms, recon, (Real*)(mvmf?1L:0L));
+	curcell opdr=new_opdr(parms, recon, (Real*)(mvmi?1L:0L));
 	curcell grad(parms->nwfsr, 1, P(recon->ngrad), (long*)0, (Real*)1);
 	if(ntotact==0){
 		error("ntotact=0;\n");
@@ -202,14 +202,9 @@ void gpu_setup_recon_mvm_trans(const parms_t* parms, recon_t* recon){
 			nact+=anmod->p[idm];
 		}
 
-		X(mat)* residual=NULL;
-		X(mat)* residualfit=NULL;
-		if(parms->tomo.alg==1){
-			residual=X(new)(ntotact, 1);
-		}
-		if(parms->fit.alg==1){
-			residualfit=X(new)(ntotact, 1);
-		}
+		X(mat)* residual=X(new)(ntotact, 1);
+		X(mat)* residualfit=X(new)(ntotact, 1);
+		
 		//Real *FLI=NULL;
 		Array<Real, Pinned>FLI;
 		/* Loading or saving intermediate TomoL result. */

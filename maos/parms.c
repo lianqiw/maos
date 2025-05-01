@@ -3343,12 +3343,6 @@ static void setup_parms_postproc_misc(parms_t *parms){
 	if(parms->save.gcovp>parms->sim.end){
 		parms->save.gcovp=parms->sim.end;
 	}
-	if(!parms->tomo.square){
-		if(parms->dbg.cmpgpu){
-			info("Make tomo.square=1 to compare cpu code against gpu implementations.\n");
-			parms->tomo.square=1;
-		}
-	}
 	if(!parms->atm.frozenflow){
 		info("psfisim is set from %d to %d in openloop mode\n",parms->evl.psfisim,parms->sim.start);
 		parms->evl.psfisim=parms->sim.start;
@@ -3558,7 +3552,7 @@ static void print_parms(const parms_t *parms){
 			case 2:
 				info2(", minimum variance split tomo\n"); break;
 			default:
-				error(", Invalid\n");
+				error(", invalid\n");
 			}
 		}
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -3778,9 +3772,11 @@ void setup_parms_gpu(parms_t *parms,int *gpus,int ngpu){
 	//Other flags that depends on GPU enabling flags
 	if(use_cuda){
 		if(parms->recon.alg==RECON_MVR){/*MV*/
-			if(parms->gpu.tomo||parms->gpu.fit==2){
-				/*Tomography RHS in cuda always requrie full grid.*/
-				parms->tomo.square=1;
+			if((parms->gpu.tomo&&(!parms->tomo.assemble||parms->tomo.precond==1))||parms->gpu.fit==2||parms->evl.tomo){
+				if(!parms->tomo.square){
+					info("Cuda code requires tomo.square=1. Changed\n");
+					parms->tomo.square=1;
+				}
 			} 
 			if(parms->evl.tomo && !parms->tomo.square){
 				warning("evl.tomo without tomo.square is not implemented in gpu. disable gpu.evl\n");

@@ -64,7 +64,7 @@ static void* mvm_direct_igpu(thread_t* info){
 	const long ntotgrad=data->ntotgrad;
 	const long ntotxloc=data->ntotxloc;
 	curcell grad=curcell(parms->nwfsr, 1, P(recon->ngrad), (long*)NULL);//the I
-	curcell opdx=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));//right hand size
+	curcell opdx=new_opdr(parms, recon, NULL);
 	curcell opdr;//initialized later
 	//curcell *fitx=curcellnew(parms->ndm, 1, P(recon->anloc), (long*)NULL);
 	curcell fitr=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL, (Real*)1);//skip data allocation.
@@ -84,6 +84,7 @@ static void* mvm_direct_igpu(thread_t* info){
 			H2D, stream);
 	}
 	curmat mvmi;
+	Real *opdr_p=NULL;
 	if(parms->load.mvmi||parms->save.mvmi){
 		dbg("Creating mvmi of size %ldx %ld\n", ntotxloc, info->end-info->start);
 		mvmi=curmat(ntotxloc, info->end-info->start);
@@ -92,10 +93,9 @@ static void* mvm_direct_igpu(thread_t* info){
 				ntotxloc*(info->end-info->start)*sizeof(Real),
 				H2D, stream);
 		}
-		opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny), (Real*)1);
-	} else{
-		opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
+		opdr_p=(Real*)1;
 	}
+	opdr=new_opdr(parms, recon, opdr_p);
 	TIC;tic;
 	curcell tomo_rhs, fit_rhs;
 	for(int ig=info->start; ig<info->end; ig++){

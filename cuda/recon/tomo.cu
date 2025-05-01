@@ -283,11 +283,6 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 		DO(cudaMemcpy(gpdata(), GPDATA(), sizeof(gpu_gp_t)*nwfs, H2D));
 	}
 
-	if(parms->tomo.precond==1){
-		//dbg("setup FDPCG\n");
-		precond=new cufdpcg_t(recon->fdpcg, grid);
-	}
-
 	{/**Initialize run time data*/
 		//dbg("init runtime temporary data\n");
 		int nxp=recon->pmap->nx;

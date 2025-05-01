@@ -94,7 +94,9 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 /**
    Convert cholmod_sparse to dsp. Data is shared
 */
-static dsp* chol2sp(cholmod_sparse*B){
+static dsp* chol2sp(cholmod_sparse**pB){
+	if(!pB || !*pB) return NULL;
+	cholmod_sparse *B=*pB;
 	dsp* A=dspnew(B->nrow, B->ncol, 0);
 	A->pp=(spint*)B->p;
 	A->nzmax=A->pp[A->ny];
@@ -104,6 +106,7 @@ static dsp* chol2sp(cholmod_sparse*B){
 		free(B->x);
 	}
 	free(B);//content is moved to A
+	*pB=NULL;
 	return A;
 }
 /**
@@ -214,7 +217,7 @@ void chol_convert(spchol* A, int keep){
 		L=A->L;
 	}
 	cholmod_sparse* B=MOD(factor_to_sparse)(L, A->c);
-	A->Cl=chol2sp(B); B=NULL;//moves content of B.
+	A->Cl=chol2sp(&B); //moves content of B.
 	MOD(free_factor)(&L, A->c);
 	if(!keep){
 		MOD(finish)(A->c);
@@ -395,7 +398,7 @@ static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long st
 	cholmod_dense* y2=d2chol(y, start, end);
 	cholmod_dense* x2=MOD(solve)(CHOLMOD_A, A->L, y2, A->c);
 	if(y2->x!=PCOL(y, start)){
-		free(y2->x);
+		free(y2->x);//data is converted. else: referenced
 	}
 	if(!x2||x2->z||x2->nzmax!=x2->nrow*x2->ncol||x2->d!=x2->nrow||start+x2->ncol!=(size_t)end){
 		error("chol_solve failed or returns unexpected answer.\n");
@@ -427,7 +430,7 @@ dsp* chol_spsolve(spchol* A, const dsp* y){
 	if(!x2||x2->z) error("chol_solve failed or returns unexpected answer.\n");
 	if(y2->x!=y->px) free(y2->x);
 	free(y2);/*don't do spfree */
-	dsp *x=chol2sp(x2); x2=NULL;
+	dsp *x=chol2sp(&x2); //moves content
 	return x;
 }
 /**
@@ -522,7 +525,7 @@ static void chol_solve_upper(const dsp* A, dmat* y2, long start, long end){
 		}
 	}
 }
-//Solve from column start to end (excluding)
+//Solve from column start to end. *x and y can be the same.
 static void chol_solve_each(dmat** x, spchol* A, const dmat* y, long start, long end){
 	if(end==0) end=y->ny;
 	if(A->L){

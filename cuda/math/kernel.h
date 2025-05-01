@@ -151,10 +151,15 @@ __global__ void sum2_do(Real* restrict res, const Real* a, const int n);
 __global__ void inn_do(Real* res_add, const Real* a, const Real* b, const int n);
 
 static inline void inn_wrap(Real* res_add, const Real* a, const Real* b, const int n, cudaStream_t stream){
-	inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res_add, a, b, n);
+	inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(double), stream>>>(res_add, a, b, n);
+}
+static inline void inn_multi_wrap(Real* res_add, const Real* a, const int acol, const Real* b, const int n, cudaStream_t stream){
+	for(int icol=0; icol<acol; icol++){
+		inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(double), stream>>>(res_add+icol, a+icol*n, b, n);
+	}
 }
 static inline void sum_wrap(Real* res, const Real* a, const int n, cudaStream_t stream){
-	sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res, a, n);
+	sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(double), stream>>>(res, a, n);
 }
 static inline void sum2_wrap(Real* res, const Real* a, const int n, cudaStream_t stream){
 	sum2_do<<<REDUCE(n), 0, stream>>>(res, a, n);

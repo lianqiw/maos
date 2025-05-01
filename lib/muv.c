@@ -282,7 +282,7 @@ void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
 		error("xin is invalid\n");
 	}
 	dmat* dotpt=NULL;
-	if(A->Up&&A->Vp){
+	if(A->Up&&A->Vp){//Apply Vp first in case xin and xout is the same
 		dmm(&dotpt, 0, A->Vp, xin, "tn", -1);
 	}
 	if(A->MI){
@@ -295,7 +295,7 @@ void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
 			dmm(xout, 0, A->MI, xin, "nn", 1);
 		}
 	} else{
-		chol_solve(xout, A->C, xin);
+		chol_solve(xout, A->C, xin);//xout and xin may be the same
 	}
 	if(dotpt){
 		dmm(xout, 1, A->Up, dotpt, "nn", 1);
@@ -357,10 +357,10 @@ void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
 void muv_direct_solve(dcell** xout, const muv_t* A, dcell* xin){
 	if(!xin) return;
 	if(NX(xin)*NY(xin)==1){/*there is only one cell. */
-		if(!*xout) *xout=dcellnew(1, 1);
+		cellinit(xout, 1, 1);
 		muv_direct_solve_mat(&P(*xout,0), A, P(xin,0));
 	} else{
-		dmat* xin2=dcell2m(xin);
+		dmat* xin2=dcell2m(xin);//do not use xin->m. it may have multiple columns.
 		muv_direct_solve_mat(&xin2, A, xin2);/*in place solve. */
 		d2cell(xout, xin2, xin);/*xin is the reference for dimensions. copy data into xout. */
 		dfree(xin2);

@@ -119,8 +119,8 @@ public:
 	void copy_opdr();
 };
 
-
-
+curcell new_opdr(const parms_t *parms, const recon_t *recon, Real *p=NULL);
+curcell new_dmr(const parms_t *parms, const recon_t *recon, int zonal=0, Real *p=NULL);
 void gpu_setup_recon_mvm_trans(const parms_t *parms, recon_t *recon);
 void gpu_setup_recon_mvm_direct(const parms_t *parms, recon_t *recon);
 

@@ -67,6 +67,7 @@ fnpre=maos_check_${ARCH}_${D}
 fnlog=${fnpre}.all #log of all
 fntmp=${fnpre}.cur #log of current simulation
 fnres=${fnpre}.res #result summary
+fnref=maos_check.ref #all ference values
 
 echo $(date) > $fnlog
 ans=0 #result code
@@ -92,6 +93,7 @@ function run_maos(){
 	s_diff2=$((s_end-s_start0)) #cumulative time
 	echo $aotype $* >> $fnlog
 	cat $fntmp >> $fnlog
+	rm $fntmp
     b=${REF[$ii]:-0}
     b2=${REF2[$ii]:-0}
 	diff=$(echo "200*($a-$b)/($a+$b+1)" | bc)
@@ -148,13 +150,13 @@ run_maos "LGS MCAO (fit):  " -cmcao_lgs.conf sim.idealtomo=1
 
 run_maos "LGS MCAO (tomo): " -cmcao_lgs.conf evl.tomo=1 
 
-run_maos "LGS MCAO (inte): " -cmcao_lgs.conf recon.split=0
+run_maos "LGS MCAO (inte): " -cmcao_lgs.conf recon.split=0 tomo.assemble=1 fit.assemble=1 #also test assembled matrices
 
-run_maos "LGS MCAO (CG):   " -cmcao_lgs.conf tomo.precond=0 
+run_maos "LGS MCAO (CG):   " -cmcao_lgs.conf tomo.precond=0 tomo.assemble=1 fit.assemble=1 #also test assembled matrices
 
 run_maos "LGS MCAO (FDPCG):" -cmcao_lgs.conf tomo.precond=1 
 
-run_maos "LGS MCAO (CBS):  " -cmcao_lgs.conf tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1]
+run_maos "LGS MCAO (CBS):  " -cmcao_lgs.conf tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1] recon.split=1 #split=0 CBS does not work well in GPU
 
 if [ ${D%.*} -le 10 ];then
 run_maos "LGS MCAO (SVD):  " -cmcao_lgs.conf tomo.alg=2 fit.alg=2 atmr.os=[2 2 1 1 1 1 1]
@@ -166,7 +168,7 @@ run_maos "LGS MCAO PCCD:  " -cmcao_lgs.conf powfs.radpix=[16,0,0] powfs.pixpsa=[
 
 run_maos "SLGS MCAO (inte): " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0] recon.split=0
 
-run_maos "SLGS MCAO (ahst):  " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0] recon.split=1
+run_maos "SLGS MCAO (ahst):  " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0] recon.split=1 tomo.splitlrt=2
 
 run_maos "LGS NCPA noatm: " -cmcao_lgs.conf sim.noatm=1 ncpa.surf=["'rms=150;L0=20;D=60;SURFEVL=0;'"] sim.wspsd= powfs.noisy=[0] atm.r0z=10 powfs0_llt.fnsurf="'rms=150;mode=5;D=0.5;dx=1/64'" #should be close to 0.
 
@@ -174,7 +176,7 @@ if [ "$D" = 30 ];then
 run_maos "NFIRAOS LGS:    " -cnfiraos_lgs.conf
 run_maos_gpu "NFIRAOS PYWFS:" -cnfiraos_ngs.conf
 fi
-echo "REF_${ARCH}=(${RMS[*]}) #$(date +%Y-%m-%d) $HOSTNAME D=$D" | tee -a $fnres
+echo "REF_${ARCH}=(${RMS[*]}) #$(date +%Y-%m-%d) $HOSTNAME D=$D" | tee -a $fnres >> $fnref
 if [ $ans -ne 0 ];then
 	echo "$ans tests failed"
 fi

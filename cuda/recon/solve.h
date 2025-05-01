@@ -49,11 +49,8 @@ class cusolve_cg:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorith
     cgtmp_t cgtmp;
     int id;
     static int counter;
-protected:
-    cusolve_cgpre *precond;
-private:
-    
 public:
+    cusolve_cgpre *precond;
     cusolve_cg(int _maxit=0, int _cgwarm=0):maxit(_maxit), cgwarm(_cgwarm), first_run(_cgwarm?0:0), precond(0){
         id=counter; counter++;
     }
@@ -122,7 +119,7 @@ protected:
     curmat y;    //Temporary data.
     curmat Vr;   //Temporary data.
 public:
-    cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp);
+    cusolve_cbs(spchol *_C, const dmat *_Up, const dmat *_Vp);
     void chol_solve(Real *out, const Real *in,  stream_t &stream);
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream);
 };

@@ -127,10 +127,10 @@ void cusolve_muv::init(const muv_t* in){
 	nxs=new int[nx];
 	nys=new int[ny];
 	for(int i=0; i<nx; i++){
-		nxs[i]=in->M->p[i]->nx;
+		nxs[i]=NX(in->M,i,0);
 	}
 	for(int i=0; i<ny; i++){
-		nys[i]=in->M->p[i*in->M->nx]->ny;
+		nys[i]=NY(in->M,0,i);
 	}
 }
 
@@ -139,7 +139,7 @@ cusolve_sparse::cusolve_sparse(int _maxit, int _cgwarm, muv_t* _R, muv_t* _L)
 	CR.init(_R);
 	CL.init(_L);
 }
-cusolve_cbs::cusolve_cbs(spchol* _C, dmat* _Up, dmat* _Vp){
+cusolve_cbs::cusolve_cbs(spchol* _C, const dmat* _Up, const dmat* _Vp){
 	if(!_C){
 		error("C cannot be empty\n");
 	}
@@ -155,18 +155,27 @@ cusolve_cbs::cusolve_cbs(spchol* _C, dmat* _Up, dmat* _Vp){
 		cp2gpu(Vp, _Vp);
 	}
 }
+/**
+ * @brief Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in
+ * single precision mode, the error is large due to accumulation.
+ *
+ * @param xout 
+ * @param xin 
+ * @param stream 
+ * @return Real 
+ */
 Real cusolve_cbs::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	if(!xout) xout=xin.New();
+	if(Up){//Apply Vp first in case xin and xout is the same
+		if(!Vr)	Vr=curmat(Vp.Ny(), 1);
+		curmv(Vr(), 0, Vp, xin.M()(), 't', -1, stream);
+	}
 	if(Cl.Type()==SP_CSC){
 		chol_solve(xout.M()(), xin.M()(), stream);
 	} else{
-		error("To implemente\n");
+		error("To implement.\n");
 	}
 	if(Up){
-		if(!Vr){
-			Vr=curmat(Vp.Ny(), 1);
-		}
-		curmv(Vr(), 0, Vp, xin.M()(), 't', -1, stream);
 		curmv(xout.M()(), 1, Up, Vr(), 'n', 1, stream);
 	}
 	return 0;

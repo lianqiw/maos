@@ -93,10 +93,10 @@ __global__ void addcabs2_do(Real *restrict a,
 /*reduction routines*/
 
 __global__ void sum_do(Real* restrict res, const Real* a, const int n){
-	extern __shared__ Real sb[];
-	sb[threadIdx.x]=0;
+	extern __shared__ double sbd[];
+	sbd[threadIdx.x]=0;
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
-		sb[threadIdx.x]+=a[i];
+		sbd[threadIdx.x]+=a[i];
 	}
 	/*
 	  Was using step for above loop. Some threads may proceed faster and
@@ -105,11 +105,11 @@ __global__ void sum_do(Real* restrict res, const Real* a, const int n){
 	for(int step=(blockDim.x>>1);step>0;step>>=1){
 		__syncthreads();
 		if(threadIdx.x<step){
-			sb[threadIdx.x]+=sb[threadIdx.x+step];
+			sbd[threadIdx.x]+=sbd[threadIdx.x+step];
 		}
 	}
 	if(threadIdx.x==0){
-		atomicAdd(res, sb[0]);
+		atomicAdd(res, sbd[0]);
 	}
 }
 /*
@@ -118,14 +118,15 @@ __global__ void sum_do(Real* restrict res, const Real* a, const int n){
   reduction again.
 */
 __global__ void sum2_do(Real* restrict res, const Real* a, const int n){
-	__shared__ Real ssb[REDUCE_WRAP*REDUCE_STRIDE];
+	typedef double sumtype;//use double to reduce truncation errors
+	__shared__ sumtype ssb[REDUCE_WRAP*REDUCE_STRIDE];
 	const int idx=threadIdx.x;
 	const int wrap=idx/WRAP_SIZE; //which wrap
 	const int jdx=(WRAP_SIZE-1)&idx;//index within this wrap
-	volatile Real* s=ssb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
+	volatile sumtype* s=ssb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
 	s[-16]=0;
 	//Read in vector from global mem
-	Real sum=0;
+	sumtype sum=0;
 	const int step=blockDim.x*gridDim.x;
 	for(int i=blockIdx.x*blockDim.x+idx; i<n; i+=step){
 		sum+=a[i];
@@ -140,10 +141,10 @@ __global__ void sum2_do(Real* restrict res, const Real* a, const int n){
 	}
 	__syncthreads();//synchronize different wraps
 	if(idx<REDUCE_WRAP){//use a few threads for reduce
-		Real sum2=ssb[REDUCE_STRIDE*idx+WRAP_SIZE/2+WRAP_SIZE-1];
+		sumtype sum2=ssb[REDUCE_STRIDE*idx+WRAP_SIZE/2+WRAP_SIZE-1];
 		//reuse sb for size of REDUCE_WRAP+REDUCE_WRAP/2;
 		ssb[idx]=0;
-		volatile Real* s2=ssb+REDUCE_WRAP/2+idx;
+		volatile sumtype* s2=ssb+REDUCE_WRAP/2+idx;
 		s2[0]=sum2;
 #pragma unroll	
 		for(int i=0; i<REDUCE_WRAP_LOG2; i++){
@@ -195,25 +196,22 @@ __global__ void maxabs_do(Real* restrict res, const Real* a, const int n){
 	}
 }
 /**
-   tmp=sum(a.*b) res_add+=tmp
-
-   2012-04-07: Bug found. The original implementation of res_rep does not work
-   for multiple blocks where only the first block will be added to the final
-   result.  */
+   res_add+=sum(a.*b)
+*/
 __global__ void inn_do(Real* res_add, const Real* a, const Real* b, const int n){
-	extern __shared__ Real sb[];
-	sb[threadIdx.x]=0;
+	extern __shared__ double sbd[];
+	sbd[threadIdx.x]=0;
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
-		sb[threadIdx.x]+=a[i]*b[i];
+		sbd[threadIdx.x]+=a[i]*b[i];
 	}
 	for(int step=(blockDim.x>>1);step>0;step>>=1){
 		__syncthreads();
 		if(threadIdx.x<step){
-			sb[threadIdx.x]+=sb[threadIdx.x+step];
+			sbd[threadIdx.x]+=sbd[threadIdx.x+step];
 		}
 	}
 	if(threadIdx.x==0){
-		atomicAdd(res_add, sb[0]);
+		atomicAdd(res_add, sbd[0]);
 	}
 }
 /* embed real to complex data.*/

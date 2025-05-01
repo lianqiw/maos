@@ -920,7 +920,11 @@ public:
 		}
 		return *this;
 	}
-	cugrid_t():nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0),dratio(1){}
+	cugrid_t(const map_t* in=NULL):nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0),dratio(1){
+		if(in){
+			(*this).operator=(in);
+		}
+	}
 	cugrid_t Scale(Real sc)const{
 		cugrid_t tmp(*this);
 		tmp.ox*=sc;

@@ -40,6 +40,22 @@ extern "C"{
 #define toc_test(A) toc2(A);tic
 #endif
 #define CATCH_ERR 0
+curcell new_opdr(const parms_t *parms, const recon_t* recon, Real *p){
+	if(parms->tomo.square){
+		return curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny), p);
+	}else{
+		return curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL, p);
+	}
+}
+curcell new_dmr(const parms_t *parms, const recon_t* recon, int zonal, Real *p){
+	if(parms->recon.modal && !zonal){
+		return curcell(parms->ndm, 1, P(recon->anmod), (long*)NULL, p);
+	}else if(parms->recon.alg==RECON_MVR && parms->fit.square){
+		return curcell(parms->ndm, 1, P(recon->anx), P(recon->any), p);
+	}else{
+		return curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL, p);
+	}
+}
 /*
   The caller must specify current GPU.
 */
@@ -61,13 +77,7 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	if(((parms->recon.alg==RECON_MVR&&parms->gpu.fit)||parms->recon.mvm||parms->gpu.moao)
 		||(parms->recon.alg==RECON_LSR&&parms->gpu.lsr)
 		){
-		if(parms->recon.modal){
-			dmrecon=curcell(parms->ndm, 1, P(recon->anmod), (long *)NULL);
-		}else if(parms->recon.alg==RECON_MVR&&parms->fit.square){
-			dmrecon=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
-		} else{
-			dmrecon=curcell(parms->ndm, 1, P(recon->anloc), (long*)NULL);
-		}
+		dmrecon=new_dmr(parms, recon);
 		dmrecon_vec=dmrecon.Vector();
 	}
 	if(parms->recon.modal){
@@ -75,17 +85,15 @@ curecon_t::curecon_t(const parms_t* parms, recon_t* recon)
 	}
 	if(parms->recon.alg==RECON_MVR&&(parms->gpu.tomo||parms->gpu.fit)
 		&&!parms->sim.idealtomo&&!parms->load.mvm&&!recon->MVM&&!cuglobal->mvm){
-		if(parms->tomo.square){
-			opdr=curcell(recon->npsr, 1, P(recon->xnx), P(recon->xny));
-		} else{
-			opdr=curcell(recon->npsr, 1, P(recon->xnloc), (long*)NULL);
-		}
+		opdr=new_opdr(parms, recon);
 		opdr_vec=opdr.Vector();
-		opdr_map=cumapcell(recon->npsr, 1);
-		for(int i=0; i<recon->npsr; i++){
-			opdr_map[i]=cumap_t(grid->xmap[i], opdr[i]);
+		if(parms->tomo.square){
+			opdr_map=cumapcell(recon->npsr, 1);
+			for(int i=0; i<recon->npsr; i++){
+				opdr_map[i]=cumap_t(grid->xmap[i], opdr[i]);
+			}
+			cudata->opdr=opdr_map;
 		}
-		cudata->opdr=opdr_map;
 	}
 	gpu_print_mem("recon init");
 }
@@ -140,13 +148,25 @@ void curecon_t::init_tomo(const parms_t*parms, recon_t*recon){
 	if(parms->gpu.tomo&&!skip_tomofit){
 		reset_tomo();
 		dbg("initialize tomography in GPU %d.\n", current_gpu());
-		RR=new cutomo_grid(parms, recon, grid);
+		if(parms->tomo.square && !parms->tomo.assemble){
+			RR=new cutomo_grid(parms, recon, grid);
+		}else{
+			RR=new cusolve_sparse(parms->tomo.maxit, parms->tomo.cgwarm, 
+				&recon->RR, &recon->RL);
+		}
 		switch(parms->tomo.alg){
 		case ALG_CBS:
 			RL=new cusolve_cbs(recon->RL.C, recon->RL.Up, recon->RL.Vp);
 			break;
 		case ALG_CG:
-			RL=dynamic_cast<cusolve_l*>(RR);
+			RL=dynamic_cast<cusolve_cg*>(RR);
+			if(parms->tomo.precond==1){
+				if(parms->tomo.square){
+					(dynamic_cast<cusolve_cg*>(RR))->precond=new cufdpcg_t(recon->fdpcg, grid);
+				}else{
+					error("To implement: FDPCG with tomo.square=0");
+				}
+			}
 			break;
 		case ALG_SVD:
 			RL=new cusolve_mvm(recon->RL.MI);
@@ -231,11 +251,7 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 		}
 		gpu_set(cuglobal->recongpu);
 	}
-	if(parms->recon.alg==RECON_MVR&&parms->fit.square){
-		dmrecon_zonal=curcell(parms->ndm, 1, P(recon->anx), P(recon->any));
-	} else{
-		dmrecon_zonal=curcell(parms->ndm, 1, P(recon->anloc), (long *)NULL);
-	}
+	dmrecon_zonal=new_dmr(parms, recon, 1);
 	dmrecon_zonal_vec=dmrecon_zonal.Vector();
 }
 void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
@@ -409,7 +425,7 @@ void curecon_t::tomo_test(sim_t* simu){
 	dcellzero(lc);
 	for(int i=0; i<5; i++){
 		muv_solve(&lc, &recon->RL, NULL, rhsc);
-		writebin(lc, "CPU_TomoCG%d", i);
+		writebin(lc, "CPU_TomoSolve%d", i);
 	}
 
 	cp2gpu(gradin, simu->gradlastol);
@@ -439,7 +455,7 @@ void curecon_t::tomo_test(sim_t* simu){
 	cuzero(lg, stream);
 	for(int i=0; i<5; i++){
 		RL->solve(lg, rhsg, stream);
-		cuwrite(lg, stream, "GPU_TomoCG%d", i);
+		cuwrite(lg, stream, "GPU_TomoSolve%d", i);
 		CUDA_SYNC_STREAM;//check for errors
 	}
 	CUDA_SYNC_DEVICE;
