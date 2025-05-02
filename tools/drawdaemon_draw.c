@@ -1051,24 +1051,6 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 					}
 					cairo_stroke(cr);
 				}
-
-				if(ptsnx>0 && drawdata->legendcurve){
-					char val[20]={0};
-					if(legend&&legend[ipts]&&connectpts){
-						val[0]=legend[ipts][0];
-					}
-					if(drawdata->cumu){
-						snprintf(val, sizeof(val), "%c (%.2f)", val[0], y);
-					}
-					if(val[0]!=0){
-						cairo_save(cr);
-						cairo_translate(cr, ix+2, round((iy-font_size*0.5)/1)*1);
-						cairo_scale(cr, 1, -1);
-						pango_text(cr, layout, 0, 0, val, 0, 1, 0);
-						cairo_restore(cr);
-					}
-				}
-				cairo_restore(cr);
 				//append cumulative average to end of legend.
 				if(legend[ipts]){
 					char* old=strstr(legend[ipts], " (");
@@ -1083,6 +1065,26 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 						free(tmp);
 					}
 				}
+				//plot legend name on curve
+				if(ptsnx>0 && drawdata->legendcurve && connectpts){
+					/*char val[20]={0};
+					if(legend&&legend[ipts]&&connectpts){
+						val[0]=legend[ipts][0];
+					}
+					if(drawdata->cumu){
+						snprintf(val, sizeof(val), "%c (%.2f)", val[0], y);
+					}*/
+					char *val=legend[ipts];
+					if(val && val[0]!=0){
+						cairo_save(cr);
+						cairo_translate(cr, ix+5, iy); //round((iy-font_size*0.5)/1)*1);
+						cairo_scale(cr, 1, -1);
+						pango_text(cr, layout, 0, 0, val, 0, 0.5, 0);
+						cairo_restore(cr);
+					}
+				}
+				cairo_restore(cr);
+
 			}/*iptsy */
 #if DRAW_NEW == 1
 			cairo_destroy(cr);

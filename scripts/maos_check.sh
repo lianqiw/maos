@@ -64,12 +64,16 @@ else
 	REF2=(${REF_GPU[@]})
 fi
 fnpre=maos_check_${ARCH}_${D}
-fnlog=${fnpre}.all #log of all
-fntmp=${fnpre}.cur #log of current simulation
+fnlog=${fnpre}.all #log of all simulations
+fnerr=${fnpre}.err #log of all failed simulations
+fntmp=${fnpre}.log #log of current simulation
 fnres=${fnpre}.res #result summary
 fnref=maos_check.ref #all ference values
-
+if [ -f $fnres ];then
+	mv ${fnres} ${fnres}_$(date +%Y%m%d-%H%M%S)
+fi
 echo $(date) > $fnlog
+echo $(date) > $fnerr
 ans=0 #result code
 ii=0
 s_start0=`date +%s`
@@ -86,6 +90,8 @@ function run_maos(){
 	if [ x$a = x ];then
 		a=000.0
 		ans=$((ans+1)) #failed to run
+		echo $aotype $* >> $fnerr
+		cat $fntmp >> $fnerr
 	fi
 	RMS[ii]=$a
     s_end=`date +%s`
