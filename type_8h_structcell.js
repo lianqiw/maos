@@ -1,0 +1,14 @@
+var type_8h_structcell =
+[
+    [ "id", "type_8h.html#a8de9ad2bda53e2da59969024fbc3660f", null ],
+    [ "p", "type_8h.html#ac4e4ecaea2c9e6849b7304df57dd3569", null ],
+    [ "nx", "type_8h.html#a546c88ba8a0e1904479cc349aef10feb", null ],
+    [ "ny", "type_8h.html#a71be2e4edd9c472b42e25f45efc063ed", null ],
+    [ "keywords", "type_8h.html#a823d904ce6542918ce1af19dc0843399", null ],
+    [ "fp", "type_8h.html#ad43278e4d933d66b294d5cd3eb51e05f", null ],
+    [ "fft", "type_8h.html#aa9a21923a0b8cec03c6eea2226e48b0f", null ],
+    [ "m", "type_8h.html#a39f0897b9cd49a745d060e89c5f5964c", null ],
+    [ "dummy1", "type_8h.html#a5cdbd9cd96059f1ca238f619d61a6d73", null ],
+    [ "dummy2", "type_8h.html#a97ff7857b2466edb142d4076598d0322", null ],
+    [ "dummy3", "type_8h.html#a6025848df2ef86628b30b218c6af6dfc", null ]
+];

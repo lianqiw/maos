@@ -1,0 +1,25 @@
+digraph "fdpcg_t"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node141 [label="{fdpcg_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node142 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +xloc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node142 [label="{loccell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structloccell"];
+  Node150 -> Node142 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node150 [label="{long\n||}",height=0.2,width=0.4,color="black",URL="$classlong.html"];
+  Node156 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +perm\n+permhf" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node156 [label="{lmat\n||}",height=0.2,width=0.4,color="red",URL="$structlmat.html"];
+  Node150 -> Node156 [color="grey25",fontsize="10",style="solid",label=" +p\n+nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node145 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +square\n+scale" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node145 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node160 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +Minv" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node160 [label="{csp\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structcsp"];
+  Node145 -> Node160 [color="grey25",fontsize="10",style="solid",label=" +pi\n+pp\n+nref" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node150 -> Node160 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny\n+nzmax" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node150 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +nxtot\n+nbx\n+nby\n+bs" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node162 -> Node141 [color="grey25",fontsize="10",style="solid",label=" +Mbinv" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node162 [label="{ccell\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structccell"];
+  Node150 -> Node162 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
+}

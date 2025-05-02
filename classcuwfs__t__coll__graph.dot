@@ -1,0 +1,50 @@
+digraph "cuwfs_t"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{cuwfs_t\n|+ imcc\l+ qe\l+ srot\l+ bkgrnd2\l+ bkgrnd2c\l+ lltncpa\l+ gradcalc\l+ lltopd\l+ pypsf\l|+ cuwfs_t()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node2 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +powfs" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node2 [label="{cupowfs_t\n||+ cupowfs_t()\l}",height=0.2,width=0.4,color="red",URL="$structcupowfs__t.html"];
+  Node3 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +pixoffx\n+pyoff\n+pixoffy" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node3 [label="{NumArray\< Real, Gpu \>\n|# p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 11 more...\l}",height=0.2,width=0.4,color="red",URL="$class_num_array.html"];
+  Node13 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +pyramid" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node13 [label="{NumCell\< Comp, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ NumCell()\l+ NumCell()\l+ NumCell()\l+ NumCell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l+ Copy()\l}",height=0.2,width=0.4,color="red",URL="$class_num_cell.html"];
+  Node17 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +pynominal" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node17 [label="{NumArray\< Comp, Gpu \>\n|# p\l|+ trans()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\l+ NumArray()\land 11 more...\l}",height=0.2,width=0.4,color="red",URL="$class_num_array.html"];
+  Node65 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +saa\n+fieldstop" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node65 [label="{NumCell\< Real, Gpu \>\n||+ M()\l+ M()\l+ p2pm()\l+ NumCell()\l+ NumCell()\l+ NumCell()\l+ NumCell()\l+ operator=()\l+ init()\l+ New()\l+ replace()\l+ Vector()\l+ Copy()\l}",height=0.2,width=0.4,color="red",URL="$class_num_cell.html"];
+  Node73 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +msaloc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node73 [label="{Array\< culoc_t \>\n|# p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 9 more...\l}",height=0.2,width=0.4,color="red",URL="$class_array.html"];
+  Node72 -> Node2 [color="grey25",fontsize="10",style="solid",label=" +loc\n+saloc" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node72 [label="{culoc_t\n||+ operator()()\l+ operator()()\l+ Nloc()\l+ Dx()\l+ Dy()\l+ culoc_t()\l}",height=0.2,width=0.4,color="red",URL="$classculoc__t.html"];
+  Node85 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +streams" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node85 [label="{Array\< stream_t \>\n|# p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 9 more...\l}",height=0.2,width=0.4,color="red",URL="$class_array.html"];
+  Node13 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +pywvf\n+pyotfs\n+wvfout" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node3 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +gradacc\n+i0sum\n+lltimcc\n+phiout\n+amp\n+lltamp\n+isum\n+opdadd\n+neasim\n+mtche\n..." ,arrowhead="odiamond",fontname="Helvetica"];
+  Node88 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +dither" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node88 [label="{Dither_t\n||+ Dither_t()\l+ Dither_t()\l+ acc()\l+ acc_i0()\l}",height=0.2,width=0.4,color="black",URL="$class_dither__t.html"];
+  Node17 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +lltotfc2\n+psfout\n+lltotfc\n+psfstat\n+psf\n+wvf\n+pyotf\n+lltwvf" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node87 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +stream" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node87 [label="{stream_t\n||+ stream_t()\l+ init()\l+ ~stream_t()\l+ deinit()\l+ reset()\l+ sync()\l+ operator cudaStream_t()\l+ blas()\l+ sparse()\l+ dn()\l}",height=0.2,width=0.4,color="black",URL="$classstream__t.html"];
+  Node6 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +i0sumsum" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node6 [label="{float\n||}",height=0.2,width=0.4,color="grey75"];
+  Node65 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +pypsfs\n+intsout\n+pistatout\n+ints" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node89 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +plan_pys" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node89 [label="{Array\< cufftHandle \>\n|# p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 9 more...\l}",height=0.2,width=0.4,color="red",URL="$class_array.html"];
+  Node38 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +custatb\n+custatt\n+msa" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node38 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node72 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +loc_tel" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node73 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +loc_dm" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node92 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +dtf" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node92 [label="{Array\< cudtf_t \>\n|# p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 9 more...\l}",height=0.2,width=0.4,color="red",URL="$class_array.html"];
+  Node91 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +plan_wvf\n+plan_py\n+plan_fs\n+plan_psf\n+lltplan_lotfc\n+lltplan_wvf\n+lltplan_lotfc2" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node91 [label="{cufftHandle\n||}",height=0.2,width=0.4,color="grey75"];
+  Node96 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +GS0" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node96 [label="{cusp\n||+ Type()\l+ Nx()\l+ Ny()\l+ Nzmax()\l+ Pp()\l+ Pp()\l+ Pi()\l+ Pi()\l+ Px()\l+ Px()\land 9 more...\l}",height=0.2,width=0.4,color="black",URL="$classcusp.html"];
+  Node97 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +lltg" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node97 [label="{Array\< Real, Pinned \>\n|# p\l|+ ~Array()\l+ operator()()\l+ operator()()\l+ R()\l+ Col()\l+ Col()\l+ Nx()\l+ Ny()\l+ N()\l+ operator bool()\land 9 more...\l}",height=0.2,width=0.4,color="red",URL="$class_array.html"];
+  Node99 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +custat" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node99 [label="{struct curandStateXORWOW *\n||}",height=0.2,width=0.4,color="grey75"];
+}

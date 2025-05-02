@@ -1,0 +1,10 @@
+digraph "curecon_t"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node0 [label="{curecon_t\n|+ grid\l+ FR\l+ FL\l+ RR\l+ RL\l+ MVM\l+ nmoao\l+ moao\l+ moao_gwfs\l+ moao_gevl\l+ dm_moao\l+ dm_wfs\l+ dm_evl\l|+ curecon_t()\l+ reset_fit()\l+ reset_tomo()\l+ reset_moao()\l+ reset_mvm()\l+ ~curecon_t()\l+ reset_runtime()\l+ init_mvm()\l+ init_fit()\l+ init_tomo()\land 10 more...\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node1 -> Node0 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node1 [label="{nonCopyable\n||# nonCopyable()\l}",height=0.2,width=0.4,color="black",URL="$classnon_copyable.html"];
+}

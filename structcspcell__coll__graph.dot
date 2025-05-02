@@ -1,0 +1,27 @@
+digraph "cspcell"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node180 [label="{cspcell\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node181 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +fp" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node181 [label="{file_t\n||}",height=0.2,width=0.4,color="grey75"];
+  Node182 -> Node181 [color="grey25",fontsize="10",style="solid",label=" +fn\n+gstr\n+msg" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node182 [label="{char\n||}",height=0.2,width=0.4,color="grey75"];
+  Node184 -> Node181 [color="grey25",fontsize="10",style="solid",label=" +gp" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node184 [label="{void *\n||}",height=0.2,width=0.4,color="grey75"];
+  Node185 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +fft" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node185 [label="{fft_t\n||}",height=0.2,width=0.4,color="grey75"];
+  Node182 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +keywords" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node188 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node188 [label="{csp\n||}",height=0.2,width=0.4,color="red",URL="$type_8h.html#structcsp"];
+  Node181 -> Node188 [color="grey25",fontsize="10",style="solid",label=" +fp" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node189 -> Node188 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny\n+nzmax" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node189 [label="{long\n||}",height=0.2,width=0.4,color="black",URL="$classlong.html"];
+  Node191 -> Node188 [color="grey25",fontsize="10",style="solid",label=" +id" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node191 [label="{M_ID\n||}",height=0.2,width=0.4,color="grey75"];
+  Node189 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +nx\n+ny" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node191 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +id" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node184 -> Node180 [color="grey25",fontsize="10",style="solid",label=" +dummy1\n+dummy2\n+dummy3" ,arrowhead="odiamond",fontname="Helvetica"];
+}
