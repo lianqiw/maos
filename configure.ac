@@ -260,7 +260,7 @@ COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd147
 COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed"
 COMMON_CLANG+=" -Wno-sign-compare " #CLANG has false positive in detecting sign comparison.
 #Set optimize flags for different compilers
-OPTIM_ALL="-g -O3 -mtune=native -ftree-vectorize -ffast-math -fno-finite-math-only"
+OPTIM_ALL="-g -O3 -mtune=native "
 
 if test "$INTEL" = "1" ;then
 	OPTIM_CLANG+=" -fp-model=precise"
