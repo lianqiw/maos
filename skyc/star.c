@@ -30,7 +30,7 @@
    Create "star" data array from star information.
 */
 static star_s* setup_star_create(const parms_s* parms, dmat* coord){
-	if(!coord){
+	if(!coord || coord->ny==0){
 		return NULL;/*there are no stars available. */
 	}
 	int nstar=coord->ny;
@@ -688,7 +688,7 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 				skip++;
 			}
 		}
-		if(skip==npowfs||jstar>=parms->skyc.maxstar){//remove the star;
+		if(skip==npowfs||(parms->skyc.maxstar>0 && jstar>=parms->skyc.maxstar)){//remove the star;
 			free_istar(star+istar, parms);
 		} else{
 			if(jstar!=istar){

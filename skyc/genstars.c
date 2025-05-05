@@ -27,16 +27,7 @@
    a poisson distribution with mean equal to the average density multiplied with
    area.
  */
-/**
-   The sort function for stars. Sort stars according total flux.
- */
-static real Z_J=3.7666e9;
-static real Z_H=2.7206e9;
-static int sortfun(const real* p1, const real* p2){
-	real tot1=Z_J*pow(10, -0.4*p1[2])+Z_H*pow(10, -0.4*p1[3]);/*tot flux */
-	real tot2=Z_J*pow(10, -0.4*p2[2])+Z_H*pow(10, -0.4*p2[3]);
-	return tot1<tot2?1:-1;
-}
+
 /**
    Generate stars for nsky star fields from star catalog.
 
@@ -49,6 +40,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	real fov,        /**<diameter of the patrol field of view in arcsec.*/
 	int nwvl,          /**<number of wavelength*/
 	real* wvls,      /**<wavelength vector*/
+	real maglimit,	/**<If set, remove stars dimmer that this in the first wavelength. */
 	rand_t* rstat /**<random stream*/
 ){
 	char fn[80];   //file containing list of stars over the entire fov.
@@ -140,21 +132,52 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			dfree(tmp);
 		}
 	}
+	long ndrop=0;
 	/*Fill in the coordinate*/
 	for(long isky=0; isky<nsky; isky++){
 		if(!P(res,isky)) continue;
 		long nstar=P(res,isky)->ny;
 		dmat* pres=P(res,isky);
+		long jstar=0;
 		for(long istar=0; istar<nstar; istar++){
 			/*randomly draw the star location. */
 			real r=sqrt(fov22*randu(rstat));
 			real th=2*M_PI*randu(rstat);
-			P(pres, 0, istar)=r*cos(th);
-			P(pres, 1, istar)=r*sin(th);
+			P(pres, 0, jstar)=r*cos(th);
+			P(pres, 1, jstar)=r*sin(th);
+			if(jstar!=istar){
+				for(int iwvl=0; iwvl<nwvl; iwvl++){
+					P(pres, 2+iwvl, jstar)=P(pres, 2+iwvl, istar);
+				}
+			}
+			if(!maglimit || P(pres, 2, istar)<=maglimit){
+				jstar++;
+			}
 		}
+		if(jstar<nstar){
+			ndrop+=(nstar-jstar);
+			if(jstar==0){
+				dfree(P(res, isky));
+			}else{
+				dresize(P(res, isky), -1, jstar);
+			}
+		}
+	}
+	if(ndrop){
+		info("Removed %ld stars dimmer than the magnitude limit %g at %g\n", ndrop, maglimit, wvl_cat[0]);
 	}
 	dfree(catalog);
 	return res;
+}
+/**
+   The sort function for stars. Sort stars according total flux.
+ */
+static int sortfun(const real* p1, const real* p2){
+	static real Z_J=3.7666e9;
+	static real Z_H=2.7206e9;
+	real tot1=Z_J*pow(10, -0.4*p1[2])+Z_H*pow(10, -0.4*p1[3]);/*tot flux */
+	real tot2=Z_J*pow(10, -0.4*p2[2])+Z_H*pow(10, -0.4*p2[3]);
+	return tot1<tot2?1:-1;
 }
 /**
    Sort the stars with J band magnitude from brightest to dimmest.

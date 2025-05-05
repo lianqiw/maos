@@ -102,6 +102,7 @@ typedef struct skyc_s{
     real lat;      /**<Galactic latitude*/
     real lon;      /**<Galactic longitude.*/
     real catscl;   /**<Scale the catlog star count*/
+	real maglimit;	 /**<If set, remove stars dimmer that this in the first wavelength. */
     real patfov;   /**<Patrol FoV in arcsec (diameter)*/
     real minrad;   /**<minimum radius of the stars (keep out of center science region)*/
     real imperrnm; /**<Implementation error in nm in the center.*/
@@ -133,8 +134,7 @@ typedef struct skyc_s{
     int mtchcr;      /**<constraint in matched filter*/
     int mtchfft;     /**<Use FFT for derivative*/
     int phytype;     /**<Type of pixel processing. 1: mtch, 2: cog, 3: correlation*/
-    int neaaniso;     /**<use additional measurement error caused by
-			 anisoplanatism in regularization.*/
+    int neaaniso;     /**<use additional measurement error caused by anisoplanatism in regularization.*/
     int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/
     int ndtrat;      /**<number of dtrat*/
     dmat *dtrats;     /**<ratio between NGS and LGS WFS sampling period. use dmat due to interp1 calling*/
@@ -148,14 +148,14 @@ typedef struct skyc_s{
     
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
-    real pmargin;  /**<phase margin of type II*/
+    real pmargin;    /**<phase margin of type II*/
     int psdcalc;     /**<Calculate PSD from time series*/
     char **fnpsf1;   /**<file name for additional otf to be interpolated and
 			multiplied to dtfq. 2 columns. first column is coordinate
 			of otf, and second column of value.*/
     real sdetmax;  /**<tmax for SDE fitting*/
     int multirate;   /**<Each OIWFS can run at different dtrat*/
-    real snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
+    real snrmin;   	 /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
     int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
     int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
 }skyc_s;

@@ -117,9 +117,9 @@ cusparseSpMM(cusparseHandle_t     handle,
 	long nx=istrans?nrow:ncol;
 	if(ncolvec==1){
 		if(nx>x.N() || ny>y.N()){
-			error("Data overflows: nx=%ld, x.N=%ld, ny=%ld, y.N=%ld\n", nx, x.N(), ny, y.N());
+			error("Data overflow: (%ld)=(%ld,%ld)x(%ld)\n",  x.N(), nx, ny, y.N());
 		}else if(nx<x.N() || ny<y.N()){
-			warning_once("Data mismatch: nx=%ld, x.N=%ld, ny=%ld, y.N=%ld\n", nx, x.N(), ny, y.N());
+			dbg_once("Dimension mismatch: (%ld)=(%ld,%ld)x(%ld)\n",  x.N(), nx, ny, y.N());
 		}
 		//info("x.p=%p, x.vdesc=%p, y.p=%p, y.vdesc=%p\n", x(), x.vdesc, y(), y.vdesc);
 		if(!x.vdesc) DO(cusparseCreateDnVec(&x.vdesc, nx, (void*)x(), CUDA_R));

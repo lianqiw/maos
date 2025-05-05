@@ -39,6 +39,7 @@ static void setup_parms_skyc(parms_s* parms){
 	READ_DBL(skyc.lat);
 	READ_DBL(skyc.lon);
 	READ_DBL(skyc.catscl);
+	READ_DBL(skyc.maglimit);
 	READ_DBL(skyc.patfov);
 	READ_DBL(skyc.minrad);
 	READ_DBL(skyc.keepout);

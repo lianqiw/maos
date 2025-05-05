@@ -50,7 +50,7 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 		aster[iaster].nwfs=nwfstot;
 		aster[iaster].wfs=mycalloc(nwfstot, wfs_s);
 		aster[iaster].iaster=iaster;
-		aster[iaster].use=1;
+		aster[iaster].use=1;//set to 0 to disable. upgrade to 2 to enable PO simulation
 		int iwfs=0;
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 			for(int jwfs=0; jwfs<P(parms->skyc.nwfsmax, ipowfs); jwfs++){
@@ -754,6 +754,7 @@ static void setup_aster_kalman(sim_s* simu, aster_s* aster, const parms_s* parms
 		}
 		if(!aster->kalman[idtrat]){//failed to converge
 			P(aster->res_ngs, idtrat, 0)=simu->varol;
+			aster->use=0;
 		}else{//in multirate, use servo result
 			dmat *tmp=0;
 			dmm(&tmp, 0, P(aster->kalman[idtrat]->P, 0), parms->maos.mcc, "nn", 1);

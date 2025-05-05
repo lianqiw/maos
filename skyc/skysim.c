@@ -139,8 +139,7 @@ static void* skysim_isky(sim_s* simu){
 		}
 		/*Select asters that have good performance. */
 		real res_geom[3]={0,0,0};
-		setup_aster_select(res_geom, asters, naster, star,
-			parms->skyc.phytype==1?0.5*simu->varol:INFINITY, parms);
+		setup_aster_select(res_geom, asters, naster, star, simu->varol, parms);
 		real sky_min=simu->varol;//best result for this sky field
 		int sky_iaster=-1;//selected asterism index for this sky field
 		int sky_idtrat=-1;//idtrat for selected asterism for this sky field
@@ -543,7 +542,7 @@ void skysim(const parms_s* parms){
 			simu->stars=genstars(parms->skyc.nsky,
 				parms->skyc.lat, parms->skyc.lon, parms->skyc.catscl,
 				parms->skyc.patfov, parms->maos.nwvl,
-				parms->maos.wvl, &simu->rand);
+				parms->maos.wvl, parms->skyc.maglimit, &simu->rand);
 		}
 		if(simu->stars->ny!=1){
 			simu->stars->nx*=simu->stars->ny;
@@ -577,7 +576,7 @@ void skysim(const parms_s* parms){
 		int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
 		simu->res=dnew_mmap(10, nsky, NULL, "Res%d_%d%s", seed_maos, parms->skyc.seed, parms->skyc.dbg?"_dbg":"");//Total, ATM NGS, ATM TT, WS, 0
 		if(!parms->skyc.estimate){
-			simu->res_aster=dnew(4+(4+parms->maos.nwvl)*parms->skyc.nwfstot, nsky*parms->skyc.maxaster);//result for all asterisms that have PO results
+			simu->res_aster=dnew(4+(4+parms->maos.nwvl)*parms->skyc.nwfstot, nsky*(parms->skyc.maxaster?parms->skyc.maxaster:20));//result for all asterisms that have PO results
 		}
 		simu->res_iaster=0;
 		int ng=parms->skyc.ngain;

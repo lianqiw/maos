@@ -172,6 +172,10 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		//if(parms->skyc.dbg) dshow(st_fast->ep, "st_fast_ep");
 	} else{
 		kalman=aster->kalman[multirate?0:idtratc];
+		if(!kalman){
+			warning("aster->kalman is NULL\n");
+			return NULL;
+		}
 	}
 	
 	const long nwvl=parms->maos.nwvl;
@@ -216,10 +220,10 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 		zfmerr=zfarr_init(nstep, 1, "%s/merr_aster%d_dtrat%d", dirsetup, aster->iaster, dtratc);
 	}
 	for(int irep=0; irep<parms->skyc.navg; irep++){
-		if(kalman){
-			kalman_init(kalman);
-		} else{
+		if(parms->skyc.servo>0){
 			servo_reset(st_fast);
+		}else{
+			kalman_init(kalman);
 		}
 		if(st_slow){
 			servo_reset(st_slow);
@@ -380,7 +384,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				}/*for wfs*/
 			}/*if phystart */
 			//output to mreal after using it to ensure two cycle delay.
-			if(st_fast){//Type I or II control.
+			if(parms->skyc.servo>0){//Type I or II control.
 				servo_output(st_fast, &mreal);
 			} else{//LQG control
 				kalman_output(kalman, &mreal, 1, 0.5, 0);//kalman output with integrator (better than direct output)
@@ -405,7 +409,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					}
 				}
 				//fast rate always have output
-				if(st_fast){
+				if(parms->skyc.servo>0){
 					dmm(&merrm, 0, P(aster->pgm, multirate?0:idtratc), gradout->m, "nn", 1);
 				}else{
 					kalman_update(kalman, gradout, 0);//it changes cl gradout to psol gradout
@@ -413,7 +417,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 
 				if(multirate && indk!=(indk_fast)){//slower loop has output. 
 					if(st_slow){
-						if(st_fast){//Both loops are integrator
+						if(parms->skyc.servo>0){//Both loops are integrator
 							dmm(&P(merr_slow,0), 0, P(aster->pgm, 1), gradslow->m, "nn", 1);
 						}else{//Fast loop is LQG. pgm not available.
 							dcellzero(merr_slow);
@@ -429,7 +433,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					zfarr_push(zfmerr, istep, merrm);
 				}
 			}//if has output
-			if(st_fast){
+			if(parms->skyc.servo>0){
 				servo_filter(st_fast, pmerrm);//do even if merrm is zero. to simulate additional latency
 			}
 			if(parms->skyc.dbg>1){
