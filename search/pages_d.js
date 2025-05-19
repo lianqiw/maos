@@ -1,15 +1,9 @@
 var searchData=
 [
-  ['simulation_20results',['Simulation Results',['../page40_results.html',1,'']]],
-  ['scao_5fbase_2econf',['scao_base.conf',['../scao_base.html',1,'page34_conf']]],
-  ['scao',['SCAO',['../scao_base_example.html',1,'page33_example']]],
-  ['scao_5flgs_2econf',['scao_lgs.conf',['../scao_lgs.html',1,'page34_conf']]],
-  ['scao_20lgs',['SCAO LGS',['../scao_lgs_example.html',1,'page33_example']]],
-  ['scao_5fngs_2econf',['scao_ngs.conf',['../scao_ngs.html',1,'page34_conf']]],
-  ['scao_20ngs',['SCAO NGS',['../scao_ngs_example.html',1,'page33_example']]],
-  ['scao_5fpywfs_2econf',['scao_pywfs.conf',['../scao_pywfs.html',1,'page34_conf']]],
-  ['sim_2econf',['sim.conf',['../sim.html',1,'page34_conf']]],
-  ['skyc_5f10_2econf',['skyc_10.conf',['../skyc_10.html',1,'page34_conf']]],
-  ['skyc_5f20_2econf',['skyc_20.conf',['../skyc_20.html',1,'page34_conf']]],
-  ['sky_20coverage',['Sky Coverage',['../skycoverage.html',1,'']]]
+  ['raven_5flgs_20conf_0',['examples/raven_lgs.conf',['../d9/dfe/raven_lgs.html',1,'page34_conf']]],
+  ['raven_5fngs_20conf_1',['examples/raven_ngs.conf',['../d0/df6/raven_ngs.html',1,'page34_conf']]],
+  ['readme_2',['README',['../d3/dcc/md__r_e_a_d_m_e.html',1,'']]],
+  ['recon_20conf_3',['recon.conf',['../d8/d1c/recon.html',1,'page34_conf']]],
+  ['results_4',['Simulation Results',['../dd/da9/page40_results.html',1,'']]],
+  ['run_20simulations_5',['Run simulations',['../da/dc3/page30_run.html',1,'']]]
 ];
