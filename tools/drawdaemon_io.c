@@ -39,7 +39,6 @@ float io_timeclear=0;//plots
 int io_heartbeat=0;
 int session=1;//session counter
 int noellipsis=1; 	/*do not allow legend ellipsis.*/
-PNEW2(drawdata_mutex);
 //This file does not link to math folder
 void fmaxmin(const float *p, long n, float *pmax, float *pmin){
 	float max=-INFINITY, min=INFINITY;
@@ -221,6 +220,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->cumulast=-1;/*mark as unknown. */
 		drawdata->limit_manual=0;
 		drawdata->zlim_manual=0;
+		pthread_mutex_init(&drawdata->mutex, NULL);
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
 	} else{

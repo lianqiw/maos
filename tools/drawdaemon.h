@@ -100,18 +100,19 @@ struct drawdata_t{
 	GtkWidget *subnb;
 	GtkWidget *page;
 	GtkWidget* drawarea;
-#if GTK_MAJOR_VERSION>=3
-	cairo_surface_t* pixmap;
-#else
-	GdkPixmap* pixmap;/*server side memory. */
-#endif
+	cairo_surface_t* pixmap;//for expose
+	cairo_surface_t* pixmap2;//for cairo_draw in a separate thread
+	cairo_surface_t* surface;//for saving to file
+	pthread_mutex_t mutex;
+	pthread_t thread;
 	char tooltip[64];
 
 	gint pwidth, pheight;/*size of pixmap.*/
+	gint pwidth2, pheight2;/*size of pixmap2.*/
 	GtkWidget** spins;/*used on the dialog to change limits. */
 	cairo_surface_t* cacheplot;/*cache the plot results so that we don't have to redraw during just panning. */
 	int cache_width, cache_height; /*width and height of cacheplot.*/
-	int pending;/*used by delayed_update_pixmap to limit rate of drawing. */
+	int iframe;/*used by delayed_update_pixmap to limit rate of drawing. */
 	int width, height;/*width and height of the entire drawing area */
 
 	int widthim, heightim;/*width and height of the part of the canvas for drawing */
@@ -173,14 +174,12 @@ extern char* defname;
 extern char* deffig;
 extern int font_name_version;
 extern int ndrawdata;
-extern pthread_mutex_t mutex_drawdata;
 extern int fifopid;
 extern float lpf;
 extern int noellipsis; 	/*do not allow legend ellipsis.*/
 /*Spaces reserved for title, label, etc */
 extern int desc_font_size;
 extern PangoFontDescription* desc;
-extern pthread_mutex_t drawdata_mutex;
 extern int client_pid;
 extern char *client_hostname;
 extern char *client_path_full;
@@ -200,7 +199,8 @@ extern GdkPixbuf *icon_avg;
 
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
-void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height);
+void cairo_draw(drawdata_t* drawdata);
+gboolean drawarea_refresh(drawdata_t *drawdata);//called by cairo_draw to redraw drawarea
 void update_zoom(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);

@@ -467,28 +467,52 @@ static void update_limit(drawdata_t *drawdata){
 	cairo_surface_get_device_scale(sur, &xs, &ys);
 	return (xs+ys)*0.5;
 }*/
-/**
-   The master routine that draws in the cairo surface.
 
-   meaning of limit_changed
-   0: no change from previous plot.
-   1: limit0 is changed and update_zoom is needed to update zoom.
-   -1:new data, or switch between cumu and non-cumu. need to run update_limit.
-*/
-void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
-	if(!drawdata->ready || width==0 || height == 0) {
-		dbg_time("data is not ready or size is 0, cancelled.\n");
-		return;
-	}
+void thread_cleanup(void *drawdata){
+	((drawdata_t*)drawdata)->thread=0;
+}
+void* cairo_draw_thread(drawdata_t* drawdata){
+	pthread_cleanup_push(thread_cleanup, drawdata);
+
+repeat:
 	//info_time("cairo_draw entr: limit_changed=%d, width=%d, height=%d\n", drawdata->limit_changed, width ,height);
 	if(drawdata->frame_io!=drawdata->frame_draw){
 		drawdata->drawn=0;
 		//info("%s %s: frame_io=%d, frame_draw=%d\n", drawdata->fig, drawdata->name, drawdata->frame_io, drawdata->frame_draw);
 		drawdata->frame_draw=drawdata->frame_io;
 	}
+	int width=drawdata->width;
+	int height=drawdata->height;
+	int iframe=drawdata->iframe;
 	/*fill white background */
 	//TIC;tic;
 	drawdata->font_name_version=font_name_version;
+	
+	cairo_t *crt=NULL;
+	cairo_t *cr=NULL;
+	pthread_mutex_lock(&drawdata->mutex);
+	if(drawdata->surface){//do not use a second pixmap as it maybe vector
+		cr=cairo_create(drawdata->surface);
+	}else{
+		crt=cairo_create(drawdata->pixmap);//maintain a reference to surface.
+		if(width!=drawdata->pwidth2 || height!=drawdata->pheight2){
+			if(drawdata->pixmap2){
+				cairo_surface_destroy(drawdata->pixmap2);
+			}
+			drawdata->pixmap2=NULL;
+			drawdata->drawn=0;
+		}
+		if(!drawdata->pixmap2){
+			drawdata->pwidth2=width;
+			drawdata->pheight2=height;
+			//int scale=cairo_surface_get_device_scale(target)
+			drawdata->pixmap2=cairo_surface_create_similar(drawdata->pixmap, CAIRO_CONTENT_COLOR_ALPHA, width, height);
+			//cairo_surface_set_device_scale(drawdata->pixmap2, scale, scale);
+		}
+		cr=cairo_create(drawdata->pixmap2);
+	}
+	pthread_mutex_unlock(&drawdata->mutex);
+
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
 	cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
@@ -1263,6 +1287,7 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	cairo_set_source_rgba(cr, 0, 0, 0, 1);
 	cairo_stroke(cr);/*border */
 	g_object_unref(layout);
+	cairo_destroy(cr);
 	drawdata->icumulast=drawdata->icumu;
 	drawdata->cumulast=drawdata->cumu;
 	drawdata->cumuquadlast=drawdata->cumuquad;
@@ -1271,5 +1296,63 @@ void cairo_draw(cairo_t* cr, drawdata_t* drawdata, int width, int height){
 	drawdata->update_zoom=0;
 	drawdata->update_limit=0;
 	drawdata->drawn=1;
+	
+	if(crt){
+		cairo_set_source_surface(crt, drawdata->pixmap2, 0, 0);
+		cairo_paint(crt);
+		cairo_destroy(crt);
+	}
+	if(drawdata->filename_gif && drawdata->frame_draw!=drawdata->frame_gif){
+		drawdata->frame_gif=drawdata->frame_draw;
+		char filename[PATH_MAX];
+		snprintf(filename, PATH_MAX, "%s/%03d.png", drawdata->filename_gif,drawdata->frame_gif);
+		//info("filename is %s\n", filename);
+		cairo_surface_write_to_png(drawdata->pixmap, filename);
+	}
+	
+	if(drawdata->drawarea){
+		g_idle_add((GSourceFunc)drawarea_refresh, drawdata);
+	}
+
+	//if(iframe<drawdata->iframe){
+	//	info("cairo_draw: iframe has changed from %d to %d, repeat\n", iframe, drawdata->iframe);
+	//}
 	//toc("cairo_draw");
+	if(iframe<drawdata->iframe){
+		//info("cairo_draw_thread: finished iframe %d, %d is pending\n", iframe, drawdata->iframe);
+		goto repeat;
+	}else{
+		//info("cairo_draw_thread: finished iframe %d, no more pending\n", iframe);
+	}
+	pthread_cleanup_pop(1);
+	return NULL;
+}
+/**
+   The master routine that draws in the cairo surface.
+
+   meaning of limit_changed
+   0: no change from previous plot.
+   1: limit0 is changed and update_zoom is needed to update zoom.
+   -1:new data, or switch between cumu and non-cumu. need to run update_limit.
+*/
+void cairo_draw(drawdata_t* drawdata){
+	//layout=pango_cairo_create_layout(cr);
+	//pango_layout_set_font_description(layout, desc);
+	if(!drawdata->ready || drawdata->width==0 || drawdata->width == 0) {
+		dbg_time("data is not ready or size is 0, cancelled.\n");
+		return;
+	}
+	if(drawdata->surface){//for file saving, do not thread
+		drawdata->drawn=0;
+		cairo_draw_thread(drawdata);
+	}else if(drawdata->thread){
+		//info_time("thread is already running, skip. todo: add a time out.\n");
+	}else{
+		drawdata->thread=thread_new((thread_fun)cairo_draw_thread, drawdata);
+		/*pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, 1);
+		pthread_create(&drawdata->thread, &attr, cairo_draw, drawdata);*/
+	}
+	//g_object_unref(layout);
 }

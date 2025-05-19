@@ -260,95 +260,59 @@ gboolean finalize_gif(){
 	}
 	return FALSE;
 }
-typedef struct updatetimer_t{
-	int pending;
-	double tupdate;//last time update was called
-	drawdata_t* drawdata;
-}updatetimer_t;
+/*
+	Update_pixmap draws to pixmap2 and then to pixmap to avoid flickering
+*/
 static void update_pixmap(drawdata_t* drawdata){
+	if(!drawdata) return;
 	/*no more pending updates, do the updating. */
 	if(drawdata->recycle) {
 		warning_time("recycle is set, do not draw\n");
 		return;
 	}
-
+	drawdata->iframe++;
 	gboolean hasdata=(drawdata->nx&&drawdata->ny)||drawdata->npts||drawdata->ncir;
-	gint width=drawdata->width;
-	gint height=drawdata->height;
-	//info("update_pixmap for %dx%d\n", width, height);
-	if(drawdata->pixmap){
-		if(width!=drawdata->pwidth||height!=drawdata->pheight||!hasdata){
-#if GTK_MAJOR_VERSION>=3
-			cairo_surface_destroy(drawdata->pixmap);
-#else
-			g_object_unref(drawdata->pixmap);
-#endif
-			drawdata->pixmap=NULL;
-		}
-	}
 	if(hasdata){
+		gint width=drawdata->width;
+		gint height=drawdata->height;
+		pthread_mutex_lock(&drawdata->mutex);
+		//info("update_pixmap for %dx%d\n", width, height);
+		if(drawdata->pixmap){
+			if(width!=drawdata->pwidth||height!=drawdata->pheight||!hasdata){
+	#if GTK_MAJOR_VERSION>=3
+				cairo_surface_destroy(drawdata->pixmap);
+	#else
+				g_object_unref(drawdata->pixmap);
+	#endif
+				drawdata->pixmap=NULL;
+			}
+		}
+	
 		if(!drawdata->pixmap){
-		/*Create a new server size pixmap and then draw on it. */
+			/*Create a new server size pixmap and then draw on it. */
 			drawdata->pwidth=width;
 			drawdata->pheight=height;
-	#if GTK_MAJOR_VERSION>=4
-			int scale=gtk_widget_get_scale_factor(curwindow);
+	#if GTK_MAJOR_VERSION>=3
+			int scale=gtk_widget_get_scale_factor(curwindow);//since 3.10
 			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width*scale, height*scale);
 			cairo_surface_set_device_scale(drawdata->pixmap, scale, scale);
-	#elif GTK_MAJOR_VERSION>=3
+	#else//since 2.22. deprecated in 4
 			drawdata->pixmap=gdk_window_create_similar_surface
-			(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);
-	#else
-			drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
+			(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);		
 	#endif
 		}
-		cairo_t *cr;
-#if GTK_MAJOR_VERSION>=3
-		cr=cairo_create(drawdata->pixmap);
-#else
-		cr=gdk_cairo_create(drawdata->pixmap);
-#endif
-		cairo_draw(cr, drawdata, width, height);
-		cairo_destroy(cr);
+		pthread_mutex_unlock(&drawdata->mutex);
+		cairo_draw(drawdata);//cairo_draw calls drawarea_refresh()
 		//info("%d %d %d\n", drawdata->frame_io, drawdata->frame_draw, drawdata->frame_gif);
-#if GTK_MAJOR_VERSION>=3
-		if(drawdata->filename_gif && drawdata->frame_draw!=drawdata->frame_gif){
-			drawdata->frame_gif=drawdata->frame_draw;
-			char filename[PATH_MAX];
-			snprintf(filename, PATH_MAX, "%s/%03d.png", drawdata->filename_gif,drawdata->frame_gif);
-			//info("filename is %s\n", filename);
-			cairo_surface_write_to_png(drawdata->pixmap, filename);
-		}
-#endif
-	}
-	gtk_widget_queue_draw(drawdata->drawarea);
-}
-static gboolean update_pixmap_timer(updatetimer_t* timer){
-	drawdata_t* drawdata=timer->drawdata;
-	double tupdate=myclockd();
-	if(timer->pending==drawdata->pending || tupdate>timer->tupdate+0.02){
-		update_pixmap(drawdata);
-		timer->tupdate=tupdate;
-	}
-	free(timer);
-	return FALSE;//remove the timeout
-}
-/**
-   Call the update_pixmap after time out. If another call is queue within
-   the time, the "pending" counter will mismatch and no action will be taken.
- */
-static void delayed_update_pixmap(drawdata_t* drawdata){
-	if(!drawdata) return;
-	if(!drawdata->pixmap){
-		update_pixmap(drawdata);
-	} else{
-		drawdata->pending++;
-		updatetimer_t* tmp=mycalloc(1, updatetimer_t);
-		tmp->pending=drawdata->pending;
-		tmp->drawdata=drawdata;
-		g_timeout_add(20, (GSourceFunc)update_pixmap_timer, tmp);//milli-seconds
 	}
 }
+gboolean drawarea_refresh(drawdata_t *drawdata){
+	if(drawdata->drawarea){
+		gtk_widget_queue_draw(drawdata->drawarea);
+	}
+	return FALSE;//run only once
+}
+
 
 #if  GTK_MAJOR_VERSION>=4
 static gboolean
@@ -359,7 +323,11 @@ on_resize_event(GtkDrawingArea* widget, int width, int height, gpointer pdata){
 	if(width>1&&height>1){
 		drawdata->width=width;
 		drawdata->height=height;
-		delayed_update_pixmap(drawdata);
+	}
+	if(drawdata!=get_current_drawdata()){
+		drawdata->drawn=0;
+	}else{
+		update_pixmap(drawdata);
 	}
 	return FALSE;
 }
@@ -372,17 +340,19 @@ on_configure_event(GtkWidget* widget, GdkEventConfigure* event, gpointer pdata){
 	(void)event;
 	(void)widget;
 	drawdata_t* drawdata=*((drawdata_t**)pdata);
-	if(event->width>1&&event->height>1){
-		drawdata->width=event->width;
-		drawdata->height=event->height;
-		delayed_update_pixmap(drawdata);
+	drawdata->width=event->width;
+	drawdata->height=event->height;
+	if(drawdata!=get_current_drawdata()){
+		drawdata->drawn=0;
+	}else if(event->width>1&&event->height>1){
+		update_pixmap(drawdata);
 	}
 	return FALSE;
 }
 #endif
 #if GTK_MAJOR_VERSION>=4
 void drawarea_draw_func(GtkDrawingArea *widget, cairo_t *cr, int width, int height, gpointer pdata){
-	(void)width; (void)height;
+	(void)widget; (void)width; (void)height;
 	drawdata_t *drawdata=*((drawdata_t **)pdata);
 	//info("draw_func called with %dx%d. pixmap=%p\n", width, height, drawdata->pixmap);
 	drawdata->width=width;
@@ -390,19 +360,16 @@ void drawarea_draw_func(GtkDrawingArea *widget, cairo_t *cr, int width, int heig
 #elif GTK_MAJOR_VERSION>=3
 static gboolean on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
 	drawdata_t *drawdata=*((drawdata_t **)pdata);
+	(void)widget;
 #else
 static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer pdata){
+	(void) event;
 	drawdata_t *drawdata=*((drawdata_t **)pdata);
+	cairo_t *cr=gdk_cairo_create(widget->window);
 #endif
-	(void)widget;
 
 	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
-		update_pixmap(drawdata);//it queues another dray so we return from here.
-#if GTK_MAJOR_VERSION<=3
-		return FALSE;
-#else
-		return;
-#endif	
+		update_pixmap(drawdata);//it queues another draw in the background.
 	}
 	if(!drawdata->pixmap){
 #if GTK_MAJOR_VERSION<=3
@@ -411,21 +378,8 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 		return;
 #endif	
 	}
-#if GTK_MAJOR_VERSION<3
-	cairo_t *cr=gdk_cairo_create(widget->window);
-#endif
-	
-#if GTK_MAJOR_VERSION<3
-	gdk_draw_drawable(widget->window,
-			widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-			drawdata->pixmap,
-			event->area.x, event->area.y,
-			event->area.x, event->area.y,
-			event->area.width, event->area.height);
-#else
 	cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
 	cairo_paint(cr);
-#endif
 	if(drawdata->draw_rect){
 		cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
 		cairo_set_line_width(cr, 1);
@@ -578,7 +532,7 @@ static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	//dbg_time("do_move: %g %g\n", xdiff, ydiff);
 	drawdata->offx+=xdiff;
 	drawdata->offy+=ydiff;
-	delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
+	update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 #if GTK_MAJOR_VERSION>=4
 static gboolean drawarea_drag_update(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t **drawdatawrap){
@@ -598,7 +552,7 @@ static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event,
 	if(button==1 && drawdata->region==2){//inside legend box
 		drawdata->legendoffx+=drawdata->legbox_rx*(dx-drawdata->dxdown); CLIP(drawdata->legendoffx, 0, 1);
 		drawdata->legendoffy+=drawdata->legbox_ry*(dy-drawdata->dydown); CLIP(drawdata->legendoffy, 0, 1);
-		delayed_update_pixmap(drawdata);
+		update_pixmap(drawdata);
 		drawdata->dxdown=dx;
 		drawdata->dydown=dy;
 	}else if(button&&drawdata->region==1){
@@ -713,7 +667,7 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	drawdata->offx=(drawdata->offx-xdiff)*drawdata->zoomx/old_zoomx+xdiff;
 	drawdata->offy=(drawdata->offy-ydiff)*drawdata->zoomy/old_zoomy+ydiff;
 	
-	delayed_update_pixmap(drawdata);
+	update_pixmap(drawdata);
 }
 #if GTK_MAJOR_VERSION>=4
 static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble dx, gdouble dy, drawdata_t **drawdatawrap){
@@ -959,6 +913,9 @@ static void page_changed(int topn, int subn){
 		drawdata_t *drawdata=pdrawdata?*pdrawdata:NULL;
 		if(drawdata){
 			update_toolbar(drawdata);
+			if(!drawdata->drawn){
+				update_pixmap(drawdata);
+			}
 		}
 	}else{
 		static int client_pid_last=0;
@@ -1314,7 +1271,6 @@ static void save_file(drawdata_t *drawdata){
 		info("filename is %s\n", filename);
 	}
 
-	cairo_surface_t *surface=NULL;
 	char* suffix=strrchr(filename, '.');
 	if(!suffix){
 		char* filename2=stradd(filename, ".png", NULL);
@@ -1325,16 +1281,16 @@ static void save_file(drawdata_t *drawdata){
 
 	if(strcmp(suffix, ".eps")==0){
 #if CAIRO_HAS_PS_SURFACE == 1
-		surface=cairo_ps_surface_create(filename, drawdata->width, drawdata->height);
-		cairo_ps_surface_set_eps(surface, TRUE);
+		drawdata->surface=cairo_ps_surface_create(filename, drawdata->width, drawdata->height);
+		cairo_ps_surface_set_eps(drawdata->surface, TRUE);
 #endif
 	} else if(strcmp(suffix, ".pdf")==0){
 #if CAIRO_HAS_PDF_SURFACE == 1
-		surface=cairo_pdf_surface_create(filename, drawdata->width, drawdata->height);
+		drawdata->surface=cairo_pdf_surface_create(filename, drawdata->width, drawdata->height);
 #endif
 	} else if(strcmp(suffix, ".svg")==0){
 #if CAIRO_HAS_SVG_SURFACE == 1
-		surface=cairo_svg_surface_create(filename, drawdata->width, drawdata->height);
+		drawdata->surface=cairo_svg_surface_create(filename, drawdata->width, drawdata->height);
 #endif
 	} else if(strcmp(suffix, ".png")==0){
 #if CAIRO_HAS_PNG_FUNCTIONS
@@ -1343,8 +1299,8 @@ static void save_file(drawdata_t *drawdata){
 		return;
 #else
 		float scale=2;
-		surface=cairo_image_surface_create((cairo_format_t)CAIRO_FORMAT_ARGB32, drawdata->width*scale, drawdata->height*scale);
-		cairo_surface_set_device_scale(surface, scale, scale);
+		drawdata->surface=cairo_image_surface_create((cairo_format_t)CAIRO_FORMAT_ARGB32, drawdata->width*scale, drawdata->height*scale);
+		cairo_surface_set_device_scale(drawdata->surface, scale, scale);
 #endif		
 #endif		
 	}else if(strcmp(suffix, ".gif")==0){
@@ -1359,18 +1315,14 @@ static void save_file(drawdata_t *drawdata){
 #endif
 #endif
 	}
-	if(!surface){
+	if(!drawdata->surface){
 		error_msg("%s: file type is not supported.\n", filename);
 		return;
 	}
-	cairo_t *cr=cairo_create(surface);
-	cairo_draw(cr, drawdata, drawdata->width, drawdata->height);
-	cairo_destroy(cr);
-	if(strcmp(suffix, ".png")==0){
-		cairo_surface_write_to_png(surface, filename);
-	}
-	cairo_surface_finish(surface);
-	cairo_surface_destroy(surface);
+	cairo_draw(drawdata);
+	cairo_surface_finish(drawdata->surface);
+	cairo_surface_destroy(drawdata->surface);
+	drawdata->surface=NULL;
 }
 
 
@@ -1384,7 +1336,7 @@ static void tool_zoom(GtkWidget* button, gpointer data){
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	update_zoom(drawdata_dialog);
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 
 static void zlim_changed(GtkSpinButton* spin, gfloat* val){
@@ -1392,46 +1344,46 @@ static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->zlim_manual=1;
 	update_zoom(drawdata_dialog);
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	*key=check_button_get_active(btn);
 	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle_inv(GtkWidget *btn, gint *key){
 	*key=!check_button_get_active(btn);
 	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*key=check_button_get_active(btn)?'y':'n';
 	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 /*static void range_changed(GtkRange* range, gfloat* val){
 	*val=gtk_range_get_value(range);
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }*/
 static void entry_changed(GtkEditable* entry, char** key){
 	free(*key);
 	*key=gtk_editable_get_chars(entry, 0, -1);
 	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 static void spin_changed(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->drawn=0;
-	delayed_update_pixmap(drawdata_dialog);
+	update_pixmap(drawdata_dialog);
 }
 static void spin_icumu(GtkSpinButton* spin){
 	drawdata_t *drawdata=get_current_drawdata();
 	if(drawdata && !drawdata->p&&!drawdata->square && drawdata->cumu){
 		drawdata->icumu=gtk_spin_button_get_value(spin);
-		delayed_update_pixmap(drawdata);
+		update_pixmap(drawdata);
 		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
 	}
 }
@@ -1846,7 +1798,7 @@ void desc_updated(){
 #endif
 		font_size=(float)desc_font_size/(float)PANGO_SCALE*(float)dpi/72.;
 	}
-	delayed_update_pixmap(get_current_drawdata());
+	update_pixmap(get_current_drawdata());
 }
 
 static void tool_font_set(GtkWidget *btn){

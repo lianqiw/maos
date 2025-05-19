@@ -319,9 +319,9 @@ static int launch_drawdaemon(){
 }
 
 /**
-   A helper routine that forks in the early stage to launch drawdaemon. Retired.
+   A helper routine can be called in the early stage to launch drawdaemon. Deprecated.
 */
-/*void draw_helper(void){
+void draw_helper(void){
 	if(draw_direct){
 		info("draw_direct=1, skip draw_helper\n");
 		return;
@@ -359,7 +359,7 @@ static int launch_drawdaemon(){
 		close(sv[1]);
 		_exit(0);//shall never return.
 	}
-}*/
+}
 /**
    Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
 */
@@ -374,16 +374,14 @@ static int get_drawdaemon(){
 	int DRAW_NOREUSE=0;
 	READ_ENV_INT(DRAW_NOREUSE, 0, 1);//if ==1, do not reuse previous drawdaemon
 #if __APPLE__
-	int display=1;
+	const char* display=":0";//always available
 #else
-	char* display=getenv("DISPLAY");
-	if(display&&!strlen(display)){//display is not set, we ask scheduler to open a drawdaemon.
-		display=0;
-	}
+	const char* display=getenv("DISPLAY"); if(display&&!strlen(display)) display=NULL;
+	display=getenv("WAYLAND_DISPLAY"); if(display&&!strlen(display)) display=NULL;
 #endif
 	LOCK(lock);
 	int sock=-1;
-	//First try reusing existing idle drawdaemon with the same id
+	//First try reusing existing idle drawdaemon with the same id.
 	while(!DRAW_NOREUSE && !scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(stwriteint(sock, DRAW_INIT)){
