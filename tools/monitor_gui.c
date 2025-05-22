@@ -337,18 +337,18 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	gtk_tree_view_column_set_title(col, title);
 	gtk_tree_view_column_set_spacing(col, 2);
 	gtk_tree_view_column_set_alignment(col, 1);
-	//resizeable makes the column very small if not expand.
-	gtk_tree_view_column_set_resizable(col, (width)?TRUE:FALSE);
-	gtk_tree_view_column_set_expand(col, (width<0)?TRUE:FALSE);
 
 	//column only hides text when 1) maxwidth is set, 2) ellipsize is set
 	if(width){
 		gtk_tree_view_column_set_min_width(col, abs(width));
+		//resizeable makes the column very small if not expand.
+		gtk_tree_view_column_set_resizable(col, (width)?TRUE:FALSE);
+		gtk_tree_view_column_set_expand(col, (width<0)?TRUE:FALSE);
+	
+		if(type==0){//set ellipsize makes it shrinkable
+			g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_START, NULL);
+		}
 	}
-	if(type==0&&width){//set ellipsize makes it shrinkable
-		g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_START, NULL);
-	}
-
 	gtk_tree_view_column_pack_start(col, render, TRUE);
 	va_list ap;
 	va_start(ap, title);
@@ -806,8 +806,8 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Dir", "text", COL_PATH, NULL));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Args", "text", COL_ARGS, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Directory", "text", COL_PATH, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Arguments", "text", COL_ARGS, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));

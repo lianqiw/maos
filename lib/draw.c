@@ -26,7 +26,7 @@
 
 #include "draw.h"
 #include "cure.h"
-PNEW(lock);
+PNEW(lock);//protect the list and TCP socket from race condition
 #define MAXDRAW 1024
 #define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
 
@@ -432,9 +432,10 @@ static int get_drawdaemon(){
 void draw_final(int reuse){
 	//called from other threads, need to lock
 	if(!sock_draws) return;
-	LOCK(lock);
-	draw_remove(-1, reuse);
-	UNLOCK(lock);
+	if(TRYLOCK(lock)){
+		draw_remove(-1, reuse);
+		UNLOCK(lock);
+	}//else: signal interrupted send_buf which already holds lock.
 }
 
 /*
@@ -577,6 +578,7 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 		} else{
 			LOCK(lock);
 		}
+		block_signal(1);//avoid kill/term signal while holding mutex
 		if(use_udp){
 			error("To be implemented\n");
 			//use sendmmsg with GSO is fastest.
@@ -600,6 +602,7 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 			udp_send(&ps->udp, buf, bufsize, counter);
 		}
 #endif
+		block_signal(0);
 		UNLOCK(lock);
 	}
 	return ans;

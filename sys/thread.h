@@ -46,7 +46,16 @@ typedef void *(*thread_wrapfun)(thread_t *);
 #define PDEINIT(A) pthread_mutex_destroy(&A)
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #define PNEW2(A) pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
-
+static inline void block_signal(int block){
+	sigset_t signal_mask;
+	sigemptyset (&signal_mask);
+    sigaddset (&signal_mask, SIGINT);
+    sigaddset (&signal_mask, SIGTERM);
+	
+    if(pthread_sigmask (block?SIG_BLOCK:SIG_UNBLOCK, &signal_mask, NULL)){
+		warning("masking/unmasking signal failed\n");
+	}
+}
 extern pthread_mutex_t mutex_fftw;
 #define LOCK_FFT LOCK(mutex_fftw)
 #define UNLOCK_FFT UNLOCK(mutex_fftw)

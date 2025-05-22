@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
 	create_window(NULL);
 	gtk_main();
 #else
-	GtkApplication *app=gtk_application_new("maos.drawdaemon", G_APPLICATION_DEFAULT_FLAGS);
+	GtkApplication *app=gtk_application_new("maos.drawdaemon", 0);
 	g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
 	//g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL);
   	int status = g_application_run (G_APPLICATION (app), 0, NULL);
