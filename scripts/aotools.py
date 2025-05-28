@@ -321,7 +321,7 @@ def opd_remove_zernike(opd, mask, rmin, rmax, radonly=0):
 def opd_loc_remove_focus(opd, loc):
     '''Remove focus mode from opd which is defined on loc'''
     return opd_loc_remove_zernike(2,2,1)
-def read_many(fdin):
+def read_many(fdin, ncol=0):
     '''read many files together'''
     if type(fdin) is list:
         fns=[]
@@ -335,12 +335,16 @@ def read_many(fdin):
         try:
             tmp=readbin(fd)
             fds.append(fd)
+            if ncol:
+                tmp=tmp[..., 0:ncol]
             res.append(tmp)
         except:
             print('Fail to read',fd)
             pass
-    
-    res=aos.simplify(np.array(res))
+    try:
+        res=aos.simplify(np.array(res))
+    except:
+        pass
     return res,fds
 def read_many_dict(fdin):
     '''read many files together into a dictionary'''
@@ -389,15 +393,18 @@ def plot_cdf(y, *args, **kargs):
     plot(np.sort(y,axis=0), x, *args, **kargs)
     ylim(0,1)
     ylabel('Cumulative Probability')
-def plot_cross(A, n=0, dx=1):
+def plot_cross(A, n=0, dx=1,cum=0, **kargs):
     '''Plot a cross section'''
     if n==0 or n is None:
         n=A.shape[0]
         
     n1=max((A.shape[0]-n)>>1,0)
     n2=min((A.shape[0]+n)>>1,A.shape[0])
-    print(n1,n2,A.shape[0]>>1)
-    plot((np.arange(n1,n2)-(A.shape[0]>>1))*dx, A[n1:n2,A.shape[1]>>1])
+    #print(n1,n2,A.shape[0]>>1)
+    y=A[n1:n2,A.shape[1]>>1]
+    if cum:
+        y=np.cumsum(y)
+    plot((np.arange(n1,n2)-(A.shape[0]>>1))*dx, y, **kargs)
 def resample_fit(x, y, degree=3):
     ff=np.poly1d(np.polyfit(x, y, degree))
     ynew=ff(x)
@@ -611,7 +618,7 @@ def calc_width_gauss(dx,data):
     mr=2*(xsq*ysq-xysq*xysq)**(1./4)
     return mr
 
-def calc_fwhm(dx, intensity):
+def calc_fwhm(intensity, dx=1):
     '''A simple way to compute the FWHM'''
     return sqrt(np.sum(intensity>=0.5*np.max(intensity))*4/np.pi)*dx
 

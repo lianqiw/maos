@@ -64,15 +64,16 @@ else
 	REF2=(${REF_GPU[@]})
 fi
 fnpre=maos_check_${ARCH}_${D}
-fnlog=${fnpre}.all #log of all simulations
+fnall=${fnpre}.all #log of all simulations
+fnfail=${fnpre}.failed #log of all simulations
 fnerr=${fnpre}.err #log of all failed simulations
-fntmp=${fnpre}.log #log of current simulation
+fnlog=${fnpre}.log #log of current simulation
 fnres=${fnpre}.res #result summary
 fnref=maos_check.ref #all ference values
 if [ -f $fnres ];then
 	mv ${fnres} ${fnres}_$(date +%Y%m%d-%H%M%S)
 fi
-echo $(date) > $fnlog
+echo $(date) > $fnall
 echo $(date) > $fnerr
 ans=0 #result code
 ii=0
@@ -82,24 +83,28 @@ function run_maos(){
 	aotype=$1
 	shift
 	s_start=`date +%s`
-    eval "../bin/maos sim.end=100 $* $args" >$fntmp 2>&1
+    eval "../bin/maos sim.end=100 $* $args" >$fnlog 2>$fnerr
 	a=
     if [ $? -eq 0 ];then
-		a=`printf %.1f $(grep 'Mean:' $fntmp |tail -n1 |cut -d ' ' -f 2)`
+		a=`printf %.1f $(grep 'Mean:' $fnlog |tail -n1 |cut -d ' ' -f 2)`
 	fi
 	if [ x$a = x ];then
 		a=000.0
 		ans=$((ans+1)) #failed to run
-		echo $aotype $* >> $fnerr
-		cat $fntmp >> $fnerr
+		echo $aotype $* >> $fnfail
+		cat $fnlog >> $fnfail
+		cat $fnerr >> $fnfail
 	fi
 	RMS[ii]=$a
     s_end=`date +%s`
 	s_diff=$((s_end-s_start)) #time per simulation
 	s_diff2=$((s_end-s_start0)) #cumulative time
-	echo $aotype $* >> $fnlog
-	cat $fntmp >> $fnlog
-	rm $fntmp
+	echo $aotype $* >> $fnall
+	cat $fnlog >> $fnall
+	cat $fnerr >> $fnall
+	echo "" >> $fnall
+	rm $fnlog
+	rm $fnerr
     b=${REF[$ii]:-0}
     b2=${REF2[$ii]:-0}
 	diff=$(echo "200*($a-$b)/($a+$b+1)" | bc)
