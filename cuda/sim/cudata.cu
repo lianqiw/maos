@@ -317,7 +317,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			int ig=gpus[ii];//user uses nvidia-smi ordering
 			if(ig>=MAXGPU){
 				warning("GPU %d does not exist\n", ig);
-			}else if(gpu_info(3,ig)==1){
+			}else if(gpu_info(3,ig)==0){
 				info("GPU %d is not usable.\n", ig);
 			} else{
 				GPUS(NGPU, 0)=gpu_info(0,ig);

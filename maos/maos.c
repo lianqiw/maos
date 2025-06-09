@@ -374,7 +374,7 @@ int main(int argc, const char* argv[]){
 	if(!ngpu) ngpu=0xFFFFFF;//default is use as many GPU as possible.
 	else if(ngpu<0) ngpu=0;//no gpu is used.
 	else for(int ig=0; ig<ngpu; ig++){
-		if(arg->gpus[ig]<0){
+		if(arg->gpus && arg->gpus[ig]<0){
 			ngpu=0;break;//gpu is disabled.
 		}
 	}
