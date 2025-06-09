@@ -263,7 +263,7 @@ static SS_INT ss_nonzero(SS_INT i, SS_INT j, SS_ENTRY aij, void* other){
 	(void)i;
 	(void)j;
 	(void)other;
-	return fabs(aij)>1e-50;
+	return ABS(aij)>1e-50;
 }
 /**
    drop zeros in the sparse matrix.
@@ -277,7 +277,7 @@ SS_INT X(ss_dropzeros) (cs* A){
 static SS_INT ss_tol(SS_INT i, SS_INT j, SS_ENTRY aij, void* tol){
 	(void)i;
 	(void)j;
-	return (fabs(aij)>*((real*)tol));
+	return (ABS(aij)>*((real*)tol));
 }
 /**
    drop values below threashold of tol.

@@ -78,8 +78,8 @@
 #define TD long
 #define R long
 #define RD long
-#undef fabs
-#define fabs(A) labs(A)
+#define ABS labs
+#define FABS labs
 #define REAL(A) A
 #define IMAG(A) 0
 #define CONJ(A) A
@@ -97,8 +97,7 @@
 #define RC dcomplex
 #define FFTW(A) fftw_##A
 
-/*Double Real*/
-#ifndef COMP_COMPLEX 
+#ifndef COMP_COMPLEX //Double Real
 #define Y(A) D##A
 #define Z(A) d##A##_
 #define T double
@@ -110,12 +109,12 @@
 #define IMAG(A) 0
 #define CONJ
 #define CARG(A) 0
+#define ABS fabs
+#define FABS fabs
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
 #define PRINT(A) info(" %10.3g",A);
-
-/*Double Complex */
-#else
+#else //Double Complex
 #define Y(A) C##A
 #define Z(A) z##A##_ /*blas/lapack convention */
 #define T dcomplex
@@ -128,20 +127,20 @@
 #define IMAG cimag
 #define CONJ conj
 #define CARG carg
+#define ABS cabs
+#define FABS fabs
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
 #else 
-#define COMP_SINGLE
-/*Single Precision*/
+#define COMP_SINGLE //Single Precision
 #define R float
 #define RD double
 #define RC fcomplex
 #define FFTW(A) fftwf_##A
-/*Float */
-#ifndef COMP_COMPLEX
+#ifndef COMP_COMPLEX ///Float Real
 #define Y(A) S##A
 #define Z(A) s##A##_
 #define T float
@@ -153,12 +152,13 @@
 #define IMAG(A) 0
 #define CONJ
 #define CARG(A) 0
+#define ABS fabsf
+#define FABS fabsf
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
 #define PRINT(A) info("%10.3e",A);
 #else
-/*Single Complex */
-#define Y(A) Z##A
+#define Y(A) Z##A //Float Complex
 #define Z(A) c##A##_ /*blas/lapack convention */
 #define T fcomplex
 #define TD dcomplex
@@ -170,6 +170,8 @@
 #define IMAG cimagf
 #define CONJ conjf
 #define CARG cargf
+#define ABS cabsf
+#define FABS fabsf
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));

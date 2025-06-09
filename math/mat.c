@@ -664,7 +664,7 @@ R X(sumabs)(const X(mat)* A){
 	if(!check_mat(A)) return 0;
 	R out=0;
 	for(long i=0; i<PN(A); i++){
-		out+=fabs(P(A, i));
+		out+=ABS(P(A, i));
 	}
 	return out;
 }

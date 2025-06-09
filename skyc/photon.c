@@ -90,7 +90,7 @@ void photon_flux(const ZB_S* zb,        /**<[in] Sky background and zero magnitu
 		
 		int jwvl;
 		for(jwvl=0; jwvl<NX(zb->wvl); jwvl++){
-			if(fabs(wvl-P(zb->wvl, jwvl)<0.1e-6)){
+			if(fabs(wvl-P(zb->wvl, jwvl))<0.1e-6){
 				break;
 			}
 		}

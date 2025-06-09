@@ -146,7 +146,7 @@ static inline void realcpy(T* out, const T* in, const long length){
  */
 static inline void abscpy(T* out, const T* in, const long length){
 	for(long i=0; i<length; i++){
-		out[i]=fabs(in[i]);
+		out[i]=ABS(in[i]);
 	}
 }
 static inline T RA2XY(T A){
@@ -155,7 +155,7 @@ static inline T RA2XY(T A){
 }
 static inline T XY2RA(T A){
 	//convert x/y to r/a*/
-	return COMPLEX(fabs(A), atan2(IMAG(A), REAL(A)));
+	return COMPLEX(ABS(A), atan2(IMAG(A), REAL(A)));
 }
 
 /**
@@ -234,7 +234,7 @@ void X(abstoreal)(X(mat)* A){
 	if(!check_mat(A)) return;
 	/*put abs to real */
 	for(int i=0; i<A->nx*A->ny; i++){
-		P(A,i)=fabs(P(A,i));
+		P(A,i)=ABS(P(A,i));
 	}
 }
 /**

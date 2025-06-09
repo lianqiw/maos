@@ -645,7 +645,7 @@ int read_fits_header(file_t* fp, char** str, uint32_t* magic, uint64_t* ndim, mw
 				error("Unable to determine naxis\n");
 			}
 			if(*ndim>0){
-				*dims=(mwSize*)calloc(sizeof(mwSize), MAX(2, *ndim));
+				*dims=(mwSize*)calloc(MAX(2, *ndim), sizeof(mwSize));
 				for(uint64_t idim=0; idim<*ndim; idim++){
 					do{
 					//skip illegal lines.

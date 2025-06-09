@@ -47,7 +47,7 @@ void X(vecnormalize_sumabs)(T *restrict p, long nx, T norm){
     if(!check_vec(p, nx)) return;
     TD ss=0;
     for (long i=0; i<nx; i++){
-		ss+=fabs(p[i]);
+		ss+=ABS(p[i]);
     }
     ss=norm/ss;
     for(int i=0; i<nx; i++){
@@ -62,13 +62,13 @@ void X(vecmaxmin)(const T *restrict p, long N, R *max, R *min){
     R a,b;
     long i;
 #ifdef COMP_COMPLEX
-    a=b=fabs(p[0]);
+    a=b=ABS(p[0]);
 #else
     a=b=p[0];
 #endif    
     for(i=1; i<N; i++){
 #ifdef COMP_COMPLEX
-	    R tmp=fabs(p[i]);
+	    R tmp=ABS(p[i]);
 #else
 	    R tmp=p[i];
 #endif
@@ -115,7 +115,7 @@ R X(vecmaxabs)(const T*restrict p, long n){
     if(!check_vec(p, n)) return 0;
     R max,min;
     X(vecmaxmin)(p, n, &max, &min);
-    max=fabs(max);
-    min=fabs(min);
+    max=FABS(max);
+    min=FABS(min);
     return max>min?max:min;
 }

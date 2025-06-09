@@ -892,7 +892,7 @@ void X(cwpow_thres)(X(mat)* restrict A, R power, R thres){
 	thres*=X(maxabs)(A);
 	//OMP_SIMD()
 	for(long i=0; i<A->nx*A->ny; i++){
-		if(fabs(P(A, i))>thres){
+		if(ABS(P(A, i))>thres){
 			P(A, i)=pow(P(A, i), power);
 		} else{
 			P(A, i)=0;
@@ -1493,7 +1493,7 @@ R X(fwhm)(X(mat)* A){
 	long n=0;
 	OMP_SIMD_R(reduction(+:n))
 	for(long ix=0; ix<A->nx*A->ny; ix++){
-		if(fabs(P(A, ix))>=hm){
+		if(REAL(P(A, ix))>=hm){
 			n++;
 		}
 	}
@@ -1722,7 +1722,7 @@ T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 			OMP_SIMD_R(reduction(+:ans))
 			for(long i=0; i<y->nx-1; i++){
 			//notice use of abs here.
-				ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
+				ans+=ABS(px[i+1]-px[i])*(py[i+1]+py[i]);
 			}
 		} else{
 			OMP_SIMD_R(reduction(+:ans))
@@ -1870,7 +1870,7 @@ void X(celldropzero)(X(cell)* B, R thres){
 			if(!tmp) continue;
 			int hasnonzero=0;
 			for(int ixy=0; ixy<tmp->nx*tmp->ny; ixy++){
-				if(fabs(P(tmp, ixy))>thres){
+				if(ABS(P(tmp, ixy))>thres){
 					hasnonzero=1;
 					break;
 				}

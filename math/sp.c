@@ -502,7 +502,7 @@ X(sp)* X(2sp)(X(mat)* A, R thres){
 		out->pp[icol]=count;
 		for(long irow=0; irow<A->nx; irow++){
 			T val=P(A, irow, icol);
-			if(fabs(val)>thres){
+			if(ABS(val)>thres){
 				out->pi[count]=irow;
 				out->px[count]=val;
 				count++;
@@ -828,7 +828,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
-				p[icol]+=fabs(A->px[irow]);
+				p[icol]+=ABS(A->px[irow]);
 			}
 		}
 		break;
@@ -837,7 +837,7 @@ X(mat)* X(spsumabs)(const X(sp)* A, int axis){
 		p=P(v);
 		for(int icol=0; icol<A->ny; icol++){
 			for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
-				p[A->pi[irow]]+=fabs(A->px[irow]);
+				p[A->pi[irow]]+=ABS(A->px[irow]);
 			}
 		}
 		break;
@@ -1002,7 +1002,7 @@ X(sp)* X(spconvolvop)(X(mat)* A){
 	X(mat)* PA=A;
 	for(long iy=0; iy<A->ny; iy++){
 		for(long ix=0; ix<A->nx; ix++){
-			if(fabs(P(PA, ix, iy))>0){
+			if(ABS(P(PA, ix, iy))>0){
 				vals[count]=P(PA, ix, iy);
 				sepx[count]=ix;
 				sepy[count]=iy;

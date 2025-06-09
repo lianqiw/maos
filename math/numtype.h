@@ -125,7 +125,9 @@ static inline double real(double A){
 #else //#if defined(__cplusplus) C99 mode
 //tgmath provides type generic macros for common math routines. It includes math.h and complex.h
 //never include tgmath.h in CUDA included headers (C++ uses overloading instead).
-#include <tgmath.h> //donot replace with math.h and complex.h. Changes simulation results.
+//deprecated the use of tgmath.h
+#include <math.h>
+#include <complex.h>
 typedef __complex__ double dcomplex;
 typedef __complex__ float fcomplex;
 #define COMPLEX(A,B) ((A)+I*(B))

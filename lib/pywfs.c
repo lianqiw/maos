@@ -191,7 +191,7 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 		//const real ratio2=acos(sqrt(0.5))/acos(0.5);
 		for(long iy=skip; iy<notf-skip; iy++){
 			for(long ix=skip; ix<notf-skip; ix++){
-				real xd=fabs(ix-notf2);
+				real xd=labs(ix-notf2);
 				real yy=iy-notf2;
 				real yd=fabs(yy);
 				real opd=0;
@@ -841,7 +841,7 @@ void pywfs_test(pywfs_t *pywfs){
 	if(!pywfs) return;
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	real siglev=pycfg->siglev;
-	if(fabs(PYWFS_DEBUG)==1){//Test linearity of PWFS with a zernike mode.
+	if(abs(PYWFS_DEBUG)==1){//Test linearity of PWFS with a zernike mode.
 		dmat* ints=0;
 		real wve=1e-9*20;
 		dmat* opds=NULL;
