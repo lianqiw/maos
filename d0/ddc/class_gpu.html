@@ -157,29 +157,29 @@ $(document).ready(function(){initNavTree('d0/ddc/class_gpu.html','../../'); init
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a7fa22ad25a8a1c9a52fa0b0b1254241f" id="r_a7fa22ad25a8a1c9a52fa0b0b1254241f"><td class="memItemLeft" align="right" valign="top"><a id="a7fa22ad25a8a1c9a52fa0b0b1254241f" name="a7fa22ad25a8a1c9a52fa0b0b1254241f"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">void</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>operator new[]</b> (<a class="el" href="../../d0/d44/class_num_array.html">size_t</a> size)</td></tr>
+void *&#160;</td><td class="memItemRight" valign="bottom"><b>operator new[]</b> (size_t size)</td></tr>
 <tr class="separator:a7fa22ad25a8a1c9a52fa0b0b1254241f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e235d88941f72b223abed4203be879d" id="r_a2e235d88941f72b223abed4203be879d"><td class="memItemLeft" align="right" valign="top"><a id="a2e235d88941f72b223abed4203be879d" name="a2e235d88941f72b223abed4203be879d"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete[]</b> (<a class="el" href="../../d0/d44/class_num_array.html">void</a> *p)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete[]</b> (void *p)</td></tr>
 <tr class="separator:a2e235d88941f72b223abed4203be879d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a2b33c824562ebb98961c2a5c163ecf54" id="r_a2b33c824562ebb98961c2a5c163ecf54"><td class="memItemLeft" align="right" valign="top"><a id="a2b33c824562ebb98961c2a5c163ecf54" name="a2b33c824562ebb98961c2a5c163ecf54"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">static</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Zero</b> (T *p, <a class="el" href="../../d0/d44/class_num_array.html">size_t</a> size, cudaStream_t stream=0)</td></tr>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>Zero</b> (T *p, size_t size, cudaStream_t stream=0)</td></tr>
 <tr class="separator:a2b33c824562ebb98961c2a5c163ecf54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0188038e3bc00df722ce7cccc93d2a5f" id="r_a0188038e3bc00df722ce7cccc93d2a5f"><td class="memItemLeft" align="right" valign="top"><a id="a0188038e3bc00df722ce7cccc93d2a5f" name="a0188038e3bc00df722ce7cccc93d2a5f"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">static</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Copy</b> (T *<a class="el" href="../../d0/d44/class_num_array.html">pout</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> T *<a class="el" href="../../d0/d44/class_num_array.html">pin</a>, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>Copy</b> (T *pout, const T *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
 <tr class="separator:a0188038e3bc00df722ce7cccc93d2a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4eb4101b08b25c2f665ce5166865b504" id="r_a4eb4101b08b25c2f665ce5166865b504"><td class="memTemplParams" colspan="2"><a id="a4eb4101b08b25c2f665ce5166865b504" name="a4eb4101b08b25c2f665ce5166865b504"></a>
-template&lt;<a class="el" href="../../d0/d44/class_num_array.html">typename</a> <a class="el" href="../../d0/d44/class_num_array.html">S</a> &gt; </td></tr>
-<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">static</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Copy</b> (T *<a class="el" href="../../d0/d44/class_num_array.html">pout</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">S</a> *<a class="el" href="../../d0/d44/class_num_array.html">pin</a>, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
+template&lt;typename S &gt; </td></tr>
+<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Copy</b> (T *pout, const S *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
 <tr class="separator:a4eb4101b08b25c2f665ce5166865b504"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ccea042814fee0ed22adbd6b649c594" id="r_a3ccea042814fee0ed22adbd6b649c594"><td class="memItemLeft" align="right" valign="top"><a id="a3ccea042814fee0ed22adbd6b649c594" name="a3ccea042814fee0ed22adbd6b649c594"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">static</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *keywords, file_t *fp, cudaStream_t stream=0)</td></tr>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, file_t *fp, cudaStream_t stream=0)</td></tr>
 <tr class="separator:a3ccea042814fee0ed22adbd6b649c594"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4480cd6e3017d0d0c9ed41d4fd2ad58e" id="r_a4480cd6e3017d0d0c9ed41d4fd2ad58e"><td class="memItemLeft" align="right" valign="top"><a id="a4480cd6e3017d0d0c9ed41d4fd2ad58e" name="a4480cd6e3017d0d0c9ed41d4fd2ad58e"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">static</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *keywords, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">format</a>,...)</td></tr>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
 <tr class="separator:a4480cd6e3017d0d0c9ed41d4fd2ad58e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>

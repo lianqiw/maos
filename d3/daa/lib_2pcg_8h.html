@@ -109,15 +109,15 @@ $(document).ready(function(){initNavTree('d3/daa/lib_2pcg_8h.html','../../'); in
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a170e589f4c5f178941a9abc475c2b790" id="r_a170e589f4c5f178941a9abc475c2b790"><td class="memItemLeft" align="right" valign="top"><a id="a170e589f4c5f178941a9abc475c2b790" name="a170e589f4c5f178941a9abc475c2b790"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">typedef</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>cgfun_t</b>) (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *A, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin, <a class="el" href="../../d0/d44/class_num_array.html">const</a> real alpha)</td></tr>
+typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>cgfun_t</b>) (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, const void *A, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin, const real alpha)</td></tr>
 <tr class="separator:a170e589f4c5f178941a9abc475c2b790"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3320bd9b5482d28eb2c5ae089d471c1" id="r_ae3320bd9b5482d28eb2c5ae089d471c1"><td class="memItemLeft" align="right" valign="top"><a id="ae3320bd9b5482d28eb2c5ae089d471c1" name="ae3320bd9b5482d28eb2c5ae089d471c1"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">typedef</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a>(*&#160;</td><td class="memItemRight" valign="bottom"><b>prefun_t</b>) (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *A, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin)</td></tr>
+typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>prefun_t</b>) (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, const void *A, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin)</td></tr>
 <tr class="separator:ae3320bd9b5482d28eb2c5ae089d471c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5ee00a62b7a0c8b9ecbd39ce221716d3" id="r_a5ee00a62b7a0c8b9ecbd39ce221716d3"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/daa/lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3">pcg</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **px, cgfun_t <a class="el" href="../../d0/d44/class_num_array.html">Amul</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *A, prefun_t <a class="el" href="../../d0/d44/class_num_array.html">Mmul</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *M, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *<a class="el" href="../../d0/d44/class_num_array.html">b</a>, int warm, int <a class="el" href="../../d0/d44/class_num_array.html">maxiter</a>)</td></tr>
+<tr class="memitem:a5ee00a62b7a0c8b9ecbd39ce221716d3" id="r_a5ee00a62b7a0c8b9ecbd39ce221716d3"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/daa/lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3">pcg</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **px, cgfun_t Amul, const void *A, prefun_t Mmul, const void *M, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *b, int warm, int maxiter)</td></tr>
 <tr class="separator:a5ee00a62b7a0c8b9ecbd39ce221716d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -144,7 +144,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *&#160;</td>
+          <td class="paramtype">const void *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
@@ -156,13 +156,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d0/d44/class_num_array.html">void</a> *&#160;</td>
+          <td class="paramtype">const void *&#160;</td>
           <td class="paramname"><em>M</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td>
           <td class="paramname"><em>b</em>, </td>
         </tr>
         <tr>
