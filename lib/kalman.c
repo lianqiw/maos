@@ -375,9 +375,10 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
  * @brief Fit PSD to SHO by maximum the damping ratio while keeping it less than
  * 5. Does not support vibration identification which have different damping
  * characteristics.
- *
- * @param psdin     The input PSD
- * @return dmat*    The SHO coefficients
+ * @param[in,out] pcoeff	Return the SHO coefficients
+ * @param psdin_    The input PSD
+ * @param tfit		For covariance fitting, time span.
+ * @return real		Fitting quality
  */
 real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 	if(!iscell(psdin_.dc) && NY(psdin_.dm)==2){//single PSD
@@ -447,7 +448,7 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 
 /**
  * @brief Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.
- * @param Kinf  [Out] Asymptotic Kalman gain K_\infty
+ * @param Kinf  [Out] Asymptotic Kalman gain \f$K_\infty\f$
  * @param Pout  [Out] The Sigma_infty: Estimation error covariance matrix
  * @param A 	Block diagonal stage evolution matrix
  * @param Qn 	Discrete state noise covariance
@@ -969,15 +970,15 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	return mres;
 }
 dmat* kalman_test2(const dmat* coeff, /**<SDE coefficients*/
-	const real dthi, /**<Loop frequency*/
+	const real dthi, 	/**<Loop frequency*/
 	const lmat* dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
-	const lmat* mdirect,
+	const lmat* mdirect,/**<mask for modes directly controlled by slower loop */
 	const dcell* Gwfs,  /**<WFS measurement from modes. Can be identity*/
-	const dcell* Cnn,  /**<WFS measurement noise covariance in radian^2*/
-	const dmat* Proj,
-	const dcell *goff, 
-	const dmat* input,
-	int flag
+	const dcell* Cnn,   /**<WFS measurement noise covariance in radian^2*/
+	const dmat* Proj,   /**<Kalman Projection matrix */
+	const dcell *goff,  /**<Gradient measurement offset (fast loop) */
+	const dmat* input,  /**<Time series */
+	int flag 		    /**<flag controlls the servo type:  0: both LQG  1: both integrator  2: LQG (fast) + integrator (slow) */
 ){
 	kalman_t *kalman=sde_kalman(coeff, dthi, dtrat_wfs, mdirect, Gwfs, Cnn, Proj);
 	dmat* res=kalman_test(kalman, goff, input, flag);

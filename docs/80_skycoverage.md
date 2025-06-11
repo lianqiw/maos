@@ -1,6 +1,6 @@
 \page skycoverage Sky Coverage
 
-\section MAOS presimulation
+\section presim MAOS presimulation
 Add `skyc_10.conf` to `maos` simulation to output information for sky coverage preprocessing with NGS grid spaced by 10". 
 ```
 for prof in 50 25 75 ;do
@@ -9,14 +9,14 @@ for prof in 50 25 75 ;do
 	done
 done
 ```
-\section Sky coverage post processing simulation
+\section postsim Sky coverage post processing simulation
 Change directory to `${prof}p_za${za}/skysim` and run the following
 ```
 	skyc skyc.pixpsa=[16 16] skyc.psd_ws= -d skyc.multirate=1 skyc.seed=1 -o APD_JHKs_typeImr_v2 -d  
 ```
 The default config is `maos.conf` which is saved by `maos` presimulation. Additional parameters that can be overriden are in `${src}/config/skyc/skyc.conf`. 
 
-\section Sky coverage results
+\section skyres Sky coverage results
 
 The following file names are given for `maos seed=1` and `skyc seed=1`.
 

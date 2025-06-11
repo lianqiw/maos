@@ -644,6 +644,12 @@ setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		}
 	}
 }
+/**
+ * @brief Set the up powfs neasim for simulations
+ * 
+ * @param parms 
+ * @param powfs 
+ */
 void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const long nsa=powfs[ipowfs].saloc->nloc;
@@ -1581,7 +1587,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
 	}
 }
-/*
+/**
   Setup gradient offset for calibration. opdadd is the wavefront aberration in
   WFS due to optics, without DM correction. opdbias is the wavefront aberration
   in WFS after DM system flat is applied.

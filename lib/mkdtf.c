@@ -39,10 +39,14 @@ void dotf_treat(dmat *otf){
 }
 /**
  * Create a OTF for pix blur and pixel binning effect
- * @param notfx,notfy size of FFT
+ * @param[out] nominal The result
+ * @param notfx 	size of FFT
+ * @param notfy 	size of FFT
+ * @param pdthetax	Ratio of pixel dtheta vs PSF dtheta squared.
+ * @param pdthetay	Ratio of pixel dtheta vs PSF dtheta squared.
  * @param pixrot	Rotation of pixel array against PSF (polar coordinate)
- * @param pdtheta	Ratio of pixel dtheta vs PSF dtheta squared.
  * @param pixblur   Pixel blur sigma(fraction of pixel)
+ * @param treat		Embed a FFT shift in moninal
 */
 void dtf_otf(dmat **nominal, long notfx, long notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat){
 	const long notfx2=notfx>>1;

@@ -527,7 +527,9 @@ void gpu_setup_recon(const parms_t* parms, recon_t* recon){
 	}
 	cudata->recon=new curecon_t(parms, recon);
 }
-/**Assembles MVM in gpu and put in recon->MVM. */
+/**
+ * Assembles MVM in gpu and put in recon->MVM. 
+ * */
 void gpu_setup_recon_mvm(const parms_t* parms, recon_t* recon){
 	if(!recon->MVM){
 		const int tomo_cgwarm=parms->tomo.cgwarm;

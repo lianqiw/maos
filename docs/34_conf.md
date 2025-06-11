@@ -33,9 +33,7 @@ for fn in *.conf atm/*.conf examples/*.conf; do echo -e "\\page ${fn/.conf/} $fn
 - \subpage mcao_lgs
 - \subpage mcao_ngs
 - \subpage nfiraos_lgs
-- \subpage nfiraos_lgs_full
 - \subpage nfiraos_ngs
-- \subpage nfiraos_ngs_full
 - \subpage powfs_common
 - \subpage powfs_none
 - \subpage powfs_pyngs
@@ -189,14 +187,8 @@ for fn in *.conf atm/*.conf examples/*.conf; do echo -e "\\page ${fn/.conf/} $fn
 \page nfiraos_lgs nfiraos_lgs.conf
 \include nfiraos_lgs.conf
 
-\page nfiraos_lgs_full nfiraos_lgs_full.conf
-\include nfiraos_lgs_full.conf
-
 \page nfiraos_ngs nfiraos_ngs.conf
 \include nfiraos_ngs.conf
-
-\page nfiraos_ngs_full nfiraos_ngs_full.conf
-\include nfiraos_ngs_full.conf
 
 \page powfs_common powfs_common.conf
 \include powfs_common.conf

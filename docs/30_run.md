@@ -371,7 +371,7 @@ The range variation is simulated by adding corresponding focus mode to LGS WFS w
 
 The Rayleigh backscatter effect can be introduced using `powfs.bkgrndfn=[filename,]` which contains simulation background level for each pixel defined at `sim.dtref`. The file contains a cell array of `nsa*nlgswfs` while each cell contains a `npixpisax*npixpsay` numerical array. `nlgswfs` is the number of `wfs` for this `powfs`.
 
-\section skycoverage Sky coverage
+\section maos_skycoverage Sky coverage
 
 The sky coverage simulation is done in two parts. \c maos is run first used to prepare NGS mode and WFS PSF time series:
 

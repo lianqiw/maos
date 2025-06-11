@@ -19,9 +19,9 @@ where \f${\mu}_0{\epsilon}_0=1/{c}_0^2\f$
 
 It has a general solution of the form
 
-\f[\mathbf{E}=\mathbf{E_0}f(\hat{\mathbf{k}}\cdot{\mathbf{x}} - c_0 t)\f] where
-\f$\hat{\mathbf{k}}\f$ is the wave propagation direction. We have
-\f$\mathbf{E}\cdot\hat{\mathbf{k}}=0\f$ and \f$c_0\mathbf{B}=\hat{\mathbf{k}}\times \mathbf{E}\f$. 
+\f[\mathbf{E}=\mathbf{E_0}f(\mathbf{\hat{k}}\cdot{\mathbf{x}} - c_0 t)\f] where
+\f$\mathbf{\hat{k}}\f$ is the wave propagation direction. We have
+\f$\mathbf{E}\cdot\mathbf{\hat{k}}=0\f$ and \f$c_0\mathbf{B}=\mathbf{\hat{k}}\times \mathbf{E}\f$. 
 
 ## Fresnel diffraction integral
 
@@ -57,10 +57,10 @@ constant phase evolution and energy normalization.
 The integral can be viewed as a convolution between \f$E(x,y,0)\f$ and 
 \f[h(x,y)=e^{\frac{i\pi}{z\lambda}(x^2+y^2)}.\f] 
 
-The convolution can be done with Fourier transform (there is no need for embedding): \f[E=\mathcal{F}^{-1}[\mathcal{F}[E(x,y,0)]\mathcal{F}[h(x,y)]].\f] 
+The convolution can be done with Fourier transform (there is no need for embedding): \f[E=\mathscr{F}^{-1}[\mathscr{F}[E(x,y,0)]\mathscr{F}[h(x,y)]].\f] 
 
-The fourier transform of \f$h(x,y)\f$ can be computed analytically. Recall  the Fourier transform \f[\mathcal{F}[\exp[ia(x^2+y^2)]]=\frac{i\pi}{a}\exp[\frac{-i\pi^2}{a}(f_x^2+f_y^2)]\f] for \f$k>0\f$. We have 
-\f[\mathcal{F}[h(x,y)]=iz\lambda\exp[-iz\pi\lambda(f_x^2+f_y^2)].\f] Using this requires upsampling since FFT convolution assumes the function is periodic. We do not use this method.
+The fourier transform of \f$h(x,y)\f$ can be computed analytically. Recall  the Fourier transform \f[\mathscr{F}[\exp[ia(x^2+y^2)]]=\frac{i\pi}{a}\exp[\frac{-i\pi^2}{a}(f_x^2+f_y^2)]\f] for \f$k>0\f$. We have 
+\f[\mathscr{F}[h(x,y)]=iz\lambda\exp[-iz\pi\lambda(f_x^2+f_y^2)].\f] Using this requires upsampling since FFT convolution assumes the function is periodic. We do not use this method.
 
 This convolution view is commonly referred to as the angular spectrum method.
 The original field \f$E(x,y,0)\f$ is only FFT'ed once. For each propagation
@@ -78,7 +78,7 @@ The integral can also be rewritten as a single Fourier transform:
 Define a new function \f$G(x^\prime, y^\prime)\f$ as 
 \f[G(x^\prime, y^\prime)=E(x^\prime, y^\prime, 0){e^{\frac{i\pi}{z\lambda}({x^\prime}^2+{y^\prime}^2)}}\f]
 Its fourier transform is
-\f[\hat{G}(p,q)=\mathcal{F}\{G(x^\prime,y^\prime)\}.\f] We have \f$p=\frac{x}{z\lambda}\f$ and \f$q=\frac{y}{z\lambda}\f$ and 
+\f[\hat{G}(p,q)=\mathscr{F}\{G(x^\prime,y^\prime)\}.\f] We have \f$p=\frac{x}{z\lambda}\f$ and \f$q=\frac{y}{z\lambda}\f$ and 
 \f[E(x,y,z)=\frac{e^{ikz}}{i\lambda z} h(x,y) \hat{G}(\frac{x}{z\lambda},\frac{y}{z\lambda}).\f] 
 
 The FFT view is more suitable when the propagation is near far field as the FFT

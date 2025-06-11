@@ -499,12 +499,12 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
    
     When tomo.ahst_wt=1:
 
-	Rngs=GM^\dagger=(GM'*W_N*GM)^{-1}*GM'*W_N  #W_N is recon->saneai
-	M^\dagger=Rngs*GA #reconstruct mode from NGS measurements equals to original mode
-	Pngs=M*M^\dagger=M*Rngs*GA satisfies Rngs*GA*Pngs=Rngs*GA
-	In other words, M^\dagger=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA)
+	\f$ Rngs=GM^\dagger=(GM'*W_N*GM)^{-1}*GM'*W_N \f$  where W_N is recon->saneai
+	\f$ M^\dagger=Rngs*GA \f$ #reconstruct mode from NGS measurements equals to original mode
+	\f$ Pngs=M*M^\dagger=M*Rngs*GA \f$ satisfies Rngs*GA*Pngs=Rngs*GA
+	In other words, \f$ M^\dagger=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA) \f$
 
-	Projector has the properties: M*Pngs*(1-M*Pngs)=0 
+	Projector has the properties: \f$ M*Pngs*(1-M*Pngs)=0 \f$
  */
 void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	ngsmod_t* ngsmod=recon->ngsmod;

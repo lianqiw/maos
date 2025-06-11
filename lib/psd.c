@@ -259,6 +259,7 @@ real psd_inte2(const dmat* psdin){
  * @brief Reverse cumulative sum of PSD
  *
  * @param psdin 	the input PSD
+ * @param scale		optional scaling
  * @return dmat* 	sqrt of the reverse integration of PSD
  */
 dmat *psd_reverse_cumu(const dmat *psdin, real scale){
@@ -422,6 +423,7 @@ void add_psd2(dmat** pout, const dmat* in, real scale){
  * @param psd	the input PSD
  * @param im	index of the first mode. -1: sum all modes. 0 to ny(psd)-1.
  * @param nm	number of modes.
+ * @param keepdc	Do not remove DC component (f=0)
  * @param scale scaling fctor
 */
 dmat* psd_select(const dmat* psd, int im, int nm, int keepdc, real scale){

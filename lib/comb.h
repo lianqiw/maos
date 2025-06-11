@@ -18,7 +18,7 @@
 #ifndef AOS_LIB_COMB_H
 #define AOS_LIB_COMB_H
 /**
-   \file combo.h
+   \file comb.h
    Compute combination
 */
 #include "../math/mathdef.h"

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file lib/misc.h
+   \file lib/libmisc.h
 */
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H

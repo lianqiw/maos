@@ -65,6 +65,7 @@ static int comb_next(int* comb, long n, long k){
 	only implemented for npowfs=1 or npowfs=2
 	@param nwfsmax 		npowfs*1 array for maximum number of wfs
 	@param starvalid 	nstar*npowfs array for validity of star at powfs mode. -1 means invalid
+	@param flag			see above
 
 */
 lmat* comb_stars(lmat* nwfsmax, lmat *starvalid, int flag){

@@ -32,6 +32,8 @@ Some benchmarking results using the TMT NFIRAOS (30 m aperture, 6 LGS, dual orde
 - 8x Nvidia GTX 580 GPU: 0.03s per time step
 
 
-\author Lianqi Wang at TMT International Observatory www.tmt.org 
+\author Lianqi Wang <a href="https://www.linkedin.com/in/lianqiw/">(Linkedin)</a> at <a href="https://www.tmt.org">TMT International Observatory</a>.
 
-The source code can be obtained in <a href="http://github.com/lianqiw/maos">http://github.com/lianqiw/maos </a>
+The source code can be obtained in <a href="https://github.com/lianqiw/maos">Github: lianqiw/maos</a>.
+
+For references, check <a href="https://www.researchgate.net/profile/Lianqi-Wang">ResearchGate</a>.

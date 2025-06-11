@@ -201,3 +201,129 @@ the time history of the complex PSF of evaluation direction \f$x\f$.
 - `ResCG_1`: Tomography and DM Fitting conjugate gradient residual time history.
 
 - `Reszoompos_1`: For LGS only, the trombine position. One cell per WFS.
+
+\section geometry Geometry Data
+
+When \c save.setup=1, MAOS will save the geometry data created before
+entering simulation to files in folder \c setup. When \c save.recon=1, the
+tomography and DM fitting matrices are also saved, which takes space and are
+not enabled by \c save.setup=1.
+
+The following explains each file. Not all of them may exist, depending on set
+of options. The suffix of the file names are removed.
+
+
+File name | Description
+---------|--------------
+\c actslave  |The slaving operator
+\c ahst_GM   |ad hoc split tomography, model to gradient operator
+\c ahst_MCC  |ahst, model cross coupling matrix.
+\c ahst_Mdm  |ahst, the NGS mode defined on DM grid
+\c ahst_Pngs |ahst, ngs mode removal operator from DM commands
+\c ahst_Ptt  |ahst, tip/tilt removal operator from DM commands
+\c ahst_Rngs |ahst, ngs mode reconstructor
+\c ahst_Wa   |ahst, the weighting using science field.
+\c aloc      |DM actuator grid.
+\c ploc      |The coarse sampled grid on aperture for reconstruction
+\c xloc      |The tomography grid.
+\c TT        |The global tip/tilt modes for wfs
+\c PTT       |The global tip/tilt removal operator for wfs
+\c saneai    |The inverse of nea^2 used in tomography (rad^2)
+\c W0        |The W0 weighting defined on ploc. 
+\c W1        |The W1 weighting defined on ploc.
+\c aper_locs |The fine sampled grid on telescope aperture.
+\c aper_amp  |Telescope aperture amplitude defined on aper_locs
+\c aper_mcc  |modal cross-coupling matrix for modes defined on aper_locs
+\c FLM       |Fit left hand side operator, sparse matrix
+\c FLU       |Fit left hand side operator, Low rank U matrix
+\c FLV       |Fit left hand side operator, Low rank V matrix
+\c FRM       |Fit right hand side operator, sparse matrix
+\c FRU       |Fit right hand side operator, Low rank U matrix
+\c FRV       |Fit right hand side operator, Low rank V matrix
+\c GA        |Gradient operator from aloc.
+\c GP        |Gradient operator from ploc.
+\c GX        |Gradient operator from xloc.
+\c HA        |Ray tracing from aloc to ploc along fit directions
+\c HXF       |Ray tracing from xloc to ploc along fit directions
+\c HXW       |Ray tracing from xloc to ploc along wfs directions
+\c L2        |Laplacian regularization on xloc
+\c NW        |Low rank terms in fitting
+\c NW2       |Adjusted low rank terms by slaving.
+\c powfs0_area         |The subaperture area
+\c powfs0_dtf0_nominal |The nominal of DTF
+\c powfs0_dtf0_si      |The si of DTF
+\c powfs0_etfprep0_2d  |The elongation transfer function
+\c powfs0_GP           |The gradient operator from ploc.
+\c powfs0_GS0          |The gradient operator from aper_locs.
+\c powfs0_i0           |The subaperture time averaged image for matched filter
+\c powfs0_gx           |The pixel by pixel x gradient of i0
+\c powfs0_gy           |The pixel by pixel y gradient of i0
+\c powfs0_imcc         |The inverse of model cross-coupling matrix of piston/tip/tilt modes
+\c powfs0_loc          |The grid for all subapertures (grouped by subapertures)
+\c powfs0_amp          |The amplitude defined on powfs0_loc
+\c powfs0_llt_loc      |The aperture grid of the uplink laser launch telescope (LLT)
+\c powfs0_llt_amp      |The aperture amplitude of LLT defined on powfs0_llt_loc
+\c powfs0_llt_imcc     |The inverse of model cross-coupling matrix of p/t/t modes for LLT
+\c powfs0_srot         |The orientation of each subaperture wrt LLT
+\c powfs0_srsa         |The distance of each subaperture from the LLT
+\c powfs0_mtche        |The matched filter gradient estimator
+\c powfs0_pts          |The lower left grid point of each subaperture.
+\c powfs0_saloc        |The lower left corner of each subaperture
+\c powfs0_sanea        |The subaperture noise equivalent angle(nea) in rad^2
+\c powfs0_saneaxy      |The nea along x/y directions in rad^2
+\c powfs0_saneaixy     |The inverse of nea along x/y directions in rad^-2
+\c powfs0_saneara      |The subaperture nea along r/a directions in rad^-2
+\c powfs0_sepsf        |The subaperture short exposure psf (tip/tilt removed)
+\c powfs0_sodium       |The sodium layer profile
+\c powfs0_sprint       |which subapertures to print
+\c powfs0_GS0          |The averaging gradient operator from pts.
+\c powfs1_ZS0          |The ztilt best fit gradient operator from pts.
+
+\section telemetry Telemetry Data
+
+Depending on parameters enabled, the simulation telemetry data will be saved
+to files in the simulation folder. The following describes them in detail.
+Notice that save.grad, save.gradgeom, save.ints and save.wfsopd takes values
+of 1, 2 or 3, where 1 means saving for all wfs, 2 means saving for only high
+order wfs and 3 means saving for lower order wfs.
+
+Name convention: the last number after underscore is the seed. The following
+shows results for seed1. When there are multiple wfs or science fields, we
+only show the results for the first. 
+
+Many of the results contains a cell array of length \c nsim (number of
+simulation steps), whenever that makes sense.
+
+The data regarding the DM commands are all defined on the actuator grid \c aloc.
+
+The second column of the tables shows which option in \c dbg.conf enables the
+save of this data.
+
+The suffix of the file names are removed.
+
+
+File name          |Option to enable | Description
+-------------------|-----------------|-------------
+\c atm_1           |save.atm   |The atmosphere 
+\c dmerr_hi_1      |save.dm   |The DM error signal for high order wfs
+\c dmfit_hi_1      |save.dm   |The DM fit result for high order wfs
+\c Merr_lo_1       |save.dm   |The low order mode error signal (split tomography)
+\c Mint_lo_1       |save.dm   |The low order mode integrator output (split tomography)
+\c dmint_hi_1      |save.dm   |The DM integrator output of high order wfs output (split integrator only)
+\c dmint_1         |save.dm   |The DM integrator output (command integrator for both high/low wfs)
+\c dmreal_1        |save.dm   |The real, effective DM commands applied
+\c dmpttr_1        |save.dmpttr   |The piston/tip/tilt removed, effective, DM commands.
+\c evl0_opdcl_1    |save.evlopd   |The closed loop opd for science fields
+\c evl0_opdol_1    |save.evlopd   |The open loop opd for science fields
+\c gcov_wfs0_5_10_1      |save.gcov   |The covariance between gradients of wfs 0 and 5 saved at time step 10
+\c opdr_1          |save.opdr   |The tomography output, defined on xloc
+\c opdx_1          |save.opdx   |The atmosphere projected onto xloc (direct fitting)
+\c wfs0_gradcl_1   |save.grad  |The wfs gradient measurement.
+\c wfs0_gradnf_1   |save.grad  |The wfs noise free gradient.
+\c wfs0_gradol_1 |save.grad  |The wfs pseudo open loop gradient
+\c wfs0_gradgeom_1 |save.gradgeom   |The wfs geometric gradient (in physical optics wfs simulations)
+\c wfs0_intsnf_1   |save.ints   |The wfs subaperture images (noise free)
+\c wfs0_intsny_1   |save.ints   |The wfs subaperture images (noisy)
+\c wfs0_lltopd_1   |save.wfsopd   |The wfs laser launch telescope OPD.
+\c wfs0_opd_1      |save.wfsopd   |The wfs OPD.
+------

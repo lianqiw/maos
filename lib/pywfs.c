@@ -362,7 +362,7 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 /**
    Perform FFT over the complex PSF with additional phases caused by the
    pyramid. FFT on each quadrant of the PSF creates diffraction effects.
-   @param[in/out]ints	The intensity. Accumulate.
+   @param[in,out] ints	The intensity. Accumulate.
    @param[in] pywfs		PYWFS parameters
    @param[in] opd		The OPD
    @param[in] siglev	The signal level.
