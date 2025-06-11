@@ -64,7 +64,7 @@ var NAVTREE =
         [ "Sodium range variation", "da/dc3/page30_run.html#sect-sodium", null ],
         [ "Rayleigh backscatter", "da/dc3/page30_run.html#pixel-background", null ]
       ] ],
-      [ "Sky coverage", "da/dc3/page30_run.html#skycoverage", null ]
+      [ "Sky coverage", "da/dc3/page30_run.html#maos_skycoverage", null ]
     ] ],
     [ "Examples", "d5/d29/page33_example.html", [
       [ "TMT NFIRAOS LGS MCAO", "da/dd3/nfiraos_example.html", null ],
@@ -101,9 +101,7 @@ var NAVTREE =
         [ "mcao_lgs.conf", "dd/d10/mcao_lgs.html", null ],
         [ "mcao_ngs.conf", "d7/d15/mcao_ngs.html", null ],
         [ "nfiraos_lgs.conf", "d9/d63/nfiraos_lgs.html", null ],
-        [ "nfiraos_lgs_full.conf", "d7/d2c/nfiraos_lgs_full.html", null ],
         [ "nfiraos_ngs.conf", "df/de4/nfiraos_ngs.html", null ],
-        [ "nfiraos_ngs_full.conf", "dc/d09/nfiraos_ngs_full.html", null ],
         [ "powfs_common.conf", "df/d16/powfs_common.html", null ],
         [ "powfs_none.conf", "d6/dab/powfs_none.html", null ],
         [ "powfs_pyngs.conf", "d6/d54/powfs_pyngs.html", null ],
@@ -230,8 +228,9 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Sky Coverage", "d5/d4c/skycoverage.html", [
-      [ "presimulation", "d5/d4c/skycoverage.html#MAOS", null ],
-      [ "coverage post processing simulation", "d5/d4c/skycoverage.html#Sky", null ]
+      [ "MAOS presimulation", "d5/d4c/skycoverage.html#presim", null ],
+      [ "Sky coverage post processing simulation", "d5/d4c/skycoverage.html#postsim", null ],
+      [ "Sky coverage results", "d5/d4c/skycoverage.html#skyres", null ]
     ] ],
     [ "Development", "de/d19/page90_devel.html", [
       [ "Fundementals", "d5/d98/page91_basics.html", [
@@ -284,20 +283,20 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"d2/da0/psd_8h.html#ad3e2510d3cfdf68cfeb3975736c02c8c",
-"d4/d08/misc_8h.html#a3301c2cb79c61e97a1b84f92edb989ef",
-"d4/d38/parms_8h.html#a5039dab4f497cf757ca2b5be1c829893",
-"d4/d38/parms_8h.html#ab7c18c14a6c7934793b061debb067022",
-"d4/d6c/structsmat.html#a1cf498c3486312116f960226da81fc2f",
-"d6/d94/maos_2types_8h.html#a46d3a7d20af30dfd0bbdfa1cc8dbe89f",
-"d6/d94/maos_2types_8h.html#ad0e43cd4a0ccf988001caf1fb04b8cbb",
-"d9/d5c/structzmat.html#addb7d48455b511ec01d57a526f551e06",
-"da/dfb/dmath_8h.html#acb291ac90c6280592569f8a1e1bd20dd",
-"dd/d31/powfs_shlgs.html",
-"de/d07/cmath_8h.html#ab7b07fc70754beff7a05ed1b14583a38",
-"de/de7/smath_8h.html#a87374d8fa4cb8184edc5cc2f04df0ca3",
-"df/def/type_8h.html#a3b05d815ad38871870986b407db2f993",
-"df/def/type_8h.html#d9/df8/unionpts__t_8____unnamed29____"
+"d2/da0/psd_8h.html#ac56927cdf31c639d3262d2fa60777310",
+"d4/d08/misc_8h.html#a25b56eea8d47545699946b02ffd09690",
+"d4/d38/parms_8h.html#a4eabb79f5637692b3f661502c4fb31cb",
+"d4/d38/parms_8h.html#ab65cc300544ae140930343e96b5422e4",
+"d4/d6c/structsmat.html#a059d43a193f4b859b57a5a44b415106f",
+"d6/d94/maos_2types_8h.html#a4541552ceb7a513342c528b17cf8c99c",
+"d6/d94/maos_2types_8h.html#acf262c84d0f25430470446a8ee476de8",
+"d9/d5c/structzmat.html#abdec13f35acab029e29dce9aec402c6c",
+"da/dfb/dmath_8h.html#aca08f55748c7eb0706a7d5c3652de502",
+"dc/de6/classstream__t.html",
+"de/d07/cmath_8h.html#aa69535d5e0b526b83c05a323526507bf",
+"de/de7/smath_8h.html#a6cd9a93ca8dbe11cf8ca4f5969457311",
+"df/def/type_8h.html#a2e321bcfe0bbb1a2d64772ff6db291ac",
+"df/def/type_8h.html#d3/d30/structlocccell"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

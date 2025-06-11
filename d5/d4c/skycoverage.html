@@ -102,19 +102,19 @@ $(document).ready(function(){initNavTree('d5/d4c/skycoverage.html','../../'); in
   <div class="headertitle"><div class="title">Sky Coverage</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="MAOS"></a>
-presimulation</h1>
+<div class="textblock"><h1><a class="anchor" id="presim"></a>
+MAOS presimulation</h1>
 <p>Add <code>skyc_10.conf</code> to <code>maos</code> simulation to output information for sky coverage preprocessing with NGS grid spaced by 10". </p><div class="fragment"><div class="line">for prof in 50 25 75 ;do</div>
 <div class="line">    for za in 0 30 45 50 55 60;do</div>
 <div class="line">        maos -c nfiraos_lgs.conf skyc_10.conf atm_mk13n${prof}p.conf sim.zadeg=$za -o ${prof}p_za${za} sim.seeds=[1] </div>
 <div class="line">    done</div>
 <div class="line">done</div>
-</div><!-- fragment --> <h1><a class="anchor" id="Sky"></a>
-coverage post processing simulation</h1>
+</div><!-- fragment --> <h1><a class="anchor" id="postsim"></a>
+Sky coverage post processing simulation</h1>
 <p>Change directory to <code>${prof}p_za${za}/skysim</code> and run the following </p><div class="fragment"><div class="line">skyc skyc.pixpsa=[16 16] skyc.psd_ws= -d skyc.multirate=1 skyc.seed=1 -o APD_JHKs_typeImr_v2 -d  </div>
 </div><!-- fragment --><p> The default config is <code>maos.conf</code> which is saved by <code>maos</code> presimulation. Additional parameters that can be overriden are in <code>${src}/config/skyc/skyc.conf</code>.</p>
-<h1><a class="anchor" id="Sky"></a>
-coverage post processing simulation</h1>
+<h1><a class="anchor" id="skyres"></a>
+Sky coverage results</h1>
 <p>The following file names are given for <code>maos seed=1</code> and <code>skyc seed=1</code>.</p>
 <ul>
 <li><code>Res1_1:</code> Science field averaged RMS WFE for each for each sky of the following modes:<ul>

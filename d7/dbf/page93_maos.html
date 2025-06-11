@@ -106,27 +106,34 @@ $(document).ready(function(){initNavTree('d7/dbf/page93_maos.html','../../'); in
 Simulation Flow</h1>
 <ul>
 <li><a class="el" href="../../de/d78/maos_8c.html#ac0f2228420376f4db7e1274f2b41667c">main()</a> is the entrance into the program. It calls<ul>
-<li>setup_parms(): to setup the parameters of types <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> and check for errors.</li>
+<li>setup_parms(): to setup the parameters of types <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> and check for errors.<ul>
 <li>setup_parms_gpu(): to setup the GPU usage for various tasks</li>
+</ul>
+</li>
 <li>maos_setup(): to setup the AO system geometry and data structs. It calls<ul>
 <li>setup_aper(): to setup the aperture grid and amplitude map (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a>)</li>
 <li>setup_powfs_init(): to setup the WFS subapertures geometry</li>
 <li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a376b025ba1fd17827089d97a298e109c">setup_recon_prep()</a>: to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)</li>
 <li>setup_surf(): to setup NCPA</li>
-<li>setup_powfs_phy(): to setup physical optics (dtf, etf, i0, mtch, cog)</li>
+<li>setup_shwfs_phy(): to setup physical optics (dtf, etf, i0, mtch, cog)</li>
 <li>setup_powfs_neasim(): to setup grad noise model if not using photon noise.</li>
 <li>setup_powfs_calib(): NCPA calibration</li>
-<li>setup_recon_prep2(): to setup GA, GF, GR, ngsmod geometry, t/t removal</li>
-<li>setup_recon(): to setup sanea, t/t removal, read MVM, ngsmod recon</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#ac24d3db35e5e0e23cf90389c578d4473">setup_recon_fit()</a>: to setup DM fitting algorithm</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit()</a>: to setup fitting to WFS subaperture algorithm</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a98fbe241a9a99143835d5b3c1726c1e8">setup_recon_GA()</a>: Actuator to gradient</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a699cb83e672d1ebc6885edce0f0b5d2a">setup_recon_GF()</a>: Focus mode to gradient</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#ac112c22f2d96d1373e967abb6bcb614d">setup_recon_GR()</a>: Radial Zernike modes to gradient</li>
+<li>ngsmod_prep(): AHST ngsmod geometry</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a367e861f652afcd5f4764c37a09c9400">setup_recon_saneai()</a>: to setup noise covariance</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#af1da2a8efe02e505b025aee27f4f02ff">setup_recon_dither_dm()</a>: Common mode dithering setup</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a5af69df7b36ffcdd820bd19a87d26e96">setup_recon_control()</a>: Setup controller</li>
 <li>setup_recon_moao(): to setup MOAO</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit()</a>: to setup fitting to WFS subaperture algorithm</li>
 <li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abccc70ee3253427358536ee2b4185c6c">setup_recon_mvm()</a>: to calculate MVM control matrix</li>
-<li>gpu_setup_recon_mvm(): to setup recon in all GPUs and calculate MVM control matrix</li>
-<li>gpu_setup_recon(): to setup recon in the preferred GPU</li>
-<li>gpu_perfevl_init(): to initialize GPU performance evaluation parameters</li>
-<li>gpu_wfssurf2gpu(): to copy NCPA OPDs to gpu</li>
-<li>setup_recon_post(): to compute PSD, etc.</li>
+<li>gpu_setup_recon_mvm(): calculate MVM control matrix using GPUs</li>
+<li>gpu_wfsgrad_init(): to setup WFS in GPU.</li>
+<li>gpu_setup_recon(): to setup recon in GPU.</li>
+<li>gpu_perfevl_init(): to initialize performance evaluation parameters in GPU.</li>
+<li>gpu_wfssurf2gpu(): to copy NCPA OPDs to GPU.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abbea7539111904f7a79b6d30a0718d8d">setup_recon_misc()</a>: to compute PSD, etc.</li>
 <li>plot_setup(): to plot the geometry (ploc, floc, aloc, amplitude map, etc.).</li>
 </ul>
 </li>
@@ -142,7 +149,7 @@ Simulation Flow</h1>
 <li>sim_update_etf(): update sodium profile if needed</li>
 <li>genatm(): update turbulence if not using frozen-flow</li>
 <li>In parallel mode (PARALLEL=1)<ul>
-<li>perfevl_pre: wfsgrad_prep, reconstruct() in parallel and then wait</li>
+<li>perfevl_pre(): wfsgrad_prep, reconstruct() in parallel and then wait</li>
 <li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>: <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a>, in parallel and then wait</li>
 <li>shift_grad(): copy from grad to gradlast for reconstruct()</li>
 <li>filter_dm(): servo filtering (dmreal)</li>
@@ -157,8 +164,8 @@ Simulation Flow</h1>
 <li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>:</li>
 </ul>
 </li>
-<li>setup_recon_tomo_update(): Update tomography parameter when needed</li>
-<li>setup_recon_update(): Update recon parameters when needed.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7">setup_recon_update_cn2()</a>: Update tomography parameter when needed</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a5af69df7b36ffcdd820bd19a87d26e96">setup_recon_control()</a>: Update recon parameters when needed.</li>
 <li>print_progress(): show progress</li>
 </ul>
 </li>

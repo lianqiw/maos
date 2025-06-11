@@ -175,9 +175,9 @@ Maxwell Equation</h2>
 <p>where \({\mu}_0{\epsilon}_0=1/{c}_0^2\)</p>
 <p>It has a general solution of the form</p>
 <p class="formulaDsp">
-\[\mathbf{E}=\mathbf{E_0}f(\hat{\mathbf{k}}\cdot{\mathbf{x}} - c_0 t)\]
+\[\mathbf{E}=\mathbf{E_0}f(\mathbf{\hat{k}}\cdot{\mathbf{x}} - c_0 t)\]
 </p>
-<p> where \(\hat{\mathbf{k}}\) is the wave propagation direction. We have \(\mathbf{E}\cdot\hat{\mathbf{k}}=0\) and \(c_0\mathbf{B}=\hat{\mathbf{k}}\times \mathbf{E}\).</p>
+<p> where \(\mathbf{\hat{k}}\) is the wave propagation direction. We have \(\mathbf{E}\cdot\mathbf{\hat{k}}=0\) and \(c_0\mathbf{B}=\mathbf{\hat{k}}\times \mathbf{E}\).</p>
 <h2><a class="anchor" id="autotoc_md44"></a>
 Fresnel diffraction integral</h2>
 <p>The electric field at a point \((x,y,z)\) following an aperture at \(z=0\) is given by</p>
@@ -204,13 +204,13 @@ Angular Spectrum</h3>
 \[h(x,y)=e^{\frac{i\pi}{z\lambda}(x^2+y^2)}.\]
 </p>
 <p>The convolution can be done with Fourier transform (there is no need for embedding): </p><p class="formulaDsp">
-\[E=\mathcal{F}^{-1}[\mathcal{F}[E(x,y,0)]\mathcal{F}[h(x,y)]].\]
+\[E=\mathscr{F}^{-1}[\mathscr{F}[E(x,y,0)]\mathscr{F}[h(x,y)]].\]
 </p>
 <p>The fourier transform of \(h(x,y)\) can be computed analytically. Recall the Fourier transform </p><p class="formulaDsp">
-\[\mathcal{F}[\exp[ia(x^2+y^2)]]=\frac{i\pi}{a}\exp[\frac{-i\pi^2}{a}(f_x^2+f_y^2)]\]
+\[\mathscr{F}[\exp[ia(x^2+y^2)]]=\frac{i\pi}{a}\exp[\frac{-i\pi^2}{a}(f_x^2+f_y^2)]\]
 </p>
 <p> for \(k&gt;0\). We have </p><p class="formulaDsp">
-\[\mathcal{F}[h(x,y)]=iz\lambda\exp[-iz\pi\lambda(f_x^2+f_y^2)].\]
+\[\mathscr{F}[h(x,y)]=iz\lambda\exp[-iz\pi\lambda(f_x^2+f_y^2)].\]
 </p>
 <p> Using this requires upsampling since FFT convolution assumes the function is periodic. We do not use this method.</p>
 <p>This convolution view is commonly referred to as the angular spectrum method. The original field \(E(x,y,0)\) is only FFT'ed once. For each propagation distance, the FFT of \(h()\) is multiplied to \(\hat{E}\) and then inverse FFT'ed to obtain the field. This approach is mostly useful in very near field propagations when \(x\) and \(x^\prime\) has the same sampling.</p>
@@ -224,7 +224,7 @@ Single FFT</h3>
 \[G(x^\prime, y^\prime)=E(x^\prime, y^\prime, 0){e^{\frac{i\pi}{z\lambda}({x^\prime}^2+{y^\prime}^2)}}\]
 </p>
 <p> Its fourier transform is </p><p class="formulaDsp">
-\[\hat{G}(p,q)=\mathcal{F}\{G(x^\prime,y^\prime)\}.\]
+\[\hat{G}(p,q)=\mathscr{F}\{G(x^\prime,y^\prime)\}.\]
 </p>
 <p> We have \(p=\frac{x}{z\lambda}\) and \(q=\frac{y}{z\lambda}\) and </p><p class="formulaDsp">
 \[E(x,y,z)=\frac{e^{ikz}}{i\lambda z} h(x,y) \hat{G}(\frac{x}{z\lambda},\frac{y}{z\lambda}).\]
