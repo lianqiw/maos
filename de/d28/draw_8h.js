@@ -5,6 +5,7 @@ var draw_8h =
       [ "loc", "de/d28/draw_8h.html#a21f274cacd6006de0eab6a2ac12a0875", null ]
     ] ],
     [ "plot_opts.__unnamed8__", "de/d28/draw_8h.html#dd/d34/unionplot__opts_8____unnamed8____", null ],
+    [ "draw_helper", "de/d28/draw_8h.html#a5e2f206b380b5b9a10b87b7d3d80ccc8", null ],
     [ "draw_add", "de/d28/draw_8h.html#a6be0be645ac1bb71cbbce02ddaf959c8", null ],
     [ "draw_final", "de/d28/draw_8h.html#ab01d0d9c0f4f57ef56695fc9a7aa3efe", null ],
     [ "draw_current", "de/d28/draw_8h.html#adc80c25521f9db8258abbaf67cba49b0", null ],

@@ -290,9 +290,9 @@ var NAVTREEINDEX =
 "da/dfb/dmath_8h.html#acb291ac90c6280592569f8a1e1bd20dd",
 "dd/d13/atm_mk13n20p.html",
 "de/d07/cmath_8h.html#aa69535d5e0b526b83c05a323526507bf",
-"de/de7/smath_8h.html#a6cd9a93ca8dbe11cf8ca4f5969457311",
-"df/def/type_8h.html#a33f0fb8ea98a84d3cfd0d086daa13e1e",
-"df/def/type_8h.html#d4/d71/structzsp"
+"de/de7/smath_8h.html#a6cbd1a80b5509e0728d89365ec3aa1c1",
+"df/def/type_8h.html#a320665323a3307f015cab4b5b1cdf161",
+"df/def/type_8h.html#d3/d5f/structrmapccell"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
