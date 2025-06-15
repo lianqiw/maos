@@ -662,37 +662,49 @@ int draw(const char* fig,    /**<Category of the figure*/
 				dtype *tmp=mymalloc(nx2*ny2, dtype);
 				for(int iy=0; iy<ny2; iy++){
 					dtype *pout=tmp+iy*nx2;
-					if(opts.image->id==M_REAL){
+					if((opts.image->id&M_REAL)==M_REAL){
 						const dmat *pd=dmat_cast(opts.image);
 						const real *pin=P(pd)+iy*ystep*NX(pd);
 						for(int ix=0; ix<nx2; ix++){
 							pout[ix]=(dtype)pin[ix*xstep];
 						}
-					}else{//convert complex numbers to real.
+					}else if((opts.image->id&M_FLT)==M_FLT){
+						const smat *pd=smat_cast(opts.image);
+						const float *pin=P(pd)+iy*ystep*NX(pd);
+						for(int ix=0; ix<nx2; ix++){
+							pout[ix]=(dtype)pin[ix*xstep];
+						}
+					}else if((opts.image->id&M_COMP)==M_COMP){//convert complex numbers to real.
+#define COMP_TO_REAL(ctype)\
+switch(ctype){\
+	case 0:\
+		for(int ix=0; ix<nx2; ix++){\
+			pout[ix]=(dtype)cabs(pin[ix*xstep]);\
+		}\
+		break;\
+	case 1:\
+		for(int ix=0; ix<nx2; ix++){\
+			pout[ix]=(dtype)atan2(cimag(pin[ix*xstep]), creal(pin[ix*xstep]));\
+		}\
+		break;\
+	case 2:\
+		for(int ix=0; ix<nx2; ix++){\
+			pout[ix]=(dtype)creal(pin[ix*xstep]);\
+		}\
+		break;\
+	case 3:\
+		for(int ix=0; ix<nx2; ix++){\
+			pout[ix]=(dtype)cimag(pin[ix*xstep]);\
+		}\
+		break;\
+	}	
 						const cmat *pc=cmat_cast(opts.image);
 						const comp *pin=P(pc)+iy*ystep*NX(pc);
-						switch(opts.ctype){
-						case 0:
-							for(int ix=0; ix<nx2; ix++){
-								pout[ix]=(dtype)cabs(pin[ix*xstep]);
-							}
-							break;
-						case 1:
-							for(int ix=0; ix<nx2; ix++){
-								pout[ix]=(dtype)atan2(cimag(pin[ix*xstep]), creal(pin[ix*xstep]));
-							}
-							break;
-						case 2:
-							for(int ix=0; ix<nx2; ix++){
-								pout[ix]=(dtype)creal(pin[ix*xstep]);
-							}
-							break;
-						case 3:
-							for(int ix=0; ix<nx2; ix++){
-								pout[ix]=(dtype)cimag(pin[ix*xstep]);
-							}
-							break;
-						}
+						COMP_TO_REAL(opts.ctype);
+					}else if((opts.image->id&M_ZMP)==M_ZMP){
+						const zmat *pc=zmat_cast(opts.image);
+						const fcomplex *pin=P(pc)+iy*ystep*NX(pc);
+						COMP_TO_REAL(opts.ctype);
 					}
 				}
 				int32_t header[2];

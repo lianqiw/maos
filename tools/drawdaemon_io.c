@@ -86,7 +86,8 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 		//info("min=%g, max=%g\n", min, max);
 	}
 	round_limit(&min, &max, 0);
-	if(!zlim[0]||!zlim[1]||zlim[0]>=zlim[1]||!isfinite(zlim[0])||!isfinite(zlim[1])){//invalid values.
+	if(zlim[0]>=zlim[1]||!isfinite(zlim[0])||!isfinite(zlim[1])){//invalid values.
+		//info("zlim=[%g,%g] is invalid. replace with %g, %g\n", zlim[0], zlim[1], min, max);
 		zlim[0]=min;
 		zlim[1]=max;
 	}else if(!zlim_manual){
@@ -540,9 +541,14 @@ void *listen_draw(void *user_data){
 				STREADSTR(drawdata->ylabel);
 				break;
 			case DRAW_ZLIM:
-				STREADFLT(drawdata->zlim, 2);
-				drawdata->zlim_manual=1;
-				drawdata->zlog_last=0;//zlim is not in log format.
+				if(drawdata->zlim_manual!=2){
+					STREADFLT(drawdata->zlim, 2);
+					drawdata->zlim_manual=1;
+					drawdata->zlog_last=0;//zlim is not in log format.
+				}else{
+					double temp[2];
+					STREADFLT(temp, 2);
+				}
 				break;
 			case DRAW_LEGEND:
 				for(int i=0; i<npts; i++){

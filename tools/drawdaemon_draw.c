@@ -544,9 +544,11 @@ repeat:
 				if(drawdata->zlog){
 					drawdata->zlim[2]=log10(drawdata->zlim[0]);
 					drawdata->zlim[3]=log10(drawdata->zlim[1]);
+					//info("convert zlim linear to log\n");
 				} else{
 					drawdata->zlim[0]=pow(10, drawdata->zlim[2]);
 					drawdata->zlim[1]=pow(10, drawdata->zlim[3]);
+					//info("convert zlim log to linear\n");
 				}
 			}
 			drawdata->zlog_last=drawdata->zlog;

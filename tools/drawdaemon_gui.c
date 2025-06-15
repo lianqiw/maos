@@ -1342,8 +1342,9 @@ static void limit_change(GtkSpinButton* spin, gfloat* val){
 static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->zlim_changed=1;
-	drawdata_dialog->zlim_manual=1;
-	update_zoom(drawdata_dialog);
+	drawdata_dialog->zlim_manual=2;//1: set by draw(). 2: set by gui.
+	drawdata_dialog->drawn=0;
+	//update_zoom(drawdata_dialog);
 	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkWidget* btn, gint* key){

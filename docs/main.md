@@ -20,8 +20,8 @@ following links for relevant information.
 - \ref skycoverage
 - \ref page90_devel
 
-<a href="https://github.com/downloads/lianqiw/files/maos_gpu.pdf">AO4ELT2 Paper on MAOS</a>
-
+<a href="https://github.com/lianqiw/files/blob/master/Wang_AO4ELT2_MAOS.pdf">AO4ELT2 Paper on MAOS</a>
+<a href="https://github.com/lianqiw/files/blob/master/Wang_SPIE2012_GPU.pdf">SPIE Paper on MAOS and GPU RTC </a>
 <p>
 
 Some benchmarking results using the TMT NFIRAOS (30 m aperture, 6 LGS, dual order 60x60 DM):
