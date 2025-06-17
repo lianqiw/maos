@@ -157,8 +157,8 @@ void free_parms(parms_t *parms){
 		dfree(parms->moao[imoao].actfloat);
 	}
 	free(parms->moao); parms->nmoao=0;
-	free(parms->aper.fnamp);
 	free(parms->aper.pupmask);
+	mapfree(parms->aper.amp);
 	lfree(parms->save.ints);
 	lfree(parms->save.wfsopd);
 	lfree(parms->save.grad);
@@ -1251,8 +1251,7 @@ static void readcfg_aper(parms_t *parms){
 	int nd=readcfg_dblarr(&dtmp,0,0,"aper.d");
 	switch(nd){
 	case 2:
-		parms->aper.din=dtmp[1];
-		//fallthrough
+		parms->aper.din=dtmp[1]; //fallthrough
 	case 1:
 		parms->aper.d=dtmp[0];
 		break;
@@ -1260,16 +1259,37 @@ static void readcfg_aper(parms_t *parms){
 		error("aper.d contains %d elements. But only 1 or 2 elements are supported.\n",nd);
 	}
 	free(dtmp);
-
-	if(parms->aper.d<=parms->aper.din){
-		error("Inner dimeter(%g) should be less than Outer Diameter(%g).\n",parms->aper.din,parms->aper.d);
-	} else if(parms->aper.d<0||parms->aper.din<0){
-		error("Inner (%g) and outer (%g) diameters should be positive.\n",parms->aper.din,parms->aper.d);
+	char *fnamp=readcfg_str("aper.fnamp");
+	if(fnamp){
+		info2("Reading aperture amplitude map from %s\n", fnamp);
+		parms->aper.amp=mapread("%s", fnamp);
+		real amp_d, amp_din;
+		map_d_din(parms->aper.amp, &amp_d, &amp_din);
+		if(!parms->aper.d){//use amp information
+			parms->aper.d=amp_d;
+			parms->aper.din=amp_din;
+		}else if(fabs(parms->aper.d-amp_d)>1||fabs(parms->aper.din-amp_din)>1){
+			info2("Amplitude map (%g, %g) does not match aperture diameter (%g, %g). Disabled\n",
+				amp_d, amp_din, parms->aper.d, parms->aper.din);
+			mapfree(parms->aper.amp);
+		}
+		if(parms->aper.amp && parms->aper.rot){
+			info("Pupil is rotated by %g deg\n", parms->aper.rot*180./M_PI);
+			dmaprot(parms->aper.amp, parms->aper.rot);
+		}
+		FREE(fnamp); 
+	}
+	if(parms->aper.d<=0){
+		error("Aperture outer diameter(%g) shall be positive\n",parms->aper.d);
+	} else if(parms->aper.d<=parms->aper.din){
+		error("Aperture inner diameter(%g) shall be less than outer diameter(%g).\n",parms->aper.din,parms->aper.d);
+	} else if(parms->aper.din<0){
+		error("Aperture inner diameter(%g) shall be positive.\n",parms->aper.din);
 	}
 	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
 	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
 	parms->aper.misregu=readcfg_dmat(2, 0, "aper.misregu");
-	READ_STR(aper.fnamp);
+	
 	READ_STR(aper.pupmask);
 }
 /**<
