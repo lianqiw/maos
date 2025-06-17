@@ -111,10 +111,10 @@ void maos_setup(const parms_t* parms){
 	}
 #endif
 	if(!parms->sim.evlol){
-		global->powfs=powfs=setup_powfs_init(parms, aper->ampground);
+		global->powfs=powfs=setup_powfs_init(parms, parms->aper.amp);
 		print_mem("After setup_powfs_init");
 		//Setup geometry and DM fitting parameters so we can flatten the DM in setup_surf.c
-		global->recon=recon=setup_recon_prep(parms, aper->ampground, powfs);
+		global->recon=recon=setup_recon_prep(parms, parms->aper.amp, powfs);
 		print_mem("After setup_recon_prep");
 		//pywfs_test(parms, powfs, recon);//as needed. needs recon->amod
 		//setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.
@@ -184,7 +184,7 @@ void maos_setup(const parms_t* parms){
 	if(parms->aper.misregu && (P(parms->aper.misregu,0) || P(parms->aper.misregu,1))){
 		//Setup un-calibrated misregistration
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			setup_powfs_amp(powfs, parms, aper->ampground, parms->aper.misregu, ipowfs);
+			setup_powfs_amp(powfs, parms, parms->aper.amp, parms->aper.misregu, ipowfs);
 		}
 	}
 #if USE_CUDA

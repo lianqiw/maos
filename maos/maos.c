@@ -87,7 +87,6 @@ static void* find_var(const char* name){
 	VAR_GET(aper,locs_dm),
 	VAR_GET(aper,amp),
 	VAR_GET(aper,amp1),
-	VAR_GET(aper,ampground),
 	VAR_GET(aper,mod),
 	VAR_GET(aper,mcc),
 	VAR_GET(aper,imcc),

@@ -32,26 +32,7 @@ performance evaluation. */
 aper_t* setup_aper(const parms_t* const parms){
 	aper_t* aper=mycalloc(1, aper_t);
 	tic;
-	if(parms->aper.fnamp){
-		info2("Reading aperture amplitude map from %s\n", parms->aper.fnamp);
-		aper->ampground=mapread("%s", parms->aper.fnamp);
-		if(fabs(aper->ampground->h)>1.e-14){
-			warning("ampground is not on ground, this is not tested\n");
-		} else{
-			real amp_d, amp_din;
-			map_d_din(aper->ampground, &amp_d, &amp_din);
-			if(fabs(parms->aper.d-amp_d)>1||
-				fabs(parms->aper.din-amp_din)>1){
-				info2("Amplitude map (%g, %g) does not match aperture diameter (%g, %g). Disabled\n",
-					amp_d, amp_din, parms->aper.d, parms->aper.din);
-				mapfree(aper->ampground);
-			}
-		}
-		if(parms->aper.rot){
-			info("Pupil is rotated by %g deg\n", parms->aper.rot*180./M_PI);
-			dmaprot(aper->ampground, parms->aper.rot);
-		}
-	}
+
 	if(parms->load.locs){
 		char* fn=parms->load.locs;
 		if(!zfexist("%s",fn)) error("%s doesn't exist\n", fn);
@@ -65,8 +46,8 @@ aper_t* setup_aper(const parms_t* const parms){
 				aper->locs->dx, parms->evl.dx);
 		}
 	} else{/* locs act as a pupil mask. no points outside will be evaluated. */
-		if(aper->ampground && fabs(parms->evl.dx-aper->ampground->dx)<EPS){
-			aper->locs=loc_from_map(aper->ampground, 0);
+		if(parms->aper.amp && fabs(parms->evl.dx-parms->aper.amp->dx)<EPS){
+			aper->locs=loc_from_map(parms->aper.amp, 0);
 		}else{
 			map_t* smap=0;
 			create_metapupil(&smap, 0, 0, parms->dirs, parms->aper.d, 0, parms->evl.dx, parms->evl.dx, 0, parms->evl.dx, 0, 0, 0, 0);
@@ -76,7 +57,7 @@ aper_t* setup_aper(const parms_t* const parms){
 	}
 	if(!aper->amp){
 		/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
-		aper->amp=mkamp(aper->locs, aper->ampground, 
+		aper->amp=mkamp(aper->locs, parms->aper.amp, 
 			-P(parms->aper.misreg, 0), -P(parms->aper.misreg, 1),
 			parms->aper.d, parms->aper.din);
 	}
@@ -153,13 +134,17 @@ aper_t* setup_aper(const parms_t* const parms){
 	if(parms->evl.psfmean||parms->evl.psfhist){
 		aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.wvl,
 			parms->evl.psfgridsize, 2, 0);
+		long nembed_old=0;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 			long nembed=P(aper->embed->nembed,iwvl);
 			if(P(parms->evl.psfsize,iwvl)<1||P(parms->evl.psfsize,iwvl) > nembed){
 				P(parms->evl.psfsize,iwvl)=nembed;
 			}
-			info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
-				iwvl, nembed, aper->sumamp2*nembed*nembed);
+			if(nembed!=nembed_old){
+				nembed_old=nembed;
+				info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
+					iwvl, nembed, aper->sumamp2*nembed*nembed);
+			}
 		}
 	}
 	toc2("setup_aper");
@@ -168,7 +153,7 @@ aper_t* setup_aper(const parms_t* const parms){
 /**
    Free the aper structure after simulation*/
 void free_aper(aper_t* aper){
-	/*aper->ampground is freed on setup_recon*/
+	/*parms->aper.amp is freed on setup_recon*/
 	locfree(aper->locs);
 	cellfree(aper->locs_dm);
 	dfree(aper->amp);
@@ -178,6 +163,5 @@ void free_aper(aper_t* aper){
 	dfree(aper->mod);
 	locfft_free(aper->embed);
 	dcellfree(aper->opdadd);
-	mapfree(aper->ampground);
 	free(aper);
 }

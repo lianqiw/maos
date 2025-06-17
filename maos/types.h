@@ -32,7 +32,6 @@ typedef struct aper_t{
     loccell *locs_dm;    /**<Distorted locs when mapped onto DM*/
     dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for performance evaluation*/
     dmat *amp1;          /**<amplitude map defined on locs, maximum is 1. use for plotting.*/
-    map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
     dmat *mod;           /**<modal column vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/

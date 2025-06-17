@@ -558,10 +558,10 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 /**
    Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).
 */
-dmat* mkamp(const loc_t* loc, const map_t* ampground, real misregx, real misregy, real D, real Din){
+dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
-	if(ampground){
-		prop_grid(ampground, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
+	if(aper){
+		prop_grid(aper, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
 	}else{
 		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
 	}

@@ -84,9 +84,9 @@ typedef struct aper_cfg_t{
     real d;     /**<Telescope aperture diameter*/
     real din;   /**<Telescope inner blocking diameter*/
     real rot;	/**<pupil rotation*/
+	map_t *amp; /**<Aperture amplitude map from aper.fnamp config. */
     dmat *misreg;  /**<Calibrated misregistration of the telescope pupil. 2x1*/
     dmat *misregu; /**<Uncalibrated misregistration of the telescope pupil. */
-    char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0)*/
     char *pupmask;/**<The pupil cold stop*/
 }aper_cfg_t;
 /**
@@ -692,7 +692,7 @@ typedef struct dbg_cfg_t{
     int tomo;        /**<Comparing tomography in GPU and CPU*/
     int fit;         /**<Comparing DM fitting in GPU and CPU*/
 
-    int gp_noamp;    /**<Use annular instead of ampground for GP*/
+    int gp_noamp;    /**<Use annular instead of aper.amp for GP*/
     dmat *atm;       /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     real gradoff_scale;/**<Scale the reference vector*/
 	int gradoff_reset;/**<reset gradoff after creating matched filter with dithering*/
