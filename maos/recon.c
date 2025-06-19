@@ -343,11 +343,10 @@ void recon_servo_update(sim_t* simu){
 			dcellzero(simu->dmerrts);
 			dmat *psd=psd_select(psdall, -1, 1, 0, 1./(NY(psdall)-1));//average all points
 			dfree(psdall);
-			//if(simu->save->psdcl) zfarr_push(simu->save->psdcl, -1, psd);
-			{//plot psd ol and cl before updating the gain
-				plot_psd(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep, "High", NULL,
+			//plot psd ol and cl before updating the gain
+			plot_psd(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, simu->dmint->ep, "High", NULL,
 				parms->plot.run, simu->save->psdcl, simu->save->psdol);
-			}
+			
 			if(NX(simu->dmint->ep)==1&&NY(simu->dmint->ep)==1){
 				dmat* psdol=servo_cl2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, P(simu->dmint->ep,0), 0);
 				dcell* coeff=servo_optim(parms->sim.dt, parms->sim.dtrat_hi, parms->sim.alhi, M_PI*0.25,
@@ -357,7 +356,8 @@ void recon_servo_update(sim_t* simu){
 				P(simu->dmint->ep,0)=oldep*(1-g)+P(P(coeff,0),0)*g;
 				info("Step %5d updated HO loop gain: %5.3f->%5.3f (%ld points)\n", 
 					simu->reconisim, oldep, P(simu->dmint->ep,0), NY(P(simu->dmerrts,0)));
-				//if(simu->save->psdol) zfarr_push(simu->save->psdol, -1, psdol);
+				if(simu->save->gain) P(P(simu->save->gain,0),(iacc/dtrat))=P(simu->dmint->ep,0);
+				
 				dcellfree(coeff);
 				dfree(psdol);
 			} else{
@@ -412,6 +412,7 @@ void recon_servo_update(sim_t* simu){
 						const real oldep=P(simu->Mint_lo->ep, 0, icol);
 						P(simu->Mint_lo->ep,0,icol)=oldep*(1.-g)+P(P(coeff,0),0)*g;
 						info("Step %5d updated LO loop gain: %5.3f->%5.3f (%ld points)\n", simu->reconisim, oldep, P(simu->Mint_lo->ep,0,icol), NY(simu->Merrts));
+						if(icol==0 && simu->save->gain) P(P(simu->save->gain,1+icol),(iacc/dtrat))=P(simu->Mint_lo->ep,0,icol);
 						dfree(psdol);
 						dcellfree(coeff);
 					} else{

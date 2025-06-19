@@ -115,9 +115,9 @@ static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
 	cairo_restore(cr);
 }
 
-static void pango_text_power(cairo_t *cr, PangoLayout *layout, float x, float y, int power, float fracx, float fracy, int vertical){
+static void pango_text_power(cairo_t *cr, PangoLayout *layout, float x, float y, float power, float fracx, float fracy, int vertical){
 	char powindex[40];
-	snprintf(powindex, 40, "10<sup>%d</sup>", power);
+	snprintf(powindex, 40, "10<sup>%g</sup>", power);
 	pango_text(cr, layout, x, y, powindex, fracx, fracy, vertical);
 }
 
@@ -126,7 +126,6 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 	float xmax, float xmin, int maxtic, int logscale){
 //when logscale is true, the xmin, xmax are already log of data.
 //dbg("xmin=%g, xmax=%g, \n", xmin, xmax);
-	(void)maxtic;
 	float diff=xmax-xmin;
 	/*first get the order of magnitude. */
 	float rmax=MAX(fabs(xmin), fabs(xmax));
@@ -141,16 +140,16 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 	xmin*=scale1;
 	diff*=scale1;
 	rmax*=scale1;
-	float spacing;
 	if(diff<rmax*1e-5){//handle special case
 		*tic1=round((0.5*(xmax+xmin)-0.1)*10)*0.1;
 		*dtic=0.2;
 		*ntic=2;
 	}else{
+		float spacing;
 		if(logscale){
-			spacing=1;
+			spacing=pow(2,ceil(log2(diff/maxtic)));
 		} else{
-			spacing=diff*0.1;
+			spacing=diff/maxtic;
 			float scale=pow(10., floor(log10(spacing)));
 			int ratio=(int)ceil(spacing/scale);//value of the first significant digit rounded up
 			//scale ratio up to keep maximum 10 tics
@@ -640,8 +639,8 @@ repeat:
 	
 	const float scalex=widthim/xdim;
 	const float scaley=heightim/ydim;
-	const int maxtic_x=widthim/(3*font_size);
-	const int maxtic_y=heightim/(3*font_size);
+	const int maxtic_x=MIN(widthim/(3*font_size),12);
+	const int maxtic_y=MIN(heightim/(3*font_size),12);
 	
 	drawdata->widthim=widthim;
 	drawdata->heightim=heightim;

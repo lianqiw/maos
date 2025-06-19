@@ -210,8 +210,6 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->zoomx=1;
 		drawdata->zoomy=1;
 		drawdata->square=-1;
-		drawdata->gray=0;
-		drawdata->ticinside=0;
 		drawdata->legendbox=1;
 		drawdata->legendcurve=1;
 		drawdata->legendoffx=1;
@@ -219,8 +217,6 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 		drawdata->xylog[0]='n';
 		drawdata->xylog[1]='n';
 		drawdata->cumulast=-1;/*mark as unknown. */
-		drawdata->limit_manual=0;
-		drawdata->zlim_manual=0;
 		pthread_mutex_init(&drawdata->mutex, NULL);
 		drawdata->next=HEAD->next;
 		HEAD->next=drawdata;
@@ -239,6 +235,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 			drawdata->session=session;
 			drawdata->limit_manual=0;
 			drawdata->zlim_manual=0;
+			drawdata->cumu=0;
 			drawdata->update_zoom=2;
 			drawdata->update_limit=1;
 		}

@@ -1158,7 +1158,7 @@ static void init_simu_wfs(sim_t* simu){
 	}
 }
 
-static void init_simu_dm(sim_t* simu){
+static void init_simu_recon(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
 	sim_save_t* save=simu->save;
@@ -1275,12 +1275,26 @@ static void init_simu_dm(sim_t* simu){
 		}
 	}
 	if(parms->recon.psd){
+		long mstep[2]={0,0};
 		if(parms->recon.psddtrat_hi){
 			simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, P(recon->Herr, 0)->nx,
 				parms->recon.psddtrat_hi);
+			if(parms->save.extra){
+				save->psdcl=zfarr_init(0, 0, "%s/Respsdcl_hi_%d.bin", fnextra, seed);
+				save->psdol=zfarr_init(0, 0, "%s/Respsdol_hi_%d.bin", fnextra, seed);	
+				mstep[0]=parms->sim.end/(parms->sim.dtrat_lo * parms->recon.psddtrat_lo);
+			}
 		}
 		if((parms->recon.split||parms->evl.split)&&parms->recon.psddtrat_lo){
 			simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
+			if(parms->save.extra){
+				save->psdcl_lo=zfarr_init(0, 0, "%s/Respsdcl_lo_%d.bin", fnextra, seed);
+				save->psdol_lo=zfarr_init(0, 0, "%s/Respsdol_lo_%d.bin", fnextra, seed);
+				mstep[1]=parms->sim.end/(parms->sim.dtrat_hi * parms->recon.psddtrat_hi);
+			}
+		}
+		if(parms->save.extra){
+			save->gain=dcellnew_file(2,1,mstep,0,"Gain update", "%s/Resgain_%d.bin", fnextra, seed);
 		}
 	}
 	int nstep=parms->sim.end;
@@ -1304,6 +1318,16 @@ static void init_simu_dm(sim_t* simu){
 			save->dmproj=zfarr_init(nstep, 1, "dmproj_%d.bin", seed);
 		}
 	}
+	if(parms->recon.alg==RECON_MVR){
+		if(parms->save.opdr){
+			save->opdr=zfarr_init(parms->sim.end-1, 1, "opdr_%d.bin", seed);
+		}
+		if(parms->save.opdx){
+			save->opdx=zfarr_init(parms->sim.end, 1, "opdx_%d.bin", seed);
+		}
+	}
+	simu->cgres=dcellnewsame_file(2, 1, parms->sim.end, 1, "CG residual for Tomography & DM Fit", 
+		"%s/ResCG_%d.bin", fnextra, seed);
 }
 
 /** MOAO **/
@@ -1387,7 +1411,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 	pthread_mutex_init(&simu->wfsgrad_mutex, 0);
 	simu->wfsgrad_isim=-1;
 
-	sim_save_t* save=simu->save=mycalloc(1, sim_save_t);
+	simu->save=mycalloc(1, sim_save_t);
 	simu->wfsisim=-1;
 	simu->perfisim=-1;
 	simu->reconisim=-2;
@@ -1450,34 +1474,12 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 		simu->wfsgrad_post=thread_prep(0, nwfs, nthread, wfsgrad_post, simu);
 	}
 	if(!parms->sim.evlol){
-		init_simu_dm(simu);
+		init_simu_recon(simu);
 		init_simu_moao(simu);
 		if(!parms->sim.idealtomo){
 			init_simu_wfs(simu);
 		}
-		if(parms->recon.alg==RECON_MVR){
-			int nstep=parms->sim.end;
-			if(parms->save.opdr){
-				save->opdr=zfarr_init(nstep-1, 1, "opdr_%d.bin", seed);
-			}
-			if(parms->save.opdx){
-				save->opdx=zfarr_init(nstep, 1, "opdx_%d.bin", seed);
-			}
-		}
-		{
-			const char* keywords="CG residual for Tomography; DM Fit";
-			simu->cgres=dcellnewsame_file(2, 1, parms->sim.end, 1, keywords, "%s/ResCG_%d.bin", fnextra, seed);
-		}
-		if(parms->recon.psd&&parms->save.extra){
-			if(parms->recon.psddtrat_hi){
-				save->psdcl=zfarr_init(0, 0, "%s/Respsdcl_hi_%d.bin", fnextra, seed);
-				save->psdol=zfarr_init(0, 0, "%s/Respsdol_hi_%d.bin", fnextra, seed);
-			}
-			if(parms->recon.psddtrat_lo){
-				save->psdcl_lo=zfarr_init(0, 0, "%s/Respsdcl_lo_%d.bin", fnextra, seed);
-				save->psdol_lo=zfarr_init(0, 0, "%s/Respsdol_lo_%d.bin", fnextra, seed);
-			}
-		}
+		
 	}
 	init_simu_evl(simu);
 #if USE_CUDA
@@ -1675,6 +1677,7 @@ void free_simu(sim_t* simu){
 	zfarr_close(save->psdol);
 	zfarr_close(save->psdcl_lo);
 	zfarr_close(save->psdol_lo);
+	dcellfree(save->gain);
 	dcellfree(simu->evlopd);
 	dfree(simu->lgsfocuslpf);
 	cellfree(simu->ints);

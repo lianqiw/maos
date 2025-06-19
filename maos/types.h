@@ -447,6 +447,7 @@ typedef struct sim_save_t{
     dcell* fsmerrs;    /**< file to store fsmerr history*/
     dcell* fsmcmds;    /**< file to store fsmcmd history*/
     dcell* ltpm_real; /**<file to store ltpm_real history*/
+	dcell* gain; /**<gain update time history. */
 }sim_save_t;
 /*
   data wrap for wfsints.
