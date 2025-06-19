@@ -2,7 +2,7 @@ var searchData=
 [
   ['ga_0',['ga',['../d6/d94/maos_2types_8h.html#a7370de9e257d05b2ace5e61d9f538a11',1,'recon_t::GA'],['../d4/d38/parms_8h.html#a323e8eafa8b63cc1aff6af7b5a9c9f4c',1,'load_cfg_t::GA']]],
   ['gahi_1',['GAhi',['../d6/d94/maos_2types_8h.html#a835f4a34defd67f02e4afc041a05f2e5',1,'recon_t']]],
-  ['gain_2',['gain',['../d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb',1,'pywfs_t']]],
+  ['gain_2',['gain',['../d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb',1,'pywfs_t::gain'],['../d6/d94/maos_2types_8h.html#aaf42af659e2ca89491e7b0e303e68551',1,'sim_save_t::gain']]],
   ['galo_3',['GAlo',['../d6/d94/maos_2types_8h.html#ae09109304ea3466f12a92c26d59f7f39',1,'recon_t']]],
   ['gcov_4',['gcov',['../d4/d38/parms_8h.html#a4d27c9fb9266760b6507e0b3ded11561',1,'save_cfg_t::gcov'],['../d6/d94/maos_2types_8h.html#a6c4283d5e0808547425fd1507cca9605',1,'sim_t::gcov']]],
   ['gcovp_5',['gcovp',['../d4/d38/parms_8h.html#a1e73b5f3ec311bc8d43ad2f4de71ea39',1,'save_cfg_t']]],
@@ -19,7 +19,7 @@ var searchData=
   ['gmax_16',['gmax',['../d4/d38/parms_8h.html#a289f538548a8a661af1cc51c796a3234',1,'plot_cfg_t']]],
   ['gngsmvst_17',['gngsmvst',['../d6/d94/maos_2types_8h.html#ac0a7f00e6b8ea7d0c4478a5fc9c0697e',1,'sim_t']]],
   ['gog_18',['gog',['../d4/d38/parms_8h.html#a092c3f92059dcbc080a8931311927e47',1,'dither_cfg_t']]],
-  ['gp_19',['gp',['../d6/d94/maos_2types_8h.html#a4a282b1fb0e3f7f9f5e577f41e8e304f',1,'recon_t::GP'],['../d4/d38/parms_8h.html#a5d6279396449b3ed92f52b082834d82a',1,'load_cfg_t::GP']]],
+  ['gp_19',['gp',['../d4/d38/parms_8h.html#a5d6279396449b3ed92f52b082834d82a',1,'load_cfg_t::GP'],['../d6/d94/maos_2types_8h.html#a4a282b1fb0e3f7f9f5e577f41e8e304f',1,'recon_t::GP']]],
   ['gp_5fnoamp_20',['gp_noamp',['../d4/d38/parms_8h.html#a9c48e15856c949aa188c2bc002fc990b',1,'dbg_cfg_t']]],
   ['gpll_21',['gpll',['../d4/d38/parms_8h.html#a17e26f44a8bc7d61fc388678d7282ee4',1,'dither_cfg_t']]],
   ['gpu_22',['gpu',['../d9/d19/pywfs_8h.html#aea7b10710994fc11ffb7259f75fb21ae',1,'pywfs_t::gpu'],['../d4/d38/parms_8h.html#a2a5c9dba1e2b9e1b329576678164074e',1,'parms_t::gpu']]],

@@ -610,14 +610,17 @@ nps</td>
 <div id="dynsection-2-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="../../d5/dda/structaper__cfg__t__coll__graph.png" border="0" usemap="#aaper__cfg__t_coll__map" alt="Collaboration graph"/></div>
 <map name="aaper__cfg__t_coll__map" id="aaper__cfg__t_coll__map">
-<area shape="rect" title=" " alt="" coords="41,276,124,341"/>
-<area shape="rect" title=" " alt="" coords="5,5,64,71"/>
-<area shape="poly" title=" " alt="" coords="30,71,23,131,23,165,28,198,39,230,55,260,50,263,34,232,23,199,18,165,17,131,25,71"/>
-<area shape="rect" href="../../d3/d27/structdmat.html" title=" " alt="" coords="69,133,117,199"/>
-<area shape="poly" title=" " alt="" coords="52,70,74,117,69,120,47,72"/>
-<area shape="poly" title=" " alt="" coords="90,199,87,223,85,260,79,259,81,222,85,198"/>
-<area shape="rect" title=" " alt="" coords="152,133,205,199"/>
-<area shape="poly" title=" " alt="" coords="175,200,166,227,152,253,138,270,134,266,147,251,161,225,170,198"/>
+<area shape="rect" title=" " alt="" coords="84,393,167,459"/>
+<area shape="rect" title=" " alt="" coords="51,5,109,71"/>
+<area shape="poly" title=" " alt="" coords="63,72,39,121,18,182,11,216,8,249,11,283,20,315,43,352,73,384,69,387,39,356,15,317,5,284,3,249,5,215,12,181,34,119,58,70"/>
+<area shape="rect" href="../../df/def/type_8h.html#d6/da3/structmap__t" title=" " alt="" coords="61,251,115,316"/>
+<area shape="poly" title=" " alt="" coords="82,71,81,142,84,227,85,234,79,235,79,227,76,143,77,71"/>
+<area shape="rect" href="../../d3/d27/structdmat.html" title=" " alt="" coords="140,251,188,316"/>
+<area shape="poly" title=" " alt="" coords="111,61,126,76,137,93,151,129,160,166,167,234,162,234,155,166,146,130,132,96,121,79,108,64"/>
+<area shape="poly" title=" " alt="" coords="87,316,87,342,92,369,95,377,90,379,87,370,82,343,82,316"/>
+<area shape="poly" title=" " alt="" coords="158,317,141,378,136,377,153,315"/>
+<area shape="rect" title=" " alt="" coords="233,251,287,316"/>
+<area shape="poly" title=" " alt="" coords="252,317,239,345,221,371,183,401,180,396,217,367,235,342,247,315"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -644,6 +647,13 @@ rot</td>
 <p>pupil rotation </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="ac7283357fd51e2dcba2f25f498062428" name="ac7283357fd51e2dcba2f25f498062428"></a><a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *</td>
+<td class="fieldname">
+amp</td>
+<td class="fielddoc">
+<p>Aperture amplitude map from aper.fnamp config. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="ae2954c86dea9ddd31254a7b5e940e765" name="ae2954c86dea9ddd31254a7b5e940e765"></a><a class="el" href="../../d3/d27/structdmat.html">dmat</a> *</td>
 <td class="fieldname">
 misreg</td>
@@ -658,17 +668,11 @@ misregu</td>
 <p>Uncalibrated misregistration of the telescope pupil. </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab58fa659977e671d883dc4597bb11ea9" name="ab58fa659977e671d883dc4597bb11ea9"></a>char *</td>
-<td class="fieldname">
-fnamp</td>
-<td class="fielddoc">
-</td></tr>
-<tr><td class="fieldtype">
 <a id="ad5e99c7003917875264e61c295f514bd" name="ad5e99c7003917875264e61c295f514bd"></a>char *</td>
 <td class="fieldname">
 pupmask</td>
 <td class="fielddoc">
-<p>amplitude maps. expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0) The pupil cold stop </p>
+<p>The pupil cold stop </p>
 </td></tr>
 </table>
 
@@ -4298,7 +4302,7 @@ fit</td>
 <td class="fieldname">
 gp_noamp</td>
 <td class="fielddoc">
-<p>Use annular instead of ampground for GP </p>
+<p>Use annular instead of aper.amp for GP </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a7fc309fe1d331dcb7c5a74bceea37e04" name="a7fc309fe1d331dcb7c5a74bceea37e04"></a><a class="el" href="../../d3/d27/structdmat.html">dmat</a> *</td>

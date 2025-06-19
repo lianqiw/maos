@@ -2,7 +2,7 @@ var searchData=
 [
   ['ga_0',['ga',['../d6/d94/maos_2types_8h.html#a7370de9e257d05b2ace5e61d9f538a11',1,'recon_t::GA'],['../d4/d38/parms_8h.html#a323e8eafa8b63cc1aff6af7b5a9c9f4c',1,'load_cfg_t::GA']]],
   ['gahi_1',['GAhi',['../d6/d94/maos_2types_8h.html#a835f4a34defd67f02e4afc041a05f2e5',1,'recon_t']]],
-  ['gain_2',['gain',['../d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb',1,'pywfs_t']]],
+  ['gain_2',['gain',['../d6/d94/maos_2types_8h.html#aaf42af659e2ca89491e7b0e303e68551',1,'sim_save_t::gain'],['../d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb',1,'pywfs_t::gain']]],
   ['galo_3',['GAlo',['../d6/d94/maos_2types_8h.html#ae09109304ea3466f12a92c26d59f7f39',1,'recon_t']]],
   ['gcov_4',['gcov',['../d4/d38/parms_8h.html#a4d27c9fb9266760b6507e0b3ded11561',1,'save_cfg_t::gcov'],['../d6/d94/maos_2types_8h.html#a6c4283d5e0808547425fd1507cca9605',1,'sim_t::gcov']]],
   ['gcovp_5',['gcovp',['../d4/d38/parms_8h.html#a1e73b5f3ec311bc8d43ad2f4de71ea39',1,'save_cfg_t']]],

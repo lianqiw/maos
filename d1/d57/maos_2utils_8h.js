@@ -8,7 +8,7 @@ var maos_2utils_8h =
     [ "parse_args", "d1/d57/maos_2utils_8h.html#ab378e384b5122058cbcb93fd61c9a96c", null ],
     [ "evl_keywords", "d1/d57/maos_2utils_8h.html#aaa75b5b04fbbb1aa2917bf328634b532", null ],
     [ "plot_setup", "d1/d57/maos_2utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822", null ],
-    [ "mkamp", "d1/d57/maos_2utils_8h.html#a1efa16926a3112dd34fe9c2ca840c614", null ],
+    [ "mkamp", "d1/d57/maos_2utils_8h.html#a9d77bf8d1060f2b89962556f1b3b8d3e", null ],
     [ "maxapriori", "d1/d57/maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e", null ],
     [ "wfslinearity", "d1/d57/maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5", null ],
     [ "lgs_wfs_sph_psd", "d1/d57/maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10", null ],

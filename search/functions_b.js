@@ -26,7 +26,7 @@ var searchData=
   ['mk1dloc_23',['mk1dloc',['../d1/d83/loc_8h.html#a6ef5cd9b22670264b85175098423fb54',1,'loc.c']]],
   ['mk1dloc_5fvec_24',['mk1dloc_vec',['../d1/d83/loc_8h.html#a0bfa1664ab178df9890c23b3b47c3d6a',1,'loc.c']]],
   ['mk2dcov_25',['mk2dcov',['../df/da9/genotf_8h.html#a5e9b2c443f945528b67a1178b82b1b73',1,'genotf.c']]],
-  ['mkamp_26',['mkamp',['../d1/d57/maos_2utils_8h.html#a1efa16926a3112dd34fe9c2ca840c614',1,'utils.c']]],
+  ['mkamp_26',['mkamp',['../d1/d57/maos_2utils_8h.html#a9d77bf8d1060f2b89962556f1b3b8d3e',1,'utils.c']]],
   ['mkannloc_27',['mkannloc',['../d1/d83/loc_8h.html#ae3ff7dce2c0f49a6e1afb12d559fa4a3',1,'loc.c']]],
   ['mkdtf_28',['mkdtf',['../d6/d89/mkdtf_8h.html#aecc59f77035e09a61d1d74fa4a9d12ab',1,'mkdtf.c']]],
   ['mketf_29',['mketf',['../d6/d89/mkdtf_8h.html#a23757e9470a03af49f7e86f4d2e94435',1,'mkdtf.c']]],

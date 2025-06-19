@@ -103,9 +103,29 @@ $(document).ready(function(){initNavTree('d0/d10/ltao.html','../../'); initResiz
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><div class="fragment"><div class="line">#File ltao.conf</div>
-<div class="line">include=mcao_lgs.conf</div>
-<div class="line">include=dm_single.conf</div>
-<div class="line">include=fov_oa.conf</div>
+<div class="line">#A basic LTAO system with no implementation errors.</div>
+<div class="line"> </div>
+<div class="line">#defines simulation parameters.</div>
+<div class="line">include     = sim.conf</div>
+<div class="line"> </div>
+<div class="line">#AO type. </div>
+<div class="line">include     = dm_single.conf #LTAO with single DM</div>
+<div class="line"> </div>
+<div class="line">#Atmospheric profile</div>
+<div class="line">include     = atm_mk13n50p.conf #Mauna Kea 13N 50%.</div>
+<div class="line"> </div>
+<div class="line">#Wavefront sensor </div>
+<div class="line">include=wfs_lgs_ttf_tt.conf</div>
+<div class="line"> </div>
+<div class="line">#Evaluation and fitting FoV information.</div>
+<div class="line">include     = fit_cir30.conf</div>
+<div class="line">include     = evl_oa.conf</div>
+<div class="line"> </div>
+<div class="line">#Including configurations for reconstruction (tomo/fitting)</div>
+<div class="line">include     = recon.conf</div>
+<div class="line"> </div>
+<div class="line">#For debugging purpose</div>
+<div class="line">include     = dbg.conf</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

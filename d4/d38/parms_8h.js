@@ -48,6 +48,7 @@ var parms_8h =
       [ "d", "d4/d38/parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7", null ],
       [ "din", "d4/d38/parms_8h.html#a09ae154f837db49c7cb8ba98666c8c5a", null ],
       [ "rot", "d4/d38/parms_8h.html#a3eaec0255616afce501e04a304fe1eb7", null ],
+      [ "amp", "d4/d38/parms_8h.html#ac7283357fd51e2dcba2f25f498062428", null ],
       [ "misreg", "d4/d38/parms_8h.html#ae2954c86dea9ddd31254a7b5e940e765", null ],
       [ "misregu", "d4/d38/parms_8h.html#a1b3586fba1bd11580eac766c9f17c889", null ],
       [ "pupmask", "d4/d38/parms_8h.html#ad5e99c7003917875264e61c295f514bd", null ]

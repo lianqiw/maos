@@ -5,7 +5,6 @@ var maos_2types_8h =
       [ "locs_dm", "d6/d94/maos_2types_8h.html#aeebf41252a1f794cf5347af1f60036fa", null ],
       [ "amp", "d6/d94/maos_2types_8h.html#ade0824ca484c50afc3878a7400f75ac1", null ],
       [ "amp1", "d6/d94/maos_2types_8h.html#a480083698bc0eb7bd229bd0ee9ad7615", null ],
-      [ "ampground", "d6/d94/maos_2types_8h.html#a709c5f3c070e2966671e273c04469d34", null ],
       [ "mod", "d6/d94/maos_2types_8h.html#a82dd38e5da494d4da22c77b88eba376e", null ],
       [ "imcc", "d6/d94/maos_2types_8h.html#af14d18422b62549ec417a75e64fa9439", null ],
       [ "ipcc", "d6/d94/maos_2types_8h.html#aaa286b3af6f54cc7c0157956a85e90c3", null ],
@@ -302,7 +301,8 @@ var maos_2types_8h =
       [ "restwfs", "d6/d94/maos_2types_8h.html#a52bae7f8a761a5049eed0a6f26a72cbf", null ],
       [ "fsmerrs", "d6/d94/maos_2types_8h.html#af34aa73f18f48d23702697d78e41c59d", null ],
       [ "fsmcmds", "d6/d94/maos_2types_8h.html#a1464b135e09709aefdcc383b76a71b67", null ],
-      [ "ltpm_real", "d6/d94/maos_2types_8h.html#ad8c8136c23a6782aa7428a74776d1c5e", null ]
+      [ "ltpm_real", "d6/d94/maos_2types_8h.html#ad8c8136c23a6782aa7428a74776d1c5e", null ],
+      [ "gain", "d6/d94/maos_2types_8h.html#aaf42af659e2ca89491e7b0e303e68551", null ]
     ] ],
     [ "wfsints_t", "d6/d94/maos_2types_8h.html#db/dc4/structwfsints__t", null ],
     [ "dither_t", "d6/d94/maos_2types_8h.html#d3/def/structdither__t", [

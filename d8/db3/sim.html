@@ -108,7 +108,7 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">#Entries marked as (engineering) are not used for normal simulations</div>
 <div class="line">#path=dir #add dir to path. Relative to the directory of enclosing conf file unless absolute path is used.</div>
 <div class="line">#Telescope Aperture Configuration.</div>
-<div class="line">aper.d        = [30 3.6] #outer (d) and inner diameter (din) in meter. may contain one number for [d] or two numbers for [d din]. din=0 when omitted.</div>
+<div class="line">aper.d        = [0] #outer (d) and inner diameter (din) in meter. may contain one number for [d] or two numbers for [d din]. din=0 when omitted. [0] to use size from aper.fnamp</div>
 <div class="line">aper.fnamp    = &quot;TMT_23cm6.bin&quot; #The telescope aperture amplitude map file. It contains a nx*ny 2d array of values between 0 and 1 with the following keywords:</div>
 <div class="line">                  # dx, dy: grid spacing in m.</div>
 <div class="line">                  # ox oy: grid origin in m. FFT style origin (-nx/2*dx) is used if omitted.</div>
