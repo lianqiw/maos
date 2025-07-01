@@ -909,12 +909,12 @@ void create_window(
 		update_title(GINT_TO_POINTER(ihost));
 		//gtk_widget_show_all(pages[ihost]);
 	}
-	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), nhost);
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(window);
 #else
 	gtk_window_present(GTK_WINDOW(window));
 #endif
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), nhost);//need to be after show_all
 	//do it here to prevent memory error.
 	usage_cpu=mycalloc(nhost, double);
 	//usage_mem=mycalloc(nhost,double);

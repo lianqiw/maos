@@ -485,7 +485,7 @@ void remove_file_older(const char* fndir, int level, long sec){
 		snprintf(fnfull, PATH_MAX, "%s/%s", fndir, dp->d_name);
 		if(!stat(fnfull, &buf)){
 			if(S_ISDIR(buf.st_mode)){
-				if(level>0) remove_file_older(fnfull, level-1, sec);
+				if(level!=0) remove_file_older(fnfull, level-1, sec);
 			} else if(S_ISREG(buf.st_mode)&&(buf.st_atime<=sec2||sec==0)){
 				if(check_suffix(fnfull, ".bin")||check_suffix(fnfull, ".lock")){
 					remove(fnfull);
@@ -970,4 +970,41 @@ void mystrrep(char *str, const char *prefix, const char *substitute){
 		memcpy(str, substitute, nsub);
 		memmove(str+nsub, str+npre, nstr-npre+1);
 	}
+}
+/**
+ * @brief Convert time in seconds to string representation with minimal length
+ * 
+ * @param tmp 	target memory
+ * @param stmp 	length of target memory
+ * @param sec 	time in seconds
+ */
+int sec2str(char*tmp, long stmp, double sec){
+	if(stmp<0) return 0;
+	if(sec<0) sec=0; //ignore negative
+	int offset=0;
+	long hr=sec/3600; sec-=hr*3600;
+	long m=sec/60; sec-=m*60;
+	if(hr){
+		offset+=snprintf(tmp+offset, stmp-offset, "%ldh", hr);
+		sec=0;//ignore remaining seconds
+		if(hr>5){
+			m=0;
+		}
+	}
+	if(m){
+		offset+=snprintf(tmp+offset, stmp-offset, "%ldm", m);
+		if(m>5){
+			sec=0;//ignore seconds
+		}else{
+			sec=round(sec);//ignore fraction seconds
+		}
+	}
+	if(sec>10){
+		offset+=snprintf(tmp+offset, stmp-offset, "%.0f", sec);
+	}else if(sec>0){
+		offset+=snprintf(tmp+offset, stmp-offset, "%.2g", sec);
+	}else if(offset==0){
+		offset+=snprintf(tmp+offset, stmp-offset, "0");
+	}
+	return offset;
 }
