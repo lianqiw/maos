@@ -502,7 +502,7 @@ cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 				P(cn2est->dmht, idm)=parms->dm[idm].ht;
 			}
 		}
-		if(parms->save.setup){
+		if(parms->save.setup>1){
 			writebin(cn2est->overlapi, "cn2_overlapi");
 			writebin(cn2est->iPnk, "cn2_iPnk");
 			writebin(cn2est->Pnk, "cn2_Pnk");

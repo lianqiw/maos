@@ -151,6 +151,6 @@ void mmap_read_header(char **p0, uint32_t *magic, long *nx, long *ny, const char
 typedef struct async_t async_t;
 async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
       const char* str, const void* p, const uint64_t nx, const uint64_t ny);
-void async_write(async_t* async, long offset, int wait);
+int async_write(async_t* async, long offset, int wait);
 void async_free(async_t* async);
 #endif

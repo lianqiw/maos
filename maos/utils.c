@@ -477,7 +477,7 @@ arg_t* parse_args(int argc, const char* argv[]){
  */
 char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
 	char keywords[400];
-	int nembed=P(aper->embed->nembed,iwvl);
+	int nembed=P(aper->locfft->nembed,iwvl);
 	real wvl=P(parms->evl.wvl,iwvl);
 	real sumamp2=aper->sumamp2;
 	snprintf(keywords, sizeof(keywords),

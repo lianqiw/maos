@@ -9,12 +9,12 @@ import scipy
 import warnings
 np.set_printoptions(threshold=100,suppress=False,precision=4,floatmode='maxprec',linewidth=120)
 from scipy.special import erf
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid as cumtrapz
 from numpy import sqrt, exp, log, floor, ceil, nan, pi, sin, cos, tan, arcsin, arccos
 from numpy.random import rand, randn
 from numpy.fft import fft,ifft,fft2, ifft2, fftshift
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure, plot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close
+from matplotlib.pyplot import figure, plot, subplot, semilogx, semilogy, loglog, xlabel, ylabel, legend, grid, clf, subplot, xlabel, ylabel, title, xlim, ylim,clim, close
 from cycler import cycler
 try:
     from natsort import natsorted
@@ -248,7 +248,9 @@ def grad_ttfr(grad, saloc):
 def loc_zernike_proj(loc, rmin, rmax, radonly=0, D=0):
     '''Project onto zernike mode between rmin and rmax from opd which is defined on loc'''
     #D=np.max(np.max(loc,axis=1)-np.min(loc, axis=1))
-    mod=aos.zernike(loc, D, rmin, rmax, radonly).T
+    mod=aos.zernike(loc, D, rmin, rmax, radonly)
+    if mod.ndim==1:
+        mod.shape=(1,mod.size)
     rmod=np.linalg.pinv(mod)
     return mod, rmod
 #remove zernike modes from rmin to rmax from 1-D OPD and loc
@@ -260,8 +262,14 @@ def opd_loc_project_zernike(opd, loc, rmin, rmax, radonly=0):
 def opd_loc_remove_zernike(opd, loc, rmin, rmax, radonly=0):
     '''Remove zernike mode between rmin and rmax from opd which is defined on loc'''
     mod, rmod=loc_zernike_proj(loc, rmin, rmax, radonly)
-    opd2=opd-mod@(rmod@opd)
+    opd2=opd-(opd@rmod)@mod
     return opd2
+
+def opd_loc_remove_ttf(opd, loc):
+    '''Remove piston/tip/tilt/focus'''
+    mod=aos.zernike(loc, 0, 0, 2, 0)[0:4,:]
+    rmod=np.linalg.pinv(mod)
+    return opd-(opd@rmod)@mod
 
 def calc_roc_k(x, y, height):
     '''compute radius of curvature and conic factor'''

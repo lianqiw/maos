@@ -427,7 +427,7 @@ dcell *KL_vonkarman_full(const loc_t *loc, int ttr, real iac, real L0){
 	}else{
 		uint32_t key=lochash(loc, 0);
 		char fn[PATH_MAX];
-		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%d_%g_%u.bin", L0, loc->nloc, ttr, iac, key);
+		snprintf(fn, sizeof(fn), "KL/KL_vonkarman_%g_%ld_%d_%g_%u", L0, loc->nloc, ttr, iac, key);
 		CACHE_FILE(res, fn, dcellread, ({res=KL_vonkarman_do(loc, ttr, iac, L0);}), writebin);
 	}
 	return res;

@@ -37,7 +37,7 @@ typedef struct aper_t{
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
     real ipcc;           /**<piston term in imcc.*/
     real sumamp2;        /**<sum of amplitude squared*/
-    locfft_t *embed;     /**<For computing PSF with FFT*/
+    locfft_t *locfft;     /**<For computing PSF with FFT*/
     real fcp;            /**<piston correction in focus term.*/
     dcell *opdadd;       /**<All OPD surface for each evaluation direction, used for ray tracing*/
     dcell *opdbias;      /**<NCPA OPD surface for each NCPA direction, used for dm_ncpa calibration.*/
