@@ -1793,7 +1793,7 @@ static void readcfg_save(parms_t *parms){
 	parms->save.gradgeom=readcfg_lmat(parms->nwfs,1,"save.gradgeom");
 	if(disable_save){
 		parms->save.extra=0;
-		if(parms->save.all||parms->save.setup||parms->save.setup){
+		if(parms->save.all||parms->save.setup){
 			error("Save is enabled. Please specify output directory.\n");
 		}
 	}

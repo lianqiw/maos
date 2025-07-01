@@ -710,7 +710,7 @@ dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, cons
 	if(mod) key=dhash(mod, key);
 	if(opdadd) key=dhash(opdadd, key);
 	char fn[PATH_MAX-10];
-	snprintf(fn, sizeof(fn), "G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2.bin", 
+	snprintf(fn, sizeof(fn), "G/G_%ld_%ld_%ld_%g_%d_%g_%g_%g_%g_%g_%u_v2", 
 		P(pywfs->locfft->nembed, 0), locin->nloc, NY(mod), pycfg->modulate*RAD2MAS, pycfg->modulpos,
 		locin->iac, displacex, displacey, 1., pycfg->poke*1e9, key);
 	dmat *gg=0;

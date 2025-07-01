@@ -36,7 +36,7 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		cuglobal->perf.wvls.init(nwvl, 1);
 
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cuglobal->perf.nembed[iwvl]=(int)aper->embed->nembed->p[iwvl];
+			cuglobal->perf.nembed[iwvl]=(int)aper->locfft->nembed->p[iwvl];
 			cuglobal->perf.psfsize[iwvl]=parms->evl.psfsize->p[iwvl];
 			cuglobal->perf.wvls[iwvl]=parms->evl.wvl->p[iwvl];
 		}
@@ -50,7 +50,7 @@ void gpu_perfevl_init(const parms_t* parms, aper_t* aper){
 		if(parms->evl.psfmean||parms->evl.psfhist){
 			cudata->perf.embed.init(nwvl, 1);//(int**) calloc(nwvl, sizeof(int*));
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-				cp2gpu(cudata->perf.embed[iwvl], P(aper->embed->embed->p[iwvl]), aper->locs->nloc, 1);
+				cp2gpu(cudata->perf.embed[iwvl], P(aper->locfft->embed->p[iwvl]), aper->locs->nloc, 1);
 			}
 		}
 	}/*for igpu */

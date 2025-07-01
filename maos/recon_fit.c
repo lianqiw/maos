@@ -429,7 +429,7 @@ void setup_recon_fit(recon_t* recon, const parms_t* parms){
 		dcellfree(recon->actextrap);
 		recon->actextrap=dspcellref(fit->actextrap);
 	}
-	if(parms->save.setup){
+	if(parms->save.setup>1){
 		writebin(fit->HA, "HA");
 		if(fit->actcpl) writebin(fit->actcpl, "fit_actcpl");
 		if(fit->actextrap) writebin(fit->actextrap, "fit_actextrap");

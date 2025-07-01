@@ -674,7 +674,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		}//for ipowfs
 	}
 
-	if(parms->save.setup||parms->save.ncpa){
+	if(parms->save.setup>1||parms->save.ncpa){
 		writebin(aper->opdadd, "evl_opdadd.bin");
 		writebin(aper->opdbias, "evl_opdbias.bin");
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

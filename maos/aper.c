@@ -132,11 +132,11 @@ aper_t* setup_aper(const parms_t* const parms){
 	}
 
 	if(parms->evl.psfmean||parms->evl.psfhist){
-		aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.wvl,
+		aper->locfft=locfft_init(aper->locs, aper->amp, parms->evl.wvl,
 			parms->evl.psfgridsize, 2, 0);
 		long nembed_old=0;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-			long nembed=P(aper->embed->nembed,iwvl);
+			long nembed=P(aper->locfft->nembed,iwvl);
 			if(P(parms->evl.psfsize,iwvl)<1||P(parms->evl.psfsize,iwvl) > nembed){
 				P(parms->evl.psfsize,iwvl)=nembed;
 			}
@@ -161,7 +161,7 @@ void free_aper(aper_t* aper){
 	dfree(aper->imcc);
 	dfree(aper->mcc);
 	dfree(aper->mod);
-	locfft_free(aper->embed);
+	locfft_free(aper->locfft);
 	dcellfree(aper->opdadd);
 	free(aper);
 }

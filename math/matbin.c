@@ -25,6 +25,7 @@
    Function to write dense matrix data into a file pointer. Generally used by
    library developer */
 void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
+	int ans=0;
 	if(ncol==-1){//initialize async data
 		if(A){
 			if(!A->async){
@@ -48,14 +49,17 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 				warning("ncol=%ld>ny=%ld\n", ncol, ny);
 				ncol=ny;
 			}
-			async_write(A->async, nx*ncol*sizeof(T), 0);
+			ans=async_write(A->async, nx*ncol*sizeof(T), 0);
 		}
 	}else if(fp){//normal writing
 		if(A->make_keywords) A->make_keywords((cell*)A);
-		writearr(fp, 0, sizeof(T), M_T, A?A->keywords:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
+		ans=writearr(fp, 0, sizeof(T), M_T, A?A->keywords:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
 	}else{
 		dbg("writedata called with invalid fp(%p) or async (ncol=%ld) information, canceled.\n", fp, ncol);
 		print_backtrace();
+	}
+	if(ans){
+		error("writedata failed\n");
 	}
 }
 

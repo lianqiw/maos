@@ -514,7 +514,11 @@ int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* f
 	}
 	if(fp->err){
 		if(errno) perror("zfwrite_do");
-		warning("write %lu bytes to %s failed\n", tot, fp->fn);
+		if(errno==ENOSPC){
+			error("not space left in device\n");
+		}else{
+			warning("write %lu bytes to %s failed\n", tot, fp->fn);
+		}
 	}
 	return fp->err;
 }
@@ -524,8 +528,8 @@ int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* f
 */
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-	if(!ptr || !size || !nmemb || !fp){
-		warning("zfwrite: invalid input\n");
+	if(!ptr || !size || !nmemb || !fp || fp->err){
+		warning("zfwrite: invalid input or error in file.\n");
 		return -1;
 	}
 	int ans=0;
@@ -1137,10 +1141,15 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 	header_t header={magic, nx, ny, (char *)str};
 	write_header(&header, fp);
 	//long pos=zfpos(fp);
-	if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
+	int ans=0;
+	if(nx*ny>0){
+		if((ans=zfwrite(p, size, nx*ny, fp))){
+			error("writearr failed\n");
+		}
+	}
 	//else dbg("writearr: size is zero: %s %ldx%ld\n", zfname(fp), nx, ny);
 	if(isfn) zfclose(fp);
-	return 0;
+	return ans;
 }
 
 
@@ -1433,24 +1442,25 @@ static void async_sync(async_t* async, int wait){
 /**
  * Write to file asynchronously. offset is the end of block that is ready to write.
  * */
-void async_write(async_t* async, long offset, int wait){
+int async_write(async_t* async, long offset, int wait){
 	if(!async||async->fp->err){
 		if(!async){
 			dbg("async is empty.\n");
+			return 0;
 		}else{
 			dbg("%s: previous aio_write returned err=%d.\n", zfname(async->fp), async->fp->err);
+			return -1;
 		}
-		return;
 	}
+	long ans=0;
 #if USE_ASYNC
-	long ans;
 	//synchronize previous operation
 	if(async->aio.aio_nbytes){
 		async_sync(async, wait);
 	}
 	if(!wait&&async->aio.aio_nbytes){
 		//dbg("%s: skip this write\n", zfname(async->fp));
-		return;
+		return 0;
 	}
 	if(offset>async->prev){//queue next.
 		memset(&async->aio, 0, sizeof(struct aiocb));//macos recommends zeroing the buffer.
@@ -1464,6 +1474,7 @@ void async_write(async_t* async, long offset, int wait){
 				async->aio.aio_nbytes=0;
 			}else{//mark as permanent failure
 				zferr(async->fp, 2);
+				ans=-1;
 				warning("%s: aio_write failed with errno %d:%s.\n", zfname(async->fp), errno, strerror(errno));
 			}
 		}else{//update previous marker only if success
@@ -1476,12 +1487,14 @@ void async_write(async_t* async, long offset, int wait){
 	if(nwrite<0){
 		perror("pwrite");
 		warning("pwrite returns %d\n", nwrite);
+		ans=-1;
 	}else if(nwrite<offset-async->prev){
 		async->prev+=nwrite;
 	}else{
 		async->prev=offset;
 	}
 #endif	
+	return ans;
 }
 void async_free(async_t* async){
 	if(!async) return;
