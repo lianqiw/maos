@@ -59,6 +59,8 @@ enum{
 	
 	COL_TOT,
 };
+#define SHOW_SOUT 1 //Show output path
+#define SHOW_STEPT 1 //Show step time separately
 static GtkListStore* listall=NULL;
 static GtkTreeModel** lists=NULL;
 static GtkWidget** views=NULL;
@@ -97,14 +99,6 @@ static void list_proc_update(proc_t* p){
 	} else{
 		p->frac=1;//finish too soon.
 	}
-	const long tot=ps->rest+ps->laps;/*show total time. */
-	const long toth=tot/3600;
-	const long totm=(tot-toth*3600)/60;
-	const long tots=tot-toth*3600-totm*60;
-	const long rest=ps->rest;
-	const long resth=rest/3600;
-	const long restm=(rest-resth*3600)/60;
-	const long rests=rest-resth*3600-restm*60;
 	const double step=ps->tot*ps->scale;//scale is normally 1
 	/*if(ps->iseed!=p->iseed_old){
 		char tmp[64];
@@ -116,16 +110,23 @@ static void list_proc_update(proc_t* p){
 		p->iseed_old=ps->iseed;
 	}*/
 	char stmp[8];
-	snprintf(stmp, 8, "%.3f", step);
+	sec2str(stmp, sizeof(stmp), step);
+
 	char tmp[64];
-	if(toth>99){
-		snprintf(tmp, 64, "%d/%d %d/%d %ldh/%ldh", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, resth, toth);
-	} else if(toth>0){
-		snprintf(tmp, 64, "%d/%d %d/%d %ldh%02ld/%ldh%02ld", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, resth, restm, toth, totm);
-	} else{
-		snprintf(tmp, 64, "%d/%d %d/%d %02ld:%02ld/%02ld:%02ld", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend, restm, rests, totm, tots);
-	}
+	snprintf(tmp, 64, "%d/%d %d/%d ", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend);
+	unsigned int offset=strlen(tmp);
 	
+	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, ps->rest);
+	if(offset+1<sizeof(tmp)){
+		tmp[offset]='/';offset++;
+	}
+	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, ps->rest+ps->laps);
+#if SHOW_STEPT==0	
+	if(offset<sizeof(tmp)){
+		tmp[offset]=' ';offset++;
+	}
+	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, step);
+#endif
 	gtk_list_store_set(listall, &iter,
 		COL_STEPT, stmp,
 		COL_STEP, tmp,
@@ -201,6 +202,7 @@ static void list_proc_append(proc_t *p){
 					memmove(tmp, pos3, strlen(pos3)+1);
 				}
 			}
+#if SHOW_SOUT == 0			
 			if(sout){
 				if(strstr(spath, " -o ")){//there is room for space after -o
 					strcat(sargs, " -o ");
@@ -209,6 +211,7 @@ static void list_proc_append(proc_t *p){
 				}
 				strcat(sargs, sout);//append sout back to sargs. Cannot overflow
 			}
+#endif			
 		}
 		{
 			stooltip=strdup(sargs);
@@ -320,13 +323,10 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	switch(type){
 	case 0:
 		render=gtk_cell_renderer_text_new();
-#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 18
-		gtk_cell_renderer_set_padding(render, 1, 1);
-		gtk_cell_renderer_set_alignment(render, 1, 0.5);
-#endif
 		break;
 	case 1:
 		render=gtk_cell_renderer_progress_new();
+		g_object_set(G_OBJECT(render), "text-xalign", 0.0, NULL);
 		break;
 	case 2:
 		render=gtk_cell_renderer_pixbuf_new();
@@ -334,22 +334,26 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	default:
 		error("Invalid\n");
 	}
+#if GTK_VERSION_AFTER(2, 18)
+	gtk_cell_renderer_set_padding(render, 1, 1);
+	gtk_cell_renderer_set_alignment(render, 1, 0.5);
+#endif
 	gtk_tree_view_column_set_title(col, title);
 	gtk_tree_view_column_set_spacing(col, 2);
 	gtk_tree_view_column_set_alignment(col, 1);
-
 	//column only hides text when 1) maxwidth is set, 2) ellipsize is set
 	if(width){
 		gtk_tree_view_column_set_min_width(col, abs(width));
-		//resizeable makes the column very small if not expand.
-		gtk_tree_view_column_set_resizable(col, (width)?TRUE:FALSE);
-		gtk_tree_view_column_set_expand(col, (width<0)?TRUE:FALSE);
-	
-		if(type==0){//set ellipsize makes it shrinkable
+		if(type==0 && width<0){//set ellipsize makes it shrinkable than minimal needed size.
 			g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_START, NULL);
 		}
 	}
-	gtk_tree_view_column_pack_start(col, render, TRUE);
+	const int expandable=(width<0)?TRUE:FALSE;
+	const int resizable=width?TRUE:FALSE;//resizeable makes the column very small if not expand.
+
+	gtk_tree_view_column_set_resizable(col, resizable);//allow user to grab and resize
+	gtk_tree_view_column_set_expand(col, expandable);//cell is expandable within column
+	gtk_tree_view_column_pack_start(col, render, expandable);//column is expandable
 	va_list ap;
 	va_start(ap, title);
 	const char* att=NULL;
@@ -806,13 +810,17 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Directory", "text", COL_PATH, NULL));
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 100, "Start Dir", "text", COL_PATH, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Arguments", "text", COL_ARGS, NULL));
-	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Out", "text", COL_OUT, NULL));
+#if SHOW_SOUT 
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Out Dir", "text", COL_OUT, NULL));
+#endif
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));
+#if SHOW_STEPT	
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_STEPT, NULL));
+#endif	
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value", COL_STEPP, NULL));
 	

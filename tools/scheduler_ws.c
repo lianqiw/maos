@@ -113,24 +113,6 @@ dump_handshake_dbg(struct lws* wsi){
 	}
 }
 
-const char* get_mimetype(const char* file){
-	int n=strlen(file);
-
-	if(n<5)
-		return NULL;
-
-	if(!strcmp(&file[n-4], ".ico"))
-		return "image/x-icon";
-
-	if(!strcmp(&file[n-4], ".png"))
-		return "image/png";
-
-	if(!strcmp(&file[n-5], ".html"))
-		return "text/html";
-
-	return NULL;
-}
-
 /* this protocol server (always the first one) just knows how to do HTTP */
 
 static int callback_http(struct lws* wsi,
@@ -168,7 +150,6 @@ static int callback_http(struct lws* wsi,
 		/* if not, send a file the easy way */
 		strcpy(buf, resource_path);
 		if(strcmp((const char*)in, "/")){
-			strcat(buf, "/");
 			strncat(buf, (char*)in, sizeof(buf)-strlen(resource_path));
 		} else{ /* default file to serve */
 			strcat(buf, "/monitor.html");
@@ -176,7 +157,7 @@ static int callback_http(struct lws* wsi,
 		buf[sizeof(buf)-1]='\0';
 
 		/* refuse to serve files we don't understand */
-		mimetype=get_mimetype(buf);
+		mimetype=lws_get_mimetype(buf, NULL);
 		if(!mimetype){
 			lwsl_err("Unknown mimetype for %s\n", buf);
 			lws_return_http_status(wsi, HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, NULL);
