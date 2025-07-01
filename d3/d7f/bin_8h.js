@@ -30,5 +30,5 @@ var bin_8h =
     [ "mmap_write_header", "d3/d7f/bin_8h.html#aa24dfa7dd0bc1a63d6fe256f3fc3ff66", null ],
     [ "mmap_read_header", "d3/d7f/bin_8h.html#af62cc405c56c23085a5d86e71a6ae0ed", null ],
     [ "async_init", "d3/d7f/bin_8h.html#ad7704ca864eabbba129afd72af210a9e", null ],
-    [ "async_write", "d3/d7f/bin_8h.html#ae0208a3d751b79aaaf879f0ce17a1b13", null ]
+    [ "async_write", "d3/d7f/bin_8h.html#ad0f51efb12402814149a0d6e80843087", null ]
 ];

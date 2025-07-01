@@ -43,5 +43,6 @@ var misc_8h =
     [ "mystrdup", "d4/d08/misc_8h.html#a78d60c2575f2d453aa78cdde0345228e", null ],
     [ "mysnprintf", "d4/d08/misc_8h.html#a9bd8555fd6d364ebf45f367645039713", null ],
     [ "parse_argopt", "d4/d08/misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
-    [ "set_realtime", "d4/d08/misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ]
+    [ "set_realtime", "d4/d08/misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
+    [ "sec2str", "d4/d08/misc_8h.html#a2c7cc6a0fd84fec69d69b709e07b907e", null ]
 ];

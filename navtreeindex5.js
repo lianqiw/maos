@@ -1,5 +1,6 @@
 var NAVTREEINDEX5 =
 {
+"d4/d6c/structsmat.html#a059d43a193f4b859b57a5a44b415106f":[12,0,166,10],
 "d4/d6c/structsmat.html#a12a04a35e171d0fcc99167a253b68731":[12,0,166,1],
 "d4/d6c/structsmat.html#a1cf498c3486312116f960226da81fc2f":[12,0,166,5],
 "d4/d6c/structsmat.html#a797cee43d56e099394211095fb59870f":[12,0,166,8],
@@ -205,7 +206,6 @@ var NAVTREEINDEX5 =
 "d6/d94/maos_2types_8h.html#a2907677ada58bdbdc9b43ceefad836c0":[13,0,2,23,10,13],
 "d6/d94/maos_2types_8h.html#a29a34bc03809f1f60d3c854fb12160a7":[13,0,2,23,15,119],
 "d6/d94/maos_2types_8h.html#a29a7a2bb4bbd0bec81fd1b0cd38966a8":[13,0,2,23,15,146],
-"d6/d94/maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d":[13,0,2,23,0,8],
 "d6/d94/maos_2types_8h.html#a2a555a85293e08d3c1eecfc57b73c3f7":[13,0,2,23,5,8],
 "d6/d94/maos_2types_8h.html#a2a7d25ddb63166f2a6b79689411ec1d6":[13,0,2,23,4,19],
 "d6/d94/maos_2types_8h.html#a2ab2f4cccbbf23b5b0e67bb4dafdf1e9":[13,0,2,23,2,0],

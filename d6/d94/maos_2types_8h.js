@@ -9,7 +9,7 @@ var maos_2types_8h =
       [ "imcc", "d6/d94/maos_2types_8h.html#af14d18422b62549ec417a75e64fa9439", null ],
       [ "ipcc", "d6/d94/maos_2types_8h.html#aaa286b3af6f54cc7c0157956a85e90c3", null ],
       [ "sumamp2", "d6/d94/maos_2types_8h.html#ae4b26f5c53393308db9f99f9369ae258", null ],
-      [ "embed", "d6/d94/maos_2types_8h.html#a2a00956141cab1fe47e9887c788e9e3d", null ],
+      [ "locfft", "d6/d94/maos_2types_8h.html#a700731f839dedeb0cdfc36e92018977d", null ],
       [ "fcp", "d6/d94/maos_2types_8h.html#a166ea928f9ede0869a67f1ef6cd3276a", null ],
       [ "opdadd", "d6/d94/maos_2types_8h.html#afbd8ae85695fba0927998cf8446defd6", null ],
       [ "opdbias", "d6/d94/maos_2types_8h.html#a3f85d361fe252aba2ccdda096e28eae1", null ],
