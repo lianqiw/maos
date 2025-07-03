@@ -515,13 +515,14 @@ long setup_star_read_ztilt(star_s* star, int nstar, const parms_s* parms, int se
 	//close(fd);
 	return nstep;
 }
-
+PNEW(mutex_wvf);
 /**
    Read in asterism WFS wvf.*/
 long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed){
 	const real ngsgrid=parms->maos.ngsgrid;
 	const int nwvl=parms->maos.nwvl;
 	long nstep=0;
+	LOCK(mutex_wvf);//allow only 1 thread to read file
 	TIC;tic;
 	for(int istar=0; istar<nstar; istar++){
 		star_s* stari=&star[istar];
@@ -632,6 +633,7 @@ long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed
 	if(parms->skyc.verbose){
 		toc2("Reading PSF");
 	}
+	UNLOCK(mutex_wvf);
 	//close(fd);
 	return nstep;
 }

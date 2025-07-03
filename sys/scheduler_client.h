@@ -41,7 +41,7 @@ void scheduler_start(int nthread, int ngpu, int waiting);
 void scheduler_finish(int status);
 void scheduler_report(status_t *status);
 /*called by monitor */
-int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
+int scheduler_launch_exe(char *hostarr, int argc, const char *argv[]);
 /*save a socket for draw()*/
 int scheduler_socket(int dir, int *sfd, int id);
 /*Handling backtrace*/

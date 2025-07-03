@@ -598,7 +598,7 @@ void skysim(const parms_s* parms){
 		if(simu->isky_start<simu->isky_end){
 			simu->isky=simu->isky_start;
 			simu->isky_print=simu->isky_start;
-			CALL(skysim_isky, simu, NCPU, 0);/*isky iteration. */
+			CALL(skysim_isky, simu, 4, 0);/*isky iteration. More memory for each additional thread*/
 		}
 		if(parms->skyc.dbgsky<0){
 			touch("Res%d_%d.done", seed_maos, parms->skyc.seed);

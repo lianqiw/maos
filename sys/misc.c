@@ -1008,3 +1008,59 @@ int sec2str(char*tmp, long stmp, double sec){
 	}
 	return offset;
 }
+/**
+ * @brief Rename prefix_host_pid.suffix to prefix_done.suffix. 
+ * If already exists and count_in>=0 increment the counter and use prefix_done.counter.suffix as filename
+ * 
+ * @param prefix 
+ * @param suffix 
+ * @param count_in if >=0, do not increase
+ * @return int the counter
+ */
+static int rename_done(const char *prefix, const char *suffix, int count_in){
+	char fn[PATH_MAX];
+	char fn1[PATH_MAX];
+	char fn2[PATH_MAX];
+	int count=count_in<0?0:count_in;
+	snprintf(fn, sizeof(fn), "%s_%s_%ld.%s", prefix, HOST, (long)getpid(), suffix);
+	if(!exist(fn)){
+		dbg("%s does not exist\n", fn);
+		return -1;
+	}
+	do{
+		if(count==0){
+			snprintf(fn2, sizeof(fn2), "%s_done.%s", prefix, suffix);
+		} else{
+			snprintf(fn2, sizeof(fn2), "%s_done.%d.%s", prefix, count, suffix);
+		}
+	} while(exist(fn2) && count_in<0 && (count=count+1));
+	snprintf(fn1, sizeof(fn1), "%s_done.%s", prefix, suffix);
+	if(count>0){
+		if(rename(fn1, fn2)){
+			dbg("Rename %s to %s failed\n", fn1, fn2);
+		}
+	}
+	if(rename(fn, fn1)){
+		dbg("Rename %s to %s failed\n", fn, fn2);
+	} else{
+		snprintf(fn, sizeof(fn), "%s_recent.%s", prefix, suffix);
+		remove(fn);
+		mysymlink(fn1, fn);
+	}
+	return count;
+}
+void rename_log(int sig, char *exe){
+	if(sig==0){//success
+		int count=rename_done("run", "log", -1);
+		if(count!=-1){
+			rename_done(exe, "conf", count);
+		}
+	}else{//killed or error
+		char fn[PATH_MAX];
+		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+		char fn2[PATH_MAX];
+		snprintf(fn2, PATH_MAX, "run_%s_%ld.err", HOST, (long)getpid());
+		(void)rename(fn, fn2);
+		mysymlink(fn2, "run_recent.log");
+	}
+}
