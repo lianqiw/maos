@@ -40,6 +40,14 @@ static void print_usage(void){
 	);
 	exit(0);
 }
+void free_arg(arg_s** parg){
+	if(!parg) return;
+	arg_s *arg=*parg;
+	free(arg->conf); 
+	free(arg->confcmd);
+	free(arg->dirout); 
+	free(arg);
+}
 /**
    Parse command line arguments argc, argv
  */
@@ -72,12 +80,11 @@ arg_s* parse_args(int argc, const char* argv[]){
 	} else{
 #ifndef MAOS_DISABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
-		if(!host){
-			host=strdup(HOST);
-		}
-		if(scheduler_launch_exe(host, argc, argv)){
-			error("Unable to launch skyc at server %s\n", host);
+		if(scheduler_launch_exe(host, argc, argv)<0){
+			warning("Launch with scheduler failed. Restart without scheduler.\n");
 		} else{
+			free_arg(&arg);
+			dbg3("Launched using scheduler.\n");
 			exit(EXIT_SUCCESS);
 		}
 #endif
@@ -103,16 +110,7 @@ arg_s* parse_args(int argc, const char* argv[]){
    Rename the log files when simulation exits.
  */
 void skyc_final(int sig){
-	if(sig==0){
-		char fn[PATH_MAX];
-		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-		remove("run_done.log");
-		mysymlink(fn, "run_done.log");
-
-		snprintf(fn, PATH_MAX, "skyc_%s_%ld.conf", HOST, (long)getpid());
-		remove("skyc_done.conf");
-		mysymlink(fn, "skyc_done.conf");
-	}
+	rename_log(sig, "skyc");
 }
 /**
    Handles signals.

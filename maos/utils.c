@@ -227,47 +227,7 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
 		}
 	}
 }
-/**
- * @brief Rename prefix_host_pid.suffix to prefix_done.suffix. 
- * If already exists and count_in>=0 increment the counter and use prefix_done.counter.suffix as filename
- * 
- * @param prefix 
- * @param suffix 
- * @param count_in if >=0, do not increase
- * @return int the counter
- */
-int rename_done(const char *prefix, const char *suffix, int count_in){
-	char fn[PATH_MAX];
-	char fn1[PATH_MAX];
-	char fn2[PATH_MAX];
-	int count=count_in<0?0:count_in;
-	snprintf(fn, sizeof(fn), "%s_%s_%ld.%s", prefix, HOST, (long)getpid(), suffix);
-	if(!exist(fn)){
-		dbg("%s does not exist\n", fn);
-		return -1;
-	}
-	do{
-		if(count==0){
-			snprintf(fn2, sizeof(fn2), "%s_done.%s", prefix, suffix);
-		} else{
-			snprintf(fn2, sizeof(fn2), "%s_done.%d.%s", prefix, count, suffix);
-		}
-	} while(exist(fn2) && count_in<0 && (count=count+1));
-	snprintf(fn1, sizeof(fn1), "%s_done.%s", prefix, suffix);
-	if(count>0){
-		if(rename(fn1, fn2)){
-			dbg("Rename %s to %s failed\n", fn1, fn2);
-		}
-	}
-	if(rename(fn, fn1)){
-		dbg("Rename %s to %s failed\n", fn, fn2);
-	} else{
-		snprintf(fn, sizeof(fn), "%s_recent.%s", prefix, suffix);
-		remove(fn);
-		mysymlink(fn1, fn);
-	}
-	return count;
-}
+
 /**
    Rename the log files when simulation exits or when signal is caught.
 */
@@ -275,19 +235,7 @@ void maos_final(int sig){
 	draw_final(1);
 	scheduler_finish(signal_caught);
 	if(disable_save) return;
-	if(sig==0){//success
-		int count=rename_done("run", "log", -1);
-		if(count!=-1){
-			rename_done("maos", "conf", count);
-		}
-	}else{//killed or error
-		char fn[PATH_MAX];
-		snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-		char fn2[PATH_MAX];
-		snprintf(fn2, PATH_MAX, "run_%s_%ld.err", HOST, (long)getpid());
-		(void)rename(fn, fn2);
-		mysymlink(fn2, "run_recent.log");
-	}
+	rename_log(sig, "maos");
 	if(global&&global->parms&&global->parms->fdlock){
 		const parms_t* parms=global->parms;
 		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), -1, sig==0);
@@ -298,17 +246,11 @@ void maos_final(int sig){
 */
 int maos_signal_handler(int sig){
 	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
-	/*if((sig==SIGTERM||sig==SIGINT)&&global&&global->setupdone==1){
-		info2("Will exit after finishing current time step\n");
-		return 1;
-	}else*/
-	{
-		maos_final(sig);/*handles signal */
-		if(global&&global->parms&&global->parms->sim.mvmport){
-			mvm_client_close();
-		}
-		scheduler_finish(sig);
+	maos_final(sig);/*handles signal */
+	if(global&&global->parms&&global->parms->sim.mvmport){
+		mvm_client_close();
 	}
+	scheduler_finish(sig);
 	return 0;
 }
 /**
@@ -414,34 +356,13 @@ arg_t* parse_args(int argc, const char* argv[]){
 		} else{
 #ifndef MAOS_DISABLE_SCHEDULER
 		/*Detached version. Always launch through scheduler if available.*/
-			if(!arg->host){//launch locally
-				if(scheduler_launch_exe("localhost", argc, argv)){
-					dbg("Launch locally without scheduler.\n");
-				}else{
-					dbg3("Launch locally using scheduler.\n");
-					free_arg(&arg);
-					exit(EXIT_SUCCESS);
-				}
-			} else{
-				const char* hostend=arg->host+strlen(arg->host);
-				//Host maybe coma separated hostnames
-				//Host2 is hostname found. Host3 is after coma.
-				char* host3=NULL;
-				for(char* host2=arg->host; host2&&host2<hostend; host2=host3){
-					char* coma=strchr(host2, ',');
-					if(coma){
-						*coma='\0';
-						host3=coma+1;
-					} else{
-						host3=NULL;
-					}
-					if(scheduler_launch_exe(host2, argc, argv)){
-						warning("Unable to launch maos at server %s.\n", host2);
-					}
-				}
-				free_arg(&arg);
-				exit(EXIT_SUCCESS);
-			}
+		if(scheduler_launch_exe(arg->host, argc, argv)<0){
+			warning("Launch with scheduler failed. Restart without scheduler.\n");
+		}else{
+			dbg3("Launched using scheduler.\n");
+			free_arg(&arg);
+			exit(EXIT_SUCCESS);
+		}
 #else
 			arg->force=1;//launch directly when scheduler is disabled.
 #endif
