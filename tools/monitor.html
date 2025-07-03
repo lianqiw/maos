@@ -194,12 +194,11 @@
 			}
 		}
 		function kill_all() {
+			const hostname = cur_hostname;
 			if (socket_lms[hostname] === undefined || socket_lms[hostname].readyState > 1) {
 				console.log("server is not ready:", hostname);
 				return
 			}
-			
-			const hostname = cur_hostname;
 			cmd = [];
 			const joblist = get_joblist(hostname)
 			for (irow = 1; irow < joblist.rows.length; irow++) {
@@ -473,7 +472,7 @@
 							console.log("errr found:", i);
 						}
 						i[icol.STATUS]=parseInt(i[icol.STATUS]);
-						i[icol.TREST]=parseInt(i[icol.TREST]);
+						i[icol.TREST]=Math.max(0,parseInt(i[icol.TREST]));
 						i[icol.TTOTAL]=parseInt(i[icol.TTOTAL]);
 						row.cells[tcol.TIME].innerHTML = i[icol.TSTART];
 						if (i[icol.STATUS] == sval.RUNNING || (i[icol.STATUS] >=sval.FINISH && i[icol.TTOTAL]>0)) {
