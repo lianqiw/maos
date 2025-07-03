@@ -59,9 +59,9 @@ static int comb_next(int* comb, long n, long k){
  * @brief Determine all valid combinations of stars for all wfs. 
 	Assume that the stars are sorted in descending S/N order. 
 	valid is set to -1 for stars that need to be skipped.
-	flag=0: keep order. nstar should be equal to nwfstot. do not reorder stars.
+	flag=0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination.
 	flag=1: regular.
-	flag=2: make wfs[0] brighter than wfs[1].
+	flag=2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim)
 	only implemented for npowfs=1 or npowfs=2
 	@param nwfsmax 		npowfs*1 array for maximum number of wfs
 	@param starvalid 	nstar*npowfs array for validity of star at powfs mode. -1 means invalid
@@ -70,8 +70,8 @@ static int comb_next(int* comb, long n, long k){
 */
 lmat* comb_stars(lmat* nwfsmax, lmat *starvalid, int flag){
 	lmat *res=NULL;
-	int npowfs=NX(nwfsmax);
-	int nstar=NX(starvalid);
+	const int npowfs=NX(nwfsmax);
+	const int nstar=NX(starvalid);
 	if(NY(starvalid)<npowfs){
 		error("starvalid should have at least %d columns\n", npowfs);
 		return NULL;
@@ -105,8 +105,8 @@ retry:
 	int *comb=comb_init(nwfstot);//select all stars
 	int count=0;
 	do{
-		if(count>=NY(res)){
-			error("count should be smaller than %ld\n", NY(res));
+		if(count>=NY(res)){//this may happen if there are invalid stars and a retry
+			dbg("count should be smaller than %ld.\n", NY(res));
 			break;
 		}
 		if(npowfs==1){
@@ -123,8 +123,8 @@ retry:
 			int mask[nwfstot];//length is the same as comb[]
 			int *comb2=comb_init(nwfs[0]);//select stars for powfs0
 			do{
-				if(count==NY(res)){
-					error("count should be smaller than %ld\n", NY(res));
+				if(count==NY(res)){//this may happen if there are invalid stars and a retry
+					dbg("count should be smaller than %ld.\n", NY(res));
 					break;
 				}
 				int skip=0;
@@ -169,7 +169,7 @@ retry:
 	}else if(count<NY(res)){
 		lresize(res, NX(res), count);
 	}else if(count>NY(res)){
-		error("Memory overflows\n");
+		error("Memory overflows\n");//should never happen due to test above
 	}
 	return res;
 }

@@ -81,7 +81,7 @@ typedef struct skyc_s{
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
     int dbgaster;    /**<only run this asterism if not -1*/
-    int keeporder;   /**<1: Keep order of stars as input is skyc.star.*/
+    int keeporder;   /**<Keep order of stars as input is skyc.star.*/
     int interpg;     /**<Interpolate gain based in dtrat and signan*/
     int save;        /**<save information for latter running in MAOS.*/
     int maxstar;     /**<maximum number of (brightest) stars for each star field.*/
@@ -102,7 +102,7 @@ typedef struct skyc_s{
     real lat;      /**<Galactic latitude*/
     real lon;      /**<Galactic longitude.*/
     real catscl;   /**<Scale the catlog star count*/
-	real maglimit;	 /**<If set, remove stars dimmer that this in the first wavelength. */
+	real maglimit;	 /**<If non zero, remove stars dimmer that this in the first wavelength. */
     real patfov;   /**<Patrol FoV in arcsec (diameter)*/
     real minrad;   /**<minimum radius of the stars (keep out of center science region)*/
     real imperrnm; /**<Implementation error in nm in the center.*/
