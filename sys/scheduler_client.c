@@ -392,31 +392,52 @@ pthread_t scheduler_listen(thread_fun fun){
 }
 /**
    Ask scheduler (maybe in another machine) to launch executable.
+   Host may be null or contain coma separated hosts
+   returns <0 for error. >=0 success
 */
-int scheduler_launch_exe(const char* host, int argc, const char* argv[]){
+int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 	char *scmd=argv2str(argc, argv, " ");
 	int ret=0;
 #if MAOS_DISABLE_SCHEDULER
 	ret=launch_exe(argv[0], scmd)<0?-1:0;
-	(void)host;(void)argc;(void)argv;
+	(void)hostarr;(void)argc;(void)argv;
 #else
-	int sock=connect_port(host, PORT, 0, 0);
-	if(sock<=-1){
-		warning("Failed to connect to %s:%d: %s\n", host, PORT, strerror(errno));
-		return -1;
+	if(!hostarr) hostarr="localhost";
+	char* hostend=hostarr+strlen(hostarr);
+	char* host3=NULL;//host name after coma if found
+	int nlaunched=0;
+	for(char* host=hostarr; host&&host<hostend; host=host3){
+		ret=0;
+		char* coma=strchr(host, ',');
+		if(coma){
+			*coma='\0';
+			host3=coma+1;
+		} else{
+			host3=NULL;
+		}
+		int sock=connect_port(host, PORT, 0, 0);
+		if(sock<=-1){
+			warning("Failed to connect to %s:%d.\n", host, PORT);
+			ret=-1;
+		}else{
+			int cmd[2]={CMD_LAUNCH, 2};
+			if(stwriteintarr(sock, cmd, 2)
+				||stwritestr(sock, argv[0])
+				||stwritestr(sock, scmd)
+				||streadint(sock, &ret)){
+				warning("Failed to write to scheduler at %s\n", host);
+				ret=-1;
+			}
+			close(sock);
+		}
+		if(coma){
+			*coma=',';//restore
+		}
+		if(ret!=-1){
+			nlaunched++;
+		}
 	}
-	int cmd[2]={CMD_LAUNCH, 2};
-	
-	if(stwriteintarr(sock, cmd, 2)
-		||stwritestr(sock, argv[0])
-		||stwritestr(sock, scmd)
-		||streadint(sock, &ret)){
-		warning("Failed to write to scheduler at %s\n", host);
-		ret=-1;
-	}
-	
-	close(sock);
-	
+	ret=(nlaunched>0)?0:-1;
 #endif
 	free(scmd);
 	return ret;

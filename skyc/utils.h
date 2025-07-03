@@ -18,6 +18,7 @@
 #ifndef SKYC_UTILS_H
 #define SKYC_UTILS_H
 #include "skyc.h"
+void free_arg(arg_s** parg);
 arg_s *parse_args(int argc, const char *argv[]);
 void prep_result_folder(arg_s *arg);
 void skyc_final(int sig);

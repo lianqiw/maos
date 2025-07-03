@@ -66,10 +66,7 @@ OMPTASK_SINGLE
 		skysim(parms);
 	}
 	free(scmd);
-	free(arg->conf); 
-	free(arg->confcmd);
-	free(arg->dirout); 
-	free(arg);
+	free_arg(&arg);
 	free_parms(parms);parms=NULL;
 	free(dirsetup);
 	free(dirstart);
