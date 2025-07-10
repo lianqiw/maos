@@ -70,7 +70,6 @@ extern "C"{
 	long  gztell(voidp gzfile);
 	int   gzclose(voidp gzfile);
 	int   gzwrite(voidp gzfile, const void* buf, unsigned len);
-	long  gztell(voidp gzfile);
 	int   gzread(voidp gzfile, voidp buf, unsigned len);
 	int   gzseek(voidp file, long offset, int whence);
 	int   gzrewind(voidp file);
@@ -692,8 +691,8 @@ void zflush(file_t* fp){
 */
 static int
 read_bin_header(header_t* header, file_t* fp){
-	uint32_t magic, magic2;
-	uint64_t nlen, nlen2;
+	uint32_t magic=0, magic2=0;
+	uint64_t nlen=0, nlen2=0;
 	memset(header, 0, sizeof(header_t));
 
 	if(fp->isfits){
@@ -749,38 +748,45 @@ read_error_eof:
 	return fp->err?fp->err:-1;
 }
 
-/*
-  Append the header to current position in the file.
+//emulate mempcpy in linux
+#define MEMPCPY(dest, src, type)\
+    dest=(char *)memcpy(dest, &src, sizeof(type)) + sizeof(type);
 
-  First write magic number, then the length of the header, then the header,
-  then the length of the header again, then the magic number again. The two set
-  of strlen and header are used to identify the header from the end of the file
-  and also to verify that what we are reading are indeed header. The header may
-  be written multiple times. They will be concatenated when read. The header
-  should contain key=value entries just like the configuration files. The
-  entries should be separated by new line charactor.
+/**
+	Write bin file header for keyword and data dimension.
+	Updated from previous version to reduce syscalls.
 
-  Don't need to write M_SKIP here because we have a pair of magic. The length
-  of header is rounded to multiple of 8 bytes.
+	First write magic number, then the length of the header, then the header,
+	then the length of the header again, then the magic number again. The two set
+	of strlen and header are used to identify the header from the end of the file
+	and also to verify that what we are reading are indeed header. The header may
+	be written multiple times. They will be concatenated when read. The header
+	should contain key=value entries just like the configuration files. The
+	entries should be separated by new line charactor.
 */
-static void
-write_bin_headerstr(const char* str, file_t* fp){
-	if(!str||!strlen(str)) return;
-	assert(!fp->isfits);
-	uint32_t magic=M_COMMENT;
-	uint64_t nlen=strlen(str)+1;
-	uint64_t nlen2=(nlen%8)?((nlen/8+1)*8):(nlen);
-	char zero[8]={0};
-	zfwrite(&magic, sizeof(uint32_t), 1, fp);
-	zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
-	/*make str 8 byte alignment. */
-	zfwrite(str, 1, nlen, fp);
-	if(nlen2>nlen)
-		zfwrite(zero, 1, nlen2-nlen, fp);
-	zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
-	zfwrite(&magic, sizeof(uint32_t), 1, fp);
+static void write_bin_header(const header_t* header, file_t* fp){
+	const uint64_t nlen8=header->str?(((strlen(header->str)+8)>>3)<<3):0;
+	uint64_t nbyte=(nlen8?(nlen8+4*2+8*2):0)+3*8;
+	char* buf=mycalloc(nbyte, char);
+	char*tmp=buf;
+	if(nlen8){
+		uint32_t mc=M_COMMENT;
+		//Don't need to write M_SKIP here because we have a pair of magic.
+		//The length of header->str is rounded to multiple of 8 bytes.
+		MEMPCPY(tmp, mc, uint32_t);
+		MEMPCPY(tmp, nlen8, uint64_t);
+		strncpy(tmp, header->str, nlen8); tmp[nlen8-1]=0;tmp+=nlen8;
+		MEMPCPY(tmp, nlen8, uint64_t);
+		MEMPCPY(tmp, mc, uint32_t);
+	}
+	uint32_t mp=M_SKIP;
+	MEMPCPY(tmp, mp, uint32_t);
+	MEMPCPY(tmp, header->magic, uint32_t);
+	MEMPCPY(tmp, header->nx, uint64_t);
+	MEMPCPY(tmp, header->ny, uint64_t);
+	zfwrite(buf, nbyte, 1, fp);
+	free(buf);
 }
-
 /*
   Write fits header. str is extra header that will be put in fits comment
 */
@@ -1056,15 +1062,7 @@ void write_header(const header_t* header, file_t* fp){
 			fp->gstr=strdup(header->str);//save global keyword to be used for each page
 		}
 	} else{
-		if(header->str){
-			write_bin_headerstr(header->str, fp);
-		}
-		//2015/01/27: We converted dummy header to a subtype.
-		uint32_t magic2=M_SKIP;
-		zfwrite(&magic2, sizeof(uint32_t), 1, fp);
-		zfwrite(&header->magic, sizeof(uint32_t), 1, fp);
-		zfwrite(&header->nx, sizeof(uint64_t), 1, fp);
-		zfwrite(&header->ny, sizeof(uint64_t), 1, fp);
+		write_bin_header(header, fp);
 	}
 }
 /**
