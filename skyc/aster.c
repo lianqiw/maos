@@ -346,22 +346,21 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 	int fast_nttf=0;
 	int fast_ntt=0;
 	int nwfs_unused=0;
+	real snrmin_fast=idtrat_fast==idtrat_slow?P(parms->skyc.snrmin_slow, idtrat_slow):P(parms->skyc.snrmin_fast, idtrat_fast);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		if(P(aster->wfs[iwfs].pistat->snr,idtrat_fast)>=P(parms->skyc.snrmin_fast,idtrat_fast)){
+		if(P(aster->wfs[iwfs].pistat->snr,idtrat_fast)>=snrmin_fast){
 			aster->wfs[iwfs].idtrat=idtrat_fast2;
 			if(parms->maos.nsa[aster->wfs[iwfs].ipowfs]>1){
 				fast_nttf++;
 			}else{
 				fast_ntt++;
 			}
+		}else if(P(aster->wfs[iwfs].pistat->snr,idtrat_slow)>=P(parms->skyc.snrmin_slow,idtrat_slow)){
+			aster->wfs[iwfs].idtrat=idtrat_slow;
 		}else{
-			if(P(aster->wfs[iwfs].pistat->snr,idtrat_slow)>=P(parms->skyc.snrmin_slow,idtrat_slow) && (idtrat_slow!=idtrat_fast)){
-				aster->wfs[iwfs].idtrat=idtrat_slow;
-			}else{
-				aster->wfs[iwfs].use=0;
-				aster->wfs[iwfs].idtrat=-1;
-				nwfs_unused++;
-			}
+			aster->wfs[iwfs].use=0;
+			aster->wfs[iwfs].idtrat=-1;
+			nwfs_unused++;
 		}
 	}
 	if(nwfs_unused){
@@ -373,14 +372,11 @@ setup_aster_multirate(aster_s* aster, const parms_s* parms){
 		P(aster->idtrats, iwfs)=aster->wfs[iwfs].idtrat;
 		P(aster->dtrats, iwfs)=P(parms->skyc.dtrats, P(aster->idtrats, iwfs));
 	}
-	
-	//info("fast_nttf=%d, fast_ntt=%d, nslow=%d\n", fast_nttf, fast_ntt, nslow);
+	/*if(fast_nttf+fast_ntt<3){
+		info("fast_nttf=%d, fast_ntt=%d, nwfs_unused=%d\n", fast_nttf, fast_ntt, nwfs_unused);
+	}*/
 	mode_mask(&aster->mdirect, parms, fast_nttf, fast_ntt);//a mode is set to 1 if it is directly controlled by the slow mode.
 	
-	//aster->mdirect=lnew(parms->maos.nmod,1);
-	if(parms->skyc.dbgaster!=-1){
-		lshow(aster->mdirect, "mdirect");
-	}
 	aster->idtratest=idtrat_fast2;
 	aster->idtratmin=idtrat_fast2;
 	aster->idtratmax=idtrat_fast2+1;
