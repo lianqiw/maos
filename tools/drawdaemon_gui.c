@@ -169,14 +169,9 @@ static drawdata_t* get_current_drawdata(void){
 	}
 	GtkWidget* topnb=curtopnb;
 	GtkWidget* subnb=get_current_page(topnb);
-	GtkWidget* page=get_current_page(subnb);
+	GtkWidget* drawarea=get_current_page(subnb);
 
-	drawdata_t** pdrawdata=page?(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap"):NULL;
-	if(pdrawdata){
-		return *pdrawdata;
-	} else{
-		return NULL;
-	}
+	return drawarea?g_object_get_data(G_OBJECT(drawarea), "drawdata"):NULL;
 }
 
 /**
@@ -223,8 +218,8 @@ static void topnb_detach_btn(GtkWidget *btn, gpointer data){
 		move_tab_page(topnb, n, topnb2);
 	}
 }
-static void update_toolbar(drawdata_t *drawdata){
-	if(!drawdata) drawdata=get_current_drawdata();
+static void update_toolbar(){//always use current page
+	drawdata_t *drawdata=get_current_drawdata();
 	if(!drawdata) return;
 	int cumu_supported=!drawdata->p&&drawdata->npts>0&&!drawdata->square;
 	if(cur_menu_cumu){
@@ -261,54 +256,61 @@ gboolean finalize_gif(){
 	return FALSE;
 }
 /*
-	Update_pixmap draws to pixmap2 and then to pixmap to avoid flickering
+	drawdaemon_draw draws to pixmap2 and then to pixmap to avoid flickering
 */
 static void update_pixmap(drawdata_t* drawdata){
 	if(!drawdata) return;
 	/*no more pending updates, do the updating. */
-	if(drawdata->recycle) {
+	if(atomic_load(&drawdata->recycle)){
 		warning_time("recycle is set, do not draw\n");
 		return;
 	}
 	drawdata->iframe++;
 	gboolean hasdata=(drawdata->nx&&drawdata->ny)||drawdata->npts||drawdata->ncir;
 	if(hasdata){
+		int locked=0;
 		gint width=drawdata->width;
 		gint height=drawdata->height;
-		pthread_mutex_lock(&drawdata->mutex);
-		//info("update_pixmap for %dx%d\n", width, height);
 		if(drawdata->pixmap){
-			if(width!=drawdata->pwidth||height!=drawdata->pheight||!hasdata){
-	#if GTK_MAJOR_VERSION>=3
+			if(width!=drawdata->pwidth||height!=drawdata->pheight){//need a new size
+				//need to lock mutex to synchronize with drawdaemon_draw which uses pixmap
+				//destroy of pixmap need to happen in Gtk main thread because it is used to paint drawarea
+				pthread_mutex_lock(&drawdata->mutex); locked=1;
 				cairo_surface_destroy(drawdata->pixmap);
-	#else
-				g_object_unref(drawdata->pixmap);
-	#endif
 				drawdata->pixmap=NULL;
 			}
 		}
-	
 		if(!drawdata->pixmap){
 			/*Create a new server size pixmap and then draw on it. */
-			drawdata->pwidth=width;
-			drawdata->pheight=height;
 	#if GTK_MAJOR_VERSION>=3
-			int scale=gtk_widget_get_scale_factor(curwindow);//since 3.10
-			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width*scale, height*scale);
-			cairo_surface_set_device_scale(drawdata->pixmap, scale, scale);
-	#else//since 2.22. deprecated in 4
-			drawdata->pixmap=gdk_window_create_similar_surface
-			(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);		
+			int gtk_scale=gtk_widget_get_scale_factor(curwindow);//since 3.10
+	#else
+			int gtk_scale=1;
 	#endif
+			if(!locked){
+				drawdata->pwidth=width;
+				drawdata->pheight=height;
+				pthread_mutex_lock(&drawdata->mutex); locked=1;
+			}
+			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width*gtk_scale, height*gtk_scale);
+	#if GTK_MAJOR_VERSION>=3
+			cairo_surface_set_device_scale(drawdata->pixmap, gtk_scale, gtk_scale);
+	#endif
+			pthread_mutex_unlock(&drawdata->mutex); 
 		}
-		pthread_mutex_unlock(&drawdata->mutex);
 		cairo_draw(drawdata);//cairo_draw calls drawarea_refresh()
+		//g_idle_add((GSourceFunc)drawarea_refresh, drawdata->drawarea);
 		//info("%d %d %d\n", drawdata->frame_io, drawdata->frame_draw, drawdata->frame_gif);
+	}else{
+		//dbg_time("hasdata=0\n");
 	}
 }
-gboolean drawarea_refresh(drawdata_t *drawdata){
-	if(drawdata->drawarea){
-		gtk_widget_queue_draw(drawdata->drawarea);
+/// @brief called by drawdaemon_draw to refresh the widget
+/// @param drawdata 
+/// @return FALSE to run only once
+gboolean drawarea_refresh(GtkWidget *drawarea){
+	if(drawarea){
+		gtk_widget_queue_draw(drawarea);
 	}
 	return FALSE;//run only once
 }
@@ -316,15 +318,14 @@ gboolean drawarea_refresh(drawdata_t *drawdata){
 
 #if  GTK_MAJOR_VERSION>=4
 static gboolean
-on_resize_event(GtkDrawingArea* widget, int width, int height, gpointer pdata){
+on_resize_event(GtkDrawingArea* widget, int width, int height, drawdata_t *drawdata){
 	(void)widget;
 	//info("on_resize_event with %dx%d\n", width, height);
-	drawdata_t* drawdata=*((drawdata_t**)pdata);
 	if(width>1&&height>1){
 		drawdata->width=width;
 		drawdata->height=height;
 	}
-	if(drawdata!=get_current_drawdata()){
+	if(drawdata==get_current_drawdata()){
 		drawdata->drawn=0;
 	}else{
 		update_pixmap(drawdata);
@@ -336,14 +337,13 @@ on_resize_event(GtkDrawingArea* widget, int width, int height, gpointer pdata){
    Expose event happens when the widget is first configured and whenever it is
    resized.  Create a new backup pixmap of the appropriate size and draw there.*/
 static gboolean
-on_configure_event(GtkWidget* widget, GdkEventConfigure* event, gpointer pdata){
+on_configure_event(GtkWidget* widget, GdkEventConfigure* event, drawdata_t *drawdata){
 	(void)event;
 	(void)widget;
-	drawdata_t* drawdata=*((drawdata_t**)pdata);
 	drawdata->width=event->width;
 	drawdata->height=event->height;
 	if(drawdata!=get_current_drawdata()){
-		drawdata->drawn=0;
+		drawdata->drawn=0;//mark for future drawing
 	}else if(event->width>1&&event->height>1){
 		update_pixmap(drawdata);
 	}
@@ -353,41 +353,43 @@ on_configure_event(GtkWidget* widget, GdkEventConfigure* event, gpointer pdata){
 #if GTK_MAJOR_VERSION>=4
 void drawarea_draw_func(GtkDrawingArea *widget, cairo_t *cr, int width, int height, gpointer pdata){
 	(void)widget; (void)width; (void)height;
-	drawdata_t *drawdata=*((drawdata_t **)pdata);
+	drawdata_t *drawdata=(drawdata_t *)pdata;
 	//info("draw_func called with %dx%d. pixmap=%p\n", width, height, drawdata->pixmap);
 	drawdata->width=width;
 	drawdata->height=height;
 #elif GTK_MAJOR_VERSION>=3
 static gboolean on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
-	drawdata_t *drawdata=*((drawdata_t **)pdata);
+	drawdata_t *drawdata=(drawdata_t *)pdata;
 	(void)widget;
 #else
 static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer pdata){
 	(void) event;
-	drawdata_t *drawdata=*((drawdata_t **)pdata);
+	drawdata_t *drawdata=(drawdata_t *)pdata;
+	if(!drawdata) return;
+	if(drawdata->cumu!=drawdata->cumu_last || drawdata->zlog!=drawdata->zlog_last){
+		update_toolbar();
+	}
 	cairo_t *cr=gdk_cairo_create(widget->window);
 #endif
+	if(drawdata->pixmap){
+		//pthread_mutex_lock(&drawdata->mutex);
+		//info_time("painting drawarea: ok\n");
+		cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
+		cairo_paint(cr);
+		//pthread_mutex_unlock(&drawdata->mutex);
 
+		if(drawdata->draw_rect){
+			cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
+			cairo_set_line_width(cr, 1);
+			cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, drawdata->dxdown, drawdata->dydown);
+			cairo_fill_preserve(cr);
+			cairo_set_source_rgba(cr, 0, 0, 0, 1);
+			cairo_stroke(cr);
+			drawdata->draw_rect=0;
+		}
+	}
 	if(drawdata->font_name_version!=font_name_version||!drawdata->drawn||drawdata->cumu!=drawdata->cumulast){
 		update_pixmap(drawdata);//it queues another draw in the background.
-	}
-	if(!drawdata->pixmap){
-#if GTK_MAJOR_VERSION<=3
-		return FALSE;
-#else
-		return;
-#endif	
-	}
-	cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
-	cairo_paint(cr);
-	if(drawdata->draw_rect){
-		cairo_set_source_rgba(cr, 0, 0, 1, 0.1);
-		cairo_set_line_width(cr, 1);
-		cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, drawdata->dxdown, drawdata->dydown);
-		cairo_fill_preserve(cr);
-		cairo_set_source_rgba(cr, 0, 0, 0, 1);
-		cairo_stroke(cr);
-		drawdata->draw_rect=0;
 	}
 #if GTK_MAJOR_VERSION<3
 	cairo_destroy(cr);
@@ -398,58 +400,54 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 #endif
 }
 
-//do not call explicitly. Used by drawdatawrap_free
-static void drawdata_delete(drawdata_t* drawdata){
-	if(!drawdata || !drawdata->page){
-		warning_time("drawdata_free called with NULL page. canceled\n");
-		return ;
-	}
-	drawdata->recycle=1;
-	if(drawdata->image){
-		cairo_surface_destroy(drawdata->image);
-		drawdata->image=NULL;
-	}
-	if(drawdata->pixmap){
-#if GTK_MAJOR_VERSION>=3
-		cairo_surface_destroy(drawdata->pixmap);
-#else
-		g_object_unref(drawdata->pixmap);
-#endif
-		drawdata->pixmap=NULL;
-	}
-	if(drawdata->cacheplot){
-		cairo_surface_destroy(drawdata->cacheplot);
-		drawdata->cacheplot=NULL;
-	}
-	drawdata->page=NULL;
-	drawdata->subnb=NULL;
-}
-///Called with g_object_set_data
-static void drawdatawrap_delete(gpointer user_data){
-	drawdata_t **drawdatawrap=user_data;
-	//info("drawdatawrap_delete called with %p\n", drawdatawrap);
-	if(drawdatawrap){
-		drawdata_delete(*drawdatawrap);
-		free(drawdatawrap);
-	}
-}
 /**
    Delete a figure page.
 */
-int delete_page(drawdata_t* drawdata){
-	//info("delete_page: %p \n", drawdata);
-	if(!drawdata||!drawdata->page||!drawdata->subnb) return 0;
+int delete_page(drawdata_t *drawdata){
+	//dbg_time("deleting page: for %p\n",drawdata);
+	atomic_store(&drawdata->recycle, 1);
 	GtkWidget *subnb=drawdata->subnb;
-	int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(subnb), drawdata->page);
-	//info("delete_page: %p %p %p %d\n", drawdata, drawdata->page, drawdata->subnb, ipage);
-	if(ipage!=-1){
-		gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), ipage);
+	if(subnb){
+		int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(subnb), drawdata->drawarea);
+		if(ipage!=-1){
+			//dbg_time("delete_page:call page removal for %p (drawarea=%p) at index %d\n",drawdata, drawdata->drawarea, ipage);
+			gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), ipage);
+			//dbg_time("delete_page:removed\n");
+			//drawdata->drawarea=NULL;
+			//drawdata->subnb=NULL;
+			
+		}else{
+			warning_time("delete_page: page not found\n");
+		}
+	}else{
+		warning_time("delete_page: %p subnb is NULL\n", drawdata);
 	}
 	return 0;
 }
-static void delete_page_btn(GtkButton *btn, drawdata_t **drawdatawrap){
-	(void)btn;
-	delete_page(*drawdatawrap);
+void drawarea_deleted(gpointer data){
+	drawdata_t *drawdata=data;
+	if(drawdata){
+		//dbg_time("%p: drawarea (%p) is deleted. delete drawdata\n", drawdata, drawdata->drawarea);
+		pthread_mutex_lock(&drawdata->mutex);
+
+		if(drawdata->image){
+			cairo_surface_destroy(drawdata->image);	drawdata->image=NULL;
+		}
+		if(drawdata->pixmap){
+			cairo_surface_destroy(drawdata->pixmap);drawdata->pixmap=NULL;
+		}
+		if(drawdata->pixmap2){
+			cairo_surface_destroy(drawdata->pixmap2);drawdata->pixmap2=NULL;
+		}
+		if(drawdata->cacheplot){
+			cairo_surface_destroy(drawdata->cacheplot);	drawdata->cacheplot=NULL;
+		}
+		//dbg_time("%p: pixmap deleted\n",drawdata);
+		atomic_store(&drawdata->recycle, 2);
+		pthread_mutex_unlock(&drawdata->mutex);
+	}else{
+		info_time("drawdata is null\n");
+	}
 }
 gboolean update_title(gpointer window){
 	if(!window) window=curwindow;
@@ -469,12 +467,10 @@ gboolean update_title(gpointer window){
 	//return client_pid<0?FALSE:TRUE;//returns true to run repeatedly.
 	return FALSE;//when called by g_idle_add, must return FALSE;
 }
-static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
+static GtkWidget* subnb_label_new(const gchar *str, drawdata_t *drawdata){
 	GtkWidget* out;
 	out=gtk_hbox_new(FALSE, 0);
 	/* create label for tab */
-	drawdata_t* drawdata=*drawdatawrap;
-	const gchar* str=drawdata->name;
 	GtkWidget* label=gtk_label_new(str);
 
 #if GTK_MAJOR_VERSION >= 3
@@ -511,7 +507,7 @@ static GtkWidget* subnb_label_new(drawdata_t** drawdatawrap){
 	//gtk_widget_set_size_request(close_btn, 24, 24);//just crops faceplate. does not reduce icon.
 	//gtk_container_set_border_width(GTK_CONTAINER(close_btn), 0);//useless
 #endif
-	g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page_btn), drawdatawrap);
+	g_signal_connect_swapped(close_btn, "clicked", G_CALLBACK(delete_page), drawdata);
 	box_append(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 #if GTK_MAJOR_VERSION < 4
     gtk_widget_show_all(out);
@@ -535,13 +531,11 @@ static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 #if GTK_MAJOR_VERSION>=4
-static gboolean drawarea_drag_update(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t **drawdatawrap){
-	drawdata_t *drawdata=*drawdatawrap;
+static gboolean drawarea_drag_update(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t *drawdata){
 	gint button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(drag));
-	//info_time("drag_update at %g %g\n", dx, dy);
+	//dbg_time("drag_update at %g %g\n", dx, dy);
 #else
-static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event, drawdata_t** drawdatawrap){
-	drawdata_t *drawdata=*drawdatawrap;
+static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
 	gdouble dx=x-drawdata->mxdown;
@@ -587,8 +581,7 @@ static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event,
 #if GTK_MAJOR_VERSION>=4 //a separate controller for cursor motion
 	return FALSE;
 }
-static void drawarea_motion_event(GtkEventControllerMotion *self, gdouble x, gdouble y, drawdata_t **drawdatawrap){
-	drawdata_t *drawdata=*drawdatawrap;
+static void drawarea_motion_event(GtkEventControllerMotion *self, gdouble x, gdouble y, drawdata_t *drawdata){
 	(void)self;
 #endif
 	/*we set the cursor */
@@ -599,30 +592,33 @@ static void drawarea_motion_event(GtkEventControllerMotion *self, gdouble x, gdo
 			//set_cursor(drawdata->drawarea, cursors[0]);
 			gtk_widget_set_has_tooltip(drawdata->drawarea, 1);
 		}
-		{
-			gdouble x2=(x-drawdata->xoff)/(gdouble)(drawdata->widthim);
-			gdouble y2=1-(y-drawdata->yoff)/(gdouble)(drawdata->heightim);
-			x2=(1.-x2)*drawdata->limit0[0]+x2*drawdata->limit0[1];
-			y2=(1.-y2)*drawdata->limit0[2]+y2*drawdata->limit0[3];
-			if(drawdata->xylog[0]!='n') x2=pow(10, x2);
-			if(drawdata->xylog[1]!='n') y2=pow(10, y2);
-			if(drawdata->p0){//2d image plot
-				int xi=(int)((x2-drawdata->limit[0])/(drawdata->limit[1]-drawdata->limit[0])*drawdata->nx);
-				int yi=(int)((y2-drawdata->limit[2])/(drawdata->limit[3]-drawdata->limit[2])*drawdata->ny);
-				float val=0;
-				if(xi>=0 && xi<drawdata->nx && yi>=0 && yi<drawdata->ny){
-					val=drawdata->p0[drawdata->nx*yi+xi];
-				}else{
-					warning("point (%d, %d) is invalid for array (%d,%d)\n", xi, yi, drawdata->nx, drawdata->ny);
-				}
-				x2=(xi+0.5)*(drawdata->limit[1]-drawdata->limit[0])/drawdata->nx+drawdata->limit[0];
-				y2=(yi+0.5)*(drawdata->limit[3]-drawdata->limit[2])/drawdata->ny+drawdata->limit[2];
+	
+		gdouble x2=(x-drawdata->xoff)/(gdouble)(drawdata->widthim);
+		gdouble y2=1-(y-drawdata->yoff)/(gdouble)(drawdata->heightim);
+		x2=(1.-x2)*drawdata->limit0[0]+x2*drawdata->limit0[1];
+		y2=(1.-y2)*drawdata->limit0[2]+y2*drawdata->limit0[3];
+		if(drawdata->xylog[0]!='n') x2=pow(10, x2);
+		if(drawdata->xylog[1]!='n') y2=pow(10, y2);
+		
+		if(drawdata->p0){//2d image plot
+			int xi=(int)((x2-drawdata->limit[0])/(drawdata->limit[1]-drawdata->limit[0])*drawdata->nx);
+			int yi=(int)((y2-drawdata->limit[2])/(drawdata->limit[3]-drawdata->limit[2])*drawdata->ny);
+			//convert to pixel coordinate
+			x2=(xi+0.5)*(drawdata->limit[1]-drawdata->limit[0])/drawdata->nx+drawdata->limit[0];
+			y2=(yi+0.5)*(drawdata->limit[3]-drawdata->limit[2])/drawdata->ny+drawdata->limit[2];
+			
+			if(xi>=0 && xi<drawdata->nx && yi>=0 && yi<drawdata->ny){
+				float val=drawdata->p0[drawdata->nx*yi+xi];
 				snprintf(drawdata->tooltip, sizeof(drawdata->tooltip), "(%g, %g): %g", x2, y2, val);
-			}else{//line plot
-				snprintf(drawdata->tooltip, sizeof(drawdata->tooltip), "(%g, %g)", x2, y2);
+			}else{
+				drawdata->tooltip[0]=0;
+				//dbg_time("point (%d, %d) is invalid for array (%d,%d)\n", xi, yi, drawdata->nx, drawdata->ny);
 			}
-			gtk_widget_set_tooltip_text(drawdata->drawarea, drawdata->tooltip);
+		}else{//line plot
+			snprintf(drawdata->tooltip, sizeof(drawdata->tooltip), "(%g, %g)", x2, y2);
 		}
+		gtk_widget_set_tooltip_text(drawdata->drawarea, drawdata->tooltip);
+	
 	} else{
 		if(drawdata->cursorinside){
 			drawdata->cursorinside=0;
@@ -650,6 +646,7 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 		drawdata->zoomy=1;
 		drawdata->offx=0;
 		drawdata->offy=0;
+		drawdata->drawn=0;
 	}
 	if(drawdata->zoomx<MIN_ZOOM){
 		drawdata->zoomx=MIN_ZOOM;
@@ -670,9 +667,8 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	update_pixmap(drawdata);
 }
 #if GTK_MAJOR_VERSION>=4
-static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble dx, gdouble dy, drawdata_t **drawdatawrap){
+static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble dx, gdouble dy, drawdata_t *drawdata){
 	GdkEvent *event=gtk_event_controller_get_current_event(GTK_EVENT_CONTROLLER(scroll));
-	drawdata_t *drawdata=*drawdatawrap;
 	double x=drawdata->mxdown;
 	double y=drawdata->mydown;
 
@@ -680,14 +676,13 @@ static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble 
 	int zoom_dir=dy!=0?dy:dx;
 	//info("dx=%g, dy=%g, x=%g, y=%g\n", dx, dy, x, y);
 #else
-static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, drawdata_t** drawdatawrap){
+static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, drawdata_t* drawdata){
 	(void)widget;
-	drawdata_t *drawdata=*drawdatawrap;
 	double x=event->x;
 	double y=event->y;
 	unsigned int time=event->time;
 	int zoom_dir=(event->direction==GDK_SCROLL_UP)?1:-1;
-	dbg("scroll_event with dir %d\n", zoom_dir);
+	//dbg_time("scroll_event with dir %d\n", zoom_dir);
 #endif
 #define DO_ZOOM 1
 #if DO_ZOOM
@@ -718,27 +713,25 @@ static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, 
 }
 
 #if GTK_MAJOR_VERSION<4
-static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t** drawdatawrap){
+static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t* drawdata){
 	(void)event;
 	(void)widget;
-	drawdata_t* drawdata=*drawdatawrap;
 	drawdata->region=0;
 	//dbg_time("focus_in_handler.\n");
 	return FALSE;
 }
 
-static gboolean drawarea_button_press(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
+static gboolean drawarea_button_press(GtkWidget* widget, GdkEventButton* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
 	/*Grab focus so the keys work */
 	if(!GTK_WIDGET_HAS_FOCUS(widget)) gtk_widget_grab_focus(widget);
 #else
-static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, drawdata_t**drawdatawrap){
+static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, drawdata_t* drawdata){
 	(void)self;
 	//always triggered when mouse is clicked.
-	info_time("drag_begin at %g %g\n", x, y);
+	//dbg_time("drag_begin at %g %g\n", x, y);
 #endif
-	drawdata_t* drawdata=*drawdatawrap;
 	if(x>drawdata->legbox_ox&&x<drawdata->legbox_ox+drawdata->legbox_width
 		&&y>drawdata->legbox_oy&&y<drawdata->legbox_oy+drawdata->legbox_height){
 		drawdata->region=2;
@@ -760,8 +753,7 @@ static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, d
 }
 
 #if GTK_MAJOR_VERSION<4
-static gboolean drawarea_button_release(GtkWidget* widget, GdkEventButton* event, drawdata_t** drawdatawrap){
-	drawdata_t *drawdata=*drawdatawrap;
+static gboolean drawarea_button_release(GtkWidget* widget, GdkEventButton* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
 	gdouble dx=x-drawdata->mxdown;
@@ -769,12 +761,11 @@ static gboolean drawarea_button_release(GtkWidget* widget, GdkEventButton* event
 	gint button=event->button;
 	(void)widget;
 #else
-static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t**drawdatawrap){
-	drawdata_t *drawdata=*drawdatawrap;
+static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t* drawdata){
 	gint button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(drag));
 	gdouble x=drawdata->mxdown+dx;
 	gdouble y=drawdata->mydown+dy;
-	info_time("drag_end at %g %g\n", x, y);
+	//dbg_time("drag_end at %g %g\n", x, y);
 #endif
 
 	if(!drawdata->region) return FALSE;
@@ -824,26 +815,23 @@ static void switch_tab(int lr, int ud){
 		return;
 	}
 	GtkWidget* topnb=curtopnb;
-	if(lr){
-		gtk_notebook_set_current_page
-		(GTK_NOTEBOOK(topnb),
+	if(lr){//switch top page
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(topnb),
 			gtk_notebook_get_current_page(GTK_NOTEBOOK(topnb))+lr);
-	} else if(ud){
-		GtkWidget* page=gtk_notebook_get_nth_page
-		(GTK_NOTEBOOK(topnb),
+	} else if(ud){//switch sub page
+		GtkWidget* subnb=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb),
 			gtk_notebook_get_current_page(GTK_NOTEBOOK(topnb)));
-		gtk_notebook_set_current_page
-		(GTK_NOTEBOOK(page),
-			gtk_notebook_get_current_page(GTK_NOTEBOOK(page))+ud);
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(subnb),
+			gtk_notebook_get_current_page(GTK_NOTEBOOK(subnb))+ud);
 	}
 }
 #if GTK_MAJOR_VERSION<4
-static gboolean drawarea_key_press(GtkWidget* widget, GdkEventKey* event, drawdata_t** drawdatawrap){
+static gboolean drawarea_key_press(GtkWidget* widget, GdkEventKey* event, drawdata_t* drawdata){
 	(void)widget;
 	guint keyval=event->keyval;
 	GdkModifierType state=event->state;
 #else
-static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guint keycode, GdkModifierType state, drawdata_t**drawdatawrap){
+static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guint keycode, GdkModifierType state, drawdata_t*drawdata){
 	(void) ec; (void) keycode;
 	//info("drawarea_key_press with keyval %ud\n", keyval);
 #endif
@@ -864,20 +852,20 @@ static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guin
 		switch(keyval){
 		case GDK_plus:
 		case GDK_equal:
-			do_zoom(*drawdatawrap, 0, 0, 1); break;
+			do_zoom(drawdata, 0, 0, 1); break;
 		case GDK_minus:
-			do_zoom(*drawdatawrap, 0, 0, -1);break;
+			do_zoom(drawdata, 0, 0, -1);break;
 		case GDK_0:
 		case GDK_1:
-			do_zoom(*drawdatawrap, 0, 0, 0);break;
+			do_zoom(drawdata, 0, 0, 0);break;
 		case GDK_Left:
-			do_move(*drawdatawrap, -10, 0);break;
+			do_move(drawdata, -10, 0);break;
 		case GDK_Right:
-			do_move(*drawdatawrap, 10, 0);break;
+			do_move(drawdata, 10, 0);break;
 		case GDK_Up:
-			do_move(*drawdatawrap, 0, 10);break;
+			do_move(drawdata, 0, 10);break;
 		case GDK_Down:
-			do_move(*drawdatawrap, 0, -10);break;
+			do_move(drawdata, 0, -10);break;
 		default:
 			return FALSE;
 		}
@@ -909,14 +897,11 @@ static void page_changed(int topn, int subn){
 	}
 	if(!subpage) return;
 	if(topn!=-1 || subn!=-1){
-		drawdata_t** pdrawdata=(drawdata_t **)g_object_get_data(G_OBJECT(subpage), "drawdatawrap");
-		drawdata_t *drawdata=pdrawdata?*pdrawdata:NULL;
-		if(drawdata){
-			update_toolbar(drawdata);
-			if(!drawdata->drawn){
-				update_pixmap(drawdata);
-			}
+		drawdata_t* drawdata=(drawdata_t *)g_object_get_data(G_OBJECT(subpage), "drawdata");
+		if(drawdata && !drawdata->drawn){
+			update_pixmap(drawdata);
 		}
+		update_toolbar();
 	}else{
 		static int client_pid_last=0;
 		if(client_pid==client_pid_last){
@@ -945,22 +930,24 @@ static void page_changed(int topn, int subn){
 static void topnb_page_switch(GtkNotebook* topnb, GtkWidget* page, guint n, GtkWidget* toolbar){
 	(void)topnb; (void)page; (void) toolbar;
 	//gtk_widget_set_sensitive(toolbar, TRUE);
+	//dbg_time("topnb_page_switch: %u\n", n);
 	page_changed(n, -1);
 }
 static void subnb_page_switch(GtkNotebook* subnb, GtkWidget* page, guint n, gpointer dummy){
+	//dbg_time("subnb_page_switch: %u\n", n);
 	(void)subnb; (void)page;
 	(void)dummy;
 	page_changed(-1, n);
 }
-static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *child, guint n, GtkWidget *topnb){
-	//info("subnb_page_removed, subnb=%p, child=%p\n",  subnb, child);
-	(void)child; (void)n;
+static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *drawarea, guint n, GtkWidget *topnb){
+	//dbg_time("subnb_page_removed, subnb=%p, child=%p, n=%u\n",  subnb, drawarea, n);
+	(void)n; (void)drawarea;
 	if(gtk_notebook_get_n_pages(subnb)==0){
 		//GtkWidget *topnb=gtk_widget_get_parent(GTK_WIDGET(subnb));//not work in gtk4
 		if(topnb){
 			int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), GTK_WIDGET(subnb));
 			if(ipage==-1){
-				dbg_time("page not found\n");
+				//dbg_time("page not found\n");//happens if topnb is destroyed already
 			}else{
 				gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), ipage);
 			}
@@ -972,9 +959,10 @@ static void topnb_page_removed(GtkNotebook* topnb, GtkWidget* child, guint n, Gt
 	//info("topnb_page_removed with n=%d for %p\n", n, topnb);
 	(void)child;
 	(void)n;
+	(void)toolbar;
 	int npage=gtk_notebook_get_n_pages(topnb);
 	if(npage==0){/*no more pages left. */
-		gtk_widget_set_sensitive(toolbar, FALSE);
+		//gtk_widget_set_sensitive(toolbar, FALSE);
 		//info("window list length is %d\n", g_slist_length(windows));
 		if(g_slist_length(windows)>1){
 			GtkWidget* window=gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(topnb)));
@@ -998,17 +986,26 @@ static void topnb_page_added(GtkNotebook *topnb, GtkWidget *child, guint n, GtkW
    addpage from child threads. Modify the routine so that addpage is called by
    the main thread when gtk is idle.
 */
-gboolean addpage(gpointer indata){
-	drawdata_t* drawdata=(drawdata_t*)indata;
-	GtkWidget* drawarea;
-	if(!drawdata->fig){
-		dbg_time("Must set fig before calling addpage");
+gboolean addpage(drawdata_t *drawdata){
+	if(!drawdata->fig || !drawdata->name){
+		dbg_time("Must set fig and name before calling addpage");
+		return 0;
 	}
+	if(atomic_load(&drawdata->recycle)){
+		//this is caused by race condition
+		//When the GUI is removing the page, the drawdaemon_io was receiving the data and then queued a addpage
+		dbg_time("unexpected: drawdata(%p). recycle is set\n", drawdata);
+		return 0;
+	}
+	//info("Adding page %s, %s\n", drawdata->fig, drawdata->name);
 	GSList* subnbs=NULL;
 	int nsubnb=0;
 	GtkWidget* window=0;
 	GtkWidget* topnb=0;
 	int jtab=-1;//default: insert to the end
+	if(!windows){//not windows remaining
+		create_window(NULL);
+	}
 	for(GSList *p=windows; p; p=p->next){
 		//scan through all window to find all topnb page that has the same "fig"
 		window=GTK_WIDGET(p->data);
@@ -1024,9 +1021,7 @@ gboolean addpage(gpointer indata){
 			}
 		}
 	}
-	if(!topnb){
-		topnb=get_topnb(create_window(NULL));
-	}
+
 	if(!nsubnb){/*subnb not found. create one. */
 		GtkWidget* subnb=gtk_notebook_new();
 		subnbs=g_slist_append(subnbs, subnb);
@@ -1047,55 +1042,39 @@ gboolean addpage(gpointer indata){
 		//gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 	}
-	GtkWidget* page=NULL;
-	GtkWidget* subnb=NULL;
+	GtkWidget* drawarea=NULL;
+	GtkWidget* subnb=subnbs->data;
 	jtab=-1;
 	for(GSList* p=subnbs; p; p=p->next){
 		/*scan through all the subnb pages with same label */
-		subnb=(GtkWidget*)p->data;
 		//info("subnb=%p\n", subnb);
-		for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
-			GtkWidget* tmp=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), itab);
-			const gchar* labeltext=subnb_label_get(subnb, tmp);
-			int res=strcmp(drawdata->name, labeltext);
-			if(!res){
-				if(!page){
-					page=tmp;
-				}else{
-					info("Found duplicate page.\n");
-					gtk_notebook_remove_page(GTK_NOTEBOOK(subnb), itab); itab--;
+		for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(p->data)); itab++){
+			GtkWidget* tmp=gtk_notebook_get_nth_page(GTK_NOTEBOOK(p->data), itab);
+			drawdata_t* drawdata_old=(drawdata_t*)g_object_get_data(G_OBJECT(tmp), "drawdata");
+			if(drawdata_old==drawdata){//We match using drawdata pointer, not ->name to avoid race condition when tab is deleted.
+				drawarea=drawdata->drawarea;
+				break;
+			}else{//locate a insert position
+				const gchar* labeltext=subnb_label_get(GTK_WIDGET(p->data), tmp);
+				int res=strcmp(drawdata->name, labeltext);
+				if(res<0 && jtab==-1){
+					jtab=itab;
+					subnb=(GtkWidget*)p->data;
 				}
-			} else if(res<0 && jtab==-1){
-				jtab=itab;
 			}
 		}
 	}
-	if(page){/*we use drawdatawrap so that we don't have to modify the data on the g_object.*/
-		drawdata_t** drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(page), "drawdatawrap");
-		if(*drawdatawrap!=drawdata){
-			dbg_time("drawdata was %p, new is %p, recycle old value.\n", *drawdatawrap, drawdata);
-			(*drawdatawrap)->recycle=1;
-			*drawdatawrap=drawdata;
-		}
-		//drawdata_free_input(drawdata_old);
-	}
-	if(page){
-		update_pixmap(drawdata);
-		if(get_current_drawdata()!=drawdata){/*we are the current page. need to update pixmap */
-			/*otherwise, notify client that it is not drawing to active page */
-			page_changed(-1, -1);
+	if(drawarea){
+		update_pixmap(drawdata);/*update pixmap */
+		if(get_current_drawdata()!=drawdata){
+			page_changed(-1, -1);/*notify client that it is not drawing to active page */
 		}
 	} else{
+		//dbg_time("%p: addpage\n", drawdata);
 		/*new tab inside the fig to contain the plot. */
-		drawdata->page=page=gtk_drawing_area_new();
+		drawarea=drawdata->drawarea=gtk_drawing_area_new();
 		drawdata->subnb=subnb;
-		/*gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page),
-			GTK_POLICY_AUTOMATIC,
-			GTK_POLICY_AUTOMATIC);*/
-		drawdata_t**drawdatawrap=mycalloc(1, drawdata_t*);
-		*drawdatawrap=drawdata;
-		g_object_set_data_full(G_OBJECT(page), "drawdatawrap", drawdatawrap, drawdatawrap_delete);
-		drawdata->drawarea=drawarea=page;
+		g_object_set_data_full(G_OBJECT(drawarea), "drawdata", drawdata, drawarea_deleted);
 
 #if GTK_VERSION_AFTER(3, 22)
 		gtk_widget_set_can_focus(drawarea, TRUE);//2.18
@@ -1110,21 +1089,21 @@ gboolean addpage(gpointer indata){
 		GtkGesture *drag=gtk_gesture_drag_new();
 		gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(drag), 0);
 		gtk_widget_add_controller(drawarea, GTK_EVENT_CONTROLLER(drag));
-		g_signal_connect(drag, "drag-begin", G_CALLBACK(drawarea_drag_begin), drawdatawrap);
-		g_signal_connect(drag, "drag-update", G_CALLBACK(drawarea_drag_update), drawdatawrap);
-		g_signal_connect(drag, "drag-end", G_CALLBACK(drawarea_drag_end), drawdatawrap);
+		g_signal_connect(drag, "drag-begin", G_CALLBACK(drawarea_drag_begin), drawdata);
+		g_signal_connect(drag, "drag-update", G_CALLBACK(drawarea_drag_update), drawdata);
+		g_signal_connect(drag, "drag-end", G_CALLBACK(drawarea_drag_end), drawdata);
 
 		GtkEventController *ec=gtk_event_controller_key_new();
 		gtk_widget_add_controller(drawarea, GTK_EVENT_CONTROLLER(ec));
-		g_signal_connect(ec, "key-pressed", G_CALLBACK(drawarea_key_press), drawdatawrap);//not useful
+		g_signal_connect(ec, "key-pressed", G_CALLBACK(drawarea_key_press), drawdata);//not useful
 
 		GtkEventController *scroll=gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
 		gtk_widget_add_controller(drawarea, GTK_EVENT_CONTROLLER(scroll));
-		g_signal_connect(scroll, "scroll", G_CALLBACK(drawarea_scroll_event), drawdatawrap);
+		g_signal_connect(scroll, "scroll", G_CALLBACK(drawarea_scroll_event), drawdata);
 
 		GtkEventController* motion=gtk_event_controller_motion_new();
 		gtk_widget_add_controller(drawarea, GTK_EVENT_CONTROLLER(motion));
-		g_signal_connect(motion, "motion", G_CALLBACK(drawarea_motion_event), drawdatawrap);
+		g_signal_connect(motion, "motion", G_CALLBACK(drawarea_motion_event), drawdata);
 #else
 		gtk_widget_add_events(drawarea, GDK_BUTTON_PRESS_MASK|
 			GDK_BUTTON_RELEASE_MASK|
@@ -1133,51 +1112,41 @@ gboolean addpage(gpointer indata){
 			GDK_KEY_PRESS_MASK|
 			GDK_KEY_RELEASE_MASK);
 		g_signal_connect(drawarea, "motion-notify-event",
-			G_CALLBACK(drawarea_motion_notify), drawdatawrap);
+			G_CALLBACK(drawarea_motion_notify), drawdata);
 
 		//notice that there is no drawarea_button_press event when click through to activate a window.
 		//so we also connect focus-in-event
 		g_signal_connect(drawarea, "button-press-event",
-			G_CALLBACK(drawarea_button_press), drawdatawrap);
+			G_CALLBACK(drawarea_button_press), drawdata);
 		g_signal_connect(drawarea, "button-release-event",
-			G_CALLBACK(drawarea_button_release), drawdatawrap);
+			G_CALLBACK(drawarea_button_release), drawdata);
 		g_signal_connect(drawarea, "focus-in-event",
-			G_CALLBACK(focus_in_handler), drawdatawrap);
+			G_CALLBACK(focus_in_handler), drawdata);
 
 		g_signal_connect(drawarea, "scroll-event",
-			G_CALLBACK(drawarea_scroll_event), drawdatawrap);
+			G_CALLBACK(drawarea_scroll_event), drawdata);
 
    		/*g_signal_connect(drawarea,"button-release-event",
-	 	G_CALLBACK(drawarea_button_release),drawdatawrap);*/
+	 	G_CALLBACK(drawarea_button_release),drawdata);*/
 		g_signal_connect(drawarea, "key-press-event",
-			G_CALLBACK(drawarea_key_press), drawdatawrap);
+			G_CALLBACK(drawarea_key_press), drawdata);
 
 #endif
-/*
+		GtkWidget* button=subnb_label_new(drawdata->name, drawdata);
+		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), drawarea, button, jtab);
+		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), drawarea, TRUE);
 #if GTK_MAJOR_VERSION>=4
-		gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(page), drawarea);//4.0
-#elif GTK_VERSION_AFTER(3, 8)
-		gtk_container_add(GTK_CONTAINER(page), drawarea);//automatically add viewport since 3.8
-#else
-		gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(page), drawarea);//old
-#endif
-*/
-		GtkWidget* button=subnb_label_new(drawdatawrap);
-		gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page, button, jtab);
-		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
-		//gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, TRUE);
-#if GTK_MAJOR_VERSION>=4
-		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawarea), drawarea_draw_func, drawdatawrap, NULL);
+		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawarea), drawarea_draw_func, drawdata, NULL);
 #elif GTK_MAJOR_VERSION==3
-		g_signal_connect(drawarea, "draw",G_CALLBACK(on_draw_event), drawdatawrap);
+		g_signal_connect(drawarea, "draw",G_CALLBACK(on_draw_event), drawdata);
 #else
-		g_signal_connect(drawarea, "expose-event",G_CALLBACK(on_expose_event), drawdatawrap);
+		g_signal_connect(drawarea, "expose-event",G_CALLBACK(on_expose_event), drawdata);
 #endif
 	/*handles zooming. */
 #if GTK_MAJOR_VERSION>=4
-		g_signal_connect(drawarea, "resize",G_CALLBACK(on_resize_event), drawdatawrap);
+		g_signal_connect(drawarea, "resize",G_CALLBACK(on_resize_event), drawdata);
 #else
-		g_signal_connect(drawarea, "configure-event", G_CALLBACK(on_configure_event), drawdatawrap);
+		g_signal_connect(drawarea, "configure-event", G_CALLBACK(on_configure_event), drawdata);
 
 #endif
 		gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH, DRAWAREA_MIN_HEIGHT);
@@ -1320,16 +1289,12 @@ static void save_file(drawdata_t *drawdata){
 		return;
 	}
 	cairo_draw(drawdata);
-	cairo_surface_finish(drawdata->surface);
-	cairo_surface_destroy(drawdata->surface);
-	drawdata->surface=NULL;
 }
-
 
 static void tool_zoom(GtkWidget* button, gpointer data){
 	(void)button;
 	drawdata_t* drawdata=get_current_drawdata();
-	int mode=GPOINTER_TO_INT(data);
+	int mode=GPOINTER_TO_INT(data)-1;
 	do_zoom(drawdata, 0, 0, mode);
 }
 
@@ -1344,24 +1309,20 @@ static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->zlim_manual=2;//1: set by draw(). 2: set by gui.
 	drawdata_dialog->drawn=0;
-	//update_zoom(drawdata_dialog);
 	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	*key=check_button_get_active(btn);
-	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle_inv(GtkWidget *btn, gint *key){
 	*key=!check_button_get_active(btn);
-	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*key=check_button_get_active(btn)?'y':'n';
-	//drawdata_dialog->zlim_changed=1;
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
@@ -1395,16 +1356,14 @@ static void togglebutton_toggle(GtkWidget* btn, void *data){
 	if(!drawdata) return;
 	switch(key){
       case 1:
-		if(drawdata->p){
-			drawdata->zlog=val;
-			drawdata->zlim_changed=1;
-		}break;
+		drawdata->zlog=val;
+		break;
 	  case 2:
 		drawdata->cumu=val;
-		update_toolbar(drawdata);
 		break;
 	}
-	update_pixmap(get_current_drawdata());
+	update_toolbar();
+	update_pixmap(drawdata);
 }
 
 static void togglebutton_stop(GtkWidget* btn, gpointer data){
@@ -1732,7 +1691,7 @@ static void tool_property(GtkWidget* button, gpointer data){
 		width=gtk_widget_get_width(curwindow);
 		height=gtk_widget_get_height(curwindow);
 #endif	
-		info_time("width=%d, height=%d\n", width, height);
+		//dbg_time("width=%d, height=%d\n", width, height);
 		hbox=gtk_hbox_new(FALSE, 0);
 		label=new_spin_button("Width", width, 100, 2800, 10, set_window_size, GINT_TO_POINTER(1));
 		box_append(GTK_BOX(hbox), label, TRUE,  TRUE, 0);
@@ -1902,7 +1861,7 @@ gboolean update_fpslabel(gpointer data){
 		float fps=0;
 		if(io_time1+10>thistime && io_time2+100>io_time1 && io_time1!=io_time2){//continuous update
 			fps=1./(io_time1-io_time2);
-			snprintf(newtext, sizeof(newtext), "%.2f Hz", fps);
+			snprintf(newtext, sizeof(newtext), "%.1f Hz", fps);
 		}else{
 			newtext[0]=0;
 			fps=0;
@@ -2001,9 +1960,9 @@ GtkWidget* create_window(GtkWidget* window){
 	//gtk_widget_set_sensitive(toolbar, FALSE);
 	new_toolbar_item(toolbar, NULL, 0, "document-save-as", NULL, NULL, tool_save, NULL);
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
-	new_toolbar_item(toolbar, NULL, 0, "zoom-in", NULL, NULL, tool_zoom, GINT_TO_POINTER(1));
-	new_toolbar_item(toolbar, NULL, 0, "zoom-fit-best", NULL, NULL, tool_zoom, GINT_TO_POINTER(0));
-	new_toolbar_item(toolbar, NULL, 0, "zoom-out", NULL, NULL, tool_zoom, GINT_TO_POINTER(-1));
+	new_toolbar_item(toolbar, NULL, 0, "zoom-in", NULL, NULL, tool_zoom, GINT_TO_POINTER(2));
+	new_toolbar_item(toolbar, NULL, 0, "zoom-fit-best", NULL, NULL, tool_zoom, GINT_TO_POINTER(1));
+	new_toolbar_item(toolbar, NULL, 0, "zoom-out", NULL, NULL, tool_zoom, GINT_TO_POINTER(0));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
 	new_toolbar_item(toolbar, NULL, 0, "document-properties", NULL, NULL, tool_property, NULL);
 

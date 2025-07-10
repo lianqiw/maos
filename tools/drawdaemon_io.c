@@ -152,13 +152,41 @@ void *listen_udp(void *dummy){
 	} while(counter>0);
 	return NULL;
 }
-void drawdata_free_input(drawdata_t *drawdata){
+/* Initialize */
+void drawdata_init(drawdata_t *drawdata){
+	drawdata->zoomx=1;
+	drawdata->zoomy=1;
+	drawdata->square=-1;
+	drawdata->legendbox=1;
+	drawdata->legendcurve=1;
+	drawdata->legendoffx=1;
+	drawdata->legendoffy=0;
+	drawdata->xylog[0]='n';
+	drawdata->xylog[1]='n';
+	drawdata->cumulast=-1;/*mark as unknown. */
+	pthread_mutex_init(&drawdata->mutex, NULL);
+}
+/**
+ * @brief Free content but keep for reuse.
+ * 
+ * @param drawdata 
+ */
+static void drawdata_freecontent(drawdata_t *drawdata){
 	/*Only free the input received via fifo from draw.c */
-	FREE(drawdata->p);
+	if(!drawdata->fig) return;
+	FREE(drawdata->fig);
+	FREE(drawdata->name);
+	FREE(drawdata->title);
+	FREE(drawdata->xlabel);
+	FREE(drawdata->ylabel);
+	free_strarr(drawdata->legend, drawdata->nptsmax); drawdata->legend=NULL;
+	free_strarr(drawdata->legend_ellipsis, drawdata->nptsmax); drawdata->legend_ellipsis=NULL;
+	FREE(drawdata->filename);
+	FREE(drawdata->filename_gif);
 	FREE(drawdata->p0);
 	FREE(drawdata->p1);
-	FREE(drawdata->limit_data);
-	FREE(drawdata->limit_cumu);
+	FREE(drawdata->p);
+
 	if(drawdata->npts>0){
 		for(int ipts=0; ipts<drawdata->nptsmax; ipts++){
 			FREE(drawdata->pts[ipts]);
@@ -172,73 +200,58 @@ void drawdata_free_input(drawdata_t *drawdata){
 	if(drawdata->ncirmax>0){
 		FREE(drawdata->cir);
 	}
-	FREE(drawdata->fig);
-	FREE(drawdata->name);
-	FREE(drawdata->title);
-	FREE(drawdata->xlabel);
-	FREE(drawdata->ylabel);
-	if(drawdata->legend){
-		for(int i=0; i<drawdata->nptsmax; i++){
-			FREE(drawdata->legend[i]);
-		}
-		FREE(drawdata->legend);
-	}
-	drawdata->page=NULL;
-	drawdata->subnb=NULL;
-	FREE(drawdata);
+	FREE(drawdata->limit_data);
+	FREE(drawdata->limit_cumu);
+	//info_time("Free content: %p\n", drawdata);
 }
+
 static drawdata_t *HEAD=NULL;
 static drawdata_t *drawdata_get(char **fig, char **name, int reset){
-	if(!HEAD){
-		HEAD=mycalloc(1, drawdata_t);//dummy head for easy handling
-	}
 	drawdata_t *drawdata=0;
-	drawdata_t *ppriv=HEAD;
-	for(drawdata_t *p=ppriv->next; p; ppriv=p, p=p->next){
-		if(p->recycle){
-			ppriv->next=p->next;
-			drawdata_free_input(p);
-			p=ppriv;
-		} else if(!strcmp(p->fig, *fig)&&!strcmp(p->name, *name)){
-			drawdata=p;
+	for(drawdata_t **pp=&HEAD; *pp; ){
+		drawdata_t *p=*pp;
+		if(atomic_load(&p->recycle)==2){
+			drawdata_freecontent(p);
+			if(p->io_time+10<myclockd()){//recycled by GUI. give 10 seconds before free to avoid race condition
+				*pp=p->next;
+				FREE(p);
+			}else{
+				pp=&p->next;
+			}
+		} else {
+			if(!atomic_load(&p->recycle) && p->fig && p->name && !strcmp(p->fig, *fig)&&!strcmp(p->name, *name)){
+				drawdata=p;
+			}
+			pp=&p->next;
 		}
 	}
 	if(!drawdata){
+		//create a new node
 		drawdata=mycalloc(1, drawdata_t);
+		drawdata->next=HEAD;
+		HEAD=drawdata;
+		drawdata_init(drawdata);
 		drawdata->fig=*fig; *fig=0;
 		drawdata->name=*name; *name=0;
-		drawdata->zoomx=1;
-		drawdata->zoomy=1;
-		drawdata->square=-1;
-		drawdata->legendbox=1;
-		drawdata->legendcurve=1;
-		drawdata->legendoffx=1;
-		drawdata->legendoffy=0;
-		drawdata->xylog[0]='n';
-		drawdata->xylog[1]='n';
-		drawdata->cumulast=-1;/*mark as unknown. */
-		pthread_mutex_init(&drawdata->mutex, NULL);
-		drawdata->next=HEAD->next;
-		HEAD->next=drawdata;
 	} else{
 		//reset image, npoints, to default. do not reset memory
 		/*while(!drawdata->drawn && drawdata->ready){
 			warning_time("Wait for previous data to draw before receiving new data\n");
 			mysleep(1);
 		}*/
-		if(reset){
-			drawdata->update_limit=1;
-		}
-		free(*fig); *fig=0;
-		free(*name); *name=0;
-		if(drawdata->session<session){
-			drawdata->session=session;
-			drawdata->limit_manual=0;
-			drawdata->zlim_manual=0;
-			drawdata->cumu=0;
-			drawdata->update_zoom=2;
-			drawdata->update_limit=1;
-		}
+		FREE(*fig);
+		FREE(*name);
+	}
+	if(reset){
+		drawdata->update_limit=1;
+	}
+	if(drawdata->session<session){
+		drawdata->session=session;
+		drawdata->limit_manual=0;
+		drawdata->zlim_manual=0;
+		//drawdata->cumu=0;
+		drawdata->update_zoom=2;
+		drawdata->update_limit=1;
 	}
 	return drawdata;
 }
@@ -301,8 +314,8 @@ static char** char_ellipsis(char *legends[], int npts){
  * */
 static void drawdata_clear_older(float timclear){
 	if(!HEAD) return;
-	for(drawdata_t *p=HEAD->next; p; p=p->next){
-		if(p->io_time<timclear){
+	for(drawdata_t *p=HEAD; p; p=p->next){
+		if(p->drawarea && p->io_time<timclear){
 			info_time("Request deleting page %s %s\n", p->fig, p->name);
 			g_idle_add((GSourceFunc)delete_page, p);
 		}
@@ -326,8 +339,8 @@ int client_pidold=-1; //old client PID.
 int draw_id=0; //1: maos, 2: drawres.
 int keep_listen=1;//set to 0 to stop listening
 int draw_single=0;//whether client only wants to draw to the active tab.
-drawdata_t *drawdata=NULL;//current
-drawdata_t *drawdata_prev=NULL;//previous
+static drawdata_t *drawdata=NULL;//current
+static drawdata_t *drawdata_prev=NULL;//previous
 char *client_hostname=NULL;
 char *client_path=NULL;//received
 char *client_path_full=NULL;//with ~ expanded.
@@ -613,7 +626,7 @@ void *listen_draw(void *user_data){
 			break;
 			case DRAW_INIT:
 			{
-				io_timeclear=myclockd();
+				io_timeclear=myclockd();//when DRAW_FINAL is called, plots older than this will will be cleared
 			}
 			break;
 			case DRAW_PID:
@@ -683,8 +696,8 @@ void *listen_draw(void *user_data){
 				io_time1=myclockd();
 				drawdata->io_time=io_time1;
 				drawdata_prev=drawdata;//for computing time
-				g_idle_add((GSourceFunc)addpage, drawdata);
-				
+				g_idle_add((GSourceFunc)addpage, drawdata);//race condition: it may happen after drawdata was destroyed in the GUI.
+				//info("Queuing %p: %s, %s\n", drawdata, drawdata->fig, drawdata->name);
 				drawdata=NULL;
 			}
 			break;

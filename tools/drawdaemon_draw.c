@@ -33,7 +33,7 @@ int hide_ylabel=0;
 int hide_title=0;
 int hide_legend=0;
 int hide_colorbar=0;
-#define DRAW_NEW 1 //1: draw to a cache surface. speed up draging.
+#define CACHE_PLOT 1 //1: draw to a cache surface. speed up draging.
 
 #define set_color(cr,color)				   \
     cairo_set_source_rgba(cr,				   \
@@ -145,22 +145,11 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
 		*dtic=0.2;
 		*ntic=2;
 	}else{
-		float spacing;
-		if(logscale){
-			spacing=pow(2,ceil(log2(diff/maxtic)));
-		} else{
-			spacing=diff/maxtic;
-			float scale=pow(10., floor(log10(spacing)));
-			int ratio=(int)ceil(spacing/scale);//value of the first significant digit rounded up
-			//scale ratio up to keep maximum 10 tics
-			if(ratio>5){
-				ratio=10;
-			}else if(ratio>2){
-				ratio=5;
-			}
-			spacing=ratio*scale;//keep a single significant digit
+		float spacing=pow(10,ceil(log(diff/maxtic)/log(10)));
+		(void)logscale;
+		if(ceil(diff/spacing)<5){
+			spacing/=2;
 		}
-
 		*tic1=myfloor(xmin/spacing)*spacing;
 		*dtic=spacing;
 		*ntic=MAX(2, (int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1));
@@ -318,18 +307,10 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx,
 		cairo_line_to(cr, ix-size, iy+size);
 		break;
 	case 3:/* + */
-#if DRAW_NEW == 1
 		cairo_move_to(cr, ix-size, iy);
 		cairo_line_to(cr, ix+size, iy);
 		cairo_move_to(cr, ix, iy-size);
 		cairo_line_to(cr, ix, iy+size);
-#else
-	/*iy-1 is because flipping makes effective rounding of 0.5 differently. */
-		cairo_move_to(cr, ix-size1, iy-1);
-		cairo_line_to(cr, ix+size, iy-1);
-		cairo_move_to(cr, ix, iy-size1);
-		cairo_line_to(cr, ix, iy+size);
-#endif
 		break;
 	case 4:/* square [] */
 		cairo_move_to(cr, ix-size, iy-size);
@@ -472,9 +453,16 @@ void thread_cleanup(void *drawdata){
 }
 void* cairo_draw_thread(drawdata_t* drawdata){
 	pthread_cleanup_push(thread_cleanup, drawdata);
-
 repeat:
-	//info_time("cairo_draw entr: limit_changed=%d, width=%d, height=%d\n", drawdata->limit_changed, width ,height);
+	if(atomic_load(&drawdata->recycle)){
+		//this is caused by race conditions
+		//The GUI may have removed the page while we are trying to render
+		//The GUI maybe resizing and therefore modifying mutex. mutex protects this scenario to avoid crash.
+		//info_time("%p: drawdata is being recycled or drawdaemon_draw lock failed. exit\n", drawdata);
+		pthread_exit(NULL); //do not use return
+	}
+	pthread_mutex_lock(&drawdata->mutex);
+	//info_time("cairo_draw enter\n");
 	if(drawdata->frame_io!=drawdata->frame_draw){
 		drawdata->drawn=0;
 		//info("%s %s: frame_io=%d, frame_draw=%d\n", drawdata->fig, drawdata->name, drawdata->frame_io, drawdata->frame_draw);
@@ -487,13 +475,16 @@ repeat:
 	//TIC;tic;
 	drawdata->font_name_version=font_name_version;
 	
-	cairo_t *crt=NULL;
 	cairo_t *cr=NULL;
-	pthread_mutex_lock(&drawdata->mutex);
-	if(drawdata->surface){//do not use a second pixmap as it maybe vector
+	int is_surface=0;
+	int need_lock=1;
+	if(drawdata->surface){//do not use a second pixmap as it maybe vector graphics. 
 		cr=cairo_create(drawdata->surface);
-	}else{
-		crt=cairo_create(drawdata->pixmap);//maintain a reference to surface.
+		is_surface=1;
+		drawdata->drawn=0;
+		//info("%p: started surface %p\n", drawdata, drawdata->surface);
+	}else if(drawdata->pixmap){
+		//draw to a secondary buffer pixmap2
 		if(width!=drawdata->pwidth2 || height!=drawdata->pheight2){
 			if(drawdata->pixmap2){
 				cairo_surface_destroy(drawdata->pixmap2);
@@ -504,16 +495,20 @@ repeat:
 		if(!drawdata->pixmap2){
 			drawdata->pwidth2=width;
 			drawdata->pheight2=height;
-			//int scale=cairo_surface_get_device_scale(target)
 			drawdata->pixmap2=cairo_surface_create_similar(drawdata->pixmap, CAIRO_CONTENT_COLOR_ALPHA, width, height);
-			//cairo_surface_set_device_scale(drawdata->pixmap2, scale, scale);
 		}
 		cr=cairo_create(drawdata->pixmap2);
+		need_lock=0;
+	}else{
+		pthread_exit(NULL); //do not use return
 	}
-	pthread_mutex_unlock(&drawdata->mutex);
-
+	//dbg_time("cairo_draw: started for %s, %s\n", drawdata->fig, drawdata->name);
 	PangoLayout* layout=pango_cairo_create_layout(cr);
 	pango_layout_set_font_description(layout, desc);
+
+	if(!need_lock){
+		pthread_mutex_unlock(&drawdata->mutex);
+	}
 	cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
 	
 	if(drawdata->p||drawdata->square){
@@ -639,8 +634,8 @@ repeat:
 	
 	const float scalex=widthim/xdim;
 	const float scaley=heightim/ydim;
-	const int maxtic_x=MIN(widthim/(3*font_size),12);
-	const int maxtic_y=MIN(heightim/(3*font_size),12);
+	const int maxtic_x=MIN(widthim/(3*font_size),10);
+	const int maxtic_y=MIN(heightim/(3*font_size),10);
 	
 	drawdata->widthim=widthim;
 	drawdata->heightim=heightim;
@@ -678,8 +673,7 @@ repeat:
 		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray,
 			drawdata->zlim+(drawdata->zlog?2:0), drawdata->zlim_manual, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
-		drawdata->image=cairo_image_surface_create_for_data
-			(drawdata->p, format, nx, ny, stride);
+		drawdata->image=cairo_image_surface_create_for_data(drawdata->p, format, nx, ny, stride);
 		drawdata->zlim_changed=0;
 	}
 	
@@ -887,7 +881,6 @@ repeat:
 	
 	if(drawdata->nx && drawdata->ny){//draw 2-d image
 		cairo_save(cr);
-		cairo_scale(cr, scalex*zoomx, scaley*zoomy);
 		/*
 		  offx, offy are the offset in the cairo window.
 		  ofx, ofy are the actual offset in the original data to display.
@@ -895,14 +888,26 @@ repeat:
 		
 		/*The x and y patterns are negated and then set as
 		  translation values in the pattern matrix.*/
-		cairo_set_source_surface(cr, drawdata->image, centerx, centery);
-		cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);//use after set_source_surface
-		//if(scalex*zoomx>1){/*use nearest filter for up sampling to get clear images */
-		//	cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
-		//}
-		cairo_paint(cr);
-		/*cairo_reset_clip(cr); */
-		
+		if(is_surface){
+			//When drawing to vector graphics, use an upsampled pixmap to avoid blur.
+			cairo_surface_t* surface_tmp=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, widthim, heightim);
+			cairo_t* cr_tmp=cairo_create(surface_tmp);
+			cairo_scale(cr_tmp, scalex*zoomx, scaley*zoomy);//scale is bad on PDF surface
+			cairo_set_source_surface(cr_tmp, drawdata->image, centerx, centery);
+			cairo_pattern_set_filter(cairo_get_source(cr_tmp), CAIRO_FILTER_NEAREST);//use after set_source_surface
+			cairo_paint(cr_tmp);
+			cairo_set_source_surface(cr, surface_tmp, 0, 0);
+			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);//use after set_source_surface
+			cairo_paint(cr);
+			cairo_destroy(cr_tmp);
+			cairo_surface_finish(surface_tmp);
+			cairo_surface_destroy(surface_tmp);
+		}else{
+			cairo_scale(cr, scalex*zoomx, scaley*zoomy);
+			cairo_set_source_surface(cr, drawdata->image, centerx, centery);
+			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);//use after set_source_surface
+			cairo_paint(cr);
+		}
 		/*
 		  xmin, xmax is the real min/max of the x axis.
 		  ofx is the offset.
@@ -918,9 +923,7 @@ repeat:
 		
 		float ncx=widthim*0.5+drawdata->offx;
 		float ncy=heightim*0.5+drawdata->offy;
-		//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-		//cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
-#if DRAW_NEW == 1
+#if CACHE_PLOT == 1
 		int new_width0=(int)ceil(widthim*zoomx)+font_size*80;
 		int new_height0=(int)ceil(heightim*zoomy)+font_size*80;
 		int new_height=new_height0;
@@ -937,7 +940,7 @@ repeat:
 		} else{
 			drawdata->ncyoff=0;
 		}
-		int redraw=0;
+		int redraw=0;//whether we need to redraw on the cacheplot
 		int new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx+drawdata->ncxoff);
 		int new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy+drawdata->ncyoff);
 		if(drawdata->cacheplot&&(drawdata->cache_width!=new_width||drawdata->cache_height!=new_height)){
@@ -946,7 +949,7 @@ repeat:
 		if(fabs(drawdata->zoomx-drawdata->zoomx_last)>1e-3||fabs(drawdata->zoomy-drawdata->zoomy_last)>1e-3){
 			redraw+=2;//zoom changed
 		}
-		if(new_width<new_width0&&(new_offx>0||-new_offx>(new_width-widthim))){
+		if(new_width<new_width0&&(new_offx>0||-new_offx>(new_width-widthim))){//translation, no need redraw
 			drawdata->ncxoff=(int)(-drawdata->offx);
 			new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx+drawdata->ncxoff);
 			//redraw+=4;
@@ -975,7 +978,7 @@ repeat:
 			//info_time("redraw=%d\n", redraw);
 			cairo_t* cr2=cr;
 			cr=cairo_create(drawdata->cacheplot);
-			cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
+			//cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
 			cairo_set_line_width(cr, linewidth);
 #endif
 			if(!drawdata->style_pts){
@@ -1111,7 +1114,7 @@ repeat:
 				cairo_restore(cr);
 
 			}/*iptsy */
-#if DRAW_NEW == 1
+#if CACHE_PLOT == 1
 			cairo_destroy(cr);
 			cr=cr2;
 		}
@@ -1205,7 +1208,7 @@ repeat:
 		cairo_identity_matrix(cr);
 		pango_scale_fontsize(layout, 0.8);
 		/*draw legend */
-		const int npts=drawdata->npts;
+		const int nlegend=MIN(20, drawdata->npts);
 		const float linelen=30;/*length of line in legend if exist. */
 		float textlen=0;/*maximum legend length. */
 		float tall=0;
@@ -1213,7 +1216,7 @@ repeat:
 		int npts_valid=0;
 		/*first figure out the size required of longest legend entry. */
 		cairo_save(cr);
-		for(int ipts=0; ipts<npts; ipts++){
+		for(int ipts=0; ipts<nlegend; ipts++){
 			if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 			float legwidth, legheight;
 			npts_valid++;
@@ -1251,7 +1254,7 @@ repeat:
 				cairo_restore(cr);
 			}
 			cairo_translate(cr, legmarin+symmargin, legmarin);
-			for(int ipts=0; ipts<npts; ipts++){
+			for(int ipts=0; ipts<nlegend; ipts++){
 				if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 				PARSE_STYLE(drawdata->style_pts[ipts]);
 				set_color(cr, color);
@@ -1297,11 +1300,34 @@ repeat:
 	drawdata->update_zoom=0;
 	drawdata->update_limit=0;
 	drawdata->drawn=1;
-	
-	if(crt){
+	if(!need_lock){
+		pthread_mutex_lock(&drawdata->mutex);
+	}
+	if(drawdata->pixmap){
+		cairo_t *crt=cairo_create(drawdata->pixmap);//maintain a reference to surface.
 		cairo_set_source_surface(crt, drawdata->pixmap2, 0, 0);
+		cairo_pattern_set_filter(cairo_get_source(crt), CAIRO_FILTER_NEAREST);
 		cairo_paint(crt);
 		cairo_destroy(crt);
+	}
+	
+	if(is_surface){//file back end
+		//potential race condition: surface maybe set while we are drawing, so we test a flag
+		//info("%p: finished surface %p\n", drawdata, drawdata->surface);
+		cairo_surface_finish(drawdata->surface);
+		cairo_surface_destroy(drawdata->surface);
+		drawdata->surface=NULL;
+	}else if(!atomic_load(&drawdata->recycle) && drawdata->drawarea){
+		//There is a potential race condition here: the drawarea may have already being removed by the GUI.
+		//We read recycle variable to check.
+		//dbg_time("cairo_draw: calling refresh\n");
+		if(iframe==drawdata->iframe){//no more drawing pending. call refresh to make sure this frame is painted
+#if GTK_VERSION_AFTER(3,4)//higher priority
+			g_main_context_invoke(NULL, (GSourceFunc)drawarea_refresh, drawdata->drawarea);
+#else
+			g_idle_add((GSourceFunc)drawarea_refresh, drawdata->drawarea);
+#endif	
+		}
 	}
 	if(drawdata->filename_gif && drawdata->frame_draw!=drawdata->frame_gif){
 		drawdata->frame_gif=drawdata->frame_draw;
@@ -1310,20 +1336,11 @@ repeat:
 		//info("filename is %s\n", filename);
 		cairo_surface_write_to_png(drawdata->pixmap, filename);
 	}
-	
-	if(drawdata->drawarea){
-		g_idle_add((GSourceFunc)drawarea_refresh, drawdata);
-	}
-
-	//if(iframe<drawdata->iframe){
-	//	info("cairo_draw: iframe has changed from %d to %d, repeat\n", iframe, drawdata->iframe);
-	//}
-	//toc("cairo_draw");
+	pthread_mutex_unlock(&drawdata->mutex);
+	//dbg_time("cairo_draw: finished for %s, %s\n", drawdata->fig, drawdata->name);
 	if(iframe<drawdata->iframe){
-		//info("cairo_draw_thread: finished iframe %d, %d is pending\n", iframe, drawdata->iframe);
+		//dbg_time("cairo_draw: finished iframe %d, %d is pending\n", iframe, drawdata->iframe);
 		goto repeat;
-	}else{
-		//info("cairo_draw_thread: finished iframe %d, no more pending\n", iframe);
 	}
 	pthread_cleanup_pop(1);
 	return NULL;
@@ -1339,21 +1356,11 @@ repeat:
 void cairo_draw(drawdata_t* drawdata){
 	//layout=pango_cairo_create_layout(cr);
 	//pango_layout_set_font_description(layout, desc);
-	if(!drawdata->ready || drawdata->width==0 || drawdata->width == 0) {
-		dbg_time("data is not ready or size is 0, cancelled.\n");
+	if(!drawdata->ready || drawdata->height==0 || drawdata->width == 0 || atomic_load(&drawdata->recycle)) {
+		//dbg_time("data is not ready or size is 0 or recycle is set, cancelled.\n");
 		return;
 	}
-	if(drawdata->surface){//for file saving, do not thread
-		drawdata->drawn=0;
-		cairo_draw_thread(drawdata);
-	}else if(drawdata->thread){
-		//info_time("thread is already running, skip. todo: add a time out.\n");
-	}else{
+	if(!drawdata->thread){
 		drawdata->thread=thread_new((thread_fun)cairo_draw_thread, drawdata);
-		/*pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr, 1);
-		pthread_create(&drawdata->thread, &attr, cairo_draw, drawdata);*/
-	}
-	//g_object_unref(layout);
+	}//else: drawing is in progress. skip request.
 }

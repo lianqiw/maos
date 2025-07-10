@@ -397,32 +397,31 @@ int main(int argc, char* argv[]){
 			} else if(restype==2){//Skycoverage results
 				snprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]);
 				dmat* res0=dread("%s", fn);
-				dmat* ires=dtrans(res0); dfree(res0);
-				dmat* tmp;
+				if(NY(res0)==0){
+					dbg("Empty result: %s, skip.\n", fn);
+					continue;
+				}
+				if(ysky && NX(ysky)!=NY(res0)){
+					dfree(ysky);
+				}
 				if(!ysky){
-					int nsky=ires->nx;
+					int nsky=NY(res0);
 					ysky=dnew(nsky, 1);
 					for(int i=0; i<nsky; i++){
 						P(ysky, i)=pow((double)i/(double)(nsky-1)*1e-9, 2);
 					}
 				}
-
-				if(ires->nx!=ysky->nx){
-					warning("Mismatch: %ld vs %ld\n", ires->nx, ysky->nx);
-					dfree(ires);
-					continue;
-				}
-				tmp=dsub(ires, 0, 0, 0, 1);
+				dmat *tmp=dsub(res0, 0, 1, 0, 0);//keep only first row
+				tmp->nx=NY(tmp); tmp->ny=1; //make it column vector.
 				dsort(tmp, 1);
 				P(P(res, P_TOT), ipath, iseed)=dcat(tmp, ysky, 2);
 				dfree(tmp);
 
-				/*tmp=dsub(ires, 0, 0, 2, 1);
+				/*tmp=dsub(ires, 2, 1, 0, 0);
+				tmp->nx=NY(tmp); tmp->ny=1; //make it column vector.
 				dsort(tmp, 1);
 				P(P(res,P_LO),ipath, iseed)=dcat(tmp, ysky, 2);
 				dfree(tmp);*/
-
-				dfree(ires);
 			} else{
 				error("Invalid restype=%d\n", restype);
 			}
@@ -449,6 +448,7 @@ int main(int argc, char* argv[]){
 	if(restype==1 && has_ahst==0){//no ahst results, TT and LOW are the same. 
 		dcellfree(P(res, P_LO));
 	}
+	int nvalid=0;//number of valid modes in CL type
 	for(int imod=0; imod<NX(res); imod++){
 		if(dcellsum(P(res, imod))==0){
 			dcellfree(P(res, imod));
@@ -458,16 +458,25 @@ int main(int argc, char* argv[]){
 			dcellscale(P(res, imod), 1e9);
 			dcellcwpow(P(resm, imod), 0.5);
 			dcellscale(P(resm, imod), 1e9);
+			if(toptab[imod][0]=='C'){
+				nvalid++;
+			}
 		}
 	}
 	char* pathtag0[npath];
-	char prefix[4]="A: ";
+	char prefix[5]="A: ";
 	for(int ipath=0; ipath<npath; ipath++){
-		prefix[0]='A'+ipath;
+		if(ipath<26){
+			prefix[0]='A'+ipath;
+		}else{
+			prefix[0]='A'+ipath/26;
+			prefix[1]='A'+ipath%26;
+			prefix[2]=':';
+		}
 		pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
 	}
-	if(nseed>1){//more than one seed is available
-		if(npath==1){//plot different seeds when only 1 path is found.
+	if(nseed>1){//more than one seed is available. Every over the seeds
+		if(npath==1 && nvalid>1){//plot different seeds when only 1 path is found.
 			char* legs0[nseed+1];
 			for(int iseed=0; iseed<nseed; iseed++){
 				legs0[iseed]=mymalloc(50, char);
@@ -501,13 +510,16 @@ int main(int argc, char* argv[]){
 					}
 				}
 				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
 				draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "All");
-				draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
-					"Open loop Wavefront Error", xlabel, ylabel, "All");
-				dcellfree(restmpol);
 				dcellfree(restmpcl);
+				if(restype==1){
+					dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
+					draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+						"Open loop Wavefront Error", xlabel, ylabel, "All");
+						dcellfree(restmpol);
+				}
+				
 				dcellfree(restmp);
 			}
 		} else{//plot seed average for each mode.
@@ -520,7 +532,25 @@ int main(int argc, char* argv[]){
 		}
 	}
 	for(int iseed=0; iseed<nseed; iseed++){//each seed
-		if(npath>1){//plot all path together for each seed
+		if(npath==1 && nvalid>1){//plot all modes together for each seed
+			dcell *restmp=dcellnew(N_ALL,1);
+			for(int ic=0; ic<restmp->nx; ic++){
+				if(P(res, ic)){
+					P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
+				}
+			}
+			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
+			draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+			dcellfree(restmpcl);
+			if(restype==1){
+				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
+				draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
+				dcellfree(restmpol);
+			}
+			dcellfree(restmp);
+		}else{//plot all path together for each seed
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
 					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
@@ -529,23 +559,6 @@ int main(int argc, char* argv[]){
 					dcellfree(tmp);
 				}
 			}
-		}
-		if(npath==1){//plot all modes together for each seed
-			dcell *restmp=dcellnew(N_ALL,1);
-			for(int ic=0; ic<restmp->nx; ic++){
-				if(P(res, ic)){
-					P(restmp, ic, 0)=dref(P(P(res, ic),0,iseed));
-				}
-			}
-			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-			dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-			draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
-				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
-			draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
-				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
-			dcellfree(restmpol);
-			dcellfree(restmpcl);
-			dcellfree(restmp);
 		}
 	}
 
@@ -561,14 +574,5 @@ int main(int argc, char* argv[]){
 	free(seed);
 	free(arg->seeds);
 	free(arg);
-	/*
-	  writebin(upterr, "upterr");
-	  if(upterr && P(upterr,0)){
-	  for(int iseed=0; iseed<nseed; iseed++){
-
-	  draw("upterr", nseed, NULL, upterr, NULL, NULL, xylog, NULL, NULL,
-	  "Uplink error", xlabel, "Error (rad)", "%d", iseed);
-	  }
-	  }*/
 	toc("drawres");
 }

@@ -33,6 +33,7 @@ extern int sock_idle;
  * Zoomed data coordinate: zoomed data. scale sz=sv/scalex/zoomx
   */
 struct drawdata_t{
+	struct drawdata_t *next;//form an linked list.
 	char* fig; 			//topnb tab
 	char* name;			//subnb tab
 	char *title;		//figure title
@@ -42,7 +43,7 @@ struct drawdata_t{
 	char **legend_ellipsis;	//legends shortened
 	char *filename; 	//previous filename to save
 	char *filename_gif; //if set, save all new frames and convert to gif
-	struct drawdata_t *next;//form an linked list.
+	
 	/*First, input data from draw.c */
 	/*For 2-d images. data range is referred to as z axis*/
 	float* p0;      	/*2d array of data. */
@@ -90,18 +91,18 @@ struct drawdata_t{
 	//misc
 	int byte_float; //number of bytes used for float (4 or 8)
 	int ready;      //ready is set to 0 when data is being read and 1 after wards.
-	int recycle;    //when set in GUI thread, data to be deleted by drawdaemon_io()
+	unsigned int recycle;//when set in GUI thread, data to be deleted by drawdaemon_io(). operated by atomic operations
 	float io_time;  //time data was received.
 	/*The following are for surfaces */
 
 #if GTK_VERSION_AFTER(4,10)
 	GFile *file;
 #endif	
-	GtkWidget *subnb;
-	GtkWidget *page;
 	GtkWidget* drawarea;
+	GtkWidget *subnb;
 	cairo_surface_t* pixmap;//for expose
 	cairo_surface_t* pixmap2;//for cairo_draw in a separate thread
+	cairo_surface_t* cacheplot;//cache the plot results so that we don't have to redraw during just panning.
 	cairo_surface_t* surface;//for saving to file
 	pthread_mutex_t mutex;
 	pthread_t thread;
@@ -110,7 +111,7 @@ struct drawdata_t{
 	gint pwidth, pheight;/*size of pixmap.*/
 	gint pwidth2, pheight2;/*size of pixmap2.*/
 	GtkWidget** spins;/*used on the dialog to change limits. */
-	cairo_surface_t* cacheplot;/*cache the plot results so that we don't have to redraw during just panning. */
+
 	int cache_width, cache_height; /*width and height of cacheplot.*/
 	int iframe;/*used by delayed_update_pixmap to limit rate of drawing. */
 	int width, height;/*width and height of the entire drawing area */
@@ -200,11 +201,11 @@ extern GdkPixbuf *icon_avg;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(drawdata_t* drawdata);
-gboolean drawarea_refresh(drawdata_t *drawdata);//called by cairo_draw to redraw drawarea
+gboolean drawarea_refresh(GtkWidget *drawarea);//called by cairo_draw to redraw drawarea
 void update_zoom(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);
-gboolean addpage(gpointer user_data);
+gboolean addpage(drawdata_t *drawdata);
 int delete_page(drawdata_t *drawdata);
 /*from drawdaemon_io */
 void* listen_draw(void*);
