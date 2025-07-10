@@ -432,10 +432,9 @@ static int get_drawdaemon(){
 void draw_final(int reuse){
 	//called from other threads, need to lock
 	if(!sock_draws) return;
-	if(TRYLOCK(lock)){
-		draw_remove(-1, reuse);
-		UNLOCK(lock);
-	}//else: signal interrupted send_buf which already holds lock.
+	LOCK(lock);
+	draw_remove(-1, reuse);
+	UNLOCK(lock);
 }
 
 /*
@@ -500,7 +499,7 @@ int draw_current(const char* fig, const char* fn){
         if(current==2){//check whether draw is busy
 			static int nskip=0;
 			static int nplot=0;
-            if((TRYLOCK(lock))){//lock failed
+            if(TRYLOCK(lock)!=0){//trylock returns 0 when succesfull
                 current=0;
 				nskip++;
                 if(nplot) dbg2("Skip after plot %d times\n", nplot);

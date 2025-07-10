@@ -81,7 +81,7 @@ pthread_t thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
 //Becareful about memory order. It determines the optimization constraints of other operations around the atomic operation
 //For example, if the store before atomic store must be visible after atomic load, memory acquire/release or sequential has to be used
-#define MEM_ORDER __ATOMIC_RELAXED
+#define MEM_ORDER __ATOMIC_SEQ_CST
 //The build in functions assume pointer is of type unsigned int
 //We use functions instead of defines to enforce type
 static inline unsigned int atomic_sub_fetch(unsigned int *ptr, unsigned int val){

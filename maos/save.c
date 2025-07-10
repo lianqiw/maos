@@ -153,9 +153,9 @@ void save_recon(sim_t* simu){
 			}
 		}
 		if(parms->recon.alg==RECON_MVR&&simu->dmrecon){
-			draw_dm(parms, recon, simu->dmrecon, 1, "DM Fitting Output", "Fit");
+			draw_dm(parms, recon, simu->dmrecon, 1, "Deformable Mirror Fitting Output", "Fit");
 		}
-		draw_dm(parms, recon, simu->dmerr, 1, "DM Error Signal (Hi)", "Err Hi");
+		draw_dm(parms, recon, simu->dmerr, 1, "Deformable Mirror Error Signal (Hi)", "Err Hi");
 
 		if(parms->recon.alg==RECON_MVR&&simu->opdr){
 			for(int i=0; i<NX(simu->opdr); i++){
@@ -165,7 +165,7 @@ void save_recon(sim_t* simu){
 				}
 			}
 		}
-		draw_dm_lo(simu, simu->Merr_lo, "DM Error Signal (Lo)", "Err Lo");
+		draw_dm_lo(simu, simu->Merr_lo, "Deformable Mirror Error Signal (Lo)", "Err Lo");
 	}
 	if(parms->recon.alg==RECON_MVR&&!parms->sim.idealtomo&&!parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
@@ -258,17 +258,17 @@ void save_dmreal(sim_t* simu){
 	const recon_t* recon=simu->recon;
 	if(parms->plot.run&&simu->reconisim>=0 && simu->reconisim%parms->plot.run==0){
 		if(parms->sim.closeloop){
-			draw_dm(parms, recon, P(simu->dmint->mintc, 0), 1, "DM Integrator (Hi)", "Int");
+			draw_dm(parms, recon, P(simu->dmint->mintc, 0), 1, "Deformable Mirror Integrator (Hi)", "Int");
 			if(simu->Mint_lo&&!parms->sim.fuseint){
-				draw_dm_lo(simu, P(simu->Mint_lo->mintc,0), "DM Integrator (Lo)", "Int Lo");
+				draw_dm_lo(simu, P(simu->Mint_lo->mintc,0), "Deformable Mirror Integrator (Lo)", "Int Lo");
 			}
 		}
 		if(simu->dmreal){
-			//draw_dm(parms, recon, simu->dmcmd, "DM Command", "Cmd");
-			draw_dm(parms, recon, simu->dmreal, 0, "DM Command", "Real");
+			//draw_dm(parms, recon, simu->dmcmd, "Deformable Mirror Command", "Cmd");
+			draw_dm(parms, recon, simu->dmreal, 0, "Deformable Mirror Command", "Real");
 			/*for(int idm=0; idm<parms->ndm; idm++){
 				drawmap("DM", P(simu->dmrealsq, idm), parms->plot.opdmax,
-					"DM Real Square", "x (m)", "y (m)", "dmrealsq %d", idm);
+					"Deformable Mirror Real Square", "x (m)", "y (m)", "dmrealsq %d", idm);
 			}*/
 			if(simu->ttmreal&&draw_current("DM", "Real TTM")){
 				int idm=0;
@@ -285,7 +285,7 @@ void save_dmreal(sim_t* simu){
 			/*if(simu->cachedm){//use cachedm
 				for(int idm=0; idm<parms->ndm; idm++){
 					drawmap("DM", P(simu->cachedm, idm), parms->plot.opdmax,
-						"DM OPD", "x (m)", "y (m)", "Real OPD %d", idm);
+						"Deformable Mirror OPD", "x (m)", "y (m)", "Real OPD %d", idm);
 				}
 			}*/
 			if(draw_current("DM", "Real OPD OA")){
@@ -304,14 +304,14 @@ void save_dmreal(sim_t* simu){
 				}
 
 				drawopd("DM", simu->aper->locs, opd, parms->plot.opdmax,
-					"DM OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
+					"Deformable Mirror OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
 				dfree(opd);
 			}
 		}
 		/*for(int idm=0; idm<parms->ndm; idm++){
 			if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
 				drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), parms->plot.opdmax,
-					"DM PSOL", "x (m)", "y (m)", "PSOL %d", idm);
+					"Deformable Mirror PSOL", "x (m)", "y (m)", "PSOL %d", idm);
 			}
 		}*/
 	}
