@@ -6,7 +6,7 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "comb.h", "db/d2c/comb_8h.html", "db/d2c/comb_8h" ],
     [ "cure.h", "df/d69/cure_8h.html", "df/d69/cure_8h" ],
     [ "draw.h", "de/d28/draw_8h.html", "de/d28/draw_8h" ],
-    [ "fractal.h", "d6/d3a/fractal_8h.html", null ],
+    [ "fractal.h", "d6/d3a/fractal_8h.html", "d6/d3a/fractal_8h" ],
     [ "genotf.h", "df/da9/genotf_8h.html", "df/da9/genotf_8h" ],
     [ "gensei.h", "dc/d87/gensei_8h.html", "dc/d87/gensei_8h" ],
     [ "hyst.h", "d7/dbc/hyst_8h.html", "d7/dbc/hyst_8h" ],

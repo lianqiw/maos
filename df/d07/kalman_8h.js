@@ -24,14 +24,16 @@ var kalman_8h =
     [ "sde_fit", "df/d07/kalman_8h.html#a3932087027a1148b071c157bcef68799", null ],
     [ "sde_fit_auto", "df/d07/kalman_8h.html#ad06ce4b648adea4331e0599abd359bc5", null ],
     [ "sde_psd", "df/d07/kalman_8h.html#a93cd2130d006d6bc57381ee38d4e9278", null ],
-    [ "sde_psd2", "df/d07/kalman_8h.html#ae249d5a72e2b41548049e36fe8be6d7f", null ],
+    [ "sde_psd2", "df/d07/kalman_8h.html#a48eb9aad723744ceec869112f6d6e430", null ],
     [ "reccati", "df/d07/kalman_8h.html#a4c3c0a5a191a9c865412ad2cee524e35", null ],
-    [ "sde_kalman", "df/d07/kalman_8h.html#ad6573355cd0bbc651c889cea66aff696", null ],
+    [ "sde_kalman", "df/d07/kalman_8h.html#af5cf2eed4fdbf24efacfa9901834562b", null ],
     [ "kalman_free", "df/d07/kalman_8h.html#a1abad10ed07b95e05ab3aa2529eab85d", null ],
-    [ "kalman_test", "df/d07/kalman_8h.html#af837cdb6f8bb06bf25a285020391e192", null ],
-    [ "kalman_test2", "df/d07/kalman_8h.html#a802c26d2689fb9d8cc9070226402be4d", null ],
+    [ "kalman_test", "df/d07/kalman_8h.html#a6b323bbc13231487a8d9ff5b2184a376", null ],
+    [ "kalman_test2", "df/d07/kalman_8h.html#a1852b3b7a7d2383f2757e0cbb84416ca", null ],
+    [ "kalman_test3", "df/d07/kalman_8h.html#a801496661048ca3e13681ce863e68ae9", null ],
     [ "kalman_init", "df/d07/kalman_8h.html#a4d3a82244fe94108b9ab5b1c57d06f38", null ],
     [ "kalman_update", "df/d07/kalman_8h.html#a81d84add40bc24fb4b4db4a029a1f075", null ],
     [ "kalman_output", "df/d07/kalman_8h.html#acff279fa114b71cc346003059fad90bd", null ],
-    [ "kalman_write", "df/d07/kalman_8h.html#a621e8bac952c4e76289ef37171333377", null ]
+    [ "kalman_write", "df/d07/kalman_8h.html#a621e8bac952c4e76289ef37171333377", null ],
+    [ "kalman_read", "df/d07/kalman_8h.html#a98bbe2d95b0aa36d5e81cce61aa4ccd9", null ]
 ];

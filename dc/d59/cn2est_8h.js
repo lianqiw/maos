@@ -43,10 +43,10 @@ var cn2est_8h =
       [ "r0m", "dc/d59/cn2est_8h.html#a3de88650635ca13c389e4f4aeca267e3", null ],
       [ "wtrecon", "dc/d59/cn2est_8h.html#adbdcc35a9f621892d1109f4d74fe9cb1", null ]
     ] ],
-    [ "cn2est_new", "dc/d59/cn2est_8h.html#a4834dcc10f7e6a8a0d9ed5f7bcf4ed1c", null ],
+    [ "cn2est_new", "dc/d59/cn2est_8h.html#a79c4d5a4e9044ca0289de8117dca6223", null ],
     [ "cn2est_est", "dc/d59/cn2est_8h.html#a8cf74d020a9038586d255930c14e9a6a", null ],
     [ "cn2est_free", "dc/d59/cn2est_8h.html#a7b84c08f588748d9c5f4582ff809b5b2", null ],
     [ "cn2est_push", "dc/d59/cn2est_8h.html#a1bd3ade1eee4b147b5008af715ad1899", null ],
-    [ "cn2est_all", "dc/d59/cn2est_8h.html#a8c513367e125acecc983798675274b88", null ],
+    [ "cn2est_all", "dc/d59/cn2est_8h.html#a1d715a095e81d96f16c9c32e41ad4825", null ],
     [ "cn2est_reset", "dc/d59/cn2est_8h.html#a6f94b35de1ae3321521688a430759be8", null ]
 ];

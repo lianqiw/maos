@@ -11,5 +11,5 @@ var dir_296d53ceaeaa7e099814a6def439fe8a =
     [ "smath.h", "de/de7/smath_8h.html", "de/de7/smath_8h" ],
     [ "type.h", "df/def/type_8h.html", "df/def/type_8h" ],
     [ "zfarr.h", "d3/d7d/zfarr_8h.html", "d3/d7d/zfarr_8h" ],
-    [ "zmath.h", "d3/d36/zmath_8h.html", null ]
+    [ "zmath.h", "d3/d36/zmath_8h.html", "d3/d36/zmath_8h" ]
 ];

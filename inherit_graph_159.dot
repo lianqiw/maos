@@ -1,0 +1,43 @@
+digraph "Graphical Class Hierarchy"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node287 [label="cusolve_cgpre",height=0.2,width=0.4,color="black",URL="$d6/d87/classcusolve__cgpre.html"];
+  Node287 -> Node1 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node1 [label="cufdpcg_t",height=0.2,width=0.4,color="black",URL="$d5/db0/classcufdpcg__t.html"];
+  Node286 [label="cusolve_l",height=0.2,width=0.4,color="black",URL="$d3/d82/classcusolve__l.html"];
+  Node286 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="cusolve_cbs",height=0.2,width=0.4,color="black",URL="$d4/d35/classcusolve__cbs.html"];
+  Node286 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="cusolve_cg",height=0.2,width=0.4,color="black",URL="$de/d5d/classcusolve__cg.html"];
+  Node5 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="cufit_grid",height=0.2,width=0.4,color="black",URL="$d2/dc2/classcufit__grid.html"];
+  Node5 -> Node7 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="cumoao_t",height=0.2,width=0.4,color="black",URL="$d4/d1a/classcumoao__t.html"];
+  Node5 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 [label="cusolve_sparse",height=0.2,width=0.4,color="black",URL="$d2/d23/classcusolve__sparse.html"];
+  Node5 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 [label="cutomo_grid",height=0.2,width=0.4,color="black",URL="$db/d1f/classcutomo__grid.html"];
+  Node286 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node11 [label="cusolve_mvm",height=0.2,width=0.4,color="black",URL="$de/dda/classcusolve__mvm.html"];
+  Node285 [label="cusolve_r",height=0.2,width=0.4,color="black",URL="$df/d37/classcusolve__r.html"];
+  Node285 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node285 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node285 -> Node9 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 [label="nonCopyable",height=0.2,width=0.4,color="black",URL="$dc/d27/classnon_copyable.html"];
+  Node0 -> Node1 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="curecon_geom",height=0.2,width=0.4,color="black",URL="$dd/dae/classcurecon__geom.html"];
+  Node0 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="curecon_t",height=0.2,width=0.4,color="black",URL="$d5/d6a/classcurecon__t.html"];
+  Node0 -> Node4 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node5 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node10 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node10 [label="cusolve_muv",height=0.2,width=0.4,color="black",URL="$d0/db6/classcusolve__muv.html"];
+  Node0 -> Node11 [dir="back",color="firebrick4",fontsize="10",style="solid",fontname="Helvetica"];
+  Node0 -> Node12 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node12 [label="map2map",height=0.2,width=0.4,color="black",URL="$d6/db6/classmap2map.html"];
+}
