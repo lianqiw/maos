@@ -134,8 +134,7 @@ def readbin(file):
             if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
                 isfits=True
     if isfile or issock:
-        try:
-            fp=open(file, 'rb', closefd=isfile)
+        with open(file, 'rb', closefd=isfile) as fp:
             if isfile:
                 magic=readuint16(fp)
                 if magic==0x8b1f:
@@ -147,10 +146,10 @@ def readbin(file):
             if type(header)==str:
                 header=[header]
             headers.extend(header)
-        except Exception as error:#file may not be ready
-            print("readbin failed:", file, error)
-        finally:
-            fp.close()
+        #except Exception as error:#file may not be ready
+        #    print("readbin failed:", file, error)
+        #finally:
+        #    fp.close()
     return convert_output(out)
 
 def readbin_auto(fp, isfits, scan=0):

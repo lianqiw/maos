@@ -148,7 +148,7 @@ static void print_key(const void* key, VISIT which, int level){
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
 				if(!store->priority||PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
-					warning("%s is not recognized, value is %s\n", store->key, store->data);
+					dbg("%s is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("%s is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
@@ -475,9 +475,11 @@ static void open_config_full(
 					if(((oldstore->data==NULL||store->data==NULL)&&(oldstore->data!=store->data))||
 							((oldstore->data!=NULL&&store->data!=NULL)&&strcmp(oldstore->data, store->data))){
 						if(oldstore->priority>priority || oldstore->index>store->index){//Entry with higher priority or entered layer prevails.
-							dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
+							if(!fd){
+								dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
+							}
 						} else{//Replace value if different.
-							if(priority>oldstore->priority){//Print if not default
+							if(!fd && priority>oldstore->priority){//Print if not default
 								dbg("Overriding %-20s\t%10s --> %s\n", store->key, oldstore->data, store->data);
 							}
 							free(oldstore->data);/*free old value */

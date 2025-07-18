@@ -1735,11 +1735,11 @@ powfs_t* setup_powfs_init(const parms_t* parms, map_t* aper){
 	powfs_t* powfs=mycalloc(parms->npowfs, powfs_t);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].type==WFS_SH){
-			info2("\n%sSetting up powfs %d geometric optics parameters%s\n\n", GREEN, ipowfs, BLACK);
+			info_green("\nSetting up powfs %d geometric optics parameters\n\n", ipowfs);
 			setup_shwfs_geom(powfs, parms, aper, ipowfs);
 			setup_shwfs_grad(powfs, parms, ipowfs);
 		} else if(parms->powfs[ipowfs].type==WFS_PY){
-			info2("\n%sSetting up powfs %d Pyramid WFS parameters%s\n\n", GREEN, ipowfs, BLACK);
+			info_green("\nSetting up powfs %d Pyramid WFS parameters\n\n", ipowfs);
 			setup_pywfs(parms->powfs[ipowfs].pycfg, powfs, parms, aper, ipowfs);
 		} else{
 			error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
@@ -1760,7 +1760,7 @@ void setup_shwfs_phy(const parms_t* parms, powfs_t* powfs){
 			   ||parms->powfs[ipowfs].psfout
 			   ||parms->powfs[ipowfs].pistatout
 			   ||parms->powfs[ipowfs].neaphy)){
-			info2("\n%sSetting up powfs %d physical optics parameters%s\n\n", GREEN, ipowfs, BLACK);
+			info_green("\nSetting up powfs %d physical optics parameters\n\n", ipowfs);
 			/*We have physical optics. setup necessary struct */
 			setup_shwfs_prep_phy(powfs, parms, ipowfs);
 			setup_shwfs_dtf(powfs, parms, ipowfs);

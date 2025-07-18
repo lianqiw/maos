@@ -260,15 +260,17 @@ void redirect(void){
 	}
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	fplog=fopen(fnlog, "w");
+	setbuf(fplog, NULL);
 	if(detached){
-		if(!freopen("/dev/null", "r", stdin)||!freopen(fnlog, "w", stdout)||dup2(fileno(stdout), fileno(stderr))==-1){
+		if(!freopen("/dev/null", "r", stdin)
+			||dup2(fileno(fplog), fileno(stdout))==-1
+			||dup2(fileno(stdout), fileno(stderr))==-1){
 			dbg("Unable to redirect stdin, stdout, or stderr\n");
 		}
 	}else{
-		fplog=fopen(fnlog, "w");
-		setbuf(fplog, NULL);
+		setvbuf(stdout, NULL, _IOLBF, 0); //Line buffering
 	}
-	setbuf(stdout, NULL);/*disable buffering. */
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

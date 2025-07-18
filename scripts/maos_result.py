@@ -24,23 +24,23 @@ def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     resc=np.cumsum(res[:,:,nsim0:], axis=2)/yy
     resc[res[:,:,nsim0:]==0]=nan
     return resc,xx
-def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
+def maos_res(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Results are in order of High, T/T, NGS total[, Focus]'''
     return maos_res_do(fds, "Res", seeds, iframe1, iframe2, quiet)
-def maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
+def maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Results are High + Low tot'''
     res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2, quiet)
     res2=res[:,0]+res[:,2]
     return res2,fds
-def maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
+def maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Results are High order only'''
     res,fds=maos_res_do(fds, "Res", seeds, iframe1, iframe2, quiet)
     res2=res[:,0]
     return res2,fds
-def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
+def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Results fore all directions with dimension nfolder*ndirection*nmod. The modes are in PR, TT, PTTR.'''
     return maos_res_do(fds, "Resp", seeds, iframe1, iframe2, quiet)
-def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
+def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Process maos results and average between firame1 to iframe2'''
     if type(fdin) is not list:
         fdin=[fdin]
@@ -74,13 +74,14 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
             if res is None or res.shape[0]==0:
                 continue
             #determine result cell
+            #Res has 4 cells: OL, None, CL, AHST
             if name=="Res":
                 if res.shape[0]>3 and res[3].size>0: #split tomography
-                    res=res[3]
+                    res=res[3] #AHST: LGS, TT, NGS(TT+PS)
                     split=1
                 else: #integrated
-                    res=res[2]
-                    res[:,0]=res[:,2] #convert from pr, tt, pttr to pttr, tt, tt to have the same as the split mode.
+                    res=res[2] #PR, TT, PTTR.
+                    res[:,0]=res[:,2] #Conver to AHST format
                     res[:,2]=res[:,1]
                     split=0
             elif name[-7:]=="Resclep": #per direction (old format)
@@ -132,6 +133,8 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=0):
             print(fd, fns, nseed, ' has no valid results')
     if resall is None:
         resall=np.array([[nan,nan,nan]])
+        if name!="Res":
+            resall.shape=(1,1,3)
         #if not os.path.exists(fdin):
         #    print(fdin, 'does not exist')
         #else:

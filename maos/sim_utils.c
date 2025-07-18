@@ -36,7 +36,7 @@ real tk_setup;   /**<Start time of setup */
 static mapcell* genatm_do(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const atm_cfg_t* atm=&parms->atm;
-	TIC;
+	//TIC;
 	mapcell* screens;
 	if(!parms->dbg.atm){
 		genatm_t* gs=simu->atmcfg;
@@ -71,9 +71,9 @@ static mapcell* genatm_do(sim_t* simu){
 				gs->slope=parms->atm.method;
 			}
 		}
-		tic;
+		//tic;
 		screens=genscreen(gs);
-		toc2("Atmosphere ");
+		//toc2("Atmosphere ");
 	} else{
 	/*
 	  create screens on two layers that produce pure
@@ -146,7 +146,7 @@ void genatm(sim_t* simu){
 		info("sim.noatm flag is on. will not generate atmoshere\n");
 		return;
 	}
-	info("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
+	//info("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
 	simu->winddir=dnew(atm->nps, 1);
 	for(int i=0; i<atm->nps; i++){
 		real angle;
@@ -156,9 +156,9 @@ void genatm(sim_t* simu){
 			angle=P(atm->wddeg, i)*M_PI/180;
 		}
 		P(simu->winddir, i)=angle;
-		info(" %5.1f", angle*180/M_PI);
+		//info(" %5.1f", angle*180/M_PI);
 	}
-	info(" deg\n");
+	//info(" deg\n");
 	int atm_movie=0;//whether loaded atm is movie to be playback.
 	if(simu->parms->load.atm){
 		const char* fn=simu->parms->load.atm;
@@ -205,6 +205,7 @@ void genatm(sim_t* simu){
 	}
 	if(simu->parms->save.atm){
 		writebin(simu->atm, "atm_%d.bin", simu->seed);
+		writebin(simu->winddir, "atm_winddir_%d.bin", simu->seed);
 	}
 
 	if(parms->plot.atm&&simu->atm){

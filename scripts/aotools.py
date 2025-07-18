@@ -88,12 +88,10 @@ def cummean(y,axis=0,skip=0,rms=0):
     return yc
 
 def mysqrt(x):
-    if type(x) is np.ndarray:
-        return np.sign(x)*np.sqrt(np.abs(x))
-    elif x<0:
-        return -np.sqrt(-x)
-    else:
-        return np.sqrt(x)
+    if np.ndim(x)>0 and x is not np.ndarray:
+        x=np.array(x)
+    return np.sign(x)*np.sqrt(np.abs(x))
+
     
 def sumsq(vec, **kargs):
     '''return sum(vec*conj(vec))'''
@@ -124,8 +122,10 @@ def rms(*args, **kargs):
 #    lines=['-','--','-.',':']
 #    return lines[np.mod(ii,len(lines))]
 
-def reset_color():
-    plt.gca().set_prop_cycle(None)
+def reset_color(ax=None):
+    if ax is None:
+        ax=plt.gca()
+    ax.set_prop_cycle(None)
 
 def cycler_marker(line='-'):
     markercycle = cycler(marker='+x*.Xodx*.Xod+') #['+', 'x', '*', '.', 'X','o','d'])
@@ -398,9 +398,11 @@ def plot_cdf(y, *args, **kargs):
         y=np.abs(y)*2
     if kargs.pop('reverse', 0):
         x=x[::-1]
-    plot(np.sort(y,axis=0), x, *args, **kargs)
-    ylim(0,1)
-    ylabel('Cumulative Probability')
+    ax=kargs.pop('ax', plt.gca())
+    ax.plot(np.sort(y,axis=0), x, *args, **kargs)
+    ax.set_ylim(0,1)
+    ax.set_ylabel('Cumulative Probability')
+
 def plot_cross(A, n=0, dx=1,cum=0, **kargs):
     '''Plot a cross section'''
     if n==0 or n is None:

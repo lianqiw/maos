@@ -586,7 +586,7 @@ void gpu_update_recon_cn2(const parms_t* parms, recon_t* recon){
 			gpu_set(igpu);
 			curecon_t* curecon=cudata->recon;
 			if(parms->recon.mvm){
-				error("Please implement\n");
+				warning("Not yet implemented, skip.\n");
 			} else{
 				curecon->update_cn2(parms, recon);
 			}

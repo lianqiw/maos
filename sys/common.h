@@ -106,17 +106,18 @@ extern int detached;
 extern int LOG_LEVEL;//default is 0; override with MAOS_LOG_LEVEL; higher value has more output
 extern int signal_caught;
 extern FILE* fplog;//The output to fplog is always without color unless user specified.
-#define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
-#define logdbg(level, COLOR, format, ...) ({if(LOG_LEVEL>level){fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
-#define logstd(level, A...) ({if(LOG_LEVEL>level){fprintf(stdout, A); if(fplog){fprintf(fplog, A);}}})
+#define logstd(level, A...) 		      ({if(LOG_LEVEL>level){if(!detached)fprintf(stdout, A); if(fplog){fprintf(fplog, A);}}})
+#define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
+#define logdbg(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 
 #define error(format,...)      ({logerr(-4, RED,        "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})
 #define warning(format,...)      logerr(-4, CYAN,     "Warning(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_time(format,...) logerr(-4, CYAN, "[%s]Warning(%s:%d): " format, myasctime(0),BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})
 //all info are shown at default log level
-#define info_line(format,...) logstd(-4,     "Info(%s:%d): " format ,BASEFILE,__LINE__,##__VA_ARGS__)
+#define info_line(format,...) logstd(-4,     "Info(%s:%d): " format, BASEFILE,__LINE__,##__VA_ARGS__)
 #define info_time(format,...) logstd(-1, "[%s]Info(%s:%d): " format, myasctime(0), BASEFILE,__LINE__,##__VA_ARGS__)
+#define info_green(A...) logdbg(-2, GREEN, A)
 #define info(A...)  logstd(-1, A) //least important info
 #define info2(A...) logstd(-2, A)
 #define info3(A...) logstd(-3, A) //most important info
@@ -128,7 +129,7 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define dbg2(A...) logdbg(1, YELLOW, A)
 #define dbg3(A...) logdbg(2, YELLOW, A)//least important dbg
 #define logdbg_time(level, format, ...) logdbg(level, YELLOW, "[%s]%s: " format, myasctime(0), __func__, ##__VA_ARGS__)
-#define dbg_line(format,...) logdbg(0, YELLOW, "Debug(%s:%d): " format ,BASEFILE,__LINE__,##__VA_ARGS__)
+#define dbg_line(format,...) logdbg(0, YELLOW, "Debug(%s:%d): " format,BASEFILE,__LINE__,##__VA_ARGS__)
 #define dbg_time( A...) logdbg_time(0, A)
 #define dbg2_time(A...) logdbg_time(1, A)
 #define dbg3_time(A...) logdbg_time(2, A)

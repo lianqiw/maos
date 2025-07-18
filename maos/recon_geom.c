@@ -20,8 +20,7 @@
 #include "recon_utils.h"
 #include "powfs.h"
 #include "ahst.h"
-#undef GREEN
-#define GREEN BLACK
+
 /**
    \file recon_geom.c
 
@@ -1245,7 +1244,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
    This can be used to do NCPA calibration.
  */
 recon_t* setup_recon_prep(const parms_t* parms, const map_t* aper, const powfs_t* powfs){
-	info("\n%sSetting up reconstruction geometry.%s\n\n", GREEN, BLACK);
+	info_green("\nSetting up reconstruction geometry.\n\n");
 	recon_t* recon=mycalloc(1, recon_t);
 	if(parms->cn2.pair&&NX(parms->cn2.pair)>0&&!recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */

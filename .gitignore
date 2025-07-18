@@ -12,6 +12,7 @@
 *.pyc
 *.stackdump
 *.tar*
+.syncthing.*
 */.#*
 *~
 *tmp.c

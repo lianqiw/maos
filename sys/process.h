@@ -57,5 +57,5 @@ extern char* DIROUT; /*the result directory (set by maos)*/
 extern char *EXENAME;/*the name of the executable.*/
 int get_ncpu(void);
 void set_dirout(const char* dir);
-#define print_mem(A,...) info(A ":\t%.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
+#define print_mem(A,...) info(A ": %.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);
 #endif

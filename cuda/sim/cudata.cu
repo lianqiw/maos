@@ -111,19 +111,24 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 					When any kernel launches, all managed memory are migrated to the GPU.
 				2. call cudaMallocManaged initially with CPU visibility and then attach memory to a single stream. CPU can access after the stream is synchronized. 
 					When a kernel launches, only global and attached managed memory are migrated to the GPU.
-				Question: After synchronizing device or stream, and CPU access some unified memory, does ALL memory gets migrated to the CPU or only those pages that are accessed?
-			Level 2: GPUs with Capability >=6 introduces page faulting mechanism that automatically migrates pages between CPU and GPU and between GPUs. 
-				They have concurrentManagedAccess=1. However, only memory allocated by cudaMallocManaged allow unified access.
-				This is called managed memory with full support. Unified memory can be accessed concurrently by all CPUs and GPUs.
-				The memory is populated on first touch, just like system allocated memory.
-				Explicit Device or Stream Synchronization is still needed for data coherency.
+				3. After device or stream synchronization, when CPU accesses unified memory, entire allocation or attached regions are migrated to CPU (not page level).
 
-			Level 3: GPUs with Capability>=7.5 on Linux with HMM, and Nvidia open kernel module>=535 also have pageableMemoryAccess=1.
-				This is called full unified memory support. All memory is unified memory. There are two types:
+			Level 2: Managed memory with full support. Has concurrentManagedAccess=1. However, only cudaMallocManaged memory allow unified access.
+				GPUs with Capability >=6 introduces page faulting mechanism that automatically migrates pages between CPU and GPU and between GPUs. 
+				Migration is page-granular and demand-driven. Page access triggers page migration. 
+				
+				*Explicit Device or Stream Synchronization is still needed for data coherency.*
+
+			Level 3: Full unified memory support.  All memory is unified memory.
+			GPUs with Capability>=7.5 on Linux with HMM, and Nvidia open kernel module>=535 also have pageableMemoryAccess=1. 
+				There are two types for cache coherency:
 				1. Hardware coherent systems (NVIDIA Grace Hopper) offer a logically combined page table for both CPU and GPUs. 
-					They offer cache-line level coherence. No page fault is needed for concurrent access.
+					They offer cache-line level coherence. No page fault is needed for concurrent access. 
+					Only available on systems that have shared physical memory between CPU and GPU 
 				2. Software coherent systems uses separate logical page tables and uses page fault and migration to allow concurrent access. 
-					In this case, avoid frequent inter-leaved access to reduce page faulting. Explicit Device or Stream Synchronization is still needed for data coherency.
+					In this case, avoid frequent inter-leaved access to reduce page faulting. 
+					
+				*Explicit Device or Stream Synchronization is still needed for data coherency.*
 
 			To improve the performance, data prefetching and data usage hints maybe helpful.
 		*/

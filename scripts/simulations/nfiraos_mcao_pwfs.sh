@@ -1,5 +1,5 @@
 #2023-07-14: PYWFS as TTF for LGS AO
-
+test=1 #testing
 mags=(12 13 14 15 16 17 18 19 20 21 22 ) #PWFS NGS magnitude
 dtratss=(1 1 1 1 1 2 4 8 16 64 80) #sampling duration of TTF PWFS over LGS WFS. determined by simulation.
 imag0=0 #starting magnitude index
@@ -11,7 +11,7 @@ zas="0 30 45 60" #zenith angle
 
 maos="maos -d"
 fd="mcao_pyttf" #output folder name
-if true; then #testing with reduced parameter set
+if [ "$test" = 1 ]; then #testing with reduced parameter set
 	profs="50"
 	zas="0"
 	maos="maos"

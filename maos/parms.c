@@ -3145,7 +3145,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 		/*Assign CG interations*/
 		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit<=0){
-			int maxit=4;//minimal 4 iterations is needed
+			real maxit=4;//minimal 4 iterations is needed
 			if(parms->recon.mvm){
 				maxit*=parms->load.mvmi?1:25;//assembly mvm needs more steps
 			} else{
@@ -3157,7 +3157,10 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			if(!parms->recon.split){
 				maxit*=4;//integrated tomo needs more steps
 			}
-			{
+			if(parms->ilgspowfs!=-1 && parms->powfs[parms->ilgspowfs].llt->nllt>1){
+				maxit*=2;//side launch needs more steps
+			}
+			if(1){
 				//if meta pupil is much larger than the aperture, needs more iterations. 
 				//if atmr.dx is smaller than 0.5, also more iterations
 				real ratio=parms->ndm==1?1:pow(1+parms->sim.foveff*parms->atmr.hmax/parms->aper.d,2);//meta pupil to pupil area ratio
@@ -3165,9 +3168,9 @@ static void setup_parms_postproc_recon(parms_t *parms){
 					ratio*=0.5/parms->atmr.dx;//grid size ratio
 				}
 				if(ratio>10) ratio=10;//limit maximum value.
-				maxit=ceil(maxit*ratio);
+				maxit*=ratio;
 			}
-			parms->tomo.maxit=maxit;
+			parms->tomo.maxit=ceil(maxit);
 		}
 		/*if(parms->recon.mvm==1&&parms->recon.split&&parms->tomo.splitlrt){
 			warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");

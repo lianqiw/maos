@@ -134,7 +134,7 @@ void maos_setup(const parms_t* parms){
 		print_mem("After setup_powfs");
 		//creates DM to WFS IA. needs GPU for pwfs. create amod for modal control.
 		
-		info2("\n%sSetting up reconstructor%s\n\n", GREEN, BLACK);
+		info_green("\nSetting up reconstructor\n\n");
 		setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
 		setup_recon_GF(recon, parms);//GF depends on GA.
 		setup_recon_GR(recon, parms);
@@ -242,8 +242,8 @@ void maos_setup(const parms_t* parms){
 #if USE_CUDA
 	cuda_dedup=0;
 #endif
-	toc2("Setup");
-	print_mem("Setup");
+	toc2("setup");
+	print_mem("After setup");
 }
 
 /**
