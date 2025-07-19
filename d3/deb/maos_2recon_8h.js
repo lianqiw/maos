@@ -1,12 +1,11 @@
 var maos_2recon_8h =
 [
     [ "free_recon_cxx", "d3/deb/maos_2recon_8h.html#addfcf918476fede1b1e41da2ee985ed7", null ],
-    [ "setup_recon_prep", "d3/deb/maos_2recon_8h.html#aa0ddc6309d1d14f0b605184373798d3c", null ],
+    [ "setup_recon_prep", "d3/deb/maos_2recon_8h.html#a376b025ba1fd17827089d97a298e109c", null ],
     [ "setup_recon_saneai", "d3/deb/maos_2recon_8h.html#a367e861f652afcd5f4764c37a09c9400", null ],
     [ "setup_recon_fit", "d3/deb/maos_2recon_8h.html#ac24d3db35e5e0e23cf90389c578d4473", null ],
     [ "setup_powfs_fit", "d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002", null ],
     [ "free_powfs_fit", "d3/deb/maos_2recon_8h.html#ae4acd7dfb4d394a30d98e3fc887c7d68", null ],
-    [ "free_fit", "d3/deb/maos_2recon_8h.html#a4bfc73b39b67ad8fd1ff3329552e80ee", null ],
     [ "setup_recon_GA", "d3/deb/maos_2recon_8h.html#a98fbe241a9a99143835d5b3c1726c1e8", null ],
     [ "setup_recon_GF", "d3/deb/maos_2recon_8h.html#a699cb83e672d1ebc6885edce0f0b5d2a", null ],
     [ "setup_recon_GR", "d3/deb/maos_2recon_8h.html#ac112c22f2d96d1373e967abb6bcb614d", null ],
@@ -29,5 +28,5 @@ var maos_2recon_8h =
     [ "FitL", "d3/deb/maos_2recon_8h.html#a435a433b74e48db9983210dc8a4235ef", null ],
     [ "FitR", "d3/deb/maos_2recon_8h.html#a29d19a65f0634a6fdf5a1e0ece0df03a", null ],
     [ "tomofit", "d3/deb/maos_2recon_8h.html#ac734bc10b9e0d6a8dc02a55019607156", null ],
-    [ "reconstruct", "d3/deb/maos_2recon_8h.html#a51b790af35dc99f61ba5ef9d54173b7f", null ]
+    [ "reconstruct", "d3/deb/maos_2recon_8h.html#ad2ff08de25993fae1b7bee5b0a54fdab", null ]
 ];

@@ -47,14 +47,11 @@ var pywfs_8h =
       [ "opdadd", "d9/d19/pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47", null ],
       [ "gain", "d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb", null ]
     ] ],
-    [ "pywfs_ng", "d9/d19/pywfs_8h.html#ac7b4803a7b02c777b35d14862ebfe681", null ],
-    [ "pywfs_new", "d9/d19/pywfs_8h.html#a4c483182664896252c8e9760cef5cd99", null ],
     [ "pywfs_free", "d9/d19/pywfs_8h.html#ab9030c894228f7971f87beda176273c5", null ],
-    [ "pycfg_free", "d9/d19/pywfs_8h.html#ac01185e7becab21fa86574a490ba6e94", null ],
     [ "pywfs_grad", "d9/d19/pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99", null ],
     [ "pywfs_ints", "d9/d19/pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d", null ],
-    [ "pywfs_mkg", "d9/d19/pywfs_8h.html#a54d180c17544b1e528115fa8160c75bf", null ],
-    [ "pywfs_tt", "d9/d19/pywfs_8h.html#a91432268bc54e68b69b04e3f0ebc0875", null ],
+    [ "pywfs_mkg", "d9/d19/pywfs_8h.html#ac90f086f4f98115dcc9a7aa90c44f0cf", null ],
+    [ "pywfs_tt", "d9/d19/pywfs_8h.html#ab3561d46a195dd543d302906e88f7c2b", null ],
     [ "pywfs_simu", "d9/d19/pywfs_8h.html#a56a2705ae38d20c2541c4b3b47be4163", null ],
     [ "pywfs_gain_calibrate", "d9/d19/pywfs_8h.html#a51055b663bc8f4233e915bc9c2463299", null ],
     [ "pywfs_test", "d9/d19/pywfs_8h.html#a8ccc1fa8060ae14a0aeb0c098b7f559d", null ]

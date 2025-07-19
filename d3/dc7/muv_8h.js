@@ -36,7 +36,7 @@ var muv_8h =
     [ "muv_direct_diag_solve", "d3/dc7/muv_8h.html#ac5d7e36b158566de7f44d65b87c6d2bc", null ],
     [ "muv_bgs_solve", "d3/dc7/muv_8h.html#a2a41612c3cf445cef62ba674385914e8", null ],
     [ "muv_solve", "d3/dc7/muv_8h.html#a9e45aed53549d6e26fb3721df387972a", null ],
-    [ "muv_direct_spsolve", "d3/dc7/muv_8h.html#a440b52724f7c37218f95bd74b13b51ce", null ],
+    [ "muv_direct_spsolve", "d3/dc7/muv_8h.html#a988717c5e19c8e764f61130c25f384b1", null ],
     [ "muv_direct_diag_prep", "d3/dc7/muv_8h.html#a697e0baa707bf1b22d3fabe1d1cb4dc9", null ],
     [ "muv_direct_diag_free", "d3/dc7/muv_8h.html#af2e78b53ad529945315fc69298ac6ac1", null ],
     [ "muv_free", "d3/dc7/muv_8h.html#ad7b8139c5b12536534d15e42e8c69393", null ]
