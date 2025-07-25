@@ -33,7 +33,7 @@
 #endif
 #define DRAWAREA_MIN_WIDTH 400
 #define DRAWAREA_MIN_HEIGHT 320
-#define MAX_ZOOM 10000
+#define MAX_ZOOM 1000 //larger zoom triggers problems in cairo (points missing)
 #define MIN_ZOOM 1
 static GtkWidget *fpslabel=NULL;
 static GSList* windows=NULL;

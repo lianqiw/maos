@@ -455,7 +455,7 @@ static int respond(int sock){
 			info_time("Host not found\n");
 			return -1;
 		}
-		usage_cpu[ihost]=(double)((pid>>16)&0xFFFF)/100.;
+		usage_cpu[ihost]=(double)(pid>>16)/100.;
 		//usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
 		usage_cpu[ihost]=MAX(MIN(1, usage_cpu[ihost]), 0);
 		//usage_mem[ihost]=MAX(MIN(1,usage_mem[ihost]),0);

@@ -441,9 +441,9 @@ static void update_limit(drawdata_t *drawdata){
 	drawdata->update_limit=0;
 	//dbg_time("update_limit out:%g %g, %g %g, limit changed=%d\n", xmin0, xmax0, ymin0, ymax0, limit_changed);
 }
-/*static double get_scale(cairo_t* cr){
+/*static float get_scale(cairo_t* cr){
 	cairo_surface_t *sur=cairo_get_target(cr);
-	double xs, ys;
+	float xs, ys;
 	cairo_surface_get_device_scale(sur, &xs, &ys);
 	return (xs+ys)*0.5;
 }*/
@@ -946,7 +946,7 @@ repeat:
 		if(drawdata->cacheplot&&(drawdata->cache_width!=new_width||drawdata->cache_height!=new_height)){
 			redraw+=1;//window resized
 		}
-		if(fabs(drawdata->zoomx-drawdata->zoomx_last)>1e-3||fabs(drawdata->zoomy-drawdata->zoomy_last)>1e-3){
+		if(drawdata->zoomx!=drawdata->zoomx_last||drawdata->zoomy!=drawdata->zoomy_last){
 			redraw+=2;//zoom changed
 		}
 		if(new_width<new_width0&&(new_offx>0||-new_offx>(new_width-widthim))){//translation, no need redraw
@@ -962,7 +962,7 @@ repeat:
 		if(redraw||!drawdata->drawn||!drawdata->cacheplot){
 			if(drawdata->cacheplot) cairo_surface_destroy(drawdata->cacheplot);
 			drawdata->cacheplot=cairo_surface_create_similar(cairo_get_target(cr), CAIRO_CONTENT_COLOR_ALPHA, new_width, new_height);
-			/*double x_scale, y_scale;
+			/*float x_scale, y_scale;
 			cairo_surface_get_device_scale(cairo_get_target(cr), &x_scale, &y_scale);
 			drawdata->cacheplot=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, new_width*x_scale, new_height*y_scale);
 			cairo_surface_set_device_scale(drawdata->cacheplot, x_scale, y_scale);*/
@@ -975,7 +975,6 @@ repeat:
 		ncx=(float)new_width*0.5-drawdata->ncxoff;
 		ncy=(float)new_height*0.5-drawdata->ncyoff;
 		if(redraw){
-			//info_time("redraw=%d\n", redraw);
 			cairo_t* cr2=cr;
 			cr=cairo_create(drawdata->cacheplot);
 			//cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
@@ -1125,8 +1124,8 @@ repeat:
 		cairo_restore(cr);
 		//toc("cairo_draw pts");
 	}
-	/*info("im: %d, %d min0: %g, %g, max0 %g, %g. zoom: %g, %g, scale %g, %g, off: %g, %g\n",
-		widthim, heightim, xmin0, ymin0, xmax0, ymax0, zoomx, zoomy, scalex, scaley, drawdata->offx, drawdata->offy);*/
+	/*info("im: %d, %d x: %g, %g y: %g, %g. zoom: %g, %g, scale %g, %g, off: %g, %g\n",
+		widthim, heightim, xmin0, xmax0, ymin0, ymax0, zoomx, zoomy, scalex, scaley, drawdata->offx, drawdata->offy);*/
 	if(drawdata->ncir>0){//plot circles
 		cairo_save(cr);
 		//cairo_set_antialias(cr, CAIRO_ANTIALIAS_GRAY);
@@ -1208,17 +1207,21 @@ repeat:
 		cairo_identity_matrix(cr);
 		pango_scale_fontsize(layout, 0.8);
 		/*draw legend */
-		const int nlegend=MIN(20, drawdata->npts);
+		const float legmarin=3;/*margin inside of box */
+		const float legmarout=5;/*margin outside of box */
+		float legwidth=0, legheight=0;
+		pango_size(layout, legend[0], &legwidth, &legheight);
+		const int nlegend=MIN((int)((heightim-2*legmarin-2*legmarout)/(legheight*1.2)), drawdata->npts);
 		const float linelen=30;/*length of line in legend if exist. */
 		float textlen=0;/*maximum legend length. */
-		float tall=0;
+		float tall=0; /*height of each line */
 		float symlen=0;/*length of legend symbol */
 		int npts_valid=0;
 		/*first figure out the size required of longest legend entry. */
 		cairo_save(cr);
 		for(int ipts=0; ipts<nlegend; ipts++){
 			if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
-			float legwidth, legheight;
+			
 			npts_valid++;
 			pango_size(layout, legend[ipts], &legwidth, &legheight);
 			textlen=MAX(textlen, legwidth);/*length of text. */
@@ -1233,8 +1236,6 @@ repeat:
 		}
 		cairo_restore(cr);
 		if(textlen){//legend is available
-			const float legmarin=3;/*margin inside of box */
-			const float legmarout=5;/*margin outside of box */
 			const float symmargin=5;/*space before and after symbol */
 			//same the legend box information for gesture control of it.
 			drawdata->legbox_width=textlen+symlen+2*legmarin+symmargin*2;
@@ -1256,11 +1257,15 @@ repeat:
 			cairo_translate(cr, legmarin+symmargin, legmarin);
 			for(int ipts=0; ipts<nlegend; ipts++){
 				if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
+				if(ipts+1==nlegend && nlegend<drawdata->npts){
+					cairo_move_to(cr, symlen+symmargin, tall*0.8);
+					cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+					pango_text(cr, layout, symlen+symmargin, tall*0.1, "......", 0, 0, 0);
+					continue;
+				}
 				PARSE_STYLE(drawdata->style_pts[ipts]);
 				set_color(cr, color);
-				float ix=symlen*0.5;
-				float iy=tall*0.5;
-				draw_point(cr, ix, iy, style, sym_size, 1, 1);
+				draw_point(cr, symlen*0.5, tall*0.5, style, sym_size, 1, 1);
 				cairo_stroke(cr);
 				if(connectpts){
 					cairo_move_to(cr, 0, tall*0.5);
@@ -1268,10 +1273,9 @@ repeat:
 					cairo_stroke(cr);
 				}
 				cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-				float toff=tall*1.1;
 				cairo_move_to(cr, symlen+symmargin, tall*0.8);
 				/*cairo_show_text(cr, legend[ig]); */
-				pango_text(cr, layout, symlen+symmargin, toff-tall, legend[ipts], 0, 0, 0);
+				pango_text(cr, layout, symlen+symmargin, tall*0.1, legend[ipts], 0, 0, 0);
 				cairo_translate(cr, 0, tall);
 			}
 		}

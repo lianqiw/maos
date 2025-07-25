@@ -171,6 +171,33 @@ static const gchar* rc_string_entry=
 "class \"GtkEntry\" style \"entry\" \n"
 };
 #endif
+static void update_progress_host(int ihost, double frac){
+	if(ihost>=0 && ihost<nhost){
+		if(frac>=0 && frac<=1){
+			usage_cpu[ihost]=frac;
+		}
+		if(usage_cpu[ihost]<0.15){//size is rounded up due to min-height css property
+			usage_cpu[ihost]=0;
+		}
+		if(usage_cpu[ihost]!=usage_cpu2[ihost]){
+			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), usage_cpu[ihost]);
+			usage_cpu2[ihost]=usage_cpu[ihost];
+			/*if(usage_cpu[ihost]>=0.8&&last_cpu<0.8){
+					modify_bg(prog_cpu[ihost], 2);
+				} else if(usage_cpu[ihost]<0.8&&last_cpu>=0.8){
+					modify_bg(prog_cpu[ihost], 1);
+				}*/
+					/*
+				if(usage_mem[ihost]>=0.8 && last_mem<0.8){
+					modify_bg(prog_mem[ihost],2);
+				}else if(usage_mem[ihost]<0.8 && last_mem>=0.8){
+					modify_bg(prog_mem[ihost],1);
+				}*/
+		}
+	}else{
+		warning_time("ihost=%d is out of range\n", ihost);
+	}
+}
 /**
    Enables the notebook page for a host*/
 gboolean host_up(gpointer data){
@@ -191,7 +218,8 @@ gboolean host_down(gpointer data){
 	gtk_widget_show(cmdconnect[ihost]);
 	gtk_widget_set_sensitive(cmdconnect[ihost], 1);*/
 	gtk_widget_set_sensitive(pages[ihost], 0);
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
+	update_progress_host(ihost, 0);
+	//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
 	//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
 	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	return 0;
@@ -257,26 +285,8 @@ static void modify_bg(GtkWidget* widget, int type){
    updates the progress bar for a job*/
 gboolean update_progress(gpointer input){
 	int ihost=GPOINTER_TO_INT(input);
-	//double last_cpu=usage_cpu2[ihost];
-	//double last_mem=usage_mem2[ihost];
-	usage_cpu2[ihost]=usage_cpu[ihost];
-	//usage_mem2[ihost]=usage_mem[ihost];
-	if(GTK_WIDGET_VISIBLE(window)){
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), usage_cpu[ihost]);
-		//gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), usage_mem[ihost]);
-		/*if(usage_cpu[ihost]>=0.8&&last_cpu<0.8){
-			modify_bg(prog_cpu[ihost], 2);
-		} else if(usage_cpu[ihost]<0.8&&last_cpu>=0.8){
-			modify_bg(prog_cpu[ihost], 1);
-		}*/
-			/*
-		if(usage_mem[ihost]>=0.8 && last_mem<0.8){
-			modify_bg(prog_mem[ihost],2);
-		}else if(usage_mem[ihost]<0.8 && last_mem>=0.8){
-			modify_bg(prog_mem[ihost],1);
-				}*/
-	}
-	return 0;
+	update_progress_host(ihost, -1);
+	return FALSE;
 }
 
 void notify_user(proc_t* p){
@@ -575,14 +585,14 @@ GtkWidget* monitor_new_progress(int vertical, int length){
 #if GTK_MAJOR_VERSION>=3
 		gtk_orientable_set_orientation(GTK_ORIENTABLE(prog),
 			GTK_ORIENTATION_VERTICAL);
-		gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(prog), TRUE);
+		gtk_progress_bar_set_inverted(GTK_PROGRESS_BAR(prog), TRUE);//bottom to top
 		gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(prog), FALSE);
 #else
 		gtk_progress_bar_set_orientation(GTK_PROGRESS_BAR(prog),
 			GTK_PROGRESS_BOTTOM_TO_TOP);
 		//g_object_set(G_OBJECT(prog), "show-text", FALSE, NULL);
 #endif
-		gtk_widget_set_size_request(prog, 4,4);
+		gtk_widget_set_size_request(prog, 5, length);
 	} else{
 		gtk_widget_set_size_request(prog, length, 12);
 	}
@@ -822,13 +832,8 @@ void create_window(
 		gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 		GtkWidget* hbox0=gtk_hbox_new(FALSE, 0);
 		if(ihost<nhost){
-#if GTK_MAJOR_VERSION>=3
-			prog_cpu[ihost]=monitor_new_progress(1, 4);
-			//prog_mem[ihost]=monitor_new_progress(1,4);
-#else
-			prog_cpu[ihost]=monitor_new_progress(1, 16);
-			//prog_mem[ihost]=monitor_new_progress(1,16);
-#endif
+			prog_cpu[ihost]=monitor_new_progress(1, 12);
+			//prog_mem[ihost]=monitor_new_progress(1,12);
 			box_append(GTK_BOX(hbox0), prog_cpu[ihost], FALSE, FALSE, 1);
 			//modify_bg(prog_cpu[ihost], 2);
 			//modify_bg(prog_mem[ihost], 1);

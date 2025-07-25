@@ -32,10 +32,10 @@ min-height and min-width are affective at controller widget size
 */
 const gchar* all_style=
 //progressbar progress:backdrop is when window is non-active.
-"progressbar trough, progress{" //trough is the entire bar. progress is active area(?)
-"min-height:15px;"
-"min-width: 4px;" 
-"border-radius:2px;"
+"progressbar, progressbar trough, progress{" //trough is the entire bar. progress is active area
+"min-height:1px;"
+"min-width:5px;"
+"border-radius:1px;"
 //"background-image: linear-gradient(0deg, yellow, red);"
 //"background-color: blue; "
 "}"
