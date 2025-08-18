@@ -1,4 +1,4 @@
-AC_INIT(maos, 3.2)
+AC_INIT(maos, 3.3)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4])
 AC_PREFIX_DEFAULT(${HOME}/.aos) #do not use variable set in this file.
@@ -460,7 +460,7 @@ compile(){
 	(
 		echo Compiling $name with $@.
 		cd ${TMP_DIR}/$name/* || return 1
-		export CFLAGS="$CFLAGS -O3 -Wno-error"  
+		export CFLAGS="${CFLAGS/-std=c11/} -O3 -Wno-error" #-std=c11 causes error in compiling libwebsockets 4.4.1 on macos
 		export CPPFLAGS="$CPPFLAGS" 
 		ans=0
 		if test -f configure ;then
@@ -476,6 +476,7 @@ compile(){
 		else
 			echo "Failed to compile $name. Please check $fnlog and $fnlog2 for details." 
 		fi
+		return $ans
 	) | tee -a $fnlog
 }
 AS_IF([test "$system" = "apple"], [
@@ -483,9 +484,9 @@ AS_IF([test "$system" = "apple"], [
 	AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
 	AS_IF([test "$enable_openmp" = "yes" ], [
 		AS_IF([test "$has_omp" = "0" ], [
-			download LIBOMP "libomp${libsuffix}.tar.bz2" ${prefix}
-			unset ac_cv_lib_omp_omp_set_num_threads
-			AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])
+			AS_IF([download LIBOMP "libomp${libsuffix}.tar.bz2" ${prefix}],
+				[unset ac_cv_lib_omp_omp_set_num_threads
+				AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1])])
 		])
 		AS_IF([test "$has_omp" = "0" ], [
 			#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
@@ -654,9 +655,10 @@ fi
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then
-	compile ZLIB https://www.zlib.net/current/zlib.tar.gz
-	unset ac_cv_lib_z_gzopen
-	AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Please install zlib.])])
+	if compile ZLIB https://www.zlib.net/current/zlib.tar.gz;then
+		unset ac_cv_lib_z_gzopen
+		AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[AC_MSG_ERROR([Please install zlib.])])
+	fi
 fi
 
 #Check FFTW header and library. FFTW3 interface in MKL performs as good as FFTW3
@@ -679,10 +681,10 @@ if test "$has_fftw" = "builtin";then
 else
 	if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
-		download FFTW "fftw${libsuffix}.tar.bz2" ${prefix}
-		unset ac_cv_lib_fftw3_fftw_execute
-		AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
-
+		if download FFTW "fftw${libsuffix}.tar.bz2" ${prefix};then
+			unset ac_cv_lib_fftw3_fftw_execute
+			AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
+		fi
 		if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 			#compile from source
 			FLAGS="--enable-threads --disable-fortran "
@@ -699,10 +701,11 @@ else
 			else
 				FLAGS+=" --enable-sse2 --enable-avx --enable-avx2 --enable-avx512"
 			fi
-			compile FFTW fftw.tar.bz2 $FLAGS
-			compile FFTW fftw.tar.bz2 $FLAGS --enable-float
-			unset ac_cv_lib_fftw3_fftw_execute
-			AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
+			if compile FFTW fftw.tar.bz2 $FLAGS;then
+				compile FFTW fftw.tar.bz2 $FLAGS --enable-float
+				unset ac_cv_lib_fftw3_fftw_execute
+				AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw='yes' LDFFT="-lfftw3"] ,[has_fftw='no'])
+			fi
 			AS_IF([test "$has_fftw" = "no"], AC_MSG_ERROR([FFTW library or header is not available.]))
 		fi
 	fi
@@ -738,14 +741,15 @@ AS_IF([test x$fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR([FFT single precis
 AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [has_chol="no"])])
 if test "$has_chol" = "no" ;then
-	download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${prefix}
-	unset ac_cv_lib_cholmod_${chol_fun}
-	AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
-
-	if test "$has_chol" = "no" ;then
-		compile CHOLMOD "cholmod.tar.bz2"
+	if download CHOLMOD "cholmod${libsuffix}.tar.bz2" ${prefix};then
 		unset ac_cv_lib_cholmod_${chol_fun}
-		AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
+		AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [has_chol="no"], [$LAPACK -lm])
+	fi
+	if test "$has_chol" = "no" ;then
+		if compile CHOLMOD "cholmod.tar.bz2";then
+			unset ac_cv_lib_cholmod_${chol_fun}
+			AC_CHECK_LIB([cholmod], [${chol_fun}], [has_chol="yes"], [AC_MSG_ERROR([Suitesparse library is not available])], [$LAPACK -lm])
+		fi
 	fi
 	unset ac_cv_header_cholmod_h ac_cv_header_suitesparse_cholmod_h
 	AC_CHECK_HEADERS([cholmod.h], [], [AC_CHECK_HEADERS([suitesparse/cholmod.h], [], [AC_MSG_ERROR([Suitesparse header is not available])])])
@@ -762,14 +766,15 @@ if test "$enable_websockets" != "no" ;then
 	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
 	AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
 	if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
-		download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${prefix}
-		unset ac_cv_lib_websockets_lws_service
-		AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
-
-		if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
-			compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=ON
+		if download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${prefix}; then
 			unset ac_cv_lib_websockets_lws_service
 			AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+		fi
+		if test "$has_lws" = "no" ;then #try to compile from source. Needs cmake
+			if compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=ON -DLWS_WITH_EXTERNAL_POLL=ON ;then
+				unset ac_cv_lib_websockets_lws_service
+				AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
+			fi
 		fi
 		if test "$has_lws" != "no" ;then
 			unset ac_cv_header_libwebsockets_h
@@ -793,14 +798,15 @@ if test "$enable_cmocka" != "no" ;then
 		#include <stdint.h>
 		#include <setjmp.h>])
 	if test "$enable_cmocka" = "no" ;then
-		download CMOCKA cmocka${libsuffix}.tar.bz2 ${prefix}
-		unset ac_cv_lib_cmocka_mock_assert
-		AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-
-		if test "$enable_cmocka" = "no" ;then
-			compile CMOCKA cmocka.tar.xz
+		if download CMOCKA cmocka${libsuffix}.tar.bz2 ${prefix};then
 			unset ac_cv_lib_cmocka_mock_assert
 			AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+		fi
+		if test "$enable_cmocka" = "no" ;then
+			if compile CMOCKA cmocka.tar.xz ;then
+				unset ac_cv_lib_cmocka_mock_assert
+				AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+			fi
 		fi
 	fi
 	if test "$enable_cmocka" != "no" ;then
@@ -1082,10 +1088,6 @@ elif test "$with_cuda" != "no" ;then #Set nvcc flags
 	#set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
 	CUDAOPT+=" -lineinfo "
 	CUDAOPT+=" -Wno-deprecated-gpu-targets"
-	if test "$enable_release" = "yes" ;then
-		CUDAOPT+=" -arch=sm_$cuarch"
-	fi
-	#CUDAOPT+="-Xptxas=-v -dlcm=cg"
 	#To specify multiple architectures, use
 	#CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
 

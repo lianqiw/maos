@@ -321,18 +321,23 @@ static void drawdata_clear_older(float timclear){
 		}
 	}
 }
-#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg_time("read " #p " failed %s.", strerror(errno)); break;}
+//CATCH_TO handles time out.
+#define READ_BUF_INT(p) p=*(int*)(buf+boff); boff+=sizeof(int)
+#define READ_BUF_N(p, len) memcpy(p, buf+boff,len); boff+=len
+#define READ_BUF_STR(p) 
 #define CATCH_TO(A,p) if(A) {if(errno==EAGAIN ||errno==EWOULDBLOCK){continue;}else{ close(sock); sock=-1; dbg_time("read " #p " failed %s.", strerror(errno)); break;}}
-#define STREADINT(p) CATCH(streadint(sock, &p),p)
-#define STREAD(p,len) CATCH(stread(sock,p,len),p)
-#define STREADSTR(p) ({if(p) {free(p);p=NULL;} CATCH(streadstr(sock, &p),p);})
+#define CATCH(A,p) if(A) {close(sock); sock=-1; dbg_time("read " #p " failed %s.", strerror(errno)); break;}
+#define STREADINT_TO(p) if(boff<blen){READ_BUF_INT(p);} else CATCH_TO(streadint(sock, &p), p)
+#define STREADINT(p) if(boff<blen){READ_BUF_INT(p);} else CATCH(streadint(sock, &p),p)
+#define STREAD(p,len) if(boff<blen){READ_BUF_N(p, len);} else CATCH(stread(sock,p,len),p)
+#define STREADSTR(p)  if(boff<blen){int len; READ_BUF_INT(len); p=realloc(p, len); READ_BUF_N(p, len);}else CATCH(streadstr(sock, &p),p)
 //read and convert incoming data to float
-#define STREADFLT(p,len) CATCH(stread(sock, p, len*byte_float),p) \
-    if(byte_float!=4){							\
+#define STREADFLT(p,len) if(boff<blen){READ_BUF_N(p, len*byte_float);}else CATCH(stread(sock, p, len*byte_float),p) \
+if(byte_float==8){								\
 	for(int i=0; i<len; i++){					\
-	    ((float*)p)[i]=(float)(((double*)p)[i]);			\
-	}								\
-    }
+	    ((float*)p)[i]=(float)(((double*)p)[i]);\
+	}											\
+}
 int sock;//socket
 int client_pid=-1;//client PID. -1: disconnected. 0: idle. >1: active plotting
 int client_pidold=-1; //old client PID.
@@ -393,13 +398,29 @@ void *listen_draw(void *user_data){
 		char *name=0;
 		int cmd=0;
 		int nlen=0;
+		char *buf=0;//read socket into buffer
+		int boff=0;//buffer read offset
+		int blen=0;//content length
+		int bsize=0;//memory allocation size
 		//int pid=getpid();
 		if(sock!=-1) dbg_time("listen_draw is listening at %d\n", sock);
 		while(sock!=-1){
-			CATCH_TO(streadint(sock, &cmd), cmd);//handles time out.
+			if(boff>blen){
+				error("buffer over use: boff=%d, blen=%d, bsize=%d\n", boff, blen, bsize);
+			}
+			STREADINT_TO(cmd);//handles time out.
 			if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
 				STREADINT(nlen);
 				STREADINT(cmd);
+				if(1 && nlen && boff>=blen){//read into buffer
+					if(nlen>bsize){
+						buf=realloc(buf, nlen);
+						bsize=nlen;
+					}
+					STREAD(buf, nlen);
+					blen=nlen;
+					boff=0;//reset position in buffer
+				}
 			}
 			//if(cmd!=DRAW_HEARTBEAT) dbg_time("%d received %d\n", pid, cmd);
 
@@ -408,7 +429,7 @@ void *listen_draw(void *user_data){
 				int sizes[4];
 				STREAD(sizes, sizeof(int)*4);
 			};break;
-			case DRAW_START:
+			case DRAW_START://0
 				//tic;
 				if(drawdata) warning_time("listen_draw: drawdata=%p, should be NULL.\n", drawdata);
 				if(fig) warning_time("fig=%s, should be NULL.\n", fig);
@@ -701,16 +722,14 @@ void *listen_draw(void *user_data){
 				drawdata=NULL;
 			}
 			break;
-			case -1://read failed.
+			case -1://read failed or server request close.
 				close(sock);
 				sock=-1;
 				break;
 			default:
 				warning_time("Unknown cmd: %d with size %d\n", cmd, nlen);
-				if(nlen){
-					void *p=malloc(nlen);
-					STREAD(p, nlen);
-					free(p);
+				if(nlen && blen){
+					boff=blen;//ignore the message
 				}
 			}/*switch */
 			cmd=-1;

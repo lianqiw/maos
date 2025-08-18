@@ -238,8 +238,6 @@ MAOS comes with a few useful python routines location in \c scripts/ folder:
 
 - `readbin.py` contains `readbin` that can read `bin` or `fits` files.
 
-- `aotools.py` contains a few useful routines for data processing.
-
 - `draw.py` contains routines to draw `opd` defined on coordinate `loc`. Use `draw(loc, opd)` or `draw(map)` where `map` is a 2d array.
 
 - `maos_result.py` contains routines `maos_res` to read and process \c MAOS results. It also imports \c libaos.py and \c draw.py

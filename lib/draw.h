@@ -32,7 +32,7 @@ int draw_add(int fd);
 void draw_final(int reuse);
 int draw_current(const char* fig, const char* fn);
 int draw_current_format(const char *fig, const char *format, ...) CHECK_ARG(2);
-int plot_empty(int sock_draw,const char *fig,const char *fn);
+
 typedef struct {
   union{
     const dmat* image;//2d image. can be real or complex. set ctype for complex.

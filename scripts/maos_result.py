@@ -9,7 +9,6 @@ except:
     natsorted=sorted
 import glob, os
 
-from libaos import read
 from readbin import readbin
 
 def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average

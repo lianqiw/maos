@@ -76,7 +76,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-
+#include <poll.h>
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -108,7 +108,7 @@ static void socket_tcp_keepalive(int sock){
 		){
 		//success
 	} else{
-		warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
+		warning_time("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
 	}
 }
 static void socket_reuse_addr(int sock){
@@ -186,7 +186,7 @@ int socket_recv_timeout(int sock, double sec){
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &val, sizeof(val)))<0){
-		warning("socket_recv_timeout: setsockopt failed\n");
+		warning_time("socket_recv_timeout: setsockopt failed\n");
 	}
 	return ans;
 }
@@ -198,7 +198,7 @@ int socket_send_timeout(int sock, double sec){
 	struct timeval val={sec,0};
 	int ans;
 	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
-		warning("socket_send_timeout: setsockopt failed\n");
+		perror("socket_send_timeout: setsockopt failed:");
 	}
 	return ans;
 }
@@ -256,7 +256,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 		sleep(10);
 		count++;
 		if(count>100){
-			warning("Failed to bind to port %d\n", port);
+			warning_time("Failed to bind to port %d\n", port);
 			close(sock);
 			sock=-1;
 		}
@@ -307,6 +307,50 @@ static int listen_signal_handler(int sig){
 	quit_listen=1;
 	return 1;
 }
+struct pollfd* pfd=NULL;
+int (**pfd_handler)(struct pollfd *fd, int flag)=NULL;//stores handlers
+int npfd=0;
+//Add a port with handler. if handler is NULL, it is handled internally.
+void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int)){
+	int ifd;
+	for(ifd=0; ifd<npfd; ifd++){
+		if(pfd[ifd].fd==sock){
+			pfd_handler[ifd]=handler;
+			pfd[ifd].events=events;
+			//info_time("listen_port_modify: fd=%d (read=%d, write=%d).\n", sock , events&POLLIN, events&POLLOUT);
+			return;
+		}else if(pfd[ifd].fd==-1){
+			break;//open slot
+		}
+	}
+	if(ifd==npfd){//not open slot.
+		npfd++;
+		pfd=realloc(pfd, sizeof(struct pollfd)*npfd);
+		pfd_handler=realloc(pfd_handler, sizeof(void*)*npfd);
+	}
+	info_time("listen_port_add: ifd=%d, fd=%d (read=%d, write=%d).\n", ifd, sock , events&POLLIN, events&POLLOUT);
+	pfd[ifd].fd=sock;
+	pfd[ifd].events=events;
+	pfd_handler[ifd]=handler;
+}
+
+//remove a port form pollfd. it is not closed. if sock==-2, remove all
+void listen_port_remove(int sock, int toclose){
+	info_time("listen_port_remove: fd=%d\n", sock);
+	for(int ifd=0; ifd<npfd; ifd++){
+		if(pfd[ifd].fd==sock || sock==-2){
+			if(toclose && pfd[ifd].fd>=0){
+				close(pfd[ifd].fd);
+			}
+			if(sock>=0) sock=-1;//mark deletion
+			pfd[ifd].fd=-1;//-1 is ignored in polling.
+		}
+	}
+	if(sock>=0){
+		warning_time("fd %d is not found\n", sock);
+	}
+}
+
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
    timeout_fun is not NULL, it will be called when 1) connection is
@@ -315,29 +359,26 @@ static int listen_signal_handler(int sig){
    if localpath is not null and start with /, open the local unix port also
    if localpath is not null and contains ip address, only bind to that ip address
  */
-void listen_port(uint16_t port, char* localpath, int (*responder)(int),
+void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*, int),
 	double timeout_sec, void (*timeout_fun)(), int nodelay){
-
-	fd_set read_fd_set;
-	fd_set active_fd_set;
-	FD_ZERO(&active_fd_set);
+	
 	char* ip=0;
 	int sock_local=-1;
 	int sock=-1;
 	if(port){
 		if((sock=bind_socket(SOCK_STREAM, ip, port))==-1){
-			warning("(%d) bind_socket failed\n", port);
+			warning_time("(%d) bind_socket failed\n", port);
 			return;
 		}
 		if(nodelay){//turn off tcp caching.
-			dbg("Turn on tcp nodelay\n");
+			dbg_time("Turn on tcp nodelay\n");
 			socket_tcp_nodelay(sock);
 		}
 		if(listen(sock, 10)<0){
 			perror("listen (sock)");
 			exit(EXIT_FAILURE);
 		}
-		FD_SET(sock, &active_fd_set);
+		listen_port_add(sock, POLLIN, NULL);
 		socket_recv_timeout(sock, 60);
 		socket_send_timeout(sock, 60);
 	}
@@ -350,7 +391,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				dbg_time("(%d) bind to %s failed\n", sock, localpath);
 			} else{
 				if(!listen(sock_local, 10)){
-					FD_SET(sock_local, &active_fd_set);
+					listen_port_add(sock_local, POLLIN, NULL);
 					socket_send_timeout(sock_local, 60);
 					socket_recv_timeout(sock_local, 60);
 				} else{
@@ -366,44 +407,42 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
-	while(quit_listen!=2&&nlisten){
+	//quit_listen is set by listen_signal_handler to 1 when need to quit
+	while(quit_listen<2&&nlisten){
 		//int new_connection=0;
 		if(quit_listen==1){
 			/*
 			  shutdown(sock, SHUT_WR) sends a FIN to the peer, therefore
 			  initialize a active close and the port will remain in TIME_WAIT state.
 
-			  shutdown(sock, SHUT_RD) sends nother, just mark the scoket as not readable.
+			  shutdown(sock, SHUT_RD) sends nothing, just mark the scoket as not readable.
 
 			  accept() create a new socket on the existing port. A socket is identified by client ip/port and server ip/port.
 
 			  It is the port that remain in TIME_WAIT state.
 			 */
-			//shutdown(sock, SHUT_RDWR);
-			//shutdown(sock_local, SHUT_RDWR);
-			/*Notice existing client to shutdown*/
 			dbg_time("(%d) terminate pending: ask all clients (count=%d) to close.\n", sock, nlisten);
 			static double quit_time=0;
 			if(!quit_time) quit_time=myclockd();
-			//stop listening.
-			FD_CLR(sock, &active_fd_set);
-			close(sock);
+			//stop listening. It is ok to actively shutdown the listening port
+			if(sock!=-1){
+				listen_port_remove(sock, 1);sock=-1;
+			}
 			if(sock_local!=-1){
-				FD_CLR(sock_local, &active_fd_set);
-				close(sock_local);
+				listen_port_remove(sock_local, 1);sock_local=-1;
 			}
 
-			//We ask the client to actively close the connection
-			for(int i=0; i<FD_SETSIZE; i++){
-				if(FD_ISSET(i, &active_fd_set)){
-					int cmd[3]={-1, 0, 0};
-					stwrite(i, cmd, 3*sizeof(int));
+			//We ask the client to actively close the connection to avoid the TCP port reuse issue.
+			for(int ifd=0; ifd<npfd; ifd++){
+				if(pfd[ifd].fd!=-1){
+					pfd_handler[ifd](&pfd[ifd], -1);
 				}
 			}
-
+			timeout_sec=0.1;//decrease timeout
+			quit_listen=2;
 			if(myclockd()>quit_time+5){//wait for a few seconds before force terminate.
 				dbg_time("(%d) force terminate while %d clients remaining.\n", sock, nlisten);
-				quit_listen=2;//force quit.
+				quit_listen=3;//force quit.
 			}
 			//don't break. Listen for connection close events.
 		}
@@ -411,8 +450,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 		struct timeval timeout;
 		timeout.tv_sec=(time_t)timeout_sec;
 		timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
-		read_fd_set=active_fd_set;
-		int navail=select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0);
+		
+		int navail=poll(pfd, npfd, timeout_sec*1e3);
 		if(navail<0){//select failed
 			if(errno==EINTR){
 				dbg_time("(%d) select failed: %s\n", sock, strerror(errno));
@@ -425,22 +464,24 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 				break;
 			}
 		} else if(navail>0){
-			for(int i=0; i<FD_SETSIZE; i++){
-				if(FD_ISSET(i, &read_fd_set)){
-					if(i==sock||i==sock_local){// Connection request on original socket. 
+			for(int ifd=0; ifd<npfd; ifd++){
+				if(pfd[ifd].revents&(POLLNVAL | POLLERR | POLLHUP)){
+					listen_port_remove(pfd[ifd].fd, 0);//invalid or closed port
+				}else if(pfd[ifd].revents){//available
+					if(!pfd_handler[ifd]){//internal port without handler
 						union{
 							struct sockaddr_un un;
 							struct sockaddr_in in;
 						} client;
 						socklen_t size=sizeof(client);
-						int sock2=accept(i, (struct sockaddr*)&client, &size);
+						int sock2=accept(pfd[ifd].fd, (struct sockaddr*)&client, &size);
 						if(sock2<0){
 							warning_time("(%d) accept failed: %s.\n", sock, strerror(errno));
 						} else{
 							dbg_time("(%d) socket is connected.\n", sock2);
-							FD_SET(sock2, &active_fd_set);
+							listen_port_add(sock2, POLLIN, responder);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
-							socket_send_timeout(sock2, 60);
+							//socket_send_timeout(sock2, 60);//fails with errno= 16 on macos
 							//new_connection=1;
 						}
 					} else{
@@ -449,11 +490,10 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 						   negative value: Close read of socket.
 						   -1: also close the socket.
 						 */
-						int ans=responder(i);
-						if(ans<0){
-							FD_CLR(i, &active_fd_set);
-							close(i);
-							dbg_time("(%d) close socket, ans=%d.\n", i, ans);
+						int ans=pfd_handler[ifd](&pfd[ifd], 0);
+						if(ans<0 && pfd[ifd].fd!=-1){
+							listen_port_remove(pfd[ifd].fd, 1);
+							dbg_time("(%d) close socket, ans=%d.\n", pfd[ifd].fd, ans);
 							//new_connection=-1;
 						}
 					}
@@ -465,8 +505,11 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 			timeout_fun();
 		}
 		nlisten=0;
-		for(int i=0; i<FD_SETSIZE; i++){
-			if(FD_ISSET(i, &active_fd_set)){
+		for(int ifd=0; ifd<npfd; ifd++){
+			if(pfd[ifd].fd!=-1){
+				if(quit_listen==1){
+					info_time("sock %d is pending\n", pfd[ifd].fd);
+				}
 				nlisten++;
 			}
 		}
@@ -476,21 +519,13 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(int),
 	}
 	/* Error happened. We close all connections and this server socket.*/
 	if(sock_local!=-1){
-		close(sock_local);
-		FD_CLR(sock_local, &active_fd_set);
+		listen_port_remove(sock_local, 1); sock_local=-1;
 	}
 	if(sock!=-1){
-		close(sock);
-		FD_CLR(sock, &active_fd_set);
+		listen_port_remove(sock,  1); sock=-1;
 	}
 	dbg_time("listen_port exited\n");
-	for(int i=0; i<FD_SETSIZE; i++){
-		if(FD_ISSET(i, &active_fd_set)){
-			dbg_time("sock %d is still connected\n", i);
-			close(i);
-			FD_CLR(i, &active_fd_set);
-		}
-	}
+	listen_port_remove(-2, 1);
 	//sync();
 }
 
@@ -512,7 +547,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		addr.sun_family=AF_UNIX;
 		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 		if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
-			warning("connect locally (%s) failed: %s. \n", hostname, strerror(errno));
+			warning_time("connect locally (%s) failed: %s. \n", hostname, strerror(errno));
 			close(sock);
 			sock=-1;
 		}

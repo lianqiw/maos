@@ -5,13 +5,14 @@ import glob
 import maos_parse
 from pathlib import Path
 if len(sys.argv)>2 and os.path.isdir(sys.argv[1]+'/maos/'):
-    srcdir=sys.argv[1];
-    fnout=sys.argv[2];
+    srcdir=sys.argv[1]
+    fnout=sys.argv[2]
 else:
     srcdir=str(Path.home())+'/work/programming/aos'
-    fnout='../mex/maos2mex.h' #output to build directory
+    fnout='maos2mex.h' #output to build directory
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))
+
 simu_all=list();
 
 headerlist=glob.glob(srcdir+'/lib/*.h')

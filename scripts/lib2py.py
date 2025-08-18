@@ -6,14 +6,19 @@
 #derived from lib2mex.py
 
 #from __future__ import print_function
-import sys,os
+import os, sys
 import maos_parse
 from pathlib import Path
 import json
-import keyword
 import glob
-srcdir=str(Path.home())+'/work/programming/aos'
-fnout=srcdir+'/scripts/libaos.py'
+fnout=None
+if len(sys.argv)>2:
+    srcdir=sys.argv[1]
+    fnout=sys.argv[2]
+else:
+    srcdir=str(Path.home())+'/work/programming/aos'
+if fnout is None:
+    fnout=srcdir+'/scripts/libaos.py'
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))
 simu_all=list();

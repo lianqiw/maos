@@ -1,8 +1,7 @@
 #!env python3
-import aotools
 import readbin
 import socket
-import sys
+
 """Get variables from running MAOS"""
 
 sock=None #saves the socket

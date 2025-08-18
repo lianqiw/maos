@@ -30,6 +30,12 @@ PNEW(lock);//protect the list and TCP socket from race condition
 #define MAXDRAW 1024
 #define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
 
+//Every command is prefixed with DRAW_ENTRY with payload length (not including the command). 
+//This helps client to handle unknown command as well as websocket proxy to forward the data.
+#define WRITECMD(sock, cmd, npayload) (stwriteint(sock, DRAW_ENTRY)||stwriteint(sock, npayload)||stwriteint(sock, cmd)) 
+#define WRITECMDSTR(sock, cmd, str) (WRITECMD(sock, cmd, sizeof(int)+strlen(str)+1)||stwritestr(sock, str))
+#define WRITECMDARR(sock, cmd, p, len) (WRITECMD(sock, cmd, len)||stwrite(sock, p, len))
+#define WRITECMDINT(sock, cmd, val) (WRITECMD(sock, cmd, sizeof(int))||stwriteint(sock, val))
 int draw_id=DRAW_ID_MAOS;      //Client identification. Same draw_id reuses drawdaemon.
 int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
@@ -53,7 +59,7 @@ static int listening=0;    //If set, listen_drawdaemon is listening to replies f
 
    2) If draw_direct=0, get_drawdaemon() will talk to draw_helper() (a
    fork()'ed process) with pid through a socket pair (AF_UNIX type). The
-   draw_helper() will then create another socket_pair, pass one end of it to
+   draw_helper() will then create another socketpair, pass one end of it to
    draw(), and the other end to drawdaemon() by fork()+exec().
 
    3 If draw_direct=1, get_drawdaemon() will launch drawdaemon directly.
@@ -81,6 +87,7 @@ typedef struct sockinfo_t{
 }sockinfo_t;
 sockinfo_t *sock_draws=NULL;
 int use_udp=0;
+int plot_empty(sockinfo_t *ps, const char *fig, const char *fn);
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
@@ -97,7 +104,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 		static int nretry=0;
 		dbg("client_port=%d\n", client_port);
 retry:
-		if(stwrite(sock_draw, cmd, sizeof(cmd))){
+		if(WRITECMDINT(DRAW_UDPPORT, client_port)){
 			warning("write to drawdaemon failed\n");
 			return NULL;
 		}
@@ -176,7 +183,7 @@ retry:
 			break;
 		case DRAW_SINGLE:
 			sock_data->draw_single=!sock_data->draw_single;
-			dbg2("draw %d draw_single=%d\n", sock_draw, sock_data->draw_single);
+			info("draw %d draw_single change to %d\n", sock_draw, sock_data->draw_single);
 			break;
 		default:
 			dbg("Unknown cmd: %d with size %d from socket %d\n", cmd, nlen, sock_draw);
@@ -222,27 +229,25 @@ static void list_destroy(list_t** head){
 		free(p);
 	}
 }
-#define WRITECMDSTR(sock, cmd, str) (stwriteint(sock, DRAW_ENTRY)||stwriteint(sock, strlen(str)+1+sizeof(int))||stwriteint(sock, cmd)||stwritestr(sock, str))
 /**Add fd to list of drawing socks*/
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
 	if(sock!=-1){
-		int cmd[2]={DRAW_PID, getpid()};
-		if(stwrite(sock, cmd, sizeof(cmd))){
-			dbg("failed to write: sock=%d\n", sock);
+		if(WRITECMDINT(sock, DRAW_PID, getpid())){
+			info_errno("write DRAW_PID failed.\n");
 			close(sock); sock=-1;
 		}
 	}
 	if(sock!=-1&&EXENAME){
 		if(WRITECMDSTR(sock, DRAW_EXENAME, EXENAME)){
-			dbg("write DRAW_EXENAME failed\n");
+			info_errno("write DRAW_EXENAME failed\n");
 			close(sock);
 			sock=-1;
 		}
 	}
 	if(sock!=-1&&(DIRSTART||DIROUT)){
 		if(WRITECMDSTR(sock, DRAW_PATH, DIROUT?DIROUT:DIRSTART)){
-			dbg("write DRAW_PATH failed\n");
+			info_errno("write DRAW_PATH failed\n");
 			close(sock);
 			sock=-1;
 		}
@@ -254,10 +259,38 @@ int draw_add(int sock){
 	sock_draws=p;
 	if(draw_single!=-1){
 		p->draw_single=1;
-	    pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
 	}
+	pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
 	draw_disabled=0;
 	return 0;
+}
+static void sockinfo_close(sockinfo_t *p, int reuse){
+	if(reuse && p->fd!=-1){
+		if(!WRITECMD(p->fd, DRAW_FINAL, 0)){
+			dbg("send %d back to scheduler for reuse\n", p->fd);
+			scheduler_socket(1, &p->fd, draw_id);
+		}
+	}
+	if(p->thread){
+		void *ans;
+		if(pthread_cancel(p->thread) || pthread_join(p->thread, &ans)){
+			dbg("Unable to cancel or join thread\n");
+		}
+		p->thread=0;
+	}
+	if(p->fd!=-1){
+		close(p->fd);
+		p->fd=-1;
+	}
+#if TEST_UDP
+	if(p->udp.sock>0) {
+		close(p->udp.sock);
+		p->udp.sock=-1;
+	}
+#endif
+	list_destroy(&p->list);
+	FREE(p->figfn[0]);
+	FREE(p->figfn[1]);
 }
 ///fd==-1 will remove all clients
 ///reuse==0 is called when write failed, do not try to write again
@@ -266,27 +299,8 @@ static void draw_remove(int fd, int reuse){
 		sockinfo_t *p=*curr;
 		if(p->fd==fd || fd==-1){
 			*curr=p->next;
-			if(reuse){
-				stwriteint(p->fd, DRAW_FINAL);
-				dbg("send %d back to scheduler for reuse\n", p->fd);
-				scheduler_socket(1, &p->fd, draw_id);
-			}
-			if(p->thread){
-				void *ans;
-				if(pthread_cancel(p->thread) || pthread_join(p->thread, &ans)){
-					dbg("Unable to cancel or join thread\n");
-				}
-			}
-			if(fd!=-1) close(fd);
-#if TEST_UDP
-			if(p->udp.sock>0) {
-				close(p->udp.sock);
-			}
-#endif
-			list_destroy(&p->list);
-			free(p->figfn[0]);
-			free(p->figfn[1]);
-			free(p);
+			sockinfo_close(p, reuse);
+			FREE(p);
 		}else{
 			curr=&p->next;
 		}
@@ -384,7 +398,7 @@ static int get_drawdaemon(){
 	//First try reusing existing idle drawdaemon with the same id.
 	while(!DRAW_NOREUSE && !scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
-		if(stwriteint(sock, DRAW_INIT)){
+		if(WRITECMD(sock, DRAW_INIT, 0)){
 			dbg("received socket=%d is already closed.\n", sock);
 			close(sock);
 			sock=-1;
@@ -431,10 +445,12 @@ static int get_drawdaemon(){
 */
 void draw_final(int reuse){
 	//called from other threads, need to lock
+	//may be failed if it is invoked by signal handler while draw is in progress
 	if(!sock_draws) return;
-	LOCK(lock);
-	draw_remove(-1, reuse);
-	UNLOCK(lock);
+	if(!TRYLOCK(lock)){
+		draw_remove(-1, reuse);
+		UNLOCK(lock);
+	}
 }
 
 /*
@@ -466,7 +482,7 @@ static int check_figfn(sockinfo_t *ps, const char* fig, const char* fn){
 	int ans=0;//default is false
 	if(!found){//page is not found
 		//ans=3; //draw without test lock
-		plot_empty(ps->fd, fig, fn);
+		plot_empty(ps, fig, fn);
 	} else{//page is found
 		char** figfn=ps->figfn;
 		if(!mystrcmp(figfn[0], fig)){
@@ -534,75 +550,87 @@ static int iframe=0; //frame counter
 #define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
 #define FWRITESTR(str) CATCH(fwritestr(fbuf, str)) //will write 1 byte if str is NULL
 #define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
-#define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, (nlen)+sizeof(int)) || fwriteint(fbuf, cmd))
-#define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, strlen(str)+1); FWRITESTR(str);}
-#define FWRITECMDARR(cmd,p,len) if((len)>0){FWRITECMD(cmd, len); FWRITEARR(p,len);}
+#define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, nlen) || fwriteint(fbuf, cmd))
+#define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, sizeof(int)+strlen(str)+1); FWRITESTR(str);}
+#define FWRITECMDARR(cmd,p,len) {FWRITECMD(cmd, len); if(len) FWRITEARR(p,len);}
+#define FWRITECMDINT(cmd,val) {FWRITECMD(cmd, sizeof(int)); FWRITEINT(val);}
 //Plot an empty page
-int plot_empty(int sock_draw, const char *fig, const char *fn){
+#define BUF_POSTPROC\
+	if(ans){\
+		warning("write failed:%d\n", ans);\
+		free_default(buf); bufsize=0; buf=0;\
+	} else{\
+		int* bufp=(int*)(buf);\
+		/*bufp[0] is DRAW_ENTRY*/\
+		bufp[1]=(int)bufsize-3*sizeof(int);\
+		/*bufp[2] is DRAW_FRAME*/\
+		bufp[3]=(int)bufsize;/*frame size*/\
+		bufp[4]=iframe;/*frame number*/\
+		bufp[5]=(int)bufsize;/*sub-frame size*/\
+		bufp[6]=0;/*sub-frame number*/\
+	}\
+
+int plot_empty(sockinfo_t *ps, const char *fig, const char *fn){
+	if(ps->fd==-1) return -1;
 	char *buf=0;
 	int ans=0;
 	size_t bufsize=0;
 	FILE *fbuf=open_memstream(&buf,&bufsize);
-	int zeros[4]={0,0,0,0};
+	int zeros[4]={0};
 	FWRITECMDARR(DRAW_FRAME,zeros,4*sizeof(int));
 	FWRITECMD(DRAW_START,0);
-	FWRITECMD(DRAW_FLOAT,sizeof(int));FWRITEINT(sizeof(real));
+	FWRITECMDINT(DRAW_FLOAT,sizeof(real));
 	FWRITECMDSTR(DRAW_FIG,fig);
 	FWRITECMDSTR(DRAW_NAME,fn);
 	FWRITECMD(DRAW_END,0);
 end2:
 	fclose(fbuf);
-	if(stwrite(sock_draw,buf,bufsize)){
-		info("write to %d failed: %s\n",sock_draw,strerror(errno));
+	BUF_POSTPROC;
+	if(bufsize && !ans && stwrite(ps->fd,buf,bufsize)){
+		info("write to %d failed: %s\n",ps->fd,strerror(errno));
 		ans=-1;
-		draw_remove(sock_draw,0);
+		sockinfo_close(ps, 0); 
 	}
 	free_default(buf);
 	return ans;
 }
 int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int always){
 	int ans=0;
-	for(sockinfo_t *ps=sock_draws, *ps_next=NULL; ps; ps=ps_next){
-		ps_next=ps->next;//draw_remove change ps node, so save info here;
+	for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
 		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 		int sock_draw=ps->fd;
+		if(sock_draw==-1) return -1;
 		int needed_i=always?1:check_figfn(ps, fig, fn);
-		if(!needed_i){
-			continue;
-		}
 		if(needed_i==2){
 			if(TRYLOCK(lock)){//line busy
-				continue;
+				needed_i=0;
 			}
-		} else{
+		}else if(needed_i){
 			LOCK(lock);
 		}
-		block_signal(1);//avoid kill/term signal while holding mutex
-		if(use_udp){
-			error("To be implemented\n");
-			//use sendmmsg with GSO is fastest.
-		} else{
-			//TIC;tic;
-			if(stwrite(sock_draw, buf, bufsize)){
-				info("write to %d failed: %s\n", sock_draw, strerror(errno));
-				ans=-1;
-				draw_remove(sock_draw, 0);
+		if(needed_i){
+			block_signal(1);//avoid kill/term signal while holding mutex
+			if(use_udp){
+				error("To be implemented\n");//use sendmmsg with GSO is fastest.
 			} else{
-				//toc2("write %s:%s %lu MiB", fig, fn, bufsize>>20);
+				if(stwrite(sock_draw, buf, bufsize)){
+					info("write to %d failed: %s\n", sock_draw, strerror(errno));
+					ans=-1;
+					sockinfo_close(ps, 0);//keep struct to avoice race condition
+				}
 			}
-		}
 
-#if TEST_UDP
-		if(ps->udp.sock>0){
-			//test UDP data
-			int counter=myclocki();
-			udp_send(&ps->udp, buf, bufsize, counter);
-			udp_send(&ps->udp, buf, bufsize, counter);
-			udp_send(&ps->udp, buf, bufsize, counter);
+	#if TEST_UDP
+			if(ps->udp.sock>0){//test UDP data
+				int counter=myclocki();
+				udp_send(&ps->udp, buf, bufsize, counter);
+				udp_send(&ps->udp, buf, bufsize, counter);
+				udp_send(&ps->udp, buf, bufsize, counter);
+			}
+	#endif
+			block_signal(0);
+			UNLOCK(lock);
 		}
-#endif
-		block_signal(0);
-		UNLOCK(lock);
 	}
 	return ans;
 }
@@ -716,7 +744,7 @@ switch(ctype){\
 				FWRITEARR(tmp, nlen2);
 				free(tmp);
 			}
-			FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(real));
+			FWRITECMDINT(DRAW_FLOAT, sizeof(real));
 			if(opts.loc){/*there are points to plot. */
 				for(int ig=0; ig<opts.ngroup; ig++){
 					int nlen=opts.loc[ig]->nloc;
@@ -743,7 +771,7 @@ switch(ctype){\
 					FWRITEINT(nlen);//number of points
 					FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
 					FWRITEINT(0);//square plot or not
-					if(p){
+					if(nlen){
 						FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
 					}
 				}
@@ -764,7 +792,7 @@ switch(ctype){\
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
 			if(opts.zlog){
-				FWRITECMDARR(DRAW_ZLOG, &opts.zlog, sizeof(int));
+				FWRITECMDINT(DRAW_ZLOG, opts.zlog);
 			}
 			if(opts.zlim[0]!=opts.zlim[1]){
 				FWRITECMDARR(DRAW_ZLIM, opts.zlim, sizeof(real)*2);
@@ -782,7 +810,7 @@ switch(ctype){\
 			if(opts.legend){
 				int nlen=0;
 				for(int ig=0; ig<opts.ngroup; ig++){
-					nlen+=opts.legend[ig]?strlen(opts.legend[ig]):0+1;
+					nlen+=(opts.legend[ig]?strlen(opts.legend[ig]):0)+1+sizeof(int);
 				}
 				FWRITECMD(DRAW_LEGEND, nlen);
 				for(int ig=0; ig<opts.ngroup; ig++){
@@ -797,16 +825,7 @@ switch(ctype){\
 			FWRITECMD(DRAW_END, 0);
 end2:
 			fclose(fbuf);
-			if(ans){
-				warning("write failed:%d\n", ans);
-				free_default(buf); bufsize=0; buf=0;
-			} else{
-				int* bufp=(int*)(buf+3*sizeof(int));
-				bufp[0]=(int)bufsize;//frame size
-				bufp[1]=iframe;//frame number
-				bufp[2]=(int)bufsize;//sub-frame size
-				bufp[3]=0;//sub-frame number
-			}
+			BUF_POSTPROC;
 		}
 		if(bufsize&&!ans){
 			ans=send_buf(fig, fn, buf, bufsize, opts.always);

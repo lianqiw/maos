@@ -91,13 +91,14 @@ int stread(int sfd, void* p, size_t len){
 	} while(nread>0&&left>0);
 	return (nread<0||(nread==0&&len!=0)||left)?-1:0;
 }*/
+
 /**
    Write a string to socket
 */
 int stwritestr(int sfd, const char* str){
 	if(str){
-		size_t len=strlen(str)+1;
-		return stwriteint(sfd, (int)len)||stwrite(sfd, str, len);
+		int len=strlen(str)+1;//notice: if pad to multiple of 4 or 8, must change strlen()+1 in draw.c
+		return stwriteint(sfd, len)||stwrite(sfd, str, len);
 	} else{
 		return stwriteint(sfd, 0);
 	}
@@ -109,7 +110,7 @@ int streadstr(int sfd, char** str){
 	int len;
 	int ans=streadint(sfd, &len);
 	if(!ans&&len>0){
-		*str=(char*)calloc(1, sizeof(char)*(size_t)len);
+		*str=mycalloc(len, char);
 		ans=stread(sfd, *str, (size_t)len);
 		if(ans){
 			free(*str);

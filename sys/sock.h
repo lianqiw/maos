@@ -22,10 +22,13 @@
    Routines to establish socket connection
 */
 #include <netinet/in.h>
+#include <poll.h>
 int socket_recv_timeout(int sock, double sec);
 int socket_send_timeout(int sock, double sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
-void listen_port(uint16_t port, char *localpath, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
+void listen_port(uint16_t port, char *localpath, int (*responder)(struct pollfd*, int), double timeout_sec, void (*timeout_fun)(), int nodelay);
+void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int));
+void listen_port_remove(int sock, int closed);
 int socket_nopipe(int sock);
 int socket_block(int sock, int block);
 int bind_socket(int protocol, char* ip, uint16_t port);

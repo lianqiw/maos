@@ -65,7 +65,9 @@ int stread3(int sfd, void* p, size_t len, size_t buflen){
 	} while(nread>0&&left>0);
 	return left?-1:0;
 }
-int server(int sock){
+int server(struct pollfd *pfd, int flag){
+	if(!pfd || flag==-1) return 0;
+	int sock=pfd->fd;
 	int nstep;
 	int nmin;
 	int nmax;
@@ -140,7 +142,9 @@ int client(const char* hostname, int port, int nmin, int nmax, int nstep, int nr
 	return 0;
 }
 //server for mvmfull_real
-int mvm_server(int sock){
+int mvm_server(struct pollfd *pfd, int flag){
+	if(!pfd || flag==-1) return 0;
+	int sock=pfd->fd;
 	int cmd[7];
 	if(streadintarr(sock, cmd, 7)){
 		return -1;

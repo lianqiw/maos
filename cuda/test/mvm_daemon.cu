@@ -182,7 +182,10 @@ static void mvm_data_free(void){
 	free(mvm_data);
 }
 real tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, tim_dmsend=0;
-static int respond(int sock){
+static int respond(struct pollfd *pfd, int flag){
+	if(!pfd) return 0;
+	(void) flag;
+	int sock=pfd->fd;
 	TIC;tic;
 	sock_mvm=sock;
 	int cmd[N_CMD]={0};

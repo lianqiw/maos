@@ -135,7 +135,9 @@ def draw(*args, **kargs):
         if len(args) == 1:
             # plot grid
             plt.plot(loc[0], loc[1], '+')
-            plt.axis('scaled')  # better than equal
+            #plt.axis('scaled')  # better than equal
+            plt.gca().axis('tight')
+            plt.gca().set_aspect('equal', adjustable='box')
             plt.xlabel('x (m)')
             plt.ylabel('y (m)')
         elif len(args) >= 2:

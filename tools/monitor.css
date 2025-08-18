@@ -1,0 +1,131 @@
+html {
+	font-family: Arial;
+	font-size: 14px;
+}
+/* CSS notes:
+	A,B: match either A or B
+	A B: matches B inside A including B inside C inside A
+	A >B: only immediate children
+	table: type selector
+	.title: class selector
+	
+	tr: table row
+	td: table data
+	th: table header, replaced td
+
+	margin is space outside of border (how far the element is from other elements around it). 
+		outline is a line outside of the border. does not affect layout or spacing (fills margin)
+	border: top,right,bottom,left
+	padding is space between content and border
+	color is for text color
+*/
+* {
+	padding-inline-start: 0;
+}
+table.monitor {
+	border-spacing: 0 0;
+	border-style: solid;
+	border-color: black;
+	border-width: 2px 1px 1px 2px;
+	table-layout: fixed;
+	max-width: 100%;
+}
+table.monitor tr{
+	width: 100%;
+	max-width:200em;
+}
+table.monitor tr td,th {
+	border-width: 0.5px 0.5px;
+	border-style: solid;
+	border-color: #AAA;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+table.monitor td {
+	text-align: right;
+}
+table.monitor th {
+	text-align: center;
+}
+
+table.monitor tr:nth-child(odd) {
+	background-color: #EEE
+}
+
+table.monitor .tdpath {
+	width: 50%;
+	max-width: 100px;/*this allows ellipsis*/
+	overflow: hidden;
+	text-overflow: ellipsis; 
+}
+table.monitor .tdout {
+	width: 50%;
+	max-width: 100px;/*this allows ellipsis*/
+	overflow: hidden;
+	text-overflow: ellipsis; 
+}
+table.monitor td.tdout{ /*use td.tdout, not td .tdout or .tdout td*/
+	text-align: left;
+}
+table.monitor td.tdout details summary{/*not effective*/
+	overflow: hidden; 
+	text-overflow: ellipsis; 
+}
+table.monitor td.tdout details p{
+	font-family: roboto mono, monospace;
+	font-size: 12px;
+	white-space: normal;
+}
+
+div.progress {
+	position: relative;
+	text-align: left;
+}
+
+div.progressbar {
+	background: #3584E4;
+	height: 20px;
+}
+
+span.progressbar {
+	position: absolute;
+	top: 2px;
+	z-index: 2;
+	text-align: left;
+	width: 100%;
+}
+.inline *{
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 14px;
+	padding-inline-start: 2px;
+	margin: 0px;
+}
+.inline >img{
+	width: 28px;
+	margin-right: 4px;
+}
+.inline >span{
+	font-size: 24px;
+	margin-right: 12px;
+}
+
+ul.tab_hosts {
+	background: #BFBFBF;
+	list-style: none;
+	overflow: hidden;
+	margin: 0px;
+}
+ul.tab_hosts li {
+	/*display: inline-block;*//*inline ignores vertical padding*/
+	padding: 5px;
+	cursor: pointer;
+	vertical-align: middle; 
+}
+
+ul.tab_hosts li:hover,
+ul.tab_hosts li.active {
+	color: #7d7d7d;
+	background: #EFEFEF;
+}
+

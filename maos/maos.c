@@ -280,10 +280,10 @@ static void* maos_listener(void* psock){
 		{
 			int fd;
 			if(streadfd(sock, &fd)){
-				warning_time("unable to read fd from %d\n", sock);
+				warning("unable to read fd from %d\n", sock);
 				continue;
 			} else{
-				dbg("got fd=%d\n", fd);
+				info("got fd=%d for plotting.\n", fd);
 			}
 			draw_add(fd);
 			if(global){

@@ -38,6 +38,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <poll.h>
 #include "../sys/sys.h"
 #if HAS_LWS
 #include "scheduler_ws.h"
@@ -57,7 +58,7 @@ typedef struct RUN_T{
 	int pid;
 	int pidnew;//the new pid
 	int sock;//socket for primary maos connection
-	int sock2;//socket for secondary maos connection for maos_command()
+	int sock_cmd;//socket for secondary maos connection for maos_command()
 	int nthread;//number of threads
 	int ngpu;//number of gpus requested.
 }RUN_T;
@@ -480,17 +481,17 @@ static void queue_new_job(const char* exename, const char* execmd){
 	all_done=0;
 }
 /**
-   Pass socket and command to maos.
+   Pass socket (if !=-1) and command to maos.
  */
 static int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
-	if(!irun||!irun->sock2||(stwriteintarr(irun->sock2, cmd2, 2)||stwritefd(irun->sock2, sock))){
-		warning_time("Unable to pass socket %d to maos (%d, %d)\n", sock, irun?irun->pid:-1, irun?irun->sock2:-1);
-		stwriteint(sock, -1);//respond failure message.
+	if(!irun||!irun->sock_cmd||(stwriteintarr(irun->sock_cmd, cmd2, 2)||(sock!=-1 && stwritefd(irun->sock_cmd, sock)))){
+		warning_time("Failed to send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun?irun->pid:-1, irun?irun->sock_cmd:-1);
+		if(sock!=-1) stwriteint(sock, -1);//respond failure message.
 	} else{
-		dbg_time("Successfully passed socket %d to maos (%d, %d)\n", sock, irun->pid, irun->sock2);
-		stwriteint(sock, 0);//respond succeed
+		dbg_time("Successfully send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun->pid, irun->sock_cmd);
+		if(sock!=-1) stwriteint(sock, 0);//respond succeed
 	}
 	return -1;//do not keep this connection.
 }
@@ -611,7 +612,15 @@ static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
    new commands with additional payload cannot be easily introduced in the
    scheduler().
 */
-static int respond(int sock){
+static int respond(struct pollfd *pfd, int flag){
+	if(!pfd){
+		return 0;
+	}
+	if(flag==-1){//ask client to shutdown
+		int cmd[3]={-1, 0, 0};
+		stwrite(pfd->fd, cmd, 3*sizeof(int));
+	}
+	int sock=pfd->fd;
 	/*
 	   Don't modify sock in this routine. otherwise select
 	   will complain Bad file descriptor
@@ -875,7 +884,7 @@ static int respond(int sock){
 		set_sockname(sock, "maos server");
 		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
-			irun->sock2=sock;
+			irun->sock_cmd=sock;
 			dbg_time("(%d:%s) maos socket is saved\n", sock, get_sockname(sock));
 		} else{
 			warning_time("(%d:%s) maos irun not found\n", sock, get_sockname(sock));
@@ -957,59 +966,114 @@ static int respond(int sock){
 		}
 		ret=-1;
 	}
-#if HAS_LWS
-	ws_service(0);
-#endif
+	if(ret<0){
+		info_time("cmd=%d returned ret=%d\n", cmd[0], ret);
+	}
 	//if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
 	return ret;//ret=-1 will close the socket.
 }
+#if HAS_LWS
 /*
   handle requests from web browser via websockets. Browser sends request over
-  text messages with fields separated by '&'.
+  text messages with fields separated by '&'. The format is 
+  PID&COMMAND_NAME;
 */
-void scheduler_handle_ws(char* in, size_t len){
-	(void)len;
-	char* sep=strchr(in, '&');
-	if(!sep){
-		warning_time("Invalid message: %s\n", in);
-		return;
-	}
-	*sep='\0';
-	int pid=strtol(in, 0, 10);
-	sep++;
-	char* tmp;
-	if((tmp=strchr(sep, '&'))){
-		*tmp='\0';
-	}
-	if((tmp=strchr(sep, ';'))){
-		*tmp='\0';
-	}
-	//LOCK(mutex_sch);
-	if(!strcmp(sep, "REMOVE")){
-		RUN_T* irun=runned_get(pid);
-		if(irun){
-			runned_remove(pid);
-		} else{
-			warning_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
+void scheduler_receive_ws(char* in, size_t len, void* userdata){
+	while(len>1){//len includes final 0
+		char* tmp;//find and mark end of current command
+		if((tmp=strchr(in, '\n'))){
+			*tmp=0; tmp++;
+		}else if((tmp=strchr(in, ';'))){
+			*tmp=0; tmp++;
+		}else{
+			tmp=in+len+1;//past end of str.
 		}
-	} else if(!strcmp(sep, "KILL")){
-		RUN_T* irun=running_get_by_pid(pid);
-		if(irun){
-			if(irun->status.info!=S_QUEUED){
-				kill(pid, SIGTERM);
-				if(irun->status.info==S_WAIT){//wait up the process.
-					stwriteint(irun->sock, S_START);
-				}
+		char* sep=strchr(in, '&');
+		if(!sep){
+			warning_time("Unable to handle cmd: {%s}, len={%zu}\n", in, len);
+			return;
+		}
+		*sep=0;
+		int pid=strtol(in, 0, 10);
+		*sep='&';
+		sep++;		
+		if(pid<=0){
+			warning_time("Unable to handle cmd: {%s}, len={%zu}\n", in, len);
+			return;
+		}
+		char *sep2=strchr(sep,'&');
+		if(sep2){
+			*sep2=0; sep2++;//next entry
+		}
+		
+		//LOCK(mutex_sch);
+		if(!strcmp(sep, "REMOVE")){
+			RUN_T* irun=runned_get(pid);
+			if(irun){
+				runned_remove(pid);
 			} else{
-				running_remove(pid, S_KILLED);
+				warning_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
 			}
-			warning_time("HTML client send term signal to %5d term signal.\n", pid);
+		} else if(!strcmp(sep, "KILL")){
+			RUN_T* irun=running_get_by_pid(pid);
+			if(irun){
+				if(irun->status.info!=S_QUEUED){
+					kill(pid, SIGTERM);
+					if(irun->status.info==S_WAIT){//wait up the process.
+						stwriteint(irun->sock, S_START);
+					}
+				} else{
+					running_remove(pid, S_KILLED);
+				}
+				warning_time("HTML client send term signal to %5d term signal.\n", pid);
+			}
+		} else if(!strcmp(sep, "DRAW")){
+			int sv2[2];//socket pair for communication.
+			/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
+			if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
+				maos_command(pid, sv2[1], MAOS_DRAW);//pass sv2[1] to maos
+				int status=1;
+				streadint(sv2[0], &status);
+				if(!status){
+					listen_port_add(sv2[0], POLLIN, ws_proxy_read);
+					ws_proxy_add(sv2[0], userdata);
+				}else{
+					close(sv2[0]);
+				}
+				close(sv2[1]);
+			} else{
+				perror("socketpair");
+			}
+			//ws_proxy_write(DRAW_SINGLE, NULL, NULL, userdata);
+		} else if(!strcmp(sep, "DRAW_FIGFN")){
+			char *fig=0, *fn=0;
+			if(sep2){
+				char* sep3=strchr(sep2,'&');
+				fig=sep2;
+				if(sep3){
+					*sep3=0; sep3++;
+					fn=sep3;
+				}
+				sep2=strchr(sep3,'&');
+				if(sep2) *sep2=0;//terminate string
+			}
+			if(fig && fn){
+				ws_proxy_write(DRAW_FIGFN, fig, fn, userdata);
+			}
+		} else{
+			warning_time("Unknown action: %s\n", sep);
 		}
-	} else{
-		warning_time("Unknown action: %s\n", sep);
+		if(tmp<in+len){//locate next command
+			len-=(tmp-in);
+			in=tmp;
+		}else{
+			len=0;
+			break;
+		}
 	}
 	//UNLOCK(mutex_sch);
 }
+#endif
 static void scheduler_timeout(void){
 	time_t thistime=myclocki();
 	//Process job queue
@@ -1017,9 +1081,7 @@ static void scheduler_timeout(void){
 		process_queue();
 	}
 	//respond to heatbeat of saved sockets
-#if HAS_LWS
-	ws_service(1000);//service http.
-#endif	
+
 	if(thistime>=(lasttime3+3)){
 		if(running){
 			check_jobs();
@@ -1070,7 +1132,7 @@ static void monitor_remove(int sock){
 */
 #if HAS_LWS
 //do the real conversion
-static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, long prepad, long postpad){
+static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, long prepad){
 	char temp[4096]={0};
 	size_t len;
 	if(path){
@@ -1089,16 +1151,16 @@ static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, 
 			st->nseed==0?0:st->iseed+1, st->nseed, st->simend==0?0:st->isim+1, st->simend,
 			st->rest, st->laps+st->rest, st->tot*st->scale);
 	}
-	if(!dest){
-		ws_push(temp, len);
-	} else{
+	if(!dest){//push to client directly using ring buffer
+		ws_append(temp, len);
+	} else{//add to list for the new client
 		*plen=len;
-		*dest=(char*)malloc(len+prepad+postpad);
+		*dest=(char*)malloc(len+prepad);
 		memcpy(*dest+prepad, temp, len);
 	}
 }
 //Push path, and status as two nodes
-static void html_push_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad, long postpad){
+static void html_push_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad){
 	l_message* node=mycalloc(1, l_message);
 	l_message* node2=mycalloc(1,l_message);
 	node->next=node2;
@@ -1109,20 +1171,19 @@ static void html_push_all_do(RUN_T *irun, l_message **head, l_message **tail, lo
 		*head=node;
 	}
 	*tail=node2;
-	html_push(irun, irun->path, &node->payload, &node->len, prepad, postpad);
-	html_push(irun, 0, &node2->payload, &node2->len, prepad, postpad);
+	html_push(irun, irun->path, &node->payload, &node->len, prepad);
+	html_push(irun, 0, &node2->payload, &node2->len, prepad);
 }
 //called by scheduelr_ws upon client connection. 
-void html_push_all(l_message** head, l_message** tail, long prepad, long postpad){
-	//LOCK(mutex_sch);
-	*head=*tail=0;
+void scheduler_push_ws(l_message** head, long prepad){
+	l_message* tail=0;//for convenience in ordering.
+	*head=0;
 	for(RUN_T* irun=runned; irun; irun=irun->next){
-		html_push_all_do(irun, head, tail, prepad, postpad);
+		html_push_all_do(irun, head, &tail, prepad);
 	}
 	for(RUN_T* irun=running; irun; irun=irun->next){
-		html_push_all_do(irun, head, tail, prepad, postpad);
+		html_push_all_do(irun, head, &tail, prepad);
 	}
-	//UNLOCK(mutex_sch);
 }
 #endif
 static int monitor_send_do(RUN_T* irun, const char* path, int sock){
@@ -1140,7 +1201,7 @@ static int monitor_send_do(RUN_T* irun, const char* path, int sock){
 /* Notify alreadyed connected monitors job update. */
 static void monitor_send(RUN_T* irun, const char* path){
 #if HAS_LWS
-	html_push(irun, path, 0, 0, 0, 0);
+	html_push(irun, path, 0, 0, 0);
 #endif
 	MONITOR_T* ic;
 redo:
@@ -1312,7 +1373,7 @@ int main(int argc, const char* argv[]){
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.
 	extern int PORT;
-	listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
+	listen_port(PORT, slocal, respond, 10, scheduler_timeout, 0);
 	remove(slocal);
 	runned_remove(-1);
 	socket_close();

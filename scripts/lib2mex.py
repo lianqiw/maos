@@ -12,7 +12,7 @@ if len(sys.argv)>2 and os.path.isdir(sys.argv[1]+'/maos/'):
     fnout=sys.argv[2]
 else:
     srcdir=str(Path.home())+'/work/programming/aos'
-    fnout=srcdir+'/mex/aolib.c'
+    fnout='aolib.c'
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))
 simu_all=list()

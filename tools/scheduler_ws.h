@@ -17,16 +17,19 @@
 */
 #ifndef AOS_SCHEDULER_WS_H
 #define AOS_SCHEDULER_WS_H
-
-int ws_service(int waiting);
-int ws_start(short port);
-struct l_message{
+typedef struct l_message{
 	char* payload;
 	size_t len;
 	struct l_message* next;
-};
-typedef struct l_message l_message;
-void ws_push(const char* in, size_t len);
-void html_push_all(l_message** head, l_message** tail, long prepad, long postpad);
-void scheduler_handle_ws(char* in, size_t len);
+}l_message;
+int  ws_start(short port);
+void ws_end();
+void ws_service();
+void ws_append(const char* in, size_t len);
+void ws_proxy_write(int cmd, char *fig, char *fn, void* userdata);
+void  ws_proxy_add(int sock, void* userdata);
+void ws_proxy_remove(void* userdata, int closed);
+int  ws_proxy_read(struct pollfd *pfd, int flag);
+void scheduler_push_ws(l_message** head, long prepad);
+void scheduler_receive_ws(char* in, size_t len, void* userdata);
 #endif
