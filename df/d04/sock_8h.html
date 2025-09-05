@@ -113,8 +113,14 @@ Functions</h2></td></tr>
 <tr class="separator:a9b9b32440b64707b50fbaae8d08f33e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24b9ffbaf688d73e66832ddffc86cb56" id="r_a24b9ffbaf688d73e66832ddffc86cb56"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">hostname</a>, int <a class="el" href="../../d0/d44/class_num_array.html">port</a>, int <a class="el" href="../../d0/d44/class_num_array.html">block</a>, int <a class="el" href="../../d0/d44/class_num_array.html">nodelay</a>)</td></tr>
 <tr class="separator:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d79915ff976b61b5e9f1cbefdb7be97" id="r_a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97">listen_port</a> (<a class="el" href="../../d0/d44/class_num_array.html">uint16_t</a> <a class="el" href="../../d0/d44/class_num_array.html">port</a>, char *<a class="el" href="../../d0/d44/class_num_array.html">localpath</a>, int(*<a class="el" href="../../d0/d44/class_num_array.html">respond</a>)(int), double <a class="el" href="../../d0/d44/class_num_array.html">timeout_sec</a>, <a class="el" href="../../d0/d44/class_num_array.html">void</a>(*<a class="el" href="../../d0/d44/class_num_array.html">timeout_fun</a>)(), int <a class="el" href="../../d0/d44/class_num_array.html">nodelay</a>)</td></tr>
-<tr class="separator:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cca90b4c83f71e1f6b685fef9452fe9" id="r_a5cca90b4c83f71e1f6b685fef9452fe9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#a5cca90b4c83f71e1f6b685fef9452fe9">listen_port</a> (<a class="el" href="../../d0/d44/class_num_array.html">uint16_t</a> <a class="el" href="../../d0/d44/class_num_array.html">port</a>, char *<a class="el" href="../../d0/d44/class_num_array.html">localpath</a>, int(*<a class="el" href="../../d0/d44/class_num_array.html">responder</a>)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int), double <a class="el" href="../../d0/d44/class_num_array.html">timeout_sec</a>, <a class="el" href="../../d0/d44/class_num_array.html">void</a>(*<a class="el" href="../../d0/d44/class_num_array.html">timeout_fun</a>)(), int <a class="el" href="../../d0/d44/class_num_array.html">nodelay</a>)</td></tr>
+<tr class="separator:a5cca90b4c83f71e1f6b685fef9452fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaceb7135948b853aca48bdb0c1727fe1" id="r_aaceb7135948b853aca48bdb0c1727fe1"><td class="memItemLeft" align="right" valign="top"><a id="aaceb7135948b853aca48bdb0c1727fe1" name="aaceb7135948b853aca48bdb0c1727fe1"></a>
+<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>listen_port_add</b> (int sock, <a class="el" href="../../d0/d44/class_num_array.html">short</a> <a class="el" href="../../d0/d44/class_num_array.html">events</a>, int(*<a class="el" href="../../d0/d44/class_num_array.html">handler</a>)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int))</td></tr>
+<tr class="separator:aaceb7135948b853aca48bdb0c1727fe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab12e10b439af93429816ddd832c0a892" id="r_ab12e10b439af93429816ddd832c0a892"><td class="memItemLeft" align="right" valign="top"><a id="ab12e10b439af93429816ddd832c0a892" name="ab12e10b439af93429816ddd832c0a892"></a>
+<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>listen_port_remove</b> (int sock, int <a class="el" href="../../d0/d44/class_num_array.html">closed</a>)</td></tr>
+<tr class="separator:ab12e10b439af93429816ddd832c0a892"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06ca6a939cfb914d1b5b39b34292ecc7" id="r_a06ca6a939cfb914d1b5b39b34292ecc7"><td class="memItemLeft" align="right" valign="top"><a id="a06ca6a939cfb914d1b5b39b34292ecc7" name="a06ca6a939cfb914d1b5b39b34292ecc7"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int sock)</td></tr>
 <tr class="separator:a06ca6a939cfb914d1b5b39b34292ecc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,8 +246,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int
 
 </div>
 </div>
-<a id="a6d79915ff976b61b5e9f1cbefdb7be97" name="a6d79915ff976b61b5e9f1cbefdb7be97"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d79915ff976b61b5e9f1cbefdb7be97">&#9670;&#160;</a></span>listen_port()</h2>
+<a id="a5cca90b4c83f71e1f6b685fef9452fe9" name="a5cca90b4c83f71e1f6b685fef9452fe9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cca90b4c83f71e1f6b685fef9452fe9">&#9670;&#160;</a></span>listen_port()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -261,7 +267,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int(*)(int)&#160;</td>
+          <td class="paramtype">int(*)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int)&#160;</td>
           <td class="paramname"><em>responder</em>, </td>
         </tr>
         <tr>

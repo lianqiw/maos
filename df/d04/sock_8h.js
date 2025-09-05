@@ -3,7 +3,7 @@ var sock_8h =
     [ "socket_recv_timeout", "df/d04/sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7", null ],
     [ "socket_send_timeout", "df/d04/sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5", null ],
     [ "connect_port", "df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56", null ],
-    [ "listen_port", "df/d04/sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97", null ],
+    [ "listen_port", "df/d04/sock_8h.html#a5cca90b4c83f71e1f6b685fef9452fe9", null ],
     [ "socket_block", "df/d04/sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e", null ],
     [ "bind_socket", "df/d04/sock_8h.html#af3f15127c9f7805205fb0e3df341b3e4", null ],
     [ "socket_port", "df/d04/sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970", null ],
