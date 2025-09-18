@@ -105,6 +105,10 @@ static void FFTW(task_callback)(void *(*work)(char *), char *jobdata, size_t els
 #endif
 }
 #endif
+#if HAS_FFTW_CALLBACK
+typedef void callback_fun(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data);
+void fftw_threads_set_callback(callback_fun callback, void *callback_data);
+#endif
 static void FFTW(fft_threads)(long nx, long ny){
 	static int fft_has_threads=-1;
 	static int last_nthread=-1;
