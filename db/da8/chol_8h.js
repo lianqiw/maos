@@ -1,12 +1,19 @@
 var chol_8h =
 [
-    [ "spchol", "db/da8/chol_8h.html#d8/d3f/structspchol", null ],
-    [ "chol_factorize", "db/da8/chol_8h.html#a045d723ad47d97c21b2ae723ea963f1d", null ],
-    [ "chol_factorize2", "db/da8/chol_8h.html#a3bbb473fcb9e37f005629214136654d9", null ],
+    [ "spchol", "db/da8/chol_8h.html#d8/d3f/structspchol", [
+      [ "L", "db/da8/chol_8h.html#a023c9cbc3204883f1365f200a29c5bcd", null ],
+      [ "c", "db/da8/chol_8h.html#a2d161a1e9d16cdd5fc3f157e4d4fc718", null ],
+      [ "Cl", "db/da8/chol_8h.html#afc90bd8b80c3759c9f9feaa95a4623fa", null ],
+      [ "Cu", "db/da8/chol_8h.html#a1ca46f48b2b1b3d753344f2a4f5006b0", null ],
+      [ "Cp", "db/da8/chol_8h.html#a562f77cce686fca21651b810bd282408", null ]
+    ] ],
+    [ "chol_free", "db/da8/chol_8h.html#a44f9dcd365904c56907f9f03b25fd9d5", null ],
+    [ "chol_factorize", "db/da8/chol_8h.html#a7d6f48a409c439318634f2627356c4b3", null ],
+    [ "chol_factorize2", "db/da8/chol_8h.html#a63a05bae70306a23141f400b5a64a8da", null ],
     [ "chol_solve", "db/da8/chol_8h.html#a90a86be3964aac1e9130deda1ff26f4d", null ],
-    [ "chol_spsolve", "db/da8/chol_8h.html#a28cf563e27f3e6f6f7bbd0d5d54ee9d6", null ],
+    [ "chol_spsolve", "db/da8/chol_8h.html#a416bdd4f3b6f78aa01162aa24636204d", null ],
     [ "chol_free_do", "db/da8/chol_8h.html#a7a999102f2b6b345ff1ed7aff6e7a841", null ],
     [ "chol_save", "db/da8/chol_8h.html#a3ff611672c83dc9ccf8f53ca9e299e71", null ],
-    [ "chol_read", "db/da8/chol_8h.html#a9c21ad65f6e7f637e61f5d4d42a2212d", null ],
+    [ "chol_read", "db/da8/chol_8h.html#a2f1d989ab970c20e86fcea8843b0243d", null ],
     [ "chol_convert", "db/da8/chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70", null ]
 ];

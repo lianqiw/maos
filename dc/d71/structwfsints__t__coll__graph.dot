@@ -1,0 +1,17 @@
+digraph "wfsints_t"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node340 [label="{wfsints_t\n||}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node341 -> Node340 [color="grey25",fontsize="10",style="solid",label=" +pistatout\n+ints" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node341 [label="{dcell\n||}",height=0.2,width=0.4,color="red",URL="$df/def/type_8h.html#df/d47/structdcell"];
+  Node349 -> Node341 [color="grey25",fontsize="10",style="solid",label=" +p\n+m" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node349 [label="{dmat\n||}",height=0.2,width=0.4,color="red",URL="$d3/d27/structdmat.html"];
+  Node344 -> Node340 [color="grey25",fontsize="10",style="solid",label=" +iwfs\n+isim" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node344 [label="{int\n||}",height=0.2,width=0.4,color="grey75"];
+  Node349 -> Node340 [color="grey25",fontsize="10",style="solid",label=" +opd\n+gradref\n+lltopd" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node356 -> Node340 [color="grey25",fontsize="10",style="solid",label=" +psfout" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node356 [label="{ccell\n||}",height=0.2,width=0.4,color="red",URL="$df/def/type_8h.html#d8/d42/structccell"];
+}

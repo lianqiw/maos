@@ -1,0 +1,26 @@
+digraph "CpuObj&lt; T &gt;"
+{
+ // INTERACTIVE_SVG=YES
+  bgcolor="transparent";
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node0 [label="{CpuObj\< T \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node0 -> Node1 [dir="back",color="orange",fontsize="10",style="solid",label=" \< cusp \>" ,fontname="Helvetica"];
+  Node1 [label="{CpuObj\< cusp \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node2 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< T, Dev \> \>" ,fontname="Helvetica"];
+  Node2 [label="{CpuObj\< NumArray\< T,\l Dev \> \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node3 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< short2,\l Gpu \> \>" ,fontname="Helvetica"];
+  Node3 [label="{CpuObj\< NumArray\< short2,\l Gpu \> \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node4 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< Real, Gpu \> \>" ,fontname="Helvetica"];
+  Node4 [label="{CpuObj\< NumArray\< Real,\l Gpu \> \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node5 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< Comp, Gpu \> \>" ,fontname="Helvetica"];
+  Node5 [label="{CpuObj\< NumArray\< Comp,\l Gpu \> \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node6 [dir="back",color="orange",fontsize="10",style="solid",label=" \< cugrid_t \>" ,fontname="Helvetica"];
+  Node6 [label="{CpuObj\< cugrid_t \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node7 [dir="back",color="orange",fontsize="10",style="solid",label=" \< curccell \>" ,fontname="Helvetica"];
+  Node7 [label="{CpuObj\< curccell \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node8 [dir="back",color="orange",fontsize="10",style="solid",label=" \< NumArray\< int, Gpu \> \>" ,fontname="Helvetica"];
+  Node8 [label="{CpuObj\< NumArray\< int,\l Gpu \> \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+  Node0 -> Node9 [dir="back",color="orange",fontsize="10",style="solid",label=" \< cumap_t \>" ,fontname="Helvetica"];
+  Node9 [label="{CpuObj\< cumap_t \>\n||+ operator new[]()\l+ operator delete[]()\l+ Copy()\l}",height=0.2,width=0.4,color="black",URL="$d3/dd7/class_cpu_obj.html"];
+}
