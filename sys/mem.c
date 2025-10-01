@@ -918,6 +918,7 @@ void register_signal_handler(int (*func)(int)){
 	sigaction(SIGBUS, &act, 0);
 	sigaction(SIGILL, &act, 0);
 	sigaction(SIGSEGV, &act, 0);
+	sigaction(SIGTRAP, &act, 0);
 	sigaction(SIGINT, &act, 0);
 	sigaction(SIGALRM, &act, 0);
 	sigaction(SIGTERM, &act, 0);

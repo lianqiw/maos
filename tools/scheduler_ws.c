@@ -37,11 +37,13 @@
 #include "../sys/sockio.h"
 #include "../sys/sock.h"
 static struct lws_context* context=0;
-//Calls by scheduler timeout periodically or upon job status change to service lws requests.
+const int tx_buffer_size=65536;
+//Calls by poll() to service lws requests.
 int ws_service_fd(struct pollfd *pollfd, int flag){
 	if(!context) return 0;
 	//info("ws_service_fd with %d (revents=%d, read=%d, write=%d)\n", pollfd->fd, pollfd->revents, pollfd->revents&POLLIN, pollfd->revents&POLLOUT);
 	if(flag==-1){
+		warning("flag==-1, call lws_context_destroy on %d\n", pollfd->fd);
 		lws_context_destroy(context);//close context.
 		context=0;
 		return 0;
@@ -59,21 +61,21 @@ int ws_service_fd(struct pollfd *pollfd, int flag){
 static int
 callback_http(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t nin){
 	switch(reason){
-		case LWS_CALLBACK_ADD_POLL_FD:
+	case LWS_CALLBACK_ADD_POLL_FD:
 		{
 			struct lws_pollargs *p = (struct lws_pollargs *)in;
-			listen_port_add(p->fd, p->events, ws_service_fd);
+			listen_port_add(p->fd, p->events, ws_service_fd, "ws");
 		}break;
-		case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
-		{
+	case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
+		{//change_mode maybe folloed by del_poll. 
 			struct lws_pollargs *p = (struct lws_pollargs *)in;
-			listen_port_add(p->fd, p->events, ws_service_fd);
+			listen_port_add(p->fd, p->events, ws_service_fd, "ws");
 		}break;
-		case LWS_CALLBACK_DEL_POLL_FD:{
+	case LWS_CALLBACK_DEL_POLL_FD:{
 			struct lws_pollargs *p = (struct lws_pollargs *)in;
-			listen_port_remove(p->fd, 0);
+			listen_port_del(p->fd, 0, "callback_http");//do not close fd. lws owns it.
 		}break;
-		default://let the default handler handle the rest
+	default://let the default handler handle the rest
 		return lws_callback_http_dummy(wsi, reason, user, in, nin);
 	}
 	return 0;
@@ -84,32 +86,80 @@ struct a_message{
 	size_t size;//total memory allocated
 };
 typedef struct p_message{
+	struct p_message *next;
+	struct p_message *prev;
 	char *p;
-	int len;
-	int size;
-	int pending;
+	double ck;//timing
+	int len;//valid payload (exclude LWS_PRE)
+	int size;//total memory allocated
+	int offset;//offset from the beginning for continuation
 }p_message;
-void ws_proxy_remove(void *userdata, int closed);
+void add_head(p_message **phead, p_message **ptail, p_message *pdata){
+	if(!phead || !ptail || !pdata) return;
+	pdata->next=*phead;	
+	pdata->prev=NULL;
+	if(*phead){
+		(*phead)->prev=pdata;
+	}
+	*phead=pdata;
+	if(!*ptail){
+		*ptail=*phead;
+	}
+}
+p_message *remove_head(p_message **phead, p_message **ptail){
+	if(!phead || !ptail || !*phead) return NULL;
+	p_message *pdata=*phead;
+	*phead=pdata->next;
+	if(*phead){
+		(*phead)->prev=NULL;
+	}else{
+		*ptail=NULL;
+	}
+	pdata->next=NULL;
+	return pdata;
+}
+void add_tail(p_message **phead, p_message **ptail, p_message *pdata){
+	if(!phead || !ptail || !pdata) return;
+	if(!*ptail){
+		add_head(phead, ptail, pdata);
+	}else{
+		(*ptail)->next=pdata;
+		pdata->prev=*ptail;
+		pdata->next=NULL;
+		*ptail=pdata;
+	}
+}
+p_message *remove_tail(p_message **phead, p_message **ptail){
+	if(!phead || !ptail || !*ptail) return NULL;
+	p_message *pdata=*ptail;
+	*ptail=pdata->prev;
+	pdata->prev=NULL;
+	if(*ptail){
+		(*ptail)->next=NULL;
+	}else{
+		*phead=NULL;
+	}
+	return pdata;
+}
 #define MAX_MESSAGE_QUEUE 1024
 /*The receiver modifies the head of the ring buffer. Each client maintains its
   own tail of the ring buffer so they can proceed that their own speed. */
 static struct a_message ringbuffer[MAX_MESSAGE_QUEUE]={0};
 static int ringbuffer_head=0;//ring buffer head for all clients
-struct per_session_data__maos_monitor{//per client
+struct monitor_t{//per client
 	struct lws* wsi;
 	l_message* lhead;//head of job list for initial connection
-	p_message* pdata;
 	int ringbuffer_tail;//ring buffer tail per client for job update
 };
 int nclient=0;//count number of clients
 static int
 callback_maos_monitor(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t nin){
-	struct per_session_data__maos_monitor* pss=(struct per_session_data__maos_monitor*)user;
+	struct monitor_t* pss=(struct monitor_t*)user;
 	int pending=0;
 	switch(reason){
 	case LWS_CALLBACK_ESTABLISHED:
 		nclient++;
-		lwsl_notice("LWS_CALLBACK_ESTABLISHED, nclient=%d\n", nclient);
+		lwsl_notice("LWS_CALLBACK_ESTABLISHED for monitor, nclient=%d\n", nclient);
 		pss->ringbuffer_tail=ringbuffer_head;//initialize to zero length
 		pss->wsi=wsi;
 		pss->lhead=0;
@@ -118,12 +168,11 @@ callback_maos_monitor(struct lws* wsi, enum lws_callback_reasons reason, void* u
 		break;
 	case LWS_CALLBACK_CLOSED://client closed
 		nclient--;
-		lwsl_notice("LWS_CALLBACK_CLOSED, nclient=%d\n", nclient);
-		ws_proxy_remove(pss, 0);
+		lwsl_notice("LWS_CALLBACK_CLOSED for monitor, nclient=%d\n", nclient);
 		break;
 		
 	case LWS_CALLBACK_PROTOCOL_DESTROY://upon server exits
-		lwsl_notice("LWS_CALLBACK_PROTOCOL_DESTROY, nclient=%d\n", nclient);
+		lwsl_notice("LWS_CALLBACK_PROTOCOL_DESTROY for monitor, nclient=%d\n", nclient);
 		for(int n=0; n<(int)(sizeof ringbuffer/sizeof ringbuffer[0]); n++)
 			if(ringbuffer[n].payload)
 				free(ringbuffer[n].payload);
@@ -139,12 +188,7 @@ callback_maos_monitor(struct lws* wsi, enum lws_callback_reasons reason, void* u
 
 		do{
 			pending=0;//continue writing if set
-			if(pss->pdata && pss->pdata->pending){//proxy data is pending
-				CHECK_WRITE_SUCCESS(pss->pdata->p, pss->pdata->len, LWS_WRITE_BINARY)
-				{
-					pss->pdata->pending=0;//mark sent
-				}
-			}else if(pss->lhead){/*initialization with list*/
+			if(pss->lhead){/*initialization with list*/
 				CHECK_WRITE_SUCCESS(pss->lhead->payload, pss->lhead->len, LWS_WRITE_TEXT)
 				{
 					l_message* tmp=pss->lhead;
@@ -170,6 +214,95 @@ callback_maos_monitor(struct lws* wsi, enum lws_callback_reasons reason, void* u
 		if(pending){//request further writing
 			lws_callback_on_writable(wsi);
 		}
+		break;
+	case LWS_CALLBACK_RECEIVE://receive client message
+		scheduler_receive_ws((char*)in, nin, pss);
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+struct drawdaemon_t{//per client
+	struct lws* wsi;
+	p_message* phead;//active proxy data list head
+	p_message* ptail;//active proxy data list tail
+	int p_count;//messages pending.
+	int p_drop;
+};
+static int
+callback_maos_drawdaemon(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t nin){
+	struct drawdaemon_t* pss=(struct drawdaemon_t*)user;
+	int pending=0;
+	switch(reason){
+	case LWS_CALLBACK_ESTABLISHED:
+		lwsl_notice("LWS_CALLBACK_ESTABLISHED for drawdaemon\n");
+		pss->wsi=wsi;
+		break;
+	case LWS_CALLBACK_CLOSED://client closed
+		lwsl_notice("LWS_CALLBACK_CLOSED for drawdaemon\n");
+		while(pss->phead){//remove buffer list
+			p_message *pdata=remove_head(&pss->phead, &pss->ptail);
+			free(pdata->p);
+			free(pdata);
+		}
+		ws_proxy_remove(pss, 1);
+		break;
+		
+	case LWS_CALLBACK_PROTOCOL_DESTROY://upon server exits
+		lwsl_notice("LWS_CALLBACK_PROTOCOL_DESTROY for drawdaemon\n");
+		break;
+
+	case LWS_CALLBACK_SERVER_WRITEABLE:	
+		//Notice that lws_write automatically retries when partial data is sent. No need to handle in user code.
+	#define CHECK_WRITE_SUCCESS(payload, len, FLAG) \
+				if(lws_write(wsi, (unsigned char*)payload+LWS_PRE, len, FLAG)<0){\
+					lwsl_err("ERROR: Failed to writing to client %p\n", wsi);\
+					return -1;\
+				}else
+
+		do{
+			pending=0;//continue writing if set
+			if(pss->phead && pss->phead->len){//proxy data is pending
+				int len=MIN(pss->phead->len-pss->phead->offset, tx_buffer_size);//how much to send. 64kB
+				enum lws_write_protocol protocol;
+				if(pss->phead->offset+len<pss->phead->len){//partial send
+					if(pss->phead->offset){//continuation
+						protocol=LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN;
+					}else{//first frame with continuation
+						protocol=LWS_WRITE_BINARY | LWS_WRITE_NO_FIN;
+						pss->phead->ck=myclockd();
+					}
+				}else{//final segment or no fragmentation.
+					if(pss->phead->offset){//continuation
+						protocol=LWS_WRITE_CONTINUATION; //final fragment
+					}else{
+						protocol=LWS_WRITE_BINARY; //no fragmentation
+					}				
+				}
+				CHECK_WRITE_SUCCESS(pss->phead->p+pss->phead->offset, len, protocol)
+				{
+					if(pss->phead->offset+len==pss->phead->len){//finished
+						if(pss->phead->offset){
+							//info_time("count=%d payload %d %.3f MB/s. (%d dropped)\n", pss->p_count, pss->phead->len, pss->phead->len/(pss->phead->ck*1048576), pss->p_drop);
+							pss->p_drop=0;
+						}
+						p_message *pdata=remove_head(&pss->phead, &pss->ptail);
+						pdata->len=0;//set data as empty
+						pdata->offset=0;//reset offset
+						add_tail(&pss->phead, &pss->ptail, pdata);
+						pss->p_count--;
+					}else{
+						pss->phead->offset+=len;//wait for next run
+					}
+				}
+				if(pss->phead && pss->phead->len) pending=1;
+			}
+		}while(!lws_send_pipe_choked(wsi) && pending);//lws_send_pipe_choked() check whether you can continue write data
+		if(pending){//request further writing
+			lws_callback_on_writable(wsi);
+		}
 	
 		break;
 
@@ -177,35 +310,18 @@ callback_maos_monitor(struct lws* wsi, enum lws_callback_reasons reason, void* u
 		scheduler_receive_ws((char*)in, nin, pss);
 		break;
 
-		/*
-		 * this just demonstrates how to use the protocol filter. If you won't
-		 * study and reject connections based on header content, you don't need
-		 * to handle this callback
-		 */
-
-	case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-		/* you could return non-zero here and kill the connection */
-		break;
-
 	default:
 		break;
 	}
 
 	return 0;
-}
 
+}
 static struct lws_protocols protocols[]={
 	/* first protocol must always be HTTP handler */
 	{ "http", callback_http, 0, 0, 0, NULL},
-	
-	{
-	"maos-monitor-protocol",
-	callback_maos_monitor,
-	sizeof(struct per_session_data__maos_monitor),
-	1024,                   /* max frame size / rx buffer */
-	0,                      //id unused
-	0,                      //user unused
-	},
+	{"maos-monitor-protocol",callback_maos_monitor,sizeof(struct monitor_t),1024,0, 0},
+	{"maos-drawdaemon-protocol",callback_maos_drawdaemon,sizeof(struct drawdaemon_t), 1024, 0, 0}, 
 	{ NULL, NULL, 0, 0, 0, 0 } /* terminator */
 };
 static const struct lws_http_mount mount = {
@@ -284,35 +400,31 @@ void ws_proxy_add(int sock_tcp, void *userdata){
 	}
 	ws_proxy[iws].fd=sock_tcp;
 	ws_proxy[iws].userdata=userdata;
+	//info_time("ws_proxy_add: fd=%d for %p\n", sock_tcp, userdata);
 }
-void ws_proxy_remove(void *userdata, int closed){
+void ws_proxy_remove(void *userdata, int toclose){
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].userdata==userdata){
-			if(closed){
-				listen_port_remove(ws_proxy[iws].fd, closed);
-			}
+			listen_port_del(ws_proxy[iws].fd, toclose, "ws_proxy_remove");
+			info_time("ws_proxy_remove: fd=%d for %p\n", ws_proxy[iws].fd, userdata);
 			ws_proxy[iws].fd=-1;
 			ws_proxy[iws].userdata=NULL;
 			break;
 		}
 	}
 }
-void ws_proxy_write(int cmd, char *fig, char *fn, void *userdata){
+int ws_proxy_get_fd(void *userdata){
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].userdata==userdata){
-			int sock=ws_proxy[iws].fd;
-			if(stwriteint(sock, cmd)||
-				(fig && stwritestr(sock, fig))||
-				(fn && stwritestr(sock, fn))){
-				info_time("Send %d {%s} {%s} to draw failed.\n", cmd, fig?fig:"", fn?fn:"");
-			}else{
-				//info_time("Send %d {%s} {%s} to draw ok.\n", cmd, fig?fig:"", fn?fn:"");
-			}
+			return ws_proxy[iws].fd;
 		}
 	}
+	return -1;
 }
+
 int ws_proxy_read(struct pollfd *pfd, int flag){
 	if(!pfd || pfd->fd==-1||(pfd->revents&POLLIN)==0) return 0;
+	
 	if(flag==-1){//ask client to shutdown
 		stwriteint(pfd->fd, -1);
 	}
@@ -326,18 +438,23 @@ int ws_proxy_read(struct pollfd *pfd, int flag){
 		warning("unable to find ws_proxy entry.\n");
 		return -1;
 	}
-	struct per_session_data__maos_monitor* pss=(struct per_session_data__maos_monitor*)ws_proxy[iws].userdata;
-
-	if(!(pss->pdata)){
-		pss->pdata=mycalloc(1, p_message);
-	}
-	p_message *pdata=pss->pdata;
+	struct drawdaemon_t* pss=(struct drawdaemon_t*)ws_proxy[iws].userdata;
 	struct lws*wsi=pss->wsi;
-	if(pdata->pending){
-		//info_time("buffer is pending\n");
-		return 0;
-	}
 	int sock=ws_proxy[iws].fd;
+	
+	p_message *pdata=NULL;
+	if(pss->ptail && (!pss->ptail->len || pss->p_count>100)){//empty slot or too much being buffered.
+		pdata=remove_tail(&pss->phead, &pss->ptail);
+	}else{//allocate new data
+		pdata=mycalloc(1, p_message);
+	}
+	if(!pdata->len){//not replacing old data
+		pss->p_count++;
+	}else{
+		//dbg_time("sock=%d count=%d payload %d is dropped\n", sock, pss->p_count, pdata->len);
+		pss->p_drop++;
+	}
+	
 	int cmd=-1;
 	int nlen=0;
 	CATCH_TO(streadint(sock, &cmd), CMD);
@@ -358,8 +475,14 @@ int ws_proxy_read(struct pollfd *pfd, int flag){
 			CATCH_TO(stread(sock, &p2[3], nlen), p);
 		}
 		pdata->len=nlen+3*sizeof(int);
-		//info("read %d with payload %d\n", cmd, pdata->len);
-		pdata->pending=1;
+		p_message *tmp=NULL;
+		if(pss->phead && pss->phead->offset!=0){//do not disturb a partially send frame
+			tmp=remove_head(&pss->phead, &pss->ptail);
+		}
+		add_head(&pss->phead, &pss->ptail, pdata);
+		if(tmp){			
+			add_head(&pss->phead, &pss->ptail, tmp); tmp=NULL;
+		}
 		lws_callback_on_writable(wsi);
 		//TODO: append to bhead
 	}else if(cmd!=DRAW_HEARTBEAT){

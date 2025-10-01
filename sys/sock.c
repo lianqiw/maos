@@ -252,7 +252,7 @@ int bind_socket(int protocol, char* ip, uint16_t port){
 	}
 	int count=0;
 	while(bind(sock, (struct sockaddr*)&name, sizeof(name))<0){
-		dbg_time("errno=%d. port=%d,sock=%d: %s. Sleep 10 seconds and then retry.", errno, port, sock, strerror(errno));
+		dbg_time("errno=%d. port=%d,sock=%d: %s. Sleep 10 seconds and then retry.\n", errno, port, sock, strerror(errno));
 		sleep(10);
 		count++;
 		if(count>100){
@@ -308,16 +308,21 @@ static int listen_signal_handler(int sig){
 	return 1;
 }
 struct pollfd* pfd=NULL;
-int (**pfd_handler)(struct pollfd *fd, int flag)=NULL;//stores handlers
+struct pfd_handler_t{
+	int(*handler)(struct pollfd*, int);
+	const char *name;
+}*pfd_handler=NULL;
 int npfd=0;
+int npfd_valid=0;
 //Add a port with handler. if handler is NULL, it is handled internally.
-void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int)){
+void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int), const char *name){
 	int ifd;
 	for(ifd=0; ifd<npfd; ifd++){
 		if(pfd[ifd].fd==sock){
-			pfd_handler[ifd]=handler;
+			pfd_handler[ifd].handler=handler;
+			pfd_handler[ifd].name=name;
 			pfd[ifd].events=events;
-			//info_time("listen_port_modify: fd=%d (read=%d, write=%d).\n", sock , events&POLLIN, events&POLLOUT);
+			//info_time("listen_port_add: already exists: fd=%d (read=%d, write=%d, %s). count=%d.\n", sock , events&POLLIN, events&POLLOUT, name, npfd_valid);
 			return;
 		}else if(pfd[ifd].fd==-1){
 			break;//open slot
@@ -326,28 +331,35 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int))
 	if(ifd==npfd){//not open slot.
 		npfd++;
 		pfd=realloc(pfd, sizeof(struct pollfd)*npfd);
-		pfd_handler=realloc(pfd_handler, sizeof(void*)*npfd);
+		pfd_handler=realloc(pfd_handler, sizeof(struct pfd_handler_t)*npfd);
 	}
-	info_time("listen_port_add: ifd=%d, fd=%d (read=%d, write=%d).\n", ifd, sock , events&POLLIN, events&POLLOUT);
+	npfd_valid++;
+	//info_time("listen_port_add: fd=%2d %c%c (%s) count=%d.\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', name, npfd_valid);
 	pfd[ifd].fd=sock;
 	pfd[ifd].events=events;
-	pfd_handler[ifd]=handler;
+	pfd_handler[ifd].handler=handler;
+	pfd_handler[ifd].name=name;
 }
-
 //remove a port form pollfd. it is not closed. if sock==-2, remove all
-void listen_port_remove(int sock, int toclose){
-	info_time("listen_port_remove: fd=%d\n", sock);
-	for(int ifd=0; ifd<npfd; ifd++){
+void listen_port_del(int sock, int toclose, const char *caller){
+	int ifd;
+	for(ifd=0; ifd<npfd; ifd++){
 		if(pfd[ifd].fd==sock || sock==-2){
-			if(toclose && pfd[ifd].fd>=0){
-				close(pfd[ifd].fd);
+			if(pfd[ifd].fd>=0){
+				if(toclose) close(pfd[ifd].fd);
+				npfd_valid--;
+				//info_time("listen_port_del: fd=%d (%s) count=%d. by %s\n", pfd[ifd].fd, pfd_handler[ifd].name, npfd_valid, caller);
+				pfd_handler[ifd].handler=NULL;//prevent stale handler
+				pfd_handler[ifd].name=NULL;
+				pfd[ifd].fd=-1;//-1 is ignored in polling.
+				if(sock>=0){//just this one
+					break;
+				}
 			}
-			if(sock>=0) sock=-1;//mark deletion
-			pfd[ifd].fd=-1;//-1 is ignored in polling.
 		}
 	}
-	if(sock>=0){
-		warning_time("fd %d is not found\n", sock);
+	if(sock>=0 && ifd==npfd){
+		warning_time("listen_port_del: not found fd=%d. count=%d. by %s\n", sock, npfd_valid, caller);
 	}
 }
 
@@ -378,7 +390,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 			perror("listen (sock)");
 			exit(EXIT_FAILURE);
 		}
-		listen_port_add(sock, POLLIN, NULL);
+		listen_port_add(sock, POLLIN, NULL, "scheduler tcp");
 		socket_recv_timeout(sock, 60);
 		socket_send_timeout(sock, 60);
 	}
@@ -391,7 +403,7 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 				dbg_time("(%d) bind to %s failed\n", sock, localpath);
 			} else{
 				if(!listen(sock_local, 10)){
-					listen_port_add(sock_local, POLLIN, NULL);
+					listen_port_add(sock_local, POLLIN, NULL, "scheduler local");
 					socket_send_timeout(sock_local, 60);
 					socket_recv_timeout(sock_local, 60);
 				} else{
@@ -426,16 +438,16 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 			if(!quit_time) quit_time=myclockd();
 			//stop listening. It is ok to actively shutdown the listening port
 			if(sock!=-1){
-				listen_port_remove(sock, 1);sock=-1;
+				listen_port_del(sock, 1, "quit_listen==1");sock=-1;
 			}
 			if(sock_local!=-1){
-				listen_port_remove(sock_local, 1);sock_local=-1;
+				listen_port_del(sock_local, 1, "quit_listen==1");sock_local=-1;
 			}
 
 			//We ask the client to actively close the connection to avoid the TCP port reuse issue.
 			for(int ifd=0; ifd<npfd; ifd++){
 				if(pfd[ifd].fd!=-1){
-					pfd_handler[ifd](&pfd[ifd], -1);
+					pfd_handler[ifd].handler(&pfd[ifd], -1);
 				}
 			}
 			timeout_sec=0.1;//decrease timeout
@@ -464,11 +476,9 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 				break;
 			}
 		} else if(navail>0){
-			for(int ifd=0; ifd<npfd; ifd++){
-				if(pfd[ifd].revents&(POLLNVAL | POLLERR | POLLHUP)){
-					listen_port_remove(pfd[ifd].fd, 0);//invalid or closed port
-				}else if(pfd[ifd].revents){//available
-					if(!pfd_handler[ifd]){//internal port without handler
+			for(int ifd=0; ifd<npfd; ifd++){//let handler handle poll errors.
+				if(pfd[ifd].revents){//available
+					if(!pfd_handler[ifd].handler){//internal port without handler
 						union{
 							struct sockaddr_un un;
 							struct sockaddr_in in;
@@ -478,8 +488,8 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 						if(sock2<0){
 							warning_time("(%d) accept failed: %s.\n", sock, strerror(errno));
 						} else{
-							dbg_time("(%d) socket is connected.\n", sock2);
-							listen_port_add(sock2, POLLIN, responder);
+							//dbg_time("(%d) socket is connected.\n", sock2);
+							listen_port_add(sock2, POLLIN, responder, "default");
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							//socket_send_timeout(sock2, 60);//fails with errno= 16 on macos
 							//new_connection=1;
@@ -490,9 +500,9 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 						   negative value: Close read of socket.
 						   -1: also close the socket.
 						 */
-						int ans=pfd_handler[ifd](&pfd[ifd], 0);
+						int ans=pfd_handler[ifd].handler(&pfd[ifd], 0);
 						if(ans<0 && pfd[ifd].fd!=-1){
-							listen_port_remove(pfd[ifd].fd, 1);
+							listen_port_del(pfd[ifd].fd, 1, "handler returns -1");
 							dbg_time("(%d) close socket, ans=%d.\n", pfd[ifd].fd, ans);
 							//new_connection=-1;
 						}
@@ -519,13 +529,13 @@ void listen_port(uint16_t port, char* localpath, int (*responder)(struct pollfd*
 	}
 	/* Error happened. We close all connections and this server socket.*/
 	if(sock_local!=-1){
-		listen_port_remove(sock_local, 1); sock_local=-1;
+		listen_port_del(sock_local, 1, "shutdown"); sock_local=-1;
 	}
 	if(sock!=-1){
-		listen_port_remove(sock,  1); sock=-1;
+		listen_port_del(sock,  1, "shutdown"); sock=-1;
 	}
-	dbg_time("listen_port exited\n");
-	listen_port_remove(-2, 1);
+	info_time("listen_port exited\n");
+	listen_port_del(-2, 1, "shutdown all");
 	//sync();
 }
 

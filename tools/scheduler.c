@@ -482,18 +482,23 @@ static void queue_new_job(const char* exename, const char* execmd){
 }
 /**
    Pass socket (if !=-1) and command to maos.
+   2025-09-22: updated logic to avoid a race condition that maos and schedule both trying to write to the socket.
  */
 static int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
-	if(!irun||!irun->sock_cmd||(stwriteintarr(irun->sock_cmd, cmd2, 2)||(sock!=-1 && stwritefd(irun->sock_cmd, sock)))){
+	int failed=(!irun||!irun->sock_cmd||(stwriteintarr(irun->sock_cmd, cmd2, 2)));
+	if(sock!=-1){
+		if(!stwriteint(sock, failed?-1:0) && !failed){//scheduler reply first before maos gets the chance to start writing to the socket
+			stwritefd(irun->sock_cmd, sock);
+		}
+	}
+	if(failed){
 		warning_time("Failed to send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun?irun->pid:-1, irun?irun->sock_cmd:-1);
-		if(sock!=-1) stwriteint(sock, -1);//respond failure message.
 	} else{
 		dbg_time("Successfully send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun->pid, irun->sock_cmd);
-		if(sock!=-1) stwriteint(sock, 0);//respond succeed
 	}
-	return -1;//do not keep this connection.
+	return failed?-2:-1;//do not keep this connection.
 }
 /*
  Stores drawdaemon sockets
@@ -775,12 +780,15 @@ static int respond(struct pollfd *pfd, int flag){
 	break;
 	case CMD_TRACE://8: Called by MAOS to request a backtrace
 	{
+		set_sockname(sock, "trace");
 		char* buf=NULL, out[200];
 		if(streadstr(sock, &buf)
 			||call_addr2line(out, sizeof out, buf)
 			||stwritestr(sock, out)){
-			warning_time("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
+			warning_time("(%d:%s) CMD_TRACE failed. buf=%s, out=%s\n", sock, get_sockname(sock), buf, out);
 			ret=-1;
+		}else{
+			info_time("(%d:%s) CMD_TRACE success. buf=%s, out=%s\n", sock, get_sockname(sock), buf, out);
 		}
 		free(buf);
 	}
@@ -1028,23 +1036,28 @@ void scheduler_receive_ws(char* in, size_t len, void* userdata){
 				warning_time("HTML client send term signal to %5d term signal.\n", pid);
 			}
 		} else if(!strcmp(sep, "DRAW")){
-			int sv2[2];//socket pair for communication.
-			/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
-			if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
-				maos_command(pid, sv2[1], MAOS_DRAW);//pass sv2[1] to maos
-				int status=1;
-				streadint(sv2[0], &status);
-				if(!status){
-					listen_port_add(sv2[0], POLLIN, ws_proxy_read);
-					ws_proxy_add(sv2[0], userdata);
-				}else{
-					close(sv2[0]);
+			int sock=ws_proxy_get_fd(userdata);
+			if(sock>-1){
+				warning_time("Already drawing.\n");
+			}else{
+				int sv2[2];//socket pair for communication.
+				/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
+				if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
+					maos_command(pid, sv2[1], MAOS_DRAW);//pass sv2[1] to maos
+					int status=1;
+					streadint(sv2[0], &status);
+					if(!status){
+						ws_proxy_add(sv2[0], userdata);//add proxy first to have higher priority in poll()
+						listen_port_add(sv2[0], POLLIN, ws_proxy_read, "ws_proxy_read");
+					}else{
+						close(sv2[0]);
+						warning_time("Failed to request DRAW to maos pid=%d\n", pid);
+					}
+					close(sv2[1]);
+				} else{
+					perror("socketpair");
 				}
-				close(sv2[1]);
-			} else{
-				perror("socketpair");
 			}
-			//ws_proxy_write(DRAW_SINGLE, NULL, NULL, userdata);
 		} else if(!strcmp(sep, "DRAW_FIGFN")){
 			char *fig=0, *fn=0;
 			if(sep2){
@@ -1058,9 +1071,35 @@ void scheduler_receive_ws(char* in, size_t len, void* userdata){
 				if(sep2) *sep2=0;//terminate string
 			}
 			if(fig && fn){
-				ws_proxy_write(DRAW_FIGFN, fig, fn, userdata);
+				int sock=ws_proxy_get_fd(userdata);
+				if(sock>-1){
+					if(stwriteint(sock, DRAW_FIGFN)||(fig && stwritestr(sock, fig))||(fn && stwritestr(sock, fn))){
+						info_time("Send %s {%s} {%s} to draw failed.\n", sep, fig?fig:"", fn?fn:"");
+					}
+				}
 			}
-		} else{
+		}else if(!strcmp(sep, "DRAW_PAUSE")){
+			int sock=ws_proxy_get_fd(userdata);
+			if(sock>-1){
+				if(stwriteint(sock, DRAW_PAUSE)){
+					info_time("Send %s to draw failed.\n", sep);
+				}
+			}
+		}else if(!strcmp(sep, "DRAW_RESUME")){
+			int sock=ws_proxy_get_fd(userdata);
+			if(sock>-1){
+				if(stwriteint(sock, DRAW_RESUME)){
+					info_time("Send %s to draw failed.\n", sep);
+				}
+			}
+		}else if(!strcmp(sep, "DRAW_SINGLE")){
+			int sock=ws_proxy_get_fd(userdata);
+			if(sock>-1){
+				if(stwriteint(sock, DRAW_SINGLE)){
+					info_time("Send %s to draw failed.\n", sep);
+				}
+			}
+		}else{
 			warning_time("Unknown action: %s\n", sep);
 		}
 		if(tmp<in+len){//locate next command

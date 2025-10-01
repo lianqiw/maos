@@ -175,6 +175,14 @@ Now rerun `autogen.sh`, `configure` and `make`. Monitor and drawdaemon should ap
 $src_dir/configure --disable-gtk-3 #disable gtk-3
 $src_dir/configure --disable-gtk-4 #disable gtk-4 
 ```
+# Browser User Interface
+
+When `maos` is compiled with `libwebsockets`, there is a browser interface that
+can manage maos jobs, as well as plot current running jobs. The URL for this
+interface can be found in the output when `maos` runs. A tutorial is available
+at <a href="https://youtu.be/2gWJ9WdUk2Y">Youtube</a>. 
+
+<a href="https://youtu.be/2gWJ9WdUk2Y"><img src="monitor-html.jpg" alt="Browser User Interface" width="60%"></a>
 
 # Graphical User Interface
 
@@ -209,6 +217,8 @@ full format `prettyname=full_hostname:port`
 - Please be aware that no authentication is performed. The user should make sure such ports are protected.
 - When `libwebsockets` is enabled, there is also a browser based interface. The address is printed in the beginning of `maos` log message.
 
+<img src="monitor-gtk3.jpg" alt="Monitor" width="60%">
+
 ## Drawdaemon
 
 Once the monitor is running, it will display running jobs on each connected
@@ -223,6 +233,8 @@ plot.run=1 or \c plot.all=1 in maos command line.
 Remote plotting: when a job is running remotely or in a headless machine, and
 `drawres`, `drawbin`, or `maos` plotting is issued, the `monitor` can open a
 `drawdaemon` in the local computer and plot remotely.
+
+<img src="drawdaemon-gtk3.jpg" alt="Drawdaemon" width="60%">
 
 ## Plotting results
 
