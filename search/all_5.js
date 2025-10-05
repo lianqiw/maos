@@ -7,7 +7,7 @@ var searchData=
   ['bin_20file_20format_4',['bin file format',['../dd/da9/page40_results.html#autotoc_md24',1,'.bin file format'],['../d5/d98/page91_basics.html#sect-bin',1,'Bin file format']]],
   ['bin_2eh_5',['bin.h',['../d3/d7f/bin_8h.html',1,'']]],
   ['binary_6',['Option 4 (binary)',['../d3/d4c/page20_compile.html#autotoc_md6',1,'']]],
-  ['bind_5fsocket_7',['bind_socket',['../df/d04/sock_8h.html#af3f15127c9f7805205fb0e3df341b3e4',1,'sock.c']]],
+  ['bind_5fsocket_7',['bind_socket',['../df/d04/sock_8h.html#a45c181941f5420133e33bb8bdca7374d',1,'sock.c']]],
   ['bkgrnd_8',['bkgrnd',['../d4/d38/parms_8h.html#abf927de595f5de271256c33761ee6685',1,'powfs_cfg_t::bkgrnd'],['../d6/d94/maos_2types_8h.html#af1f72dd5af2b9727a8c6b3e4d3125956',1,'powfs_t::bkgrnd']]],
   ['bkgrnd2_9',['bkgrnd2',['../dc/d85/classcuwfs__t.html#afefe432f2f46393338bd42e38599362b',1,'cuwfs_t']]],
   ['bkgrnd2c_10',['bkgrnd2c',['../dc/d85/classcuwfs__t.html#a5b5611f26b4a3dcc3a499697cd4e9752',1,'cuwfs_t']]],

@@ -15,6 +15,6 @@ var searchData=
   ['spchol_12',['spchol',['../db/da8/chol_8h.html#d8/d3f/structspchol',1,'']]],
   ['ssp_13',['ssp',['../df/def/type_8h.html#dc/d44/structssp',1,'']]],
   ['sspcell_14',['sspcell',['../df/def/type_8h.html#d0/db5/structsspcell',1,'']]],
-  ['status_5ft_15',['status_t',['../d6/d3a/structstatus__t.html',1,'']]],
+  ['status_5ft_15',['status_t',['../d4/d64/scheduler__client_8h.html#d6/d3a/structstatus__t',1,'']]],
   ['stream_5ft_16',['stream_t',['../dc/de6/classstream__t.html',1,'']]]
 ];

@@ -1,5 +1,8 @@
 var NAVTREEINDEX14 =
 {
+"df/def/type_8h.html#d1/df9/structdccell":[13,0,3,9,28],
+"df/def/type_8h.html#d2/d09/structlccell":[13,0,3,9,30],
+"df/def/type_8h.html#d2/d1a/unionrmap__t_8____unnamed19____":[13,0,3,9,44],
 "df/def/type_8h.html#d2/d8c/structmapcell":[13,0,3,9,36],
 "df/def/type_8h.html#d3/d27/structrmap__t":[13,0,3,9,12],
 "df/def/type_8h.html#d3/d30/structlocccell":[13,0,3,9,41],

@@ -100,11 +100,147 @@ $(document).ready(function(){initNavTree('d4/d64/scheduler__client_8h.html','../
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">scheduler_client.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:d6/d3a/structstatus__t" id="r_d6/d3a/structstatus__t"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#d6/d3a/structstatus__t">status_t</a></td></tr>
+<tr class="separator:d6/d3a/structstatus__t"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:aae3e18d81d1a613188ef55cc67bb7004" id="r_aae3e18d81d1a613188ef55cc67bb7004"><td class="memItemLeft" align="right" valign="top"><a id="aae3e18d81d1a613188ef55cc67bb7004" name="aae3e18d81d1a613188ef55cc67bb7004"></a>
+#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_version</b>&#160;&#160;&#160;53</td></tr>
+<tr class="separator:aae3e18d81d1a613188ef55cc67bb7004"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a394b3903fbf00ba2b6243f60689a5a5f" id="r_a394b3903fbf00ba2b6243f60689a5a5f"><td class="memItemLeft" align="right" valign="top"><a id="a394b3903fbf00ba2b6243f60689a5a5f" name="a394b3903fbf00ba2b6243f60689a5a5f"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>CMD_START</b> =1
+, <b>CMD_FINISH</b>
+, <b>CMD_STATUS</b>
+, <b>CMD_CRASH</b>
+, <br />
+&#160;&#160;<b>CMD_MONITOR</b>
+, <b>CMD_PATH</b>
+, <b>CMD_KILL</b>
+, <b>CMD_TRACE</b>
+, <br />
+&#160;&#160;<b>CMD_PROBE</b>
+, <b>CMD_DRAWCLI</b>
+, <b>CMD_REMOVE</b>
+, <b>CMD_DRAWSER</b>
+, <br />
+&#160;&#160;<b>CMD_MAOSCLI</b>
+, <b>CMD_MAOSSER</b>
+, <b>CMD_RESTART</b>
+, <b>CMD_KILLED</b>
+, <br />
+&#160;&#160;<b>CMD_DUMMY</b>
+, <b>CMD_LAUNCH</b>
+<br />
+ }</td></tr>
+<tr class="separator:a394b3903fbf00ba2b6243f60689a5a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac205be2172292384dd687b5471a87edd" id="r_ac205be2172292384dd687b5471a87edd"><td class="memItemLeft" align="right" valign="top"><a id="ac205be2172292384dd687b5471a87edd" name="ac205be2172292384dd687b5471a87edd"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>MAOS_SERVER</b> =1
+, <b>MAOS_DRAW</b> =10
+, <b>MAOS_VAR</b> =20
+, <b>MAOS_PAUSE</b>
+, <br />
+&#160;&#160;<b>MAOS_ASSIGN_WFS</b> =100
+, <b>MAOS_ASSIGN_EVL</b>
+, <b>MAOS_ASSIGN_RECON</b>
+, <b>MAOS_ASSIGN_DONE</b> =199
+<br />
+ }</td></tr>
+<tr class="separator:ac205be2172292384dd687b5471a87edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a157d5577a5b2f5986037d0d09c7dc77d" id="r_a157d5577a5b2f5986037d0d09c7dc77d"><td class="memItemLeft" align="right" valign="top"><a id="a157d5577a5b2f5986037d0d09c7dc77d" name="a157d5577a5b2f5986037d0d09c7dc77d"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>MON_CMD</b> =1
+, <b>MON_DRAWDAEMON</b> =2
+, <b>MON_STATUS</b> =3
+, <b>MON_PATH</b> =6
+, <br />
+&#160;&#160;<b>MON_CLEARJOB</b> =7
+, <b>MON_KILLJOB</b> =8
+, <b>MON_SAVEJOB</b> =9
+, <b>MON_VERSION</b> =13
+, <br />
+&#160;&#160;<b>MON_LOAD</b> =14
+, <b>MON_ADDHOST</b> =17
+<br />
+ }</td></tr>
+<tr class="separator:a157d5577a5b2f5986037d0d09c7dc77d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1fb9092bcdeada2d206bdc74afbbe122" id="r_a1fb9092bcdeada2d206bdc74afbbe122"><td class="memItemLeft" align="right" valign="top"><a id="a1fb9092bcdeada2d206bdc74afbbe122" name="a1fb9092bcdeada2d206bdc74afbbe122"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>S_RUNNING</b> =1
+, <b>S_WAIT</b>
+, <b>S_START</b>
+, <b>S_QUEUED</b>
+, <br />
+&#160;&#160;<b>S_UNKNOWN</b>
+, <b>S_FINISH</b> =11
+, <b>S_CRASH</b>
+, <b>S_TOKILL</b>
+, <br />
+&#160;&#160;<b>S_REMOVE</b>
+, <b>S_KILLED</b>
+, <b>S_NONEXIST</b>
+<br />
+ }</td></tr>
+<tr class="separator:a1fb9092bcdeada2d206bdc74afbbe122"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84627a72058502328269676b81780f89" id="r_a84627a72058502328269676b81780f89"><td class="memItemLeft" align="right" valign="top"><a id="a84627a72058502328269676b81780f89" name="a84627a72058502328269676b81780f89"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>DRAW_START</b> =0
+, <b>DRAW_DATA</b>
+, <b>DRAW_HEARTBEAT</b>
+, <b>DRAW_POINTS</b>
+, <br />
+&#160;&#160;<b>DRAW_STYLE</b>
+, <b>DRAW_CIRCLE</b>
+, <b>DRAW_LIMIT</b>
+, <b>DRAW_FIG</b>
+, <br />
+&#160;&#160;<b>DRAW_NAME</b>
+, <b>DRAW_TITLE</b>
+, <b>DRAW_XLABEL</b>
+, <b>DRAW_YLABEL</b>
+, <br />
+&#160;&#160;<b>DRAW_ZLIM</b>
+, <b>DRAW_LEGEND</b>
+, <b>DRAW_XYLOG</b>
+, <b>DRAW_FIGFN</b>
+, <br />
+&#160;&#160;<b>DRAW_PAUSE</b>
+, <b>DRAW_RESUME</b>
+, <b>DRAW_FINAL</b>
+, <b>DRAW_FLOAT</b>
+, <br />
+&#160;&#160;<b>DRAW_FRAME</b>
+, <b>DRAW_SINGLE</b>
+, <b>DRAW_UDPPORT</b>
+, <b>DRAW_INIT</b>
+, <br />
+&#160;&#160;<b>DRAW_PID</b>
+, <b>DRAW_ZLOG</b>
+, <b>DRAW_PATH</b>
+, <b>DRAW_EXENAME</b>
+, <br />
+&#160;&#160;<b>DRAW_END</b> =100
+, <b>DRAW_ENTRY</b> =9999
+<br />
+ }</td></tr>
+<tr class="separator:a84627a72058502328269676b81780f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3520ff6d43011872bab77edd27d4de3" id="r_af3520ff6d43011872bab77edd27d4de3"><td class="memItemLeft" align="right" valign="top"><a id="af3520ff6d43011872bab77edd27d4de3" name="af3520ff6d43011872bab77edd27d4de3"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>DRAW_ID_MAOS</b> =1
+, <b>DRAW_ID_RES</b>
+, <b>DRAW_ID_BIN</b>
+, <b>DRAW_ID_TOT</b>
+ }</td></tr>
+<tr class="separator:af3520ff6d43011872bab77edd27d4de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a0f53c3d23f04efdd0d3dbc2312e24c62" id="r_a0f53c3d23f04efdd0d3dbc2312e24c62"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62">parse_host</a> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">line</a>)</td></tr>
@@ -120,6 +256,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a937c9f864f3c274f2ad154e29e73461f" id="r_a937c9f864f3c274f2ad154e29e73461f"><td class="memItemLeft" align="right" valign="top"><a id="a937c9f864f3c274f2ad154e29e73461f" name="a937c9f864f3c274f2ad154e29e73461f"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">hostname</a>)</td></tr>
 <tr class="separator:a937c9f864f3c274f2ad154e29e73461f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58bf53ff0d18a7c82955c024e31fe525" id="r_a58bf53ff0d18a7c82955c024e31fe525"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#a58bf53ff0d18a7c82955c024e31fe525">scheduler_connect_self</a> (int <a class="el" href="../../d0/d44/class_num_array.html">block</a>)</td></tr>
+<tr class="separator:a58bf53ff0d18a7c82955c024e31fe525"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8adf4adef989fbe64052a8e8766b75d" id="r_ab8adf4adef989fbe64052a8e8766b75d"><td class="memItemLeft" align="right" valign="top">pthread_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#ab8adf4adef989fbe64052a8e8766b75d">scheduler_listen</a> (thread_fun fun)</td></tr>
 <tr class="separator:ab8adf4adef989fbe64052a8e8766b75d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25cea5f5488b400b89f7cac75f93b815" id="r_a25cea5f5488b400b89f7cac75f93b815"><td class="memItemLeft" align="right" valign="top"><a id="a25cea5f5488b400b89f7cac75f93b815" name="a25cea5f5488b400b89f7cac75f93b815"></a>
@@ -129,7 +267,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> 
 <tr class="separator:a143c4df02307a2d39088a677ca9fcd51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b93c8f28b99804e00ac8483359a97fa" id="r_a2b93c8f28b99804e00ac8483359a97fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#a2b93c8f28b99804e00ac8483359a97fa">scheduler_finish</a> (int status)</td></tr>
 <tr class="separator:a2b93c8f28b99804e00ac8483359a97fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a291e438e222f941d3969e605277de68e" id="r_a291e438e222f941d3969e605277de68e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#a291e438e222f941d3969e605277de68e">scheduler_report</a> (<a class="el" href="../../d6/d3a/structstatus__t.html">status_t</a> *status)</td></tr>
+<tr class="memitem:a291e438e222f941d3969e605277de68e" id="r_a291e438e222f941d3969e605277de68e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#a291e438e222f941d3969e605277de68e">scheduler_report</a> (<a class="el" href="../../d4/d64/scheduler__client_8h.html#d6/d3a/structstatus__t">status_t</a> *status)</td></tr>
 <tr class="separator:a291e438e222f941d3969e605277de68e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aceb820cceb5b82849de35bf624721bb4" id="r_aceb820cceb5b82849de35bf624721bb4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d64/scheduler__client_8h.html#aceb820cceb5b82849de35bf624721bb4">scheduler_launch_exe</a> (char *<a class="el" href="../../d0/d44/class_num_array.html">hostarr</a>, int <a class="el" href="../../d0/d44/class_num_array.html">argc</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">argv</a>[])</td></tr>
 <tr class="separator:aceb820cceb5b82849de35bf624721bb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,7 +283,190 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that will be used to talk to the scheduler. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><hr/><h2 class="groupheader">Data Structure Documentation</h2>
+<a name="d6/d3a/structstatus__t" id="d6/d3a/structstatus__t"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#d6/d3a/structstatus__t">&#9670;&#160;</a></span>status_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct status_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="textblock"><p>Status about each process. Timing, wavefront error, etc. </p>
+</div><div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="../../closed.png" alt="+"/> Collaboration diagram for status_t:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+<div class="center"><img src="../../db/d4c/structstatus__t__coll__graph.png" border="0" usemap="#astatus__t_coll__map" alt="Collaboration graph"/></div>
+<map name="astatus__t_coll__map" id="astatus__t_coll__map">
+<area shape="rect" title=" " alt="" coords="163,251,229,316"/>
+<area shape="rect" title=" " alt="" coords="5,5,64,71"/>
+<area shape="poly" title=" " alt="" coords="32,71,30,106,32,147,41,188,61,225,79,243,100,256,147,272,146,277,98,261,75,247,57,228,36,190,27,147,25,106,27,71"/>
+<area shape="rect" href="../../d7/d63/classlong.html" title=" " alt="" coords="101,5,144,71"/>
+<area shape="poly" title=" " alt="" coords="124,71,129,144,137,186,150,226,156,236,151,238,146,228,132,187,123,144,119,71"/>
+<area shape="rect" title=" " alt="" coords="181,5,211,71"/>
+<area shape="poly" title=" " alt="" coords="199,71,199,234,193,234,193,71"/>
+<area shape="rect" title=" " alt="" coords="271,5,313,71"/>
+<area shape="poly" title=" " alt="" coords="292,71,283,157,275,198,265,228,244,253,240,250,260,225,270,197,278,156,287,70"/>
+<area shape="rect" title=" " alt="" coords="361,5,417,71"/>
+<area shape="poly" title=" " alt="" coords="396,71,397,106,394,148,383,191,361,228,336,250,306,265,276,275,246,281,245,276,274,270,304,260,333,246,357,225,378,189,389,147,392,106,391,71"/>
+</map>
+</div>
+<table class="fieldtable">
+<tr><th colspan="3">Data Fields</th></tr>
+<tr><td class="fieldtype">
+<a id="a6ec70d20995ae19696d4a9f8dacdc696" name="a6ec70d20995ae19696d4a9f8dacdc696"></a>double</td>
+<td class="fieldname">
+wfs</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a581a6ba95ca35d7c28886841c5dbea55" name="a581a6ba95ca35d7c28886841c5dbea55"></a>double</td>
+<td class="fieldname">
+recon</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a207780eb65318280908d21c4dc48c9ed" name="a207780eb65318280908d21c4dc48c9ed"></a>double</td>
+<td class="fieldname">
+other</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a87498688ba0cbca7e803dee6fc885df7" name="a87498688ba0cbca7e803dee6fc885df7"></a>double</td>
+<td class="fieldname">
+eval</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="addcebebe68884dddbe7f5fb33d45cd4c" name="addcebebe68884dddbe7f5fb33d45cd4c"></a>double</td>
+<td class="fieldname">
+tot</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a212985e68016fa54491405151679e23d" name="a212985e68016fa54491405151679e23d"></a>double</td>
+<td class="fieldname">
+scale</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ae3d18d306d8b90ba7d2631a1054730f3" name="ae3d18d306d8b90ba7d2631a1054730f3"></a>double</td>
+<td class="fieldname">
+mean</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ad1feb9aaf4d41d706e50cd3d6b59ec86" name="ad1feb9aaf4d41d706e50cd3d6b59ec86"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
+<td class="fieldname">
+rest</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a792508c860bcc5718aaae3f1782f5202" name="a792508c860bcc5718aaae3f1782f5202"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
+<td class="fieldname">
+laps</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a80b362fb22def83af9c44156a1d2437d" name="a80b362fb22def83af9c44156a1d2437d"></a>int</td>
+<td class="fieldname">
+iseed</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aafe5ad2f2a2ea0f15cab3277099de3ee" name="aafe5ad2f2a2ea0f15cab3277099de3ee"></a>int</td>
+<td class="fieldname">
+nseed</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aa68f587c57e9cf7076c5fc9bfa1ebb5f" name="aa68f587c57e9cf7076c5fc9bfa1ebb5f"></a>int</td>
+<td class="fieldname">
+nthread</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a764517ba57dfc4c80189a6d09f92251f" name="a764517ba57dfc4c80189a6d09f92251f"></a>int</td>
+<td class="fieldname">
+isim</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a274f2e43306ab399f0659151b3c4308d" name="a274f2e43306ab399f0659151b3c4308d"></a>int</td>
+<td class="fieldname">
+simstart</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab10af1b9f06f70ae5bf7f0ae88703bfa" name="ab10af1b9f06f70ae5bf7f0ae88703bfa"></a>int</td>
+<td class="fieldname">
+simend</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a519389b48d8e8cf0e52a2f8690872df6" name="a519389b48d8e8cf0e52a2f8690872df6"></a>char</td>
+<td class="fieldname">
+done</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a29cbb38ecd8e0d6b81152e32b65dd817" name="a29cbb38ecd8e0d6b81152e32b65dd817"></a>char</td>
+<td class="fieldname">
+warning</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ab5eec02628b79ecb1c4e20e3f68715a2" name="ab5eec02628b79ecb1c4e20e3f68715a2"></a>char</td>
+<td class="fieldname">
+unused1</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3477838b03e1dde99e96f465ed040a61" name="a3477838b03e1dde99e96f465ed040a61"></a>char</td>
+<td class="fieldname">
+unused2</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a7ed6f4191a9c51f835afedc42237dcde" name="a7ed6f4191a9c51f835afedc42237dcde"></a>double</td>
+<td class="fieldname">
+clerrlo</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a2c44512f0f6ec858f9e2148f82fafb43" name="a2c44512f0f6ec858f9e2148f82fafb43"></a>double</td>
+<td class="fieldname">
+clerrhi</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a3ad077e15bc1e44c1a8114f74eba3340" name="a3ad077e15bc1e44c1a8114f74eba3340"></a>int</td>
+<td class="fieldname">
+info</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ade663146c6ce2bab9cd70167eea87286" name="ade663146c6ce2bab9cd70167eea87286"></a>time_t</td>
+<td class="fieldname">
+timstart</td>
+<td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a28a3ed45a322efd5658ea18abd8ac55f" name="a28a3ed45a322efd5658ea18abd8ac55f"></a>time_t</td>
+<td class="fieldname">
+timlast</td>
+<td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="a0f53c3d23f04efdd0d3dbc2312e24c62" name="a0f53c3d23f04efdd0d3dbc2312e24c62"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0f53c3d23f04efdd0d3dbc2312e24c62">&#9670;&#160;</a></span>parse_host()</h2>
 
@@ -245,6 +566,25 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> 
 
 </div>
 </div>
+<a id="a58bf53ff0d18a7c82955c024e31fe525" name="a58bf53ff0d18a7c82955c024e31fe525"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58bf53ff0d18a7c82955c024e31fe525">&#9670;&#160;</a></span>scheduler_connect_self()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int scheduler_connect_self </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>block</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>To open a port and connect to scheduler in the local host </p>
+
+</div>
+</div>
 <a id="ab8adf4adef989fbe64052a8e8766b75d" name="ab8adf4adef989fbe64052a8e8766b75d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab8adf4adef989fbe64052a8e8766b75d">&#9670;&#160;</a></span>scheduler_listen()</h2>
 
@@ -327,7 +667,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> 
         <tr>
           <td class="memname"><a class="el" href="../../d0/d44/class_num_array.html">void</a> scheduler_report </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d6/d3a/structstatus__t.html">status_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="../../d4/d64/scheduler__client_8h.html#d6/d3a/structstatus__t">status_t</a> *&#160;</td>
           <td class="paramname"><em>status</em></td><td>)</td>
           <td></td>
         </tr>

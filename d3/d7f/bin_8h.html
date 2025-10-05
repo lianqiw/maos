@@ -118,6 +118,13 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ad5f4d58cc059c86ebe6e571f3de83137" id="r_ad5f4d58cc059c86ebe6e571f3de83137"><td class="memItemLeft" align="right" valign="top"><a id="ad5f4d58cc059c86ebe6e571f3de83137" name="ad5f4d58cc059c86ebe6e571f3de83137"></a>
+#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>swap2bytes</b>(data)&#160;&#160;&#160;( (((data) &gt;&gt; 8) &amp; 0x00FF) | (((data) &lt;&lt; 8) &amp; 0xFF00) )</td></tr>
+<tr class="separator:ad5f4d58cc059c86ebe6e571f3de83137"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8220fece38d403c612d8b9acaafe9116" id="r_a8220fece38d403c612d8b9acaafe9116"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d7f/bin_8h.html#a8220fece38d403c612d8b9acaafe9116">swap4bytes</a>(data)</td></tr>
+<tr class="separator:a8220fece38d403c612d8b9acaafe9116"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b8590d40f0e96642c06585c74cbaaca" id="r_a3b8590d40f0e96642c06585c74cbaaca"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d7f/bin_8h.html#a3b8590d40f0e96642c06585c74cbaaca">swap8bytes</a>(data)</td></tr>
+<tr class="separator:a3b8590d40f0e96642c06585c74cbaaca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d7a62842f24cb108f65eccaffd1792e" id="r_a7d7a62842f24cb108f65eccaffd1792e"><td class="memItemLeft" align="right" valign="top"><a id="a7d7a62842f24cb108f65eccaffd1792e" name="a7d7a62842f24cb108f65eccaffd1792e"></a>
 #<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>M_INT</b>&#160;&#160;&#160;M_INT32</td></tr>
 <tr class="separator:a7d7a62842f24cb108f65eccaffd1792e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -357,6 +364,49 @@ magic</td>
 </td></tr>
 </table>
 
+</div>
+</div>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a8220fece38d403c612d8b9acaafe9116" name="a8220fece38d403c612d8b9acaafe9116"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8220fece38d403c612d8b9acaafe9116">&#9670;&#160;</a></span>swap4bytes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#<a class="el" href="../../d0/d44/class_num_array.html">define</a> swap4bytes</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">data</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">( (((data) &gt;&gt; 24) &amp; 0x000000FF) | (((data) &gt;&gt;  8) &amp; 0x0000FF00) | \</div>
+<div class="line">  (((data) &lt;&lt;  8) &amp; 0x00FF0000) | (((data) &lt;&lt; 24) &amp; 0xFF000000) )</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a3b8590d40f0e96642c06585c74cbaaca" name="a3b8590d40f0e96642c06585c74cbaaca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b8590d40f0e96642c06585c74cbaaca">&#9670;&#160;</a></span>swap8bytes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#<a class="el" href="../../d0/d44/class_num_array.html">define</a> swap8bytes</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">data</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">( (((data) &gt;&gt; 56) &amp; 0x00000000000000FF) | (((data) &gt;&gt; 40) &amp; 0x000000000000FF00) | \</div>
+<div class="line">  (((data) &gt;&gt; 24) &amp; 0x0000000000FF0000) | (((data) &gt;&gt;  8) &amp; 0x00000000FF000000) | \</div>
+<div class="line">  (((data) &lt;&lt;  8) &amp; 0x000000FF00000000) | (((data) &lt;&lt; 24) &amp; 0x0000FF0000000000) | \</div>
+<div class="line">  (((data) &lt;&lt; 40) &amp; 0x00FF000000000000) | (((data) &lt;&lt; 56) &amp; 0xFF00000000000000) )</div>
+</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>

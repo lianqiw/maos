@@ -1,5 +1,8 @@
 var NAVTREEINDEX9 =
 {
+"da/dfb/dmath_8h.html#ac5950501d0006b4cb1328252b7d60151":[13,0,3,2,165],
+"da/dfb/dmath_8h.html#ac5a46e01fa02794edd27a0942355dacd":[13,0,3,2,193],
+"da/dfb/dmath_8h.html#ac722ad5582be0e164fc4346376c45262":[13,0,3,2,160],
 "da/dfb/dmath_8h.html#ac8e1cf93132dcf5b008b64d66901c82d":[13,0,3,2,26],
 "da/dfb/dmath_8h.html#aca08f55748c7eb0706a7d5c3652de502":[13,0,3,2,185],
 "da/dfb/dmath_8h.html#acaef232fd9fe653b37f0b68b4f7be4b2":[13,0,3,2,72],
@@ -122,8 +125,8 @@ var NAVTREEINDEX9 =
 "db/da8/chol_8h.html#a9c21ad65f6e7f637e61f5d4d42a2212d":[13,0,1,1,7],
 "db/da8/chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70":[13,0,1,1,8],
 "db/da8/chol_8h.html#d8/d3f/structspchol":[13,0,1,1,0],
-"db/daa/struct_magic_3_01double_01_4.html":[12,0,107],
-"db/db2/structmap2map__t.html":[12,0,115],
+"db/daa/struct_magic_3_01double_01_4.html":[12,0,109],
+"db/db2/structmap2map__t.html":[12,0,117],
 "db/db7/gpu__math_8cu.html":[13,0,0,0,1],
 "db/dd5/thread_8h.html":[13,0,4,11],
 "db/dd5/thread_8h.html#a9c06e9160167b01ec6e81558ae27e2d8":[13,0,4,11,4],
@@ -142,7 +145,7 @@ var NAVTREEINDEX9 =
 "db/df3/mkg_8h.html#a4bde2eb21a3f84f0fc6a4feff9d91634":[13,0,1,15,1],
 "dc/d1e/atm_spm25p.html":[4,4,85],
 "dc/d1e/classcupts__t.html":[12,0,38],
-"dc/d27/classnon_copyable.html":[12,0,128],
+"dc/d27/classnon_copyable.html":[12,0,130],
 "dc/d37/slaving_8h.html":[13,0,1,27],
 "dc/d37/slaving_8h.html#a232f382fb6fa62d76800171a1ce8e27c":[13,0,1,27,8],
 "dc/d37/slaving_8h.html#a2ad99898c30843dc9912e6f253727b76":[13,0,1,27,6],
@@ -246,8 +249,5 @@ var NAVTREEINDEX9 =
 "dc/db7/map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6":[13,0,3,5,4],
 "dc/db7/map_8h.html#a37d70ae639530fbecf1e8393a360114a":[13,0,3,5,5],
 "dc/db7/map_8h.html#a3aff9d494ac68438376e0bb4e894bb70":[13,0,3,5,2],
-"dc/db7/map_8h.html#a60fc3a06842ea99955e93365757c4336":[13,0,3,5,11],
-"dc/db7/map_8h.html#ac44af32fcc3487df0d7dc4f861eb64f7":[13,0,3,5,1],
-"dc/db7/map_8h.html#aeeb7ed8fce49b6c3591753893a8f06c4":[13,0,3,5,10],
-"dc/db7/map_8h.html#af6072757526bdf462d0333b0e483770e":[13,0,3,5,7]
+"dc/db7/map_8h.html#a60fc3a06842ea99955e93365757c4336":[13,0,3,5,11]
 };
