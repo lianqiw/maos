@@ -5,9 +5,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const { useState, useEffect, useRef } = React;
   const [topActive, setTopActive] = useState({});//active fig
   const [botActive, setBotActive] = useState({});//active name
-  //const [jobActive, setJobActive] = useState('');//current active job
   const [figSeq, setFigSeq] = useState(0);//figure sequence number (index of drawData). triggers plotly update.
-  //const [wss, setWss] = useState({});//save websocket information
   //Use useRef for data that is not directly related to rendering.
   const pause = useRef({});//pause plotting
   const jobRef = useRef({});//job data. 
@@ -23,7 +21,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
     }
     let ws;
     if (!wssRef.current[job]) {
-      console.log(`drawdaemon is connecting for ${host} ${pid} at ${pcol}+${hostname}`);
+      console.log(`Drawdaemon is connecting for ${job} at ${pcol}${hostname}`);
       try {
         ws = new WebSocket(pcol + hostname + "/xxx", "maos-drawdaemon-protocol");	/* + "/xxx" bit is for IE10 workaround */
         ws.binaryType = 'arraybuffer';
@@ -31,24 +29,21 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
         console.log(error);
       }
     } else {
-      console.log(`drawdaemon is already active for ${host} ${pid}`);
+      console.log(`Drawdaemon is already active for ${host} ${pid}`);
     }
     if (!ws) return false;
     ws.onopen = () => {
       wssRef.current[job] = ws;
-      //setWss((oldVal) => ({ ...oldVal, [job]: ws }));//record ws for commanding
-      //setJobActive((oldVal) => (oldVal ? oldVal : job));//preserve previous active job
       setBotActive((oldVal) => ({ ...oldVal, [job]: {} }))//Initialize botActive to empty object to avoid undefined error
       setTopActive((oldVal) => ({ ...oldVal, [job]: {} }))//initialize to empty
       jobRef.current[job] = { 'drawData': {} };//empty plots
-      console.log("Draw WebSocket connected", {host, ...wssRef.current, job, jobRef});
+      console.log(`Draw WebSocket connected for ${job}`);
       ws.send(pid + "&" + "DRAW" + ";");
     };
 
     ws.onclose = (event) => {//we keep plots when connection is closed.
       delete wssRef.current[job];
-      //setWss((oldVal) => ({...oldVal, [job]:undefined}))
-      console.log("Draw WebSocket disconnected", {event, host, ...wssRef.current, job, jobRef});
+      console.log(`Draw WebSocket disconnected for ${job}`);
     };
 
     ws.onmessage = (event) => {
@@ -78,14 +73,11 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
               jobRef.current[job]['active'] = fig;
               //Initialize topActive to first figure 
               setTopActive((oldVal) => ({ ...oldVal, [job]: fig }))
-              //console.log(`setTopActive with ${fig}`)
             }
             if (!jobRef.current[job]['drawData'][fig]) {
               jobRef.current[job]['drawData'][fig] = {}
               //Initialize botActive to first figure of the group
               setBotActive((oldVal) => ({ ...oldVal, [job]: { ...oldVal[job], [fig]: name } }))
-              //console.log(`setBotActive with ${fig}:${name}`)
-              //setFigCount(old => old + 1);
             }
 
             jobRef.current[job]['drawData'][fig][name] = drawData;
@@ -107,15 +99,14 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   }//function connect
 
   useEffect(() => {//run ones upon mount and state change
-    console.log("drawdaemon useEffect", drawInfo)
     Object.keys(drawInfo).map((job) => {
-      const hostname=drawInfo[job];//host:port->shortname
-      if(hostname){
-        if(!wssRef.current[job]){
-          const pid=job.split(':').at(-1);
+      const hostname = drawInfo[job];//host:port->shortname
+      if (hostname) {
+        if (!wssRef.current[job]) {
+          const pid = job.split(':').at(-1);
           connect(hostname, pid);
         }
-      }else if(wssRef.current[job]){//close page
+      } else if (wssRef.current[job]) {//close page
         console.warn(`Close Draw Websocket connection to ${job}`)
         wssRef.current[job].close();//drop connection
         jobRef.current[job] = { 'drawData': {} };//remove plots
@@ -125,11 +116,11 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   }, [drawInfo]);
 
   useEffect(() => {//trigger plotting if page switched or data is updated
-    if(chartRef.current && !pause.current[jobActive]){
+    if (chartRef.current && !pause.current[jobActive]) {
       try {
         let clear = 1;
-        if (jobActive!=='' && jobRef.current[jobActive] && jobRef.current[jobActive]['drawData'] 
-          && jobRef.current[jobActive]['drawData'][topActive[jobActive]] 
+        if (jobActive !== '' && jobRef.current[jobActive] && jobRef.current[jobActive]['drawData']
+          && jobRef.current[jobActive]['drawData'][topActive[jobActive]]
           && botActive[jobActive][topActive[jobActive]]) {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
@@ -144,7 +135,6 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
           Plotly.purge(chartRef.current, 0);
         }
       } catch (err) {
-        //console.log(err, jobRef.current[jobActive]);
         Plotly.purge(chartRef.current, 0);
         console.log(err, { jobActive, jobRef, topActive, botActive });
       }
@@ -153,41 +143,37 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
 
   useEffect(() => {//let server know the current jobActive page.
     try {
-      if (wssRef.current[jobActive] && jobRef.current[jobActive] && jobRef.current[jobActive]['pid'] > -1 
+      if (wssRef.current[jobActive] && jobRef.current[jobActive] && jobRef.current[jobActive]['pid'] > -1
         && topActive[jobActive] && botActive[jobActive][topActive[jobActive]]) {
         wssRef.current[jobActive].send(`${jobRef.current[jobActive]['pid']}&DRAW_FIGFN&${topActive[jobActive]}&${botActive[jobActive][topActive[jobActive]]}`);
       }
     } catch (err) {
-      console.log({err, jobActive, wssRef, jobRef, topActive, botActive});
+      console.log({ err, jobActive, wssRef, jobRef, topActive, botActive });
     }
   }, [jobActive, topActive, botActive]);
- /*<ul className="inline tab_hosts">
-        {Object.keys(wss).filter((v)=>wss[v]).map((job) => (<li key={job} className={job === jobActive ? "active" : ""}><span onClick={() => { setJobActive(job); }}>{job}</span>
-          <span onClick={() => { wss[job].close() }}>⛌</span></li>))}
-      </ul> */
   try {
-    return jobRef.current[jobActive] && jobRef.current[jobActive]['drawData']?(<div>
+    return jobRef.current[jobActive] && jobRef.current[jobActive]['drawData'] ? (<div>
       <ul className="inline tab_hosts"> {/*draw top-notebook (horizontal)*/}
         {Object.keys(jobRef.current[jobActive]['drawData']).sort().map((fig) => (
           <li key={fig} className={topActive[jobActive] === fig ? "active" : ""}
-            onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); pause.current[jobActive]=false; }}
+            onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); pause.current[jobActive] = false; }}
           >{fig}</li>))}
-        <li title="Pause or Resume ploting" onClick={()=>{pause.current[jobActive]=!pause.current[jobActive]}}>{pause.current[jobActive]?"▶️":"⏸️"}</li>
-        <li title="Stop receiving more data for plotting" onClick={()=>{wssRef.current[jobActive].close()}}>⏹️</li>
+        <li title="Pause or Resume ploting" onClick={() => { pause.current[jobActive] = !pause.current[jobActive] }}>{pause.current[jobActive] ? "▶️" : "⏸️"}</li>
+        <li title="Stop receiving more data for plotting" onClick={() => { wssRef.current[jobActive].close() }}>⏹️</li>
       </ul>
       <table border="0"><tbody><tr valign="top">
         <td><ul className="tab_hosts">{/*draw sub-notebook (vertical)*/}
           {jobRef.current[jobActive]['drawData'][topActive[jobActive]] &&
             Object.keys(jobRef.current[jobActive]['drawData'][topActive[jobActive]]).sort().map((name) => (
               <li key={name} className={botActive[jobActive][topActive[jobActive]] === name ? "active" : ""}
-                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } }));pause.current[jobActive]=false; }}
+                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } })); pause.current[jobActive] = false; }}
               >{name}</li>))}
-          </ul></td>
+        </ul></td>
         <td>
           <div id="chart" ref={chartRef}></div>
         </td>
       </tr></tbody></table>
-    </div>):(<div id="chart" ref={chartRef}></div>)
+    </div>) : (<div id="chart" ref={chartRef}></div>)
   } catch (err) {
     console.log({ err, jobRef, topActive, botActive, jobActive });
   }

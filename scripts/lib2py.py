@@ -25,7 +25,7 @@ simu_all=list();
 headerlist=glob.glob(srcdir+'/math/loc.h')
 headerlist=glob.glob(srcdir+'/math/map.h')
 headerlist=glob.glob(srcdir+'/lib/*.h')
-headerlist.append(srcdir+'/sys/scheduler.h')
+headerlist.append(srcdir+'/sys/scheduler_client.h')
 headerlist.append(srcdir+'/mex/aolib.h')
 structs=maos_parse.parse_structs('', headerlist)
 funcs=maos_parse.parse_func('',headerlist)

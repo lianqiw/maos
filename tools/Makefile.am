@@ -3,16 +3,16 @@ AM_LDFLAGS=$(LDEXE)
 ICONS=icon-avg.png icon-cancel.png icon-clear.png icon-connect.png icon-draw-small.png icon-draw.png icon-error.png \
 icon-finished.png icon-log.png icon-monitor.png icon-play.png icon-save.png icon-skip.png icon-waiting.png
 
-noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h mygtk.h monitor.html gtk3-css.h resources.xml $(ICONS) 
+noinst_HEADERS=monitor.h drawdaemon.h scheduler.h mygtk.h monitor.html gtk3-css.h resources.xml $(ICONS) 
 
 PROGS=
 
 if USE_SCHEDULER
 PROGS+=../bin/scheduler
-___bin_scheduler_SOURCES=scheduler.c
+___bin_scheduler_SOURCES=scheduler.c scheduler_http.c scheduler_proxy.c
 ___bin_scheduler_LDADD=../sys/libaosys.la 
 if HAS_LWS
-___bin_scheduler_SOURCES+=scheduler_ws.c
+___bin_scheduler_SOURCES+=scheduler_lws.c
 ___bin_scheduler_LDADD+=-lwebsockets
 endif
 endif
