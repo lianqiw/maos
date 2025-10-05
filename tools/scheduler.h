@@ -15,21 +15,25 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_SCHEDULER_WS_H
-#define AOS_SCHEDULER_WS_H
-typedef struct l_message{
-	char* payload;
-	size_t len;
-	struct l_message* next;
-}l_message;
-int  ws_start(short port);
-void ws_end();
-void ws_service();
-void ws_append(const char* in, size_t len);
-int  ws_proxy_get_fd(void* userdata);
-void ws_proxy_add(int sock, void* userdata);
-void ws_proxy_remove(void* userdata, int toclose);
-int  ws_proxy_read(struct pollfd *pfd, int flag);
-void scheduler_push_ws(l_message** head, long prepad);
-void scheduler_receive_ws(char* in, size_t len, void* userdata);
+#ifndef AOS_SCHEDULER_H
+#define AOS_SCHEDULER_H
+
+#include <poll.h>
+typedef struct ws_proxy_t{
+	int fd;
+	int (*send)(char* buf, int nlen, int mode, void *userdata);
+	int (*forward)(int fd, int nlen, int mode, void *userdata);
+	void *userdata;
+}ws_proxy_t;
+void runned_remove(int pid);
+void running_kill(int pid);
+int  maos_command(int pid, int sock, int cmd);
+void monitor_add(int sock, int flag, int (*func)(char*buf, int nlen, int mode, void *userdata), void* userdata);
+void ws_proxy_command(char* in, size_t len, ws_proxy_t ws);
+void ws_proxy_remove(void *userdata, int toclose);
+#if HAS_LWS
+int  start_lws(short port);
+#endif
+extern const int http_padding;
+int http_handler(struct pollfd *pfd, int flag);
 #endif

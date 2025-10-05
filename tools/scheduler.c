@@ -40,9 +40,8 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include "../sys/sys.h"
-#if HAS_LWS
-#include "scheduler_ws.h"
-#endif
+#include "scheduler.h"
+
 //static char* scheduler_fnlog=NULL;
 static int NGPU=0;
 /**
@@ -70,6 +69,9 @@ typedef struct MONITOR_T{
 	int sock;
 	int load;/*handle machine load information. */
 	int plot;/*whether plot is enabled*/
+	int http;/*client wants text mode */
+	int (*func)(char*buf, int nlen, int mode, void *userdata);//function to send text
+	void* userdata;//parameter for func
 	struct MONITOR_T* next;
 }MONITOR_T;
 
@@ -88,13 +90,11 @@ static RUN_T* running_get_by_pid(int pid);
 static RUN_T* running_get_by_status(int status);
 static RUN_T *running_get_by_sock(int sock);
 
-static RUN_T* runned_get(int pid);
-static void runned_remove(int pid);
+//static RUN_T* runned_get(int pid);
 static int runned_add(RUN_T* irun);
 static void running_remove(int pid, int status);
 //static MONITOR_T *monitor_get(int hostid);
-static void monitor_remove(int hostid);
-static MONITOR_T* monitor_add(int hostid);
+static void monitor_remove(int sock);
 static void scheduler_timeout(void);
 static void monitor_send(RUN_T* run, const char* path);
 static void monitor_send_initial(MONITOR_T* ic);
@@ -170,7 +170,7 @@ static int runned_add(RUN_T* irun){
 		return 0;
 	}
 }
-static void runned_remove(int pid){
+void runned_remove(int pid){
 	RUN_T *irun=NULL;
 	for(RUN_T **curr=&runned; *curr;){
 		irun=*curr;
@@ -194,7 +194,7 @@ static void runned_remove(int pid){
 		warning_time("runned_remove: Record %s:%d not found!\n", HOST, pid);
 	}
 }
-static RUN_T* runned_get(int pid){
+/*static RUN_T* runned_get(int pid){
 	RUN_T* irun;
 	for(irun=runned; irun; irun=irun->next){
 		if(irun->pid==pid){
@@ -202,7 +202,7 @@ static RUN_T* runned_get(int pid){
 		}
 	}
 	return irun;
-}
+}*/
 /**
    Restart a crashed/finished job
 */
@@ -338,6 +338,22 @@ static RUN_T* running_get_by_sock(int sock){
 		}
 	}
 	return irun;
+}
+void running_kill(int pid){
+	RUN_T* irun=running_get_by_pid(pid);
+	if(irun){
+		if(irun->status.info!=S_QUEUED){
+			kill(pid, SIGTERM);
+			if(irun->status.info==S_WAIT){//wait up the process.
+				stwriteint(irun->sock, S_START);
+			}
+			irun->status.info=S_UNKNOWN;
+			monitor_send(irun, NULL);
+		} else{
+			running_remove(pid, S_KILLED);
+		}
+		//dbg_time("%5d term signal sent\n", pid);
+	}
 }
 /**
 	check all the jobs. remove if any job quited.
@@ -484,7 +500,7 @@ static void queue_new_job(const char* exename, const char* execmd){
    Pass socket (if !=-1) and command to maos.
    2025-09-22: updated logic to avoid a race condition that maos and schedule both trying to write to the socket.
  */
-static int maos_command(int pid, int sock, int cmd){
+int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
 	int failed=(!irun||!irun->sock_cmd||(stwriteintarr(irun->sock_cmd, cmd2, 2)));
@@ -727,15 +743,8 @@ static int respond(struct pollfd *pfd, int flag){
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 		set_sockname(sock, "monitor");
-		MONITOR_T* tmp=monitor_add(sock);
-		if(tmp){
-			if(pid>=0x8){//old scheme where scheduler_version at compiling is passed
-				tmp->load=1;
-			} else if(pid<0){//new scheme with bit indicating different options
-				tmp->load=pid&1;
-				tmp->plot=pid&(1<<1);
-			}
-		}
+		monitor_add(sock, pid, NULL, NULL);
+
 		dbg_time("(%d:%s) monitor from %s is connected.\n", sock, get_sockname(sock), addr2name(socket_peer(sock)));
 	}
 	break;
@@ -761,21 +770,8 @@ static int respond(struct pollfd *pfd, int flag){
 	break;
 	case CMD_KILL://7: Called by Monitor to kill a task.
 	{
-		RUN_T* irun=running_get_by_pid(pid);
 		warning_time("(%d:%s) Received monitor command to kill %d\n", sock, get_sockname(sock), pid);
-		if(irun){
-			if(irun->status.info!=S_QUEUED){
-				kill(pid, SIGTERM);
-				if(irun->status.info==S_WAIT){//wait up the process.
-					stwriteint(irun->sock, S_START);
-				}
-				irun->status.info=S_UNKNOWN;
-				monitor_send(irun, NULL);
-			} else{
-				running_remove(pid, S_KILLED);
-			}
-			//dbg_time("%5d term signal sent\n", pid);
-		}
+		running_kill(pid);
 	}
 	break;
 	case CMD_TRACE://8: Called by MAOS to request a backtrace
@@ -788,7 +784,7 @@ static int respond(struct pollfd *pfd, int flag){
 			warning_time("(%d:%s) CMD_TRACE failed. buf=%s, out=%s\n", sock, get_sockname(sock), buf, out);
 			ret=-1;
 		}else{
-			info_time("(%d:%s) CMD_TRACE success. buf=%s, out=%s\n", sock, get_sockname(sock), buf, out);
+			//info_time("(%d:%s) CMD_TRACE success. buf=%s, out=%s\n", sock, get_sockname(sock), buf, out);
 		}
 		free(buf);
 	}
@@ -980,139 +976,8 @@ static int respond(struct pollfd *pfd, int flag){
 	//if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
 	return ret;//ret=-1 will close the socket.
 }
-#if HAS_LWS
-/*
-  handle requests from web browser via websockets. Browser sends request over
-  text messages with fields separated by '&'. The format is 
-  PID&COMMAND_NAME;
-*/
-void scheduler_receive_ws(char* in, size_t len, void* userdata){
-	while(len>1){//len includes final 0
-		char* tmp;//find and mark end of current command
-		if((tmp=strchr(in, '\n'))){
-			*tmp=0; tmp++;
-		}else if((tmp=strchr(in, ';'))){
-			*tmp=0; tmp++;
-		}else{
-			tmp=in+len+1;//past end of str.
-		}
-		char* sep=strchr(in, '&');
-		if(!sep){
-			warning_time("Unable to handle cmd: {%s}, len={%zu}\n", in, len);
-			return;
-		}
-		*sep=0;
-		int pid=strtol(in, 0, 10);
-		*sep='&';
-		sep++;		
-		if(pid<=0){
-			warning_time("Unable to handle cmd: {%s}, len={%zu}\n", in, len);
-			return;
-		}
-		char *sep2=strchr(sep,'&');
-		if(sep2){
-			*sep2=0; sep2++;//next entry
-		}
-		
-		//LOCK(mutex_sch);
-		if(!strcmp(sep, "REMOVE")){
-			RUN_T* irun=runned_get(pid);
-			if(irun){
-				runned_remove(pid);
-			} else{
-				warning_time("CMD_REMOVE: %s:%d not found\n", HOST, pid);
-			}
-		} else if(!strcmp(sep, "KILL")){
-			RUN_T* irun=running_get_by_pid(pid);
-			if(irun){
-				if(irun->status.info!=S_QUEUED){
-					kill(pid, SIGTERM);
-					if(irun->status.info==S_WAIT){//wait up the process.
-						stwriteint(irun->sock, S_START);
-					}
-				} else{
-					running_remove(pid, S_KILLED);
-				}
-				warning_time("HTML client send term signal to %5d term signal.\n", pid);
-			}
-		} else if(!strcmp(sep, "DRAW")){
-			int sock=ws_proxy_get_fd(userdata);
-			if(sock>-1){
-				warning_time("Already drawing.\n");
-			}else{
-				int sv2[2];//socket pair for communication.
-				/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
-				if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
-					maos_command(pid, sv2[1], MAOS_DRAW);//pass sv2[1] to maos
-					int status=1;
-					streadint(sv2[0], &status);
-					if(!status){
-						ws_proxy_add(sv2[0], userdata);//add proxy first to have higher priority in poll()
-						listen_port_add(sv2[0], POLLIN, ws_proxy_read, "ws_proxy_read");
-					}else{
-						close(sv2[0]);
-						warning_time("Failed to request DRAW to maos pid=%d\n", pid);
-					}
-					close(sv2[1]);
-				} else{
-					perror("socketpair");
-				}
-			}
-		} else if(!strcmp(sep, "DRAW_FIGFN")){
-			char *fig=0, *fn=0;
-			if(sep2){
-				char* sep3=strchr(sep2,'&');
-				fig=sep2;
-				if(sep3){
-					*sep3=0; sep3++;
-					fn=sep3;
-				}
-				sep2=strchr(sep3,'&');
-				if(sep2) *sep2=0;//terminate string
-			}
-			if(fig && fn){
-				int sock=ws_proxy_get_fd(userdata);
-				if(sock>-1){
-					if(stwriteint(sock, DRAW_FIGFN)||(fig && stwritestr(sock, fig))||(fn && stwritestr(sock, fn))){
-						info_time("Send %s {%s} {%s} to draw failed.\n", sep, fig?fig:"", fn?fn:"");
-					}
-				}
-			}
-		}else if(!strcmp(sep, "DRAW_PAUSE")){
-			int sock=ws_proxy_get_fd(userdata);
-			if(sock>-1){
-				if(stwriteint(sock, DRAW_PAUSE)){
-					info_time("Send %s to draw failed.\n", sep);
-				}
-			}
-		}else if(!strcmp(sep, "DRAW_RESUME")){
-			int sock=ws_proxy_get_fd(userdata);
-			if(sock>-1){
-				if(stwriteint(sock, DRAW_RESUME)){
-					info_time("Send %s to draw failed.\n", sep);
-				}
-			}
-		}else if(!strcmp(sep, "DRAW_SINGLE")){
-			int sock=ws_proxy_get_fd(userdata);
-			if(sock>-1){
-				if(stwriteint(sock, DRAW_SINGLE)){
-					info_time("Send %s to draw failed.\n", sep);
-				}
-			}
-		}else{
-			warning_time("Unknown action: %s\n", sep);
-		}
-		if(tmp<in+len){//locate next command
-			len-=(tmp-in);
-			in=tmp;
-		}else{
-			len=0;
-			break;
-		}
-	}
-	//UNLOCK(mutex_sch);
-}
-#endif
+
+
 static void scheduler_timeout(void){
 	time_t thistime=myclocki();
 	//Process job queue
@@ -1138,50 +1003,63 @@ static void scheduler_timeout(void){
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
-static MONITOR_T* monitor_add(int sock){
+void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, void *userdata), void* userdata){
 	//dbg_time("added monitor on sock %d\n",sock);
-	MONITOR_T* node=mycalloc(1, MONITOR_T);
-	node->sock=sock;
-	node->next=pmonitor;
-	pmonitor=node;
-	monitor_send_initial(node);
-	return node;
-}
-static void monitor_remove(int sock){
-	MONITOR_T* ic, * ic2=NULL;
-	/*int freed=0; */
-	for(ic=pmonitor; ic; ic2=ic, ic=ic->next){
+	MONITOR_T *node=NULL;
+	for(MONITOR_T *ic=pmonitor; ic; ic=ic->next){
 		if(ic->sock==sock){
-			if(ic2){
-				ic2->next=ic->next;
-			} else{
-				pmonitor=ic->next;
-			}
-			//close(ic->sock); close panics accept
-			dbg_time("Removed monitor at %d\n", ic->sock);
-			shutdown(ic->sock, SHUT_WR);
-			free(ic);
+			node=ic;
 			break;
 		}
 	}
+	if(!node){
+		node=mycalloc(1, MONITOR_T);
+		node->sock=sock;
+		node->next=pmonitor;
+		pmonitor=node;
+		dbg_time("monitor is added: fd=%d flag=%d\n", node->sock, flag);
+	}else{
+		dbg_time("monitor is updated: fd=%d flag=%d\n", node->sock, flag);
+	}
+	
+	if(flag>=0x8){//old scheme where scheduler_version at compiling is passed
+		node->load=1;
+	} else if(flag<0){//new scheme with bit indicating different options
+		node->load=flag&1;
+		node->plot=(flag>>1)&1;
+		node->http=(flag>>2)&1;
+	}
+	node->func=func;
+	node->userdata=userdata;
+	monitor_send_initial(node);
 }
-
-/**
-   Convert RUN_T to string for websocket.
-*/
-#if HAS_LWS
-//do the real conversion
-static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, long prepad){
-	char temp[4096]={0};
-	size_t len;
+static void monitor_remove(int sock){
+	MONITOR_T* ic=NULL;
+	for(MONITOR_T **curr=&pmonitor; *curr;){
+		ic=*curr;
+		if(ic->sock==sock){
+			*curr=ic->next;
+			dbg_time("Removed monitor at %d\n", ic->sock);
+			shutdown(ic->sock, SHUT_WR);
+			//close(ic->sock);// close panics accept
+			free(ic);
+			return;
+		}else{
+			curr=&ic->next;
+		}
+	}
+	warning_time("Monitor is not found fd=%d\n", sock);
+}
+static int http_convert(RUN_T *irun, const char *path, char *buf, int size){
+	int len;
 	if(path){
-		len=snprintf(temp, 4096, "%d&PATH&%s$", irun->pid, path);
+		len=snprintf(buf, size, "%d&PATH&%s$", irun->pid, path);
 	} else{
 		status_t* st=&irun->status;
 		struct tm* tim=localtime(&(st->timlast));
 		char stime[80];
 		strftime(stime, 80, "[%a %H:%M:%S]", tim);
-		len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
+		len=snprintf(buf, size, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
 			"&%s&%.2f&%.2f" /*start time, errhi, errlo*/
 			"&%d&%d&%d&%d" /*iseed, nseed, isim, nsim*/
 			"&%ld&%ld&%.3f$" /*rest, tot, step timing*/
@@ -1190,64 +1068,46 @@ static void html_push(RUN_T *irun, const char *path, char **dest, size_t *plen, 
 			st->nseed==0?0:st->iseed+1, st->nseed, st->simend==0?0:st->isim+1, st->simend,
 			st->rest, st->laps+st->rest, st->tot*st->scale);
 	}
-	if(!dest){//push to client directly using ring buffer
-		ws_append(temp, len);
-	} else{//add to list for the new client
-		*plen=len;
-		*dest=(char*)malloc(len+prepad);
-		memcpy(*dest+prepad, temp, len);
-	}
+	return len;
 }
-//Push path, and status as two nodes
-static void html_push_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad){
-	l_message* node=mycalloc(1, l_message);
-	l_message* node2=mycalloc(1,l_message);
-	node->next=node2;
-	node2->next=0;
-	if(*tail){
-		(*tail)->next=node;
-	} else{
-		*head=node;
+static int monitor_send_do(RUN_T* irun, const char* path, MONITOR_T *ic){
+	if(!irun || !ic) return -1;
+	int ans=0;
+	if(ic->http){
+		char buf[4096];
+		int padding=ic->func?http_padding:(int)(3*sizeof(int));
+		int nlen=http_convert(irun, path, buf+padding, sizeof(buf)-padding);
+		if(ic->func){//directly write to client
+			ans=ic->func(buf+padding, nlen, 0, ic->userdata);
+		}else{//send to proxy
+			((int*)buf)[0]=DRAW_ENTRY;
+			((int*)buf)[1]=nlen;
+			((int*)buf)[2]=0;//0 indicate text data
+			ans=stwrite(ic->sock, buf, nlen+padding);
+		}
+	}else{//write to TCP client
+		int cmd[3];
+		cmd[1]=irun->pidnew;
+		cmd[2]=irun->pid;
+		if(path){/*don't do both. */
+			cmd[0]=MON_PATH;
+			ans=(stwrite(ic->sock, cmd, 3*sizeof(int))||stwritestr(ic->sock, path));
+		} else{
+			cmd[0]=MON_STATUS;
+			ans=(stwrite(ic->sock, cmd, 3*sizeof(int))||stwrite(ic->sock, &irun->status, sizeof(status_t)));
+		}
 	}
-	*tail=node2;
-	html_push(irun, irun->path, &node->payload, &node->len, prepad);
-	html_push(irun, 0, &node2->payload, &node2->len, prepad);
+	return ans;
 }
-//called by scheduelr_ws upon client connection. 
-void scheduler_push_ws(l_message** head, long prepad){
-	l_message* tail=0;//for convenience in ordering.
-	*head=0;
-	for(RUN_T* irun=runned; irun; irun=irun->next){
-		html_push_all_do(irun, head, &tail, prepad);
-	}
-	for(RUN_T* irun=running; irun; irun=irun->next){
-		html_push_all_do(irun, head, &tail, prepad);
-	}
-}
-#endif
-static int monitor_send_do(RUN_T* irun, const char* path, int sock){
-	int cmd[3];
-	cmd[1]=irun->pidnew;
-	cmd[2]=irun->pid;
-	if(path){/*don't do both. */
-		cmd[0]=MON_PATH;
-		return (stwrite(sock, cmd, 3*sizeof(int))||stwritestr(sock, path));
-	} else{
-		cmd[0]=MON_STATUS;
-		return (stwrite(sock, cmd, 3*sizeof(int))||stwrite(sock, &irun->status, sizeof(status_t)));
-	}
-}
+
 /* Notify alreadyed connected monitors job update. */
 static void monitor_send(RUN_T* irun, const char* path){
-#if HAS_LWS
-	html_push(irun, path, 0, 0, 0);
-#endif
 	MONITOR_T* ic;
 redo:
 	for(ic=pmonitor; ic; ic=ic->next){
-		int sock=ic->sock;
-		if(monitor_send_do(irun, path, sock)){
-			monitor_remove(sock);
+		if(monitor_send_do(irun, path, ic)){
+			dbg_time("monitor_send to fd=%d failed, remove\n", ic->sock);
+			monitor_remove(ic->sock);
 			goto redo;
 		}
 	}
@@ -1312,17 +1172,15 @@ static void monitor_send_load(void){
 }
 /* Notify the new added monitor all job information. */
 static void monitor_send_initial(MONITOR_T* ic){
-	int sock;
-	RUN_T* irun;
-	sock=ic->sock;
-	for(irun=runned; irun; irun=irun->next){
-		if(monitor_send_do(irun, irun->path, sock)||monitor_send_do(irun, NULL, sock)){
+	int sock=ic->sock;
+	for(RUN_T* irun=runned; irun; irun=irun->next){
+		if(monitor_send_do(irun, irun->path, ic)||monitor_send_do(irun, NULL, ic)){
 			monitor_remove(sock);
 			return;
 		}
 	}
-	for(irun=running; irun; irun=irun->next){
-		if(monitor_send_do(irun, irun->path, sock)||monitor_send_do(irun, NULL, sock)){
+	for(RUN_T* irun=running; irun; irun=irun->next){
+		if(monitor_send_do(irun, irun->path, ic)||monitor_send_do(irun, NULL, ic)){
 			monitor_remove(sock);
 			return;
 		}
@@ -1407,13 +1265,12 @@ int main(int argc, const char* argv[]){
 	//We call it in scheduler_timeout using poll. no need for LOCK in this case
 #if HAS_LWS
 	extern int PORT;
-	ws_start(PORT+100);
-#endif	
+	start_lws(PORT+100);
+#endif
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.
 	extern int PORT;
-	listen_port(PORT, slocal, respond, 10, scheduler_timeout, 0);
-	remove(slocal);
+	listen_port((listen_opt_t){.port=PORT, .localpath=slocal, .responder=respond, .http_responder=http_handler, .timeout_fun=scheduler_timeout, .timeout_sec=10});
 	runned_remove(-1);
 	socket_close();
 	signal_caught=0;//enable printing memory debug information

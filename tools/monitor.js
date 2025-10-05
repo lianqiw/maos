@@ -25,6 +25,7 @@ function App() {
   const [drawInfo, setDrawInfo] = useState([]);//set for draw
   //useRef are persistent and is not a new variable for every render.
   const wssRef = useRef({});//for immediate testing, do not wait for state update
+  window.wssRef=wssRef;
   const jobRef = useRef(job);
   const activeRef = useRef(active);
   const fullName = useRef({});//full hostname.
@@ -52,22 +53,20 @@ function App() {
       wssRef.current[host] = ws;
       setWss((oldVal) => ({ ...oldVal, [host]: ws }));
       setActive((oldVal) => oldVal ? oldVal : host);
-      console.log(host, "Monitor WebSocket connected", { ...ws });
+      console.log(`Monitor WebSocket connected to ${host}`);
       if (localStorage.hosts.indexOf(hostname) == -1) {
         localStorage.hosts += ";" + hostname;
       }
-      console.log({ ...wssRef.current });
     };
     ws.onclose = () => {
-      console.log({ ...wssRef.current });
       delete wssRef.current[host];
       setWss((oldVal) => (oldVal[host] ? { ...oldVal, [host]: false } : { ...oldVal, [host]: undefined }))//false: disconnected. undefined: removed.
       setJob((oldVal) => oldVal.filter((v) => v.Host != host));//remove jobs of the host
-      console.warn(host, "Monitor WebSocket disconnected", ws);
+      console.log(`Monitor WebSocket disconnected from ${host}`);
     };
     ws.onerror = (err) => {
       removeHost(hostname);
-      console.error(hostname, "WebSocket error", err);
+      console.error(err, `WebSocket error for ${host}`);
     };
     ws.onmessage = (event) => {
       if (typeof event.data === "string") {//instanceof does not work for string
@@ -109,6 +108,7 @@ function App() {
             } else {
               continue;//invalid data
             }
+            try{
             setJob((oldValue) => {
               const ind = oldValue.findIndex((v) => v.PID == i[0] && v.Host === host);
               if (newdata === undefined && ind != -1) {//remove
@@ -119,6 +119,9 @@ function App() {
                 return oldValue.map((v, i) => (i === ind) ? { ...v, ...newdata } : v);
               }
             });
+            }catch(err){
+              console.log({err, job:jobRef.current, newdata})
+            }
           }
         }
       } else if (event.data instanceof Blob) {//Blob is read only
@@ -143,9 +146,8 @@ function App() {
     }
     hosts_old.push(hostname);
     const hosts = [...new Set(hosts_old)];//unique entries
-    console.log(hosts);
     localStorage.hosts = hosts.filter((hostname) => connect(hostname)).join(";");//keep only valid hosts
-    console.log({ storage: localStorage.hosts })
+    console.log("localStorage.hosts:", localStorage.hosts);
   }, []);
 
   useEffect(() => {
@@ -227,8 +229,9 @@ function App() {
             }}> ⛌</span>
           </li>
         ))}
-        <li><input id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
-          <button onClick={() => { setText(''); if (text.length) { connect(text); } }}>Connect</button>
+        <li><form onSubmit={(e) => {e.preventDefault(); setText(''); if (text.length) { connect(text); } }}>
+          <input style={{width:'10em'}} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
+          <button type="submit">Connect</button></form>
         </li>
         {Object.keys(drawInfo).filter((info) => (drawInfo[info])).map((info) => (
           <li key={info} className={active === info ? "active" : ""}>
@@ -236,7 +239,7 @@ function App() {
             <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [info]: undefined })); setActive(""); }}>⛌</span>
           </li>))}
       </ul>
-      {!active.includes(':') && job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).length > 0 ? (
+      {!active.includes(':') && (
         <table className="monitor">
           <thead>
             <tr>{columns.map((col) => <th key={col} className={cn[col]}>{col}</th>)}
@@ -254,8 +257,7 @@ function App() {
             ))}
           </tbody>
         </table>
-      ) : null
-      }
+      ) }
       <DrawDaemon drawInfo={drawInfo} jobActive={active}></DrawDaemon>
     </div>
   );

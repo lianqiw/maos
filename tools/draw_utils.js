@@ -222,7 +222,7 @@ function procBuffer(wsBuf) {
         drawData['xylog'] = getByteArray(2);
         break;
       case draw.final:
-        console.log("draw.final");
+        console.log("DRAW_FINAL");
         drawData['final']=1;
         break;
       case draw.float:

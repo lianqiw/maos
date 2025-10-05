@@ -106,19 +106,6 @@ struct mem_t{
 	unsigned int nref; /**<Number of reference.*/
 };
 
-#define swap2bytes(data) \
-( (((data) >> 8) & 0x00FF) | (((data) << 8) & 0xFF00) ) 
-
-#define swap4bytes(data)   \
-( (((data) >> 24) & 0x000000FF) | (((data) >>  8) & 0x0000FF00) | \
-  (((data) <<  8) & 0x00FF0000) | (((data) << 24) & 0xFF000000) ) 
-
-#define swap8bytes(data)   \
-( (((data) >> 56) & 0x00000000000000FF) | (((data) >> 40) & 0x000000000000FF00) | \
-  (((data) >> 24) & 0x0000000000FF0000) | (((data) >>  8) & 0x00000000FF000000) | \
-  (((data) <<  8) & 0x000000FF00000000) | (((data) << 24) & 0x0000FF0000000000) | \
-  (((data) << 40) & 0x00FF000000000000) | (((data) << 56) & 0xFF00000000000000) ) 
-
 void swap_array(void* out, void* in, long bytes, int size){
 	switch(size){
 	case 1:

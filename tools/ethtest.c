@@ -275,17 +275,17 @@ int main(int argc, char* argv[]){
 		nbuf=strtol(NBUF, NULL, 10);
 		dbg("nbuf=%d\n", nbuf);
 	}
-	char* ip=0;
+	char* ipaddr=0;
 	if(argc>3){
-		ip=argv[3];
+		ipaddr=argv[3];
 	}
 
 	if(!strcmp(argv[1], "server")){
 		int port=strtol(argv[2], NULL, 10);
-		listen_port(port, ip, server, 0, NULL, 1);
+		listen_port((listen_opt_t){.port=port, .nodelay=1, .ipaddr=ipaddr, .responder=server});
 	} else if(!strcmp(argv[1], "mvm_server")){
 		int port=strtol(argv[2], NULL, 10);
-		listen_port(port, ip, mvm_server, 0, NULL, 1);
+		listen_port((listen_opt_t){.port=port, .nodelay=1, .ipaddr=ipaddr, .responder=mvm_server});
 	} else{
 		if(argc<4){
 			error("Usage: ./ethtest client hostname port [nrep] [nmin] [nmax] [nstep]");

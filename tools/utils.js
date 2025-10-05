@@ -4,7 +4,6 @@ function get_hostname() {
   * We open the websocket encrypted if this page came on an
   * https:// url itself, otherwise unencrypted
   */
-  console.log(window.location.href);
   var u = window.location.href;
   if (u.substring(0, 5) === "https") {
     window.pcol = "wss://";

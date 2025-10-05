@@ -16,7 +16,7 @@ if not os.path.isdir(srcdir+'/maos/'):
 simu_all=list();
 
 headerlist=glob.glob(srcdir+'/lib/*.h')
-headerlist.append(srcdir+'/sys/scheduler.h')
+headerlist.append(srcdir+'/sys/scheduler_client.h')
 headerlist.append(srcdir+'/mex/aolib.h')
 headerlist.append(srcdir+'/maos/parms.h')
 headerlist.append(srcdir+'/maos/types.h')

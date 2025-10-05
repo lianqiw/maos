@@ -35,7 +35,7 @@ maos_LDADD+=-lmwcholmod $(LIBMEX)
 endif
 
 BUILT_SOURCES=maos2mex.h aolib.c
-maos2mex.h:../scripts/maos2mex.py ../sys/scheduler.h ../maos/parms.h ../maos/types.h ../lib/accphi.h ../lib/cure.h \
+maos2mex.h:../scripts/maos2mex.py ../sys/scheduler_client.h ../maos/parms.h ../maos/types.h ../lib/accphi.h ../lib/cure.h \
 	../lib/gensei.h ../lib/locfft.h ../lib/mkh.h ../lib/muv.h ../lib/proj.h ../lib/slaving.h \
 	../lib/aos.h ../lib/draw.h ../lib/hyst.h ../lib/libmisc.h ../lib/mkw.h ../lib/pcg.h ../lib/psd.h ../lib/stfun.h\
 	../lib/chol.h ../lib/fractal.h ../lib/kalman.h ../lib/mkdtf.h ../lib/mkz.h ../lib/petal.h ../lib/readcfg.h ../lib/turbulence.h\

@@ -359,5 +359,5 @@ void gpu_mvm_daemon(int port){
 	pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
 	info("Starting MVM daemon at port %d\n", port);
 	redirect();
-	listen_port(port, NULL, respond, -1, NULL, 1);
+	listen_port((listen_opt_t){.port=port, .nodelay=1, .responder=respond});
 }

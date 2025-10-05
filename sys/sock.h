@@ -26,12 +26,22 @@
 int socket_recv_timeout(int sock, double sec);
 int socket_send_timeout(int sock, double sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
-void listen_port(uint16_t port, char *localpath, int (*responder)(struct pollfd*, int), double timeout_sec, void (*timeout_fun)(), int nodelay);
+typedef struct listen_opt_t{
+	int port;
+	int nodelay;
+	const char *localpath;//for local unix socket if set
+	const char *ipaddr;//ip address to listen for port if set
+	int (*responder)(struct pollfd*, int);
+	int (*http_responder)(struct pollfd*, int);
+	void (*timeout_fun)();
+	double timeout_sec;
+}listen_opt_t;
+void listen_port(listen_opt_t opt);//uint16_t port, char *localpath, int (*responder)(struct pollfd*, int), double timeout_sec, void (*timeout_fun)(), int nodelay);
 void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int), const char *caller);
 void listen_port_del(int sock, int toclose, const char *caller);
 int socket_nopipe(int sock);
 int socket_block(int sock, int block);
-int bind_socket(int protocol, char* ip, uint16_t port);
+int bind_socket(int protocol, const char* ipaddr, uint16_t port);
 int socket_port(int sock);
 in_addr_t socket_peer(int sock);
 const char *addr2name(in_addr_t s_addr);

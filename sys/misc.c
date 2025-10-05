@@ -953,10 +953,10 @@ void print_version(void){
 	info2(" w/o CUDA\n");
 #endif
 	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
-#if HAS_LWS
+#if !MAOS_DISABLE_SCHEDULER
 	extern uint16_t PORT;
-	info("The web based job monitor can be accessed at http://localhost:%d\n", 100+PORT);
-#endif
+	info("The browser based job monitor and drawdaemon can be accessed at http://localhost:%d\n", PORT);
+#endif	
 }
 void mystrrep(char *str, const char *prefix, const char *substitute){
 	if(!str || !prefix || !substitute) return;
