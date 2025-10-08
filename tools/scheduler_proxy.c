@@ -46,16 +46,24 @@ static void ws_proxy_add(ws_proxy_t ws){
 	int jws=-1;
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].fd==ws.fd){
+			jws=iws;//replace existing entry
 			break;
 		}
-		if(ws_proxy[iws].fd==-1){
+		if(jws==-1 && ws_proxy[iws].fd==-1){
 			jws=iws;//save insert location
 		}
 	}
 	if(jws==-1){
 		jws=nws_proxy;
 		nws_proxy++;
-		ws_proxy=realloc(ws_proxy, nws_proxy*sizeof(ws_proxy_t));
+		ws_proxy_t *tmp=realloc(ws_proxy, nws_proxy*sizeof(ws_proxy_t));
+		if(tmp){
+			ws_proxy=tmp;
+		} else{
+			nws_proxy--;
+			warning("Unable to allocate memory for ws_proxy\n");
+			return;
+		}
 	}
 	ws_proxy[jws]=ws;
 	//info_time("ws_proxy_add: fd=%d for %p\n", sock_tcp, userdata);
@@ -71,11 +79,14 @@ void ws_proxy_remove(void *userdata, int toclose){
 		if(ws_proxy[iws].userdata==userdata){
 			listen_port_del(ws_proxy[iws].fd, toclose, "ws_proxy_remove");
 			//info_time("ws_proxy_remove: fd=%d for %p\n", ws_proxy[iws].fd, userdata);
+			if(ws_proxy[iws].fd_remote>0)close(ws_proxy[iws].fd_remote);//notify maos that the proxy is closed
+			ws_proxy[iws].fd_remote=-1;
 			ws_proxy[iws].fd=-1;
 			ws_proxy[iws].userdata=NULL;
-			break;
+			return;
 		}
 	}
+	warning_time("%p not found\n", userdata);
 }
 /**
  * @brief Obtain the server socket number for the proxy link
@@ -126,7 +137,17 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 		warning_time("failed to peek 3 ints; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
 		return 0;
 	}
-	if(cmd[0]==DRAW_HEARTBEAT||cmd[2]==DRAW_HEARTBEAT) return 0;//ignored
+	if(cmd[0]==DRAW_HEARTBEAT||cmd[2]==DRAW_HEARTBEAT){
+		if((nlen2=recv(sock, &cmd, sizeof(cmd), MSG_DONTWAIT))<3){
+			warning_time("Unable to read 3 ints: nlen2=%d\n", nlen2);
+			if(nlen2==0 && (errno==EWOULDBLOCK || errno==EAGAIN)){
+				return 0;
+			}else{
+				return -1;
+			}
+		}
+		return 0;//ignored
+	}
 	if(cmd[0]==DRAW_ENTRY){
 		int nlen=cmd[1];
 		int mode=cmd[2]==0?0:1;
@@ -190,64 +211,68 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 		int pid=strtol(in, 0, 10);
 		*sep='&';
 		sep++;
-		if(pid<=0){
-			warning_time("Unable to handle cmd: {%.20s}, len={%zu}\n", in, len);
-			continue;
-		}
+
 		char *sep2=strchr(sep, '&');
 		if(sep2){
 			*sep2=0; sep2++;//next entry
 		}
 
 		//LOCK(mutex_sch);
-		if(!strcmp(sep, "REMOVE")){
+		if(pid>0 && !strcmp(sep, "REMOVE")){
 			runned_remove(pid);
-		} else if(!strcmp(sep, "KILL")){
+		} else if(pid>0 && !strcmp(sep, "KILL")){
 			info_time("HTTP client send term signal to %5d term signal.\n", pid);
 			running_kill(pid);
-		} else if(!strcmp(sep, "MONITOR")){
+		} else if(pid>0 && !strcmp(sep, "MONITOR")){
 			if(ws.forward){//forward mode
 				if(ws_proxy_get_fd(ws.userdata)>-1){
-					warning_time("Already drawing.\n");
-				} else{
-					int sock=scheduler_connect_self(1);
-					int cmd[2]={CMD_MONITOR, 1<<31|1<<2};
-					if(sock==-1 || stwriteintarr(sock, cmd, 2)){
-						warning("Unable to talk to scheduler");
-						if(sock!=-1) close(sock);
-					}else{
-						ws.fd=sock;
-						ws_proxy_add(ws);//add proxy first to have higher priority in poll()
-						listen_port_add(sock, POLLIN, ws_proxy_read, "ws_proxy_read");
-					}
+					warning_time("Reopen monitor for %p.\n", ws.userdata);
+					ws_proxy_remove(ws.userdata, 1);
+				}
+				int sock=scheduler_connect_self(1);
+				int cmd[2]={CMD_MONITOR, 1<<31|1<<2|1<<1};
+				if(sock==-1 || stwriteintarr(sock, cmd, 2)){
+					warning("Unable to talk to scheduler");
+					if(sock!=-1) close(sock);
+				}else{
+					ws.fd=sock;
+					ws.fd_remote=-1;
+					ws_proxy_add(ws);//add proxy first to have higher priority in poll()
+					listen_port_add(sock, POLLIN, ws_proxy_read, "ws_proxy_read");
 				}
 			} else if(ws.send){
-				monitor_add((int)(long)(ws.userdata), 1<<31|1<<2, ws.send, ws.userdata);
+				monitor_add((int)(long)(ws.userdata), 1<<31|1<<2|1<<1, ws.send, ws.userdata);
+				ws.fd=(int)(long)(ws.userdata);
+				ws_proxy_add(ws);//keep reference so that we can disconnect it when browser disconnects
 			}
 		} else if(!strcmp(sep, "DRAW")){
 			int sock=ws_proxy_get_fd(ws.userdata);
 			if(sock>-1){
-				warning_time("Already drawing.\n");
-			} else{
-				int sv2[2];//socket pair for communication.
-				/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
-				if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
-					maos_command(pid, sv2[1], MAOS_DRAW);//pass sv2[1] to maos
-					int status=1;
-					streadint(sv2[0], &status);
-					if(!status){
-						ws.fd=sv2[0];
-						ws_proxy_add(ws);//add proxy first to have higher priority in poll()
-						listen_port_add(sv2[0], POLLIN, ws_proxy_read, "ws_proxy_read");
-					} else{
-						close(sv2[0]);
-						warning_time("Failed to request DRAW to maos pid=%d\n", pid);
-					}
-					close(sv2[1]);
-				} else{
-					perror("socketpair");
-				}
+				warning_time("Reopen drawing for %p.\n", ws.userdata);
+				ws_proxy_remove(ws.userdata, 1);
 			}
+			
+			int sv2[2];//socket pair for communication.
+			/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
+			if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
+				int status=send_draw_sock(sv2[1], pid);
+				if(!status){
+					streadint(sv2[0], &status);
+				}
+				if(!status){
+					ws.fd=sv2[0];
+					ws.fd_remote=sv2[1];
+					ws_proxy_add(ws);//add proxy first to have higher priority in poll()
+					listen_port_add(sv2[0], POLLIN, ws_proxy_read, "ws_proxy_read");
+				} else{
+					close(sv2[0]);
+					warning_time("Failed to request DRAW to maos pid=%d\n", pid);
+				}
+				close(sv2[1]);
+			} else{
+				perror("socketpair");
+			}
+		
 		} else if(!strcmp(sep, "DRAW_FIGFN")){
 			char *fig=0, *fn=0;
 			if(sep2){

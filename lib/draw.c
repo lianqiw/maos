@@ -1076,7 +1076,7 @@ int drawints(const char* fig, const loc_t* saloc, const dcell* ints, real zlim,
 		ints2=dcell2m(ints3);
 		dcellfree(ints3);
 	}
-	draw("Ints", (plot_opts){
+	draw(fig, (plot_opts){
 		.image=ints2, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
 	dfree(ints2);
 	return 1;

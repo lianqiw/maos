@@ -20,7 +20,8 @@
 
 #include <poll.h>
 typedef struct ws_proxy_t{
-	int fd;
+	int fd_remote;//socket passed to maos
+	int fd;//socket to read from maos
 	int (*send)(char* buf, int nlen, int mode, void *userdata);
 	int (*forward)(int fd, int nlen, int mode, void *userdata);
 	void *userdata;
@@ -28,6 +29,7 @@ typedef struct ws_proxy_t{
 void runned_remove(int pid);
 void running_kill(int pid);
 int  maos_command(int pid, int sock, int cmd);
+int send_draw_sock(int sock, int pid);
 void monitor_add(int sock, int flag, int (*func)(char*buf, int nlen, int mode, void *userdata), void* userdata);
 void ws_proxy_command(char* in, size_t len, ws_proxy_t ws);
 void ws_proxy_remove(void *userdata, int toclose);

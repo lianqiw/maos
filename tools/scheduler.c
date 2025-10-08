@@ -496,9 +496,23 @@ static void queue_new_job(const char* exename, const char* execmd){
 	monitor_send(irun, NULL);
 	all_done=0;
 }
+
 /**
-   Pass socket (if !=-1) and command to maos.
-   2025-09-22: updated logic to avoid a race condition that maos and schedule both trying to write to the socket.
+ * @brief Sends a command to a running process (maos) and optionally passes a socket.
+ *
+ * This function retrieves the running process by its PID, then attempts to send a command
+ * (and optionally a socket) to the process via its command socket. It also replies to the
+ * provided socket (if valid) with the result of the operation.
+ *
+ * @param pid   The process ID of the target running process.
+ * @param sock  The socket descriptor to reply to, or -1 if no reply is needed.
+ * @param cmd   The command to send to the running process.
+ *
+ * @return 0 on success, -1 on failure.
+ *
+ * The function logs a warning if the operation fails, or a debug message on success.
+ * If the process or its command socket is not found, or if writing the command fails,
+ * the function returns -1.
  */
 int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
@@ -514,7 +528,7 @@ int maos_command(int pid, int sock, int cmd){
 	} else{
 		dbg_time("Successfully send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun->pid, irun->sock_cmd);
 	}
-	return failed?-2:-1;//do not keep this connection.
+	return failed?-1:0;//do not keep this connection.
 }
 /*
  Stores drawdaemon sockets
@@ -526,7 +540,18 @@ typedef struct SOCKID_M{
 	struct SOCKID_M* next;
 } SOCKID_T;
 static SOCKID_T* shead=0;
-//save_socket to linked list. socket is uniq, but id may not be.
+
+/**
+ * @brief Saves or updates the association between a socket and an ID.
+ *
+ * This function searches for an existing entry in the linked list of SOCKID_T structures
+ * that matches the given socket descriptor (`sock_save`). If found, it updates the associated
+ * ID with the provided `id` value and logs the update. If not found, it creates a new entry,
+ * initializes it with the given socket and ID, inserts it at the head of the list, and logs the save.
+ *
+ * @param sock_save The socket descriptor to be saved or updated.
+ * @param id        The ID to associate with the socket.
+ */
 static void socket_save(int sock_save, int id){
 	int found=0;
 	for(SOCKID_T* p=shead; p; p=p->next){
@@ -564,17 +589,22 @@ static void socket_remove(SOCKID_T*p){
 //retrieve socket from linked list based in id. 
 static int socket_get(int id){
 	int sock_save=-1;
-	dbg_time("Looking up socket with id %d\n", id);
+	//dbg_time("Looking up socket with id %d\n", id);
 	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
 		p_next=p->next;//save so that socket_remove can be called
 		int badsock=0;
-		if((badsock=stcheck(p->sock))||p->id==id){
+		if(p->sock==-1){//should not happen
+			socket_remove(p);
+		}else if((badsock=stcheck(p->sock))||p->id==id){
 			if(badsock){
 				dbg_time("Remove bad socket %d with id %d\n", p->sock, p->id);
 				close(p->sock); //closed socket
+				p->sock=-1;
+				socket_remove(p);
 			} else if(sock_save==-1){
 				sock_save=p->sock; //valid match
 				dbg_time("Get socket %d with id %d\n", p->sock, p->id);
+				p->sock=-1;
 				socket_remove(p);
 			}else{
 				dbg_time("Skip socket %d with id %d\n", p->sock, p->id);
@@ -626,6 +656,66 @@ static const char* get_sockname(int sock){
 }
 
 static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
+static int monitor_request_draw(int sock, int pid){
+	MONITOR_T* pm=0;
+	int ans=-1;
+	for(pm=pmonitor; pm; pm=pm->next){
+		if(pm->plot){
+			if(pm->http){
+				char buf[4096];
+				int padding=pm->func?http_padding:(int)(3*sizeof(int));
+				int nlen=snprintf(buf+padding, sizeof(buf)-padding, "%d&DRAW$", pid);
+				if(pm->func){//directly write to client
+					ans=pm->func(buf+padding, nlen, 0, pm->userdata);
+				}else{//send to proxy
+					((int*)buf)[0]=DRAW_ENTRY;
+					((int*)buf)[1]=nlen;
+					((int*)buf)[2]=0;//0 indicate text data
+					ans=stwrite(pm->sock, buf, nlen+padding);
+				}
+			}else{
+				int moncmd[3]={MON_DRAWDAEMON,0,pid};
+				ans=stwrite(pm->sock, moncmd, sizeof(moncmd));
+			}
+			scheduler_recv_wait=sock;
+			dbg_time("(%d:%s) request monitor at %d to start drawdaemon\n", sock, get_sockname(sock), pm->sock);
+			break;
+		}
+	}
+	return ans;
+}
+/**
+ * @brief Send socket to draw for drawing.
+ * 
+ * @param sock 
+ * @param pid 
+ * @return int 0 for success. -1 for failure
+ */
+int send_draw_sock(int sock, int pid){
+	int ret;
+	if(pid<=0){//this is for pending scheduler_recv_socket or a new idle connection
+		if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)||stwritefd(scheduler_recv_wait, sock)){
+			int sock2=dup(sock);
+			if(scheduler_recv_wait!=-1){
+				dbg_time("(%d:%s) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, get_sockname(sock), scheduler_recv_wait, sock2);
+			}else{
+				dbg_time("(%d:%s) No pending drawdaemon request, save socket as %d for future\n", sock, get_sockname(sock), sock2);
+			}
+			socket_save(sock2, abs(pid));//duplicate socket and keep it 
+			set_sockname(sock2, "drawdaemon");
+			ret=0;//prevent scheduler from listening to this socket.
+		} else{
+			dbg_time("passed sock %d to draw at %d\n", sock, scheduler_recv_wait);
+			ret=0;//close socket on scheduler.
+		}
+		stwriteint(sock, 0);
+		scheduler_recv_wait=-1;
+	} else{//ask maos to start drawing with this drawdaemon
+		ret=maos_command(pid, sock, MAOS_DRAW);
+	}
+	dbg_time("returns %d for sock=%d, pid=%d\n", ret, sock, pid);
+	return ret;
+}
 //PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
 /**
    respond to client requests. The fixed header is int[2] for opcode and
@@ -830,17 +920,7 @@ static int respond(struct pollfd *pfd, int flag){
 		} else{//pid==0 or pid<10000; request a drawdaemon using monitor. 
 			set_sockname(sock, "open drawdaemon");
 			if(pid<-10000) pid+=10000;
-			MONITOR_T* pm=0;
-			for(pm=pmonitor; pm; pm=pm->next){
-				if(pm->plot){
-					int moncmd[3]={MON_DRAWDAEMON,0,pid};
-					stwrite(pm->sock, moncmd, sizeof(moncmd));
-					scheduler_recv_wait=sock;
-					dbg_time("(%d:%s) request monitor at %d to start drawdaemon\n", sock, get_sockname(sock), pm->sock);
-					break;
-				}
-			}
-			if(!pm){
+			if(monitor_request_draw(sock, pid)){
 				//there is no available drawdameon. Need to create one by sending request to monitor.
 				warning_time("(%d:%s) there is no monitor available to start drawdaemon\n", sock, get_sockname(sock));
 				if(stwriteint(sock, -1)){
@@ -856,32 +936,12 @@ static int respond(struct pollfd *pfd, int flag){
 	case CMD_DRAWSER://12: called by Drawdaemon/Monitor to provide drawdaemon to draw().*/
 		set_sockname(sock, "drawdaemon");
 		dbg_time("(%d:%s) drawdaemon for pid=%d from %s.\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
-		if(pid<=0){//this is for pending scheduler_recv_socket or a new idle connection
-			if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)
-				||stwritefd(scheduler_recv_wait, sock)){
-				int sock2=dup(sock);
-				if(scheduler_recv_wait!=-1){
-					dbg_time("(%d:%s) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, get_sockname(sock), scheduler_recv_wait, sock2);
-				}else{
-					dbg_time("(%d:%s) No pending drawdaemon request, save socket as %d for future\n", sock, get_sockname(sock), sock2);
-				}
-				socket_save(sock2, abs(pid));//duplicate socket and keep it 
-				set_sockname(sock2, "drawdaemon");
-				ret=-1;//prevent scheduler from listening to this socket.
-			} else{
-				dbg_time("(%d:%s) passed sock to draw at %d\n", sock, get_sockname(sock), scheduler_recv_wait);
-				ret=-1;//close socket on scheduler.
-			}
-			stwriteint(sock, 0);
-			scheduler_recv_wait=-1;
-		} else{//ask maos to start drawing with this drawdaemon
-			ret=maos_command(pid, sock, MAOS_DRAW);
-		}
+		ret=send_draw_sock(sock, pid)?-2:-1;
 		break;
 	case CMD_MAOSCLI://13:  for a maos client to create a client link to maos.
 		set_sockname(sock, "maos client");
 		dbg_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
-		ret=maos_command(pid, sock, MAOS_VAR);
+		ret=maos_command(pid, sock, MAOS_VAR)?-2:-1;
 		break;
 	case CMD_MAOSSER://14: called by maos to save a port to run maos_command
 	{
@@ -971,7 +1031,7 @@ static int respond(struct pollfd *pfd, int flag){
 		ret=-1;
 	}
 	if(ret<0){
-		info_time("cmd=%d returned ret=%d\n", cmd[0], ret);
+		dbg_time("cmd=%d returned ret=%d\n", cmd[0], ret);
 	}
 	//if(cmd[0]!=CMD_STATUS||ret) dbg_time("(%d:%s) respond returns %d for %d.\n", sock, get_sockname(sock), ret, cmd[0]);
 	return ret;//ret=-1 will close the socket.
@@ -1017,9 +1077,9 @@ void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, 
 		node->sock=sock;
 		node->next=pmonitor;
 		pmonitor=node;
-		dbg_time("monitor is added: fd=%d flag=%d\n", node->sock, flag);
+		dbg_time("monitor is added: fd=%d flag=%x\n", node->sock, flag);
 	}else{
-		dbg_time("monitor is updated: fd=%d flag=%d\n", node->sock, flag);
+		dbg_time("monitor is updated: fd=%d flag=%x\n", node->sock, flag);
 	}
 	
 	if(flag>=0x8){//old scheme where scheduler_version at compiling is passed

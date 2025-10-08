@@ -6,12 +6,18 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const [topActive, setTopActive] = useState({});//active fig
   const [botActive, setBotActive] = useState({});//active name
   const [figSeq, setFigSeq] = useState(0);//figure sequence number (index of drawData). triggers plotly update.
+  const [cumStart, setCumStart]=useState(0);//time step to start cumulative plot.
+  const [cumInput, setCumInput]=useState(0);//capture input context
+  const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot
+  const [wss, setWss]=useState({});
+  const [pause, setPause]=useState({});
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   //Use useRef for data that is not directly related to rendering.
-  const pause = useRef({});//pause plotting
+  //const pause = useRef({});//pause plotting
   const jobRef = useRef({});//job data. 
   const wssRef = useRef({});//mutable ref object that persists for the entire lifecycle of the component.
   const chartRef = useRef(null);//for plotly. References a DOM object.
-
+  const cumInputRef=useRef(null);//for input of cumStart
   function connect(hostname, pid) {
     if (!hostname || hostname.length == 0) return false;
     const host = split_hostname(hostname);//host:port->shortname
@@ -21,36 +27,40 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
     }
     let ws;
     if (!wssRef.current[job]) {
-      console.log(`Drawdaemon is connecting for ${job} at ${pcol}${hostname}`);
+      //console.log(now(),`Drawdaemon is connecting for ${job} at ${pcol}${hostname}`);
       try {
         ws = new WebSocket(pcol + hostname + "/xxx", "maos-drawdaemon-protocol");	/* + "/xxx" bit is for IE10 workaround */
-        ws.binaryType = 'arraybuffer';
       } catch (error) {
-        console.log(error);
+        console.log(now(),error);
       }
     } else {
-      console.log(`Drawdaemon is already active for ${host} ${pid}`);
+      console.log(now(),`Drawdaemon is already active for ${host} ${pid}`);
     }
     if (!ws) return false;
     ws.onopen = () => {
+      ws.binaryType = 'arraybuffer';
+      setWss((oldVal) => ({ ...oldVal, [job]: true }));
       wssRef.current[job] = ws;
       setBotActive((oldVal) => ({ ...oldVal, [job]: {} }))//Initialize botActive to empty object to avoid undefined error
       setTopActive((oldVal) => ({ ...oldVal, [job]: {} }))//initialize to empty
       jobRef.current[job] = { 'drawData': {} };//empty plots
-      console.log(`Draw WebSocket connected for ${job}`);
+      console.log(now(),`Drawdaemon connected for ${job}`);
       ws.send(pid + "&" + "DRAW" + ";");
     };
 
     ws.onclose = (event) => {//we keep plots when connection is closed.
+      setWss((oldVal) => ({ ...oldVal, [job]: false }));
       delete wssRef.current[job];
-      console.log(`Draw WebSocket disconnected for ${job}`);
+      console.log(now(), `Drawdaemon disconnected from ${job}`);
     };
-
+    ws.onerror = (err) => {
+      console.error(now(), hostname, "Drawdaemon connection error", err);
+    };
     ws.onmessage = (event) => {
       if (typeof event.data === "string") {//instanceof does not work for string
-        console.log("Got unexpected text data with bytes ", event.data.size);
+        console.log(now(),"Got unexpected text data with bytes ", event.data.size);
       } else if (event.data instanceof Blob) {//Blob is read only
-        console.log("Got unexpected blob data with bytes ", event.data.size);
+        console.log(now(),"Got unexpected blob data with bytes ", event.data.size);
       } else if (event.data instanceof ArrayBuffer) {//ArrayBuffer support writing.
         let drawData = procBuffer(event.data); //separate into function for testing
         if ('pid' in drawData) {
@@ -82,19 +92,15 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
 
             jobRef.current[job]['drawData'][fig][name] = drawData;
           } catch (err) {
-            console.log({ err, drawData, jobRef, job });
+            console.log(now(),{ err, drawData, jobRef, job });
           }
         }
         setFigSeq(old => old + 1);
       } else {
-        console.error("Invalid data:", event.data);
+        console.error(now(), "Invalid data:", event.data);
       }
     };
 
-
-    ws.onerror = (err) => {
-      console.error(hostname, "WebSocket error", err);
-    };
     return true;
   }//function connect
 
@@ -107,16 +113,16 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
           connect(hostname, pid);
         }
       } else if (wssRef.current[job]) {//close page
-        console.warn(`Close Draw Websocket connection to ${job}`)
+        console.warn(`Close Drawdaemon connection to ${job}`)
         wssRef.current[job].close();//drop connection
         jobRef.current[job] = { 'drawData': {} };//remove plots
         Plotly.purge(chartRef.current, 0);//delete plot
       }
     })
   }, [drawInfo]);
-
+  
   useEffect(() => {//trigger plotting if page switched or data is updated
-    if (chartRef.current && !pause.current[jobActive]) {
+    if (chartRef.current && !pause[jobActive]) {
       try {
         let clear = 1;
         if (jobActive !== '' && jobRef.current[jobActive] && jobRef.current[jobActive]['drawData']
@@ -124,6 +130,8 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
           && botActive[jobActive][topActive[jobActive]]) {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
+            drawData.cumStart=cumStart;
+            drawData.cumPlot=cumPlot;
             const { traces, layout } = makeTraces(drawData);
             if (traces.length) {
               Plotly.newPlot(chartRef.current, traces, layout, { responsive: true });
@@ -136,10 +144,17 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
         }
       } catch (err) {
         Plotly.purge(chartRef.current, 0);
-        console.log(err, { jobActive, jobRef, topActive, botActive });
+        console.log(now(),err, { jobActive, jobRef, topActive, botActive });
       }
     }
-  }, [jobActive, topActive, botActive, figSeq]);
+    //Use ResizeObserver to handle container resize
+    const resizeObserver = new ResizeObserver(() => {
+      Plotly.Plots.resize(chartRef.current);
+    });
+    resizeObserver.observe(chartRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [jobActive, topActive, botActive, figSeq, cumStart, cumPlot, pause, dimensions]);
 
   useEffect(() => {//let server know the current jobActive page.
     try {
@@ -148,7 +163,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
         wssRef.current[jobActive].send(`${jobRef.current[jobActive]['pid']}&DRAW_FIGFN&${topActive[jobActive]}&${botActive[jobActive][topActive[jobActive]]}`);
       }
     } catch (err) {
-      console.log({ err, jobActive, wssRef, jobRef, topActive, botActive });
+      console.log(now(),{ err, jobActive, wssRef, jobRef, topActive, botActive });
     }
   }, [jobActive, topActive, botActive]);
   try {
@@ -156,26 +171,28 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
       <ul className="inline tab_hosts"> {/*draw top-notebook (horizontal)*/}
         {Object.keys(jobRef.current[jobActive]['drawData']).sort().map((fig) => (
           <li key={fig} className={topActive[jobActive] === fig ? "active" : ""}
-            onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); pause.current[jobActive] = false; }}
+            onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); setPause(oldVal=>({...oldVal, [jobActive]:false}));}}
           >{fig}</li>))}
-        <li title="Pause or Resume ploting" onClick={() => { pause.current[jobActive] = !pause.current[jobActive] }}>{pause.current[jobActive] ? "▶️" : "⏸️"}</li>
-        <li title="Stop receiving more data for plotting" onClick={() => { wssRef.current[jobActive].close() }}>⏹️</li>
+        <li><form onSubmit={(e)=>{e.preventDefault(); setCumStart(cumInput); setCumPlot(true);}}>
+          <input ref={cumInputRef} style={{width:'5em'}} value={cumInput} 
+          onClick={()=>{if(cumInputRef.current) cumInputRef.current.select();}} 
+          onChange={e=>{setCumInput(e.target.value?parseInt(e.target.value):0);}}></input></form></li>
+        <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{setCumPlot(oldVal=>!oldVal)}}>🎢</li>
+        <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
+        <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
       </ul>
-      <table border="0"><tbody><tr valign="top">
-        <td><ul className="tab_hosts">{/*draw sub-notebook (vertical)*/}
+      <div className="layout">
+        <ul className="tab_hosts">{/*draw sub-notebook (vertical)*/}
           {jobRef.current[jobActive]['drawData'][topActive[jobActive]] &&
             Object.keys(jobRef.current[jobActive]['drawData'][topActive[jobActive]]).sort().map((name) => (
               <li key={name} className={botActive[jobActive][topActive[jobActive]] === name ? "active" : ""}
-                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } })); pause.current[jobActive] = false; }}
+                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } })); setPause(oldVal=>({...oldVal, [jobActive]:false})); }}
               >{name}</li>))}
-        </ul></td>
-        <td>
-          <div id="chart" ref={chartRef}></div>
-        </td>
-      </tr></tbody></table>
+        </ul>
+        <div id="chart" ref={chartRef}></div></div>
     </div>) : (<div id="chart" ref={chartRef}></div>)
   } catch (err) {
-    console.log({ err, jobRef, topActive, botActive, jobActive });
+    console.log(now(),{ err, jobRef, topActive, botActive, jobActive });
   }
 })
 
