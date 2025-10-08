@@ -78,7 +78,7 @@ void X(spmulcreal)(T* restrict y, const X(sp)* A, const RC* restrict x, R alpha)
 	if(A&&x&&y){
 		for(long icol=0; icol<A->ny; icol++){
 			for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
-				y[A->pi[ix]]+=alpha*(A->px[ix]*creal(x[icol]));
+				y[A->pi[ix]]+=alpha*A->px[ix]*REALC(x[icol]);
 			}
 		}
 
@@ -126,7 +126,7 @@ OMP_FOR(4)
 			for(long icol=0L; icol<A->ny; icol++){
 				T tmp=0;
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
-					tmp+=alpha*conj(A->px[ix])*P(x,A->pi[ix]);
+					tmp+=alpha*CONJ(A->px[ix])*P(x,A->pi[ix]);
 				}
 				P(y,icol)+=tmp;
 			}
@@ -154,7 +154,7 @@ static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const cha
 	} else{
 
 #define no_conj(A) (A)
-#define do_conj(A) conj(A)
+#define do_conj(A) CONJ(A)
 #define no_trans(A,i,j) P(A,i,j)
 #define do_trans(A,i,j) P(A,j,i)
 #define LOOP_NORMA(ppy, yny,  conjA, ppx, conjx)				\

@@ -17,7 +17,9 @@
 */
 #ifndef AOS_CUDA_GPU_SIM_H
 #define AOS_CUDA_GPU_SIM_H
-#define AOS_CUDA_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #if defined(__cplusplus) && !USE_CPP
 extern "C"{
 #endif

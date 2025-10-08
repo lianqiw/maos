@@ -57,7 +57,7 @@ struct drawdata_t{
 	int zlog; 	    	/*draw image in log scale*/
 	int zlog_last; 		/*zlog status during previous call to cairo_draw()*/
 	int gray;       	/*do we draw in gray scale or in colored */
-	unsigned char* p;	/*converted from p0 of char or int depends on value of gary */
+	void* p;			/*converted from p0 of char or int depends on value of gary */
 	cairo_surface_t *image;/*image from p.*/
 
 	/*Draw points */
@@ -209,10 +209,10 @@ gboolean addpage(drawdata_t *drawdata);
 int delete_page(drawdata_t *drawdata);
 /*from drawdaemon_io */
 void* listen_draw(void*);
-void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog);
+void flt2pix(const float *restrict p, void *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog);
 void fmaxmin(const float* p, long n, float* max, float* min);
 void round_limit(float* xmin, float* xmax, int logscale);
 gboolean update_title(gpointer data);
 gboolean update_fpslabel(gpointer label);
-gboolean finalize_gif();
+gboolean finalize_gif(void*);
 #endif

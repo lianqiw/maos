@@ -502,7 +502,7 @@ void X(vecperm)(X(mat)* out, const X(mat)* in, const long* perm){
 		if(perm[i]>0){
 			P(out, i)=P(in, perm[i]);
 		} else{
-			P(out, i)=conj(P(in, -perm[i]));
+			P(out, i)=CONJ(P(in, -perm[i]));
 		}
 	}
 }
@@ -517,7 +517,7 @@ void X(vecpermi)(X(mat)* out, const X(mat)* in, const long* perm){
 		if(perm[i]>0){
 			P(out, perm[i])=P(in, i);
 		} else{
-			P(out, -perm[i])=conj(P(in, i));
+			P(out, -perm[i])=CONJ(P(in, i));
 		}
 	}
 }
@@ -561,7 +561,7 @@ T X(sum)(const X(mat)* A){
 */
 T X(mean)(const X(mat) *A){
 	if(!A) return 0;
-	return X(sum)(A)/PN(A);
+	return X(sum)(A)/(R)PN(A);
 }
 /**
    compute the trace (sum of diagonal elements)

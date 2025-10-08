@@ -17,7 +17,9 @@
 */
 #ifndef AOS_SCHEDULER_H
 #define AOS_SCHEDULER_H
-
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include <poll.h>
 typedef struct ws_proxy_t{
 	int fd_remote;//socket passed to maos

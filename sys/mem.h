@@ -26,12 +26,13 @@ extern "C"{
   void *calloc_maos(size_t, size_t);
   void *malloc_maos(size_t);
   void *realloc_maos(void *, size_t);
-  void *realloc2_maos(void *, size_t, size_t);
+  void *recalloc_maos(void *, size_t, size_t);
   void  free_maos(void *);
   extern void *(*calloc_default)(size_t, size_t);
   extern void *(*malloc_default)(size_t);
   extern void *(*realloc_default)(void *, size_t);
   extern void  (*free_default)(void *);
+  int realloc_check(void **p0, size_t oldsize, size_t newsize);
 #ifdef __cplusplus
 }
 #endif
@@ -49,10 +50,10 @@ extern void  (*free_default)(void *);
 #define mycalloc(nelem, type)     (type*)(funtrace_set, calloc_maos(nelem, sizeof(type)))
 #define mymalloc(nelem, type)     (type*)(funtrace_set, malloc_maos(nelem*sizeof(type)))
 #define myrealloc(p, nelem, type) (type*)(funtrace_set, realloc_maos(p, nelem*sizeof(type)))
-#define myrealloc2(p, oldtype, newtype) (newtype*)(funtrace_set, realloc2_maos(p, sizeof(oldtype), sizeof(newtype)))
+#define myrecalloc(p, oldtype, newtype) (newtype*)(funtrace_set, recalloc_maos(p, sizeof(oldtype), sizeof(newtype)))
 #define myfree(p) if(p) free_maos(p)
 
-#if !defined(IN_MEM_C) && !defined(AOS_CUDA_H)
+#if !defined(IN_MEM_C) && !defined(__cplusplus)
 #define calloc(nelem, size) (funtrace_set, calloc_maos(nelem, size))
 #define malloc(size)        (funtrace_set, malloc_maos(size))
 #define realloc(p, size)    (funtrace_set, realloc_maos(p, size))

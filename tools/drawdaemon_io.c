@@ -67,7 +67,7 @@ static unsigned int crp(float x, float x0){
 
 /**
    convert float to char with color map*/
-void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog){
+void flt2pix(const float *restrict p, void *pix, long nx, long ny, int gray, float *zlim, int zlim_manual, int zlog){
 	float max, min;
 	fmaxmin(p, nx*ny, &max, &min);
 	//info("min=%g, max=%g\n", min, max);
@@ -143,7 +143,7 @@ void flt2pix(const float *restrict p, unsigned char *pix, long nx, long ny, int 
 void *listen_udp(void *dummy){
 	(void)dummy;
 	dbg_time("listen_dup listening at socket %d\n", udp_sock);
-	void *buf=0;
+	char *buf=0;
 	size_t bufsize=0;
 	int counter=0;
 	do{
@@ -210,7 +210,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 	drawdata_t *drawdata=0;
 	for(drawdata_t **pp=&HEAD; *pp; ){
 		drawdata_t *p=*pp;
-		if(atomic_load(&p->recycle)==2){
+		if(__atomic_load_n(&p->recycle,__ATOMIC_SEQ_CST)==2){
 			drawdata_freecontent(p);
 			if(p->io_time+10<myclockd()){//recycled by GUI. give 10 seconds before free to avoid race condition
 				*pp=p->next;
@@ -219,7 +219,7 @@ static drawdata_t *drawdata_get(char **fig, char **name, int reset){
 				pp=&p->next;
 			}
 		} else {
-			if(!atomic_load(&p->recycle) && p->fig && p->name && !strcmp(p->fig, *fig)&&!strcmp(p->name, *name)){
+			if(!__atomic_load_n(&p->recycle,__ATOMIC_SEQ_CST) && p->fig && p->name && !strcmp(p->fig, *fig)&&!strcmp(p->name, *name)){
 				drawdata=p;
 			}
 			pp=&p->next;
@@ -330,7 +330,7 @@ static void drawdata_clear_older(float timclear){
 #define STREADINT_TO(p) if(boff<blen){READ_BUF_INT(p);} else CATCH_TO(streadint(sock, &p), p)
 #define STREADINT(p) if(boff<blen){READ_BUF_INT(p);} else CATCH(streadint(sock, &p),p)
 #define STREAD(p,len) if(boff<blen){READ_BUF_N(p, len);} else CATCH(stread(sock,p,len),p)
-#define STREADSTR(p)  if(boff<blen){int len; READ_BUF_INT(len); p=realloc(p, len); READ_BUF_N(p, len);}else CATCH(streadstr(sock, &p),p)
+#define STREADSTR(p)  if(boff<blen){int len; READ_BUF_INT(len); p=(char*)realloc(p, len); READ_BUF_N(p, len);}else CATCH(streadstr(sock, &p),p)
 //read and convert incoming data to float
 #define STREADFLT(p,len) if(boff<blen){READ_BUF_N(p, len*byte_float);}else CATCH(stread(sock, p, len*byte_float),p) \
 if(byte_float==8){								\
@@ -414,7 +414,7 @@ void *listen_draw(void *user_data){
 				STREADINT(cmd);
 				if(1 && nlen && boff>=blen){//read into buffer
 					if(nlen>bsize){
-						buf=realloc(buf, nlen);
+						buf=(char*)realloc(buf, nlen);
 						bsize=nlen;
 					}
 					STREAD(buf, nlen);
@@ -442,13 +442,13 @@ void *listen_draw(void *user_data){
 				long tot=header[0]*header[1];
 				if(drawdata->nmax<tot){
 					drawdata->nmax=tot;
-					drawdata->p0=realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
+					drawdata->p0=(float*)realloc(drawdata->p0, tot*byte_float);//use byte_float to avoid overflow
 					if(lpf<1){
 						free(drawdata->p1);//recreate below; 
 						drawdata->p1=NULL;
 					}
 					
-					drawdata->p=realloc(drawdata->p, tot*sizeof(int));
+					drawdata->p=(char*)realloc(drawdata->p, tot*sizeof(int));
 					
 				}
 				if(tot>0){
@@ -460,7 +460,7 @@ void *listen_draw(void *user_data){
 					}else{
 						STREADFLT(drawdata->p0, tot);
 						if(lpf<1&&!drawdata->p1){
-							drawdata->p1=realloc(drawdata->p1, tot*byte_float);
+							drawdata->p1=(float*)realloc(drawdata->p1, tot*byte_float);
 						}
 					}
 				}
@@ -479,8 +479,8 @@ void *listen_draw(void *user_data){
 				if(npts>drawdata->nptsmax){
 					drawdata->pts=myrealloc(drawdata->pts, npts, float *);
 					drawdata->style_pts=myrealloc(drawdata->style_pts, npts, int);
-					drawdata->ptsdim=realloc(drawdata->ptsdim, npts*sizeof(int[2]));
-					drawdata->legend=realloc(drawdata->legend, npts*sizeof(char *));
+					drawdata->ptsdim=(int(*)[2])realloc(drawdata->ptsdim, npts*2*sizeof(int));
+					drawdata->legend=myrealloc(drawdata->legend, npts, char *);
 					for(; drawdata->nptsmax<npts; drawdata->nptsmax++){
 						drawdata->pts[drawdata->nptsmax]=NULL;
 						drawdata->style_pts[drawdata->nptsmax]=0;
@@ -496,7 +496,7 @@ void *listen_draw(void *user_data){
 				STREADINT(drawdata->square);
 				drawdata->grid=1;
 				if(drawdata->ptsdim[ipts][0]*drawdata->ptsdim[ipts][1]<nptsx*nptsy){
-					drawdata->pts[ipts]=realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
+					drawdata->pts[ipts]=(float*)realloc(drawdata->pts[ipts], nptsx*nptsy*byte_float);
 					//drawdata->icumu=0;
 				}
 				drawdata->ptsdim[ipts][0]=nptsx;
@@ -545,7 +545,7 @@ void *listen_draw(void *user_data){
 				break;
 			case DRAW_LIMIT:
 				if(!drawdata->limit_data){
-					drawdata->limit_data=malloc(4*byte_float);
+					drawdata->limit_data=(float*)malloc(4*byte_float);
 				}
 				STREADFLT(drawdata->limit_data, 4);
 				drawdata->limit_manual=1;

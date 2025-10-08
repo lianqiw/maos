@@ -43,8 +43,8 @@ typedef struct {
   loc_t** loc;
   const dcell* dc;
   const int32_t* style;
-  const real zlim[2];//z limit
   const real* limit;//x and y limit
+  const real zlim[2];//z limit
   const int zlog;//z log.
   const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
   const char* xylog;

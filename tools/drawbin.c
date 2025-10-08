@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
 					loc=loc_save;
 				}
 				if(!loc){
-					loc=d2loc(p1);
+					loc=loc_convert(dref(p1));
 					if(!loc_save){
 						loc_save=loc;
 						p1_save=p1;

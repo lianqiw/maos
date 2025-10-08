@@ -867,7 +867,7 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	dcell *outc=dcellnew(1,1); 
-	dmat *outi=P(outc,0)=dnew_do(NX(mres), 1, (void*)1, 0);//used to wrap column of output
+	dmat *outi=P(outc,0)=dnew_do(NX(mres), 1, (real*)1, 0);//used to wrap column of output
 	dcell *merr_fast=dcellnew_same(1,1, nmod, 1);//fast rate error signal
 	dcell *merr_slow=dcellnew_same(1,1, nmod, 1);//slow rate error signal
 	dmat *mreal=dnew(nmod, 1);//corrector status

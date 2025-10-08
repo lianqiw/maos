@@ -1045,7 +1045,7 @@ int main(int argc, char* argv[]){
 	if(!headless){
 		create_status_icon();
 #if MAC_INTEGRATION
-		GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+		GtkosxApplication* theApp=(GtkosxApplication*)g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 		gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	//g_signal_connect(theApp,"NSApplicationDidBecomeActive", G_CALLBACK(status_icon_on_click), GINT_TO_POINTER(1));//useless
 		gtkosx_application_ready(theApp);
@@ -1063,7 +1063,7 @@ int main(int argc, char* argv[]){
 	GtkApplication* app;
 	int status;
 	//application id must contain a .
-	app=gtk_application_new("maos.monitor", G_APPLICATION_HANDLES_OPEN|G_APPLICATION_HANDLES_COMMAND_LINE|G_APPLICATION_NON_UNIQUE);
+	app=gtk_application_new("maos.monitor", (GApplicationFlags)(G_APPLICATION_HANDLES_OPEN|G_APPLICATION_HANDLES_COMMAND_LINE|G_APPLICATION_NON_UNIQUE));
 	g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL);
 	g_signal_connect(app, "activate", G_CALLBACK(create_window), NULL);
 	status=g_application_run(G_APPLICATION(app), argc, argv);

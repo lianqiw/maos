@@ -16,8 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(__linux__)
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
-
+#endif
 
 #include <stddef.h>
 #include <pthread.h>

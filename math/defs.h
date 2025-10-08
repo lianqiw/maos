@@ -81,6 +81,7 @@
 #define ABS labs
 #define FABS labs
 #define REAL(A) A
+#define REALC(A) A
 #define IMAG(A) 0
 #define CONJ(A) A
 #define ARG(A) 0
@@ -106,6 +107,7 @@
 #define M_SPT64 M_DSP64
 #define M_SPT32 M_DSP32
 #define REAL
+#define REALC creal
 #define IMAG(A) 0
 #define CONJ
 #define CARG(A) 0
@@ -124,6 +126,7 @@
 #define M_SPT32 M_CSP32
 #define COMPLEX DCOMPLEX
 #define REAL creal
+#define REALC creal
 #define IMAG cimag
 #define CONJ conj
 #define CARG carg
@@ -149,6 +152,7 @@
 #define M_SPT64 M_SSP64
 #define M_SPT32 M_SSP32
 #define REAL
+#define REALC crealf
 #define IMAG(A) 0
 #define CONJ
 #define CARG(A) 0
@@ -167,6 +171,7 @@
 #define M_SPT32 M_ZSP32
 #define COMPLEX FCOMPLEX
 #define REAL crealf
+#define REALC crealf
 #define IMAG cimagf
 #define CONJ conjf
 #define CARG cargf

@@ -43,7 +43,7 @@ void X(scale)(X(mat)* A, R w){
  *
  */
 void X(normalize_sum)(X(mat) *A, T sum){
-	if(A) X(scale)(A, sum/X(sum)(A));
+	if(A) X(scale)(A, REAL(sum/X(sum)(A)));
 }
 /**
  * @brief normalize the sum of abs(A) to sum.
@@ -123,7 +123,7 @@ T X(dot)(const X(mat)* A, const X(mat)* B){
 		X(show)(B, "inn_B");
 		error("X(dot): NaN found\n");
 	}
-	return out;
+	return (T)out;
 }
 
 /**
@@ -144,7 +144,7 @@ T X(wdot)(const T* a, const X(mat)* w, const T* b){
 		writearr("wdot_b", 1, sizeof(real), M_T, NULL, b, w->nx, w->ny);
 		error("NaN found.\n");
 	}
-	return res;
+	return (T)res;
 }
 
 /**
@@ -943,9 +943,9 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 			error("A is %ldx%ld, B is %ldx%ld. They should match in size.\n",
 				NX(A), NY(A), NX(*B0), NY(*B0));
 		}
-		if(ac){
+		if(ac!=(T)0){
 			X(mat) * restrict B=*B0;
-			if(bc){
+			if(bc!=(T)0){
 				OMP_SIMD()
 				for(int i=0; i<PN(A); i++){
 					P(B, i)=P(B, i)*bc+P(A, i)*ac;
@@ -967,14 +967,14 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
  * Compute B[:,icol]=bc*B[:,icol]+ac*A where A is vector.
  * */
 void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac){
-	if(NX(A)&&ac){
+	if(NX(A)&&ac!=(T)0){
 		if(!B||NY(A)>1||icol<0){
 			error("only support adding a vector to an existing matrix\n");
 		}else if(NX(A)!=NX(B)||NY(B)<=icol){
 			error("Mismatch: A is %ldx%ld, B is %ldx%ld. icol is %ld.\n",
 				NX(A), NY(A), NX(B), NY(B), icol);
 		}
-		if(bc){
+		if(bc!=(T)0){
 			OMP_SIMD()
 				for(int i=0; i<NX(A); i++){
 					P(B, i, icol)=P(B, i, icol)*bc+P(A, i)*ac;
@@ -999,7 +999,7 @@ void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
-	if(A&&A->nx&&ac){
+	if(A&&A->nx&&ac!=(T)0){
 		if(!*B0){
 			bc=0;/*no bother to accumulate. */
 			X(init)(B0, A->nx, A->ny);

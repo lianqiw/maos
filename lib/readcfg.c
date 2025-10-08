@@ -564,7 +564,7 @@ static const STORE_T* getrecord(char* key, int mark){
 	}
 	return found?(*(STORE_T**)found):0;
 }
-static void *getrecord_data(char* key, int mark){
+static char *getrecord_data(char* key, int mark){
 	const STORE_T *record=getrecord(key, mark);
 	return record?record->data:0;
 }

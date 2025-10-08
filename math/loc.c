@@ -49,7 +49,29 @@ void locfree_do(cell* p){
 		loc_free_map(loc);
 	}
 }
-
+/**
+ * @brief Convert dmat to loc in place
+ * 
+ * @param A 
+ * @return loc_t* 
+ */
+static loc_t *dmat2loc_inplace(dmat*A){
+	if(!A) return NULL;
+	loc_t* loc=myrecalloc(A, dmat, loc_t);
+	loc->id=M_LOC;
+	loc->locy=loc->locx+loc->nloc;
+	loc->dmat->deinit=locfree_do;
+	loc->dmat->make_keywords=loc_keywords;
+	return loc;
+}
+static void loc_parse_header(loc_t* loc){
+	if(!loc) return;
+	loc->dx=search_keyword_num(loc->keywords, "dx");
+	loc->dy=search_keyword_num_default(loc->keywords, "dy", loc->dx);
+	loc->ht=search_keyword_num_default(loc->keywords, "ht", 0);
+	loc->iac=search_keyword_num_default(loc->keywords, "iac", 0);
+	loc_dxdy(loc);
+}
 /**
  * @brief Convert a dmat to loc_t object
  * 
@@ -58,19 +80,15 @@ void locfree_do(cell* p){
  */
 loc_t* loc_convert(dmat* A){
 	if(!A || A->id!=M_REAL) return NULL;
-	loc_t* loc=myrealloc2(A, dmat, loc_t);
-	loc->id=M_LOC;
-	loc->locy=loc->locx+loc->nloc;
-	loc->dmat->deinit=locfree_do;
-	loc->dmat->make_keywords=loc_keywords;
+	loc_t *loc=dmat2loc_inplace(A);
+	loc_parse_header(loc);
 	return loc;
 }
-
 /**
    Create a loc with nloc elements.
 */
 loc_t* locnew(long nloc, real dx, real dy){
-	loc_t* loc=loc_convert(dnew(nloc, 2));
+	loc_t* loc=dmat2loc_inplace(dnew(nloc, 2));
 	loc->dx=dx;
 	loc->dy=dy?dy:dx;
 	return loc;
@@ -80,7 +98,7 @@ loc_t* locnew(long nloc, real dx, real dy){
  */
 loc_t* locref(loc_t* in){
 	if(!in) return NULL;
-	loc_t *loc=loc_convert(dref(in->dmat));
+	loc_t* loc=dmat2loc_inplace(dref(in->dmat));
 	loc->dx=in->dx;
 	loc->dy=in->dy;
 	loc->ht=in->ht;
@@ -91,7 +109,7 @@ loc_t* locref(loc_t* in){
    Create a pts with nsa, dsa, nx, dx
 */
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy){
-	pts_t* pts=myrealloc2(locnew(nsa, dsax, dsay), loc_t, pts_t);
+	pts_t* pts=myrecalloc(locnew(nsa, dsax, dsay), loc_t, pts_t);
 	pts->nxsa=nxsa;
 	pts->nysa=nysa;
 	pts->dx=dx;
@@ -1710,57 +1728,6 @@ void loc_dxdy(loc_t* out){
 		out->dy=dyd;
 	}
 }
-/**
- * Convert a 2 column vector to loc
- * */
-loc_t* d2loc(const dmat *A){
-	if(A->ny!=2){
-		warning("d2loc: wrong dimension %ldx%ld\n", NX(A), NY(A));
-		return NULL;
-	}
-	real dx=fabs(search_keyword_num(A->keywords, "dx"));
-	real dy=fabs(search_keyword_num(A->keywords, "dy"));
-	loc_t *loc=locnew(NX(A), dx, dy);
-	memcpy(loc->locx, PCOL(A, 0), sizeof(real)*NX(A));
-	memcpy(loc->locy, PCOL(A, 1), sizeof(real)*NX(A));
-	loc_dxdy(loc);
-	return loc;
-}
-/**
-   Verify the magic, dimension and read in the loc_t by calling locreaddata2().
- */
-/*loc_t* locreaddata(file_t* fp, header_t* header){
-	if(!fp) return NULL;
-	header_t header2={0};
-	if(!header){
-		header=&header2;
-	}
-	if(header->magic==0){
-		read_header(header, fp);
-	}
-	if((header->magic&M_REAL)!=M_REAL){
-		warning("magic=%u. Expect %x\n", header->magic, M_REAL);
-		return NULL;
-	}
-	real dx=fabs(search_keyword_num(header->str, "dx"));
-	real dy=fabs(search_keyword_num(header->str, "dy"));
-
-	free(header->str);header->str=0;
-	long nx=header->nx;
-	long ny=header->ny;
-	loc_t* out;
-	if(nx==0||ny==0){
-		out=NULL;
-	} else{
-		out=locnew(nx, dx, dy);
-		readvec(out->locx, M_REAL, header->magic, sizeof(real), nx, fp);
-		readvec(out->locy, M_REAL, header->magic, sizeof(real), nx, fp);
-
-		loc_dxdy(out);
-	}
-	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
-	return out;
-}*/
 
 void loc_keywords(cell *p){
 	if(!p) return;
@@ -1768,7 +1735,7 @@ void loc_keywords(cell *p){
 		loc_t *loc=(loc_t*)p;
 		if(loc->keywords) free(loc->keywords);
 		char str[120];
-		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;iac=%.15g\n", loc->dx, loc->dy, loc->iac);
+		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;ht=%.15g\n;iac=%.15g\n", loc->dx, loc->dy, loc->ht, loc->iac);
 		loc->keywords=strdup(str);
 	}
 }

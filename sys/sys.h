@@ -29,4 +29,5 @@
 #include "daemonize.h"
 #include "bin.h"
 #include "readstr.h"
+#include "dlist.h"
 #endif

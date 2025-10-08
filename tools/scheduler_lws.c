@@ -20,6 +20,9 @@
 	handle http connection, serving files, upgrade the connection to websocket,
 	and read and write websocket messages.
 */
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,9 +35,7 @@
 #include <libwebsockets.h>
 #include <poll.h>
 //#include "../sys/sys.h"
-#ifdef HAVE_CONFIG_H
-#include "config.h" 
-#endif
+
 #include "../sys/mem.h" //make sure memory debugging is used 
 #include "../sys/misc.h"
 #include "../sys/sockio.h"
@@ -143,7 +144,7 @@ callback_maos(struct lws *wsi, enum lws_callback_reasons reason, void *user, voi
 	case LWS_CALLBACK_SERVER_WRITEABLE:
 		//Notice that lws_write automatically retries when partial data is sent. No need to handle in user code.
 #define CHECK_WRITE_SUCCESS(payload, len, FLAG) \
-				if(lws_write(wsi, (unsigned char*)payload+LWS_PRE, len, FLAG)<0){\
+				if(lws_write(wsi, (unsigned char*)payload+LWS_PRE, len, (enum lws_write_protocol)FLAG)<0){\
 					lwsl_err("ERROR: Failed to writing to client %p\n", wsi);\
 					return -1;\
 				}else
@@ -153,7 +154,7 @@ callback_maos(struct lws *wsi, enum lws_callback_reasons reason, void *user, voi
 			msg_t* msg=(msg_t*)pss->phead;
 			if(msg&&msg->len){//proxy data is pending
 				int len=MIN(msg->len-msg->offset, tx_buffer_size);//how much to send. 64kB
-				enum lws_write_protocol protocol;
+				int protocol;
 				if(msg->offset+len<msg->len){//partial send
 					if(msg->offset){//continuation
 						protocol=LWS_WRITE_CONTINUATION|LWS_WRITE_NO_FIN;
@@ -273,7 +274,7 @@ lws_forward_tcp(int fd, int nlen, int mode, void *userdata){
 	int nlen2=nlen+LWS_PRE;
 	if(pdata->size<nlen2){
 		pdata->size=nlen2;
-		pdata->p=realloc(pdata->p, nlen2);
+		pdata->p=(char*)realloc(pdata->p, nlen2);
 	}
 	pdata->len=nlen;
 	pdata->mode=mode;

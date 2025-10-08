@@ -19,10 +19,8 @@
 #define AOS_CUDA_UTILS_H
 #include <typeinfo>
 #include <map>
-#include "common.h"
 #include "types.h"
 #include "cublas.h"
-#include "kernel.h"
 #include "curmat.h"
 class lock_t{
 	pthread_mutex_t& mutex;

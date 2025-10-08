@@ -44,13 +44,13 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h> //don't use tgmath here. it is included in math/numtype.h
-#if defined(__cplusplus) && !defined(AOS_CUDA_H)
+/*#if defined(__cplusplus) && !defined(AOS_CUDA_H)
 //c++ mode, not CUDA
 using std::signbit;
 using std::isfinite;
 using std::isnan;
 using std::strerror;
-#endif //C99 mode or CUDA.
+#endif*/ //C99 mode or CUDA.
 #if defined(__cplusplus)
 #define __auto_type auto
 #endif

@@ -39,7 +39,7 @@ aper_t* setup_aper(const parms_t* const parms){
 		if(!(aper->locs=locread("%s", fn))){
 			error("Failed to Load locs from %s\n", fn);
 		}else{
-			info("Loaded locs from %s\n", fn);
+			warning("Loaded locs from %s\n", fn);
 		}
 		if(fabs(aper->locs->dx-parms->evl.dx)>1e-7*parms->evl.dx){
 			warning("Loaded locs has unexpected sampling of %g, should be %g\n",
@@ -90,7 +90,6 @@ aper_t* setup_aper(const parms_t* const parms){
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int ievl=0; ievl<nevl; ievl++){
 				if(parms->distortion.dm2sci[ievl+idm*nevl])
-#pragma omp task shared(isset)
 				{
 					P(aper->locs_dm, ievl, idm)
 						=loctransform(aper->locs, parms->distortion.dm2sci[ievl+idm*nevl]);
@@ -98,7 +97,6 @@ aper_t* setup_aper(const parms_t* const parms){
 				}
 			}
 		}
-#pragma omp taskwait
 		if(!isset){
 			cellfree(aper->locs_dm);
 		} else if(parms->save.setup){

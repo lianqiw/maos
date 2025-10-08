@@ -381,7 +381,7 @@ void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, 
 				dfree(psftemp);
 			}
 			cabs22d(&psftemp, 0, P(psf2s,iwvl), 1);
-			draw(psfname, (plot_opts){.image=psftemp,.zlog=zlog,.zlim={psfmin,1}},title, "x", "y", "%s", tabname);
+			draw(psfname, (plot_opts){.image=psftemp,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
 		}
 	}
 	dfree(psftemp);

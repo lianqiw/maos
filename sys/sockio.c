@@ -221,7 +221,7 @@ int stcheck(int sfd){
 /**
  * Use UDP socket to send data reliably. Status is checked.
  * */
-int udp_send(udp_t* info, void* buf, size_t len, int counter){
+int udp_send(udp_t* info, char* buf, size_t len, int counter){
 	if(!info || info->sock<=0){
 		warning("udp_send: info or info->sock is invalid\n");
 		return -1;
@@ -233,7 +233,7 @@ int udp_send(udp_t* info, void* buf, size_t len, int counter){
 	size_t npacket=(len+packet_size-1)/packet_size;
 	struct msghdr *msg=mycalloc(npacket, struct msghdr);
 	struct iovec *iovec=mycalloc(npacket*2, struct iovec);
-	void* header=malloc(npacket*header_size);
+	char* header=(char*)malloc(npacket*header_size);
 	char* buf2=buf;
 	char* header2=header;
 	ssize_t nsend;
@@ -296,10 +296,11 @@ int udp_send(udp_t* info, void* buf, size_t len, int counter){
 /**
  * Use UDP socket to receive data reliably. if counter
  * */
-int udp_recv(udp_t* info, void** pbuf, size_t *len){
+int udp_recv(udp_t* info, char** pbuf, size_t *len){
 	if(!info||info->sock<=0){
 		warning("udp_recv info or info->sock is invalid\n");
-		goto onerror;
+		*len=0;
+		return -1;
 	}
 	size_t header_size=(size_t)info->header;
 	size_t packet_size=(size_t)(info->payload)-header_size;
@@ -317,25 +318,28 @@ int udp_recv(udp_t* info, void** pbuf, size_t *len){
 			dbg("%zu packets to be received with counter %d\n", npacket, counter);
 		}else{
 			warning("Unable to peek data.\n");
-			goto onerror;
+			*len=0;
+			return -1;
 		}
 	}else{
 		warning("Please implement header information for new version %d\n", info->version);
-		goto onerror;
+		*len=0;
+		return -1;
 	}
 	TIC;tic;
 	if(!*pbuf||*len<npacket*(size_t)(info->payload)){
 		*len=npacket*(size_t)(info->payload);
 		warning("Buffer is too small, reallocate to %lu bytes\n", *len);
-		if(!(*pbuf=realloc(*pbuf, *len))){
+		if(!(*pbuf=(char*)realloc(*pbuf, *len))){
 			warning("realloc buf failed\n");
-			goto onerror;
+			*len=0;
+			return -1;
 		}
 	}
 	
 	struct msghdr* msg=mycalloc(npacket, struct msghdr);
 	struct iovec* iovec=mycalloc(npacket*2, struct iovec);
-	void* header=calloc(npacket, header_size);
+	char* header=(char*)calloc(npacket, header_size);
 	char* buf2=*pbuf;
 	char* header2=header;
 	for(size_t ip=0; ip<npacket; ip++){
@@ -432,7 +436,4 @@ retry:
 	free(iovec);
 	toc("udp_recv");
 	return counter;
-onerror:
-	*len=0;
-	return -1;
 }

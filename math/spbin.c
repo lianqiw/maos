@@ -52,7 +52,7 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 	if(!header){
 		header=&header2;
 	}
-	if(header->magic==0){
+	if(header->id==0){
 		read_header(header, fp);
 	}
 	long m=header->nx;
@@ -62,7 +62,7 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 	if(m!=0&&n!=0){
 		uint32_t magic2=0;
 		uint32_t magic1=0;
-		switch(header->magic){
+		switch(header->id){
 		case M_DSP64:
 			magic1=M_DBL;
 			magic2=M_INT64;
@@ -80,7 +80,7 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 			magic2=M_INT32;
 			break;
 		default:
-			error("This is not a valid sparse matrix file. magic=%x\n", header->magic);
+			error("This is not a valid sparse matrix file. magic=%x\n", header->id);
 		}
 		zfread(&nzmax, sizeof(uint64_t), 1, fp);
 		if(nzmax!=0){
@@ -92,6 +92,6 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 		}
 	}
 	free(header->str); header->str=NULL;
-	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
+	header->id=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }

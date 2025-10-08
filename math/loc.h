@@ -25,7 +25,7 @@
  */
 loc_t* loc_convert(dmat* A);
 #define locwrite(out, A...) writebin(out, A)
-#define locread(A...)    loc_convert(dmat_cast(readbin_id(M_LOC, 0, A)))
+#define locread(A...)    loc_convert(dread(A))
 #define loccellread(A...) (loccell*)cellconvert(readbin_id(M_LOC, 1, A), (cell*(*)(cell*))loc_convert)
 #define loccellnew (loccell*)cellnew
 #define locccellnew (locccell*)cellnew
@@ -114,7 +114,6 @@ void locresize(loc_t* loc, long nloc);
 void dembed_locstat(dmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void cembed_locstat(cmat** out, real alpha, loc_t* loc, real* oin, real beta, int reverse);
 void loc_dxdy(loc_t* loc);
-loc_t* d2loc(const dmat* A);
 loc_t* locreaddata(file_t* fp, header_t* header);
 void loc_keywords(cell *loc);
 lmat* loc_coord2ind(loc_t *aloc, dmat *dead);

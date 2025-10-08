@@ -484,7 +484,7 @@ OMP_FOR(parms->powfs[hipowfs].nwfsr)
 		csp* tmp2=cspmulsp(propxt, tmp, "nn");
 		cspfree(tmp);
 		cspfree(propxt);
-#pragma omp critical
+OMP_CRITICAL
 		cspadd(&Mhat, 1, tmp2, 1./(neai*neai));
 		cspfree(tmp2);
 	}
@@ -665,10 +665,10 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	if(NY(xin)!=1){
 		error("Invalid\n");
 	}
-	const long nps=recon->npsr;
+	const unsigned int nps=recon->npsr;
 	fdpcg_t* fdpcg=recon->fdpcg;
 	long bs=recon->fdpcg->bs;
-	long nb=recon->fdpcg->nxtot/bs;
+	unsigned int nb=recon->fdpcg->nxtot/bs;
 	//long nxtot=fdpcg->nxtot;
 	ccell* xhati=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
 	ccell* xhat2i=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
@@ -709,7 +709,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 #endif
 	czero(xhat);
 	data.ib=0;
-	CALL(fdpcg_mulblock, &data, 4, 1);//slower than FFT. **Wrong result in taurus if use nthread=4**
+	CALL(fdpcg_mulblock, &data, recon->nthread, 1);//slower than FFT. **Wrong result in taurus if use nthread=4**
 	//CALL_THREAD(info_mulblock, 1);
 #if DBG_FD
 	writebin(xhati, "fdc_mul");

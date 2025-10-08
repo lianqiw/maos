@@ -106,7 +106,7 @@ static void memkey_init(int enabled){
 		memkey_maxdel=0;
 		memkey_len=0x1FFFFFF;
 		dbg("initializing memkey_all for %u of %lu bytes\n", memkey_len, sizeof(memkey_t));
-		memkey_all=calloc_default(memkey_len+1, sizeof(memkey_t));
+		memkey_all=(memkey_t*)calloc_default(memkey_len+1, sizeof(memkey_t));
 		memkey_thres=memkey_len>>1;
 		MEM_DEBUG=enabled;//enable after we setup.
 	}else if(!enabled && memkey_len){
@@ -727,14 +727,14 @@ void *realloc_maos(void *p0, size_t size){
 		if(memkey_len){
 			memkey_add(p, size);
 		}
-	}
+		}
 	if(MEM_VERBOSE){
 		info("%p %s realloc with %zu bytes\n", p, funtrace, size);
 	}
 	funtrace_unset;
 	return p;
 }
-void *realloc2_maos(void *p0, size_t oldsize, size_t newsize){//zero out newly allocated segment
+void *recalloc_maos(void *p0, size_t oldsize, size_t newsize){//zero out newly allocated segment
 	void* pnew=realloc_maos(p0, newsize);
 	if(newsize>oldsize){
 		memset((char*)pnew+oldsize, 0, newsize-oldsize);

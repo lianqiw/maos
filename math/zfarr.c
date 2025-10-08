@@ -71,7 +71,7 @@ void zfarr_push(zfarr* ca, int i, const_anyarray A_){
 		print_backtrace();
 		return;
 	}*/
-	M_ID id=0;
+	M_ID id=(M_ID)0;
 	if(A){
 		id=A->id;
 		if(!ca->id){

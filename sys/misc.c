@@ -1049,7 +1049,7 @@ static int rename_done(const char *prefix, const char *suffix, int count_in){
 	}
 	return count;
 }
-void rename_log(int sig, char *exe){
+void rename_log(int sig, const char *exe){
 	if(sig==0){//success
 		int count=rename_done("run", "log", -1);
 		if(count!=-1){

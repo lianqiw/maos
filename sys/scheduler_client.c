@@ -88,9 +88,9 @@ void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 		LOCK(mutex_hosts);
 		if(memhost<(size_t)(nhost+1)){
 			memhost+=10;
-			hosts=realloc(hosts, memhost*sizeof(char*));
-			hostshort=realloc(hostshort, memhost*sizeof(char *));
-			hostsaddr=realloc(hostsaddr, memhost*sizeof(char*));
+			hosts=(char**)realloc(hosts, memhost*sizeof(char*));
+			hostshort=(char**)realloc(hostshort, memhost*sizeof(char *));
+			hostsaddr=(char**)realloc(hostsaddr, memhost*sizeof(char*));
 		}
 
 		const char* eq=strchr(line, '=');
@@ -402,7 +402,7 @@ int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 	ret=launch_exe(argv[0], scmd)<0?-1:0;
 	(void)hostarr;(void)argc;(void)argv;
 #else
-	if(!hostarr) hostarr="localhost";
+	if(!hostarr) hostarr=(char*)"localhost";
 	char* hostend=hostarr+strlen(hostarr);
 	char* host3=NULL;//host name after coma if found
 	int nlaunched=0;
@@ -507,7 +507,7 @@ int call_addr2line(char* ans, int nans, const char* cmdstr){
 		pclose(fpcmd);
 	}
 	if(res){//failed. copy the progname and addresses
-		char *prog=strrchr(cmdstr, '/');
+		const char *prog=strrchr(cmdstr, '/');
 		strncat(ans, prog?(prog+1):cmdstr, nans);
 		res=0;
 	}

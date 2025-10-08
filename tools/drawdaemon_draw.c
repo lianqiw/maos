@@ -24,7 +24,7 @@
   1) Only draw once, to a cached surface with no zoom, or displacement.
   2) Draw the cached surface to the real surface with zoom or displacement when user requests.
 */
-const double stroke_dot[2]={1,5};
+//const double stroke_dot[2]={1,5};
 const double stroke_dash[2]={10,5};
 const double stroke_solid[2]={10,0};
 
@@ -454,7 +454,7 @@ void thread_cleanup(void *drawdata){
 void* cairo_draw_thread(drawdata_t* drawdata){
 	pthread_cleanup_push(thread_cleanup, drawdata);
 repeat:
-	if(atomic_load(&drawdata->recycle)){
+	if(__atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST)){
 		//this is caused by race conditions
 		//The GUI may have removed the page while we are trying to render
 		//The GUI maybe resizing and therefore modifying mutex. mutex protects this scenario to avoid crash.
@@ -673,7 +673,7 @@ repeat:
 		flt2pix(drawdata->p0, drawdata->p, nx, ny, drawdata->gray,
 			drawdata->zlim+(drawdata->zlog?2:0), drawdata->zlim_manual, drawdata->zlog);
 		cairo_surface_destroy(drawdata->image);
-		drawdata->image=cairo_image_surface_create_for_data(drawdata->p, format, nx, ny, stride);
+		drawdata->image=cairo_image_surface_create_for_data((unsigned char*)drawdata->p, format, nx, ny, stride);
 		drawdata->zlim_changed=0;
 	}
 	
@@ -1321,7 +1321,7 @@ repeat:
 		cairo_surface_finish(drawdata->surface);
 		cairo_surface_destroy(drawdata->surface);
 		drawdata->surface=NULL;
-	}else if(!atomic_load(&drawdata->recycle) && drawdata->drawarea){
+	}else if(!__atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST) && drawdata->drawarea){
 		//There is a potential race condition here: the drawarea may have already being removed by the GUI.
 		//We read recycle variable to check.
 		//dbg_time("cairo_draw: calling refresh\n");
@@ -1360,7 +1360,7 @@ repeat:
 void cairo_draw(drawdata_t* drawdata){
 	//layout=pango_cairo_create_layout(cr);
 	//pango_layout_set_font_description(layout, desc);
-	if(!drawdata->ready || drawdata->height==0 || drawdata->width == 0 || atomic_load(&drawdata->recycle)) {
+	if(!drawdata->ready || drawdata->height==0 || drawdata->width == 0 || __atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST)) {
 		//dbg_time("data is not ready or size is 0 or recycle is set, cancelled.\n");
 		return;
 	}

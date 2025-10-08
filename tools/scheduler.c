@@ -34,6 +34,9 @@
 
    2012-10-25: This file only contains the routines to be used by the server.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
@@ -949,9 +952,9 @@ static int respond(struct pollfd *pfd, int flag){
 		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
 			irun->sock_cmd=sock;
-			dbg_time("(%d:%s) maos socket is saved\n", sock, get_sockname(sock));
+			dbg_time("(%d:%s) maos server socket is saved\n", sock, get_sockname(sock));
 		} else{
-			warning_time("(%d:%s) maos irun not found\n", sock, get_sockname(sock));
+			warning_time("(%d:%s) maos server socket does not have irun. close.\n", sock, get_sockname(sock));
 			ret=-1;
 		}
 	}
@@ -1209,9 +1212,9 @@ static void monitor_send_load(void){
 	double mem=get_usage_mem();
 	double gpu_mem=0;
 	double gpu=0;
-	if(NGPU&&0){
+	/*if(NGPU){
 		gpu=get_usage_gpu(&gpu_mem);
-	}
+	}*/
 	int cmd[3];
 	cmd[0]=MON_LOAD;
 	cmd[1]=0;

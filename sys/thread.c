@@ -16,7 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifdef __linux__
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE //for SYSCALL
+#endif
 #endif
 #include <signal.h>
 #include "common.h"

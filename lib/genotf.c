@@ -81,16 +81,14 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
 			otfnorm=nloc;
 		}
 		otfnorm=1./otfnorm;
-
-		struct T_VALID(*qval)[npsfx]=(struct T_VALID(*)[npsfx])pval;
-
+		
 		real wvk=TWOPI/wvl;
 		for(long jm=0; jm<npsfy; jm++){
 			for(long im=0; im<npsfx; im++){
-				long(*jloc)[2]=qval[jm][im].loc;
+				long(*jloc)[2]=pval[im+jm*npsfx].loc;
 				comp tmpc=0.;
 				real tmpr=0.;
-				for(long iloc=0; iloc<qval[jm][im].n; iloc++){
+				for(long iloc=0; iloc<pval[im+jm*npsfx].n; iloc++){
 					long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 					long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
 					real tmp12=P(BPD, iloc1)*P(BPD, iloc2)*P(BP, iloc2, iloc1);
@@ -167,7 +165,6 @@ static T_VALID* gen_pval(long npsfx, long npsfy, loc_t* loc){
 		error("malloc for %ld failed\n", pvaltot);
 	}
 	T_VALID* pval=mymalloc(npsfx*npsfy, T_VALID);
-	T_VALID(*restrict qval)[npsfx]=(T_VALID(*)[npsfx])(pval);
 	long count=0, count2;
 	loc_create_map(loc);
 	map_t* map=loc->map;
@@ -193,8 +190,8 @@ static T_VALID* gen_pval(long npsfx, long npsfy, loc_t* loc){
 					count++;
 				}
 			}
-			qval[jm][im].loc=pval0+count2;
-			qval[jm][im].n=count-count2;
+			pval[im+jm*npsfx].loc=pval0+count2;
+			pval[im+jm*npsfx].n=count-count2;
 		}
 	}
 	lfree(mloc);

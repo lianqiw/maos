@@ -553,11 +553,9 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 	const aper_t* aper=simu->aper;
 	const int nloc=aper->locs->nloc;
 	const int nwvl=parms->evl.nwvl;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++)
-		if((parms->evl.psf->p[ievl] &2))
-#pragma omp task
-		{
-
+OMP_TASK_FOR(4)	
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if((parms->evl.psf->p[ievl] &2)){
 			//warning_once("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
 			gpu_set(cuglobal->evlgpu[ievl]);
 			curmat& iopdevl=cuglobal->perf.opd[ievl];
@@ -615,7 +613,7 @@ void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 			}
 			CUDA_SYNC_STREAM;
 		}
-#pragma omp taskwait
+	}
 }
 void gpu_perfevl_save(sim_t* simu){
 	const parms_t* parms=simu->parms;

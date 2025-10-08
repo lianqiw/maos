@@ -19,6 +19,7 @@
 #include "cn2est.h"
 #include "mkh.h"
 #include "turbulence.h"
+#include "libmisc.h"
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 #define COV_ROTATE 0     /*1: rotate the covariance and then cut along x. (old method).*/

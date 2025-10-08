@@ -15,9 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "../math/cumath.h"
 #include "../math/prop_map.h"
-#include "gpu_test.h"
+
 /**
    \file test.cu
    Routines for testing cuda. Execute from test/test_cuda

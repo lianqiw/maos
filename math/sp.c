@@ -856,7 +856,7 @@ R X(sptrace)(const X(sp)*A, R power){
 	R sum=0;
 	for(int icol=0; icol<A->ny; icol++){
 		for(int irow=A->pp[icol]; irow<A->pp[icol+1]; irow++){
-			if(A->pi[irow]==icol && A->px[irow]!=0){
+			if(A->pi[irow]==icol && A->px[irow]!=(T)0){
 #ifdef COMP_COMPLEX				
 				sum+=pow(ABS2(A->px[irow]), power*0.5);
 #else

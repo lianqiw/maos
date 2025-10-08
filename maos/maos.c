@@ -32,7 +32,7 @@
 */
 static void* find_var(const char* name){
 	struct VAR_MAP{
-		char* name;
+		const char* name;
 		void* var;
 	};
 	if(!global || !global->simu){
@@ -145,7 +145,7 @@ static void* find_var(const char* name){
 	{NULL,NULL}
 	};
 	struct MAP_MAP{
-		char* name;
+		const char* name;
 		struct VAR_MAP* map;
 	};
 #define MAP_ALL(NAME) {#NAME "_", NAME ## _map}
@@ -163,9 +163,9 @@ static void* find_var(const char* name){
 	int j0=global->simu?0:1;
 	if(name && strcmp(name, "list")){
 		for(int j=j0; map_map[j].name; j++){
-			char* div=strchr(name, '.');
+			const char* div=strchr(name, '.');
 			if(!div) continue;
-			char* div2=strchr(name, '[');
+			const char* div2=strchr(name, '[');
 			if(div2&&div2<div){
 				div=div2;
 			}
@@ -309,8 +309,7 @@ static void* maos_listener(void* psock){
 		}break;
 
 		default:
-			warning_time("Unknown cmd %d. Closed connection.\n", cmd[0]);
-			return NULL;
+			warning_time("Unknown cmd %d. \n", cmd[0]);
 			break;
 		}
 	}

@@ -45,39 +45,44 @@
 
 #if defined(__cplusplus)
 //When including by CUDA, all definitions are already available.
-#ifndef AOS_CUDA_H
+#if !defined(AOS_CUDA_H) 
 //C++ mode
-#include <complex>
+#include <ccomplex>
 #include <cmath>
-using std::real;
-using std::conj;
-using std::isinf;
-using std::complex;
-typedef complex<double> dcomplex;
-typedef complex<float> fcomplex;
+typedef std::complex<double> dcomplex;
+typedef std::complex<float> fcomplex;
+#ifdef I
+#undef I
+#endif
 #define I dcomplex(0,1)
 #define COMPLEX(A,B) dcomplex(A,B)
 #define DCOMPLEX(A,B) dcomplex(A,B)
 #define FCOMPLEX(A,B) fcomplex(A,B)
-#define fabs std::abs
-#define cabs fabs
-#define cimag imag
-#define creal real
-#define cexp exp
-#define cpow pow
-#define csqrt sqrt
-#define clog log
-#define carg arg
-#define cabsf fabs
 
-#define cimagf imag
-#define crealf real
-#define conjf conj
-#define cexpf exp
-#define cpowf pow
-#define csqrtf sqrt
-#define clogf log
-#define cargf arg
+#define fabs std::abs
+#define cabs std::abs
+#define cabsf std::abs
+
+#define cexp std::exp
+#define cexpf std::exp
+#define cpow std::pow
+#define cpowf std::pow
+#define csqrt std::sqrt
+#define csqrtf std::sqrt
+#define clog std::log
+#define clogf std::log
+#define carg std::arg
+#define cargf std::arg
+
+#define cimag std::imag
+#define cimagf std::imag
+#define creal std::real
+#define crealf std::real
+using std::conj;//cannot use #define here
+#define conjf std::conj
+
+#if !defined(IN_EXTERN_C)
+//Prevent compiling failure when number is a literal that defaults to int or double.
 static inline fcomplex operator*(double A, const fcomplex& B){
 	return B*(float)A;
 }
@@ -114,18 +119,11 @@ static inline dcomplex operator-(float A, const dcomplex& B){
 static inline dcomplex operator-(const dcomplex& B, float A){
 	return B-(double)A;
 }
-static inline double conj(double A){
-	return A;
-}
-static inline double real(double A){
-	return A;
-}
-
+#endif
 #endif//#ifndef AOS_CUDA_H
-#else //#if defined(__cplusplus) C99 mode
+#else //#if not defined(__cplusplus) C99 mode
+//Do no use tgmath.h. It conflicts with CUDA includes.
 //tgmath provides type generic macros for common math routines. It includes math.h and complex.h
-//never include tgmath.h in CUDA included headers (C++ uses overloading instead).
-//deprecated the use of tgmath.h
 #include <math.h>
 #include <complex.h>
 typedef __complex__ double dcomplex;

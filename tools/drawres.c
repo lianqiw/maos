@@ -134,7 +134,7 @@ int main(int argc, char* argv[]){
 				if(dp->d_name[0]!='.'&&strcmp(dp->d_name, "skysim")){
 					if(npath==mpath){
 						mpath*=2;
-						path=realloc(path, sizeof(char*)*mpath);
+						path=myrealloc(path, mpath, char*);
 					}
 					path[npath]=stradd(path[ipath], "/", dp->d_name, NULL);
 					npath++;
@@ -510,12 +510,12 @@ int main(int argc, char* argv[]){
 					}
 				}
 				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-				draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("CL", (plot_opts){ .ngroup=(int)restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "All");
 				dcellfree(restmpcl);
 				if(restype==1){
 					dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-					draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+					draw("OL", (plot_opts){ .ngroup=(int)restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
 						"Open loop Wavefront Error", xlabel, ylabel, "All");
 						dcellfree(restmpol);
 				}
@@ -525,7 +525,7 @@ int main(int argc, char* argv[]){
 		} else{//plot seed average for each mode.
 			for(int ic=0; ic<resm->nx; ic++){
 				if(P(resm, ic)){
-					draw(toptab[ic], (plot_opts){.ngroup=npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab[ic], (plot_opts){.ngroup=(int)npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
 			}
@@ -540,12 +540,12 @@ int main(int argc, char* argv[]){
 				}
 			}
 			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-			draw("CL", (plot_opts){ .ngroup=restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+			draw("CL", (plot_opts){ .ngroup=(int)restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 			dcellfree(restmpcl);
 			if(restype==1){
 				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-				draw("OL", (plot_opts){ .ngroup=restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("OL", (plot_opts){ .ngroup=(int)restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 				dcellfree(restmpol);
 			}
@@ -554,7 +554,7 @@ int main(int argc, char* argv[]){
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
 					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-					draw(toptab[ic], (plot_opts){.ngroup=npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab[ic], (plot_opts){.ngroup=(int)npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
 					dcellfree(tmp);
 				}

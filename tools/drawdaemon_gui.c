@@ -148,9 +148,9 @@ static const char *topnb_label_get(GtkWidget *topnb, GtkWidget *subnb){
 static void window_changed(GtkWidget* window){
 	//info("window_changed: %p\n", window);
 	curwindow=window;
-	cur_menu_cumu=g_object_get_data(G_OBJECT(window), "menu_cumu");
-	cur_menu_icumu=g_object_get_data(G_OBJECT(window), "menu_icumu");
-	cur_menu_zlog=g_object_get_data(G_OBJECT(window), "menu_zlog");
+	cur_menu_cumu=(GtkWidget*)g_object_get_data(G_OBJECT(window), "menu_cumu");
+	cur_menu_icumu=(GtkWidget*)g_object_get_data(G_OBJECT(window), "menu_icumu");
+	cur_menu_zlog=(GtkWidget*)g_object_get_data(G_OBJECT(window), "menu_zlog");
 	curtopnb=get_topnb(window);
 }
 /*Get the current page for notebook*/
@@ -171,7 +171,7 @@ static drawdata_t* get_current_drawdata(void){
 	GtkWidget* subnb=get_current_page(topnb);
 	GtkWidget* drawarea=get_current_page(subnb);
 
-	return drawarea?g_object_get_data(G_OBJECT(drawarea), "drawdata"):NULL;
+	return drawarea?(drawdata_t*)g_object_get_data(G_OBJECT(drawarea), "drawdata"):NULL;
 }
 
 /**
@@ -235,7 +235,8 @@ static void update_toolbar(){//always use current page
 		gtk_widget_set_sensitive(cur_menu_zlog, drawdata->p?TRUE:FALSE);
 	}
 }
-gboolean finalize_gif(){
+gboolean finalize_gif(void*data){
+	(void)data;
 	if(pfilename_gif && *pfilename_gif){
 		info_time("finalizing gif for %s\n", *pfilename_gif);
 		const char *convert[]={"/usr/bin/convert", "/usr/local/bin/convert", "/opt/homebrew/bin/convert"};
@@ -261,7 +262,7 @@ gboolean finalize_gif(){
 static void update_pixmap(drawdata_t* drawdata){
 	if(!drawdata) return;
 	/*no more pending updates, do the updating. */
-	if(atomic_load(&drawdata->recycle)){
+	if(__atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST)){
 		warning_time("recycle is set, do not draw\n");
 		return;
 	}
@@ -405,7 +406,7 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 */
 int delete_page(drawdata_t *drawdata){
 	//dbg_time("deleting page: for %p\n",drawdata);
-	atomic_store(&drawdata->recycle, 1);
+	__atomic_store_n(&drawdata->recycle, 1, __ATOMIC_SEQ_CST);
 	GtkWidget *subnb=drawdata->subnb;
 	if(subnb){
 		int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(subnb), drawdata->drawarea);
@@ -425,7 +426,7 @@ int delete_page(drawdata_t *drawdata){
 	return 0;
 }
 void drawarea_deleted(gpointer data){
-	drawdata_t *drawdata=data;
+	drawdata_t *drawdata=(drawdata_t*)data;
 	if(drawdata){
 		//dbg_time("%p: drawarea (%p) is deleted. delete drawdata\n", drawdata, drawdata->drawarea);
 		pthread_mutex_lock(&drawdata->mutex);
@@ -443,7 +444,7 @@ void drawarea_deleted(gpointer data){
 			cairo_surface_destroy(drawdata->cacheplot);	drawdata->cacheplot=NULL;
 		}
 		//dbg_time("%p: pixmap deleted\n",drawdata);
-		atomic_store(&drawdata->recycle, 2);
+		__atomic_store_n(&drawdata->recycle, 2,__ATOMIC_SEQ_CST);
 		pthread_mutex_unlock(&drawdata->mutex);
 	}else{
 		info_time("drawdata is null\n");
@@ -829,7 +830,7 @@ static void switch_tab(int lr, int ud){
 static gboolean drawarea_key_press(GtkWidget* widget, GdkEventKey* event, drawdata_t* drawdata){
 	(void)widget;
 	guint keyval=event->keyval;
-	GdkModifierType state=event->state;
+	guint state=event->state;
 #else
 static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guint keycode, GdkModifierType state, drawdata_t*drawdata){
 	(void) ec; (void) keycode;
@@ -991,7 +992,7 @@ gboolean addpage(drawdata_t *drawdata){
 		dbg_time("Must set fig and name before calling addpage");
 		return 0;
 	}
-	if(atomic_load(&drawdata->recycle)){
+	if(__atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST)){
 		//this is caused by race condition
 		//When the GUI is removing the page, the drawdaemon_io was receiving the data and then queued a addpage
 		dbg_time("unexpected: drawdata(%p). recycle is set\n", drawdata);
@@ -1043,7 +1044,7 @@ gboolean addpage(drawdata_t *drawdata){
 		gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 	}
 	GtkWidget* drawarea=NULL;
-	GtkWidget* subnb=subnbs->data;
+	GtkWidget* subnb=(GtkWidget*)subnbs->data;
 	jtab=-1;
 	for(GSList* p=subnbs; p; p=p->next){
 		/*scan through all the subnb pages with same label */
@@ -1240,7 +1241,7 @@ static void save_file(drawdata_t *drawdata){
 		info("filename is %s\n", filename);
 	}
 
-	char* suffix=strrchr(filename, '.');
+	const char* suffix=strrchr(filename, '.');
 	if(!suffix){
 		char* filename2=stradd(filename, ".png", NULL);
 		g_free(drawdata->filename);
