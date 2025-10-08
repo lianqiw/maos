@@ -1,6 +1,9 @@
 html {
 	font-family: Arial;
-	font-size: 14px;
+	font-size: 0.875em; /* 14px if browser default is 16px */
+}
+body {
+  margin: 0px;
 }
 /* CSS notes:
 	A,B: match either A or B
@@ -43,9 +46,13 @@ table.monitor tr td,th {
 }
 table.monitor td {
 	text-align: right;
+	padding-left: 0.14em;
+	padding-right: 0.14em;
 }
 table.monitor th {
 	text-align: center;
+	padding-left: 0.14em;
+	padding-right: 0.14em;
 }
 
 table.monitor tr:nth-child(odd) {
@@ -54,13 +61,12 @@ table.monitor tr:nth-child(odd) {
 
 table.monitor .tdpath {
 	width: 50%;
-	max-width: 100px;/*this allows ellipsis*/
+	max-width: 10em;/*this allows ellipsis*/
 	overflow: hidden;
 	text-overflow: ellipsis; 
 }
 table.monitor .tdout {
-	width: 50%;
-	max-width: 100px;/*this allows ellipsis*/
+	max-width: 10em;/*this allows ellipsis*/
 	overflow: hidden;
 	text-overflow: ellipsis; 
 }
@@ -80,6 +86,8 @@ table.monitor td.tdout details p{
 div.progress {
 	position: relative;
 	text-align: left;
+	max-width:10em;
+	width: 10em;
 }
 
 div.progressbar {
@@ -92,12 +100,13 @@ span.progressbar {
 	top: 2px;
 	z-index: 2;
 	text-align: left;
+	text-overflow: ellipsis; 
 	width: 100%;
 }
 .inline *{
 	display: inline-block;
 	vertical-align: middle;
-	font-size: 14px;
+	font-size: 1em;
 	margin: 0px;
 }
 
@@ -109,8 +118,7 @@ span.progressbar {
 	/*margin-right: 12px;*/
 }
 ul.tab_hosts img{
-	width: 28px;
-	/*margin-right: 4px;*/
+	width: 2em;
 	padding:0px;
 }
 ul.tab_hosts {/*this is the tab bar*/
@@ -122,9 +130,9 @@ ul.tab_hosts {/*this is the tab bar*/
 }
 ul.tab_hosts li{
 	/*display: inline-block;*//*inline ignores vertical padding*/
-	padding: 5px;
+
+	padding: 0.3em;
 	cursor: pointer;
-	vertical-align: middle; 
 	white-space: nowrap;
 }
 
@@ -181,4 +189,12 @@ ul.tab_hosts li.active{
 	height: 5px;
 	margin: 0;
 	padding: 0; 
+}
+
+.layout{
+	display: grid;
+	grid-template-columns:auto 1fr;
+	width:100%;
+	height:calc(100vh - 70px);
+	box-sizing: border-box;
 }

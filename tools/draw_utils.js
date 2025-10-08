@@ -260,12 +260,33 @@ function procBuffer(wsBuf) {
   }//while
   return drawData;
 }//function procbuffer
+function makeCumu(y, cumStart, cumPlot){
+  if(cumPlot){
+    if(cumStart<0) cumStart=0;
+    let y2;
+    if (byteFloat == 4) {//use slice to avoid byteoffset alignment error.
+      y2 = new Float32Array(y.length-cumStart);
+    } else if (byteFloat == 8) {
+      y2 = new Float64Array(y.length-cumStart);
+    }
+    let cum=0;
+    for(let i=0; i<y2.length; i++){
+      cum=cum+y[i+cumStart]**2;
+      y2[i]=Math.sqrt(cum/(i+1));
+    }
+    const x2=Array.from({length:y2.length}, (_, index)=>cumStart+index);
+    return {x:x2,y:y2};
+  }else{
+    return {y:y};
+  }
+}
 function makeTraces(drawData) {
   const layout = {
     title: 'title' in drawData?drawData['title']:"", 
-    width: 800, height: 600,
     xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false },
     yaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false },
+    autosize: true,
+    margin: {t:20, b:40, l:40, r:20},
   }
   let traces = [];
   let square = 0;
@@ -284,14 +305,15 @@ function makeTraces(drawData) {
   } else if (drawData['pts']) {
     const showlegend = drawData['pts'].length > 1 ? 1 : 0;
     traces = traces.concat(drawData['pts'].map((pts, ipts) => {
+      const extra={name: drawData['legend'] ? drawData['legend'][ipts] : "", showlegend};
       if (pts.ny == 2) {
         if (pts.square) square = 1;
         return {
-          x: pts.p.slice(0, pts.nx), y: pts.p.slice(pts.nx, 2 * pts.nx),
-          mode: "markers", marker: { symbol: 'x' }, name: drawData['legend'] ? drawData['legend'][ipts] : "", showlegend
+          x: pts.p.slice(0, pts.nx), y: pts.p.slice(pts.nx, 2 * pts.nx), 
+          mode: "markers", marker: { symbol: 'x' }, ...extra
         }
-      } else {
-        return { y: pts.p, mode: "lines+markers", name: drawData['legend'] ? drawData['legend'][ipts] : "", showlegend }
+      } else{
+        return { ...makeCumu(pts.p, drawData.cumStart, drawData.cumPlot), mode: "lines",  ...extra}
       }
     }));
   }
@@ -299,9 +321,9 @@ function makeTraces(drawData) {
     traces = traces.concat(mkCircles(drawData['circle']));
   }
   if (square) {
+    layout.xaxis.constrain='domain';
     layout.yaxis.scaleanchor = 'x';
     layout.yaxis.scaleratio = ratio;
-    layout.height = layout.width * ratio;
   }
   return {traces:traces,layout:layout};
 }

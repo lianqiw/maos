@@ -199,7 +199,7 @@ static void ws_write_close(int fd){//send a ws close frame.
 static int ws_fail(int fd, const char *format, ...) CHECK_ARG(2);
 static int ws_fail(int fd, const char *format, ...) {
 	format2fn;
-	info("ws_received failed: %s", fn);
+	dbg_time("sock %d: %s\n", fd, fn);
 	ws_proxy_remove((void*)(long)fd, 1);
 	return -1;
 }
@@ -208,10 +208,10 @@ static int ws_fail(int fd, const char *format, ...) {
 */
 static int ws_receive(struct pollfd *pfd, int flag){
 	int fd=pfd->fd;
-	if(flag==-1){//server ask client to close
-		dbg_time("listen_sock requests shutdown\n");
-		ws_write_close(fd);
+	if(flag==-1){//server ask browser client to close
+		ws_write_close(fd);//send browser client close frame
 		shutdown(fd, SHUT_WR);//make sure we don't reply to the close message.
+		return ws_fail(fd, "listen_sock requests shutdown");
 	}
 	static char *prev=NULL;//save previous message to handle continuation
 	static size_t nprev=0;//length of previous message
@@ -220,7 +220,7 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	char *buf=buf0;
 	const int len = recv(fd, buf, BUF_SIZE-1, 0);
 	if (len<6){//server received msg must be at least 6 bytes
-		return ws_fail(fd, "len=%d\n", len);
+		return ws_fail(fd, "len=%d", len);
 	}
 	const int FIN=((unsigned char)(buf[0])>>7);//must be unsigned char for this to be 1.
 	int opcode=(unsigned char)(buf[0]) & 0x0F;
@@ -277,14 +277,13 @@ static int ws_receive(struct pollfd *pfd, int flag){
 		}
 		//ssize_t len2 = recv(fd, buf+len, sizeof(buf)-len, 0);
 	}else if(opcode==0x8){//client replied//request close
-		dbg_time("client requests close. fd=%d\n", fd);
 		ws_write_close(fd);
-		return -1;//we need to close it first.
+		return ws_fail(fd, "client requests close");
 	}else if(opcode==0x9){//client sent a ping. we reply with pong
 		buf[offset-2]=0x8A;//pong
 		buf[offset-1]=msg_len;//cannot be more than 126
 		if(stwrite(fd, buf+offset-2, msg_len+2)){
-			return ws_fail(fd, "pong\n");
+			return ws_fail(fd, "pong");
 		}else{
 			return 0;
 		}

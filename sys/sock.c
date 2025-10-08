@@ -313,21 +313,35 @@ struct pfd_handler_t{
 	const char *name;
 }*pfd_handler=NULL;
 int npfd=0;
-int npfd_valid=0;
+int pending_handler(struct pollfd *fd, int flag){
+	(void)flag;
+	(void)fd;
+	error("panding_handler should be replaced before use.\n");
+	return 0;
+}
 //Add a port with handler. if handler is NULL, it is handled internally.
+/**
+ * Add a socket to the pollfd array for event monitoring.
+ *
+ * @param sock     The socket file descriptor to add.
+ * @param events   The events to monitor (e.g., POLLIN, POLLOUT).
+ * @param handler  The function to handle events on this socket (can be NULL for internal handling).
+ * @param name     A descriptive name for this socket (for debugging/logging).
+ *
+ * If the socket is already present, updates its handler and name if necessary.
+ * Allocates memory for new entries as needed.
+ */
 void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int), const char *name){
 	int jfd=-1;//insert location
 	for(int ifd=0; ifd<npfd; ifd++){
 		if(pfd[ifd].fd==sock){
 			if(handler!=pfd_handler[ifd].handler){
-				dbg_time("fd=%2d %c%c (%s->%s) count=%d.\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', pfd_handler[ifd].name, name, npfd_valid);
+				dbg_time("fd=%2d %c%c (%s->%s).\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', pfd_handler[ifd].name, name);
 			}
-			pfd_handler[ifd].handler=handler;
-			pfd_handler[ifd].name=name;
-			pfd[ifd].events=events;
-			return;
-		}else if(pfd[ifd].fd==-1){
-			if(jfd==-1) jfd=ifd;
+			jfd=ifd;
+			break;
+		}else if(jfd==-1 && pfd[ifd].fd==-1){
+			jfd=ifd;
 		}
 	}
 	if(jfd==-1){//no open slot.
@@ -335,9 +349,15 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int),
 		npfd++;
 		pfd=realloc(pfd, sizeof(struct pollfd)*npfd);
 		pfd_handler=realloc(pfd_handler, sizeof(struct pfd_handler_t)*npfd);
+		if(!pfd || !pfd_handler){
+			npfd=0;
+			error("Unable to allocate memory for pollfd or pfd_handler\n");
+			return;
+		}
 	}
-	npfd_valid++;
-	dbg_time("fd=%2d %c%c (%s) count=%d.\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', name, npfd_valid);
+	if(pfd[jfd].fd!=sock && handler!=pending_handler){
+		dbg_time("fd=%2d %c%c (%s).\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', name);
+	}
 	pfd[jfd].fd=sock;
 	pfd[jfd].events=events;
 	pfd[jfd].revents=0;
@@ -345,6 +365,15 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int),
 	pfd_handler[jfd].name=name;
 }
 //remove a port form pollfd. it is not closed. if sock==-2, remove all
+/**
+ * Remove a socket from the pollfd array, optionally closing it.
+ *
+ * @param sock     The socket file descriptor to remove; if -2, remove all sockets.
+ * @param toclose  If nonzero, close the socket(s) before removing.
+ * @param caller   A string indicating the caller for logging/debugging purposes.
+ *
+ * This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed.
+ */
 void listen_port_del(int sock, int toclose, const char *caller){
 	int ifd;
 	for(ifd=0; ifd<npfd; ifd++){
@@ -353,8 +382,7 @@ void listen_port_del(int sock, int toclose, const char *caller){
 				if(toclose){
 					close(pfd[ifd].fd);//sends FIN
 				}
-				npfd_valid--;
-				dbg_time("fd=%2d    (%s) count=%d. by %s\n", pfd[ifd].fd, pfd_handler[ifd].name, npfd_valid, caller);
+				dbg_time("fd=%2d    (%s) by %s\n", pfd[ifd].fd, pfd_handler[ifd].name, caller);
 				pfd_handler[ifd].handler=NULL;//prevent stale handler
 				pfd_handler[ifd].name=NULL;
 				pfd[ifd].fd=-1;//-1 is ignored in polling.
@@ -365,7 +393,7 @@ void listen_port_del(int sock, int toclose, const char *caller){
 		}
 	}
 	if(sock>=0 && ifd==npfd){
-		warning_time("not found fd=%d. count=%d. by %s\n", sock, npfd_valid, caller);
+		warning_time("not found fd=%d by %s\n", sock, caller);
 	}
 }
 

@@ -32,7 +32,7 @@ function split_hostname(hostname) {
 function Progress({ text, frac }){
     return (
       <td>
-        <div className="progress" style={{ "width": "160px" }} key="progress">
+        <div className="progress" title={text}>
           <div className="progressbar" style={{ "width": frac }}></div>
           <span className="progressbar">{text}</span>
         </div>
