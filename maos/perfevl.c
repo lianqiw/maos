@@ -469,10 +469,9 @@ static void perfevl_mean(sim_t* simu){
 			} else{
 #endif
 				const aper_t* aper=simu->aper;
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++)
-					if((P(parms->evl.psf,ievl)&2))
-#pragma omp task
-					{
+OMP_TASK_FOR(4)				
+				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+					if((P(parms->evl.psf,ievl)&2)){
 
 						dmat* iopdevl=P(simu->evlopd,ievl);
 						ngsmod_opd(iopdevl, aper->locs, recon->ngsmod,
@@ -502,7 +501,7 @@ static void perfevl_mean(sim_t* simu){
 						}
 						dfree(P(simu->evlopd,ievl));
 					}
-#pragma omp taskwait
+				}
 #if USE_CUDA
 			}
 #endif

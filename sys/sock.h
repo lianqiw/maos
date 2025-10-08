@@ -23,8 +23,8 @@
 */
 #include <netinet/in.h>
 #include <poll.h>
-int socket_recv_timeout(int sock, double sec);
-int socket_send_timeout(int sock, double sec);
+int socket_recv_timeout(int sock, long sec);
+int socket_send_timeout(int sock, long sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
 typedef struct listen_opt_t{
 	int port;

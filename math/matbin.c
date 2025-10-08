@@ -71,7 +71,7 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 	if(!header){
 		header=&header2;
 	}
-	if(header->magic==0){
+	if(header->id==0){
 		read_header(header, fp);
 	}
 	uint64_t nx, ny;
@@ -81,9 +81,9 @@ X(mat)* X(readdata)(file_t* fp, header_t* header){
 	X(mat)* out=X(new)((long)nx, (long)ny);
 	out->keywords=header->str; header->str=NULL;
 	if(nx&&ny){
-		readvec(P(out), M_T, header->magic, sizeof(T), nx*ny, fp);
+		readvec(P(out), M_T, header->id, sizeof(T), nx*ny, fp);
 	}
-	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
+	header->id=0; header->nx=0; header->ny=0;//prevent reuse.
 	return out;
 }
 

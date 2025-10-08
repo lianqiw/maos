@@ -49,7 +49,7 @@ void X(vecnormalize_sumabs)(T *restrict p, long nx, T norm){
     for (long i=0; i<nx; i++){
 		ss+=ABS(p[i]);
     }
-    ss=norm/ss;
+    ss=norm/(T)ss;
     for(int i=0; i<nx; i++){
 		p[i]*=ss;
     }

@@ -447,9 +447,7 @@ static void skysim_calc_psd(sim_s* simu){
 		int im_ws=parms->skyc.addws==1?0:1;
 		add_psd2(&P(simu->psds, im_ws), parms->skyc.psd_ws, 1); //all in m^2 unit.
 	}
-	if(parms->skyc.dbg||1){
-		writebin(simu->psds, "psds_m2.bin");
-	}
+	writebin(simu->psds, "psds_m2.bin");
 }
 
 static void skysim_prep_gain(sim_s* simu){
@@ -489,9 +487,7 @@ static void skysim_prep_sde(sim_s* simu){
 		P(simu->sdecoeff,2,im)/=sqrt(P(parms->maos.mcc, im, im));//convert from m to rad
 	}
 	dshow(simu->sdecoeff, "sde_coeff");
-	if(parms->skyc.dbg||1){
-		writebin(simu->sdecoeff, "sde_coeff");
-	}
+	writebin(simu->sdecoeff, "sde_coeff");
 }
 /**
    Setup the stars fields and then calls skysim_isky() to handle each star field.

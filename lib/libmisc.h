@@ -21,6 +21,11 @@
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
 #include "../math/mathdef.h"
+extern const real RAD2AS;
+extern const real RAD2MAS;
+extern const real MAS2RAD;
+extern const real AS2RAD;
+
 void addnoise(dmat *A, rand_t* rstat, 
 	      const real bkgrnd, const real bkgrndc, 
 	      const dmat *bkgrnd2, const dmat *bkgrnd2c,

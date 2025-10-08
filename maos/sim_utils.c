@@ -1992,7 +1992,7 @@ void print_progress(sim_t* simu){
 				}
 				for(int ic=0; ic<2; ic++){
 					dcell *res=P(simu->plot_res, ic);
-					draw("Res", (plot_opts){.ngroup=NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=simu->plot_legs},
+					draw("Res", (plot_opts){.ngroup=(int)NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=simu->plot_legs},
 						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "RMS WFE%s", ic==0?"":" OL");
 				}
 			}

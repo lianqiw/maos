@@ -17,7 +17,9 @@
 */
 #ifndef AOS_CUDA_GPU_MATH_H
 #define AOS_CUDA_GPU_MATH_H
-#define AOS_CUDA_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 /**
  * \file gpu_math.h
  * Routines that can be used by CPU.

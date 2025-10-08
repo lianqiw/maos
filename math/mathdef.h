@@ -139,12 +139,9 @@ void fft_threads(long nx, long ny);
 #define cspcellnew (cspcell*)cellnew
 #define cspccellnew (cspccell*)cellnew
 #define dcellresize(A,nx,ny) cellresize(A,nx,ny)
-extern const real RAD2AS;
-extern const real RAD2MAS;
-extern const real MAS2RAD;
-extern const real AS2RAD;
-extern const real TWOPI;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#define TWOPI 6.28318530717958647692
 #endif

@@ -300,8 +300,8 @@ static void plot_psd(const dmat *psdall, double dt, int dtrat,
 		style[imod+nmod]=default_color(imod)<<8|7; //dashed line
 	}
 	if(doplot){
-		draw("PSD", (plot_opts){.dc=psds, .xylog="yy", .legend=(const char *const *)legs, .always=1, .style=(nmod==1)?NULL:style }, "", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD %s", label);
-		draw("PSD", (plot_opts){.dc=cums, .xylog="yy", .legend=(const char *const *)(legs+nmod), .always=1, .style=(nmod==1)?NULL:style }, "", "Frequency (Hz)", "PSD Reverse Cumulative Integral (nm)", "Cumu %s", label);
+		draw("PSD", (plot_opts){.dc=psds, .style=(nmod==1)?NULL:style, .xylog="yy", .legend=(const char *const *)legs, .always=1}, "", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD %s", label);
+		draw("PSD", (plot_opts){.dc=cums, .style=(nmod==1)?NULL:style, .xylog="yy", .legend=(const char *const *)(legs+nmod), .always=1 }, "", "Frequency (Hz)", "PSD Reverse Cumulative Integral (nm)", "Cumu %s", label);
 	}
 	dcellfree(psds);
 	dcellfree(cums);

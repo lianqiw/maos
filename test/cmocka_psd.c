@@ -22,7 +22,8 @@
 #include <cmocka.h>
 #include "../lib/aos.h"
 
-void test_psd2d(){
+void test_psd2d(void **state){
+	(void)state;
 	dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 128, 1);
 	dmat *psd=psd2d_aniso(screen, 1./64.);
 	real inte1=sqrt(psd_inte2(psd))*1e9;
@@ -44,7 +45,8 @@ void test_psd2d(){
 	dfree(screen);
 }
 
-void test_stfun(){
+void test_stfun(void **state){
+	(void)state;
 	dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 128, 1);
 	dmat *st=stfun_batch(screen, NULL);
 	info("sum=%g, max=%g\n", dsum(st), dmax(st));

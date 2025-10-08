@@ -21,7 +21,8 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include "../lib/aos.h"
-void test_embed(){
+void test_embed(void **state){
+	(void)state;
 	rand_t rstat;
 	seed_rand(&rstat, 1);
 	for(long nx=6; nx<8; nx++){
@@ -55,7 +56,8 @@ void test_embed(){
 		}
 	}
 }
-void test_denc(){
+void test_denc(void **state){
+	(void)state;
 	dmat *screen=(dmat *)genatm_simple(0.186, 0, -11./3., 1./64., 129, 1);
 	/*dmat *screen=dnew(129,129);
 	rand_t rstat;
@@ -75,7 +77,8 @@ void test_denc(){
 	dfree(xx);
 	dfree(screen);
 }
-void test_dcircle(){
+void test_dcircle(void **state){
+	(void)state;
 	//test dcircle, dcog, dshift2center
 	long nn=10;
 	dmat *A=dnew(nn, nn);

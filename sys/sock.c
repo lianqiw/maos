@@ -181,7 +181,7 @@ static void socket_tcp_nodelay(int sock){
 /**
  * Set recv timeout in seconds
  * */
-int socket_recv_timeout(int sock, double sec){
+int socket_recv_timeout(int sock, long sec){
 	if(sock==-1) return -1;
 	struct timeval val={sec,0};
 	int ans;
@@ -193,7 +193,7 @@ int socket_recv_timeout(int sock, double sec){
 /**
  * Set recv timeout in seconds
  * */
-int socket_send_timeout(int sock, double sec){
+int socket_send_timeout(int sock, long sec){
 	if(sock==-1) return -1;
 	struct timeval val={sec,0};
 	int ans;
@@ -347,8 +347,8 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int),
 	if(jfd==-1){//no open slot.
 		jfd=npfd;
 		npfd++;
-		pfd=realloc(pfd, sizeof(struct pollfd)*npfd);
-		pfd_handler=realloc(pfd_handler, sizeof(struct pfd_handler_t)*npfd);
+		pfd=myrealloc(pfd, npfd, struct pollfd);
+		pfd_handler=myrealloc(pfd_handler, npfd, struct pfd_handler_t);
 		if(!pfd || !pfd_handler){
 			npfd=0;
 			error("Unable to allocate memory for pollfd or pfd_handler\n");
@@ -396,7 +396,6 @@ void listen_port_del(int sock, int toclose, const char *caller){
 		warning_time("not found fd=%d by %s\n", sock, caller);
 	}
 }
-
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
    timeout_fun is not NULL, it will be called when 1) connection is
@@ -527,7 +526,7 @@ void listen_port(listen_opt_t opt){
 							warning_time("(%d) accept failed: %s.\n", sock, strerror(errno));
 						} else{
 							if(opt.http_responder){
-								listen_port_add(sock2, POLLIN, (void*)(-1), "pending");//pending type detection
+								listen_port_add(sock2, POLLIN, pending_handler, "pending");//pending type detection
 							}else{
 								listen_port_add(sock2, POLLIN, opt.responder, "responder");
 							}
@@ -536,7 +535,7 @@ void listen_port(listen_opt_t opt){
 							//new_connection=1;
 						}
 					} else{
-						if(pfd_handler[ifd].handler==(void*)(-1)){//check whether client is tcp or http
+						if(pfd_handler[ifd].handler==pending_handler){//check whether client is tcp or http
 							char buf[5]={0};
 							int len=recv(pfd[ifd].fd, buf, 4, MSG_PEEK);
 							if(len==4 && !strcmp(buf, "GET ")){

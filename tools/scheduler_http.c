@@ -20,6 +20,9 @@
 	handle http connection, serving files, upgrade the connection to websocket,
 	and read and write websocket messages.
 */
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -165,7 +168,7 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	static int size=0;
 	if(size<http_padding+nlen){
 		size=http_padding+nlen;
-		buf=realloc(buf, size);
+		buf=myrealloc(buf, size, char);
 	}
 	int offset=2;//no mask field can be present
 	buf[0] = 0x81+mode;//82 is binary. 81 is text. 
@@ -235,7 +238,7 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	}
 	if(msg_len+offset>BUF_SIZE-1){//buffer is too small. We read the remaining data in block mode.
 		//dbg_time("Buffer is too small\n");
-		buf=malloc(msg_len+offset+1);
+		buf=(char*)malloc(msg_len+offset+1);
 		memcpy(buf, buf0, BUF_SIZE-1);
 		if(stread(fd, buf+BUF_SIZE-1, msg_len+offset-(BUF_SIZE-1))){
 			return ws_fail(fd, "stread");
@@ -262,7 +265,7 @@ static int ws_receive(struct pollfd *pfd, int flag){
 				free(prev); prev=NULL; nprev=0;
 			}
 		}
-		prev=realloc(prev, (nprev+msg_len+1));//save data
+		prev=myrealloc(prev, (nprev+msg_len+1), char);//save data
 		memcpy(prev+nprev, buf+offset, msg_len+1); nprev+=msg_len;//save length
 		offset=0;//in prev, no offset
 		if(FIN==1 && opcode==0){//assemble the final message
@@ -304,11 +307,11 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	Parse keys from http payload. The client needs to free the returned memory.
 */
 char* http_parse_key(const char *buf, const char *name){
-	char *key_start = strstr(buf, name);
+	const char *key_start = strstr(buf, name);
 	if (!key_start) return 0;
 	key_start += strlen(name);
 	while (*key_start == ' ') key_start++;
-	char *key_end = strchr(key_start, '\r');
+	const char *key_end = strchr(key_start, '\r');
 	if (!key_end) return 0;
 	return strndup(key_start, key_end-key_start);
 }
@@ -387,9 +390,9 @@ int http_handler(struct pollfd *pfd, int flag) {
 		return 0;
     } else {//handle http send file
 		int ans=0;
-		char *path = buf + 4;
-		char *sp = strchr(path, ' ');
-		char* close=strstr(buf, "Connection: close")?"Connection: close\r\n":"";
+		const char *path = buf + 4;
+		const char* close=strstr(buf, "Connection: close")?"Connection: close\r\n":"";
+		char *sp = strchr(buf+4, ' ');
 		if (!sp) return -1;
 		*sp = 0;
 		if (strcmp(path, "/") == 0){

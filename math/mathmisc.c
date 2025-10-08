@@ -19,11 +19,7 @@
 #include "numtype.h"
 #include "mathmisc.h"
 #include "blas.h"
-const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
-const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
-const real RAD2AS=206264.8062470964; //radian in unit of arcsec
-const real RAD2MAS=206264806.2470964; //radian to milli-arcsecond
-const real TWOPI=6.28318530717958647692;
+int fft_disable_threads=0;
 #define check_vec(p,N) (p?(N?1:0):(N?(error("p is null but N is not 0\n"),0):0))
 /**
    Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
@@ -206,7 +202,7 @@ spint* readspint(file_t* fp, long* nx, long* ny){
 		*ny=(long)header.ny;
 		size_t len=(*nx)*(*ny);
 		out=mymalloc(len, spint);
-		if(readvec(out, M_SPINT, header.magic, sizeof(spint), len, fp)){
+		if(readvec(out, M_SPINT, header.id, sizeof(spint), len, fp)){
 			free(out);
 			return NULL;
 		}
@@ -230,7 +226,7 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 		T2 *p2=mymalloc(nmemb,T2);			\
 		if(!(ans=zfread(p2, sizeof(T2), nmemb, fp))){\
 		for(size_t i=0; i<nmemb; i++){		\
-			((T1*)p)[i]=p2[i];				\
+			((T1*)p)[i]=(T1)(p2[i]);		\
 		}}							        \
 		free(p2);					        \
     }
@@ -239,14 +235,14 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 		ans=zfread(p, size, nmemb, fp);
 	}
 		TEST_CONVERT(M_DBL, double, M_FLT, float)
-		TEST_CONVERT(M_DBL, double, M_CMP, dcomplex)
-		TEST_CONVERT(M_DBL, double, M_ZMP, fcomplex)
+		//TEST_CONVERT(M_DBL, double, M_CMP, dcomplex)
+		//TEST_CONVERT(M_DBL, double, M_ZMP, fcomplex)
 		TEST_CONVERT(M_DBL, double, M_INT32, int)
 		TEST_CONVERT(M_DBL, double, M_INT64, int64_t)
 		TEST_CONVERT(M_DBL, double, M_SPINT, spint)
 		TEST_CONVERT(M_FLT, float, M_DBL, double)
-		TEST_CONVERT(M_FLT, float, M_CMP, dcomplex)
-		TEST_CONVERT(M_FLT, float, M_ZMP, fcomplex)
+		//TEST_CONVERT(M_FLT, float, M_CMP, dcomplex)
+		//TEST_CONVERT(M_FLT, float, M_ZMP, fcomplex)
 		TEST_CONVERT(M_FLT, float, M_INT32, int)
 		TEST_CONVERT(M_FLT, float, M_INT64, int64_t)
 		TEST_CONVERT(M_FLT, float, M_SPINT, spint)
@@ -264,20 +260,20 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 		TEST_CONVERT(M_ZMP, fcomplex, M_SPINT, spint)
 		TEST_CONVERT(M_INT32, int, M_DBL, double)
 		TEST_CONVERT(M_INT32, int, M_FLT, float)
-		TEST_CONVERT(M_INT32, int, M_CMP, dcomplex)
-		TEST_CONVERT(M_INT32, int, M_ZMP, fcomplex)
+		//TEST_CONVERT(M_INT32, int, M_CMP, dcomplex)
+		//TEST_CONVERT(M_INT32, int, M_ZMP, fcomplex)
 		TEST_CONVERT(M_INT32, int, M_INT64, int64_t)
 		TEST_CONVERT(M_INT32, int, M_SPINT, spint)
 		TEST_CONVERT(M_INT64, int64_t, M_DBL, double)
 		TEST_CONVERT(M_INT64, int64_t, M_FLT, float)
-		TEST_CONVERT(M_INT64, int64_t, M_CMP, dcomplex)
-		TEST_CONVERT(M_INT64, int64_t, M_ZMP, fcomplex)
+		//TEST_CONVERT(M_INT64, int64_t, M_CMP, dcomplex)
+		//TEST_CONVERT(M_INT64, int64_t, M_ZMP, fcomplex)
 		TEST_CONVERT(M_INT64, int64_t, M_INT32, int)
 		TEST_CONVERT(M_INT64, int64_t, M_SPINT, spint)
 		TEST_CONVERT(M_SPINT, spint, M_DBL, double)
 		TEST_CONVERT(M_SPINT, spint, M_FLT, float)
-		TEST_CONVERT(M_SPINT, spint, M_CMP, dcomplex)
-		TEST_CONVERT(M_SPINT, spint, M_ZMP, fcomplex)
+		//TEST_CONVERT(M_SPINT, spint, M_CMP, dcomplex)
+		//TEST_CONVERT(M_SPINT, spint, M_ZMP, fcomplex)
 		TEST_CONVERT(M_SPINT, spint, M_INT32, int)
 		TEST_CONVERT(M_SPINT, spint, M_INT64, int64_t)
 	else{

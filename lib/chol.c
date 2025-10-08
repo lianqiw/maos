@@ -44,10 +44,10 @@
 */
 #define AS_DOUBLE 1 //must always be true
 #if !defined(COMP_SINGLE) || AS_DOUBLE
-#define CHOL_DATA CHOLMOD_DOUBLE
+#define CHOL_DTYPE CHOLMOD_DOUBLE
 typedef double chol_real;
 #else
-#define CHOL_DATA CHOLMOD_SINGLE
+#define CHOL_DTYPE CHOLMOD_SINGLE
 typedef float chol_real;
 #endif
 
@@ -60,7 +60,7 @@ typedef float chol_real;
 		    ((t1*)p1)[i]=((t2*)p2)[i];		\
 		}					\
     }else{					\
-		p1=p2;					\
+		p1=(chol_real*)p2;					\
     }
 #define DO_COPY(p1, p2, t1, t2, size)		\
     if(sizeof(t1)!=sizeof(t2)){			\
@@ -81,7 +81,7 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 	B->p=A->pp;/*do not duplicate. */
 	B->i=A->pi;
 	DO_CONVERT(B->x, A->px, chol_real, real, B->nzmax);
-	B->dtype=CHOL_DATA;
+	B->dtype=CHOL_DTYPE;
 	B->itype=CHOL_ITYPE;
 	B->xtype=CHOLMOD_REAL;
 	B->stype=1;/*assume data is symmetric. upper triangular part is used. */
@@ -122,7 +122,7 @@ static cholmod_dense* d2chol(const dmat* A, int start, int end){
 	B->z=NULL;
 	B->xtype=CHOLMOD_REAL;
 	DO_CONVERT(B->x, PCOL(A, start), chol_real, real, B->nzmax);
-	B->dtype=CHOL_DATA;
+	B->dtype=CHOL_DTYPE;
 	return B;
 }
 
@@ -209,7 +209,7 @@ void chol_convert(spchol* A, int keep){
 #endif
 	cholmod_factor* L=A->L;
 	if(keep){
-		A->Cp=A->L->Perm;
+		A->Cp=(spint*)A->L->Perm;
 		L=MOD(copy_factor)(A->L, A->c);
 	} else{
 		A->Cp=mymalloc(A->L->n, spint);
@@ -310,7 +310,7 @@ spchol* chol_read(const char* format, ...){
 	file_t* fp=zfopen(fn, "rb");
 	header_t header={0,0,0,0};
 	read_header(&header, fp);
-	if(!iscell(&header.magic)){
+	if(!iscell(&header.id)){
 		error("%s does not contain cell array\n", fn);
 	}
 	long ncx=header.nx;
@@ -362,7 +362,7 @@ spchol* chol_read(const char* format, ...){
 	nx=header2.nx; ny=header2.ny;					\
 	if(nx*ny!=(long)(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
 	L->A=mymalloc(nx*ny,real);					\
-	readvec(L->A, M_REAL, header2.magic, sizeof(real), nx*ny, fp);	
+	readvec(L->A, M_REAL, header2.id, sizeof(real), nx*ny, fp);	
 		READSPINT(Perm, L->n);
 		READSPINT(ColCount, L->n);
 		if(L->is_super==0){/*Simplicity */
@@ -405,7 +405,7 @@ static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long st
 	}
 
 	if(!*x&&start==0&&sizeof(real)==sizeof(chol_real)){
-		*x=dnew_do(x2->nrow, x2->ncol, x2->x, mem_new(x2->x));
+		*x=dnew_do(x2->nrow, x2->ncol, (real*)x2->x, mem_new(x2->x));
 	} else{
 		if(!(*x)){
 			*x=dnew(x2->nrow, end);

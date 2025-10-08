@@ -105,8 +105,9 @@ struct mem_t{
 	int kind; /**<Kind of memory. 0: heap, 1: mmap*/
 	unsigned int nref; /**<Number of reference.*/
 };
-
-void swap_array(void* out, void* in, long bytes, int size){
+#define FITS_BS 2880 /*fits block size*/
+#define FITS_NH 36   /*number of headers in a block*/
+void swap_array(char* out, const char* in, long bytes, int size){
 	switch(size){
 	case 1:
 		if(out!=in){
@@ -115,8 +116,8 @@ void swap_array(void* out, void* in, long bytes, int size){
 		break;
 	case 2:
 	{
-		uint16_t* pout=out;
-		uint16_t* pin=in;
+		uint16_t* pout=(uint16_t*)out;
+		uint16_t* pin=(uint16_t*)in;
 		long len=bytes>>1;
 		for(long i=0; i<len; i++){
 			pout[i]=swap2bytes(pin[i]);
@@ -125,8 +126,8 @@ void swap_array(void* out, void* in, long bytes, int size){
 	break;
 	case 4:
 	{
-		uint32_t* pout=out;
-		uint32_t* pin=in;
+		uint32_t* pout=(uint32_t*)out;
+		uint32_t* pin=(uint32_t*)in;
 		long len=bytes>>2;
 		for(long i=0; i<len; i++){
 			pout[i]=swap4bytes(pin[i]);
@@ -135,8 +136,8 @@ void swap_array(void* out, void* in, long bytes, int size){
 	break;
 	default://this is the longest data unit we need to handle.
 	{
-		uint64_t* pout=out;
-		uint64_t* pin=in;
+		uint64_t* pout=(uint64_t*)out;
+		uint64_t* pin=(uint64_t*)in;
 		long len=bytes>>3;
 		for(long i=0; i<len; i++){
 			pout[i]=swap8bytes(pin[i]);
@@ -483,7 +484,7 @@ int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-int zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+static int zfwrite_do(const char* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	size_t tot=size*nmemb;
 	while(!fp->err){
 		int count=zfwrite_wrap(ptr, tot, fp);
@@ -518,33 +519,32 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 		warning("zfwrite: invalid input or error in file.\n");
 		return -1;
 	}
+	const char *in=(const char*)ptr;
 	int ans=0;
 	if(fp->isfits&&BIGENDIAN==0){
 		int length=size*nmemb;
 		/* write a block of 2880 bytes each time, with big-endianness.*/
-		const int bs=2880;
-		char junk[bs];
-		int nb=(length+bs-1)/bs;
-		char* in=(char*)ptr;
+		char junk[FITS_BS];
+		int nb=(length+FITS_BS-1)/FITS_BS;
 		for(int ib=0; ib<nb&&!ans; ib++){
-			int nd=length<bs?length:bs;
+			int nd=length<FITS_BS?length:FITS_BS;
 			swap_array(junk, in, nd, size);
 			/* use bs instead of nd to test tailing blanks*/
-			in+=bs; length-=bs;
+			in+=FITS_BS; length-=FITS_BS;
 			if(length<0){
-				memset(junk+nd, 0, (bs-nd)*sizeof(char));
+				memset(junk+nd, 0, (FITS_BS-nd)*sizeof(char));
 			}
-			ans=zfwrite_do(junk, sizeof(char), bs, fp);
+			ans=zfwrite_do(junk, sizeof(char), FITS_BS, fp);
 		}
 	} else{
-		ans=zfwrite_do(ptr, size, nmemb, fp);
+		ans=zfwrite_do(in, size, nmemb, fp);
 	}
 	return ans;
 }
 /**
  * Wrap normal and gzip file operation.
  * */
-int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
+int zfread_wrap(char* ptr, const size_t tot, file_t* fp){
 	if(!fp||fp->fd<0||fp->err||!ptr){
 		warning("zfread_wrap: error encountered\n");
 		return -1;
@@ -557,7 +557,7 @@ int zfread_wrap(void* ptr, const size_t tot, file_t* fp){
 /**
    Read from the file. Handle partial read.
 */
-int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+static int zfread_do(char* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	ssize_t tot=size*nmemb;
 	while(!fp->err){
 		long count=zfread_wrap(ptr, tot, fp);
@@ -586,23 +586,22 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if(fp->err){
 		ans=-1;
 	} else if(fp->isfits&&size>1){/*need to do byte swapping.*/
-		const long bs=2880;
 		long length=size*nmemb;
-		long nb=(length+bs-1)/bs;
+		long nb=(length+FITS_BS-1)/FITS_BS;
 		char* out=(char*)ptr;
 		for(int ib=0; ib<nb; ib++){
-			int nd=length<bs?length:bs;
+			int nd=length<FITS_BS?length:FITS_BS;
 			ans=zfread_do(out, sizeof(char), nd, fp);
-			if(nd<bs){//read the padding
-				zfseek(fp, bs-nd, SEEK_CUR);
+			if(nd<FITS_BS){//read the padding
+				zfseek(fp, FITS_BS-nd, SEEK_CUR);
 			}
 			if(ans) break;
 			swap_array(out, out, nd, size);
-			out+=bs;
-			length-=bs;
+			out+=FITS_BS;
+			length-=FITS_BS;
 		}
 	} else{
-		ans=zfread_do(ptr, size, nmemb, fp);
+		ans=zfread_do((char*)ptr, size, nmemb, fp);
 	}
 	return ans;
 }
@@ -711,7 +710,7 @@ read_bin_header(header_t* header, file_t* fp){
 			CHECK_ERR(zfread(&nlen2, sizeof(uint64_t), 1, fp)||nlen2!=nlen, "Read length of comment 2 failed");
 			CHECK_ERR(zfread(&magic2, sizeof(uint32_t), 1, fp)||magic2!=magic, "Read data type 2 failed");
 		} else{ //Finish
-			header->magic=magic;
+			header->id=magic;
 			CHECK_ERR(zfread(&header->nx, sizeof(uint64_t), 1, fp), "Read nx failed");
 			CHECK_ERR(zfread(&header->ny, sizeof(uint64_t), 1, fp), "Real ny failed");
 			if((magic&0x6400)!=0x6400){
@@ -728,7 +727,7 @@ read_error:
 		warning("read_bin_header: error=%d.\n", fp->err);
 	}
 read_error_eof:
-	header->magic=0;
+	header->id=0;
 	header->nx=0;
 	header->ny=0;
 	free(header->str); header->str=NULL;
@@ -768,7 +767,7 @@ static void write_bin_header(const header_t* header, file_t* fp){
 	}
 	uint32_t mp=M_SKIP;
 	MEMPCPY(tmp, mp, uint32_t);
-	MEMPCPY(tmp, header->magic, uint32_t);
+	MEMPCPY(tmp, header->id, uint32_t);
 	MEMPCPY(tmp, header->nx, uint64_t);
 	MEMPCPY(tmp, header->ny, uint64_t);
 	zfwrite(buf, nbyte, 1, fp);
@@ -831,8 +830,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 		naxis[0]=2;
 		count++;
 	}
-	const int nh=36;//each fits page can only contain 36 headers.
-	char header[nh][80];
+	char header[FITS_NH][80];
 	memset(header, ' ', sizeof(char)*36*80);
 	int hc=0;
 	if(fp->isfits==1){
@@ -845,7 +843,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 	snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
 
 #define FLUSH_OUT /*write the page if ready */		\
-	if(hc==nh){					\
+	if(hc==FITS_NH){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
 	    memset(header, ' ', sizeof(char)*36*80);	\
 	    hc=0;					\
@@ -1005,22 +1003,22 @@ read_fits_header(header_t* header, file_t* fp){
 	}
 	switch(bitpix){
 	case -32:
-		header->magic=nc==2?M_ZMP:M_FLT;
+		header->id=nc==2?M_ZMP:M_FLT;
 		break;
 	case -64:
-		header->magic=nc==2?M_CMP:M_DBL;
+		header->id=nc==2?M_CMP:M_DBL;
 		break;
 	case 64:
-		header->magic=M_INT64;
+		header->id=M_INT64;
 		break;
 	case 32:
-		header->magic=M_INT32;
+		header->id=M_INT32;
 		break;
 	case 16:
-		header->magic=M_INT16;
+		header->id=M_INT16;
 		break;
 	case 8:
-		header->magic=M_INT8;
+		header->id=M_INT8;
 		break;
 	default:
 		zferr(fp, 2);
@@ -1033,7 +1031,7 @@ read_error:
 		warning("read_fits_header: error=%d\n", fp->err);
 	}
 read_error_eof:
-	header->magic=0;
+	header->id=0;
 	header->nx=0;
 	header->ny=0;
 	return fp->err?fp->err:-1;
@@ -1043,8 +1041,8 @@ read_error_eof:
    information and string header if any.  */
 void write_header(const header_t* header, file_t* fp){
 	if(fp->isfits){
-		if(header->magic!=MCC_ANY){
-			write_fits_header(fp, header->str?header->str:fp->gstr, header->magic, 2, &header->nx, &header->ny);
+		if(header->id!=MCC_ANY){
+			write_fits_header(fp, header->str?header->str:fp->gstr, header->id, 2, &header->nx, &header->ny);
 		}else if(header->str){
 			fp->gstr=strdup(header->str);//save global keyword to be used for each page
 		}
@@ -1123,7 +1121,7 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 		}
 		return -1;
 	}
-	header_t header={magic, nx, ny, (char *)str};
+	header_t header={.id=magic, .nx=nx, .ny=ny, .str=(char *)str};
 	write_header(&header, fp);
 	//long pos=zfpos(fp);
 	int ans=0;
@@ -1383,7 +1381,7 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 	async_t* async=mycalloc(1, struct async_t);
 	if(async){
 		async->fp=fp;
-		async->p=p;
+		async->p=(const char*)p;
 		async->pos=pos;//start of data block. do not modify
 		async->prev=0; //length of data block written by previous async_write() call.
 #if USE_ASYNC	

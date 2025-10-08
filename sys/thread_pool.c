@@ -238,7 +238,7 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 #else //use array based stack
 typedef struct jobs_t{
 	thread_wrapfun fun; /**<The function*/
-	void *arg;          /**<The argument*/
+	thread_t *arg;          /**<The argument*/
 	tp_counter_t *counter;/**<address of the job group, whos value keeps track of queued jobs.*/
 	unsigned int next;  /**<4 byte index into jobsall for next job, replacing pointer*/
 }jobs_t;
@@ -337,7 +337,7 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 				job=&jobsall[jobind];
 				if(fun){
 					job->fun=fun;
-					job->arg=arg;
+					job->arg=(thread_t*)arg;
 				} else{
 					job->fun=arg2[ijob].fun;
 					job->arg=&arg2[ijob];

@@ -46,7 +46,7 @@
 
   
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
-typedef enum M_ID{//last 2 bytes
+enum {//last 2 bytes
   	M_0      =0x0,     /*undefined*/
 	M_DBL    =0x6402,  /*double */
 	M_INT64  =0x6403,  /*int 64 array */
@@ -81,7 +81,8 @@ typedef enum M_ID{//last 2 bytes
   	M_RMAP64 =0x026402, /*map_t, compatible with M_DBL*/
   	M_LOC64  =0x036402, /*loc_t with double data*/
   	M_EOD    =0x64FF    /*Indicate end of valid data */
-}M_ID;
+};
+typedef uint32_t M_ID; /*the magic number, see above*/
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
 #elif LONG_MAX==9223372036854775807L
@@ -111,10 +112,7 @@ typedef int spint;
 
 typedef struct file_t file_t;
 typedef struct {
-  union{
-    M_ID id;//this must be the first element because we cast header_t to uint32_t.
-    uint32_t magic;
-  };
+	uint32_t id;//this must be the first element because we cast header_t to uint32_t.
     uint64_t nx;
     uint64_t ny;
     char *str;

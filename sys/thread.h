@@ -99,8 +99,6 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 //weak is ok since we do while
 #define atomic_compare_exchange_n(ptr, pexpected, desired) __atomic_compare_exchange_n(ptr, pexpected, desired, 0, MEM_ORDER, MEM_ORDER)
 #define atomic_compare_exchange(ptr, pexpected, pdesired) __atomic_compare_exchange(ptr, pexpected, pdesired, 0, MEM_ORDER, MEM_ORDER) 
-#define atomic_load(ptr) __atomic_load_n(ptr, MEM_ORDER) 
-#define atomic_store(ptr, val) __atomic_store_n(ptr, val, MEM_ORDER) 
 
 #if _OPENMP >= 201511
 #define OMPTASK_SINGLE	\
@@ -117,6 +115,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #define OMP(A) DO_PRAGMA(omp A)
 #define OMP_TASK_FOR(ntask)      expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) priority(1))
 #define OMP_TASK_FOR_COLLAPSE(n, ntask) expect_level(1);DO_PRAGMA(omp taskloop default(shared) num_tasks(ntask) collapse(n) priority(1))
+#define OMP_CRITICAL DO_PRAGMA(omp critical)
 #else
 #define OMPTASK_SINGLE
 #define OMP_IN_PARALLEL 0
@@ -125,6 +124,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #define OMP(A)
 #define OMP_TASK_FOR(ntask)
 #define OMP_TASK_FOR_COLLAPSE(n, ntask)
+#define OMP_CRITICAL
 #endif
 
 /*
@@ -246,7 +246,7 @@ dbg("tmin=%u, tmax=%u ms\n", (counter)->tmin, (counter)->tmax);(counter)->tmin=0
         QUEUE(&counter, fun, arg, nthread, urgent);\
         WAIT(&counter, urgent);\
     } else{\
-        fun((void *)(arg));\
+        fun(arg);\
     }\
 })\
 

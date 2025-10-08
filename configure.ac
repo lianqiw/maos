@@ -22,7 +22,7 @@ fi
 if test -z "$LIBS" ;then
 	LIBS=" "
 fi
-if test -n "$MAOS_CC" && which "$MAOS_CC" >/dev/null 2>&1;then
+if test -z "$CC" -a -n "$MAOS_CC" && which "$MAOS_CC" >/dev/null 2>&1;then
 	CC="$MAOS_CC"
 fi
 AC_CONFIG_MACRO_DIR([m4])
@@ -32,20 +32,10 @@ AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
-case "$CFLAGS" in
-		*-std=*)
-	;;
-	*)
-		CFLAGS+=" -std=c11"
-	;;
-esac
-AC_PROG_CC([$CC])
-#AM_PROG_CC_C_O #deprecated. Included in AC_PROG_CC.
-#AC_PROG_CC_STDC #enable the current c standard, which is c99 circa 2014
-#AC_PROG_CC_C99  #enable C99
+AC_PROG_CC([$CC]) #overrides CC
+#AC_LANG([C++]) #uncomment this line to use C++ compiler (for compatibility checking)
 #AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS+=" -std=c11"], AC_MSG_ERROR("C compiler cannot compile C11 code"))
 #AC_PROG_CXX([$CXX])
-
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
@@ -73,39 +63,39 @@ LDEXE=
 LDRT=
 OPTS=
 CUDAOPT= #options for CUDA
-USE_CPP=0
-#find the real flavor of CC
-case `$CC -v 2>&1` in
-	*clang++*)
-		CN=CLANG
+case "x$CC" in
+	x*++)
 		USE_CPP=1
+	;;
+	*)
+	case "x$CFLAGS" in
+	x*++*)
+		USE_CPP=1;;
+	*)
+		USE_CPP=0
+	esac
+esac
+#find the real flavor of CC
+case `$CC --version 2>&1` in
+	*clang*)
+		CN=CLANG
 		;;
 	*DPC++*) #New intel compilar with clang backend
 	  	CN=CLANG
 		LDOPTS+=" -limf"
 		INTEL=1
 		;;
-	*clang*)
-		CN=CLANG
-		;;
-	*icpc*) #Old intel compiler
-		CN=ICC
-		USE_CPP=1
-		;;
-	*icc*) #Old intel compiler
+	*icpc*|*icc*) #Old intel compiler
 		CN=ICC
 		;;
-	*g++*)
-		CN=GCC
-		USE_CPP=1
-		;;
-	*gcc*)
+	*g++*|*gcc*)
 		CN=GCC
 		;;
 	*)
 		CN=GCC
 		AC_MSG_ERROR([Compiler $CC is unknown])
 esac
+
 AC_DEFINE_UNQUOTED(USE_CPP, [$USE_CPP], [Compile using C++ compiler])
 AM_CONDITIONAL(GCC, [test x$CN = xGCC])
 AM_CONDITIONAL(ICC, [test x$CN = xICC])
@@ -176,7 +166,9 @@ else
 	fi
 	done
 fi
-
+if test "$USE_CPP" = "1" ;then
+	cmocka_default="no" #the C++ compiler does not work with cmocka
+fi
 #Common configure options.
 AC_ARG_ENABLE(allstatic, AS_HELP_STRING([--enable-allstatic], [Compile statically (obsolete)]))
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]))
@@ -195,10 +187,11 @@ AC_ARG_ENABLE(gtk-4, AS_HELP_STRING([--disable-gtk-4],[Disable GTK4]), [use_gtk_
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced compatibility]))
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
-AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]))
+AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]), [enable_cmocka="$enableval"], [enable_cmocka="$cmocka_default"])
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
 AC_ARG_ENABLE(download, AS_HELP_STRING([--disable-download], [Disable downloading library]))
 AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
+AC_ARG_ENABLE(threadlib, AS_HELP_STRING([--enable-threadlib], [Enable threading library for blas and fftw.]))
 #echo enable_openmp="$enable_openmp"
 #echo openmp_default="$openmp_default"
 if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
@@ -249,22 +242,22 @@ if test "$enable_release" = "yes" ;then
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
+#use -Wno-error=xxxx to disable certain warnings from being treated as errors.
+#use -Wno-xxxx to disable certain warnings entirely.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wno-unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations"
-	#OPTScommon+=" -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security -Wno-vla "
+	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations"
 fi
 
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers "
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_CLANG=" -Wno-error=pass-failed -Wno-pass-failed"
-COMMON_CLANG+=" -Wno-sign-compare " #CLANG has false positive in detecting sign comparison.
+COMMON_CLANG=" -Wno-pass-failed -Wno-sign-compare -Wno-gnu-folding-constant"  #CLANG has false positive in detecting sign comparison.
 #Set optimize flags for different compilers
 OPTIM_ALL="-g -O3 -mtune=native "
 
 if test "$INTEL" = "1" ;then
 	OPTIM_CLANG+=" -fp-model=precise"
-	#OPTIM_CLANGS+=" -Wno-error=recommended-option -Wno-recommended-option"
+	#OPTIM_CLANGS+=" -Wno-recommended-option"
 	OPTS_CPU+=" -qopenmp-simd"
 else
 	OPTS_CPU+=" -fopenmp-simd" #Only to be used for CPU code.
@@ -272,7 +265,11 @@ fi
 
 DEBUG_ALL="-g3 -O0 -DDEBUG_TRACE" #-og
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
-
+if test "$USE_CPP" = "1" ;then
+	COMMON_GCC+=" -Wno-changes-meaning -Wno-class-memaccess -Wno-error=use-after-free -Wno-format-truncation -Wno-error=int-in-bool-context"
+	COMMON_CLANG+=" -Wno-vla-cxx-extension  -Wno-deprecated"
+	COMMON_ALL+=" -Wno-deprecated-declarations " #do not emit warning
+fi
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -500,7 +497,7 @@ AS_IF([test "$system" = "apple"], [
 	])
 ], [AS_IF([test "$enable_openmp" != "no"], [AC_OPENMP])]
 )
-
+AS_IF([test -z "$OPENMP_CFLAGS" -a -n "$OPENMP_CXXFLAGS"], [OPENMP_CFLAGS="$OPENMP_CXXFLAGS"])
 #Don't add OPENMP_CFLAGS to CFLAGS yet to avoid building external library with the flag
 AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp=0], [has_omp=1])
 AS_IF([test "$has_omp" = "0"], [CFLAGS+=" -pthread"])
@@ -539,7 +536,13 @@ else
 	AC_DEFINE(USE_STATIC, [0], [Comple maos with dynamic linkage])
 	mkl="mkl mkl-static" #prefer dynamic
 fi
-try_lapack="openblas openblas-0 openblas-serial openblas-serial-0 pkg-config default-3 default"
+
+if test "x$enable_threadlibx" != xno ;then #prefer threaded blas if available
+	openblas="openblas-threads openblas-threads-0 openblas-serial openblas-serial-0"
+else #disable threading
+	openblas="openblas-serial openblas-serial-0"
+fi
+try_lapack="$openblas pkg-config default-3 default"
 if test x$mkl_avail = xyes; then
 	case $use_mkl in
 	yes) #prefer MKL
@@ -550,9 +553,7 @@ if test x$mkl_avail = xyes; then
 		;;
 	esac
 fi
-#call convention of fortran libraries
-#AC_F77_FUNC(dgemm)
-#AC_F77_FUNC(dposv)
+
 #download LIBNANE file.tar.bz2 [outdir]
 
 function set_lapack(){
@@ -569,7 +570,7 @@ function set_lapack(){
 			LAPACK="-lmkl_intel"
 		fi
 
-		if test "$has_omp" = "0"; then
+		if test "$has_omp" = "0" -o x$enable_threadlib == xno ; then
 			LAPACK+=" -lmkl_sequential "
 		else
 			if test "$CN" = "ICC" -o "$CN" = "CLANG" ;then
@@ -585,7 +586,9 @@ function set_lapack(){
 			LAPACK=${LAPACK// /,}
 			LAPACK=${LAPACK//,,/,}
 		fi
-		LAPACK+=" $OPENMP_CFLAGS -lpthread -ldl"
+		if test x$enable_threadlib != xno ;then
+			LAPACK+=" $OPENMP_CFLAGS -lpthread -ldl"
+		fi
 		;;
 	blis*) #slow. use mkl instead.
 		if test "$type" = "blis-download"; then
@@ -601,14 +604,14 @@ function set_lapack(){
 	pkg-config)
 		LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 		;;
-	openblas)
+	openblas-threads)
 		if test "$has_omp" = "0" ;then
 			LAPACK="-lopenblasp"
 		else
 			LAPACK="-lopenblaso" #openblas has lapack built in
 		fi
 		;;
-	openblas-0)
+	openblas-threads-0)
 		if test "$has_omp" = "0" ;then
 			LAPACK="-l:libopenblasp.so.0"
 		else
@@ -634,16 +637,18 @@ function set_lapack(){
 	echo trying LAPACK=$LAPACK
 }
 has_lapack=no
-
+has_blas=no
+dgemm=dgemm_
+dposv=dposv_
 for try in ${try_lapack}; do
 	if test "$has_lapack" = "no" -o "$has_blas" = "no";then
-		unset ac_cv_lib_m_dgemm_
-		unset ac_cv_lib_m_dposv_
+		unset ac_cv_lib_m_${dgemm:-dgemm_}
+		unset ac_cv_lib_m_${dposv:-dposv_}
 		set_lapack ${try}
 		if test -n "$LAPACK" ;then
 			#the trailing -lm is necessary for ubuntu-16.04 with mkl
-			AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
-			AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
+			AC_CHECK_LIB([m],[${dposv:-dposv_}],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm -I$SRC_DIR])
+			AC_CHECK_LIB([m],[${dgemm:-dgemm_}],[has_blas=yes],[has_blas=no],[$LAPACK -lm -I$SRC_DIR])
 		fi
 	fi
 done
@@ -677,7 +682,9 @@ fi
 if test "$has_fftw" = "builtin";then
 	AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
 	AC_CHECK_LIB([m], [fftwf_execute],[has_fftwf=1] ,[has_fftwf=0],[$LAPACK -lm])
-	fftw_threads=1
+	if test x$enable_threadlib != xno;then
+		fftw_threads=1
+	fi
 else
 	if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 		#download pre-compiled
@@ -711,25 +718,29 @@ else
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 LDFFT+=" -lfftw3f"] ,[has_fftwf=0])
 
-	#if test "$has_omp" = "1" ;then
-	#	THREADS_SUFFIX="_omp"
-	#else
-	THREADS_SUFFIX="_threads"
-	#fi
-	LDFFT_THREADS=" -pthread"
-	for name in $LDFFT ;do
-		case "$name" in
-		*.a)
-			LDFFT_THREADS+=" ${name/.a/}${THREADS_SUFFIX}.a"
-			;;
-		*.so)
-			LDFFT_THREADS+=" ${name/.so/}${THREADS_SUFFIX}.so"
-			;;
-		*)
-			LDFFT_THREADS+=" $name${THREADS_SUFFIX}"
-		esac
-	done
-	AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT ])
+	if test x$enable_threadlib != xno;then
+		#if test "$has_omp" = "1" ;then
+		#	THREADS_SUFFIX="_omp"
+		#else
+		THREADS_SUFFIX="_threads"
+		#fi
+		LDFFT_THREADS=" -pthread"
+		for name in $LDFFT ;do
+			case "$name" in
+			*.a)
+				LDFFT_THREADS+=" ${name/.a/}${THREADS_SUFFIX}.a"
+				;;
+			*.so)
+				LDFFT_THREADS+=" ${name/.so/}${THREADS_SUFFIX}.so"
+				;;
+			*)
+				LDFFT_THREADS+=" $name${THREADS_SUFFIX}"
+			esac
+		done
+		AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 LDFFT+=" $LDFFT_THREADS"], [fftw_threads=0], [$LDFFT_THREADS $LDFFT ])
+	else
+		fftw_threads=0
+	fi
 	LDFFT_MEX=$LDFFT
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], [FFTW has thread support.])
@@ -798,25 +809,26 @@ if test "$enable_cmocka" != "no" ;then
 		#include <stdint.h>
 		#include <setjmp.h>])
 	if test "$enable_cmocka" = "no" ;then
-		if download CMOCKA cmocka${libsuffix}.tar.bz2 ${prefix};then
-			unset ac_cv_lib_cmocka_mock_assert
-			AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
-		fi
-		if test "$enable_cmocka" = "no" ;then
+		#if download CMOCKA cmocka${libsuffix}.tar.bz2 ${prefix};then
+		#	unset ac_cv_lib_cmocka_mock_assert
+		#	AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
+		#fi
+		#if test "$enable_cmocka" = "no" ;then
 			if compile CMOCKA cmocka.tar.xz ;then
 				unset ac_cv_lib_cmocka_mock_assert
 				AC_CHECK_LIB([cmocka], [mock_assert], [enable_cmocka="yes"], [enable_cmocka="no"])
 			fi
-		fi
+		#fi
 	fi
 	if test "$enable_cmocka" != "no" ;then
 		AC_DEFINE(USE_CMOCKA, [1], [Enable unit testing with cmocka])
 	fi
 fi
-AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka != xno ])
+AM_CONDITIONAL(USE_CMOCKA, [ test x$enable_cmocka = xyes ])
 gtk_ver=0
 has_cairo=0
 has_notify=0
+has_mac=0
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 	#Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 	#cairo 1.2 comes with gtk+-2.10
@@ -1050,7 +1062,7 @@ if test "$with_cuda" != "no" ;then
 		#CCBINOPT is what NVCC passes to C++ compiler
 		CCBINOPT="$OPTScommon $OPTSprof $OPTS_CC $CPPFLAGS $OPENMP_CFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
 		CCBINOPT="${CCBINOPT/-fpermissive/}"
-		case `$CCBIN -v 2>&1` in
+		case `$CCBIN --version 2>&1` in
 		*clang*|*DPC++*)
 			CCN=CLANG
 			;;
@@ -1063,8 +1075,8 @@ if test "$with_cuda" != "no" ;then
 		esac
 	fi
 fi
-if test "$with_cuda" != "no" -a $CN = CLANG ;then #use clang to compile GPU code. Which is as fast as nvcc but more tolerant.
-	NVCC=$CC
+if test "$with_cuda" != "no" -a $CCN = CLANG ;then #use clang to compile GPU code. Which is as fast as nvcc but more tolerant.
+	NVCC=$CCBIN
 	if test $CC_VERSION -ge 50 ;then
 		CUDAOPT+=" --std=c++17" #fix __float128 error. see https://discourse.llvm.org/t/error-float128-is-not-supported-on-this-target/72397
 	fi
@@ -1183,11 +1195,13 @@ echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
 echo BIGENDIAN=$BIGENDIAN
 echo enable_allstatic=$enable_allstatic
+echo CC=$CC
+echo USE_CPP=$USE_CPP
 echo CPPFLAGS=$CPPFLAGS
 echo CFLAGS=$CFLAGS
 echo LDFFT=$LDFFT
 echo LDCHOL=$LDCHOL
-echo LAPCAK=$LAPACK
+echo LAPACK=$LAPACK
 echo LDEXE=$LDEXE
 echo LDFLAGS=$LDFLAGS
 
@@ -1196,7 +1210,7 @@ if test "$gtk_ver" != "0" ;then
 fi
 if test "$with_cuda" != "no" ;then
 	echo "NVCC=$NVCC"
-	#echo "CUDAOPT=$CUDAOPT"
+	echo "CUDAOPT=$CUDAOPT"
 	#echo "CCBINOPT=$CCBINOPT"
 	#echo "LIBCUDA=$LIBCUDA"
 	echo "LDCUDA=$LDCUDA"
@@ -1222,7 +1236,7 @@ echo "OpenMP:          ${YESNO[[$has_omp]]}"
 echo "FFTW Threads:    ${YESNO[[$fftw_threads]]}"
 echo "Precision:       ${FP[[$enable_single]]}"
 echo "CUDA:            ${cudaver:-no} ${cudaver:+ (${FP[[1-$cuda_double]]}, arch: $cuarch)}"
-echo "GTK version:     ${gtk_ver}${has_mac:+ (with mac integration)}"
+echo "GTK version:     ${gtk_ver}"
 
 echo "Websocket:       ${enable_websockets:-yes}"
 echo "MATLAB MEX:      $with_matlab"

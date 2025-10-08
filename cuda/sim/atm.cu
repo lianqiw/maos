@@ -311,9 +311,6 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			//toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
 		}//if isim
 	}//for ips
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
 }
 void gpu_dmreal2gpu(mapcell* dmreal){
 	for(int im=0; im<NGPU; im++){

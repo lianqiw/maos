@@ -43,43 +43,13 @@ static void save_wisdom(){
 		FFTW(export_wisdom_to_file)(fpwisdom);
 		fclose(fpwisdom);
 	}
-}
-/**
-   executed after main() exits.
-*/
-static __attribute__((destructor))void deinit(){
-	save_wisdom();
-}
-static void (*init_threads())(int){
-	void (*p_fftw_plan_with_nthreads)(int)=NULL;
-#if HAS_FFTW_THREADS
-	const char *suffix="_threads";
-#ifdef COMP_SINGLE
-	fftwf_init_threads();
-	p_fftw_plan_with_nthreads=(void(*)(int))fftwf_plan_with_nthreads;
-#else
-	fftw_init_threads();
-	p_fftw_plan_with_nthreads=(void(*)(int))fftw_plan_with_nthreads;
-#endif
-#else
-	dbg("FFTW thread library is not evailable\n");
-	const char *suffix="_serial";
-#endif	
-#ifdef COMP_SINGLE
-	const char *libname="fftwf";
-#else
-	const char *libname="fftw";
-#endif
-	sprintf(fnwisdom, "%s/%s_wisdom%s", DIRCACHE, libname, suffix);
-	load_wisdom();
-	return p_fftw_plan_with_nthreads;
-}
-
-
-
+}  
 #if HAS_FFTW_CALLBACK
 //sometimes the callback function is not included in the header.
 typedef void callback_fun(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data);
+#ifdef __cplusplus
+	extern "C" 	
+#endif
 void fftw_threads_set_callback(callback_fun callback, void *callback_data);
 static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
 	(void)data;
@@ -103,26 +73,62 @@ static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t
 		QUEUE(&group, work, jobdata+elsize*i, 1, 1);
 	}
 	WAIT(&group, 1);
-#endif
+#endif//_OPENMP
 }
-#endif
+#endif//HAS_FFTW_CALLBACK
+/**
+   executed after main() exits.
+*/
+static __attribute__((destructor))void deinit(){
+	save_wisdom();
+}
+static void (*init_threads())(int){
+	void (*p_fftw_plan_with_nthreads)(int)=NULL;
+#if HAS_FFTW_THREADS
+	const char *suffix="_threads";
+#ifdef COMP_SINGLE
+	fftwf_init_threads();
+	p_fftw_plan_with_nthreads=(void(*)(int))fftwf_plan_with_nthreads;
+#else
+	fftw_init_threads();
+	p_fftw_plan_with_nthreads=(void(*)(int))fftw_plan_with_nthreads;
+#endif//COMP_SINGLE
+#if HAS_FFTW_CALLBACK
+	fftw_threads_set_callback(FFTW(parallel_callback), NULL); //since version 3.3.9
+	dbg("fftw_thread_set_callback is set.\n");
+#else			
+	dbg("fftw_thread_set_callback is not available.\n");
+#endif//HAS_FFTW_CALLBACK
+#else//#if HAS_FFTW_THREADS
+	dbg("FFTW thread library is not evailable\n");
+	const char *suffix="_serial";
+#endif//HAS_FFTW_THREADS
+#ifdef COMP_SINGLE
+	const char *libname="fftwf";
+#else
+	const char *libname="fftw";
+#endif//COMP_SINGLE
+	snprintf(fnwisdom, sizeof(fnwisdom), "%s/%s_wisdom%s", DIRCACHE, libname, suffix);
+	load_wisdom();
+	return p_fftw_plan_with_nthreads;
+}
+/**
+   Set number of threads for FFTW based on array size.
+*/
 static void FFTW(fft_threads)(long nx, long ny){
 	static int fft_has_threads=-1;
 	static int last_nthread=-1;
+	extern int fft_disable_threads;
 	static void (*p_fftw_plan_with_nthreads)(int)=NULL;
-	if(fft_has_threads==-1){//first initialization
-		if((p_fftw_plan_with_nthreads=init_threads())){
-#if HAS_FFTW_CALLBACK
-			fftw_threads_set_callback(FFTW(parallel_callback), NULL); //since version 3.3.9
-			dbg("fftw_thread_set_callback is set.\n");
-#else			
-			dbg("fftw_thread_set_callback is not available.\n");
-#endif
+	if(fft_has_threads==-1){
+		if(!fft_disable_threads && (p_fftw_plan_with_nthreads=init_threads())){
 			fft_has_threads=1;
 		} else{
+			dbg("FFTW threads is %s.\n", fft_disable_threads?"disabled":"not available");
 			fft_has_threads=0;
 		}
 	}
+	
 	if(fft_has_threads==1){
 		int nth=(nx*ny>256*256)?NTHREAD:1;
 		if(nth!=last_nthread){
@@ -134,7 +140,11 @@ static void FFTW(fft_threads)(long nx, long ny){
 }
 
 #ifdef __cplusplus
+#ifdef  COMP_SINGLE
+#define COMP(A) reinterpret_cast<fftwf_complex*>(A)
+#else
 #define COMP(A) reinterpret_cast<fftw_complex*>(A)
+#endif
 #else
 #define COMP(A) A
 #endif

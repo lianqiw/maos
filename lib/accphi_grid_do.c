@@ -263,7 +263,6 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 				if(interp_cache){//use cached results
 					//First handle points fall within [0, wrapx)
-#pragma omp simd //not effective
 					for(int irow=irows; irow<rowdiv; irow++){
 						dplocx0=interp_cache[irow].dplocx;
 						nplocx0=interp_cache[irow].nplocx;
@@ -272,7 +271,6 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					//Then handle points fall within [wrapx, wrapx+xover)
 					//xover is EPS if wrap==0, 1 if wrap==1.
 					if(wrap){
-#pragma omp simd //not effective
 						for(int irow=rowdiv; irow<nxout; irow++){//right on edge
 							dplocx0=interp_cache[irow].dplocx;
 							nplocx0=interp_cache[irow].nplocx;

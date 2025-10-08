@@ -87,9 +87,6 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 	/*
 	  The original method of adding in to out is not right.
 	*/
-		T(*psfs)[npsfx]=(T(*)[npsfx])psf;
-		R(*amps)[nopdx]=(R(*)[nopdx])amp;
-		R(*opds)[nopdx]=(R(*)[nopdx])opd;
 		const R ctheta=cos(theta);
 		const R stheta=sin(theta);
 		const int nopdx2=nopdx/2;
@@ -110,15 +107,15 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 					int iy2=ifloor(y2);
 					x2=x2-ix2;
 					y2=y2-iy2;
-					R iopd=opds[iy2][ix2]*(1.-x2)*(1.-y2)
-						+opds[iy2][ix2+1]*(x2*(1.-y2))
-						+opds[iy2+1][ix2]*((1-x2)*y2)
-						+opds[iy2+1][ix2+1]*(x2*y2);
-					R iamp=amps[iy2][ix2]*(1.-x2)*(1.-y2)
-						+amps[iy2][ix2+1]*(x2*(1.-y2))
-						+amps[iy2+1][ix2]*((1-x2)*y2)
-						+amps[iy2+1][ix2+1]*(x2*y2);
-					psfs[iy][ix]=iamp*EXPI(wvk*iopd);
+					R iopd=opd[iy2*nopdx+ix2]*(1.-x2)*(1.-y2)
+						+opd[iy2*nopdx+ix2+1]*(x2*(1.-y2))
+						+opd[(iy2+1)*nopdx+ix2]*((1-x2)*y2)
+						+opd[(iy2+1)*nopdx+ix2+1]*(x2*y2);
+					R iamp=amp[iy2*nopdx+ix2]*(1.-x2)*(1.-y2)
+						+amp[iy2*nopdx+ix2+1]*(x2*(1.-y2))
+						+amp[(iy2+1)*nopdx+ix2]*((1-x2)*y2)
+						+amp[(iy2+1)*nopdx+ix2+1]*(x2*y2);
+					psf[iy*npsfx+ix]=iamp*EXPI(wvk*iopd);
 				}
 			}
 		}

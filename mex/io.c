@@ -640,7 +640,7 @@ int read_fits_header(file_t* fp, char** str, uint32_t* magic, uint64_t* ndim, mw
 				error("Unable to determine bitpix\n");
 			}
 			zfread(line, 1, 80, fp); line[80]='\0'; start++;
-			if(sscanf(line+10, "%"SCNu64, ndim)!=1){
+			if(sscanf(line+10, "%" SCNu64, ndim)!=1){
 				zfclose(fp);
 				error("Unable to determine naxis\n");
 			}

@@ -128,14 +128,14 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	long(*curp)[2]=data->curp;
 	dcell* MVMt=data->MVMt;
 	//int nthread=recon->nthread;
+	TIC;tic;
 	for(long iact=info->start; iact<info->end; iact++){
-	//TIC;tic;
 		int curdm=curp[iact][0];
 		int curact=curp[iact][1];
 		if(recon->actcpl&&P(P(recon->actcpl,curdm),curact)<EPS){
 			continue;
 		}
-		info_progress(iact, ntotact);
+		//info_progress(iact, 64);
 		//TIC;tic;
 		dcellzero(FRT);
 		dcellzero(RRT);
@@ -158,7 +158,8 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 				memcpy(PCOL(to, curact), P(P(RRT,iwfs)), NX(to)*sizeof(real));
 			}
 		}
-		//toc2(" %ld", iact);
+		info("Mean time is %.3f seconds\n", (myclockd()-tk)/(1+iact-info->start));
+		fflush(stdout);
 		/*{
 			writebin(FLI, "cpu_dmrecon_%ld", iact);
 			writebin(FRT, "cpu_opdx_%ld", iact);
@@ -209,7 +210,16 @@ setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		}
 	}
 	MVR_MVM_T data={parms, recon, MVMt, curp, ntotact};
-	int nthread=recon->nthread;
+	int nthread;
+	if(0){//handle one act at a time
+		nthread=1;
+		recon->nthread=NTHREAD;
+	}else{//make each iact a single thread
+		nthread=NTHREAD;//recon->nthread;
+		recon->nthread=1;//make sure only 1 threaded is used per iact
+		extern int fft_disable_threads;
+		fft_disable_threads=1;//disable fftw threads in each thread.
+	}
 	thread_t *tdata=thread_prep(0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
 	CALL_THREAD(tdata, 1);
 	free(tdata);

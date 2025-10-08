@@ -71,7 +71,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 		dbg("mmap_open failed\n");
 		return NULL;
 	}
-	char* map=mem_p(mem);
+	char* map=(char*)mem_p(mem);
 	mmap_write_header(&map, MCC_ANY, nx, ny, keywords);
 	X(cell)* out=X(cellnew)(nx, ny);
 	if(keywords) out->keywords=strdup(keywords);
@@ -139,7 +139,7 @@ X(cell)* X(cellread_mmap)(const char* format, ...){
 		dbg("mmap_open failed\n");
 		return NULL;
 	}
-	char* map=mem_p(mem);
+	char* map=(char*)mem_p(mem);
 	long nx, ny;
 	uint32_t magic;
 	const char* keywords;

@@ -168,12 +168,11 @@ typedef struct locstat_t{
 
 /**
    Struct for coordinates like plocs, xloc, aloc etc.
-   TODO: use rmat interface of mem_t?
 */
 typedef struct loc_t{
     union{
         dmat dmat[1];
-        struct{
+        struct{//must be the same as dmat
             M_ID id;
             real* locx;  /**< x coordinates of each point [allocates memory for both locx and locy]*/
             long nloc;   /**< number of points*/
@@ -181,16 +180,16 @@ typedef struct loc_t{
             char *keywords; /**<The keywords as a string*/
 		};
 	};
-	struct{
-		real* locy;  /**< y coordinates of each point*/
-		locstat_t* stat;/**<points to column statistics*/
-		map_t* map;    /**< point to the map used for identifying neihboring points.*/
-		real dx;     /**< Sampling along x*/
-		real dy;     /**< Sampling along y*/
-		real ht;     /**< Conjugation height of the loc grid.*/
-		real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-		int npad;      /*padding when create map*/
-    };
+	
+	real* locy;  /**< y coordinates of each point*/
+	locstat_t* stat;/**<points to column statistics*/
+	map_t* map;    /**< point to the map used for identifying neihboring points.*/
+	real dx;     /**< Sampling along x*/
+	real dy;     /**< Sampling along y*/
+	real ht;     /**< Conjugation height of the loc grid.*/
+	real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+	int npad;      /*padding when create map*/
+
 }loc_t;
 /**
    low left point of each subaperture.
@@ -509,8 +508,8 @@ static inline long index_col(long iy, long nx, long ny){
 #define PRR(A,...)	((A)?(PR(A,__VA_ARGS__)):0) //return 0 if A is NULL
 //Return Number of elements
 #define PN0(A)       ((A)?((A)->nx*(A)->ny):0)
-#define NX0(A)       ((A)?(A)->nx:0)
-#define NY0(A)       ((A)?(A)->ny:0)
+#define NX0(A)       ((A)?(A)->nx:0L)
+#define NY0(A)       ((A)?(A)->ny:0L)
 
 //Do not do checking which slows done loops a lot
 #define PN1(A,i)     PN0(P1(A,i))

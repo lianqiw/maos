@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
 	icon_avg=gdk_pixbuf_new_from_resource_at_scale("/maos/icon-avg.png", -1, 16, 1, NULL);
 
 #if MAC_INTEGRATION
-	GtkosxApplication* theApp=g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+	GtkosxApplication* theApp=(GtkosxApplication*)g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
 	gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
 	gtkosx_application_ready(theApp);
 	g_signal_connect(theApp, "NSApplicationWillTerminate", G_CALLBACK(mac_terminate), &sock);

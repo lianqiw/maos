@@ -20,6 +20,11 @@
 */
 #include "libmisc.h"
 #include "cure.h"
+const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
+const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
+const real RAD2AS=206264.8062470964; //radian in unit of arcsec
+const real RAD2MAS=206264806.2470964; //radian to milli-arcsecond
+
 /**
    add photon and read out noise.  pcalib part of bkgrnd is calibrated
    out. pcalib2 part of bkgrnd2 is calibrated out.  */

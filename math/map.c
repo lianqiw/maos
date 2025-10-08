@@ -24,7 +24,7 @@
  */
 map_t* map_convert(dmat *A){
 	if(!A || A->id!=M_REAL) return NULL;
-	map_t* map=myrealloc2(A, dmat, map_t);
+	map_t* map=myrecalloc(A, dmat, map_t);
 	map->id=M_MAP;
 	map->make_keywords=map_make_keywords;
 	if(map->keywords) map_parse_keywords(map); 
@@ -39,7 +39,7 @@ map_t* map_convert(dmat *A){
  */
 rmap_t* rmap_convert(dmat* A){
 	if(!A || A->id!=M_REAL) return NULL;
-	rmap_t* map=myrealloc2(A, dmat, rmap_t);
+	rmap_t* map=myrecalloc(A, dmat, rmap_t);
 	map->id=M_RMAP;
 	map->make_keywords=rmap_make_keywords;
 	if(map->keywords) rmap_parse_keywords(map);
@@ -367,14 +367,12 @@ void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
 		real wty=sa<0?1:0;
 		real* p1=P(atm1)+(1-(long)wty)*offy;
 		real* p2=P(atm2)+(long)wty*offy;
-		real(*pp1)[nx]=(real(*)[nx])p1;
-		real(*pp2)[nx]=(real(*)[nx])p2;
 		real overyd=(real)overy;
 		for(long iy=0; iy<overy; iy++){
 			real wt1=fabs(wty-(real)(iy+1)/overyd);
 			for(long ix=0; ix<nx; ix++){
-				pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
-				pp2[iy][ix]=pp1[iy][ix];
+				p1[ix+iy*nx]=(1-wt1)*p1[ix+iy*nx]+wt1*p2[ix+iy*nx];
+				p2[ix+iy*nx]=p1[ix+iy*nx];
 			}
 		}
 	} else if(sa==0){
@@ -384,8 +382,6 @@ void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
 		real wtx=ca<0?1:0;
 		real* p1=P(atm1)+(1-(long)wtx)*offx;
 		real* p2=P(atm2)+(long)wtx*offx;
-		real(*pp1)[nx]=(real(*)[nx])p1;
-		real(*pp2)[nx]=(real(*)[nx])p2;
 		real wts[overx];
 		real overxd=(real)overx;
 		for(long ix=0; ix<overx; ix++){
@@ -393,8 +389,8 @@ void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
 		}
 		for(long iy=0; iy<ny; iy++){
 			for(long ix=0; ix<overx; ix++){
-				pp1[iy][ix]=(1-wts[ix])*pp1[iy][ix]+wts[ix]*pp2[iy][ix];
-				pp2[iy][ix]=pp1[iy][ix];
+				p1[ix+iy*nx]=(1-wts[ix])*p1[ix+iy*nx]+wts[ix]*p2[ix+iy*nx];
+				p2[ix+iy*nx]=p1[ix+iy*nx];
 			}
 		}
 	} else{

@@ -53,6 +53,6 @@ typedef struct{
     int payload;//maximum payload size in bytes
     int header;//header size in bytes
 }udp_t;
-int udp_send(udp_t* info, void* buf, size_t len, int counter);
-int udp_recv(udp_t* info, void** pbuf, size_t* len);
+int udp_send(udp_t* info, char* buf, size_t len, int counter);
+int udp_recv(udp_t* info, char** pbuf, size_t* len);
 #endif

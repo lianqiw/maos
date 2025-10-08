@@ -383,7 +383,7 @@ static gboolean dialog_confirm(const char* format, ...){
 #endif
 	format2fn;
 	GtkWidget* dia=gtk_message_dialog_new
-	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT|GTK_DIALOG_MODAL,
+	(GTK_WINDOW(window), (GtkDialogFlags)(GTK_DIALOG_DESTROY_WITH_PARENT|GTK_DIALOG_MODAL),
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_YES_NO,
 		"%s", fn);
@@ -464,7 +464,7 @@ menudata_t menudata[]={
 /*A general routine handle actions to each item.*/
 static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter* iter, gpointer user_data){
 	(void)path;
-	menudata_t* data=user_data;
+	menudata_t* data=(menudata_t*) user_data;
 	int cmd=data->command;
 	const char* action=data->action;
 	GValue value=G_VALUE_INIT;
@@ -496,7 +496,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 /*Handles menu item clicks in a general way.*/
 static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
 	(void)menuitem;
-	menudata_t* data=user_data;
+	menudata_t* data=(menudata_t*)user_data;
 	GtkWidget* view=views[cur_page];
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	int nsel=gtk_tree_selection_count_selected_rows(selection);

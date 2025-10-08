@@ -248,7 +248,8 @@ void mat_basic(void **state){
     assert_null(b);
 }
 
-void mat_cell(){
+void mat_cell(void **state){
+	(void)state;
     dmat *in=dlinspace(0,1,16);
     long dims[2]={4,12};
     dcell *in2vec=d2cellref(in, dims, 2);

@@ -17,6 +17,7 @@
 */
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
+#define AOS_CUDA_H //prevents numtype.h from defining complex number operations
 /**
  * Notice that multiple routines uses stream=0 as default parameter to be used during preparation. When stream==0, all other stream operation should be blocked to ensure data integrity. So
  * 		1. CUDA_API_PER_THREAD_DEFAULT_STREAM should not be defined

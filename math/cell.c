@@ -61,7 +61,7 @@ void cellinit2(panyarray A_, const_anyarray B_){
 	if(*A){
 		cellinit(A, B->nx, B->ny);
 	} else if(iscell(B)){
-		M_ID magic=0;
+		M_ID magic=(M_ID)0;
 		for(int ib=0; ib<B->nx*B->ny; ib++){
 			if(P(B, ib)){
 				if(!magic){
@@ -307,7 +307,7 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 	if(!A_.c || iscell(A_.c)){//empty data is treated as cell
 		const cell* A=A_.c;
 		if(ncol<=0){//not async write.
-			header_t header={MCC_ANY, NX(A), NY(A), A?A->keywords:NULL};
+			header_t header={MCC_ANY, (uint64_t)NX(A), (uint64_t)NY(A), A?A->keywords:NULL};
 			write_header(&header, fp);
 		}
 		for(long ix=0; ix<PN(A); ix++){
@@ -371,14 +371,14 @@ void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...
 
 /*
 	Read a block which may be cell array or basic arrys. do not scan.  id is
-	intended only for the fundamental data. header is read first if header==0 or header->magic==0.
+	intended only for the fundamental data. header is read first if header==0 or header->id==0.
 */
 cell *readdata(file_t *fp, M_ID id, header_t *header){
 	header_t header2={0,0,0,0};
 	if(!header){//header is not yet read
 		header=&header2;
 	}
-	if(!header->magic){
+	if(!header->id){
 		if(read_header(header, fp)) return NULL;
 	}
 	if(!header->nx || !header->ny){
@@ -390,7 +390,7 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 	long ny=header->ny;
 	cell *res=NULL;
 	//dbg("calling readdata_cell with dimension %ldx%ld\n", nx, ny);
-	if(iscell(&header->magic)){
+	if(iscell(&header->id)){
 		cell *dcout=cellnew(nx, ny);
 		dcout->keywords=header->str; header->str=0;
 		header_t headerc={0,0,0,0};
@@ -408,7 +408,7 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 	}else{
 		void *out=NULL;
 		
-		if(!id) id=header->magic;
+		if(!id) id=header->id;
 		switch(id&0xFFFF){
 		case M_DBL:
 			out=dreaddata(fp, header);break;
@@ -433,7 +433,7 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 			out=NULL;
 		}
 	
-		res=out;
+		res=(cell*)out;
 	}
 	return res;
 }
@@ -487,13 +487,13 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 		header=&header2;
 	}
 	//if header is not supplied, read from file
-	if(header->magic==0 && read_header(header, fp)){
+	if(header->id==0 && read_header(header, fp)){
 		return NULL;//read header failed
 	}
 	void* out=0;
 	//scan file in automatic mode or when cell dimension is 0 or when request cell but data is not cell.
 	
-	if(!iscell(&header->magic)){//data is not cell
+	if(!iscell(&header->id)){//data is not cell
 		if(level==0||level<-1){// and no scan is desired
 			out=readdata(fp, id, header);
 		}else{//want to scan or want cell array
@@ -519,7 +519,7 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 				cellfree(dcout);
 			}
 		}
-	}else if (level==-1&&!iscell(&header->magic)&&out&&iscell(out)&&PN((cell*)out)==1){
+	}else if (level==-1&&!iscell(&header->id)&&out&&iscell(out)&&PN((cell*)out)==1){
 		//automatic scan mode with only one element, do not wrap into array
 		//dbg("level=%d, scan mode find only a single element.\n", level);
 		cell* out2=P((cell*)out, 0);
@@ -528,7 +528,7 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 		out=out2;
 	}
 	free(header->str);header->str=0;
-	header->magic=0; header->nx=0; header->ny=0;//prevent reuse.
+	header->id=0; header->nx=0; header->ny=0;//prevent reuse.
 	return (cell*)out;
 }
 
@@ -553,7 +553,7 @@ cell* readbin(const char* format, ...){
  */
 cell* readsock(int sock){
 	file_t* fp=zfdopen(dup(sock));
-	cell* out=fp?readdata_auto(fp, 0, -1, 0):NULL;
+	cell* out=fp?readdata_auto(fp, (M_ID)0, -1, 0):NULL;
 	zfclose(fp);
 	return out;
 }

@@ -27,6 +27,9 @@
 	The built-in websocket server can avoid a proxy and let scheduler directly
 	write to the websocket. This is also mediated in this file.
 */
+#ifdef HAVE_CONFIG_H
+#include "config.h" 
+#endif
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
@@ -56,7 +59,7 @@ static void ws_proxy_add(ws_proxy_t ws){
 	if(jws==-1){
 		jws=nws_proxy;
 		nws_proxy++;
-		ws_proxy_t *tmp=realloc(ws_proxy, nws_proxy*sizeof(ws_proxy_t));
+		ws_proxy_t *tmp=myrealloc(ws_proxy, nws_proxy, ws_proxy_t);
 		if(tmp){
 			ws_proxy=tmp;
 		} else{
