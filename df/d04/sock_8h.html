@@ -121,11 +121,9 @@ Functions</h2></td></tr>
 <tr class="separator:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adda6e54dfdc220f7b8d2a1625a57224b" id="r_adda6e54dfdc220f7b8d2a1625a57224b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#adda6e54dfdc220f7b8d2a1625a57224b">listen_port</a> (<a class="el" href="../../d0/dcc/structlisten__opt__t.html">listen_opt_t</a> <a class="el" href="../../d0/d44/class_num_array.html">opt</a>)</td></tr>
 <tr class="separator:adda6e54dfdc220f7b8d2a1625a57224b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c13c4782e5461737bc253878ceed153" id="r_a6c13c4782e5461737bc253878ceed153"><td class="memItemLeft" align="right" valign="top"><a id="a6c13c4782e5461737bc253878ceed153" name="a6c13c4782e5461737bc253878ceed153"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>listen_port_add</b> (int sock, <a class="el" href="../../d0/d44/class_num_array.html">short</a> <a class="el" href="../../d0/d44/class_num_array.html">events</a>, int(*handler)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int), <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">caller</a>)</td></tr>
+<tr class="memitem:a6c13c4782e5461737bc253878ceed153" id="r_a6c13c4782e5461737bc253878ceed153"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#a6c13c4782e5461737bc253878ceed153">listen_port_add</a> (int sock, <a class="el" href="../../d0/d44/class_num_array.html">short</a> <a class="el" href="../../d0/d44/class_num_array.html">events</a>, int(*handler)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int), <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">caller</a>)</td></tr>
 <tr class="separator:a6c13c4782e5461737bc253878ceed153"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fadbb4ac1bc4bee3c07ebeec41e6118" id="r_a0fadbb4ac1bc4bee3c07ebeec41e6118"><td class="memItemLeft" align="right" valign="top"><a id="a0fadbb4ac1bc4bee3c07ebeec41e6118" name="a0fadbb4ac1bc4bee3c07ebeec41e6118"></a>
-<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>listen_port_del</b> (int sock, int <a class="el" href="../../d0/d44/class_num_array.html">toclose</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">caller</a>)</td></tr>
+<tr class="memitem:a0fadbb4ac1bc4bee3c07ebeec41e6118" id="r_a0fadbb4ac1bc4bee3c07ebeec41e6118"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d04/sock_8h.html#a0fadbb4ac1bc4bee3c07ebeec41e6118">listen_port_del</a> (int sock, int <a class="el" href="../../d0/d44/class_num_array.html">toclose</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">caller</a>)</td></tr>
 <tr class="separator:a0fadbb4ac1bc4bee3c07ebeec41e6118"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06ca6a939cfb914d1b5b39b34292ecc7" id="r_a06ca6a939cfb914d1b5b39b34292ecc7"><td class="memItemLeft" align="right" valign="top"><a id="a06ca6a939cfb914d1b5b39b34292ecc7" name="a06ca6a939cfb914d1b5b39b34292ecc7"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int sock)</td></tr>
@@ -268,6 +266,101 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int
       </table>
 </div><div class="memdoc">
 <p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also if localpath is not null and contains ip address, only bind to that ip address </p>
+
+</div>
+</div>
+<a id="a6c13c4782e5461737bc253878ceed153" name="a6c13c4782e5461737bc253878ceed153"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c13c4782e5461737bc253878ceed153">&#9670;&#160;</a></span>listen_port_add()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d0/d44/class_num_array.html">void</a> listen_port_add </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">short</a>&#160;</td>
+          <td class="paramname"><em>events</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int(*)(<a class="el" href="../../d0/d44/class_num_array.html">struct</a> <a class="el" href="../../d0/d44/class_num_array.html">pollfd</a> *, int)&#160;</td>
+          <td class="paramname"><em>handler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add a socket to the pollfd array for event monitoring.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sock</td><td>The socket file descriptor to add. </td></tr>
+    <tr><td class="paramname">events</td><td>The events to monitor (e.g., POLLIN, POLLOUT). </td></tr>
+    <tr><td class="paramname">handler</td><td>The function to handle events on this socket (can be NULL for internal handling). </td></tr>
+    <tr><td class="paramname">name</td><td>A descriptive name for this socket (for debugging/logging).</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>If the socket is already present, updates its handler and name if necessary. Allocates memory for new entries as needed. </p>
+
+</div>
+</div>
+<a id="a0fadbb4ac1bc4bee3c07ebeec41e6118" name="a0fadbb4ac1bc4bee3c07ebeec41e6118"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fadbb4ac1bc4bee3c07ebeec41e6118">&#9670;&#160;</a></span>listen_port_del()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d0/d44/class_num_array.html">void</a> listen_port_del </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sock</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>toclose</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> char *&#160;</td>
+          <td class="paramname"><em>caller</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Remove a socket from the pollfd array, optionally closing it.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sock</td><td>The socket file descriptor to remove; if -2, remove all sockets. </td></tr>
+    <tr><td class="paramname">toclose</td><td>If nonzero, close the socket(s) before removing. </td></tr>
+    <tr><td class="paramname">caller</td><td>A string indicating the caller for logging/debugging purposes.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed. </p>
 
 </div>
 </div>

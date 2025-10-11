@@ -5,6 +5,8 @@ var sock_8h =
     [ "socket_send_timeout", "df/d04/sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5", null ],
     [ "connect_port", "df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56", null ],
     [ "listen_port", "df/d04/sock_8h.html#adda6e54dfdc220f7b8d2a1625a57224b", null ],
+    [ "listen_port_add", "df/d04/sock_8h.html#a6c13c4782e5461737bc253878ceed153", null ],
+    [ "listen_port_del", "df/d04/sock_8h.html#a0fadbb4ac1bc4bee3c07ebeec41e6118", null ],
     [ "socket_block", "df/d04/sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e", null ],
     [ "bind_socket", "df/d04/sock_8h.html#a45c181941f5420133e33bb8bdca7374d", null ],
     [ "socket_port", "df/d04/sock_8h.html#a2d15d50fe2dfb27d8260084823fdc970", null ],
