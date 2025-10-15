@@ -157,7 +157,51 @@ mtche(Real* restrict grad, Real(*mtches)[2],
 	}
 }
 /**
-   Apply tCoG. /todo: replace atomicAdd by reduction.
+   Apply windowed CoG. /todo: replace atomicAdd by reduction.
+*/
+__global__ static void
+wcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2, 
+	int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real* cogmask, Real bkgrnd, Real* srot){
+	__shared__ Real sum[3];
+	if(threadIdx.x<3&&threadIdx.y==0) sum[threadIdx.x]=0.f;
+	__syncthreads();//is this necessary?
+	int isa=blockIdx.x;
+	ints+=isa*nx*ny;
+	//loop can be replaced if block dimension matches nx, ny exactly.
+	for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
+		for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
+			Real im=(ints[ix+iy*nx]-bkgrnd)*cogmask[ix+iy*nx];
+			atomicAdd(&sum[0], im);
+			atomicAdd(&sum[1], im*ix);
+			atomicAdd(&sum[2], im*iy);
+		}
+	}
+	__syncthreads();
+	if(threadIdx.x==0&&threadIdx.y==0){
+		if(scale2){
+			Real sum2=scale1*scale2[isa];
+			sum[0]=sum2; //replace intensity by constant.
+		}
+		if(sum[0]>0){
+			Real gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;
+			Real gy=(sum[2]/sum[0]-(ny-1)*0.5)*pixthetay;
+			if(srot){
+				Real s, c;
+				Z(sincos)(srot[isa], &s, &c);
+				Real tmp=gx*c-gy*s;
+				gy=gx*s+gy*c;
+				gx=tmp;
+			}
+			grad[isa]=gx;
+			grad[isa+nsa]=gy;
+		} else{
+			grad[isa]=0;
+			grad[isa+nsa]=0;
+		}
+	}
+}
+/**
+   Apply thresholded CoG. /todo: replace atomicAdd by reduction.
 */
 __global__ static void
 tcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2, 
@@ -410,10 +454,18 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 			error("Invalid sigmatch\n");
 		}
 		Real* srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot():NULL;
-		tcog_do<<<nsa, dim3(pixpsax, pixpsay), 0, stream>>>
+		Real* cogmask=cuwfs[iwfs].cogmask();
+		if(cogmask){
+			wcog_do<<<nsa, dim3(pixpsax, pixpsay), 0, stream>>>
+			(gradcalc, ints[0], scale1, scale2,
+				pixpsax, pixpsay, pixthetax, pixthetay, nsa,
+				cogmask, cogoff, srot);
+		}else{
+			tcog_do<<<nsa, dim3(pixpsax, pixpsay), 0, stream>>>
 			(gradcalc, ints[0], scale1, scale2,
 				pixpsax, pixpsay, pixthetax, pixthetay, nsa,
 				cogthres, cogoff, srot);
+		}
 	}
 	break;
 	default://Use CPU version

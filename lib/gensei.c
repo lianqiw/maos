@@ -353,7 +353,7 @@ OMP_FOR(NTHREAD)
 				} else if(shift2center){
 					/*Forst psf to be centered. */
 					real pmax=dmax(sepsfi);
-					dcog(pgrad, sepsfi, 0.5, 0.5, 0.1*pmax, 0.2*pmax, 0);
+					dcog(pgrad, sepsfi, 0.5, 0.5, 0.1*pmax, 0.2*pmax, 0, NULL);
 				}
 
 				/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/

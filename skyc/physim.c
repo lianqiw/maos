@@ -362,7 +362,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 								dmulvec(igrad, P(mtche[iwfs],isa), P(P(ints[iwfs],isa)), 1);
 								break;
 							case 2:
-								dcog(igrad, P(ints[iwfs],isa), 0, 0, 3*P(rnefs, idtrat, ipowfs), 0, 0);
+								dcog(igrad, P(ints[iwfs],isa), 0, 0, 3*P(rnefs, idtrat, ipowfs), 0, 0, NULL);
 								igrad[0]*=pixtheta;
 								igrad[1]*=pixtheta;
 								break;

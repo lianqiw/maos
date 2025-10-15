@@ -98,19 +98,19 @@ void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 
 
 /*compute cog NEA using Monte Carlo realizations of noise*/
-void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
+void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, real cogoff, int ntry,
 	rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 ){
 	dmat* ints2=dnew(NX(ints), NY(ints));
 	real gnf[2]={0,0};
 	real gny[2]={0,0};
-	dcog(gnf, ints, 0, 0, cogthres, cogoff, 0);
+	dcog(gnf, ints, 0, 0, cogthres, cogoff, 0, cogmask);
 	seed_rand(rstat, 1);/*reset the seed each time.*/
 	nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
 	for(int i=0; i<ntry; i++){
 		dcp(&ints2, ints);
 		addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, 0, rne, 1);
-		dcog(gny, ints2, 0, 0, cogthres, cogoff, 0);
+		dcog(gny, ints2, 0, 0, cogthres, cogoff, 0, cogmask);
 		real errx=gny[0]-gnf[0];
 		real erry=gny[1]-gnf[1];
 		nea[0]+=errx*errx;
@@ -158,7 +158,7 @@ void sodium_fit(
 	const dcell* srot,    /**<Subaperture to LLT clocking*/
 	const dmat* siglev,  /**<Subaperture signal level*/
 	const dmat* wvlwts,    /**<Wavelength weights*/
-	const dcell* gradncpa,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
+	const dcell* gradoff,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
 	real dh,      /**<The sodium profile sampling in meters*/
 	real hs,      /**<LGS focusing height*/
 	real htel,    /**<Telescope hegith*/
@@ -222,12 +222,12 @@ void sodium_fit(
 	if(!i0m){//prepare to create the sub layer image model
 		i0mv=dcellnew(1, nh);
 		i0m=dccellnew(nh, 1);
-		if(gradncpa){
-			dcellcp(&grad, gradncpa);
+		if(gradoff){
+			dcellcp(&grad, gradoff);
 		}else{
 			grad=dcellnew_same(ni0, 1, nsa*2, 1);
 		}
-		dbg("Initial gradient uses %s.\n", gradncpa?"gradncpa":"zero");
+		dbg("Initial gradient uses %s.\n", gradoff?"gradoff":"zero");
 		
 		if(use_cache){
 			fit_cache.i0m=i0m;
@@ -332,7 +332,7 @@ OMP_FOR(NTHREAD)
 			etf_full=mketf(dtf, nai, 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf final");tic;
 		}
-		const dcell *gradf=gradncpa?gradncpa:(pgrad?(*pgrad):grad);
+		const dcell *gradf=gradoff?gradoff:(pgrad?(*pgrad):grad);
 		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, gradf, 0, 0);
 		toc2("gensei final");tic;
 	}
@@ -402,7 +402,7 @@ void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
 	sodium_fit(psodium, pgrad, pi0, pgx, pgy, i0in,
 		sepsf, powfs[ipowfs].dtf, powfs[ipowfs].saloc, powfs[ipowfs].saa,
 		powfs[ipowfs].srsa, powfs[ipowfs].srot,
-		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradncpa,
+		parms->powfs[ipowfs].siglevs, parms->powfs[ipowfs].wvlwts, powfs[ipowfs].gradoff,
 		parms->powfs[ipowfs].llt->na_fit_dh, parms->powfs[ipowfs].hs, parms->sim.htel, parms->sim.za, 
 		parms->powfs[ipowfs].llt->na_fit_svdthres, nrep, parms->save.dither>1, use_cache);//parms->save.setup);
 	

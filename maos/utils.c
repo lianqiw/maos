@@ -462,10 +462,14 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			if(powfs[ipowfs].gradncpa){
-				drawgrad("Goff", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].gradncpa, jwfs),
+			if(powfs[ipowfs].gradoff){
+				drawgrad("Goff", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].gradoff, jwfs),
 					parms->plot.grad2opd, parms->powfs[ipowfs].trs, 0,
 					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
+			}
+			if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->cogmask){
+				drawints("CoG", powfs[ipowfs].saloc, powfs[ipowfs].intstat->cogmask, 0,
+						"WFS CoG Mask", "x", "y", "WFS %2d", iwfs);
 			}
 		}
 	}
@@ -602,7 +606,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 				}
 					  break;
 				case 2:{/*tCoG gives gradients along r/a*/
-					dcog(g, ints, 0., 0.,cogthres, cogoff, 0);
+					dcog(g, ints, 0., 0.,cogthres, cogoff, 0, NULL);
 					g[0]*=pixthetax;
 					g[1]*=pixthetay;
 				}
@@ -700,7 +704,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 			P(gradmf,isa)=geach[0]*scale;
 			P(gradmf,isa+nsa)=geach[1]*scale;
 			{
-				dcog(geach, P(i0_new, isa), 0, 0, cogthres, cogoff, 0);
+				dcog(geach, P(i0_new, isa), 0, 0, cogthres, cogoff, 0, NULL);
 				geach[0]*=pixthetax;
 				geach[1]*=pixthetay;
 				if(srot){
@@ -980,14 +984,17 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	dmat** mtche=NULL;
 	real* i0sum=NULL;
 	real i0sumg=0;
-	if(phytype==1){
+	dmat** cogmask=NULL;
+	if(phytype==PTYPE_MF){
 		mtche=&PR(powfs[ipowfs].intstat->mtche, 0, wfsind);
 	}
 	if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->i0sum){
 		i0sum=&PR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
 		i0sumg=PR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
 	}
-
+	if(phytype==PTYPE_COG && powfs[ipowfs].intstat && powfs[ipowfs].intstat->cogmask){
+		cogmask=&PR(powfs[ipowfs].intstat->cogmask, 0, wfsind);
+	}
 	const real* srot=(parms->powfs[ipowfs].radpix)?PR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
 	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	const real pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -1020,7 +1027,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		sigtot=i1sum/PR(powfs[ipowfs].saasum, wfsind);
 		break;
 	}
-	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogthres=cogmask?0:parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	for(int isa=0; isa<nsa; isa++){
 		real geach[3]={0,0,1};
@@ -1060,10 +1067,9 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 				sumi=sigtot*P(saa,isa);
 				break;
 			}
-			dcog(geach, ints[isa], 0., 0., cogthres, cogoff, sumi);
+			dcog(geach, ints[isa], 0., 0., cogthres, cogoff, sumi, cogmask?cogmask[isa]:NULL);
 			geach[0]*=pixthetax;
 			geach[1]*=pixthetay;
-
 		}
 			  break;
 		case PTYPE_MAP:{//MAP: (to be removed. This algorithm is not very useful.)

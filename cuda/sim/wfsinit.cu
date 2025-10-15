@@ -101,15 +101,18 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 	}
 	toc2("gpu_wfsgrad_update_etf");
 }
-
-void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ipowfs){
+/**
+   Initialize or update mtched filter, cogmask, and i0sum, i0sumsum
+*/
+void gpu_wfsgrad_update_ref(const parms_t* parms, const powfs_t* powfs, int ipowfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
 	Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 	if(parms->powfs[ipowfs].usephy&&powfs[ipowfs].intstat){
 		dbg("powfs%d: updating matched filter in GPU\n", ipowfs);
 		const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 		const int nsa=powfs[ipowfs].saloc->nloc;
-		const int multi_mf=parms->powfs[ipowfs].phytype_sim==PTYPE_MF&&powfs[ipowfs].intstat->mtche->ny>1;
+		const int multi=(parms->powfs[ipowfs].phytype_sim==PTYPE_MF&&NY(powfs[ipowfs].intstat->mtche)>1)
+		||parms->powfs[ipowfs].phytype_sim==PTYPE_COG&&NY(powfs[ipowfs].intstat->cogmask)>1;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
@@ -119,14 +122,21 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 					break;
 				}
 			}
-			if(multi_mf||iwfs2==iwfs){
+			if(multi||iwfs2==iwfs){
+				const int icol=multi?jwfs:0;
 				if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){//matched filter
-					int icol=multi_mf?jwfs:0;
 					dmat* mtche=dcell_col(powfs[ipowfs].intstat->mtche, icol);
 					//Delete old referenced values.
 					cuwfs[iwfs].mtche.deinit();
 					cp2gpu(cuwfs[iwfs].mtche, mtche);
 					dfree(mtche);
+				}
+				if(parms->powfs[ipowfs].phytype_sim==PTYPE_COG && powfs[ipowfs].intstat->cogmask){//matched filter
+					dmat* cogmask=dcell_col(powfs[ipowfs].intstat->cogmask, icol);
+					//Delete old referenced values.
+					cuwfs[iwfs].cogmask.deinit();
+					cp2gpu(cuwfs[iwfs].cogmask, cogmask);
+					dfree(cogmask);
 				}
 				if(powfs[ipowfs].intstat->i0sum){
 					//Delete old referenced values.
@@ -136,16 +146,13 @@ void gpu_wfsgrad_update_mtche(const parms_t* parms, const powfs_t* powfs, int ip
 				}
 			} else{
 				cuwfs[iwfs].mtche=cuwfs[iwfs2].mtche;
+				cuwfs[iwfs].cogmask=cuwfs[iwfs2].cogmask;
 				cuwfs[iwfs].i0sum=cuwfs[iwfs2].i0sum;
 				cuwfs[iwfs].i0sumsum=cuwfs[iwfs2].i0sumsum;
 			}
 		}
 	}
 }
-/**
-   Initialize or update mtched filter
-*/
-
 /**
    Initialize other arrays
 */
@@ -449,7 +456,7 @@ void gpu_wfsgrad_init(const parms_t* parms, const powfs_t* powfs){
 	}/*for iwfs */
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		gpu_wfsgrad_update_etf(parms, powfs, ipowfs);
-		gpu_wfsgrad_update_mtche(parms, powfs, ipowfs);
+		gpu_wfsgrad_update_ref(parms, powfs, ipowfs);
 	}
 	gpu_print_mem("wfs init");
 }

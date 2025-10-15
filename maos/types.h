@@ -67,6 +67,7 @@ typedef struct intstat_t{
     dmat *i0sum;        /**<sum of i0 for each subaperture*/
     dmat *i0sumsum;     /**<sum of i0sum for all subapertures*/
     dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
+	dcell *cogmask;     /**<mask for cog calculation*/
 }intstat_t;
 
 /**
@@ -91,7 +92,7 @@ typedef struct powfs_t{
     /*NCPA */
     dcell *opdadd;      /**<opdadd includes both common and NCPA OPDS. It is used for ray tracing*/
     dcell *opdbias;     /**<opdbias is used to compute gradient offset. It includes contributions only from NCPA OPD.*/
-    dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
+    dcell *gradoff;    /**<Offset to grads due to ncpa, sodium profile, etc. Copied to simu->gradoff for runtime update*/
     /*Physical optics */
     dtf_t *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */

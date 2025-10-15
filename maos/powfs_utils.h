@@ -30,7 +30,7 @@
 #define AOS_POWFS_UTILS_H
 #include "common.h"
 void genmtch(const parms_t* parms, powfs_t* powfs, const int ipowfs);
-void cog_nea(real* nea, const dmat* ints, real cogthres, real cogoff, int ntry,
+void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, real cogoff, int ntry,
   rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
 );
 real remove_focus_grad(const loc_t* saloc, dmat* grad, real factor);
@@ -49,7 +49,7 @@ void sodium_fit(
   const dcell* srot,    /**<Subaperture to LLT clocking*/
   const dmat* siglev,  /**<Subaperture signal level*/
   const dmat* wvlwts,    /**<Wavelength weights*/
-  const dcell* gradncpa,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
+  const dcell* gradoff,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
   real dh,      /**<The sodium profile sampling in meters*/
   real hs,      /**<LGS focusing height*/
   real htel,    /**<Telescope hegith*/
