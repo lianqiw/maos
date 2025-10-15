@@ -96,7 +96,7 @@ var smath_8h =
     [ "smulvec3", "de/de7/smath_8h.html#a254d2dc6603ab9ec685de33a016121d1", null ],
     [ "scorr", "de/de7/smath_8h.html#ad59f00a8390dd2621108b222c789ed60", null ],
     [ "spara3", "de/de7/smath_8h.html#a99adc27b116bb13002d22f0f5c1debbe", null ],
-    [ "scog", "de/de7/smath_8h.html#aa7d2f8faedade200b4652b7dbeb6ea95", null ],
+    [ "scog", "de/de7/smath_8h.html#ae75e8df670401f74cef5f8c113153ccc", null ],
     [ "sshift2center", "de/de7/smath_8h.html#acafab4d45fde1970594c1ea8d83817ba", null ],
     [ "scwpow", "de/de7/smath_8h.html#ab92a41d80a629f6a0638faa4aad09bdc", null ],
     [ "scwexp", "de/de7/smath_8h.html#afbdb4fdaea97abe00b679ac378a0d5a4", null ],

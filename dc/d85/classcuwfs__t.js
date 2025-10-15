@@ -11,7 +11,6 @@ var classcuwfs__t =
     [ "qe", "dc/d85/classcuwfs__t.html#ace61382985c60f440ba19aecb8b6a46e", null ],
     [ "srot", "dc/d85/classcuwfs__t.html#a71b6bb8f6b72ca8101c1211414ee51ff", null ],
     [ "mtche", "dc/d85/classcuwfs__t.html#a1eadaa4bdf1c9b47ce02b2efc5f961d5", null ],
-    [ "cogmask", "dc/d85/classcuwfs__t.html#a63d10f36da5c3b031a953bab867da37e", null ],
     [ "i0sum", "dc/d85/classcuwfs__t.html#aea778961066ecabc2a3a833c053600fd", null ],
     [ "i0sumsum", "dc/d85/classcuwfs__t.html#a4300695719c53b84704f7198999596fc", null ],
     [ "bkgrnd2", "dc/d85/classcuwfs__t.html#afefe432f2f46393338bd42e38599362b", null ],

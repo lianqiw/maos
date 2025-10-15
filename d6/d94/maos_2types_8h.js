@@ -31,8 +31,7 @@ var maos_2types_8h =
       [ "gy", "d6/d94/maos_2types_8h.html#a1d35c517b854e0ce54c4b0ab3cd61bbd", null ],
       [ "i0sum", "d6/d94/maos_2types_8h.html#a12a657b68c0bc0caedaa622b1db00070", null ],
       [ "i0sumsum", "d6/d94/maos_2types_8h.html#aed12a3eca32089c23f0b4b83e2dfd54e", null ],
-      [ "mtche", "d6/d94/maos_2types_8h.html#a50ed0361d297b2d2329ab5eceda203ef", null ],
-      [ "cogmask", "d6/d94/maos_2types_8h.html#ac9056a0ae50921b4bc903248122847fe", null ]
+      [ "mtche", "d6/d94/maos_2types_8h.html#a50ed0361d297b2d2329ab5eceda203ef", null ]
     ] ],
     [ "powfs_t", "d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t", [
       [ "saloc", "d6/d94/maos_2types_8h.html#a5fd004708034f40be93d7bcf6f69ec60", null ],
@@ -50,7 +49,7 @@ var maos_2types_8h =
       [ "areascale", "d6/d94/maos_2types_8h.html#a2256cf16f55dc3bb7e4ad97b4a42f044", null ],
       [ "opdadd", "d6/d94/maos_2types_8h.html#aa8eaaa9796312d82ac90aa5aa69e3523", null ],
       [ "opdbias", "d6/d94/maos_2types_8h.html#a8c66d2b2c5c35fbaee1dfae82835a10b", null ],
-      [ "gradoff", "d6/d94/maos_2types_8h.html#ac8d5c1e753e0ab6fbb55588d0f966757", null ],
+      [ "gradncpa", "d6/d94/maos_2types_8h.html#a162613b54fda54c711284c1b298806d0", null ],
       [ "dtf", "d6/d94/maos_2types_8h.html#a52cb65d094051f9cd59428023a19b255", null ],
       [ "sodium", "d6/d94/maos_2types_8h.html#a625fa37c8d1de10a5924d4f578dd84a8", null ],
       [ "sodiumprep", "d6/d94/maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f", null ],
