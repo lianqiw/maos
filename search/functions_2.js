@@ -65,7 +65,7 @@ var searchData=
   ['ccellzero_62',['ccellzero',['../de/d07/cmath_8h.html#a193a03f98ee7128386819d9821ceb859',1,'ctmp.c']]],
   ['cchol_63',['cchol',['../de/d07/cmath_8h.html#a86ebc0c1cf12c2f77fb7c6a79bd7bd62',1,'ctmp.c']]],
   ['ccircle_64',['ccircle',['../de/d07/cmath_8h.html#af58c153ffedd233ccbfc4423d1e7f953',1,'ctmp.c']]],
-  ['ccog_65',['ccog',['../de/d07/cmath_8h.html#a415711fbbbfd48fdf7ff5c843c8ba53e',1,'ctmp.c']]],
+  ['ccog_65',['ccog',['../de/d07/cmath_8h.html#ab046f8093b6041fec3fe881ae6e6e811',1,'ctmp.c']]],
   ['ccols_66',['ccols',['../de/d07/cmath_8h.html#a544d3b67015cad64bdb1945482a57e11',1,'ctmp.c']]],
   ['ccorr_67',['ccorr',['../de/d07/cmath_8h.html#ad22442f812f82bd6b213bedcbcd83e5f',1,'ctmp.c']]],
   ['ccp_68',['ccp',['../de/d07/cmath_8h.html#adb3c55ee96a9e7249403f738d251688c',1,'ctmp.c']]],

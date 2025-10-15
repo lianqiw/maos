@@ -1,8 +1,8 @@
 var searchData=
 [
   ['u_0',['U',['../d3/dc7/muv_8h.html#adbb422e2111167472b69a8853a9ade9c',1,'muv_t']]],
-  ['udp_5frecv_1',['udp_recv',['../db/d54/sockio_8h.html#aa4ce77a5c9b05e430798658fe328d4ec',1,'sockio.c']]],
-  ['udp_5fsend_2',['udp_send',['../db/d54/sockio_8h.html#a53031e6a454db8ec6d2b1c390310ef44',1,'sockio.c']]],
+  ['udp_5frecv_1',['udp_recv',['../db/d54/sockio_8h.html#a0ff85fb841b8a4c117ca1a8f897dbb81',1,'sockio.c']]],
+  ['udp_5fsend_2',['udp_send',['../db/d54/sockio_8h.html#abc1c613d90cf9a9ffb4697ffb5961b3a',1,'sockio.c']]],
   ['udp_5ft_3',['udp_t',['../db/d54/sockio_8h.html#d4/d74/structudp__t',1,'']]],
   ['up_4',['Up',['../d3/dc7/muv_8h.html#a5cdc5331bf4237d1ccbd7e2ff60c1778',1,'muv_t']]],
   ['upb_5',['UpB',['../d3/dc7/muv_8h.html#a87735c7751cda61faf074e8fea7d733a',1,'muv_t']]],

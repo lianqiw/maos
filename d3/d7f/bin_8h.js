@@ -1,7 +1,6 @@
 var bin_8h =
 [
     [ "header_t", "d3/d7f/bin_8h.html#de/d7e/structheader__t", null ],
-    [ "header_t.__unnamed39__", "d3/d7f/bin_8h.html#d2/dcc/unionheader__t_8____unnamed39____", null ],
     [ "zfexist", "d3/d7f/bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22", null ],
     [ "zftouch", "d3/d7f/bin_8h.html#a413945d9b9ed2b96159910115707a7ad", null ],
     [ "zfeof", "d3/d7f/bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201", null ],

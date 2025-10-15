@@ -98,7 +98,15 @@ var type_8h =
       [ "ncol", "df/def/type_8h.html#a97e5f52c821e34ebf38586a6a019d652", null ],
       [ "ny", "df/def/type_8h.html#a149274579012b1df0813c6020df76c36", null ]
     ] ],
-    [ "loc_t", "df/def/type_8h.html#da/ddc/structloc__t", null ],
+    [ "loc_t", "df/def/type_8h.html#da/ddc/structloc__t", [
+      [ "locy", "df/def/type_8h.html#a1a5d6b9152829ba7a7af0fa050ba460e", null ],
+      [ "stat", "df/def/type_8h.html#aeefce377653b1be3d342783286600d47", null ],
+      [ "map", "df/def/type_8h.html#ac56220a98267328ad973d6c842d07156", null ],
+      [ "dx", "df/def/type_8h.html#a34c782841e745bb5bd8f4f24f73f5f42", null ],
+      [ "dy", "df/def/type_8h.html#af9af538ff99023b4c999993bdffc791c", null ],
+      [ "ht", "df/def/type_8h.html#a9de2c65a8077e7d4b6eca35e079866b4", null ],
+      [ "iac", "df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae", null ]
+    ] ],
     [ "pts_t", "df/def/type_8h.html#de/d88/structpts__t", [
       [ "nxsa", "df/def/type_8h.html#a320665323a3307f015cab4b5b1cdf161", null ],
       [ "nysa", "df/def/type_8h.html#a90e7c3a8c0eebab6593e56fc2e782f89", null ],
@@ -335,23 +343,14 @@ var type_8h =
     [ "rmap_t.__unnamed19__", "df/def/type_8h.html#d2/d1a/unionrmap__t_8____unnamed19____", null ],
     [ "rmap_t.__unnamed19__.__unnamed21__", "d4/d68/structrmap__t_8____unnamed19_____8____unnamed21____.html", "d4/d68/structrmap__t_8____unnamed19_____8____unnamed21____" ],
     [ "loc_t.__unnamed23__", "df/def/type_8h.html#d1/d54/unionloc__t_8____unnamed23____", null ],
-    [ "loc_t.__unnamed23__.__unnamed27__", "df/def/type_8h.html#d4/d9c/structloc__t_8____unnamed23_____8____unnamed27____", [
+    [ "loc_t.__unnamed23__.__unnamed25__", "df/def/type_8h.html#de/dd1/structloc__t_8____unnamed23_____8____unnamed25____", [
       [ "locx", "df/def/type_8h.html#a08e1e9e92be5dac315d65cfa8562342d", null ],
       [ "nloc", "df/def/type_8h.html#a6eaa0afbec778db997a7fdcd4c3f3123", null ],
       [ "two", "df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
       [ "keywords", "df/def/type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ]
     ] ],
-    [ "loc_t.__unnamed25__", "df/def/type_8h.html#df/dbf/structloc__t_8____unnamed25____", [
-      [ "locy", "df/def/type_8h.html#ad2412cc515d4ebddbf286f9a9afe53e5", null ],
-      [ "stat", "df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
-      [ "map", "df/def/type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
-      [ "dx", "df/def/type_8h.html#aacd2b09d39705a84bff035c18c9faea9", null ],
-      [ "dy", "df/def/type_8h.html#a8e7dd5d3e76aa952e21999a5537dcffb", null ],
-      [ "ht", "df/def/type_8h.html#aeb5e48e74123cacc52761302ea4a7d22", null ],
-      [ "iac", "df/def/type_8h.html#aaed3eced69a81bcc445a6f3215f7e23c", null ]
-    ] ],
-    [ "pts_t.__unnamed29__", "df/def/type_8h.html#d9/df8/unionpts__t_8____unnamed29____", null ],
-    [ "pts_t.__unnamed29__.__unnamed31__", "df/def/type_8h.html#db/d8b/structpts__t_8____unnamed29_____8____unnamed31____", [
+    [ "pts_t.__unnamed27__", "df/def/type_8h.html#d1/d58/unionpts__t_8____unnamed27____", null ],
+    [ "pts_t.__unnamed27__.__unnamed29__", "df/def/type_8h.html#df/d90/structpts__t_8____unnamed27_____8____unnamed29____", [
       [ "origy", "df/def/type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d", null ],
       [ "stat", "df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4", null ],
       [ "map", "df/def/type_8h.html#a1d78dc8ed51214e518b5114fe24490ae", null ],
@@ -360,14 +359,14 @@ var type_8h =
       [ "dummy_iac", "df/def/type_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
       [ "npad", "df/def/type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
     ] ],
-    [ "pts_t.__unnamed29__.__unnamed31__.__unnamed33__", "df/def/type_8h.html#db/da7/unionpts__t_8____unnamed29_____8____unnamed31_____8____unnamed33____", null ],
-    [ "pts_t.__unnamed29__.__unnamed31__.__unnamed33__.__unnamed37__", "df/def/type_8h.html#d4/ddb/structpts__t_8____unnamed29_____8____unnamed31_____8____unnamed33_____8____unnamed37____", [
+    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed31__", "df/def/type_8h.html#d9/dc6/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31____", null ],
+    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed31__.__unnamed35__", "df/def/type_8h.html#d7/d42/structpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31_____8____unnamed35____", [
       [ "origx", "df/def/type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df", null ],
       [ "nsa", "df/def/type_8h.html#a8d2a959e6b154ec9215882b82f28cfcb", null ],
       [ "two", "df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61", null ],
       [ "keywords", "df/def/type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb", null ]
     ] ],
-    [ "pts_t.__unnamed29__.__unnamed31__.__unnamed35__", "df/def/type_8h.html#d0/da8/unionpts__t_8____unnamed29_____8____unnamed31_____8____unnamed35____", [
+    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed33__", "df/def/type_8h.html#de/d2c/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed33____", [
       [ "dsa", "df/def/type_8h.html#a5f039b4ef0058a1d652f13d612375a5b", null ],
       [ "dsax", "df/def/type_8h.html#ac00f31f2b88090d3b65908bc03a79765", null ]
     ] ],

@@ -4,7 +4,7 @@ var NAVTREEINDEX10 =
 "dc/db7/map_8h.html#aeeb7ed8fce49b6c3591753893a8f06c4":[13,0,3,5,10],
 "dc/db7/map_8h.html#af6072757526bdf462d0333b0e483770e":[13,0,3,5,7],
 "dc/de2/atmr_single.html":[4,4,0],
-"dc/de6/classstream__t.html":[12,0,173],
+"dc/de6/classstream__t.html":[12,0,171],
 "dd/d10/mcao_lgs.html":[4,4,26],
 "dd/d13/atm_mk13n20p.html":[4,4,63],
 "dd/d2b/libmisc_8h.html":[13,0,1,12],
@@ -21,7 +21,7 @@ var NAVTREEINDEX10 =
 "dd/d2b/libmisc_8h.html#aefe5e957c8884dfb7dfa49430562a87c":[13,0,1,12,2],
 "dd/d31/powfs_shlgs.html":[4,4,34],
 "dd/d45/class_cpu.html":[12,0,19],
-"dd/d61/struct_magic_3_01float2_01_4.html":[12,0,112],
+"dd/d61/struct_magic_3_01float2_01_4.html":[12,0,110],
 "dd/da0/todo.html":[11],
 "dd/da9/page40_results.html":[5],
 "dd/da9/page40_results.html#autotoc_md20":[5,0,0],
@@ -44,7 +44,7 @@ var NAVTREEINDEX10 =
 "dd/da9/page40_results.html#telemetry":[5,5],
 "dd/dae/classcurecon__geom.html":[12,0,39],
 "dd/dae/classcurecon__geom.html#a4027a545a061db101166b9bea8c07736":[12,0,39,0],
-"dd/db6/class_ref_p.html":[12,0,151],
+"dd/db6/class_ref_p.html":[12,0,149],
 "dd/dc1/lmath_8h.html":[13,0,3,3],
 "dd/dc1/lmath_8h.html#a021e38aa00f9be88aec662eeb2e104fd":[13,0,3,3,11],
 "dd/dc1/lmath_8h.html#a03eebd7cd0b700db6d413363606e5cee":[13,0,3,3,44],
@@ -166,7 +166,6 @@ var NAVTREEINDEX10 =
 "de/d07/cmath_8h.html#a3aee13b188b8b7f02baed5ae2faa81ab":[13,0,3,1,1],
 "de/d07/cmath_8h.html#a3c6348c5e8f15e5111ed1503ac5fa142":[13,0,3,1,95],
 "de/d07/cmath_8h.html#a3ca97be4564a348fa4d6c5dd95f64aad":[13,0,3,1,98],
-"de/d07/cmath_8h.html#a415711fbbbfd48fdf7ff5c843c8ba53e":[13,0,3,1,94],
 "de/d07/cmath_8h.html#a4294bf58e9cd7b785ec238a4bea3f69f":[13,0,3,1,39],
 "de/d07/cmath_8h.html#a45dc91b7e5ef3b04fcc939039645f5ca":[13,0,3,1,127],
 "de/d07/cmath_8h.html#a4692e52509c8d3d737ac5e2a3c752877":[13,0,3,1,38],
@@ -249,5 +248,6 @@ var NAVTREEINDEX10 =
 "de/d07/cmath_8h.html#a95bdb33095d091c0419e34ba578a7202":[13,0,3,1,64],
 "de/d07/cmath_8h.html#a96984ff584ce4e88e382bfcc92932cf6":[13,0,3,1,53],
 "de/d07/cmath_8h.html#a970b8a51775b5afaba85e299f68ab153":[13,0,3,1,76],
-"de/d07/cmath_8h.html#a99a2fcb8aa4e4a63138bf7bd36e649dd":[13,0,3,1,119]
+"de/d07/cmath_8h.html#a99a2fcb8aa4e4a63138bf7bd36e649dd":[13,0,3,1,119],
+"de/d07/cmath_8h.html#a9e844b6fdd24288b403bd7d7d8e844a5":[13,0,3,1,106]
 };

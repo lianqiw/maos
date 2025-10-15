@@ -112,7 +112,7 @@ Macros</h2></td></tr>
 #<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>locwrite</b>(<a class="el" href="../../d0/d44/class_num_array.html">out</a>,  A...)&#160;&#160;&#160;writebin(<a class="el" href="../../d0/d44/class_num_array.html">out</a>, A)</td></tr>
 <tr class="separator:ad1599c06101f3c9882c324bb0d5c1aee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc76b818d3f543a2f9e24b1b85041362" id="r_acc76b818d3f543a2f9e24b1b85041362"><td class="memItemLeft" align="right" valign="top"><a id="acc76b818d3f543a2f9e24b1b85041362" name="acc76b818d3f543a2f9e24b1b85041362"></a>
-#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>locread</b>(A...)&#160;&#160;&#160;loc_convert(<a class="el" href="../../da/dfb/dmath_8h.html#a64468aff0b03ca71e827827661a500a2">dmat_cast</a>(readbin_id(M_LOC, 0, A)))</td></tr>
+#<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>locread</b>(A...)&#160;&#160;&#160;loc_convert(<a class="el" href="../../df/dfb/mathdef_8h.html#ad0368089202674ea67ae0d38214c5783">dread</a>(A))</td></tr>
 <tr class="separator:acc76b818d3f543a2f9e24b1b85041362"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a363c14492176066daafd403e3b4b1eaf" id="r_a363c14492176066daafd403e3b4b1eaf"><td class="memItemLeft" align="right" valign="top"><a id="a363c14492176066daafd403e3b4b1eaf" name="a363c14492176066daafd403e3b4b1eaf"></a>
 #<a class="el" href="../../d0/d44/class_num_array.html">define</a>&#160;</td><td class="memItemRight" valign="bottom"><b>loccellread</b>(A...)&#160;&#160;&#160;(<a class="el" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>*)cellconvert(readbin_id(M_LOC, 1, A), (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*(*)(<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*))loc_convert)</td></tr>
@@ -259,12 +259,11 @@ Functions</h2></td></tr>
 <tr class="separator:ab9144022d33a0ef11a9701a336e75a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd9de0b3686313b9f4235d351f9b82e5" id="r_acd9de0b3686313b9f4235d351f9b82e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d83/loc_8h.html#acd9de0b3686313b9f4235d351f9b82e5">loc_dxdy</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc)</td></tr>
 <tr class="separator:acd9de0b3686313b9f4235d351f9b82e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5ca0a1a2d1a2b73a01d4fd50cecd9e5" id="r_ac5ca0a1a2d1a2b73a01d4fd50cecd9e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d83/loc_8h.html#ac5ca0a1a2d1a2b73a01d4fd50cecd9e5">d2loc</a> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *A)</td></tr>
-<tr class="separator:ac5ca0a1a2d1a2b73a01d4fd50cecd9e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0dc6fca0c31f01ae41f22f2fea2c3113" id="r_a0dc6fca0c31f01ae41f22f2fea2c3113"><td class="memItemLeft" align="right" valign="top"><a id="a0dc6fca0c31f01ae41f22f2fea2c3113" name="a0dc6fca0c31f01ae41f22f2fea2c3113"></a>
 <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>locreaddata</b> (file_t *fp, <a class="el" href="../../d3/d7f/bin_8h.html#de/d7e/structheader__t">header_t</a> *header)</td></tr>
 <tr class="separator:a0dc6fca0c31f01ae41f22f2fea2c3113"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9e58cb7c47e06eb95dc83f36bd37041" id="r_ae9e58cb7c47e06eb95dc83f36bd37041"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d83/loc_8h.html#ae9e58cb7c47e06eb95dc83f36bd37041">loc_keywords</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *loc)</td></tr>
+<tr class="memitem:ae9e58cb7c47e06eb95dc83f36bd37041" id="r_ae9e58cb7c47e06eb95dc83f36bd37041"><td class="memItemLeft" align="right" valign="top"><a id="ae9e58cb7c47e06eb95dc83f36bd37041" name="ae9e58cb7c47e06eb95dc83f36bd37041"></a>
+<a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><b>loc_keywords</b> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *loc)</td></tr>
 <tr class="separator:ae9e58cb7c47e06eb95dc83f36bd37041"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2bc324bef2c93728a7ca2b8d79f167b" id="r_ab2bc324bef2c93728a7ca2b8d79f167b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/da0/structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d83/loc_8h.html#ab2bc324bef2c93728a7ca2b8d79f167b">loc_coord2ind</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *aloc, <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *<a class="el" href="../../d0/d44/class_num_array.html">dead</a>)</td></tr>
 <tr class="separator:ab2bc324bef2c93728a7ca2b8d79f167b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2110,44 +2109,6 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
       </table>
 </div><div class="memdoc">
 <p>Determine dx and dy from data. </p>
-
-</div>
-</div>
-<a id="ac5ca0a1a2d1a2b73a01d4fd50cecd9e5" name="ac5ca0a1a2d1a2b73a01d4fd50cecd9e5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5ca0a1a2d1a2b73a01d4fd50cecd9e5">&#9670;&#160;</a></span>d2loc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> * d2loc </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>A</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Convert a 2 column vector to loc </p>
-
-</div>
-</div>
-<a id="ae9e58cb7c47e06eb95dc83f36bd37041" name="ae9e58cb7c47e06eb95dc83f36bd37041"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae9e58cb7c47e06eb95dc83f36bd37041">&#9670;&#160;</a></span>loc_keywords()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../d0/d44/class_num_array.html">void</a> loc_keywords </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td>
-          <td class="paramname"><em>p</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Verify the magic, dimension and read in the <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> by calling locreaddata2(). </p>
 
 </div>
 </div>

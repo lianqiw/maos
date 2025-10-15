@@ -1,8 +1,8 @@
 var sock_8h =
 [
     [ "listen_opt_t", "d0/dcc/structlisten__opt__t.html", null ],
-    [ "socket_recv_timeout", "df/d04/sock_8h.html#a4d4b5881c92423db1f340d56a4dd32d7", null ],
-    [ "socket_send_timeout", "df/d04/sock_8h.html#a9b9b32440b64707b50fbaae8d08f33e5", null ],
+    [ "socket_recv_timeout", "df/d04/sock_8h.html#ac45b6aaed303ceef4a0e3ae7981a8284", null ],
+    [ "socket_send_timeout", "df/d04/sock_8h.html#a030122492a232ed5b4fed8ce43b90e0b", null ],
     [ "connect_port", "df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56", null ],
     [ "listen_port", "df/d04/sock_8h.html#adda6e54dfdc220f7b8d2a1625a57224b", null ],
     [ "listen_port_add", "df/d04/sock_8h.html#a6c13c4782e5461737bc253878ceed153", null ],

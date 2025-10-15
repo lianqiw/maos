@@ -49,7 +49,7 @@ var searchData=
   ['srsa_46',['srsa',['../d6/d94/maos_2types_8h.html#ac30143607f18cf7c2993d5a019a21313',1,'powfs_t']]],
   ['srsamax_47',['srsamax',['../d6/d94/maos_2types_8h.html#a1578360552fcb598c2d42d3131131d81',1,'powfs_t']]],
   ['start_48',['start',['../d4/d38/parms_8h.html#aa3b6c743a591b326d06c5d2e42d428f0',1,'sim_cfg_t']]],
-  ['stat_49',['stat',['../df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'loc_t.__unnamed25__::stat'],['../df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed29__.__unnamed31__::stat']]],
+  ['stat_49',['stat',['../df/def/type_8h.html#aeefce377653b1be3d342783286600d47',1,'loc_t::stat'],['../df/def/type_8h.html#a77ddcb5f19832f4145345889013ab3a4',1,'pts_t.__unnamed27__.__unnamed29__::stat']]],
   ['stateptr_50',['stateptr',['../dc/d95/structmt__state.html#aee0052353c8cec5ac527484928f36745',1,'mt_state']]],
   ['statevec_51',['statevec',['../dc/d95/structmt__state.html#a11de820957450a4b49de2e90f046f596',1,'mt_state']]],
   ['status_52',['status',['../d6/d94/maos_2types_8h.html#a31c5bb23de574b69dcdb2fc8730a11e8',1,'sim_t']]],

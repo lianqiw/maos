@@ -54,7 +54,5 @@ var loc_8h =
     [ "loc_nxny", "d1/d83/loc_8h.html#a661df971a3fe89b0c20a4f9b81772f33", null ],
     [ "locresize", "d1/d83/loc_8h.html#a4d17a0ee145421054bd35a35b55fb05d", null ],
     [ "loc_dxdy", "d1/d83/loc_8h.html#acd9de0b3686313b9f4235d351f9b82e5", null ],
-    [ "d2loc", "d1/d83/loc_8h.html#ac5ca0a1a2d1a2b73a01d4fd50cecd9e5", null ],
-    [ "loc_keywords", "d1/d83/loc_8h.html#ae9e58cb7c47e06eb95dc83f36bd37041", null ],
     [ "loc_coord2ind", "d1/d83/loc_8h.html#ab2bc324bef2c93728a7ca2b8d79f167b", null ]
 ];

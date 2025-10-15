@@ -94,7 +94,7 @@ var cmath_8h =
     [ "cmulvec3", "de/d07/cmath_8h.html#a832bf53ce62a01eb4b32069866aa1a38", null ],
     [ "ccorr", "de/d07/cmath_8h.html#ad22442f812f82bd6b213bedcbcd83e5f", null ],
     [ "cpara3", "de/d07/cmath_8h.html#aa85947400f088300b15fa22db7b583f4", null ],
-    [ "ccog", "de/d07/cmath_8h.html#a415711fbbbfd48fdf7ff5c843c8ba53e", null ],
+    [ "ccog", "de/d07/cmath_8h.html#ab046f8093b6041fec3fe881ae6e6e811", null ],
     [ "cshift2center", "de/d07/cmath_8h.html#a3c6348c5e8f15e5111ed1503ac5fa142", null ],
     [ "ccwpow", "de/d07/cmath_8h.html#a88d681d163d1857792e15aa151884f59", null ],
     [ "ccwexp", "de/d07/cmath_8h.html#a0c81e1d04997ef766033bc54755542e8", null ],

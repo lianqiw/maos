@@ -11,13 +11,12 @@ var searchData=
   ['load_5fcfg_5ft_8',['load_cfg_t',['../d4/d38/parms_8h.html#d3/d1e/structload__cfg__t',1,'']]],
   ['loc_5ft_9',['loc_t',['../df/def/type_8h.html#da/ddc/structloc__t',1,'']]],
   ['loc_5ft_2e_5f_5funnamed23_5f_5f_10',['loc_t.__unnamed23__',['../df/def/type_8h.html#d1/d54/unionloc__t_8____unnamed23____',1,'']]],
-  ['loc_5ft_2e_5f_5funnamed23_5f_5f_2e_5f_5funnamed27_5f_5f_11',['loc_t.__unnamed23__.__unnamed27__',['../df/def/type_8h.html#d4/d9c/structloc__t_8____unnamed23_____8____unnamed27____',1,'']]],
-  ['loc_5ft_2e_5f_5funnamed25_5f_5f_12',['loc_t.__unnamed25__',['../df/def/type_8h.html#df/dbf/structloc__t_8____unnamed25____',1,'']]],
-  ['locccell_13',['locccell',['../df/def/type_8h.html#d3/d30/structlocccell',1,'']]],
-  ['loccell_14',['loccell',['../df/def/type_8h.html#dc/da1/structloccell',1,'']]],
-  ['locfft_5ft_15',['locfft_t',['../db/d1f/locfft_8h.html#d3/dcd/structlocfft__t',1,'']]],
-  ['lock_5ft_16',['lock_t',['../d7/dc3/classlock__t.html',1,'']]],
-  ['locstat_5ft_17',['locstat_t',['../df/def/type_8h.html#db/d43/structlocstat__t',1,'']]],
-  ['locstatcol_5ft_18',['locstatcol_t',['../df/def/type_8h.html#db/d5f/structlocstatcol__t',1,'']]],
-  ['lsr_5fcfg_5ft_19',['lsr_cfg_t',['../d4/d38/parms_8h.html#db/dea/structlsr__cfg__t',1,'']]]
+  ['loc_5ft_2e_5f_5funnamed23_5f_5f_2e_5f_5funnamed25_5f_5f_11',['loc_t.__unnamed23__.__unnamed25__',['../df/def/type_8h.html#de/dd1/structloc__t_8____unnamed23_____8____unnamed25____',1,'']]],
+  ['locccell_12',['locccell',['../df/def/type_8h.html#d3/d30/structlocccell',1,'']]],
+  ['loccell_13',['loccell',['../df/def/type_8h.html#dc/da1/structloccell',1,'']]],
+  ['locfft_5ft_14',['locfft_t',['../db/d1f/locfft_8h.html#d3/dcd/structlocfft__t',1,'']]],
+  ['lock_5ft_15',['lock_t',['../d7/dc3/classlock__t.html',1,'']]],
+  ['locstat_5ft_16',['locstat_t',['../df/def/type_8h.html#db/d43/structlocstat__t',1,'']]],
+  ['locstatcol_5ft_17',['locstatcol_t',['../df/def/type_8h.html#db/d5f/structlocstatcol__t',1,'']]],
+  ['lsr_5fcfg_5ft_18',['lsr_cfg_t',['../d4/d38/parms_8h.html#db/dea/structlsr__cfg__t',1,'']]]
 ];

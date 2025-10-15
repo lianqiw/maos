@@ -102,7 +102,7 @@ var dmath_8h =
     [ "dmulvec3", "da/dfb/dmath_8h.html#af6c253e8ef4432268a038a4545dafe79", null ],
     [ "dcorr", "da/dfb/dmath_8h.html#a2d1d98785f0dd0198de66b15afc3d874", null ],
     [ "dpara3", "da/dfb/dmath_8h.html#ae8986fc7f0c22844bf754528f288e41d", null ],
-    [ "dcog", "da/dfb/dmath_8h.html#a2f3489465a7d7ce53c4ba2234867cda8", null ],
+    [ "dcog", "da/dfb/dmath_8h.html#ab3ada8bd070814ffa3bd95c8f40f8eea", null ],
     [ "dshift2center", "da/dfb/dmath_8h.html#a8f232832a5efdaea10129cbc19ecb0b9", null ],
     [ "dcwpow", "da/dfb/dmath_8h.html#a6957a4dae51bdac2e2bb97ebdc74b1a9", null ],
     [ "dcwexp", "da/dfb/dmath_8h.html#ae55d5f2527984cf9b14a2bc68eb134e4", null ],
