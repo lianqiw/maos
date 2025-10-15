@@ -965,15 +965,15 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 		const int nsa=NX(intstat->i0);
 		//outer loop to prevent i0 from drifting
-		//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
+		//Compute CoG of i0 + goff and drive it toward gradoff with low gain (0.1)
 		if(1){
 			dzero(goff);
 			shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);//force cog
 			dadd(&goff, 1, P(simu->gradoff, iwfs), 1);
 			if(simu->gradoffdrift){//cog boot strapped
 				dadd(&goff, 1, P(simu->gradoffdrift, iwfs), -1);
-			} else if(simu->powfs[ipowfs].gradncpa){//cmf boot strapped, gradncpa is cog of i0
-				dadd(&goff, 1, P(simu->powfs[ipowfs].gradncpa, jwfs), -1);
+			} else if(simu->powfs[ipowfs].gradoff){//cmf boot strapped, gradoff is cog of i0
+				dadd(&goff, 1, P(simu->powfs[ipowfs].gradoff, jwfs), -1);
 			}
 			dadd(&P(simu->gradoff, iwfs), 1, goff, -parms->powfs[ipowfs].dither_gdrift);
 			if(jwfs==0){
@@ -994,12 +994,12 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 			for(int isa=0; isa<nsa; isa++){
 				real g0[2], gx[2], gy[2];
 				dcp(&i0sx, PR(intstat->i0, isa, jwfs));
-				dcog(g0, i0sx, 0., 0., cogthres, cogoff, 0);
+				dcog(g0, i0sx, 0., 0., cogthres, cogoff, 0, NULL);
 				dcp(&i0sy, PR(intstat->i0, isa, jwfs));
 				dadd(&i0sx, 1, PR(intstat->gx, isa, jwfs), gshift);
 				dadd(&i0sy, 1, PR(intstat->gy, isa, jwfs), gshift);
-				dcog(gx, i0sx, 0., 0., cogthres, cogoff, 0);
-				dcog(gy, i0sy, 0., 0., cogthres, cogoff, 0);
+				dcog(gx, i0sx, 0., 0., cogthres, cogoff, 0, NULL);
+				dcog(gy, i0sy, 0., 0., cogthres, cogoff, 0, NULL);
 
 				//Works in both x/y and r/a coordinate.
 				theta+=(atan2(gx[1]-g0[1], gx[0]-g0[0])+atan2(gy[1]-g0[1], gy[0]-g0[0])-gyoff);
@@ -1157,7 +1157,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 						}
 
 						if(ptype2==PTYPE_COG){//project pgrad to TWFS corrected modes
-							dcelladd(pgrad, 1, powfs[ipowfs].gradncpa, -1);
+							dcelladd(pgrad, 1, powfs[ipowfs].gradoff, -1);
 							dbg("project pgrad to TWFS corrected modes\n");
 							dcell *zm=0;
 							dcellmm(&zm, recon->RRlgs, *pgrad, "nn", 1);
@@ -1181,7 +1181,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 							} else if(ptype2==PTYPE_MF){
 								if(jwfs==0) dbg("in cmf mode, gradoff is reset to 0, and ncpa is used to create i0 with new sodium profile\n");
 								//since we are building ideal matched filter with
-								//the correct gradncpa and sodium profile. no need
+								//the correct gradoff and sodium profile. no need
 								//to use gradient reference vector.
 								dzero(P(simu->gradoff, iwfs));
 							}
@@ -1245,7 +1245,7 @@ static void wfsgrad_dither_post(sim_t* simu){
 					genmtch(parms, powfs, ipowfs);
 #if USE_CUDA
 					if(parms->gpu.wfs){
-						gpu_wfsgrad_update_mtche(parms, powfs, ipowfs);
+						gpu_wfsgrad_update_ref(parms, powfs, ipowfs);
 					}
 #endif
 				}

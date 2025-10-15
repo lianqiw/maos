@@ -243,8 +243,9 @@ typedef struct powfs_cfg_t{
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/
     int mtchfft;    /**<Compute gx, gy using i0 with FFT derivative instead of PSF.*/
-    real cogthres;/**<CoG threshold, relative to max(im)*/
-    real cogoff;  /**<CoG offset to remove, relative to max(im). */
+    real cogthres; /**<CoG threshold, relative to max(im)*/
+    real cogoff;   /**<CoG offset to remove, relative to max(im). */
+	real cogmask;  /**<Using this threshold to setup mask for CoG based on i0*/
 	dmat* ncpa;     /**<Description of NCPA; 2xn; first row is rms in meter, second row is zernike mode or negative for power law.*/
     int needGS0;    /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */

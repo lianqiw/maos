@@ -803,11 +803,11 @@ static void init_simu_wfs(sim_t* simu){
 		if(parms->powfs[ipowfs].pistatout){
 			P(simu->pistatout, iwfs)=dcellnew(nsa, parms->powfs[ipowfs].nwvl);
 		}
-		if(powfs[ipowfs].gradncpa&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
-			//CMF has gradncpa with in matched filter
+		if(powfs[ipowfs].gradoff&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
+			//CMF has gradoff within matched filter reference image
 			int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
-			dbg3("wfs %d: copying gradncpa to gradoff\n", iwfs);
-			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradncpa, wfsind, 1), 1);
+			dbg3("wfs %d: copying powfs.gradoff to simu.gradoff\n", iwfs);
+			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradoff, wfsind, 1), 1);
 		}
 
 	}
@@ -2152,12 +2152,12 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 		locwrite(powfs[ipowfs].loc, "%s/powfs%d_loc", dirskysim, ipowfs);
 		writebin(P(powfs[ipowfs].amp,0), "%s/powfs%d_amp", dirskysim, ipowfs);
 		locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc", dirskysim, ipowfs);
-		if(powfs[ipowfs].gradncpa){
+		if(powfs[ipowfs].gradoff){
 			int nsa=parms->powfs[ipowfs].order;
 			mymkdir("%s/gradoff/", dirskysim);
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				writebin(P(powfs[ipowfs].gradncpa, jwfs),
+				writebin(P(powfs[ipowfs].gradoff, jwfs),
 					"%s/gradoff/gradoff_sa%d_x%.0f_y%.0f.bin",
 					dirskysim, nsa,
 					parms->wfs[iwfs].thetax*RAD2AS,

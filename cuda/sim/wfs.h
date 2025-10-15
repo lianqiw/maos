@@ -86,6 +86,7 @@ public:
 	curmat qe;        /**<See powfs.qe*/
 	curmat srot;      /**<angle to rotate PSF/OTF*/
 	curmat mtche;     /**<matched filter gradient operator.*/
+	curmat cogmask;   /**<Center of gravity mask */
 	curmat i0sum;     /**<sum of i0 for each subaperture.*/
 	float i0sumsum;   /**<sum of i0sum for all subaps*/
 	curmat bkgrnd2;   /**<background as an image*/

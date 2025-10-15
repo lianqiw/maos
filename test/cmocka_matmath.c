@@ -94,16 +94,16 @@ void test_dcircle(void **state){
 	assert_float_equal(r, r2, 0.05);
 	//test dcog 
 	real grad[2];
-	dcog(grad, A, 0, 0, 0, 0, 0);
+	dcog(grad, A, 0, 0, 0, 0, 0, NULL);
 	assert_float_equal(grad[0], cx-(nn-1)*0.5, 0.1);
 	assert_float_equal(grad[1], cy-(nn-1)*0.5, 0.1);
 	//test shift2center
 	dshift2center(A, 0, 0);
-	dcog(grad, A, 0, 0, 0, 0, 0);
+	dcog(grad, A, 0, 0, 0, 0, 0, NULL);
 	assert_float_equal(grad[0], 0, 0.1);
 	assert_float_equal(grad[1], 0, 0.1);
 	dshift2center(A, 0.1, -0.7);
-	dcog(grad, A, 0, 0, 0, 0, 0);
+	dcog(grad, A, 0, 0, 0, 0, 0, NULL);
 	assert_float_equal(grad[0], 0.1, 0.1);
 	assert_float_equal(grad[1], -0.7, 0.1);
 

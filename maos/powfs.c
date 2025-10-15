@@ -1338,7 +1338,6 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 static void
 setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	TIC;tic;
-	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int ntry=500;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
@@ -1363,52 +1362,118 @@ setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	dcellfree(powfs[ipowfs].sanea);
 	powfs[ipowfs].sanea=dcellnew(NY(intstat->i0), 1);
 
-	for(int jwfs=0; jwfs<nwfs; jwfs++){
+	for(int jwfs=0; jwfs<NX(powfs[ipowfs].sanea); jwfs++){
 		//int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-		if(jwfs==0||(intstat&&NY(intstat->i0)>1)){
-			real* srot=NULL;
-			if(parms->powfs[ipowfs].radpix){
-				srot=P(PR(powfs[ipowfs].srot, jwfs, 0));
-			}
-			dmat** bkgrnd2=NULL;
-			dmat** bkgrnd2c=NULL;
-			dmat* psanea=P(powfs[ipowfs].sanea, jwfs)=dnew(nsa, 3);
-
-			if(powfs[ipowfs].bkgrnd){
-				bkgrnd2=PCOLR(powfs[ipowfs].bkgrnd, jwfs);
-			}
-			if(powfs[ipowfs].bkgrndc){
-				bkgrnd2c=PCOLR(powfs[ipowfs].bkgrndc, jwfs);
-			}
-			dmat* nea=dnew(2, 2);
-			for(int isa=0; isa<nsa; isa++){
-				dmat* bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
-				dmat* bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
-				dzero(nea);
-				dmat* ints=P(intstat->i0, isa, jwfs);/*equivalent noise*/
-				cog_nea(P(nea), ints, cogthres, cogoff, ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
-				P(nea, 0)=P(nea, 0)*pixthetax*pixthetax;
-				P(nea, 3)=P(nea, 3)*pixthetay*pixthetay;
-				P(nea, 1)=P(nea, 1)*pixthetax*pixthetay;
-				P(nea, 2)=P(nea, 1);
-
-				if(srot){
-					dmat* nea2=0;
-					drotvecnn(&nea2, nea, srot[isa]);
-					dfree(nea); nea=nea2; nea2=0;
-				}
-				P(psanea, isa, 0)=P(nea, 0);//xx
-				P(psanea, isa, 1)=P(nea, 3);//yy
-				P(psanea, isa, 2)=P(nea, 1);//xy
-			}
-			dfree(nea);
+		real* srot=NULL;
+		if(parms->powfs[ipowfs].radpix){
+			srot=P(PR(powfs[ipowfs].srot, jwfs, 0));
 		}
-	}//for jwfs
+		dmat** bkgrnd2=NULL;
+		dmat** bkgrnd2c=NULL;
+		dmat* psanea=P(powfs[ipowfs].sanea, jwfs)=dnew(nsa, 3);
+
+		if(powfs[ipowfs].bkgrnd){
+			bkgrnd2=PCOLR(powfs[ipowfs].bkgrnd, jwfs);
+		}
+		if(powfs[ipowfs].bkgrndc){
+			bkgrnd2c=PCOLR(powfs[ipowfs].bkgrndc, jwfs);
+		}
+		dmat* nea=dnew(2, 2);
+		for(int isa=0; isa<nsa; isa++){
+			dmat* bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
+			dmat* bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
+			dzero(nea);
+			dmat* ints=P(intstat->i0, isa, jwfs);/*equivalent noise*/
+			dmat* cogmask=NULL;
+			if(powfs[ipowfs].intstat->cogmask){
+				cogmask=PR(powfs[ipowfs].intstat->cogmask, isa, jwfs);
+			}
+			cog_nea(P(nea), ints, cogmask, cogthres, cogoff, ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
+			P(nea, 0)=P(nea, 0)*pixthetax*pixthetax;
+			P(nea, 3)=P(nea, 3)*pixthetay*pixthetay;
+			P(nea, 1)=P(nea, 1)*pixthetax*pixthetay;
+			P(nea, 2)=P(nea, 1);
+
+			if(srot){
+				dmat* nea2=0;
+				drotvecnn(&nea2, nea, srot[isa]);
+				dfree(nea); nea=nea2; nea2=0;
+			}
+			P(psanea, isa, 0)=P(nea, 0);//xx
+			P(psanea, isa, 1)=P(nea, 3);//yy
+			P(psanea, isa, 2)=P(nea, 1);//xy
+		}
+		dfree(nea);
+	}
 
 	toc2("setup_shwfs_cog_nea");
 }
+/**
+   Setup cogmask for CoG calculation.
+*/
+static void setup_shwfs_cog_mask(const parms_t* parms, powfs_t* powfs, int ipowfs){
+	if(!powfs[ipowfs].intstat || !PN(powfs[ipowfs].intstat->i0)) {
+		error("setting up cogmask requires i0 to be available\n");
+		return;
+	}
+	powfs[ipowfs].intstat->cogmask=dcellnew_same(NX(powfs[ipowfs].intstat->i0), NY(powfs[ipowfs].intstat->i0),
+		NX(powfs[ipowfs].intstat->i0, 0), NY(powfs[ipowfs].intstat->i0,0));
+	for(int icol=0; icol<NY(powfs[ipowfs].intstat->i0); icol++){
+		for(int isa=0; isa<NX(powfs[ipowfs].intstat->i0); isa++){
+			dmat *i0=P(powfs[ipowfs].intstat->i0, isa, icol);
+			dmat *cogmask=P(powfs[ipowfs].intstat->cogmask, isa, icol);
+			for(int i=0; i<PN(i0); i++){
+				real ratio=P(i0, i)/parms->powfs[ipowfs].cogmask;
+				if(ratio>1.) ratio=1.;
+				P(cogmask, i)=ratio;
+			}
+		}
+	}
+	if(parms->save.setup){
+		writebin(powfs[ipowfs].intstat->cogmask, "powfs%d_cogmask", ipowfs);
+	}
+}
+static void setup_shwfs_cog_gradoff(const parms_t* parms, powfs_t* powfs, int ipowfs){
+	if(!powfs[ipowfs].intstat || !PN(powfs[ipowfs].intstat->i0)) {
+		error("setting up gradoff requires i0 to be available\n");
+		return;
+	}
+	const int nsa=powfs[ipowfs].saloc->nloc;
+	const int nwfs=parms->powfs[ipowfs].nwfs;
+	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
+	const real pixthetay=parms->powfs[ipowfs].pixtheta;
+	const real cogthres=parms->powfs[ipowfs].cogthres;
+	const real cogoff=parms->powfs[ipowfs].cogoff;
+	intstat_t* intstat=powfs[ipowfs].intstat;
+	if(parms->powfs[ipowfs].type!=WFS_SH){
+		error("Only SHWFS is supported\n");
+	}
+	info("Compute gradient offset \n");
+	dcellfree(powfs[ipowfs].gradoff);
+	if(!powfs[ipowfs].gradoff){
+		powfs[ipowfs].gradoff=dcellnew_same(parms->powfs[ipowfs].nwfs, 1, 2*nsa, 1);
+	} else{
+		warning("powfs%d: will add to existing gradoff.\n", ipowfs);
+	}
 
+	for(int jwfs=0; jwfs<nwfs; jwfs++){
+		for(int isa=0; isa<nsa; isa++){
+			dmat* ints=PR(intstat->i0, isa, jwfs);/*equivalent noise*/
+			dmat* cogmask=NULL;
+			if(powfs[ipowfs].intstat->cogmask){
+				cogmask=PR(powfs[ipowfs].intstat->cogmask, isa, jwfs);
+			}
+			real grad[2];
+			dcog(grad, ints, 0, 0, cogthres, cogoff, 0, cogmask);
+			P(P(powfs[ipowfs].gradoff, jwfs), isa)+=grad[0]*pixthetax;
+			P(P(powfs[ipowfs].gradoff, jwfs), isa+nsa)+=grad[1]*pixthetay;
+		}
+	}
 
+	if(parms->save.setup){
+		writebin(powfs[ipowfs].gradoff, "powfs%d_cog_gradoff", ipowfs);
+	}
+}
 /**
    Setup the (matched filter or CoG) pixel processing parameters for physical optics wfs.
 */
@@ -1423,6 +1488,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		||!parms->powfs[ipowfs].phyusenea
 		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)
 		||parms->powfs[ipowfs].phytype_sim==PTYPE_CORR
+		||parms->powfs[ipowfs].phytype_sim==PTYPE_COG
 		){
 		intstat_t* intstat=powfs[ipowfs].intstat=mycalloc(1, intstat_t);
 		if(parms->powfs[ipowfs].i0load){
@@ -1572,7 +1638,10 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			}
 		}
 
+	}else{
+		warning("powfs%d: i0 is not needed\n", ipowfs);
 	}
+
 	/*Generating Matched filter */
 	if(parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 		genmtch(parms, powfs, ipowfs);
@@ -1580,8 +1649,14 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche", ipowfs);
 		}
 	}
-	if(parms->powfs[ipowfs].phytype_recon==PTYPE_COG&&parms->powfs[ipowfs].skip!=3&&!parms->powfs[ipowfs].phyusenea){
-		setup_shwfs_cog_nea(parms, powfs, ipowfs);
+	if(parms->powfs[ipowfs].phytype_sim==PTYPE_COG&&parms->powfs[ipowfs].skip!=3){
+		if(parms->powfs[ipowfs].cogmask>0){
+			setup_shwfs_cog_mask(parms, powfs, ipowfs);
+		}
+		setup_shwfs_cog_gradoff(parms, powfs, ipowfs);
+		if(!parms->powfs[ipowfs].phyusenea){
+			setup_shwfs_cog_nea(parms, powfs, ipowfs);
+		}
 	}
 	if(parms->save.setup){
 		writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
@@ -1597,12 +1672,11 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 		//opdbias contains real NCPA effects. No CPA is included.
 		dcell *opdbias=powfs[ipowfs].opdbias;
 		if(opdbias){
-			//Always compute gradncpa. May not use it in CMF non updated case.
-			if(!powfs[ipowfs].gradncpa){
-				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+			//Always compute gradoff. May not use it in CMF non updated case.
+			if(!powfs[ipowfs].gradoff){
+				powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 			} else{
-				warning("gradncpa already exists\n");
-				dcellzero(powfs[ipowfs].gradncpa);
+				warning("powfs%d: will add to existing gradoff.\n", ipowfs);
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -1612,32 +1686,32 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 						dmat* ints=0;
 						pywfs_ints(&ints, powfs[ipowfs].pywfs, P(opdbias, jwfs), parms->wfs[iwfs].siglev);
 						//writebin(P(opdbias,jwfs), "opdbias\n");exit(0);
-						pywfs_grad(&P(powfs[ipowfs].gradncpa, jwfs), powfs[ipowfs].pywfs, ints);
+						pywfs_grad(&P(powfs[ipowfs].gradoff, jwfs), powfs[ipowfs].pywfs, ints);
 						dfree(ints);
 					} else if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){//Ztilt
-						pts_ztilt(&P(powfs[ipowfs].gradncpa, jwfs), powfs[ipowfs].pts,
+						pts_ztilt(&P(powfs[ipowfs].gradoff, jwfs), powfs[ipowfs].pts,
 							PR(powfs[ipowfs].saimcc, jwfs, 0),
 							amp, P(P(opdbias, jwfs)));
 					} else{//Gtilt
 						if(parms->powfs[ipowfs].ncpa_method==NCPA_G
 							|| (parms->powfs[ipowfs].ncpa_method==NCPA_I0&&parms->powfs[ipowfs].dither)){//GS0*opd
-							dspmm(&P(powfs[ipowfs].gradncpa, jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
+							dspmm(&P(powfs[ipowfs].gradoff, jwfs), PR(powfs[ipowfs].GS0, jwfs, 0),
 								P(opdbias, jwfs), "nn", 1);
 							//MF drift control moved to wfsgrad.c
-							//need gradncpa for sodium profile fit.
+							//need gradoff for sodium profile fit.
 						}
 					}
 				}
 			}
 		}
 		if(powfs[ipowfs].pixoffx){
-			if(!powfs[ipowfs].gradncpa){
-				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+			if(!powfs[ipowfs].gradoff){
+				powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int nsa=powfs[ipowfs].saloc->nloc;
-				if(!P(powfs[ipowfs].gradncpa, jwfs)){
-					P(powfs[ipowfs].gradncpa, jwfs)=dnew(nsa*2, 1);
+				if(!P(powfs[ipowfs].gradoff, jwfs)){
+					P(powfs[ipowfs].gradoff, jwfs)=dnew(nsa*2, 1);
 				}
 
 				real pixthetax=parms->powfs[ipowfs].pixtheta;
@@ -1653,13 +1727,13 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 						gy=gx*st+gy*ct;
 						gx=gx2;
 					}
-					P(P(powfs[ipowfs].gradncpa, jwfs), isa)+=gx;
-					P(P(powfs[ipowfs].gradncpa, jwfs), isa+nsa)+=gy;
+					P(P(powfs[ipowfs].gradoff, jwfs), isa)+=gx;
+					P(P(powfs[ipowfs].gradoff, jwfs), isa+nsa)+=gy;
 				}
 			}
 		}
 		if(parms->save.setup){
-			writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
+			writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff", ipowfs);
 		}
 	}
 }
@@ -1841,7 +1915,7 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	etf_free(powfs[ipowfs].etfsim2);
 	dcellfree(powfs[ipowfs].opdadd);
 	dcellfree(powfs[ipowfs].opdbias);
-	dcellfree(powfs[ipowfs].gradncpa);
+	dcellfree(powfs[ipowfs].gradoff);
 	dfree(powfs[ipowfs].dtheta);
 }
 /**

@@ -715,18 +715,33 @@ void X(para3)(R* grad, const X(mat)* corr){
    all length are given in terms of pixel.
 */
 void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
-	R thres, R bkgrnd, R flux){
+	R thres, R bkgrnd, R flux, const X(mat) *mask){
 	R sum=0, sumx=0, sumy=0;
 	R iI;
-	
-	for(int iy=0; iy<im->ny; iy++){
-		OMP_SIMD_R(reduction(+:sum, sumx, sumy))
-		for(int ix=0; ix<im->nx; ix++){
-			iI=REAL(P(im, ix, iy))-bkgrnd;
-			if(iI>thres){
+	if(mask){
+		if(thres){
+			thres=0;
+			warning_once("X(cog): threshold is ignored when mask is given\n");
+		}
+		for(int iy=0; iy<im->ny; iy++){
+			OMP_SIMD_R(reduction(+:sum, sumx, sumy))
+			for(int ix=0; ix<im->nx; ix++){
+				iI=(REAL(P(im, ix, iy))-bkgrnd)*REAL(P(mask, ix, iy));
 				sum+=iI;
 				sumx+=iI*ix;
 				sumy+=iI*iy;
+			}
+		}
+	}else{
+		for(int iy=0; iy<im->ny; iy++){
+			OMP_SIMD_R(reduction(+:sum, sumx, sumy))
+			for(int ix=0; ix<im->nx; ix++){
+				iI=REAL(P(im, ix, iy))-bkgrnd;
+				if(iI>thres){
+					sum+=iI;
+					sumx+=iI*ix;
+					sumy+=iI*iy;
+				}
 			}
 		}
 	}
@@ -750,7 +765,7 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 void X(shift2center)(X(mat)* A, R offsetx, R offsety){
 	R grad[2];
 	R Amax=X(max)(A);
-	X(cog)(grad, A, offsetx, offsety, Amax*0.1, Amax*0.2, 0);
+	X(cog)(grad, A, offsetx, offsety, Amax*0.1, Amax*0.2, 0, NULL);
 	if(fabs(grad[0])>0.1||fabs(grad[1])>0.1){
 	/*dbg("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 		XC(mat)* B=XC(new)(A->nx, A->ny);
@@ -773,7 +788,7 @@ void X(shift2center)(X(mat)* A, R offsetx, R offsety){
 #else
 		XC(real2d)(&A, 0, B, 1);
 #endif
-		X(cog)(grad, A, offsetx, offsety, Amax*0.1, Amax*0.2, 0);
+		X(cog)(grad, A, offsetx, offsety, Amax*0.1, Amax*0.2, 0, NULL);
 		/*dbg("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
 		XC(free)(B);
 	}
