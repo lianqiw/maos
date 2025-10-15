@@ -181,6 +181,7 @@ var parms_8h =
       [ "mtchfft", "d4/d38/parms_8h.html#a92d381c003fc68ec17db8b42fd5af873", null ],
       [ "cogthres", "d4/d38/parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67", null ],
       [ "cogoff", "d4/d38/parms_8h.html#a6baba8c243f71803bcb842733673269d", null ],
+      [ "cogmask", "d4/d38/parms_8h.html#a7f17a466bcb0c120a15a8281b1c1c1e0", null ],
       [ "ncpa", "d4/d38/parms_8h.html#ab17527be0e1718dbd8d979e8fe22cdae", null ],
       [ "needGS0", "d4/d38/parms_8h.html#acea51dd03c8fa685f986c09fdd71702c", null ],
       [ "noisy", "d4/d38/parms_8h.html#ab9678267aa9abc9c88bfdc5a2cfd7236", null ],

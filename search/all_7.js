@@ -70,7 +70,7 @@ var searchData=
   ['dcellzero_67',['dcellzero',['../da/dfb/dmath_8h.html#ae385d21eb33f992fd5ff4d3166d929ba',1,'dtmp.c']]],
   ['dchol_68',['dchol',['../da/dfb/dmath_8h.html#aa85e85b65b79db61c5441d3d9a76c0f9',1,'blas.c']]],
   ['dcircle_69',['dcircle',['../da/dfb/dmath_8h.html#a34a223d0175a571c0de7d194a076f7a2',1,'dtmp.c']]],
-  ['dcog_70',['dcog',['../da/dfb/dmath_8h.html#a2f3489465a7d7ce53c4ba2234867cda8',1,'dtmp.c']]],
+  ['dcog_70',['dcog',['../da/dfb/dmath_8h.html#ab3ada8bd070814ffa3bd95c8f40f8eea',1,'dtmp.c']]],
   ['dcols_71',['dcols',['../da/dfb/dmath_8h.html#a0f30bd69a2f32e041eb0a5687cc9b7a2',1,'dtmp.c']]],
   ['dcorr_72',['dcorr',['../da/dfb/dmath_8h.html#a2d1d98785f0dd0198de66b15afc3d874',1,'dtmp.c']]],
   ['dcp_73',['dcp',['../da/dfb/dmath_8h.html#ab5adc5cd1e79d9a79751ba482728f230',1,'dtmp.c']]],
