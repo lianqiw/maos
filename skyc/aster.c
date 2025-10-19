@@ -228,10 +228,12 @@ static void mask_gm(dmat *ggm, const lmat *mblind){
 	}
 }
 /**
- * Select GM using WFS mask. Also compute direct mode mask (mdirect) if pmdirect is set.
+ * Select GM using WFS mask. Also compute direct mode mask (mblind) if mblind is set.
  * direct mode are modes that are only sensed by the slower loop and therefore directly fed into the integrator.
-*  @param mdirect	Modes controlled by slower loop.
- * @param rmblind	Compute and remove blind modes 
+ * @param mblind	Modes blind to the current set of WFS
+ * @param gm_in		Gradient interaction matrix for each WFS
+ * @param mask		Masking out WFS if element is set to 0.
+ * @return	dmat	Contatenated Gradient interaction matrix with masked WFS zeroed.
  * */
 static dmat* setup_aster_gm_mask(lmat** mblind, const parms_s* parms, const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
@@ -468,7 +470,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		//We need to build the reconstructor for each valid case.
 		//Assemble the measurement error covariance matrix
 		int idtrat;
-		if(multirate){//for multirate, idtrat is the slowest of all active WFS
+		if(multirate){//two cases for multirate. fast and slow loop
 			idtrat=icase==icase_fast?fast_idtrat:slow_idtrat;
 			if(icase==icase_fast){//fast loop may have subset of WFS
 				for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -482,8 +484,6 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		}else{
 			idtrat=icase;//for non multirate
 		}
-		//for multrate, we use sanea at the slower rate for fast WFS due to averaging.
-		//info("aster %d: icase=%d, idtrat=%d\n", aster->iaster, icase, idtrat);
 		//Since we masked gm, no need to mask NEA.
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 			dcp(&P(nea,iwfs), P(aster->wfs[iwfs].pistat->sanea, idtrat));
@@ -491,7 +491,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		}
 		//dshow(nea->m, "nea");
 		if(multirate){
-			if(icase==icase_fast){
+			if(icase==icase_fast){//fast loop
 				if(parms->skyc.dbg) lshow(aster->mdirect, "mdirect");
 				//zero out GM for modes not measured by the faster loop. 
 				gmfast=setup_aster_gm_mask(&aster->mdirect, parms, aster->g, fast_mask);
@@ -535,15 +535,9 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 			}else{//slow loop
 				//Setup modes controlled by slow loop that is not measured correctly by the fast loop
 				//Mslow=(I-Gfast*Gfast^-1)
-				//Must use non-filtered gmfast
-				//dmat *gmfast=setup_aster_gm_mask(parms, aster->g, fast_mask);
-				//dmat *rgmfast=dpinv(gmfast, nea->m);
 				dmat *Mslow=dnew(nmod, nmod); 
 				daddI(Mslow, 1);
 				dmm(&Mslow, 1, P(aster->pgm,icase_fast), gmfast, "nn", -1);
-				//for(int i=0; i<PN(Mslow); i++){
-					//if(P(Mslow, i)<1e-7) P(Mslow, i)=0;
-				//}
 				if(parms->skyc.dbg){
 					dshow(Mslow, "aster%d_M_slow", aster->iaster);
 					//dshow(Mslow, "aster%d_M_slow", aster->iaster);
@@ -556,8 +550,6 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 				dmm(&gmslow, 0, gmfull, Mslow, "nn", 1);
 				dmat *pgmslow=dpinv(gmslow, nea->m);
 				dmm(&P(aster->pgm,icase), 0, Mslow, pgmslow, "nn", 1);
-				//dfree(gmfast);
-				//dfree(rgmfast);
 				dfree(Mslow);
 				dfree(gmslow);
 				dfree(pgmslow);
@@ -572,8 +564,6 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		}
 		P(aster->sigman,icase)=calc_recon_error(P(aster->pgm,icase), nea->m, parms->maos.mcc);
 		if(parms->skyc.dbg){
-			//dshow(P(aster->pgm, icase), "pgm_%d", idtrat);
-			//dshow(nea->m, "nea_%d", idtrat);
 			dshow(P(aster->sigman, icase), "aster%d_sigman_%.0f", aster->iaster, P(parms->skyc.dtrats, idtrat));
 		}
 		if(parms->skyc.dbg>2){

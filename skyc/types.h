@@ -109,7 +109,7 @@ typedef struct aster_s{
     int tsa;           /**<total number of subapertures.*/
     int nwfs;          /**<number of WFS.*/
     int use;           /**<use this asterism for further physical optics simulation.*/
-	lmat *mdirect;     /**<in multirate mode, directly output such modes for slower mode*/
+	lmat *mdirect;     /**<in multirate mode, directly output such modes from slower mode*/
 	//The following are wfs dependent
     wfs_s *wfs;        /**<list of wfs for this asterism*/
 	lmat *idtrats;	   /**<idtrat of each wfs*/
