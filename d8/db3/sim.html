@@ -241,7 +241,7 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">moao.actfloat = [&quot;&quot;]  #list of floating actuators. see dm.actfloat</div>
 <div class="line">moao.ar       = [1]   #aspect ratio. see dm.ar.</div>
 <div class="line">#Science evaluation field parameters</div>
-<div class="line">evl.dx      = ref:atm.dx  #sampling of the aperture in meter in simulation. -1: follow atm.dx</div>
+<div class="line">evl.dx      = ref:atm.dx  #sampling of the aperture in meter in simulation. -1: follow atm.dx. Smaller dx will give larger PSF size.</div>
 <div class="line">evl.psfr    = [1] #output psf reconstruction telemetry for this direction.</div>
 <div class="line">evl.hs      = [inf] #the height of the science object. normally infinity.</div>
 <div class="line">evl.rmax    = 1   #max radial order for zernke fitting in performance evaluation. 1: includes piston/tip/tilt. 2: p/t/t/focus/astigmatism</div>
