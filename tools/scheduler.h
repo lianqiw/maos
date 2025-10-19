@@ -39,5 +39,5 @@ void ws_proxy_remove(void *userdata, int toclose);
 int  start_lws(short port);
 #endif
 extern const int http_padding;
-int http_handler(struct pollfd *pfd, int flag);
+int http_handshake(struct pollfd *pfd, int flag);
 #endif

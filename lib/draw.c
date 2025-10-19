@@ -552,7 +552,7 @@ static int iframe=0; //frame counter
 #define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
 #define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, nlen) || fwriteint(fbuf, cmd))
 #define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, sizeof(int)+strlen(str)+1); FWRITESTR(str);}
-#define FWRITECMDARR(cmd,p,len) {FWRITECMD(cmd, len); if(len) FWRITEARR(p,len);}
+#define FWRITECMDARR(cmd,p,len) {FWRITECMD(cmd, len); if(len>0) FWRITEARR(p,len);}
 #define FWRITECMDINT(cmd,val) {FWRITECMD(cmd, sizeof(int)); FWRITEINT(val);}
 //Plot an empty page
 #define BUF_POSTPROC\

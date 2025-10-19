@@ -1333,7 +1333,7 @@ int main(int argc, const char* argv[]){
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.
 	extern int PORT;
-	listen_port((listen_opt_t){.port=PORT, .localpath=slocal, .responder=respond, .http_responder=http_handler, .timeout_fun=scheduler_timeout, .timeout_sec=10});
+	listen_port((listen_opt_t){.port=PORT, .localpath=slocal, .responder=respond, .http_responder=http_handshake, .timeout_fun=scheduler_timeout, .timeout_sec=10});
 	runned_remove(-1);
 	socket_close();
 	signal_caught=0;//enable printing memory debug information

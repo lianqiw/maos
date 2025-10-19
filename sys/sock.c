@@ -538,7 +538,9 @@ void listen_port(listen_opt_t opt){
 						if(pfd_handler[ifd].handler==pending_handler){//check whether client is tcp or http
 							char buf[5]={0};
 							int len=recv(pfd[ifd].fd, buf, 4, MSG_PEEK);
-							if(len==4 && !strcmp(buf, "GET ")){
+							if((len==4 && !strcmp(buf, "GET "))
+								||(len>=3 && buf[0] == 0x16 && buf[1] == 0x03 &&
+    							(buf[2] == 0x00 || buf[2] == 0x01 || buf[2] == 0x02 || buf[2] == 0x03))){
 								listen_port_add(pfd[ifd].fd, POLLIN, opt.http_responder, "http_responder");
 							}else{
 								listen_port_add(pfd[ifd].fd, POLLIN, opt.responder, "responder");

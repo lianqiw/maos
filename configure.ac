@@ -656,7 +656,10 @@ done
 if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
 	AC_MSG_ERROR([Please install blas/lapack])
 fi
-
+AX_CHECK_OPENSSL(
+	[AC_DEFINE([HAVE_OPENSSL], [1], [Define if OpenSSL is available])],
+	[AC_MSG_NOTICE([OpenSSL library not found])]
+)
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then

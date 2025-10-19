@@ -23,6 +23,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
+#ifdef HAVE_OPENSSL 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +38,184 @@
 #include "../sys/sys.h"
 #include "scheduler.h"
 #define BUF_SIZE 4096
+
+typedef struct http_context_t{
+	int fd;
+#if HAVE_OPENSSL
+	SSL *ssl;
+#endif	
+	int(*recv)(struct http_context_t*ctx, char *buf, size_t nbuf);
+	int(*send)(struct http_context_t*ctx, const char *buf, size_t nbuf);
+}http_context_t;
+http_context_t *ssl_context=NULL;
+int nssl_context=0;
+#ifdef HAVE_OPENSSL
+static int has_ssl=0;//guard initialization and tell the status. 1: yes. 0 or -1: no. 0: not initialized
+SSL_CTX *ssl_ctx=NULL;
+void init_ssl(){
+	if(has_ssl) return;
+	SSL_load_error_strings();
+	OpenSSL_add_ssl_algorithms();
+
+	const SSL_METHOD *method = TLS_server_method();  // TLS 1.2/1.3 compatible
+	ssl_ctx = SSL_CTX_new(method);
+	if (!ssl_ctx) {
+		perror("Unable to create SSL context");
+		ERR_print_errors_fp(stderr);
+		has_ssl=-1;
+	}else{
+		has_ssl=1;
+		do{
+			char fn_crt[PATH_MAX];
+			char fn_key[PATH_MAX];
+			mysnprintf(fn_crt, sizeof(fn_crt), "%s/.aos/%s.crt", HOME, HOST);
+			if(!exist(fn_crt)){
+				mysnprintf(fn_crt, sizeof(fn_crt), "%s/.aos/Server.crt", HOME);
+			}
+			if(!exist(fn_crt)){
+				warning_time("TLS certificate not found at %s\n", fn_crt);
+				has_ssl=-1; break;
+			}
+			mysnprintf(fn_key, sizeof(fn_key), "%s/.aos/%s.key", HOME, HOST);
+			if(!exist(fn_key)){
+				mysnprintf(fn_key, sizeof(fn_key), "%s/.aos/Server.key", HOME);
+			}
+			if(!exist(fn_key)){
+				warning_time("TLS key not found at %s\n", fn_key);
+				has_ssl=-1; break;
+			}
+
+			if (SSL_CTX_use_certificate_file(ssl_ctx, fn_crt, SSL_FILETYPE_PEM) <= 0 ||
+				SSL_CTX_use_PrivateKey_file(ssl_ctx, fn_key, SSL_FILETYPE_PEM) <= 0) {
+				ERR_print_errors_fp(stderr);
+				has_ssl=-1; break;
+			}
+		}while(0);
+		if(has_ssl==-1){
+			SSL_CTX_free(ssl_ctx);
+			ssl_ctx=NULL;
+		}
+	}
+}
+#endif
+static void remove_http_context(http_context_t *ctx){
+	ctx->fd=-1;
+#if HAVE_OPENSSL
+	if(ssl_ctx && ctx->ssl){
+		SSL_free(ctx->ssl);
+		ctx->ssl=NULL;
+	}
+#endif
+}
+#if HAVE_OPENSSL
+int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
+	return SSL_read(ctx->ssl, (void*)buf, nbuf);
+}
+int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+	if(!nbuf) return 0;
+	ssize_t nsend;
+	do{
+		nsend=SSL_write(ctx->ssl, buf, nbuf);
+		//dbg_time("fd=%d nsend=%ld, nbuf=%lu\n", ctx->fd, nsend, nbuf);
+		if(nsend>0){
+			buf=buf+nsend;
+			nbuf-=nsend;
+		}
+	}while(nsend>0 && nbuf);
+	if(nbuf){
+		remove_http_context(ctx);
+		return -1;
+	}else{
+		return 0;
+	}
+}
+#endif
+int http_reader(http_context_t*ctx, char *buf, size_t nbuf){
+	return recv(ctx->fd, (void*)buf, nbuf, 0);
+}
+int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+	if(!nbuf) return 0;
+	ssize_t nsend;
+	do{
+		nsend=send(ctx->fd, buf, nbuf, 0);
+		//dbg_time("fd=%d nsend=%ld, nbuf=%lu\n", ctx->fd, nsend, nbuf);
+		if(nsend>0){
+			buf=buf+nsend;
+			nbuf-=nsend;
+		}
+	}while(nsend>0 && nbuf);
+	if(nbuf){
+		remove_http_context(ctx);
+		return -1;
+	}else{
+		return 0;
+	}
+}
+
+static http_context_t *get_http_context(int fd){
+	for (int ic=0; ic<nssl_context; ic++){
+		if(ssl_context[ic].fd==fd){
+			return &ssl_context[ic];
+		}
+	}
+	error("http_context not found for fd=%d\n", fd);
+	return NULL;
+}
+/**Create a context for fd. overriding existing one if exists */
+static http_context_t *create_http_context(int fd){
+	char buf[5]={0};
+	int len=recv(fd, buf, 4, MSG_PEEK);
+	int ishttp=(len==4 && !strcmp(buf, "GET "));
+	int ishttps=(len>=3 && buf[0] == 0x16 && buf[1] == 0x03 &&
+    		(buf[2] == 0x00 || buf[2] == 0x01 || buf[2] == 0x02 || buf[2] == 0x03));
+	if(!ishttp && !ishttps){
+		warning("Connection is not http or https\n");
+		return NULL;
+	}
+	int jc=-1;
+	for (int ic=0; ic<nssl_context; ic++){
+		if(ssl_context[ic].fd==fd){
+			jc=ic;
+			break;//found matching
+		}else if(ssl_context[ic].fd==-1 && jc==-1){
+			jc=ic;//mark for insertion
+		}
+	}
+	if(jc==-1){
+		jc=nssl_context;
+		nssl_context++;
+		ssl_context=myrealloc(ssl_context, nssl_context, http_context_t);
+	}
+	memset(&ssl_context[jc], 0, sizeof(http_context_t));
+	ssl_context[jc].fd=fd;
+	if(ishttps){
+#if HAVE_OPENSSL
+		if(has_ssl==0) init_ssl();
+		if(ssl_ctx){
+			SSL* ssl=SSL_new(ssl_ctx);
+			SSL_set_fd(ssl, fd);
+			if (SSL_accept(ssl) > 0) {//success
+				ssl_context[jc].ssl=ssl;
+				ssl_context[jc].recv=https_reader;
+				ssl_context[jc].send=https_writer;
+			}else{
+				unsigned long err = ERR_peek_error();
+				warning_time("SSL_accept failed: %s\n", ERR_reason_error_string(err));
+				SSL_free(ssl);
+				ssl=NULL;
+			}
+		}
+#endif
+		if(!ssl_context[jc].recv){
+			warning("HTTPS is not supported\n");
+			return NULL;
+		}
+	}else if(ishttp){
+		ssl_context[jc].recv=http_reader;
+		ssl_context[jc].send=http_writer;
+	}
+	return &ssl_context[jc];
+}
 
 /* Minimal SHA-1 Implementation */
 
@@ -135,7 +317,7 @@ static void base64_encode(const unsigned char *in, int in_len, char *out) {
 
 const int http_padding=16;
 /** 
- * Read tcp data and send to websockets. allocated memory must have at least http_padding padding before the pointer*/
+ * Write to websockets. allocated memory must have at least http_padding padding before the pointer*/
 static int ws_send(char *buf, int nlen, int mode, void *userdata){
 	int offset=2;//no mask field can be present
 	if(nlen>UINT16_MAX){
@@ -155,8 +337,8 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 		*((uint16_t*)&header[2])=swap2bytes(nlen);
 	}
 	int fd_dest=(int)(long)userdata;
-	//read tcp and send to websockets
-	if(stwrite(fd_dest, header, nlen+offset)){
+	http_context_t* ctx=get_http_context(fd_dest);
+	if(ctx->send(ctx, header, nlen+offset)){
 		return -1;
 	}
 	return 0;
@@ -164,38 +346,27 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 /** 
  * Read tcp data and send to websockets */
 static int ws_forward(int fd, int nlen, int mode, void *userdata){
-	static char *buf=0;
+	static char *buf=0;//persistent buffer
 	static int size=0;
-	if(size<http_padding+nlen){
-		size=http_padding+nlen;
+	int offset=2;//no mask field can be present
+	if(nlen>UINT16_MAX){
+		offset+=8;
+	}else if(nlen>125){
+		offset+=2;
+	}
+	if(size<offset+nlen){
+		size=offset+nlen;
 		buf=myrealloc(buf, size, char);
 	}
-	int offset=2;//no mask field can be present
-	buf[0] = 0x81+mode;//82 is binary. 81 is text. 
-	if(nlen<126){
-		buf[1]=nlen;
-	}else if(nlen>UINT16_MAX){
-		buf[1]=127;
-		*((uint64_t*)&buf[2])=swap8bytes((long)nlen);
-		offset+=8;//8 byte length
-	}else{
-		buf[1]=126;
-		*((uint16_t*)&buf[2])=swap2bytes(nlen);
-		offset+=2;//2 byte length
-	}
-	int fd_dest=(int)(long)userdata;
-	//read tcp and send to websockets
-	if(stread(fd, buf+offset, nlen) || stwrite(fd_dest, buf, nlen+offset)){
-		return -1;
-	}
-	return 0;
+	if(stread(fd, buf+offset, nlen)) return -1;
+	return ws_send(buf+offset, nlen, mode, userdata);
 }
-static void ws_write_close(int fd){//send a ws close frame.
+static void ws_write_close(http_context_t* ctx){//send a ws close frame.
 	char buf[4];
 	buf[0]=0x88;//FIN=1; opcode=8
 	buf[1]=0x2;//payload=2
 	buf[2]=0x3;	buf[3]=0xE8;//1000
-	if(stwrite(fd, buf, sizeof(buf))){
+	if(ctx->send(ctx, buf, sizeof(buf))){
 		dbg_time("Send close failed.\n");
 	}
 }
@@ -210,9 +381,10 @@ static int ws_fail(int fd, const char *format, ...) {
 	Receive websocket messages and call ws_proxy_command to handle it.
 */
 static int ws_receive(struct pollfd *pfd, int flag){
-	int fd=pfd->fd;
+	const int fd=pfd->fd;
+	http_context_t* ctx=get_http_context(pfd->fd);
 	if(flag==-1){//server ask browser client to close
-		ws_write_close(fd);//send browser client close frame
+		ws_write_close(ctx);//send browser client close frame
 		shutdown(fd, SHUT_WR);//make sure we don't reply to the close message.
 		return ws_fail(fd, "listen_sock requests shutdown");
 	}
@@ -221,7 +393,7 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	static int oprev=0;//opcode of previous message
     char buf0[BUF_SIZE];
 	char *buf=buf0;
-	const int len = recv(fd, buf, BUF_SIZE-1, 0);
+	const int len = ctx->recv(ctx, buf, BUF_SIZE-1);
 	if (len<6){//server received msg must be at least 6 bytes
 		return ws_fail(fd, "len=%d", len);
 	}
@@ -240,8 +412,8 @@ static int ws_receive(struct pollfd *pfd, int flag){
 		//dbg_time("Buffer is too small\n");
 		buf=(char*)malloc(msg_len+offset+1);
 		memcpy(buf, buf0, BUF_SIZE-1);
-		if(stread(fd, buf+BUF_SIZE-1, msg_len+offset-(BUF_SIZE-1))){
-			return ws_fail(fd, "stread");
+		if(ctx->recv(ctx, buf+BUF_SIZE-1, msg_len+offset-(BUF_SIZE-1))){
+			return ws_fail(fd, "recv");
 		}
 	}
 	buf[msg_len+offset]=0;//always terminate string
@@ -278,14 +450,13 @@ static int ws_receive(struct pollfd *pfd, int flag){
 			prev=NULL;
 			nprev=0;
 		}
-		//ssize_t len2 = recv(fd, buf+len, sizeof(buf)-len, 0);
 	}else if(opcode==0x8){//client replied//request close
-		ws_write_close(fd);
+		ws_write_close(ctx);
 		return ws_fail(fd, "client requests close");
 	}else if(opcode==0x9){//client sent a ping. we reply with pong
 		buf[offset-2]=0x8A;//pong
 		buf[offset-1]=msg_len;//cannot be more than 126
-		if(stwrite(fd, buf+offset-2, msg_len+2)){
+		if(ctx->send(ctx, buf+offset-2, msg_len+2)){
 			return ws_fail(fd, "pong");
 		}else{
 			return 0;
@@ -318,7 +489,7 @@ char* http_parse_key(const char *buf, const char *name){
 /*
 	Upgrade http connection to websocket. it replaces the handler in listen_port.
 */
-void http_upgrade_websocket(int fd, char *buf) {
+void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	//Sec-WebSocket-Protocol: maos-monitor-protocol
 	//dbg2_time("Upgrading %d to websockets\n", fd);
 	char *key=http_parse_key(buf, "Sec-WebSocket-Key:");
@@ -326,10 +497,10 @@ void http_upgrade_websocket(int fd, char *buf) {
     unsigned char sha[20];
     char accept_src[128];
     snprintf(accept_src, sizeof(accept_src), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", key);
-    SHA1_CTX ctx;
-    sha1_init(&ctx);
-    sha1_update(&ctx, (unsigned char*)accept_src, strlen(accept_src));
-    sha1_final(&ctx, sha);
+	SHA1_CTX sha_ctx;
+    sha1_init(&sha_ctx);
+    sha1_update(&sha_ctx, (unsigned char*)accept_src, strlen(accept_src));
+    sha1_final(&sha_ctx, sha);
     char accept_key[64];
     base64_encode(sha, 20, accept_key);
 	
@@ -341,11 +512,11 @@ void http_upgrade_websocket(int fd, char *buf) {
              "Sec-WebSocket-Accept: %s\r\n"
 			 "Sec-WebSocket-Protocol: %s\r\n\r\n",
              accept_key, protocol?protocol:"chat");
-    stwrite(fd, resp, strlen(resp));
-	listen_port_add(fd, POLLIN, ws_receive, "ws_receive");//switch to websocket handler
+    ctx->send(ctx, resp, strlen(resp));
+	listen_port_add(ctx->fd, POLLIN, ws_receive, "ws_receive");//switch to websocket handler
 	if(!strcmp(protocol, "maos-monitor-protocol")){
 		char cmd[11]="1&MONITOR;";
-		ws_proxy_command(cmd, strlen(cmd), (ws_proxy_t){.send=ws_send, .userdata=(void*)(long)(fd)});
+		ws_proxy_command(cmd, strlen(cmd), (ws_proxy_t){.send=ws_send, .userdata=(void*)(long)(ctx->fd)});
 	}
 	
 	free(protocol);
@@ -354,7 +525,7 @@ void http_upgrade_websocket(int fd, char *buf) {
 /*
 	Send a close request to client which will indicate closure. 
 */
-void http_close(int client_fd){
+void http_close(http_context_t *ctx){
 	const char *resp =
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: text/plain\r\n"
@@ -363,21 +534,23 @@ void http_close(int client_fd){
 		"\r\n"
 		"Hello world\n";
 
-	stwrite(client_fd, resp, strlen(resp));
-	shutdown(client_fd, SHUT_WR);  // optional graceful signal
+	ctx->send(ctx, resp, strlen(resp));
+	shutdown(ctx->fd, SHUT_WR);  // optional graceful signal
 }
+
 /*
 	HTTP handler callable by listen_port. 
 	It supports sending plain files (folder is disabled for security reasons) and websocket upgrade
 */
-int http_handler(struct pollfd *pfd, int flag) {
+int http_handler(struct pollfd *pfd, int flag){
 	int fd=pfd->fd;
+	http_context_t* ctx=get_http_context(pfd->fd);
 	if(flag==-1){
-		http_close(fd);
+		http_close(ctx);
 		return 0;//wait for client to initiate close
 	}
     char buf[BUF_SIZE];
-    int n = recv(fd, buf, sizeof(buf) - 1, 0);
+	int n= ctx->recv(ctx, buf, sizeof(buf) - 1);
     if (n <= 0) return -1;
     buf[n] = 0;
 	//info_time("received '%s'\n", buf);
@@ -386,7 +559,7 @@ int http_handler(struct pollfd *pfd, int flag) {
 		return -1;//error
 	}
     if (strstr(buf, "Upgrade: websocket")) {//handle upgrade
-        http_upgrade_websocket(fd, buf);
+        http_upgrade_websocket(ctx, buf);
 		return 0;
     } else {//handle http send file
 		int ans=0;
@@ -414,21 +587,21 @@ int http_handler(struct pollfd *pfd, int flag) {
 
 		if (!f) {//send 404
 			snprintf(header, sizeof(header), "HTTP/1.1 404 Not Found\r\n%sContent-Length: 9\r\n\r\nNot Found", close);
-			stwrite(fd, header, strlen(header));
+			ans=ctx->send(ctx, header, strlen(header));
 		}else{//send file
 			fseek(f, 0, SEEK_END);
 			long size = ftell(f);
 			rewind(f);
 
 			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Length: %ld\r\n\r\n", close, size);
-			if(stwrite(fd, header, strlen(header))){
+			if(ctx->send(ctx, header, strlen(header))){
 				ans=-1;
 			}else{
 				char buf2[BUF_SIZE];
 				size_t n2;
 				
 				while ((n2 = fread(buf2, 1, sizeof(buf2), f)) > 0 && !ans){
-					ans=stwrite(fd, buf2, n2);
+					ans=ctx->send(ctx, buf2, n2);
 				}
 			}
 			fclose(f);
@@ -439,4 +612,16 @@ int http_handler(struct pollfd *pfd, int flag) {
 		return ans;
 		
     }
+}
+int http_handshake(struct pollfd *pfd, int flag){
+	http_context_t *ctx=create_http_context(pfd->fd);
+	if(!ctx){
+		return -1;
+	}
+	if(flag==-1){
+		http_close(ctx);
+		return 0;//wait for client to initiate close
+	}
+	listen_port_add(pfd->fd, POLLIN, http_handler, "http_handler");
+	return 0;
 }

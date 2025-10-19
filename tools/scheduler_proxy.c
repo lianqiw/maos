@@ -41,7 +41,7 @@
 static ws_proxy_t *ws_proxy=NULL;
 static int nws_proxy=0;
 /**
- * @brief Add a new proxy link
+ * @brief Add a new proxy link. fd is websocket fd
  *
  * @param ws information for the helper routine
  */
