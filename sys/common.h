@@ -28,10 +28,6 @@
 #include "config.h"
 #endif
 
-#if HAS_OPENMP && !defined(_OPENMP)
-#define _OPENMP 201511 //Sometimes GPU code does not define this
-#endif
-
 #if _OPENMP >= 201511
 #include <omp.h>
 #else

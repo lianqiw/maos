@@ -585,7 +585,7 @@ static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointe
 #else
 static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data){
 	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
-	GtkWidget *view=user_data;
+	GtkWidget *view=GTK_WIDGET(user_data);
 	(void)n_press;
 #endif
 
@@ -630,7 +630,7 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 #else
 static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x, gdouble y, gpointer user_data){
 	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
-	GtkWidget* view=user_data;
+	GtkWidget* view=GTK_WIDGET(user_data);
 	(void)n_press;
 #endif
 	;
@@ -659,7 +659,7 @@ static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x
 			
 			if(status2==icon_running||status2==icon_waiting){
 #if GTK_MAJOR_VERSION>3				
-				int* cmds=malloc(sizeof(int)*4);
+				int* cmds=mymalloc(4, int);
 				cmds[0]=MON_CMD; cmds[1]=ihost; cmds[2]=pid; cmds[3]=CMD_KILL;
 				dialog_confirm(cmds, "Kill %d?", pid);
 #else				

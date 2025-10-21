@@ -1,4 +1,4 @@
-AM_CFLAGS=-I$(top_srcdir)
+AM_CFLAGS=-I$(top_srcdir) $(CHOL_CFLAGS)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS=accphi.h aos.h cn2est.h cure.h draw.h fractal.h genotf.h gensei.h hyst.h kalman.h laplacian.h locfft.h \
@@ -14,11 +14,11 @@ comb.c
 
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
-libaos_la_LIBADD=../math/libaomath.la
+libaos_la_LIBADD=../math/libaomath.la $(CHOL_LIBS)
 
 bin_PROGRAMS=../bin/aolib.so
 ___bin_aolib_so_SOURCES=aolib.c
-___bin_aolib_so_LDADD=libaos.la $(LDFFT) $(LDCHOL) $(LAPACK) -lm -ldl -lz
+___bin_aolib_so_LDADD=libaos.la $(FFTW_LIBS) $(LAPACK) $(LDEXE)
 ___bin_aolib_so_LDFLAGS=-static -Xcompiler -shared $(LDSO)
 #Linker flags depends on system type (native linker is used)
 if LINUX

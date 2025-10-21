@@ -38,7 +38,41 @@
 #include "../sys/sys.h"
 #include "scheduler.h"
 #define BUF_SIZE 4096
-
+/**
+ * @brief Context for an HTTP connection.
+ *
+ * Encapsulates transport-specific state and I/O operations for a single
+ * HTTP connection so callers can treat plain and TLS-backed sockets
+ * uniformly.
+ *
+ * Responsibilities and semantics:
+ *  - Holds the underlying OS file descriptor for the connection.
+ *  - Optionally holds a TLS/SSL handle when built with OpenSSL.
+ *  - Provides function pointers for receiving and sending data. These
+ *    functions should follow conventional POSIX-style semantics:
+ *      - Return the number of bytes read/written on success.
+ *      - Return 0 to indicate EOF (for recv) where applicable.
+ *      - Return -1 on error and set errno (or use a transport-specific
+ *        error reporting mechanism).
+ *  - The caller is responsible for managing the lifecycle of the fd and
+ *    the ssl pointer (closing/freeing them as appropriate).
+ *
+ * Thread-safety:
+ *  - Access to a single http_context_t instance is not guaranteed to be
+ *    thread-safe. Synchronize externally if the same context will be used
+ *    concurrently from multiple threads.
+ *
+ * Members:
+ *  - fd: File descriptor for the underlying socket/connection.
+ *  - ssl: (present only when HAVE_OPENSSL is enabled) Pointer to an
+ *         OpenSSL SSL object or equivalent TLS state.
+ *  - recv: Pointer to a receive function with signature:
+ *          int (*recv)(struct http_context_t *ctx, char *buf, size_t nbuf);
+ *          Must read up to nbuf bytes into buf.
+ *  - send: Pointer to a send function with signature:
+ *          int (*send)(struct http_context_t *ctx, const char *buf, size_t nbuf);
+ *          Must write up to nbuf bytes from buf.
+ */
 typedef struct http_context_t{
 	int fd;
 #if HAVE_OPENSSL
@@ -98,7 +132,7 @@ void init_ssl(){
 	}
 }
 #endif
-static void remove_http_context(http_context_t *ctx){
+static void http_context_remove(http_context_t *ctx){
 	ctx->fd=-1;
 #if HAVE_OPENSSL
 	if(ssl_ctx && ctx->ssl){
@@ -108,10 +142,11 @@ static void remove_http_context(http_context_t *ctx){
 #endif
 }
 #if HAVE_OPENSSL
-int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
-	return SSL_read(ctx->ssl, (void*)buf, nbuf);
+static int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
+	return ctx?SSL_read(ctx->ssl, (void*)buf, nbuf):-1;
 }
-int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+	if(!ctx) return -1;
 	if(!nbuf) return 0;
 	ssize_t nsend;
 	do{
@@ -123,17 +158,18 @@ int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 		}
 	}while(nsend>0 && nbuf);
 	if(nbuf){
-		remove_http_context(ctx);
+		http_context_remove(ctx);
 		return -1;
 	}else{
 		return 0;
 	}
 }
 #endif
-int http_reader(http_context_t*ctx, char *buf, size_t nbuf){
-	return recv(ctx->fd, (void*)buf, nbuf, 0);
+static int http_reader(http_context_t*ctx, char *buf, size_t nbuf){
+	return ctx?recv(ctx->fd, (void*)buf, nbuf, 0):-1;
 }
-int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
+	if(!ctx) return -1;
 	if(!nbuf) return 0;
 	ssize_t nsend;
 	do{
@@ -145,14 +181,14 @@ int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 		}
 	}while(nsend>0 && nbuf);
 	if(nbuf){
-		remove_http_context(ctx);
+		http_context_remove(ctx);
 		return -1;
 	}else{
 		return 0;
 	}
 }
 
-static http_context_t *get_http_context(int fd){
+static http_context_t *http_context_get(int fd){
 	for (int ic=0; ic<nssl_context; ic++){
 		if(ssl_context[ic].fd==fd){
 			return &ssl_context[ic];
@@ -162,7 +198,7 @@ static http_context_t *get_http_context(int fd){
 	return NULL;
 }
 /**Create a context for fd. overriding existing one if exists */
-static http_context_t *create_http_context(int fd){
+static http_context_t *http_context_create(int fd){
 	char buf[5]={0};
 	int len=recv(fd, buf, 4, MSG_PEEK);
 	int ishttp=(len==4 && !strcmp(buf, "GET "));
@@ -217,103 +253,6 @@ static http_context_t *create_http_context(int fd){
 	return &ssl_context[jc];
 }
 
-/* Minimal SHA-1 Implementation */
-
-typedef struct {
-    uint32_t h[5];
-    unsigned char block[64];
-    uint64_t bitlen;
-    size_t curlen;
-} SHA1_CTX;
-
-static void sha1_init(SHA1_CTX *ctx) {
-    ctx->h[0] = 0x67452301;
-    ctx->h[1] = 0xEFCDAB89;
-    ctx->h[2] = 0x98BADCFE;
-    ctx->h[3] = 0x10325476;
-    ctx->h[4] = 0xC3D2E1F0;
-    ctx->curlen = 0;
-    ctx->bitlen = 0;
-}
-
-static void sha1_transform(SHA1_CTX *ctx, const unsigned char *data) {
-    uint32_t w[80];
-    uint32_t a, b, c, d, e, t;
-
-    for (int i = 0; i < 16; i++)
-        w[i] = (data[4*i]<<24)|(data[4*i+1]<<16)|(data[4*i+2]<<8)|data[4*i+3];
-    for (int i = 16; i < 80; i++) {
-        uint32_t v = w[i-3]^w[i-8]^w[i-14]^w[i-16];
-        w[i] = (v << 1) | (v >> 31);
-    }
-
-    a = ctx->h[0]; b = ctx->h[1]; c = ctx->h[2]; d = ctx->h[3]; e = ctx->h[4];
-
-    for (int i = 0; i < 80; i++) {
-        uint32_t f, k;
-        if (i < 20) { f = (b & c) | ((~b) & d); k = 0x5A827999; }
-        else if (i < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
-        else if (i < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
-        else { f = b ^ c ^ d; k = 0xCA62C1D6; }
-
-        t = ((a << 5) | (a >> 27)) + f + e + k + w[i];
-        e = d; d = c; c = (b << 30) | (b >> 2); b = a; a = t;
-    }
-
-    ctx->h[0] += a; ctx->h[1] += b; ctx->h[2] += c;
-    ctx->h[3] += d; ctx->h[4] += e;
-}
-
-static void sha1_update(SHA1_CTX *ctx, const unsigned char *data, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        ctx->block[ctx->curlen++] = data[i];
-        if (ctx->curlen == 64) {
-            sha1_transform(ctx, ctx->block);
-            ctx->bitlen += 512;
-            ctx->curlen = 0;
-        }
-    }
-}
-
-static void sha1_final(SHA1_CTX *ctx, unsigned char *out) {
-    ctx->bitlen += ctx->curlen * 8;
-    ctx->block[ctx->curlen++] = 0x80;
-    if (ctx->curlen > 56) {
-        while (ctx->curlen < 64) ctx->block[ctx->curlen++] = 0;
-        sha1_transform(ctx, ctx->block);
-        ctx->curlen = 0;
-    }
-    while (ctx->curlen < 56) ctx->block[ctx->curlen++] = 0;
-
-    for (int i = 7; i >= 0; i--)
-        ctx->block[ctx->curlen++] = (ctx->bitlen >> (i * 8)) & 0xFF;
-
-    sha1_transform(ctx, ctx->block);
-    for (int i = 0; i < 5; i++) {
-        out[i*4] = (ctx->h[i] >> 24) & 0xFF;
-        out[i*4+1] = (ctx->h[i] >> 16) & 0xFF;
-        out[i*4+2] = (ctx->h[i] >> 8) & 0xFF;
-        out[i*4+3] = ctx->h[i] & 0xFF;
-    }
-}
-
-/**  Base64 Encode  */
-static void base64_encode(const unsigned char *in, int in_len, char *out) {
-	static const char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    int i, j;
-    for (i = 0, j = 0; i < in_len;) {
-        uint32_t a = i < in_len ? in[i] : 0; i++;
-        uint32_t b = i < in_len ? in[i] : 0; i++;
-        uint32_t c = i < in_len ? in[i] : 0; i++;
-        uint32_t triple = (a << 16) | (b << 8) | c;
-
-        out[j++] = b64_table[(triple >> 18) & 0x3F];
-        out[j++] = b64_table[(triple >> 12) & 0x3F];
-        out[j++] = (i > in_len + 1) ? '=' : b64_table[(triple >> 6) & 0x3F];
-        out[j++] = (i > in_len) ? '=' : b64_table[triple & 0x3F];
-    }
-    out[j] = 0;
-}
 
 const int http_padding=16;
 /** 
@@ -337,8 +276,8 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 		*((uint16_t*)&header[2])=swap2bytes(nlen);
 	}
 	int fd_dest=(int)(long)userdata;
-	http_context_t* ctx=get_http_context(fd_dest);
-	if(ctx->send(ctx, header, nlen+offset)){
+	http_context_t* ctx=http_context_get(fd_dest);
+	if(!ctx || ctx->send(ctx, header, nlen+offset)){
 		return -1;
 	}
 	return 0;
@@ -362,6 +301,7 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	return ws_send(buf+offset, nlen, mode, userdata);
 }
 static void ws_write_close(http_context_t* ctx){//send a ws close frame.
+	if(!ctx) return;
 	char buf[4];
 	buf[0]=0x88;//FIN=1; opcode=8
 	buf[1]=0x2;//payload=2
@@ -382,11 +322,14 @@ static int ws_fail(int fd, const char *format, ...) {
 */
 static int ws_receive(struct pollfd *pfd, int flag){
 	const int fd=pfd->fd;
-	http_context_t* ctx=get_http_context(pfd->fd);
+	http_context_t* ctx=http_context_get(pfd->fd);
 	if(flag==-1){//server ask browser client to close
 		ws_write_close(ctx);//send browser client close frame
 		shutdown(fd, SHUT_WR);//make sure we don't reply to the close message.
 		return ws_fail(fd, "listen_sock requests shutdown");
+	}
+	if(!ctx){
+		return -1;
 	}
 	static char *prev=NULL;//save previous message to handle continuation
 	static size_t nprev=0;//length of previous message
@@ -494,16 +437,10 @@ void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	//dbg2_time("Upgrading %d to websockets\n", fd);
 	char *key=http_parse_key(buf, "Sec-WebSocket-Key:");
 	char *protocol=http_parse_key(buf, "Sec-WebSocket-Protocol:");
-    unsigned char sha[20];
     char accept_src[128];
+	char accept_key[64];
     snprintf(accept_src, sizeof(accept_src), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", key);
-	SHA1_CTX sha_ctx;
-    sha1_init(&sha_ctx);
-    sha1_update(&sha_ctx, (unsigned char*)accept_src, strlen(accept_src));
-    sha1_final(&sha_ctx, sha);
-    char accept_key[64];
-    base64_encode(sha, 20, accept_key);
-	
+	base64_sha1(accept_src, accept_key);
     char resp[256];
     snprintf(resp, sizeof(resp),
              "HTTP/1.1 101 Switching Protocols\r\n"
@@ -526,6 +463,7 @@ void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	Send a close request to client which will indicate closure. 
 */
 void http_close(http_context_t *ctx){
+	if(!ctx) return;
 	const char *resp =
 		"HTTP/1.1 200 OK\r\n"
 		"Content-Type: text/plain\r\n"
@@ -544,15 +482,19 @@ void http_close(http_context_t *ctx){
 */
 int http_handler(struct pollfd *pfd, int flag){
 	int fd=pfd->fd;
-	http_context_t* ctx=get_http_context(pfd->fd);
+	http_context_t* ctx=http_context_get(pfd->fd);
 	if(flag==-1){
 		http_close(ctx);
 		return 0;//wait for client to initiate close
 	}
-    char buf[BUF_SIZE];
+	char buf[BUF_SIZE];
+	if (!ctx) {
+		warning_time("http_context_get returned NULL for fd=%d\n", fd);
+		return -1;
+	}
 	int n= ctx->recv(ctx, buf, sizeof(buf) - 1);
-    if (n <= 0) return -1;
-    buf[n] = 0;
+	if (n <= 0) return -1;
+	buf[n] = 0;
 	//info_time("received '%s'\n", buf);
     if (strncmp(buf, "GET ", 4) != 0){
 		warning_time("buf shall start with 'GET': '%s'. close connection. fd=%d\n", buf, fd);
@@ -593,7 +535,7 @@ int http_handler(struct pollfd *pfd, int flag){
 			long size = ftell(f);
 			rewind(f);
 
-			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Length: %ld\r\n\r\n", close, size);
+			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Type: text/html\r\nContent-Length: %ld\r\n\r\n", close, size);
 			if(ctx->send(ctx, header, strlen(header))){
 				ans=-1;
 			}else{
@@ -611,10 +553,10 @@ int http_handler(struct pollfd *pfd, int flag){
 		}
 		return ans;
 		
-    }
+	}
 }
 int http_handshake(struct pollfd *pfd, int flag){
-	http_context_t *ctx=create_http_context(pfd->fd);
+	http_context_t *ctx=http_context_create(pfd->fd);
 	if(!ctx){
 		return -1;
 	}

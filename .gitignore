@@ -36,6 +36,7 @@ libtool
 m4/*
 !m4/acinclude.m4
 !m4/ax_check_openssl.m4
+!m4/my_*.m4
 mex/aolib.c
 mex/maos2mex.h
 missing

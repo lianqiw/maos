@@ -15,20 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_SYS_SYS_H
-#define AOS_SYS_SYS_H
-#include "common.h"
-#include "misc.h"
-#include "path.h"
-#include "hashlittle.h"
-#include "sock.h"
-#include "sockio.h"
-#include "thread.h"
-#include "process.h"
-#include "scheduler_client.h"
-#include "daemonize.h"
-#include "bin.h"
-#include "readstr.h"
-#include "dlist.h"
-#include "sha1.h"
+#ifndef AOS_SYS_SHA1_H
+#define AOS_SYS_SHA1_H
+typedef struct SHA1_CTX SHA1_CTX;
+void sha1_init(SHA1_CTX *ctx);
+void sha1_update(SHA1_CTX *ctx, const unsigned char *data, size_t len);
+void sha1_final(SHA1_CTX *ctx, unsigned char *out);
+void base64_encode(const unsigned char *in, int in_len, char *out);
+void base64_sha1(const char* in,  char *out);
 #endif

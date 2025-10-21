@@ -11,23 +11,11 @@ SRCS=setup.c parms.c utils.c powfs.c aper.c	sim.c fdpcg.c wfsgrad.c perfevl.c wf
 
 lib_LTLIBRARIES=libmaos.la
 libmaos_la_SOURCES=$(SRCS)
-libmaos_la_LIBADD=
+libmaos_la_LIBADD=../lib/libaos.la
 if USE_CUDA
 libmaos_la_LIBADD+=../cuda/recon/libcurecon.la
-#if USE_STATIC
-#libmaos_la_LIBADD+=../cuda/dlink.o
-#endif
 endif
-libmaos_la_LIBADD+=../lib/libaos.la
 
 bin_PROGRAMS=../bin/maos
 ___bin_maos_SOURCES=maos.c
-___bin_maos_LDADD=libmaos.la
-#if USE_CUDA
-#___bin_maos_LDADD+=$(LIBCUDA)
-#if USE_STATIC
-#___bin_maos_LDADD+=-lculibos -ldl -lrt
-#endif
-#endif
-___bin_maos_LDADD+=$(LDEXE_MAOS) $(LDEXE_FULL)
-
+___bin_maos_LDADD=libmaos.la $(LDEXE_FULL)

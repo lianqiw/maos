@@ -9,10 +9,11 @@ bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 #test_gpu_LDADD=../cuda/libaogpu.la $(LDADD)  $(LIBCUDA)
 #endif
 
-if USE_CMOCKA
+if HAS_CMOCKA
 bin_PROGRAMS+=cmocka_mat cmocka_matmath cmocka_locfft cmocka_blas \
 cmocka_readstr cmocka_threadpool cmocka_psd
-LDADD+=-lcmocka
+LDADD+=$(CMOCKA_LIBS)
+AM_CFLAGS+=$(CMOCKA_CFLAGS)
 endif
 TESTS=$(bin_PROGRAMS)
 

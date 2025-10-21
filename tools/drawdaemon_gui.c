@@ -366,8 +366,8 @@ static gboolean on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
 static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer pdata){
 	(void) event;
 	drawdata_t *drawdata=(drawdata_t *)pdata;
-	if(!drawdata) return;
-	if(drawdata->cumu!=drawdata->cumu_last || drawdata->zlog!=drawdata->zlog_last){
+	if(!drawdata) return FALSE;
+	if(drawdata->cumu!=drawdata->cumulast || drawdata->zlog!=drawdata->zlog_last){
 		update_toolbar();
 	}
 	cairo_t *cr=gdk_cairo_create(widget->window);

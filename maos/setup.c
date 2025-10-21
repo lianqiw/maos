@@ -69,7 +69,7 @@ void maos_setup(const parms_t* parms){
 		warning("dmproj does not work with PRALLEL=2 implementation. Set to 1.\n");
 		PARALLEL=1;
 	}
-#if HAS_OPENMP==0
+#ifndef _OPENMP
 	if(PARALLEL==2){
 		warning("PRALLEL=2 requires OpenMP. Set to 1.\n");
 		PARALLEL=1;

@@ -23,11 +23,6 @@
 #define __AOS_UTILS_H
 #include "common.h"
 
-#if USE_STATIC
-extern char _binary____config_tar_gz_start;
-extern char _binary____config_tar_gz_end;
-#endif
-
 void plotloc(const char *fig, const parms_t *parms, 
 	     loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);
 void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...) CHECK_ARG(4);

@@ -1,4 +1,4 @@
-name: CI in macos
+name: CI in macos in c++ mode
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
     - name: configure and make
       run: |
         mkdir build && cd build
-        ../maos/configure --enable-release --disable-binary --prefix=$(pwd)/../external
+        ../maos/configure CC=clang++ --disable-binary --prefix=$(pwd)/../external
         make -j
     - name: make check
       run: cd build && make check

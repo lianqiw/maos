@@ -134,8 +134,12 @@ function App() {
           try {
             setJob((oldValue) => {
               const ind = oldValue.findIndex((v) => v.PID == i[0] && v.Host === host);
-              if (newdata === undefined && ind != -1) {//remove
-                return oldValue.filter((v, i) => i != ind);
+              if (newdata === undefined){//remove
+                if(ind != -1) {//found
+                  return oldValue.filter((v, i) => i != ind);
+                }else{
+                  return oldValue;//not found
+                }
               } else if (ind == -1) {//append
                 return [...oldValue, newdata];
               } else {//update
@@ -234,61 +238,65 @@ function App() {
 
   const columns = ["Time", "Host", "PID", "Start Dir", "Arguments", "Out Dir", "Low", "High", "Step"];
   const cn = { Time: "", Host: "", PID: "", "Start Dir": "tdpath", "Arguments": "tdpath", "Out Dir": "tdout", Low: "", High: "", Step: "" };
-  return (
-    <div>
-      <ul className="inline tab_hosts">
-        <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
-          <ul className="menu-list" >
-            <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-            <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-            <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-            <li onClick={() => { cmdHost(active, "kill_all"); }}>🟥 Kill All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-            {job.filter((row) => (row.status == 1 || row.status == 3)).map((row) =>
-              (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW") }}>▶️ Plot {row.PID} at {row.Host}</li>))}
-          </ul>
-        }></Menu>
-        <li className={active === "" ? "active" : ""} onClick={() => setActive("")}>
-          <span>▶️ Active</span>
-        </li>
-        {Object.keys(wss).filter((v) => wss[v] != undefined).map((host) => (//List of hosts
-          <li key={host} className={active === host ? "active" : ""}>
-            <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(fullName.current[host]); }}>{wss[host] ? "🟢" : "🔴"}</span>
-            <span title="Switch to host" onClick={() => { setActive(host); }}>{host}</span>
-            <span title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>&nbsp;⛌</span>
+  try{
+    return (
+      <div>
+        <ul className="inline tab_hosts">
+          <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
+            <ul className="menu-list" >
+              <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "kill_all"); }}>🟥 Kill All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              {job.filter((row) => (row.status == 1 || row.status == 3)).map((row) =>
+                (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW") }}>▶️ Plot {row.PID} at {row.Host}</li>))}
+            </ul>
+          }></Menu>
+          <li className={active === "" ? "active" : ""} onClick={() => setActive("")}>
+            <span>▶️ Active</span>
           </li>
-        ))}
-        <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { connect(text); } }}>
-          <input style={{ width: '10em' }} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
-          <button type="submit">Connect</button></form>
-        </li>
-        {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
-          <li key={job} className={active === job ? "active" : ""}>
-            <span onClick={() => { setActive(job) }}>{job.replace(':-',':draw ')}</span>
-            <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>&nbsp;⛌</span>
-          </li>))}
-      </ul>
-      {!active.includes(':') && (
-        <table className="monitor">
-          <thead>
-            <tr>{columns.map((col) => <th key={col} className={cn[col]}>{col}</th>)}
-              <th key="icon"></th>
-              <th key="progress">Progress</th>
-            </tr>
-          </thead>
-          <tbody>
-            {job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).map((row, i) => (
-              <tr key={row.PID}>
-                {columns.map((col) => <td key={col} className={cn[col]} title={row[col]}>{row[col]}</td>)}
-                <td onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
-                <Progress text={row.prog} frac={row.frac}></Progress>
+          {Object.keys(wss).filter((v) => wss[v] != undefined).map((host) => (//List of hosts
+            <li key={host} className={active === host ? "active" : ""}>
+              <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(fullName.current[host]); }}>{wss[host] ? "🟢" : "🔴"}</span>
+              <span title="Switch to host" onClick={() => { setActive(host); }}>{host}</span>
+              <span title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>&nbsp;⛌</span>
+            </li>
+          ))}
+          <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { connect(text); } }}>
+            <input style={{ width: '10em' }} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
+            <button type="submit">Connect</button></form>
+          </li>
+          {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
+            <li key={job} className={active === job ? "active" : ""}>
+              <span onClick={() => { setActive(job) }}>{job.replace(':-',':draw ')}</span>
+              <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>&nbsp;⛌</span>
+            </li>))}
+        </ul>
+        {!active.includes(':') && (
+          <table className="monitor">
+            <thead>
+              <tr>{columns.map((col) => <th key={col} className={cn[col]}>{col}</th>)}
+                <th key="icon"></th>
+                <th key="progress">Progress</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <DrawDaemon drawInfo={drawInfo} jobActive={active}></DrawDaemon>
-    </div>
-  );
+            </thead>
+            <tbody>
+              {job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).map((row, i) => (
+                <tr key={row.PID}>
+                  {columns.map((col) => <td key={col} className={cn[col]} title={row[col]}>{row[col]}</td>)}
+                  <td onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
+                  <Progress text={row.prog} frac={row.frac}></Progress>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <DrawDaemon drawInfo={drawInfo} jobActive={active}></DrawDaemon>
+      </div>
+    );
+  }catch(err){
+    console.log(Now(), "Failed to create jsx:", {wss, job, drawInfo} )
+  }
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
