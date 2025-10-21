@@ -206,7 +206,7 @@ var searchData=
   ['cnorm_203',['cnorm',['../de/d07/cmath_8h.html#aef8ed03215c7d2d139b4e27601225e41',1,'ctmp.c']]],
   ['cnormalize_5fsum_204',['cnormalize_sum',['../de/d07/cmath_8h.html#a27798d8582ca81cce96872b58fdc03d0',1,'ctmp.c']]],
   ['cnormalize_5fsumabs_205',['cnormalize_sumabs',['../de/d07/cmath_8h.html#af58a2e752d27e465c1a5e6cd14766d5b',1,'ctmp.c']]],
-  ['code_206',['code',['../d3/d4c/page20_compile.html',1,'Compile the Code'],['../d3/d4c/page20_compile.html#autotoc_md7',1,'Compile the Code'],['../d3/d4c/page20_compile.html#autotoc_md2',1,'Download the code']]],
+  ['code_206',['code',['../d3/d4c/page20_compile.html#autotoc_md7',1,'Compile the Code'],['../d3/d4c/page20_compile.html',1,'Compile the Code'],['../d3/d4c/page20_compile.html#autotoc_md2',1,'Download the code']]],
   ['cogmask_207',['cogmask',['../d6/d94/maos_2types_8h.html#ac9056a0ae50921b4bc903248122847fe',1,'intstat_t::cogmask'],['../d4/d38/parms_8h.html#a7f17a466bcb0c120a15a8281b1c1c1e0',1,'powfs_cfg_t::cogmask'],['../dc/d85/classcuwfs__t.html#a63d10f36da5c3b031a953bab867da37e',1,'cuwfs_t::cogmask']]],
   ['cogoff_208',['cogoff',['../d4/d38/parms_8h.html#a6baba8c243f71803bcb842733673269d',1,'powfs_cfg_t']]],
   ['cogthres_209',['cogthres',['../d4/d38/parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67',1,'powfs_cfg_t']]],
