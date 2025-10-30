@@ -300,11 +300,8 @@ void free_arg(arg_t **parg){
 	arg_t *arg=*parg;
 	if(!arg) return;
 	free(arg->dirout);
-	free(arg->conf);
-	if(arg->confcmd){
-		remove(arg->confcmd);
-		free(arg->confcmd);
-	}
+	free(arg->confmain);
+	free(arg->confcmd);
 	free(arg->gpus);
 	free(arg->host);
 	free(arg->execmd);
@@ -326,7 +323,7 @@ arg_t* parse_args(int argc, const char* argv[]){
 	{"nthread",'n',M_INT, 1, 0, &nthread,NULL},
 	{"gpu",    'g',M_INT, 2, 0, &arg->gpus, &arg->ngpu},
 	{"ngpu",   'G',M_INT, 1, 0, &arg->ngpu2, NULL},
-	{"conf",   'c',M_STR, 1, 0, &arg->conf, NULL},
+	{"conf",   'c',M_STR, 1, 0, &arg->confmain, NULL},
 	{"path",   'p',M_STR, 1, 1, (void*)addpath, NULL},
 	{"run",    'r',M_STR, 1, 0, &arg->host, NULL},
 	{"server", 'S',M_INT, 0, 0, &arg->server,NULL},
@@ -334,10 +331,10 @@ arg_t* parse_args(int argc, const char* argv[]){
 	};
 	arg->confcmd=strnadd(argc-1, argv+1, " ");
 	parse_argopt(arg->confcmd, options);
-	if(arg->conf&&arg->conf[0]!='/'&&exist(arg->conf)){
+	if(arg->confmain&&arg->confmain[0]!='/'&&exist(arg->confmain)){
 		//make it absolute path to avoid recursive loading when maos_recent.conf is used
-		char *argconf=arg->conf;
-		arg->conf=myabspath(argconf);
+		char *argconf=arg->confmain;
+		arg->confmain=myabspath(argconf);
 		free(argconf);
 	}
 	if((!arg->host||!strcmp(arg->host, "localhost"))&&!arg->detach){//forground running.

@@ -898,12 +898,12 @@ typedef struct arg_t{
     int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
     int server;      /**<MAOS acting as server*/
     char *dirout;    /**<Result output directory*/
-    char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
+    char *confmain;  /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
     char *host;      /**<Run in another host*/
     char *execmd;    /**<concatenation of argv*/
 }arg_t;
-parms_t* setup_parms(const char *main, const char *extra, int override);
+parms_t* setup_parms(const char *mainconf, const char *extracmd, int override);
 void setup_parms_gpu(parms_t *parms, int *gpus, int ngpu);
 void free_parms(parms_t *parms);
 /*The following are here so that we don't have to include type.h or utils.h */

@@ -543,7 +543,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			nrow=len;
 			ncol=1;
 			if(count>len){
-				warning("Need %d, but got %d values, ignore the rest.\n", len, count);
+				warning("%s=%s: need %d, but got %d values, ignore the rest.\n", key, data, len, count);
 				count=len;
 			}
 		}

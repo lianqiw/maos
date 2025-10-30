@@ -385,11 +385,12 @@ static void open_config_full(
 				setenv(var, value, 1);
 				read_sys_env();
 			}
-		} else if(!strcmp(var, "include")){
+		} else if(!strcmp(var, "include")){//also covers !eql case
 			/*dbg("Opening embeded config file %s\n",value); */
 			char* embeded=strextract(value);
 			if(embeded){
 				if(strcmp(embeded, config_in)){
+					//if conf file is included from command line, reduce its priority
 					open_config_full(embeded, prefix, fd?priority:priority-1, index, fd?level+1:level);
 				}else{
 					warning("Recursive inclusion: %s includes %s. Ignored.\n", config_in, embeded);
@@ -471,10 +472,10 @@ static void open_config_full(
 							error("Invalid value: append=%d\n", append);
 						}
 					}
-				} else {//check if the values are identical
+				} else if(!append){//check if the values are identical
 					if(((oldstore->data==NULL||store->data==NULL)&&(oldstore->data!=store->data))||
 							((oldstore->data!=NULL&&store->data!=NULL)&&strcmp(oldstore->data, store->data))){
-						if(oldstore->priority>priority || oldstore->index>store->index){//Entry with higher priority or entered layer prevails.
+						if(oldstore->priority>priority || oldstore->index>store->index){//Entry with higher priority or entered later prevails.
 							if(!fd){
 								dbg("Not overriding %-20s\t%10s by %s\n", store->key, oldstore->data, store->data);
 							}

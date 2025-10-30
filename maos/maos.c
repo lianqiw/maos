@@ -386,7 +386,7 @@ int main(int argc, const char* argv[]){
 	if(arg->dirout) info2("Output folder is '%s'.\n", arg->dirout);
 	print_version();
 	/*setting up parameters before asking scheduler to check for any errors. */
-	parms_t* parms=setup_parms(arg->conf, arg->confcmd, arg->over);
+	parms_t* parms=setup_parms(arg->confmain, arg->confcmd, arg->over);
 
 	if(parms->sim.nseed>0){
 		

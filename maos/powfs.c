@@ -1654,7 +1654,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			setup_shwfs_cog_mask(parms, powfs, ipowfs);
 		}
 		if(parms->powfs[ipowfs].cogcalib){
-		setup_shwfs_cog_gradoff(parms, powfs, ipowfs);
+			setup_shwfs_cog_gradoff(parms, powfs, ipowfs);
 		}
 		if(!parms->powfs[ipowfs].phyusenea){
 			setup_shwfs_cog_nea(parms, powfs, ipowfs);

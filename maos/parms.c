@@ -3638,8 +3638,9 @@ static void print_parms(const parms_t *parms){
 /**
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
-   returned from setup_parms. */
-parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
+   returned from setup_parms. 
+   */
+parms_t *setup_parms(const char *mainconf, const char* extraconf, int override){
 	char *config_path=find_config("maos");
 	/*Setup PATH and result directory so that the config_path is in the back of path */
 	if(!config_path||!exist(config_path)){
@@ -3652,16 +3653,13 @@ parms_t *setup_parms(const char *mainconf,const char *extraconf,int override){
 		addpath2(0, "%s/%s", config_path, "examples");
 		free(config_path); config_path=NULL;
 	}
-	if(mainconf){
+	if(mainconf && strlen(mainconf)){
 		open_config(mainconf, 0);/*user supplied main .conf file. */
+	}else{
+		open_config("default.conf", 0);//default main conf file
 	}
 	if(extraconf && strlen(extraconf)){
 		open_config(extraconf, 1);/*overriding .conf or lines*/
-	}
-	if(!mainconf && //sanity check for completeness.
-		(!readcfg_peek("sim.skysim")||!readcfg_peek("save.evlopd")||
-			!readcfg_peek("atm.r0z")||!readcfg_peek("recon.psdnseg"))){
-		open_config("default.conf", 0);/*updates to this file is not tracked by git. */
 	}
 	parms_t *parms=mycalloc(1,parms_t);
 	/*

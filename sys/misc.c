@@ -646,13 +646,42 @@ static char* cmd_string(char* start, char** end2){
 	}
 	return out;
 }
+/** 
+	swap content from begin to end (exclusive) to pdest location if pdest < begin 
+	otherwise, just remove the content. pdest is updated.
+	|pdest   |begin.   |end -->|begin |pdest |end
+	|begin   |end      |pdest --> |begin |pdest
+ */
+void str_swap(char**pdest, char *begin, char *end){
+	//info("dest={%p:%s}, begin={%p:%s}, end={%p:%s}\n", *pdest, *pdest, begin, begin, end, end);
+	int n=end-begin;
+	if(*pdest==begin){
+		return;//noop
+	}else if(*pdest<begin){//move content to beginning.
+		char temp[n];
+		memcpy(temp, begin, n);
+		memmove(*pdest+n, *pdest, begin-*pdest);
+		memcpy(*pdest, temp, n);
+		*pdest+=n;
+	}else if(*pdest>=end){//remove content. pdest points to \0
+		int nres=*pdest-end;
+		memmove(begin, end, nres);
+		*pdest=nres+begin;
+		memset(*pdest, 0, n);
+	}else{
+		error("Invalid configuration\n");
+	}
+}
 /**
    Parse command line arguments. The remaining string contains whatever is not yet parsed.
    This is more relaxed than the built in getopd
 */
 void parse_argopt(char* cmds, argopt_t* options){
-	char* cmds_end=cmds+(cmds?strlen(cmds):0);
+	if(!cmds) return;
+	const int ncmd=strlen(cmds);
+	char* cmds_end=cmds+ncmd;
 	char* start=cmds;
+	char* conf_start=cmds;
 	while(start<cmds_end){
 		if(isspace((int)start[0])||start[0]=='\n'){
 			start[0]=' ';
@@ -660,7 +689,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 			continue;
 		}
 		if(options&&start[0]=='-'){
-			char* start0=start;
+			char* const start0=start;
 			char key='0';
 			char* value;
 			int iopt=-1;
@@ -778,14 +807,18 @@ void parse_argopt(char* cmds, argopt_t* options){
 				error("Unknown type");
 			}/*switch */
 			/*Empty the string that we already parsed. */
-			memset(start0, ' ', start-start0);
+			if(start0<start){
+				str_swap(&cmds_end, start0, start);
+				start=start0;
+			}
 		} else if(start[0]=='='){/*equal sign found, key=value */
 			/*create a \n before the key. */
-			int skipspace=1;
-			for(char* start2=start-1; start2>=cmds; start2--){
-				if(isspace((int)*start2)||*start2=='\n'){
+			int skipspace=1;//skip space before =
+			char* start0;
+			for(start0=start-1; start0>=cmds; start0--){
+				if(isspace((int)*start0)||*start0=='\n'){
 					if(!skipspace){
-						*start2='\n';
+						*start0='\n';
 						break;
 					}
 				} else{
@@ -795,27 +828,21 @@ void parse_argopt(char* cmds, argopt_t* options){
 			start++;
 		} else if(!mystrcmp(start, ".conf")){ /*.conf found. */
 			/*create a \n before the key. and \n after .conf */
-			for(char* start2=start-1; start2>=cmds; start2--){
-				if(isspace((int)*start2)||*start2=='\n'){
-					//check whether -c is before *.conf
-					char *start3=start2;
-					//skip continuous space
-					while(start3-1>=cmds && isspace((int)start3[-1])){
-						start3--;
-					}
-					if(start3-2>=cmds&&start3[-2]=='-'&&start3[-1]=='c'){
-						if(start2-3>=cmds){
-							start2[-3]='\n';
-						}
-					}else{
-						*start2='\n';
-					}
+			char *start0;//mark space or \n before key
+			for(start0=start-1; start0>=cmds; start0--){
+				if(isspace((int)*start0)||*start0=='\n'){				
+					*start0='\n';
 					break;
 				}
 			}
+			if(start0<cmds){
+				start0=cmds;
+			}
 			start+=5;
-			start[0]='\n';
-			start++;
+			if(*start0=='\n') start0++;
+			start[0]='\n';//restore
+			start++;		
+			str_swap(&conf_start, start0, start);
 		} else if(start[0]=='['){/*make sure we don't split brackets that are part of value. */
 			const char *save_start=start;
 			int nopen=1; //opening brackets not closed.
