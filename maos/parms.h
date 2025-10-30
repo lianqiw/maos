@@ -246,6 +246,7 @@ typedef struct powfs_cfg_t{
     real cogthres; /**<CoG threshold, relative to max(im)*/
     real cogoff;   /**<CoG offset to remove, relative to max(im). */
 	real cogmask;  /**<Using this threshold to setup mask for CoG based on i0*/
+	int cogcalib;   /**<Calibrate CoG gradient offset using i0. */
 	dmat* ncpa;     /**<Description of NCPA; 2xn; first row is rms in meter, second row is zernike mode or negative for power law.*/
     int needGS0;    /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */

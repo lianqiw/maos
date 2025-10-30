@@ -1488,7 +1488,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		||!parms->powfs[ipowfs].phyusenea
 		||(powfs[ipowfs].opdbias&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)
 		||parms->powfs[ipowfs].phytype_sim==PTYPE_CORR
-		||parms->powfs[ipowfs].phytype_sim==PTYPE_COG
+		||(parms->powfs[ipowfs].phytype_sim==PTYPE_COG && (parms->powfs[ipowfs].cogmask || parms->powfs[ipowfs].cogcalib))
 		){
 		intstat_t* intstat=powfs[ipowfs].intstat=mycalloc(1, intstat_t);
 		if(parms->powfs[ipowfs].i0load){
@@ -1653,7 +1653,9 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		if(parms->powfs[ipowfs].cogmask>0){
 			setup_shwfs_cog_mask(parms, powfs, ipowfs);
 		}
+		if(parms->powfs[ipowfs].cogcalib){
 		setup_shwfs_cog_gradoff(parms, powfs, ipowfs);
+		}
 		if(!parms->powfs[ipowfs].phyusenea){
 			setup_shwfs_cog_nea(parms, powfs, ipowfs);
 		}

@@ -340,6 +340,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(dbl,cogthres);
 	READ_POWFS_RELAX(dbl,cogoff);
 	READ_POWFS_RELAX(dbl,cogmask);
+	READ_POWFS_RELAX(int,cogcalib);
 	READ_POWFS_MAT(d,ncpa);
 	READ_POWFS_RELAX(int,ncpa_method);
 	READ_POWFS_RELAX(int,i0scale);
