@@ -210,7 +210,9 @@ function App() {
       ...bcc, [h]:
         jobRef.current.reduce((acc, v) => {
           if (v.Host === h) {
-            if (cmd === "clear_finished" && v.status == 11) {
+            if (cmd === "clear_all" && v.status >= 11) {
+              return acc + `${v.PID}&REMOVE;`;
+            } else if (cmd === "clear_finished" && v.status == 11) {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_skipped" && v.status == 11 && v.tot == 0) {
               return acc + `${v.PID}&REMOVE;`;
@@ -218,8 +220,6 @@ function App() {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "kill_all" && v.status < 11) {
               return acc + `${v.PID}&KILL;`;
-            } else if (cmd === "plot_job" && (v.status == 1 || v.status == 3)) {
-              return acc + `${v.PID}&DRAW;`;
             }
           }
           return acc;
@@ -244,6 +244,7 @@ function App() {
         <ul className="inline tab_hosts">
           <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
             <ul className="menu-list" >
+              <li onClick={() => { cmdHost(active, "clear_all"); }}>☑️ Clear All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>

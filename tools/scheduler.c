@@ -691,7 +691,7 @@ static int monitor_request_draw(int sock, int pid){
  * @brief Send socket to draw for drawing.
  * 
  * @param sock 
- * @param pid 
+ * @param pid 	<=0: service pending request. >0: request drawing
  * @return int 0 for success. -1 for failure
  */
 int send_draw_sock(int sock, int pid){
@@ -835,9 +835,7 @@ static int respond(struct pollfd *pfd, int flag){
 		break;
 	case CMD_MONITOR://5: Called by Monitor when it connects
 	{
-		set_sockname(sock, "monitor");
 		monitor_add(sock, pid, NULL, NULL);
-
 		dbg_time("(%d:%s) monitor from %s is connected.\n", sock, get_sockname(sock), addr2name(socket_peer(sock)));
 	}
 	break;
@@ -1068,6 +1066,7 @@ static void scheduler_timeout(void){
 /*The following routines maintains the MONITOR_T linked list. */
 void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, void *userdata), void* userdata){
 	//dbg_time("added monitor on sock %d\n",sock);
+	set_sockname(sock, "monitor");
 	MONITOR_T *node=NULL;
 	for(MONITOR_T *ic=pmonitor; ic; ic=ic->next){
 		if(ic->sock==sock){
@@ -1327,8 +1326,12 @@ int main(int argc, const char* argv[]){
 	//Use ws_service in a separate thread does not update job status.
 	//We call it in scheduler_timeout using poll. no need for LOCK in this case
 #if HAS_LWS
+#ifdef LWS_WITH_EXTERNAL_POLL
 	extern int PORT;
 	start_lws(PORT+100);
+#else
+	warning_time("libwebsockets is not compiled with external_poll. disabled\n");
+#endif
 #endif
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.

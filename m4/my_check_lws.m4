@@ -1,8 +1,8 @@
 AC_DEFUN([MY_CHECK_LWS],[
-	AC_ARG_ENABLE(libwebsockets, AS_HELP_STRING([--disable-libwebsockets],[Disable libwebsockets]))
+	AC_ARG_ENABLE(libwebsockets, AS_HELP_STRING([--enable-libwebsockets],[Disable libwebsockets]))
 	#Check for libwebsocket
 	has_lws=no
-	if test "$enable_libwebsockets" != "no" ;then
+	if test "$enable_libwebsockets" = "yes" ;then
 		save_CFLAGS="$CFLAGS"
 		m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
 			PKG_CHECK_MODULES([LWS], [libwebsockets], [has_lws="yes" CFLAGS="$CFLAGS $LWS_CFLAGS"],[has_lws="no" LWS_LIBS="-lwebsockets"])

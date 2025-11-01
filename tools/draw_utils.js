@@ -252,7 +252,6 @@ function procBuffer(wsBuf) {
         //console.log(`drawData (${wsBuf.byteLength} bytes):`, drawData)
         //start making plot
         return drawData;
-        break;
       default:
         console.warn("unknown command", buf.cmd);
         buf.pos += len;//skip its payload
@@ -282,11 +281,15 @@ function makeCumu(y, cumStart, cumPlot){
 }
 function makeTraces(drawData) {
   const layout = {
-    title: 'title' in drawData?drawData['title']:"", 
-    xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false },
-    yaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false },
+    title: {'text':('title' in drawData?drawData['title']:"")}, 
+    xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+      title: {'text':('xlabel' in drawData?drawData['xlabel']:"")}, 
+    },
+    yaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+      title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
+    },
     autosize: true,
-    margin: {t:20, b:40, l:40, r:20},
+    margin: {t:40, b:40, l:40, r:20},
   }
   let traces = [];
   let square = 0;

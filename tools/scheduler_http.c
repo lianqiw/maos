@@ -194,7 +194,7 @@ static http_context_t *http_context_get(int fd){
 			return &ssl_context[ic];
 		}
 	}
-	error("http_context not found for fd=%d\n", fd);
+	warning_time("http_context not found for fd=%d\n", fd);
 	return NULL;
 }
 /**Create a context for fd. overriding existing one if exists */
@@ -323,14 +323,14 @@ static int ws_fail(int fd, const char *format, ...) {
 static int ws_receive(struct pollfd *pfd, int flag){
 	const int fd=pfd->fd;
 	http_context_t* ctx=http_context_get(pfd->fd);
+	if(!ctx){
+		return -1;
+	}
 	if(flag==-1){//server ask browser client to close
 		ws_write_close(ctx);//send browser client close frame
 		shutdown(fd, SHUT_WR);//make sure we don't reply to the close message.
 		return ws_fail(fd, "listen_sock requests shutdown");
-	}
-	if(!ctx){
-		return -1;
-	}
+	}	
 	static char *prev=NULL;//save previous message to handle continuation
 	static size_t nprev=0;//length of previous message
 	static int oprev=0;//opcode of previous message
@@ -483,15 +483,16 @@ void http_close(http_context_t *ctx){
 int http_handler(struct pollfd *pfd, int flag){
 	int fd=pfd->fd;
 	http_context_t* ctx=http_context_get(pfd->fd);
+	if (!ctx) {
+		warning_time("http_context_get returned NULL for fd=%d\n", fd);
+		return -1;
+	}
 	if(flag==-1){
 		http_close(ctx);
 		return 0;//wait for client to initiate close
 	}
 	char buf[BUF_SIZE];
-	if (!ctx) {
-		warning_time("http_context_get returned NULL for fd=%d\n", fd);
-		return -1;
-	}
+	
 	int n= ctx->recv(ctx, buf, sizeof(buf) - 1);
 	if (n <= 0) return -1;
 	buf[n] = 0;
@@ -516,37 +517,51 @@ int http_handler(struct pollfd *pfd, int flag){
 		if(path[0]=='/'){
 			path++;//ignore leading /
 		}
+		const char *texttype=NULL;
 		char fullpath[256];
+		FILE *fp=NULL;
 		if(strchr(path, '/')){//do not allow directory. return 404.
 			//warning("directory is not supported in path: '%s'", path);
 			path=NULL;
 		}else{
-        	snprintf(fullpath, sizeof(fullpath), "%s/%s", SRCDIR "/tools", path);	
+			if(check_suffix(path, ".html") || check_suffix(path, ".htm")){
+				texttype="text/html";
+			}else if(check_suffix(path, ".css")){
+				texttype="text/css";
+			}else if(check_suffix(path, ".js")||check_suffix(path, ".jsx")){
+				texttype="text/javascript";
+			}else if(check_suffix(path, ".jpg")||check_suffix(path, ".jpeg")){
+				texttype="image/jpeg";
+			}else if(check_suffix(path, ".png")){
+				texttype="image/png";
+			}
+			if(texttype){
+        		snprintf(fullpath, sizeof(fullpath), "%s/%s", SRCDIR "/tools", path);	
+				fp = fopen(fullpath, "rb");
+			}
 		}
-		//open File
-		FILE *f = path?fopen(fullpath, "rb"):NULL;
 		char header[256];
 
-		if (!f) {//send 404
+		if (!fp) {//send 404
 			snprintf(header, sizeof(header), "HTTP/1.1 404 Not Found\r\n%sContent-Length: 9\r\n\r\nNot Found", close);
 			ans=ctx->send(ctx, header, strlen(header));
 		}else{//send file
-			fseek(f, 0, SEEK_END);
-			long size = ftell(f);
-			rewind(f);
-
-			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Type: text/html\r\nContent-Length: %ld\r\n\r\n", close, size);
+			fseek(fp, 0, SEEK_END);
+			long size = ftell(fp);
+			rewind(fp);
+			
+			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Type: %s\r\nContent-Length: %ld\r\n\r\n", close, texttype, size);
 			if(ctx->send(ctx, header, strlen(header))){
 				ans=-1;
 			}else{
 				char buf2[BUF_SIZE];
 				size_t n2;
 				
-				while ((n2 = fread(buf2, 1, sizeof(buf2), f)) > 0 && !ans){
+				while ((n2 = fread(buf2, 1, sizeof(buf2), fp)) > 0 && !ans){
 					ans=ctx->send(ctx, buf2, n2);
 				}
 			}
-			fclose(f);
+			fclose(fp);
 		}
 		if(close[0]!=0){//close connection
 			ans=-1;

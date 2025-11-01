@@ -76,7 +76,7 @@ static int
 callback_http(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t nin){
 	switch(reason){
 	case LWS_CALLBACK_ADD_POLL_FD:
-	{
+	{//this no longer works with latest libwebsockets
 		struct lws_pollargs *p=(struct lws_pollargs *)in;
 		listen_port_add(p->fd, p->events, lws_respond, "ws");
 	}break;

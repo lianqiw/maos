@@ -443,8 +443,11 @@ int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 	return ret;
 }
 /**
-   send a drawing sock to the scheduler for caching (dir=1) or request a sock for drawing (dir=-1).
-   id should be between 1 and 9999.
+   send a drawing sock to the scheduler for caching (dir=1) or request an existing sock (dir=-1) or new sock (dir=0) for drawing.
+   abs(id) should be between 1 and 9999. the id send to the scheduler has the following meaning:
+   -10000<id<0: request existing socket (drawdaemon). preferably for the same
+   id<-10000: request new socket (drawdaemon).
+   id>0: save socket (drawdaemon) for reuse.
 */
 int scheduler_socket(int dir, int *sfd, int id){
 	int ans=-1;

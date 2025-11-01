@@ -11,7 +11,6 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot
   const [wss, setWss]=useState({});
   const [pause, setPause]=useState({});
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   //Use useRef for data that is not directly related to rendering.
   //const pause = useRef({});//pause plotting
   const jobRef = useRef({});//job data. 
@@ -154,7 +153,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
     resizeObserver.observe(chartRef.current);
 
     return () => resizeObserver.disconnect();
-  }, [jobActive, topActive, botActive, figSeq, cumStart, cumPlot, pause, dimensions]);
+  }, [jobActive, topActive, botActive, figSeq, cumStart, cumPlot, pause]);
 
   useEffect(() => {//let server know the current jobActive page.
     try {
