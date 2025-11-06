@@ -35,6 +35,7 @@ def parse_file(srcdir, files):
         ln=ln.replace('*','* ') #add space after *
         ln=re.sub(r'[ ]*[*]','*', ln) #remove space before *
         ln=re.sub(r'[ ]+',' ', ln) #remove double space
+        ln=ln.replace('* *','**') #remove space between **
         lines.append(ln)
     return lines
 #parse C structs and its fields, and return variable name and type
@@ -79,6 +80,7 @@ def parse_func(srcdir, files):
         if ln[0:6]=='extern':
             pass
         ln=ln.replace('const_','').replace('const','')
+        ln=ln.replace('* *','**') #remove space between **
         end=0
         while True:
             funname=''
@@ -121,12 +123,12 @@ def parse_func(srcdir, files):
                             junk=float(argpair[0])
                             funarg.append(['number', argpair[0]])
                         except:
-                            msg='ill argument('+arg+')'
+                            msg='ill argument:('+arg+')'
                             funname=''
                 elif len(argpair)==2 :
                     funarg.append(argpair)
                 else:#failed to parse function
-                    msg='ill argument('+arg+')'
+                    msg='ill argument:('+arg+')'
                     raise(Exception(msg))
                     funname=''
             if funname=='readbin':
