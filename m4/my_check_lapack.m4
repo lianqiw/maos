@@ -121,6 +121,7 @@ AC_DEFUN([MY_CHECK_LAPACK], [
 				;;
 		esac
 		if test -n "$LAPACK" ; then
+			LAPACK="$LAPACK -lm"
 			unset ac_cv_lib_m_${dgemm}
 			unset ac_cv_lib_m_${dposv}
 			AC_CHECK_LIB([m], [${dposv}], [has_lapack=yes], [has_lapack=no], [$LAPACK])
