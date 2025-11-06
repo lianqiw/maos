@@ -53,7 +53,7 @@ typedef struct {
   int always;//always draw (do not check for active panel)
 } plot_opts;
 
-int draw(const char* fig, plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
+int draw(const char* fig, const plot_opts opts, const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...) CHECK_ARG(6);
 
 int drawmap(const char *fig, const map_t *map, real zlim,

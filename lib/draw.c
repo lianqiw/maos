@@ -639,7 +639,7 @@ typedef float dtype;
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
 int draw(const char* fig,    /**<Category of the figure*/
-	plot_opts opts,     /**<Additional options*/
+	const plot_opts opts,     /**<Additional options*/
 	const char* title,  /**<title of the plot*/
 	const char* xlabel, /**<x axis label*/
 	const char* ylabel, /**<y axis label*/
@@ -677,8 +677,9 @@ int draw(const char* fig,    /**<Category of the figure*/
 			FWRITECMD(DRAW_START, 0);
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
+			FWRITECMDINT(DRAW_FLOAT, sizeof(real));
 			if(opts.image){
-				FWRITECMD(DRAW_FLOAT, sizeof(int));FWRITEINT(sizeof(dtype));
+				if(sizeof(real)!=sizeof(dtype)) FWRITECMDINT(DRAW_FLOAT, sizeof(dtype));
 				//FWRITEARR(opts.image->p, nlen2);
 #define MAXNX 1024 //downsample if bigger.
 				const dmat *p=opts.image;
@@ -743,45 +744,54 @@ switch(ctype){\
 				FWRITEARR(header, nlen1);
 				FWRITEARR(tmp, nlen2);
 				free(tmp);
-			}
-			FWRITECMDINT(DRAW_FLOAT, sizeof(real));
-			if(opts.loc){/*there are points to plot. */
-				for(int ig=0; ig<opts.ngroup; ig++){
-					int nlen=opts.loc[ig]->nloc;
-					if(opts.maxlen && opts.maxlen<nlen) nlen=opts.maxlen;
-					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*nlen*2);
-					FWRITEINT(nlen);
-					FWRITEINT(2);
-					FWRITEINT(1);
-					FWRITEARR(opts.loc[ig]->locx, sizeof(real)*nlen);
-					FWRITEARR(opts.loc[ig]->locy, sizeof(real)*nlen);
+				if(sizeof(real)!=sizeof(dtype)) FWRITECMDINT(DRAW_FLOAT, sizeof(real));
+			}else{//points or lines
+				const int ngroup=opts.dc && (opts.ngroup>PN(opts.dc)||opts.ngroup==0)?PN(opts.dc):opts.ngroup;
+				if(opts.loc){/*there are points to plot. */
+					for(int ig=0; ig<ngroup; ig++){
+						int nlen=opts.loc[ig]->nloc;
+						if(opts.maxlen && opts.maxlen<nlen) nlen=opts.maxlen;
+						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*nlen*2);
+						FWRITEINT(nlen);
+						FWRITEINT(2);
+						FWRITEINT(1);
+						FWRITEARR(opts.loc[ig]->locx, sizeof(real)*nlen);
+						FWRITEARR(opts.loc[ig]->locy, sizeof(real)*nlen);
+					}
+					if(opts.dc){
+						warning("both loc and dc are specified, ignore dc.\n");
+					}
+				} else if(opts.dc){
+					for(int ig=0; ig<ngroup; ig++){
+						dmat* p=P(opts.dc, ig);
+						int nlen=NX(p);
+						if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
+						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen*sizeof(real));
+						FWRITEINT(nlen);//number of points
+						FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
+						FWRITEINT(0);//square plot or not
+						if(nlen){
+							FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
+						}
+					}
+				} else {
+					warning("Empty plot.\n");
 				}
-				if(opts.dc){
-					warning("both loc and dc are specified, ignore dc.\n");
+				if(opts.style){
+					FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
+					FWRITEINT(ngroup);
+					FWRITEARR(opts.style, sizeof(uint32_t)*ngroup);
 				}
-			} else if(opts.dc){
-				if(opts.ngroup>PN(opts.dc)||opts.ngroup==0){
-					opts.ngroup=PN(opts.dc);
-				}
-				for(int ig=0; ig<opts.ngroup; ig++){
-					dmat* p=P(opts.dc, ig);
-					int nlen=NX(p);
-					if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
-					FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen*sizeof(real));
-					FWRITEINT(nlen);//number of points
-					FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
-					FWRITEINT(0);//square plot or not
-					if(nlen){
-						FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
+				if(opts.legend){
+					int nlen=0;
+					for(int ig=0; ig<ngroup; ig++){
+						nlen+=(opts.legend[ig]?strlen(opts.legend[ig]):0)+1+sizeof(int);
+					}
+					FWRITECMD(DRAW_LEGEND, nlen);
+					for(int ig=0; ig<ngroup; ig++){
+						FWRITESTR(opts.legend[ig]);
 					}
 				}
-			} else if (!opts.image){
-				warning("Empty plot.\n");
-			}
-			if(opts.style){
-				FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*opts.ngroup);
-				FWRITEINT(opts.ngroup);
-				FWRITEARR(opts.style, sizeof(uint32_t)*opts.ngroup);
 			}
 			if(opts.cir){
 				if(NX(opts.cir)!=4){
@@ -803,21 +813,6 @@ switch(ctype){\
 			if(opts.xylog){
 				FWRITECMDARR(DRAW_XYLOG, opts.xylog, sizeof(char)*2);
 			}
-
-			/*if(format){
-				FWRITECMDSTR(DRAW_NAME, fn);
-			}*/
-			if(opts.legend){
-				int nlen=0;
-				for(int ig=0; ig<opts.ngroup; ig++){
-					nlen+=(opts.legend[ig]?strlen(opts.legend[ig]):0)+1+sizeof(int);
-				}
-				FWRITECMD(DRAW_LEGEND, nlen);
-				for(int ig=0; ig<opts.ngroup; ig++){
-					FWRITESTR(opts.legend[ig]);
-				}
-			}
-
 			FWRITECMDSTR(DRAW_TITLE, title);
 			FWRITECMDSTR(DRAW_XLABEL, xlabel);
 			FWRITECMDSTR(DRAW_YLABEL, ylabel);
