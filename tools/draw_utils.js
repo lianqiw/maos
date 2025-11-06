@@ -261,7 +261,7 @@ function procBuffer(wsBuf) {
 }//function procbuffer
 function makeCumu(y, cumStart, cumPlot){
   if(cumPlot){
-    if(cumStart<0) cumStart=0;
+    if(cumStart<0) cumStart=0; else cumStart=Math.round(cumStart*y.length);
     let y2;
     if (byteFloat == 4) {//use slice to avoid byteoffset alignment error.
       y2 = new Float32Array(y.length-cumStart);
@@ -282,10 +282,12 @@ function makeCumu(y, cumStart, cumPlot){
 function makeTraces(drawData) {
   const layout = {
     title: {'text':('title' in drawData?drawData['title']:"")}, 
-    xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+    xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false, 
+      type: ('xylog' in drawData && drawData.xylog[0]==='y'.charCodeAt(0))?'log':'linear',
       title: {'text':('xlabel' in drawData?drawData['xlabel']:"")}, 
     },
     yaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+      type: ('xylog' in drawData && drawData.xylog[1]==='y'.charCodeAt(0))?'log':'linear',
       title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
     },
     autosize: true,
@@ -313,7 +315,7 @@ function makeTraces(drawData) {
         if (pts.square) square = 1;
         return {
           x: pts.p.slice(0, pts.nx), y: pts.p.slice(pts.nx, 2 * pts.nx), 
-          mode: "markers", marker: { symbol: 'x' }, ...extra
+          mode: square?"markers":"lines", marker: { symbol: 'x' }, ...extra
         }
       } else{
         return { ...makeCumu(pts.p, drawData.cumStart, drawData.cumPlot), mode: "lines",  ...extra}

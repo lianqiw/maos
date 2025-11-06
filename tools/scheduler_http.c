@@ -297,8 +297,15 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 		size=offset+nlen;
 		buf=myrealloc(buf, size, char);
 	}
-	if(stread(fd, buf+offset, nlen)) return -1;
-	return ws_send(buf+offset, nlen, mode, userdata);
+	socket_recv_timeout(fd, 5);//make sure it doesn't hang
+	int ans=0;
+	if(stread(fd, buf+offset, nlen)){
+		ans=-1;
+	}else{
+		ans=ws_send(buf+offset, nlen, mode, userdata);
+	}
+	socket_recv_timeout(fd, 0);
+	return ans;
 }
 static void ws_write_close(http_context_t* ctx){//send a ws close frame.
 	if(!ctx) return;

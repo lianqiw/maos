@@ -1,5 +1,30 @@
 "use strict"; //every variable need to be defined
-
+function lpfDrawdata(newData, oldData, lpf){
+  try{
+    if('data' in oldData && 'data' in newData && lpf!=1){
+      const ny=newData['data'].length;
+      if(ny>0 && ny==oldData['data'].length){
+        const nx=newData['data'][0].length;
+        if(nx==oldData['data'][0].length){
+          for (let iy = 0; iy < ny; iy++) {
+            for (let ix=0; ix<nx; ix++){
+              newData['data'][iy][ix]=newData['data'][iy][ix]*lpf+oldData['data'][iy][ix]*(1.-lpf);
+            }
+          }
+        }
+      }
+    }/*else if('pts' in oldData && 'pts' in newData){
+      const nx=newData['pts'].length;
+      if(nx==oldData['pts'].length){
+        for (let ix=0; ix<nx; ix++){
+          newData['pts'][ix]=newData['pts'][ix]*lpf+oldData['pts'][ix]*(1-lpf);
+        }
+      }
+    }*/
+  }catch(err){
+    console.log(now(), err);
+  }
+}
 const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   //Notice that the state variables do CHANGE at every re-rendering. It just does not change within a rendering
   const { useState, useEffect, useRef } = React;
@@ -8,6 +33,8 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const [figSeq, setFigSeq] = useState(0);//figure sequence number (index of drawData). triggers plotly update.
   const [cumStart, setCumStart]=useState(0);//time step to start cumulative plot.
   const [cumInput, setCumInput]=useState(0);//capture input context
+  const [lpfInput, setLpfInput]=useState(1);//low pass filter to slow down update
+  const lpf=useRef(1); //use reference avoid closure capture stale data
   const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot
   const [wss, setWss]=useState({});
   const [pause, setPause]=useState({});
@@ -17,6 +44,8 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const wssRef = useRef({});//mutable ref object that persists for the entire lifecycle of the component.
   const chartRef = useRef(null);//for plotly. References a DOM object.
   const cumInputRef=useRef(null);//for input of cumStart
+  const lpfInputRef=useRef(null);//for input of lpf
+  
   function connect(hostname, pid) {
     if (!hostname || hostname.length == 0) return false;
     const host = split_hostname(hostname);//host:port->shortname
@@ -88,7 +117,9 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
               //Initialize botActive to first figure of the group
               setBotActive((oldVal) => ({ ...oldVal, [job]: { ...oldVal[job], [fig]: name } }))
             }
-
+            if (lpf.current!=1 && name in jobRef.current[job]['drawData'][fig]){
+              lpfDrawdata(drawData, jobRef.current[job]['drawData'][fig][name], lpf.current);
+            }
             jobRef.current[job]['drawData'][fig][name] = drawData;
           } catch (err) {
             console.log(now(),{ err, drawData, jobRef, job });
@@ -172,11 +203,17 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
           <li key={fig} className={topActive[jobActive] === fig ? "active" : ""}
             onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); setPause(oldVal=>({...oldVal, [jobActive]:false}));}}
           >{fig}</li>))}
-        <li><form onSubmit={(e)=>{e.preventDefault(); setCumStart(cumInput); setCumPlot(true);}}>
-          <input ref={cumInputRef} style={{width:'5em'}} value={cumInput} 
+        <li title="Set cumulative plotting starting index">
+          <form onSubmit={(e)=>{e.preventDefault(); setCumStart(parseFloat(cumInput.length?cumInput:"0")); setCumPlot(true);}}>
+          <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.01" min="0" max="1"
           onClick={()=>{if(cumInputRef.current) cumInputRef.current.select();}} 
-          onChange={e=>{setCumInput(e.target.value?parseInt(e.target.value):0);}}></input></form></li>
+          onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
         <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{setCumPlot(oldVal=>!oldVal)}}>🎢</li>
+        <li title="Set image update low pass filter">
+          <form onSubmit={(e)=>{e.preventDefault(); lpf.current=(parseFloat(lpfInput.length?lpfInput:"0.01"));}}>
+          <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.001" min="0.001" max="1"
+          onClick={()=>{if(lpfInputRef.current) lpfInputRef.current.select();}} 
+          onChange={e=>{setLpfInput(e.target.value);}}></input></form></li>
         <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
         <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
       </ul>
