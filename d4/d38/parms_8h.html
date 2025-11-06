@@ -226,8 +226,8 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a1217e561507a90f212a53f7e63d12038" id="r_a1217e561507a90f212a53f7e63d12038"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d38/parms_8h.html#a1217e561507a90f212a53f7e63d12038">setup_parms</a> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../de/d78/maos_8c.html#ac0f2228420376f4db7e1274f2b41667c">main</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *extra, int <a class="el" href="../../d0/d44/class_num_array.html">override</a>)</td></tr>
-<tr class="separator:a1217e561507a90f212a53f7e63d12038"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae093c8027457ac84653fbf51f5e325e6" id="r_ae093c8027457ac84653fbf51f5e325e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d38/parms_8h.html#ae093c8027457ac84653fbf51f5e325e6">setup_parms</a> (<a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">mainconf</a>, <a class="el" href="../../d0/d44/class_num_array.html">const</a> char *<a class="el" href="../../d0/d44/class_num_array.html">extracmd</a>, int <a class="el" href="../../d0/d44/class_num_array.html">override</a>)</td></tr>
+<tr class="separator:ae093c8027457ac84653fbf51f5e325e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad108d3a5091968e86ec8adcc269d450" id="r_aad108d3a5091968e86ec8adcc269d450"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d38/parms_8h.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu</a> (<a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, int *gpus, int ngpu)</td></tr>
 <tr class="separator:aad108d3a5091968e86ec8adcc269d450"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a6a2e33b33daf9cc04fbbd68733cd26" id="r_a8a6a2e33b33daf9cc04fbbd68733cd26"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d38/parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26">free_parms</a> (<a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms)</td></tr>
@@ -1695,6 +1695,13 @@ cogoff</td>
 cogmask</td>
 <td class="fielddoc">
 <p>Using this threshold to setup mask for CoG based on i0 </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="a9473cafcaccdcb0526e3220c5c6012a6" name="a9473cafcaccdcb0526e3220c5c6012a6"></a>int</td>
+<td class="fieldname">
+cogcalib</td>
+<td class="fielddoc">
+<p>Calibrate CoG gradient offset using i0. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ab17527be0e1718dbd8d979e8fe22cdae" name="ab17527be0e1718dbd8d979e8fe22cdae"></a><a class="el" href="../../d3/d27/structdmat.html">dmat</a> *</td>
@@ -5708,9 +5715,9 @@ dirout</td>
 <p>Result output directory </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="aa9df00cdf16a696ecaa5f669e5faf991" name="aa9df00cdf16a696ecaa5f669e5faf991"></a>char *</td>
+<a id="a3f6c43564e88a7efe4540327779ad209" name="a3f6c43564e88a7efe4540327779ad209"></a>char *</td>
 <td class="fieldname">
-conf</td>
+confmain</td>
 <td class="fielddoc">
 <p>master .conf file. nfiraos.conf by default. -c to change </p>
 </td></tr>
@@ -5740,8 +5747,8 @@ execmd</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a1217e561507a90f212a53f7e63d12038" name="a1217e561507a90f212a53f7e63d12038"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1217e561507a90f212a53f7e63d12038">&#9670;&#160;</a></span>setup_parms()</h2>
+<a id="ae093c8027457ac84653fbf51f5e325e6" name="ae093c8027457ac84653fbf51f5e325e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae093c8027457ac84653fbf51f5e325e6">&#9670;&#160;</a></span>setup_parms()</h2>
 
 <div class="memitem">
 <div class="memproto">

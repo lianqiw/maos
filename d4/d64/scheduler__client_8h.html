@@ -743,7 +743,7 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>send a drawing sock to the scheduler for caching (dir=1) or request a sock for drawing (dir=-1). id should be between 1 and 9999. </p>
+<p>send a drawing sock to the scheduler for caching (dir=1) or request an existing sock (dir=-1) or new sock (dir=0) for drawing. abs(id) should be between 1 and 9999. the id send to the scheduler has the following meaning: -10000&lt;id&lt;0: request existing socket (drawdaemon). preferably for the same id&lt;-10000: request new socket (drawdaemon). id&gt;0: save socket (drawdaemon) for reuse. </p>
 
 </div>
 </div>

@@ -1,5 +1,6 @@
 var NAVTREEINDEX5 =
 {
+"d4/d68/structrmap__t_8____unnamed19_____8____unnamed21____.html#aafc4fc7e48a0710a1dc94ef3e8bc5764":[12,0,152,7],
 "d4/d68/structrmap__t_8____unnamed19_____8____unnamed21____.html#ab80bb7740288fda1f201890375a60c8f":[12,0,152,0],
 "d4/d6c/structsmat.html":[12,0,166],
 "d4/d6c/structsmat.html#a059d43a193f4b859b57a5a44b415106f":[12,0,166,10],
@@ -248,6 +249,5 @@ var NAVTREEINDEX5 =
 "d6/d94/maos_2types_8h.html#a412a53ba66bdf50bd9461706a5d1cbc2":[13,0,2,23,11,0],
 "d6/d94/maos_2types_8h.html#a43496769569c86d9e1df05a7966911b5":[13,0,2,23,15,53],
 "d6/d94/maos_2types_8h.html#a4391530204b4d68608bf32f2a91b730d":[13,0,2,23,15,138],
-"d6/d94/maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d":[13,0,2,23,15,79],
-"d6/d94/maos_2types_8h.html#a4533bbeacf67d4386ef01662d7de56ca":[13,0,2,23,15,88]
+"d6/d94/maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d":[13,0,2,23,15,79]
 };

@@ -182,6 +182,7 @@ var parms_8h =
       [ "cogthres", "d4/d38/parms_8h.html#a309dc28c7e1c90cb414d20bb5fdf9f67", null ],
       [ "cogoff", "d4/d38/parms_8h.html#a6baba8c243f71803bcb842733673269d", null ],
       [ "cogmask", "d4/d38/parms_8h.html#a7f17a466bcb0c120a15a8281b1c1c1e0", null ],
+      [ "cogcalib", "d4/d38/parms_8h.html#a9473cafcaccdcb0526e3220c5c6012a6", null ],
       [ "ncpa", "d4/d38/parms_8h.html#ab17527be0e1718dbd8d979e8fe22cdae", null ],
       [ "needGS0", "d4/d38/parms_8h.html#acea51dd03c8fa685f986c09fdd71702c", null ],
       [ "noisy", "d4/d38/parms_8h.html#ab9678267aa9abc9c88bfdc5a2cfd7236", null ],
@@ -672,12 +673,12 @@ var parms_8h =
       [ "ngpu2", "d4/d38/parms_8h.html#a7356cd98a8c2d8b193ed97a1ab568b29", null ],
       [ "server", "d4/d38/parms_8h.html#a9dd2fbd3368036a4ea001ada021feb80", null ],
       [ "dirout", "d4/d38/parms_8h.html#ae27eb782c897db66719a088a8470fda4", null ],
-      [ "conf", "d4/d38/parms_8h.html#aa9df00cdf16a696ecaa5f669e5faf991", null ],
+      [ "confmain", "d4/d38/parms_8h.html#a3f6c43564e88a7efe4540327779ad209", null ],
       [ "confcmd", "d4/d38/parms_8h.html#a1039b6ee39d8075132f4cfa90dfcded6", null ],
       [ "host", "d4/d38/parms_8h.html#a7980d7913b42c73339ae91d80d1fad49", null ],
       [ "execmd", "d4/d38/parms_8h.html#afd31178667f89763217596f9bfa1585a", null ]
     ] ],
-    [ "setup_parms", "d4/d38/parms_8h.html#a1217e561507a90f212a53f7e63d12038", null ],
+    [ "setup_parms", "d4/d38/parms_8h.html#ae093c8027457ac84653fbf51f5e325e6", null ],
     [ "setup_parms_gpu", "d4/d38/parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],
     [ "free_parms", "d4/d38/parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ]
 ];

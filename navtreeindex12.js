@@ -1,5 +1,6 @@
 var NAVTREEINDEX12 =
 {
+"de/de7/smath_8h.html#a6603d9cdfb12df7bb64c32685c26f4e1":[13,0,3,8,42],
 "de/de7/smath_8h.html#a6647163694eace9c7b28b8b41e198554":[13,0,3,8,175],
 "de/de7/smath_8h.html#a66ee274ad104499bd067fc8f6ff91936":[13,0,3,8,40],
 "de/de7/smath_8h.html#a66f5d7a45851a2f70718861c3fdecbcf":[13,0,3,8,88],
@@ -248,6 +249,5 @@ var NAVTREEINDEX12 =
 "df/def/type_8h.html#a1c9c16038627be17e3244fd6081bdf52":[13,0,3,9,9,1],
 "df/def/type_8h.html#a1d78dc8ed51214e518b5114fe24490ae":[13,0,3,9,49,2],
 "df/def/type_8h.html#a1ee74c8ce9ac65a4598426e1e227eeb8":[13,0,3,9,37,4],
-"df/def/type_8h.html#a2000cf8ce69a38a69473e4b681adb21a":[13,0,3,9,24,3],
-"df/def/type_8h.html#a21c5c6a47f7e46b204c31131c79d3b1a":[13,0,3,9,28,2]
+"df/def/type_8h.html#a2000cf8ce69a38a69473e4b681adb21a":[13,0,3,9,24,3]
 };

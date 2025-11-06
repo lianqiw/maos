@@ -158,7 +158,7 @@ var searchData=
   ['setup_2ec_155',['setup.c',['../d2/d2e/setup_8c.html',1,'']]],
   ['setup_5faper_156',['setup_aper',['../d4/dda/aper_8h.html#a304be709a4651cc4b49af3340714143e',1,'aper.c']]],
   ['setup_5ffit_157',['setup_fit',['../d0/dfd/recon__fit_8c.html#a8d298f9df5b70d8c5e2f241589216fe7',1,'recon_fit.c']]],
-  ['setup_5fparms_158',['setup_parms',['../d4/d38/parms_8h.html#a1217e561507a90f212a53f7e63d12038',1,'parms.c']]],
+  ['setup_5fparms_158',['setup_parms',['../d4/d38/parms_8h.html#ae093c8027457ac84653fbf51f5e325e6',1,'parms.c']]],
   ['setup_5fparms_5fgpu_159',['setup_parms_gpu',['../d4/d38/parms_8h.html#aad108d3a5091968e86ec8adcc269d450',1,'parms.c']]],
   ['setup_5fpowfs_5fcalib_160',['setup_powfs_calib',['../d2/d05/powfs_8h.html#a33bf8889280bcb05fb321b5397ccb49e',1,'powfs.c']]],
   ['setup_5fpowfs_5ffit_161',['setup_powfs_fit',['../d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002',1,'setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms):&#160;recon_fit.c'],['../d0/dfd/recon__fit_8c.html#a58f4cbdab5f06550701e99866c9e6002',1,'setup_powfs_fit(powfs_t *powfs, const recon_t *recon, const parms_t *parms):&#160;recon_fit.c']]],
