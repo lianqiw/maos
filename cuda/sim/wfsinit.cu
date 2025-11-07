@@ -31,7 +31,7 @@ static void etf2gpu(cucmat& cuetf, etf_t* etf, int icol){
 */
 void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipowfs){
 	const int* wfsgpu=cuglobal->wfsgpu();
-	TIC;tic;
+	//TIC;tic;
 	if(parms->powfs[ipowfs].usephy&&parms->powfs[ipowfs].llt){
 		Array<cuwfs_t>& cuwfs=cuglobal->wfs;
 		const int nwvl=parms->powfs[ipowfs].nwvl;
@@ -99,7 +99,7 @@ void gpu_wfsgrad_update_etf(const parms_t* parms, const powfs_t* powfs, int ipow
 			}
 		}
 	}
-	toc2("gpu_wfsgrad_update_etf");
+	//toc2("gpu_wfsgrad_update_etf");
 }
 /**
    Initialize or update mtched filter, cogmask, and i0sum, i0sumsum

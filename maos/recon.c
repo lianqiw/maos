@@ -211,13 +211,22 @@ static void recon_split_lo(sim_t* simu){
 				//dshow(P(*merr, 0), "merr");
 			}//for iRngs
 			dcellfree(tmp);
-
-			if(parms->sim.mffocus&&ngsmod->indfocus&&parms->sim.lpfocushi<1){ //Do LPF on focus.
-				const real lpfocus=parms->sim.lpfocuslo;
-				real ngsfocus=P(P(simu->Merr_lo,0),ngsmod->indfocus);
-				if(ngsfocus){//there is output
-					simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-					P(P(simu->Merr_lo,0),ngsmod->indfocus)=simu->ngsfocuslpf;
+			if(parms->sim.mffocus&&ngsmod->indfocus && parms->sim.lpfocushi<1&& P(P(simu->Merr_lo,0), ngsmod->indfocus)){
+				if(parms->sim.dtrat_lo>1){//new method. use NGS measurement as LGS offset
+					for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+						const int ipowfs=parms->wfs[iwfs].powfs;
+						if(isfinite(parms->powfs[ipowfs].hs)||parms->powfs[ipowfs].llt){
+							const real ep=P(parms->sim.eplo, 0);
+							dadd(&P(simu->gradoff, iwfs), 1, P(recon->GFall, iwfs), -ep*P(P(simu->Merr_lo,0), ngsmod->indfocus));
+						}
+					}
+					P(P(simu->Merr_lo,0), ngsmod->indfocus)=0;//remove from low order path
+				}else{ //Do LPF on NGS focus.
+					//This does not work when dtrat_lo>1. Need to upsample to LGS WFS or DM rate
+					const real lpfocus=parms->sim.lpfocuslo;
+					real *ngsfocus=&P(P(simu->Merr_lo,0), ngsmod->indfocus);
+					simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus* *ngsfocus;
+					*ngsfocus=simu->ngsfocuslpf;
 				}
 			}
 		}//else: there is ideal NGS correction done in perfevl. 

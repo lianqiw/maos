@@ -281,7 +281,7 @@ typedef struct powfs_cfg_t{
 	int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
 	int dither_ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
     //options for zoom corrector
-    //int zoomdtrat;   /**<Use llt.coldtrat instead*/
+    int zoomdtrat;   /**<Separated from llt.coldtrat to work with statc sodium profile*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     real zoomgain; /**<gain of the trombone controller*/
     real zoomgain_drift; /**<gain for the trombone controller with i0 drift input*/
@@ -427,6 +427,7 @@ typedef struct tomo_cfg_t{
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
     int ahst_focus;   /**<1: Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
+	int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -708,7 +709,6 @@ typedef struct dbg_cfg_t{
     int fullatm;     /**<Always copy full atm to GPU.*/
     int lo_blend;    /**<Low order multi-rate control blending scheme.*/
     real eploscale;/**<Scale of eplo*/
-    int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }dbg_cfg_t;
 /**

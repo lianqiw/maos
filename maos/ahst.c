@@ -89,7 +89,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 				real yy=y[iloc]*y[iloc];
 				//remove piston in focus 
 				if(ngsmod->indps){
-					if(ngsmod->ahstfocus){
+					if(ngsmod->ahst_focus){
 						mod[ngsmod->indps][iloc]=//mod[2] has no focus effect on science
 							-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
 					} else{
@@ -169,7 +169,7 @@ static void ngsmod_dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 				focus+=pm[ngsmod->indfocus];
 			}
 			if(ngsmod->indps){//ps mode
-				if(ngsmod->ahstfocus){
+				if(ngsmod->ahst_focus){
 					focus+=pm[ngsmod->indps]*scale;//scaled to avoid focus mode in science.
 				} else{
 					focus+=pm[ngsmod->indps];
@@ -248,7 +248,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 		return;
 	}
 	ngsmod_t* ngsmod=recon->ngsmod=mycalloc(1, ngsmod_t);
-	ngsmod->ahstfocus=parms->tomo.ahst_focus;
+	ngsmod->ahst_focus=parms->tomo.ahst_focus;
 	const int ndm=parms->ndm;
 	ngsmod->aper_fcp=aper->fcp;
 	if(ndm>1&&fabs(parms->dm[0].ht)>1000){
@@ -635,7 +635,7 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	ngsmod_out[1]=coeff[2];
 
 	if(ngsmod->indps){
-		if(ngsmod->ahstfocus){
+		if(ngsmod->ahst_focus){
 			ngsmod_out[ngsmod->indps]=(-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]));
 		} else{
 			ngsmod_out[ngsmod->indps]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
@@ -678,7 +678,7 @@ void ngsmod_opd(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 			focus+=mode[ngsmod->indfocus];
 		}
 		if(ngsmod->indps){
-			if(!ngsmod->ahstfocus){
+			if(!ngsmod->ahst_focus){
 				focus+=mode[ngsmod->indps]*scale1;
 			}
 			ps1=mode[ngsmod->indps];
@@ -750,7 +750,7 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 		//if ndm==1, remove all 2nd order modes from ground DM since LGS cannot sense them properly
 		//if ndm>1 and ahst_keepfocus=0, remove focus from all DMs. LGS focus is not reliable
 		//merge 2nd order modes from upper DMs to ground DM.
-		const int im0=parms->ndm==1?ngsmod->nmod:(parms->dbg.ahst_keepfocus?3:4);
+		const int im0=parms->ndm==1?ngsmod->nmod:(parms->tomo.ahst_keepfocus?3:4);
 		for(int im=im0; im<ngsmod->nmod; im++){
 			P(P(simu->Mngs, 0), im)=0;
 			for(int idm=1; idm<parms->ndm; idm++){
@@ -779,10 +779,10 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 			}else{
 				info_once("Remove focus/astig from DM error signal.\n");
 			}
-		}else if(parms->dbg.ahst_keepfocus&&ngsmod->indfocus&&parms->sim.mffocus){
+		}else if(parms->tomo.ahst_keepfocus&&ngsmod->indfocus&&parms->sim.mffocus){
 			/*The LGS focus mode is filtered from gradient input to the reconstructor, so we do not remove it again here*/
-			if(ngsmod->indps&&ngsmod->ahstfocus){
-				/* When ahstfocus is true, the first PS mode contains focus mode in
+			if(ngsmod->indps&&ngsmod->ahst_focus){
+				/* When ahst_focus is true, the first PS mode contains focus mode in
 				* LGS WFS. Relocate this focus mode to the global focus mode to
 				* preserve LGS focus measurements.*/
 				mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(ngsmod->scale-1);
@@ -791,6 +791,14 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 			}
 		}
 		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
+	}
+	if(parms->sim.mffocus==3){
+		if(!ngsmod->indfocus){
+			error("indfocus=0\n");
+		}
+		dcellzero(simu->Mngs);
+		P(P(simu->Mngs, 0), ngsmod->indfocus)=simu->lgsfocushpf;
+		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", 1);
 	}
 	//dshow(P(simu->Mngs, 0), "Mngs");
 }

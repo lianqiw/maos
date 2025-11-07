@@ -361,7 +361,7 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(dbl,dither_gog);
 	READ_POWFS_RELAX(dbl,dither_gdrift);
 	READ_POWFS_RELAX(dbl,dither_glpf);
-	//READ_POWFS_RELAX(int, zoomdtrat);
+	READ_POWFS_RELAX(int,zoomdtrat);
 	READ_POWFS_RELAX(int,zoomshare);
 	READ_POWFS_RELAX(dbl,zoomgain);
 	READ_POWFS_RELAX(dbl,zoomgain_drift);
@@ -1753,7 +1753,6 @@ static void readcfg_dbg(parms_t *parms){
 	READ_INT(dbg.fullatm);
 	READ_INT(dbg.lo_blend);
 	READ_DBL(dbg.eploscale);
-	READ_INT(dbg.ahst_keepfocus);
 	READ_INT(dbg.recon_stuck);
 }
 /**
@@ -2278,6 +2277,10 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				lltcfg->epfsm=fc2lp(lltcfg->fcfsm, parms->sim.dt*powfsi->dtrat);
 				if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
 			}
+			if(powfsi->zoomdtrat>0 && lltcfg->coldtrat==0){
+				info("powfs%d:llt.coldtrat is set to zoomdtrat=%d\n", ipowfs, powfsi->zoomdtrat);
+				lltcfg->coldtrat=powfsi->zoomdtrat;
+			}
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM
 			if(powfsi->epfsm<=0){
@@ -2394,39 +2397,60 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
 	parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
 
-	if(parms->sim.mffocus==-1){
+	if(parms->sim.mffocus<=0){
 		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
-		dbg("Focus blending is automatically enabled when there is LGS.\n");
+		if(parms->sim.mffocus){
+			dbg("parms->sim.mffocus=%d is automatically set when there is LGS.\n", parms->sim.mffocus);
+		}
 	}else if(parms->sim.mffocus>0 && !parms->nlgspowfs){
 		dbg("Focus blending is only needed when there is LGS. Changed.\n");
 		parms->sim.mffocus=0;
 	}
 
-	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
+	if(parms->sim.mffocus<0||parms->sim.mffocus>3){
 		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
 	}
-	
 	if(parms->sim.fcfocus<0){
 		parms->sim.fcfocus=0.1/parms->sim.dtlo;
 	}
-	
+	//sim.mffocus is only true if there is lgs wfs
+	parms->tomo.ahst_keepfocus=1;//default is keep focus
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(!parms->powfs[ipowfs].frs){
-			if(parms->sim.mffocus && isinf(parms->sim.fcfocus) && !isinf(parms->powfs[ipowfs].hs)){
-				//focus is removed from LGS measurement. Need to activate frs flag
-				warning("powfs%d frs should be set for LGS when sim.mffocus=%d and sim.fcfocus=%g, changed.\n", 
-					ipowfs, parms->sim.mffocus, parms->sim.fcfocus);
+		if(!isinf(parms->powfs[ipowfs].hs)){//LGS WFS only
+			if(parms->sim.mffocus==3){
+				dbg("powfs%d: set frs=1 when sim.mffocus=3\n", ipowfs);
 				parms->powfs[ipowfs].frs=1;
+			}else if(parms->sim.mffocus){
+				if(!isinf(parms->sim.fcfocus)){//there is focus blending with finite frequency
+					if(parms->powfs[ipowfs].frs){
+						if(parms->powfs[ipowfs].frs==1){
+							dbg("powfs%d: sim.fcfocus!=inf requires frs=0; changed.\n", ipowfs);
+						}
+						parms->powfs[ipowfs].frs=0;
+					}
+				}else{
+					if(parms->powfs[ipowfs].frs==-1){
+						parms->powfs[ipowfs].frs=1;
+					}else if(!parms->powfs[ipowfs].frs){
+						dbg("powfs%d: sim.fcfocus=inf prefers frs=1 but is 0.\n", ipowfs);
+					}
+				}
 			}
 		}
-		if(parms->powfs[ipowfs].frs){
-			if(isinf(parms->powfs[ipowfs].hs) || !parms->powfs[ipowfs].llt){
-				warning("powfs%d frs is set but hs is inf or llt is not set\n", ipowfs);
+		if(parms->powfs[ipowfs].frs==-1){
+			parms->powfs[ipowfs].frs=0;
+		}
+		
+		if(!parms->powfs[ipowfs].skip && parms->powfs[ipowfs].frs){//focus is removed from high order WFS
+			parms->tomo.ahst_keepfocus=0;
+			dbg("powfs%d.frs=1, set tomo.ahst_keepfocus=0\n", ipowfs);
+			if(isinf(parms->powfs[ipowfs].hs)){
+				warning("powfs%d.frs=1 but is not LGS.\n", ipowfs);
 			}
 			if(parms->recon.split && 
 				((parms->recon.alg==RECON_MVR && !parms->tomo.splitlrt)
 				||(parms->recon.alg==RECON_LSR && !parms->lsr.splitlrt))){
-				warning("powfs%d frs is set but splitlrt is not set in split reconstruction.\n", ipowfs);
+				warning("powfs%d.frs=1 but splitlrt=0 in split reconstruction.\n", ipowfs);
 			}
 		}
 	}
@@ -3209,13 +3233,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 	}
 	
-	/*if(parms->tomo.ahst_focus){
-		if(parms->recon.split!=1||!parms->sim.mffocus){
-			parms->tomo.ahst_focus=0;//no need ahst_focus
-			dbg("Disable tomo.ahst_focus.\n");
-		}
-	}*/
-
 	if(!parms->recon.mvm){
 		if(parms->tomo.alg!=ALG_CG&&parms->load.mvmi){
 			free(parms->load.mvmi);
@@ -3264,19 +3281,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		parms->recon.psd=0;
 	}
 
-	/*
-		It is OK to tune gain without noise. the algorithm doesnot need noise information.
-	if(parms->recon.psd){
-		if(parms->recon.psddtrat_hi&&!parms->sim.noisy_hi){
-			parms->recon.psddtrat_hi=0;
-		}
-		if(parms->recon.psddtrat_lo&&!parms->sim.noisy_lo){
-			parms->recon.psddtrat_lo=0;
-		}
-		if(!parms->recon.psddtrat_hi&&!parms->recon.psddtrat_lo){
-			parms->recon.psd=0;
-		}
-	}*/
 	switch(parms->recon.twfs_rmin){
 	case 1:
 		parms->itwfssph=parms->recon.twfs_radonly?1:9; break;

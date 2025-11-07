@@ -1140,7 +1140,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		}
 	} else if(mode==1){/*first pair for interpolation*/
 		if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
-			dbg("No need to update etfsim\n");
+			dbg2("No need to update etfsim\n");
 		} else{
 			if(powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
 				etf_free(powfs[ipowfs].etfsim);
@@ -1148,7 +1148,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 			powfs[ipowfs].etfsim=0;
 			if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 				//reuse etfsim2 as etfsim
-				dbg("reuse etfsim2 as etfsim.\n");
+				dbg2("reuse etfsim2 as etfsim.\n");
 				powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 			} else{
 				petf=&powfs[ipowfs].etfsim;
@@ -1156,7 +1156,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		}
 	} else if(mode==2){/*second pair for interpolation*/
 		if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
-			dbg("No need to update etfsim2\n");
+			dbg2("No need to update etfsim2\n");
 		} else{
 			if(powfs[ipowfs].etfsim2!=powfs[ipowfs].etfsim){
 				etf_free(powfs[ipowfs].etfsim2);
@@ -1168,7 +1168,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		error("Invalid mode=%d\n", mode);
 	}
 	if(petf){
-		dbg("mketf: powfs %d using column %d with dh=%g\n", ipowfs, icol, deltah);
+		//dbg("mketf: powfs %d using column %d with dh=%g\n", ipowfs, icol, deltah);
 		*petf=mketf(powfs[ipowfs].dtf, sodium, icol,
 					powfs[ipowfs].srot, powfs[ipowfs].srsa,
 					parms->powfs[ipowfs].hs+deltah,

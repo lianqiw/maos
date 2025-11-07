@@ -157,7 +157,7 @@ typedef struct ngsmod_t{
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     lmat *modvalid; /**<Flag of valid modes that has multi-rate control*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
-    int ahstfocus;  /**<records parms->tomo.ahst_focus*/
+    int ahst_focus;  /**<records parms->tomo.ahst_focus*/
     int indfocus;  /**<Include focus in NGS controlled modes. Records the index*/
     int indps;     /**<Include plate scale in NGS controlled modes. Records the index*/
     int indastig;  /**<Include astigmatism mode in NGS controlled modes. Records the index*/
@@ -621,6 +621,7 @@ typedef struct sim_t{
     dcell *LGSfocus_drift;  /**<LGS focus drift error*/
     dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
+    real lgsfocushpf;/**<hpf pass filtered averaged LGS focus*/
     real ngsfocuslpf;/**<low pass filtered NGS focus*/
     //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/

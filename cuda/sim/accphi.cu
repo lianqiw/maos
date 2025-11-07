@@ -275,7 +275,7 @@ void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
 			focus+=mod[ngsmod->indfocus];
 		}
 		if(ngsmod->indps){
-			if(!ngsmod->ahstfocus){
+			if(!ngsmod->ahst_focus){
 				focus+=mod[ngsmod->indps]*(1.f-scale);
 			}
 			ps1=mod[ngsmod->indps];
