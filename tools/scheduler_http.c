@@ -133,6 +133,7 @@ void init_ssl(){
 }
 #endif
 static void http_context_remove(http_context_t *ctx){
+	dbg_time("http_context removed for %d\n", ctx->fd);
 	ctx->fd=-1;
 #if HAVE_OPENSSL
 	if(ssl_ctx && ctx->ssl){
@@ -156,8 +157,9 @@ static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
-	}while(nsend>0 && nbuf);
+	}while(nbuf && (nsend>0||SSL_get_error(ctx->ssl, nsend)==SSL_ERROR_WANT_WRITE));
 	if(nbuf){
+		warning_time("https_writer failed, nsend=%lu, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
 		return -1;
 	}else{
@@ -179,8 +181,9 @@ static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
-	}while(nsend>0 && nbuf);
+	}while(nbuf && (nsend>0||errno==EAGAIN || errno==EWOULDBLOCK) );
 	if(nbuf){
+		warning_time("http_writer failed, nsend=%lu, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
 		return -1;
 	}else{
@@ -250,6 +253,7 @@ static http_context_t *http_context_create(int fd){
 		ssl_context[jc].recv=http_reader;
 		ssl_context[jc].send=http_writer;
 	}
+	dbg_time("http_context created for %d\n", ssl_context[jc].fd);
 	return &ssl_context[jc];
 }
 
@@ -277,7 +281,11 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 	}
 	int fd_dest=(int)(long)userdata;
 	http_context_t* ctx=http_context_get(fd_dest);
-	if(!ctx || ctx->send(ctx, header, nlen+offset)){
+	if(!ctx){
+		warning_time("http_context not found for fd=%d\n", fd_dest);
+		return -1;
+	}else if(ctx->send(ctx, header, nlen+offset)){
+		warning_time("send failed for fd=%d\n", fd_dest);
 		return -1;
 	}
 	return 0;
@@ -329,8 +337,9 @@ static int ws_fail(int fd, const char *format, ...) {
 */
 static int ws_receive(struct pollfd *pfd, int flag){
 	const int fd=pfd->fd;
-	http_context_t* ctx=http_context_get(pfd->fd);
+	http_context_t* ctx=http_context_get(fd);
 	if(!ctx){
+		warning_time("http_context is not found for %d\n", fd);
 		return -1;
 	}
 	if(flag==-1){//server ask browser client to close
@@ -530,7 +539,7 @@ int http_handler(struct pollfd *pfd, int flag){
 		if(strchr(path, '/')){//do not allow directory. return 404.
 			//warning("directory is not supported in path: '%s'", path);
 			path=NULL;
-		}else{
+		}else{//explicit list of all allowed file types
 			if(check_suffix(path, ".html") || check_suffix(path, ".htm")){
 				texttype="text/html";
 			}else if(check_suffix(path, ".css")){
@@ -541,6 +550,8 @@ int http_handler(struct pollfd *pfd, int flag){
 				texttype="image/jpeg";
 			}else if(check_suffix(path, ".png")){
 				texttype="image/png";
+			}else if(check_suffix(path, ".ico")){
+				texttype="image/ico";
 			}
 			if(texttype){
         		snprintf(fullpath, sizeof(fullpath), "%s/%s", SRCDIR "/tools", path);	
@@ -580,6 +591,7 @@ int http_handler(struct pollfd *pfd, int flag){
 int http_handshake(struct pollfd *pfd, int flag){
 	http_context_t *ctx=http_context_create(pfd->fd);
 	if(!ctx){
+		warning_time("http_context creat failed for %d\n", pfd->fd);
 		return -1;
 	}
 	if(flag==-1){

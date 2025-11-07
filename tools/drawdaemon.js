@@ -25,7 +25,7 @@ function lpfDrawdata(newData, oldData, lpf){
     console.log(now(), err);
   }
 }
-const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
+const DrawDaemon = React.memo(({ drawInfo, jobActive,updateDrawInfo }) => {
   //Notice that the state variables do CHANGE at every re-rendering. It just does not change within a rendering
   const { useState, useEffect, useRef } = React;
   const [topActive, setTopActive] = useState({});//active fig
@@ -46,10 +46,9 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
   const cumInputRef=useRef(null);//for input of cumStart
   const lpfInputRef=useRef(null);//for input of lpf
   
-  function connect(hostname, pid) {
+  function connect(hostname, job) {
     if (!hostname || hostname.length == 0) return false;
-    const host = split_hostname(hostname);//host:port->shortname
-    const job = host + ':' + pid;
+    const [host, pid] = job.split(':', 2);
     if (hostname.indexOf(':') == -1) {
       hostname += port;
     }
@@ -93,6 +92,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
         let drawData = procBuffer(event.data); //separate into function for testing
         if ('pid' in drawData) {
           jobRef.current[job]['pid'] = drawData['pid'];
+          updateDrawInfo([job, host+':'+drawData['pid']])
         }
         if ('path' in drawData) {
           jobRef.current[job]['path'] = drawData['path'];
@@ -136,15 +136,18 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
 
   useEffect(() => {//run ones upon mount and state change
     Object.keys(drawInfo).map((job) => {
-      const hostname = drawInfo[job];//host:port->shortname
-      if (hostname) {
+      if (drawInfo[job]) {//host:port->hostname
         if (!wssRef.current[job]) {
           const pid = job.split(':').at(-1);
-          connect(hostname, pid);
+          if(pid<=0 || !jobRef.current[job]){
+            connect(drawInfo[job].hostname, job);
+          }//else: do not auto-reconnect existing job plots
         }
-      } else if (wssRef.current[job]) {//close page
-        console.warn(`Close Drawdaemon connection to ${job}`)
-        wssRef.current[job].close();//drop connection
+      } else {
+        if (wssRef.current[job]) {//close page
+          console.warn(`Close Drawdaemon connection to ${job}`)
+          wssRef.current[job].close();//drop connection
+        }
         jobRef.current[job] = { 'drawData': {} };//remove plots
         Plotly.purge(chartRef.current, 0);//delete plot
       }
@@ -164,7 +167,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
             drawData.cumPlot=cumPlot;
             const { traces, layout } = makeTraces(drawData);
             if (traces.length) {
-              Plotly.newPlot(chartRef.current, traces, layout, { responsive: true });
+              Plotly.react(chartRef.current, traces, layout, { responsive: true });
               clear = 0;
             }
           }
@@ -197,7 +200,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
     }
   }, [jobActive, topActive, botActive]);
   try {
-    return jobRef.current[jobActive] && jobRef.current[jobActive]['drawData'] ? (<div>
+    return jobRef.current[jobActive] && jobRef.current[jobActive]['drawData'] && Object.keys(jobRef.current[jobActive]['drawData']).length ? (<div>
       <ul className="inline tab_hosts"> {/*draw top-notebook (horizontal)*/}
         {Object.keys(jobRef.current[jobActive]['drawData']).sort().map((fig) => (
           <li key={fig} className={topActive[jobActive] === fig ? "active" : ""}
@@ -205,7 +208,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
           >{fig}</li>))}
         <li title="Set cumulative plotting starting index">
           <form onSubmit={(e)=>{e.preventDefault(); setCumStart(parseFloat(cumInput.length?cumInput:"0")); setCumPlot(true);}}>
-          <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.01" min="0" max="1"
+          <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.1" min="0"
           onClick={()=>{if(cumInputRef.current) cumInputRef.current.select();}} 
           onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
         <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{setCumPlot(oldVal=>!oldVal)}}>🎢</li>
@@ -218,7 +221,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive }) => {
         <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
       </ul>
       <div className="layout">
-        <ul className="tab_hosts">{/*draw sub-notebook (vertical)*/}
+        <ul className="tab_hosts" style={{width:'8em'}}>{/*draw sub-notebook (vertical)*/}
           {jobRef.current[jobActive]['drawData'][topActive[jobActive]] &&
             Object.keys(jobRef.current[jobActive]['drawData'][topActive[jobActive]]).sort().map((name) => (
               <li key={name} className={botActive[jobActive][topActive[jobActive]] === name ? "active" : ""}

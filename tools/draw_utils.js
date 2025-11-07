@@ -261,7 +261,13 @@ function procBuffer(wsBuf) {
 }//function procbuffer
 function makeCumu(y, cumStart, cumPlot){
   if(cumPlot){
-    if(cumStart<0) cumStart=0; else cumStart=Math.round(cumStart*y.length);
+    if(cumStart<0){
+      cumStart=0; 
+    }else if (cumStart<1) {
+      cumStart=Math.round(cumStart*y.length);
+    }else {
+      cumStart=Math.round(cumStart);
+    }
     let y2;
     if (byteFloat == 4) {//use slice to avoid byteoffset alignment error.
       y2 = new Float32Array(y.length-cumStart);
@@ -291,7 +297,8 @@ function makeTraces(drawData) {
       title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
     },
     autosize: true,
-    margin: {t:40, b:40, l:40, r:20},
+    margin: {t:40, b:40, l:50, r:20},
+    uirevision: 'my_revision'
   }
   let traces = [];
   let square = 0;

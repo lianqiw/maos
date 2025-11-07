@@ -97,7 +97,6 @@ static RUN_T *running_get_by_sock(int sock);
 static int runned_add(RUN_T* irun);
 static void running_remove(int pid, int status);
 //static MONITOR_T *monitor_get(int hostid);
-static void monitor_remove(int sock);
 static void scheduler_timeout(void);
 static void monitor_send(RUN_T* run, const char* path);
 static void monitor_send_initial(MONITOR_T* ic);
@@ -521,15 +520,13 @@ int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
 	int failed=(!irun||!irun->sock_cmd||(stwriteintarr(irun->sock_cmd, cmd2, 2)));
-	if(sock!=-1){
-		if(!stwriteint(sock, failed?-1:0) && !failed){//scheduler reply first before maos gets the chance to start writing to the socket
-			stwritefd(irun->sock_cmd, sock);
-		}
+	if(sock!=-1 && !stwriteint(sock, failed?-1:0) && !failed){//scheduler reply first before maos gets the chance to start writing to the socket
+		stwritefd(irun->sock_cmd, sock);
 	}
 	if(failed){
-		warning_time("Failed to send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun?irun->pid:-1, irun?irun->sock_cmd:-1);
+		warning_time("Failed to send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, pid, irun?irun->sock_cmd:-1);
 	} else{
-		dbg_time("Successfully send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, irun->pid, irun->sock_cmd);
+		dbg_time("Successfully send command %d and socket %d to maos (PID=%d, sock_cmd=%d)\n", cmd, sock, pid, irun->sock_cmd);
 	}
 	return failed?-1:0;//do not keep this connection.
 }
@@ -641,7 +638,12 @@ static void socket_close(){
 	}
 }
 static void set_sockname(int sock, const char *name){
-	if(sock>-1&&sock<MAXSOCK&&!sockname[sock]){
+	if(sock>-1&&sock<MAXSOCK&&(!sockname[sock]||strcmp(sockname[sock],name))){
+		if(sockname[sock] && !strcmp(sockname[sock], "monitor")){
+			warning_time("remove staled monitor socket %d\n", sock);
+			monitor_remove(sock);//sock is reused with old monitor sock
+		}
+		dbg_time("sock %d is named %s\n", sock, name);
 		sockname[sock]=name;
 	}
 }
@@ -695,26 +697,34 @@ static int monitor_request_draw(int sock, int pid){
  * @return int 0 for success. -1 for failure
  */
 int send_draw_sock(int sock, int pid){
-	int ret;
+	int ret;//return status
+	set_sockname(sock, "drawdaemon");
 	if(pid<=0){//this is for pending scheduler_recv_socket or a new idle connection
 		if(scheduler_recv_wait==-1||stwriteint(scheduler_recv_wait, 0)||stwritefd(scheduler_recv_wait, sock)){
-			int sock2=dup(sock);
 			if(scheduler_recv_wait!=-1){
-				dbg_time("(%d:%s) Failed to pass sock to draw at %d, save socket as %d for future\n", sock, get_sockname(sock), scheduler_recv_wait, sock2);
+				dbg_time("(%d:%s) failed to pass sock to draw at %d.\n", sock, get_sockname(sock), scheduler_recv_wait);
 			}else{
-				dbg_time("(%d:%s) No pending drawdaemon request, save socket as %d for future\n", sock, get_sockname(sock), sock2);
+				dbg_time("(%d:%s) no pending drawdaemon request.\n", sock, get_sockname(sock));
 			}
-			socket_save(sock2, abs(pid));//duplicate socket and keep it 
-			set_sockname(sock2, "drawdaemon");
-			ret=0;//prevent scheduler from listening to this socket.
+			ret=-1;
 		} else{
 			dbg_time("passed sock %d to draw at %d\n", sock, scheduler_recv_wait);
-			ret=0;//close socket on scheduler.
+			stwriteint(sock, 0);
+			ret=0;
 		}
-		stwriteint(sock, 0);
 		scheduler_recv_wait=-1;
 	} else{//ask maos to start drawing with this drawdaemon
-		ret=maos_command(pid, sock, MAOS_DRAW);
+		RUN_T* irun=running_get_by_pid(pid);
+		if(!irun){
+			dbg_time("(%d:%s) maos PID=%d not longer exists.\n", sock, get_sockname(sock), pid);
+			ret=-1;
+		}else if(maos_command(pid, sock, MAOS_DRAW)){
+			dbg_time("(%d:%s) failed to pass sock to maos PID=%d.\n", sock, get_sockname(sock), pid);
+			ret=-1;
+		}else{
+			dbg_time("(%d:%s) passed sock to maos PID=%d.\n", sock, get_sockname(sock), pid);
+			ret=0;
+		}
 	}
 	dbg_time("returns %d for sock=%d, pid=%d\n", ret, sock, pid);
 	return ret;
@@ -934,19 +944,28 @@ static int respond(struct pollfd *pfd, int flag){
 	case CMD_REMOVE://11: Called by Monitor to remove a finished job fron the list*/
 		runned_remove(pid);
 	break;
-	case CMD_DRAWSER://12: called by Drawdaemon/Monitor to provide drawdaemon to draw().*/
-		set_sockname(sock, "drawdaemon");
-		dbg_time("(%d:%s) drawdaemon for pid=%d from %s.\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
-		ret=send_draw_sock(sock, pid)?-2:-1;
-		break;
-	case CMD_MAOSCLI://13:  for a maos client to create a client link to maos.
+	case CMD_DRAWSER:{//12: called by Drawdaemon/Monitor to provide drawdaemon to draw().*/
+		int sock2=dup(sock);
+		dbg_time("(%d:%s) drawdaemon for pid=%d from %s. duplicated as %d\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)), sock2);
+		if(send_draw_sock(sock2, pid)){//pass a duplicated fd to maos
+			dbg_time("Save drawdaemon %d for future use\n", sock2);
+			socket_save(sock2, abs(pid));
+			stwriteint(sock2, 0);//respond OK to drawdaemon
+		}
+		ret=-1;//remove this sock from scheduler receiving pollfd
+	}break;
+	case CMD_MAOSCLI:{//13:  for a maos client to create a client link to maos.
 		set_sockname(sock, "maos client");
+		int sock2=dup(sock);//pass a duplicated fd to maos
 		dbg_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
-		ret=maos_command(pid, sock, MAOS_VAR)?-2:-1;
-		break;
+		if(maos_command(pid, sock2, MAOS_VAR)){
+			close(sock2);//failed
+		}
+		ret=-1;//remove this sock from scheduler receiving pollfd
+	}break;
 	case CMD_MAOSSER://14: called by maos to save a port to run maos_command
 	{
-		set_sockname(sock, "maos server");
+		set_sockname(sock, "maos");
 		RUN_T* irun=running_get_by_pid(pid);
 		if(irun){
 			irun->sock_cmd=sock;
@@ -1095,13 +1114,14 @@ void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, 
 	node->userdata=userdata;
 	monitor_send_initial(node);
 }
-static void monitor_remove(int sock){
+void monitor_remove(int sock){
 	MONITOR_T* ic=NULL;
 	for(MONITOR_T **curr=&pmonitor; *curr;){
 		ic=*curr;
 		if(ic->sock==sock){
 			*curr=ic->next;
 			dbg_time("Removed monitor at %d\n", ic->sock);
+			unset_sockname(ic->sock);
 			shutdown(ic->sock, SHUT_WR);
 			//close(ic->sock);// close panics accept
 			free(ic);

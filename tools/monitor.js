@@ -96,7 +96,7 @@ function App() {
           var newdata;
           if (i.length>=2 && i[1]=='DRAW'){
             const job = `${host}:${i[0]}`;
-            setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: fullName.current[host] }))
+            setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname:fullName.current[host], jobname:job} }))
             setActive(job);
             console.log(now(), j[ij])
             continue;//skip setJob
@@ -192,7 +192,7 @@ function App() {
     if (wssRef.current[host] && wssRef.current[host].readyState === WebSocket.OPEN) {
       if (cmd === "DRAW") {
         const job = `${host}:${PID}`;
-        setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: fullName.current[host] }))
+        setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname: fullName.current[host], jobname:job} }))
         setActive(job);
       } else if (cmd === "KILL_ASK") {
         if (window.confirm("Kill the job " + PID + "?")) cmdHostPid(host, PID, "KILL");
@@ -214,7 +214,7 @@ function App() {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_finished" && v.status == 11) {
               return acc + `${v.PID}&REMOVE;`;
-            } else if (cmd === "clear_skipped" && v.status == 11 && v.tot == 0) {
+            } else if (cmd === "clear_skipped" && v.status == 11 && v.prog === "") {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_crashed" && v.status > 11) {
               return acc + `${v.PID}&REMOVE;`;
@@ -269,7 +269,7 @@ function App() {
           </li>
           {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
             <li key={job} className={active === job ? "active" : ""}>
-              <span onClick={() => { setActive(job) }}>{job.replace(':-',':draw ')}</span>
+              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname.replace(':-',':draw ')}</span>
               <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>&nbsp;⛌</span>
             </li>))}
         </ul>
@@ -292,7 +292,8 @@ function App() {
             </tbody>
           </table>
         )}
-        <DrawDaemon drawInfo={drawInfo} jobActive={active}></DrawDaemon>
+        <DrawDaemon drawInfo={drawInfo} jobActive={active} 
+        updateDrawInfo={(info)=>{setDrawInfo((oldInfo) => ({ ...oldInfo, [info[0]]: {...oldInfo[info[0]], jobname: info[1]}}))}}></DrawDaemon>
       </div>
     );
   }catch(err){

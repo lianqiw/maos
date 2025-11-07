@@ -80,16 +80,20 @@ static void ws_proxy_add(ws_proxy_t ws){
 void ws_proxy_remove(void *userdata, int toclose){
 	for(int iws=0; iws<nws_proxy; iws++){
 		if(ws_proxy[iws].userdata==userdata){
+			if(ws_proxy[iws].ismonitor){
+				monitor_remove((int)(long)(ws_proxy[iws].userdata));
+			}
 			listen_port_del(ws_proxy[iws].fd, toclose, "ws_proxy_remove");
 			//info_time("ws_proxy_remove: fd=%d for %p\n", ws_proxy[iws].fd, userdata);
 			if(ws_proxy[iws].fd_remote>0)close(ws_proxy[iws].fd_remote);//notify maos that the proxy is closed
+			
 			ws_proxy[iws].fd_remote=-1;
 			ws_proxy[iws].fd=-1;
 			ws_proxy[iws].userdata=NULL;
 			return;
 		}
 	}
-	warning_time("%p not found\n", userdata);
+	dbg_time("%p not found.\n", userdata);//ok, may not be registered yet.
 }
 /**
  * @brief Obtain the server socket number for the proxy link
@@ -134,16 +138,17 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 
 	int sock=ws_proxy[iws].fd;
 
-	int cmd[3];
+	int cmd[3]={0};
 	int nlen2=recv(sock, &cmd, sizeof(cmd), MSG_PEEK);//peek at the command
-	if(nlen2<3){
-		warning_time("failed to peek 3 ints; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
+	if(nlen2<(int)sizeof(int)){
+		warning_time("failed to peek; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
 		return 0;
 	}
 	if(cmd[0]==DRAW_HEARTBEAT||cmd[2]==DRAW_HEARTBEAT){
-		if((nlen2=recv(sock, &cmd, sizeof(cmd), MSG_DONTWAIT))<3){
-			warning_time("Unable to read 3 ints: nlen2=%d\n", nlen2);
-			if(nlen2==0 && (errno==EWOULDBLOCK || errno==EAGAIN)){
+		int nlen3;
+		if((nlen3=recv(sock, &cmd, nlen2, MSG_DONTWAIT))<nlen2){
+			warning_time("Unable to read %d ints, got %d\n", nlen2, nlen3);
+			if(nlen3<0 && (errno==EWOULDBLOCK || errno==EAGAIN)){
 				return 0;
 			}else{
 				return -1;
@@ -182,7 +187,10 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
  * @param ws 	Information for the helper function to write to websocket client
  */
 void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
-	in[len]=0;//make sure string is null terminated
+	if(in[len]){
+		warning_time("buf string is not terminated\n");
+		in[len]=0;//make sure string is null terminated
+	}
 	char *end=NULL;//find and mark end of current command
 	while(len>1){//len includes final 0
 		if(end){//handle command separation
@@ -229,7 +237,7 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 		} else if(pid>0 && !strcmp(sep, "MONITOR")){
 			if(ws.forward){//forward mode
 				if(ws_proxy_get_fd(ws.userdata)>-1){
-					warning_time("Reopen monitor for %p.\n", ws.userdata);
+					dbg_time("Reopen monitor for %p.\n", ws.userdata);
 					ws_proxy_remove(ws.userdata, 1);
 				}
 				int sock=scheduler_connect_self(1);
@@ -246,12 +254,13 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 			} else if(ws.send){
 				monitor_add((int)(long)(ws.userdata), 1<<31|1<<2|1<<1, ws.send, ws.userdata);
 				ws.fd=(int)(long)(ws.userdata);
+				ws.ismonitor=1;
 				ws_proxy_add(ws);//keep reference so that we can disconnect it when browser disconnects
 			}
 		} else if(!strcmp(sep, "DRAW")){
 			int sock=ws_proxy_get_fd(ws.userdata);
 			if(sock>-1){
-				warning_time("Reopen drawing for %p.\n", ws.userdata);
+				dbg_time("Reopen drawing for %p.\n", ws.userdata);
 				ws_proxy_remove(ws.userdata, 1);
 			}
 			

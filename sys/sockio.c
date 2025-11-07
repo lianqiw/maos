@@ -210,7 +210,7 @@ int stcheck(int sfd){
 	if(len==0){
 		dbg_time("Client %d has orderly shutdown\n", sfd);
 		ans=1;
-	}else if(len==-1 && errno!=EAGAIN){
+	}else if(len==-1 && (errno!=EAGAIN && errno!=EWOULDBLOCK)){
 		dbg_time("recv from %d failed with errno %d: %s\n", sfd, errno, strerror(errno));
 		ans=1;
 	}

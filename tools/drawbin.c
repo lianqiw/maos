@@ -122,7 +122,7 @@ int main(int argc, char* argv[]){
 					drawmap("map", data, 0, title1, "x", "y", "%s[%02d]", figname, id++);
 					mapfree(data);
 				}else{
-					draw("points", (plot_opts){ .ngroup=1, .dc=arg1 }, title1, "x", "y", "%s[%02d]", figname, id++);
+					draw("points", (plot_opts){ .ngroup=1, .dd=&p1 }, title1, "x", "y", "%s[%02d]", figname, id++);
 				}
 			}else{//two parameter
 				if(loc&&p2&&p2->nx&&p2->ny){

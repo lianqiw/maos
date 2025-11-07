@@ -761,9 +761,9 @@ switch(ctype){\
 					if(opts.dc){
 						warning("both loc and dc are specified, ignore dc.\n");
 					}
-				} else if(opts.dc){
+				} else if(opts.dc || opts.dd){
 					for(int ig=0; ig<ngroup; ig++){
-						dmat* p=P(opts.dc, ig);
+						dmat* p=opts.dc?P(opts.dc, ig):opts.dd[ig];
 						int nlen=NX(p);
 						if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
 						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen*sizeof(real));

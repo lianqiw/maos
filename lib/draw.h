@@ -41,7 +41,8 @@ typedef struct {
   int ngroup;///number of lines
   int maxlen;///limit maximum nx
   loc_t** loc;
-  const dcell* dc;
+  dmat** dd;//array of dmat
+  const dcell* dc;//dcell. takes priority over dd
   const int32_t* style;
   const real* limit;//x and y limit
   const real zlim[2];//z limit
