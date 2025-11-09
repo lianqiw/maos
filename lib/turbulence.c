@@ -386,7 +386,7 @@ dmat* genatm_loc(loc_t* loc, real r0, real dsa, real slope, int seed){
 	real D=loc_diam(loc);
 	dmat* opd=dnew(loc->nloc, 1);
 	map_t* atm=genatm_simple(r0, dsa, slope, loc->dx, ceil(D/loc->dx)*2, seed);
-	prop_grid(atm, loc, P(opd), 1, 0, 0, 1, 1, 0, 0);
+	prop(&(propdata_t){.mapin=atm, .locout=loc, .phiout=P(opd), .alpha=1, .displacex=0, .displacey=0, .scale=1, .wrap=1}, 0, 0);
 	mapfree(atm);
 	return opd;
 }

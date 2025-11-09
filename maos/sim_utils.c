@@ -274,8 +274,8 @@ void atm2xloc(dcell** opdx, const sim_t* simu){
 			real disx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
 			real disy=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
 			int ipsr=P(parms->atm.ipsr, ips);
-			prop_grid(P(simu->atm, ips), P(recon->xloc, ipsr), P(P(*opdx, ipsr)),
-				1, disx, disy, 1, 1, 0, 0);
+			prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
+				.alpha=1, .displacex=disx, .displacey=disy, .scale=1, .wrap=1}, 0, 0);
 		}
 	}
 }
@@ -704,21 +704,21 @@ static void init_simu_evl(sim_t* simu){
 			const int ind=ievl+nevl*ips;
 			propdata_t* data=&simu->evl_propdata_atm[ind];
 			const real ht=P(parms->atm.ht, ips);
-			data->displacex0=ht*P(parms->evl.thetax, ievl);
-			data->displacey0=ht*P(parms->evl.thetay, ievl);
+			data->displacex=ht*P(parms->evl.thetax, ievl);
+			data->displacey=ht*P(parms->evl.thetay, ievl);
 			data->scale=1-ht/P(parms->evl.hs, ievl);
 			data->alpha=1;
 			data->wrap=1;
 			data->ostat=aper->locs->stat;
 			tot=aper->locs->stat->ncol;
-			simu->evl_prop_atm[ind]=thread_prep(0, tot, nthread, prop, data);
+			simu->evl_prop_atm[ind]=thread_prep(0, tot, nthread, prop_thread, data);
 		}
 		for(int idm=0; idm<parms->ndm&&!parms->sim.evlol; idm++){
 			const int ind=ievl+nevl*idm;
 			propdata_t* data=&simu->evl_propdata_dm[ind];
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			data->displacex0=ht*P(parms->evl.thetax, ievl);
-			data->displacey0=ht*P(parms->evl.thetay, ievl);
+			data->displacex=ht*P(parms->evl.thetax, ievl);
+			data->displacey=ht*P(parms->evl.thetay, ievl);
 			data->scale=1-ht/P(parms->evl.hs, ievl);
 			const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
 			data->alpha=-cos(theta*parms->dm[idm].dratio);
@@ -730,7 +730,7 @@ static void init_simu_evl(sim_t* simu){
 					data->mapin=P(simu->dmrealsq, idm);
 				} else{
 					data->locin=P(recon->aloc, idm);
-					data->phiin=P(simu->dmreal, idm);
+					data->phiin=P(P(simu->dmreal, idm));
 				}
 			}
 			if(aper->locs_dm){
@@ -740,8 +740,8 @@ static void init_simu_evl(sim_t* simu){
 				data->ostat=aper->locs->stat;
 				tot=aper->locs->stat->ncol;
 			}
-			data->phiout=(dmat*)1;/*replace later in simulation. */
-			simu->evl_prop_dm[ind]=thread_prep(0, tot, nthread, prop, data);
+			data->phiout=(real*)1;/*replace later in simulation. */
+			simu->evl_prop_dm[ind]=thread_prep(0, tot, nthread, prop_thread, data);
 		}
 	}
 }
@@ -978,12 +978,12 @@ static void init_simu_wfs(sim_t* simu){
 			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
 			data->scale=1.-ht/hs;
-			data->displacex0=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
-			data->displacey0=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
+			data->displacex=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
+			data->displacey=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
 			data->alpha=1;
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
-			data->phiout=(dmat*)1;/*replace later in simulation. */
+			data->phiout=(real*)1;/*replace later in simulation. */
 			int tot=0;
 			if(powfs[ipowfs].loc_tel){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_tel, wfsind);
@@ -996,14 +996,14 @@ static void init_simu_wfs(sim_t* simu){
 				tot=data->ptsout->nsa;
 			}
 			int nthread=data->scale==1?2:8;//use more threads for LGS as ray tracing is slow due to cone coordinate.
-			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop, data);
+			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop_thread, data);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 			propdata_t* data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 			data->scale=1.-ht/hs;
-			data->displacex0=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
-			data->displacey0=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
+			data->displacex=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
+			data->displacey=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
 			const real theta=RSS(parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay);
 			data->alpha=-cos(theta*parms->dm[idm].dratio);/*remove dm contribution. */
 			data->wrap=0;
@@ -1014,10 +1014,10 @@ static void init_simu_wfs(sim_t* simu){
 					data->mapin=P(simu->dmrealsq, idm);
 				} else{
 					data->locin=P(recon->aloc, idm);
-					data->phiin=P(simu->dmreal, idm);
+					data->phiin=P(P(simu->dmreal, idm));
 				}
 			}
-			data->phiout=(dmat*)1;/*replace later in simulation */
+			data->phiout=(real*)1;/*replace later in simulation */
 			int tot;
 			if(powfs[ipowfs].loc_dm || powfs[ipowfs].loc_tel){/*distortion or rotation. */
 				data->locout=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
@@ -1030,7 +1030,7 @@ static void init_simu_wfs(sim_t* simu){
 				tot=data->ptsout->nsa;
 			}
 			int nthread=data->scale==1?2:4;//use more threads for LGS as ray tracing is slow due to cone coordinate.
-			simu->wfs_prop_dm[iwfs+nwfs*idm]=thread_prep(0, tot, nthread, prop, data);
+			simu->wfs_prop_dm[iwfs+nwfs*idm]=thread_prep(0, tot, nthread, prop_thread, data);
 		}/*idm */
 	}/*iwfs */
 	simu->wfs_intsdata=mycalloc(nwfs, wfsints_t);

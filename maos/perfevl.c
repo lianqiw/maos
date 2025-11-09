@@ -62,9 +62,8 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 		if(aper->locs_dm){
 			locs=P(aper->locs_dm, ievl, idm);
 		}
-		prop_grid(P(simu->dmprojsq,idm), locs, P(iopdevl),
-			alpha, dispx, dispy, scale, 0,
-			0, 0);
+		prop(&(propdata_t){.mapin=P(simu->dmprojsq,idm), .locout=locs, .phiout=P(iopdevl),
+			.alpha=alpha, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 	}
 }
 
@@ -160,7 +159,7 @@ void* perfevl_ievl(thread_t* info){
 				if(ips!=simu->perfevl_iground||!simu->evlopdground||parms->atm.dtrat>0){
 					int ind=ievl+parms->evl.nevl*ips;
 					propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
-					evl_propdata->phiout=iopdevl;
+					evl_propdata->phiout=P(iopdevl);
 					if(parms->atm.dtrat>0){
 						real wt;
 						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(simu->atm), parms->atm.interp);
@@ -177,8 +176,8 @@ void* perfevl_ievl(thread_t* info){
 						evl_propdata->mapin=P(simu->atm, iframe);
 						if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
 					}else{
-						evl_propdata->displacex1=-P(simu->atm,ips)->vx*isim*dt;
-						evl_propdata->displacey1=-P(simu->atm,ips)->vy*isim*dt;
+						evl_propdata->displacex2=-P(simu->atm,ips)->vx*isim*dt;
+						evl_propdata->displacey2=-P(simu->atm,ips)->vy*isim*dt;
 						evl_propdata->alpha=atmscale;
 					}
 					CALL_THREAD(simu->evl_prop_atm[ind], 1);
@@ -260,16 +259,16 @@ void* perfevl_ievl(thread_t* info){
 					if(scale<0) continue;
 					real displacex=P(parms->evl.thetax,ievl)*hl;
 					real displacey=P(parms->evl.thetay,ievl)*hl;
+					propdata_t propdata={.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1, .displacex=displacex, .displacey=displacey, .scale=scale};
 					if(parms->tomo.square){
 						memcpy(&xmap, P(recon->xmap,ipsr), sizeof(map_t));
 						xmap.p=P(P(simu->opdr,ipsr));
-						prop_grid(&xmap, aper->locs, P(iopdevl), -1,
-							displacex, displacey, scale, 0, 0, 0);
+						propdata.mapin=&xmap;
 					} else{
-						prop_nongrid(P(recon->xloc,ipsr), P(P(simu->opdr,ipsr)),
-							aper->locs, P(iopdevl), -1,
-							displacex, displacey, scale, 0, 0);
+						propdata.locin=P(recon->xloc,ipsr);
+						propdata.phiin=P(P(simu->opdr,ipsr));
 					}
+					prop(&(propdata), 0, 0);
 				}
 			}
 		} else{
@@ -279,7 +278,7 @@ void* perfevl_ievl(thread_t* info){
 				int ndm=parms->ndm;
 				for(int idm=0; idm<ndm; idm++){
 					int ind=ievl+parms->evl.nevl*idm;
-					simu->evl_propdata_dm[ind].phiout=iopdevl;
+					simu->evl_propdata_dm[ind].phiout=P(iopdevl);
 					CALL_THREAD(simu->evl_prop_dm[ind], 1);
 				}
 			}
@@ -296,8 +295,8 @@ void* perfevl_ievl(thread_t* info){
 			/**
 			   prop is faster than spmulvec. \fixme check definition of misreg
 			*/
-				prop_nongrid(P(recon->moao[imoao].aloc,0), P(dmevl[ievl]),
-					aper->locs, P(iopdevl), -1, 0, 0, 1, 0, 0);
+			prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc,0), .phiin=P(dmevl[ievl]),
+				.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1}, 0, 0);
 			}
 		}
 
@@ -671,9 +670,9 @@ void* perfevl(sim_t* simu){
 			const real dt=parms->sim.dt;
 			const real atmscale=simu->atmscale?P(simu->atmscale,isim):1;
 			propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
-			evl_propdata->phiout=simu->evlopdground;
-			evl_propdata->displacex1=-P(simu->atm,ips)->vx*isim*dt;
-			evl_propdata->displacey1=-P(simu->atm,ips)->vy*isim*dt;
+			evl_propdata->phiout=P(simu->evlopdground);
+			evl_propdata->displacex2=-P(simu->atm,ips)->vx*isim*dt;
+			evl_propdata->displacey2=-P(simu->atm,ips)->vy*isim*dt;
 			evl_propdata->alpha=atmscale;
 			CALL_THREAD(simu->evl_prop_atm[ind], 1);
 		}

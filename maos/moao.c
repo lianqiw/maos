@@ -150,27 +150,23 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
 		const real ht=P(parms->atmr.ht,ipsr);
 		real scale=1.-ht/hs;
+		propdata_t propdata={.phiin=P(P(opdr,ipsr)), .locout=recon->floc, .phiout=P(P(xp,0)), .alpha=1,
+				.displacex=thetax*ht, .displacey=thetay*ht, .scale=scale};
 		if(parms->tomo.square){
-			map_t map;
-			memcpy(&map, P(recon->xmap,ipsr), sizeof(map_t));
-			map.p=P(P(opdr,ipsr));
-			prop_grid_stat(&map, recon->floc->stat,
-				P(P(xp,0)), 1,
-				thetax*ht, thetay*ht, scale, 0, 0, 0);
+			propdata.mapin=P(recon->xmap,ipsr);
 		} else{
-			prop_nongrid(P(recon->xloc,ipsr), P(P(opdr,ipsr)),
-				recon->floc, P(P(xp,0)), 1,
-				thetax*ht, thetay*ht, scale, 0, 0);
+			propdata.locin=P(recon->xloc,ipsr);
 		}
+		prop(&propdata, 0, 0);
 	}
 	//static int count=-1; count++;
 	//writebin(P(xp,0), "opdfit0_%d", count);
 	for(int idm=0; idm<parms->ndm; idm++){
 		const real ht=parms->dm[idm].ht;
 		real scale=1.-ht/hs;
-		prop_nongrid(P(recon->aloc,idm), P(P(dmcommon,idm)),
-			recon->floc, P(P(xp,0)), -1,
-			thetax*ht, thetay*ht, scale,
+		prop(&(propdata_t){.locin=P(recon->aloc,idm), .phiin=P(P(dmcommon,idm)),
+			.locout=recon->floc, .phiout=P(P(xp,0)), .alpha=-1,
+			.displacex=thetax*ht, .displacey=thetay*ht, .scale=scale},
 			0, 0);
 	}
 	//writebin(P(xp,0), "opdfit1_%d", count);

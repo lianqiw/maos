@@ -362,8 +362,8 @@ static dcell *setup_recon_ecnn(const recon_t *recon, const parms_t *parms, const
 			const real dispx=P(parms->evl.thetax,ievl)*ht;
 			const real dispy=P(parms->evl.thetay,ievl)*ht;
 			for(int icol=0; icol<NY(t1); icol++){
-				prop_nongrid(P(recon->aloc,idm), PCOL(t1, icol)+offset,
-					locs, PCOL(x1, icol), 1, dispx, dispy, scale, 0, 0);
+				prop(&(propdata_t){.locin=P(recon->aloc,idm), .phiin=PCOL(t1, icol)+offset,
+					.locout=locs, .phiout=PCOL(x1, icol), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 			}
 			offset+=P(recon->aloc,idm)->nloc;
 		}

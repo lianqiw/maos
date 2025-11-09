@@ -65,18 +65,18 @@ void prep_cachedm(sim_t* simu){
 			cpropdata[idm].mapin=P(simu->dmrealsq,idm);
 		} else{
 			cpropdata[idm].locin=P(simu->recon->aloc,idm);
-			cpropdata[idm].phiin=P(simu->dmreal,idm);
+			cpropdata[idm].phiin=P(P(simu->dmreal,idm));
 		}
 		cpropdata[idm].mapout=P(simu->cachedm,idm);
 		cpropdata[idm].alpha=1;
-		cpropdata[idm].displacex0=0;
-		cpropdata[idm].displacey0=0;
-		cpropdata[idm].displacex1=0;
-		cpropdata[idm].displacey1=0;
+		cpropdata[idm].displacex=0;
+		cpropdata[idm].displacey=0;
+		cpropdata[idm].displacex2=0;
+		cpropdata[idm].displacey2=0;
 		cpropdata[idm].scale=1;
 		
 		simu->cachedm_prop[idm]=thread_prep(0, NY(cpropdata[idm].mapout),
-			nthread, prop, simu->cachedm_propdata+idm);
+			nthread, prop_thread, simu->cachedm_propdata+idm);
 	}
 }
 

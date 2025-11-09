@@ -374,7 +374,6 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 			if(P(parms->evl.psfr, ievl)){
 				dzero(xx);
 				if(opdr){
-					map_t xmap;
 					const int npsr=recon->npsr;
 					/*First compute residual opd: Hx*x-Ha*a*/
 					for(int ips=0; ips<npsr; ips++){
@@ -383,15 +382,13 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 						real dispx=P(parms->evl.thetax, ievl)*ht;
 						real dispy=P(parms->evl.thetay, ievl)*ht;
 						if(scale<0) continue;
+						propdata_t propdata={.phiin=P(P(opdr, ips)), .locout=locs, .phiout=P(xx), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale};
 						if(parms->tomo.square){/*square xloc */
-							memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
-							xmap.p=P(P(opdr, ips));
-							prop_grid_stat(&xmap, locs->stat, P(xx), 1,
-								dispx, dispy, scale, 0, 0, 0);
+							propdata.mapin=P(recon->xmap, ips);
 						} else{
-							prop_nongrid(P(recon->xloc, ips), P(P(opdr, ips)), locs,
-								P(xx), 1, dispx, dispy, scale, 0, 0);
+							propdata.locin=P(recon->xloc, ips);
 						}
+						prop(&propdata, 0, 0);
 					}
 				}
 				if(dmtmp){
@@ -401,8 +398,8 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 						real dispx=P(parms->evl.thetax, ievl)*ht;
 						real dispy=P(parms->evl.thetay, ievl)*ht;
 						if(scale<0) continue;
-						prop_nongrid(P(recon->aloc, idm), P(P(dmtmp, idm)), locs,
-							P(xx), 1, dispx, dispy, scale, 0, 0);
+						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(dmtmp, idm)), .locout=locs,
+							.phiout=P(xx), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 					}
 				}
 				dmm(&P(simu->ecov, ievl), 1, xx, xx, "nt", 1);

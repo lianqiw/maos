@@ -100,7 +100,6 @@ static void test_accuracy(int argc, char** argv){
     loc_embed(screen2, locin, screen);
 
     dmat *phi_h=NULL, *phi_cubh=NULL;
-    real* phi_cub, * phi_cub2;
 
     real cubic=0.3;
     int ii;
@@ -115,40 +114,37 @@ static void test_accuracy(int argc, char** argv){
     diff14=0;
     diff15=0;
 
-    real* phi_pts=mycalloc(loc->nloc, real);
-    real* phi_loc=mycalloc(loc->nloc, real);
-    real* phi_stat=mycalloc(loc->nloc, real);
-    real* phi_loc2loc=mycalloc(loc->nloc, real);
+    dmat* phi_pts=dnew(loc->nloc, 1);
+    dmat* phi_loc=dnew(loc->nloc, 1);
+    dmat* phi_stat=dnew(loc->nloc, 1);
+    dmat* phi_loc2loc=dnew(loc->nloc, 1);
 
     map_t* map1=mapnew2(loc->map);
-
-    prop_grid(screen, loc, phi_loc, -2, displacex, displacey, scale, wrap, 0, 0);
+	screen->iac=0;
+	loc->iac=0;
+    prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_loc), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     tic;
-    prop_grid(screen, loc, phi_loc, 1, displacex, displacey, scale, wrap, 0, 0);
+    prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_loc), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("loc\t");
-
-    prop_grid_pts(screen, pts, phi_pts, -2, displacex, displacey, scale, wrap, 0, 0);
-    tic;
-    prop_grid_pts(screen, pts, phi_pts, 1, displacex, displacey, scale, wrap, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	tic;
+	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("pts\t");
 
-
-    prop_grid_map(screen, map1, -2, displacex, displacey, scale, wrap, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     tic;
-    prop_grid_map(screen, map1, 1, displacex, displacey, scale, wrap, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("map\t");
 
-
-    prop_grid_stat(screen, locstat, phi_stat, -2, displacex, displacey, scale, wrap, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     tic;
-    prop_grid_stat(screen, locstat, phi_stat, 1, displacex, displacey, scale, wrap, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("stat\t");tic;
 
 
-
-    prop_nongrid(locin, P(screen), loc, phi_loc2loc, -2, displacex, displacey, scale, 0, 0);
+	prop(&(propdata_t){.locin=loc, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_loc2loc), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("nongrid\t"); tic;
-    prop_nongrid(locin, P(screen), loc, phi_loc2loc, 1, displacex, displacey, scale, 0, 0);
+	prop(&(propdata_t){.locin=loc, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_loc2loc), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
     toc("nongrid\t");
 
 
@@ -160,29 +156,29 @@ static void test_accuracy(int argc, char** argv){
     tic;
     dspmv(phi_h, hfor, dmat_cast(screen), 'n', 1);
     toc("mul h\t");
-
-
-    phi_cub=mycalloc(loc->nloc, real);
-    phi_cub2=mycalloc(loc->nloc, real);
-    real* phi_cub3=mycalloc(loc->nloc, real);
-    real* phi_cub4=mycalloc(loc->nloc, real);
+	screen->iac=cubic;
+	loc->iac=cubic;
+	screen2->iac=cubic;
+    dmat* phi_cub=dnew(loc->nloc, 1);
+    dmat* phi_cub2=dnew(loc->nloc, 1);
+    dmat* phi_cub3=dnew(loc->nloc, 1);
+    dmat* phi_cub4=dnew(loc->nloc, 1);
     phi_cubh=dnew(loc->nloc, 1);
-
-    prop_nongrid_cubic(locin, P(screen), loc, phi_cub, -2, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_cub), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     tic;
-    prop_nongrid_cubic(locin, P(screen), loc, phi_cub, 1, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_cub), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     toc("nongrid, cubic\t");
-    prop_grid_cubic(screen, loc, phi_cub2, -2, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_cub2), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     tic;
-    prop_grid_cubic(screen, loc, phi_cub2, 1, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_cub2), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     toc("grid,  cubic\t");
-    prop_grid_cubic(screen2, loc, phi_cub3, -2, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen2, .locout=loc, .phiout=P(phi_cub3), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     tic;
-    prop_grid_cubic(screen2, loc, phi_cub3, 1, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen2, .locout=loc, .phiout=P(phi_cub3), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     toc("grid2, cubic\t");
-    prop_grid_stat_cubic(screen, locstat, phi_cub4, -2, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     tic;
-    prop_grid_stat_cubic(screen, locstat, phi_cub4, 1, displacex, displacey, scale, cubic, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
     toc("grid  2stat, cubic\t");
     dsp* hforcubic;
     tic;
@@ -194,15 +190,15 @@ static void test_accuracy(int argc, char** argv){
     toc("cubic mul h\t\t");
     real diffc12=0, diff45=0, diff46=0, diff47=0;
     for(ii=0; ii<loc->nloc; ii++){
-        diff1+=fabs(phi_loc[ii]-phi_pts[ii]);
-        diff2+=fabs(phi_stat[ii]-phi_loc[ii]);
-        diff3+=fabs(phi_stat[ii]-phi_pts[ii]);
-        diff14+=fabs(phi_loc2loc[ii]-phi_pts[ii]);
-        diff15+=fabs(P(phi_h,ii)-phi_pts[ii]);
-        diff45+=fabs(phi_loc2loc[ii]-P(phi_h,ii));
-        diffc12+=fabs(phi_cub[ii]-P(phi_cubh,ii));
-        diff46+=fabs(phi_cub[ii]-phi_cub2[ii]);
-        diff47+=fabs(phi_cub[ii]-phi_cub3[ii]);
+        diff1+=fabs(P(phi_loc,ii)-P(phi_pts,ii));
+        diff2+=fabs(P(phi_stat,ii)-P(phi_loc,ii));
+        diff3+=fabs(P(phi_stat,ii)-P(phi_pts,ii));
+        diff14+=fabs(P(phi_loc2loc,ii)-P(phi_pts,ii));
+        diff15+=fabs(P(phi_h,ii)-P(phi_pts,ii));
+        diff45+=fabs(P(phi_loc2loc,ii)-P(phi_h,ii));
+        diffc12+=fabs(P(phi_cub,ii)-P(phi_cubh,ii));
+        diff46+=fabs(P(phi_cub,ii)-P(phi_cub2,ii));
+        diff47+=fabs(P(phi_cub,ii)-P(phi_cub3,ii));
     }
     info("(pts-loc)=\t%g\n(stat-loc)=\t%g\n(stat-pts)=\t%g\n"
         "(loc2loc-pts)=\t%g\n(h-pts)=\t%g\n"

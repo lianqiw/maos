@@ -188,8 +188,8 @@ typedef struct loc_t{
 	real dy;     /**< Sampling along y*/
 	real ht;     /**< Conjugation height of the loc grid.*/
 	real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
+	real dratio;  /**<demagnification ratio (>1 for shrinking beam)*/
 	int npad;      /*padding when create map*/
-
 }loc_t;
 /**
    low left point of each subaperture.
@@ -220,6 +220,7 @@ typedef struct pts_t{
             real dsay;   	 /**<side length of subaperture. */
             real dummy_ht; 	 /**<Place holder*/
             real dummy_iac;  /**<Place holder*/
+			real dratio;  	 /**<demagnification ratio (>1 for shrinking beam)*/
             int npad;      	 /**<padding when create map*/
 		};
 	};

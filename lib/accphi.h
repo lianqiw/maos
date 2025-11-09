@@ -30,122 +30,32 @@
 */
 typedef struct propdata_t{
     /*Input.  */
-    map_t *mapin;
+    const map_t *mapin;
     /*Or */
     loc_t *locin;
-    const dmat *phiin;
+    const real *phiin;
     
     /*Output */
     map_t *mapout;
     /*Or */
-    dmat *phiout;
+    real *phiout;
     /*Combined with */
     const pts_t *ptsout;
     /*Or */
     const loc_t *locout; 
     /*Or  */
     const locstat_t *ostat;
+	real alpha;/*scale of value: */
+    real displacex, displacey;/*Constant displacement */
+    real displacex2, displacey2;/*Time step dependent displacement */
+    real scale;/*scale of coordinate */
+	real rot;  /*rotation*/
 
-    /*Constant displacement */
-    real displacex0, displacey0;
-    /*Time step dependent displacement */
-    real displacex1, displacey1;
-    /*scale of coordinate */
-    real scale;
-    /*scale of value: */
-    real alpha;
     int wrap;
+	int transpose;
     int nooptim;/*disable optim. */
     int index;
 }propdata_t;
-void* prop(thread_t *data);/*A unified wrapper */
-
-#define ARGIN_GRID						\
-    const map_t *mapin /**<[in] OPD defind on a square grid*/
-#define ARGIN_GRID2 mapin
-#define ARGIN_NONGRID							\
-    const loc_t *locin,     /**<[in] Coordinate of iregular source grid*/	\
-    const real *phiin/**<[in] Input OPD defined in locin*/
-#define ARGIN_NONGRID2 locin, phiin
-#define ARGOUT_LOC							\
-    const loc_t *locout, /**<[in] Coordinate of irregular output grid*/	\
-    real* phiout      /**<[in,out] Output OPD defined in locout*/
-#define ARGOUT_LOC2 locout, phiout
-#define ARGOUT_PTS							\
-    const pts_t *pts,   /**<[in] coordinate of destination grid*/	\
-    real *phiout     /**<[in,out] OPD defined on locout*/
-#define ARGOUT_PTS2 pts, phiout
-#define ARGOUT_MAP							\
-    map_t *mapout    /**<[in,out] Output OPD defined in a square grid*/
-#define ARGOUT_MAP2 mapout
-#define ARGOUT_STAT							\
-    const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/	\
-    real *phiout /**<[in, out] Output OPD defined on ostat*/
-#define ARGOUT_STAT2 ostat, phiout
-#define ARG_PROP							\
-    const real alpha,     /**<[in] scaling of OPD*/			\
-    real displacex, /**<[in] displacement of the ray */		\
-    real displacey, /**<[in] displacement of the ray */		\
-    const real scale     /**<[in] scaling of the beam diameter (cone)*/
-#define ARG_PROP2 alpha, displacex, displacey, scale
-
-#define ARG_INDEX                               \
-    long start, /**<[in] start index*/           \
-    long end /**<[ind] end index*/
-
-#define ARG_PROP_WRAP                           \
-    ARG_PROP,                                   \
-    int wrap, /**<[in] warp around */           \
-    ARG_INDEX
-
-#define ARG_PROP_NOWRAP                         \
-    ARG_PROP,                                   \
-    ARG_INDEX
-
-#define ARG_PROP_CUBIC                                          \
-    ARG_PROP,                                                           \
-    real cubic_iac, /**<[in] inter-actuator coupling coeffcient*/       \
-    ARG_INDEX
-
-void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_WRAP);
-void prop_grid_map (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_WRAP);
-void prop_grid_pts (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_WRAP);
-void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_WRAP);
-
-void prop_nongrid    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP);
-void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_NOWRAP);
-void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP);
-void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta/**<Angle of rotation*/);
-/*
-  A few cubic spline propagations.
-*/
-void prop_grid_cubic     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC);
-void prop_grid_map_cubic (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC);
-void prop_grid_pts_cubic (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_CUBIC);
-void prop_grid_stat_cubic(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_CUBIC);
-
-void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_CUBIC);
-void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC);
-void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC);
-
-/**
-   Do the reverse propagation of prop_grid_map. If prop_grid_map does y+=H*x;
-   This just does x+=H'*y; */
-void prop_grid_map_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
-							const map_t *mapout, /**<[in] OPD defined in a square grid*/
-							ARG_PROP_WRAP);
-/**
-   Do the reverse propagation of prop_grid_stat. If prop_grid_stat does y+=H*x;
-   This just does x+=H'*y; */
-void prop_grid_stat_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
-							const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/
-							const real *phiout, /**<[in] Output OPD defined in locout*/
-							ARG_PROP_WRAP);
-/*
-  the following routine is used to do down sampling by doing binning ray tracing.
-  locout is coarse sampling, locint is fine sampling.
-  phiin->phiout.
-*/
-void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP);
-
+void* prop_thread(thread_t *data);/*A unified wrapper */
+void prop(propdata_t* propdata, long start, long end);
 #endif

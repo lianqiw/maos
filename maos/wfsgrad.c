@@ -68,7 +68,8 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 		if(powfs[ipowfs].loc_tel){
 			loc=P(powfs[ipowfs].loc_tel, wfsind);
 		}
-		prop_nongrid(aloc, P(P(wfsopd, 0)), loc, P(opd), alpha, misregx, misregy, 1, 0, 0);
+		prop(&(propdata_t){.locin=aloc, .phiin=P(P(wfsopd, 0)), .locout=loc, .phiout=P(opd), 
+			.alpha=alpha, .displacex=misregx, .displacey=misregy}, 0, 0);
 		dcellfree(wfsopd);
 	} else{
 		//project tubulence onto DM grid (global ideal)
@@ -81,8 +82,8 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 			//wfs is registered to pupil. wfs.hc only effects the cone effect.
 			
 			if(scale<0) continue;
-			prop_grid(P(simu->dmprojsq, idm), loc, P(opd),
-				alpha, dispx, dispy, scale, 0, 0, 0);
+			prop(&(propdata_t){.mapin=P(simu->dmprojsq, idm), .locout=loc, .phiout=P(opd),
+				.alpha=alpha, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 		}
 	}
 }
@@ -180,7 +181,7 @@ void* wfsgrad_iwfs(thread_t* info){
 			for(int ips=0; ips<nps; ips++){
 				thread_t* wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 				propdata_t* wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
-				wfs_propdata->phiout=opd;
+				wfs_propdata->phiout=P(opd);
 				if(parms->atm.dtrat>0){
 					real wt;
 					int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
@@ -197,8 +198,8 @@ void* wfsgrad_iwfs(thread_t* info){
 					wfs_propdata->mapin=P(atm, iframe);
 					//if(iwfs==0) dbg("wfs: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, wfs_propdata->alpha);
 				}else{
-					wfs_propdata->displacex1=-P(atm, ips)->vx*dt*isim;
-					wfs_propdata->displacey1=-P(atm, ips)->vy*dt*isim;
+					wfs_propdata->displacex2=-P(atm, ips)->vx*dt*isim;
+					wfs_propdata->displacey2=-P(atm, ips)->vy*dt*isim;
 					wfs_propdata->alpha=atmscale;
 				}
 				if(nhs>1){
@@ -250,7 +251,7 @@ void* wfsgrad_iwfs(thread_t* info){
 			for(int idm=0; idm<parms->ndm; idm++){
 				thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 				propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
-				wfs_propdata->phiout=opd;
+				wfs_propdata->phiout=P(opd);
 				if(nhs>1){
 					const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 					wfs_propdata->scale=1.-(ht-hc)/(hs-hc);
@@ -286,8 +287,8 @@ void* wfsgrad_iwfs(thread_t* info){
 			if(dmwfs[iwfs]){
 				/* No need to do mis registration here since the MOAO DM is attached
 				to close to the WFS.*/
-				prop_nongrid_pts(P(recon->moao[imoao].aloc, 0), P(dmwfs[iwfs]),
-					powfs[ipowfs].pts, P(opd), -1, 0, 0, 1, 0, 0);
+				prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc, 0), .phiin=P(dmwfs[iwfs]),
+					.ptsout=powfs[ipowfs].pts, .phiout=P(opd), .alpha=-1}, 0, 0);
 			}
 		}
 
@@ -383,9 +384,9 @@ void* wfsgrad_iwfs(thread_t* info){
 						const real displacex=-vx*isim*dt+thetax*hl+ox;
 						const real displacey=-vy*isim*dt+thetay*hl+oy;
 						
-						prop_grid_pts(atmi, powfs[ipowfs].llt->pts,
-							P(lltopd), atmscale*wt, displacex, displacey,
-							scale, 1., 0, 0);
+						prop(&(propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
+							.phiout=P(lltopd), .alpha=atmscale*wt, .displacex=displacex, .displacey=displacey,
+							.scale=scale, .wrap=1}, 0, 0);
 					}
 				}
 				if(do_pistat||parms->powfs[ipowfs].idealfsm){

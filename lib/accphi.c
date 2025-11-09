@@ -25,12 +25,107 @@
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
 
+#define ARGIN_GRID						\
+    const map_t *mapin, /**<[in] OPD grid*/\
+	const real *phiin  /**<[in] OPD defind on the grid. may be null, in which case mapin->p will be used*/
+#define ARGIN_GRID2 mapin, phiin
+
+#define ARGIN_NONGRID							\
+    const loc_t *locin,     /**<[in] Coordinate of iregular source grid*/	\
+    const real *phiin/**<[in] Input OPD defined in locin*/
+#define ARGIN_NONGRID2 locin, phiin
+#define ARGOUT_LOC							\
+    const loc_t *locout, /**<[in] Coordinate of irregular output grid*/	\
+    real* phiout      /**<[in,out] Output OPD defined in locout*/
+#define ARGOUT_LOC2 locout, phiout
+#define ARGOUT_PTS							\
+    const pts_t *pts,   /**<[in] coordinate of destination grid*/	\
+    real *phiout     /**<[in,out] OPD defined on locout*/
+#define ARGOUT_PTS2 pts, phiout
+#define ARGOUT_MAP							\
+    map_t *mapout,    /**<[in,out] Output OPD grid*/\
+	real *phiout      /**<[in,out] Output OPD on the grid. may be null, in which case mapout->p will be used*/
+#define ARGOUT_MAP2 mapout, phiout
+#define ARGOUT_STAT							\
+    const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/	\
+    real *phiout /**<[in, out] Output OPD defined on ostat*/
+#define ARGOUT_STAT2 ostat, phiout
+#define ARG_PROP							\
+    const real alpha,     /**<[in] scaling of OPD*/			\
+    real displacex, /**<[in] displacement of the ray */		\
+    real displacey, /**<[in] displacement of the ray */		\
+    const real scale     /**<[in] scaling of the beam diameter (cone)*/
+#define ARG_PROP2 alpha, displacex, displacey, scale
+
+#define ARG_INDEX                               \
+    long start, /**<[in] start index*/           \
+    long end /**<[ind] end index*/
+
+#define ARG_PROP_WRAP                           \
+    ARG_PROP,                                   \
+    int wrap, /**<[in] warp around */           \
+    ARG_INDEX
+
+#define ARG_PROP_NOWRAP                         \
+    ARG_PROP,                                   \
+    ARG_INDEX
+
+#define ARG_PROP_CUBIC                                          \
+    ARG_PROP,                                                           \
+    real cubic_iac, /**<[in] inter-actuator coupling coeffcient*/       \
+    ARG_INDEX
+
+void prop_grid     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_WRAP);
+void prop_grid_map (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_WRAP);
+void prop_grid_pts (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_WRAP);
+void prop_grid_stat(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_WRAP);
+
+void prop_nongrid    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP);
+void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_NOWRAP);
+void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_NOWRAP);
+void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta/**<Angle of rotation*/);
+/*
+  A few cubic spline propagations.
+*/
+void prop_grid_cubic     (ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC);
+void prop_grid_map_cubic (ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC);
+void prop_grid_pts_cubic (ARGIN_GRID, ARGOUT_PTS, ARG_PROP_CUBIC);
+void prop_grid_stat_cubic(ARGIN_GRID, ARGOUT_STAT,ARG_PROP_CUBIC);
+
+void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_CUBIC);
+void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC);
+void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC);
+
+/**
+   Do the reverse propagation of prop_grid_map. If prop_grid_map does y+=H*x;
+   This just does x+=H'*y; */
+void prop_grid_map_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
+							real* phiin,
+							const map_t *mapout, /**<[in] OPD defined in a square grid*/
+							const real* phiout,
+							ARG_PROP_WRAP);
+/**
+   Do the reverse propagation of prop_grid_stat. If prop_grid_stat does y+=H*x;
+   This just does x+=H'*y; */
+void prop_grid_stat_transpose(map_t *mapin, /**<[out] OPD defind on a square grid*/
+							real* phiin,
+							const locstat_t *ostat,/**<[in] statics of columns in a loc_t*/
+							const real *phiout, /**<[in] Output OPD defined in locout*/
+							ARG_PROP_WRAP);
+/*
+  the following routine is used to do down sampling by doing binning ray tracing.
+  locout is coarse sampling, locint is fine sampling.
+  phiin->phiout.
+*/
+void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP);
+
 /**
    Identify the index of this ray tracing.
 */
 static void prop_index(propdata_t* propdata){
 	if(!propdata) return;
 	int done=0;
+
 	if(propdata->mapin){
 		if(propdata->mapin->iac){
 			if(propdata->mapout){
@@ -46,16 +141,18 @@ static void prop_index(propdata_t* propdata){
 					propdata->index=11;
 					done=1;
 				}
-				if(propdata->locout){
-					if(done) error("Invalid\n");
-					/*case 12 */
-					propdata->index=12;
-					done=1;
+				if(!propdata->ostat && propdata->locout && propdata->locout->stat){
+					propdata->ostat=propdata->locout->stat;
 				}
 				if(propdata->ostat){
 					if(done) error("Invalid\n");
 					/*case 13 */
 					propdata->index=14;
+					done=1;
+				}else if(propdata->locout){
+					if(done) error("Invalid\n");
+					/*case 12 */
+					propdata->index=12;
 					done=1;
 				}
 			}
@@ -129,6 +226,22 @@ static void prop_index(propdata_t* propdata){
 			}
 		}
 	}
+	if(propdata->rot){
+		if(propdata->index==7){
+			propdata->index=15;
+		}else{
+			error("Invalid\n");
+		}
+	}
+	if(propdata->transpose){
+		if(propdata->index==13){
+			propdata->index=16;
+		}else if(propdata->index==3){
+			propdata->index=17;
+		}else{
+			error("Invalid\n");
+		}
+	}
 	if(done==0) error("Invalid\n");
 }
 
@@ -136,111 +249,137 @@ static void prop_index(propdata_t* propdata){
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
 */
-void* prop(thread_t* data){
-	if(!data) return NULL;
-	propdata_t* propdata=(propdata_t*)data->data;
+void prop(propdata_t* propdata, long start, long end){
+	if(!propdata) return;
+	if(!propdata->alpha) propdata->alpha=1;//0 does not make sense. default to 1.
+	if(!propdata->scale) propdata->scale=1;//0 does not make sense. default 1
 	if(!propdata->index){
 		prop_index(propdata);
 	}
-	const real displacex=propdata->displacex0+propdata->displacex1;
-	const real displacey=propdata->displacey0+propdata->displacey1;
+	const real displacex=propdata->displacex+propdata->displacex2;
+	const real displacey=propdata->displacey+propdata->displacey2;
 	switch(propdata->index){
 	case 1:
-		prop_grid_pts(propdata->mapin, propdata->ptsout, P(propdata->phiout),
+		prop_grid_pts(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin), propdata->ptsout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
-			data->start, data->end);
+			start, end);
 		break;
 	case 2:
-		prop_grid(propdata->mapin, propdata->locout, P(propdata->phiout),
+		prop_grid(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->locout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
-			data->start, data->end);
+			start, end);
 		break;
 	case 3:
-		prop_grid_stat(propdata->mapin, propdata->ostat, P(propdata->phiout),
+		prop_grid_stat(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ostat, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->wrap,
-			data->start, data->end);
+			start, end);
 		break;
 	case 4:
-		prop_nongrid_cubic(propdata->locin, P(propdata->phiin),
-			propdata->locout, P(propdata->phiout),
+		prop_nongrid_cubic(propdata->locin, propdata->phiin,
+			propdata->locout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 5:
-		prop_nongrid_map_cubic(propdata->locin, P(propdata->phiin),
-			propdata->mapout,
+		prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
+			propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 6:
-		prop_nongrid_pts_cubic(propdata->locin, P(propdata->phiin),
-			propdata->ptsout, P(propdata->phiout),
+		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
+			propdata->ptsout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->locin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 7:
-		prop_nongrid(propdata->locin, P(propdata->phiin),
-			propdata->locout, P(propdata->phiout),
+		prop_nongrid(propdata->locin, propdata->phiin,
+			propdata->locout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
-			data->start, data->end);
+			start, end);
 		break;
 	case 8:
-		prop_nongrid_map(propdata->locin, P(propdata->phiin),
-			propdata->mapout,
+		prop_nongrid_map(propdata->locin, propdata->phiin,
+			propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
-			data->start, data->end);
+			start, end);
 		break;
 	case 9:
-		prop_nongrid_pts(propdata->locin, P(propdata->phiin),
-			propdata->ptsout, P(propdata->phiout),
+		prop_nongrid_pts(propdata->locin, propdata->phiin,
+			propdata->ptsout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale,
-			data->start, data->end);
+			start, end);
 		break;
 	case 10:
-		prop_grid_map_cubic(propdata->mapin, propdata->mapout,
+		prop_grid_map_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 11:
-		prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, P(propdata->phiout),
+		prop_grid_pts_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ptsout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 12:
-		prop_grid_cubic(propdata->mapin, propdata->locout, P(propdata->phiout),
+		prop_grid_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->locout, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
-			data->start, data->end);
+			start, end);
 		break;
 	case 13:
-		prop_grid_map(propdata->mapin, propdata->mapout,
+		prop_grid_map(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
 			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap, data->start, data->end);
+			propdata->scale, propdata->wrap, 
+			start, end);
 		break;
 	case 14:
-		prop_grid_stat_cubic(propdata->mapin, propdata->ostat, P(propdata->phiout),
+		prop_grid_stat_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ostat, propdata->phiout,
 			propdata->alpha, displacex, displacey,
 			propdata->scale, propdata->mapin->iac,
-			data->start, data->end);
+			start, end);
+		break;
+	case 15:
+		prop_nongrid_rot(propdata->locin, propdata->phiin,
+			propdata->locout, propdata->phiout,
+			propdata->alpha, displacex, displacey,
+			propdata->scale,
+			start, end, propdata->rot);
+		break;
+	case 16:
+		prop_grid_map_transpose((map_t*)propdata->mapin, (real*)(propdata->phiin?propdata->phiin:P(propdata->mapin)),
+			(const map_t*)propdata->mapout, (const real*)(propdata->phiout?propdata->phiout:P(propdata->mapout)),
+			propdata->alpha, displacex, displacey,
+			propdata->scale, propdata->wrap, 
+			start, end);
+		break;
+	case 17:
+		prop_grid_stat_transpose((map_t*)propdata->mapin, (real*)(propdata->phiin?propdata->phiin:P(propdata->mapin)),
+			propdata->ostat, (const real*)propdata->phiout,
+			propdata->alpha, displacex, displacey,
+			propdata->scale, propdata->wrap,
+			start, end);
 		break;
 	default:
 		error("Invalid\n");
 	}
-	return NULL;
 }
 
-
+void* prop_thread(thread_t* data){
+	if(!data) return NULL;
+	prop(data->data, data->start, data->end);
+	return NULL;
+}
 #define PREPIN_NONGRID(nskip)				\
     /*padding to avoid test boundary*/		 \
     if(!locin->map) loc_create_map_npad(locin, nskip,0,0);	\
@@ -286,7 +425,6 @@ void* prop(thread_t* data){
     const real dyout=mapout->dy;			\
     const real ox=mapout->ox;				\
     const real oy=mapout->oy;				\
-    real *phiout=P(mapout);					\
     const int nxout=NX(mapout);				\
     if(!end) end=NY(mapout);
 
@@ -379,7 +517,7 @@ void* prop(thread_t* data){
 		for(int kx=-1; kx<3; kx++){				\
 			real wt=fx[kx+1]*fy[ky+1];			\
 			if(wt>EPS){						\
-				real tmp=P(mapin,kx+nplocx,ky+nplocy);	\
+				real tmp=phiin[(kx+nplocx)+nx*(ky+nplocy)];\
 				sum+=wt*tmp;sumwt+=wt;				\
 			}							\
 		}							\
@@ -466,10 +604,10 @@ OMP_TASK_FOR(2)
 
 		nplocx1=(nplocx==nxmax?0:nplocx+1);
 		nplocy1=(nplocy==nymax?0:nplocy+1);
-		const real m00=P(mapin, nplocx, nplocy);
-		const real m10=P(mapin, nplocx1, nplocy);
-		const real m01=P(mapin, nplocx, nplocy1);
-		const real m11=P(mapin, nplocx1, nplocy1);
+		const real m00=phiin[nplocx +nx*nplocy];
+		const real m10=phiin[nplocx1+nx*nplocy];
+		const real m01=phiin[nplocx +nx*nplocy1];
+		const real m11=phiin[nplocx1+nx*nplocy1];
 		phiout[iloc]+=alpha*((m00+(m10-m00)*dplocx)*(1.-dplocy)
 							+(m01+(m11-m01)*dplocx)*    dplocy);
 	}
@@ -626,6 +764,7 @@ void prop_grid_cubic(ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC){
 	(void)nymin;
 	PREPOUT_LOC;
 	PREP_CUBIC_PARAM;
+	const int nx=NX(mapin);
 OMP_TASK_FOR(4)
 	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_CUBIC;
@@ -659,6 +798,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
+	const int nx=NX(mapin);
 OMP_TASK_FOR(4)
 	for(long isa=start; isa<end; isa++){
 		RUNTIME_CUBIC;
@@ -699,6 +839,7 @@ void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC){
 	PREPIN_GRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
+	const int nx=NX(mapin);
 OMP_TASK_FOR(2)	
 	for(long iy=start; iy<end; iy++){
 		RUNTIME_CUBIC;
@@ -735,7 +876,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_STAT;
 	PREP_CUBIC_PARAM;
-	
+	const int nx=NX(mapin);
 OMP_TASK_FOR(2)
 	for(long icol=start; icol<end; icol++){
 		RUNTIME_CUBIC;

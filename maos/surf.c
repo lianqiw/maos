@@ -115,8 +115,8 @@ static void* prop_surf_evl(thread_t* info){
 		const real displacex=P(parms->evl.thetax, ievl)*hl;
 		const real displacey=P(parms->evl.thetay, ievl)*hl;
 		const real scale=1-hl/P(parms->evl.hs, ievl);
-		prop_grid_stat(surf, aper->locs->stat, P(P(aper->opdadd, ievl)),
-			1, displacex, displacey, scale, 0, 0, 0);
+		prop(&(propdata_t){.mapin=surf, .ostat=aper->locs->stat, .phiout=P(P(aper->opdadd, ievl)),
+			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
 	}
 	return NULL;
 }
@@ -142,8 +142,8 @@ static void* prop_surf_ncpa(thread_t* info){
 		const real displacex=P(parms->ncpa.thetax, idir)*hl;
 		const real displacey=P(parms->ncpa.thetay, idir)*hl;
 		const real scale=1.-hl/P(parms->ncpa.hs, idir);
-		prop_grid(surf, recon->floc, P(P(aper->opdbias, idir)),
-			1, displacex, displacey, scale, 0, 0, 0);
+		prop(&(propdata_t){.mapin=surf, .locout=recon->floc, .phiout=P(P(aper->opdbias, idir)),
+			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
 	}
 	return NULL;
 }
@@ -173,8 +173,8 @@ static void* prop_surf_wfs(thread_t* info){
 			locwfs=powfs[ipowfs].loc;
 		}
 		dcell *opdout=data->isncpa?powfs[ipowfs].opdbias:powfs[ipowfs].opdadd;
-		prop_grid(surf, locwfs, P(P(opdout, wfsind)),
-			1, displacex, displacey, scale, 1., 0, 0);
+		prop(&(propdata_t){.mapin=surf, .locout=locwfs, .phiout=P(P(opdout, wfsind)),
+			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=1}, 0, 0);
 	}
 	return NULL;
 }
@@ -649,12 +649,12 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 						if(!P(recon->dm_ncpa, idm)||P(recon->dm_ncpa, idm)->nx==0) continue;
 						real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 						real scale=1.-ht/hs;
-						real dispx=ht*thetax;
-						real dispy=ht*thetay;
+						real displacex=ht*thetax;
+						real displacey=ht*thetay;
 						real alpha=-cos(theta*parms->dm[idm].dratio);
-						prop_nongrid(P(recon->aloc, idm), P(P(recon->dm_ncpa, idm)),
-							powfs[ipowfs].loc, P(P(powfs[ipowfs].opdbias, jwfs)),
-							alpha, dispx, dispy, scale, 0, 0);
+						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
+							.locout=powfs[ipowfs].loc, .phiout=P(P(powfs[ipowfs].opdbias, jwfs)),
+							.alpha=alpha, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
 					}
 				}
 			}
@@ -688,14 +688,14 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
 				const real hl=parms->dm[idm].ht;
-				const real dispx=P(parms->evl.thetax, ievl)*hl;
-				const real dispy=P(parms->evl.thetay, ievl)*hl;
+				const real displacex=P(parms->evl.thetax, ievl)*hl;
+				const real displacey=P(parms->evl.thetay, ievl)*hl;
 				const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
 				const real scale=1-hl/P(parms->evl.hs, ievl);
 				const real alpha=cos(theta*parms->dm[idm].dratio);
-				prop_nongrid(P(recon->aloc, idm), P(P(recon->dm_ncpa, idm)),
-					aper->locs, P(P(aper->opdadd, ievl)),
-					alpha, dispx, dispy, scale, 0, 0);
+				prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
+					.locout=aper->locs, .phiout=P(P(aper->opdadd, ievl)),
+					.alpha=alpha, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
 			}
 		}
 		if(parms->save.setup>1){

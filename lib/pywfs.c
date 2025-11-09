@@ -664,7 +664,8 @@ static dmat *pywfs_mkg_do(const pywfs_t *pywfs, const loc_t *locin, const loc_t 
 		} else{
 			P(opdin, imod)=poke;
 		}
-		prop_nongrid((loc_t *)locin, P(opdin), locfft, P(opdfft), 1, displacex, displacey, scale, 0, 0);
+		prop(&(propdata_t){.locin=(loc_t *)locin, .phiin=P(opdin), .locout=locfft, .phiout=P(opdfft), 
+			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
 		//writebin(opdfft, "phiout_cpu_%d", imod);
 		pywfs_ints(&ints, pywfs, opdfft, pycfg->siglev);
 		//writebin(ints, "ints_cpu_%d", imod);
@@ -695,7 +696,8 @@ dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, cons
 	if(opdadd){
 		dfree(pywfs->opdadd);
 		pywfs->opdadd=dnew(pywfs->locfft->loc->nloc, 1);
-		prop_nongrid(pywfs->loc, P(opdadd), pywfs->locfft->loc, P(pywfs->opdadd), 1, 0, 0, 1, 0, 0);
+		prop(&(propdata_t){.locin=pywfs->loc, .phiin=P(opdadd), .locout=pywfs->locfft->loc, .phiout=P(pywfs->opdadd), 
+			.alpha=1, .displacex=0, .displacey=0, .scale=1}, 0, 0);
 	}
 	loc_t *locfft=pywfs->locfft->loc;
 	if(distortion){
@@ -803,7 +805,8 @@ void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0){
 		cure_loc(&opdr, grad, pywfs->saloc);
 		amp2r=dsumsq(opdr);
 		map_t *opdr_map=map_convert(opdr);opdr=NULL;//reference OPD into a map_t
-		prop_grid(opdr_map, pywfs->locfft->loc, P(opd2), 1, 0, 0, 1, 0, 0, 0);
+		prop(&(propdata_t){.mapin=opdr_map, .locout=pywfs->locfft->loc, .phiout=P(opd2), 
+			.alpha=1, .displacex=0, .displacey=0, .scale=1, .wrap=0}, 0, 0);
 		mapfree(opdr_map);
 	}
 		

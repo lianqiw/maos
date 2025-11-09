@@ -483,7 +483,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
 	if(aper){
-		prop_grid(aper, loc, P(amp), 1, misregx, misregy, 1, 0, 0, 0);
+		prop(&(propdata_t){.mapin=aper, .locout=loc, .phiout=P(amp), .displacex=misregx, .displacey=misregy}, 0, 0);
 	}else{
 		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
 	}

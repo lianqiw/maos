@@ -315,10 +315,10 @@ class cell(Structure):
         ('header', c_char_p),
         ('dummy_fp', c_void_p),
         ('dummy_fft', c_void_p),
-        ('dummy_1', c_void_p),
-        ('dummy_2', c_void_p),
-        ('dummy_3', c_void_p),
-        ('dummy_4', c_void_p),
+        ('dummy_mem', c_void_p),
+        ('dummy_async', c_void_p),
+        ('dummy_deinit', c_void_p),
+        ('dummy_make_keywords', c_void_p),
         ]
  
     def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
@@ -383,6 +383,8 @@ class cell(Structure):
         self.dummy_fft=None
         self.dummy_mem=None
         self.dummy_async=None
+        self.dummy_deinit=None
+        self.dummy_make_keywords=None
         self.python=True
     def shape(self, twod):
         if self.ny > 1 or twod:
@@ -400,10 +402,10 @@ class loc(Structure):
         ('header',c_void_p),
         ('dummy_fp',c_void_p),
         ('dummy_fft',c_void_p),
-        ('dummy_1',c_void_p),
-        ('dummy_2',c_void_p),
-        ('dummy_3',c_void_p),
-        ('dummy_4',c_void_p), #up to here. follow cell memory layout.
+        ('dummy_mem',c_void_p),
+        ('dummy_async',c_void_p),
+        ('dummy_deinit',c_void_p),
+        ('dummy_make_keywords',c_void_p), #up to here. follow cell memory layout.
         ('locy', c_void_p),
         ('locstat_t', c_void_p),
         ('map',  c_void_p),
@@ -411,6 +413,7 @@ class loc(Structure):
         ('dy',   c_double),
         ('ht',   c_double),
         ('iac',  c_double),
+        ('dratio',c_double),
         ('npad', c_int),
         ]
     def __init__(self, arr=None): #convert from numpy to C. Memory is borrowed
@@ -423,14 +426,27 @@ class loc(Structure):
                     arr=self.arr=arr.copy()
                 if arr.dtype!=np.double:
                     arr=arr.astype(np.double)
+                dlocx=np.abs(arr[0,1:]-arr[0,0:-1])
+                dlocy=np.abs(arr[1,1:]-arr[1,0:-1])
+                self.locx=arr[0,].ctypes.data_as(c_void_p)
                 self.nloc=arr.shape[1]
                 self.two=2;
-                self.locx=arr[0,].ctypes.data_as(c_void_p)
+                self.header=None
+                self.dummy_fp=None
+                self.dummy_fft=None
+                self.dummy_mem=None
+                self.dummy_async=None
+                self.dummy_deinit=None
+                self.dummy_make_keywords=None
                 self.locy=arr[1,].ctypes.data_as(c_void_p)
-                dlocx=np.abs(arr[0,1:]-arr[0,0:-1])
+                self.locstat_t=None
+                self.map=None
                 self.dx=min(dlocx[dlocx>0])
-                dlocy=np.abs(arr[1,1:]-arr[1,0:-1])
                 self.dy=min(dlocy[dlocy>0])
+                self.ht=0
+                self.iac=0
+                self.dratio=1
+                self.npad=1
                 self.python=True
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero

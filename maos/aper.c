@@ -73,7 +73,7 @@ aper_t* setup_aper(const parms_t* const parms){
 				dmaprot(mask, parms->aper.rot);
 			}
 			dmat* ampmask=dnew(aper->locs->nloc, 1);
-			prop_grid(mask, aper->locs, P(ampmask), 1, 0, 0, 1, 0, 0, 0);
+			prop(&(propdata_t){.mapin=mask, .locout=aper->locs, .phiout=P(ampmask)}, 0, 0);
 			dcwm(aper->amp, ampmask);
 			dfree(ampmask);
 			mapfree(mask);

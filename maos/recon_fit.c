@@ -560,8 +560,8 @@ void FitR(dcell** xout, const void* A,
 				if(scale<0) continue;
 				real dispx=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
 				real dispy=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
-				prop_grid(P(simu->atm, ips), fit->floc, P(P(xp, ifit)),
-					atmscale, dispx, dispy, scale, 1, 0, 0);
+				prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=fit->floc, .phiout=P(P(xp, ifit)),
+					.alpha=atmscale, .displacex=dispx, .displacey=dispy, .scale=scale, .wrap=1}, 0, 0);
 			}
 			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
 				real tmp=P(simu->telws, isim);
@@ -584,8 +584,8 @@ void FitR(dcell** xout, const void* A,
 				if(scale<0) continue;
 				real dispx=P(fit->thetax, ifit)*ht;
 				real dispy=P(fit->thetay, ifit)*ht;
-				prop_nongrid(P(fit->xloc, ips), P(P(xin, ips)), fit->floc,
-					P(P(xp, ifit)), 1, dispx, dispy, scale, 0, 0);
+				prop(&(propdata_t){.locin=P(fit->xloc, ips), .phiin=P(P(xin, ips)), .locout=fit->floc,
+					.phiout=P(P(xp, ifit)), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 			}
 		}
 	}

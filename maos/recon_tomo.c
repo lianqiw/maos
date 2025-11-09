@@ -517,11 +517,9 @@ static void* Tomo_prop_do(Tomo_T *data){
 					dispx+=P(simu->atm, ips0)->vx*delay;
 					dispy+=P(simu->atm, ips0)->vy*delay;
 				}
-				map_t xmap;/*make a temporary xmap for thread safety.*/
-				memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
-				xmap.p=P(P(data->xin, ips));
-				prop_grid_stat(&xmap, recon->ploc->stat, P(xx), 1,
-					dispx, dispy, scale, 0, 0, 0);
+				prop(&(propdata_t){.mapin=P(recon->xmap, ips), .phiin=P(P(data->xin, ips)),
+					.ostat=recon->ploc->stat, .phiout=P(xx), .alpha=1,
+					.displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 			} else{
 				dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 				dspmm(&xx, P(HXW, iwfs, ips), P(data->xin, ips), "nn", 1);
@@ -536,8 +534,8 @@ static void* Tomo_prop_do(Tomo_T *data){
 				reshape(xxr, recon->ploc->nloc, 1);
 			}else{
 				xxr=dnew(recon->ploc->nloc, 1);
-				prop_nongrid_rot(recon->ploc, P(xx), recon->ploc, P(xxr), 
-					1, 0, 0, 1, 0, 0, -recon->wfsr[iwfs].misregc);
+				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(xx), .locout=recon->ploc, .phiout=P(xxr), 
+					.rot=-recon->wfsr[iwfs].misregc}, 0, 0);
 			}
 		}
 		/*Apply the gradient operation */
@@ -587,8 +585,8 @@ static void* Tomo_nea_gpt_do(Tomo_T *data){
 				reshape(P(data->gg, iwfs), recon->ploc->nloc, 1);
 			}else{
 				P(data->gg, iwfs)=dnew(recon->ploc->nloc, 1);
-				prop_nongrid_rot(recon->ploc, P(ggr), recon->ploc, P(P(data->gg, iwfs)), 
-					1, 0, 0, 1, 0, 0, recon->wfsr[iwfs].misregc);
+				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(ggr), .locout=recon->ploc, .phiout=P(P(data->gg, iwfs)), 
+					.rot=recon->wfsr[iwfs].misregc}, 0, 0);
 			}
 			dfree(ggr);
 		}
@@ -664,8 +662,8 @@ static void* Tomo_iprop_do(Tomo_T *data){
 					dispx+=P(simu->atm, ips0)->vx*delay;
 					dispy+=P(simu->atm, ips0)->vy*delay;
 				}
-				prop_grid_stat_transpose(&xmap, recon->ploc->stat, P(P(data->gg, iwfs)), 1,
-					dispx, dispy, scale, 0, 0, 0);
+				prop(&(propdata_t){.mapin=&xmap, .ostat=recon->ploc->stat, .phiout=P(P(data->gg, iwfs)), 
+					.alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
 			}
 		} else{
 			dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;

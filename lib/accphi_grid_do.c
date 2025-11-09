@@ -19,7 +19,6 @@
   Included by accphi.c for prop_grid_map and prop_grid_map_tranpose
   derived from prop_grid_stat.c on 2011-10-05.
 */
-#include "accphi.h"
 #undef FUN_NAME_MAP
 #undef FUN_NAME_PTS
 #undef FUN_NAME_STAT
@@ -368,20 +367,20 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 */
 void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*/
+	CONST_IN real* phiin,
 	CONST_OUT map_t* mapout, /**<[in,out] output OPD defined on a square grid*/
+	CONST_OUT real* phiout,
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
 		if(wrap) error("wrap=1 is invalid for cubic\n");
-		prop_grid_map_cubic(mapin, mapout, ARG_PROP2, mapin->iac, start, end);
+		prop_grid_map_cubic(mapin, phiin, mapout, phiout, ARG_PROP2, mapin->iac, start, end);
 		return;
 #else
 		error("transpose ray tracing is not available with iac\n");
 #endif
 	}
 
-	CONST_OUT real* phiout=P(mapout);
-	CONST_IN real* phiin=P(mapin);
 	/*With OpenMP compiler complained uninitialized value for the following
 	  because they are treated as firstprivate*/
 	if(end==0) end=NY(mapout);
@@ -407,13 +406,14 @@ void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*
 }
 
 void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
+	CONST_IN real* phiin,
 	const pts_t* pts,/**<[in] coordinate of destination grid*/
 	CONST_OUT real* phiout, /**<[in,out] OPD defined on locout*/
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
 		if(wrap) error("wrap=1 is invalid for cubic\n");
-		prop_grid_pts_cubic(mapin, pts, phiout, ARG_PROP2, mapin->iac, start, end);
+		prop_grid_pts_cubic(mapin, phiin, pts, phiout, ARG_PROP2, mapin->iac, start, end);
 		return;
 #else
 		error("transpose ray tracing is not available with iac\n");
@@ -437,7 +437,7 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	for(long isa=start; isa<end; isa++){
 		const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
 		const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
-		missing+=FUN_NAME_BLOCK(P(mapin), nxin, nyin,
+		missing+=FUN_NAME_BLOCK(phiin, nxin, nyin,
 			phiout+isa*nxout*nyout, nxout, nyout,
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);
@@ -446,12 +446,13 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 }
 
 void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
+	CONST_IN real* phiin,
 	const locstat_t* ostat, /**<[in] information about each clumn of a output loc grid*/
 	CONST_OUT real* phiout,    /**<[in,out] OPD defined on ostat*/
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
-		prop_grid_stat_cubic(mapin, ostat, phiout, ARG_PROP2, mapin->iac, start, end);
+		prop_grid_stat_cubic(mapin, phiin, ostat, phiout, ARG_PROP2, mapin->iac, start, end);
 		return;
 #else
 		error("transpose ray tracing is not available with iac\n");
@@ -476,7 +477,7 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 		const long nxout=ostat->cols[icol+1].pos-offset;
 		const real oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
 		const real oyout=ostat->cols[icol].ystart*dy_in1*scale+displacey;
-		missing+=FUN_NAME_BLOCK(P(mapin), nxin, nyin,
+		missing+=FUN_NAME_BLOCK(phiin, nxin, nyin,
 			phiout+offset, nxout, nyout,
 			dxout, dyout, oxout, oyout,
 			alpha, wrap);

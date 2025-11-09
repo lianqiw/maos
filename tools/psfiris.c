@@ -88,7 +88,7 @@ static void* psfiris_do(thread_t* info){
 	map_t* otf_coarse=mapnew(notf1, notf1, dx1/wvl, dx1/wvl);
 	creal2d((dmat**)&otf_coarse, 0, P(otf2,0), 1);/*otf2 should be real. confirmed.*/
 	map_t* otf_fine=mapnew(notf2, notf2, dx2/wvl, dx2/wvl);
-	prop_grid_map(otf_coarse, otf_fine, 1, 0, 0, 1, 0, 0, 0);
+	prop(&(propdata_t){.mapin=otf_coarse, .mapout=otf_fine}, 0, 0);
 	mapfree(otf_coarse);
 	cfree(P(otf0,0));
 	cfree(P(otf2,0));
@@ -256,9 +256,10 @@ int main(int argc, char* argv[]){
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);
 	for(int imod=0; imod<nmod; imod++){
 		for(int ialoc=0; ialoc<naloc; ialoc++){
-			prop_nongrid(P(aloc,ialoc), P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
-				ploc, PCOL(mode_ploc, imod),
-				1, thetax[idir]*AS2RAD, thetay[idir]*AS2RAD, 1, 0, 0);
+			prop(&(propdata_t){.locin=P(aloc,ialoc), .phiin=P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
+				.locout=ploc, .phiout=PCOL(mode_ploc, imod),
+				.alpha=1, .displacex=thetax[idir]*AS2RAD, .displacey=thetay[idir]*AS2RAD, .scale=1}, 0, 0);
+			
 		}
 		double inp=dvecdot(PCOL(mode_ploc, imod), PCOL(mode_ploc, imod), P(pwt), ploc->nloc);
 		dmat* dtmp=drefcols(mode_ploc, imod, 1);
