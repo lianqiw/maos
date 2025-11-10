@@ -101,7 +101,7 @@ var searchData=
   ['guard_98',['guard',['../d4/d38/parms_8h.html#ab5a4ba05c0a12a768a36af9224ad8395',1,'fit_cfg_t::guard'],['../d4/d38/parms_8h.html#ae2bec0511d5c1bfc5803ec0d32743593',1,'tomo_cfg_t::guard'],['../d4/d38/parms_8h.html#a047d4da1130cceb1288cbb5b88b09fee',1,'dm_cfg_t::guard']]],
   ['guidelines_99',['Guidelines',['../d5/d98/page91_basics.html#sect-guide',1,'']]],
   ['gwfs_100',['Gwfs',['../df/d07/kalman_8h.html#aeb80e8ca70355831f272e1865201c0fe',1,'kalman_t']]],
-  ['gx_101',['gx',['../d6/d94/maos_2types_8h.html#a84cd068c5700856d0c0b8380238d38b0',1,'dither_t::gx'],['../d6/d94/maos_2types_8h.html#a1c61dbea1184e23671439619e912279e',1,'intstat_t::gx'],['../d6/d94/maos_2types_8h.html#aa10c8fa7876bc8c8fd33c8c968c48533',1,'recon_t::GX']]],
+  ['gx_101',['gx',['../d6/d94/maos_2types_8h.html#aa10c8fa7876bc8c8fd33c8c968c48533',1,'recon_t::GX'],['../d6/d94/maos_2types_8h.html#a84cd068c5700856d0c0b8380238d38b0',1,'dither_t::gx'],['../d6/d94/maos_2types_8h.html#a1c61dbea1184e23671439619e912279e',1,'intstat_t::gx']]],
   ['gxhi_102',['GXhi',['../d6/d94/maos_2types_8h.html#aaea7d3ea09c550090d780b678e687434',1,'recon_t']]],
   ['gxl_103',['GXL',['../d6/d94/maos_2types_8h.html#af73ecba081a623749ebf547d3a242290',1,'recon_t']]],
   ['gxlo_104',['GXlo',['../d6/d94/maos_2types_8h.html#ab3728a8c284d3cf4ed3bb192982fa27c',1,'recon_t']]],

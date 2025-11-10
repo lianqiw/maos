@@ -146,11 +146,12 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">#Focus tracking gains.</div>
 <div class="line">sim.fcfocus   = inf   #cross-over frequency in Hz of the focus LPF of the NGS focus and HPF of LGS focus. LPF gain is lpfocus=2*pi*fc/fs where fs is sampling frequency.</div>
 <div class="line">                      #-1 means 1/10 of NGS frame rate. inf means remove LGS focus completely.</div>
-<div class="line">sim.mffocus   = -1    #method for focus tracking.</div>
-<div class="line">                        #0: disable focus update.</div>
-<div class="line">                        #1: Focus tracking using closed loop gradients, for each LGS independently. (preferred)</div>
-<div class="line">                        #2: Focus tracking using closed loop gradients, for common LGS focus only.</div>
-<div class="line">                        #-1: auto. 1 for LGS, 0 for NGS.</div>
+<div class="line">sim.mffocus   = -1    #method for focus blending between LGS and NGS WFS.</div>
+<div class="line">                        #0: Only when there is no LGS. Auto change to 1 if LGS is present.</div>
+<div class="line">                        #1: HPF each LGS WFS + LPF TTF WFS (default)</div>
+<div class="line">                        #2: Replace LGS focus by global focus and then HPF LGS WFS + LPF TTF WFS (redefined on 2025-11-07)</div>
+<div class="line">                        #3: like 2, but remove LGS focus during tomography and add back focus to tomography output.</div>
+<div class="line">                        #-1: auto. 1 for LGS, 0 for NGS AO only.</div>
 <div class="line">#Focus offloading to telescope</div>
 <div class="line">sim.focus2tel = 0     #Offload focus to telescope. (engineering)</div>
 <div class="line">sim.epfocus2tel=0.01  #Integrator gain for telescope focus control</div>
@@ -276,7 +277,6 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">dm.hist   = [0]    #output histogram of DM actuator commands.</div>
 <div class="line">dm.histbin= [1e-7] #The bin size in meters for DM histogram computation.</div>
 <div class="line">dm.histn  = [201]  #Total number of bins. odd number, centered around zero.</div>
-<div class="line">dm.vmisreg= [0]    #DM vertical misregistration. not implemented yet.</div>
 <div class="line">dm.hyst   = [0]    #DM model hysteresis amount (ratio)</div>
 <div class="line">dm.hyst_alpha=[2]  #The DM model hysteresis alpha parameter</div>
 <div class="line">dm.hyst_stroke=[10e-6] #The surface stroke that the hysteresis is measured at</div>

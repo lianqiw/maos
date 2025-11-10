@@ -102,7 +102,7 @@ var maos_2types_8h =
       [ "Wa", "d6/d94/maos_2types_8h.html#a848ae29c5fa11f7f90178429e61abc61", null ],
       [ "modvalid", "d6/d94/maos_2types_8h.html#ac95732b78c8e53f041ef64893511a0ad", null ],
       [ "nmod", "d6/d94/maos_2types_8h.html#a2a7d25ddb63166f2a6b79689411ec1d6", null ],
-      [ "ahstfocus", "d6/d94/maos_2types_8h.html#a0108f1734d11ac219c47a29a56048fe6", null ],
+      [ "ahst_focus", "d6/d94/maos_2types_8h.html#ae1e2ce796a3f19a9da6051a3d453a425", null ],
       [ "indfocus", "d6/d94/maos_2types_8h.html#a28d8f689a09cdfaa209bae03ee8d987d", null ],
       [ "indps", "d6/d94/maos_2types_8h.html#a7b926af03323b94d1518f8fc7088c2cc", null ],
       [ "indastig", "d6/d94/maos_2types_8h.html#a787aa71173c537a493a61562fcd70884", null ]
@@ -416,6 +416,7 @@ var maos_2types_8h =
       [ "LGSfocus_drift", "d6/d94/maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d", null ],
       [ "LGSfocusts", "d6/d94/maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04", null ],
       [ "lgsfocuslpf", "d6/d94/maos_2types_8h.html#ac7280331f2805e1438cdbf11256e3ef9", null ],
+      [ "lgsfocushpf", "d6/d94/maos_2types_8h.html#a578d7bd165232bcceee937c4043b1664", null ],
       [ "ngsfocuslpf", "d6/d94/maos_2types_8h.html#a68470d6b731fca75ce22488d2b942c30", null ],
       [ "zoomdrift", "d6/d94/maos_2types_8h.html#a7ba232fc197eb33ed4103b54edf2fe30", null ],
       [ "zoomint", "d6/d94/maos_2types_8h.html#a62609fa0dbe51b15b2964f8cee5ab92a", null ],

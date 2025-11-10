@@ -68,7 +68,7 @@ var type_8h =
       [ "oy", "df/def/type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159", null ],
       [ "dx", "df/def/type_8h.html#ae181f26dba81f910257529c82596f699", null ],
       [ "dy", "df/def/type_8h.html#a67eb3911c023e67c247677e03642927e", null ],
-      [ "h", "df/def/type_8h.html#a5a775e608fdc821648d555dee623ae2f", null ],
+      [ "ht", "df/def/type_8h.html#a6b60af0fddab1729b31a9e99c4dc2941", null ],
       [ "vy", "df/def/type_8h.html#a1b941ccdd3db094fe026e49f9c4da998", null ],
       [ "iac", "df/def/type_8h.html#a6cd3d45c39f5e6bba94a8a535172d9c1", null ],
       [ "dratio", "df/def/type_8h.html#ad9e9c9b8a27a834b7500ba1aba25a991", null ]
@@ -105,7 +105,8 @@ var type_8h =
       [ "dx", "df/def/type_8h.html#a34c782841e745bb5bd8f4f24f73f5f42", null ],
       [ "dy", "df/def/type_8h.html#af9af538ff99023b4c999993bdffc791c", null ],
       [ "ht", "df/def/type_8h.html#a9de2c65a8077e7d4b6eca35e079866b4", null ],
-      [ "iac", "df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae", null ]
+      [ "iac", "df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae", null ],
+      [ "dratio", "df/def/type_8h.html#ab80f91d182878cd9a3d44ab7318e5ec0", null ]
     ] ],
     [ "pts_t", "df/def/type_8h.html#de/d88/structpts__t", [
       [ "nxsa", "df/def/type_8h.html#a320665323a3307f015cab4b5b1cdf161", null ],
@@ -357,6 +358,7 @@ var type_8h =
       [ "dsay", "df/def/type_8h.html#a19dfd1eb18f0cd511ae2e820376eb615", null ],
       [ "dummy_ht", "df/def/type_8h.html#acded0299863f46bf80bd357bb35a805f", null ],
       [ "dummy_iac", "df/def/type_8h.html#a2629b85c755ad85c4278fd09d0ae1e4c", null ],
+      [ "dratio", "df/def/type_8h.html#a425a0bdb6d3e0b942452d2a89ff7d3f3", null ],
       [ "npad", "df/def/type_8h.html#ad669e307f9bad95ac9d5a9e65d3d3e36", null ]
     ] ],
     [ "pts_t.__unnamed27__.__unnamed29__.__unnamed31__", "df/def/type_8h.html#d9/dc6/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31____", null ],

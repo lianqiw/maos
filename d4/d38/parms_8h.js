@@ -211,6 +211,7 @@ var parms_8h =
       [ "dither_ogskip", "d4/d38/parms_8h.html#a6e3260bc2057fda36fbc327131feef4f", null ],
       [ "dither_ograt", "d4/d38/parms_8h.html#a23bfd9e98336e6e4ddcc5f9ee2098737", null ],
       [ "dither_ogsingle", "d4/d38/parms_8h.html#a6ef7f7c718cf537a9642d2dd7ca40896", null ],
+      [ "zoomdtrat", "d4/d38/parms_8h.html#a178b4fc1a8d815d9f10d5d17aa24a6df", null ],
       [ "zoomshare", "d4/d38/parms_8h.html#a83a827dd108e871579b35cabdea4250d", null ],
       [ "zoomgain", "d4/d38/parms_8h.html#ac8ecc8a08547a292f2c3e6fc47d98e9b", null ],
       [ "zoomgain_drift", "d4/d38/parms_8h.html#a97b40d9e2b96bbf67978b8d92e58299f", null ],
@@ -252,7 +253,6 @@ var parms_8h =
       [ "iastroke", "d4/d38/parms_8h.html#ab49b483f1b6a14f8be562605833c9522", null ],
       [ "strokescale", "d4/d38/parms_8h.html#ad6415fdca79642e38adfb6f1116a8552", null ],
       [ "dratio", "d4/d38/parms_8h.html#ad852fb1e8d8077f26ac79017bcee1027", null ],
-      [ "vmisreg", "d4/d38/parms_8h.html#af81a20c35a750e761d550ba5974ba8b6", null ],
       [ "ht", "d4/d38/parms_8h.html#a3ed9dd9f61090feb63e218f79a58a360", null ],
       [ "dx", "d4/d38/parms_8h.html#a68f83e1a2074710313580b7b171861f8", null ],
       [ "ar", "d4/d38/parms_8h.html#a46ac70e6a9a415545a16d3c5f5a6ba57", null ],
@@ -316,6 +316,7 @@ var parms_8h =
       [ "ahst_wt", "d4/d38/parms_8h.html#a256cfc5b788c7113853e292a2e44f44b", null ],
       [ "ahst_idealngs", "d4/d38/parms_8h.html#a9f0000b080e40876b90d6092aa42477b", null ],
       [ "ahst_focus", "d4/d38/parms_8h.html#a82aabbaf4f8e34a1e874c07345654fba", null ],
+      [ "ahst_keepfocus", "d4/d38/parms_8h.html#a34f66baa853ccf6852aed655564e1f36", null ],
       [ "alg", "d4/d38/parms_8h.html#a5954774cf8fee73453d64f3b79947e47", null ],
       [ "bgs", "d4/d38/parms_8h.html#aab059096759e6a895e2c52935a5cb695", null ],
       [ "precond", "d4/d38/parms_8h.html#ac820686f19e0aa3de5d2f2f52d52fe7f", null ],
@@ -520,7 +521,6 @@ var parms_8h =
       [ "fullatm", "d4/d38/parms_8h.html#a1dcc3f9751e686e97c05d21b02bff1b5", null ],
       [ "lo_blend", "d4/d38/parms_8h.html#a6916639ecb67bcbc48c49f36a44993d7", null ],
       [ "eploscale", "d4/d38/parms_8h.html#ac37f02a595c508cfa971f0c5fdc1ab98", null ],
-      [ "ahst_keepfocus", "d4/d38/parms_8h.html#a35690960ed253638dce939fcd21acfae", null ],
       [ "recon_stuck", "d4/d38/parms_8h.html#a47c472c893f90a2dbb99db24ba146398", null ]
     ] ],
     [ "gpu_cfg_t", "d4/d38/parms_8h.html#de/d64/structgpu__cfg__t", [
