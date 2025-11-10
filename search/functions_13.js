@@ -19,5 +19,6 @@ var searchData=
   ['zfrewind_16',['zfrewind',['../d3/d7f/bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289',1,'bin.c']]],
   ['zfseek_17',['zfseek',['../d3/d7f/bin_8h.html#acff7a399a7daacbf8fcca57c18732f57',1,'bin.c']]],
   ['zftouch_18',['zftouch',['../d3/d7f/bin_8h.html#a413945d9b9ed2b96159910115707a7ad',1,'bin.c']]],
-  ['zfwrite_19',['zfwrite',['../d3/d7f/bin_8h.html#ace6a770f21f23800c9f497498495d1d5',1,'bin.c']]]
+  ['zfwrite_19',['zfwrite',['../d3/d7f/bin_8h.html#ace6a770f21f23800c9f497498495d1d5',1,'bin.c']]],
+  ['zoomfocusadj_20',['zoomfocusadj',['../d1/d57/maos_2utils_8h.html#a2558acd2e1bdbe89fdef88a9997a803e',1,'utils.c']]]
 ];

@@ -1,5 +1,7 @@
 var NAVTREEINDEX9 =
 {
+"da/dfb/dmath_8h.html#ae2080bee99c5bbe99b4a04d345974068":[13,0,3,2,89],
+"da/dfb/dmath_8h.html#ae3407b7cd38cb405f1d79139063d8067":[13,0,3,2,3],
 "da/dfb/dmath_8h.html#ae385d21eb33f992fd5ff4d3166d929ba":[13,0,3,2,54],
 "da/dfb/dmath_8h.html#ae42837a4f13df4a5110e90c12a01d56a":[13,0,3,2,38],
 "da/dfb/dmath_8h.html#ae45f4bcb07ae1f7c51db180c5114c863":[13,0,3,2,190],
@@ -247,7 +249,5 @@ var NAVTREEINDEX9 =
 "dd/d2b/libmisc_8h.html#aefe5e957c8884dfb7dfa49430562a87c":[13,0,1,12,2],
 "dd/d31/powfs_shlgs.html":[4,4,34],
 "dd/d45/class_cpu.html":[12,0,19],
-"dd/d61/struct_magic_3_01float2_01_4.html":[12,0,110],
-"dd/da0/todo.html":[11],
-"dd/da9/page40_results.html":[5]
+"dd/d61/struct_magic_3_01float2_01_4.html":[12,0,110]
 };

@@ -12,7 +12,7 @@ var maos_2utils_8h =
     [ "maxapriori", "d1/d57/maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e", null ],
     [ "wfslinearity", "d1/d57/maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5", null ],
     [ "lgs_wfs_sph_psd", "d1/d57/maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10", null ],
-    [ "wfsfocusadj", "d1/d57/maos_2utils_8h.html#a5ee5428a0082233dcc43a3900af1125b", null ],
+    [ "zoomfocusadj", "d1/d57/maos_2utils_8h.html#a2558acd2e1bdbe89fdef88a9997a803e", null ],
     [ "dither_position", "d1/d57/maos_2utils_8h.html#a69cccbd79992ae4b41973a64fa9e5097", null ],
     [ "shwfs_grad", "d1/d57/maos_2utils_8h.html#a6790b30ef72abe52665bcc6c6a850402", null ],
     [ "readwfs", "d1/d57/maos_2utils_8h.html#a25d060ed7078a00c4a9c60928121b055", null ],

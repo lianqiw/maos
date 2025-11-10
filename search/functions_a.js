@@ -45,7 +45,7 @@ var searchData=
   ['lnew_5ffile_42',['lnew_file',['../dd/dc1/lmath_8h.html#a4cbc22ee4e0ba4f177d1a63eed187429',1,'ltmp.c']]],
   ['lnew_5fmmap_43',['lnew_mmap',['../dd/dc1/lmath_8h.html#a277784bd3d3020f18da1217dcb782326',1,'ltmp.c']]],
   ['loc2mat_44',['loc2mat',['../d1/d83/loc_8h.html#a961eedac8c3398ba77adc6c9dddc2cd9',1,'loc.c']]],
-  ['loc_5fadd_5ffocus_45',['loc_add_focus',['../d1/d83/loc_8h.html#a00e44a2e52d008cbdf792b699a90107f',1,'loc.c']]],
+  ['loc_5fadd_5ffocus_5foffset_45',['loc_add_focus_offset',['../d1/d83/loc_8h.html#ab4fb59327b34b322b09c3d5e04d60708',1,'loc.c']]],
   ['loc_5fadd_5fptt_46',['loc_add_ptt',['../d1/d83/loc_8h.html#aa67d37dc351390ca94b64ea7da64949f',1,'loc.c']]],
   ['loc_5fangle_47',['loc_angle',['../d1/d83/loc_8h.html#a04242e38ce1be4dde205ea7bbeb98b04',1,'loc.c']]],
   ['loc_5fcalc_5fmod_48',['loc_calc_mod',['../d1/d83/loc_8h.html#a8df253e112de8cf6973422c38810ce67',1,'loc.c']]],

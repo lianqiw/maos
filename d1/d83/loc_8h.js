@@ -39,7 +39,7 @@ var loc_8h =
     [ "loc_reduce", "d1/d83/loc_8h.html#a4131d6d75c196d07ef1ad110e6fd9556", null ],
     [ "loc_reduce_spcell", "d1/d83/loc_8h.html#a8a2bbfc477710e2aa86c65630e07c786", null ],
     [ "loc_reduce_sp", "d1/d83/loc_8h.html#ace526a66d1e3f71d9585bc75a48edee1", null ],
-    [ "loc_add_focus", "d1/d83/loc_8h.html#a00e44a2e52d008cbdf792b699a90107f", null ],
+    [ "loc_add_focus_offset", "d1/d83/loc_8h.html#ab4fb59327b34b322b09c3d5e04d60708", null ],
     [ "loc2mat", "d1/d83/loc_8h.html#a961eedac8c3398ba77adc6c9dddc2cd9", null ],
     [ "pts2loc", "d1/d83/loc_8h.html#ab855fe221abf303219c6015930b966e8", null ],
     [ "locrot", "d1/d83/loc_8h.html#a43744124123f421e19046c7d64502ec7", null ],
