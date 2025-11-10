@@ -122,65 +122,48 @@ void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP);
 /**
    Identify the index of this ray tracing.
 */
-static void prop_index(propdata_t* propdata){
-	if(!propdata) return;
-	int done=0;
-
+static int prop_index(propdata_t* propdata){
+	if(!propdata) return 0;
+	int index=0;
 	if(propdata->mapin){
 		if(propdata->mapin->iac){
 			if(propdata->mapout){
-				if(done) error("Invalid\n");
-				/*case 10 */
-				propdata->index=10;
-				done=1;
+				if(index) error("Invalid\n");
+				index=10;
 			}
 			if(propdata->phiout){
 				if(propdata->ptsout){
-					if(done) error("Invalid\n");
-					/*case 11 */
-					propdata->index=11;
-					done=1;
+					if(index) error("Invalid\n");
+					index=11;
 				}
 				if(!propdata->ostat && propdata->locout && propdata->locout->stat){
 					propdata->ostat=propdata->locout->stat;
 				}
 				if(propdata->ostat){
-					if(done) error("Invalid\n");
-					/*case 13 */
-					propdata->index=14;
-					done=1;
+					if(index) error("Invalid\n");
+					index=14;
 				}else if(propdata->locout){
-					if(done) error("Invalid\n");
-					/*case 12 */
-					propdata->index=12;
-					done=1;
+					if(index) error("Invalid\n");
+					index=12;
 				}
 			}
 		} else{
 			if(propdata->mapout){
-				if(done) error("Invalid\n");
-				/*case 0 */
-				propdata->index=13;
-				done=1;
+				if(index) error("Invalid\n");
+				index=13;
 			}
 			if(propdata->phiout){
 				if(propdata->ptsout){
-					if(done) error("Invalid\n");
-					/*case 1 */
-					propdata->index=1;
-					done=1;
+					if(index) error("Invalid\n");
+					index=1;
 				}
 				if(propdata->locout){
-					if(done) error("Invalid\n");
-					/*case 2 */
-					propdata->index=2;
-					done=1;
+					if(index) error("Invalid\n");
+					index=2;
 				}
 				if(propdata->ostat){
-					if(done) error("Invalid\n");
-					/*case 3 */
-					propdata->index=3;
-					done=1;
+					if(index) error("Invalid\n");
+					index=3;
 				}
 			}
 		}
@@ -188,196 +171,199 @@ static void prop_index(propdata_t* propdata){
 	if(propdata->locin){
 		if(propdata->locin->iac){
 			if(propdata->locout){
-				if(done) error("Invalid\n");
-				/*case 4 */
-				propdata->index=4;
-				done=1;
+				if(index) error("Invalid\n");
+				index=4;
 			}
 			if(propdata->mapout){
-				if(done) error("Invalid\n");
-				/*case 5 */
-				propdata->index=5;
-				done=1;
+				if(index) error("Invalid\n");
+				index=5;
 			}
 			if(propdata->ptsout){
-				if(done) error("Invalid\n");
-				/*case 6 */
-				propdata->index=6;
-				done=1;
+				if(index) error("Invalid\n");
+				index=6;
 			}
 		} else{
 			if(propdata->locout){
-				if(done) error("Invalid\n");
-				/*case 7 */
-				propdata->index=7;
-				done=1;
+				if(index) error("Invalid\n");
+				index=7;
 			}
 			if(propdata->mapout){
-				if(done) error("Invalid\n");
-				/*case 8 */
-				propdata->index=8;
-				done=1;
+				if(index) error("Invalid\n");
+				index=8;
 			}
 			if(propdata->ptsout){
-				if(done) error("Invalid\n");
-				/*case 9 */
-				propdata->index=9;
-				done=1;
+				if(index) error("Invalid\n");
+				index=9;
 			}
 		}
 	}
 	if(propdata->rot){
-		if(propdata->index==7){
-			propdata->index=15;
+		if(index==7){
+			index=15;
 		}else{
 			error("Invalid\n");
 		}
 	}
 	if(propdata->transpose){
-		if(propdata->index==13){
-			propdata->index=16;
-		}else if(propdata->index==3){
-			propdata->index=17;
+		if(index==13){
+			index=16;
+		}else if(index==3){
+			index=17;
 		}else{
 			error("Invalid\n");
 		}
 	}
-	if(done==0) error("Invalid\n");
+	return index;
 }
 
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
 */
-void prop(propdata_t* propdata, long start, long end){
+void prop_range(propdata_t* propdata, long start, long end){
 	if(!propdata) return;
 	if(!propdata->alpha) propdata->alpha=1;//0 does not make sense. default to 1.
-	if(!propdata->scale) propdata->scale=1;//0 does not make sense. default 1
-	if(!propdata->index){
-		prop_index(propdata);
+	int index=prop_index(propdata);
+	if(index==0){
+		error("Invalid input\n");
+		return;
 	}
-	const real displacex=propdata->displacex+propdata->displacex2;
-	const real displacey=propdata->displacey+propdata->displacey2;
-	switch(propdata->index){
+	const real ht=propdata->mapin?propdata->mapin->ht:propdata->locin->ht;
+	const real hc=propdata->mapout?propdata->mapout->ht:(propdata->locout?propdata->locout->ht:0);
+	if(propdata->hs && (hc>propdata->hs || ht>propdata->hs)){
+		dbg("Layer is above guide star\n");
+		return;
+	}
+
+	const real dratio=propdata->mapin?propdata->mapin->dratio:propdata->locin->dratio;
+	const real theta=RSS(propdata->thetax, propdata->thetay);
+	const real alpha=propdata->alpha*(dratio?cos(theta*dratio):1);//angle of incidence effect
+
+	const real scale=propdata->hs?(1.-(ht-hc)/(propdata->hs-hc)):1.;
+	const real displacex=ht*propdata->thetax+scale*propdata->misregx+propdata->shiftx;
+	const real displacey=ht*propdata->thetay+scale*propdata->misregy+propdata->shifty;
+	switch(index){
 	case 1:
 		prop_grid_pts(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin), propdata->ptsout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap,
+			alpha, displacex, displacey,
+			scale, propdata->wrap,
 			start, end);
 		break;
 	case 2:
 		prop_grid(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->locout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap,
+			alpha, displacex, displacey,
+			scale, propdata->wrap,
 			start, end);
 		break;
 	case 3:
 		prop_grid_stat(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ostat, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap,
+			alpha, displacex, displacey,
+			scale, propdata->wrap,
 			start, end);
 		break;
 	case 4:
 		prop_nongrid_cubic(propdata->locin, propdata->phiin,
 			propdata->locout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->locin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->locin->iac,
 			start, end);
 		break;
 	case 5:
 		prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
 			propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->locin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->locin->iac,
 			start, end);
 		break;
 	case 6:
 		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
 			propdata->ptsout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->locin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->locin->iac,
 			start, end);
 		break;
 	case 7:
 		prop_nongrid(propdata->locin, propdata->phiin,
 			propdata->locout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale,
+			alpha, displacex, displacey,
+			scale,
 			start, end);
 		break;
 	case 8:
 		prop_nongrid_map(propdata->locin, propdata->phiin,
 			propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
-			propdata->alpha, displacex, displacey,
-			propdata->scale,
+			alpha, displacex, displacey,
+			scale,
 			start, end);
 		break;
 	case 9:
 		prop_nongrid_pts(propdata->locin, propdata->phiin,
 			propdata->ptsout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale,
+			alpha, displacex, displacey,
+			scale,
 			start, end);
 		break;
 	case 10:
 		prop_grid_map_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->mapin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->mapin->iac,
 			start, end);
 		break;
 	case 11:
 		prop_grid_pts_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ptsout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->mapin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->mapin->iac,
 			start, end);
 		break;
 	case 12:
 		prop_grid_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->locout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->mapin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->mapin->iac,
 			start, end);
 		break;
 	case 13:
 		prop_grid_map(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->mapout, propdata->phiout?propdata->phiout:P(propdata->mapout),
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap, 
+			alpha, displacex, displacey,
+			scale, propdata->wrap, 
 			start, end);
 		break;
 	case 14:
 		prop_grid_stat_cubic(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin),propdata->ostat, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->mapin->iac,
+			alpha, displacex, displacey,
+			scale, propdata->mapin->iac,
 			start, end);
 		break;
 	case 15:
 		prop_nongrid_rot(propdata->locin, propdata->phiin,
 			propdata->locout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale,
+			alpha, displacex, displacey,
+			scale,
 			start, end, propdata->rot);
 		break;
 	case 16:
 		prop_grid_map_transpose((map_t*)propdata->mapin, (real*)(propdata->phiin?propdata->phiin:P(propdata->mapin)),
 			(const map_t*)propdata->mapout, (const real*)(propdata->phiout?propdata->phiout:P(propdata->mapout)),
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap, 
+			alpha, displacex, displacey,
+			scale, propdata->wrap, 
 			start, end);
 		break;
 	case 17:
 		prop_grid_stat_transpose((map_t*)propdata->mapin, (real*)(propdata->phiin?propdata->phiin:P(propdata->mapin)),
 			propdata->ostat, (const real*)propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->wrap,
+			alpha, displacex, displacey,
+			scale, propdata->wrap,
 			start, end);
 		break;
 	default:
 		error("Invalid\n");
 	}
 }
-
+void prop(propdata_t* propdata){
+	prop_range(propdata, 0, 0);
+}
 void* prop_thread(thread_t* data){
 	if(!data) return NULL;
-	prop(data->data, data->start, data->end);
+	prop_range((propdata_t*)data->data, data->start, data->end);
 	return NULL;
 }
 #define PREPIN_NONGRID(nskip)				\

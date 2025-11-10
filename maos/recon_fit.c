@@ -555,13 +555,10 @@ void FitR(dcell** xout, const void* A,
 			real hs=P(fit->hs, ifit);
 			P(xp, ifit)=dnew(fit->floc->nloc, 1);
 			for(int ips=0; ips<parms->atm.nps; ips++){
-				const real ht=P(parms->atm.ht, ips)-fit->floc->ht;
-				real scale=1-ht/hs;
-				if(scale<0) continue;
-				real dispx=P(fit->thetax, ifit)*ht-P(simu->atm, ips)->vx*isim*parms->sim.dt;
-				real dispy=P(fit->thetay, ifit)*ht-P(simu->atm, ips)->vy*isim*parms->sim.dt;
 				prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=fit->floc, .phiout=P(P(xp, ifit)),
-					.alpha=atmscale, .displacex=dispx, .displacey=dispy, .scale=scale, .wrap=1}, 0, 0);
+					.alpha=atmscale, .hs=hs, .thetax=P(fit->thetax, ifit), .thetay=P(fit->thetay, ifit),
+					.shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt, 
+					.shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt, .wrap=1});
 			}
 			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
 				real tmp=P(simu->telws, isim);
@@ -579,13 +576,8 @@ void FitR(dcell** xout, const void* A,
 			real hs=P(fit->hs, ifit);
 			P(xp, ifit)=dnew(fit->floc->nloc, 1);
 			for(int ips=0; ips<npsr; ips++){
-				const real ht=P(fit->xloc, ips)->ht-fit->floc->ht;
-				real scale=1-ht/hs;
-				if(scale<0) continue;
-				real dispx=P(fit->thetax, ifit)*ht;
-				real dispy=P(fit->thetay, ifit)*ht;
 				prop(&(propdata_t){.locin=P(fit->xloc, ips), .phiin=P(P(xin, ips)), .locout=fit->floc,
-					.phiout=P(P(xp, ifit)), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+					.phiout=P(P(xp, ifit)), .alpha=1, .hs=hs, .thetax=P(fit->thetax, ifit), .thetay=P(fit->thetay, ifit)});
 			}
 		}
 	}

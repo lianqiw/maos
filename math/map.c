@@ -50,7 +50,7 @@ rmap_t* rmap_convert(dmat* A){
 */
 map_t* mapnew(long nx, long ny, real dx, real dy){
 	map_t* map=map_convert(dnew(nx, ny));
-	map->h=0;
+	map->ht=0;
 	map->dx=dx;
 	map->dy=dy;
 	map->ox=-(map->nx/2)*map->dx;
@@ -67,7 +67,7 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 map_t* mapnew2(map_t* A){
 	if(isempty(A)) return NULL;
 	map_t* map=mapnew(A->nx, A->ny, A->dx, A->dy);
-	map->h=A->h;
+	map->ht=A->ht;
 	map->ox=A->ox;
 	map->oy=A->oy;
 	map->vx=A->vx;
@@ -215,7 +215,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		*mapout=mapnew(nx, ny, dx, dy);
 		(*mapout)->ox=ox;
 		(*mapout)->oy=oy;
-		(*mapout)->h=ht0;
+		(*mapout)->ht=ht0;
 		dmat* dmap=DMAT((*mapout));
 		if(square){/**Only want square grid*/
 			dset(dmap, 1);
@@ -250,14 +250,15 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 void map_parse_keywords(map_t* map){
 	if(!map || map->id!=M_MAP || !map->keywords) return;
 	const char* keywords=map->keywords;
-	map->iac=0;
 	map->ox=search_keyword_num(keywords, "ox");
 	map->oy=search_keyword_num(keywords, "oy");
 	map->dx=search_keyword_num(keywords, "dx");
 	map->dy=search_keyword_num(keywords, "dy");
-	map->h=search_keyword_num_default(keywords, "h", 0);
+	map->ht=search_keyword_num_default(keywords, "h", 0);
 	map->vx=search_keyword_num_default(keywords, "vx", 0);
 	map->vy=search_keyword_num_default(keywords, "vy", 0);
+	map->iac=search_keyword_num_default(keywords, "iac", 0);
+	map->dratio=search_keyword_num_default(keywords, "dratio", 0);
 	real D=search_keyword_num(keywords, "D");
 	real offset=search_keyword_num_default(keywords, "offset",0);
 
@@ -320,7 +321,7 @@ void map_make_keywords(cell* p){
 	if(map->keywords) free(map->keywords);
 	char keywords[1024];
 	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
-		map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
+		map->ox, map->oy, map->dx, map->dy, map->ht, map->vx, map->vy);
 	map->keywords=strdup(keywords);
 }
 

@@ -1103,7 +1103,6 @@ static void readcfg_dm(parms_t *parms){
 		free(tmp);
 	}
 	READ_DM_RELAX(dbl,dratio);
-	READ_DM_RELAX(dbl,vmisreg);
 	READ_DM_RELAX(dbl,histbin);
 	READ_DM_RELAX(int,histn);
 	READ_DM_RELAX(int,hist);
@@ -2864,7 +2863,7 @@ static void setup_parms_postproc_dm(parms_t *parms){
 		}
 	}
 	for(int i=0; i<parms->ndm; i++){
-		real ht=parms->dm[i].ht+parms->dm[i].vmisreg;
+		real ht=parms->dm[i].ht;
 		if(fabs(ht)<1.e-10){
 			parms->dm[i].isground=1;
 			parms->idmground=i;

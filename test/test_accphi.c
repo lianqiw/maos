@@ -75,33 +75,38 @@ static void test_accuracy(int argc, char** argv){
             P(screen, ix, iy)=P(tmp, ix)*P(tmp, iy);
         }
     }
+	const real ht=10000;
+	const real hs=ht/(1-scale);
+	screen->ht=ht;
+	
     //pts_t *pts=realloc(mkannloc(D, 0, 1./2.,0), sizeof(pts_t));
     pts_t* pts=(pts_t*)realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));
     pts->dx=dx;
     pts->dy=dx;
     pts->nxsa=dsa/dx;
     pts->nysa=pts->nxsa;
-    loc_t* loc=pts2loc(pts);
-
-
-    /*loc for the map */
-    loc_t* locin=mksqloc(screen->nx, screen->ny, dx, dx, screen->ox, screen->oy);
-
+    loc_t* locin=pts2loc(pts);
+	locin->ht=ht;
     loc_create_map(locin);
-    loc_create_stat(loc);
-    loc_create_map(loc);
-    locstat_t* locstat=loc->stat;
+	loc_t* locout=pts2loc(pts);
+	locout->ht=0;
+	loc_create_stat(locout);
+	loc_create_map(locout);
+	locstat_t* locstat=locout->stat;
+	
+    /*loc for the map */
+    loc_t* locin2=mksqloc(screen->nx, screen->ny, dx, dx, screen->ox, screen->oy);
+	locin2->ht=ht;
+    loc_create_map(locin2);
+    
 
-
-
-
-    map_t* screen2=mapnew2(locin->map);
+    map_t* screen2=mapnew2(locin2->map);
     dset(DMAT(screen2), NAN);
-    loc_embed(screen2, locin, screen);
-
+    loc_embed(screen2, locin2, screen);
+	screen2->ht=locin2->ht;
     dmat *phi_h=NULL, *phi_cubh=NULL;
 
-    real cubic=0.3;
+    
     int ii;
 
     info("displacex=%g, displacey=%g, scale=%g, wrap=%d\n",
@@ -114,82 +119,83 @@ static void test_accuracy(int argc, char** argv){
     diff14=0;
     diff15=0;
 
-    dmat* phi_pts=dnew(loc->nloc, 1);
-    dmat* phi_loc=dnew(loc->nloc, 1);
-    dmat* phi_stat=dnew(loc->nloc, 1);
-    dmat* phi_loc2loc=dnew(loc->nloc, 1);
+    dmat* phi_pts=dnew(locout->nloc, 1);
+    dmat* phi_loc=dnew(locout->nloc, 1);
+    dmat* phi_stat=dnew(locout->nloc, 1);
+    dmat* phi_loc2loc=dnew(locout->nloc, 1);
 
-    map_t* map1=mapnew2(loc->map);
-	screen->iac=0;
-	loc->iac=0;
-    prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_loc), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+    map_t* map1=mapnew2(locout->map);
+
+    prop(&(propdata_t){.mapin=screen, .locout=locout, .phiout=P(phi_loc), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     tic;
-    prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_loc), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+    prop(&(propdata_t){.mapin=screen, .locout=locout, .phiout=P(phi_loc), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("loc\t");
-	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
 	tic;
-	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ptsout=pts, .phiout=P(phi_pts), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("pts\t");
 
-	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     tic;
-	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .mapout=map1, .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("map\t");
 
-	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     tic;
-	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_stat), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("stat\t");tic;
 
 
-	prop(&(propdata_t){.locin=loc, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_loc2loc), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=locout, .phiout=P(phi_loc2loc), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("nongrid\t"); tic;
-	prop(&(propdata_t){.locin=loc, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_loc2loc), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=wrap}, 0, 0);
+	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=locout, .phiout=P(phi_loc2loc), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey, .wrap=wrap});
     toc("nongrid\t");
 
 
-    phi_h=dnew(loc->nloc, 1);
+    phi_h=dnew(locout->nloc, 1);
     tic;
-    dsp* hfor=mkh(locin, loc, displacex, displacey, scale, 0);
+    dsp* hfor=mkh(locin2, locout, displacex, displacey, scale, 0);
     toc("mkh\t\t");
     dspmv(phi_h, hfor, dmat_cast(screen), 'n', -2);
     tic;
     dspmv(phi_h, hfor, dmat_cast(screen), 'n', 1);
     toc("mul h\t");
+	//for cubic
+	const real cubic=0.3;
 	screen->iac=cubic;
-	loc->iac=cubic;
+	locin->iac=cubic;
 	screen2->iac=cubic;
-    dmat* phi_cub=dnew(loc->nloc, 1);
-    dmat* phi_cub2=dnew(loc->nloc, 1);
-    dmat* phi_cub3=dnew(loc->nloc, 1);
-    dmat* phi_cub4=dnew(loc->nloc, 1);
-    phi_cubh=dnew(loc->nloc, 1);
-	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_cub), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+    dmat* phi_cub=dnew(locout->nloc, 1);
+    dmat* phi_cub2=dnew(locout->nloc, 1);
+    dmat* phi_cub3=dnew(locout->nloc, 1);
+    dmat* phi_cub4=dnew(locout->nloc, 1);
+    phi_cubh=dnew(locout->nloc, 1);
+	prop(&(propdata_t){.locin=locin2, .phiin=P(screen->dmat), .locout=locout, .phiout=P(phi_cub), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey});
     tic;
-	prop(&(propdata_t){.locin=locin, .phiin=P(screen->dmat), .locout=loc, .phiout=P(phi_cub), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.locin=locin2, .phiin=P(screen->dmat), .locout=locout, .phiout=P(phi_cub), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey});
     toc("nongrid, cubic\t");
-	prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_cub2), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .locout=locout, .phiout=P(phi_cub2), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey});
     tic;
-	prop(&(propdata_t){.mapin=screen, .locout=loc, .phiout=P(phi_cub2), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .locout=locout, .phiout=P(phi_cub2), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey});
     toc("grid,  cubic\t");
-	prop(&(propdata_t){.mapin=screen2, .locout=loc, .phiout=P(phi_cub3), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen2, .locout=locout, .phiout=P(phi_cub3), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey});
     tic;
-	prop(&(propdata_t){.mapin=screen2, .locout=loc, .phiout=P(phi_cub3), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen2, .locout=locout, .phiout=P(phi_cub3), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey});
     toc("grid2, cubic\t");
-	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=-2, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=-2, .hs=hs, .shiftx=displacex, .shifty=displacey});
     tic;
-	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+	prop(&(propdata_t){.mapin=screen, .ostat=locstat, .phiout=P(phi_cub4), .alpha=1, .hs=hs, .shiftx=displacex, .shifty=displacey});
     toc("grid  2stat, cubic\t");
     dsp* hforcubic;
     tic;
-    hforcubic=mkh_cubic(locin, loc, displacex, displacey, scale, 0, cubic);
+    hforcubic=mkh_cubic(locin2, locout, displacex, displacey, scale, 0, cubic);
     toc("mkh cubic \t\t");
     dspmv(phi_cubh, hforcubic, dmat_cast(screen), 'n', -2);
     tic;
     dspmv(phi_cubh, hforcubic, dmat_cast(screen), 'n', 1);
     toc("cubic mul h\t\t");
     real diffc12=0, diff45=0, diff46=0, diff47=0;
-    for(ii=0; ii<loc->nloc; ii++){
+    for(ii=0; ii<locout->nloc; ii++){
         diff1+=fabs(P(phi_loc,ii)-P(phi_pts,ii));
         diff2+=fabs(P(phi_stat,ii)-P(phi_loc,ii));
         diff3+=fabs(P(phi_stat,ii)-P(phi_pts,ii));
@@ -214,27 +220,27 @@ static void test_accuracy(int argc, char** argv){
         mapwrite(screen2, "accphi_screen2");
         mapwrite(screen, "accphi_screen");
         locwrite(pts, "accphi_pts");
-        locwrite(loc, "accphi_loc");
-        locwrite(locin, "accphi_locin");
-        loc_create_map_npad(locin, 0, 0, 0);
-        mapwrite(locin->map, "accphi_locin_map");
-        mapwrite(loc->map, "accphi_loc_map");
+        locwrite(locout, "accphi_loc");
+        locwrite(locin2, "accphi_locin");
+        loc_create_map_npad(locin2, 0, 0, 0);
+        mapwrite(locin2->map, "accphi_locin_map");
+        mapwrite(locout->map, "accphi_loc_map");
         mapwrite(map1, "accphi_map2map.bin");
         /*
-        writedbl(phi_pts,loc->nloc,1,"accphi_pts1.bin");
-        writedbl(phi_loc,loc->nloc,1,"accphi_loc0.bin");
-        writedbl(phi_stat,loc->nloc,1,"accphi_stat.bin");
-        writedbl(phi_loc2loc,loc->nloc,1,"accphi_loc2loc.bin");
-        writedbl(phi_h,loc->nloc,1,"accphi_loc2h.bin");
-        writedbl(phi_cub,loc->nloc,1,"accphi_cub_loc2loc.bin");
-        writedbl(phi_cub2,loc->nloc,1,"accphi_cub_map2loc.bin");
-        writedbl(phi_cub3,loc->nloc,1,"accphi_cub_locmap2loc.bin");
-        writedbl(phi_cub4,loc->nloc,1,"accphi_cub_locmap2stat.bin");
-        writedbl(phi_cubh,loc->nloc,1,"accphi_cub_loc2h.bin");
+        writedbl(phi_pts,locout->nloc,1,"accphi_pts1.bin");
+        writedbl(phi_loc,locout->nloc,1,"accphi_loc0.bin");
+        writedbl(phi_stat,locout->nloc,1,"accphi_stat.bin");
+        writedbl(phi_loc2loc,locout->nloc,1,"accphi_loc2loc.bin");
+        writedbl(phi_h,locout->nloc,1,"accphi_loc2h.bin");
+        writedbl(phi_cub,locout->nloc,1,"accphi_cub_loc2loc.bin");
+        writedbl(phi_cub2,locout->nloc,1,"accphi_cub_map2loc.bin");
+        writedbl(phi_cub3,locout->nloc,1,"accphi_cub_locmap2loc.bin");
+        writedbl(phi_cub4,locout->nloc,1,"accphi_cub_locmap2stat.bin");
+        writedbl(phi_cubh,locout->nloc,1,"accphi_cub_loc2h.bin");
         info("saved\n");
 
-        writedbl(phi_pts,loc->nloc,1,"accphi_pts.bin");
-        writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
+        writedbl(phi_pts,locout->nloc,1,"accphi_pts.bin");
+        writedbl(phi_cub,locout->nloc,1,"accphi_cub.bin");
         */
         writebin(hfor, "accphi_hfor");
         writebin(hforcubic, "accphi_cub_hfor");
@@ -251,7 +257,7 @@ static void test_accuracy(int argc, char** argv){
     dfree(phi_cubh);
 
     cellfree(screen);
-    locfree(locin);
+    locfree(locin2);
 }
 
 int main(int argc, char** argv){

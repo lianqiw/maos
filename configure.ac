@@ -156,8 +156,8 @@ fi
 DEBUG_ALL="-g3 -O0" #-og
 DEBUG_GCC="-ggdb -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls " #-fsanitize=address"
 if test "$USE_CPP" = "1" ;then
-	COMMON_GCC+=" -Wno-changes-meaning -Wno-class-memaccess -Wno-error=use-after-free -Wno-format-truncation -Wno-error=int-in-bool-context"
-	COMMON_CLANG+=" -Wno-vla-cxx-extension  -Wno-deprecated"
+	COMMON_GCC+=" -Wno-changes-meaning -Wno-class-memaccess -Wno-error=use-after-free -Wno-format-truncation -Wno-error=int-in-bool-context -fpermissive"
+	COMMON_CLANG+=" -Wno-vla-cxx-extension  -Wno-deprecated -Wno-address-of-temporary"
 	COMMON_ALL+=" -Wno-deprecated-declarations " #do not emit warning
 fi
 #inline definition:

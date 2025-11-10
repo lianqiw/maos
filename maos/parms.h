@@ -338,7 +338,6 @@ typedef struct dm_cfg_t{
     dcell *strokescale;   /**< describes polynomials that convert opd to voltage (first cell), and voltage to opd
 			    	* (second cell). The two operations has to be strict inverse of each other*/
 	real dratio;     /**<telescope diameter to DM diameter ratio (beam angle magnification factor)*/
-    real vmisreg; /**<vertical misregistration*/
     real ht;      /**<height conjugation range*/
     real dx;      /**<actuator separation along x (derived from order)*/
     real ar;      /**<[in] aspect ratio: dy/dx*/

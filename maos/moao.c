@@ -148,26 +148,21 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	P(xp,0)=dnew(recon->floc->nloc, 1);
 
 	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-		const real ht=P(parms->atmr.ht,ipsr);
-		real scale=1.-ht/hs;
-		propdata_t propdata={.phiin=P(P(opdr,ipsr)), .locout=recon->floc, .phiout=P(P(xp,0)), .alpha=1,
-				.displacex=thetax*ht, .displacey=thetay*ht, .scale=scale};
+		propdata_t propdata={.phiin=P(P(opdr,ipsr)), .locout=recon->floc, .phiout=P(P(xp,0)), .alpha=1, .hs=hs,
+				.thetax=thetax, .thetay=thetay};
 		if(parms->tomo.square){
 			propdata.mapin=P(recon->xmap,ipsr);
 		} else{
 			propdata.locin=P(recon->xloc,ipsr);
 		}
-		prop(&propdata, 0, 0);
+		prop(&propdata);
 	}
 	//static int count=-1; count++;
 	//writebin(P(xp,0), "opdfit0_%d", count);
 	for(int idm=0; idm<parms->ndm; idm++){
-		const real ht=parms->dm[idm].ht;
-		real scale=1.-ht/hs;
 		prop(&(propdata_t){.locin=P(recon->aloc,idm), .phiin=P(P(dmcommon,idm)),
-			.locout=recon->floc, .phiout=P(P(xp,0)), .alpha=-1,
-			.displacex=thetax*ht, .displacey=thetay*ht, .scale=scale},
-			0, 0);
+			.locout=recon->floc, .phiout=P(P(xp,0)), .alpha=-1, .hs=hs,
+			.thetax=thetax, .thetay=thetay});
 	}
 	//writebin(P(xp,0), "opdfit1_%d", count);
 	if(rhsout){

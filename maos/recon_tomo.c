@@ -507,19 +507,19 @@ static void* Tomo_prop_do(Tomo_T *data){
 		for(int ips=0; ips<nps; ips++){
 			if(parms->tomo.square&&!parms->dbg.tomo_hxw){
 			/*Do the ray tracing instead of using HXW. */
-				real ht=P(recon->ht, ips);
-				real scale=1.-ht/hs;
-				if(scale<0) continue;
-				real dispx=parms->wfsr[iwfs].thetax*ht+(shwfs?scale*parms->wfsr[iwfs].misregx:0);
-				real dispy=parms->wfsr[iwfs].thetay*ht+(shwfs?scale*parms->wfsr[iwfs].misregy:0);
+				real misregx=(shwfs?parms->wfsr[iwfs].misregx:0);
+				real misregy=(shwfs?parms->wfsr[iwfs].misregy:0);
+				real shiftx=0;
+				real shifty=0;
 				if(parms->tomo.predict){
 					int ips0=P(parms->atmr.indps, ips);
-					dispx+=P(simu->atm, ips0)->vx*delay;
-					dispy+=P(simu->atm, ips0)->vy*delay;
+					shiftx=P(simu->atm, ips0)->vx*delay;
+					shifty=P(simu->atm, ips0)->vy*delay;
 				}
 				prop(&(propdata_t){.mapin=P(recon->xmap, ips), .phiin=P(P(data->xin, ips)),
-					.ostat=recon->ploc->stat, .phiout=P(xx), .alpha=1,
-					.displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+					.ostat=recon->ploc->stat, .phiout=P(xx), .alpha=1, .hs=hs,
+					.thetax=parms->wfsr[iwfs].thetax, .thetay=parms->wfsr[iwfs].thetay,
+					.misregx=misregx, .misregy=misregy, .shiftx=shiftx, .shifty=shifty});
 			} else{
 				dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 				dspmm(&xx, P(HXW, iwfs, ips), P(data->xin, ips), "nn", 1);
@@ -535,7 +535,7 @@ static void* Tomo_prop_do(Tomo_T *data){
 			}else{
 				xxr=dnew(recon->ploc->nloc, 1);
 				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(xx), .locout=recon->ploc, .phiout=P(xxr), 
-					.rot=-recon->wfsr[iwfs].misregc}, 0, 0);
+					.rot=-recon->wfsr[iwfs].misregc});
 			}
 		}
 		/*Apply the gradient operation */
@@ -586,7 +586,7 @@ static void* Tomo_nea_gpt_do(Tomo_T *data){
 			}else{
 				P(data->gg, iwfs)=dnew(recon->ploc->nloc, 1);
 				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(ggr), .locout=recon->ploc, .phiout=P(P(data->gg, iwfs)), 
-					.rot=recon->wfsr[iwfs].misregc}, 0, 0);
+					.rot=recon->wfsr[iwfs].misregc});
 			}
 			dfree(ggr);
 		}
@@ -646,24 +646,23 @@ static void* Tomo_iprop_do(Tomo_T *data){
 			}
 			memcpy(&xmap, P(recon->xmap, ips), sizeof(map_t));
 			xmap.p=P(P(data->xout, ips));
-			real ht=P(recon->ht, ips);
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				if(!P(data->gg, iwfs)) continue;
 				const real hs=parms->wfs[iwfs].hs;
 				const int ipowfs=parms->wfs[iwfs].powfs;
 				const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
-				real scale=1.-ht/hs;
-				if(scale<0) continue;
-				real dispx=parms->wfsr[iwfs].thetax*ht+(shwfs?scale*parms->wfsr[iwfs].misregx:0);
-				real dispy=parms->wfsr[iwfs].thetay*ht+(shwfs?scale*parms->wfsr[iwfs].misregy:0);
+				real misregx=(shwfs?parms->wfsr[iwfs].misregx:0);
+				real misregy=(shwfs?parms->wfsr[iwfs].misregy:0);
+				real shiftx=0, shifty=0;
 				if(parms->tomo.predict){
 					const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 					int ips0=P(parms->atmr.indps, ips);
-					dispx+=P(simu->atm, ips0)->vx*delay;
-					dispy+=P(simu->atm, ips0)->vy*delay;
+					shiftx=P(simu->atm, ips0)->vx*delay;
+					shifty=P(simu->atm, ips0)->vy*delay;
 				}
 				prop(&(propdata_t){.mapin=&xmap, .ostat=recon->ploc->stat, .phiout=P(P(data->gg, iwfs)), 
-					.alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+					.alpha=1, .hs=hs, .misregx=misregx, .misregy=misregy,
+					.shiftx=shiftx, .shifty=shifty});
 			}
 		} else{
 			dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;

@@ -62,6 +62,11 @@ static loc_t *dmat2loc_inplace(dmat*A){
 	loc->locy=loc->locx+loc->nloc;
 	loc->dmat->deinit=locfree_do;
 	loc->dmat->make_keywords=loc_keywords;
+	loc->dx=NAN;
+	loc->dy=NAN;
+	loc->ht=0;
+	loc->iac=0;
+	loc->dratio=0;
 	return loc;
 }
 static void loc_parse_header(loc_t* loc){
@@ -70,6 +75,7 @@ static void loc_parse_header(loc_t* loc){
 	loc->dy=search_keyword_num_default(loc->keywords, "dy", loc->dx);
 	loc->ht=search_keyword_num_default(loc->keywords, "ht", 0);
 	loc->iac=search_keyword_num_default(loc->keywords, "iac", 0);
+	loc->dratio=search_keyword_num_default(loc->keywords, "dratio", 0);
 	loc_dxdy(loc);
 }
 /**
@@ -103,6 +109,7 @@ loc_t* locref(loc_t* in){
 	loc->dy=in->dy;
 	loc->ht=in->ht;
 	loc->iac=in->iac;
+	loc->dratio=in->dratio;
 	return loc;
 }
 /**
@@ -227,6 +234,7 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 	}
 	((loc_t*)loc)->map=mapnew(map_nx, map_ny, loc->dx, loc->dy);
 	loc->map->iac=loc->iac;
+	loc->map->dratio=loc->dratio;
 	loc->map->ox=xmin;
 	loc->map->oy=ymin;
 	dmat* pmap=DMAT(loc->map);
@@ -480,7 +488,8 @@ loc_t* loc_from_map(map_t* map, real thres){
 	}
 	locresize(loc, count);
 	loc->iac=map->iac;
-	loc->ht=map->h;
+	loc->dratio=map->dratio;
+	loc->ht=map->ht;
 	return loc;
 }
 /**
@@ -1347,6 +1356,7 @@ loc_t* locdup(loc_t* loc){
 	memcpy(res->locx, loc->locx, sizeof(real)*loc->nloc);
 	memcpy(res->locy, loc->locy, sizeof(real)*loc->nloc);
 	res->iac=loc->iac;
+	res->dratio=loc->dratio;
 	res->ht=loc->ht;
 	return res;
 }
@@ -1735,7 +1745,7 @@ void loc_keywords(cell *p){
 		loc_t *loc=(loc_t*)p;
 		if(loc->keywords) free(loc->keywords);
 		char str[120];
-		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;ht=%.15g\n;iac=%.15g\n", loc->dx, loc->dy, loc->ht, loc->iac);
+		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;ht=%.15g\n;iac=%.15g;dratio=%.15g\n", loc->dx, loc->dy, loc->ht, loc->iac, loc->dratio);
 		loc->keywords=strdup(str);
 	}
 }
