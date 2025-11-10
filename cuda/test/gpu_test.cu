@@ -107,7 +107,8 @@ void test_prop(){
 	curmat cc=iac2cc(mapin->iac);
 	gpu_map2map(cumapout, cumapin, dispx, dispy, alpha, cc, 'n');
 	cuwrite(cumapout.p, 0, "prop_mapout");
-	prop_grid_map(mapin, mapout, alpha, dispx, dispy, 1, 0, 0, 0);
+	propdata_t propdata={.mapin=mapin, .mapout=mapout, .alpha=alpha, .shiftx=dispx, .shifty=dispy};
+	prop(&propdata);
 	writebin(mapout, "prop_mapout_cpu");
 }
 
