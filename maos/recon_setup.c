@@ -487,7 +487,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 			writebin(recon->RFlgsg, "focus_RFlgsg");
 		}
 	}
-	if(parms->sim.focus2tel){
+	if(parms->sim.focus2tel){//offloading DM focus to telescope
 		dcell* Fdm=dcellnew(parms->ndm, 1);
 		recon->RFdm=dcellnew(1, parms->ndm);
 		for(int idm=0; idm<parms->ndm; idm++){

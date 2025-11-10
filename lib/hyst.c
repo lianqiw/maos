@@ -18,8 +18,9 @@
 #include "hyst.h"
 
 /**
-   contains data related to DM hysterisis modeling for all the common DMs (not
-MOAO). let input be x, and output of each mode be y.  */
+    contains data related to DM hysterisis modeling for all the common DMs (not
+	MOAO). let input be x, and output of each mode be y.  
+*/
 struct hyst_t{
 	real alpha;       /**<Material constant*/
 	real beta;        /**<constants*/
@@ -31,6 +32,7 @@ struct hyst_t{
 
 /**
   Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke.
+  For details, see the documentation 50_hyst.md
 */
 hyst_t* hyst_new(
 	real hysteresis,   /**<The ratio of the maximum difference of ascending/descending curve over 2*stroke. */

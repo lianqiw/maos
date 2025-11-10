@@ -6,7 +6,7 @@ Algorithms {#algorithm}
 The DM hysteresis modeling is based on "Modeling the hysteresis of a scanning probe microscope"
 J. Vac. Sci. Technol. B 18 (2), Mar/Apr 2000
 
-Formula (2) is used with  V replaced by command x, and x replaced by actual DM position y
+Formula (2) is used with x replaced by actual DM position y and V replaced by command x, 
 \f[
 	\frac{dy}{dx}=\alpha sign(dx) (\beta x-y)+(\beta-u)
 \f]
