@@ -30,32 +30,24 @@
 */
 typedef struct propdata_t{
     /*Input.  */
-    const map_t *mapin;
-    /*Or */
-    loc_t *locin;
-    const real *phiin;
+    const map_t *mapin; /*Or */ loc_t *locin;
+    const real *phiin; /*If not null, use it instead of mapin->p */
     
     /*Output */
-    map_t *mapout;
-    /*Or */
-    real *phiout;
-    /*Combined with */
-    const pts_t *ptsout;
-    /*Or */
-    const loc_t *locout; 
-    /*Or  */
-    const locstat_t *ostat;
+    map_t *mapout;/*or */const pts_t *ptsout;/*Or */const loc_t *locout;/*Or*/const locstat_t *ostat;
+    real *phiout; /*If not null, use it instead of mapout->p */
 	real alpha;/*scale of value: */
-    real displacex, displacey;/*Constant displacement */
-    real displacex2, displacey2;/*Time step dependent displacement */
-    real scale;/*scale of coordinate */
+	real hs;   /*range of source*/
+    real thetax, thetay;/*ray angle*/
+    real misregx, misregy;/*misregistration of the output grid*/
+	real shiftx, shifty; /*shift of the input grid (due to wind, etc.) */
 	real rot;  /*rotation*/
 
     int wrap;
 	int transpose;
     int nooptim;/*disable optim. */
-    int index;
 }propdata_t;
 void* prop_thread(thread_t *data);/*A unified wrapper */
-void prop(propdata_t* propdata, long start, long end);
+void prop_range(propdata_t* propdata, long start, long end);
+void prop(propdata_t* propdata);
 #endif

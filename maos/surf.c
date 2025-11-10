@@ -106,17 +106,13 @@ static void* prop_surf_evl(thread_t* info){
 	const parms_t* parms=data->parms;
 	const aper_t* aper=data->aper;
 	const map_t* surf=data->surf;
-	const real hl=surf->h;
 	const int* evlcover=data->evlcover;
 	for(int ievl=info->start; ievl<info->end; ievl++){
 		if(!evlcover[ievl]){
 			continue;
 		}
-		const real displacex=P(parms->evl.thetax, ievl)*hl;
-		const real displacey=P(parms->evl.thetay, ievl)*hl;
-		const real scale=1-hl/P(parms->evl.hs, ievl);
 		prop(&(propdata_t){.mapin=surf, .ostat=aper->locs->stat, .phiout=P(P(aper->opdadd, ievl)),
-			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+			.alpha=1, .hs=P(parms->evl.hs, ievl), .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
 	}
 	return NULL;
 }
@@ -127,7 +123,6 @@ static void* prop_surf_ncpa(thread_t* info){
 	const aper_t* aper=data->aper;
 	const recon_t* recon=data->recon;
 	const map_t* surf=data->surf;
-	const real hl=surf->h;
 	const int* ncpacover=data->ncpacover;
 	if(!data->isncpa){
 		dbg2("Ignore CPA surface %d for aper->opdbias\n", data->isurf);
@@ -139,11 +134,8 @@ static void* prop_surf_ncpa(thread_t* info){
 			dbg("Ignore CPA surface %d for aper->opdbias\n", data->isurf);
 			continue;
 		}
-		const real displacex=P(parms->ncpa.thetax, idir)*hl;
-		const real displacey=P(parms->ncpa.thetay, idir)*hl;
-		const real scale=1.-hl/P(parms->ncpa.hs, idir);
 		prop(&(propdata_t){.mapin=surf, .locout=recon->floc, .phiout=P(P(aper->opdbias, idir)),
-			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+			.alpha=1, .hs=P(parms->ncpa.hs, idir), .thetax=P(parms->ncpa.thetax, idir), .thetay=P(parms->ncpa.thetay, idir)});
 	}
 	return NULL;
 }
@@ -153,7 +145,6 @@ static void* prop_surf_wfs(thread_t* info){
 	const parms_t* parms=data->parms;
 	const powfs_t* powfs=data->powfs;
 	const map_t* surf=data->surf;
-	const real ht=surf->h;
 	const int* wfscover=data->wfscover;
 	for(int iwfs=info->start; iwfs<info->end; iwfs++){
 		if(!wfscover[iwfs]){
@@ -161,11 +152,6 @@ static void* prop_surf_wfs(thread_t* info){
 		}
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
-		const real hs=parms->wfs[iwfs].hs;
-		const real scale=1.-ht/hs;
-		const real displacex=parms->wfs[iwfs].thetax*ht;
-		const real displacey=parms->wfs[iwfs].thetay*ht;
-
 		loc_t* locwfs;
 		if(powfs[ipowfs].loc_tel){
 			locwfs=P(powfs[ipowfs].loc_tel, wfsind);
@@ -174,7 +160,7 @@ static void* prop_surf_wfs(thread_t* info){
 		}
 		dcell *opdout=data->isncpa?powfs[ipowfs].opdbias:powfs[ipowfs].opdadd;
 		prop(&(propdata_t){.mapin=surf, .locout=locwfs, .phiout=P(P(opdout, wfsind)),
-			.alpha=1, .displacex=displacex, .displacey=displacey, .scale=scale, .wrap=1}, 0, 0);
+			.alpha=1, .hs=parms->wfs[iwfs].hs, .thetax=parms->wfs[iwfs].thetax, .thetay=parms->wfs[iwfs].thetay, .wrap=1});
 	}
 	return NULL;
 }
@@ -643,18 +629,11 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					const real hs=parms->wfs[iwfs].hs;
 					const real thetax=parms->wfs[iwfs].thetax;
 					const real thetay=parms->wfs[iwfs].thetay;
-					const real theta=RSS(thetax, thetay);
-
 					for(int idm=0; idm<parms->ndm; idm++){
 						if(!P(recon->dm_ncpa, idm)||P(recon->dm_ncpa, idm)->nx==0) continue;
-						real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-						real scale=1.-ht/hs;
-						real displacex=ht*thetax;
-						real displacey=ht*thetay;
-						real alpha=-cos(theta*parms->dm[idm].dratio);
 						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
 							.locout=powfs[ipowfs].loc, .phiout=P(P(powfs[ipowfs].opdbias, jwfs)),
-							.alpha=alpha, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+							.alpha=-1, .hs=hs, .thetax=thetax, .thetay=thetay});
 					}
 				}
 			}
@@ -687,15 +666,10 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		dcellzero(aper->opdadd);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
-				const real hl=parms->dm[idm].ht;
-				const real displacex=P(parms->evl.thetax, ievl)*hl;
-				const real displacey=P(parms->evl.thetay, ievl)*hl;
-				const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
-				const real scale=1-hl/P(parms->evl.hs, ievl);
-				const real alpha=cos(theta*parms->dm[idm].dratio);
 				prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
 					.locout=aper->locs, .phiout=P(P(aper->opdadd, ievl)),
-					.alpha=alpha, .displacex=displacex, .displacey=displacey, .scale=scale}, 0, 0);
+					.alpha=1, .hs=P(parms->evl.hs, ievl), 
+					.thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
 			}
 		}
 		if(parms->save.setup>1){

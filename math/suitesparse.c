@@ -87,7 +87,7 @@ static void* ss_realloc(void* p, SS_INT n, size_t size, SS_INT* ok){
 	void* pnew;
 	pnew=realloc(p, SS_MAX(n, 1)*size); /* realloc the block */
 	*ok=(pnew!=NULL);                  /* realloc fails if pnew is NULL */
-	return ((*ok)?pnew:p);             /* return original p if failure */
+	return (pnew?pnew:p);             /* return original p if failure */
 }
 
 /**

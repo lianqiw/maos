@@ -117,7 +117,7 @@ typedef struct map_t{
     real oy;      /**<Origin in y*/
     real dx;      /**<Sampling along x*/
     real dy;      /**<Sampling along y*/
-    real h;       /**<Heigh conjugation of this surface*/
+    real ht;       /**<Heigh conjugation of this surface*/
     real vx;      /**Wind velocity. Useful for atmospheric grid*/
     real vy;      /**Wind velocity. Useful for atmospheric grid*/
     real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/

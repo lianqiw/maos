@@ -93,7 +93,7 @@ static mapcell* genatm_do(sim_t* simu){
 		const real strength=sqrt(1.0299*pow(parms->aper.d/atm->r0, 5./3.))*(0.5e-6/(2*M_PI));//PR WFE.
 		for(int ips=0; ips<atm->nps; ips++){
 			P(screens, ips)=mapnew(nx, ny, dx, dx);
-			P(screens, ips)->h=P(atm->ht, ips);
+			P(screens, ips)->ht=P(atm->ht, ips);
 			if(!P(atm->wt, ips)) continue;
 			real dbgatm=PR(parms->dbg.atm, ips);
 			if(dbgatm>0){//zernike mode
@@ -169,10 +169,10 @@ void genatm(sim_t* simu){
 		}
 		if(NX(simu->atm)!=atm->nps){
 			if(parms->atm.dtrat && NX(simu->atm)>1){
-				real h=P(simu->atm, 0)->h;
+				real h=P(simu->atm, 0)->ht;
 				int sameh=1;
 				for(int ips=1; ips<NX(simu->atm); ips++){
-					if(h!=P(simu->atm ,ips)->h){
+					if(h!=P(simu->atm ,ips)->ht){
 						sameh=0;
 						break;
 					}
@@ -196,7 +196,7 @@ void genatm(sim_t* simu){
 	if(!parms->dbg.atm&&atm->nps==parms->atm.nps&&!atm_movie){
 		for(int i=0; i<atm->nps; i++){
 			real angle=P(simu->winddir, i);
-			P(simu->atm, i)->h=P(parms->atm.ht, i);
+			P(simu->atm, i)->ht=P(parms->atm.ht, i);
 			P(simu->atm, i)->vx=cos(angle)*P(parms->atm.ws, i);
 			P(simu->atm, i)->vy=sin(angle)*P(parms->atm.ws, i);
 		}
@@ -271,11 +271,11 @@ void atm2xloc(dcell** opdx, const sim_t* simu){
 	}
 	if(simu->atm){
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			real disx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
-			real disy=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
+			real shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
+			real shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
 			int ipsr=P(parms->atm.ipsr, ips);
 			prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
-				.alpha=1, .displacex=disx, .displacey=disy, .scale=1, .wrap=1}, 0, 0);
+				.alpha=1, .shiftx=shiftx, .shifty=shifty, .wrap=1});
 		}
 	}
 }
@@ -703,10 +703,9 @@ static void init_simu_evl(sim_t* simu){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const int ind=ievl+nevl*ips;
 			propdata_t* data=&simu->evl_propdata_atm[ind];
-			const real ht=P(parms->atm.ht, ips);
-			data->displacex=ht*P(parms->evl.thetax, ievl);
-			data->displacey=ht*P(parms->evl.thetay, ievl);
-			data->scale=1-ht/P(parms->evl.hs, ievl);
+			data->thetax=P(parms->evl.thetax, ievl);
+			data->thetay=P(parms->evl.thetay, ievl);
+			data->hs=P(parms->evl.hs, ievl);
 			data->alpha=1;
 			data->wrap=1;
 			data->ostat=aper->locs->stat;
@@ -716,12 +715,10 @@ static void init_simu_evl(sim_t* simu){
 		for(int idm=0; idm<parms->ndm&&!parms->sim.evlol; idm++){
 			const int ind=ievl+nevl*idm;
 			propdata_t* data=&simu->evl_propdata_dm[ind];
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			data->displacex=ht*P(parms->evl.thetax, ievl);
-			data->displacey=ht*P(parms->evl.thetay, ievl);
-			data->scale=1-ht/P(parms->evl.hs, ievl);
-			const real theta=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl));
-			data->alpha=-cos(theta*parms->dm[idm].dratio);
+			data->thetax=P(parms->evl.thetax, ievl);
+			data->thetay=P(parms->evl.thetay, ievl);
+			data->hs=P(parms->evl.hs, ievl);
+			data->alpha=-1;
 			data->wrap=0;
 			if(parms->sim.cachedm){
 				data->mapin=P(simu->cachedm, idm);
@@ -975,11 +972,12 @@ static void init_simu_wfs(sim_t* simu){
 		const real hs=parms->wfs[iwfs].hs;
 
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			const real ht=P(parms->atm.ht, ips);
 			propdata_t* data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
-			data->scale=1.-ht/hs;
-			data->displacex=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
-			data->displacey=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
+			data->hs=hs;
+			data->thetax=parms->wfs[iwfs].thetax;
+			data->thetay=parms->wfs[iwfs].thetay;
+			data->misregx=(parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregx:0);
+			data->misregy=(parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0);
 			data->alpha=1;
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
@@ -995,17 +993,17 @@ static void init_simu_wfs(sim_t* simu){
 				data->ptsout=powfs[ipowfs].pts;
 				tot=data->ptsout->nsa;
 			}
-			int nthread=data->scale==1?2:8;//use more threads for LGS as ray tracing is slow due to cone coordinate.
+			int nthread=isinf(data->hs)?2:8;//use more threads for LGS as ray tracing is slow due to cone coordinate.
 			simu->wfs_prop_atm[iwfs+nwfs*ips]=thread_prep(0, tot, nthread, prop_thread, data);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 			propdata_t* data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
-			data->scale=1.-ht/hs;
-			data->displacex=ht*parms->wfs[iwfs].thetax+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregx:0);
-			data->displacey=ht*parms->wfs[iwfs].thetay+(parms->powfs[ipowfs].type==WFS_SH?data->scale*parms->wfs[iwfs].misregy:0);
-			const real theta=RSS(parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay);
-			data->alpha=-cos(theta*parms->dm[idm].dratio);/*remove dm contribution. */
+			data->hs=hs;
+			data->thetax=parms->wfs[iwfs].thetax;
+			data->thetay=parms->wfs[iwfs].thetay;
+			data->misregx=(parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregx:0);
+			data->misregy=(parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0);
+			data->alpha=-1;/*remove dm contribution. */
 			data->wrap=0;
 			if(parms->sim.cachedm){
 				data->mapin=P(simu->cachedm, idm);
@@ -1029,7 +1027,7 @@ static void init_simu_wfs(sim_t* simu){
 				data->ptsout=powfs[ipowfs].pts;
 				tot=data->ptsout->nsa;
 			}
-			int nthread=data->scale==1?2:4;//use more threads for LGS as ray tracing is slow due to cone coordinate.
+			int nthread=isinf(data->hs)?2:4;//use more threads for LGS as ray tracing is slow due to cone coordinate.
 			simu->wfs_prop_dm[iwfs+nwfs*idm]=thread_prep(0, tot, nthread, prop_thread, data);
 		}/*idm */
 	}/*iwfs */

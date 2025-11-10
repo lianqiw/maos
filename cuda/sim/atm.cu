@@ -218,7 +218,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			/*Do not copy over nx, ny from atm as cuatm is smaller*/
 				cuatm[ips].vx=atm[ips]->vx;
 				cuatm[ips].vy=atm[ips]->vy;
-				cuatm[ips].ht=atm[ips]->h;
+				cuatm[ips].ht=atm[ips]->ht;
 				cuatm[ips].dx=atm[ips]->dx;
 				cuatm[ips].dy=atm[ips]->dx;
 				cuatm[ips].ox=INFINITY;/*place holder */

@@ -351,7 +351,7 @@ mapcell* genscreen_str(const char* keywords){
 			if(P(surfs,i)){
 				char* old=P(surfs, i)->keywords;
 				P(surfs, i)->keywords=stradd(keywords, old, NULL);
-				P(surfs,i)->h=ht;
+				P(surfs,i)->ht=ht;
 				P(surfs, i)->vx=vx;
 				P(surfs, i)->vx=vy;
 				if(old) free(old);
@@ -386,7 +386,7 @@ dmat* genatm_loc(loc_t* loc, real r0, real dsa, real slope, int seed){
 	real D=loc_diam(loc);
 	dmat* opd=dnew(loc->nloc, 1);
 	map_t* atm=genatm_simple(r0, dsa, slope, loc->dx, ceil(D/loc->dx)*2, seed);
-	prop(&(propdata_t){.mapin=atm, .locout=loc, .phiout=P(opd), .alpha=1, .displacex=0, .displacey=0, .scale=1, .wrap=1}, 0, 0);
+	prop(&(propdata_t){.mapin=atm, .locout=loc, .phiout=P(opd), .alpha=1, .wrap=1});
 	mapfree(atm);
 	return opd;
 }

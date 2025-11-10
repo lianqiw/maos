@@ -53,25 +53,20 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 	const real hs=P(parms->evl.hs,ievl);
 
 	for(int idm=0; idm<parms->ndm; idm++){
-		const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		real dispx=ht*P(parms->evl.thetax,ievl);
-		real dispy=ht*P(parms->evl.thetay,ievl);
-		real scale=1.-ht/hs;
-		if(scale<0) continue;
 		loc_t* locs=aper->locs;
 		if(aper->locs_dm){
 			locs=P(aper->locs_dm, ievl, idm);
 		}
 		prop(&(propdata_t){.mapin=P(simu->dmprojsq,idm), .locout=locs, .phiout=P(iopdevl),
-			.alpha=alpha, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+			.alpha=alpha, .hs=hs, .thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)});
 	}
 }
 
 static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* psfname,
 	dcell* evlpsfmean, zfarr** evlpsfhist,
 	dmat* iopdevl, int ievl){
-/* the OPD after this time will be tilt removed. Don't use for performance
-   evaluation. */
+	/* the OPD after this time will be tilt removed. Don't use for performance
+	evaluation. */
 	ccell* psf2s=0;
 	locfft_psf(&psf2s, aper->locfft, iopdevl, parms->evl.psfsize, 0);
 	int nwvl=parms->evl.nwvl;
@@ -163,21 +158,12 @@ void* perfevl_ievl(thread_t* info){
 					if(parms->atm.dtrat>0){
 						real wt;
 						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(simu->atm), parms->atm.interp);
-						/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(simu->atm));
-						real wt2=0;
-						if(nps>1&&parms->atm.interp){
-							wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
-							if(parms->atm.interp==2){
-								wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
-							}
-						}
-						evl_propdata->alpha=ips==0?(1-wt2):wt2;*/
 						evl_propdata->alpha=atmscale*wt;
 						evl_propdata->mapin=P(simu->atm, iframe);
 						if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
 					}else{
-						evl_propdata->displacex2=-P(simu->atm,ips)->vx*isim*dt;
-						evl_propdata->displacey2=-P(simu->atm,ips)->vy*isim*dt;
+						evl_propdata->shiftx=-P(simu->atm,ips)->vx*isim*dt;
+						evl_propdata->shifty=-P(simu->atm,ips)->vy*isim*dt;
 						evl_propdata->alpha=atmscale;
 					}
 					CALL_THREAD(simu->evl_prop_atm[ind], 1);
@@ -254,12 +240,8 @@ void* perfevl_ievl(thread_t* info){
 				map_t xmap;
 				const int npsr=parms->atmr.nps;
 				for(int ipsr=0; ipsr<npsr; ipsr++){
-					real hl=P(parms->atmr.ht,ipsr);
-					real scale=1.-hl/P(parms->evl.hs,ievl);
-					if(scale<0) continue;
-					real displacex=P(parms->evl.thetax,ievl)*hl;
-					real displacey=P(parms->evl.thetay,ievl)*hl;
-					propdata_t propdata={.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1, .displacex=displacex, .displacey=displacey, .scale=scale};
+					propdata_t propdata={.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1, .hs=P(parms->evl.hs,ievl), 
+						.thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)};
 					if(parms->tomo.square){
 						memcpy(&xmap, P(recon->xmap,ipsr), sizeof(map_t));
 						xmap.p=P(P(simu->opdr,ipsr));
@@ -268,7 +250,7 @@ void* perfevl_ievl(thread_t* info){
 						propdata.locin=P(recon->xloc,ipsr);
 						propdata.phiin=P(P(simu->opdr,ipsr));
 					}
-					prop(&(propdata), 0, 0);
+					prop(&propdata);
 				}
 			}
 		} else{
@@ -296,7 +278,7 @@ void* perfevl_ievl(thread_t* info){
 			   prop is faster than spmulvec. \fixme check definition of misreg
 			*/
 			prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc,0), .phiin=P(dmevl[ievl]),
-				.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1}, 0, 0);
+				.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1});
 			}
 		}
 
@@ -671,8 +653,8 @@ void* perfevl(sim_t* simu){
 			const real atmscale=simu->atmscale?P(simu->atmscale,isim):1;
 			propdata_t *evl_propdata=&simu->evl_propdata_atm[ind];
 			evl_propdata->phiout=P(simu->evlopdground);
-			evl_propdata->displacex2=-P(simu->atm,ips)->vx*isim*dt;
-			evl_propdata->displacey2=-P(simu->atm,ips)->vy*isim*dt;
+			evl_propdata->shiftx=-P(simu->atm,ips)->vx*isim*dt;
+			evl_propdata->shifty=-P(simu->atm,ips)->vy*isim*dt;
 			evl_propdata->alpha=atmscale;
 			CALL_THREAD(simu->evl_prop_atm[ind], 1);
 		}

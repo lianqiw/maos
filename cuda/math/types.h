@@ -912,7 +912,7 @@ public:
 			oy=in->oy;
 			dx=in->dx;
 			dy=in->dy;
-			ht=in->h;
+			ht=in->ht;
 			vx=in->vx;
 			vy=in->vy;
 			dratio=in->dratio;

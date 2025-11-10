@@ -1199,7 +1199,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	llt->amp=dnew(nxsa*nxsa, 1);
 	if(lltcfg->fnamp){
 		map_t* lltamp=mapread("%s", lltcfg->fnamp);
-		prop(&(propdata_t){.mapin=lltamp, .ptsout=llt->pts, .phiout=P(llt->amp)}, 0, 0);
+		prop(&(propdata_t){.mapin=lltamp, .ptsout=llt->pts, .phiout=P(llt->amp)});
 		sumamp2=ddot(llt->amp, llt->amp);
 		mapfree(lltamp);
 	} else{
@@ -1237,7 +1237,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		llt->ncpa=dcellnew(nlotf, 1);
 		for(int ilotf=0; ilotf<nlotf; ilotf++){
 			P(llt->ncpa, ilotf)=dnew(nxsa, nxsa);
-			prop(&(propdata_t){.mapin=P(ncpa, ilotf), .ptsout=llt->pts, .phiout=P(P(llt->ncpa, ilotf))}, 0, 0);
+			prop(&(propdata_t){.mapin=P(ncpa, ilotf), .ptsout=llt->pts, .phiout=P(P(llt->ncpa, ilotf))});
 		}
 		cellfree(ncpa);
 	}

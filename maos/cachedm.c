@@ -48,8 +48,9 @@ void prep_cachedm(sim_t* simu){
 			real dx=parms->dm[idm].dx/(parms->sim.cachedm>3?parms->sim.cachedm:4);
 			info(" 1/%gm", 1./dx);
 			create_metapupil(&P(simu->cachedm,idm), 0, 0, parms->dirs, parms->aper.d,
-				parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
+				parms->dm[idm].ht, dx, dx,
 				0, dx, 0, 0, 0, 0);
+			P(simu->cachedm,idm)->dratio=P(simu->recon->aloc,idm)->dratio;
 		}
 	}
 	info("\n");
@@ -68,12 +69,6 @@ void prep_cachedm(sim_t* simu){
 			cpropdata[idm].phiin=P(P(simu->dmreal,idm));
 		}
 		cpropdata[idm].mapout=P(simu->cachedm,idm);
-		cpropdata[idm].alpha=1;
-		cpropdata[idm].displacex=0;
-		cpropdata[idm].displacey=0;
-		cpropdata[idm].displacex2=0;
-		cpropdata[idm].displacey2=0;
-		cpropdata[idm].scale=1;
 		
 		simu->cachedm_prop[idm]=thread_prep(0, NY(cpropdata[idm].mapout),
 			nthread, prop_thread, simu->cachedm_propdata+idm);

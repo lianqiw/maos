@@ -69,21 +69,17 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 			loc=P(powfs[ipowfs].loc_tel, wfsind);
 		}
 		prop(&(propdata_t){.locin=aloc, .phiin=P(P(wfsopd, 0)), .locout=loc, .phiout=P(opd), 
-			.alpha=alpha, .displacex=misregx, .displacey=misregy}, 0, 0);
+			.alpha=alpha, .misregx=misregx, .misregy=misregy});
 		dcellfree(wfsopd);
 	} else{
 		//project tubulence onto DM grid (global ideal)
 		for(int idm=0; idm<parms->ndm; idm++){
 			loc_t* loc=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
-			const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-			const real scale=1.-ht/hs;
-			real dispx=ht*parms->wfs[iwfs].thetax+scale*misregx;
-			real dispy=ht*parms->wfs[iwfs].thetay+scale*misregy;
-			//wfs is registered to pupil. wfs.hc only effects the cone effect.
-			
-			if(scale<0) continue;
-			prop(&(propdata_t){.mapin=P(simu->dmprojsq, idm), .locout=loc, .phiout=P(opd),
-				.alpha=alpha, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+			const real ht=parms->dm[idm].ht;
+			if(ht>hs) continue;
+			prop(&(propdata_t){.mapin=P(simu->dmprojsq, idm), .locout=loc, .phiout=P(opd), .alpha=alpha, 
+				.hs=hs, .thetax=parms->wfs[iwfs].thetax, .thetay=parms->wfs[iwfs].thetay, 
+				.misregx=misregx, .misregy=misregy});
 		}
 	}
 }
@@ -174,7 +170,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	for(int ihs=0; ihs<nhs; ihs++){
 		dzero(opd);
 		const real hs=(nhs>1?(ihs-(nhs-1)*0.5):0)*dhs+parms->wfs[iwfs].hs;
-		const real hc=nhs>1?(parms->wfs[iwfs].hc*(1.-hs/parms->wfs[iwfs].hs)):0;//effective hc
+		//const real hc=nhs>1?(parms->wfs[iwfs].hc*(1.-hs/parms->wfs[iwfs].hs)):0;//effective hc (not used, but is this necessary or correct?)
 		/* Now begin ray tracing. */
 		if(atm&&((!parms->sim.idealwfs&&!parms->powfs[ipowfs].lo)
 				||(!parms->sim.wfsalias&&parms->powfs[ipowfs].lo))){
@@ -185,27 +181,12 @@ void* wfsgrad_iwfs(thread_t* info){
 				if(parms->atm.dtrat>0){
 					real wt;
 					int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
-					/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(atm));
-					real wt2=0;
-					if(nps>1&&parms->atm.interp){
-						wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
-						if(parms->atm.interp==2){
-							wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
-						}
-						wfs_propdata->alpha=ips==0?(1-wt2):wt2;
-					}*/
 					wfs_propdata->alpha=atmscale*wt;
 					wfs_propdata->mapin=P(atm, iframe);
-					//if(iwfs==0) dbg("wfs: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, wfs_propdata->alpha);
 				}else{
-					wfs_propdata->displacex2=-P(atm, ips)->vx*dt*isim;
-					wfs_propdata->displacey2=-P(atm, ips)->vy*dt*isim;
+					wfs_propdata->shiftx=-P(atm, ips)->vx*dt*isim;
+					wfs_propdata->shifty=-P(atm, ips)->vy*dt*isim;
 					wfs_propdata->alpha=atmscale;
-				}
-				if(nhs>1){
-					const real ht=P(parms->atm.ht, ips);
-					wfs_propdata->scale=1.-(ht-hc)/(hs-hc);
-					//if(iwfs==0 && (ips+1)==nps) info("wfs=%d ips=%d ihs=%d, nhs=%d, scale=%g\n", iwfs, ips, ihs, nhs, wfs_propdata->scale);
 				}
 				/* have to wait to finish before another phase screen. */
 				CALL_THREAD(wfs_prop, 1);
@@ -252,11 +233,6 @@ void* wfsgrad_iwfs(thread_t* info){
 				thread_t* wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 				propdata_t* wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 				wfs_propdata->phiout=P(opd);
-				if(nhs>1){
-					const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-					wfs_propdata->scale=1.-(ht-hc)/(hs-hc);
-					//if(iwfs==0) info("wfs=%d idm=%d ihs=%d, nhs=%d, scale=%g\n", iwfs, idm, ihs, nhs, wfs_propdata->scale);
-				}
 				CALL_THREAD(wfs_prop, 1);
 			}/*idm */
 			real ptt[3]={0,0,0};
@@ -288,7 +264,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				/* No need to do mis registration here since the MOAO DM is attached
 				to close to the WFS.*/
 				prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc, 0), .phiin=P(dmwfs[iwfs]),
-					.ptsout=powfs[ipowfs].pts, .phiout=P(opd), .alpha=-1}, 0, 0);
+					.ptsout=powfs[ipowfs].pts, .phiout=P(opd), .alpha=-1});
 			}
 		}
 
@@ -353,7 +329,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				if(atm){/*LLT OPD */
 				real wt=1;
 					for(int ips=0; ips<nps; ips++){
-						const real hl=P(atm, ips)->h;
+						const real hl=P(atm, ips)->ht;
 						const real scale=1.-hl/hs;
 						if(scale<0) continue;
 						const real ox=P(parms->powfs[ipowfs].llt->ox, illt);
@@ -365,28 +341,18 @@ void* wfsgrad_iwfs(thread_t* info){
 						map_t *atmi;
 						if(parms->atm.dtrat>0){
 							int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
-							/*int iframe=wrap_seq(isim/parms->atm.dtrat+ips, NX(atm));
-							real wt2=0;
-							if(nps>1&&parms->atm.interp){
-								wt2=(real)(isim%parms->atm.dtrat)/parms->atm.dtrat;
-								if(parms->atm.interp==2){
-									wt2=pow(sin(wt2*M_PI/2), 2);//smoother interp with sin^2 function
-								}
-								//atmscale=ips==0?(1-wt2):wt2;
-							}*/
 							atmi=P(atm, iframe);
-							//if(iwfs==0) dbg("lltopd: isim=%d, atm frame=%d, wt1=%g\n", isim, iframe, atmscale);
 						}else{
 							vx=P(atm, ips)->vx;
 							vy=P(atm, ips)->vy;
 							atmi=P(atm, ips);
 						}
-						const real displacex=-vx*isim*dt+thetax*hl+ox;
-						const real displacey=-vy*isim*dt+thetay*hl+oy;
-						
+					
 						prop(&(propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
-							.phiout=P(lltopd), .alpha=atmscale*wt, .displacex=displacex, .displacey=displacey,
-							.scale=scale, .wrap=1}, 0, 0);
+							.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
+							.thetax=thetax, .thetay=thetay,
+							.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
+							.wrap=1});
 					}
 				}
 				if(do_pistat||parms->powfs[ipowfs].idealfsm){

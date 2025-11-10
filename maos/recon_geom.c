@@ -285,10 +285,11 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 	recon->xnloc=lnew(recon->npsr, 1);
 	for(long i=0; i<recon->npsr; i++){
 		P(recon->xloc, i)->iac=parms->tomo.iac;
+		P(recon->xloc, i)->ht=P(recon->ht, i);
 		loc_create_map_npad(P(recon->xloc, i), (nin0||parms->tomo.square)?0:1,
 			nin0*P(recon->os, i), nin0*P(recon->os, i));
 		P(recon->xmap, i)=mapref(P(recon->xloc, i)->map);
-		P(recon->xmap, i)->h=P(recon->ht, i);
+		P(recon->xmap, i)->ht=P(recon->ht, i);
 		P(recon->xnx, i)=P(recon->xmap, i)->nx;
 		P(recon->xny, i)=P(recon->xmap, i)->ny;
 		P(recon->xnloc, i)=P(recon->xloc, i)->nloc;
@@ -358,7 +359,7 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 				long nx=D/dx+1;
 				long ny=D/dy+1;
 				map=mapnew(nx, ny, dx, dy);
-				map->h=ht;
+				map->ht=ht;
 				map->ox+=offset*dx;
 				mapcircle(map, D*0.5, 1);
 			} else{
@@ -377,7 +378,10 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		P(recon->aloc, idm)->iac=parms->dm[idm].iac;
 		loc_create_map_npad(P(recon->aloc, idm), parms->fit.square?0:1, 0, 0);
 		P(recon->amap, idm)=P(recon->aloc, idm)->map;
-		P(recon->amap, idm)->h=ht;
+		P(recon->aloc, idm)->dratio=parms->dm[idm].dratio;
+		P(recon->amap, idm)->dratio=parms->dm[idm].dratio;
+		P(recon->aloc, idm)->ht=ht;
+		P(recon->amap, idm)->ht=ht;
 		if(parms->fit.cachedm){
 			const real dx2=parms->atmr.dx/parms->fit.pos;
 			const real dy2=dx2;
@@ -1141,7 +1145,7 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither>1){
-				const real ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+				const real ht=parms->dm[idm].ht;
 				const real dispx=ht*parms->wfs[iwfs].thetax;
 				const real dispy=ht*parms->wfs[iwfs].thetay;
 				const int nmod=parms->recon.modal?P(recon->anmod, idm):P(recon->aloc,0)->nloc;

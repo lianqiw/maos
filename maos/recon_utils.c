@@ -377,29 +377,19 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 					const int npsr=recon->npsr;
 					/*First compute residual opd: Hx*x-Ha*a*/
 					for(int ips=0; ips<npsr; ips++){
-						const real ht=P(recon->ht, ips);
-						real scale=1-ht/hs;
-						real dispx=P(parms->evl.thetax, ievl)*ht;
-						real dispy=P(parms->evl.thetay, ievl)*ht;
-						if(scale<0) continue;
-						propdata_t propdata={.phiin=P(P(opdr, ips)), .locout=locs, .phiout=P(xx), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale};
+						propdata_t propdata={.phiin=P(P(opdr, ips)), .locout=locs, .phiout=P(xx), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)};
 						if(parms->tomo.square){/*square xloc */
 							propdata.mapin=P(recon->xmap, ips);
 						} else{
 							propdata.locin=P(recon->xloc, ips);
 						}
-						prop(&propdata, 0, 0);
+						prop(&propdata);
 					}
 				}
 				if(dmtmp){
 					for(int idm=0; idm<parms->ndm; idm++){
-						const real ht=parms->dm[idm].ht;
-						real scale=1.-ht/hs;
-						real dispx=P(parms->evl.thetax, ievl)*ht;
-						real dispy=P(parms->evl.thetay, ievl)*ht;
-						if(scale<0) continue;
 						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(dmtmp, idm)), .locout=locs,
-							.phiout=P(xx), .alpha=1, .displacex=dispx, .displacey=dispy, .scale=scale}, 0, 0);
+							.phiout=P(xx), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
 					}
 				}
 				dmm(&P(simu->ecov, ievl), 1, xx, xx, "nt", 1);
