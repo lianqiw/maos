@@ -1221,9 +1221,9 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 
 /**
    Add val amount of focus to opd. The unit is in radian like.
-   Piston is removed.
+   Piston is removed. The focus is centered at ox, oy
 */
-void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
+void loc_add_focus_offset(const dmat* opd, const loc_t* loc, const real val, const real ox, const real oy){
 	if(!opd||!loc||!val) return;
 	if(loc->nloc!=opd->nx*opd->ny){
 		error("Invalid dimensions. loc has %ld, opd has %ldx%ld\n", loc->nloc, opd->nx, opd->ny);
@@ -1233,7 +1233,9 @@ void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	const real* restrict locy=loc->locy;
 	real piston=0;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
-		real tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
+		const real x=locx[iloc]-ox;
+		const real y=locy[iloc]-oy;
+		real tmp=(x*x+y*y)*val;
 		P(opd,iloc)+=tmp;
 		piston+=tmp;
 	}
@@ -1241,6 +1243,9 @@ void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	for(long iloc=0; iloc<loc->nloc; iloc++){
 		P(opd,iloc)+=piston;
 	}
+}
+void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
+	loc_add_focus_offset(opd, loc, val, 0, 0);
 }
 /**
    Create a dmat containing locx and locy in two columns

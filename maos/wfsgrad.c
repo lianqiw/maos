@@ -210,12 +210,20 @@ void* wfsgrad_iwfs(thread_t* info){
 			real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 			loc_add_ptt(opd, ptt, powfs[ipowfs].loc);
 		}
-
-		real focus=wfsfocusadj(simu, iwfs);
-		if(fabs(focus)>1e-20){
-			loc_add_focus(opd, powfs[ipowfs].loc, focus);
+		if(simu->telfocusreal){/*Telescope focus correction*/
+			real focus=-P(P(simu->telfocusreal,0),0);
+			if(fabs(focus)>1e-20){
+				loc_add_focus(opd, powfs[ipowfs].loc, focus);
+			}
 		}
-
+		if(parms->powfs[ipowfs].llt){
+			real focus=zoomfocusadj(simu, iwfs);
+			if(fabs(focus)>1e-20){
+				loc_add_focus_offset(opd, powfs[ipowfs].loc, focus, 
+					PR(parms->powfs[ipowfs].llt->ox, wfsind), 
+					PR(parms->powfs[ipowfs].llt->oy, wfsind));
+			}
+		}
 		/* Add surface error*/
 		if(powfs[ipowfs].opdadd&&P(powfs[ipowfs].opdadd, wfsind)){
 			dadd(&opd, 1, P(powfs[ipowfs].opdadd, wfsind), 1);
@@ -761,16 +769,15 @@ static void wfsgrad_dither(sim_t* simu, int iwfs){
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
-
+	const int isim=simu->wfsisim;
 	dcell* LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const int do_phy=simu->wfsflags[ipowfs].do_phy;
 		if(!simu->wfsflags[ipowfs].gradout||!parms->powfs[ipowfs].llt
-			||simu->wfsisim<parms->powfs[ipowfs].step||!do_phy){
+			||isim<parms->powfs[ipowfs].step||!do_phy){
 			continue;
 		}
-
 		real lgsfocusm=0;//LGS averaged focus
 		if(parms->sim.mffocus>1){
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -786,7 +793,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			P(P(simu->LGSfocusts, iwfs), 0, simu->wfsisim)=P(P(LGSfocus, iwfs), 0);//save time history
+			P(P(simu->LGSfocusts, iwfs), 0, isim)=P(P(LGSfocus, iwfs), 0);//save time history
 			if(parms->powfs[ipowfs].zoomgain){
 				//Trombone from gradients. always enable
 				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager
@@ -801,7 +808,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 					dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), lgsfocusm-P(P(LGSfocus, iwfs), 0));
 				}
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
-				P(P(simu->LGSfocusts, iwfs), 1, simu->wfsisim)=focus-P(simu->lgsfocuslpf, iwfs);
+				P(P(simu->LGSfocusts, iwfs), 1, isim)=focus-P(simu->lgsfocuslpf, iwfs);
 				//LPF is after using the value to put it off critical path of the RTC.
 				real lpfocus=parms->sim.lpfocushi;
 				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+focus*lpfocus;

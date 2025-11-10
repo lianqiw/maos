@@ -279,80 +279,109 @@ void atm2xloc(dcell** opdx, const sim_t* simu){
 		}
 	}
 }
+/*
+	Update trombone position. 
+	The fast sodium range is simulated with powfs.focus as a wavefront error
+	The trombone response is simulated with a focus wavefront error first. 
+	The ETF is then updated so that the difference between the two above is slowly removed.
+	This hybrid implementation ensure zero long term focus in both wavefront and in i0 (gradients)
+*/
+void sim_update_zoom(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(!parms->powfs[ipowfs].llt || parms->powfs[ipowfs].zoomdtrat==0) continue;
+		const int isim=simu->wfsisim;
+		const int zoom_update=(parms->powfs[ipowfs].zoomdtrat>0&&isim%parms->powfs[ipowfs].zoomdtrat==0);
+		//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
+		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
+		if(zoom_update){
+			if(parms->powfs[ipowfs].zoomshare){
+				const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+				if(P(simu->zoomavg_count, iwfs0)){//gradient based	
+					average_powfs(simu->zoomavg, parms->powfs[ipowfs].wfs, 1);
+				}
+				if(P(simu->zoomdrift_count, iwfs0)){//i0 based
+					average_powfs(simu->zoomdrift, parms->powfs[ipowfs].wfs, 1);
+				}
+			}
+		}
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			if(zoom_update){
+				real zoomerr1=0, zoomerr2=0;
+				if(P(simu->zoomavg_count, iwfs)){//gradient based
+					zoomerr1=P(simu->zoomavg, iwfs)/P(simu->zoomavg_count, iwfs);
+					P(simu->zoomavg, iwfs)=0;
+					P(simu->zoomavg_count, iwfs)=0;
+				}
+				if(P(simu->zoomdrift_count, iwfs)){//i0 based
+					zoomerr2=P(simu->zoomdrift, iwfs)/P(simu->zoomdrift_count, iwfs);
+					P(simu->zoomdrift, iwfs)=0;
+					P(simu->zoomdrift_count, iwfs)=0;
+				}
+				real zoomerr=(parms->powfs[ipowfs].zoomgain*zoomerr1
+					+parms->powfs[ipowfs].zoomgain_drift*zoomerr2);
+				P(simu->zoomerr, iwfs)=zoomerr/parms->powfs[ipowfs].zoomdtrat;//ZOH with reduced strength
+			}
+			//update zoom integrator at every step for smooth transition
+			P(simu->zoomint, iwfs)+=P(simu->zoomerr, iwfs);
+			if(simu->zoompos&&simu->zoompos_icol<PN(simu->zoompos, iwfs)){
+				P(P(simu->zoompos, iwfs), simu->zoompos_icol)=P(simu->zoomint, iwfs);
+			}
+		}
+		simu->zoompos_icol++;
+	}
+}
 /**
    Evolving the Sodium layer by updating the elongation transfer function.
 */
 void sim_update_etf(sim_t* simu){
-	int isim=simu->wfsisim;
+	const int isim=simu->wfsisim;
 	const parms_t* parms=simu->parms;
 	powfs_t* powfs=simu->powfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		/* Update ETF if necessary. */
-		if(!parms->powfs[ipowfs].llt) continue;
 		//Needs ETF for imaging
 		const int has_phy=parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout;
-		//Need to initialize trombone position
-		const int zoomset=parms->powfs[ipowfs].zoomset
-			&&simu->wfsisim==parms->sim.start+parms->powfs[ipowfs].zoomset
-			&&parms->powfs[ipowfs].phytype_sim!=PTYPE_MF;
+		if(!parms->powfs[ipowfs].llt || !has_phy) continue;
 		//Time for sodium profile update
 		const int na_update=parms->powfs[ipowfs].llt->coldtrat>0&&isim%parms->powfs[ipowfs].llt->coldtrat==0;
-		const int zoom_update=parms->powfs[ipowfs].zoomdtrat>0&&isim%parms->powfs[ipowfs].zoomdtrat==0;
-		if(has_phy &&(na_update||zoomset||zoom_update)){
+		//Time for trombone position update
+		const int zoom_update=(parms->powfs[ipowfs].zoomdtrat>0&&isim%parms->powfs[ipowfs].zoomdtrat==0);
+		//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
+		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
+		const real factor=-2*pow(parms->powfs[ipowfs].hs, 2);
+		real deltah1=0, deltah2=0;
+		if(na_update || zoom_update){
 			int icol=0, icol2=0;
+			const int colsim=parms->powfs[ipowfs].llt->colsim;
 			if(parms->powfs[ipowfs].llt->coldtrat>0){
-				int dtrat=parms->powfs[ipowfs].llt->coldtrat;
-				int colsim=parms->powfs[ipowfs].llt->colsim;
-				icol=colsim+isim/dtrat;
+				icol=colsim+isim/parms->powfs[ipowfs].llt->coldtrat;
 				icol2=icol+1;
-			}
-			real deltah1=0;
-			static real deltah2=0;//keep history
-			//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
-			//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
-			const real factor=-2*pow(parms->powfs[ipowfs].hs, 2);
-			if(zoomset || zoom_update){
-				if(!parms->powfs[ipowfs].zoomshare){
-					error("Please implement\n");
-				}
-				int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
-				real zoomerr1=0, zoomerr2=0;
-				if(P(simu->zoomavg_count, iwfs0)){//gradient based
-					average_powfs(simu->zoomavg, parms->powfs[ipowfs].wfs, 1);
-					zoomerr1=P(simu->zoomavg, iwfs0)/P(simu->zoomavg_count, iwfs0);
-					dzero(simu->zoomavg);
-					lzero(simu->zoomavg_count);
-				}
-				if(P(simu->zoomdrift_count, iwfs0)){//i0 based
-					average_powfs(simu->zoomdrift, parms->powfs[ipowfs].wfs, 1);
-					zoomerr2=P(simu->zoomdrift, iwfs0)/P(simu->zoomdrift_count, iwfs0);
-					dzero(simu->zoomdrift);
-					lzero(simu->zoomdrift_count);
-				}
-				if(zoomset){
-					P(simu->zoomint, iwfs0)=(zoomerr1+zoomerr2);
-					//more accurate method:
-					real hold=parms->powfs[ipowfs].hs;
-					real hnew=1./(1./hold+2*P(simu->zoomint, iwfs0));
-					deltah1=hnew-hold;
-				}else{
-					P(simu->zoomint, iwfs0)+=parms->powfs[ipowfs].zoomgain*zoomerr1
-						+parms->powfs[ipowfs].zoomgain_drift*zoomerr2;
-					deltah1=deltah2;
-					deltah2=P(simu->zoomint, iwfs0)*factor;//convert focus to height
-				}
-				if(simu->zoompos&&simu->zoompos_icol<PN(simu->zoompos, iwfs0)){
-					P(P(simu->zoompos, iwfs0), simu->zoompos_icol)=P(simu->zoomint, iwfs0);
-					simu->zoompos_icol++;
-				}
-				dbg("Step %d: powfs %d: zoompos is %g.\n", isim, ipowfs, zoomset?deltah1:deltah2);
 			}else{
-				info("Step %d: powfs %d: new sodium profile.\n", isim, ipowfs);
+				icol=colsim;
+				icol2=colsim;
 			}
-			//We use deltah1 and deltah2 to smooth motion
-			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah1, zoomset?0:parms->powfs[ipowfs].llt->na_thres);
-			if(icol2!=icol){
-				setup_shwfs_etf(powfs, parms, ipowfs, 2, icol2, deltah2, parms->powfs[ipowfs].llt->na_thres);
+			if(zoom_update){
+				const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+				if(!parms->powfs[ipowfs].zoomshare){
+					error("Update setup_shwfs_etf to handle non-shared zoom per LGS.\n");
+				}
+				//We drive the trombone so that focus error modeled in the wavefront is minimized
+				//sodium profile variation is corrected with zoomint (in wavefront space)
+				//focus error due to i0 offset is corrected with ETF (in i0 space)
+				real focusadj=0;
+				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					focusadj+=zoomfocusadj(simu, iwfs);
+				}
+				focusadj/=parms->powfs[ipowfs].nwfs;
+				deltah1=P(simu->zoomprev, iwfs0);//old zoom location
+				deltah2=deltah1-0.2*factor*focusadj;
+				P(simu->zoomprev, iwfs0)=deltah2;//save as old result for next step
+			}
+			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah1, 0);
+			if(icol2!=icol || deltah1!=deltah2){
+				setup_shwfs_etf(powfs, parms, ipowfs, 2, icol2, deltah2, 0);
 			}
 #if USE_CUDA
 			if(parms->gpu.wfs){
@@ -1082,6 +1111,8 @@ static void init_simu_wfs(sim_t* simu){
 		simu->zoomdrift=dnew(parms->nwfs, 1);
 		simu->zoomdrift_count=lnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
+		simu->zoomerr=dnew(parms->nwfs, 1);
+		simu->zoomprev=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
 		simu->zoomavg_count=lnew(parms->nwfs, 1);
 		//To use writebin_async, the number of columns must be related to timestep
@@ -1095,7 +1126,7 @@ static void init_simu_wfs(sim_t* simu){
 				nnx[iwfs]=1;
 				nny[iwfs]=0;
 				if(parms->powfs[ipowfs].zoomdtrat){
-					nny[iwfs]=parms->sim.end/parms->powfs[ipowfs].zoomdtrat+1;
+					nny[iwfs]=nsim;
 				}
 				nnx2[iwfs]=2;//raw and HPF
 				nny2[iwfs]=nsim;

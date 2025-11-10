@@ -105,6 +105,7 @@ void prepare_isim(sim_t *simu){
 	}
 #endif
 	update_wfsflags(simu);
+	sim_update_zoom(simu);
 	sim_update_etf(simu);
 	if(parms->sim.dmproj){
 		/* temporarily disable FR.M so that Mfun is used.*/

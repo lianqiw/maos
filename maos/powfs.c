@@ -1416,6 +1416,7 @@ static void setup_shwfs_cog_mask(const parms_t* parms, powfs_t* powfs, int ipowf
 		error("setting up cogmask requires i0 to be available\n");
 		return;
 	}
+	dbg("powfs%d: generating cog_mask\n", ipowfs);
 	powfs[ipowfs].intstat->cogmask=dcellnew_same(NX(powfs[ipowfs].intstat->i0), NY(powfs[ipowfs].intstat->i0),
 		NX(powfs[ipowfs].intstat->i0, 0), NY(powfs[ipowfs].intstat->i0,0));
 	for(int icol=0; icol<NY(powfs[ipowfs].intstat->i0); icol++){

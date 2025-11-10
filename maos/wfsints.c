@@ -214,9 +214,9 @@ void* wfsints(thread_t* thread_data){
 		real etf2wt=0;
 		if(hasllt){
 			petf1=powfs[ipowfs].etfsim[iwvl].etf;
-			if(parms->powfs[ipowfs].llt->coldtrat>0){
+			if(powfs[ipowfs].etfsim2){
 				petf2=powfs[ipowfs].etfsim2[iwvl].etf;
-				const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
+				const int dtrat=parms->powfs[ipowfs].llt->coldtrat?parms->powfs[ipowfs].llt->coldtrat:parms->powfs[ipowfs].zoomdtrat;
 				etf2wt=(real)(data->isim%dtrat)/(real)dtrat;
 				etf1wt=1.-etf2wt;
 			}

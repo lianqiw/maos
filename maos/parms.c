@@ -365,7 +365,6 @@ static void readcfg_powfs(parms_t *parms){
 	READ_POWFS_RELAX(int,zoomshare);
 	READ_POWFS_RELAX(dbl,zoomgain);
 	READ_POWFS_RELAX(dbl,zoomgain_drift);
-	READ_POWFS_RELAX(int,zoomset);
 	READ_POWFS_RELAX(dbl,apfsm);
 	READ_POWFS_RELAX(dbl,epfsm);
 	READ_POWFS_RELAX(dbl,alfsm);
@@ -2275,10 +2274,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(lltcfg->fcfsm){
 				lltcfg->epfsm=fc2lp(lltcfg->fcfsm, parms->sim.dt*powfsi->dtrat);
 				if(lltcfg->fcfsm>0) info("powfs%d.llt.fsm: f0=%g Hz, LPF ep=%g\n", ipowfs, lltcfg->fcfsm, lltcfg->epfsm);
-			}
-			if(powfsi->zoomdtrat>0 && lltcfg->coldtrat==0){
-				info("powfs%d:llt.coldtrat is set to zoomdtrat=%d\n", ipowfs, powfsi->zoomdtrat);
-				lltcfg->coldtrat=powfsi->zoomdtrat;
 			}
 		}
 		if(lltcfg||powfsi->dither==1){//has FSM

@@ -39,10 +39,10 @@ __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2],
 	}
 }
 __global__ void add_focus_do(Real* restrict opd, Real(*restrict loc)[2],
-	int n, Real focus){
+	int n, Real focus, Real ox, Real oy){
 	const int step=blockDim.x*gridDim.x;
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
-		opd[i]+=(loc[i][0]*loc[i][0]+loc[i][1]*loc[i][1])*focus;
+		opd[i]+=((loc[i][0]-ox)*(loc[i][0]-ox)+(loc[i][1]-oy)*(loc[i][1]-oy))*focus;
 	}
 }
 __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,

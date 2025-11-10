@@ -360,7 +360,7 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			zfarr_push_scale(simu->save->wfslltopd[iwfs], isim, lltopd, 1, stream);
 		}
 		if(cuwfs[iwfs].dtf[0].etf[1].etf){
-			const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
+			const int dtrat=parms->powfs[ipowfs].llt->coldtrat?parms->powfs[ipowfs].llt->coldtrat:parms->powfs[ipowfs].zoomdtrat;
 			wt2=(real)(isim%dtrat)/(real)dtrat;
 			//wt2=(real)isim/dtrat; wt2=wt2-floor(wt2);
 			wt1=1.-wt2;

@@ -285,7 +285,6 @@ typedef struct powfs_cfg_t{
     int zoomshare;   /**<1: All LGS share the same trombone*/
     real zoomgain; /**<gain of the trombone controller*/
     real zoomgain_drift; /**<gain for the trombone controller with i0 drift input*/
-    int zoomset;     /**<Set zoom position from the beginning*/
     int ng;         /**<number of gradients per subaperture. 2 for SHWFS. >2 for raw PWFS*/
 
     //options for FSM
