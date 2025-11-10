@@ -1,10 +1,10 @@
 AM_CFLAGS=-I $(top_srcdir)
 AM_LDFLAGS=$(LDEXE)
 ICONS=icon-avg.png icon-cancel.png icon-clear.png icon-connect.png icon-draw-small.png icon-draw.png icon-error.png \
-icon-finished.png icon-log.png icon-monitor.png icon-play.png icon-save.png icon-skip.png icon-waiting.png
+icon-finished.png icon-log.png icon-monitor.png icon-play.png icon-save.png icon-skip.png icon-waiting.png favicon.ico
 
-noinst_HEADERS=monitor.h drawdaemon.h scheduler.h mygtk.h monitor.html gtk3-css.h resources.xml $(ICONS) 
-
+noinst_HEADERS=monitor.h drawdaemon.h scheduler.h mygtk.h monitor.html gtk3-css.h 
+EXTRA_DIST=resources.xml monitor.html monitor.js monitor.css monitor_utils.js monitor_draw_utils.js monitor_draw.js $(ICONS)
 PROGS=
 
 if USE_SCHEDULER
