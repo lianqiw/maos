@@ -222,8 +222,9 @@ function procBuffer(wsBuf) {
         drawData['xylog'] = getByteArray(2);
         break;
       case draw.final:
-        console.log("DRAW_FINAL");
+        //console.log("DRAW_FINAL");
         drawData['final']=1;
+        drawData['id']=drawData['fig']+drawData['name']
         break;
       case draw.float:
         byteFloat = getInt();
@@ -298,22 +299,27 @@ function makeTraces(drawData) {
     },
     autosize: true,
     margin: {t:40, b:40, l:50, r:20},
-    uirevision: 'my_revision'
+    uirevision: drawData['id'],
   }
   let traces = [];
   let square = 0;
   let ratio = 1;
   if (drawData['data']) {
-    square = 1;
     const nx = drawData['data'][0].length;
     const ny = drawData['data'].length;
-    ratio = (nx && ny) ? (ny / nx) : 1;
-    let x, y;
-    if (drawData['limit']) {
-      x = linspace(drawData['limit'][0], drawData['limit'][1], nx)
-      y = linspace(drawData['limit'][2], drawData['limit'][3], ny)
+    if(nx && ny){
+      square = 1;
+      let trace={z: drawData['data'], type: 'heatmap', colorscale: 'Jet', showlegend: false };
+      if (drawData['limit']) {
+        const x = linspace(drawData['limit'][0], drawData['limit'][1], nx)
+        const y = linspace(drawData['limit'][2], drawData['limit'][3], ny)
+        ratio=(drawData['limit'][3]-drawData['limit'][2])/(drawData['limit'][1]-drawData['limit'][0]);
+        trace={x,y,...trace}
+      }else{
+        ratio=ny/nx
+      }
+      traces.push(trace);
     }
-    traces.push({ x, y, z: drawData['data'], type: 'heatmap', colorscale: 'Jet', showlegend: false });
   } else if (drawData['pts']) {
     const showlegend = drawData['pts'].length > 1 ? 1 : 0;
     traces = traces.concat(drawData['pts'].map((pts, ipts) => {

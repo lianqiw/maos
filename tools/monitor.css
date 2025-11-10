@@ -65,11 +65,11 @@ table.monitor .tdpath {
 	overflow: hidden;
 	text-overflow: ellipsis; 
 }
-table.monitor .tdout {
-	max-width: 10em;/*this allows ellipsis*/
+/*table.monitor .tdout {
+	max-width: 10em;
 	overflow: hidden;
 	text-overflow: ellipsis; 
-}
+}*/
 table.monitor td.tdout{ /*use td.tdout, not td .tdout or .tdout td*/
 	text-align: left;
 }

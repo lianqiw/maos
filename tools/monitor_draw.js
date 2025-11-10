@@ -25,7 +25,7 @@ function lpfDrawdata(newData, oldData, lpf){
     console.log(now(), err);
   }
 }
-const DrawDaemon = React.memo(({ drawInfo, jobActive,updateDrawInfo }) => {
+const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   //Notice that the state variables do CHANGE at every re-rendering. It just does not change within a rendering
   const { useState, useEffect, useRef } = React;
   const [topActive, setTopActive] = useState({});//active fig
@@ -85,7 +85,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive,updateDrawInfo }) => {
     };
     ws.onmessage = (event) => {
       if (typeof event.data === "string") {//instanceof does not work for string
-        console.log(now(),"Got unexpected text data with bytes ", event.data.size);
+        console.log(now(), `Got unexpected text data ${event.data}`);
       } else if (event.data instanceof Blob) {//Blob is read only
         console.log(now(),"Got unexpected blob data with bytes ", event.data.size);
       } else if (event.data instanceof ArrayBuffer) {//ArrayBuffer support writing.
@@ -211,7 +211,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive,updateDrawInfo }) => {
           <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.1" min="0"
           onClick={()=>{if(cumInputRef.current) cumInputRef.current.select();}} 
           onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
-        <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{setCumPlot(oldVal=>!oldVal)}}>🎢</li>
+        <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
         <li title="Set image update low pass filter">
           <form onSubmit={(e)=>{e.preventDefault(); lpf.current=(parseFloat(lpfInput.length?lpfInput:"0.01"));}}>
           <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.001" min="0.001" max="1"
@@ -225,7 +225,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive,updateDrawInfo }) => {
           {jobRef.current[jobActive]['drawData'][topActive[jobActive]] &&
             Object.keys(jobRef.current[jobActive]['drawData'][topActive[jobActive]]).sort().map((name) => (
               <li key={name} className={botActive[jobActive][topActive[jobActive]] === name ? "active" : ""}
-                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } })); setPause(oldVal=>({...oldVal, [jobActive]:false})); }}
+                onClick={() => { setBotActive(oldVal => ({ ...oldVal, [jobActive]: { ...oldVal[jobActive], [topActive[jobActive]]: name } })); }}
               >{name}</li>))}
         </ul>
         <div id="chart" ref={chartRef}></div></div>

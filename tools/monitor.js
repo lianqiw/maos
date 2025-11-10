@@ -1,7 +1,7 @@
 "use strict"; //every variable need to be defined
 window.port = ':80';
 window.pcol = "ws://";
-const iconName = { 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
+const iconName = {0:"❓", 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
 //Notice: 
 //Always define Components outside of App.
 //Components defined within App() will always be rerendered when App() renders. Move it outside to avoid.
@@ -126,7 +126,7 @@ function App() {
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
               if (i[13] === '0.000') i[13] = '';
-              newdata = { PID: i[2], Host: host, status: i[3], Time: i[4], High: i[5], Low: i[6], Step: i[13], prog: prog, frac: frac, icon: icon };
+              newdata = { PID: i[2], Host: host, status: i[3]?i[3]:12, Time: i[4], High: i[5], Low: i[6], Step: i[13], prog: prog, frac: frac, icon: icon };
             }
           } else {
             continue;//invalid data
@@ -293,7 +293,7 @@ function App() {
           </table>
         )}
         <DrawDaemon drawInfo={drawInfo} jobActive={active} 
-        updateDrawInfo={(info)=>{setDrawInfo((oldInfo) => ({ ...oldInfo, [info[0]]: {...oldInfo[info[0]], jobname: info[1]}}))}}></DrawDaemon>
+        updateDrawInfo={(info)=>{setActive(info[0]); setDrawInfo((oldInfo) => ({ ...oldInfo, [info[0]]: {...oldInfo[info[0]], jobname: info[1]}}))}}></DrawDaemon>
       </div>
     );
   }catch(err){

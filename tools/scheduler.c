@@ -377,7 +377,7 @@ static void check_jobs(void){
 					}
 				} else {
 					nrunning++;
-					if((irun->last_time+600<now)&&irun->status.info==S_RUNNING){
+					if((irun->last_time+600<now)){
 						dbg_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
 								irun->pid, now-irun->last_time);
 						irun->status.info=S_UNKNOWN;
