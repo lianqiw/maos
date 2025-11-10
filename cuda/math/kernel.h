@@ -134,7 +134,7 @@ __global__ void add_do(T *vec, T beta, int n){
 //__global__ void scale_do(Comp* restrict in, int n, Real alpha);
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real pis, Real tx, Real ty);
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real* ptt, Real pis, Real tx, Real ty);
-__global__ void add_focus_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real focus);
+__global__ void add_focus_do(Real* restrict opd, Real(*restrict loc)[2], int n, Real focus, Real ox, Real oy);
 __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 	Real ttx, Real tty,
 	Real ps1, Real ps2, Real ps3,

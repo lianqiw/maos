@@ -589,13 +589,22 @@ void *gpu_wfsgrad_queue(thread_t* info){
 				mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 
 					INFINITY, hc, 0, 0, 0, 0, -1, stream);
 			}
-
-			Real focus=(Real)wfsfocusadj(simu, iwfs);
-			if(Z(fabs)(focus)>1e-20){
-				const int nloc=cupowfs[ipowfs].loc.Nloc();
-				add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus);
+			if(simu->telfocusreal){
+				Real focus=-(Real)P(P(simu->telfocusreal,0),0);
+				if(Z(fabs)(focus)>1e-20){
+					const int nloc=cupowfs[ipowfs].loc.Nloc();
+					add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus, 0, 0);
+				}
 			}
-
+			if(parms->powfs[ipowfs].llt){
+				Real focus=(Real)zoomfocusadj(simu, iwfs);
+				if(fabs(focus)>1e-20){
+					const Real ox=PR(parms->powfs[ipowfs].llt->ox, wfsind);
+					const Real oy=PR(parms->powfs[ipowfs].llt->oy, wfsind);
+					const int nloc=cupowfs[ipowfs].loc.Nloc();
+					add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus, ox, oy);
+				}
+			}
 			if(cupowfs[ipowfs].fieldstop){
 				if(parms->powfs[ipowfs].nwvl>1){
 					error("Implement broadband case\n");

@@ -96,6 +96,7 @@ void loc_reduce_spcell(loc_t* loc, dspcell* sp, int dim, int cont);
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont);
 
 void loc_add_focus(const dmat* opd, const loc_t* loc, real val);
+void loc_add_focus_offset(const dmat* opd, const loc_t* loc, real val, real ox, real oy);
 dmat* loc2mat(loc_t* loc, int piston);
 loc_t* pts2loc(pts_t* pts);
 void locrot(loc_t* loc, const real theta);

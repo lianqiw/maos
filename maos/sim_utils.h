@@ -19,6 +19,7 @@
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H
 void atm2xloc(dcell **opdx, const sim_t *simu);
+void sim_update_zoom(sim_t *simu);
 void sim_update_etf(sim_t *simu);
 void update_wfsflags(sim_t *simu);
 void shift_grad(sim_t *simu);

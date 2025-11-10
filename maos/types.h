@@ -355,7 +355,6 @@ typedef struct recon_t{
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     moao_t *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
-    dcell *GFlgs;      /**<Focus to LGS gradients*/
     dcell *GFngs;      /**<Focus to NGS gradients*/
     dcell *GFall;      /**<Focus to WFS Gradients.*/
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
@@ -626,7 +625,9 @@ typedef struct sim_t{
     //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/
     lmat *zoomdrift_count;
+	dmat *zoomerr;    /**<Trombone error signal, LOH to smooth out the transition*/
     dmat *zoomint;    /**<Trombone integrator*/
+	dmat *zoomprev;	  /**<Previous trombone position (in height). */
     dmat *zoomavg;    /**<Trombone averager from gradients*/
     lmat *zoomavg_count;/**<Count of zoomavg accumulation*/
     dcell *zoompos;    /**<Trombone position history. for saving*/

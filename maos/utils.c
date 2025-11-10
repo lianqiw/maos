@@ -465,7 +465,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
 			}
 			if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->cogmask){
-				drawints("CoG", powfs[ipowfs].saloc, powfs[ipowfs].intstat->cogmask, 0,
+				drawints("Gmask", powfs[ipowfs].saloc, powfs[ipowfs].intstat->cogmask, 0,
 						"WFS CoG Mask", "x", "y", "WFS %2d", iwfs);
 			}
 		}
@@ -845,9 +845,10 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 }
 
 /**
-   Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
+   Compute the focus adjustment caused by mismatch between the sodium profile range and trombone
+   Used in both CPU and GPU code. Notice that this focus is centered on the LLT.
 */
-real wfsfocusadj(sim_t* simu, int iwfs){
+real zoomfocusadj(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
@@ -858,12 +859,7 @@ real wfsfocusadj(sim_t* simu, int iwfs){
 		if(powfs[ipowfs].focus){//input focus error due to range variation
 			focus+=PR(powfs[ipowfs].focus, isim, wfsind);
 		}
-		/*
-		  The simu->zoomint has been migrated to sim_update_etf to change the hs directly.
-		  */
-	}
-	if(simu->telfocusreal){
-		focus-=P(P(simu->telfocusreal,0),0);
+		focus-=P(simu->zoomint, iwfs);
 	}
 	return focus;
 }
