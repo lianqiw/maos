@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['d_0',['d',['../d9/d19/pywfs_8h.html#af885240cbecf74b2a4c267898fb2fef6',1,'pywfs_cfg_t::D'],['../d4/d38/parms_8h.html#a0f4066f8181cc956c6bd50a40882f257',1,'llt_cfg_t::d'],['../d4/d38/parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7',1,'aper_cfg_t::d']]],
+  ['d_0',['d',['../d4/d38/parms_8h.html#a0f4066f8181cc956c6bd50a40882f257',1,'llt_cfg_t::d'],['../d4/d38/parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7',1,'aper_cfg_t::d'],['../d9/d19/pywfs_8h.html#af885240cbecf74b2a4c267898fb2fef6',1,'pywfs_cfg_t::D']]],
   ['d2cell_1',['d2cell',['../da/dfb/dmath_8h.html#abed4b3e507a4bb20689c0fce64de6c0a',1,'dtmp.c']]],
   ['d2cellref_2',['d2cellref',['../da/dfb/dmath_8h.html#a7ff47722a9401a5bf0e98b3be7493920',1,'dtmp.c']]],
   ['d2sp_3',['d2sp',['../da/dfb/dmath_8h.html#ae45f4bcb07ae1f7c51db180c5114c863',1,'dtmp.c']]],

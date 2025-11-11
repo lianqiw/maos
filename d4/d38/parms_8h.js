@@ -215,7 +215,6 @@ var parms_8h =
       [ "zoomshare", "d4/d38/parms_8h.html#a83a827dd108e871579b35cabdea4250d", null ],
       [ "zoomgain", "d4/d38/parms_8h.html#ac8ecc8a08547a292f2c3e6fc47d98e9b", null ],
       [ "zoomgain_drift", "d4/d38/parms_8h.html#a97b40d9e2b96bbf67978b8d92e58299f", null ],
-      [ "zoomset", "d4/d38/parms_8h.html#a5aea9dc5cc99570a54fd28232ea55b37", null ],
       [ "ng", "d4/d38/parms_8h.html#abb349e921acd3f558dad1d163e868d53", null ],
       [ "apfsm", "d4/d38/parms_8h.html#a6074b1c7bdf1eb69a90fd993db87d315", null ],
       [ "epfsm", "d4/d38/parms_8h.html#abe42d224efc359b32d436b9442f55c8c", null ],

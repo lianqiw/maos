@@ -255,7 +255,6 @@ var maos_2types_8h =
       [ "MVM", "d6/d94/maos_2types_8h.html#a64905f799b035a2bef86639f9b05125e", null ],
       [ "MVA", "d6/d94/maos_2types_8h.html#ad5dbb605c4c0a76ac31494bb3f705890", null ],
       [ "moao", "d6/d94/maos_2types_8h.html#ac5380ba23d9dd22537cdc88a049030b8", null ],
-      [ "GFlgs", "d6/d94/maos_2types_8h.html#a3712a9c6efaa5c60eeee0680c1c7086f", null ],
       [ "GFngs", "d6/d94/maos_2types_8h.html#a4db93fafc238b48372c19d994ee628ee", null ],
       [ "GFall", "d6/d94/maos_2types_8h.html#a3f71c3e37eaa09e33fd3207e0f1a9c4d", null ],
       [ "RFlgsg", "d6/d94/maos_2types_8h.html#ab19ee67f78ce16e243f0fd229d862205", null ],
