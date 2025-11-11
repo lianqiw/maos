@@ -125,10 +125,12 @@ $(document).ready(function(){initNavTree('d3/d3d/llt__c_l.html','../../'); initR
 <div class="line">llt.fnrange=NaFocus6frozen.bin #Sodium range variation in meter (in addition to profile veriation if any).</div>
 <div class="line">                #matrix of size nsim*1 or nsim*nLGS.</div>
 <div class="line">llt.fnprof=&quot;NapMean.bin&quot; #sodium profile to build LGS elongation ETF. can</div>
-<div class="line">               #contain 2 or more columns. The first column is the</div>
-<div class="line">               #altitude, the second and the rest columns are the</div>
-<div class="line">               #strength of sodium layer that sum to the scaling</div>
-<div class="line">               #factor of signal level, normally 1.</div>
+<div class="line">               #contain 2 or more columns. The first column is the altitude, the</div>
+<div class="line">               #second and the rest columns are the strength of sodium return</div>
+<div class="line">               #per layer that sum to the scaling factor of signal level,</div>
+<div class="line">               #normally 1. We assume that the profiles are real returns</div>
+<div class="line">               #measured at zenith and therefore do not further scale the</div>
+<div class="line">               #profile based on solid angle. </div>
 <div class="line">llt.fnprep=    #empty: use llt.fnprof. sodium profile for i0 for preparation.</div>
 <div class="line">llt.colprep= 0 #which column of the profiles to use in matched filter.</div>
 <div class="line">llt.colsim = 0 #which column of the profiles to start to use in simulation.</div>
