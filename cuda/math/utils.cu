@@ -148,28 +148,19 @@ void scale_add(T* p1, R alpha, const S* p2, R beta, long n){
 	}
 }
 template <>
-void scale_add<double2, double, Comp>(double2* p1, double alpha, const Comp* p2, double beta, long n){
+void scale_add<double2, double, float2>(double2* p1, double alpha, const float2* p2, double beta, long n){
 	for(long i=0; i<n; i++){
 		p1[i].x=p1[i].x*alpha+p2[i].x*beta;
 		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
 	}
 }
 template <>
-void scale_add<float2, float, Comp>(float2* p1, float alpha, const Comp* p2, float beta, long n){
+void scale_add<float2, float, double2>(float2* p1, float alpha, const double2* p2, float beta, long n){
 	for(long i=0; i<n; i++){
 		p1[i].x=p1[i].x*alpha+p2[i].x*beta;
 		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
 	}
 }
-#if CPU_SINGLE==0
-template <>
-void scale_add<float2, float, comp>(float2 *p1, float alpha, const comp *p2, float beta, long n){
-	for(long i=0; i<n; i++){
-		p1[i].x=p1[i].x*alpha+p2[i].x*beta;
-		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
-	}
-}
-#endif
 /**
    Convert device (Real) array and add to host double.
    dest = alpha * dest + beta *src;
@@ -193,8 +184,8 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	free(tmp);
 }
 #define add2cpu_mat(D, T, C)						\
-    void add2cpu(D##mat **out, T alpha, const NumArray<C, Gpu> &in, T beta, \
-		 cudaStream_t stream, pthread_mutex_t *mutex){		\
+void add2cpu(D##mat **out, T alpha, const NumArray<C, Gpu> &in, T beta, \
+	cudaStream_t stream, pthread_mutex_t *mutex){		\
 	if(!in){							\
 	    if(*out) D##scale(*out, alpha);				\
 	    return;							\
@@ -206,22 +197,14 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	    assert((*out)->nx*(*out)->ny==in.N());			\
 	}								\
 	add2cpu(&(*out)->p, alpha, in(), beta, in.N(), stream, mutex); \
-    }
-
-add2cpu_mat(s, float, Real)
-add2cpu_mat(z, float, Comp)
-#if CPU_SINGLE==0
-add2cpu_mat(s, float, real)
-add2cpu_mat(z, float, comp)
-#endif
-#if COMP_SINGLE==0
+}
+/*
+	We provide add2cpu and cp2cpu for all CPU types.
+*/
 add2cpu_mat(d, real, Real)
 add2cpu_mat(c, real, Comp)
-#if CPU_SINGLE==0
-add2cpu_mat(d, real, real)
-add2cpu_mat(c, real, comp)
-#endif
-#endif
+add2cpu_mat(s, float, Real)
+add2cpu_mat(z, float, Comp)
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
@@ -266,14 +249,12 @@ void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 	if(pout->keywords) free(pout->keywords);				\
 	if(in.keywords.length()) pout->keywords=strdup(in.keywords.c_str());	\
 }
-#if COMP_SINGLE==0
-	cp2cpu_same(dmat, dzero, dnew, double)
-	cp2cpu_same(cmat, czero, cnew, double2)
-#endif
-	cp2cpu_same(smat, szero, snew, float)
-	cp2cpu_same(zmat, zzero, znew, float2)
-#if ! CUDA_DOUBLE
-#if COMP_SINGLE==0
+cp2cpu_same(dmat, dzero, dnew, real)
+cp2cpu_same(cmat, czero, cnew, dcomplex)
+cp2cpu_same(smat, szero, snew, float)
+cp2cpu_same(zmat, zzero, znew, fcomplex)
+#if CUDA_DOUBLE
+#if CPU_SINGLE
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
@@ -281,13 +262,21 @@ void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 #endif
-#else
 void cp2cpu(smat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
+#else
+#if CPU_SINGLE==0
+void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
+	add2cpu(out, 0, in, 1, stream, 0);
+}
+void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
+	add2cpu(out, 0, in, 1, stream, 0);
+}
+#endif
 #endif
 #define cp2cpu_cell(S, T)						\
 void cp2cpu(S##cell **out, const NumCell<T, Gpu> &in, cudaStream_t stream){ \
@@ -302,7 +291,7 @@ void cp2cpu(S##cell **out, const NumCell<T, Gpu> &in, cudaStream_t stream){ \
 	for(int i=0; i<in.N(); i++){					\
 	    cp2cpu(&(*out)->p[i], in[i], stream);			\
 	}								\
-    }
+}
 cp2cpu_cell(s, Real)
 cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)

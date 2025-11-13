@@ -1060,7 +1060,7 @@ void Add(NumArray<T, Gpu> &out, T *alpha1, const NumArray<T, Gpu> &in, cudaStrea
 		out=NumArray<T, Gpu>(in.Nx(), in.Ny());
 	}
 	add_do<<<DIM(in.N(), 256), 0, stream>>>
-		(out(), alpha1, 1.f, in(), in.N());
+		(out(), alpha1, (T)1, in(), in.N());
 }
 template <typename T, template<typename> class Dev >
 void initzero(NumArray<T, Dev>& A, long nx, long ny){

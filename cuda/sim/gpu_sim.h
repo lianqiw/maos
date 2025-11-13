@@ -26,6 +26,7 @@ extern "C"{
 #include "../../lib/aos.h"
 #include "../../maos/parms.h"
 #include "../../maos/types.h"
+#include "../../maos/mvm_client.h"
 	extern global_t *global;
 	void gpu_dbg(void);
 	void gpu_cleanup(void);

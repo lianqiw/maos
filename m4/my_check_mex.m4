@@ -1,4 +1,4 @@
-AC_DEFUN([MY_CHECK_MEX],[
+AC_DEFUN([MY_CHECK_MEX], [AS_IF([test $enable_single = 1], [with_matlab=no],[
 	#Compile mex routines if MATLAB is detected and single is not enabled
 	MEXDIR_AUTO=
 	if which matlab >/dev/null 2>&1;then
@@ -108,6 +108,7 @@ AC_DEFUN([MY_CHECK_MEX],[
 		AC_SUBST(LDMEX)
 		AC_SUBST(MEXOPT)
 	fi
+	])
 	AM_CONDITIONAL(USE_MEX, [test "$with_matlab" != "no"])
 	if test "$with_matlab" != "no" ;then
 		echo "MEXDIR=$MEXDIR"

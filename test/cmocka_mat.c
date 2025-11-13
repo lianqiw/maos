@@ -28,7 +28,11 @@ void mat_basic(void **state){
     rand_t rstat;
     seed_rand(&rstat, 1);
     drandn(b, 1, &rstat);
-    assert_int_equal(dhash(b, 1), 0x190394e1);
+	if(sizeof(b->p[0])==sizeof(double)){
+    	assert_int_equal(dhash(b, 1), 0x190394e1);
+	}else{
+		assert_int_equal(dhash(b, 1), 0x814f5609);
+	}
     assert_float_equal(dsum(b), 3.748561, 0.000001);
     assert_float_equal(dtrace(b), 0.820539, 0.000001);
     assert_float_equal(dmaxabs(b), 1.852614, 1e-6);

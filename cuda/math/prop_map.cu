@@ -450,8 +450,8 @@ void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 	res->cc=cc?cc():NULL;
 	{
 		Real nxps2, nyps2;
-		Real fxps2=modff(offx2+dispx+(nx-1)*xratio, &nxps2);
-		Real fyps2=modff(offy2+dispy+(ny-1)*yratio, &nyps2);
+		Real fxps2=modf(offx2+dispx+(nx-1)*xratio, &nxps2);
+		Real fyps2=modf(offy2+dispy+(ny-1)*yratio, &nyps2);
 		if(offx1+nx>nxdir||offy1+ny>nydir||nxps2>=nxps-1||nyps2>=nyps-1){
 			info("input: offset=%d, %d, to %g+%g, %g+%g, size %d, %d\n", offx2, offy2, nxps2, fxps2, nyps2, fyps2, nxps, nyps);
 			info("output: offset=%d, %d, to %d, %d, size %d, %d\n", offx1, offy1, offx1+nx, offy1+ny, nxdir, nydir);

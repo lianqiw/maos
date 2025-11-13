@@ -197,6 +197,7 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  float *C, int ldc){
 	return cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
 						  const double *A, int lda,
@@ -212,6 +213,7 @@ cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  float2 *C, int ldc){
 	return cublasCdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc);
 }
+template<>
 cublasStatus_t cublasGdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 						  int m, int n,
 						  const double2 *A, int lda,

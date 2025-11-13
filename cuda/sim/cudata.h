@@ -26,8 +26,6 @@
 extern int NGPU;//Actual number of GPUs being used. 
 extern int MAXGPU;
 extern Array<int> GPUS;//Used GPUS in cuda (col 0) and nvidia-smi index (col 1). nrow may be more than NGPU
-typedef Real AReal;
-typedef Real GReal;
 
 typedef struct{
     int ips;

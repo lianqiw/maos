@@ -25,8 +25,6 @@ Make sure the results is correct first.
 Test using transpose.
 
 */
-typedef Real AReal;
-typedef Real GReal;
 
 #define tix threadIdx.x
 #define tiy threadIdx.y
@@ -154,11 +152,11 @@ void mvm_test(int igpu){
 	X(mat)* x=X(new)(N, 1);
 	rand_t stat;
 	seed_rand(&stat, 1);
-	srandn(mvm, 1, &stat);
-	srandn(x, 1, &stat);
+	X(randn)(mvm, 1, &stat);
+	X(randn)(x, 1, &stat);
 	//writebin(mvm, "mvm");
 	//writebin(x, "x");
-	X(mat)* mvmt=strans(mvm);
+	X(mat)* mvmt=X(trans)(mvm);
 	curmat cumvmt;
 	curmat cumvm;
 	curmat cux, cuy;
@@ -171,7 +169,7 @@ void mvm_test(int igpu){
 	Array<event_t> event(nevent);
 	Real one=1.;
 	//cuwrite(cuy, stream, "y0");
-	Real tm;
+	float tm;
 	cudaProfilerStart();
 
 	{
