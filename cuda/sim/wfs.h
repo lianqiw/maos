@@ -20,8 +20,7 @@
 #include <cufft.h>
 #include "../math/cumath.h"
 #include "gpu_sim.h"
-#define RAND_BLOCK 8
-#define RAND_THREAD 256
+#define RAND_THREAD 32 //how many subapertures per block
 struct cuetf_t{
 	cucmat etf;
 	int icol;

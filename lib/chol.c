@@ -60,7 +60,7 @@ typedef float chol_real;
 		    ((t1*)p1)[i]=((t2*)p2)[i];		\
 		}					\
     }else{					\
-		p1=(chol_real*)p2;					\
+		p1=(t1*)p2;					\
     }
 #define DO_COPY(p1, p2, t1, t2, size)		\
     if(sizeof(t1)!=sizeof(t2)){			\

@@ -536,16 +536,13 @@ void gpu_wfsgrad_seeding(const parms_t* parms, const powfs_t* powfs, rand_t* rst
 		int seed=lrand(rstat);/*don't put this after continue. */
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(!parms->powfs[ipowfs].noisy) continue;
-		int nsa=powfs[ipowfs].saloc->nloc*2;
+		int nsa=powfs[ipowfs].saloc->nloc;
 		if(nsa<RAND_THREAD){
 			cuwfs[iwfs].custatt=nsa;//number of threads
 			cuwfs[iwfs].custatb=1;//number of blocks
-		} else if(nsa<RAND_THREAD*RAND_BLOCK){
-			cuwfs[iwfs].custatt=RAND_THREAD;
-			cuwfs[iwfs].custatb=nsa/RAND_THREAD+(nsa%RAND_THREAD)?1:0;
 		} else{
 			cuwfs[iwfs].custatt=RAND_THREAD;
-			cuwfs[iwfs].custatb=RAND_BLOCK;
+			cuwfs[iwfs].custatb=(nsa+RAND_THREAD-1)/RAND_THREAD;
 		}
 		DO(cudaMalloc(&cuwfs[iwfs].custat, (cuwfs[iwfs].custatt*cuwfs[iwfs].custatb)*sizeof(curandState)));
 		setup_rand<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt>>>(cuwfs[iwfs].custat, seed);

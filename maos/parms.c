@@ -3654,7 +3654,12 @@ parms_t *setup_parms(const char *mainconf, const char* extraconf, int override){
 	if(mainconf && strlen(mainconf)){
 		open_config(mainconf, 0);/*user supplied main .conf file. */
 	}else{
-		open_config("default.conf", 0);//default main conf file
+		char fn[PATH_MAX];
+		snprintf(fn, PATH_MAX, "%s/.aos/default.conf", HOME);
+		if(!exist(fn)){
+			snprintf(fn, PATH_MAX, "default.conf");
+		}
+		open_config(fn, 0);//default main conf file
 	}
 	if(extraconf && strlen(extraconf)){
 		open_config(extraconf, 1);/*overriding .conf or lines*/

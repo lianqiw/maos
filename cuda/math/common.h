@@ -37,8 +37,11 @@
 #include <cuComplex.h>
 #include <cuda_profiler_api.h>
 #include <cusolverDn.h>
-
-typedef double2 dcomplex;
+#if CPU_SINGLE==0
+	typedef double2 dcomplex;
+#else
+	typedef float2 dcomplex;
+#endif
 typedef float2 fcomplex;
 #include "gpu_math.h"
 #define NG1D 128

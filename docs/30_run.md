@@ -16,7 +16,9 @@ Usage: maos [OPTION...] [FILE]...
 maos is a simulation tool developed to adaptive optics systems
 
 Examples:
-maos -o result # Run the default configuration from default.conf and save results to \c result folder
+maos -o result # Run the default configuration from default.conf and save results to \c result folder. 
+   ~/.aos/default.conf will be used if exists, 
+   otherwise src_dir/config/maos/default.conf will be used.
 
 maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf
          # Run a single conjugate natural guide star case, with seed 1 and 10

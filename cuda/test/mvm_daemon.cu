@@ -22,13 +22,6 @@
 #include "../math/cumath.h"
 #include "../sim/cudata.h"
 #include "gpu_test.h"
-#if !USE_CPP
-extern "C"{
-#endif
-#include "../../maos/mvm_client.h"
-#if !USE_CPP
-}
-#endif
 
 /**
    \file mvm_daemon.cu

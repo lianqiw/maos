@@ -140,7 +140,7 @@ fi
 #use -Wno-xxxx to disable certain warnings entirely.
 OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations"
+	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations -Wno-error=narrowing"
 fi
 
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers "
