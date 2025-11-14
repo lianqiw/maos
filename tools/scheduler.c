@@ -1164,7 +1164,7 @@ static int monitor_send_do(RUN_T* irun, const char* path, MONITOR_T *ic){
 		}else{//send to proxy
 			((int*)buf)[0]=DRAW_ENTRY;
 			((int*)buf)[1]=nlen;
-			((int*)buf)[2]=0;//0 indicate text data
+			((int*)buf)[2]=-1;//-1 indicate text data. >=0: binary data for draw
 			ans=stwrite(ic->sock, buf, nlen+padding);
 		}
 	}else{//write to TCP client

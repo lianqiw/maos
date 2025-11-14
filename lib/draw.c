@@ -28,7 +28,7 @@
 #include "cure.h"
 PNEW(lock);//protect the list and TCP socket from race condition
 #define MAXDRAW 1024
-#define TEST_UDP 0 //test UDP implementation. Doesn't seem to help performance. Keep at 0.
+
 
 //Every command is prefixed with DRAW_ENTRY with payload length (not including the command). 
 //This helps client to handle unknown command as well as websocket proxy to forward the data.
@@ -75,9 +75,6 @@ typedef struct list_t{
 
 typedef struct sockinfo_t{
 	int fd;//socket;
-#if TEST_UDP
-	udp_t udp;
-#endif
 	int pause;//do not draw anything
 	int draw_single;//only draw active figure
 	list_t* list; //list of existing figures
@@ -87,6 +84,37 @@ typedef struct sockinfo_t{
 }sockinfo_t;
 sockinfo_t *sock_draws=NULL;
 int use_udp=0;
+static inline int fwriteint(FILE* fbuf, int A){
+	if(fwrite(&A, sizeof(int), 1, fbuf)<1) return -1;
+	return 0;
+}
+//write str length and str itself (with tailing NULL)
+static inline int fwritestr(FILE* fbuf, const char* str){
+	if(!str) str="";
+	uint32_t nlen=strlen(str)+1;
+	if(fwriteint(fbuf, nlen) || fwrite(str, 1, nlen, fbuf)<nlen) return -1;
+	return 0;
+}
+
+#define CATCH(A) if(A) {ans=1; warning("fwrite failed\n"); goto end2;}
+#define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
+#define FWRITESTR(str) CATCH(fwritestr(fbuf, str)) //will write 1 byte if str is NULL
+#define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
+#define FWRITECMDSTR(cmd,str) if(str){FWRITEINT(cmd); FWRITESTR(str);}
+#define FWRITECMDARR(cmd,p,len) {FWRITEINT(cmd); if(len>0) FWRITEARR(p,len);}
+#define FWRITECMDINT(cmd,val) {FWRITEINT(cmd); FWRITEINT(val);}
+//Plot an empty page
+#define BUF_POSTPROC\
+	fclose(fbuf);\
+	if(ans){\
+		warning("write failed:%d\n", ans);\
+		free_default(buf); bufsize=0; buf=0;\
+	} else{\
+		int* bufp=(int*)(buf);\
+		/*bufp[0] is DRAW_ENTRY*/\
+		bufp[1]=(int)bufsize-3*sizeof(int);\
+	}
+
 int plot_empty(sockinfo_t *ps, const char *fig, const char *fn);
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
@@ -96,50 +124,7 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 	int sock_draw=sock_data->fd;
 	char** figfn=sock_data->figfn;
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
-#if TEST_UDP
-	if(sock_data->udp.sock<=0){
-		sock_data->udp.sock=bind_socket(SOCK_DGRAM, 0, 0);
-		int client_port=socket_port(sock_data->udp.sock);
-		int cmd[4]={DRAW_ENTRY, sizeof(int)*2, DRAW_UDPPORT, client_port};
-		static int nretry=0;
-		dbg("client_port=%d\n", client_port);
-retry:
-		if(WRITECMDINT(DRAW_UDPPORT, client_port)){
-			warning("write to drawdaemon failed\n");
-			return NULL;
-		}
-		//server replies in UDP packet.
-		socklen_t slen=sizeof(sock_data->udp.peer_addr);
-		int cmd2[64];
-		socket_recv_timeout(sock_data->udp.sock, 2);
-		int ncmd=recvfrom(sock_data->udp.sock, cmd2, sizeof(cmd2), 0,
-						 (struct sockaddr*)&sock_data->udp.peer_addr, &slen);
-		if(ncmd>0){
-			dbg("received udp reply from %s:%d (%d) bytes. UDP payload is %d. Header size is %d\n",
-				addr2name(sock_data->udp.peer_addr.sin_addr.s_addr),
-						  sock_data->udp.peer_addr.sin_port, cmd2[3], cmd2[4], cmd2[5]);
-			sock_data->udp.version=cmd2[2];
-			sock_data->udp.payload=cmd2[4];
-			sock_data->udp.header=cmd2[5];
-			//set default destination for UDP.
-			if(connect(sock_data->udp.sock, (struct sockaddr*)&sock_data->udp.peer_addr, slen)){
-				dbg("connection fails to establish, errno=%d, close socket.\n", errno);
-				close(sock_data->udp.sock);
-				sock_data->udp.sock=-1;
-			}else{
-				dbg("connection is established.\n");
-			}
-		}else{
-			nretry++;
-			if(nretry<5){
-				warning("no data is received, retry\n");
-				goto retry;
-			}else{
-				warning("no data is received, give up\n");
-			}
-		}
-	}
-#endif
+
 	int cmd;
 	int nlen=0;
 
@@ -232,27 +217,28 @@ static void list_destroy(list_t** head){
 /**Add fd to list of drawing socks*/
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
-	if(sock!=-1){
-		if(WRITECMDINT(sock, DRAW_PID, getpid())){
-			info_errno("write DRAW_PID failed.\n");
-			close(sock); sock=-1;
-		}
-	}
-	if(sock!=-1&&EXENAME){
-		if(WRITECMDSTR(sock, DRAW_EXENAME, EXENAME)){
-			info_errno("write DRAW_EXENAME failed\n");
-			close(sock);
-			sock=-1;
-		}
-	}
-	if(sock!=-1&&(DIRSTART||DIROUT)){
-		if(WRITECMDSTR(sock, DRAW_PATH, DIROUT?DIROUT:DIRSTART)){
-			info_errno("write DRAW_PATH failed\n");
-			close(sock);
-			sock=-1;
-		}
-	}
 	if(sock==-1) return -1;
+	char *buf=0;
+	size_t bufsize=0;
+	FILE *fbuf=open_memstream(&buf,&bufsize);
+	int ans=0;
+	FWRITECMDINT(DRAW_ENTRY, 0);
+	FWRITECMDINT(DRAW_PID, getpid());
+	if(EXENAME){
+		FWRITECMDSTR(DRAW_EXENAME, EXENAME);
+	}
+	if((DIRSTART||DIROUT)){
+		FWRITECMDSTR(DRAW_PATH, DIROUT?DIROUT:DIRSTART);
+	}
+end2:
+	BUF_POSTPROC;
+	if(bufsize && !ans && stwrite(sock,buf,bufsize)){
+		info("write to %d failed: %s\n",sock,strerror(errno));
+		close(sock);
+		ans=-1;
+	}
+	free_default(buf);
+	if(ans==-1) return -1;
 	sockinfo_t *p=mycalloc(1, sockinfo_t);
 	p->fd=sock;
 	p->next=sock_draws;
@@ -282,12 +268,6 @@ static void sockinfo_close(sockinfo_t *p, int reuse){
 		close(p->fd);
 		p->fd=-1;
 	}
-#if TEST_UDP
-	if(p->udp.sock>0) {
-		close(p->udp.sock);
-		p->udp.sock=-1;
-	}
-#endif
 	list_destroy(&p->list);
 	FREE(p->figfn[0]);
 	FREE(p->figfn[1]);
@@ -534,57 +514,19 @@ int draw_current_format(const char *fig, const char *format,...){
 	format2fn;
 	return draw_current(fig, fn);
 }
-static inline int fwriteint(FILE* fbuf, int A){
-	if(fwrite(&A, sizeof(int), 1, fbuf)<1) return -1;
-	return 0;
-}
-//write str length and str itself (with tailing NULL)
-static inline int fwritestr(FILE* fbuf, const char* str){
-	if(!str) str="";
-	uint32_t nlen=strlen(str)+1;
-	if(fwriteint(fbuf, nlen) || fwrite(str, 1, nlen, fbuf)<nlen) return -1;
-	return 0;
-}
-static int iframe=0; //frame counter
-#define CATCH(A) if(A) {ans=1; warning("fwrite failed\n"); goto end2;}
-#define FWRITEARR(p,len) CATCH(fwrite(p,1,len,fbuf)<len)
-#define FWRITESTR(str) CATCH(fwritestr(fbuf, str)) //will write 1 byte if str is NULL
-#define FWRITEINT(A) CATCH(fwriteint(fbuf,A))
-#define FWRITECMD(cmd, nlen) CATCH(fwriteint(fbuf, DRAW_ENTRY) || fwriteint(fbuf, nlen) || fwriteint(fbuf, cmd))
-#define FWRITECMDSTR(cmd,str) if(str){FWRITECMD(cmd, sizeof(int)+strlen(str)+1); FWRITESTR(str);}
-#define FWRITECMDARR(cmd,p,len) {FWRITECMD(cmd, len); if(len>0) FWRITEARR(p,len);}
-#define FWRITECMDINT(cmd,val) {FWRITECMD(cmd, sizeof(int)); FWRITEINT(val);}
-//Plot an empty page
-#define BUF_POSTPROC\
-	if(ans){\
-		warning("write failed:%d\n", ans);\
-		free_default(buf); bufsize=0; buf=0;\
-	} else{\
-		int* bufp=(int*)(buf);\
-		/*bufp[0] is DRAW_ENTRY*/\
-		bufp[1]=(int)bufsize-3*sizeof(int);\
-		/*bufp[2] is DRAW_FRAME*/\
-		bufp[3]=(int)bufsize;/*frame size*/\
-		bufp[4]=iframe;/*frame number*/\
-		bufp[5]=(int)bufsize;/*sub-frame size*/\
-		bufp[6]=0;/*sub-frame number*/\
-	}\
-
 int plot_empty(sockinfo_t *ps, const char *fig, const char *fn){
 	if(ps->fd==-1) return -1;
 	char *buf=0;
 	int ans=0;
 	size_t bufsize=0;
 	FILE *fbuf=open_memstream(&buf,&bufsize);
-	int zeros[4]={0};
-	FWRITECMDARR(DRAW_FRAME,zeros,4*sizeof(int));
-	FWRITECMD(DRAW_START,0);
+	FWRITECMDINT(DRAW_ENTRY, 0);
+	FWRITEINT(DRAW_START);
 	FWRITECMDINT(DRAW_FLOAT,sizeof(real));
 	FWRITECMDSTR(DRAW_FIG,fig);
 	FWRITECMDSTR(DRAW_NAME,fn);
-	FWRITECMD(DRAW_END,0);
+	FWRITEINT(DRAW_END);
 end2:
-	fclose(fbuf);
 	BUF_POSTPROC;
 	if(bufsize && !ans && stwrite(ps->fd,buf,bufsize)){
 		info("write to %d failed: %s\n",ps->fd,strerror(errno));
@@ -619,15 +561,6 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 					sockinfo_close(ps, 0);//keep struct to avoice race condition
 				}
 			}
-
-	#if TEST_UDP
-			if(ps->udp.sock>0){//test UDP data
-				int counter=myclocki();
-				udp_send(&ps->udp, buf, bufsize, counter);
-				udp_send(&ps->udp, buf, bufsize, counter);
-				udp_send(&ps->udp, buf, bufsize, counter);
-			}
-	#endif
 			block_signal(0);
 			UNLOCK(lock);
 		}
@@ -648,7 +581,6 @@ int draw(const char* fig,    /**<Category of the figure*/
 	if(draw_disabled) return 0;
 	format2fn;
 
-	iframe++;
 	int ans=0;
 	if(!get_drawdaemon()){
 		int needed=opts.always?1:0;
@@ -672,9 +604,8 @@ int draw(const char* fig,    /**<Category of the figure*/
 			//To be able to handle the data in forward/backward compatible way,
 			//each segment is composed of 1) the length of bytes (int), 2) command name (int), 3) payload
 			FILE* fbuf=open_memstream(&buf, &bufsize);
-			int zeros[4]={0,0,0,0};
-			FWRITECMDARR(DRAW_FRAME, zeros, 4*sizeof(int));
-			FWRITECMD(DRAW_START, 0);
+			FWRITECMDINT(DRAW_ENTRY, 0);
+			FWRITEINT(DRAW_START);
 			FWRITECMDSTR(DRAW_FIG, fig);
 			FWRITECMDSTR(DRAW_NAME, fn);
 			FWRITECMDINT(DRAW_FLOAT, sizeof(real));
@@ -740,7 +671,7 @@ switch(ctype){\
 				header[1]=ny2;
 				size_t nlen1=sizeof(header);
 				size_t nlen2=sizeof(dtype)*nx2*ny2;
-				FWRITECMD(DRAW_DATA, nlen1+nlen2);
+				FWRITEINT(DRAW_DATA);
 				FWRITEARR(header, nlen1);
 				FWRITEARR(tmp, nlen2);
 				free(tmp);
@@ -751,7 +682,7 @@ switch(ctype){\
 					for(int ig=0; ig<ngroup; ig++){
 						int nlen=opts.loc[ig]->nloc;
 						if(opts.maxlen && opts.maxlen<nlen) nlen=opts.maxlen;
-						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+sizeof(real)*nlen*2);
+						FWRITEINT(DRAW_POINTS);
 						FWRITEINT(nlen);
 						FWRITEINT(2);
 						FWRITEINT(1);
@@ -766,7 +697,7 @@ switch(ctype){\
 						dmat* p=opts.dc?P(opts.dc, ig):opts.dd[ig];
 						int nlen=NX(p);
 						if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
-						FWRITECMD(DRAW_POINTS, 3*sizeof(int)+nlen*sizeof(real));
+						FWRITEINT(DRAW_POINTS);
 						FWRITEINT(nlen);//number of points
 						FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
 						FWRITEINT(0);//square plot or not
@@ -778,16 +709,12 @@ switch(ctype){\
 					warning("Empty plot.\n");
 				}
 				if(opts.style){
-					FWRITECMD(DRAW_STYLE, sizeof(int)+sizeof(uint32_t)*ngroup);
+					FWRITEINT(DRAW_STYLE);
 					FWRITEINT(ngroup);
 					FWRITEARR(opts.style, sizeof(uint32_t)*ngroup);
 				}
 				if(opts.legend){
-					int nlen=0;
-					for(int ig=0; ig<ngroup; ig++){
-						nlen+=(opts.legend[ig]?strlen(opts.legend[ig]):0)+1+sizeof(int);
-					}
-					FWRITECMD(DRAW_LEGEND, nlen);
+					FWRITEINT(DRAW_LEGEND);
 					for(int ig=0; ig<ngroup; ig++){
 						FWRITESTR(opts.legend[ig]);
 					}
@@ -797,7 +724,7 @@ switch(ctype){\
 				if(NX(opts.cir)!=4){
 					error("Cir should have 4 rows\n");
 				}
-				FWRITECMD(DRAW_CIRCLE, sizeof(int)+sizeof(real)*PN(opts.cir));
+				FWRITEINT(DRAW_CIRCLE);
 				FWRITEINT(NY(opts.cir));
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
@@ -817,9 +744,8 @@ switch(ctype){\
 			FWRITECMDSTR(DRAW_XLABEL, xlabel);
 			FWRITECMDSTR(DRAW_YLABEL, ylabel);
 
-			FWRITECMD(DRAW_END, 0);
+			FWRITEINT(DRAW_END);
 end2:
-			fclose(fbuf);
 			BUF_POSTPROC;
 		}
 		if(bufsize&&!ans){
