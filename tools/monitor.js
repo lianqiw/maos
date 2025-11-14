@@ -178,6 +178,12 @@ function App() {
       hosts.push(hostname);
     }
     hosts.filter((v) => v.length > 0).forEach((v) => connect(v));//connect to other hosts
+    (async () => {
+      const { ZstdSimple, ZstdStream } = await zstdCodec.ZstdInit();
+      window.ZstdSimple=ZstdSimple
+      window.ZstdStream=ZstdStream
+    // Now use ZstdSimple.compress(...) or ZstdSimple.decompress(...)
+    })();
   }, []);
 
   useEffect(() => {

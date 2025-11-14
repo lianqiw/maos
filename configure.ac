@@ -318,6 +318,7 @@ MY_CHECK_CMOCKA([AC_DEFINE(HAS_CMOCKA, [1], [Enable unit testing with cmocka])],
 MY_CHECK_MEX()
 MY_CHECK_CUDA()
 MY_CHECK_GTK()
+MY_CHECK_ZSTD()
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
 	if ! which doxygen ;then

@@ -45,7 +45,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   const chartRef = useRef(null);//for plotly. References a DOM object.
   const cumInputRef=useRef(null);//for input of cumStart
   const lpfInputRef=useRef(null);//for input of lpf
-  
+  const layout={autosize: true, margin: {t:40, b:40, l:50, r:20}};
   function connect(hostname, job) {
     if (!hostname || hostname.length == 0) return false;
     const [host, pid] = job.split(':', 2);
@@ -163,9 +163,13 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           && botActive[jobActive][topActive[jobActive]]) {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
+            const id=drawData.fig+drawData.name;
+            if(layout.uirevision!==id){
+              layout.uirevision=id;//preserve zoom for the plot
+            }
             drawData.cumStart=cumStart;
             drawData.cumPlot=cumPlot;
-            const { traces, layout } = makeTraces(drawData);
+            const traces  = makeTraces(drawData, layout);
             if (traces.length) {
               Plotly.react(chartRef.current, traces, layout, { responsive: true });
               clear = 0;

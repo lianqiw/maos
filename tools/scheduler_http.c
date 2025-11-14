@@ -27,6 +27,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif
+#if HAVE_LIBZSTD
+#include <zstd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -257,17 +260,20 @@ static http_context_t *http_context_create(int fd){
 	return &ssl_context[jc];
 }
 
-
-const int http_padding=16;
-/** 
- * Write to websockets. allocated memory must have at least http_padding padding before the pointer*/
-static int ws_send(char *buf, int nlen, int mode, void *userdata){
+static int nlen_offset(int nlen){
 	int offset=2;//no mask field can be present
 	if(nlen>UINT16_MAX){
 		offset+=8;
 	}else if(nlen>125){
 		offset+=2;
 	}
+	return offset;
+}
+const int http_padding=16;
+/** 
+ * Write to websockets. allocated memory must have at least http_padding padding before the pointer*/
+static int ws_send(char *buf, int nlen, int mode, void *userdata){
+	int offset=nlen_offset(nlen);
 	char *header=buf-offset;
 	header[0] = 0x81+mode;//82 is binary. 81 is text. 
 	if(nlen<126){
@@ -290,17 +296,92 @@ static int ws_send(char *buf, int nlen, int mode, void *userdata){
 	}
 	return 0;
 }
+#if HAVE_LIBZSTD
+void* decompress_buffer(
+    const void* src,
+    size_t srcSize,
+    size_t dstOffset,
+    size_t* dstSizeOut
+) {
+    static void* buf = NULL;
+    static size_t bufCap = 0;
+    if (!src || !dstSizeOut) return NULL;
+    // Determine decompressed size
+    unsigned long long decompressedSize = ZSTD_getFrameContentSize(src, srcSize);
+    if (decompressedSize == ZSTD_CONTENTSIZE_ERROR) {
+        fprintf(stderr, "Not a valid zstd compressed buffer\n");
+        return NULL;
+    } else if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN) {
+        fprintf(stderr, "Original size unknown, cannot safely allocate buffer\n");
+        return NULL;
+    }
+
+    size_t needed = dstOffset + decompressedSize;
+    if (bufCap < needed) {
+        void* newBuf = realloc(buf, needed);
+        if (!newBuf) return NULL;
+        buf = newBuf;
+        bufCap = needed;
+    }
+
+    // Decompress into the buffer at dstOffset
+    size_t ret = ZSTD_decompress((char*)buf + dstOffset, bufCap - dstOffset, src, srcSize);
+    if (ZSTD_isError(ret)) {
+        fprintf(stderr, "ZSTD_decompress error: %s\n", ZSTD_getErrorName(ret));
+        return NULL;
+    }
+
+    *dstSizeOut = ret;
+    return buf;
+}
+/**
+ * Compress a portion of a buffer using Zstd with a persistent internal buffer.
+ * Automatically reallocates if the buffer is too small.
+ *
+ * @param src         Pointer to source buffer
+ * @param srcOffset   Offset into the source buffer
+ * @param srcSize     Number of bytes to compress
+ * @param dstOffset   Offset into the internal destination buffer
+ * @param dstSizeOut  Pointer to store the compressed size of this call
+ * @param level       Compression level (1-22)
+ * @return            Pointer to internal buffer containing compressed data, or NULL on error
+ */
+void* compress_buffer(
+    const void* srcPtr,
+    size_t srcSize,
+    size_t dstOffset,
+    size_t* dstSizeOut,
+    int level
+) {
+    static void* buf = NULL;       // persistent buffer
+    static size_t bufCap = 0;      // current capacity
+    if (!srcPtr || !dstSizeOut) return NULL;
+    // Ensure persistent buffer is large enough
+    size_t needed = dstOffset + ZSTD_compressBound(srcSize);
+    if (bufCap < needed) {
+        void* newBuf = realloc(buf, needed);
+        if (!newBuf) return NULL; // allocation failed
+        buf = newBuf;
+        bufCap = needed;
+    }
+
+    // Compress into the persistent buffer at offset
+    char* dstPtr = (char*)buf + dstOffset;
+    size_t compressedSize = ZSTD_compress(dstPtr, bufCap - dstOffset, srcPtr, srcSize, level);
+    if (ZSTD_isError(compressedSize)) {
+        fprintf(stderr, "ZSTD_compress error: %s\n", ZSTD_getErrorName(compressedSize));
+        return NULL;
+    }
+    *dstSizeOut = compressedSize;
+    return buf;
+}
+#endif
 /** 
  * Read tcp data and send to websockets */
 static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	static char *buf=0;//persistent buffer
 	static int size=0;
-	int offset=2;//no mask field can be present
-	if(nlen>UINT16_MAX){
-		offset+=8;
-	}else if(nlen>125){
-		offset+=2;
-	}
+	int offset=http_padding;//max possible padding.
 	if(size<offset+nlen){
 		size=offset+nlen;
 		buf=myrealloc(buf, size, char);
@@ -309,7 +390,15 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	int ans=0;
 	if(stread(fd, buf+offset, nlen)){
 		ans=-1;
-	}else{
+	}
+	if(!ans){
+#if HAVE_LIBZSTD
+	if(nlen>1024){
+		size_t nlen2=0;
+		char* buf2=(char*)compress_buffer(buf+offset, nlen, offset, &nlen2, 1);
+		ans=ws_send(buf2+offset, nlen2, mode, userdata);
+	}else
+#endif
 		ans=ws_send(buf+offset, nlen, mode, userdata);
 	}
 	socket_recv_timeout(fd, 0);

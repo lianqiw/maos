@@ -10,9 +10,9 @@ PROGS=
 if USE_SCHEDULER
 PROGS+=../bin/scheduler
 ___bin_scheduler_SOURCES=scheduler.c scheduler_http.c scheduler_proxy.c
-___bin_scheduler_LDADD=../sys/libaosys.la $(OPENSSL_LIBS)
+___bin_scheduler_LDADD=../sys/libaosys.la $(OPENSSL_LIBS) $(ZSTD_LIBS)
 ___bin_scheduler_LDFLAGS=$(OPENSSL_LDFLAGS)
-___bin_scheduler_CFLAGS=$(OPENSSL_INCLUDES)
+___bin_scheduler_CFLAGS=$(OPENSSL_INCLUDES) $(ZSTD_CFLAGS)
 if HAS_LWS
 ___bin_scheduler_SOURCES+=scheduler_lws.c
 ___bin_scheduler_LDADD+=$(LWS_LIBS)

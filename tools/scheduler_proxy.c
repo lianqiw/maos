@@ -158,7 +158,7 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 	}
 	if(cmd[0]==DRAW_ENTRY){
 		int nlen=cmd[1];
-		int mode=cmd[2]==0?0:1;
+		int mode=cmd[2]==-1?0:1;
 		if(cmd[2]==0){//text data, no need for the header. read and drop the header
 			if(stread(sock, &cmd, sizeof(cmd))){
 				warning_time("Unable to read 3 ints\n");

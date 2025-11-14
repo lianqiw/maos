@@ -105,16 +105,45 @@ function reshapeTo2D(p, nx, ny) {
   //console.log(`reshapeTo2D nx=${nx} ny=${ny} res[0].length=${res[0].length} res.length=${res.length}`)
   return res;
 }
-function procBuffer(wsBuf) {
+function dataViewToHex(view) {
+    const hex = [];
+    for (let i = 0; i < view.byteLength; i++) {
+        const byte = view.getUint8(i);       // get byte
+        hex.push(byte.toString(16).padStart(2, '0')); // convert to hex
+    }
+    return hex.join(' ');
+}
+function maybeDecompress(buffer) {
+  const data=new Uint8Array(buffer, 0);// Uint8Array
+  const isZstd =
+    data.length >= 4 &&
+    data[0] === 0x28 &&
+    data[1] === 0xB5 &&
+    data[2] === 0x2F &&
+    data[3] === 0xFD;
+  if (isZstd) {
+    const decompressed=ZstdStream.decompress(data); //do not use ZstdSimple which gives wrong length
+    //console.log(now(), "compressed", originalSize, data.length, decompressed.byteOffset, decompressed.byteLength)
+    return decompressed.buffer.slice(decompressed.byteOffset, decompressed.byteOffset + decompressed.byteLength);
+  } else {
+    //console.log(now(), "not compressed");
+    return buffer;
+  }
+}
+
+function procBuffer(rawBuffer) {
+  //rawBuffer may be compressed.
   //console.log("Got ArrayBuffer data with bytes ", wsBuf.byteLength);
-  const dataView = new DataView(wsBuf);
+  const wsBuf=maybeDecompress(rawBuffer);
+  const wsView = new DataView(wsBuf);
+  //console.log(now(), wsView, dataViewToHex(wsView));
   var buf = { pos: 0, cmd: 0 };
   var drawData = {};
   function getKey() {
     Object.keys(draw).find(key => draw[key] === buf.cmd)
   }
   function getInt() {
-    let v = dataView.getInt32(buf.pos, true); buf.pos += 4;
+    let v = wsView.getInt32(buf.pos, true); buf.pos += 4;
     return v;
   }
   function getByteArray(e = -1) {
@@ -153,17 +182,17 @@ function procBuffer(wsBuf) {
     return String.fromCharCode.apply(null, getByteArray().slice(0, -1));//drop terminating \0
   }
   let len;
+  try{
   while (buf.pos < wsBuf.byteLength) {
     buf.cmd = getInt()
     switch (buf.cmd) {
       case draw.entry:
         len = getInt();//length
-        continue;
         break;
       case draw.frame:
-        buf.pos += 16;//skip 4 ints
+        buf.pos += 16;//skip 4 ints. obsoleted
         break;
-      case draw.start:
+      case draw.start://obsoleted
         break;
       case draw.data: {
         let nx = getInt();
@@ -224,7 +253,6 @@ function procBuffer(wsBuf) {
       case draw.final:
         //console.log("DRAW_FINAL");
         drawData['final']=1;
-        drawData['id']=drawData['fig']+drawData['name']
         break;
       case draw.float:
         byteFloat = getInt();
@@ -258,6 +286,9 @@ function procBuffer(wsBuf) {
         buf.pos += len;//skip its payload
     }//switch
   }//while
+  }catch (error) {
+  console.log(now(), "error", error, wsBuf, buf);
+  }
   return drawData;
 }//function procbuffer
 function makeCumu(y, cumStart, cumPlot){
@@ -286,21 +317,17 @@ function makeCumu(y, cumStart, cumPlot){
     return {y:y};
   }
 }
-function makeTraces(drawData) {
-  const layout = {
-    title: {'text':('title' in drawData?drawData['title']:"")}, 
-    xaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false, 
+function makeTraces(drawData, layout) {
+  layout.title= {'text':('title' in drawData?drawData['title']:"")};
+  layout.xaxis= { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false, 
       type: ('xylog' in drawData && drawData.xylog[0]==='y'.charCodeAt(0))?'log':'linear',
       title: {'text':('xlabel' in drawData?drawData['xlabel']:"")}, 
-    },
-    yaxis: { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+    };
+  layout.yaxis= { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
       type: ('xylog' in drawData && drawData.xylog[1]==='y'.charCodeAt(0))?'log':'linear',
       title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
-    },
-    autosize: true,
-    margin: {t:40, b:40, l:50, r:20},
-    uirevision: drawData['id'],
-  }
+    };
+
   let traces = [];
   let square = 0;
   let ratio = 1;
@@ -343,7 +370,7 @@ function makeTraces(drawData) {
     layout.yaxis.scaleanchor = 'x';
     layout.yaxis.scaleratio = ratio;
   }
-  return {traces:traces,layout:layout};
+  return traces;
 }
 window.procBuffer=procBuffer;
 window.makeTraces=makeTraces;
