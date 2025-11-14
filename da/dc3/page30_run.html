@@ -127,7 +127,9 @@ Usage</h1>
 <div class="line">maos is a simulation tool developed to adaptive optics systems</div>
 <div class="line"> </div>
 <div class="line">Examples:</div>
-<div class="line">maos -o result # Run the default configuration from default.conf and save results to \c result folder</div>
+<div class="line">maos -o result # Run the default configuration from default.conf and save results to \c result folder. </div>
+<div class="line">   ~/.aos/default.conf will be used if exists, </div>
+<div class="line">   otherwise src_dir/config/maos/default.conf will be used.</div>
 <div class="line"> </div>
 <div class="line">maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf</div>
 <div class="line">         # Run a single conjugate natural guide star case, with seed 1 and 10</div>
