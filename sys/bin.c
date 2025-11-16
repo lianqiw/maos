@@ -25,12 +25,20 @@
 #include <limits.h>
 #include <ctype.h> /*isspace */
 #include <errno.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "process.h"
 #include "misc.h"
 #include "path.h"
 #include "thread.h"
 #include "bin.h"
 #include "scheduler_client.h"
+#include "zstdio.h"
+#include "sockio.h"
+#if HAVE_LIBZSTD
+#include <zstd.h>
+#endif
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
   with default compression retio, the write time for compressed file is from 3
@@ -87,7 +95,8 @@ struct file_t{
 	const char *msg; /**<Error message if any*/
 	char *gstr;/**<Top level keyword string for fits file. */
 	voidp gp;   /**<only used when gzipped*/
-	int isgzip;/**<Is the file zipped.*/
+	zstd_t *zp;/**<only used when zstd compressed */
+	int iszip;/**<Is the file zipped: 0: not, 1: gzip, 2: zstd.*/
 	int isfits;/**<Is the file fits.*/
 	int fd;    /**<The underlying file descriptor, used for locking. */
 	int err;   /**<error happened. 1: eof, 2: other error*/
@@ -175,10 +184,10 @@ static char* procfn(const char* fn, const char* mod){
 	if(mod[0]=='r'){
 		char* fnr=NULL;
 		if(!(fnr=search_file(fn2, 1))){/*If does not exist. */
-			if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")
-				&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")){
+			if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")&&!check_suffix(fn2, ".bin.zst")
+				&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")&&!check_suffix(fn2, ".fits.zst")){
 			 //Try adding suffix.
-				const char* suf[]={".bin",".fits",".bin.gz",".fits.gz"};
+				const char* suf[]={".bin",".fits",".bin.gz",".fits.gz",".bin.zst",".fits.zst"};
 				for(unsigned int is=0; is<4; is++){
 					strcat(fn2, suf[is]);
 					if(!(fnr=search_file(fn2, 1))){
@@ -193,8 +202,8 @@ static char* procfn(const char* fn, const char* mod){
 		free(fn2);
 		fn2=fnr;
 	} else if(mod[0]=='w'||mod[0]=='a'){
-		if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")
-			&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")){
+		if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")&&!check_suffix(fn2, ".bin.zst")
+			&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")&&!check_suffix(fn2, ".fits.zst")){
 			strcat(fn2, ".bin");
 		}
 		/*if (check_suffix(fn2, ".gz")){
@@ -255,7 +264,7 @@ void zftouch(const char* format, ...){
 file_t* zfdopen(int fd){
 	file_t* fp=mycalloc(1, file_t);
 	if(fp){
-		fp->isgzip=0;
+		fp->iszip=0;
 		fp->fd=fd;
 	}
 	return fp;
@@ -304,12 +313,19 @@ file_t* zfopen(const char* fni, const char* mod){
 	}
 	if(mod[0]=='w'||mod[0]=='a'){
 		if(check_suffix(fn2, ".gz")){
-			fp->isgzip=1;
+			fp->iszip=1;
 			if(mod[0]=='w'){
 				fp->fn[strlen(fn2)-3]='\0';
 			}
+#if HAVE_LIBZSTD			
+		}else if(check_suffix(fn2, ".zst")){
+			fp->iszip=2;
+			if(mod[0]=='w'){
+				fp->fn[strlen(fn2)-4]='\0';
+			}
+#endif			
 		} else{
-			fp->isgzip=0;
+			fp->iszip=0;
 		}
 	}
 	/*Now open the file to get a fd number that we can use to lock on the file.*/
@@ -355,21 +371,36 @@ file_t* zfopen(const char* fni, const char* mod){
 			warning("Unable to read magic from %s.\n", fn2);
 			goto fail;
 		} else{
-			if(magic==0x8b1f){
-				fp->isgzip=1;
-			} else{
-				fp->isgzip=0;
+			if(magic==0xB528){
+				if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
+					warning("Unable to read magic from %s.\n", fn2);
+				}else{
+					if(magic==0xFD2F){
+						fp->iszip=2;
+					}
+				}
+			}else if(magic==0x8b1f){
+				fp->iszip=1;
 			}
 		}
 		lseek(fp->fd, 0, SEEK_SET);
 	}
-	if(fp->isgzip){
+	if(fp->iszip==1){
 		if(!(fp->gp=gzdopen(fp->fd, mod))){
 			warning("Error gzdopen for %s\n", fn2);
 			goto fail;
 		}
+	}else if(fp->iszip==2){
+#if HAVE_LIBZSTD
+		fp->zp=zstd_open(fp->fd, mod[0]);
+		if(!fp->zp){
+			error("zstd_open failed\n");
+		}
+#else
+		error("zstd is not supported.\n");
+#endif
 	}
-	if(check_suffix(fn2, ".fits")||check_suffix(fn2, ".fits.gz")){
+	if(check_suffix(fn2, ".fits")||check_suffix(fn2, ".fits.gz")||check_suffix(fn2, ".fits.zst")){
 		fp->isfits=1;
 	}
 	/*if(mod[0]=='w' && !fp->isfits){
@@ -406,7 +437,7 @@ static void zferrprint(file_t *fp){
 static void zferr(file_t *fp, int err){
 	if(!fp) return;
 	fp->err=err;
-	zferrprint(fp);
+	if(err) zferrprint(fp);
 }
 /**
  * Return the error number
@@ -456,8 +487,12 @@ void zfclose(file_t* fp){
 		}
 	}
 	//LOCK(lock);//causes race condition with zfopen_try
-	if(fp->isgzip){
+	if(fp->iszip==1){
 		gzclose(fp->gp);
+#if HAVE_LIBZSTD
+	}else if(fp->iszip==2){
+		zstd_close(fp->zp, 1);
+#endif		
 	} else{
 		close(fp->fd);
 	}
@@ -468,39 +503,27 @@ void zfclose(file_t* fp){
 	//UNLOCK(lock);
 }
 /**
- * Wrap normal and gzip file write operation.
+ * Wrap normal and compressed file write operation. Return zero if success, non-zero otherwise.
  * */
-int zfwrite_wrap(const void* ptr, const size_t tot, file_t* fp){
+static int zfwrite_do(const void* ptr, const size_t tot, file_t* fp){
+	int ans=-1;
 	if(!fp||fp->fd<0||fp->err||!ptr){
 		warning("zfwrite_wrap: error encountered, cancelled.\n");
-		return (fp&&fp->err)?fp->err:-1;
-	} else if(fp->isgzip){
-		return gzwrite(fp->gp, ptr, tot);
+		ans=(fp&&fp->err)?fp->err:-1;
+	} else if(fp->iszip==1){
+		ans=convert_ans(gzwrite(fp->gp, ptr, tot), tot);
+	} else if(fp->iszip==2){
+#if HAVE_LIBZSTD
+		ans=zstd_write(fp->zp, ptr, tot);
+#endif
 	} else{
-		return write(fp->fd, ptr, tot);
+		ans=stwrite(fp->fd, ptr, tot);
 	}
-}
-/*
-  Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
-  fwrite. Follows the interface of fwrite.
-*/
-static int zfwrite_do(const char* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	size_t tot=size*nmemb;
-	while(!fp->err){
-		int count=zfwrite_wrap(ptr, tot, fp);
-		if(count>=0){//=0 is not an error
-			if((size_t)count<tot){
-				ptr+=count;
-				tot-=count;
-			} else{
-				break;
-			}
-		} else{
-			zferr(fp, 2);
-		}
+	if(ans){
+		zferr(fp, 2);
 	}
 	if(fp->err){
-		if(errno) perror("zfwrite_do");
+		if(errno) info("zfwrite_do got error when writing %s:%s", fp?fp->fn:"", strerror(errno));
 		if(errno==ENOSPC){
 			error("not space left in device\n");
 		}else{
@@ -514,7 +537,7 @@ static int zfwrite_do(const char* ptr, const size_t size, const size_t nmemb, fi
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
 */
 int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+	/*a wrapper to call either fwrite or gzwrite based on flag of iszip*/
 	if(!ptr || !size || !nmemb || !fp || fp->err){
 		warning("zfwrite: invalid input or error in file.\n");
 		return -1;
@@ -532,48 +555,40 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 			/* use bs instead of nd to test tailing blanks*/
 			in+=FITS_BS; length-=FITS_BS;
 			if(length<0){
-				memset(junk+nd, 0, (FITS_BS-nd)*sizeof(char));
+				memset(junk+nd, 0, (FITS_BS-nd));
 			}
-			ans=zfwrite_do(junk, sizeof(char), FITS_BS, fp);
+			ans=zfwrite_do(junk, FITS_BS, fp);
 		}
 	} else{
-		ans=zfwrite_do(in, size, nmemb, fp);
+		ans=zfwrite_do(in, size*nmemb, fp);
 	}
 	return ans;
 }
 /**
- * Wrap normal and gzip file operation.
+ * Wrap normal and compressed file operation. Return 0 if success, 2 if error, 1 if EOF.
  * */
-int zfread_wrap(char* ptr, const size_t tot, file_t* fp){
+static int zfread_do(void* ptr, const size_t tot, file_t* fp){
+	int ans=-1;
 	if(!fp||fp->fd<0||fp->err||!ptr){
 		warning("zfread_wrap: error encountered\n");
 		return -1;
-	} else if(fp->isgzip){
-		return gzread(fp->gp, ptr, tot);
+	} else if(fp->iszip==1){
+		ans=convert_ans(gzread(fp->gp, ptr, tot), tot);
+	} else if(fp->iszip==2){
+#if HAVE_LIBZSTD		
+		ans=zstd_read(fp->zp, ptr, tot);
+#endif		
 	} else{
-		return read(fp->fd, ptr, tot);
+		ans=stread(fp->fd, ptr, tot);
 	}
-}
-/**
-   Read from the file. Handle partial read.
-*/
-static int zfread_do(char* ptr, const size_t size, const size_t nmemb, file_t* fp){
-	ssize_t tot=size*nmemb;
-	while(!fp->err){
-		long count=zfread_wrap(ptr, tot, fp);
-		if(count>0){
-			if(count<tot){
-				ptr+=count;
-				tot-=count;
-			} else{
-				break;
-			}
-		} else if(count==0){//eof
-			zferr(fp, 1);
-		} else{//unknown error
-			warning("%s: unknown error happend during reading.\n", fp->fn);
-			zferr(fp, 2);
-		}
+	if(ans==-1){//error
+		zferr(fp, 2);
+	}else if(ans==-2){//eof
+		zferr(fp, 1);
+	}
+	
+	if(fp->err==2){
+		if(errno) info("zfread_do got error when reading %s:%s\n", fp?fp->fn:"", strerror(errno));
 	}
 	return fp->err;
 }
@@ -583,25 +598,20 @@ static int zfread_do(char* ptr, const size_t size, const size_t nmemb, file_t* f
 */
 int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	int ans=0;
+	const long length=size*nmemb;
 	if(fp->err){
 		ans=-1;
-	} else if(fp->isfits&&size>1){/*need to do byte swapping.*/
-		long length=size*nmemb;
-		long nb=(length+FITS_BS-1)/FITS_BS;
-		char* out=(char*)ptr;
-		for(int ib=0; ib<nb; ib++){
-			int nd=length<FITS_BS?length:FITS_BS;
-			ans=zfread_do(out, sizeof(char), nd, fp);
-			if(nd<FITS_BS){//read the padding
-				zfseek(fp, FITS_BS-nd, SEEK_CUR);
-			}
-			if(ans) break;
-			swap_array(out, out, nd, size);
-			out+=FITS_BS;
-			length-=FITS_BS;
+	} else if(fp->isfits && size>1){/*Read a full block and do byte swapping.*/
+		ans=zfread_do(ptr, length, fp);
+		if(ans) return ans;
+		swap_array((char*)ptr, (char*)ptr, length, size);
+		long nrem=length%FITS_BS;
+		if(nrem>0){//read full length
+			char junk[FITS_BS-nrem];
+			ans=zfread_do(junk, (FITS_BS-nrem), fp);
 		}
 	} else{
-		ans=zfread_do((char*)ptr, size, nmemb, fp);
+		ans=zfread_do(ptr, length, fp);
 	}
 	return ans;
 }
@@ -609,7 +619,7 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
    Move the current position pointer, like fseek
 */
 long zfseek(file_t* fp, long offset, int whence){
-	if(fp->isgzip){
+	if(fp->iszip==1){
 		return gzseek(fp->gp, offset, whence);
 	} else{
 		return lseek(fp->fd, offset, whence);
@@ -619,7 +629,7 @@ long zfseek(file_t* fp, long offset, int whence){
    Move the file position pointer to the beginning
 */
 void zfrewind(file_t* fp){
-	if(fp->isgzip){
+	if(fp->iszip==1){
 		if(!gzrewind(fp->gp)){
 			zferr(fp, 0);
 		}
@@ -633,7 +643,7 @@ void zfrewind(file_t* fp){
    Tell position pointer in file.
 */
 long zfpos(file_t* fp){
-	/*if(fp->isgzip){
+	/*if(fp->iszip==1){
 		return gztell(fp->gp);
 	} else{
 		return lseek(fp->fd, 0, SEEK_CUR);
@@ -663,12 +673,16 @@ long zflen(file_t *fp){
 /**
    Flush the buffer.
 */
-/*
+
 void zflush(file_t* fp){
-	if(fp->isgzip){
+	if(fp->iszip==1){
 		gzflush(fp->gp, 4);
+	}else if(fp->iszip==2){
+#if HAVE_LIBZSTD		
+		zstd_flush(fp->zp);
+#endif		
 	}
-}*/
+}
 #define CHECK_EOF(A, errmsg) if(A){if(fp->err==1) goto read_error_eof; else  {fp->msg=errmsg;goto read_error;}}//eof is not error
 #define CHECK_ERR(A, errmsg) if(A){if(!fp->err) zferr(fp, 2); fp->msg=errmsg; goto read_error;} //eof is error
 /*
@@ -777,19 +791,19 @@ static void write_bin_header(const header_t* header, file_t* fp){
   Write fits header. str is extra header that will be put in fits comment
 */
 static void
-write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
-	uint64_t naxis[count+1];
+write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
+	uint64_t dims[naxis+1];
 	va_list ap;
-	va_start(ap, count);              /*Initialize the argument list. */
+	va_start(ap, naxis);              /*Initialize the argument list. */
 	int empty=0;
-	for(int i=0; i<count; i++){
+	for(int i=0; i<naxis; i++){
 		uint64_t* addr=va_arg(ap, uint64_t*);  /*Get the next argument value.   */
 		if((*addr)==0) empty=1;
-		naxis[i]=*addr;
+		dims[i]=*addr;
 	}
 	va_end(ap);
 
-	if(empty) count=0;
+	if(empty) naxis=0;
 	int iscomplex=0;
 	int bitpix=0;
 	switch(magic&0xFFFF){
@@ -823,15 +837,15 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 		warning("Data type is not yet supported. magic=%x\n", magic);
 		return;
 	}
-	if(iscomplex){//insert 2 to beginning of naxis
-		for(int i=count; i>0; i--){
-			naxis[i]=naxis[i-1];
+	if(iscomplex){//insert 2 to beginning of dims
+		for(int i=naxis; i>0; i--){
+			dims[i]=dims[i-1];
 		}
-		naxis[0]=2;
-		count++;
+		dims[0]=2;
+		naxis++;
 	}
 	char header[FITS_NH][80];
-	memset(header, ' ', sizeof(char)*36*80);
+	memset(header, ' ', sizeof(char)*FITS_NH*80);
 	int hc=0;
 	if(fp->isfits==1){
 		snprintf(header[hc], 80, "%-8s= %20s", "SIMPLE", "T");    header[hc][30]=' '; hc++;
@@ -840,18 +854,18 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int count, ...){
 		snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
 	}
 	snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
-	snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", naxis);   header[hc][30]=' '; hc++;
 
 #define FLUSH_OUT /*write the page if ready */		\
 	if(hc==FITS_NH){					\
-	    zfwrite(header, sizeof(char), 36*80, fp);	\
-	    memset(header, ' ', sizeof(char)*36*80);	\
+	    zfwrite(header, sizeof(char), FITS_NH*80, fp);	\
+	    memset(header, ' ', sizeof(char)*FITS_NH*80);	\
 	    hc=0;					\
 	}
-	for(int i=0; i<count; i++){
+	for(int i=0; i<naxis; i++){
 		FLUSH_OUT;
 		snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1,
-			(unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+			(unsigned long)(dims[i])); header[hc][30]=' '; hc++;
 	}
 	if(fp->isfits==1){//Write the extend keyword which does not mendate extension to be present.
 		snprintf(header[hc], 80, "%-8s= %20s", "EXTEND", "T");    header[hc][30]=' '; hc++;
@@ -1371,6 +1385,7 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 		zfseek(fp, size*nx*ny-sizeof(char), SEEK_CUR);
 		zfwrite(&zero, 1, sizeof(char), fp);
 	}
+	zflush(fp);//flush before using fd to write
 #else
 	long pos=writearr(fp, 0, size, magic, str, p, nx, ny);
 #endif

@@ -27,70 +27,49 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
-int stwrite(int sfd, const void* p, size_t len){
+/*
+	Wrap io function and handle partial operations.
+	returns numbers of bytes successfully or executed or -1.
+*/
+ssize_t wrap_io(int sfd, void* p, const size_t len, int mode){
 	int is_sock=issock(sfd);
-	ssize_t nwrite;
-	do{
+	size_t total=0;
+	while(total<len){
+		ssize_t n=-1;
 		if(is_sock){
-			nwrite=send(sfd, p, len, MSG_NOSIGNAL);
-		} else{
-			nwrite=write(sfd, p, len);
+			if(mode==1 || mode=='w'){
+				n=send(sfd, (char*)p+total, len-total, MSG_NOSIGNAL);
+			}else if(mode==0 || mode=='r'){
+				n=recv(sfd, (char*)p+total, len-total, 0);//MSG_WAITALL);
+			}else{
+				error("invalid mode=%d (%c)\n", mode, mode);
+			}
+		} else {
+			if(mode==1 || mode=='w'){
+				n=write(sfd, (char*)p+total, len-total);
+			}else if(mode==0 || mode=='r'){
+				n=read(sfd, (char*)p+total, len-total);
+			}else{
+				error("invalid mode=%d (%c)\n", mode, mode);
+			}
 		}
-		if(nwrite>0){
-			p=(char*)p+(size_t)nwrite; 
-			len-=(size_t)nwrite;
+		if(n==0){
+			break;
+		}else if(n<0){
+			if(errno==EINTR) continue;//retry. do not retry for EGAIN or EWOULDBLOCK
+			return -1;
+		}else{
+			total+=(size_t)n;
 		}
-	} while(nwrite>0&&len);
-	return (nwrite<0||len)?-1:0;//-1 indicate error/closed
+	}
+	return total;
 }
-int stread(int sfd, void* p, size_t len){
-	int is_sock=issock(sfd);
-	ssize_t nread;
-	do{
-		if(is_sock){
-			nread=recv(sfd, p, len, 0);//MSG_WAITALL);
-		} else{
-			nread=read(sfd, p, len);
-		}
-		if(nread>0){
-			p=(char*)p+(size_t)nread; 
-			len-=(size_t)nread;
-		}
-	} while(nread>0&&len);
-	//if(left) info("stread failed: nread=%ld, left=%ld\n", nread, left);
-	return (nread<0||(nread==0&&len!=0)||len)>0?-1:0; //-1 indicated error/closed
+int stwrite(int sfd, const void* p, const size_t len){
+	return convert_ans(wrap_io(sfd, (void*)p, len, 'w'), len);
 }
-/*Write long messages with smaller buffer*/
-/*int stwrite2(int sfd, const void* p, size_t len, size_t nbuf){
-	if(nbuf>len) nbuf=len;
-	ssize_t nwrite;
-	long left=len;//do not use size_t which is unsigned
-#ifdef __linux__
-	int is_sock=issock(sfd);
-#endif
-	do{
-#ifdef __linux__
-		if(is_sock){
-			nwrite=send(sfd, p, len, MSG_NOSIGNAL);
-		} else
-#endif
-			nwrite=write(sfd, p, nbuf);
-
-		p=(char*)p+nwrite; left-=nwrite;
-	} while(nwrite>0&&left>0);
-	return (nwrite<0||left)?-1:0;
-}*/
-/*Read long messages with smaller buffer*/
-/*int stread2(int sfd, void* p, size_t len, size_t nbuf){
-	if(nbuf>len) nbuf=len;
-	ssize_t nread;
-	long left=len;
-	do{
-		nread=read(sfd, p, nbuf);
-		p=(char*)p+nread; left-=nread;
-	} while(nread>0&&left>0);
-	return (nread<0||(nread==0&&len!=0)||left)?-1:0;
-}*/
+int stread(int sfd, void* p, const size_t len){
+	return convert_ans(wrap_io(sfd, p, len, 'r'), len);
+}
 
 /**
    Write a string to socket
