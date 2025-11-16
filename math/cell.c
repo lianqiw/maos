@@ -310,8 +310,20 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 			header_t header={MCC_ANY, (uint64_t)NX(A), (uint64_t)NY(A), A?A->keywords:NULL};
 			write_header(&header, fp);
 		}
+		uint32_t id=0;//find the type
 		for(long ix=0; ix<PN(A); ix++){
-			writedata(fp, P(A,ix), ncol);
+			if(P(A,ix)){
+				id=P(A,ix)->id;
+				break;
+			}
+		}
+		for(long ix=0; ix<PN(A); ix++){
+			if(P(A,ix)){
+				writedata(fp, P(A,ix), ncol);
+			}else{//write empty 
+				header_t header={id, (uint64_t)0, (uint64_t)0, NULL};
+				write_header(&header, fp);
+			}
 		}
 	}else switch(A_.c->id&0xFFFF){
 		case M_DBL:

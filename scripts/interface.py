@@ -161,6 +161,11 @@ def py2cellref(arr, tid=0):
         arr = np.asarray(arr)
     if sp.issparse(arr):
         return byref(csr(arr,tid))
+    elif type(arr) is cell_ndarray:
+        if arr.size==0:
+            return None #turn empty ndarray to Null pointer. do not use 0
+        else:
+            return byref(cell(arr.base,tid))
     elif type(arr) is np.ndarray:
         if arr.size==0:
             return None #turn empty ndarray to Null pointer. do not use 0

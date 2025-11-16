@@ -23,10 +23,19 @@
    \file sockio.h
    Routines handle socket i/o.
 */
+ssize_t wrap_io(int sfd, void* p, const size_t len, int mode);
 int stwrite(int sfd, const void *p, size_t len);
 int stread(int sfd, void *p, size_t len);
-int stwrite2(int sfd, const void *p, size_t len, size_t buflen);
-int stread2(int sfd, void *p, size_t len, size_t buflen);
+static inline int convert_ans(ssize_t ans, size_t len){
+	if(ans>=0){
+		if(ans<(ssize_t)len){
+			ans=-2;//partial writting. 
+		}else{
+			ans=0;//success
+		}
+	}
+	return (int)ans;
+}
 static inline int stwriteint(int sfd, int cmd){
     return stwrite(sfd, &cmd, sizeof(int));
 }
