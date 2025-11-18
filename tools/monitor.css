@@ -129,8 +129,6 @@ ul.tab_hosts {/*this is the tab bar*/
 	width: 100%;
 }
 ul.tab_hosts li{
-	/*display: inline-block;*//*inline ignores vertical padding*/
-
 	padding: 0.3em;
 	cursor: pointer;
 	white-space: nowrap;
@@ -168,12 +166,11 @@ ul.tab_hosts li.active{
 }
 
 .menu-list li {
-  padding: 5px;
-  /*border-bottom: 1px solid #eee;*/
   cursor: pointer;
   white-space: nowrap;
-  vertical-align: left;
   width: 93%;
+  display: flex;
+  align-items:center;
 }
 
 .menu-list li:hover {
@@ -197,4 +194,7 @@ ul.tab_hosts li.active{
 	width:100%;
 	height:calc(100vh - 70px);
 	box-sizing: border-box;
+}
+.spring-spacer {
+	flex-grow: 1; /* This element will expand to fill available space */
 }

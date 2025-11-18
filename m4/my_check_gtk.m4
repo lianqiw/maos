@@ -7,7 +7,7 @@ AC_DEFUN([MY_CHECK_GTK],[
 	has_cairo=0
 	has_notify=0
 	has_mac=0
-	m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
+	m4_ifdef([PKG_PROG_PKG_CONFIG], [
 		#Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 		#cairo 1.2 comes with gtk+-2.10
 		#make sure there are spaces before and after >=

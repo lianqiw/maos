@@ -101,32 +101,37 @@ AC_DEFUN([MY_CHECK_CUDA],[
 		fi
 	fi
 	if test "$with_cuda" != "no" ;then
-		#Check cor cuda library
-		if test -f "${CUDADIR}/lib${libsuffix}/libcudart.$ldsuffix" ;then
-			CUDA_L="${CUDADIR}/lib${libsuffix}"
-		elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
-			CUDA_L="${CUDADIR}/lib"
-		elif test -f "${CUDADIR}/lib/x64/cudart.lib" ;then
-			CUDA_L="${CUDADIR}/lib/x64"
-		else
-			CUDA_L=""
-		fi
-		if test -d "$CUDA_L" ;then
-			LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
-		else
-			LDCUDA=
-			AC_MSG_NOTICE([CUDA toolkit not found])
-			with_cuda="no"
-		fi
-		AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA $LDCUDA])
-
-		#Check for cuda header
-		if test -f "${CUDADIR}/include/cuda.h" ;then
-			CUDAOPT+=" -I${CUDADIR}/include"
-		else
-			AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
-			CUDAOPT=
-		fi
+		AC_CHECK_LIB([cudart], [cudaSetDevice], [], [
+			#Check cor cuda library
+			if test -f "${CUDADIR}/lib${libsuffix}/libcudart.$ldsuffix" ;then
+				CUDA_L="${CUDADIR}/lib${libsuffix}"
+			elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
+				CUDA_L="${CUDADIR}/lib"
+			elif test -f "${CUDADIR}/lib/x64/cudart.lib" ;then
+				CUDA_L="${CUDADIR}/lib/x64"
+			else
+				CUDA_L=""
+			fi
+			if test -d "$CUDA_L" ;then
+				LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
+			else
+				LDCUDA=
+				AC_MSG_NOTICE([CUDA toolkit not found])
+				with_cuda="no"
+			fi
+			unset ac_cv_lib_cudart_cudaSetDevice
+			AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]); with_cuda="no"], [$LDCUDA])
+		])
+		CUDAOPT=
+		AC_CHECK_HEADERS([cuda.h], [] ,[
+			#Check for cuda header
+			if test -f "${CUDADIR}/include/cuda.h" ;then
+				CUDAOPT+=" -I${CUDADIR}/include"
+			else
+				unset ac_cv_header_cuda_h
+				AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]); with_cuda="no"])
+			fi
+		])
 		if test "$with_cuda" != "no" ;then
 			LIBCUDA+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart -lstdc++"
 			if test "$enable_debug" = "yes" ;then

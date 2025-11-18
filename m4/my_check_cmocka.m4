@@ -6,8 +6,8 @@ AC_DEFUN([MY_CHECK_CMOCKA],[
 	has_cmocka="no"
 	if test "$enable_cmocka" != "no" ;then
 		save_CFLAGS="$CFLAGS"
-		m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
-			PKG_CHECK_MODULES([CMOCKA], [cmocka], [has_cmocka="yes" CFLAGS="$CFLAGS $CMOCKA_CFLAGS"],[has_cmocka="no" CMOCKA_LIBS="-lcmocka"])
+		m4_ifdef([PKG_PROG_PKG_CONFIG], [
+			PKG_CHECK_MODULES([CMOCKA], [cmocka], [has_cmocka="yes" CFLAGS="$CFLAGS $CMOCKA_CFLAGS"],[:])
 		])
 		if test $has_cmocka = "no";then
 			AC_CHECK_LIB([cmocka], [mock_assert], [has_cmocka="yes"], [has_cmocka="no"])
@@ -23,6 +23,9 @@ AC_DEFUN([MY_CHECK_CMOCKA],[
 					AC_CHECK_LIB([cmocka], [mock_assert], [has_cmocka="yes"], [has_cmocka="no"])
 				fi
 			fi
+		fi
+		if test -z "$CMOCKA_LIBS" ;then
+			CMOCKA_LIBS="-lcmocka"
 		fi
 		AC_CHECK_HEADERS([cmocka.h],[:],[has_cmocka="no"],[
 			#include <stdarg.h>

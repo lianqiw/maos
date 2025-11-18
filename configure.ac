@@ -28,7 +28,7 @@ elif which wget >/dev/null 2>&1;then
 	wget="wget -t1 --no-check-certificate"
 	wgetoutput="-O"
 else
-	wget="AC_MSG_ERROR([Please install wget or curl])"
+	wget="echo Please install wget or curl && false"
 fi
 
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
@@ -139,9 +139,8 @@ fi
 #use -Wno-error=xxxx to disable certain warnings from being treated as errors.
 #use -Wno-xxxx to disable certain warnings entirely.
 OPTScommon=
-if test "${USER}" = "lianqiw" ;then
-	OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations -Wno-error=narrowing"
-fi
+
+#OPTScommon+=" -Werror -Wno-error=unknown-pragmas -Wformat=2 -Wno-error=deprecated-declarations -Wno-error=narrowing"
 
 COMMON_ALL="-Wall -Wshadow -Wextra -Wno-missing-braces -Wno-missing-field-initializers "
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
@@ -268,7 +267,7 @@ libdir="${prefix}/lib${libsuffix}" #external library installation location
 mkdir -p "${libdir}"
 export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath in configure since it will be hard coded into 3rd library during compilation
 LDFLAGS+=" -L${libdir} "
-
+m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 #compile LIBNAME srcfile.tar.gz [compile options]
 AS_IF([test "$enable_openmp" != "no" ],[
 	AS_IF([test "$system" = "apple" ], [

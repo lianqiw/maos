@@ -40,16 +40,9 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h> //don't use tgmath here. it is included in math/numtype.h
-/*#if defined(__cplusplus) && !defined(AOS_CUDA_H)
-//c++ mode, not CUDA
-using std::signbit;
-using std::isfinite;
-using std::isnan;
-using std::strerror;
-#endif*/ //C99 mode or CUDA.
-#if defined(__cplusplus)
+/*#if defined(__cplusplus)
 #define __auto_type auto
-#endif
+#endif*/
 #undef	MAX
 #define MAX(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); (_M1)>(_M2)?(_M1):(_M2);})
 #undef	MIN
