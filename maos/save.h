@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef AOS_MAOS_SAVE_H
+#define AOS_MAOS_SAVE_H
 #include "common.h"
 void save_wfsgrad(sim_t *simu);
 void save_pistat(sim_t *simu);
@@ -26,3 +28,4 @@ void draw_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int mo
 void draw_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type);
 void plot_gradoff(sim_t *simu, int iwfs);
 void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin);
+#endif

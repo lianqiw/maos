@@ -35,6 +35,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   const [cumInput, setCumInput]=useState(0);//capture input context
   const [lpfInput, setLpfInput]=useState(1);//low pass filter to slow down update
   const lpf=useRef(1); //use reference avoid closure capture stale data
+  const figName=useRef('');
   const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot
   const [wss, setWss]=useState({});
   const [pause, setPause]=useState({});
@@ -163,10 +164,11 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           && botActive[jobActive][topActive[jobActive]]) {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
-            const id=drawData.fig+drawData.name;
-            if(layout.uirevision!==id){
-              layout.uirevision=id;//preserve zoom for the plot
+            const id=drawData.fig+'_'+drawData.name;
+            if(figName.current!==id){
+              figName.current=id;
             }
+            layout.uirevision=figName.current;//preserve zoom for the plot
             drawData.cumStart=cumStart;
             drawData.cumPlot=cumPlot;
             const traces  = makeTraces(drawData, layout);
@@ -209,20 +211,26 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         {Object.keys(jobRef.current[jobActive]['drawData']).sort().map((fig) => (
           <li key={fig} className={topActive[jobActive] === fig ? "active" : ""}
             onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); setPause(oldVal=>({...oldVal, [jobActive]:false}));}}
-          >{fig}</li>))}
-        <li title="Set cumulative plotting starting index">
-          <form onSubmit={(e)=>{e.preventDefault(); setCumStart(parseFloat(cumInput.length?cumInput:"0")); setCumPlot(true);}}>
-          <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.1" min="0"
-          onClick={()=>{if(cumInputRef.current) cumInputRef.current.select();}} 
-          onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
-        <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
-        <li title="Set image update low pass filter">
-          <form onSubmit={(e)=>{e.preventDefault(); lpf.current=(parseFloat(lpfInput.length?lpfInput:"0.01"));}}>
-          <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.001" min="0.001" max="1"
-          onClick={()=>{if(lpfInputRef.current) lpfInputRef.current.select();}} 
-          onChange={e=>{setLpfInput(e.target.value);}}></input></form></li>
+          >{fig}</li>))}  
         <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
         <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
+        <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
+        <Menu label={(<span style={{padding:'0.3em'}}>Menu</span>)} child={<ul className="menu-list" >
+          <li title="Set cumulative plotting starting index"><span>Cum Start</span><div className="spring-spacer"></div>
+            <form onSubmit={(e)=>{e.preventDefault(); setCumStart(parseFloat(cumInput.length?cumInput:"0")); setCumPlot(true);}}>
+            <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.1" min="0"
+            onClick={(e)=>{if(cumInputRef.current) cumInputRef.current.select(); e.stopPropagation();}} 
+            onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
+          <li title="Set image update low pass filter"><span>Update LPF </span><div className="spring-spacer"></div>
+            <form onSubmit={(e)=>{e.preventDefault(); lpf.current=(parseFloat(lpfInput.length?lpfInput:"0.01"));}}>
+            <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.001" min="0.001" max="1"
+            onClick={()=>{if(lpfInputRef.current) lpfInputRef.current.select();}} 
+            onChange={e=>{setLpfInput(e.target.value);}}></input></form></li>
+          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'png',filename: figName.current});}}>💾 Save as {figName.current}.png</li>
+          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'jpeg',filename: figName.current});}}>💾 Save as {figName.current}.jpg</li>
+          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'svg',filename: figName.current});}}>💾 Save as {figName.current}.svg</li>
+          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'webp',filename: figName.current});}}>💾 Save as {figName.current}.webp</li>
+        </ul>}></Menu>
       </ul>
       <div className="layout">
         <ul className="tab_hosts" style={{width:'8em'}}>{/*draw sub-notebook (vertical)*/}

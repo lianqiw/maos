@@ -1,9 +1,9 @@
 AC_DEFUN([MY_CHECK_FFT],[
 	save_CFLAGS="${CFLAGS}"
-	m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
-		PKG_CHECK_MODULES([FFTW], [fftw3], [CFLAGS="$CFLAGS $FFTW_CFLAGS"],[FFTW_LIBS="-lfftw3"])
+	has_fftw="no"
+	m4_ifdef([PKG_PROG_PKG_CONFIG], [
+		PKG_CHECK_MODULES([FFTW], [fftw3], [has_fftw=yes CFLAGS="$CFLAGS $FFTW_CFLAGS"],[:])
 	])
-
 	#Check FFTW header and library. 
 	if test "$enable_binary" != "no";then
 		steps="1 2 3"
@@ -33,15 +33,17 @@ AC_DEFUN([MY_CHECK_FFT],[
 			MY_COMPILE([FFTW], [fftw.tar.bz2], [$FLAGS --enable-float])
 		;;
 		esac
-		unset ac_cv_lib_m_fftw_execute
+		unset ac_cv_lib_fftw3_fftw_execute
 		unset ac_cv_header_fftw3_h
-		AC_CHECK_LIB([m], [fftw_execute], [has_fftw="yes"], [has_fftw="no"],[$FFTW_LIBS])
+		AC_CHECK_LIB([fftw3], [fftw_execute], [has_fftw="yes"], [has_fftw="no"],[$FFTW_LIBS])
 		AC_CHECK_HEADERS([fftw3.h], [:], [has_fftw="no"])
 		if test "$has_fftw" = "yes" ;then :
 			break;
 		fi
 	done
-	
+	if test -z "$FFTW_LIBS" ;then
+		FFTW_LIBS="-lfftw3"
+	fi
 	if test "$has_fftw" = "yes" ;then :
 		$1
 	else :
@@ -49,7 +51,7 @@ AC_DEFUN([MY_CHECK_FFT],[
 	fi
 	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1 FFTW_LIBS="$FFTW_LIBS -lfftw3f"] ,[has_fftwf=0],[$FFTW_LIBS])
 
-	if test x$enable_threadlib != xno;then
+	if test "$has_fftw" = "yes" -a x$enable_threadlib != xno;then
 		#if test "$has_omp" = "1" ;then
 		#	THREADS_SUFFIX="_omp"
 		#else
@@ -72,14 +74,14 @@ AC_DEFUN([MY_CHECK_FFT],[
 				;;
 			esac
 		done
-		AC_CHECK_LIB([m], [fftw_plan_with_nthreads], [fftw_threads=1 FFTW_LIBS="$FFTW_LIBS $FFTW_LIBS_THREADS"], [fftw_threads=0], [$FFTW_LIBS_THREADS $FFTW_LIBS ])
+		AC_CHECK_LIB([fftw3], [fftw_plan_with_nthreads], [fftw_threads=1 FFTW_LIBS="$FFTW_LIBS $FFTW_LIBS_THREADS"], [fftw_threads=0], [$FFTW_LIBS_THREADS $FFTW_LIBS ])
 	else
 		fftw_threads=0
 	fi
 	
 	AC_DEFINE_UNQUOTED(HAS_FFTW_THREADS, [$fftw_threads], [FFTW has thread support.])
 	AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], [FFTW has single precision support.])
-	AC_CHECK_LIB([m], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$FFTW_LIBS]) #since version 3.3.9
+	AC_CHECK_LIB([fftw3], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$FFTW_LIBS]) #since version 3.3.9
 	AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], [FFT has fftw_threads_set_callback support])
 	AS_IF([test x$has_fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR([FFT single precision is not available for --disable-double])])
 	AC_SUBST(FFTW_LIBS)

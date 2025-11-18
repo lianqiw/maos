@@ -4,8 +4,9 @@ AC_DEFUN([MY_CHECK_LWS],[
 	has_lws=no
 	if test "$enable_libwebsockets" = "yes" ;then
 		save_CFLAGS="$CFLAGS"
-		m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG
-			PKG_CHECK_MODULES([LWS], [libwebsockets], [has_lws="yes" CFLAGS="$CFLAGS $LWS_CFLAGS"],[has_lws="no" LWS_LIBS="-lwebsockets"])
+		LWS_LIBS="-lwebsockets"
+		m4_ifdef([PKG_PROG_PKG_CONFIG], [
+			PKG_CHECK_MODULES([LWS], [libwebsockets], [has_lws="yes" CFLAGS="$CFLAGS $LWS_CFLAGS"],[:])
 		])
 		if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
 			AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])

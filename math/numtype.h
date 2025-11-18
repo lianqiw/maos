@@ -47,7 +47,7 @@
 //When including by CUDA, all definitions are already available.
 #if !defined(AOS_CUDA_H) 
 //C++ mode
-#include <ccomplex>
+#include <complex>
 #include <cmath>
 typedef std::complex<double> dcomplex;
 typedef std::complex<float> fcomplex;

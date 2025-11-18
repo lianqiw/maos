@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef AOS_SYS_READSTR_H
+#define AOS_SYS_READSTR_H
 #include "common.h"
 #include "bin.h"
 /**
@@ -49,3 +51,4 @@ const char* search_keyword(const char* keywords, const char* key);
 double search_keyword_num(const char* keywords, const char *key);
 double search_keyword_num_valid(const char* keywords, const char *key);
 double search_keyword_num_default(const char* keywords, const char *key, double value0);
+#endif

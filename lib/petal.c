@@ -67,7 +67,7 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 		}
 	}
 	//info("nx=%ld, ny=%ld, cx=%g, cy=%g\n", nx, ny, cx, cy);
-	spint count=0;
+	long count=0;
 	long icol=0;
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){

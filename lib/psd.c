@@ -199,7 +199,7 @@ dmat* psd_t2s(const dmat* psdt, real vmean){
 	return psds;
 }
 
-/**Convert special PSD to temporal*/
+/**Convert spatial PSD to temporal*/
 dmat* psd_s2t(const dmat* psds, real vmean){
 	if(NX(psds)!=1||NY(psds)>4){
 		error("psds needs to be 1 row and less than 4 cols\n");
