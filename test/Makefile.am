@@ -1,5 +1,5 @@
 AM_CFLAGS=-I $(top_srcdir) -g -O0
-LDADD=../lib/libaos.la $(LDEXE_FULL) 
+LDADD=../lib/libaos.la $(EXEFULL_LIBS)
 
 bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
 	test_fft test_proj test_loc test_chol test_accphi	\

@@ -19,6 +19,9 @@ AC_DEFUN([MY_CHECK_CHOLMOD],[
 			MY_DOWNLOAD([CHOLMOD], [cholmod${libsuffix}.tar.bz2], [${prefix}])
 			;;
 		3)
+			if test "$enable_dlong" != "no"; then
+				CPPFLAGS="$CPPFLAGS -DDLONG"
+			fi
 			MY_COMPILE([CHOLMOD], [cholmod.tar.bz2])
 			;;
 		esac

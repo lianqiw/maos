@@ -62,7 +62,7 @@ AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],[BUILD folder])
 #CFLAGS are for C compiler
 #CXXFLAGS are for C++ compiler
 LDOPTS=
-LDEXE=
+EXE_LIBS=
 OPTS=
 
 case "x$CC $CFLAGS" in
@@ -79,7 +79,7 @@ case `$CC --version 2>&1` in
 		;;
 	*DPC++*) #New intel compiler with clang backend
 	  	CN=CLANG
-		LDEXE="$LDEXE -limf"
+		EXE_LIBS="$EXE_LIBS -limf"
 		INTEL=1
 		;;
 	*icpc*|*icc*) #Old intel compiler
@@ -110,10 +110,7 @@ AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced 
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
 AC_ARG_ENABLE(download, AS_HELP_STRING([--disable-download], [Disable downloading library]))
-AC_ARG_ENABLE(openmp, AS_HELP_STRING([--enable-openmp], [Enable openmp support]))
 AC_ARG_ENABLE(threadlib, AS_HELP_STRING([--enable-threadlib], [Enable threading library for blas and fftw.]))
-#echo enable_openmp="$enable_openmp"
-#echo openmp_default="$openmp_default"
 
 if test "$enable_double" = "no" -o "$enable_single" = "yes" ;then
 	enable_single=1
@@ -196,7 +193,7 @@ AM_CONDITIONAL(WIN,    false)
 case "$host_os" in
 	*linux*)
 		AM_CONDITIONAL(LINUX, true)
-		LDEXE="$LDEXE -lrt" #need real time library.
+		EXE_LIBS="$EXE_LIBS -lrt" #need real time library.
 		#RUNPATH is not used for dlopen or secondary dependencies. RPATH is. disable-new-dtags uses RPATH instead of RUNPATH
 		#RUNPATH is searched after LD_LIBRARY_PATH while RPATH is searched before LD_LIBRARY_PATH. Both are before the default paths.
 		LDOPTS+=" -Wl,--no-as-needed,--disable-new-dtags" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
@@ -268,38 +265,15 @@ mkdir -p "${libdir}"
 export LD_LIBRARY_PATH+=":${libdir}" #avoid using rpath in configure since it will be hard coded into 3rd library during compilation
 LDFLAGS+=" -L${libdir} "
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
-#compile LIBNAME srcfile.tar.gz [compile options]
-AS_IF([test "$enable_openmp" != "no" ],[
-	AS_IF([test "$system" = "apple" ], [
-		#MACOS supports openmp with separate omp library
-		AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0
-			AS_IF([test "$enable_openmp" = "yes"], [ #force enable openmp on macos
-				MY_DOWNLOAD([LIBOMP], [libomp${libsuffix}.tar.bz2], [${prefix}])
-				unset ac_cv_lib_omp_omp_set_num_threads
-				AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0
-					#ompurl="https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/openmp-13.0.0.src.tar.xz"
-					MY_COMPILE([LIBOMP], ["libomp.tar.xz"], [${prefix} -DOPENMP_LIBDIR_SUFFIX=${libsuffix}])
-					unset ac_cv_lib_omp_omp_set_num_threads
-					AC_CHECK_LIB([omp],[omp_set_num_threads],[has_omp=1],[has_omp=0])
-				])
-			])
-		])
-		AS_IF([test "$has_omp" = "1"], [OPENMP_CFLAGS="-Xpreprocessor -fopenmp" LDFLAGS+=" -lomp" libtool_fix_openmp=1])
-	], [AC_OPENMP])
-	AS_IF([test -z "$OPENMP_CFLAGS" -a -n "$OPENMP_CXXFLAGS"], [OPENMP_CFLAGS="$OPENMP_CXXFLAGS"])
-	#Don't add OPENMP_CFLAGS to CFLAGS yet to avoid building external library with the flag
-	AS_IF([test -z "$OPENMP_CFLAGS"], [has_omp=0], [has_omp=1])
-], [has_omp=0])
-AS_IF([test "$has_omp" = 1], 
-	[AS_IF([test "$INTEL" = "1" ],[OPENMP_CFLAGS=${OPENMP_CFLAGS//-fopenmp/-qopenmp}])],
-	[AS_IF([test "$INTEL" = "1" ],[CFLAGS+=" -pthread -qopenmp-simd"],[CFLAGS+=" -pthread -fopenmp-simd"])])
-AM_CONDITIONAL(LIBTOOL_FIX_OPENMP, [test "$libtool_fix_openmp" = "1" -a -n "$LIBTOOL"])
+AC_LANG_PUSH([C]) #always use C linkage for checking libraries
+
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[:],[
 	MY_COMPILE([ZLIB], [https://www.zlib.net/current/zlib.tar.gz])
 	unset ac_cv_lib_z_gzopen
 	AC_CHECK_LIB([z],[gzopen],[:],[AC_MSG_ERROR([Please install zlib.])])
 ])
+MY_CHECK_OPENMP([:],[AC_MSG_NOTICE([OpenMP not found])])
 
 #Must be before FFT and cholmod checking
 MY_CHECK_LAPACK(
@@ -318,6 +292,7 @@ MY_CHECK_MEX()
 MY_CHECK_CUDA()
 MY_CHECK_GTK()
 MY_CHECK_ZSTD()
+AC_LANG_POP([C])
 #Doxygen Features
 if test "$enable_doxygen" = "yes" ;then
 	if ! which doxygen ;then
@@ -356,15 +331,15 @@ OPTS+=" $OPTScommon $OPTS_CC $OPTSprof "
 #put rpath here to avoid using it when compiling 3rd party library
 LDFLAGS+=" $LDOPTS -Wl,-rpath,${libdir}" #to run artifacts from github workflow avoid using rpath
 CFLAGS+=" $FFTW_CFLAGS $OPTS $OPENMP_CFLAGS" #do not replace 
-LDEXE+=" -lz -lm -ldl"
-LDEXE_FULL="$FFTW_LIBS $CHOL_LIBS $LAPACK $LDEXE" #Make sure FFTW_LIBS is before LAPACK to avoid MKL providing FFTW functions.
+EXE_LIBS+=" $OPENMP_LIBS -lz -lm -ldl "
+EXEFULL_LIBS="$FFTW_LIBS $LAPACK $EXE_LIBS" #Make sure FFTW_LIBS is before LAPACK to avoid MKL providing FFTW functions.
 #echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
 AC_SUBST(CN)
 AS_UNSET(OPTS)
-AC_SUBST(LDEXE)
-AC_SUBST(LDEXE_FULL)
+AC_SUBST(EXE_LIBS)
+AC_SUBST(EXEFULL_LIBS)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)
@@ -377,7 +352,7 @@ echo CC=$CC
 echo USE_CPP=$USE_CPP
 echo CPPFLAGS=$CPPFLAGS
 echo CFLAGS=$CFLAGS
-echo LDEXE=$LDEXE
+echo EXE_LIBS=$EXE_LIBS
 echo LDFLAGS=$LDFLAGS
 
 yesno=("no" "yes")
@@ -392,7 +367,7 @@ echo "Debug:           ${enable_debug:-no}"
 echo "Scheduler:       ${enable_scheduler:-yes}"
 echo "CMOCKA:          ${has_cmocka}"
 echo "Coverage:        ${enable_gcov:-no}"
-echo "OpenMP:          ${yesno[[$has_omp]]}"
+echo "OpenMP:          ${has_omp}"
 echo "FFTW Threads:    ${yesno[[$fftw_threads]]}"
 echo "Precision:       ${FP[[$enable_single]]}"
 echo "CUDA:            ${cudaver:-no} ${cudaver:+ (${FP[[1-$cuda_double]]}, arch: $cuarch)}"

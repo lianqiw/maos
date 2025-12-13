@@ -1,5 +1,5 @@
 AM_CFLAGS=-I $(top_srcdir) #Compiler flags for each target that doesn't specify per target CFLAGS. Supplements CFLAGS
-AM_LDFLAGS=$(LDCUDA)
+AM_LDFLAGS=$(CUDA_LDFLAGS)
 #the libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later
 nobase_include_HEADERS=common.h maos.h parms.h types.h utils.h powfs.h \
 	aper.h recon.h  sim.h fdpcg.h powfs_utils.h	ahst.h sim_utils.h surf.h save.h mvm_client.h moao.h \
@@ -18,4 +18,4 @@ endif
 
 bin_PROGRAMS=../bin/maos
 ___bin_maos_SOURCES=maos.c
-___bin_maos_LDADD=libmaos.la $(LDEXE_FULL)
+___bin_maos_LDADD=libmaos.la $(EXEFULL_LIBS)

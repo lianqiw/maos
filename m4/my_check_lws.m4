@@ -33,8 +33,8 @@ AC_DEFUN([MY_CHECK_LWS],[
 			$2
 		fi
 		CFLAGS=${save_CFLAGS}
-		echo LWS_LIBS=$LWS_LIBS
 		echo LWS_CFLAGS=$LWS_CFLAGS
+		echo LWS_LIBS=$LWS_LIBS
 	fi
 	AM_CONDITIONAL(HAS_LWS, [test "$has_lws" = "yes"])
 ])
