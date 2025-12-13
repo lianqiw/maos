@@ -229,7 +229,7 @@ void maos_setup(const parms_t* parms){
 			P(evlpsfdl,iwvl)->keywords=evl_keywords(parms, aper, -1, iwvl, parms->evl.psfisim-1);
 		}
 		if(parms->plot.run||parms->plot.psf){
-			plot_psf(psf2s, "PSFdl", 2, 0, parms->evl.wvl, parms->plot.psf==1, parms->plot.psfmin);
+			plot_psf(psf2s, "PSFdl", 2, 0, parms->evl.wvl, parms->plot.psf!=2, parms->plot.psfmin);
 		}
 		ccellfree(psf2s);
 		writebin(evlpsfdl, "evlpsfdl.fits");
