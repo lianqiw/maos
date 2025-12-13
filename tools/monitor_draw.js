@@ -215,7 +215,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
         <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
         <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
-        <Menu label={(<span style={{padding:'0.3em'}}>Menu</span>)} child={<ul className="menu-list" >
+        <Menu label={(<span style={{padding:'0.3em'}}>Options</span>)} child={<ul className="menu-list" >
           <li title="Set cumulative plotting starting index"><span>Cum Start</span><div className="spring-spacer"></div>
             <form onSubmit={(e)=>{e.preventDefault(); setCumStart(parseFloat(cumInput.length?cumInput:"0")); setCumPlot(true);}}>
             <input ref={cumInputRef} style={{width:'4em'}} value={cumInput} type="number" step="0.1" min="0"

@@ -330,20 +330,31 @@ function makeTraces(drawData, layout) {
 
   let traces = [];
   let square = 0;
-  let ratio = 1;
+  //let ratio = 1;
   if (drawData['data']) {
     const nx = drawData['data'][0].length;
     const ny = drawData['data'].length;
     if(nx && ny){
       square = 1;
-      let trace={z: drawData['data'], type: 'heatmap', colorscale: 'Jet', showlegend: false };
+      let zdata=drawData['data'];
+      if('zlim' in drawData && 'zlimManual' in drawData && drawData.zlimManual) {
+        const zmin=drawData['zlim'][0];
+        const zmax=drawData['zlim'][1];
+        if(zmin<zmax){
+          zdata=zdata.map(row => row.map(val => (val>zmax)?zmax:(val<zmin?zmin:val)));
+        }
+      }
+      if('zlog' in drawData && drawData.zlog) {
+        zdata=zdata.map(row => row.map(val => (val>0)?Math.log10(val):null));
+      }
+      let trace={z: zdata, type: 'heatmap', colorscale: 'Jet', showlegend: false };
       if (drawData['limit']) {
         const x = linspace(drawData['limit'][0], drawData['limit'][1], nx)
         const y = linspace(drawData['limit'][2], drawData['limit'][3], ny)
-        ratio=(drawData['limit'][3]-drawData['limit'][2])/(drawData['limit'][1]-drawData['limit'][0]);
+        //ratio=(drawData['limit'][3]-drawData['limit'][2])/(drawData['limit'][1]-drawData['limit'][0]);
         trace={x,y,...trace}
-      }else{
-        ratio=ny/nx
+      //}else{
+        //ratio=ny/nx
       }
       traces.push(trace);
     }
@@ -368,7 +379,7 @@ function makeTraces(drawData, layout) {
   if (square) {
     layout.xaxis.constrain='domain';
     layout.yaxis.scaleanchor = 'x';
-    layout.yaxis.scaleratio = ratio;
+    layout.yaxis.scaleratio = 1;//1 for square pixels
   }
   return traces;
 }
