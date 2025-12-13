@@ -1,8 +1,8 @@
 AC_DEFUN([MY_CHECK_CUDA],[
 	if test "${CN}"="CLANG" -a "$system" = "apple" ;then
-		CUDAOPT="-stdlib=libc++"
+		CUDA_CFLAGS="-stdlib=libc++"
 	else
-		CUDAOPT= #CFLAGS for CUDA
+		CUDA_CFLAGS= #CFLAGS for CUDA
 	fi
 
 	#AUTO detect libraries in the system
@@ -113,37 +113,37 @@ AC_DEFUN([MY_CHECK_CUDA],[
 				CUDA_L=""
 			fi
 			if test -d "$CUDA_L" ;then
-				LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
+				CUDA_LDFLAGS="-L$CUDA_L -Wl,-rpath,$CUDA_L"
 			else
-				LDCUDA=
+				CUDA_LDFLAGS=
 				AC_MSG_NOTICE([CUDA toolkit not found])
 				with_cuda="no"
 			fi
 			unset ac_cv_lib_cudart_cudaSetDevice
-			AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]); with_cuda="no"], [$LDCUDA])
+			AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]); with_cuda="no"], [$CUDA_LDFLAGS])
 		])
-		CUDAOPT=
+		CUDA_CFLAGS=
 		AC_CHECK_HEADERS([cuda.h], [] ,[
 			#Check for cuda header
 			if test -f "${CUDADIR}/include/cuda.h" ;then
-				CUDAOPT+=" -I${CUDADIR}/include"
+				CUDA_CFLAGS+=" -I${CUDADIR}/include"
 			else
 				unset ac_cv_header_cuda_h
 				AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]); with_cuda="no"])
 			fi
 		])
 		if test "$with_cuda" != "no" ;then
-			LIBCUDA+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart -lstdc++"
+			CUDA_LIBS+=" -lcurand -lcusolver -lcusparse -lcufft -lcublas -lcudart -lstdc++"
 			if test "$enable_debug" = "yes" ;then
-				CUDAOPT+=" -O0 -g"
+				CUDA_CFLAGS+=" -O0 -g"
 			else
-				CUDAOPT+=" -O3 -g"
+				CUDA_CFLAGS+=" -O3 -g"
 			fi
-			CUDAOPT+=" -DHAVE_CONFIG_H -I$BUILD_DIR "
+			CUDA_CFLAGS+=" -DHAVE_CONFIG_H -I$BUILD_DIR "
 
-			#CCBINOPT is what NVCC passes to C++ compiler
-			CCBINOPT="$OPTScommon $OPTSprof $OPTS_CC $CPPFLAGS $OPENMP_CFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
-			CCBINOPT="${CCBINOPT/-fpermissive/}"
+			#CCBIN_CFLAGS is what NVCC passes to C++ compiler
+			CCBIN_CFLAGS="$OPTScommon $OPTSprof $OPTS_CC $CPPFLAGS $OPENMP_CFLAGS ${CFLAGS/-std=c11/} -Wno-unused-parameter"
+			CCBIN_CFLAGS="${CCBIN_CFLAGS/-fpermissive/}"
 			case `$CCBIN --version 2>&1` in
 			*clang*|*DPC++*)
 				CCN=CLANG
@@ -153,7 +153,7 @@ AC_DEFUN([MY_CHECK_CUDA],[
 				;;
 			*)
 				CCN=GCC
-				CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ "
+				CCBIN_CFLAGS+=" -Wno-unused-value -D__STRICT_ANSI__ "
 			esac
 		fi
 	fi
@@ -162,11 +162,10 @@ AC_DEFUN([MY_CHECK_CUDA],[
 			NVCC=$CC
 			AC_MSG_NOTICE([Use $CC with cuda in directory $CUDADIR])
 			if test $CC_VERSION -ge 50 ;then
-				CUDAOPT+=" --std=c++17" #fix __float128 error. see https://discourse.llvm.org/t/error-float128-is-not-supported-on-this-target/72397
+				CUDA_CFLAGS+=" --std=c++17" #fix __float128 error. see https://discourse.llvm.org/t/error-float128-is-not-supported-on-this-target/72397
 			fi
-			CUDAOPT+=" --cuda-gpu-arch=sm_${cuarch} $CCBINOPT --cuda-path=$CUDADIR"
-			CUDAOPT+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
-			CCBINOPT= #no need for this
+			CUDA_CFLAGS+=" --cuda-gpu-arch=sm_${cuarch} $CCBIN_CFLAGS --cuda-path=$CUDADIR"
+			CUDA_CFLAGS+=" --no-cuda-version-check -Wno-unknown-cuda-version -Wno-format-nonliteral"
 		else
 			AC_MSG_NOTICE([Use nvcc with cuda in directory $CUDADIR])
 			#NVCC+=" $CFLAGS_CPU"
@@ -182,13 +181,13 @@ AC_DEFUN([MY_CHECK_CUDA],[
 
 			#virtual GPUs are used here to allow JIT compilation during runtime
 			#set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
-			CUDAOPT+=" -lineinfo "
-			CUDAOPT+=" -Wno-deprecated-gpu-targets"
+			CUDA_CFLAGS+=" -lineinfo "
+			CUDA_CFLAGS+=" -Wno-deprecated-gpu-targets"
 			#To specify multiple architectures, use
-			#CUDAOPT+=" -gencode arch=compute_20 -gencode arch=compute_30"
+			#CUDA_CFLAGS+=" -gencode arch=compute_20 -gencode arch=compute_30"
 
-			if test -n "$CCBINOPT" ;then
-				CCBINOPT="--compiler-options \"$CCBINOPT\""
+			if test -n "$CCBIN_CFLAGS" ;then
+				CUDA_CFLAGS="$CUDA_CFLAGS --compiler-options \"$CCBIN_CFLAGS\""
 			fi
 		fi
 		if test "$cuda_double" = "yes" ;then
@@ -196,10 +195,10 @@ AC_DEFUN([MY_CHECK_CUDA],[
 		else
 			cuda_double=0		
 		fi
-		AC_SUBST(CUDAOPT)
-		AC_SUBST(CCBINOPT)
-		AC_SUBST(LIBCUDA)
-		AC_SUBST(LDCUDA)
+		CCBIN_CFLAGS= #no need for this
+		AC_SUBST(CUDA_CFLAGS)
+		AC_SUBST(CUDA_LIBS)
+		AC_SUBST(CUDA_LDFLAGS)
 		AC_SUBST(NVCC)
 	else
 		cuda_double=0
@@ -218,9 +217,8 @@ AC_DEFUN([MY_CHECK_CUDA],[
 	AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 	if test "$with_cuda" != "no" ;then
 		echo "NVCC=$NVCC"
-		echo "CUDAOPT=$CUDAOPT"
-		#echo "CCBINOPT=$CCBINOPT"
-		#echo "LIBCUDA=$LIBCUDA"
-		echo "LDCUDA=$LDCUDA"
+		echo "CUDA_CFLAGS=$CUDA_CFLAGS"
+		#echo "CUDA_LIBS=$CUDA_LIBS"
+		echo "CUDA_LDFLAGS=$CUDA_LDFLAGS"
 	fi
 ])

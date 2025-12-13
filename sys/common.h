@@ -28,12 +28,6 @@
 #include "config.h"
 #endif
 
-#if _OPENMP >= 201511
-#include <omp.h>
-#else
-#undef _OPENMP
-#endif
-
 #include <stdarg.h> //for va_start
 #include <stdlib.h>
 #include <stdio.h>
