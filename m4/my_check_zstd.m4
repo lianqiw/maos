@@ -15,8 +15,8 @@ AC_DEFUN([MY_CHECK_ZSTD],[
 		AC_DEFINE([HAVE_LIBZSTD], [1], [Define if libzstd is available])
 		AC_SUBST(ZSTD_CFLAGS)
 		AC_SUBST(ZSTD_LIBS)
-		echo ZSTD_LIBS=$ZSTD_LIBS
 		echo ZSTD_CFLAGS=$ZSTD_CFLAGS
+		echo ZSTD_LIBS=$ZSTD_LIBS
 		AC_MSG_NOTICE([libzstd is found])
 		$1
 	else

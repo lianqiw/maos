@@ -84,9 +84,9 @@ AC_DEFUN([MY_CHECK_FFT],[
 	AC_CHECK_LIB([fftw3], [fftw_threads_set_callback], [has_fftw_callback=1], [has_fftw_callback=0], [$FFTW_LIBS]) #since version 3.3.9
 	AC_DEFINE_UNQUOTED(HAS_FFTW_CALLBACK, [$has_fftw_callback], [FFT has fftw_threads_set_callback support])
 	AS_IF([test x$has_fftwf = 0 -a x$use_double = xno], [AC_MSG_ERROR([FFT single precision is not available for --disable-double])])
-	AC_SUBST(FFTW_LIBS)
 	AC_SUBST(FFTW_CFLAGS)
-	echo FFTW_LIBS=$FFTW_LIBS
+	AC_SUBST(FFTW_LIBS)
 	echo FFTW_CFLAGS=$FFTW_CFLAGS
+	echo FFTW_LIBS=$FFTW_LIBS
 	CFLAGS=${save_CFLAGS}
 ])

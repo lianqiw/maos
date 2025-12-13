@@ -63,7 +63,7 @@ AC_DEFUN([MY_CHECK_LAPACK], [
 				fi
 
 				if test "x$enable_threadlib" != "xno" ; then
-					LAPACK="$LAPACK $OPENMP_CFLAGS -lpthread -ldl"
+					LAPACK="$LAPACK $OPENMP_CFLAGS $OPENMP_LIBS -lpthread -ldl"
 				fi
 				;;
 

@@ -27,9 +27,19 @@
    4.5 (201511): Introduced taskloop and priority. Taskloop has implicit taskgroup.
 */
 //#include <stdatomic.h> //_Atomic with OPENMP is not supported in compilares <=6. We use builtin atomic functions instead.
-#include <pthread.h>
 #include "common.h"
-
+#if defined(__cplusplus) && !USE_CPP
+} //escaping extern "C"
+#endif
+#include <pthread.h>
+#if _OPENMP >= 201511
+#include <omp.h>
+#else
+#undef _OPENMP
+#endif
+#if defined(__cplusplus) && !USE_CPP
+extern "C"{//re-entering extern "C"
+#endif
 typedef struct thread_t thread_t;
 typedef void *(*thread_fun)(void *);
 typedef void *(*thread_wrapfun)(thread_t *);

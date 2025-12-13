@@ -36,6 +36,8 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	if(nzmax>0){
 		sp->pi=mymalloc(nzmax, spint);
 		sp->px=mymalloc(nzmax, T);
+	}else if(nzmax<0){
+		error("Negative nzmax in X(spnew): %ld\n", nzmax);
 	}
 	sp->nx=nx;
 	sp->ny=ny;
@@ -242,7 +244,7 @@ int X(spcheck)(const X(sp)* sp){
 			}
 		}
 		if(sp->pp[sp->ny]!=sp->nzmax){
-			warning("real nzmax is %ld, allocated is %ld\n", (long)sp->pp[sp->ny], sp->nzmax);
+			warning("real nzmax is %ld, allocated is %ld\n", (long)sp->pp[sp->ny], (long)sp->nzmax);
 		}
 	}
 	return (not_lower?0:1)|(not_upper?0:2);

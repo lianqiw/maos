@@ -50,40 +50,25 @@
 #include "defs.h"
 /*Obtain from SuiteSparse ss_multiply. Gather together */
 #define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define SS_INT spint
-#define SS_ENTRY T
-#define cs X(sp)
-
 #define SS_FLIP(i) (-(i)-2)
 #define SS_UNFLIP(i) (((i) < 0) ? SS_FLIP(i) : (i))
 #define SS_MARKED(w,j) (w [j] < 0)
 #define SS_MARK(w,j) { w [j] = SS_FLIP (w [j]) ; }
 
 /**
- free a sparse matrix */
-static cs* ss_spfree(cs* A){
-	if(A){
-		free(A->pp);
-		free(A->pi);
-		free(A->px);
-	}
-	return NULL;
-}
-
-/**
  wrapper for malloc */
-static void* ss_malloc(SS_INT n, size_t size){
+static void* ss_malloc(spint n, size_t size){
 	return (malloc(SS_MAX(n, 1)*size));
 }
 
 /**
  wrapper for calloc */
-static void* ss_calloc(SS_INT n, size_t size){
+static void* ss_calloc(spint n, size_t size){
 	return (calloc(SS_MAX(n, 1), size));
 }
 /**
  wrapper for realloc */
-static void* ss_realloc(void* p, SS_INT n, size_t size, SS_INT* ok){
+static void* ss_realloc(void* p, spint n, size_t size, spint* ok){
 	void* pnew;
 	pnew=realloc(p, SS_MAX(n, 1)*size); /* realloc the block */
 	*ok=(pnew!=NULL);                  /* realloc fails if pnew is NULL */
@@ -91,36 +76,13 @@ static void* ss_realloc(void* p, SS_INT n, size_t size, SS_INT* ok){
 }
 
 /**
- allocate a sparse matrix (triplet form or compressed-column form) */
-static cs* ss_spalloc(SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT triplet){
-	cs* A=(cs*)ss_calloc(1, sizeof(cs));    /* allocate the cs struct */
-	if(!A) return (NULL);                 /* out of memory */
-	A->id=M_SPT;
-	A->nx=m;                              /* define dimensions and nzmax */
-	A->ny=n;
-	A->nzmax=nzmax=SS_MAX(nzmax, 1);
-
-	A->pp=(SS_INT*)ss_malloc(triplet?nzmax:n+1, sizeof(SS_INT));
-	A->pi=(SS_INT*)ss_malloc(nzmax, sizeof(SS_INT));
-	A->px=values?(SS_ENTRY*)ss_malloc(nzmax, sizeof(SS_ENTRY)):NULL;
-	A->nref=mycalloc(1, unsigned int);A->nref[0]=1;
-	
-	if((!A->pp||!A->pi||(values&&!A->px))){
-		error("Out of memory: p=%p, i=%p, x=%p\n", A->pp, A->pi, A->px);
-		ss_spfree(A);
-		A=NULL;
-	}
-	return A;
-}
-
-/**
  change the max # of entries sparse matrix */
-static SS_INT ss_sprealloc(cs* A, SS_INT nzmax){
-	SS_INT ok, oki, okj=1, okx=1;
+static spint ss_sprealloc(X(sp)* A, spint nzmax){
+	spint ok, oki, okj=1, okx=1;
 	if(!A) return (0);
 	if(nzmax<=0) nzmax=(A->pp[A->ny]);
-	A->pi=(SS_INT*)ss_realloc(A->pi, nzmax, sizeof(SS_INT), &oki);
-	if(A->px) A->px=(SS_ENTRY*)ss_realloc(A->px, nzmax, sizeof(SS_ENTRY), &okx);
+	A->pi=(spint*)ss_realloc(A->pi, nzmax, sizeof(spint), &oki);
+	if(A->px) A->px=(T*)ss_realloc(A->px, nzmax, sizeof(T), &okx);
 	ok=(oki&&okj&&okx);
 	if(ok) A->nzmax=nzmax;
 	return (ok);
@@ -128,18 +90,18 @@ static SS_INT ss_sprealloc(cs* A, SS_INT nzmax){
 
 /**
  free workspace and return a sparse matrix result */
-static cs* ss_done(cs* C, void* w, void* x, SS_INT ok){
+static X(sp)* ss_done(X(sp)* C, void* w, void* x, spint ok){
 	free(w);                       /* free workspace */
 	free(x);
-	return (ok?C:ss_spfree(C));   /* return result if OK, else free it */
+	return (ok?C:(X(spfree_do)(C), (X(sp*))NULL));   /* return result if OK, else free it */
 }
 
 /**
  x = x + beta * A(:,j), where x is a dense vector and A(:,j) is dsp */
-static SS_INT ss_scatter(const cs* A, SS_INT j, SS_ENTRY beta, SS_INT* w, SS_ENTRY* x, SS_INT mark,
-	cs* C, SS_INT nz){
-	SS_INT i, p, * Ap, * Ai, * Ci;
-	SS_ENTRY* Ax;
+static spint ss_scatter(const X(sp)* A, spint j, T beta, spint* w, T* x, spint mark,
+	X(sp)* C, spint nz){
+	spint i, p, * Ap, * Ai, * Ci;
+	T* Ax;
 	if(!(A)||!w||!(C)) return (-1);     /* check inputs */
 	Ap=A->pp; Ai=A->pi; Ax=A->px; Ci=C->pi;
 	for(p=Ap[j]; p<Ap[j+1]; p++){
@@ -155,10 +117,11 @@ static SS_INT ss_scatter(const cs* A, SS_INT j, SS_ENTRY beta, SS_INT* w, SS_ENT
 
 /**
  C = A*B */
-cs* X(ss_multiply) (const cs* A, const cs* B){
-	SS_INT p, j, nz=0, anz, * Cp, * Ci, * Bp, m, n, bnz, * w, values, * Bi;
-	SS_ENTRY* x, * Bx, * Cx;
-	cs* C;
+X(sp)* X(ss_multiply) (const X(sp)* A, const X(sp)* B){
+	spint p, nz=0, anz, * Cp, * Ci, * Bp, bnz, * w, values, * Bi;
+	long m, n, j;
+	T* x, * Bx, * Cx;
+	X(sp)* C;
 	if(!(A)||!(B)){
 		error("A or B is not available\n");
 		return (NULL);      /* check inputs */
@@ -169,10 +132,10 @@ cs* X(ss_multiply) (const cs* A, const cs* B){
 	}
 	m=A->nx; anz=A->pp[A->ny];
 	n=B->ny; Bp=B->pp; Bi=B->pi; Bx=B->px; bnz=Bp[n];
-	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                    /* get workspace */
+	w=(spint*)ss_calloc(m, sizeof(spint));                    /* get workspace */
 	values=(A->px!=NULL)&&(Bx!=NULL);
-	x=values?(SS_ENTRY*)ss_malloc(m, sizeof(SS_ENTRY)):NULL; /* get workspace */
-	C=ss_spalloc(m, n, anz+bnz, values, 0);        /* allocate result */
+	x=values?(T*)ss_malloc(m, sizeof(T)):NULL; /* get workspace */
+	C=X(spnew)(m, n, anz+bnz);        /* allocate result */
 	if(!C||!w||(values&&!x)){
 		error("Out of memory\n");
 		return (ss_done(C, w, x, 0));
@@ -197,10 +160,11 @@ cs* X(ss_multiply) (const cs* A, const cs* B){
 
 /**
  C = alpha*A + beta*B */
-cs* X(ss_add) (const cs* A, const cs* B, SS_ENTRY alpha, SS_ENTRY beta){
-	SS_INT p, j, nz=0, anz, * Cp, * Ci, * Bp, m, n, bnz, * w, values;
-	SS_ENTRY* x, * Bx, * Cx;
-	cs* C;
+X(sp)* X(ss_add) (const X(sp)* A, const X(sp)* B, T alpha, T beta){
+	spint p, j, nz=0, anz, * Cp, * Ci, * Bp, bnz, * w, values;
+	long m, n; //to avoid overflow when multying
+	T* x, * Bx, * Cx;
+	X(sp)* C;
 	if(!(A)||!(B)){
 		error("A or B is not available\n");
 		return (NULL);         /* check inputs */
@@ -211,14 +175,14 @@ cs* X(ss_add) (const cs* A, const cs* B, SS_ENTRY alpha, SS_ENTRY beta){
 	}
 	m=A->nx; anz=A->pp[A->ny];
 	n=B->ny; Bp=B->pp; Bx=B->px; bnz=Bp[n];
-	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                       /* get workspace */
+	w=(spint*)ss_calloc(m, sizeof(spint));                       /* get workspace */
 	values=(A->px!=NULL)&&(Bx!=NULL);
-	x=values?(SS_ENTRY*)ss_malloc(m, sizeof(SS_ENTRY)):NULL;    /* get workspace */
-	SS_INT cnz=anz+bnz;
+	x=values?(T*)ss_malloc(m, sizeof(T)):NULL;    /* get workspace */
+	spint cnz=anz+bnz;
 	if(cnz>m*n){
 		cnz=m*n;
 	}
-	C=ss_spalloc(m, n, cnz, values, 0);           /* allocate result*/
+	C=X(spnew)(m, n, cnz);           /* allocate result*/
 	if(!C||!w||(values&&!x)){
 		error("Out of memory\n");
 		return (ss_done(C, w, x, 0));
@@ -237,9 +201,10 @@ cs* X(ss_add) (const cs* A, const cs* B, SS_ENTRY alpha, SS_ENTRY beta){
 
 /**
  drop entries for which fkeep(A(i,j)) is false; return nz if OK, else -1 */
-static SS_INT ss_fkeep(cs* A, SS_INT(*fkeep) (SS_INT, SS_INT, SS_ENTRY, void*), void* other){
-	SS_INT j, p, nz=0, n, * Ap, * Ai;
-	SS_ENTRY* Ax;
+static spint ss_fkeep(X(sp)* A, spint(*fkeep) (spint, spint, T, void*), void* other){
+	spint p, nz=0, * Ap, * Ai;
+	long j, n;
+	T* Ax;
 	if(!(A)||!fkeep) return (-1);    /* check inputs */
 	n=A->ny; Ap=A->pp; Ai=A->pi; Ax=A->px;
 	for(j=0; j<n; j++){
@@ -259,7 +224,7 @@ static SS_INT ss_fkeep(cs* A, SS_INT(*fkeep) (SS_INT, SS_INT, SS_ENTRY, void*), 
 /**
    return true of is not zero.
 */
-static SS_INT ss_nonzero(SS_INT i, SS_INT j, SS_ENTRY aij, void* other){
+static spint ss_nonzero(spint i, spint j, T aij, void* other){
 	(void)i;
 	(void)j;
 	(void)other;
@@ -268,13 +233,13 @@ static SS_INT ss_nonzero(SS_INT i, SS_INT j, SS_ENTRY aij, void* other){
 /**
    drop zeros in the sparse matrix.
  */
-SS_INT X(ss_dropzeros) (cs* A){
+spint X(ss_dropzeros) (X(sp)* A){
 	return (ss_fkeep(A, &ss_nonzero, NULL));  /* keep all nonzero entries */
 }
 /**
    whether value is below threshold.
  */
-static SS_INT ss_tol(SS_INT i, SS_INT j, SS_ENTRY aij, void* tol){
+static spint ss_tol(spint i, spint j, T aij, void* tol){
 	(void)i;
 	(void)j;
 	return (ABS(aij)>*((real*)tol));
@@ -282,31 +247,32 @@ static SS_INT ss_tol(SS_INT i, SS_INT j, SS_ENTRY aij, void* tol){
 /**
    drop values below threashold of tol.
 */
-SS_INT X(ss_droptol) (cs* A, real tol){
+spint X(ss_droptol) (X(sp)* A, real tol){
 	return (ss_fkeep(A, &ss_tol, &tol));    /* keep all large entries */
 }
-static real ss_cumsum(SS_INT* p, SS_INT* c, SS_INT n){
-	SS_INT i, nz=0;
+static real ss_cumsum(spint* p, spint* c, spint n){
+	spint i, nz=0;
 	real nz2=0;
 	if(!p||!c) return (-1);     /* check inputs */
 	for(i=0; i<n; i++){
 		p[i]=nz;
 		nz+=c[i];
-		nz2+=c[i];              /* also in real to avoid SS_INT overflow */
+		nz2+=c[i];              /* also in real to avoid spint overflow */
 		c[i]=p[i];             /* also copy p[0..n-1] back into c[0..n-1]*/
 	}
 	p[n]=nz;
 	return (nz2);                  /* return sum (c [0..n-1]) */
 }
 
-cs* X(ss_transpose) (const cs* A, SS_INT values){
-	SS_INT p, q, j, * Cp, * Ci, n, m, * Ap, * Ai, * w;
-	SS_ENTRY* Cx, * Ax;
-	cs* C;
+X(sp)* X(ss_transpose) (const X(sp)* A, spint values){
+	spint p, q, * Cp, * Ci, * Ap, * Ai, * w;
+	long n, m, j;
+	T* Cx, * Ax;
+	X(sp)* C;
 	if(!(A)) return (NULL);    /* check inputs */
 	m=A->nx; n=A->ny; Ap=A->pp; Ai=A->pi; Ax=A->px;
-	C=ss_spalloc(n, m, Ap[n], values&&Ax, 0);       /* allocate result */
-	w=(SS_INT*)ss_calloc(m, sizeof(SS_INT));                      /* get workspace */
+	C=X(spnew)(n, m, Ap[n]);       /* allocate result */
+	w=(spint*)ss_calloc(m, sizeof(spint));                      /* get workspace */
 	if(!C||!w) return (ss_done(C, w, NULL, 0));       /* out of memory */
 	Cp=C->pp; Ci=C->pi; Cx=C->px;
 	for(p=0; p<Ap[n]; p++) w[Ai[p]]++;          /* row counts */

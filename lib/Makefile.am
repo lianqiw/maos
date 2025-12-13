@@ -14,11 +14,11 @@ comb.c
 
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
-libaos_la_LIBADD=../math/libaomath.la $(CHOL_LIBS)
+libaos_la_LIBADD=../math/libaomath.la $(CHOL_LIBS) #do not include EXEFULL_LIBS here so that it can be loaded in matlab
 
 bin_PROGRAMS=../bin/aolib.so
 ___bin_aolib_so_SOURCES=aolib.c
-___bin_aolib_so_LDADD=libaos.la $(FFTW_LIBS) $(LAPACK) $(LDEXE)
+___bin_aolib_so_LDADD=libaos.la $(EXEFULL_LIBS)
 ___bin_aolib_so_LDFLAGS=-static -Xcompiler -shared $(LDSO)
 #Linker flags depends on system type (native linker is used)
 if LINUX

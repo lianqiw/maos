@@ -40,8 +40,8 @@ AC_DEFUN([MY_CHECK_CMOCKA],[
 			$2
 		fi
 		CFLAGS=${save_CFLAGS}
-		echo CMOCKA_LIBS=$CMOCKA_LIBS
 		echo CMOCKA_CFLAGS=$CMOCKA_CFLAGS
+		echo CMOCKA_LIBS=$CMOCKA_LIBS
 	fi
 	AM_CONDITIONAL(HAS_CMOCKA, [ test x$has_cmocka = xyes ])
 ])

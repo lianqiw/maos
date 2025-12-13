@@ -98,7 +98,7 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 					count++;
 				}
 				if(count>ht->nzmax){
-					error("hpetal matrix overflows. count=%ld, nzmax=%ld\n", count, ht->nzmax);
+					error("hpetal matrix overflows. count=%ld, nzmax=%ld\n", count, (long)ht->nzmax);
 				}
 			}
 			if(popd){
