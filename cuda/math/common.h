@@ -195,11 +195,7 @@ __device__ __host__ inline void type_convert<double2, double>(double2 &out, cons
 	out.y=0;
 }
 extern int NULL_STREAM;
-#if DEBUG
 #define CUDA_CHECK_ERROR DO(cudaGetLastError())
-#else
-#define CUDA_CHECK_ERROR
-#endif
 #define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){print_backtrace(); error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define DORELAX(A...) ({int _ans=(int)(A); static int _counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){_counter++; if(_counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define CUDA_SYNC_STREAM if(stream!=0){CUDA_CHECK_ERROR;DORELAX(cudaStreamSynchronize(stream));}
