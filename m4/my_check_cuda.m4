@@ -62,17 +62,32 @@ AC_DEFUN([MY_CHECK_CUDA],[
 			cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
 			cudaver="${cudaver/.}"
 			echo CUDA toolkit version is $cudaver
-			if test "$cudaver" -lt 90 ;then
-				cuarch=20 #minimum arch version supported.
-			elif test "$cudaver" -lt 110 ;then
-				cuarch=30
-			elif test "$cudaver" -lt 120 ;then
-				cuarch=35
-			else
-				cuarch=50
+			if test "$cudaver" -lt 70 ;then
+				#CUDA 4.0 supports compute_20
+				#CUDA 7.0 supports C++11.
+				AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
 			fi
-			if test "$cudaver" -lt 60 ;then
-				cuarchmax=35 #maximum arch version supported.
+			if test "$cudaver" -lt 65 ;then
+				cuarchmin=10 #minimum arch version supported.
+			elif test "$cudaver" -lt 70 ;then
+				cuarchmin=11
+			elif test "$cudaver" -lt 90 ;then
+				cuarchmin=20
+			elif test "$cudaver" -lt 110 ;then
+				cuarchmin=30
+			elif test "$cudaver" -lt 120 ;then
+				cuarchmin=35
+			elif test "$cudaver" -lt 130 ;then
+				cuarchmin=50
+			else
+				cuarchmin=75
+			fi
+			if test "$cudaver" -lt 32 ;then
+				cuarchmax=20 #maximum arch version supported.
+			elif test "$cudaver" -lt 50 ;then
+				cuarchmax=21
+			elif test "$cudaver" -lt 65 ;then
+				cuarchmax=35
 			elif test "$cudaver" -lt 80 ;then
 				cuarchmax=50
 			elif test "$cudaver" -lt 90 ;then
@@ -81,16 +96,20 @@ AC_DEFUN([MY_CHECK_CUDA],[
 				cuarchmax=70
 			elif test "$cudaver" -lt 110 ;then
 				cuarchmax=75
-			elif test "$cudaver" -lt 120 ;then
+			elif test "$cudaver" -lt 118 ;then
 				cuarchmax=80
-			else
+			elif test "$cudaver" -lt 128 ;then
 				cuarchmax=90
+			elif test "$cudaver" -lt 131 ;then
+				cuarchmax=120
+			else
+				cuarchmax=120
 			fi
 			devarch=`nvidia-smi  --query-gpu=compute_cap --format=csv,noheader,nounits |sed  's/\.//g' |sort -n |head -1`
 			if test -n "$devarch" ; then
-				if test $devarch -lt $cuarch ;then
-					AC_MSG_ERROR([CUDA version supports compute capability $cuarch - $cuarchmax, but device is at $devarch])
-				elif test "$enable_release" != "yes" ;then
+				if test $devarch -lt $cuarchmin ;then
+					AC_MSG_ERROR([CUDA version supports compute capability $cuarchmin - $cuarchmax, but device is at $devarch])
+				else
 					if test $devarch -gt $cuarchmax ;then
 						cuarch=$cuarchmax
 					else
@@ -173,18 +192,13 @@ AC_DEFUN([MY_CHECK_CUDA],[
 				CCBIN="${CCBIN%% *}"
 				NVCC+=" -ccbin ${CCBIN%% *}"
 			fi
-			if test "$cudaver" -lt 70 ;then
-				#CUDA 4.0 supports compute_20
-				#CUDA 7.0 supports C++11.
-				AC_MSG_ERROR([Require at least CUDA toolkit 7.0])
-			fi
 
 			#virtual GPUs are used here to allow JIT compilation during runtime
 			#set env CUDA_CACHE_MAXSIZE to a large number to cache JIT
 			CUDA_CFLAGS+=" -lineinfo "
 			CUDA_CFLAGS+=" -Wno-deprecated-gpu-targets"
 			#To specify multiple architectures, use
-			#CUDA_CFLAGS+=" -gencode arch=compute_20 -gencode arch=compute_30"
+			CUDA_CFLAGS+=" -arch=sm_${cuarch}" #with arch options, minimal arch is generated.
 
 			if test -n "$CCBIN_CFLAGS" ;then
 				CUDA_CFLAGS="$CUDA_CFLAGS --compiler-options \"$CCBIN_CFLAGS\""

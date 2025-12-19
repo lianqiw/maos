@@ -180,6 +180,18 @@ static int task_cmp(const task_t* a, const task_t* b){
 		return 0;
 	}
 }
+int check_cuda_version(){
+	int driverVersion = 0;
+	int runtimeVersion = 0;
+
+	cudaDriverGetVersion(&driverVersion);
+	cudaRuntimeGetVersion(&runtimeVersion);
+	if(driverVersion < runtimeVersion){
+		error("CUDA Driver version %d is older than CUDA Runtime version %d. Please update your GPU driver.\n", driverVersion, runtimeVersion);
+		return 1;
+	}
+	return 0;
+}
 /**
    Initialize GPU. Return 1 if success.
    if gpus is not null, it is of length ngpu. gpus specifies gpu index to use.
@@ -201,7 +213,8 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		warning("gpus is set, but ngpu=0. set gpus to NULL.\n");
 		gpus=NULL;
 	}
-		
+	check_cuda_version();
+	
 	if(gpus){//user prescribed list of GPUs
 		int ngpu2=0;
 		for(int ig=0; ig<ngpu; ig++){
