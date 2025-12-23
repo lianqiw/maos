@@ -370,8 +370,12 @@ static int get_drawdaemon(){
 #if __APPLE__
 	const char* display=":0";//always available
 #else
-	const char* display=getenv("DISPLAY"); if(display&&!strlen(display)) display=NULL;
-	display=getenv("WAYLAND_DISPLAY"); if(display&&!strlen(display)) display=NULL;
+	const char* display=getenv("DISPLAY"); 
+	if(display&&!strlen(display)) display=NULL;
+	if(!display){
+		display=getenv("WAYLAND_DISPLAY"); 
+		if(display&&!strlen(display)) display=NULL;
+	}
 #endif
 	LOCK(lock);
 	int sock=-1;
