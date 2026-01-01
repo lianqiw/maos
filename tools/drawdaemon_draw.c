@@ -273,10 +273,10 @@ void update_zoom(drawdata_t* drawdata){
  */
 #define PARSE_STYLE(stylein)				\
 {											\
-	style=stylein & 0x7;					\
-	connectpts=(stylein&0x8)>>3;			\
-	color=(stylein&0xFFFFFF00)>>8;			\
-	sym_size=round((stylein&0xF0)>>4);		\
+	style=stylein & 0x7;/*last 3 bits*/		\
+	connectpts=(stylein>>3)&1;				\
+	color=(stylein>>8)&0xFFFFFF;			\
+	sym_size=(stylein>>4)&0xF;				\
 	if(style==0||style==7) connectpts=1;	\
 	cairo_set_dash(cr, style==7?stroke_dash:stroke_solid, 2, 0);\
 }
@@ -329,6 +329,7 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx,
 	default:
 		break;//treat as 0
 	}
+	cairo_move_to(cr, ix, iy);
 }
 /**
    Compute the limit from data for line plotting.
@@ -1013,7 +1014,7 @@ repeat:
 					color=default_color(ipts);
 				}
 				/*save the styles for legend */
-				drawdata->style_pts[ipts]=style|connectpts<<3|color<<8|(int)(sym_size)<<4;
+				drawdata->style_pts[ipts]=style|connectpts<<3|color<<8|(uint32_t)(sym_size)<<4;
 				set_color(cr, color);
 
 				const float* ptsx, * ptsy=NULL;

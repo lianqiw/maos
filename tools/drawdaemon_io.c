@@ -530,10 +530,10 @@ void *listen_draw(void *user_data){
 			case DRAW_STYLE:
 				STREADINT(drawdata->nstyle);
 				if(drawdata->nstylemax<drawdata->nstyle){
-					drawdata->style=myrealloc(drawdata->style, drawdata->nstyle, int32_t);
+					drawdata->style=myrealloc(drawdata->style, drawdata->nstyle, uint32_t);
 					drawdata->nstylemax=drawdata->nstyle;
 				}
-				STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
+				STREAD(drawdata->style, sizeof(uint32_t)*drawdata->nstyle);
 				break;
 			case DRAW_CIRCLE:
 				STREADINT(drawdata->ncir);
