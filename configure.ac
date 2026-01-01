@@ -1,4 +1,4 @@
-AC_INIT(maos, 3.3)
+AC_INIT(maos, 3.4)
 AC_PREREQ(2.57)
 AC_CONFIG_AUX_DIR([m4]) #for autoconf
 AC_CONFIG_MACRO_DIR([m4]) #for aclocal
