@@ -67,7 +67,7 @@ struct drawdata_t{
 	int nptsmax;    	/*allocated size of pts sets*/
 
 	/*styles for points */
-	int32_t* style;
+	uint32_t* style;
 	int* style_pts;    /*save pts style for legend */
 	int nstyle;
 	int nstylemax;     /*memory storeage of style*/
