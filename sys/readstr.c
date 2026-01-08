@@ -351,6 +351,10 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	
 	/*process possible numbers before the array. */
 	bopen=strchr(startptr, '[');
+	const char *sep=strchr(startptr, ';');
+	if(sep && bopen && sep<bopen){
+		bopen=NULL;//; appears before [, no array.
+	}
 	if(bopen){/*there is indeed '[' */
 		while(startptr[0]!='['){/*parse expression before [. only * and / are allowed*/
 			double fact1=strtod(startptr, (char**)&endptr);/*get the number */
@@ -385,6 +389,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		if(!endarr) endarr=startptr+strlen(startptr);
 	}
 	bclose=strchr(startptr, ']');
+	if(!bopen && bclose && bclose>endarr){
+		bclose=NULL;//] appears after endarr, ignore it.
+	}
 	if(bclose){/*there is indeed ']'. Handle operations after ] */
 		endarr=bclose;
 		endptr=bclose+1;

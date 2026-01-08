@@ -632,6 +632,7 @@ typedef struct ncpa_cfg_t{
 	int ttr;    	/**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
 	int rmsci;  	/**<1: do not include calibration residual in science path.*/
 	int preload; 	/**<preload integrator with DM sys flat*/
+	int offsetdm;   /**<Offset DM error signal instead of WFS gradients*/
     int ndir;   	/**<Number of points for NCPA calibration*/
 	char **surf;    /**<OPD surfaces*/
 	int nsurf;      /**<Number of OPD surfaces*/
