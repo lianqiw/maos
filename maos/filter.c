@@ -287,7 +287,10 @@ static void filter_cl(sim_t* simu){
 		dmerr=simu->dmerr;
 	}
 	//always run servo_filter even if dmerr is NULL.
-	int hiout=servo_filter(simu->dmint, dmerr);
+	if(dmerr && simu->dmoff){
+		dcelladd(&dmerr, 1, simu->dmoff, 1);
+	}
+	servo_filter(simu->dmint, dmerr);
 
 	if(simu->Mint_lo && simu->Merr_lo){
 		/*Low order in split tomography only. fused integrator*/
@@ -319,6 +322,11 @@ static void filter_cl(sim_t* simu){
 		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
 		dcellfree(Mtmp);
 	}
+}
+static void postproc_dm(sim_t* simu){
+	const parms_t* parms=simu->parms;
+	const recon_t* recon=simu->recon;
+	const int isim=simu->reconisim;
 	if(parms->recon.modal){//convert to zonal space
 		dcellzero(simu->dmcmd);
 		dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
@@ -333,7 +341,7 @@ static void filter_cl(sim_t* simu){
 	if(simu->ttmreal){
 		ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
 	}
-	if(parms->sim.focus2tel&&hiout){//offloading DM focus mode to telescope.
+	if(parms->sim.focus2tel&&isim%parms->sim.dtrat_hi==0){//offloading DM focus mode to telescope.
 		dcellcp(&simu->telfocusreal, simu->telfocusint);
 		dcellmm(&simu->telfocusint, recon->RFdm, simu->dmcmd, "nn", parms->sim.epfocus2tel);
 	}
@@ -345,9 +353,9 @@ static void filter_cl(sim_t* simu){
 		dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
 	}
 
-	if(!parms->ncpa.preload&&recon->dm_ncpa){
+	if(parms->ncpa.preload&&simu->dmoff){
 		info_once("Add NCPA after integrator\n");
-		dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
+		dcelladd(&simu->dmcmd, 1, simu->dmoff, 1);
 	}
 
 	if(parms->dbg.dmoff){
@@ -359,7 +367,7 @@ static void filter_cl(sim_t* simu){
 	}
 	//Need to clip
 	if(!parms->recon.modal&&(parms->sim.dmclip||parms->sim.dmclipia||recon->actstuck)){
-		int feedback=(parms->sim.dmclip||parms->sim.dmclipia)||(recon->actstuck&&parms->dbg.recon_stuck);
+		int feedback=parms->sim.closeloop && ((parms->sim.dmclip||parms->sim.dmclipia)||(recon->actstuck&&parms->dbg.recon_stuck));
 		if(feedback){
 			dcellcp(&simu->dmtmp2, simu->dmcmd);
 		}
@@ -514,53 +522,7 @@ void filter_fsm(sim_t* simu){
 
 	simu->fsmerr=NULL;
 }
-/**
-   filter DM commands in open loop mode by simply copy the output
- */
-static void filter_ol(sim_t* simu){
-	const parms_t* parms=simu->parms;
-	assert(!parms->sim.closeloop);
-	if(simu->dmerr&&P(parms->sim.ephi,0)>0){
-		dcellcp(&simu->dmtmp, simu->dmerr);
-	} else{
-		dcellzero(simu->dmtmp);
-	}
-	if(simu->Merr_lo&&P(parms->sim.eplo,0)>0){
-		addlow2dm(&simu->dmtmp, simu, simu->Merr_lo, 1);
-	}
-	//Extrapolate to edge actuators
-	if(parms->recon.modal){
-		dcellzero(simu->dmcmd);
-		dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
-	}else if(simu->recon->actextrap&&!(parms->recon.psol&&parms->fit.actextrap)){
-		dcellzero(simu->dmcmd);
-		dcellmm((cell**)&simu->dmcmd, simu->recon->actextrap, simu->dmtmp, "nn", 1);
-	}else{
-		dcellcp(&simu->dmcmd, simu->dmtmp);
-	}
-	if(simu->recon->dm_ncpa){
-		warning_once("Add NCPA after integrator\n");
-		dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
-	}
-	if(parms->dbg.dmoff){
-		info_once("Add injected DM offset vector\n");
-		int icol=(simu->reconisim+1)%NY(parms->dbg.dmoff);
-		for(int idm=0; idm<parms->ndm; idm++){
-			dadd(&P(simu->dmcmd, idm), 1, P(parms->dbg.dmoff, idm, icol), -1);
-		}
-	}
-	if(simu->ttmreal){
-		ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
-	}
 
-	/*hysterisis. */
-	if(simu->hyst){
-		hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
-	} else{
-		dcellcp(&simu->dmreal, simu->dmcmd);
-	}
-	/*moao DM is already taken care of automatically.*/
-}
 /**
    Simulate turbulence on the DM
 */
@@ -609,11 +571,18 @@ void filter_dm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(parms->sim.evlol) return;
 	if(parms->sim.closeloop){
-		filter_cl(simu);
+		filter_cl(simu);//output integrator to dmtmp
 	} else{
-		filter_ol(simu);
+		if(simu->dmerr&&P(parms->sim.ephi,0)>0){
+			dcellcp(&simu->dmtmp, simu->dmerr);
+		} else{
+			dcellzero(simu->dmtmp);
+		}
+		if(simu->Merr_lo&&P(parms->sim.eplo,0)>0){
+			addlow2dm(&simu->dmtmp, simu, simu->Merr_lo, 1);
+		}
 	}
-
+	postproc_dm(simu);
 #if USE_CUDA
 	if(simu->recon->moao){
 		if(parms->gpu.moao){

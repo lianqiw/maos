@@ -817,6 +817,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	dcellfree(recon->RFlgsg);
 	dcellfree(recon->RFngsg);
 	dcellfree(recon->RFdm);
+	dcellfree(recon->Rmod);
 	dcellfree(recon->GRall);
 	dcellfree(recon->GRtwfs);
 	dcellfree(recon->RRtwfs);
@@ -826,7 +827,7 @@ void free_recon(const parms_t* parms, recon_t* recon){
 	cellfree(recon->Herr);
 	dspfree(recon->W0);
 	dfree(recon->W1);
-
+	cellfree(recon->dm_ncpa);
 	cellfree(recon->xloc);
 	cellfree(recon->xmap);
 	cellfree(recon->xcmap);

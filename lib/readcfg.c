@@ -148,7 +148,7 @@ static void print_key(const void* key, VISIT which, int level){
 		if(store->flag!=1&&(!store->data||strcmp(store->data, "ignore"))){
 			if(store->flag==0){
 				if(!store->priority||PERMISSIVE||!strncmp(store->key, "dbg.", 4)){
-					dbg("%s is not recognized, value is %s\n", store->key, store->data);
+					warning("%s is not recognized, value is %s\n", store->key, store->data);
 				} else{
 					error("%s is not recognized, value is %s. Set env MAOS_PERMISSIVE=1 to ignore the error.\n", store->key, store->data);
 				}
@@ -743,7 +743,7 @@ int readcfg_int(const char* format, ...){
 	char* endstr;
 	real ans=0;
 	if(!(val=getrecord_data(key, 1))){
-		//warning("%s not found, assume 0.\n", key);
+		warning("%s not found, assume 0.\n", key);
 		ans=0;
 	}else if(isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
@@ -759,7 +759,7 @@ real readcfg_dbl(const char* format, ...){
 	char *endstr;
 	real ans=0;
 	if(!(data=getrecord_data(key, 1))){
-		//warning("%s not found, assume 0.\n", key);
+		warning("%s not found, assume 0.\n", key);
 		ans=0;
 	}else if(isnan(ans=readstr_num(key, data, &endstr))||endstr[0]!='\0'){
 		error("Invalid data: %s=%s\n", key, data);

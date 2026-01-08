@@ -790,7 +790,13 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
-
+	if(parms->ncpa.offsetdm){
+		if(recon->dm_ncpa){
+			simu->dmoff=dcelldup(recon->dm_ncpa); 
+		}else{
+			simu->dmoff=dcellnew(parms->ndm, 1);
+		}
+	}
 	/*Do not initialize gradlastcl. Do not initialize gradlastol in open
 	  loop. They are used for testing*/
 	if(parms->sim.closeloop){
@@ -1180,7 +1186,7 @@ static void init_simu_wfs(sim_t* simu){
 		long nny[2]={1, ncn2};
 		simu->cn2res=dcellnew_file(2, 1, nnx, nny, "Slodar output", "%s/Rescn2_%d.bin", fnextra, seed);
 	}
-	if(parms->itpowfs!=-1){
+	if(parms->save.extra && parms->itpowfs!=-1){
 		const int ipowfs=parms->itpowfs;
 		const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
 		if(nacc>0){
@@ -1269,10 +1275,6 @@ static void init_simu_recon(sim_t* simu){
 	if(parms->sim.closeloop){
 		simu->dmint=servo_new_sho(NULL, parms->sim.aphi, parms->sim.alhi,
 			parms->sim.dt, parms->sim.ephi, parms->sim.f0dm, parms->sim.zetadm);
-	}
-	if(parms->ncpa.preload&&recon->dm_ncpa){//set the integrator
-		warning_once("Preload integrator with NCPA\n");
-		dcelladd(&P(simu->dmint->mint, 0), 1, recon->dm_ncpa, 1);
 	}
 	if(parms->recon.split||parms->evl.split>1){
 		simu->Merr_lo_store=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
@@ -1611,6 +1613,7 @@ void free_simu(sim_t* simu){
 	free(simu->perfevl_post);
 	free(simu->status);
 	dfree(simu->evlopdground);
+	dcellfree(simu->dmoff);
 	dcellfree(simu->wfsopd);
 	dcellfree(simu->gradcl);
 	dcellfree(simu->gradacc);

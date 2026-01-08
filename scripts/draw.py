@@ -11,7 +11,7 @@ import scipy
 #import struct
 
 def iscell(arr):
-    return type(arr)==np.ndarray and arr.dtype.name=='object'
+    return isinstance(arr, np.ndarray) and arr.dtype.name=='object'
     
 def coord2grid(x, **kargs):
     xmin = x.min()
@@ -42,7 +42,7 @@ def isvec(arg):
 
 
 def isloc(arg):
-    if type(arg) is not np.ndarray:
+    if not isinstance(arg, np.ndarray):
         return False
     if iscell(arg):
         return False
@@ -67,9 +67,9 @@ def locembed(loc, opd, return_ext=0, **kargs):
     # draw(loc, opd): embed opd onto loc
     if loc.shape[0]>2 and loc.shape[1]==2: #need a transpose
         loc=loc.T
-    if type(opd) is scipy.sparse._csr.csr_matrix:
+    if isinstance(opd, scipy.sparse._csr.csr_matrix):
         opd=opd.toarray()
-    elif type(opd)==type([]):
+    elif isinstance(opd, list):
         opd=np.array(opd)
     nloc = loc.shape[1]
     if iscell(opd): #cell
@@ -114,9 +114,9 @@ def locembed(loc, opd, return_ext=0, **kargs):
     else:
         return ims
 def isimg(arg0):
-    if type(arg0) is scipy.sparse._csr.csr_matrix:
+    if isinstance(arg0, scipy.sparse._csr.csr_matrix):
         return True
-    elif type(arg0) is np.ndarray:
+    elif isinstance(arg0, np.ndarray):
         while (iscell(arg0) or arg0.ndim>2) and arg0.shape[0]==1:
             arg0=arg0[0]
         return iscell(arg0)==False and (arg0.ndim==1 or (arg0.ndim==2 and arg0.shape[0]*100>arg0.shape[1] and arg0.shape[1]*100>arg0.shape[0]))
@@ -126,7 +126,7 @@ def draw(*args, **kargs):
     #if not 'keep' in kargs or kargs['keep'] == 0:
     #    plt.clf()
     arg0=args[0]
-    if type(arg0) is np.ndarray:
+    if isinstance(arg0, np.ndarray):
         arg0=np.squeeze(arg0)
     if isloc(arg0):  # first argument is loc
         loc=arg0
@@ -157,14 +157,14 @@ def draw(*args, **kargs):
             continue
         if stop:
             break
-        if type(arg0) == list:
+        if isinstance(arg0, list):
             if len(arg0)==1:
                 arg0=arg0[0]
-        if type(arg0) is np.ndarray:
+        if isinstance(arg0, np.ndarray):
             arg0=np.squeeze(arg0)
             while arg0.shape[0]==1 and (iscell(arg0) or arg0.ndim>2):
                 arg0=np.squeeze(arg0[0])
-        if type(arg0) is scipy.sparse._csr.csr_matrix:
+        if isinstance(arg0, scipy.sparse._csr.csr_matrix):
             arg0=arg0.toarray()
         ct+=1
         if ct>1:
@@ -188,7 +188,7 @@ def draw(*args, **kargs):
             #if img.dtype.name.find('complex')>-1:
             if np.iscomplexobj(img):
                 img=np.real(img)
-            if type(img) is scipy.sparse._csr.csr_matrix:
+            if isinstance(img, scipy.sparse._csr.csr_matrix):
                 img=img.toarray()
             if 'center' in kargs:
                 img=center(img, kargs['center'])
@@ -207,9 +207,9 @@ def draw(*args, **kargs):
             plt.grid(False)
             #if type(arg0) == list or arg0.dtype == object or arg0.ndim==3 or (isloc(arg0)==False and arg0.ndim==2 and arg0.shape[0]*100<arg0.shape[1]):  # list, array of array or 3d array
         else: #many images
-            if type(arg0) == list or type(arg0)==tuple:
+            if isinstance(arg0, list) or isinstance(arg0, tuple):
                 nframe = len(arg0)
-            elif type(arg0) == np.ndarray:
+            elif isinstance(arg0, np.ndarray):
                 if iscell(arg0):
                     nframe = arg0.size
                     arg0=arg0.reshape(nframe)

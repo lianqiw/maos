@@ -1668,6 +1668,7 @@ static void readcfg_ncpa(parms_t *parms){
 		dnormalize_sumabs(parms->ncpa.wt, 1);
 	}
 	READ_INT(ncpa.preload);
+	READ_INT(ncpa.offsetdm);
 	READ_INT(ncpa.rmsci);
 	parms->ncpa.nsurf=readcfg_strarr(&parms->ncpa.surf, 0, 0, "ncpa.surf");
 	parms->ncpa.ntsurf=readcfg_strarr(&parms->ncpa.tsurf, 0, 0, "ncpa.tsurf");

@@ -19,7 +19,7 @@
 #include "surf.h"
 #include "recon_utils.h"
 #include "powfs.h"
-
+#include "save.h"
 /**
    \file surf.h
    Setup NCPA surfaces for WFS and Performance evaluation.
@@ -77,7 +77,7 @@ setup_surf_tilt(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			locwfs=powfs[ipowfs].loc;
 		}
 		for(int itsurf=0; itsurf< parms->ncpa.ntsurf; itsurf++){
-			m3proj(P(tsurf, itsurf), P(powfs[ipowfs].opdadd, wfsind), locwfs,
+			m3proj(P(tsurf, itsurf), P(powfs[ipowfs].opdbias, wfsind), locwfs,
 				parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
 		}
 	}
@@ -176,9 +176,9 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	const int nevl=parms->evl.nevl;
 	const int nwfs=parms->nwfs;
 	const int nncpa= parms->ncpa.ndir;
-	int* evlcover=mymalloc(nevl, int);
-	int* wfscover=mymalloc(nwfs, int);
-	int* ncpacover=mymalloc(nncpa, int);
+	int* evlcover=mycalloc(nevl, int);
+	int* wfscover=mycalloc(nwfs, int);
+	int* ncpacover=mycalloc(nncpa, int);
 	int opdxcover=1;
 	SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, 0, evlcover, wfscover, ncpacover, 0};
 	const int nthread=NTHREAD;
@@ -235,7 +235,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					info2("\n");
 				}
 			}
-			if(evlct!=nevl){
+			if(evlct!=nevl){//only covers some evaluation directions, assume not covering NCPA calibration direction
 				for(int idir=0; idir<nncpa; idir++){
 					ncpacover[idir]=0;
 				}
@@ -253,7 +253,24 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					}
 					ncover++;
 				} else{
-					readstr_numarr((void**)&wfscover, NULL, NULL, nwfs, 2, M_INT, "SURFWFS",strwfs);
+					int* input=NULL;
+					int ninput=readstr_numarr((void**)&input, NULL, NULL, 0, 0, M_INT, "SURFWFS",strwfs);
+					if(ninput==1){
+						for(int iwfs=0;iwfs<nwfs; iwfs++){
+							wfscover[iwfs]=input[0];
+						}
+					}else if(ninput==nwfs){
+						for(int iwfs=0;iwfs<nwfs; iwfs++){
+							wfscover[iwfs]=input[iwfs];
+						}
+					}else if(ninput==parms->npowfs){
+						for(int iwfs=0; iwfs<nwfs; iwfs++){
+							const int ipowfs=parms->wfs[iwfs].powfs;
+							wfscover[iwfs]=input[ipowfs];
+						}
+					}else{
+						warning("SURFWFS=%s: invalid number of inputs %d\n", strwfs, ninput);
+					}
 					int nwfscover=0;
 					for(int i=0; i<nwfs; i++){
 						nwfscover+=wfscover[i]?1:0;
@@ -588,6 +605,9 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(powfs[ipowfs].opdbias){//add NCPA surfaces to opdadd for ray tracing. Those from dm_ncpa is not added.
 				dcelladd(&powfs[ipowfs].opdadd, 1, powfs[ipowfs].opdbias, 1);
+				if(!parms->ncpa.calib){//If not calibrating NCPA, we can free opdbias here.
+					dcellfree(powfs[ipowfs].opdbias);
+				}
 			}
 		}
 		/**
@@ -620,10 +640,13 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			if(parms->save.setup){
 				writebin(recon->dm_ncpa, "dm_ncpa");
 			}
+			if(parms->plot.run){
+				draw_dm(parms, recon, recon->dm_ncpa, 0, "DM NCPA Offset", "NCPA");
+			}
 			dspcellfree(recon->HA_ncpa);
 		}
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(any_ncpa){//apply NCPA DM command.
+			if(any_ncpa && (!parms->ncpa.offsetdm || parms->powfs[ipowfs].skip==2)){//convert NCPA DM command to gradients.
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					const real hs=parms->wfs[iwfs].hs;
@@ -661,7 +684,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			writebin(powfs[ipowfs].opdbias, "powfs%d_opdbias.bin", ipowfs);
 		}
 	}
-	if( parms->ncpa.calib&&parms->ncpa.rmsci&&recon->dm_ncpa&&aper->opdadd){
+	if(parms->ncpa.calib&&parms->ncpa.rmsci&&recon->dm_ncpa&&aper->opdadd){
 		//Don't include uncorrectable WFE in science evaluation
 		dcellzero(aper->opdadd);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -676,6 +699,5 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			writebin(aper->opdadd, "evl_opdadd_correctable.bin");
 		}
 	}
-	dcellfree(aper->opdbias);
-	dcellfree(recon->dm_ncpa);
+	dcellfree(aper->opdbias);//only used for NCPA calibration to determine DM bias
 }

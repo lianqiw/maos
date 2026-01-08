@@ -1355,15 +1355,27 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				P(P(Rmod, ilayer), parms->itwfssph)*=(parms->sim.eptsph/simu->eptwfs);
 			}
 		}
-		zfarr_push(simu->save->restwfs, simu->wfsflags[itpowfs].gradout-1, Rmod);
-
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			int ipowfs=parms->wfs[iwfs].powfs;
-			if(parms->powfs[ipowfs].llt){
+		if(parms->save.extra){
+			zfarr_push(simu->save->restwfs, simu->wfsflags[itpowfs].gradout-1, Rmod);
+		}
+		if(parms->ncpa.offsetdm){
+			for(int ilayer=0; ilayer<nlayer; ilayer++){
+				dmm(&P(simu->dmoff, ilayer), 1, P(recon->Rmod, ilayer), P(Rmod, ilayer), "nn", simu->eptwfs);
+			}
+			if(parms->plot.run){
+				draw_dm(parms, recon, simu->dmoff, 0, "DM Offset", "Off");
+			}
+		}else{
+			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+				int ipowfs=parms->wfs[iwfs].powfs;
 				for(int ilayer=0; ilayer<nlayer; ilayer++){
-					dmm(&P(simu->gradoff, iwfs), 1, P(recon->GRall, iwfs, ilayer), P(Rmod, ilayer), "nn", -simu->eptwfs);
+					if(parms->powfs[ipowfs].skip!=2 && P(recon->GRall, iwfs, ilayer)){
+						dmm(&P(simu->gradoff, iwfs), 1, P(recon->GRall, iwfs, ilayer), P(Rmod, ilayer), "nn", -simu->eptwfs);
+					}
 				}
-				plot_gradoff(simu, iwfs);
+				if(parms->plot.run){
+					plot_gradoff(simu, iwfs);
+				}
 			}
 		}
 		if(parms->save.gradoff){

@@ -90,8 +90,8 @@ typedef struct powfs_t{
 	dmat *saamin;       /**<Min of subaperture area across all wfs in this powfs. */
     real areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
-    dcell *opdadd;      /**<opdadd includes both common and NCPA OPDS. It is used for ray tracing*/
-    dcell *opdbias;     /**<opdbias is used to compute gradient offset. It includes contributions only from NCPA OPD.*/
+    dcell *opdadd;      /**<Actual OPD along the common and WFS path.*/
+    dcell *opdbias;     /**<Calibrated OPD to compute WFS gradient bias. Usually includes opdadd and NCPA offset (if ncpa.calib=1).*/
     dcell *gradoff;    /**<Offset to grads due to ncpa, sodium profile, etc. Copied to simu->gradoff for runtime update*/
     /*Physical optics */
     dtf_t *dtf;         /**<array of dtf for each wvl*/
@@ -361,7 +361,9 @@ typedef struct recon_t{
     dcell *RFngsg;     /**<focus reconstruction for all TTF NGS from grad.*/
     /*For focus offloading*/
     dcell *RFdm;       /**<Focus from DM commands. For telescope offloading*/
-
+	
+	/*For truth WFS*/
+	dcell *Rmod;       /**<Truth zernike mode in DM space */
     dcell *GRall;      /**<Truth zernike modes to gradient. Was only radial modes but now all modes (depends on recon.twfs_radonly*/
     dcell* GRtwfs;     /**<Truth zernike modes to gradient for twfs*/
     dcell* RRtwfs;     /**<Truth zernike modes reconstruction from twfs grads*/
@@ -548,6 +550,7 @@ typedef struct sim_t{
     int gradoffisim; /**<last isim the new gradoff is activated*/
     int gradoffisim0; /**<last isim the gradoffacc is reset*/
     real eptwfs;     /**<Twfs reference vector servo gain.*/
+	dcell *dmoff;    /**<NCPA calibration for DM. add to dmreal.*/
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
     dcell *gradscale2; /**<Gain scaling for other dithering modes.*/

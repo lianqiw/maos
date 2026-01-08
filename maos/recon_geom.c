@@ -914,7 +914,7 @@ void setup_recon_GF(recon_t* recon, const parms_t* parms){
 	}
 }
 /**
-   From radial order modes to gradients.
+   Mapping Truth WFS reconstructed modes (in actuator space) to gradients.
  */
 void setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
@@ -931,7 +931,8 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
 	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
 	const int zradonly=parms->recon.twfs_radonly;
-	dbg("twfs mode is %s from order %d to %d on %d layers.\n", zradonly?"radial":"all modes", rmin, rmax, nlayer);
+	recon->Rmod=dcellnew(parms->ndm, 1);
+	info("Truth wfs controls mode %s from order %d to %d on %d layers.\n", zradonly?"radial":"all modes", rmin, rmax, nlayer);
 	for(int idm=0; idm<nlayer; idm++){
 		const loc_t* loc=P(recon->aloc, idm);
 		int rmin2=rmin;
@@ -939,8 +940,8 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 			rmin2=3;
 		}
 		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
-		dmat* opd=zernike(loc, -parms->aper.d, rmin2, rmax, zradonly);
-		if(parms->recon.modal){
+		dmat* opd=zernike(loc, 0, rmin2, rmax, zradonly);
+		if(parms->recon.modal){//conver to modal actuator space
 			dmat *opd2=NULL;
 			dcellmm(&opd2, P(recon->amodpinv, idm, idm), opd, "nn", 1);
 			dfree(opd); opd=opd2;
@@ -948,7 +949,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 		OMP_FOR(8)
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
-			if(parms->powfs[ipowfs].skip==2||parms->powfs[ipowfs].llt){
+			if(parms->powfs[ipowfs].skip==2||(!parms->ncpa.offsetdm && !parms->powfs[ipowfs].lo)){
 				if(P(recon->GA, iwfs, idm)){
 					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfs, idm), opd, "nn", 1);
 				}else{
@@ -956,7 +957,11 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 				}
 			}
 		}
-		dfree(opd);
+		if(parms->ncpa.offsetdm){
+			P(recon->Rmod, idm)=opd; opd=NULL;
+		}else{
+			dfree(opd);
+		}
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
@@ -975,20 +980,22 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 				P(recon->GRtwfs, iwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
 			}
 		}
-		if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
-			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
-			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
-				error("recon.GRwfs should have more than 1 layer for sodium fitting projection.\n");
-			}
-			if(rmin>2){
-				error("rmin should be 1 or 2 for sodium fitting projection\n");
-			}
-			if(!recon->GRlgs){
-				recon->GRlgs=dcellnew(parms->powfs[ipowfs].nwfs, nlayer2);
-			}
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-			for(int ilayer=0; ilayer<nlayer2; ilayer++){
-				P(recon->GRlgs, jwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
+		if(!parms->ncpa.offsetdm){
+			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
+				int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
+				if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
+					error("recon.GRwfs should have more than 1 layer for sodium fitting projection.\n");
+				}
+				if(rmin>2){
+					error("rmin should be 1 or 2 for sodium fitting projection\n");
+				}
+				if(!recon->GRlgs){
+					recon->GRlgs=dcellnew(parms->powfs[ipowfs].nwfs, nlayer2);
+				}
+				int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+				for(int ilayer=0; ilayer<nlayer2; ilayer++){
+					P(recon->GRlgs, jwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
+				}
 			}
 		}
 	}
@@ -1000,6 +1007,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(parms->save.recon){
 		writebin(recon->GRall, "twfs_GR");
 		if(recon->RRlgs) writebin(recon->RRlgs, "twfs_RRlgs");
+		if(parms->ncpa.offsetdm) writebin(recon->Rmod, "twfs_Rmod");
 	}
 }
 /**
