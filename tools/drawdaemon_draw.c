@@ -1080,7 +1080,7 @@ repeat:
 					cairo_stroke(cr);
 				}
 				//append cumulative average to end of legend.
-				if(legend[ipts]){
+				if(legend[ipts] && legend[ipts][0]!=0){
 					char* old=strstr(legend[ipts], " (");
 					if(old){//remove old value.
 						old[0]=0;
@@ -1094,7 +1094,7 @@ repeat:
 					}
 				}
 				//plot legend name on curve
-				if(ptsnx>0 && drawdata->legendcurve && connectpts){
+				if(ptsnx>2 && drawdata->legendcurve && connectpts){
 					/*char val[20]={0};
 					if(legend&&legend[ipts]&&connectpts){
 						val[0]=legend[ipts][0];
@@ -1221,7 +1221,7 @@ repeat:
 		/*first figure out the size required of longest legend entry. */
 		cairo_save(cr);
 		for(int ipts=0; ipts<nlegend; ipts++){
-			if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
+			if(!legend[ipts]||legend[ipts][0]==0||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 			
 			npts_valid++;
 			pango_size(layout, legend[ipts], &legwidth, &legheight);
@@ -1257,7 +1257,7 @@ repeat:
 			}
 			cairo_translate(cr, legmarin+symmargin, legmarin);
 			for(int ipts=0; ipts<nlegend; ipts++){
-				if(!legend[ipts]||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
+				if(!legend[ipts]||legend[ipts][0]==0||!drawdata->pts[ipts]||!drawdata->ptsdim[ipts][0]||!drawdata->ptsdim[ipts][1]) continue;
 				if(ipts+1==nlegend && nlegend<drawdata->npts){
 					cairo_move_to(cr, symlen+symmargin, tall*0.8);
 					cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);

@@ -2267,6 +2267,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		/*link LLT with iwfs*/
 		if(lltcfg){
 			parms->nlgspowfs++;
+			parms->nlgswfs+=powfsi->nwfs;
 			if(parms->ilgspowfs==-1){
 				parms->ilgspowfs=ipowfs;
 			} else{
