@@ -143,7 +143,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 	P(cir, 1, 0)=0;
 	P(cir, 2, 0)=totfov/2;
 	P(cir, 3, 0)=0x000000;/*rgb color */
-	int ngroup=3+parms->npowfs+parms->nlgspowfs;
+	int ngroup=3+parms->npowfs+parms->nlgswfs;
 	const char* legend[ngroup];
 	loccell* locs=(loccell*)cellnew(ngroup, 1);
 	int32_t* style=mycalloc(ngroup, int32_t);
@@ -182,7 +182,7 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
 		}
 		if(!isinf(parms->powfs[ipowfs].hs)){
-			style[count]=(0xFF8800<<8)|(4<<4)|2|8;/*LGS */
+			style[count]=(0xFF8800<<8)|(4<<4)|2;/*LGS */
 		} else if(!parms->powfs[ipowfs].lo){
 			style[count]=(0xFFFF00<<8)|(4<<4)|1;/*Hi NGS*/
 		} else if(parms->powfs[ipowfs].order>1){
@@ -191,16 +191,19 @@ void plotdir(const char* fig, const parms_t* parms, real totfov, const char* for
 			style[count]=(0x0000FF<<8)|(4<<4)|1;/*TT */
 		}
 		count++;
+	}
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 		if(parms->powfs[ipowfs].llt){
-			legend[count]="LLT";
-			style[count]=(0xFF8800<<8)|(4<<4)|1|8;
-			int nllt=PN(parms->powfs[ipowfs].llt->ox);
-			P(locs,count)=locnew(nllt, 0, 0);
+			if(jwfs==0) legend[count]="LLT"; else legend[count]=NULL;
+			style[count]=(0xFF8800<<8)|(4<<4)|3|8;//connect LLT to LGS
+			P(locs,count)=locnew(2, 0, 0);
 			const real hs=parms->powfs[ipowfs].hs;
-			for(int illt=0; illt<nllt; illt++){
-				P(locs,count)->locx[illt]=P(parms->powfs[ipowfs].llt->ox, illt)/hs*RAD2AS;
-				P(locs,count)->locy[illt]=P(parms->powfs[ipowfs].llt->oy, illt)/hs*RAD2AS;
-			}
+			P(locs,count)->locx[0]=PR(parms->powfs[ipowfs].llt->ox, jwfs)/hs*RAD2AS;
+			P(locs,count)->locy[0]=PR(parms->powfs[ipowfs].llt->oy, jwfs)/hs*RAD2AS;
+			P(locs,count)->locx[1]=parms->wfs[iwfs].thetax*RAD2AS;
+			P(locs,count)->locy[1]=parms->wfs[iwfs].thetay*RAD2AS;
 			count++;
 		}
 	}
