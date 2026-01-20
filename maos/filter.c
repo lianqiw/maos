@@ -448,7 +448,6 @@ static void postproc_dm(sim_t* simu){
 void filter_fsm(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!simu->fsmint) return;
-		/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 
 	if(simu->fsmerr){//use common FSM. not good
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -473,7 +472,8 @@ void filter_fsm(sim_t* simu){
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 			if(!simu->fsmint[iwfs]) continue;
-			servo_output(simu->fsmint[iwfs], &P(simu->fsmcmd, iwfs));//sho filter is separate. /todo: splitting sho from servo_output is inaccurate if there is partial frame delay.
+			/*fsmerr is from gradients from this time step. so output integrator before update for correct delay*/
+			servo_output(simu->fsmint[iwfs], &P(simu->fsmcmd, iwfs));
 			hasinput=servo_filter(simu->fsmint[iwfs], simu->fsmerr?P(simu->fsmerr, iwfs):NULL);
 		}
 		//lgs wfs common fsm

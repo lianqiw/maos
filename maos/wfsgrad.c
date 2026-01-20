@@ -839,9 +839,9 @@ void* wfsgrad_post(thread_t* info){
 		const int do_phy=simu->wfsflags[ipowfs].do_phy;
 		dmat* gradcl=P(simu->gradcl, iwfs);
 		/* copy fsmreal to output  */
-		if(NE(simu->fsmreal, iwfs)){
-			P(P(simu->save->fsmcmds, iwfs), 0, isim)=P(P(simu->fsmreal, iwfs), 0);
-			P(P(simu->save->fsmcmds, iwfs), 1, isim)=P(P(simu->fsmreal, iwfs), 1);
+		if(NE(simu->fsmcmd, iwfs)){
+			P(P(simu->save->fsmcmds, iwfs), 0, isim)=P(P(simu->fsmcmd, iwfs), 0);
+			P(P(simu->save->fsmcmds, iwfs), 1, isim)=P(P(simu->fsmcmd, iwfs), 1);
 		}
 		if(simu->wfsflags[ipowfs].gradout){
 			if(parms->plot.run&&isim%parms->plot.run==0){

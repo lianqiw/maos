@@ -95,7 +95,7 @@ def convert_output(input):
                 key=headers[ic+1]
             else:
                 key='key_{}'.format(ic)
-            while type(key) is list:
+            while isinstance(key, list):
                 key=key[0]
             out[key]=input[ic]
         return out
@@ -143,7 +143,7 @@ def readbin(file):
                 else:
                     fp.seek(0, 0)
             (out, header, err)=readbin_auto(fp, isfits)
-            if type(header)==str:
+            if isinstance(header,str):
                 header=[header]
             headers.extend(header)
         #except Exception as error:#file may not be ready
@@ -351,7 +351,7 @@ def get_header():
     return headers
 def set_header(header):
     headers.clear()
-    if type(header) is list:
+    if isinstance(header, list):
         headers.extend(header)
     elif header is not None:
         headers.append(header)
