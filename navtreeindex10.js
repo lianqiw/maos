@@ -1,5 +1,9 @@
 var NAVTREEINDEX10 =
 {
+"dd/d45/class_cpu.html":[12,0,19],
+"dd/d61/struct_magic_3_01float2_01_4.html":[12,0,110],
+"dd/da0/todo.html":[11],
+"dd/da9/page40_results.html":[5],
 "dd/da9/page40_results.html#autotoc_md20":[5,0,0],
 "dd/da9/page40_results.html#autotoc_md21":[5,0,1],
 "dd/da9/page40_results.html#autotoc_md22":[5,1],
@@ -245,9 +249,5 @@ var NAVTREEINDEX10 =
 "de/d07/cmath_8h.html#ab3159a1cba08cacee28341ac4fc74cd9":[13,0,3,1,210],
 "de/d07/cmath_8h.html#ab4e7185434d6d9e73d125ac5bc890379":[13,0,3,1,18],
 "de/d07/cmath_8h.html#ab58f2662121c9aee82f839f3fc0d8ea6":[13,0,3,1,61],
-"de/d07/cmath_8h.html#ab596488a8518082a456033900c1a2636":[13,0,3,1,175],
-"de/d07/cmath_8h.html#ab6daca88ab287c71e9a22644bf9b7498":[13,0,3,1,173],
-"de/d07/cmath_8h.html#ab7b07fc70754beff7a05ed1b14583a38":[13,0,3,1,130],
-"de/d07/cmath_8h.html#ab8b2f101e72c73a34582c6492a99925d":[13,0,3,1,152],
-"de/d07/cmath_8h.html#ab8b352a5300fcd8282b4e868ccc45034":[13,0,3,1,183]
+"de/d07/cmath_8h.html#ab596488a8518082a456033900c1a2636":[13,0,3,1,175]
 };

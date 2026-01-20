@@ -300,6 +300,7 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">ncpa.wt    = []  #Weight for each NCPA calibration direction. (see evl.wt)</div>
 <div class="line">ncpa.hs    = []  #Height of star for each NCPA calibration direction. (see powfs.hs)</div>
 <div class="line">ncpa.preload=0   #1: preload integrator with DM sys flat, 0: add DM sys flat after the integrator. (engineering)</div>
+<div class="line">ncpa.offsetdm=0  #1: add NCPA DM bias to dm error signal instead of biasing WFS gradients (engineering)</div>
 <div class="line">ncpa.rmsci=0     #1: do not include uncorrelatable error in science path. (engineering)</div>
 <div class="line"> </div>
 <div class="line">ncpa.surf  = []  #Simulating surfaces like the telescope or NCPA. Can be a file or string array to generate on the fly.</div>
