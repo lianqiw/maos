@@ -30,14 +30,14 @@ def expand_struct(struct):
     for key in struct:
         val0=struct[key]
     
-        if type(val0)==type('') and val0[-1]=='*':
+        if isinstance(val0, str) and val0[-1]=='*':
             val=val0[0:-1]
             ispointer=1
         else:
             val=val0
             ispointer=0
-        if type(val)==type('') and structs.get(val):
-            if type(structs[val])==type(dict()): #other types
+        if isinstance(val, str) and structs.get(val):
+            if isinstance(structs[val], dict): #other types
                 expand_struct(structs[val])
             struct[key]=[val0, structs[val]]
 
@@ -132,7 +132,7 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
     for key in struct: 
         valtype=struct[key]
         ans=""
-        if type(valtype)==type(list()):
+        if isinstance(valtype, list):
             if key=='save':
                 continue
             tmp=struct2mx(valtype[0], nvar, funname+"_", childpointer, fullpointer+childpointer, key, valtype[1])

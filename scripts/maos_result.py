@@ -41,7 +41,7 @@ def maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     return maos_res_do(fds, "Resp", seeds, iframe1, iframe2, quiet)
 def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
     '''Process maos results and average between firame1 to iframe2'''
-    if type(fdin) is not list:
+    if not isinstance(fdin, list):
         fdin=[fdin]
     fds2=[]
     for fdini in fdin:
@@ -68,7 +68,7 @@ def maos_res_do(fdin, name, seeds=None, iframe1=0.2, iframe2=1, quiet=1):
                 print(fn, 'does not exist')
                 continue
             res=readbin(fn)
-            if type(res) is tuple:
+            if isinstance(res, tuple):
                 res=res[0]
             if res is None or res.shape[0]==0:
                 continue
