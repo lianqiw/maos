@@ -1909,6 +1909,7 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 		dcellfree(powfs[ipowfs].llt->ncpa);
 		free(powfs[ipowfs].llt);
 	}
+	dfree(powfs[ipowfs].focus);
 	dcellfree(powfs[ipowfs].sodium);
 	dcellfree(powfs[ipowfs].sodiumprep);
 	if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){

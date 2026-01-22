@@ -1635,6 +1635,7 @@ void free_simu(sim_t* simu){
 	cellfree(simu->wfspsol);
 	dcellfree(simu->dmcmd);
 	dcellfree(simu->dmtmp);
+	dcellfree(simu->dmtmp2);
 	dcellfree(simu->dmadd);
 	servo_free(simu->dmint);
 	servo_free(simu->Mint_lo);
@@ -1676,6 +1677,8 @@ void free_simu(sim_t* simu){
 	dfree(simu->zoomavg);
 	lfree(simu->zoomavg_count);
 	dfree(simu->zoomint);
+	dfree(simu->zoomerr);
+	dfree(simu->zoomprev);
 	if(parms->evl.split){
 		dcellfree(simu->clemp);
 		dfree(simu->cleNGSm);

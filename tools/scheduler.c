@@ -878,7 +878,8 @@ static int respond(struct pollfd *pfd, int flag){
 	case CMD_TRACE://8: Called by MAOS to request a backtrace
 	{
 		set_sockname(sock, "trace");
-		char* buf=NULL, out[200];
+		char* buf=NULL;
+		char out[200];
 		if(streadstr(sock, &buf)
 			||call_addr2line(out, sizeof out, buf)
 			||stwritestr(sock, out)){

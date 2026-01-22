@@ -79,7 +79,7 @@ static void loc_parse_header(loc_t* loc){
 	loc_dxdy(loc);
 }
 /**
- * @brief Convert a dmat to loc_t object
+ * @brief Convert a dmat in place to loc_t object
  * 
  * @param A 	Input array to be changed in place.
  * @return loc_t* 

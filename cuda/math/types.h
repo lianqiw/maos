@@ -71,11 +71,9 @@ class Cpu{
 	T val;
 public:
 	void *operator new[](size_t size){
-		//return ::calloc(size, 1);
-		return (void*) mycalloc(size, char);
+		return (void *)mycalloc(size, char);
 	}
 	void operator delete[](void* p){
-		//::free(p);
 		myfree(p);
 	}
 	static void Zero(T *p, size_t size, cudaStream_t stream=0){
@@ -103,11 +101,9 @@ class CpuObj{
 	T val;
 public:
 	void *operator new[](size_t size){
-		//return ::calloc(size, 1);
 		return (void *)mycalloc(size, char);
 	}
 	void operator delete[](void *p){
-		//::free(p);
 		myfree(p);
 	}
 	static void Copy(T *pout, const T *pin, size_t size, cudaStream_t stream=0){
@@ -166,11 +162,11 @@ public:
 	}
 	static void Write(T *p, long nx, long ny, const char *keywords, file_t *fp, cudaStream_t stream=0){
 		ASSERT_NUMERIC;
-		T *tmp=(T *)malloc(nx*ny*sizeof(T));
+		T *tmp=mymalloc(nx*ny, T);
 		DO(cudaMemcpyAsync(tmp, p, nx*ny*sizeof(T), D2H, stream));
 		CUDA_SYNC_STREAM;
 		writearr(fp, 0, sizeof(T), Magic<T>::magic, keywords, tmp, nx, ny);
-		free(tmp);
+		myfree(tmp);
 	}
 	static void Write(T *p, long nx, long ny, const char *keywords, const char *format, ...){
 		ASSERT_NUMERIC;

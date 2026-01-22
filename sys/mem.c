@@ -74,7 +74,7 @@ PNEW(mutex_deinit);
 static unsigned int  memcnt=0;
 static size_t memalloc=0, memfree=0;
 /*max depth in backtrace */
-#define DT 8 //matches funtrace_len/8
+#define DT 16 //matches funtrace_len/8
 
 #define METHOD 1
 #if METHOD == 1 //Use hash table
@@ -207,7 +207,7 @@ static void print_mem_debug(){
 					counter++;
 					info3("%p %9dB", memkey_all[i].p, memkey_all[i].size);
 					if(memkey_all[i].nfunc){
-						int offset=memkey_all[i].nfunc>3?1:0;
+						int offset=memkey_all[i].nfunc>8?1:0;
 						if(ans||(ans=print_backtrace_symbol(memkey_all[i].func, memkey_all[i].nfunc-offset))){
 							info3(" %p\n", memkey_all[i].p);
 						}
@@ -685,8 +685,8 @@ static void memkey_init(){
 }
 #endif
 
-void *calloc_maos(size_t nbyte, size_t nelem){
-	void *p=calloc_default(nbyte, nelem);
+void *calloc_maos(size_t nelem, size_t nbyte){
+	void *p=calloc_default(nelem, nbyte);
 	if(!p){
 		error("calloc for %ld bytes failed (%d): %s\n", nbyte*nelem, errno, strerror(errno));
 	}
@@ -811,10 +811,10 @@ static __attribute__((destructor)) void deinit(){
 		if(p1->data) myfree(p1->data);
 		free_default(p1);
 	}
+	free_process();//does not free TEMP
 	if(MEM_DEBUG){
 		print_mem_debug();
 	}
-	free_process();//call after print_mem_debug which needs TEMP
 	if(fplog) fclose(fplog);
 }
 
@@ -823,7 +823,7 @@ static __attribute__((destructor)) void deinit(){
 */
 void register_deinit(void (*fun)(void), void *data){
 	LOCK(mutex_deinit);
-	init_mem();
+	init_mem();//make sure it is called as this may be called before init()
 	deinit_t *node=NULL;
 	for(node=deinit_head; node; node=node->next){
 		if(fun&&fun==node->fun){

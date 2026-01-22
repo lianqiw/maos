@@ -115,9 +115,11 @@ void free_hosts(){
 	for(int ihost=0; ihost<nhost; ihost++){
 		free(hosts[ihost]);
 		free(hostsaddr[ihost]);
+		free(hostshort[ihost]);
 	}
 	free(hosts);
 	free(hostsaddr);
+	free(hostshort);
 	nhost=0;
 	UNLOCK(mutex_hosts);
 }
@@ -493,18 +495,21 @@ int call_addr2line(char* ans, int nans, const char* cmdstr){
 	} else{
 		char line[4096];
 		nans--;
+		int ct=0;
 		while(fgets(line, sizeof(line), fpcmd)){
+			if(line[0]=='?') continue;
 			char *tmp=strrchr(line, '/');
 			if(tmp){
 				tmp++;
 				char* tmp2=strchr(tmp, '\n'); if(tmp2) tmp2[0]='\0';
 				tmp2=strchr(tmp,'('); if(tmp2) tmp2[-1]='\0';
-				if(!mystrcmp(tmp, "sp")||!mystrcmp(tmp, "mat")||!mystrcmp(tmp, "cell.c")||!mystrcmp(tmp, "loc.c")||!mystrcmp(tmp, "mem.c")){
+				if(ct>7 && (!mystrcmp(tmp, "sp")||!mystrcmp(tmp, "mat")||!mystrcmp(tmp, "cell.c")||!mystrcmp(tmp, "loc.c")||!mystrcmp(tmp, "mem.c"))){
 					break;
 				}
 				strncat(ans, "->", nans); nans-=3;
 				strncat(ans, tmp, nans);nans-=strlen(tmp);
 				res=0;
+				ct++;
 			}
 		}
 		pclose(fpcmd);

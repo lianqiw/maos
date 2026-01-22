@@ -17,7 +17,7 @@
 */
 #include "map.h"
 /**
- * @brief Convert a dmat to map object. Ensure that the type is properly initialized
+ * @brief Convert a dmat in place to map object. Ensure that the type is properly initialized
  * 
  * @param A 	input dmat object. will be changed in place.
  * @return map_t* 
@@ -32,7 +32,7 @@ map_t* map_convert(dmat *A){
 }
 
 /**
- * @brief Convert a dmat to rmap object. Ensure that the type is properly initialized
+ * @brief Convert a dmat in place to rmap object. Ensure that the type is properly initialized
  * 
  * @param A 	input dmat object. will be changed in place.
  * @return map_t* 

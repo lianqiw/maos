@@ -41,22 +41,22 @@ extern int MEM_VERBOSE;
 extern int MEM_DEBUG;
 extern int MEM_FUNTRACE;
 extern __thread char funtrace[];//stores info about top level function ca
-#define funtrace_len 64
+#define funtrace_len 128
 #define funtrace_set (((MEM_DEBUG || MEM_VERBOSE) && !funtrace[0] && MEM_FUNTRACE)?(void*)(long)snprintf(funtrace, funtrace_len, "%s:%d (%s)", BASEFILE,__LINE__,__func__):NULL)
 #define funtrace_unset funtrace[0]=0;
 extern void  (*free_default)(void *);
 //Do not convert alloca to function call. It is auto freed after function returns.
 #define myalloca(nelem, type)     (type*)alloca(nelem*sizeof(type))
-#define mycalloc(nelem, type)     (type*)(funtrace_set, calloc_maos(nelem, sizeof(type)))
-#define mymalloc(nelem, type)     (type*)(funtrace_set, malloc_maos(nelem*sizeof(type)))
-#define myrealloc(p, nelem, type) (type*)(funtrace_set, realloc_maos(p, nelem*sizeof(type)))
-#define myrecalloc(p, oldtype, newtype) (newtype*)(funtrace_set, recalloc_maos(p, sizeof(oldtype), sizeof(newtype)))
+#define mycalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mycalloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, calloc_maos(nelem, sizeof(type)))
+#define mymalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mymalloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, malloc_maos(nelem*sizeof(type)))
+#define myrealloc(p, nelem, type) (type*)(funtrace_set, MEM_VERBOSE?(info_line("myrealloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, realloc_maos(p, nelem*sizeof(type)))
+#define myrecalloc(p, oldtype, newtype) (newtype*)(funtrace_set, MEM_VERBOSE?(info_line("myrecalloc: 1x%zu bytes ", sizeof(newtype)),0):0,recalloc_maos(p, sizeof(oldtype), sizeof(newtype)))
 #define myfree(p) if(p) free_maos(p)
 
 #if !defined(IN_MEM_C) && !defined(__cplusplus)
-#define calloc(nelem, size) (funtrace_set, calloc_maos(nelem, size))
-#define malloc(size)        (funtrace_set, malloc_maos(size))
-#define realloc(p, size)    (funtrace_set, realloc_maos(p, size))
+#define calloc(nelem, size) (funtrace_set, MEM_VERBOSE?(info_line("calloc: %zux%zu bytes ", (size_t)nelem, (size_t)size),0):0,calloc_maos(nelem, size))
+#define malloc(size)        (funtrace_set, MEM_VERBOSE?(info_line("malloc: %zu bytes ", (size_t)size),0):0,malloc_maos(size))
+#define realloc(p, size)    (funtrace_set, MEM_VERBOSE?(info_line("realloc: %zu bytes ", (size_t)size),0):0,realloc_maos(p, size))
 #define free(p) if(p) free_maos(p)
 #endif
 void register_malloc(void* (*ex_malloc)(size_t), void* (*ex_calloc)(size_t, size_t), void* (*ex_realloc)(void*, size_t), void (*ex_free)(void*));

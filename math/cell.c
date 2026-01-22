@@ -130,21 +130,19 @@ uint32_t cellhash(const_anyarray in, uint32_t key){
 	return key;
 }
 /**
- * @brief Convert elements of cell array
+ * @brief Convert elements of cell array in place.
  * 
  */
 cell *cellconvert(cell *A, cell* (*fun_convert)(cell*)){
 	if(!A) return NULL;
-	cell *out;
 	if(iscell(A)){
-		out=cellnew(A->nx, A->ny);
 		for(long i=0; i<PN(A); i++){
-			P(out, i)=cellconvert(P(A,i), fun_convert);
+			P(A, i)=cellconvert(P(A,i), fun_convert);
 		}
 	}else{
-		out=fun_convert(A);
+		A=fun_convert(A);
 	}
-	return out;
+	return A;
 }
 
 /**

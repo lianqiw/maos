@@ -737,17 +737,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					}
 				}
 			}/*dtrat_output */
-			//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
 			ctoc_final("wfs %d", iwfs);
-
-			/*{//this replaces gpu_wfsgrad_sync
-				//This does not work. memcpy is not allowed in callback
-				struct wfsgrad_callback_t* tmp=mycalloc(1, struct wfsgrad_callback_t);
-				tmp->simu=simu;
-				tmp->iwfs=iwfs;
-				tmp->op=2;
-				cudaStreamAddCallback(stream, wfsgrad_callback, (void*)tmp, 0);
-			}*/
 			CUDA_CHECK_ERROR;
 		}//for ihs
 	}//for iwfs

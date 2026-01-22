@@ -26,7 +26,6 @@
 #if defined __CYGWIN__
 #include <sys/cygwin.h>
 #endif
-#define IN_MEM_C 1 //disable memory management in this file.
 #include "common.h"
 #include "misc.h"
 #include "process.h"
@@ -108,6 +107,12 @@ void init_process(void){
 	}
 	//Create temporary folders
 	mymkdir("%s", TEMP);
+	
+	if(!setenv("TEMP", TEMP, 1)){
+		free(TEMP);
+		TEMP=getenv("TEMP");
+	}
+
 	/*{//preserve compatibility with old maos versions. Deprecated because the folder content may be removed by automatic tmp cleanup.
 		char TEMP2[100];
 		snprintf(TEMP2, sizeof(TEMP2), "/tmp/maos-%s", USER);
@@ -184,9 +189,8 @@ void set_dirout(const char *dir){
  * free memory
  * */
 void free_process(){
-	/*make sure free_process is called in the end. scheduler_connect_self
-	requires TEMP for backtrace printing*/
-	free(TEMP); TEMP=NULL;
+	//Do not free TEMP or HOME.
+	free(DIRBUILD); DIRBUILD=NULL;
 	free(DIRCACHE); DIRCACHE=NULL;
 	free(DIRLOCK); DIRLOCK=NULL;
 	free(DIREXE); DIREXE=NULL;
