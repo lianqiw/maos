@@ -287,6 +287,7 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					if(nwfscover==nwfs){
 						ncover++;
 					}
+					free(input);
 				}
 			}
 			if(ncover==2){

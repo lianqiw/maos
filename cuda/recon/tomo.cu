@@ -51,6 +51,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		const int np=np1*np1;
 		int nsa=saloc->nloc;
 		short2* partxy=mycalloc(np*nsa, short2);//need to zero memory
+		info("partxy=%p\n", partxy);
 		const real dx1=1./ploc->dx;
 		const real dy1=1./ploc->dy;
 		for(int ic=0; ic<GPt->ny; ic++){
@@ -86,7 +87,7 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		GPp.init(np, nsa);
 		DO(cudaMemcpy(GPp(), partxy, sizeof(short2)*np*nsa, H2D));
 		*GPscale=1./pxscale;
-		free(partxy);
+		myfree(partxy);//need to match myfree with mycalloc
 	} else{/*use sparse */
 		dbg("GP uses sparse matrix: pos=%g, xdiff=%g, ydiff=%g.\n", pos, xdiff, ydiff);
 		GPf=cusp(GP);

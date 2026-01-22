@@ -62,9 +62,6 @@ void fractal_vkcov_free(){
 		free(p);
 	}
 }
-static __attribute__((constructor)) void init(){
-	register_deinit(fractal_vkcov_free, NULL);
-}
 
 /**
    Compute Von Karman covariance function at separations computed from the grid
@@ -85,6 +82,9 @@ static vkcov_t* vkcov_calc(real r0, real L0, real dx, long n, long ninit){
 	node->next=head;
 	if(r0>=L0){
 		error("Illegal parameter: r0=%g, L0=%g\n", r0, L0);
+	}
+	if(!head){
+		register_deinit(fractal_vkcov_free, NULL);
 	}
 	head=node;
 	dmat* r=dnew(2, nroot+2);

@@ -59,6 +59,7 @@ static void X(spfree_content)(X(sp)* sp){
 		free(sp->pp);
 		free(sp->pi);
 		free(sp->nref);
+		free(sp->keywords);
 	}
 }
 /**

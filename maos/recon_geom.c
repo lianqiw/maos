@@ -638,14 +638,14 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 					} else{
 						error("Invalid gtype_recon\n");
 					}
-					P(recon->GP, iwfs)=gp;
+					P(recon->GP, iwfs)=gp; gp=NULL;
 					locfree(gloc);
 					dfree(gamp);
 				}
 			}
 			//outside of OMP_FOR
 			if(share_gp){
-				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+				for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 					const int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
 					P(recon->GP, iwfs)=dspref(P(recon->GP, iwfs0));
 				}
