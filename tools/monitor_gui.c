@@ -171,7 +171,7 @@ static void list_proc_append(proc_t *p){
 	snprintf(spid, 12, " %d ", p->pid);
 	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
-	char* spath=p->path;
+	const char* spath=p->path;
 	char* stooltip=NULL;//for tooltip
 	char* sstart=NULL;//starting directory
 	char* sout=NULL;  //output directory
@@ -183,7 +183,7 @@ static void list_proc_append(proc_t *p){
 			pos=strstr(spath, "/skyc ");
 		}
 		if(pos){
-			sstart=(char*)malloc(pos-spath+1);//job start directory
+			sstart=(char*)malloc((pos-spath)+1);//job start directory
 			memcpy(sstart, spath, pos-spath);
 			sstart[pos-spath]='\0';
 			sargs=strdup(pos+1);//job arguments. 
@@ -196,7 +196,7 @@ static void list_proc_append(proc_t *p){
 				if(!pos3) pos3=strchr(pos2, 0);//end of string
 				if(pos3){
 					if(sout) free(sout);
-					sout=(char*)malloc(pos3-pos2+1);
+					sout=(char*)malloc((pos3-pos2)+1);
 					memcpy(sout, pos2, pos3-pos2);
 					sout[pos3-pos2]='\0';
 					memmove(tmp, pos3, strlen(pos3)+1);

@@ -51,7 +51,6 @@ __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 	Real astig1, Real astig2, Real focus,
 	Real thetax, Real thetay, Real scale, Real ht, Real alpha
 ){
-	const Real scale1=1.f-scale;
 	const int step=blockDim.x*gridDim.x;
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=step){
 		Real x=loc[i][0];
@@ -62,11 +61,12 @@ __global__ void add_ngsmod_do(Real* restrict opd, Real(*restrict loc)[2], int n,
 		opd[i]+=alpha*(+x*ttx
 			+y*tty
 			+focus*(x2+y2)
-			+ps1*(-2*scale*ht*(thetax*x+thetay*y))
-			+ps2*((x2-y2)*scale1-2*scale*ht*(thetax*x-thetay*y))
-			+ps3*(xy*scale1-scale*ht*(thetay*x+thetax*y))
 			+astig1*(x2-y2)
-			+astig2*(xy));
+			+astig2*(xy)
+			+ps1*(-2*scale*ht*(thetax*x+thetay*y))
+			+ps2*(-2*scale*ht*(thetax*x-thetay*y))
+			+ps3*(  -scale*ht*(thetay*x+thetax*y))
+		);
 	}
 }
 

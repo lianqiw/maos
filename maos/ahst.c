@@ -96,10 +96,17 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 						mod[ngsmod->indps][iloc]=scale1*(xx+yy-MCC_fcp)
 							-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
 					}
-					mod[ngsmod->indps+1][iloc]=scale1*(xx-yy)
-						-2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]);
-					mod[ngsmod->indps+2][iloc]=scale1*(xy)
-						-ht*scale*(thetay*x[iloc]+thetax*y[iloc]);
+					if(ngsmod->ahst_focus==2){//no astigmatism effect on science
+						mod[ngsmod->indps+1][iloc]=
+							-2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]);
+						mod[ngsmod->indps+2][iloc]=
+							-ht*scale*(thetay*x[iloc]+thetax*y[iloc]);
+					}else{
+						mod[ngsmod->indps+1][iloc]=scale1*(xx-yy)
+							-2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]);
+						mod[ngsmod->indps+2][iloc]=scale1*(xy)
+							-ht*scale*(thetay*x[iloc]+thetax*y[iloc]);
+					}
 				}
 				if(ngsmod->indastig){
 					mod[ngsmod->indastig][iloc]=(xx-yy);
@@ -166,20 +173,26 @@ static void ngsmod_dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 		if(idm==0){
 			real focus=0, astigx=0, astigy=0;
 			if(ngsmod->indfocus){//focus is a mode
-				focus+=pm[ngsmod->indfocus];
+				focus=pm[ngsmod->indfocus];
 			}
+			if(ngsmod->indastig){
+				astigx=pm[ngsmod->indastig];
+				astigy=pm[ngsmod->indastig+1];
+			}
+
 			if(ngsmod->indps){//ps mode
 				if(ngsmod->ahst_focus){
 					focus+=pm[ngsmod->indps]*scale;//scaled to avoid focus mode in science.
 				} else{
 					focus+=pm[ngsmod->indps];
 				}
-				astigx+=pm[ngsmod->indps+1];
-				astigy+=pm[ngsmod->indps+2];
-			}
-			if(ngsmod->indastig){
-				astigx+=pm[ngsmod->indastig];
-				astigy+=pm[ngsmod->indastig+1];
+				if(ngsmod->ahst_focus==2){
+					astigx+=pm[ngsmod->indps+1]*scale;
+					astigy+=pm[ngsmod->indps+2]*scale;
+				}else{
+					astigx+=pm[ngsmod->indps+1];
+					astigy+=pm[ngsmod->indps+2];
+				}
 			}
 			for(long iloc=0; iloc<nloc; iloc++){
 				real xx=xloc[iloc]*xloc[iloc];
@@ -636,15 +649,23 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 
 	if(ngsmod->indps){
 		if(ngsmod->ahst_focus){
-			ngsmod_out[ngsmod->indps]=(-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]));
+			ngsmod_out[ngsmod->indps]=
+				-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]);
 		} else{
 			ngsmod_out[ngsmod->indps]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
 				-2*scale*hdm*(thetax*coeff[1]+thetay*coeff[2]));
 		}
-		ngsmod_out[ngsmod->indps+1]=(scale1*(coeff[3]-coeff[4])
-			-2*scale*hdm*(thetax*coeff[1]-thetay*coeff[2]));
-		ngsmod_out[ngsmod->indps+2]=(scale1*(coeff[5])
-			-scale*hdm*(thetay*coeff[1]+thetax*coeff[2]));
+		if(ngsmod->ahst_focus==2){
+			ngsmod_out[ngsmod->indps+1]=
+				-2*scale*hdm*(thetax*coeff[1]-thetay*coeff[2]);
+			ngsmod_out[ngsmod->indps+2]=
+				-scale*hdm*(thetay*coeff[1]+thetax*coeff[2]);
+		}else{
+			ngsmod_out[ngsmod->indps+1]=scale1*(coeff[3]-coeff[4])
+				-2*scale*hdm*(thetax*coeff[1]-thetay*coeff[2]);
+			ngsmod_out[ngsmod->indps+2]=scale1*(coeff[5])
+				-scale*hdm*(thetay*coeff[1]+thetax*coeff[2]);
+		}
 	}
 	if(ngsmod->indastig){
 		ngsmod_out[ngsmod->indastig]=(coeff[3]-coeff[4]);
@@ -675,19 +696,25 @@ void ngsmod_opd(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 		const real scale1=1.-scale;
 		real focus=0, ps1=0, ps2=0, ps3=0, astigx=0, astigy=0;
 		if(ngsmod->indfocus){
-			focus+=mode[ngsmod->indfocus];
-		}
-		if(ngsmod->indps){
-			if(!ngsmod->ahst_focus){
-				focus+=mode[ngsmod->indps]*scale1;
-			}
-			ps1=mode[ngsmod->indps];
-			ps2=mode[ngsmod->indps+1];
-			ps3=mode[ngsmod->indps+2];
+			focus=mode[ngsmod->indfocus];
 		}
 		if(ngsmod->indastig){
 			astigx=mode[ngsmod->indastig];
 			astigy=mode[ngsmod->indastig+1];
+		}
+
+		if(ngsmod->indps){
+			ps1=mode[ngsmod->indps];
+			ps2=mode[ngsmod->indps+1];
+			ps3=mode[ngsmod->indps+2];
+
+			if(!ngsmod->ahst_focus){
+				focus+=ps1*scale1;
+			}
+			if(ngsmod->ahst_focus!=2){
+				astigx+=ps2*scale1;
+				astigy+=ps3*scale1;
+			}
 		}
 		for(int iloc=0; iloc<loc->nloc; iloc++){
 			real x=locx[iloc];
@@ -699,8 +726,8 @@ void ngsmod_opd(dmat* iopd, const loc_t* loc, const ngsmod_t* ngsmod,
 				+locy[iloc]*mode[1]
 				+focus*(x2+y2)
 				+ps1*(-2*scale*hdm*(thetax*x+thetay*y))
-				+ps2*((x2-y2)*scale1-2*scale*hdm*(thetax*x-thetay*y))
-				+ps3*(xy*scale1-scale*hdm*(thetay*x+thetax*y))
+				+ps2*(-2*scale*hdm*(thetax*x-thetay*y))
+				+ps3*(  -scale*hdm*(thetay*x+thetax*y))
 				+astigx*(x2-y2)
 				+astigy*(xy);
 			P(iopd,iloc)+=tmp*alpha;

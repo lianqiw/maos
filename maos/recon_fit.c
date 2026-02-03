@@ -157,9 +157,8 @@ setup_fit_lrt(fit_t* fit){
 		inw+=ndm;
 	}
 	if(fit->flag.lrt_tt){
-		real factor=0;
 		info("Adding TT constraint on upper DMs to fit matrix.\n");
-		factor=fitscl*2./loc_diam(P(fit->aloc,0));
+		const real factor=fitscl*2./loc_diam(P(fit->aloc,0));
 		for(int idm=1; idm<ndm; idm++){
 			int nloc=P(fit->aloc,idm)->nloc;
 			real* p=P(P(fit->NW,idm))+(inw+(idm-1)*2)*nloc;
