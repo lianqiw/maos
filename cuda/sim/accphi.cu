@@ -272,19 +272,24 @@ void ngsmod2loc(curmat& opd, Real(*restrict loc)[2],
 
 		Real focus=0, ps1=0, ps2=0, ps3=0, astigx=0, astigy=0;
 		if(ngsmod->indfocus){
-			focus+=mod[ngsmod->indfocus];
-		}
-		if(ngsmod->indps){
-			if(!ngsmod->ahst_focus){
-				focus+=mod[ngsmod->indps]*(1.f-scale);
-			}
-			ps1=mod[ngsmod->indps];
-			ps2=mod[ngsmod->indps+1];
-			ps3=mod[ngsmod->indps+2];
+			focus=mod[ngsmod->indfocus];
 		}
 		if(ngsmod->indastig){
 			astigx=mod[ngsmod->indastig];
 			astigy=mod[ngsmod->indastig+1];
+		}
+
+		if(ngsmod->indps){
+			ps1=mod[ngsmod->indps];
+			ps2=mod[ngsmod->indps+1];
+			ps3=mod[ngsmod->indps+2];
+			if(!ngsmod->ahst_focus){
+				focus+=ps1*(1.f-scale);
+			}
+			if(ngsmod->ahst_focus!=2){
+				astigx+=ps2*(1.f-scale);
+				astigy+=ps3*(1.f-scale);
+			}
 		}
 
 		add_ngsmod_do<<<DIM(opd.N(), 256), 0, stream>>>
