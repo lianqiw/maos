@@ -569,7 +569,7 @@ repeat:
 	
 	int xlog=drawdata->xylog[0]=='y'?1:0;
 	int ylog=drawdata->xylog[1]=='y'?1:0;
-	static float xmin, xmax, ymin, ymax;
+	float xmin, xmax, ymin, ymax;
 	if(xlog){
 		xmin=log10(drawdata->limit[0]);
 		xmax=log10(drawdata->limit[1]);
@@ -1211,7 +1211,7 @@ repeat:
 		const float legmarin=3;/*margin inside of box */
 		const float legmarout=5;/*margin outside of box */
 		float legwidth=0, legheight=0;
-		pango_size(layout, legend[0], &legwidth, &legheight);
+		if(legend[0]) pango_size(layout, legend[0], &legwidth, &legheight);
 		const int nlegend=MIN((int)((heightim-2*legmarin-2*legmarout)/(legheight*1.2)), drawdata->npts);
 		const float linelen=30;/*length of line in legend if exist. */
 		float textlen=0;/*maximum legend length. */
