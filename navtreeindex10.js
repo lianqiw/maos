@@ -1,5 +1,6 @@
 var NAVTREEINDEX10 =
 {
+"dd/d31/powfs_shlgs.html":[4,4,34],
 "dd/d45/class_cpu.html":[12,0,19],
 "dd/d61/struct_magic_3_01float2_01_4.html":[12,0,110],
 "dd/da0/todo.html":[11],
@@ -248,6 +249,5 @@ var NAVTREEINDEX10 =
 "de/d07/cmath_8h.html#ab2e05ad023fa279a021fe4d78e2e164f":[13,0,3,1,212],
 "de/d07/cmath_8h.html#ab3159a1cba08cacee28341ac4fc74cd9":[13,0,3,1,210],
 "de/d07/cmath_8h.html#ab4e7185434d6d9e73d125ac5bc890379":[13,0,3,1,18],
-"de/d07/cmath_8h.html#ab58f2662121c9aee82f839f3fc0d8ea6":[13,0,3,1,61],
-"de/d07/cmath_8h.html#ab596488a8518082a456033900c1a2636":[13,0,3,1,175]
+"de/d07/cmath_8h.html#ab58f2662121c9aee82f839f3fc0d8ea6":[13,0,3,1,61]
 };

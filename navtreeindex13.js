@@ -1,5 +1,6 @@
 var NAVTREEINDEX13 =
 {
+"df/def/type_8h.html#a37e2e0f86d0da4a723c1c2278dce5532":[13,0,3,9,31,2],
 "df/def/type_8h.html#a380c1e2f1294c6b6ca9924bf9575dd9d":[13,0,3,9,26,3],
 "df/def/type_8h.html#a39b2a96347c81b862aac48a998bfa4e5":[13,0,3,9,12,1],
 "df/def/type_8h.html#a39c8bfe5cc63a4119946dbc683e416ec":[13,0,3,9,36,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#d6/da3/structmap__t":[13,0,3,9,11],
 "df/def/type_8h.html#d6/ddb/structdspcell":[13,0,3,9,22],
 "df/def/type_8h.html#d6/de5/structcccell":[13,0,3,9,26],
-"df/def/type_8h.html#d7/d25/structmapccell":[13,0,3,9,39],
-"df/def/type_8h.html#d7/d42/structpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31_____8____unnamed35____":[13,0,3,9,51]
+"df/def/type_8h.html#d7/d25/structmapccell":[13,0,3,9,39]
 };
