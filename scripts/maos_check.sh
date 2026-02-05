@@ -163,9 +163,9 @@ run_maos "LGS MCAO (tomo): " -cmcao_lgs.conf evl.tomo=1
 
 run_maos "LGS MCAO (inte): " -cmcao_lgs.conf recon.split=0 tomo.assemble=1 fit.assemble=1 #also test assembled matrices
 
-run_maos "LGS MCAO (CG):   " -cmcao_lgs.conf tomo.precond=0 tomo.assemble=1 fit.assemble=1 #also test assembled matrices
+run_maos "LGS MCAO (CG):   " -cmcao_lgs.conf tomo.precond=0 tomo.assemble=1 fit.assemble=1 powfs.dtrat=[1 2 2] #also test assembled matrices
 
-run_maos "LGS MCAO (FDPCG):" -cmcao_lgs.conf tomo.precond=1 
+run_maos "LGS MCAO (FDPCG):" -cmcao_lgs.conf tomo.precond=1 sim.fuseint=0 powfs.dtrat=[1 2 2]
 
 run_maos "LGS MCAO (CBS):  " -cmcao_lgs.conf tomo.alg=0 fit.alg=0 atmr.os=[2 2 1 1 1 1 1] recon.split=1 #split=0 CBS does not work well in GPU
 
