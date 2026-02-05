@@ -607,6 +607,7 @@ typedef struct sim_t{
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
+	dcell *Mtmp_lo;   /**<Temporary: NGS mode in DM commands*/
     servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/

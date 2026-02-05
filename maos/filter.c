@@ -316,11 +316,9 @@ static void filter_cl(sim_t* simu){
 			act_stuck_cmd(recon->aloc, simu->dmpsol, recon->actstuck);
 		}
 	}
-	if(simu->Mint_lo&&simu->Merr_lo&&!parms->sim.fuseint){
-		dcell* Mtmp=0;
-		servo_output(simu->Mint_lo, &Mtmp);
-		addlow2dm(&simu->dmtmp, simu, Mtmp, 1);
-		dcellfree(Mtmp);
+	if(simu->Mint_lo&&!parms->sim.fuseint){
+		servo_output(simu->Mint_lo, &simu->Mtmp_lo);
+		addlow2dm(&simu->dmtmp, simu, simu->Mtmp_lo, 1);
 	}
 }
 static void postproc_dm(sim_t* simu){
