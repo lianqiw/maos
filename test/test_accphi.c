@@ -102,7 +102,7 @@ static void test_accuracy(int argc, char** argv){
 
     map_t* screen2=mapnew2(locin2->map);
     dset(DMAT(screen2), NAN);
-    loc_embed(screen2, locin2, screen);
+    loc_embed(screen2, locin2, screen, 0, 0);
 	screen2->ht=locin2->ht;
     dmat *phi_h=NULL, *phi_cubh=NULL;
 

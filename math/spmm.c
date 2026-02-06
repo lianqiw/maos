@@ -29,9 +29,9 @@ typedef struct mm_t{
 static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2]){
 	const cell *A=A_.c;
 	const cell *B=B_.c;
-	int ax, az;
+	int ax, az;//stride for A
 	int nx, ny, nz;
-	int bz, by;
+	int bz, by;//stride for B
 	if(trans[0]=='n'||trans[0]=='N'){
 		nx=A->nx;
 		ax=1; az=A->nx;
@@ -47,11 +47,25 @@ static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2
 	if(trans[1]=='n'||trans[1]=='N'){
 		ny=B->ny;
 		bz=1; by=B->nx;
-		if(nz!=B->nx) error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+		if(nz!=B->nx){
+			if(B->nx==1 && nz==B->ny){//vector case
+				ny=B->nx;
+				by=B->ny;
+			}else{
+				error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+			}
+		}
 	} else if(trans[1]=='c'||trans[1]=='t'){
 		ny=B->nx;
 		by=1; bz=B->nx;
-		if(nz!=B->ny) error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+		if(nz!=B->ny){
+			if(B->ny==1 && nz==B->nx){//vector case
+				ny=B->ny;
+				bz=B->ny;
+			}else{
+				error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+			}
+		}
 	} else{
 		error("Invalid trans[1]=%c\n", trans[1]);
 		ny=0; by=0; bz=0;

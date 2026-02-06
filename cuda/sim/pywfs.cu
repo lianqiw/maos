@@ -328,7 +328,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 				opdin->p[0]->p[imod-1]=0;
 			}
 		}
-		loc_embed(P(mapinsq,0), locin, P(opdin,0));
+		loc_embed(P(mapinsq,0), locin, P(opdin,0), 1, 0);
 		CUDA_SYNC_STREAM;
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);

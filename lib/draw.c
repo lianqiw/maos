@@ -840,7 +840,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 		return 0;
 	}
 	dmat* opd0=dnew(0,0);
-	loc_embed(opd0, loc, opd);
+	loc_embed(opd0, loc, opd, 0, 0);
 	real offset=loc->npad+(isfinite(loc->ht)?-0.5:0);//-0.5 means coordinate is at center of pixel. 0 means at corner. saloc is at corner. 
 	real limit[4];
 	if(loc->map){
@@ -908,8 +908,8 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat *saa, const dmat* gradin,
 	dmat *phiy=dnew(0, 0);
 	dmat *gx=dnew_do(nsa, 1, P(grad), 0);
 	dmat *gy=dnew_do(nsa, 1, P(grad)+nsa, 0);
-	loc_embed(phix, saloc, gx);
-	loc_embed(phiy, saloc, gy);
+	loc_embed(phix, saloc, gx, 0, 0);
+	loc_embed(phiy, saloc, gy, 0, 0);
 	dfree(gx);
 	dfree(gy);
 	if(grad2opd){

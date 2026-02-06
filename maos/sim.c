@@ -116,7 +116,7 @@ void prepare_isim(sim_t *simu){
 		if(!parms->fit.square){
 			/* Embed DM commands to a square array for fast ray tracing */
 			for(int idm=0; idm<parms->ndm; idm++){
-				loc_embed(P(simu->dmprojsq, idm), P(recon->aloc, idm), P(simu->dmproj, idm));
+				loc_embed(P(simu->dmprojsq, idm), P(recon->aloc, idm), P(simu->dmproj, idm), 1, 0);
 			}
 		}
 #if USE_CUDA
