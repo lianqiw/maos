@@ -121,6 +121,8 @@ Functions</h2></td></tr>
 <tr class="separator:adc1b4899c000ff26f846ec7c8be176c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ad99898c30843dc9912e6f253727b76" id="r_a2ad99898c30843dc9912e6f253727b76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/d37/slaving_8h.html#a2ad99898c30843dc9912e6f253727b76">act_float_interp</a> (<a class="el" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a> *aloc, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#db/d4d/structlcell">lcell</a> *actfloat)</td></tr>
 <tr class="separator:a2ad99898c30843dc9912e6f253727b76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ff1e29e1ee3acf0db66d7daaa1c7d6c" id="r_a6ff1e29e1ee3acf0db66d7daaa1c7d6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/d37/slaving_8h.html#a6ff1e29e1ee3acf0db66d7daaa1c7d6c">act_extrap_lor</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *aloc, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *actcpl, real <a class="el" href="../../d0/d44/class_num_array.html">scl</a>)</td></tr>
+<tr class="separator:a6ff1e29e1ee3acf0db66d7daaa1c7d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff1a74f47996b38dd7de6a52e7a83c9c" id="r_aff1a74f47996b38dd7de6a52e7a83c9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/d37/slaving_8h.html#aff1a74f47996b38dd7de6a52e7a83c9c">act_extrap_each</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *aloc, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *actcpl, real <a class="el" href="../../d0/d44/class_num_array.html">scl</a>)</td></tr>
 <tr class="separator:aff1a74f47996b38dd7de6a52e7a83c9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a232f382fb6fa62d76800171a1ce8e27c" id="r_a232f382fb6fa62d76800171a1ce8e27c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/d37/slaving_8h.html#a232f382fb6fa62d76800171a1ce8e27c">act_extrap</a> (<a class="el" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a> *aloc, <a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *actcpl, real <a class="el" href="../../d0/d44/class_num_array.html">scl</a>, int <a class="el" href="../../d0/d44/class_num_array.html">lor</a>)</td></tr>
@@ -430,6 +432,47 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a6ff1e29e1ee3acf0db66d7daaa1c7d6c" name="a6ff1e29e1ee3acf0db66d7daaa1c7d6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ff1e29e1ee3acf0db66d7daaa1c7d6c">&#9670;&#160;</a></span>act_extrap_lor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> * act_extrap_lor </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>aloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> <a class="el" href="../../d3/d27/structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>actcplc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">const</a> real&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create an extrapolator that does the following</p><ol type="1">
+<li>Reduce the information to active actuators</li>
+<li>Project low order modes out from the active actuators</li>
+<li>Project back to full vector</li>
+<li>Extrapolate to inactive actuators</li>
+<li>Add back low order modes to the full vector extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^ </li>
+</ol>
+
+</div>
+</div>
 <a id="aff1a74f47996b38dd7de6a52e7a83c9c" name="aff1a74f47996b38dd7de6a52e7a83c9c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aff1a74f47996b38dd7de6a52e7a83c9c">&#9670;&#160;</a></span>act_extrap_each()</h2>
 
@@ -461,13 +504,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an extrapolator that does the following</p><ol type="1">
-<li>Reduce the information to active actuators</li>
-<li>Project low order modes out from the active actuators</li>
-<li>Project back to full vector</li>
-<li>Extrapolate to inactive actuators</li>
-<li>Add back low order modes to the full vector extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^ </li>
-</ol>
+<p>Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

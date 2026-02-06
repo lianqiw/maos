@@ -5,7 +5,7 @@ var loc_8h =
     [ "loc_create_map_npad", "d1/d83/loc_8h.html#a0228b9c5ec770e72ffc2f0febdbc5e09", null ],
     [ "loc_create_map", "d1/d83/loc_8h.html#ae9474383cd2662c9c246d312d21afbce", null ],
     [ "lochash", "d1/d83/loc_8h.html#ac428cbcf587739f1b4623e9ce3898d42", null ],
-    [ "loc_embed_do", "d1/d83/loc_8h.html#a7c200c7dda9be36d85436379c882ac3c", null ],
+    [ "loc_embed", "d1/d83/loc_8h.html#ab7158b1657be02f97c3d2c3cbdef3835", null ],
     [ "loc_embed2", "d1/d83/loc_8h.html#a56474619288cbb573f195b2eeeb53abd", null ],
     [ "loc_embed_cell", "d1/d83/loc_8h.html#a92df7a28814cd2615733addf08917fdd", null ],
     [ "loc_extract", "d1/d83/loc_8h.html#a907129388439c75da938eb78d551566f", null ],

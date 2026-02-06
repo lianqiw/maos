@@ -1,6 +1,7 @@
 var dir_97aefd0d527b934f1d99a682da8fe6a9 =
 [
     [ "accphi.h", "d3/d84/lib_2accphi_8h.html", "d3/d84/lib_2accphi_8h" ],
+    [ "bessel_mode.h", "d6/d1d/bessel__mode_8h.html", "d6/d1d/bessel__mode_8h" ],
     [ "chol.h", "db/da8/chol_8h.html", "db/da8/chol_8h" ],
     [ "cn2est.h", "dc/d59/cn2est_8h.html", "dc/d59/cn2est_8h" ],
     [ "comb.h", "db/d2c/comb_8h.html", "db/d2c/comb_8h" ],
