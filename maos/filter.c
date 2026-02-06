@@ -170,7 +170,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		}
 		iastroked=iastroke*1.414;//for diagonal separation.
 		if(!parms->fit.square){
-			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), dm);
+			loc_embed(P(simu->dmrealsq,idm), P(recon->aloc,idm), dm, 1, 0);
 			dmr=DMAT(P(simu->dmrealsq,idm));
 		} else{
 			dmr=dm;
@@ -538,7 +538,7 @@ void turb_dm(sim_t* simu){
 			}
 		} else{//dmrealsq is the same as dmreal.
 			dmat *tmp=drefcols(P(simu->dmadd, idm), icol, 1);
-			loc_embed_add(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), tmp);
+			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), tmp, 1, 1);
 			dfree(tmp);
 		}
 	}
@@ -551,7 +551,7 @@ void update_dm(sim_t* simu){
 	if(!parms->fit.square&&simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 		for(int idm=0; idm<parms->ndm; idm++){
-			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(simu->dmreal,idm));
+			loc_embed(P(simu->dmrealsq,idm), P(simu->recon->aloc,idm), P(simu->dmreal,idm), 1, 0);
 		}
 	}
 #if USE_CUDA

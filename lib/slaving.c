@@ -706,7 +706,7 @@ dspcell* act_float_interp(loccell* aloc,  /**<[in] Actuator grid array*/
    Create an interpreter that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
 */
-static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
+dsp* act_extrap_each(loc_t* aloc,        /**<[in] Actuator grid array*/
 	const dmat* actcplc,/**<[in] Actuator coupling coefficiency*/
 	const real thres  /**<[in] Threshold of coupling to turn on interpolation*/
 ){
@@ -868,7 +868,7 @@ static dsp* act_extrap_do(loc_t* aloc,        /**<[in] Actuator grid array*/
  * extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^
  * */
 
-dsp *act_extrap_each(loc_t *aloc,
+dsp *act_extrap_lor(loc_t *aloc,
 	const dmat *actcplc,
 	const real thres
 ){
@@ -898,7 +898,7 @@ dsp *act_extrap_each(loc_t *aloc,
 	dspmm(&MMr, Hr, MMp, "nn", 1);
 	//writebin(MMr, "MMr");
 	cellfree(Hr);
-	dsp *He=act_extrap_do(aloc, actcplc, thres);
+	dsp *He=act_extrap_each(aloc, actcplc, thres);
 	//writebin(He, "He");
 	dmat *MMe=NULL;//MMe=He*MMr+MMp
 	dspmm(&MMe, He, MMr, "nn", 1);
@@ -931,9 +931,9 @@ dspcell* act_extrap(loccell* aloc,     /**<[in] Actuator grid array*/
 	for(int idm=0; idm<ndm; idm++){
 		if(lor){
 			//when enabled, the resulting matrix is much less sparse.
-			P(out,idm,idm)=act_extrap_each(P(aloc,idm), P(actcplc,idm), thres);
+			P(out, idm, idm)=act_extrap_lor(P(aloc,idm), P(actcplc,idm), thres);
 		}else{
-			P(out, idm, idm)=act_extrap_do(P(aloc, idm), P(actcplc, idm), thres);
+			P(out, idm, idm)=act_extrap_each(P(aloc, idm), P(actcplc, idm), thres);
 		}
 	}
 	return out;

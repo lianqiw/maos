@@ -45,13 +45,7 @@ static inline long loc_map_get(map_t* map, long ix, long iy){
 	}
 }
 uint32_t lochash(const loc_t* loc, uint32_t key);
-void loc_embed_do(anydmat _dest, const loc_t *loc, const_anydmat in, int add);
-static inline void loc_embed(anydmat dest, const loc_t* loc, const_anydmat in){
-  loc_embed_do(dest, loc, in, 0);
-}
-static inline void loc_embed_add(anydmat dest, const loc_t *loc, const_anydmat in){
-  loc_embed_do(dest, loc, in, 1);
-}
+void loc_embed(anydmat _dest, const loc_t *loc, const_anydmat in, int expanded, int add);
 dcell* loc_embed2(const loc_t* loc, const dmat* arr);
 void loc_embed_cell(dcell** dest, const loc_t* loc, const dcell* in);
 void loc_extract(dmat* dest, const loc_t* loc, map_t* in);

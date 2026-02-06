@@ -338,7 +338,7 @@ if(dnx>=mnx){/*output array is larger*/\
 /**
   Embed in into dest according to map defined in loc->map. The two arrays are assumed to be concentric.
 */
-void loc_embed_do(anydmat _dest, const loc_t* loc, const_anydmat in, int add){
+void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat in, int expanded, int add){
 	if(!loc||!_dest.dm||!in.dm) return;
 	if(!loc->map){
 		loc_create_map((loc_t*)loc);
@@ -355,8 +355,9 @@ void loc_embed_do(anydmat _dest, const loc_t* loc, const_anydmat in, int add){
 	const real *pin=P(in.dm)-1;//iphi count from 1
 	for(int iy=0; iy<my; iy++){
 		for(int ix=0; ix<mx; ix++){
-			long iphi=fabs(P(map, ix+moffx, iy+moffy));
-			if(iphi){
+			long iphi=P(map, ix+moffx, iy+moffy);
+			if(expanded && iphi<0) iphi=-iphi;
+			if(iphi>0){
 				P(dest, ix+doffx, iy+doffy)=add?(P(dest, ix+doffx, iy+doffy)+pin[iphi]):pin[iphi];
 			}
 		}
@@ -389,7 +390,7 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 	for(int ix=0; ix<nx*ny; ix++){
 		P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
 		tmp->p=&P(arr, ix*loc->nloc);
-		loc_embed(P(dest, ix), loc, tmp);
+		loc_embed(P(dest, ix), loc, tmp, 0, 0);
 	}
 	dfree(tmp);
 	return dest;
@@ -413,8 +414,8 @@ void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 		error("dest and map doesn't agree\n");
 	}
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=fabs(P(map,i));
-		if(iphi){
+		long iphi=P(map,i);
+		if(iphi>0){//do not embed for extra padding.
 			P(dest,i)=dref(P(in, iphi-1));
 		} else{
 			P(dest,i)=0;

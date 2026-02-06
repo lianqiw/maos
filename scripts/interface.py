@@ -94,16 +94,16 @@ def simplify(arr, do_stack=1, do_squeeze=0):
     return arr
 
 #obtain ctypes type information from MAOS id.
-#The value is (type, complex?, kind(0:dense, 1: sparse, 2: loc, 10: cell))
+#The value is (type, complex?, kind(0:dense, 1: 2: loc, 2: sparse with int64 index, 3: sparse with int32 index, 10: cell))
 id2ctype={
-    0x6400: (c_double_complex,0,1) if has_complex else (c_double,1,1), #M_CSP64
-    0x6401: (c_double,0,1), #M_SP64
+    0x6400: (c_double_complex, 0,2) if has_complex else (c_double,1,2), #M_CSP64
+    0x6401: (c_double,0,2), #M_SP64
     0x6402: (c_double,0,0), #'M_DBL'
     0x6403: (c_long,  0,0), #'M_INT64'
     0x6404: (c_double_complex, 0,0) if has_complex else (c_double,1,0), #'M_CMP'
     0x6405: (c_int,   0,0), #'M_INT32',),
-    0x6406: (c_float_complex, 0, 1) if has_complex else (c_float, 1,1),#'M_CSP32,
-    0x6407: (c_float, 0,1), #'M_SP32',),
+    0x6406: (c_double_complex, 0,3) if has_complex else (c_double,1,3),#'M_CSP32,
+    0x6407: (c_double,0,3), #'M_SP32',),
     0x6408: (c_float, 0,0), #'M_FLT',),
     0x6409: (c_float_complex, 0, 0) if has_complex else (c_float, 1,0), #'M_ZMP'
     0x640A: (c_char,  0,0), #'M_INT8',),
@@ -214,7 +214,7 @@ class cell_ndarray(np.ndarray):
         except:
             print("id2ctype: unknown type", id)
             res=np.array([])
-        if kind==0 or kind==2: #dense matrix
+        if kind==0 or kind==1: #dense matrix
             parr=cast(ctypes_array.p, POINTER(tt))
             if iscomplex:
                 res=np.ctypeslib.as_array(parr, shape=(*ctypes_array.shape(0),2))
@@ -226,13 +226,13 @@ class cell_ndarray(np.ndarray):
                     raise(Exception('Please implement'))
             else:
                 res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape(0))
-            if kind==2: #LOC
+            if kind==1: #LOC
                 res.dx=ctypes_array.dx
                 res.dy=ctypes_array.dy
                 res.ht=ctypes_array.ht
                 res.iac=ctypes_array.iac
 
-        elif kind==1: #sparse matrix does not support subclassing like numpy
+        elif kind==2 or kind==3: #sparse matrix does not support subclassing like numpy
             return cell_csr_array(ctypes_pointer, pointer)
         elif kind==10: #cell array
             res=np.empty(ctypes_array.shape(1), dtype=object)
@@ -278,13 +278,17 @@ class cell_csr_array(sp.csr_array):
         except:
             print("id2ctype: unknown type", id);
             return None
-        if kind==0 or kind==2:
+        if kind==0 or kind==1:
             return cell_ndarray(ctypes_array, pointer)
-        elif kind==1:
+        elif kind==2 or kind==3:
             if ctypes_array.nzmax>0:
                 xp=np.ctypeslib.as_array(cast(ctypes_array.x, POINTER(tt)), shape=(ctypes_array.nzmax,))
-                ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_long)), shape=(ctypes_array.nzmax,))
-                pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_long)), shape=(ctypes_array.ny+1,))
+                if kind==2:
+                    ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_long)), shape=(ctypes_array.nzmax,))
+                    pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_long)), shape=(ctypes_array.ny+1,))
+                elif kind==3:
+                    ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_int)), shape=(ctypes_array.nzmax,))
+                    pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_int)), shape=(ctypes_array.ny+1,))
                 super().__init__((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=False)
                 self.pointer=pointer 
             else:
@@ -303,7 +307,7 @@ def pt2py(pointer):
         except:
             print("id2ctype: unknown type", pointer.contents.id)
             return np.array([])
-        if kind==1:#sparse
+        if kind==2 or kind==3:#sparse
             return cell_csr_array(pointer)
         else:
             return cell_ndarray(pointer)
