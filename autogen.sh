@@ -22,9 +22,9 @@ if ! which autoreconf; then
 		case "`uname`" in
 		Linux)
 			if which apt; then
-				sudo apt install $common gcc git tar bzip2 libfftw3-dev liblapack3 libcmocka-dev libwebsockets-dev
+				sudo apt install $common gcc git tar bzip2 libfftw3-dev liblapack3 libcmocka-dev 
 			elif which dnf; then
-				sudo dnf install $common gcc git tar bzip2 fftw-devel lapack libcmocka-devel libwebsockets-devel
+				sudo dnf install $common gcc git tar bzip2 fftw-devel lapack libcmocka-devel 
 			else
 				echo "System: Linux. Not sure how to install the packages."
 			fi

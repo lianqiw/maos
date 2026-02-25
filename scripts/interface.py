@@ -210,9 +210,9 @@ class cell_ndarray(np.ndarray):
         else:
             header=''
         try:
-            (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id)
+            (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
         except:
-            print("id2ctype: unknown type", id)
+            print("id2ctype: unknown type", ctypes_array.id)
             res=np.array([])
         if kind==0 or kind==1: #dense matrix
             parr=cast(ctypes_array.p, POINTER(tt))
@@ -274,7 +274,7 @@ class cell_csr_array(sp.csr_array):
         if pointer is None and not hasattr(ctypes_array, 'python'):
             pointer=wrap_pointer(ctypes_pointer)
         try:
-            (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id)
+            (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
         except:
             print("id2ctype: unknown type", id);
             return None
@@ -303,7 +303,7 @@ def pt2py(pointer):
     '''convert C array pointer to numpy array. References C memory'''
     if bool(pointer):
         try:
-            (tt, iscomplex, kind)=id2ctype.get(pointer.contents.id)
+            (tt, iscomplex, kind)=id2ctype.get(pointer.contents.id&0xFFFF)
         except:
             print("id2ctype: unknown type", pointer.contents.id)
             return np.array([])

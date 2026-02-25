@@ -22,9 +22,9 @@ if fnout is None:
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))
 simu_all=list();
-headerlist=glob.glob(srcdir+'/math/loc.h')
-headerlist=glob.glob(srcdir+'/math/map.h')
 headerlist=glob.glob(srcdir+'/lib/*.h')
+headerlist.append(srcdir+'/math/loc.h')
+headerlist.append(srcdir+'/math/map.h')
 headerlist.append(srcdir+'/sys/scheduler_client.h')
 headerlist.append(srcdir+'/mex/aolib.h')
 structs=maos_parse.parse_structs('', headerlist)
@@ -141,7 +141,7 @@ def handle_output(funtype, funname):
         if structs.get(funtype,None):
             fun_arg='make_class(\''+funtype+'\''+','+json.dumps(structs.get(funtype,None))+')'
         else:
-            print(funtype, funname)
+            #print(funtype, funname)
             fun_arg='Unknown'
     if ispointer:
         fun_val='pt2py(out)'
@@ -221,9 +221,10 @@ for funname in funcs: #loop over functions
         fundef+='\n    return '+pyargout
 
     if(fundef.find('Unknown'))>-1:
-        continue
+        print('skip', funname)
         #print("'''", file=fpout)
-    print(fundef, file=fpout);
+    else:
+        print(fundef, file=fpout)
     #if(fundef.find('Unknown'))>-1:
     #    print("'''", file=fpout)
 fpout.close()
