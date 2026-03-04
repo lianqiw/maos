@@ -105,7 +105,14 @@ AC_DEFUN([MY_CHECK_CUDA],[
 			else
 				cuarchmax=120
 			fi
-			devarch=`nvidia-smi  --query-gpu=compute_cap --format=csv,noheader,nounits |sed  's/\.//g' |sort -n |head -1`
+			devarch=`nvidia-smi  --query-gpu=compute_cap --format=csv,noheader,nounits`
+			if test "$?" -ne 0 ;then
+				AC_MSG_NOTICE([Unable to detect GPU architecture. Assume $cuarchmin])
+				devarch=$cuarchmin
+			else
+				devarch=`echo $devarch |tr ' ' '\n' |sed 's/\.//g' |sort -n |head -1`
+			fi
+			
 			if test -n "$devarch" ; then
 				if test $devarch -lt $cuarchmin ;then
 					AC_MSG_ERROR([CUDA version supports compute capability $cuarchmin - $cuarchmax, but device is at $devarch])
