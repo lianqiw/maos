@@ -95,16 +95,27 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 		info("GPU%2d cudaGetDeviceProperties failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
 		return 0;
 	}else{
+#if CUDA_VERSION >= 8000
+		int pageableMemoryAccess=prop.pageableMemoryAccess;
+		int concurrentManagedAccess=prop.concurrentManagedAccess;
+		int managedMemory=prop.managedMemory;
+		int unifiedAddressing=prop.unifiedAddressing;
+#else
+		int pageableMemoryAccess=0;
+		int concurrentManagedAccess=0;
+		int managedMemory=0;
+		int unifiedAddressing=0;
+#endif
 		info("GPU%2d is %s with arch %d.%d (%d%d%d%d), %.1fGB free, %.1fGB total device memory.\n", igpu, prop.name, prop.major, prop.minor, 
-			prop.pageableMemoryAccess, prop.concurrentManagedAccess, prop.managedMemory, prop.unifiedAddressing, fr*9.3e-10, tot*9.3e-10);
-		if(0){
+			pageableMemoryAccess, concurrentManagedAccess, managedMemory, unifiedAddressing, fr*9.3e-10, tot*9.3e-10);
+		/*if(0){
 			dbg("PageableMemoryAccess=%d, concurrentManagedAccess=%d, managedMemory=%d, unifiedAddressing=%d\n",
 				prop.pageableMemoryAccess, prop.concurrentManagedAccess, prop.managedMemory, prop.unifiedAddressing);
 			if(prop.pageableMemoryAccessUsesHostPageTables){
 				dbg("hostNativeAtomicSupported=%d pageableMemoryAccessUsesHostPageTables=%d directManagedMemAccessFromHost=%d\n",
 					prop.hostNativeAtomicSupported, prop.pageableMemoryAccessUsesHostPageTables, prop.directManagedMemAccessFromHost);
 			}
-		}
+		}*/
 		/* About unified memory. There are three levels of support depending the cuda device capability.
 			Level 1: Capability<6 supports mangedMemory=1 but with concurrentManagedAccess=0. There are the following limitations:
 				1. Default visibility of cudaMallocManaged memory is with all GPUs. CPU cannot access it (segfault otherwise) while any kernel is not synchronized. 
