@@ -51,6 +51,7 @@ void prep_cachedm(sim_t* simu){
 				parms->dm[idm].ht, dx, dx,
 				0, dx, 0, 0, 0, 0);
 			P(simu->cachedm,idm)->dratio=P(simu->recon->aloc,idm)->dratio;
+			P(simu->cachedm,idm)->aoi=P(simu->recon->aloc,idm)->aoi;
 		}
 	}
 	info("\n");

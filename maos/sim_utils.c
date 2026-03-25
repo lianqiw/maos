@@ -1233,6 +1233,7 @@ static void init_simu_recon(sim_t* simu){
 		P(simu->dmrealsq, idm)=mapnew2(P(recon->amap, idm));
 		dset(P(simu->dmrealsq, idm)->dmat, NAN);
 		P(simu->dmrealsq, idm)->dratio=parms->dm[idm].dratio;
+		P(simu->dmrealsq, idm)->aoi=parms->dm[idm].aoi;
 		if(parms->fit.square){/*dmreal is also square.*/
 			P(simu->dmreal, idm)=dref_reshape(P(simu->dmrealsq, idm)->dmat, P(recon->anloc, idm), 1);
 		} else{

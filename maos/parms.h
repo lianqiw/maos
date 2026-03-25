@@ -336,7 +336,8 @@ typedef struct dm_cfg_t{
     real iastroke;/**<Inter actuator stroke (surface)*/
     dcell *strokescale;   /**< describes polynomials that convert opd to voltage (first cell), and voltage to opd
 			    	* (second cell). The two operations has to be strict inverse of each other*/
-	real dratio;     /**<telescope diameter to DM diameter ratio (beam angle magnification factor)*/
+	real dratio;  /**<telescope diameter to DM diameter ratio (beam angle magnification factor)*/
+	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
     real ht;      /**<height conjugation range*/
     real dx;      /**<actuator separation along x (derived from order)*/
     real ar;      /**<[in] aspect ratio: dy/dx*/

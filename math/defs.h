@@ -205,7 +205,7 @@ static inline int issp(const void* id){
 
 #endif //if COMP_LONG
 #define DO_PRAGMA(A...) _Pragma(#A)
-#ifdef COMP_COMPLEX 
+#if defined(COMP_COMPLEX) || _OPENMP < 201511
 #define OMP_SIMD(A...) //DO_PRAGMA(omp simd A) //simd is not available for complex numbers
 #define OMP_SIMD_R(A...) //simd is not available for complex numbers for reduction
 #else

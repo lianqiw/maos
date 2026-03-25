@@ -148,7 +148,9 @@ void init_hosts(){
 			parse_host(line);
 		}
 		fclose(fp);
-	}	
+	}else{
+		parse_host("localhost");//ensures that monitor can connect to localhost
+	}
 }
 /**
    Translate hostname to address based on ~/.aos/hosts

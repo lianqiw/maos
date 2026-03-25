@@ -377,10 +377,12 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 		real dx=parms->dm[idm].dx;
 		P(recon->aloc, idm)->iac=parms->dm[idm].iac;
 		loc_create_map_npad(P(recon->aloc, idm), parms->fit.square?0:1, 0, 0);
-		P(recon->amap, idm)=P(recon->aloc, idm)->map;
 		P(recon->aloc, idm)->dratio=parms->dm[idm].dratio;
-		P(recon->amap, idm)->dratio=parms->dm[idm].dratio;
+		P(recon->aloc, idm)->aoi=parms->dm[idm].aoi;
 		P(recon->aloc, idm)->ht=ht;
+		P(recon->amap, idm)=P(recon->aloc, idm)->map;
+		P(recon->amap, idm)->dratio=parms->dm[idm].dratio;
+		P(recon->amap, idm)->aoi=parms->dm[idm].aoi;
 		P(recon->amap, idm)->ht=ht;
 		if(parms->fit.cachedm){
 			const real dx2=parms->atmr.dx/parms->fit.pos;

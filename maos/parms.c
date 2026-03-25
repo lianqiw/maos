@@ -1034,6 +1034,7 @@ static void readcfg_dm(parms_t *parms){
 	READ_DM_RELAX(dbl,offset);
 	READ_DM_RELAX(dbl,dx);
 	READ_DM_RELAX(dbl,ar);
+	READ_DM_RELAX(dbl,aoi);
 	for(int idm=0; idm<ndm; idm++){
 		if(parms->dm[idm].dx<=-1){//this is the order.
 			parms->dm[idm].dx=-parms->aper.d/parms->dm[idm].dx;
@@ -1045,6 +1046,10 @@ static void readcfg_dm(parms_t *parms){
 		if(parms->dm[idm].ar<=0){
 			error("dm.ar must be positive\n");
 		}
+		if(parms->dm[idm].aoi<0 || parms->dm[idm].aoi>=90){
+			error("parms->dm[%d].aoi=%g° is out of range\n", idm, parms->dm[idm].aoi);
+		}
+		parms->dm[idm].aoi*=M_PI/180;
 	}
 	READ_DM_RELAX(dbl,guard);
 	{
@@ -3560,8 +3565,8 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("There are %d DMs\n",parms->ndm);
 	for(i=0; i<parms->ndm; i++){
-		info("    DM %d: at %4.1f km, pitch %g m, offset %3.1f, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
-			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio,
+		info("    DM %d: at %4.1f km, pitch %g m, aoi %g°, offset %3.1f, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
+			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio, parms->dm[i].aoi*180/M_PI,
 			parms->dm[i].offset, parms->dm[i].iac,
 			fabs(P(parms->dm[i].stroke, 0))*1e6, fabs(parms->dm[i].iastroke)*1e6);
 	}

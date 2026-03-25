@@ -59,6 +59,7 @@ map_t* mapnew(long nx, long ny, real dx, real dy){
 	map->vy=0;
 	map->iac=0;
 	map->dratio=0;
+	map->aoi=0;
 	return map;
 }
 /**
@@ -74,6 +75,7 @@ map_t* mapnew2(map_t* A){
 	map->vy=A->vy;
 	map->iac=A->iac;
 	map->dratio=A->dratio;
+	map->aoi=A->aoi;
 	return map;
 }
 map_t* mapref(const map_t* in){
@@ -259,6 +261,7 @@ void map_parse_keywords(map_t* map){
 	map->vy=search_keyword_num_default(keywords, "vy", 0);
 	map->iac=search_keyword_num_default(keywords, "iac", 0);
 	map->dratio=search_keyword_num_default(keywords, "dratio", 0);
+	map->aoi=search_keyword_num_default(keywords, "aoi", 0);
 	real D=search_keyword_num(keywords, "D");
 	real offset=search_keyword_num_default(keywords, "offset",0);
 

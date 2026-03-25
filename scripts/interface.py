@@ -423,6 +423,7 @@ class loc(Structure):
         ('ht',   c_double),
         ('iac',  c_double),
         ('dratio',c_double),
+        ('aoi',c_double),
         ('npad', c_int),
         ]
     def __init__(self, arr=None): #convert from numpy to C. Memory is borrowed
@@ -455,6 +456,7 @@ class loc(Structure):
                 self.ht=0
                 self.iac=0
                 self.dratio=1
+                self.aoi=0
                 self.npad=1
                 self.python=True
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))

@@ -242,7 +242,7 @@ void mapcell2loc(Real* phiout, const Array<culoc_t>& locondm, const cumapcell& c
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
 		const Real scale=1.-(ht-hc)/(hs-hc);
-		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
+		map2loc(cudm[idm], locondm[idm], phiout, alpha*cos(theta*cudm[idm].dratio+cudm[idm].aoi), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
 	}
 }
 /**
@@ -255,7 +255,7 @@ void mapcell2loc(Real* phiout, const culoc_t& locout, const cumapcell& cudm,
 		assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 		const Real ht=cudm[idm].ht;
 		const Real scale=1.-(ht-hc)/(hs-hc);
-		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
+		map2loc(cudm[idm], locout, phiout, alpha*cos(theta*cudm[idm].dratio+cudm[idm].aoi), ht*thetax+scale*misregx, ht*thetay+scale*misregy, scale, 0, stream);
 	}/*idm */
 }
 /**

@@ -121,7 +121,8 @@ typedef struct map_t{
     real vx;      /**Wind velocity. Useful for atmospheric grid*/
     real vy;      /**Wind velocity. Useful for atmospheric grid*/
     real iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
-	real dratio;  /**<demagnification ratio (>1 for shrinking beam)*/
+	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
 } map_t;
 
 /**
@@ -188,7 +189,8 @@ typedef struct loc_t{
 	real dy;     /**< Sampling along y*/
 	real ht;     /**< Conjugation height of the loc grid.*/
 	real iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
-	real dratio;  /**<demagnification ratio (>1 for shrinking beam)*/
+	real dratio;  /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+	real aoi;	  /**<Angle of incidence in radian for ray tracing input */
 	int npad;      /*padding when create map*/
 }loc_t;
 /**
@@ -220,7 +222,8 @@ typedef struct pts_t{
             real dsay;   	 /**<side length of subaperture. */
             real dummy_ht; 	 /**<Place holder*/
             real dummy_iac;  /**<Place holder*/
-			real dratio;  	 /**<demagnification ratio (>1 for shrinking beam)*/
+			real dratio;  	 /**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+			real aoi;	     /**<Angle of incidence in radian for ray tracing input */
             int npad;      	 /**<padding when create map*/
 		};
 	};

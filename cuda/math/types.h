@@ -896,7 +896,8 @@ public:
 	Real dx, dy;
 	Real ht;
 	Real vx, vy;
-	Real dratio;/**<demagnification ratio (>1 for shrinking beam)*/
+	Real dratio;/**<M1 to DM demagnification ratio (>1 for shrinking beam)*/
+	Real aoi;   /**<Angle of incidence in radian for ray tracing input */
 	curmat cubic_cc; /*coefficients for cubic influence function. */
 	//use default copy assignment operator and copy constructor
 
@@ -912,11 +913,12 @@ public:
 			vx=in->vx;
 			vy=in->vy;
 			dratio=in->dratio;
+			aoi=in->aoi;
 			cubic_cc=iac2cc(in->iac);
 		}
 		return *this;
 	}
-	cugrid_t(const map_t* in=NULL):nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0),dratio(1){
+	cugrid_t(const map_t* in=NULL):nx(0), ny(0), ox(0), oy(0), dx(0), dy(0), ht(0), vx(0), vy(0),dratio(1),aoi(0){
 		if(in){
 			(*this).operator=(in);
 		}
