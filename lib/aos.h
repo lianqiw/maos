@@ -53,4 +53,5 @@
 #include "pywfs.h"
 #include "comb.h"
 #include "bessel_mode.h"
+#include "rayleigh.h"
 #endif
