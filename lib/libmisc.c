@@ -20,6 +20,7 @@
 */
 #include "libmisc.h"
 #include "cure.h"
+#include "accphi.h"
 const real AS2RAD=4.848136811095360e-06; //arcsec in unit of radian
 const real MAS2RAD=4.848136811095360e-09; //arcsec in unit of radian
 const real RAD2AS=206264.8062470964; //radian in unit of arcsec
@@ -187,18 +188,21 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid. n*2 */
    Calibrate the distortion as measured using interaction matrix.
 */
 dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
-	const loc_t* aloc, /**<[in] Actuator grid*/
-	const loc_t* saloc,/**<[in] Subaperture grid*/
-	real dispx,      /**<[in] Beam displacement along x*/
-	real dispy,      /**<[in] Beam displacement along y*/
-	real scale,      /**<[in] Beam cone effect*/
+	propdata_t *propdata,
 	int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
 ){
+	const loc_t *aloc=propdata->locin;
+	const loc_t *saloc=propdata->locout;
+
 	//static int count=-1; count++;
 	if(NX(GA)!=saloc->nloc*2||NY(GA)!=aloc->nloc){
 		error("GA, aloc, and saloc does not match\n");
 	}
-
+	real dispx, dispy, alpha, scale;
+	if(!prop_prep(&dispx, &dispy, &alpha, &scale, propdata)){
+		dbg("Layer is above guide star\n");
+		return NULL;
+	}
 	const int period0=10;//period of poking on saloc
 	const real stroke=1e-6; //stroke of poke
 

@@ -30,7 +30,7 @@
 */
 typedef struct propdata_t{
     /*Input.  */
-    const map_t *mapin; /*Or */ loc_t *locin;
+    const map_t *mapin; /*Or */ const loc_t *locin;
     const real *phiin; /*If not null, use it instead of mapin->p */
     
     /*Output */
@@ -47,6 +47,7 @@ typedef struct propdata_t{
 	int transpose;
     int nooptim;/*disable optim. */
 }propdata_t;
+int prop_prep(real* displacex, real* displacey,  real *alpha, real* scale, propdata_t* propdata);
 void* prop_thread(thread_t *data);/*A unified wrapper */
 void prop_range(propdata_t* propdata, long start, long end);
 void prop(propdata_t* propdata);

@@ -215,7 +215,27 @@ static int prop_index(propdata_t* propdata){
 	}
 	return index;
 }
-
+int prop_prep(real* displacex, real* displacey,  real *alpha, real* scale, propdata_t* propdata){
+	if(!propdata->alpha) propdata->alpha=1;//default to 1
+	if(propdata->hs<=0) propdata->hs=INFINITY;//default to NGS
+	const real ht=propdata->mapin?propdata->mapin->ht:propdata->locin->ht;
+	const real hc=propdata->mapout?propdata->mapout->ht:(propdata->locout?propdata->locout->ht:0);
+	if(hc>propdata->hs || ht>propdata->hs){
+		warning("Layer is above guide star\n");
+		return 0;
+	}
+	const real theta=RSS(propdata->thetax, propdata->thetay);
+	const real dratio=propdata->mapin?propdata->mapin->dratio:propdata->locin->dratio;
+	const real aoi=propdata->mapin?propdata->mapin->aoi:propdata->locin->aoi;
+	*alpha=propdata->alpha*cos(theta*dratio+aoi);//angle of incidence effect
+	*scale=propdata->hs?(1.-(ht-hc)/(propdata->hs-hc)):1.;
+	*displacex=ht*propdata->thetax+*scale*propdata->misregx+propdata->shiftx;
+	*displacey=ht*propdata->thetay+*scale*propdata->misregy+propdata->shifty;
+	/*if(aoi){
+		info_once("aoi=%g, theta=%g, dratio=%g, alpha=%g %g\n", aoi, theta, dratio, propdata->alpha, *alpha);
+	} */
+	return 1;
+}
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
@@ -228,20 +248,11 @@ void prop_range(propdata_t* propdata, long start, long end){
 		error("Invalid input\n");
 		return;
 	}
-	const real ht=propdata->mapin?propdata->mapin->ht:propdata->locin->ht;
-	const real hc=propdata->mapout?propdata->mapout->ht:(propdata->locout?propdata->locout->ht:0);
-	if(propdata->hs && (hc>propdata->hs || ht>propdata->hs)){
+	real displacex, displacey, alpha, scale;
+	if(!prop_prep(&displacex, &displacey, &alpha, &scale, propdata)){
 		dbg("Layer is above guide star\n");
 		return;
 	}
-
-	const real dratio=propdata->mapin?propdata->mapin->dratio:propdata->locin->dratio;
-	const real theta=RSS(propdata->thetax, propdata->thetay);
-	const real alpha=propdata->alpha*(dratio?cos(theta*dratio):1);//angle of incidence effect
-
-	const real scale=propdata->hs?(1.-(ht-hc)/(propdata->hs-hc)):1.;
-	const real displacex=ht*propdata->thetax+scale*propdata->misregx+propdata->shiftx;
-	const real displacey=ht*propdata->thetay+scale*propdata->misregy+propdata->shifty;
 	switch(index){
 	case 1:
 		prop_grid_pts(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin), propdata->ptsout, propdata->phiout,

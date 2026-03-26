@@ -538,20 +538,19 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 				continue;
 			}
 			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
-			const real hs=parms->wfsr[iwfsr].hs;
 			loc_t* loc=recon->ploc; //do not use ploc_tel. the rotation is handled in recon_utils.
 			for(int ips=0; ips<npsr; ips++){
-				const real  ht=P(recon->ht, ips);
-				const real  scale=1.-ht/hs;
-				real dispx=parms->wfsr[iwfsr].thetax*ht+(shwfs?scale*parms->wfsr[iwfsr].misregx:0);
-				real dispy=parms->wfsr[iwfsr].thetay*ht+(shwfs?scale*parms->wfsr[iwfsr].misregy:0);
-				if(atm){//point ahead to reduce lag.
-					int ips2=P(parms->atmr.indps, ips);
-					dispx+=P(atm, ips2)->vx*delay;
-					dispy+=P(atm, ips2)->vy*delay;
-				}
+				int ips2=atm?P(parms->atmr.indps, ips):-1;//point ahead to reduce lag.
 				cellfree(P(HXW, iwfsr, ips));
-				P(HXW, iwfsr, ips)=mkh(P(recon->xloc, ips), loc, dispx, dispy, scale, 0);
+				P(HXW, iwfsr, ips)=mkh(&(propdata_t){.locin=P(recon->xloc, ips), .locout=loc, 
+					.thetax=parms->wfsr[iwfsr].thetax,
+					.thetay=parms->wfsr[iwfsr].thetay,
+					.hs=parms->wfsr[iwfsr].hs,
+					.misregx=shwfs?parms->wfsr[iwfsr].misregx:0,
+					.misregy=shwfs?parms->wfsr[iwfsr].misregy:0,
+					.shiftx=atm?P(atm, ips2)->vx*delay:0,
+					.shifty=atm?P(atm, ips2)->vy*delay:0
+				});
 			}
 		}
 		toc2("HXW");
@@ -633,7 +632,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 							1, 0, 0, 1);
 					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
 						dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc, ipowfs), 1, 1, 0, 0);
-						dsp* H=mkh(ploc, gloc, 0, 0, 1, 0);
+						dsp* H=mkh(&(propdata_t){.locin=ploc, .locout=gloc});
 						gp=dspmulsp(ZS0, H, "nn");
 						dspfree(H);
 						dspfree(ZS0);
@@ -702,15 +701,16 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 				continue;
 			}*/
 			const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
-			const real hs=parms->wfsr[iwfsr].hs;
 			const loc_t* saloc=P(recon->saloc, ipowfs);
 			for(int idm=0; idm<ndm; idm++){
-				const real  ht=parms->dm[idm].ht;
-				const real  scale=1.-ht/hs;
-				const loc_t* aloc=P(recon->aloc, idm);
-				const real dispx=parms->wfsr[iwfsr].thetax*ht+(shwfs?scale*parms->wfsr[iwfsr].misregx:0);
-				const real dispy=parms->wfsr[iwfsr].thetay*ht+(shwfs?scale*parms->wfsr[iwfsr].misregy:0);
-
+				loc_t* aloc=P(recon->aloc, idm);
+				propdata_t propdata={.locin=aloc,
+					.thetax=parms->wfsr[iwfsr].thetax,
+					.thetay=parms->wfsr[iwfsr].thetay,
+					.hs=parms->wfsr[iwfsr].hs,
+					.misregx=(shwfs?parms->wfsr[iwfsr].misregx:0),
+					.misregy=(shwfs?parms->wfsr[iwfsr].misregy:0)};
+					
 				if(parms->powfs[ipowfs].type==WFS_PY){//PWFS
 					/*if(!parms->powfs[ipowfs].lo)*/
 					{
@@ -719,6 +719,11 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 								int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
 							opdadd=P(powfs[ipowfs].opdadd, wfsind);
 						}*/
+						real dispx, dispy, alpha, scale;
+						prop_prep(&dispx, &dispy, &alpha, &scale, &propdata);
+						if(fabs(scale-1)>EPS){
+							error("scale!=1\n");
+						}
 						if(!parms->recon.modal){
 							info("PyWFS mkg from aloc to saloc\n");
 							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
@@ -731,6 +736,9 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							P(recon->GA, iwfsr, idm)=(cell*)pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
 								P(recon->amod, idm, idm), opdadd, dispx, dispy);
 						}
+						if(fabs(alpha-1)>EPS){
+							dcellscale(P(recon->GA, iwfsr, idm), alpha);
+						}						
 					}
 				} else{//SHWFS
 					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfsr+idm*nwfsr]:0;
@@ -744,11 +752,13 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 							warning_once("dm2wfs: determine distortion by fitting \n");
 							//First, simulate the poke matrix measurement process.
 							loc_t* loc2=loctransform(ploc, input);
-							dsp* H2=mkh(aloc, loc2, dispx, dispy, scale, 0);
+							propdata.locout=loc2;
+							dsp* H2=mkh(&propdata);
 							locfree(loc2);
 							dsp* GA2=dspmulsp(P(recon->GP, iwfsr), H2, "nn"); //measured GA.
 							dspfree(H2);
-							dmat* calib2=loc_calib(GA2, aloc, saloc, dispx, dispy, scale, 2);
+							propdata.locout=saloc;
+							dmat* calib2=loc_calib(GA2, &propdata, 2);
 							dshow(calib2, "dm2wfs calib fitting");
 							dspfree(GA2);
 							loc=loctransform2(ploc, calib2);
@@ -761,7 +771,10 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						}
 						locrot(loc, -parms->wfsr[iwfsr].misregc);
 					}*/
-					dsp *Ht=mkht(aloc, loc, dispx, dispy, scale, -parms->wfsr[iwfsr].misregc);
+					propdata.locout=loc;
+					propdata.rot=-parms->wfsr[iwfsr].misregc;
+					dsp *Ht=mkht(&propdata);
+					propdata.rot=0;
 					dsp *GA=dspmulsp(P(recon->GP, iwfsr), Ht, "nt");
 					dspfree(Ht);
 					if(loc!=ploc){

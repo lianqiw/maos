@@ -385,7 +385,7 @@ static dcell* KL_vonkarman_do(const loc_t* loc, int ttr, real iac, real L0){
 		/*real dx=loc->dx*0.5;
 		real dy=loc->dy*0.5;
 		loc_t *ploc=mksqloc((xmax-xmin+2*loc->dx)/dx+1, (ymax-ymin+loc->dy*2)/dy+1, dx, dy, xmin-loc->dx, ymin-loc->dy);*/
-		dsp *h=mkh_cubic(loc, loc, 0, 0, 1, 0, iac);
+		dsp *h=mkh_cubic(&(propdata_t){.locin=loc, .locout=loc}, iac);
 		dmat *modu=NULL;
 		dcellmm(&modu, h, modz, "nn", 1);//convert to dense modal matrix.
 		dspfree(h);

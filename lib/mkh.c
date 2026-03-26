@@ -42,9 +42,8 @@
    that it sums to 1.
 
  */
-dsp* mkh(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real angle){
-	dsp* Hb=mkht(locin, locout, displacex, displacey, scale, angle);
+dsp* mkh(propdata_t *propdata){
+	dsp* Hb=mkht(propdata);
 	dsp* H=dsptrans(Hb);
 	dspfree(Hb);
 	return H;
@@ -56,17 +55,24 @@ dsp* mkh(const loc_t* locin, const loc_t* locout,
    @param displacex	Shift of the beam at the input grid along x 
    @param displacey Shift of the beam at the input grid along y
    @param scale		Scaling of the beam from target to input grid. (scale < 1 if beam is coming from a point source)
-   @param angle		Rotation of the target grid (Clock-wise) (applied before displacex and displacey).
+   @param rot		Rotation of the target grid (Clock-wise) (applied before displacex and displacey).
 
 */
-dsp* mkht(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real angle){
+dsp* mkht(propdata_t *propdata){
+	const loc_t* locin=propdata->locin;
+	const loc_t* locout=propdata->locout;
+	if(locin->iac){
+		return mkht_cubic(propdata, locin->iac);
+	}
 	if(!locin||!locout||!locin->nloc||!locout->nloc){
 		dbg("mkht input is empty.\n");
 		return NULL;
 	}
-	if(locin->iac){
-		return mkht_cubic(locin, locout, displacex, displacey, scale, angle, locin->iac);
+	real rot=propdata->rot;
+	real displacex, displacey, alpha, scale;
+	if(!prop_prep(&displacex, &displacey, &alpha, &scale, propdata)){
+		dbg("Layer is above guide star\n");
+		return NULL;
 	}
 	loc_create_map(locin);
 	dsp* hback;
@@ -81,8 +87,8 @@ dsp* mkht(const loc_t* locin, const loc_t* locout,
 	displacey=(displacey-locin->map->oy)*dy_in1;
 	const real* px=locout->locx;
 	const real* py=locout->locy;
-	const real ct=cos(angle);
-	const real st=sin(angle);
+	const real ct=cos(rot);
+	const real st=sin(rot);
 	/*-1 because we count from 1 in the map. */
 	map_t* map=locin->map;
 	//const int nxmin=locin->npad;
@@ -139,8 +145,8 @@ dsp* mkht(const loc_t* locin, const loc_t* locout,
 				}
 			}
 		}
-		if(wtsum>EPS&&wtsum<1-EPS*10){
-			wtsum=1./wtsum;
+		if(wtsum>EPS){
+			wtsum=alpha/wtsum;
 			for(long ip=bp[iloc]; ip<count; ip++){
 				bx[count]*=wtsum;
 			}
@@ -155,9 +161,8 @@ dsp* mkht(const loc_t* locin, const loc_t* locout,
 /**
    Transposes the result from mkht_cubic.
  */
-dsp* mkh_cubic(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real angle, real cubic_iac){
-	dsp* Hb=mkht_cubic(locin, locout, displacex, displacey, scale, angle, cubic_iac);
+dsp* mkh_cubic(propdata_t *propdata, real cubic_iac){
+	dsp* Hb=mkht_cubic(propdata, cubic_iac);
 	dsp* H=dsptrans(Hb);
 	dspfree(Hb);
 	return H;
@@ -165,14 +170,21 @@ dsp* mkh_cubic(const loc_t* locin, const loc_t* locout,
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac==0*/
-dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
-	real displacex, real displacey, real scale, real angle, real cubic_iac){
+dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
+	if(cubic_iac<=0){
+		return mkht(propdata);
+	}
+	const loc_t* locin=propdata->locin;
+	const loc_t* locout=propdata->locout;
 	if(!locin||!locout||!locin->nloc||!locout->nloc){
 		dbg("mkht_cubic input is empty.\n");
 		return NULL;
 	}
-	if(cubic_iac<=0){
-		return mkht(locin, locout, displacex, displacey, scale, angle);
+	real rot=propdata->rot;
+	real displacex, displacey, alpha, scale;
+	if(!prop_prep(&displacex, &displacey, &alpha, &scale, propdata)){
+		dbg("Layer is above guide star\n");
+		return NULL;
 	}
 	dsp* hback;
 	real dplocx, dplocy;
@@ -189,8 +201,8 @@ dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
 	displacey=(displacey-map->oy)*dy_in1;
 	const real* px=locout->locx;
 	const real* py=locout->locy;
-	const real ct=cos(angle);
-	const real st=sin(angle);
+	const real ct=cos(rot);
+	const real st=sin(rot);
 	/*-1 because we count from 1 in the map. */
 	/*cubic */
 	real fx[4], fy[4];
@@ -264,8 +276,8 @@ dsp* mkht_cubic(const loc_t* locin, const loc_t* locout,
 				}
 			}
 		}
-		if(wtsum>EPS&&wtsum<1-EPS){
-			wtsum=1./wtsum;
+		if(wtsum>EPS){
+			wtsum=alpha/wtsum;
 			for(long ip=bp[iloc]; ip<count; ip++){
 				bx[count]*=wtsum;
 			}

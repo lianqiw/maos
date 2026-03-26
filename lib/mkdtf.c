@@ -158,7 +158,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 				real dx=pixoffx?(PR(pixoffx, isa, iwfs)*pixthetax):0;
 				real dy=pixoffy?(PR(pixoffy, isa, iwfs)*pixthetay):0;
 				loc_t* loc_ccd=mksqloc(pixpsax, pixpsay, pixthetax, pixthetay, pxo-dx, pyo-dy);
-				P(sis, isa, iwfs)=mkh(loc_psf, loc_ccd, 0, 0, 1, -theta);
+				P(sis, isa, iwfs)=mkh(&(propdata_t){.locin=loc_psf, .locout=loc_ccd, .rot=-theta});
 				locfree(loc_ccd);
 			}/*isa */
 		}/*iwfs */
@@ -428,7 +428,7 @@ dmat* smooth(const dmat* prof, real dxnew){
 		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
 		loc_t* loc_in=mk1dloc_vec(P(prof), nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);
-		dsp* ht=mkht(loc_out, loc_in, 0, 0, 1, 0);
+		dsp* ht=mkht(&(propdata_t){.locin=loc_out, .locout=loc_in});
 		out=dnew(nxnew, NY(prof));
 		memcpy(P(out), loc_out->locx, sizeof(real)*nxnew);
 		{

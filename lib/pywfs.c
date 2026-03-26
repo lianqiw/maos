@@ -104,7 +104,7 @@ static void pywfs_mksi(pywfs_t *pywfs, loc_t *loc_fft, loc_t *saloc0, real pupel
 		}
 		P(pywfs->sioff, ind, 0)=offx;
 		P(pywfs->sioff, ind, 1)=offy;
-		P(pywfs->si, ind)=mkh(loc_fft, saloc, (offx*notf2)*dxp+shx, (offy*notf2)*dxp+shy, 1., 0);
+		P(pywfs->si, ind)=mkh(&(propdata_t){.locin=loc_fft, .locout=saloc, .shiftx=(offx*notf2)*dxp+shx, .shifty=(offy*notf2)*dxp+shy});
 	}
 }
 pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){

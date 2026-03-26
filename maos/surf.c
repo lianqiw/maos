@@ -362,20 +362,14 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	dspcell* HA=recon->HA_ncpa=dspcellnew(nevl, ndm);
 	TIC;tic;
 	for(int ievl=0; ievl<nevl; ievl++){
-		real hs=P(parms->ncpa.hs, ievl);
 		for(int idm=0; idm<ndm; idm++){
 			if( parms->ncpa.calib==2&&idm>0){
 				continue;
 			}
-			const real ht=parms->dm[idm].ht;
-			const real scale=1.-ht/hs;
-			real displace[2];
-			displace[0]=P(parms->ncpa.thetax, ievl)*ht;
-			displace[1]=P(parms->ncpa.thetay, ievl)*ht;
-			P(HA, ievl, idm)=mkh(P(recon->aloc, idm), recon->floc,
-				displace[0], displace[1], scale, 0);
-			const real theta=RSS(P(parms->ncpa.thetax, ievl), P(parms->ncpa.thetay, ievl));
-			dspscale(P(HA, ievl, idm), cos(theta*parms->dm[idm].dratio));
+			P(HA, ievl, idm)=mkh(&(propdata_t){.locin=P(recon->aloc, idm), .locout=recon->floc,
+				.thetax=P(parms->ncpa.thetax, ievl),
+				.thetay=P(parms->ncpa.thetay, ievl),
+				.hs=P(parms->ncpa.hs, ievl)});
 		}
 	}
 	//We don't handle float ot stuck actuators in NCPA calibration.

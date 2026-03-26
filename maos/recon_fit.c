@@ -36,13 +36,12 @@ setup_fit_HXF(const fit_t* fit){
 OMP_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int ips=0; ips<npsr; ips++){
-			const real hsi=P(fit->hs,ifit);
-			const real ht=P(fit->xloc,ips)->ht-fit->floc->ht;
-			const real scale=1.-ht/hsi;
-			real displace[2];
-			displace[0]=P(fit->thetax,ifit)*ht;
-			displace[1]=P(fit->thetay,ifit)*ht;
-			P(HXF, ifit, ips)=mkh(P(fit->xloc,ips), fit->floc, displace[0], displace[1], scale, 0);
+			P(HXF, ifit, ips)=mkh(&(propdata_t){
+				.locin=P(fit->xloc,ips), 
+				.locout=fit->floc, 
+				.thetax=P(fit->thetax,ifit),
+				.thetay=P(fit->thetay,ifit),
+				.hs=P(fit->hs,ifit)});
 		}
 	}
 	toc2("HXF");
@@ -60,17 +59,17 @@ setup_fit_HA(fit_t* fit){
 OMP_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int idm=0; idm<ndm; idm++){
-			const real hs=P(fit->hs,ifit);
-			const real ht=P(fit->aloc,idm)->ht-fit->floc->ht;
-			const real scale=1.-ht/hs;
-			real displace[2];
-			displace[0]=P(fit->thetax,ifit)*ht;
-			displace[1]=P(fit->thetay,ifit)*ht;
+			//const real ht=P(fit->aloc,idm)->ht-fit->floc->ht;
 			loc_t* loc=fit->floc;
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			dsp *ha=mkh(P(fit->aloc,idm), loc, displace[0], displace[1], scale, 0);
+			dsp *ha=mkh(&(propdata_t){
+				.locin=P(fit->aloc,idm), 
+				.locout=loc, 
+				.thetax=P(fit->thetax,ifit),
+				.thetay=P(fit->thetay,ifit),
+				.hs=P(fit->hs,ifit)});
 			if(fit->modal){
 				dspmm((dmat**)&P(fit->HA, ifit, idm), ha, P(fit->amod, idm, idm), "nn", 1);
 				dspfree(ha);
