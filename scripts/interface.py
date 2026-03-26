@@ -1,15 +1,16 @@
 #!/Usr/bin/env python
 
 #Use ctypes to interface with C libraries
-#POINTER is the class type of pointer
-#pointer() acts on actual array, while POINTER() works on class type.
-#pointer(cell(arr)) #creates cell Structure for np.array type arr and makes a pointer
-#pcell=POINTER(cell) ; pcell() #Creates a class for cell Structure and then makes an object pointer with no content.
+#cell is subclass of Structure. The _fields_ matches C object layout
+#ctypes.POINTER(cell) is the class type of pointer that points to type cell
+#A pointer acts on actual object. use pointer.contents to deference its content (the object). 
+#A pointer can be cast to and from integer (address)
+#cell(arr) converts python object arr (e.g., np.ndarray) in a cell object
+#ctypes.pointer(cell(arr)) #creates a pointer to newly created cell object from arr
 
-#c_int is a ctypes type
-#a=c_int(42) #creates a ctypes int object
-#p=pointer(a) creates C compatible pointers to object a
-#p.contents retreates the contents of pointer p
+#c_int is a ctypes wrapper for int: c_int(42). ctypes.size(c_int(42)) returns 4, but sys.getsizeof(c_int(42)) is much bigger than 4.
+#pointer(p) is a ctypes wrapper for C pointer.
+#p.contents retreates the contents of pointer p (equivalent to *p in C)
 #addressof(p) retreates the address of p
 #use pd=cast(p, POINTER(c_double)) to convert pointer p to c_double pointer 
 #use pd=cast(address, POINTER(c_double)) to convert address in c_double pointer
@@ -28,6 +29,7 @@ import os
 #import sys
 #from pdb import set_trace as keyboard
 from ctypes import *
+import ctypes as ctypes
 #import json
 import numpy as np
 import scipy.sparse as sp
@@ -149,34 +151,25 @@ def py2cell(arr, tid=0):
     if type(arr) is list:
         arr=np.asarray(arr)
     if sp.issparse(arr):
-        return csr(arr, tid)
-    else:
-        return cell(arr, tid)
+        arr=csr(arr, tid)
+    elif isinstance(arr, np.ndarray):
+        if arr.size==0:
+            arr=None
+        else:
+            arr=cell(arr, tid)
+    return arr
 
 def py2cellref(arr, tid=0):
     '''convert numpy array to C array pointer adaptively or output'''
+    arr=py2cell(arr, tid)
     if arr is None:
         return None
-    elif type(arr) is list:
-        arr = np.asarray(arr)
-    if sp.issparse(arr):
-        return byref(csr(arr,tid))
-    elif type(arr) is cell_ndarray:
-        if arr.size==0:
-            return None #turn empty ndarray to Null pointer. do not use 0
-        else:
-            return byref(cell(arr.base,tid))
-    elif type(arr) is np.ndarray:
-        if arr.size==0:
-            return None #turn empty ndarray to Null pointer. do not use 0
-        else:
-            return byref(cell(arr,tid))
     else:
         return byref(arr)
 
 def arr2object(arr): 
     '''convert numpy number arrays with more than 3 dimensions to numpy object arrays'''
-    if type(arr) is not np.ndarray:
+    if not isinstance(arr, np.ndarray):
         print('Unsupported data type')
         return arr
     if arr.ndim<=2:
@@ -197,6 +190,7 @@ class wrap_pointer:
     def __init__(self, pointer):
         self.pointer=pointer
     def __del__(self):
+        print(f'Calling cellfree_do for {self.pointer:x}')
         lib.cellfree_do(cast(self.pointer, c_void_p))
 class cell_ndarray(np.ndarray):
     '''Subclass to manage memory and extra attributes'''
@@ -209,15 +203,19 @@ class cell_ndarray(np.ndarray):
             header=ctypes_array.header.decode('ascii')
         else:
             header=''
-        try:
-            (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
-        except:
-            print("id2ctype: unknown type", ctypes_array.id)
+        if not ctypes_array.p or ctypes_array.nx ==0 or ctypes_array.ny ==0:
             res=np.array([])
+            kind=-1
+        else:
+            try:
+                (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
+            except:
+                print("id2ctype: unknown type", ctypes_array.id)
+                res=np.array([])
         if kind==0 or kind==1: #dense matrix
             parr=cast(ctypes_array.p, POINTER(tt))
             if iscomplex:
-                res=np.ctypeslib.as_array(parr, shape=(*ctypes_array.shape(0),2))
+                res=np.ctypeslib.as_array(parr, shape=(*ctypes_array.shape(),2))
                 if tt is c_double:
                     res=np.squeeze(res.view(np.complex128), axis=-1)
                 elif tt is c_float:
@@ -225,13 +223,7 @@ class cell_ndarray(np.ndarray):
                 else:
                     raise(Exception('Please implement'))
             else:
-                res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape(0))
-            if kind==1: #LOC
-                res.dx=ctypes_array.dx
-                res.dy=ctypes_array.dy
-                res.ht=ctypes_array.ht
-                res.iac=ctypes_array.iac
-
+                res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape())
         elif kind==2 or kind==3: #sparse matrix does not support subclassing like numpy
             return cell_csr_array(ctypes_pointer, pointer)
         elif kind==10: #cell array
@@ -241,8 +233,8 @@ class cell_ndarray(np.ndarray):
                 for ix in range(ctypes_array.nx):
                     address=parr[ix+ctypes_array.nx*iy]
                     if address is not None:
-                        pp=cast(int(address), POINTER(cell))
-                        res[iy, ix]=cell_ndarray(pp, pointer) #recursive. do not keep pointer in child
+                        pp=cast(address, POINTER(cell))
+                        res[iy, ix]=cell_ndarray(pp, 0) #recursive. do not pass pointer to child
                     else:
                         res[iy, ix]=np.array([])
             if ctypes_array.ny==1:
@@ -251,6 +243,11 @@ class cell_ndarray(np.ndarray):
         obj=res.view(cls)
         obj.pointer=pointer #pointer is reference counted
         obj.header=header
+        if kind==1: #LOC
+            obj.dx=ctypes_array.dx
+            obj.dy=ctypes_array.dy
+            obj.ht=ctypes_array.ht
+            obj.iac=ctypes_array.iac
         if len(header)>0:
             for pair in header.replace('\n',';').replace(';;',';').split(';'):
                 if pair.find('=')>-1:
@@ -299,20 +296,38 @@ class cell_csr_array(sp.csr_array):
         if hasattr(obj, 'pointer'):
             self.pointer=obj.pointer
             
-def pt2py(pointer):
-    '''convert C array pointer to numpy array. References C memory'''
-    if bool(pointer):
+def ct2py(var):
+    '''convert ctypes data to Python data'''
+    if not bool(var):
+        return None
+    if isinstance(var, ctypes._Pointer):
+        pointer=var
+        var=pointer.contents
+    else:
+        pointer=None
+    if hasattr(var, 'id'): #a maos struct for array; conver to ndarray
         try:
-            (tt, iscomplex, kind)=id2ctype.get(pointer.contents.id&0xFFFF)
+            (tt, iscomplex, kind)=id2ctype.get(var.id&0xFFFF)
         except:
-            print("id2ctype: unknown type", pointer.contents.id)
+            print("id2ctype: unknown type", var.id)
             return np.array([])
         if kind==2 or kind==3:#sparse
             return cell_csr_array(pointer)
         else:
             return cell_ndarray(pointer)
+    elif isinstance(var, Structure): #a generic struct; convert to dictionary
+        result = {}
+        for field_name, field_type in var._fields_:
+            value = getattr(var, field_name)
+            if isinstance(value, ctypes._Pointer):
+                value=ct2py(value)
+            elif field_type is c_void_p:
+                print(f'unexpected: {field_name} is c_void_p')
+                value = None
+            result[field_name] = value
+        return result
     else:
-        return np.array([])
+        return var.value
 
 class cell(Structure):
     '''To interface numpy.array with C cell '''
@@ -333,8 +348,9 @@ class cell(Structure):
     def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
         #attributes set within __init__ are per object
         #print(f'__init__ is called for cell {addressof(self)}')
-        if type(arr) is list:
+        if isinstance(arr, list):
             arr=np.asarray(arr)
+        
         if arr.ndim>2:
             arr=arr2object(arr)
         if arr is not None:
@@ -395,8 +411,8 @@ class cell(Structure):
         self.dummy_deinit=None
         self.dummy_make_keywords=None
         self.python=True
-    def shape(self, twod):
-        if self.ny > 1 or twod:
+    def shape(self, force2d=0):
+        if self.ny > 1 or force2d:
             return (self.ny, self.nx)
         else:
             return (self.nx,) #last , is necessary
@@ -451,14 +467,15 @@ class loc(Structure):
                 self.locy=arr[1,].ctypes.data_as(c_void_p)
                 self.locstat_t=None
                 self.map=None
-                self.dx=min(dlocx[dlocx>0])
-                self.dy=min(dlocy[dlocy>0])
+                self.dx=np.median(dlocx[dlocx>0])
+                self.dy=np.median(dlocy[dlocy>0])
                 self.ht=0
                 self.iac=0
                 self.dratio=1
                 self.aoi=0
                 self.npad=1
                 self.python=True
+                print(f'loc: locx={self.locx:x} locy={self.locy:x}')
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero
 
@@ -517,32 +534,66 @@ def convert_fields(fields):
     newfields=[]
     for key,val in fields.items():
         if val[-1]=='*':
-            val=c_void_p
-        else:
+            if val[-2]=='*':
+                print('Please handle pointer to pointer')
+                return None
+            if val.find('mat')!=-1 or val.find('cell')!=-1:
+                val=POINTER(cell)
+            elif val.find('loc_t')!=-1:
+                val=POINTER(loc)
+            else:
+                val=c_void_p
+        elif val in val2type:
             val=val2type[val]
+        else:
+            return None
         newfields.append((key,val))
     return newfields
 
 def make_class(name, fields):
     '''Dynaically create a ctypes class with field listed '''
-    newfields=convert_fields(fields)
-    class newclass(Structure):
-        pass
-        def as_array(self):#convert struct into dictionary
-            out=dict()
-            for ff in self._fields_:
-                #convert C pointers to POINTER then to array
-                field=eval("self.{}".format(ff[0]))
-                if field is not None:
-                    if ff[1] is c_void_p:
-                        out[ff[0]]=cast(field,POINTER(cell)).contents.as_array()
-                        #exec('out[\''+ff[0]+'\']=cast(self.'+ff[0]+',POINTER(cell)).contents.as_array()')
-                    else:
-                        out[ff[0]]=field
-                else:
-                    out[ff[0]]=None
-            out['struct']=self
-            return out
+    fields_type=convert_fields(fields)
+    if fields_type:
+        return type(name, (Structure,), {"_fields_": fields_type})
+    else:
+        return None
 
-    newclass._fields_=newfields
-    return newclass
+type_map = {
+    int: c_int,
+    float: c_double,
+    bool: c_bool,
+    bytes: c_char_p
+}
+def dict_to_struct_type(data, name='struct'):
+    '''Convert dictionary to ctypes class'''
+    fields = []
+
+    for k, v in data.items():
+        #print(f'Field {k} has type {type(v)}')
+        if isinstance(v, sp.csc_array):
+            fields.append((k, POINTER(csr)))
+        elif isinstance(v, np.ndarray):
+            fields.append((k, POINTER(cell)))
+        elif type(v) in type_map:
+            fields.append((k, type_map[type(v)]))
+        else:
+            print(f'Unknown field {k} {type(v)}')
+    
+    struct=type(name, (Structure,), {"_fields_": fields})
+    return struct
+def dict_to_struct(data, struct=None, name='struct'):
+    if struct is None:
+        struct=dict_to_struct_type(data, name=name)
+
+    values = {}
+    for k, vtype in struct._fields_: 
+        v=data.get(k, None)
+        if issubclass(vtype, POINTER(loc)):
+            print(f'{vtype} is loc')
+            values[k]=cast(pointer(loc(v)), vtype)
+        if vtype is c_void_p or issubclass(vtype, ctypes._Pointer):
+            values[k]=cast(pointer(py2cell(v)), vtype)
+        else:
+            values[k]=v.encode() if isinstance(v, str) else v
+
+    return struct(**values)

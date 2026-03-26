@@ -51,8 +51,8 @@ def parse_structs(srcdir, files):
             struct=struct+len('struct')
             start=ln.find('{', struct)
             if start==-1:
-                break;
-            name=ln[struct+1:start];
+                break
+            name=ln[struct+1:start]
             end0=ln.find('{', start+1)
             end=ln.find('}', start+1)
 
@@ -63,13 +63,14 @@ def parse_structs(srcdir, files):
                 break
             fields=ln[start+1:end].split(';')
             if len(name)==0:
-                end0=ln.find(';', end+1);
-                name=ln[end+1:end0];
+                end0=ln.find(';', end+1)
+                name=ln[end+1:end0]
+            name=name.lstrip().rstrip()
             structs[name]=dict()
             for fi in fields:
-                tmp=fi.replace('struct','').replace('const','').lstrip().rstrip().split(' ');
-                if len(tmp)==2:
-                    structs[name][tmp[1]]=tmp[0]
+                tmp=fi.replace('struct','').replace('const','').lstrip().rstrip().split(' ')
+                if len(tmp)>=2:
+                    structs[name][tmp[-1]]=tmp[0]
     return structs
 
     #parse C functions

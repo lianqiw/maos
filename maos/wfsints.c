@@ -155,11 +155,9 @@ void* wfsints(thread_t* thread_data){
 			}else{
 				czero(lwvf);
 			}
-			cembed_wvf(lwvf, P(lltopd), P(powfs[ipowfs].llt->amp), nlx, nlx, wvl, 0);
-			/*turn to complex psf*/
-			cfft2(lwvf, -1);
-			/*turn to psf*/
-			cabs2toreal(lwvf, 1./((real)nlwvf*nlwvf));//sum to 1. scaling is independent of notf
+			cembed_wvf(lwvf, P(lltopd), P(powfs[ipowfs].llt->amp), nlx, nlx, wvl, 0);//embed OPD into larger 2-d array
+			cfft2(lwvf, -1);//turn to complex psf
+			cabs2toreal(lwvf, 1./((real)nlwvf*nlwvf));//turn to psf and scale so that it sums to 1. scaling is independent of notf
 			/*if(isa_start==0){//print uplink spot size.
 				cfftshift(lwvf);
 				real fwhm=1.1774*cgauss_width(lwvf, 0.01)/dtheta1*RAD2AS;
@@ -170,18 +168,19 @@ void* wfsints(thread_t* thread_data){
 			cmat *lotfc2=NULL;
 			if(nlwvf!=nwvf){//need to embed/crop uplink OTF
 				/* uplink has different aperture size than LGS subaperture, but
-				the same spatial and OTF sampling. Crop or pad OTF toget to get
+				the same spatial OPD and therefore OTF sampling. Crop or pad OTF toget to get
 				the same PSF/OTF sampling.*/
-				islotf=1;cfft2(lwvf, -1);//turn to OTF
+				islotf=1;//note that lotfc contains OTF instead of PSF
+				cfft2(lwvf, -1);//turn to OTF
 				lotfc2=cnew(nwvf, nwvf);//make uplink PSF(OTF) same size and sampling as downlink
-				ccpcorner(lotfc2, lwvf, C_FULL);//crop PSF
+				ccpcorner(lotfc2, lwvf, C_FULL);//crop OTF
 			}else{
 				lotfc2=lwvf; 
 			}
-			if(nwvf!=notfx||notfx!=notfy){//need to embed/crop uplink PSF
+			if(nwvf!=notfx||notfx!=notfy){//need to embed/crop uplink PSF to match downlink PSF size
 				if(islotf){
 					cfft2(lotfc2, 1);//turn back to PSF
-					cscale(lotfc2, 1./((real)nwvf*nwvf));
+					cscale(lotfc2, 1./((real)nwvf*nwvf));//undo scaling due to fft
 					islotf=0;
 				}
 				if(!lotfc){
@@ -239,11 +238,11 @@ void* wfsints(thread_t* thread_data){
 				cfft2(wvf, -1); /*use 2d fft to form PSF. */
 			}
 			TIM(2);//2 is fft
-			if(psf!=wvf){/*copy the peaks (at corner) from wvf to psf */
+			if(psf!=wvf){/*Embed PSF into a larger array by copying the peaks (at corner) from wvf to psf */
 				ccpcorner(psf, wvf, C_FULL);
 			}
 
-			/*output complex pupil function to use in skyc*/
+			/*output complex pupil function (phasor) to use in skycoverage*/
 			if(psfout){
 				ccp(&fftpsfout, psf);
 				/*notf * notf to cancel out the effect of fft pair (one here, one later in skyc)*/
@@ -253,15 +252,13 @@ void* wfsints(thread_t* thread_data){
 				/*output center of the complex pupil function.*/
 				cembed(P(psfout, isa, iwvl), fftpsfout, 0);
 			}
-			/* form PSF with peak in corner*/
-			cabs2toreal(psf, 1);
+			cabs2toreal(psf, 1); /* form PSF with peak in corner*/
 			TIM(1);
 			/* need to turn to otf to add llt contribution or output pixel intensities.*/
 			cfft2(psf, -1);   /*turn to otf. peak in corner */
 			TIM(2);
 			if(pistatout){  /*The pistat does not include uplink effect*/
-				/*copy to temporary array. peak in in corner*/
-				ccp(&psftmp, psf);
+				ccp(&psftmp, psf); /*copy to temporary array. peak in in corner*/
 				if(gx){      /*remove tip/tilt from OTF using tilt reference. */
 					ctilt(psftmp, -gx[isa]*dtheta1, -gy[isa]*dtheta1, 0);
 				}
@@ -277,12 +274,13 @@ void* wfsints(thread_t* thread_data){
 			if(lltopd){            /*add uplink otf */
 				ccwmc(psf, lotfc);   /*normalization done in gen of lotfc. */
 			}
-			/* we have otf here in psf*/
+			/* psf contain OTF with peak in corner */
 			if(ints){
+				//Apply sodium profile elongation and detector pixel transfer function
 				apply_dtf_etf(psf, nominal, petf1?P(petf1, isa, illt):0, etf1wt, petf2?P(petf2, isa, illt):0, etf2wt); TIM(3);
-				/*max(otf) is 1 after multiply with norm. peak in corner  */
+				//max(otf) is 1 after multiply with nominal. peak in corner
 				cfft2(psf, 1); TIM(2);
-				/*Now peak in center because nominal is pre-treated.  */
+				/*Now peak in center because nominal is pre-treated.*/
 				dspmulcreal(P(P(ints,isa)), si, P(psf), P(wvlwts,iwvl)*norm_ints); TIM(4);
 			}
 		}/*isa */
