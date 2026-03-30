@@ -161,7 +161,6 @@ var annotated_dup =
     [ "pts_t.__unnamed27__.__unnamed29__.__unnamed33__", "df/def/type_8h.html#de/d2c/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed33____", "df/def/type_8h_de/d2c/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed33____" ],
     [ "pywfs_cfg_t", "d9/d19/pywfs_8h.html#d0/d1d/structpywfs__cfg__t", "d9/d19/pywfs_8h_d0/d1d/structpywfs__cfg__t" ],
     [ "pywfs_t", "d9/d19/pywfs_8h.html#d2/d8c/structpywfs__t", "d9/d19/pywfs_8h_d2/d8c/structpywfs__t" ],
-    [ "rayleigh_t", "d5/d7f/rayleigh_8h.html#d0/dfa/structrayleigh__t", "d5/d7f/rayleigh_8h_d0/dfa/structrayleigh__t" ],
     [ "recon_cfg_t", "d4/d38/parms_8h.html#d1/d32/structrecon__cfg__t", "d4/d38/parms_8h_d1/d32/structrecon__cfg__t" ],
     [ "recon_t", "d6/d94/maos_2types_8h.html#d1/d27/structrecon__t", "d6/d94/maos_2types_8h_d1/d27/structrecon__t" ],
     [ "RefP", "dd/db6/class_ref_p.html", null ],
