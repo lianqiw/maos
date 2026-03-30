@@ -220,6 +220,7 @@ var hierarchy =
     [ "pts_t.__unnamed27__.__unnamed29__.__unnamed33__", "df/def/type_8h.html#de/d2c/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed33____", null ],
     [ "pywfs_cfg_t", "d9/d19/pywfs_8h.html#d0/d1d/structpywfs__cfg__t", null ],
     [ "pywfs_t", "d9/d19/pywfs_8h.html#d2/d8c/structpywfs__t", null ],
+    [ "rayleigh_t", "d5/d7f/rayleigh_8h.html#d0/dfa/structrayleigh__t", null ],
     [ "recon_cfg_t", "d4/d38/parms_8h.html#d1/d32/structrecon__cfg__t", null ],
     [ "recon_t", "d6/d94/maos_2types_8h.html#d1/d27/structrecon__t", null ],
     [ "RefP< T, Dev >", "dd/db6/class_ref_p.html", [

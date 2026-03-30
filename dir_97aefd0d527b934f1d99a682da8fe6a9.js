@@ -26,6 +26,7 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "proj.h", "d2/dcf/proj_8h.html", "d2/dcf/proj_8h" ],
     [ "psd.h", "d2/da0/psd_8h.html", "d2/da0/psd_8h" ],
     [ "pywfs.h", "d9/d19/pywfs_8h.html", "d9/d19/pywfs_8h" ],
+    [ "rayleigh.h", "d5/d7f/rayleigh_8h.html", "d5/d7f/rayleigh_8h" ],
     [ "readcfg.h", "da/d6e/readcfg_8h.html", "da/d6e/readcfg_8h" ],
     [ "servo.h", "de/d09/servo_8h.html", "de/d09/servo_8h" ],
     [ "slaving.h", "dc/d37/slaving_8h.html", "dc/d37/slaving_8h" ],

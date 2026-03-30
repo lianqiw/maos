@@ -3,7 +3,7 @@ var libmisc_8h =
     [ "addnoise", "dd/d2b/libmisc_8h.html#a4bf8970d027f919a7485a8e426415de6", null ],
     [ "addnoise_grad", "dd/d2b/libmisc_8h.html#a48f27901c57db366ade9713f9eabc688", null ],
     [ "poly2fit", "dd/d2b/libmisc_8h.html#aefe5e957c8884dfb7dfa49430562a87c", null ],
-    [ "loc_calib", "dd/d2b/libmisc_8h.html#a61c2095f27dff06e1906852ffb717b0d", null ],
+    [ "loc_calib", "dd/d2b/libmisc_8h.html#a805adf2e9f909d6fcda91fd6a2a66ae2", null ],
     [ "polyfit", "dd/d2b/libmisc_8h.html#a210f7b71835167dc3ff695d7f38a3a7f", null ],
     [ "polyval", "dd/d2b/libmisc_8h.html#ac019db172581dae2348fd2ffe1b371d3", null ],
     [ "calc_dither_amp", "dd/d2b/libmisc_8h.html#a13c5edd8c559386a72b522f43e49e733", null ],
