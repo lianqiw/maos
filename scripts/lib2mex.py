@@ -11,7 +11,7 @@ if len(sys.argv)>2 and os.path.isdir(sys.argv[1]+'/maos/'):
     srcdir=sys.argv[1]
     fnout=sys.argv[2]
 else:
-    srcdir=str(Path.home())+'/work/programming/aos'
+    srcdir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     fnout='aolib.c'
 if not os.path.isdir(srcdir+'/maos/'):
     raise(Exception('Unable to find maos source dir'))

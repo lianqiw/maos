@@ -190,7 +190,7 @@ class wrap_pointer:
     def __init__(self, pointer):
         self.pointer=pointer
     def __del__(self):
-        print(f'Calling cellfree_do for {self.pointer:x}')
+        #print(f'Calling cellfree_do for {self.pointer}')
         lib.cellfree_do(cast(self.pointer, c_void_p))
 class cell_ndarray(np.ndarray):
     '''Subclass to manage memory and extra attributes'''

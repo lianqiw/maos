@@ -16,7 +16,7 @@ if len(sys.argv)>2:
     srcdir=sys.argv[1]
     fnout=sys.argv[2]
 else:
-    srcdir=str(Path.home())+'/work/programming/aos'
+    srcdir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if fnout is None:
     fnout=srcdir+'/scripts/libaos.py'
 if not os.path.isdir(srcdir+'/maos/'):
