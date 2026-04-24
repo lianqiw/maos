@@ -93,9 +93,6 @@ void maos_setup(const parms_t* parms){
 	cuda_dedup=1;
 	
 	if(use_cuda){
-#if USE_CUDA>100
-		gpu_ext_assign();
-#endif		
 		extern dmat *(*pywfs_mkg_ext)(const pywfs_t*pywfs, const loc_t*locin, const loc_t*locfft, const dmat*mod, real displacex, real displacey);
 		pywfs_mkg_ext=gpu_pywfs_mkg;
 	}

@@ -103,6 +103,7 @@ GPU_FFT(c, Comp, CUFFT_C2C);
 GPU_FFT(z, Comp, CUFFT_C2C);
 
 void gpu_ext_assign(){
+#if __CUDA_ARCH__ >=600
 #define CPU_ASSIGN_BLAS(X,R,T)\
 	extern void (*X##svd_ext)(X##mat **U, R##mat **S, X##mat **Vt, const X##mat *A);\
 	extern void (*X##svd_pow_ext)(X##mat *A_, real pow, real thres1, real thres2);\
@@ -122,6 +123,9 @@ void gpu_ext_assign(){
 	X##fft2_ext=gpu_##X##fft2
 	CPU_ASSIGN_FFT(c);
 	CPU_ASSIGN_FFT(z);
+#else
+	dbg("GPU is not used for fft2, svd, svd_pow and gemm of large arrays because the GPU architecture is too old.\n");
+#endif
 }
 
 void gpu_dgemm_test(){

@@ -412,6 +412,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				}
 			}
 		}*/
+		gpu_ext_assign();
 		if(parms){
 			/*Assign task to gpu evenly based on empirical data to maximum GPU
 			 * usage. We first gather together all the tasks and assign a timing
