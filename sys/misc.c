@@ -647,16 +647,16 @@ static char* cmd_string(char* start, char** end2){
 	return out;
 }
 /** 
-	swap content from begin to end (exclusive) to pdest location if pdest < begin 
-	otherwise, just remove the content. pdest is updated.
+	swap content.  
+	1) if pdest < begin: swap content from begin to end (exclusive) with pdest 
 	|pdest   |begin.   |end -->|begin |pdest |end
-	|begin   |end      |pdest --> |begin |pdest
+	2) if pdest > end: remove content from begin to end	
+	|begin   |end      |pdest --> |end |pdest
  */
 void str_swap(char**pdest, char *begin, char *end){
-	//info("dest={%p:%s}, begin={%p:%s}, end={%p:%s}\n", *pdest, *pdest, begin, begin, end, end);
 	int n=end-begin;
 	if(*pdest==begin){
-		return;//noop
+		*pdest+=n;
 	}else if(*pdest<begin){//move content to beginning.
 		char temp[n];
 		memcpy(temp, begin, n);
@@ -842,7 +842,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 			if(*start0=='\n') start0++;
 			start[0]='\n';//restore
 			start++;		
-			str_swap(&conf_start, start0, start);
+			str_swap(&conf_start, start0, start);//gather conf files before key=values
 		} else if(start[0]=='['){/*make sure we don't split brackets that are part of value. */
 			const char *save_start=start;
 			int nopen=1; //opening brackets not closed.
