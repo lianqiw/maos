@@ -61,7 +61,11 @@ void mac_terminate(GtkosxApplication *app, gpointer psock){
 }
 #endif
 int main(int argc, char* argv[]){
-	info("drawdaemon is launched with %s %s\n", argv[0], argv[1]);
+	if(argc==1){
+		info("Usage: %s socket or hostname. Assume localhost if not supplied.\n", argv[0]);
+	}
+	const char *target=argc>1?argv[1]:"localhost";
+	info("drawdaemon is launched with %s %s\n", argv[0], target);
 	if(getenv("MAOS_DIRECT_LAUNCH")){
 		char fnlog[PATH_MAX];
 		snprintf(fnlog, PATH_MAX, "%s/drawdaemon.log", TEMP);
@@ -110,10 +114,8 @@ int main(int argc, char* argv[]){
 			draw_id=0;
 		}
 		info_time("draw_id=%d\n",draw_id);
-	}else if(argc<2){
-		error("Usage: %s socket or hostname.\n", argv[0]);
 	}
-	thread_new(listen_draw, argv[1]);
+	thread_new(listen_draw, (void*)target);
 #if GTK_MAJOR_VERSION<4
 	create_window(NULL);
 	gtk_main();

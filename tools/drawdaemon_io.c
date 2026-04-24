@@ -368,6 +368,9 @@ void *listen_draw(void *user_data){
 	while(keep_listen){
 		client_pid=-1;
 		if(sock<0&&client_hostname){
+#ifdef MAOS_DISABLE_SCHEDULER
+			error("Must use socket when scheduler is disabled\n");
+#endif
 			dbg_time("Connecting to %s\n", client_hostname);
 			sock=scheduler_connect(client_hostname);
 			if(sock==-1){
