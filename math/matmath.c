@@ -1501,7 +1501,7 @@ void X(embedd)(X(mat)* restrict out, const XR(mat)* restrict in, const R theta){
    Calculate number of pixels having values larger than or equal to half of
    maximum and convert to diameter.
 
-   For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*X(gauss_width).*/
+   For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*X(gauss_sigma).*/
 R X(fwhm)(X(mat)* A){
 	if(!A) return 0;
 	R hm=0.5*X(max)(A);
@@ -1523,7 +1523,9 @@ void X(gauss_fit)(
 	R* ma, /**<major axis*/
 	R* mb, /**<minor axi*/
 	R* angle, /**<angle*/
-	X(mat)* A, /**<The irradiance (intensity)*/
+	R* amp, /**<Amplitude*/
+	X(mat)**img, /**<Return the fitting image */
+	X(mat)*A, /**<The irradiance (intensity)*/
 	R thres  ///The threshold relative to peak.
 	){
 	long ny=NY(A);
@@ -1544,17 +1546,16 @@ void X(gauss_fit)(
 		if(ma) *ma=0;
 		if(mb) *mb=0;
 		if(angle) *angle=0;
+		if(amp) *amp=0;
 		return;
 	}
 	thres*=Amax;
-	sum=1./sum;
-	sumx*=sum;
-	sumy*=sum;
+	sumx/=sum;
+	sumy/=sum;
 	R sumx2=0, sumy2=0, sumxy=0;
-	sum=0;
 	for(long iy=0; iy<ny; iy++){
 		R y=(R)iy-sumy;
-		OMP_SIMD_R(reduction(+:sumx2, sumy2, sumxy, sum))
+		OMP_SIMD_R(reduction(+:sumx2, sumy2, sumxy))
 		for(long ix=0; ix<nx; ix++){
 			R x=(R)ix-sumx;
 			R Ai=REAL(P(A, ix, iy));
@@ -1562,34 +1563,51 @@ void X(gauss_fit)(
 				sumx2+=Ai*x*x;
 				sumy2+=Ai*y*y;
 				sumxy+=Ai*x*y;
-				sum+=Ai;
 			}
 		}
 	}
-	sum=1./sum;
-	sumx2*=sum;
-	sumy2*=sum;
-	sumxy*=sum;
+	sumx2/=sum;
+	sumy2/=sum;
+	sumxy/=sum;
 	R tmp=sqrt((sumx2-sumy2)*(sumx2-sumy2)+4*(sumxy*sumxy));
 	//equivalent radius with same area is sqrt(ma*mb)
-	if(mr) *mr=2*pow(sumx2*sumy2-sumxy*sumxy,1./4.);
-	if(ma) *ma=sqrt(2*(sumx2+sumy2+tmp));
-	if(mb) *mb=sqrt(2*(sumx2+sumy2-tmp));
+	const R det=sumx2*sumy2-sumxy*sumxy;
+	if(mr) *mr=pow(det, 0.25);
+	if(ma) *ma=sqrt(0.5*(sumx2+sumy2+tmp));
+	if(mb) *mb=sqrt(0.5*(sumx2+sumy2-tmp));
 	if(angle) *angle=0.5*atan2(2*sumxy,(sumx2-sumy2));
+	if(amp) *amp=sum/(2.*M_PI*sqrt(det));
+	if(img){
+		X(init)(img, nx, ny);
+		// inverse covariance
+        R inv00 =  sumy2 / det;
+        R inv11 =  sumx2 / det;
+        R inv01 = -sumxy / det;
+
+        for(long iy=0; iy<ny; iy++){
+            R y = (iy - sumy);
+            for(long ix=0; ix<nx; ix++){
+                R x = (ix - sumx);
+                R Q = inv00*x*x + 2*inv01*x*y + inv11*y*y;
+                P(*img, ix, iy) = *amp * exp(-0.5 * Q);
+            }
+        }
+
+	}
 }
 /**
- * A convenient wrapper
+ * Determine the sigma_r of 2d gauss function.
  * */
-R X(gauss_width)(X(mat)*A, R thres){
+R X(gauss_sigma)(X(mat)*A, R thres){
 	R mr;
-	X(gauss_fit)(&mr, 0, 0, 0, A, thres);
+	X(gauss_fit)(&mr, 0, 0, 0, 0, NULL, A, thres);
 	return mr;
 }
 /**
  * Use gauss fit to compute fwhm
  * */
 R X(fwhm_gauss)(X(mat)* A){
-	return X(gauss_width)(A, 0.01)*1.17741;
+	return X(gauss_sigma)(A, 0.01)*2*1.17741;
 }
 #ifndef COMP_COMPLEX
 struct enc_t{

@@ -95,8 +95,8 @@
     void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
     void X(embedd)(X(mat) *restrict A, const XR(mat) *restrict B, const R theta); \
     R X(fwhm)(X(mat) *A);						\
-    void X(gauss_fit)(R*mr, R*ma, R*mb, R*theta, X(mat)*A, R thres);\
-    R X(gauss_width)(X(mat)*A, R thres);\
+    void X(gauss_fit)(R*mr, R*ma, R*mb, R*theta, R*amp, X(mat)**img, X(mat)*A, R thres);\
+    R X(gauss_sigma)(X(mat)*A, R thres);\
     R X(fwhm_gauss)(X(mat) *A);\
     X(mat) *X(enc)(const X(mat) *A, const X(mat) *dvec, int type, int nthread) CHECK_UNUSED_RESULT;	\
 	typedef T (*X(minsearch_fun))(const T *x, void *info);		\

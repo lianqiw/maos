@@ -218,8 +218,11 @@ void maos_setup(const parms_t* parms){
 	/*compute diffraction limited PSF. Save to output directory.*/
 		dmat* iopdevl=dnew(aper->locs->nloc, 1);
 		ccell* psf2s=0;
+		const int nwvl_save=aper->locfft->wvl->nx; 
+		aper->locfft->wvl->nx=1;//DL psf is independent of wavelength except spatial scaling.
 		locfft_psf(&psf2s, aper->locfft, iopdevl, parms->evl.psfsize, 0);
-		const int nwvl=parms->evl.nwvl;
+		aper->locfft->wvl->nx=nwvl_save;
+		const int nwvl=NX(psf2s);
 		dcell* evlpsfdl=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cabs22d(&P(evlpsfdl,iwvl), 1, P(psf2s,iwvl), 1);

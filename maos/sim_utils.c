@@ -1880,7 +1880,7 @@ void print_progress(sim_t* simu){
 			const char *hol="Step     #  Open Loop  PR TT  ";
 			const char *hoa="On Axis PR    TT Field  PR     TT ";
 			const char *hsp="Split High     TT    Low    ";
-			const char *htm=" Timing ";
+			const char *htm=" Timing";
 			info2("%s%s%s%s\n", hol, !parms->sim.evlol?hoa:"", (!parms->sim.evlol&&parms->evl.split)?hsp:"", LOG_LEVEL<1?htm:"");
 		}
 		info2("Step %5d: OL%7.1f %6.1f",
@@ -1906,7 +1906,7 @@ void print_progress(sim_t* simu){
 			}
 		}
 		if(LOG_LEVEL<1){//dbg is inactive
-			info2(" nm %6.3fs\n", status->mean*tkmean);
+			info2(" nm %6.3fs %ldh%02ldm\n", status->mean*tkmean, resth, restm);
 		}else{
 			info2(" nm\n");
 		}

@@ -34,8 +34,8 @@ void drectangle(dmat *A, double cx, double cy, double rx, double ry, double thet
 dsp* chol_factorize2(lmat** Cp, const dsp* A_in);
 void addpath(const char* path);
 void rmpath(const char* path);
-double dgauss_width(dmat* A, double thres);
-void dgauss_fit(double* mr, double* ma, double* mb, double* theta, dmat* A, double thres);
+double dgauss_sigma(dmat* A, double thres);
+double dfwhm_gauss(dmat* A);
 dmat* dpinv(dmat*A, cell *wt);
 dmat* dpinv2(dmat*A, cell *wt, double thres1, double thres2);
 dcell* dcellpinv(dcell *A, cell *wt);
