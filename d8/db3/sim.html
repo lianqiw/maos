@@ -252,7 +252,7 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">evl.psfhist = 0   #output history of the complex psf (a lot of storage).</div>
 <div class="line">evl.psfmean = 0   #output time averaged psf after incrementally averaging this many time steps.</div>
 <div class="line">                  #1: only save in the end. n: save average every n steps (no reset after saving)</div>
-<div class="line">evl.psfol   = 0   #compute open loop psf in additional to closed loop PSF.</div>
+<div class="line">evl.psfol   = 1   #compute open loop psf in additional to closed loop PSF.</div>
 <div class="line">                  #0: disable 1: on axis direction only, 2: all directions and average them.</div>
 <div class="line">evl.psf     = [1] #Include this direction if psf is computed. 1 or nevl elements. 1: regular, 2: ngs mode removed in ahst. 3: both.</div>
 <div class="line">evl.pttr    = [0] #remove p/t/t in wavefront OPD before computing PSF or covariance.</div>
@@ -283,6 +283,7 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">dm.actfloat = [&quot;&quot;] #file containing floating actuators. nx2 coordinate</div>
 <div class="line">dm.actstuck = [&quot;&quot;] #file containing stuck actuators. nx2 coordinate. or nx3 with third column the stuck position (in opd).</div>
 <div class="line">dm.dratio   = [1]  #telescope diameter to DM diameter ratio (beam angle magnification factor). Used to scale DM OPD correction.</div>
+<div class="line">dm.aoi      = [0]  #Angle of incidence in degree for ray tracing input </div>
 <div class="line">dm.nmod     = [0.96] #Maxium number of modes in modal controller for each DM. 0: all available modes. &lt;1: as a fraction of dm.order^2*pi/4. &gt;1: actual number.</div>
 <div class="line"> </div>
 <div class="line">#Distortion parameters</div>

@@ -252,6 +252,7 @@ var parms_8h =
       [ "iastroke", "d4/d38/parms_8h.html#ab49b483f1b6a14f8be562605833c9522", null ],
       [ "strokescale", "d4/d38/parms_8h.html#ad6415fdca79642e38adfb6f1116a8552", null ],
       [ "dratio", "d4/d38/parms_8h.html#ad852fb1e8d8077f26ac79017bcee1027", null ],
+      [ "aoi", "d4/d38/parms_8h.html#aad72531466d66d83f0e1a70b318c8e1c", null ],
       [ "ht", "d4/d38/parms_8h.html#a3ed9dd9f61090feb63e218f79a58a360", null ],
       [ "dx", "d4/d38/parms_8h.html#a68f83e1a2074710313580b7b171861f8", null ],
       [ "ar", "d4/d38/parms_8h.html#a46ac70e6a9a415545a16d3c5f5a6ba57", null ],

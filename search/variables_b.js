@@ -8,7 +8,7 @@ var searchData=
   ['maxlen_5',['maxlen',['../de/d28/draw_8h.html#ac21e46b3e42072d5401f11d728402070',1,'plot_opts']]],
   ['maxthread_6',['MAXTHREAD',['../da/d42/process_8h.html#aaf201d9c154f29dd2853b04a1ec9533f',1,'process.c']]],
   ['mbinv_7',['Mbinv',['../d6/d94/maos_2types_8h.html#ad0e43cd4a0ccf988001caf1fb04b8cbb',1,'fdpcg_t']]],
-  ['mcc_8',['mcc',['../d6/d94/maos_2types_8h.html#a58140cc6c4f3719762527d79564ae797',1,'ngsmod_t::MCC'],['../d6/d94/maos_2types_8h.html#a14fef4d4fa3e3e07f6aab1dacd9cdda5',1,'llt_t::mcc']]],
+  ['mcc_8',['mcc',['../d6/d94/maos_2types_8h.html#a14fef4d4fa3e3e07f6aab1dacd9cdda5',1,'llt_t::mcc'],['../d6/d94/maos_2types_8h.html#a58140cc6c4f3719762527d79564ae797',1,'ngsmod_t::MCC']]],
   ['mccp_9',['MCCP',['../d6/d94/maos_2types_8h.html#a19b11645d2b5beb485409dc0d18a3416',1,'ngsmod_t']]],
   ['mccu_10',['MCCu',['../d6/d94/maos_2types_8h.html#ac538ab602aefc638055c95ae48c7795e',1,'ngsmod_t']]],
   ['mdata_11',['Mdata',['../d3/dc7/muv_8h.html#aa30689f9fb9ae039a0fc04175ba7134d',1,'muv_t']]],

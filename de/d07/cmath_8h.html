@@ -446,10 +446,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cclip</b> (<a class="e
 <tr class="separator:a0c0812b61d20a447fef4f0ab28c9eda0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f54f4a239c77745288e040294f72322" id="r_a0f54f4a239c77745288e040294f72322"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#a0f54f4a239c77745288e040294f72322">cfwhm</a> (<a class="el" href="../../db/d16/structcmat.html">cmat</a> *A)</td></tr>
 <tr class="separator:a0f54f4a239c77745288e040294f72322"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a027a0fda383088c50bcebac7b6bf2a89" id="r_a027a0fda383088c50bcebac7b6bf2a89"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#a027a0fda383088c50bcebac7b6bf2a89">cgauss_fit</a> (real *mr, real *<a class="el" href="../../d0/d44/class_num_array.html">ma</a>, real *<a class="el" href="../../d0/d44/class_num_array.html">mb</a>, real *<a class="el" href="../../d0/d44/class_num_array.html">theta</a>, <a class="el" href="../../db/d16/structcmat.html">cmat</a> *A, real thres)</td></tr>
-<tr class="separator:a027a0fda383088c50bcebac7b6bf2a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ab4f2a4155bba498f4a5c54a0c5fc1d" id="r_a2ab4f2a4155bba498f4a5c54a0c5fc1d"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#a2ab4f2a4155bba498f4a5c54a0c5fc1d">cgauss_width</a> (<a class="el" href="../../db/d16/structcmat.html">cmat</a> *A, real thres)</td></tr>
-<tr class="separator:a2ab4f2a4155bba498f4a5c54a0c5fc1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb5d6967a5f55d6f5f1d46779b7d19fb" id="r_adb5d6967a5f55d6f5f1d46779b7d19fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d0/d44/class_num_array.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#adb5d6967a5f55d6f5f1d46779b7d19fb">cgauss_fit</a> (real *mr, real *<a class="el" href="../../d0/d44/class_num_array.html">ma</a>, real *<a class="el" href="../../d0/d44/class_num_array.html">mb</a>, real *<a class="el" href="../../d0/d44/class_num_array.html">theta</a>, real *amp, <a class="el" href="../../db/d16/structcmat.html">cmat</a> **<a class="el" href="../../d0/d44/class_num_array.html">img</a>, <a class="el" href="../../db/d16/structcmat.html">cmat</a> *A, real thres)</td></tr>
+<tr class="separator:adb5d6967a5f55d6f5f1d46779b7d19fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6ea4950c393bbece5977087a2d15ded" id="r_ac6ea4950c393bbece5977087a2d15ded"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#ac6ea4950c393bbece5977087a2d15ded">cgauss_sigma</a> (<a class="el" href="../../db/d16/structcmat.html">cmat</a> *A, real thres)</td></tr>
+<tr class="separator:ac6ea4950c393bbece5977087a2d15ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf79f8d7196bd24f3f403257e6274341" id="r_acf79f8d7196bd24f3f403257e6274341"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d07/cmath_8h.html#acf79f8d7196bd24f3f403257e6274341">cfwhm_gauss</a> (<a class="el" href="../../db/d16/structcmat.html">cmat</a> *A)</td></tr>
 <tr class="separator:acf79f8d7196bd24f3f403257e6274341"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29ec226764f3514c583f062e9d17f015" id="r_a29ec226764f3514c583f062e9d17f015"><td class="memItemLeft" align="right" valign="top"><a id="a29ec226764f3514c583f062e9d17f015" name="a29ec226764f3514c583f062e9d17f015"></a>
@@ -4096,14 +4096,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>csptrace</b> (<a clas
       </table>
 </div><div class="memdoc">
 <p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
-<p>For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*CX(gauss_width).</p>
+<p>For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*CX(gauss_sigma).</p>
 <p>Calculate number of pixels having values larger than or equal to half of maximum and convert to diameter.</p>
-<p>For more accurate calculation of Gaussian beams, use the sqrt(2*log(2))*ZX(gauss_width). </p>
+<p>For more accurate calculation of Gaussian beams, use the 2*sqrt(2*log(2))*ZX(gauss_sigma). </p>
 
 </div>
 </div>
-<a id="a027a0fda383088c50bcebac7b6bf2a89" name="a027a0fda383088c50bcebac7b6bf2a89"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a027a0fda383088c50bcebac7b6bf2a89">&#9670;&#160;</a></span>cgauss_fit()</h2>
+<a id="adb5d6967a5f55d6f5f1d46779b7d19fb" name="adb5d6967a5f55d6f5f1d46779b7d19fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb5d6967a5f55d6f5f1d46779b7d19fb">&#9670;&#160;</a></span>cgauss_fit()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -4135,6 +4135,18 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>csptrace</b> (<a clas
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>amp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../db/d16/structcmat.html">cmat</a> **&#160;</td>
+          <td class="paramname"><em>img</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="../../db/d16/structcmat.html">cmat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
@@ -4158,6 +4170,8 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>csptrace</b> (<a clas
     <tr><td class="paramname">ma</td><td>major axis  </td></tr>
     <tr><td class="paramname">mb</td><td>minor axi  </td></tr>
     <tr><td class="paramname">angle</td><td>angle  </td></tr>
+    <tr><td class="paramname">amp</td><td>Amplitude  </td></tr>
+    <tr><td class="paramname">img</td><td>Return the fitting image  </td></tr>
     <tr><td class="paramname">A</td><td>The irradiance (intensity)  </td></tr>
     <tr><td class="paramname">thres</td><td>The threshold relative to peak. </td></tr>
   </table>
@@ -4166,14 +4180,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>csptrace</b> (<a clas
 
 </div>
 </div>
-<a id="a2ab4f2a4155bba498f4a5c54a0c5fc1d" name="a2ab4f2a4155bba498f4a5c54a0c5fc1d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2ab4f2a4155bba498f4a5c54a0c5fc1d">&#9670;&#160;</a></span>cgauss_width()</h2>
+<a id="ac6ea4950c393bbece5977087a2d15ded" name="ac6ea4950c393bbece5977087a2d15ded"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6ea4950c393bbece5977087a2d15ded">&#9670;&#160;</a></span>cgauss_sigma()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real cgauss_width </td>
+          <td class="memname">real cgauss_sigma </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="../../db/d16/structcmat.html">cmat</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
@@ -4191,7 +4205,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>csptrace</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A convenient wrapper </p>
+<p>Determine the sigma_r of 2d gauss function. </p>
 
 </div>
 </div>
