@@ -225,7 +225,7 @@ case "$host_os" in
 		system="apple"
 		ldsuffix="dylib"
 		if test "$enable_release" = "yes" ;then
-			CFLAGS+=" -mmacosx-version-min=10.13" #_open_memstream is only available on macos 10.13 and later
+			CFLAGS+=" -mmacosx-version-min=11.0" #_open_memstream is only available on macos 10.13 and later
 		fi
 		if test "$host_cpu" = "aarch64" ;then
 			libsuffix=a64 #arm mac

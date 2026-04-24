@@ -362,6 +362,14 @@ char* find_exe(const char* name){
 	}
 	const char* dirs[]={BUILDDIR, "/usr", "/usr/local", "/opt", "/opt/homebrew"};
 	for(unsigned int i=0; i<sizeof(dirs)/sizeof(dirs[0]); i++){
+#if defined(__APPLE__)
+        char* fnapp=stradd(dirs[i], "/bin/", name, ".app/Contents/MacOS/", name, NULL);
+        if(exist(fnapp)){
+			return fnapp;
+		}else{
+			free(fnapp);
+		}
+#endif
 		char* fn=stradd(dirs[i], "/bin/", name, NULL);
 		if(exist(fn)){
 			return fn;

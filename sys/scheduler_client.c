@@ -84,7 +84,7 @@ PNEW(mutex_hosts);
 void parse_host(const char* line /**<contains hostname[=hostaddr:port]*/
 ){
 	static size_t memhost=0;
-	if(strlen(line)>0&&line[0]!='#'){
+	if(strlen(line)>0 && line[0]!='\n' && line[0]!='#'){
 		LOCK(mutex_hosts);
 		if(memhost<(size_t)(nhost+1)){
 			memhost+=10;

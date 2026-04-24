@@ -22,9 +22,9 @@ if ! which autoreconf; then
 		case "`uname`" in
 		Linux)
 			if which apt; then
-				sudo apt install $common gcc git tar bzip2 libfftw3-dev liblapack3 libcmocka-dev 
+				sudo apt-get install -m $common gcc git tar bzip2 zlib1g libfftw3-dev libopenblas0-openmp libopenblas0-pthread || echo 'Please install manually'
 			elif which dnf; then
-				sudo dnf install $common gcc git tar bzip2 fftw-devel lapack libcmocka-devel 
+				sudo dnf install $common gcc git tar bzip2 zlib fftw-devel openblas-openmp openblas-threads || echo 'Please install manually'
 			else
 				echo "System: Linux. Not sure how to install the packages."
 			fi
