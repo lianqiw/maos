@@ -229,9 +229,9 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 		}
 
 		//LOCK(mutex_sch);
-		if(pid>0 && !strcmp(sep, "REMOVE")){
+		if(!strcmp(sep, "REMOVE")){
 			runned_remove(pid);
-		} else if(pid>0 && !strcmp(sep, "KILL")){
+		} else if(!strcmp(sep, "KILL")){
 			info_time("HTTP client send term signal to %5d term signal.\n", pid);
 			running_kill(pid);
 		} else if(pid>0 && !strcmp(sep, "MONITOR")){
