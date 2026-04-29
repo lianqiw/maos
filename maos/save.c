@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "save.h"
-#include "ahst.h"
 #include "sim_utils.h"
 #include "sim.h"
 /**
@@ -353,10 +352,11 @@ void plot_gradoff(sim_t *simu, int iwfs){
 		}
 	}
 }
-void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
+void plot_psf(const_anycell _psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
 	dmat* psftemp=NULL;
+	dmat* psfreal=NULL;
 	const char* title, * tab;
-	for(int iwvl=0; iwvl<NX(psf2s); iwvl++){
+	for(int iwvl=0; iwvl<NX(_psf2s.c); iwvl++){
 		switch(type){
 			case 2:
 				title="Science Diffraction Limited PSF";
@@ -377,11 +377,17 @@ void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, 
 		char tabname[64];
 		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
 		if(draw_current(psfname, tabname)){
-			if(psftemp&&NX(psftemp)!=P(psf2s,iwvl)->nx){
-				dfree(psftemp);
+			cell* c=P(_psf2s.c, iwvl);
+			if(dmat_cast(c)){
+				psfreal=dmat_cast(c);
+			}else if(cmat_cast(c)){
+				if(psftemp&&NX(psftemp)!=c->nx){
+					dfree(psftemp);
+				}
+				cabs22d(&psftemp, 0, cmat_cast(c), 1);
+				psfreal=psftemp;
 			}
-			cabs22d(&psftemp, 0, P(psf2s,iwvl), 1);
-			draw(psfname, (plot_opts){.image=psftemp,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
+			draw(psfname, (plot_opts){.image=psfreal,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
 		}
 	}
 	dfree(psftemp);

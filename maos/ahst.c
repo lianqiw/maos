@@ -30,8 +30,8 @@
   multiply to 2R to get zernike mode.
   2010-07-23: Added tikholnov regularization to Wa.
 */
-#include "common.h"
 #include "ahst.h"
+#include "utils.h"
 /*
    2017-09-11: When there is misregistration/distortion between the DM and
    science pupil, the assumed NGS mode on DM remain intact, but the influence on

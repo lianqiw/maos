@@ -22,9 +22,10 @@
 
    Contains main simulation blocks.
 */
+#include "common.h"
 void *perfevl_ievl(thread_t *info);
 void *perfevl(sim_t *simu);
-void plot_psf(ccell *psf2s, const char *psfname, int type, int ievl, dmat *wvl, int zlog, real psfmin);
+void plot_psf(const_anycell psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin);
 void prep_cachedm(sim_t *simu);
 void calc_cachedm(sim_t *simu);
 void filter_dm(sim_t *simu);

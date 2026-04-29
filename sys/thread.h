@@ -28,9 +28,6 @@
 */
 //#include <stdatomic.h> //_Atomic with OPENMP is not supported in compilares <=6. We use builtin atomic functions instead.
 #include "common.h"
-#if defined(__cplusplus) && !USE_CPP
-} //escaping extern "C"
-#endif
 #include <pthread.h>
 #if _OPENMP >= 201511
 #include <omp.h>
@@ -38,7 +35,7 @@
 #undef _OPENMP
 #endif
 #if defined(__cplusplus) && !USE_CPP
-extern "C"{//re-entering extern "C"
+extern "C"{
 #endif
 typedef struct thread_t thread_t;
 typedef void *(*thread_fun)(void *);
@@ -280,4 +277,7 @@ dbg("tmin=%u, tmax=%u ms\n", (counter)->tmin, (counter)->tmax);(counter)->tmin=0
 		}\
 	}
 #endif //#if _OPENMP
+#if defined(__cplusplus) && !USE_CPP
+}
+#endif
 #endif //ifndef AOS_LIB_THREAD_H

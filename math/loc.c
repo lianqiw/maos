@@ -210,7 +210,6 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 		UNLOCK(maplock);
 		return;
 	}
-	((loc_t*)loc)->npad=npad;/*just record the information. */
 	real xmin, xmax, ymin, ymax;
 	dvecmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
 	dvecmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -230,11 +229,18 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 			error("Specified size %dx%d is too small, need at least %ldx%ld\n",
 				nx, ny, map_nx, map_ny);
 		}
-		xmin-=(nx-map_nx)/2*loc->dx;
-		ymin-=(ny-map_ny)/2*loc->dy;
+		if(npad<(nx-map_nx)/2){
+			npad=(nx-map_nx)/2;
+		}
+		if(npad>(ny-map_ny)/2){
+			npad=(ny-map_ny)/2;
+		}
+		xmin-=((nx-map_nx)/2)*loc->dx;
+		ymin-=((ny-map_ny)/2)*loc->dy;
 		map_nx=nx;
 		map_ny=ny;
 	}
+	((loc_t*)loc)->npad=npad;/*record the information. */
 	((loc_t*)loc)->map=mapnew(map_nx, map_ny, loc->dx, loc->dy);
 	loc->map->iac=loc->iac;
 	loc->map->dratio=loc->dratio;
@@ -342,13 +348,17 @@ if(dnx>=mnx){/*output array is larger*/\
 /**
   Embed in into dest according to map defined in loc->map. The two arrays are assumed to be concentric.
 */
-void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat in, int expanded, int add){
-	if(!loc||!_dest.dm||!in.dm) return;
+void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat _in, int expanded, int add){
+	if(!loc||!_dest.dm||!_in.dm) return;
 	if(!loc->map){
 		loc_create_map((loc_t*)loc);
 	}
 	map_t *map=loc->map;
-	dmat *dest=_dest.dm;
+	dmat *dest=dmat_cast(_dest.dm);
+	dmat *in=dmat_cast(_in.dm);
+	if(!dest || !in){
+		error("Needs implementation for these types: %u %u", _dest.dm->id, _in.dm->id);
+	}
 	if(!dest->nx||!dest->ny){
 		dresize(dest, map->nx-loc->npad*2, map->ny-loc->npad*2);
 	}
@@ -356,7 +366,7 @@ void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat in, int expanded, 
 	CALC_EMBED_OFFSET(doffx, moffx, mx, dest->nx, map->nx);
 	CALC_EMBED_OFFSET(doffy, moffy, my, dest->ny, map->ny);
 	if(!add) dset(dest, NAN);
-	const real *pin=P(in.dm)-1;//iphi count from 1
+	const real *pin=P(in)-1;//iphi count from 1
 	for(int iy=0; iy<my; iy++){
 		for(int ix=0; ix<mx; ix++){
 			long iphi=P(map, ix+moffx, iy+moffy);

@@ -27,5 +27,4 @@ void save_dmreal(sim_t *simu);
 void draw_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type);
 void draw_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type);
 void plot_gradoff(sim_t *simu, int iwfs);
-void plot_psf(ccell* psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin);
 #endif

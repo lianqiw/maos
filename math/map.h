@@ -17,7 +17,6 @@
 */
 #ifndef AOS_LIB_MAP_H
 #define AOS_LIB_MAP_H
-#include "mathdef.h"
 #include "type.h"
 /**
    \file map.h

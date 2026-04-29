@@ -21,7 +21,8 @@
 
 #ifndef __AOS_UTILS_H
 #define __AOS_UTILS_H
-#include "common.h"
+#include "parms.h"
+#include "types.h"
 
 void plotloc(const char *fig, const parms_t *parms, 
 	     loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);

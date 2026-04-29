@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "mathdef.h"
 #include "map.h"
 /**
  * @brief Convert a dmat in place to map object. Ensure that the type is properly initialized

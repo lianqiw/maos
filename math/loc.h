@@ -17,7 +17,6 @@
 */
 #ifndef AOS_LIB_LOC_H
 #define AOS_LIB_LOC_H
-#include "mathdef.h"
 #include "type.h"
 /**
    \file loc.h
