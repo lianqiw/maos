@@ -1235,12 +1235,16 @@ static void readcfg_atmr(parms_t *parms){
 	if(NX(parms->atmr.ht)==0){
 		dcp(&parms->atmr.ht,parms->atm.ht);
 	}
-	if(NX(parms->atmr.wt)==0){
-		dcp(&parms->atmr.wt,parms->atm.wt);
-	} else{
-		if(NX(parms->atmr.wt)!=NX(parms->atmr.ht)){
-			error("atmr.wt length must match atmr.ht\n");
+	if(PN(parms->atmr.wt)==0 || dsum(parms->atmr.wt)==0){
+		dinit(&parms->atmr.wt, PN(parms->atmr.ht), 1);
+		if(PN(parms->atm.ht)<PN(parms->atmr.ht)){
+			warning("atmr.ht shall not have more entries than atmr.ht\n");
 		}
+		dsp* hbin=mkhbin1d(parms->atm.ht, parms->atmr.ht);
+		dspmm(&parms->atmr.wt, hbin, parms->atm.wt, "nn", 1);
+		dspfree(hbin);
+	}else if(NX(parms->atmr.wt)!=NX(parms->atmr.ht)){
+		error("atmr.wt length must match atmr.ht\n");
 	}
 	parms->atmr.nps=NX(parms->atmr.ht);
 	parms->atmr.os=readcfg_lmat(parms->atmr.nps,1,"atmr.os");

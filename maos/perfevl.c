@@ -518,7 +518,7 @@ static void perfevl_save(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const int isim=simu->perfisim;
 	if(parms->evl.psfmean&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-		info2("Step %d: Output PSF (cumulative average).\n", isim);
+		info2("Step %5d: Output PSF (cumulative average).\n", isim);
 		int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 		const real scale=1./(real)nacc;
 		if(!parms->sim.evlol){
@@ -563,7 +563,7 @@ static void perfevl_save(sim_t* simu){
 		}
 	}
 	if(parms->evl.cov&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
-		info2("Step %d: Output opdcov (cumulative average)\n", isim);
+		info2("Step %5d: Output opdcov (cumulative average)\n", isim);
 		int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 		const real scale=1./(real)nacc;
 		dcellscale(simu->evlopdcov, scale);
@@ -586,7 +586,7 @@ static void perfevl_save(sim_t* simu){
 		}
 	}
 	if(parms->evl.opdmean&&CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdmean)){
-		info2("Step %d: Output opdmean (cumulative average)\n", isim);
+		info2("Step %5d: Output opdmean (cumulative average)\n", isim);
 		int nacc=(simu->perfisim+1-parms->evl.psfisim);//total accumulated.
 		const real scale=1./(real)nacc;
 		dcellscale(simu->evlopdmean, scale);

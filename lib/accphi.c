@@ -253,7 +253,21 @@ void prop_range(propdata_t* propdata, long start, long end){
 		dbg("Layer is above guide star\n");
 		return;
 	}
-	switch(index){
+	if(propdata->bin){
+		switch(index){
+		case 7:
+			if(start!=0 || (end!=0 && end!=propdata->locout->nloc)){
+				error("Binning only support full range.\n");
+			}else{
+				prop_nongrid_bin(propdata->locin, propdata->phiin,
+				propdata->locout, propdata->phiout,
+				alpha, displacex, displacey, scale);
+			}
+			break;
+		default:
+			error("Binning is only implemented for nongrid.\n");
+		}
+	}else switch(index){
 	case 1:
 		prop_grid_pts(propdata->mapin, propdata->phiin?propdata->phiin:P(propdata->mapin), propdata->ptsout, propdata->phiout,
 			alpha, displacex, displacey,

@@ -46,6 +46,7 @@ typedef struct propdata_t{
     int wrap;
 	int transpose;
     int nooptim;/*disable optim. */
+    int bin;/*1: use binning operation instead of interpolation (for fine to coarse interpolation)*/
 }propdata_t;
 int prop_prep(real* displacex, real* displacey,  real *alpha, real* scale, propdata_t* propdata);
 void* prop_thread(thread_t *data);/*A unified wrapper */

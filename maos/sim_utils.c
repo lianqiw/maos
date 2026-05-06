@@ -1902,7 +1902,7 @@ void print_progress(sim_t* simu){
 			}
 			extern int NO_EVL;
 			if(!NO_EVL&&isinf(P(simu->cle, 0, isim))){
-				error("\nStep %d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
+				error("\nStep %5d: NaN/inf found: cle is %g\n", isim, P(simu->cle, 0, isim));
 			}
 		}
 		if(LOG_LEVEL<1){//dbg is inactive

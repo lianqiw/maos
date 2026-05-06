@@ -128,7 +128,7 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 		if(simu->reconisim<10) nclip0=0;
 		if(nclip>nclip0){
 			nclip0=nclip;
-			info2("step %d DM %d: %d actuators clipped\n",simu->reconisim,idm,nclip);
+			info2("Step %5d DM %d: %d actuators clipped\n",simu->reconisim,idm,nclip);
 		}
 	}
 }
