@@ -188,7 +188,7 @@ dmat* poly2fit(const dmat* in,  /**<[in] input grid. n*2 */
    Calibrate the distortion as measured using interaction matrix.
 */
 dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
-	propdata_t *propdata,
+	propdata_t *propdata,/**<in] See accphi.h */
 	int maxorder       /**<[in] Maximum power of x/y. Negative to limit total power*/
 ){
 	const loc_t *aloc=propdata->locin;

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-	\file dhlist.c Implements a double linked list. Not thread safe.
+	\file dlist.c Implements a double linked list. Not thread safe.
 */
 #include <stdlib.h>
 #include <stdio.h>

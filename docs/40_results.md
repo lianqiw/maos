@@ -2,7 +2,7 @@
 
 \tableofcontents
 
-\section maosres RMS WFE
+# RMS WFE
 
 MAOS provides a few convenient routines to quickly process the simulation
 results and obtain time averaged wavefront error. 
@@ -83,7 +83,7 @@ and cannot handle compressed files conveniently.
 
 There is \c readbin.py in \c scripts folder for reading \c .bin or \c .fits
 files in python. Alternatively, it is also possible to call \c C routines in
-python, including \c readbin and \c writebin as \c read and \c write. To do
+python, including \c read and \c write. To do
 so, first set an environment variable \c MAOS_AOLIB poing to the \c aolib.so
 file in the \c .bin folder in the compiling directory. Then import \c
 scripts/aoslib.py to your python.
@@ -139,7 +139,7 @@ add the suffix when use \c read.
     - \c resp[3,idir]: Closed loop wavefront variance for each science field point in the same format as res[0].
 
 
-## Split tomography
+## Split tomography results
 
 - \c Resclemp_1: LGS/TT/NGS mode wavefront error for each direction.
 
@@ -186,6 +186,16 @@ header.
 
 - \c evlpsfhist_1_ievlx: When \c evl.psfhist is 1, each of these files contains
 the time history of the complex PSF of evaluation direction \f$x\f$.
+
+## Subaperture Pixels
+
+The subaperture pixels can be saved by specifying \c save.setup=1 for models computed during the setup process, and \c save.ints=1 for runtime data. The pixels are grouped by subapertures, with the subaperture ordering defined in \c saloc (see \c powfs0_saloc.bin). 
+
+- \c setup/powfs0_i0.bin: contains the WFS model image used to build matched filter or calibrate CoG.
+- \c wfs0_intsnf_1.bin: contains noise free WFS pixel for every frame. 
+- \c wfs0_intsny_1.bin: contains noisy WFS pixels for every frame. 
+
+The config input \c powfs.bkgrndfn uses the same format. 
 
 ## Other
 

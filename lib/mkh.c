@@ -40,7 +40,8 @@
    |x|>2\end{cases}\f} where c is the nearest neighbor coupling
    frequency. The leading coefficient is to normalize the influence function so
    that it sums to 1.
-
+	
+   @param[in] propdata See accphi.h
  */
 dsp* mkh(propdata_t *propdata){
 	dsp* Hb=mkht(propdata);
@@ -50,13 +51,7 @@ dsp* mkh(propdata_t *propdata){
 }
 /**
    Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout.
-   @param locin		The input grid
-   @param locout	The target grid
-   @param displacex	Shift of the beam at the input grid along x 
-   @param displacey Shift of the beam at the input grid along y
-   @param scale		Scaling of the beam from target to input grid. (scale < 1 if beam is coming from a point source)
-   @param rot		Rotation of the target grid (Clock-wise) (applied before displacex and displacey).
-
+   @param[in] propdata See accphi.h
 */
 dsp* mkht(propdata_t *propdata){
 	const loc_t* locin=propdata->locin;
