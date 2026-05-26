@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
+#define CHECK_INDEX 1
 #include "parms.h"
 #include "mvm_client.h"
 #if USE_CUDA
@@ -825,11 +826,11 @@ static void readcfg_siglev(parms_t *parms){
 		powfs_wvl_tot+=nwvl;
 	}
 
-	dmat *powfs_wvlwts=readcfg_dmat(powfs_wvl_tot, 2, "powfs.wvlwts");
-	dmat *powfs_mag =readcfg_dmat(powfs_wvl_tot, 2, "powfs.mag");
-	dmat *powfs_magb=readcfg_dmat(powfs_wvl_tot, 2, "powfs.magbkgrnd");
-	dmat *telthruput=readcfg_dmat(powfs_wvl_tot, 2, "powfs.telthruput");
-	dmat *atmthruput=readcfg_dmat(powfs_wvl_tot, 2, "powfs.atmthruput");
+	dmat *powfs_wvlwts=readcfg_dmat(powfs_wvl_tot, 1, "powfs.wvlwts");
+	dmat *telthruput=readcfg_dmat(powfs_wvl_tot, 1, "powfs.telthruput");
+	dmat *atmthruput=readcfg_dmat(powfs_wvl_tot, 1, "powfs.atmthruput");
+	dmat *powfs_mag =readcfg_dmat(0, 0, "powfs.mag");
+	dmat *powfs_magb=readcfg_dmat(0, 0, "powfs.magbkgrnd");
 	//specified for wfs overrides numbers set in powfs.
 	dmat *wfs_siglev=readcfg_dmat(0, 0, "wfs.siglev");
 	dmat *wfs_wvlwts=readcfg_dmat(0, 0, "wfs.wvlwts");
@@ -837,19 +838,27 @@ static void readcfg_siglev(parms_t *parms){
 	dmat *bzero     =readcfg_dmat(0, 0, "sim.bzero");//zero magnitude flux at each wavelength.
 	//dmat *wfs_telt=readcfg_dmat(0, 0, "wfs.telthruput");
 	//dmat *wfs_atmt=readcfg_dmat(0, 0, "wfs.atmthruput");
-
+#define check_dimension(name, arr, size, size2)\
+	if(NX(arr)!=0 && NX(arr)!=size && NX(arr)!=size2){\
+		error(name " must be either empty, or a vector of %d entries.\n", size);\
+	}
+	check_dimension("powfs.mag",  powfs_mag,  powfs_wvl_tot, parms->npowfs);
+	check_dimension("powfs.magb", powfs_magb, powfs_wvl_tot, parms->npowfs);
+	check_dimension("wfs.siglev", wfs_siglev, parms->nwfs, parms->nwfs);
+	check_dimension("wfs.wvlwts", wfs_wvlwts, wfs_wvl_tot, parms->nwfs);
+#undef check_dimension
+	if(PN(wfs_siglev) && (PN(powfs_mag) || PN(wfs_mag))){
+		warning("When both wfs.siglev and powfs.mag or wfs.mag are set, the latter takes precedence. \n");
+	}
+	if(PN(wfs_mag) && PN(powfs_mag)){
+		warning("When both powfs.mag and wfs.mag are set, the latter takes precedence. \n");
+	}
+	if(PN(wfs_wvlwts) && (PN(powfs_mag)||PN(wfs_mag))){
+		warning("When both wfs.wvlwts and powfs.mag or wfs.mag are set, the latter takes precedence. \n");
+	}
 	const real cosz=cos(parms->sim.za);
 	const real secz=1./cosz;
-
 	int siglev_shared=1;//all wfs in this power share the same siglev and wvlwts.
-#define check_dimension(name, arr, size)\
-	if(NX(arr)!=0 && NX(arr)!=size){\
-		error(name " must be either empty or a vector of %d entries.\n", size);\
-	}
-	check_dimension("wfs.siglev", wfs_siglev, parms->nwfs);
-	check_dimension("wfs.wvlwts", wfs_wvlwts, wfs_wvl_tot);
-	check_dimension("wfs.mag",    wfs_mag,    wfs_wvl_tot);
-#undef check_dimension
 	/*if(dsum(wfs_mag)>0||dsum(powfs_mag)>0){
 		info("When both wfs.mag and powfs.mag are specified, wfs.mag takes precedence\n");
 	} else{
@@ -869,12 +878,15 @@ static void readcfg_siglev(parms_t *parms){
 			real bkgrnd_mag=0;
 			if(PN(wfs_mag) || PN(powfs_mag) || PN(powfs_magb)){
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					const real mag=(PN(wfs_mag)&&P(wfs_mag, wfs_wvl_count+iwvl))?P(wfs_mag, wfs_wvl_count+iwvl):P(powfs_mag, powfs_wvl_count+iwvl);//do not scale by cosz. It is scaled later in postproc_za.
-					const real magb=PN(powfs_magb)?P(powfs_magb, powfs_wvl_count+iwvl):0;
+#define INDEX_WFS(wfs_mag) PN(wfs_mag)==parms->nwfs?P(wfs_mag, iwfs):(PN(wfs_mag)==wfs_wvl_tot?P(wfs_mag, wfs_wvl_count+iwvl):0)
+#define INDEX_POWFS(powfs_mag) PN(powfs_mag)==parms->npowfs?P(powfs_mag, ipowfs):(PN(powfs_mag)==powfs_wvl_tot?P(powfs_mag, powfs_wvl_count+iwvl):0)
+					//obtain magnitude from wfs.mag if exists or powfs.mag.
+					const real mag_wfs=INDEX_WFS(wfs_mag);
+					const real mag_powfs=INDEX_POWFS(powfs_mag);
+					const real mag=mag_wfs?mag_wfs:mag_powfs;
+					const real magb=INDEX_POWFS(powfs_magb);
 					if(!mag && !magb) continue;//mag==0 is ignored
-					const real telt=P(telthruput, powfs_wvl_count+iwvl);
-					const real atmt=P(atmthruput, powfs_wvl_count+iwvl);
-					const real thruput=telt*pow(atmt, secz); //total throughput
+					const real thruput=P(telthruput, powfs_wvl_count+iwvl)*pow(P(atmthruput, powfs_wvl_count+iwvl), secz); //total throughput
 					const real dsa=parms->powfs[ipowfs].dsa;
 					const real wvl=P(parms->powfs[ipowfs].wvl, iwvl);
 					if(mag){
@@ -905,9 +917,6 @@ static void readcfg_siglev(parms_t *parms){
 			}
 			if(siglev_mag){//use siglev and wvlwts from magnitude
 				parms->wfs[iwfs].siglev=siglev_mag;
-				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					P(parms->wfs[iwfs].wvlwts, iwvl)/=siglev_mag;
-				}
 				dbg("wfs %d siglev %g is from magnitude\n", iwfs, parms->wfs[iwfs].siglev);
 			}else{//use supplied siglev and wvlwts
 				if(NX(wfs_siglev)==0||!P(wfs_siglev, iwfs)){
@@ -918,7 +927,7 @@ static void readcfg_siglev(parms_t *parms){
 					dbg("wfs %d siglev %g is from wfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
 				}
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					real wvlwti=1;
+					real wvlwti=0;
 					if(nwvl>1){
 						if(NX(wfs_wvlwts)){
 							wvlwti=P(wfs_wvlwts, wfs_wvl_count+iwvl);
@@ -926,20 +935,21 @@ static void readcfg_siglev(parms_t *parms){
 						if(!wvlwti && NX(powfs_wvlwts)){
 							wvlwti=P(powfs_wvlwts, powfs_wvl_count+iwvl);
 						}
-						if(!wvlwti){
-							wvlwti=1./nwvl;//default to 1/nwvl;
-						}
 					}
-					P(parms->wfs[iwfs].wvlwts, iwvl)=wvlwti;
+					P(parms->wfs[iwfs].wvlwts, iwvl)=wvlwti?wvlwti:1;
+				}
+			}
+			dnormalize_sum(parms->wfs[iwfs].wvlwts, 1);
+			if(iwfs!=iwfs0){
+				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					if(fabs(P(parms->wfs[iwfs0].wvlwts, iwvl)-P(parms->wfs[iwfs].wvlwts, iwvl))>1e-3){
 						wvlwts_diff=1;
 						siglev_shared=0;
 					}
 				}
-				dnormalize_sum(parms->wfs[iwfs].wvlwts, 1);
-			}
-			if(fabs(parms->wfs[iwfs].siglev-parms->wfs[iwfs0].siglev)>EPS){
-				siglev_shared=0;
+				if(fabs(parms->wfs[iwfs].siglev-parms->wfs[iwfs0].siglev)>EPS){
+					siglev_shared=0;
+				}
 			}
 			siglev_sum+=parms->wfs[iwfs].siglev;
 			wfs_wvl_count+=nwvl;
@@ -955,7 +965,17 @@ static void readcfg_siglev(parms_t *parms){
 		}else{
 			dcp(&parms->powfs[ipowfs].wvlwts, parms->wfs[iwfs0].wvlwts);
 		}
-		
+		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
+
+		if(!siglev_shared){
+			parms->powfs[ipowfs].siglev=siglev_sum/parms->powfs[ipowfs].nwfs;//update to the average of all wfs in this powfs.
+		}
+		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);
+		for(int jwfs=0; jwfs<NX(parms->powfs[ipowfs].siglevs); jwfs++){
+			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			P(parms->powfs[ipowfs].siglevs,jwfs)=parms->wfs[iwfs].siglev*MAX(1,parms->powfs[ipowfs].dtrat);
+		}
+		dbg3("powfs[%d].siglevs is %ldx1\n",ipowfs,NX(parms->powfs[ipowfs].siglevs));
 		//parms->powfs[ipowfs].wvlmean=ddot(parms->powfs[ipowfs].wvl, parms->wfs[iwfs0].wvlwts)/dsum(parms->wfs[iwfs0].wvlwts);
 		if(parms->powfs[ipowfs].lo){
 			real nembed=2;
@@ -969,26 +989,14 @@ static void readcfg_siglev(parms_t *parms){
 				dbg("powfs[%d].wvlmean is set to %g based on average.\n", ipowfs, parms->powfs[ipowfs].wvlmean);
 			}
 		}
-		
 		powfs_wvl_count+=nwvl;
-		dbg3("powfs[%d].wvlwts is %ldx%ld\n",ipowfs,NX(parms->powfs[ipowfs].wvlwts),NY(parms->powfs[ipowfs].wvlwts));
-		parms->powfs[ipowfs].siglevs=dnew(siglev_shared?1:parms->powfs[ipowfs].nwfs, 1);
-		for(int jwfs=0; jwfs<NX(parms->powfs[ipowfs].siglevs); jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			P(parms->powfs[ipowfs].siglevs,jwfs)=parms->wfs[iwfs].siglev*MAX(1,parms->powfs[ipowfs].dtrat);
-		}
-		if(!siglev_shared){
-			parms->powfs[ipowfs].siglev=siglev_sum/parms->powfs[ipowfs].nwfs;//update to the average of all wfs in this powfs.
-		}
-		dbg3("powfs[%d].siglevs is %ldx1\n",ipowfs,NX(parms->powfs[ipowfs].siglevs));
-	}
+	}//for powfs
 
 	dfree(wfs_siglev);
 	dfree(wfs_wvlwts);
 	dfree(powfs_wvlwts);
 
 	dfree(wfs_mag);
-
 	dfree(powfs_mag);
 	dfree(powfs_magb);
 
@@ -996,10 +1004,6 @@ static void readcfg_siglev(parms_t *parms){
 	dfree(atmthruput);
 
 	dfree(bzero);
-	//dfree(wfs_telt);
-	//dfree(wfs_atmt);
-
-
 }
 
 #define READ_DM(A,B)				\

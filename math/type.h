@@ -447,6 +447,9 @@ def_anyloc(, **, panyloc);
 
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
+#define CHECK_INDEX 1
+#endif
+#if CHECK_INDEX
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
         error("Index %ld is out of range for (%ld,%ld) array\n", i, nx, ny);

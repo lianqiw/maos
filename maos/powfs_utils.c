@@ -156,7 +156,7 @@ void sodium_fit(
 	const dcell* saa,      /**<Subaperture area. */
 	const dcell* srsa,    /**<Subaperture to LLT distance*/
 	const dcell* srot,    /**<Subaperture to LLT clocking*/
-	const dmat* siglev,  /**<Subaperture signal level*/
+	const dmat* siglevs,  /**<Subaperture signal level*/
 	const dmat* wvlwts,    /**<Wavelength weights*/
 	const dcell* gradoff,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
 	real dh,      /**<The sodium profile sampling in meters*/
@@ -260,7 +260,7 @@ void sodium_fit(
 				P(na2i, 0, 1)=1;
 				//ETF takes a lot of storage but is inexpensive to build. So we choose to build it on the fly
 				etf_t *etf_i=mketf(dtf, na2i, 0, srot, srsa, hs, htel, za, 1);
-				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
+				gensei(&P(i0m, ix), NULL, NULL, NULL, sepsf, dtf, etf_i, saa, radgx?srot:NULL, siglevs, wvlwts, grad, 0, 0);
 				etf_free(etf_i);
 				if(!P(i0mv, 0, ix)||P(P(i0mv, 0, ix))!=P(P(i0m, ix)->m)){
 					dfree(P(i0mv, 0, ix));
@@ -292,7 +292,7 @@ void sodium_fit(
 			//mketf for full profile must use the same no_interp flag 
 			etf_full=mketf(dtf, nai, 0, srot, srsa, hs, htel, za, 1);
 			toc2("mketf full"); tic;
-			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, grad, 0, 0);
+			gensei(pi0tmp, pgxtmp, pgytmp, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglevs, wvlwts, grad, 0, 0);
 			toc2("gensei full"); tic;
 			mtch_cell(&mtche, NULL, NULL, NULL, *pi0tmp, *pgxtmp, *pgytmp, NULL, NULL, NULL, 0, 0, 3,
 				pixthetax, pixthetay, NULL, radgx, 1, 1);
@@ -333,7 +333,7 @@ OMP_FOR(NTHREAD)
 			toc2("mketf final");tic;
 		}
 		const dcell *gradf=gradoff?gradoff:(pgrad?(*pgrad):grad);
-		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglev, wvlwts, gradf, 0, 0);
+		gensei(pi0, pgx, pgy, NULL, sepsf, dtf, etf_full, saa, radgx?srot:NULL, siglevs, wvlwts, gradf, 0, 0);
 		toc2("gensei final");tic;
 	}
 

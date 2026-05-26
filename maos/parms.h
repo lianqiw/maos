@@ -189,8 +189,8 @@ typedef struct powfs_cfg_t{
     real pixoffx;  /**<offset of image center from center of detector*/
     real pixoffy;  /**<see pixoffx*/
     real sigscale; /**<scale the signal level for simulation.*/
-    real siglev;   /**<signal level at dtrat=1. will be override by wfs.siglev is specified.*/
-    dmat* siglevs;  /**<in array format. 1x1 or nwfsx1, scaled from wfs.siglev by dtrat. */
+    real siglev;   /**<average signal level for all wfs in this powfs at dtrat=1.*/
+    dmat* siglevs;  /**<signal level of each wfs in array format. 1x1 or nwfsx1 at actual dtrat. */
     real sigrecon; /**<signal level for NEA computation*/
     struct llt_cfg_t *llt;/**<configuration for LLT*/
     char* fnllt;   /**<filename of LLT configuration. empty means no llt.*/
@@ -323,7 +323,7 @@ typedef struct wfs_cfg_t{
     real hc;      /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
     real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
     real siglev; /**<Total signal value for all wavelength. if not specified in config, will use powfs.siglev*/
-    real sigsim; /**<Signal value used for simulation. (derived parameter)*/
+    real sigsim; /**<Signal value used for simulation at each sim.dt. (wfs.siglev*powfs.sigscale)*/
     real fitwt;  /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;   /**<powfs type*/
 }wfs_cfg_t;
