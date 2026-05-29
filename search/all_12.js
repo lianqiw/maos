@@ -37,7 +37,7 @@ var searchData=
   ['origy_34',['origy',['../df/def/type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d',1,'pts_t.__unnamed27__.__unnamed29__']]],
   ['os_35',['os',['../dc/d59/cn2est_8h.html#a111bffff3aa695200480f268920e3932',1,'cn2est_t::os'],['../d4/d38/parms_8h.html#a389921eecc54edf5560bf425a2dcb262',1,'atmr_cfg_t::os'],['../d6/d94/maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911',1,'recon_t::os']]],
   ['os_20and_20compile_20monitor_20drawdaemon_20optional_36',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md11',1,'']]],
-  ['other_37',['Other',['../dd/da9/page40_results.html#autotoc_md31',1,'']]],
+  ['other_37',['Other',['../dd/da9/page40_results.html#autotoc_md33',1,'']]],
   ['over_38',['over',['../d4/d38/parms_8h.html#a98fad09a68cb05b822f9c1a3a0a74e71',1,'arg_t']]],
   ['overlapi_39',['overlapi',['../dc/d59/cn2est_8h.html#abbd22f0f3a95814008472b9036153f7a',1,'cn2est_t']]],
   ['overview_40',['Overview',['../index.html',1,'']]],

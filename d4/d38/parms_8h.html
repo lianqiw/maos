@@ -1363,14 +1363,14 @@ sigscale</td>
 <td class="fieldname">
 siglev</td>
 <td class="fielddoc">
-<p>signal level at dtrat=1. will be override by wfs.siglev is specified. </p>
+<p>average signal level for all wfs in this powfs at dtrat=1. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a7bf4ca9968bca8ce8b4bbb3aa41d7565" name="a7bf4ca9968bca8ce8b4bbb3aa41d7565"></a><a class="el" href="../../d3/d27/structdmat.html">dmat</a> *</td>
 <td class="fieldname">
 siglevs</td>
 <td class="fielddoc">
-<p>in array format. 1x1 or nwfsx1, scaled from wfs.siglev by dtrat. </p>
+<p>signal level of each wfs in array format. 1x1 or nwfsx1 at actual dtrat. </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="aec77715022986f5ec8002e3e457bb72d" name="aec77715022986f5ec8002e3e457bb72d"></a>real</td>
@@ -2176,7 +2176,7 @@ siglev</td>
 <td class="fieldname">
 sigsim</td>
 <td class="fielddoc">
-<p>Signal value used for simulation. (derived parameter) </p>
+<p>Signal value used for simulation at each sim.dt. (wfs.siglev*powfs.sigscale) </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ad8a9271a8f30a49f263fcb6aed99f8d5" name="ad8a9271a8f30a49f263fcb6aed99f8d5"></a>real</td>

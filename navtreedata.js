@@ -73,8 +73,8 @@ var NAVTREE =
       [ "SCAO LGS", "d0/dbd/scao_lgs_example.html", null ],
       [ "SCAO NGS", "dc/d8a/scao_ngs_example.html", null ],
       [ "Config File List", "d5/d2b/page34_conf.html", [
-        [ "atmr_single.conf", "dc/de2/atmr_single.html", null ],
         [ "atm_single.conf", "d9/dd8/atm_single.html", null ],
+        [ "atmr_single.conf", "dc/de2/atmr_single.html", null ],
         [ "changes.conf", "de/dbe/changes.html", null ],
         [ "dbg.conf", "d8/ddb/dbg.html", null ],
         [ "default.conf", "d6/d82/default.html", null ],
@@ -85,15 +85,24 @@ var NAVTREE =
         [ "dm_none.conf", "db/d3e/dm_none.html", null ],
         [ "dm_single.conf", "de/dde/dm_single.html", null ],
         [ "dm_triple.conf", "de/d8b/dm_triple.html", null ],
+        [ "evl_cir30.conf", "dd/de8/evl_cir30.html", null ],
+        [ "evl_cir60.conf", "df/d99/evl_cir60.html", null ],
         [ "evl_oa.conf", "dc/d93/evl_oa.html", null ],
         [ "evl_sq34.conf", "d7/db9/evl_sq34.html", null ],
+        [ "evl_sq60.conf", "db/d17/evl_sq60.html", null ],
         [ "evl_x.conf", "d3/dbe/evl_x.html", null ],
+        [ "evl_xy.conf", "df/d66/evl_xy.html", null ],
         [ "fit_cir30.conf", "d1/d9a/fit_cir30.html", null ],
+        [ "fit_cir60.conf", "d8/d5d/fit_cir60.html", null ],
         [ "fit_oa.conf", "da/d97/fit_oa.html", null ],
         [ "fit_sq34.conf", "d0/d2d/fit_sq34.html", null ],
+        [ "fit_sq60.conf", "d2/d02/fit_sq60.html", null ],
+        [ "fov_cir30.conf", "df/d9e/fov_cir30.html", null ],
+        [ "fov_cir60.conf", "d0/d40/fov_cir60.html", null ],
         [ "fov_oa.conf", "da/da3/fov_oa.html", null ],
         [ "fov_pmos.conf", "d0/d8a/fov_pmos.html", null ],
         [ "fov_sq34.conf", "d9/d9a/fov_sq34.html", null ],
+        [ "fov_sq60.conf", "d0/d5b/fov_sq60.html", null ],
         [ "glao.conf", "d4/d4b/glao.html", null ],
         [ "llt_CL.conf", "d3/d3d/llt__c_l.html", null ],
         [ "llt_SL.conf", "df/db7/llt__s_l.html", null ],
@@ -101,8 +110,6 @@ var NAVTREE =
         [ "mcao_base.conf", "d2/d76/mcao_base.html", null ],
         [ "mcao_lgs.conf", "dd/d10/mcao_lgs.html", null ],
         [ "mcao_ngs.conf", "d7/d15/mcao_ngs.html", null ],
-        [ "nfiraos_lgs.conf", "d9/d63/nfiraos_lgs.html", null ],
-        [ "nfiraos_ngs.conf", "df/de4/nfiraos_ngs.html", null ],
         [ "powfs_common.conf", "df/d16/powfs_common.html", null ],
         [ "powfs_none.conf", "d6/dab/powfs_none.html", null ],
         [ "powfs_pyngs.conf", "d6/d54/powfs_pyngs.html", null ],
@@ -126,19 +133,22 @@ var NAVTREE =
         [ "wfs_lgs_pyttf.conf", "d3/dbf/wfs_lgs_pyttf.html", null ],
         [ "wfs_lgs_tt3.conf", "db/d2d/wfs_lgs_tt3.html", null ],
         [ "wfs_lgs_ttf.conf", "d1/db3/wfs_lgs_ttf.html", null ],
-        [ "wfs_lgs_ttf_tt2.conf", "d3/d7a/wfs_lgs_ttf_tt2.html", null ],
         [ "wfs_lgs_ttf_tt.conf", "da/d9b/wfs_lgs_ttf_tt.html", null ],
+        [ "wfs_lgs_ttf_tt2.conf", "d3/d7a/wfs_lgs_ttf_tt2.html", null ],
         [ "wfs_lgs_ttf_tt_twfs.conf", "d9/ddb/wfs_lgs_ttf_tt_twfs.html", null ],
         [ "wfs_ngs_tt.conf", "dc/d3b/wfs_ngs_tt.html", null ],
         [ "wfs_sgra.conf", "d9/d1d/wfs_sgra.html", null ],
+        [ "atm/atm13_mk13n25p.conf", "de/df9/atm13_mk13n25p.html", null ],
+        [ "atm/atm13_mk13n50p.conf", "dd/d1d/atm13_mk13n50p.html", null ],
+        [ "atm/atm13_mk13n75p.conf", "d7/d4d/atm13_mk13n75p.html", null ],
         [ "atm/atm_arm25p.conf", "d5/da8/atm_arm25p.html", null ],
         [ "atm/atm_arm50p.conf", "d7/d34/atm_arm50p.html", null ],
         [ "atm/atm_arm75p.conf", "d9/d83/atm_arm75p.html", null ],
+        [ "atm/atm_elt50p.conf", "da/d4c/atm_elt50p.html", null ],
         [ "atm/atm_mk13n10p.conf", "d7/d9d/atm_mk13n10p.html", null ],
         [ "atm/atm_mk13n15p.conf", "d5/db6/atm_mk13n15p.html", null ],
         [ "atm/atm_mk13n20p.conf", "dd/d13/atm_mk13n20p.html", null ],
         [ "atm/atm_mk13n25p.conf", "dd/dde/atm_mk13n25p.html", null ],
-        [ "atm/atm_mk13n25p_old.conf", "d8/d82/atm_mk13n25p_old.html", null ],
         [ "atm/atm_mk13n30p.conf", "d9/d65/atm_mk13n30p.html", null ],
         [ "atm/atm_mk13n35p.conf", "db/d64/atm_mk13n35p.html", null ],
         [ "atm/atm_mk13n40p.conf", "db/d4e/atm_mk13n40p.html", null ],
@@ -150,78 +160,102 @@ var NAVTREE =
         [ "atm/atm_mk13n65p.conf", "db/d80/atm_mk13n65p.html", null ],
         [ "atm/atm_mk13n70p.conf", "d0/d24/atm_mk13n70p.html", null ],
         [ "atm/atm_mk13n75p.conf", "d2/d2c/atm_mk13n75p.html", null ],
-        [ "atm/atm_mk13n75p_old.conf", "d5/d1f/atm_mk13n75p_old.html", null ],
         [ "atm/atm_mk13n80p.conf", "d5/d79/atm_mk13n80p.html", null ],
         [ "atm/atm_mk13n85p.conf", "de/d82/atm_mk13n85p.html", null ],
         [ "atm/atm_mk13n90p.conf", "d1/d7d/atm_mk13n90p.html", null ],
         [ "atm/atm_mk13n95p.conf", "d1/dc8/atm_mk13n95p.html", null ],
+        [ "atm/atm_mk25pGL_25pFA.conf", "dd/d30/atm_mk25p_g_l_25p_f_a.html", null ],
+        [ "atm/atm_mk25pGL_50pFA.conf", "d5/ddb/atm_mk25p_g_l_50p_f_a.html", null ],
+        [ "atm/atm_mk25pGL_75pFA.conf", "d8/ddf/atm_mk25p_g_l_75p_f_a.html", null ],
+        [ "atm/atm_mk50pGL_25pFA.conf", "d4/de4/atm_mk50p_g_l_25p_f_a.html", null ],
+        [ "atm/atm_mk50pGL_50pFA.conf", "d4/dd0/atm_mk50p_g_l_50p_f_a.html", null ],
+        [ "atm/atm_mk50pGL_75pFA.conf", "d6/da6/atm_mk50p_g_l_75p_f_a.html", null ],
+        [ "atm/atm_mk75pGL_25pFA.conf", "d6/d65/atm_mk75p_g_l_25p_f_a.html", null ],
+        [ "atm/atm_mk75pGL_50pFA.conf", "d8/df9/atm_mk75p_g_l_50p_f_a.html", null ],
+        [ "atm/atm_mk75pGL_75pFA.conf", "d4/dfc/atm_mk75p_g_l_75p_f_a.html", null ],
+        [ "atm/atm_orm10p.conf", "d0/d21/atm_orm10p.html", null ],
         [ "atm/atm_orm25p.conf", "d7/d9d/atm_orm25p.html", null ],
         [ "atm/atm_orm50p.conf", "da/df4/atm_orm50p.html", null ],
+        [ "atm/atm_orm5p.conf", "d8/dd1/atm_orm5p.html", null ],
         [ "atm/atm_orm75p.conf", "d0/d83/atm_orm75p.html", null ],
         [ "atm/atm_spm25p.conf", "dc/d1e/atm_spm25p.html", null ],
         [ "atm/atm_spm50p.conf", "d3/d4f/atm_spm50p.html", null ],
         [ "atm/atm_spm75p.conf", "d0/d07/atm_spm75p.html", null ],
         [ "atm/atm_srd.conf", "da/dc3/atm_srd.html", null ],
         [ "examples/gems_lgs.conf", "d9/d74/gems_lgs.html", null ],
+        [ "examples/keck.conf", "d8/d82/keck.html", null ],
+        [ "examples/keck_2dm30.conf", "d2/d72/keck_2dm30.html", null ],
+        [ "examples/keck_2dm60.conf", "d9/da8/keck_2dm60.html", null ],
+        [ "examples/keck_3dm60.conf", "d3/dbb/keck_3dm60.html", null ],
         [ "examples/keck_base.conf", "da/d0f/keck_base.html", null ],
         [ "examples/keck_lgs.conf", "d4/d19/keck_lgs.html", null ],
         [ "examples/keck_ngs.conf", "da/dac/keck_ngs.html", null ],
+        [ "examples/mcao_2dm30.conf", "d0/d14/mcao_2dm30.html", null ],
+        [ "examples/mcao_2dm60.conf", "d3/d11/mcao_2dm60.html", null ],
+        [ "examples/mcao_3dm60.conf", "d9/d91/mcao_3dm60.html", null ],
+        [ "examples/morfeo_lgs.conf", "d0/d29/morfeo_lgs.html", null ],
+        [ "examples/nfiraos_lgs.conf", "d9/d63/nfiraos_lgs.html", null ],
+        [ "examples/nfiraos_lgs_noimpl.conf", "d9/d7e/nfiraos_lgs_noimpl.html", null ],
+        [ "examples/nfiraos_lgs_pyttf.conf", "d9/d65/nfiraos_lgs_pyttf.html", null ],
+        [ "examples/nfiraos_ngs.conf", "df/de4/nfiraos_ngs.html", null ],
         [ "examples/raven_lgs.conf", "d9/dfe/raven_lgs.html", null ],
-        [ "examples/raven_ngs.conf", "d0/df6/raven_ngs.html", null ]
+        [ "examples/raven_ngs.conf", "d0/df6/raven_ngs.html", null ],
+        [ "examples/tmt.conf", "d8/d0f/tmt.html", null ]
       ] ]
     ] ],
     [ "Simulation Results", "dd/da9/page40_results.html", [
-      [ "RMS WFE", "dd/da9/page40_results.html#maosres", [
-        [ "Python", "dd/da9/page40_results.html#autotoc_md20", null ],
-        [ "Matlab", "dd/da9/page40_results.html#autotoc_md21", null ]
+      [ "RMS WFE", "dd/da9/page40_results.html#autotoc_md20", [
+        [ "Python", "dd/da9/page40_results.html#autotoc_md21", null ],
+        [ "Matlab", "dd/da9/page40_results.html#autotoc_md22", null ]
       ] ],
-      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md22", null ],
-      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md23", [
-        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md24", null ],
-        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md25", null ],
+      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md23", null ],
+      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md24", [
+        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md25", null ],
+        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md26", null ],
         [ "Python", "dd/da9/page40_results.html#sect-python", null ],
         [ "IDL", "dd/da9/page40_results.html#sect-idl", null ],
         [ "FITS", "dd/da9/page40_results.html#sect-fits", null ]
       ] ],
-      [ "Result Files", "dd/da9/page40_results.html#autotoc_md26", [
-        [ "Wavefront error", "dd/da9/page40_results.html#autotoc_md27", null ],
-        [ "Split tomography", "dd/da9/page40_results.html#autotoc_md28", null ],
-        [ "Log files", "dd/da9/page40_results.html#autotoc_md29", null ],
-        [ "PSF", "dd/da9/page40_results.html#autotoc_md30", null ],
-        [ "Other", "dd/da9/page40_results.html#autotoc_md31", null ]
+      [ "Result Files", "dd/da9/page40_results.html#autotoc_md27", [
+        [ "Wavefront error", "dd/da9/page40_results.html#autotoc_md28", null ],
+        [ "Split tomography results", "dd/da9/page40_results.html#autotoc_md29", null ],
+        [ "Log files", "dd/da9/page40_results.html#autotoc_md30", null ],
+        [ "PSF", "dd/da9/page40_results.html#autotoc_md31", null ],
+        [ "Subaperture Pixels", "dd/da9/page40_results.html#autotoc_md32", null ],
+        [ "Other", "dd/da9/page40_results.html#autotoc_md33", null ]
       ] ],
       [ "Geometry Data", "dd/da9/page40_results.html#geometry", null ],
       [ "Telemetry Data", "dd/da9/page40_results.html#telemetry", null ]
     ] ],
     [ "NFIRAOS Performance", "d6/d3f/page43_nfiraos.html", [
-      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md32", null ],
-      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md33", [
-        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md34", null ],
-        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md35", [
-          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md36", null ],
-          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md37", null ],
-          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md38", null ],
-          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md39", null ]
+      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md34", null ],
+      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md35", [
+        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md36", null ],
+        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md37", [
+          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md38", null ],
+          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md39", null ],
+          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md40", null ],
+          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md41", null ]
         ] ],
-        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md40", null ]
+        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md42", null ]
       ] ],
-      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md41", null ]
+      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md43", null ]
     ] ],
     [ "Algorithms", "d4/d15/algorithm.html", [
       [ "DM Actuator Influence Function", "d4/d15/algorithm.html#sect-dm-actuator", [
-        [ "Linear influence function", "d4/d15/algorithm.html#autotoc_md42", null ],
-        [ "Cubic influence function", "d4/d15/algorithm.html#autotoc_md43", null ]
+        [ "Linear influence function", "d4/d15/algorithm.html#autotoc_md44", null ],
+        [ "Cubic influence function", "d4/d15/algorithm.html#autotoc_md45", null ]
       ] ],
       [ "DM Hysteresis", "d4/d15/algorithm.html#hysteresis", null ],
       [ "Physical Optics Beam Propagation", "d4/d15/algorithm.html#pop", [
-        [ "Maxwell Equation", "d4/d15/algorithm.html#autotoc_md44", null ],
-        [ "Fresnel diffraction integral", "d4/d15/algorithm.html#autotoc_md45", null ],
-        [ "Fresnel approximation", "d4/d15/algorithm.html#autotoc_md46", [
-          [ "Angular Spectrum", "d4/d15/algorithm.html#autotoc_md47", null ],
-          [ "Single FFT", "d4/d15/algorithm.html#autotoc_md48", null ]
+        [ "Maxwell Equation", "d4/d15/algorithm.html#autotoc_md46", null ],
+        [ "Fresnel diffraction integral", "d4/d15/algorithm.html#autotoc_md47", null ],
+        [ "Fresnel approximation", "d4/d15/algorithm.html#autotoc_md48", [
+          [ "Angular Spectrum", "d4/d15/algorithm.html#autotoc_md49", null ],
+          [ "Single FFT", "d4/d15/algorithm.html#autotoc_md50", null ]
         ] ],
-        [ "Fraunhofer approximation", "d4/d15/algorithm.html#autotoc_md49", null ],
-        [ "Sphere to sphere propagation", "d4/d15/algorithm.html#autotoc_md50", null ]
+        [ "Fraunhofer approximation", "d4/d15/algorithm.html#autotoc_md51", null ],
+        [ "Sphere to sphere propagation", "d4/d15/algorithm.html#autotoc_md52", null ]
       ] ]
     ] ],
     [ "Sky Coverage", "d5/d4c/skycoverage.html", [
@@ -280,20 +314,20 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"d2/da0/psd_8h.html#af2aec0f4a9066b544f121afc87bf8d3a",
-"d4/d08/misc_8h.html#ad6b7501458b86f4591091f219fdcad78",
-"d4/d38/parms_8h.html#a5a51874ef5e2219cb7480672c0908afe",
-"d4/d38/parms_8h.html#ac03c72da51af407d0395a8604fe072a2",
-"d5/d0d/classcugrid__t.html",
-"d6/d94/maos_2types_8h.html#a47b81002d316b023928634e33d077c4c",
-"d6/d94/maos_2types_8h.html#acf262c84d0f25430470446a8ee476de8",
-"d9/d5c/structzmat.html#a43057c17549eb857ca3bf698ca264b44",
-"da/dfb/dmath_8h.html#ac8e1cf93132dcf5b008b64d66901c82d",
-"dc/db7/map_8h.html#a60fc3a06842ea99955e93365757c4336",
-"de/d07/cmath_8h.html#aa061fa7b98246b61d04a7275856c730f",
-"de/de7/smath_8h.html#a6603d9cdfb12df7bb64c32685c26f4e1",
-"df/def/type_8h.html#a22ed5332569be3ede9b92395e8fbf3bd",
-"df/def/type_8h.html#d0/d27/structscccell"
+"d2/da0/psd_8h.html#a8af51aba20d221a672f03d3a1e81c785",
+"d4/d08/misc_8h.html#a83f5c2f8367c892852a68eef3241d247",
+"d4/d38/parms_8h.html#a559af56a433b6aae3f9de03613f74bb7",
+"d4/d38/parms_8h.html#abca2d1fdbd1f774de850639c62f3df5c",
+"d4/da9/wfs_lgs_hittf.html",
+"d6/d94/maos_2types_8h.html#a3e952b0172729566f022f9c54257b62c",
+"d6/d94/maos_2types_8h.html#ac89e6edb3556c1f783c08f11414a9a04",
+"d9/d19/pywfs_8h.html#ac90f086f4f98115dcc9a7aa90c44f0cf",
+"da/dfb/dmath_8h.html#aaa4dc6677f6438146fd853f05eb77804",
+"dc/d85/classcuwfs__t.html#a71b6bb8f6b72ca8101c1211414ee51ff",
+"de/d07/cmath_8h.html#a7adaf77724f176ba09a92c237e166f2f",
+"de/de7/smath_8h.html#a4516bd0b9565d1dd87d0e7d2864ba3fa",
+"df/def/type_8h.html#a055eb815edb115e0225d517aab0d922e",
+"df/def/type_8h.html#ad6ff340b76144bd224003ceae28de5e0"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

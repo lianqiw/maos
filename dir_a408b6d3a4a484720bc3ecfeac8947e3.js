@@ -3,6 +3,7 @@ var dir_a408b6d3a4a484720bc3ecfeac8947e3 =
     [ "bin.h", "d3/d7f/bin_8h.html", "d3/d7f/bin_8h" ],
     [ "common.h", "d2/de5/sys_2common_8h.html", null ],
     [ "daemonize.h", "df/d59/daemonize_8h.html", "df/d59/daemonize_8h" ],
+    [ "dlist.c", "d4/d36/dlist_8c.html", null ],
     [ "hashlittle.h", "d6/d92/hashlittle_8h.html", "d6/d92/hashlittle_8h" ],
     [ "misc.h", "d4/d08/misc_8h.html", "d4/d08/misc_8h" ],
     [ "path.h", "d7/dd4/path_8h.html", "d7/dd4/path_8h" ],

@@ -184,16 +184,18 @@ $(document).ready(function(){initNavTree('df/d16/powfs_common.html','../../'); i
 <div class="line">powfs.i0scale = [0]  #For testing: scaling sum of averaged image intensity generated using turbulence OTF to match normalized SAA. Do not enable.</div>
 <div class="line">powfs.i0save  = [0]  #save time avearged subaperture images.</div>
 <div class="line">powfs.i0load  = [&quot;&quot;] #load i0,gx,gy from this folder.</div>
-<div class="line">powfs.siglev  = [960] #signal level at sim.dtref=1/600 (updated to 960 for LGS WFS 2021-11-02)</div>
+<div class="line">powfs.siglev  = [960] #signal level at sim.dtref (updated to 960 for LGS WFS 2021-11-02)</div>
 <div class="line">powfs.sigrecon= [0]  #siglev used for NEA computation. 0: use siglev. Limited to 1200 maximum to avoid reconstruction degradation.</div>
-<div class="line">powfs.sigscale= [1]  #scale factor from the wfs.siglev to wfs.siglevsim for simulation. to simulate signal variation/mismatch. obsolete. do not use.</div>
-<div class="line">powfs.bkgrnd  = [0]  #sky background in unit e/pixel/frame at sim.dtref.</div>
-<div class="line">powfs.bkgrndc = [1]  #background calibration factor for powfs.bkgrnd. 1: DC component fully removed.</div>
+<div class="line">powfs.sigscale= [1]  #scale factor from the wfs.siglev to wfs.sigsim for simulation. to simulate signal variation/mismatch. testing only. do not use.</div>
+<div class="line">powfs.bkgrnd  = [0]  #sky background and dark in unit e/pixel/frame at sim.dtref. The purpose is to introduce Poisson noise.</div>
+<div class="line">powfs.bkgrndc = [1]  #background calibration factor for powfs.bkgrnd. 1: DC component fully removed. The effect to signal is +poisson(signal)-signal*signalc</div>
 <div class="line">powfs.bkgrndfn= [&quot;&quot;] #sky background/rayleigh backscatter image for each subaperture in each wfs. in unit e/pixel/frame at sim.dtref. </div>
 <div class="line">                     #The file contains a cell array of `nsa*nlgswfs` while each cell contains a `npixpisax*npixpsay` numerical array. </div>
-<div class="line">powfs.bkgrndfnc=[&quot;&quot;] #background calibration factor for powfs.bkgrndfn. 1: DC component fully removed.</div>
-<div class="line">powfs.qe       =[&quot;&quot;] #Quantum efficiency scaling of pixels in each subaperture. Calibrated by flat fielding. Set maximum to 1.</div>
-<div class="line">powfs.embfac  = [2]  #embeding factor of complex pupil function to generate subaperture image using FFT method. keep at 2 to avoid aliasing.</div>
+<div class="line">                     #The subapertures are ordered based on saloc as in powfs0_saloc.bin. see powfs0_i0.bin for an example</div>
+<div class="line">powfs.bkgrndfnc=[&quot;&quot;] #part of powfs.bkgrndfn that is subtracted. at the same unit as bkgrndfn. The effect to signal is +poisson(bkgrndfn)-bkgrndfnc</div>
+<div class="line">powfs.qe       =[&quot;&quot;] #Relative quantum efficiency of each pixel in each subaperture. Set the maximum to 1. </div>
+<div class="line">                     #Lower values will introduce equivalent additional Poisson and read out noise.</div>
+<div class="line">powfs.embfac  = [2]  #Embeding factor of complex pupil function to generate subaperture image using FFT method. keep at 2 to avoid aliasing.</div>
 <div class="line">powfs.psfout  = [0]  #output complex psf core for sky coverage. only valid in split tomography, do ideal compensation of NGS modes.</div>
 <div class="line">powfs.pistatout = [0] #output tip/tilt removed averaged psf for later #matched filter input</div>
 <div class="line">powfs.pistatstc = [0] #shift pistat to center using fft method before saving.</div>
@@ -264,13 +266,14 @@ $(document).ready(function(){initNavTree('df/d16/powfs_common.html','../../'); i
 <div class="line">#wfs.thetax=[] #x coordinate in arcsecond unit.</div>
 <div class="line">#wfs.thetay=[] #y coordinate in arcsecond unit.</div>
 <div class="line"> </div>
-<div class="line">#The following are used to compute powfs.siglev and wfs.siglev. They are not added to parms.</div>
-<div class="line">powfs.mag       = [0]#&gt;0: compute siglev from this magnitude. LGS magnitude is scaled by sim.za, while NGS magnitude is not. One value per wavelength. 0: use siglev.</div>
-<div class="line">powfs.telthruput= [0.307]#End to end througput of the telescope, WFS, detector. Excluding atmospheric throughput. One value per wavelength</div>
-<div class="line">powfs.atmthruput= [0.84]#One-way throughput of the atmosphere at the WFS wavelength at zenith. Scaled by zenith angle.</div>
-<div class="line">powfs.magbkgrnd = [0]#Guide star background magnitude per arcsec. 0: use bkgrnd.</div>
+<div class="line">#The guide star magnitudes compute and override siglev and wvlwts if not empty and not zero.</div>
+<div class="line">#siglev from LGS magnitude is scaled by sim.za, while NGS magnitude is not.</div>
+<div class="line">powfs.mag       = [] #Guide star magnitude per powfs. One value per wavelength. Empty: use siglev.</div>
+<div class="line">powfs.magbkgrnd = [] #Guide star background magnitude per arcsec. One value per wavelength. Empty: use bkgrnd.</div>
+<div class="line">powfs.telthruput= [0.307]#End to end througput of the telescope, WFS, detector. Excluding atmospheric throughput. One value per wavelength. May use a single number</div>
+<div class="line">powfs.atmthruput= [0.84]#One-way throughput of the atmosphere at zenith. One value per wavelength. May use a single number. Scaled by zenith angle.</div>
 <div class="line">#Specify if values are different per wfs in the same powfs</div>
-<div class="line">wfs.mag         = []#&gt;0: compute siglev from this magnitude. LGS magnitude is scaled by sim.za, while NGS magnitude is not. One value per wavelength. 0 or empty: use powfs.mag or siglev.</div>
+<div class="line">wfs.mag         = []  #Guide star magnitude per wfs. See powfs.mag. One value per wavelength. Empty: use powfs.mag or siglev.</div>
 <div class="line">wfs.misregx     = [0] #misregistration of lenslet array along x in unit of subaperture size. between -0.5 and 0.5</div>
 <div class="line">wfs.misregy     = [0] #misregistration of lenslet array along x in unit of subaperture size. between -0.5 and 0.5</div>
 <div class="line">wfs.misregc     = [0] #misregistration of lenslet array in clocking in degrees.</div>

@@ -196,12 +196,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">locin</td><td>The input grid </td></tr>
-    <tr><td class="paramname">locout</td><td>The target grid </td></tr>
-    <tr><td class="paramname">displacex</td><td>Shift of the beam at the input grid along x </td></tr>
-    <tr><td class="paramname">displacey</td><td>Shift of the beam at the input grid along y </td></tr>
-    <tr><td class="paramname">scale</td><td>Scaling of the beam from target to input grid. (scale &lt; 1 if beam is coming from a point source) </td></tr>
-    <tr><td class="paramname">rot</td><td>Rotation of the target grid (Clock-wise) (applied before displacex and displacey). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
   </table>
   </dd>
 </dl>
@@ -239,7 +234,13 @@ h_{0}(x)=\frac{1}{1+2c}\begin{cases}
 (2c-\frac{1}{2})(2-|x|)^{2}+(\frac{1}{2}-c)(2-|x|)^{3} &amp; 1&lt;|x|\leq2\\ 0 &amp;
 |x|&gt;2\end{cases}\end{eqnarray*}
 </p>
-<p> where c is the nearest neighbor coupling frequency. The leading coefficient is to normalize the influence function so that it sums to 1. </p>
+<p> where c is the nearest neighbor coupling frequency. The leading coefficient is to normalize the influence function so that it sums to 1.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

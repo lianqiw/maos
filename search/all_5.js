@@ -1,12 +1,12 @@
 var searchData=
 [
   ['backscatter_0',['Rayleigh backscatter',['../da/dc3/page30_run.html#pixel-background',1,'']]],
-  ['band_20strehl_20ratio_1',['band strehl ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md38',1,'H band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md37',1,'J band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md39',1,'K band Strehl Ratio']]],
+  ['band_20strehl_20ratio_1',['band strehl ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md40',1,'H band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md39',1,'J band Strehl Ratio'],['../d6/d3f/page43_nfiraos.html#autotoc_md41',1,'K band Strehl Ratio']]],
   ['beam_20propagation_2',['Physical Optics Beam Propagation',['../d4/d15/algorithm.html#pop',1,'']]],
   ['bessel_5fmode_2eh_3',['bessel_mode.h',['../d6/d1d/bessel__mode_8h.html',1,'']]],
   ['bessel_5fmodes_4',['bessel_modes',['../d6/d1d/bessel__mode_8h.html#adfcdbf7c5ca41663b7b973a1b6fcc33d',1,'bessel_mode.c']]],
   ['bgs_5',['bgs',['../d3/dc7/muv_8h.html#ae31c91e7bded161b089819de993bb5ee',1,'muv_t::bgs'],['../d4/d38/parms_8h.html#aab059096759e6a895e2c52935a5cb695',1,'tomo_cfg_t::bgs'],['../d4/d38/parms_8h.html#a6a352da6dab6ef9ad69ec5a100430f04',1,'fit_cfg_t::bgs'],['../d4/d38/parms_8h.html#a15e318faa040a437f927fa7c142ec24a',1,'lsr_cfg_t::bgs']]],
-  ['bin_20file_20format_6',['bin file format',['../dd/da9/page40_results.html#autotoc_md24',1,'.bin file format'],['../d5/d98/page91_basics.html#sect-bin',1,'Bin file format']]],
+  ['bin_20file_20format_6',['bin file format',['../dd/da9/page40_results.html#autotoc_md25',1,'.bin file format'],['../d5/d98/page91_basics.html#sect-bin',1,'Bin file format']]],
   ['bin_2eh_7',['bin.h',['../d3/d7f/bin_8h.html',1,'']]],
   ['binary_8',['Option 4 (binary)',['../d3/d4c/page20_compile.html#autotoc_md6',1,'']]],
   ['bind_5fsocket_9',['bind_socket',['../df/d04/sock_8h.html#a45c181941f5420133e33bb8bdca7374d',1,'sock.c']]],
