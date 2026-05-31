@@ -982,8 +982,8 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
 			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
-			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
-				error("recon.GRwfs should have more than 1 layer when there are multiple twfs.\n");
+			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1 && parms->ndm>1){
+				warning("recon.GRwfs should have more than 1 layer when there are multiple twfs and DMs.\n");
 			}
 			if(rmin<3){
 				warning("rmin should be 3 for truth wfs.\n");

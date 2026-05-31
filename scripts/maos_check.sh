@@ -83,10 +83,12 @@ function run_maos(){
 	aotype=$1
 	shift
 	s_start=`date +%s`
-    ../bin/maos "sim.end=100 $* $args" >$fnlog 2>$fnerr
+    ../bin/maos sim.end=100 $* $args >$fnlog 2>$fnerr
 	a=
     if [ $? -eq 0 ];then
 		a=`printf %.1f $(grep 'Mean:' $fnlog |tail -n1 |cut -d ' ' -f 2)`
+	else
+		echo Failed to run maos sim.end=100 $* $args 
 	fi
 	if [ x$a = x ];then
 		a=000.0

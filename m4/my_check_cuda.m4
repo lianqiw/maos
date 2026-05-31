@@ -234,6 +234,7 @@ AC_DEFUN([MY_CHECK_CUDA],[
 	fi
 	AC_DEFINE_UNQUOTED(CUDA_DOUBLE, [$cuda_double], [Use double precision mode in CUDA])
 	AC_DEFINE_UNQUOTED(USE_CUDA, [${cudaver:-0}], [CUDA version])
+	AC_DEFINE_UNQUOTED(CUDA_ARCH, [${cuarch}0], [CUDA Architecture])
 	AM_CONDITIONAL(CUDA_DOUBLE, [test "$cuda_double" = "1" ])
 	AM_CONDITIONAL(USE_CUDA, [test "$with_cuda" != "no"])
 	if test "$with_cuda" != "no" ;then

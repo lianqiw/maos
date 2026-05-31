@@ -839,8 +839,8 @@ static void readcfg_siglev(parms_t *parms){
 	//dmat *wfs_telt=readcfg_dmat(0, 0, "wfs.telthruput");
 	//dmat *wfs_atmt=readcfg_dmat(0, 0, "wfs.atmthruput");
 #define check_dimension(name, arr, size, size2)\
-	if(NX(arr)!=0 && NX(arr)!=size && NX(arr)!=size2){\
-		error(name " must be either empty, or a vector of %d entries.\n", size);\
+	if(NX(arr)!=0 && !(NX(arr)==1 && P(arr,0)==0) && NX(arr)!=size && NX(arr)!=size2){\
+		error(name " must be either empty, [0], or a vector of %d entries.\n", size);\
 	}
 	check_dimension("powfs.mag",  powfs_mag,  powfs_wvl_tot, parms->npowfs);
 	check_dimension("powfs.magb", powfs_magb, powfs_wvl_tot, parms->npowfs);
@@ -921,7 +921,7 @@ static void readcfg_siglev(parms_t *parms){
 			}else{//use supplied siglev and wvlwts
 				if(NX(wfs_siglev)==0||!P(wfs_siglev, iwfs)){
 					parms->wfs[iwfs].siglev=parms->powfs[ipowfs].siglev;
-					dbg("wfs %d siglev %g is from powfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
+					//dbg("wfs %d siglev %g is from powfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
 				} else{
 					parms->wfs[iwfs].siglev=P(wfs_siglev,iwfs);
 					dbg("wfs %d siglev %g is from wfs.siglev\n", iwfs, parms->wfs[iwfs].siglev);
@@ -1268,6 +1268,9 @@ static void readcfg_aper(parms_t *parms){
 	case 1:
 		parms->aper.d=dtmp[0];
 		break;
+	case 0:
+		parms->aper.d=0; 
+		break;
 	default:
 		error("aper.d contains %d elements. But only 1 or 2 elements are supported.\n",nd);
 	}
@@ -1278,7 +1281,7 @@ static void readcfg_aper(parms_t *parms){
 		parms->aper.amp=mapread("%s", fnamp);
 		real amp_d, amp_din;
 		map_d_din(parms->aper.amp, &amp_d, &amp_din);
-		if(!parms->aper.d){//use amp information
+		if(parms->aper.d<=0){//use amp information
 			parms->aper.d=amp_d;
 			parms->aper.din=amp_din;
 		}else if(fabs(parms->aper.d-amp_d)>1||fabs(parms->aper.din-amp_din)>1){
@@ -1293,7 +1296,8 @@ static void readcfg_aper(parms_t *parms){
 		FREE(fnamp); 
 	}
 	if(parms->aper.d<=0){
-		error("Aperture outer diameter(%g) shall be positive\n",parms->aper.d);
+		warning("Aperture diameter or amplitude map is not supplied, assume D=30.\n");
+		parms->aper.d=30;
 	} else if(parms->aper.d<=parms->aper.din){
 		error("Aperture inner diameter(%g) shall be less than outer diameter(%g).\n",parms->aper.din,parms->aper.d);
 	} else if(parms->aper.din<0){
@@ -2117,6 +2121,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->hipowfs_hsmax=0;
 	parms->hipowfs=lnew(parms->npowfs, 1);
 	parms->lopowfs=lnew(parms->npowfs, 1);
+	int npowfs_tt=0;
+	int npowfs_focus=0;
 	//first: process types of powfs that are not TWFS
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
@@ -2463,6 +2469,20 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 	}
+	//Sanity check
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
+		if(powfsi->skip!=2){
+			if(!powfsi->trs){
+				npowfs_tt++;
+			}
+			if(powfsi->order>1 && !(isinf(parms->sim.fcfocus)&&parms->powfs[ipowfs].llt)){
+				npowfs_focus++;
+			}
+		}
+	}
+	if(!npowfs_tt) warning("There is no WFS providing tip/tilt.\n");
+	if(!npowfs_focus) warning("There is no WFS providing focus.\n");
 	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
 }

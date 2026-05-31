@@ -144,11 +144,12 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 	long ninx,    /**<[in] Suggested size along x*/
 	long niny,    /**<[in] Suggested size along y*/
 	int pad,      /**<[in] Increase nx, ny to power of 2*/
-	int square    /**<[in] Full square/rectangular grid*/
+	int square    /**<[in] 1: Full square/rectangular grid, 2: circular, 0: minimal*/
 ){
 	const real R=D/2;
 	real ox=0, oy=0;
 	long nx, ny;
+	real maxR=0;//maximum R of all the foot prints
 	{
 		real minx=-R-guard, miny=-R-guard, maxx=R+guard, maxy=R+guard;
 		if(dirs && ht0!=0){
@@ -158,10 +159,12 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 			for(int idir=0; idir<dirs->ny; idir++){
 				real ht=ht0-P(dirs,3, idir);//hc
 				real RR=(1.-ht/P(dirs, 2, idir))*R+guard;
-				real sx1=(P(dirs, 0, idir)*ht)-RR;
-				real sx2=(P(dirs, 0, idir)*ht)+RR;
-				real sy1=(P(dirs, 1, idir)*ht)-RR;
-				real sy2=(P(dirs, 1, idir)*ht)+RR;
+				const real xc=(P(dirs, 0, idir)*ht);
+				const real yc=(P(dirs, 1, idir)*ht);
+				real sx1=xc-RR;
+				real sx2=xc+RR;
+				real sy1=yc-RR;
+				real sy2=yc+RR;
 				//Need to work when ht<0;
 				if(sx1<minx) minx=sx1;
 				if(sx1>maxx) maxx=sx1;
@@ -171,8 +174,10 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 				if(sy1>maxy) maxy=sy1;
 				if(sy2<miny) miny=sy2;
 				if(sy2>maxy) maxy=sy2;
+				maxR=MAX(maxR, RR+sqrt(xc*xc+yc*yc));
+
 			}
-			//info("range is %g, %g; %g, %g\n", minx, maxx, miny, maxy);
+			//info("range is %g, %g; %g, %g, maxR=%g\n", minx, maxx, miny, maxy, maxR);
 		}else if(ht0!=0){
 			error("if ht0 is 0, dirs must be set\n");
 		}
@@ -182,6 +187,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		ny=ceil((maxy-oy)/dy)+1;
 		//info("ox=%g, oy=%g, nx=%ld, ny=%ld\n", ox, oy, nx, ny);
 	}
+	if(!maxR) maxR=R;
 	if(square){//make it a square grid.
 		ox=oy=MIN(ox,oy);
 		nx=ny=MAX(nx,ny);
@@ -220,9 +226,11 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		(*mapout)->oy=oy;
 		(*mapout)->ht=ht0;
 		dmat* dmap=DMAT((*mapout));
-		if(square){/**Only want square grid*/
+		if(square==1){/**Only want square grid*/
 			dset(dmap, 1);
-		} else{/*Want non square grid*/
+		}else if(square==2){
+			dcircle(dmap, -ox, -oy, dx, dy, maxR, 1);
+		} else if(square==0){/*Want non square grid*/
 			if(dirs){
 				for(int idir=0; idir<dirs->ny; idir++){
 					real ht=ht0-P(dirs, 3, idir);
@@ -237,6 +245,8 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 			for(int i=0; i<nx*ny; i++){
 				P(dmap,i)=(P(dmap,i))>1.e-15?1:0;
 			}
+		}else{
+			error("square has wrong entry: %d. 0, 1, or 2 expected.\n", square);
 		}
 	}
 }

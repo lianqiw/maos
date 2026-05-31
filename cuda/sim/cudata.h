@@ -57,7 +57,7 @@ public:
     Array<cuwfs_t>wfs;
     Array<atm_prep_t>atm_prep_data;
     curmat mvm;
-    cuglobal_t():atmscale(0), recongpu(0), atm_full(0){
+    cuglobal_t():atmscale(0), recongpu(0), atm_full(0), atm_dtrat(0), atm_interp(0), atm_nps(0){
     }
     ~cuglobal_t(){
 	    dfree(atmscale);

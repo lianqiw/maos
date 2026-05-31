@@ -103,7 +103,7 @@ GPU_FFT(c, Comp, CUFFT_C2C);
 GPU_FFT(z, Comp, CUFFT_C2C);
 
 void gpu_ext_assign(){
-#if __CUDA_ARCH__ >=600
+#if CUDA_ARCH >=600
 #define CPU_ASSIGN_BLAS(X,R,T)\
 	extern void (*X##svd_ext)(X##mat **U, R##mat **S, X##mat **Vt, const X##mat *A);\
 	extern void (*X##svd_pow_ext)(X##mat *A_, real pow, real thres1, real thres2);\

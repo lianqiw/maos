@@ -1342,15 +1342,15 @@ void wfsgrad_twfs_recon(sim_t* simu){
 	const recon_t* recon=simu->recon;
 	const int itpowfs=parms->itpowfs;
 	if(simu->wfsflags[itpowfs].gradout){
-		info2("Step %5d: TWFS[%d] has output with gain %g\n", simu->wfsisim, itpowfs, simu->eptwfs);
+		info_once("Step %5d: TWFS has output with gain %g every %d steps.\n", simu->wfsisim, simu->eptwfs, parms->powfs[itpowfs].dtrat);
 		gradoff_acc(simu, parms->ilgspowfs);//todo: improve ipowfs index.
 		const int nlayer=NY(recon->GRall);
 		dcell* Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, recon->RRtwfs, simu->gradcl, "nn", 1);
-		if(simu->wfsflags[itpowfs].gradout<5&&parms->itwfssph>-1){
+		if(simu->wfsflags[itpowfs].gradout<5&&parms->itwfssph>-1 && fabs(parms->sim.eptsph/simu->eptwfs-1)>0.01){
 			dbg("Step %5d: TWFS output %d spherical mode (%d) gain is boosted from %g to %g\n",
-				simu->wfsisim, simu->wfsflags[itpowfs].gradout, parms->itwfssph, parms->sim.eptwfs, parms->sim.eptsph);
+				simu->wfsisim, simu->wfsflags[itpowfs].gradout, parms->itwfssph, simu->eptwfs, parms->sim.eptsph);
 			for(int ilayer=0; ilayer<nlayer; ilayer++){
 				P(P(Rmod, ilayer), parms->itwfssph)*=(parms->sim.eptsph/simu->eptwfs);
 			}
@@ -1363,7 +1363,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				dmm(&P(simu->dmoff, ilayer), 1, P(recon->Rmod, ilayer), P(Rmod, ilayer), "nn", simu->eptwfs);
 			}
 			if(parms->plot.run){
-				draw_dm(parms, recon, simu->dmoff, 0, "DM Offset", "Off");
+				draw_dm(parms, recon, simu->dmoff, 0, "DM Offset", "Offset");
 			}
 		}else{
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

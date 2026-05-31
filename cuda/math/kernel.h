@@ -33,7 +33,7 @@ __device__ static inline float atomicAdd(float* address, float val)
 }
 #endif
 */
-#if __CUDA_ARCH__ < 600  && CUDA_DOUBLE
+#if CUDA_ARCH < 600  && CUDA_DOUBLE
 __device__ static inline double myAtomicAdd(double* address, double val){
 	double old=*address;
 	double assumed;

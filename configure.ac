@@ -281,8 +281,10 @@ MY_CHECK_LAPACK(
 	[AC_MSG_ERROR([Please install blas/lapack])]
 )
 AX_CHECK_OPENSSL(
-	[AC_DEFINE([HAVE_OPENSSL], [1], [Define if OpenSSL is available])],
-	[AC_MSG_NOTICE([OpenSSL library not found])]
+	[AC_DEFINE([HAVE_OPENSSL], [1], [Define if OpenSSL is available]) 
+		has_ssl=1],
+	[AC_MSG_NOTICE([OpenSSL library not found]) 
+		has_ssl=0]
 )
 MY_CHECK_FFT([:],[AC_MSG_ERROR([FFTW library is not found])]) #must be before CHECK_MEX
 MY_CHECK_CHOLMOD([:],[AC_MSG_ERROR([CHOLMOD library is not found])])
@@ -364,7 +366,7 @@ echo "host_os:         ${host_os}"
 echo "host_cpu:        ${host_cpu}"
 echo "CC:              ${CN} ($CC_VERSION)"
 echo "Debug:           ${enable_debug:-no}"
-echo "Scheduler:       ${enable_scheduler:-yes}"
+echo "Scheduler:       ${enable_scheduler:-yes} (SSL=$has_ssl)"
 echo "CMOCKA:          ${has_cmocka}"
 echo "Coverage:        ${enable_gcov:-no}"
 echo "OpenMP:          ${has_omp}"

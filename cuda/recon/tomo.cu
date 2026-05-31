@@ -51,7 +51,6 @@ void prep_GP(Array<short2, Gpu>& GPp, Real* GPscale, cusp& GPf,
 		const int np=np1*np1;
 		int nsa=saloc->nloc;
 		short2* partxy=mycalloc(np*nsa, short2);//need to zero memory
-		info("partxy=%p\n", partxy);
 		const real dx1=1./ploc->dx;
 		const real dy1=1./ploc->dy;
 		for(int ic=0; ic<GPt->ny; ic++){

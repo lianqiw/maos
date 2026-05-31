@@ -149,19 +149,20 @@ __global__ void map2loc_cubic(Real* restrict out, const Real* restrict in,
 void atm2loc(Real* phiout, const culoc_t& loc, Real hs, Real hc, Real thetax, Real thetay,
 	Real misregx, Real misregy, Real dt, int isim, Real atmalpha0, cudaStream_t stream){
 	cumapcell& cuatm=cudata->atm;
+	if(!cuatm.N()) return;
 	Real atmalpha=atmalpha0;
 	if(Z(fabs)(atmalpha)<EPS) return;
 	const int atm_dtrat=cuglobal->atm_dtrat;
 	if(cuglobal->atmscale&&!atm_dtrat){
 		atmalpha*=cuglobal->atmscale->p[isim];
 	}
-	int nps=atm_dtrat?cuglobal->atm_nps:cudata->atm.N();
+	int nps=atm_dtrat?cuglobal->atm_nps:cuatm.N();
 	real wt=1;
 	for(int jps=0; jps<nps; jps++){
 		int ips;
 		if(atm_dtrat){
-			ips=atm_interp(&wt, jps, isim, atm_dtrat, cudata->atm.N(), cuglobal->atm_interp);
-			/*ips=wrap_seq(isim/atm_dtrat+jps, cudata->atm.N());
+			ips=atm_interp(&wt, jps, isim, atm_dtrat, cuatm.N(), cuglobal->atm_interp);
+			/*ips=wrap_seq(isim/atm_dtrat+jps, cuatm.N());
 			Real wt2=0;
 			if(nps>1&&atm_interp){
 				wt2=(real)(isim%atm_dtrat)/atm_dtrat;
