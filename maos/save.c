@@ -18,6 +18,7 @@
 #include "save.h"
 #include "sim_utils.h"
 #include "sim.h"
+#include "plot_utils.h"
 /**
  * \file save.h
    Collects routines that does save and plotting to clean
@@ -86,7 +87,7 @@ void save_gradol(sim_t* simu){
 		}
 	}
 	if(parms->save.ngcov>0){
-	/*Outputing psol gradient covariance. */
+		/*Outputing psol gradient covariance. */
 		for(int igcov=0; igcov<parms->save.ngcov; igcov++){
 			int iwfs1=P(parms->save.gcov,igcov*2);
 			int iwfs2=P(parms->save.gcov,igcov*2+1);
@@ -95,36 +96,40 @@ void save_gradol(sim_t* simu){
 		}
 	}
 }
+/**
+   Propagate the atmosphere to closest xloc. skip wavefront sensing and
+   reconstruction.
 
-void draw_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type){
-	if(!ac) return;
-	for(int idm=0; idm<NX(ac); idm++){
-		if(!draw_current_format("DM", "%s %d", type, idm)) continue;
-		dmat *dmc=NULL;
-		if(recon->amod && modal){
-			dmm(&dmc, 0, P(recon->amod, idm, idm), P(ac,idm), "nn", 1);
-		}else{
-			dmc=dref(P(ac,idm));
-		}
-		drawopd("DM", P(recon->aloc, idm), dmc, parms->plot.opdmax, title, "x (m)", "y (m)", "%s %d", type, idm);
-		dfree(dmc);
+   2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not
+   match in number. Fixed. Do not do scaling even if fit.ht is less.
+
+*/
+static void atm2xloc(dcell** opdx, const sim_t* simu){
+	const recon_t* recon=simu->recon;
+	const parms_t* parms=simu->parms;
+	if(parms->recon.glao){
+		return;
 	}
-}
-void draw_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type){
-	if(!simu||!merr) return;
-	int added=0;
-	for(int idm=0; idm<NX(simu->dmtmp); idm++){
-		if(draw_current_format("DM", "%s %d", type, idm)){
-			if(!added){
-				added=1;//add only once
-				dcellzero(simu->dmtmp);
-				addlow2dm(&simu->dmtmp, simu, merr, 1);
-				break;
-			}
+	/*in close loop mode, opdr is from last time step. */
+	int isim=simu->reconisim;
+	if(!*opdx){
+		*opdx=dcellnew(recon->npsr, 1);
+	}
+	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
+		if(!P(*opdx, ipsr)){
+			P(*opdx, ipsr)=dnew(P(recon->xloc, ipsr)->nloc, 1);
+		} else{
+			dzero(P(*opdx, ipsr));
 		}
 	}
-	if(added){
-		draw_dm(simu->parms, simu->recon, simu->dmtmp, 1, title, type);
+	if(simu->atm){
+		for(int ips=0; ips<parms->atm.nps; ips++){
+			real shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
+			real shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
+			int ipsr=P(parms->atm.ipsr, ips);
+			prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
+				.alpha=1, .shiftx=shiftx, .shifty=shifty, .wrap=1});
+		}
 	}
 }
 /**
@@ -134,38 +139,6 @@ void save_recon(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
 	if(simu->reconisim<0) return;
-	if(parms->plot.run&&simu->reconisim%parms->plot.run==0){
-		if(simu->dm_wfs){
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				int ipowfs=parms->wfs[iwfs].powfs;
-				int imoao=parms->powfs[ipowfs].moao;
-				if(imoao<0) continue;
-				drawopd("DM", P(recon->moao[imoao].aloc, 0), P(simu->dm_wfs, iwfs), parms->plot.opdmax,
-					"MOAO DM Command", "x(m)", "y(m)", "WFS %2d", iwfs);
-			}
-		}
-		if(simu->dm_evl){
-			int imoao=parms->evl.moao;
-			for(int ievl=0; ievl<parms->evl.nevl&&imoao>=0; ievl++){
-				drawopd("DM", P(recon->moao[imoao].aloc,0), P(simu->dm_evl,ievl), parms->plot.opdmax,
-					"MOAO DM Command", "x(m)", "y(m)", "Evl %d", ievl);
-			}
-		}
-		if(parms->recon.alg==RECON_MVR&&simu->dmrecon){
-			draw_dm(parms, recon, simu->dmrecon, 1, "Deformable Mirror Fitting Output", "Fit");
-		}
-		draw_dm(parms, recon, simu->dmerr, 1, "Deformable Mirror Error Signal (Hi)", "Err Hi");
-
-		if(parms->recon.alg==RECON_MVR&&simu->opdr){
-			for(int i=0; i<NX(simu->opdr); i++){
-				if(P(simu->opdr,i)){
-					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), parms->plot.opdmax,
-						"Reconstructed Atmosphere", "x (m)", "y (m)", "Layer %d", i);
-				}
-			}
-		}
-		draw_dm_lo(simu, simu->Merr_lo, "Deformable Mirror Error Signal (Lo)", "Err Lo");
-	}
 	if(parms->recon.alg==RECON_MVR&&!parms->sim.idealtomo&&!parms->recon.glao){
 	/*minimum variance tomo/fit reconstructor */
 		if(parms->save.opdr){
@@ -236,84 +209,13 @@ void save_recon(sim_t* simu){
 		dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset.
 	}
 }
-/**
-   Plot and save dmproj
-*/
-void save_dmproj(sim_t* simu){
-	const parms_t* parms=simu->parms;
-	const recon_t* recon=simu->recon;
-	if(parms->save.dm){
-		zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
-	}
-	if(parms->plot.run&&simu->dmproj&&simu->reconisim>0&&simu->reconisim%parms->plot.run==0){
-		draw_dm(parms, recon, simu->dmproj, 0, "ATM to DM Projection (Hi)", "Proj Hi");
-	}
-}
+
 /**
    Plot and save dmreal
  */
 void save_dmreal(sim_t* simu){
 	const parms_t* parms=simu->parms;
-	const recon_t* recon=simu->recon;
-	if(parms->plot.run&&simu->reconisim>=0 && simu->reconisim%parms->plot.run==0){
-		if(parms->sim.closeloop){
-			draw_dm(parms, recon, P(simu->dmint->mintc, 0), 1, "Deformable Mirror Integrator (Hi)", "Int");
-			if(simu->Mint_lo&&!parms->sim.fuseint){
-				draw_dm_lo(simu, P(simu->Mint_lo->mintc,0), "Deformable Mirror Integrator (Lo)", "Int Lo");
-			}
-		}
-		if(simu->dmreal){
-			//draw_dm(parms, recon, simu->dmcmd, "Deformable Mirror Command", "Cmd");
-			draw_dm(parms, recon, simu->dmreal, 0, "Deformable Mirror Command", "Real");
-			/*for(int idm=0; idm<parms->ndm; idm++){
-				drawmap("DM", P(simu->dmrealsq, idm), parms->plot.opdmax,
-					"Deformable Mirror Real Square", "x (m)", "y (m)", "dmrealsq %d", idm);
-			}*/
-			if(simu->ttmreal&&draw_current("DM", "Real TTM")){
-				int idm=0;
-				real ptt[3]={0,0,0};
-				ptt[1]=P(simu->ttmreal,0);
-				ptt[2]=P(simu->ttmreal,1);
-				dmat* tmp=dnew(P(recon->aloc,idm)->nloc, 1);
-				loc_add_ptt(tmp, ptt, P(recon->aloc,idm));
-				drawopd("DM", P(recon->aloc,idm), tmp, parms->plot.opdmax,
-					"TTM Command", "x (m)", "y (m)", "Real TTM");
-				dfree(tmp);
-			}
-
-			/*if(simu->cachedm){//use cachedm
-				for(int idm=0; idm<parms->ndm; idm++){
-					drawmap("DM", P(simu->cachedm, idm), parms->plot.opdmax,
-						"Deformable Mirror OPD", "x (m)", "y (m)", "Real OPD %d", idm);
-				}
-			}*/
-			if(draw_current("DM", "Real OPD OA")){
-				dmat* opd=dnew(simu->aper->locs->nloc, 1);
-				for(int idm=0; idm<parms->ndm; idm++){
-					int ind=parms->evl.nevl*idm;
-					simu->evl_propdata_dm[ind].phiout=P(opd);
-					CALL_THREAD(simu->evl_prop_dm[ind], 0);
-				}
-				dscale(opd, -1);
-				if(simu->ttmreal){
-					real ptt[]={0,0,0};
-					ptt[1]=P(simu->ttmreal,0);
-					ptt[2]=P(simu->ttmreal,1);
-					loc_add_ptt(opd, ptt, simu->aper->locs);
-				}
-
-				drawopd("DM", simu->aper->locs, opd, parms->plot.opdmax,
-					"Deformable Mirror OPD On Axis", "x (m)", "y (m)", "Real OPD OA");
-				dfree(opd);
-			}
-		}
-		/*for(int idm=0; idm<parms->ndm; idm++){
-			if(parms->recon.psol && simu->dmpsol&&P(simu->dmpsol,idm)){
-				drawopd("DM", P(simu->recon->aloc,idm), P(simu->dmpsol,idm), parms->plot.opdmax,
-					"Deformable Mirror PSOL", "x (m)", "y (m)", "PSOL %d", idm);
-			}
-		}*/
-	}
+	
 	if(parms->save.dm){
 		int isim=(parms->sim.closeloop?2:0)+simu->reconisim;
 		if(isim>=0&&isim<parms->sim.end){
@@ -331,64 +233,4 @@ void save_dmreal(sim_t* simu){
 			}
 		}
 	}
-}
-
-void plot_gradoff(sim_t *simu, int iwfs){
-	const parms_t *parms=simu->parms;
-	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
-		if(iwfs<0){
-			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
-				plot_gradoff(simu, iwfs);
-			}
-		}else{
-			int ipowfs=parms->wfs[iwfs].powfs;
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-			int draw_single_save=draw_single;
-			draw_single=0;
-			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),
-				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
-				"WFS Offset", "x (m)", "y (m)", "WFS %2d", iwfs);
-			draw_single=draw_single_save;
-		}
-	}
-}
-void plot_psf(const_anycell _psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
-	dmat* psftemp=NULL;
-	dmat* psfreal=NULL;
-	const char* title, * tab;
-	for(int iwvl=0; iwvl<NX(_psf2s.c); iwvl++){
-		switch(type){
-			case 2:
-				title="Science Diffraction Limited PSF";
-				tab="DL";
-				break;
-			case 1:
-				title="Science Closed Loop PSF";
-				tab="CL";
-				break;
-			case 0:
-				title="Science Open Loop PSF";
-				tab="OL";
-				break;
-			default:
-				title="PSF";
-				tab="PSF";
-		}
-		char tabname[64];
-		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
-		if(draw_current(psfname, tabname)){
-			cell* c=P(_psf2s.c, iwvl);
-			if(dmat_cast(c)){
-				psfreal=dmat_cast(c);
-			}else if(cmat_cast(c)){
-				if(psftemp&&NX(psftemp)!=c->nx){
-					dfree(psftemp);
-				}
-				cabs22d(&psftemp, 0, cmat_cast(c), 1);
-				psfreal=psftemp;
-			}
-			draw(psfname, (plot_opts){.image=psfreal,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
-		}
-	}
-	dfree(psftemp);
 }

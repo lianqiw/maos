@@ -404,7 +404,7 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 			dcelladd(&dmtmp, 1, dmerr, 1);
 		}
 		if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
-			addlow2dm(&dmtmp, simu, dmerr_lo, 1);
+			addlow2dm(&dmtmp, parms, recon, dmerr_lo, 1);
 		}
 		dcellmm(&simu->ecov, dmtmp, dmtmp, "nt", 1);
 	}

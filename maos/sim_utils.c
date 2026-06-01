@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <unistd.h>
-
 #include "common.h"
 #include "sim.h"
 #include "sim_utils.h"
@@ -243,42 +242,6 @@ void genatm(sim_t* simu){
 	}
 }
 
-/**
-   Propagate the atmosphere to closest xloc. skip wavefront sensing and
-   reconstruction.
-
-   2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not
-   match in number. Fixed. Do not do scaling even if fit.ht is less.
-
-*/
-void atm2xloc(dcell** opdx, const sim_t* simu){
-	const recon_t* recon=simu->recon;
-	const parms_t* parms=simu->parms;
-	if(parms->recon.glao){
-		return;
-	}
-	/*in close loop mode, opdr is from last time step. */
-	int isim=simu->reconisim;
-	if(!*opdx){
-		*opdx=dcellnew(recon->npsr, 1);
-	}
-	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-		if(!P(*opdx, ipsr)){
-			P(*opdx, ipsr)=dnew(P(recon->xloc, ipsr)->nloc, 1);
-		} else{
-			dzero(P(*opdx, ipsr));
-		}
-	}
-	if(simu->atm){
-		for(int ips=0; ips<parms->atm.nps; ips++){
-			real shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
-			real shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
-			int ipsr=P(parms->atm.ipsr, ips);
-			prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
-				.alpha=1, .shiftx=shiftx, .shifty=shifty, .wrap=1});
-		}
-	}
-}
 /*
 	Update trombone position. 
 	The fast sodium range is simulated with powfs.focus as a wavefront error
@@ -1428,7 +1391,7 @@ static void init_simu_moao(sim_t* simu){
    Initialize simu (of type sim_t) and various simulation data structs. Called
    for every seed.
 */
-sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
+sim_t* sim_init(const parms_t* parms, powfs_t* powfs,
 	aper_t* aper, recon_t* recon, int iseed){
 	const int nevl=parms->evl.nevl;
 	const int nwfs=parms->nwfs;
@@ -1536,7 +1499,7 @@ sim_t* init_simu(const parms_t* parms, powfs_t* powfs,
 /**
    Release memory of simu (of type sim_t) and close files.
 */
-void free_simu(sim_t* simu){
+void sim_free(sim_t* simu){
 	if(!simu) return;
 	global->simu=0;
 	const parms_t* parms=simu->parms;

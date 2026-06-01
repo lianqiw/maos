@@ -19,6 +19,7 @@
 #include "sim.h"
 #include "ahst.h"
 #include "save.h"
+#include "plot_utils.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -28,16 +29,7 @@
    Applies hysterisis. Input dmcmd is command to the DM and output dmreal is the
    actual position the DM goes to.
 */
-/**
-   Add low order NGS modes to DM actuator commands for AHST and MVST
- */
-void addlow2dm(dcell** dmval, const sim_t* simu, const dcell* low_val, real gain){
-	if(simu->parms->recon.split==2){
-		dcellmm(dmval, simu->recon->MVModes, low_val, "nn", gain);
-	}else{//ahst
-		dcellmm(dmval, simu->recon->ngsmod->Modes, low_val, "nn", gain);
-	}
-}
+
 static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long stuck2){
 	real diff=*x2-*x1;
 	if(fabs(diff)>thres){
@@ -298,7 +290,7 @@ static void filter_cl(sim_t* simu){
 			/*accumulate to the main integrator. Use mpreint to properly account
 			 * for type II controler. Gain is already applied.*/
 			dcellzero(simu->dmtmp);
-			addlow2dm(&simu->dmtmp, simu, simu->Mint_lo->mpreintc, 1);
+			addlow2dm(&simu->dmtmp, parms, recon, simu->Mint_lo->mpreintc, 1);
 			servo_add(simu->dmint, simu->dmtmp, 1);
 		}
 	}
@@ -318,7 +310,7 @@ static void filter_cl(sim_t* simu){
 	}
 	if(simu->Mint_lo&&!parms->sim.fuseint){
 		servo_output(simu->Mint_lo, &simu->Mtmp_lo);
-		addlow2dm(&simu->dmtmp, simu, simu->Mtmp_lo, 1);
+		addlow2dm(&simu->dmtmp, parms, recon, simu->Mtmp_lo, 1);
 	}
 }
 static void postproc_dm(sim_t* simu){
@@ -344,7 +336,7 @@ static void postproc_dm(sim_t* simu){
 		dcellmm(&simu->telfocusint, recon->RFdm, simu->dmcmd, "nn", parms->sim.epfocus2tel);
 	}
 	if(recon->dither_m){
-		//Change phase in calc_dither_amp if phase of dithering is changed
+		//Change phase in dither_amp_calc if phase of dithering is changed
 		//this is for step isim+1
 		//2023-05-20: bias by pi/2 so that it works with npoint==2
 		real anglei=M_PI*0.5+((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
@@ -577,7 +569,7 @@ void filter_dm(sim_t* simu){
 			dcellzero(simu->dmtmp);
 		}
 		if(simu->Merr_lo&&P(parms->sim.eplo,0)>0){
-			addlow2dm(&simu->dmtmp, simu, simu->Merr_lo, 1);
+			addlow2dm(&simu->dmtmp, parms, simu->recon, simu->Merr_lo, 1);
 		}
 	}
 	postproc_dm(simu);
@@ -604,6 +596,7 @@ void filter_dm(sim_t* simu){
 		pthread_mutex_unlock(&simu->dmreal_mutex);
 		//dbg("dmreal_isim is set to %d\n", simu->dmreal_isim);
 	}
+	plot_dmreal(simu);
 	save_dmreal(simu);
 	//Record NGS mode correction time history
 	if(simu->corrNGSm&&P(simu->Mint_lo->mintc, 0)){

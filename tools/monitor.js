@@ -291,7 +291,7 @@ function App() {
               {job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).map((row, i) => (
                 <tr key={row.PID}>
                   {columns.map((col) => <td key={col} className={cn[col]} title={row[col]}>{row[col]}</td>)}
-                  <td onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
+                  <td className="jobIcon" onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
                   <Progress text={row.prog} frac={row.frac}></Progress>
                 </tr>
               ))}

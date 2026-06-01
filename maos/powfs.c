@@ -20,6 +20,7 @@
 #include "powfs_utils.h"
 #include "recon.h"
 #include "recon_utils.h"
+#include "dither_utils.h"
 
 /**
    \file powfs.h
@@ -1645,7 +1646,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 
 	/*Generating Matched filter */
 	if(parms->powfs[ipowfs].phytype_recon==PTYPE_MF||parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
-		genmtch(parms, powfs, ipowfs);
+		mtch_wrap(parms, powfs, ipowfs);
 		if(parms->save.setup){
 			writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche", ipowfs);
 		}

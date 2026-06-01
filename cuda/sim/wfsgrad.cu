@@ -26,7 +26,7 @@ extern "C"
 {
 #endif
 #include "../../maos/sim.h"
-#include "../../maos/utils.h"
+#include "../../maos/dither_utils.h"
 #if !USE_CPP
 }
 #endif

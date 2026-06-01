@@ -19,7 +19,7 @@
 #include "surf.h"
 #include "recon_utils.h"
 #include "powfs.h"
-#include "save.h"
+#include "plot_utils.h"
 /**
    \file surf.h
    Setup NCPA surfaces for WFS and Performance evaluation.
@@ -639,7 +639,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 				writebin(recon->dm_ncpa, "dm_ncpa");
 			}
 			if(parms->plot.run){
-				draw_dm(parms, recon, recon->dm_ncpa, 0, "DM NCPA Offset", "NCPA");
+				plot_dm(parms, recon, recon->dm_ncpa, 0, "DM NCPA Offset", "NCPA");
 			}
 			dspcellfree(recon->HA_ncpa);
 		}

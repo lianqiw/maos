@@ -20,8 +20,10 @@
 #include "fdpcg.h"
 #include "ahst.h"
 #include "recon_utils.h"
+#include "petal_utils.h"
 #include "moao.h"
 #include "powfs.h"
+#include "twfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -503,39 +505,6 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 	}
 }
 
-/**
-   Setup reconstructor for TWFS or sodium fit gradient
-*/
-static void
-setup_recon_twfs(recon_t* recon, const parms_t* parms){
-	if(parms->itpowfs==-1){
-		return;
-	}
-
-	dspcell* neai=NULL;
-	//int itwfs=-1;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(parms->powfs[ipowfs].skip==2){//twfs
-			if(!neai){
-				neai=dspcellnew(parms->nwfs, parms->nwfs);
-			}
-			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
-		} 
-	}
-	//need to set a threshold to avoid other modes reconstruct to spherical modes.
-	
-	if(recon->GRtwfs){
-		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv(recon->GRtwfs, neai);
-	}
-
-	if(parms->save.setup){
-		if(recon->RRtwfs) writebin(recon->RRtwfs, "twfs_recon");
-	}
-	cellfree(neai);
-}
-
 
 /**
    Setup either the control matrix using either minimum variance reconstructor by calling setup_recon_mvr()
@@ -552,7 +521,7 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* po
 	/*mvst uses information here*/
 	setup_recon_focus(recon, parms);
 	/*setup Truth wfs*/
-	setup_recon_twfs(recon, parms);
+	twfs_setup_RR(recon, parms);
 	
 	if(!parms->sim.idealtomo){
 		if(parms->recon.mvm&&parms->load.mvm){
@@ -636,39 +605,7 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	}
 	locfree(eloc);
 }
-/**
- * Petaling mode control
-*/
-void setup_recon_petal(recon_t *recon, const parms_t *parms, const powfs_t *powfs){
-	if(!parms->recon.petal) return;
-	recon->petal=mycalloc(2, petal_t*);
-	for(int ir=0; ir<2; ir++){
-		int ipowfs=0;
-		if(ir==0&&parms->ittfpowfs!=-1){
-			ipowfs=parms->ittfpowfs;
-		} else if(ir==1&&parms->ittpowfs!=-1){
-			ipowfs=parms->ittpowfs;
-		} else{
-			continue;
-		}
-		real nembed=2;
-		real dsa=powfs[ipowfs].pts->dsa;
-		real dtheta=parms->powfs[ipowfs].wvlmean/(nembed*dsa);
-		real pdtheta=parms->powfs[ipowfs].pixtheta/dtheta;
-		dbg("powfs[%d].pdtheta=%g\n", ipowfs, pdtheta);
-		if(fabs(pdtheta-1)>0.01){
-			warning("TODO: pdtheta!=1 requries resampling PSFs\n");
-		}
-		//only withtt only for t/t oiwfs unless petaltt>1. 
-		//enable it for TTF OIWFS sometimes results in a clocking gradient pattern.
-		int withtt=(parms->powfs[ipowfs].order==1||parms->recon.petaltt>1)?parms->recon.petaltt:0;
-		recon->petal[ir]=petal_setup(powfs[ipowfs].pts->loc, powfs[ipowfs].loc->dx, P(powfs[ipowfs].amp, 0),
-			pdtheta, parms->powfs[ipowfs].pixblur, parms->aper.rot, parms->recon.petalnpsf, withtt);
-		if(parms->save.setup){
-			petal_save(recon->petal[ir], "petal_%d", ir);
-		}
-	}
-}
+
 /**
    Reconstruction optimization background loops setup.
  */
@@ -692,12 +629,8 @@ void setup_recon_misc(recon_t* recon, const parms_t* parms, loc_t* locs, const p
 		setup_recon_psd(recon, parms);
 	}
 	if(parms->recon.petal){
-		int idm=parms->idmground;
-		recon->apetal=petal_mkh_loc(P(recon->aloc,idm), 6, parms->aper.rot);
-		setup_recon_petal(recon, parms, powfs);
-		if(parms->save.setup){
-			writebin(recon->apetal, "apetal");
-		}
+		petal_setup_wrap(recon, parms, powfs);
+		
 	}
 	toc2("setup_recon_misc");
 }

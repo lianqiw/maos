@@ -20,6 +20,7 @@
 #include "recon_utils.h"
 #include "powfs.h"
 #include "ahst.h"
+#include "twfs.h"
 
 /**
    \file recon_geom.c
@@ -926,103 +927,6 @@ void setup_recon_GF(recon_t* recon, const parms_t* parms){
 
 	if(parms->save.recon){
 		writebin(recon->GFall, "GFall");
-	}
-}
-/**
-   Mapping Truth WFS reconstructed modes (in actuator space) to gradients.
- */
-void setup_recon_GR(recon_t* recon, const parms_t* parms){
-	if(parms->itpowfs==-1&&!(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG)){
-		return;
-	}
-	int nlayer=1;
-	//Need two layers when there are multiple TWFS or LGS WFS gradient offset needs projection adjustment
-	if((parms->itpowfs!=-1 && parms->powfs[parms->itpowfs].nwfs>1)
-		||(parms->ilgspowfs!=-1&&parms->powfs[parms->ilgspowfs].dither==-1&&parms->powfs[parms->ilgspowfs].phytype_sim2==PTYPE_COG&&parms->powfs[parms->ilgspowfs].nwfs>1)){
-		nlayer=parms->ndm;
-	}
-	recon->GRall=dcellnew(parms->nwfs, nlayer);
-
-	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
-	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
-	const int zradonly=parms->recon.twfs_radonly;
-	recon->Rmod=dcellnew(parms->ndm, 1);
-	info("Truth wfs controls mode %s from order %d to %d on %d layers.\n", zradonly?"radial":"all modes", rmin, rmax, nlayer);
-	for(int idm=0; idm<nlayer; idm++){
-		const loc_t* loc=P(recon->aloc, idm);
-		int rmin2=rmin;
-		if(idm>0 && rmin2<3){//don't place those on upper layer.
-			rmin2=3;
-		}
-		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
-		dmat* opd=zernike(loc, 0, rmin2, rmax, zradonly);
-		if(parms->recon.modal){//conver to modal actuator space
-			dmat *opd2=NULL;
-			dcellmm(&opd2, P(recon->amodpinv, idm, idm), opd, "nn", 1);
-			dfree(opd); opd=opd2;
-		}
-		OMP_FOR(8)
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			const int ipowfs=parms->wfs[iwfs].powfs;
-			if(parms->powfs[ipowfs].skip==2||(!parms->recon.twfs_offsetdm && !parms->powfs[ipowfs].lo)){
-				if(P(recon->GA, iwfs, idm)){
-					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfs, idm), opd, "nn", 1);
-				}else{
-					error("Please implement without GA\n");
-				}
-			}
-		}
-		if(parms->recon.twfs_offsetdm){
-			P(recon->Rmod, idm)=opd; opd=NULL;
-		}else{
-			dfree(opd);
-		}
-	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].skip==2){//twfs
-			int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
-			if(parms->powfs[ipowfs].nwfs>1&&nlayer==1 && parms->ndm>1){
-				warning("recon.GRwfs should have more than 1 layer when there are multiple twfs and DMs.\n");
-			}
-			if(rmin<3){
-				warning("rmin should be 3 for truth wfs.\n");
-			}
-			if(!recon->GRtwfs){
-				recon->GRtwfs=dcellnew(parms->nwfs, nlayer2);
-			}
-			for(int ilayer=0; ilayer<nlayer2; ilayer++){
-				P(recon->GRtwfs, iwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
-			}
-		}
-		if(!parms->recon.twfs_offsetdm){
-			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
-				int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
-				if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
-					error("recon.GRwfs should have more than 1 layer for sodium fitting projection.\n");
-				}
-				if(rmin>2){
-					error("rmin should be 1 or 2 for sodium fitting projection\n");
-				}
-				if(!recon->GRlgs){
-					recon->GRlgs=dcellnew(parms->powfs[ipowfs].nwfs, nlayer2);
-				}
-				int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-				for(int ilayer=0; ilayer<nlayer2; ilayer++){
-					P(recon->GRlgs, jwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
-				}
-			}
-		}
-	}
-	if(recon->GRlgs){
-		//2021-10-15: Since we are not selecting modes, there is no need for high threshold
-		//to high threshold makes the filtering ill formed
-		recon->RRlgs=dcellpinv(recon->GRlgs, NULL);
-	}
-	if(parms->save.recon){
-		writebin(recon->GRall, "twfs_GR");
-		if(recon->RRlgs) writebin(recon->RRlgs, "twfs_RRlgs");
-		if(parms->recon.twfs_offsetdm) writebin(recon->Rmod, "twfs_Rmod");
 	}
 }
 /**

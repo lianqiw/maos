@@ -31,194 +31,7 @@
 #endif
 #include "powfs.h"
 #include "sim_utils.h"
-/*
-   A few utility routines
-*/
-/**
- * Return type of wfs
-*/
-static const char *
-powfs_legend(const parms_t *parms, int ipowfs){
-	const char *const legwfs[]={
-	"LGS WFS",
-	"NGS WFS",
-	"PWFS",
-	"TTF WFS",
-	"TT WFS",
-	"Other WFS",
-	};
-	int ilegwfs=6;
-	if(parms->powfs[ipowfs].lo){
-		if(parms->powfs[ipowfs].order==1){
-			ilegwfs=4;
-		} else{
-			ilegwfs=3;
-		}
-	} else{
-		if(parms->powfs[ipowfs].trs){
-			ilegwfs=0;
-		} else{
-			if(parms->powfs[ipowfs].type==WFS_PY){
-				ilegwfs=2;
-			} else{
-				ilegwfs=1;
-			}
-		}
-	}
-	return legwfs[ilegwfs];
-}
-/**
-   Plot the loc, together with all beams
-*/
-void plotloc(const char* fig, const parms_t* parms,
-	loc_t* loc, real ht, const char* format, ...){
-	format2fn;
-	int ncir=parms->evl.nevl+parms->fit.nfit+parms->nwfs;
-	if(parms->ncpa.calib){
-		ncir+= parms->ncpa.ndir;
-	}
-	dmat* cir=dnew(4, ncir);
-	const char *legend[ncir+1];
-	memset(legend, 0, sizeof(char*)*(ncir+1));
-	int count=0;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		real hs=P(parms->evl.hs,ievl);
-		P(cir, 0, count)=ht*P(parms->evl.thetax,ievl);
-		P(cir, 1, count)=ht*P(parms->evl.thetay,ievl);
-		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
-		P(cir, 3, count)=0xFF0000;/*rgb color */
-		count++;
-		if(ievl==0) legend[count]="Evaluation";//after count++ because points are plotted first
-	}
-	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-		real hs=P(parms->fit.hs,ifit);
-		P(cir, 0, count)=ht*P(parms->fit.thetax,ifit);
-		P(cir, 1, count)=ht*P(parms->fit.thetay,ifit);
-		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
-		P(cir, 3, count)=0xFF22DD;/*rgb color */
-		count++;
-		if(ifit==0) legend[count]="DM Fitting";
-	}
-	for(int idir=0; idir< parms->ncpa.ndir; idir++){
-		real hs=P(parms->ncpa.hs,idir);
-		P(cir, 0, count)=ht*P(parms->ncpa.thetax,idir);
-		P(cir, 1, count)=ht*P(parms->ncpa.thetay,idir);
-		P(cir, 2, count)=parms->aper.d*0.5*(1-ht/hs);
-		P(cir, 3, count)=0x22FF00;/*rgb color */
-		count++;
-		if(idir==0) legend[count]="NCPA";
-	}
 
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		real hs=parms->wfs[iwfs].hs;
-		P(cir, 0, count)=parms->wfs[iwfs].thetax*ht;
-		P(cir, 1, count)=parms->wfs[iwfs].thetay*ht;
-		P(cir, 2, count)=parms->aper.d*0.5*(1.-ht/hs);
-		if(!isinf(hs)){//LGS
-			P(cir, 3, count)=0xFF8800;
-		} else if(!parms->powfs[ipowfs].lo){//Hi NGS
-			P(cir, 3, count)=0xFFFF00;
-		} else if(parms->powfs[ipowfs].order>1){//TTF
-			P(cir, 3, count)=0x0000FF;//TTF
-		} else{
-			P(cir, 3, count)=0x0000FF;//TT
-		}
-		count++;
-		if(P(parms->powfs[ipowfs].wfsind,iwfs)==0){
-			legend[count]=powfs_legend(parms, ipowfs);
-		}
-	}
-	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir, .legend=legend},
-		"Coordinate", "x (m)", "y (m)", "%s", fn);
-	dfree(cir);
-}
-/**
-   ploted all the different beam directions as points. */
-void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...){
-	format2fn;
-	int ncir=1;
-	dmat* cir=dnew(4, ncir);
-	P(cir, 0, 0)=0;
-	P(cir, 1, 0)=0;
-	P(cir, 2, 0)=totfov/2;
-	P(cir, 3, 0)=0x000000;/*rgb color */
-	int ngroup=3+parms->npowfs+parms->nlgswfs;
-	const char* legend[ngroup];
-	loccell* locs=(loccell*)cellnew(ngroup, 1);
-	int32_t* style=mycalloc(ngroup, int32_t);
-	int count=0;
-	legend[count]="Evaluation";
-	style[count]=(0xFF0000<<8)|(4<<4)|3;
-	P(locs,count)=locnew(parms->evl.nevl, 0, 0);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		P(locs,count)->locx[ievl]=P(parms->evl.thetax,ievl)*RAD2AS;
-		P(locs,count)->locy[ievl]=P(parms->evl.thetay,ievl)*RAD2AS;
-	}
-	count++;
-	legend[count]="DM Fitting";
-	style[count]=(0xFF22DD<<8)|(4<<4)|3;
-	P(locs,count)=locnew(parms->fit.nfit, 0, 0);
-	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-		P(locs,count)->locx[ifit]=P(parms->fit.thetax,ifit)*RAD2AS;
-		P(locs,count)->locy[ifit]=P(parms->fit.thetay,ifit)*RAD2AS;
-	}
-	count++;
-	legend[count]="NCPA";
-	style[count]=(0x22FF00<<8)|(4<<4)|2;
-	P(locs,count)=locnew( parms->ncpa.ndir, 0, 0);
-	for(int ifit=0; ifit< parms->ncpa.ndir; ifit++){
-		P(locs,count)->locx[ifit]=P(parms->ncpa.thetax,ifit)*RAD2AS;
-		P(locs,count)->locy[ifit]=P(parms->ncpa.thetay,ifit)*RAD2AS;
-	}
-	count++;
-
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		legend[count]=powfs_legend(parms, ipowfs);
-		P(locs,count)=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			P(locs,count)->locx[jwfs]=parms->wfs[iwfs].thetax*RAD2AS;
-			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
-		}
-		if(!isinf(parms->powfs[ipowfs].hs)){
-			style[count]=(0xFF8800<<8)|(4<<4)|2;/*LGS */
-		} else if(!parms->powfs[ipowfs].lo){
-			style[count]=(0xFFFF00<<8)|(4<<4)|1;/*Hi NGS*/
-		} else if(parms->powfs[ipowfs].order>1){
-			style[count]=(0x0000FF<<8)|(4<<4)|4;/*TTF*/
-		} else{
-			style[count]=(0x0000FF<<8)|(4<<4)|1;/*TT */
-		}
-		count++;
-	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-		if(parms->powfs[ipowfs].llt){
-			if(jwfs==0) legend[count]="LLT"; else legend[count]=NULL;
-			style[count]=(0xFF8800<<8)|(4<<4)|3|8;//connect LLT to LGS
-			P(locs,count)=locnew(2, 0, 0);
-			const real hs=parms->powfs[ipowfs].hs;
-			P(locs,count)->locx[0]=PR(parms->powfs[ipowfs].llt->ox, jwfs)/hs*RAD2AS;
-			P(locs,count)->locy[0]=PR(parms->powfs[ipowfs].llt->oy, jwfs)/hs*RAD2AS;
-			P(locs,count)->locx[1]=parms->wfs[iwfs].thetax*RAD2AS;
-			P(locs,count)->locy[1]=parms->wfs[iwfs].thetay*RAD2AS;
-			count++;
-		}
-	}
-	if(count!=ngroup){
-		error("count=%d, ngroup=%d. they should equal.\n", count, ngroup);
-	}
-	real limit[4];
-	limit[0]=limit[2]=-totfov/2;
-	limit[1]=limit[3]=totfov/2;
-	draw(fig, (plot_opts){.ngroup=ngroup, .loc=P(locs), .style=style, .limit=limit, .cir=cir, .legend=legend},
-		"Asterism", "x (arcsec)", "y (arcsec)", "%s", fn);
-	dfree(cir);
-	cellfree(locs);
-	free(style);
-}
 /**
  * @brief Remove lock file and create Res_seed.done file when maos finishes a seed.
  * 
@@ -242,31 +55,6 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
 	}
 }
 
-/**
-   Rename the log files when simulation exits or when signal is caught.
-*/
-void maos_final(int sig){
-	draw_final(1);
-	scheduler_finish(signal_caught);
-	if(disable_save) return;
-	rename_log(sig, "maos");
-	if(global&&global->parms&&global->parms->fdlock){
-		const parms_t* parms=global->parms;
-		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), -1, sig==0);
-	}
-}
-/**
-   Handles signals.
-*/
-int maos_signal_handler(int sig){
-	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
-	maos_final(sig);/*handles signal */
-	if(global&&global->parms&&global->parms->sim.mvmport){
-		mvm_client_close();
-	}
-	scheduler_finish(sig);
-	return 0;
-}
 /**
    Print out usage information.
 */
@@ -428,68 +216,6 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 		sumamp2* nembed* nembed, parms->sim.dt* (isim-parms->evl.psfisim+1));
 	return strdup(keywords);
 }
-/**
-   Plot grid points, amplitude maps and NCPA.
- */
-void plot_setup(const parms_t* parms, const powfs_t* powfs,
-	const aper_t* aper, const recon_t* recon){
-	int draw_single_save=draw_single;
-	draw_single=0;
-	plotdir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */
-	if(recon){
-		if(parms->plot.setup>1){
-			plotloc("Aperture", parms, recon->ploc, 0, "ploc");
-			plotloc("Aperture", parms, recon->floc, 0, "floc");
-		}
-		for(int idm=0; idm<parms->ndm; idm++){
-			real ht=parms->dm[idm].ht;
-			plotloc("Aperture", parms, P(recon->aloc,idm), ht, "aloc %d", idm);
-			/*if(recon->actcpl){
-				drawopd("Aperture", P(recon->aloc, idm), P(recon->actcpl, idm), 0, 
-					"DM Actuator Coupling Factor", "x (m)", "y (m)", "actcpl %d", idm);
-			}*/
-		}
-		if(parms->plot.setup>1){
-			for(int ips=0; ips<recon->npsr; ips++){
-				const real ht=P(recon->ht,ips);
-				plotloc("Aperture", parms, P(recon->xloc,ips), ht, "xloc %d", ips);
-			}
-		}
-	}
-	drawopd("Aperture", aper->locs, aper->amp1, 0, "Performance Evaluation Amplitude Map",
-		"x (m)", "y (m)", "aper");
-
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		for(int iamp=0; iamp<PN(powfs[ipowfs].amp); iamp++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,iamp);
-			if(parms->plot.setup>1){
-				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp,iamp), 0,
-					"WFS Amplitude Map", "x (m)", "y (m)", "amp wfs%d", iwfs);
-			}
-			if(powfs[ipowfs].saloc->nloc>4){
-				drawopd("Aperture", powfs[ipowfs].saloc, P(powfs[ipowfs].saa,iamp), 0,
-					"WFS Subaperture Amplitude", "x (m)", "y (m)", "saa wfs%d ", iwfs);
-			}
-		}
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-			if(powfs[ipowfs].gradoff){
-				drawgrad("Goff", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].gradoff, jwfs),
-					parms->plot.grad2opd, parms->powfs[ipowfs].trs, 0,
-					"WFS Offset", "x (m)", "y (m)", "Gncpa %d", iwfs);
-			}
-			if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->cogmask){
-				drawints("Gmask", powfs[ipowfs].saloc, powfs[ipowfs].intstat->cogmask, 0,
-						"WFS CoG Mask", "x", "y", "WFS %2d", iwfs);
-			}
-		}
-	}
-	/*if(recon->floc){
-		drawopd("Aperture", recon->floc, recon->W1, 0, "DM Fitting Amplitude Map", "x (m)", "y (m)", "W1");
-	}*/
-	draw_single=draw_single_save;
-}
-
 
 /**
    Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).
@@ -878,26 +604,6 @@ real zoomfocusadj(sim_t* simu, int iwfs){
 	return focus;
 }
 /**
-   Expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
-*/
-
-void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int isim, real deltam){
-	//adjust for delay due to propagation, and computation delay if delay is not 2 frame.
-	const int adjust=alfsm+1-dtrat;
-	//adjust to get delay at beginning of integration
-	const int adjust2=dtrat-1;
-	const real anglei=(2*M_PI/npoint);
-	const real angle0=M_PI*0.5;
-	const real angle=angle0+((isim-adjust-adjust2)/dtrat)*anglei+deltam;
-	const real angle2=angle0+((isim-adjust)/dtrat)*anglei+deltam;
-	const real delay=(real)adjust/dtrat;
-	const real beta=1+delay+floor(-delay);
-	const real scale=1./(beta*beta+(1-beta)*(1-beta));
-	//use average of two places during accumulation and scale
-	*cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
-	*ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
-}
-/**
    Find peak, then using parabolic fit on 3x3 window around it.
 */
 /*
@@ -1201,4 +907,14 @@ real average_powfs(dmat *vec, lmat *wfs, int replace){
 		}
 	}
 	return avg;
+}
+/**
+   Add low order NGS modes to DM actuator commands for AHST and MVST
+ */
+void addlow2dm(dcell** dmval, const parms_t *parms, const recon_t *recon, const dcell* low_val, real gain){
+	if(parms->recon.split==2){
+		dcellmm(dmval, recon->MVModes, low_val, "nn", gain);
+	}else{//ahst
+		dcellmm(dmval, recon->ngsmod->Modes, low_val, "nn", gain);
+	}
 }

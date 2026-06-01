@@ -15,12 +15,14 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_MAOS_SAVE_H
-#define AOS_MAOS_SAVE_H
-#include "common.h"
-void save_pistat(sim_t *simu);
-void save_gradol(sim_t *simu);
-void save_recon(sim_t *simu);
-void save_dmreal(sim_t *simu);
+/**
+   \file petal_utils.h
 
+   Contains utility routines to for petal mode reconstruction. Actual implementation is in lib/petal.c
+*/
+#ifndef AOS_PETAL_UTILS_H
+#define AOS_PETAL_UTILS_H
+#include "common.h"
+void petal_setup_wrap(recon_t *recon, const parms_t *parms, const powfs_t *powfs);
+void petal_recon(sim_t *simu);
 #endif

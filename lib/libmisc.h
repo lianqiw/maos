@@ -32,11 +32,14 @@ void addnoise(dmat *A, rand_t* rstat,
 	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
 	      const dmat* qe, real rne, real excess);
 void addnoise_grad(dmat *grad, const dmat *neal, rand_t *srand);
+int cog_multi(dmat** cg, const dmat* im,	const dmat* loc,int wsize);
+void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, real cogoff, int ntry,
+  rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
+);
 dmat *poly2fit(const dmat *in, const dmat *out, int maxorder);
 dmat *loc_calib(const dsp *GA, propdata_t *propdata, int maxorder);
 dmat *polyfit(const dmat *x, const dmat *y, int maxorder);
 dmat *polyval(const dmat *x, const dmat *coeff, int separate);
-real calc_dither_amp(dmat **res, const dmat *signal, long dtrat, long npoint, int detrend, int combine);
 int wrap_seq(long index, long n);
 real wrap2range(real val, real low, real high);
 real pchip_wt(int i, float u);

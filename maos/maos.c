@@ -19,6 +19,8 @@
 #include "common.h"
 #include "sim_utils.h"
 #include "maos.h"
+#include "plot_utils.h"
+#include "mvm_client.h"
 
 //PRINT_MACRO(USE_CUDA)
 /**
@@ -316,6 +318,31 @@ static void* maos_listener(void* psock){
 	return NULL;
 }
 
+/**
+   Rename the log files when simulation exits or when signal is caught.
+*/
+void maos_final(int sig){
+	draw_final(1);
+	scheduler_finish(signal_caught);
+	if(disable_save) return;
+	rename_log(sig, "maos");
+	if(global&&global->parms&&global->parms->fdlock){
+		const parms_t* parms=global->parms;
+		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), -1, sig==0);
+	}
+}
+/**
+   Handles signals.
+*/
+int maos_signal_handler(int sig){
+	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
+	maos_final(sig);/*handles signal */
+	if(global&&global->parms&&global->parms->sim.mvmport){
+		mvm_client_close();
+	}
+	scheduler_finish(sig);
+	return 0;
+}
 
 /**
    This is the standard entrance routine to the program.  It first calls

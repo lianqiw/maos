@@ -165,7 +165,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 							maos_isim(isim);
 							isim++;
 						} else{//one seed finished
-							free_simu(simu);simu=0;
+							sim_free(simu);simu=0;
 							iseed++;
 							break;
 						}

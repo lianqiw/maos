@@ -15,12 +15,15 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_MAOS_SAVE_H
-#define AOS_MAOS_SAVE_H
-#include "common.h"
-void save_pistat(sim_t *simu);
-void save_gradol(sim_t *simu);
-void save_recon(sim_t *simu);
-void save_dmreal(sim_t *simu);
+/**
+   \file twfs.h
 
+   Truth WFS related
+*/
+#ifndef AOS_TWFS_H
+#define AOS_TWFS_H
+#include "common.h"
+void twfs_setup_GR(recon_t* recon, const parms_t* parms);
+void twfs_setup_RR(recon_t* recon, const parms_t* parms);
+void twfs_recon(sim_t* simu);
 #endif

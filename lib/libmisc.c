@@ -137,6 +137,35 @@ int cog_multi(
 	}
 	return 0;
 }
+
+/*compute cog NEA using Monte Carlo realizations of noise*/
+void cog_nea(real* nea, const dmat* ints, const dmat* cogmask, real cogthres, real cogoff, int ntry,
+	rand_t* rstat, real bkgrnd, real bkgrndc, const dmat* bkgrnd2i, const dmat* bkgrnd2ic, real rne
+){
+	dmat* ints2=dnew(NX(ints), NY(ints));
+	real gnf[2]={0,0};
+	real gny[2]={0,0};
+	dcog(gnf, ints, 0, 0, cogthres, cogoff, 0, cogmask);
+	seed_rand(rstat, 1);/*reset the seed each time.*/
+	nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
+	for(int i=0; i<ntry; i++){
+		dcp(&ints2, ints);
+		addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, 0, rne, 1);
+		dcog(gny, ints2, 0, 0, cogthres, cogoff, 0, cogmask);
+		real errx=gny[0]-gnf[0];
+		real erry=gny[1]-gnf[1];
+		nea[0]+=errx*errx;
+		nea[1]+=errx*erry;
+		nea[3]+=erry*erry;
+	}
+	dfree(ints2);
+	real stry=1./ntry;
+	nea[0]=nea[0]*stry;
+	nea[3]=nea[3]*stry;
+	nea[1]=nea[1]*stry;
+	nea[2]=nea[1];
+}
+
 /**
    Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out.
 */
@@ -345,80 +374,7 @@ dmat *polyfit(const dmat *x, /**<[in] input vector */
 	dfree(mm);
 	return coeff;
 }
-/**
-   Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
-*/
-real calc_dither_amp(
-	dmat **res, /**<result. nmod*1 if not combine. */
-	const dmat *signal, /**<array of data. nmod*nsim */
-	long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
-	long npoint,  /**<number of points during dithering*/
-	int detrend,  /**<flag for detrending (remove linear signal)*/
-	int combine	  /**<flag for combining modes. for tip/tilt only*/
-){
-	long nmod=NY(signal)==1?1:NX(signal);
-	long nframe=((NY(signal)==1?signal->nx:signal->ny)-1)/dtrat+1;//number of actual frames
-	dmat *slope=dnew(nmod, 1);//for detrending
-	long offset=(nframe/npoint-1)*npoint;//number of WFS frame separations between first and last cycle
-	if(detrend&&offset){//detrending
-		for(long imod=0; imod<nmod; imod++){
-			for(long ip=0; ip<npoint; ip++){
-				long i0=ip*dtrat*nmod+imod;
-				long i1=(ip+offset)*dtrat*nmod+imod;
-				P(slope,imod)+=P(signal, i1)-P(signal, i0);
-			}
-			P(slope,imod)/=(npoint*offset);
-		}
-		//dbg("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
-	}
-	real anglei=M_PI*2/npoint;
-	real angle0=M_PI*0.5;//2023-05-29: bias added to work with npoint==2
-	real ipv=0, qdv=0, a2m=0;
-	if(combine){//tip and tilt dithering
-		if(nmod!=2){
-			error("combine only support nmod=2\n");
-		}
-		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=angle0+anglei*iframe;//position of dithering
-			real cs=cos(angle);
-			real ss=sin(angle);
-			real ttx=P(signal, iframe*dtrat*nmod)-P(slope,0)*iframe;
-			real tty=P(signal, iframe*dtrat*nmod+1)-P(slope,1)*iframe;
-			ipv+=(ttx*cs+tty*ss);
-			qdv+=(ttx*ss-tty*cs);
-		}
-		a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-		
-	}else{//independent mode
-		if(nmod>1&&!res){
-			error("when there are more than 1 mode. res must be used to return the results\n");
-		}
-		if(res){
-			dinit(res, nmod, 1);
-		}
-		dmat *ipq=dnew(2,nmod);
-		for(int iframe=0; iframe<nframe; iframe++){
-			real angle=angle0+anglei*iframe;//position of dithering
-			real cs=cos(angle);
-			real ss=sin(angle);
-			for(int imod=0; imod<nmod; imod++){
-				real mod=P(signal, iframe*dtrat*nmod+imod)-P(slope,imod)*iframe;
-				P(ipq,0,imod)+=(mod*cs);//ipv
-				P(ipq,1,imod)+=(mod*ss);//iqv
-			}
-		}
-		for(int imod=0; imod<nmod; imod++){
-			a2m=sqrt(P(ipq,0,imod)*P(ipq,0,imod)+P(ipq,1,imod)*P(ipq,1,imod))/nframe*2.;
-			if(res) P(*res, imod)=a2m;
-		}
-		if(res){
-			a2m=P(*res,0);//first mode
-		}
-		dfree(ipq);
-	}
-	dfree(slope);
-	return a2m;
-}
+
 
 
 /**

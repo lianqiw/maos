@@ -32,6 +32,7 @@ table.monitor {
 	border-width: 2px 1px 1px 2px;
 	table-layout: fixed;
 	max-width: 100%;
+	cursor:default;
 }
 table.monitor tr{
 	width: 100%;
@@ -82,7 +83,9 @@ table.monitor td.tdout details p{
 	font-size: 12px;
 	white-space: normal;
 }
-
+table.monitor td.jobIcon{
+	cursor:pointer;
+}
 div.progress {
 	position: relative;
 	text-align: left;

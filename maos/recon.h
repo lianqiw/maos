@@ -27,7 +27,6 @@ void free_powfs_fit(powfs_t *powfs, const parms_t *parms);
 void free_fit(fit_t *fit, int nfit);
 void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t *powfs);
 void setup_recon_GF(recon_t* recon, const parms_t* parms);
-void setup_recon_GR(recon_t* recon, const parms_t* parms);
 void setup_recon_tomo_reg(recon_t *recon, const parms_t *parms);
 void setup_recon_tomo_matrix(recon_t *recon, const parms_t *parms);
 void setup_recon_update_cn2(recon_t *recon, const parms_t *parms);

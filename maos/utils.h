@@ -24,17 +24,12 @@
 #include "parms.h"
 #include "types.h"
 
-void plotloc(const char *fig, const parms_t *parms, 
-	     loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);
-void plotdir(const char* fig, const parms_t* parms, real totfov, const char* format, ...) CHECK_ARG(4);
+
 void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed, int success);
-void maos_final(int sig);
-int maos_signal_handler(int sig);
 arg_t* parse_args(int argc, const char *argv[]);
 void free_arg(arg_t** parg);
 char *evl_keywords(const parms_t *parms, const aper_t *aper, int ievl, int iwvl, int isim);
-void apply_fieldstop(dmat *opd, const dmat *amp, const lmat *embed, long nembed, const dmat* fieldstop, real wvl);
-void plot_setup(const parms_t *parms, const powfs_t *powfs, const aper_t *aper, const recon_t *recon);
+
 dmat *mkamp(const loc_t *loc, const map_t *aper, real misregx, real misregy, real D, real Din);
 void maxapriori(real *g, const dmat *ints, const parms_t *parms, 
 		const powfs_t *powfs, int iwfs, int isa, int noisy,
@@ -42,7 +37,6 @@ void maxapriori(real *g, const dmat *ints, const parms_t *parms,
 void wfslinearity(const parms_t *parms, powfs_t *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const parms_t *parms, powfs_t *powfs, recon_t *recon, const int iwfs);
 real zoomfocusadj(sim_t *simu, int iwfs);
-void dither_position(real *cs, real *ss, int alfsm, int dtrat, int npoint, int isim, real deltam);   
 void shwfs_grad(dmat **pgrad, dmat *ints[], const parms_t *parms, const powfs_t *powfs, int iwfs, int phytype);
 dcell *readwfs(const char *file, const parms_t *parms, int ipowfs);
 
@@ -66,4 +60,5 @@ real average_powfs(dmat* vec, lmat* wfs, int replace);
 void wfsgrad_llt_tt(real *ttx, real *tty, sim_t *simu, int iwfs, int isim);
 void wait_dmreal(sim_t*simu, int isim);
 void post_dmreal(sim_t *simu);
+void addlow2dm(dcell** dmval, const parms_t *parms, const recon_t *recon, const dcell* low_val, real gain);
 #endif

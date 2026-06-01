@@ -25,6 +25,7 @@
 #include "powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
+#include "plot_utils.h"
 #include "fdpcg.h"
 #include "save.h"
 #if USE_CUDA
@@ -55,7 +56,7 @@ sim_t* maos_iseed(int iseed){
 			P(parms->sim.seeds, iseed));
 		return 0;
 	}
-	sim_t* simu=init_simu(parms, powfs, aper, recon, iseed);
+	sim_t* simu=sim_init(parms, powfs, aper, recon, iseed);
 	if(iseed==0) simu->tk_s0=myclockd();
 	simu->tk_si=myclockd();
 	global->simu=simu;
@@ -112,7 +113,12 @@ void prepare_isim(sim_t *simu){
 		cell *FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
 		muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
 		recon->fit->FR.M=FRM;/*set FR.M back*/
-		save_dmproj(simu);
+		if(parms->save.dm){
+			zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
+		}
+		if(parms->plot.run&&simu->dmproj&&simu->reconisim>0&&simu->reconisim%parms->plot.run==0){
+			plot_dm(parms, recon, simu->dmproj, 0, "ATM to DM Projection (Hi)", "Proj Hi");
+		}
 		if(!parms->fit.square){
 			/* Embed DM commands to a square array for fast ray tracing */
 			for(int idm=0; idm<parms->ndm; idm++){
@@ -289,7 +295,7 @@ static void *reconstruct_loop(sim_t *simu){
 /**
    Closed loop simulation main loop.
 
-   It calls init_simu() to initialize the simulation struct, and then calls
+   It calls sim_init() to initialize the simulation struct, and then calls
    maos_isim() for each simulation time step. Arranged this way so that
    maos_isim() can be called from matlab.
    \callgraph
@@ -369,7 +375,7 @@ void maos_sim(){
 #if defined(__linux__) || defined(__APPLE__)
 		scheduler_report(simu->status);
 #endif
-		free_simu(simu);
+		sim_free(simu);
 		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), simu->iseed, signal_caught==0);
 		global->simu=NULL;
 	}/*seed */

@@ -20,6 +20,8 @@
 #include "moao.h"
 #include "ahst.h"
 #include "sim.h"
+#include "twfs.h"
+#include "plot_utils.h"
 /**
   \file setup.c
   Sets up maos simulation.
@@ -134,7 +136,7 @@ void maos_setup(const parms_t* parms){
 		info_green("\nSetting up reconstructor\n\n");
 		setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
 		setup_recon_GF(recon, parms);//GF depends on GA.
-		setup_recon_GR(recon, parms);
+		twfs_setup_GR(recon, parms);
 		if(parms->recon.split||parms->evl.split){
 			ngsmod_prep(parms, recon, aper);//needs GA
 		}

@@ -21,6 +21,7 @@
 #include "fdpcg.h"
 #include "sim.h"
 #include "recon_utils.h"
+#include "plot_utils.h"
 #include "mvm_client.h"
 #include "ahst.h"
 #include "moao.h"
@@ -619,6 +620,7 @@ void* reconstruct(sim_t* simu){
 #endif
 			moao_recon(simu);
 	}
+	plot_recon(simu);
 	save_recon(simu);
 	simu->tk_recon=myclockd()-tk_start;
 	return NULL;

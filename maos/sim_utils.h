@@ -18,15 +18,14 @@
 #include "common.h"
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H
-void atm2xloc(dcell **opdx, const sim_t *simu);
+void genatm(sim_t *simu);
 void sim_update_zoom(sim_t *simu);
 void sim_update_etf(sim_t *simu);
 void update_wfsflags(sim_t *simu);
 void shift_grad(sim_t *simu);
 void seeding(sim_t *simu);
-sim_t* init_simu(const parms_t *parms,powfs_t *powfs, aper_t *aper,recon_t *recon,int iseed);
-void free_simu(sim_t *simu);
+sim_t* sim_init(const parms_t *parms,powfs_t *powfs, aper_t *aper,recon_t *recon,int iseed);
+void sim_free(sim_t *simu);
 void print_progress(sim_t *simu);
 void save_skyc(powfs_t *powfs, recon_t *recon, const parms_t *parms);
-void genatm(sim_t *simu);
 #endif

@@ -19,6 +19,7 @@
 #include "sim.h"
 #include "ahst.h"
 #include "sim_utils.h"
+#include "plot_utils.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
