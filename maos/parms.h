@@ -530,6 +530,7 @@ typedef struct recon_cfg_t{
     int twfs_rmin; 	 /**<minimum zernike order (inclusive)*/
     int twfs_rmax;	 /**<maximum zernike order (inclusive)*/
     int twfs_radonly;/**<1: radial only, 0: all modes*/
+    int twfs_offsetdm;/**<1: Offset DM error signal instead of WFS gradients*/
 	int petal;  	 /**1: enable petal mode control*/
 	int petaldtrat;	 /**<how many time steps to average for petaling mode control.*/
 	int petalstep; 	 /**<simulation step to enable petal mode control*/

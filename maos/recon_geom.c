@@ -964,7 +964,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 		OMP_FOR(8)
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
-			if(parms->powfs[ipowfs].skip==2||(!parms->ncpa.offsetdm && !parms->powfs[ipowfs].lo)){
+			if(parms->powfs[ipowfs].skip==2||(!parms->recon.twfs_offsetdm && !parms->powfs[ipowfs].lo)){
 				if(P(recon->GA, iwfs, idm)){
 					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfs, idm), opd, "nn", 1);
 				}else{
@@ -972,7 +972,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 				}
 			}
 		}
-		if(parms->ncpa.offsetdm){
+		if(parms->recon.twfs_offsetdm){
 			P(recon->Rmod, idm)=opd; opd=NULL;
 		}else{
 			dfree(opd);
@@ -995,7 +995,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 				P(recon->GRtwfs, iwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
 			}
 		}
-		if(!parms->ncpa.offsetdm){
+		if(!parms->recon.twfs_offsetdm){
 			if(parms->powfs[ipowfs].llt&&parms->powfs[ipowfs].dither==-1&&parms->powfs[ipowfs].phytype_sim2==PTYPE_COG){
 				int nlayer2=MIN(parms->powfs[ipowfs].nwfs, nlayer);
 				if(parms->powfs[ipowfs].nwfs>1&&nlayer==1){
@@ -1022,7 +1022,7 @@ void setup_recon_GR(recon_t* recon, const parms_t* parms){
 	if(parms->save.recon){
 		writebin(recon->GRall, "twfs_GR");
 		if(recon->RRlgs) writebin(recon->RRlgs, "twfs_RRlgs");
-		if(parms->ncpa.offsetdm) writebin(recon->Rmod, "twfs_Rmod");
+		if(parms->recon.twfs_offsetdm) writebin(recon->Rmod, "twfs_Rmod");
 	}
 }
 /**

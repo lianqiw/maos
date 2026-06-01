@@ -645,6 +645,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		}
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(any_ncpa && (!parms->ncpa.offsetdm || parms->powfs[ipowfs].skip==2)){//convert NCPA DM command to gradients.
+				dbg("powfs%d: convert dm_ncpa to opdbias\n", ipowfs);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 					const real hs=parms->wfs[iwfs].hs;
@@ -658,7 +659,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					}
 				}
 			}
-			if( parms->ncpa.ttr&&powfs[ipowfs].opdbias){
+			if(parms->ncpa.ttr&&powfs[ipowfs].opdbias){
 			/*remove average tilt from opdbias and same amount from
 			  opdadd. Does not need to be very accurate.*/
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){

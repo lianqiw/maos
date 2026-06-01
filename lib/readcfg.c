@@ -496,7 +496,7 @@ static void open_config_full(
 					error("Error inserting to tree\n");
 				}
 				countnew++;
-				if(store->flag!=-1 && !store->prefix){
+				if(store->flag!=-1){
 					nstore++;
 				}
 				store=NULL;//consumed by the tree.

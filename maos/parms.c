@@ -429,14 +429,10 @@ static void readcfg_powfs(parms_t *parms){
 			powfsi->dsa*=-parms->aper.d;
 		}else{
 			if(!powfsi->dsa){
-				if(powfsi->lo || !parms->ndm){
-					error("powfs[%d].dsa must be set for LO powfs.\n", ipowfs);
+				if(!parms->ndm){
+					error("powfs[%d].dsa must be set when there is no DM.\n", ipowfs);
 				} else{//Follow ground DM.
-					if(parms->ndm){
-						powfsi->dsa=parms->dm[0].dx;
-					} else{
-						error("powfs[%d].dsa must be set when there is no DM.\n", ipowfs);
-					}
+					powfsi->dsa=parms->dm[0].dx;
 				}
 			}
 			powfsi->order=ceil(parms->aper.d/powfsi->dsa);
@@ -1599,6 +1595,7 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.twfs_rmin);
 	READ_INT(recon.twfs_rmax);
 	READ_INT(recon.twfs_radonly);
+	READ_INT(recon.twfs_offsetdm);
 	READ_INT(recon.petal);
 	READ_INT(recon.petaldtrat);
 	READ_INT(recon.petalstep);
@@ -2134,7 +2131,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			if(powfsi->trs==1){
 				error("Low order wfs should not be tilt removed\n");
 			}
-			if(powfsi->gtype_sim==GTYPE_G&&powfsi->type==WFS_SH){
+			if(powfsi->gtype_sim==GTYPE_G&&powfsi->type==WFS_SH && powfsi->order<=2){
 				warning("Low order powfs%d is using gtilt instead of ztilt in simulation. "
 					"This is not recommended.\n", ipowfs);
 			}

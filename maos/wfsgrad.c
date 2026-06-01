@@ -863,10 +863,6 @@ void* wfsgrad_post(thread_t* info){
 			} else{
 				dscale(gradcl, parms->powfs[ipowfs].gradscale);
 			}
-			if(P(simu->gradoff, iwfs)){
-				dadd(&P(simu->gradcl, iwfs), 1, P(simu->gradoff, iwfs), -parms->dbg.gradoff_scale);
-			}
-
 			if(parms->dbg.gradoff){
 				info_once("wfs %d: add dbg.gradoff to gradient vector\n", iwfs);
 				int icol=(simu->wfsisim+1)%NY(parms->dbg.gradoff);
@@ -1342,7 +1338,6 @@ void wfsgrad_twfs_recon(sim_t* simu){
 	const recon_t* recon=simu->recon;
 	const int itpowfs=parms->itpowfs;
 	if(simu->wfsflags[itpowfs].gradout){
-		info_once("Step %5d: TWFS has output with gain %g every %d steps.\n", simu->wfsisim, simu->eptwfs, parms->powfs[itpowfs].dtrat);
 		gradoff_acc(simu, parms->ilgspowfs);//todo: improve ipowfs index.
 		const int nlayer=NY(recon->GRall);
 		dcell* Rmod=0;
@@ -1358,7 +1353,11 @@ void wfsgrad_twfs_recon(sim_t* simu){
 		if(parms->save.extra){
 			zfarr_push(simu->save->restwfs, simu->wfsflags[itpowfs].gradout-1, Rmod);
 		}
-		if(parms->ncpa.offsetdm){
+		if(parms->recon.twfs_offsetdm){
+			info_once("Step %5d: TWFS output to dmoff with gain %g every %d steps.\n", simu->wfsisim, simu->eptwfs, parms->powfs[itpowfs].dtrat);
+			if(!simu->dmoff){
+				simu->dmoff=dcellnew(parms->ndm, 1);
+			}
 			for(int ilayer=0; ilayer<nlayer; ilayer++){
 				dmm(&P(simu->dmoff, ilayer), 1, P(recon->Rmod, ilayer), P(Rmod, ilayer), "nn", simu->eptwfs);
 			}
@@ -1366,6 +1365,7 @@ void wfsgrad_twfs_recon(sim_t* simu){
 				draw_dm(parms, recon, simu->dmoff, 0, "DM Offset", "Offset");
 			}
 		}else{
+			info_once("Step %5d: TWFS output to gradcl with gain %g every %d steps.\n", simu->wfsisim, simu->eptwfs, parms->powfs[itpowfs].dtrat);
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				for(int ilayer=0; ilayer<nlayer; ilayer++){
@@ -1501,6 +1501,9 @@ void* wfsgrad(sim_t* simu){
 	}
 	if(parms->recon.petal){
 		wfsgrad_petal_recon(simu);
+	}
+	if(simu->gradoff){//moved here to preserve static focus in gradoff
+		dcelladd(&simu->gradcl, 1, simu->gradoff, -parms->dbg.gradoff_scale);
 	}
 	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

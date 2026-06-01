@@ -790,12 +790,8 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
-	if(parms->ncpa.offsetdm){
-		if(recon->dm_ncpa){
-			simu->dmoff=dcelldup(recon->dm_ncpa); 
-		}else{
-			simu->dmoff=dcellnew(parms->ndm, 1);
-		}
+	if(parms->ncpa.offsetdm && recon->dm_ncpa){
+		simu->dmoff=dcelldup(recon->dm_ncpa); 
 	}
 	/*Do not initialize gradlastcl. Do not initialize gradlastol in open
 	  loop. They are used for testing*/

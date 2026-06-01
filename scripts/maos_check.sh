@@ -15,7 +15,11 @@ case "$1" in
 	D=$1
 	shift;;
 esac
-if [ "$D" != "30" ];then
+if [ "$D" = "30" ];then
+	args="tmt.conf"
+elif [ "$D" = "10" ];then
+	args="keck.conf"
+else
     args="aper.d=$D "
 fi
 args+=" $@"
