@@ -10,10 +10,13 @@ var searchData=
   ['thread_5fprep_7',['thread_prep',['../db/dd5/thread_8h.html#aefb4ea36bbedea7ae5ada90fee8248fb',1,'thread.c']]],
   ['tomo_5fnea_5fgpt_8',['Tomo_nea_gpt',['../de/d09/recon__tomo_8c.html#a1429c8b70e161f91770d3fdbc88a4942',1,'recon_tomo.c']]],
   ['tomofit_9',['tomofit',['../d3/deb/maos_2recon_8h.html#ac734bc10b9e0d6a8dc02a55019607156',1,'recon.c']]],
-  ['tomol_10',['tomol',['../d3/deb/maos_2recon_8h.html#afcd22c411fbceae27ccf7e14309077f5',1,'TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c'],['../de/d09/recon__tomo_8c.html#afcd22c411fbceae27ccf7e14309077f5',1,'TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c']]],
+  ['tomol_10',['tomol',['../de/d09/recon__tomo_8c.html#afcd22c411fbceae27ccf7e14309077f5',1,'TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c'],['../d3/deb/maos_2recon_8h.html#afcd22c411fbceae27ccf7e14309077f5',1,'TomoL(dcell **xout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c']]],
   ['tomor_11',['tomor',['../d3/deb/maos_2recon_8h.html#aaa04e0ea1c4aad353e807344b6e35f67',1,'TomoR(dcell **xout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c'],['../de/d09/recon__tomo_8c.html#aa1b2e85b187dfdb4a027936f18b4e5f1',1,'TomoR(dcell **xout, const void *A, const dcell *gin, const real alpha):&#160;recon_tomo.c']]],
   ['tomort_12',['tomort',['../d3/deb/maos_2recon_8h.html#a060ae9b2bc6a20378d32564512e04f2a',1,'TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c'],['../de/d09/recon__tomo_8c.html#a060ae9b2bc6a20378d32564512e04f2a',1,'TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c']]],
   ['trim_5fstring_13',['trim_string',['../d3/da7/readstr_8h.html#aa740d6879e4af2bdd01f9624ef206fe3',1,'readstr.c']]],
   ['turbcov_14',['turbcov',['../d2/d75/turbulence_8h.html#a1c4be70c5e3d18e4554c4fae00344ef2',1,'turbulence.c']]],
-  ['turbpsd_15',['turbpsd',['../d2/d75/turbulence_8h.html#a25cae05b64bdb31f22b4a47425cc4415',1,'turbulence.c']]]
+  ['turbpsd_15',['turbpsd',['../d2/d75/turbulence_8h.html#a25cae05b64bdb31f22b4a47425cc4415',1,'turbulence.c']]],
+  ['twfs_5frecon_16',['twfs_recon',['../dc/d5e/twfs_8h.html#a7db5ccbebe80689500634770e246d9c7',1,'twfs.c']]],
+  ['twfs_5fsetup_5fgr_17',['twfs_setup_GR',['../dc/d5e/twfs_8h.html#af14d040e631947fda55f70fc787ecf84',1,'twfs.c']]],
+  ['twfs_5fsetup_5frr_18',['twfs_setup_RR',['../dc/d5e/twfs_8h.html#a1136e8a0957ff13fa9a410a707e7ac4c',1,'twfs.c']]]
 ];

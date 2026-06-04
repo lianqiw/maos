@@ -12,7 +12,7 @@ var searchData=
   ['act_5fzero_9',['act_zero',['../dc/d37/slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf',1,'slaving.c']]],
   ['add_5fpsd_10',['add_psd',['../d2/da0/psd_8h.html#a88b3d3ded70e3150b2f8533e05d6491b',1,'psd.c']]],
   ['add_5fpsd2_11',['add_psd2',['../d2/da0/psd_8h.html#a88258084783ed5748c1fa3bbe9aa8b1f',1,'psd.c']]],
-  ['addlow2dm_12',['addlow2dm',['../d2/d94/sim_8h.html#a722a80fbfae289e4c927d98427eee27b',1,'filter.c']]],
+  ['addlow2dm_12',['addlow2dm',['../d1/d57/maos_2utils_8h.html#a32d3d6f0eee614280b8bd70d90f2743e',1,'utils.c']]],
   ['addnoise_13',['addnoise',['../dd/d2b/libmisc_8h.html#a4bf8970d027f919a7485a8e426415de6',1,'libmisc.c']]],
   ['addnoise_5fgrad_14',['addnoise_grad',['../dd/d2b/libmisc_8h.html#a48f27901c57db366ade9713f9eabc688',1,'libmisc.c']]],
   ['addpath_15',['addpath',['../d7/dd4/path_8h.html#a8539b4e587a7ea71221206e43f29ead5',1,'path.c']]],
@@ -27,8 +27,7 @@ var searchData=
   ['argv2str_24',['argv2str',['../d4/d08/misc_8h.html#a4cc81ab3fb9b32735ac33131087f16be',1,'misc.c']]],
   ['async_5finit_25',['async_init',['../d3/d7f/bin_8h.html#ad7704ca864eabbba129afd72af210a9e',1,'bin.c']]],
   ['async_5fwrite_26',['async_write',['../d3/d7f/bin_8h.html#ad0f51efb12402814149a0d6e80843087',1,'bin.c']]],
-  ['atm2xloc_27',['atm2xloc',['../d6/ddb/sim__utils_8h.html#a6140547e84ed40849518c002ff165382',1,'sim_utils.c']]],
-  ['atm_5finterp_28',['atm_interp',['../dd/d2b/libmisc_8h.html#a698c18f4e0938e730e6ead90f4b7a423',1,'libmisc.c']]],
-  ['available_5fspace_29',['available_space',['../d4/d08/misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
-  ['average_5fpowfs_30',['average_powfs',['../d1/d57/maos_2utils_8h.html#a8f8497509bbb601ac374325aa53a0883',1,'utils.c']]]
+  ['atm_5finterp_27',['atm_interp',['../dd/d2b/libmisc_8h.html#a698c18f4e0938e730e6ead90f4b7a423',1,'libmisc.c']]],
+  ['available_5fspace_28',['available_space',['../d4/d08/misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4',1,'misc.c']]],
+  ['average_5fpowfs_29',['average_powfs',['../d1/d57/maos_2utils_8h.html#a8f8497509bbb601ac374325aa53a0883',1,'utils.c']]]
 ];

@@ -8,7 +8,6 @@ var maos_2recon_8h =
     [ "free_powfs_fit", "d3/deb/maos_2recon_8h.html#ae4acd7dfb4d394a30d98e3fc887c7d68", null ],
     [ "setup_recon_GA", "d3/deb/maos_2recon_8h.html#a98fbe241a9a99143835d5b3c1726c1e8", null ],
     [ "setup_recon_GF", "d3/deb/maos_2recon_8h.html#a699cb83e672d1ebc6885edce0f0b5d2a", null ],
-    [ "setup_recon_GR", "d3/deb/maos_2recon_8h.html#ac112c22f2d96d1373e967abb6bcb614d", null ],
     [ "setup_recon_tomo_reg", "d3/deb/maos_2recon_8h.html#a829971036b353f363b9f6d171279a530", null ],
     [ "setup_recon_tomo_matrix", "d3/deb/maos_2recon_8h.html#a734c26f3d555e9e8038c196ad0a242ef", null ],
     [ "setup_recon_update_cn2", "d3/deb/maos_2recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7", null ],

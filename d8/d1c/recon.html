@@ -195,7 +195,7 @@ $(document).ready(function(){initNavTree('d8/d1c/recon.html','../../'); initResi
 <div class="line">lsr.fnreg     = #File name for regularization. has to be sparse cell array of ndm*ndm. </div>
 <div class="line">lsr.bgs       = 0 #block Gauss Seidel method.</div>
 <div class="line">lsr.alg       = 2 #LSR algorithm. see tomo.alg. SVD works the best.</div>
-<div class="line">lsr.maxit     = 0 #max iterations in CG. 0 is default: 30. x10 in non warm restart mode.</div>
+<div class="line">lsr.maxit     = 0 #max iterations in CG. 0 is default: 30. x10 in non warm restart mode. </div>
 <div class="line"> </div>
 <div class="line">#The misregistration model to be used in WFE reconstruction</div>
 <div class="line">recon.distortion_tel2wfs=[]</div>
@@ -207,6 +207,7 @@ $(document).ready(function(){initNavTree('d8/d1c/recon.html','../../'); initResi
 <div class="line">recon.twfs_rmin=3    #minimum zernike order (inclusive)</div>
 <div class="line">recon.twfs_rmax=20   #maximum zernike order (inclusive)</div>
 <div class="line">recon.twfs_radonly=0 #1: radial only, 0: all modes</div>
+<div class="line">recon.twfs_offsetdm=0 #1: Apply twfs correction to dmerr offset instead of gradients (also see ncpa.offsetdm)</div>
 <div class="line">#supersedes the following configuration</div>
 <div class="line">#dbg.twfsflag=0 #use TWFS to control 0: all modes&gt;=spherical, 1: only radial modes&gt;=spherical, 2: all modes&gt;=focus, 3: only radial modes&gt;= focus</div>
 <div class="line">#dbg.twfsrmax=9 #TWFS maximum zernike radial order.</div>

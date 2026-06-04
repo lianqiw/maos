@@ -2,13 +2,16 @@ var dir_8ce14126537f3a9a7f58ccafbb182cd0 =
 [
     [ "ahst.h", "d1/db8/ahst_8h.html", "d1/db8/ahst_8h" ],
     [ "aper.h", "d4/dda/aper_8h.html", "d4/dda/aper_8h" ],
+    [ "dither_utils.h", "d4/d41/dither__utils_8h.html", "d4/d41/dither__utils_8h" ],
     [ "fdpcg.h", "d6/dd2/maos_2fdpcg_8h.html", "d6/dd2/maos_2fdpcg_8h" ],
     [ "maos.c", "de/d78/maos_8c.html", "de/d78/maos_8c" ],
     [ "moao.h", "d2/d80/maos_2moao_8h.html", "d2/d80/maos_2moao_8h" ],
     [ "parms.h", "d4/d38/parms_8h.html", "d4/d38/parms_8h" ],
     [ "perfevl.c", "da/dd9/perfevl_8c.html", "da/dd9/perfevl_8c" ],
+    [ "petal_utils.h", "dc/da1/petal__utils_8h.html", "dc/da1/petal__utils_8h" ],
+    [ "plot_utils.h", "d9/d45/plot__utils_8h.html", "d9/d45/plot__utils_8h" ],
     [ "powfs.h", "d2/d05/powfs_8h.html", "d2/d05/powfs_8h" ],
-    [ "powfs_utils.h", "d8/d14/powfs__utils_8h.html", "d8/d14/powfs__utils_8h" ],
+    [ "powfs_utils.h", "d8/d14/powfs__utils_8h.html", null ],
     [ "recon.h", "d3/deb/maos_2recon_8h.html", "d3/deb/maos_2recon_8h" ],
     [ "recon_fit.c", "d0/dfd/recon__fit_8c.html", "d0/dfd/recon__fit_8c" ],
     [ "recon_geom.c", "d1/d52/recon__geom_8c.html", "d1/d52/recon__geom_8c" ],
@@ -23,6 +26,7 @@ var dir_8ce14126537f3a9a7f58ccafbb182cd0 =
     [ "sim.h", "d2/d94/sim_8h.html", "d2/d94/sim_8h" ],
     [ "sim_utils.h", "d6/ddb/sim__utils_8h.html", "d6/ddb/sim__utils_8h" ],
     [ "surf.h", "d5/d85/surf_8h.html", "d5/d85/surf_8h" ],
+    [ "twfs.h", "dc/d5e/twfs_8h.html", "dc/d5e/twfs_8h" ],
     [ "types.h", "d6/d94/maos_2types_8h.html", "d6/d94/maos_2types_8h" ],
     [ "utils.h", "d1/d57/maos_2utils_8h.html", "d1/d57/maos_2utils_8h" ]
 ];

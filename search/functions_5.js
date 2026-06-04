@@ -24,7 +24,6 @@ var searchData=
   ['free_5frecon_5fcxx_21',['free_recon_cxx',['../d3/deb/maos_2recon_8h.html#addfcf918476fede1b1e41da2ee985ed7',1,'free_recon_cxx(recon_t *recon):&#160;recon_setup.c'],['../d1/dc1/recon__setup_8c.html#addfcf918476fede1b1e41da2ee985ed7',1,'free_recon_cxx(recon_t *recon):&#160;recon_setup.c']]],
   ['free_5frecon_5fmoao_22',['free_recon_moao',['../d2/d80/maos_2moao_8h.html#ac67cb937d05b108cd085a0854bfd9ca0',1,'moao.c']]],
   ['free_5frecon_5funused_23',['free_recon_unused',['../d3/deb/maos_2recon_8h.html#a9a15286be2826aa71cfca6227bb58f07',1,'free_recon_unused(const parms_t *parms, recon_t *recon):&#160;recon_setup.c'],['../d1/dc1/recon__setup_8c.html#a9a15286be2826aa71cfca6227bb58f07',1,'free_recon_unused(const parms_t *parms, recon_t *recon):&#160;recon_setup.c']]],
-  ['free_5fsimu_24',['free_simu',['../d6/ddb/sim__utils_8h.html#a0236c03d94acd03a419f81d082897bea',1,'sim_utils.c']]],
-  ['freepath_25',['freepath',['../d7/dd4/path_8h.html#af4d7c608d3c193573c706d3dfd7e070c',1,'path.c']]],
-  ['fresnel_5fprop_26',['fresnel_prop',['../db/d1f/locfft_8h.html#ac2e0f90fbeca9d5351cfb28aa169f7f0',1,'locfft.c']]]
+  ['freepath_24',['freepath',['../d7/dd4/path_8h.html#af4d7c608d3c193573c706d3dfd7e070c',1,'path.c']]],
+  ['fresnel_5fprop_25',['fresnel_prop',['../db/d1f/locfft_8h.html#ac2e0f90fbeca9d5351cfb28aa169f7f0',1,'locfft.c']]]
 ];

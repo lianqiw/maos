@@ -11,6 +11,5 @@ var sim_8h =
     [ "wfs_ideal_atm", "d2/d94/sim_8h.html#a737f7e7dbf049d9f775793054afa423b", null ],
     [ "wfsgrad_iwfs", "d2/d94/sim_8h.html#a293a9729129a25779373f5e9348300d4", null ],
     [ "wfsgrad_post", "d2/d94/sim_8h.html#a07645b0cad9426bfdd74a4d6d0fe9b3e", null ],
-    [ "addlow2dm", "d2/d94/sim_8h.html#a722a80fbfae289e4c927d98427eee27b", null ],
     [ "filter_fsm", "d2/d94/sim_8h.html#a90d16c85d70cbb02bf35fe56bc651b7f", null ]
 ];

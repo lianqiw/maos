@@ -1,10 +1,5 @@
 var NAVTREEINDEX8 =
 {
-"d9/d19/pywfs_8h.html#ac90f086f4f98115dcc9a7aa90c44f0cf":[13,0,1,25,5],
-"d9/d19/pywfs_8h.html#acbd0d2bbccd50cfd8cb716021e376eee":[13,0,1,25,0,12],
-"d9/d19/pywfs_8h.html#acc902b9eadedebe1fd29fc06bfaee458":[13,0,1,25,0,10],
-"d9/d19/pywfs_8h.html#acdb71e37bc278e2caeabf8d6defb0288":[13,0,1,25,0,15],
-"d9/d19/pywfs_8h.html#ad36b35d4aa3843841f00aea5783f0429":[13,0,1,25,0,13],
 "d9/d19/pywfs_8h.html#ae6552070a18084f24ddbede70afac5b2":[13,0,1,25,1,8],
 "d9/d19/pywfs_8h.html#aea7b10710994fc11ffb7259f75fb21ae":[13,0,1,25,1,2],
 "d9/d19/pywfs_8h.html#aedce6273a4e3d109640e52cdb8ebbce6":[13,0,1,25,0,18],
@@ -17,6 +12,10 @@ var NAVTREEINDEX8 =
 "d9/d19/pywfs_8h.html#d2/d8c/structpywfs__t":[13,0,1,25,1],
 "d9/d1c/dither_pydm.html":[4,4,6],
 "d9/d1d/wfs_sgra.html":[4,4,64],
+"d9/d45/plot__utils_8h.html":[13,0,2,9],
+"d9/d45/plot__utils_8h.html#a29b5db79f88972306acd919fea5bdf6c":[13,0,2,9,0],
+"d9/d45/plot__utils_8h.html#a92f165ec5bb2ccb133a9cfda1acb5400":[13,0,2,9,1],
+"d9/d45/plot__utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822":[13,0,2,9,2],
 "d9/d5c/structzmat.html":[12,0,186],
 "d9/d5c/structzmat.html#a252b00e9ba675da2e7622be31419751f":[12,0,186,2],
 "d9/d5c/structzmat.html#a381f4bfc7935fcbd9f0a380c8a166b88":[12,0,186,7],
@@ -75,8 +74,8 @@ var NAVTREEINDEX8 =
 "da/d6e/readcfg_8h.html#af90add8965ad5b713f08e85d11ea70a0":[13,0,1,27,7],
 "da/d97/fit_oa.html":[4,4,21],
 "da/d9b/wfs_lgs_ttf_tt.html":[4,4,60],
-"da/d9e/recon__mvst_8c.html":[13,0,2,14],
-"da/d9e/recon__mvst_8c.html#a14b7a0beadfd04a65affccf99767892b":[13,0,2,14,0],
+"da/d9e/recon__mvst_8c.html":[13,0,2,17],
+"da/d9e/recon__mvst_8c.html#a14b7a0beadfd04a65affccf99767892b":[13,0,2,17,0],
 "da/d9f/page10_intro.html":[1],
 "da/da3/fov_oa.html":[4,4,26],
 "da/dac/keck_ngs.html":[4,4,116],
@@ -99,9 +98,9 @@ var NAVTREEINDEX8 =
 "da/dc3/page30_run.html#sect-wfs":[3,4,1],
 "da/dcf/struct_magic_3_01double2_01_4.html":[12,0,108],
 "da/dd3/nfiraos_example.html":[4,0],
-"da/dd9/perfevl_8c.html":[13,0,2,6],
-"da/dd9/perfevl_8c.html#a134560b62033d7250b41f614143d5630":[13,0,2,6,0],
-"da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26":[13,0,2,6,1],
+"da/dd9/perfevl_8c.html":[13,0,2,7],
+"da/dd9/perfevl_8c.html#a134560b62033d7250b41f614143d5630":[13,0,2,7,0],
+"da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26":[13,0,2,7,1],
 "da/df1/structcuetf__t.html":[12,0,25],
 "da/df4/atm_orm50p.html":[4,4,102],
 "da/dfb/dmath_8h.html":[13,0,3,2],
@@ -249,5 +248,6 @@ var NAVTREEINDEX8 =
 "da/dfb/dmath_8h.html#aa84e231252f43a2b63f6603080ffb8a7":[13,0,3,2,152],
 "da/dfb/dmath_8h.html#aa85e85b65b79db61c5441d3d9a76c0f9":[13,0,3,2,87],
 "da/dfb/dmath_8h.html#aa961edfebe29145e59aadc1e372688b7":[13,0,3,2,200],
-"da/dfb/dmath_8h.html#aa9800d611b228e1bcece7d1d937efc8a":[13,0,3,2,220]
+"da/dfb/dmath_8h.html#aa9800d611b228e1bcece7d1d937efc8a":[13,0,3,2,220],
+"da/dfb/dmath_8h.html#aaa4dc6677f6438146fd853f05eb77804":[13,0,3,2,32]
 };

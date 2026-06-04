@@ -34,13 +34,14 @@ var searchData=
   ['ttpsd_31',['ttpsd',['../d4/d38/parms_8h.html#aaafdf85c0702c2520e67e8bcfb674495',1,'llt_cfg_t']]],
   ['ttr_32',['ttr',['../d4/d38/parms_8h.html#a93abd1a95716a3b68d0e0cd0345044fb',1,'ncpa_cfg_t']]],
   ['ttrat_33',['ttrat',['../d4/d38/parms_8h.html#ab7c18c14a6c7934793b061debb067022',1,'llt_cfg_t']]],
-  ['twfs_5fradonly_34',['twfs_radonly',['../d4/d38/parms_8h.html#a6742907419017f9e85e4dde099f4f524',1,'recon_cfg_t']]],
-  ['twfs_5frmax_35',['twfs_rmax',['../d4/d38/parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5',1,'recon_cfg_t']]],
-  ['twfs_5frmin_36',['twfs_rmin',['../d4/d38/parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da',1,'recon_cfg_t']]],
-  ['twfsflag_37',['twfsflag',['../d4/d38/parms_8h.html#ac146f818a483505d0b26f65a0e45b151',1,'dbg_cfg_t']]],
-  ['twfsrmax_38',['twfsrmax',['../d4/d38/parms_8h.html#a91a89431be920b7eca2b8746ec58fc51',1,'dbg_cfg_t']]],
-  ['two_39',['two',['../df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61',1,'loc_t.__unnamed23__.__unnamed25__::two'],['../df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61',1,'pts_t.__unnamed27__.__unnamed29__.__unnamed31__.__unnamed35__::two']]],
-  ['txdeg_40',['txdeg',['../df/def/type_8h.html#a4f35e852650c8627a3eebbfadf00de0a',1,'rmap_t']]],
-  ['tydeg_41',['tydeg',['../df/def/type_8h.html#a0ba307d3338a9bc91061214106f9f90c',1,'rmap_t']]],
-  ['type_42',['type',['../d4/d38/parms_8h.html#aa4df9de485454ee311c4bc4b4242d67a',1,'powfs_cfg_t::type'],['../d4/d08/misc_8h.html#aa606bb2fcaf8c97e7428bb541dc62a8e',1,'argopt_t::type']]]
+  ['twfs_5foffsetdm_34',['twfs_offsetdm',['../d4/d38/parms_8h.html#a66b42d181fee35f4bc494aced17e613e',1,'recon_cfg_t']]],
+  ['twfs_5fradonly_35',['twfs_radonly',['../d4/d38/parms_8h.html#a6742907419017f9e85e4dde099f4f524',1,'recon_cfg_t']]],
+  ['twfs_5frmax_36',['twfs_rmax',['../d4/d38/parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5',1,'recon_cfg_t']]],
+  ['twfs_5frmin_37',['twfs_rmin',['../d4/d38/parms_8h.html#a9645ffacd610145c3eb2cfb7e53988da',1,'recon_cfg_t']]],
+  ['twfsflag_38',['twfsflag',['../d4/d38/parms_8h.html#ac146f818a483505d0b26f65a0e45b151',1,'dbg_cfg_t']]],
+  ['twfsrmax_39',['twfsrmax',['../d4/d38/parms_8h.html#a91a89431be920b7eca2b8746ec58fc51',1,'dbg_cfg_t']]],
+  ['two_40',['two',['../df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61',1,'loc_t.__unnamed23__.__unnamed25__::two'],['../df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61',1,'pts_t.__unnamed27__.__unnamed29__.__unnamed31__.__unnamed35__::two']]],
+  ['txdeg_41',['txdeg',['../df/def/type_8h.html#a4f35e852650c8627a3eebbfadf00de0a',1,'rmap_t']]],
+  ['tydeg_42',['tydeg',['../df/def/type_8h.html#a0ba307d3338a9bc91061214106f9f90c',1,'rmap_t']]],
+  ['type_43',['type',['../d4/d38/parms_8h.html#aa4df9de485454ee311c4bc4b4242d67a',1,'powfs_cfg_t::type'],['../d4/d08/misc_8h.html#aa606bb2fcaf8c97e7428bb541dc62a8e',1,'argopt_t::type']]]
 ];
