@@ -2408,7 +2408,11 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	dbg("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2,parms->sim.dtrat_lof);
 	parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
 	parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
-
+	if(parms->sim.dtrat_hi !=parms->sim.dtrat_lo || parms->sim.dtrat_lo!=parms->sim.dtrat_lo2){
+		if(!parms->recon.split){
+			error("\n\n\nFor mixed dtrat cases, please use split tomography by setting recon.split=1\n\n\n");
+		}
+	}
 	if(parms->sim.mffocus<=0){
 		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
 		if(parms->sim.mffocus){
