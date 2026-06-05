@@ -422,7 +422,9 @@ void recon_servo_update(sim_t* simu){
 						const real oldep=P(simu->Mint_lo->ep, 0, icol);
 						P(simu->Mint_lo->ep,0,icol)=oldep*(1.-g)+P(P(coeff,0),0)*g;
 						info("Step %5d updated LO loop gain: %5.3f->%5.3f (%ld points)\n", simu->reconisim, oldep, P(simu->Mint_lo->ep,0,icol), NY(simu->Merrts));
-						if(icol==0 && simu->save->gain) P(P(simu->save->gain,1+icol),(iacc/dtrat))=P(simu->Mint_lo->ep,0,icol);
+						if(icol==0 && simu->save->gain){
+							P(P(simu->save->gain,1+icol),(iacc/dtrat))=P(simu->Mint_lo->ep,0,icol);
+						}
 						dfree(psdol);
 						dcellfree(coeff);
 					} else{

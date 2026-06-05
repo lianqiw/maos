@@ -1279,7 +1279,7 @@ static void init_simu_recon(sim_t* simu){
 			if(parms->save.extra){
 				save->psdcl=zfarr_init(0, 0, "%s/Respsdcl_hi_%d.bin", fnextra, seed);
 				save->psdol=zfarr_init(0, 0, "%s/Respsdol_hi_%d.bin", fnextra, seed);	
-				mstep[0]=parms->sim.end/(parms->sim.dtrat_lo * parms->recon.psddtrat_lo);
+				mstep[0]=parms->sim.end/(parms->sim.dtrat_hi * parms->recon.psddtrat_hi);
 			}
 		}
 		if((parms->recon.split||parms->evl.split)&&parms->recon.psddtrat_lo){
@@ -1287,7 +1287,7 @@ static void init_simu_recon(sim_t* simu){
 			if(parms->save.extra){
 				save->psdcl_lo=zfarr_init(0, 0, "%s/Respsdcl_lo_%d.bin", fnextra, seed);
 				save->psdol_lo=zfarr_init(0, 0, "%s/Respsdol_lo_%d.bin", fnextra, seed);
-				mstep[1]=parms->sim.end/(parms->sim.dtrat_hi * parms->recon.psddtrat_hi);
+				mstep[1]=parms->sim.end/(parms->sim.dtrat_lo * parms->recon.psddtrat_lo);
 			}
 		}
 		if(parms->save.extra){
