@@ -18,7 +18,7 @@ jobs:
       run: sudo apt-get install -y libfftw3-dev libsuitesparse-dev libcmocka-dev libopenblas-openmp-dev graphviz doxygen texlive-latex-base
       continue-on-error: true
     - name: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: maos
     - name: autogen
@@ -34,7 +34,7 @@ jobs:
       run: cd build && make doc
     - name: checkout gh-pages 
       #if: github.ref == 'refs/heads/master'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: gh-pages
         path: doc
@@ -57,7 +57,7 @@ jobs:
         make check
     - name: maos result check
       run: cd build/bin && ../../maos/scripts/maos_check.sh 5
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: maos-linux

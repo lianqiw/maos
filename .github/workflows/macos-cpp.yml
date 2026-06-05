@@ -18,7 +18,7 @@ jobs:
       run: brew install autoconf automake libtool make fftw suite-sparse cmocka libomp gtk4 libwebsockets
       continue-on-error: true
     - name: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: maos
     - name: autogen
@@ -31,7 +31,7 @@ jobs:
         make -j
     - name: make check
       run: cd build && make check
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: maos-macos
