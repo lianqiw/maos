@@ -107,7 +107,7 @@ $(document).ready(function(){initNavTree('d8/d1c/recon.html','../../'); initResi
 <div class="line">#The parameters for generation reconstruction</div>
 <div class="line">recon.alg       = 0 #0: MVR. 1: LSR</div>
 <div class="line">recon.glao      = 0 #1: average gradient from wfs of same type (GLAO).</div>
-<div class="line">recon.split     = 1 #0: integrated reconstruction. 1: ad hoc Split. 2: mvst (only if recon.alg==0)</div>
+<div class="line">recon.split     = 1 #0: integrated reconstruction (only use when dtrats of all WFS equal). 1: split tomography (the best choice for most cases). 2: mvst (deprecated)</div>
 <div class="line">recon.mvm       = 0 #1: pre-assemble control matrix by solve identity matrix </div>
 <div class="line">recon.modal     = 0 #-2: emulate zonal, -1: zernike modes, 0: zonal, 1: KL modes</div>
 <div class="line">recon.psol      = -1 #1: Use pseudo open loop gradients. -1 : auto, on for MVR off for lsr</div>
