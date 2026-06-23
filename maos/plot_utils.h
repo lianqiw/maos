@@ -24,7 +24,7 @@
 #ifndef AOS_PLOT_UTILS_H
 #define AOS_PLOT_UTILS_H
 #include "common.h"
-void plot_loc(const char *fig, const parms_t *parms, loc_t *loc, real ht, const char *format,...) CHECK_ARG(5);
+void plot_loc(const char *fig, const parms_t *parms, int show_recon, int show_evl, loc_t *loc, real ht, const char *format,...) CHECK_ARG(7);
 void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* format, ...) CHECK_ARG(4);
 void plot_setup(const parms_t *parms, const powfs_t *powfs, const aper_t *aper, const recon_t *recon);
 void plot_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type);

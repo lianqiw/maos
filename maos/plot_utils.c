@@ -58,7 +58,7 @@ powfs_legend(const parms_t *parms, int ipowfs){
 /**
    Plot the loc, together with all beams
 */
-void plot_loc(const char* fig, const parms_t* parms,
+void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_evl, 
 	loc_t* loc, real ht, const char* format, ...){
 	format2fn;
 	int ncir=parms->evl.nevl+parms->fit.nfit+parms->nwfs;
@@ -69,7 +69,7 @@ void plot_loc(const char* fig, const parms_t* parms,
 	const char *legend[ncir+1];
 	memset(legend, 0, sizeof(char*)*(ncir+1));
 	int count=0;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	for(int ievl=0; show_evl && ievl<parms->evl.nevl; ievl++){
 		real hs=P(parms->evl.hs,ievl);
 		P(cir, 0, count)=ht*P(parms->evl.thetax,ievl);
 		P(cir, 1, count)=ht*P(parms->evl.thetay,ievl);
@@ -78,7 +78,7 @@ void plot_loc(const char* fig, const parms_t* parms,
 		count++;
 		if(ievl==0) legend[count]="Evaluation";//after count++ because points are plotted first
 	}
-	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
+	for(int ifit=0; show_recon && ifit<parms->fit.nfit; ifit++){
 		real hs=P(parms->fit.hs,ifit);
 		P(cir, 0, count)=ht*P(parms->fit.thetax,ifit);
 		P(cir, 1, count)=ht*P(parms->fit.thetay,ifit);
@@ -87,7 +87,7 @@ void plot_loc(const char* fig, const parms_t* parms,
 		count++;
 		if(ifit==0) legend[count]="DM Fitting";
 	}
-	for(int idir=0; idir< parms->ncpa.ndir; idir++){
+	for(int idir=0; show_recon && idir< parms->ncpa.ndir; idir++){
 		real hs=P(parms->ncpa.hs,idir);
 		P(cir, 0, count)=ht*P(parms->ncpa.thetax,idir);
 		P(cir, 1, count)=ht*P(parms->ncpa.thetay,idir);
@@ -97,7 +97,7 @@ void plot_loc(const char* fig, const parms_t* parms,
 		if(idir==0) legend[count]="NCPA";
 	}
 
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; show_recon && iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		real hs=parms->wfs[iwfs].hs;
 		P(cir, 0, count)=parms->wfs[iwfs].thetax*ht;
@@ -117,12 +117,26 @@ void plot_loc(const char* fig, const parms_t* parms,
 			legend[count]=powfs_legend(parms, ipowfs);
 		}
 	}
+	if(count>ncir){
+		error("Overflow\n");
+	}else if(count<ncir){
+		dresize(cir, NX(cir), count);
+	}
 	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir, .legend=legend},
 		"Coordinate", "x (m)", "y (m)", "%s", fn);
 	dfree(cir);
 }
 /**
-   ploted all the different beam directions as points. */
+   ploted all the different beam directions as points. 
+   style is defined as follows:
+   bits 1-3:the point style.
+   bit  4: whether points are connected.
+   bits 5-8: size
+   bits 9-32:color
+ 
+   The color follows RGB representation: (Since 2011-02-18)
+   bits 32-25: Red. bits 24-17: Green. bits 16-9: Blue.
+   */
 void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* format, ...){
 	format2fn;
 	int ncir=1;
@@ -217,21 +231,21 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 	plot_dir("Aperture", parms, parms->sim.fov*RAD2AS, "fov");/*plot wfs/evaluation direction */
 	if(recon){
 		if(parms->plot.setup>1){
-			plot_loc("Aperture", parms, recon->ploc, 0, "ploc");
-			plot_loc("Aperture", parms, recon->floc, 0, "floc");
+			plot_loc("Aperture", parms, 1, 0, recon->ploc, 0, "ploc");
+			plot_loc("Aperture", parms, 1, 0, recon->floc, 0, "floc");
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 			real ht=parms->dm[idm].ht;
-			plot_loc("Aperture", parms, P(recon->aloc,idm), ht, "aloc %d", idm);
+			plot_loc("Aperture", parms, 1, 1, P(recon->aloc,idm), ht, "aloc %d", idm);
 			/*if(recon->actcpl){
 				drawopd("Aperture", P(recon->aloc, idm), P(recon->actcpl, idm), 0, 
 					"DM Actuator Coupling Factor", "x (m)", "y (m)", "actcpl %d", idm);
 			}*/
 		}
-		if(parms->plot.setup>1){
+		if(parms->plot.setup){
 			for(int ips=0; ips<recon->npsr; ips++){
 				const real ht=P(recon->ht,ips);
-				plot_loc("Aperture", parms, P(recon->xloc,ips), ht, "xloc %d", ips);
+				plot_loc("Aperture", parms, 1, 0, P(recon->xloc,ips), ht, "xloc %02d", ips);
 			}
 		}
 	}

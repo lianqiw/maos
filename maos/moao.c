@@ -128,7 +128,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 			writebin(recon->moao[imoao].actslave, "moao%d_actslave", imoao);
 		}
 		if(parms->plot.setup){
-			plot_loc("FoV", parms, P(recon->moao[imoao].aloc,0), 0, "moao_aloc");
+			plot_loc("FoV", parms, 0, 0, P(recon->moao[imoao].aloc,0), 0, "moao_aloc");
 		}
 	}/*imoao */
 }
