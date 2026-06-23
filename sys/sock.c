@@ -210,7 +210,7 @@ static int bind_socket_unix(const char* sockpath){
 	socket_nopipe(sock);
 	struct sockaddr_un addr={0};
 	addr.sun_family=AF_UNIX;
-	strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
+	strscpy(addr.sun_path, sockpath, sizeof(addr.sun_path));
 	if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
 		perror("bind_socket_unix");
 		warning_time("(%d) bind to %s failed\n", sock, sockpath);
@@ -607,7 +607,7 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 		socket_send_timeout(sock, 60);
 		struct sockaddr_un addr={0};
 		addr.sun_family=AF_UNIX;
-		strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
+		strscpy(addr.sun_path, hostname, sizeof(addr.sun_path));
 		if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
 			warning_time("connect locally (%s) failed: %s. \n", hostname, strerror(errno));
 			close(sock);
@@ -653,10 +653,10 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 				if(col&&strlen(col+1)>0){//port is part of hostaddr
 					size_t nn=col-hostaddr;
 					if(nn+1>sizeof(hoststr)) nn=sizeof(hoststr)-1;
-					strncpy(hoststr, hostaddr, nn); hoststr[nn]='\0';
+					strscpy(hoststr, hostaddr, nn); 
 					nn=strlen(col+1);
 					if(nn+1>sizeof(portstr)) nn=sizeof(portstr)-1;
-					strncpy(portstr, col+1, nn); portstr[nn]='\0';
+					strscpy(portstr, col+1, nn);
 				} else{
 					snprintf(hoststr, sizeof(hoststr), "%s", hostaddr);
 					snprintf(portstr, sizeof(portstr), "%d", port);

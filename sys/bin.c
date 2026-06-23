@@ -775,7 +775,7 @@ static void write_bin_header(const header_t* header, file_t* fp){
 		//The length of header->str is rounded to multiple of 8 bytes.
 		MEMPCPY(tmp, mc, uint32_t);
 		MEMPCPY(tmp, nlen8, uint64_t);
-		strncpy(tmp, header->str, nlen8); tmp[nlen8-1]=0;tmp+=nlen8;
+		strscpy(tmp, header->str, nlen8);tmp+=nlen8;
 		MEMPCPY(tmp, nlen8, uint64_t);
 		MEMPCPY(tmp, mc, uint32_t);
 	}
@@ -893,14 +893,12 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 			if(length>70) length=70;//each line can contain maximum 70 values
 
 			if(eq){//there is an equal sign.
-				//strncpy(header[hc], str, MIN(8, (eq-str)));//replaced by below
 				for(int ic=0; ic<MIN(8, (eq-str)); ic++){//fits standard requires upper case keywords
 					if(!str[ic]) break;
 					header[hc][ic]=toupper((unsigned char)str[ic]);
 				}
 				header[hc][8]='=';
 				header[hc][9]=' ';
-				//strncpy(header[hc]+10, eq+1, length);//replaced by below
 				int slash_found=0;//convert char before / to upper case for the FITS standard
 				for(int ic=0; ic<length; ic++){
 					if(eq[1+ic]=='/'){
@@ -910,8 +908,8 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 					if(!eq[1+ic]) break;
 				}
 			} else{
-				strncpy(header[hc], "COMMENT   ", 11);
-				strncpy(header[hc]+10, str, length);
+				strscpy(header[hc], "COMMENT   ", 11);
+				strscpy(header[hc]+10, str, length);
 			}
 			if(nl){//Replace \n by space
 				header[hc][10+length-1]=' ';
@@ -1305,7 +1303,7 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 		uint64_t nlen=bytes_header(keywords)-24;
 		((uint32_t*)p)[0]=(uint32_t)M_COMMENT; p+=4;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
-		memcpy(p, keywords, strlen(keywords)+1); p+=nlen;
+		strscpy(p, keywords, nlen); p+=nlen;
 		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
 		((uint32_t*)p)[0]=(uint32_t)M_COMMENT;p+=4;
 	}

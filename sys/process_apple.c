@@ -43,7 +43,7 @@ int get_job_progname(char* res, int nres, int pid){
 	if(pid>0){
 		char buf[PATH_MAX];
 		if(proc_pidpath(pid, buf, sizeof(buf))>0){
-			strncpy(res, buf, nres); res[nres-1]=0;
+			strscpy(res, buf, nres);
 			ans=0;
 		}
 	} else{
@@ -51,7 +51,7 @@ int get_job_progname(char* res, int nres, int pid){
 		uint32_t size=sizeof(path);
 		if(_NSGetExecutablePath(path, &size)==0){
 			if(realpath(path, path2)){
-				strncpy(res, path2, nres); res[nres-1]=0;
+				strscpy(res, path2, nres);
 				ans=0;
 			}
 		}

@@ -34,7 +34,7 @@ int get_job_progname(char* res, int nres, int pid){
 	char buf[PATH_MAX];
 	size_t cb=sizeof(buf);
 	sysctl(mib, 4, buf, &cb, NULL, 0);
-	strncpy(res, nres, path2); res[nres-1]=0;
+	strscpy(res, nres, path2); 
 	return 0;
 }
 size_t get_job_mem(void){/*return in KiB */

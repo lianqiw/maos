@@ -292,13 +292,12 @@ static void open_config_full(
 		} else{/*read from string*/
 			if(!config_line) break;
 			char* p0=strchr(config_line, '\n');
-			const int len=p0?(p0-config_line):(MAXLN-1);
-			if(len+1>MAXLN){
+			if(p0) *p0='\0'; //terminate string
+			if(strscpy(line, config_line, sizeof(line))<0){
 				error("Input line is too long. Please make MAXLN larger to accomodate.\n");break;
-			}else{
-				strncpy(line, config_line, len); line[len]='\0';
 			}
 			if(p0){
+				*p0='\n'; //restore
 				config_line=p0+1;//start of next line
 			} else{
 				config_line=NULL;//no more

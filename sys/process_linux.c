@@ -41,7 +41,7 @@ int get_job_progname(char* res, int nres, int pid){
 		if(delt){
 			delt[0]='\0';
 		}
-		strncpy(res, path, nres); res[nres-1]=0;
+		strscpy(res, path, nres);
 	} else{
 		warning("Failed to readlink %s\n", procpath);
 	}

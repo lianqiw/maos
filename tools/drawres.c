@@ -110,7 +110,9 @@ int main(int argc, char* argv[]){
 	} else{
 		npath=1;
 		path=mycalloc(npath, char*);
-		path[0]=mygetcwd();
+		if(!(path[0]=getcwd(NULL, 0))){
+			path[0]=strdup(HOME);
+		}
 	}
 	int mpath=npath;
 	long nseed=0;

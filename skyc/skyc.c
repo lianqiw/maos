@@ -31,7 +31,9 @@ char* dirstart;
    for signal to proceed, and then starts skysim to do sky coverage.
  */
 int main(int argc, const char* argv[]){
-	dirstart=mygetcwd();
+	if(!(dirstart=getcwd(NULL, 0))){
+		error("Unable to get current directory\n");
+	}	
 	char* scmd=argv2str(argc, argv, " ");
 	arg_s* arg=parse_args(argc, argv);
 	/*In detach mode send to background and disable drawing*/

@@ -42,7 +42,7 @@ int main(int argc, char **argv){
     if(argc!=2){
 	error("Usage:load script.m or load script\n");
     }
-    char *cwd=mygetcwd();
+    char *cwd=getcwd(NULL, 0); if(!cwd) cwd=strdup(HOME);
     int slen=strlen(cwd)+3+strlen(argv[1]);
     char scmd[slen];
     if(!mystrcmp(cwd,HOME)){

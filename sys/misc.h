@@ -24,6 +24,7 @@
    misc routines.
 */
 //const char *mybasename(const char *fn);
+ssize_t strscpy(char *dest, const char *src, size_t count);
 char *mydirname(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 int copyfile(const char* src, const char* dest);
@@ -34,7 +35,6 @@ double myclockd(void);
 const char *myasctime(time_t at);
 char *strtime_pid(void);
 const char *myhostname(void);
-char *mygetcwd(void);
 char *myabspath(const char *path);
 int mysymlink(const char *source, const char *dest);
 int mylink(const char* source, const char* dest);

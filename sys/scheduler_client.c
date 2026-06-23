@@ -253,9 +253,8 @@ void scheduler_report_path(const char* path){
 	(void)path;
 #else
 	static char path_save[PATH_MAX];
-	path_save[0]=0;
 	if(path){
-		strncpy(path_save, path, PATH_MAX-1);
+		strscpy(path_save, path, PATH_MAX);
 	} else if(!path_save[0]){
 		return;//do nothing
 	}

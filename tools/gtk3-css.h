@@ -33,84 +33,84 @@ min-height and min-width are affective at controller widget size
 const gchar* all_style=
 //progressbar progress:backdrop is when window is non-active.
 "progressbar, progressbar trough, progress{" //trough is the entire bar. progress is active area
-"min-height:1px;"
-"min-width:5px;"
-"border-radius:1px;"
+"min-height:1pt;"
+"min-width:5pt;"
+"border-radius:1pt;"
 //"background-image: linear-gradient(0deg, yellow, red);"
 //"background-color: blue; "
 "}"
 "*{" //for everything
-//"min-height:5px;"
-//"min-width: 5px;" //"background-color: rgba(255, 0, 0, 255);"
-"margin:0px;" //OK. margin is outside
-"padding:1px;" //OK. Padding is blank inside
-"border-radius:1px;" //OK
-"border-width:1px;" //OK
-"font:12px Sans;"
+//"min-height:5pt;"
+//"min-width: 5pt;" //"background-color: rgba(255, 0, 0, 255);"
+"margin:0pt;" //OK. margin is outside
+"padding:1pt;" //OK. Padding is blank inside
+"border-radius:1pt;" //OK
+"border-width:1pt;" //OK
+"font:12pt Sans;"
 "}"
 "entry{"
-"min-height:12px;"
-"padding: 2px;"
+"min-height:12pt;"
+"padding: 2pt;"
 "}"
 "checkbutton *{"
-"min-height:8px;"
-"min-width:8px;"
+"min-height:8pt;"
+"min-width:8pt;"
 "}"
 "scale *{" //need * to match sub components
-"min-height:6px;"
-"min-width:6px;"
+"min-height:6pt;"
+"min-width:6pt;"
 "}"
 "box {"
-"padding: 2px;"
+"padding: 2pt;"
 "}"
 "notebook{\n"
 "background-color:@theme_bg_color;"
 "}\n"
 "notebook tab{\n" //OK
-"border-width: 1px;" //OK
+"border-width: 1pt;" //OK
 //"border-color: #FF0000;"
 "border-style: none;"
-//"padding: 2px 2px 5px 2px;" 
+//"padding: 2pt 2pt 5pt 2pt;" 
 "background-color:@selected_bg_color;" //OK. selected_bg_color is grayish
-"min-height: 8px;"
-"min-width:  32px;"
+"min-height: 8pt;"
+"min-width:  32pt;"
 "}\n"
 "notebook header.top tab{"
-"border-radius: 4px 4px 0px 0px;"  
+"border-radius: 4pt 4pt 0pt 0pt;"  
 "}\n"
 "notebook header.right tab{"
-"border-radius: 0px 4px 4px 0px;" 
+"border-radius: 0pt 4pt 4pt 0pt;" 
 "}\n"
 "notebook tab:checked, tab:checked *, tab:checked * *{\n" //OK
 "background-color:@theme_bg_color;"//theme_bg_color is white
 "}\n"
 "notebook tab button {"
-"padding: 0px;" //OK. Padding is blank inside
-"min-height:4px;"
-"min-width: 4px;"
+"padding: 0pt;" //OK. Padding is blank inside
+"min-height:4pt;"
+"min-width: 4pt;"
 "}\n"
 "spinbutton, spinbutton *{"
-"min-height: 8px;"
-"min-width:  8px;"
+"min-height: 8pt;"
+"min-width:  8pt;"
 "}\n"
 "textview{\n"
-"font:14px Sans;"
-"border-width:3px;"
+"font:12pt Sans;"
+"border-width:3pt;"
 "}\n"
 ".entry.progressbar{\n"
 /*"-GtkEntry-has-frame:1;"
-"-GtkEntry-progress-border:0px,0px,0px,0px;"
-"-GtkEntry-inner-border:0px,0px,0px,0px;"*/
+"-GtkEntry-progress-border:0pt,0pt,0pt,0pt;"
+"-GtkEntry-inner-border:0pt,0pt,0pt,0pt;"*/
 "background-image:-gtk-gradient(linear,left bottom, right bottom, from (#0000FF), to (#0000FF));"
-"border-width:1px;"
+"border-width:1pt;"
 "border-style:none;"
 "border-color:#000000;"
 "}\n"
 "headerbar{"
-"min-height:8px;"
-"border-width: 0px; margin: 0px; padding: 0px;"
+"min-height:8pt;"
+"border-width: 0pt; margin: 0pt; padding: 0pt;"
 "}\n"
 "button .toggle {"
-"border-width: 0px; margin: 0px; padding: 0px;"
+"border-width: 0pt; margin: 0pt; padding: 0pt;"
 "}\n"
 ;

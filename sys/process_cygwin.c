@@ -21,7 +21,7 @@
 /*Largely not implemented. */
 int get_job_progname(char* res, int nres, int pid){
 	(void)pid;
-	strncpy(res, "maos", nres); res[nres-1]=0;
+	strscpy(res, "maos", nres); 
 	return 0;
 }
 size_t get_job_mem(void){

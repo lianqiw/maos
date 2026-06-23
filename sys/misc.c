@@ -37,12 +37,46 @@
 #include "bin.h"
 #include "scheduler_client.h"
 /**
+ * strscpy - Copy a C-string into a sized buffer
+ * @dest: Where to copy the string to
+ * @src: Where to copy the string from
+ * @count: Size of destination buffer
+ *
+ * Copy the source string to a maximum of count bytes of the destination buffer.
+ * The destination buffer is guaranteed to be NUL-terminated if count is > 0.
+ *
+ * Return: The number of characters copied (not including the trailing NUL).
+ * Return -E2BIG if the count is 0 or if the source string was truncated.
+ */
+ssize_t strscpy(char *dest, const char *src, size_t count) {
+    // A 0-sized destination buffer is invalid and cannot hold a NUL terminator
+    if (count == 0) {
+        return -27; // -E2BIG (Value may vary by system, 27 is standard on Linux)
+    }
+
+    size_t res = 0;
+    while (res < count) {
+        dest[res] = src[res];
+        if (dest[res] == '\0') {
+            return res; // Success: returned length of copied string
+        }
+        res++;
+    }
+
+    // If we reached here, the string was truncated. 
+    // Enforce NUL termination on the very last byte.
+    dest[count - 1] = '\0';
+    return -27; // -E2BIG
+}
+/**
    Obtain the dirname of a path. See mybasename().
 */
 char* mydirname(const char* fn){
-	if(!fn||strlen(fn)==0) return NULL;
+	if(!fn||fn[0]==0) return NULL;
 	char fn2[PATH_MAX];
-	strncpy(fn2, fn, PATH_MAX-1);
+	if(strscpy(fn2, fn, PATH_MAX-1)<0){
+		error("fn overflow\n");
+	}
 	/*If this is a folder, remove the last / */
 	if(fn2[strlen(fn2)-1]=='/')
 		fn2[strlen(fn2)-1]='\0';
@@ -214,21 +248,10 @@ double myclockd(void){
 #endif
 }
 /**
-   Get current directory. The returnned string must be freed.
-*/
-char* mygetcwd(void){
-	char cwd0[PATH_MAX];
-	if(!getcwd(cwd0, PATH_MAX)){
-		dbg("Error getting current directory: %s\n", strerror(errno));
-		strncpy(cwd0, getenv("PWD"), PATH_MAX); cwd0[PATH_MAX-1]=0;
-	}
-	return strdup(cwd0);
-}
-/**
 Translate a path into absolute path. The caller shall free the returned string.
 */
 char *myabspath(const char *path){
-	if(!path) return mygetcwd();
+	if(!path) return getcwd(NULL, 0);
 	if(path[0]=='/') return strdup(path);
 	char path2[PATH_MAX];
 	if(path[0]=='~' && path[1]=='/'){
@@ -242,7 +265,8 @@ char *myabspath(const char *path){
 			}
 		}
 		if(!getcwd(path2, PATH_MAX)){
-			strncpy(path2, getenv("PWD"), PATH_MAX); path2[PATH_MAX-1]=0;
+			warning("Unable to get current path, assume /\n");
+			path2[0]='/'; path2[1]=0;
 		}
 		while(!mystrcmp(path, "../")){
 			char *tmp=strrchr(path2, '/');

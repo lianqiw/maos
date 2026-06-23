@@ -127,7 +127,10 @@ void init_process(void){
 	DIRLOCK=stradd(HOME, "/.aos/lock", NULL);//should be shared if job are distributed between different servers.
 	mymkdir("%s", DIRLOCK);
 
-	DIRSTART=mygetcwd();
+	if(!(DIRSTART=getcwd(NULL, 0))){
+		warning("Unable to get current path, use HOME instead\n");
+		DIRSTART=strdup(HOME);
+	}
 	DIRBUILD=myabspath(BUILDDIR);
 
 	mystrrep(DIRSTART, DIRBUILD, BUILDDIR);
