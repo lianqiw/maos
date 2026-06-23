@@ -29,13 +29,16 @@
 //#include <stdatomic.h> //_Atomic with OPENMP is not supported in compilares <=6. We use builtin atomic functions instead.
 #include "common.h"
 #include <pthread.h>
-#if _OPENMP >= 201511
-#include <omp.h>
-#else
-#undef _OPENMP
-#endif
 #if defined(__cplusplus) && !USE_CPP
 extern "C"{
+#endif
+#if _OPENMP 
+void omp_set_num_threads(int nthread);
+int omp_get_max_threads(void);
+int omp_in_parallel(void);
+int omp_get_level(void);
+int omp_get_active_level(void);
+int omp_get_thread_num(void);
 #endif
 typedef struct thread_t thread_t;
 typedef void *(*thread_fun)(void *);
