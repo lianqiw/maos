@@ -111,7 +111,7 @@ fdpcg_saselect(long nx, long ny, real dx, loc_t* saloc, real* saa){
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
 static lmat*
-fdpcg_perm(const long* nx, const long* ny, const long* os, int bs, int nps, int shift, int half){
+fdpcg_perm(const long* nx, const long* ny, const real* os, int bs, int nps, int shift, int half){
 	long nx2[nps], ny2[nps];
 	long noff[nps];
 	long xloctot=0;
@@ -339,7 +339,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 	loc_t* saloc=powfs[hipowfs].saloc;
 	const long nps=recon->npsr;
 	long pos=parms->tomo.pos;
-	const long* os=P(parms->atmr.os);
+	const real* os=P(parms->atmr.os);
 	if(pos!=os[0]){
 		dbg("ploc over sampling does not equal to ground layer over sampling.\n");
 	}

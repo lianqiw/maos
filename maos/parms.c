@@ -87,7 +87,7 @@ void free_parms(parms_t *parms){
 	dfree(parms->atm.L0);
 	dfree(parms->atmr.ht);
 	dfree(parms->atmr.wt);
-	lfree(parms->atmr.os);
+	dfree(parms->atmr.os);
 	dfree(parms->atm.size);
 	lfree(parms->atm.ipsr);
 	lfree(parms->atm.overx);
@@ -1247,7 +1247,7 @@ static void readcfg_atmr(parms_t *parms){
 		error("atmr.wt length must match atmr.ht\n");
 	}
 	parms->atmr.nps=NX(parms->atmr.ht);
-	parms->atmr.os=readcfg_lmat(parms->atmr.nps,1,"atmr.os");
+	parms->atmr.os=readcfg_dmat(parms->atmr.nps,1,"atmr.os");
 	READ_DBL(atmr.dx);
 }
 
@@ -1305,17 +1305,26 @@ static void readcfg_aper(parms_t *parms){
 	
 	READ_STR(aper.pupmask);
 }
-/**<
+/**
  * check and scale thetax and thetay to match fov in diameter. If thetax and
  * thetay have only a single on axis point, will make a grid of points
- * sufficient pacing. The unit of thetax, thetay, fov are in arcsec.
+ * sufficient pacing. The unit of thetax, thetay, fov are in arcsec. 
+ * no change if fov is 0 or 1. 
+ * Returns the effective fov diameter.
  * */
-static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
+static real scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 	if(PN(thetax)!=PN(thetay)||PN(thetax)!=PN(wt)){
 		error("thetax, thetay, and wt mismatch in dimensions:%ld, %ld, %ld\n", PN(thetax), PN(thetay), PN(wt));
 	}
 	if(fov==0 || fov==1){//when fov is 0 or 1. will not do anything. use thetax and thetay as it.
-		return;
+		real fov2=0;
+		for(int i=0; i<PN(thetax); i++){
+			real fsq=P(thetax, i)*P(thetax, i)+P(thetay, i)*P(thetay, i);
+			if(fsq>fov2){
+				fov2=fsq;
+			}
+		}
+		return 2*sqrt(fov2);
 	}
 	real maxxy=0;
 	for(int i=0; i<PN(thetax); i++){
@@ -1348,12 +1357,12 @@ static void scale_fov(dmat *thetax,dmat *thetay,dmat *wt,real fov){
 		reshape(wt, np, 1);
 	}else{
 		if(fabs(maxxy-0.5)>EPS){
-			info("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
-			fov=fov/(2*maxxy);
+			dbg("maxxy=%g is not 0.5, adjust the scaling properly.\n", maxxy);
 		}
-		dscale(thetax,fov);
-		dscale(thetay,fov);
+		dscale(thetax,fov/(2*maxxy));
+		dscale(thetay,fov/(2*maxxy));
 	}
+	return fov;
 }
 const char *wvl2name(real wvl){
 	if(wvl<0.01){
@@ -1380,8 +1389,7 @@ static void readcfg_evl(parms_t *parms){
 	READ_DMAT(evl.thetax);
 	READ_DMAT(evl.thetay);
 	READ_DMAT_N(evl.wt,NX(parms->evl.thetax), 1);
-	real evl_fov=readcfg_dbl("evl.fov");
-	scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt,evl_fov);
+	parms->evl.fovas=scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt, readcfg_dbl("evl.fov"));
 	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
 	dnormalize_sumabs(parms->evl.wt, 1);
 	READ_DMAT_N(evl.hs,parms->evl.nevl, 1);
@@ -1465,8 +1473,7 @@ static void readcfg_fit(parms_t *parms){
 	READ_DMAT(fit.thetax);
 	READ_DMAT(fit.thetay);
 	READ_DMAT(fit.wt);
-	real fit_fov=readcfg_dbl("fit.fov");
-	scale_fov(parms->fit.thetax,parms->fit.thetay,parms->fit.wt,fit_fov);
+	parms->fit.fovas=scale_fov(parms->fit.thetax,parms->fit.thetay,parms->fit.wt,readcfg_dbl("fit.fov"));
 	parms->fit.nfit=NX(parms->fit.thetax);//maybe changed by scale_fov
 	parms->fit.hs=readcfg_dmat(parms->fit.nfit,1,"fit.hs");
 	real ramin=INFINITY;
@@ -2556,7 +2563,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		dresize(parms->atmr.wt,nps,1);
 		dcp(&parms->atmr.ht,parms->atm.ht);
 		dcp(&parms->atmr.wt,parms->atm.wt);
-		lresize(parms->atmr.os,nps,1);
+		dresize(parms->atmr.os,nps,1);
 		for(int ips=parms->atmr.nps; ips<nps; ips++){
 			P(parms->atmr.os,ips)=P(parms->atmr.os,parms->atmr.nps-1);
 		}
@@ -2568,7 +2575,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		dbg("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 		dresize(parms->atmr.ht,1,1);
 		dresize(parms->atmr.wt,1,1);
-		lresize(parms->atmr.os,1,1);
+		dresize(parms->atmr.os,1,1);
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
@@ -3133,7 +3140,11 @@ static void setup_parms_postproc_recon(parms_t *parms){
 					parms->tomo.precond=PCG_NONE;
 				}
 			}else if(parms->tomo.precond==-1){
-				parms->tomo.precond=PCG_FD;
+				if(parms->fit.fovas<=120){
+					parms->tomo.precond=PCG_FD;
+				}else{
+					parms->tomo.precond=PCG_NONE;
+				}
 			}
 		}else{
 			parms->tomo.precond=PCG_NONE;

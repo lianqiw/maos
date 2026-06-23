@@ -74,7 +74,7 @@ typedef struct atmr_cfg_t{
     dmat *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     real dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
     lmat *indps;   /**<Mapping atmr.ps to atm.ps*/
-    lmat *os;      /**<over sampling factor of xloc over actuator spacing */
+    dmat *os;      /**<over sampling factor of xloc over actuator spacing */
     int nps;      /**<number of phase screens*/
 }atmr_cfg_t;
 /**
@@ -368,6 +368,7 @@ typedef struct evl_cfg_t{
     dmat *wt;       /**<weight of each direction*/
     dmat *wvl;      /**<wavelength for PSF and strehl computation*/
     dmat *hs;       /**<height of each science object*/
+    real fovas;     /**<FoV diameter in arcseconds*/
 	const char **wvlname; /**<Common name of each wavelength. */
     real dx;        /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
@@ -457,6 +458,7 @@ typedef struct fit_cfg_t{
     real svdthres; /**<Threshold in SVD inversion*/
     real actthres; /**<Threshold for slaving value of weakly coupled actuators*/
     real actthres2;/**<Threshold for reducing jump across weakly coupled actuators*/
+    real fovas;      /**<FoV diameter in arcseconds*/
     int actslave;    /**<Enable slaving for non-active actuators. Useful in CBS method*/
     int actextrap;   /**<extrapolate actuator results to non-active actuators.*/
     int nfit;        /**<Number of DM fit directions */
