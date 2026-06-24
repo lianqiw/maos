@@ -9,7 +9,6 @@ var misc_8h =
       [ "val", "d4/d08/misc_8h.html#a24ad5e1eedf791f851b48a567df76287", null ],
       [ "nval", "d4/d08/misc_8h.html#a788ff2d4c1eb23bf8146aff728d08980", null ]
     ] ],
-    [ "strscpy", "d4/d08/misc_8h.html#a211d69aebc6717c5ec61bb721ff73d3f", null ],
     [ "mydirname", "d4/d08/misc_8h.html#ad6b7501458b86f4591091f219fdcad78", null ],
     [ "check_suffix", "d4/d08/misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de", null ],
     [ "copyfile", "d4/d08/misc_8h.html#a6bd8a670108400bf12f854d3e275c0dd", null ],
@@ -19,6 +18,7 @@ var misc_8h =
     [ "myclockd", "d4/d08/misc_8h.html#afae347457a92c7a7befe7442e7d66539", null ],
     [ "myasctime", "d4/d08/misc_8h.html#aed4e72f001a017cd71bb3912319ce18e", null ],
     [ "strtime_pid", "d4/d08/misc_8h.html#a22e8fb3014e7b891ad4950b02fd6b504", null ],
+    [ "mygetcwd", "d4/d08/misc_8h.html#a05db75a4eed692eaa3221e27436aa5de", null ],
     [ "myabspath", "d4/d08/misc_8h.html#a40abc3c75ef6e8bfa0da2dace7bb7d8c", null ],
     [ "mysymlink", "d4/d08/misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a", null ],
     [ "mylink", "d4/d08/misc_8h.html#a9867f2a8994e96bb38589f4ecdbc347a", null ],

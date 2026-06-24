@@ -159,7 +159,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>logdbg</b>(level,  COLOR,  format, ...)&#160;&#160;&#160;({if(LOG_LEVEL&gt;level){if(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})</td></tr>
 <tr class="separator:a11e48f0f410e9764ccb0bb113b093cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b9a882fdc463a3d4dcc99840fd0adb8" id="r_a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memItemLeft" align="right" valign="top"><a id="a5b9a882fdc463a3d4dcc99840fd0adb8" name="a5b9a882fdc463a3d4dcc99840fd0adb8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, RED,         &quot;Error(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>error</b>(format, ...)&#160;&#160;&#160;({logerr(-4, RED,         &quot;Error(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__); call_signal_handler(SIGUSR2);})</td></tr>
 <tr class="separator:a5b9a882fdc463a3d4dcc99840fd0adb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d3ff0e9f81516a70ebb38e09b9ef34e" id="r_a5d3ff0e9f81516a70ebb38e09b9ef34e"><td class="memItemLeft" align="right" valign="top"><a id="a5d3ff0e9f81516a70ebb38e09b9ef34e" name="a5d3ff0e9f81516a70ebb38e09b9ef34e"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>warning</b>(format, ...)&#160;&#160;&#160;logerr(-4, CYAN,      &quot;Warning(%s:%d): &quot; format, BASEFILE,__LINE__, ##__VA_ARGS__)</td></tr>
