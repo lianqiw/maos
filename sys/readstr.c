@@ -62,7 +62,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 		}
 	}
 	/*skip spaces*/
-	while(sdata2<sdataend&&isspace(sdata2[0])){
+	while(sdata2<sdataend&&isspace((unsigned char)sdata2[0])){
 		sdata2++;
 	}
 	int end_coma=0;//end with coma. append an additional element.
@@ -83,7 +83,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			}
 			sdata3=sdata4+1;
 			//Skip spaces
-			while(sdata3<sdataend&&isspace(sdata3[0])){
+			while(sdata3<sdataend&&isspace((unsigned char)sdata3[0])){
 				sdata3++;
 			}
 			//separator following the quote.
@@ -161,7 +161,7 @@ static void parse_expr(double* vmul, double* vadd, char** pendptr){
 	while(endptr[0]=='/'||endptr[0]=='*'||endptr[0]=='+'||endptr[0]=='-'){
 		char op=endptr[0];
 		endptr++;
-		while(isspace(endptr[0])) endptr++;
+		while(isspace((unsigned char)endptr[0])) endptr++;
 		char *data=endptr;
 		double tmp=strtod(data, (char**)&endptr);
 		if(data==endptr){
@@ -207,7 +207,7 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	char* endptr;
-	while(isspace(data[0]) && data[0]!='\0') data++;
+	while(isspace((unsigned char)data[0]) && data[0]!='\0') data++;
 	if(!data || data[0]=='\0'){
 		warning("%s: cannot parse a number from an empty string. Assume 0.\n", key);
 		return 0;
@@ -366,7 +366,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 				} else{
 					fact/=fact1;
 				}
-				while(isspace(endptr[0])) endptr++;
+				while(isspace((unsigned char)endptr[0])) endptr++;
 				if(endptr[0]=='/'){
 					power=-1;
 				} else if(endptr[0]=='*'){
@@ -395,7 +395,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	if(bclose){/*there is indeed ']'. Handle operations after ] */
 		endarr=bclose;
 		endptr=bclose+1;
-		while(isspace(endptr[0])||endptr[0]=='\''){
+		while(isspace((unsigned char)endptr[0])||endptr[0]=='\''){
 			if(endptr[0]=='\'') trans=1-trans;
 			endptr++;
 		}
@@ -403,7 +403,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		parse_expr(&vmul, &vadd, (char**)&endptr);
 		addval+=vadd;
 		fact*=vmul;
-		while(isspace(endptr[0])) endptr++;
+		while(isspace((unsigned char)endptr[0])) endptr++;
 		if(!is_end(endptr[0])&&endptr[0]!=';'&&endptr[0]!=','){
 			error("%s=%s: There is garbage in the end of the string.\n", key, data);return -1;
 		}
@@ -438,12 +438,12 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 		
 		if(startptr<endarr){//more data to read
-			if(!(isspace(startptr[0])||startptr[0]=='@'|| startptr[0]==';'||startptr[0]==',')){
+			if(!(isspace((unsigned char)startptr[0])||startptr[0]=='@'|| startptr[0]==';'||startptr[0]==',')){
 				error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
 			}
 		}
 		/*process the number separators. */
-		while(startptr<endarr && isspace(startptr[0])) startptr++;//continuous spaces are ignored
+		while(startptr<endarr && isspace((unsigned char)startptr[0])) startptr++;//continuous spaces are ignored
 		/*if the number is followed by @n, it is repeated n times. */
 		if(startptr[0]=='@'){
 			startptr++;
@@ -459,7 +459,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 				}
 			}
 		}
-		while(startptr<endarr&&isspace(startptr[0])) startptr++;//continuous spaces are ignored
+		while(startptr<endarr&&isspace((unsigned char)startptr[0])) startptr++;//continuous spaces are ignored
 		if(startptr<endarr && startptr[0]==','){
 			startptr++; //a single coma is permitted
 		} else if(startptr<endarr && startptr[0]==';'){//; is used to separate into a new row
@@ -472,7 +472,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			rowbegin=count;
 			startptr++;
 		}
-		while(startptr<endarr && isspace(startptr[0])) startptr++;//continuous spaces are ignored
+		while(startptr<endarr && isspace((unsigned char)startptr[0])) startptr++;//continuous spaces are ignored
 	}
 	if(startptr!=endarr){
 		error("%s=%s: garbage is found: {%s}\n", key, data, startptr);return -1;
@@ -567,8 +567,8 @@ void trim_string(const char **pstart, const char **pend){
 	const char* start=*pstart;
 	const char* end=(pend && *pend)?*pend:(start+strlen(start));
 repeat:
-	while(isspace((int)start[0]) && start<end) start++;
-	while(isspace((int)end[-1])&& start<end) end--;
+	while(isspace((unsigned char)start[0]) && start<end) start++;
+	while(isspace((unsigned char)end[-1])&& start<end) end--;
 	if(start>=end){ 
 		start=NULL;
 		end=NULL;
@@ -602,14 +602,14 @@ const char* search_keyword(const char* keywords, const char* key){
 		int was_space=1;
 		for(const char* p=keywords; p<end; p++){
 			const char c=*p;
-			if(!isspace((int)c)&&c!=';'&&c!=','){
+			if(!isspace((unsigned char)c)&&c!=';'&&c!=','){
 				if(was_space){//start of key
 					if(!strncasecmp(p, key, nkey)){//match regardless of case.
 						p+=nkey;
-						while(isspace((int)*p)&&p<end) p++;
+						while(isspace((unsigned char)*p)&&p<end) p++;
 						if(*p=='='){
 							p++;
-							while(isspace((int)*p)&&p<end) p++;
+							while(isspace((unsigned char)*p)&&p<end) p++;
 							ans=p;
 							break;
 						} else{

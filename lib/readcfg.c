@@ -61,15 +61,15 @@ static void strtrim(char** str){
 	int iend;
 	/*turn non-printable characters, coma, and semicolumn, to space */
 	for(char* tmp=*str; !is_end(*tmp); tmp++){
-		if(!isgraph((int)*tmp)||isspace(*tmp)){
+		if(!isgraph((unsigned char)*tmp)||isspace((unsigned char)*tmp)){
 			*tmp=' ';
 		}
 	}
 	/*remove leading spaces. */
-	while(!is_end(**str)&&isspace((*str)[0])) (*str)++;
+	while(!is_end(**str)&&isspace((unsigned char)(*str)[0])) (*str)++;
 	iend=strlen(*str)-1;
 	/*remove tailing spaces. */
-	while((isspace((*str)[iend])||(*str)[iend]==';')&&iend>=0){
+	while((isspace((unsigned char)(*str)[iend])||(*str)[iend]==';')&&iend>=0){
 		(*str)[iend]='\0';
 		iend--;
 	}
@@ -125,13 +125,13 @@ static char* squeeze(char* line){
 		}
 		/*Remove trailing linebreak, semi-colon, and spaces*/
 		int nread=strlen(line)-1;
-		while(nread>=0&&(isspace(line[nread])||is_end(line[nread]))){
+		while(nread>=0&&(isspace((unsigned char)line[nread])||is_end(line[nread]))){
 			line[nread]='\0';
 			nread--;
 		}
 		/*Remove leading spaces*/
 		sline=line;
-		while(isspace(sline[0])) sline++;
+		while(isspace((unsigned char)sline[0])) sline++;
 		if(is_end(sline[0]))  sline=NULL;
 	}
 	return sline;
@@ -239,7 +239,7 @@ static void open_config_full(
 		}
 	} else{
 		priority++;//make direct entries higher priority
-		while(config_in[0]!=0 && (config_in[0]=='/' || isspace((int)*config_in))){
+		while(config_in[0]!=0 && (config_in[0]=='/' || isspace((unsigned char)*config_in))){
 			config_in++;//skip leading space.
 		}
 		if(config_in[0]==0) return;
@@ -248,7 +248,7 @@ static void open_config_full(
 		char* end;
 		//Remove trailing space
 		for(end=config_file+strlen(config_file)-1; end>=config_file; end--){
-			if(isspace((int)*end)||*end=='\n') *end='\0';
+			if(isspace((unsigned char)*end)||*end=='\n') *end='\0';
 			else break;
 		}
 		if(end<config_file){

@@ -17,6 +17,7 @@
 */
 #include <errno.h>
 #include "drawdaemon.h"
+#include <unistd.h>
 /*
   Routines in this file handles I/O.
 

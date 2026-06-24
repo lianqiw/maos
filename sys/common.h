@@ -93,7 +93,7 @@ extern FILE* fplog;//The output to fplog is always without color unless user spe
 #define logerr(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 #define logdbg(level, COLOR, format, ...) ({if(LOG_LEVEL>level){if(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); if(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})
 
-#define error(format,...)      ({logerr(-4, RED,         "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); default_signal_handler(SIGUSR2,0,0);})
+#define error(format,...)      ({logerr(-4, RED,         "Error(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__); raise(SIGUSR2);})
 #define warning(format,...)      logerr(-4, CYAN,      "Warning(%s:%d): " format, BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_time(format,...) logerr(-4, CYAN, "[%s] Warning(%s:%d): " format, myasctime(0),BASEFILE,__LINE__, ##__VA_ARGS__)
 #define warning_once(A...)  ({static int done=0; if(!done){done=1; warning(A);}})

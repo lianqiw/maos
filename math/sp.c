@@ -885,7 +885,7 @@ void X(spdroptol)(X(sp)* A, R thres){
 	if(!A) return;
 	assert_sp(A);
 	if(thres<EPS) thres=EPS;
-	R maxv;
+	R maxv=0;
 	X(vecmaxmin)(A->px, A->nzmax, &maxv, NULL);
 	X(ss_droptol)(A, maxv*thres);
 }

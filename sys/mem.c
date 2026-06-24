@@ -144,7 +144,9 @@ static void memkey_add(void *p, size_t size){
 				if(funtrace[0]){
 					memcpy(memkey_all[ind].funtrace, funtrace, funtrace_len);
 				} else{
+#ifndef __CYGWIN__
 					memkey_all[ind].nfunc=backtrace(memkey_all[ind].func, DT);
+#endif
 				}
 				if(counter>memkey_maxadd){
 					memkey_maxadd=counter;
@@ -907,14 +909,14 @@ int dummy_signal_handler(int sig){
 	info2("Signal %d caught, will not quit.\n", sig);
 	return 1;
 }
-
 /**
    Register signal handler
 */
 void register_signal_handler(int (*func)(int)){
+	//info2("Register signal handler %p\n", func);
 	struct sigaction act={0};
 	act.sa_sigaction=default_signal_handler;
-	act.sa_flags=SA_SIGINFO|SA_RESETHAND;//SA_RESETHAND resets the handler to default after one shot
+	act.sa_flags=SA_SIGINFO;//SA_RESETHAND resets the handler to default after one shot. do not enable it to avoid crash in python or matlab or cmocka
 	sigaction(SIGBUS, &act, 0);
 	sigaction(SIGILL, &act, 0);
 	sigaction(SIGSEGV, &act, 0);

@@ -971,8 +971,8 @@ void handle_args(int argc, char *argv[]){
 			} else if(!mystrcmp(s, key2a)||!mystrcmp(s, key2b)){
 				plot_enabled=0;
 				warning("plot disabled\n");
-			} else if((s[0]=='h'&&(!s[1]||isspace(s[1])))
-					||(!mystrcmp(s, "help")&&(!s[4]||isspace(s[4])))
+			} else if((s[0]=='h'&&(!s[1]||isspace((unsigned char)s[1])))
+					||(!mystrcmp(s, "help")&&(!s[4]||isspace((unsigned char)s[4])))
 					){
 				print_help(argv[0]);
 				return;

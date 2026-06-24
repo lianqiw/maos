@@ -17,6 +17,7 @@
 */
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
+#include <unistd.h>
 #ifndef GTK_WIDGET_HAS_FOCUS
 #define GTK_WIDGET_HAS_FOCUS gtk_widget_has_focus
 #endif

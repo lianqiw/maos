@@ -191,7 +191,7 @@ static void list_proc_append(proc_t *p){
 			char* tmp=sargs;
 			while((tmp=strstr(tmp, " -o"))){
 				char* pos2=tmp+3;//start of output directory
-				while(isspace(pos2[0])) pos2++;//skip space
+				while(isspace((unsigned char)pos2[0])) pos2++;//skip space
 				char* pos3=strchr(pos2, ' ');//end of output directory
 				if(!pos3) pos3=strchr(pos2, 0);//end of string
 				if(pos3){
@@ -375,12 +375,9 @@ void scheduler_cmd_wrap2(GtkDialog *dialog, int response_id, int* cmds){
 	}
 	free(cmds);
 }
-CHECK_ARG(2)
-static void dialog_confirm(int *cmds, const char* format, ...){
-#else
-CHECK_ARG(1)
-static gboolean dialog_confirm(const char* format, ...){
 #endif
+CHECK_ARG(2)
+static gboolean dialog_confirm(int *cmds, const char* format, ...){
 	format2fn;
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), (GtkDialogFlags)(GTK_DIALOG_DESTROY_WITH_PARENT|GTK_DIALOG_MODAL),
@@ -391,7 +388,9 @@ static gboolean dialog_confirm(const char* format, ...){
 #if GTK_MAJOR_VERSION>3
 	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(scheduler_cmd_wrap2), cmds);
 	gtk_widget_show(dia);
+	return 1;
 #else
+	(void)cmds;
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy(dia);
 	return result==GTK_RESPONSE_YES;
@@ -404,23 +403,24 @@ int reset_clipboard=0;
 */
 static void clipboard_append(const char* jobinfo){
 #if GTK_MAJOR_VERSION > 3 
-//GTK4 replaces gtkclipboard by gdkclipboard
-	GdkClipboard *clipboard = gtk_widget_get_clipboard(window);
-	GdkContentProvider *provider=gdk_clipboard_get_content(clipboard);
-	GValue value=G_VALUE_INIT;
-	g_value_init(&value, G_TYPE_STRING);
-	if(!gdk_content_provider_get_value(provider, &value, NULL)) return;
-	const char *old=g_value_get_string(&value);
-	char *newer=NULL;
-	if(old){
-		newer=stradd(old, jobinfo, "\n", NULL);
-		g_value_reset(&value);
-	}else{
-		newer=stradd(jobinfo, "\n", NULL);
-	}
-	g_value_take_string(&value, newer);
-	gdk_clipboard_set_value(clipboard, &value);
-	g_value_unset(&value);
+    GdkClipboard *clipboard = gtk_widget_get_clipboard(window);
+
+    char *old = gdk_clipboard_read_text_finish(
+        clipboard,
+        gdk_clipboard_read_text_async(clipboard, NULL, NULL, NULL),
+        NULL
+    );
+
+    char *newer = NULL;
+    if (old) {
+        newer = stradd(old, jobinfo, "\n", NULL);
+        g_free(old);
+    } else {
+        newer = stradd(jobinfo, "\n", NULL);
+    }
+
+    gdk_clipboard_set_text(clipboard, newer);
+    free(newer);
 #else
 	GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
 	for(int iatom=0; iatom<2; iatom++){
@@ -494,7 +494,7 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 }
 
 /*Handles menu item clicks in a general way.*/
-static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
+static void handle_menu_event(GtkWidget* menuitem, gpointer user_data){
 	(void)menuitem;
 	menudata_t* data=(menudata_t*)user_data;
 	GtkWidget* view=views[cur_page];
@@ -508,7 +508,7 @@ static void handle_menu_event(GtkMenuItem* menuitem, gpointer user_data){
 	const char* action=data->action;
 	/*Alert user in Kill or Restart event*/
 	if(!strcmp(action, "Kill")||!strcmp(action, "Restart")){
-		ans=dialog_confirm("%s %d jobs?", action, nsel);
+		ans=dialog_confirm(NULL,"%s %d jobs?", action, nsel);
 		/*GtkWidget* dia=gtk_message_dialog_new
 		(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 			GTK_MESSAGE_QUESTION,
@@ -628,10 +628,11 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 	gdouble y=event->y;
 	(void) user_data;
 #else
-static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x, gdouble y, gpointer user_data){
+static gboolean view_release_event(GtkGesture*self, GdkEventSequence *sequence, gpointer user_data){
 	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
 	GtkWidget* view=GTK_WIDGET(user_data);
-	(void)n_press;
+	gdouble x=0, y=0;
+	gtk_gesture_get_point(self, sequence, &x, &y);
 #endif
 	;
 	if(button!=1) return FALSE;//only handle left click
@@ -663,7 +664,7 @@ static gboolean view_release_event(GtkGestureClick*self, gint n_press, gdouble x
 				cmds[0]=MON_CMD; cmds[1]=ihost; cmds[2]=pid; cmds[3]=CMD_KILL;
 				dialog_confirm(cmds, "Kill %d?", pid);
 #else				
-				if(dialog_confirm("Kill %d?", pid)){
+				if(dialog_confirm(NULL, "Kill %d?", pid)){
 					scheduler_cmd_wrap(ihost, pid, CMD_KILL);
 				}
 #endif
@@ -779,10 +780,9 @@ GtkWidget* new_page(int ihost){
 		//g_signal_connect(view, "unselect-all", G_CALLBACK(view_unselect_all), GINT_TO_POINTER(ihost));
 #else
 		GtkGesture* gesture=gtk_gesture_click_new();
-		g_signal_connect(gesture, "pressed", 
-			G_CALLBACK(view_click_event), view);
-		g_signal_connect(gesture, "released",
-		G_CALLBACK(view_release_event), view);
+		gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gesture), 0);
+		g_signal_connect(gesture, "pressed", G_CALLBACK(view_click_event), view);
+		g_signal_connect(gesture, "released", G_CALLBACK(view_release_event), view);
 		gtk_widget_add_controller(view, GTK_EVENT_CONTROLLER(gesture));
 #endif
 	}

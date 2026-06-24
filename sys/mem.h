@@ -66,5 +66,4 @@ void read_sys_env();
 #define iscrash(sig) (sig==SIGABRT||sig==SIGSEGV||sig==SIGILL||sig==SIGFPE)
 void register_signal_handler(int(*)(int));
 int dummy_signal_handler(int sig);
-void default_signal_handler(int sig, siginfo_t *siginfo, void *unused);
 #endif

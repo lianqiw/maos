@@ -1206,7 +1206,7 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 	if((dim==1&&nloc!=sp->nx)||(dim==2&&nloc!=sp->ny)||dim<0||dim>2)
 		error("Mismatch dimension\n");
 	dmat* sum=dspsumabs(sp, 3-dim);
-	int* skip;
+	int* skip=NULL;
 	loc_reduce(loc, sum, EPS, cont, &skip);
 	dfree(sum);
 	int count=0;

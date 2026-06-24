@@ -574,6 +574,13 @@ static int zfread_do(void* ptr, const size_t tot, file_t* fp){
 		return -1;
 	} else if(fp->iszip==1){
 		ans=convert_ans(gzread(fp->gp, ptr, tot), tot);
+		if(ans<0){
+			int errnum=0;
+			const char* msg=gzerror(fp->gp, &errnum);
+			if(errnum){
+				warning("gzread error: %s\n", msg);
+			}
+		}
 	} else if(fp->iszip==2){
 #if HAVE_LIBZSTD		
 		ans=zstd_read(fp->zp, ptr, tot);
@@ -875,7 +882,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 	}
 	if(str){
 		const char* str_end=str+strlen(str);
-		while(isspace(str[0])&&str<str_end) str++;
+		while(isspace((unsigned char)str[0])&&str<str_end) str++;
 		while(str&&str<str_end){
 			FLUSH_OUT;
 			const char* nl=strchr(str, '\n');//separation of keys
@@ -921,7 +928,7 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 			} else{
 				str+=length;
 			}
-			while(str<str_end && isspace(str[0])) str++;
+			while(str<str_end && isspace((unsigned char)str[0])) str++;
 		}
 	}
 	FLUSH_OUT;
@@ -992,7 +999,7 @@ read_fits_header(header_t* header, file_t* fp){
 					is_comment=1;
 				}
 				//Remove trailing space.
-				while(length>0&&isspace((int)hh[length-1])){
+				while(length>0&&isspace((unsigned char)hh[length-1])){
 					hh[length-1]='\0';
 					length--;
 				}

@@ -28,6 +28,7 @@
 
 #include <errno.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include "../sys/sys.h"
 #include "monitor.h"
 //the following are only by the thread running listen_host() to avoid race condition

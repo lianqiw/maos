@@ -4,7 +4,9 @@ import re
 def parse_file(srcdir, files):
     lines=list()
     for fn in files:
-        fpi=open(srcdir+'/'+fn,'r')
+        if srcdir is not None and len(srcdir)>0:
+            fn=srcdir+'/'+fn
+        fpi=open(fn,'r')
         ln=fpi.read();
         fpi.close();
     

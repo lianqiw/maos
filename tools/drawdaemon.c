@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "drawdaemon.h"
+#include <unistd.h>
 //int sock;
 const char *host=0;
 #if MAC_INTEGRATION

@@ -226,11 +226,13 @@ int single_instance_daemonize(const char* lockfolder,
 	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	if(exist(fnlog)){
 		snprintf(fnerr, PATH_MAX, "%s/%s.log.%s", lockfolder, progname, myasctime(0));
-		(void)rename(fnlog, fnerr);
+		if(rename(fnlog, fnerr)){
+			warning("Rename %s to %s failed: %s\n", fnlog, fnerr, strerror(errno));
+		}
 	}
 	snprintf(fnerr, PATH_MAX, "%s/%s.err", lockfolder, progname);
-	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-	if(!freopen(fnerr, "w", stderr)) warning("Error redirect stderr\n");
+	if(!freopen(fnlog, "a", stdout)) warning("Error redirect stdout\n");
+	if(!freopen(fnerr, "a", stderr)) warning("Error redirect stderr\n");
 	setbuf(stdout, NULL);/*disable buffering. */
 
 	char strpid[60];

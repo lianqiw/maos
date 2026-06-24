@@ -14,9 +14,9 @@ AC_DEFUN([MY_COMPILE],[
 			export CPPFLAGS="$CPPFLAGS" 
 			ans=0
 			if test -f configure ;then
-				(./configure --prefix=${prefix} --libdir=${libdir} $3 && make -j4 install) > $fnlog2 2>&1|| ans=1
+				(./configure --prefix=${prefix} --libdir=${libdir} $3 && make -j install) > $fnlog2 2>&1|| ans=1
 			elif test -f CMakeLists.txt ;then
-				(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $3 && make -j4 install) >$fnlog2 2>&1|| ans=1
+				(mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX:PATH=${prefix} -DCMAKE_INSTALL_LIBDIR=lib${libsuffix} -DLIB_SUFFIX=${libsuffix} $3 && make -j install) >$fnlog2 2>&1|| ans=1
 			else
 				echo "Unknown compile system." 
 				ans=1
