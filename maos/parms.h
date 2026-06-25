@@ -877,6 +877,7 @@ typedef struct parms_t{
     int nhiwfs;      /**<Number of high order wfs*/
 	int nlgswfs;	 /**<Number of lgs wfs*/
     dmat *dirs;      /**<Collect for beam directions*/
+    dmat *dirrecon;  /**<Collect for beam directions only for reconstruction*/
     int dither;      /**<Some WFS is doing dithering*/
     int ilgspowfs;   /**<Index of LGS WFS*/
     int nlgspowfs;   /**<Number of LGS POWFS*/

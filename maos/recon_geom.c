@@ -231,7 +231,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 				const real ht=P(recon->ht, ips);
 				const real dxr=P(recon->dx, ips);
 				const real offset=ips==0?0:1./(ips+1);
-				create_metapupil(0, &nxi, &nyi, parms->dirs, parms->aper.d, ht, dxr, dxr, offset, guard, 0, 0, 0, 1);
+				create_metapupil(0, &nxi, &nyi, parms->dirrecon, parms->aper.d, ht, dxr, dxr, offset, guard, 0, 0, 0, 1);
 				nxi/=P(recon->os, ips);
 				nyi/=P(recon->os, ips);
 				if(nxmax<nxi) nxmax=nxi;
@@ -260,10 +260,10 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			const long nin=nin0*P(recon->os, ips);
 			map_t* map=0;
 			const real offset=ips==0?0:1./(ips+1);
-			create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, offset, guard, nin, nin, 0, parms->tomo.square);
+			create_metapupil(&map, 0, 0, parms->dirrecon, parms->aper.d, ht, dxr, dxr, offset, guard, nin, nin, 0, parms->tomo.square);
 			P(recon->xloc, ips)=loc_from_map(map, 0);
 			loc_create_stat(P(recon->xloc, ips));
-			info("    layer %d: grid is %4ldx%4ld @ %.3f m, offset is %.2f, %5ld points\n",
+			info("    layer %2d: grid is %4ldx%4ld @ %.3f m, offset is %.2f, %5ld points\n",
 				ips, NX(map), NY(map), dxr, offset, P(recon->xloc, ips)->nloc);
 			mapfree(map);
 		}
@@ -274,7 +274,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 			const real ht=P(recon->ht, ips);
 			real dxr=parms->atmr.dx/parms->fit.pos;
 			const real guard=MAX(1, parms->tomo.guard)*dxr;
-			create_metapupil(&P(recon->xcmap, ips), 0, 0, parms->dirs, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
+			create_metapupil(&P(recon->xcmap, ips), 0, 0, parms->dirrecon, parms->aper.d, ht, dxr, dxr, 0, guard, 0, 0, 0, parms->fit.square);
 			mem_unref(&P(recon->xcmap, ips)->mem);
 			P(recon->xcmap, ips)->mem=0;
 			P(P(recon->xcmap, ips))=NULL;

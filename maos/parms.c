@@ -185,6 +185,7 @@ void free_parms(parms_t *parms){
 	free_strarr(parms->recon.distortion_dm2sci,parms->ndm*parms->fit.nfit);
 	free_strarr(parms->recon.distortion_tel2wfs,parms->nwfsr);
 	dfree(parms->dirs);
+	dfree(parms->dirrecon);
 	lfree(parms->dbg.tomo_maxit);
 	dcellfree(parms->dbg.dmoff);
 	dcellfree(parms->dbg.gradoff);
@@ -2746,53 +2747,56 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		}
 		parms->atmr.dx=mindsa;
 	}
-
-
-
 }
-static void setup_parms_postproc_dirs(parms_t *parms){
-	//Collect all beam directions
-	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->ncpa.calib?parms->ncpa.ndir:0);
-	parms->dirs=dnew(4,ndir);
-	dmat *pdir=parms->dirs/*PDMAT*/;
+static dmat* make_dirs(parms_t *parms, int recon_only){
+	const int ndir=parms->nwfs+parms->fit.nfit+(recon_only?0:(parms->evl.nevl+(parms->ncpa.calib?parms->ncpa.ndir:0)));
+	dmat *dirs=dnew(4, ndir);
 	int count=0;
-
 	for(int i=0; i<parms->nwfs; i++){
-		P(pdir,0,count)=parms->wfs[i].thetax;
-		P(pdir,1,count)=parms->wfs[i].thetay;
-		P(pdir,2,count)=parms->wfs[i].hs;
-		P(pdir,3,count)=parms->wfs[i].hc;
-		count++;
-	}
-
-	for(int i=0; i<parms->evl.nevl; i++){
-		P(pdir,0,count)=P(parms->evl.thetax,i);
-		P(pdir,1,count)=P(parms->evl.thetay,i);
-		P(pdir,2,count)=P(parms->evl.hs,i);
-		count++;
-	}
-	for(int i=0; i<parms->fit.nfit; i++){
-		P(pdir,0,count)=P(parms->fit.thetax,i);
-		P(pdir,1,count)=P(parms->fit.thetay,i);
-		P(pdir,2,count)=P(parms->fit.hs,i);
-		count++;
-	}
-	if(parms->ncpa.calib){
-		for(int i=0; i<parms->ncpa.ndir; i++){
-			P(pdir,0,count)=P(parms->ncpa.thetax,i);
-			P(pdir,1,count)=P(parms->ncpa.thetay,i);
-			P(pdir,2,count)=P(parms->ncpa.hs,i);
+		int ipowfs=parms->wfs[i].powfs;
+		if(!recon_only || !parms->powfs[ipowfs].skip){
+			P(dirs,0,count)=parms->wfs[i].thetax;
+			P(dirs,1,count)=parms->wfs[i].thetay;
+			P(dirs,2,count)=parms->wfs[i].hs;
+			P(dirs,3,count)=parms->wfs[i].hc;
 			count++;
 		}
 	}
-	if(count<ndir){
-		warning("count=%d, ndir=%d\n",count,ndir);
-	} else if(count>ndir){
-		error("count=%d, ndir=%d\n",count,ndir);
+	for(int i=0; i<parms->fit.nfit; i++){
+		P(dirs,0,count)=P(parms->fit.thetax,i);
+		P(dirs,1,count)=P(parms->fit.thetay,i);
+		P(dirs,2,count)=P(parms->fit.hs,i);
+		count++;
 	}
-	dresize(parms->dirs,4,count);
+	
+	if(!recon_only){
+		for(int i=0; i<parms->evl.nevl; i++){
+			P(dirs,0,count)=P(parms->evl.thetax,i);
+			P(dirs,1,count)=P(parms->evl.thetay,i);
+			P(dirs,2,count)=P(parms->evl.hs,i);
+			count++;
+		}
+		if(parms->ncpa.calib){
+			for(int i=0; i<parms->ncpa.ndir; i++){
+				P(dirs,0,count)=P(parms->ncpa.thetax,i);
+				P(dirs,1,count)=P(parms->ncpa.thetay,i);
+				P(dirs,2,count)=P(parms->ncpa.hs,i);
+				count++;
+			}
+		}
+	}
+	if(count>ndir){
+		error("Overflow: count=%d, ndir=%d\n",count,ndir);
+	}
+	dresize(dirs,4,count);
+	return dirs;
+}
+static void setup_parms_postproc_dirs(parms_t *parms){
+	//Collect all beam directions
+	parms->dirs=make_dirs(parms, 0);
+	//Determine the maximum FoV.
 	real rmax=0;
-	for(int ic=0; ic<count; ic++){
+	for(int ic=0; ic<NY(parms->dirs); ic++){
 		real x=P(parms->dirs,0,ic);
 		real y=P(parms->dirs,1,ic);
 		real r=sqrt(x*x+y*y);
@@ -3167,7 +3171,7 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->tomo.cgwarm=1;
 		}
 	}//else: no warm
-
+	parms->dirrecon=make_dirs(parms, 1);
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
 		warning("ahst split tomography does not have good NGS correction in open loop.\n");
 	}
@@ -3590,7 +3594,7 @@ static void print_parms(const parms_t *parms){
 		const real rho=RSS(parms->wfs[i].thetax, parms->wfs[i].thetay)*RAD2AS;
 		real th=rho==0?0:atan2(parms->wfs[i].thetay, parms->wfs[i].thetax)*180/M_PI;
 		//if(th<0) th+=360;
-		info("    wfs %d: powfs %d, at (%7.2f, %7.2f) (%5.1f, %4.0f°) arcsec, %3.0f km, siglev is %7.1f", i,
+		info("    wfs %2d: powfs %d, at (%7.2f, %7.2f) (%5.1f, %4.0f°) arcsec, %3.0f km, siglev is %7.1f", i,
 			parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
 			parms->wfs[i].thetay*RAD2AS, rho, th, 
 			parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
@@ -3605,7 +3609,7 @@ static void print_parms(const parms_t *parms){
 	}
 	info2("There are %d DMs\n",parms->ndm);
 	for(i=0; i<parms->ndm; i++){
-		info("    DM %d: at %4.1f km, pitch %g m, aoi %g°, offset %3.1f, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
+		info("    DM %2d: at %4.1f km, pitch %g m, aoi %g°, offset %3.1f, %g inter-actuator coupling, %g micron stroke, %g micron inter-actuator stroke.\n",
 			i, parms->dm[i].ht/1000, parms->dm[i].dx/parms->dm[i].dratio, parms->dm[i].aoi*180/M_PI,
 			parms->dm[i].offset, parms->dm[i].iac,
 			fabs(P(parms->dm[i].stroke, 0))*1e6, fabs(parms->dm[i].iastroke)*1e6);
@@ -3646,7 +3650,7 @@ static void print_parms(const parms_t *parms){
 		print_alg(parms->fit.bgs,parms->fit.alg, parms->fit.maxit, parms->fit.precond, parms->fit.svdthres);
 		info2("\nThere are %d DM fitting directions\n",parms->fit.nfit);
 		for(i=0; i<parms->fit.nfit; i++){
-			info("    Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+			info("    Fit %2d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 				i,P(parms->fit.wt,i),P(parms->fit.thetax,i)*RAD2AS,
 				P(parms->fit.thetay,i)*RAD2AS);
 			if(fabs(P(parms->fit.thetax,i))>1||fabs(P(parms->fit.thetay,i))>1){
@@ -3667,7 +3671,7 @@ static void print_parms(const parms_t *parms){
 	info2("There are %d evaluation directions at sampling 1/%g m.\n",
 		parms->evl.nevl,1./parms->evl.dx);
 	for(i=0; i<parms->evl.nevl; i++){
-		info("    Evl %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+		info("    Evl %2d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 			i,P(parms->evl.wt,i),P(parms->evl.thetax,i)*RAD2AS,
 			P(parms->evl.thetay,i)*RAD2AS);
 		if(fabs(P(parms->evl.thetax,i))>1||fabs(P(parms->evl.thetay,i))>1){

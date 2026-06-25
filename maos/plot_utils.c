@@ -392,7 +392,7 @@ void plot_recon(sim_t *simu){
 			for(int i=0; i<NX(simu->opdr); i++){
 				if(P(simu->opdr,i)){
 					drawopd("Opdr", P(recon->xloc,i), P(simu->opdr,i), parms->plot.opdmax,
-						"Reconstructed Atmosphere", "x (m)", "y (m)", "Layer %d", i);
+						"Reconstructed Atmosphere", "x (m)", "y (m)", "Layer %02d", i);
 				}
 			}
 		}
