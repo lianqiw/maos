@@ -11,7 +11,7 @@ var searchData=
   ['petal_5frecon_8',['petal_recon',['../dc/da1/petal__utils_8h.html#ab2b6413cfe7341b28ffeba650e3c106d',1,'petal_utils.c']]],
   ['petal_5fsetup_5fwrap_9',['petal_setup_wrap',['../dc/da1/petal__utils_8h.html#a1d478e7815c90cc7e2e80d6d8c711842',1,'petal_utils.c']]],
   ['plot_5fdir_10',['plot_dir',['../d9/d45/plot__utils_8h.html#a92f165ec5bb2ccb133a9cfda1acb5400',1,'plot_utils.c']]],
-  ['plot_5floc_11',['plot_loc',['../d9/d45/plot__utils_8h.html#a29b5db79f88972306acd919fea5bdf6c',1,'plot_utils.c']]],
+  ['plot_5floc_11',['plot_loc',['../d9/d45/plot__utils_8h.html#a4bb1de617e7ba823c160f295802836a5',1,'plot_utils.c']]],
   ['plot_5fsetup_12',['plot_setup',['../d9/d45/plot__utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822',1,'plot_utils.c']]],
   ['poly2fit_13',['poly2fit',['../dd/d2b/libmisc_8h.html#aefe5e957c8884dfb7dfa49430562a87c',1,'libmisc.c']]],
   ['polyfit_14',['polyfit',['../dd/d2b/libmisc_8h.html#a210f7b71835167dc3ff695d7f38a3a7f',1,'libmisc.c']]],

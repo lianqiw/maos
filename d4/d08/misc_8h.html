@@ -129,6 +129,8 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a211d69aebc6717c5ec61bb721ff73d3f" id="r_a211d69aebc6717c5ec61bb721ff73d3f"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a211d69aebc6717c5ec61bb721ff73d3f">strscpy</a> (char *dest, const char *src, size_t count)</td></tr>
+<tr class="separator:a211d69aebc6717c5ec61bb721ff73d3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6b7501458b86f4591091f219fdcad78" id="r_ad6b7501458b86f4591091f219fdcad78"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#ad6b7501458b86f4591091f219fdcad78">mydirname</a> (const char *fn)</td></tr>
 <tr class="separator:ad6b7501458b86f4591091f219fdcad78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6c9a96f04de8b5f720072691fbec0de" id="r_ae6c9a96f04de8b5f720072691fbec0de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#ae6c9a96f04de8b5f720072691fbec0de">check_suffix</a> (const char *fn, const char *suffix)</td></tr>
@@ -150,8 +152,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a5376dd0259af3bcc80c85d1db13d86cd" id="r_a5376dd0259af3bcc80c85d1db13d86cd"><td class="memItemLeft" align="right" valign="top"><a id="a5376dd0259af3bcc80c85d1db13d86cd" name="a5376dd0259af3bcc80c85d1db13d86cd"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>myhostname</b> (void)</td></tr>
 <tr class="separator:a5376dd0259af3bcc80c85d1db13d86cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05db75a4eed692eaa3221e27436aa5de" id="r_a05db75a4eed692eaa3221e27436aa5de"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a05db75a4eed692eaa3221e27436aa5de">mygetcwd</a> (void)</td></tr>
-<tr class="separator:a05db75a4eed692eaa3221e27436aa5de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40abc3c75ef6e8bfa0da2dace7bb7d8c" id="r_a40abc3c75ef6e8bfa0da2dace7bb7d8c"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a40abc3c75ef6e8bfa0da2dace7bb7d8c">myabspath</a> (const char *path)</td></tr>
 <tr class="separator:a40abc3c75ef6e8bfa0da2dace7bb7d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f86cdbb374813c70bae4dfbdc893f8a" id="r_a4f86cdbb374813c70bae4dfbdc893f8a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a">mysymlink</a> (const char *source, const char *dest)</td></tr>
@@ -311,6 +311,43 @@ nval</td>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a211d69aebc6717c5ec61bb721ff73d3f" name="a211d69aebc6717c5ec61bb721ff73d3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a211d69aebc6717c5ec61bb721ff73d3f">&#9670;&#160;</a></span>strscpy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t strscpy </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>dest</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>strscpy - Copy a C-string into a sized buffer @dest: Where to copy the string to @src: Where to copy the string from @count: Size of destination buffer</p>
+<p>Copy the source string to a maximum of count bytes of the destination buffer. The destination buffer is guaranteed to be NUL-terminated if count is &gt; 0.</p>
+<p>Return: The number of characters copied (not including the trailing NUL). Return -E2BIG if the count is 0 or if the source string was truncated. </p>
+
+</div>
+</div>
 <a id="ad6b7501458b86f4591091f219fdcad78" name="ad6b7501458b86f4591091f219fdcad78"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad6b7501458b86f4591091f219fdcad78">&#9670;&#160;</a></span>mydirname()</h2>
 
@@ -516,25 +553,6 @@ nval</td>
       </table>
 </div><div class="memdoc">
 <p>Get furrent time in ascii string that doesn't contain spaces. Suitable for use in filenames. The returnned string must be freed. </p>
-
-</div>
-</div>
-<a id="a05db75a4eed692eaa3221e27436aa5de" name="a05db75a4eed692eaa3221e27436aa5de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05db75a4eed692eaa3221e27436aa5de">&#9670;&#160;</a></span>mygetcwd()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char * mygetcwd </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Get current directory. The returnned string must be freed. </p>
 
 </div>
 </div>
