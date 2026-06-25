@@ -656,6 +656,7 @@ var parms_8h =
       [ "nhiwfs", "d4/d38/parms_8h.html#aa4b638209afe3a75bbfa3f06179ec60d", null ],
       [ "nlgswfs", "d4/d38/parms_8h.html#a4ce231379d38023c7c076f6c3ef835c3", null ],
       [ "dirs", "d4/d38/parms_8h.html#a9a5f86b7cfd6cb08e50dfac4e17df26c", null ],
+      [ "dirrecon", "d4/d38/parms_8h.html#a37dd4cb88f359cbe55a7df5c08aa1d88", null ],
       [ "dither", "d4/d38/parms_8h.html#ae8285c239fd9f63adf7f7d5ccb2aec1f", null ],
       [ "ilgspowfs", "d4/d38/parms_8h.html#a7e5fb4451f9c4ee844e8013b0aefc0a0", null ],
       [ "nlgspowfs", "d4/d38/parms_8h.html#aeac0a5bfe67aa6af9cbfb46596daaaa3", null ],
