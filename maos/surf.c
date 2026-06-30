@@ -367,9 +367,10 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 				continue;
 			}
 			P(HA, ievl, idm)=mkh(&(propdata_t){.locin=P(recon->aloc, idm), .locout=recon->floc,
+				.hs=P(parms->ncpa.hs, ievl), 
 				.thetax=P(parms->ncpa.thetax, ievl),
-				.thetay=P(parms->ncpa.thetay, ievl),
-				.hs=P(parms->ncpa.hs, ievl)});
+				.thetay=P(parms->ncpa.thetay, ievl)
+				});
 		}
 	}
 	//We don't handle float ot stuck actuators in NCPA calibration.

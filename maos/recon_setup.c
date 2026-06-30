@@ -569,8 +569,9 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		for(int idm=0; idm<parms->ndm; idm++){
 			dsp* Htmp=mkh(&(propdata_t){.locin=P(recon->aloc,idm), .locout=eloc, 
-				.thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl),
-				.hs=P(parms->evl.hs,ievl)});
+				.hs=P(parms->evl.hs,ievl), 
+				.thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)
+				});
 			
 			if(parms->recon.modal){
 				dmat* Hdtmp=NULL;

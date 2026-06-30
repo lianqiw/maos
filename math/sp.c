@@ -553,7 +553,6 @@ void X(spadd)(X(sp)** A0, T alpha, const X(sp)* B, T beta){
 /**
    Add alpha times identity to a sparse matrix.
    If X(sp) is not symmetric, only add diagonal to first nm*nm block for nm=min(nx,ny)
-   Assume the the sparse array is sported correctly.
 */
 X(sp)* X(spaddI)(const X(sp)* A, T alpha){
 	if(!A) return NULL;
@@ -572,36 +571,49 @@ X(sp)* X(spaddI)(const X(sp)* A, T alpha){
 	}
 	long nzmax=A->pp[A->ny];
 	X(sp)* out=X(spnew)(A->nx, A->ny, nzmax+nmissing);
-	long missing=0;
+	long offset=0;
 	for(long icol=0; icol<A->ny; icol++){
-		out->pp[icol]=A->pp[icol]+missing;
-		int found=0;
+		out->pp[icol]=A->pp[icol]+offset;
+		int found=0;//whether diagonal value is found
+		int exist=-1;//whether diagonal value exists
 		long ix;
 		for(ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
 			//copy over
-			out->px[ix+missing]=A->px[ix];
-			out->pi[ix+missing]=A->pi[ix];
+			out->px[ix+offset]=A->px[ix];
+			out->pi[ix+offset]=A->pi[ix];
+			if(found) continue;//already handled
 			if(A->pi[ix]==icol){
 				found=1;
-				out->px[ix+missing]+=alpha;
-			} else if(A->pi[ix]>icol && !found){//insert. implies missing>0
-				found=1;
-				out->px[ix+missing]=alpha;
-				out->pi[ix+missing]=icol;
-				missing++;
-				out->px[ix+missing]=A->px[ix];
-				out->pi[ix+missing]=A->pi[ix];
+				out->px[ix+offset]+=alpha;
+			} else if(A->pi[ix]>icol){
+				if(exist==-1){//not checked yet
+					exist=0;//set to 0
+					for(int ix2=ix+1; ix2<A->pp[icol+1]; ix2++){
+						if(A->pi[ix2]==icol){
+							exist=1;
+							break;
+						}
+					}
+				}
+				if(!exist){//insert here
+					found=1;
+					out->px[ix+offset]=alpha;
+					out->pi[ix+offset]=icol;
+					offset++;
+				}
+				out->px[ix+offset]=A->px[ix];
+				out->pi[ix+offset]=A->pi[ix];
 			}
 		}
 		if(!found){
-			out->px[ix+missing]=alpha;
-			out->pi[ix+missing]=icol;
-			missing++;
+			out->px[ix+offset]=alpha;
+			out->pi[ix+offset]=icol;
+			offset++;
 		}
 	}
-	out->pp[A->ny]=A->pp[A->ny]+missing;
-	if(missing!=nmissing){
-		error("missing=%ld, should equal to nmissing=%ld\n", missing, nmissing);
+	out->pp[A->ny]=A->pp[A->ny]+offset;
+	if(offset!=nmissing){
+		error("missing=%ld, should equal to nmissing=%ld\n", offset, nmissing);
 	}
 	return out;
 }

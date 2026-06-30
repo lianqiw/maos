@@ -597,7 +597,9 @@ real zoomfocusadj(sim_t* simu, int iwfs){
 	real focus=0;
 	if(parms->powfs[ipowfs].llt){
 		if(powfs[ipowfs].focus){//input focus error due to range variation
-			focus+=PR(powfs[ipowfs].focus, isim, wfsind);
+			long ix=isim%NX(powfs[ipowfs].focus);
+			long iy=wfsind%NY(powfs[ipowfs].focus);
+			focus+=P(powfs[ipowfs].focus, ix, iy);
 		}
 		focus-=P(simu->zoomint, iwfs);
 	}

@@ -39,9 +39,9 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 			P(HXF, ifit, ips)=mkh(&(propdata_t){
 				.locin=P(fit->xloc,ips), 
 				.locout=fit->floc, 
+				.hs=P(fit->hs,ifit),
 				.thetax=P(fit->thetax,ifit),
-				.thetay=P(fit->thetay,ifit),
-				.hs=P(fit->hs,ifit)});
+				.thetay=P(fit->thetay,ifit)});
 		}
 	}
 	toc2("HXF");
@@ -67,9 +67,10 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 			dsp *ha=mkh(&(propdata_t){
 				.locin=P(fit->aloc,idm), 
 				.locout=loc, 
+				.hs=P(fit->hs,ifit),
 				.thetax=P(fit->thetax,ifit),
-				.thetay=P(fit->thetay,ifit),
-				.hs=P(fit->hs,ifit)});
+				.thetay=P(fit->thetay,ifit)
+				});
 			if(fit->modal){
 				dspmm((dmat**)&P(fit->HA, ifit, idm), ha, P(fit->amod, idm, idm), "nn", 1);
 				dspfree(ha);

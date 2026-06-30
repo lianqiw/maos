@@ -544,9 +544,9 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 				int ips2=atm?P(parms->atmr.indps, ips):-1;//point ahead to reduce lag.
 				cellfree(P(HXW, iwfsr, ips));
 				P(HXW, iwfsr, ips)=mkh(&(propdata_t){.locin=P(recon->xloc, ips), .locout=loc, 
+					.hs=parms->wfsr[iwfsr].hs,
 					.thetax=parms->wfsr[iwfsr].thetax,
 					.thetay=parms->wfsr[iwfsr].thetay,
-					.hs=parms->wfsr[iwfsr].hs,
 					.misregx=shwfs?parms->wfsr[iwfsr].misregx:0,
 					.misregy=shwfs?parms->wfsr[iwfsr].misregy:0,
 					.shiftx=atm?P(atm, ips2)->vx*delay:0,
@@ -706,9 +706,9 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			for(int idm=0; idm<ndm; idm++){
 				loc_t* aloc=P(recon->aloc, idm);
 				propdata_t propdata={.locin=aloc,
+					.hs=parms->wfsr[iwfsr].hs,
 					.thetax=parms->wfsr[iwfsr].thetax,
 					.thetay=parms->wfsr[iwfsr].thetay,
-					.hs=parms->wfsr[iwfsr].hs,
 					.misregx=(shwfs?parms->wfsr[iwfsr].misregx:0),
 					.misregy=(shwfs?parms->wfsr[iwfsr].misregy:0)};
 					

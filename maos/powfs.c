@@ -1056,8 +1056,7 @@ static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
 		if(NY(powfs[ipowfs].focus)>parms->powfs[ipowfs].nwfs){
 			dresize(powfs[ipowfs].focus, -1, parms->powfs[ipowfs].nwfs);
 		}else if(NY(powfs[ipowfs].focus)<parms->powfs[ipowfs].nwfs){
-			error("fnrange has wrong columns which should be 1 or >=%d columns\n",
-			parms->powfs[ipowfs].nwfs);
+			warning("fnrange has insufficient columns (#LGS). Will reuse columns.\n");
 		}
 	}
 	/*The focus wavefront is dh/(2*h^2)*r^2. The RMS WFE is dh*(D/h)^2/(16*sqrt(3))*/
