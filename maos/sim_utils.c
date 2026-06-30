@@ -951,7 +951,7 @@ static void init_simu_wfs(sim_t* simu){
 	save->gradgeom=mycalloc(nwfs, zfarr*);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
-		if(P(parms->save.gradgeom, iwfs)&&parms->powfs[ipowfs].phystep>-1){
+		if(P(parms->save.gradgeom, iwfs)&&parms->powfs[ipowfs].usephy){
 			save->gradgeom[iwfs]=zfarr_init(nstep, 1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 		}
 	}

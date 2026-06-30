@@ -657,7 +657,6 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 		const real saat=parms->powfs[ipowfs].saat;
 		const int ng=parms->powfs[ipowfs].ng;
 		dcell* nea=0;
-		//if(parms->powfs[ipowfs].neaphy || parms->powfs[ipowfs].phystep>-1){
 		if(powfs[ipowfs].sanea){
 			dbg2("powfs%d: use sanea to derive neasim\n", ipowfs);
 			nea=dcelldup(powfs[ipowfs].sanea);

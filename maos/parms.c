@@ -637,6 +637,26 @@ static void readcfg_powfs(parms_t *parms){
 	free(dbltmp);
 	free(strtmp);
 }
+static void remove_empty_powfs(parms_t *parms){
+	int ipowfs=0;//valid powfs index
+	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++){
+		if(parms->powfs[kpowfs].nwfs==0){//no stars, adjust wfs.powfs and then remove
+			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+				if(parms->wfs[iwfs].powfs>ipowfs){
+					parms->wfs[iwfs].powfs--;
+				}
+			}
+			free_powfs_cfg(&parms->powfs[kpowfs]);
+		} else{
+			if(ipowfs<kpowfs){
+				memcpy(parms->powfs+ipowfs,parms->powfs+kpowfs,sizeof(powfs_cfg_t));
+			}
+			ipowfs++;
+		}
+	}
+	parms->powfs=myrealloc(parms->powfs, parms->npowfs, powfs_cfg_t);
+	parms->npowfs=ipowfs;
+}
 #define READ_WFS(A,B)					\
     if(readcfg_##A##arr((&A##tmp),nwfs,0,"wfs."#B)==nwfs){\
     for(i=0; i<nwfs; i++){				\
@@ -690,15 +710,6 @@ static void readcfg_wfs(parms_t *parms){
 	int ipowfs=0;
 	
 	for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++,ipowfs++){
-		if(parms->powfs[kpowfs].nwfs==0){//no stars, remove
-			free_powfs_cfg(&parms->powfs[kpowfs]);
-			ipowfs--;
-			continue;
-		} else{
-			if(ipowfs<kpowfs){
-				memcpy(parms->powfs+ipowfs,parms->powfs+kpowfs,sizeof(powfs_cfg_t));
-			}
-		}
 		int mwfs=parms->powfs[ipowfs].nwfs;
 		parms->powfs[ipowfs].wfs=lnew(mwfs,1);
 		parms->powfs[ipowfs].wfsind=lnew(parms->nwfs,1);
@@ -725,7 +736,7 @@ static void readcfg_wfs(parms_t *parms){
 		error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n",
 			parms->nwfs,wfscount);
 	}
-	
+
 	READ_WFS_DELTA(dbl,hs,delta_hs);
 	READ_WFS_DELTA(dbl,hc,delta_hc);
 	free(dbltmp);
@@ -864,6 +875,7 @@ static void readcfg_siglev(parms_t *parms){
 	int wfs_wvl_count=0;
 	int powfs_wvl_count=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(!parms->powfs[ipowfs].nwfs) continue;
 		const int nwvl=parms->powfs[ipowfs].nwvl;
 		int wvlwts_diff=0;//mark that wvlwts are different
 		const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
@@ -2200,39 +2212,43 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		if(powfsi->dtrat<=0){
 			error("powfs[%d].dtrat=%d is invalid.\n", ipowfs, powfsi->dtrat);
 		}else if(powfsi->step<parms->sim.start 
-			|| (parms->sim.end>0 && powfsi->step>=parms->sim.end)){//powfs is disabled.
+			|| (parms->sim.end>parms->sim.start && powfsi->step>=parms->sim.end)){//powfs is disabled.
 			info("powfs %d is not used.\n", ipowfs);
-		}else if(powfsi->step>0){/*round step to be multiple of dtrat. */
+			powfsi->use=0;
+			if(powfsi->step<parms->sim.start) powfsi->step=parms->sim.end+1;//not used
+		}else{/*round step to be multiple of dtrat. */
 			powfsi->step=((powfsi->step+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+			powfsi->use=1;
 		}
 		if(parms->sim.wfsalias){
 			powfsi->noisy=0;
+			powfsi->usephy=0;
 			powfsi->phystep=-1;
 			if(powfsi->type!=WFS_SH){
 				error("sim.wfsalias is only supported for SHWFS\n");
 			}
-		}
-		if(powfsi->dither||(parms->recon.petal&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
-			if(powfsi->phystep==-1){
-				error("powfs%d: Physical optics mode is required for dithering or petaling control.\n", ipowfs);
+		} 
+		/*Do we ever do physical optics.*/
+		if(powfsi->phystep!=-1 && powfsi->use
+			&&(powfsi->phystep<parms->sim.end||parms->sim.end==parms->sim.start)){
+			powfsi->usephy=1;
+			parms->nphypowfs++;
+			if(!parms->sim.closeloop){
+				warning("powfs%d: Physical optics mode may not work well in open loop simulations.\n", ipowfs);
 			}
-		}
-		if(powfsi->phystep!=-1){/*round phystep to be multiple of dtrat. */
 			if(powfsi->phystep<powfsi->step){
 				powfsi->phystep=powfsi->step;
 			}else{
 				powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 			}
-		}
-		/*Do we ever do physical optics.*/
-		if(powfsi->phystep>=0&&(powfsi->phystep<parms->sim.end||parms->sim.end==0)){
-			powfsi->usephy=1;
-			parms->nphypowfs++;
-			if(!parms->sim.closeloop){
-				warning("powfs%d: Physical optics mode does not work well in open loop simulations.\n", ipowfs);
-			}
 		} else{
 			powfsi->usephy=0;
+			powfsi->phystep=parms->sim.end+1;
+		}
+		if(powfsi->dither||(parms->recon.petal&&parms->powfs[ipowfs].lo)||powfsi->type==WFS_PY){
+			if(!powfsi->usephy){
+				error("powfs%d: Physical optics mode is required for dithering or petaling control.\n", ipowfs);
+			}
 		}
 		if(powfsi->phystep>powfsi->step||parms->save.gradgeom){
 			powfsi->needGS0=1;
@@ -2240,7 +2256,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			powfsi->needGS0=0;
 		}
 
-		if(powfsi->qe&&powfsi->phystep>=0){
+		if(powfsi->qe&&powfsi->usephy){
 			//Check rne input.
 			long pixpsay=powfsi->pixpsa;
 			long pixpsax=powfsi->radpix;
@@ -3566,26 +3582,30 @@ static void print_parms(const parms_t *parms){
 		info("    %s in reconstruction. ",
 			parms->powfs[ipowfs].gtype_recon==GTYPE_G?"Gtilt":"Ztilt");
 
-		if(parms->powfs[ipowfs].step!=parms->powfs[ipowfs].phystep){
-			info("Geomtric optics start at %d with %s ",
-				parms->powfs[ipowfs].step,
-				parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
-		}
-		if(parms->powfs[ipowfs].phystep>-1&&parms->powfs[ipowfs].phystep<parms->sim.end){
-			info("Physical optics start at %d with '%s' ",
-				parms->powfs[ipowfs].phystep, phytype[parms->powfs[ipowfs].phytype_sim]);
-		}
+		if(!parms->powfs[ipowfs].use){
+				info("Not used in simulation\n");
+		}else{
+			if(parms->powfs[ipowfs].step<parms->powfs[ipowfs].phystep){
+				info("Geomtric optics start at %d with %s ",
+					parms->powfs[ipowfs].step,
+					parms->powfs[ipowfs].gtype_sim==GTYPE_G?"gtilt":"ztilt");
+			}
+			if(parms->powfs[ipowfs].usephy){
+				info("Physical optics start at %d with '%s' ",
+					parms->powfs[ipowfs].phystep, phytype[parms->powfs[ipowfs].phytype_sim]);
+			}
 
-		if(parms->powfs[ipowfs].noisy){
-			info("(noisy)\n");
-		} else{
-			info("(noise free)\n");
-		}
-		if(parms->powfs[ipowfs].dither){
-			info("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
-				parms->powfs[ipowfs].dither_pllskip,parms->powfs[ipowfs].dither_pllrat);
-			info("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
-				parms->powfs[ipowfs].dither_ogskip,parms->powfs[ipowfs].dither_ograt);
+			if(parms->powfs[ipowfs].noisy){
+				info("(noisy)\n");
+			} else{
+				info("(noise free)\n");
+			}
+			if(parms->powfs[ipowfs].dither){
+				info("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
+					parms->powfs[ipowfs].dither_pllskip,parms->powfs[ipowfs].dither_pllrat);
+				info("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
+					parms->powfs[ipowfs].dither_ogskip,parms->powfs[ipowfs].dither_ograt);
+			}
 		}
 	}
 	info2("There are %d wfs\n",parms->nwfs);
@@ -3728,6 +3748,7 @@ parms_t *setup_parms(const char *mainconf, const char* extraconf, int override){
 	readcfg_powfs(parms);//depends on readcfg_dm results
 	readcfg_wfs(parms);
 	readcfg_siglev(parms);
+	remove_empty_powfs(parms);
 	readcfg_moao(parms);
 	readcfg_atmr(parms);
 	readcfg_tomo(parms);

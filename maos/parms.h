@@ -233,6 +233,7 @@ typedef struct powfs_cfg_t{
 		       - -1: never, doesn't need to compute DTF
 		    */
     int usephy;     /**<whether physical optics is used at all during simulation.(derived parameter)*/
+    int use;        /**<whether powfs is used at all during simulation.(derived parameter)*/
     real r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     real L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     int mtchcr;     /**<use constrained matched filter (0: disable, 1: both axis. 2: radial/x only, 3: az/y only)*/
