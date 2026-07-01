@@ -247,7 +247,7 @@ static void recon_split_lo(sim_t* simu){
 				dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
 				const real lpfocus=parms->sim.lpfocuslo;
 				real ngsfocus=P(P(tmp,0),0);
-				simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
+				simu->ngslolpf[0]=simu->ngslolpf[0]*(1-lpfocus)+lpfocus*ngsfocus;
 				error("Please Implement: add ngsfocus to Merr_lo");
 				dcellfree(tmp);
 			}

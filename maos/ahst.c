@@ -625,8 +625,8 @@ int ngsmod_dot_post(real* pttr_out, real* pttrcoeff_out, real* ngsmod_out,
 	}
 	if(pttr_out){
 		/*compute TT removed wavefront variance as a side product */
-		real pis=aper->ipcc*coeff[0]*coeff[0];
-		real ptt=dwdot(coeff, aper->imcc, coeff);
+		double pis=aper->ipcc*coeff[0]*coeff[0];
+		double ptt=dwdot(coeff, aper->imcc, coeff);
 		pttr_out[0]=tot-pis;/*PR */
 		pttr_out[1]=ptt-pis;/*TT */
 		pttr_out[2]=tot-ptt;/*PTTR */
@@ -818,14 +818,6 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 			}
 		}
 		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
-	}
-	if(parms->sim.mffocus==3){
-		if(!ngsmod->indfocus){
-			error("indfocus=0\n");
-		}
-		dcellzero(simu->Mngs);
-		P(P(simu->Mngs, 0), ngsmod->indfocus)=simu->lgsfocushpf;
-		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", 1);
 	}
 	//dshow(P(simu->Mngs, 0), "Mngs");
 }

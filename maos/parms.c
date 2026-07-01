@@ -2447,7 +2447,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		parms->sim.mffocus=0;
 	}
 
-	if(parms->sim.mffocus<0||parms->sim.mffocus>3){
+	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
 		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
 	}
 	if(parms->sim.fcfocus<0){
@@ -2457,10 +2457,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->tomo.ahst_keepfocus=1;//default is keep focus
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!isinf(parms->powfs[ipowfs].hs)){//LGS WFS only
-			if(parms->sim.mffocus==3){
-				dbg("powfs%d: set frs=1 when sim.mffocus=3\n", ipowfs);
-				parms->powfs[ipowfs].frs=1;
-			}else if(parms->sim.mffocus){
+			if(parms->sim.mffocus){
 				if(!isinf(parms->sim.fcfocus)){//there is focus blending with finite frequency
 					if(parms->powfs[ipowfs].frs){
 						if(parms->powfs[ipowfs].frs==1){
@@ -3649,21 +3646,29 @@ static void print_parms(const parms_t *parms){
 				error(", invalid\n");
 			}
 		}
+		int any_trs=0;
+		int any_frs=0;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].lo
-				&& (parms->powfs[ipowfs].trs||parms->powfs[ipowfs].frs)){
-				info("    low rank term includes ");
+			if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].lo){
 				if(parms->powfs[ipowfs].trs){
-					int lrt=(!parms->recon.split||parms->tomo.splitlrt==2);
-					info("tip/tilt (%s) ", lrt?"L/R":"R");
+					any_trs=1;
 				}
 				if(parms->powfs[ipowfs].frs){
-					int lrt=(!parms->recon.split||parms->tomo.splitlrt);
-					info("focus (%s) ", lrt?"L/R":"R");
+					any_frs=1;
 				}
-				info("for high order WFS.\n");
-				break;
 			}
+		}
+		if(any_trs || any_frs){
+			info("    low rank term includes ");
+			if(any_trs){
+				int lrt=(!parms->recon.split||parms->tomo.splitlrt);
+				info("tip/tilt (%s) ", lrt?"L/R":"R");
+			}
+			if(any_frs){
+				int lrt=(!parms->recon.split||parms->tomo.splitlrt==2);
+				info("focus (%s) ", lrt?"L/R":"R");
+			}
+			info("for high order WFS.\n");
 		}
 		info2("DM Fitting is using ");
 		

@@ -102,7 +102,7 @@ static mapcell* genatm_do(sim_t* simu){
 				info2("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", dbgatm, P(atm->wt, ips)*strength*1e9);
 				dmat* opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
 				dmat* opd2=dref_reshape(opd, nx, ny);
-				dadd((dmat**)&P(screens, ips), 0, opd2, P(atm->wt, ips)*strength);
+				dadd((dmat**)&P(screens, ips), 0, opd2, P(atm->wt, ips)*strength*pow(nx*atm->dx/parms->aper.d,2));
 				dfree(opd);
 				dfree(opd2);
 			} else if(dbgatm<0){//Fourier mode;
@@ -805,7 +805,8 @@ static void init_simu_wfs(sim_t* simu){
 			warning("sim.mffocus is enabled but sim.lpfocus is zero.\n");
 		}
 		simu->lgsfocuslpf=dnew(parms->nwfs, 1);
-		simu->ngsfocuslpf=0;
+		memset(simu->ngslolpf, 0, sizeof(simu->ngslolpf));
+		memset(simu->lgslolpf, 0, sizeof(simu->lgslolpf));
 	}
 	if(parms->nphypowfs){
 		//TODO: split implementation for each POWFS.
@@ -1243,6 +1244,7 @@ static void init_simu_recon(sim_t* simu){
 	if(parms->recon.split||parms->evl.split>1){
 		simu->Merr_lo_store=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
 		simu->Merr_lo2=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
+		simu->Mtmp_lo=dcellnew_same(1,1,recon->ngsmod->nmod,1);
 		if(parms->sim.closeloop){
 			simu->Mint_lo=servo_new(NULL,
 				parms->sim.aplo, parms->sim.allo, parms->sim.dt, parms->sim.eplo);
@@ -1616,7 +1618,6 @@ void sim_free(sim_t* simu){
 	dcellfree(simu->dmhist);
 	dcellfree(simu->Merr_lo_store);
 	dcellfree(simu->Merr_lo2);
-	dcellfree(simu->ngsmodlpf);
 	dcellfree(simu->fsmerr_store);
 	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);

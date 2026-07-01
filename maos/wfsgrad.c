@@ -527,8 +527,6 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
    if sim.mffocus==1: The HPF is applied to each LGS WFS independently. The remaining differential focus is negligible.
 
    if sim.mffocus==2: The focus measurement of all LGS is replaced by LGS averaged and HPFed focus.
-   
-   if sim.mffocus==3: The LGS averaged and HPFed focus is removed in tomography but added after tomography.
 */
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -537,9 +535,8 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 	dcell* LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		const int do_phy=simu->wfsflags[ipowfs].do_phy;
 		if(!simu->wfsflags[ipowfs].gradout||!parms->powfs[ipowfs].llt
-			||isim<parms->powfs[ipowfs].step||!do_phy){
+			||isim<parms->powfs[ipowfs].step){
 			continue;
 		}
 		real lgsfocusm=0;//LGS averaged focus
@@ -571,16 +568,13 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 					focus=lgsfocusm;
 					dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), lgsfocusm-P(P(LGSfocus, iwfs), 0));
 				}
+				info_once("HPF LGS focus in gradcl\n");
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
-				P(P(simu->LGSfocusts, iwfs), 1, isim)=focus-P(simu->lgsfocuslpf, iwfs);
 				//LPF is after using the value to put it off critical path of the RTC.
 				real lpfocus=parms->sim.lpfocushi;
 				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+focus*lpfocus;
 			}
 		}//for jwfs
-		if(parms->sim.mffocus>1){
-			simu->lgsfocushpf=lgsfocusm-P(simu->lgsfocuslpf, P(parms->powfs[ipowfs].wfs, 0));
-		}
 	}//for ipowfs
 }
 

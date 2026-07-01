@@ -624,8 +624,8 @@ typedef struct sim_t{
     dcell *LGSfocus_drift;  /**<LGS focus drift error*/
     dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
-    real lgsfocushpf;/**<hpf pass filtered averaged LGS focus*/
-    real ngsfocuslpf;/**<low pass filtered NGS focus*/
+    real ngslolpf[3];/**<low pass filtered NGS focus, and optionally astigmatism*/
+    real lgslolpf[3];/**<low pass filtered LGS focus, and optionally astigmatism*/
     //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/
     lmat *zoomdrift_count;
@@ -669,9 +669,6 @@ typedef struct sim_t{
 
     dmat* ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
-
-    //Temporary
-    dmat *ngsmodlpf;  /**<For removal low frequency component of ngsmod from LGS recon*/
 
     /*MOAO*/
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
