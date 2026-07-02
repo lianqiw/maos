@@ -286,7 +286,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 void plot_dm(const parms_t *parms, const recon_t *recon, const dcell *ac, int modal, const char *title, const char *type){
 	if(!ac) return;
 	for(int idm=0; idm<NX(ac); idm++){
-		if(!draw_current_format("DM", "%s %d", type, idm)) continue;
+		if(!draw_current_format("DM", "%s %d", type, idm) || !P(ac,idm))continue;
 		dmat *dmc=NULL;
 		if(recon->amod && modal){
 			dmm(&dmc, 0, P(recon->amod, idm, idm), P(ac,idm), "nn", 1);

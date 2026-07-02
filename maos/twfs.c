@@ -47,7 +47,6 @@ void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 		if(idm>0 && rmin2<3){//don't place those on upper layer.
 			rmin2=3;
 		}
-		//must use aper.d here to make sure mode in different layers match in strength for TWFS.
 		dmat* opd=zernike(loc, 0, rmin2, rmax, zradonly);
 		if(parms->recon.modal){//conver to modal actuator space
 			dmat *opd2=NULL;
@@ -142,7 +141,7 @@ void twfs_setup_RR(recon_t* recon, const parms_t* parms){
 	
 	if(recon->GRtwfs){
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv(recon->GRtwfs, neai);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai, 1e-3, 0.1);
 	}
 
 	if(parms->save.setup){

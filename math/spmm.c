@@ -159,7 +159,7 @@ OMP_FOR(4)
    op(A)=conj(A') if trans=='c'
 */
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
-	if(!A||!x) return;
+	if(!A||!x||!PN(A) ||!PN(x)) return;
 	mm_t D=parse_trans(A, x, trans);
 	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
 	X(mat)* y=*yout;
@@ -387,7 +387,7 @@ void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char t
 	cell **C0=C0_.c;
 	const cell *A=A_.c;
 	const cell *B=B_.c;
-	if(!A||!B) return;
+	if(!A||!B||!PN(A)||!PN(B)) return;
 	if(iscell(A)!=iscell(B) || (*C0 && iscell(A)!=iscell(*C0))){
 		if(iscell(A) && PN(A)==1){
 			A=P(A,0);
