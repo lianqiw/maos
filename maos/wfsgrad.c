@@ -571,7 +571,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 				info_once("HPF LGS focus in gradcl\n");
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
 				//LPF is after using the value to put it off critical path of the RTC.
-				real lpfocus=parms->sim.lpfocushi;
+				real lpfocus=parms->sim.lpfocus;
 				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+focus*lpfocus;
 			}
 		}//for jwfs

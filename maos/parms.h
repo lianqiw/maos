@@ -614,10 +614,9 @@ typedef struct sim_cfg_t{
     int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int noisy_hi;    /**<whether high order WFS is noisy*/
     int noisy_lo;    /**<whether low order WFS is noisy*/
-    real lpfocushi;	/**<derived: lpfocus=2*pi*fc*sim.dthi*/
-    real lpfocuslo;	/**<derived: lpfocus=2*pi*fc*sim.dtlo*/
+    real lpfocus;	/**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    real lpbias;	/**<Bias correction LPF. Use on (fast-slow) signal*/
     real lpttm;    	/**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
-
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */

@@ -801,12 +801,10 @@ static void init_simu_wfs(sim_t* simu){
 
 	}
 	if(parms->sim.mffocus){
-		if(fabs(parms->sim.lpfocushi)<1.e-15){
-			warning("sim.mffocus is enabled but sim.lpfocus is zero.\n");
-		}
 		simu->lgsfocuslpf=dnew(parms->nwfs, 1);
-		memset(simu->ngslolpf, 0, sizeof(simu->ngslolpf));
-		memset(simu->lgslolpf, 0, sizeof(simu->lgslolpf));
+	}
+	if(recon->ngsmod->Mbias){
+		simu->Mbias=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
 	}
 	if(parms->nphypowfs){
 		//TODO: split implementation for each POWFS.
@@ -1606,7 +1604,8 @@ void sim_free(sim_t* simu){
 	servo_free(simu->dmint);
 	servo_free(simu->Mint_lo);
 	dcellfree(simu->Mtmp_lo);
-	dcellfree(simu->Mngs);
+	dcellfree(simu->Mbias);
+	dcellfree(simu->Mngs_hi);
 	dcellfree(simu->dmerrts);
 	cellfree(simu->Merrts);
 	dcellfree(simu->gcov);

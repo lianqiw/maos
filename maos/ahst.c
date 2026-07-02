@@ -377,7 +377,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	   if ahst_wt==4: if ndm=2. Move all 2nd order modes from upper DM to ground DM. if ndm==1, remove 2nd order modes.
 
 	   ahst_wt==1 is different from others as it considers aliasing errors of the NGS WFS.
-	   ahst_wt==2 or 3 is virtually identical. ahst_wt=3 is retired as of 12/11/2024 since it is similar to 3 and never used.
+	   ahst_wt==2 or 3 is virtually identical. ahst_wt=2 is retired as of 12/11/2024 since it is similar to 3 and never used.
 	*/
 	dcell *wts=NULL;
 	if(!parms->recon.modal && parms->tomo.ahst_wt>1){
@@ -414,6 +414,20 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 			dcellfree(tmp);
 		}
 		ngsmod->Pngs2=dcellpinv(ngsmod->Modes2, wts);
+	}
+	if(parms->tomo.ahst_wt!=4){
+		ngsmod->Mbias=lnew(ngsmod->nmod, 1);
+		if(ngsmod->indfocus && parms->sim.lpfocus!=1){
+			P(ngsmod->Mbias, ngsmod->indfocus)=1;
+		}
+		if(ngsmod->indastig) {
+			P(ngsmod->Mbias, ngsmod->indastig)=1;
+			P(ngsmod->Mbias, ngsmod->indastig+1)=1;
+		}
+		lshow(ngsmod->Mbias, "Mbias");
+		if(lsum(ngsmod->Mbias)==0){
+			lfree(ngsmod->Mbias);
+		}
 	}
 	dcellfree(wts);
 	if(parms->save.setup){
@@ -752,6 +766,7 @@ void ngsmod_free(ngsmod_t* ngsmod){
 	dfree(ngsmod->IMCC_TT);
 	dfree(ngsmod->IMCC_F);
 	lfree(ngsmod->modvalid);
+	lfree(ngsmod->Mbias);
 	free(ngsmod);
 }
 /*
@@ -771,53 +786,34 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	const parms_t* parms=simu->parms;
 	const ngsmod_t* ngsmod=recon->ngsmod;
 	if(!dmerr||!ngsmod->Pngs) return;
-	dcellzero(simu->Mngs);
+	
 	if(parms->tomo.ahst_wt==4){//this is equivalent to ahst_wt=1 for 2 dms.
-		dcellmm(&simu->Mngs, ngsmod->Pngs2, dmerr, "nn", 1);
+		dcellzero(simu->Mtmp_lo);
+		dcellmm(&simu->Mtmp_lo, ngsmod->Pngs2, dmerr, "nn", 1);
 		//if ndm==1, remove all 2nd order modes from ground DM since LGS cannot sense them properly
 		//if ndm>1 and ahst_keepfocus=0, remove focus from all DMs. LGS focus is not reliable
 		//merge 2nd order modes from upper DMs to ground DM.
 		const int im0=parms->ndm==1?ngsmod->nmod:(parms->tomo.ahst_keepfocus?3:4);
 		for(int im=im0; im<ngsmod->nmod; im++){
-			P(P(simu->Mngs, 0), im)=0;
+			P(P(simu->Mtmp_lo, 0), im)=0;
 			for(int idm=1; idm<parms->ndm; idm++){
-				P(P(simu->Mngs, 0), im)-=P(P(simu->Mngs, idm), im);
+				P(P(simu->Mtmp_lo, 0), im)-=P(P(simu->Mtmp_lo, idm), im);
 			}
 		}
-		dcellmm(&dmerr, ngsmod->Modes2, simu->Mngs, "nn", -1);//t/t are removed from all dms.
+		dcellmm(&dmerr, ngsmod->Modes2, simu->Mtmp_lo, "nn", -1);//t/t are removed from all dms.
 	}else{
-		dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn", 1);
-		real *mngs=P(P(simu->Mngs, 0));
-		if(ngsmod->indastig&&parms->sim.mffocus){//LTAO
-			//LTAO is unable to tell where focus/astigmatism occures. NGS WFS needs to control this.
-			//Solution: remove LPF'ed focus/astigmatism from LGS DM command. 
-			const real lpfocus=parms->sim.lpfocushi;
-			if(lpfocus<1){
-				if(!simu->ngsmodlpf){
-					simu->ngsmodlpf=dnew(3, 1);
-				}
-				info_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
-				P(simu->ngsmodlpf,0)=P(simu->ngsmodlpf,0)*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
-				P(simu->ngsmodlpf,1)=P(simu->ngsmodlpf,1)*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
-				P(simu->ngsmodlpf,2)=P(simu->ngsmodlpf,2)*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
-				mngs[ngsmod->indfocus]=P(simu->ngsmodlpf,0);
-				mngs[ngsmod->indastig]=P(simu->ngsmodlpf,1);
-				mngs[ngsmod->indastig+1]=P(simu->ngsmodlpf,2);
-			}else{
-				info_once("Remove focus/astig from DM error signal.\n");
+		dcellzero(simu->Mngs_hi);
+		dcellmm(&simu->Mngs_hi, ngsmod->Pngs, dmerr, "nn", 1);
+		if(ngsmod->Mbias){
+			for(int imod=0; imod<ngsmod->nmod; imod++){
+				if(!P(ngsmod->Mbias, imod)){
+					P(P(simu->Mbias, 0), imod)=P(P(simu->Mngs_hi, 0),imod);//remove LGS result
+				}//else: remove bias
 			}
-		}else if(parms->tomo.ahst_keepfocus&&ngsmod->indfocus&&parms->sim.mffocus){
-			/*The LGS focus mode is filtered from gradient input to the reconstructor, so we do not remove it again here*/
-			if(ngsmod->indps&&ngsmod->ahst_focus){
-				/* When ahst_focus is true, the first PS mode contains focus mode in
-				* LGS WFS. Relocate this focus mode to the global focus mode to
-				* preserve LGS focus measurements.*/
-				mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(ngsmod->scale-1);
-			} else{
-				mngs[ngsmod->indfocus]=0;//preserve focus
-			}
+			dcellmm(&dmerr, ngsmod->Modes, simu->Mbias, "nn", -1);
+		}else{
+			dcellmm(&dmerr, ngsmod->Modes, simu->Mngs_hi, "nn", -1);
 		}
-		dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
 	}
 	//dshow(P(simu->Mngs, 0), "Mngs");
 }

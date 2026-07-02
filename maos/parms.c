@@ -2505,8 +2505,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	}
 	if(!npowfs_tt) warning("There is no WFS providing tip/tilt.\n");
 	if(!npowfs_focus) warning("There is no WFS providing focus.\n");
-	parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
-	parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus,parms->sim.dt*parms->sim.dtrat_lof);
+	parms->sim.lpfocus=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
+	parms->sim.lpbias=fc2lp(0.05, 1);
+	dbg("sim.mffocus=%d, sim.lpfocus=%g\n", parms->sim.mffocus, parms->sim.lpfocus);
 }
 
 /**

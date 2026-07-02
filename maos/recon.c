@@ -209,25 +209,17 @@ static void recon_split_lo(sim_t* simu){
 						}
 					}
 				}
-				//dshow(P(*merr, 0), "merr");
+				//dshow(P(*merr, 0), "merr"); 
 			}//for iRngs
 			dcellfree(tmp);
-			if(parms->sim.mffocus&&ngsmod->indfocus && parms->sim.lpfocushi<1&& P(P(simu->Merr_lo,0), ngsmod->indfocus)){
-				if(parms->sim.dtrat_lo>1){//new method. use NGS measurement as LGS offset
-					for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-						const int ipowfs=parms->wfs[iwfs].powfs;
-						if(isfinite(parms->powfs[ipowfs].hs)||parms->powfs[ipowfs].llt){
-							const real ep=P(parms->sim.eplo, 0);
-							dadd(&P(simu->gradoff, iwfs), 1, P(recon->GFall, iwfs), -ep*P(P(simu->Merr_lo,0), ngsmod->indfocus));
-						}
+			if(ngsmod->Mbias && simu->Mngs_hi){
+				const real g=parms->sim.lpbias;
+				for(int imod=0; imod<ngsmod->nmod; imod++){
+					if(P(ngsmod->Mbias, imod)){
+						real bias=P(P(simu->Mngs_hi, 0), imod)-P(P(simu->Merr_lo, 0), imod);
+						P(P(simu->Mbias, 0), imod)=(1.-g)*P(P(simu->Mbias, 0), imod)+g*bias;
+						P(P(simu->Merr_lo, 0), imod)=0;//do not feed integrator
 					}
-					P(P(simu->Merr_lo,0), ngsmod->indfocus)=0;//remove from low order path
-				}else{ //Do LPF on NGS focus.
-					//This does not work when dtrat_lo>1. Need to upsample to LGS WFS or DM rate
-					const real lpfocus=parms->sim.lpfocuslo;
-					real *ngsfocus=&P(P(simu->Merr_lo,0), ngsmod->indfocus);
-					simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus* *ngsfocus;
-					*ngsfocus=simu->ngsfocuslpf;
 				}
 			}
 		}//else: there is ideal NGS correction done in perfevl. 
@@ -245,10 +237,7 @@ static void recon_split_lo(sim_t* simu){
 				dcell* tmp=NULL;
 				dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
 				dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
-				const real lpfocus=parms->sim.lpfocuslo;
-				real ngsfocus=P(P(tmp,0),0);
-				simu->ngslolpf[0]=simu->ngslolpf[0]*(1-lpfocus)+lpfocus*ngsfocus;
-				error("Please Implement: add ngsfocus to Merr_lo");
+				error("Please Implement: Mode blending");
 				dcellfree(tmp);
 			}
 		}
@@ -383,9 +372,9 @@ void recon_servo_update(sim_t* simu){
 		if(simu->Merr_lo){
 			dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Merr_lo,0)), 1);
 		}else if(!parms->recon.split && simu->dmerr){
-			dcellzero(simu->Mngs);
-			dcellmm(&simu->Mngs, recon->ngsmod->Pngs, simu->dmerr, "nn", 1);
-			dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Mngs, 0)), 1);
+			dcellzero(simu->Mtmp_lo);
+			dcellmm(&simu->Mtmp_lo, recon->ngsmod->Pngs, simu->dmerr, "nn", 1);
+			dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, P(P(simu->Mtmp_lo, 0)), 1);
 		}
 		if(iframe+1==dtrat){
 			/*if(parms->save.dm){

@@ -156,6 +156,7 @@ typedef struct ngsmod_t{
 	dcell *Modes2;   /**<DM vector for the modes (only for Pngs)*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     lmat *modvalid; /**<Flag of valid modes that has multi-rate control*/
+    lmat *Mbias;/**<Set to 1 for modes that blends both LGS and NGS results*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahst_focus;  /**<records parms->tomo.ahst_focus*/
     int indfocus;  /**<Include focus in NGS controlled modes. Records the index*/
@@ -605,11 +606,12 @@ typedef struct sim_t{
     dcell *dmerr;      /**<equals to dmerr_store when there is output.*/
     dcell *dmerr_store; /**<high order dm error signal.*/
     /*Low order*/
+    servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
 	dcell *Mtmp_lo;   /**<Temporary: NGS mode in DM commands*/
-    servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/
-    dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
+    dcell *Mngs_hi;    /**<NGS mode content in dmerr*/
+    dcell *Mbias;      /**<NGS mode bias determined from LPF*(LGS-NGS)*/
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
     dcell *fsmerr_drift;/**<Drift control of uplink*/
@@ -624,8 +626,6 @@ typedef struct sim_t{
     dcell *LGSfocus_drift;  /**<LGS focus drift error*/
     dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
-    real ngslolpf[3];/**<low pass filtered NGS focus, and optionally astigmatism*/
-    real lgslolpf[3];/**<low pass filtered LGS focus, and optionally astigmatism*/
     //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/
     lmat *zoomdrift_count;
