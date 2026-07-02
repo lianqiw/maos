@@ -9,12 +9,13 @@ var searchData=
   ['update_5fdm_6',['update_dm',['../d2/d94/sim_8h.html#a8115a05357efc3f5259f1eb5cb0b1e23',1,'filter.c']]],
   ['update_5fwfsflags_7',['update_wfsflags',['../d6/ddb/sim__utils_8h.html#af1e48383ae5fca23ceaaecaa20e40176',1,'sim_utils.c']]],
   ['usage_8',['Usage',['../da/dc3/page30_run.html#sect-run',1,'']]],
-  ['use_5fcuda_9',['use_cuda',['../d2/d2e/setup_8c.html#ae8287653ae43d338f5cca0b41d1e384d',1,'setup.c']]],
-  ['used_10',['used',['../d4/d38/parms_8h.html#ac7478caddd51ca20ceb2c98c140ed550',1,'moao_cfg_t::used'],['../d6/d94/maos_2types_8h.html#a57579226ab2934985993550e03c153c2',1,'moao_t::used']]],
-  ['useopdr_11',['useopdr',['../d4/d38/parms_8h.html#adb77e58ed14a4410fc7edc259dd45151',1,'dbg_cfg_t']]],
-  ['usephy_12',['usephy',['../d4/d38/parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f',1,'powfs_cfg_t']]],
-  ['user_20interface_13',['user interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
-  ['utils_2eh_14',['utils.h',['../d1/d57/maos_2utils_8h.html',1,'']]],
-  ['ux_15',['Ux',['../d6/d89/mkdtf_8h.html#a07e1f39a2b79613e1ae6c5af49afad59',1,'dtf_t']]],
-  ['uy_16',['Uy',['../d6/d89/mkdtf_8h.html#af19273870883e70fe352903389d1a60e',1,'dtf_t']]]
+  ['use_9',['use',['../d4/d38/parms_8h.html#a245c433f1d41ea6add15f0af04179905',1,'powfs_cfg_t']]],
+  ['use_5fcuda_10',['use_cuda',['../d2/d2e/setup_8c.html#ae8287653ae43d338f5cca0b41d1e384d',1,'setup.c']]],
+  ['used_11',['used',['../d4/d38/parms_8h.html#ac7478caddd51ca20ceb2c98c140ed550',1,'moao_cfg_t::used'],['../d6/d94/maos_2types_8h.html#a57579226ab2934985993550e03c153c2',1,'moao_t::used']]],
+  ['useopdr_12',['useopdr',['../d4/d38/parms_8h.html#adb77e58ed14a4410fc7edc259dd45151',1,'dbg_cfg_t']]],
+  ['usephy_13',['usephy',['../d4/d38/parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f',1,'powfs_cfg_t']]],
+  ['user_20interface_14',['user interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
+  ['utils_2eh_15',['utils.h',['../d1/d57/maos_2utils_8h.html',1,'']]],
+  ['ux_16',['Ux',['../d6/d89/mkdtf_8h.html#a07e1f39a2b79613e1ae6c5af49afad59',1,'dtf_t']]],
+  ['uy_17',['Uy',['../d6/d89/mkdtf_8h.html#af19273870883e70fe352903389d1a60e',1,'dtf_t']]]
 ];

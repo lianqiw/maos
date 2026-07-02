@@ -1,8 +1,5 @@
 var NAVTREEINDEX14 =
 {
-"df/def/type_8h.html#ace5dc01349dcc234d960edac1ff45987":[13,0,3,9,32,3],
-"df/def/type_8h.html#ace9dc2f64789615eca5eee8fa8e80bb6":[13,0,3,9,58],
-"df/def/type_8h.html#acf4d5f0460b27e0d7f87db456c6f4835":[13,0,3,9,33,3],
 "df/def/type_8h.html#ad16ff87a6ae002a844590cf93d63767f":[13,0,3,9,20,1],
 "df/def/type_8h.html#ad2546c6a6eb7ae9e1a5763c419ce8bf2":[13,0,3,9,32,5],
 "df/def/type_8h.html#ad2826e067a8104ab8712ae2dfede8897":[13,0,3,9,20,3],

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['d_0',['d',['../d9/d19/pywfs_8h.html#af885240cbecf74b2a4c267898fb2fef6',1,'pywfs_cfg_t::D'],['../d4/d38/parms_8h.html#a0f4066f8181cc956c6bd50a40882f257',1,'llt_cfg_t::d'],['../d4/d38/parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7',1,'aper_cfg_t::d']]],
+  ['d_0',['d',['../d4/d38/parms_8h.html#a0f4066f8181cc956c6bd50a40882f257',1,'llt_cfg_t::d'],['../d4/d38/parms_8h.html#ae93528f14ccaac968aab5a2b3dd6a7f7',1,'aper_cfg_t::d'],['../d9/d19/pywfs_8h.html#af885240cbecf74b2a4c267898fb2fef6',1,'pywfs_cfg_t::D']]],
   ['d2cell_1',['d2cell',['../da/dfb/dmath_8h.html#abed4b3e507a4bb20689c0fce64de6c0a',1,'dtmp.c']]],
   ['d2cellref_2',['d2cellref',['../da/dfb/dmath_8h.html#a7ff47722a9401a5bf0e98b3be7493920',1,'dtmp.c']]],
   ['d2sp_3',['d2sp',['../da/dfb/dmath_8h.html#ae45f4bcb07ae1f7c51db180c5114c863',1,'dtmp.c']]],
@@ -359,8 +359,8 @@ var searchData=
   ['dtrat_356',['dtrat',['../d4/d38/parms_8h.html#a900f18d08f204e8188a7076858a8e1eb',1,'atm_cfg_t::dtrat'],['../d4/d38/parms_8h.html#a8cb20aaa818ea17c5d294c6667d69e3a',1,'powfs_cfg_t::dtrat']]],
   ['dtrat_5fhi_357',['dtrat_hi',['../d4/d38/parms_8h.html#aec72bf6aca0d55da0463eb00dc0bdcb4',1,'sim_cfg_t']]],
   ['dtrat_5flo_358',['dtrat_lo',['../d4/d38/parms_8h.html#ac2480389ea8f9c4f78949dad55f1091e',1,'sim_cfg_t']]],
-  ['dtrat_5flo2_359',['dtrat_lo2',['../d4/d38/parms_8h.html#a5039dab4f497cf757ca2b5be1c829893',1,'sim_cfg_t']]],
-  ['dtrat_5flof_360',['dtrat_lof',['../d4/d38/parms_8h.html#a8644b21c8952aefa286974b1c93c3c15',1,'sim_cfg_t']]],
+  ['dtrat_5flofast_359',['dtrat_lofast',['../d4/d38/parms_8h.html#ade5302210ea5e2a9270cdbeccdb85688',1,'sim_cfg_t']]],
+  ['dtrat_5flottf_360',['dtrat_lottf',['../d4/d38/parms_8h.html#a63b259de324a69cfa5b835164dd1acfc',1,'sim_cfg_t']]],
   ['dtrat_5fskip_361',['dtrat_skip',['../d4/d38/parms_8h.html#a77217e88a710d1fcaed2b3d90044572f',1,'sim_cfg_t']]],
   ['dtrat_5fwfs_362',['dtrat_wfs',['../df/d07/kalman_8h.html#a37e6b5595c1aa15097d4d6df7e99ea39',1,'kalman_t']]],
   ['dtrats_363',['dtrats',['../df/d07/kalman_8h.html#af7a34ef5704258a552cced853b408b07',1,'kalman_t']]],
