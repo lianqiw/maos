@@ -417,7 +417,7 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	}
 	if(parms->tomo.ahst_wt!=4){
 		ngsmod->Mbias=lnew(ngsmod->nmod, 1);
-		if(ngsmod->indfocus && parms->sim.lpfocus!=1){
+		if(ngsmod->indfocus && parms->sim.lpfocus<1){//LGS focus is not ignored
 			P(ngsmod->Mbias, ngsmod->indfocus)=1;
 		}
 		if(ngsmod->indastig) {
@@ -441,10 +441,10 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 /**
    Invert GM while handling rank deficiency.
 
-   It ignores those WFS whoes mask is 0, and assumes the modes are ordered as
+   It ignores those WFS whoes wfsmask is 0, and assumes the modes are ordered as
    below: T/T x, T/T y, PS1, PS2, PS3, Focus.
 */
-static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, lmat** pmodvalid){
+static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* wfsmask, const ngsmod_t *ngsmod, lmat** pMctrl){
 	if(NY(GM)!=1){
 		error("To be implemented\n");
 	}
@@ -452,7 +452,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	dcell* GM2=dcellnew(NX(GM), NY(GM));
 	int nmod=0, ntt=0, nttf=0;
 	for(int iwfs=0; iwfs<NX(GM); iwfs++){
-		if((!mask||P(mask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
+		if((!wfsmask||P(wfsmask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
 			dbg(" %d", iwfs);
 			P(GM2, iwfs)=ddup(P(GM, iwfs));
 			nmod=P(GM2, iwfs)->ny;
@@ -467,39 +467,41 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 		}
 	}
 	dbg("\n");
-	lmat* modvalid=0;
-	if(pmodvalid){
-		if(!*pmodvalid){
-			*pmodvalid=lnew(nmod, 1);
+	lmat* Mctrl=0;//indicate valid control modes
+	if(pMctrl){
+		if(!*pMctrl){
+			*pMctrl=lnew(nmod, 1);
 		} else{
-			lset(*pmodvalid, 0);
+			lset(*pMctrl, 0);
 		}
-		modvalid=*pmodvalid;
+		Mctrl=*pMctrl;
 	} else{
-		modvalid=lnew(nmod, 1);
+		Mctrl=lnew(nmod, 1);
 	}
 	if(nttf>0||ntt>0){
-		lset(modvalid, 1);
+		lset(Mctrl, 1);
 	}
 	if(nttf>0){
 		if(nttf==1&&ntt==0&&nmod==6){
-			P(modvalid,2)=0;//disable magnofication mode
+			if(ngsmod->indps){
+				P(Mctrl, ngsmod->indps)=0;//disable PS1 magnification mode
+			}
 		}//else: all mode is valid
-	} else{//nttf==0;
-		if(nmod>=6){
-			P(modvalid,5)=0;//no focus control.
+	} else if(ntt>0){//nttf==0;
+		if(ngsmod->indfocus){
+			P(Mctrl,ngsmod->indfocus)=0;//no focus control.
 		}
-		if(nmod>=5){
-			if(ntt<3){//1 or 2 TT OIWFS can not control all 3 PS modes
-				P(modvalid,2)=0;
+		if(ngsmod->indastig){
+			P(Mctrl,ngsmod->indastig)=0;//no astigmatism control.
+			P(Mctrl,ngsmod->indastig+1)=0;//no astigmatism control.
+		}
+		if(ngsmod->indps){
+			if(ntt<3){//1 or 2 TT OIWFS can not control all 3 PS modes, ignore PS1
+				P(Mctrl,ngsmod->indps)=0;
 			}
-			if(ntt<2){//1 TT OIWFS can not control any PS mode.
-				P(modvalid,3)=0;
-				P(modvalid,4)=0;
-			}
-			if(ntt==0){
-				P(modvalid,0)=0;
-				P(modvalid,1)=0;
+			if(ntt==1){//1 TT OIWFS can not control any PS mode.
+				P(Mctrl,ngsmod->indps+1)=0;
+				P(Mctrl,ngsmod->indps+2)=0;
 			}
 		}
 	}
@@ -507,7 +509,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	for(int iwfs=0; iwfs<NX(GM); iwfs++){
 		if(P(GM2, iwfs)){
 			for(int imod=0; imod<nmod; imod++){
-				if(!P(modvalid, imod)){
+				if(!P(Mctrl, imod)){
 					int ng=P(GM2, iwfs)->nx;
 					memset(PCOL(P(GM2, iwfs), imod), 0, ng*sizeof(real));
 				}
@@ -516,8 +518,8 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* mask, l
 	}
 	dcell* RM=dcellpinv(GM2, saneai);
 	dcellfree(GM2);
-	if(!pmodvalid){
-		lfree(modvalid);
+	if(!pMctrl){
+		lfree(Mctrl);
 	}
 	return RM;
 }
@@ -538,34 +540,20 @@ void ngsmod_setup(const parms_t* parms, recon_t* recon){
 	if(parms->recon.split==1&&!parms->tomo.ahst_idealngs&&parms->ntipowfs){
 		cellfree(ngsmod->Rngs);
 		ngsmod->Rngs=dccellnew(2, 1);
-		P(ngsmod->Rngs,0)=inv_gm(ngsmod->GM, recon->saneai, 0, 0);
+		P(ngsmod->Rngs,0)=inv_gm(ngsmod->GM, recon->saneai, NULL, ngsmod, 0);
 		
-		if(parms->sim.dtrat_lo!=parms->sim.dtrat_lo2){
-			//Multi-rate control
+		if(parms->sim.dtrat_lo!=parms->sim.dtrat_lofast){
+			//Reconstructor for the faster loop in Multi-rate control
 			int nwfsr=parms->nwfsr;
-			lmat* mask=lnew(nwfsr, 1);
+			lmat* wfsmask=lnew(nwfsr, 1);
 			for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
 				int ipowfs=parms->wfsr[iwfsr].powfs;
-				if(parms->powfs[ipowfs].dtrat==parms->sim.dtrat_lo2&&P(ngsmod->GM, iwfsr)){
-					P(mask, iwfsr)=1;
+				if(parms->powfs[ipowfs].dtrat==parms->sim.dtrat_lofast&&P(ngsmod->GM, iwfsr)){
+					P(wfsmask, iwfsr)=1;
 				}
 			}
-			P(ngsmod->Rngs,1)=inv_gm(ngsmod->GM, recon->saneai, mask, &ngsmod->modvalid);
-			lfree(mask);
-			switch(parms->dbg.lo_blend){
-			case 0://Just use the two together
-				ngsmod->lp2=0;
-				break;
-			case 1://Slower loop generates offset for faster loop
-				ngsmod->lp2=-1;
-				break;
-			case 2://HPF on faster loop @ 1/20 of lower loop.
-				ngsmod->lp2=fc2lp(0.05/parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
-				break;
-			default:
-				error("Invalid dbg.lo_blend=%d\n", parms->dbg.lo_blend);
-			}
-			warning("ngsmod->lp2=%g\n", ngsmod->lp2);
+			P(ngsmod->Rngs,1)=inv_gm(ngsmod->GM, recon->saneai, wfsmask, ngsmod, &ngsmod->modvalid);
+			lfree(wfsmask);
 		}
 	}
 	if(parms->tomo.ahst_wt==1){

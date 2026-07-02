@@ -141,7 +141,6 @@ typedef struct ngsmod_t{
     real hdm;      /**<height of upper DM.*/
     real scale;   /**<(1-ht/hs)^-2*/
     real aper_fcp;/**<piston term in focus in plocs.*/
-    real lp2;     /**<LPF coefficient for P(Rngs,1)*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
@@ -608,7 +607,7 @@ typedef struct sim_t{
     /*Low order*/
     servo_t *Mint_lo;  /**<intermediate results for type II/lead filter*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
+    dcell *Merr_bias;   /**<NGS mode bias determined from LPF*(Fast_NGS-Slow_NGS)*/
 	dcell *Mtmp_lo;   /**<Temporary: NGS mode in DM commands*/
     dcell *Mngs_hi;    /**<NGS mode content in dmerr*/
     dcell *Mbias;      /**<NGS mode bias determined from LPF*(LGS-NGS)*/

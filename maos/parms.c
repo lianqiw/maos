@@ -1784,8 +1784,6 @@ static void readcfg_dbg(parms_t *parms){
 	READ_DCELL(dbg.gradoff);
 	READ_INT(dbg.wfs_iac);
 	READ_INT(dbg.fullatm);
-	READ_INT(dbg.lo_blend);
-	READ_DBL(dbg.eploscale);
 	READ_INT(dbg.recon_stuck);
 }
 /**
@@ -2127,8 +2125,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->hipowfs_hsmax=INFINITY;
 	parms->sim.dtrat_hi=-1;
 	parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
-	parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
-	parms->sim.dtrat_lof=-1;
+	parms->sim.dtrat_lofast=-1;//minimum of all lo wfs
+	parms->sim.dtrat_lottf=-1;
 	parms->step_lo=-1;
 	parms->step_hi=-1;
 
@@ -2371,14 +2369,14 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 				} else if(parms->sim.dtrat_lo<powfsi->dtrat){
 					parms->sim.dtrat_lo=powfsi->dtrat;
 				}
-				if(parms->sim.dtrat_lo2<0){
-					parms->sim.dtrat_lo2=powfsi->dtrat;
-				} else if(parms->sim.dtrat_lo2>powfsi->dtrat){
-					parms->sim.dtrat_lo2=powfsi->dtrat;
+				if(parms->sim.dtrat_lofast<0){
+					parms->sim.dtrat_lofast=powfsi->dtrat;
+				} else if(parms->sim.dtrat_lofast>powfsi->dtrat){
+					parms->sim.dtrat_lofast=powfsi->dtrat;
 				}
 				if(powfsi->order>1){
-					if(parms->sim.dtrat_lof<0||parms->sim.dtrat_lof>powfsi->dtrat){
-						parms->sim.dtrat_lof=powfsi->dtrat;
+					if(parms->sim.dtrat_lottf<0||parms->sim.dtrat_lottf>powfsi->dtrat){
+						parms->sim.dtrat_lottf=powfsi->dtrat;
 					}
 				}
 				if(parms->step_lo<0||parms->step_lo>powfsi->step){
@@ -2426,13 +2424,13 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	if(parms->npowfs&&!parms->nhipowfs){
 		warning("There is no high order WFS.\n");
 	}
-	if(parms->sim.dtrat_lo%parms->sim.dtrat_lo2!=0){
-		error("Slower dtrat=%d has to be multiple of %d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2);
+	if(parms->sim.dtrat_lo%parms->sim.dtrat_lofast!=0){
+		error("Slower dtrat=%d has to be multiple of %d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lofast);
 	}
-	dbg("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lo2,parms->sim.dtrat_lof);
+	dbg("dtrat_lo=%d, dtrat_lofast=%d, dtrat_lottf=%d\n",parms->sim.dtrat_lo,parms->sim.dtrat_lofast,parms->sim.dtrat_lottf);
 	parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
 	parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
-	if(parms->sim.dtrat_hi !=parms->sim.dtrat_lo || parms->sim.dtrat_lo!=parms->sim.dtrat_lo2){
+	if(parms->sim.dtrat_hi !=parms->sim.dtrat_lo || parms->sim.dtrat_lo!=parms->sim.dtrat_lofast){
 		if(!parms->recon.split){
 			error("\n\n\nFor mixed dtrat cases, please use split tomography by setting recon.split=1\n\n\n");
 		}

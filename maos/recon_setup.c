@@ -200,7 +200,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				if(nea_mean>neathres
 					&&parms->powfs[ipowfs].usephy
 					&&parms->powfs[ipowfs].order<=2
-					&&parms->sim.dtrat_lo==parms->sim.dtrat_lo2
+					&&parms->sim.dtrat_lo==parms->sim.dtrat_lofast
 					){
 					warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
 						iwfs, nea_mean*RAD2MAS);

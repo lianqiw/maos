@@ -1241,7 +1241,6 @@ static void init_simu_recon(sim_t* simu){
 	}
 	if(parms->recon.split||parms->evl.split>1){
 		simu->Merr_lo_store=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
-		simu->Merr_lo2=dcellnew(1, 1);//, recon->ngsmod->nmod, 1);
 		simu->Mtmp_lo=dcellnew_same(1,1,recon->ngsmod->nmod,1);
 		if(parms->sim.closeloop){
 			simu->Mint_lo=servo_new(NULL,
@@ -1616,7 +1615,7 @@ void sim_free(sim_t* simu){
 	dcellfree(simu->dmerr_store);
 	dcellfree(simu->dmhist);
 	dcellfree(simu->Merr_lo_store);
-	dcellfree(simu->Merr_lo2);
+	dcellfree(simu->Merr_bias);
 	dcellfree(simu->fsmerr_store);
 	dcellfree(simu->fsmerr_drift);
 	dcellfree(simu->fsmreal);

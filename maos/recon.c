@@ -143,15 +143,15 @@ static void recon_split_lo(sim_t* simu){
 			dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
 		}
 	}
-	int enRngs[2]={0,0}; int anyRngs=0;
+	int enRngs[2]={0,0}; //whether the loop is enabled
+	int anyRngs=0;//whether any loop is enabled
 	if(parms->ntipowfs&&isim>=parms->step_lo){
 		if(!parms->sim.closeloop||(isim+1)%parms->sim.dtrat_lo==0){
-			enRngs[0]=1;//Common rate
+			enRngs[0]=1;//Common rate or Slow rate
 			anyRngs++;
 		}
-		if(parms->sim.dtrat_lo!=parms->sim.dtrat_lo2&&(isim+1)%parms->sim.dtrat_lo2==0){
-			enRngs[1]=1;// Multi-rate control
-
+		if(parms->sim.dtrat_lo!=parms->sim.dtrat_lofast&&(isim+1)%parms->sim.dtrat_lofast==0){
+			enRngs[1]=1;// Faster loop in Multi-rate control.
 			anyRngs++;
 			if(parms->recon.split==2){
 				error("Multi-rate control for MVR is to be implemented\n");
@@ -164,54 +164,41 @@ static void recon_split_lo(sim_t* simu){
 
 		switch(parms->recon.split){
 		case 1:	{//Low order NGS recon.
-			dcell* tmp=0;
 			ngsmod_t* ngsmod=recon->ngsmod;
 			for(int iRngs=0; iRngs<2; iRngs++){
-				//For multi-rate control, iRngs=0 is slower loop and iRngs=1 is the faster loop
+				//For multi-rate control, iRngs=0 is slower loop (full reconstructor) and iRngs=1 is the faster loop (partial reconstructor)
+				//For single-rate, iRngs=1 is not used
 				if(!enRngs[iRngs]) continue;
 				dcell** merr;//reconstruction output
-				if((ngsmod->lp2>=0&&iRngs==1)||(ngsmod->lp2<0&&iRngs==0)){
-					merr=&tmp; //output to separate array to handle LPF or TWFS
-					dcellzero(tmp);
-				} else{
-					merr=&simu->Merr_lo;
+				if(iRngs==1 || (iRngs==0 && enRngs[1]==0)){//faster loop or common rate
+					merr=&simu->Merr_lo; //output to error signal
+				}else{
+					merr=&simu->Mtmp_lo; //output to separate array to handle LPF or TWFS
+					dcellzero(*merr);
 				}
 				dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
-				//dshow(P(*merr,0), "merr");
-				if(iRngs==0){
-					dcellscale(*merr, parms->dbg.eploscale);
+			}
+			if(enRngs[1]){//This is multirate control. Blend the measurements
+				if(!simu->Merr_bias){
+					simu->Merr_bias=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
 				}
-				if(iRngs==1&&ngsmod->lp2>=0){ //Do LHF on measurements
-					if(ngsmod->lp2>0){//HPF
-						real* valpf=P(P(simu->Merr_lo2,0));
-						real* val=P(P(tmp,0));
-						for(int imod=0; imod<ngsmod->nmod; imod++){
-							if(imod==ngsmod->indfocus){//there is no need to blend focus.
-								continue;
-							}
-							valpf[imod]=valpf[imod]*(1.-ngsmod->lp2)+val[imod]*ngsmod->lp2;
-							val[imod]-=valpf[imod];
-						}
-					}
-					if(ngsmod->lp2>0||(ngsmod->lp2==0&&!enRngs[0])){
-						dcelladd(&simu->Merr_lo, 1, tmp, 1);
-					}
-				} else if(ngsmod->lp2<0){//Use slower as Truth WFS mode by mode
+				if(enRngs[0]){//slow loop has output;
+					const real g=parms->sim.lpbias;
 					for(int imod=0; imod<ngsmod->nmod; imod++){
-						if(P(ngsmod->modvalid, imod)){//Modes that has multi-rates
-							if(iRngs==0){//Accumulate Truth mode offset
-								P(P(simu->Merr_lo2,0),imod)+=P(P(tmp,0),imod)*(0.5/parms->dbg.eploscale);
-							} else{//Apply truth mode offset.
-								P(P(simu->Merr_lo,0),imod)+=P(P(simu->Merr_lo2,0),imod);
-							}
-						} else if(iRngs==0){//direct output. Avoid real integrator as above.
-							P(P(simu->Merr_lo,0),imod)=P(P(tmp,0),imod);
+						if(P(ngsmod->modvalid, imod)){//control by both loops; update bias
+							real bias=P(P(simu->Merr_lo, 0), imod)-P(P(simu->Mtmp_lo, 0), imod);
+							P(P(simu->Merr_bias, 0), imod)=(1-g)*P(P(simu->Merr_bias, 0), imod)+g*bias;
+						}else{//Controlled only by slow loop. Output directly
+							P(P(simu->Merr_lo, 0), imod)=P(P(simu->Mtmp_lo, 0), imod);
 						}
 					}
 				}
-				//dshow(P(*merr, 0), "merr"); 
-			}//for iRngs
-			dcellfree(tmp);
+				for(int imod=0; imod<ngsmod->nmod; imod++){
+					if(P(ngsmod->modvalid, imod)){//control by both loops; apply bias
+						P(P(simu->Merr_lo, 0), imod)-=P(P(simu->Merr_bias, 0), imod);
+					}
+				}
+			}
 			if(ngsmod->Mbias && simu->Mngs_hi){
 				const real g=parms->sim.lpbias;
 				for(int imod=0; imod<ngsmod->nmod; imod++){

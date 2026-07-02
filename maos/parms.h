@@ -608,9 +608,9 @@ typedef struct sim_cfg_t{
     real dtlo;     /**<low order wfs sampling period*/
     real dthi;     /**<high order wfs sampling period*/
     int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
-    int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
-    int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
-    int dtrat_lof;   /**<lowest dtrat of the lower order focus loop.*/
+    int dtrat_lo;    /**<slower loop dtrat or common of the lower order loop.*/
+    int dtrat_lofast;/**<faster loop dtrat of the lower order loop.*/
+    int dtrat_lottf; /**<faster loop dtrat of the TTF WFS.*/
     int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int noisy_hi;    /**<whether high order WFS is noisy*/
     int noisy_lo;    /**<whether low order WFS is noisy*/
@@ -710,8 +710,6 @@ typedef struct dbg_cfg_t{
 
     int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
     int fullatm;     /**<Always copy full atm to GPU.*/
-    int lo_blend;    /**<Low order multi-rate control blending scheme.*/
-    real eploscale;/**<Scale of eplo*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }dbg_cfg_t;
 /**
