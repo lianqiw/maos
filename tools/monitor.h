@@ -82,4 +82,6 @@ void scheduler_cmd_wrap(int ihost, int pid, int command);
 extern const char *mailto;
 extern int plot_enabled;
 extern int headless;
+extern gint cur_ihost;
+void handle_job_action(int imenu);
 #endif

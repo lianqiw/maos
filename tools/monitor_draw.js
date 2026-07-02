@@ -169,8 +169,12 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
               figName.current=id;
             }
             layout.uirevision=figName.current;//preserve zoom for the plot
-            drawData.cumStart=cumStart;
-            drawData.cumPlot=cumPlot;
+            
+            if(drawData.cumPlot!==cumPlot || drawData.cumStart!==cumStart){
+              drawData.cumPlot=cumPlot;
+              drawData.cumStart=cumStart;
+              Plotly.purge(chartRef.current, 0);
+            }
             const traces  = makeTraces(drawData, layout);
             if (traces.length) {
               Plotly.react(chartRef.current, traces, layout, { responsive: true });
@@ -213,7 +217,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
             onClick={() => { setTopActive(oldVal => ({ ...oldVal, [jobActive]: fig })); setPause(oldVal=>({...oldVal, [jobActive]:false}));}}
           >{fig}</li>))}  
         <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
-        <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🔴"}</li>
+        <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🛑"}</li>
         <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
         <Menu label={(<span style={{padding:'0.3em'}}>Options</span>)} child={<ul className="menu-list" >
           <li title="Set cumulative plotting starting index"><span>Cum Start</span><div className="spring-spacer"></div>

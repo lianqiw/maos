@@ -77,8 +77,44 @@ function Menu({ label, child }){
     </div>
   );
 }
+function ResizableColumn({ title, width, onWidthChange }) {
+  const startResize = (e) => {
+    const startX = e.clientX;
+    const startWidth = width;
+
+    function onMove(e) {
+      onWidthChange(Math.max(20, startWidth + e.clientX - startX));
+    }
+
+    function onUp() {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  return (
+    <th style={{ width, position: "relative" }}>
+      {title}
+      <div
+        onMouseDown={startResize}
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          width: 6,
+          height: "100%",
+          cursor: "col-resize",
+        }}
+      />
+    </th>
+  );
+}
 //Use global function instead of import to avoid error with in-browser babel transformer
 window.get_hostname=get_hostname;
 window.split_hostname=split_hostname;
 window.Menu=Menu;
 window.Progress=Progress;
+window.ResizableColumn=ResizableColumn;

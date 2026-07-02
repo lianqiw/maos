@@ -227,14 +227,12 @@ int scheduler_connect_self(int block){
 	char fn[PATH_MAX];
 	int retry=block?100:2;
 	do{
-		if(TEMP[0]=='/'){//try local connection first.
+		if(TEMP[0]=='/'){//Use local connection .
 			snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
-			sock=connect_port(fn, PORT, 0, 0);
-		}
-		if(sock<0){//try socket connection
+		}else{//use socket connection
 			snprintf(fn, PATH_MAX, "localhost");
-			sock=connect_port(fn, PORT, 0, 0);
 		}
+		sock=connect_port(fn, PORT, 0, 0);
 		if(sock<0){
 			launch_scheduler(block?10:0);
 			mysleep(1);

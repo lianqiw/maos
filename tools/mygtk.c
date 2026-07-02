@@ -42,10 +42,12 @@ GtkWidget *tool_button_new(int toggle, const char *name, GdkPixbuf *buf){
 			gtk_button_set_child(GTK_BUTTON(item), image);
 #endif
 	} else{
-		item=gtk_vseparator_new();
 #if GTK_MAJOR_VERSION>=3
-		gtk_widget_set_opacity(item, 0);
-		gtk_widget_set_hexpand(item, toggle);
+		item=gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+		//gtk_widget_set_opacity(item, 0);
+		gtk_widget_set_size_request(item, 4, -1);
+#else
+		item=gtk_vseparator_new();
 #endif
 	}
 	return item;

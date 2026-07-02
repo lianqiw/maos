@@ -46,10 +46,10 @@ enum{
 	COL_OUT, /*output folder*/
 	//COL_SEED,
 	//COL_SEEDP,/*gint */
-	COL_STEPT,
-	COL_STEP,
-	COL_STEPP,/*gint */
-	COL_TIMING,
+	COL_STEPT,/*str; step progressing and timing*/
+	COL_STEP, /*str; step timing*/
+	COL_STEPP,/*gint; percentage done */
+	COL_TIMING,//remaining time if running or total time
 	//COL_ALL,
 	//COL_REST,
 	COL_ERRLO,
@@ -59,7 +59,8 @@ enum{
 	
 	COL_TOT,
 };
-#define SHOW_SOUT 1 //Show output path
+#define SHOW_START 0 //Show start path separately
+#define SHOW_SOUT 0 //Show output path separately
 #define SHOW_STEPT 1 //Show step time separately
 static GtkListStore* listall=NULL;
 static GtkTreeModel** lists=NULL;
@@ -111,25 +112,20 @@ static void list_proc_update(proc_t* p){
 	}*/
 	char stmp[8];
 	sec2str(stmp, sizeof(stmp), step);
-
 	char tmp[64];
 	snprintf(tmp, 64, "%d/%d %d/%d ", ps->iseed+1, ps->nseed, ps->isim+1, ps->simend);
-	unsigned int offset=strlen(tmp);
-	
-	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, ps->rest);
-	if(offset+1<sizeof(tmp)){
-		tmp[offset]='/';offset++;
+
+	char timing[64]; timing[0]=0;
+	if(ps->info==S_RUNNING){
+		sec2str(timing, sizeof(timing), ps->rest);
+	}else if(ps->info==S_FINISH){
+		sec2str(timing, sizeof(timing), ps->laps);
 	}
-	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, ps->rest+ps->laps);
-#if SHOW_STEPT==0	
-	if(offset<sizeof(tmp)){
-		tmp[offset]=' ';offset++;
-	}
-	offset+=sec2str(tmp+offset, sizeof(tmp)-offset, step);
-#endif
+
 	gtk_list_store_set(listall, &iter,
 		COL_STEPT, stmp,
 		COL_STEP, tmp,
+		COL_TIMING, timing,
 		COL_STEPP, (gint)(p->frac*100),
 		-1);
 #define ERR_MAX 9999.9
@@ -171,27 +167,33 @@ static void list_proc_append(proc_t *p){
 	snprintf(spid, 12, " %d ", p->pid);
 	struct tm* tim=localtime(&p->status.timlast);
 	strftime(sdate, 80, "%m-%d %H:%M:%S", tim);
-	const char* spath=p->path;
+	char* spath=p->path;
 	char* stooltip=NULL;//for tooltip
 	char* sstart=NULL;//starting directory
 	char* sout=NULL;  //output directory
 	char* sargs=NULL; //job arguments
 	if(spath){
-		const char* pos=NULL;
-		pos=strstr(spath, "/maos ");
+		char* pos=strstr(spath, "/maos ");
 		if(!pos){
 			pos=strstr(spath, "/skyc ");
 		}
 		if(pos){
-			sstart=(char*)malloc((pos-spath)+1);//job start directory
-			memcpy(sstart, spath, pos-spath);
-			sstart[pos-spath]='\0';
-			sargs=strdup(pos+1);//job arguments. 
-			//Move output directory to the end of sargs
-			char* tmp=sargs;
+			sstart=spath;//start of path
+#if SHOW_START
+			pos[0]=0;\\terminate string
+			sargs=pos+1;//start of arguments
+#else
+			sargs=sstart;
+#endif
+			int has_space=0;
+			//Extract output directory 
+			char* tmp=pos+5;
 			while((tmp=strstr(tmp, " -o"))){
 				char* pos2=tmp+3;//start of output directory
-				while(isspace((unsigned char)pos2[0])) pos2++;//skip space
+				while(isspace((unsigned char)pos2[0])){
+					has_space=1;
+					pos2++;//skip space
+				}
 				char* pos3=strchr(pos2, ' ');//end of output directory
 				if(!pos3) pos3=strchr(pos2, 0);//end of string
 				if(pos3){
@@ -202,20 +204,18 @@ static void list_proc_append(proc_t *p){
 					memmove(tmp, pos3, strlen(pos3)+1);
 				}
 			}
+			{
+				stooltip=strdup(pos+6);
+				parse_argopt(stooltip, NULL);
+			}
 #if SHOW_SOUT == 0			
 			if(sout){
-				if(strstr(spath, " -o ")){//there is room for space after -o
-					strcat(sargs, " -o ");
-				}else{
-					strcat(sargs, " -o");
-				}
-				strcat(sargs, sout);//append sout back to sargs. Cannot overflow
+				int len=strlen(sout);
+				memmove(pos+5+len+3+has_space, pos+5, strlen(pos+5)+1);
+				memcpy(pos+5, " -o ", 4); 
+				memcpy(pos+8+has_space, sout, len);
 			}
 #endif			
-		}
-		{
-			stooltip=strdup(sargs);
-			parse_argopt(stooltip, NULL);
 		}
 	}
 	GtkTreeIter iter;
@@ -236,7 +236,7 @@ static void list_proc_append(proc_t *p){
 		COL_STEP, " ",
 		COL_STEPP, 0,
 		-1);
-	free(sstart); free(sout); free(sargs); free(stooltip);
+	free(sout); free(stooltip);
 	GtkTreePath* tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(listall), &iter);
 	p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(listall), tpath);
 	gtk_tree_path_free(tpath);
@@ -345,7 +345,7 @@ static GtkTreeViewColumn* new_column(int type, int width, const char* title, ...
 	if(width){
 		gtk_tree_view_column_set_min_width(col, abs(width));
 		if(type==0 && width<0){//set ellipsize makes it shrinkable than minimal needed size.
-			g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_START, NULL);
+			g_object_set(G_OBJECT(render), "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 		}
 	}
 	const int expandable=(width<0)?TRUE:FALSE;
@@ -397,7 +397,7 @@ static gboolean dialog_confirm(int *cmds, const char* format, ...){
 #endif	
 }
 int reset_clipboard=0;
-#if GTK_MAJOR_VERSION<4
+
 /**
    Append text to clipboard (primary and default).
 */
@@ -405,12 +405,12 @@ static void clipboard_append(const char* jobinfo){
 #if GTK_MAJOR_VERSION > 3 
     GdkClipboard *clipboard = gtk_widget_get_clipboard(window);
 
-    char *old = gdk_clipboard_read_text_finish(
+    char *old = NULL; /*gdk_clipboard_read_text_finish(
         clipboard,
         gdk_clipboard_read_text_async(clipboard, NULL, NULL, NULL),
         NULL
     );
-
+	*/
     char *newer = NULL;
     if (old) {
         newer = stradd(old, jobinfo, "\n", NULL);
@@ -449,7 +449,7 @@ typedef struct{
 	GdkPixbuf** icon;//use address for compile time constant
 	int command;
 }menudata_t;
-gint cur_page=-1;
+
 menudata_t menudata[]={
 	{"Plot", "Plot", &icon_draw, CMD_DRAWSER},
 	{"Clear", "Clear", &icon_clear, CMD_REMOVE},
@@ -494,10 +494,10 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 }
 
 /*Handles menu item clicks in a general way.*/
-static void handle_menu_event(GtkWidget* menuitem, gpointer user_data){
+void handle_menu_event(GtkWidget* menuitem, gpointer user_data){
 	(void)menuitem;
 	menudata_t* data=(menudata_t*)user_data;
-	GtkWidget* view=views[cur_page];
+	GtkWidget* view=views[cur_ihost];
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	int nsel=gtk_tree_selection_count_selected_rows(selection);
 	if(nsel<1){
@@ -522,9 +522,14 @@ static void handle_menu_event(GtkWidget* menuitem, gpointer user_data){
 		gtk_tree_selection_selected_foreach(selection, handle_selection, user_data);
 	}
 }
-
+void handle_job_action(int imenu){
+	if(imenu>-1 && imenu<9){
+		handle_menu_event(NULL, menudata+imenu);
+	}
+}
+#if GTK_MAJOR_VERSION<4
 static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
-	(void)user_data;
+	(void) user_data;
 	GtkTreeSelection* selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	int nsel=gtk_tree_selection_count_selected_rows(selection);
 
@@ -538,7 +543,7 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
 	if(nsel>0){
-		cur_page=GPOINTER_TO_INT(user_data);
+		//cur_ihost=GPOINTER_TO_INT(wrap_ihost);
 		for(size_t i=0; i<sizeof(menudata)/sizeof(menudata_t); i++){
 			if(menudata[i].menu){
 				if(1){
@@ -578,15 +583,16 @@ static gboolean view_popup_menu(GtkWidget* view, gpointer user_data){
 #endif
 /* Handle click on treeview */
 #if GTK_MAJOR_VERSION<4
-static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointer user_data){
+static gboolean view_click_event(GtkWidget* view, GdkEventButton* event, gpointer wrap_ihost){
 	gdouble x=event->x;
 	gdouble y=event->y;
 	int button=event->button;
 #else
-static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer user_data){
+static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x, gdouble y, gpointer wrap_ihost){
 	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
-	GtkWidget *view=GTK_WIDGET(user_data);
+	GtkWidget *view=gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 	(void)n_press;
+	(void)wrap_ihost;
 #endif
 
 	GtkTreePath* path=NULL;
@@ -614,7 +620,7 @@ static gboolean view_click_event(GtkGestureClick* self, gint n_press, gdouble x,
 	//right click popup menu
 	if(button==3){
 #if GTK_MAJOR_VERSION<4	
-		view_popup_menu(view, user_data);
+		view_popup_menu(view, wrap_ihost);
 #endif
 		return TRUE;//return TRUE to avoid modifying selection
 	}
@@ -626,15 +632,14 @@ static gboolean view_release_event(GtkWidget* view, GdkEventButton* event, gpoin
 	int button=event->button;
 	gdouble x=event->x;
 	gdouble y=event->y;
-	(void) user_data;
 #else
 static gboolean view_release_event(GtkGesture*self, GdkEventSequence *sequence, gpointer user_data){
 	int button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(self));
-	GtkWidget* view=GTK_WIDGET(user_data);
+	GtkWidget *view=gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
 	gdouble x=0, y=0;
 	gtk_gesture_get_point(self, sequence, &x, &y);
 #endif
-	;
+	(void) user_data;
 	if(button!=1) return FALSE;//only handle left click
 	GtkTreePath* path=NULL;
 	GtkTreeViewColumn* column=NULL;
@@ -781,8 +786,8 @@ GtkWidget* new_page(int ihost){
 #else
 		GtkGesture* gesture=gtk_gesture_click_new();
 		gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gesture), 0);
-		g_signal_connect(gesture, "pressed", G_CALLBACK(view_click_event), view);
-		g_signal_connect(gesture, "released", G_CALLBACK(view_release_event), view);
+		g_signal_connect(gesture, "pressed", G_CALLBACK(view_click_event), GINT_TO_POINTER(ihost));
+		g_signal_connect(gesture, "released", G_CALLBACK(view_release_event), GINT_TO_POINTER(ihost));
 		gtk_widget_add_controller(view, GTK_EVENT_CONTROLLER(gesture));
 #endif
 	}
@@ -810,7 +815,9 @@ GtkWidget* new_page(int ihost){
 	} else{
 		gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID", "text", COL_PID, NULL));
 	}
+#if SHOW_START
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 100, "Start Dir", "text", COL_PATH, NULL));
+#endif
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -100, "Arguments", "text", COL_ARGS, NULL));
 #if SHOW_SOUT 
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 50, "Out Dir", "text", COL_OUT, NULL));
@@ -818,9 +825,11 @@ GtkWidget* new_page(int ihost){
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low", "text", COL_ERRLO, "foreground", COL_COLOR, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, "foreground", COL_COLOR, NULL));
 	//gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value", COL_SEEDP, NULL));
-#if SHOW_STEPT	
+
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_STEPT, NULL));
-#endif	
+
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_TIMING, NULL));
+
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value", COL_STEPP, NULL));
 	

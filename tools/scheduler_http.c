@@ -211,7 +211,7 @@ static http_context_t *http_context_create(int fd){
 	int ishttps=(len>=3 && buf[0] == 0x16 && buf[1] == 0x03 &&
     		(buf[2] == 0x00 || buf[2] == 0x01 || buf[2] == 0x02 || buf[2] == 0x03));
 	if(!ishttp && !ishttps){
-		warning("Connection is not http or https\n");
+		warning_time("Connection is not http or https\n");
 		return NULL;
 	}
 	int jc=-1;
@@ -249,7 +249,7 @@ static http_context_t *http_context_create(int fd){
 		}
 #endif
 		if(!ssl_context[jc].recv){
-			warning("HTTPS is not supported\n");
+			warning_time("HTTPS is not supported\n");
 			return NULL;
 		}
 	}else if(ishttp){
@@ -680,7 +680,7 @@ int http_handler(struct pollfd *pfd, int flag){
 int http_handshake(struct pollfd *pfd, int flag){
 	http_context_t *ctx=http_context_create(pfd->fd);
 	if(!ctx){
-		warning_time("http_context creat failed for %d\n", pfd->fd);
+		warning_time("http_context creat failed for %d, protocol not supported.\n", pfd->fd);
 		return -1;
 	}
 	if(flag==-1){

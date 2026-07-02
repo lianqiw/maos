@@ -1,6 +1,6 @@
 html {
 	font-family: Arial;
-	font-size: 0.875em; /* 14px if browser default is 16px */
+	font-size: 0.875em; /* 0.875em; 14px if browser default is 16px */
 }
 body {
   margin: 0px;
@@ -31,12 +31,12 @@ table.monitor {
 	border-color: black;
 	border-width: 2px 1px 1px 2px;
 	table-layout: fixed;
+	width: 100%;
 	max-width: 100%;
 	cursor:default;
 }
-table.monitor tr{
-	width: 100%;
-	max-width:200em;
+table.monitor col{
+	min-width: 1em;
 }
 table.monitor tr td,th {
 	border-width: 0.5px 0.5px;
@@ -44,45 +44,23 @@ table.monitor tr td,th {
 	border-color: #AAA;
 	white-space: nowrap;
 	vertical-align: middle;
-}
-table.monitor td {
-	text-align: right;
 	padding-left: 0.14em;
 	padding-right: 0.14em;
+	overflow: hidden;
+	white-space: nowrap; 
+	text-overflow: ellipsis; 
+}
+table.monitor td {
+	text-align: right;	
 }
 table.monitor th {
 	text-align: center;
-	padding-left: 0.14em;
-	padding-right: 0.14em;
 }
 
 table.monitor tr:nth-child(odd) {
 	background-color: #EEE
 }
 
-table.monitor .tdpath {
-	width: 50%;
-	max-width: 10em;/*this allows ellipsis*/
-	overflow: hidden;
-	text-overflow: ellipsis; 
-}
-/*table.monitor .tdout {
-	max-width: 10em;
-	overflow: hidden;
-	text-overflow: ellipsis; 
-}*/
-table.monitor td.tdout{ /*use td.tdout, not td .tdout or .tdout td*/
-	text-align: left;
-}
-table.monitor td.tdout details summary{/*not effective*/
-	overflow: hidden; 
-	text-overflow: ellipsis; 
-}
-table.monitor td.tdout details p{
-	font-family: roboto mono, monospace;
-	font-size: 12px;
-	white-space: normal;
-}
 table.monitor td.jobIcon{
 	cursor:pointer;
 }

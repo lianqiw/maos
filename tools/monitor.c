@@ -91,6 +91,7 @@ GtkWidget* toolbar;
 #define MAX_HOST 20
 const char *mailto=NULL;
 int headless=0;//set to 1 when GTK cannot create window
+gint cur_ihost=-1;
 /*
 #define DIALOG_MSG(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
@@ -438,22 +439,22 @@ void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
 void kill_all_jobs(GtkWidget* btn, gpointer data){
 	(void)btn;
 	(void)data;
-	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	//int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
 		GTK_BUTTONS_NONE,
-		"Kill all jobs on %s?", this_host==nhost?"all servers":hostshort[this_host]);
+		"Kill all jobs on %s?", cur_ihost==nhost?"all servers":hostshort[cur_ihost]);
 	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill all", 1, "Cancel", 0, NULL);
 #if GTK_MAJOR_VERSION>=4
-	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(this_host));
+	g_signal_connect(GTK_DIALOG(dia), "response", G_CALLBACK(kill_all_job_callback), GINT_TO_POINTER(cur_ihost));
 	gtk_window_present(GTK_WINDOW(dia));
 #else
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy(dia);
 	if(result){
-		kill_all_jobs_do(this_host);
+		kill_all_jobs_do(cur_ihost);
 	}
 #endif
 }
@@ -539,13 +540,13 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 
 void clear_jobs(GtkWidget* btn, gpointer flag){
 	(void)btn;
-	int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
-	if(this_host==nhost){
+	//int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	if(cur_ihost==nhost){
 		for(int ihost=0; ihost<nhost; ihost++){
 			clear_job_wrap(ihost, GPOINTER_TO_INT(flag));
 		}
 	}else{
-		clear_job_wrap(this_host, GPOINTER_TO_INT(flag));
+		clear_job_wrap(cur_ihost, GPOINTER_TO_INT(flag));
 	}
 }
 
@@ -577,6 +578,19 @@ GtkWidget* monitor_new_entry_progress(void){
 	gtk_entry_set_has_frame(GTK_ENTRY(prog), 0);
 	gtk_entry_set_alignment(GTK_ENTRY(prog), 0.5);//since 2.4
 	return prog;
+}
+void handle_job_button(GtkWidget *btn, gpointer user_data){
+	(void) btn;
+	//cur_ihost=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	int imenu=GPOINTER_TO_INT(user_data);
+	handle_job_action(imenu);
+}
+static void switch_page_cb(GtkNotebook *self,
+    GtkWidget *page, guint page_num, gpointer user_data){
+	(void)self;
+	(void)page;
+	(void)user_data;
+	cur_ihost=page_num;
 }
 GtkWidget* monitor_new_progress(int vertical, int length){
 	GtkWidget* prog=gtk_progress_bar_new();
@@ -744,8 +758,15 @@ void create_window(
 	new_toolbar_item(toolbar, NULL, 0, "edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, GINT_TO_POINTER(-4));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 	new_toolbar_item(toolbar, NULL, 0, "process-stop", icon_cancel, "Kill all jobs", kill_all_jobs, GINT_TO_POINTER(-1));
-	new_toolbar_item(toolbar, NULL, 0, "media-floppy", icon_save, "Save jobs to file", save_all_jobs, GINT_TO_POINTER(-1));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	new_toolbar_item(toolbar, NULL, 0, NULL, icon_draw, "Plot selected job", handle_job_button, GINT_TO_POINTER(0));
+	new_toolbar_item(toolbar, NULL, 0, "edit-delete", NULL, "Kill selected job", handle_job_button, GINT_TO_POINTER(3));
+	new_toolbar_item(toolbar, NULL, 0, "view-refresh", NULL, "Restart selected job", handle_job_button, GINT_TO_POINTER(4));
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+	new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, "Copy command line", handle_job_button, GINT_TO_POINTER(6));
+	//new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, "Copy start directory", handle_job_button, GINT_TO_POINTER(7));
+	//new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, "Copy output directory", handle_job_button, GINT_TO_POINTER(8));
+	new_toolbar_item(toolbar, NULL, 0, "media-floppy", icon_save, "Save jobs to file at ~/", save_all_jobs, GINT_TO_POINTER(-1));
 #if GTK_MAJOR_VERSION<4
 	gtk_widget_show_all(toolbar);
 #endif
@@ -919,6 +940,7 @@ void create_window(
 #else
 	gtk_window_present(GTK_WINDOW(window));
 #endif
+	g_signal_connect(notebook, "switch-page", G_CALLBACK(switch_page_cb), NULL);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), nhost);//need to be after show_all
 	//do it here to prevent memory error.
 	usage_cpu=mycalloc(nhost, double);

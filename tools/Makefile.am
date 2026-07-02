@@ -30,7 +30,7 @@ if GUI
 if USE_SCHEDULER
 PROGS+=../bin/monitor
 ___bin_monitor_SOURCES=monitor_gui.c monitor.c monitor_thread.c resources.c mygtk.c
-___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS)
+___bin_monitor_CFLAGS=$(GTK_CFLAGS) $(MAC_CFLAGS) $(AM_CFLAGS) -Wno-deprecated-declarations
 ___bin_monitor_LDADD=../sys/libaosys.la $(GTK_LIBS) $(MAC_LIBS) $(EXE_LIBS)
 if NOTIFY
 ___bin_monitor_CFLAGS+=$(NOTIFY_CFLAGS) -DWITH_NOTIFY=1

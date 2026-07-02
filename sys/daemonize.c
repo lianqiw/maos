@@ -225,7 +225,7 @@ int single_instance_daemonize(const char* lockfolder,
 	
 	snprintf(fnlog, PATH_MAX, "%s/%s.log", lockfolder, progname);
 	if(exist(fnlog)){
-		snprintf(fnerr, PATH_MAX, "%s/%s.log.%s", lockfolder, progname, myasctime(0));
+		snprintf(fnerr, PATH_MAX, "%s/%s.log.old", lockfolder, progname);
 		if(rename(fnlog, fnerr)){
 			warning("Rename %s to %s failed: %s\n", fnlog, fnerr, strerror(errno));
 		}

@@ -22,6 +22,19 @@ function saveHost(hostname) {//add a host to localStorage.hosts
     console.log(now(), "localStorage.hosts:", localStorage.hosts);
   }
 }
+function sec2str(seconds){
+  seconds = Math.floor(seconds);
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  
+  if(hours>0){
+    return String(hours).padStart(2, "0")+'h'+String(minutes).padStart(2, "0")
+  }else{
+    return String(minutes).padStart(2, "0")+':'+String(secs).padStart(2, "0")
+  }
+}
 function App() {
   const { useState, useEffect, useRef } = React;
   const [job, setJob] = useState([]);//save received jobs
@@ -36,6 +49,20 @@ function App() {
   const jobRef = useRef(job);
   const activeRef = useRef(active);
   const fullName = useRef({});//full hostname.
+  const rempx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const pageWidth=document.documentElement.clientWidth;
+  const [widths, setWidths] = useState({//for resizeable column
+    "Time": rempx*7.5,
+    "Host": rempx*5,
+    "PID": rempx*3.5,
+    "Start Dir": Math.max(pageWidth*0.1, rempx*10),
+    "Out Dir": Math.max(pageWidth*0.1, rempx*10),
+    "Low": rempx*4,
+    "High": rempx*4,
+    "Step": rempx*3,
+    " ":rempx*1.2,
+    "Progress":rempx*10
+  });
   //useEffect(()=>{//Effect function runs after React updates the DOM.
   function connect(hostname) {
     if (hostname.length == 0) return false;
@@ -113,7 +140,8 @@ function App() {
               dirout = i[2].substring(io + 2).trim().split(' ')[0];
               i[2] = i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g, " ").trim();
             }
-            newdata = { PID: i[0], Host: host, "Start Dir": startdir, "Arguments": i[2], "Out Dir": dirout, status: 0 };
+            //newdata = { PID: i[0], Host: host, "Start Dir": startdir, "Arguments": i[2], "Out Dir": dirout, status: 0 };
+            newdata = { PID: i[0], Host: host, "Arguments":startdir+" -o "+dirout+" "+i[2], status: 0 };
           } else if (i.length == 14 && i[1]==='STATUS') {//0:pid, 1:STATUS, 2:pidnew, 3:status, 4:start time,5: errhi, 6:errlo, 7:iseed, 8:nseed, 9:isim, 10:nsim, 11:rest, 12:tot, 13:step timing
             i[3] = parseInt(i[3]);//status. 1: running, 2: wait, 3: started, 4: queued. 11: finished. 12: crashed. 13: to kill; 14: remove; 15: killed;
             if (i[3] != 14) {//14: remove
@@ -121,8 +149,13 @@ function App() {
               i[11] = parseInt(i[11]);//remaining time
               i[12] = parseInt(i[12]);//total time
               const icon = (i[12] > 0 || i[3] != 11) ? iconName[i[3]] : "⏩";
-              const prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + i[9] + '/' + i[10] + ' ' + i[11] + '/' + i[12];
-              const frac = Math.round(100 * (1 - (i[12] == 0 ? 1 : i[11] / i[12]))) + '%'
+              const frac = Math.round(100 * (1 - (i[12] == 0 ? 1 : i[11] / i[12]))) + '%';
+              let prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + i[9] + '/' + i[10] 
+              if(i[11]==1){
+                prog+= ' ' + sec2str(i[11]);
+              }else if(i[3]==11){
+                prog+= ' ' + sec2str(i[12]);
+              }
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
               if (i[13] === '0.000') i[13] = '';
@@ -216,7 +249,9 @@ function App() {
       ...bcc, [h]:
         jobRef.current.reduce((acc, v) => {
           if (v.Host === h) {
-            if (cmd === "clear_all" && v.status >= 11) {
+            if (acc.length>4000) {
+              return acc;//prevent overflow
+            } else if (cmd === "clear_all" && v.status >= 11) {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_finished" && v.status == 11) {
               return acc + `${v.PID}&REMOVE;`;
@@ -242,8 +277,7 @@ function App() {
     });
   }
 
-  const columns = ["Time", "Host", "PID", "Start Dir", "Arguments", "Out Dir", "Low", "High", "Step"];
-  const cn = { Time: "", Host: "", PID: "", "Start Dir": "tdpath", "Arguments": "tdpath", "Out Dir": "tdout", Low: "", High: "", Step: "" };
+  const columns = ["Time", "Host", "PID", "Arguments", "Low", "High", "Step", " ", "Progress"];
   try{
     return (
       <div>
@@ -281,18 +315,23 @@ function App() {
         </ul>
         {!active.includes(':') && (
           <table className="monitor">
+            <colgroup>
+            {columns.map((cl) => <col key={cl} title={cl} style={{width:widths[cl]}}></col>)}
+            </colgroup>
             <thead>
-              <tr>{columns.map((col) => <th key={col} className={cn[col]}>{col}</th>)}
-                <th key="icon"></th>
-                <th key="progress">Progress</th>
+              <tr>{columns.map((col) => col in widths?<ResizableColumn
+              width={widths[col]} title={col} key={col}
+              onWidthChange={(w) =>
+                setWidths({ ...widths, [col]: w })
+              }/>:<th key={col}>{col}</th>)}
               </tr>
             </thead>
             <tbody>
               {job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).map((row, i) => (
                 <tr key={row.PID}>
-                  {columns.map((col) => <td key={col} className={cn[col]} title={row[col]}>{row[col]}</td>)}
-                  <td className="jobIcon" onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
-                  <Progress text={row.prog} frac={row.frac}></Progress>
+                  {columns.slice(0,-2).map((col) => <td key={col} title={row[col]}>{row[col]}</td>)}
+                  <td className="jobIcon" key="icon" onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
+                  <Progress key="progress" text={row.prog} frac={row.frac}></Progress>
                 </tr>
               ))}
             </tbody>

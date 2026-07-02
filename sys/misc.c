@@ -1033,28 +1033,19 @@ int sec2str(char*tmp, long stmp, double sec){
 	if(stmp<0) return 0;
 	if(sec<0) sec=0; //ignore negative
 	int offset=0;
-	long hr=sec/3600; sec-=hr*3600;
-	long m=sec/60; sec-=m*60;
+	int hr=sec/3600; sec-=hr*3600;
+	int m=sec/60; sec-=m*60;
+	tmp[0]=0;
 	if(hr){
-		offset+=snprintf(tmp+offset, stmp-offset, "%ldh", hr);
 		sec=0;//ignore remaining seconds
-		if(hr>5){
-			m=0;
-		}
-	}
-	if(m){
-		offset+=snprintf(tmp+offset, stmp-offset, "%ldm", m);
-		if(m>5){
-			sec=0;//ignore seconds
-		}else{
-			sec=round(sec);//ignore fraction seconds
-		}
-	}
-	if(sec>10){
-		offset+=snprintf(tmp+offset, stmp-offset, "%.0f", sec);
+		offset+=snprintf(tmp+offset, stmp-offset, "%dh%02dm", hr, m);
+	}else if(m){
+		offset+=snprintf(tmp+offset, stmp-offset, "%dm%02ds", m, (int)sec);
+	}else if(sec>10){
+		offset+=snprintf(tmp+offset, stmp-offset, "%ds", (int)sec);
 	}else if(sec>0){
-		offset+=snprintf(tmp+offset, stmp-offset, "%.2g", sec);
-	}else if(offset==0){
+		offset+=snprintf(tmp+offset, stmp-offset, "%.2gs", sec);
+	}else{
 		offset+=snprintf(tmp+offset, stmp-offset, "0");
 	}
 	return offset;
