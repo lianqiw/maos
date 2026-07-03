@@ -1616,6 +1616,7 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.twfs_rmax);
 	READ_INT(recon.twfs_radonly);
 	READ_INT(recon.twfs_offsetdm);
+	READ_DBL(recon.twfs_svdthres);
 	READ_INT(recon.petal);
 	READ_INT(recon.petaldtrat);
 	READ_INT(recon.petalstep);

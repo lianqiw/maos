@@ -141,7 +141,7 @@ void twfs_setup_RR(recon_t* recon, const parms_t* parms){
 	
 	if(recon->GRtwfs){
 		cellfree(recon->RRtwfs);
-		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai, 1e-3, 0.1);
+		recon->RRtwfs=dcellpinv2(recon->GRtwfs, neai, parms->recon.twfs_svdthres, 0.1);
 	}
 
 	if(parms->save.setup){
