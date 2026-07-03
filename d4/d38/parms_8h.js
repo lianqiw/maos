@@ -387,6 +387,7 @@ var parms_8h =
       [ "twfs_rmax", "d4/d38/parms_8h.html#aa79cbf6c67f60e56addcd44f945257b5", null ],
       [ "twfs_radonly", "d4/d38/parms_8h.html#a6742907419017f9e85e4dde099f4f524", null ],
       [ "twfs_offsetdm", "d4/d38/parms_8h.html#a66b42d181fee35f4bc494aced17e613e", null ],
+      [ "twfs_svdthres", "d4/d38/parms_8h.html#abec2b990e4f90456f92d993f3e9f268a", null ],
       [ "petaldtrat", "d4/d38/parms_8h.html#a0fca2bb965487d48e28b716229565ce1", null ],
       [ "petalstep", "d4/d38/parms_8h.html#abc6a9769b3f1e67f7360a97b278e7980", null ],
       [ "petalnpsf", "d4/d38/parms_8h.html#a3ea7f3bdb747d09eaf31599d74417877", null ],
