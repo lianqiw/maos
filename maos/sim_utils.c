@@ -753,6 +753,7 @@ static void init_simu_wfs(sim_t* simu){
 	save->ztiltout=mycalloc(nwfs, zfarr*);
 	simu->gradcl=dcellnew(nwfs, 1);
 	simu->wfsopd=dcellnew(nwfs, 1);
+	simu->lltopd=dcellnew(nwfs, 1);
 	if(parms->ncpa.offsetdm && recon->dm_ncpa){
 		simu->dmoff=dcelldup(recon->dm_ncpa); 
 	}
@@ -770,6 +771,7 @@ static void init_simu_wfs(sim_t* simu){
 		parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim1;//restore the value
 	}
 	simu->gradacc=dcellnew(nwfs, 1);/*wfsgrad internal */
+	simu->gradcalc=dcellnew(nwfs, 1);
 	simu->gradoff=dcellnew(nwfs, 1);
 	simu->gradscale=dcellnew(nwfs, 1);//leave empty first
 	simu->gradscale2=dcellnew(nwfs, 1);//leave empty first.
@@ -784,6 +786,9 @@ static void init_simu_wfs(sim_t* simu){
 				P(simu->ints, iwfs)=dcellnew_same(nsa, 1, powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 			} else{
 				P(simu->ints, iwfs)=dcellnew_same(1, 1, powfs[ipowfs].saloc->nloc, powfs[ipowfs].pywfs->cfg->nside);
+			}
+			if(parms->powfs[ipowfs].llt){
+				P(simu->lltopd, iwfs)=dnew(powfs[ipowfs].llt->pts->nxsa, powfs[ipowfs].llt->pts->nysa);
 			}
 		}
 		if(parms->powfs[ipowfs].phystep!=0||P(parms->save.gradgeom, iwfs)||parms->powfs[ipowfs].pistatout){
@@ -1578,8 +1583,10 @@ void sim_free(sim_t* simu){
 	dfree(simu->evlopdground);
 	dcellfree(simu->dmoff);
 	dcellfree(simu->wfsopd);
+	dcellfree(simu->lltopd);
 	dcellfree(simu->gradcl);
 	dcellfree(simu->gradacc);
+	dcellfree(simu->gradcalc);
 	dcellfree(simu->gradlastcl);
 	dcellfree(simu->gradlastol);
 	dcellfree(simu->gradoff);

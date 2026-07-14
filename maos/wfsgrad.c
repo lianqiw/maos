@@ -158,7 +158,7 @@ void* wfsgrad_iwfs(thread_t* info){
 	const int do_pistat=simu->wfsflags[ipowfs].do_pistat;
 	const int do_geom=(!do_phy||save_gradgeom||do_pistat)&&parms->powfs[ipowfs].type==WFS_SH;
 	const dmat* amp=PR(powfs[ipowfs].amp, wfsind);
-	dmat *gradcalc=NULL; //calculation output (geometric mode)
+	dmat** gradcalc=NULL; //calculation output (geometric mode)
 	dmat** gradacc=&P(simu->gradacc, iwfs);//accumulation output (geometric mode)
 	dmat** gradout=&P(simu->gradcl, iwfs); //final output
 	dcell* ints=P(simu->ints, iwfs);
@@ -300,18 +300,20 @@ void* wfsgrad_iwfs(thread_t* info){
 			pistat always peak in center no matter what NCPA is present.
 			*/
 			if(!do_pistat||parms->powfs[ipowfs].pistatstc||dtrat==1){
-				//we do not need separate gradcalc.
-				gradcalc=dref(*gradacc);
-			}//else: calculate first to gradcalc then add to gradacc
+				gradcalc=gradacc;//we do not need separate gradcalc.
+			}else{//calculate first to gradcalc then add to gradacc
+				gradcalc=&P(simu->gradcalc, iwfs);
+				dzero(*gradcalc);
+			}
 			if(parms->powfs[ipowfs].gtype_sim==GTYPE_Z){ /*compute ztilt. */
-				pts_ztilt(&gradcalc, powfs[ipowfs].pts,
+				pts_ztilt(gradcalc, powfs[ipowfs].pts,
 					PR(powfs[ipowfs].saimcc, wfsind, 0),
 					P(amp), P(opd));
 			} else{/*G tilt */
-				dspmm(&gradcalc, PR(powfs[ipowfs].GS0, wfsind, 0), opd, "nn", 1);
+				dspmm(gradcalc, PR(powfs[ipowfs].GS0, wfsind, 0), opd, "nn", 1);
 			}
-			if(P(gradcalc)!=P(*gradacc)){
-				dadd(gradacc, 1, gradcalc, 1);
+			if(gradcalc!=gradacc){
+				dadd(gradacc, 1, *gradcalc, 1);
 			}
 		}
 
@@ -331,14 +333,15 @@ void* wfsgrad_iwfs(thread_t* info){
 			}
 			dmat* lltopd=NULL;
 			if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
-				if(powfs[ipowfs].llt->ncpa){
-					lltopd=ddup(PR(powfs[ipowfs].llt->ncpa, wfsind, 0));
-				} else{
-					lltopd=dnew(powfs[ipowfs].llt->pts->nxsa, powfs[ipowfs].llt->pts->nysa);
+				lltopd=P(simu->lltopd, iwfs);
+				if(powfs[ipowfs].llt->ncpa){//start with NCPA
+					dadd(&lltopd, 0, PR(powfs[ipowfs].llt->ncpa, wfsind, 0), 1);
+				}else{//start with zero.
+					dzero(lltopd);
 				}
 				const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
 				if(atm){/*LLT OPD */
-				real wt=1;
+					real wt=1;
 					for(int ips=0; ips<nps; ips++){
 						const real hl=P(atm, ips)->ht;
 						const real scale=1.-hl/hs;
@@ -368,14 +371,13 @@ void* wfsgrad_iwfs(thread_t* info){
 				}
 				if(do_pistat||parms->powfs[ipowfs].idealfsm){
 					/* remove tip/tilt completely */
-					dmat* lltg=dnew(2, 1);
+					dmat* lltg=P(simu->fsmreal, iwfs);
+					dzero(lltg);
 					pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
 						powfs[ipowfs].llt->imcc,
 						P(powfs[ipowfs].llt->amp),
 						P(lltopd));
-					P(P(simu->fsmreal, iwfs), 0)=-P(lltg, 0);
-					P(P(simu->fsmreal, iwfs), 1)=-P(lltg, 1);
-					dfree(lltg);
+					dscale(lltg, -1);
 				}
 				real ttx=0, tty=0;//uplink jitter and correction
 				wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
@@ -392,15 +394,13 @@ void* wfsgrad_iwfs(thread_t* info){
 				intsdata->ints=ints;
 				intsdata->psfout=psfout;
 				intsdata->pistatout=P(simu->pistatout, iwfs);
-				if(parms->powfs[ipowfs].pistatout){
-					intsdata->gradref=gradcalc;
+				if(parms->powfs[ipowfs].pistatout && !parms->powfs[ipowfs].pistatstc){
+					intsdata->gradref=*gradcalc;
 				}
 				intsdata->opd=opd;
 				intsdata->lltopd=lltopd;
 				intsdata->isim=isim;
 				CALL_THREAD(simu->wfs_ints[iwfs], 1);
-				dfree(lltopd);
-				intsdata->lltopd=0;
 				intsdata->opd=0;
 				if(psfout){
 					zfarr_push(psfoutzfarr, isim, psfout);
@@ -412,6 +412,11 @@ void* wfsgrad_iwfs(thread_t* info){
 		}
 		TIM(3);
 		if(simu->wfsflags[ipowfs].gradout && (ihs+1)==nhs){
+			if(do_geom){
+				if(dtrat!=1||nhs!=1){
+					dscale(*gradacc, 1./(dtrat*nhs));/*average */
+				}
+			}
 			if(do_phy){
 				/* In Physical optics mode, do integration and compute
 				gradients. The matched filter are in x/y coordinate even if
@@ -463,12 +468,12 @@ void* wfsgrad_iwfs(thread_t* info){
 				} else{
 					pywfs_grad(gradout, powfs[ipowfs].pywfs, P(ints, 0));
 				}
+				if(save_gradgeom){
+					zfarr_push(simu->save->gradgeom[iwfs], isim, *gradacc);/*noise free. */
+				}
 			} else{
 				/* geomtric optics accumulation mode. scale and copy results to output. */
 				dcp(gradout, *gradacc);
-				if(dtrat!=1||nhs!=1){
-					dscale(*gradout, 1./(dtrat*nhs));/*average */
-				}
 				if(P(parms->save.gradnf, iwfs)){
 					zfarr_push(simu->save->gradnf[iwfs], isim, *gradout);
 				}
@@ -478,15 +483,8 @@ void* wfsgrad_iwfs(thread_t* info){
 					addnoise_grad(*gradout, neasim, &simu->wfs_rand[iwfs]);
 				}
 			}
-			if(save_gradgeom&&do_phy){
-				dmat* gradtmp=NULL;
-				dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-				zfarr_push(simu->save->gradgeom[iwfs], isim, gradtmp);/*noise free. */
-				dfree(gradtmp);
-			}
 		}//dtrat_out
 	}//for ihs
-	dfree(gradcalc);
 	TIM(4);
 	TIM1;
 	return NULL;

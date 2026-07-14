@@ -534,12 +534,14 @@ typedef struct sim_t{
 
     /*WFS data for each time step. Each has a cell for each wfs*/
     dcell *wfsopd;     /**<WFS Ray tracing result*/
+    dcell *lltopd;     /**<LGS WFS uplink Ray tracing result*/
     dccell *ints;      /**<WFS subaperture images.*/
     dccell *intsout;   /**<Time averaged subaperture image*/
     cccell *wfspsfout; /**<output WFS PSF history.*/
     dccell *pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
+    dcell *gradcalc;   /**<Geomtric gradient calculation output*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2res;     /**<Cn2 Estimation Result*/
