@@ -40,7 +40,6 @@ try:
     lib=cdll.LoadLibrary(aolib_so)
 except:
     raise Exception('Load aolib.so failed from '+aolib_so)
-from readbin import set_header, convert_output
 
 if 'c_double_complex' in globals():
     has_complex=1

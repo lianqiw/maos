@@ -6,6 +6,7 @@ import os
 import gzip
 import struct
 import socket
+from interface import cell_ndarray
 # magic number are used in bin files to indicate data type
 # dname descrinebs data type. M_ types are fundamental types. 
 # MC_ types has been superseded by MCC_ANY
@@ -84,9 +85,8 @@ def readvec(fp, datatype, nxy):#enable read from socket and file
         return np.fromfile(fp, dtype=datatype, count=nxy, sep='')
     else:#for socket reading, or gzip
         return np.frombuffer(fp.read(nxy*datatype.itemsize), dtype=datatype)
-headers=[] #global variable
 
-def convert_output(input):
+def convert_output(input, headers):
     '''Convert array to dictionary if necessary'''
     if len(headers)>0 and headers[0]=='type=struct' and len(headers)==input.size+1:
         out={}
@@ -103,11 +103,11 @@ def convert_output(input):
         return input
     
 def readbin(file):
-    headers.clear()
     isfits=False
     isfile=False
     issock=False
     out=np.array(())
+    header=''
     if isinstance(file, socket.socket):
         file=file.fileno()
         isfits=False
@@ -142,37 +142,37 @@ def readbin(file):
                     fp=gzip.open(file,'rb')
                 else:
                     fp.seek(0, 0)
-            (out, header, err)=readbin_auto(fp, isfits)
-            if isinstance(header,str):
-                header=[header]
-            headers.extend(header)
+            (out, err)=readbin_auto(fp, isfits)
+
         #except Exception as error:#file may not be ready
         #    print("readbin failed:", file, error)
         #finally:
         #    fp.close()
-    return convert_output(out)
+    #return convert_output(out, header)
+    if err<0:
+        print('readbin: error happened', err)
+    return out
 
 def readbin_auto(fp, isfits, scan=0):
     '''Wraps readbin_do to handle top level scanning of fits file'''
     err=0
     if scan or isfits:
         out=list()
-        header=list()
         while err==0:
-            [out_i, header_i, err]=readbin_do(fp, isfits)
+            [out_i, err]=readbin_do(fp, isfits)
             if err==0:
                 out.append(out_i)
-                header.append(header_i)
         if len(out)==1:
             out=out[0]
-            #header=header[0]
         else:
-            out=np.array(out)
+            try:
+                out=np.array(out)
+            except:
+                out=np.array(out, dtype=object)
     else:
-        [out, header, err]=readbin_do(fp, isfits)
-    if err<0:
-        print('readbin: error happened', err)
-    return (out, header, err)
+        [out, err]=readbin_do(fp, isfits)
+
+    return (out, err)
 
 def readbin_do(fp, isfits):
     err=0
@@ -194,27 +194,17 @@ def readbin_do(fp, isfits):
             raise ValueError("Invalid magic number {} at {}".format(magic, fp.tell()))
         
     if dname[0:2]=='MC': #cell array
-        header_cell=header #top level header
-        header=[]
-        header.append(header_cell)
-        #header={}
-        #header['global']=header_cell
-        #if nx>0 and ny>0:
-        #    header['cell']=np.zeros((ny, nx), dtype=object)
         out=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
             for ix in range(0, nx):
-                out[iy,ix], header_i, err=readbin_do(fp, isfits)
+                out[iy,ix], err=readbin_do(fp, isfits)
                 if err:
                     break
-                if len(header_i)>0:
-                    header.append(header_i)
             if err:
                 break
         if ny==1:
             out=out[0,]
-            #header['cell']=header['cell'][0,]
     elif 'SP' in dname and nx>0 and ny>0: #sparse matrix
         datatype=np.dtype(dname2type[dname])
         nz=readvec(fp, np.dtype(np.int64), 1)[0]
@@ -244,7 +234,9 @@ def readbin_do(fp, isfits):
                 fp.read(2880-byteleft) #avoid seek, which doesn't work with gzip
     else:
         out=np.array(())
-    return (out, header, err)
+    out=out.view(cell_ndarray)
+    out.header=header
+    return (out, err)
 
 
 def readfits_header(fp):
@@ -345,16 +337,6 @@ def readbin_header(fp):
         header=np.array(header.split('\n'))
     return (magic, nx, ny, header)
 
-def header():
-    return headers
-def get_header():
-    return headers
-def set_header(header):
-    headers.clear()
-    if isinstance(header, list):
-        headers.extend(header)
-    elif header is not None:
-        headers.append(header)
 if __name__ == '__main__':
     if len(sys.argv)>1:
         for fn in sys.argv[1:]:
