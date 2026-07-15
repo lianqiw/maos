@@ -755,11 +755,12 @@ void create_window(
 	new_toolbar_item(toolbar, NULL, 0, "object-select", icon_finished, "Clear finished jobs", clear_jobs, GINT_TO_POINTER(-1));
 	new_toolbar_item(toolbar, NULL, 0, "media-skip-forward", icon_skip, "Clear skipped jobs", clear_jobs, GINT_TO_POINTER(-2));
 	new_toolbar_item(toolbar, NULL, 0, "dialog-error", icon_failed, "Clear crashed jobs", clear_jobs, GINT_TO_POINTER(-3));
-	new_toolbar_item(toolbar, NULL, 0, "edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, GINT_TO_POINTER(-4));
+	//new_toolbar_item(toolbar, NULL, 0, "edit-clear-all", icon_clear, "Clear all jobs", clear_jobs, GINT_TO_POINTER(-4));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 	new_toolbar_item(toolbar, NULL, 0, "process-stop", icon_cancel, "Kill all jobs", kill_all_jobs, GINT_TO_POINTER(-1));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 	new_toolbar_item(toolbar, NULL, 0, NULL, icon_draw, "Plot selected job", handle_job_button, GINT_TO_POINTER(0));
+	new_toolbar_item(toolbar, NULL, 0, NULL, icon_clear, "Clear selected job", handle_job_button, GINT_TO_POINTER(1));
 	new_toolbar_item(toolbar, NULL, 0, "edit-delete", NULL, "Kill selected job", handle_job_button, GINT_TO_POINTER(3));
 	new_toolbar_item(toolbar, NULL, 0, "view-refresh", NULL, "Restart selected job", handle_job_button, GINT_TO_POINTER(4));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL);

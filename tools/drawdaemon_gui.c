@@ -1966,6 +1966,8 @@ GtkWidget* create_window(GtkWidget* window){
 	new_toolbar_item(toolbar, NULL, 0, "zoom-fit-best", NULL, NULL, tool_zoom, GINT_TO_POINTER(1));
 	new_toolbar_item(toolbar, NULL, 0, "zoom-out", NULL, NULL, tool_zoom, GINT_TO_POINTER(0));
 	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
+	new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, NULL, topnb_detach_btn, topnb);
+	new_toolbar_item(toolbar, NULL, 0, NULL, NULL, NULL, NULL, NULL); //separator
 	new_toolbar_item(toolbar, NULL, 0, "document-properties", NULL, NULL, tool_property, NULL);
 
 	//Log scale
@@ -1998,7 +2000,7 @@ GtkWidget* create_window(GtkWidget* window){
 	new_toolbar_item(toolbar, NULL, 0, "view-refresh-symbolic", NULL, NULL, toolbutton_refresh, NULL);
 	new_toolbar_item(toolbar, NULL, 1, "media-playback-pause", NULL, NULL, togglebutton_pause, NULL);
 	new_toolbar_item(toolbar, NULL, 1, "media-playback-stop", NULL, NULL, togglebutton_stop, NULL);
-	new_toolbar_item(toolbar, NULL, 0, "edit-copy", NULL, NULL, topnb_detach_btn, topnb);
+
 	new_toolbar_item(toolbar, NULL, 1, NULL, NULL, NULL, NULL, NULL); //separator
 
 	if(!fpslabel){//create only for the main window.

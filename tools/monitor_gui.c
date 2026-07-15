@@ -206,6 +206,11 @@ static void list_proc_append(proc_t *p){
 			}
 			{
 				stooltip=strdup(pos+6);
+				char *dc=strstr(stooltip, "-c ");
+				while(dc){//remove space between -c and the following conf to avoid breaking them up
+					dc[0]=' '; dc[1]='-'; dc[2]='c';
+					dc=strstr(stooltip, "-c ");
+				}
 				parse_argopt(stooltip, NULL);
 			}
 #if SHOW_SOUT == 0			
@@ -482,14 +487,18 @@ static void handle_selection(GtkTreeModel* model, GtkTreePath* path, GtkTreeIter
 			g_value_unset(&value);
 		}
 	} else{
-		gtk_tree_model_get_value(model, iter, COL_PID, &value);
-		int pid=strtol(g_value_get_string(&value), NULL, 10);
-		g_value_unset(&value);
-		gtk_tree_model_get_value(model, iter, COL_HOST, &value);
-		const char* hostn=g_value_get_string(&value);
-		int ihost=host2i(hostn);
-		g_value_unset(&value);
-		scheduler_cmd_wrap(ihost, pid, cmd);
+		GdkPixbuf*status2=0;
+		gtk_tree_model_get(model, iter, COL_ACTION, &status2, -1);
+		if(!(cmd==CMD_DRAWSER&&status2!=icon_running)){
+			gtk_tree_model_get_value(model, iter, COL_PID, &value);
+			int pid=strtol(g_value_get_string(&value), NULL, 10);
+			g_value_unset(&value);
+			gtk_tree_model_get_value(model, iter, COL_HOST, &value);
+			int ihost=host2i(g_value_get_string(&value));
+			g_value_unset(&value);
+			
+			scheduler_cmd_wrap(ihost, pid, cmd);
+		}
 	}
 }
 
