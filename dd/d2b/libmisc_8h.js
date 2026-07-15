@@ -10,5 +10,7 @@ var libmisc_8h =
     [ "wrap_seq", "dd/d2b/libmisc_8h.html#a2235242a9bac255b39560b25cf2e5dd4", null ],
     [ "wrap2range", "dd/d2b/libmisc_8h.html#a5b60d683c9be737576399efb2096b1f6", null ],
     [ "pchip_wt", "dd/d2b/libmisc_8h.html#a25f8efb8afacde9b737e6a9d9ce27c8a", null ],
-    [ "atm_interp", "dd/d2b/libmisc_8h.html#a698c18f4e0938e730e6ead90f4b7a423", null ]
+    [ "atm_interp", "dd/d2b/libmisc_8h.html#a698c18f4e0938e730e6ead90f4b7a423", null ],
+    [ "wfe_fov_prep", "dd/d2b/libmisc_8h.html#a8df349ce4adf0cc8a3a8ab3115122ef9", null ],
+    [ "wfe_fov_fill", "dd/d2b/libmisc_8h.html#af43cafa4b0b4a72412366dd48d4036b0", null ]
 ];

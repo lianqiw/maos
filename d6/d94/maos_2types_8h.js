@@ -481,6 +481,7 @@ var maos_2types_8h =
       [ "opdrhatlast", "d6/d94/maos_2types_8h.html#a8c9f676f80ff757732b7bf41b899cb2a", null ],
       [ "plot_legs", "d6/d94/maos_2types_8h.html#a99035050c10bc59293b18f40a0786fbf", null ],
       [ "plot_res", "d6/d94/maos_2types_8h.html#a161f76b8a5c30480adab5d6c44657ad5", null ],
+      [ "plot_reseach", "d6/d94/maos_2types_8h.html#ae5714b1424ba079860d2cfb693ce13ac", null ],
       [ "plot_isim", "d6/d94/maos_2types_8h.html#a02fc8e8ccad8c87e30e5003e056fd821", null ],
       [ "wfsints_isa", "d6/d94/maos_2types_8h.html#acb3585b187d349dd454477dee37961ed", null ],
       [ "perfevl_iground", "d6/d94/maos_2types_8h.html#ae6c2436d6d3c7cc92d230f7628d9ccaa", null ],
