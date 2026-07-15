@@ -26,7 +26,7 @@ var searchData=
   ['grad_23',['grad',['../d4/d38/parms_8h.html#a25188de13cd950f5dda6813b2541088e',1,'save_cfg_t']]],
   ['grad2opd_24',['grad2opd',['../d4/d38/parms_8h.html#ac971ec5e649fd759ecaf6b7dbde216f8',1,'plot_cfg_t']]],
   ['gradacc_25',['gradacc',['../dc/d85/classcuwfs__t.html#a8bc2e336f1c5a74068630ad33fbea47b',1,'cuwfs_t::gradacc'],['../d6/d94/maos_2types_8h.html#a12885438bdefbfffba8230079dac8ac0',1,'sim_t::gradacc']]],
-  ['gradcalc_26',['gradcalc',['../dc/d85/classcuwfs__t.html#a726ef9ba745eeb655914b54140e15380',1,'cuwfs_t']]],
+  ['gradcalc_26',['gradcalc',['../dc/d85/classcuwfs__t.html#a726ef9ba745eeb655914b54140e15380',1,'cuwfs_t::gradcalc'],['../d6/d94/maos_2types_8h.html#a7b7939a2638845a99d989bbd4192b11a',1,'sim_t::gradcalc']]],
   ['gradcl_27',['gradcl',['../d6/d94/maos_2types_8h.html#a50cc69c3df04f52ef958e27dc59f7bc2',1,'sim_t']]],
   ['gradgeom_28',['gradgeom',['../d4/d38/parms_8h.html#a6dfd012d136d2b0c8b8647fab6e2d42b',1,'save_cfg_t']]],
   ['gradgeomhi_29',['gradgeomhi',['../d4/d38/parms_8h.html#ad590c85bf2b7fd782666ee8c50c80f93',1,'save_cfg_t']]],
