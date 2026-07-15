@@ -44,4 +44,6 @@ int wrap_seq(long index, long n);
 real wrap2range(real val, real low, real high);
 real pchip_wt(int i, float u);
 int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp);
+dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npath, int nwvl);
+void wfe_fov_fill(dccell *res, const dcell *clep, int ipath, int isim);
 #endif

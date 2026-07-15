@@ -714,6 +714,7 @@ typedef struct sim_t{
     /**Saved for plotting*/
     const char **plot_legs;///legend
     dccell *plot_res;    ///results array
+    dccell *plot_reseach;    ///results array for per directional plotting
     int plot_isim;      ///previous plotted isum;
     /*A few indicators*/
     int wfsints_isa;   /**<sa counter for wfsints*/

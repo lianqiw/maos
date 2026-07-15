@@ -80,7 +80,7 @@ static void perfevl_psfcl(const parms_t* parms, const aper_t* aper, const char* 
 	if(parms->evl.psfhist){
 		zfarr_push(evlpsfhist[ievl], -1, psf2s);
 	}
-	if(parms->plot.run){
+	if((parms->plot.run==1 && ievl==0) || parms->plot.run>1){
 		plot_psf(psf2s, psfname, 1, ievl, parms->evl.wvl, parms->plot.psf!=2, parms->plot.psfmin);
 	}
 	ccellfree(psf2s);

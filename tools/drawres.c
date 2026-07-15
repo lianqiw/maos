@@ -276,7 +276,7 @@ int main(int argc, char* argv[]){
 		P(res, i)=dcellnew(npath, nseed);
 		P(resm, i)=dcellnew(npath, 1);//seed averaged
 	}
-
+	dccell*reseach=NULL;
 	const char* xlabel, * ylabel;
 	dmat* ysky=NULL;
 	const char* xylog;
@@ -293,6 +293,8 @@ int main(int argc, char* argv[]){
 	/*dcell *upterr=dcellnew(npath, nseed);
 	  dcell *uptcmd=dcellnew(npath, nseed);*/
 	for(int ipath=0; ipath<npath; ipath++){
+		dcell *resp=NULL;
+		int nseed_actual=0;
 		for(int iseed=0; iseed<nseed; iseed++){
 			char fn[PATH_MAX];
 			switch(restype){
@@ -396,6 +398,14 @@ int main(int argc, char* argv[]){
 					dadd(&P(P(res, P_OLTOT), ipath, iseed), 1, P(P(res, P_OLHI), ipath, iseed), 1);
 				}
 				dcellfree(ires);
+				//process per direction results
+				dcell *respi=dcellread("%s/Resp_%ld.bin", path[ipath], seed[iseed]);
+				if(!resp){
+					resp=respi; respi=NULL;
+				}else{
+					dcelladd(&resp, 1, respi, 1);
+					dcellfree(respi);
+				}
 			} else if(restype==2){//Skycoverage results
 				snprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]);
 				dmat* res0=dread("%s", fn);
@@ -427,7 +437,40 @@ int main(int argc, char* argv[]){
 			} else{
 				error("Invalid restype=%d\n", restype);
 			}
+			nseed_actual++;
 		}//for seed
+		if(resp && nseed_actual){
+			if(nseed_actual>1) dcellscale(resp, 1./nseed_actual);
+			if(!reseach){
+				int nevl=NX(resp);
+				dmat *thetax=dnew(nevl, 1);
+				dmat *thetay=dnew(nevl, 1);
+				if(resp->keywords){
+					const char *key;
+					if((key=search_keyword(resp->keywords, "evl.thetax"))){
+						if(!readstr_numarr((void**)&P(thetax), NULL, NULL, nevl, 0, M_REAL, "thetax", key)){
+							warning("Unable to parse thetax\n");
+							dfree(thetax);
+						}
+					}
+					if((key=search_keyword(resp->keywords, "evl.thetay"))){
+						if(!readstr_numarr((void**)&P(thetay), NULL, NULL, nevl, 0, M_REAL, "thetay", key)){
+							warning("Unable to parse thetay\n");
+							dfree(thetay);
+						}
+					}
+				}
+				if(thetax && thetay){
+					reseach=wfe_fov_prep(thetax, thetay, 1, npath, 0);
+				}
+			}
+			if(reseach){
+				int nevl=NX(resp);
+				dcell *clep=dcellsub(resp, 0, nevl, 3, 1);
+				wfe_fov_fill(reseach, clep, ipath, 0);
+				dcellfree(clep);
+			}
+		}
 	}//for path
 	for(int imod=0; imod<NX(res); imod++){//mode
 		for(int ipath=0; ipath<npath; ipath++){
@@ -563,11 +606,15 @@ int main(int argc, char* argv[]){
 			}
 		}
 	}
-
+	if(reseach){
+		draw("CL", (plot_opts){.dc=P(reseach, 0), .legend=(const char* const*)pathtag0},
+			"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
+	}
 	draw_final(1);
 	cellfree(ysky);
 	cellfree(res);
 	cellfree(resm);
+	cellfree(reseach);
 	for(int ipath=0; ipath<npath; ipath++){
 		free(path[ipath]);
 		free(pathtag0[ipath]);

@@ -1716,7 +1716,7 @@ void sim_free(sim_t* simu){
 	cellfree(simu->llt_ws);
 	free(simu->plot_legs);
 	cellfree(simu->plot_res);
-
+	cellfree(simu->plot_reseach);
 	/*Close all files */
 	zfarr_close(save->restwfs);
 	zfarr_close_n(save->wfspsfout, nwfs);
@@ -1758,9 +1758,6 @@ void sim_free(sim_t* simu){
 	free(simu);
 }
 
-int compare_dbl2_ascend(const void *a, const void *b){
-	return (int)(((double *)a)[0]-((double *)b)[0]);
-}
 /**
    Print out wavefront error information and timing at each time step.
 */
@@ -1884,55 +1881,29 @@ void print_progress(sim_t* simu){
 					lapsh, lapsm, resth, restm);
 
 		if(parms->plot.run){
-			if(!simu->plot_legs){
-				simu->plot_legs=mycalloc(5, const char*);
-				const char **legs=simu->plot_legs;
-				int nline=0;
-				legs[nline++]="Total";
-				legs[nline++]="High Order";
-				legs[nline++]="Tip/Tilt";
-				if(parms->evl.split){
-					if(simu->recon->ngsmod->indps){
-						legs[nline++]="Plate Scale";
-					} else if(simu->recon->ngsmod->indastig){
-						legs[nline++]="Astig";
-					}
-					if(simu->recon->ngsmod->indfocus){
-						legs[nline++]="Focus";
-					}
-				}
-				simu->plot_res=dccellnew(5,1);
-				P(simu->plot_res, 0)=dcellnew_same(nline, 1, parms->sim.end, 1);//CL vs time step for different modes
-				P(simu->plot_res, 1)=dcellnew_same(3, 1, parms->sim.end, 1);//OL vs time step
-				P(simu->plot_res, 2)=dcellnew_same(1, 1, parms->evl.nevl, 2);//CL vs dir WEF
-				P(simu->plot_res, 3)=dcellnew_same(1, 1, parms->evl.nevl, 1);//CL vs dir indexing
-				P(simu->plot_res, 4)=dcellnew_same(parms->evl.nwvl, 1, parms->evl.nevl, 2);//CL vs dir Strehl
-				if(parms->evl.nevl>1){	// sort evaluation directions
-					//\todo modularize this.
-					dmat *tmp=dnew(2, parms->evl.nevl);
-					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-						real r=RSS(P(parms->evl.thetax, ievl), P(parms->evl.thetay, ievl))*RAD2AS;
-						/*if(P(parms->evl.thetax, ievl)<0 || P(parms->evl.thetay, ievl)<0){
-							r=-r;
-						}*/
-						P(tmp, 0, ievl)=r;
-						P(tmp, 1, ievl)=ievl;//mark direction
-					}
-					//dshow(tmp,"tmp");
-					qsort(P(tmp), NY(tmp), 2*sizeof(real), compare_dbl2_ascend);
-					//dshow(tmp,"tmp sorted");
-					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-						P(P(P(simu->plot_res, 2), 0), ievl, 0)=P(tmp, 0, ievl);
-						P(P(P(simu->plot_res, 3), 0), ievl, 0)=P(tmp, 1, ievl);//index
-						for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-							P(P(P(simu->plot_res, 4), iwvl), ievl, 0)=P(tmp, 0, ievl);
+			if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
+				if(!simu->plot_legs){
+					simu->plot_legs=mycalloc(5, const char*);
+					const char **legs=simu->plot_legs;
+					int nline=0;
+					legs[nline++]="Total";
+					legs[nline++]="High Order";
+					legs[nline++]="Tip/Tilt";
+					if(parms->evl.split){
+						if(simu->recon->ngsmod->indps){
+							legs[nline++]="Plate Scale";
+						} else if(simu->recon->ngsmod->indastig){
+							legs[nline++]="Astig";
+						}
+						if(simu->recon->ngsmod->indfocus){
+							legs[nline++]="Focus";
 						}
 					}
-					dfree(tmp);
+					simu->plot_res=dccellnew(2,1);
+					P(simu->plot_res, 0)=dcellnew_same(nline, 1, parms->sim.end, 1);//CL vs time step for different modes
+					P(simu->plot_res, 1)=dcellnew_same(3, 1, parms->sim.end, 1);//OL vs time step
 				}
-				//dset(simu->plot_res->m, NAN);
-			}
-			if(draw_current("Res", "RMS WFE") || draw_current("Res", "RMS WFE OL") ){
+				
 				for(;simu->plot_isim<=isim;simu->plot_isim++){
 					int i=simu->plot_isim;
 					for(int ic=0; ic<2; ic++){//0: CL. 1: OL
@@ -1962,46 +1933,24 @@ void print_progress(sim_t* simu){
 						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "RMS WFE%s", ic==0?"":" OL");
 				}
 			}
-			if(isim>20&&parms->evl.nevl>1&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
-				dcell *res=P(simu->plot_res, 2);
-				int istart=MAX(isim-1000, 20);
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-					int jevl=(int)P(P(P(simu->plot_res,3), 0), ievl);
-					P(P(res,0), ievl, 1)=0;
-					for(int i=istart; i<isim; i++){
-						P(P(res,0), ievl, 1)+=P(P(simu->clep, jevl),0,i);
-					}
-					P(P(res, 0), ievl, 1)=sqrt(P(P(res, 0), ievl, 1)/(isim-istart))*1e9;
+			
+			if(parms->evl.nevl>1&&isim>20&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
+				if(!simu->plot_reseach){
+					simu->plot_reseach=wfe_fov_prep(parms->evl.thetax, parms->evl.thetay, RAD2AS, 1, parms->evl.nwvl);
 				}
-				//check directions of the same radius and average them.
-				for(int ievl=0; ievl<parms->evl.nevl-1; ievl++){
-					int jevl=ievl+1;
-					for(; jevl<parms->evl.nevl; jevl++){
-						if(fabs(P(P(res, 0), ievl, 0)-P(P(res, 0), jevl, 0))>1){
-							break;
-						}
-					}
-					if(jevl>ievl+1){//directions of the same radius
-						real sum2=0;
-						for(int i=ievl; i<jevl; i++){
-							sum2+=pow(P(P(res, 0), i, 1),2);
-						}
-						sum2=sqrt(sum2/(jevl-ievl));
-						for(int i=ievl; i<jevl; i++){
-							P(P(res, 0), i, 1)=sum2;
-						}
-					}
-				}
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-					real wfe=P(P(P(simu->plot_res, 2), 0), ievl, 1)*1e-9;
-					for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-						P(P(P(simu->plot_res, 4), iwvl), ievl, 1)=exp(-pow(TWOPI*wfe/P(parms->evl.wvl,iwvl),2));
-					}
-				}
-				draw("Res", (plot_opts){ .dc=res},
+				wfe_fov_fill(simu->plot_reseach, simu->clep, 0, isim);
+				if(simu->plot_reseach){
+					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 0)},
 						"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
-				draw("Res", (plot_opts){ .dc=P(simu->plot_res, 4), .legend=parms->evl.wvlname},
-										"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
+					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+						real wfe=P(P(P(simu->plot_reseach, 0), 0), ievl, 1)*1e-9;
+						for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+							P(P(P(simu->plot_reseach, 2), iwvl), ievl, 1)=exp(-pow(TWOPI*wfe/P(parms->evl.wvl,iwvl),2));
+						}
+					}
+					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 2), .legend=parms->evl.wvlname},
+						"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
+				}
 			}
 
 		}
