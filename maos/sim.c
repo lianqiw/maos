@@ -376,7 +376,7 @@ void maos_sim(){
 		scheduler_report(simu->status);
 #endif
 		sim_free(simu);
-		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), simu->iseed, signal_caught==0);
+		remove_lock(parms->fdlock, parms->fnlock, P(parms->sim.seeds), PN(parms->sim.seeds), iseed, signal_caught==0);
 		global->simu=NULL;
 	}/*seed */
 
