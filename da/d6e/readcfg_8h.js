@@ -6,6 +6,7 @@ var readcfg_8h =
     [ "readcfg_peek_priority", "da/d6e/readcfg_8h.html#a23e6af091d96304ce76d92acc966c9cb", null ],
     [ "readcfg_peek_index", "da/d6e/readcfg_8h.html#a1f5ea303a546c0dce7fb0e030a59b9a0", null ],
     [ "readcfg_ignore", "da/d6e/readcfg_8h.html#a3d049e1fb1b83a7c3cd7b1d5866f43f9", null ],
+    [ "readcfg_raw", "da/d6e/readcfg_8h.html#a07491a3c6070807bba78c515c40fa840", null ],
     [ "readcfg_str", "da/d6e/readcfg_8h.html#aca90e8fb1c0657af3f77caf1fe5550de", null ],
     [ "readcfg_int", "da/d6e/readcfg_8h.html#af90add8965ad5b713f08e85d11ea70a0", null ],
     [ "readcfg_dbl", "da/d6e/readcfg_8h.html#aa5be30c2caeb90e0d575ead83f3ceff0", null ],

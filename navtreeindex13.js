@@ -1,5 +1,6 @@
 var NAVTREEINDEX13 =
 {
+"df/d79/classcuda__wfs_1_1cushz__t.html":[12,0,0,8],
 "df/d99/evl_cir60.html":[4,4,13],
 "df/d9e/fov_cir30.html":[4,4,24],
 "df/da9/genotf_8h.html":[13,0,1,8],
@@ -248,6 +249,5 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#ac6ae9ce4f2b13130d7a8bdc18517aa45":[13,0,3,9,36,1],
 "df/def/type_8h.html#ac7102cbe89e0f455deb13406499f348e":[13,0,3,9,10,3],
 "df/def/type_8h.html#ac88fed44e9f978c6757ec8dfcfb31589":[13,0,3,9,19,2],
-"df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae":[13,0,3,9,15,6],
-"df/def/type_8h.html#acbe8165220bd56892c5b93106028926a":[13,0,3,9,28,5]
+"df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae":[13,0,3,9,15,6]
 };

@@ -113,8 +113,8 @@ Functions</h2></td></tr>
 <tr class="separator:a5434023ffadb38fc203c0c1afdb24668"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52e20d61151f1ad644449c0faac9987f" id="r_a52e20d61151f1ad644449c0faac9987f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/da7/readstr_8h.html#a52e20d61151f1ad644449c0faac9987f">readstr_numarr</a> (void **ret, int *nrow0, int *ncol0, int len, int relax, int type, const char *key, const char *data)</td></tr>
 <tr class="separator:a52e20d61151f1ad644449c0faac9987f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa740d6879e4af2bdd01f9624ef206fe3" id="r_aa740d6879e4af2bdd01f9624ef206fe3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/da7/readstr_8h.html#aa740d6879e4af2bdd01f9624ef206fe3">trim_string</a> (const char **pheader, const char **pend)</td></tr>
-<tr class="separator:aa740d6879e4af2bdd01f9624ef206fe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9236250943a021ed16f62e968a2ef6c0" id="r_a9236250943a021ed16f62e968a2ef6c0"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/da7/readstr_8h.html#a9236250943a021ed16f62e968a2ef6c0">trim_string</a> (const char *header, const char **pend)</td></tr>
+<tr class="separator:a9236250943a021ed16f62e968a2ef6c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9119233e162eff99de9c95eb19e88e5c" id="r_a9119233e162eff99de9c95eb19e88e5c"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/da7/readstr_8h.html#a9119233e162eff99de9c95eb19e88e5c">search_keyword</a> (const char *keywords, const char *key)</td></tr>
 <tr class="separator:a9119233e162eff99de9c95eb19e88e5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecf97bfe55620a3d5fa3b94622d7d4d9" id="r_aecf97bfe55620a3d5fa3b94622d7d4d9"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/da7/readstr_8h.html#aecf97bfe55620a3d5fa3b94622d7d4d9">search_keyword_num</a> (const char *keywords, const char *key)</td></tr>
@@ -309,17 +309,17 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa740d6879e4af2bdd01f9624ef206fe3" name="aa740d6879e4af2bdd01f9624ef206fe3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa740d6879e4af2bdd01f9624ef206fe3">&#9670;&#160;</a></span>trim_string()</h2>
+<a id="a9236250943a021ed16f62e968a2ef6c0" name="a9236250943a021ed16f62e968a2ef6c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9236250943a021ed16f62e968a2ef6c0">&#9670;&#160;</a></span>trim_string()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void trim_string </td>
+          <td class="memname">const char * trim_string </td>
           <td>(</td>
-          <td class="paramtype">const char **&#160;</td>
-          <td class="paramname"><em>pstart</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -334,7 +334,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>update header and end to point to valid region. Does not modify the string </p>
+<p>Return start of valid region and update pend (if set) to end of valid region. Does not modify the string </p>
 
 </div>
 </div>

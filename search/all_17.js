@@ -51,7 +51,7 @@ var searchData=
   ['tomort_48',['tomort',['../d3/deb/maos_2recon_8h.html#a060ae9b2bc6a20378d32564512e04f2a',1,'TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c'],['../de/d09/recon__tomo_8c.html#a060ae9b2bc6a20378d32564512e04f2a',1,'TomoRt(dcell **gout, const void *A, const dcell *xin, const real alpha):&#160;recon_tomo.c']]],
   ['tomoscale_49',['tomoscale',['../d4/d38/parms_8h.html#a65cb820cf4f1a3b1be3f9fc4fbe17c21',1,'TOMOSCALE:&#160;setup.c'],['../d2/d2e/setup_8c.html#a65cb820cf4f1a3b1be3f9fc4fbe17c21',1,'TOMOSCALE:&#160;setup.c']]],
   ['tp_5fcounter_5ft_50',['tp_counter_t',['../d3/dec/thread__pool_8h.html#d2/d26/structtp__counter__t',1,'']]],
-  ['trim_5fstring_51',['trim_string',['../d3/da7/readstr_8h.html#aa740d6879e4af2bdd01f9624ef206fe3',1,'readstr.c']]],
+  ['trim_5fstring_51',['trim_string',['../d3/da7/readstr_8h.html#a9236250943a021ed16f62e968a2ef6c0',1,'readstr.c']]],
   ['trs_52',['trs',['../d4/d38/parms_8h.html#af68295aed03eca4810c88583d7c1ff9d',1,'powfs_cfg_t']]],
   ['tsurf_53',['tsurf',['../d4/d38/parms_8h.html#adc4c60016b38cbc0f17a8e46c5731c8a',1,'ncpa_cfg_t::tsurf'],['../d6/d94/maos_2types_8h.html#ad0ef0f50270d939ef09f85b7b11a22b0',1,'sim_t::tsurf']]],
   ['tt_54',['TT',['../d6/d94/maos_2types_8h.html#aad3b5cf81516a58a4af1a04035c6a739',1,'recon_t']]],
