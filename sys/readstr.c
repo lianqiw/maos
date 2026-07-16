@@ -53,7 +53,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 	if(!sdata) return count;
 	const char* sdataend=0;//sdata+strlen(sdata);
 	const char* sdata2=sdata;
-	trim_string(&sdata2, &sdataend);
+	sdata2=trim_string(sdata2, &sdataend);
 	if(sdata[0]=='['){
 		sdata2++;
 		sdataend--;
@@ -116,7 +116,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			}
 		}
 		if(sdata4>sdata2){/*found non-empty str*/
-			trim_string(&sdata2, &sdata4);
+			sdata2=trim_string(sdata2, &sdata4);
 			(*res)[count++]=mystrndup(sdata2, sdata4-sdata2);
 		} else{/*found empty str*/
 			(*res)[count++]=NULL;
@@ -560,11 +560,10 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	return count;
 }
 /**
-	update header and end to point to valid region. Does not modify the string
+	Return start of valid region and update pend (if set) to end of valid region. Does not modify the string
 */
-void trim_string(const char **pstart, const char **pend){
-	if(!pstart) return;
-	const char* start=*pstart;
+const char* trim_string(const char *start, const char **pend){
+	if(!start) return NULL;
 	const char* end=(pend && *pend)?*pend:(start+strlen(start));
 repeat:
 	while(isspace((unsigned char)start[0]) && start<end) start++;
@@ -575,7 +574,7 @@ repeat:
 	} else{
 		if(start+1<end && (start[0]=='\''||start[0]=='"')){
 			if(end[-1]!=start[0]){
-				error("Quote is not matched: {%s}\n", *pstart);
+				error("Quote is not matched: {%s}\n", start);
 			} else{
 				end--;
 			}
@@ -583,8 +582,8 @@ repeat:
 			goto repeat;
 		}
 	}
-	*pstart=start;
 	if(pend) *pend=end;
+	return start;
 }
 /**
    Search and return the value correspond to key. Case is ignored; 
@@ -596,7 +595,7 @@ const char* search_keyword(const char* keywords, const char* key){
 	const char* ans=NULL;
 	//const char* val=header;
 	const char* end=NULL;
-	trim_string(&keywords, &end);
+	keywords=trim_string(keywords, &end);
 	if(keywords&&end){
 		const int nkey=strlen(key);
 		int was_space=1;

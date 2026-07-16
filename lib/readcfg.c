@@ -106,7 +106,7 @@ static void strtrim(char** str){
 quotes are not found.  */
 static char* strextract(const char* data){
 	const char *start=data, *end=0;
-	trim_string(&start, &end);
+	start=trim_string(data, &end);
 	return mystrndup(start, end-start);
 }
 /**
@@ -627,6 +627,14 @@ int readcfg_peek_index(const char *format, ...){
 	format2key;
 	const STORE_T *store=getrecord(key, 0);
 	return store?store->index:0;
+}
+/**
+   Obtain a raw value from the key.
+ */
+const char* readcfg_raw(const char* format, ...){
+	format2key;
+	const STORE_T* store=getrecord(key, 1);
+	return store?trim_string(store->data, NULL):0;
 }
 /**
    Obtain a string value from the key.

@@ -42,9 +42,10 @@ int    readcfg_peek_priority(const char *format, ...) CHECK_ARG(1);
 int    readcfg_peek_index(const char *format, ...) CHECK_ARG(1);
 void   readcfg_ignore(const char *format, ...) CHECK_ARG(1);
 
-char*  readcfg_str (const char*format,...) CHECK_ARG(1);
-int    readcfg_int (const char*format,...) CHECK_ARG(1);
-real   readcfg_dbl (const char*format,...) CHECK_ARG(1);
+const char*  readcfg_raw(const char*format,...) CHECK_ARG(1);
+char*  readcfg_str(const char*format,...) CHECK_ARG(1);
+int    readcfg_int(const char*format,...) CHECK_ARG(1);
+real   readcfg_dbl(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_strarr(char ***res, int len, int relax, const char *format, ...) CHECK_ARG(4);
 int    readcfg_intarr(int **ret, int len, int relax, const char *format,...) CHECK_ARG(4);

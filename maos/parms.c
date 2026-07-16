@@ -1396,14 +1396,82 @@ const char *wvl2name(real wvl){
 	return n[j];
 }
 /**
+ * Read thetax, thetay, and wt definition. Support both a list of points and a string description.
+ * */
+static real readcfg_fov(dmat **thetax, dmat **thetay, dmat **wt, const char *prefix){
+	const char *thetax_input=readcfg_raw("%s.thetax", prefix);
+	const char *thetay_input=readcfg_raw("%s.thetay", prefix);
+	if(strstr(thetax_input, "type")){//new descriptive type
+		const char *type=search_keyword(thetax_input, "type");
+		const int nring=(int)search_keyword_num_valid(thetax_input, "nring");
+		const real ratio=search_keyword_num_default(thetax_input, "ratio", 1);//aspect ratio
+		readcfg_ignore("%s.wt", prefix);
+		if(nring<1){
+			error("nring must be positive.\n");
+		}
+		if(!mystrcmp(type, "cir")){//circular
+			const real npoint=(nring-1)*8+1;
+			*thetax=dnew(npoint, 1);
+			*thetay=dnew(npoint, 1);
+			const real dtheta=M_PI/4;
+			for(int iring=1; iring<nring; iring++){
+				int off=(iring-1)*8+1;
+				const real radius=0.5*(iring)/(nring-1);
+				for(int iaz=0; iaz<8; iaz++){
+					P(*thetax, off+iaz)=cos(iaz*dtheta)*radius;
+					P(*thetay, off+iaz)=sin(iaz*dtheta)*radius*ratio;
+				}
+			}
+		}else if(!mystrcmp(type, "rect")||!mystrcmp(type, "square")){//rectangular or square
+			const int clip=(int)search_keyword_num_default(thetax_input, "clip", 0);//clip points out side of circle
+			int nringx=nring, nringy=nring;
+			if(ratio<1){
+				nringy=ceil(nring*ratio);
+			}else{
+				nringx=ceil(nring/ratio);
+			}
+			real normx=nringx>1?0.5/(nringx-1):1;
+			real normy=nringy>1?0.5/(nringy-1):1;
+			if(ratio<1){
+				normy*=ratio;
+			}else if(ratio>1){
+				normx/=ratio;
+			}
+			const int npoint=(2*nringx-1)*(2*nringy-1);
+			*thetax=dnew(npoint, 1);
+			*thetay=dnew(npoint, 1);
+			int ct=0;
+			for(int iy=1-nringy; iy<nringy; iy++){
+				for(int ix=1-nringx; ix<nringx; ix++){
+					if(clip && nringx>1 && nringy>1){
+						if(RSS((real)ix/(nringx-1), (real)iy/(nringy-1))>1){
+							continue;
+						}
+					}
+					P(*thetax, ct)=ix*normx;
+					P(*thetay, ct)=iy*normy;
+					ct++;
+				}
+			}
+		}else{
+			error("unknown type: %s\n", type);
+		} 
+	}else{
+		*thetax=readstr_dmat(0, 0, "thetax", thetax_input);
+		*thetay=readstr_dmat(0, 0, "thetay", thetay_input);
+		*wt=readstr_dmat(PN(*thetax), 1, "wt", readcfg_raw("%s.wt", prefix));
+	}
+	if(!*wt){
+		*wt=dnew(PN(*thetax), 1); dset(*wt, 1);
+	}
+	return scale_fov(*thetax, *thetay, *wt, readcfg_dbl("%s.fov", prefix));
+}
+/**
    Read in performance evaluation science point parameters.
 */
 static void readcfg_evl(parms_t *parms){
-	READ_DMAT(evl.thetax);
-	READ_DMAT(evl.thetay);
-	READ_DMAT_N(evl.wt,NX(parms->evl.thetax), 1);
-	parms->evl.fovas=scale_fov(parms->evl.thetax,parms->evl.thetay,parms->evl.wt, readcfg_dbl("evl.fov"));
-	parms->evl.nevl=NX(parms->evl.thetax);//maybe changed by scale_fov
+	parms->evl.fovas=readcfg_fov(&parms->evl.thetax, &parms->evl.thetay, &parms->evl.wt, "evl");
+	parms->evl.nevl=PN(parms->evl.thetax);//maybe changed by scale_fov
 	dnormalize_sumabs(parms->evl.wt, 1);
 	READ_DMAT_N(evl.hs,parms->evl.nevl, 1);
 	READ_LMAT_N(evl.psf,parms->evl.nevl,1);
@@ -1483,11 +1551,8 @@ static void readcfg_tomo(parms_t *parms){
 /**
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
 static void readcfg_fit(parms_t *parms){
-	READ_DMAT(fit.thetax);
-	READ_DMAT(fit.thetay);
-	READ_DMAT(fit.wt);
-	parms->fit.fovas=scale_fov(parms->fit.thetax,parms->fit.thetay,parms->fit.wt,readcfg_dbl("fit.fov"));
-	parms->fit.nfit=NX(parms->fit.thetax);//maybe changed by scale_fov
+	parms->fit.fovas=readcfg_fov(&parms->fit.thetax, &parms->fit.thetay, &parms->fit.wt, "fit");
+	parms->fit.nfit=PN(parms->fit.thetax);//maybe changed by scale_fov
 	parms->fit.hs=readcfg_dmat(parms->fit.nfit,1,"fit.hs");
 	real ramin=INFINITY;
 	for(int ifit=0; ifit<parms->fit.nfit; ifit++){
