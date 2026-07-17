@@ -122,7 +122,6 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">sim.dt        = 1/600 #Main loop sampling time in seconds.</div>
 <div class="line">sim.dtref     = 1/600 #The integration time in seconds for which the powfs.siglev is computed. Do not change this value. The actual integration time is governed by sim.dt and powfs.dtrat.</div>
 <div class="line">sim.zadeg     = 30    #zenith angle in degrees. Switched to 30 degree on 2025-01-27.</div>
-<div class="line">sim.htel      = 4000  #height of telescope in meters from mean sea level. It is used to adjust powfs.hs for LGS.</div>
 <div class="line">sim.cachedm   = 4     #Caching DM commands to fine sampled grids to speed up ray tracing.  #=1: sampling is dm.dx/4. &gt;3: sampling is dm.dx/sim.cachedm. 0 to disable.</div>
 <div class="line">sim.fov       = 0     #The entire FoV diameter in arcsec. Only used for plotting.</div>
 <div class="line"> </div>
