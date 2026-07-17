@@ -108,6 +108,7 @@ def readbin(file):
     issock=False
     out=np.array(())
     header=''
+    err=0
     if isinstance(file, socket.socket):
         file=file.fileno()
         isfits=False

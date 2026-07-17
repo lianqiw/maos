@@ -19,6 +19,14 @@ try:
 except:
     natsorted=sorted
 import re
+
+def rms(*args, **kargs):
+    """compute rms of input"""
+    if len(args) > 1:
+        arr = np.array(args)
+    else:
+        arr = np.array(args[0])
+    return np.sqrt(np.mean(np.real(arr * np.conj(arr)), **kargs))
 def auto_crop_roi(img, threshold_rel=0.2, max_radius=50):
     ny, nx = img.shape
 
