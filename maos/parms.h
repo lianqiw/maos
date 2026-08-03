@@ -306,7 +306,7 @@ typedef struct wfsr_cfg_t{
 	real misregx; /**<misregistration wrt telescope pupil: shift along x */
 	real misregy; /**<misregistration wrt telescope pupil. shift along y */
 	real misregc; /**<misregistration wrt telescope pupil. clocking error.*/
-	//real hc;    /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
+	real hc;    /**<conjugation height of WFS pupil is wfs.hc=powfs.hc+wfs.delta_hc (input)*/
 	real hs;      /**height of star is wfs.hs=powfs.hs+wfs.delta_hs (input)*/
 	int powfs;    /**<powfs type*/
 }wfsr_cfg_t;
@@ -875,8 +875,8 @@ typedef struct parms_t{
     int nlowfs;      /**<Number of low order wfs.*/
     int nhiwfs;      /**<Number of high order wfs*/
 	int nlgswfs;	 /**<Number of lgs wfs*/
-    dmat *dirs;      /**<Collect for beam directions*/
-    dmat *dirrecon;  /**<Collect for beam directions only for reconstruction*/
+    dmat *dirs;    /**<Directions of Beams for simulation*/
+    dmat *dirrecon;  /**<Directions of beams only for reconstruction*/
     int dither;      /**<Some WFS is doing dithering*/
     int ilgspowfs;   /**<Index of LGS WFS*/
     int nlgspowfs;   /**<Number of LGS POWFS*/

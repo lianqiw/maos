@@ -607,8 +607,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 	if(reseach){
-		draw("CL", (plot_opts){.dc=P(reseach, 0), .legend=(const char* const*)pathtag0},
-			"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
+		draw("CL", (plot_opts){.dc=P(reseach, 1), .legend=(const char* const*)pathtag0},
+			"Total Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "Total: FoV");
+		draw("CL", (plot_opts){.dc=P(reseach, 2), .legend=(const char* const*)pathtag0},
+			"High Order Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "High: FoV");
 	}
 	draw_final(1);
 	cellfree(ysky);

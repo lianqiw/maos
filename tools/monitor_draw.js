@@ -66,6 +66,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
     }
     if (!ws) return false;
     ws.onopen = () => {
+      console.log(now(),`Drawdaemon connecting for ${job}`);
       ws.binaryType = 'arraybuffer';
       setWss((oldVal) => ({ ...oldVal, [job]: true }));
       wssRef.current[job] = ws;
@@ -103,6 +104,15 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         }
         if ('final' in drawData) {
           jobRef.current[job]['pid'] = -1;//draw is no longer active
+          const session=drawData['session']
+          //Remove drawData with session less than this session
+          jobRef.current[job]['drawData']=Object.fromEntries(
+            Object.entries(jobRef.current[job]['drawData']).map(([key, item])=>
+            [key, Object.fromEntries(//filter each fn
+                Object.entries(item).filter(([key2, item2])=>
+                  item2 && item2.session==session))
+            ]).filter(([key, item])=>Object.keys(item).length>0)
+          )
         }
         const fig = drawData['fig'];
         const name = drawData['name'];
@@ -140,9 +150,11 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
       if (drawInfo[job]) {//host:port->hostname
         if (!wssRef.current[job]) {
           const pid = job.split(':').at(-1);
-          if(pid<=0 || !jobRef.current[job]){
+          if(pid<=0 || !jobRef.current[job] || !wssRef.current[job]){
             connect(drawInfo[job].hostname, job);
-          }//else: do not auto-reconnect existing job plots
+          }else{//: do not auto-reconnect existing job plots
+            console.log(now(), "Drawdaemon is already connected for "+job)
+          }
         }
       } else {
         if (wssRef.current[job]) {//close page

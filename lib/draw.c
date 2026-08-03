@@ -367,6 +367,9 @@ static int get_drawdaemon(){
 	}
 	int DRAW_NOREUSE=0;
 	READ_ENV_INT(DRAW_NOREUSE, 0, 1);//if ==1, do not reuse previous drawdaemon
+	if(DRAW_NOREUSE){
+		draw_id=getppid()%10000;
+	}
 #if __APPLE__
 	const char* display=":0";//always available
 #else
@@ -380,7 +383,7 @@ static int get_drawdaemon(){
 	LOCK(lock);
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id.
-	while(!DRAW_NOREUSE && !scheduler_socket(-1, &sock, draw_id)){
+	while(!scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(WRITECMD(sock, DRAW_INIT, 0)){
 			dbg("received socket=%d is already closed.\n", sock);

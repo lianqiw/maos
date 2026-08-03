@@ -1934,21 +1934,23 @@ void print_progress(sim_t* simu){
 				}
 			}
 			
-			if(parms->evl.nevl>1&&isim>20&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV Strehl"))){
+			if(parms->evl.nevl>1&&isim>20&&(draw_current("Res", "FoV WFE")||draw_current("Res", "FoV WFE HO")||draw_current("Res", "FoV Strehl"))){
 				if(!simu->plot_reseach){
 					simu->plot_reseach=wfe_fov_prep(parms->evl.thetax, parms->evl.thetay, RAD2AS, 1, parms->evl.nwvl);
 				}
 				wfe_fov_fill(simu->plot_reseach, simu->clep, 0, isim);
 				if(simu->plot_reseach){
-					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 0)},
-						"Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
+					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 1)},
+						"Total Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE");
+					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 2)},
+						"High Order Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "FoV WFE HO");
 					for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-						real wfe=P(P(P(simu->plot_reseach, 0), 0), ievl, 1)*1e-9;
+						real wfe=P(P(P(simu->plot_reseach, 1), 0), ievl, 1)*1e-9;
 						for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-							P(P(P(simu->plot_reseach, 2), iwvl), ievl, 1)=exp(-pow(TWOPI*wfe/P(parms->evl.wvl,iwvl),2));
+							P(P(P(simu->plot_reseach, 3), iwvl), ievl, 1)=exp(-pow(TWOPI*wfe/P(parms->evl.wvl,iwvl),2));
 						}
 					}
-					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 2), .legend=parms->evl.wvlname},
+					draw("Res", (plot_opts){ .dc=P(simu->plot_reseach, 3), .legend=parms->evl.wvlname},
 						"Strehl Ratio", "Field Angle (as)", "Strehl Ratio", "FoV Strehl");
 				}
 			}

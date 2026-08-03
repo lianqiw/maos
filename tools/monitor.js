@@ -12,7 +12,7 @@ const iconName = {0:"❓", 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "�
 //import {get_hostname, split_hostname} from "utils.js"; //ES Module imports
 //import {DrawDaemon} from "drawdaemon.js";
 window.now = () => `[${new Date().toLocaleString()}]`;
-
+/*
 function saveHost(hostname) {//add a host to localStorage.hosts
   if (!hostname) return;
   const hosts = [...new Set(localStorage.hosts.split(";"))];
@@ -21,7 +21,7 @@ function saveHost(hostname) {//add a host to localStorage.hosts
     localStorage.hosts = hosts.filter((v) => v.length > 0).join(";");
     console.log(now(), "localStorage.hosts:", localStorage.hosts);
   }
-}
+}*/
 function sec2str(seconds){
   seconds = Math.floor(seconds);
 
@@ -33,6 +33,14 @@ function sec2str(seconds){
     return String(hours).padStart(2, "0")+'h'+String(minutes).padStart(2, "0")
   }else{
     return String(minutes).padStart(2, "0")+':'+String(secs).padStart(2, "0")
+  }
+}
+function step2str(step){
+  const stepk=Math.floor(step/1000)
+  if(stepk*1000==step){
+    return stepk.toLocaleString()+'k'
+  }else{
+    return step.toLocaleString()
   }
 }
 function App() {
@@ -48,13 +56,23 @@ function App() {
   const wssReconnectRef = useRef({});//to track reconnection attempts
   const jobRef = useRef(job);
   const activeRef = useRef(active);
-  const fullName = useRef({});//full hostname.
+  //const fullName = useRef({});//full hostname.
+  const [hosts, setHosts]=useState(()=>{
+    const hostname = get_hostname();
+    const host = split_hostname(hostname);
+    const savedHosts = localStorage.getItem("savedHosts");
+    return savedHosts?JSON.parse(savedHosts):{
+      [host]:hostname
+    }
+  })
   const rempx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const pageWidth=document.documentElement.clientWidth;
-  const [widths, setWidths] = useState({//for resizeable column
+  const [widths, setWidths] = useState(()=>{
+    const savedWidth = localStorage.getItem("savedWidth");
+    const pageWidth=document.documentElement.clientWidth;
+    return savedWidth?JSON.parse(savedWidth):{//for resizeable column
     "Time": rempx*7.5,
     "Host": rempx*5,
-    "PID": rempx*3.5,
+    "PID": rempx*4,
     "Start Dir": Math.max(pageWidth*0.1, rempx*10),
     "Out Dir": Math.max(pageWidth*0.1, rempx*10),
     "Low": rempx*4,
@@ -62,17 +80,17 @@ function App() {
     "Step": rempx*3,
     " ":rempx*1.2,
     "Progress":rempx*10
-  });
+  }});
   //useEffect(()=>{//Effect function runs after React updates the DOM.
-  function connect(hostname) {
-    if (hostname.length == 0) return false;
-    const host = split_hostname(hostname);//host:port->shortname
+  function connect(host) {
+    if (!host || host.length == 0) return false;
+    var hostname=hosts[host]
+    if(!hostname) return false;
     if (hostname.indexOf(':') == -1) {
       hostname += port;
     }
     let ws;
     if (wssRef.current[host] && wssRef.current[host].readyState === WebSocket.OPEN) {
-      ws = wssRef.current[host];
       return true;//no need to setup event handlers again
     } else {
       try {
@@ -86,8 +104,8 @@ function App() {
     ws.onopen = () => {
       console.log(now(), `Monitor connected to ${host}`);
       ws.binaryType = 'arraybuffer';
-      saveHost(hostname);//save to localStorage only after successful connection.
-      fullName.current[host] = hostname;//for translation from host to hostname
+      //saveHost(hostname);//save to localStorage only after successful connection.
+      //fullName.current[host] = hostname;//for translation from host to hostname
       wssRef.current[host] = ws;//save the ws object only after successful connection.
       setWss((oldVal) => ({ ...oldVal, [host]: true }));
       wssReconnectRef.current[host] = 1;//reset reconnction counter
@@ -123,25 +141,25 @@ function App() {
           var newdata;
           if (i.length>=2 && i[1]=='DRAW'){
             const job = `${host}:${i[0]}`;
-            setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname:fullName.current[host], jobname:job} }))
+            setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname:hosts[host], jobname:job} }))
             setActive(job);
-            console.log(now(), j[ij])
+            //console.log(now(), "Answer drawing for "+job)
             continue;//skip setJob
           }else if (i.length == 3 && i[1]==='PATH') {//0: pid, 1: PATH, 2: path+args
             let startdir = "";
             const ip = i[2].indexOf(" ");
             if (ip != -1) {
-              startdir = i[2].substring(0, ip);
+              startdir = i[2].substring(0, ip)+" ";
               i[2] = i[2].substring(ip);
             }
             const io = i[2].lastIndexOf("-o");
             let dirout = "";
             if (io != -1) {
-              dirout = i[2].substring(io + 2).trim().split(' ')[0];
+              dirout = " -o "+i[2].substring(io + 2).trim().split(' ')[0]+" "
               i[2] = i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g, " ").trim();
             }
             //newdata = { PID: i[0], Host: host, "Start Dir": startdir, "Arguments": i[2], "Out Dir": dirout, status: 0 };
-            newdata = { PID: i[0], Host: host, "Arguments":startdir+" -o "+dirout+" "+i[2], status: 0 };
+            newdata = { PID: i[0], Host: host, "Arguments":startdir+dirout+i[2], status: 0 };
           } else if (i.length == 14 && i[1]==='STATUS') {//0:pid, 1:STATUS, 2:pidnew, 3:status, 4:start time,5: errhi, 6:errlo, 7:iseed, 8:nseed, 9:isim, 10:nsim, 11:rest, 12:tot, 13:step timing
             i[3] = parseInt(i[3]);//status. 1: running, 2: wait, 3: started, 4: queued. 11: finished. 12: crashed. 13: to kill; 14: remove; 15: killed;
             if (i[3] != 14) {//14: remove
@@ -150,12 +168,7 @@ function App() {
               i[12] = parseInt(i[12]);//total time
               const icon = (i[12] > 0 || i[3] != 11) ? iconName[i[3]] : "⏩";
               const frac = Math.round(100 * (1 - (i[12] == 0 ? 1 : i[11] / i[12]))) + '%';
-              let prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + i[9] + '/' + i[10] 
-              if(i[11]==1){
-                prog+= ' ' + sec2str(i[11]);
-              }else if(i[3]==11){
-                prog+= ' ' + sec2str(i[12]);
-              }
+              let prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + step2str(i[9]) + '/' + step2str(i[10])+' '+sec2str(i[3]==1?i[11]:i[12])
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
               if (i[13] === '0.000') i[13] = '';
@@ -195,22 +208,24 @@ function App() {
   }//function connect
   function removeHost(host) {//remove a host from localStorage.hosts
     if (!host) return;
-    const hostname = fullName.current[host];
+    //const hostname = fullName.current[host];
     if (wssRef.current[host]) wssRef.current[host].close();
     wssReconnectRef.current[host] = 0;//prevent auto reconnection
     setWss((oldVal) => ({ ...oldVal, [host]: undefined }));//hide from list
-    const hosts = [...new Set(localStorage.hosts.split(";"))];//unique entries
-    localStorage.hosts = hosts.filter((v) => v != hostname && v.length > 0).join(";");
-    console.log(now(), "localStorage.hosts:", localStorage.hosts);
+    //const hosts = [...new Set(localStorage.hosts.split(";"))];//unique entries
+    //localStorage.hosts = hosts.filter((v) => v != hostname && v.length > 0).join(";");
+    //console.log(now(), "localStorage.hosts:", localStorage.hosts);
+    setHosts((oldVal)=>({...oldVal, [host]: undefined}))
   }
   useEffect(() => {//run once upon mount
-    const hostname = get_hostname();//connect current host
+    /*const hostname = get_hostname();//connect current host
     if (!localStorage.hosts) localStorage.hosts = "";
     let hosts = [...new Set(localStorage.hosts.split(";"))]
     if (hosts.indexOf(hostname) == -1) {
       hosts.push(hostname);
     }
     hosts.filter((v) => v.length > 0).forEach((v) => connect(v));//connect to other hosts
+    */
     (async () => {
       const { ZstdSimple, ZstdStream } = await zstdCodec.ZstdInit();
       window.ZstdSimple=ZstdSimple
@@ -226,13 +241,24 @@ function App() {
   useEffect(() => {
     activeRef.current = active;//update reference
   }, [active])
-
+  useEffect(()=>{
+    localStorage.setItem("savedWidth", JSON.stringify(widths))
+  }, [widths])
+  useEffect(()=>{
+    Object.keys(hosts).map(host=>{
+      if(hosts[host] && !wssRef.current[host]){
+        connect(host)
+      }
+    })
+    localStorage.setItem("savedHosts", JSON.stringify(hosts))
+  }, [hosts])
   function cmdHostPid(host, PID, cmd) {
     if (wssRef.current[host] && wssRef.current[host].readyState === WebSocket.OPEN) {
       if (cmd === "DRAW") {
         const job = `${host}:${PID}`;
-        setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname: fullName.current[host], jobname:job} }))
+        setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: {hostname: hosts[host], jobname:job} }))
         setActive(job);
+        //console.log(now(), "Initiate drawing for "+job)
       } else if (cmd === "KILL_ASK") {
         if (window.confirm("Kill the job " + PID + "?")) cmdHostPid(host, PID, "KILL");
       } else {
@@ -296,20 +322,20 @@ function App() {
           <li className={active === "" ? "active" : ""} onClick={() => setActive("")}>
             <span>▶️ Active</span>
           </li>
-          {Object.keys(wss).filter((v) => wss[v] != undefined).map((host) => (//List of hosts
+          {Object.keys(hosts).filter((v) => hosts[v] != undefined).map((host) => (//List of hosts
             <li key={host} className={active === host ? "active" : ""}>
-              <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(fullName.current[host]); }}>{wss[host] ? "🟢" : "🔴"}</span>
+              <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(host); }}>{wss[host] ? "🟢" : "🔴"}</span>
               <span title="Switch to host" onClick={() => { setActive(host); }}>{host}</span>
               <span title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>&nbsp;⛌</span>
             </li>
           ))}
-          <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { connect(text); } }}>
+          <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { setHosts((oldVal)=>({...oldVal, [split_hostname(text)]:text}))}}}>
             <input style={{ width: '10em' }} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
             <button type="submit">Connect</button></form>
           </li>
           {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
             <li key={job} className={active === job ? "active" : ""}>
-              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname.replace(':-',':draw ')}</span>
+              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname}</span>
               <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>&nbsp;⛌</span>
             </li>))}
         </ul>

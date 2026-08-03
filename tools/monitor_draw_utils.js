@@ -31,7 +31,7 @@ const draw = {
   end: 100,
   entry: 9999
 };
-var byteFloat = 4;
+let byteFloat = 4;
 
 function linspace(start, stop, length) {
   if (stop === undefined) {
@@ -130,7 +130,7 @@ function maybeDecompress(buffer) {
     return buffer;
   }
 }
-
+let session=1 //increment for each new plotting session
 function procBuffer(rawBuffer) {
   //rawBuffer may be compressed.
   //console.log("Got ArrayBuffer data with bytes ", wsBuf.byteLength);
@@ -192,7 +192,7 @@ function procBuffer(rawBuffer) {
       case draw.frame:
         buf.pos += 16;//skip 4 ints. obsoleted
         break;
-      case draw.start://obsoleted
+      case draw.start://
         break;
       case draw.data: {
         let nx = getInt();
@@ -223,6 +223,7 @@ function procBuffer(rawBuffer) {
         break;
       case draw.fig:
         drawData['fig'] = getStr();
+        drawData['session']=session
         break;
       case draw.name:
         drawData['name'] = getStr();
@@ -253,6 +254,8 @@ function procBuffer(rawBuffer) {
       case draw.final:
         //console.log("DRAW_FINAL");
         drawData['final']=1;
+        drawData['session']=session
+        session+=1
         break;
       case draw.float:
         byteFloat = getInt();

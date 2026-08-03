@@ -466,10 +466,11 @@ static int compare_dbl2_ascend(const void *a, const void *b){
 dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npath, int nwvl){
 	const int nevl=PN(thetax);
 	if(nevl<=1) return NULL;
-	dccell *reseach=dccellnew(3, 1);
-	P(reseach, 0)=dcellnew_same(npath, 1, nevl, 2);//CL vs dir WEF
-	P(reseach, 1)=dcellnew_same(1, 1, nevl, 1);//CL vs dir indexing
-	if(nwvl) P(reseach, 2)=dcellnew_same(nwvl, npath, nevl, 2);//CL vs dir Strehl
+	dccell *reseach=dccellnew(3+(nwvl?1:0), 1);
+	P(reseach, 0)=dcellnew_same(1, 1, nevl, 1);//CL vs dir indexing
+	P(reseach, 1)=dcellnew_same(npath, 1, nevl, 2);//CL vs dir WEF
+	P(reseach, 2)=dcellnew_same(npath, 1, nevl, 2);//CL vs dir WEF
+	if(nwvl) P(reseach, 3)=dcellnew_same(nwvl, npath, nevl, 2);//CL vs dir Strehl
 	// sort evaluation directions
 	dmat *tmp=dnew(2, nevl);
 	for(int ievl=0; ievl<nevl; ievl++){
@@ -479,11 +480,12 @@ dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npat
 	}
 	qsort(P(tmp), NY(tmp), 2*sizeof(real), compare_dbl2_ascend);
 	for(int ievl=0; ievl<nevl; ievl++){
-		P(P(P(reseach, 1), 0), ievl, 0)=P(tmp, 1, ievl);//index
+		P(P(P(reseach, 0), 0), ievl, 0)=P(tmp, 1, ievl);//index
 		for(int ipath=0; ipath<npath; ipath++){
-			P(P(P(reseach, 0), ipath), ievl, 0)=P(tmp, 0, ievl);			
+			P(P(P(reseach, 1), ipath), ievl, 0)=P(tmp, 0, ievl);	
+			P(P(P(reseach, 2), ipath), ievl, 0)=P(tmp, 0, ievl);	
 			for(int iwvl=0; iwvl<nwvl; iwvl++){//for Strehl plotting
-				P(P(P(reseach, 2, ipath), iwvl), ievl, 0)=P(tmp, 0, ievl);
+				P(P(P(reseach, 3, ipath), iwvl), ievl, 0)=P(tmp, 0, ievl);
 			}
 		}
 	}
@@ -498,17 +500,21 @@ dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npat
 void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 	if(!reseach || !clep) return;
 	if(isim<=0) isim=NY(P(clep,0));
-	dmat *res=P(P(reseach, 0), ipath);
+	dmat *res=P(P(reseach, 1), ipath);
+	dmat *res_ho=P(P(reseach, 2), ipath);
 	const int nevl=NX(res);
 	int istart=MAX(isim-1000, 20);
 	if(istart>=isim) istart=0;
 	for(int ievl=0; ievl<nevl; ievl++){
-		int jevl=(int)P(P(P(reseach, 1), 0), ievl);
+		int jevl=(int)P(P(P(reseach, 0), 0), ievl);
 		P(res, ievl, 1)=0;
+		P(res_ho, ievl, 1)=0;
 		for(int i=istart; i<isim; i++){
 			P(res, ievl, 1)+=P(P(clep, jevl),0,i);
+			P(res_ho, ievl, 1)+=P(P(clep, jevl),2,i);
 		}
 		P(res, ievl, 1)=sqrt(P(res, ievl, 1)/(isim-istart))*1e9;
+		P(res_ho, ievl, 1)=sqrt(P(res_ho, ievl, 1)/(isim-istart))*1e9;
 	}
 	//check directions of the same radius and average them.
 	for(int ievl=0; ievl<nevl-1; ievl++){
@@ -520,12 +526,16 @@ void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 		}
 		if(jevl>ievl+1){//directions of the same radius
 			real sum2=0;
+			real sum2_ho=0;
 			for(int i=ievl; i<jevl; i++){
 				sum2+=pow(P(res, i, 1),2);
+				sum2_ho+=pow(P(res_ho, i, 1),2);
 			}
 			sum2=sqrt(sum2/(jevl-ievl));
+			sum2_ho=sqrt(sum2_ho/(jevl-ievl));
 			for(int i=ievl; i<jevl; i++){
 				P(res, i, 1)=sum2;
+				P(res_ho, i, 1)=sum2_ho;
 			}
 		}
 	}

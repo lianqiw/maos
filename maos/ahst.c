@@ -267,8 +267,12 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	if(ndm>1&&fabs(parms->dm[0].ht)>1000){
 		error("Unsupported configuration. First DM is not on ground\n");
 	}
+	int nffngs=0;
 	real hs=NAN;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(!parms->powfs[ipowfs].llt && parms->powfs[ipowfs].order>1){
+			nffngs++;
+		}
 		if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip) continue;
 		if(isnan(hs)){
 			hs=parms->powfs[ipowfs].hs;
@@ -290,9 +294,11 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 			ngsmod->indps=ngsmod->nmod;
 			ngsmod->nmod+=3;
 		} 
-		//Always enable focus when LGS WFS is present
-		ngsmod->indfocus=ngsmod->nmod;
-		ngsmod->nmod+=1;
+		//Enable focus blending between LGS and NGS.
+		if(nffngs){
+			ngsmod->indfocus=ngsmod->nmod;
+			ngsmod->nmod+=1;
+		}
 		if(ngsmod->nmod==3 && parms->nhiwfs>1){//Astigmatism for LTAO
 			ngsmod->indastig=ngsmod->nmod;
 			ngsmod->nmod+=2;

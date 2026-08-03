@@ -56,7 +56,10 @@ powfs_legend(const parms_t *parms, int ipowfs){
 	return legwfs[ilegwfs];
 }
 /**
-   Plot the loc, together with all beams
+   Plot the loc, together with all beams.
+   show_recon=1: include WFS for tomography and DM fitting directions
+   show_recon=2: include all WFS and DM fitting directions
+   show_evl: include evaluation directions
 */
 void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_evl, 
 	loc_t* loc, real ht, const char* format, ...){
@@ -87,7 +90,7 @@ void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_ev
 		count++;
 		if(ifit==0) legend[count]="DM Fitting";
 	}
-	for(int idir=0; show_recon && idir< parms->ncpa.ndir; idir++){
+	for(int idir=0; show_recon && idir<parms->ncpa.ndir; idir++){
 		real hs=P(parms->ncpa.hs,idir);
 		P(cir, 0, count)=ht*P(parms->ncpa.thetax,idir);
 		P(cir, 1, count)=ht*P(parms->ncpa.thetay,idir);
@@ -97,11 +100,12 @@ void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_ev
 		if(idir==0) legend[count]="NCPA";
 	}
 
-	for(int iwfs=0; show_recon && iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		real hs=parms->wfs[iwfs].hs;
-		P(cir, 0, count)=parms->wfs[iwfs].thetax*ht;
-		P(cir, 1, count)=parms->wfs[iwfs].thetay*ht;
+	for(int iwfs=0; show_recon && iwfs<parms->nwfsr; iwfs++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
+		if(show_recon==1 && parms->powfs[ipowfs].skip) continue;
+		real hs=parms->wfsr[iwfs].hs;
+		P(cir, 0, count)=parms->wfsr[iwfs].thetax*ht;
+		P(cir, 1, count)=parms->wfsr[iwfs].thetay*ht;
 		P(cir, 2, count)=parms->aper.d*0.5*(1.-ht/hs);
 		if(!isinf(hs)){//LGS
 			P(cir, 3, count)=0xFF8800;
@@ -249,7 +253,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 			real ht=parms->dm[idm].ht;
-			plot_loc("Aperture", parms, 1, 1, P(recon->aloc,idm), ht, "aloc %d", idm);
+			plot_loc("Aperture", parms, 2, 1, P(recon->aloc,idm), ht, "aloc %d", idm);
 			/*if(recon->actcpl){
 				drawopd("Aperture", P(recon->aloc, idm), P(recon->actcpl, idm), 0, 
 					"DM Actuator Coupling Factor", "x (m)", "y (m)", "actcpl %d", idm);

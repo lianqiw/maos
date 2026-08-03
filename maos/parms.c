@@ -1668,9 +1668,8 @@ static void readcfg_recon(parms_t *parms){
 	READ_INT(recon.modal);
 	READ_INT(recon.psol);
 	READ_DBL(recon.poke);
-	parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
-	readcfg_strarr(&parms->recon.distortion_tel2wfs,parms->nwfsr,1,"recon.distortion_tel2wfs");
-	readcfg_strarr(&parms->recon.distortion_dm2wfs,parms->ndm*parms->nwfsr,1,"recon.distortion_dm2wfs");
+	readcfg_strarr(&parms->recon.distortion_tel2wfs,parms->nwfs,1,"recon.distortion_tel2wfs");
+	readcfg_strarr(&parms->recon.distortion_dm2wfs,parms->ndm*parms->nwfs,1,"recon.distortion_dm2wfs");
 	readcfg_strarr(&parms->recon.distortion_dm2sci,parms->ndm*parms->fit.nfit,1,"recon.distortion_dm2sci");
 	READ_INT(recon.psd);
 	READ_INT(recon.psddtrat_hi);
@@ -2202,8 +2201,6 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	parms->hipowfs_hsmax=0;
 	parms->hipowfs=lnew(parms->npowfs, 1);
 	parms->lopowfs=lnew(parms->npowfs, 1);
-	int npowfs_tt=0;
-	int npowfs_focus=0;
 	//first: process types of powfs that are not TWFS
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
@@ -2555,19 +2552,57 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			}
 		}
 	}
+	if(parms->recon.glao){
+		parms->wfsr=mycalloc(parms->npowfs,wfsr_cfg_t);
+		parms->nwfsr=parms->npowfs;
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			parms->wfsr[ipowfs].thetax=0;
+			parms->wfsr[ipowfs].thetay=0;
+			parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
+			parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
+			parms->wfsr[ipowfs].powfs=ipowfs;
+			parms->powfs[ipowfs].nwfsr=1;
+			parms->powfs[ipowfs].wfsr=lnew(1,1);
+			P(parms->powfs[ipowfs].wfsr,0)=ipowfs;
+		}
+		/*
+		  parms->fit.nfit=1;
+		  dresize(parms->fit.thetax, 1, 1);
+		  dresize(parms->fit.thetay, 1, 1);
+		  dresize(parms->fit.wt, 1, 1);
+		  dresize(parms->fit.hs, 1, 1);
+		  P(parms->fit.thetax,0)=0;
+		  P(parms->fit.thetay,0)=0;
+		  P(parms->fit.wt,0)=1;
+		*/
+	} else{/*Use same information as wfs. */
+		parms->wfsr=mycalloc(parms->nwfs, wfsr_cfg_t);
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			parms->wfsr[iwfs].thetax=parms->wfs[iwfs].thetax;
+			parms->wfsr[iwfs].thetay=parms->wfs[iwfs].thetay;
+			parms->wfsr[iwfs].hs=parms->wfs[iwfs].hs;
+			parms->wfsr[iwfs].hc=parms->wfs[iwfs].hc;
+			parms->wfsr[iwfs].misregx=parms->wfs[iwfs].misregx;
+			parms->wfsr[iwfs].misregy=parms->wfs[iwfs].misregy;
+			parms->wfsr[iwfs].misregc=parms->wfs[iwfs].misregc;
+			parms->wfsr[iwfs].powfs=parms->wfs[iwfs].powfs;
+		}
+		parms->nwfsr=parms->nwfs;
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
+		}
+	}
 	//Sanity check
+	int npowfs_focus=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->skip!=2){
-			if(!powfsi->trs){
-				npowfs_tt++;
-			}
 			if(powfsi->order>1 && !(isinf(parms->sim.fcfocus)&&parms->powfs[ipowfs].llt)){
 				npowfs_focus++;
 			}
 		}
 	}
-	if(!npowfs_tt) warning("There is no WFS providing tip/tilt.\n");
 	if(!npowfs_focus) warning("There is no WFS providing focus.\n");
 	parms->sim.lpfocus=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpbias=fc2lp(0.05, 1);
@@ -2658,8 +2693,7 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		P(parms->atmr.ht,0)=parms->dm[0].ht;
 		P(parms->atmr.wt,0)=1;
 		parms->atmr.nps=1;
-	}
-	else if(parms->npowfs>0){
+	}else if(parms->npowfs>0){
 		int ipsr2=0;
 		for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 			if(P(parms->atmr.ht,ipsr)>=parms->hipowfs_hsmax){
@@ -2766,73 +2800,24 @@ static void setup_parms_postproc_atm(parms_t *parms){
 		}
 		parms->sim.dt=0;
 	}
-
-	if(!parms->atmr.hs){
-		real hs=NAN;
-		/*find out the height to setup cone coordinate. */
-		if(parms->tomo.cone){
-			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			/*skip wfs that does not participate in tomography*/
-				if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
-					continue;
-				}
-				/*isinf and !isinf both return 0 on inf in FreeBSD 9.0.*/
-				if(isnan(hs)){
-					hs=parms->powfs[ipowfs].hs;
-				} else{
-					if(!isinf(hs)||!isinf(parms->powfs[ipowfs].hs)){
-						if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
-							warning("Two high order POWFS with different hs found: %g and %g. Please double check the results.\n",
-								hs,parms->powfs[ipowfs].hs);
-							if(parms->powfs[ipowfs].hs>hs){
-								hs=parms->powfs[ipowfs].hs;
-							}
-						}
-					}
-				}
-			}
-		}
-		if(isnan(hs)) hs=INFINITY;
-		parms->atmr.hs=hs;
-	}
-	if(parms->atmr.dx<EPS){
-	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
-		real mindsa=INFINITY;
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
-				continue;
-			}
-			if(parms->powfs[ipowfs].dsa<mindsa){
-				mindsa=parms->powfs[ipowfs].dsa;
-			}
-		}
-		if(isinf(mindsa)){
-			for(int idm=0; idm<parms->ndm; idm++){
-				if(parms->dm[idm].dx<mindsa){
-					mindsa=parms->dm[idm].dx;
-				}
-			}
-		}
-		if(isinf(mindsa)){
-			for(int imoao=0; imoao<parms->nmoao; imoao++){
-				if(parms->moao[imoao].dx<mindsa){
-					mindsa=parms->moao[imoao].dx;
-				}
-			}
-		}
-		if(isinf(mindsa)){
-			error("Unable to determine atmr.dx. Please specify manually atmr.dx\n");
-		}
-		parms->atmr.dx=mindsa;
-	}
 }
 static dmat* make_dirs(parms_t *parms, int recon_only){
-	const int ndir=parms->nwfs+parms->fit.nfit+(recon_only?0:(parms->evl.nevl+(parms->ncpa.calib?parms->ncpa.ndir:0)));
+	const int ndir=(recon_only?parms->nwfsr:parms->nwfs)+parms->fit.nfit+(recon_only?0:(parms->evl.nevl+(parms->ncpa.calib?parms->ncpa.ndir:0)));
 	dmat *dirs=dnew(4, ndir);
 	int count=0;
-	for(int i=0; i<parms->nwfs; i++){
-		int ipowfs=parms->wfs[i].powfs;
-		if(!recon_only || !parms->powfs[ipowfs].skip){
+	if(recon_only){
+		for(int i=0; i<parms->nwfsr; i++){
+			int ipowfs=parms->wfsr[i].powfs;
+			if(!(parms->recon.split&&parms->powfs[ipowfs].lo)){
+				P(dirs,0,count)=parms->wfsr[i].thetax;
+				P(dirs,1,count)=parms->wfsr[i].thetay;
+				P(dirs,2,count)=parms->wfsr[i].hs;
+				P(dirs,3,count)=parms->wfsr[i].hc;
+				count++;
+			}
+		}
+	}else{
+		for(int i=0; i<parms->nwfs; i++){
 			P(dirs,0,count)=parms->wfs[i].thetax;
 			P(dirs,1,count)=parms->wfs[i].thetay;
 			P(dirs,2,count)=parms->wfs[i].hs;
@@ -2872,6 +2857,7 @@ static dmat* make_dirs(parms_t *parms, int recon_only){
 static void setup_parms_postproc_dirs(parms_t *parms){
 	//Collect all beam directions
 	parms->dirs=make_dirs(parms, 0);
+	parms->dirrecon=make_dirs(parms, 1);
 	//Determine the maximum FoV.
 	real rmax=0;
 	for(int ic=0; ic<NY(parms->dirs); ic++){
@@ -3171,46 +3157,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 	}
 
-	if(parms->recon.glao){
-		parms->wfsr=mycalloc(parms->npowfs,wfsr_cfg_t);
-		parms->nwfsr=parms->npowfs;
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			parms->wfsr[ipowfs].thetax=0;
-			parms->wfsr[ipowfs].thetay=0;
-			parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
-			//parms->wfsr[ipowfs].hc=parms->powfs[ipowfs].hc;
-			parms->wfsr[ipowfs].powfs=ipowfs;
-			parms->powfs[ipowfs].nwfsr=1;
-			parms->powfs[ipowfs].wfsr=lnew(1,1);
-			P(parms->powfs[ipowfs].wfsr,0)=ipowfs;
-		}
-		/*
-		  parms->fit.nfit=1;
-		  dresize(parms->fit.thetax, 1, 1);
-		  dresize(parms->fit.thetay, 1, 1);
-		  dresize(parms->fit.wt, 1, 1);
-		  dresize(parms->fit.hs, 1, 1);
-		  P(parms->fit.thetax,0)=0;
-		  P(parms->fit.thetay,0)=0;
-		  P(parms->fit.wt,0)=1;
-		*/
-	} else{/*Use same information as wfs. */
-		parms->wfsr=mycalloc(parms->nwfs, wfsr_cfg_t);
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			parms->wfsr[iwfs].thetax=parms->wfs[iwfs].thetax;
-			parms->wfsr[iwfs].thetay=parms->wfs[iwfs].thetay;
-			parms->wfsr[iwfs].hs=parms->wfs[iwfs].hs;
-			parms->wfsr[iwfs].misregx=parms->wfs[iwfs].misregx;
-			parms->wfsr[iwfs].misregy=parms->wfs[iwfs].misregy;
-			parms->wfsr[iwfs].misregc=parms->wfs[iwfs].misregc;
-			parms->wfsr[iwfs].powfs=parms->wfs[iwfs].powfs;
-		}
-		parms->nwfsr=parms->nwfs;
-		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-			parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
-			parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
-		}
-	}
 	if(parms->recon.alg==RECON_MVR){//MVM: tomo+fit
 		if(parms->tomo.alg==-1){//default to CG
 			parms->tomo.alg=ALG_CG;
@@ -3242,6 +3188,67 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->fit.alg=ALG_SVD;
 		}
 	}
+	if(parms->atmr.dx<EPS){
+		/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
+		real dxbase=INFINITY;
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
+				continue;
+			}
+			if(parms->powfs[ipowfs].dsa<dxbase){
+				dxbase=parms->powfs[ipowfs].dsa;
+			}
+		}
+		if(isinf(dxbase)){
+			for(int idm=0; idm<parms->ndm; idm++){
+				if(parms->dm[idm].dx<dxbase){
+					dxbase=parms->dm[idm].dx;
+				}
+			}
+		}
+		if(isinf(dxbase)){
+			for(int imoao=0; imoao<parms->nmoao; imoao++){
+				if(parms->moao[imoao].dx<dxbase){
+					dxbase=parms->moao[imoao].dx;
+				}
+			}
+		}
+		if(isinf(dxbase)){
+			if(!parms->sim.evlol){
+				warning("Unable to determine atmr.dx. Use 0.5\n");
+			}
+			dxbase=0.5;
+		}
+		parms->atmr.dx=dxbase;
+	}
+	if(parms->tomo.cone){
+		real hs=NAN;
+		/*find out the height to setup cone coordinate. */
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		/*skip wfs that does not participate in tomography*/
+			if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
+				continue;
+			}
+			/*isinf and !isinf both return 0 on inf in FreeBSD 9.0.*/
+			if(isnan(hs)){
+				hs=parms->powfs[ipowfs].hs;
+			} else{
+				if(!isinf(hs)||!isinf(parms->powfs[ipowfs].hs)){
+					if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
+						warning("Two high order POWFS with different hs found: %g and %g. Please double check the results.\n",
+							hs,parms->powfs[ipowfs].hs);
+						if(parms->powfs[ipowfs].hs>hs){
+							hs=parms->powfs[ipowfs].hs;
+						}
+					}
+				}
+			}
+		}
+		if(isnan(hs)) hs=INFINITY;
+		parms->atmr.hs=hs;
+	}else{
+		parms->atmr.hs=INFINITY;
+	}
 	if(parms->atm.frozenflow&&!parms->dbg.nocgwarm){
 		parms->fit.cgwarm=1;
 		parms->lsr.cgwarm=1;
@@ -3249,7 +3256,6 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			parms->tomo.cgwarm=1;
 		}
 	}//else: no warm
-	parms->dirrecon=make_dirs(parms, 1);
 	if(parms->recon.split==1&&!parms->sim.closeloop&&parms->ndm>1){
 		warning("ahst split tomography does not have good NGS correction in open loop.\n");
 	}
