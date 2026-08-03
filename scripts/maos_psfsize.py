@@ -7,7 +7,8 @@ import glob
 from readbin import readbin as read
 #from libaos import read #this uses maos libaos.so
 from astropy.modeling.models import Moffat2D, Const2D
-from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling.fitting import LevMarLSQFitter #handles bounded optim poorly
+from astropy.modeling.fitting import TRFLSQFitter #handles bounded optim better
 from astropy.modeling import Fittable2DModel, Parameter
 from scipy.special import betaincinv
 from scipy.integrate import dblquad
@@ -27,9 +28,10 @@ def rms(*args, **kargs):
     else:
         arr = np.array(args[0])
     return np.sqrt(np.mean(np.real(arr * np.conj(arr)), **kargs))
-def auto_crop_roi(img, threshold_rel=0.2, max_radius=50):
+def auto_crop_roi(img, threshold_rel=0.01, max_radius=None):
     ny, nx = img.shape
-
+    if max_radius is None:
+        max_radius=int(min(nx,ny)/2)
     # --- find peak
     iy, ix = np.unravel_index(np.argmax(img), img.shape)
 
@@ -58,10 +60,50 @@ def auto_crop_roi(img, threshold_rel=0.2, max_radius=50):
     x1 = min(nx, ix + r + margin + 1)
 
     return img[y0:y1, x0:x1], (x0, y0)
-    
-def fit_moffat_roi(img, alpha=3):
-    sub, (xoff, yoff) = auto_crop_roi(img)
 
+class EllipticalMoffat2D(Fittable2DModel):
+    '''major-axis/axis-ratio parameterization of mofatt'''
+    amplitude = Parameter(default=1.0)
+    x_0 = Parameter(default=0.0)
+    y_0 = Parameter(default=0.0)
+
+    # Moffat scale along the major axis
+    gamma = Parameter(default=1.0, bounds=(1e-6, None))
+
+    # Minor / major axis ratio
+    q = Parameter(default=1.0, bounds=(1e-3, 1.0))
+
+    alpha = Parameter(default=2.5, bounds=(1e-6, None))
+
+    # Rotation of major axis, radians
+    theta = Parameter(default=0.0,
+                      bounds=(-np.pi / 2, np.pi / 2))
+
+    @staticmethod
+    def evaluate(x, y, amplitude, x_0, y_0,
+                 gamma, q, alpha, theta):
+
+        dx = x - x_0
+        dy = y - y_0
+
+        cos_t = np.cos(theta)
+        sin_t = np.sin(theta)
+
+        # Rotate into the ellipse coordinate system
+        xp = dx * cos_t + dy * sin_t
+        yp = -dx * sin_t + dy * cos_t
+
+        r2 = (xp / gamma)**2 + (yp / (q * gamma))**2
+
+        return amplitude * (1.0 + r2)**(-alpha)
+    
+def fit_moffat_roi(img, alpha=3, name=None, circular=0):
+    if True: #speed up
+        sub, (xoff, yoff) = auto_crop_roi(img)
+    else:
+        sub=img
+        xoff=0
+        yoff=0
     ny, nx = sub.shape
     y, x = np.mgrid[:ny, :nx]
 
@@ -70,30 +112,48 @@ def fit_moffat_roi(img, alpha=3):
     #B0=0
     # center (local)
     iy, ix = np.unravel_index(np.argmax(sub), sub.shape)
-
-    model = Moffat2D(
-        amplitude=sub.max() ,#- B0,
+    if circular: #axial symmetric
+        model = Moffat2D(
+            amplitude=sub.max() ,#- B0,
+            x_0=ix,
+            y_0=iy,
+            gamma=min(nx, ny) / 4,
+            alpha=alpha
+        ) #+ Const2D(amplitude=B0)
+    else: #elliptical
+        model = EllipticalMoffat2D(
+        amplitude=np.max(sub),
         x_0=ix,
         y_0=iy,
-        gamma=min(nx, ny) / 4,
-        alpha=alpha
-    ) #+ Const2D(amplitude=B0)
+        gamma=3.0,
+        q=0.8,
+        alpha=2.5,
+        theta=0.0,
+    )
 
-    # stabilize
-    model.alpha.fixed = True #for stability
-    model.gamma.bounds = (1e-2, None)
-
-    fitter = LevMarLSQFitter()
+    # bounded optimization
+    model.alpha.bounds = (1+1e-6, 20) #below 1 not integratable, >>10 degenerate with gamma
+    fitter = TRFLSQFitter()
+        
     fit = fitter(model, x, y, sub)
-
+    ierr= fitter.fit_info["status"]<1
+    #Sanity check results
+    model_img=fit(x,y)
+    diff=np.sum((sub-model_img)**2)/np.sum(sub**2)
+    if ierr or diff>0.05 or fit.alpha.value<=1+2e-7:
+        print(f"Fitting is not good: {name}, diff={diff:.4g}, alpha={fit.alpha.value:.4g}, gamma={fit.gamma.value:.4g}, q={fit.q.value:.4g}")
+        if ierr>4:
+            print("nfev:", fitter.fit_info["nfev"])
+            print("message:", fitter.fit_info["message"])
+    
     # shift back to global coords
     fit.x_0.value += xoff
     fit.y_0.value += yoff
-
+    
     return fit
 
         
-def moffat_ensquare_width(gamma, alpha, f):
+def moffat_ensquare_width(gamma, alpha, f, q=1):
     def square_ee(W, gamma, alpha):
         half = W / 2
     
@@ -116,8 +176,8 @@ def moffat_ensquare_width(gamma, alpha, f):
     def err(W):
         return square_ee(W, gamma, alpha) - f
 
-    return brentq(err, 0.01*gamma, 50*gamma)
-def moffat_slit_width(gamma, alpha, f):
+    return brentq(err, 0.01*gamma, 50*gamma)*np.sqrt(q)
+def moffat_slit_width(gamma, alpha, f, q=1):
     """
     Full slit width W enclosing fraction f for Astropy Moffat2D.
 
@@ -139,6 +199,7 @@ def moffat_slit_width(gamma, alpha, f):
         Full slit width
     """
     if alpha <= 1:
+        print(f"alpha={alpha}")
         raise ValueError("alpha must be > 1 for finite total energy")
     if not (0 < f < 1):
         raise ValueError("f must be between 0 and 1")
@@ -148,15 +209,14 @@ def moffat_slit_width(gamma, alpha, f):
 
     # convert to slit width
     a = gamma * np.sqrt(u / (1.0 - u))
-    return 2.0 * a
-def moffat_fwhm(gamma, alpha):
-    return 2 * gamma * np.sqrt(2**(1/alpha)-1)
-def moffat_encircle_width(gamma, alpha, frac):
-    return 2 * gamma * np.sqrt((1 - frac)**(1/(1 - alpha)) - 1)
-def parse_header_float(psfs, key):
+    return 2.0 * a * np.sqrt(q)
+def moffat_fwhm(gamma, alpha, q=1):
+    return 2 * gamma * np.sqrt(2**(1/alpha)-1)*np.sqrt(q)
+def moffat_encircle_width(gamma, alpha, frac, q=1):
+    return 2 * gamma * np.sqrt((1 - frac)**(1/(1 - alpha)) - 1) * np.sqrt(q)
+def parse_header_float(headers, key):
     res=[]
-    for psfi in psfs:
-        hh=psfi.header
+    for hh in headers:
         dp=''
         if isinstance(hh, str):
             s1=hh.find(f'{key} ')
@@ -172,91 +232,130 @@ def parse_header_float(psfs, key):
         res.append(dp)
     return np.stack(res)
 
-def proc_psf(fn, **kargs):
+def proc_psf(fn, fn_cache=None, **kargs):
     """
         Read PSF from a file and compute FWHM using Moffat fitting
     """
-    fn_cache=fn+'.npz' #cache results
+    if isinstance(fn, str):
+        fn0=fn
+        if fn_cache is None:
+            fn_cache=fn0+'.npz' #cache results
+    else:
+        fn0=fn[0]
+    #if fn_cache is None:
+    #    print("Will not use cache for array if fn_cache is not set")
     skip=0
-    if os.path.exists(fn_cache) and os.path.getmtime(fn_cache) > os.path.getmtime(fn):
+    if fn_cache and os.path.exists(fn_cache) and os.path.getmtime(fn_cache) > os.path.getmtime(fn0):
         try:
             data=np.load(fn_cache)
             dps=data["dps"]
             wvls=data["wvls"]
             alpha=data["alpha"]
             gamma=data["gamma"]
-            ress=data["ress"]
+            if 'q' in data:
+                q=data["q"]
+            else:
+                q=np.ones(gamma.size)
+            #ress=data["ress"]
             skip=1
+            #print(f'Using cached results from {fn_cache}')
         except:
+            print(f'Loading cached results from {fn_cache} failed')
             pass
+
     if skip==0:
-        datas=read(fn)
-        dps=parse_header_float(datas, 'DP') #pixel width
-        wvls=parse_header_float(datas, 'WVL')*1e6 #wavelength, convert to micron
+        datas=read(fn0)
+        headers=[data.header for data in datas]
+        if not isinstance(fn, str):
+            count=1
+            for fn2 in fn[1:]:
+                datas+=read(fn2)
+                count+=1
+            if count>1:
+                datas/=count
+        dps=parse_header_float(headers, 'DP') #pixel width
+        wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
         nwvl=datas.shape[0]
         gamma=np.zeros((nwvl))
         alpha=np.zeros((nwvl))
-        ress=np.zeros((nwvl,3))
+        q=np.zeros((nwvl))
+        
         for iwvl in range(nwvl):
             #res=calc_fwhm_gaussian(datas[iwvl], dx=dps[iwvl])
             #res=maos_utils.print_psf_metrics(directory=f"{fd}/", x=-90, y=0, ee=50, seed=1)
-            model=fit_moffat_roi(datas[iwvl], **kargs)
+            model=fit_moffat_roi(datas[iwvl], name=fn0, **kargs)
             alpha[iwvl]=model.alpha.value 
             gamma[iwvl]=model.gamma.value
-            ress[iwvl, 0]=moffat_fwhm(gamma[iwvl], alpha[iwvl])*dps[iwvl] #FWHM
-            #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
-            #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
-            #ress[iwvl, 1]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 en-squared diameter
-            #ress[iwvl, 2]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-squared diameter
-            ress[iwvl, 1]=moffat_slit_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 slit width
-            ress[iwvl, 2]=moffat_slit_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 slit width
-            #alpha is manually set to 3, so the ratio between fwhm and EE-p% is constant
-            #not a good idea to fit over alpha
-        np.savez(fn_cache, dps=dps, wvls=wvls, alpha=alpha, gamma=gamma, ress=ress)
+            if "q" in model.param_names:
+                q[iwvl]=model.q.value #elliptical
+            else:
+                q[iwvl]=1 #circular
+        np.savez(fn_cache, dps=dps, wvls=wvls, alpha=alpha, gamma=gamma, q=q)
+    #no longer caching ress
+    nwvl=wvls.size
+    ress=np.zeros((nwvl,3))
+    for iwvl in range(nwvl):
+        ress[iwvl, 0]=moffat_fwhm(gamma[iwvl], alpha[iwvl], q=q[iwvl])*dps[iwvl] #FWHM
+        #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
+        #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
+        #ress[iwvl, 1]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 en-squared diameter
+        #ress[iwvl, 2]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-squared diameter
+        ress[iwvl, 1]=moffat_slit_width(gamma[iwvl], alpha[iwvl], 0.5, q=q[iwvl])*dps[iwvl] #EE-50 slit width
+        ress[iwvl, 2]=moffat_slit_width(gamma[iwvl], alpha[iwvl], 0.8, q=q[iwvl])*dps[iwvl] #EE-80 slit width
+        #alpha is manually set to 3, so the ratio between fwhm and EE-p% is constant
+        #not a good idea to fit over alpha
+    
+    #print(f'Save results to {fn_cache}')
     return ress,dps,wvls
 
 def proc_psfs(fd, seeds=[1], **kargs):
     """
     Read PSFs from a folder and compute FWHM.
-    Multiple seeds are averaged.
+    Multiple seeds are averaged before fitting
     """
-    ressc=[]
-    for seed in seeds:
-        if not os.path.isfile(f"{fd}/Res_{seed}.done"):
-            continue
-        ress=[] #result array
-        fr=[] #field point radius
-        fx=[] #field point x
-        fy=[] #field point y
-        dps=None #PSF pixel sampling
-        fns=natsorted(glob.glob(f"{fd}/evlpsfcl_{seed}_x*_y*.fits"))
-        for fn in fns:
-            m = re.search(r"_x([+-]?\d+(?:\.\d+)?)_y([+-]?\d+(?:\.\d+)?)\.fits$", fn)
-            x, y = map(float, m.groups())
-            fr.append(np.sqrt(x*x+y*y))
-            fx.append(x)
-            fy.append(y)
-            res,dps,wvls=proc_psf(fn, **kargs)
-            ress.append(res)
-        fr=np.array(fr)
-        fx=np.array(fx)
-        fy=np.array(fy)
+    ressc=[] 
+
+    ress=[] #result array
+    fr=[] #field point radius
+    fx=[] #field point x
+    fy=[] #field point y
+    dps=None #PSF pixel sampling
+    fns=natsorted(glob.glob(f"{fd}/evlpsfcl_{seeds[0]}_x*_y*.fits"))
+    for fn in fns:
+        m = re.search(r"_x([+-]?\d+(?:\.\d+)?)_y([+-]?\d+(?:\.\d+)?)\.fits$", fn)
+        x, y=m.groups()
+        fns2=[fn]
+        for seed in seeds[1:]:
+            fns2.append(f"{fd}/evlpsfcl_{seed}_x{x}_y{y}.fits")
+        x, y = map(float, m.groups())
+        fr.append(np.sqrt(x*x+y*y))
+        fx.append(x)
+        fy.append(y)
+        fn_cache=f"{fd}/evlpsfcl_{'_'.join(map(str, seeds))}_x{x}_y{y}.fits.npz"
+        res,dps,wvls=proc_psf(fns2, fn_cache, **kargs)
+        ress.append(res)
+    fr=np.array(fr)
+    fx=np.array(fx)
+    fy=np.array(fy)
+
+    ress=np.stack(ress)
+    ind=np.lexsort((fy, fx))
+    fr=fr[ind]
+    fx=fx[ind]
+    fy=fy[ind]
+    ress=ress[ind]
+    avg=np.mean(ress,axis=0) #field averaged result
+    err=np.std(ress,axis=0) #variation over the field
     
-        ress=np.stack(ress)
-        ind=np.lexsort((fy, fx))
-        fr=fr[ind]
-        fx=fx[ind]
-        fy=fy[ind]
-        ress=ress[ind]
-        avg=np.mean(ress,axis=0) #field averaged result
-        err=np.std(ress,axis=0) #variation over the field
-        
-        #open loop
-        fn=f"{fd}/evlpsfol_{seed}.fits"
-        datas=read(fn)
-        ressol, dps, wvls=proc_psf(fn, **kargs)
-    
-        ressc.append({'avg':avg, 'std':err, 'cl':ress, 'ol':ressol,'fr':fr, 'fx':fx, 'fy':fy, 'dps':dps, 'wvls':wvls})
+    #open loop
+    fn=f"{fd}/evlpsfol_{seeds[0]}.fits"
+    fns2=[fn]
+    for seed in seeds[1:]:
+        fns2.append(f"{fd}/evlpsfol_{seed}.fits")
+    fn_cache=f"{fd}/evlpsfol_{'_'.join(map(str, seeds))}.fits.npz"
+    ressol, dps, wvls=proc_psf(fns2, fn_cache, **kargs)
+
+    ressc.append({'avg':avg, 'std':err, 'cl':ress, 'ol':ressol,'fr':fr, 'fx':fx, 'fy':fy, 'dps':dps, 'wvls':wvls})
     if len(ressc)>1: #collect seeds
         ressc = {k: rms(np.array([d[k] for d in ressc if d is not None]), axis=0) for k in ressc[0]}
     elif len(ressc)==1:
@@ -265,70 +364,3 @@ def proc_psfs(fd, seeds=[1], **kargs):
         ressc = None
     return ressc
     
-def strip_prefix(strings):
-    if not strings:
-        return strings
-
-    prefix = os.path.commonprefix(strings)
-    return [s[len(prefix):] for s in strings]
-def longest_common_substring(strings):
-    """Return the longest substring common to all strings."""
-    if not strings:
-        return ""
-
-    shortest = min(strings, key=len)
-
-    for length in range(len(shortest), 0, -1):
-        for start in range(len(shortest) - length + 1):
-            sub = shortest[start:start + length]
-            if all(sub in s for s in strings):
-                return sub
-    return ""
-def strip_common(strings):
-    """
-    Remove:
-      1. common directory path
-      2. common filename prefix
-      3. common filename suffix
-
-    Parameters
-    ----------
-    strings : list[str]
-
-    Returns
-    -------
-    list[str]
-    """
-    if not strings:
-        return []
-
-    # Remove common directory path
-    paths = [Path(s) for s in strings]
-    parent = os.path.commonpath([str(p.parent) for p in paths])
-
-    names = []
-    for p in paths:
-        try:
-            rel = p.relative_to(parent)
-        except ValueError:
-            # Different drives (Windows), fall back to filename
-            rel = p.name
-        names.append(str(rel))
-
-    # Remove common prefix
-    prefix = os.path.commonprefix(names)
-    names = [n[len(prefix):] for n in names]
-
-    # Remove common suffix
-    rev_prefix = os.path.commonprefix([n[::-1] for n in names])
-    suffix = rev_prefix[::-1]
-
-    if suffix:
-        names = [n[:-len(suffix)] for n in names]
-
-    # Remove longest common middle substring
-    middle = longest_common_substring(names)
-    if middle:
-        names = [s.replace(middle, "...", 1) for s in names]
-
-    return names    

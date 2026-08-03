@@ -260,9 +260,7 @@ class cell_ndarray(np.ndarray):
     def __array_finalize__(self, obj):
         if obj is None:
             return
-        if hasattr(obj, 'pointer'):
-            self.pointer=obj.pointer
-
+        self.__dict__.update(getattr(obj, "__dict__", {}))
 class cell_csr_array(sp.csr_array):
     def __init__(self, ctypes_pointer, pointer=None):
         #print(f'cell_csr_array __new__ {ctypes_pointer}')
@@ -474,7 +472,7 @@ class loc(Structure):
                 self.aoi=0
                 self.npad=1
                 self.python=True
-                print(f'loc: locx={self.locx:x} locy={self.locy:x}')
+                #print(f'loc: locx={self.locx:x} locy={self.locy:x}')
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero
 

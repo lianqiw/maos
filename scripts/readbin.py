@@ -6,7 +6,17 @@ import os
 import gzip
 import struct
 import socket
-from interface import cell_ndarray
+
+class cell_ndarray(np.ndarray):
+    def __new__(cls, input_array, **attrs):
+        obj = np.asarray(input_array).view(cls)
+        obj.__dict__.update(attrs)
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is not None:
+            self.__dict__.update(getattr(obj, "__dict__", {}))
+
 # magic number are used in bin files to indicate data type
 # dname descrinebs data type. M_ types are fundamental types. 
 # MC_ types has been superseded by MCC_ANY
