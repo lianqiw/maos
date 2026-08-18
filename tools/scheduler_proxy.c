@@ -110,7 +110,7 @@ static int ws_proxy_get_fd(void *userdata){
 	return -1;
 }
 /**
- * @brief Read from TCP server and forward to the websocket client
+ * @brief Read from TCP server (scheduler or draw) and forward to the websocket client
  *
  * @param pfd	File descriptor
  * @param flag	Maybe set to -1 to ask the client to close the connection
@@ -139,33 +139,28 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 	int sock=ws_proxy[iws].fd;
 
 	int cmd[3]={0};
-	int nlen2=recv(sock, &cmd, sizeof(cmd), MSG_PEEK);//peek at the command
+	int nlen2=recv(sock, cmd, sizeof(cmd), MSG_PEEK);//peek at the command. do not consume it as the proxy needs it
 	if(nlen2<(int)sizeof(int)){
 		warning_time("failed to peek; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
-		return 0;
+		return -1;//break the link
 	}
-	if(cmd[0]==DRAW_HEARTBEAT||cmd[2]==DRAW_HEARTBEAT){
-		int nlen3;
-		if((nlen3=recv(sock, &cmd, nlen2, MSG_DONTWAIT))<nlen2){
-			warning_time("Unable to read %d ints, got %d\n", nlen2, nlen3);
-			if(nlen3<0 && (errno==EWOULDBLOCK || errno==EAGAIN)){
-				return 0;
-			}else{
-				return -1;
-			}
+	if(cmd[0]==DRAW_HEARTBEAT){
+		if(recv(sock, cmd, sizeof(int), MSG_DONTWAIT)<(ssize_t)sizeof(int)){
+			warning_time("Unable to read 1 int, close connection.\n");
+			return -1;
 		}
 		return 0;//ignored
 	}
 	if(cmd[0]==DRAW_ENTRY){
 		int nlen=cmd[1];
 		int mode=cmd[2]==-1?0:1;
-		if(cmd[2]==0){//text data, no need for the header. read and drop the header
-			if(stread(sock, &cmd, sizeof(cmd))){
-				warning_time("Unable to read 3 ints\n");
+		if(cmd[2]==0){//text data, the client does not need the header. read and drop the header
+			if(recv(sock, cmd, sizeof(cmd), MSG_DONTWAIT)<(ssize_t)sizeof(cmd)){
+				warning_time("Unable to read 3 int, close connection.\n");
 				return -1;
 			}
-		} else{
-			nlen+=3*sizeof(int);//additional data
+		} else{//binary data. the client wants the header as well.
+			nlen+=3*sizeof(int);
 		}
 		if(ws_proxy[iws].forward(sock, nlen, mode, ws_proxy[iws].userdata)){
 			ws_proxy[iws].fd=-1;

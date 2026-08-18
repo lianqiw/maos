@@ -869,7 +869,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 
 	if(fatal_error_in_progress){
 		info("Signal handler is already in progress. Force quit without cleanup.\n");
-		raise(SIGTERM);
+		_exit(143);
 	}else{
 		fatal_error_in_progress++;
 	}

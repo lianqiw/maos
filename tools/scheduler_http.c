@@ -155,14 +155,14 @@ static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	ssize_t nsend;
 	do{
 		nsend=SSL_write(ctx->ssl, buf, nbuf);
-		//dbg_time("fd=%d nsend=%ld, nbuf=%lu\n", ctx->fd, nsend, nbuf);
+		//dbg_time("fd=%d nsend=%zd, nbuf=%zu\n", ctx->fd, nsend, nbuf);
 		if(nsend>0){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
 	}while(nbuf && (nsend>0||SSL_get_error(ctx->ssl, nsend)==SSL_ERROR_WANT_WRITE));
 	if(nbuf){
-		warning_time("https_writer failed, nsend=%lu, nbuf=%zu.\n", nsend, nbuf);
+		warning_time("https_writer failed, nsend=%zd, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
 		return -1;
 	}else{
@@ -179,14 +179,14 @@ static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	ssize_t nsend;
 	do{
 		nsend=send(ctx->fd, buf, nbuf, 0);
-		//dbg_time("fd=%d nsend=%ld, nbuf=%lu\n", ctx->fd, nsend, nbuf);
+		//dbg_time("fd=%d nsend=%zd, nbuf=%zu\n", ctx->fd, nsend, nbuf);
 		if(nsend>0){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
 	}while(nbuf && (nsend>0||errno==EAGAIN || errno==EWOULDBLOCK) );
 	if(nbuf){
-		warning_time("http_writer failed, nsend=%lu, nbuf=%zu.\n", nsend, nbuf);
+		warning_time("http_writer failed, nsend=%zd, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
 		return -1;
 	}else{

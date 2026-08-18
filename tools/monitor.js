@@ -82,6 +82,17 @@ function App() {
     "Progress":rempx*10
   }});
   //useEffect(()=>{//Effect function runs after React updates the DOM.
+  function reconnect(host){
+    if (wssReconnectRef.current[host] > 0 && wssReconnectRef.current[host] < 100) { //try to reconnect only 100 times max
+      console.log(now(), `Monitor trying reconnect to ${host} after ${wssReconnectRef.current[host]} seconds`);
+      wssReconnectRef.current[host] *= 2;//exponential backoff
+      if(!connect(host)){
+        setTimeout(() => {
+          reconnect(host);
+        }, wssReconnectRef.current[host] * 1000);//in ms 
+      }
+    }
+  }
   function connect(host) {
     if (!host || host.length == 0) return false;
     var hostname=hosts[host]
@@ -116,13 +127,7 @@ function App() {
       console.log(now(), `Monitor disconnected from ${host}`);
       delete wssRef.current[host];//websocket cannot be reused.
       setWss((oldVal) => ({ ...oldVal, [host]: oldVal[host] === undefined ? undefined : false }))//undefined: remove. we keep ws for reconnction
-      if (wssReconnectRef.current[host] > 0 && wssReconnectRef.current[host] < 10) { //try to reconnect only 10 times max
-        console.log(now(), `Monitor trying reconnect to ${host} after ${wssReconnectRef.current[host]} seconds`);
-        wssReconnectRef.current[host] *= 2;//exponential backoff
-        setTimeout(() => {
-          connect(hostname);
-        }, wssReconnectRef.current[host] * 1000);//in ms 
-      }
+      reconnect(host)
     };
     ws.onerror = (err) => {
       console.log(now(), `Monitor connection error from ${host}`);

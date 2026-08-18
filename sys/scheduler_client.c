@@ -320,6 +320,7 @@ void scheduler_finish(int status){
 	if(psock<0){
 		return;
 	}
+	socket_send_timeout(psock, 2);
 	int cmd[2];
 	if(status==0){
 		cmd[0]=CMD_FINISH;
@@ -421,6 +422,8 @@ int scheduler_launch_exe(char* hostarr, int argc, const char* argv[]){
 			warning("Failed to connect to %s:%d.\n", host, PORT);
 			ret=-1;
 		}else{
+			socket_recv_timeout(sock, 10);
+			socket_send_timeout(sock, 2);
 			int cmd[2]={CMD_LAUNCH, 2};
 			if(stwriteintarr(sock, cmd, 2)
 				||stwritestr(sock, argv[0])
@@ -455,26 +458,28 @@ int scheduler_socket(int dir, int *sfd, int id){
 #if MAOS_DISABLE_SCHEDULER
 	(void)dir;(void)sfd;(void)id;
 #else
-	int ssock=scheduler_connect_self(1);
-	if(ssock==-1 || !sfd){
+	int sock=scheduler_connect_self(1);
+	if(sock==-1 || !sfd){
 		return -1;
 	}
+	socket_send_timeout(sock, 2);
+	socket_recv_timeout(sock, 10);
 	id=abs(id);
 	if(id>10000 || id==0) id=1;
 	if(dir==1&&*sfd!=-1){//send
 		int cmd[2]={CMD_DRAWCLI, id};
-		ans=(stwriteintarr(ssock, cmd, 2)||stwritefd(ssock, *sfd));
+		ans=(stwriteintarr(sock, cmd, 2)||stwritefd(sock, *sfd));
 	}else if(dir==-1 || dir==0){//recv
 		int ans2;
 		int cmd[2]={CMD_DRAWCLI, dir==-1?(-id):(-10000-id)};
-		ans=(stwriteintarr(ssock, cmd, 2)||streadint(ssock, &ans2))||ans2;
+		ans=(stwriteintarr(sock, cmd, 2)||streadint(sock, &ans2))||ans2;
 		if(!ans){
-			ans=streadfd(ssock, sfd);
+			ans=streadfd(sock, sfd);
 		}
 	}else{
 		dbg_time("invalid dir=%d\n", dir);
 	}
-	close(ssock);
+	close(sock);
 	if(ans){
 		dbg2_time("scheduler_socket operation for %s failed.\n", dir==1?"send":"receive");
 	}
@@ -562,6 +567,8 @@ int print_backtrace_symbol(void* const* buffer, int size){
 #if MAOS_DISABLE_SCHEDULER == 0
 		//Create a new connection.
 		int sock=scheduler_connect_self(0);
+		socket_recv_timeout(sock, 10);
+		socket_send_timeout(sock, 2);
 		if(sock!=-1){
 			int cmd[2];
 			int len;

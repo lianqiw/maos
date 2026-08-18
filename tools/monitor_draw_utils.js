@@ -321,15 +321,15 @@ function makeCumu(y, cumStart, cumPlot){
   }
 }
 function makeTraces(drawData, layout) {
-  layout.title= {'text':('title' in drawData?drawData['title']:"")};
-  layout.xaxis= { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false, 
-      type: ('xylog' in drawData && drawData.xylog[0]==='y'.charCodeAt(0))?'log':'linear',
+  Object.assign(layout.title, {'text':('title' in drawData?drawData['title']:"")})
+  Object.assign(layout.xaxis, { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false, 
+      type: ('xylog' in drawData && drawData.xylog[0]==='y'.charCodeAt(0))?'log':'linear', 
       title: {'text':('xlabel' in drawData?drawData['xlabel']:"")}, 
-    };
-  layout.yaxis= { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
-      type: ('xylog' in drawData && drawData.xylog[1]==='y'.charCodeAt(0))?'log':'linear',
+    });
+  Object.assign(layout.yaxis, { showgrid: true, showline: true, mirror: true, ticks: "inside", zeroline: false,
+      type: ('xylog' in drawData && drawData.xylog[1]==='y'.charCodeAt(0))?'log':'linear', 
       title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
-    };
+    });
 
   let traces = [];
   let square = 0;
@@ -383,6 +383,10 @@ function makeTraces(drawData, layout) {
     layout.xaxis.constrain='domain';
     layout.yaxis.scaleanchor = 'x';
     layout.yaxis.scaleratio = 1;//1 for square pixels
+  }else{
+    layout.xaxis.constrain=null;
+    layout.yaxis.scaleanchor = null;
+    layout.yaxis.scaleratio = null;//1 for square pixels
   }
   return traces;
 }

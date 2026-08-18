@@ -40,13 +40,13 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   const [wss, setWss]=useState({});
   const [pause, setPause]=useState({});
   //Use useRef for data that is not directly related to rendering.
-  //const pause = useRef({});//pause plotting
   const jobRef = useRef({});//job data. 
   const wssRef = useRef({});//mutable ref object that persists for the entire lifecycle of the component.
   const chartRef = useRef(null);//for plotly. References a DOM object.
   const cumInputRef=useRef(null);//for input of cumStart
   const lpfInputRef=useRef(null);//for input of lpf
-  const layout={autosize: true, margin: {t:40, b:40, l:50, r:20}};
+  const layout=useRef({});//remember the current layout
+  const [chartLoaded, setChartLoaded]=useState(0)
   function connect(hostname, job) {
     if (!hostname || hostname.length == 0) return false;
     const [host, pid] = job.split(':', 2);
@@ -72,7 +72,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
       wssRef.current[job] = ws;
       setBotActive((oldVal) => ({ ...oldVal, [job]: {} }))//Initialize botActive to empty object to avoid undefined error
       setTopActive((oldVal) => ({ ...oldVal, [job]: {} }))//initialize to empty
-      jobRef.current[job] = { 'drawData': {} };//empty plots
+      jobRef.current[job] = { 'drawData': {}, 'layout':{}};//empty plots
       console.log(now(),`Drawdaemon connected for ${job}`);
       ws.send(pid + "&" + "DRAW" + ";");
     };
@@ -93,7 +93,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
       } else if (event.data instanceof ArrayBuffer) {//ArrayBuffer support writing.
         let drawData = procBuffer(event.data); //separate into function for testing
         if ('pid' in drawData) {
-          if(jobRef.current[job]['pid']==-1){//new session, restore active page
+          if(jobRef.current[job]['pid']==-1){//new session
             jobRef.current[job]['active'] = undefined //reset active page
           }
           jobRef.current[job]['pid'] = drawData['pid'];
@@ -135,6 +135,12 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
               lpfDrawdata(drawData, jobRef.current[job]['drawData'][fig][name], lpf.current);
             }
             jobRef.current[job]['drawData'][fig][name] = drawData;
+            if(!jobRef.current[job]['layout'][fig]){
+              jobRef.current[job]['layout'][fig]={};
+            }
+            if(!jobRef.current[job]['layout'][fig][name]){
+              jobRef.current[job]['layout'][fig][name]={autosize: true, margin: {t:40, b:40, l:50, r:20}, uirevision: Math.random(), title:{}, xaxis:{}, yaxis:{}}
+            }
           } catch (err) {
             console.log(now(),{ err, drawData, jobRef, job });
           }
@@ -147,7 +153,38 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
 
     return true;
   }//function connect
-
+  //Persist chart user initiated zoom. 
+  useEffect(() => {
+    if (!chartLoaded || !chartRef.current) {
+        return;
+    }
+    const chart = chartRef.current;
+    const handleRelayout = (event) => {
+        if (event['xaxis.range[0]'] !== undefined &&
+            event['xaxis.range[1]'] !== undefined) {
+            layout.current.xaxis.range = [
+                event['xaxis.range[0]'],
+                event['xaxis.range[1]']
+            ];
+        }
+        if (event['yaxis.range[0]'] !== undefined &&
+            event['yaxis.range[1]'] !== undefined) {
+            layout.current.yaxis.range = [
+                event['yaxis.range[0]'],
+                event['yaxis.range[1]']
+            ];
+        }
+    };
+    try{
+      chart.on('plotly_relayout', handleRelayout);
+      console.log(now(), 'registered handlerRelayout');
+      return () => {
+        chart.removeListener('plotly_relayout', handleRelayout);
+      };
+    } catch (error){
+      console.log(now(), chart, error);
+    }
+  }, [chartLoaded]);
   useEffect(() => {//run ones upon mount and state change
     Object.keys(drawInfo).map((job) => {
       if (drawInfo[job]) {//host:port->hostname
@@ -178,22 +215,22 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           && jobRef.current[jobActive]['drawData'][topActive[jobActive]]
           && botActive[jobActive][topActive[jobActive]]) {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
+          layout.current = (jobRef.current[jobActive]['layout'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
             const id=drawData.fig+'_'+drawData.name;
             if(figName.current!==id){
               figName.current=id;
             }
-            layout.uirevision=figName.current;//preserve zoom for the plot
-            
             if(drawData.cumPlot!==cumPlot || drawData.cumStart!==cumStart){
               drawData.cumPlot=cumPlot;
               drawData.cumStart=cumStart;
-              Plotly.purge(chartRef.current, 0);
+              //Plotly.purge(chartRef.current, 0);
             }
-            const traces  = makeTraces(drawData, layout);
+            const traces  = makeTraces(drawData, layout.current);
             if (traces.length) {
-              Plotly.react(chartRef.current, traces, layout, { responsive: true });
+              Plotly.react(chartRef.current, traces, layout.current, { responsive: true });
               clear = 0;
+              setChartLoaded(1)
             }
           }
         }
@@ -212,14 +249,15 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
     resizeObserver.observe(chartRef.current);
 
     return () => resizeObserver.disconnect();
-  }, [jobActive, topActive, botActive, figSeq, cumStart, cumPlot, pause]);
+  }, [figSeq, cumStart, cumPlot, pause]);
 
-  useEffect(() => {//let server know the current jobActive page.
+  useEffect(() => {//switch page
     try {
       if (wssRef.current[jobActive] && jobRef.current[jobActive] && jobRef.current[jobActive]['pid'] > -1
         && topActive[jobActive] && botActive[jobActive][topActive[jobActive]]) {
-        wssRef.current[jobActive].send(`${jobRef.current[jobActive]['pid']}&DRAW_FIGFN&${topActive[jobActive]}&${botActive[jobActive][topActive[jobActive]]}`);
+        wssRef.current[jobActive].send(`${jobRef.current[jobActive]['pid']}&DRAW_FIGFN&${topActive[jobActive]}&${botActive[jobActive][topActive[jobActive]]}`);//let server know the current jobActive page.
       }
+      setFigSeq(old => old + 1);//trigger plot update
     } catch (err) {
       console.log(now(),{ err, jobActive, wssRef, jobRef, topActive, botActive });
     }

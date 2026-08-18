@@ -1087,6 +1087,7 @@ static void scheduler_timeout(void){
 void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, void *userdata), void* userdata){
 	//dbg_time("added monitor on sock %d\n",sock);
 	set_sockname(sock, "monitor");
+	socket_send_timeout(sock, 5);
 	MONITOR_T *node=NULL;
 	for(MONITOR_T *ic=pmonitor; ic; ic=ic->next){
 		if(ic->sock==sock){

@@ -108,9 +108,7 @@ static void socket_tcp_keepalive(int sock){
 		){
 		//success
 	} else{
-		if(errno!=EOPNOTSUPP){
-			warning_time("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
-		}
+		warning_time("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
 	}
 }
 static void socket_reuse_addr(int sock){
@@ -199,7 +197,7 @@ int socket_send_timeout(int sock, long sec){
 	if(sock==-1) return -1;
 	struct timeval val={sec,0};
 	int ans;
-	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
+\	if((ans=setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &val, sizeof(val)))<0){
 		perror("socket_send_timeout: setsockopt failed:");
 	}
 	return ans;
@@ -532,7 +530,6 @@ void listen_port(listen_opt_t opt){
 							}else{
 								listen_port_add(sock2, POLLIN, opt.responder, "responder");
 							}
-							socket_tcp_keepalive(sock2);
 							//socket_recv_timeout(sock2, 5);//do not set recv timeout. The socket may be passed to draw() that does not use select.
 							//socket_send_timeout(sock2, 60);//fails with errno= 16 on macos
 							//new_connection=1;
