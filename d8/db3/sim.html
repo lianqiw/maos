@@ -192,7 +192,8 @@ $(document).ready(function(){initNavTree('d8/db3/sim.html','../../'); initResiza
 <div class="line">#Atmospheric turbulence common parameters (atm.r0z etc. are defined in atm_*.conf files)</div>
 <div class="line">atm.method    = 0     #0: Von Karman (default). 1: Fractal method. 2: Biharmonics (psd is f^-4 power). (engineering)</div>
 <div class="line">atm.ninit     = 17    #Initial size of the screen in fractal method. &gt;=2 (engineering)</div>
-<div class="line">atm.size      = [64 64] #size of atmosphere in meter. 0: automatic to cover the meta-pupil.</div>
+<div class="line">atm.size      = [0 0] #size of atmosphere in meter. 0: automatic to cover the meta-pupil and at least 2*atm.L0</div>
+<div class="line">atm.L0        = 30    #atm outer scale. Removed from individual profiles because L0 is largely a globally constant number</div>
 <div class="line">atm.dx        = 1/64  #Sampling of the atmosphere in meter. Usually match evl.dx. Change powfs.dx to match if necessary.</div>
 <div class="line">atm.wddeg     = [0]   #Fixed wind direction (in degree) for all (1 number) or each (same length as atm.ht) turbulence layer. not used if atm.wdrand is set.</div>
 <div class="line">atm.wdrand    = 1     #&gt;0: as an additional seed to randomize wind direction (see sim.seeds)</div>

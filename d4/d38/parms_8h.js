@@ -231,6 +231,7 @@ var parms_8h =
       [ "misregx", "d4/d38/parms_8h.html#acea6c9dd09ebfd30f21990df10a5504a", null ],
       [ "misregy", "d4/d38/parms_8h.html#ae9204a09504c51cd97005dadc4322606", null ],
       [ "misregc", "d4/d38/parms_8h.html#a92ea8b6d38c0f4957bb27779ef273e0b", null ],
+      [ "hc", "d4/d38/parms_8h.html#af33fc825020660dd0788533e4fdce0a1", null ],
       [ "powfs", "d4/d38/parms_8h.html#a04b645f7f90d8c24f6b353b9207cc6cd", null ]
     ] ],
     [ "wfs_cfg_t", "d4/d38/parms_8h.html#d2/d57/structwfs__cfg__t", [
