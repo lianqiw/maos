@@ -702,14 +702,19 @@ switch(ctype){\
 				} else if(opts.dc || opts.dd){
 					for(int ig=0; ig<ngroup; ig++){
 						dmat* p=opts.dc?P(opts.dc, ig):opts.dd[ig];
-						int nlen=NX(p);
-						if(opts.maxlen&&opts.maxlen<nlen) nlen=opts.maxlen;
+						int nx=NX(p);
+						int ny=NY(p);
+						if(nx==1 && ny>1){
+							nx=ny;
+							ny=1;
+						}
+						if(opts.maxlen&&opts.maxlen<nx) nx=opts.maxlen;
 						FWRITEINT(DRAW_POINTS);
-						FWRITEINT(nlen);//number of points
-						FWRITEINT(NY(p));//number of numbers per point. 1 or 2.
+						FWRITEINT(nx);//number of points
+						FWRITEINT(ny);//number of numbers per point. 1 or 2.
 						FWRITEINT(0);//square plot or not
-						if(nlen){
-							FWRITEARR(P(p), NY(p)*nlen*sizeof(real));
+						if(nx && ny){
+							FWRITEARR(P(p), nx*ny*sizeof(real));
 						}
 					}
 				} else {
@@ -862,7 +867,7 @@ static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 	}else{
 		grad=dref(gradin); 
 	}
-	reshape(grad, nsa, 2);
+	reshape(grad, nsa, ng);
 	if(saa){
 		for(int isa=0; isa<nsa; isa++){
 			if(P(saa, isa)<0.01){

@@ -259,7 +259,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 					"DM Actuator Coupling Factor", "x (m)", "y (m)", "actcpl %d", idm);
 			}*/
 		}
-		if(parms->plot.setup){
+		if(parms->plot.setup>1){
 			for(int ips=0; ips<recon->npsr; ips++){
 				const real ht=P(recon->ht,ips);
 				plot_loc("Aperture", parms, 1, 0, P(recon->xloc,ips), ht, "xloc %02d", ips);
@@ -291,6 +291,15 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			if(powfs[ipowfs].intstat&&powfs[ipowfs].intstat->cogmask){
 				drawints("Gmask", powfs[ipowfs].saloc, powfs[ipowfs].intstat->cogmask, 0,
 						"WFS CoG Mask", "x", "y", "WFS %2d", iwfs);
+			}
+		}
+		if(powfs[ipowfs].sanea){
+			const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
+			for(int jwfs=0; jwfs<PN(powfs[ipowfs].sanea); jwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+				drawgrad("Gnea", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].sanea, jwfs),
+					 0, 0, neathres*neathres,
+					"WFS Subaperture Noise", "x (m)", "y (m)", "Gnea %d", iwfs);
 			}
 		}
 	}
@@ -435,31 +444,29 @@ void plot_gradoff(sim_t *simu, int iwfs){
 		}
 	}
 }
-void plot_psf(const_anycell _psf2s, const char* psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
+void plot_psf(const_anycell _psf2s, const char *psfname, int type, int ievl, dmat* wvl, int zlog, real psfmin){
 	dmat* psftemp=NULL;
 	dmat* psfreal=NULL;
-	const char* title, * tab;
+	const char* title;
+	switch(type){
+		case 2:
+			title="Science Diffraction Limited PSF";
+			break;
+		case 1:
+			title="Science Closed Loop PSF";
+			break;
+		case 0:
+			title="Science Open Loop PSF";
+			break;
+		default:
+			title="PSF";
+	}
 	for(int iwvl=0; iwvl<NX(_psf2s.c); iwvl++){
-		switch(type){
-			case 2:
-				title="Science Diffraction Limited PSF";
-				tab="DL";
-				break;
-			case 1:
-				title="Science Closed Loop PSF";
-				tab="CL";
-				break;
-			case 0:
-				title="Science Open Loop PSF";
-				tab="OL";
-				break;
-			default:
-				title="PSF";
-				tab="PSF";
-		}
+		char topname[64];
+		mysnprintf(topname, sizeof(topname), "PSF %.2f", P(wvl,iwvl)*1e6);
 		char tabname[64];
-		snprintf(tabname, sizeof(tabname), "%s%2d %.2f", tab, ievl, P(wvl,iwvl)*1e6);
-		if(draw_current(psfname, tabname)){
+		mysnprintf(tabname, sizeof(tabname), "%s%2d", psfname, ievl);
+		if(draw_current(topname, tabname)){
 			cell* c=P(_psf2s.c, iwvl);
 			if(dmat_cast(c)){
 				psfreal=dmat_cast(c);
@@ -470,7 +477,7 @@ void plot_psf(const_anycell _psf2s, const char* psfname, int type, int ievl, dma
 				cabs22d(&psftemp, 0, cmat_cast(c), 1);
 				psfreal=psftemp;
 			}
-			draw(psfname, (plot_opts){.image=psfreal,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
+			draw(topname, (plot_opts){.image=psfreal,.zlim={psfmin,1},.zlog=zlog},title, "x", "y", "%s", tabname);
 		}
 	}
 	dfree(psftemp);

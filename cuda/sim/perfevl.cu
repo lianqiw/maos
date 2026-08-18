@@ -386,9 +386,11 @@ void* gpu_perfevl_queue(thread_t* info){
 					}
 
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFol", cudata->perf.psfol[iwvl], count, stream,
+						char topname[64];
+						mysnprintf(topname, sizeof(topname), "PSF %.2f", P(parms->evl.wvl,iwvl)*1e6);
+						drawpsf_gpu(topname, cudata->perf.psfol[iwvl], count, stream,
 							parms->plot.psf!=2?1:0, parms->plot.psfmin, "Science Open Loop PSF",
-							"x", "y", "OL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+							"x", "y", "OL%2d", ievl);
 					}
 				}
 				if(!parms->gpu.psf){ //need to move psf from GPU to CPU for accumulation.
@@ -461,9 +463,11 @@ void* gpu_perfevl_queue(thread_t* info){
 				if(parms->plot.run&&isim%parms->plot.run==0){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFcl", cuglobal->perf.psfcl[iwvl+nwvl*ievl], count, stream,
+						char topname[64];
+						mysnprintf(topname, sizeof(topname), "PSF %.2f", P(parms->evl.wvl,iwvl)*1e6);
+						drawpsf_gpu(topname, cuglobal->perf.psfcl[iwvl+nwvl*ievl], count, stream,
 							parms->plot.psf!=2?1:0, parms->plot.psfmin, "Science Closed Loop PSF",
-							"x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+							"x", "y", "CL%2d", ievl);
 					}
 				}
 				if(!parms->gpu.psf){
@@ -572,9 +576,11 @@ OMP_TASK_FOR(4)
 				if(parms->plot.run&&simu->perfisim%parms->plot.run==0){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
-						drawpsf_gpu("PSFngsr", cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl], count, stream,
+						char topname[64];
+						mysnprintf(topname, sizeof(topname), "PSF %.2f", P(parms->evl.wvl,iwvl)*1e6);
+						drawpsf_gpu(topname, cuglobal->perf.psfcl_ngsr[iwvl+nwvl*ievl], count, stream,
 							parms->plot.psf!=2?1:0, parms->plot.psfmin, "Science Closed Loop PSF",
-							"x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+							"x", "y", "NGSR %2d", ievl);
 					}
 				}
 				if(!parms->gpu.psf){

@@ -267,6 +267,10 @@ void sim_update_zoom(sim_t* simu){
 					average_powfs(simu->zoomdrift, parms->powfs[ipowfs].wfs, 1);
 				}
 			}
+			if(parms->plot.run && simu->zoompos){
+				draw("Res", (plot_opts){.dc=simu->zoompos, .always=1, .maxlen=isim}, 
+				"LGS Trombone Position", "Time Step", "Focus (m)", "%s", "Trombone");
+			}
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);

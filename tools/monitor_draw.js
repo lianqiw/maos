@@ -93,6 +93,9 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
       } else if (event.data instanceof ArrayBuffer) {//ArrayBuffer support writing.
         let drawData = procBuffer(event.data); //separate into function for testing
         if ('pid' in drawData) {
+          if(jobRef.current[job]['pid']==-1){//new session, restore active page
+            jobRef.current[job]['active'] = undefined //reset active page
+          }
           jobRef.current[job]['pid'] = drawData['pid'];
           updateDrawInfo([job, host+':'+drawData['pid']])
         }
@@ -103,7 +106,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           jobRef.current[job]['exename'] = drawData['exename']
         }
         if ('final' in drawData) {
-          jobRef.current[job]['pid'] = -1;//draw is no longer active
+          jobRef.current[job]['pid'] = -1;//pid is no longer active
           const session=drawData['session']
           //Remove drawData with session less than this session
           jobRef.current[job]['drawData']=Object.fromEntries(
@@ -239,8 +242,8 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
             onChange={e=>{setCumInput(e.target.value);}}></input></form></li>
           <li title="Set image update low pass filter"><span>Update LPF </span><div className="spring-spacer"></div>
             <form onSubmit={(e)=>{e.preventDefault(); lpf.current=(parseFloat(lpfInput.length?lpfInput:"0.01"));}}>
-            <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.001" min="0.001" max="1"
-            onClick={()=>{if(lpfInputRef.current) lpfInputRef.current.select();}} 
+            <input ref={lpfInputRef} style={{width:'4em'}} value={lpfInput} type="number" step="0.01" min="0.001" max="1"
+            onClick={(e)=>{if(lpfInputRef.current) lpfInputRef.current.select(); e.stopPropagation();}} 
             onChange={e=>{setLpfInput(e.target.value);}}></input></form></li>
           <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'png',filename: figName.current});}}>💾 Save as {figName.current}.png</li>
           <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'jpeg',filename: figName.current});}}>💾 Save as {figName.current}.jpg</li>

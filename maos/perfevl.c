@@ -224,7 +224,7 @@ void* perfevl_ievl(thread_t* info){
 					cabs22d(&P(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
 				}
 				if(parms->plot.run&&isim%parms->plot.run==0){
-					plot_psf(psf2s, "PSFol", 0, ievl, parms->evl.wvl, parms->plot.psf!=2, parms->plot.psfmin);
+					plot_psf(psf2s, "OL", 0, ievl, parms->evl.wvl, parms->plot.psf!=2, parms->plot.psfmin);
 				}
 				ccellfree(psf2s);
 			}
@@ -317,7 +317,7 @@ void* perfevl_ievl(thread_t* info){
 					}
 				}/*opdcov */
 				if(parms->evl.psfmean||parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
-					perfevl_psfcl(parms, aper, "PSFcl", simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
+					perfevl_psfcl(parms, aper, "CL", simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
 				}/*do_psf */
 			}
 		}
@@ -479,7 +479,7 @@ OMP_TASK_FOR(4)
 							}
 						}
 						if(do_psf){
-							perfevl_psfcl(parms, aper, "PSFngsr", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+							perfevl_psfcl(parms, aper, "NGSR", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
 						}
 						dfree(P(simu->evlopd,ievl));
 					}
