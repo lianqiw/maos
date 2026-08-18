@@ -208,6 +208,7 @@ static void recon_split_lo(sim_t* simu){
 						P(P(simu->Merr_lo, 0), imod)=0;//do not feed integrator
 					}
 				}
+				//dshow(P(simu->Mbias, 0),   "Mbias");
 			}
 		}//else: there is ideal NGS correction done in perfevl. 
 		break;
@@ -304,7 +305,8 @@ void recon_servo_update(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
 	if(!parms->recon.psd) return;
-	if(simu->dmerr&&parms->recon.psddtrat_hi>0){//compute PSD on dmerr.
+	if(simu->dmerr&&parms->recon.psddtrat_hi>0 
+		&& (simu->reconisim+1)%parms->sim.dtrat_hi==0){//compute PSD on dmerr.
 		const int dtrat=parms->recon.psddtrat_hi;
 		const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
 		const int iframe=iacc%dtrat;
@@ -352,7 +354,8 @@ void recon_servo_update(sim_t* simu){
 			dfree(psd);
 		}
 	}
-	if((simu->Merr_lo||parms->evl.split)&&parms->recon.psddtrat_lo>0){//compute PSD on low order control
+	if((simu->Merr_lo||parms->evl.split)&&parms->recon.psddtrat_lo>0
+		&&(simu->reconisim+1)%parms->sim.dtrat_lo==0){//compute PSD on low order control
 		const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
 		const int dtrat=parms->recon.psddtrat_lo;
 		const int iframe=iacc%dtrat;

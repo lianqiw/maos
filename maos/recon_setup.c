@@ -95,9 +95,24 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				info("Averaging saneaxy of different WFS for GLAO mode\n");
 				saneac=dcellnew(1,1);
 				int ni0=PN(powfs[ipowfs].sanea);
-				real scale=1./ni0;
-				for(int ii0=0; ii0<ni0; ii0++){
-					dadd(&P(saneac,0), 1, P(powfs[ipowfs].sanea, ii0), scale);
+				P(saneac,0)=dnew(nsa, 2);
+				for(int isa=0; isa<nsa; isa++){
+					real saneaix=0, saneaiy=0;
+					for(int ii0=0; ii0<ni0; ii0++){
+						if(P(P(powfs[ipowfs].sanea, ii0), isa, 0) && P(P(powfs[ipowfs].sanea, ii0), isa, 1)){
+							saneaix+=1./P(P(powfs[ipowfs].sanea, ii0), isa, 0);
+							saneaiy+=1./P(P(powfs[ipowfs].sanea, ii0), isa, 1);
+						}
+					}
+					if(saneaix && saneaiy){
+						P(P(saneac,0), isa, 0)=1./saneaix;
+						P(P(saneac,0), isa, 1)=1./saneaiy;
+					}
+				}
+				if(parms->plot.setup){
+					drawgrad("Gnea", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, 0), P(saneac, 0),
+						0, 0, neathres*neathres,
+						"WFS Subaperture Noise", "x (m)", "y (m)", "Gnea glao%d", ipowfs);
 				}
 			}else{
 				saneac=dcelldup(powfs[ipowfs].sanea);
@@ -107,9 +122,9 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				dmat *saa=PR(powfs[ipowfs].saa, jwfs);
 				for(int isa=0; isa<nsa; isa++){
 					real area=P(saa, isa);
-					if(area<saat){
+					if(area<saat || P(P(saneac, jwfs), isa, 0)==0){
 						for(int ig=0; ig<ng; ig++){
-							P(P(saneac, jwfs), isa, ig)*=1e4;
+							P(P(saneac, jwfs), isa, ig)=neathres*neathres*1e4;
 						}
 					}
 				}

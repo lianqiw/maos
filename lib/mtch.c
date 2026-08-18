@@ -312,7 +312,7 @@ void mtch_cell(
 			i0sumsum+=P(i0sum, isa, ii0);
 			if(P(i0sum, isa, ii0)<i0thres||P(nea2, 0)>nea2thres||P(nea2, 3)>nea2thres){
 			//Signal level too low or error to high.
-				P(nea2, 0)=P(nea2, 3)=nea2thres;
+				P(nea2, 0)=P(nea2, 3)=0;//nea2thres;
 				P(nea2, 1)=P(nea2, 2)=0;
 				dset(P(*pmtche, isa, ii0), 0);
 			}
