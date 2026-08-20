@@ -108,7 +108,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	}
 	/* 2012-03-21: Remove focus mode from GL and NEA so no focus is
 	   measured/estimated by mvst. It is then estimate separately*/
-	if(parms->sim.mffocus){
+	/*if(parms->sim.mffocus){
 		dcell* focus=NULL;
 		dcellmm(&focus, recon->RFngsg, recon->GXL, "nn", 1);
 		dcellmm(&recon->GXL, recon->GFngs, focus, "nn", -1);
@@ -118,7 +118,7 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 		dcellmm(&neailo, recon->GFngs, focus, "nn", -1);
 		//dcelldropzero(neailo, 1e-8);
 		dcellfree(focus);
-	}
+	}*/
 
 	dcell* U=NULL;
 	dcell* FU=NULL;
@@ -159,12 +159,12 @@ setup_recon_mvst(recon_t* recon, const parms_t* parms){
 	dcelladdI(M, 1);
 	dcell* Minv=dcellinv(M);
 	dcellfree(M);
-	if(parms->sim.mffocus){
+	/*if(parms->sim.mffocus){
 	//Embed a focus removal. Necessary!
 		dcell* focus=NULL;
 		dcellmm(&focus, Minv, recon->GFngs, "nn", 1);
 		dcellmm(&Minv, focus, recon->RFngsg, "nn", -1);
-	}
+	}*/
 	if(parms->save.setup){
 		writebin(Minv, "mvst_Rngs_0");
 		writebin(FUw, "mvst_Modes_0");

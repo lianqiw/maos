@@ -224,13 +224,13 @@ static void recon_split_lo(sim_t* simu){
 				dcell* Mpsol_lo=P(simu->Mint_lo->mintc,0);
 				dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 			}
-			if(parms->sim.mffocus){
+			/*if(parms->sim.mffocus){
 				dcell* tmp=NULL;
 				dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
 				dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
 				error("Please Implement: Mode blending");
 				dcellfree(tmp);
-			}
+			}*/
 		}
 		break;
 		default:

@@ -427,7 +427,7 @@ typedef struct tomo_cfg_t{
 			3: Identity weighting (bad)
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_focus;   /**<1: Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
+    int ahst_focus;   /**<1: Make magnification mode free of focus in science*/
 	int ahst_keepfocus;/**<keep LGS focus in ngs mode removal*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
@@ -582,16 +582,10 @@ typedef struct sim_cfg_t{
     real eptwfs;   /**<Twfs reference vector servo gain.*/
     real eptsph;   /**<Twfs reference vector servo gain for spherical mode*/
     real fcttm;    /**<cross over frequency of tip/tilt split. 0 to disable ttm.*/
-    real fcfocus;  /**<cross-over frequency of the focus LPF.*/
     real fov;      /**<User specified fov diameter*/
 	real foveff;   /**<The effective fov diameter */
     int focus2tel;   /**<Offload focus to telescope*/
     real epfocus2tel;/*Gain for telescope focus control*/
-    int mffocus;     /**<method for focus blending between LGS and LO NGS
-			- 0: no focus blending.
-			- 1: Focus blending using CL gradients, for each LGS independently.
-			- 2: Focus blending using CL gradinets, for common LGS focus only (not preferred).
-		     */
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
@@ -615,7 +609,6 @@ typedef struct sim_cfg_t{
     int dtrat_skip;  /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int noisy_hi;    /**<whether high order WFS is noisy*/
     int noisy_lo;    /**<whether low order WFS is noisy*/
-    real lpfocus;	/**<derived: lpfocus=2*pi*fc*sim.dthi*/
     real lpbias;	/**<Bias correction LPF. Use on (fast-slow) signal*/
     real lpttm;    	/**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     int dmclip;      /**<derived: Need to clip actuator stroke*/

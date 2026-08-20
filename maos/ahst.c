@@ -304,8 +304,8 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 			ngsmod->nmod+=2;
 		}
 	}
-	info("Low order modes: nmod=%d, mffocus=%d, ahst_focus=%d, indps=%d, indfocus=%d, indastig=%d\n", 
-		ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indfocus, ngsmod->indastig);
+	info("Low order modes: nmod=%d, ahst_focus=%d, indps=%d, indfocus=%d, indastig=%d\n", 
+		ngsmod->nmod, parms->tomo.ahst_focus, ngsmod->indps, ngsmod->indfocus, ngsmod->indastig);
 	ngsmod->hs=hs;
 	if(ndm>1){
 		ngsmod->hdm=parms->dm[ndm-1].ht;//last DM.
@@ -423,7 +423,8 @@ void ngsmod_prep(const parms_t* parms, recon_t* recon, const aper_t* aper){
 	}
 	if(parms->tomo.ahst_wt!=4){
 		ngsmod->Mbias=lnew(ngsmod->nmod, 1);
-		if(ngsmod->indfocus && parms->sim.lpfocus<1){//LGS focus is not ignored
+		if(ngsmod->indfocus && (parms->ilgspowfs==-1 || parms->powfs[parms->ilgspowfs].frs==0)){
+			//LGS focus is not ignored. We use LPF(ngs-lgs) as bias to lgs measurement
 			P(ngsmod->Mbias, ngsmod->indfocus)=1;
 		}
 		if(ngsmod->indastig) {

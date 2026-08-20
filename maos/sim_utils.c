@@ -258,7 +258,7 @@ void sim_update_sodium(sim_t* simu){
 		//Time for sodium profile update
 		const int na_update=parms->powfs[ipowfs].llt->coldtrat>0&&(isim)%parms->powfs[ipowfs].llt->coldtrat==0;
 		//Time for trombone position update
-		const int zoom_update=parms->sim.mffocus && (parms->powfs[ipowfs].zoomdtrat>0&&(isim)%parms->powfs[ipowfs].zoomdtrat==0);
+		const int zoom_update=(parms->powfs[ipowfs].zoomdtrat>0&&(isim)%parms->powfs[ipowfs].zoomdtrat==0);
 		//f2ht converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
 		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
 		const real f2ht=-2*pow(parms->powfs[ipowfs].hs, 2);
@@ -326,7 +326,7 @@ void sim_update_sodium(sim_t* simu){
 			}
 	#endif
 		}
-		if(parms->sim.mffocus && parms->powfs[ipowfs].zoomdtrat>0 && simu->zoompos){
+		if(parms->powfs[ipowfs].zoomdtrat>0 && simu->zoompos){
 			real finterp=(real)((isim)%parms->powfs[ipowfs].zoomdtrat)/(real)parms->powfs[ipowfs].zoomdtrat;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -787,9 +787,6 @@ static void init_simu_wfs(sim_t* simu){
 		}
 
 	}
-	if(parms->sim.mffocus){
-		simu->lgsfocuslpf=dnew(parms->nwfs, 1);
-	}
 	if(recon->ngsmod->Mbias){
 		simu->Mbias=dcellnew_same(1, 1, recon->ngsmod->nmod, 1);
 	}
@@ -1087,7 +1084,7 @@ static void init_simu_wfs(sim_t* simu){
 				nny2[iwfs]=0;
 			}
 		}
-		if(parms->sim.mffocus){
+		if(parms->powfs[parms->ilgspowfs].zoomdtrat>0){
 			simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, "LGS Trombone position", "%s/Reszoompos_%d.bin", fnextra, seed);
 		}
 		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx2, nny2, "LGS focus time history", "%s/Resfocuserrs_%d.bin", fnextra, seed);
@@ -1670,7 +1667,6 @@ void sim_free(sim_t* simu){
 	zfarr_close(save->psdol_lo);
 	dcellfree(save->gain);
 	dcellfree(simu->evlopd);
-	dfree(simu->lgsfocuslpf);
 	cellfree(simu->ints);
 	cellfree(simu->intsout);
 	cellfree(simu->wfspsfout);
@@ -2079,7 +2075,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	fprintf(fp, "]\n");
 	fprintf(fp, "maos.nstep=%d\n", parms->sim.end);
 	fprintf(fp, "maos.ahstfocus=%d\n", parms->tomo.ahst_focus);
-	fprintf(fp, "maos.mffocus=%d\n", parms->sim.mffocus);
+	fprintf(fp, "maos.mffocus=%d\n", 0);
 	if(parms->powfs[P(parms->hipowfs, 0)].llt->fnrange){
 		fprintf(fp, "maos.fnrange=%s\n", parms->powfs[P(parms->hipowfs, 0)].llt->fnrange);
 	}else{

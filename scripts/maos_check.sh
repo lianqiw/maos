@@ -16,7 +16,7 @@ case "$1" in
 	shift;;
 esac
 if [ "$D" = "30" ];then
-	args="tmt.conf sim.fcfocus=inf "
+	args="tmt.conf "
 elif [ "$D" = "10" ];then
 	args="keck.conf"
 else

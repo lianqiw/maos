@@ -1691,9 +1691,7 @@ static void readcfg_recon(parms_t *parms){
    Read in simulation parameters
 */
 static void readcfg_sim(parms_t *parms){
-	READ_DBL(sim.fcfocus);
 	READ_DBL(sim.fcttm);
-	READ_INT(sim.mffocus);
 	READ_DBL(sim.epfocus2tel);
 	READ_INT(sim.focus2tel);
 	READ_DMAT(sim.aphi);
@@ -2498,43 +2496,8 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			error("\n\n\nFor mixed dtrat cases, please use split tomography by setting recon.split=1\n\n\n");
 		}
 	}
-	if(parms->sim.mffocus<0){
-		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
-		if(parms->sim.mffocus){
-			dbg("parms->sim.mffocus=%d is automatically set when there is LGS.\n", parms->sim.mffocus);
-		}
-	}else if(parms->sim.mffocus>0 && !parms->nlgspowfs){
-		dbg("Focus blending is only needed when there is LGS. Changed.\n");
-		parms->sim.mffocus=0;
-	}
-
-	if(parms->sim.mffocus<0||parms->sim.mffocus>1){
-		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
-	}
-	if(parms->sim.fcfocus<0){
-		parms->sim.fcfocus=0.1/parms->sim.dtlo;
-	}
-	//sim.mffocus is only true if there is lgs wfs
 	parms->tomo.ahst_keepfocus=1;//default is keep focus
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(!isinf(parms->powfs[ipowfs].hs)){//LGS WFS only
-			if(parms->sim.mffocus){
-				if(!isinf(parms->sim.fcfocus)){//there is focus blending with finite frequency
-					if(parms->powfs[ipowfs].frs){
-						if(parms->powfs[ipowfs].frs==1){
-							dbg("powfs%d: sim.fcfocus!=inf requires frs=0; changed.\n", ipowfs);
-						}
-						parms->powfs[ipowfs].frs=0;
-					}
-				}else{
-					if(parms->powfs[ipowfs].frs==-1){
-						parms->powfs[ipowfs].frs=1;
-					}else if(!parms->powfs[ipowfs].frs){
-						dbg("powfs%d: sim.fcfocus=inf prefers frs=1 but is 0.\n", ipowfs);
-					}
-				}
-			}
-		}
 		if(parms->powfs[ipowfs].frs==-1){
 			parms->powfs[ipowfs].frs=0;
 		}
@@ -2598,15 +2561,13 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		powfs_cfg_t *powfsi=&parms->powfs[ipowfs];
 		if(powfsi->skip!=2){
-			if(powfsi->order>1 && !(isinf(parms->sim.fcfocus)&&parms->powfs[ipowfs].llt)){
+			if(powfsi->order>1 && !(parms->powfs[ipowfs].frs)){
 				npowfs_focus++;
 			}
 		}
 	}
 	if(!npowfs_focus) warning("There is no WFS providing focus.\n");
-	parms->sim.lpfocus=fc2lp(parms->sim.fcfocus, parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpbias=fc2lp(0.05, 1);
-	dbg("sim.mffocus=%d, sim.fcfocus=%g Hz, sim.lpfocus=%g\n", parms->sim.mffocus, parms->sim.fcfocus, parms->sim.lpfocus);
 }
 
 /**

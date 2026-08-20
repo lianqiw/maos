@@ -451,11 +451,11 @@ void setup_recon_update_cn2(recon_t* recon, const parms_t* parms){
 static void
 setup_recon_focus(recon_t* recon, const parms_t* parms){
 	if(parms->nlgspowfs){
-		if(parms->recon.split==2&&parms->sim.mffocus){//For MVST.
+		/*if(parms->recon.split==2&&parms->sim.mffocus){//For MVST.
 			dmat* GMGngs=NULL;
 			dcell* GMngs=dcellnew(1, parms->nwfs);
-			/*Compute focus reconstructor from NGS Grads. fuse grads
-			  together to construct a single focus measurement*/
+			//Compute focus reconstructor from NGS Grads. fuse grads
+			// together to construct a single focus measurement
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				int ipowfs=parms->wfs[iwfs].powfs;
 				if(parms->powfs[ipowfs].trs==0&&parms->powfs[ipowfs].order>1&&parms->powfs[ipowfs].skip!=2){
@@ -468,7 +468,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				dmm(&GMGngs, 1, P(recon->GFall,iwfs), P(GMngs,iwfs), "tn", 1);
 			}
 			dinvspd_inplace(GMGngs);
-			/*A focus reconstructor from all NGS measurements.*/
+			//A focus reconstructor from all NGS measurements.
 			recon->RFngsg=dcellnew(1, parms->nwfs);
 
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -481,7 +481,7 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 			if(parms->save.setup){
 				writebin(recon->RFngsg, "focus_RFngsg");
 			}
-		}
+		}*/
 		/*
 		  Compute focus constructor from LGS grads. A constructor for each LGS
 		  because each LGS may have different range error. Applyes to parms->wfs, not parms->wfs.

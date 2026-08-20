@@ -1610,7 +1610,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			/*generate short exposure i0,gx,gy from psf. */
 			{
 				if(parms->powfs[ipowfs].llt){
-					setup_shwfs_etf(powfs, parms, ipowfs, 0, parms->powfs[ipowfs].llt->colprep, 0, 0);
+					setup_shwfs_etf(powfs, parms, ipowfs, 0, parms->powfs[ipowfs].llt->colprep, 200, 0);
 				}
 				cccell** pfotf=(parms->powfs[ipowfs].phytype_sim==PTYPE_MAP
 					||(parms->dbg.wfslinearity!=-1&&parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs))?&intstat->fotf:0;
