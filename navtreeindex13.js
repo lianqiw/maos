@@ -1,8 +1,5 @@
 var NAVTREEINDEX13 =
 {
-"df/d69/cure_8h.html#ae208aa4b8be979db2b5d4c2cedf90cdd":[13,0,1,5,3],
-"df/d79/classcuda__wfs_1_1cushz__t.html":[12,0,0,8],
-"df/d99/evl_cir60.html":[4,4,13],
 "df/d9e/fov_cir30.html":[4,4,24],
 "df/da9/genotf_8h.html":[13,0,1,8],
 "df/da9/genotf_8h.html#a5e9b2c443f945528b67a1178b82b1b73":[13,0,1,8,1],
@@ -101,8 +98,8 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#a546c88ba8a0e1904479cc349aef10feb":[13,0,3,9,0,2],
 "df/def/type_8h.html#a58ccc96608ccd6c19e43e6378646ab27":[13,0,3,9,30,3],
 "df/def/type_8h.html#a59015595bbb69c836f38693da17f1bcd":[13,0,3,9,22,1],
-"df/def/type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb":[13,0,3,9,47,3],
 "df/def/type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb":[13,0,3,9,51,3],
+"df/def/type_8h.html#a59aeb2c9970b7b25be2fab2317e31fcb":[13,0,3,9,47,3],
 "df/def/type_8h.html#a5ac3666a5e38bde4f0002b18af9318ba":[13,0,3,9,9,3],
 "df/def/type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159":[13,0,3,9,11,1],
 "df/def/type_8h.html#a5dceb122d9a8fa9c6eb2bca4708e68f3":[13,0,3,9,33,2],
@@ -226,8 +223,8 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#ab6645abc1f12ec6029a73115852e9d77":[13,0,3,9,21,2],
 "df/def/type_8h.html#ab80f91d182878cd9a3d44ab7318e5ec0":[13,0,3,9,15,7],
 "df/def/type_8h.html#ab85aa7493e52bdda37813bcaf5359d30":[13,0,3,9,26,0],
-"df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61":[13,0,3,9,51,2],
 "df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61":[13,0,3,9,47,2],
+"df/def/type_8h.html#ab8a9f715dbb64fd5c56e7783c6820a61":[13,0,3,9,51,2],
 "df/def/type_8h.html#ab8fb79012784e8d786e4447268449151":[13,0,3,9,34,2],
 "df/def/type_8h.html#ab902b69f82f1894e2d3a37214d9f1ae6":[13,0,3,9,28,3],
 "df/def/type_8h.html#aba30b2965e029dafcdfb28b94b012b7f":[13,0,3,9,27,4],
@@ -249,5 +246,8 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#ac69053a6dad27c1bc6fba2fb34ff1be6":[13,0,3,9,25,3],
 "df/def/type_8h.html#ac6ae9ce4f2b13130d7a8bdc18517aa45":[13,0,3,9,36,1],
 "df/def/type_8h.html#ac7102cbe89e0f455deb13406499f348e":[13,0,3,9,10,3],
-"df/def/type_8h.html#ac88fed44e9f978c6757ec8dfcfb31589":[13,0,3,9,19,2]
+"df/def/type_8h.html#ac88fed44e9f978c6757ec8dfcfb31589":[13,0,3,9,19,2],
+"df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae":[13,0,3,9,15,6],
+"df/def/type_8h.html#acbe8165220bd56892c5b93106028926a":[13,0,3,9,28,5],
+"df/def/type_8h.html#acd7579d2c13ae676bbfba099ae78b35c":[13,0,3,9,19,3]
 };

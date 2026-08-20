@@ -1,7 +1,7 @@
 var sim__utils_8h =
 [
     [ "genatm", "d6/ddb/sim__utils_8h.html#a82672d602a95b40837f6226d00ec041c", null ],
-    [ "sim_update_etf", "d6/ddb/sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf", null ],
+    [ "sim_update_sodium", "d6/ddb/sim__utils_8h.html#a0c29cf407a4ebf069bea4077676e86d7", null ],
     [ "update_wfsflags", "d6/ddb/sim__utils_8h.html#af1e48383ae5fca23ceaaecaa20e40176", null ],
     [ "shift_grad", "d6/ddb/sim__utils_8h.html#af7b6fd38efb1954ea36cc7b9082b126b", null ],
     [ "seeding", "d6/ddb/sim__utils_8h.html#a6b1f1928d824e6686d78972835a22467", null ],

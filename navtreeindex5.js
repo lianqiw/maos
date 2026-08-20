@@ -1,8 +1,5 @@
 var NAVTREEINDEX5 =
 {
-"d4/d6c/structsmat.html#add8c1e7b9e24c5fc51757d73dc1afa0e":[12,0,167,0],
-"d4/d6c/structsmat.html#ae30354cac5ab0bdf5325dd8fe8155bd7":[12,0,167,6],
-"d4/d6c/structsmat.html#afcfc436a5cf203a9d4a1855b00ea1db4":[12,0,167,7],
 "d4/da9/wfs_lgs_hittf.html":[4,4,55],
 "d4/dca/stfun_8h.html":[13,0,1,30],
 "d4/dca/stfun_8h.html#a25760d56b9e232904dacb79b1446a4cb":[13,0,1,30,1],
@@ -154,7 +151,9 @@ var NAVTREEINDEX5 =
 "d6/d94/maos_2types_8h.html#a07aebe5c2c1195f58a0e78eee4fd261f":[13,0,2,27,10,57],
 "d6/d94/maos_2types_8h.html#a08c9c987ce7084933a258a2074bad68b":[13,0,2,27,1,0],
 "d6/d94/maos_2types_8h.html#a09223260279db84244f135f0a65f3dff":[13,0,2,27,9,3],
+"d6/d94/maos_2types_8h.html#a0a686f9335844454e471c69fc3411af5":[13,0,2,27,15,77],
 "d6/d94/maos_2types_8h.html#a0aa9216ac153cc4cb6d3a566025766a5":[13,0,2,27,15,155],
+"d6/d94/maos_2types_8h.html#a0b6dbfe39eac1bbc17058cc278995979":[13,0,2,27,15,76],
 "d6/d94/maos_2types_8h.html#a0b95db9b881d7db77b043a9f750a247f":[13,0,2,27,3,18],
 "d6/d94/maos_2types_8h.html#a0bf9e87fb2b7e2329747d5e2a9c264e6":[13,0,2,27,10,94],
 "d6/d94/maos_2types_8h.html#a0c2374807453947d95ba95153812390e":[13,0,2,27,4,1],
@@ -244,10 +243,11 @@ var NAVTREEINDEX5 =
 "d6/d94/maos_2types_8h.html#a3743817757bab872b4a6dd9d66a55129":[13,0,2,27,15,75],
 "d6/d94/maos_2types_8h.html#a3797e182e48042be558ef3dc637e0f3e":[13,0,2,27,11,2],
 "d6/d94/maos_2types_8h.html#a38b3737619743afd44673717a64b8548":[13,0,2,27,3,29],
-"d6/d94/maos_2types_8h.html#a391a465f5eb4c2f57ba4694a4c40a52f":[13,0,2,27,15,88],
 "d6/d94/maos_2types_8h.html#a3950c9b64ed7db171ce5377c64e34503":[13,0,2,27,15,139],
 "d6/d94/maos_2types_8h.html#a3ae7b8fc8e71e9e2caf9378614888191":[13,0,2,27,3,23],
 "d6/d94/maos_2types_8h.html#a3b2829bb4b42b5a114766ce29f1ed83c":[13,0,2,27,1,4],
 "d6/d94/maos_2types_8h.html#a3ba3b15c2b64a4d07a27845cbabbe70a":[13,0,2,27,15,91],
-"d6/d94/maos_2types_8h.html#a3d4fdf12b64858d355758ddd5d86553c":[13,0,2,27,15,132]
+"d6/d94/maos_2types_8h.html#a3d4fdf12b64858d355758ddd5d86553c":[13,0,2,27,15,132],
+"d6/d94/maos_2types_8h.html#a3d6c472c3ad0aa01ac1544e131d5ae00":[13,0,2,27,15,22],
+"d6/d94/maos_2types_8h.html#a3e411085201b1eb19aebd338801f1a75":[13,0,2,27,10,95]
 };

@@ -165,7 +165,7 @@ var searchData=
   ['shwfs_5fgrad_162',['shwfs_grad',['../d1/d57/maos_2utils_8h.html#a6790b30ef72abe52665bcc6c6a850402',1,'utils.c']]],
   ['sim_5ffree_163',['sim_free',['../d6/ddb/sim__utils_8h.html#a012381767867ba63164a283b16b1b62e',1,'sim_utils.c']]],
   ['sim_5finit_164',['sim_init',['../d6/ddb/sim__utils_8h.html#ae1341adba3f2490ababa1dd0554773d6',1,'sim_utils.c']]],
-  ['sim_5fupdate_5fetf_165',['sim_update_etf',['../d6/ddb/sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf',1,'sim_utils.c']]],
+  ['sim_5fupdate_5fsodium_165',['sim_update_sodium',['../d6/ddb/sim__utils_8h.html#a0c29cf407a4ebf069bea4077676e86d7',1,'sim_utils.c']]],
   ['simcc_166',['simcc',['../de/de7/smath_8h.html#a3ed6e4899de10fd75169248ba67b8b5c',1,'stmp.c']]],
   ['single_5finstance_5fdaemonize_167',['single_instance_daemonize',['../df/d59/daemonize_8h.html#a11717d53b875bab717d53dc7c280b1af',1,'daemonize.c']]],
   ['sinit_168',['sinit',['../de/de7/smath_8h.html#aa6fa0b5c2f20bcf9a20b2f45f619db2e',1,'stmp.c']]],

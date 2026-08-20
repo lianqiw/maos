@@ -226,7 +226,7 @@ var searchData=
   ['sim_5finit_223',['sim_init',['../d6/ddb/sim__utils_8h.html#ae1341adba3f2490ababa1dd0554773d6',1,'sim_utils.c']]],
   ['sim_5fsave_5ft_224',['sim_save_t',['../d6/d94/maos_2types_8h.html#d1/d15/structsim__save__t',1,'']]],
   ['sim_5ft_225',['sim_t',['../d6/d94/maos_2types_8h.html#d1/da4/structsim__t',1,'']]],
-  ['sim_5fupdate_5fetf_226',['sim_update_etf',['../d6/ddb/sim__utils_8h.html#ad8735860632183309e1afb0f4dd020cf',1,'sim_utils.c']]],
+  ['sim_5fupdate_5fsodium_226',['sim_update_sodium',['../d6/ddb/sim__utils_8h.html#a0c29cf407a4ebf069bea4077676e86d7',1,'sim_utils.c']]],
   ['sim_5futils_2eh_227',['sim_utils.h',['../d6/ddb/sim__utils_8h.html',1,'']]],
   ['simcc_228',['simcc',['../de/de7/smath_8h.html#a3ed6e4899de10fd75169248ba67b8b5c',1,'stmp.c']]],
   ['simulation_229',['Sky coverage post processing simulation',['../d5/d4c/skycoverage.html#postsim',1,'']]],
