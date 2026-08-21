@@ -2882,7 +2882,7 @@ static void setup_parms_postproc_dirs(parms_t *parms){
 */
 static void setup_parms_postproc_atm_size(parms_t *parms){
 	const int nps=parms->atm.nps;
-	int Nmax=0;
+	int Nmax=ceil(P(parms->atm.L0, 0)*2/parms->atm.dx);//default to 2*L0 to capture enough low resolution
 	long nxout[nps],nyout[nps];
 	parms->atm.nxn=lnew(nps,1);
 	for(int ips=0; ips<nps; ips++){
@@ -2901,8 +2901,11 @@ static void setup_parms_postproc_atm_size(parms_t *parms){
 	} else{/*user specified.*/
 		parms->atm.nx=2*(int)round(0.5*P(parms->atm.size,0)/parms->atm.dx);
 		parms->atm.ny=2*(int)round(0.5*P(parms->atm.size,1)/parms->atm.dx);
-		if(parms->atm.nx<Nmax) parms->atm.nx=Nmax;
-		if(parms->atm.ny<Nmax) parms->atm.ny=Nmax;
+		if(parms->atm.nx<Nmax || parms->atm.nx<Nmax) {
+			//Do not silently increase the atmospheric size to avoid changing open loop error between configurations.
+			error("Atmospheric size is too small. Please increase from %gx%g to %gx%g m.\n",
+				P(parms->atm.size, 0), P(parms->atm.size, 1), Nmax*parms->atm.dx, Nmax*parms->atm.dx);
+		}
 	}
 	if(parms->atm.method==1){/*must be square and 1+power of 2 */
 		int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
@@ -2910,16 +2913,12 @@ static void setup_parms_postproc_atm_size(parms_t *parms){
 		parms->atm.ny=parms->atm.nx;
 	}
 	/*record the size of the atmosphere. */
-	real atm_size_x=P(parms->atm.size,0);
-	real atm_size_y=P(parms->atm.size,1);
 	P(parms->atm.size,0)=parms->atm.nx*parms->atm.dx;
 	P(parms->atm.size,1)=parms->atm.ny*parms->atm.dx;
-	if(P(parms->atm.size,0)>atm_size_x||P(parms->atm.size,1)>atm_size_y){
-		info("Atmospheric size is increased from (%g, %g) to (%g, %g) m.\n",
-			atm_size_x,atm_size_y,P(parms->atm.size,0),P(parms->atm.size,1));
-	}
 	if(P(parms->atm.L0,0)>P(parms->atm.size,0)){
-		info("Atmospheric size is smaller than outer scale.\n");
+		warning("Atmospheric size %gx%g m is smaller than outer scale of %gm.\n", 
+			P(parms->atm.size,0),P(parms->atm.size,1), P(parms->atm.L0,0)
+		);
 	}
 	/*for screen evolving. */
 	parms->atm.overx=lnew(parms->atm.nps,1);
