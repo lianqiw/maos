@@ -422,7 +422,6 @@ var maos_2types_8h =
       [ "LGSfocus", "d6/d94/maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95", null ],
       [ "LGSfocus_drift", "d6/d94/maos_2types_8h.html#a439831c6667df780fbfba6d4b18a7b2d", null ],
       [ "LGSfocusts", "d6/d94/maos_2types_8h.html#acfa489411f06aa49cd5ebbdc8b082c04", null ],
-      [ "lgsfocuslpf", "d6/d94/maos_2types_8h.html#ac7280331f2805e1438cdbf11256e3ef9", null ],
       [ "zoomdrift", "d6/d94/maos_2types_8h.html#a7ba232fc197eb33ed4103b54edf2fe30", null ],
       [ "zoomint", "d6/d94/maos_2types_8h.html#a62609fa0dbe51b15b2964f8cee5ab92a", null ],
       [ "zoomprev", "d6/d94/maos_2types_8h.html#a904acb04c9389d9f88a464768c226266", null ],

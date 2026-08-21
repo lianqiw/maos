@@ -1,9 +1,5 @@
 var NAVTREEINDEX13 =
 {
-"df/d69/cure_8h.html#ac66e57085269aa6a0ba7526c40a11060":[13,0,1,5,0],
-"df/d69/cure_8h.html#ae208aa4b8be979db2b5d4c2cedf90cdd":[13,0,1,5,3],
-"df/d79/classcuda__wfs_1_1cushz__t.html":[12,0,0,8],
-"df/d99/evl_cir60.html":[4,4,13],
 "df/d9e/fov_cir30.html":[4,4,24],
 "df/da9/genotf_8h.html":[13,0,1,8],
 "df/da9/genotf_8h.html#a5e9b2c443f945528b67a1178b82b1b73":[13,0,1,8,1],
@@ -249,5 +245,9 @@ var NAVTREEINDEX13 =
 "df/def/type_8h.html#ac618331c31838a444819a8a2578c88ad":[13,0,3,9,8,2],
 "df/def/type_8h.html#ac69053a6dad27c1bc6fba2fb34ff1be6":[13,0,3,9,25,3],
 "df/def/type_8h.html#ac6ae9ce4f2b13130d7a8bdc18517aa45":[13,0,3,9,36,1],
-"df/def/type_8h.html#ac7102cbe89e0f455deb13406499f348e":[13,0,3,9,10,3]
+"df/def/type_8h.html#ac7102cbe89e0f455deb13406499f348e":[13,0,3,9,10,3],
+"df/def/type_8h.html#ac88fed44e9f978c6757ec8dfcfb31589":[13,0,3,9,19,2],
+"df/def/type_8h.html#aca42afbecc1435f923dd21a55378afae":[13,0,3,9,15,6],
+"df/def/type_8h.html#acbe8165220bd56892c5b93106028926a":[13,0,3,9,28,5],
+"df/def/type_8h.html#acd7579d2c13ae676bbfba099ae78b35c":[13,0,3,9,19,3]
 };
