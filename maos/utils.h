@@ -36,7 +36,7 @@ void maxapriori(real *g, const dmat *ints, const parms_t *parms,
 		real bkgrnd, real rne);
 void wfslinearity(const parms_t *parms, powfs_t *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const parms_t *parms, powfs_t *powfs, recon_t *recon, const int iwfs);
-real zoomfocusadj(sim_t *simu, int iwfs);
+real wfsfocusadj(sim_t *simu, int iwfs);
 void shwfs_grad(dmat **pgrad, dmat *ints[], const parms_t *parms, const powfs_t *powfs, int iwfs, int phytype);
 dcell *readwfs(const char *file, const parms_t *parms, int ipowfs);
 

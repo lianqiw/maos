@@ -585,10 +585,9 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 }
 
 /**
-   Compute the focus adjustment caused by mismatch between the sodium profile range and trombone
-   Used in both CPU and GPU code. Notice that this focus is centered on the LLT.
+   Apply the focus adjustment caused sodium profile range variation
 */
-real zoomfocusadj(sim_t* simu, int iwfs){
+real wfsfocusadj(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
@@ -599,9 +598,8 @@ real zoomfocusadj(sim_t* simu, int iwfs){
 		if(powfs[ipowfs].focus){//input focus error due to range variation
 			long ix=isim%NX(powfs[ipowfs].focus);
 			long iy=wfsind%NY(powfs[ipowfs].focus);
-			focus+=P(powfs[ipowfs].focus, ix, iy);
+			focus=P(powfs[ipowfs].focus, ix, iy);
 		}
-		focus-=P(simu->zoomint, iwfs);
 	}
 	return focus;
 }

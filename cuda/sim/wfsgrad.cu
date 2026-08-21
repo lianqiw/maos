@@ -597,12 +597,10 @@ void *gpu_wfsgrad_queue(thread_t* info){
 				}
 			}
 			if(parms->powfs[ipowfs].llt){
-				Real focus=(Real)zoomfocusadj(simu, iwfs);
+				Real focus=(Real)wfsfocusadj(simu, iwfs);
 				if(fabs(focus)>1e-20){
-					const Real ox=PR(parms->powfs[ipowfs].llt->ox, wfsind);
-					const Real oy=PR(parms->powfs[ipowfs].llt->oy, wfsind);
 					const int nloc=cupowfs[ipowfs].loc.Nloc();
-					add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus, ox, oy);
+					add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus, 0, 0);
 				}
 			}
 			if(cupowfs[ipowfs].fieldstop){

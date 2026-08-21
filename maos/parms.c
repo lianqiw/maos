@@ -2498,7 +2498,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 			error("\n\n\nFor mixed dtrat cases, please use split tomography by setting recon.split=1\n\n\n");
 		}
 	}
-	if(parms->sim.mffocus<=0){
+	if(parms->sim.mffocus<0){
 		parms->sim.mffocus=(parms->nlgspowfs)?1:0;
 		if(parms->sim.mffocus){
 			dbg("parms->sim.mffocus=%d is automatically set when there is LGS.\n", parms->sim.mffocus);
@@ -2508,7 +2508,7 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		parms->sim.mffocus=0;
 	}
 
-	if(parms->sim.mffocus<0||parms->sim.mffocus>2){
+	if(parms->sim.mffocus<0||parms->sim.mffocus>1){
 		error("parms->sim.mffocus=%d is invalid\n",parms->sim.mffocus);
 	}
 	if(parms->sim.fcfocus<0){
@@ -2604,9 +2604,9 @@ static void setup_parms_postproc_wfs(parms_t *parms){
 		}
 	}
 	if(!npowfs_focus) warning("There is no WFS providing focus.\n");
-	parms->sim.lpfocus=fc2lp(parms->sim.fcfocus,parms->sim.dthi);//active only when wfs has output.
+	parms->sim.lpfocus=fc2lp(parms->sim.fcfocus, parms->sim.dthi);//active only when wfs has output.
 	parms->sim.lpbias=fc2lp(0.05, 1);
-	dbg("sim.mffocus=%d, sim.lpfocus=%g\n", parms->sim.mffocus, parms->sim.lpfocus);
+	dbg("sim.mffocus=%d, sim.fcfocus=%g Hz, sim.lpfocus=%g\n", parms->sim.mffocus, parms->sim.fcfocus, parms->sim.lpfocus);
 }
 
 /**

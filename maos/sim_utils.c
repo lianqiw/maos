@@ -242,24 +242,41 @@ void genatm(sim_t* simu){
 	}
 }
 
-/*
-	Update trombone position. 
-	The fast sodium range is simulated with powfs.focus as a wavefront error
-	The trombone response is simulated with a focus wavefront error first. 
-	The ETF is then updated so that the difference between the two above is slowly removed.
-	This hybrid implementation ensure zero long term focus in both wavefront and in i0 (gradients)
+/**
+   Evolving the Sodium layer by updating the elongation transfer function. 
+   
+   The trombone position is also updated.
 */
-void sim_update_zoom(sim_t* simu){
+void sim_update_sodium(sim_t* simu){
+	const int isim=simu->wfsisim;
 	const parms_t* parms=simu->parms;
+	powfs_t* powfs=simu->powfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(!parms->powfs[ipowfs].llt || parms->powfs[ipowfs].zoomdtrat==0) continue;
-		const int isim=simu->wfsisim;
-		const int zoom_update=(parms->powfs[ipowfs].zoomdtrat>0&&isim%parms->powfs[ipowfs].zoomdtrat==0);
-		//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
+		//Needs ETF for imaging
+		const int has_phy=parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout;
+		if(!parms->powfs[ipowfs].llt || !has_phy) continue;
+		//Time for sodium profile update
+		const int na_update=parms->powfs[ipowfs].llt->coldtrat>0&&(isim)%parms->powfs[ipowfs].llt->coldtrat==0;
+		//Time for trombone position update
+		const int zoom_update=parms->sim.mffocus && (parms->powfs[ipowfs].zoomdtrat>0&&(isim)%parms->powfs[ipowfs].zoomdtrat==0);
+		//f2ht converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
 		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
+		const real f2ht=-2*pow(parms->powfs[ipowfs].hs, 2);
+		const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+		real deltah1=0, deltah2=0;
+		int icol=0, icol2=0;
+		if(na_update){
+			const int colsim=parms->powfs[ipowfs].llt->colsim;
+			if(parms->powfs[ipowfs].llt->coldtrat>0){
+				icol=colsim+isim/parms->powfs[ipowfs].llt->coldtrat;
+				icol2=icol+1;
+			}else{
+				icol=colsim;
+				icol2=colsim;
+			}
+		}
 		if(zoom_update){
 			if(parms->powfs[ipowfs].zoomshare){
-				const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
 				if(P(simu->zoomavg_count, iwfs0)){//gradient based	
 					average_powfs(simu->zoomavg, parms->powfs[ipowfs].wfs, 1);
 				}
@@ -269,12 +286,10 @@ void sim_update_zoom(sim_t* simu){
 			}
 			if(parms->plot.run && simu->zoompos){
 				draw("Res", (plot_opts){.dc=simu->zoompos, .always=1, .maxlen=isim}, 
-				"LGS Trombone Position", "Time Step", "Focus (m)", "%s", "Trombone");
+				"LGS Trombone Position", "Time Step", "Offset (m)", "%s", "Trombone");
 			}
-		}
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			if(zoom_update){
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
 				real zoomerr1=0, zoomerr2=0;
 				if(P(simu->zoomavg_count, iwfs)){//gradient based
 					zoomerr1=P(simu->zoomavg, iwfs)/P(simu->zoomavg_count, iwfs);
@@ -288,75 +303,38 @@ void sim_update_zoom(sim_t* simu){
 				}
 				real zoomerr=(parms->powfs[ipowfs].zoomgain*zoomerr1
 					+parms->powfs[ipowfs].zoomgain_drift*zoomerr2);
-				P(simu->zoomerr, iwfs)=zoomerr/parms->powfs[ipowfs].zoomdtrat;//ZOH with reduced strength
+				//2026-08-19: Switch to run integrator when the averager has output instead of using ZOH
+				//Reason is trombone itself has a smoothing function already by interpolating deltah1 and deltah2
+				P(simu->zoomprev, iwfs)=P(simu->zoomint, iwfs);//save old zoom location
+				P(simu->zoomint, iwfs)+=zoomerr;
 			}
-			//update zoom integrator at every step for smooth transition
-			P(simu->zoomint, iwfs)+=P(simu->zoomerr, iwfs);
-			if(simu->zoompos&&simu->zoompos_icol<PN(simu->zoompos, iwfs)){
-				P(P(simu->zoompos, iwfs), simu->zoompos_icol)=P(simu->zoomint, iwfs);
+			if(parms->powfs[ipowfs].zoomshare){
+				deltah1=P(simu->zoomprev, iwfs0)*f2ht;//old zoom location
+				deltah2=P(simu->zoomint , iwfs0)*f2ht;
+			}else{
+				error("Update setup_shwfs_etf to handle non-shared zoom per LGS.\n");
 			}
 		}
-		simu->zoompos_icol++;
-	}
-}
-/**
-   Evolving the Sodium layer by updating the elongation transfer function.
-*/
-void sim_update_etf(sim_t* simu){
-	const int isim=simu->wfsisim;
-	const parms_t* parms=simu->parms;
-	powfs_t* powfs=simu->powfs;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		//Needs ETF for imaging
-		const int has_phy=parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout;
-		if(!parms->powfs[ipowfs].llt || !has_phy) continue;
-		//Time for sodium profile update
-		const int na_update=parms->powfs[ipowfs].llt->coldtrat>0&&isim%parms->powfs[ipowfs].llt->coldtrat==0;
-		//Time for trombone position update
-		const int zoom_update=(parms->powfs[ipowfs].zoomdtrat>0&&isim%parms->powfs[ipowfs].zoomdtrat==0);
-		//factor converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
-		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
-		const real factor=-2*pow(parms->powfs[ipowfs].hs, 2);
-		real deltah1=0, deltah2=0;
 		if(na_update || zoom_update){
-			int icol=0, icol2=0;
-			const int colsim=parms->powfs[ipowfs].llt->colsim;
-			if(parms->powfs[ipowfs].llt->coldtrat>0){
-				icol=colsim+isim/parms->powfs[ipowfs].llt->coldtrat;
-				icol2=icol+1;
-			}else{
-				icol=colsim;
-				icol2=colsim;
-			}
-			if(zoom_update){
-				const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
-				if(!parms->powfs[ipowfs].zoomshare){
-					error("Update setup_shwfs_etf to handle non-shared zoom per LGS.\n");
-				}
-				//We drive the trombone so that focus error modeled in the wavefront is minimized
-				//sodium profile variation is corrected with zoomint (in wavefront space)
-				//focus error due to i0 offset is corrected with ETF (in i0 space)
-				real focusadj=0;
-				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-					focusadj+=zoomfocusadj(simu, iwfs);
-				}
-				focusadj/=parms->powfs[ipowfs].nwfs;
-				deltah1=P(simu->zoomprev, iwfs0);//old zoom location
-				deltah2=deltah1-0.2*factor*focusadj;
-				P(simu->zoomprev, iwfs0)=deltah2;//save as old result for next step
-			}
 			setup_shwfs_etf(powfs, parms, ipowfs, 1, icol, deltah1, 0);
 			if(icol2!=icol || deltah1!=deltah2){
 				setup_shwfs_etf(powfs, parms, ipowfs, 2, icol2, deltah2, 0);
 			}
-#if USE_CUDA
+	#if USE_CUDA
 			if(parms->gpu.wfs){
 				gpu_wfsgrad_update_etf(parms, powfs, ipowfs);
 			}
-#endif
+	#endif
 		}
-	}
+		if(parms->sim.mffocus && parms->powfs[ipowfs].zoomdtrat>0 && simu->zoompos){
+			real finterp=(real)((isim)%parms->powfs[ipowfs].zoomdtrat)/(real)parms->powfs[ipowfs].zoomdtrat;
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				P(P(simu->zoompos, iwfs), simu->zoompos_icol)=((1.-finterp)*P(simu->zoomprev, iwfs)+finterp*P(simu->zoomint, iwfs))*f2ht;
+			}
+			simu->zoompos_icol++;
+		}
+	}//for ipowfs
 }
 /**
  * Update flags
@@ -1084,7 +1062,6 @@ static void init_simu_wfs(sim_t* simu){
 		simu->zoomdrift=dnew(parms->nwfs, 1);
 		simu->zoomdrift_count=lnew(parms->nwfs, 1);
 		simu->zoomint=dnew(parms->nwfs, 1);
-		simu->zoomerr=dnew(parms->nwfs, 1);
 		simu->zoomprev=dnew(parms->nwfs, 1);
 		simu->zoomavg=dnew(parms->nwfs, 1);
 		simu->zoomavg_count=lnew(parms->nwfs, 1);
@@ -1110,7 +1087,9 @@ static void init_simu_wfs(sim_t* simu){
 				nny2[iwfs]=0;
 			}
 		}
-		simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, "LGS Trombone position", "%s/Reszoompos_%d.bin", fnextra, seed);
+		if(parms->sim.mffocus){
+			simu->zoompos=dcellnew_file(parms->nwfs, 1, nnx, nny, "LGS Trombone position", "%s/Reszoompos_%d.bin", fnextra, seed);
+		}
 		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx2, nny2, "LGS focus time history", "%s/Resfocuserrs_%d.bin", fnextra, seed);
 	}
 	if(parms->dither){
@@ -1616,6 +1595,7 @@ void sim_free(sim_t* simu){
 	dcellfree(simu->Mtmp_lo);
 	dcellfree(simu->Mbias);
 	dcellfree(simu->Mngs_hi);
+	dcellfree(simu->Mngs_hi_acc);
 	dcellfree(simu->dmerrts);
 	cellfree(simu->Merrts);
 	dcellfree(simu->gcov);
@@ -1652,7 +1632,6 @@ void sim_free(sim_t* simu){
 	dfree(simu->zoomavg);
 	lfree(simu->zoomavg_count);
 	dfree(simu->zoomint);
-	dfree(simu->zoomerr);
 	dfree(simu->zoomprev);
 	if(parms->evl.split){
 		dcellfree(simu->clemp);

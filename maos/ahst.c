@@ -799,6 +799,8 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 		dcellzero(simu->Mngs_hi);
 		dcellmm(&simu->Mngs_hi, ngsmod->Pngs, dmerr, "nn", 1);
 		if(ngsmod->Mbias){
+			dcelladd(&simu->Mngs_hi_acc, 1, simu->Mngs_hi, 1);
+			simu->Mngs_hi_nacc++;
 			for(int imod=0; imod<ngsmod->nmod; imod++){
 				if(!P(ngsmod->Mbias, imod)){
 					P(P(simu->Mbias, 0), imod)=P(P(simu->Mngs_hi, 0),imod);//remove LGS result

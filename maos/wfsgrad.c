@@ -220,11 +220,9 @@ void* wfsgrad_iwfs(thread_t* info){
 			}
 		}
 		if(parms->powfs[ipowfs].llt){
-			real focus=zoomfocusadj(simu, iwfs);
+			real focus=wfsfocusadj(simu, iwfs);
 			if(fabs(focus)>1e-20){
-				loc_add_focus_offset(opd, powfs[ipowfs].loc, focus, 
-					PR(parms->powfs[ipowfs].llt->ox, wfsind), 
-					PR(parms->powfs[ipowfs].llt->oy, wfsind));
+				loc_add_focus(opd, powfs[ipowfs].loc, focus);
 			}
 		}
 		/* Add surface error*/
@@ -522,9 +520,7 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
    which NGS cannot provide due to low frame rate. After the HPF on lgs
    gradients, our system is NO LONGER affected by sodium layer variation.
 
-   if sim.mffocus==1: The HPF is applied to each LGS WFS independently. The remaining differential focus is negligible.
-
-   if sim.mffocus==2: The focus measurement of all LGS is replaced by LGS averaged and HPFed focus.
+   if sim.mffocus is set: The HPF is applied to each LGS WFS. 
 */
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -537,40 +533,23 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			||isim<parms->powfs[ipowfs].step){
 			continue;
 		}
-		real lgsfocusm=0;//LGS averaged focus
-		if(parms->sim.mffocus>1){
-			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-				lgsfocusm+=P(P(LGSfocus, iwfs), 0);
-			}
-			lgsfocusm/=parms->powfs[ipowfs].nwfs;
-		}
-
-		/*Here we set trombone position according to focus in the first
-		  measurement. And adjust the focus content of this
-		  measurement. This simulates the initial focus acquisition
-		  step. No need if start with pre-built matched filter.*/
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-			P(P(simu->LGSfocusts, iwfs), 0, isim)=P(P(LGSfocus, iwfs), 0);//save time history
-			if(parms->powfs[ipowfs].zoomgain){
-				//Trombone from gradients. always enable
-				P(simu->zoomavg, iwfs)+=P(P(LGSfocus, iwfs), 0);//zoom averager
-				P(simu->zoomavg_count, iwfs)++;
-			}
+			real focus=P(P(LGSfocus, iwfs), 0);
+			P(P(simu->LGSfocusts, iwfs), 0, isim)=focus;//save time history
 			if(parms->sim.mffocus){
-				real focus=0;
-				if(parms->sim.mffocus==1){//Focus HPF of each LGS
-					focus=P(P(LGSfocus, iwfs), 0);
-				}else{//replace with global focus measurement and take HPF
-					focus=lgsfocusm;
-					dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), lgsfocusm-P(P(LGSfocus, iwfs), 0));
-				}
 				info_once("HPF LGS focus in gradcl\n");
 				//LPF can be after using the value to put it off critical path of the RTC.
-				real lpfocus=parms->sim.lpfocus;
-				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1-lpfocus)+focus*lpfocus;
+				const real lpfocus=parms->sim.lpfocus;
+				P(simu->lgsfocuslpf, iwfs)=P(simu->lgsfocuslpf, iwfs)*(1.-lpfocus)+focus*lpfocus;
+				//info("focus=%g, lpfocus=%g\n", focus, P(simu->lgsfocuslpf, iwfs));
 				dadd(&P(simu->gradcl, iwfs), 1, P(recon->GFall, iwfs), -P(simu->lgsfocuslpf, iwfs));
+				focus=P(simu->lgsfocuslpf, iwfs);
+				if(parms->powfs[ipowfs].zoomgain){
+					//Trombone uses LPF'ed LGS gradients. Disabled if sim.mffocus is not set
+					P(simu->zoomavg, iwfs)+=focus;//zoom averager
+					P(simu->zoomavg_count, iwfs)++;
+				}
 			}
 		}//for jwfs
 	}//for ipowfs

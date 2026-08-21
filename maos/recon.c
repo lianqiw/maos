@@ -171,9 +171,9 @@ static void recon_split_lo(sim_t* simu){
 				if(!enRngs[iRngs]) continue;
 				dcell** merr;//reconstruction output
 				if(iRngs==1 || (iRngs==0 && enRngs[1]==0)){//faster loop or common rate
-					merr=&simu->Merr_lo; //output to error signal
+					merr=&simu->Merr_lo; //output to error signal if a single loop or fast loop
 				}else{
-					merr=&simu->Mtmp_lo; //output to separate array to handle LPF or TWFS
+					merr=&simu->Mtmp_lo; //output to temporary for blending with fast loop
 					dcellzero(*merr);
 				}
 				dcellmm(merr, P(ngsmod->Rngs,iRngs), simu->gradlastcl, "nn", 1);
@@ -199,15 +199,18 @@ static void recon_split_lo(sim_t* simu){
 					}
 				}
 			}
-			if(ngsmod->Mbias && simu->Mngs_hi){
+			if(ngsmod->Mbias && simu->Mngs_hi_nacc){
 				const real g=parms->sim.lpbias;
+				dcellscale(simu->Mngs_hi_acc, 1./simu->Mngs_hi_nacc);
 				for(int imod=0; imod<ngsmod->nmod; imod++){
 					if(P(ngsmod->Mbias, imod)){
-						real bias=P(P(simu->Mngs_hi, 0), imod)-P(P(simu->Merr_lo, 0), imod);
+						real bias=P(P(simu->Mngs_hi_acc, 0), imod)-P(P(simu->Merr_lo, 0), imod);
 						P(P(simu->Mbias, 0), imod)=(1.-g)*P(P(simu->Mbias, 0), imod)+g*bias;
 						P(P(simu->Merr_lo, 0), imod)=0;//do not feed integrator
 					}
 				}
+				dcellzero(simu->Mngs_hi_acc);
+				simu->Mngs_hi_nacc=0;
 				//dshow(P(simu->Mbias, 0),   "Mbias");
 			}
 		}//else: there is ideal NGS correction done in perfevl. 

@@ -612,6 +612,8 @@ typedef struct sim_t{
     dcell *Merr_bias;   /**<NGS mode bias determined from LPF*(Fast_NGS-Slow_NGS)*/
 	dcell *Mtmp_lo;   /**<Temporary: NGS mode in DM commands*/
     dcell *Mngs_hi;    /**<NGS mode content in dmerr*/
+    dcell *Mngs_hi_acc;/**<Accumulate Mngs_hi*/
+    long   Mngs_hi_nacc;/**<Number of accumulation*/
     dcell *Mbias;      /**<NGS mode bias determined from LPF*(LGS-NGS)*/
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
@@ -627,10 +629,8 @@ typedef struct sim_t{
     dcell *LGSfocus_drift;  /**<LGS focus drift error*/
     dcell *LGSfocusts; /**<Time history of focus error*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
-    //dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomdrift; /**<Trombone error signal from i0/ib drift control*/
     lmat *zoomdrift_count;
-	dmat *zoomerr;    /**<Trombone error signal, LOH to smooth out the transition*/
     dmat *zoomint;    /**<Trombone integrator*/
 	dmat *zoomprev;	  /**<Previous trombone position (in height). */
     dmat *zoomavg;    /**<Trombone averager from gradients*/
