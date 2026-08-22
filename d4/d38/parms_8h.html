@@ -2787,7 +2787,7 @@ ahst_idealngs</td>
 <td class="fieldname">
 ahst_focus</td>
 <td class="fielddoc">
-<p>1: Make magnification mode free of focus in science </p>
+<p>1: Make magnification mode free of focus in science (only effective when sim.mffocus=1 </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a34f66baa853ccf6852aed655564e1f36" name="a34f66baa853ccf6852aed655564e1f36"></a>int</td>
@@ -3615,6 +3615,13 @@ fcttm</td>
 <p>cross over frequency of tip/tilt split. 0 to disable ttm. </p>
 </td></tr>
 <tr><td class="fieldtype">
+<a id="af89b05e322912b2be93a7e2cb870dd04" name="af89b05e322912b2be93a7e2cb870dd04"></a>real</td>
+<td class="fieldname">
+fcfocus</td>
+<td class="fielddoc">
+<p>cross-over frequency of the focus LPF. </p>
+</td></tr>
+<tr><td class="fieldtype">
 <a id="a02fd9af1c45be163127f3d5083780798" name="a02fd9af1c45be163127f3d5083780798"></a>real</td>
 <td class="fieldname">
 fov</td>
@@ -3640,6 +3647,17 @@ focus2tel</td>
 <td class="fieldname">
 epfocus2tel</td>
 <td class="fielddoc">
+</td></tr>
+<tr><td class="fieldtype">
+<a id="ac03c72da51af407d0395a8604fe072a2" name="ac03c72da51af407d0395a8604fe072a2"></a>int</td>
+<td class="fieldname">
+mffocus</td>
+<td class="fielddoc">
+<p>method for focus blending between LGS and LO NGS</p><ul>
+<li>0: no focus blending.</li>
+<li>1: Focus blending using CL gradients, for each LGS independently.</li>
+<li>2: Focus blending using CL gradinets, for common LGS focus only (not preferred). </li>
+</ul>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="ad5674c2b4206a5d1d8bf1eb9b800fb23" name="ad5674c2b4206a5d1d8bf1eb9b800fb23"></a>int</td>
@@ -3780,6 +3798,13 @@ noisy_hi</td>
 noisy_lo</td>
 <td class="fielddoc">
 <p>whether low order WFS is noisy </p>
+</td></tr>
+<tr><td class="fieldtype">
+<a id="aaf28d18a4938d270362d346c638ac5ed" name="aaf28d18a4938d270362d346c638ac5ed"></a>real</td>
+<td class="fieldname">
+lpfocus</td>
+<td class="fielddoc">
+<p>derived: lpfocus=2*pi*fc*sim.dthi </p>
 </td></tr>
 <tr><td class="fieldtype">
 <a id="a1c053a7ba515103b4b3d586262cc2586" name="a1c053a7ba515103b4b3d586262cc2586"></a>real</td>
