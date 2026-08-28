@@ -139,7 +139,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
               jobRef.current[job]['layout'][fig]={};
             }
             if(!jobRef.current[job]['layout'][fig][name]){
-              jobRef.current[job]['layout'][fig][name]={autosize: true, margin: {t:40, b:40, l:50, r:20}, uirevision: Math.random(), title:{}, xaxis:{}, yaxis:{}}
+              jobRef.current[job]['layout'][fig][name]={autosize: true, margin: {t:40, b:40, l:50, r:20}, uirevision: Math.random(), title:{}, xaxis:{autorange: true}, yaxis:{autorange: true}}
             }
           } catch (err) {
             console.log(now(),{ err, drawData, jobRef, job });
@@ -177,7 +177,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
     };
     try{
       chart.on('plotly_relayout', handleRelayout);
-      console.log(now(), 'registered handlerRelayout');
+      //console.log(now(), 'registered handlerRelayout');
       return () => {
         chart.removeListener('plotly_relayout', handleRelayout);
       };

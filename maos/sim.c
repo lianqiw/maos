@@ -89,7 +89,6 @@ sim_t* maos_iseed(int iseed){
 	Prepare before each isim
 */
 void prepare_isim(sim_t *simu){
-	int isim=simu->perfisim;
 	const parms_t *parms=simu->parms;
 	recon_t *recon=simu->recon;
 
@@ -102,11 +101,13 @@ void prepare_isim(sim_t *simu){
 #if USE_CUDA
 	if(parms->gpu.evl||parms->gpu.wfs){
 	/*may need to copy another part */
-		gpu_atm2gpu(simu->atm, simu->atmscale, parms, simu->iseed, isim);
+		gpu_atm2gpu(simu->atm, simu->atmscale, parms, simu->iseed, simu->perfisim);
 	}
 #endif
 	update_wfsflags(simu);
-	sim_update_sodium(simu);
+	if(simu->wfsisim>parms->sim.start){
+		sim_update_sodium(simu);
+	}
 	if(parms->sim.dmproj){
 		/* temporarily disable FR.M so that Mfun is used.*/
 		cell *FRM=recon->fit->FR.M; recon->fit->FR.M=NULL;
@@ -130,7 +131,7 @@ void prepare_isim(sim_t *simu){
 		}
 #endif
 	}
-	if(!simu->pause&&parms->sim.end>10+parms->sim.start&&parms->sim.dtrat_hi+isim<parms->sim.end&&!signal_caught){
+	if(!simu->pause&&parms->sim.end>10+parms->sim.start&&parms->sim.dtrat_hi+simu->wfsisim<parms->sim.end&&!signal_caught){
 		draw_single=1;//Only draw active frame.
 	} else{
 		draw_single=0;

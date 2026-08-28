@@ -29,6 +29,51 @@ function split_hostname(hostname) {
     return host.split('.')[0];
   }
 }
+function splitText(text) {
+    const result = [];
+    let current = '';
+    let bracketDepth = 0;
+
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+
+        if (c === '[') {
+            bracketDepth++;
+            current += c;
+        } else if (c === ']') {
+            bracketDepth--;
+            current += c;
+        } else if (c === ' ' && bracketDepth === 0) {
+            const prev = text.slice(0, i).trimEnd();
+            const next = text.slice(i + 1);
+
+            // Keep space around '='
+            const aroundEquals =
+                prev.endsWith('=') || next.startsWith('=');
+
+            // Keep space after a single-letter dash option, e.g. "-c value"
+            const afterDashOption = /-[A-Za-z]$/.test(prev);
+
+            if (aroundEquals || afterDashOption) {
+                current += c;
+            } else {
+                if (current.trim()) {
+                    result.push(current.trim());
+                    current = '';
+                }
+            }
+        } else {
+            current += c;
+        }
+    }
+
+    if (current.trim()) {
+        result.push(current.trim());
+    }
+
+    // Remove whitespace around '='
+    return result.map(s => s.replace(/\s*=\s*/g, '='));
+}
 function Progress({ text, frac }){
     return (
       <td>
@@ -115,6 +160,7 @@ function ResizableColumn({ title, width, onWidthChange }) {
 //Use global function instead of import to avoid error with in-browser babel transformer
 window.get_hostname=get_hostname;
 window.split_hostname=split_hostname;
+window.splitText=splitText
 window.Menu=Menu;
 window.Progress=Progress;
 window.ResizableColumn=ResizableColumn;

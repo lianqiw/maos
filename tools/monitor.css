@@ -42,10 +42,11 @@ table.monitor tr td,th {
 	border-width: 0.5px 0.5px;
 	border-style: solid;
 	border-color: #AAA;
-	white-space: nowrap;
 	vertical-align: middle;
 	padding-left: 0.14em;
 	padding-right: 0.14em;
+}
+td,th{
 	overflow: hidden;
 	white-space: nowrap; 
 	text-overflow: ellipsis; 
@@ -178,4 +179,25 @@ ul.tab_hosts li.active{
 }
 .spring-spacer {
 	flex-grow: 1; /* This element will expand to fill available space */
+}
+.popup{                          
+	position: absolute;
+	top: 100%;
+	right: 0;
+	z-index: 1000;
+	background: white;
+	white-space: pre-wrap;
+	padding: 4px 8px;
+	border: 1px solid #3584E4;
+	user-select: auto;
+}
+.show-overflow{
+	position: relative;
+	overflow: visible !important; 
+	text-overflow: none;
+}
+.hide-overflow{
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }

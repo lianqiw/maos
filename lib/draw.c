@@ -171,14 +171,16 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 			info("draw %d draw_single change to %d\n", sock_draw, sock_data->draw_single);
 			break;
 		default:
-			dbg("Unknown cmd: %d with size %d from socket %d\n", cmd, nlen, sock_draw);
 			if(nlen){
 				void* p=malloc(nlen);
 				stread(sock_draw, p, nlen);
 				free(p);
 			}
+			dbg("Unknown cmd: %d with size %d from socket %d. Close connection.\n", cmd, nlen, sock_draw);
+			close(sock_draw);
 			break;
 		}
+		cmd=0;
 	}
 	dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
 	listening=0;

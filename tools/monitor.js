@@ -56,6 +56,14 @@ function App() {
   const wssReconnectRef = useRef({});//to track reconnection attempts
   const jobRef = useRef(job);
   const activeRef = useRef(active);
+  const [expandedCell, setExpandedCell]=useState(null); //handle row expansion
+  const [selectedRows, setSelectedRows] = useState(new Set());//handle row select
+  const [dragging, setDragging] = useState(false);//handle dragging
+  const [dragStart, setDragStart] = useState(null);//handle dragging
+  const didDrag = useRef(false);
+  const tableRef = useRef(null);
+  const popupRef = useRef(null);
+
   //const fullName = useRef({});//full hostname.
   const [hosts, setHosts]=useState(()=>{
     const hostname = get_hostname();
@@ -69,18 +77,22 @@ function App() {
   const [widths, setWidths] = useState(()=>{
     const savedWidth = localStorage.getItem("savedWidth");
     const pageWidth=document.documentElement.clientWidth;
-    return savedWidth?JSON.parse(savedWidth):{//for resizeable column
+    const defaultWidth={//for resizeable column
     "Time": rempx*7.5,
     "Host": rempx*5,
     "PID": rempx*4,
     "Start Dir": Math.max(pageWidth*0.1, rempx*10),
     "Out Dir": Math.max(pageWidth*0.1, rempx*10),
+    "▹":rempx*1.2,
     "Low": rempx*4,
     "High": rempx*4,
     "Step": rempx*3,
     " ":rempx*1.2,
     "Progress":rempx*10
-  }});
+    }
+    const width=savedWidth?JSON.parse(savedWidth):{}
+    return {...defaultWidth, ...width};
+  })
   //useEffect(()=>{//Effect function runs after React updates the DOM.
   function reconnect(host){
     if (wssReconnectRef.current[host] > 0 && wssReconnectRef.current[host] < 100) { //try to reconnect only 100 times max
@@ -163,8 +175,8 @@ function App() {
               dirout = " -o "+i[2].substring(io + 2).trim().split(' ')[0]+" "
               i[2] = i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g, " ").trim();
             }
-            //newdata = { PID: i[0], Host: host, "Start Dir": startdir, "Arguments": i[2], "Out Dir": dirout, status: 0 };
-            newdata = { PID: i[0], Host: host, "Arguments":startdir+dirout+i[2], status: 0 };
+            newdata = { PID: i[0], Host: host, "Start Dir": startdir, "Arguments": i[2], "Out Dir": dirout, status: 0 };
+            //newdata = { PID: i[0], Host: host, "Arguments":startdir+dirout+i[2], status: 0 };
           } else if (i.length == 14 && i[1]==='STATUS') {//0:pid, 1:STATUS, 2:pidnew, 3:status, 4:start time,5: errhi, 6:errlo, 7:iseed, 8:nseed, 9:isim, 10:nsim, 11:rest, 12:tot, 13:step timing
             i[3] = parseInt(i[3]);//status. 1: running, 2: wait, 3: started, 4: queued. 11: finished. 12: crashed. 13: to kill; 14: remove; 15: killed;
             if (i[3] != 14) {//14: remove
@@ -284,6 +296,8 @@ function App() {
               return acc;//prevent overflow
             } else if (cmd === "clear_all" && v.status >= 11) {
               return acc + `${v.PID}&REMOVE;`;
+            } else if (cmd === "clear_selected" && v.status >= 11 && selectedRows.has(v.PID)) {
+              return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_finished" && v.status == 11) {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "clear_skipped" && v.status == 11 && v.prog === "") {
@@ -292,9 +306,11 @@ function App() {
               return acc + `${v.PID}&REMOVE;`;
             } else if (cmd === "kill_all" && v.status < 11) {
               return acc + `${v.PID}&KILL;`;
+            } else if (cmd === "kill_selected" && v.status < 11 && selectedRows.has(v.PID)) {
+              return acc + `${v.PID}&KILL;`;
             }
           }
-          return acc;
+          return acc;//do not concatenate
         }, "")
     }), {});
     Object.keys(cmdstr).forEach((host) => {
@@ -308,18 +324,73 @@ function App() {
     });
   }
 
-  const columns = ["Time", "Host", "PID", "Arguments", "Low", "High", "Step", " ", "Progress"];
+  const filteredJobs = job.filter(
+    row => (active.length === 0 && row.status < 10) || row.Host === active
+  );
+
+  const handleMouseDown = (e, index) => {
+    e.preventDefault();
+    didDrag.current = false;
+    setDragStart(index);
+    setDragging(true);
+  };
+
+  const handleMouseEnter = (index) => {
+    if (!dragging || dragStart === null) return;
+
+    didDrag.current = true;
+
+    const start = Math.min(dragStart, index);
+    const end = Math.max(dragStart, index);
+
+    setSelectedRows(
+      new Set(filteredJobs.slice(start, end + 1).map(row => row.PID))
+    );
+  };
+
+  const handleClick = (pid) => {
+    // Don't process the click generated at the end of a drag
+    if (didDrag.current) {
+      didDrag.current = false;
+      return;
+    }
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(pid)) {
+        next.delete(pid);
+      } else {
+        next.add(pid);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (tableRef.current && !tableRef.current.contains(e.target)) {
+        setSelectedRows(new Set());
+      }
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
+        setExpandedCell(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  const columns = ["Time", "Host", "PID", "Arguments","▹", "Low", "High", "Step", " ", "Progress"];
   try{
     return (
-      <div>
+      <div ref={tableRef}>
         <ul className="inline tab_hosts">
           <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
             <ul className="menu-list" >
-              <li onClick={() => { cmdHost(active, "clear_all"); }}>☑️ Clear All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, selectedRows.size>0?"clear_selected":"clear_all"); }}>☑️ Clear {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-              <li onClick={() => { cmdHost(active, "kill_all"); }}>🟥 Kill All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, selectedRows.size>0?"kill_selected":"kill_all"); }}>🟥 Kill {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               {job.filter((row) => (row.status == 1 || row.status == 3)).map((row) =>
                 (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW") }}>▶️ Plot {row.PID} at {row.Host}</li>))}
             </ul>
@@ -357,10 +428,30 @@ function App() {
               }/>:<th key={col}>{col}</th>)}
               </tr>
             </thead>
-            <tbody>
-              {job.filter((row) => ((active.length == 0 && row.status < 10) || row.Host === active)).map((row, i) => (
-                <tr key={row.PID}>
-                  {columns.slice(0,-2).map((col) => <td key={col} title={row[col]}>{row[col]}</td>)}
+            <tbody style={{ userSelect: dragging ? 'none' : 'auto' }} onMouseUp={() => setDragging(false)}>
+              {filteredJobs.map((row, i) => (
+                <tr key={row.PID} 
+                    onClick={() => handleClick(row.PID)}
+                    onMouseDown={(e) => {handleMouseDown(e, i);}}
+                    onMouseEnter={() => {if (dragging) {handleMouseEnter(i)};}}
+                  style={{backgroundColor: selectedRows.has(row.PID) ? "#dbeafe" : undefined}}>
+                  {columns.slice(0, 3).map((col) => <td key={col}>{row[col]}</td>)}
+                  {columns.slice(3, 4).map((col) => <td key={col} title={row[col]}
+                    className='show-overflow' style={{borderRight: 'none', borderBottom: 'none', display: 'flex'}}>
+                    <span className='hide-overflow' style={{flex: 1}}>
+                      <span >{row["Start Dir"]} </span>
+                      <span style={{color:'#3584E4'}}>{row["Out Dir"]} </span>
+                      {row[col]}
+                    </span>
+                    {expandedCell === row.PID && (
+                      <div ref={popupRef} className='popup'
+                        onMouseDown={(e) => e.stopPropagation()}>
+                      {splitText(row[col]).map((word, i) => (<div key={i}>{word}</div>))}
+                      </div>
+                    )}</td>)}
+                  <td key='expand' style={{textAlign: "center", borderLeft: 'none'}} 
+                    onClick={(e)=>{setExpandedCell(expandedCell==row.PID?null:row.PID); e.stopPropagation()}}>▹</td>
+                  {columns.slice(5,-2).map((col) => <td key={col}>{row[col]}</td>)}
                   <td className="jobIcon" key="icon" onClick={() => { cmdHostPid(row.Host, row.PID, row.status > 10 ? "REMOVE" : "KILL_ASK") }}>{row.icon}</td>
                   <Progress key="progress" text={row.prog} frac={row.frac}></Progress>
                 </tr>

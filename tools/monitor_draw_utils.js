@@ -381,10 +381,12 @@ function makeTraces(drawData, layout) {
   }
   if (square) {
     layout.xaxis.constrain='domain';
+    layout.yaxis.constrain='domain';
     layout.yaxis.scaleanchor = 'x';
     layout.yaxis.scaleratio = 1;//1 for square pixels
   }else{
     layout.xaxis.constrain=null;
+    layout.yaxis.constrain=null;
     layout.yaxis.scaleanchor = null;
     layout.yaxis.scaleratio = null;//1 for square pixels
   }
