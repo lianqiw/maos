@@ -746,11 +746,25 @@ static void readcfg_wfs(parms_t *parms){
 	int MISREG_SEQ=1;
 	READ_ENV_INT(MISREG_SEQ, 0, INFINITY);
 	seed_rand(&stat, MISREG_SEQ);
-	
+	for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].astscale>1){
+			real rmax=0;
+			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+				const int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				real r=RSS(parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay);
+				if(r>rmax){
+					rmax=r;
+				}
+			}
+			if(fabs(rmax*RAD2AS-0.5)>0.01){
+				error("using powfs.astscale>1 require the powfs max radius to be 0.5: %g\n", rmax*RAD2AS);
+			}
+		}
+	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].astscale==0){
-			dbg_once("powfs.astscale=0 is ignored.\n");
+			dbg_once("powfs.astscale=0 or 1 is ignored.\n");
 		}
 		if(parms->powfs[ipowfs].astscale!=0 && parms->powfs[ipowfs].astscale!=1){//scale asterism
 			parms->wfs[iwfs].thetax*=parms->powfs[ipowfs].astscale;

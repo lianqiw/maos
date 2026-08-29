@@ -599,8 +599,10 @@ int main(int argc, char* argv[]){
 			for(int ic=0; ic<res->nx; ic++){
 				if(P(res, ic)){
 					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
-					draw(toptab[ic], (plot_opts){.ngroup=(int)npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
-						title[ic], xlabel, ylabel, "%s:%-4ld", sidetab[ic], seed[iseed]);
+					char toptab_seed[64];
+					snprintf(toptab_seed, sizeof(toptab_seed), "%s:%ld ", toptab[ic], seed[iseed]);
+					draw(toptab_seed, (plot_opts){.ngroup=(int)npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
+						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					dcellfree(tmp);
 				}
 			}
