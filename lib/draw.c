@@ -383,7 +383,7 @@ static int get_drawdaemon(){
 	LOCK(lock);
 	int sock=-1;
 	//First try reusing existing idle drawdaemon with the same id.
-	while(!scheduler_socket(-1, &sock, draw_id)){
+	while(sock==-1 && !scheduler_socket(-1, &sock, draw_id)){
 		//test whether received drawdaemon is still running
 		if(WRITECMD(sock, DRAW_INIT, 0)){
 			dbg("received socket=%d is already closed.\n", sock);
@@ -391,35 +391,30 @@ static int get_drawdaemon(){
 			sock=-1;
 		}else{
 			dbg("received socket=%d is ok.\n", sock);
-			break;
 		}
 	}
-	if(sock==-1){
-		if(display){
-			if(draw_direct||sock_helper<=-1){//directly fork and launch
-				TIC;tic;
-				sock=launch_drawdaemon();
-				toc2("Directly launch drawdaemon");
-			} else{//use helper to launch
-				if(stwriteint(sock_helper, draw_id)||streadfd(sock_helper, &sock)){
-					sock=-1;
-					draw_disabled=1;
-					close(sock_helper);
-					sock_helper=-1;
-					warning("Unable to talk to the helper to launch drawdaemon.\n");
-				}else{
-					dbg("launch using sock helper: sock=%d\n", sock);
-				}
+	if(sock==-1	&& !scheduler_socket(0, &sock, draw_id)){
+		dbg("launch using scheduler: sock=%d\n", sock);
+	}
+	if(sock==-1 && display){//try launch locally
+		if(draw_direct||sock_helper<=-1){//directly fork and launch
+			TIC;tic;
+			sock=launch_drawdaemon();
+			toc2("Directly launch drawdaemon");
+		} else{//use helper to launch
+			if(stwriteint(sock_helper, draw_id)||streadfd(sock_helper, &sock)){
+				sock=-1;
+				draw_disabled=1;
+				close(sock_helper);
+				sock_helper=-1;
+				warning("Unable to talk to the helper to launch drawdaemon.\n");
+			}else{
+				dbg("launch using sock helper: sock=%d\n", sock);
 			}
-		} else{//no display is available. use scheduler to launch drawdaemon
-			scheduler_socket(0, &sock, draw_id);
-			dbg("launch using scheduler: sock=%d\n", sock);
 		}
 	}
-	
-	if(sock!=-1 && !draw_add(sock) && !socket_send_timeout(sock, 60)){
-		//prevent hang. too small timeout will prevent large data from passing through.
-	}else{
+	//prevent hang. too small timeout will prevent large data from passing through.
+	if(sock==-1 || draw_add(sock) || socket_send_timeout(sock, 60)){
 		draw_disabled=1;
 		sock=-1;
 		warning("Unable to open drawdaemon. Disable drawing.\n");

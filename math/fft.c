@@ -210,7 +210,7 @@ static void X(fft2plan)(X(mat)* A, int dir){
 }
 
 /**
-   make plans for cfft2partial
+   make plans for cfft2partial.
 */
 static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	assert(abs(dir)==1);
@@ -221,26 +221,31 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	const int ny=A->ny;
 	int FFTW_FLAGS;
 	FFTW_FLAGS=FFTW_ESTIMATE;
-	PLAN1D_T* plan1d=A->fft->plan1d[dir+1]=mycalloc(1, PLAN1D_T);
+	PLAN1D_T* plan1d=A->fft->plan1d[dir+1]=mycalloc(3, PLAN1D_T);
 	LOCK_FFT;
 	FFTW(fft_threads)(A->nx, A->ny);
 	/*along columns for all columns. */
-	plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
+	if(!(plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
 		COMP(P(A)), NULL, 1, nx,
 		COMP(P(A)), NULL, 1, nx,
-		dir, FFTW_FLAGS);
-	/*selected along rows, beginning */
-	plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
-		COMP(P(A)), NULL, nx, 1,
-		COMP(P(A)), NULL, nx, 1,
-		dir, FFTW_FLAGS);
-	/*selected along rows, end */
-	plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
-		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
-		COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
-		dir, FFTW_FLAGS);
-	if(!plan1d->plan[0]||!plan1d->plan[1]||!plan1d->plan[2]){
+		dir, FFTW_FLAGS))){
 		error("Plan is empty\n");
+	}
+	if(ncomp>0){
+		/*selected along rows, beginning */
+		plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
+			COMP(P(A)), NULL, nx, 1,
+			COMP(P(A)), NULL, nx, 1,
+			dir, FFTW_FLAGS);
+		/*selected along rows, end */
+		plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
+			COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
+			COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
+			dir, FFTW_FLAGS);
+	
+		if(!plan1d->plan[1]||!plan1d->plan[2]){
+			error("Plan is empty\n");
+		}
 	}
 	UNLOCK_FFT;
 	plan1d->ncomp=ncomp;
@@ -284,6 +289,7 @@ void X(fft2s)(X(mat)* A, int dir){/*symmetrical cfft2. */
    Apply 2d FFT partially over ncomp \f$\times\f$ncomp region use two 1d plans that
    takes 1d fft through its column and selectly for its rows to produce smaller
    psf.
+   if ncomp==0, only do FFT along the columns.
 */
 void X(fft2partial)(X(mat)* A, int ncomp, int dir){
 	assert(abs(dir)==1);
@@ -294,7 +300,7 @@ void X(fft2partial)(X(mat)* A, int ncomp, int dir){
 	PLAN1D_T* plan1d=A->fft->plan1d[dir+1];
 	if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
 	for(int i=0; i<3; i++){
-		FFTW(execute)(plan1d->plan[i]);
+		if(plan1d->plan[i]) FFTW(execute)(plan1d->plan[i]);
 	}
 }
 

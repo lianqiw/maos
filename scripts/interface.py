@@ -184,20 +184,13 @@ def arr2object(arr):
             arr2[i]=arr2object(arr[i])
     return arr2
 
-class wrap_pointer:
-    '''Reference counting for c array'''
-    def __init__(self, pointer):
-        self.pointer=pointer
-    def __del__(self):
-        #print(f'Calling cellfree_do for {self.pointer}')
-        lib.cellfree_do(cast(self.pointer, c_void_p))
+
+#        lib.cellfree_do(cast(self.pointer, c_void_p))
 class cell_ndarray(np.ndarray):
     '''Subclass to manage memory and extra attributes'''
-    def __new__(cls, ctypes_pointer, pointer=None):
+    def __new__(cls, ctypes_pointer):
         #print(f'cell_ndarray __new__ {ctypes_pointer}')
         ctypes_array=cast(ctypes_pointer, POINTER(cell)).contents
-        if pointer is None and not hasattr(ctypes_array, 'python'):
-            pointer=wrap_pointer(ctypes_pointer)
         if ctypes_array.header:
             header=ctypes_array.header.decode('ascii')
         else:
@@ -214,7 +207,7 @@ class cell_ndarray(np.ndarray):
         if kind==0 or kind==1: #dense matrix
             parr=cast(ctypes_array.p, POINTER(tt))
             if iscomplex:
-                res=np.ctypeslib.as_array(parr, shape=(*ctypes_array.shape(),2))
+                res=np.ctypeslib.as_array(parr, shape=(*ctypes_array.shape(),2)).copy()
                 if tt is c_double:
                     res=np.squeeze(res.view(np.complex128), axis=-1)
                 elif tt is c_float:
@@ -222,7 +215,7 @@ class cell_ndarray(np.ndarray):
                 else:
                     raise(Exception('Please implement'))
             else:
-                res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape())
+                res=np.ctypeslib.as_array(parr, shape=ctypes_array.shape()).copy()
         elif kind==2 or kind==3: #sparse matrix does not support subclassing like numpy
             return cell_csr_array(ctypes_pointer, pointer)
         elif kind==10: #cell array
@@ -233,14 +226,13 @@ class cell_ndarray(np.ndarray):
                     address=parr[ix+ctypes_array.nx*iy]
                     if address is not None:
                         pp=cast(address, POINTER(cell))
-                        res[iy, ix]=cell_ndarray(pp, 0) #recursive. do not pass pointer to child
+                        res[iy, ix]=cell_ndarray(pp) 
                     else:
                         res[iy, ix]=np.array([])
             if ctypes_array.ny==1:
                 res=res[0,]
 
         obj=res.view(cls)
-        obj.pointer=pointer #pointer is reference counted
         obj.header=header
         if kind==1: #LOC
             obj.dx=ctypes_array.dx
@@ -257,23 +249,22 @@ class cell_ndarray(np.ndarray):
                         except:
                             setattr(obj, ires[0], ires[1])
         return obj
-    def __array_finalize__(self, obj):
+    def __array_finalize__(self, obj): #this is called when res.view() is called
         if obj is None:
             return
         self.__dict__.update(getattr(obj, "__dict__", {}))
 class cell_csr_array(sp.csr_array):
-    def __init__(self, ctypes_pointer, pointer=None):
+    def __init__(self, ctypes_pointer):
         #print(f'cell_csr_array __new__ {ctypes_pointer}')
+        #create numpy object from C
         ctypes_array=cast(ctypes_pointer, POINTER(csr)).contents
-        if pointer is None and not hasattr(ctypes_array, 'python'):
-            pointer=wrap_pointer(ctypes_pointer)
         try:
             (tt, iscomplex, kind)=id2ctype.get(ctypes_array.id&0xFFFF)
         except:
             print("id2ctype: unknown type", id);
             return None
         if kind==0 or kind==1:
-            return cell_ndarray(ctypes_array, pointer)
+            return cell_ndarray(ctypes_array)
         elif kind==2 or kind==3:
             if ctypes_array.nzmax>0:
                 xp=np.ctypeslib.as_array(cast(ctypes_array.x, POINTER(tt)), shape=(ctypes_array.nzmax,))
@@ -283,18 +274,16 @@ class cell_csr_array(sp.csr_array):
                 elif kind==3:
                     ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_int)), shape=(ctypes_array.nzmax,))
                     pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_int)), shape=(ctypes_array.ny+1,))
-                super().__init__((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=False)
-                self.pointer=pointer 
+                super().__init__((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=True)
             else:
                 super().__init__((ctypes_array.nx,ctypes_array.ny))
     def __array_finalize__(self, obj):
         if obj is None:
             return
-        if hasattr(obj, 'pointer'):
-            self.pointer=obj.pointer
+        self.__dict__.update(getattr(obj, "__dict__", {}))
             
 def ct2py(var):
-    '''convert ctypes data to Python data'''
+    '''convert C data to Python data'''
     if not bool(var):
         return None
     if isinstance(var, ctypes._Pointer):
@@ -307,11 +296,14 @@ def ct2py(var):
             (tt, iscomplex, kind)=id2ctype.get(var.id&0xFFFF)
         except:
             print("id2ctype: unknown type", var.id)
-            return np.array([])
+            res=np.array([])
         if kind==2 or kind==3:#sparse
-            return cell_csr_array(pointer)
+            res=cell_csr_array(pointer)
         else:
-            return cell_ndarray(pointer)
+            res=cell_ndarray(pointer)
+        if pointer:
+            #print(f"Freeing {pointer}")
+            lib.cellfree_do(cast(pointer, c_void_p))
     elif isinstance(var, Structure): #a generic struct; convert to dictionary
         result = {}
         for field_name, field_type in var._fields_:
@@ -322,10 +314,11 @@ def ct2py(var):
                 print(f'unexpected: {field_name} is c_void_p')
                 value = None
             result[field_name] = value
-        return result
+        res=result
     else:
-        return var.value
-
+        res=var.value
+    
+    return res
 class cell(Structure):
     '''To interface numpy.array with C cell '''
     _fields_ = [ #fields compatible with C type of cell and mat
@@ -345,6 +338,14 @@ class cell(Structure):
     def __init__(self, arr=None, tid=0):#convert from numpy to C. Memory is borrowed
         #attributes set within __init__ are per object
         #print(f'__init__ is called for cell {addressof(self)}')
+        self.header=None
+        self.dummy_fp=None
+        self.dummy_fft=None
+        self.dummy_mem=None
+        self.dummy_async=None
+        self.dummy_deinit=None
+        self.dummy_make_keywords=None
+        self.python=True
         if isinstance(arr, list):
             arr=np.asarray(arr)
         
@@ -379,6 +380,8 @@ class cell(Structure):
                 if arr.flags['C']==False:
                     arr=arr.copy(order='C')
                 self.p=arr.ctypes.data_as(c_void_p)
+                if hasattr(arr, 'header'):
+                    self.header=c_char_p(arr.header.encode("utf-8"))
             else:
                 self.qarr=np.zeros(self.shape(1), dtype=object) #stores objects
                 self.parr=np.zeros(self.shape(1), dtype=c_void_p) #store pointer of objects
@@ -400,20 +403,16 @@ class cell(Structure):
             self.p=None
             self.nx=0
             self.ny=0
-        self.header=None
-        self.dummy_fp=None
-        self.dummy_fft=None
-        self.dummy_mem=None
-        self.dummy_async=None
-        self.dummy_deinit=None
-        self.dummy_make_keywords=None
-        self.python=True
+
     def shape(self, force2d=0):
         if self.ny > 1 or force2d:
             return (self.ny, self.nx)
         else:
             return (self.nx,) #last , is necessary
-            
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.__dict__.update(getattr(obj, "__dict__", {}))
 class loc(Structure):
     '''To interface numpy.array with C lob '''
     _fields_ = [
@@ -475,7 +474,10 @@ class loc(Structure):
                 #print(f'loc: locx={self.locx:x} locy={self.locy:x}')
                 #print('loc: dx={0}, dy={1}'.format(self.dx, self.dy))
         #default initialization to zero
-
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.__dict__.update(getattr(obj, "__dict__", {}))
 class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just like arrays as numpy is row order
     '''To interface numpy.array with C sparse array '''
     _fields_=[ #need to match C memory layout
@@ -517,7 +519,10 @@ class csr(Structure):#CSR sparse matrix. We convert C CSC to Python CSR just lik
             self.python=True
         else:
             raise(Exception('Invalid conversion to csr'))
-
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.__dict__.update(getattr(obj, "__dict__", {}))
 def convert_fields(fields):
     '''convert a C type keyword to ctypes type'''
     val2type={

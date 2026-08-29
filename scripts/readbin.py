@@ -6,6 +6,7 @@ import os
 import gzip
 import struct
 import socket
+from warnings import warn
 
 class cell_ndarray(np.ndarray):
     def __new__(cls, input_array, **attrs):
@@ -145,18 +146,19 @@ def readbin(file):
             if (file[-5:]=='.fits' or file[-8:] == '.fits.gz'):
                 isfits=True
     if isfile or issock:
-        with open(file, 'rb', closefd=isfile) as fp:
-            if isfile:
-                magic=readuint16(fp)
-                if magic==0x8b1f:
-                    fp.close()
-                    fp=gzip.open(file,'rb')
-                else:
-                    fp.seek(0, 0)
-            (out, err)=readbin_auto(fp, isfits)
+        try:
+            with open(file, 'rb', closefd=isfile) as fp:
+                if isfile:
+                    magic=readuint16(fp)
+                    if magic==0x8b1f:
+                        fp.close()
+                        fp=gzip.open(file,'rb')
+                    else:
+                        fp.seek(0, 0)
+                (out, err)=readbin_auto(fp, isfits)
 
-        #except Exception as error:#file may not be ready
-        #    print("readbin failed:", file, error)
+        except Exception as error:#file may not be ready
+            warn(f"readbin failed: {file}, {error}")
         #finally:
         #    fp.close()
     #return convert_output(out, header)

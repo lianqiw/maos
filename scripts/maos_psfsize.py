@@ -14,7 +14,7 @@ from scipy.special import betaincinv
 from scipy.integrate import dblquad
 from scipy.optimize import brentq
 from cycler import cycler
-
+from warnings import warn
 try:
     from natsort import natsorted
 except:
@@ -141,7 +141,7 @@ def fit_moffat_roi(img, alpha=3, name=None, circular=0):
     model_img=fit(x,y)
     diff=np.sum((sub-model_img)**2)/np.sum(sub**2)
     if ierr or diff>0.05 or fit.alpha.value<=1+2e-7:
-        print(f"Fitting is not good: {name}, diff={diff:.4g}, alpha={fit.alpha.value:.4g}, gamma={fit.gamma.value:.4g}, q={fit.q.value:.4g}")
+        warn(f"Fitting is not good: {name}, diff={diff:.4g}, alpha={fit.alpha.value:.4g}, gamma={fit.gamma.value:.4g}")
         if ierr>4:
             print("nfev:", fitter.fit_info["nfev"])
             print("message:", fitter.fit_info["message"])
@@ -226,11 +226,27 @@ def parse_header_float(headers, key):
         elif isinstance(hh, dict):
             dp=hh[key]
         if dp.find('/')==-1:
-            print(dp)
+            warn(f'dp: {dp}')
             raise(Exception('Unable to parse header'))
         dp=float(dp[:dp.find('/')])
         res.append(dp)
     return np.stack(res)
+def average_psf(fn):
+    if isinstance(fn, str):
+        datas=read(fn)
+    else:
+        datas=read(fn[0])
+    headers=[data.header for data in datas]
+    if not isinstance(fn, str):
+        count=1
+        for fn2 in fn[1:]:
+            try:
+                datas+=read(fn2)
+                count+=1
+            except Exception as e:
+                warn(f"Unable to process {fn2}: e")
+        if count>1:
+            datas/=count
 
 def proc_psf(fn, fn_cache=None, **kargs):
     """
@@ -264,33 +280,22 @@ def proc_psf(fn, fn_cache=None, **kargs):
             pass
 
     if skip==0:
-        datas=read(fn0)
-        headers=[data.header for data in datas]
-        if not isinstance(fn, str):
-            count=1
-            for fn2 in fn[1:]:
-                datas+=read(fn2)
-                count+=1
-            if count>1:
-                datas/=count
-        dps=parse_header_float(headers, 'DP') #pixel width
-        wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
-        nwvl=datas.shape[0]
-        gamma=np.zeros((nwvl))
-        alpha=np.zeros((nwvl))
-        q=np.zeros((nwvl))
-        
-        for iwvl in range(nwvl):
-            #res=calc_fwhm_gaussian(datas[iwvl], dx=dps[iwvl])
-            #res=maos_utils.print_psf_metrics(directory=f"{fd}/", x=-90, y=0, ee=50, seed=1)
-            model=fit_moffat_roi(datas[iwvl], name=fn0, **kargs)
-            alpha[iwvl]=model.alpha.value 
-            gamma[iwvl]=model.gamma.value
-            if "q" in model.param_names:
-                q[iwvl]=model.q.value #elliptical
-            else:
-                q[iwvl]=1 #circular
-        np.savez(fn_cache, dps=dps, wvls=wvls, alpha=alpha, gamma=gamma, q=q)
+        try:
+            datas, headers=average_psf(fn)
+            dps=parse_header_float(headers, 'DP') #pixel width
+            wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
+            nwvl=datas.shape[0]
+            model=np.empty((nwvl), dtype=object)
+            
+            for iwvl in range(nwvl):
+                #res=calc_fwhm_gaussian(datas[iwvl], dx=dps[iwvl])
+                #res=maos_utils.print_psf_metrics(directory=f"{fd}/", x=-90, y=0, ee=50, seed=1)
+                model[iwvl]=fit_moffat_roi(datas[iwvl], name=fn0, **kargs)
+            if fn_cache is not None:
+                np.savez(fn_cache, dps=dps, wvls=wvls, model=model)
+        except Exception as e:
+            print(f'Process {fn} failed: {e}')
+            return None
     #no longer caching ress
     nwvl=wvls.size
     ress=np.zeros((nwvl,3))
@@ -332,8 +337,13 @@ def proc_psfs(fd, seeds=[1], **kargs):
         fx.append(x)
         fy.append(y)
         fn_cache=f"{fd}/evlpsfcl_{'_'.join(map(str, seeds))}_x{x}_y{y}.fits.npz"
-        res,dps,wvls=proc_psf(fns2, fn_cache, **kargs)
-        ress.append(res)
+        
+        tmp=proc_psf(fns2, fn_cache, **kargs)
+        if tmp is not None:
+            res,dps,wvls,_=tmp
+            ress.append(res)
+    if len(ress)==0:
+        return None
     fr=np.array(fr)
     fx=np.array(fx)
     fy=np.array(fy)

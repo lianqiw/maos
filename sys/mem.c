@@ -891,7 +891,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 		cancel_action=signal_handler(sig);
 		dbg_time("Signal handler returns %d\n", cancel_action);
 	}
-	if(!cancel_action){//Propagate signal to default handler.
+	if(sig!=SIGUSR2 || !cancel_action){//Propagate signal to default handler.
 		dbg_time("Propagate signal\n");
 		struct sigaction act={0};
 		act.sa_handler=SIG_DFL;
@@ -906,7 +906,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	}
 }
 int dummy_signal_handler(int sig){
-	info2("Signal %d caught, will not quit.\n", sig);
+	info2("Signal %d caught, will %s quit.\n", sig, sig==SIGUSR2?"not":"");
 	return 1;
 }
 /**

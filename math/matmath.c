@@ -1628,26 +1628,26 @@ static void* X(enc_thread)(thread_t* pdata){
 	const long ncomp=ncomp2/2;
 	const R dk=1./ncomp2;
 	const R pi2=2*M_PI;
-	if(type==0){
+	if(type==0 || type==2){
 		X(mat)* ksinc=X(new)(PN(dvec), ncomp2);
-		X(mat)* pks=ksinc;
 		/*Cache the data. */
 		for(long iy=0; iy<ncomp2; iy++){
 			R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
 			OMP_SIMD()
 			for(long ir=pdata->start; ir<pdata->end; ir++){
-				P(pks, ir, iy)=sinc(ky*dr[ir])*dr[ir];
+				P(ksinc, ir, iy)=sinc(ky*dr[ir])*dr[ir];
 			}
 		}
 		for(long iy=0; iy<ncomp2; iy++){
 			for(long ix=0; ix<ncomp2; ix++){
 				OMP_SIMD()
 				for(long ir=pdata->start; ir<pdata->end; ir++){
-					R s=P(pks, ir, iy)*P(pks, ir, ix);
+					R s=type==2?P(ksinc, ir, ix):P(ksinc, ir, iy)*P(ksinc, ir, ix);
 					P(enc, ir)+=s*P(ppsf, ix, iy);
 				}
 			}
 		}
+		X(free)(ksinc);
 	} else{
 		for(long iy=0; iy<ncomp2; iy++){
 			R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
@@ -1662,7 +1662,7 @@ static void* X(enc_thread)(thread_t* pdata){
 						P(enc, ir)+=s*P(ppsf, ix, iy);
 					}
 				} break;
-				case 0:
+				case 0:/*Ensquared energy in a pixel*/
 					break;
 				case 1: {/*Encircled energy. dr is diameter */
 					R k=sqrt(kx*kx+ky*ky);
@@ -1675,10 +1675,10 @@ static void* X(enc_thread)(thread_t* pdata){
 					}
 				} break;
 				case 2:/*Enslitted energe in a slit. */
-					error("To implement: Do FFT only along 1-d\n");
 					break;
 				default:
 					error("Not implemented\n");
+					return NULL;
 				}
 			}
 		}
@@ -1695,6 +1695,7 @@ X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
 	){
 	if(type<-1||type>2){
 		error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");
+		return NULL;
 	}
 	if(nthread<=0) nthread=NTHREAD;	
 	const R rmax=ceil(X(max)(dvec))+1;
@@ -1715,10 +1716,13 @@ X(mat)* X(enc)(const X(mat)* psf, /**<The input array*/
 	XC(embedd)(psf2, psfc, 0);
 	X(free)(psfc);
 	XC(fftshift)(psf2);
-	XC(fft2)(psf2, -1);
+	if(type==2){
+		XC(fft2partial)(psf2, 0, -1);
+	}else{
+		XC(fft2)(psf2, -1);
+	}
 	X(mat)* phat=NULL;
-	XC(real2d)(&phat, 0, psf2, 1);
-	X(scale)(phat, pow((R)ncomp2, -2));
+	XC(real2d)(&phat, 0, psf2, (type==2)?(1./ncomp2):(1./ncomp2/ncomp2));
 	XC(free)(psf2);
 	X(mat)* enc=X(new)(PN(dvec), 1);
 	struct enc_t data={enc, dvec, phat, type};
