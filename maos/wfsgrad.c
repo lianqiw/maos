@@ -289,6 +289,67 @@ void* wfsgrad_iwfs(thread_t* info){
 			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, amp, parms->plot.opdmax,
 				"WFS OPD", "x (m)", "y (m)", "WFS %2d", iwfs);
 		}
+		dmat* lltopd=NULL;
+		if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
+			lltopd=P(simu->lltopd, iwfs);
+			if(powfs[ipowfs].llt->ncpa){//start with NCPA
+				dadd(&lltopd, 0, PR(powfs[ipowfs].llt->ncpa, wfsind, 0), 1);
+			}else{//start with zero.
+				dzero(lltopd);
+			}
+			const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
+			if(atm){/*LLT OPD */
+				real wt=1;
+				for(int ips=0; ips<nps; ips++){
+					const real hl=P(atm, ips)->ht;
+					const real scale=1.-hl/hs;
+					if(scale<0) continue;
+					const real ox=P(parms->powfs[ipowfs].llt->ox, illt);
+					const real oy=P(parms->powfs[ipowfs].llt->oy, illt);
+					const real thetax=parms->wfs[iwfs].thetax-ox/hs;
+					const real thetay=parms->wfs[iwfs].thetay-oy/hs;
+					real vx=0;
+					real vy=0;
+					map_t *atmi;
+					if(parms->atm.dtrat>0){
+						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
+						atmi=P(atm, iframe);
+					}else{
+						vx=P(atm, ips)->vx;
+						vy=P(atm, ips)->vy;
+						atmi=P(atm, ips);
+					}
+				
+					prop(&(propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
+						.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
+						.thetax=thetax, .thetay=thetay,
+						.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
+						.wrap=1});
+				}
+			}
+			if(parms->powfs[ipowfs].idealfsm){
+				/* remove tip/tilt completely */
+				dmat* lltg=P(simu->fsmreal, iwfs);
+				dzero(lltg);
+				pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
+					powfs[ipowfs].llt->imcc,
+					P(powfs[ipowfs].llt->amp),
+					P(lltopd));
+				dscale(lltg, -1);
+				real ptt[3]={0, P(P(simu->fsmreal, iwfs), 0), P(P(simu->fsmreal, iwfs), 1)};
+				loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
+			}else{
+				real ttx=0, tty=0;//uplink jitter and correction
+				wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
+				if(ttx!=0||tty!=0){ /* add tip/tilt to llt opd */
+					real ptt[3]={0, ttx, tty};
+					loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
+				}
+			}
+			if(save_opd){
+				zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd);
+			}
+		}
 		if(do_geom){
 			/* Now Geometric Optics gradient calculations. if dtrat==1, we compute
 			gradients directly to gradacc, which is the same as gradcalc. If
@@ -329,64 +390,7 @@ void* wfsgrad_iwfs(thread_t* info){
 			if(nhs>1){
 				error("Please implement\n");
 			}
-			dmat* lltopd=NULL;
-			if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
-				lltopd=P(simu->lltopd, iwfs);
-				if(powfs[ipowfs].llt->ncpa){//start with NCPA
-					dadd(&lltopd, 0, PR(powfs[ipowfs].llt->ncpa, wfsind, 0), 1);
-				}else{//start with zero.
-					dzero(lltopd);
-				}
-				const long illt=P(parms->powfs[ipowfs].llt->i, wfsind);
-				if(atm){/*LLT OPD */
-					real wt=1;
-					for(int ips=0; ips<nps; ips++){
-						const real hl=P(atm, ips)->ht;
-						const real scale=1.-hl/hs;
-						if(scale<0) continue;
-						const real ox=P(parms->powfs[ipowfs].llt->ox, illt);
-						const real oy=P(parms->powfs[ipowfs].llt->oy, illt);
-						const real thetax=parms->wfs[iwfs].thetax-ox/hs;
-						const real thetay=parms->wfs[iwfs].thetay-oy/hs;
-						real vx=0;
-						real vy=0;
-						map_t *atmi;
-						if(parms->atm.dtrat>0){
-							int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
-							atmi=P(atm, iframe);
-						}else{
-							vx=P(atm, ips)->vx;
-							vy=P(atm, ips)->vy;
-							atmi=P(atm, ips);
-						}
-					
-						prop(&(propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
-							.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
-							.thetax=thetax, .thetay=thetay,
-							.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
-							.wrap=1});
-					}
-				}
-				if(do_pistat||parms->powfs[ipowfs].idealfsm){
-					/* remove tip/tilt completely */
-					dmat* lltg=P(simu->fsmreal, iwfs);
-					dzero(lltg);
-					pts_ztilt(&lltg, powfs[ipowfs].llt->pts,
-						powfs[ipowfs].llt->imcc,
-						P(powfs[ipowfs].llt->amp),
-						P(lltopd));
-					dscale(lltg, -1);
-				}
-				real ttx=0, tty=0;//uplink jitter and correction
-				wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
-				if(ttx!=0||tty!=0){ /* add tip/tilt to llt opd */
-					real ptt[3]={0, ttx, tty};
-					loc_add_ptt(lltopd, ptt, powfs[ipowfs].llt->loc);
-				}
-				if(save_opd){
-					zfarr_push(simu->save->wfslltopd[iwfs], isim, lltopd);
-				}
-			}
+			
 			if(parms->powfs[ipowfs].type==WFS_SH){//SHWFS
 				wfsints_t* intsdata=simu->wfs_intsdata+iwfs;
 				intsdata->ints=ints;
@@ -606,7 +610,7 @@ void* wfsgrad_post(thread_t* info){
 
 			if(do_phy){
 				if(NE(simu->fsmerr_store, iwfs)){
-					wfsgrad_fsm(simu, iwfs);
+					wfsgrad_fsm(simu, iwfs);//compute fsmerr from gradients
 				}
 				if(parms->powfs[ipowfs].dither){
 					dither_acc(simu, iwfs);
