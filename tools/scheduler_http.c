@@ -38,6 +38,7 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <ctype.h>
 #include "../sys/sys.h"
 #include "scheduler.h"
 #define BUF_SIZE 4096
@@ -81,11 +82,12 @@ typedef struct http_context_t{
 #if HAVE_OPENSSL
 	SSL *ssl;
 #endif	
+	char *auth;//basic auth
 	int(*recv)(struct http_context_t*ctx, char *buf, size_t nbuf);
 	int(*send)(struct http_context_t*ctx, const char *buf, size_t nbuf);
 }http_context_t;
-http_context_t *ssl_context=NULL;
-int nssl_context=0;
+http_context_t *http_context=NULL;
+int nhttp_context=0;
 #ifdef HAVE_OPENSSL
 static int has_ssl=0;//guard initialization and tell the status. 1: yes. 0 or -1: no. 0: not initialized
 SSL_CTX *ssl_ctx=NULL;
@@ -144,6 +146,7 @@ static void http_context_remove(http_context_t *ctx){
 		ctx->ssl=NULL;
 	}
 #endif
+	free(ctx->auth); ctx->auth=NULL;
 }
 #if HAVE_OPENSSL
 static int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
@@ -195,9 +198,9 @@ static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 }
 
 static http_context_t *http_context_get(int fd){
-	for (int ic=0; ic<nssl_context; ic++){
-		if(ssl_context[ic].fd==fd){
-			return &ssl_context[ic];
+	for (int ic=0; ic<nhttp_context; ic++){
+		if(http_context[ic].fd==fd){
+			return &http_context[ic];
 		}
 	}
 	warning_time("http_context not found for fd=%d\n", fd);
@@ -215,21 +218,21 @@ static http_context_t *http_context_create(int fd){
 		return NULL;
 	}
 	int jc=-1;
-	for (int ic=0; ic<nssl_context; ic++){
-		if(ssl_context[ic].fd==fd){
+	for (int ic=0; ic<nhttp_context; ic++){
+		if(http_context[ic].fd==fd){
 			jc=ic;
 			break;//found matching
-		}else if(ssl_context[ic].fd==-1 && jc==-1){
+		}else if(http_context[ic].fd==-1 && jc==-1){
 			jc=ic;//mark for insertion
 		}
 	}
 	if(jc==-1){
-		jc=nssl_context;
-		nssl_context++;
-		ssl_context=myrealloc(ssl_context, nssl_context, http_context_t);
+		jc=nhttp_context;
+		nhttp_context++;
+		http_context=myrealloc(http_context, nhttp_context, http_context_t);
 	}
-	memset(&ssl_context[jc], 0, sizeof(http_context_t));
-	ssl_context[jc].fd=fd;
+	memset(&http_context[jc], 0, sizeof(http_context_t));
+	http_context[jc].fd=fd;
 	if(ishttps){
 #if HAVE_OPENSSL
 		if(has_ssl==0) init_ssl();
@@ -237,9 +240,9 @@ static http_context_t *http_context_create(int fd){
 			SSL* ssl=SSL_new(ssl_ctx);
 			SSL_set_fd(ssl, fd);
 			if (SSL_accept(ssl) > 0) {//success
-				ssl_context[jc].ssl=ssl;
-				ssl_context[jc].recv=https_reader;
-				ssl_context[jc].send=https_writer;
+				http_context[jc].ssl=ssl;
+				http_context[jc].recv=https_reader;
+				http_context[jc].send=https_writer;
 			}else{
 				unsigned long err = ERR_peek_error();
 				warning_time("SSL_accept failed: %s\n", ERR_reason_error_string(err));
@@ -248,16 +251,41 @@ static http_context_t *http_context_create(int fd){
 			}
 		}
 #endif
-		if(!ssl_context[jc].recv){
+		if(!http_context[jc].recv){
 			warning_time("HTTPS is not supported\n");
 			return NULL;
 		}
 	}else if(ishttp){
-		ssl_context[jc].recv=http_reader;
-		ssl_context[jc].send=http_writer;
+		http_context[jc].recv=http_reader;
+		http_context[jc].send=http_writer;
 	}
-	dbg_time("http_context created for %d\n", ssl_context[jc].fd);
-	return &ssl_context[jc];
+	dbg_time("http_context created for %d\n", http_context[jc].fd);
+	//parse user password
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "%s/.aos/htpasswd", HOME);
+	FILE *fp=fopen(fn, "r");
+	while(fp){
+		char *line=NULL;
+		size_t lsize=0;
+		size_t n=getline(&line, &lsize, fp);
+		fclose(fp);
+		while(n>=1 && (line[n-1]==0 || isspace((int)line[n-1]))){
+			line[n-1]=0; n--;
+		}
+		if(n<=2) break;
+		char *user_pass=stradd(USER, ":", line, NULL);
+		n=strlen(user_pass);
+		size_t nout=4*((n+2)/3);
+		char *out=mycalloc(nout, char);
+		base64_encode((const unsigned char*)user_pass, n, out);
+		http_context[jc].auth=stradd("Authorization: Basic ", out, NULL);
+		free(line);
+		free(user_pass);
+		free(out);
+		break;
+	}
+	info("auth=%s\n", http_context[jc].auth?http_context[jc].auth:"(none)");
+	return &http_context[jc];
 }
 
 static int nlen_offset(int nlen){
@@ -597,7 +625,8 @@ int http_handler(struct pollfd *pfd, int flag){
 		return 0;//wait for client to initiate close
 	}
 	char buf[BUF_SIZE];
-	
+	char header[256];
+
 	int n= ctx->recv(ctx, buf, sizeof(buf) - 1);
 	if (n <= 0) return -1;
 	buf[n] = 0;
@@ -605,6 +634,26 @@ int http_handler(struct pollfd *pfd, int flag){
     if (strncmp(buf, "GET ", 4) != 0){
 		warning_time("buf shall start with 'GET': '%s'. close connection. fd=%d\n", buf, fd);
 		return -1;//error
+	}
+	if(ctx->auth){
+		char *key=http_parse_key(buf, "Authorization: Basic");
+		//info("Got Authorization: Basic %s\n", key);
+		free(key);
+		if(!strstr(buf, ctx->auth)){
+			dbg("Authentication failed. Sending 401 Unauthorized.\n");
+			snprintf(header, sizeof(header), 
+			"HTTP/1.1 401 Unauthorized\r\n"
+			"WWW-Authenticate: Basic realm='Private Area'\r\n"
+			"Content-Type: text/html; charset=UTF-8\r\n"
+			"Content-Length: 85\r\n"
+			"Connection: close\r\n"
+			"\r\n"
+			"<html>\n"
+			"<head><title>401 Unauthorized</title></head>\n"
+			"<body>Unauthorized</body>\n"
+			"</html>");
+			return ctx->send(ctx, header, strlen(header));
+		}
 	}
     if (strstr(buf, "Upgrade: websocket")) {//handle upgrade
         http_upgrade_websocket(ctx, buf);
@@ -647,7 +696,6 @@ int http_handler(struct pollfd *pfd, int flag){
 				fp = fopen(fullpath, "rb");
 			}
 		}
-		char header[256];
 
 		if (!fp) {//send 404
 			snprintf(header, sizeof(header), "HTTP/1.1 404 Not Found\r\n%sContent-Length: 9\r\n\r\nNot Found", close);
@@ -677,6 +725,10 @@ int http_handler(struct pollfd *pfd, int flag){
 		
 	}
 }
+/// @brief Accept HTTP connection
+/// @param pfd 
+/// @param flag 
+/// @return 
 int http_handshake(struct pollfd *pfd, int flag){
 	http_context_t *ctx=http_context_create(pfd->fd);
 	if(!ctx){
