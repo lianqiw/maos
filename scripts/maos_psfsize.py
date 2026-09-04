@@ -21,7 +21,76 @@ try:
 except:
     natsorted=sorted
 import re
+def strip_prefix(strings):
+    if not strings:
+        return strings
 
+    prefix = os.path.commonprefix(strings)
+    arr=[s[len(prefix):] for s in strings]
+    arr = [s.lstrip("_") for s in arr]
+    return arr
+def strip_common(strings):
+    """
+    Remove:
+      1. common directory path
+      2. common filename prefix
+      3. common filename suffix
+
+    Parameters
+    ----------
+    strings : list[str]
+
+    Returns
+    -------
+    list[str]
+    """
+    def longest_common_substring(strings):
+        """Return the longest substring common to all strings."""
+        if not strings:
+            return ""
+    
+        shortest = min(strings, key=len)
+    
+        for length in range(len(shortest), 0, -1):
+            for start in range(len(shortest) - length + 1):
+                sub = shortest[start:start + length]
+                if all(sub in s for s in strings):
+                    return sub
+        return ""
+    if not strings:
+        return []
+
+    # Remove common directory path
+    paths = [Path(s) for s in strings]
+    parent = os.path.commonpath([str(p.parent) for p in paths])
+
+    names = []
+    for p in paths:
+        try:
+            rel = p.relative_to(parent)
+        except ValueError:
+            # Different drives (Windows), fall back to filename
+            rel = p.name
+        names.append(str(rel))
+
+    # Remove common prefix
+    prefix = os.path.commonprefix(names)
+    names = [n[len(prefix):] for n in names]
+
+    # Remove common suffix
+    rev_prefix = os.path.commonprefix([n[::-1] for n in names])
+    suffix = rev_prefix[::-1]
+
+    if suffix:
+        names = [n[:-len(suffix)] for n in names]
+
+    # Remove longest common middle substring
+    middle = longest_common_substring(names)
+    if middle:
+        names = [s.replace(middle, "...", 1) for s in names]
+
+    return names    
+# import maos_client
 def rms(*args, **kargs):
     """compute rms of input"""
     if len(args) > 1:
@@ -599,6 +668,7 @@ def proc_psf_fit(fn, fn_cache=None, **kargs):
         datas, headers=average_psf(fn)
         dps=parse_header_float(headers, 'DP') #pixel width
         wvls=parse_header_float(headers, 'WVL')*1e6 #wavelength, convert to micron
+        sums=parse_header_float(headers, 'SUM') #total intensity
         nwvl=datas.shape[0]
         model=np.empty((nwvl), dtype=object)
         
@@ -607,7 +677,7 @@ def proc_psf_fit(fn, fn_cache=None, **kargs):
             #res=maos_utils.print_psf_metrics(directory=f"{fd}/", x=-90, y=0, ee=50, seed=1)
             model[iwvl]=fit_moffat_roi(datas[iwvl], name=fn0, **kargs)
         if fn_cache is not None:
-            np.savez(fn_cache, dps=dps, wvls=wvls, model=model)
+            np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, model=model)
     #no longer caching ress
     nwvl=wvls.size
     ress=np.zeros((nwvl,3))
@@ -663,7 +733,7 @@ def proc_psf(fn, fn_cache=None, **kargs):
                 img=datas[iwvl]
                 aos.dshift2center(img, 0.5, 0.5) #make CoG at FFT zero frequency
                 nx, ny=img.shape
-                r=np.arange(nx/2)
+                r=np.arange(0, nx/2, 0.5)
                 azavg=aos.denc(img, r, -1, 0)
                 azavg/=azavg[0]
                 
@@ -689,7 +759,7 @@ def proc_psf(fn, fn_cache=None, **kargs):
         ress[iwvl, 2]=np.interp(0.8, enslit, r)*2*dps[iwvl] #Ensqlited 80% width
     return ress,dps,sums, wvls,enc
 
-def proc_psfs(fd, seeds=[1], use_fit=0, **kargs):
+def proc_psfs(fd, seeds=[1], use_fit=0, fdol=None,**kargs):
     """
     Read PSFs from a folder and compute FWHM.
     Multiple seeds are averaged before fitting
@@ -712,7 +782,7 @@ def proc_psfs(fd, seeds=[1], use_fit=0, **kargs):
         fr.append(np.sqrt(x*x+y*y))
         fx.append(x)
         fy.append(y)
-        fn_cache=f"{fd}/evlpsfcl_{'_'.join(map(str, seeds))}_x{x}_y{y}{'' if use_fit else '_enc'}.fits.npz"
+        fn_cache=f"{fd}/evlpsfcl_{'_'.join(map(str, seeds))}_x{x}_y{y}{'_moffat' if use_fit else '_enc'}.fits.npz"
         if use_fit:
             tmp=proc_psf_fit(fns2, fn_cache, **kargs)
         else:
@@ -736,11 +806,13 @@ def proc_psfs(fd, seeds=[1], use_fit=0, **kargs):
     err=np.std(ress,axis=0) #variation over the field
     
     #open loop
-    fn=f"{fd}/evlpsfol_{seeds[0]}.fits"
+    if fdol is None:
+        fdol=fd
+    fn=f"{fdol}/evlpsfol_{seeds[0]}.fits"
     fns2=[fn]
     for seed in seeds[1:]:
-        fns2.append(f"{fd}/evlpsfol_{seed}.fits")
-    fn_cache=f"{fd}/evlpsfol_{'_'.join(map(str, seeds))}{'' if use_fit else '_enc'}.fits.npz"
+        fns2.append(f"{fdol}/evlpsfol_{seed}.fits")
+    fn_cache=f"{fdol}/evlpsfol_{'_'.join(map(str, seeds))}{'_moffat' if use_fit else '_enc'}.fits.npz"
     if use_fit:
         ressol, dps, _, wvls, _=proc_psf_fit(fns2, fn_cache, **kargs)
     else:

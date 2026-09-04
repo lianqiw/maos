@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-systems="zspec zimager lris2csu lris2ifu lris2ifu_ltao mosfire kapa "
+systems="zspec zimager lris2csu lris2ifu mosfire kapa "
 atms="25pGL_25pFA 25pGL_50pFA 25pGL_75pFA 50pGL_25pFA 50pGL_50pFA 50pGL_75pFA 75pGL_25pFA 75pGL_50pFA 75pGL_75pFA "
 zas="30 45 55 60"
 alg0="tomo"
-rnes="0.1 2.7"
+rnes="0.1 "
 base="-c strata.conf sim.seeds=[1 10 20 30]"
 
 ### Special overrides here
 fasttt=0 #set to 1 to enable fast t/t
-atms="50pGL_50pFA" #only median seeing
-systems="mosfire lris2ifu" #subset of systems
+#atms="50pGL_50pFA" #only median seeing
+systems="zimager" #subset of systems
 khz=0 #test khz
 #alg0="tomo"
 zas="30"
@@ -26,13 +26,15 @@ else
     ngsdtrat=600 #guider only
 fi
 lgs4ngs1="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355 0] "
-lgs4ngs1_reduced="powfs.nwfs=[3 1] wfs.thetax=[-0.355 -0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0] powfs0_llt.ox= [-1 -1 1]*6.5  powfs0_llt.oy= [-1 1 -1]*1" #remove one of the LGS
-lgs4ngs1_reduced2="powfs.nwfs=[3 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove one of the LGS
-lgs4ngs1_ltao="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale]"
-lgs4ngs1_lris2ifu_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355*4 -0.355 0.355 0.355 0.5*4]/4 wfs.thetay=[-0.355*4 0.355 -0.355 0.355 0]/4 powfs.astscale=[850 540*$ngsscale]"
-lgs4ngs1_lris2ifu_hybrid2="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*4 0.5*4]/4 wfs.thetay=[-0.355 0.355 -0.355 0.355*4 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS
-lgs4ngs1_mosfire_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355/0.573 -0.355 0.355 0.355 0.5/0.573]*0.573 wfs.thetay=[-0.355/0.573 0.355 -0.355 0.355 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
-lgs4ngs1_mosfire_hybrid2="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355/0.573 0.5/0.573]*0.573 wfs.thetay=[-0.355 0.355 -0.355 0.355/0.573 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
+lgs4ngs1_reduced="powfs.nwfs=[3 1] wfs.thetax=[-0.355 -0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0] powfs0_llt.ox= [-1 -1 1]*6.5  powfs0_llt.oy= [-1 1 -1]*1" #remove one of the LGS close from evaluation field
+lgs4ngs1_reduced_oppo="powfs.nwfs=[3 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove one of the LGS oppo to evaluation field
+lgs4ngs1_reduced_2="powfs.nwfs=[2 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove two LGS
+lgs4ngs1_dichroic="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale]"
+lgs4ngs1_lris2ifu_hybrid_oppo="powfs.nwfs=[4 1] wfs.thetax=[-0.355*4 -0.355 0.355 0.355 0.5*4]/4 wfs.thetay=[-0.355*4 0.355 -0.355 0.355 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS oppo to evaluation field
+lgs4ngs1_lris2ifu_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*4 0.5*4]/4 wfs.thetay=[-0.355 0.355 -0.355 0.355*4 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS close to evaluation field
+lgs4ngs1_lris2ifu_one_oa="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*0 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355*0 0] " #retract one of the LGS close to evaluation field
+lgs4ngs1_mosfire_hybrid_oppo="powfs.nwfs=[4 1] wfs.thetax=[-0.355/0.573 -0.355 0.355 0.355 0.5/0.573]*0.573 wfs.thetay=[-0.355/0.573 0.355 -0.355 0.355 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
+lgs4ngs1_mosfire_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355/0.573 0.5/0.573]*0.573 wfs.thetay=[-0.355 0.355 -0.355 0.355/0.573 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
 lgs6ngs1="powfs.nwfs=[6 1] wfs.thetax=[1 0.5 -0.5 -1 -0.5 0.5 1]/2 wfs.thetay=[0 0.87 0.87 0 -0.87 -0.87 0]/2 \
     powfs0_llt.ox=[1 0.5 -0.5 -1 -0.5 0.5]*6.5  powfs0_llt.oy=[0 0.87 0.87 0 -0.87 -0.87]*6.5 "
 lgs8ngs3="wfs_lgs_ttf_tt.conf powfs.nwfs=[8 1 2] wfs.thetax=[1 0.71 0 -0.71 -1 -0.71 -0 0.71 0 -0.87 0.87]/2 wfs.thetay=[0 0.71 1 0.71 0 -0.71 -1 -0.71 1 -0.5 -0.5]/2 \
@@ -74,7 +76,7 @@ evl[mosfire]="evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5]*360\
 declare -A config
 config[lris2csu]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} ${evl[lris2csu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
 config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
-config[lris2ifu_ltao]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
+#config[lris2ifu_dichroic]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
 config[mosfire]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} powfs.dtrat=[1 $ngsdtrat] " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
 config[zimager]=" powfs.astscale=[50  240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 powfs.dtrat=[1 $ngsdtrat] " #Zshooter imager with circular FoV D=3'
 config[zspec]=" powfs.astscale=[15.2  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 powfs.dtrat=[1 $ngsdtrat] " #Zshooter spectrograph in LTAO mode
@@ -85,7 +87,7 @@ algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
 
-ast_extra="reduced2"
+ast_extra= #"one_oa"
 
 for sys in $systems;do   
     if [ $sys = kapa -a $fasttt -ne 0 ] ;then
@@ -114,10 +116,10 @@ for sys in $systems;do
                             else
                                 fd=${alg}_rne${rne}_${nlgs}_${lmag}
                             fi
-                            case $ast_extra in 
+                            case "$ast_extra" in 
                                 hybrid*)
                                     ast="lgs${nlgs}ngs1_${sys}_${ast_extra}" ;;
-                                reduced*)
+                                reduced* | dichroic*)
                                     ast="lgs${nlgs}ngs1_${ast_extra}" ;;
                                 *)
                                     ast="lgs${nlgs}ngs1" ;;
