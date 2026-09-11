@@ -8,8 +8,8 @@ base="-c strata.conf sim.seeds=[1 10 20 30]"
 
 ### Special overrides here
 fasttt=0 #set to 1 to enable fast t/t
-#atms="50pGL_50pFA" #only median seeing
-systems="zimager" #subset of systems
+atms="50pGL_50pFA" #only median seeing
+systems="lris2csu_dense" #subset of systems
 khz=0 #test khz
 #alg0="tomo"
 zas="30"
@@ -25,11 +25,14 @@ if [ $fasttt -ne 0 ];then
 else
     ngsdtrat=600 #guider only
 fi
-lgs4ngs1="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355 0] "
+lgs4ngs1="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355 0]  powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1"
+lgs4ngs1_rect="powfs.nwfs=[4 1] wfs.thetax=[-0.433 -0.433 0.433 0.433 0.5] wfs.thetay=[-0.25 0.25 -0.25 0.25 0] powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1" #rectangular asterism
+
 lgs4ngs1_reduced="powfs.nwfs=[3 1] wfs.thetax=[-0.355 -0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0] powfs0_llt.ox= [-1 -1 1]*6.5  powfs0_llt.oy= [-1 1 -1]*1" #remove one of the LGS close from evaluation field
 lgs4ngs1_reduced_oppo="powfs.nwfs=[3 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove one of the LGS oppo to evaluation field
 lgs4ngs1_reduced_2="powfs.nwfs=[2 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove two LGS
-lgs4ngs1_dichroic="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale]"
+
+lgs4ngs1_dichroic="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale]" #using LTAO asterism
 lgs4ngs1_lris2ifu_hybrid_oppo="powfs.nwfs=[4 1] wfs.thetax=[-0.355*4 -0.355 0.355 0.355 0.5*4]/4 wfs.thetay=[-0.355*4 0.355 -0.355 0.355 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS oppo to evaluation field
 lgs4ngs1_lris2ifu_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*4 0.5*4]/4 wfs.thetay=[-0.355 0.355 -0.355 0.355*4 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS close to evaluation field
 lgs4ngs1_lris2ifu_one_oa="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*0 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355*0 0] " #retract one of the LGS close to evaluation field
@@ -41,13 +44,18 @@ lgs8ngs3="wfs_lgs_ttf_tt.conf powfs.nwfs=[8 1 2] wfs.thetax=[1 0.71 0 -0.71 -1 -
     powfs0_llt.ox=[1 0.71 0 -0.71 -1 -0.71 -0 0.71]*6.5  powfs0_llt.oy=[0 0.71 1 0.71 0 -0.71 -1 -0.71 ]*6.5 "
 declare -A fit #field of view points for DM fitting
 declare -A evl #field of view points for evaluation
-
+fit_sq60="include=fit_sq60.conf fit.wt=[1 1 1 1 1 1 1 1 1 1 1 1 0.5 1 1 1 1 1 1 1 1 1 1 1 1] "
 fit[lris2csu]="fit.thetax = [-0.5 -0.5 -0.5 -0.5 -0.5 -0.25 -0.25 -0.25 -0.25 -0.25 0 0 0 0 0 0.25 0.25 0.25 0.25 0.25 0.5 0.5 0.5 0.5 0.5]*600 \
             fit.thetay = [-0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5 -0.5 -0.25 0 0.25 0.5]*300 \
             fit.wt     = [1 1 1 1 1 1 1 1 1 1 1 1 0.5 1 1 1 1 1 1 1 1 1 1 1 1]  \
             fit.fov    = 1"
 
 #Only use a quadrant
+evl_quad="evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5] \
+            evl.thetay = [0 0 0 0.25 0.25 0.25 0.5 0.5 0.5] \
+            evl.wt     = [1 1 1 1 1 1 1 1 1] \
+            evl.fov    = 1" 
+
 evl[lris2csu]="evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5]*600 \
             evl.thetay = [0 0 0 0.25 0.25 0.25 0.5 0.5 0.5]*300 \
             evl.wt     = [1 1 1 1 1 1 1 1 1] \
@@ -75,6 +83,8 @@ evl[mosfire]="evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5]*360\
 
 declare -A config
 config[lris2csu]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} ${evl[lris2csu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[lris2csu2]=" powfs.astscale=[432 540*$ngsscale] $fit_sq60 fit.fov=180 $evl_quad evl.fov=180 powfs.dtrat=[1 $ngsdtrat] " #LRIS2 reduced FoV 3'xx'. LGS is 7.2' Diam. Guider is at 4.5' off axis
+config[lris2csu_dense]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} evl.fov=600 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
 config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
 #config[lris2ifu_dichroic]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
 config[mosfire]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} powfs.dtrat=[1 $ngsdtrat] " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
@@ -87,7 +97,7 @@ algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
 
-ast_extra= #"one_oa"
+ast_extra= #"rect"
 
 for sys in $systems;do   
     if [ $sys = kapa -a $fasttt -ne 0 ] ;then
@@ -105,7 +115,7 @@ for sys in $systems;do
                         nlgss="4"
                     else
                         lmags="8"
-                        nlgss="4"
+                        nlgss="4 6"
                     fi
                 fi
                 for nlgs in $nlgss ;do
@@ -119,7 +129,7 @@ for sys in $systems;do
                             case "$ast_extra" in 
                                 hybrid*)
                                     ast="lgs${nlgs}ngs1_${sys}_${ast_extra}" ;;
-                                reduced* | dichroic*)
+                                reduced* | dichroic* | rect*)
                                     ast="lgs${nlgs}ngs1_${ast_extra}" ;;
                                 *)
                                     ast="lgs${nlgs}ngs1" ;;

@@ -880,23 +880,8 @@ void parse_argopt(char* cmds, argopt_t* options){
 			if(!start[0] && nopen){
 				error("Bracket is not closed: {%s} from {%s}\n", save_start, cmds);
 			}
-			/*
-			char* bend=strchr(start+1, ']');
-			char* bnextstart=strchr(start+1, '[');
-			if(bend){
-				if(!bnextstart||bend<bnextstart)){
-					for(; start<bend+1; start++){
-						if(start[0]=='\n') start[0]=' ';
-					}
-				}else{
-
-				}
-			} else{
-				
-				start++;
-			}*/
 		} else if(start[0]=='\''||start[0]=='"'){/*make sure we don't split strings that are part of value. */
-			char* quoteend=strchr(start, start[0]);
+			char* quoteend=strchr(start+1, start[0]);	
 			if(quoteend){
 				start=quoteend+1;
 			} else{

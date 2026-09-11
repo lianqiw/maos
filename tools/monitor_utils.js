@@ -7,9 +7,11 @@ function get_hostname() {
   var u = window.location.href;
   if (u.substring(0, 5) === "https") {
     window.pcol = "wss://";
+    window.hcol = "https://";
     u = u.substring(8);
   } else {
     window.pcol = "ws://";
+    window.hcol = "http://"; 
     if (u.substring(0, 4) === "http") {
       u = u.substring(7);
     }
@@ -17,7 +19,7 @@ function get_hostname() {
   u = u.split('/')[0];
   const p = u.indexOf(':');
   if (p != -1) {
-    port = u.substring(p);
+    window.port = u.substring(p);
   }
   return u;
 }

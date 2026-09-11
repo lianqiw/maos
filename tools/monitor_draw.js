@@ -290,7 +290,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         </ul>}></Menu>
       </ul>
       <div className="layout">
-        <ul className="tab_hosts" style={{width:'8em'}}>{/*draw sub-notebook (vertical)*/}
+        <ul className="tab_hosts" style={{width:'8em', overflowY: 'auto'}}>{/*draw sub-notebook (vertical)*/}
           {jobRef.current[jobActive]['drawData'][topActive[jobActive]] &&
             Object.keys(jobRef.current[jobActive]['drawData'][topActive[jobActive]]).sort().map((name) => (
               <li key={name} className={botActive[jobActive][topActive[jobActive]] === name ? "active" : ""}

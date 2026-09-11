@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <sys/random.h>
 #include "../sys/sys.h"
 #include "scheduler.h"
 #define BUF_SIZE 4096
@@ -83,6 +84,7 @@ typedef struct http_context_t{
 	SSL *ssl;
 #endif	
 	char *auth;//basic auth
+	char *cookie;//session cookie
 	int(*recv)(struct http_context_t*ctx, char *buf, size_t nbuf);
 	int(*send)(struct http_context_t*ctx, const char *buf, size_t nbuf);
 }http_context_t;
@@ -147,6 +149,7 @@ static void http_context_remove(http_context_t *ctx){
 	}
 #endif
 	free(ctx->auth); ctx->auth=NULL;
+	free(ctx->cookie); ctx->cookie=NULL;
 }
 #if HAVE_OPENSSL
 static int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
@@ -550,6 +553,41 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	}
     return 0;
 }
+#define TOKEN_BYTES 32
+
+static int generate_token(uint8_t *token, size_t len){
+    size_t offset = 0;
+
+    while (offset < len) {
+#ifdef __APPLE__
+		arc4random_buf(token + offset, len - offset);
+		ssize_t n = len;
+#else		
+        ssize_t n = getrandom(token + offset, len - offset, 0);
+#endif
+        if (n < 0)
+            return -1;
+
+        offset += n;
+    }
+
+    return 0;
+}
+
+char *generate_session_cookie(void){
+    uint8_t token[TOKEN_BYTES];
+
+    if (generate_token(token, sizeof(token)) != 0)
+        return NULL;
+
+    char token_hex[TOKEN_BYTES * 2 + 1];
+
+    for (size_t i = 0; i < TOKEN_BYTES; i++)
+        snprintf(&token_hex[i * 2], 3, "%02x", token[i]);
+
+    token_hex[sizeof(token_hex) - 1] = '\0';
+    return mystrdup(token_hex);
+}
 /*
 	Parse keys from http payload. The client needs to free the returned memory.
 */
@@ -635,13 +673,19 @@ int http_handler(struct pollfd *pfd, int flag){
 		warning_time("buf shall start with 'GET': '%s'. close connection. fd=%d\n", buf, fd);
 		return -1;//error
 	}
+	int set_cookie=0;
 	if(ctx->auth){
-		char *key=http_parse_key(buf, "Authorization: Basic");
-		//info("Got Authorization: Basic %s\n", key);
-		free(key);
-		if(!strstr(buf, ctx->auth)){
+		if(!ctx->cookie){
+			ctx->cookie=generate_session_cookie();
+		}
+		if(ctx->cookie && strstr(buf, ctx->cookie)){//Get cookie, no need to authenticate
+			//info("Got correct cookie.\n");
+		}else if(strstr(buf, ctx->auth)){//Get basic authentication, set cookie
+			//info("Got correct Authorization. Set Set-Cookie: session=%s.\n", ctx->cookie);
+			set_cookie=1;
+		}else{
 			dbg("Authentication failed. Sending 401 Unauthorized.\n");
-			snprintf(header, sizeof(header), 
+			mysnprintf(header, sizeof(header), 
 			"HTTP/1.1 401 Unauthorized\r\n"
 			"WWW-Authenticate: Basic realm='Private Area'\r\n"
 			"Content-Type: text/html; charset=UTF-8\r\n"
@@ -692,20 +736,23 @@ int http_handler(struct pollfd *pfd, int flag){
 				texttype="image/ico";
 			}
 			if(texttype){
-        		snprintf(fullpath, sizeof(fullpath), "%s/%s", SRCDIR "/tools", path);	
+        		mysnprintf(fullpath, sizeof(fullpath), "%s/%s", SRCDIR "/tools", path);	
 				fp = fopen(fullpath, "rb");
 			}
 		}
 
 		if (!fp) {//send 404
-			snprintf(header, sizeof(header), "HTTP/1.1 404 Not Found\r\n%sContent-Length: 9\r\n\r\nNot Found", close);
+			mysnprintf(header, sizeof(header), "HTTP/1.1 404 Not Found\r\n%sContent-Length: 9\r\n\r\nNot Found", close);
 			ans=ctx->send(ctx, header, strlen(header));
 		}else{//send file
 			fseek(fp, 0, SEEK_END);
 			long size = ftell(fp);
 			rewind(fp);
-			
-			snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Type: %s\r\nContent-Length: %ld\r\n\r\n", close, texttype, size);
+			if(set_cookie){
+				mysnprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sSet-Cookie: session=%s; Path=/; Max-Age=315360000; HttpOnly; SameSite=None; Secure\r\nContent-Type: %s\r\nContent-Length: %ld\r\n\r\n", close, ctx->cookie, texttype, size);
+			}else{
+				mysnprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n%sContent-Type: %s\r\nContent-Length: %ld\r\n\r\n", close, texttype, size);
+			}
 			if(ctx->send(ctx, header, strlen(header))){
 				ans=-1;
 			}else{

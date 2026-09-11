@@ -21,13 +21,16 @@ def coord2grid(x, **kargs):
         if 'dx' in kargs and kargs['dx']!=0:
             dx=kargs['dx']
         else:
-            dx2=x2[x2>0].min() #assume regular
-            dx=(xmax-xmin)*np.sqrt(np.pi*0.5/x.size) #assume evenly distributed
-            if(abs(dx-dx2)<(dx+dx2)*0.1):
-                dx=dx2
-        dx2 = 1./dx
-        nx = np.round((xmax-xmin)*dx2+1.).astype(int)
-        ix = np.floor(x2*dx2+1e-5).astype(int)
+            tol=(xmax-xmin)*1e-6
+            di=np.diff(np.sort(x2))
+            dx=np.median(di[di>tol])
+            #dx2=x2[x2>0].min() #assume regular
+            #dx=(xmax-xmin)*np.sqrt(np.pi*0.5/x.size) #assume evenly distributed
+            #if(abs(dx-dx2)<(dx+dx2)*0.1):
+            #    dx=dx2
+        dxi = 1./dx
+        nx = np.round((xmax-xmin)*dxi+1.).astype(int)
+        ix = np.floor(x2*dxi+1e-5).astype(int)
     else:
         ix = np.zeros(x.shape)
         nx = 1

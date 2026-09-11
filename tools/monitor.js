@@ -1,6 +1,7 @@
 "use strict"; //every variable need to be defined
 window.port = ':80';
 window.pcol = "ws://";
+window.hcol = "http://";
 const iconName = {0:"❓", 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
 //Notice: 
 //Always define Components outside of App.
@@ -118,7 +119,7 @@ function App() {
     } else {
       try {
         ws = new WebSocket(pcol + hostname + "/xxx", "maos-monitor-protocol");	/* + "/xxx" bit is for IE10 workaround */
-      } catch (err) {
+     } catch (err) {
         console.log(now(), `Monitor cannot create WebSocket to ${host}:`, err);
         return false;
       }

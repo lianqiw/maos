@@ -685,10 +685,13 @@ def proc_psf_fit(fn, fn_cache=None, **kargs):
         ress[iwvl, 0]=global_fwhm(model[iwvl])*dps[iwvl] #FWHM
         #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
         #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
-        #ress[iwvl, 1]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 en-squared diameter
-        #ress[iwvl, 2]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-squared diameter
-        ress[iwvl, 1]=slit_width(model[iwvl], 0.5)*dps[iwvl] #EE-50 slit width
-        ress[iwvl, 2]=slit_width(model[iwvl], 0.8)*dps[iwvl] #EE-80 slit width
+        
+        ress[iwvl, 1]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 en-squared diameter
+        ress[iwvl, 2]=slit_width(model[iwvl], 0.5)*dps[iwvl] #EE-50 slit width
+        ress[iwvl, 3]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-squared diameter
+        ress[iwvl, 4]=slit_width(model[iwvl], 0.8)*dps[iwvl] #EE-80 slit width
+
+        
         #alpha is manually set to 3, so the ratio between fwhm and EE-p% is constant
         #not a good idea to fit over alpha
     
@@ -733,7 +736,7 @@ def proc_psf(fn, fn_cache=None, **kargs):
                 img=datas[iwvl]
                 aos.dshift2center(img, 0.5, 0.5) #make CoG at FFT zero frequency
                 nx, ny=img.shape
-                r=np.arange(0, nx/2, 0.5)
+                r=np.arange(0, nx/2, 1)
                 azavg=aos.denc(img, r, -1, 0)
                 azavg/=azavg[0]
                 
@@ -747,7 +750,7 @@ def proc_psf(fn, fn_cache=None, **kargs):
             return None
     #no longer caching ress
     nwvl=wvls.size
-    ress=np.zeros((nwvl,3))
+    ress=np.zeros((nwvl,5))
     for iwvl in range(nwvl):
         azavg=enc[iwvl]['azavg']
         r=enc[iwvl]['r']
@@ -755,8 +758,11 @@ def proc_psf(fn, fn_cache=None, **kargs):
         enslit=enc[iwvl]['enslit']
         #np.interp require data to be ascending
         ress[iwvl, 0]=np.interp(0.5, azavg[::-1], r[::-1])*2*dps[iwvl] #FWHM
-        ress[iwvl, 1]=np.interp(0.8, ensquare, r)*2*dps[iwvl] #Ensquared 80% width
-        ress[iwvl, 2]=np.interp(0.8, enslit, r)*2*dps[iwvl] #Ensqlited 80% width
+        ress[iwvl, 1]=np.interp(0.5, ensquare, r)*2*dps[iwvl] #Ensquared 50% width
+        ress[iwvl, 2]=np.interp(0.5, enslit, r)*2*dps[iwvl] #Ensqlited 50% width
+        ress[iwvl, 3]=np.interp(0.8, ensquare, r)*2*dps[iwvl] #Ensquared 80% width
+        ress[iwvl, 4]=np.interp(0.8, enslit, r)*2*dps[iwvl] #Ensqlited 80% width
+
     return ress,dps,sums, wvls,enc
 
 def proc_psfs(fd, seeds=[1], use_fit=0, fdol=None,**kargs):
