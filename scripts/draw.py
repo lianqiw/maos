@@ -143,16 +143,17 @@ def draw(*args, **kargs):
             plt.gca().set_aspect('equal', adjustable='box')
             plt.xlabel('x (m)')
             plt.ylabel('y (m)')
+            return None
         elif len(args) >= 2:
             ct=0
             for arg1 in args[1:]:
                 ct+=1
                 if ct>1:
                     plt.figure(figsize=kargs.get('figsize'))
-                ims, ext2 = locembed(loc, arg1, return_ext=1, **kargs)
-                kargs['ext']=ext2
+                ims, ext = locembed(loc, arg1, return_ext=1, **kargs)
+                kargs['ext']=ext
                 draw(ims, **kargs)
-        return
+            return ims, ext
     ct=0
     stop=0
     for arg0 in args:
@@ -208,6 +209,7 @@ def draw(*args, **kargs):
             #cax = plt.gcf().add_axes([plt.gca().get_position().x1+0.01, plt.gca().get_position().y0, 0.02, plt.gca().get_position().height])
             #plt.colorbar(im, cax=cax)
             plt.grid(False)
+            return img
             #if type(arg0) == list or arg0.dtype == object or arg0.ndim==3 or (isloc(arg0)==False and arg0.ndim==2 and arg0.shape[0]*100<arg0.shape[1]):  # list, array of array or 3d array
         else: #many images
             if isinstance(arg0, list) or isinstance(arg0, tuple):
@@ -260,6 +262,7 @@ def draw(*args, **kargs):
                 else:
                     draw(arg0[iframe], **kargs)
             plt.gcf().tight_layout() #fix layout
+            return arg0
 # Use as standalone script
 if __name__ == "__main__":
     from readbin import read

@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
+#Default Configuration
 systems="zspec zimager lris2csu lris2ifu mosfire kapa "
 atms="25pGL_25pFA 25pGL_50pFA 25pGL_75pFA 50pGL_25pFA 50pGL_50pFA 50pGL_75pFA 75pGL_25pFA 75pGL_50pFA 75pGL_75pFA "
 zas="30 45 55 60"
 alg0="tomo"
-rnes="0.1 "
+rnes="0.1 2.7"
 base="-c strata.conf sim.seeds=[1 10 20 30]"
+lmags="8" #magnitude of LGS
+nlgss="4" #number of LGS
 
-### Special overrides here
+#Overrides 
 fasttt=0 #set to 1 to enable fast t/t
 atms="50pGL_50pFA" #only median seeing
-systems="lris2csu_dense" #subset of systems
-khz=0 #test khz
-#alg0="tomo"
 zas="30"
+systems="mosfire_dense" #subset of systems
+#khz=1 #test khz
+#alg0="tomo"
+rnes="0.1"
+nlgss="4 6"
 ### End
+ast_extra= #"rect"
 
 if [ $fasttt = 2 ];then
     ngsscale=0 #make NGS on axis
@@ -88,6 +94,7 @@ config[lris2csu_dense]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} evl
 config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
 #config[lris2ifu_dichroic]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
 config[mosfire]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} powfs.dtrat=[1 $ngsdtrat] " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
+config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} evl.fov=360 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
 config[zimager]=" powfs.astscale=[50  240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 powfs.dtrat=[1 $ngsdtrat] " #Zshooter imager with circular FoV D=3'
 config[zspec]=" powfs.astscale=[15.2  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 powfs.dtrat=[1 $ngsdtrat] " #Zshooter spectrograph in LTAO mode
 config[kapa]=" powfs.astscale=[15.2   0] powfs.wvl=[0.589 1.25]  powfs.pixtheta=[1 0.05] fit_oa.conf fit.fov=0 evl_x.conf evl.fov=20 evl.psfmean=0" #Kapa LTAO
@@ -97,7 +104,7 @@ algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
 
-ast_extra= #"rect"
+
 
 for sys in $systems;do   
     if [ $sys = kapa -a $fasttt -ne 0 ] ;then
@@ -107,21 +114,18 @@ for sys in $systems;do
         for atm in $atms;do
             for alg in $alg0 ;do
                 if [ $alg = idealfit ];then
-                    lmags=0
-                    nlgss=0
+                    lmags2=0
+                    nlgss2=0
+                    rnes2=0
                 else
-                    if [ $fasttt -ne 0 ];then
-                        lmags="8"
-                        nlgss="4"
-                    else
-                        lmags="8"
-                        nlgss="4 6"
-                    fi
+                    lmags2="$lmags"
+                    nlgss2="$nlgss"
+                    rnes2="$rnes"
                 fi
-                for nlgs in $nlgss ;do
-                    for lmag in $lmags ;do
-                        for rne in $rnes; do
-                            if [ $alg = idealfit ];then
+                for nlgs in $nlgss2 ;do
+                    for lmag in $lmags2 ;do
+                        for rne in $rnes2; do
+                            if [ $alg = "idealfit" ];then
                                 fd=${alg}
                             else
                                 fd=${alg}_rne${rne}_${nlgs}_${lmag}
