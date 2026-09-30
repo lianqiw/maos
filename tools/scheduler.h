@@ -31,6 +31,7 @@ typedef struct ws_proxy_t{
 }ws_proxy_t;
 void runned_remove(int pid);
 void running_kill(int pid);
+void runned_restart(int pid);
 int  maos_command(int pid, int sock, int cmd);
 int send_draw_sock(int sock, int pid);
 void monitor_add(int sock, int flag, int (*func)(char*buf, int nlen, int mode, void *userdata), void* userdata);

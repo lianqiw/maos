@@ -23,4 +23,5 @@ void sha1_update(SHA1_CTX *ctx, const unsigned char *data, size_t len);
 void sha1_final(SHA1_CTX *ctx, unsigned char *out);
 void base64_encode(const unsigned char *in, int in_len, char *out);
 void base64_sha1(const char* in,  char *out);
+char *generate_session_cookie(void);
 #endif

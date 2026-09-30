@@ -39,7 +39,6 @@
 #include <stdint.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include <sys/random.h>
 #include "../sys/sys.h"
 #include "scheduler.h"
 #define BUF_SIZE 4096
@@ -209,6 +208,16 @@ static http_context_t *http_context_get(int fd){
 	warning_time("http_context not found for fd=%d\n", fd);
 	return NULL;
 }
+char *read_line_trim(int *pn, FILE *fp){
+	char *line=NULL;
+	size_t lsize=0;
+	size_t n=getline(&line, &lsize, fp);
+	while(n>=1 && (line[n-1]==0 || isspace((int)line[n-1]))){
+		line[n-1]=0; n--;
+	}
+	*pn=n;
+	return line;
+}
 /**Create a context for fd. overriding existing one if exists */
 static http_context_t *http_context_create(int fd){
 	char buf[5]={0};
@@ -266,28 +275,38 @@ static http_context_t *http_context_create(int fd){
 	//parse user password
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "%s/.aos/htpasswd", HOME);
-	FILE *fp=fopen(fn, "r");
-	while(fp){
-		char *line=NULL;
-		size_t lsize=0;
-		size_t n=getline(&line, &lsize, fp);
+	FILE *fp=NULL;
+	if((fp=fopen(fn, "r"))){
+		int n;
+		char *line=read_line_trim(&n, fp);
 		fclose(fp);
-		while(n>=1 && (line[n-1]==0 || isspace((int)line[n-1]))){
-			line[n-1]=0; n--;
+		if(n>2){
+			char *user_pass=stradd(USER, ":", line, NULL);
+			n=strlen(user_pass);
+			size_t nout=4*((n+2)/3);
+			char *out=mycalloc(nout, char);
+			base64_encode((const unsigned char*)user_pass, n, out);
+			http_context[jc].auth=stradd("Authorization: Basic ", out, NULL);
+			free(user_pass);
+			free(out);
 		}
-		if(n<=2) break;
-		char *user_pass=stradd(USER, ":", line, NULL);
-		n=strlen(user_pass);
-		size_t nout=4*((n+2)/3);
-		char *out=mycalloc(nout, char);
-		base64_encode((const unsigned char*)user_pass, n, out);
-		http_context[jc].auth=stradd("Authorization: Basic ", out, NULL);
 		free(line);
-		free(user_pass);
-		free(out);
-		break;
+	}
+	//Create a cookie for easy reauthentication
+	if(http_context[jc].auth){
+		snprintf(fn, PATH_MAX, "%s/.aos/htcookie", HOME);
+		if((fp=fopen(fn, "r"))){
+			int n;
+			http_context[jc].cookie=read_line_trim(&n, fp);
+			fclose(fp);
+		}else if((fp=fopen(fn, "w"))){
+			http_context[jc].cookie=generate_session_cookie();
+			fprintf(fp, "%s\n", http_context[jc].cookie);
+			fclose(fp);
+		}
 	}
 	info("auth=%s\n", http_context[jc].auth?http_context[jc].auth:"(none)");
+	info("cookie=%s\n",http_context[jc].cookie?http_context[jc].cookie:"(none)");
 	return &http_context[jc];
 }
 
@@ -553,41 +572,6 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	}
     return 0;
 }
-#define TOKEN_BYTES 32
-
-static int generate_token(uint8_t *token, size_t len){
-    size_t offset = 0;
-
-    while (offset < len) {
-#ifdef __APPLE__
-		arc4random_buf(token + offset, len - offset);
-		ssize_t n = len;
-#else		
-        ssize_t n = getrandom(token + offset, len - offset, 0);
-#endif
-        if (n < 0)
-            return -1;
-
-        offset += n;
-    }
-
-    return 0;
-}
-
-char *generate_session_cookie(void){
-    uint8_t token[TOKEN_BYTES];
-
-    if (generate_token(token, sizeof(token)) != 0)
-        return NULL;
-
-    char token_hex[TOKEN_BYTES * 2 + 1];
-
-    for (size_t i = 0; i < TOKEN_BYTES; i++)
-        snprintf(&token_hex[i * 2], 3, "%02x", token[i]);
-
-    token_hex[sizeof(token_hex) - 1] = '\0';
-    return mystrdup(token_hex);
-}
 /*
 	Parse keys from http payload. The client needs to free the returned memory.
 */
@@ -675,9 +659,6 @@ int http_handler(struct pollfd *pfd, int flag){
 	}
 	int set_cookie=0;
 	if(ctx->auth){
-		if(!ctx->cookie){
-			ctx->cookie=generate_session_cookie();
-		}
 		if(ctx->cookie && strstr(buf, ctx->cookie)){//Get cookie, no need to authenticate
 			//info("Got correct cookie.\n");
 		}else if(strstr(buf, ctx->auth)){//Get basic authentication, set cookie

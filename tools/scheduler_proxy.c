@@ -229,6 +229,9 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 		} else if(!strcmp(sep, "KILL")){
 			info_time("HTTP client send term signal to %5d term signal.\n", pid);
 			running_kill(pid);
+		} else if(!strcmp(sep, "RESTART")){
+			dbg_time("HTTP client request restart job %d\n", pid);
+			runned_restart(pid);
 		} else if(pid>0 && !strcmp(sep, "MONITOR")){
 			if(ws.forward){//forward mode
 				if(ws_proxy_get_fd(ws.userdata)>-1){

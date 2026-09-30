@@ -22,7 +22,9 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/random.h>
 #include "sha1.h"
+#include "misc.h"
 struct SHA1_CTX{
     uint32_t h[5];
     unsigned char block[64];
@@ -125,4 +127,40 @@ void base64_sha1(const char* in,  char *out){
     sha1_update(&sha_ctx, (unsigned char*)in, strlen(in));
     sha1_final(&sha_ctx, sha);
     base64_encode(sha, sizeof(sha), out);
+}
+
+#define TOKEN_BYTES 32
+
+static int generate_token(uint8_t *token, size_t len){
+    size_t offset = 0;
+
+    while (offset < len) {
+#ifdef __APPLE__
+		arc4random_buf(token + offset, len - offset);
+		ssize_t n = len;
+#else		
+        ssize_t n = getrandom(token + offset, len - offset, 0);
+#endif
+        if (n < 0)
+            return -1;
+
+        offset += n;
+    }
+
+    return 0;
+}
+
+char *generate_session_cookie(void){
+    uint8_t token[TOKEN_BYTES];
+
+    if (generate_token(token, sizeof(token)) != 0)
+        return NULL;
+
+    char token_hex[TOKEN_BYTES * 2 + 1];
+
+    for (size_t i = 0; i < TOKEN_BYTES; i++)
+        snprintf(&token_hex[i * 2], 3, "%02x", token[i]);
+
+    token_hex[sizeof(token_hex) - 1] = '\0';
+    return mystrdup(token_hex);
 }

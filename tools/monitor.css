@@ -158,8 +158,21 @@ ul.tab_hosts li.active{
 .menu-list li:hover {
   background-color: #EFEFEF;
 }
-
-.menu-button :hover {
+.cross {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+	line-height: 1;
+}
+.cross:hover {
+  background-color:red;
+  color: white;
+}
+.menu-button:hover {
   background-color: #EFEFEF;
 }
 .black-bar{

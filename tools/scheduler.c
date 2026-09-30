@@ -208,7 +208,7 @@ void runned_remove(int pid){
 /**
    Restart a crashed/finished job
 */
-static void runned_restart(int pid){
+void runned_restart(int pid){
 	RUN_T *irun=NULL;
 	for(RUN_T **curr=&runned; *curr;){
 		irun=*curr;

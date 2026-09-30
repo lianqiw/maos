@@ -1,5 +1,5 @@
 "use strict"; //every variable need to be defined
-window.port = ':80';
+window.port = '';
 window.pcol = "ws://";
 window.hcol = "http://";
 const iconName = {0:"❓", 1: "▶️", 2: "🕒", 3: "🆕", 4: "🕒", 11: "✅", 12: "❌", 13: "❌", 14: "❌", 15: "❌" };
@@ -61,6 +61,7 @@ function App() {
   const [selectedRows, setSelectedRows] = useState(new Set());//handle row select
   const [dragging, setDragging] = useState(false);//handle dragging
   const [dragStart, setDragStart] = useState(null);//handle dragging
+  const [shiftAnchor, setShiftAnchor] = useState(null);//handle shift click
   const didDrag = useRef(false);
   const tableRef = useRef(null);
   const popupRef = useRef(null);
@@ -110,7 +111,7 @@ function App() {
     if (!host || host.length == 0) return false;
     var hostname=hosts[host]
     if(!hostname) return false;
-    if (hostname.indexOf(':') == -1) {
+    if (hostname.indexOf(':') == -1 && port!=='') {
       hostname += port;
     }
     let ws;
@@ -143,7 +144,7 @@ function App() {
       reconnect(host)
     };
     ws.onerror = (err) => {
-      console.log(now(), `Monitor connection error from ${host}`);
+      console.log(now(), `Monitor connection error from ${host}: `, err);
     };
     ws.onmessage = (event) => {
       if (typeof event.data === "string") {//instanceof does not work for string
@@ -184,7 +185,7 @@ function App() {
               i[2] = parseInt(i[2]);//pid
               i[11] = parseInt(i[11]);//remaining time
               i[12] = parseInt(i[12]);//total time
-              const icon = (i[12] > 0 || i[3] != 11) ? iconName[i[3]] : "⏩";
+              const icon = (i[12] > 0 || i[3] != 11) ? iconName[i[3]] : "⏭️";
               const frac = Math.round(100 * (1 - (i[12] == 0 ? 1 : i[11] / i[12]))) + '%';
               let prog = i[12] == 0 ? "" : i[7] + '/' + i[8] + ' ' + step2str(i[9]) + '/' + step2str(i[10])+' '+sec2str(i[3]==1?i[11]:i[12])
               if (i[5] === '0.00') i[5] = '';
@@ -309,6 +310,8 @@ function App() {
               return acc + `${v.PID}&KILL;`;
             } else if (cmd === "kill_selected" && v.status < 11 && selectedRows.has(v.PID)) {
               return acc + `${v.PID}&KILL;`;
+            } else if (cmd === "restart_selected" && v.status >10 && selectedRows.has(v.PID)) {
+              return acc + `${v.PID}&RESTART;`;
             }
           }
           return acc;//do not concatenate
@@ -349,12 +352,34 @@ function App() {
     );
   };
 
-  const handleClick = (pid) => {
-    // Don't process the click generated at the end of a drag
-    if (didDrag.current) {
-      didDrag.current = false;
-      return;
-    }
+ const handleClick = (e, pid) => {
+  // Don't process the click generated at the end of a drag
+  if (didDrag.current) {
+    didDrag.current = false;
+    return;
+  }
+
+  const index = filteredJobs.findIndex(row => row.PID === pid);
+  if (index < 0) return;
+  const isModifier = e.ctrlKey || e.metaKey;
+  if (e.shiftKey && shiftAnchor !== null) {
+    const start = Math.min(shiftAnchor, index);
+    const end = Math.max(shiftAnchor, index);
+    const range = filteredJobs
+      .slice(start, end + 1)
+      .map(row => row.PID);
+    setSelectedRows(prev => {
+      if (isModifier) {
+        // Ctrl+Shift: add the range to the existing selection
+        const next = new Set(prev);
+        range.forEach(pid => next.add(pid));
+        return next;
+      }
+      // Shift alone: replace selection with the range
+      return new Set(range);
+    });
+  } else if (isModifier) {
+    // Ctrl/Cmd-click: toggle this row
     setSelectedRows(prev => {
       const next = new Set(prev);
       if (next.has(pid)) {
@@ -364,9 +389,25 @@ function App() {
       }
       return next;
     });
-  };
-
+    // Ctrl-click establishes a new anchor
+    setShiftAnchor(index);
+  } else {
+    // Normal click: select only this row
+    setSelectedRows(new Set([pid]));
+    setShiftAnchor(index);
+  }
+};
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedRows(new Set());
+        setExpandedCell(null);
+        setDragging(false);
+        setDragStart(null);
+        didDrag.current = false;
+      }
+    };
+
     const handleClickOutside = (e) => {
       if (tableRef.current && !tableRef.current.contains(e.target)) {
         setSelectedRows(new Set());
@@ -375,8 +416,10 @@ function App() {
         setExpandedCell(null);
       }
     };
+    document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
+      document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
@@ -384,16 +427,18 @@ function App() {
   try{
     return (
       <div ref={tableRef}>
-        <ul className="inline tab_hosts">
+        <ul className="inline tab_hosts" style={{zIndex: 10, position: "sticky", top: 0}}>
           <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
             <ul className="menu-list" >
-              <li onClick={() => { cmdHost(active, selectedRows.size>0?"clear_selected":"clear_all"); }}>☑️ Clear {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "clear_all"); }}>🧹 Clear All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              {selectedRows.size>0 && <li onClick={() => { cmdHost(active, "clear_selected"); }}>☑️ Clear Selected Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>}
               <li onClick={() => { cmdHost(active, "clear_finished"); }}>✅ Clear Finished Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-              <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏩ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, "clear_skipped"); }}>⏭️ Clear Skipped Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               <li onClick={() => { cmdHost(active, "clear_crashed"); }}>❌ Clear Crashed Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
-              <li onClick={() => { cmdHost(active, selectedRows.size>0?"kill_selected":"kill_all"); }}>🟥 Kill {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              <li onClick={() => { cmdHost(active, selectedRows.size>0?"kill_selected":"kill_all"); }}>🛑 Kill {selectedRows.size>0?"Selected":"All"} Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
+              {selectedRows.size>0 && <li onClick={() => { cmdHost(active, "restart_selected"); }}>🔄 Restart Selected Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>}
               {job.filter((row) => (row.status == 1 || row.status == 3)).map((row) =>
-                (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW") }}>▶️ Plot {row.PID} at {row.Host}</li>))}
+                (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW") }}>📊 Plot {row.PID} at {row.Host}</li>))}
             </ul>
           }></Menu>
           <li className={active === "" ? "active" : ""} onClick={() => setActive("")}>
@@ -402,8 +447,8 @@ function App() {
           {Object.keys(hosts).filter((v) => hosts[v] != undefined).map((host) => (//List of hosts
             <li key={host} className={active === host ? "active" : ""}>
               <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(host); }}>{wss[host] ? "🟢" : "🔴"}</span>
-              <span title="Switch to host" onClick={() => { setActive(host); }}>{host}</span>
-              <span title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>&nbsp;⛌</span>
+              <span title="Switch to host" onClick={() => { setActive(host); }}>{host}&nbsp; </span>
+              <span className="cross" title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>✖</span>
             </li>
           ))}
           <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { setHosts((oldVal)=>({...oldVal, [split_hostname(text)]:text}))}}}>
@@ -412,8 +457,8 @@ function App() {
           </li>
           {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
             <li key={job} className={active === job ? "active" : ""}>
-              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname}</span>
-              <span onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>&nbsp;⛌</span>
+              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname}&nbsp; </span>
+              <span className="cross" onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>✖</span>
             </li>))}
         </ul>
         {!active.includes(':') && (
@@ -432,7 +477,7 @@ function App() {
             <tbody style={{ userSelect: dragging ? 'none' : 'auto' }} onMouseUp={() => setDragging(false)}>
               {filteredJobs.map((row, i) => (
                 <tr key={row.PID} 
-                    onClick={() => handleClick(row.PID)}
+                    onClick={e => handleClick(e, row.PID)}
                     onMouseDown={(e) => {handleMouseDown(e, i);}}
                     onMouseEnter={() => {if (dragging) {handleMouseEnter(i)};}}
                   style={{backgroundColor: selectedRows.has(row.PID) ? "#dbeafe" : undefined}}>
