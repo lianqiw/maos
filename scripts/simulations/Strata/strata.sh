@@ -13,11 +13,14 @@ nlgss="4" #number of LGS
 fasttt=0 #set to 1 to enable fast t/t
 atms="50pGL_50pFA" #only median seeing
 zas="30"
-systems="mosfire_dense" #subset of systems
+systems="kapa" #subset of systems
 #khz=1 #test khz
 #alg0="tomo"
-rnes="0.1"
-nlgss="4 6"
+rnes="0.1 2.0 2.7"
+nlgss="4 "
+sodium=
+use_cog=2 #use CoG for LGS. 1: recon, 2: sim
+#"D150"
 ### End
 ast_extra= #"rect"
 
@@ -31,20 +34,20 @@ if [ $fasttt -ne 0 ];then
 else
     ngsdtrat=600 #guider only
 fi
-lgs4ngs1="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355 0]  powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1"
-lgs4ngs1_rect="powfs.nwfs=[4 1] wfs.thetax=[-0.433 -0.433 0.433 0.433 0.5] wfs.thetay=[-0.25 0.25 -0.25 0.25 0] powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1" #rectangular asterism
+lgs4ngs1="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355 -0.355 0.355 0.355 0.5 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355 0 0]  powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1"
+lgs4ngs1_rect="powfs.nwfs=[4 1 1] wfs.thetax=[-0.433 -0.433 0.433 0.433 0.5 0.5] wfs.thetay=[-0.25 0.25 -0.25 0.25 0 0] powfs0_llt.ox= [-1 -1 1 1]*6.5  powfs0_llt.oy= [-1 1 -1 1]*1" #rectangular asterism
 
-lgs4ngs1_reduced="powfs.nwfs=[3 1] wfs.thetax=[-0.355 -0.355 0.355 0.5] wfs.thetay=[-0.355 0.355 -0.355 0] powfs0_llt.ox= [-1 -1 1]*6.5  powfs0_llt.oy= [-1 1 -1]*1" #remove one of the LGS close from evaluation field
-lgs4ngs1_reduced_oppo="powfs.nwfs=[3 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove one of the LGS oppo to evaluation field
-lgs4ngs1_reduced_2="powfs.nwfs=[2 1] wfs.thetax=[0.355 -0.355 0.355 0.5] wfs.thetay=[0.355 0.355 -0.355 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove two LGS
+lgs4ngs1_reduced="powfs.nwfs=[3 1 1] wfs.thetax=[-0.355 -0.355 0.355 0.5 0.5] wfs.thetay=[-0.355 0.355 -0.355 0 0] powfs0_llt.ox= [-1 -1 1]*6.5  powfs0_llt.oy= [-1 1 -1]*1" #remove one of the LGS close from evaluation field
+lgs4ngs1_reduced_oppo="powfs.nwfs=[3 1 1] wfs.thetax=[0.355 -0.355 0.355 0.5 0.5] wfs.thetay=[0.355 0.355 -0.355 0 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove one of the LGS oppo to evaluation field
+lgs4ngs1_reduced_2="powfs.nwfs=[2 1 1] wfs.thetax=[0.355 -0.355 0.355 0.5 0.5] wfs.thetay=[0.355 0.355 -0.355 0 0] powfs0_llt.ox= [1 -1 1]*6.5  powfs0_llt.oy= [1 1 -1]*1" #remove two LGS
 
-lgs4ngs1_dichroic="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale]" #using LTAO asterism
-lgs4ngs1_lris2ifu_hybrid_oppo="powfs.nwfs=[4 1] wfs.thetax=[-0.355*4 -0.355 0.355 0.355 0.5*4]/4 wfs.thetay=[-0.355*4 0.355 -0.355 0.355 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS oppo to evaluation field
-lgs4ngs1_lris2ifu_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*4 0.5*4]/4 wfs.thetay=[-0.355 0.355 -0.355 0.355*4 0]/4 powfs.astscale=[850 540*$ngsscale]" #retract one of the LGS close to evaluation field
-lgs4ngs1_lris2ifu_one_oa="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*0 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355*0 0] " #retract one of the LGS close to evaluation field
-lgs4ngs1_mosfire_hybrid_oppo="powfs.nwfs=[4 1] wfs.thetax=[-0.355/0.573 -0.355 0.355 0.355 0.5/0.573]*0.573 wfs.thetay=[-0.355/0.573 0.355 -0.355 0.355 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
-lgs4ngs1_mosfire_hybrid="powfs.nwfs=[4 1] wfs.thetax=[-0.355 -0.355 0.355 0.355/0.573 0.5/0.573]*0.573 wfs.thetay=[-0.355 0.355 -0.355 0.355/0.573 0]*0.573 powfs.astscale=[1335 800*$ngsscale]"
-lgs6ngs1="powfs.nwfs=[6 1] wfs.thetax=[1 0.5 -0.5 -1 -0.5 0.5 1]/2 wfs.thetay=[0 0.87 0.87 0 -0.87 -0.87 0]/2 \
+lgs4ngs1_dichroic="$lgs4ngs1 powfs.astscale=[15.2 540*$ngsscale 540*$ngsscale]" #using LTAO asterism
+lgs4ngs1_lris2ifu_hybrid_oppo="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355*4 -0.355 0.355 0.355 0.5*4 0.5*4]/4 wfs.thetay=[-0.355*4 0.355 -0.355 0.355 0 9]/4 powfs.astscale=[850 540*$ngsscale 540*$ngsscale]" #retract one of the LGS oppo to evaluation field
+lgs4ngs1_lris2ifu_hybrid="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*4 0.5*4 0.5*4]/4 wfs.thetay=[-0.355 0.355 -0.355 0.355*4 0 0]/4 powfs.astscale=[850 540*$ngsscale  540*$ngsscale]" #retract one of the LGS close to evaluation field
+lgs4ngs1_lris2ifu_one_oa="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355 -0.355 0.355 0.355*0 0.5 0.5] wfs.thetay=[-0.355 0.355 -0.355 0.355*0 0 0] " #retract one of the LGS close to evaluation field
+lgs4ngs1_mosfire_hybrid_oppo="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355/0.573 -0.355 0.355 0.355 0.5/0.573 0.5/0.573]*0.573 wfs.thetay=[-0.355/0.573 0.355 -0.355 0.355 0 0]*0.573 powfs.astscale=[1335 800*$ngsscale 800*$ngsscale]"
+lgs4ngs1_mosfire_hybrid="powfs.nwfs=[4 1 1] wfs.thetax=[-0.355 -0.355 0.355 0.355/0.573 0.5/0.573 0.5/0.573]*0.573 wfs.thetay=[-0.355 0.355 -0.355 0.355/0.573 0 0]*0.573 powfs.astscale=[1335 800*$ngsscale 800*$ngsscale]"
+lgs6ngs1="powfs.nwfs=[6 1 1] wfs.thetax=[1 0.5 -0.5 -1 -0.5 0.5 1 1]/2 wfs.thetay=[0 0.87 0.87 0 -0.87 -0.87 0 0]/2 \
     powfs0_llt.ox=[1 0.5 -0.5 -1 -0.5 0.5]*6.5  powfs0_llt.oy=[0 0.87 0.87 0 -0.87 -0.87]*6.5 "
 lgs8ngs3="wfs_lgs_ttf_tt.conf powfs.nwfs=[8 1 2] wfs.thetax=[1 0.71 0 -0.71 -1 -0.71 -0 0.71 0 -0.87 0.87]/2 wfs.thetay=[0 0.71 1 0.71 0 -0.71 -1 -0.71 1 -0.5 -0.5]/2 \
     powfs0_llt.ox=[1 0.71 0 -0.71 -1 -0.71 -0 0.71]*6.5  powfs0_llt.oy=[0 0.71 1 0.71 0 -0.71 -1 -0.71 ]*6.5 "
@@ -88,23 +91,29 @@ evl[mosfire]="evl.thetax = [0 0.25 0.5 0 0.25 0.5 0 0.25 0.5]*360\
             evl.fov    = 1" 
 
 declare -A config
-config[lris2csu]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} ${evl[lris2csu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
-config[lris2csu2]=" powfs.astscale=[432 540*$ngsscale] $fit_sq60 fit.fov=180 $evl_quad evl.fov=180 powfs.dtrat=[1 $ngsdtrat] " #LRIS2 reduced FoV 3'xx'. LGS is 7.2' Diam. Guider is at 4.5' off axis
-config[lris2csu_dense]=" powfs.astscale=[850 540*$ngsscale] ${fit[lris2csu]} evl.fov=600 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
-config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
+ngs_glao=" powfs.dtrat=[1 $ngsdtrat 1000000]"
+config[lris2csu]=" powfs.astscale=[850 540*$ngsscale 540*$ngsscale] ${fit[lris2csu]} ${evl[lris2csu]} $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[lris2csu_dense]=" ${config[lris2csu]} evl.fov=600 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' evl.thetay= " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[lris2csu_narrow]=" powfs.astscale=[432 540*$ngsscale 540*$ngsscale] $fit_sq60 fit.fov=180 $evl_quad evl.fov=180 $ngs_glao " #LRIS2 reduced FoV 3'xx'. LGS is 7.2' Diam. Guider is at 4.5' off axis
+config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} $ngs_glao " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
 #config[lris2ifu_dichroic]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
-config[mosfire]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} powfs.dtrat=[1 $ngsdtrat] " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
-config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale] ${fit[mosfire]} evl.fov=360 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' powfs.dtrat=[1 $ngsdtrat] " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
-config[zimager]=" powfs.astscale=[50  240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 powfs.dtrat=[1 $ngsdtrat] " #Zshooter imager with circular FoV D=3'
-config[zspec]=" powfs.astscale=[15.2  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 powfs.dtrat=[1 $ngsdtrat] " #Zshooter spectrograph in LTAO mode
-config[kapa]=" powfs.astscale=[15.2   0] powfs.wvl=[0.589 1.25]  powfs.pixtheta=[1 0.05] fit_oa.conf fit.fov=0 evl_x.conf evl.fov=20 evl.psfmean=0" #Kapa LTAO
+config[mosfire]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} $ngs_glao " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
+config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[mosfire]} evl.fov=360 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[zimager]=" powfs.astscale=[50 240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 $ngs_glao " #Zshooter imager with circular FoV D=3'
+config[zimager_dense]=" powfs.astscale=[50  240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl.fov=180 evl.thetax='type=square; nring=9; ratio=1; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[zspec]=" powfs.astscale=[15.2 240*$ngsscale  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 $ngs_glao " #Zshooter spectrograph in LTAO mode
+config[kapa]=" powfs.astscale=[15.2 0 0] powfs.wvl=[0.589 1.25 0.8]  powfs.pixtheta=[1 0.05 0.5] fit_oa.conf fit.fov=0 evl_x.conf evl.fov=20 evl.psfmean=0 powfs.dtrat=[1 1 1000]" #Kapa LTAO
 #config[kola]="$lgs8ngs3 powfs.astscale=[60 30 30] powfs.wvl=[0.589 1.25 1.25] powfs.nwvl=[1 1 1] powfs.pixtheta=[1 0.05 0.05] fit_cir60.conf fit.fov=60 evl_x.conf evl.fov=60 dm.offset+=[1/3 2/3] dm.ht+=[6000 10000] sim.dt=1/1500 " #Example 
 declare -A algs
 algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly to DM
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
-
-
+#for sodium in W1.2 ; do #W1.2 W1.5 W1.8
+for ss in 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5; do ast_extra=Q$ss #pixel scale. P(ideal LLT). Q (actual LLT)
+#for ss in 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 ;do ast_extra=N$ss #aperture size with random (S), fixed (V) or without (N) super resolution
+#for ast_extra in P0.5 ;do
+#for ast_extra in D100 ; do #asterism size
+#for ast_extra in X6 X8 X10 X12 ;do #number of pixels
 
 for sys in $systems;do   
     if [ $sys = kapa -a $fasttt -ne 0 ] ;then
@@ -130,6 +139,7 @@ for sys in $systems;do
                             else
                                 fd=${alg}_rne${rne}_${nlgs}_${lmag}
                             fi
+                            ast2_extra=""
                             case "$ast_extra" in 
                                 hybrid*)
                                     ast="lgs${nlgs}ngs1_${sys}_${ast_extra}" ;;
@@ -138,8 +148,65 @@ for sys in $systems;do
                                 *)
                                     ast="lgs${nlgs}ngs1" ;;
                             esac
-                            echo $ast
-                            conf="$base ${config[${sys}]} ${!ast} powfs.mag=[${lmag} 8.5] atm/atm_mk${atm}.conf powfs.rne=[$rne 0.5] ${algs[${alg}]}"
+                            case "$ast_extra" in 
+                                D*)
+                                #asterism size
+                                ast2="powfs.astscale=[${ast_extra:1} 240*$ngsscale]"
+                                ;;
+                                P*)
+                                #pixel size
+                                ast2="powfs.pixtheta=[${ast_extra:1} 0.5 0.5]"
+                                ;;
+                                Q*)
+                                #pixel size with uplink blurry due to focus error
+                                ast2="powfs.pixtheta=[${ast_extra:1} 0.5 0.5] powfs0_llt.focus=140 "
+                                ;;
+                                X*)
+                                #subaperture field of view
+                                ast2="powfs.pixpsa=[-${ast_extra:1} 6 6] powfs.notf=[40 0 0] sim.seeds=[1] "
+                                ast2_extra="mtch"
+                                #ast2+=" powfs.phytype_recon=[2 2 2]"
+                                ;;
+                                N*)
+                                #subaperture size without super resolution
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[0 0 0] powfs.misregy=[0 0 0] powfs.misregc=[0 0 0] save.setup=1 "
+                                ;;
+                                S*) 
+                                #subaperture size with super resolution
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[1 0 0] powfs.misregy=[1 0 0] powfs.misregc=[1 0 0] save.setup=1 "
+                                ;;
+                                U*) 
+                                #subaperture size with super resolution
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] wfs.misregx=[0.5 -0.5 0.5 -0.5 0 0] wfs.misregy=[0.5 0.5 -0.5 -0.5 0 0] save.setup=1 "
+                                ;;
+                                V*) 
+                                #subaperture size with super resolution
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] wfs.misregx=[0 0.5 0.5 0 0 0] wfs.misregy=[0 0.5 0 0.5 0 0] save.setup=1 "
+                                ;;
+                                *)
+                                ast2=
+                            esac
+                            case $sodium in
+                                W*)
+                                #scale sodium profile depth
+                                ast3="powfs0_llt.fnprof=NapMean${sodium:1}x.bin save.setup=0 "
+                                if [ "$sodium" != "W1.0" -a "x$sodium" != "x" ];then
+                                    fd+="_$sodium"
+                                fi
+                                ;;
+                                *)
+                                ast3=
+                                ;;
+                            esac
+                            if [ x$use_cog = x1 ];then
+                                ast2+=" powfs.phytype_recon=[2 2 2]"
+                                ast2_extra="cog"
+                            elif [ x$use_cog = x2 ];then
+                                ast2+=" powfs.phytype_sim=[2 2 2]"
+                                ast2_extra="cog2"
+                            fi
+                            echo $sys $ast
+                            conf="$base sim.zadeg=${za} ${config[${sys}]} ${!ast} ${ast2} ${ast3} powfs.mag=[${lmag} 8.5 8.5] atm/atm_mk${atm}.conf powfs.rne=[$rne 0.5 0.5] ${algs[${alg}]}"
 
                             if [ $fasttt -ne 0 ]; then
                                 if [ $ngsscale = 0 ];then
@@ -151,15 +218,21 @@ for sys in $systems;do
                             if [ "$ast_extra" != "" ];then
                                 fd+='_'${ast_extra}
                             fi
+                            if [ "$ast2_extra" != "" ];then
+                                fd+='_'${ast2_extra}
+                            fi
                             if [ "$khz" = 1 ];then
                                 fd+='_1khz'
                                 conf+=" sim.dt=1/1000 sim.end=10020 "
                             fi
-                            maos $conf -o strata/${sys}/za${za}/${atm}/${fd} -d
-                        done
-                    done
-                done
-            done
-        done
-    done
-done
+                            maos $conf -o strata/${sys}/za${za}/${atm}/${fd} -d # sim.end=0 save.setup=1 plot.all=1
+      
+                        done #for rne
+                    done #for lmag
+                done #nlgs
+            done #for alg
+        done #for atm
+    done #for za
+done #for sys
+done #for ast_exctra
+#done #for sodium

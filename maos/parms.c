@@ -785,7 +785,7 @@ static void readcfg_wfs(parms_t *parms){
 				warning_once("When both wfs.misreg and powfs.misreg are set, the former is used\n");
 			} else{
 				if(iwfs==P(parms->powfs[ipowfs].wfs,0)){
-					info("powfs[%d].misreg=%6.2f %6.2f %7.2f is converted to\n", ipowfs, 
+					info("powfs[%d].misreg=%6.2f %6.2f %7.2f is converted to wfs.misreg\n", ipowfs, 
 					parms->powfs[ipowfs].misregx, parms->powfs[ipowfs].misregy, parms->powfs[ipowfs].misregc);
 				}
 				int do_rand=parms->powfs[ipowfs].nwfs>1 && MISREG_SEQ!=0;
@@ -794,8 +794,8 @@ static void readcfg_wfs(parms_t *parms){
 				parms->wfs[iwfs].misregc=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregc;
 			}
 		
-			info("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
-				iwfs, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, parms->wfs[iwfs].misregc);
+			/*info("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
+				iwfs, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, parms->wfs[iwfs].misregc);*/
 		}
 		if((parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy||parms->wfs[iwfs].misregc)&&parms->powfs[ipowfs].type!=WFS_SH){
 			warning("wfs.misreg is only used for Shack Hartmann WFS\n");
@@ -3705,14 +3705,16 @@ static void print_parms(const parms_t *parms){
 		const real rho=RSS(parms->wfs[i].thetax, parms->wfs[i].thetay)*RAD2AS;
 		real th=rho==0?0:atan2(parms->wfs[i].thetay, parms->wfs[i].thetax)*180/M_PI;
 		//if(th<0) th+=360;
-		info("    wfs %2d: powfs %d, at (%7.2f, %7.2f) (%5.1f, %4.0f°) arcsec, %3.0f km, siglev is %7.1f", i,
-			parms->wfs[i].powfs,parms->wfs[i].thetax*RAD2AS,
-			parms->wfs[i].thetay*RAD2AS, rho, th, 
+		info("    wfs %2d: powfs %d, at %5.1f arcsec, %4.0f°, %3.0f km, siglev is %7.1f", i,
+			parms->wfs[i].powfs, rho, th, 
 			parms->wfs[i].hs*1e-3,parms->wfs[i].siglev*parms->powfs[ipowfs].dtrat);
 		if((parms->wfs[i].siglev-parms->wfs[i].sigsim)>EPS){
 			info(" (%g in simulation)",parms->wfs[i].sigsim);
 		}
 		info(" bkgrnd is %g",parms->powfs[ipowfs].bkgrnd);
+		info(" misreg is %.1f° (%.1f, %.1f) dsa ",  parms->wfs[i].misregc/M_PI*180, 
+			parms->wfs[i].misregx/parms->powfs[ipowfs].dsa, 
+			parms->wfs[i].misregy/parms->powfs[ipowfs].dsa);
 		info("\n");
 		if(fabs(parms->wfs[i].thetax)>1||fabs(parms->wfs[i].thetay)>1){
 			warning("wfs %d thetax or thetay appears too large\n", i);

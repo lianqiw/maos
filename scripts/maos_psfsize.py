@@ -86,7 +86,7 @@ def strip_common(strings):
 
     # Remove longest common middle substring
     middle = longest_common_substring(names)
-    if middle:
+    if len(middle)>5:
         names = [s.replace(middle, "...", 1) for s in names]
 
     return names    
@@ -331,7 +331,7 @@ def global_fwhm(model):
     # Circularized FWHM
     return fwhm_major * np.sqrt(q)
       
-def slit_width(model, fraction=0.8):
+def moffat_slit_width(model, fraction=0.8):
     """
     Return the width of an infinitely long slit that encloses
     `fraction` of the total PSF energy.
@@ -680,22 +680,19 @@ def proc_psf_fit(fn, fn_cache=None, **kargs):
             np.savez(fn_cache, dps=dps, sums=sums, wvls=wvls, model=model)
     #no longer caching ress
     nwvl=wvls.size
-    ress=np.zeros((nwvl,3))
+    if 'EEs' in kargs:
+        EEs=kargs['EEs']
+    else:
+        EEs=[0.5, 0.8]
+    ress=np.zeros((nwvl,1+len(EEs)*2))
     for iwvl in range(nwvl):
         ress[iwvl, 0]=global_fwhm(model[iwvl])*dps[iwvl] #FWHM
         #ress[iwvl, 1]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 diameter
         #ress[iwvl, 2]=moffat_encircle_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-circled diameter
+        for iEE in range(len(EEs)):
+            ress[iwvl, 1+iEE*2]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], EEs[iEE])*dps[iwvl] #EE- en-squared diameter
+            ress[iwvl, 2+iEE*2]=moffat_slit_width(model[iwvl], EEs[iEE])*dps[iwvl] #EE- slit width
         
-        ress[iwvl, 1]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.5)*dps[iwvl] #EE-50 en-squared diameter
-        ress[iwvl, 2]=slit_width(model[iwvl], 0.5)*dps[iwvl] #EE-50 slit width
-        ress[iwvl, 3]=moffat_ensquare_width(gamma[iwvl], alpha[iwvl], 0.8)*dps[iwvl] #EE-80 en-squared diameter
-        ress[iwvl, 4]=slit_width(model[iwvl], 0.8)*dps[iwvl] #EE-80 slit width
-
-        
-        #alpha is manually set to 3, so the ratio between fwhm and EE-p% is constant
-        #not a good idea to fit over alpha
-    
-    #print(f'Save results to {fn_cache}')
     return ress,dps,sums,wvls,model
 def proc_psf(fn, fn_cache=None, **kargs):
     """
@@ -750,7 +747,11 @@ def proc_psf(fn, fn_cache=None, **kargs):
             return None
     #no longer caching ress
     nwvl=wvls.size
-    ress=np.zeros((nwvl,5))
+    if 'EEs' in kargs:
+        EEs=kargs['EEs']
+    else:
+        EEs=[0.5, 0.8]
+    ress=np.zeros((nwvl,1+len(EEs)*2))
     for iwvl in range(nwvl):
         azavg=enc[iwvl]['azavg']
         r=enc[iwvl]['r']
@@ -758,10 +759,9 @@ def proc_psf(fn, fn_cache=None, **kargs):
         enslit=enc[iwvl]['enslit']
         #np.interp require data to be ascending
         ress[iwvl, 0]=np.interp(0.5, azavg[::-1], r[::-1])*2*dps[iwvl] #FWHM
-        ress[iwvl, 1]=np.interp(0.5, ensquare, r)*2*dps[iwvl] #Ensquared 50% width
-        ress[iwvl, 2]=np.interp(0.5, enslit, r)*2*dps[iwvl] #Ensqlited 50% width
-        ress[iwvl, 3]=np.interp(0.8, ensquare, r)*2*dps[iwvl] #Ensquared 80% width
-        ress[iwvl, 4]=np.interp(0.8, enslit, r)*2*dps[iwvl] #Ensqlited 80% width
+        for iEE in range(len(EEs)):
+            ress[iwvl, 1+iEE*2]=np.interp(EEs[iEE], ensquare, r)*2*dps[iwvl] #Ensquared width
+            ress[iwvl, 2+iEE*2]=np.interp(EEs[iEE], enslit, r)*2*dps[iwvl] #Ensqlited width
 
     return ress,dps,sums, wvls,enc
 
@@ -832,3 +832,5 @@ def proc_psfs(fd, seeds=[1], use_fit=0, fdol=None,**kargs):
         ressc = None
     return ressc
     
+def concat_dict(ress):
+    return {k: np.array([d[k] for d in ress if d is not None]) for k in ress[0]}
