@@ -587,10 +587,20 @@ static void readcfg_powfs(parms_t *parms){
 					powfsi->phyusenea=0;
 				}
 			}
+			if(powfsi->pixpsa<0){
+				powfsi->pixpsa=2*round(-0.5*powfsi->pixpsa*AS2RAD/powfsi->pixtheta);
+				dbg("powfs%d: pixpsa is converted to %d\n", ipowfs, powfsi->pixpsa);
+			}
+			if(powfsi->radpix<0){
+				powfsi->radpix=2*round(-0.5*powfsi->radpix*AS2RAD/powfsi->pixtheta);
+				dbg("powfs%d: pixpsa is converted to %d\n", ipowfs, powfsi->radpix);
+			}
 			long pixpsay=powfsi->pixpsa;
 			long pixpsax=powfsi->radpix;
 			if(!pixpsax) pixpsax=pixpsay;
-			if(pixpsax*pixpsay<4){
+			if(pixpsay==0){
+				error("powfs%d: pixpsa and radpix cannot both be zero\n", ipowfs);
+			}else if(pixpsax*pixpsay<4){
 				powfsi->mtchcr=0;//cannot do constraint.
 			}
 
@@ -775,7 +785,7 @@ static void readcfg_wfs(parms_t *parms){
 				warning_once("When both wfs.misreg and powfs.misreg are set, the former is used\n");
 			} else{
 				if(iwfs==P(parms->powfs[ipowfs].wfs,0)){
-					dbg("powfs[%d].misreg=%6.2f %6.2f %7.2f is converted to\n", ipowfs, 
+					info("powfs[%d].misreg=%6.2f %6.2f %7.2f is converted to\n", ipowfs, 
 					parms->powfs[ipowfs].misregx, parms->powfs[ipowfs].misregy, parms->powfs[ipowfs].misregc);
 				}
 				int do_rand=parms->powfs[ipowfs].nwfs>1 && MISREG_SEQ!=0;
@@ -784,7 +794,7 @@ static void readcfg_wfs(parms_t *parms){
 				parms->wfs[iwfs].misregc=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregc;
 			}
 		
-			dbg("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
+			info("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
 				iwfs, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, parms->wfs[iwfs].misregc);
 		}
 		if((parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy||parms->wfs[iwfs].misregc)&&parms->powfs[ipowfs].type!=WFS_SH){

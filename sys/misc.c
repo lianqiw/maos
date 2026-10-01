@@ -705,7 +705,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 	const int ncmd=strlen(cmds);
 	char* cmds_end=cmds+ncmd;
 	char* start=cmds;
-	char* conf_start=cmds;
+	//char* conf_start=cmds;
 	while(start<cmds_end){
 		if(isspace((int)start[0])||start[0]=='\n'){
 			start[0]=' ';
@@ -865,8 +865,9 @@ void parse_argopt(char* cmds, argopt_t* options){
 			start+=5;
 			if(*start0=='\n') start0++;
 			start[0]='\n';//restore
-			start++;		
-			str_swap(&conf_start, start0, start);//gather conf files before key=values
+			start++;
+			//The following is disabled to avoid inconsistency
+			//str_swap(&conf_start, start0, start);//gather conf files before key=values
 		} else if(start[0]=='['){/*make sure we don't split brackets that are part of value. */
 			const char *save_start=start;
 			int nopen=1; //opening brackets not closed.

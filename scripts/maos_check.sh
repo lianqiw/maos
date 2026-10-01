@@ -175,11 +175,11 @@ run_maos "LGS MCAO (MVM):  " -cmcao_lgs.conf fit.alg=0 recon.mvm=1
 else
 run_maos_gpu "LGS MCAO (MVM):  " -cmcao_lgs.conf fit.alg=0 recon.mvm=1
 fi
-run_maos "LGS MCAO PCCD:  " -cmcao_lgs.conf powfs.radpix=[16,0,0] powfs.pixpsa=[6,0,0]
+run_maos "LGS MCAO PCCD:  " -cmcao_lgs.conf powfs.radpix=[16,0,0] powfs.pixpsa=[6,6,6]
 
-run_maos "SLGS MCAO (inte): " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0] recon.split=0
+run_maos "SLGS MCAO (inte): " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,6,6] recon.split=0
 
-run_maos "SLGS MCAO (ahst):  " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,0,0] recon.split=1 tomo.splitlrt=2
+run_maos "SLGS MCAO (ahst):  " -cmcao_lgs.conf powfs.fnllt=['llt_SL.conf',,] powfs.pixpsa=[16,6,6] recon.split=1 tomo.splitlrt=2
 
 run_maos "LGS NCPA noatm: " -cmcao_lgs.conf sim.noatm=1 ncpa.surf=["'rms=150;L0=20;D=60;SURFEVL=0;'"] sim.wspsd= powfs.noisy=[0] atm.r0z=10 powfs0_llt.fnsurf="'rms=150;mode=5;D=0.5;dx=1/64'" #should be close to 0.
 

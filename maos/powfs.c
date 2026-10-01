@@ -776,7 +776,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				real ddy=(0-P(parms->powfs[ipowfs].llt->oy, illt));
 				desrot=atan2(ddy, ddx);
 			}
-			dmat* saa=powfs[ipowfs].saamax;
+			dmat* saa=PR(powfs[ipowfs].saa, illt);
 			for(int isa=0; isa<nsa; isa++){
 				int ind=(int)round(P(P(powfs[ipowfs].srsa, illt), isa)/dprint);
 				real irot=fabs(P(P(powfs[ipowfs].srot, illt), isa)-desrot);
