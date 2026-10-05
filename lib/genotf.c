@@ -283,6 +283,7 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 	GENOTF_T data={*potf, loc, amp, opdbias, area, thres, wvl, npsfx, npsfy, nsa, pttr, cov, pval, isafull, otffull};
 	thread_t* tdata=thread_prep(0, nsa, NCPU, genotf_wrap, &data);
 	CALL_THREAD(tdata, 1);
+	fprintf(stderr,"\n");
 	free(tdata);
 	cfree(otffull);
 	dfree(B);

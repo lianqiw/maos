@@ -503,7 +503,7 @@ void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 	dmat *res=P(P(reseach, 1), ipath);
 	dmat *res_ho=P(P(reseach, 2), ipath);
 	const int nevl=NX(res);
-	int istart=MAX(isim-1000, 20);
+	int istart=MAX((int)(0.2*isim), 20);
 	if(istart>=isim) istart=0;
 	for(int ievl=0; ievl<nevl; ievl++){
 		int jevl=(int)P(P(P(reseach, 0), 0), ievl);

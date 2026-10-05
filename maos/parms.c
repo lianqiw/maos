@@ -789,9 +789,9 @@ static void readcfg_wfs(parms_t *parms){
 					parms->powfs[ipowfs].misregx, parms->powfs[ipowfs].misregy, parms->powfs[ipowfs].misregc);
 				}
 				int do_rand=parms->powfs[ipowfs].nwfs>1 && MISREG_SEQ!=0;
-				parms->wfs[iwfs].misregx=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregx;
-				parms->wfs[iwfs].misregy=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregy;
-				parms->wfs[iwfs].misregc=(do_rand?(2*randu(&stat)-1):1)*parms->powfs[ipowfs].misregc;
+				parms->wfs[iwfs].misregx=(do_rand?(randu(&stat)-0.5):0.5)*parms->powfs[ipowfs].misregx;
+				parms->wfs[iwfs].misregy=(do_rand?(randu(&stat)-0.5):0.5)*parms->powfs[ipowfs].misregy;
+				parms->wfs[iwfs].misregc=(do_rand?(randu(&stat)-0.5):0.5)*parms->powfs[ipowfs].misregc;
 			}
 		
 			/*info("  wfs[%d].misreg=%6.2f %6.2f %7.2f\n",
@@ -3180,39 +3180,9 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		}
 	}
 
-	if(parms->recon.alg==RECON_MVR){//MVM: tomo+fit
-		if(parms->tomo.alg==-1){//default to CG
-			parms->tomo.alg=ALG_CG;
-		}
-		if(parms->tomo.alg==ALG_CG){
-			if(parms->nhipowfs>1){
-				if(parms->tomo.precond==PCG_FD){
-					info("Disable FDPCG when there are multiple high order powfs.\n");
-					parms->tomo.precond=PCG_NONE;
-				}
-			}else if(parms->tomo.precond==-1){
-				if(parms->fit.fovas<=120){
-					parms->tomo.precond=PCG_FD;
-				}else{
-					parms->tomo.precond=PCG_NONE;
-				}
-			}
-		}else{
-			parms->tomo.precond=PCG_NONE;
-		}
-		if(parms->fit.alg==-1){
-			if(parms->recon.modal){
-				parms->fit.alg=parms->recon.mvm?ALG_SVD:ALG_CG;
-			}else{
-				parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS or SVD.
-			}
-		}else if(parms->recon.modal && parms->fit.alg==ALG_CBS){
-			warning("recon.modal cannot work with CBS. Change to SVD.\n");
-			parms->fit.alg=ALG_SVD;
-		}
-	}
 	if(parms->atmr.dx<EPS){
-		/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
+		/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. 
+		2026-10-06: it is not helpful to use dxbase=dm.dx when dm.dx is smaller than powfs.dsa (super resolution)*/
 		real dxbase=INFINITY;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].lo||parms->powfs[ipowfs].skip){
@@ -3243,6 +3213,37 @@ static void setup_parms_postproc_recon(parms_t *parms){
 			dxbase=0.5;
 		}
 		parms->atmr.dx=dxbase;
+	}
+	if(parms->recon.alg==RECON_MVR){//MVM: tomo+fit
+		if(parms->tomo.alg==-1){//default to CG
+			parms->tomo.alg=ALG_CG;
+		}
+		if(parms->tomo.alg==ALG_CG){
+			if(parms->nhipowfs>1){
+				if(parms->tomo.precond==PCG_FD){
+					warning("Disable FDPCG when there are multiple high order powfs.\n");
+					parms->tomo.precond=PCG_NONE;
+				}
+			}else if(parms->tomo.precond==-1){
+				if(parms->fit.fovas<=120){
+					parms->tomo.precond=PCG_FD;
+				}else{
+					parms->tomo.precond=PCG_NONE;
+				}
+			}
+		}else{
+			parms->tomo.precond=PCG_NONE;
+		}
+		if(parms->fit.alg==-1){
+			if(parms->recon.modal){
+				parms->fit.alg=parms->recon.mvm?ALG_SVD:ALG_CG;
+			}else{
+				parms->fit.alg=parms->recon.mvm?ALG_CBS:ALG_CG;//MVM is only good with CBS or SVD.
+			}
+		}else if(parms->recon.modal && parms->fit.alg==ALG_CBS){
+			warning("recon.modal cannot work with CBS. Change to SVD.\n");
+			parms->fit.alg=ALG_SVD;
+		}
 	}
 	if(parms->tomo.cone){
 		real hs=NAN;
@@ -3324,6 +3325,9 @@ static void setup_parms_postproc_recon(parms_t *parms){
 		/*Assign CG interations*/
 		if(parms->tomo.alg==ALG_CG&&parms->tomo.maxit<=0){
 			real maxit=4;//minimal 4 iterations is needed
+			if(parms->tomo.maxit<-1){
+				maxit*=-parms->tomo.maxit;
+			}
 			if(parms->recon.mvm){
 				maxit*=parms->load.mvmi?1:25;//assembly mvm needs more steps
 			} else{

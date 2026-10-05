@@ -68,7 +68,7 @@ void gpu_print_mem(const char* msg){
 	size_t fr, tot;
 	cudaDeviceSynchronize();
 	DO(cudaMemGetInfo(&fr, &tot));
-	info("GPU %d: mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
+	dbg("GPU %d: mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -279,7 +279,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		if(mem_minimum==0){//gpu is disabled
 			return 0;
 		} else{
-			info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
+			dbg("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(real)(1024*1024*1024));
 		}
 	} else{
 		mem_minimum=1000000000;//1GB.
