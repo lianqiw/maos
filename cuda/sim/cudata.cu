@@ -87,13 +87,13 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 	int ans;
 	if((ans=cudaSetDevice(igpu))){
 		info("GPU%2d cudaSetDevice failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
-		return 0;
+		return 100;
 	}else if((ans=cudaMemGetInfo(&fr, &tot))){
 		info("GPU%2d cudaMemGetInfo failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
-		return 0;
+		return 100;
 	}else if((ans=cudaGetDeviceProperties(&prop, igpu))){
 		info("GPU%2d cudaGetDeviceProperties failed with error %d: %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));
-		return 0;
+		return 100;
 	}else{
 #if CUDA_VERSION >= 8000
 		int pageableMemoryAccess=prop.pageableMemoryAccess;
@@ -106,8 +106,12 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 		int managedMemory=0;
 		int unifiedAddressing=0;
 #endif
-		info("GPU%2d is %s with arch %d.%d (%d%d%d%d), %.1fGB free, %.1fGB total device memory.\n", igpu, prop.name, prop.major, prop.minor, 
-			pageableMemoryAccess, concurrentManagedAccess, managedMemory, unifiedAddressing, fr*9.3e-10, tot*9.3e-10);
+		long usage=100;
+		if((long)fr>minimum){
+			usage=(long)((tot-fr)*100./tot);
+		} 
+		info("GPU%2d is %s with arch %d.%d (%d%d%d%d), %.1fGB free, %.1fGB total device memory. Usage=%ld%%\n", igpu, prop.name, prop.major, prop.minor, 
+			pageableMemoryAccess, concurrentManagedAccess, managedMemory, unifiedAddressing, fr*9.3e-10, tot*9.3e-10, usage);
 		/*if(0){
 			dbg("PageableMemoryAccess=%d, concurrentManagedAccess=%d, managedMemory=%d, unifiedAddressing=%d\n",
 				prop.pageableMemoryAccess, prop.concurrentManagedAccess, prop.managedMemory, prop.unifiedAddressing);
@@ -143,11 +147,7 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 
 			To improve the performance, data prefetching and data usage hints maybe helpful.
 		*/
-		if((long)fr>minimum){
-			return (long)((tot-fr)*100./tot);
-		} else{
-			return 0;
-		}
+		return usage;
 	}
 }
 /*static int cmp_long_ascend(const long *a, const long *b){
@@ -160,7 +160,7 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 	}
 }*/
 static int cmp_long2_ascend(const long* a, const long* b){
-	if(b[1]<a[1]){
+	if(a[1]>b[1]){
 		return 1;
 	} else if(a[1]<b[1]){
 		return -1;
@@ -169,7 +169,7 @@ static int cmp_long2_ascend(const long* a, const long* b){
 	}
 }
 static int cmp_long3_ascend(const long *a, const long *b){
-	if(b[2]<a[2]){
+	if(a[2]>b[2]){
 		return 1;
 	} else if(a[2]<b[2]){
 		return -1;
@@ -313,7 +313,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		goto end;
 	}
 	//sort to obtain [1] as nvidia-smi index
-	qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void *, const void *))cmp_long2_ascend);
+	qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), (int(*)(const void *, const void *))cmp_long2_ascend);
 	//check whether GPU is disabled by environment variable
 	for(int ig=0; ig<MAXGPU; ig++){
 		gpu_info(1,ig)=ig;//PCI-id ordering. (nvidia-smi order)
@@ -363,7 +363,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			}
 		}
 		/*sort so that gpus with more available memory is in the front.*/
-		qsort(gpu_info, MAXGPU, sizeof(gpu_info[0]), (int(*)(const void*, const void*))cmp_long3_ascend);
+		qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), (int(*)(const void*, const void*))cmp_long3_ascend);
 		for(int ig=0; ig<ngpu; ig++){
 			if(gpu_info(3,ig) && gpu_info(2,ig)<100){
 				GPUS(NGPU,0)=(int)gpu_info(0,ig);//cuda index
