@@ -462,6 +462,7 @@ void listen_port(listen_opt_t opt){
 
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
+	static double lasttime=0;
 	//quit_listen is set by listen_signal_handler to 1 when need to quit
 	while(quit_listen<2&&nlisten){
 		//int new_connection=0;
@@ -501,7 +502,6 @@ void listen_port(listen_opt_t opt){
 			}
 			//don't break. Listen for connection close events.
 		}
-		
 		int navail=poll(pfd, npfd, opt.timeout_sec*1e3);
 		if(navail<0){//select failed
 			if(errno==EINTR){
@@ -563,9 +563,10 @@ void listen_port(listen_opt_t opt){
 					}
 				}
 			}
-		}else if(opt.timeout_fun){
-			//only run timeout_fun when timeout actually happens.
-			//if((timeout_sec==0||navail==0)&&!new_connection&&timeout_fun){
+		}
+		double thistime=myclockd();
+		if(opt.timeout_fun && (navail==0 || thistime>=lasttime+opt.timeout_sec)){
+			lasttime=thistime;
 			opt.timeout_fun();
 		}
 		nlisten=0;

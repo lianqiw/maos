@@ -305,8 +305,8 @@ static http_context_t *http_context_create(int fd){
 			fclose(fp);
 		}
 	}
-	info("auth=%s\n", http_context[jc].auth?http_context[jc].auth:"(none)");
-	info("cookie=%s\n",http_context[jc].cookie?http_context[jc].cookie:"(none)");
+	dbg("auth=%s\n", http_context[jc].auth?http_context[jc].auth:"(none)");
+	dbg("cookie=%s\n",http_context[jc].cookie?http_context[jc].cookie:"(none)");
 	return &http_context[jc];
 }
 

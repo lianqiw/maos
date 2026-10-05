@@ -179,7 +179,7 @@ function procBuffer(rawBuffer) {
     return v;
   }
   function getStr() {
-    return String.fromCharCode.apply(null, getByteArray().slice(0, -1));//drop terminating \0
+    return String.fromCharCode.apply(null, getByteArray().slice(0, -1)).trim();//drop terminating \0
   }
   let len;
   try{

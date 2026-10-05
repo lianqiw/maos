@@ -150,9 +150,10 @@ ul.tab_hosts li.active{
 .menu-list li {
   cursor: pointer;
   white-space: nowrap;
-  width: 93%;
+  /*width: 93%;*/
   display: flex;
   align-items:center;
+  padding: 0.3em;
 }
 
 .menu-list li:hover {
@@ -213,4 +214,11 @@ ul.tab_hosts li.active{
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+.menu-icon{
+	width: 1.5em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 0.2em;
 }

@@ -357,6 +357,31 @@ void running_kill(int pid){
 		//dbg_time("%5d term signal sent\n", pid);
 	}
 }
+///check whether the job still exists
+static int check_job_exists(RUN_T *irun){
+	int ans=0;
+	if(irun && irun->pid>0 && irun->status.info<10){
+		time_t now=myclocki();
+		if(kill(irun->pid, 0)){//No longer exists
+			if(irun->last_time+60<now){//allow grace period.
+				info_time("check_jobs: Job %d no longer exists. Change status to S_CRASH\n", irun->pid);
+				running_remove(irun->pid, S_CRASH);
+			}else{//wait 1 minute before forceful cleanup
+				ans=1;
+			}
+		} else {
+			ans=1;
+			if((irun->last_time+600<now)){
+				//do not attempt to kill as there maybe a networking issue.
+				info_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
+						irun->pid, now-irun->last_time);
+				irun->status.info=S_UNKNOWN;
+				monitor_send(irun, NULL);
+			}
+		}
+	}
+	return ans;
+}
 /**
 	check all the jobs. remove if any job quited.
  */
@@ -364,26 +389,10 @@ static void check_jobs(void){
 	RUN_T* irun=NULL, *irun_next=NULL;
 	int nrunning=0;
 	if(running){
-		time_t now=myclocki();
 		for(irun=running; irun; irun=irun_next){
 			irun_next=irun->next;
 			if(irun->pid>0){//Running job
-				if(kill(irun->pid, 0)){//No longer exists
-					if(irun->last_time+60<now){//allow grace period.
-						dbg_time("check_jobs: Job %d no longer exists. Change status to S_CRASH\n", irun->pid);
-						running_remove(irun->pid, S_CRASH);
-					}else{
-						nrunning++;
-					}
-				} else {
-					nrunning++;
-					if((irun->last_time+600<now)){
-						dbg_time("check_jobs: Job %d does not update after %lu seconds. Change status to S_UNKNOWN\n",
-								irun->pid, now-irun->last_time);
-						irun->status.info=S_UNKNOWN;
-						monitor_send(irun, NULL);
-					}
-				}
+				nrunning+=check_job_exists(irun)?1:0;
 			}
 		}
 	}
@@ -414,7 +423,7 @@ static void process_queue(void){
 	//dbg2_time("nused_cpu=%d, ngpu=%d, avail=%d\n", nrun_get(0), nrun_get(1), avail);
 	RUN_T* irun=running_get_by_status(S_WAIT);
 	if(irun){//There are jobs waiting.
-		if(irun->sock>0){//already connected.
+		if(irun->sock>0){//already connected. we start it
 			int nthread=irun->nthread;
 			int avail=get_cpu_avail();
 			if(nrun_get(0)+nthread<=NCPU&&(nthread<=avail||avail>=3)
@@ -422,55 +431,49 @@ static void process_queue(void){
 				irun->last_time=myclocki();
 				irun->status.timlast=myclocki();
 				if(stwriteint(irun->sock, S_START)){
-					dbg_time("Starting Job %d at %d failed: %s\n", irun->pid, irun->sock, strerror(errno));
+					warning_time("Starting Job %d at %d failed: %s\n", irun->pid, irun->sock, strerror(errno));
 				} else{
-					dbg_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
+					info_time("Starting Job %d at %d ok.\n", irun->pid, irun->sock);
 				}
 				//we mark the sate as running in either state and let check_job do the clean up
 				irun->status.info=S_START;
 				nrun_add(irun->pid, irun->nthread, irun->ngpu);
 				monitor_send(irun, NULL);
 			}
-		} else{
-			if(kill(irun->pid, 0)){
-				dbg_time("Job %d already exited. irun->sock=%d, change to UNKNOWN.\n", irun->pid, irun->sock);
-				irun->status.info=S_UNKNOWN;
+		} else{//check job status
+			check_job_exists(irun);
+		}
+	}
+	if(nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
+		//static double lasttime2=0;
+		//time_t thistime2=myclocki();
+		//if(thistime2>lasttime2+0.001){//wait 1ms for job to connect.
+			//lasttime2=thistime2;
+			irun=running_get_by_status(S_QUEUED);
+			if(!irun){
+				dbg_time("all jobs are done\n");
+				all_done=1;
+				nrun_handle(3, 0, 0, 0);
+				counter=-1; //reset the counter
 			} else{
-				dbg_time("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
-			}
-		}
-	} else{
-		if(nrun_get(0)<NTHREAD&&(!NGPU||nrun_get(1)<NGPU)){//resource available to star a new job
-			//static double lasttime2=0;
-			//time_t thistime2=myclocki();
-			//if(thistime2>lasttime2+0.001){//wait 1ms for job to connect.
-				//lasttime2=thistime2;
-				irun=running_get_by_status(S_QUEUED);
-				if(!irun){
-					dbg_time("all jobs are done\n");
-					all_done=1;
-					nrun_handle(3, 0, 0, 0);
-					counter=-1; //reset the counter
+				int pid;
+				irun->last_time=myclocki();
+				irun->status.timlast=myclocki();
+				if((pid=launch_exe(irun->exe, irun->path0))<0){
+					warning_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
+					running_remove(irun->pid, S_CRASH);
 				} else{
-					int pid;
-					irun->last_time=myclocki();
-					irun->status.timlast=myclocki();
-					if((pid=launch_exe(irun->exe, irun->path0))<0){
-						dbg_time("Launch job %d failed: %d (%s)\n", irun->pid, pid, irun->exe);
-						running_remove(irun->pid, S_CRASH);
-					} else{
-						dbg_time("Launch job %d as pid %d (%s)\n", irun->pid, pid, irun->exe);
-						//inplace update the information in monitor
-						irun->status.info=S_WAIT;//will be checked again by process_queue
-						irun->pidnew=pid;
-						monitor_send(irun, NULL);
-						irun->pid=pid;
-					}
+					info_time("Launch job %d as pid %d (%s)\n", irun->pid, pid, irun->exe);
+					//inplace update the information in monitor
+					irun->status.info=S_WAIT;//will be checked again by process_queue
+					irun->pidnew=pid;
+					monitor_send(irun, NULL);
+					irun->pid=pid;
 				}
-			//}
-		}else{
-			dbg_time("no resource available. nused_cpu=%d, ngpu=%d.\n", nrun_get(0), nrun_get(1));
-		}
+			}
+		//}
+	}else{
+		dbg_time("no resource available. nused_cpu=%d, ngpu=%d.\n", nrun_get(0), nrun_get(1));
 	}
 }
 /** replace \n by space*/
@@ -493,7 +496,7 @@ static void queue_new_job(const char* exename, const char* execmd){
 	irun->exe=strdup(exename);
 	irun->path0=strdup(execmd);
 	irun->path=remove_endl(irun->path0);
-	dbg_time("%d (%s)\n", irun->pid, exename);
+	info_time("%d (%s)\n", irun->pid, exename);
 	monitor_send(irun, irun->path);
 	monitor_send(irun, NULL);
 	all_done=0;
@@ -958,7 +961,7 @@ static int respond(struct pollfd *pfd, int flag){
 	case CMD_MAOSCLI:{//13:  for a maos client to create a client link to maos.
 		set_sockname(sock, "maos client");
 		int sock2=dup(sock);//pass a duplicated fd to maos
-		dbg_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
+		info_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
 		if(maos_command(pid, sock2, MAOS_VAR)){
 			close(sock2);//failed
 		}
@@ -978,7 +981,7 @@ static int respond(struct pollfd *pfd, int flag){
 	}
 	break;
 	case CMD_RESTART://15: Called by monitor to restart a job
-		dbg_time("(%d:%s) restart job %d\n", sock, get_sockname(sock), pid);
+		info_time("(%d:%s) restart job %d\n", sock, get_sockname(sock), pid);
 		runned_restart(pid);
 		break;
 	case CMD_KILLED://16: called by maos to indicate that job is cancelled or killed
@@ -1043,11 +1046,7 @@ static int respond(struct pollfd *pfd, int flag){
 	if(ret){
 		RUN_T* irun=running_get_by_sock(sock);//is maos
 		if(irun&&irun->status.info<10){
-			//connection failed to a running maos job.
-			if(kill(irun->pid, 0)){
-				dbg_time("(%d:%s) Job %d no longer exists, crashed?\n", sock, get_sockname(sock), irun->pid);
-				running_remove(irun->pid, S_CRASH);
-			}
+			check_job_exists(irun);
 		}
 		ret=-1;
 	}

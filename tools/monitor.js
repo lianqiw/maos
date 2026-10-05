@@ -65,7 +65,8 @@ function App() {
   const didDrag = useRef(false);
   const tableRef = useRef(null);
   const popupRef = useRef(null);
-
+  const [menu, setMenu] = useState(null);//for popup context menu
+  const menuRef = useRef(null);//for popup context menu
   //const fullName = useRef({});//full hostname.
   const [hosts, setHosts]=useState(()=>{
     const hostname = get_hostname();
@@ -191,7 +192,7 @@ function App() {
               if (i[5] === '0.00') i[5] = '';
               if (i[6] === '0.00') i[6] = '';
               if (i[13] === '0.000') i[13] = '';
-              newdata = { PID: i[2], Host: host, status: i[3]?i[3]:12, Time: i[4], High: i[5], Low: i[6], Step: i[13], prog: prog, frac: frac, icon: icon };
+              newdata = { PID: i[2], Host: host, Time: i[4], status: i[3]?i[3]:12, High: i[5], Low: i[6], Step: i[13], prog: prog, frac: frac, icon: icon };
             }
           } else {
             continue;//invalid data
@@ -352,51 +353,60 @@ function App() {
     );
   };
 
- const handleClick = (e, pid) => {
-  // Don't process the click generated at the end of a drag
-  if (didDrag.current) {
-    didDrag.current = false;
-    return;
-  }
+  const handleClick = (e, pid) => {
+    // Don't process the click generated at the end of a drag
+    if (didDrag.current) {
+      didDrag.current = false;
+      return;
+    }
 
-  const index = filteredJobs.findIndex(row => row.PID === pid);
-  if (index < 0) return;
-  const isModifier = e.ctrlKey || e.metaKey;
-  if (e.shiftKey && shiftAnchor !== null) {
-    const start = Math.min(shiftAnchor, index);
-    const end = Math.max(shiftAnchor, index);
-    const range = filteredJobs
-      .slice(start, end + 1)
-      .map(row => row.PID);
-    setSelectedRows(prev => {
-      if (isModifier) {
-        // Ctrl+Shift: add the range to the existing selection
+    const index = filteredJobs.findIndex(row => row.PID === pid);
+    if (index < 0) return;
+    const isModifier = e.ctrlKey || e.metaKey;
+    if (e.shiftKey && shiftAnchor !== null) {
+      const start = Math.min(shiftAnchor, index);
+      const end = Math.max(shiftAnchor, index);
+      const range = filteredJobs
+        .slice(start, end + 1)
+        .map(row => row.PID);
+      setSelectedRows(prev => {
+        if (isModifier) {
+          // Ctrl+Shift: add the range to the existing selection
+          const next = new Set(prev);
+          range.forEach(pid => next.add(pid));
+          return next;
+        }
+        // Shift alone: replace selection with the range
+        return new Set(range);
+      });
+    } else if (isModifier) {
+      // Ctrl/Cmd-click: toggle this row
+      setSelectedRows(prev => {
         const next = new Set(prev);
-        range.forEach(pid => next.add(pid));
+        if (next.has(pid)) {
+          next.delete(pid);
+        } else {
+          next.add(pid);
+        }
         return next;
-      }
-      // Shift alone: replace selection with the range
-      return new Set(range);
-    });
-  } else if (isModifier) {
-    // Ctrl/Cmd-click: toggle this row
-    setSelectedRows(prev => {
-      const next = new Set(prev);
-      if (next.has(pid)) {
-        next.delete(pid);
-      } else {
-        next.add(pid);
-      }
-      return next;
-    });
-    // Ctrl-click establishes a new anchor
-    setShiftAnchor(index);
-  } else {
-    // Normal click: select only this row
-    setSelectedRows(new Set([pid]));
-    setShiftAnchor(index);
-  }
-};
+      });
+      // Ctrl-click establishes a new anchor
+      setShiftAnchor(index);
+    } else {
+      // Normal click: select only this row
+      setSelectedRows(new Set([pid]));
+      setShiftAnchor(index);
+    }
+  };
+  const copySelectedRows = async () => {
+    const selected = filteredJobs.filter(job => selectedRows.has(job.PID));
+
+    const text = selected
+      .map(job => Object.values(job).join("\t"))
+      .join("\n");
+
+    await navigator.clipboard.writeText(text);
+  };
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -405,6 +415,7 @@ function App() {
         setDragging(false);
         setDragStart(null);
         didDrag.current = false;
+        setMenu(null);
       }
     };
 
@@ -414,6 +425,9 @@ function App() {
       }
       if (popupRef.current && !popupRef.current.contains(e.target)) {
         setExpandedCell(null);
+      }
+      if (menuRef.current && !menuRef.current.contains(e.target)){
+        setMenu(null);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -480,6 +494,7 @@ function App() {
                     onClick={e => handleClick(e, row.PID)}
                     onMouseDown={(e) => {handleMouseDown(e, i);}}
                     onMouseEnter={() => {if (dragging) {handleMouseEnter(i)};}}
+                    onContextMenu={(e)=>{e.preventDefault(); if(!selectedRows.has(row.PID)) setSelectedRows(new Set([row.PID]));setMenu({x: e.clientX, y: e.clientY, row})}}
                   style={{backgroundColor: selectedRows.has(row.PID) ? "#dbeafe" : undefined}}>
                   {columns.slice(0, 3).map((col) => <td key={col}>{row[col]}</td>)}
                   {columns.slice(3, 4).map((col) => <td key={col} title={row[col]}
@@ -505,6 +520,20 @@ function App() {
             </tbody>
           </table>
         )}
+        {menu && selectedRows.size>0 && (
+            <ul ref={menuRef} className="menu-list" style={{
+              position: "fixed",
+              left: menu.x,
+              top: menu.y,
+              zIndex:1000,
+            }}>
+            <li onClick={() => {cmdHost(active, "clear_selected"); setMenu(null); }}><span  className="menu-icon">☑️</span>Clear Selected Jobs</li>
+            <li onClick={() => {copySelectedRows(); setMenu(null);}}><span className="menu-icon">📑</span>Copy Selected Jobs</li>
+            <li onClick={() => {cmdHost(active, "kill_selected"); setMenu(null);}}><span  className="menu-icon">🛑</span>Kill Selected Jobs </li>
+            <li onClick={() => {cmdHost(active, "restart_selected"); setMenu(null);}}><span  className="menu-icon">🔄</span>Restart Selected Jobs</li>
+            {job.filter((row) => (row.status == 1 || row.status == 3)).map((row) =>
+              (<li key={row.Host + row.PID} onClick={() => { cmdHostPid(row.Host, row.PID, "DRAW");setMenu(null); }}>📊 Plot {row.PID} at {row.Host}</li>))}
+        </ul>)}
         <DrawDaemon drawInfo={drawInfo} jobActive={active} 
         updateDrawInfo={(info)=>{setActive(info[0]); setDrawInfo((oldInfo) => ({ ...oldInfo, [info[0]]: {...oldInfo[info[0]], jobname: info[1]}}))}}></DrawDaemon>
       </div>

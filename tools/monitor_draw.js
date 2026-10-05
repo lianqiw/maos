@@ -217,7 +217,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           layout.current = (jobRef.current[jobActive]['layout'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
-            const id=drawData.fig+'_'+drawData.name;
+            const id=(drawData.fig+'_'+drawData.name).replace(/\s+/g, "_");
             if(figName.current!==id){
               figName.current=id;
             }
