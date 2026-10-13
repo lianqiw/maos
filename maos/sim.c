@@ -116,7 +116,7 @@ void prepare_isim(sim_t *simu){
 		if(parms->save.dm){
 			zfarr_push(simu->save->dmproj, simu->wfsisim, simu->dmproj);
 		}
-		if(parms->plot.run&&simu->dmproj&&simu->reconisim>0&&simu->reconisim%parms->plot.run==0){
+		if(parms->plot.run&&simu->dmproj){
 			plot_dm(parms, recon, simu->dmproj, 0, "ATM to DM Projection (Hi)", "Proj Hi");
 		}
 		if(!parms->fit.square){

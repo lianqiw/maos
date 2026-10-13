@@ -76,7 +76,7 @@ void save_gradol(sim_t* simu){
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].psol||!P(simu->gradlastol,iwfs)) continue;
-		if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
+		if(parms->plot.run){
 			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
 			drawgrad("Gpol", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(simu->gradlastol,iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.opdmax,

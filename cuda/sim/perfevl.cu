@@ -352,7 +352,7 @@ void* gpu_perfevl_queue(thread_t* info){
 		if(save_evlopd && simu->save->evlopdol){
 			zfarr_push_scale(simu->save->evlopdol[ievl], isim, iopdevl, 1, stream);
 		}
-		if(parms->plot.run&&isim%parms->plot.run==0){
+		if(parms->plot.run){
 			drawopdamp_gpu("Evlol", aper->locs, iopdevl, stream, aper->amp1, 0,
 				"Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 		}
@@ -379,7 +379,7 @@ void* gpu_perfevl_queue(thread_t* info){
 			}
 			if(parms->evl.psfmean){
 				psfcomp_r(cudata->perf.psfol(), opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
-				if(parms->plot.run&&isim%parms->plot.run==0){
+				if(parms->plot.run){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					if(parms->evl.psfol==2){
 						count*=lsum(parms->evl.psf);
@@ -427,7 +427,7 @@ void* gpu_perfevl_queue(thread_t* info){
 			zfarr_push_scale(simu->save->evlopdcl[ievl], isim, iopdevl, 1, stream);
 		}
 
-		if(parms->plot.run&&isim%parms->plot.run==0){
+		if(parms->plot.run){
 			drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1, 0,
 				"Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 		}
@@ -460,7 +460,7 @@ void* gpu_perfevl_queue(thread_t* info){
 				} else if(parms->evl.psfmean){
 					psfcomp_r(cuglobal->perf.psfcl+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
 				}
-				if(parms->plot.run&&isim%parms->plot.run==0){
+				if(parms->plot.run){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						char topname[64];
@@ -540,7 +540,7 @@ OMP_TASK_FOR(4)
 			ngsmod2loc(iopdevl, cudata->perf.locs(), simu->recon->ngsmod, cleNGSm,
 				parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 				-1, stream);
-			if(parms->plot.run&&simu->perfisim%parms->plot.run==0){
+			if(parms->plot.run){
 				drawopdamp_gpu("Evlcl", aper->locs, iopdevl, stream, aper->amp1, 0,
 					"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
 			}
@@ -573,7 +573,7 @@ OMP_TASK_FOR(4)
 				} else if(parms->evl.psfmean){
 					psfcomp_r(cuglobal->perf.psfcl_ngsr+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
 				}
-				if(parms->plot.run&&simu->perfisim%parms->plot.run==0){
+				if(parms->plot.run){
 					int count=parms->gpu.psf?(simu->perfisim+1-parms->evl.psfisim):1;
 					for(int iwvl=0; iwvl<nwvl; iwvl++){
 						char topname[64];

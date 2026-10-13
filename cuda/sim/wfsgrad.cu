@@ -613,7 +613,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 			if(save_opd){
 				zfarr_push_scale(simu->save->wfsopd[iwfs], isim, phiout, 1, stream);
 			}
-			if(parms->plot.run&&isim%parms->plot.run==0){
+			if(parms->plot.run){
 				const dmat* amp=PR(powfs[ipowfs].amp, wfsind);
 				drawopdamp_gpu("Opdwfs", powfs[ipowfs].loc, phiout, stream, amp, 0,
 					"WFS OPD", "x (m)", "y (m)", "WFS %2d", iwfs);
@@ -763,7 +763,7 @@ void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 			if(save_gradgeom){//also do geom grad during phy grad sims
 				zfarr_push_scale(simu->save->gradgeom[iwfs], isim, cuwfs[iwfs].gradacc, 1, stream);
 			}
-			if((parms->plot.run&&isim%parms->plot.run==0&&draw_current("Ints", NULL))
+			if((parms->plot.run&&draw_current("Ints", NULL))
 			||(parms->powfs[ipowfs].lo && parms->recon.petal)){// && parms->powfs[ipowfs].lo){
 				cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
 			}

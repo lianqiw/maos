@@ -294,12 +294,12 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			}
 		}
 		if(powfs[ipowfs].sanea){
-			const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
+			//const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
 			for(int jwfs=0; jwfs<PN(powfs[ipowfs].sanea); jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
 				drawgrad("Gnea", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].sanea, jwfs),
-					 0, 0, neathres*neathres,
-					"WFS Subaperture Noise", "x (m)", "y (m)", "Gnea %d", iwfs);
+					0, 0, 0 /*neathres*neathres*/,
+					"WFS Subaperture Noise Equivalent Angle (rad^2)", "x (m)", "y (m)", "Gnea %d", iwfs);
 			}
 		}
 	}
@@ -343,7 +343,7 @@ void plot_dm_lo(sim_t *simu, dcell *merr, const char *title, const char *type){
 void plot_dmreal(sim_t *simu){
     const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
-    if(parms->plot.run&&simu->reconisim>=0 && simu->reconisim%parms->plot.run==0){
+    if(parms->plot.run){
 		if(parms->sim.closeloop){
 			plot_dm(parms, recon, P(simu->dmint->mintc, 0), 1, "Deformable Mirror Integrator (Hi)", "Int");
 			if(simu->Mint_lo&&!parms->sim.fuseint){
@@ -392,7 +392,7 @@ void plot_recon(sim_t *simu){
     const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
 	if(simu->reconisim<0) return;
-	if(parms->plot.run&&simu->reconisim%parms->plot.run==0){
+	if(parms->plot.run){
 		if(simu->dm_wfs){
 			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 				int ipowfs=parms->wfs[iwfs].powfs;
@@ -427,7 +427,7 @@ void plot_recon(sim_t *simu){
 }
 void plot_gradoff(sim_t *simu, int iwfs){
 	const parms_t *parms=simu->parms;
-	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
+	if(parms->plot.run){
 		if(iwfs<0){
 			for(iwfs=0; iwfs<parms->nwfs; iwfs++){
 				plot_gradoff(simu, iwfs);

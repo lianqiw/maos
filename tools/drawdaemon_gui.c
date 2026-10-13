@@ -15,13 +15,13 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
 #include <unistd.h>
 #ifndef GTK_WIDGET_HAS_FOCUS
 #define GTK_WIDGET_HAS_FOCUS gtk_widget_has_focus
 #endif
 #if GTK_MAJOR_VERSION>=3
+#include <gdk/gdk.h>
 #define GDK_Left GDK_KEY_Left
 #define GDK_Right GDK_KEY_Right
 #define GDK_Up GDK_KEY_Up
@@ -31,6 +31,8 @@
 #define GDK_equal GDK_KEY_equal
 #define GDK_0 GDK_KEY_0
 #define GDK_1 GDK_KEY_1
+#else
+#include <gdk/gdkkeysyms.h>
 #endif
 #define DRAWAREA_MIN_WIDTH 400
 #define DRAWAREA_MIN_HEIGHT 320

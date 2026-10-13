@@ -41,7 +41,6 @@ int draw_direct=0;  //Directly launch drawdaemon without forking a draw_helper
 int draw_disabled=0; //if set, draw will be disabled
 int draw_single=0;  //if ==1, only draw active frame and skip if line is busy. if ==-1, disable draw_single altogether. otherwise draw all frames.
 static int sock_helper=-1;//socket of draw_helper
-static int listening=0;    //If set, listen_drawdaemon is listening to replies from drawdemon
 
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
@@ -120,35 +119,39 @@ int plot_empty(sockinfo_t *ps, const char *fig, const char *fn);
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
 static void* listen_drawdaemon(sockinfo_t* sock_data){
-	listening=1;
-	int sock_draw=sock_data->fd;
+	int fd=sock_data->fd;
 	char** figfn=sock_data->figfn;
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
 
 	int cmd;
 	int nlen=0;
 
-	if(!socket_recv_timeout(sock_draw, 0)){
+	if(!socket_recv_timeout(fd, 0)){
         //make sure it blocks when no data is readable
-        dbg("started listening at %d\n", sock_draw);
+        dbg("started listening at %d\n", fd);
     }else{
-        dbg("set timeout=0 failed for %d\n", sock_draw);
+        dbg("set timeout=0 failed for %d\n", fd);
     }
-	while(sock_data->fd!=-1&&!streadint(sock_draw, &cmd)){
+	while(sock_data->fd!=-1){
+		int ans=streadint(fd, &cmd);
+		if(ans<0){
+			warning("streadint %d failed with %d. Stop listening.\n", fd, ans);
+			break;
+		}
 		if(cmd==DRAW_ENTRY){//every message in new format start with DRAW_ENTRY.
-			streadint(sock_draw, &nlen);
-			streadint(sock_draw, &cmd);
+			streadint(fd, &nlen);
+			streadint(fd, &cmd);
 		}
 		switch(cmd){
 		case DRAW_FIGFN:
 		{
 			char* fig=0, * fn=0;
-			streadstr(sock_draw, &fig);
-			streadstr(sock_draw, &fn);
+			streadstr(fd, &fig);
+			streadstr(fd, &fn);
 			if(fig&&fn){
 				if(figfn[0]&&figfn[1]&&(strcmp(figfn[0], fig)||strcmp(figfn[1], fn))){
 					if(sock_data->draw_single==1){
-						dbg2("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+						dbg2("draw %d switch to fig=%s, fn=%s\n", fd, fig, fn);
 					}
 				}
 				free(figfn[0]);
@@ -157,33 +160,32 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 				figfn[1]=fn;
 			}
 		}
-		break;
+			break;
 		case DRAW_PAUSE:
 			sock_data->pause=1;
-			dbg2("draw %d paused\n", sock_draw);
+			dbg2("draw %d paused\n", fd);
 			break;
 		case DRAW_RESUME:
 			sock_data->pause=0;
-			dbg2("draw %d resumed\n", sock_draw);
+			dbg2("draw %d resumed\n", fd);
 			break;
 		case DRAW_SINGLE:
 			sock_data->draw_single=!sock_data->draw_single;
-			info("draw %d draw_single change to %d\n", sock_draw, sock_data->draw_single);
+			info("draw %d draw_single change to %d\n", fd, sock_data->draw_single);
 			break;
 		default:
 			if(nlen){
 				void* p=malloc(nlen);
-				stread(sock_draw, p, nlen);
+				stread(fd, p, nlen);
 				free(p);
 			}
-			dbg("Unknown cmd: %d with size %d from socket %d. Close connection.\n", cmd, nlen, sock_draw);
-			close(sock_draw);
+			dbg("Unknown cmd: %d with size %d from socket %d. Close connection.\n", cmd, nlen, fd);
+			close(fd);
 			break;
 		}
 		cmd=0;
 	}
-	dbg_time("stopped lisening to drawdaemon at %d, errno=%d, %s\n", sock_draw, errno, strerror(errno));
-	listening=0;
+	//dbg_time("Stopped listening to drawdaemon at %d, errno=%d, %s\n", fd, errno, strerror(errno));
 	return NULL;
 }
 
@@ -216,7 +218,7 @@ static void list_destroy(list_t** head){
 		free(p);
 	}
 }
-/**Add fd to list of drawing socks*/
+/**Add fd to list of drawing socks. lock is already locked*/
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
 	if(sock==-1) return -1;
@@ -241,15 +243,22 @@ end2:
 	}
 	free_default(buf);
 	if(ans==-1) return -1;
-	sockinfo_t *p=mycalloc(1, sockinfo_t);
+	sockinfo_t *p=NULL;
+	for(p=sock_draws; p; p=p->next){
+		if(p->fd==-1){
+			break;
+		}
+	}
+	if(!p){
+		p=mycalloc(1, sockinfo_t);
+		p->next=sock_draws;
+		sock_draws=p;
+	}
 	p->fd=sock;
-	p->next=sock_draws;
-	sock_draws=p;
 	if(draw_single!=-1){
 		p->draw_single=1;
 	}
 	pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
-	draw_disabled=0;
 	return 0;
 }
 static void sockinfo_close(sockinfo_t *p, int reuse){
@@ -274,23 +283,7 @@ static void sockinfo_close(sockinfo_t *p, int reuse){
 	FREE(p->figfn[0]);
 	FREE(p->figfn[1]);
 }
-///fd==-1 will remove all clients
-///reuse==0 is called when write failed, do not try to write again
-static void draw_remove(int fd, int reuse){
-	for(sockinfo_t **curr=&sock_draws; *curr;){
-		sockinfo_t *p=*curr;
-		if(p->fd==fd || fd==-1){
-			*curr=p->next;
-			sockinfo_close(p, reuse);
-			FREE(p);
-		}else{
-			curr=&p->next;
-		}
-	}
-	if(!sock_draws){
-		draw_disabled=1;//do not try to restart drawdaemon
-	}
-}
+
 static int launch_drawdaemon(){
 	int sv2[2];//socket pair for communication.
 	/*one end of sv2 will be passed back to call, the other end of sv2 will be passed to drawdaemon.*/
@@ -432,7 +425,15 @@ void draw_final(int reuse){
 	//may be failed if it is invoked by signal handler while draw is in progress
 	if(!sock_draws) return;
 	if(!TRYLOCK(lock)){
-		draw_remove(-1, reuse);
+		for(sockinfo_t **curr=&sock_draws; *curr;){
+			sockinfo_t *p=*curr;
+			*curr=p->next;
+			sockinfo_close(p, reuse);
+			FREE(p);
+		}
+		if(!sock_draws){
+			draw_disabled=1;//do not try to restart drawdaemon
+		}
 		UNLOCK(lock);
 	}
 }
@@ -492,6 +493,7 @@ int draw_current(const char* fig, const char* fn){
         current=1;
     }else{
 		for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
+			if(ps->fd==-1) continue;
             if((current=check_figfn(ps, fig, fn))){
                 break;
             }
@@ -499,12 +501,12 @@ int draw_current(const char* fig, const char* fn){
         if(current==2){//check whether draw is busy
 			static int nskip=0;
 			static int nplot=0;
-            if(TRYLOCK(lock)!=0){//trylock returns 0 when succesfull
+            if(TRYLOCK(lock)!=0){//trylock failed
                 current=0;
 				nskip++;
                 if(nplot) dbg2("Skip after plot %d times\n", nplot);
 				nplot=0;
-            } else{
+            } else{//trylock success
 				nplot++;
 				if(nskip) dbg2("Resume after skip %d times\n", nskip);
 				nskip=0;
@@ -532,6 +534,7 @@ int plot_empty(sockinfo_t *ps, const char *fig, const char *fn){
 	FWRITEINT(DRAW_END);
 end2:
 	BUF_POSTPROC;
+	//do not use send_buf here 
 	if(bufsize && !ans && stwrite(ps->fd,buf,bufsize)){
 		info("write to %d failed: %s\n",ps->fd,strerror(errno));
 		ans=-1;
@@ -544,8 +547,8 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 	int ans=0;
 	for(sockinfo_t *ps=sock_draws; ps; ps=ps->next){
 		/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-		int sock_draw=ps->fd;
-		if(sock_draw==-1) return -1;
+		int fd=ps->fd;
+		if(fd==-1) continue;
 		int needed_i=always?1:check_figfn(ps, fig, fn);
 		if(needed_i==2){
 			if(TRYLOCK(lock)){//line busy
@@ -559,8 +562,8 @@ int send_buf(const char *fig, const char *fn, char *buf, size_t bufsize, int alw
 			if(use_udp){
 				error("To be implemented\n");//use sendmmsg with GSO is fastest.
 			} else{
-				if(stwrite(sock_draw, buf, bufsize)){
-					info("write to %d failed: %s\n", sock_draw, strerror(errno));
+				if(stwrite(fd, buf, bufsize)){
+					info("write to %d failed: %s\n", fd, strerror(errno));
 					ans=-1;
 					sockinfo_close(ps, 0);//keep struct to avoice race condition
 				}
@@ -598,11 +601,9 @@ int draw(const char* fig,    /**<Category of the figure*/
 				}
 			}
 		}
-		
 		char* buf=0;
 		size_t bufsize=0;
 		if(needed){
-			//dbg("%s %s: %d %d\n", fig, fn, opts.always, needed);
 			//When using UDP, we need to serialize the data instead of writing like a FILE
 			//Use open_memstream to serialize and f_openmem for de-serialize
 			//To be able to handle the data in forward/backward compatible way,
@@ -856,6 +857,12 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	dfree(opd0);
 	return 1;
 }
+/***
+	Sanitize gradients for plotting
+
+	Zero those where saa<0.01
+	Remove tip/tilt if trs is set
+ */
 static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 	int ng=PN(gradin)/nsa;
 	dmat *grad=0;

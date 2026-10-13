@@ -34,24 +34,26 @@ int draw_current(const char* fig, const char* fn);
 int draw_current_format(const char *fig, const char *format, ...) CHECK_ARG(2);
 
 typedef struct {
+  //For 2-d images
   union{
-    const dmat* image;//2d image. can be real or complex. set ctype for complex.
-    const cmat* cimage;
+    const dmat* image;//2-d image. real valued. 
+    const cmat* cimage;//2-d image. complex value. ctype determines how to convert to real value
   };
-  int ngroup;///number of lines
-  int maxlen;///limit maximum nx
-  loc_t** loc;
+  const real* limit;//for 2-d image. xmin,xmax,ymin,ymax
+  const real zlim[2];//for 2-d image. value limit min, max 
+  const int zlog;//for 2-d image. Use log10 of value.
+  const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
+  //For lines
+  int ngroup;///number of lines. 0: automatic
+  int maxlen;///maximum nx to plot
+  loc_t** loc;//2-d grid points to plot.
   dmat** dd;//array of dmat
   const dcell* dc;//dcell. takes priority over dd
-  const int32_t* style;
-  const real* limit;//x and y limit
-  const real zlim[2];//z limit
-  const int zlog;//z log.
-  const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
-  const char* xylog;
-  const dmat* cir;
-  const char* const* const legend;
-  int always;//always draw (do not check for active panel)
+  const int32_t* style;//line style
+  const char* xylog;//for lines, take log along x (xylog[0]=='y') and/or y (xylog[1]=='n')
+  const dmat* cir;//circles to draw
+  const char* const* const legend;//legends for lines
+  int always;//1: always draw (do not check for active panel)
 } plot_opts;
 
 int draw(const char* fig, const plot_opts opts, const char* title, const char* xlabel, const char* ylabel,

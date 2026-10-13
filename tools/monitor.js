@@ -461,7 +461,7 @@ function App() {
           {Object.keys(hosts).filter((v) => hosts[v] != undefined).map((host) => (//List of hosts
             <li key={host} className={active === host ? "active" : ""}>
               <span title="Connect to host" onClick={() => { setActive(host); if (!wss[host]) connect(host); }}>{wss[host] ? "🟢" : "🔴"}</span>
-              <span title="Switch to host" onClick={() => { setActive(host); }}>{host}&nbsp; </span>
+              <span title="Switch to host" onClick={() => { setActive(host); }}>{host}</span>
               <span className="cross" title="Remove Host" onClick={() => { setActive(""); removeHost(host); }}>✖</span>
             </li>
           ))}
@@ -471,7 +471,7 @@ function App() {
           </li>
           {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
             <li key={job} className={active === job ? "active" : ""}>
-              <span onClick={() => { setActive(job) }}>{drawInfo[job].jobname}&nbsp; </span>
+              <span onClick={() => { setActive(job) }}>📊{drawInfo[job].jobname}&nbsp; </span>
               <span className="cross" onClick={() => { setDrawInfo((oldInfo) => ({ ...oldInfo, [job]: undefined })); setActive(""); }}>✖</span>
             </li>))}
         </ul>

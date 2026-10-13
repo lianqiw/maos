@@ -27,14 +27,15 @@ int socket_recv_timeout(int sock, long sec);
 int socket_send_timeout(int sock, long sec);
 int connect_port(const char *hostname, int port, int block, int nodelay);
 typedef struct listen_opt_t{
-	int port;
+  const char *localpath;//optional: for local unix socket
+	const char *ipaddr;//optional: ip address to listen for port 
+	int (*responder)(struct pollfd*, int);//tcp responder
+	int (*http_responder)(struct pollfd*, int);//http responder
+	void (*timeout_fun)();//timeout function callback
+	double timeout_sec;//timeout in seconds
+	int port; //optional: socket port to listen
+  int fd; //optional: fd to listen
 	int nodelay;
-	const char *localpath;//for local unix socket if set
-	const char *ipaddr;//ip address to listen for port if set
-	int (*responder)(struct pollfd*, int);
-	int (*http_responder)(struct pollfd*, int);
-	void (*timeout_fun)();
-	double timeout_sec;
 }listen_opt_t;
 void listen_port(listen_opt_t opt);//uint16_t port, char *localpath, int (*responder)(struct pollfd*, int), double timeout_sec, void (*timeout_fun)(), int nodelay);
 void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int), const char *caller);
