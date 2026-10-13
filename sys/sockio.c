@@ -29,7 +29,7 @@
 #endif
 /*
 	Wrap io function and handle partial operations.
-	returns numbers of bytes successfully or executed or -1.
+	returns numbers of bytes successfully transfored when success or -1 when error happens.
 */
 ssize_t wrap_io(int sfd, void* p, const size_t len, int mode){
 	int is_sock=issock(sfd);

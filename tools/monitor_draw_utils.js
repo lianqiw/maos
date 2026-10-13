@@ -197,7 +197,7 @@ function procBuffer(rawBuffer) {
       case draw.data: {
         let nx = getInt();
         let ny = getInt();
-        drawData['data'] = reshapeTo2D(getFloatArray(nx * ny), nx, ny);
+        drawData.data = reshapeTo2D(getFloatArray(nx * ny), nx, ny);
       } break;
       case draw.heartbeat:
         break;
@@ -205,56 +205,56 @@ function procBuffer(rawBuffer) {
         let nx = getInt();
         let ny = getInt();
         let square = getInt();
-        if (!drawData['pts']) {
-          drawData['pts'] = [];
+        if (!drawData.pts) {
+          drawData.pts = [];
         }
-        drawData['pts'].push({ p: getFloatArray(nx * ny), nx: nx, ny: ny, square: square });
+        drawData.pts.push({ p: getFloatArray(nx * ny), nx: nx, ny: ny, square: square });
       } break;
       case draw.style:
-        drawData['style'] = getIntArray();
+        drawData.style = getIntArray();
         break;
       case draw.circle: {
         const nc = getInt()
-        drawData['circle'] = getFloatArray(4 * nc);
+        drawData.circle = getFloatArray(4 * nc);
       } break;
       case draw.limit:
-        drawData['limit'] = getFloatArray(4);
-        drawData['limitManual'] = 1;
+        drawData.limit = getFloatArray(4);
+        drawData.limitManual = 1;
         break;
       case draw.fig:
-        drawData['fig'] = getStr();
-        drawData['session']=session
+        drawData.fig = getStr();
+        drawData.session=session
         break;
       case draw.name:
-        drawData['name'] = getStr();
+        drawData.name = getStr();
         break;
       case draw.title:
-        drawData['title'] = getStr();
+        drawData.title = getStr();
         break;
       case draw.xlabel:
-        drawData['xlabel'] = getStr();
+        drawData.xlabel = getStr();
         break;
       case draw.ylabel:
-        drawData['ylabel'] = getStr();
+        drawData.ylabel = getStr();
         break;
       case draw.zlim:
-        drawData['zlim'] = getFloatArray(2);
-        drawData['zlimManual'] = 1;
-        drawData['zlogLast'] = 0;
+        drawData.zlim = getFloatArray(2);
+        drawData.zlimManual = 1;
+        drawData.zlogLast = 0;
         break;
       case draw.legend:
-        drawData['legend'] = []
-        for (let il = 0; il < drawData['pts'].length; il++) {
-          drawData['legend'].push(getStr());
+        drawData.legend = []
+        for (let il = 0; il < drawData.pts.length; il++) {
+          drawData.legend.push(getStr());
         }
         break;
       case draw.xylog:
-        drawData['xylog'] = getByteArray(2);
+        drawData.xylog = getByteArray(2);
         break;
       case draw.final:
         //console.log("DRAW_FINAL");
-        drawData['final']=1;
-        drawData['session']=session
+        drawData.final=1;
+        drawData.session=session
         session+=1
         break;
       case draw.float:
@@ -269,16 +269,16 @@ function procBuffer(rawBuffer) {
         //console.log("draw.init");
         break;
       case draw.pid:
-        drawData['pid'] = getInt();
+        drawData.pid = getInt();
         break;
       case draw.zlog:
-        drawData['zlog'] = getInt();
+        drawData.zlog = getInt();
         break;
       case draw.path:
-        drawData['path'] = getStr();
+        drawData.path = getStr();
         break;
       case draw.exename:
-        drawData['exename'] = getStr();
+        drawData.exename = getStr();
         break;
       case draw.end:
         //console.log(`drawData (${wsBuf.byteLength} bytes):`, drawData)
@@ -294,7 +294,7 @@ function procBuffer(rawBuffer) {
   }
   return drawData;
 }//function procbuffer
-function makeCumu(y, cumStart, cumPlot){
+function makeCumu(y, dx, cumStart, cumPlot){
   if(cumPlot){
     if(cumStart<0){
       cumStart=0; 
@@ -314,11 +314,68 @@ function makeCumu(y, cumStart, cumPlot){
       cum=cum+y[i+cumStart]**2;
       y2[i]=Math.sqrt(cum/(i+1));
     }
-    const x2=Array.from({length:y2.length}, (_, index)=>cumStart+index);
+    const x2=Array.from({length:y2.length}, (_, index)=>dx*(cumStart+index));
     return {x:x2,y:y2};
   }else{
-    return {y:y};
+    const x2=Array.from({length:y.length}, (_, index)=>dx*(index));
+    return {x:x2,y:y};
   }
+}
+  
+function updateclim(data, layout, lpf) {
+  if(!lpf) lpf=1
+  //data is 2d
+  const dmin = data.reduce(
+    (m, row) => row.reduce(
+      (m, x) => Number.isFinite(x) ? Math.min(m, x) : m, m), Infinity
+  );
+
+  const dmax = data.reduce(
+      (m, row) => row.reduce(
+          (m, x) => Number.isFinite(x) ? Math.max(m, x) : m, m), -Infinity
+  );
+  //const dmin = Math.min(...data.filter(Number.isFinite));
+  //const dmax = Math.max(...data.filter(Number.isFinite));
+  
+  if (Number.isFinite(dmin) && Number.isFinite(dmax)){
+    if(!layout.clim || !layout.clim[0] || !layout.clim[1]){
+      layout.clim=[dmin,dmax];
+    }else if(lpf<1){//use LPF
+      layout.clim=[layout.clim[0]*(1.-lpf)+lpf*dmin, layout.clim[1]*(1.-lpf)+lpf*dmax]
+    }else{ //use hysteresis
+      let [cmin, cmax] = layout.clim;
+      const widthd=dmax-dmin
+      const widthc=cmax-cmin
+      const midd=(dmax+dmin)*0.5
+      const midc=(cmax+cmin)*0.5
+      if(Math.abs(widthc-widthd)<widthc*0.1 && Math.abs(midd-midc)>widthc*0.1){
+        //width change is small, but center shifts
+        cmin=midd-widthc*0.5
+        cmax=midd+widthc*0.5
+      }else{
+        const width = Math.min(widthd, widthc);
+        if(dmin<cmin-width*0.05){
+          cmin=dmin
+        }else if(dmin>cmin+width*0.5){
+          cmin=dmin
+        }
+        if(dmax>cmax+width*0.05){
+          cmax=dmax
+        }else if(dmax<cmax-width*0.5){
+          cmax=dmax
+        }
+        if(cmin>=cmax){
+          cmin=dmin
+          cmax=dmax
+        }
+      }
+      //console.log(now(), {cmin, cmax, dmin, dmax, clim:layout.clim})
+      layout.clim=[cmin, cmax]
+    }
+  }else if(!('clim' in layout)){
+    layout.clim=[null, null];
+  }
+  return layout.clim;
 }
 function makeTraces(drawData, layout) {
   Object.assign(layout.title, {'text':('title' in drawData?drawData['title']:"")})
@@ -330,65 +387,79 @@ function makeTraces(drawData, layout) {
       type: ('xylog' in drawData && drawData.xylog[1]==='y'.charCodeAt(0))?'log':'linear', 
       title: {'text':('ylabel' in drawData?drawData['ylabel']:"")}, 
     });
-
+  Object.assign(layout.margin.autoexpand, drawData.data?false:true)
   let traces = [];
   let square = 0;
   //let ratio = 1;
-  if (drawData['data']) {
-    const nx = drawData['data'][0].length;
-    const ny = drawData['data'].length;
+  if (drawData.data) {
+    const nx = drawData.data[0].length;
+    const ny = drawData.data.length;
     if(nx && ny){
-      square = 1;
-      let zdata=drawData['data'];
-      if('zlim' in drawData && 'zlimManual' in drawData && drawData.zlimManual) {
-        const zmin=drawData['zlim'][0];
-        const zmax=drawData['zlim'][1];
+      square = (nx>1 && ny>1)?1:2;
+      let zdata=drawData.data;
+      let zmin, zmax;
+      if(drawData.zim && drawData.zlimManual) {
+        zmin=drawData.zlim[0];
+        zmax=drawData.zlim[1];
         if(zmin<zmax){
           zdata=zdata.map(row => row.map(val => (val>zmax)?zmax:(val<zmin?zmin:val)));
         }
-      }
-      if('zlog' in drawData && drawData.zlog) {
+      }      
+      if(drawData.zlog) {
         zdata=zdata.map(row => row.map(val => (val>0)?Math.log10(val):null));
+        if(zmin) zmin=zmin>0?Math.log10(zmin):null
+        if(zmax) zmax=zmax>0?Math.log10(zmax):null
       }
-      let trace={z: zdata, type: 'heatmap', colorscale: 'Jet', showlegend: false };
-      if (drawData['limit']) {
-        const x = linspace(drawData['limit'][0], drawData['limit'][1], nx)
-        const y = linspace(drawData['limit'][2], drawData['limit'][3], ny)
-        //ratio=(drawData['limit'][3]-drawData['limit'][2])/(drawData['limit'][1]-drawData['limit'][0]);
+      if(!zmin || !zmax){
+        [zmin, zmax] = updateclim(zdata, layout, drawData.climLpf);
+      }
+      let trace={z: zdata, type: 'heatmap', colorscale: 'Jet', showlegend: false, zmin: zmin, zmax: zmax};
+      if (drawData.limit) {
+        const x = linspace(drawData.limit[0], drawData.limit[1], nx)
+        const y = linspace(drawData.limit[2], drawData.limit[3], ny)
+        //ratio=(drawData.limit[3]-drawData.limit[2])/(drawData.limit[1]-drawData.limit[0]);
         trace={x,y,...trace}
-      //}else{
+      }else{
         //ratio=ny/nx
       }
       traces.push(trace);
     }
-  } else if (drawData['pts']) {
-    const showlegend = drawData['pts'].length > 1 ? 1 : 0;
-    traces = traces.concat(drawData['pts'].map((pts, ipts) => {
-      const extra={name: drawData['legend'] ? drawData['legend'][ipts] : "", showlegend};
+  } else if (drawData.pts) {
+    const showlegend = drawData.pts.length > 1 ? 1 : 0;
+    traces = traces.concat(drawData.pts.map((pts, ipts) => {
+      const extra={name: drawData.legend ? drawData.legend[ipts] : "", showlegend};
       if (pts.ny == 2) {
-        if (pts.square) square = 1;
+        if (pts.square){
+         square = (square==1||pts.nx>1)?1:2;
+        }
         return {
           x: pts.p.slice(0, pts.nx), y: pts.p.slice(pts.nx, 2 * pts.nx), 
           mode: square?"markers":"lines", marker: { symbol: 'x' }, ...extra
         }
       } else{
-        return { ...makeCumu(pts.p, drawData.cumStart, drawData.cumPlot), mode: "lines",  ...extra}
+        const dx=drawData.xRange?drawData.xRange/pts.nx:1
+        return { ...makeCumu(pts.p, dx, drawData.cumStart, drawData.cumPlot), mode: "lines",  ...extra}
       }
     }));
   }
-  if (drawData['circle']) {
-    traces = traces.concat(mkCircles(drawData['circle']));
+  if (drawData.circle) {
+    traces = traces.concat(mkCircles(drawData.circle));
   }
   if (square) {
-    layout.xaxis.constrain='domain';
-    layout.yaxis.constrain='domain';
-    layout.yaxis.scaleanchor = 'x';
-    layout.yaxis.scaleratio = 1;//1 for square pixels
-  }else{
+    if(square==1){//shrink domain
+      layout.xaxis.constrain='domain';
+      layout.yaxis.constrain='domain';
+    }else{//adjust range
+      layout.xaxis.constrain='range';
+      layout.yaxis.constrain='range';
+    }
+    layout.yaxis.scaleanchor='x';
+    layout.yaxis.scaleratio =1;//1 for square pixels
+  }else{//free
     layout.xaxis.constrain=null;
     layout.yaxis.constrain=null;
-    layout.yaxis.scaleanchor = null;
-    layout.yaxis.scaleratio = null;//1 for square pixels
+    layout.yaxis.scaleanchor=null;
+    layout.yaxis.scaleratio =null;
   }
   return traces;
 }

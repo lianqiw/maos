@@ -285,7 +285,7 @@ void* wfsgrad_iwfs(thread_t* info){
 		if(save_opd){
 			zfarr_push(simu->save->wfsopd[iwfs], isim, opd);
 		}
-		if(parms->plot.run&&isim%parms->plot.run==0){
+		if(parms->plot.run){
 			drawopdamp("Opdwfs", powfs[ipowfs].loc, opd, amp, parms->plot.opdmax,
 				"WFS OPD", "x (m)", "y (m)", "WFS %2d", iwfs);
 		}
@@ -583,7 +583,7 @@ void* wfsgrad_post(thread_t* info){
 			P(P(simu->save->fsmcmds, iwfs), 1, isim)=P(P(simu->fsmcmd, iwfs), 1);
 		}
 		if(simu->wfsflags[ipowfs].gradout){
-			if(parms->plot.run&&isim%parms->plot.run==0){
+			if(parms->plot.run){
 				/*drawgrad("Gcl", simu->powfs[ipowfs].saloc, gradcl,
 					parms->plot.grad2opd, parms->powfs[ipowfs].trs, P(parms->plot.gmax),
 					"WFS Closeloop Gradients", "x (m)", "y (m)", "Gcl %d", iwfs);*/
@@ -661,7 +661,7 @@ void* wfsgrad(sim_t* simu){
 	if(simu->gradoff){//moved here to preserve static focus in gradoff
 		dcelladd(&simu->gradcl, 1, simu->gradoff, -parms->dbg.gradoff_scale);
 	}
-	if(parms->plot.run&&simu->wfsisim%parms->plot.run==0){
+	if(parms->plot.run){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
 			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);

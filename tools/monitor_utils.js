@@ -159,6 +159,50 @@ function ResizableColumn({ title, width, onWidthChange }) {
     </th>
   );
 }
+function FloatInput({
+  title='Set cumulative plotting starting index',
+  name='Input',
+  type="number",
+  value,
+  step,
+  min,
+  max,
+  onChange,
+  onApply,
+}) {
+  const inputRef = React.useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if(onApply) {
+      onApply(parseFloat(value || min))
+    }
+  };
+
+  return (
+    <li title={title}>
+      <span>{name}</span>
+      <div className="spring-spacer" />
+
+      <form onSubmit={handleSubmit}>
+        <input
+          ref={inputRef}
+          style={{ width: '4em' }}
+          value={value}
+          type={type}
+          step={step}
+          min={min}
+          max={max}
+          onClick={(e) => {
+            if(inputRef.current) inputRef.current.select();
+            e.stopPropagation();
+          }}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </form>
+    </li>
+  );
+}
 //Use global function instead of import to avoid error with in-browser babel transformer
 window.get_hostname=get_hostname;
 window.split_hostname=split_hostname;
@@ -166,3 +210,4 @@ window.splitText=splitText
 window.Menu=Menu;
 window.Progress=Progress;
 window.ResizableColumn=ResizableColumn;
+window.FloatInput=FloatInput;

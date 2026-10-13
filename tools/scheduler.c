@@ -804,6 +804,7 @@ static int respond(struct pollfd *pfd, int flag){
 			irun->status.info=S_START;
 			nrun_add(pid, nthread, ngpu);
 		}
+		irun->last_time=myclocki();
 		all_done=0;
 		if(irun->path) monitor_send(irun, irun->path);
 		monitor_send(irun, NULL);
@@ -868,6 +869,7 @@ static int respond(struct pollfd *pfd, int flag){
 			break;
 		}
 		irun->path=remove_endl(irun->path0);
+		irun->last_time=myclocki();
 		dbg_time("(%d:%s) Job %d received path. \n", sock, get_sockname(sock), pid);
 		monitor_send(irun, irun->path);
 	}

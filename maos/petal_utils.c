@@ -140,7 +140,7 @@ void petal_recon(sim_t *simu){
 			if(parms->powfs[jpowfs].lo) continue;
 			dcellmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfs, idm), P(simu->dmtmp, idm), "nn", -gain);
 		}
-		if(parms->plot.run&&petal_isim%parms->plot.run==0){
+		if(parms->plot.run){
 			int draw_single_save=draw_single; draw_single=0;
 			drawopd("DM", P(simu->recon->aloc, idm), P(simu->dmtmp, idm), parms->plot.opdmax, "DM Petal Error Signal (Hi)", "x (m)", "y (m)", "Petal %d", idm);
 			plot_gradoff(simu, -1);

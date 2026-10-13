@@ -425,9 +425,12 @@ void listen_port(listen_opt_t opt){
 			perror("listen (sock)");
 			exit(EXIT_FAILURE);
 		}
-		listen_port_add(sock, POLLIN, NULL, "scheduler tcp");
+		listen_port_add(sock, POLLIN, NULL, "listen_tcp");
 		socket_recv_timeout(sock, 60);
 		socket_send_timeout(sock, 60);
+	}
+	if(opt.fd){
+		listen_port_add(opt.fd, POLLIN, opt.http_responder?pending_handler:opt.responder, "listen_fd");
 	}
 	if(opt.localpath){
 		if(opt.localpath[0]=='/'){
@@ -438,7 +441,7 @@ void listen_port(listen_opt_t opt){
 				dbg_time("(%d) bind to %s failed\n", sock, opt.localpath);
 			} else{
 				if(!listen(sock_local, 10)){
-					listen_port_add(sock_local, POLLIN, NULL, "scheduler local");
+					listen_port_add(sock_local, POLLIN, NULL, "listen_local");
 					socket_send_timeout(sock_local, 60);
 					socket_recv_timeout(sock_local, 60);
 				} else{
@@ -556,7 +559,7 @@ void listen_port(listen_opt_t opt){
 						 */
 						int ans=pfd_handler[ifd].handler(&pfd[ifd], 0);
 						if(ans<0 && pfd[ifd].fd!=-1){
-							listen_port_del(pfd[ifd].fd, 1, "closed by handler.");
+							listen_port_del(pfd[ifd].fd, 1, "handler");
 							//dbg_time("(%d) close socket, ans=%d.\n", pfd[ifd].fd, ans);
 							//new_connection=-1;
 						}
