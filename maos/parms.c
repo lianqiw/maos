@@ -1295,6 +1295,10 @@ static void readcfg_aper(parms_t *parms){
 	real *dtmp;
 	/*aper.d may contain one for [d] or two numbers for [d din] */
 	int nd=readcfg_dblarr(&dtmp,0,0,"aper.d");
+	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
+	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
+	parms->aper.misregu=readcfg_dmat(2, 0, "aper.misregu");
+	READ_STR(aper.pupmask);
 	switch(nd){
 	case 2:
 		parms->aper.din=dtmp[1]; //fallthrough
@@ -1336,11 +1340,7 @@ static void readcfg_aper(parms_t *parms){
 	} else if(parms->aper.din<0){
 		error("Aperture inner diameter(%g) shall be positive.\n",parms->aper.din);
 	}
-	READ_DBL_SCALE(aper.rot, aper.rotdeg, M_PI/180.);
-	parms->aper.misreg=readcfg_dmat(2, 0, "aper.misreg");
-	parms->aper.misregu=readcfg_dmat(2, 0, "aper.misregu");
-	
-	READ_STR(aper.pupmask);
+
 }
 /**
  * check and scale thetax and thetay to match fov in diameter. If thetax and
