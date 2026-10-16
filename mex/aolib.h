@@ -44,3 +44,4 @@ void dembed(dmat*out, dmat*in, double theta);
 void dshift2center(dmat *A, real offx, real offy);
 dmat *dcell2m(dcell*A);
 dsp *dspaddI(dsp*A, double alpha);
+void dmaprot(dmat *A, double theta);

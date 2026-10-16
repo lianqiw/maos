@@ -5,21 +5,26 @@ atms="25pGL_25pFA 25pGL_50pFA 25pGL_75pFA 50pGL_25pFA 50pGL_50pFA 50pGL_75pFA 75
 zas="30 45 55 60"
 alg0="tomo"
 rnes="0.1 2.7"
-base="-c strata.conf sim.seeds=[1 10 20 30]"
+base="-c strata.conf sim.seeds=[1 10 20 30] -G1"
 lmags="8" #magnitude of LGS
 nlgss="4" #number of LGS
-
+sodium=
+ncpa=
+ncpa_calib=0
+hz=0
 #Overrides 
 fasttt=0 #set to 1 to enable fast t/t
 atms="50pGL_50pFA" #only median seeing
 zas="30"
-systems="kapa" #subset of systems
-#khz=1 #test khz
-#alg0="tomo"
-rnes="0.1 2.0 2.7"
-nlgss="4 "
-sodium=
-use_cog=2 #use CoG for LGS. 1: recon, 2: sim
+systems="kapa_strata" #subset of systems
+noatm=0
+rotdeg=0
+rnes=1.8 #likely 
+openloop=1
+#rnes="2.7 1.8 0.8 0.3" #2.0 2.7"
+#nlgss="4 "
+#lmags="6 8 7.3 9"
+#use_cog= #2 #use CoG for LGS. 1: recon + sim, 2: sim only (better)
 #"D150"
 ### End
 ast_extra= #"rect"
@@ -102,21 +107,25 @@ config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[m
 config[zimager]=" powfs.astscale=[50 240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 $ngs_glao " #Zshooter imager with circular FoV D=3'
 config[zimager_dense]=" powfs.astscale=[50  240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl.fov=180 evl.thetax='type=square; nring=9; ratio=1; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
 config[zspec]=" powfs.astscale=[15.2 240*$ngsscale  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 $ngs_glao " #Zshooter spectrograph in LTAO mode
-config[kapa]=" powfs.astscale=[15.2 0 0] powfs.wvl=[0.589 1.25 0.8]  powfs.pixtheta=[1 0.05 0.5] fit_oa.conf fit.fov=0 evl_x.conf evl.fov=20 evl.psfmean=0 powfs.dtrat=[1 1 1000]" #Kapa LTAO
+config[kapa]=" powfs.astscale=[15.2 0 0] powfs.wvl=[0.589 1.25 0.8]  powfs.pixtheta=[1 0.05 0.5] fit_oa.conf fit.fov=0 evl_x.conf evl.wt=[1 0 0 0 0 0 0 0 0] evl.fov=20 evl.psfmean=0 powfs.dtrat=[1 1 1000]" #Upgraded kapa LTAO
+#Default atmthruput is 0.84, telthrughput is 0.307
+kapa_common="powfs.atmthruput=[0.896 0.896 0.896] powfs.telthruput=[0.36*0.9 0.32 0.03] sim.end=2000" #common between original and upgraded kapa
+config[kapa_orig]=" ${config[kapa]} $kapa_common dm.ht=[0] dm.dx=[0.5625] powfs.pixtheta=[1.5 0.05 0.5]  powfs.pixpsa=[4 6 6] powfs0_llt.ox=[0] powfs0_llt.oy=[0] powfs0_llt.focus=280" #Original kapa with original center launch LLT. 1.7" spot size?
+config[kapa_strata]=" ${config[kapa]} $kapa_common powfs0_llt.focus=140 "
 #config[kola]="$lgs8ngs3 powfs.astscale=[60 30 30] powfs.wvl=[0.589 1.25 1.25] powfs.nwvl=[1 1 1] powfs.pixtheta=[1 0.05 0.05] fit_cir60.conf fit.fov=60 evl_x.conf evl.fov=60 dm.offset+=[1/3 2/3] dm.ht+=[6000 10000] sim.dt=1/1500 " #Example 
 declare -A algs
 algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly to DM
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
 #for sodium in W1.2 ; do #W1.2 W1.5 W1.8
-for ss in 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5; do ast_extra=Q$ss #pixel scale. P(ideal LLT). Q (actual LLT)
-#for ss in 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 ;do ast_extra=N$ss #aperture size with random (S), fixed (V) or without (N) super resolution
-#for ast_extra in P0.5 ;do
+#for ss in 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5; do ast_extra=Q$ss #pixel scale. P(ideal LLT). Q (LLT 140 nm focus aberration)
+#for ss in 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 ;do for vv in V;do ast_extra=${vv}$ss #aperture size with random (S), fixed (V) or without (N) super resolution
 #for ast_extra in D100 ; do #asterism size
 #for ast_extra in X6 X8 X10 X12 ;do #number of pixels
-
+for hz in 600 ;do
+for ncpa in "Keck_ncpa_rmswfe130nm.fits";do
 for sys in $systems;do   
-    if [ $sys = kapa -a $fasttt -ne 0 ] ;then
+    if [ ${sys:0:4} = kapa -a $fasttt -ne 0 ] ;then
         continue
     fi
     for za in $zas;do
@@ -169,11 +178,19 @@ for sys in $systems;do
                                 ;;
                                 N*)
                                 #subaperture size without super resolution
-                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[0 0 0] powfs.misregy=[0 0 0] powfs.misregc=[0 0 0] save.setup=1 "
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[0 0 0] powfs.misregy=[0 0 0] powfs.misregc=[0 0 0]  "
                                 ;;
                                 S*) 
-                                #subaperture size with super resolution
-                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[1 0 0] powfs.misregy=[1 0 0] powfs.misregc=[1 0 0] save.setup=1 "
+                                #subaperture size with super resolution (randomized)
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] powfs.misregx=[1 0 0] powfs.misregy=[1 0 0] powfs.misregc=[0 0 0]  "
+                                #ast2+=" sim.seeds=[1] "
+                                ast2_extra="v4"
+                                ;;
+                                V*) 
+                                #subaperture size with super resolution (manually set)
+                                ast2="powfs.dsa=[0.1624*${ast_extra:1} -2 -30] wfs.misregx=[0 0.5 0.5 0 0 0] wfs.misregy=[0 0.5 0 0.5 0 0] plot.all=1 sim.end=0 save.setup=1"
+                                #ast2+=" sim.seeds=[1] "
+                                ast2_extra="v2"
                                 ;;
                                 U*) 
                                 #subaperture size with super resolution
@@ -206,7 +223,7 @@ for sys in $systems;do
                                 ast2_extra="cog2"
                             fi
                             echo $sys $ast
-                            conf="$base sim.zadeg=${za} ${config[${sys}]} ${!ast} ${ast2} ${ast3} powfs.mag=[${lmag} 8.5 8.5] atm/atm_mk${atm}.conf powfs.rne=[$rne 0.5 0.5] ${algs[${alg}]}"
+                            conf="$base sim.zadeg=${za} ${!ast} ${config[${sys}]} ${ast2} ${ast3} powfs.mag=[${lmag} 8.5 8.5] atm/atm_mk${atm}.conf powfs.rne=[$rne 0.5 0.5] ${algs[${alg}]}"
 
                             if [ $fasttt -ne 0 ]; then
                                 if [ $ngsscale = 0 ];then
@@ -221,9 +238,33 @@ for sys in $systems;do
                             if [ "$ast2_extra" != "" ];then
                                 fd+='_'${ast2_extra}
                             fi
-                            if [ "$khz" = 1 ];then
-                                fd+='_1khz'
-                                conf+=" sim.dt=1/1000 sim.end=10020 "
+                            if [ -n "$hz" ];then
+                                fd+="_${hz}hz"
+                                conf+=" sim.dt=1/${hz} "
+                                if [ ${sys:0:4} = kapa ];then
+                                    conf+=" sim.end=4*${hz}+20"
+                                else
+                                    conf+=" sim.end=10*${hz}+20"
+                                fi
+                            fi
+                            if [ -n "$ncpa" ];then
+                                fd+="_ncpa${ncpa_calib}"
+                                conf+=" ncpa.surf=[$ncpa] ncpa.calib=${ncpa_calib} "
+                            fi
+                            if [ x$noatm = x1 ] ;then
+                                fd+="_noatm"
+                                conf+=" sim.noatm=1 sim.wspsd= powfs.noisy=[0]"
+                                if [ -z "$ncpa" ];then
+                                    continue
+                                fi
+                            fi
+                            if [ x$rotdeg != x0 ];then
+                                fd+="_rot${rotdeg}"
+                                conf+=" aper.rotdeg=${rotdeg}"
+                            fi
+                            if [ x$openloop = x1 ];then
+                                fd+="_openloop"
+                                conf+=" sim.closeloop=0 "
                             fi
                             maos $conf -o strata/${sys}/za${za}/${atm}/${fd} -d # sim.end=0 save.setup=1 plot.all=1
       
@@ -234,5 +275,7 @@ for sys in $systems;do
         done #for atm
     done #for za
 done #for sys
-done #for ast_exctra
+#done #for ast_exctra
 #done #for sodium
+done
+done

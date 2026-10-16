@@ -6,7 +6,7 @@ This module contains routines to embed opds defined on coordinates to 2-d array 
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
+import scipy.sparse
 #from aotools import center #cyclic import
 #import struct
 
