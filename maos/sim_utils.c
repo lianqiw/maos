@@ -480,8 +480,9 @@ static void init_simu_evl(sim_t* simu){
 		}
 		long nnx[4]={nmod,0,nmod,ahst_nmod};
 		long nny[4]={nsim,0,nsim,nsim};
-
-		simu->res=dcellnew_file(4, 1, nnx, nny, "Field averaged open and closed loop WFE.", "Res_%d.bin", seed);
+		char keywords[128];
+		snprintf(keywords, sizeof(keywords), "sim.dt=%g;\nevl.dx=%g;\n", parms->sim.dt, parms->evl.dx);
+		simu->res=dcellnew_file(4, 1, nnx, nny, keywords, "Res_%d.bin", seed);
 		//Do not reference. Just assign. Don't free.
 		simu->ole=P(simu->res, 0);
 		//P(simu->res, 1) is no longer used.
@@ -495,18 +496,23 @@ static void init_simu_evl(sim_t* simu){
 		{
 			char *pk=keywords;
 			char *pkend=keywords+sizeof(keywords);
+			char elem[64];
+			int ne=0;
+			ne=snprintf(elem, sizeof(elem), "sim.dt=%g; \nevl.dx=%g;\n", parms->sim.dt, parms->evl.dx);
+			if(pk+ne<pkend){
+				memcpy(pk, elem, ne+1);
+				pk+=ne;
+			}
 			for(int j=0; j<2; j++){
-				char elem[16];
 				dmat *theta=j==0?parms->evl.thetax:parms->evl.thetay;
 				for(int i=-1; i<nevl+1; i++){
 					if(i==-1){
-						snprintf(elem, sizeof(elem), "evl.theta%s=[", j==0?"x":"y");
+						ne=snprintf(elem, sizeof(elem), "evl.theta%s=[", j==0?"x":"y");
 					}else if(i==nevl){
-						snprintf(elem, sizeof(elem), "]; ");
+						ne=snprintf(elem, sizeof(elem), "];\n ");
 					}else{
-						snprintf(elem, sizeof(elem), " %.2f", P(theta, i)*RAD2AS);
+						ne=snprintf(elem, sizeof(elem), " %.2f", P(theta, i)*RAD2AS);
 					}
-					int ne=strnlen(elem, sizeof(elem));
 					if(pk+ne<pkend){
 						memcpy(pk, elem, ne+1);
 						pk+=ne;
@@ -809,14 +815,13 @@ static void init_simu_wfs(sim_t* simu){
 		simu->fsmreal=dcellnew3(nwfs, 1, nnx, NULL);
 		simu->fsmint=mycalloc(parms->nwfs, servo_t *);
 		simu->fsmsho=mycalloc(parms->nwfs, sho_t *);
-		if(parms->sim.closeloop){
-			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-				if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
-					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-						simu->fsmint[iwfs]=servo_new_scalar(P(simu->fsmreal, iwfs), parms->powfs[ipowfs].apfsm, parms->powfs[ipowfs].alfsm, parms->sim.dt, parms->powfs[ipowfs].epfsm);
-						simu->fsmsho[iwfs]=sho_new(parms->powfs[ipowfs].f0fsm, parms->powfs[ipowfs].zetafsm);
-					}
+		//Always enable uplink loop for LGS WFS to simulate open loop physical optics WFS correction
+		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+			if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
+				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					simu->fsmint[iwfs]=servo_new_scalar(P(simu->fsmreal, iwfs), parms->powfs[ipowfs].apfsm, parms->powfs[ipowfs].alfsm, parms->sim.dt, parms->powfs[ipowfs].epfsm);
+					simu->fsmsho[iwfs]=sho_new(parms->powfs[ipowfs].f0fsm, parms->powfs[ipowfs].zetafsm);
 				}
 			}
 		}
