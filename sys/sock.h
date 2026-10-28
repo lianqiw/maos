@@ -29,12 +29,12 @@ int connect_port(const char *hostname, int port, int block, int nodelay);
 typedef struct listen_opt_t{
   const char *localpath;//optional: for local unix socket
 	const char *ipaddr;//optional: ip address to listen for port 
+  int port; //optional: socket port to listen
+  int fd;   //optional: fd to listen
 	int (*responder)(struct pollfd*, int);//tcp responder
 	int (*http_responder)(struct pollfd*, int);//http responder
 	void (*timeout_fun)();//timeout function callback
 	double timeout_sec;//timeout in seconds
-	int port; //optional: socket port to listen
-  int fd; //optional: fd to listen
 	int nodelay;
 }listen_opt_t;
 void listen_port(listen_opt_t opt);//uint16_t port, char *localpath, int (*responder)(struct pollfd*, int), double timeout_sec, void (*timeout_fun)(), int nodelay);

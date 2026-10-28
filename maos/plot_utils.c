@@ -126,7 +126,7 @@ void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_ev
 	}else if(count<ncir){
 		dresize(cir, NX(cir), count);
 	}
-	draw(fig, (plot_opts){.ngroup=1, .loc=&loc, .cir=cir, .legend=legend},
+	draw(fig, (plot_opts){.loc=&loc, .legend=legend, .cir=cir},
 		"Coordinate", "x (m)", "y (m)", "%s", fn);
 	dfree(cir);
 }
@@ -232,7 +232,7 @@ void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* fo
 	real limit[4];
 	limit[0]=limit[2]=-totfov/2;
 	limit[1]=limit[3]=totfov/2;
-	draw(fig, (plot_opts){.ngroup=ngroup, .loc=P(locs), .style=style, .limit=limit, .cir=cir, .legend=legend},
+	draw(fig, (plot_opts){.loc=P(locs), .ngroup=ngroup, .style=style, .legend=legend, .cir=cir, .limit=limit},
 		"Asterism", "x (arcsec)", "y (arcsec)", "%s", fn);
 	dfree(cir);
 	cellfree(locs);

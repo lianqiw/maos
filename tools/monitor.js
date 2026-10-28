@@ -442,7 +442,7 @@ function App() {
     return (
       <div ref={tableRef}>
         <ul className="inline tab_hosts" style={{zIndex: 10, position: "sticky", top: 0}}>
-          <Menu label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
+          <Menu title="Click to show the menu" label={(<span><img src="icon-monitor.png" alt="icon"></img><span>Menu</span></span>)} child={
             <ul className="menu-list" >
               <li onClick={() => { cmdHost(active, "clear_all"); }}>🧹 Clear All Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>
               {selectedRows.size>0 && <li onClick={() => { cmdHost(active, "clear_selected"); }}>☑️ Clear Selected Jobs on {active === "" || wss[active] === undefined ? "all" : active}</li>}
@@ -456,7 +456,7 @@ function App() {
             </ul>
           }></Menu>
           <li className={active === "" ? "active" : ""} onClick={() => setActive("")}>
-            <span>▶️ Active</span>
+            <span title="Active jobs">▶️ Active</span>
           </li>
           {Object.keys(hosts).filter((v) => hosts[v] != undefined).map((host) => (//List of hosts
             <li key={host} className={active === host ? "active" : ""}>
@@ -466,8 +466,8 @@ function App() {
             </li>
           ))}
           <li><form onSubmit={(e) => { e.preventDefault(); setText(''); if (text.length) { setHosts((oldVal)=>({...oldVal, [split_hostname(text)]:text}))}}}>
-            <input style={{ width: '10em' }} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
-            <button type="submit">Connect</button></form>
+            <input title="Connect to additional host" style={{ width: '10em' }} id="add_host" value={text} onChange={e => setText(e.target.value)}></input>
+            <button title="Click to connect" type="submit">Connect</button></form>
           </li>
           {Object.keys(drawInfo).filter((job) => (drawInfo[job])).map((job) => (
             <li key={job} className={active === job ? "active" : ""}>
@@ -482,7 +482,7 @@ function App() {
             </colgroup>
             <thead>
               <tr>{columns.map((col) => col in widths?<ResizableColumn
-              width={widths[col]} title={col} key={col}
+              width={widths[col]} name={col} key={col}
               onWidthChange={(w) =>
                 setWidths({ ...widths, [col]: w })
               }/>:<th key={col}>{col}</th>)}

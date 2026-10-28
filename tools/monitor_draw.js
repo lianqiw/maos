@@ -281,7 +281,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           const drawData = (jobRef.current[jobActive]['drawData'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           layout.current = (jobRef.current[jobActive]['layout'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
-            const id=(drawData.fig+'_'+drawData.name).replace(/\s+/g, "_");
+            const id=(drawData.fig+'_'+drawData.name).replace(/[:\s]+/g, "_");
             if(figName.current!==id){
               figName.current=id;
             }
@@ -363,7 +363,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         <li title="Pause or Resume ploting" onClick={() => { setPause(oldVal=>({...oldVal, [jobActive]:oldVal[jobActive]?false:true}));}}>{pause[jobActive] ? "▶️" : "⏸️"}</li>
         <li title="Stop receiving more data for plotting" onClick={() => { if(wssRef.current[jobActive]) wssRef.current[jobActive].close() }}>{wss[jobActive]?"⏹️" : "🛑"}</li>
         <li title="Cumulative ploting" className={cumPlot?"active":""} onClick={()=>{if(!cumInput) {setCumInput(0.1); setCumStart(0.1);}setCumPlot(oldVal=>!oldVal)}}>🎢</li>
-        <Menu label={(<span style={{padding:'0.3em'}}>💾 Options</span>)} child={<ul className="menu-list" >
+        <Menu label={(<span style={{padding:'0.3em'}}>Options</span>)} child={<ul className="menu-list" >
           <FloatInput title='Set x axis range' name='Set x axis range' value={xRange} min="0"
             onChange={setXRange} onApply={setXRange}/>
           <FloatInput title='Set cumulative plotting starting index' name='Set cumu start' value={cumInput} step="0.1" min="0" 
@@ -372,6 +372,8 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
             onChange={setLpfInput} onApply={(value)=>{lpf.current=value}}/>
           <FloatInput title="Set clim update low pass filter" name="Set clim update LPF" value={climLpfInput} step="0.001" min="0" max="1"
             onChange={setClimLpfInput}/>
+        </ul>}/>
+        <Menu label={(<span style={{padding:'0.3em'}}>💾 Save</span>)} child={<ul className="menu-list" >
           {(gifActive.current)&&
            (<li onClick={()=>{finishGif()}}>💾 Stop Recording Animation</li>)||
            (<li onClick={()=>{startGif(figName.current)}}>🎞️ Record Animation as {figName.current}.gif</li>)
@@ -380,7 +382,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'jpeg',filename: figName.current});}}>🏞️ Save as {figName.current}.jpg</li>
           <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'svg',filename: figName.current});}}>📐 Save as {figName.current}.svg</li>
           <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'webp',filename: figName.current});}}>🅿️ Save as {figName.current}.webp</li>
-        </ul>}></Menu>
+        </ul>}/>
       </ul>
       <div className="layout">
         <ul className="tab_hosts" style={{width:'8em', overflowY: 'auto'}}>{/*draw sub-notebook (vertical)*/}

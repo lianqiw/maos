@@ -681,8 +681,14 @@ switch(ctype){\
 				FWRITEARR(tmp, nlen2);
 				free(tmp);
 				if(sizeof(real)!=sizeof(dtype)) FWRITECMDINT(DRAW_FLOAT, sizeof(real));
+				if(opts.zlim[0]!=opts.zlim[1]){
+					FWRITECMDARR(DRAW_ZLIM, opts.zlim, sizeof(real)*2);
+				}
+				if(opts.zlog){
+					FWRITECMDINT(DRAW_ZLOG, opts.zlog);
+				}
 			}else{//points or lines
-				const int ngroup=opts.dc && (opts.ngroup>PN(opts.dc)||opts.ngroup==0)?PN(opts.dc):opts.ngroup;
+				const int ngroup=(opts.dc && (opts.ngroup>PN(opts.dc)||opts.ngroup==0))?PN(opts.dc):(opts.ngroup?opts.ngroup:1);
 				if(opts.loc){/*there are points to plot. */
 					for(int ig=0; ig<ngroup; ig++){
 						int nlen=opts.loc[ig]->nloc;
@@ -718,6 +724,18 @@ switch(ctype){\
 				} else {
 					warning("Empty plot.\n");
 				}
+				if(opts.dx){
+					FWRITEINT(DRAW_DX);
+					FWRITEINT(1);
+					FWRITEARR(&opts.dx, sizeof(real));
+				}else if(opts.dxs){
+					FWRITEINT(DRAW_DX);
+					FWRITEINT(PN(opts.dxs));
+					FWRITEARR(P(opts.dxs), sizeof(real)*PN(opts.dxs))
+				}
+				if(opts.xylog){
+					FWRITECMDARR(DRAW_XYLOG, opts.xylog, sizeof(char)*2);
+				}
 				if(opts.style){
 					FWRITEINT(DRAW_STYLE);
 					FWRITEINT(ngroup);
@@ -730,6 +748,7 @@ switch(ctype){\
 					}
 				}
 			}
+			//common
 			if(opts.cir){
 				if(NX(opts.cir)!=4){
 					error("Cir should have 4 rows\n");
@@ -738,18 +757,11 @@ switch(ctype){\
 				FWRITEINT(NY(opts.cir));
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
-			if(opts.zlog){
-				FWRITECMDINT(DRAW_ZLOG, opts.zlog);
-			}
-			if(opts.zlim[0]!=opts.zlim[1]){
-				FWRITECMDARR(DRAW_ZLIM, opts.zlim, sizeof(real)*2);
-			}
+
 			if(opts.limit){/*xmin,xmax,ymin,ymax */
 				FWRITECMDARR(DRAW_LIMIT, opts.limit, sizeof(real)*4);
 			}
-			if(opts.xylog){
-				FWRITECMDARR(DRAW_XYLOG, opts.xylog, sizeof(char)*2);
-			}
+
 			FWRITECMDSTR(DRAW_TITLE, title);
 			FWRITECMDSTR(DRAW_XLABEL, xlabel);
 			FWRITECMDSTR(DRAW_YLABEL, ylabel);
@@ -802,7 +814,7 @@ int drawmap(const char* fig, const map_t* map, real zlim,
 	real limit[4];
 	LIMIT_SET_X(limit, map->ox, 0.5, map->dx, map->nx);
 	LIMIT_SET_Y(limit, map->oy, 0.5, map->dy, map->ny);
-	draw(fig, (plot_opts){.image=(const dmat*)map, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=(const dmat*)map, .zlim={-zlim,zlim}, .limit=limit}, title, xlabel, ylabel, "%s", fn);
 	return 1;
 }
 /**
@@ -827,7 +839,7 @@ int drawloc(const char* fig, loc_t* loc, real zlim,
 	real limit[4];
 	LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, nx);
 	LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, ny);
-	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=opd0, .zlim={-zlim,zlim}, .limit=limit}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -853,7 +865,7 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 		LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, opd0->nx);
 		LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, opd0->ny);
 	}
-	draw(fig, (plot_opts){.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+	draw(fig, (plot_opts){.image=opd0, .zlim={-zlim,zlim}, .limit=limit}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }
@@ -938,7 +950,7 @@ int drawgrad(const char* fig, loc_t* saloc, const dmat *saa, const dmat* gradin,
 	LIMIT_SET_X(limit, saloc->map->ox, offset, saloc->dx, phi->nx);
 	LIMIT_SET_Y(limit, saloc->map->oy, offset, saloc->dy, phi->ny);
 	draw(fig, (plot_opts){
-		.image=phi, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+		.image=phi, .zlim={-zlim,zlim}, .limit=limit}, title, xlabel, ylabel, "%s", fn);
 	
 	dfree(grad);
 	dfree(phi);
@@ -978,7 +990,7 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	LIMIT_SET_X(limit, loc->map->ox, offset, loc->dx, nx);
 	LIMIT_SET_Y(limit, loc->map->oy, offset, loc->dy, ny);
 	draw(fig, (plot_opts){
-		.image=opd0, .limit=limit, .zlim={-zlim,zlim}}, title, xlabel, ylabel, "%s", fn);
+		.image=opd0, .zlim={-zlim,zlim}, .limit=limit}, title, xlabel, ylabel, "%s", fn);
 	dfree(opd0);
 	return 1;
 }

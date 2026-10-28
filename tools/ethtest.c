@@ -282,10 +282,10 @@ int main(int argc, char* argv[]){
 
 	if(!strcmp(argv[1], "server")){
 		int port=strtol(argv[2], NULL, 10);
-		listen_port((listen_opt_t){.port=port, .nodelay=1, .ipaddr=ipaddr, .responder=server});
+		listen_port((listen_opt_t){.ipaddr=ipaddr, .port=port, .responder=server, .nodelay=1});
 	} else if(!strcmp(argv[1], "mvm_server")){
 		int port=strtol(argv[2], NULL, 10);
-		listen_port((listen_opt_t){.port=port, .nodelay=1, .ipaddr=ipaddr, .responder=mvm_server});
+		listen_port((listen_opt_t){.ipaddr=ipaddr, .port=port, .responder=mvm_server, .nodelay=1});
 	} else{
 		if(argc<4){
 			error("Usage: ./ethtest client hostname port [nrep] [nmin] [nmax] [nstep]");

@@ -269,7 +269,7 @@ static void plot_psd(const dmat *psdall, double dt, int dtrat,
 	}
 	int nmod=NY(psdall)-1;
 	dcell *psds=dcellnew(2*nmod, 1);
-	dcell *cums=dcellnew(nmod, 1);//only integrate OL PSD to indicate residual with correction bandwidth
+	dcell *cumol=dcellnew(nmod, 1);//only integrate OL PSD to indicate residual with correction bandwidth
 	char **legs=mycalloc(nmod*2, char*);
 	int32_t *style=mycalloc(nmod*2, int32_t);
 	
@@ -280,21 +280,21 @@ static void plot_psd(const dmat *psdall, double dt, int dtrat,
 		if(save_ol) zfarr_push(save_ol, -1, psdol);
 		P(psds, imod)=dref(psd);//dsub(psd,  1,-1,0,-1); 
 		P(psds, imod+nmod)=dref(psdol);//dsub(psdol, 1, -1, 0, -1);
-		P(cums, imod)=psd_reverse_cumu(psdol, 1e9);
+		P(cumol, imod)=psd_reverse_cumu(psdol, 1e9);
 		dfree(psdol);
 		dfree(psd);
 		char temp[1024]; 
-		snprintf(temp, sizeof(temp), "Closed Loop %s", modes?modes[imod]:""); legs[imod]=strdup(temp);
-		snprintf(temp, sizeof(temp), "Open Loop %s", modes?modes[imod]:""); legs[imod+nmod]=strdup(temp);
+		snprintf(temp, sizeof(temp), "CL %s", modes?modes[imod]:""); legs[imod]=strdup(temp);
+		snprintf(temp, sizeof(temp), "OL %s", modes?modes[imod]:""); legs[imod+nmod]=strdup(temp);
 		style[imod]=default_color(imod)<<8;   //solid  line
 		style[imod+nmod]=default_color(imod)<<8|7; //dashed line
 	}
 	if(doplot){
-		draw("PSD", (plot_opts){.dc=psds, .style=(nmod==1)?NULL:style, .xylog="yy", .legend=(const char *const *)legs, .always=1}, "", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD %s", label);
-		draw("PSD", (plot_opts){.dc=cums, .style=(nmod==1)?NULL:style, .xylog="yy", .legend=(const char *const *)(legs+nmod), .always=1 }, "", "Frequency (Hz)", "PSD Reverse Cumulative Integral (nm)", "Cumu %s", label);
+		draw("PSD", (plot_opts){.dc=psds, .xylog="yy", .style=(nmod==1)?NULL:style, .legend=(const char *const *)legs, .always=1}, "", "Frequency (Hz)", "PSD (m<sup>2</sup>/Hz)", "PSD %s", label);
+		draw("PSD", (plot_opts){.dc=cumol,.xylog="yy", .style=(nmod==1)?NULL:style, .legend=(const char *const *)(legs+nmod), .always=1 }, "", "Frequency (Hz)", "OL PSD Reverse Cumulative Integral (nm)", "Cumu %s", label);
 	}
 	dcellfree(psds);
-	dcellfree(cums);
+	dcellfree(cumol);
 	for(int imod=0; imod<2*nmod; imod++){
 		free(legs[imod]);
 	}

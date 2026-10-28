@@ -63,6 +63,8 @@ struct drawdata_t{
 	/*Draw points */
 	float** pts;      	/*set of points to draw; */
 	int(*ptsdim)[2];  	/*nx, ny of pts*/
+	float* dx;          //spacing of x if only y is provided. one value or one value per line.
+	int ndx;
 	int npts;        	/*number of pts sets. */
 	int nptsmax;    	/*allocated size of pts sets*/
 
