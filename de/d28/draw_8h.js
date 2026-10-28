@@ -2,7 +2,7 @@ var draw_8h =
 [
     [ "plot_opts", "de/d28/draw_8h.html#d3/de8/structplot__opts", [
       [ "maxlen", "de/d28/draw_8h.html#ac21e46b3e42072d5401f11d728402070", null ],
-      [ "loc", "de/d28/draw_8h.html#a21f274cacd6006de0eab6a2ac12a0875", null ]
+      [ "dx", "de/d28/draw_8h.html#afeed23f027b64c5cd4ee14f7478297c4", null ]
     ] ],
     [ "plot_opts.__unnamed8__", "de/d28/draw_8h.html#dd/d34/unionplot__opts_8____unnamed8____", null ],
     [ "draw_helper", "de/d28/draw_8h.html#a5e2f206b380b5b9a10b87b7d3d80ccc8", null ],
