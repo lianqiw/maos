@@ -28,6 +28,7 @@ const draw = {
   zlog: 25,
   path: 26,
   exename: 27,
+  dx:28,
   end: 100,
   entry: 9999
 };
@@ -280,6 +281,10 @@ function procBuffer(rawBuffer) {
       case draw.exename:
         drawData.exename = getStr();
         break;
+      case draw.dx:
+        const ndx = getInt()
+        drawData.dx=getFloatArray(ndx)
+        break;
       case draw.end:
         //console.log(`drawData (${wsBuf.byteLength} bytes):`, drawData)
         //start making plot
@@ -437,7 +442,16 @@ function makeTraces(drawData, layout) {
           mode: square?"markers":"lines", marker: { symbol: 'x' }, ...extra
         }
       } else{
-        const dx=drawData.xRange?drawData.xRange/pts.nx:1
+        let dx=1;
+        if(drawData.xRange){
+         dx=drawData.xRange/pts.nx
+        }else if(drawData.dx){
+          if(drawData.dx.length==1){
+            dx=drawData.dx[0]
+          }else if(drawData.dx.length==drawData.pts.length){
+            dx=drawData.dx[ipts]
+          }
+        }
         return { ...makeCumu(pts.p, dx, drawData.cumStart, drawData.cumPlot), mode: "lines",  ...extra}
       }
     }));

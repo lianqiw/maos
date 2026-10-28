@@ -86,7 +86,7 @@ function Progress({ text, frac }){
       </td>
     );
 }
-function Menu({ label, child }){
+function Menu({title, label, child }){
   const [isOpen, setIsOpen] = React.useState(false);
   //Ref to the entire menu container for click-outside detection
   const menuRef = React.useRef(null);
@@ -116,7 +116,7 @@ function Menu({ label, child }){
   }, [isOpen]);
   const handleState = () => setIsOpen(!isOpen) //avoid inline function that triggers rerender
   return (
-    <div className="menu-container" >
+    <div title={title} className="menu-container" >
       <div onClick={handleState} className="menu-button" ref={menuRef}>
         {label}
       </div>
@@ -124,7 +124,7 @@ function Menu({ label, child }){
     </div>
   );
 }
-function ResizableColumn({ title, width, onWidthChange }) {
+function ResizableColumn({ name, width, onWidthChange }) {
   const startResize = (e) => {
     const startX = e.clientX;
     const startWidth = width;
@@ -143,8 +143,8 @@ function ResizableColumn({ title, width, onWidthChange }) {
   };
 
   return (
-    <th style={{ width, position: "relative" }}>
-      {title}
+    <th title="Drag | to resize" style={{ width, position: "relative" }}>
+      {name}
       <div
         onMouseDown={startResize}
         style={{
@@ -160,7 +160,7 @@ function ResizableColumn({ title, width, onWidthChange }) {
   );
 }
 function FloatInput({
-  title='Set cumulative plotting starting index',
+  title='Input',
   name='Input',
   type="number",
   value,

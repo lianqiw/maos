@@ -39,20 +39,23 @@ typedef struct {
     const dmat* image;//2-d image. real valued. 
     const cmat* cimage;//2-d image. complex value. ctype determines how to convert to real value
   };
-  const real* limit;//for 2-d image. xmin,xmax,ymin,ymax
   const real zlim[2];//for 2-d image. value limit min, max 
   const int zlog;//for 2-d image. Use log10 of value.
   const int ctype; //how to convert cimage to image. 0: abs, 1: phase. 2: real, 3: imaginary.
   //For lines
+  dmat** dd;//array of dmat
+  loc_t** loc;//2-d grid points to plot.
+  const dcell* dc;//dcell. takes priority over dd
   int ngroup;///number of lines. 0: automatic
   int maxlen;///maximum nx to plot
-  loc_t** loc;//2-d grid points to plot.
-  dmat** dd;//array of dmat
-  const dcell* dc;//dcell. takes priority over dd
-  const int32_t* style;//line style
+  const real dx;//spacing of x if only y is provided.
+  const dmat *dxs;//spacing of x if only y is provided. one value per line. (if dx is not specified)
   const char* xylog;//for lines, take log along x (xylog[0]=='y') and/or y (xylog[1]=='n')
-  const dmat* cir;//circles to draw
+  const int32_t* style;//line style
   const char* const* const legend;//legends for lines
+  //common for 2-d image or lines
+  const dmat* cir;//circles to draw
+  const real* limit;//manual xmin,xmax,ymin,ymax
   int always;//1: always draw (do not check for active panel)
 } plot_opts;
 

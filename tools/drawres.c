@@ -280,9 +280,49 @@ int main(int argc, char* argv[]){
 	const char* xlabel, * ylabel;
 	dmat* ysky=NULL;
 	const char* xylog;
+	dmat *dts=dnew(npath,1);
+	for(int ipath=0; ipath<npath; ipath++){
+		char fn[PATH_MAX];
+		char line[256];
+		mysnprintf(fn, PATH_MAX, "%s/maos_done.conf", path[ipath]);
+		FILE *fp=fopen(fn, "r");
+		if(!fp){
+			mysnprintf(fn, PATH_MAX, "%s/maos_recent.conf", path[ipath]);
+			fp=fopen(fn, "r");
+		};
+		if(!fp) continue;
+		while(fgets(line, sizeof(line), fp)!=NULL){
+			char *key=strstr(line, "sim.dt");
+			if(key){
+				char *eq=strchr(key, '=');
+				if(eq){
+					eq++;
+					char *endptr;
+					double a=strtod(eq, &endptr);
+					if(endptr){
+						if(endptr[0]=='/'){
+							a/=strtod(endptr+1, NULL);
+						}else if(endptr[0]=='*'){
+							a*=strtod(endptr+1, NULL);
+						}
+					}
+					P(dts, ipath)=a;
+					break;
+				}
+			}
+		}
+		fclose(fp);
+	}
+	if(dmax(dts)==0){
+		dfree(dts);
+	}
 	if(restype==1){
 		xylog="nn";
-		xlabel="Steps";
+		if(dts){
+			xlabel="Time (s)";
+		}else{
+			xlabel="Steps";
+		}
 		ylabel="Wavefront Error (nm)";
 	} else{
 		xylog="yn";
@@ -299,9 +339,9 @@ int main(int argc, char* argv[]){
 			char fn[PATH_MAX];
 			switch(restype){
 			case 1:
-				snprintf(fn, PATH_MAX, "%s/Res_%ld.bin", path[ipath], seed[iseed]); break;
+				mysnprintf(fn, PATH_MAX, "%s/Res_%ld.bin", path[ipath], seed[iseed]); break;
 			case 2:
-				snprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]); break;
+				mysnprintf(fn, PATH_MAX, "%s/Res%ld_%ld.bin", path[ipath], seed[iseed], seed2[iseed]); break;
 			default:
 				error("Invalid restype=%d\n", restype);
 			}
@@ -535,7 +575,7 @@ int main(int argc, char* argv[]){
 						cellresize(P(res, ic), 1, nseed+1);
 						P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
 					}
-					draw(toptab[ic], (plot_opts){.dc=P(res, ic), .xylog=xylog, .legend=(const char* const*)legs0},
+					draw(toptab[ic], (plot_opts){.dc=P(res, ic), .dx=P(dts,0), .xylog=xylog, .legend=(const char* const*)legs0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					if(nseed>1){//seed average
 						dfree(P(P(res, ic), nseed));
@@ -555,12 +595,12 @@ int main(int argc, char* argv[]){
 					}
 				}
 				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-				draw("CL", (plot_opts){ .ngroup=(int)restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("CL", (plot_opts){.dc=restmpcl, .dx=P(dts,0), .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "All");
 				dcellfree(restmpcl);
 				if(restype==1){
 					dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-					draw("OL", (plot_opts){ .ngroup=(int)restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+					draw("OL", (plot_opts){.dc=restmpol, .dx=P(dts,0), .xylog=xylog, .legend=(const char *const *)sidetab },
 						"Open loop Wavefront Error", xlabel, ylabel, "All");
 						dcellfree(restmpol);
 				}
@@ -570,7 +610,7 @@ int main(int argc, char* argv[]){
 		} else{//plot seed average for each mode.
 			for(int ic=0; ic<resm->nx; ic++){
 				if(P(resm, ic)){
-					draw(toptab[ic], (plot_opts){.ngroup=(int)npath,.dc=P(resm, ic), .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab[ic], (plot_opts){.dc=P(resm, ic), .dxs=dts, .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 				}
 			}
@@ -585,12 +625,12 @@ int main(int argc, char* argv[]){
 				}
 			}
 			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-			draw("CL", (plot_opts){ .ngroup=(int)restmpcl->nx, .dc=restmpcl, .xylog=xylog, .legend=(const char *const *)sidetab },
+			draw("CL", (plot_opts){.dc=restmpcl, .dx=P(dts, 0),.xylog=xylog, .legend=(const char *const *)sidetab },
 				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 			dcellfree(restmpcl);
 			if(restype==1){
 				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-				draw("OL", (plot_opts){ .ngroup=(int)restmpol->nx, .dc=restmpol, .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("OL", (plot_opts){.dc=restmpol, .dx=P(dts, 0), .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 				dcellfree(restmpol);
 			}
@@ -601,7 +641,7 @@ int main(int argc, char* argv[]){
 					dcell* tmp=dcellsub(P(res, ic), 0, 0, iseed, 1);
 					char toptab_seed[64];
 					snprintf(toptab_seed, sizeof(toptab_seed), "%s:%ld ", toptab[ic], seed[iseed]);
-					draw(toptab_seed, (plot_opts){.ngroup=(int)npath, .dc=tmp, .xylog=xylog, .legend=(const char* const*)pathtag0},
+					draw(toptab_seed, (plot_opts){.dc=tmp, .dxs=dts, .xylog=xylog, .legend=(const char* const*)pathtag0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					dcellfree(tmp);
 				}

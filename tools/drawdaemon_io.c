@@ -674,6 +674,17 @@ void *listen_draw(void *user_data){
 			case DRAW_EXENAME:
 				STREADSTR(client_exename);
 				break;
+			case DRAW_DX:
+			{
+				int ndx=0;
+				STREADINT(ndx);
+				if(!drawdata->dx || ndx>drawdata->ndx){
+					drawdata->dx=(float*)realloc(drawdata->dx, byte_float*ndx);
+				}
+				drawdata->ndx=ndx;
+				STREADFLT(drawdata->dx, drawdata->ndx);
+			}
+			break;
 			case DRAW_END:
 			{
 				drawdata->npts=npts;

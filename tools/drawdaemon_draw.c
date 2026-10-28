@@ -346,6 +346,7 @@ static void update_limit(drawdata_t *drawdata){
 		const int ptsnx=drawdata->ptsdim[ipts][0];
 		const int ptsny=drawdata->ptsdim[ipts][1];
 		float xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
+		float dx=1.;
 		if(ptsny>1){/*x is supplied */
 			fmaxmin(ptsx, ptsnx, &xmax, &xmin);
 			ptsy=ptsx+ptsnx;
@@ -357,8 +358,17 @@ static void update_limit(drawdata_t *drawdata){
 				}
 			}
 		} else{/*x is index */
-			xmin=0; xmax=(float)(ptsnx-1);
-			ptsy=ptsx;
+			if(drawdata->dx){
+				if(drawdata->ndx==drawdata->npts){
+					dx=drawdata->dx[ipts];
+				}else if(drawdata->ndx==1){
+					dx=drawdata->dx[0];
+				}else{
+					warning("npts=%d, ndx=%d; ignores dx.\n", drawdata->npts, drawdata->ndx);
+				}
+			}
+			xmin=0; xmax=(float)(ptsnx-1)*dx;
+			ptsy=ptsx; ptsx=NULL;
 		}
 		if(drawdata->cumu){
 			int icumu=(int)drawdata->icumu;
@@ -366,7 +376,11 @@ static void update_limit(drawdata_t *drawdata){
 			if(icumu<ptsnx){
 				ips0=icumu;
 			}
-			xmin=ips0;
+			if(ptsx){
+				xmin=ptsx[ips0];
+			}else{
+				xmin=ips0*dx;
+			}
 			float y_cumu=0, y=0;
 
 			for(int ips=ips0; ips<ptsnx; ips++){
@@ -747,7 +761,7 @@ repeat:
 				if(drawdata->grid){
 					cairo_save(cr);
 					//cairo_set_dash(cr, stroke_dot, 2, gridskip);
-					cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 1);
+					cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 0.8);
 					cairo_move_to(cr, xpos, yoff);
 					cairo_line_to(cr, xpos, yoff+heightim);
 					cairo_stroke(cr);
@@ -808,7 +822,7 @@ repeat:
 				if(drawdata->grid){
 					cairo_save(cr);
 					//cairo_set_dash(cr, stroke_dot, 2, gridskip);
-					cairo_set_source_rgba(cr, 0.6, 0.6, 0.6, 1);
+					cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 0.8);
 					cairo_move_to(cr, xoff, ypos);
 					cairo_line_to(cr, xoff+widthim, ypos);
 					cairo_stroke(cr);
@@ -1004,8 +1018,17 @@ repeat:
 				const float *pts=drawdata->pts[ipts];
 				const int ptsnx=drawdata->ptsdim[ipts][0];
 				const int ptsny=drawdata->ptsdim[ipts][1];
+				float dx=1;
 				if(!pts||ptsnx==0||ptsny==0) continue;
-
+				if(drawdata->dx){
+					if(drawdata->ndx==drawdata->npts){
+						dx=drawdata->dx[ipts];
+					}else if(drawdata->ndx==1){
+						dx=drawdata->dx[0];
+					}else{
+						warning("npts=%d, ndx=%d; ignores dx.\n", drawdata->npts, drawdata->ndx);
+					}
+				}
 				cairo_save(cr);
 				//cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 				if(drawdata->nstyle>1){
@@ -1038,7 +1061,7 @@ repeat:
 					int ptstep=1;
 					/*Draw first point */
 					/*don't do round here. */
-					ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx; if(!isfinite(ix)) ix=0;
+					ix=((xlog?log10(ptsx?ptsx[ips]:ips*dx):(ptsx?ptsx[ips]:ips*dx))-centerx)*scalex*zoomx+ncx; if(!isfinite(ix)) ix=0;
 					iy=((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy; 
 					if(!isfinite(iy)) iy=0;
 					if(cumu){
@@ -1054,7 +1077,7 @@ repeat:
 					}
 					/*connect additional points. */
 					for(ips++; ips<ptsnx; ips+=ptstep){
-						ix=((xlog?log10(ptsx?ptsx[ips]:ips):(ptsx?ptsx[ips]:ips))-centerx)*scalex*zoomx+ncx;		
+						ix=((xlog?log10(ptsx?ptsx[ips]:ips*dx):(ptsx?ptsx[ips]:ips*dx))-centerx)*scalex*zoomx+ncx;		
 						y=ptsy[ips];
 						if(!isfinite(y)) y=0;
 						if(cumu){

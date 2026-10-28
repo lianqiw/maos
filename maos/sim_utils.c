@@ -285,8 +285,8 @@ void sim_update_sodium(sim_t* simu){
 				}
 			}
 			if(parms->plot.run && simu->zoompos){
-				draw("Res", (plot_opts){.dc=simu->zoompos, .always=1, .maxlen=isim}, 
-				"LGS Trombone Position", "Time Step", "Offset (m)", "%s", "Trombone");
+				draw("Res", (plot_opts){.dc=simu->zoompos, .maxlen=isim, .dx=parms->sim.dt, .always=1,}, 
+				"LGS Trombone Position", "Time (s)", "Offset (m)", "%s", "Trombone");
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
@@ -1917,8 +1917,8 @@ void print_progress(sim_t* simu){
 				}
 				for(int ic=0; ic<2; ic++){
 					dcell *res=P(simu->plot_res, ic);
-					draw("Res", (plot_opts){.ngroup=(int)NX(res), .maxlen=simu->plot_isim+1, .dc=res, .xylog="nn", .legend=simu->plot_legs},
-						"Wavefront Error", "Time Step", "Wavefront Error (nm)", "RMS WFE%s", ic==0?"":" OL");
+					draw("Res", (plot_opts){.dc=res, .maxlen=simu->plot_isim+1, .dx=parms->sim.dt, .xylog="nn", .legend=simu->plot_legs},
+						"Wavefront Error", "Time (s)", "Wavefront Error (nm)", "RMS WFE%s", ic==0?"":" OL");
 				}
 			}
 			
