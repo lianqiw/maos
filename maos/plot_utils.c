@@ -463,9 +463,14 @@ void plot_psf(const_anycell _psf2s, const char *psfname, int type, int ievl, dma
 	}
 	for(int iwvl=0; iwvl<NX(_psf2s.c); iwvl++){
 		char topname[64];
-		mysnprintf(topname, sizeof(topname), "PSF %.2f", P(wvl,iwvl)*1e6);
 		char tabname[64];
-		mysnprintf(tabname, sizeof(tabname), "%s%2d", psfname, ievl);
+		if(type!=2){
+			mysnprintf(topname, sizeof(topname), "PSF %.2f", P(wvl,iwvl)*1e6);
+			mysnprintf(tabname, sizeof(tabname), "%s%2d", psfname, ievl);
+		}else{
+			mysnprintf(topname, sizeof(topname), "PSF DL");
+			mysnprintf(tabname, sizeof(tabname), "%s", psfname);
+		}
 		if(draw_current(topname, tabname)){
 			cell* c=P(_psf2s.c, iwvl);
 			if(dmat_cast(c)){
