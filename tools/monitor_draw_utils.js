@@ -345,8 +345,8 @@ function updateclim(data, layout, lpf) {
   if (Number.isFinite(dmin) && Number.isFinite(dmax)){
     if(!layout.clim || !layout.clim[0] || !layout.clim[1]){
       layout.clim=[dmin,dmax];
-    }else if(lpf<1){//use LPF
-      layout.clim=[layout.clim[0]*(1.-lpf)+lpf*dmin, layout.clim[1]*(1.-lpf)+lpf*dmax]
+    //}else if(lpf<1){//use LPF
+      //layout.clim=[layout.clim[0]*(1.-lpf)+lpf*dmin, layout.clim[1]*(1.-lpf)+lpf*dmax]
     }else{ //use hysteresis
       let [cmin, cmax] = layout.clim;
       const widthd=dmax-dmin
@@ -359,13 +359,17 @@ function updateclim(data, layout, lpf) {
         cmax=midd+widthc*0.5
       }else{
         const width = Math.min(widthd, widthc);
-        if(dmin<cmin-width*0.05){
+        if(dmin<cmin-width*0.1){
           cmin=dmin
+        }else if(lpf<1){
+          cmin=cmin*(1-lpf)+lpf*dmin
         }else if(dmin>cmin+width*0.5){
           cmin=dmin
         }
-        if(dmax>cmax+width*0.05){
+        if(dmax>cmax+width*0.1){
           cmax=dmax
+        }else if(lpf<1){
+          cmax=cmax*(1-lpf)+lpf*dmax
         }else if(dmax<cmax-width*0.5){
           cmax=dmax
         }

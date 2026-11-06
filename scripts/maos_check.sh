@@ -137,7 +137,7 @@ run_maos "NGS SCAO (modal):" -cscao_ngs.conf recon.modal=1 recon.alg=1
 
 run_maos "NGS PWFS (zonal):" -cscao_pywfs.conf recon.modal=0 powfs.dx=[1/16] sim.end=500
 
-run_maos "NGS PWFS (modal):" -cscao_pywfs.conf recon.modal=1 powfs.dx=[1/16] sim.end=500
+run_maos "NGS PWFS (modal):" -cscao_pywfs.conf recon.modal=1 powfs.dx=[1/16] sim.end=500 powfs.nwvl=[2] powfs.wvl=[0.6e-6 0.8e-6] powfs.wvlwts=[0.5 0.5]
 
 run_maos "LGS SCAO (inte): " -cscao_lgs.conf recon.split=0
 
