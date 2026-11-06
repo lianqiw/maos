@@ -445,7 +445,8 @@ void seeding(sim_t* simu){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		seed_rand(&simu->wfs_rand[iwfs], lrand(simu->init_rand));
 	}
-	seed_rand(simu->telws_rand, lrand(simu->init_rand)*parms->sim.wsseq);
+	/*2016-11-04: changed so that telws is independent of wfs configuration*/
+	seed_rand(simu->telws_rand, simu->seed+parms->sim.wsseq);
 #if USE_CUDA
 	if(parms->gpu.wfs&&!parms->sim.evlol){
 		gpu_wfsgrad_seeding(parms, simu->powfs, simu->init_rand);
