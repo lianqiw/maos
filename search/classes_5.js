@@ -16,8 +16,7 @@ var searchData=
   ['gpu_3c_20real_20_3e_13',['Gpu&lt; Real &gt;',['../d0/ddc/class_gpu.html',1,'']]],
   ['gpu_3c_20short2_20_2a_20_3e_14',['Gpu&lt; short2 * &gt;',['../d0/ddc/class_gpu.html',1,'']]],
   ['gpu_3c_20short2_20_3e_15',['Gpu&lt; short2 &gt;',['../d0/ddc/class_gpu.html',1,'']]],
-  ['gpu_3c_20t_20_2a_20_3e_16',['Gpu&lt; T * &gt;',['../d0/ddc/class_gpu.html',1,'']]],
-  ['gpu_5fcfg_5ft_17',['gpu_cfg_t',['../d4/d38/parms_8h.html#de/d64/structgpu__cfg__t',1,'']]],
-  ['gpu_5ffdpcg_5ft_18',['gpu_fdpcg_t',['../d9/dc3/structgpu__fdpcg__t.html',1,'']]],
-  ['gpu_5fgp_5ft_19',['gpu_gp_t',['../dd/dd4/structgpu__gp__t.html',1,'']]]
+  ['gpu_5fcfg_5ft_16',['gpu_cfg_t',['../d4/d38/parms_8h.html#de/d64/structgpu__cfg__t',1,'']]],
+  ['gpu_5ffdpcg_5ft_17',['gpu_fdpcg_t',['../d9/dc3/structgpu__fdpcg__t.html',1,'']]],
+  ['gpu_5fgp_5ft_18',['gpu_gp_t',['../dd/dd4/structgpu__gp__t.html',1,'']]]
 ];

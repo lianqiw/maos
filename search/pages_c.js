@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['performance_0',['NFIRAOS Performance',['../d6/d3f/page43_nfiraos.html',1,'']]],
-  ['powfs_5fcommon_20conf_1',['powfs_common.conf',['../df/d16/powfs_common.html',1,'page34_conf']]],
-  ['powfs_5fnone_20conf_2',['powfs_none.conf',['../d6/dab/powfs_none.html',1,'page34_conf']]],
-  ['powfs_5fpyngs_20conf_3',['powfs_pyngs.conf',['../d6/d54/powfs_pyngs.html',1,'page34_conf']]],
-  ['powfs_5fpytwfs_20conf_4',['powfs_pytwfs.conf',['../df/d63/powfs_pytwfs.html',1,'page34_conf']]],
-  ['powfs_5fshlgs_20conf_5',['powfs_shlgs.conf',['../dd/d31/powfs_shlgs.html',1,'page34_conf']]],
-  ['powfs_5fshngs_20conf_6',['powfs_shngs.conf',['../dc/d6a/powfs_shngs.html',1,'page34_conf']]],
-  ['powfs_5fshtt_20conf_7',['powfs_shtt.conf',['../d3/df3/powfs_shtt.html',1,'page34_conf']]],
-  ['powfs_5fshttf_20conf_8',['powfs_shttf.conf',['../d5/dc1/powfs_shttf.html',1,'page34_conf']]],
-  ['powfs_5fshtwfs_20conf_9',['powfs_shtwfs.conf',['../de/de1/powfs_shtwfs.html',1,'page34_conf']]],
-  ['pywfs_20conf_10',['pywfs.conf',['../d1/d6d/pywfs.html',1,'page34_conf']]]
+  ['idl_0',['IDL',['../dd/da9/page40_results.html#sect-idl',1,'']]],
+  ['imager_1',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md37',1,'']]],
+  ['in_20mac_20os_20and_20compile_20monitor_20drawdaemon_20optional_2',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md11',1,'']]],
+  ['influence_20function_3',['DM Actuator Influence Function',['../d4/d15/algorithm.html#sect-dm-actuator',1,'']]],
+  ['influence_20function_4',['influence function',['../d4/d15/algorithm.html#autotoc_md45',1,'Cubic influence function'],['../d4/d15/algorithm.html#autotoc_md44',1,'Linear influence function']]],
+  ['installing_20gtk_20in_20mac_20os_20and_20compile_20monitor_20drawdaemon_20optional_5',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md11',1,'']]],
+  ['integral_6',['Fresnel diffraction integral',['../d4/d15/algorithm.html#autotoc_md47',1,'']]],
+  ['interface_7',['Interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
+  ['interface_20to_20maos_8',['Interface to MAOS',['../d3/d4c/page20_compile.html#autotoc_md18',1,'']]],
+  ['introduction_9',['Introduction',['../da/d9f/page10_intro.html',1,'']]],
+  ['iris_20imager_10',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md37',1,'']]]
 ];

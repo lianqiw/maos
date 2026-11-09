@@ -13,9 +13,10 @@ var searchData=
   ['numarray_3c_20real_2c_20pinned_20_3e_10',['NumArray&lt; Real, Pinned &gt;',['../d0/d44/class_num_array.html',1,'']]],
   ['numarray_3c_20short2_2c_20gpu_20_3e_11',['NumArray&lt; short2, Gpu &gt;',['../d0/d44/class_num_array.html',1,'']]],
   ['numarray_3c_20t_2c_20cpu_20_3e_12',['NumArray&lt; T, Cpu &gt;',['../d0/d44/class_num_array.html',1,'']]],
-  ['numcell_13',['NumCell',['../d4/d0f/class_num_cell.html',1,'']]],
-  ['numcell_3c_20comp_2c_20gpu_20_3e_14',['NumCell&lt; Comp, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
-  ['numcell_3c_20int_2c_20gpu_20_3e_15',['NumCell&lt; int, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
-  ['numcell_3c_20real_2c_20gpu_20_3e_16',['NumCell&lt; Real, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
-  ['numcell_3c_20short2_2c_20gpu_20_3e_17',['NumCell&lt; short2, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]]
+  ['numarray_3c_20t_2c_20dev_20_3e_13',['NumArray&lt; T, Dev &gt;',['../d0/d44/class_num_array.html',1,'']]],
+  ['numcell_14',['NumCell',['../d4/d0f/class_num_cell.html',1,'']]],
+  ['numcell_3c_20comp_2c_20gpu_20_3e_15',['NumCell&lt; Comp, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
+  ['numcell_3c_20int_2c_20gpu_20_3e_16',['NumCell&lt; int, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
+  ['numcell_3c_20real_2c_20gpu_20_3e_17',['NumCell&lt; Real, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]],
+  ['numcell_3c_20short2_2c_20gpu_20_3e_18',['NumCell&lt; short2, Gpu &gt;',['../d4/d0f/class_num_cell.html',1,'']]]
 ];

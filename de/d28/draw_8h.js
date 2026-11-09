@@ -4,7 +4,7 @@ var draw_8h =
       [ "maxlen", "de/d28/draw_8h.html#ac21e46b3e42072d5401f11d728402070", null ],
       [ "dx", "de/d28/draw_8h.html#afeed23f027b64c5cd4ee14f7478297c4", null ]
     ] ],
-    [ "plot_opts.__unnamed8__", "de/d28/draw_8h.html#dd/d34/unionplot__opts_8____unnamed8____", null ],
+    [ "plot_opts.__unnamed0__", "de/d28/draw_8h.html#df/d61/unionplot__opts_8____unnamed0____", null ],
     [ "draw_helper", "de/d28/draw_8h.html#a5e2f206b380b5b9a10b87b7d3d80ccc8", null ],
     [ "draw_add", "de/d28/draw_8h.html#a6be0be645ac1bb71cbbce02ddaf959c8", null ],
     [ "draw_final", "de/d28/draw_8h.html#ab01d0d9c0f4f57ef56695fc9a7aa3efe", null ],

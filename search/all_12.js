@@ -30,11 +30,11 @@ var searchData=
   ['option_202_20snapshot_27',['Option 2 (snapshot)',['../d3/d4c/page20_compile.html#autotoc_md4',1,'']]],
   ['option_203_20released_28',['Option 3 (released)',['../d3/d4c/page20_compile.html#autotoc_md5',1,'']]],
   ['option_204_20binary_29',['Option 4 (binary)',['../d3/d4c/page20_compile.html#autotoc_md6',1,'']]],
-  ['optional_30',['optional',['../d3/d4c/page20_compile.html#autotoc_md8',1,'Compiler options (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md9',1,'GPU acceleration (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md11',1,'Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md10',1,'Matlab Mex Routines (Optional)']]],
+  ['optional_30',['Optional',['../d3/d4c/page20_compile.html#autotoc_md8',1,'Compiler options (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md9',1,'GPU acceleration (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md11',1,'Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)'],['../d3/d4c/page20_compile.html#autotoc_md10',1,'Matlab Mex Routines (Optional)']]],
   ['options_20optional_31',['Compiler options (Optional)',['../d3/d4c/page20_compile.html#autotoc_md8',1,'']]],
-  ['order_32',['order',['../d4/d38/parms_8h.html#a7ce5a7e5353ced2fec3ac3c376cb4073',1,'moao_cfg_t::order'],['../d9/d19/pywfs_8h.html#a4c5562283523e060cbd64b4168075576',1,'pywfs_cfg_t::order'],['../d4/d38/parms_8h.html#ae10178a9b28ce9f3cd6c22d2c1323aa0',1,'powfs_cfg_t::order'],['../d4/d38/parms_8h.html#ad797af78c1614e5e46aa692d782dc522',1,'dm_cfg_t::order']]],
-  ['origx_33',['origx',['../df/def/type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df',1,'pts_t.__unnamed27__.__unnamed29__.__unnamed31__.__unnamed35__']]],
-  ['origy_34',['origy',['../df/def/type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d',1,'pts_t.__unnamed27__.__unnamed29__']]],
+  ['order_32',['order',['../d9/d19/pywfs_8h.html#a4c5562283523e060cbd64b4168075576',1,'pywfs_cfg_t::order'],['../d4/d38/parms_8h.html#ae10178a9b28ce9f3cd6c22d2c1323aa0',1,'powfs_cfg_t::order'],['../d4/d38/parms_8h.html#ad797af78c1614e5e46aa692d782dc522',1,'dm_cfg_t::order'],['../d4/d38/parms_8h.html#a7ce5a7e5353ced2fec3ac3c376cb4073',1,'moao_cfg_t::order']]],
+  ['origx_33',['origx',['../df/def/type_8h.html#ac5b5d67be71e2fbc9216e02b37ae94df',1,'pts_t.__unnamed0__.__unnamed0__.__unnamed0__.__unnamed0__']]],
+  ['origy_34',['origy',['../df/def/type_8h.html#a1b5cd36f499a90d75c3364cd160d5c3d',1,'pts_t.__unnamed0__.__unnamed0__']]],
   ['os_35',['os',['../dc/d59/cn2est_8h.html#a111bffff3aa695200480f268920e3932',1,'cn2est_t::os'],['../d4/d38/parms_8h.html#a0059e753de046dbae571f33227a989d1',1,'atmr_cfg_t::os'],['../d6/d94/maos_2types_8h.html#a300faac1aa46b7ffde1b98a5674d6911',1,'recon_t::os']]],
   ['os_20and_20compile_20monitor_20drawdaemon_20optional_36',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md11',1,'']]],
   ['other_37',['Other',['../dd/da9/page40_results.html#autotoc_md33',1,'']]],
@@ -44,6 +44,6 @@ var searchData=
   ['overx_41',['overx',['../d4/d38/parms_8h.html#a2f885c0eebcc84c3dffcfda28720e321',1,'atm_cfg_t']]],
   ['overy_42',['overy',['../d4/d38/parms_8h.html#ab1ffbc5086b5df46cc72f95e26af6f69',1,'atm_cfg_t']]],
   ['ovs_43',['ovs',['../dc/d59/cn2est_8h.html#a359e266f87ea2b677e39d8227359add8',1,'cn2est_t']]],
-  ['ox_44',['ox',['../d4/d38/parms_8h.html#a23689b9ee64be9c94f07bc6679665b7c',1,'llt_cfg_t::ox'],['../df/def/type_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31',1,'rmap_t::ox'],['../df/def/type_8h.html#a34eb928be06a75df224949c753beef8f',1,'map_t::ox']]],
-  ['oy_45',['oy',['../df/def/type_8h.html#a39b2a96347c81b862aac48a998bfa4e5',1,'rmap_t::oy'],['../df/def/type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159',1,'map_t::oy'],['../d4/d38/parms_8h.html#acfe48ac926991f1b4d92111412d699ef',1,'llt_cfg_t::oy']]]
+  ['ox_44',['ox',['../d4/d38/parms_8h.html#a23689b9ee64be9c94f07bc6679665b7c',1,'llt_cfg_t::ox'],['../df/def/type_8h.html#a34eb928be06a75df224949c753beef8f',1,'map_t::ox'],['../df/def/type_8h.html#a96aa2b948f73d25358dfdfbeaa2faa31',1,'rmap_t::ox']]],
+  ['oy_45',['oy',['../d4/d38/parms_8h.html#acfe48ac926991f1b4d92111412d699ef',1,'llt_cfg_t::oy'],['../df/def/type_8h.html#a5ca3f6d7f89cf4f3c09086f1c01c4159',1,'map_t::oy'],['../df/def/type_8h.html#a39b2a96347c81b862aac48a998bfa4e5',1,'rmap_t::oy']]]
 ];

@@ -9,10 +9,10 @@ var servo_8h =
       [ "alfrac", "de/d09/servo_8h.html#a61f95b9c42cb12c783f000b13a4838f8", null ]
     ] ],
     [ "sho_t", "de/d09/servo_8h.html#d7/d37/structsho__t", null ],
-    [ "servo_t.__unnamed10__", "de/d09/servo_8h.html#df/d14/unionservo__t_8____unnamed10____", [
+    [ "servo_t.__unnamed0__", "de/d09/servo_8h.html#de/d56/unionservo__t_8____unnamed0____", [
       [ "mint", "de/d09/servo_8h.html#a8b823f49ba31caa5cd88e520c2f82bdc", null ]
     ] ],
-    [ "servo_t.__unnamed12__", "de/d09/servo_8h.html#d7/dbc/unionservo__t_8____unnamed12____", [
+    [ "servo_t.__unnamed1__", "de/d09/servo_8h.html#d8/d43/unionservo__t_8____unnamed1____", [
       [ "mpreint", "de/d09/servo_8h.html#a664c2558110c6d650234a3f67f7739ed", null ]
     ] ],
     [ "servo_optim", "de/d09/servo_8h.html#a5f3e6ba52e7900c2302f005e5b1e2728", null ],

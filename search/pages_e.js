@@ -1,16 +1,11 @@
 var searchData=
 [
-  ['scao_0',['SCAO',['../dc/d7f/scao_base_example.html',1,'page33_example']]],
-  ['scao_20lgs_1',['SCAO LGS',['../d0/dbd/scao_lgs_example.html',1,'page33_example']]],
-  ['scao_20ngs_2',['SCAO NGS',['../dc/d8a/scao_ngs_example.html',1,'page33_example']]],
-  ['scao_5fbase_20conf_3',['scao_base.conf',['../d3/da7/scao_base.html',1,'page34_conf']]],
-  ['scao_5flgs_20conf_4',['scao_lgs.conf',['../d2/d91/scao_lgs.html',1,'page34_conf']]],
-  ['scao_5fngs_20conf_5',['scao_ngs.conf',['../d3/d4b/scao_ngs.html',1,'page34_conf']]],
-  ['scao_5fpywfs_20conf_6',['scao_pywfs.conf',['../d7/d20/scao_pywfs.html',1,'page34_conf']]],
-  ['sim_20conf_7',['sim.conf',['../d8/db3/sim.html',1,'page34_conf']]],
-  ['simulation_20results_8',['Simulation Results',['../dd/da9/page40_results.html',1,'']]],
-  ['simulations_9',['Run simulations',['../da/dc3/page30_run.html',1,'']]],
-  ['sky_20coverage_10',['Sky Coverage',['../d5/d4c/skycoverage.html',1,'']]],
-  ['skyc_5f10_20conf_11',['skyc_10.conf',['../df/d54/skyc_10.html',1,'page34_conf']]],
-  ['skyc_5f20_20conf_12',['skyc_20.conf',['../d9/df5/skyc_20.html',1,'page34_conf']]]
+  ['k_20band_20strehl_20ratio_0',['K band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md41',1,'']]],
+  ['keck_20conf_1',['examples/keck.conf',['../d8/d82/keck.html',1,'page34_conf']]],
+  ['keck_5f2dm30_20conf_2',['examples/keck_2dm30.conf',['../d2/d72/keck_2dm30.html',1,'page34_conf']]],
+  ['keck_5f2dm60_20conf_3',['examples/keck_2dm60.conf',['../d9/da8/keck_2dm60.html',1,'page34_conf']]],
+  ['keck_5f3dm60_20conf_4',['examples/keck_3dm60.conf',['../d3/dbb/keck_3dm60.html',1,'page34_conf']]],
+  ['keck_5fbase_20conf_5',['examples/keck_base.conf',['../da/d0f/keck_base.html',1,'page34_conf']]],
+  ['keck_5flgs_20conf_6',['examples/keck_lgs.conf',['../d4/d19/keck_lgs.html',1,'page34_conf']]],
+  ['keck_5fngs_20conf_7',['examples/keck_ngs.conf',['../da/dac/keck_ngs.html',1,'page34_conf']]]
 ];

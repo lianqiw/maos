@@ -14,7 +14,7 @@ var searchData=
   ['used_11',['used',['../d4/d38/parms_8h.html#ac7478caddd51ca20ceb2c98c140ed550',1,'moao_cfg_t::used'],['../d6/d94/maos_2types_8h.html#a57579226ab2934985993550e03c153c2',1,'moao_t::used']]],
   ['useopdr_12',['useopdr',['../d4/d38/parms_8h.html#adb77e58ed14a4410fc7edc259dd45151',1,'dbg_cfg_t']]],
   ['usephy_13',['usephy',['../d4/d38/parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f',1,'powfs_cfg_t']]],
-  ['user_20interface_14',['user interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
+  ['user_20interface_14',['User Interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
   ['utils_2eh_15',['utils.h',['../d1/d57/maos_2utils_8h.html',1,'']]],
   ['ux_16',['Ux',['../d6/d89/mkdtf_8h.html#a07e1f39a2b79613e1ae6c5af49afad59',1,'dtf_t']]],
   ['uy_17',['Uy',['../d6/d89/mkdtf_8h.html#af19273870883e70fe352903389d1a60e',1,'dtf_t']]]

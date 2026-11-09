@@ -12,48 +12,29 @@ var hierarchy =
     [ "ccell", "df/def/type_8h.html#d8/d42/structccell", null ],
     [ "cell", "df/def/type_8h.html#db/d76/structcell", null ],
     [ "cgtmp_t", "d1/dad/classcgtmp__t.html", null ],
-    [ "cmat", "db/d16/structcmat.html", null ],
+    [ "cmat", "df/def/type_8h.html#db/d16/structcmat", null ],
     [ "cn2est_cfg_t", "d4/d38/parms_8h.html#d9/df1/structcn2est__cfg__t", null ],
     [ "cn2est_pair_t", "dc/d59/cn2est_8h.html#d2/d4d/structcn2est__pair__t", null ],
     [ "cn2est_t", "dc/d59/cn2est_8h.html#d8/d2f/structcn2est__t", null ],
-    [ "Cpu< T >", "dd/d45/class_cpu.html", [
-      [ "Pinned< Real * >", "df/db5/class_pinned.html", null ],
-      [ "Pinned< T * >", "df/db5/class_pinned.html", null ],
-      [ "Pinned< Real >", "df/db5/class_pinned.html", null ],
-      [ "Pinned< Comp * >", "df/db5/class_pinned.html", null ],
-      [ "Pinned< int * >", "df/db5/class_pinned.html", null ],
-      [ "Pinned< short2 * >", "df/db5/class_pinned.html", null ],
+    [ "Cpu&lt; T &gt;", "dd/d45/class_cpu.html", [
       [ "Pinned< T >", "df/db5/class_pinned.html", null ]
     ] ],
-    [ "Cpu< Array< culoc_t > >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< Array< Real, Pinned > >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< atm_prep_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< CellArray >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< Comp * >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< cudtf_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< cufftHandle >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< cuimat >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< culoc_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< cupowfs_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< cuwfs_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< int * >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< int >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< map2map >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< Real * >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< Real >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< short2 * >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< stream_t >", "dd/d45/class_cpu.html", null ],
-    [ "Cpu< T * >", "dd/d45/class_cpu.html", null ],
-    [ "CpuObj< T >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< cugrid_t >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< cumap_t >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< curccell >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< cusp >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< NumArray< Comp, Gpu > >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< NumArray< int, Gpu > >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< NumArray< Real, Gpu > >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< NumArray< short2, Gpu > >", "d3/dd7/class_cpu_obj.html", null ],
-    [ "CpuObj< NumArray< T, Cpu > >", "d3/dd7/class_cpu_obj.html", null ],
+    [ "Cpu&lt; Comp * &gt;", "dd/d45/class_cpu.html", [
+      [ "Pinned< Comp * >", "df/db5/class_pinned.html", null ]
+    ] ],
+    [ "Cpu&lt; int * &gt;", "dd/d45/class_cpu.html", [
+      [ "Pinned< int * >", "df/db5/class_pinned.html", null ]
+    ] ],
+    [ "Cpu&lt; Real * &gt;", "dd/d45/class_cpu.html", [
+      [ "Pinned< Real * >", "df/db5/class_pinned.html", null ]
+    ] ],
+    [ "Cpu&lt; Real &gt;", "dd/d45/class_cpu.html", [
+      [ "Pinned< Real >", "df/db5/class_pinned.html", null ]
+    ] ],
+    [ "Cpu&lt; short2 * &gt;", "dd/d45/class_cpu.html", [
+      [ "Pinned< short2 * >", "df/db5/class_pinned.html", null ]
+    ] ],
+    [ "CpuObj&lt; T &gt;", "d3/dd7/class_cpu_obj.html", null ],
     [ "csp", "df/def/type_8h.html#d1/d2a/structcsp", null ],
     [ "cspcell", "df/def/type_8h.html#d8/d70/structcspcell", null ],
     [ "cudata_t", "db/d5f/classcudata__t.html", null ],
@@ -118,11 +99,11 @@ var hierarchy =
     [ "dither_t", "d6/d94/maos_2types_8h.html#d3/def/structdither__t", null ],
     [ "dlist", "d6/d93/structdlist.html", null ],
     [ "dm_cfg_t", "d4/d38/parms_8h.html#d9/df5/structdm__cfg__t", null ],
-    [ "dmat", "d3/d27/structdmat.html", null ],
+    [ "dmat", "df/def/type_8h.html#d3/d27/structdmat", null ],
     [ "dsp", "df/def/type_8h.html#de/d35/structdsp", null ],
     [ "dspcell", "df/def/type_8h.html#d6/ddb/structdspcell", null ],
     [ "dtf_t", "d6/d89/mkdtf_8h.html#d3/d9b/structdtf__t", null ],
-    [ "dtype< T >", "d6/de0/classdtype.html", null ],
+    [ "dtype&lt; T &gt;", "d6/de0/classdtype.html", null ],
     [ "etf_t", "d6/d89/mkdtf_8h.html#d4/d5b/structetf__t", null ],
     [ "event_t", "da/d67/structevent__t.html", null ],
     [ "evl_cfg_t", "d4/d38/parms_8h.html#d3/d46/structevl__cfg__t", null ],
@@ -132,26 +113,12 @@ var hierarchy =
     [ "fractal_t", "d6/d94/maos_2types_8h.html#d2/d15/structfractal__t", null ],
     [ "genatm_t", "d2/d75/turbulence_8h.html#d0/d92/structgenatm__t", null ],
     [ "global_t", "d6/d94/maos_2types_8h.html#db/d00/structglobal__t", null ],
-    [ "Gpu< T >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< AReal >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< Comp * >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< Comp >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< gpu_fdpcg_t >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< gpu_gp_t >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< GReal >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< int * >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< int >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< lap_t >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< Real * >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< Real >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< short2 * >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< short2 >", "d0/ddc/class_gpu.html", null ],
-    [ "Gpu< T * >", "d0/ddc/class_gpu.html", null ],
+    [ "Gpu&lt; T &gt;", "d0/ddc/class_gpu.html", null ],
     [ "gpu_cfg_t", "d4/d38/parms_8h.html#de/d64/structgpu__cfg__t", null ],
     [ "gpu_fdpcg_t", "d9/dc3/structgpu__fdpcg__t.html", null ],
     [ "gpu_gp_t", "dd/dd4/structgpu__gp__t.html", null ],
     [ "header_t", "d3/d7f/bin_8h.html#de/d7e/structheader__t", null ],
-    [ "imat", "d6/d6f/structimat.html", null ],
+    [ "imat", "df/def/type_8h.html#d6/d6f/structimat", null ],
     [ "intstat_t", "d6/d94/maos_2types_8h.html#de/d79/structintstat__t", null ],
     [ "invpsd_t", "d6/d94/maos_2types_8h.html#d7/dff/structinvpsd__t", null ],
     [ "kalman_t", "df/d07/kalman_8h.html#d4/d41/structkalman__t", null ],
@@ -159,14 +126,14 @@ var hierarchy =
     [ "lcccell", "df/def/type_8h.html#df/d5e/structlcccell", null ],
     [ "lccell", "df/def/type_8h.html#d2/d09/structlccell", null ],
     [ "lcell", "df/def/type_8h.html#db/d4d/structlcell", null ],
-    [ "listen_opt_t", "d0/dcc/structlisten__opt__t.html", null ],
+    [ "listen_opt_t", "df/d04/sock_8h.html#d0/dcc/structlisten__opt__t", null ],
     [ "llt_cfg_t", "d4/d38/parms_8h.html#d1/dde/structllt__cfg__t", null ],
     [ "llt_t", "d6/d94/maos_2types_8h.html#de/df6/structllt__t", null ],
-    [ "lmat", "d7/da0/structlmat.html", null ],
+    [ "lmat", "df/def/type_8h.html#d7/da0/structlmat", null ],
     [ "load_cfg_t", "d4/d38/parms_8h.html#d3/d1e/structload__cfg__t", null ],
     [ "loc_t", "df/def/type_8h.html#da/ddc/structloc__t", null ],
-    [ "loc_t.__unnamed23__", "df/def/type_8h.html#d1/d54/unionloc__t_8____unnamed23____", null ],
-    [ "loc_t.__unnamed23__.__unnamed25__", "df/def/type_8h.html#de/dd1/structloc__t_8____unnamed23_____8____unnamed25____", null ],
+    [ "loc_t.__unnamed0__", "df/def/type_8h.html#da/d22/unionloc__t_8____unnamed0____", null ],
+    [ "loc_t.__unnamed0__.__unnamed0__", "df/def/type_8h.html#d0/d3e/structloc__t_8____unnamed0_____8____unnamed0____", null ],
     [ "locccell", "df/def/type_8h.html#d3/d30/structlocccell", null ],
     [ "loccell", "df/def/type_8h.html#dc/da1/structloccell", null ],
     [ "locfft_t", "db/d1f/locfft_8h.html#d3/dcd/structlocfft__t", null ],
@@ -174,18 +141,18 @@ var hierarchy =
     [ "locstat_t", "df/def/type_8h.html#db/d43/structlocstat__t", null ],
     [ "locstatcol_t", "df/def/type_8h.html#db/d5f/structlocstatcol__t", null ],
     [ "lsr_cfg_t", "d4/d38/parms_8h.html#db/dea/structlsr__cfg__t", null ],
-    [ "Magic< T >", "d2/d6e/struct_magic.html", null ],
-    [ "Magic< double >", "db/daa/struct_magic_3_01double_01_4.html", null ],
-    [ "Magic< double2 >", "da/dcf/struct_magic_3_01double2_01_4.html", null ],
-    [ "Magic< float >", "d1/d9c/struct_magic_3_01float_01_4.html", null ],
-    [ "Magic< float2 >", "dd/d61/struct_magic_3_01float2_01_4.html", null ],
-    [ "Magic< int >", "d3/dea/struct_magic_3_01int_01_4.html", null ],
-    [ "Magic< long int >", "d5/df1/struct_magic_3_01long_01int_01_4.html", null ],
+    [ "Magic&lt; T &gt;", "d2/d6e/struct_magic.html", null ],
+    [ "Magic&lt; double &gt;", "db/daa/struct_magic_3_01double_01_4.html", null ],
+    [ "Magic&lt; double2 &gt;", "da/dcf/struct_magic_3_01double2_01_4.html", null ],
+    [ "Magic&lt; float &gt;", "d1/d9c/struct_magic_3_01float_01_4.html", null ],
+    [ "Magic&lt; float2 &gt;", "dd/d61/struct_magic_3_01float2_01_4.html", null ],
+    [ "Magic&lt; int &gt;", "d3/dea/struct_magic_3_01int_01_4.html", null ],
+    [ "Magic&lt; long int &gt;", "d5/df1/struct_magic_3_01long_01int_01_4.html", null ],
     [ "map2map_shared_t", "db/dcd/structmap2map__shared__t.html", null ],
     [ "map2map_t", "db/db2/structmap2map__t.html", null ],
     [ "map_t", "df/def/type_8h.html#d6/da3/structmap__t", null ],
-    [ "map_t.__unnamed15__", "df/def/type_8h.html#df/d4b/unionmap__t_8____unnamed15____", null ],
-    [ "map_t.__unnamed15__.__unnamed17__", "d4/d37/structmap__t_8____unnamed15_____8____unnamed17____.html", null ],
+    [ "map_t.__unnamed0__", "df/def/type_8h.html#dc/de7/unionmap__t_8____unnamed0____", null ],
+    [ "map_t.__unnamed0__.__unnamed0__", "df/def/type_8h.html#d7/dd9/structmap__t_8____unnamed0_____8____unnamed0____", null ],
     [ "mapccell", "df/def/type_8h.html#d7/d25/structmapccell", null ],
     [ "mapcell", "df/def/type_8h.html#d2/d8c/structmapcell", null ],
     [ "moao_cfg_t", "d4/d38/parms_8h.html#d1/d0a/structmoao__cfg__t", null ],
@@ -208,146 +175,198 @@ var hierarchy =
     [ "parms_t", "d4/d38/parms_8h.html#d4/d51/structparms__t", null ],
     [ "plot_cfg_t", "d4/d38/parms_8h.html#de/d7c/structplot__cfg__t", null ],
     [ "plot_opts", "de/d28/draw_8h.html#d3/de8/structplot__opts", null ],
-    [ "plot_opts.__unnamed8__", "de/d28/draw_8h.html#dd/d34/unionplot__opts_8____unnamed8____", null ],
+    [ "plot_opts.__unnamed0__", "de/d28/draw_8h.html#df/d61/unionplot__opts_8____unnamed0____", null ],
     [ "powfs_cfg_t", "d4/d38/parms_8h.html#d5/d33/structpowfs__cfg__t", null ],
     [ "powfs_t", "d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t", null ],
     [ "propdata_t", "d3/d84/lib_2accphi_8h.html#d9/db3/structpropdata__t", null ],
     [ "pts_t", "df/def/type_8h.html#de/d88/structpts__t", null ],
-    [ "pts_t.__unnamed27__", "df/def/type_8h.html#d1/d58/unionpts__t_8____unnamed27____", null ],
-    [ "pts_t.__unnamed27__.__unnamed29__", "df/def/type_8h.html#df/d90/structpts__t_8____unnamed27_____8____unnamed29____", null ],
-    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed31__", "df/def/type_8h.html#d9/dc6/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31____", null ],
-    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed31__.__unnamed35__", "df/def/type_8h.html#d7/d42/structpts__t_8____unnamed27_____8____unnamed29_____8____unnamed31_____8____unnamed35____", null ],
-    [ "pts_t.__unnamed27__.__unnamed29__.__unnamed33__", "df/def/type_8h.html#de/d2c/unionpts__t_8____unnamed27_____8____unnamed29_____8____unnamed33____", null ],
+    [ "pts_t.__unnamed0__", "df/def/type_8h.html#d7/d66/unionpts__t_8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__", "df/def/type_8h.html#dc/dee/structpts__t_8____unnamed0_____8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed0__", "df/def/type_8h.html#d6/d4d/unionpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed0__.__unnamed0__", "df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____", null ],
+    [ "pts_t.__unnamed0__.__unnamed0__.__unnamed1__", "df/def/type_8h.html#dd/de9/unionpts__t_8____unnamed0_____8____unnamed0_____8____unnamed1____", null ],
     [ "pywfs_cfg_t", "d9/d19/pywfs_8h.html#d0/d1d/structpywfs__cfg__t", null ],
     [ "pywfs_t", "d9/d19/pywfs_8h.html#d2/d8c/structpywfs__t", null ],
     [ "rayleigh_t", "d5/d7f/rayleigh_8h.html#d0/dfa/structrayleigh__t", null ],
     [ "recon_cfg_t", "d4/d38/parms_8h.html#d1/d32/structrecon__cfg__t", null ],
     [ "recon_t", "d6/d94/maos_2types_8h.html#d1/d27/structrecon__t", null ],
-    [ "RefP< T, Dev >", "dd/db6/class_ref_p.html", [
+    [ "RefP&lt; T, Dev &gt;", "dd/db6/class_ref_p.html", [
       [ "Array< T, CpuObj >", "d5/d21/class_array.html", [
-        [ "CellArray< T >", "d1/d12/class_cell_array.html", [
-          [ "NumCell< Real, Gpu >", "d4/d0f/class_num_cell.html", null ],
-          [ "NumCell< Comp, Gpu >", "d4/d0f/class_num_cell.html", null ],
-          [ "NumCell< int, Gpu >", "d4/d0f/class_num_cell.html", null ],
-          [ "NumCell< short2, Gpu >", "d4/d0f/class_num_cell.html", null ],
+        [ "CellArray< NumArray< T, Dev > >", "d1/d12/class_cell_array.html", null ],
+        [ "CellArray< NumArray< T, Cpu > >", "d1/d12/class_cell_array.html", [
           [ "NumCell< T, Dev >", "d4/d0f/class_num_cell.html", null ]
+        ] ],
+        [ "CellArray< T >", "d1/d12/class_cell_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; AReal, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< AReal, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< AReal, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; Array&lt; culoc_t &gt;, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Array< culoc_t > >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Array&lt; Real, Pinned &gt;, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Array< Real, Pinned > >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; atm_prep_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< atm_prep_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; CellArray&lt; cumap_t &gt;, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< CellArray< cumap_t > >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Comp *, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Comp *, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Comp *, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Comp *, Pinned >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Comp, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Comp, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< Comp, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; cudtf_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< cudtf_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; cufftHandle, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< cufftHandle >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; cuimat, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< cuimat >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; culoc_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< culoc_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; cupowfs_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< cupowfs_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; cuwfs_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< cuwfs_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; gpu_fdpcg_t, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< gpu_fdpcg_t, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; gpu_gp_t, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< gpu_gp_t, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; GReal, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< GReal, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< GReal, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; int *, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< int *, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; int *, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< int *, Pinned >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; int, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< int >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; int, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< int, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< int, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; lap_t, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< lap_t, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; map2map, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< map2map >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; NumArray&lt; Comp, Gpu &gt;, CpuObj &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< NumArray< Comp, Gpu >, CpuObj >", "d5/d21/class_array.html", [
+        [ "CellArray< NumArray< Comp, Gpu > >", "d1/d12/class_cell_array.html", [
+          [ "NumCell< Comp, Gpu >", "d4/d0f/class_num_cell.html", null ]
         ] ]
+      ] ]
+    ] ],
+    [ "RefP&lt; NumArray&lt; int, Gpu &gt;, CpuObj &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< NumArray< int, Gpu >, CpuObj >", "d5/d21/class_array.html", [
+        [ "CellArray< NumArray< int, Gpu > >", "d1/d12/class_cell_array.html", [
+          [ "NumCell< int, Gpu >", "d4/d0f/class_num_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP&lt; NumArray&lt; Real, Gpu &gt;, CpuObj &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< NumArray< Real, Gpu >, CpuObj >", "d5/d21/class_array.html", [
+        [ "CellArray< NumArray< Real, Gpu > >", "d1/d12/class_cell_array.html", [
+          [ "NumCell< Real, Gpu >", "d4/d0f/class_num_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP&lt; NumArray&lt; short2, Gpu &gt;, CpuObj &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< NumArray< short2, Gpu >, CpuObj >", "d5/d21/class_array.html", [
+        [ "CellArray< NumArray< short2, Gpu > >", "d1/d12/class_cell_array.html", [
+          [ "NumCell< short2, Gpu >", "d4/d0f/class_num_cell.html", null ]
+        ] ]
+      ] ]
+    ] ],
+    [ "RefP&lt; Real *, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Real *, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Real *, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Real *, Pinned >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Real, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Real, Cpu >", "d5/d21/class_array.html", [
+        [ "NumArray< Real >", "d0/d44/class_num_array.html", null ]
       ] ],
-      [ "Array< T, Cpu >", "d5/d21/class_array.html", null ],
-      [ "Array< NumArray< T, Cpu >, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< NumArray< Real, Gpu >, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< Real, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< Real *, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< Real *, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< T *, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< T *, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< Real, Cpu >", "d5/d21/class_array.html", null ],
-      [ "Array< Real, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< int >", "d5/d21/class_array.html", null ],
-      [ "Array< cumap_t, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< cupowfs_t >", "d5/d21/class_array.html", null ],
-      [ "Array< CellArray >", "d5/d21/class_array.html", null ],
-      [ "Array< AReal, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< GReal, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< Comp, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< int, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< NumArray< Comp, Gpu >, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< Comp *, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< Comp *, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< cufftHandle >", "d5/d21/class_array.html", null ],
-      [ "Array< gpu_fdpcg_t, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< cugrid_t, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< cuwfs_t >", "d5/d21/class_array.html", null ],
-      [ "Array< atm_prep_t >", "d5/d21/class_array.html", null ],
-      [ "Array< map2map >", "d5/d21/class_array.html", null ],
-      [ "Array< Real >", "d5/d21/class_array.html", null ],
-      [ "Array< Array< Real, Pinned > >", "d5/d21/class_array.html", null ],
-      [ "Array< Array< culoc_t > >", "d5/d21/class_array.html", null ],
-      [ "Array< culoc_t >", "d5/d21/class_array.html", null ],
-      [ "Array< cuimat >", "d5/d21/class_array.html", null ],
-      [ "Array< NumArray< int, Gpu >, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< int *, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< int *, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< curccell, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< NumArray< short2, Gpu >, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< short2, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< short2 *, Pinned >", "d5/d21/class_array.html", null ],
-      [ "Array< short2 *, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< cusp, CpuObj >", "d5/d21/class_array.html", null ],
-      [ "Array< gpu_gp_t, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< lap_t, Gpu >", "d5/d21/class_array.html", null ],
-      [ "Array< stream_t >", "d5/d21/class_array.html", null ],
-      [ "Array< cudtf_t >", "d5/d21/class_array.html", null ],
-      [ "Array< T, Dev >", "d5/d21/class_array.html", [
-        [ "CellArray< NumArray< T, Cpu > >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< NumArray< Real, Gpu > >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< cumap_t >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< NumArray< Comp, Gpu > >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< cugrid_t >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< NumArray< int, Gpu > >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< curccell >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< NumArray< short2, Gpu > >", "d1/d12/class_cell_array.html", null ],
-        [ "CellArray< cusp >", "d1/d12/class_cell_array.html", null ],
+      [ "Array< Real >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; Real, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Real, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< Real, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; Real, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< Real, Pinned >", "d5/d21/class_array.html", [
+        [ "NumArray< Real, Pinned >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; short2 *, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< short2 *, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; short2 *, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< short2 *, Pinned >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; short2, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< short2, Gpu >", "d5/d21/class_array.html", [
+        [ "NumArray< short2, Gpu >", "d0/d44/class_num_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; stream_t, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< stream_t >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; T, Cpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< T, Cpu >", "d5/d21/class_array.html", [
         [ "NumArray< T, Cpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< Real, Gpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< Real >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< Real, Pinned >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< AReal, Gpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< GReal, Gpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< Comp, Gpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< int, Gpu >", "d0/d44/class_num_array.html", null ],
-        [ "NumArray< short2, Gpu >", "d0/d44/class_num_array.html", null ],
+        [ "NumArray< T, Dev >", "d0/d44/class_num_array.html", null ]
+      ] ],
+      [ "Array< T, Dev >", "d5/d21/class_array.html", [
+        [ "CellArray< cusp >", "d1/d12/class_cell_array.html", null ],
+        [ "CellArray< curcell >", "d1/d12/class_cell_array.html", null ],
+        [ "CellArray< curccell >", "d1/d12/class_cell_array.html", null ],
+        [ "CellArray< cumap_t >", "d1/d12/class_cell_array.html", null ],
+        [ "CellArray< cugrid_t >", "d1/d12/class_cell_array.html", null ]
+      ] ]
+    ] ],
+    [ "RefP&lt; T, Dev &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< T, Dev >", "d5/d21/class_array.html", [
         [ "NumArray< T, Dev >", "d0/d44/class_num_array.html", null ]
       ] ]
     ] ],
-    [ "RefP< AReal, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Array< culoc_t >, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Array< Real, Pinned >, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< atm_prep_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< CellArray, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Comp *, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Comp *, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Comp, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cudtf_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cufftHandle, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cugrid_t, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cuimat, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< culoc_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cumap_t, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cupowfs_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< curccell, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cusp, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< cuwfs_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< gpu_fdpcg_t, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< gpu_gp_t, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< GReal, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< int *, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< int *, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< int, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< int, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< lap_t, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< map2map, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< NumArray< Comp, Gpu >, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< NumArray< int, Gpu >, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< NumArray< Real, Gpu >, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< NumArray< short2, Gpu >, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< NumArray< T, Cpu >, CpuObj >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Real *, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Real *, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Real, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Real, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< Real, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< short2 *, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< short2 *, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< short2, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< stream_t, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< T *, Gpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< T *, Pinned >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< T, Cpu >", "dd/db6/class_ref_p.html", null ],
-    [ "RefP< T, CpuObj >", "dd/db6/class_ref_p.html", null ],
+    [ "RefP&lt; T, Gpu &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< T *, Gpu >", "d5/d21/class_array.html", null ]
+    ] ],
+    [ "RefP&lt; T, Pinned &gt;", "dd/db6/class_ref_p.html", [
+      [ "Array< T *, Pinned >", "d5/d21/class_array.html", null ]
+    ] ],
     [ "rmap_t", "df/def/type_8h.html#d3/d27/structrmap__t", null ],
-    [ "rmap_t.__unnamed19__", "df/def/type_8h.html#d2/d1a/unionrmap__t_8____unnamed19____", null ],
-    [ "rmap_t.__unnamed19__.__unnamed21__", "d4/d68/structrmap__t_8____unnamed19_____8____unnamed21____.html", null ],
+    [ "rmap_t.__unnamed0__", "df/def/type_8h.html#d5/d8a/unionrmap__t_8____unnamed0____", null ],
+    [ "rmap_t.__unnamed0__.__unnamed0__", "df/def/type_8h.html#d2/dfa/structrmap__t_8____unnamed0_____8____unnamed0____", null ],
     [ "rmapccell", "df/def/type_8h.html#d3/d5f/structrmapccell", null ],
     [ "rmapcell", "df/def/type_8h.html#de/db0/structrmapcell", null ],
     [ "save_cfg_t", "d4/d38/parms_8h.html#de/ddb/structsave__cfg__t", null ],
@@ -355,13 +374,13 @@ var hierarchy =
     [ "sccell", "df/def/type_8h.html#db/d40/structsccell", null ],
     [ "scell", "df/def/type_8h.html#d0/d54/structscell", null ],
     [ "servo_t", "de/d09/servo_8h.html#da/d58/structservo__t", null ],
-    [ "servo_t.__unnamed10__", "de/d09/servo_8h.html#df/d14/unionservo__t_8____unnamed10____", null ],
-    [ "servo_t.__unnamed12__", "de/d09/servo_8h.html#d7/dbc/unionservo__t_8____unnamed12____", null ],
+    [ "servo_t.__unnamed0__", "de/d09/servo_8h.html#de/d56/unionservo__t_8____unnamed0____", null ],
+    [ "servo_t.__unnamed1__", "de/d09/servo_8h.html#d8/d43/unionservo__t_8____unnamed1____", null ],
     [ "sho_t", "de/d09/servo_8h.html#d7/d37/structsho__t", null ],
     [ "sim_cfg_t", "d4/d38/parms_8h.html#d3/d8f/structsim__cfg__t", null ],
     [ "sim_save_t", "d6/d94/maos_2types_8h.html#d1/d15/structsim__save__t", null ],
     [ "sim_t", "d6/d94/maos_2types_8h.html#d1/da4/structsim__t", null ],
-    [ "smat", "d4/d6c/structsmat.html", null ],
+    [ "smat", "df/def/type_8h.html#d4/d6c/structsmat", null ],
     [ "spchol", "db/da8/chol_8h.html#d8/d3f/structspchol", null ],
     [ "ssp", "df/def/type_8h.html#dc/d44/structssp", null ],
     [ "sspcell", "df/def/type_8h.html#d0/db5/structsspcell", null ],
@@ -381,21 +400,21 @@ var hierarchy =
     [ "zcccell", "df/def/type_8h.html#d5/dcd/structzcccell", null ],
     [ "zccell", "df/def/type_8h.html#d1/d27/structzccell", null ],
     [ "zcell", "df/def/type_8h.html#d0/d43/structzcell", null ],
-    [ "zmat", "d9/d5c/structzmat.html", null ],
+    [ "zmat", "df/def/type_8h.html#d9/d5c/structzmat", null ],
     [ "zsp", "df/def/type_8h.html#d4/d71/structzsp", null ],
     [ "zspcell", "df/def/type_8h.html#d9/d87/structzspcell", null ],
     [ "Comp", "da/d77/class_comp.html", null ],
     [ "Comp *", "db/dbe/class_comp_01_5.html", null ],
-    [ "Comp *", "db/dbe/class_comp_01_5.html", null ],
-    [ "Comp * *", "dd/d08/class_comp_01_5_01_5.html", null ],
-    [ "CpuObj< T > *", "d8/dc9/class_cpu_obj_3_01_t_01_4_01_5.html", null ],
+    [ "Comp **", "d5/d56/class_comp_01_5_5.html", null ],
     [ "cuimat", "dc/d0d/classcuimat.html", null ],
     [ "cuimat *", "d1/d1f/classcuimat_01_5.html", null ],
+    [ "Gpu&lt; T &gt; *", "d9/d35/class_gpu_3_01_t_01_4_01_5.html", null ],
     [ "long", "d7/d63/classlong.html", null ],
+    [ "Pinned&lt; T &gt; *", "d0/def/class_pinned_3_01_t_01_4_01_5.html", null ],
     [ "Real", "d0/d58/class_real.html", null ],
-    [ "Real *", "d3/d4b/class_real_01_5.html", null ],
-    [ "Real * *", "dc/de0/class_real_01_5_01_5.html", null ],
+    [ "Real **", "d6/db4/class_real_01_5_5.html", null ],
     [ "short2", "d6/d70/classshort2.html", null ],
     [ "short2 *", "dc/d4d/classshort2_01_5.html", null ],
+    [ "string", "d5/d92/classstring.html", null ],
     [ "unsigned int *", "d2/d74/classunsigned_01int_01_5.html", null ]
 ];

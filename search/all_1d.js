@@ -29,7 +29,7 @@ var searchData=
   ['zfseek_26',['zfseek',['../d3/d7f/bin_8h.html#acff7a399a7daacbf8fcca57c18732f57',1,'bin.c']]],
   ['zftouch_27',['zftouch',['../d3/d7f/bin_8h.html#a413945d9b9ed2b96159910115707a7ad',1,'bin.c']]],
   ['zfwrite_28',['zfwrite',['../d3/d7f/bin_8h.html#ace6a770f21f23800c9f497498495d1d5',1,'bin.c']]],
-  ['zmat_29',['zmat',['../d9/d5c/structzmat.html',1,'']]],
+  ['zmat_29',['zmat',['../df/def/type_8h.html#d9/d5c/structzmat',1,'']]],
   ['zmath_2eh_30',['zmath.h',['../d3/d36/zmath_8h.html',1,'']]],
   ['zoomavg_31',['zoomavg',['../d6/d94/maos_2types_8h.html#a3ba3b15c2b64a4d07a27845cbabbe70a',1,'sim_t']]],
   ['zoomavg_5fcount_32',['zoomavg_count',['../d6/d94/maos_2types_8h.html#ada9d1a9e1e7714cea84fedd1f25a5252',1,'sim_t']]],
