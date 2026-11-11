@@ -178,6 +178,7 @@ void free_parms(parms_t *parms){
 
 	dfree(parms->aper.misreg);
 	dfree(parms->aper.misregu);
+	dfree(parms->aper.segment);
 	free_strarr(parms->distortion.tel2wfs,parms->nwfs);
 	free_strarr(parms->distortion.dm2wfs,parms->ndm*parms->nwfs);
 	free_strarr(parms->distortion.dm2sci,parms->ndm*parms->evl.nevl);
@@ -1340,7 +1341,7 @@ static void readcfg_aper(parms_t *parms){
 	} else if(parms->aper.din<0){
 		error("Aperture inner diameter(%g) shall be positive.\n",parms->aper.din);
 	}
-
+	parms->aper.segment=readcfg_dmat(4,0,"aper.segment");
 }
 /**
  * check and scale thetax and thetay to match fov in diameter. If thetax and

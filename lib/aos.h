@@ -54,4 +54,5 @@
 #include "comb.h"
 #include "bessel_mode.h"
 #include "rayleigh.h"
+#include "hexpupil.h"
 #endif

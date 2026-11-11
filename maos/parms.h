@@ -88,6 +88,7 @@ typedef struct aper_cfg_t{
     dmat *misreg;  /**<Calibrated misregistration of the telescope pupil. 2x1*/
     dmat *misregu; /**<Uncalibrated misregistration of the telescope pupil. */
     char *pupmask;/**<The pupil cold stop*/
+    dmat *segment; /**<Segment configuration */
 }aper_cfg_t;
 /**
    contains input parameters for laser launch telescope
