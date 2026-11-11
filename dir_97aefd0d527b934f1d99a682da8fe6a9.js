@@ -10,6 +10,7 @@ var dir_97aefd0d527b934f1d99a682da8fe6a9 =
     [ "fractal.h", "d6/d3a/fractal_8h.html", null ],
     [ "genotf.h", "df/da9/genotf_8h.html", "df/da9/genotf_8h" ],
     [ "gensei.h", "dc/d87/gensei_8h.html", "dc/d87/gensei_8h" ],
+    [ "hexpupil.h", "d9/d13/hexpupil_8h.html", "d9/d13/hexpupil_8h" ],
     [ "hyst.h", "d7/dbc/hyst_8h.html", "d7/dbc/hyst_8h" ],
     [ "kalman.h", "df/d07/kalman_8h.html", "df/d07/kalman_8h" ],
     [ "laplacian.h", "d0/da6/laplacian_8h.html", "d0/da6/laplacian_8h" ],

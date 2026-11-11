@@ -356,7 +356,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dcellsvd_pow</b> (<a 
 <tr class="memitem:aa961edfebe29145e59aadc1e372688b7" id="r_aa961edfebe29145e59aadc1e372688b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa961edfebe29145e59aadc1e372688b7">dspmulsp</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *B, const char trans[2])</td></tr>
 <tr class="memitem:a3c37dea539c8931bc3b8bf58663e8e6b" id="r_a3c37dea539c8931bc3b8bf58663e8e6b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3c37dea539c8931bc3b8bf58663e8e6b">dspmulsp2</a> (<a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> **C0, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *B, const char trans[2], const real scale)</td></tr>
 <tr class="memitem:ad5d6cc55da0c100361466524f1821247" id="r_ad5d6cc55da0c100361466524f1821247"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad5d6cc55da0c100361466524f1821247">dspcelltrans</a> (const <a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *spc)</td></tr>
-<tr class="memitem:aec3b429d3aed405ebd1d9e2ad8b919ec" id="r_aec3b429d3aed405ebd1d9e2ad8b919ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aec3b429d3aed405ebd1d9e2ad8b919ec">dspcat</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *B, int type)</td></tr>
+<tr class="memitem:af30fecfc1fdb0f1f78d5ecac85983c00" id="r_af30fecfc1fdb0f1f78d5ecac85983c00"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af30fecfc1fdb0f1f78d5ecac85983c00">dspcat</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *B, int dim)</td></tr>
 <tr class="memitem:a28a5bbbb19ac8d6740d35b5af982e2af" id="r_a28a5bbbb19ac8d6740d35b5af982e2af"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28a5bbbb19ac8d6740d35b5af982e2af">dspcell2sp</a> (const <a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *A)</td></tr>
 <tr class="memitem:ad2f158f8d8c862c5e06c5fffe7d03a05" id="r_ad2f158f8d8c862c5e06c5fffe7d03a05"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad2f158f8d8c862c5e06c5fffe7d03a05">dspsum</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, int col)</td></tr>
 <tr class="memitem:a1564f0de4717ea5b2db776e1a311aa08" id="r_a1564f0de4717ea5b2db776e1a311aa08"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1564f0de4717ea5b2db776e1a311aa08">dspsumabs</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *A, int col)</td></tr>
@@ -2676,7 +2676,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dsptrace</b> (const <
         </tr>
       </table>
 </div><div class="memdoc">
-<p>rotate the column vectors CCW, equivalent as rotate coordinate theta CW. A is nx2 while A(:,1) is x, A(:,2) is y. </p>
+<p>rotate the column vectors CCW, equivalent as rotate coordinate theta CW. A is nx2 while A(:,0) is x, A(:,1) is y. </p>
 
 </div>
 </div>
@@ -2698,7 +2698,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dsptrace</b> (const <
         </tr>
       </table>
 </div><div class="memdoc">
-<p>rotate the row vectors CCW. same as rotate coordinate theta CW. A is 2xn A(:,1) is x, A(:,2) is y. </p>
+<p>rotate the row vectors CCW. same as rotate coordinate theta CW. A is 2xn A(0, :) is x, A(1, :) is y. </p>
 
 </div>
 </div>
@@ -5591,8 +5591,8 @@ d&amp;=&amp;                 f(0)                      \\
 
 </div>
 </div>
-<a id="aec3b429d3aed405ebd1d9e2ad8b919ec" name="aec3b429d3aed405ebd1d9e2ad8b919ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aec3b429d3aed405ebd1d9e2ad8b919ec">&#9670;&#160;</a></span>dspcat()</h2>
+<a id="af30fecfc1fdb0f1f78d5ecac85983c00" name="af30fecfc1fdb0f1f78d5ecac85983c00"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af30fecfc1fdb0f1f78d5ecac85983c00">&#9670;&#160;</a></span>dspcat()</h2>
 
 <div class="memitem">
 <div class="memproto">

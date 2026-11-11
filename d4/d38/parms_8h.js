@@ -51,7 +51,8 @@ var parms_8h =
       [ "amp", "d4/d38/parms_8h.html#ac7283357fd51e2dcba2f25f498062428", null ],
       [ "misreg", "d4/d38/parms_8h.html#ae2954c86dea9ddd31254a7b5e940e765", null ],
       [ "misregu", "d4/d38/parms_8h.html#a1b3586fba1bd11580eac766c9f17c889", null ],
-      [ "pupmask", "d4/d38/parms_8h.html#ad5e99c7003917875264e61c295f514bd", null ]
+      [ "pupmask", "d4/d38/parms_8h.html#ad5e99c7003917875264e61c295f514bd", null ],
+      [ "segment", "d4/d38/parms_8h.html#aad8c578ed23757ee379124fd376b2f1f", null ]
     ] ],
     [ "llt_cfg_t", "d4/d38/parms_8h.html#d1/dde/structllt__cfg__t", [
       [ "d", "d4/d38/parms_8h.html#a0f4066f8181cc956c6bd50a40882f257", null ],

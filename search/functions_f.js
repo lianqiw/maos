@@ -239,7 +239,7 @@ var searchData=
   ['sspadd2_236',['sspadd2',['../de/de7/smath_8h.html#a57e9b680422be9835a008ab32b4658e4',1,'stmp.c']]],
   ['sspaddi_237',['sspaddI',['../de/de7/smath_8h.html#a73993494c35b8cc04f8f3b2d2858078c',1,'stmp.c']]],
   ['sspblockextract_238',['sspblockextract',['../de/de7/smath_8h.html#a4516bd0b9565d1dd87d0e7d2864ba3fa',1,'stmp.c']]],
-  ['sspcat_239',['sspcat',['../de/de7/smath_8h.html#a06d932c08e57bfcdc1b7b93760e04fe8',1,'stmp.c']]],
+  ['sspcat_239',['sspcat',['../de/de7/smath_8h.html#a99e6b31c7777a84b4592d066bfd90435',1,'stmp.c']]],
   ['sspcell2sp_240',['sspcell2sp',['../de/de7/smath_8h.html#a097a6b6d04f4e3cd82452e484c74321b',1,'stmp.c']]],
   ['sspcell_5fcast_241',['sspcell_cast',['../de/de7/smath_8h.html#a87374d8fa4cb8184edc5cc2f04df0ca3',1,'stmp.c']]],
   ['sspcelldroptol_242',['sspcelldroptol',['../de/de7/smath_8h.html#a4ea7bb2e5bed0065efab359cd014c04d',1,'stmp.c']]],

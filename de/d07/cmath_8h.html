@@ -405,7 +405,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (real *gr
 <tr class="memitem:ab8b352a5300fcd8282b4e868ccc45034" id="r_ab8b352a5300fcd8282b4e868ccc45034"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab8b352a5300fcd8282b4e868ccc45034">cspmulsp</a> (const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *B, const char trans[2])</td></tr>
 <tr class="memitem:a536f2733e0c8699aba79904d7a94a8f9" id="r_a536f2733e0c8699aba79904d7a94a8f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a536f2733e0c8699aba79904d7a94a8f9">cspmulsp2</a> (<a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> **C0, const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *B, const char trans[2], const comp scale)</td></tr>
 <tr class="memitem:af18b1c8852a2ad0738520ddd9c3b030b" id="r_af18b1c8852a2ad0738520ddd9c3b030b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d8/d70/structcspcell">cspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af18b1c8852a2ad0738520ddd9c3b030b">cspcelltrans</a> (const <a class="el" href="../../df/def/type_8h.html#d8/d70/structcspcell">cspcell</a> *spc)</td></tr>
-<tr class="memitem:a54f185dd792d6a7d57ff07ed7645e588" id="r_a54f185dd792d6a7d57ff07ed7645e588"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a54f185dd792d6a7d57ff07ed7645e588">cspcat</a> (const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *B, int type)</td></tr>
+<tr class="memitem:aaba4ab55ca32e253a338c9c9a9754aa7" id="r_aaba4ab55ca32e253a338c9c9a9754aa7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaba4ab55ca32e253a338c9c9a9754aa7">cspcat</a> (const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *B, int dim)</td></tr>
 <tr class="memitem:a8b4bdc0f48c0eba16bbab382cd95f65b" id="r_a8b4bdc0f48c0eba16bbab382cd95f65b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b4bdc0f48c0eba16bbab382cd95f65b">cspcell2sp</a> (const <a class="el" href="../../df/def/type_8h.html#d8/d70/structcspcell">cspcell</a> *A)</td></tr>
 <tr class="memitem:a7a49675190448cfa4d016d3589c227d3" id="r_a7a49675190448cfa4d016d3589c227d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7a49675190448cfa4d016d3589c227d3">cspsum</a> (const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, int col)</td></tr>
 <tr class="memitem:ad278e2e9b3fd85de5067b04c6304a996" id="r_ad278e2e9b3fd85de5067b04c6304a996"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad278e2e9b3fd85de5067b04c6304a996">cspsumabs</a> (const <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> *A, int col)</td></tr>
@@ -2545,7 +2545,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
         </tr>
       </table>
 </div><div class="memdoc">
-<p>rotate the column vectors CCW, equivalent as rotate coordinate theta CW. A is nx2 while A(:,1) is x, A(:,2) is y. </p>
+<p>rotate the column vectors CCW, equivalent as rotate coordinate theta CW. A is nx2 while A(:,0) is x, A(:,1) is y. </p>
 
 </div>
 </div>
@@ -2567,7 +2567,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
         </tr>
       </table>
 </div><div class="memdoc">
-<p>rotate the row vectors CCW. same as rotate coordinate theta CW. A is 2xn A(:,1) is x, A(:,2) is y. </p>
+<p>rotate the row vectors CCW. same as rotate coordinate theta CW. A is 2xn A(0, :) is x, A(1, :) is y. </p>
 
 </div>
 </div>
@@ -5124,8 +5124,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dfft_free_plan</b> (s
 
 </div>
 </div>
-<a id="a54f185dd792d6a7d57ff07ed7645e588" name="a54f185dd792d6a7d57ff07ed7645e588"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a54f185dd792d6a7d57ff07ed7645e588">&#9670;&#160;</a></span>cspcat()</h2>
+<a id="aaba4ab55ca32e253a338c9c9a9754aa7" name="aaba4ab55ca32e253a338c9c9a9754aa7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaba4ab55ca32e253a338c9c9a9754aa7">&#9670;&#160;</a></span>cspcat()</h2>
 
 <div class="memitem">
 <div class="memproto">

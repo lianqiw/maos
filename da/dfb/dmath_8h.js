@@ -203,7 +203,7 @@ var dmath_8h =
     [ "dspmulsp", "da/dfb/dmath_8h.html#aa961edfebe29145e59aadc1e372688b7", null ],
     [ "dspmulsp2", "da/dfb/dmath_8h.html#a3c37dea539c8931bc3b8bf58663e8e6b", null ],
     [ "dspcelltrans", "da/dfb/dmath_8h.html#ad5d6cc55da0c100361466524f1821247", null ],
-    [ "dspcat", "da/dfb/dmath_8h.html#aec3b429d3aed405ebd1d9e2ad8b919ec", null ],
+    [ "dspcat", "da/dfb/dmath_8h.html#af30fecfc1fdb0f1f78d5ecac85983c00", null ],
     [ "dspcell2sp", "da/dfb/dmath_8h.html#a28a5bbbb19ac8d6740d35b5af982e2af", null ],
     [ "dspsum", "da/dfb/dmath_8h.html#ad2f158f8d8c862c5e06c5fffe7d03a05", null ],
     [ "dspsumabs", "da/dfb/dmath_8h.html#a1564f0de4717ea5b2db776e1a311aa08", null ],
