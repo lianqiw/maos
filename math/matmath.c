@@ -570,7 +570,7 @@ int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
 
 /**
    rotate the column vectors CCW, equivalent as rotate coordinate theta CW.
-   A is nx2 while A(:,1) is x, A(:,2) is y.
+   A is nx2 while A(:,0) is x, A(:,1) is y.
 */
 void X(rotvec)(X(mat)* A, const R theta){
 	if(!check_mat(A)||A->ny!=2){
@@ -589,7 +589,7 @@ void X(rotvec)(X(mat)* A, const R theta){
 
 /**
    rotate the row vectors CCW. same as rotate coordinate theta CW.
-   A is 2xn A(:,1) is x, A(:,2) is y.
+   A is 2xn A(0, :) is x, A(1, :) is y.
 */
 void X(rotvect)(X(mat)* A, const R theta){
 	if(!check_mat(A)||A->nx!=2){

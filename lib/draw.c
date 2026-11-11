@@ -222,6 +222,7 @@ static void list_destroy(list_t** head){
 int draw_add(int sock){
 	//Check that the drawdaemon is live.
 	if(sock==-1) return -1;
+	draw_disabled=0;
 	char *buf=0;
 	size_t bufsize=0;
 	FILE *fbuf=open_memstream(&buf,&bufsize);
@@ -300,7 +301,7 @@ static int launch_drawdaemon(){
 		close(sv2[1]);
 	} else{
 		perror("socketpair");
-		warning("socket pair failed, cannot launch drawdaemon\n");
+		warning("socket pair failed, cannot launch drawdaemon, set draw_disabled=1\n");
 		draw_disabled=1;
 		sv2[0]=-1;
 	}
@@ -402,7 +403,7 @@ static int get_drawdaemon(){
 				draw_disabled=1;
 				close(sock_helper);
 				sock_helper=-1;
-				warning("Unable to talk to the helper to launch drawdaemon.\n");
+				warning("Unable to talk to the helper to launch drawdaemon. set draw_disabled=1.\n");
 			}else{
 				dbg("launch using sock helper: sock=%d\n", sock);
 			}
@@ -412,7 +413,7 @@ static int get_drawdaemon(){
 	if(sock==-1 || draw_add(sock) || socket_send_timeout(sock, 60)){
 		draw_disabled=1;
 		sock=-1;
-		warning("Unable to open drawdaemon. Disable drawing.\n");
+		warning("Unable to open drawdaemon. Disable drawing. set draw_disabled=1\n");
 	}
 	UNLOCK(lock);
 	return sock==-1;
@@ -432,6 +433,7 @@ void draw_final(int reuse){
 			FREE(p);
 		}
 		if(!sock_draws){
+			warning("draw_final. set draw_disabled=1\n");
 			draw_disabled=1;//do not try to restart drawdaemon
 		}
 		UNLOCK(lock);

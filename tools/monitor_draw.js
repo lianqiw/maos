@@ -34,7 +34,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   const [cumStart, setCumStart]=useState(0);//time step to start cumulative plot.
   const [cumInput, setCumInput]=useState(0);//capture input value without changing cumStart instantenously
   const [lpfInput, setLpfInput]=useState(1);//low pass filter to slow down update
-  const [climLpfInput, setClimLpfInput]=useState(0.01)
+  const [climLpfInput, setClimLpfInput]=useState(0.1)
   const lpf=useRef(1); //use reference avoid closure capture stale data
   const figName=useRef('');
   const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot

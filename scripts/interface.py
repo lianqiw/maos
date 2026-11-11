@@ -188,7 +188,7 @@ def arr2object(arr):
 #        lib.cellfree_do(cast(self.pointer, c_void_p))
 class cell_ndarray(np.ndarray):
     '''Subclass to manage memory and extra attributes'''
-    def __new__(cls, ctypes_pointer):
+    def __new__(cls, ctypes_pointer):#new creates new object
         #print(f'cell_ndarray __new__ {ctypes_pointer}')
         ctypes_array=cast(ctypes_pointer, POINTER(cell)).contents
         if ctypes_array.header:
@@ -254,7 +254,7 @@ class cell_ndarray(np.ndarray):
             return
         self.__dict__.update(getattr(obj, "__dict__", {}))
 class cell_csr_array(sp.csr_array):
-    def __init__(self, ctypes_pointer):
+    def __new__(cls, ctypes_pointer):
         #print(f'cell_csr_array __new__ {ctypes_pointer}')
         #create numpy object from C
         ctypes_array=cast(ctypes_pointer, POINTER(csr)).contents
@@ -274,9 +274,11 @@ class cell_csr_array(sp.csr_array):
                 elif kind==3:
                     ip=np.ctypeslib.as_array(cast(ctypes_array.i, POINTER(c_int)), shape=(ctypes_array.nzmax,))
                     pp=np.ctypeslib.as_array(cast(ctypes_array.p, POINTER(c_int)), shape=(ctypes_array.ny+1,))
-                super().__init__((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=True)
+                return sp.csr_array((xp, ip, pp), shape=(ctypes_array.ny, ctypes_array.nx), copy=True)
             else:
-                super().__init__((ctypes_array.nx,ctypes_array.ny))
+                return sp.csr_array((ctypes_array.nx,ctypes_array.ny))
+        else:
+            raise(TypeError(f"Unsupported CSR data kind: {kind}"))
     def __array_finalize__(self, obj):
         if obj is None:
             return
