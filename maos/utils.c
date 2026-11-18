@@ -202,6 +202,7 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 	real sumamp2=aper->sumamp2;
 	snprintf(keywords, sizeof(keywords),
 		"theta=(%.15g, %.15g) / Field location (arcsec)\n"
+		"ZA=%g / Zenith Angle (degrees)\n"
 		"r0=%g / Fried parameter (meter)\n"
 		"L0=%g / Outer scale (meter)\n"
 		"wvl=%g / Wavelength (m)\n"
@@ -211,7 +212,7 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 		"sum=%g / PSF total intensity\n"
 		"dt=%g / Total exposure (seconds)\n",
 		ievl<0?0:P(parms->evl.thetax,ievl)*RAD2AS, ievl<0?0:P(parms->evl.thetay,ievl)*RAD2AS,
-		parms->atm.r0, P(parms->atm.L0,0),
+		parms->sim.za/M_PI*180, parms->atm.r0, P(parms->atm.L0,0),
 		wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*RAD2AS,
 		sumamp2* nembed* nembed, parms->sim.dt* (isim-parms->evl.psfisim+1));
 	return strdup(keywords);

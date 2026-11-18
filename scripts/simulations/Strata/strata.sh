@@ -4,23 +4,25 @@ systems="zspec zimager lris2csu lris2ifu mosfire kapa "
 atms="25pGL_25pFA 25pGL_50pFA 25pGL_75pFA 50pGL_25pFA 50pGL_50pFA 50pGL_75pFA 75pGL_25pFA 75pGL_50pFA 75pGL_75pFA "
 zas="30 45 55 60"
 alg0="tomo"
-rnes="0.1 2.7"
+rnes="0.1 2.7" #1.8 is likely 
 base="-c strata.conf sim.seeds=[1 10 20 30] -G1"
 lmags="8" #magnitude of LGS
 nlgss="4" #number of LGS
+fasttt=0
 sodium=
 ncpa=
 ncpa_calib=0
-hz=0
+hz=
+
 #Overrides 
-fasttt=0 #set to 1 to enable fast t/t
+#fasttt=0 #set to 1 to enable fast t/t
 atms="50pGL_50pFA" #only median seeing
 zas="30"
-systems="kapa_strata" #subset of systems
-noatm=0
-rotdeg=0
-rnes=1.8 #likely 
-openloop=1
+systems="zspec" #subset of systems
+#noatm=0
+#rotdeg=0
+rnes=0.1 # 1.8 #likely 
+#openloop=1
 #rnes="2.7 1.8 0.8 0.3" #2.0 2.7"
 #nlgss="4 "
 #lmags="6 8 7.3 9"
@@ -29,12 +31,12 @@ openloop=1
 ### End
 ast_extra= #"rect"
 
-if [ $fasttt = 2 ];then
+if [ x$fasttt = x2 ];then
     ngsscale=0 #make NGS on axis
 else
     ngsscale=1 #off axis
 fi
-if [ $fasttt -ne 0 ];then
+if [ x$fasttt != x0 ];then
     ngsdtrat=1
 else
     ngsdtrat=600 #guider only
@@ -103,27 +105,30 @@ config[lris2csu_narrow]=" powfs.astscale=[432 540*$ngsscale 540*$ngsscale] $fit_
 config[lris2ifu]=" powfs.astscale=[212 540*$ngsscale 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} $ngs_glao " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'
 #config[lris2ifu_dichroic]=" powfs.astscale=[15.2 540*$ngsscale] ${fit[lris2ifu]} ${evl[lris2ifu]} powfs.dtrat=[1 $ngsdtrat] " #LRIS2 IFU FoV 20x7.2 arcsec. LGS is 2.5'x2.5'. 
 config[mosfire]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[mosfire]} ${evl[mosfire]} $ngs_glao " #MOSFIRE spectrograph 6'x3' fov. Guider is 6.7' off axis.
-config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[mosfire]} evl.fov=360 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
+config[mosfire_dense]=" powfs.astscale=[765 800*$ngsscale 800*$ngsscale] ${fit[mosfire]} evl.fov=360 evl.thetax='type=square; nring=9; ratio=0.5; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is 2'x2' at 4.5' off axis
 config[zimager]=" powfs.astscale=[50 240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl_x.conf evl.fov=180 $ngs_glao " #Zshooter imager with circular FoV D=3'
 config[zimager_dense]=" powfs.astscale=[50  240*$ngsscale 240*$ngsscale] fit_cir60.conf fit.fov=180 evl.fov=180 evl.thetax='type=square; nring=9; ratio=1; clip=0' $ngs_glao " #LRIS2 FoV 10'x5'. LGS is 10'x10'. Guider is at 4.5' off axis
 config[zspec]=" powfs.astscale=[15.2 240*$ngsscale  240*$ngsscale] fit_oa.conf fit.fov=0 evl_oa.conf evl.fov=0 $ngs_glao " #Zshooter spectrograph in LTAO mode
-config[kapa]=" powfs.astscale=[15.2 0 0] powfs.wvl=[0.589 1.25 0.8]  powfs.pixtheta=[1 0.05 0.5] fit_oa.conf fit.fov=0 evl_x.conf evl.wt=[1 0 0 0 0 0 0 0 0] evl.fov=20 evl.psfmean=0 powfs.dtrat=[1 1 1000]" #Upgraded kapa LTAO
+config[kapa]=" powfs.astscale=[15.2 0 0] powfs.wvl=[0.589 1.25 0.8]  powfs.pixtheta=[1 0.05 0.5] fit_oa.conf fit.fov=0 evl_x.conf evl.wt=[1 0 0 0 0 0 0 0 0] evl.fov=20 evl.psfmean=0 powfs.dtrat=[1 1 1000]  powfs0_llt.focus=0" #Upgraded kapa LTAO
 #Default atmthruput is 0.84, telthrughput is 0.307
 kapa_common="powfs.atmthruput=[0.896 0.896 0.896] powfs.telthruput=[0.36*0.9 0.32 0.03] sim.end=2000" #common between original and upgraded kapa
-config[kapa_orig]=" ${config[kapa]} $kapa_common dm.ht=[0] dm.dx=[0.5625] powfs.pixtheta=[1.5 0.05 0.5]  powfs.pixpsa=[4 6 6] powfs0_llt.ox=[0] powfs0_llt.oy=[0] powfs0_llt.focus=280" #Original kapa with original center launch LLT. 1.7" spot size?
+#kapa: strata with nfiraos throughput, new llt.focus
+#kapa_strata: strata with current kapa throught, with llt.focus
+#kapa_origin: current kapa
 config[kapa_strata]=" ${config[kapa]} $kapa_common powfs0_llt.focus=140 "
+config[kapa_orig]=" ${config[kapa]} $kapa_common dm.ht=[0] dm.dx=[0.5625] powfs.pixtheta=[1.5 0.05 0.5]  powfs.pixpsa=[4 6 6] powfs0_llt.ox=[0] powfs0_llt.oy=[0] powfs0_llt.focus=280" #Original kapa with original center launch LLT. 1.7" spot size?
 #config[kola]="$lgs8ngs3 powfs.astscale=[60 30 30] powfs.wvl=[0.589 1.25 1.25] powfs.nwvl=[1 1 1] powfs.pixtheta=[1 0.05 0.05] fit_cir60.conf fit.fov=60 evl_x.conf evl.fov=60 dm.offset+=[1/3 2/3] dm.ht+=[6000 10000] sim.dt=1/1500 " #Example 
 declare -A algs
 algs[idealfit]="sim.idealfit=1" #best performance by fitting turbulence directly to DM
 algs[glao]="recon.alg=1" #instead of averaging gradients which cannot handle misregistration or differential measurement noise, we use LSQ method.
 algs[tomo]="" #default
-#for sodium in W1.2 ; do #W1.2 W1.5 W1.8
+#for sodium in W1.2 ; do #W1.2 W1.5 W1.8 #sodium width
 #for ss in 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5; do ast_extra=Q$ss #pixel scale. P(ideal LLT). Q (LLT 140 nm focus aberration)
 #for ss in 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 ;do for vv in V;do ast_extra=${vv}$ss #aperture size with random (S), fixed (V) or without (N) super resolution
-#for ast_extra in D100 ; do #asterism size
+for ast_extra in D15 D20 D30 D40 D50 D100 D150 D250; do #asterism size
 #for ast_extra in X6 X8 X10 X12 ;do #number of pixels
-for hz in 600 ;do
-for ncpa in "Keck_ncpa_rmswfe130nm.fits";do
+#for hz in 600 ;do
+#for ncpa in ""; do #"Keck_ncpa_rmswfe130nm.fits";do
 for sys in $systems;do   
     if [ ${sys:0:4} = kapa -a $fasttt -ne 0 ] ;then
         continue
@@ -160,7 +165,7 @@ for sys in $systems;do
                             case "$ast_extra" in 
                                 D*)
                                 #asterism size
-                                ast2="powfs.astscale=[${ast_extra:1} 240*$ngsscale]"
+                                ast2="powfs.astscale=[${ast_extra:1} 240*$ngsscale 240*$ngsscale]"
                                 ;;
                                 P*)
                                 #pixel size
@@ -258,7 +263,7 @@ for sys in $systems;do
                                     continue
                                 fi
                             fi
-                            if [ x$rotdeg != x0 ];then
+                            if [ -n "$rotdeg" -a x$rotdeg != x0 ];then
                                 fd+="_rot${rotdeg}"
                                 conf+=" aper.rotdeg=${rotdeg}"
                             fi
@@ -275,7 +280,7 @@ for sys in $systems;do
         done #for atm
     done #for za
 done #for sys
-#done #for ast_exctra
-#done #for sodium
-done
+
+#Extras
+#done
 done
