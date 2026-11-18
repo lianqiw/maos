@@ -345,10 +345,6 @@ void* gpu_perfevl_queue(thread_t* info){
 			Real angle=simu->winddir?simu->winddir->p[0]:0;
 			curaddptt(iopdevl, cudata->perf.locs(), 0, tt*cosf(angle), tt*sinf(angle), stream);
 		}
-		if(simu->telfocusreal){
-			Real focus=-(Real)P(P(simu->telfocusreal,0),0);
-			add_focus_do<<<DIM(nloc, 256), 0, stream>>>(iopdevl, cudata->perf.locs(), nloc, focus, 0, 0);
-		}
 		if(save_evlopd && simu->save->evlopdol){
 			zfarr_push_scale(simu->save->evlopdol[ievl], isim, iopdevl, 1, stream);
 		}
@@ -402,6 +398,10 @@ void* gpu_perfevl_queue(thread_t* info){
 			}
 		}
 		if(parms->sim.evlol) continue;
+		if(simu->telfocusreal){
+			Real focus=-(Real)P(P(simu->telfocusreal,0),0);
+			add_focus_do<<<DIM(nloc, 256), 0, stream>>>(iopdevl, cudata->perf.locs(), nloc, focus, 0, 0);
+		}
 		if(parms->evl.tomo){
 			if(parms->tomo.square){
 				mapcell2loc(iopdevl(), cudata->perf.locs, cudata->opdr, 

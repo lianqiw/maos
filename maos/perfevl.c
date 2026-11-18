@@ -177,9 +177,6 @@ void* perfevl_ievl(thread_t* info){
 			real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 			loc_add_ptt(iopdevl, ptt, aper->locs);
 		}
-		if(simu->telfocusreal){
-			loc_add_focus(iopdevl, aper->locs, -P(P(simu->telfocusreal,0),0));
-		}
 		/*Add surfaces along science path. prepared in setup_surf.c */
 		if(aper->opdadd&&P(aper->opdadd,ievl)){
 			dadd(&iopdevl, 1, P(aper->opdadd,ievl), 1);
@@ -232,6 +229,9 @@ void* perfevl_ievl(thread_t* info){
 		}
 		if(parms->sim.evlol) continue;
 		TIM(2);
+		if(simu->telfocusreal){
+			loc_add_focus(iopdevl, aper->locs, -P(P(simu->telfocusreal,0),0));
+		}
 		if(parms->evl.tomo){
 			/*
 			  evaluate tomography performance: Apply ideal correction using

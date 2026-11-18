@@ -205,36 +205,34 @@ void* wfsgrad_iwfs(thread_t* info){
 			real alpha=parms->sim.idealwfs?1:-1;
 			wfs_ideal_atm(simu, opd, iwfs, alpha);
 		}
-
-
 		if(simu->telws){/*Wind shake */
 			real tmp=P(simu->telws, isim);
 			real angle=simu->winddir?P(simu->winddir, 0):0;
 			real ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 			loc_add_ptt(opd, ptt, powfs[ipowfs].loc);
 		}
-		if(simu->telfocusreal){/*Telescope focus correction*/
-			real focus=-P(P(simu->telfocusreal,0),0);
-			if(fabs(focus)>1e-20){
-				loc_add_focus(opd, powfs[ipowfs].loc, focus);
-			}
-		}
-		if(parms->powfs[ipowfs].llt){
-			real focus=wfsfocusadj(simu, iwfs);
-			if(fabs(focus)>1e-20){
-				loc_add_focus(opd, powfs[ipowfs].loc, focus);
-			}
-		}
 		/* Add surface error*/
 		if(powfs[ipowfs].opdadd&&P(powfs[ipowfs].opdadd, wfsind)){
 			dadd(&opd, 1, P(powfs[ipowfs].opdadd, wfsind), 1);
 		}
-
 		if(save_opd){
 			zfarr_push(simu->save->wfsopdol[iwfs], isim, opd);
 		}
+
 		TIM(1);
 		if(CL){
+			if(simu->telfocusreal){/*Telescope focus correction*/
+				real focus=-P(P(simu->telfocusreal,0),0);
+				if(fabs(focus)>1e-20){
+					loc_add_focus(opd, powfs[ipowfs].loc, focus);
+				}
+			}
+			if(parms->powfs[ipowfs].llt){
+				real focus=wfsfocusadj(simu, iwfs);
+				if(fabs(focus)>1e-20){
+					loc_add_focus(opd, powfs[ipowfs].loc, focus);
+				}
+			}
 			if(PARALLEL==2){
 				wait_dmreal(simu, simu->wfsisim);
 			}
