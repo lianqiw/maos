@@ -258,7 +258,7 @@ static RUN_T* running_add(int pid, int sock){
 		char progname[PATH_MAX];
 		if(pid>0){
 			if(get_job_progname(progname, PATH_MAX, pid)){//failed. Already exited.
-				warning_time("PID %d already exited. will not add\n", pid);
+				dbg_time("PID %d already exited. will not add\n", pid);
 				return NULL;
 			}
 		}
@@ -822,7 +822,7 @@ static int respond(struct pollfd *pfd, int flag){
 			dbg_time("(%d:%s) pid=%d is running but not recorded.\n", sock, get_sockname(sock), pid);
 			irun=running_add(pid, sock);
 			if(!irun){
-				warning_time("scheduler: running_add %d failed. Exe already exited.\n", pid);
+				dbg_time("scheduler: running_add %d failed. Exe already exited.\n", pid);
 				break;
 			}
 			irun->status.info=S_START;
@@ -1038,7 +1038,7 @@ static int respond(struct pollfd *pfd, int flag){
 	}
 	break;
 	default:
-		warning_time("(%d:%s) Invalid cmd: %x\n", sock, get_sockname(sock), cmd[0]);
+		warning_time("(%d:%s) Invalid cmd: %d\n", sock, get_sockname(sock), cmd[0]);
 		ret=-1;
 	}
 	//job is finished. process the next job. don't wait for timeout

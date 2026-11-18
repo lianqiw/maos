@@ -333,7 +333,9 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 		dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
 		dmat *ints=0;
 		dmat *goff=0;
+		TIC;tic;dbg("Computing pywfs ints ...");
 		pywfs_ints(&ints, pywfs, opd, siglev);
+		toc2("done");
 		pywfs_grad(&goff, pywfs, ints);
 		/*if(parms->save.setup){
 			writebin(ints, "powfs%d_piston_ints", ipowfs);
@@ -344,8 +346,12 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 		dfree(goff);
 		dfree(opd);
 		dfree(ints);
+	}
+	{
 		//Determine optical gain.
+		TIC;tic;dbg("Computing pywfs_tt ...");
 		dmat *TT=pywfs_tt(pywfs);
+		toc2("done");
 		real gsum=dsum(TT);
 		real gainscl=ng*nsa/gsum;
 		/*
@@ -515,7 +521,6 @@ void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const pywfs_t *pywfs){
-	TIC;tic;info("Computing pywfs_tt...");
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const loc_t *loc=pywfs->locfft->loc;
 	dmat *opd=dnew(loc->nloc, 1);
@@ -585,7 +590,6 @@ dmat *pywfs_tt(const pywfs_t *pywfs){
 	dfree(grady);
 	dfree(opd);
 	dfree(ints);
-	toc2("done");
 	return out;
 }
 static uint32_t pywfs_hash(const pywfs_t *pywfs, uint32_t key){

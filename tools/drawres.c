@@ -276,7 +276,7 @@ int main(int argc, char* argv[]){
 		P(res, i)=dcellnew(npath, nseed);
 		P(resm, i)=dcellnew(npath, 1);//seed averaged
 	}
-	dccell*reseach=NULL;
+	dccell*resfov=NULL;//compute result for fov
 	const char* xlabel, * ylabel;
 	dmat* ysky=NULL;
 	const char* xylog;
@@ -481,7 +481,7 @@ int main(int argc, char* argv[]){
 		}//for seed
 		if(resp && nseed_actual){
 			if(nseed_actual>1) dcellscale(resp, 1./nseed_actual);
-			if(!reseach){
+			if(!resfov){
 				int nevl=NX(resp);
 				dmat *thetax=dnew(nevl, 1);
 				dmat *thetay=dnew(nevl, 1);
@@ -501,13 +501,13 @@ int main(int argc, char* argv[]){
 					}
 				}
 				if(thetax && thetay){
-					reseach=wfe_fov_prep(thetax, thetay, 1, npath, 0);
+					resfov=wfe_fov_prep(thetax, thetay, 1, npath, 0);
 				}
 			}
-			if(reseach){
+			if(resfov){
 				int nevl=NX(resp);
 				dcell *clep=dcellsub(resp, 0, nevl, 3, 1);
-				wfe_fov_fill(reseach, clep, ipath, 0);
+				wfe_fov_fill(resfov, clep, ipath, 0);
 				dcellfree(clep);
 			}
 		}
@@ -560,7 +560,7 @@ int main(int argc, char* argv[]){
 		}
 		pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
 	}
-	if(nseed>1){//more than one seed is available. Every over the seeds
+	if(nseed>1){//more than one seed is available. Average over the seeds
 		if(npath==1 && nvalid>1){//plot different seeds when only 1 path is found.
 			char* legs0[nseed+1];
 			for(int iseed=0; iseed<nseed; iseed++){
@@ -648,17 +648,17 @@ int main(int argc, char* argv[]){
 			}
 		}
 	}
-	if(reseach){
-		draw("CL", (plot_opts){.dc=P(reseach, 1), .legend=(const char* const*)pathtag0},
+	if(resfov){
+		draw("CL", (plot_opts){.dc=P(resfov, 1), .legend=(const char* const*)pathtag0},
 			"Total Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "Total: FoV");
-		draw("CL", (plot_opts){.dc=P(reseach, 2), .legend=(const char* const*)pathtag0},
+		draw("CL", (plot_opts){.dc=P(resfov, 2), .legend=(const char* const*)pathtag0},
 			"High Order Wavefront Error", "Field Angle (as)", "Wavefront Error (nm)", "High: FoV");
 	}
 	draw_final(1);
 	cellfree(ysky);
 	cellfree(res);
 	cellfree(resm);
-	cellfree(reseach);
+	cellfree(resfov);
 	for(int ipath=0; ipath<npath; ipath++){
 		free(path[ipath]);
 		free(pathtag0[ipath]);

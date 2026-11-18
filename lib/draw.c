@@ -433,7 +433,7 @@ void draw_final(int reuse){
 			FREE(p);
 		}
 		if(!sock_draws){
-			warning("draw_final. set draw_disabled=1\n");
+			dbg("draw_final. set draw_disabled=1\n");
 			draw_disabled=1;//do not try to restart drawdaemon
 		}
 		UNLOCK(lock);

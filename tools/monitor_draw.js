@@ -36,7 +36,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
   const [lpfInput, setLpfInput]=useState(1);//low pass filter to slow down update
   const [climLpfInput, setClimLpfInput]=useState(0.1)
   const lpf=useRef(1); //use reference avoid closure capture stale data
-  const figName=useRef('');
+  const [figName, setFigName]=useState('');
   const [cumPlot, setCumPlot]=useState(false);//plot cumulative plot
   const [xRange, setXRange]=useState(0);//x axis range. Only applicable when the x axis lable contains Step
   const [wss, setWss]=useState({});
@@ -207,6 +207,15 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
       }
     })
   }, [drawInfo]);
+  function saveFile(format, filename){
+    Plotly.downloadImage(chartRef.current, {
+      format: format,
+      width: chartRef.current.clientWidth,
+      height: chartRef.current.clientHeight,
+      scale: window.devicePixelRatio,
+      filename: filename
+    });
+  }
   function startGif(filename){
     if(!chartRef.current) return;
     if(gifActive.current) finishGif()
@@ -282,9 +291,7 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
           layout.current = (jobRef.current[jobActive]['layout'][topActive[jobActive]][botActive[jobActive][topActive[jobActive]]]);
           if (drawData) {
             const id=(drawData.fig+'_'+drawData.name).replace(/[:\s]+/g, "_");
-            if(figName.current!==id){
-              figName.current=id;
-            }
+            setFigName(id);
             if(drawData.cumPlot!==cumPlot || drawData.cumStart!==cumStart){
               drawData.cumPlot=cumPlot;
               drawData.cumStart=cumStart;
@@ -376,12 +383,12 @@ const DrawDaemon = React.memo(({ drawInfo, jobActive, updateDrawInfo}) => {
         <Menu label={(<span style={{padding:'0.3em'}}>💾 Save</span>)} child={<ul className="menu-list" >
           {(gifActive.current)&&
            (<li onClick={()=>{finishGif()}}>💾 Stop Recording Animation</li>)||
-           (<li onClick={()=>{startGif(figName.current)}}>🎞️ Record Animation as {figName.current}.gif</li>)
+           (<li onClick={()=>{startGif(figName)}}>🎞️ Record Animation as {figName}.gif</li>)
           }
-          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'png',filename: figName.current});}}>🖼️ Save as {figName.current}.png</li>
-          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'jpeg',filename: figName.current});}}>🏞️ Save as {figName.current}.jpg</li>
-          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'svg',filename: figName.current});}}>📐 Save as {figName.current}.svg</li>
-          <li onClick={()=>{Plotly.downloadImage(chartRef.current, {format: 'webp',filename: figName.current});}}>🅿️ Save as {figName.current}.webp</li>
+          <li onClick={()=>{saveFile('png', figName);}}>🖼️ Save as {figName}.png</li>
+          <li onClick={()=>{saveFile('jpeg', figName);}}>🏞️ Save as {figName}.jpg</li>
+          <li onClick={()=>{saveFile('svg', figName);}}>📐 Save as {figName}.svg</li>
+          <li onClick={()=>{saveFile('webp', figName);}}>🅿️ Save as {figName}.webp</li>
         </ul>}/>
       </ul>
       <div className="layout">
