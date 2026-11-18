@@ -144,8 +144,8 @@ $(function(){initNavTree('d8/db3/sim.html','../../',''); });
 <div class="line">                        #1: HPF each LGS WFS + LPF TTF WFS (default)</div>
 <div class="line">                        #-1: auto. 1 for LGS, 0 for NGS AO only.</div>
 <div class="line">#Focus offloading to telescope</div>
-<div class="line">sim.focus2tel = 0     #Offload focus to telescope. (engineering)</div>
-<div class="line">sim.epfocus2tel=0.01  #Integrator gain for telescope focus control</div>
+<div class="line">sim.focus2tel = 0     #Offload focus to telescope. (useful when DM stroke limited)</div>
+<div class="line">sim.epfocus2tel=0.001  #Integrator gain for telescope focus control</div>
 <div class="line">#Truth WFS reference vector update parameters</div>
 <div class="line">sim.aptwfs    = 1     #Truth WFS reference vector update leakage ap.</div>
 <div class="line">sim.eptwfs    = 0.05  #Truth WFS reference vector update integrator gain.</div>
