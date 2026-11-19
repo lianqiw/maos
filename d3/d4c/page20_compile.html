@@ -100,9 +100,9 @@ $(function(){initNavTree('d3/d4c/page20_compile.html','../../',''); });
   <div class="headertitle"><div class="title">Compile the Code </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md57"></a>
+<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 Compiling</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md58"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
 Prerequisites</h2>
 <ul>
 <li>Posix compatible platform: Linux, macOS, or WSL for windows. BSDs may work but are not actively verified.</li>
@@ -120,17 +120,17 @@ Prerequisites</h2>
 </ul>
 <p>In linux, use the native package manager (apt for Debian/Ubuntu, rpm for Fedora/Centos/RHEL and derivatives) to install.</p>
 <p>In macOS, it is convenient to use homebrew (<a href="https://brew.sh/">https://brew.sh/</a>) to install.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md59"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
 Download the code</h2>
 <p>We recommend using different folders to 1) store the source code, 2) compile the code (different directory can be used for different compiling options), and 3) run simulations.</p>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md60"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
 Option 1 (preferred)</h3>
 <p>The preferred method is to use the always up-to-data Git version: </p><div class="fragment"><div class="line">cd ~/work/programming</div>
 <div class="line">git clone https://github.com/lianqiw/maos.git maos</div>
 <div class="line">cd maos</div>
 <div class="line">./autogen.sh</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md61"></a>
+</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
 Option 2 (snapshot)</h3>
 <p>Download the tag version that is not formally released:</p>
 <div class="fragment"><div class="line">cd ~/work/programming</div>
@@ -139,14 +139,14 @@ Option 2 (snapshot)</h3>
 <div class="line">cd maos-2.8</div>
 <div class="line">./autogen.sh</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md62"></a>
+</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
 Option 3 (released)</h3>
 <p>There are released version that comes with <span class="tt">configure</span>. Use this if the utilities mentioned above are not available. In this case, do not try to update the <span class="tt">configure.ac</span> file which will trigger regeneration of <span class="tt">configure</span> and require these utilities.</p>
 <div class="fragment"><div class="line">cd ~/work/programming</div>
 <div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/maos-2.8.0.tar.gz</div>
 <div class="line">cd maos_2.8.0</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md63"></a>
+</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
 Option 4 (binary)</h3>
 <p>Instead of compiling the code, there are also pre-compiled binaries that can be downloaded. This option works the best when there is no desire to modify the code.</p>
 <div class="fragment"><div class="line">cd ~/work/maos</div>
@@ -155,7 +155,7 @@ Option 4 (binary)</h3>
 <div class="line">#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_amd64-2.8.0.tar.bz2 #for macos </div>
 <div class="line">#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_aarch64-2.8.0.tar.bz2 #for macos apple silicon</div>
 <div class="line">tar xvf maos_*.bz2</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md64"></a>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
 Compile the Code</h2>
 <p>Next we create another folder, where we are going to compile the code. example:</p>
 <div class="fragment"><div class="line">cd ~/work/maos</div>
@@ -163,7 +163,7 @@ Compile the Code</h2>
 <div class="line">$src_dir/configure</div>
 <div class="line">make -j4 #this will compile using 4 threads.</div>
 </div><!-- fragment --><p> You can replace <span class="tt">optim</span> with any directory name of your choice. The compiled executable is maos in the sub-folder <span class="tt">bin</span> of the compiling folder. You do not have to do <span class="tt">make install</span> to run the simulations, but if not, then you need to add <span class="tt">optim/bin</span> to your executable path (e.g. update your .bash_profile or .zshenv file <span class="tt">$PATH</span> variable).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md65"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
 Compiler options (Optional)</h2>
 <p>The default compiler for the system is used with optimization flags. There are a few optional switches or additional components that can be enabled when calling configure.</p>
 <p>To use a different compiler or enable debugging: </p><div class="fragment"><div class="line">$src_dir/configure CC=icc    #ICC compiler</div>
@@ -173,7 +173,7 @@ Compiler options (Optional)</h2>
 <div class="line">$src_dir/configure --disable-openmp #Use pthreads instead of openmp (openmp is the default)</div>
 <div class="line">$src_dir/configure --disable-double #Use single precision (double is the default)</div>
 <div class="line">$src_dir/configure --disable-scheduler #disable the built-in scheduler (for CPU cluster with job management)</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md66"></a>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
 GPU acceleration (Optional)</h2>
 <p>To enable GPU computing, first install nvidia graphics driver and cuda software development toolkit (SDK), and then issue the following command to ensure graphics configuration is correct: <code>nvidia-smi</code>. You should see all your nvidia gpus are listed. When <span class="tt">clang</span> is used as the C compiler, it will be used instead of <span class="tt">nvcc</span> to compute the <span class="tt">cuda</span> code.</p>
 <p>The configure can automatically detect cuda if <span class="tt">nvcc</span> is in the path, or if cuda is installed in <span class="tt">/usr/local/cuda</span>. For other locations, you need to pass the cuda directory to configure:</p>
@@ -182,7 +182,7 @@ GPU acceleration (Optional)</h2>
 <div class="fragment"><div class="line">maos -g-1    #disable GPU compute</div>
 <div class="line">maos -g0 -g2 #Only use gpu 0 and 2</div>
 <div class="line">maos -G2     #Automatically choose 2 gpus.</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md67"></a>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
 Matlab Mex Routines (Optional)</h2>
 <p>To compile mex routines for matlab, pass the matlab directory to configure if it is not in <code>$PATH:</code> </p>
 <div class="fragment"><div class="line">$src_dir/configure --with-matlab=$matlab_dir</div>
@@ -192,16 +192,16 @@ Matlab Mex Routines (Optional)</h2>
 <li>The <code>aolib()</code> exports many useful routines for use in <code>matlab</code>. Run <code>aolib()</code> to see the list of available functions.</li>
 <li>The <code>maos()</code> can be used to run maos within matlab. Run <code>maos()</code> to see instructions.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md68"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
 Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)</h2>
 <p>For macOS, it is the simplest to install gtk and gtk-mac-integration (only for gtk+-3) using homebrew (or macport). For manual install, follow the instructions on <a href="https://www.gtk.org/docs/installations/">page</a> to install gtk+ for osx and configure the envirionmental parameters. Make sure <span class="tt">pkg-config</span> is in the <span class="tt">PATH</span>. Version 2, 3, and 4 are supported. Highest version is chosen unless explicitly disabled (see below).</p>
 <p>Now rerun <span class="tt">autogen.sh</span>, <span class="tt">configure</span> and <span class="tt">make</span>. Monitor and drawdaemon should appear in <span class="tt">bin</span> folder now. To select gtk version when multiple ones are available: </p><div class="fragment"><div class="line">$src_dir/configure --disable-gtk-3 #disable gtk-3</div>
 <div class="line">$src_dir/configure --disable-gtk-4 #disable gtk-4 </div>
-</div><!-- fragment --> <h1 class="doxsection"><a class="anchor" id="autotoc_md69"></a>
+</div><!-- fragment --> <h1 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
 Browser User Interface</h1>
 <p>When <span class="tt">maos</span> is compiled with <span class="tt">libwebsockets</span>, there is a browser interface that can manage maos jobs, as well as plot current running jobs. The URL for this interface can be found in the output when <span class="tt">maos</span> runs. A tutorial is available at <a href="https://youtu.be/2gWJ9WdUk2Y">Youtube</a>.</p>
 <p><a href="https://youtu.be/2gWJ9WdUk2Y"><img src="../../monitor-html.jpg" alt="Browser User Interface" width="60%" class="inline"/></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md70"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
 Graphical User Interface</h1>
 <p>When GTK+ libraries are found in the system, additional executables will be compiled, <code>drawdaemon</code>, <code>drawres</code>, <code>drawbin</code> and <code>monitor</code> in the <code>bin</code> folder.</p>
 <ul>
@@ -210,7 +210,7 @@ Graphical User Interface</h1>
 <li>The <code>drawres</code> can be used to automatically plot the results folder.</li>
 <li>The <code>drawbin</code> can be used to automatically plot the OPDs or maps.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md71"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
 Monitor</h2>
 <p>In order to use monitor to monitor jobs in different machines, follow these steps:</p>
 <p>Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor.</p>
@@ -222,16 +222,16 @@ Monitor</h2>
 <li>When <span class="tt">libwebsockets</span> is enabled, there is also a browser based interface. The address is printed in the beginning of <span class="tt">maos</span> log message.</li>
 </ul>
 <p><img src="../../monitor-gtk3.jpg" alt="Monitor" width="60%" class="inline"/></p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md72"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
 Drawdaemon</h2>
 <p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <span class="tt">Plot selected jobs</span> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawdaemon windows can be started for the same or different jobs.</p>
 <p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line.</p>
 <p>Remote plotting: when a job is running remotely or in a headless machine, and <span class="tt">drawres</span>, <span class="tt">drawbin</span>, or <span class="tt">maos</span> plotting is issued, the <span class="tt">monitor</span> can open a <span class="tt">drawdaemon</span> in the local computer and plot remotely.</p>
 <p><img src="../../drawdaemon-gtk3.jpg" alt="Drawdaemon" width="60%" class="inline"/></p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md73"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md23"></a>
 Plotting results</h2>
 <p><span class="tt">drawres result_folder</span> can be used to plot the results. Wildcards are supported to match many folders. It will launch drawdaemon using an active monitor in a remote machine if the current shell does not have DISPLAY set. This can be used to view results remotely.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md74"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md24"></a>
 Python Scripts</h1>
 <p>MAOS comes with a few useful python routines location in <code>scripts/</code> folder:</p>
 <ul>
@@ -243,7 +243,7 @@ Python Scripts</h1>
 <li><span class="tt">maos_client</span> provides an interface to a running maos session. See next subsection.</li>
 </ul>
 <p>For <span class="tt">libaos.py</span> to work, an environment variable <span class="tt">MAOS_AOLIB</span> need to set to the path of <span class="tt">aolib.so</span>.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md75"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
 Interface to MAOS</h2>
 <p>It is possible to retrieve or override MAOS internal data when it is running. See the following steps:</p>
 <p>First, set up shell environment so that the libaos.py can find it.</p>

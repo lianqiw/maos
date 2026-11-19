@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['k_20band_20strehl_20ratio_0',['K band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md98',1,'']]],
+  ['k_20band_20strehl_20ratio_0',['K band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md48',1,'']]],
   ['keck_20conf_1',['examples/keck.conf',['../d8/d82/keck.html',1,'page34_conf']]],
   ['keck_5f2dm30_20conf_2',['examples/keck_2dm30.conf',['../d2/d72/keck_2dm30.html',1,'page34_conf']]],
   ['keck_5f2dm60_20conf_3',['examples/keck_2dm60.conf',['../d9/da8/keck_2dm60.html',1,'page34_conf']]],

@@ -71,7 +71,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(function(){initNavTree('d3/da0/md_claude__bugs__20261119.html','../../',''); });
+$(function(){initNavTree('d4/d1e/md_docs_2claude__bugs__20261119.html','../../',''); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -100,13 +100,13 @@ $(function(){initNavTree('d3/da0/md_claude__bugs__20261119.html','../../',''); }
   <div class="headertitle"><div class="title">Possible bugs reported (code unchanged) </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md7"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md60"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md61"></a>
 earlier rounds</h1>
 <ul>
 <li>cuda/math/curmat.cu curcellmm: trans[1]=='n'||trans[0]=='N' should likely be trans[1] </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md62"></a>
 batch15 tools/scheduler*</h1>
 <ul>
 <li>scheduler.c ~208/256/321: not-found check uses irun (last node) -&gt; warning never fires</li>
@@ -120,7 +120,7 @@ batch15 tools/scheduler*</h1>
 <li>scheduler_proxy.c ~295 DRAW_FIGFN: strchr(sep3) with sep3 NULL</li>
 <li>scheduler_lws.c ~282: pdata leak on failed stread </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md63"></a>
 batch11 sys/mex/skyc</h1>
 <ul>
 <li>skyc/skysim.c ~284 skysim_save: asteri already offset, indexed again by selaster</li>
@@ -140,7 +140,7 @@ batch11 sys/mex/skyc</h1>
 <li>sys/daemonize.c lock_file_version: retry loop unbounded (guard before label)</li>
 <li>sys/daemonize.c launch_exe: *(stexe-1) without bounds check </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md64"></a>
 batch10 math/sp*, zfarr, mex/interface.h</h1>
 <ul>
 <li>math/spmm.c ~370 spmulsp2: trans[1]=='t'||trans[1]=='t' (second should be 'c')</li>
@@ -154,7 +154,7 @@ batch10 math/sp*, zfarr, mex/interface.h</h1>
 <li>math/zfarr.c zfarr_push: x for i</li>
 <li>mex/interface.h: mx2kalman ignores Rn; cn2est2mx wtrecon-&gt;p[0] unchecked; mx2c/mx2d NULL checks after use </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md65"></a>
 batch12 sys/mem,misc,path,process*,readstr,scheduler_client,sha1</h1>
 <ul>
 <li>sys/readstr.c ~497 DO_TRANS: inner loop irow&lt;ncol should be irow&lt;nrow (non-square transpose wrong)</li>
@@ -169,7 +169,7 @@ batch12 sys/mem,misc,path,process*,readstr,scheduler_client,sha1</h1>
 <li><a class="el" href="../../d7/d29/scheduler__client_8c.html">sys/scheduler_client.c</a> call_addr2line: nans-=3 after 2-char "-&gt;", can underflow; print_backtrace_symbol sets timeouts before sock!=-1 check</li>
 <li>sys/mem.c inactive METHOD 2/3 branches: missing brace; memkey_del 0/1 used as size; memkey_init arg mismatch </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md66"></a>
 batch08 math/loc,map,mat,matbin,matcomp</h1>
 <ul>
 <li>math/mat.c ~577 X(flip): non-flipped axis scale 0 not 1; loops nx/2 rows -&gt; axis=1,2 wrong</li>
@@ -183,7 +183,7 @@ batch08 math/loc,map,mat,matbin,matcomp</h1>
 <li>math/loc.c ~1580 loc_angle: divide by count possibly 0</li>
 <li>math/matbin.c ~65 X(writedata): A-&gt;make_keywords before NULL check </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md67"></a>
 batch14 tools (monitor, ethtest, memdbg, mvm_cpu, psfgc...)</h1>
 <ul>
 <li>tools/monitor_gui.c ~438: extern int *sock_main vs definition int sock_main[2] (type mismatch -&gt; garbage)</li>
@@ -196,7 +196,7 @@ batch14 tools (monitor, ethtest, memdbg, mvm_cpu, psfgc...)</h1>
 <li>tools/mvm_cpu.c ~185: float sd=cos(theta) likely sin</li>
 <li>tools/psfgc.c ~197/202: psf_lgs NULL deref; wvls NULL indexed; wvlmat leak (also psfiris.c) </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md68"></a>
 batch13 sys/sock*,thread*,zstdio, tools/drawdaemon*</h1>
 <ul>
 <li>sys/sock.c ~150 socket_block: F_GETFD/F_SETFD with O_NONBLOCK should be F_GETFL/F_SETFL (never non-blocking)</li>
@@ -213,7 +213,7 @@ batch13 sys/sock*,thread*,zstdio, tools/drawdaemon*</h1>
 <li>tools/drawdaemon_io.c ~300 char_ellipsis: assumes all legends non-NULL and &gt;= len of legends[0]</li>
 <li>tools/drawdaemon_io.c ~150 flt2pix gray: divide by (max-min) unchecked </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md69"></a>
 batch09 math/mathmisc,numtype,random,matmmap,matmath</h1>
 <ul>
 <li>math/mathmisc.c readspint: writes *nx/*ny=0 when NULL</li>
@@ -228,7 +228,7 @@ batch09 math/mathmisc,numtype,random,matmmap,matmath</h1>
 <li>math/matmmap.c X(readdata_mmap): strdup(NULL keywords)</li>
 <li>math/matmmap.c X(cellnewsame_mmap): NULL fn becomes "(null)" </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md70"></a>
 batch07 maos/sim*,surf,twfs,utils,wfsgrad,wfsints, math/amoeba,bessik,blas,cell,fft</h1>
 <ul>
 <li>math/blas.c ~51 X(mm): B transpose test uses trans[0]=='C'||trans[0]=='c' -&gt; should be trans[1] [CONFIRMED by reading; same pattern as curcellmm]</li>
@@ -241,7 +241,7 @@ batch07 maos/sim*,surf,twfs,utils,wfsgrad,wfsints, math/amoeba,bessik,blas,cell,
 <li>math/cell.c ~205 cellresize: ny==1 realloc path when ny grows reinterprets layout</li>
 <li>maos/surf.c ~130 prop_surf_ncpa: dead isncpa check (harmless) </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md71"></a>
 batch05 lib/servo,slaving,stfun,turbulence,zernike; maos/ahst,dither_utils,filter,fdpcg,maos,moao,mvm_client</h1>
 <ul>
 <li>lib/turbulence.c ~300 genscreen_str: ny read with key "nx"; ~368 <a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(surfs,i)</a>-&gt;vx=vy should be -&gt;vy</li>
@@ -252,7 +252,7 @@ batch05 lib/servo,slaving,stfun,turbulence,zernike; maos/ahst,dither_utils,filte
 <li>maos/mvm_client.c mvm_client_close: sock_mvm not reset -&gt; double close in deinit</li>
 <li><a class="el" href="../../de/d78/maos_8c.html">maos/maos.c</a> maos_var put: newdata leaked; dcelladd into local when var NULL </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md72"></a>
 batch02 cuda/recon, cuda/sim, cuda/test (part)</h1>
 <ul>
 <li>cuda/recon/fit.cu do_hxpt cache path: alpha applied twice (alpha^2); do_hat uses 1</li>
@@ -267,7 +267,7 @@ batch02 cuda/recon, cuda/sim, cuda/test (part)</h1>
 <li>cuda/sim/cudata.cu gpu_init ntask==0: cudata_t/cuglobal leaked</li>
 <li>cuda/sim/pywfs.cu gpu_pywfs_mkg: displacex/y passed as thetax/thetay; message prints wrong nloc </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md73"></a>
 batch03 cuda/test, lib/accphi..libmisc</h1>
 <ul>
 <li>cuda/test/mvmfull_real.cu ~447: sd=cos(theta) likely sin</li>
@@ -284,7 +284,7 @@ batch03 cuda/test, lib/accphi..libmisc</h1>
 <li>lib/hyst.c hyst_dmat/dcell NULL hyst: dcp into local pointer copy</li>
 <li>lib/bessel_mode.c: k_cutoff&lt;1 -&gt; mode_max 0, doubling never grows </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md74"></a>
 batch01 cuda/math</h1>
 <ul>
 <li>cuda/math/kernel.h singular_pow/singular_gap: nstop int&amp; gets host stack address from cusvd_pow</li>
@@ -296,7 +296,7 @@ batch01 cuda/math</h1>
 <li>cuda/math/prop_map.cu <a class="el" href="../../d6/db6/classmap2map.html#a871442f9e4d57be83c9fb8edee78687a">map2map::init_l2d</a>: delay param unused</li>
 <li>NOTE: cuda/math/curmat.cu curcellmm trans[0]=='N' -&gt; trans[1]=='N' code fix present in working tree, not made by doc agents (user?) </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md75"></a>
 batch04 lib/locfft..readcfg</h1>
 <ul>
 <li>lib/mkh.c ~149/~289: renormalization bx[count]*=wtsum should be bx[ip]</li>
@@ -309,7 +309,7 @@ batch04 lib/locfft..readcfg</h1>
 <li>lib/pcg.c ~76: res[k] printed but only set when LOG_LEVEL&gt;1</li>
 <li>lib/mkw.c mkw_annular: cancels 1/(pi r^2) but mkw_circular may renormalize </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md23"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md76"></a>
 batch06 maos/parms..setup</h1>
 <ul>
 <li>maos/powfs.c ~257 sa_reduce: saasum summed before dresize -&gt; includes stale entries</li>

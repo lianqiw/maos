@@ -71,7 +71,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(function(){initNavTree('df/d8d/md_claude__review__20261119.html','../../',''); });
+$(function(){initNavTree('d8/d99/md_docs_2claude__review__20261119.html','../../',''); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -100,9 +100,9 @@ $(function(){initNavTree('df/d8d/md_claude__review__20261119.html','../../','');
   <div class="headertitle"><div class="title">MAOS bug-fix proposals (for review) </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md24"></a></p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md77"></a></p>
 <p>These are the proposed fixes for the items in <span class="tt">bugs.md</span>. All patches are based on commit <span class="tt">88beaf2da</span> (branch <span class="tt">strata</span>), and nothing is committed.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md78"></a>
 Files</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -115,7 +115,7 @@ Files</h1>
 <td class="markdownTableBodyNone">This file  </td><td class="markdownTableBodyNone">The per-item verdict tables from each group, below the summary.  </td></tr>
 </table>
 <p>To apply: <span class="tt">cd src &amp;&amp; git apply ../bugfix_proposals/all_fixes.patch</span> (or apply the group patches one at a time). To drop a single fix, edit the patch or revert that hunk after applying.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md26"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md79"></a>
 Verification of the combined patch</h1>
 <ul>
 <li><b>Build:</b> a full build of the combined tree with CUDA (sm_120) and OpenMP gives 0 errors.</li>
@@ -123,7 +123,7 @@ Verification of the combined patch</h1>
 <li><b>End-to-end:</b> I ran <span class="tt">scripts/maos_check.sh 5</span> (29 AO configs, GPU) twice on unpatched 88beaf2da and twice on the patched tree. Every difference between unpatched and patched is within the run-to-run spread of the unpatched build: up to about 9 nm in the MCAO CG/SVD/MVM/CBS cases and under 1 nm elsewhere. One case that looked shifted (FDPCG, +8 nm) was re-run on its own: unpatched 155.4 and 152.6 nm, patched 153.7 and 153.4 nm. So at D=5 m over 100 steps there is no measurable change. This test can't resolve small changes, and many fixes are on paths it doesn't exercise.</li>
 <li><b>Not compiled:</b> GTK and Matlab code, because there are no GTK or mex headers on this machine (<span class="tt">tools/monitor*</span>, <span class="tt">tools/drawdaemon*</span>, <span class="tt">tools/scheduler_lws.c</span>, <span class="tt">mex/*</span>). The <span class="tt">sys/process_apple.c</span> and <span class="tt">sys/process_bsd.c</span> changes are also unbuilt here. These were reviewed by reading only.</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md27"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md80"></a>
 Counts</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -137,7 +137,7 @@ Counts</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">ALREADY-FIXED by 88beaf2da  </td><td class="markdownTableBodyNone">7 (two were incomplete: see mkh.c and socket_block below)  </td></tr>
 </table>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md28"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
 Your earlier fixes in 88beaf2da that were incomplete</h1>
 <ul>
 <li><b><span class="tt">lib/mkh.c</span>:</b><ul>
@@ -148,7 +148,7 @@ Your earlier fixes in 88beaf2da that were incomplete</h1>
 <li><b><span class="tt">sys/sock.c <a class="el" href="../../df/d04/sock_8h.html#a7e9e0dd0702c7f7fbd7217a964a5047e">socket_block</a></span>:</b> <span class="tt">F_GETFD</span> was left next to the new <span class="tt">F_SETFL</span>. More importantly, now that <span class="tt">socket_block(sock,0)</span> really sets O_NONBLOCK, <span class="tt"><a class="el" href="../../df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a>(..., block=0)</span> would fail with EINPROGRESS, and drawdaemon would treat EAGAIN as a disconnect. The patch removes the non-blocking call in <span class="tt"><a class="el" href="../../df/d04/sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a></span>, whose <span class="tt">block</span> argument only controls retries, and makes drawdaemon's socket blocking. That restores the runtime behavior from before 88beaf2da. <b>Without this patch, 88beaf2da breaks scheduler and remote connections.</b></li>
 <li><b><span class="tt"><a class="el" href="../../de/d09/recon__tomo_8c.html" title="Setup tomography parameters.">maos/recon_tomo.c</a></span>:</b> <span class="tt">Tomo_iprop_do</span> had the same <span class="tt">wfs</span>/<span class="tt">wfsr</span> indexing bug (<span class="tt">hs</span> and <span class="tt">powfs</span>), plus two refactoring regressions: the transpose flag was lost in 7c6d019cf and <span class="tt">thetax</span>/<span class="tt">thetay</span> in 3756209f2. Together these made it a forward trace instead of the transpose. This only matters for CPU tomography with <span class="tt">tomo.square=1</span> and <span class="tt">dbg.tomo_hxw=0</span>.</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md29"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
 Fixes that can change simulation results</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -184,12 +184,12 @@ Fixes that can change simulation results</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><span class="tt">sys/readstr.c DO_TRANS</span>  </td><td class="markdownTableBodyNone">Non-square transposed config arrays (<span class="tt">[...]'</span>); no shipped config uses one  </td></tr>
 </table>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
 Security</h1>
 <ul>
 <li><b><span class="tt">tools/scheduler_http.c read_line_trim</span> / cookie:</b> an empty <span class="tt">~/.aos/htcookie</span> produced the cookie <span class="tt">""</span>, and <span class="tt">strstr(buf,"")</span> matches every request, which bypassed web authentication. A failed <span class="tt">getline</span> also wrote out of bounds. Both are fixed.</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md31"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
 Needs your decision</h1>
 <ol type="1">
 <li><b><span class="tt">lib/mkh.c</span> bilinear renormalization.</b><ul>
@@ -213,7 +213,7 @@ Needs your decision</h1>
 </ul>
 </li>
 </ol>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md32"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md85"></a>
 Noticed but not changed</h1>
 <ul>
 <li><span class="tt">skyc/star.c ~198</span>: <span class="tt"><a class="el" href="../../da/dfb/dmath_8h.html#a10830fb41f473ae929a5aee34361dec1">dadd</a>(&amp;tmp, 0, ...)</span> inside the wavelength loop overwrites instead of accumulating. It probably should be <span class="tt">bc=1</span>.</li>
@@ -223,11 +223,11 @@ Noticed but not changed</h1>
 <li><span class="tt">sys</span>: zfrewind doesn't reset the zstd decoder; async_init is unsafe for gz/zstd; lock_file_version leaks its fd; udp_recv doesn't bounds-check the packet index.</li>
 </ul>
 <hr  />
- <h1 class="doxsection"><a class="anchor" id="autotoc_md34"></a>
+ <h1 class="doxsection"><a class="anchor" id="autotoc_md87"></a>
 Per-group verdict tables</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md88"></a>
 Group: sys</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md89"></a>
 sys group: fixes</h3>
 <p>Base: <span class="tt">strata</span> @ 88beaf2da (the worktree was created from <span class="tt">master</span>, which does not contain 88beaf2da, so I reset the worktree branch to 88beaf2da first). <span class="tt">fixes/sys.patch</span> applies with <span class="tt">git apply</span> on 88beaf2da.</p>
 <p>Note: the patch also changes one line in <span class="tt">tools/drawdaemon_io.c</span> (see item 31 / sock.c socket_block). Check for overlap with the tools group's patch.</p>
@@ -308,7 +308,7 @@ sys group: fixes</h3>
 <p>Counts: FIX 33, ALREADY-FIXED 1 (zfeof, doc fixed), NOT-A-BUG 1 (mystrndup "" behavior, with an extra NULL-check fix), NEEDS-DECISION 1 (socket_block follow-up, patch applied; counted under FIX as well).</p>
 <p>High impact: #9 readstr DO_TRANS (changes parsed config values for non-square transposed arrays). #28 is not numerical, but it fixes a runtime regression that 88beaf2da introduced (scheduler/drawdaemon networking).</p>
 <p>Build check: <span class="tt">gcc -std=gnu11 -fsyntax-only -fopenmp -I. -I$optim -DHAVE_CONFIG_H</span> is clean (also with -Wall -Wextra) for bin.c, daemonize.c, mem.c, misc.c, path.c, <a class="el" href="../../d0/d85/process_8c.html">process.c</a> (which includes process_linux.c), readstr.c, <a class="el" href="../../d7/d29/scheduler__client_8c.html">scheduler_client.c</a>, sock.c, sockio.c, thread_pool.c and zstdio.c. thread_pool.c with USE_QUEUE=1/ENABLE_TP_TIMING=1 has no remaining <span class="tt">job-&gt;</span> errors (only the unrelated NTHREAD error). process_apple.c and process_bsd.c could not be checked on Linux. I did not syntax-check tools/drawdaemon_io.c (GTK); it is a one-character change.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md37"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md90"></a>
 Needs decision</h2>
 <p>**#28 socket_block / non-blocking sockets.** Once socket_block works correctly (88beaf2da plus the F_GETFL fix), every <span class="tt">socket_block(sock,0)</span> call really makes the socket non-blocking. The code was never written for that: connect_port does a plain connect() and the callers use stread/stwrite with SO_RCVTIMEO.</p><ul>
 <li>Option A (applied, recommended): keep socket_block correct, remove the <span class="tt">socket_block(sock,0)</span> call in connect_port (<span class="tt">block</span> only controls retries, as its doc already says), and change drawdaemon_io.c to <span class="tt">socket_block(sock,1)</span>. Runtime behavior is the same as before 88beaf2da.</li>
@@ -316,9 +316,9 @@ Needs decision</h2>
 <li>Option C: revert 88beaf2da's sock.c hunk. This is not recommended, because the function would stay wrong.</li>
 </ul>
 <p>If the orchestrator does not want this group's patch to touch tools/, the one-line drawdaemon_io.c change must still go into the tools patch. Otherwise drawdaemon will see EAGAIN as a disconnect.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md38"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md91"></a>
 Group: math</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md39"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md92"></a>
 math/ fixes</h3>
 <p>Base: commit 88beaf2da (strata). The patch was generated with <span class="tt">git diff</span> against 88beaf2da and verified with <span class="tt">git apply --check -R</span> in the worktree and with <span class="tt">patch -p1 --dry-run</span> on a clean <span class="tt">git archive 88beaf2da</span> tree. Doc blocks were updated where the documented behavior changed: X(add), X(interp1linear)/X(interp1log) </p><dl class="section return"><dt>Returns</dt><dd>, X(celldiff), X(spcell2sp), X(spdroptol) and readspint.</dd></dl>
 <p>Syntax check: <span class="tt">gcc -std=gnu11 -fsyntax-only -fopenmp -Wall -I. -I/home/lianqiw/work/maos/optim -I/home/lianqiw/.aos/include -DHAVE_CONFIG_H</span> on math/{d,s,c,z,l}math.c (the template wrappers; cmath/zmath include fft.c), math/loc.c, map.c, mathmisc.c, zfarr.c, random.c and cell.c. All are clean, with no errors or warnings. <span class="tt">fftw3.h</span> is in /home/lianqiw/.aos/include.</p>
@@ -399,7 +399,7 @@ math/ fixes</h3>
 <td class="markdownTableBodyNone">36  </td><td class="markdownTableBodyNone">math/cell.c:cellresize  </td><td class="markdownTableBodyNone">FIX  </td><td class="markdownTableBodyNone">The <span class="tt">A-&gt;ny==1</span> linear-realloc path reinterpreted the layout when nx shrank and ny&gt;1. That path is now limited to <span class="tt">ny==1\|\|nx&gt;=A-&gt;nx</span>, and other cases use the copy path. The same guard is applied to X(resize).  </td><td class="markdownTableBodyNone">normal  </td></tr>
 </table>
 <p>Counts: FIX 32, NOT-A-BUG 1, ALREADY-FIXED 1, NEEDS-DECISION 2 (1 applied, 1 not applied).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md40"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md93"></a>
 Needs decision</h2>
 <p>**#8 X(spcell2sp)** (patch applied). Options:</p><ul>
 <li>(a) Keep converting in place and free the replaced dense block. This preserves today's side effect: callers such as lib/muv.c <span class="tt">A-&gt;M</span> keep the sparsified block, with values below 1e-12 dropped. The risk is a use-after-free if the dense block is aliased elsewhere.</li>
@@ -411,16 +411,16 @@ Needs decision</h2>
 <li>(c) Add a caller-supplied scale argument.</li>
 </ul>
 <p>Any of these changes MAP tracking and the lib/kalman.c SDE fit when an initial value is exactly 0, so this is high impact. Recommendation: (c), or (b) for the minimal change.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md41"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md94"></a>
 Related notes (outside math/, not changed)</h2>
 <ul>
 <li>skyc/star.c ~198: <span class="tt"><a class="el" href="../../da/dfb/dmath_8h.html#a10830fb41f473ae929a5aee34361dec1">dadd</a>(&amp;tmp, 0, <a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(neaspec,ig,iwvl)</a>, wvlwt)</span> inside the wavelength loop uses bc=0, so each wavelength overwrites tmp instead of accumulating. bc should probably be 1. With fix #23, a wavelength weight of 0 would also zero tmp.</li>
 <li>skyc/powfs.c ~97: <span class="tt">dinterp1(psf1x, psf1y, psf2x, 0)</span> passes a 2-D xnew, which interp1 rejects (<span class="tt">xnew-&gt;ny!=1</span>). This is probably dead code or a latent error.</li>
 <li>X(interp1linear)/X(interp1log): an xnew exactly equal to the last grid point gets ydefault (<span class="tt">xxm&gt;=nmax1</span>). Not reported and not changed.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md42"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md95"></a>
 Group: lib</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md43"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md96"></a>
 lib group: bug triage</h3>
 <p>Base: <span class="tt">88beaf2da</span> (strata). The agent worktree started on master <span class="tt">f9d7c268a</span>, which does not contain 88beaf2da. The worktree branch was reset to 88beaf2da so that <span class="tt">lib.patch</span> applies to the post-fix tree. It touches only <span class="tt">lib/*.c</span>. Syntax check (<span class="tt">gcc -std=gnu11 -fsyntax-only -fopenmp ...</span>) is clean for all 15 changed files.</p>
 <table class="markdownTable">
@@ -493,13 +493,13 @@ lib group: bug triage</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">33  </td><td class="markdownTableBodyNone">lib/mkw.c:mkw_annular  </td><td class="markdownTableBodyNone">NEEDS-DECISION (no patch)  </td><td class="markdownTableBodyNone"><span class="tt"><a class="el" href="../../d9/dca/mkw_8h.html#a0d501dfe785d8d03a9d817d3380775d0">mkw_annular</a></span> cancels <span class="tt"><a class="el" href="../../d9/dca/mkw_8h.html#a3b65c8711d5fd4e09f68a920665d3da3">mkw_circular</a></span>'s factor using the analytic <span class="tt">1/(pi r^2)</span>. <span class="tt"><a class="el" href="../../d9/dca/mkw_8h.html#a3b65c8711d5fd4e09f68a920665d3da3">mkw_circular</a></span> additionally renormalizes to sum(W1)=1 whenever the numeric integral differs by more than 1e-12, so inner and outer get slightly different, uncancelled factors before the subtraction. The error is probably small (numerical-integration level), but fixing it changes W0/W1 for every annular pupil.  </td><td class="markdownTableBodyNone"><b>high</b> if fixed  </td></tr>
 </table>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md44"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md97"></a>
 mkh.c renormalization check (requested)</h2>
 <ul>
 <li>~289 (<span class="tt"><a class="el" href="../../d3/d56/mkh_8h.html#a1d56073029d5917e1269f6daebbdf01c">mkht_cubic</a></span>): <span class="tt">bx[ip]</span> is present (88beaf2da). However, <span class="tt">wtsum</span> was never accumulated in the cubic loop, so the block was dead. The patch adds <span class="tt">wtsum+=weight;</span>.</li>
 <li>~149 (<span class="tt"><a class="el" href="../../d3/d56/mkh_8h.html#a8ba9c83c5b84284bf29564539b9004fc">mkht</a></span>, bilinear): <b>not fixed</b> in 88beaf2da; it still had <span class="tt">bx[count]*=wtsum</span>. The patch fixes it.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md45"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md98"></a>
 Needs decision</h2>
 <p>**#20/#21 mkh renormalization (high impact).** Since 2014 (78d14e894), the bilinear <span class="tt"><a class="el" href="../../d3/d56/mkh_8h.html#a8ba9c83c5b84284bf29564539b9004fc">mkht</a></span> renormalization loop has scaled <span class="tt">bx[count]</span>, an unused slot, so it had no effect. Since 3ed706212, <span class="tt">alpha</span> has been applied only through that loop, so bilinear <span class="tt"><a class="el" href="../../d3/d56/mkh_8h.html#ab0842264aa0872e0964f2f896a38dc24">mkh</a></span> matrices also ignore <span class="tt">alpha</span>. In practice <span class="tt">alpha</span> is <span class="tt">cos(theta*dratio+aoi)</span>, which is 1 unless <span class="tt">dratio</span>/<span class="tt">aoi</span> are set. The fix changes HXW, HA, HXF, the NCPA HA, the pywfs <span class="tt">si</span>, and the mkdtf <span class="tt">si</span> at edge points where some interpolation neighbors are missing: they get renormalized to sum to <span class="tt">alpha</span>, the same as <span class="tt">prop()</span>. Options:</p><ul>
 <li>(a) Keep the patch (recommended): <span class="tt"><a class="el" href="../../d3/d56/mkh_8h.html#ab0842264aa0872e0964f2f896a38dc24">mkh</a></span> becomes consistent with <span class="tt">prop()</span> (edge extrapolation and alpha), and the user already approved the identical change at ~289.</li>
@@ -518,9 +518,9 @@ Needs decision</h2>
 </ul>
 <p>Option (a) changes the fitting weights for annular apertures (<span class="tt"><a class="el" href="../../d1/d52/recon__geom_8c.html">recon_geom.c</a>:197</span>), so it is high impact. No patch was applied.</p>
 <p>**#24 mtch bkgrnd_res.** This is a clear bug and the patch is applied, but it changes matched filters whenever <span class="tt">powfs.bkgrndc</span> does not equal 1. It is flagged for awareness.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md46"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md99"></a>
 Group: maos_skyc</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md47"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md100"></a>
 maos_skyc fixes</h3>
 <p>Base: patch was made against <b>88beaf2da</b> (strata branch, which includes the earlier bug-fix commit). The worktree started at f9d7c268a, which does not contain 88beaf2da, so I rebased the worktree onto 88beaf2da before writing the patch. <span class="tt">git apply --check</span> passes on 88beaf2da.</p>
 <table class="markdownTable">
@@ -572,7 +572,7 @@ maos_skyc fixes</h3>
 <td class="markdownTableBodyNone">22  </td><td class="markdownTableBodyNone"><a class="el" href="../../d2/d9f/parms_8c.html">maos/parms.c</a>:remove_empty_powfs  </td><td class="markdownTableBodyNone">FIX  </td><td class="markdownTableBodyNone">realloc used the old npowfs. npowfs is now updated first (realloc_maos handles size 0).  </td><td class="markdownTableBodyNone">low  </td></tr>
 </table>
 <p>Counts: FIX 17, NEEDS-DECISION 3 (2 with a patch applied), NOT-A-BUG 1, ALREADY-FIXED 1.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md48"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md101"></a>
 Needs decision</h2>
 <ul>
 <li><p class="startli">**#4 skyc/aster.c setup_aster_multirate.** Options:</p><ul>
@@ -589,9 +589,9 @@ Needs decision</h2>
 </li>
 <li>**#16 maos/powfs.c wfspupmask (unused).** The intended meta-pupil radius projected onto WFS iwfs's pupil is probably `d/2*(1-ht/hs_j)/(1-ht/hs_i)`, with the shift sx,sy also divided by `(1-ht/hs_i)`. Since the function is unused, the options are to remove it or to fix it if it is ever needed. Not patched.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md102"></a>
 Group: cuda</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md50"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md103"></a>
 cuda group: bug review</h3>
 <p>Base: commit 88beaf2da (branch strata). `git apply --check --cached cuda.patch` passes against it. Build check: every changed .cu file, plus <a class="el" href="../../db/db7/gpu__math_8cu.html">cuda/math/gpu_math.cu</a> and cuda/math/curmat.cu (they include the changed headers), was compiled with nvcc 13 using the project's CUDA_CFLAGS (-arch=sm_120, from optim/Makefile). All of them compiled with rc=0.</p>
 <table class="markdownTable">
@@ -656,7 +656,7 @@ cuda group: bug review</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">137  </td><td class="markdownTableBodyNone">cuda/test/mvm_test.cu:blockmv  </td><td class="markdownTableBodyNone">FIX  </td><td class="markdownTableBodyNone">The reduction into y was commented out. It is restored as a general (any BLOCKMV_TNY) sync + sum + atomicAdd, and the doc is fixed. The kernel's only call site is itself commented out.  </td><td class="markdownTableBodyNone">low (inactive test code)  </td></tr>
 </table>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md51"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md104"></a>
 Needs decision</h2>
 <p>No item is marked NEEDS-DECISION. Two related observations for the maintainer:</p>
 <ul>
@@ -667,16 +667,16 @@ Needs decision</h2>
 </li>
 <li><b>mvmfull_pipe.cu mtch_do:</b> the reduction relies on implicit warp-synchronous execution (no <span class="tt">volatile</span> or <span class="tt">__syncwarp</span>), which is unsafe on Volta and later. This is test code and was left unchanged.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md52"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md105"></a>
 High-impact items</h2>
 <ul>
 <li>125: init_moao WFS MOAO DM wiring.</li>
 <li>131: gpu_pywfs_mkg displacement, which changes the GPU-computed PWFS GA for altitude DMs.</li>
 <li>147: cusvd_pow singular value truncation now actually happens, which changes GPU svd_pow results for NX&gt;500.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md53"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md106"></a>
 Group: tools_mex</h2>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md54"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md107"></a>
 tools_mex fixes (base: 88beaf2da)</h3>
 <p>Patch: <span class="tt">tools_mex.patch</span>. It was made against 88beaf2da, and it still applies after <span class="tt">sys.patch</span>'s change to <span class="tt">tools/drawdaemon_io.c</span>. None of these changes affect numerical simulation results: tools/ and mex/ are not part of the maos/skyc simulation path.</p>
 <table class="markdownTable">
@@ -749,13 +749,13 @@ tools_mex fixes (base: 88beaf2da)</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">33  </td><td class="markdownTableBodyNone">tools/drawdaemon_io.c: flt2pix (gray)  </td><td class="markdownTableBodyNone">FIX  </td><td class="markdownTableBodyNone"><span class="tt">255/(max-min)</span> divided by zero for a constant image, for example all zeros. Now guarded the same way as the color branch (scale 0, mid-gray).  </td><td class="markdownTableBodyNone">normal  </td></tr>
 </table>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md55"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md108"></a>
 Needs decision</h2>
 <ul>
 <li>**#23 ethtest_standalone.c connect_port F_SETFD.** Options: (a) delete the no-op <span class="tt">fcntl</span> line; (b) change it to <span class="tt">F_SETFL</span> and have <span class="tt">client()</span> call <span class="tt">connect_port(...,1,...)</span>, i.e. blocking; (c) change it to <span class="tt">F_SETFL</span> and add proper EINPROGRESS/poll handling. Recommendation: (a), or (b) together with the caller change. Test program, low priority. Not patched.</li>
 <li>**#31 GTK4 scroll direction** (patched). If the GTK4 "scroll down zooms in" behavior was intended, keep the truncation fix and drop the sign flip.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md56"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md109"></a>
 Build check</h2>
 <ul>
 <li>Clean with <span class="tt">gcc -fsyntax-only -Wall</span> (HAVE_LIBZSTD and HAVE_OPENSSL on via config.h): scheduler.c, scheduler_http.c, scheduler_proxy.c, ethtest.c, mvm_cpu.c, psfgc.c, psfiris.c.</li>

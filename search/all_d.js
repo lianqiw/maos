@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['h_0',['batch10 math/sp*, zfarr, mex/interface.h',['../d3/da0/md_claude__bugs__20261119.html#autotoc_md11',1,'']]],
-  ['h_20band_20strehl_20ratio_1',['H band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md97',1,'']]],
+  ['h_0',['batch10 math/sp*, zfarr, mex/interface.h',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md64',1,'']]],
+  ['h_20band_20strehl_20ratio_1',['H band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md47',1,'']]],
   ['ha_2',['HA',['../d6/d94/maos_2types_8h.html#a25e66f4657bee58467185d1e6bb04fe2',1,'moao_t::HA'],['../d6/d94/maos_2types_8h.html#aa4cd45f177953b9157d112fec870e0a6',1,'fit_t::HA']]],
   ['ha_5fncpa_3',['HA_ncpa',['../d6/d94/maos_2types_8h.html#a3612776b64d8632b7ed1f8a0e58addbf',1,'recon_t']]],
   ['hashlittle_4',['hashlittle',['../d6/d92/hashlittle_8h.html#a8fcafa39241f09d13a63a0f9756772cc',1,'hashlittle.c']]],
@@ -10,7 +10,7 @@ var searchData=
   ['hdm_7',['hdm',['../d6/d94/maos_2types_8h.html#a0c2374807453947d95ba95153812390e',1,'ngsmod_t']]],
   ['header_5ft_8',['header_t',['../d3/d7f/bin_8h.html#de/d7e/structheader__t',1,'']]],
   ['herr_9',['Herr',['../d6/d94/maos_2types_8h.html#af4555b7c44a8fb404144f8033d72bee2',1,'recon_t']]],
-  ['high_20impact_20items_10',['High-impact items',['../df/d8d/md_claude__review__20261119.html#autotoc_md52',1,'']]],
+  ['high_20impact_20items_10',['High-impact items',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md105',1,'']]],
   ['hipowfs_11',['hipowfs',['../d4/d38/parms_8h.html#a3e50cea76bf5797a8cd8186ade5db69d',1,'parms_t']]],
   ['hipowfs_5fhsmax_12',['hipowfs_hsmax',['../d4/d38/parms_8h.html#ac61a8d956b15cb9fdce6b860e89ef272',1,'parms_t']]],
   ['hipowfs_5fhsmin_13',['hipowfs_hsmin',['../d4/d38/parms_8h.html#a891bcd366c74ce693e6afbb95e2eb78a',1,'parms_t']]],

@@ -1,11 +1,11 @@
 var searchData=
 [
-  ['earlier_20fixes_20in_2088beaf2da_20that_20were_20incomplete_0',['Your earlier fixes in 88beaf2da that were incomplete',['../df/d8d/md_claude__review__20261119.html#autotoc_md28',1,'']]],
-  ['earlier_20rounds_1',['earlier rounds',['../d3/da0/md_claude__bugs__20261119.html#autotoc_md8',1,'']]],
-  ['equation_2',['Maxwell Equation',['../d4/d15/algorithm.html#autotoc_md103',1,'']]],
-  ['error_3',['error',['../dd/da9/page40_results.html#autotoc_md85',1,'Wavefront error'],['../d6/d3f/page43_nfiraos.html#autotoc_md95',1,'Wavefront error']]],
+  ['earlier_20fixes_20in_2088beaf2da_20that_20were_20incomplete_0',['Your earlier fixes in 88beaf2da that were incomplete',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md81',1,'']]],
+  ['earlier_20rounds_1',['earlier rounds',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md61',1,'']]],
+  ['equation_2',['Maxwell Equation',['../d4/d15/algorithm.html#autotoc_md53',1,'']]],
+  ['error_3',['error',['../dd/da9/page40_results.html#autotoc_md35',1,'Wavefront error'],['../d6/d3f/page43_nfiraos.html#autotoc_md45',1,'Wavefront error']]],
   ['error_20budget_20breakdown_4',['Error Budget Breakdown',['../da/dc3/page30_run.html#sect-ebb',1,'']]],
-  ['ethtest_20memdbg_20mvm_5fcpu_20psfgc_5',['batch14 tools (monitor, ethtest, memdbg, mvm_cpu, psfgc...)',['../d3/da0/md_claude__bugs__20261119.html#autotoc_md14',1,'']]],
+  ['ethtest_20memdbg_20mvm_5fcpu_20psfgc_5',['batch14 tools (monitor, ethtest, memdbg, mvm_cpu, psfgc...)',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md67',1,'']]],
   ['evl_5fcir30_20conf_6',['evl_cir30.conf',['../dd/de8/evl_cir30.html',1,'page34_conf']]],
   ['evl_5fcir60_20conf_7',['evl_cir60.conf',['../df/d99/evl_cir60.html',1,'page34_conf']]],
   ['evl_5foa_20conf_8',['evl_oa.conf',['../dc/d93/evl_oa.html',1,'page34_conf']]],
