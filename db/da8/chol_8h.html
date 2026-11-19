@@ -222,7 +222,14 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Factorize a sparse array into LL' with reordering. </p>
+<p>Factorize a sparse array into LL' with reordering. Errors out if the factorization fails.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">A_in</td><td>Symmetric positive definite sparse matrix. Only the upper triangular part is used. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated cholesky factor, or NULL if A_in is NULL. Free with chol_free(). </dd></dl>
 
 </div>
 </div>
@@ -244,7 +251,15 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Alternative interface </p>
+<p>Alternative interface to chol_factorize(). Returns the lower triangular cholesky factor as dsp and, if Cp is not NULL, the permutation vector in *Cp.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">Cp</td><td>If not NULL, *Cp is set to a newly allocated permutation vector. The caller frees it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A_in</td><td>Symmetric positive definite sparse matrix. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated lower triangular cholesky factor. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -271,7 +286,15 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Solve A*x=y where the cholesky factor of A is stored in A. </p>
+<p>Solve A*x=y where the cholesky factor of A is stored in A.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">x</td><td>Solution. Allocated if NULL; otherwise overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Cholesky factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>Right hand side. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -293,7 +316,15 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Solve A*x=y where Y is sparse. Not good idea to use dsp ** as chol_solve because the result may have different nzmax. </p>
+<p>Solve A*x=y where Y is sparse. Not good idea to use dsp ** as chol_solve because the result may have different nzmax.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Cholesky factor with the native cholmod factor L. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>Sparse right hand side. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse solution. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -311,7 +342,13 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free cholesky factor. </p>
+<p>Free cholesky factor.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>Cholesky factor to free. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -338,7 +375,14 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Save cholesky factor and permutation vector to file. </p>
+<p>Save cholesky factor and permutation vector to file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Cholesky factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -360,7 +404,14 @@ Cp</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read cholesky factor form file. In the matlab convention, the upper triangle is saved. </p>
+<p>Read cholesky factor form file. In the matlab convention, the upper triangle is saved.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated cholesky factor. Free with chol_free(). </dd></dl>
 
 </div>
 </div>
@@ -383,7 +434,14 @@ Cp</td>
       </table>
 </div><div class="memdoc">
 <p>Convert the internal data type cholesky factor into the lower left diagonal and permutation vector. The internal data A-&gt;L is freed if keep is 0.</p>
-<p>This routine works only if the factor is using simplicity factor. not supernodal. so, in chol_factorize, we have set c.final_super=0, so that the final result is always in simplicity factor. </p>
+<p>This routine works only if the factor is using simplicity factor. not supernodal. so, in chol_factorize, we have set c.final_super=0, so that the final result is always in simplicity factor.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>Cholesky factor. Cl and Cp are filled. Does nothing if A-&gt;L is not set or Cl/Cp already exist. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keep</td><td>Whether to keep the internal factor A-&gt;L (and A-&gt;c). If kept, Cp references A-&gt;L-&gt;Perm. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

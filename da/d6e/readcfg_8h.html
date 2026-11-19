@@ -107,10 +107,8 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:acf12b4b509f4a89bce6b14cbe171d758" id="r_acf12b4b509f4a89bce6b14cbe171d758"><td class="memItemLeft" align="right" valign="top"><a id="acf12b4b509f4a89bce6b14cbe171d758" name="acf12b4b509f4a89bce6b14cbe171d758"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config_prefix</b> (const char *fn, const char *prefix, const char *prekey)</td></tr>
-<tr class="memitem:ac7f7925edc9875dac2770938ecca4d21" id="r_ac7f7925edc9875dac2770938ecca4d21"><td class="memItemLeft" align="right" valign="top"><a id="ac7f7925edc9875dac2770938ecca4d21" name="ac7f7925edc9875dac2770938ecca4d21"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (const char *fn, int priority)</td></tr>
+<tr class="memitem:acf12b4b509f4a89bce6b14cbe171d758" id="r_acf12b4b509f4a89bce6b14cbe171d758"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acf12b4b509f4a89bce6b14cbe171d758">open_config_prefix</a> (const char *fn, const char *prefix, const char *prekey)</td></tr>
+<tr class="memitem:ac7f7925edc9875dac2770938ecca4d21" id="r_ac7f7925edc9875dac2770938ecca4d21"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac7f7925edc9875dac2770938ecca4d21">open_config</a> (const char *fn, int priority)</td></tr>
 <tr class="memitem:a7985dcf84dcc547bc18df8a29b616d76" id="r_a7985dcf84dcc547bc18df8a29b616d76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7985dcf84dcc547bc18df8a29b616d76">close_config</a> (const char *format,...)</td></tr>
 <tr class="memitem:a73c95aaed91c735a3fdc93701f6d964f" id="r_a73c95aaed91c735a3fdc93701f6d964f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a73c95aaed91c735a3fdc93701f6d964f">readcfg_peek</a> (const char *format,...)</td></tr>
 <tr class="memitem:a2e922a9c36a239462733acec6cd00827" id="r_a2e922a9c36a239462733acec6cd00827"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e922a9c36a239462733acec6cd00827">readcfg_peek_n</a> (const char *format,...)</td></tr>
@@ -152,6 +150,70 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="acf12b4b509f4a89bce6b14cbe171d758" name="acf12b4b509f4a89bce6b14cbe171d758"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf12b4b509f4a89bce6b14cbe171d758">&#9670;&#160;</a></span>open_config_prefix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void open_config_prefix </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>config_in</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>prefix</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>prekey</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Load config_in with each key prefixed by prefix. The priority and index are taken from the existing record prekey so that the new entries override in the same order as prekey.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_in</td><td>The .conf file to read, or a string of key=value entries. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">prefix</td><td>Prefix of each key. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">prekey</td><td>The existing key whose priority and index are used. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac7f7925edc9875dac2770938ecca4d21" name="ac7f7925edc9875dac2770938ecca4d21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7f7925edc9875dac2770938ecca4d21">&#9670;&#160;</a></span>open_config()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void open_config </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>config_in</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>priority</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Open config_in (a .conf file or key=value string) and load the entries with given priority. See open_config_full().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_in</td><td>The .conf file to read, or a string of key=value entries. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priorities of keys. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a7985dcf84dcc547bc18df8a29b616d76" name="a7985dcf84dcc547bc18df8a29b616d76"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7985dcf84dcc547bc18df8a29b616d76">&#9670;&#160;</a></span>close_config()</h2>
 
@@ -170,7 +232,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Save all configs to file and check for unused config options. </p>
+<p>Save all configs to file and check for unused config options.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the output file name, followed by its arguments. NULL to skip saving. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -192,7 +260,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check whether a have a record of a key. </p>
+<p>Check whether a have a record of a key.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the key exists, 0 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -214,7 +289,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check the size of an array input </p>
+<p>Check the size of an array input</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of entries in the value, or 0 if the key does not exist. </dd></dl>
 
 </div>
 </div>
@@ -236,7 +318,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return priority value of the record </p>
+<p>Return priority value of the record</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The priority, or 0 if the key does not exist. </dd></dl>
 
 </div>
 </div>
@@ -258,7 +347,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return index value of the record </p>
+<p>Return index value of the record</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The input order index, or 0 if the key does not exist. </dd></dl>
 
 </div>
 </div>
@@ -280,7 +376,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Ignore an entry and do not warn if it does not exist. </p>
+<p>Ignore an entry and do not warn if it does not exist.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -302,7 +404,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain a raw value from the key. </p>
+<p>Obtain a raw value from the key.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the internal value string with surrounding quotes and spaces skipped (the end is not truncated), or NULL if not found. Do not free. </dd></dl>
 
 </div>
 </div>
@@ -324,7 +433,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain a string value from the key. </p>
+<p>Obtain a string value from the key.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated string with surrounding quotes removed, or NULL if not found or empty; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -346,7 +462,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read integer </p>
+<p>Read integer value of the key specified by format. Warns and returns 0 if not found. Errors if the value is not an integer.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The integer value. </dd></dl>
 
 </div>
 </div>
@@ -368,7 +491,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read real </p>
+<p>Read real value of the key specified by format. Warns and returns 0 if not found.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The real value. </dd></dl>
 
 </div>
 </div>
@@ -405,7 +535,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read string array of len elements </p>
+<p>Read string array of len elements</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ret</td><td>The string array. If len is nonzero and *ret is set, it is pre-allocated with len entries; otherwise it is allocated. The caller frees it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of entries read, not including those copied when relax is set. </dd></dl>
 
 </div>
 </div>
@@ -442,7 +582,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read integer array of len elements </p>
+<p>Read integer array of len elements</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ret</td><td>The integer array. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated. The caller frees it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of values in *ret, including those filled when relax is set, or -1 on error. </dd></dl>
 
 </div>
 </div>
@@ -479,7 +629,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read integer array of len elements </p>
+<p>Read real array of len elements</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ret</td><td>The real array. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated. The caller frees it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of values in *ret, including those filled when relax is set, or -1 on error. </dd></dl>
 
 </div>
 </div>
@@ -511,16 +671,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read as a dmat. It can be a file name or an array. </p>
+<p>Read as a dmat. It can be a file name or an array.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of elements requested  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>1: allow fewer values and fill the rest  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>input </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of elements requested. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted and filled with the last value: 0 no, 1 only if a single entry is given, 2 any number. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key that needs the value. Used for error messages. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The input value string. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated dmat, or NULL if str is NULL or empty; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -552,7 +713,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read as a dmat. It can be a file name or an array. </p>
+<p>Read as a dmat. It can be a file name or an array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of elements requested. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated dmat, or NULL if not found or empty; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -584,7 +754,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read as an lmat. </p>
+<p>Read as an lmat.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of elements requested. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated lmat, or NULL if not found or empty; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -606,7 +785,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>open_config</b> (cons
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read dcell </p>
+<p>Read dcell from the file whose name is the value of the key specified by format. Returns NULL if the key does not exist.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>The printf style format of the key, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated dcell, or NULL; the caller frees it. </dd></dl>
 
 </div>
 </div>

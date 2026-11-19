@@ -2,6 +2,7 @@ var maos_2utils_8h =
 [
     [ "remove_lock", "d1/d57/maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20", null ],
     [ "parse_args", "d1/d57/maos_2utils_8h.html#ab378e384b5122058cbcb93fd61c9a96c", null ],
+    [ "free_arg", "d1/d57/maos_2utils_8h.html#af165695540a14022995fcd8dc6dc7f3c", null ],
     [ "evl_keywords", "d1/d57/maos_2utils_8h.html#aaa75b5b04fbbb1aa2917bf328634b532", null ],
     [ "mkamp", "d1/d57/maos_2utils_8h.html#a9d77bf8d1060f2b89962556f1b3b8d3e", null ],
     [ "maxapriori", "d1/d57/maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e", null ],

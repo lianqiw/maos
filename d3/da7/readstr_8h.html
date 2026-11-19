@@ -148,17 +148,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Group all routines that are used to parse values from string that contain key=value pairs. Obtain a string array value from the key. String entries must be separated by coma [,]. Enclosing with quote is optional, but necessary to protect spaces. Examples: []: one empty string [,]: two empty strings [a,b]: two strings: "a" and "b"; [a,b,]: three strings, "a", "b", and "" ['a b']: one string "a b". </p>
+<p>Group all routines that are used to parse values from string that contain key=value pairs. Obtain a string array value from the key. String entries must be separated by coma [,]. Enclosing with quote is optional, but necessary to protect spaces. Examples: []: one empty string [,]: two empty strings [a,b]: two strings: "a" and "b"; [a,b,]: three strings, "a", "b", and "" ['a b']: one string "a b".</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>Result  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>max number f values to read  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted. If true, will copy from last.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value.  </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">res</td><td>Result. If len is nonzero and *res is set, it is pre-allocated with len entries; otherwise it is allocated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>max number of values to read. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">sdata</td><td>Input string </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of entries, including those copied when relax is set. </dd></dl>
 
 </div>
 </div>
@@ -185,15 +186,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read in a number from the value string. Will interpret +,0,*,/ operators if there is nospace in between. *endptr0 will be updated to point to the next valid entry, or at separator like coma (spaced are skipped). </p>
+<p>Read in a number from the value string. Will interpret +,0,*,/ operators if there is nospace in between. *endptr0 will be updated to point to the next valid entry, or at separator like coma (spaced are skipped).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">endptr0</td><td>Location in Input string after readed number. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">endptr0</td><td>Location in Input string after readed number. May be NULL. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>The number, 0 if data is empty, or NAN if parsing failed. </dd></dl>
 
 </div>
 </div>
@@ -248,20 +250,21 @@ Functions</h2></td></tr>
 <p>Read numerical array from a string. if len is nonzero, <em>ret should be already allocated. NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab) Can read in the following formats: [1 2 3] as 3 rows, 1 col [1 2 3] in memory [1 2 3]+2 as [3 4 5] in memory 2</em>[1 2 3] or [1 2 3]*2 as [2 4 6] in memory [1 2 3]/2 as [0.5 1 1.5] in memory 2/[1 2 3] as [2/1 2/2 2/3] in memory 2/[1 2 3]*2+1 as [5 3 7/3] in memory</p>
 <p>2-d arrays are groups as column vecotrs (in contrast to matlab that uses rows); semi-colon is used to separate columns. [1 2 3; 4 5 6] is 2 d array, 3 rows, 2 columns. In memory is stored as [1 2 3 4 5 6] transpose is supported: [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]</p>
 <p>when there is no [], only read until there is ';', '<br  />
-', or end of str. </p><dl class="section return"><dt>Returns</dt><dd>Number of values actually read not including duplicated when relax is set. </dd></dl>
+', or end of str.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">nrow0</td><td>Number of rows (nx)  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ncol0</td><td>Number of columns (ny)  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted. If true, will copy from last.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Data type  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value.  </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ret</td><td>Result. If len is nonzero, it may be pre-allocated with len entries; otherwise it is allocated. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nrow0</td><td>Number of rows (nx). May be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">ncol0</td><td>Number of columns (ny). May be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Max number of values to read. 0 means no limit. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">relax</td><td>Whether fewer entries are permitted: 0 no, 1 only if a single entry is given, 2 any number. Missing entries are copied from last. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Data type (M_INT, M_LONG, M_DBL, or M_FLT). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>the key that needs the value. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of values in *ret, including those filled when relax is set, or -1 on error. </dd></dl>
 
 </div>
 </div>
@@ -283,7 +286,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return start of valid region and update pend (if set) to end of valid region. Does not modify the string </p>
+<p>Return start of valid region and update pend (if set) to end of valid region. Does not modify the string. Leading and trailing spaces and matching quotes are removed.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Start of the string. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pend</td><td>End of the string (exclusive). Uses the string end if NULL or *pend is NULL. Updated to the end of valid region, or NULL if it is empty. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Start of valid region, or NULL if it is empty. Points into the input string. </dd></dl>
 
 </div>
 </div>
@@ -305,7 +316,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Search and return the value correspond to key. Case is ignored; NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign. </p>
+<p>Search and return the value correspond to key. Case is ignored; NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>String containing key=value pairs. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Pointer to the value in keywords, or NULL if not found. </dd></dl>
 
 </div>
 </div>
@@ -327,7 +346,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a number from the header with key </p>
+<p>Read a number from the header with key</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>String containing key=value pairs. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The number, or NAN if not found. </dd></dl>
 
 </div>
 </div>
@@ -349,7 +376,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a number from the header and verify. </p>
+<p>Read a number from the header and verify. Calls error() if not found or invalid.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>String containing key=value pairs. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The number. </dd></dl>
 
 </div>
 </div>
@@ -376,7 +411,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a number from the header and use value0 if not found. </p>
+<p>Read a number from the header and use value0 if not found.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>String containing key=value pairs. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The key. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value0</td><td>Default value. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The number, or value0 if not found or invalid. </dd></dl>
 
 </div>
 </div>

@@ -7,6 +7,8 @@ var mathmisc_8h =
     [ "maxminlong", "df/d2b/mathmisc_8h.html#aaaaed679d152deb02470ebcb73919242", null ],
     [ "nextpow2", "df/d2b/mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2", null ],
     [ "nextfftsize", "df/d2b/mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca", null ],
+    [ "mylog2", "df/d2b/mathmisc_8h.html#ae0a9c8af7043c7b58bf51d49d8a48ea9", null ],
+    [ "golden_section_search", "df/d2b/mathmisc_8h.html#aa9c48e33e0913833217cf18edacc69e6", null ],
     [ "readspint", "df/d2b/mathmisc_8h.html#a1889170b9cdf1b140a907bc15a94ec83", null ],
     [ "readvec", "df/d2b/mathmisc_8h.html#a35d1cc335d45d63efe5d6692256b9438", null ]
 ];

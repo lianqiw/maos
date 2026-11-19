@@ -131,15 +131,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>hashlittle.c contains a hash function used to hash a chunk of data and return a hash number that can be used to identify the data. Apply with care to double floating numbers because of round off error. hash the data and return an hash number. </p><dl class="section return"><dt>Returns</dt><dd>a hash number </dd></dl>
+<p>hashlittle.c contains a hash function used to hash a chunk of data and return a hash number that can be used to identify the data. Apply with care to double floating numbers because of round off error. Hash the data and return a hash number. For long data only a subset of the words (stride length/10000) is sampled.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The data  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data in byte  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">initval</td><td>The initial hash number </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>The data. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data in bytes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">initval</td><td>The initial hash number. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>The hash number. </dd></dl>
 
 </div>
 </div>

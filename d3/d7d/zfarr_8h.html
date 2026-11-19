@@ -104,8 +104,7 @@ $(function(){initNavTree('d3/d7d/zfarr_8h.html','../../',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a79e8217928d0be5ebaeabe0df079d385" id="r_a79e8217928d0be5ebaeabe0df079d385"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a79e8217928d0be5ebaeabe0df079d385">zfarr_init2</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
-<tr class="memitem:af03bf97cddc74f885360118c25140018" id="r_af03bf97cddc74f885360118c25140018"><td class="memItemLeft" align="right" valign="top"><a id="af03bf97cddc74f885360118c25140018" name="af03bf97cddc74f885360118c25140018"></a>
-zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *format,...)</td></tr>
+<tr class="memitem:af03bf97cddc74f885360118c25140018" id="r_af03bf97cddc74f885360118c25140018"><td class="memItemLeft" align="right" valign="top">zfarr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af03bf97cddc74f885360118c25140018">zfarr_init</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *format,...)</td></tr>
 <tr class="memitem:ab81474f55c843efb1d1a3df0b427aef1" id="r_ab81474f55c843efb1d1a3df0b427aef1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab81474f55c843efb1d1a3df0b427aef1">zfarr_push</a> (zfarr *ca, int i, const_anyarray A)</td></tr>
 <tr class="memitem:a749eb5424ce0ab50cc3ad55b1560ddf3" id="r_a749eb5424ce0ab50cc3ad55b1560ddf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a749eb5424ce0ab50cc3ad55b1560ddf3">zfarr_close</a> (zfarr *ca)</td></tr>
 <tr class="memitem:a4da312d93e7d98d003098db6976392fc" id="r_a4da312d93e7d98d003098db6976392fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4da312d93e7d98d003098db6976392fc">zfarr_close_n</a> (zfarr **ca, int nc)</td></tr>
@@ -146,7 +145,58 @@ zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell </p>
+<p>Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows of the cell array. 0 if unknown. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns of the cell array. 0 if unknown. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Keywords written to the header. May be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated zfarr, or NULL if the file name is empty; close it with zfarr_close(). </dd></dl>
+
+</div>
+</div>
+<a id="af03bf97cddc74f885360118c25140018" name="af03bf97cddc74f885360118c25140018"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af03bf97cddc74f885360118c25140018">&#9670;&#160;</a></span>zfarr_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">zfarr * zfarr_init </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>nx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>ny</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>format</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Same as zfarr_init2() without keywords.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows of the cell array. 0 if unknown. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns of the cell array. 0 if unknown. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated zfarr, or NULL if the file name is empty; close it with zfarr_close(). </dd></dl>
 
 </div>
 </div>
@@ -173,7 +223,15 @@ zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Append a A of type type into the zfarr ca, at location i. Append if i==0. </p>
+<p>Write A into the zfarr ca at location i. Skipped locations are filled with empty data if the total size is known. Append at the current location if i&lt;=0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ca</td><td>The zfarr object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i</td><td>Location to write to, or &lt;=0 to append. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A_</td><td><a class="el" href="../../d5/d21/class_array.html">Array</a> to write. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -191,7 +249,13 @@ zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Close the zfarr. </p>
+<p>Close the zfarr. Fills unwritten elements with empty data if the total size was specified, or updates the header with the actual count otherwise. Frees ca.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ca</td><td>The zfarr object. Freed on return. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -213,7 +277,14 @@ zfarr *&#160;</td><td class="memItemRight" valign="bottom"><b>zfarr_init</b> (<a
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Close an array of zfarr </p>
+<p>Close an array of zfarr and free the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ca</td><td><a class="el" href="../../d5/d21/class_array.html">Array</a> of zfarr objects. Each and the array itself are freed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nc</td><td>Number of elements in ca. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

@@ -141,16 +141,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke. For details, see the documentation 50_hyst.md </p>
+<p>Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke. For details, see the documentation 50_hyst.md</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">hysteresis</td><td>The ratio of the maximum difference of ascending/descending curve over 2*stroke.  </td></tr>
-    <tr><td class="paramname">alpha</td><td>The alpha parameter  </td></tr>
-    <tr><td class="paramname">stroke</td><td>The DM command is from -stroke to stroke  </td></tr>
-    <tr><td class="paramname">nact</td><td>Number of actuators </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hysteresis</td><td>The ratio of the maximum difference of ascending/descending curve over 2*stroke. Between 0 and 1. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>The alpha parameter. Negative to use the default of 2. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stroke</td><td>The DM command is from -stroke to stroke (m). Infinity is replaced by 10e-6. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nact</td><td>Number of actuators </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated hysteresis model. Free with hyst_free(). </dd></dl>
 
 </div>
 </div>
@@ -168,7 +169,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reset hysteresis state </p>
+<p>Reset hysteresis state</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">hyst</td><td>Hysteresis model. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -186,7 +193,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free hysteresis model. </p>
+<p>Free hysteresis model.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hyst</td><td>Hysteresis model to free. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -213,7 +226,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply hysteresis to DM vector. dmreal and dmcmd may be the same </p>
+<p>Apply hysteresis to DM vector. dmreal and dmcmd may be the same</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">hyst</td><td>Hysteresis model. Its state is updated. If NULL, dmcmd is copied to dmreal. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dmreal</td><td>Actual DM position of nact*ntime. Must be preallocated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dmcmd</td><td>DM commands of nact*ntime. Each column is a time step. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -240,7 +261,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply hysteresis to set of DM vectors </p>
+<p>Apply hysteresis to set of DM vectors</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">hyst</td><td><a class="el" href="../../d5/d21/class_array.html">Array</a> of hysteresis models, one per DM. If NULL, dmcmd is copied to dmreal. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dmreal</td><td>Actual DM positions. Must be preallocated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dmcmd</td><td>DM commands. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -272,7 +301,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Test hysteresis model. Dmcmd has dimensions of nact*ntime </p>
+<p>Test hysteresis model. Dmcmd has dimensions of nact*ntime</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hysteresis</td><td>The ratio of the maximum difference of ascending/descending curve over 2*stroke. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hyst_alpha</td><td>The alpha parameter. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hyst_stroke</td><td>The DM command is from -stroke to stroke. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dmcmd</td><td>DM commands of nact*ntime. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated actual DM position of nact*ntime. The caller frees it. </dd></dl>
 
 </div>
 </div>

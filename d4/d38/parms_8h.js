@@ -685,6 +685,7 @@ var parms_8h =
       [ "host", "d4/d38/parms_8h.html#a7980d7913b42c73339ae91d80d1fad49", null ],
       [ "execmd", "d4/d38/parms_8h.html#afd31178667f89763217596f9bfa1585a", null ]
     ] ],
+    [ "T_TYPE", "d4/d38/parms_8h.html#aa54a3168fd46da424c10df2764f9ef49", null ],
     [ "setup_parms", "d4/d38/parms_8h.html#ae093c8027457ac84653fbf51f5e325e6", null ],
     [ "setup_parms_gpu", "d4/d38/parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],
     [ "free_parms", "d4/d38/parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ]

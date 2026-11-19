@@ -1,12 +1,16 @@
 var sockio_8h =
 [
     [ "udp_t", "db/d54/sockio_8h.html#d4/d74/structudp__t", null ],
+    [ "wrap_io", "db/d54/sockio_8h.html#ae95dc790476eddbcee71194e2f145e42", null ],
+    [ "stwrite", "db/d54/sockio_8h.html#ac7fb31521bed5d14292784874f15be50", null ],
+    [ "stread", "db/d54/sockio_8h.html#aec87592c4fbf2ad03b9cc5f1cd03fe2a", null ],
     [ "stwritestr", "db/d54/sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d", null ],
     [ "streadstr", "db/d54/sockio_8h.html#a329670963f85960af4805e221af37db2", null ],
     [ "stwritestrarr", "db/d54/sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339", null ],
     [ "streadstrarr", "db/d54/sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d", null ],
     [ "stwritefd", "db/d54/sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f", null ],
     [ "streadfd", "db/d54/sockio_8h.html#afb4493d945a1d2b3f2c26a04e2a7bf8b", null ],
+    [ "stcheck", "db/d54/sockio_8h.html#ad2364ca481e12db6b45009478899970f", null ],
     [ "udp_send", "db/d54/sockio_8h.html#abc1c613d90cf9a9ffb4697ffb5961b3a", null ],
     [ "udp_recv", "db/d54/sockio_8h.html#a0ff85fb841b8a4c117ca1a8f897dbb81", null ]
 ];

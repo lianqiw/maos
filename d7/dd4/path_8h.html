@@ -137,7 +137,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a directory to path. Higher priority is searched first. </p>
+<p>Add a directory to path. Higher priority is searched first. An existing entry is moved according to the new priority.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priority of the directory. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf-style format of the directory name, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -155,7 +162,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a directory to path with default priority of 0. </p>
+<p>Add a directory to path with default priority of 0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Directory name. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -173,7 +186,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove a directory from path. </p>
+<p>Remove a directory from path.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Directory name. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -191,7 +210,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Print current path. </p>
+<p>Print the current search path for configuration files. </p>
 
 </div>
 </div>
@@ -213,15 +232,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise. <br  />
-</p>
+<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">fn</td><td>filename to search </td></tr>
-    <tr><td class="paramname">current</td><td>search current folder </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fn</td><td>filename to search </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">current</td><td>search current folder </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated file name, or NULL if not found; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -239,7 +258,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Empty the path. </p>
+<p>Empty the search path and free its memory. </p>
 
 </div>
 </div>
@@ -257,7 +276,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find the directory that hold the configuration files. name is "maos" for maos, "skyc" for skyc. </p>
+<p>Find the directory that hold the configuration files.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>"maos" for maos, "skyc" for skyc. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated directory name, or NULL if not found; the caller frees it. </dd></dl>
 
 </div>
 </div>

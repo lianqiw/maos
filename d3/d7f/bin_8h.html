@@ -175,7 +175,6 @@ Enumerations</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a55e5dc1b9fd29f858d152f3194dd1d22" id="r_a55e5dc1b9fd29f858d152f3194dd1d22"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a55e5dc1b9fd29f858d152f3194dd1d22">zfexist</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="mdescLeft">&#160;</td><td class="mdescRight">saving to disk will be disabled when set to nonzero.  <br /></td></tr>
 <tr class="memitem:a413945d9b9ed2b96159910115707a7ad" id="r_a413945d9b9ed2b96159910115707a7ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a413945d9b9ed2b96159910115707a7ad">zftouch</a> (const char *format,...)</td></tr>
 <tr class="memitem:afb7723b26befc0c6f2a95a7e1a516201" id="r_afb7723b26befc0c6f2a95a7e1a516201"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb7723b26befc0c6f2a95a7e1a516201">zfeof</a> (file_t *fp)</td></tr>
 <tr class="memitem:aa2befd7adf220d7469f537919c2c3975" id="r_aa2befd7adf220d7469f537919c2c3975"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2befd7adf220d7469f537919c2c3975">zfpos</a> (file_t *fp)</td></tr>
@@ -183,8 +182,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a0fb14ee86ee80eac407abb5fe9b5e289" id="r_a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (file_t *fp)</td></tr>
 <tr class="memitem:a0cc9385f1a99368d36091786b313dea2" id="r_a0cc9385f1a99368d36091786b313dea2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0cc9385f1a99368d36091786b313dea2">zflen</a> (file_t *fp)</td></tr>
 <tr class="memitem:aaf11bfd20fedb311db4a1103211bdbfc" id="r_aaf11bfd20fedb311db4a1103211bdbfc"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf11bfd20fedb311db4a1103211bdbfc">zfopen</a> (const char *fn, const char *mod)</td></tr>
-<tr class="memitem:ae4c74009c38d112ff46c2040b661a59f" id="r_ae4c74009c38d112ff46c2040b661a59f"><td class="memItemLeft" align="right" valign="top"><a id="ae4c74009c38d112ff46c2040b661a59f" name="ae4c74009c38d112ff46c2040b661a59f"></a>
-file_t *&#160;</td><td class="memItemRight" valign="bottom"><b>zfdopen</b> (int fd)</td></tr>
+<tr class="memitem:ae4c74009c38d112ff46c2040b661a59f" id="r_ae4c74009c38d112ff46c2040b661a59f"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4c74009c38d112ff46c2040b661a59f">zfdopen</a> (int fd)</td></tr>
 <tr class="memitem:aa8967ca7ae67be2fb41b5497a5cd4ce0" id="r_aa8967ca7ae67be2fb41b5497a5cd4ce0"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa8967ca7ae67be2fb41b5497a5cd4ce0">zfname</a> (file_t *fp)</td></tr>
 <tr class="memitem:a01b67a362199a6b984e5759f7d84c168" id="r_a01b67a362199a6b984e5759f7d84c168"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a01b67a362199a6b984e5759f7d84c168">zfisfits</a> (file_t *fp)</td></tr>
 <tr class="memitem:a4ed840d37c980314e41e565e7dd617d3" id="r_a4ed840d37c980314e41e565e7dd617d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ed840d37c980314e41e565e7dd617d3">zfclose</a> (file_t *fp)</td></tr>
@@ -208,8 +206,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>write_timestamp</b> (
 <tr class="memitem:af62cc405c56c23085a5d86e71a6ae0ed" id="r_af62cc405c56c23085a5d86e71a6ae0ed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af62cc405c56c23085a5d86e71a6ae0ed">mmap_read_header</a> (char **p0, uint32_t *magic, <a class="el" href="../../d7/d63/classlong.html">long</a> *nx, <a class="el" href="../../d7/d63/classlong.html">long</a> *ny, const char **pkeywords)</td></tr>
 <tr class="memitem:ad7704ca864eabbba129afd72af210a9e" id="r_ad7704ca864eabbba129afd72af210a9e"><td class="memItemLeft" align="right" valign="top">async_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad7704ca864eabbba129afd72af210a9e">async_init</a> (file_t *fp, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
 <tr class="memitem:ad0f51efb12402814149a0d6e80843087" id="r_ad0f51efb12402814149a0d6e80843087"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad0f51efb12402814149a0d6e80843087">async_write</a> (async_t *async, <a class="el" href="../../d7/d63/classlong.html">long</a> offset, int wait)</td></tr>
-<tr class="memitem:a2b5a92b55915d614a7c8569ff1d27b81" id="r_a2b5a92b55915d614a7c8569ff1d27b81"><td class="memItemLeft" align="right" valign="top"><a id="a2b5a92b55915d614a7c8569ff1d27b81" name="a2b5a92b55915d614a7c8569ff1d27b81"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>async_free</b> (async_t *async)</td></tr>
+<tr class="memitem:a2b5a92b55915d614a7c8569ff1d27b81" id="r_a2b5a92b55915d614a7c8569ff1d27b81"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2b5a92b55915d614a7c8569ff1d27b81">async_free</a> (async_t *async)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Defines our custom file format .bin that may be gzipped and the basic IO functions. All file read/write operators are through functions in this file. The routines can also operate on .fits files. </p>
@@ -366,9 +363,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>saving to disk will be disabled when set to nonzero. </p>
-<p>Test whether a bin file exist. </p>
+<p>Test whether a bin file exist.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the file exists, 0 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -390,7 +392,13 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Update the modification time of a bin file. </p>
+<p>Update the modification time of a bin file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -408,7 +416,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return 1 if end of file is reached. </p>
+<p>Return 1 if end of file is reached.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if an EOF error was recorded or the position is at the end of the file, 0 otherwise or if the position cannot be determined. </dd></dl>
 
 </div>
 </div>
@@ -426,7 +441,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Tell position pointer in file. </p>
+<p>Tell position pointer in file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Current position in bytes, or -1 on error. </dd></dl>
 
 </div>
 </div>
@@ -453,7 +475,16 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Move the current position pointer, like fseek </p>
+<p>Move the current position pointer, like fseek</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset</td><td>Offset in bytes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">whence</td><td>SEEK_SET, SEEK_CUR, or SEEK_END. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The resulting offset from the beginning of the file, or -1 on error. Seeking is not supported for zstd compressed files (returns -1) because the underlying fd offset is not the uncompressed position. </dd></dl>
 
 </div>
 </div>
@@ -471,7 +502,13 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Move the file position pointer to the beginning </p>
+<p>Move the file position pointer to the beginning and clear the error on success.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -489,7 +526,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return file length </p>
+<p>Return file length. The current file position is preserved.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>File length in bytes, or -1 on error. </dd></dl>
 
 </div>
 </div>
@@ -512,7 +556,40 @@ str</td>
       </table>
 </div><div class="memdoc">
 <p>Open a bin file for read/write access.</p>
-<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. </p>
+<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, the file is compressed with gzip or zstd if the name ends with .gz or .zst. If the file has no recognized suffix, .bin is appended to the file name. Files opened for writing are locked.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fni</td><td>File name. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mod</td><td>Access mode: r for read, w for write (truncate), a for append. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated file_t; close it with zfclose(). NULL on failure. </dd></dl>
+
+</div>
+</div>
+<a id="ae4c74009c38d112ff46c2040b661a59f" name="ae4c74009c38d112ff46c2040b661a59f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4c74009c38d112ff46c2040b661a59f">&#9670;&#160;</a></span>zfdopen()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">file_t * zfdopen </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>fd</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>convert a socket or fd into file_t.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File or socket descriptor. Closed by zfclose(). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated file_t; free it with zfclose(). </dd></dl>
 
 </div>
 </div>
@@ -531,7 +608,14 @@ str</td>
       </table>
 </div><div class="memdoc">
 <p>Open a bin file or socket for read/write access.</p>
-<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. Return the underlining filename </p>
+<p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. Return the underlining filename</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the file name; do not free. NULL if fp is NULL. </dd></dl>
 
 </div>
 </div>
@@ -549,7 +633,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return 1 when it is a fits file. </p>
+<p>Return 1 when it is a fits file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if fp is a fits file, 0 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -567,7 +658,13 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Close the file. </p>
+<p>Close the file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle; freed. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -599,7 +696,17 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handles byteswapping in fits file format then call zfwrite_do to do the actual writing. </p>
+<p>Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Data to write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element in bytes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nmemb</td><td>Number of elements. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle; its error field is set on failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if success, non-zero otherwise. </dd></dl>
 
 </div>
 </div>
@@ -631,7 +738,17 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Handles byteswapping in fits file format then call zfread_do to do the actual writing. return 0 when succeed and -1 when error. </p>
+<p>Handles byteswapping in fits file format then call zfread_do to do the actual reading.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">ptr</td><td>Buffer to read into. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element in bytes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nmemb</td><td>Number of elements. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle; its error field is set on failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 when succeed, 1 at EOF, 2 on read error, and -1 if fp already has an error. </dd></dl>
 
 </div>
 </div>
@@ -649,7 +766,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return the error number </p>
+<p>Return the error number</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fp</td><td>File handle. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The error field (0: none, 1: EOF, 2: other error), or -1 if fp is NULL. </dd></dl>
 
 </div>
 </div>
@@ -667,7 +791,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Get the length of mem to storge the header and its dimension, rounded to multiple of 8. </p>
+<p>Get the length of mem to storge the header and its dimension, rounded to multiple of 8.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Header string. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of bytes of the keyword block (string rounded to multiple of 8 plus 24), or 0 if keywords is NULL. </dd></dl>
 
 </div>
 </div>
@@ -689,7 +820,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A unified header writing routine for .bin and .fits files. It write the array information and string header if any. </p>
+<p>A unified header writing routine for .bin and .fits files. It write the array information and string header if any.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">header</td><td>Header with magic number, dimension, and optional string. For fits files, magic MCC_ANY saves the string as the global keyword. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle to write to. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -711,7 +849,15 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A unified header reading routine for .bin and .fits files. It read the array information and string header if any. Return non zero value if reading failed </p>
+<p>A unified header reading routine for .bin and .fits files. It read the array information and string header if any.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">header</td><td>Header to fill. header-&gt;str is newly allocated; the caller frees it. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle, read from its current position. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, non zero value if reading failed (1 at the end of data marker for bin files). </dd></dl>
 
 </div>
 </div>
@@ -763,22 +909,21 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.</p>
 <p>Write the time stamp as header into current location in the file. Write an 1-d or 2-d array into the file. First write a magic number that represents the data type. Then write two numbers representing the dimension. Finally write the data itself.</p>
-<p>returns the file offset of the array start </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fpn</td><td>The file pointer  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isfn</td><td>Is this a filename or already opened file  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see <a class="el" href="../../d3/d7f/bin_8h.html">bin.h</a>  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The header as string  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The data of the array  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. this index changes fastest  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. 1 for vector </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fpn</td><td>The file name (if isfn) or the opened file_t pointer. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">isfn</td><td>Is this a filename or already opened file. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see <a class="el" href="../../d3/d7f/bin_8h.html">bin.h</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The header as string. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The data of the array. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. this index changes fastest. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. 1 for vector. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 if the file cannot be opened, or the zfwrite error code. </dd></dl>
 
 </div>
 </div>
@@ -797,7 +942,14 @@ str</td>
       </table>
 </div><div class="memdoc">
 <p>Create a mem_t object.</p>
-<p>Notice that nref is set to 0. Default is set to reference heap memory. </p>
+<p>Notice that nref is set to 0. Default is set to reference heap memory.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Memory to manage; owned by the returned mem_t. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t; release it with mem_unref(). </dd></dl>
 
 </div>
 </div>
@@ -815,7 +967,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Unreference the mmaped memory. When the reference drops to zero free or unmap it. </p>
+<p>Unreference the mmaped memory. When the reference drops to zero free or unmap it.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pin</td><td>Pointer to the mem_t; set to NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The remaining reference count. 0 if freed or pin is empty. </dd></dl>
 
 </div>
 </div>
@@ -833,7 +992,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a reference to a mem_t. </p>
+<p>Add a reference to a mem_t.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">in</td><td>The mem_t. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>in. Release it with mem_unref(). </dd></dl>
 
 </div>
 </div>
@@ -855,7 +1021,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Replace internal vector. If p is null, checking only. Use with care. </p>
+<p>Replace internal vector. Use with care. Errors if the memory is mmaped or referenced more than once.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">in</td><td>The mem_t. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>New memory pointer; the old one is not freed. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -873,7 +1046,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check whether it is a referenced data. </p>
+<p>Check whether it is a referenced data.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The mem_t. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>kind+nref (non-zero if mmaped or referenced), or 0 if in is NULL. </dd></dl>
 
 </div>
 </div>
@@ -891,7 +1071,14 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return internal pointer </p>
+<p>Return internal pointer</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The mem_t. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the internal memory; do not free. NULL if in is NULL. </dd></dl>
 
 </div>
 </div>
@@ -918,7 +1105,16 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Open a file for write with mmmap. We don't provide an access control here for generic usage of the function. Lock on a special dummy file for access control. </p>
+<p>Open a file for write with mmmap. We don't provide an access control here for generic usage of the function. Lock on a special dummy file for access control.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fn</td><td>File name (.bin only), or a shared memory name. May be NULL for writing. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">msize</td><td>Size in bytes to map. For reading, 0 means the file length. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rw</td><td>1 to open for read/write (the file is created and resized), 0 for read only. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated mem_t of the mapping; release it with mem_unref(). NULL if the file cannot be found or opened for reading. </dd></dl>
 
 </div>
 </div>
@@ -955,7 +1151,17 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p. </p>
+<p>Initialize the header in the mmaped file. Upon exit, p0 points to the location of data p.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">p0</td><td>Pointer to the header location in the mmaped memory; advanced past the header. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td><a class="el" href="../../d2/d6e/struct_magic.html">Magic</a> number of the data type. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Header string. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -992,7 +1198,17 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize the dimension from the header in the mmaped file. </p>
+<p>Initialize the dimension from the header in the mmaped file.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">p0</td><td>Pointer to the header location in the mmaped memory; advanced to the data. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">magic</td><td><a class="el" href="../../d2/d6e/struct_magic.html">Magic</a> number of the data type. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pkeywords</td><td>Reference to the header string in the mapped memory; do not free. NULL if there is none. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1039,7 +1255,20 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Allocates space in fp for our block of data by writing header first and skip to the end of data offset. It has the same interface as writearr except only fp is allowed Use aio_* api if USE_ASYNC is set, otherwise use pwrite() aio_* api launches threads for async writing. pwrite is much simpler for our usecase. There is no impact on simulation step timing. we don't use mmap to write to file as it causes excessive traffic to NFS file system. </p>
+<p>Allocates space in fp for our block of data by writing header first and skip to the end of data offset. It has the same interface as writearr except only fp is allowed Use aio_* api if USE_ASYNC is set, otherwise use pwrite() aio_* api launches threads for async writing. pwrite is much simpler for our usecase. There is no impact on simulation step timing. we don't use mmap to write to file as it causes excessive traffic to NFS file system.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File handle opened for writing. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see <a class="el" href="../../d3/d7f/bin_8h.html">bin.h</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The header as string. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The data of the array. Must stay valid until async_free(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated async_t; free it with async_free(). NULL on failure. </dd></dl>
 
 </div>
 </div>
@@ -1066,7 +1295,40 @@ str</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wait until previous async write are finished. Write to file asynchronously. offset is the end of block that is ready to write. </p>
+<p>Write to file asynchronously.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">async</td><td>The async writing state. May be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset</td><td>The end (in bytes from the start of the data) of the block that is ready to write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wait</td><td>Wait for the previous write to finish (only with USE_ASYNC). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success or if async is NULL, -1 on error. </dd></dl>
+
+</div>
+</div>
+<a id="a2b5a92b55915d614a7c8569ff1d27b81" name="a2b5a92b55915d614a7c8569ff1d27b81"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b5a92b55915d614a7c8569ff1d27b81">&#9670;&#160;</a></span>async_free()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void async_free </td>
+          <td>(</td>
+          <td class="paramtype">async_t *</td>          <td class="paramname"><span class="paramname"><em>async</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Wait for pending asynchronous writes to finish and free async.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">async</td><td>The async writing state; freed. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

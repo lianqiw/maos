@@ -256,18 +256,19 @@ fieldstop</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>For routines that embed OPDs defined on loc to square(rectangular) array and do fft on it. </p>
+<p>For routines that embed OPDs defined on loc to square(rectangular) array and do fft on it. Initialize the <a class="el" href="#d3/dcd/structlocfft__t">locfft_t</a> struct that embeds OPD on loc into square arrays for FFT.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>The wavelength  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fftsize</td><td>The suggested size for FFT, nwvl values  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">oversize</td><td>Factor of oversize. 2 fot FFT  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fieldstop</td><td>Size of field stop (radian) if used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc (referenced, not copied). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude (referenced, not copied). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>The wavelength (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fftsize</td><td>The suggested size for FFT, nwvl values. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">oversize</td><td>Factor of oversize. 2 for Nyquist sampling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fieldstop</td><td>Size of field stop (radian) if used. 0 to disable. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated struct; free with locfft_free(). </dd></dl>
 
 </div>
 </div>
@@ -285,7 +286,13 @@ fieldstop</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Frees the struct </p>
+<p>Frees the struct</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">locfft</td><td>The struct to free. Can be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -325,7 +332,17 @@ fieldstop</td>
 <p>Computes PSF from OPD by FFT. The PSF is computed as</p>
 <p>\(\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]\)</p>
 <p>The peak value (center) in the computed PSF is normalized by the peak value in the differaction limited PSF. In other words, the peak value in the computed PSF is the Strehl. Keep this in mind when you compute enclosed energy.</p>
-<p>Extract center part of psfsize. </p>
+<p>Extract center part of psfsize.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">psf2sp</td><td>The complex PSF for each wavelength. Allocated if NULL, otherwise overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locfft</td><td>The locfft struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>The OPD defined on locfft-&gt;loc (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">psfsize</td><td>Size of PSF to extract for each wavelength. NULL for full size. 1 for Strehl only. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sum2one</td><td>If set, normalize PSF to sum to 1; otherwise peak is Strehl. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -352,7 +369,15 @@ fieldstop</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply a field stop to the OPD. </p>
+<p>Apply a field stop to the OPD.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">locfft</td><td>The locfft struct with fieldmask set. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>The OPD (m), replaced by the field stop filtered OPD. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvlwts</td><td>Weights of each wavelength. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -407,17 +432,17 @@ fieldstop</td>
 <p>Fresnel propagation using either FFT or angular spectrum method.</p>
 <p>For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular spectrum method, the output sampling equals to the input sampling. When the output sampling equals, the two methods agree. Notice that at near field when dp is smaller than dx, the output of angular spectrum method is periodic.</p>
 <p>The output is normalized so that its squared sum equals to nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this scaling.</p>
-<p>The brutal force method (method=0) has the exact solution without using fresnel approximation. It is however very slow. The results agrees with method=1 or 2 when the sampling agrees and the approximation holds. </p>
+<p>The brutal force method (method=0) has the exact solution without using fresnel approximation. It is however very slow. The results agrees with method=1 or 2 when the sampling agrees and the approximation holds.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pout</td><td>Output complex field. Sampling depends on method. Should not be empty if method is 0.  </td></tr>
-    <tr><td class="paramname">pdxout</td><td>Sampling of output, can be supplied if method=0, use dp if not supplied.  </td></tr>
-    <tr><td class="paramname">in</td><td>Input complex field, , Amp*exp(-i*k*opd)  </td></tr>
-    <tr><td class="paramname">dxin</td><td>Spatial sampling of in  </td></tr>
-    <tr><td class="paramname">wvl</td><td>Wavelength  </td></tr>
-    <tr><td class="paramname">z</td><td>Propagation distance  </td></tr>
-    <tr><td class="paramname">scale</td><td>Scaling to be applied to out to preserve energy. 0: determine from input  </td></tr>
-    <tr><td class="paramname">method</td><td>Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>Output complex field. Sampling depends on method. Allocated if NULL (32x32 for method 0, same size as in otherwise). </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pdxout</td><td>Sampling of output. For method=0 it can be supplied, otherwise z*wvl/(dxin*nx) is used. Set on output. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Input complex field, Amp*exp(-i*k*opd). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dxin</td><td>Spatial sampling of in (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>Wavelength (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">z</td><td>Propagation distance (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Scaling to be applied to out to preserve energy. 0: determine from input. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">method</td><td>Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2. </td></tr>
   </table>
   </dd>
 </dl>

@@ -144,7 +144,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply L2 directly to map with periodic condition. </p>
+<p>Apply L2 directly to map with periodic condition.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">opdout</td><td>Output, the laplacian of opd. Must be preallocated with the same size as opd. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>Input OPD on a square grid. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -181,7 +191,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>build laplacian on square map using periodic conditions </p>
+<p>build laplacian on square map using periodic conditions</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of points along y. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated (nx*ny)*(nx*ny) sparse laplacian. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -208,7 +229,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate laplacian on <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> </p>
+<p>Generate laplacian on <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Grid coordinates. Its map is created if not yet. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated nloc*nloc sparse laplacian. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -235,7 +265,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the factor for the laplacian </p>
+<p>compute the factor for the laplacian for points with all 4 neighbors.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The scaling factor of the laplacian. </dd></dl>
 
 </div>
 </div>

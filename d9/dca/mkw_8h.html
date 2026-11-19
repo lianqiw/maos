@@ -140,7 +140,16 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>compute the W0, W1 for bilinear influence function. The normalization is very important. We need to have sum(amp)==1; W0 and W1 can not be scaled because: 1) they scale the same way as amp, 2) we are using W0-W1*W1', one is linear, one is quadratic. So the result will be different.</p>
 <p>for the result, we must have 1) sum(W0,1)==W1, sum(W0,2)==W1, 2) sum(W1)==1 2009-11-20: bug found: using a circular gray pixel amplitude map, sum(W1) is less than 1 if loc is not large enough. This method is not good! Prefer the mkw_circular instead which follows closely the laos method. The LAOS W0/W1 gives very good performance in NGS modes.</p>
-<p>This function does not work well. </p>
+<p>This function does not work well.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The grid coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on loc, normalized to sum to 1. NULL for uniform amplitude. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W0</td><td>The sparse W0. Newly allocated. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W1</td><td>The dense W1. Newly allocated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -182,15 +191,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid. </p>
+<p>compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>grid coordinate  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>center of circle, x  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>center of circle, y  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cr</td><td>circle radius  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">W0</td><td>sparse W0  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">W1</td><td>dense W1 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The grid coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>Center of circle, x (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>Center of circle, y (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cr</td><td>Circle radius (m). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W0</td><td>The sparse W0. Newly allocated. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W1</td><td>The dense W1. Newly allocated. </td></tr>
   </table>
   </dd>
 </dl>
@@ -240,16 +249,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro. see mkw(). </p>
+<p>compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro. see mkw_circular().</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>grid coordinate  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>center of circle, x  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>center of circle, y  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cri</td><td>inner circular hole radius  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cro</td><td>outer circle radius  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">W0</td><td>sparse W0  </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">W1</td><td>dense W1 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The grid coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>Center of circle, x (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>Center of circle, y (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cri</td><td>Inner circular hole radius (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cro</td><td>Outer circle radius (m). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W0</td><td>The sparse W0. Newly allocated. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">W1</td><td>The dense W1. Newly allocated. </td></tr>
   </table>
   </dd>
 </dl>

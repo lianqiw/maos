@@ -112,8 +112,7 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a10b3b5b531f82aad2babe50983faea39" id="r_a10b3b5b531f82aad2babe50983faea39"><td class="memItemLeft" align="right" valign="top"><a id="a10b3b5b531f82aad2babe50983faea39" name="a10b3b5b531f82aad2babe50983faea39"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_setup_recon_mvm_trans</b> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon)</td></tr>
+<tr class="memitem:a10b3b5b531f82aad2babe50983faea39" id="r_a10b3b5b531f82aad2babe50983faea39"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a10b3b5b531f82aad2babe50983faea39">gpu_setup_recon_mvm_trans</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Compute the transpose of MVM control matrix in GPU colume by colume. </p>
@@ -286,6 +285,36 @@ load_mvmf</td>
 <td class="fielddoc">
 </td></tr>
 </table>
+
+</div>
+</div>
+<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a10b3b5b531f82aad2babe50983faea39" name="a10b3b5b531f82aad2babe50983faea39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10b3b5b531f82aad2babe50983faea39">&#9670;&#160;</a></span>gpu_setup_recon_mvm_trans()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gpu_setup_recon_mvm_trans </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *</td>          <td class="paramname"><span class="paramname"><em>parms</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *</td>          <td class="paramname"><span class="paramname"><em>recon</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Assemble the MVR control matrix in GPU using the transpose method: for each actuator, solve the fitting and tomography in transpose to obtain one row of the MVM. Actuators are split among all GPUs. Intermediate results can be loaded or saved with load.mvmi/mvmf and save.mvmi/mvmf. The result is kept in GPU (cuglobal-&gt;mvm) and/or copied to recon-&gt;MVM. Skipped if load.mvm is set. Only supports recon.alg=0 (MVR). GPU reconstruction data (cudata-&gt;recon) is deleted from all GPUs afterwards.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>Reconstruction data. recon-&gt;MVM is set. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

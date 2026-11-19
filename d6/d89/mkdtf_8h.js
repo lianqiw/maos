@@ -28,5 +28,8 @@ var mkdtf_8h =
     [ "dtf_otf", "d6/d89/mkdtf_8h.html#adce340f42de02d8e6e09312a407fec4b", null ],
     [ "mkdtf", "d6/d89/mkdtf_8h.html#aecc59f77035e09a61d1d74fa4a9d12ab", null ],
     [ "mketf", "d6/d89/mkdtf_8h.html#a23757e9470a03af49f7e86f4d2e94435", null ],
-    [ "smooth", "d6/d89/mkdtf_8h.html#a42b0c09d2d32b74de2c5b88ea515eeff", null ]
+    [ "dtf_free_do", "d6/d89/mkdtf_8h.html#aebceaa4b5aa6ca6e7aaa011d7dea2bc5", null ],
+    [ "etf_free_do", "d6/d89/mkdtf_8h.html#ad2d2722feb99b759b848cbab3f600eb3", null ],
+    [ "smooth", "d6/d89/mkdtf_8h.html#a42b0c09d2d32b74de2c5b88ea515eeff", null ],
+    [ "smooth_cell", "d6/d89/mkdtf_8h.html#a14ac4da1e0e8b091c2e570c4f3566041", null ]
 ];
