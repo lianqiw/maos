@@ -113,7 +113,8 @@ Functions</h2></td></tr>
 <tr class="memitem:adda6e54dfdc220f7b8d2a1625a57224b" id="r_adda6e54dfdc220f7b8d2a1625a57224b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adda6e54dfdc220f7b8d2a1625a57224b">listen_port</a> (<a class="el" href="#d0/dcc/structlisten__opt__t">listen_opt_t</a> opt)</td></tr>
 <tr class="memitem:a6c13c4782e5461737bc253878ceed153" id="r_a6c13c4782e5461737bc253878ceed153"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6c13c4782e5461737bc253878ceed153">listen_port_add</a> (int sock, short events, int(*handler)(struct pollfd *, int), const char *caller)</td></tr>
 <tr class="memitem:a0fadbb4ac1bc4bee3c07ebeec41e6118" id="r_a0fadbb4ac1bc4bee3c07ebeec41e6118"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0fadbb4ac1bc4bee3c07ebeec41e6118">listen_port_del</a> (int sock, int toclose, const char *caller)</td></tr>
-<tr class="memitem:a06ca6a939cfb914d1b5b39b34292ecc7" id="r_a06ca6a939cfb914d1b5b39b34292ecc7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a06ca6a939cfb914d1b5b39b34292ecc7">socket_nopipe</a> (int sock)</td></tr>
+<tr class="memitem:a06ca6a939cfb914d1b5b39b34292ecc7" id="r_a06ca6a939cfb914d1b5b39b34292ecc7"><td class="memItemLeft" align="right" valign="top"><a id="a06ca6a939cfb914d1b5b39b34292ecc7" name="a06ca6a939cfb914d1b5b39b34292ecc7"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>socket_nopipe</b> (int sock)</td></tr>
 <tr class="memitem:a7e9e0dd0702c7f7fbd7217a964a5047e" id="r_a7e9e0dd0702c7f7fbd7217a964a5047e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e9e0dd0702c7f7fbd7217a964a5047e">socket_block</a> (int sock, int block)</td></tr>
 <tr class="memitem:a45c181941f5420133e33bb8bdca7374d" id="r_a45c181941f5420133e33bb8bdca7374d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a45c181941f5420133e33bb8bdca7374d">bind_socket</a> (int protocol, const char *ipaddr, uint16_t port)</td></tr>
 <tr class="memitem:a2d15d50fe2dfb27d8260084823fdc970" id="r_a2d15d50fe2dfb27d8260084823fdc970"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d15d50fe2dfb27d8260084823fdc970">socket_port</a> (int sock)</td></tr>
@@ -230,15 +231,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set receive timeout.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sec</td><td>Timeout in seconds. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, negative on failure. </dd></dl>
+<p>Set recv timeout in seconds </p>
 
 </div>
 </div>
@@ -260,15 +253,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set send timeout.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sec</td><td>Timeout in seconds. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, negative on failure. </dd></dl>
+<p>Set recv timeout in seconds </p>
 
 </div>
 </div>
@@ -300,17 +285,16 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Connect to a host at port. If hostname already includes port after :, port is ignored. hostname may start with / to indicate a local UNIX port. In blocking mode, retries every 10 seconds up to 25 times.</p>
+<p>Connect to a host at port. If hostname already includes port after :, port is ignored. hostname may start with / to indicate a local UNIX port </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">hostname</td><td>The hostname can be just name or name:port, or a unix socket path starting with /. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">port</td><td>The port if hostname does not include it. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">block</td><td>Whether to retry until connection is established. The returned socket is always in blocking mode. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nodelay</td><td>Whether to set TCP nodelay flag. </td></tr>
+    <tr><td class="paramname">hostname</td><td>The hostname can be just name or name:port.  </td></tr>
+    <tr><td class="paramname">port</td><td>The port if hostname does not include it  </td></tr>
+    <tr><td class="paramname">block</td><td>Do we block until connection is established  </td></tr>
+    <tr><td class="paramname">nodelay</td><td>set TCP nodelay flag </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Connected socket file descriptor, or -1 on failure. </dd></dl>
 
 </div>
 </div>
@@ -328,13 +312,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also. If ipaddr is not null, only bind to that ip address.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">opt</td><td>Listening options: port, ipaddr, localpath, fd, responder, http_responder, timeout_fun, timeout_sec, and nodelay. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also if localpath is not null and contains ip address, only bind to that ip address </p>
 
 </div>
 </div>
@@ -367,16 +345,16 @@ nodelay</td>
       </table>
 </div><div class="memdoc">
 <p>Add a socket to the pollfd array for event monitoring.</p>
-<p>If the socket is already present, updates its events, handler and name. Allocates memory for new entries as needed.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>The socket file descriptor to add. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">events</td><td>The events to monitor (e.g., POLLIN, POLLOUT). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">handler</td><td>The function to handle events on this socket (NULL for internal handling of a listening socket). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>A descriptive name for this socket (for debugging/logging). The pointer is stored. </td></tr>
+    <tr><td class="paramname">sock</td><td>The socket file descriptor to add. </td></tr>
+    <tr><td class="paramname">events</td><td>The events to monitor (e.g., POLLIN, POLLOUT). </td></tr>
+    <tr><td class="paramname">handler</td><td>The function to handle events on this socket (can be NULL for internal handling). </td></tr>
+    <tr><td class="paramname">name</td><td>A descriptive name for this socket (for debugging/logging).</td></tr>
   </table>
   </dd>
 </dl>
+<p>If the socket is already present, updates its handler and name if necessary. Allocates memory for new entries as needed. </p>
 
 </div>
 </div>
@@ -404,40 +382,15 @@ nodelay</td>
       </table>
 </div><div class="memdoc">
 <p>Remove a socket from the pollfd array, optionally closing it.</p>
-<p>This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>The socket file descriptor to remove; if -2, remove all sockets. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">toclose</td><td>If nonzero, close the socket(s) before removing. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">caller</td><td>A string indicating the caller for logging/debugging purposes. </td></tr>
+    <tr><td class="paramname">sock</td><td>The socket file descriptor to remove; if -2, remove all sockets. </td></tr>
+    <tr><td class="paramname">toclose</td><td>If nonzero, close the socket(s) before removing. </td></tr>
+    <tr><td class="paramname">caller</td><td>A string indicating the caller for logging/debugging purposes.</td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="a06ca6a939cfb914d1b5b39b34292ecc7" name="a06ca6a939cfb914d1b5b39b34292ecc7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a06ca6a939cfb914d1b5b39b34292ecc7">&#9670;&#160;</a></span>socket_nopipe()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int socket_nopipe </td>
-          <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sock</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Prevent SIGPIPE when writing to a closed socket, using SO_NOSIGPIPE if available or ignoring SIGPIPE otherwise (except on linux, which uses MSG_NOSIGNAL).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure or if sock is -1. </dd></dl>
+<p>This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed. </p>
 
 </div>
 </div>
@@ -459,15 +412,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set socket to blocking or non-blocking mode.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">block</td><td>1 for blocking mode, 0 for non-blocking mode. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure. </dd></dl>
+<p>Set socket to unblocking mode </p>
 
 </div>
 </div>
@@ -494,16 +439,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>make a server port and bind to localhost on all addresses. Retries every 10 seconds, up to 100 times, if bind fails.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">protocol</td><td>Socket type, usually SOCK_DGRAM or SOCK_STREAM. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ipaddr</td><td>IP address to bind to. NULL binds to all addresses. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">port</td><td>Port to bind to. If 0, the system assigns a port. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Socket file descriptor, or -1 on failure. Exits if socket creation fails. </dd></dl>
+<p>make a server port and bind to localhost on all addresses. protocl is usually SOCK_DGRAM or SOCK_STREAM. ip is usually zero. if port is 0, will bind an assigned port </p>
 
 </div>
 </div>
@@ -521,14 +457,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the local port of a socket.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Port number in host byte order, or -1 on failure. </dd></dl>
+<p>determine the socket port </p>
 
 </div>
 </div>
@@ -546,14 +475,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the IP address of the socket peer.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket file descriptor. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Peer IPv4 address in network byte order, or 0 on failure. </dd></dl>
+<p>determine the socket peer IP address </p>
 
 </div>
 </div>
@@ -571,14 +493,7 @@ nodelay</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert in_addr_t to host name for print out.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">s_addr</td><td>IPv4 address in network byte order. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Host name or dotted address string from <a class="el" href="../../d7/d29/scheduler__client_8c.html#afb6b3f2cfe62dbcf0437cacd8328ab5d">lookup_hostname()</a>. </dd></dl>
+<p>convert in_addr_t to host name for print out </p>
 
 </div>
 </div>

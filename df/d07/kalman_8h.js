@@ -30,10 +30,8 @@ var kalman_8h =
     [ "kalman_free", "df/d07/kalman_8h.html#a1abad10ed07b95e05ab3aa2529eab85d", null ],
     [ "kalman_test", "df/d07/kalman_8h.html#af837cdb6f8bb06bf25a285020391e192", null ],
     [ "kalman_test2", "df/d07/kalman_8h.html#a802c26d2689fb9d8cc9070226402be4d", null ],
-    [ "kalman_test3", "df/d07/kalman_8h.html#a3ebb7fb8a0edd29dbc8032b1a1022299", null ],
     [ "kalman_init", "df/d07/kalman_8h.html#a4d3a82244fe94108b9ab5b1c57d06f38", null ],
     [ "kalman_update", "df/d07/kalman_8h.html#a81d84add40bc24fb4b4db4a029a1f075", null ],
     [ "kalman_output", "df/d07/kalman_8h.html#acff279fa114b71cc346003059fad90bd", null ],
-    [ "kalman_write", "df/d07/kalman_8h.html#a621e8bac952c4e76289ef37171333377", null ],
-    [ "kalman_read", "df/d07/kalman_8h.html#ac1254dabbb6525070fa0eb778439cb15", null ]
+    [ "kalman_write", "df/d07/kalman_8h.html#a621e8bac952c4e76289ef37171333377", null ]
 ];

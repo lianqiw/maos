@@ -108,7 +108,8 @@ Functions</h2></td></tr>
 <tr class="memitem:aea4bdd99e2d054739f511c19926398c3" id="r_aea4bdd99e2d054739f511c19926398c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aea4bdd99e2d054739f511c19926398c3">ngsmod_dot</a> (real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a> *ngsmod, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a> *aper, const real *opd, int ievl)</td></tr>
 <tr class="memitem:a8dfcf63ddc17bf76e13676edeace7a21" id="r_a8dfcf63ddc17bf76e13676edeace7a21"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8dfcf63ddc17bf76e13676edeace7a21">ngsmod_dot_post</a> (real *pttr_out, real *pttrcoeff_out, real *ngsmod_out, real tot, const real *coeff, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a> *ngsmod, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a> *aper, real thetax, real thetay)</td></tr>
 <tr class="memitem:a94177f64acfe56654db4e671a4b5ad0b" id="r_a94177f64acfe56654db4e671a4b5ad0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a94177f64acfe56654db4e671a4b5ad0b">ngsmod_free</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a> *ngsmod)</td></tr>
-<tr class="memitem:acc55867b9d159e29becb5c9da446fcf6" id="r_acc55867b9d159e29becb5c9da446fcf6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acc55867b9d159e29becb5c9da446fcf6">ngsmod_split</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **Merr, <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *dmerr)</td></tr>
+<tr class="memitem:acc55867b9d159e29becb5c9da446fcf6" id="r_acc55867b9d159e29becb5c9da446fcf6"><td class="memItemLeft" align="right" valign="top"><a id="acc55867b9d159e29becb5c9da446fcf6" name="acc55867b9d159e29becb5c9da446fcf6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_split</b> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **Merr, <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *dmerr)</td></tr>
 <tr class="memitem:a1e7dc48e7168ac32c503021a355c9c96" id="r_a1e7dc48e7168ac32c503021a355c9c96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1e7dc48e7168ac32c503021a355c9c96">ngsmod_remove</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *dmerr)</td></tr>
 <tr class="memitem:a5251d330587a4fd6f50bd344fc7302a3" id="r_a5251d330587a4fd6f50bd344fc7302a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5251d330587a4fd6f50bd344fc7302a3">ngsmod_opd</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *iopd, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a> *ngsmod, real thetax, real thetay, const real *mod, real alpha)</td></tr>
 </table>
@@ -139,15 +140,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>AHST parameters that are related to the geometry only, and will not be updated when estimated WFS measurement noise changes.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>Reconstructor. recon-&gt;ngsmod is allocated and set up. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture of science evaluation. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>AHST parameters that are related to the geometry only, and will not be updated when estimated WFS measurement noise changes. </p>
 
 </div>
 </div>
@@ -172,14 +165,7 @@ Functions</h2></td></tr>
 <p>setup NGS modes reconstructor in ahst mode.</p>
 <p>When tomo.ahst_wt=1:</p>
 <p>\( Rngs=GM^\dagger=(GM&#39;*W_N*GM)^{-1}*GM&#39;*W_N \) where W_N is recon-&gt;saneai \( M^\dagger=Rngs*GA \) <a class="el" href="../../d3/deb/maos_2recon_8h.html#ad2ff08de25993fae1b7bee5b0a54fdab">reconstruct</a> mode from NGS measurements equals to original mode \( Pngs=M*M^\dagger=M*Rngs*GA \) satisfies Rngs*GA*Pngs=Rngs*GA In other words, \( M^\dagger=(M^T W_G M)^{-1}*M^T W_G with W_G=(GA^T*W_N*GA) \)</p>
-<p>Projector has the properties: \( M*Pngs*(1-M*Pngs)=0 \)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>Reconstructor. recon-&gt;ngsmod-&gt;Rngs (and Pngs if tomo.ahst_wt==1) are updated. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Projector has the properties: \( M*Pngs*(1-M*Pngs)=0 \) </p>
 
 </div>
 </div>
@@ -231,20 +217,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>used in performance evaluation on science opds. The outputs are overwritten (not accumulated).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pttr_out</td><td>Variance of piston removed, tip/tilt, and piston/tip/tilt removed OPD. May be NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">pttrcoeff_out</td><td>Piston, tip, and tilt coefficients. May be NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ngsmod_out</td><td>NGS mode coefficients (nmod elements). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ngsmod</td><td>NGS mode configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture of science evaluation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>Science OPD defined on aper-&gt;locs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ievl</td><td>Index of the evaluation direction. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>used in performance evaluation on science opds. accumulate to out </p>
 
 </div>
 </div>
@@ -301,22 +274,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Separate post processing part so that GPU code can call it.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pttr_out</td><td>Variance of piston removed, tip/tilt, and piston/tip/tilt removed OPD. May be NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">pttrcoeff_out</td><td>Piston, tip, and tilt coefficients. May be NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ngsmod_out</td><td>NGS mode coefficients (nmod elements). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">tot</td><td>Weighted sum of OPD squared. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>Weighted sum of OPD times 1, x, y, x*x, y*y, x*y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ngsmod</td><td>NGS mode configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture of science evaluation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Evaluation direction along x (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Evaluation direction along y (radian). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 if succeeded, 1 if any computed variance is significantly negative. </dd></dl>
+<p>Separate post processing part so that GPU code can call it. Return non zero if error happens. </p>
 
 </div>
 </div>
@@ -334,48 +292,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>frees <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">ngsmod</td><td>The struct to free. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="acc55867b9d159e29becb5c9da446fcf6" name="acc55867b9d159e29becb5c9da446fcf6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acc55867b9d159e29becb5c9da446fcf6">&#9670;&#160;</a></span>ngsmod_split()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void ngsmod_split </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **</td>          <td class="paramname"><span class="paramname"><em>Merr</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *</td>          <td class="paramname"><span class="paramname"><em>simu</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *</td>          <td class="paramname"><span class="paramname"><em>dmerr</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Split NGS mode error from dmerr</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">Merr</td><td>NGS mode error. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">dmerr</td><td>DM error signal. NGS modes are removed in place. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>frees <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/df8/structngsmod__t">ngsmod_t</a> </p>
 
 </div>
 </div>
@@ -397,14 +314,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>remove NGS modes from LGS DM commands. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000004">Todo</a></b></dt><dd>handle 3 DM case.</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. The intermediate NGS mode vectors are updated. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">dmerr</td><td>LGS DM error signal. NGS modes are removed in place. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>remove NGS modes from LGS DM commands. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000004">Todo</a></b></dt><dd>handle 3 DM case. </dd></dl>
 
 </div>
 </div>
@@ -451,19 +361,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain OPD on loc for NGS mode vector.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">iopd</td><td>OPD to accumulate to. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Grid of iopd. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ngsmod</td><td>NGS mode configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Direction along x (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Direction along y (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>NGS mode vector (nmod elements). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Obtain OPD on loc for NGS mode vector. </p>
 
 </div>
 </div>

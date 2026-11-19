@@ -17,7 +17,6 @@ var loc_8h =
     [ "locnew", "d1/d83/loc_8h.html#ad414bd9281d336c4db72de1373a3f4d3", null ],
     [ "locref", "d1/d83/loc_8h.html#a54eb0584919fe714065cfba437633a90", null ],
     [ "ptsnew", "d1/d83/loc_8h.html#a84543d5b33950e44c31a90aff35a2609", null ],
-    [ "loc_calc_ptt", "d1/d83/loc_8h.html#afc89ab8fece5838d6cd54308079abb69", null ],
     [ "loc_calc_mod", "d1/d83/loc_8h.html#a8df253e112de8cf6973422c38810ce67", null ],
     [ "loc_mcc_ptt", "d1/d83/loc_8h.html#a46226e136c567990047af71fb8c45053", null ],
     [ "pts_mcc_ptt", "d1/d83/loc_8h.html#a2d5bae49b00ac31462965e05bcede903", null ],
@@ -40,7 +39,6 @@ var loc_8h =
     [ "loc_reduce", "d1/d83/loc_8h.html#a4131d6d75c196d07ef1ad110e6fd9556", null ],
     [ "loc_reduce_spcell", "d1/d83/loc_8h.html#a8a2bbfc477710e2aa86c65630e07c786", null ],
     [ "loc_reduce_sp", "d1/d83/loc_8h.html#ace526a66d1e3f71d9585bc75a48edee1", null ],
-    [ "loc_add_focus", "d1/d83/loc_8h.html#a00e44a2e52d008cbdf792b699a90107f", null ],
     [ "loc_add_focus_offset", "d1/d83/loc_8h.html#ab4fb59327b34b322b09c3d5e04d60708", null ],
     [ "loc2mat", "d1/d83/loc_8h.html#a961eedac8c3398ba77adc6c9dddc2cd9", null ],
     [ "pts2loc", "d1/d83/loc_8h.html#ab855fe221abf303219c6015930b966e8", null ],
@@ -56,6 +54,5 @@ var loc_8h =
     [ "loc_nxny", "d1/d83/loc_8h.html#a661df971a3fe89b0c20a4f9b81772f33", null ],
     [ "locresize", "d1/d83/loc_8h.html#a4d17a0ee145421054bd35a35b55fb05d", null ],
     [ "loc_dxdy", "d1/d83/loc_8h.html#acd9de0b3686313b9f4235d351f9b82e5", null ],
-    [ "loc_keywords", "d1/d83/loc_8h.html#ae9e58cb7c47e06eb95dc83f36bd37041", null ],
     [ "loc_coord2ind", "d1/d83/loc_8h.html#ab2bc324bef2c93728a7ca2b8d79f167b", null ]
 ];

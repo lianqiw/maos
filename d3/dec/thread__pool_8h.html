@@ -173,13 +173,7 @@ group</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize the thread pool. Repeated call to resize the pool</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nthread</td><td>Number of threads including the master thread. 0 or more than the number of processors uses the number of processors. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Initialize the thread pool. Repeated call to resize the pool </p>
 
 </div>
 </div>
@@ -216,18 +210,8 @@ group</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Queue jobs that belongs to group denoted by counter. counter-&gt;group will be incremented by 1 for each job queued and decreased by 1 after each job is finished. Wait on it will clear when count is decreased to zero.</p>
-<p>Job is added to jobsnormal or joburgent depending on urgent value</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">counter</td><td>Job group counter. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fun</td><td>Function to call with arg for each job. If NULL, arg is an array of <a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a> and each valid element's own fun is called with it. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Argument of fun, or array of njob <a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a> if fun is NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">njob</td><td>Number of jobs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">urgent</td><td>Whether the jobs are urgent. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Queue jobs that belongs to group denoted by group. The argument group, will be incremented by 1 for each job queued and decreased by 1 after each job is finished. Wait on it will clear when count is decreased to zero.</p>
+<p>Job is added to jobsnormal or joburgent depending on urgent value </p>
 
 </div>
 </div>
@@ -249,14 +233,7 @@ group</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wait for jobs in the count to be done. Does jobs while waiting. Has the potential to deadlock if it calls do_job and the job inside calls pthread_cond_wait.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">counter</td><td>Job group counter to wait for. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">urgent</td><td>Whether to only do urgent jobs while waiting. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Wait for jobs in the count to be done. Has the potential to deadlock if it calls do_job and the job inside calls pthread_cond_wait. </p>
 
 </div>
 </div>

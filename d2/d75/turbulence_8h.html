@@ -304,19 +304,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A simpler interface to gerate a single screen.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m) at 0.5 micron. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>Outer scale (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slope</td><td>PSD slope. 0 means -11/3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x and y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">seed</td><td>Random seed. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated screen. The caller frees it. </dd></dl>
+<p>A simpler interface to gerate a single screen. </p>
 
 </div>
 </div>
@@ -353,18 +341,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate atmosphere and map onto loc.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Grid coordinate. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m) at 0.5 micron. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dsa</td><td>Outer scale (m) of the generated screen. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slope</td><td>PSD slope. 0 means -11/3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">seed</td><td>Random seed. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated OPD (m) defined on loc. The caller frees it. </dd></dl>
+<p>Generate atmosphere and map onto loc. </p>
 
 </div>
 </div>
@@ -382,14 +359,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generates multiple screens from spectrum. Note that if data-&gt;share=1, the atmosphere will be different from data-&gt;share=0 due to different algorithms used.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">data</td><td>Atmosphere generation parameters. The random stream is consumed. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated screens, one per layer. If data-&gt;share is set, they are memory mapped from the cache file. The caller frees it. </dd></dl>
+<p>Generates multiple screens from spectrum. Note that if data-&gt;share=1, the atmosphere will be different from data-&gt;share=0 due to different algorithms used. </p>
 
 </div>
 </div>
@@ -407,14 +377,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate screen according to a header. It has multiple possible options. 1) If is a filename. load from file 2) if mode and petal is not set. generate screen from PSD with the following keys L0 (Outer scale) slope (optional, default is -11/3) seed (optional) 3) If mode is set. generate from a zernike mode with the following keys mode (zernike mode) 4) If petal is set. generate randomized petal modes each with rms value. petal sets total number of petals theta0 sets petal gap orientation angular offset in radian. 0 means a gap is along y axis. seed piston: generates piston mode if set tip: generate tip mode if set tilt: generates tilt mode if set The following common parameters are used: r0 (Fried parameter in m) or rms (in nm) dx (sampling) nx (number of points)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>File name or a string of key=value pairs as described above. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated screens. The caller frees it. </dd></dl>
+<p>Generate screen according to a header. It has multiple possible options. 1) If is a filename. load from file 2) if mode and petal is not set. generate screen from PSD with the following keys L0 (Outer scale) slope (optional, default is -11/3) seed (optional) 3) If mode is set. generate from a zernike mode with the following keys mode (zernike mode) 4) If petal is set. generate randomized petal modes each with rms value. petal sets total number of petals theta0 sets petal gap orientation angular offset in radian. 0 means a gap is along y axis. seed piston: generates piston mode if set tip: generate tip mode if set tilt: generates tilt mode if set The following common parameters are used: r0 (Fried parameter in m) or rms (in nm) dx (sampling) nx (number of points) </p>
 
 </div>
 </div>
@@ -446,17 +409,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the covariance for separation of r, and put the values in cov. In kolmogorov spectrum, the variance are defined as half of the structure function between two points separated by rmax.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r</td><td>Separation (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rmax</td><td>Maximum separation (m). Only used for kolmogorov spectrum. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m) at 0.5 micron. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>Outer scale (m). Infinity means kolmogorov spectrum. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated OPD covariance (m^2) with the same size as r. The caller frees it. </dd></dl>
+<p>Compute the covariance for separation of r, and put the values in cov. In kolmogorov spectrum, the variance are defined as half of the structure function between two points separated by rmax. </p>
 
 </div>
 </div>
@@ -518,19 +471,19 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Creates 2-d PSD at size nx*ny: psd=(strength*(f^2+L0^-2)^(slope/2))^power. Zero frequency component is in the corner <a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(psd,0)</a>.</p>
+<p>Creates 2-d PSD at size nx*ny: psd=(strength*(f^2+L0^-2)^(slope/2))^power. Zero frequency component is in the corner <a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(psd,0)</a>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>Output. Reused if the size matches, otherwise (re)allocated. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>The size along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>The size along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>The sampling of spatial coordinate (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">strength</td><td>Strength coefficient. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">outerscale</td><td>Outerscale (m). 0 means infinity. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">minfreq</td><td>Low end frequency cut off (1/m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxfreq</td><td>High end frequency cut off (1/m). 0 means infinity. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slope</td><td>should be -11/3 for von karman or kolmogorov screens, or -4 for biharmonic screen (just testing only). 0 means -11/3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">power</td><td>optionally do a power of psd. </td></tr>
+    <tr><td class="paramname">pout</td><td>Output  </td></tr>
+    <tr><td class="paramname">nx</td><td>The size  </td></tr>
+    <tr><td class="paramname">ny</td><td>The size  </td></tr>
+    <tr><td class="paramname">dx</td><td>The sampling of spatial coordinate.  </td></tr>
+    <tr><td class="paramname">strength</td><td>Strength coefficient  </td></tr>
+    <tr><td class="paramname">outerscale</td><td>Outerscale  </td></tr>
+    <tr><td class="paramname">minfreq</td><td>Low end frequency cut off  </td></tr>
+    <tr><td class="paramname">maxfreq</td><td>High end frequency cut off  </td></tr>
+    <tr><td class="paramname">slope</td><td>should be -11/3 for von karman or kolmogorov screens, or -4 for biharmonic screen (just testing only).  </td></tr>
+    <tr><td class="paramname">power</td><td>optionally do a power of psd. </td></tr>
   </table>
   </dd>
 </dl>
@@ -580,20 +533,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute spatial PSD of turbulence spectrum.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>The size along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>The size along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>The sampling (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m) at 0.5 micron. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>Outer scale (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slope</td><td>PSD slope. 0 means -11/3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">power</td><td>Power to apply to the PSD (e.g., 0.5 for the amplitude spectrum). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated PSD with zero frequency at the corner. The caller frees it. </dd></dl>
+<p>Compute spatial PSD of turbulence spectrum. </p>
 
 </div>
 </div>
@@ -625,17 +565,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and weights.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nps</td><td>Number of layers. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ht</td><td>Layer heights (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wt</td><td>Layer weights. Layers with weight below 0.01 are ignored. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Isoplanatic angle (radian). </dd></dl>
+<p>Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and weights. </p>
 
 </div>
 </div>
@@ -667,17 +597,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Estimate Green wood frequency</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nps</td><td>Number of layers. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ws</td><td>Layer wind speeds (m/s). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wt</td><td>Layer weights. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Greenwood frequency (Hz). </dd></dl>
+<p>Estimate Green wood frequency </p>
 
 </div>
 </div>
@@ -719,19 +639,7 @@ screen</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Estimate generalized aniso angle theta2 from Fried parameter r0, and layer height and weights, and deformable mirror conjugation heights hc1 hc2 of the ground and altitude DMs.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nps</td><td>Number of layers. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ht</td><td>Layer heights (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wt</td><td>Layer weights. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hc1</td><td>Conjugation height (m) of the ground DM. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hc2</td><td>Conjugation height (m) of the altitude DM. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Generalized isoplanatic angle (radian). </dd></dl>
+<p>Estimate generalized aniso angle theta2 from Fried parameter r0, and layer height and weights, and deformable mirror conjugation heights hc1 hc2 of the ground and altitude DMs. </p>
 
 </div>
 </div>

@@ -138,17 +138,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Prepare data for Tomography Fourier Domain Preconditioner.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>Reconstructor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>WFS type data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">atm</td><td>Atmosphere screens. Used to provide wind velocity information for delay compensation. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated preconditioner data. Free with fdpcg_free(). </dd></dl>
+<p>Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information. </p>
 
 </div>
 </div>
@@ -175,15 +165,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the Fourier domain preconditioner. Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin));</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>Output. Allocated if NULL. The content is replaced. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The reconstructor (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a>). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Input. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply the Fourier domain preconditioner. Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin)); </p>
 
 </div>
 </div>
@@ -201,13 +183,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free fdpcg related data structs.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fdpcg</td><td>The struct to free. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free fdpcg related data structs. </p>
 
 </div>
 </div>

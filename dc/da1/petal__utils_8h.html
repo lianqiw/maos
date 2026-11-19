@@ -132,15 +132,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setup petaling mode control when recon.petal is set: petal modes on the ground DM (recon-&gt;apetal) and petal reconstructors for the TTF and TT OIWFS.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. apetal and petal are allocated and set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Petaling mode control </p>
 
 </div>
 </div>
@@ -158,13 +150,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reconstruct petal modes. The function is now split into three parts: Part 1: accumuate i0 at every time step and set do_petal if a reconstruction is due. Part 2: launch a new thread to do the petal reconstruction. Part 3: join the thread and do post-processing to update the reference vectors.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>The simulation struct. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Reconstruct petal modes. The function is now split into three parts: Part 1: accumuate i0 at every time step and set do_petal if a reconstruction is due. Part 2: launch a new thread to do the petal reconstruction. Part 3: join the thread and do post-processing to update the reference vectors. </p>
 
 </div>
 </div>

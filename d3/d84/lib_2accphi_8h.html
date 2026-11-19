@@ -107,10 +107,13 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab50dd3a4ec22182aeb21b70fc006fbbb" id="r_ab50dd3a4ec22182aeb21b70fc006fbbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab50dd3a4ec22182aeb21b70fc006fbbb">prop_prep</a> (real *displacex, real *displacey, real *alpha, real *scale, <a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *propdata)</td></tr>
-<tr class="memitem:ae2fd5fecf711b86519a0c15ec8dd9aed" id="r_ae2fd5fecf711b86519a0c15ec8dd9aed"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae2fd5fecf711b86519a0c15ec8dd9aed">prop_thread</a> (<a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a> *data)</td></tr>
+<tr class="memitem:ab50dd3a4ec22182aeb21b70fc006fbbb" id="r_ab50dd3a4ec22182aeb21b70fc006fbbb"><td class="memItemLeft" align="right" valign="top"><a id="ab50dd3a4ec22182aeb21b70fc006fbbb" name="ab50dd3a4ec22182aeb21b70fc006fbbb"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>prop_prep</b> (real *displacex, real *displacey, real *alpha, real *scale, <a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *propdata)</td></tr>
+<tr class="memitem:ae2fd5fecf711b86519a0c15ec8dd9aed" id="r_ae2fd5fecf711b86519a0c15ec8dd9aed"><td class="memItemLeft" align="right" valign="top"><a id="ae2fd5fecf711b86519a0c15ec8dd9aed" name="ae2fd5fecf711b86519a0c15ec8dd9aed"></a>
+void *&#160;</td><td class="memItemRight" valign="bottom"><b>prop_thread</b> (<a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a> *data)</td></tr>
 <tr class="memitem:a3a0c016119a791f0a9fd1bda9c919cdc" id="r_a3a0c016119a791f0a9fd1bda9c919cdc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3a0c016119a791f0a9fd1bda9c919cdc">prop_range</a> (<a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *propdata, <a class="el" href="../../d7/d63/classlong.html">long</a> start, <a class="el" href="../../d7/d63/classlong.html">long</a> end)</td></tr>
-<tr class="memitem:a9186a62ba17b7bb6e507b6204ed8763e" id="r_a9186a62ba17b7bb6e507b6204ed8763e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9186a62ba17b7bb6e507b6204ed8763e">prop</a> (<a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *propdata)</td></tr>
+<tr class="memitem:a9186a62ba17b7bb6e507b6204ed8763e" id="r_a9186a62ba17b7bb6e507b6204ed8763e"><td class="memItemLeft" align="right" valign="top"><a id="a9186a62ba17b7bb6e507b6204ed8763e" name="a9186a62ba17b7bb6e507b6204ed8763e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>prop</b> (<a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *propdata)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains ray tracing routines optimized for different input/output formats. Notice that the OPDs are accumulated. </p>
@@ -289,79 +292,6 @@ bin</td>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
-<a id="ab50dd3a4ec22182aeb21b70fc006fbbb" name="ab50dd3a4ec22182aeb21b70fc006fbbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab50dd3a4ec22182aeb21b70fc006fbbb">&#9670;&#160;</a></span>prop_prep()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int prop_prep </td>
-          <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>displacex</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>displacey</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>alpha</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>scale</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *</td>          <td class="paramname"><span class="paramname"><em>propdata</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute the ray tracing geometry from propdata: the displacement (displacex, displacey) at the input layer, the amplitude scaling alpha (including angle of incidence), and the cone effect scaling factor scale. Fills defaults of propdata-&gt;alpha (1) and propdata-&gt;hs (infinity).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">displacex</td><td>Displacement along x at the input layer (m). </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">displacey</td><td>Displacement along y at the input layer (m). </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">alpha</td><td>Amplitude scaling including angle of incidence. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">scale</td><td>Cone effect scaling factor. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">propdata</td><td>Ray tracing parameters; defaults of alpha and hs are filled in. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if valid, 0 if the layer is above the guide star. </dd></dl>
-
-</div>
-</div>
-<a id="ae2fd5fecf711b86519a0c15ec8dd9aed" name="ae2fd5fecf711b86519a0c15ec8dd9aed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae2fd5fecf711b86519a0c15ec8dd9aed">&#9670;&#160;</a></span>prop_thread()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void * prop_thread </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a> *</td>          <td class="paramname"><span class="paramname"><em>data</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>A unified wrapper of prop_range() for use with <a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Thread data with data-&gt;data pointing to <a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> and the range in start, end. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
-
-</div>
-</div>
 <a id="a3a0c016119a791f0a9fd1bda9c919cdc" name="a3a0c016119a791f0a9fd1bda9c919cdc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3a0c016119a791f0a9fd1bda9c919cdc">&#9670;&#160;</a></span>prop_range()</h2>
 
@@ -385,39 +315,7 @@ bin</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A wrapper prop routine that handles all the different cases by calling the different routines. Handles threading.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">propdata</td><td>Ray tracing parameters; the output OPD is accumulated into. alpha defaults to 1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>First output index (point, subaperture, or row) to process. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>One past the last output index to process. 0 means all. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a9186a62ba17b7bb6e507b6204ed8763e" name="a9186a62ba17b7bb6e507b6204ed8763e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9186a62ba17b7bb6e507b6204ed8763e">&#9670;&#160;</a></span>prop()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void prop </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="#d9/db3/structpropdata__t">propdata_t</a> *</td>          <td class="paramname"><span class="paramname"><em>propdata</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Ray tracing as specified by propdata for the full output range. See prop_range().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">propdata</td><td>Ray tracing parameters; the output OPD is accumulated into. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>A wrapper prop routine that handles all the different cases by calling the different routines. Handles threading. </p>
 
 </div>
 </div>

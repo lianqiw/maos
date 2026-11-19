@@ -525,22 +525,21 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize <a class="el" href="#d8/d2f/structcn2est__t">cn2est_t</a> for SLODAR based Cn2 estimation.</p>
+<p>Initialize <a class="el" href="#d8/d2f/structcn2est__t">cn2est_t</a> </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">wfspair</td><td>2n*1 vector for n pair of WFS indices. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wfstheta</td><td>nwfs*2: angular direction of each WFS (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>nsa*2: Subaperture low left corner coordinates. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>nsa*1: Normalized subaperture area. NULL to use all subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saat</td><td>Threshold, relative to the maximum of saa, for keeping subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>nwfs*1: altitude of guide star (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">htrecon</td><td>Layers height intended for tomography (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keepht</td><td>2: slodar directly to htrecon, otherwise: interpolate onto htrecon from native slodar heights. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>The Outer scale (m). </td></tr>
+    <tr><td class="paramname">wfspair</td><td>2n*1 vector for n pair of WFS indices.  </td></tr>
+    <tr><td class="paramname">wfstheta</td><td>nwfs*2: angular direction of each WFS.  </td></tr>
+    <tr><td class="paramname">saloc</td><td>nsa*2: Subaperture low left corner coordinates  </td></tr>
+    <tr><td class="paramname">saa</td><td>nsa*1: Normalized subaperture area  </td></tr>
+    <tr><td class="paramname">saat</td><td>Threshold for keeping subapertures  </td></tr>
+    <tr><td class="paramname">hs</td><td>nwfs*1: altitude of guide star  </td></tr>
+    <tr><td class="paramname">htrecon</td><td>Layers height intended for tomography  </td></tr>
+    <tr><td class="paramname">keepht</td><td>2: slodar directly to htrecon, otherwise: interpolate onto htrecon from native slodar heights  </td></tr>
+    <tr><td class="paramname">L0</td><td>The Outer scale </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#d8/d2f/structcn2est__t">cn2est_t</a>, or NULL if there is no WFS pair or not enough subapertures. Free with cn2est_free(). </dd></dl>
 
 </div>
 </div>
@@ -562,14 +561,7 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Do the Cn2 Estimation from the accumulated covariance. Results are stored in cn2est-&gt;wt, r0, r0m, and wtrecon.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">cn2est</td><td>Cn2 estimation data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">verbose</td><td>Whether to print the results. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Do the Cn2 Estimation. </p>
 
 </div>
 </div>
@@ -587,13 +579,7 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free all the data.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">cn2est</td><td>Cn2 estimation data to free. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free all the data. </p>
 
 </div>
 </div>
@@ -615,14 +601,7 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Accumulate the covariance of open loop gradients gradol (one per WFS) for Cn2 estimation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">cn2est</td><td>Cn2 estimation data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gradol</td><td>Open loop gradients of each WFS. Each column is a time step. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Accumulate the coveriance. </p>
 
 </div>
 </div>
@@ -684,23 +663,7 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>One stop wrapper for <a class="el" href="#a4834dcc10f7e6a8a0d9ed5f7bcf4ed1c">cn2est_new</a>, <a class="el" href="#a1bd3ade1eee4b147b5008af715ad1899">cn2est_push</a>, and <a class="el" href="#a8cf74d020a9038586d255930c14e9a6a">cn2est_est</a>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">wfspair</td><td>2n*1 vector for n pair of WFS indices. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wfstheta</td><td>nwfs*2: angular direction of each WFS. Treated as arcsec and converted to radian (in a temporary copy; the input is not modified) if its maximum absolute value is above 1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture low left corner coordinates. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>Normalized subaperture area. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saat</td><td>Threshold for keeping subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>Altitude of guide star (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">htrecon</td><td>Layers height intended for tomography (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keepht</td><td>2: slodar directly to htrecon, otherwise: interpolate onto htrecon. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">l0</td><td>The outer scale (m). </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">grad</td><td>Open loop gradients of each WFS. Reshaped to a column if it is a row. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#d8/d2f/structcn2est__t">cn2est_t</a> with the estimation result. Free with cn2est_free(). </dd></dl>
+<p>One stop wrapper for <a class="el" href="#a4834dcc10f7e6a8a0d9ed5f7bcf4ed1c">cn2est_new</a>, <a class="el" href="#a1bd3ade1eee4b147b5008af715ad1899">cn2est_push</a>, and <a class="el" href="#a8cf74d020a9038586d255930c14e9a6a">cn2est_est</a>. </p>
 
 </div>
 </div>
@@ -718,13 +681,7 @@ wtrecon</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reset the accumulation</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">cn2est</td><td>Cn2 estimation data. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Reset the accumulation </p>
 
 </div>
 </div>

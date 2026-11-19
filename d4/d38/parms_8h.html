@@ -137,7 +137,7 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:aa54a3168fd46da424c10df2764f9ef49" id="r_aa54a3168fd46da424c10df2764f9ef49"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa54a3168fd46da424c10df2764f9ef49">T_TYPE</a> { <b>T_PLOC</b> =0
+<tr class="memitem:aa54a3168fd46da424c10df2764f9ef49" id="r_aa54a3168fd46da424c10df2764f9ef49"><td class="memItemLeft" align="right" valign="top"><a id="aa54a3168fd46da424c10df2764f9ef49" name="aa54a3168fd46da424c10df2764f9ef49"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>T_TYPE</b> { <b>T_PLOC</b> =0
 , <b>T_ALOC</b>
 , <b>T_XLOC</b>
 , <b>T_ATM</b>
@@ -5722,22 +5722,6 @@ execmd</td>
 
 </div>
 </div>
-<a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
-<a id="aa54a3168fd46da424c10df2764f9ef49" name="aa54a3168fd46da424c10df2764f9ef49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa54a3168fd46da424c10df2764f9ef49">&#9670;&#160;</a></span>T_TYPE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="#aa54a3168fd46da424c10df2764f9ef49">T_TYPE</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>convenient constants. used in utils.c </p>
-
-</div>
-</div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
 <a id="ae093c8027457ac84653fbf51f5e325e6" name="ae093c8027457ac84653fbf51f5e325e6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae093c8027457ac84653fbf51f5e325e6">&#9670;&#160;</a></span>setup_parms()</h2>
@@ -5762,16 +5746,7 @@ execmd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>This routine calles other routines in this file to setup the parms parameter struct parms and check for possible errors. parms is kept constant after returned from setup_parms.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mainconf</td><td>The main .conf file. If NULL or empty, use ~/.aos/default.conf or default.conf. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">extraconf</td><td>Additional .conf files or lines that override the main configuration. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">override</td><td>If set, rerun seeds that are already done. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The parameter struct. Newly allocated; free it with <a class="el" href="../../d2/d9f/parms_8c.html#a8a6a2e33b33daf9cc04fbbd68733cd26">free_parms()</a>. </dd></dl>
+<p>This routine calles other routines in this file to setup the parms parameter struct parms and check for possible errors. parms is kept constant after returned from setup_parms. </p>
 
 </div>
 </div>
@@ -5798,15 +5773,7 @@ execmd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Additional setup_parms code to run when maos is running. It only contains GPU initialization code for the moment.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">parms</td><td>The parameter struct. GPU flags are adjusted. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gpus</td><td>List of GPU indices to use. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ngpu</td><td>Number of GPUs to use. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Additional setup_parms code to run when maos is running. It only contains GPU initialization code for the moment. </p>
 
 </div>
 </div>
@@ -5824,13 +5791,7 @@ execmd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the parms struct.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct to free, including the struct itself. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free the parms struct. </p>
 
 </div>
 </div>

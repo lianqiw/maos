@@ -164,21 +164,20 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>solve A*x=b using (preconditioned) conjugate gradient method</p>
-<p>; input x is first guess if not NULL and warm==1; A is symmetric positive definite (SPD) matrix plus low rand terms. x0 contains the initial guess. Amul is the operator that applies A to x.</p>
+<p>; input x is first guess if not NULL and warm==1; A is symmetric positive definite (SPD) matrix plus low rand terms. x0 contains the initial guess. Amul is the operator that applies A to x. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. Input for warm restart. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Amul</td><td>The function that applies y=y+A*x*alpha: (*Amul)(&amp;y,A,x,alpha). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Contain info about the left hand side matrix A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Mmul</td><td>The precond func that applies y=M^-1*x. NULL to disable preconditioning. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">M</td><td>Contains info about preconditioner matrix M. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">warm</td><td>Use warm restart (use the value contained in px). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxiter</td><td>Max number of iterations. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. input for warm restart.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">Amul</td><td>The function that applies y=y+A*x*alpha: (*Amul)(&amp;y,A,x,alpha)  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Contain info about the The left hand side matrix A  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">Mmul</td><td>The precond func that applies y=M^-1*x;  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">M</td><td>Contains info about preconditioner matrix M.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">warm</td><td>Use warm restart (use the value contained in px)  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxiter</td><td>Max number of iterations </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Final residual |b-A*x|/|b| after maxiter iterations, or 0 if terminated early. </dd></dl>
 
 </div>
 </div>

@@ -129,7 +129,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>read_cpu_counter</b> (
 double&#160;</td><td class="memItemRight" valign="bottom"><b>read_self_cpu</b> (void)</td></tr>
 <tr class="memitem:ac98d2202992eb71111685678bae4eb41" id="r_ac98d2202992eb71111685678bae4eb41"><td class="memItemLeft" align="right" valign="top"><a id="ac98d2202992eb71111685678bae4eb41" name="ac98d2202992eb71111685678bae4eb41"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>get_ncpu</b> (void)</td></tr>
-<tr class="memitem:ad4e774cdbb99440b5f5e4a80742411d2" id="r_ad4e774cdbb99440b5f5e4a80742411d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad4e774cdbb99440b5f5e4a80742411d2">set_dirout</a> (const char *dir)</td></tr>
+<tr class="memitem:ad4e774cdbb99440b5f5e4a80742411d2" id="r_ad4e774cdbb99440b5f5e4a80742411d2"><td class="memItemLeft" align="right" valign="top"><a id="ad4e774cdbb99440b5f5e4a80742411d2" name="ad4e774cdbb99440b5f5e4a80742411d2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>set_dirout</b> (const char *dir)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A few routines handles process resource. </p>
@@ -189,7 +190,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>get_ncpu</b> (void)</t
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the path strings (DIRBUILD, DIRCACHE, DIROUT, HOST, etc.) allocated by <a class="el" href="../../d0/d85/process_8c.html#a453c688586be0b4133d5cd3508985e41">init_process()</a>. TEMP and HOME are kept. </p>
+<p>free memory </p>
 
 </div>
 </div>
@@ -207,8 +208,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>get_ncpu</b> (void)</t
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain the current usage level of CPU, between 0 and 1.</p>
-<dl class="section return"><dt>Returns</dt><dd>Fraction of CPU time spent in user/system since the previous call (cached if called within 0.1 s). </dd></dl>
+<p>Obtain the current usage level of CPU, between 0 and 1. </p>
 
 </div>
 </div>
@@ -226,32 +226,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>get_ncpu</b> (void)</t
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return number of idle CPUs that are available to run jobs. Do not count hyperthread cores.</p>
-<dl class="section return"><dt>Returns</dt><dd>Number of available CPUs, 0 if the load is too high. </dd></dl>
-
-</div>
-</div>
-<a id="ad4e774cdbb99440b5f5e4a80742411d2" name="ad4e774cdbb99440b5f5e4a80742411d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4e774cdbb99440b5f5e4a80742411d2">&#9670;&#160;</a></span>set_dirout()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void set_dirout </td>
-          <td>(</td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>dir</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Set DIROUT, the result directory, to the absolute path of dir with the build directory and HOME abbreviated.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">dir</td><td>Output directory. Uses the current directory if NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Return number of idle CPUs that are available to run jobs. Do not count hyperthread cores. </p>
 
 </div>
 </div>

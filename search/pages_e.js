@@ -1,19 +1,11 @@
 var searchData=
 [
-  ['idl_0',['IDL',['../dd/da9/page40_results.html#sect-idl',1,'']]],
-  ['imager_1',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md44',1,'']]],
-  ['impact_20items_2',['High-impact items',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md105',1,'']]],
-  ['in_2088beaf2da_20that_20were_20incomplete_3',['Your earlier fixes in 88beaf2da that were incomplete',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md81',1,'']]],
-  ['in_20mac_20os_20and_20compile_20monitor_20drawdaemon_20optional_4',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md18',1,'']]],
-  ['incomplete_5',['Your earlier fixes in 88beaf2da that were incomplete',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md81',1,'']]],
-  ['influence_20function_6',['DM Actuator Influence Function',['../d4/d15/algorithm.html#sect-dm-actuator',1,'']]],
-  ['influence_20function_7',['influence function',['../d4/d15/algorithm.html#autotoc_md52',1,'Cubic influence function'],['../d4/d15/algorithm.html#autotoc_md51',1,'Linear influence function']]],
-  ['installing_20gtk_20in_20mac_20os_20and_20compile_20monitor_20drawdaemon_20optional_8',['Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)',['../d3/d4c/page20_compile.html#autotoc_md18',1,'']]],
-  ['integral_9',['Fresnel diffraction integral',['../d4/d15/algorithm.html#autotoc_md54',1,'']]],
-  ['interface_10',['Interface',['../d3/d4c/page20_compile.html#autotoc_md19',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md20',1,'Graphical User Interface']]],
-  ['interface_20h_11',['batch10 math/sp*, zfarr, mex/interface.h',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md64',1,'']]],
-  ['interface_20to_20maos_12',['Interface to MAOS',['../d3/d4c/page20_compile.html#autotoc_md25',1,'']]],
-  ['introduction_13',['Introduction',['../da/d9f/page10_intro.html',1,'']]],
-  ['iris_20imager_14',['IRIS Imager',['../d6/d3f/page43_nfiraos.html#autotoc_md44',1,'']]],
-  ['items_15',['High-impact items',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md105',1,'']]]
+  ['k_20band_20strehl_20ratio_0',['K band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md41',1,'']]],
+  ['keck_20conf_1',['examples/keck.conf',['../d8/d82/keck.html',1,'page34_conf']]],
+  ['keck_5f2dm30_20conf_2',['examples/keck_2dm30.conf',['../d2/d72/keck_2dm30.html',1,'page34_conf']]],
+  ['keck_5f2dm60_20conf_3',['examples/keck_2dm60.conf',['../d9/da8/keck_2dm60.html',1,'page34_conf']]],
+  ['keck_5f3dm60_20conf_4',['examples/keck_3dm60.conf',['../d3/dbb/keck_3dm60.html',1,'page34_conf']]],
+  ['keck_5fbase_20conf_5',['examples/keck_base.conf',['../da/d0f/keck_base.html',1,'page34_conf']]],
+  ['keck_5flgs_20conf_6',['examples/keck_lgs.conf',['../d4/d19/keck_lgs.html',1,'page34_conf']]],
+  ['keck_5fngs_20conf_7',['examples/keck_ngs.conf',['../da/dac/keck_ngs.html',1,'page34_conf']]]
 ];

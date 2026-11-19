@@ -133,14 +133,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Performance evaluation for each direction in parallel mode.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">info</td><td>Thread info. info-&gt;data is the simulation struct and [info-&gt;start, info-&gt;end) is the range of directions. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<p>Performance evaluation for each direction in parallel mode. </p>
 
 </div>
 </div>
@@ -160,14 +153,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Peformance evaluation on science FoV.</p>
 <p>Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean to field average. Notice that the science FoV can be different from the DM fitting FoV, which is tuned to better sharpen the NGS</p>
-<dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000006">Todo</a></b></dt><dd>Write a standalone routine that can plot results, using techniques developped in drawdaemon.</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>The simulation struct. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000006">Todo</a></b></dt><dd>Write a standalone routine that can plot results, using techniques developped in drawdaemon. <br  />
+ </dd></dl>
 
 </div>
 </div>
@@ -186,13 +173,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Prepares the DM caching structs that caches DM on fine sampled grid to speed up ray tracing with linear interpolation.</p>
-<p>Because the DM has coarse sampling, and cubic influence functions, directly interpolate from the DM to the WFS and science OPD takes a lot of computation. We can speed up this process by first propagating the DM commands to a square grid that matches the sampling of the WFS or science OPD, and then propagate from the square grid to different WFS or science directions. For each sampling and each DM, we only need one fine sampled square grid that will cover all the different directions in the FoV of the WFSs or science. For the ground DM, we need a plane of 1/64m sampling that matches the WFS and science OPD. For the upper DM, we need to two planes, one at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m (1-11.2/90) for the LGS due to cone effect. The square grid are on axis.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. The DM cache grid and ray tracing threads are created. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Because the DM has coarse sampling, and cubic influence functions, directly interpolate from the DM to the WFS and science OPD takes a lot of computation. We can speed up this process by first propagating the DM commands to a square grid that matches the sampling of the WFS or science OPD, and then propagate from the square grid to different WFS or science directions. For each sampling and each DM, we only need one fine sampled square grid that will cover all the different directions in the FoV of the WFSs or science. For the ground DM, we need a plane of 1/64m sampling that matches the WFS and science OPD. For the upper DM, we need to two planes, one at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m (1-11.2/90) for the LGS due to cone effect. The square grid are on axis. </p>
 
 </div>
 </div>
@@ -210,13 +191,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Partition the ray tracing by DM/Destination combinations, as well as segments in each combination to maximum efficiency.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. The DM cache is updated from the current DM commands. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Partition the ray tracing by DM/Destination combinations, as well as segments in each combination to maximum efficiency. </p>
 
 </div>
 </div>
@@ -234,13 +209,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Does the servo filtering by calling filter_cl() or using the open loop error directly.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Does the servo filtering by calling filter_cl() or filter_ol() </p>
 
 </div>
 </div>
@@ -258,13 +227,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Update various quantities upon updating dmreal.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Update various quantities upon updating dmreal. </p>
 
 </div>
 </div>
@@ -282,14 +245,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calls wfsgrad_iwfs() to computes WFS gradient in parallel. It also includes operations on Gradients before tomography.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<p>Calls wfsgrad_iwfs() to computes WFS gradient in parallel. It also includes operations on Gradients before tomography. </p>
 
 </div>
 </div>
@@ -309,14 +265,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>compute physical optics images and add to ints. be careful that fftw inverse fft doesn't have 1/n^2 scaling. this function lives inside the threading routine wfsgradx</p>
 <p>Notice that the uplink have to have the same spatial sampling as the subaperture (dx). uplink psf has sampling lambda/(nlwvf*dx) subaperture has sampling lambda/(nwvf*dx) uplink otf has the sampling dx/lambda sampling as subaperture.</p>
-<p>WHen notf is bigger than nwvf*embfac, the PSF is embeded which preserves the sampling. The uplink OTF need to be upsampled to dx/lambda *(nwvf/notf)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">thread_data</td><td>Thread data; data is a <a class="el" href="../../d6/d94/maos_2types_8h.html#db/dc4/structwfsints__t">wfsints_t</a> whose ints and pistatout are accumulated for subapertures from start to end. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<p>WHen notf is bigger than nwvf*embfac, the PSF is embeded which preserves the sampling. The uplink OTF need to be upsampled to dx/lambda *(nwvf/notf) </p>
 
 </div>
 </div>
@@ -348,16 +297,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Propagate only controllable component of turbulence to WFS.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>WFS OPD to accumulate into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Propagate only controllable component of turbulence to WFS. </p>
 
 </div>
 </div>
@@ -375,14 +315,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>computes close loop and pseudo open loop gradidents for both gometric and physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in physical optics mode.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>Thread data; info-&gt;data is <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>, which is updated, and info-&gt;start is the WFS index. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<p>computes close loop and pseudo open loop gradidents for both gometric and physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in physical optics mode. </p>
 
 </div>
 </div>
@@ -400,14 +333,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Post process gradients of each WFS (scaling, offset, saving and plotting). Every operation here should be in the Simulator not the Controller.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>Thread data; info-&gt;data is <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>, which is updated, and WFS start to end are processed. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>NULL. </dd></dl>
+<p>Every operation here should be in the Simulator not the Controller </p>
 
 </div>
 </div>
@@ -425,13 +351,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Servo filter for FSM commands.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Servo filter for FSM commands. </p>
 
 </div>
 </div>

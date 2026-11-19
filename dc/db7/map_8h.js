@@ -4,8 +4,6 @@ var map_8h =
     [ "rmap_convert", "dc/db7/map_8h.html#ac44af32fcc3487df0d7dc4f861eb64f7", null ],
     [ "mapnew", "dc/db7/map_8h.html#a3aff9d494ac68438376e0bb4e894bb70", null ],
     [ "mapnew2", "dc/db7/map_8h.html#a137222cc40e02cb453f0856b0514b030", null ],
-    [ "mapref", "dc/db7/map_8h.html#ac70064ac7d2425cc75006eaa6bea8a4b", null ],
-    [ "mapdup", "dc/db7/map_8h.html#a80e1822405617f91e90e4ff5f0225a80", null ],
     [ "mapcircle", "dc/db7/map_8h.html#a2f14bff75349a1a03b75f0a7665cefb6", null ],
     [ "map_d_din", "dc/db7/map_8h.html#a37d70ae639530fbecf1e8393a360114a", null ],
     [ "create_metapupil", "dc/db7/map_8h.html#a1863fb416c429ceb5076bbcec266245c", null ],

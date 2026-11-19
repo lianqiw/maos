@@ -135,16 +135,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize the stfun data to calculate structure function.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x of the OPD. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of points along y of the OPD. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude map of nx*ny points. If NULL, a uniform amplitude of 1 is used. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated stfun_t. It is freed by stfun_finalize(). </dd></dl>
+<p>Initialize the stfun data to calculate structure function. </p>
 
 </div>
 </div>
@@ -166,14 +157,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Accumulate the OPD for structure function computation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The stfun data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD of nx*ny points. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Accumulate OPDs. </p>
 
 </div>
 </div>
@@ -191,14 +175,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Use accumulated data to compute the structure function.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The stfun data. It is freed by this function. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated structure function of size 2nx*2ny. The caller frees it. </dd></dl>
+<p>Use accumulated data to compute the structure function. </p>
 
 </div>
 </div>
@@ -220,15 +197,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Batch process cell array of OPDs.</p>
+<p>Batch process cell array of OPDs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd_</td><td>A single nx*ny OPD or a cell array of nz nx*ny OPDs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>nx*ny array of the amplitude map. May be NULL. </td></tr>
+    <tr><td class="paramname">opd_</td><td>nz array of nx*ny array of the OPD  </td></tr>
+    <tr><td class="paramname">amp</td><td>n*ny array of the amplitude map </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated structure function. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -250,15 +226,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate the structure function of the phase of kolmogorov spectrum.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Grid coordinate (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m) at 0.5 micron. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nloc*nloc structure function in OPD (m^2) between each pair of points. The caller frees it. </dd></dl>
+<p>Generate the structure function of the phase of kolmogorov spectrum. </p>
 
 </div>
 </div>

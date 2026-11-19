@@ -129,118 +129,16 @@ $(function(){initNavTree('d3/dd7/class_cpu_obj.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3732b40185008b11705fb85624e66c03" id="r_a3732b40185008b11705fb85624e66c03"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3732b40185008b11705fb85624e66c03">operator new[]</a> (size_t size)</td></tr>
-<tr class="memitem:a3a03dc1e6913c62eb00e9ad30ae8b34c" id="r_a3a03dc1e6913c62eb00e9ad30ae8b34c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3a03dc1e6913c62eb00e9ad30ae8b34c">operator delete[]</a> (void *p)</td></tr>
+<tr class="memitem:a3732b40185008b11705fb85624e66c03" id="r_a3732b40185008b11705fb85624e66c03"><td class="memItemLeft" align="right" valign="top"><a id="a3732b40185008b11705fb85624e66c03" name="a3732b40185008b11705fb85624e66c03"></a>
+void *&#160;</td><td class="memItemRight" valign="bottom"><b>operator new[]</b> (size_t size)</td></tr>
+<tr class="memitem:a3a03dc1e6913c62eb00e9ad30ae8b34c" id="r_a3a03dc1e6913c62eb00e9ad30ae8b34c"><td class="memItemLeft" align="right" valign="top"><a id="a3a03dc1e6913c62eb00e9ad30ae8b34c" name="a3a03dc1e6913c62eb00e9ad30ae8b34c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete[]</b> (void *p)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a957ac824e555775254900ab6ad84a1fc" id="r_a957ac824e555775254900ab6ad84a1fc"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a957ac824e555775254900ab6ad84a1fc">Copy</a> (T *pout, const T *pin, size_t size, cudaStream_t stream=0)</td></tr>
+<tr class="memitem:a957ac824e555775254900ab6ad84a1fc" id="r_a957ac824e555775254900ab6ad84a1fc"><td class="memItemLeft" align="right" valign="top"><a id="a957ac824e555775254900ab6ad84a1fc" name="a957ac824e555775254900ab6ad84a1fc"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>Copy</b> (T *pout, const T *pin, size_t size, cudaStream_t stream=0)</td></tr>
 </table>
-<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a3732b40185008b11705fb85624e66c03" name="a3732b40185008b11705fb85624e66c03"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3732b40185008b11705fb85624e66c03">&#9670;&#160;</a></span>operator new[]()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void * <a class="el" href="../../d3/dd7/class_cpu_obj.html">CpuObj</a>&lt; T &gt;::operator new[] </td>
-          <td>(</td>
-          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Allocate zero initialized host memory for objects.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of bytes. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Allocated memory. Freed with delete[]. </dd></dl>
-
-</div>
-</div>
-<a id="a3a03dc1e6913c62eb00e9ad30ae8b34c" name="a3a03dc1e6913c62eb00e9ad30ae8b34c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a03dc1e6913c62eb00e9ad30ae8b34c">&#9670;&#160;</a></span>operator delete[]()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d3/dd7/class_cpu_obj.html">CpuObj</a>&lt; T &gt;::operator delete[] </td>
-          <td>(</td>
-          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>p</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Free host memory allocated by new[].</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Memory to free. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a957ac824e555775254900ab6ad84a1fc" name="a957ac824e555775254900ab6ad84a1fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a957ac824e555775254900ab6ad84a1fc">&#9670;&#160;</a></span>Copy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d3/dd7/class_cpu_obj.html">CpuObj</a>&lt; T &gt;::Copy </td>
-          <td>(</td>
-          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>pout</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const T *</td>          <td class="paramname"><span class="paramname"><em>pin</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">cudaStream_t</td>          <td class="paramname"><span class="paramname"><em>stream</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Copy objects by assignment after synchronizing stream if it is not 0.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pout</td><td>Destination. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pin</td><td>Source. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of elements. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to synchronize first. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>cuda/math/<b>types.h</b></li>
 </ul>

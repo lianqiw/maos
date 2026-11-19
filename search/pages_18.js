@@ -1,31 +1,4 @@
 var searchData=
 [
-  ['tables_0',['Per-group verdict tables',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md87',1,'']]],
-  ['telemetry_20data_1',['Telemetry Data',['../dd/da9/page40_results.html#telemetry',1,'']]],
-  ['test_20lib_20accphi_20libmisc_2',['batch03 cuda/test, lib/accphi..libmisc',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md73',1,'']]],
-  ['test_20part_3',['batch02 cuda/recon, cuda/sim, cuda/test (part)',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md72',1,'']]],
-  ['tests_4',['Tests',['../d6/d23/md__c_l_a_u_d_e.html#autotoc_md2',1,'']]],
-  ['that_20can_20change_20simulation_20results_5',['Fixes that can change simulation results',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md82',1,'']]],
-  ['that_20were_20incomplete_6',['Your earlier fixes in 88beaf2da that were incomplete',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md81',1,'']]],
-  ['the_20code_7',['the Code',['../d3/d4c/page20_compile.html',1,'Compile the Code'],['../d3/d4c/page20_compile.html#autotoc_md14',1,'Compile the Code']]],
-  ['the_20code_8',['Download the code',['../d3/d4c/page20_compile.html#autotoc_md9',1,'']]],
-  ['the_20combined_20patch_9',['Verification of the combined patch',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md79',1,'']]],
-  ['thread_20zstdio_20tools_20drawdaemon_10',['batch13 sys/sock*,thread*,zstdio, tools/drawdaemon*',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md68',1,'']]],
-  ['tmt_20conf_11',['examples/tmt.conf',['../d8/d0f/tmt.html',1,'page34_conf']]],
-  ['tmt_20nfiraos_20lgs_20mcao_12',['TMT NFIRAOS LGS MCAO',['../da/dd3/nfiraos_example.html',1,'page33_example']]],
-  ['to_20maos_13',['Interface to MAOS',['../d3/d4c/page20_compile.html#autotoc_md25',1,'']]],
-  ['to_20sphere_20propagation_14',['Sphere to sphere propagation',['../d4/d15/algorithm.html#autotoc_md59',1,'']]],
-  ['todo_20list_15',['Todo List',['../dd/da0/todo.html',1,'']]],
-  ['tomography_20results_16',['Split tomography results',['../dd/da9/page40_results.html#autotoc_md36',1,'']]],
-  ['tools_20drawdaemon_17',['batch13 sys/sock*,thread*,zstdio, tools/drawdaemon*',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md68',1,'']]],
-  ['tools_20monitor_20ethtest_20memdbg_20mvm_5fcpu_20psfgc_18',['batch14 tools (monitor, ethtest, memdbg, mvm_cpu, psfgc...)',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md67',1,'']]],
-  ['tools_20scheduler_19',['batch15 tools/scheduler*',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md62',1,'']]],
-  ['tools_5fmex_20',['Group: tools_mex',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md106',1,'']]],
-  ['tools_5fmex_20fixes_20base_3a_2088beaf2da_21',['tools_mex fixes (base: 88beaf2da)',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md107',1,'']]],
-  ['triage_22',['lib group: bug triage',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md96',1,'']]],
-  ['turbulence_20profile_23',['Turbulence profile',['../d6/d3f/page43_nfiraos.html#autotoc_md41',1,'']]],
-  ['turbulence_20zernike_20maos_20ahst_20dither_5futils_20filter_20fdpcg_20maos_20moao_20mvm_5fclient_24',['batch05 lib/servo,slaving,stfun,turbulence,zernike; maos/ahst,dither_utils,filter,fdpcg,maos,moao,mvm_client',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md71',1,'']]],
-  ['twfs_20utils_20wfsgrad_20wfsints_20math_20amoeba_20bessik_20blas_20cell_20fft_25',['batch07 maos/sim*,surf,twfs,utils,wfsgrad,wfsints, math/amoeba,bessik,blas,cell,fft',['../d4/d1e/md_docs_2claude__bugs__20261119.html#autotoc_md70',1,'']]],
-  ['two_20dimension_20pointers_26',['Two Dimension Pointers',['../d5/d98/page91_basics.html#sect-2d-pointer',1,'']]],
-  ['types_27',['Types',['../d5/d98/page91_basics.html#sect-maos-math',1,'Fundamental Math Types'],['../d5/d98/page91_basics.html#sect-maos-data',1,'MAOS Data Types'],['../d5/d98/page91_basics.html#sect-specific-type',1,'Specific Types']]]
+  ['variation_0',['Sodium range variation',['../da/dc3/page30_run.html#sect-sodium',1,'']]]
 ];

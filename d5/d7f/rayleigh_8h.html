@@ -109,8 +109,11 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af352c6fe9797b9fd84d665a8fbd346be" id="r_af352c6fe9797b9fd84d665a8fbd346be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af352c6fe9797b9fd84d665a8fbd346be">rayleigh</a> (<a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *cfg)</td></tr>
-<tr class="memitem:aa4d70bdc8b8b9f0b4e6d44cb216f3392" id="r_aa4d70bdc8b8b9f0b4e6d44cb216f3392"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa4d70bdc8b8b9f0b4e6d44cb216f3392">rayleigh_free</a> (<a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *cfg)</td></tr>
-<tr class="memitem:adaf569250c44d1d73f340b676550d877" id="r_adaf569250c44d1d73f340b676550d877"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adaf569250c44d1d73f340b676550d877">rayleigh_setup</a> (real D)</td></tr>
+<tr class="memdesc:af352c6fe9797b9fd84d665a8fbd346be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute rayleigh backscatter patterns for all WFS. All input are in SI unit.  <br /></td></tr>
+<tr class="memitem:aa4d70bdc8b8b9f0b4e6d44cb216f3392" id="r_aa4d70bdc8b8b9f0b4e6d44cb216f3392"><td class="memItemLeft" align="right" valign="top"><a id="aa4d70bdc8b8b9f0b4e6d44cb216f3392" name="aa4d70bdc8b8b9f0b4e6d44cb216f3392"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>rayleigh_free</b> (<a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *cfg)</td></tr>
+<tr class="memitem:adaf569250c44d1d73f340b676550d877" id="r_adaf569250c44d1d73f340b676550d877"><td class="memItemLeft" align="right" valign="top"><a id="adaf569250c44d1d73f340b676550d877" name="adaf569250c44d1d73f340b676550d877"></a>
+<a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>rayleigh_setup</b> (real D)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Compute rayleigh backscatter for WFS subaperture </p>
@@ -252,63 +255,9 @@ npsf</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute rayleigh backscatter patterns for all WFS. All input are in SI unit.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">cfg</td><td>The configuration, including subaperture grid, WFS directions, LLT locations and scattering layers. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nsa*nwfs cell of npsf*npsf backscatter PSF for each subaperture, or NULL if cfg is NULL; the caller frees it. </dd></dl>
 
-</div>
-</div>
-<a id="aa4d70bdc8b8b9f0b4e6d44cb216f3392" name="aa4d70bdc8b8b9f0b4e6d44cb216f3392"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa4d70bdc8b8b9f0b4e6d44cb216f3392">&#9670;&#160;</a></span>rayleigh_free()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void rayleigh_free </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> *</td>          <td class="paramname"><span class="paramname"><em>cfg</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Free <a class="el" href="#d0/dfa/structrayleigh__t" title="Parameters for the rayleigh() scattering simulation.">rayleigh_t</a> created by rayleigh_setup().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">cfg</td><td>The configuration to free. Can be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="adaf569250c44d1d73f340b676550d877" name="adaf569250c44d1d73f340b676550d877"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adaf569250c44d1d73f340b676550d877">&#9670;&#160;</a></span>rayleigh_setup()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="#d0/dfa/structrayleigh__t">rayleigh_t</a> * rayleigh_setup </td>
-          <td>(</td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>D</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Create a test configuration of <a class="el" href="#d0/dfa/structrayleigh__t" title="Parameters for the rayleigh() scattering simulation.">rayleigh_t</a> for a telescope of diameter D (default 5 m): annular subaperture grid, 6 LGS WFS (one on axis and five on a 35 arcsec ring) and a single Rayleigh scattering layer. Free with rayleigh_free().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Telescope diameter (m). 0 for the default of 5 m. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated configuration; free with rayleigh_free(). </dd></dl>
+<p>Compute rayleigh backscatter patterns for all WFS. All input are in SI unit. </p>
+<dl class="section return"><dt>Returns</dt><dd>dcell* PSF for each subaperture </dd></dl>
 
 </div>
 </div>

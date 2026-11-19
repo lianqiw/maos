@@ -188,40 +188,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Generate OTFs for an aperture or multiple subapertures. ALl these apertures must share the same geometry, but may come with different amplitude map and/or OPD biasas. if pttr is 1, the OTF will have tip/tilt removed. make r0 to infinity to build diffraction limited OTF. make r0 to infinity and opdbias to none null to build OTF for a static map.</p>
-<p>2020-01-21: Compute OTF using nyquist sampling and then upsample with FFT.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">potf</td><td>The otf array for output. Allocated if NULL; otherwise each OTF is overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>the aperture grid (same for all apertures) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude map of all the (sub)apertures. NULL for uniform amplitude. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opdbias</td><td>The static OPD bias (complex part of amp). NULL for none. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">area</td><td>normalized area of the (sub)apertures </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>The threshold to consider a (sub)aperture as full </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>The wavelength (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cov</td><td>The covariance. If not supplied use r0 and l0 for von Karman spectrum. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">l0</td><td>Outer scale (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npsfx</td><td>Size of PSF along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npsfy</td><td>Size of PSF along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nsa</td><td>Number of (sub)apertures </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pttr</td><td>Remove piston/tip/tilt </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>2020-01-21: Compute OTF using nyquist sampling and then upsample with FFT. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">potf</td><td>The otf array for output  </td></tr>
-    <tr><td class="paramname">loc</td><td>the common aperture grid  </td></tr>
+    <tr><td class="paramname">loc</td><td>the aperture grid (same for all apertures)  </td></tr>
     <tr><td class="paramname">amp</td><td>The amplitude map of all the (sub)apertures  </td></tr>
-    <tr><td class="paramname">opdbias</td><td>The static OPD bias.  </td></tr>
+    <tr><td class="paramname">opdbias</td><td>The static OPD bias (complex part of amp).  </td></tr>
     <tr><td class="paramname">area</td><td>normalized area of the (sub)apertures  </td></tr>
     <tr><td class="paramname">thres</td><td>The threshold to consider a (sub)aperture as full  </td></tr>
     <tr><td class="paramname">wvl</td><td>The wavelength. only needef if opdbias is not null  </td></tr>
     <tr><td class="paramname">cov</td><td>The covariance. If not supplied use r0 for kolmogorov spectrum.  </td></tr>
     <tr><td class="paramname">r0</td><td>Fried parameter  </td></tr>
     <tr><td class="paramname">l0</td><td>Outer scale  </td></tr>
-    <tr><td class="paramname">npsfx</td><td>Size of PSF/OTF  </td></tr>
-    <tr><td class="paramname">npsfy</td><td>Size of PSF/OTF  </td></tr>
+    <tr><td class="paramname">npsfx</td><td>Size of PSF  </td></tr>
+    <tr><td class="paramname">npsfy</td><td>Size of PSF  </td></tr>
     <tr><td class="paramname">nsa</td><td>Number of (sub)apertures  </td></tr>
     <tr><td class="paramname">pttr</td><td>Remove piston/tip/tilt </td></tr>
   </table>
@@ -263,18 +244,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Average spatially the 4-d covariance function to create a 2-d covariance function. For OPD f defined on points x (2-d coordinate), the 4-d covariance is simply &lt;f'f&gt; where f is vector form of the OPD and the average is over time. The 2-d covariance is additionally averaged over all the points so that B(r)=&lt;f(x)'f(x+r)&gt;_x,t To compute B, we first figure out the number of overlapping pairs of points for each r and then compute the averaging. When the amplitude is less than the threshold, the point does not count.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Point coordinates. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude on loc. NULL to use all points. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ampthres</td><td>Points with amplitude below this threshold are excluded. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cov</td><td>The 4-d covariance of nloc*nloc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">norm</td><td>1: average to compute the covariance. 0: sum to compute approximate PSD. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated 2-d covariance with the peak at the center. The caller frees it. </dd></dl>
+<p>Average spatially the 4-d covariance function to create a 2-d covariance function. For OPD f defined on points x (2-d coordinate), the 4-d covariance is simply &lt;f'f&gt; where f is vector form of the OPD and the average is over time. The 2-d covariance is additionally averaged over all the points so that B(r)=&lt;f(x)'f(x+r)&gt;_x,t To compute B, we first figure out the number of overlapping pairs of points for each r and then compute the averaging. When the amplitude is less than the threshold, the point does not count. </p>
 
 </div>
 </div>

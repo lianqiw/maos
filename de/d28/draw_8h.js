@@ -9,7 +9,6 @@ var draw_8h =
     [ "draw_add", "de/d28/draw_8h.html#a6be0be645ac1bb71cbbce02ddaf959c8", null ],
     [ "draw_final", "de/d28/draw_8h.html#ab01d0d9c0f4f57ef56695fc9a7aa3efe", null ],
     [ "draw_current", "de/d28/draw_8h.html#adc80c25521f9db8258abbaf67cba49b0", null ],
-    [ "draw_current_format", "de/d28/draw_8h.html#ab9039a2d7b1b79a450924760e45506a1", null ],
     [ "draw", "de/d28/draw_8h.html#a64b7bd604a1af3e62b966803839f4aad", null ],
     [ "drawmap", "de/d28/draw_8h.html#a2e8891182cfedf560ac3f65d8d11bd31", null ],
     [ "drawloc", "de/d28/draw_8h.html#ab9f58d1807e52233e03d6df8d30af7e8", null ],

@@ -1,7 +1,5 @@
 var classcuglobal__t =
 [
-    [ "cuglobal_t", "d7/de7/classcuglobal__t.html#a72483d18ca9bce4f034e4c5f2d17c3f8", null ],
-    [ "~cuglobal_t", "d7/de7/classcuglobal__t.html#a9e8e7d9209531ad3e550f662255889b8", null ],
     [ "atmscale", "d7/de7/classcuglobal__t.html#a32ac54af9897a0ae590b911719f1ca3e", null ],
     [ "atm_full", "d7/de7/classcuglobal__t.html#ad0cfd48d65a9bf467f2e0da452883f79", null ],
     [ "atm_interp", "d7/de7/classcuglobal__t.html#a05de0901eb609661891f2510ccbabeca", null ],

@@ -2,7 +2,6 @@ var cmath_8h =
 [
     [ "cnew", "de/d07/cmath_8h.html#ae7a454126e4d0465eff8d87ed7f04aac", null ],
     [ "cnew_file", "de/d07/cmath_8h.html#a3aee13b188b8b7f02baed5ae2faa81ab", null ],
-    [ "cnew_do", "de/d07/cmath_8h.html#a7c59bc14a8a8e3f12ba34df3b24d700a", null ],
     [ "cmat_cast", "de/d07/cmath_8h.html#a7f73280e5444e4ffe90ab6446843e9da", null ],
     [ "cinit", "de/d07/cmath_8h.html#a145e2d6cf0d6577b9c560efeb152b576", null ],
     [ "cfree_content", "de/d07/cmath_8h.html#a611e2d8cd1141a3c499356d834d1e47f", null ],
@@ -213,7 +212,6 @@ var cmath_8h =
     [ "cfft2s", "de/d07/cmath_8h.html#a9ee95d19c60ca917f6f61708ff6544b6", null ],
     [ "cfft2partial", "de/d07/cmath_8h.html#ab3159a1cba08cacee28341ac4fc74cd9", null ],
     [ "cffttreat", "de/d07/cmath_8h.html#a2d48d3d2ceefb8fbcaec5e9b4c279808", null ],
-    [ "dfft_free_plan", "de/d07/cmath_8h.html#aae8fee69c712490f1929a7a4f1d63d47", null ],
     [ "dcell_fft2", "de/d07/cmath_8h.html#ab2e05ad023fa279a021fe4d78e2e164f", null ],
     [ "dfft1plan_r2hc", "de/d07/cmath_8h.html#a5baf540c57c23d758fd1b123539866f7", null ],
     [ "dfft1", "de/d07/cmath_8h.html#a5aa34b0d84643af55e8e7dcb07d80000", null ]

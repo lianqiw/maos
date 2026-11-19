@@ -108,7 +108,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ae97782b41c65bcfc49dd5535c1269277" id="r_ae97782b41c65bcfc49dd5535c1269277"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae97782b41c65bcfc49dd5535c1269277">cov_vonkarman</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *modz, real L0)</td></tr>
 <tr class="memitem:a4752aa8b5f24209a50ac01127878ce2f" id="r_a4752aa8b5f24209a50ac01127878ce2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4752aa8b5f24209a50ac01127878ce2f">cov_diagnolize</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *mz, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *cov)</td></tr>
 <tr class="memitem:a0ad3af89781ee984fa623b98b31d81f7" id="r_a0ad3af89781ee984fa623b98b31d81f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ad3af89781ee984fa623b98b31d81f7">KL_vonkarman_full</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int ttr, real iac, real L0)</td></tr>
-<tr class="memitem:ac84fe62d4211a6e5f9ae6a923b2b1c6e" id="r_ac84fe62d4211a6e5f9ae6a923b2b1c6e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac84fe62d4211a6e5f9ae6a923b2b1c6e">KL_vonkarman</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int ttr, real L0)</td></tr>
+<tr class="memitem:ac84fe62d4211a6e5f9ae6a923b2b1c6e" id="r_ac84fe62d4211a6e5f9ae6a923b2b1c6e"><td class="memItemLeft" align="right" valign="top"><a id="ac84fe62d4211a6e5f9ae6a923b2b1c6e" name="ac84fe62d4211a6e5f9ae6a923b2b1c6e"></a>
+<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>KL_vonkarman</b> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int ttr, real L0)</td></tr>
 <tr class="memitem:a65ebc8583ba990204a26ce3d9fee1e88" id="r_a65ebc8583ba990204a26ce3d9fee1e88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a65ebc8583ba990204a26ce3d9fee1e88">fft_mode</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real D, real px, real py)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
@@ -145,18 +146,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create Zernike modes on loc with diameter D and radial order from rmin to rmax r=0 is piston r=1 is tip/tilt r=2 is quadratic modes if flag is &gt;0, only radial mode is used. if flag is 0, all modes between rmin and rmax. if flag is &lt;0, only generate mode -flag. rmin and rmax is irrelevant set D to -|D| to avoid clipping points outside of D.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Pupil diameter (m). 0 or larger than the loc diameter means the loc diameter. Negative to avoid clipping points outside of D. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rmin</td><td>Minimum radial order (inclusive). Use 1 to skip piston. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rmax</td><td>Maximum radial order (inclusive). Reduced if it exceeds what loc supports. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>Mode selection as described above. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated modal matrix with one column per mode, normalized to unit RMS, or NULL if loc is NULL or rmin&gt;rmax. The caller frees it. </dd></dl>
+<p>Create Zernike modes on loc with diameter D and radial order from rmin to rmax r=0 is piston r=1 is tip/tilt r=2 is quadratic modes if nopiston is set, skip piston mode. if flag is &gt;0, only radial mode is used. if flag is 0, all modes between rmin and rmax. if flag is &lt;0, only generate mode -flag. rmin and rmax is irrelevant set D to -|D| to avoid clipping points outside of D. </p>
 
 </div>
 </div>
@@ -177,14 +167,7 @@ Functions</h2></td></tr>
 <p>Covariance of zernike modes in Kolmogorov Turbulence. Only modes with the same m have non-zero covariance.</p>
 <p>Based on Eq 3.14 in Adaptive Optics in Astronomy (Roddier 1999). Verified against values in J.Y.Wang 1978, table II(a,b).</p>
 <p>Notice that (D/r0)^(5/3) has been factored out.</p>
-<p>2015-06-05: This is not longer being used. It is inaccurate for annular pupil. Analytic calculation using the power spectrum is used instead.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nr</td><td>Maximum radial order (inclusive). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated covariance matrix of all zernike modes up to radial order nr. Piston terms are zero. The caller frees it. </dd></dl>
+<p>2015-06-05: This is not longer being used. It is inaccurate for annular pupil. Analytic calculation using the power spectrum is used instead. </p>
 
 </div>
 </div>
@@ -211,20 +194,19 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute covariance matrix of modes in von Karman turbulence.</p>
-<p>The turbulence OPD y can be expressed as \(y=M*x\) where \(x\) is the modal coefficient and \(M\) is the modal matrix (parameter modz). The OPD covariance \(&lt;yy&#39;&gt;\) can be expressed as followes: \(&lt;yy&#39;&gt;=M*&lt;xx&#39;&gt;*M&#39;\) where \(&lt;xx&#39;&gt;\) is the modal coefficient covariance matrix. We have \(M&#39;&lt;yy&#39;&gt;M=(M&#39;M)&lt;xx&#39;&gt;(M&#39;M)=CC&lt;xx&#39;&gt;CC\) where \(CC=(M&#39;M)\). Therefore \(&lt;xx&#39;&gt;=CC^{-1} M&#39;&lt;yy&#39;&gt;M CC^{-1}\)</p>
-<p>The function first computes \(DD=M&#39;&lt;yy&#39;&gt;M\) with  \(DD[i,j]=\sum_{k,m}
-M[k,i]*yy[k,m]*M[m,j]\) which can be expressed in Fourier domain as \(DD=\sum_{k&#39;,m&#39;} Mhat[k&#39;,i] Mhat[m&#39;,j] \Phi[k&#39;,m&#39;]\) where \(\Phi\) is the turbulence power spectrum.</p>
-<p>For modes \(M\) defined on the DM, its influence function should be includes. \(&lt;yy&#39;&gt;=H*M*&lt;xx&#39;&gt;*M&#39;H&#39;\).</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Compute covariance matrix of modes in von Karman turbulence. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">modz</td><td>The modal matrix (zernike or zonal) defined on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>The outer scale (m). </td></tr>
+    <tr><td class="paramname">loc</td><td>The location grid </td></tr>
+    <tr><td class="paramname">modz</td><td>The modal matrix (zernike or zonal) </td></tr>
+    <tr><td class="paramname">L0</td><td>The outer scale </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated mode coefficient covariance matrix, computed for r0=0.2 m, or NULL if loc or modz is NULL. The caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The mode coefficient covariance matrix</dd></dl>
+<p>The turbulence OPD y can be expressed as \(y=M*x\) where \(x\) is the modal coefficient and \(M\) is the modal matrix (parameter modz). The OPD covariance \(&lt;yy&#39;&gt;\) can be expressed as followes: \(&lt;yy&#39;&gt;=M*&lt;xx&#39;&gt;*M&#39;\) where \(&lt;xx&#39;&gt;\) is the modal coefficient covariance matrix. We have \(M&#39;&lt;yy&#39;&gt;M=(M&#39;M)&lt;xx&#39;&gt;(M&#39;M)=CC&lt;xx&#39;&gt;CC\) where \(CC=(M&#39;M)\). Therefore \(&lt;xx&#39;&gt;=CC^{-1} M&#39;&lt;yy&#39;&gt;M CC^{-1}\)</p>
+<p>The function first computes \(DD=M&#39;&lt;yy&#39;&gt;M\) with  \(DD[i,j]=\sum_{k,m}
+M[k,i]*yy[k,m]*M[m,j]\) which can be expressed in Fourier domain as \(DD=\sum_{k&#39;,m&#39;} Mhat[k&#39;,i] Mhat[m&#39;,j] \Phi[k&#39;,m&#39;]\) where \(\Phi\) is the turbulence power spectrum.</p>
+<p>For modes \(M\) defined on the DM, its influence function should be includes. \(&lt;yy&#39;&gt;=H*M*&lt;xx&#39;&gt;*M&#39;H&#39;\). </p>
 
 </div>
 </div>
@@ -246,15 +228,14 @@ M[k,i]*yy[k,m]*M[m,j]\) which can be expressed in Fourier domain as \(DD=\sum_{k
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Diagnolize the covariance matrix and transform the mode. Random vector is expressed as y=mod*x. Its covariance is &lt;yy'&gt;=mod*&lt;x*x'&gt;<em>mod=mod*cov*mod'; The covariance of the coefficient x can be decomposed with svd: cov=U*S*V'. So we have &lt;yy'&gt;=mod</em>&lt;x*x'&gt;*mod=mod*U*S*v'*mod'; Refine the bases with KL=mod*U, we have &lt;yy'&gt;=KL*S*KL' where the covariance of coefficient is diagonal S. Modes after a sudden drop in strength of over 100x are dropped.</p>
+<p>Diagnolize the covariance matrix and transform the mode. Random vector is expressed as y=mod*x. Its covariance is &lt;yy'&gt;=mod*&lt;x*x'&gt;<em>mod=mod*cov*mod'; The covariance of the coefficient x can be decomposed with svd: cov=U*S*V'. So we have &lt;yy'&gt;=mod</em>&lt;x*x'&gt;*mod=mod*U*S*v'*mod'; Refine the bases with KL=mod*U, we have &lt;yy'&gt;=KL*S*KL' where the covariance of coefficient is diagonal S. returns the diagnolized mode and the covariance of each modal coefficient. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mod</td><td>Input mode. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cov</td><td>Covariance of modes. </td></tr>
+    <tr><td class="paramname">mod</td><td>Input mode  </td></tr>
+    <tr><td class="paramname">cov</td><td>Covariance of modes </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated dcell with the diagnolized mode in the first cell and the covariance (variance) of each modal coefficient in the second, or NULL if mod or cov is NULL. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -289,54 +270,7 @@ M[k,i]*yy[k,m]*M[m,j]\) which can be expressed in Fourier domain as \(DD=\sum_{k
 <p>Create Karhunen-Loeve modes for which each mode coefficient is statistically independent in von Karman spectrum.</p>
 <p>The original method is to compute covariance of zernike modes in von Karman spectrum and diagnolize the covariance matrix. But this methods suffers for higher order systems because high order zernike modes are hard to generate on account of limited resolution of real precision floating point numbers. To make matters worse, to generate m KL modes, around 2*m Zernike modes are needed because each KL mode is a linear combination of all Zernike modes with same azimuthal (m) but higher radial (r) order. A work around of the precisiosn issue is to limit the absolute value of the zernike modes to within 100 to avoid excessive norm due to round off errors.</p>
 <p>The new method is to use zonal modes (identity matrix). The advantage is that the zonal modes spans the whole range of possible modes and are straightforward to generate.</p>
-<p>In theory, the KL modes computes should be independent on the starting mode, as long as the modes are independent and span the whole vector space for the coordinate.</p>
-<p>The result is cached on disk if loc has 500 or more points.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ttr</td><td>Whether to remove piston, tip, and tilt from the modes. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iac</td><td>Inter-actuator coupling of the cubic influence function. Linear influence function is used if &lt;=0. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>The outer scale (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated dcell with KL modes in the first cell and their variance in the second, or NULL if loc is NULL. The caller frees it. </dd></dl>
-
-</div>
-</div>
-<a id="ac84fe62d4211a6e5f9ae6a923b2b1c6e" name="ac84fe62d4211a6e5f9ae6a923b2b1c6e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac84fe62d4211a6e5f9ae6a923b2b1c6e">&#9670;&#160;</a></span>KL_vonkarman()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> * KL_vonkarman </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>ttr</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>L0</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>A convenient wrapper of KL_vonkarman_full() for simplified useage.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ttr</td><td>Whether to remove piston, tip, and tilt from the modes. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>The outer scale (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated KL modal matrix, or NULL if loc is NULL. The caller frees it. </dd></dl>
+<p>In theory, the KL modes computes should be independent on the starting mode, as long as the modes are independent and span the whole vector space for the coordinate. </p>
 
 </div>
 </div>
@@ -368,17 +302,7 @@ M[k,i]*yy[k,m]*M[m,j]\) which can be expressed in Fourier domain as \(DD=\sum_{k
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate FFT mode with period.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Diameter (m) over which the periods are counted. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">px</td><td>Number of periods across D along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">py</td><td>Number of periods across D along y. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated OPD cos(2*pi*px*x/D)*cos(2*pi*py*y/D) on loc, or NULL if loc is NULL. The caller frees it. </dd></dl>
+<p>Generate FFT mode with period. </p>
 
 </div>
 </div>

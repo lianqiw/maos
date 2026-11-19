@@ -112,7 +112,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a6be0be645ac1bb71cbbce02ddaf959c8" id="r_a6be0be645ac1bb71cbbce02ddaf959c8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6be0be645ac1bb71cbbce02ddaf959c8">draw_add</a> (int fd)</td></tr>
 <tr class="memitem:ab01d0d9c0f4f57ef56695fc9a7aa3efe" id="r_ab01d0d9c0f4f57ef56695fc9a7aa3efe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab01d0d9c0f4f57ef56695fc9a7aa3efe">draw_final</a> (int reuse)</td></tr>
 <tr class="memitem:adc80c25521f9db8258abbaf67cba49b0" id="r_adc80c25521f9db8258abbaf67cba49b0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adc80c25521f9db8258abbaf67cba49b0">draw_current</a> (const char *fig, const char *fn)</td></tr>
-<tr class="memitem:ab9039a2d7b1b79a450924760e45506a1" id="r_ab9039a2d7b1b79a450924760e45506a1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9039a2d7b1b79a450924760e45506a1">draw_current_format</a> (const char *fig, const char *format,...)</td></tr>
+<tr class="memitem:ab9039a2d7b1b79a450924760e45506a1" id="r_ab9039a2d7b1b79a450924760e45506a1"><td class="memItemLeft" align="right" valign="top"><a id="ab9039a2d7b1b79a450924760e45506a1" name="ab9039a2d7b1b79a450924760e45506a1"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>draw_current_format</b> (const char *fig, const char *format,...)</td></tr>
 <tr class="memitem:a64b7bd604a1af3e62b966803839f4aad" id="r_a64b7bd604a1af3e62b966803839f4aad"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a64b7bd604a1af3e62b966803839f4aad">draw</a> (const char *fig, const <a class="el" href="#d3/de8/structplot__opts">plot_opts</a> opts, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="memitem:a2e8891182cfedf560ac3f65d8d11bd31" id="r_a2e8891182cfedf560ac3f65d8d11bd31"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e8891182cfedf560ac3f65d8d11bd31">drawmap</a> (const char *fig, const <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *map, real zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
 <tr class="memitem:ab9f58d1807e52233e03d6df8d30af7e8" id="r_ab9f58d1807e52233e03d6df8d30af7e8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9f58d1807e52233e03d6df8d30af7e8">drawloc</a> (const char *fig, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real zlim, const char *title, const char *xlabel, const char *ylabel, const char *format,...)</td></tr>
@@ -345,14 +346,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add fd to list of drawing socks. lock is already locked. Sends client information to drawdaemon and starts a thread listening to it.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sock</td><td>Socket connected to drawdaemon. Closed if writing to it fails. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure. </dd></dl>
+<p>Add fd to list of drawing socks. lock is already locked </p>
 
 </div>
 </div>
@@ -370,13 +364,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">reuse</td><td>Whether to send the sockets to the scheduler for reuse. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse. </p>
 
 </div>
 </div>
@@ -398,50 +386,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check whether what we are drawing is current page of any drawdaemon.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fn</td><td>Name of the figure. NULL to check fig only. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0: do not draw. 1: draw. 2: current page and draw is not busy. </dd></dl>
-
-</div>
-</div>
-<a id="ab9039a2d7b1b79a450924760e45506a1" name="ab9039a2d7b1b79a450924760e45506a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9039a2d7b1b79a450924760e45506a1">&#9670;&#160;</a></span>draw_current_format()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int draw_current_format </td>
-          <td>(</td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fig</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>format</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Same as draw_current() with fn specified by printf-style format.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the figure name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>See draw_current(). </dd></dl>
+<p>Check whether what we are drawing is current page of any drawdaemon. </p>
 
 </div>
 </div>
@@ -488,19 +433,18 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot an image, points, or curves as specified in opts, and optionally circles. Connects to drawdaemon if not yet.</p>
+<p>Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opts</td><td>Additional options: image, points (loc), curves (dc or dd), circles, limits, style, legend, etc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>title of the plot </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the subcategory (name) of the plot, followed by its arguments. </td></tr>
+    <tr><td class="paramname">fig</td><td>Category of the figure  </td></tr>
+    <tr><td class="paramname">opts</td><td>Additional options  </td></tr>
+    <tr><td class="paramname">title</td><td>title of the plot  </td></tr>
+    <tr><td class="paramname">xlabel</td><td>x axis label  </td></tr>
+    <tr><td class="paramname">ylabel</td><td>y axis label  </td></tr>
+    <tr><td class="paramname">format</td><td>subcategory of the plot. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 if succeeded or nothing to draw, -1 if sending failed, 1 if serialization failed. </dd></dl>
 
 </div>
 </div>
@@ -552,20 +496,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see ddraw() like ddraw, acting on map object. see ddraw()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">map</td><td>OPD map to plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Mapping the floating point numbers onto screen with scaling similar to matlab imagesc. . see ddraw() like ddraw, acting on map object. see ddraw() </p>
 
 </div>
 </div>
@@ -617,20 +548,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the loc on the screen. see ddraw()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinate to plot. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Plot the loc on the screen. see ddraw() </p>
 
 </div>
 </div>
@@ -687,21 +605,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot the opd using coordinate loc. see ddraw()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinate of opd. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD defined on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Plot the opd using coordinate loc. see ddraw() </p>
 
 </div>
 </div>
@@ -773,24 +677,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot gradients, either reconstructed into OPD using CuReD or as x and y gradient maps side by side.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>Subaperture area used to mask gradients when grad2opd is set. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gradin</td><td>Gradients with all x gradients first. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">grad2opd</td><td>Whether to reconstruct OPD with CuReD (requires more than 4 subapertures and 2 gradients each). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">trs</td><td>Whether to remove tip/tilt. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Plot gradients using CuReD </p>
 
 </div>
 </div>
@@ -852,22 +739,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Plot opd with coordinate loc where amp is above half of its maximum. see ddraw()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinate of opd. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD defined on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude defined on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Plot opd with coordinate loc where amp is above threshold. see ddraw() </p>
 
 </div>
 </div>
@@ -924,21 +796,7 @@ cimage</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Concatenate and plot subaperture images.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fig</td><td>Category of the figure. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ints</td><td>Subaperture images: one per subaperture, or a single (TT or PWFS) or 4 (TTF) images. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">zlim</td><td>Limit of the color scale is [-zlim, zlim]. 0 for automatic. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">title</td><td>Title of the plot. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xlabel</td><td>x axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ylabel</td><td>y axis label. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the plot name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 if the plot is sent to draw(), 0 if skipped (not current page or invalid input). </dd></dl>
+<p>Concatenate and plot subaperture images. </p>
 
 </div>
 </div>
