@@ -141,13 +141,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Cumulative Reconstructor</p>
-<p>Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011) </p>
+<p>Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011)</p>
+<p>Integrates x gradients along x chains and connects the chains using y gradients.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pphix</td><td>Output: opd  </td></tr>
-    <tr><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN  </td></tr>
-    <tr><td class="paramname">gy</td><td>y gradients, dimension is ny*ny.  </td></tr>
-    <tr><td class="paramname">dx</td><td>Size of subaperture </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pphix</td><td>Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL; otherwise resized if too small and overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>y gradients, dimension is nx*ny. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Size of subaperture </td></tr>
   </table>
   </dd>
 </dl>
@@ -182,7 +183,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Implements 2d cure by calling cure1d twice. </p>
+<p>Implements 2d cure by calling cure1d twice (along x and along y) and averaging the results.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phi</td><td>Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL; otherwise overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>y gradients, dimension is nx*ny. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Size of subaperture. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -209,7 +219,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid. </p>
+<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phix</td><td>Output OPD on the square grid of subaperture corners, with keywords for its geometry. Allocated if NULL; otherwise overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">grad0</td><td>Gradients, nsa*2 (or 2*nsa) with all x gradients first. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. Its map is created if not yet. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -236,7 +254,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. Return phix also on saloc grid. </p>
+<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. Return phix also on saloc grid.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phix</td><td>Output OPD on saloc. Allocated if NULL; otherwise must have saloc-&gt;nloc rows and only the values are overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">grad</td><td>Gradients, nsa*2 with all x gradients first. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

@@ -134,11 +134,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Computes the Disk Harmonic Modes, aka Fourier Bessel modes, for a given set of coordinates and a cutoff frequency. The modes are ordered by their spatial frequency (alpha) and returned in a column-major format Inputs:</p><ul>
-<li>loc: <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> structure containing the coordinates of the points where modes are evaluated</li>
-<li>k_cutoff: maximum spatial frequency (alpha) to include in the output modes</li>
-<li>type: 0 for Dirichlet (Jm=0 at boundary), 1 for Neumann (Jm'=0 at boundary) Outputs: OPD </li>
-</ul>
+<p>Computes the Disk Harmonic Modes, aka Fourier Bessel modes, for a given set of coordinates and a cutoff frequency. The modes are ordered by their spatial frequency (alpha). For m&gt;0, the cosine and sine modes are in adjacent columns.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinates of the points where modes are evaluated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Diameter of the disk (m). 0 to use the diameter of loc. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">k_cutoff</td><td>Maximum spatial frequency (alpha, normalized to the disk radius) to include. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>0 for Dirichlet (Jm=0 at boundary), 1 for Neumann (Jm'=0 at boundary). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Modes OPD with one mode per column. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
 </div>

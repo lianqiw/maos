@@ -138,7 +138,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance matrix. For physical optics wfs, the NEA is computed using matched filter output. For geometric optics, the NEA is from input. </p>
+<p>Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance matrix. For physical optics wfs, the NEA is computed using matched filter output. For geometric optics, the NEA is from input.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;sanea, saneai, saneal, and neam are set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -160,7 +168,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Update assembled tomography matrix with new L2. Called from cn2est when new profiles are available. </p>
+<p>Update assembled tomography matrix with new L2. Called from cn2est when new profiles are available.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -188,7 +203,15 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Setup either the control matrix using either minimum variance reconstructor by calling setup_recon_mvr() or least square reconstructor by calling <a class="el" href="../../d3/deb/maos_2recon_8h.html#a2abb7b002334af528061452e9d4050bb">setup_recon_lsr()</a> It can be called repeatedly to update the reconstructor when NEA updates.</p>
-<p>The results are measurement noise dependent and may be updated during simulation. </p>
+<p>The results are measurement noise dependent and may be updated during simulation.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -210,7 +233,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>PSD computation for gain update </p>
+<p>Setup PSD computation for servo gain update: recon-&gt;Herr maps DM error to the evaluation directions.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;Herr is set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -242,7 +272,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reconstruction optimization background loops setup. </p>
+<p>Setup miscellaneous reconstruction data: ecnn (when sim.ecnn is set), PSD for servo gain update, and petal mode reconstruction.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locs</td><td>The science pupil grid. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -260,7 +299,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Frees recon-&gt;invpsd or recon-&gt;fractal </p>
+<p>Frees recon-&gt;invpsd or recon-&gt;fractal</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -282,7 +327,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free unused object in recon struct after preparation is done. </p>
+<p>Free unused object in recon struct after preparation is done.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -304,7 +356,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the recon struct. </p>
+<p>Free the recon struct.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>The reconstruction struct to free, including the struct itself. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

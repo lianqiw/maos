@@ -9,6 +9,7 @@ var bin_8h =
     [ "zfrewind", "d3/d7f/bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289", null ],
     [ "zflen", "d3/d7f/bin_8h.html#a0cc9385f1a99368d36091786b313dea2", null ],
     [ "zfopen", "d3/d7f/bin_8h.html#aaf11bfd20fedb311db4a1103211bdbfc", null ],
+    [ "zfdopen", "d3/d7f/bin_8h.html#ae4c74009c38d112ff46c2040b661a59f", null ],
     [ "zfname", "d3/d7f/bin_8h.html#aa8967ca7ae67be2fb41b5497a5cd4ce0", null ],
     [ "zfisfits", "d3/d7f/bin_8h.html#a01b67a362199a6b984e5759f7d84c168", null ],
     [ "zfclose", "d3/d7f/bin_8h.html#a4ed840d37c980314e41e565e7dd617d3", null ],
@@ -29,5 +30,6 @@ var bin_8h =
     [ "mmap_write_header", "d3/d7f/bin_8h.html#aa24dfa7dd0bc1a63d6fe256f3fc3ff66", null ],
     [ "mmap_read_header", "d3/d7f/bin_8h.html#af62cc405c56c23085a5d86e71a6ae0ed", null ],
     [ "async_init", "d3/d7f/bin_8h.html#ad7704ca864eabbba129afd72af210a9e", null ],
-    [ "async_write", "d3/d7f/bin_8h.html#ad0f51efb12402814149a0d6e80843087", null ]
+    [ "async_write", "d3/d7f/bin_8h.html#ad0f51efb12402814149a0d6e80843087", null ],
+    [ "async_free", "d3/d7f/bin_8h.html#a2b5a92b55915d614a7c8569ff1d27b81", null ]
 ];

@@ -130,7 +130,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create transpose of ray tracing operator from locin to locout using cubic influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac==0 </p>
+<p>Create transpose of ray tracing operator from locin to locout using cubic influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac&lt;=0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cubic_iac</td><td>Inter-actuator coupling of the cubic influence function. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -152,7 +160,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transposes the result from mkht_cubic. </p>
+<p>Transposes the result from mkht_cubic.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cubic_iac</td><td>Inter-actuator coupling of the cubic influence function. Falls back to bilinear if &lt;=0. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -170,12 +186,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout.</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -210,10 +228,11 @@ locout, ...), Pout=H*Pin does the bilinear interpolation.</p>
 <p> where c is the nearest neighbor coupling frequency. The leading coefficient is to normalize the influence function so that it sums to 1.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -235,7 +254,15 @@ locout, ...), Pout=H*Pin does the bilinear interpolation.</p>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and xout should be 1-d arrays of coordinates. We require the coordinates to order incrementally monotonically, but do not require them to be evenly spaced. </p>
+<p>Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and xout should be 1-d arrays of coordinates. We require the coordinates to order incrementally monotonically, but do not require them to be evenly spaced.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input coordinate (one column). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xout</td><td>The output coordinate (one column). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="../../df/def/type_8h.html#afe7fbb6b2b187cd6e7fb2de743368378">NX(xout)</a>*NX(xin) sparse matrix; the caller frees it. </dd></dl>
 
 </div>
 </div>

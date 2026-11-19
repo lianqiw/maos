@@ -1,5 +1,7 @@
 var readcfg_8h =
 [
+    [ "open_config_prefix", "da/d6e/readcfg_8h.html#acf12b4b509f4a89bce6b14cbe171d758", null ],
+    [ "open_config", "da/d6e/readcfg_8h.html#ac7f7925edc9875dac2770938ecca4d21", null ],
     [ "close_config", "da/d6e/readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76", null ],
     [ "readcfg_peek", "da/d6e/readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f", null ],
     [ "readcfg_peek_n", "da/d6e/readcfg_8h.html#a2e922a9c36a239462733acec6cd00827", null ],

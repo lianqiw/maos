@@ -1,5 +1,7 @@
 var classcudata__t =
 [
+    [ "cudata_t", "db/d5f/classcudata__t.html#a38cbe890ecef9ba9ba3840f7811b9da1", null ],
+    [ "~cudata_t", "db/d5f/classcudata__t.html#a39193b2e23274c58ae18584232667f42", null ],
     [ "igpu", "db/d5f/classcudata__t.html#a6b54a9a44f05e75f204d07d97e58d2f6", null ],
     [ "reserve", "db/d5f/classcudata__t.html#a0250e3bffa206b42e6c76b997bf2016f", null ],
     [ "atm", "db/d5f/classcudata__t.html#a0e7443031c60279cb6532aaed98db7b3", null ],

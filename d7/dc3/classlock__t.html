@@ -112,9 +112,57 @@ $(function(){initNavTree('d7/dc3/classlock__t.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a13f6360817618f15d1fee8629a8071e4" id="r_a13f6360817618f15d1fee8629a8071e4"><td class="memItemLeft" align="right" valign="top"><a id="a13f6360817618f15d1fee8629a8071e4" name="a13f6360817618f15d1fee8629a8071e4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>lock_t</b> (pthread_mutex_t &amp;_mutex, int _enable=1)</td></tr>
+<tr class="memitem:a13f6360817618f15d1fee8629a8071e4" id="r_a13f6360817618f15d1fee8629a8071e4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a13f6360817618f15d1fee8629a8071e4">lock_t</a> (pthread_mutex_t &amp;_mutex, int _enable=1)</td></tr>
+<tr class="memitem:a489380f686904af5c2af90219b5ff94f" id="r_a489380f686904af5c2af90219b5ff94f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a489380f686904af5c2af90219b5ff94f">~lock_t</a> ()</td></tr>
 </table>
+<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a13f6360817618f15d1fee8629a8071e4" name="a13f6360817618f15d1fee8629a8071e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13f6360817618f15d1fee8629a8071e4">&#9670;&#160;</a></span>lock_t()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">lock_t::lock_t </td>
+          <td>(</td>
+          <td class="paramtype">pthread_mutex_t &amp;</td>          <td class="paramname"><span class="paramname"><em>_mutex</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_enable</em></span><span class="paramdefsep"> = </span><span class="paramdefval">1</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Scoped lock: lock the mutex if enabled. It is unlocked on destruction.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">_mutex</td><td>Mutex to lock. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">_enable</td><td>Whether to lock at all. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a489380f686904af5c2af90219b5ff94f" name="a489380f686904af5c2af90219b5ff94f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a489380f686904af5c2af90219b5ff94f">&#9670;&#160;</a></span>~lock_t()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">lock_t::~lock_t </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Unlock the mutex if it was locked. </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>cuda/math/<b>utils.h</b></li>
 </ul>

@@ -2,6 +2,7 @@ var smath_8h =
 [
     [ "snew", "de/de7/smath_8h.html#a6c1805d11d1e8f18edd7d44c2450cfd6", null ],
     [ "snew_file", "de/de7/smath_8h.html#acfbc8435a93d17061d68255e5e371192", null ],
+    [ "snew_do", "de/de7/smath_8h.html#a187f4434c46a6ac647a20336b1c9867e", null ],
     [ "smat_cast", "de/de7/smath_8h.html#a56743748c78b7fe273769f35e5bcdd6f", null ],
     [ "sinit", "de/de7/smath_8h.html#aa6fa0b5c2f20bcf9a20b2f45f619db2e", null ],
     [ "sfree_content", "de/de7/smath_8h.html#ad819cbbde6c9a4ba0ed32b9759e14bd4", null ],

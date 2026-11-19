@@ -131,7 +131,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used. </p>
+<p>Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;MVM is set if not already. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

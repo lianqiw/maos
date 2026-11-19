@@ -296,7 +296,9 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stdout, A); <span class="keywordflow">if</span>(fplog){fprintf(fplog, A);}}})</div>
+<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(<a class="code hl_variable" href="#a3ecebc9d2fcb9f207a3373191a0ca251">LOG_LEVEL</a>&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stdout, A); <span class="keywordflow">if</span>(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>){fprintf(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>, A);}}})</div>
+<div class="ttc" id="asys_2common_8h_html_a3ecebc9d2fcb9f207a3373191a0ca251"><div class="ttname"><a href="#a3ecebc9d2fcb9f207a3373191a0ca251">LOG_LEVEL</a></div><div class="ttdeci">int LOG_LEVEL</div><div class="ttdef"><b>Definition</b> mem.c:73</div></div>
+<div class="ttc" id="asys_2common_8h_html_a9a72a91e72ef9e66b1ada23de0c5ca5a"><div class="ttname"><a href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a></div><div class="ttdeci">FILE * fplog</div><div class="ttdef"><b>Definition</b> daemonize.c:38</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -328,7 +330,7 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); <span class="keywordflow">if</span>(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})</div>
+<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(<a class="code hl_variable" href="#a3ecebc9d2fcb9f207a3373191a0ca251">LOG_LEVEL</a>&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stderr, COLOR format BLACK, ##__VA_ARGS__); <span class="keywordflow">if</span>(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>){fprintf(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>, format, ##__VA_ARGS__);}}})</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -360,7 +362,7 @@ Macros</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(LOG_LEVEL&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); <span class="keywordflow">if</span>(fplog){fprintf(fplog, format, ##__VA_ARGS__);}}})</div>
+<b>Value:</b><div class="fragment"><div class="line">({<span class="keywordflow">if</span>(<a class="code hl_variable" href="#a3ecebc9d2fcb9f207a3373191a0ca251">LOG_LEVEL</a>&gt;level){<span class="keywordflow">if</span>(!detached)fprintf(stdout, COLOR format BLACK, ##__VA_ARGS__); <span class="keywordflow">if</span>(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>){fprintf(<a class="code hl_variable" href="#a9a72a91e72ef9e66b1ada23de0c5ca5a">fplog</a>, format, ##__VA_ARGS__);}}})</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -834,7 +836,7 @@ Macros</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">logstd(-1, format <span class="stringliteral">&quot; takes %.6f seconds.\n&quot;</span>, ##__VA_ARGS__, <a class="code hl_function" href="../../d4/d08/misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a>()-tk)</div>
-<div class="ttc" id="amisc_8h_html_afae347457a92c7a7befe7442e7d66539"><div class="ttname"><a href="../../d4/d08/misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a></div><div class="ttdeci">double myclockd(void)</div><div class="ttdef"><b>Definition</b> misc.c:236</div></div>
+<div class="ttc" id="amisc_8h_html_afae347457a92c7a7befe7442e7d66539"><div class="ttname"><a href="../../d4/d08/misc_8h.html#afae347457a92c7a7befe7442e7d66539">myclockd</a></div><div class="ttdeci">double myclockd(void)</div><div class="ttdef"><b>Definition</b> misc.c:270</div></div>
 </div><!-- fragment -->
 </div>
 </div>

@@ -2,6 +2,7 @@ var dmath_8h =
 [
     [ "dnew", "da/dfb/dmath_8h.html#a98907b4425d06d4c51a4072fc28c4b57", null ],
     [ "dnew_file", "da/dfb/dmath_8h.html#a99d6775b6b53aa98a9e8fe9efa9e16f0", null ],
+    [ "dnew_do", "da/dfb/dmath_8h.html#afdf0aa1b79a1dfe164c85c5d23cbf158", null ],
     [ "dmat_cast", "da/dfb/dmath_8h.html#a64468aff0b03ca71e827827661a500a2", null ],
     [ "dinit", "da/dfb/dmath_8h.html#ae3407b7cd38cb405f1d79139063d8067", null ],
     [ "dfree_content", "da/dfb/dmath_8h.html#afc94c4e52d26f442ecf3661b2442ad76", null ],

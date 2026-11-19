@@ -152,7 +152,20 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the transpose of a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc. </p>
+<p>Returns the transpose of a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on xloc. NULL for uniform amplitude. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>The subaperture coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saorc</td><td>1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix of size xloc-&gt;nloc*(nsa*2); the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -199,7 +212,20 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc. </p>
+<p>Returns a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on xloc. NULL for uniform amplitude. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>The subaperture coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saorc</td><td>1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix of size (nsa*2)*xloc-&gt;nloc; the caller frees it. </dd></dl>
 
 </div>
 </div>

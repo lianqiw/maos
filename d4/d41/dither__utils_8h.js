@@ -1,7 +1,9 @@
 var dither__utils_8h =
 [
+    [ "gradoff_acc", "d4/d41/dither__utils_8h.html#a269cd01ddd0340b8293776bd764761cd", null ],
     [ "dither_position", "d4/d41/dither__utils_8h.html#a69cccbd79992ae4b41973a64fa9e5097", null ],
     [ "dither_amp_calc", "d4/d41/dither__utils_8h.html#a44a0642839b7a528d19a011f941d45eb", null ],
+    [ "dither_acc_i0", "d4/d41/dither__utils_8h.html#a24447c980ac97dee0740f5ba8aac7de8", null ],
     [ "dither_acc", "d4/d41/dither__utils_8h.html#adee81d00578d4b7ef952f670c64d309a", null ],
     [ "dither_post", "d4/d41/dither__utils_8h.html#a28436b5fe96a6abbc23f4072eae6b87d", null ],
     [ "sodium_fit_wrap", "d4/d41/dither__utils_8h.html#a78515cd482dfbcfc21ce21ad6a1275c7", null ],
