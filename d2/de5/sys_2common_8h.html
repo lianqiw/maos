@@ -107,6 +107,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a3acffbd305ee72dcd4593c0d8af64a4f" id="r_a3acffbd305ee72dcd4593c0d8af64a4f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3acffbd305ee72dcd4593c0d8af64a4f">MIN</a>(a,  b)</td></tr>
 <tr class="memitem:a2961979d92811d291076c186a7f4de8d" id="r_a2961979d92811d291076c186a7f4de8d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2961979d92811d291076c186a7f4de8d">RSS</a>(a,  b)</td></tr>
 <tr class="memitem:a4d1b666b1dcd8c2dd235072df0b95ba9" id="r_a4d1b666b1dcd8c2dd235072df0b95ba9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4d1b666b1dcd8c2dd235072df0b95ba9">CLIP</a>(x,  d_,  u_)</td></tr>
+<tr class="memitem:a18b721c3476d35cd0cc753ec5ff46e3d" id="r_a18b721c3476d35cd0cc753ec5ff46e3d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a18b721c3476d35cd0cc753ec5ff46e3d">ADDR</a>(...)</td></tr>
 <tr class="memitem:a080abdcb9c02438f1cd2bb707af25af8" id="r_a080abdcb9c02438f1cd2bb707af25af8"><td class="memItemLeft" align="right" valign="top"><a id="a080abdcb9c02438f1cd2bb707af25af8" name="a080abdcb9c02438f1cd2bb707af25af8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>restrict</b>&#160;&#160;&#160;__restrict</td></tr>
 <tr class="memitem:a6ebf6899d6c1c8b7b9d09be872c05aae" id="r_a6ebf6899d6c1c8b7b9d09be872c05aae"><td class="memItemLeft" align="right" valign="top"><a id="a6ebf6899d6c1c8b7b9d09be872c05aae" name="a6ebf6899d6c1c8b7b9d09be872c05aae"></a>
@@ -275,6 +276,24 @@ Macros</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">({__typeof__(d_) d=(d_); __typeof__(u_) u=(u_);x=x&lt;d?d:(x&gt;u?u:x);})</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a18b721c3476d35cd0cc753ec5ff46e3d" name="a18b721c3476d35cd0cc753ec5ff46e3d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18b721c3476d35cd0cc753ec5ff46e3d">&#9670;&#160;</a></span>ADDR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ADDR</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em></em></span>...</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">(&amp;(__VA_ARGS__))</div>
 </div><!-- fragment -->
 </div>
 </div>
