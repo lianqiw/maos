@@ -101,7 +101,7 @@ static void scheduler_timeout(void);
 static void monitor_send(RUN_T* run, const char* path);
 static void monitor_send_initial(MONITOR_T* ic);
 static void monitor_send_load(void);
-static long counter=-1;//an negative index for a pending run
+static int counter=-1;//an negative index for a pending run
 static int nused_cpu=0;//number of CPUs being used
 static int nused_gpu=0;//number of GPUs being used
 static time_t lasttime3=0;//every 3 seconds
@@ -174,9 +174,11 @@ static int runned_add(RUN_T* irun){
 }
 void runned_remove(int pid){
 	RUN_T *irun=NULL;
+	int found=0;
 	for(RUN_T **curr=&runned; *curr;){
 		irun=*curr;
 		if(irun->pid==pid || pid==-1){//remove node
+			found=1;
 			if(runned_end==&irun->next){
 				runned_end=curr;
 			}
@@ -192,7 +194,7 @@ void runned_remove(int pid){
 			curr=&irun->next;
 		}
 	}
-	if(!irun && pid!=-1){
+	if(!found && pid!=-1){
 		warning_time("runned_remove: Record %s:%d not found!\n", HOST, pid);
 	}
 }
@@ -210,9 +212,11 @@ void runned_remove(int pid){
 */
 void runned_restart(int pid){
 	RUN_T *irun=NULL;
+	int found=0;
 	for(RUN_T **curr=&runned; *curr;){
 		irun=*curr;
 		if(irun->pid==pid){
+			found=1;
 			if(irun->status.info<10){
 				dbg_time("status.info=%d, cancelled.\n", irun->status.info);
 				break;
@@ -240,7 +244,7 @@ void runned_restart(int pid){
 			curr=&irun->next;
 		}
 	}
-	if(!irun){
+	if(!found){
 		warning_time("Process with pid=%d is not found\n", pid);
 	}
 }
@@ -280,9 +284,11 @@ static RUN_T* running_add(int pid, int sock){
 static void running_remove(int pid, int status){
 	//dbg_time("Removing %d from running\n", pid);
 	RUN_T* irun=NULL;
+	int found=0;
 	for(RUN_T** curr=&running; *curr; ){
 		irun=*curr;
 		if(irun->pid==pid){
+			found=1;
 			if(running_end==&irun->next){
 				running_end=curr;
 			}
@@ -305,7 +311,7 @@ static void running_remove(int pid, int status){
 			curr=&irun->next;
 		}
 	}
-	if(!irun){
+	if(!found){
 		dbg_time("%s:%d not found\n", HOST, pid);
 	}
 }
@@ -628,6 +634,7 @@ static void socket_heartbeat(){
 		int cmd[1]={DRAW_HEARTBEAT};
 		if(stcheck(p->sock) || stwrite(p->sock, cmd, sizeof(cmd))){
 			dbg_time("Remove bad socket %d with id %d\n", p->sock, p->id);
+			close(p->sock);
 			socket_remove(p);
 		}
 	}
@@ -817,6 +824,14 @@ static int respond(struct pollfd *pfd, int flag){
 		break;
 	case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
+		//Read the status first so that it is available for an unrecorded job and the
+		//socket stays in sync even if the job cannot be added.
+		status_t status;
+		if(stread(sock, &status, sizeof(status_t))){
+			warning_time("Error reading status.\n");
+			ret=-1;
+			break;
+		}
 		RUN_T* irun=running_get_by_pid(pid);
 		if(!irun){/*started before scheduler is relaunched. */
 			dbg_time("(%d:%s) pid=%d is running but not recorded.\n", sock, get_sockname(sock), pid);
@@ -826,16 +841,14 @@ static int respond(struct pollfd *pfd, int flag){
 				break;
 			}
 			irun->status.info=S_START;
-			irun->nthread=irun->status.nthread;
+			irun->nthread=status.nthread;
 			nrun_add(pid, irun->nthread, irun->ngpu);
 			monitor_send(irun, NULL);
 		}
 		//save and restore time information
 		time_t timlast=irun->status.timlast;
 		time_t timstart=irun->status.timstart;
-		if(sizeof(status_t)!=read(sock, &(irun->status), sizeof(status_t))){
-			warning_time("Error reading status.\n");
-		}
+		irun->status=status;
 		irun->status.timlast=timlast;
 		irun->status.timstart=timstart;
 		irun->last_time=myclocki();
@@ -884,7 +897,7 @@ static int respond(struct pollfd *pfd, int flag){
 	{
 		set_sockname(sock, "trace");
 		char* buf=NULL;
-		char out[200];
+		char out[200]={0};
 		if(streadstr(sock, &buf)
 			||call_addr2line(out, sizeof out, buf)
 			||stwritestr(sock, out)){
@@ -957,6 +970,8 @@ static int respond(struct pollfd *pfd, int flag){
 			dbg_time("Save drawdaemon %d for future use\n", sock2);
 			socket_save(sock2, abs(pid));
 			stwriteint(sock2, 0);//respond OK to drawdaemon
+		}else{
+			close(sock2);//the receiver has its own copy now.
 		}
 		ret=-1;//remove this sock from scheduler receiving pollfd
 	}break;
@@ -964,9 +979,8 @@ static int respond(struct pollfd *pfd, int flag){
 		set_sockname(sock, "maos client");
 		int sock2=dup(sock);//pass a duplicated fd to maos
 		info_time("(%d:%s) pass command to maos %d for client at %s\n", sock, get_sockname(sock), pid, addr2name(socket_peer(sock)));
-		if(maos_command(pid, sock2, MAOS_VAR)){
-			close(sock2);//failed
-		}
+		maos_command(pid, sock2, MAOS_VAR);
+		close(sock2);//maos has its own copy if passing succeeded.
 		ret=-1;//remove this sock from scheduler receiving pollfd
 	}break;
 	case CMD_MAOSSER://14: called by maos to save a port to run maos_command
@@ -1162,6 +1176,7 @@ static int monitor_send_do(RUN_T* irun, const char* path, MONITOR_T *ic){
 		char buf[4096];
 		int padding=ic->func?http_padding:(int)(3*sizeof(int));
 		int nlen=http_convert(irun, path, buf+padding, sizeof(buf)-padding);
+		if(nlen>=(int)sizeof(buf)-padding) nlen=sizeof(buf)-padding-1;//truncated
 		if(ic->func){//directly write to client
 			ans=ic->func(buf+padding, nlen, 0, ic->userdata);
 		}else{//send to proxy
@@ -1218,9 +1233,10 @@ double get_usage_gpu(double* const gpu_mem){
 				ngpu++;
 			}
 			pclose(fp);
-			if(!total0){
+			if(!total0||!ngpu){
 				enabled=0;
 				dbg_time("total0=0, disable gpu usage.\n");
+				return 0;
 			}
 			*gpu_mem=(double)used0/total0;
 			return (double)nuse/ngpu;
@@ -1341,8 +1357,8 @@ int main(int argc, const char* argv[]){
 					warning_time("unknown entry: %s\n", line);
 				}
 			}
+			pclose(fpcmd);
 		}
-		pclose(fpcmd);
 		dbg("NGPU=%d\n", NGPU);
 	}
 
@@ -1350,7 +1366,6 @@ int main(int argc, const char* argv[]){
 	//We call it in scheduler_timeout using poll. no need for LOCK in this case
 #if HAS_LWS
 #ifdef LWS_WITH_EXTERNAL_POLL
-	extern int PORT;
 	start_lws(PORT+100);
 #else
 	warning_time("libwebsockets is not compiled with external_poll. disabled\n");
@@ -1358,7 +1373,6 @@ int main(int argc, const char* argv[]){
 #endif
 	//Must acquire mutex_sch before handling run_t
 	//still need time out to handle process queue.
-	extern int PORT;
 	listen_port((listen_opt_t){.localpath=slocal, .port=PORT, .responder=respond, .http_responder=http_handshake, .timeout_fun=scheduler_timeout, .timeout_sec=10});
 	runned_remove(-1);
 	socket_close();

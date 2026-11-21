@@ -83,6 +83,16 @@ enum {//last 2 bytes
   	M_EOD    =0x64FF    /*Indicate end of valid data */
 };
 typedef uint32_t M_ID; /*the magic number, see above*/
+/**
+   Whether the magic number is a dense complex array (M_CMP or M_ZMP).
+
+   @param[in] magic The magic number.
+   @return 1 if complex, 0 otherwise.
+*/
+static inline int magic_iscomplex(uint32_t magic){
+	magic&=0xFFFF;
+	return (magic==M_CMP||magic==M_ZMP)?1:0;
+}
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
 #elif LONG_MAX==9223372036854775807L
@@ -136,6 +146,7 @@ void zfrewind(file_t *fp);
 long zflen(file_t *fp);
 file_t *zfopen(const char *fn, const char *mod);
 file_t *zfdopen(int fd);
+file_t *zfdopen_as(int fd, const char *mod, const char *suffix);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
 void zfclose(file_t *fp);

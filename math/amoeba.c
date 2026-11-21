@@ -150,6 +150,11 @@ int X(minsearch)(T* x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void* i
 	T pinit[nmod+1][nmod];
 	T* pinit2[nmod+1];
 	T yinit[nmod+1];
+	for(int j=0; j<nmod; j++){
+		if(x[j]==0){
+			warning("x[%d]=0 may create unexpected result.\n", j);
+		}
+	}
 	for(int i=0; i<nmod+1; i++){
 		pinit2[i]=pinit[i];
 		for(int j=0; j<nmod; j++){

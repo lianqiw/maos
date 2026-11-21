@@ -38,8 +38,8 @@ static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 		const real dxsa=parms->maos.dxsa[ipowfs];
 		const real pixoffx=parms->skyc.pixoffx[ipowfs];
 		const real pixoffy=parms->skyc.pixoffy[ipowfs];
-		const real pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
-		const real pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
+		const real pxo=-(pixpsa*0.5-0.5+pixoffx)*pixtheta;
+		const real pyo=-(pixpsa*0.5-0.5+pixoffy)*pixtheta;
 		loc_t* loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pixtheta, pxo, pyo);
 		powfs[ipowfs].dtf=mycalloc(parms->maos.nwvl, dtf_s);
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
@@ -89,7 +89,7 @@ static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 					int jy=iy-ncomp2;
 					for(int ix=0; ix<ncomp; ix++){
 						int jx=ix-ncomp2;
-						P(psf2x,ix,iy)=sqrt(jx*jx+jy*jy)*dtheta;
+						P(psf2x,ix+iy*ncomp)=sqrt(jx*jx+jy*jy)*dtheta;
 					}
 				}
 				dbg("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*RAD2MAS);
@@ -127,7 +127,7 @@ static void setup_powfs_dtf(powfs_s* powfs, const parms_s* parms){
 			cfree(nominal);
 
 			loc_t* loc_psf=mksqloc(ncomp, ncomp, dtheta, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
-			powfs[ipowfs].dtf[iwvl].si=mkh(&(propdata_t){.locin=loc_psf, .locout=loc_ccd, .hs=INFINITY});
+			powfs[ipowfs].dtf[iwvl].si=mkh(ADDR((propdata_t){.locin=loc_psf, .locout=loc_ccd, .hs=INFINITY}));
 			locfree(loc_psf);
 			if(parms->skyc.dbg>3){
 				writebin(powfs[ipowfs].dtf[iwvl].nominal,

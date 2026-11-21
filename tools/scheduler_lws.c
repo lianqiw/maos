@@ -281,6 +281,9 @@ lws_forward_tcp(int fd, int nlen, int mode, void *userdata){
 	int *p2=(int *)(pdata->p+LWS_PRE);
 	if(stread(fd, p2, nlen)){
 		warning_time("read tcp failed\n");
+		pdata->len=0;//return as empty slot to avoid leaking pdata
+		add_tail(&pss->phead, &pss->ptail, pdata->list);
+		pss->p_count--;
 		return -1;
 	}
 

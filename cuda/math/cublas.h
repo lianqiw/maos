@@ -68,19 +68,19 @@ template<typename T>
 void cugemm(NumArray<T, Gpu> &C, T beta, const NumArray<T, Gpu> &A, const NumArray<T, Gpu> &B, const char trans[2], T alpha, stream_t &stream){
     int m, n, k, k2;
     cublasOperation_t transa, transb;
-    if(trans[0]=='t'){
+    if(trans[0]=='t'||trans[0]=='T'||trans[0]=='c'||trans[0]=='C'){
         m=A.Ny();
         k=A.Nx();
-        transa=CUBLAS_OP_T;
+        transa=(trans[0]=='c'||trans[0]=='C')?CUBLAS_OP_C:CUBLAS_OP_T;
     } else{
         m=A.Nx();
         k=A.Ny();
         transa=CUBLAS_OP_N;
     }
-    if(trans[1]=='t'){
+    if(trans[1]=='t'||trans[1]=='T'||trans[1]=='c'||trans[1]=='C'){
         n=B.Nx();
         k2=B.Ny();
-        transb=CUBLAS_OP_T;
+        transb=(trans[1]=='c'||trans[1]=='C')?CUBLAS_OP_C:CUBLAS_OP_T;
     } else{
         n=B.Ny();
         k2=B.Nx();
@@ -200,24 +200,30 @@ int cusvdp(NumArray<T, Gpu> &U, NumArray<TS, Gpu> &S, NumArray<T, Gpu> &V, NumAr
  * */
 template<typename T, typename ST>
 int cusvd_pow(NumArray<T, Gpu> &A, ST power, ST thres1, ST thres2, stream_t &stream){
+    if(A.Nx()!=A.Ny()){
+        error("A must be square: %ldx%ld\n", (long)A.Nx(), (long)A.Ny());
+    }
     NumArray<T, Gpu> U, Vt;
 	NumArray<ST, Gpu> S;
     cusvd(U, S, Vt, A, stream);
 	int nstop=S.N();
+	RefP<int, Gpu> nstop_gpu(1);//kernels need device memory
+	DO(cudaMemcpyAsync(nstop_gpu(), &nstop, sizeof(int), H2D, stream));
 	singular_gap<<<REDUCE(S.N()), DIM_REDUCE*sizeof(int), stream>>>
-		(S(), S.N(), nstop, thres1, thres2);
+		(S(), S.N(), nstop_gpu(), thres1, thres2);
 	//if(nstop<S.N()){
 	//CUDA_SYNC_STREAM;
 	//dbg("gpu: crop at %d out of %ld singular values, thres=%g, %g\n", nstop, S.N(), thres1, thres2);
 	//}
-	singular_pow<<<DIM(S.N(), 256), 0, stream>>>(S(), S.N(), power, nstop);
+	singular_pow<<<DIM(S.N(), 256), 0, stream>>>(S(), S.N(), power, nstop_gpu());
     //U=U*S
    	cudgmm(U, U, S, stream);
 	T alpha, beta;
 	ST alpha2=0, beta2=1;
 	type_convert(alpha, alpha2);
 	type_convert(beta, beta2);
-    cugemm(A, alpha, Vt, U, "tt", beta, stream);
+    //A=Vt'*(U*S)' using conjugate transpose (same as transpose for real)
+    cugemm(A, alpha, Vt, U, "cc", beta, stream);
     return 0;
 }
 #endif

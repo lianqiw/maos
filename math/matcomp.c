@@ -54,25 +54,25 @@ void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B){
    with rotation takes 0.330 ms.
 */
 void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
-	const int nopdx, const int nopdy,
+	const long nopdx, const long nopdy,
 	const R wvl, const R theta){
 	if(!check_mat(A)) return;
 	T* psf=P(A);
-	const int npsfx=A->nx;
-	const int npsfy=A->ny;
+	const long npsfx=A->nx;
+	const long npsfy=A->ny;
 
 	R wvk=TWOPI/wvl;
 	memset(psf, 0, sizeof(T)*npsfx*npsfy);
 	if(fabs(theta)<1.e-10){/*no rotation. */
-		const int skipx=(npsfx-nopdx)/2;
-		const int skipy=(npsfy-nopdy)/2;
+		const long skipx=(npsfx-nopdx)/2;
+		const long skipy=(npsfy-nopdy)/2;
 		assert(skipx>=0&&skipy>=0);
 		T* psf0=psf+skipy*npsfx+skipx;
 		for(long iy=0; iy<nopdy; iy++){
 			T* psfi=psf0+iy*npsfx;
 			const R* opdi=opd+iy*nopdx;
 			const R* ampi=amp+iy*nopdx;
-			for(int ix=0; ix<nopdx; ix++){
+			for(long ix=0; ix<nopdx; ix++){
 			/*sqrt(1-cos^2)!=sin due to sign problem.  */
 				psfi[ix]=ampi[ix]*EXPI(wvk*opdi[ix]);
 				/*most time is spend in EXP. */
@@ -89,16 +89,16 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 	*/
 		const R ctheta=cos(theta);
 		const R stheta=sin(theta);
-		const int nopdx2=nopdx/2;
-		const int npsfx2=npsfx/2;
-		const int nopdy2=nopdy/2;
-		const int npsfy2=npsfy/2;
+		const long nopdx2=nopdx/2;
+		const long npsfx2=npsfx/2;
+		const long nopdy2=nopdy/2;
+		const long npsfy2=npsfy/2;
 		const int maxr=iceil(sqrt(nopdx*nopdx+nopdy*nopdy));
-		const int xskip=npsfx>maxr?(npsfx-maxr)/2:0;
-		const int yskip=npsfy>maxr?(npsfy-maxr)/2:0;
+		const long xskip=npsfx>maxr?(npsfx-maxr)/2:0;
+		const long yskip=npsfy>maxr?(npsfy-maxr)/2:0;
 		for(long iy=yskip; iy<npsfy-yskip; iy++){
 			R y=iy-npsfy2;
-			for(int ix=xskip; ix<npsfx-xskip; ix++){
+			for(long ix=xskip; ix<npsfx-xskip; ix++){
 				R x=ix-npsfx2;
 				R x2=x*ctheta+y*stheta+nopdx2;
 				R y2=-x*stheta+y*ctheta+nopdy2;
@@ -183,8 +183,8 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 	const T* restrict psfin=P(B);
 	assert((nx&1)==0&&(ny&1)==0&&(ninx&1)==0&&(niny&1)==0);
 	memset(psfout, 0, sizeof(T)*nx*ny);
-	const int ny2=(ny<niny)?ny/2:niny/2;
-	const int nx2=(nx<ninx)?nx/2:ninx/2;
+	const long ny2=(ny<niny)?ny/2:niny/2;
+	const long nx2=(nx<ninx)?nx/2:ninx/2;
 
 #define DO_COPY2(CCMD)			\
 	CCMD(psfout+(ny-ny2+i)*nx+(nx-nx2),		\
@@ -195,7 +195,7 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 	     psfin+i*ninx+(ninx-nx2), nx2);		\
 	CCMD(psfout+i*nx,				\
 	     psfin+i*ninx, nx2); 
-	for(int i=0; i<ny2; i++){
+	for(long i=0; i<ny2; i++){
 		switch(flag){
 		case C_FULL:
 			DO_COPY2(cmpcpy);
@@ -286,8 +286,8 @@ CMAT_TO_DMAT(arg2d, CARG)
 */
 void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 	if(!check_mat(otf, otfin)) return;
-	int nx=otf->nx;
-	int ny=otf->ny;
+	long nx=otf->nx;
+	long ny=otf->ny;
 	R dux=1./(R)nx;
 	R duy=1./(R)ny;
 	T ux[nx];
@@ -297,33 +297,33 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 	//warning_once("Consider caching ux, uy\n");
 	if(peak_corner==1){/*peak in center */
 		ux[0]=EXPI(-TWOPI*dux*sx*(-nx/2));
-		for(int i=1; i<nx; i++){
+		for(long i=1; i<nx; i++){
 			ux[i]=ux[i-1]*cx;
 		}
 		uy[0]=EXPI(-TWOPI*duy*sy*(-ny/2));
-		for(int i=1; i<ny; i++){
+		for(long i=1; i<ny; i++){
 			uy[i]=uy[i-1]*cy;
 		}
 	} else{
 		ux[0]=1;
-		for(int i=1; i<nx/2; i++){
+		for(long i=1; i<nx/2; i++){
 			ux[i]=ux[i-1]*cx;
 		}
 		ux[nx/2]=EXPI(-TWOPI*dux*sx*(-nx/2));
-		for(int i=nx/2+1; i<nx; i++){
+		for(long i=nx/2+1; i<nx; i++){
 			ux[i]=ux[i-1]*cx;
 		}
 		uy[0]=1;
-		for(int i=1; i<ny/2; i++){
+		for(long i=1; i<ny/2; i++){
 			uy[i]=uy[i-1]*cy;
 		}
 		uy[ny/2]=EXPI(-TWOPI*duy*sy*(-ny/2));
-		for(int i=ny/2+1; i<ny; i++){
+		for(long i=ny/2+1; i<ny; i++){
 			uy[i]=uy[i-1]*cy;
 		}
 	}
-	for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
 			P(otf, ix, iy)=P(otfin, ix, iy)*ux[ix]*uy[iy];
 		}
 	}

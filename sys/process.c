@@ -23,6 +23,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#endif
 #if defined __CYGWIN__
 #include <sys/cygwin.h>
 #endif
@@ -160,7 +163,7 @@ void init_process(void){
 #if _OPENMP
 	//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
 	if(getenv("OMP_NUM_THREADS")){
-		int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);
+		int nthread=(int)strtol(getenv("OMP_NUM_THREADS"), 0, 10);
 		if(nthread<MAXTHREAD&&nthread>0){
 			MAXTHREAD=nthread;
 		}
@@ -175,7 +178,13 @@ void init_process(void){
 	} else{
 		NMEM=0;
 	}
-	fclose(fp);
+	if(fp) fclose(fp);
+#elif defined(__APPLE__)
+	{
+		int64_t memsize=0;
+		size_t len=sizeof(memsize);
+		NMEM=sysctlbyname("hw.memsize", &memsize, &len, NULL, 0)?0:(long)memsize;
+	}
 #else
 	NMEM=0;/*do not know. */
 #endif

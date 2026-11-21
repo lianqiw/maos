@@ -40,7 +40,7 @@ static int comb_next(int* comb, long n, long k){
 	if(n<1||k<1){
 		return 0;
 	}
-	int i=k-1;
+	int i=(int)k-1;
 	comb[i]++;/*increment to next */
 	while(comb[i]+k>=n+i+1&&i>0){/*out of range, increment previous one */
 		i--;
@@ -69,8 +69,8 @@ static int comb_next(int* comb, long n, long k){
 */
 lmat* comb_stars(lmat* nwfsmax, lmat *starvalid, int flag){
 	lmat *res=NULL;
-	const int npowfs=NX(nwfsmax);
-	const int nstar=NX(starvalid);
+	const int npowfs=(int)NX(nwfsmax);
+	const int nstar=(int)NX(starvalid);
 	if(NY(starvalid)<npowfs){
 		error("starvalid should have at least %d columns\n", npowfs);
 		return NULL;
@@ -86,7 +86,7 @@ lmat* comb_stars(lmat* nwfsmax, lmat *starvalid, int flag){
 	int nwfs[npowfs];//actual nwfs for each powfs
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 		if(nleft>=P(nwfsmax,ipowfs)){
-			nwfs[ipowfs]=P(nwfsmax,ipowfs);
+			nwfs[ipowfs]=(int)P(nwfsmax,ipowfs);
 		} else{
 			nwfs[ipowfs]=nleft;
 		}
@@ -158,7 +158,7 @@ retry:
 		lfree(res);
 		if(nwfstot>1){//reduce number of wfs and retry
 			nwfstot--;
-			if(nwfs[1]>0){
+			if(npowfs>1&&nwfs[1]>0){
 				nwfs[1]--;
 			}else if(nwfs[0]>0){
 				nwfs[0]--;

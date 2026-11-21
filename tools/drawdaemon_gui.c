@@ -292,10 +292,10 @@ static void update_pixmap(drawdata_t* drawdata){
 			int gtk_scale=1;
 	#endif
 			if(!locked){
-				drawdata->pwidth=width;
-				drawdata->pheight=height;
 				pthread_mutex_lock(&drawdata->mutex); locked=1;
 			}
+			drawdata->pwidth=width;
+			drawdata->pheight=height;
 			drawdata->pixmap=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width*gtk_scale, height*gtk_scale);
 	#if GTK_MAJOR_VERSION>=3
 			cairo_surface_set_device_scale(drawdata->pixmap, gtk_scale, gtk_scale);
@@ -525,7 +525,9 @@ static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 	return gtk_label_get_text(GTK_LABEL(gtk_widget_get_first_child(label)));
 #else
 	GList* list=gtk_container_get_children(GTK_CONTAINER(label));
-	return gtk_label_get_text(GTK_LABEL(g_list_first(list)->data));
+	const char* text=gtk_label_get_text(GTK_LABEL(g_list_first(list)->data));//owned by the label
+	g_list_free(list);
+	return text;
 #endif
 }
 static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
@@ -677,7 +679,9 @@ static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble 
 	double y=drawdata->mydown;
 
 	unsigned int time=gdk_event_get_time(event);
-	int zoom_dir=dy!=0?dy:dx;
+	double delta=dy!=0?dy:dx;//may be fractional for smooth scrolling.
+	if(delta==0) return FALSE;
+	int zoom_dir=delta<0?1:-1;//scroll up (negative delta) zooms in, same as GTK3.
 	//info("dx=%g, dy=%g, x=%g, y=%g\n", dx, dy, x, y);
 #else
 static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, drawdata_t* drawdata){
@@ -812,7 +816,12 @@ static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, 
 
 }
 
+/**
+   Switch the current tab of the top level notebook (lr) or of the current sub notebook (ud).
 
+   @param[in] lr Relative change of the top level page index. Takes precedence if nonzero.
+   @param[in] ud Relative change of the sub notebook page index.
+*/
 static void switch_tab(int lr, int ud){
 	if(!curtopnb){
 		dbg_time("curtopnb is null\n");

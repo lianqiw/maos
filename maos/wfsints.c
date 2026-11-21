@@ -86,17 +86,17 @@ void* wfsints(thread_t* thread_data){
 	const dmat* opd=data->opd;
 	const dmat* lltopd=data->lltopd;
 	const dmat* wvlwts=parms->wfs[iwfs].wvlwts;
-	const int isa_start=thread_data->start;
-	const int isa_end=thread_data->end;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const long isa_start=thread_data->start;
+	const long isa_end=thread_data->end;
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
-	const int illt=hasllt?P(parms->powfs[ipowfs].llt->i,wfsind):0;
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const int illt=hasllt?(int)P(parms->powfs[ipowfs].llt->i,wfsind):0;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	const int notfx=powfs[ipowfs].notfx;/*necessary size to build detector image. */
 	const int notfy=powfs[ipowfs].notfy;
-	const int nopd=powfs[ipowfs].pts->nxsa;
-	const int saoffset=nopd*nopd;
-	const int nwvf=nopd*parms->powfs[ipowfs].embfac;
+	const long nopd=powfs[ipowfs].pts->nxsa;
+	const long saoffset=nopd*nopd;
+	const long nwvf=nopd*parms->powfs[ipowfs].embfac;
 	const int use1d=(nwvf>2*notfy?1:0)&&(!hasllt)&&(!lltopd);
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	dcell* ints=data->ints;
@@ -147,8 +147,8 @@ void* wfsints(thread_t* thread_data){
 		const real dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;//: 1/dtheta
 		/* uplink llt opd*/
 		if(lltopd){
-			const int nlx=powfs[ipowfs].llt->pts->nxsa;
-			const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
+			const long nlx=powfs[ipowfs].llt->pts->nxsa;
+			const long nlwvf=nlx*parms->powfs[ipowfs].embfac;
 			/*embed opd to compute complex pupil function*/
 			if(!lwvf) {
 				lwvf=cnew(nlwvf, nlwvf); 
@@ -191,6 +191,7 @@ void* wfsints(thread_t* thread_data){
 				ccpcorner(lotfc, lotfc2, C_FULL);//clip or expand PSF.
 				if(lotfc2!=lwvf) cfree(lotfc2);
 			}else{
+				if(lotfc&&lotfc!=lwvf) cfree(lotfc);//from the previous wavelength
 				lotfc=lotfc2; lotfc2=NULL;
 			}
 			if(!islotf) cfft2(lotfc, -1);/*turn to otf. */
@@ -221,14 +222,14 @@ void* wfsints(thread_t* thread_data){
 			}
 		}
 		/* now big loop over subapertures */
-		for(int isa=isa_start; isa<isa_end; isa++){
+		for(long isa=isa_start; isa<isa_end; isa++){
 			if(multi_nominal){
 				if(!hasllt){
 					nominal=P(powfs[ipowfs].dtf[iwvl].nominal,isa,illt);
 				}
 				si=P(powfs[ipowfs].dtf[iwvl].si,isa,illt);
 			}
-			int ioffset=isa*saoffset;
+			long ioffset=isa*saoffset;
 			/*embed amp/opd to complex wvf with a embedding factor of 2. */
 			cembed_wvf(wvf, P(opd)+ioffset,amp+ioffset, nopd, nopd, P(parms->powfs[ipowfs].wvl,iwvl), 0);
 			TIM(1);//1 is copy

@@ -52,7 +52,7 @@ typedef struct psfiris_t{
 
 static void* psfiris_do(thread_t* info){
 	psfiris_t* data=(psfiris_t*)info->data;
-	int iwvl=info->start;
+	int iwvl=(int)info->start;
 	int npix=data->npix;
 	int notf1=data->notf1;
 	int notf2=data->notf2;
@@ -88,10 +88,10 @@ static void* psfiris_do(thread_t* info){
 	map_t* otf_coarse=mapnew(notf1, notf1, dx1/wvl, dx1/wvl);
 	creal2d((dmat**)&otf_coarse, 0, P(otf2,0), 1);/*otf2 should be real. confirmed.*/
 	map_t* otf_fine=mapnew(notf2, notf2, dx2/wvl, dx2/wvl);
-	prop(&(propdata_t){.mapin=otf_coarse, .mapout=otf_fine});
+	prop(ADDR((propdata_t){.mapin=otf_coarse, .mapout=otf_fine}));
 	mapfree(otf_coarse);
-	cfree(P(otf0,0));
-	cfree(P(otf2,0));
+	ccellfree(otf0);
+	ccellfree(otf2);
 
 	dfftshift(DMAT(otf_fine));/*peak in corner*/
 	ccpd(&otf, P(psf_lgs,iwvl));
@@ -108,6 +108,7 @@ static void* psfiris_do(thread_t* info){
 		double dxsa=30;//30 meter
 		double embfac=wvl/dtheta2/dxsa;
 		dtf_t* dtf=mkdtf(wvlmat, dxsa, embfac, notf2, notf2, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL);
+		dfree(wvlmat);
 		ccwmd(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,iwvl)=dnew(npix, npix);
@@ -160,12 +161,12 @@ int main(int argc, char* argv[]){
 		outfile=strdup(argv[P_OUTFILE]);
 	}
 
-	int prof=strtol(argv[P_PROF], NULL, 10);
-	int za=strtol(argv[P_ZA], NULL, 10);
-	int ngscount=strtol(argv[P_NGSCOUNT], NULL, 10);
-	int skyp=strtol(argv[P_SKYP], NULL, 10);
-	int idir=strtol(argv[P_IDIR], NULL, 10);
-	int npix=strtol(argv[P_NPIX], NULL, 10);
+	int prof=(int)strtol(argv[P_PROF], NULL, 10);
+	int za=(int)strtol(argv[P_ZA], NULL, 10);
+	int ngscount=(int)strtol(argv[P_NGSCOUNT], NULL, 10);
+	int skyp=(int)strtol(argv[P_SKYP], NULL, 10);
+	int idir=(int)strtol(argv[P_IDIR], NULL, 10);
+	int npix=(int)strtol(argv[P_NPIX], NULL, 10);
 	double pixsize=strtod(argv[P_PIXSIZE], NULL)*AS2RAD;
 	double pixoffx=strtod(argv[P_PIXOFFX], NULL);
 	double pixoffy=strtod(argv[P_PIXOFFY], NULL);
@@ -202,6 +203,9 @@ int main(int argc, char* argv[]){
 	}
 	double thetax[]={0, 8.5, 8.5};
 	double thetay[]={0, 0, 8.5};
+	if(idir<0||idir>=(int)(sizeof(thetax)/sizeof(thetax[0]))){
+		error("Invalid idir=%d. Valid values are 0, 1, 2.\n", idir);
+	}
 	char msg[400];
 	snprintf(msg, 400,
 		"%s\n"
@@ -236,9 +240,9 @@ int main(int argc, char* argv[]){
 
 	info("NGS mode wavefront error: \nTip/tilt:%g nm PS: %g nm\n", sqrt(tt)*1e9, sqrt(ps)*1e9);
 	loccell* aloc=loccellread("setup/setup/aloc");
-	int naloc=aloc->nx;
+	int naloc=(int)aloc->nx;
 	dcell* mode_aloc=dcellread("setup/setup/ahst_Modes");
-	int nmod=P(mode_aloc,0)->ny;
+	int nmod=(int)P(mode_aloc,0)->ny;
 	for(int ialoc=0; ialoc<naloc; ialoc++){
 		P(aloc,ialoc)->iac=0.3;
 	}
@@ -256,9 +260,9 @@ int main(int argc, char* argv[]){
 	dmat* mode_ploc=dnew(ploc->nloc, nmod);
 	for(int imod=0; imod<nmod; imod++){
 		for(int ialoc=0; ialoc<naloc; ialoc++){
-			prop(&(propdata_t){.locin=P(aloc,ialoc), .phiin=P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
+			prop(ADDR((propdata_t){.locin=P(aloc,ialoc), .phiin=P(P(mode_aloc,ialoc))+imod*P(mode_aloc,ialoc)->nx,
 				.locout=ploc, .phiout=PCOL(mode_ploc, imod),
-				.alpha=1, .thetax=thetax[idir]*AS2RAD, .thetay=thetay[idir]*AS2RAD});
+				.alpha=1, .thetax=thetax[idir]*AS2RAD, .thetay=thetay[idir]*AS2RAD}));
 			
 		}
 		double inp=dvecdot(PCOL(mode_ploc, imod), PCOL(mode_ploc, imod), P(pwt), ploc->nloc);
@@ -273,7 +277,7 @@ int main(int argc, char* argv[]){
 	dmat* pcc_mode=cc_mode;
 	P(pcc_mode, 0, 0)=P(pcc_mode, 1, 1)=tt/2.;
 	P(pcc_mode, 2, 2)=P(pcc_mode, 3, 3)=P(pcc_mode, 4, 4)=ps/3.;
-	int nploc=ploc->nloc;
+	long nploc=ploc->nloc;
 	dmat* tmp=NULL;
 	dmat* cc_opd=NULL;
 	dmm(&tmp, 0, mode_ploc, cc_mode, "nn", 1);

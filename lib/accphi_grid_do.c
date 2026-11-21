@@ -44,9 +44,24 @@
 //OMP_TASK_FOR in this file does not help with performance.
 /**
    Ray tracing from phiin with size of nxin*nyin to
-   phiout with size of nxout*nyout, normalized spacing of dxout, dyout, origin offset of oxout, oyout.
- */
-static int
+   phiout with size of nxout*nyout using bilinear interpolation. Coordinates are
+   normalized by the input grid spacing. The transpose version accumulates into phiin instead.
+
+   @param[in] phiin Input OPD on a grid of nxin*nyin (accumulated into in the transpose version).
+   @param[in] nxin Number of input points along x.
+   @param[in] nyin Number of input points along y.
+   @param[in,out] phiout Output OPD of nxout*nyout; alpha times the interpolated input is added to it (read only in the transpose version).
+   @param[in] nxout Number of output points along x.
+   @param[in] nyout Number of output points along y.
+   @param[in] dxout Output spacing along x, normalized by the input spacing.
+   @param[in] dyout Output spacing along y, normalized by the input spacing.
+   @param[in] oxout Output origin along x in input grid units.
+   @param[in] oyout Output origin along y in input grid units.
+   @param[in] alpha Scaling factor.
+   @param[in] wrap Whether to wrap around the input grid periodically.
+   @return Number of output points that fall outside of the input grid.
+*/
+static long
 FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 	CONST_OUT real* phiout, long nxout, long nyout,
 	real dxout, real dyout, real oxout, real oyout,
@@ -54,11 +69,11 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 	const long wrapx=nxin-1;
 	const long wrapy=nyin-1;
-	int missing=0;
+	long missing=0;
 	if(PROP_GRID_MAP_OPTIM){
 		if(fabs(dxout-1.)<EPS&&fabs(dyout-1.)<EPS){
 			//loc_out and loc_in has the same sampling.
-			int irows=0;
+			long irows=0;
 			real dplocx=oxout;
 			real dplocy=oyout;
 			int nplocx, nplocy0;
@@ -71,11 +86,11 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			SPLIT(dplocx, dplocx, nplocx);
 
 			const int do_edge=dplocx<EPS||wrap;
-			int rowdiv0=wrapx-nplocx;
+			long rowdiv0=wrapx-nplocx;
 			if(rowdiv0>nxout) rowdiv0=nxout;
 			if(rowdiv0<0) rowdiv0=0;
 
-			int icols=0;
+			long icols=0;
 			if(wrap){
 				dplocy-=floor(dplocy/(real)nyin)*nyin;
 			} else{
@@ -96,9 +111,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			const real tl=dplocx*(1-dplocy);
 			const real tr=(1.-dplocx)*(1-dplocy);
 			phiin+=nplocx;
-			if(nyout==640){
-				dbg("icols=%d, nyout=%ld\n", icols, nyout);
-			}
+
 			for(long icol=icols; icol<nyout; icol++){
 				CONST_IN real* restrict phicol, * restrict phicol2;
 				CONST_OUT real* restrict phiout2=phiout+icol*nxout;//starting address of output
@@ -124,8 +137,8 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					phicol[irow+offset]+=tmp*tl;	\
 					phicol[irow]+=tmp*tr;
 #endif
-				int irow=irows;
-				int rowdiv=rowdiv0;
+				long irow=irows;
+				long rowdiv=rowdiv0;
 				do{
 					//First handle points fall within [0, wrapx)
 					for(; irow<rowdiv; irow++){
@@ -166,14 +179,14 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				}
 
 			}
-			int irows=0;
+			long irows=0;
 			if(wrap){
 				oxout-=floor(oxout/(real)nxin)*nxin;
 			} else if(oxout<0){
 				irows=iceil(-oxout*dxout1);
 			}
 			//rowdiv is number of points falls within [0, wrapx)
-			int rowdiv0=iceil((wrapx-oxout)*dxout1);
+			long rowdiv0=iceil((wrapx-oxout)*dxout1);
 			if(rowdiv0<=0){
 				if(!wrap){
 					missing=nxout*nyout;
@@ -190,7 +203,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			struct interp_cache_t{
 				real dplocx;
 				int nplocx;
-				int nplocx2;
+				long nplocx2;
 			};
 			struct interp_cache_t *interp_cache=0;
 			if(nyout>10&&nxout<2000){//cache SPLIT() results
@@ -198,7 +211,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				interp_cache=mycalloc(nxout, struct interp_cache_t);
 				real rowdiv=rowdiv0;
 				real dplocx=dplocx00;
-				int irow=irows;
+				long irow=irows;
 				real dplocx0;
 				int nplocx0;
 				do{
@@ -229,7 +242,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 				real dplocy=myfma(icol, dyout, oyout);
 				real dplocx, dplocx0, dplocy0;
 				int nplocx0, nplocy;
-				int rowdiv;
+				long rowdiv;
 				while(dplocy>=nyin){
 					//only happens when wrap=1. wrap to within [0, nyin)
 					dplocy-=nyin;
@@ -262,7 +275,7 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 
 				if(interp_cache){//use cached results
 					//First handle points fall within [0, wrapx)
-					for(int irow=irows; irow<rowdiv; irow++){
+					for(long irow=irows; irow<rowdiv; irow++){
 						dplocx0=interp_cache[irow].dplocx;
 						nplocx0=interp_cache[irow].nplocx;
 						GRID_ADD(irow, (interp_cache[irow].nplocx2));//hotspot for NFIRAOS simulation
@@ -270,14 +283,14 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 					//Then handle points fall within [wrapx, wrapx+xover)
 					//xover is EPS if wrap==0, 1 if wrap==1.
 					if(wrap){
-						for(int irow=rowdiv; irow<nxout; irow++){//right on edge
+						for(long irow=rowdiv; irow<nxout; irow++){//right on edge
 							dplocx0=interp_cache[irow].dplocx;
 							nplocx0=interp_cache[irow].nplocx;
 							GRID_ADD(irow, (interp_cache[irow].nplocx2));
 						}
 					}
 				} else{
-					int irow=irows;
+					long irow=irows;
 					do{
 					//First handle points fall within [0, wrapx)
 						for(; irow<rowdiv; irow++, dplocx+=dxout){
@@ -315,10 +328,10 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
 			if(dplocy>=0&&dplocy<=wrapy){
 				SPLIT(dplocy, dplocy, nplocy);
 				dplocy1=1.-dplocy;
-				nplocy1=(nplocy==wrapx?0:nplocy+1);
+				nplocy1=(nplocy==wrapy?0:nplocy+1);
 				dplocx0=oxout;
 
-				for(int irow=0; irow<nxout; irow++){
+				for(long irow=0; irow<nxout; irow++){
 					dplocx=dplocx0+irow*dxout;
 					if(wrap){
 						dplocx=dplocx-floor(dplocx/(real)nxin)*nxin;
@@ -357,19 +370,19 @@ FUN_NAME_BLOCK(CONST_IN real* phiin, long nxin, long nyin,
    Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
    the input grid. scale is the cone effect.
-*/
 
-/*
-  Implement prop_grid_stat or prop_grid_stat_tranpose in a unified way.
-  Let mapin be x, phiout be y. H be propagator.
-  prop_grid_stat does y+=H*x;
-  prop_grid_stat_transpose does x+=H'*y;
+   Implements prop_grid_map or prop_grid_map_transpose in a unified way.
+   Let mapin be x, phiout be y. H be propagator.
+   prop_grid_map does y+=H*x;
+   prop_grid_map_transpose does x+=H'*y;
+   Cubic interpolation is used if mapin->iac is set (not available for transpose).
 
+   @param[in] mapin Input square grid (geometry, and OPD if phiin is the same data).
+   @param[in] phiin Input OPD defined on mapin (accumulated into in the transpose version).
+   @param[in] mapout Output square grid.
+   @param[in,out] phiout Output OPD defined on mapout, accumulated into (read only in the transpose version).
 */
-void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*/
-	CONST_IN real* phiin,
-	CONST_OUT map_t* mapout, /**<[in,out] output OPD defined on a square grid*/
-	CONST_OUT real* phiout,
+void FUN_NAME_MAP(CONST_IN map_t* mapin, CONST_IN real* phiin, CONST_OUT map_t* mapout, CONST_OUT real* phiout,
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
@@ -398,17 +411,24 @@ void FUN_NAME_MAP(CONST_IN map_t* mapin,   /**<[in] OPD defind on a square grid*
 	const real oxout=mapout->ox*dx_in1*scale+displacex;
 	const real oyout=mapout->oy*dy_in1*scale+displacey;
 	const long nxout=NX(mapout);
-	int missing=FUN_NAME_BLOCK(phiin, nxin, nyin,
+	long missing=FUN_NAME_BLOCK(phiin, nxin, nyin,
 		phiout+start*nxout, nxout, end-start,
 		dxout, dyout, oxout, oyout+dyout*start,
 		alpha, wrap);
 	WARN_MISSING(nxout*(end-start));
 }
 
-void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
-	CONST_IN real* phiin,
-	const pts_t* pts,/**<[in] coordinate of destination grid*/
-	CONST_OUT real* phiout, /**<[in,out] OPD defined on locout*/
+/**
+   Ray tracing from a square grid (mapin) to subaperture grids defined by pts,
+   for subapertures start to end (end=0 means all). Implements prop_grid_pts or
+   prop_grid_pts_transpose depending on TRANSPOSE. Cubic interpolation is used if mapin->iac is set.
+
+   @param[in] mapin Input square grid.
+   @param[in] phiin Input OPD defined on mapin (accumulated into in the transpose version).
+   @param[in] pts Coordinate of destination subaperture grids.
+   @param[in,out] phiout Output OPD defined on pts, accumulated into (read only in the transpose version).
+*/
+void FUN_NAME_PTS(CONST_IN map_t* mapin, CONST_IN real* phiin, const pts_t* pts, CONST_OUT real* phiout,
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
@@ -433,7 +453,7 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	long nxout=pts->nxsa;
 	long nyout=pts->nysa?pts->nysa:pts->nxsa;
 	if(!end) end=pts->nsa;
-	int missing=0;
+	long missing=0;
 	for(long isa=start; isa<end; isa++){
 		const real oxout=pts->origx[isa]*dx_in1*scale+displacex;
 		const real oyout=pts->origy[isa]*dy_in1*scale+displacey;
@@ -445,10 +465,20 @@ void FUN_NAME_PTS(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	WARN_MISSING((end-start)*nxout*nyout);
 }
 
-void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
-	CONST_IN real* phiin,
-	const locstat_t* ostat, /**<[in] information about each clumn of a output loc grid*/
-	CONST_OUT real* phiout,    /**<[in,out] OPD defined on ostat*/
+/**
+   Ray tracing from a square grid (mapin) to an output loc described by its
+   column statistics ostat, for columns start to end. Implements prop_grid_stat or
+   prop_grid_stat_transpose depending on TRANSPOSE. Cubic interpolation is used if mapin->iac is set.
+   Let mapin be x, phiout be y. H be propagator.
+   prop_grid_stat does y+=H*x;
+   prop_grid_stat_transpose does x+=H'*y;
+
+   @param[in] mapin Input square grid.
+   @param[in] phiin Input OPD defined on mapin (accumulated into in the transpose version).
+   @param[in] ostat Information about each column of the output loc grid.
+   @param[in,out] phiout Output OPD defined on ostat, accumulated into (read only in the transpose version).
+*/
+void FUN_NAME_STAT(CONST_IN map_t* mapin, CONST_IN real* phiin, const locstat_t* ostat, CONST_OUT real* phiout,
 	ARG_PROP_WRAP){
 	if(mapin->iac){
 #if TRANSPOSE == 0
@@ -470,7 +500,7 @@ void FUN_NAME_STAT(CONST_IN map_t* mapin, /**<[in] OPD defind on a square grid*/
 	displacex=(displacex-mapin->ox)*dx_in1;
 	displacey=(displacey-mapin->oy)*dy_in1;
 	const long nyout=1;
-	int missing=0;
+	long missing=0;
 	if(end==0) end=ostat->ncol;
 	for(long icol=start; icol<end; icol++){	
 		const long offset=ostat->cols[icol].pos;

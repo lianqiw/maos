@@ -1,7 +1,5 @@
 AC_DEFUN([MY_CHECK_CMOCKA],[
-	if test "$USE_CPP" = "1" ;then
-		cmocka_default="no" #the C++ compiler does not work with cmocka
-	fi
+	cmocka_default="yes" #test/unittest.h includes cmocka.h after aos.h so that it also works with C++
 	AC_ARG_ENABLE(cmocka, AS_HELP_STRING([--enable-cmocka], [Enable test with cmocka]), [enable_cmocka="$enableval"], [enable_cmocka="$cmocka_default"])
 	has_cmocka="no"
 	if test "$enable_cmocka" != "no" ;then

@@ -33,7 +33,7 @@ static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 	if(!coord || coord->ny==0){
 		return NULL;/*there are no stars available. */
 	}
-	int nstar=coord->ny;
+	int nstar=(int)coord->ny;
 	dmat* pc=coord;
 	int nwvl=parms->maos.nwvl;
 	star_s* star=mycalloc(nstar, star_s);
@@ -82,9 +82,9 @@ static star_s* setup_star_create(const parms_s* parms, dmat* coord){
 				break;
 			}
 		}
-		if(pow(star[istar].thetax, 2)+pow(star[istar].thetay, 2)<minrad2){
+		if(pow(star[jstar].thetax, 2)+pow(star[jstar].thetay, 2)<minrad2){
 			dbg("Skip star at (%.1f, %.1f) because minrad=%g\n",
-				star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS, parms->skyc.minrad);
+				star[jstar].thetax*RAD2AS, star[jstar].thetay*RAD2AS, parms->skyc.minrad);
 			skip=1;
 		}
 		if(!skip){
@@ -193,7 +193,7 @@ static void setup_star_read_pistat(sim_s* simu, star_s* star, int nstar, int see
 			for(int ig=0; ig<nsa*2; ig++){
 				dmat* tmp=0;
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
-					dadd(&tmp, 0, P(neaspec,ig,iwvl), P(parms->skyc.wvlwt,iwvl));
+					dadd(&tmp, 1, P(neaspec,ig,iwvl), P(parms->skyc.wvlwt,iwvl));
 				}
 				P(stari->pistat[ipowfs].neaspec,ig)=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats, 0);
 				dfree(tmp);
@@ -645,8 +645,8 @@ long setup_star_read_wvf(star_s* star, int nstar, const parms_s* parms, int seed
 }*/
 static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 	if(!nstar) return;
-	int npowfs=NX(star[0].minidtrat);
-	int nwvl=NX(star[0].mags);
+	int npowfs=(int)NX(star[0].minidtrat);
+	int nwvl=(int)NX(star[0].mags);
 	for(int istar=0; istar<nstar; istar++){
 		info("star %d at (%3.0f %3.0f)\" mag=(", istar, star[istar].thetax*RAD2AS, star[istar].thetay*RAD2AS);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -656,7 +656,7 @@ static void print_stars(const star_s *star, int nstar, const dmat *dtrats){
 			int idtrat=(int)P(star[istar].minidtrat,ipowfs);
 			if(idtrat>=0){
 				pistat_s* pistat=&star[istar].pistat[ipowfs];
-				int nsa=NX(pistat->i0);
+				long nsa=NX(pistat->i0);
 				info("%s: snr=%4.1f at dtrat=%2.0f%s", nsa==1?"TT":"TTF", P(pistat->snr,idtrat), P(dtrats,idtrat),ipowfs==0?"":", ");
 			}
 		}
@@ -675,7 +675,7 @@ star_s* setup_star(int* nstarout, sim_s* simu, dmat* stars, int seed){
 		return NULL;
 	}
 	star_s* star=setup_star_create(parms, stars);
-	int nstar=stars->ny;
+	int nstar=(int)stars->ny;
 	const int npowfs=parms->maos.npowfs;
 	setup_star_read_pistat(simu, star, nstar, seed);
 	setup_star_siglev(parms, star, nstar);

@@ -42,6 +42,8 @@ long double factorial(long n1, long n2){
  * @return long The result
  */
 long calc_gcd(long a, long b){
+	if(a<0) a=-a;
+	if(b<0) b=-b;
 	if(a==b || b==0){
 		return a;
 	}else if(a>b){
@@ -58,6 +60,8 @@ long calc_gcd(long a, long b){
  * @return long 
  */
 long calc_lcm(long a, long b){
+	if(a<0) a=-a;
+	if(b<0) b=-b;
 	if(a==0&&b==0){
 		return 0;
 	}else{
@@ -78,10 +82,15 @@ long* invperm(long* p, long np){
 }
 
 /**
- Compute max, min and sum of a long vector*/
-void maxminlong(const long* restrict p, long N,
-	long* restrict max, long* restrict min){
-	if(!p) return;
+   Compute max and min of a long vector.
+
+   @param[in] p The vector.
+   @param[in] N Length of p.
+   @param[out] max The maximum value. Can be NULL. Not modified if p is NULL or empty.
+   @param[out] min The minimum value. Can be NULL. Not modified if p is NULL or empty.
+*/
+void maxminlong(const long* restrict p, long N, long* restrict max, long* restrict min){
+	if(!p||N<=0) return;
 	long a=p[0];
 	long b=p[0];
 	long i=0;
@@ -121,7 +130,7 @@ long nextfftsize(long n){
 
 		for(int irad=0; irad<nradix; ){
 			int radix=radixs[irad];
-			int ratio=n2/radix;
+			long ratio=n2/radix;
 			if(ratio*radix==n2){/*no remainder*/
 				selected[irad]=1;
 				n2=ratio;
@@ -197,20 +206,36 @@ spint* readspint(file_t* fp, long* nx, long* ny){
 	read_header(&header, fp);
 	free(header.str);
 	spint* out=NULL;
-	if(nx!=0&&ny!=0){
-		*nx=(long)header.nx;
-		*ny=(long)header.ny;
-		size_t len=(*nx)*(*ny);
+	size_t len=(size_t)header.nx*header.ny;
+	if(nx) *nx=len?(long)header.nx:0;
+	if(ny) *ny=len?(long)header.ny:0;
+	if(len){
 		out=mymalloc(len, spint);
 		if(readvec(out, M_SPINT, header.id, sizeof(spint), len, fp)){
 			free(out);
 			return NULL;
 		}
-	} else{
-		*nx=0;
-		*ny=0;
 	}
 	return out;
+}
+/**
+   Read nmemb elements of type magic from file. Complex numbers are read as
+   pairs of real numbers so that the byte swapping for fits files is done on
+   each real component.
+
+   @param[out] p The output array.
+   @param[in] magic Magic number (data type) of the data in the file and p.
+   @param[in] size Size in bytes of each element.
+   @param[in] nmemb Number of elements to read.
+   @param[in,out] fp The file to read from.
+   @return 0 if succeeded, nonzero if failed.
+*/
+static int readvec_do(void* p, uint32_t magic, size_t size, size_t nmemb, file_t* fp){
+	if(magic_iscomplex(magic)){
+		return zfread(p, size/2, nmemb*2, fp);
+	}else{
+		return zfread(p, size, nmemb, fp);
+	}
 }
 /**
    Read a vector from file and perform conversion if type mismatches.
@@ -224,7 +249,7 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
 #define TEST_CONVERT(M1, T1, M2, T2)		\
     else if(magic_p==M1 && magic_file==M2){	\
 		T2 *p2=mymalloc(nmemb,T2);			\
-		if(!(ans=zfread(p2, sizeof(T2), nmemb, fp))){\
+		if(!(ans=readvec_do(p2, M2, sizeof(T2), nmemb, fp))){\
 		for(size_t i=0; i<nmemb; i++){		\
 			((T1*)p)[i]=(T1)(p2[i]);		\
 		}}							        \
@@ -232,7 +257,7 @@ int readvec(void* p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t 
     }
 
 	if(magic_p==magic_file){
-		ans=zfread(p, size, nmemb, fp);
+		ans=readvec_do(p, magic_file, size, nmemb, fp);
 	}
 		TEST_CONVERT(M_DBL, double, M_FLT, float)
 		//TEST_CONVERT(M_DBL, double, M_CMP, dcomplex)

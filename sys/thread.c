@@ -33,17 +33,18 @@ PNEW2(mutex_fftw);
 */
 pthread_t thread_new(thread_fun fun, void* arg){
 	int ans;
-	pthread_t temp;
+	pthread_t temp=0;
 	pthread_attr_t attr;
 	if((ans=pthread_attr_init(&attr))){
 		error("pthread_attr_init failed with %d\n", ans);
+		return 0;
 	}
 	if((ans=pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED))){
 		error("pthread_attr_setdetachstate failed with %d\n", ans);
-	}
-	if((ans=pthread_create(&temp, &attr, fun, arg))){
+	}else if((ans=pthread_create(&temp, &attr, fun, arg))){
 		error("pthread_create failed with answer %d\n", ans);
 	}
+	pthread_attr_destroy(&attr);
 	if(ans) temp=0;
 	return temp;
 }

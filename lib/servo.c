@@ -229,7 +229,10 @@ static int servo_isstable(const dmat* nu, const cmat* Hol, real pmargin_thres){
 	real fp, fg;
 	real pmargin=phase_at_gain(&fp, nu, Hol, 1)+M_PI;
 	real gmargin=0-gain_at_phase(&fg, nu, Hol, -M_PI);
-	int isstable=pmargin>pmargin_thres && fp<fg && gmargin>0;
+	/*Allow a small tolerance: the type II lead filter is designed to give
+	  exactly pmargin_thres, which is subject to round off.*/
+	const real ptol=1e-6;
+	int isstable=pmargin>pmargin_thres-ptol && fp<fg && gmargin>0;
 	/*if(!isstable){
 	   info("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
 		 pmargin*180/M_PI, fp, gmargin, fg);
@@ -255,7 +258,8 @@ static real servo_calc_max_gain(SERVO_CALC_T *st, real pmargin){
 /**
    Calculate total error. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
 */
-static real servo_calc_do(SERVO_CALC_T* st, real g0){
+static real servo_calc_do(void* pst, real g0){
+	SERVO_CALC_T* st=(SERVO_CALC_T*)pst;
 	const dmat* nu=st->nu;
 	if(!st->Hol){
 		st->Hol=cnew(NX(nu), 1);
@@ -362,6 +366,10 @@ static real servo_calc_do(SERVO_CALC_T* st, real g0){
 */
 dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zeta,
 	int servo_type, const dmat *psdin, const dmat *sigma2n){
+	if(psdin&&NY(psdin)!=2){
+		error("psdin should have two columns\n");
+		return NULL;
+	}
 	if(!pmargin) pmargin=M_PI/4;
 	SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(SERVO_CALC_T));
 	servo_calc_init(&st, psdin, dt, dtrat, al);
@@ -379,7 +387,7 @@ dcell* servo_optim(real dt, long dtrat, real al, real pmargin, real f0, real zet
 		real g0_max=2.0;
 		for(long ins=0; ins<NX(gm)*NY(gm); ins++){
 			st.sigma2n=sigma2n?P(sigma2n,ins):0;
-			real g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
+			real g0=golden_section_search(servo_calc_do, &st, g0_min, g0_max, g0_step);
 			servo_calc_do(&st, g0);
 			P(gm,ins)=dnew(ng+2, 1);
 			P(P(gm,ins),0)=st.g;
@@ -473,6 +481,10 @@ dmat* servo_cl2ol(const dmat* psdcl, real dt, long dtrat, real al, real gain, re
    Tested OK: 2010-06-11
 */
 real servo_residual(real* noise_amp, const dmat* psdin, real dt, long dtrat, real al, const dmat* gain, int servo_type){
+	if(!psdin||NY(psdin)!=2||!gain||PN(gain)<(servo_type==2?3:1)){
+		error("psdin should have two columns and gain should have %d elements\n", servo_type==2?3:1);
+		return NAN;
+	}
 	SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(st));
 	servo_calc_init(&st, psdin, dt, dtrat, al);
 	st.type=servo_type==2?2:1;
@@ -502,6 +514,7 @@ servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrla
 	int indmul=0;
 	if(NX(gain)!=3){
 		error("Wrong format in gain\n");
+		return;
 	}
 	real gg, e1a, e1;
 	if(iscell(merrc)){
@@ -512,13 +525,14 @@ servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrla
 		dmat* merr=dmat_cast(merrc);
 		dmat* mlead=dmat_cast(mleadc);
 		dmat* merrlast=dmat_cast(merrlastc);
-		int nmod=0;/*number of modes*/
+		long nmod=0;/*number of modes*/
 		nmod=PN(merr);
 		if(NY(merr)==1){
 			nmod=NX(merr);
 		} else{
 			if(NX(merr)!=1){
 				error("Don't handle this case\n");
+				return;
 			}
 			nmod=NY(merr);
 		}
@@ -528,12 +542,13 @@ servo_typeII_filter(const dmat *gain, cell *mpreintc, cell *mleadc, cell *merrla
 			indmul=1;
 		} else{
 			error("Wrong format in gain\n");
+			return;
 		}
 		/**2013-12-03: fix lead filter implementation. gg is relocated
 		   2013-12-05: Implemented a more accurate and robust lead filter
 		 */
-		for(int imod=0; imod<nmod; imod++){
-			int indm=imod*indmul;
+		for(long imod=0; imod<nmod; imod++){
+			long indm=imod*indmul;
 			gg=P(gain, 0, indm);
 			e1a=P(gain, 1, indm);
 			e1=P(gain, 2, indm);
@@ -564,6 +579,7 @@ static void servo_init(servo_t* st, const anyarray merr_){
 static void servo_convert_ep(servo_t* st, const dmat* ep){
 	if(!ep){
 		error("ep cannot be null\n");
+		return;
 	}
 	dfree(st->ep);
 	if(NX(ep)!=3){//type I
@@ -638,10 +654,10 @@ static void servo_shift_ap(servo_t* st){
 	if(!st->initialized) return;
 	cell *recycle=P(st->mint,ap->nx-1);
 	dcellscale(recycle, P(ap, ap->nx-1));
-	for(int iap=ap->nx-2; iap>=0; iap--){
+	for(int iap=(int)ap->nx-2; iap>=0; iap--){
 		dcelladd(&recycle, 1, P(st->mint,iap), P(ap, iap));
 	}
-	for(int iap=ap->nx-1; iap>0; iap--){
+	for(int iap=(int)ap->nx-1; iap>0; iap--){
 		P(st->mint, iap)=P(st->mint,iap-1);/*shifting */
 	}
 	P(st->mint,0)=recycle;/*new command. */
@@ -699,6 +715,7 @@ int servo_filter(servo_t* st, const anyarray _merr){
 	servo_shift_ap(st);
 	if(!st->mint){
 		error("servo_t must be created using servo_new()\n");
+		return 0;
 	}
 	if(!st->ep){//ep is externally handled
 		dcelladd(&st->mpreint, 0, merr, 1);
@@ -712,7 +729,10 @@ int servo_filter(servo_t* st, const anyarray _merr){
 		}
 		break;
 	case 2:{//PID controller
-		if(NY(st->ep)!=1) error("not supported\n");
+		if(NY(st->ep)!=1){
+			error("not supported\n");
+			return 0;
+		}
 		real g1=P(st->ep,0)+P(st->ep,1);
 		real g2=-P(st->ep,1);
 		dcelladd(&st->mpreint, 0, merr, g1);
@@ -725,6 +745,7 @@ int servo_filter(servo_t* st, const anyarray _merr){
 		break;
 	default:
 		error("Invalid: NX(st->ep)=%ld\n", NX(st->ep));
+		return 0;
 	}
 	dcelladd(&P(st->mint, 0), 1, st->mpreint, 1);
 	return 1;
@@ -763,7 +784,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 	if(NY(input)==1){/*single mode. each column is for a mode.*/
 		reshape(input, 1, NX(input));
 	}
-	int nmod=NX(input);
+	long nmod=NX(input);
 	dmat* pinput=input;
 	dmat* merr=dnew(nmod, 1);
 	dcell* mreal=dcellnew(1, 1);
@@ -802,6 +823,7 @@ dmat* servo_test(dmat* input, real dt, int dtrat, dmat* sigma2n, dmat* gain){
 		}
 	}
 	dfree(sigman);
+	dfree(noise);
 	dfree(merr);
 	dcellfree(mreal);
 	dcellfree(meas);

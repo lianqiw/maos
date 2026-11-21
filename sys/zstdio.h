@@ -29,8 +29,8 @@ extern "C" {
 
 typedef struct zstd_t zstd_t;
 
-zstd_t* zstd_open(int fd, int mode); // mode = 'r': read, 'w': write
-size_t zstd_read(zstd_t *zf, void *buf, size_t size);
+zstd_t* zstd_open(int fd, int mode);
+int zstd_read(zstd_t *zf, void *buf, size_t size);
 int zstd_write(zstd_t *zf, const void *buf, size_t size);
 int zstd_flush(zstd_t *zf);
 int zstd_close(zstd_t *zf, int close_fd);

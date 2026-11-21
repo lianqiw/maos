@@ -21,10 +21,11 @@
 //This file is only used by cmath and zmath, which defines COMP_COMPLEX
 #if defined(COMP_COMPLEX) && (!defined(COMP_SINGLE) || HAS_FFTWF==1)
 
+/**File name to save FFT wisdom.*/
+static char fnwisdom[64];
 /**
    load FFT wisdom from file.
 */
-static char fnwisdom[64];
 static void load_wisdom(){
 	FILE* fpwisdom;
 	if((fpwisdom=fopen(fnwisdom, "r"))){
@@ -51,6 +52,27 @@ typedef void callback_fun(void *(*work)(char *), char *jobdata, size_t elsize, i
 	extern "C" 	
 #endif
 void fftw_threads_set_callback(callback_fun callback, void *callback_data);
+#if !_OPENMP && !defined(FFT_JOB_DEFINED)
+#define FFT_JOB_DEFINED
+/*A job of FFTW for the thread pool, which requires the thread_fun signature.*/
+typedef struct{
+	void *(*work)(char *);
+	char *data;
+}fft_job_t;
+static void *fft_job_run(void *p){
+	fft_job_t *job=(fft_job_t *)p;
+	return job->work(job->data);
+}
+#endif
+/**
+   Callback for FFTW to run its parallel jobs using OpenMP or the internal thread pool.
+
+   @param[in] work The work function.
+   @param[in,out] jobdata Data of the jobs; job i uses jobdata+elsize*i.
+   @param[in] elsize Size of the data of each job.
+   @param[in] njobs Number of jobs.
+   @param[in] data Unused.
+*/
 static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t elsize, int njobs, void *data){
 	(void)data;
 	//dbg("fft_task_callback: %d threads\n", njobs);
@@ -63,14 +85,17 @@ static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t
 		}
 	}else{
 		#pragma omp taskloop default(shared) num_tasks(njobs) priority(1)
-		for(int i=0; i<njobs; ++i){
+		for(long i=0; i<njobs; ++i){
 			work(jobdata+elsize*i);
 		}
 	}
 #else
 	tp_counter_t group={0};
+	fft_job_t jobs[njobs];
 	for(int i=0; i<njobs; ++i){
-		QUEUE(&group, work, jobdata+elsize*i, 1, 1);
+		jobs[i].work=work;
+		jobs[i].data=jobdata+elsize*i;
+		QUEUE(&group, fft_job_run, &jobs[i], 1, 1);
 	}
 	WAIT(&group, 1);
 #endif//_OPENMP
@@ -152,7 +177,7 @@ static void FFTW(fft_threads)(long nx, long ny){
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
 */
 typedef struct PLAN1D_T{
-	int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
+	long ncomp;        /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
 	FFTW(plan) plan[3]; /**< Array of plans for 1-d FFT */
 }PLAN1D_T;
 
@@ -198,9 +223,9 @@ static void X(fft2plan)(X(mat)* A, int dir){
 	FFTW(fft_threads)(A->nx, A->ny);
 	/*!!fft uses row major mode. so need to reverse order */
 	if(A->nx==1||A->ny==1){
-		A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
+		A->fft->plan[dir+1]=FFTW(plan_dft_1d)((int)(A->ny*A->nx), COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
 	} else{
-		A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
+		A->fft->plan[dir+1]=FFTW(plan_dft_2d)((int)A->ny, (int)A->nx, COMP(P(A)), COMP(P(A)), dir, FFTW_FLAGS);
 	}
 	if(!A->fft->plan[dir+1]){
 		error("Plan is empty\n");
@@ -212,13 +237,13 @@ static void X(fft2plan)(X(mat)* A, int dir){
 /**
    make plans for cfft2partial.
 */
-static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
+static void X(fft2partialplan)(X(mat)* A, long ncomp, int dir){
 	assert(abs(dir)==1);
 	if(!A->fft){
 		A->fft=mycalloc(1, fft_t);
 	} else if(A->fft->plan1d[dir+1]) return;
-	const int nx=A->nx;
-	const int ny=A->ny;
+	const int nx=(int)A->nx;//FFTW uses int
+	const int ny=(int)A->ny;
 	int FFTW_FLAGS;
 	FFTW_FLAGS=FFTW_ESTIMATE;
 	PLAN1D_T* plan1d=A->fft->plan1d[dir+1]=mycalloc(3, PLAN1D_T);
@@ -233,12 +258,12 @@ static void X(fft2partialplan)(X(mat)* A, int ncomp, int dir){
 	}
 	if(ncomp>0){
 		/*selected along rows, beginning */
-		plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
+		plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, (int)(ncomp/2),
 			COMP(P(A)), NULL, nx, 1,
 			COMP(P(A)), NULL, nx, 1,
 			dir, FFTW_FLAGS);
 		/*selected along rows, end */
-		plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
+		plan1d->plan[2]=FFTW(plan_many_dft)(1, &ny, (int)(ncomp/2),
 			COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
 			COMP(P(A))+nx-ncomp/2, NULL, nx, 1,
 			dir, FFTW_FLAGS);
@@ -264,7 +289,7 @@ void X(fft2)(X(mat)* A, int dir){
 		if(!A->fft||!A->fft->plan[dir+1]){
 			X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
 		}
-		FFTW(execute)(A->fft->plan[dir+1]);
+		if(A->fft->plan[dir+1]) FFTW(execute)(A->fft->plan[dir+1]);
 	}
 }
 
@@ -291,14 +316,17 @@ void X(fft2s)(X(mat)* A, int dir){/*symmetrical cfft2. */
    psf.
    if ncomp==0, only do FFT along the columns.
 */
-void X(fft2partial)(X(mat)* A, int ncomp, int dir){
+void X(fft2partial)(X(mat)* A, long ncomp, int dir){
 	assert(abs(dir)==1);
 	assert(A&&P(A));
 	if(!A->fft||!A->fft->plan1d[dir+1]){
 		X(fft2partialplan)(A, ncomp, dir);
 	}
 	PLAN1D_T* plan1d=A->fft->plan1d[dir+1];
-	if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
+	if(ncomp!=plan1d->ncomp){
+		error("Plan and fft mismatch\n");
+		return;
+	}
 	for(int i=0; i<3; i++){
 		if(plan1d->plan[i]) FFTW(execute)(plan1d->plan[i]);
 	}
@@ -327,20 +355,23 @@ void XR(fft_free_plan)(fft_t *fft){
  */
 static void XR(cell_fft2plan)(XR(cell)* dc, int dir){
 	assert(abs(dir)==1);
-	if(dc->nx*dc->ny!=2){
+	if(dc->nx*dc->ny!=2||!P(dc,0)||!P(dc,1)){
 		error("XR(cell) of two elements is required\n");
+		return;
 	}
-	int nx=P(dc,0)->nx;
-	int ny=P(dc,0)->ny;
+	int nx=(int)P(dc,0)->nx;//FFTW uses int
+	int ny=(int)P(dc,0)->ny;
 	if(P(dc,1)->nx!=nx||P(dc,1)->ny!=ny){
 		error("The two elements in XR(cell) must be of the same size\n");
+		return;
 	}
-	fftw_iodim dims[2]={{nx,1,1},{ny,nx,nx}};
-	fftw_iodim howmany_dims={1,1,1};
-	R* restrict p1=P(P(dc,0));
-	R* restrict p2=P(P(dc,1));
+	FFTW(iodim) dims[2]={{nx,1,1},{ny,nx,nx}};
+	FFTW(iodim) howmany_dims={1,1,1};
+	/*split dft is always forward. backward transform is done by swapping real and imaginary parts.*/
+	R* restrict p1=P(P(dc,dir==-1?0:1));
+	R* restrict p2=P(P(dc,dir==-1?1:0));
 	/*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
-	fft_t* fft=mycalloc(1, fft_t);
+	fft_t* fft=dc->fft?dc->fft:mycalloc(1, fft_t);
 	if(!fft->plan[dir+1]){
 		LOCK_FFT;
 		FFTW(fft_threads)(nx, ny);
@@ -361,25 +392,26 @@ void XR(cell_fft2)(XR(cell)* dc, int dir){
 	if(!dc->fft||!dc->fft->plan[dir+1]){
 		XR(cell_fft2plan)(dc, dir);
 	}
-	FFTW(execute)(dc->fft->plan[dir+1]);
+	if(dc->fft&&dc->fft->plan[dir+1]) FFTW(execute)(dc->fft->plan[dir+1]);
 }
 /**
    Create a fftw plan for 1d real to real FFT.
  */
 void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
+	assert(abs(dir)==1&&A&&P(A));
 	if(A->nx!=1&&A->ny!=1){
 		error("not supported\n");
+		return;
 	}
-	assert(abs(dir)==1&&A&&P(A));
 	if(!A->fft) A->fft=mycalloc(1, fft_t);
 	int FFTW_FLAGS;
 	FFTW_FLAGS=FFTW_ESTIMATE;
 	LOCK_FFT;
 	if(!A->fft->plan[dir+1]){
 		if(dir==-1){
-			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, P(A), P(A), FFTW_R2HC, FFTW_FLAGS);
+			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)((int)(A->nx*A->ny), P(A), P(A), FFTW_R2HC, FFTW_FLAGS);
 		} else{
-			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, P(A), P(A), FFTW_HC2R, FFTW_FLAGS);
+			A->fft->plan[dir+1]=FFTW(plan_r2r_1d)((int)(A->nx*A->ny), P(A), P(A), FFTW_HC2R, FFTW_FLAGS);
 		}
 		if(!A->fft->plan[dir+1]){
 			error("fftw_plan_r2r_1d: Plan is empty. Please check FFT library.\n");
@@ -391,7 +423,11 @@ void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
    Do 1d real to real FFT.
  */
 void XR(fft1)(XR(mat)* A, int dir){
-	assert(A->fft&&abs(dir)==1);
+	assert(abs(dir)==1);
+	if(!A||!A->fft||!A->fft->plan[dir+1]){
+		error("Plan is not created. Call XR(fft1plan_r2hc) first.\n");
+		return;
+	}
 	FFTW(execute)(A->fft->plan[dir+1]);
 }
 

@@ -183,12 +183,14 @@ static char* procfn(const char* fn, const char* mod){
 	/*If there is no recognized suffix, add .bin in the end. */
 	if(mod[0]=='r'){
 		char* fnr=NULL;
-		if(!(fnr=search_file(fn2, 1))){/*If does not exist. */
+		if(IS_SHM(fn2)){//shared memory is opened by myopen() with shm_open(), not found on disk.
+			fnr=strdup(fn2);
+		}else if(!(fnr=search_file(fn2, 1))){/*If does not exist. */
 			if(!check_suffix(fn2, ".bin")&&!check_suffix(fn2, ".bin.gz")&&!check_suffix(fn2, ".bin.zst")
 				&&!check_suffix(fn2, ".fits")&&!check_suffix(fn2, ".fits.gz")&&!check_suffix(fn2, ".fits.zst")){
 			 //Try adding suffix.
 				const char* suf[]={".bin",".fits",".bin.gz",".fits.gz",".bin.zst",".fits.zst"};
-				for(unsigned int is=0; is<4; is++){
+				for(unsigned int is=0; is<sizeof(suf)/sizeof(suf[0]); is++){
 					strcat(fn2, suf[is]);
 					if(!(fnr=search_file(fn2, 1))){
 						fn2[strlen(fn2)-strlen(suf[is])]='\0';
@@ -259,14 +261,69 @@ void zftouch(const char* format, ...){
 //PNEW(lock);
 /*
   convert a socket or fd into file_t.
-*/
 
+  @param[in] fd File or socket descriptor. Closed by zfclose().
+  @return Newly allocated file_t; free it with zfclose().
+*/
 file_t* zfdopen(int fd){
 	file_t* fp=mycalloc(1, file_t);
 	if(fp){
 		fp->iszip=0;
 		fp->fd=fd;
 	}
+	return fp;
+}
+/**
+  convert a file descriptor, socket, or pipe into file_t with the format implied by suffix.
+
+  Unlike zfopen(), the format is not detected from the content, so the
+  descriptor does not need to be seekable.
+
+  @param[in] fd File, socket, or pipe descriptor. Closed by zfclose().
+  @param[in] mod Access mode: r for read, w for write.
+  @param[in] suffix File name suffix that sets the format: .bin, .fits, with optional .gz or .zst appended. NULL is .bin.
+  @return Newly allocated file_t; free it with zfclose(). NULL on failure.
+*/
+file_t* zfdopen_as(int fd, const char* mod, const char* suffix){
+	if(fd<0||!mod||(mod[0]!='r'&&mod[0]!='w')){
+		warning("Invalid fd=%d or mod=%s\n", fd, mod?mod:"(null)");
+		return NULL;
+	}
+	file_t* fp=zfdopen(fd);
+	if(!fp) return NULL;
+	fp->mode=(mod[0]=='w');
+	if(suffix){
+		if(check_suffix(suffix, ".gz")){
+			fp->iszip=1;
+		}else if(check_suffix(suffix, ".zst")){
+#if HAVE_LIBZSTD
+			fp->iszip=2;
+#else
+			warning("zstd is not supported.\n");
+			free(fp);
+			return NULL;
+#endif
+		}
+		if(strstr(suffix, ".fits")){
+			fp->isfits=1;
+		}
+	}
+	if(fp->iszip==1){
+		if(!(fp->gp=gzdopen(fd, mod))){
+			warning("Error gzdopen for fd %d\n", fd);
+			free(fp);
+			return NULL;
+		}
+	}
+#if HAVE_LIBZSTD
+	else if(fp->iszip==2){
+		if(!(fp->zp=zstd_open(fd, mod[0]))){
+			warning("zstd_open failed for fd %d\n", fd);
+			free(fp);
+			return NULL;
+		}
+	}
+#endif
 	return fp;
 }
 /**
@@ -395,9 +452,11 @@ file_t* zfopen(const char* fni, const char* mod){
 		fp->zp=zstd_open(fp->fd, mod[0]);
 		if(!fp->zp){
 			error("zstd_open failed\n");
+			goto fail;
 		}
 #else
 		error("zstd is not supported.\n");
+		goto fail;
 #endif
 	}
 	if(check_suffix(fn2, ".fits")||check_suffix(fn2, ".fits.gz")||check_suffix(fn2, ".fits.zst")){
@@ -507,11 +566,14 @@ void zfclose(file_t* fp){
  * */
 static int zfwrite_do(const void* ptr, const size_t tot, file_t* fp){
 	int ans=-1;
-	if(!fp||fp->fd<0||fp->err||!ptr){
+	if(!fp){
+		warning("zfwrite_wrap: fp is NULL, cancelled.\n");
+		return -1;
+	} else if(fp->fd<0||fp->err||!ptr){
 		warning("zfwrite_wrap: error encountered, cancelled.\n");
-		ans=(fp&&fp->err)?fp->err:-1;
+		ans=fp->err?fp->err:-1;
 	} else if(fp->iszip==1){
-		ans=convert_ans(gzwrite(fp->gp, ptr, tot), tot);
+		ans=convert_ans(gzwrite(fp->gp, ptr, (unsigned)tot), tot);
 	} else if(fp->iszip==2){
 #if HAVE_LIBZSTD
 		ans=zstd_write(fp->zp, ptr, tot);
@@ -545,13 +607,13 @@ int zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	const char *in=(const char*)ptr;
 	int ans=0;
 	if(fp->isfits&&BIGENDIAN==0){
-		int length=size*nmemb;
+		long length=(long)(size*nmemb);
 		/* write a block of 2880 bytes each time, with big-endianness.*/
 		char junk[FITS_BS];
-		int nb=(length+FITS_BS-1)/FITS_BS;
-		for(int ib=0; ib<nb&&!ans; ib++){
-			int nd=length<FITS_BS?length:FITS_BS;
-			swap_array(junk, in, nd, size);
+		long nb=(length+FITS_BS-1)/FITS_BS;
+		for(long ib=0; ib<nb&&!ans; ib++){
+			long nd=length<FITS_BS?length:FITS_BS;
+			swap_array(junk, in, nd, (int)size);
 			/* use bs instead of nd to test tailing blanks*/
 			in+=FITS_BS; length-=FITS_BS;
 			if(length<0){
@@ -573,7 +635,7 @@ static int zfread_do(void* ptr, const size_t tot, file_t* fp){
 		warning("zfread_wrap: error encountered\n");
 		return -1;
 	} else if(fp->iszip==1){
-		ans=convert_ans(gzread(fp->gp, ptr, tot), tot);
+		ans=convert_ans(gzread(fp->gp, ptr, (unsigned)tot), tot);
 		if(ans<0){
 			int errnum=0;
 			const char* msg=gzerror(fp->gp, &errnum);
@@ -608,10 +670,12 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	const long length=size*nmemb;
 	if(fp->err){
 		ans=-1;
-	} else if(fp->isfits && size>1){/*Read a full block and do byte swapping.*/
+	} else if(fp->isfits){/*Read data, do byte swapping, and skip the padding to a full block.*/
 		ans=zfread_do(ptr, length, fp);
 		if(ans) return ans;
-		swap_array((char*)ptr, (char*)ptr, length, size);
+		if(size>1){
+			swap_array((char*)ptr, (char*)ptr, length, (int)size);
+		}
 		long nrem=length%FITS_BS;
 		if(nrem>0){//read full length
 			char junk[FITS_BS-nrem];
@@ -628,6 +692,8 @@ int zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 long zfseek(file_t* fp, long offset, int whence){
 	if(fp->iszip==1){
 		return gzseek(fp->gp, offset, whence);
+	} else if(fp->iszip==2){
+		return -1;
 	} else{
 		return lseek(fp->fd, offset, whence);
 	}
@@ -665,7 +731,7 @@ int zfeof(file_t* fp){
 	long pos=zfpos(fp);
 	long end=zfseek(fp, 0, SEEK_END);
 	zfseek(fp, pos, SEEK_SET);
-	return pos!=end;
+	return pos>=0&&pos==end;
 }
 /**
  * Return file length
@@ -678,9 +744,10 @@ long zflen(file_t *fp){
 }
 
 /**
-   Flush the buffer.
-*/
+   Flush the buffer of compressed files.
 
+   @param[in,out] fp File handle.
+*/
 void zflush(file_t* fp){
 	if(fp->iszip==1){
 		gzflush(fp->gp, 4);
@@ -883,52 +950,50 @@ write_fits_header(file_t* fp, const char* str, uint32_t magic, int naxis, ...){
 	if(str){
 		const char* str_end=str+strlen(str);
 		while(isspace((unsigned char)str[0])&&str<str_end) str++;
-		while(str&&str<str_end){
+		int cont=0;//continuing a line that did not fit
+		int upper=0;//convert value to upper case (before any /) for the FITS standard
+		while(str<str_end){
 			FLUSH_OUT;
 			const char* nl=strchr(str, '\n');//separation of keys
 			const char* nc=strchr(str, ';');//separation of keys
-			const char* eq=strchr(str, '=');
 			if(!nl) nl=str_end;
 			if(nc&&nc<nl) nl=nc;
-			if(eq>nl) eq=0;
-			int length;
-			if(eq){
-				length=nl-eq;
-			} else{
-				length=nl-str+1;
-			}
-			if(length>70) length=70;//each line can contain maximum 70 values
-
+			const char* eq=cont?NULL:strchr(str, '=');
+			if(eq&&eq>nl) eq=NULL;
+			const char* start;
 			if(eq){//there is an equal sign.
 				for(int ic=0; ic<MIN(8, (eq-str)); ic++){//fits standard requires upper case keywords
-					if(!str[ic]) break;
 					header[hc][ic]=toupper((unsigned char)str[ic]);
 				}
 				header[hc][8]='=';
-				header[hc][9]=' ';
-				int slash_found=0;//convert char before / to upper case for the FITS standard
-				for(int ic=0; ic<length; ic++){
-					if(eq[1+ic]=='/'){
-						slash_found=1;
-					}
-					header[hc][10+ic]=slash_found?eq[1+ic]:toupper((unsigned char)eq[1+ic]);
-					if(!eq[1+ic]) break;
-				}
+				start=eq+1;
+				upper=1;
 			} else{
-				strscpy(header[hc], "COMMENT   ", 11);
-				strscpy(header[hc]+10, str, length);
+				memcpy(header[hc], cont?"CONTINUE":"COMMENT ", 8);
+				start=str;
+				if(!cont) upper=0;
 			}
-			if(nl){//Replace \n by space
-				header[hc][10+length-1]=' ';
+			long length=nl-start;
+			int truncated=0;
+			if(length>70){//each card can contain maximum 70 values
+				length=70;
+				//do not split at a space, which would be trimmed when reading
+				while(length>1&&isspace((unsigned char)start[length-1])) length--;
+				truncated=1;
+			}
+			for(long ic=0; ic<length; ic++){
+				if(start[ic]=='/') upper=0;
+				header[hc][10+ic]=upper?toupper((unsigned char)start[ic]):start[ic];
 			}
 			hc++;
-			//update str to after \n
-			if(eq){
-				str=eq+length+1;
-			} else{
-				str+=length;
+			if(truncated){
+				str=start+length;
+				cont=1;
+			}else{
+				str=nl<str_end?nl+1:str_end;
+				cont=0;
+				while(str<str_end && isspace((unsigned char)str[0])) str++;
 			}
-			while(str<str_end && isspace((unsigned char)str[0])) str++;
 		}
 	}
 	FLUSH_OUT;
@@ -950,42 +1015,41 @@ read_fits_header(header_t* header, file_t* fp){
 	while(!end){
 		int start=0;
 		if(page==0){
-			CHECK_EOF(zfread(line, 1, 80, fp), "Read line 1 failed");
+			CHECK_EOF(zfread_do(line, 80, fp), "Read line 1 failed");
 			line[80]='\0';
 			CHECK_ERR(strncmp(line, "SIMPLE", 6)&&strncmp(line, "XTENSION= 'IMAGE", 16), "Invalid frame data type");
-			CHECK_ERR(zfread(line, 1, 80, fp), "Read line 2 failed"); line[80]='\0';
+			CHECK_ERR(zfread_do(line, 80, fp), "Read line 2 failed"); line[80]='\0';
 			CHECK_ERR(sscanf(line+10, "%20d", &bitpix)!=1, "Read bitpix failed");
-			CHECK_ERR(zfread(line, 1, 80, fp), "Read line 3 failed"); line[80]='\0';
+			CHECK_ERR(zfread_do(line, 80, fp), "Read line 3 failed"); line[80]='\0';
 			CHECK_ERR(sscanf(line+10, "%20d", &naxis)!=1, "Read naxis failed");
 			CHECK_ERR(naxis>3, "Unable to handle naxis>3");
 			if(naxis>2){
-				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 4 failed"); line[80]='\0';
+				CHECK_ERR(zfread_do(line, 80, fp), "Read line 4 failed"); line[80]='\0';
 				CHECK_ERR(sscanf(line+10, "%20d", &nc)!=1, "Read nc failed");
 			}
 			if(naxis>0){
-				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 4 failed"); line[80]='\0';
+				CHECK_ERR(zfread_do(line, 80, fp), "Read line 4 failed"); line[80]='\0';
 				CHECK_ERR(sscanf(line+10, "%20lu", (unsigned long*)&header->nx)!=1, "Read nx failed");
 			} else{
 				header->nx=0;
 			}
 			if(naxis>1){
-				CHECK_ERR(zfread(line, 1, 80, fp), "Read line 5 failed"); line[80]='\0';
+				CHECK_ERR(zfread_do(line, 80, fp), "Read line 5 failed"); line[80]='\0';
 				CHECK_ERR(sscanf(line+10, "%20lu", (unsigned long*)&header->ny)!=1, "Read ny failed");
 			} else{
 				header->ny=0;
 			}
 			start=3+naxis;
 		}
-		int was_comment=0;
 		for(int i=start; i<36; i++){
-			CHECK_ERR(zfread(line, 1, 80, fp), "Read data line failed"); 
+			CHECK_ERR(zfread_do(line, 80, fp), "Read data line failed"); 
 			line[80]='\0';
 			if(!strncmp(line, "END", 3)){
 				end=1;
 			} else{
 				char* hh=line;
 				int length=80;
-				int is_comment=0;
+				int is_cont=0;
 				//Ignore a few keys
 				if(!strncmp(line, "EXTEND", 6)){
 					continue;
@@ -996,7 +1060,10 @@ read_fits_header(header_t* header, file_t* fp){
 				} else if(!strncmp(line, "COMMENT", 7)){
 					hh=line+10;
 					length-=10;
-					is_comment=1;
+				} else if(!strncmp(line, "CONTINUE", 8)){//continuation of the previous line
+					hh=line+10;
+					length-=10;
+					is_cont=1;
 				}
 				//Remove trailing space.
 				while(length>0&&isspace((unsigned char)hh[length-1])){
@@ -1007,7 +1074,7 @@ read_fits_header(header_t* header, file_t* fp){
 				if(length>0){
 					if(header->str){
 						header->str=myrealloc(header->str, strlen(header->str)+length+3, char);
-						if(!(is_comment&&was_comment)){
+						if(!is_cont){
 							strcat(header->str, "\n\0");
 						}
 					} else{
@@ -1015,7 +1082,6 @@ read_fits_header(header_t* header, file_t* fp){
 					}
 					strcat(header->str, hh);
 				}
-				was_comment=is_comment;
 			}
 		}
 		page++;
@@ -1145,7 +1211,13 @@ long writearr(const void* fpn,     /**<[in] The file pointer*/
 	//long pos=zfpos(fp);
 	int ans=0;
 	if(nx*ny>0){
-		if((ans=zfwrite(p, size, nx*ny, fp))){
+		size_t usize=size;
+		size_t nmemb=nx*ny;
+		if(magic_iscomplex(magic)){//byte swap real and imaginary parts separately.
+			usize=size/2;
+			nmemb*=2;
+		}
+		if((ans=zfwrite(p, usize, nmemb, fp))){
 			error("writearr failed\n");
 		}
 	}
@@ -1178,6 +1250,7 @@ unsigned int mem_unref(mem_t** pin){
 		}
 		if(in->shm){
 			shm_unlink(in->shm);
+			free(in->shm);
 		}
 		free(in);
 	}
@@ -1253,6 +1326,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 		if(!fn2) return NULL;
 		if(!check_suffix(fn2, ".bin")){
 			error("mmap only support .bin file\n");
+			free(fn2);
 			return NULL;
 		}
 
@@ -1261,6 +1335,9 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 			/*First truncate the file to 0 to delete old data. */
 			if(fd==-1||ftruncate(fd, msize)==-1){
 				error("Unable to open or ftruncate file %s to %zu size\n", fn2, msize);
+				if(fd!=-1) close(fd);
+				free(fn2);
+				return NULL;
 			}
 		} else{
 			fd=myopen(fn2, O_RDONLY, 0600);
@@ -1271,17 +1348,25 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 			if(rw){
 				error("Unable to create file %s\n", fn2);
 			}
+			free(fn2);
 			return NULL;
 		}
 
-		if(!rw&&!msize){
-			msize=flen(fn2);
+		if(!rw&&!msize){//fstat also works for shared memory
+			struct stat st;
+			if(!fstat(fd, &st)) msize=st.st_size;
 		}
 
 	}
 	//Notice that changed made in MAP_PRIVATE mode are not saved to file. So cannot be used
 	//mmap should not be used for writing as it causes a lot of disk activity during small updates.
-	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ, /*(fd==-1?MAP_ANONYMOUS:0)|*/MAP_SHARED, fd, 0);
+	void* p=mmap(NULL, msize, (rw?PROT_WRITE:0)|PROT_READ,
+#ifdef MAP_ANONYMOUS
+		(fd==-1?MAP_ANONYMOUS:0)|
+#elif defined(MAP_ANON)
+		(fd==-1?MAP_ANON:0)|
+#endif
+		MAP_SHARED, fd, 0);
 	if(fd!=-1) close(fd);//it is ok to close fd after mmap.
 	mem_t* mem=0;
 	if(p==MAP_FAILED){
@@ -1291,7 +1376,7 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 		mem=mem_new(p);
 		mem->kind=1;
 		mem->n=msize;
-		if(IS_SHM(fn2)){
+		if(rw&&IS_SHM(fn2)){//only the creator removes the shared memory when freed.
 			mem->shm=fn2;
 			fn2=NULL;
 		}
@@ -1300,6 +1385,11 @@ mem_t* mmap_open(const char* fn, size_t msize, int rw){
 	return mem;
 }
 
+/*Unaligned access to the header in the mmaped memory. memcpy avoids undefined behavior.*/
+static inline void put_u32(char* p, uint32_t v){ memcpy(p, &v, sizeof(v)); }
+static inline void put_u64(char* p, uint64_t v){ memcpy(p, &v, sizeof(v)); }
+static inline uint32_t get_u32(const char* p){ uint32_t v; memcpy(&v, p, sizeof(v)); return v; }
+static inline uint64_t get_u64(const char* p){ uint64_t v; memcpy(&v, p, sizeof(v)); return v; }
 /**
    Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
 */
@@ -1308,16 +1398,16 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 	/*Always have a header to align the data. */
 	if(keywords){
 		uint64_t nlen=bytes_header(keywords)-24;
-		((uint32_t*)p)[0]=(uint32_t)M_COMMENT; p+=4;
-		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
+		put_u32(p, (uint32_t)M_COMMENT); p+=4;
+		put_u64(p, nlen); p+=8;
 		strscpy(p, keywords, nlen); p+=nlen;
-		((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
-		((uint32_t*)p)[0]=(uint32_t)M_COMMENT;p+=4;
+		put_u64(p, nlen); p+=8;
+		put_u32(p, (uint32_t)M_COMMENT); p+=4;
 	}
-	((uint32_t*)p)[0]=(uint32_t)M_SKIP; p+=4;
-	((uint32_t*)p)[0]=(uint32_t)magic; p+=4;
-	((uint64_t*)p)[0]=(uint64_t)nx; p+=8;
-	((uint64_t*)p)[0]=(uint64_t)ny; p+=8;
+	put_u32(p, (uint32_t)M_SKIP); p+=4;
+	put_u32(p, magic); p+=4;
+	put_u64(p, (uint64_t)nx); p+=8;
+	put_u64(p, (uint64_t)ny); p+=8;
 	*p0=p;
 }
 
@@ -1327,14 +1417,14 @@ void mmap_write_header(char** p0, uint32_t magic, long nx, long ny, const char* 
 void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char** pkeywords){
 	char* p=*p0;
 	char* keywords=NULL;
-	while(((uint32_t*)p)[0]==M_COMMENT){
+	while(get_u32(p)==M_COMMENT){
 		p+=4;
-		uint64_t nlen=((uint64_t*)p)[0];p+=8;
+		uint64_t nlen=get_u64(p);p+=8;
 		keywords=p;
 		p+=nlen;
-		if(nlen==((uint64_t*)p)[0]){
+		if(nlen==get_u64(p)){
 			p+=8;
-			if(((uint32_t*)p)[0]==M_COMMENT){
+			if(get_u32(p)==M_COMMENT){
 				p+=4;
 			} else{
 				keywords=NULL;
@@ -1349,10 +1439,10 @@ void mmap_read_header(char** p0, uint32_t* magic, long* nx, long* ny, const char
 	if(!keywords){
 		p=*p0;
 	}
-	if(((uint32_t*)p)[0]==M_SKIP) p+=4;
-	*magic=((uint32_t*)p)[0]; p+=4;
-	*nx=((uint64_t*)p)[0]; p+=8;
-	*ny=((uint64_t*)p)[0]; p+=8;
+	if(get_u32(p)==M_SKIP) p+=4;
+	*magic=get_u32(p); p+=4;
+	*nx=(long)get_u64(p); p+=8;
+	*ny=(long)get_u64(p); p+=8;
 	*p0=p;
 	if(pkeywords) *pkeywords=keywords;
 }
@@ -1381,6 +1471,9 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 			  const char* str, const void* p, const uint64_t nx, const uint64_t ny){
 	//dbg("%s: initializing async info\n", fp->fn);
 	if(!fp) return NULL;
+	if(fp->isfits){//fits requires byte swapping and padding which are not supported here. Caller falls back to synchronous writing.
+		return NULL;
+	}
 #if 1 //use hole to reserve space for the current block.
 	header_t header={magic, nx, ny, (char*)str};
 	write_header(&header, fp);
@@ -1410,10 +1503,10 @@ async_t* async_init(file_t* fp, const size_t size, const uint32_t magic,
 	}
 	return async;
 }
+#if USE_ASYNC	
 /**
  * Wait until previous async write are finished.
  * */
-#if USE_ASYNC	
 static void async_sync(async_t* async, int wait){
 	long ans;
 	if(async->aio.aio_nbytes){//check previous result
@@ -1455,7 +1548,7 @@ int async_write(async_t* async, long offset, int wait){
 			return -1;
 		}
 	}
-	long ans=0;
+	int ans=0;
 #if USE_ASYNC
 	//synchronize previous operation
 	if(async->aio.aio_nbytes){
@@ -1486,15 +1579,17 @@ int async_write(async_t* async, long offset, int wait){
 	}
 #else
 	(void) wait;
-	int nwrite=pwrite(async->fp->fd, async->p+async->prev, offset-async->prev, async->prev+async->pos);
-	if(nwrite<0){
-		perror("pwrite");
-		warning("pwrite returns %d\n", nwrite);
-		ans=-1;
-	}else if(nwrite<offset-async->prev){
-		async->prev+=nwrite;
-	}else{
-		async->prev=offset;
+	if(offset>async->prev){
+		ssize_t nwrite=pwrite(async->fp->fd, async->p+async->prev, offset-async->prev, async->prev+async->pos);
+		if(nwrite<0){
+			perror("pwrite");
+			warning("pwrite returns %ld\n", (long)nwrite);
+			ans=-1;
+		}else if(nwrite<offset-async->prev){
+			async->prev+=nwrite;
+		}else{
+			async->prev=offset;
+		}
 	}
 #endif	
 	return ans;

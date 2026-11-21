@@ -91,11 +91,11 @@ int main(int argc, char* argv[]){
 		info("Usage: \n\tenv MVM_CLIENT=hostname MVM_PORT=port MVM_SASTEP=sastep ./mvm_cpu fraction nstep\n");
 		_Exit(0);
 	}
-	int fraction=strtol(argv[P_FRAC], NULL, 10);
-	int nstep=strtol(argv[P_NSTEP], NULL, 10);
+	int fraction=(int)strtol(argv[P_FRAC], NULL, 10);
+	int nstep=(int)strtol(argv[P_NSTEP], NULL, 10);
 	int nstep0=nstep>1?20:0;//warm up
 	dmat* d_saind=dread("NFIRAOS_saind");
-	const int nsa=(d_saind->nx-1)/fraction;
+	const int nsa=(int)((d_saind->nx-1)/fraction);
 	int* saind=mymalloc((1+nsa), int);
 	for(int i=0; i<nsa+1; i++){
 		saind[i]=(int)P(d_saind,i);
@@ -126,16 +126,16 @@ int main(int argc, char* argv[]){
 	int sastep=200;//how many subapertures each time
 	int nrep=1;
 	if(getenv("MVM_NREP")){
-		nrep=strtol(getenv("MVM_NREP"), NULL, 10);
+		nrep=(int)strtol(getenv("MVM_NREP"), NULL, 10);
 	}
 	if(getenv("MVM_SECT")){
-		sastep=nsa/strtol(getenv("MVM_SECT"), NULL, 10);
+		sastep=(int)(nsa/strtol(getenv("MVM_SECT"), NULL, 10));
 	}
 	if(getenv("MVM_TRANS")){
-		use_trans=strtol(getenv("MVM_TRANS"), NULL, 10);
+		use_trans=(int)strtol(getenv("MVM_TRANS"), NULL, 10);
 	}
 	if(getenv("MVM_SASTEP")){
-		sastep=strtol(getenv("MVM_SASTEP"), NULL, 10);
+		sastep=(int)strtol(getenv("MVM_SASTEP"), NULL, 10);
 	}
 	info("use_trans=%d, nrep=%d, sastep=%d\n", use_trans, nrep, sastep);
 	int sock=-1;
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]){
 		tic;
 		double theta=M_PI*0.5*istep+FSMdelta;
 		float cd=cos(theta);
-		float sd=cos(theta);
+		float sd=sin(theta);
 		szero(dm);
 		for(int isa=0; isa<nsa; isa+=sastep){
 			int npixleft;

@@ -304,7 +304,7 @@ cu_fieldstop(curmat& opd, curmat& amp, int* embed, int nembed,
 	CUFFT(fftplan, wvf, CUFFT_FORWARD);
 	cwm_do<<<DIM(wvf.N(), 256), 0, stream>>>(wvf(), fieldstop(), wvf.N());
 	CUFFT(fftplan, wvf, CUFFT_INVERSE);
-	unwrap_phase_do<<<DIM2(wvf.Nx(), wvf.Ny(), 16), 0, stream>>>(wvf, opd, embed, opd.Nx(), wvl);
+	unwrap_phase_do<<<DIM(opd.Nx(), 256), 0, stream>>>(wvf, opd, embed, opd.Nx(), wvl);
 }
 
 __global__ static void
@@ -334,7 +334,7 @@ Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay, int xy):imc(0){
 void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
 	const int nsa=ints.N();
 	const int pixpsa=ints[0].N();
-	dither_acc_do<<<nsa, pixpsa, 0, stream>>>
+	dither_acc_do<<<nsa, MIN(pixpsa, 256), 0, stream>>>
 		(imb.pm, imx.pm, imy.pm, ints.pm, cs, ss, pixpsa, nsa);
 	imc++;
 	if(imc%npll==0){
@@ -550,7 +550,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					dfree(opd);
 				} else{
 					mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, 
-						hs, hc, thetax, thetay, 0, 0, alpha, stream);
+						hs, hc, thetax, thetay, misregx, misregy, alpha, stream);
 				}
 			}
 			if(simu->telws){
@@ -578,7 +578,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 				}
 				wait_dmreal(simu, isim);
 				mapcell2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal,
-					hs, hc, thetax, thetay, parms->wfs[iwfs].misregx, parms->wfs[iwfs].misregy, -1, stream);
+					hs, hc, thetax, thetay, misregx, misregy, -1, stream);
 				Real ttx=0, tty=0;
 				if(simu->ttmreal){
 					ttx+=simu->ttmreal->p[0];
@@ -593,7 +593,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 				}
 			}
 
-			if(parms->tomo.ahst_idealngs==1&&parms->powfs[ipowfs].lo){
+			if(parms->tomo.ahst_idealngs==1&&parms->powfs[ipowfs].skip){//same as CPU
 				const real* cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
 				ngsmod2loc(phiout, cupowfs[ipowfs].loc(), recon->ngsmod, cleNGSm,
 					parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
@@ -652,7 +652,7 @@ void *gpu_wfsgrad_queue(thread_t* info){
 					}
 				}
 				if(parms->powfs[ipowfs].psfout){
-					zfarr_push_scale(simu->save->ztiltout[iwfs], isim, gradcalc, 1, stream);
+					zfarr_push_scale(simu->save->ztiltout[iwfs], isim, gradacc, 1, stream);
 				}
 				if(do_phy||parms->powfs[ipowfs].psfout||do_pistatout){/*physical optics */
 					if(nhs>1) error("Please implement\n");

@@ -17,6 +17,11 @@ jobs:
     - name: setup environment #install all external libraryes to avoid distcheck failure
       run: sudo apt-get install -y libfftw3-dev libsuitesparse-dev libcmocka-dev libopenblas-openmp-dev graphviz doxygen texlive-latex-base
       continue-on-error: true
+    - name: install CUDA toolkit #Ubuntu bundled CUDA. GitHub hosted runners have no GPU. maos falls back to CPU.
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nvidia-cuda-toolkit gcc-12 g++-12 #CUDA 12.0 supports gcc up to 12
+        nvcc --version
     - name: checkout
       uses: actions/checkout@v6
       with:
@@ -27,7 +32,8 @@ jobs:
     - name: configure and make
       run: |
         mkdir build && cd build
-        ../maos/configure --enable-release --enable-doxygen --prefix=$(pwd)/../external
+        ../maos/configure --enable-release --enable-doxygen --with-cuda=/usr --with-ccbin=gcc-12 --prefix=$(pwd)/../external
+        grep -q "define USE_CUDA [1-9]" config.h || { echo "CUDA is not enabled"; exit 1; }
         make -j8
         make check
     - name: make doc
@@ -52,7 +58,7 @@ jobs:
     - name: clang make
       run: |
         mkdir clang && cd clang
-        ../maos/configure --enable-release --prefix=$(pwd)/../external CC=clang
+        ../maos/configure --enable-release --prefix=$(pwd)/../external CC=clang --without-cuda
         make -j8
         make check
     - name: maos result check

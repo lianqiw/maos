@@ -31,7 +31,11 @@
 #include <inttypes.h>
 #include "io.h"
 //static void write_timestamp(file_t *fp);
+/**
+   Format the current local time as a string like ctime() without the trailing newline.
 
+   @return Pointer to a static buffer; not thread safe and must not be freed.
+*/
 const char* myasctime(void){
 	static char st[64];
 	time_t a;
@@ -122,7 +126,7 @@ char* mydirname(const char* fn){
 static int islink(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
-	return !stat(fn, &buf)&&S_ISLNK(buf.st_mode);
+	return !lstat(fn, &buf)&&S_ISLNK(buf.st_mode);
 }
 static char* procfn(const char* fn, const char* mod){
 	if(!fn){
@@ -159,9 +163,11 @@ static char* procfn(const char* fn, const char* mod){
 					fn2[strlen(fn2)-7]='\0';/*remove the added .bin, .gz*/
 					strcat(fn2, ".fits");/*replace with .fits*/
 					if(!exist(fn2)){
+						free(fn2);
 						return NULL;
 					}
 				} else{
+					free(fn2);
 					return NULL;
 				}
 			}
@@ -171,6 +177,7 @@ static char* procfn(const char* fn, const char* mod){
 			/*remove old file to avoid write over a symbolic link.*/
 			if(remove(fn2)){
 				dbg("Failed to remove %s\n", fn2);
+				free(fn2);
 				return NULL;
 			}
 		} else{
@@ -206,6 +213,7 @@ file_t* zfopen(const char* fn, const char* mod){
 		if(fp->fd!=-1&&flock(fp->fd, LOCK_EX|LOCK_NB)){
 			dbg("Trying to write to a file that is already opened for writing: %s\n", fn2);
 			close(fp->fd);
+			free(fp); free(fn2);
 			return NULL;
 		} else{
 			if(mod[0]=='w'&&ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
@@ -215,10 +223,12 @@ file_t* zfopen(const char* fn, const char* mod){
 		break;
 	default:
 		dbg("Unknown mod=%s\n", mod);
+		free(fp); free(fn2);
 		return NULL;
 	}
 	if(fp->fd==-1){
 		dbg("Unable to open file %s\n", fn2);
+		free(fp); free(fn2);
 		return NULL;
 	}
 	if(mod[0]=='w'){
@@ -231,7 +241,7 @@ file_t* zfopen(const char* fn, const char* mod){
 		uint16_t magic;
 		if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
 			dbg("Read magic failed\n");
-			close(fp->fd); return NULL;
+			close(fp->fd); free(fp); free(fn2); return NULL;
 		}
 		if(magic==0x8b1f){
 			fp->isgzip=1;
@@ -243,12 +253,12 @@ file_t* zfopen(const char* fn, const char* mod){
 	if(fp->isgzip){
 		if(!(fp->p=gzdopen(fp->fd, mod))){
 			dbg("Error gzdopen for %s\n", fn2);
-			close(fp->fd); return NULL;
+			close(fp->fd); free(fp); free(fn2); return NULL;
 		}
 	} else{
 		if(!(fp->p=fdopen(fp->fd, mod))){
 			dbg("Error fdopen for %s\n", fn2);
-			close(fp->fd); return NULL;
+			close(fp->fd); free(fp); free(fn2); return NULL;
 		}
 	}
 	if(check_suffix(fn2, ".fits")||check_suffix(fn2, ".fits.gz")){
@@ -296,11 +306,11 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp)
 	/* write a block of 2880 bytes each time, with big-endianness.*/
 		const int bs=2880;
 		char junk[bs];
-		int length=size*nmemb;
-		int nb=(length+bs-1)/bs;
+		long length=(long)(size*nmemb);
+		long nb=(length+bs-1)/bs;
 		char* in=(char*)ptr;
-		for(int ib=0; ib<nb; ib++){
-			int nd=length<bs?length:bs;
+		for(long ib=0; ib<nb; ib++){
+			int nd=length<bs?(int)length:bs;
 			switch(size){
 			case 2:
 				for(int i=0; i<nd; i+=2){
@@ -344,7 +354,15 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t* fp)
 		zfwrite_do(ptr, size, nmemb, fp);
 	}
 }
+/**
+   Read raw data with gzread or fread.
 
+   @param[out] ptr Buffer to receive the data.
+   @param[in] size Size of each element in bytes.
+   @param[in] nmemb Number of elements.
+   @param[in,out] fp File handle.
+   @return 0 on success, -1 on failure or end of file.
+*/
 static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if(fp->isgzip){
 		return gzread((gzFile)fp->p, ptr, size*nmemb)>0?0:-1;
@@ -364,9 +382,9 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 		long length=size*nmemb;
 		long nb=(length+bs-1)/bs;
 		char* out=(char*)ptr;
-		for(int ib=0; ib<nb; ib++){
+		for(long ib=0; ib<nb; ib++){
 			if(zfread_do(junk, sizeof(char), bs, fp)) return -1;
-			int nd=length<bs?length:bs;
+			int nd=length<bs?(int)length:(int)bs;
 			switch(size){
 			case 2:
 				for(int i=0; i<nd; i+=2){
@@ -791,6 +809,7 @@ int read_header2(header_t* header, file_t* fp){
 		header->magic=read_bin_magic(fp, &header->str);
 		if(header->magic==0){
 			ans=0;
+			header->ndim=0;//EOF. do not reuse ndim from a previous call
 		} else{
 			ans=0;
 			header->ndim=2;

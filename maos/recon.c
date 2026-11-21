@@ -67,7 +67,7 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 		int maxit=parms->tomo.maxit;
 		if(NX(parms->dbg.tomo_maxit)){
 			if(isim<NX(parms->dbg.tomo_maxit)){
-				maxit=P(parms->dbg.tomo_maxit,isim);
+				maxit=(int)P(parms->dbg.tomo_maxit,isim);
 				recon->RL.maxit=maxit;/*update maxit information */
 				info2("Running tomo.maxit=%d\n", maxit);
 			} else{
@@ -112,7 +112,7 @@ static void calc_gradol(sim_t* simu){
 				int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
 OMP_TASK_FOR(4)
 				for(long indwfs=0; indwfs<nindwfs; indwfs++){			
-					int iwfs=parms->recon.glao?ipowfs:P(parms->powfs[ipowfs].wfs,indwfs);
+					int iwfs=parms->recon.glao?ipowfs:(int)P(parms->powfs[ipowfs].wfs,indwfs);
 					dcp(&P(simu->gradlastol,iwfs), P(simu->gradlastcl,iwfs));
 					dcell *dmpsol=P(simu->wfspsol,ipowfs);
 					for(int idm=0; idm<parms->ndm&&dmpsol; idm++){
@@ -245,7 +245,7 @@ static void recon_split_lo(sim_t* simu){
  * @return void* 
  */
 dmat *combine_ngs_psd(const dmat *psdall){
-	int ncol=NY(psdall)-1;
+	int ncol=(int)NY(psdall)-1;
 	if(ncol!=6 && ncol!=5){
 		return dref(psdall);
 	}
@@ -267,7 +267,7 @@ static void plot_psd(const dmat *psdall, double dt, int dtrat,
 		error("Please implement\n");
 		return;
 	}
-	int nmod=NY(psdall)-1;
+	int nmod=(int)NY(psdall)-1;
 	dcell *psds=dcellnew(2*nmod, 1);
 	dcell *cumol=dcellnew(nmod, 1);//only integrate OL PSD to indicate residual with correction bandwidth
 	char **legs=mycalloc(nmod*2, char*);
@@ -440,7 +440,11 @@ void* reconstruct(sim_t* simu){
 			//}
 			struct timespec ts;
 			clock_gettime(CLOCK_REALTIME, &ts);
-			ts.tv_nsec+=1e6;
+			ts.tv_nsec+=1000000;
+			if(ts.tv_nsec>=1000000000){
+				ts.tv_sec++;
+				ts.tv_nsec-=1000000000;
+			}
 			pthread_cond_timedwait(&simu->wfsgrad_condr, &simu->wfsgrad_mutex, &ts);
 		}
 		if(simu->wfsgrad_isim>simu->reconisim){
@@ -554,7 +558,7 @@ void* reconstruct(sim_t* simu){
 						}
 						for(int id=0; id<nd; id++){//index of dithered mode
 							const int jm=md*id;//DM mode of dithered mode. 
-							const int jm2=(id+1==nd&&recon->anmod)?P(recon->anmod, idm):(jm+md);
+							const int jm2=(id+1==nd&&recon->anmod)?(int)P(recon->anmod, idm):(jm+md);
 							const real scale0=P(gs2, id)/gs1;
 							const real dscale1=scale0-P(gs2, MIN(nd-1, id+1))/gs1;
 							if(print) info(" %4.2f", scale0);

@@ -26,31 +26,38 @@
 #include "sock.h"
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
+#define NEED_NOSIGPIPE 1 /*e.g., macOS: set SO_NOSIGPIPE on the socket instead*/
 #endif
 /*
 	Wrap io function and handle partial operations.
 	returns numbers of bytes successfully transfored when success or -1 when error happens.
 */
 ssize_t wrap_io(int sfd, void* p, const size_t len, int mode){
+	const int is_write=(mode==1 || mode=='w');
+	if(!is_write && !(mode==0 || mode=='r')){
+		error("invalid mode=%d (%c)\n", mode, mode);
+		return -1;
+	}
 	int is_sock=issock(sfd);
+#if NEED_NOSIGPIPE
+	if(is_sock&&is_write){//a closed peer would otherwise raise SIGPIPE and kill the process
+		socket_nopipe(sfd);
+	}
+#endif
 	size_t total=0;
 	while(total<len){
 		ssize_t n=-1;
 		if(is_sock){
-			if(mode==1 || mode=='w'){
+			if(is_write){
 				n=send(sfd, (char*)p+total, len-total, MSG_NOSIGNAL);
-			}else if(mode==0 || mode=='r'){
-				n=recv(sfd, (char*)p+total, len-total, 0);//MSG_WAITALL);
 			}else{
-				error("invalid mode=%d (%c)\n", mode, mode);
+				n=recv(sfd, (char*)p+total, len-total, 0);//MSG_WAITALL);
 			}
 		} else {
-			if(mode==1 || mode=='w'){
+			if(is_write){
 				n=write(sfd, (char*)p+total, len-total);
-			}else if(mode==0 || mode=='r'){
-				n=read(sfd, (char*)p+total, len-total);
 			}else{
-				error("invalid mode=%d (%c)\n", mode, mode);
+				n=read(sfd, (char*)p+total, len-total);
 			}
 		}
 		if(n==0){
@@ -76,7 +83,7 @@ int stread(int sfd, void* p, const size_t len){
 */
 int stwritestr(int sfd, const char* str){
 	if(str){
-		int len=strlen(str)+1;//notice: if pad to multiple of 4 or 8, must change strlen()+1 in draw.c
+		int len=(int)strlen(str)+1;//notice: if pad to multiple of 4 or 8, must change strlen()+1 in draw.c
 		return stwriteint(sfd, len)||stwrite(sfd, str, len);
 	} else{
 		return stwriteint(sfd, 0);
@@ -177,11 +184,13 @@ int streadfd(int sfd, int* fd){
 	}
 	return ans;
 }
-/*
-  Check whether the client has shutdown a connection (TCP)
-  Returns 1 if closed;
-*/
+/**
+   Check whether the client has shutdown a connection (TCP) without blocking
+   or consuming data.
 
+   @param[in] sfd Socket.
+   @return 1 if closed or failed, 0 otherwise.
+*/
 int stcheck(int sfd){
 	int ans=0;
 	char buf[4];
@@ -246,8 +255,8 @@ int udp_send(udp_t* info, char* buf, size_t len, int counter){
 	int cmd[5];
 	size_t nresent=0, nresent2=0;
 	//listen for resend request
-	while((nsend=recv(info->sock, cmd, sizeof(cmd), 0))>=5){
-		if(cmd[0]==UDP_RESEND&&cmd[1]==counter&& cmd[2]==(int)npacket){
+	while((nsend=recv(info->sock, cmd, sizeof(cmd), 0))==(ssize_t)sizeof(cmd)){
+		if(cmd[0]==UDP_RESEND&&cmd[1]==counter&& cmd[2]==(int)npacket&&cmd[3]>=0&&cmd[4]<=(int)npacket){
 			nresent++;
 			nresent2+=(size_t)(cmd[4]-cmd[3]);
 			for(int ip=cmd[3]; ip<cmd[4]; ip++){
@@ -290,7 +299,7 @@ int udp_recv(udp_t* info, char** pbuf, size_t *len){
 	ssize_t ans;
 	if(info->version==1){
 		int meta[3];
-		if((ans=recv(info->sock, meta, sizeof(meta), MSG_PEEK))!=-1){//peek at available data.
+		if((ans=recv(info->sock, meta, sizeof(meta), MSG_PEEK))>=(ssize_t)sizeof(meta) && meta[2]>0){//peek at available data.
 			info("recv peek got %zd bytes\n", ans);
 			counter=meta[0];
 			npacket=(size_t)meta[2];
@@ -350,7 +359,8 @@ retry:
 		int counter2=meta[0];
 		int ipacket2=meta[1];
 		int npacket2=meta[2];
-		if(counter2!=counter || (size_t)npacket2!=npacket){
+		if(ans<(ssize_t)sizeof(meta) || counter2!=counter || (size_t)npacket2!=npacket
+			|| ipacket2<0 || (size_t)ipacket2>=npacket){
 			//drop the packet
 			dbg("Drop invalid package %d of %d with counter %d.\n", ipacket2, npacket2, counter2);
 			recv(info->sock, meta, sizeof(meta), 0);
@@ -391,7 +401,7 @@ retry:
 				}
 			}else{
 				if(i1!=-1){
-					int cmd[5]={UDP_RESEND, counter, (int)npacket, i1, (int)ip-1};
+					int cmd[5]={UDP_RESEND, counter, (int)npacket, i1, (int)ip};//end is exclusive
 					send(info->sock, cmd, sizeof(cmd), 0);
 					nresent2++;
 					i1=-1;
@@ -399,7 +409,7 @@ retry:
 			}
 		}
 		if(i1!=-1){
-			int cmd[5]={UDP_RESEND, counter, (int)npacket, i1, (int)npacket-1};
+			int cmd[5]={UDP_RESEND, counter, (int)npacket, i1, (int)npacket};//end is exclusive
 			send(info->sock, cmd, sizeof(cmd), 0);
 			nresent2++;
 		}

@@ -41,6 +41,7 @@ void free_recon_moao(recon_t* recon, const parms_t* parms){
 		dspcellfree(recon->moao[imoao].HA);
 		dcellfree(recon->moao[imoao].NW);
 		dspcellfree(recon->moao[imoao].actslave);
+		dcellfree(recon->moao[imoao].actcpl);
 		dspfree(recon->moao[imoao].W0);
 		dfree(recon->moao[imoao].W1);
 		lcellfree(recon->moao[imoao].actstuck);
@@ -81,7 +82,7 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
 		recon->moao[imoao].aimcc=loc_mcc_ptt(P(recon->moao[imoao].aloc,0), NULL);
 		dinvspd_inplace(recon->moao[imoao].aimcc);
 		recon->moao[imoao].HA=dspcellnew(1, 1);
-		P(recon->moao[imoao].HA,0)=mkh(&(propdata_t){.locin=P(recon->moao[imoao].aloc,0), .locout=recon->floc});
+		P(recon->moao[imoao].HA,0)=mkh(ADDR((propdata_t){.locin=P(recon->moao[imoao].aloc,0), .locout=recon->floc}));
 		if(parms->moao[imoao].actstuck){
 			recon->moao[imoao].actstuck=lcellnew(1, 1);
 			P(recon->moao[imoao].actstuck,0)=loc_coord2ind(P(recon->moao[imoao].aloc,0), parms->moao[imoao].actstuck);
@@ -161,9 +162,9 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
 	//static int count=-1; count++;
 	//writebin(P(xp,0), "opdfit0_%d", count);
 	for(int idm=0; idm<parms->ndm; idm++){
-		prop(&(propdata_t){.locin=P(recon->aloc,idm), .phiin=P(P(dmcommon,idm)),
+		prop(ADDR((propdata_t){.locin=P(recon->aloc,idm), .phiin=P(P(dmcommon,idm)),
 			.locout=recon->floc, .phiout=P(P(xp,0)), .alpha=-1, .hs=hs,
-			.thetax=thetax, .thetay=thetay});
+			.thetax=thetax, .thetay=thetay}));
 	}
 	//writebin(P(xp,0), "opdfit1_%d", count);
 	if(rhsout){

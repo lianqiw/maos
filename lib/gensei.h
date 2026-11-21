@@ -34,7 +34,7 @@ void upsample_otf(cmat* out, const cmat* in);
 cccell* genseotf(const pts_t* pts, const_anyarray amp, const dcell* opdbias,
   const_anyarray saa, const dmat* wvl, real r0, real L0, int embfac);
 void gensepsf(dccell** psepsfs, const cccell* otfs, const cccell* lotf, 
-  const_anyarray saa, const dmat* wvl, int notfx, int notfy);
+  const_anyarray saa, const dmat* wvl, long notfx, long notfy);
 void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf, 
   const dccell* sepsfs, const dtf_t* dtf, const etf_t* etf,
   const dcell* saa, const dcell* gxyrot, const dmat* siglev, const dmat* wvlwts, const dcell *goff,

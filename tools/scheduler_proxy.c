@@ -139,7 +139,7 @@ static int ws_proxy_read(struct pollfd *pfd, int flag){
 	int sock=ws_proxy[iws].fd;
 
 	int cmd[3]={0};
-	int nlen2=recv(sock, cmd, sizeof(cmd), MSG_PEEK);//peek at the command. do not consume it as the proxy needs it
+	int nlen2=(int)recv(sock, cmd, sizeof(cmd), MSG_PEEK);//peek at the command. do not consume it as the proxy needs it
 	if(nlen2<(int)sizeof(int)){
 		warning_time("failed to peek; nlen2=%d, revents=%d\n", nlen2, pfd->revents);
 		return -1;//break the link
@@ -214,7 +214,7 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 			continue;
 		}
 		*sep=0;
-		int pid=strtol(in, 0, 10);
+		int pid=(int)strtol(in, 0, 10);
 		*sep='&';
 		sep++;
 
@@ -271,7 +271,7 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 				}
 				if(!status){
 					ws.fd=sv2[0];
-					ws.fd_remote=sv2[1];
+					ws.fd_remote=-1;//sv2[1] is closed below once passed. Do not close it again in ws_proxy_remove.
 					ws_proxy_add(ws);//add proxy first to have higher priority in poll()
 					listen_port_add(sv2[0], POLLIN, ws_proxy_read, "ws_proxy_read");
 				} else{
@@ -291,9 +291,9 @@ void ws_proxy_command(char *in, size_t len, ws_proxy_t ws){
 				if(sep3){
 					*sep3=0; sep3++;
 					fn=sep3;
+					sep2=strchr(sep3, '&');
+					if(sep2) *sep2=0;//terminate string
 				}
-				sep2=strchr(sep3, '&');
-				if(sep2) *sep2=0;//terminate string
 			}
 			if(fig&&fn){
 				int sock=ws_proxy_get_fd(ws.userdata);

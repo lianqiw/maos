@@ -28,7 +28,7 @@ typedef struct {
 // Target function: returns Jm(x) or Jm'(x)
 double target_func(int m, double x, int type) {
     if (type == 0) return jn(m, x); // Dirichlet
-    if (x < 1e-9) return (m == 1) ? -0.5 : 0.0; // Neumann
+    if (x < 1e-9) return (m == 1) ? 0.5 : 0.0; // Neumann: J1'(0)=0.5
     return 0.5 * (jn(m - 1, x) - jn(m + 1, x));
 }
 
@@ -59,17 +59,17 @@ int cmp_alpha(const void *a, const void *b) {
     return (d > 0) - (d < 0);
 }
 /**
- * Computes the Disk Harmonic Modes, aka Fourier Bessel modes, for a given set of coordinates and a cutoff frequency.
- * The modes are ordered by their spatial frequency (alpha) and returned in a column-major format
- * Inputs:
- *   - loc: loc_t structure containing the coordinates of the points where modes are evaluated
- *   - k_cutoff: maximum spatial frequency (alpha) to include in the output modes
- *   - type: 0 for Dirichlet (Jm=0 at boundary), 1 for Neumann (Jm'=0 at boundary)
- * Outputs: OPD
- */
+   Computes the Disk Harmonic Modes, aka Fourier Bessel modes, for a given set of coordinates and a cutoff frequency.
+   The modes are ordered by their spatial frequency (alpha). For m>0, the cosine and sine modes are in adjacent columns.
 
+   @param[in] loc Coordinates of the points where modes are evaluated.
+   @param[in] D Diameter of the disk (m). 0 to use the diameter of loc.
+   @param[in] k_cutoff Maximum spatial frequency (alpha, normalized to the disk radius) to include.
+   @param[in] type 0 for Dirichlet (Jm=0 at boundary), 1 for Neumann (Jm'=0 at boundary).
+   @return Modes OPD with one mode per column. Newly allocated; the caller frees it.
+*/
 dmat* bessel_modes(loc_t *loc, double D, double k_cutoff, int type) {
-    const int nloc = loc->nloc;
+    const long nloc = loc->nloc;
     //double **out_phi, int *out_n_modes
     // 1. Pre-calculate polar coordinates
     double *r = (double*)malloc(nloc * sizeof(double));
@@ -77,13 +77,14 @@ dmat* bessel_modes(loc_t *loc, double D, double k_cutoff, int type) {
 	if(D==0){
 		D=loc_diam(loc);
 	}
-    for (int i = 0; i < nloc; i++) {
+    for (long i = 0; i < nloc; i++) {
         r[i] = sqrt(loc->locx[i] * loc->locx[i] + loc->locy[i] * loc->locy[i])*2./D;
         theta[i] = atan2(loc->locy[i], loc->locx[i]);
     }
 
     // 2. Build mode list and calculate normalization constants
 	int mode_max=k_cutoff*k_cutoff;
+	if(mode_max<1) mode_max=1;//ensure doubling below grows the array
     bmode_t *modes = (bmode_t*)malloc(mode_max * sizeof(bmode_t));
     int mode_count = 0;
     int total_cols = 0;
@@ -131,13 +132,13 @@ dmat* bessel_modes(loc_t *loc, double D, double k_cutoff, int type) {
         double alpha = modes[i].alpha;
         double scale = modes[i].scale;
         if (m == 0) {
-            for (int j = 0; j < nloc; j++) {
+            for (long j = 0; j < nloc; j++) {
                 P(phi, j, current_col) = scale * jn(0, alpha * r[j]);
             }
             current_col++;
         } else {
             // Cosine column
-            for (int j = 0; j < nloc; j++) {
+            for (long j = 0; j < nloc; j++) {
 				double jnj = scale*jn(m, alpha * r[j]);
                 P(phi, j, current_col  ) = jnj * cos(m * theta[j]);
 				P(phi, j, current_col+1) = jnj * sin(m * theta[j]);

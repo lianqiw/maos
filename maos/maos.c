@@ -41,8 +41,9 @@ static void* find_var(const char* name){
 		dbg("Variables are not available\n");
 		return NULL;
 	}
-#define VAR_GET(STRUCT,FIELD) {#STRUCT "." #FIELD, global->STRUCT->FIELD}
-#define VAR_GET_2(STRUCT,FIELD,NUM) {#STRUCT "[" #NUM "]." #FIELD, global->STRUCT[NUM].FIELD}
+//recon and powfs are NULL in evlol mode.
+#define VAR_GET(STRUCT,FIELD) {#STRUCT "." #FIELD, global->STRUCT?(void*)global->STRUCT->FIELD:NULL}
+#define VAR_GET_2(STRUCT,FIELD,NUM) {#STRUCT "[" #NUM "]." #FIELD, global->STRUCT?(void*)global->STRUCT[NUM].FIELD:NULL}
 	struct VAR_MAP simu_map[]={
 	//VAR_GET(simu,atm),//skip this, too big
 	VAR_GET(simu,wfsopd),
@@ -194,7 +195,7 @@ static void* find_var(const char* name){
 				count+=strlen(var_map[i].name)+1;
 			}
 		}
-		dummy->keywords=mycalloc(count, char);
+		dummy->keywords=mycalloc(count+1, char);
 		strcat(dummy->keywords, msg0);
 		for(int j=0; map_map[j].name; j++){
 			struct VAR_MAP* var_map=map_map[j].map;
@@ -231,11 +232,17 @@ static void* maos_var(void* psock){
 						stwriteint(sock, M_EOD);
 					} else if(cmd[1]==2){//client to put
 						cell* newdata=readsock(sock);
-						dcelladd(&var, 0, newdata, 1);
+						if(var){
+							dcelladd(&var, 0, newdata, 1);
+						}else{
+							warning("%s not found, ignore put.\n", name);
+						}
+						cellfree(newdata);
 					} else{
 						warning("unknown operation %d\n", cmd[1]);
 					}
 				}
+				free(name);
 			}
 		}
 		break;

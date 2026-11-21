@@ -316,6 +316,7 @@ int main(int argc, char* argv[]){
 	if(dmax(dts)==0){
 		dfree(dts);
 	}
+	const real dt0=dts?P(dts,0):0;//dts is NULL if sim.dt is not found
 	if(restype==1){
 		xylog="nn";
 		if(dts){
@@ -451,19 +452,21 @@ int main(int argc, char* argv[]){
 				dmat* res0=dread("%s", fn);
 				if(NY(res0)==0){
 					dbg("Empty result: %s, skip.\n", fn);
+					dfree(res0);
 					continue;
 				}
 				if(ysky && NX(ysky)!=NY(res0)){
 					dfree(ysky);
 				}
 				if(!ysky){
-					int nsky=NY(res0);
+					int nsky=(int)NY(res0);
 					ysky=dnew(nsky, 1);
 					for(int i=0; i<nsky; i++){
 						P(ysky, i)=pow((double)i/(double)(nsky-1)*1e-9, 2);
 					}
 				}
 				dmat *tmp=dsub(res0, 0, 1, 0, 0);//keep only first row
+				dfree(res0);
 				tmp->nx=NY(tmp); tmp->ny=1; //make it column vector.
 				dsort(tmp, 1);
 				P(P(res, P_TOT), ipath, iseed)=dcat(tmp, ysky, 2);
@@ -482,7 +485,7 @@ int main(int argc, char* argv[]){
 		if(resp && nseed_actual){
 			if(nseed_actual>1) dcellscale(resp, 1./nseed_actual);
 			if(!resfov){
-				int nevl=NX(resp);
+				int nevl=(int)NX(resp);
 				dmat *thetax=dnew(nevl, 1);
 				dmat *thetay=dnew(nevl, 1);
 				if(resp->keywords){
@@ -505,7 +508,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 			if(resfov){
-				int nevl=NX(resp);
+				int nevl=(int)NX(resp);
 				dcell *clep=dcellsub(resp, 0, nevl, 3, 1);
 				wfe_fov_fill(resfov, clep, ipath, 0);
 				dcellfree(clep);
@@ -515,7 +518,7 @@ int main(int argc, char* argv[]){
 	for(int imod=0; imod<NX(res); imod++){//mode
 		for(int ipath=0; ipath<npath; ipath++){
 			int seedcount=0;
-			int nsim=0;
+			long nsim=0;
 			for(int iseed=0; iseed<nseed; iseed++){
 				dmat* resi=P(P(res, imod), ipath, iseed);
 				if(resi && NX(resi)){
@@ -575,7 +578,7 @@ int main(int argc, char* argv[]){
 						cellresize(P(res, ic), 1, nseed+1);
 						P(P(res, ic), nseed)=dref(P(P(resm, ic), 0));
 					}
-					draw(toptab[ic], (plot_opts){.dc=P(res, ic), .dx=P(dts,0), .xylog=xylog, .legend=(const char* const*)legs0},
+					draw(toptab[ic], (plot_opts){.dc=P(res, ic), .dx=dt0, .xylog=xylog, .legend=(const char* const*)legs0},
 						title[ic], xlabel, ylabel, "%s", sidetab[ic]);
 					if(nseed>1){//seed average
 						dfree(P(P(res, ic), nseed));
@@ -595,12 +598,12 @@ int main(int argc, char* argv[]){
 					}
 				}
 				dcell *restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-				draw("CL", (plot_opts){.dc=restmpcl, .dx=P(dts,0), .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("CL", (plot_opts){.dc=restmpcl, .dx=dt0, .xylog=xylog, .legend=(const char *const *)sidetab },
 					"Closed loop Wavefront Error", xlabel, ylabel, "All");
 				dcellfree(restmpcl);
 				if(restype==1){
 					dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-					draw("OL", (plot_opts){.dc=restmpol, .dx=P(dts,0), .xylog=xylog, .legend=(const char *const *)sidetab },
+					draw("OL", (plot_opts){.dc=restmpol, .dx=dt0, .xylog=xylog, .legend=(const char *const *)sidetab },
 						"Open loop Wavefront Error", xlabel, ylabel, "All");
 						dcellfree(restmpol);
 				}
@@ -625,12 +628,12 @@ int main(int argc, char* argv[]){
 				}
 			}
 			dcell* restmpcl=dcellsub(restmp, 0, 6, 0, 1);
-			draw("CL", (plot_opts){.dc=restmpcl, .dx=P(dts, 0),.xylog=xylog, .legend=(const char *const *)sidetab },
+			draw("CL", (plot_opts){.dc=restmpcl, .dx=dt0,.xylog=xylog, .legend=(const char *const *)sidetab },
 				"Closed loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 			dcellfree(restmpcl);
 			if(restype==1){
 				dcell *restmpol=dcellsub(restmp, 6, 3, 0, 1);
-				draw("OL", (plot_opts){.dc=restmpol, .dx=P(dts, 0), .xylog=xylog, .legend=(const char *const *)sidetab },
+				draw("OL", (plot_opts){.dc=restmpol, .dx=dt0, .xylog=xylog, .legend=(const char *const *)sidetab },
 				"Open loop Wavefront Error", xlabel, ylabel, "%s:%-4ld", "All", seed[iseed]);
 				dcellfree(restmpol);
 			}
@@ -659,12 +662,14 @@ int main(int argc, char* argv[]){
 	cellfree(res);
 	cellfree(resm);
 	cellfree(resfov);
+	dfree(dts);
 	for(int ipath=0; ipath<npath; ipath++){
 		free(path[ipath]);
 		free(pathtag0[ipath]);
 	}
 	free(path);
 	free(seed);
+	free(seed2);
 	free(arg->seeds);
 	free(arg);
 	toc("drawres");

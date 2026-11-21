@@ -46,9 +46,11 @@
 #if !defined(COMP_SINGLE) || AS_DOUBLE
 #define CHOL_DTYPE CHOLMOD_DOUBLE
 typedef double chol_real;
+#define M_CHOL_REAL M_DBL
 #else
 #define CHOL_DTYPE CHOLMOD_SINGLE
 typedef float chol_real;
+#define M_CHOL_REAL M_FLT
 #endif
 
 #define CHOL_SIMPLE 1 //essential for chol_convert to work.
@@ -98,6 +100,7 @@ static dsp* chol2sp(cholmod_sparse**pB){
 	if(!pB || !*pB) return NULL;
 	cholmod_sparse *B=*pB;
 	dsp* A=dspnew(B->nrow, B->ncol, 0);
+	free(A->pp);//replaced by B->p
 	A->pp=(spint*)B->p;
 	A->nzmax=A->pp[A->ny];
 	A->pi=(spint*)B->i;
@@ -112,7 +115,7 @@ static dsp* chol2sp(cholmod_sparse**pB){
 /**
    Convert our dmat type to cholmod_dense type.
 */
-static cholmod_dense* d2chol(const dmat* A, int start, int end){
+static cholmod_dense* d2chol(const dmat* A, long start, long end){
 	cholmod_dense* B=mycalloc(1, cholmod_dense);
 	if(end==0) end=A->ny;
 	B->nrow=A->nx;
@@ -231,6 +234,7 @@ void chol_convert(spchol* A, int keep){
 */
 dsp* chol_factorize2(lmat** Cp, const dsp* A_in){
 	spchol* C=chol_factorize(A_in);
+	if(!C) return NULL;
 	if(!C->Cl){
 		chol_convert(C, 1);
 	}
@@ -292,11 +296,7 @@ void chol_save(spchol* A, const char* format, ...){
 			writearr(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
 			writearr(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
 		}
-		if(L->dtype==CHOLMOD_DOUBLE){
-			writearr(fp, 0, sizeof(double), M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
-		} else{
-			writearr(fp, 0, sizeof(float), M_FLT, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
-		}
+		writearr(fp, 0, sizeof(chol_real), M_CHOL_REAL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
 	}
 	zfclose(fp);
 }
@@ -361,8 +361,8 @@ spchol* chol_read(const char* format, ...){
 #define READDBL(A,N) read_header(&header2,fp);				\
 	nx=header2.nx; ny=header2.ny;					\
 	if(nx*ny!=(long)(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
-	L->A=mymalloc(nx*ny,real);					\
-	readvec(L->A, M_REAL, header2.id, sizeof(real), nx*ny, fp);	
+	L->A=mymalloc(nx*ny, chol_real);					\
+	readvec(L->A, M_CHOL_REAL, header2.id, sizeof(chol_real), nx*ny, fp);	
 		READSPINT(Perm, L->n);
 		READSPINT(ColCount, L->n);
 		if(L->is_super==0){/*Simplicity */
@@ -380,10 +380,11 @@ spchol* chol_read(const char* format, ...){
 			READSPINT(s, L->ssize);
 		}
 		READDBL(x, L->is_super?L->xsize:L->nzmax);
+		L->dtype=CHOL_DTYPE;
 		A->c=mycalloc(1, cholmod_common);
 		MOD(start)(A->c);
 #undef READSPINT
-#undef READDDBL
+#undef READDBL
 	}
 	zfclose(fp);
 	return A;
@@ -426,6 +427,7 @@ static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long st
 dsp* chol_spsolve(spchol* A, const dsp* y){
 	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
 	cholmod_sparse* y2=dsp2chol(y);
+	y2->stype=0;//right hand side is not symmetric
 	cholmod_sparse* x2=MOD(spsolve)(CHOLMOD_A, A->L, y2, A->c);
 	if(!x2||x2->z) error("chol_solve failed or returns unexpected answer.\n");
 	if(y2->x!=y->px) free(y2->x);

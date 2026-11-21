@@ -39,19 +39,12 @@ dcell *rayleigh(rayleigh_t *cfg){
     const real hs     = cfg->hs;
     const real dtheta = cfg->dtheta;
     const int npsf    = cfg->npsf;
-	info("dsa=%g, nsa=%ld, dx=%g sbeam=%g, dbeam=%g, hs=%g, dtheta=%g\n", dsa, saloc->nloc, saloc->dx, sbeam, dbeam, hs, dtheta);
-	dshow(saloc->dmat, "saloc");
-	info("saloc->locx=%p, saloc->locy=%p, -saloc->locx=%lx\n", saloc->locx, saloc->locy, saloc->locy-saloc->locx);
-	dshow(thetax, "thetax");
-	dshow(thetay, "thetay");
-	dshow(llt_ox, "llt_ox");
-	dshow(llt_oy, "llt_oy");
-	dshow(tau, "tau");
-	const int nwfs=PN(thetax);
+	dbg("dsa=%g, nsa=%ld, dx=%g sbeam=%g, dbeam=%g, hs=%g, dtheta=%g\n", dsa, saloc->nloc, saloc->dx, sbeam, dbeam, hs, dtheta);
+	const int nwfs=(int)PN(thetax);
 	assert(nwfs==PN(thetay));
 	assert(PN(llt_ox)==1 || PN(llt_ox)==nwfs);
 	assert(PN(llt_oy)==1 || PN(llt_oy)==nwfs);
-	const int nsa=saloc->nloc;
+	const long nsa=saloc->nloc;
 	const real thres0=dbeam*dbeam*0.25;//beam radius squared
 	const real gscale=-1./(2*sbeam*sbeam);
 	const real dsa2=dsa*0.5;
@@ -67,15 +60,12 @@ dcell *rayleigh(rayleigh_t *cfg){
 		const real p2s=dtheta*ht;//convert pixel index to spatial at layer
 		for(int iwfs=0; iwfs<nwfs; iwfs++){//viewing WFS
 			for(int ilgs=0; ilgs<nwfs; ilgs++){//LGS beam
-				real x_beam=P(thetax, ilgs)*ht+P(llt_ox, ilgs)*scale; //beam center at this layer
-				real y_beam=P(thetay, ilgs)*ht+P(llt_oy, ilgs)*scale; //beam center at this layer
-				for(int isa=0; isa<nsa; isa++){
+				real x_beam=P(thetax, ilgs)*ht+PR(llt_ox, ilgs)*scale; //beam center at this layer
+				real y_beam=P(thetay, ilgs)*ht+PR(llt_oy, ilgs)*scale; //beam center at this layer
+				for(long isa=0; isa<nsa; isa++){
 					real x_sa=(saloc->locx[isa]+dsa2)*scale+P(thetax, iwfs)*ht; //subaperture optical axis location at this layer.
 					real y_sa=(saloc->locy[isa]+dsa2)*scale+P(thetay, iwfs)*ht;
 					real sep2=abs2(x_sa-x_beam)+abs2(y_sa-y_beam);
-					if(iwfs==0 && ilgs==1){
-						info("beam at %g, %g, sa at %g, %g, thres %g, sep %g\n", x_beam, y_beam, x_sa, y_sa, sqrt(thres_fov), sqrt(sep2));
-					}
 					if(sep2<thres_fov){//inside of the FoV
 						for(int ipy=0; ipy<npsf; ipy++){//loop over the PSF points
 							real y_pix=y_sa+(ipy-npsf2)*p2s;
@@ -124,8 +114,6 @@ rayleigh_t *rayleigh_setup(real D){
 		P(thetax, iwfs)=rast*cos((real)iwfs/(nwfs-1)*TWOPI);
 		P(thetay, iwfs)=rast*sin((real)iwfs/(nwfs-1)*TWOPI);
 	}
-	dshow(thetax, "thetax");
-	dshow(thetay, "thetay");
 	const int nh=1;
 	const real dh=200;
 	const real h0=30e3;

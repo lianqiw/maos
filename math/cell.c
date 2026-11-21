@@ -38,16 +38,19 @@ cell* cellnew(long nx, long ny){
 /**
    check the size of cell array if exist. Otherwise create it
 */
-void cellinit(panyarray A_, long nx, long ny){
+int cellinit(panyarray A_, long nx, long ny){
 	cell** A=A_.c;
+	if(!A) return -1;
 	if(*A){
 		if(!(iscell(*A)&&(*A)->nx==nx&&(*A)->ny==ny)){
 			error("type or size mismatch: id=%u, require (%ld, %ld), A is (%ld, %ld)\n",
 				(*A)->id, nx, ny, (*A)->nx, (*A)->ny);
+			return -1;
 		}
 	} else{
 		*A=cellnew(nx, ny);
 	}
+	return 0;
 }
 /**
    check the size of cell array if exist. Otherwise create it. m is created for dcell
@@ -57,6 +60,7 @@ void cellinit2(panyarray A_, const_anyarray B_){
 	cell** A=A_.c;
 	if(!iscell(B)){
 		error("Invalid usage. B must be cell\n");
+		return;
 	}
 	if(*A){
 		cellinit(A, B->nx, B->ny);
@@ -167,6 +171,7 @@ void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys){
 					(*nxs)[ix]=P(A, ix, iy)->nx;
 				} else if(P(A, ix, iy)->nx != (*nxs)[ix]){
 					error("Cells along a row has different number of rows\n");
+					goto fail;
 				}
 			}
 		}
@@ -179,10 +184,16 @@ void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys){
 					(*nys)[iy]=P(A, ix, iy)->ny;
 				} else if((*nys)[iy]!=P(A, ix, iy)->ny){
 					error("Cells along a column has different number of columns\n");
+					goto fail;
 				}
 			}
 		}
 	}
+	return;
+fail:
+	free(*nxs); *nxs=NULL;
+	free(*nys); *nys=NULL;
+	*nx=0; *ny=0;
 }
 /**
    Resize a generic cell array.
@@ -193,11 +204,11 @@ void cellresize(anyarray A_, long nx, long ny){
 		error("Can only resize a valid cell array with m unset.\n");
 		return;
 	}
-	if(A->nx==nx||A->ny==1){
-		int nold=A->nx*A->ny;
-		int nnew=nx*ny;
+	if(A->nx==nx||(A->ny==1&&(ny==1||nx>=A->nx))){//layout is preserved by linear realloc
+		long nold=A->nx*A->ny;
+		long nnew=nx*ny;
 		if(nnew<nold&&iscell(A)){
-			for(int i=nnew; i<nold; i++){
+			for(long i=nnew; i<nold; i++){
 				cellfree_do(P(A,i));
 			}
 		}
@@ -253,6 +264,9 @@ void cellfree_do(anyarray A_){
 	switch(id&0xFFFF){
 	case MCC_ANY:{
 		cell* dc=A;
+		if(dc->fp && zfisfits(dc->fp)){//async writing is not supported for fits. write all data now.
+			writedata(dc->fp, dc, 0);
+		}
 		for(int ix=0; ix<PN(dc); ix++){
 			cellfree_do(P(dc,ix));
 		}
@@ -304,6 +318,10 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 	}
 	if(!A_.c || iscell(A_.c)){//empty data is treated as cell
 		const cell* A=A_.c;
+		if(ncol==-1 && fp && zfisfits(fp)){
+			//async writing is not supported for fits. data is written when A is freed (see cellfree_do).
+			return;
+		}
 		if(ncol<=0){//not async write.
 			header_t header={MCC_ANY, (uint64_t)NX(A), (uint64_t)NY(A), A?A->keywords:NULL};
 			write_header(&header, fp);
@@ -318,7 +336,7 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 		for(long ix=0; ix<PN(A); ix++){
 			if(P(A,ix)){
 				writedata(fp, P(A,ix), ncol);
-			}else{//write empty 
+			}else if(ncol<=0){//write empty (not for async writing, where fp is NULL)
 				header_t header={id, (uint64_t)0, (uint64_t)0, NULL};
 				write_header(&header, fp);
 			}
@@ -520,6 +538,7 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 			cell *dcout=(cell*)out;
 			if(PN(dcout)==0){
 				out=NULL;
+				cellfree(dcout);
 			}else if(PN(dcout)>=1){
 				if(PN(dcout)>1){
 					warning("%s: using the first cell when multiple is found\n", zfname(fp));
@@ -542,6 +561,28 @@ static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 	return (cell*)out;
 }
 
+/**
+   Read array or cell array from an opened file, socket, or pipe, like readbin_id().
+
+   @param[in] fp File to read from, e.g., from zfdopen_as().
+   @param[in] id Requested fundamental data type. 0 for native.
+   @param[in] level Cell nesting level, see readdata_auto(). -1 to detect automatically.
+   @return Newly allocated data; the caller frees it. NULL if empty or if reading fails.
+*/
+cell* readbin_fp(file_t* fp, M_ID id, int level){
+	return fp?readdata_auto(fp, id, level, 0):NULL;
+}
+/**
+   Read array or cell array from file with name given by the printf-style format.
+   id is the requested fundamental data type (converted if necessary, 0 for
+   native), level is the cell nesting level, see readdata_auto(). Returns NULL
+   if the file cannot be opened. The caller owns the result.
+
+   @param[in] id Requested fundamental data type. 0 for native.
+   @param[in] level Cell nesting level, see readdata_auto().
+   @param[in] format printf-style format of the file name.
+   @return Newly allocated data; the caller frees it. NULL if the file cannot be opened.
+*/
 cell* readbin_id(M_ID id, int level, const char* format, ...){
 	format2fn;
 	file_t* fp=NULL;

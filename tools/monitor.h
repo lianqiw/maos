@@ -23,6 +23,11 @@
 #include "../sys/sys.h"
 #include "mygtk.h"
 
+#if USE_COLUMN_VIEW
+typedef struct _MonJob job_row_t;//a row of the job list (GListStore item)
+#else
+typedef GtkTreeRowReference job_row_t;//a row of the job list
+#endif
 /**
    Information for each process.
 */
@@ -35,7 +40,7 @@ typedef struct proc_t{
 	char* path;
 	status_t status;
 	char time3[80];
-	GtkTreeRowReference* row;
+	job_row_t* row;
 	time_t tlast;//time of last update from host
 	//time_t timstart;//job added time
 	//time_t timlast;//job last status change time
@@ -64,7 +69,7 @@ extern GdkPixbuf *icon_connect;
 //extern GtkTextBuffer* textbuffer;
 gboolean update_title(gpointer data);
 GtkWidget* new_page(int ihost);
-gboolean remove_entry(GtkTreeRowReference* row);
+gboolean remove_entry(job_row_t* row);
 GtkWidget* monitor_new_entry_progress(void);
 GtkWidget* monitor_new_progress(int vertical, int length);
 void* listen_host(void*pmsock);

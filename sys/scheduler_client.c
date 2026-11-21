@@ -55,7 +55,13 @@ int is_scheduler=0;
 #define MAOS_DISABLE_SCHEDULER 0
 #endif
 
+/**
+   Wait until enough CPUs are idle to run nthread threads (capped at NCPU),
+   polling every 5 seconds. Used when the scheduler is not available. A lock
+   file in HOME serializes waiting processes.
 
+   @param[in] nthread Number of threads needed.
+*/
 void wait_cpu(int nthread){
 	char fnlock[64];
 	snprintf(fnlock, 64, "%s/aos.lock", getenv("HOME"));
@@ -144,7 +150,7 @@ void init_hosts(){
 	fp=fopen(fn, "r");
 	if(fp){
 		char line[64];
-		while(fscanf(fp, "%s ", line)==1){
+		while(fscanf(fp, "%63s ", line)==1){
 			parse_host(line);
 		}
 		fclose(fp);
@@ -204,7 +210,7 @@ static void launch_scheduler(int retry){
 	dbg_time("launch_scheduler\n");
 	/*launch scheduler if it is not already running. */
 	while(single_instance_daemonize(TEMP, "scheduler", scheduler_version,
-		(void(*)(void*))launch_scheduler_do, NULL)&&retry>-1){
+		launch_scheduler_do, NULL)&&retry>-1){
 		retry--;
 		sleep(1);
 	}
@@ -493,12 +499,12 @@ int scheduler_socket(int dir, int *sfd, int id){
 int call_addr2line(char* ans, int nans, const char* cmdstr){
 	ans[0]=0;
 	int res=1;
+	nans--;//maximum number of characters, excluding the terminating NUL.
 	FILE *fpcmd=popen(cmdstr, "r");
 	if(!fpcmd){
 		warning("popen failed: %s", cmdstr);
 	} else{
 		char line[4096];
-		nans--;
 		int ct=0;
 		while(fgets(line, sizeof(line), fpcmd)){
 			if(line[0]=='?') continue;
@@ -510,8 +516,8 @@ int call_addr2line(char* ans, int nans, const char* cmdstr){
 				if(ct>7 && (!mystrcmp(tmp, "sp")||!mystrcmp(tmp, "mat")||!mystrcmp(tmp, "cell.c")||!mystrcmp(tmp, "loc.c")||!mystrcmp(tmp, "mem.c"))){
 					break;
 				}
-				strncat(ans, "->", nans); nans-=3;
-				strncat(ans, tmp, nans);nans-=strlen(tmp);
+				strncat(ans, "->", nans-strlen(ans));
+				strncat(ans, tmp, nans-strlen(ans));
 				res=0;
 				ct++;
 			}
@@ -520,7 +526,7 @@ int call_addr2line(char* ans, int nans, const char* cmdstr){
 	}
 	if(res){//failed. copy the progname and addresses
 		const char *prog=strrchr(cmdstr, '/');
-		strncat(ans, prog?(prog+1):cmdstr, nans);
+		strncat(ans, prog?(prog+1):cmdstr, nans-strlen(ans));
 		res=0;
 	}
 	return res;
@@ -567,9 +573,9 @@ int print_backtrace_symbol(void* const* buffer, int size){
 #if MAOS_DISABLE_SCHEDULER == 0
 		//Create a new connection.
 		int sock=scheduler_connect_self(0);
-		socket_recv_timeout(sock, 10);
-		socket_send_timeout(sock, 2);
 		if(sock!=-1){
+			socket_recv_timeout(sock, 10);
+			socket_send_timeout(sock, 2);
 			int cmd[2];
 			int len;
 			cmd[0]=CMD_TRACE;
@@ -579,7 +585,7 @@ int print_backtrace_symbol(void* const* buffer, int size){
 				dbg("write cmd %d failed\n", cmd[0]);
 			} else if(stwritestr(sock, cmdstr)){
 				dbg("write cmd %s failed\n", cmdstr);
-			} else if(streadint(sock, &len) || len>=PATH_MAX || stread(sock, line, len)){
+			} else if(streadint(sock, &len) || len<=0 || len>=PATH_MAX || stread(sock, line, len)){
 				dbg("read cmd failed\n");
 			} else{
 				dbg(" %s\n", line);

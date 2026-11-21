@@ -84,8 +84,14 @@ void X(vecmaxmin)(const T *restrict p, long N, R *max, R *min){
     if(min)*min=b; 
 }
 /**
-   compute sum(p1.*p2.*p3)*/
+   compute sum(p1.*p2.*p3). A NULL vector is treated as all ones.
 
+   @param[in] p1 First vector. May be NULL.
+   @param[in] p2 Second vector. May be NULL.
+   @param[in] p3 Third (real) vector. May be NULL.
+   @param[in] n Number of elements.
+   @return The weighted dot product.
+*/
 T X(vecdot)(const T *restrict p1, const T *restrict p2, const R *restrict p3, long n){
     TD ans=0;
     if(p1 && p2 && p3){

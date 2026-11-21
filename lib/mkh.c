@@ -56,7 +56,7 @@ dsp* mkh(propdata_t *propdata){
 dsp* mkht(propdata_t *propdata){
 	const loc_t* locin=propdata->locin;
 	const loc_t* locout=propdata->locout;
-	if(locin->iac){
+	if(locin&&locin->iac){
 		return mkht_cubic(propdata, locin->iac);
 	}
 	if(!locin||!locout||!locin->nloc||!locout->nloc){
@@ -124,7 +124,7 @@ dsp* mkht(propdata_t *propdata){
 				long iphi;
 				/*The test on weight fixes the right/top boundary defect*/
 				if(weight>EPS&&(iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
-					int ic;//look for duplicates (happens when extended)
+					long ic;//look for duplicates (happens when extended)
 					for(ic=bp[iloc]; ic<count; ic++){
 						if(bi[ic]+1==iphi){
 							bx[ic]+=weight;
@@ -143,7 +143,7 @@ dsp* mkht(propdata_t *propdata){
 		if(wtsum>EPS){
 			wtsum=alpha/wtsum;
 			for(long ip=bp[iloc]; ip<count; ip++){
-				bx[count]*=wtsum;
+				bx[ip]*=wtsum;
 			}
 			//warning("Scale weight by 1+%g\n", wtsum-1);
 		}
@@ -218,8 +218,8 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 	long count=0;
 	const int nxmin=locin->npad;/*allow guarding points*/
 	const int nymin=locin->npad;
-	const int nxmax=map->nx-nxmin-1;
-	const int nymax=map->ny-nxmin-1;
+	const long nxmax=map->nx-nxmin-1;
+	const long nymax=map->ny-nxmin-1;
 	for(iloc=0; iloc<locout->nloc; iloc++){
 		bp[iloc]=count;
 		if(count+17>nzmax){
@@ -256,7 +256,7 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 				long iphi;
 				/*The test on weight fixes the right/top boundary defect*/
 				if(weight>EPS&&(iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
-					int ic;//look for duplicates
+					long ic;//look for duplicates
 					for(ic=bp[iloc]; ic<count; ic++){
 						if(bi[ic]+1==iphi){
 							bx[ic]+=weight;
@@ -268,13 +268,14 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 						bx[count]=weight;
 						count++;
 					}
+					wtsum+=weight;
 				}
 			}
 		}
 		if(wtsum>EPS){
 			wtsum=alpha/wtsum;
 			for(long ip=bp[iloc]; ip<count; ip++){
-				bx[count]*=wtsum;
+				bx[ip]*=wtsum;
 			}
 			dbg("Scale weight by 1+%20g\n", wtsum-1);
 		}
@@ -296,6 +297,7 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 	if(NY(xin)!=1||NY(xout)!=1){
 		error("We require both xin and xout to be only one column\n");
+		return NULL;
 	}
 	int iout=0;
 	dsp* hbin=dspnew(NX(xout), NX(xin), NX(xin)*2);

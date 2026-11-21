@@ -1,35 +1,39 @@
 AM_CFLAGS=-I $(top_srcdir) -g -O0
 LDADD=../lib/libaos.la $(EXEFULL_LIBS)
+EXTRA_DIST=unittest.h unittest_driver.sh unittest_report.sh unittest_coverage.sh
 
-bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2 \
-	test_fft test_proj test_loc test_chol test_accphi	\
-	test_fd test_atm test_fractal 
-#if USE_CUDA
-#bin_PROGRAMS+=test_gpu
-#test_gpu_LDADD=../cuda/libaogpu.la $(LDADD)  $(LIBCUDA)
-#endif
-
+#All unit tests use cmocka. They must not depend on temporary input or output files.
 if HAS_CMOCKA
-bin_PROGRAMS+=cmocka_mat cmocka_matmath cmocka_locfft cmocka_blas \
-cmocka_readstr cmocka_threadpool cmocka_psd cmocka_fits cmocka_rayleigh
+bin_PROGRAMS=cmocka_sys cmocka_threadpool cmocka_readstr cmocka_fits \
+	cmocka_mat cmocka_matmath cmocka_matops cmocka_cmat cmocka_fft cmocka_blas \
+	cmocka_rand cmocka_sparse cmocka_chol cmocka_loc cmocka_locfft cmocka_psd \
+	cmocka_accphi cmocka_proj cmocka_fdpcg cmocka_atm cmocka_fractal cmocka_rayleigh \
+	cmocka_sock cmocka_sysutil cmocka_map cmocka_cell cmocka_mathmisc \
+	cmocka_wfs cmocka_recon cmocka_modes cmocka_pywfs \
+	cmocka_servo cmocka_cfg cmocka_libmisc
 LDADD+=$(CMOCKA_LIBS)
 AM_CFLAGS+=$(CMOCKA_CFLAGS)
 endif
 TESTS=$(bin_PROGRAMS)
+#The driver also updates the unit test status report docs/unittest_status.md in the
+#build folder after each test. make doc includes it in the documentation.
+LOG_DRIVER=$(SHELL) $(srcdir)/unittest_driver.sh "$(top_srcdir)" "$(top_builddir)"
 
 CLEANFILES=maos_check_GPU_5.all maos_check_GPU_5.res maos_check_GPU_5.cur \
-	maos_check_CPU_5.all maos_check_CPU_5.res maos_check_CPU_5.cur 
+	maos_check_CPU_5.all maos_check_CPU_5.res maos_check_CPU_5.cur
 clean-local:
-	@rm -rf *.bin *.fits
-if GCOV	
+	@rm -rf *.bin *.fits unittest_report.lock
+if GCOV
 	@rm -fr coverage
 	@find . -name "*.gcda" -exec rm {} \;
-	@lcov --directory . --zerocounters
+	@if command -v lcov >/dev/null ;then lcov --directory . --zerocounters ;fi
 endif
 
 if GCOV
 check-local:
-	@mkdir -p coverage
-	@lcov --compat-libtool --directory .. --capture --output-file coverage/app.info  
-	@genhtml -o coverage/ coverage/app.info 
+	@if command -v lcov >/dev/null && command -v genhtml >/dev/null ;then \
+		mkdir -p coverage && \
+		lcov --compat-libtool --directory .. --capture --output-file coverage/app.info && \
+		genhtml -o coverage/ coverage/app.info ;\
+	fi
 endif

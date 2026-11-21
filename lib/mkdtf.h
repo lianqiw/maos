@@ -41,10 +41,10 @@ typedef struct dtf_t{
     real dxsa;         /**<Subaperture size*/
     real pixthetax;    /**<Pixel size along x (radial)*/
     real pixthetay;    /**<Pixel size along y (radial*/
-    int notfx;         /**<FFT size along x*/
-    int notfy;         /**<FFT size along y*/
-    int pixpsax;       /**<Number of pixels along x*/
-    int pixpsay;       /**<Number of pixels along y*/
+    long notfx;        /**<FFT size along x*/
+    long notfy;        /**<FFT size along y*/
+    long pixpsax;      /**<Number of pixels along x*/
+    long pixpsay;      /**<Number of pixels along y*/
     int radpix;        /**<1: Pixels are along radial/azimuthal direction*/
     int nwvl;          /**<Number of dtf_t*/
 }dtf_t;

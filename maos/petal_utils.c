@@ -59,15 +59,18 @@ void petal_setup_wrap(recon_t *recon, const parms_t *parms, const powfs_t *powfs
 }
 static unsigned int petal_bg_status=0;//if set, indicates that the thread wfsgrad_peta_bg is finished
 /**
- * @brief Background profess to run the slow reconstruction process
- * 
- * @param simu 
- * @return void* 
- */
-static void *wfsgrad_petal_thread(sim_t *simu){
+   Background thread to run the slow petal reconstruction. Sets petal_bg_status
+   to 1 when finished.
+
+   @param[in,out] psimu The simulation struct. simu->petal_m is updated from simu->petal_i0.
+   @return NULL.
+*/
+static void *wfsgrad_petal_thread(void *psimu){
+	sim_t *simu=(sim_t *)psimu;
 	const int nrep=8;
 	for(int ir=0; ir<2; ir++){
-		dmat *phib=ir==1?P(simu->petal_m, 0):NULL;//2nd step use first step as input.
+		if(!simu->recon->petal[ir]) continue;//this step is not configured.
+		dmat *phib=ir==1?P(simu->petal_m, 0):NULL;//2nd step use first step as input (if available).
 		petal_solve(NULL, &P(simu->petal_m, ir), simu->recon->petal[ir], P(simu->petal_i0, ir, 1), phib, nrep);
 	}
 	petal_bg_status=1;
@@ -90,7 +93,11 @@ void petal_recon(sim_t *simu){
 	}
 	int isim=simu->wfsisim;
 	int do_petal=0;
-	real rad2m=0;
+	//The final petal estimate is from the last configured step: TT OIWFS (ir=1) if available, otherwise TTF OIWFS (ir=0).
+	const int irout=parms->ittpowfs!=-1?1:0;
+	const int ipowfs_out=irout==1?parms->ittpowfs:parms->ittfpowfs;
+	if(ipowfs_out==-1) return;//petal_setup_wrap() did not set up any petal reconstructor.
+	const real rad2m=parms->powfs[ipowfs_out].wvlmean/TWOPI;//radian to m
 	for(int ir=0; ir<2; ir++){
 		int ipowfs=0;
 		if(ir==0&&parms->ittfpowfs!=-1){
@@ -100,9 +107,8 @@ void petal_recon(sim_t *simu){
 		}else{
 			continue;
 		}
-		rad2m=parms->powfs[ipowfs].wvlmean/TWOPI;//radian to m
 		if(isim<parms->powfs[ipowfs].phystep || isim<parms->recon.petalstep) continue;
-		int iwfs=P(parms->powfs[ipowfs].wfs, 0);
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, 0);
 		dcelladd(&P(simu->petal_i0, ir, 0), 1, P(simu->ints, iwfs), 1);
 		if((isim+1-parms->powfs[ipowfs].step)%parms->recon.petaldtrat==0){
 			//normalization is not necessary
@@ -124,13 +130,14 @@ void petal_recon(sim_t *simu){
 		void *ans;
 		pthread_join(thread, &ans); thread=0; petal_bg_status=0;
 		//post-processing petalling results
-		dadds(P(simu->petal_m, 1), -dmean(P(simu->petal_m, 1)));//remove piston
-		dshow(P(simu->petal_m, 1), "Step%6d (from %d): petal output:", isim, petal_isim);
-		dscale(P(simu->petal_m, 1), rad2m);//convert to m
+		dmat *petal_out=P(simu->petal_m, irout);
+		dadds(petal_out, -dmean(petal_out));//remove piston
+		dshow(petal_out, "Step%6d (from %d): petal output:", isim, petal_isim);
+		dscale(petal_out, rad2m);//convert to m
 		int idm=parms->idmground;
 		dcellzero(simu->dmtmp);//this cannot be done in the thread as dmtmp is used by filter().
 		real gain=parms->recon.petaldtrat==1?0.5:1;//gain of 1 can be used if peltadtrat>1
-		dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, P(simu->petal_m, 1), "nn", 1);
+		dspmm(&P(simu->dmtmp, idm), simu->recon->apetal, petal_out, "nn", 1);
 		if(1){
 			warning_once("Remove p/t/t from dm petal offset.\n");
 			loc_remove_ptt(P(simu->dmtmp, idm), P(simu->recon->aloc, idm), NULL, NULL, 0);
@@ -138,7 +145,8 @@ void petal_recon(sim_t *simu){
 		for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 			int jpowfs=parms->wfs[jwfs].powfs;
 			if(parms->powfs[jpowfs].lo) continue;
-			dcellmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfs, idm), P(simu->dmtmp, idm), "nn", -gain);
+			const int jwfsr=parms->recon.glao?jpowfs:jwfs;//GA is indexed by reconstruction WFS
+			dcellmm(&P(simu->gradoff, jwfs), P(simu->recon->GA, jwfsr, idm), P(simu->dmtmp, idm), "nn", -gain);
 		}
 		if(parms->plot.run){
 			int draw_single_save=draw_single; draw_single=0;
@@ -150,6 +158,6 @@ void petal_recon(sim_t *simu){
 	}
 	if(do_petal){//launch a thread to do the task
 		petal_isim=isim;
-		pthread_create(&thread, NULL, (thread_fun)wfsgrad_petal_thread, simu);
+		pthread_create(&thread, NULL, wfsgrad_petal_thread, simu);
 	}
 }

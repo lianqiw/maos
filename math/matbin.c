@@ -28,7 +28,9 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 	int ans=0;
 	if(ncol==-1){//initialize async data
 		if(A){
-			if(!A->async){
+			if(zfisfits(fp)){
+				//not supported. data is written when A is freed.
+			}else if(!A->async){
 				if(A->make_keywords) A->make_keywords((cell*)A);
 				((X(mat)*)A)->async=async_init(fp, sizeof(T), M_T, A->keywords, P(A), A->nx, A->ny);
 			}else{
@@ -51,9 +53,11 @@ void X(writedata)(file_t* fp, const X(mat)* A, long ncol){
 			}
 			ans=async_write(A->async, nx*ncol*sizeof(T), 0);
 		}
+	}else if(A && ncol>0 && !fp){
+		//async writing is not initialized (fits file). data is written when A is freed.
 	}else if(fp){//normal writing
-		if(A->make_keywords) A->make_keywords((cell*)A);
-		ans=writearr(fp, 0, sizeof(T), M_T, A?A->keywords:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
+		if(A && A->make_keywords) A->make_keywords((cell*)A);
+		ans=(int)writearr(fp, 0, sizeof(T), M_T, A?A->keywords:NULL, A?P(A):NULL, A?A->nx:0, A?A->ny:0);
 	}else{
 		dbg("writedata called with invalid fp(%p) or async (ncol=%ld) information, canceled.\n", fp, ncol);
 		print_backtrace();

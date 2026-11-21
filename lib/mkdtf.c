@@ -100,7 +100,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	const real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
 	const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
 ){
-	int nwvl=NX(wvls)*NY(wvls);
+	int nwvl=(int)(NX(wvls)*NY(wvls));
 	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
 	dtfs->nwvl=nwvl;
 	//const real blurx=pixblur*pixthetax;
@@ -113,8 +113,8 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	const real pxo=-(pixpsax*0.5-0.5)*pixthetax;
 	const real pyo=-(pixpsay*0.5-0.5)*pixthetay;
 	
-	const int nwfs=MAX(pixoffx?NY(pixoffx):1, pixrot?NX(pixrot):1);
-	const int nsa=MAX(pixoffx?NX(pixoffx):1, pixrot?NX(P(pixrot, 0)):1);
+	const int nwfs=(int)MAX(pixoffx?NY(pixoffx):1, pixrot?NX(pixrot):1);
+	const long nsa=MAX(pixoffx?NX(pixoffx):1, pixrot?NX(P(pixrot, 0)):1);
 
 	/*both nominal and si depends on wavelength.*/
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -149,7 +149,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		//real ct=1;
 		//real st=0;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				if(pixrot){
 					theta=P(PR(pixrot,iwfs,0),isa);
 				}
@@ -158,7 +158,7 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 				real dx=pixoffx?(PR(pixoffx, isa, iwfs)*pixthetax):0;
 				real dy=pixoffy?(PR(pixoffy, isa, iwfs)*pixthetay):0;
 				loc_t* loc_ccd=mksqloc(pixpsax, pixpsay, pixthetax, pixthetay, pxo-dx, pyo-dy);
-				P(sis, isa, iwfs)=mkh(&(propdata_t){.locin=loc_psf, .locout=loc_ccd, .rot=-theta});
+				P(sis, isa, iwfs)=mkh(ADDR((propdata_t){.locin=loc_psf, .locout=loc_ccd, .rot=-theta}));
 				locfree(loc_ccd);
 			}/*isa */
 		}/*iwfs */
@@ -170,12 +170,12 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 		comp* Uy=P(dtfs[iwvl].Uy);
 
 		/*The following is used in genseotf to compute shifted i0.*/
-		for(int ix=0; ix<notfx; ix++){
-			int jx=ix<notfx2?ix:(ix-notfx);
+		for(long ix=0; ix<notfx; ix++){
+			long jx=ix<notfx2?ix:(ix-notfx);
 			Ux[ix]=COMPLEX(0, -2.*M_PI*jx*dux);
 		}
-		for(int iy=0; iy<notfy; iy++){
-			int jy=iy<notfy2?iy:(iy-notfy);
+		for(long iy=0; iy<notfy; iy++){
+			long jy=iy<notfy2?iy:(iy-notfy);
 			Uy[iy]=COMPLEX(0, -2.*M_PI*jy*duy);
 		}
 
@@ -183,31 +183,41 @@ dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
 	return dtfs;
 }
 
-etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
-	const_anyarray sodium_,/**<The sodium profile. In each cell First column is coordinate. Different cells must have the same coordinate. Can also be a dmat*/
-	int icol,     /**<Which sodium profile to use*/
-	const dcell* srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	const dcell* srsa,  /**<Subaperture to LLT distance*/
-	real hs,      /**<LGS WFS focus altitude*/
-	real htel,    /**<Telescope altitude*/
-	real za_rad,   /**<Zenith angle in radian*/
-	int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
-){
+/**
+   Compute the elongation transfer function (ETF) for LGS WFS subapertures from
+   the sodium profile. The DTF nominal is fused into the ETF.
+
+   @param[in] dtfs The dtfs, one per wavelength.
+   @param[in] sodium_ The sodium profile. In each cell first column is coordinate (m). Different cells must have the same coordinate. Can also be a dmat.
+   @param[in] icol Which sodium profile column to use (wrapped).
+   @param[in] srot Rotation angle of each subaperture (radian). Required.
+   @param[in] srsa Subaperture to LLT distance (m).
+   @param[in] hs LGS WFS focus altitude (m).
+   @param[in] htel Telescope altitude (m).
+   @param[in] za_rad Zenith angle (radian).
+   @param[in] no_interp Use direct sum instead of interpolation + FFT. Slower.
+   @return Newly allocated array of nwvl etf_t; free with etf_free().
+*/
+etf_t* mketf(const dtf_t* dtfs, const_anyarray sodium_, int icol, const dcell* srot, const dcell* srsa,
+	real hs, real htel, real za_rad, int no_interp){
+	if(!srot){
+		error("srot is required\n");
+		return NULL;
+	}
 	int nwvl=dtfs[0].nwvl;
 	etf_t* etfs=mycalloc(nwvl, etf_t);
 	etfs->nwvl=nwvl;
 	etfs->hs=hs;
 	/*setup elongation along radial direction. don't care azimuthal. */
-	if(!srot) error("srot is required");
 	const cell *sodium=sodium_.c;
-	const int nllt=MAX(NX(srot), iscell(sodium)?NX(sodium):1);
-	const int nsa=P(srot,0)->nx;
+	const int nllt=(int)MAX(NX(srot), iscell(sodium)?NX(sodium):1);
+	const long nsa=P(srot,0)->nx;
 	dmat* sodium0=dmat_cast(iscell(sodium)?P(sodium,0):sodium);
-	const int ncol=sodium0->ny-1;
-	const int nhp=NX(sodium0);
+	const int ncol=(int)(sodium0->ny-1);
+	const long nhp=NX(sodium0);
 	const real* px=P(sodium0);
 	const real cosza=cos(za_rad);
-	const int icolwrap=wrap_seq(icol, ncol);
+	const long icolwrap=wrap_seq(icol, ncol);
 	//info("Na using column %d.\n",icol);
 
 	//adjusting sodium height for the zenith angle;
@@ -255,7 +265,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 		if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
 			OMP_FOR_COLLAPSE(2, NTHREAD)
 			for(int illt=0; illt<nllt; illt++){
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					const real rsa=P(P(srsa,illt),isa);
 					const real theta=P(PR(srot, illt, 0), isa);
 					const real ct=cos(theta);
@@ -266,7 +276,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 						for(int icompx=0; icompx<notfx; icompx++){
 							const real kx=dux*(icompx>=notfx2?(icompx-notfx):icompx);
 							const real kr=(ct*kx+st*ky);/*along radial*/
-							for(int ih=0; ih<nhp; ih++){
+							for(long ih=0; ih<nhp; ih++){
 								if(pna[illt][ih]>0){
 									const real tmp=(-TWOPI*(kr*(rsa*cosza/(px[ih]-htel)-rsa/hs)));
 									P(etf2d, icompx, icompy)+=pna[illt][ih]*EXPI(tmp);
@@ -288,16 +298,16 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 			*/
 			const int npad=2;/*zero padding to reduce aliasing */
 			const int nover=2;/*enough size for rotation*/
-			const int netf=notfx*nover*npad;
+			const long netf=notfx*nover*npad;
 			const real dtetf=dtheta/nover;
 			const real dusc=(netf*dtetf)/(dtheta*notfx);
 			dmat* thetas=dnew(netf, 1);
-			const int netf2=netf>>1;
+			const long netf2=netf>>1;
 			/*Only interpolating the center part. the rest is padding. */
-			const int etf0=netf2-(int)round(notfx2*(dtheta/dtetf));
-			const int etf1=etf0+(int)round(notfx*(dtheta/dtetf));
+			const long etf0=netf2-(long)round(notfx2*(dtheta/dtetf));
+			const long etf1=etf0+(long)round(notfx*(dtheta/dtetf));
 			if(etf0<0) error("Invalid configuration\n");
-			for(int it=etf0; it<etf1; it++){
+			for(long it=etf0; it<etf1; it++){
 				P(thetas,it)=(it-netf2)*dtetf;
 			}
 			int ncrop=0;
@@ -318,7 +328,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 						cset(P(petf, isa, illt), 1);
 					}else{
 						czero(etf);
-						for(int icomp=etf0; icomp<etf1; icomp++){
+						for(long icomp=etf0; icomp<etf1; icomp++){
 							/*peak in center */
 							const real itheta=P(thetas,icomp);
 							/*non linear mapping. changed from - to + on 2014-05-07.*/
@@ -387,7 +397,7 @@ etf_t* mketf(const dtf_t* dtfs,  /**<The dtfs*/
 		}//if na_interp else
 		//fuse nominal to etf to avoid multiply again.
 		for(int illt=0; illt<nllt; illt++){
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				ccwmd(P(petf, isa, illt), PR(dtfs[iwvl].nominal, isa, illt));
 			}
 		}
@@ -428,16 +438,14 @@ dmat* smooth(const dmat* prof, real dxnew){
 		const long nxnew=ceil((P(prof,nxin-1)-x0in)/dxnew);
 		loc_t* loc_in=mk1dloc_vec(P(prof), nxin);
 		loc_t* loc_out=mk1dloc(x0in, dxnew, nxnew);
-		dsp* ht=mkht(&(propdata_t){.locin=loc_out, .locout=loc_in});
+		dsp* ht=mkht(ADDR((propdata_t){.locin=loc_out, .locout=loc_in}));
 		out=dnew(nxnew, NY(prof));
 		memcpy(P(out), loc_out->locx, sizeof(real)*nxnew);
-		{
-			dmat pin={0}, pout={0};//temporary, does not own reference, no need to free
-			dcols(&pin, prof, 1, NY(prof)-1);/*input profile */
-			dcols(&pout, out, 1, NY(prof)-1);/*output profile */
-			dspmv(&pout, ht, &pin, 'n', 1);
-		}
 		for(long icol=1; icol<NY(prof); icol++){
+			dmat pin={0}, pout={0};//temporary, does not own reference, no need to free
+			dcols(&pin, prof, icol, 1);/*input profile */
+			dcols(&pout, out, icol, 1);/*output profile */
+			dspmv(&pout, ht, &pin, 'n', 1);
 			real Nasum=dvecsum(PCOL(prof, icol), nxin);/*preserve sum of input profile */
 			dvecnormalize_sumabs(PCOL(out, icol), nxnew, Nasum);
 		}

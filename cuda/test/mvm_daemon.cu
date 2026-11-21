@@ -223,7 +223,7 @@ static int respond(struct pollfd *pfd, int flag){
 			cmds=(int*)calloc(NCPU, sizeof(int));
 			for(long i=0; i<NCPU; i++){
 				cmds[i]=CMD_MCOPY;
-				pthread_create(threads+i, NULL, (thread_fun)mvm_thread, (void*)i);
+				pthread_create(threads+i, NULL, mvm_thread, (void*)i);
 			}
 		}
 		//Wait for all copying to be finish.

@@ -90,13 +90,23 @@ static thread_pool_t pool;/*The default pool; */
 static const unsigned int jobsall_mask=0xFFF;//number of jobs in jobsall. Must be all 1's
 static int do_job(int urgent);
 #define USE_QUEUE 0
+/**
+   Run a thread_t job with its own function. Used for jobs queued by QUEUE_THREAD.
+
+   @param[in] arg The thread_t.
+   @return The return value of its function.
+*/
+static void *run_thread_job(void *arg){
+	thread_t *t=(thread_t *)arg;
+	return t->fun(t);
+}
 #if USE_QUEUE //New implementation use queue. 2022-02-08. Not yet working.
 /**
  * struct of jobs for the linked first in first out (fifo) list.
  * We use index here to emulate a 4 byte pointer
  */
 typedef struct jobs_t{
-	thread_wrapfun fun; /**<The function*/
+	thread_fun fun; /**<The function*/
 	void *arg;          /**<The argument*/
 	tp_counter_t *counter;/**<address of the job group, whos value keeps track of queued jobs.*/
 }jobs_t;
@@ -117,8 +127,8 @@ static unsigned int jobsall_njob=0;
 **/
 static void jobs_enqueue(jobs_t *job, int urgent){
 	unsigned int ind, ntot2;
-	thread_wrapfun empty=NULL;
-	thread_wrapfun one=(thread_wrapfun)1L;
+	thread_fun empty=NULL;
+	thread_fun one=(thread_fun)1L;
 	//First, check and occupy an empty slot.
 	__atomic_load(&jobsall_njob, &ntot2, ATOMIC_ORDER);
 	do{
@@ -163,7 +173,7 @@ static unsigned int jobs_dequeue(jobs_t *job, int urgent){
 	//Read the slot information. This may fail even through we forced memory order (why?)
 	do{
 		__atomic_load(&jobsall[ind].fun, &job->fun, ATOMIC_ORDER);
-	} while(job->fun==NULL||job->fun==(thread_wrapfun)1);
+	} while(job->fun==NULL||job->fun==(thread_fun)1);
 	//after .fun is availabel, the following are all available.
 	job->arg=jobsall[ind].arg;
 	job->counter=jobsall[ind].counter;
@@ -187,12 +197,12 @@ static int do_job(int urgent){
 #if ENABLE_TP_TIMING
 		{
 			unsigned int tk1=(unsigned int)ceil((myclockd()-tk0)*1e3);
-			unsigned int old_value=job->counter->tmax;
-			while(old_value<tk1&&!atomic_compare_exchange_n(&job->counter->tmax, &old_value, tk1));
-			old_value=job->counter->tmin;
+			unsigned int old_value=job.counter->tmax;
+			while(old_value<tk1&&!atomic_compare_exchange_n(&job.counter->tmax, &old_value, tk1));
+			old_value=job.counter->tmin;
 			unsigned int zero=0;
-			if(!atomic_compare_exchange_n(&job->counter->tmin, &zero, tk1)){//not zero
-				while(old_value>tk1&&!atomic_compare_exchange_n(&job->counter->tmin, &old_value, tk1));
+			if(!atomic_compare_exchange_n(&job.counter->tmin, &zero, tk1)){//not zero
+				while(old_value>tk1&&!atomic_compare_exchange_n(&job.counter->tmin, &old_value, tk1));
 			}
 		}
 #endif		
@@ -203,13 +213,19 @@ static int do_job(int urgent){
 }
 
 /**
- *  Queue jobs that belongs to group denoted by group. The argument group, will
- *  be incremented by 1 for each job queued and decreased by 1 after each job is
- *  finished. Wait on it will clear when count is decreased to zero.
- *
- *  Job is added to jobsnormal or joburgent depending on urgent value
- */
-void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent){
+   Queue jobs that belongs to group denoted by counter. counter->group will be
+   incremented by 1 for each job queued and decreased by 1 after each job is
+   finished. Wait on it will clear when count is decreased to zero.
+
+   Job is added to jobsnormal or joburgent depending on urgent value
+
+   @param[in,out] counter Job group counter.
+   @param[in] fun Function to call with arg for each job. If NULL, arg is an array of thread_t and each valid element's own fun is called with it.
+   @param[in] arg Argument of fun, or array of njob thread_t if fun is NULL.
+   @param[in] njob Number of jobs.
+   @param[in] urgent Whether the jobs are urgent.
+*/
+void thread_pool_queue(tp_counter_t *counter, thread_fun fun, void *arg, int njob, int urgent){
 	thread_t *arg2=(thread_t *)arg;
 	jobs_t job={0};
 	if(!jobsall){
@@ -226,7 +242,7 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 			job.fun=fun;
 		} else{
 			job.arg=&arg2[ijob];
-			job.fun=arg2[ijob].fun;
+			job.fun=run_thread_job;
 		}
 		jobs_enqueue(&job, urgent);//take idle job from the pool using lock free approach. 
 	
@@ -237,8 +253,8 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 }
 #else //use array based stack
 typedef struct jobs_t{
-	thread_wrapfun fun; /**<The function*/
-	thread_t *arg;          /**<The argument*/
+	thread_fun fun; /**<The function*/
+	void *arg;          /**<The argument*/
 	tp_counter_t *counter;/**<address of the job group, whos value keeps track of queued jobs.*/
 	unsigned int next;  /**<4 byte index into jobsall for next job, replacing pointer*/
 }jobs_t;
@@ -313,13 +329,19 @@ static int do_job(int urgent){
 }
 
 /**
- *  Queue jobs that belongs to group denoted by group. The argument group, will
- *  be incremented by 1 for each job queued and decreased by 1 after each job is
- *  finished. Wait on it will clear when count is decreased to zero.
- *
- *  Job is added to jobsnormal or joburgent depending on urgent value
- */
-void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int njob, int urgent){
+   Queue jobs that belongs to group denoted by counter. counter->group will be
+   incremented by 1 for each job queued and decreased by 1 after each job is
+   finished. Wait on it will clear when count is decreased to zero.
+
+   Job is added to jobsnormal or joburgent depending on urgent value
+
+   @param[in,out] counter Job group counter.
+   @param[in] fun Function to call with arg for each job. If NULL, arg is an array of thread_t and each valid element's own fun is called with it.
+   @param[in] arg Argument of fun, or array of njob thread_t if fun is NULL.
+   @param[in] njob Number of jobs.
+   @param[in] urgent Whether the jobs are urgent.
+*/
+void thread_pool_queue(tp_counter_t *counter, thread_fun fun, void *arg, int njob, int urgent){
 	unsigned int headind=0, tailind=0;
 	thread_t *arg2=(thread_t *)arg;
 	if(!jobsall){
@@ -337,9 +359,9 @@ void thread_pool_queue(tp_counter_t *counter, thread_wrapfun fun, void *arg, int
 				job=&jobsall[jobind];
 				if(fun){
 					job->fun=fun;
-					job->arg=(thread_t*)arg;
+					job->arg=arg;
 				} else{
-					job->fun=arg2[ijob].fun;
+					job->fun=run_thread_job;
 					job->arg=&arg2[ijob];
 				}
 				job->counter=counter;
@@ -431,7 +453,7 @@ void thread_pool_wait_all(void){
 	*/
 	//while(do_job(0));//causes segmentation fault.
 	pthread_mutex_lock(&pool.mutex);
-	if(pool.nidle+1<pool.ncur){/*some job is still doing the last bit. */
+	while(pool.nidle+1<pool.ncur){/*some job is still doing the last bit. */
 		pthread_cond_wait(&pool.idle, &pool.mutex);
 	}
 	pthread_mutex_unlock(&pool.mutex);
@@ -469,7 +491,7 @@ void thread_pool_init(unsigned int nthread){
 
 
 	}
-	unsigned int nthread_max=sysconf(_SC_NPROCESSORS_ONLN);
+	unsigned int nthread_max=(unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 	if(nthread<=0) nthread=nthread_max;
 	if(nthread>nthread_max) nthread=nthread_max;
 	pthread_mutex_lock(&pool.mutex);
@@ -479,6 +501,8 @@ void thread_pool_init(unsigned int nthread){
 		for(; pool.ncur<pool.nmax; pool.ncur++){
 			if(pthread_create(&thread, &pool.attr, run_thread, (void*)(long)pool.ncur)){
 				error("Can not create thread\n");
+				pool.nmax=pool.ncur;//only count threads that are running
+				break;
 			}
 		}
 	} else if(pool.ncur>pool.nmax){/*need to quit some threads. */
@@ -497,7 +521,7 @@ void thread_pool_destroy(void){
 	pthread_mutex_lock(&pool.mutex);
 	pool.nmax=1;
 	pthread_cond_broadcast(&pool.jobwait);
-	if(pool.ncur>1){
+	while(pool.ncur>1){
 		pthread_cond_wait(&pool.exited, &pool.mutex);
 	}
 	pthread_mutex_unlock(&pool.mutex);

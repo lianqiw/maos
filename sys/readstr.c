@@ -53,12 +53,17 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 	if(!sdata) return count;
 	const char* sdataend=0;//sdata+strlen(sdata);
 	const char* sdata2=sdata;
+	int err=0;
 	sdata2=trim_string(sdata2, &sdataend);
-	if(sdata[0]=='['){
+	if(!sdata2){//blank string
+		sdata2=sdataend=sdata;
+	}else if(sdata2[0]=='['){
 		sdata2++;
 		sdataend--;
-		if(sdataend[0]!=']'){
+		if(sdataend<sdata2||sdataend[0]!=']'){
 			error("%s=%s: unmatched [] in input.\n", key, sdata);
+			err=1;
+			sdataend=sdata2;//do not parse
 		}
 	}
 	/*skip spaces*/
@@ -66,7 +71,7 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 		sdata2++;
 	}
 	int end_coma=0;//end with coma. append an additional element.
-	while(sdata2<sdataend||end_coma){
+	while(!err&&(sdata2<sdataend||end_coma)){
 		//sdata2 is current value star
 		//sdata4 is current value end
 		//sdata3 is next value start		
@@ -80,6 +85,8 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			sdata4=strchr(sdata2, sep);//find matching quote.
 			if(!sdata4){
 				error("%s=%s: unmatched quote in input\n", key, sdata);
+				err=1;
+				break;
 			}
 			sdata3=sdata4+1;
 			//Skip spaces
@@ -113,11 +120,13 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 				*res=myrealloc(*res, maxcount, char*);
 			} else{
 				error("%s=%s: need %d numbers, but got more than %d.\n", key, sdata, len, count);
+				err=1;
+				break;
 			}
 		}
 		if(sdata4>sdata2){/*found non-empty str*/
 			sdata2=trim_string(sdata2, &sdata4);
-			(*res)[count++]=mystrndup(sdata2, sdata4-sdata2);
+			(*res)[count++]=sdata2?mystrndup(sdata2, sdata4-sdata2):NULL;
 		} else{/*found empty str*/
 			(*res)[count++]=NULL;
 		}
@@ -126,7 +135,9 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			sdata2++;
 		}
 	}
-	if(count && count<len){//not enough entry
+	if(err){
+		//keep the entries that are already read. Do not fill.
+	}else if(count && count<len){//not enough entry
 		if(!relax||(relax==1&&count>1)){
 			error("%s=%s: require %d numbers, but got %d.\n", key, sdata, len, count);
 		}else{
@@ -134,8 +145,10 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 			for(int i=count; i<len; i++){
 				(*res)[i]=(*res)[count-1]?strdup((*res)[count-1]):NULL;
 			}
+			count=len;
 		}
-	}else if(!len){
+	}
+	if(!len){
 		if(count>0){
 			*res=myrealloc(*res, count, char*);
 		} else{
@@ -145,14 +158,19 @@ int readstr_strarr(char*** res, /**<[out] Result*/
 	return count;
 }
 /**
- * Parse the extra expression to the form _*mul+add. It supports +,-,*,/ operators with no space before the operator.
- * */
-static void parse_expr(double* vmul, double* vadd, char** pendptr){
+   Parse the extra expression to the form _*mul+add. It supports +,-,*,/ operators with no space before the operator.
+
+   @param[out] vmul Multiplicative factor.
+   @param[out] vadd Additive term.
+   @param[in,out] pendptr Pointer to the start of the expression; updated to the end of the parsed expression.
+   @return 0 on success, -1 if an operator is not followed by a number (*pendptr is not updated).
+*/
+static int parse_expr(double* vmul, double* vadd, char** pendptr){
 	*vmul=1;
 	*vadd=0;
 	if(!pendptr || !*pendptr) {
 		dbg("parse_expr: string is empty.\n");
-		return;
+		return 0;
 	}
 	char *endptr=*pendptr;
 	double valpriv=1;
@@ -166,7 +184,7 @@ static void parse_expr(double* vmul, double* vadd, char** pendptr){
 		double tmp=strtod(data, (char**)&endptr);
 		if(data==endptr){
 			error("%s: Unable to read a number after operator %c\n", *pendptr, op);
-			break;
+			return -1;
 		}
 		//convert - to + and / to * for easy handling
 		if(op=='-'){
@@ -196,6 +214,7 @@ static void parse_expr(double* vmul, double* vadd, char** pendptr){
 		*vadd+=valpriv;
 	}
 	*pendptr=endptr;
+	return 0;
 }
 
 /**
@@ -207,9 +226,11 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 	char** endptr0    /**<[out] Location in Input string after readed number.*/
 ){
 	char* endptr;
-	while(isspace((unsigned char)data[0]) && data[0]!='\0') data++;
+	if(endptr0) *endptr0=(char*)data;
+	while(data && isspace((unsigned char)data[0]) && data[0]!='\0') data++;
 	if(!data || data[0]=='\0'){
 		warning("%s: cannot parse a number from an empty string. Assume 0.\n", key);
+		if(endptr0) *endptr0=(char*)data;
 		return 0;
 	}
 	double res=strtod(data, &endptr);
@@ -218,7 +239,9 @@ double readstr_num(const char *key, /**<[in] the key that needs the value.*/
 		return NAN;
 	}
 	double vmul, vadd;
-	parse_expr(&vmul, &vadd, &endptr);
+	if(parse_expr(&vmul, &vadd, &endptr)){
+		return NAN;
+	}
 	if(endptr0) *endptr0=endptr;
 	return res*vmul+vadd;
 }
@@ -400,7 +423,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			endptr++;
 		}
 		double vmul, vadd;
-		parse_expr(&vmul, &vadd, (char**)&endptr);
+		if(parse_expr(&vmul, &vadd, (char**)&endptr)){
+			return -1;
+		}
 		addval+=vadd;
 		fact*=vmul;
 		while(isspace((unsigned char)endptr[0])) endptr++;
@@ -447,7 +472,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		/*if the number is followed by @n, it is repeated n times. */
 		if(startptr[0]=='@'){
 			startptr++;
-			int nrep=strtol(startptr, (char **)&endptr, 10);
+			int nrep=(int)strtol(startptr, (char **)&endptr, 10);
 			if(startptr==endptr){
 				nrep=0;
 				error("Failed to read an integer after @: %s\n", startptr); return -1;
@@ -505,6 +530,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			}
 		}
 	}else if(trans&&count>0){
+		if(len&&count>len){//only len values are stored in *ret
+			error("%s=%s: need %d, but got %d values.\n", key, data, len, count);return -1;
+		}
 		dbg("%s=%s: transposing %dx%d array\n", key, data, ncol, nrow);
 		void* newer=calloc(count, size);
 #define DO_TRANS(T)						\
@@ -512,7 +540,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 			T *from=(T*)(*ret);					\
 			T *to=(T*)newer;					\
 			for(int icol=0; icol<ncol; icol++){		\
-			for(int irow=0; irow<ncol; irow++){		\
+			for(int irow=0; irow<nrow; irow++){		\
 				to[icol+ncol*irow]=from[irow+nrow*icol];	\
 			}						\
 			}							\
@@ -566,8 +594,8 @@ const char* trim_string(const char *start, const char **pend){
 	if(!start) return NULL;
 	const char* end=(pend && *pend)?*pend:(start+strlen(start));
 repeat:
-	while(isspace((unsigned char)start[0]) && start<end) start++;
-	while(isspace((unsigned char)end[-1])&& start<end) end--;
+	while(start<end && isspace((unsigned char)start[0])) start++;
+	while(start<end && isspace((unsigned char)end[-1])) end--;
 	if(start>=end){ 
 		start=NULL;
 		end=NULL;
@@ -597,7 +625,7 @@ const char* search_keyword(const char* keywords, const char* key){
 	const char* end=NULL;
 	keywords=trim_string(keywords, &end);
 	if(keywords&&end){
-		const int nkey=strlen(key);
+		const long nkey=strlen(key);
 		int was_space=1;
 		for(const char* p=keywords; p<end; p++){
 			const char c=*p;

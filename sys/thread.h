@@ -33,12 +33,18 @@
 extern "C"{
 #endif
 #if _OPENMP 
+#ifdef __cplusplus
+extern "C"{ //the OpenMP runtime has C linkage
+#endif
 void omp_set_num_threads(int nthread);
 int omp_get_max_threads(void);
 int omp_in_parallel(void);
 int omp_get_level(void);
 int omp_get_active_level(void);
 int omp_get_thread_num(void);
+#ifdef __cplusplus
+}
+#endif
 #endif
 typedef struct thread_t thread_t;
 typedef void *(*thread_fun)(void *);
@@ -151,8 +157,9 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 #if _OPENMP >= 201511 //minimum openmp version supported for taskloop
 /**
    Notice it is not effective to set the environment variables here.
-*/
 
+   @param[in] nthread Number of threads.
+*/
 static inline void THREAD_POOL_INIT(int nthread){
     info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
@@ -162,12 +169,12 @@ static inline void THREAD_POOL_INIT(int nthread){
     (void)counter; \
 if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent) nogroup)\
-    for(int it=0; it<nthread; it++){\
+    for(long it=0; it<nthread; it++){\
         fun(arg);\
     }\
 }else{\
     DO_PRAGMA(omp parallel for default(shared))\
-    for(int it=0; it<nthread; it++){\
+    for(long it=0; it<nthread; it++){\
         fun(arg);\
     }\
 }
@@ -176,12 +183,12 @@ if(omp_in_parallel()){\
 #define CALL(fun, arg, nthread, urgent) \
 if(omp_in_parallel()){\
     DO_PRAGMA(omp taskloop default(shared) priority(urgent))\
-    for(int it=0; it<nthread; it++){\
+    for(long it=0; it<nthread; it++){\
         fun(arg);\
     }\
 }else{\
     DO_PRAGMA(omp parallel for default(shared))\
-    for(int it=0; it<nthread; it++){\
+    for(long it=0; it<nthread; it++){\
         fun(arg);\
     }\
 }
@@ -237,7 +244,7 @@ if(omp_in_parallel()){\
 #define THREAD_POOL_INIT(A) ({thread_pool_init(A);info("Using thread pool with %d threads\n", A);})
 
 /// Queue jobs to counter. Do not wait
-#define QUEUE(counter, fun, arg, njob, urgent) thread_pool_queue(counter, (thread_wrapfun)fun, arg, njob, urgent)
+#define QUEUE(counter, fun, arg, njob, urgent) thread_pool_queue(counter, fun, arg, njob, urgent)
 #define QUEUE_THREAD(counter, A, urgent) thread_pool_queue(counter, NULL, A, A[0].nthread, urgent)
 
 //We use define so that we can print the calling line 

@@ -84,8 +84,8 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	cp2gpu_dedup(&ref->p, src->pp, src->ny+1, 1);
 	cp2gpu_dedup(&ref->i, src->pi, src->nzmax, 1);
 	cp2gpu_dedup(&ref->x, src->px, src->nzmax, 1);
-	ref->nx=src_csc->nx;
-	ref->ny=src_csc->ny;
+	ref->nx=transp?src_csc->ny:src_csc->nx;//dimension of the stored matrix
+	ref->ny=transp?src_csc->nx:src_csc->ny;
 	ref->nzmax=src->nzmax;
 	ref->type=tocsr?SP_CSR:SP_CSC;
 	ref->count=1;
@@ -376,10 +376,10 @@ void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, i
 		cfree(psftemp);
 	}
 }
+#undef cudaFree
 /**
    Free data if not referenced or reference is 1.
 */
-#undef cudaFree
 int mycudaFree(void* pp){
 	if(!pp) return 0;
 	int tofree=1;

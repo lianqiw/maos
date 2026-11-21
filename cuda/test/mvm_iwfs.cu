@@ -67,7 +67,7 @@ void mvm_only(int* gpus, int ngpu, int nstep){
 	cp2gpu(cumvm1, mvm1);
 	cp2gpu(cugrad1, grad1);
 	curmat cuact(nact, 1);
-	event_t* event_mvm=(event_t*)malloc(sizeof(event_t)*(nstep+1));
+	event_t* event_mvm=new event_t[nstep+1];
 	stream_t stream_mvm;
 	Real one=1;
 	for(int istep=0; istep<nstep; istep++){
@@ -83,7 +83,7 @@ void mvm_only(int* gpus, int ngpu, int nstep){
 	}
 	sscale(timing, 1e-3);
 	writebin(timing, "timing_mvmonly_%dgpu", ngpu);
-	free(event_mvm);
+	delete[] event_mvm;
 }
 //Timing only MVM.
 /**
@@ -139,7 +139,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 		dmres->p[igpu]=X(new)(nact, 1);
 		//pthread_create(&threads[igpu], NULL, (thread_fun)mvm_cp, &data[igpu]);
 	}
-	X(mat)* timing_mvm=X(new)(2, nstep);
+	X(mat)* timing_mvm=X(new)(ngpu, nstep);
 	X(mat)* timing=X(new)(nstep, 1);
 	X(mat)* result=X(new)(nstep, 1);
 	Real one=1; Real zero=0; Real* pbeta;
@@ -238,7 +238,7 @@ void mvm_iwfs(int* gpus, int ngpu, int nstep){
 		result->p[istep]=dmres->p[0]->p[nact/2];
 		timing->p[istep]=toc3;
 		if(istep%1000==0||timing->p[istep]>2e-3){
-			info("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[istep]*1e6);
+			info("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[ngpu*istep]*1e6);
 		}
 	}
 	writebin(timing, "timing_%dgpu", ngpu);

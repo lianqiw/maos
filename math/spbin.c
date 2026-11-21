@@ -79,8 +79,28 @@ X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 			magic1=M_FLT;
 			magic2=M_INT32;
 			break;
+#ifdef COMP_COMPLEX
+		case M_CSP64:
+			magic1=M_CMP;
+			magic2=M_INT64;
+			break;
+		case M_ZSP64:
+			magic1=M_ZMP;
+			magic2=M_INT64;
+			break;
+		case M_CSP32:
+			magic1=M_CMP;
+			magic2=M_INT32;
+			break;
+		case M_ZSP32:
+			magic1=M_ZMP;
+			magic2=M_INT32;
+			break;
+#endif
 		default:
 			error("This is not a valid sparse matrix file. magic=%x\n", header->id);
+			free(header->str); header->str=NULL;
+			return NULL;
 		}
 		zfread(&nzmax, sizeof(uint64_t), 1, fp);
 		if(nzmax!=0){

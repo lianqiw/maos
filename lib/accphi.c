@@ -401,13 +401,13 @@ void* prop_thread(thread_t* data){
     displacex = (displacex-locin->map->ox)*dx_in1;	\
     displacey = (displacey-locin->map->oy)*dy_in1;	\
     map_t*  map=locin->map;					\
-    const int nxmin=MAX(nskip,locin->npad);	\
-    const int nymin=nxmin;					\
-    const int nxmax=locin->map->nx-nxmin-1;	\
-    const int nymax=locin->map->ny-nymin-1;	\
+    const long nxmin=MAX(nskip,locin->npad);	\
+    const long nymin=nxmin;					\
+    const long nxmax=locin->map->nx-nxmin-1;	\
+    const long nymax=locin->map->ny-nymin-1;	\
     /*-1 because we count from 1 in the map*/\
     const real *phiin0=phiin-1;				\
-    int missing=0;				
+    long missing=0;				
 #define PREPIN_GRID(nskip)			\
     const real dx_in1 = 1./mapin->dx;		\
     const real dx_in2 = scale*dx_in1;		\
@@ -415,11 +415,11 @@ void* prop_thread(thread_t* data){
     const real dy_in2 = scale*dy_in1;		\
     displacex = (displacex-mapin->ox)*dx_in1;	\
     displacey = (displacey-mapin->oy)*dy_in1;	\
-    const int nxmin=nskip;					\
-    const int nymin=nskip;					\
-    const int nxmax  = mapin->nx-nskip-1;	\
-    const int nymax  = mapin->ny-nskip-1;	\
-    int missing=0; 
+    const long nxmin=nskip;					\
+    const long nymin=nskip;					\
+    const long nxmax  = mapin->nx-nskip-1;	\
+    const long nymax  = mapin->ny-nskip-1;	\
+    long missing=0; 
 #define PREPOUT_LOC							\
     if(!locout) error("locout is NULL!");	\
     const real *px=locout->locx;			\
@@ -436,7 +436,7 @@ void* prop_thread(thread_t* data){
     const real dyout=mapout->dy;			\
     const real ox=mapout->ox;				\
     const real oy=mapout->oy;				\
-    const int nxout=NX(mapout);				\
+    const long nxout=NX(mapout);				\
     if(!end) end=NY(mapout);
 
 #define PREPOUT_STAT						\
@@ -445,7 +445,7 @@ void* prop_thread(thread_t* data){
 
 #define RUNTIME_LINEAR						\
     real dplocx, dplocy;					\
-    int nplocx, nplocy, nplocx1, nplocy1;	
+    long nplocx, nplocy, nplocx1, nplocy1;	
 
 
 #define PREP_CUBIC_PARAM					\
@@ -461,7 +461,7 @@ void* prop_thread(thread_t* data){
 		static int printed=0;				\
 		if(missing>0 && !printed) {			\
 			printed=1;						\
-			dbg("%d out of %ld points not covered by input screen\n",\
+			dbg("%ld out of %ld points not covered by input screen\n",\
 				missing, (long)(ntot));		\
 			print_backtrace();				\
 		}									\
@@ -471,28 +471,28 @@ void* prop_thread(thread_t* data){
     long iphi; real tmp=0; real wt=0; real wtsum=0;	\
     wt=(1.-dplocx)*(1.-dplocy);				\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/	\
-		if((iphi=fabs(P(map,nplocx,nplocy)))){\
+		if((iphi=labs(loc_map_get(map, nplocx, nplocy)))){/*bounds checked*/\
 			tmp+=(phiin0[iphi]*wt);			\
 			wtsum+=wt;						\
 		}									\
     }										\
     wt=(dplocx)*(1.-dplocy);				\
     if(wt>EPS){								\
-		if((iphi=fabs(P(map,nplocx1,nplocy)))){	\
+		if((iphi=labs(loc_map_get(map, nplocx1, nplocy)))){/*bounds checked*/	\
 			tmp+=(phiin0[iphi]*wt);			\
 			wtsum+=wt;						\
 		}									\
     }										\
     wt=(1.-dplocx)*(dplocy);				\
     if(wt>EPS){								\
-		if((iphi=fabs(P(map,nplocx,nplocy1)))){		\
+		if((iphi=labs(loc_map_get(map, nplocx, nplocy1)))){/*bounds checked*/		\
 			tmp+=(phiin0[iphi]*wt);				\
 			wtsum+=wt;						\
 		}									\
     }										\
     wt=(dplocx)*(dplocy);					\
     if(wt>EPS){								\
-		if((iphi=fabs(P(map,nplocx1,nplocy1)))){\
+		if((iphi=labs(loc_map_get(map, nplocx1, nplocy1)))){/*bounds checked*/\
 			tmp+=(phiin0[iphi]*wt);			\
 			wtsum+=wt;						\
 		}									\
@@ -506,7 +506,7 @@ void* prop_thread(thread_t* data){
 
 #define RUNTIME_CUBIC						\
     real dplocx, dplocy, dplocx0, dplocy0;	\
-    int nplocx, nplocy;
+    long nplocx, nplocy;
 
 #define MAKE_CUBIC_COEFF_X					\
     real fx[4];								\
@@ -584,8 +584,8 @@ void prop_grid(ARGIN_GRID, ARGOUT_LOC, ARG_PROP_WRAP){
 	PREPIN_GRID(0);
 	PREPOUT_LOC;
 	(void)nxmin; (void)nymin;
-	const int nx=NX(mapin);
-	const int ny=NY(mapin);
+	const long nx=NX(mapin);
+	const long ny=NY(mapin);
 OMP_TASK_FOR(2)
 	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_LINEAR;
@@ -659,6 +659,9 @@ void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP){
    other parameters.*/
 void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta){
 	if(locin->iac){
+		if(theta){
+			error("Rotation is not implemented for cubic influence function.\n");
+		}
 		prop_nongrid_cubic(ARGIN_NONGRID2, ARGOUT_LOC2, ARG_PROP2, locin->iac, start, end);
 		return;
 	}
@@ -703,8 +706,8 @@ void prop_nongrid_map(ARGIN_NONGRID,
 		if(dplocy+EPS>=nymin&&dplocy<=nymax+EPS){
 			SPLIT(dplocy, dplocy, nplocy);
 			nplocy1=nplocy+1;
-			for(int ix=0; ix<nxout; ix++){
-				int iloc=ix+iy*nxout;
+			for(long ix=0; ix<nxout; ix++){
+				long iloc=ix+iy*nxout;
 				dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 				if(dplocx>=nxmin&&dplocx<=nxmax){
 					SPLIT(dplocx, dplocx, nplocx);
@@ -775,7 +778,7 @@ void prop_grid_cubic(ARGIN_GRID, ARGOUT_LOC, ARG_PROP_CUBIC){
 	(void)nymin;
 	PREPOUT_LOC;
 	PREP_CUBIC_PARAM;
-	const int nx=NX(mapin);
+	const long nx=NX(mapin);
 OMP_TASK_FOR(4)
 	for(long iloc=start; iloc<end; iloc++){
 		RUNTIME_CUBIC;
@@ -809,7 +812,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
-	const int nx=NX(mapin);
+	const long nx=NX(mapin);
 OMP_TASK_FOR(4)
 	for(long isa=start; isa<end; isa++){
 		RUNTIME_CUBIC;
@@ -850,7 +853,7 @@ void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP_CUBIC){
 	PREPIN_GRID(1);
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
-	const int nx=NX(mapin);
+	const long nx=NX(mapin);
 OMP_TASK_FOR(2)	
 	for(long iy=start; iy<end; iy++){
 		RUNTIME_CUBIC;
@@ -859,8 +862,8 @@ OMP_TASK_FOR(2)
 			SPLIT(dplocy, dplocy, nplocy);
 			dplocy0=1.-dplocy;
 			MAKE_CUBIC_COEFF_Y;
-			for(int ix=0; ix<nxout; ix++){
-				int iloc=ix+iy*nxout;//output index
+			for(long ix=0; ix<nxout; ix++){
+				long iloc=ix+iy*nxout;//output index
 				dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 				if(dplocx>=nxmin&&dplocx<=nxmax){
 					SPLIT(dplocx, dplocx, nplocx);
@@ -887,7 +890,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
 	PREPIN_GRID(1);
 	PREPOUT_STAT;
 	PREP_CUBIC_PARAM;
-	const int nx=NX(mapin);
+	const long nx=NX(mapin);
 OMP_TASK_FOR(2)
 	for(long icol=start; icol<end; icol++){
 		RUNTIME_CUBIC;
@@ -896,9 +899,9 @@ OMP_TASK_FOR(2)
 			SPLIT(dplocy, dplocy, nplocy);
 			dplocy0=1.-dplocy;
 			MAKE_CUBIC_COEFF_Y;
-			int nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
-			for(int ix=0; ix<nxout; ix++){
-				int iloc=ostat->cols[icol].pos+ix;//output index.
+			long nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
+			for(long ix=0; ix<nxout; ix++){
+				long iloc=ostat->cols[icol].pos+ix;//output index.
 				dplocx=myfma(ostat->cols[icol].xstart+ix*dxout, dx_in2, displacex);
 				if(dplocx>=nxmin&&dplocx<=nxmax){
 					SPLIT(dplocx, dplocx, nplocx);
@@ -951,7 +954,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP_CUBIC){
 	PREPOUT_PTS;
 	PREP_CUBIC_PARAM;
 OMP_TASK_FOR(2)	
-	for(int isa=start; isa<end; isa++){
+	for(long isa=start; isa<end; isa++){
 		RUNTIME_CUBIC;
 		const long iloc0=isa*pts->nxsa*pts->nysa;
 		const real ox=pts->origx[isa];
@@ -990,15 +993,15 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP_CUBIC){
 	PREPOUT_MAP;
 	PREP_CUBIC_PARAM;
 OMP_TASK_FOR(2)
-	for(int iy=start; iy<end; iy++){
+	for(long iy=start; iy<end; iy++){
 		RUNTIME_CUBIC;
 		dplocy=myfma(oy+iy*dyout, dy_in2, displacey);
 		if(dplocy>=nymin&&dplocy<=nymax){
 			SPLIT(dplocy, dplocy, nplocy);
 			dplocy0=1.-dplocy;
 			MAKE_CUBIC_COEFF_Y;
-			for(int ix=0; ix<nxout; ix++){
-				int iloc=ix+iy*nxout;
+			for(long ix=0; ix<nxout; ix++){
+				long iloc=ix+iy*nxout;
 				dplocx=myfma(ox+ix*dxout, dx_in2, displacex);
 				if(dplocx>=nxmin&&dplocx<=nxmax){
 					SPLIT(dplocx, dplocx, nplocx);
@@ -1038,11 +1041,11 @@ void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP){
 	}
 	loc_create_map_npad(locout, 1, 0, 0);
 	real dplocx, dplocy;
-	int nplocx, nplocy, nplocx1, nplocy1;
-	const int nxmin=locout->npad;
-	const int nymin=locout->npad;
-	const int nxmax=locout->map->nx-nxmin-1;
-	const int nymax=locout->map->ny-nymin-1;
+	long nplocx, nplocy, nplocx1, nplocy1;
+	const long nxmin=locout->npad;
+	const long nymin=locout->npad;
+	const long nxmax=locout->map->nx-nxmin-1;
+	const long nymax=locout->map->ny-nymin-1;
 	/*notice inverse of scale. */
 	const real dx_out1=1./locout->dx;
 	const real dx_out2=(1./scale)*dx_out1;

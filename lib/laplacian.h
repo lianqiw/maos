@@ -23,7 +23,7 @@
    Compute laplacian operator for turbulence covariance approximation.
 */
 void apply_laplacian_map(dmat *opdout, const dmat *opd, real dx, real r0, real weight);
-dsp* mklaplacian_map(int nx, int ny, real dx, real r0, real weight);
+dsp* mklaplacian_map(long nx, long ny, real dx, real r0, real weight);
 dsp* mklaplacian_loc(loc_t *loc, real r0, real weight);
 real laplacian_coef(real r0, real weight, real dx);
 #endif

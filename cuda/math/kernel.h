@@ -208,12 +208,12 @@ __global__ void mvm_do(const Real* restrict mvm, Real* restrict a, const Real* r
 __global__ void multimv_do(const Real* restrict mvm, Real* restrict a, const Real* restrict g, int nact, int ng);
 
 template<typename T>
-__global__ void singular_pow(T *restrict S, int n, T power, int& nstop){
+__global__ void singular_pow(T *restrict S, int n, T power, const int *nstop){
 	/*if(threadIdx.x==0 && blockIdx.x==0){
 		printf("gpu: crop at %d out of %d\n", nstop, n);
 	}*/
 	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<n; i+=blockDim.x*gridDim.x){
-		if(i<nstop){
+		if(i<*nstop){
 			S[i]=pow(S[i], power);
 		} else{
 			S[i]=0;
@@ -223,7 +223,7 @@ __global__ void singular_pow(T *restrict S, int n, T power, int& nstop){
 /**
 	Determine the index to stop compute*/
 template<typename T>
-__global__ void singular_gap(T *restrict S, int n, int &nstop, T thres1, T thres2){
+__global__ void singular_gap(T *restrict S, int n, int *nstop, T thres1, T thres2){
 	extern __shared__ int nb[];//index 
 	nb[threadIdx.x]=n;
 	thres1*=S[0];
@@ -249,7 +249,7 @@ __global__ void singular_gap(T *restrict S, int n, int &nstop, T thres1, T thres
 		}
 	}
 	if(threadIdx.x==0){
-		atomicMin(&nstop, nb[threadIdx.x]);
+		atomicMin(nstop, nb[threadIdx.x]);
 	}
 }
 

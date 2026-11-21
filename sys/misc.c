@@ -76,13 +76,16 @@ char* mydirname(const char* fn){
 	char fn2[PATH_MAX];
 	if(strscpy(fn2, fn, PATH_MAX-1)<0){
 		error("fn overflow\n");
+		return NULL;
 	}
 	/*If this is a folder, remove the last / */
-	if(fn2[strlen(fn2)-1]=='/')
+	if(fn2[1]&&fn2[strlen(fn2)-1]=='/')
 		fn2[strlen(fn2)-1]='\0';
 	char* sep=strrchr(fn2, '/');
 	if(!sep){
 		fn2[0]='.'; fn2[1]='\0';
+	} else if(sep==fn2){//root directory
+		fn2[1]='\0';
 	} else{
 		sep[0]='\0';
 	}
@@ -150,7 +153,7 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 	size_t slen=strlen(DIRSTART)+2;
 	if(!delim) delim=" ";
 	for(int iarg=0; iarg<argc; iarg++){
-		slen+=strlen(delim)+strlen(argv[iarg]);
+		slen+=strlen(delim)+(argv[iarg]?strlen(argv[iarg]):0);
 	}
 	char* scmd=mycalloc(slen, char);
 	
@@ -169,6 +172,7 @@ char* argv2str(int argc, const char* argv[], const char* delim){
 			if(p[0]=='\n') p[0]=' ';
 		}
 	}
+	scmdend--;//last character. Repeated trailing delimiters are trimmed to one.
 	while(scmdend>scmd+1&&scmdend[0]==delim[0]&&scmdend[-1]==delim[0]){
 		scmdend[0]='\0';
 		scmdend--;
@@ -187,6 +191,8 @@ void print_file(const char* fnin){
 	FILE* fp;
 	if(!(fp=fopen(fn, "r"))){
 		warning("Open %s failed\n", fn);
+		free(fn);
+		return;
 	}
 	copyfile_fp(fp, stdout);
 	fflush(stdout);
@@ -357,7 +363,7 @@ int isfile(const char* fn){
 int islink(const char* fn){
 	if(!fn) return 0;
 	struct stat buf;
-	return !stat(fn, &buf)&&S_ISLNK(buf.st_mode);
+	return !lstat(fn, &buf)&&S_ISLNK(buf.st_mode);
 }
 /**
    Test whether fd is a socket
@@ -388,11 +394,11 @@ time_t fmtime(const char* fn){
 */
 char* stradd(const char* a, ...){
 	char* out;
-	size_t n=0;
+	size_t n=1;//terminating NUL
 	va_list ap;
 	va_start(ap, a);
 	if(a){
-		n=strlen(a)+1;
+		n+=strlen(a);
 	}
 	for(const char* arg=va_arg(ap, const char*); arg; arg=va_arg(ap, const char*)){
 		n+=strlen(arg);
@@ -416,7 +422,7 @@ char* strnadd(int argc, const char* argv[], const char* delim){
 	if(!argc) return NULL;
 	size_t slen=1+strlen(delim);
 	for(int iarg=0; iarg<argc; iarg++){
-		slen+=strlen(delim)+strlen(argv[iarg]);
+		slen+=strlen(delim)+(argv[iarg]?strlen(argv[iarg]):0);
 	}
 	char* scmd=mycalloc(slen, char);
 	for(int iarg=0; iarg<argc; iarg++){
@@ -448,7 +454,7 @@ char* expand_filename(const char* fn){
    Duplicate a string. Check for NULL.  Do not call strndup to avoid recursive deadlock.
  */
 char* mystrndup(const char* A, size_t len){
-	if(!len) return NULL;
+	if(!A||!len) return NULL;
 	size_t len2=strlen(A);
 	if(!len2) return NULL;
 	if(len2<len) len=len2;
@@ -482,7 +488,7 @@ int mysnprintf(char* restrict str, size_t size, const char *restrict format, ...
 	va_end(ap);	
 	if(n<0){
 		warning("snprintf failed with error %d\n", n);
-	}else if(n>(ssize_t)size){
+	}else if(n>=(ssize_t)size){
 		warning("snprintf is truncated: %s (need %d, got %zu)\n", str, n, size);
 	}
 	return n;
@@ -534,6 +540,7 @@ void mymkdir(const char* format, ...){
 		char* tmp=strrchr(fn, '/');
 		if(!tmp){
 			error("Unable to mkdir '%s'\n", fn);
+			return;
 		}
 		tmp[0]='\0';
 		mymkdir("%s", fn);
@@ -606,7 +613,7 @@ int mypause(int fd1,/**<first file no, usually 0 for stdin*/
 		for(int i=0; i<FD_SETSIZE; i++){
 			if(FD_ISSET(i, &active_fd_set)){
 				char key;
-				int nread=read(i, &key, 1);
+				int nread=(int)read(i, &key, 1);
 				info_errno("read");
 				if(nread==1){
 					if(key=='c'){
@@ -650,6 +657,7 @@ static char* cmd_string(char* start, char** end2){
 		input++;
 		if(!end){
 			error("String does not end\n");
+			end=input+strlen(input);//take the remaining string
 		}
 	} else{
 		end=input;
@@ -678,7 +686,7 @@ static char* cmd_string(char* start, char** end2){
 	|begin   |end      |pdest --> |end |pdest
  */
 void str_swap(char**pdest, char *begin, char *end){
-	int n=end-begin;
+	long n=end-begin;
 	if(*pdest==begin){
 		*pdest+=n;
 	}else if(*pdest<begin){//move content to beginning.
@@ -688,7 +696,7 @@ void str_swap(char**pdest, char *begin, char *end){
 		memcpy(*pdest, temp, n);
 		*pdest+=n;
 	}else if(*pdest>=end){//remove content. pdest points to \0
-		int nres=*pdest-end;
+		long nres=*pdest-end;
 		memmove(begin, end, nres);
 		*pdest=nres+begin;
 		memset(*pdest, 0, n);
@@ -702,7 +710,7 @@ void str_swap(char**pdest, char *begin, char *end){
 */
 void parse_argopt(char* cmds, argopt_t* options){
 	if(!cmds) return;
-	const int ncmd=strlen(cmds);
+	const long ncmd=strlen(cmds);
 	char* cmds_end=cmds+ncmd;
 	char* start=cmds;
 	//char* conf_start=cmds;
@@ -762,12 +770,20 @@ void parse_argopt(char* cmds, argopt_t* options){
 				value=NULL;
 			}
 			int isfun=(options[iopt].isfun);
+			if(options[iopt].valtype==2&&!value){
+				error("Option -%c requires a value\n", key);
+			}
 			switch(options[iopt].type){
 			case 0:/*no result needed */
 				break;
 			case M_INT:{
 				if(options[iopt].valtype==2){//needs an array
-					if(isfun) error("Not implemented yet\n");
+					if(isfun){
+						error("Not implemented yet\n");
+						break;
+					}else if(!value){//error is already reported
+						break;
+					}
 					int val=(int)strtol(value, &start, 10);
 					int** tmp=(int**)options[iopt].val;
 					int* nval=(int*)options[iopt].nval;
@@ -796,13 +812,18 @@ void parse_argopt(char* cmds, argopt_t* options){
 					  break;
 			case M_DBL:{
 				if(options[iopt].valtype==2){//needs an array
-					if(isfun) error("Not implemented yet\n");
+					if(isfun){
+						error("Not implemented yet\n");
+						break;
+					}else if(!value){//error is already reported
+						break;
+					}
 					double val=strtod(value, &start);
 					double** tmp=(double**)options[iopt].val;
 					int* nval=(int*)options[iopt].nval;
 					(*nval)++;
 					*tmp=myrealloc(*tmp, (size_t)*nval, double);
-					(*tmp)[(*nval)-1]=(int)val;
+					(*tmp)[(*nval)-1]=val;
 				} else{
 					double val=value?strtod(value, &start):1;
 					if(isfun){/*Is function */
@@ -818,7 +839,7 @@ void parse_argopt(char* cmds, argopt_t* options){
 			case M_STR:{
 				char* val=value?cmd_string(value, &start):strdup("Unknown");
 				if(isfun){
-					void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
+					void (*tmp)(const char*)=(void (*)(const char*))options[iopt].val;
 					tmp(val);
 					free(val);
 				} else{
@@ -880,6 +901,8 @@ void parse_argopt(char* cmds, argopt_t* options){
 			}
 			if(!start[0] && nopen){
 				error("Bracket is not closed: {%s} from {%s}\n", save_start, cmds);
+			}else if(start[0]=='\''){//transpose of the array, not a quote
+				start++;
 			}
 		} else if(start[0]=='\''||start[0]=='"'){/*make sure we don't split strings that are part of value. */
 			char* quoteend=strchr(start+1, start[0]);	
@@ -991,7 +1014,6 @@ void print_version(void){
 #endif
 	info("Launched at %s in %s with PID %ld.\n", myasctime(0), HOST, (long)getpid());
 #if !MAOS_DISABLE_SCHEDULER
-	extern uint16_t PORT;
 	info("The browser based job monitor and drawdaemon can be accessed at http://localhost:%d\n", PORT);
 #endif	
 }
@@ -1069,7 +1091,7 @@ static int rename_done(const char *prefix, const char *suffix, int count_in){
 		}
 	}
 	if(rename(fn, fn1)){
-		dbg("Rename %s to %s failed\n", fn, fn2);
+		dbg("Rename %s to %s failed\n", fn, fn1);
 	} else{
 		snprintf(fn, sizeof(fn), "%s_recent.%s", prefix, suffix);
 		remove(fn);

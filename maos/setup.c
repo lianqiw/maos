@@ -157,7 +157,7 @@ void maos_setup(const parms_t* parms){
 		{//testing
 			if(parms->dbg.wfslinearity!=-1){//testing wfs linearity
 				int iwfs=parms->dbg.wfslinearity;
-				assert(iwfs>-1||iwfs<parms->nwfs);
+				assert(iwfs>-1&&iwfs<parms->nwfs);
 				info2("Studying wfslineariy for WFS %d\n", iwfs);
 				wfslinearity(parms, powfs, iwfs);
 				((parms_t*)parms)->sim.end=parms->sim.start;//indicate no simulation
@@ -220,11 +220,11 @@ void maos_setup(const parms_t* parms){
 	/*compute diffraction limited PSF. Save to output directory.*/
 		dmat* iopdevl=dnew(aper->locs->nloc, 1);
 		ccell* psf2s=0;
-		const int nwvl_save=aper->locfft->wvl->nx; 
+		const long nwvl_save=aper->locfft->wvl->nx; 
 		aper->locfft->wvl->nx=1;//DL psf is independent of wavelength except spatial scaling.
 		locfft_psf(&psf2s, aper->locfft, iopdevl, parms->evl.psfsize, 0);
 		aper->locfft->wvl->nx=nwvl_save;
-		const int nwvl=NX(psf2s);
+		const int nwvl=(int)NX(psf2s);
 		dcell* evlpsfdl=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cabs22d(&P(evlpsfdl,iwvl), 1, P(psf2s,iwvl), 1);

@@ -46,6 +46,7 @@ void addpath2(int priority, const char *format, ...){
 	char* abspath=myabspath(fn);
 	if(!fn||!abspath||!isdir(abspath)){
 		warning("Path not found: path=%s; abspath=%s; Ignored.\n", fn, abspath);
+		free(abspath);
 		return;
 	}
 	LOCK(mutex_path);
@@ -177,6 +178,7 @@ char* find_config(const char* name){
 		config_path=stradd(DIREXE, "/config/", name, NULL);
 	}
 	if(!exist(config_path)&&maos_config_path){
+		free(config_path);
 		config_path=stradd(maos_config_path, "/config/", name, NULL);
 		if(!exist(config_path)){
 			free(config_path);

@@ -39,17 +39,13 @@ extern "C"{
 #else
 #define ctoc(A) toc2(A)
 #endif
+/**Number of thread in a block. (for reduction).*/
+const int TT_NBX=128;
 /**
 	save aper_locs, aper_amp to GPU.
 */
-const int TT_NBX=128;//Number of thread in a block. (for reduction).
-__global__ static void calc_ptt_do(
-	Real* cc,						/**<[out] coefficient*/
-	const Real(*restrict loc)[2],	/**<[in] location of points*/
-	const int nloc,					/**<[in] number of points*/
-	const Real* restrict phi,		/**<[in] phase at every point*/
-	const Real* restrict amp		/**<[in] amplitude at every point*/
-	){
+__global__ static void calc_ptt_do(Real* cc, const Real(*restrict loc)[2], const int nloc, const Real* restrict phi,
+	const Real* restrict amp){
 	__shared__ Real ccb[4][TT_NBX];
 
 	for(int i=0; i<4; i++){
@@ -71,6 +67,7 @@ __global__ static void calc_ptt_do(
 			}
 		}
 	}
+	__syncthreads();
 	if(threadIdx.x<4){
 		atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
 	}
@@ -161,7 +158,16 @@ static void calc_ngsmod(Real* cc,
 		(cc, loc, nloc, phi, amp);
 }
 
+/**
+   Accumulate the complex sum of amp*exp(i*kk*opd), whose squared magnitude is
+   the peak of the PSF (Strehl). Requires 2*blockDim.x Real shared memory.
 
+   @param[in,out] strehlc Complex result, accumulated into. Nothing is saved if NULL.
+   @param[in] opd OPD at every point.
+   @param[in] amp Amplitude at every point.
+   @param[in] nloc Number of points.
+   @param[in] kk Wave number 2*pi/wavelength.
+*/
 __global__ static void
 strehlcomp_do(Comp* strehlc,
 	const Real* opd, const Real* amp, const int nloc, const Real kk){

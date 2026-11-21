@@ -97,7 +97,7 @@ typedef struct star_s{
     ccell ***wvfout;   /**<complex wavefront output from maos run, of size npowfs*1*/
     dcell *ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
     dcell *goff;       /**<gradient offset for NCPA calibration.*/
-    int   nstep;       /**<number of time steps available.*/
+    long  nstep;       /**<number of time steps available.*/
     dmat* minidtrat;   /**<prefered dtrat for minimum snr*/
 }star_s;
 /**
@@ -105,7 +105,7 @@ typedef struct star_s{
 typedef struct aster_s{
     int iaster;        /**<index of aster for this sky*/
 	int iaster_all;	   /**<index of aster for all sky */
-    int nstep;         /**<number of time steps available*/
+    long nstep;        /**<number of time steps available*/
     int tsa;           /**<total number of subapertures.*/
     int nwfs;          /**<number of WFS.*/
     int use;           /**<use this asterism for further physical optics simulation.*/

@@ -36,7 +36,7 @@ void print_nea(const dcell* sanea, const lcell* sprint, const loc_t* saloc){
 			dmat* psanea=P(sanea, ii0);
 			for(int ksa=0; ksa<NX(saindex); ksa++){
 				long isa=P(saindex, ksa);
-				if(isa>0){
+				if(isa>=0){
 					info2("%8ld: (%5.1f, %5.1f) m, (%6.2f, %6.2f) mas\n",
 						isa, saloc->locx[isa], saloc->locy[isa],
 						sqrt(P(psanea, isa, 0))*RAD2MAS,
@@ -76,8 +76,8 @@ void mtch_wrap(const parms_t* parms, powfs_t* powfs, const int ipowfs){
 	real sigrecon=parms->powfs[ipowfs].sigrecon;
 	if(sigrecon<=0){
 		if(parms->powfs[ipowfs].siglev>1200){
-			info("powfs%d: sigrecon is limited to %g for too high siglev %g\n", ipowfs, sigrecon, parms->powfs[ipowfs].siglev);
 			sigrecon=1200;
+			info("powfs%d: sigrecon is limited to %g for too high siglev %g\n", ipowfs, sigrecon, parms->powfs[ipowfs].siglev);
 		}else{
 			sigrecon=parms->powfs[ipowfs].siglev;
 		}

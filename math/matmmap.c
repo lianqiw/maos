@@ -96,9 +96,15 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long* nnx, long* nny,
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char* keywords,
 	const char* format, ...){
 	format2fn;
-	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, keywords, "%s", fn);
+	return X(cellnew_mmap)(nx, ny, (long*)-mx, (long*)-my, keywords, fn?"%s":NULL, fn);
 }
+/**
+   Create a matrix that references data in a mmapped file at the current position and advance the position.
 
+   @param[in,out] map Pointer to the current position in the mapped memory. Advanced past the matrix.
+   @param[in] mem The memory handle of the mapping, referenced by the matrix.
+   @return The matrix referencing the mapped data. Newly allocated; the caller frees it.
+*/
 static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
 	long nx, ny;
 	uint32_t magic;
@@ -106,10 +112,11 @@ static X(mat*) X(readdata_mmap)(char** map, mem_t* mem){
 	mmap_read_header(map, &magic, &nx, &ny, &keywords);
 	if(magic!=M_T){
 		error("File has magic %d, we want %d\n", (int)magic, M_T);
+		return NULL;
 	}
 	X(mat)* out=X(new_do)(nx, ny, (T*)(*map), mem);
 	*map+=nx*ny*sizeof(T);
-	if(out){
+	if(out&&keywords){
 		out->keywords=strdup(keywords);
 	}
 	return out;
@@ -146,6 +153,8 @@ X(cell)* X(cellread_mmap)(const char* format, ...){
 	mmap_read_header(&map, &magic, &nx, &ny, &keywords);
 	if(!iscell(&magic)){
 		error("We want a cell array, File has %x\n", (int)magic);
+		mem_unref(&mem);
+		return NULL;
 	}
 	X(cell)* out=X(cellnew)(nx, ny);
 	if(keywords) out->keywords=strdup(keywords);

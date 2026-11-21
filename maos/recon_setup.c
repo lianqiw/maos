@@ -62,14 +62,15 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 	dfree(recon->neam);
 	recon->neam=dnew(parms->nwfsr, 1);
 	if(parms->load.saneai){//load from file.
-		recon->saneai=dspcellread("%s", parms->load.saneai);
+		dspcellfree(recon->saneai);
+		saneai=recon->saneai=dspcellread("%s", parms->load.saneai);
 		int mismatch=0;
-		if(NX(recon->saneai)!=parms->nwfs){
+		if(NX(recon->saneai)!=parms->nwfsr){
 			mismatch=1;
 		}else{
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				const int ipowfs=parms->wfsr[iwfs].powfs;
-				const int nsa=powfs[ipowfs].saloc->nloc;
+				const long nsa=powfs[ipowfs].saloc->nloc;
 				if(NX(recon->saneai, iwfs, iwfs)!=nsa*2){
 					mismatch=1;
 				}
@@ -83,7 +84,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 	}else{//compute
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
-		const int nsa=powfs[ipowfs].saloc->nloc;
+		const long nsa=powfs[ipowfs].saloc->nloc;
 		const int ng=parms->powfs[ipowfs].ng;
 		
 		const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
@@ -94,9 +95,9 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 			if(parms->recon.glao && PN(powfs[ipowfs].sanea)>1){//average sanea 
 				info("Averaging saneaxy of different WFS for GLAO mode\n");
 				saneac=dcellnew(1,1);
-				int ni0=PN(powfs[ipowfs].sanea);
+				int ni0=(int)PN(powfs[ipowfs].sanea);
 				P(saneac,0)=dnew(nsa, 2);
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					real saneaix=0, saneaiy=0;
 					for(int ii0=0; ii0<ni0; ii0++){
 						if(P(P(powfs[ipowfs].sanea, ii0), isa, 0) && P(P(powfs[ipowfs].sanea, ii0), isa, 1)){
@@ -120,7 +121,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 			for(int jwfs=0; jwfs<PN(saneac); jwfs++){
 				real saat=parms->powfs[ipowfs].saat; if(!saat) saat=0.3;
 				dmat *saa=PR(powfs[ipowfs].saa, jwfs);
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					real area=P(saa, isa);
 					if(area<saat || P(P(saneac, jwfs), isa, 0)==0){
 						for(int ig=0; ig<ng; ig++){
@@ -147,7 +148,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				for(int jwfs=0; jwfs<PN(powfs[ipowfs].saa); jwfs++){
 					P(saneac,jwfs)=dnew(nsa, ng);//in this mode, no x/y cross-coupling.
 					real saat=parms->powfs[ipowfs].saat; if(!saat) saat=0.3;
-					for(int isa=0; isa<nsa; isa++){
+					for(long isa=0; isa<nsa; isa++){
 						real area=P(P(powfs[ipowfs].saa, jwfs), isa);
 						real nearad2=nearad/(area>saat?area:1e-4);
 						for(int ig=0; ig<ng; ig++){
@@ -170,14 +171,17 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 		const real neamin2=pow(parms->powfs[ipowfs].neamin*MAS2RAD, 2);
 
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfsr,jwfs);
-			int iwfs0=P(parms->powfs[ipowfs].wfsr,0);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfsr,jwfs);
+			int iwfs0=(int)P(parms->powfs[ipowfs].wfsr,0);
+			//parms->wfs is indexed by physical wfs. iwfs is a wfsr index which differs in GLAO mode.
+			dmat *sabad=parms->wfs[P(parms->powfs[ipowfs].wfs,jwfs)].sabad;
+			dmat *sabad0=parms->wfs[P(parms->powfs[ipowfs].wfs,0)].sabad;
 			dmat *saa=PR(powfs[ipowfs].saa, jwfs);
 			lmat* samask=0;
-			if(parms->wfs[iwfs].sabad){
-				samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
+			if(sabad){
+				samask=loc_coord2ind(powfs[ipowfs].saloc, sabad);
 			}
-			if(!do_ref||iwfs==iwfs0||parms->wfs[iwfs].sabad||parms->wfs[iwfs0].sabad){
+			if(!do_ref||iwfs==iwfs0||sabad||sabad0){
 				dmat* sanea0=PR(saneac, jwfs, 0);
 				dmat* sanea0l=0;
 				dmat* sanea0i=0;
@@ -187,9 +191,9 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 				}
 				real nea2_sum=0;
 				long nea2_count=0;
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					if(samask && P(samask, isa)){
-						warning("wfs %d sa %d is masked\n", iwfs, isa);
+						warning("wfs %d sa %ld is masked\n", iwfs, isa);
 						for(int iy=0; iy<ng; iy++){
 							P(sanea0, isa, iy)=INFINITY;
 						}
@@ -246,7 +250,7 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].skip==3) continue;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfsr,jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfsr,jwfs);
 			const char* neatype;
 
 			if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy)&&
@@ -375,8 +379,8 @@ static dcell *setup_recon_ecnn(const recon_t *recon, const parms_t *parms, const
 		int offset=0;
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int icol=0; icol<NY(t1); icol++){
-				prop(&(propdata_t){.locin=P(recon->aloc,idm), .phiin=PCOL(t1, icol)+offset,
-					.locout=locs, .phiout=PCOL(x1, icol), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)});
+				prop(ADDR((propdata_t){.locin=P(recon->aloc,idm), .phiin=PCOL(t1, icol)+offset,
+					.locout=locs, .phiout=PCOL(x1, icol), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)}));
 			}
 			offset+=P(recon->aloc,idm)->nloc;
 		}
@@ -463,7 +467,8 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 				} else{
 					continue;
 				}
-				dspmm(&P(GMngs,iwfs), P(recon->saneai,iwfs,iwfs),
+				const int iwfsr=parms->recon.glao?ipowfs:iwfs;//saneai is indexed by wfsr
+				dspmm(&P(GMngs,iwfs), P(recon->saneai,iwfsr,iwfsr),
 					P(recon->GFall,iwfs), "nn", 1);
 				dmm(&GMGngs, 1, P(recon->GFall,iwfs), P(GMngs,iwfs), "tn", 1);
 			}
@@ -491,10 +496,11 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(!parms->powfs[ipowfs].llt) continue;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
-				int iwfs0=P(parms->powfs[ipowfs].wfs,0);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
+				int iwfs0=(int)P(parms->powfs[ipowfs].wfs,0);
 				if(iwfs==iwfs0||!parms->recon.glao){
-					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfs, iwfs));
+					const int iwfsr=parms->recon.glao?ipowfs:iwfs;//saneai is indexed by wfsr
+					P(recon->RFlgsg, iwfs, iwfs)=dpinv(P(recon->GFall,iwfs), P(recon->saneai, iwfsr, iwfsr));
 				} else{
 					P(recon->RFlgsg, iwfs, iwfs)=dref(P(recon->RFlgsg, iwfs0, iwfs0));
 				}
@@ -583,10 +589,10 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	loc_t* eloc=mkannloc(d1, d2, dx, 0.8);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		for(int idm=0; idm<parms->ndm; idm++){
-			dsp* Htmp=mkh(&(propdata_t){.locin=P(recon->aloc,idm), .locout=eloc, 
+			dsp* Htmp=mkh(ADDR((propdata_t){.locin=P(recon->aloc,idm), .locout=eloc, 
 				.hs=P(parms->evl.hs,ievl), 
 				.thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)
-				});
+				}));
 			
 			if(parms->recon.modal){
 				dmat* Hdtmp=NULL;

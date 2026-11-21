@@ -21,21 +21,24 @@
 
    Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011)
 
-*/
+   Integrates x gradients along x chains and connects the chains using y gradients.
 
-void cure1d(dmat** pphix,   /**<Output: opd*/
-	const dmat* gx,/**<x gradients, dimension is nx*ny. Invalid subapertures set to NaN*/
-	const dmat* gy,/**<y gradients, dimension is ny*ny.*/
-	real dx      /**<Size of subaperture*/
-){
+   @param[in,out] pphix Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL;
+   otherwise resized if too small and overwritten.
+   @param[in] gx x gradients, dimension is nx*ny. Invalid subapertures set to NaN
+   @param[in] gy y gradients, dimension is nx*ny.
+   @param[in] dx Size of subaperture
+*/
+void cure1d(dmat** pphix, const dmat* gx, const dmat* gy, real dx){
 	const long nx=NX(gx);
 	const long ny=NY(gy);
 	const long maxseg=(nx+1)/2;
 	dmat* lx=dnew(nx+1, ny);
+	dset(lx, NAN);//points not in any x-chain are invalid
 	lmat* flag=lnew(1+maxseg*2, ny);//nseg, iseg[0].start, iseg[0].end, ...
 	for(long iy=0; iy<ny; iy++){
 	//Sum along first dimension (x)
-		int on=0, iseg=0;
+		int on=0; long iseg=0;
 		for(long ix=0; ix<nx; ix++){
 			int invalid=isnan(P(gx, ix, iy));
 			if(!on&&!invalid){ //beginning of a segment
@@ -231,16 +234,17 @@ void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 	}
 	if(NX(grad)*NY(grad)!=nsa*2){
 		error("Invalid dimension of grad: %ldx%ld. nsa=%ld\n", NX(grad0), NY(grad0), nsa);
+		dfree(grad);
 		return;
 	}
 	loc_create_map(saloc);
 	int npad=saloc->npad;
-	int nx=saloc->map->nx-npad*2;
-	int ny=saloc->map->ny-npad*2;
+	long nx=saloc->map->nx-npad*2;
+	long ny=saloc->map->ny-npad*2;
 	dmat* gx=dnew(nx, ny);
 	dmat* gy=dnew(nx, ny);
-	for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
 			long ii=P(saloc->map,(ix+npad),(iy+npad));
 			if(ii>0){
 				P(gx,ix,iy)=P(grad, ii-1, 0);

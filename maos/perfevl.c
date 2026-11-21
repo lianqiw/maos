@@ -45,6 +45,7 @@
 #define TIM(A)
 #endif
 extern int KEEP_MEM;
+PNEW(mutex_psfol);//protects open loop PSF/OPD accumulation shared by directions (evl.psfol==2)
 /**
    Propagate only controllable component of turbulence to evaluation grid.
 */
@@ -58,8 +59,8 @@ static void perfevl_ideal_atm(sim_t* simu, dmat* iopdevl, int ievl, real alpha){
 		if(aper->locs_dm){
 			locs=P(aper->locs_dm, ievl, idm);
 		}
-		prop(&(propdata_t){.mapin=P(simu->dmprojsq,idm), .locout=locs, .phiout=P(iopdevl),
-			.alpha=alpha, .hs=hs, .thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)});
+		prop(ADDR((propdata_t){.mapin=P(simu->dmprojsq,idm), .locout=locs, .phiout=P(iopdevl),
+			.alpha=alpha, .hs=hs, .thetax=P(parms->evl.thetax,ievl), .thetay=P(parms->evl.thetay,ievl)}));
 	}
 }
 
@@ -115,7 +116,7 @@ void* perfevl_ievl(thread_t* info){
 	const aper_t* aper=simu->aper;
 	const recon_t* recon=simu->recon;
 	const int isim=simu->perfisim;
-	const real atmscale=simu->atmscale?P(simu->atmscale,isim):1;
+	const real atmscale=(simu->atmscale&&!parms->atm.dtrat)?P(simu->atmscale,isim):1;
 	const int nmod=parms->evl.nmod;
 	const int imoao=parms->evl.moao;
 	const real dt=parms->sim.dt;
@@ -126,7 +127,7 @@ void* perfevl_ievl(thread_t* info){
 		}
 		iopdevl=dmat_cast(info->thread_data);
 	}
-	for(int ievl=info->start; ievl<info->end; ievl++){
+	for(int ievl=(int)info->start; ievl<info->end; ievl++){
 		const int do_psf_cov=(parms->evl.psfmean||parms->evl.psfhist||parms->evl.cov||parms->evl.opdmean)
 			&&isim>=parms->evl.psfisim&&P(parms->evl.psf,ievl);
 		const int save_evlopd=parms->save.evlopd>0&&((isim+1)%parms->save.evlopd)==0;
@@ -158,7 +159,7 @@ void* perfevl_ievl(thread_t* info){
 					evl_propdata->phiout=P(iopdevl);
 					if(parms->atm.dtrat>0){
 						real wt;
-						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(simu->atm), parms->atm.interp);
+						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, (int)NX(simu->atm), parms->atm.interp);
 						evl_propdata->alpha=atmscale*wt;
 						evl_propdata->mapin=P(simu->atm, iframe);
 						if(ievl==0) dbg("perfevl: isim=%d, atm frame=%d, wt=%g\n", isim, iframe, evl_propdata->alpha);
@@ -207,19 +208,24 @@ void* perfevl_ievl(thread_t* info){
 			} else{
 				opdevlcopy=dref(iopdevl);
 			}
+			//With evl.psfol==2, several directions (threads) accumulate into the same arrays.
+			LOCK(mutex_psfol);
 			if(parms->evl.cov){
 				dmm(&simu->evlopdcovol, 1, opdevlcopy, opdevlcopy, "nt", 1);
 			}
 			if(parms->evl.cov || parms->evl.opdmean){
 				dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
 			}/*opdcov*/
+			UNLOCK(mutex_psfol);
 			if(parms->evl.psfmean){
 				ccell* psf2s=0;
 				locfft_psf(&psf2s, aper->locfft, opdevlcopy, parms->evl.psfsize, 0);
 				int nwvl=parms->evl.nwvl;
+				LOCK(mutex_psfol);
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					cabs22d(&P(simu->evlpsfolmean,iwvl), 1, P(psf2s,iwvl), 1);
 				}
+				UNLOCK(mutex_psfol);
 				if(parms->plot.run){
 					plot_psf(psf2s, "OL", 0, ievl, parms->evl.wvl, parms->plot.psf!=2, parms->plot.psfmin);
 				}
@@ -278,8 +284,8 @@ void* perfevl_ievl(thread_t* info){
 			/**
 			   prop is faster than spmulvec. \fixme check definition of misreg
 			*/
-			prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc,0), .phiin=P(dmevl[ievl]),
-				.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1});
+			prop(ADDR((propdata_t){.locin=P(recon->moao[imoao].aloc,0), .phiin=P(dmevl[ievl]),
+				.locout=aper->locs, .phiout=P(iopdevl), .alpha=-1}));
 			}
 		}
 
@@ -452,7 +458,7 @@ static void perfevl_mean(sim_t* simu){
 #endif
 				const aper_t* aper=simu->aper;
 OMP_TASK_FOR(4)				
-				for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+				for(long ievl=0; ievl<parms->evl.nevl; ievl++){
 					if((P(parms->evl.psf,ievl)&2)){
 
 						dmat* iopdevl=P(simu->evlopd,ievl);
@@ -461,7 +467,7 @@ OMP_TASK_FOR(4)
 							pcleNGSm, -1);
 						if(parms->plot.run){
 							drawopdamp("Evlcl", aper->locs, iopdevl, aper->amp1, parms->plot.opdmax,
-								"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %d", ievl);
+								"Science Closed loop OPD", "x (m)", "y (m)", "ngsr %ld", ievl);
 						}
 						if(P(parms->evl.pttr,ievl)){
 							/*we cannot use clmp because the removed ngsmod
@@ -479,7 +485,7 @@ OMP_TASK_FOR(4)
 							}
 						}
 						if(do_psf){
-							perfevl_psfcl(parms, aper, "NGSR", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+							perfevl_psfcl(parms, aper, "NGSR", simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, (int)ievl);
 						}
 						dfree(P(simu->evlopd,ievl));
 					}

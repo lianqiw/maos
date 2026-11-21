@@ -127,11 +127,43 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	dcell* eyec=d2cellref(eye, P(recon->anloc), ndm);
 	long(*curp)[2]=data->curp;
 	dcell* MVMt=data->MVMt;
+	/*
+	  apply_invpsd() and apply_fractal() (tomo.cxxalg=1 or 2) use work space
+	  in recon->invpsd or recon->fractal, which is not thread safe. Each thread
+	  uses a private copy of the work space through a shallow copy of recon
+	  and recon->RL. Other data are only read.
+	*/
+	recon_t recon2=*recon;
+	muv_t RL=recon->RL;
+	invpsd_t invpsd2;
+	fractal_t fractal2;
+	if(recon->invpsd){
+		invpsd2=*recon->invpsd;
+		const ccell *src=recon->invpsd->fftxopd;
+		invpsd2.fftxopd=ccellnew(NX(src), NY(src));
+		for(long i=0; i<PN(src); i++){
+			P(invpsd2.fftxopd, i)=cnew(NX(P(src, i)), NY(P(src, i)));
+		}
+		recon2.invpsd=&invpsd2;
+		if(RL.extra==recon->invpsd) RL.extra=&invpsd2;
+	}
+	if(recon->fractal){
+		fractal2=*recon->fractal;
+		const dcell *src=recon->fractal->xopd;
+		fractal2.xopd=dcellnew(NX(src), NY(src));
+		for(long i=0; i<PN(src); i++){
+			P(fractal2.xopd, i)=dnew(NX(P(src, i)), NY(P(src, i)));
+		}
+		recon2.fractal=&fractal2;
+		if(RL.extra==recon->fractal) RL.extra=&fractal2;
+	}
+	if(RL.Mdata==recon) RL.Mdata=&recon2;
+	if(RL.pdata==recon) RL.pdata=&recon2;
 	//int nthread=recon->nthread;
 	TIC;tic;
 	for(long iact=info->start; iact<info->end; iact++){
-		int curdm=curp[iact][0];
-		int curact=curp[iact][1];
+		int curdm=(int)curp[iact][0];
+		long curact=curp[iact][1];
 		if(recon->actcpl&&P(P(recon->actcpl,curdm),curact)<EPS){
 			continue;
 		}
@@ -148,7 +180,7 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 		//toc2("fit");
 		/*Apply R_L*/
 		dcellzero(RLT);//warm restart.
-		muv_solve(&RLT, &recon->RL, NULL, FRT);
+		muv_solve(&RLT, &RL, NULL, FRT);
 		/*Apply R_R'*/
 		muv_trans(&RRT, &recon->RR, RLT, 1);
 		//toc2("tomo");
@@ -173,6 +205,8 @@ setup_recon_mvr_mvm_iact(thread_t* info){
 	dcellfree(RRT);
 	dfree(eye);
 	dcellfree(eyec);
+	if(recon->invpsd) ccellfree(invpsd2.fftxopd);
+	if(recon->fractal) dcellfree(fractal2.xopd);
 	return NULL;
 }
 
@@ -232,8 +266,11 @@ setup_recon_mvr_mvm(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 
 /**
    Assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.
-*/
 
+   @param[in] parms The parameter struct.
+   @param[in,out] recon The reconstruction struct. recon->MVM is set if not already.
+   @param[in] powfs The powfs struct array.
+*/
 void setup_recon_mvm(const parms_t* parms, recon_t* recon, const powfs_t* powfs){
 	TIC;tic;
 	if(!parms->recon.mvm) return;

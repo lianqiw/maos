@@ -55,12 +55,22 @@ static const char *scsrmv_err[]={
 	"Matrix type not supported"
 };
 
-/*
-	y=A*x where A is sparse. x, y are vectors or matrices. (Slow for GS0.)
-	Y = α op (A) ⋅ X + β Y or Y = α op (A) ⋅ X + β Y with β=1
-	Converted cuSparse generic API for CUDA version 11 which removed old API.
-*/
+/**
+   Sparse matrix multiplication y+=alpha*op(A)*x where A is sparse. x, y are
+   vectors or matrices. (Slow for GS0.) Uses the cuSparse generic API for CUDA
+   version 11 and later which removed the old API.
 
+   @param[in,out] y Output vector or matrix, accumulated into. Its dense
+   descriptor is created and cached if not yet existing.
+   @param[in] A Sparse matrix (CSR or CSC). Its SpMV/SpMM work buffer is
+   allocated or enlarged as needed.
+   @param[in] x Input vector or matrix. Its dense descriptor is created and
+   cached if not yet existing.
+   @param[in] ncolvec Number of columns in x and y. 1 for vector.
+   @param[in] trans 't' or 1 to use transpose of A, otherwise use A.
+   @param[in] alpha Scaling factor of the product.
+   @param[in] stream Stream whose cusparse handle is used.
+*/
 void cuspmul(curmat &y, const cusp &A, const curmat &x, long ncolvec, char trans, Real alpha, stream_t &stream){
 	cusparseOperation_t opr;
 	int istrans=(trans=='t'||trans==1);
@@ -145,9 +155,9 @@ cusparseSpMM(cusparseHandle_t     handle,
 			warning_once("x[%ldx%ld] is larger than %ldx%ld\n", x.Nx(), x.Ny(), nx, ncolvec);
 		}
 		if(y.N()<ncolvec*ny){
-			error("y[%ldx%ld] is smaller than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
+			error("y[%ldx%ld] is smaller than %ldx%ld\n", y.Nx(), y.Ny(), ny, ncolvec);
 		}else if(y.N()>ncolvec*ny){
-			warning_once("y[%ldx%ld] is larger than %ldx%ld\n", y.Nx(), y.Ny(), nx, ncolvec);
+			warning_once("y[%ldx%ld] is larger than %ldx%ld\n", y.Nx(), y.Ny(), ny, ncolvec);
 		}
 		if(!x.mdesc) DO(cusparseCreateDnMat(&x.mdesc, nx, ncolvec, nx,(void *)x(), CUDA_R, CUSPARSE_ORDER_COL));
 		if(!y.mdesc) DO(cusparseCreateDnMat(&y.mdesc, ny, ncolvec, ny,(void *)y(), CUDA_R, CUSPARSE_ORDER_COL));
@@ -163,7 +173,6 @@ cusparseSpMM(cusparseHandle_t     handle,
 			DO(cudaMalloc(&A.ref->bspmm, bsize));
 			info("A(%p).nbspmm was increased from %ld to %ld\n", &A, A.ref->nbspmm, x.Ny());
 			A.ref->nbspmm=x.Ny();
-			A.ref->bspmm=A.ref->bspmm;
 		}
 #if CUDA_VERSION >= 12040
 		//DO(status=cusparseSpMM_preprocess(stream.sparse(), opr, opB, &alpha, A.ref->desc, x.mdesc, &one, y.mdesc, CUDA_R, alg, A.bspmm));

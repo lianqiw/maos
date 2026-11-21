@@ -38,6 +38,7 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <ctype.h>
 #include "../sys/sys.h"
 #include "scheduler.h"
@@ -152,20 +153,20 @@ static void http_context_remove(http_context_t *ctx){
 }
 #if HAVE_OPENSSL
 static int https_reader(http_context_t*ctx, char *buf, size_t nbuf){
-	return ctx?SSL_read(ctx->ssl, (void*)buf, nbuf):-1;
+	return ctx?SSL_read(ctx->ssl, (void*)buf, (int)(nbuf>INT_MAX?INT_MAX:nbuf)):-1;
 }
 static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	if(!ctx) return -1;
 	if(!nbuf) return 0;
 	ssize_t nsend;
 	do{
-		nsend=SSL_write(ctx->ssl, buf, nbuf);
+		nsend=SSL_write(ctx->ssl, buf, (int)(nbuf>INT_MAX?INT_MAX:nbuf));
 		//dbg_time("fd=%d nsend=%zd, nbuf=%zu\n", ctx->fd, nsend, nbuf);
 		if(nsend>0){
 			buf=buf+nsend;
 			nbuf-=nsend;
 		}
-	}while(nbuf && (nsend>0||SSL_get_error(ctx->ssl, nsend)==SSL_ERROR_WANT_WRITE));
+	}while(nbuf && (nsend>0||SSL_get_error(ctx->ssl, (int)nsend)==SSL_ERROR_WANT_WRITE));
 	if(nbuf){
 		warning_time("https_writer failed, nsend=%zd, nbuf=%zu.\n", nsend, nbuf);
 		http_context_remove(ctx);
@@ -176,7 +177,7 @@ static int https_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 }
 #endif
 static int http_reader(http_context_t*ctx, char *buf, size_t nbuf){
-	return ctx?recv(ctx->fd, (void*)buf, nbuf, 0):-1;
+	return ctx?(int)recv(ctx->fd, (void*)buf, nbuf, 0):-1;
 }
 static int http_writer(http_context_t*ctx, const char *buf, size_t nbuf){
 	if(!ctx) return -1;
@@ -208,20 +209,44 @@ static http_context_t *http_context_get(int fd){
 	warning_time("http_context not found for fd=%d\n", fd);
 	return NULL;
 }
+/**
+   Create a new file that only the owner can read or write. Used for the
+   password and cookie files.
+
+   @param[in] fn The filename.
+   @return The opened file, or NULL if it exists already or cannot be created.
+*/
+static FILE *fopen_private(const char *fn){
+	int fd=open(fn, O_WRONLY|O_CREAT|O_EXCL, 0600);
+	if(fd<0) return NULL;
+	FILE *fp=fdopen(fd, "w");
+	if(!fp) close(fd);
+	return fp;
+}
+/**
+   Read a line from fp and strip trailing white spaces.
+
+   @param[out] pn Length of the trimmed line.
+   @param[in] fp File to read from.
+   @return Newly allocated string; the caller frees it. NULL if the line is empty or at EOF/error.
+*/
 char *read_line_trim(int *pn, FILE *fp){
 	char *line=NULL;
 	size_t lsize=0;
-	size_t n=getline(&line, &lsize, fp);
+	ssize_t n=getline(&line, &lsize, fp);
 	while(n>=1 && (line[n-1]==0 || isspace((int)line[n-1]))){
 		line[n-1]=0; n--;
 	}
-	*pn=n;
+	if(n<=0){//EOF, error, or empty line
+		free(line); line=NULL; n=0;
+	}
+	*pn=(int)n;
 	return line;
 }
 /**Create a context for fd. overriding existing one if exists */
 static http_context_t *http_context_create(int fd){
 	char buf[5]={0};
-	int len=recv(fd, buf, 4, MSG_PEEK);
+	ssize_t len=recv(fd, buf, 4, MSG_PEEK);
 	int ishttp=(len==4 && !strcmp(buf, "GET "));
 	int ishttps=(len>=3 && buf[0] == 0x16 && buf[1] == 0x03 &&
     		(buf[2] == 0x00 || buf[2] == 0x01 || buf[2] == 0x02 || buf[2] == 0x03));
@@ -233,6 +258,7 @@ static http_context_t *http_context_create(int fd){
 	for (int ic=0; ic<nhttp_context; ic++){
 		if(http_context[ic].fd==fd){
 			jc=ic;
+			http_context_remove(&http_context[jc]);//free ssl, auth, and cookie of the stale context
 			break;//found matching
 		}else if(http_context[ic].fd==-1 && jc==-1){
 			jc=ic;//mark for insertion
@@ -265,6 +291,7 @@ static http_context_t *http_context_create(int fd){
 #endif
 		if(!http_context[jc].recv){
 			warning_time("HTTPS is not supported\n");
+			http_context_remove(&http_context[jc]);//mark the slot as unused
 			return NULL;
 		}
 	}else if(ishttp){
@@ -276,22 +303,38 @@ static http_context_t *http_context_create(int fd){
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "%s/.aos/htpasswd", HOME);
 	FILE *fp=NULL;
+	char *line=NULL;
+	int nline;
 	if((fp=fopen(fn, "r"))){
-		int n;
-		char *line=read_line_trim(&n, fp);
+		line=read_line_trim(&nline, fp);
 		fclose(fp);
-		if(n>2){
-			char *user_pass=stradd(USER, ":", line, NULL);
-			n=strlen(user_pass);
-			size_t nout=4*((n+2)/3);
-			char *out=mycalloc(nout, char);
-			base64_encode((const unsigned char*)user_pass, n, out);
-			http_context[jc].auth=stradd("Authorization: Basic ", out, NULL);
-			free(user_pass);
-			free(out);
+	}else if((fp=fopen_private(fn))){
+		line=generate_session_cookie();
+		nline=line?(int)strlen(line):0;
+		if(nline>16){
+			line[16]=0;
+			nline=16;
 		}
-		free(line);
+		if(line){
+			fprintf(fp, "%s\n", line);
+			info_time("Created web password in %s for user %s.\n", fn, USER);
+		}
+		fclose(fp);
+	}else{
+		nline=0;
 	}
+	if(nline>2){
+		char *user_pass=stradd(USER, ":", line, NULL);
+		nline=(int)strlen(user_pass);
+		size_t nout=4*((nline+2)/3);
+		char *out=mycalloc(nout+1, char);//+1 for the terminating NUL
+		base64_encode((const unsigned char*)user_pass, nline, out);
+		http_context[jc].auth=stradd("Authorization: Basic ", out, NULL);
+		free(user_pass);
+		free(out);
+	}
+	free(line);
+
 	//Create a cookie for easy reauthentication
 	if(http_context[jc].auth){
 		snprintf(fn, PATH_MAX, "%s/.aos/htcookie", HOME);
@@ -299,9 +342,11 @@ static http_context_t *http_context_create(int fd){
 			int n;
 			http_context[jc].cookie=read_line_trim(&n, fp);
 			fclose(fp);
-		}else if((fp=fopen(fn, "w"))){
+		}else if((fp=fopen_private(fn))){
 			http_context[jc].cookie=generate_session_cookie();
-			fprintf(fp, "%s\n", http_context[jc].cookie);
+			if(http_context[jc].cookie){
+				fprintf(fp, "%s\n", http_context[jc].cookie);
+			}
 			fclose(fp);
 		}
 	}
@@ -443,10 +488,10 @@ static int ws_forward(int fd, int nlen, int mode, void *userdata){
 	}
 	if(!ans){
 #if HAVE_LIBZSTD
-	if(nlen>1024){
-		size_t nlen2=0;
-		char* buf2=(char*)compress_buffer(buf+offset, nlen, offset, &nlen2, 1);
-		ans=ws_send(buf2+offset, nlen2, mode, userdata);
+	size_t nlen2=0;
+	char* buf2=NULL;//do not free. persistent buffer.
+	if(nlen>1024 && (buf2=(char*)compress_buffer(buf+offset, nlen, offset, &nlen2, 1))){
+		ans=ws_send(buf2+offset, (int)nlen2, mode, userdata);
 	}else
 #endif
 		ans=ws_send(buf+offset, nlen, mode, userdata);
@@ -509,10 +554,15 @@ static int ws_receive(struct pollfd *pfd, int flag){
 	if(msg_len+offset>BUF_SIZE-1){//buffer is too small. We read the remaining data in block mode.
 		//dbg_time("Buffer is too small\n");
 		buf=(char*)malloc(msg_len+offset+1);
-		memcpy(buf, buf0, BUF_SIZE-1);
-		if(ctx->recv(ctx, buf+BUF_SIZE-1, msg_len+offset-(BUF_SIZE-1))){
+		memcpy(buf, buf0, len);
+	}
+	for(size_t nrecv=len; nrecv<msg_len+offset;){//read the remaining data
+		int nr=ctx->recv(ctx, buf+nrecv, msg_len+offset-nrecv);
+		if(nr<=0){
+			if(buf!=buf0) free(buf);
 			return ws_fail(fd, "recv");
 		}
+		nrecv+=nr;
 	}
 	buf[msg_len+offset]=0;//always terminate string
 	/*Unmask message from client. A client must mask all frames sent to the
@@ -549,12 +599,15 @@ static int ws_receive(struct pollfd *pfd, int flag){
 			nprev=0;
 		}
 	}else if(opcode==0x8){//client replied//request close
+		if(buf!=buf0) free(buf);
 		ws_write_close(ctx);
 		return ws_fail(fd, "client requests close");
 	}else if(opcode==0x9){//client sent a ping. we reply with pong
 		buf[offset-2]=0x8A;//pong
 		buf[offset-1]=msg_len;//cannot be more than 126
-		if(ctx->send(ctx, buf+offset-2, msg_len+2)){
+		int ans=ctx->send(ctx, buf+offset-2, msg_len+2);
+		if(buf!=buf0) free(buf);
+		if(ans){
 			return ws_fail(fd, "pong");
 		}else{
 			return 0;
@@ -594,7 +647,7 @@ void http_upgrade_websocket(http_context_t *ctx, char *buf) {
 	char *protocol=http_parse_key(buf, "Sec-WebSocket-Protocol:");
     char accept_src[128];
 	char accept_key[64];
-    snprintf(accept_src, sizeof(accept_src), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", key);
+    snprintf(accept_src, sizeof(accept_src), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", key?key:"");
 	base64_sha1(accept_src, accept_key);
     char resp[256];
     snprintf(resp, sizeof(resp),
@@ -606,7 +659,7 @@ void http_upgrade_websocket(http_context_t *ctx, char *buf) {
              accept_key, protocol?protocol:"chat");
     ctx->send(ctx, resp, strlen(resp));
 	listen_port_add(ctx->fd, POLLIN, ws_receive, "ws_receive");//switch to websocket handler
-	if(!strcmp(protocol, "maos-monitor-protocol")){
+	if(protocol && !strcmp(protocol, "maos-monitor-protocol")){
 		char cmd[11]="1&MONITOR;";
 		ws_proxy_command(cmd, strlen(cmd), (ws_proxy_t){.send=ws_send, .userdata=(void*)(long)(ctx->fd)});
 	}
@@ -663,7 +716,7 @@ int http_handler(struct pollfd *pfd, int flag){
 			//info("Got correct cookie.\n");
 		}else if(strstr(buf, ctx->auth)){//Get basic authentication, set cookie
 			//info("Got correct Authorization. Set Set-Cookie: session=%s.\n", ctx->cookie);
-			set_cookie=1;
+			set_cookie=ctx->cookie?1:0;
 		}else{
 			dbg("Authentication failed. Sending 401 Unauthorized.\n");
 			mysnprintf(header, sizeof(header), 

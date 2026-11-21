@@ -1,5 +1,5 @@
 AC_DEFUN([MY_CHECK_LWS],[
-	AC_ARG_ENABLE(libwebsockets, AS_HELP_STRING([--enable-libwebsockets],[Disable libwebsockets]))
+	AC_ARG_ENABLE(libwebsockets, AS_HELP_STRING([--enable-libwebsockets],[Also serve the browser monitor with libwebsockets (on PORT+100)]))
 	#Check for libwebsocket
 	has_lws=no
 	if test "$enable_libwebsockets" = "yes" ;then

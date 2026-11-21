@@ -220,9 +220,7 @@ int connect_port(const char* hostname, int port, int block, int mode){
 		}
 		/* Give the socket a name. */
 		init_sockaddr(&servername, hostname, port);
-		if(!block){
-			fcntl(sock, F_SETFD, O_NONBLOCK);
-		}
+
 		if(connect(sock, (struct sockaddr*)&servername, sizeof(servername))<0){
 			perror("connect");
 			close(sock);
@@ -232,6 +230,9 @@ int connect_port(const char* hostname, int port, int block, int mode){
 			sleep(4);
 			count++;
 		} else{
+			if(!block){
+				fcntl(sock, F_SETFL, O_NONBLOCK);
+			}	
 			return sock;
 		}
 	} while(count<10);

@@ -427,11 +427,34 @@ void kill_all_jobs_do(const int this_host){
 		kill_job_wrap(ihost, 0);
 	}
 }
-#if GTK_MAJOR_VERSION>=4
-void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
+#if USE_ALERT_DIALOG
+/**
+   Completion handler of the kill all jobs confirmation dialog. Kills all jobs
+   if confirmed.
+
+   @param[in] dialog The alert dialog.
+   @param[in] result The result of the dialog.
+   @param[in] data Host index (nhost for all hosts), as GINT_TO_POINTER().
+*/
+static void kill_all_job_callback(GObject *dialog, GAsyncResult *result, gpointer data){
+	int this_host=GPOINTER_TO_INT(data);
+	if(gtk_alert_dialog_choose_finish(GTK_ALERT_DIALOG(dialog), result, NULL)==1){
+		kill_all_jobs_do(this_host);
+	}
+}
+#elif GTK_MAJOR_VERSION>=4
+/**
+   Handler of the "response" signal of the kill all jobs confirmation dialog
+   (GTK4). Destroys the dialog and kills all jobs if confirmed.
+
+   @param[in] dialog The dialog.
+   @param[in] result The response. 1 to kill. Closing the dialog gives GTK_RESPONSE_DELETE_EVENT.
+   @param[in] data Host index (nhost for all hosts), as GINT_TO_POINTER().
+*/
+static void kill_all_job_callback(GtkDialog *dialog, int result, gpointer data){
 	gtk_window_destroy(GTK_WINDOW(dialog));
 	int this_host=GPOINTER_TO_INT(data);
-	if(result){
+	if(result==1){
 		kill_all_jobs_do(this_host);
 	}
 }
@@ -441,6 +464,15 @@ void kill_all_jobs(GtkWidget* btn, gpointer data){
 	(void)data;
 	//int this_host=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 
+#if USE_ALERT_DIALOG
+	GtkAlertDialog *dia=gtk_alert_dialog_new("Kill all jobs on %s?", cur_ihost==nhost?"all servers":hostshort[cur_ihost]);
+	const char *buttons[]={"Cancel", "Kill all", NULL};
+	gtk_alert_dialog_set_buttons(dia, buttons);
+	gtk_alert_dialog_set_cancel_button(dia, 0);
+	gtk_alert_dialog_set_default_button(dia, 0);
+	gtk_alert_dialog_choose(dia, GTK_WINDOW(window), NULL, kill_all_job_callback, GINT_TO_POINTER(cur_ihost));
+	g_object_unref(dia);
+#else
 	GtkWidget* dia=gtk_message_dialog_new
 	(GTK_WINDOW(window), GTK_DIALOG_DESTROY_WITH_PARENT,
 		GTK_MESSAGE_QUESTION,
@@ -453,9 +485,10 @@ void kill_all_jobs(GtkWidget* btn, gpointer data){
 #else
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy(dia);
-	if(result){
+	if(result==1){//closing the dialog gives GTK_RESPONSE_DELETE_EVENT
 		kill_all_jobs_do(cur_ihost);
 	}
+#endif
 #endif
 }
 #if GTK_MAJOR_VERSION < 3
@@ -1007,8 +1040,7 @@ void handle_args(int argc, char *argv[]){
 			const char *endargi=argv[i]+strlen(argv[i]);
 			int temp=strtol(argv[i], &endl, 10);
 			if(endl==endargi){//argument is port
-				extern int PORT;
-				PORT=temp;
+				PORT=(uint16_t)temp;
 			}else{
 				parse_host(argv[i]);
 			}

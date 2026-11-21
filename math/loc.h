@@ -23,9 +23,10 @@
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
 loc_t* loc_convert(dmat* A);
+cell* loc_convert_cell(cell* A);
 #define locwrite(out, A...) writebin(out, A)
 #define locread(A...)    loc_convert(dread(A))
-#define loccellread(A...) (loccell*)cellconvert(readbin_id(M_LOC, 1, A), (cell*(*)(cell*))loc_convert)
+#define loccellread(A...) (loccell*)cellconvert(readbin_id(M_LOC, 1, A), loc_convert_cell)
 #define loccellnew (loccell*)cellnew
 #define locccellnew (locccell*)cellnew
 #define loccellfree(A) cellfree(A) //if(A){cellfree_do((cell*)A); A=NULL;};

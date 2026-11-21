@@ -84,8 +84,8 @@ static mapcell* genatm_do(sim_t* simu){
 	  layer 5 is at dm layer. otherwise the error is a
 	  little larger.
 	*/
-		int nx=NX(atm);
-		int ny=NY(atm);
+		long nx=NX(atm);
+		long ny=NY(atm);
 		screens=mapcellnew(atm->nps, 1);
 		real dx=atm->dx;
 		loc_t* psloc=0;
@@ -217,6 +217,7 @@ void genatm(sim_t* simu){
 	print_mem("After genatm");
 	if((parms->atm.r0evolve&2)==2){
 		dbg("Scaling OPD temporarily\n");
+		dfree(simu->atmscale);//genatm is called every step when !atm.frozenflow
 		simu->atmscale=psd2ts(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
 		const real r02wt=(-5./3.);//layer weight is prop to r0^(-5/3)
 		for(long i=0; i<NX(simu->atmscale); i++){
@@ -251,6 +252,7 @@ void sim_update_sodium(sim_t* simu){
 	const int isim=simu->wfsisim;
 	const parms_t* parms=simu->parms;
 	powfs_t* powfs=simu->powfs;
+	int zoompos_updated=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		//Needs ETF for imaging
 		const int has_phy=parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout;
@@ -262,7 +264,7 @@ void sim_update_sodium(sim_t* simu){
 		//f2ht converts our definition of focus mode (x^2*y^2)*alpha to LGS height error (delta_h*D^2)/(8*hs^2)
 		//for larger distance, the convertion should use 1/(2*h1)-1/(2*h2)=alpha
 		const real f2ht=-2*pow(parms->powfs[ipowfs].hs, 2);
-		const int iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+		const int iwfs0=(int)P(parms->powfs[ipowfs].wfs, 0);
 		real deltah1=0, deltah2=0;
 		int icol=0, icol2=0;
 		if(na_update){
@@ -289,7 +291,7 @@ void sim_update_sodium(sim_t* simu){
 				"LGS Trombone Position", "Time (s)", "Offset (m)", "%s", "Trombone");
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 				real zoomerr1=0, zoomerr2=0;
 				if(P(simu->zoomavg_count, iwfs)){//gradient based
 					zoomerr1=P(simu->zoomavg, iwfs)/P(simu->zoomavg_count, iwfs);
@@ -329,12 +331,15 @@ void sim_update_sodium(sim_t* simu){
 		if(parms->sim.mffocus && parms->powfs[ipowfs].zoomdtrat>0 && simu->zoompos){
 			real finterp=(real)((isim)%parms->powfs[ipowfs].zoomdtrat)/(real)parms->powfs[ipowfs].zoomdtrat;
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 				P(P(simu->zoompos, iwfs), simu->zoompos_icol)=((1.-finterp)*P(simu->zoomprev, iwfs)+finterp*P(simu->zoomint, iwfs))*f2ht;
 			}
-			simu->zoompos_icol++;
+			zoompos_updated=1;
 		}
 	}//for ipowfs
+	if(zoompos_updated){//once per step even with multiple LGS powfs
+		simu->zoompos_icol++;
+	}
 }
 /**
  * Update flags
@@ -385,7 +390,11 @@ void shift_grad(sim_t* simu){
 				//dbg("waiting: wfsgrad_count is %d, need %d\n", simu->wfsgrad_count, 1);
 				struct timespec ts;
 				clock_gettime(CLOCK_REALTIME, &ts);
-				ts.tv_nsec+=1e6;
+				ts.tv_nsec+=1000000;
+				if(ts.tv_nsec>=1000000000){
+					ts.tv_sec++;
+					ts.tv_nsec-=1000000000;
+				}
 				pthread_cond_timedwait(&simu->wfsgrad_condw, &simu->wfsgrad_mutex, &ts);
 			}
 			//dbg("ready: wfsgrad_count is ready: %d\n", simu->wfsgrad_count);
@@ -407,7 +416,7 @@ void shift_grad(sim_t* simu){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			const real scale=1./parms->powfs[ipowfs].nwfs;
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, indwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, indwfs);
 				dadd(&P(simu->gradlastcl, ipowfs), 1., P(simu->gradcl, iwfs), scale);
 			}
 		}
@@ -680,7 +689,7 @@ static void init_simu_evl(sim_t* simu){
 	simu->evl_propdata_dm=mycalloc(nevl*parms->ndm, propdata_t);
 	for(int ievl=0; ievl<nevl; ievl++){
 		int nthread=2;
-		int tot;
+		long tot;
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			const int ind=ievl+nevl*ips;
 			propdata_t* data=&simu->evl_propdata_atm[ind];
@@ -766,7 +775,7 @@ static void init_simu_wfs(sim_t* simu){
 	simu->gradscale2=dcellnew(nwfs, 1);//leave empty first.
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		const int nsa=powfs[ipowfs].saloc->nloc;
+		const long nsa=powfs[ipowfs].saloc->nloc;
 		const int ng=parms->powfs[ipowfs].ng;
 		P(simu->gradcl, iwfs)=dnew(nsa*ng, 1);
 		P(simu->wfsopd, iwfs)=dnew(powfs[ipowfs].loc->nloc, 1);
@@ -788,7 +797,7 @@ static void init_simu_wfs(sim_t* simu){
 		}
 		if(powfs[ipowfs].gradoff&&!(parms->powfs[ipowfs].phytype_sim==1&&parms->powfs[ipowfs].ncpa_method==NCPA_I0)){
 			//CMF has gradoff within matched filter reference image
-			int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+			int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 			dbg3("wfs %d: copying powfs.gradoff to simu.gradoff\n", iwfs);
 			dadd(&P(simu->gradoff, iwfs), 1, PR(powfs[ipowfs].gradoff, wfsind, 1), 1);
 		}
@@ -820,7 +829,7 @@ static void init_simu_wfs(sim_t* simu){
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].llt||parms->powfs[ipowfs].dither==1){
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					simu->fsmint[iwfs]=servo_new_scalar(P(simu->fsmreal, iwfs), parms->powfs[ipowfs].apfsm, parms->powfs[ipowfs].alfsm, parms->sim.dt, parms->powfs[ipowfs].epfsm);
 					simu->fsmsho[iwfs]=sho_new(parms->powfs[ipowfs].f0fsm, parms->powfs[ipowfs].zetafsm);
 				}
@@ -858,7 +867,7 @@ static void init_simu_wfs(sim_t* simu){
 		long notfy=powfs[ipowfs].notfy;
 		long notf=MAX(notfx, notfy);
 		if(parms->powfs[ipowfs].psfout){
-			const int nsa=powfs[ipowfs].saloc->nloc;
+			const long nsa=powfs[ipowfs].saloc->nloc;
 			/*The PSFs here are PSFs of each subaperture. */
 			P(simu->wfspsfout, iwfs)=ccellnew_same(nsa, parms->powfs[ipowfs].nwvl, notf/2+2, notf/2+2);
 			mymkdir("%s/wvfout/", dirskysim);
@@ -927,7 +936,9 @@ static void init_simu_wfs(sim_t* simu){
 	save->gradol=mycalloc(nwfs, zfarr*);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].psol&&P(parms->save.gradpsol, iwfs)){
+		//In GLAO mode, only the first WFS of each powfs has psol gradients (see save_gradol()).
+		if(parms->powfs[ipowfs].psol&&P(parms->save.gradpsol, iwfs)
+			&&(!parms->recon.glao||iwfs==P(parms->powfs[ipowfs].wfs, 0))){
 			save->gradol[iwfs]=zfarr_init(nstep, 1, "wfs%d_gradpsol_%d.bin", iwfs, seed);
 		}
 	}
@@ -954,7 +965,7 @@ static void init_simu_wfs(sim_t* simu){
 	simu->wfs_propdata_dm=mycalloc(nwfs*parms->ndm, propdata_t);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+		const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 		const real hs=parms->wfs[iwfs].hs;
 
 		for(int ips=0; ips<parms->atm.nps; ips++){
@@ -968,7 +979,7 @@ static void init_simu_wfs(sim_t* simu){
 			data->wrap=1;
 			data->mapin=(map_t*)1;/*need to update this in genatm. */
 			data->phiout=(real*)1;/*replace later in simulation. */
-			int tot=0;
+			long tot=0;
 			if(powfs[ipowfs].loc_tel){/*misregistration. */
 				data->locout=P(powfs[ipowfs].loc_tel, wfsind);
 				tot=data->locout->nloc;
@@ -1002,7 +1013,7 @@ static void init_simu_wfs(sim_t* simu){
 				}
 			}
 			data->phiout=(real*)1;/*replace later in simulation */
-			int tot;
+			long tot;
 			if(powfs[ipowfs].loc_dm || powfs[ipowfs].loc_tel){/*distortion or rotation. */
 				data->locout=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
 				tot=data->locout->nloc;
@@ -1022,7 +1033,7 @@ static void init_simu_wfs(sim_t* simu){
 
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
-		int tot=powfs[ipowfs].saloc->nloc;
+		long tot=powfs[ipowfs].saloc->nloc;
 		wfsints_t* data=simu->wfs_intsdata+iwfs;
 		data->iwfs=iwfs;
 		int nthread=NTHREAD;
@@ -1099,6 +1110,7 @@ static void init_simu_wfs(sim_t* simu){
 		simu->LGSfocusts=dcellnew_file(parms->nwfs, 1, nnx2, nny2, "LGS focus time history", "%s/Resfocuserrs_%d.bin", fnextra, seed);
 	}
 	if(parms->dither){
+		const char *fndither=(parms->save.extra||parms->save.dither)?"extra":"-";//dither outputs are also saved with save.dither
 		simu->dither=mycalloc(nwfs, dither_t*);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
@@ -1106,8 +1118,8 @@ static void init_simu_wfs(sim_t* simu){
 				simu->dither[iwfs]=mycalloc(1, dither_t);
 				if(parms->powfs[ipowfs].dither>1){
 					//int nm=parms->powfs[ipowfs].dither_mode2?2:1;
-					int nm=NX(P(recon->dither_rg, iwfs, iwfs));
-					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, "Common path dithering time history", "%s/Resdithererr_wfs%d_%d", fnextra, iwfs, seed);
+					int nm=(int)NX(P(recon->dither_rg, iwfs, iwfs));
+					simu->dither[iwfs]->mr=dcellnewsame_file(2, 1, nm, nsim, "Common path dithering time history", "%s/Resdithererr_wfs%d_%d", fndither, iwfs, seed);
 				}
 			}
 		}
@@ -1120,7 +1132,7 @@ static void init_simu_wfs(sim_t* simu){
 					if(parms->powfs[ipowfs].dither==1){
 						nnx[iwfs]=4;
 					}else{
-						int nm=NX(P(recon->dither_rg, iwfs, iwfs));
+						int nm=(int)NX(P(recon->dither_rg, iwfs, iwfs));
 						nnx[iwfs]=4+2*nm;
 					}
 					nny[iwfs]=(nsim-parms->powfs[ipowfs].dither_pllskip)/(parms->powfs[ipowfs].dtrat*parms->powfs[ipowfs].dither_pllrat);
@@ -1129,7 +1141,7 @@ static void init_simu_wfs(sim_t* simu){
 					nny[iwfs]=0;
 				}
 			}
-			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, "Dithering gain output", "%s/Resditheramp_%d.bin", fnextra, seed);
+			simu->resdither=dcellnew_file(nwfs, 1, nnx, nny, "Dithering gain output", "%s/Resditheramp_%d.bin", fndither, seed);
 		}
 	}
 	if(recon->cn2est){
@@ -1372,7 +1384,7 @@ static void init_simu_moao(sim_t* simu){
 			}
 		}
 		if(simu->dm_evl){
-			save->dm_evl=mycalloc(nwfs, zfarr*);
+			save->dm_evl=mycalloc(nevl, zfarr*);
 			for(int ievl=0; ievl<nevl; ievl++){
 				save->dm_evl[ievl]=zfarr_init(nstep, 1, "evl%d_moaofit_%d.bin", ievl, seed);
 			}
@@ -1410,9 +1422,9 @@ sim_t* sim_init(const parms_t* parms, powfs_t* powfs,
 	simu->recon=recon;
 	simu->aper=aper;
 	simu->iseed=iseed;
-	simu->seed=P(parms->sim.seeds, iseed);
+	simu->seed=(int)P(parms->sim.seeds, iseed);
 	if(simu->seed==0){
-		simu->seed=myclocki();
+		simu->seed=(int)myclocki();
 		warning("Seed is 0, using time as seed: %d\n", simu->seed);
 	}
 	int seed=simu->seed;
@@ -1425,7 +1437,7 @@ sim_t* sim_init(const parms_t* parms, powfs_t* powfs,
 	simu->status->simend=parms->sim.end;
 	simu->status->nthread=NTHREAD;
 	simu->status->info=S_RUNNING;
-	if(parms->save.extra||parms->save.dither){
+	if(parms->save.extra||parms->save.dither||parms->save.gradoff){
 		mymkdir("extra");
 	}
 	fnextra=parms->save.extra?"extra":"-";
@@ -1591,6 +1603,7 @@ void sim_free(sim_t* simu){
 	dfree(simu->ttmreal);
 	cellfree(simu->dmrealsq);
 	dcellfree(simu->dmproj);
+	cellfree(simu->dmprojsq);
 	cellfree(simu->wfspsol);
 	dcellfree(simu->dmcmd);
 	dcellfree(simu->dmtmp);
@@ -1904,11 +1917,16 @@ void print_progress(sim_t* simu){
 							dmat *tmp=simu->clem;
 							P(P(res, 1), i)=sqrt(P(tmp, 0, i))*1e9;//LGS
 							P(P(res, 2), i)=sqrt(P(tmp, 1, i))*1e9;//TT
-							if(NX(res)>4){
-								P(P(res, 4), i)=sqrt(P(tmp, 3, i))*1e9;//Focus
+							//clem row 3 (focus) exists only when indfocus is set. Order matches plot_legs.
+							const int indfocus=simu->recon->ngsmod->indfocus;
+							const real focus=indfocus?P(tmp, 3, i):0;
+							int ilo=3;
+							if(simu->recon->ngsmod->indps||simu->recon->ngsmod->indastig){
+								P(P(res, ilo), i)=sqrt(P(tmp, 2, i)-(focus+P(tmp, 1, i)))*1e9;//PS or Astig
+								ilo++;
 							}
-							if(NX(res)>3){
-								P(P(res, 3), i)=sqrt(P(tmp, 2, i)-(P(tmp, 3, i)+P(tmp, 1, i)))*1e9;//PS
+							if(indfocus){
+								P(P(res, ilo), i)=sqrt(focus)*1e9;//Focus
 							}
 						} else{
 							P(P(res, 1), i)=sqrt(P(cle, 2, i))*1e9;//PTTR
@@ -1979,8 +1997,8 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 			}
 			real sepmean=0;
 			for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs-1; indwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, indwfs);
-				int iwfs2=P(parms->powfs[ipowfs].wfs, indwfs+1);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, indwfs);
+				int iwfs2=(int)P(parms->powfs[ipowfs].wfs, indwfs+1);
 				if(fabs(parms->wfs[iwfs].thetax-parms->wfs[iwfs2].thetax)<1.e-10){
 					real sep=parms->wfs[iwfs2].thetay-parms->wfs[iwfs].thetay;
 					if(fabs(sepmean)<1e-20){
@@ -2086,7 +2104,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 	fprintf(fp, "maos.nstep=%d\n", parms->sim.end);
 	fprintf(fp, "maos.ahstfocus=%d\n", parms->tomo.ahst_focus);
 	fprintf(fp, "maos.mffocus=%d\n", parms->sim.mffocus);
-	if(parms->powfs[P(parms->hipowfs, 0)].llt->fnrange){
+	if(parms->nhipowfs&&parms->powfs[P(parms->hipowfs, 0)].llt&&parms->powfs[P(parms->hipowfs, 0)].llt->fnrange){
 		fprintf(fp, "maos.fnrange=%s\n", parms->powfs[P(parms->hipowfs, 0)].llt->fnrange);
 	}else{
 		fprintf(fp, "maos.fnrange=\n");
@@ -2104,7 +2122,7 @@ void save_skyc(powfs_t* powfs, recon_t* recon, const parms_t* parms){
 			int nsa=parms->powfs[ipowfs].order;
 			mymkdir("%s/gradoff/", dirskysim);
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 				writebin(P(powfs[ipowfs].gradoff, jwfs),
 					"%s/gradoff/gradoff_sa%d_x%.0f_y%.0f.bin",
 					dirskysim, nsa,

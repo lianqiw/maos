@@ -49,6 +49,7 @@
     T X(spwdot)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;	\
     T X(spcellwdot)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT; \
     void X(cellmm)(panyarray C0, const_anyarray A, const_anyarray B, const char trans[2], const R alpha);\
+    void X(mm_cell)(X(mat)** C0, const cell* A, const X(mat)* B, const char trans[2], const R alpha);\
     X(cell)* X(cellmm2)(const X(cell)* A, const X(cell)* B, const char trans[2]); \
 	X(sp) *X(2sp)(X(mat)*A, R thres) CHECK_UNUSED_RESULT; \
     void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha); \

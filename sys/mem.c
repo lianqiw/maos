@@ -509,8 +509,13 @@ void print_mem_debug(){
 	
 	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
 }
-void memkey_init(){
-	if(MEM_DEBUG){
+/**
+   Allocate the memory key table for memory accounting if enabled is set.
+
+   @param[in] enabled Nonzero to allocate the memory key table; zero to free it.
+*/
+static void memkey_init(int enabled){
+	if(enabled){
 		memkey_max=1000000;
 		memkey_all=calloc_default(memkey_max, sizeof(memkey_t));
 		memhead_used.counter=S_USED;//start with 10
@@ -519,6 +524,7 @@ void memkey_init(){
 		free(memkey_all);
 		memkey_all=NULL;
 		memkey_max=0;
+	}
 }
 #else
 typedef struct{
@@ -655,10 +661,15 @@ static void memkey_add(void *p, size_t size){
 	}
 	UNLOCK(mutex_mem);
 }
-//Return 0 if success. 1 if failed.
-static int memkey_del(void *p){
+/**
+   Remove a memory record from the tree.
+
+   @param[in] p Memory address being freed.
+   @return Size of the recorded allocation in bytes, or 0 if not found.
+*/
+static size_t memkey_del(void *p){
 	if(!p) return 0;
-	int ans=1;
+	size_t ans=0;
 	void *found=0;
 	memkey_t key;
 	key.p=p;
@@ -667,22 +678,27 @@ static int memkey_del(void *p){
 	if(found){
 		memkey_t *key1=*(memkey_t **)found;/*the address of allocated memkey_t. */
 		memfree+=key1->size;
+		ans=key1->size;
 		memcnt--;
 		if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
 			warning("%p free: Record deleting error\n", p);
 		}
 		UNLOCK(mutex_mem);
 		free_default(key1);
-		ans=0;
 	} else{
 		UNLOCK(mutex_mem);
 		warning("%p free: Record not found\n", p);
-		ans=1;
 	}
 	return ans;
 }
 
-static void memkey_init(){
+/**
+   Not used for this method.
+
+   @param[in] enabled Unused.
+*/
+static void memkey_init(int enabled){
+	(void)enabled;
 
 }
 #endif
@@ -718,6 +734,11 @@ void *malloc_maos(size_t size){
 void *realloc_maos(void *p0, size_t size){
 	//to avoid race condition if p0 and p is different and p0 is allocated to another thread
 	//We delete p0 first and then readd p.
+	if(!size){//realloc(p, 0) is implementation defined (and undefined in C23).
+		free_maos(p0);
+		funtrace_unset;
+		return NULL;
+	}
 	if(memkey_len&&p0){
 		memkey_del(p0);
 	}

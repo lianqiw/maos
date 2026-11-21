@@ -30,8 +30,6 @@
     T X(dot)(const X(mat)*A, const X(mat) *B);				\
     T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     void X(cwm)(X(mat) *A, const X(mat) *B);				\
-    void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2);\
-    void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W , const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);	\
     /*void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); */\
     void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B);	\
@@ -82,7 +80,6 @@
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
-    X(mat)* X(interp1_2)(const X(mat) *xyin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
     X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
     X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
     void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);	\
@@ -128,8 +125,7 @@
 #define AOS_CMATMATH_DEF(X,XR,T,R)					\
     void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B); \
     void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B); \
-    void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	const int nopdx, const int nopdy, const R wvl, const R theta);			\
-    void X(embedc_flag)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \
+    void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	const long nopdx, const long nopdy, const R wvl, const R theta);			\
     void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag);	\
     void X(abstoreal)(X(mat) *A);					\
     void X(abs2toreal)(X(mat) *A, R scale);					\

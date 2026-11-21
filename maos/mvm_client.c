@@ -27,12 +27,12 @@ static int sock_mvm=-1;
 /*Read into real array until we get all*/
 #define READ_ARR(p,n,type)				\
     {							\
-	int nleft;					\
+	long nleft;				\
 	char *start;					\
 	nleft=(n)*sizeof(type);				\
 	start=(char*)(p);				\
 	do{						\
-	    int nread=read(sock_mvm, start, nleft);	\
+	    long nread=read(sock_mvm, start, nleft);	\
 	    nleft-=nread;				\
 	    start+=nread;				\
 	    if(nread<=0){				\
@@ -58,12 +58,12 @@ static int sock_mvm=-1;
 void mvm_client_send_m(dmat* mvmd, int ngpu){
 	int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
 	cmd[1]=ngpu;
-	cmd[2]=NX(mvmd);
-	cmd[3]=NY(mvmd);
+	cmd[2]=(int)NX(mvmd);
+	cmd[3]=(int)NY(mvmd);
 	info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
 	WRITE_CMD(cmd);
 	float* fmvm=mymalloc((NX(mvmd)*NY(mvmd)), float);
-	for(int i=0; i<NX(mvmd)*NY(mvmd); i++){
+	for(long i=0; i<NX(mvmd)*NY(mvmd); i++){
 		fmvm[i]=(float)(P(mvmd,i)*GSCALE1*ASCALE);
 	}
 	WRITE_ARR(fmvm, NX(mvmd)*NY(mvmd), float);
@@ -87,11 +87,11 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 		error("please call mvm_client_init first\n");
 	}
 	/* first move gradients to continuous buffer with correct numerical type.*/
-	int nwfs=NX(grad);
-	int ngtot=0;
+	int nwfs=(int)NX(grad);
+	long ngtot=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(P(grad,iwfs)){
-			int n=P(grad,iwfs)->nx;
+			long n=P(grad,iwfs)->nx;
 			ngtot+=n;
 		}
 	}
@@ -99,12 +99,12 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	GReal* pgall=gall;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(!P(grad,iwfs)) continue;
-		int ng=P(grad,iwfs)->nx;
-		for(int ig=0; ig<ng; ig++){
+		long ng=P(grad,iwfs)->nx;
+		for(long ig=0; ig<ng; ig++){
 			*(pgall++)=(GReal)(P(P(grad,iwfs),ig)*GSCALE);
 		}
 	}
-	int natot=0;
+	long natot=0;
 	for(int idm=0; idm<NX(dm); idm++){
 		if(P(dm,idm)){
 			natot+=P(dm,idm)->nx;
@@ -117,7 +117,7 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 		static int neach0=10;
 		neach=(neach0+=10);
 	}
-	if(neach>ngtot) neach=ngtot;
+	if(neach>ngtot) neach=(int)ngtot;
 	TIC;real tk0=tic;
 	int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
 	cmd[1]=0;//NGPU
@@ -137,9 +137,9 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
 	//Copy DM command to the right place.
 	for(int idm=0; idm<NX(dm); idm++){
 		if(P(dm,idm)){
-			int nact=P(dm,idm)->nx;
+			long nact=P(dm,idm)->nx;
 			real* restrict pdm=P(P(dm,idm));
-			for(int i=0; i<nact; i++){
+			for(long i=0; i<nact; i++){
 				pdm[i]=(real)(*(pdmall++)*ASCALE1);
 			}
 		}
@@ -154,7 +154,10 @@ void mvm_client_recon(int mvmsize, dcell* dm, dcell* grad){
    Close connection
  */
 void mvm_client_close(void){
-	close(sock_mvm);
+	if(sock_mvm!=-1){
+		close(sock_mvm);
+		sock_mvm=-1;
+	}
 }
 static __attribute__((destructor))void deinit(){
 	if(sock_mvm!=-1){

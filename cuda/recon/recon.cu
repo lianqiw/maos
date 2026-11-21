@@ -201,8 +201,8 @@ void curecon_t::init_moao(const parms_t*parms, recon_t*recon){
 				if(!dm_wfs){
 					dm_wfs=curcell(nwfs, 1);
 				}
-				dm_wfs[iwfs]=dm_moao[imoao][count][0];
 				dm_moao[imoao][count]=curcell(1, 1, anx, any);
+				dm_wfs[iwfs]=dm_moao[imoao][count][0];
 				moao_gwfs->p[iwfs]=parms->moao[imoao].gdm;
 				dir[count].thetax=parms->wfs[iwfs].thetax;
 				dir[count].thetay=parms->wfs[iwfs].thetay;
@@ -271,7 +271,7 @@ void curecon_t::update_cn2(const parms_t* parms, recon_t* recon){
 	if(_RR&&_RR!=_RL){
 		_RR->init_hx(parms, recon);
 	}
-	if(parms->tomo.precond==1){
+	if(parms->tomo.precond==1&&_RL){
 		_RL->update_fdpcg(recon->fdpcg);
 	}
 }
@@ -360,7 +360,7 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			}
 			Real g=moao_gwfs->p[iwfs];
 			Add(cudata->dm_wfs[iwfs][0].p, (Real)(1.-g), temp, g, stream);
-			if(!wfsgpu||(_dm_wfs&&_dm_wfs->p[iwfs])){//gpu.moao implies fit.square=1
+			if(_dm_wfs&&(!wfsgpu||_dm_wfs->p[iwfs])){//gpu.moao implies fit.square=1
 				cp2cpu(&_dm_wfs->p[iwfs], cudata->dm_wfs[iwfs][0], stream);
 			}
 		}
@@ -379,7 +379,7 @@ void curecon_t::moao_filter(dcell* _dm_wfs, dcell* _dm_evl){
 			}
 			Real g=moao_gevl->p[ievl];
 			Add(cudata->dm_evl[ievl][0].p, 1-g, temp, g, stream);
-			if(!cuglobal->evlgpu||(_dm_evl&&_dm_evl->p[ievl])){
+			if(_dm_evl&&(!cuglobal->evlgpu||_dm_evl->p[ievl])){
 				cp2cpu(&_dm_evl->p[ievl], cudata->dm_evl[ievl][0], stream);
 			}
 		}
@@ -601,16 +601,14 @@ void gpu_recon_reset(const parms_t* parms){//reset warm restart.
 			curecon->reset_runtime();
 		}
 		if(cudata->dm_wfs){
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-				gpu_set(cuglobal->wfsgpu[iwfs]);
+			for(int iwfs=0; iwfs<parms->nwfs&&iwfs<cudata->dm_wfs.N(); iwfs++){
 				if(cudata->dm_wfs[iwfs]){
 					cuzero(cudata->dm_wfs[iwfs][0].p);
 				}
 			}
 		}
 		if(cudata->dm_evl){
-			for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-				gpu_set(cuglobal->evlgpu[ievl]);
+			for(int ievl=0; ievl<parms->evl.nevl&&ievl<cudata->dm_evl.N(); ievl++){
 				if(cudata->dm_evl[ievl]){
 					cuzero(cudata->dm_evl[ievl][0].p);
 				}

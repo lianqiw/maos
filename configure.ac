@@ -45,6 +45,19 @@ fi
 AC_CONFIG_HEADERS([config.h]) #contains package name.
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
 AC_LANG([C])
+#Autoconf>=2.70 dropped the extern "C" guard from the prototype used by
+#AC_CHECK_LIB/AC_CHECK_FUNC. Restore it so that link checks work when CC is a
+#C++ compiler (e.g., CC=g++), which compiles conftest.c as C++.
+m4_define([AC_LANG_CALL(C)],
+[AC_LANG_PROGRAM([$1
+m4_if([$2], [main], ,
+[/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char $2 ();])], [return $2 ();])])
 AC_TYPE_SIZE_T #it sets CC if empty
 AC_PROG_CC([$CC]) #overrides CC
 #AC_LANG([C++]) #uncomment this line to use C++ compiler (for compatibility checking)
@@ -110,7 +123,7 @@ AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for enhanced 
 AC_ARG_ENABLE(doxygen, AS_HELP_STRING([--enable-doxygen], [Force enable doxygen. It will download doxygen binary if not available in the system]))
 AC_ARG_ENABLE(binary, AS_HELP_STRING([--disable-binary], [Disable downloading precompiled library]))
 AC_ARG_ENABLE(download, AS_HELP_STRING([--disable-download], [Disable downloading library]))
-AC_ARG_ENABLE(threadlib, AS_HELP_STRING([--enable-threadlib], [Enable threading library for blas and fftw.]))
+AC_ARG_ENABLE(threadlib, AS_HELP_STRING([--disable-threadlib], [Do not use the threaded BLAS and FFTW libraries]))
 
 if test "$enable_double" = "no" -o "$enable_single" = "yes" ;then
 	enable_single=1

@@ -23,8 +23,11 @@
 char* dirsetup;
 /**
    Print out usage information.
- */
-static void print_usage(void){
+
+   @param[in] junk Unused. Required by parse_argopt() for M_INT callbacks.
+*/
+static void print_usage(int junk){
+	(void)junk;
 	info(
 		"Usage: skyc [OPTION...] [FILE]...\n"
 		"skyc is a simulation tool developed to do sky coveragepostprocessing\n\n"
@@ -32,7 +35,7 @@ static void print_usage(void){
 		"-h, --help        to print out this message\n"
 		"-d, --detach      to detach from terminal and run in background\n"
 		"-f, --force       force starting simulation without scheduler\n"
-		"-n N, --nthread=N Use N threads, default is 1\n"
+		"-n N, --nthread=N Use N threads, default is all CPU cores\n"
 		"-o DIR, --output=DIR\n"
 		"                  output the results to DIR.\n"
 		"-c FILE.conf, --conf=FILE.conf\n"

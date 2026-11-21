@@ -49,8 +49,8 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
 			if(iseed>=0&&success){
 				touch("Res_%ld.done", seeds[iseed]);
 			}
-			close(fdlock[jseed]); fdlock[jseed]=0;
-			remove(fnlock[jseed]); free(fnlock[jseed]); fnlock[jseed]=NULL;
+			if(fdlock[jseed]>0){ close(fdlock[jseed]); fdlock[jseed]=-1; }
+			if(fnlock&&fnlock[jseed]){ remove(fnlock[jseed]); free(fnlock[jseed]); fnlock[jseed]=NULL; }
 		}
 	}
 }
@@ -58,32 +58,37 @@ void remove_lock(int *fdlock, char **fnlock, long *seeds, long nseed, long iseed
 /**
    Print out usage information.
 */
-static void print_usage(void){
+static void print_usage(int junk){
+	(void)junk;
 	info2(
-		"Usage: maos [OPTION...] [FILE]...\n"
+		"Usage: maos [OPTION...] [FILE.conf]... [key=value]...\n"
 		"maos is a simulation tool developed to adaptive optics systems\n\n"
 		"Examples:\n"
 		"maos   # Run the default configuration from default.conf with all CPUs and GPUs\n\n"
 		"maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf \n"
 		"       # Run a single conjugate natural guide star case, with seed 1 and 10\n"
 		"       # detach from the terminal and output results to folder scao_ngs\n"
-		"       # and read in overriding parameters stored in override.conf and chol.conf\n"
+		"       # and read in overriding parameters stored in override.conf\n"
 		"\n"
 		"Options: \n"
 		"-h, --help        to print out this message\n"
-		"-d, --detach      to detach from terminal and run in background\n"
-		"-f, --force       force starting simulation without scheduler\n"
-		"-n, --nthread=N   Use N threads, default is 1\n"
+		"-d, --detach      to detach from terminal and run in background. Requires -o.\n"
+		"-f, --force       force starting simulation without waiting for the scheduler\n"
+		"-O, --override    rerun seeds that are already finished (Res_seed.done exists)\n"
+		"-n, --nthread=N   Use N threads, default is all CPU cores\n"
 		"-o, --output=DIR  output the results to DIR.\n"
 		"-c, --conf=FILE.conf\n"
-		"                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
+		"                  Use FILE.conf as the baseline config instead of default.conf\n"
 		"-p, --path=dir    Add dir to the internal PATH\n"
-		"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
+		"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. Repeat for more GPUs. default: automatic\n"
 		"-G, --ngpu=N      Use a total of N gpus.\n"
 		"-r, --run=host    Run the job in another host.\n"
 		"\n"
+		"Command line key=value entries override .conf files given in the command line,\n"
+		"which override the baseline config, regardless of the order.\n"
+		"\n"
 		"The following environment variables are supported\n"
-		"MAOS_TOMO_SCALE=1e12 Rebalance tomography terms for single precision calculation\n"
+		"MAOS_TOMOSCALE=1e-12 Rebalance tomography terms for single precision calculation\n"
 		"MAOS_PARALLEL=1      Set to 0 to disable parallel launch\n"
 		"MAOS_NO_WFS=0        Set to 1 to disable all WFS calls\n"
 		"MAOS_NO_EVL=0        Set to 1 to disable evaluation calls\n"
@@ -91,8 +96,9 @@ static void print_usage(void){
 		"MAOS_KEEP_MEM=0      Set to 1 to keep temporary memory between steps\n"
 		"MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting\n"
 		"MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info\n"
-		"MAOS_LOG_LEVEL=0     Set logging level. -3: error only, -2:  warning, -1  essential info, 0:  useful info, \n"
-		"                     1:  debugging info, 2: debugging info, 3: everything.\n"
+		"MAOS_PERMISSIVE=0    Set to 1 to only warn about unknown or duplicate keys\n"
+		"MAOS_LOG_LEVEL=0     Set logging level. -4: nothing, -3: errors and warnings, -2: essential info,\n"
+		"                     -1: important info, 0: all info, 1-3: increasing debugging info.\n"
 	);
 
 	exit(0);
@@ -128,7 +134,6 @@ arg_t* parse_args(int argc, const char* argv[]){
 	{"conf",   'c',M_STR, 1, 0, &arg->confmain, NULL},
 	{"path",   'p',M_STR, 1, 1, (void*)addpath, NULL},
 	{"run",    'r',M_STR, 1, 0, &arg->host, NULL},
-	{"server", 'S',M_INT, 0, 0, &arg->server,NULL},
 	{NULL,     0,  0,     0, 0, NULL, NULL}
 	};
 	arg->confcmd=strnadd(argc-1, argv+1, " ");
@@ -197,7 +202,7 @@ arg_t* parse_args(int argc, const char* argv[]){
  */
 char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl, int isim){
 	char keywords[400];
-	int nembed=P(aper->locfft->nembed,iwvl);
+	long nembed=P(aper->locfft->nembed,iwvl);
 	real wvl=P(parms->evl.wvl,iwvl);
 	real sumamp2=aper->sumamp2;
 	snprintf(keywords, sizeof(keywords),
@@ -207,7 +212,7 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 		"L0=%g / Outer scale (meter)\n"
 		"wvl=%g / Wavelength (m)\n"
 		"dx=%g / OPD sampling (m)\n"
-		"nfft=(%d,%d) / FFT grid size\n"
+		"nfft=(%ld,%ld) / FFT grid size\n"
 		"dp=%g / PSF sampling (arcsec)\n"
 		"sum=%g / PSF total intensity\n"
 		"dt=%g / Total exposure (seconds)\n",
@@ -224,7 +229,7 @@ char* evl_keywords(const parms_t* parms, const aper_t* aper, int ievl, int iwvl,
 dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, real D, real Din){
 	dmat* amp=dnew(loc->nloc, 1);
 	if(aper){
-		prop(&(propdata_t){.mapin=aper, .locout=loc, .phiout=P(amp), .misregx=misregx, .misregy=misregy});
+		prop(ADDR((propdata_t){.mapin=aper, .locout=loc, .phiout=P(amp), .misregx=misregx, .misregy=misregy}));
 	}else{
 		loc_circle_add(amp, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
 	}
@@ -238,9 +243,9 @@ dmat* mkamp(const loc_t* loc, const map_t* aper, real misregx, real misregy, rea
  */
 void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	const int nwvl=parms->powfs[ipowfs].nwvl;
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	const dmat* wvlwts=parms->wfs[iwfs].wvlwts;
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	ccell* fotf=PR(intstat->fotf,wfsind,0);
@@ -286,10 +291,13 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 	const real cogthres=parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
 	int type=parms->powfs[ipowfs].phytype_sim;
+	/*Only tCoG with radial pixels (radpix) gives gradients along r/a. MF and
+	  MAP (maxapriori converts back) give gradients along x/y. */
+	const int g_ra=(type==2&&parms->powfs[ipowfs].radpix&&srot);
 	for(int dir=0; dir<ndir; dir++){
 		dzero(gnfra);
 		dzero(gnfxy);
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			info_progress(isa, nsa);
 			if(srot){
 				theta=srot[isa];
@@ -359,7 +367,7 @@ void wfslinearity(const parms_t* parms, powfs_t* powfs, const int iwfs){
 				default:
 					error("Invalid");
 				}
-				if(type==1||!srot){
+				if(!g_ra){
 					P(pgnfxy, isep, isa)=g[0]/pixthetax;
 					P(pgnfxy, isep, isa+nsa)=g[1]/pixthetay;
 
@@ -402,12 +410,13 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	dmat* opd=zernike(recon->ploc, parms->aper.d, 2, 15, 1);
 	//writebin(opd, "ropd");
 	dmat* GR=0;
-	dspmm(&GR, P(recon->GP,iwfs), opd, "nn", 1);
+	const int iwfsr=parms->recon.glao?ipowfs:iwfs;//GP and saneai are indexed by reconstruction WFS
+	dspmm(&GR, P(recon->GP,iwfsr), opd, "nn", 1);
 	dfree(opd);
-	dmat* RR=dpinv(GR, P(recon->saneai,iwfs,iwfs));
+	dmat* RR=dpinv(GR, P(recon->saneai,iwfsr,iwfsr));
 	//writebin(GR, "GR");
 	//writebin(RR, "RR");
-	int nsa=powfs[ipowfs].saloc->nloc;
+	long nsa=powfs[ipowfs].saloc->nloc;
 	dmat* gradmf=dnew(nsa, 2);
 	dmat* gradcg=dnew(nsa, 2);
 	int ncol=1000;
@@ -417,7 +426,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 	real scale=1;
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	real* srot=(parms->powfs[ipowfs].radpix)?
 		P(PR(powfs[ipowfs].srot,wfsind,0)):NULL;
 	const real cogthres=parms->powfs[ipowfs].cogthres;
@@ -433,7 +442,7 @@ void lgs_wfs_sph_psd(const parms_t* parms, powfs_t* powfs, recon_t* recon, const
 			parms->powfs[ipowfs].i0scale, parms->powfs[ipowfs].mtchstc);
 
 		//writebin(i0_new, "i0_%d", icol);
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			real geach[3]={0,0,1};
 			dmulvec(geach, P(mtche,isa), P(P(i0_new,isa)), 1);
 			if(parms->powfs[ipowfs].sigmatch){
@@ -484,12 +493,13 @@ typedef struct{
 	real rne;
 	int noisy;
 	int iwfs;
-	int isa;
+	long isa;
 }mapdata_t;
 /**
    The function to evaluate the result at x.
 */
-static real mapfun(real* x, mapdata_t* info){
+static real mapfun(const real* x, void* pinfo){
+	mapdata_t* info=(mapdata_t*)pinfo;
 	const dmat* ints=info->ints;
 	ccell* fotf=info->fotf;
 	ccell* otf=info->otf;
@@ -497,9 +507,9 @@ static real mapfun(real* x, mapdata_t* info){
 	const powfs_t* powfs=info->powfs;
 	int iwfs=info->iwfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
-	int isa=info->isa;
-	int nwvl=NY(fotf);
+	int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
+	long isa=info->isa;
+	int nwvl=(int)NY(fotf);
 	if(!otf){
 		info->otf=ccellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -515,7 +525,7 @@ static real mapfun(real* x, mapdata_t* info){
 			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		dspcell* psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 		int idtf=NY(powfs[ipowfs].dtf[iwvl].si)>1?wfsind:0;
-		int idtfsa=NX(powfs[ipowfs].dtf[iwvl].si)>1?isa:0;
+		long idtfsa=NX(powfs[ipowfs].dtf[iwvl].si)>1?isa:0;
 		dsp* sis=P(psi, idtfsa, idtf);
 		real wvl=P(parms->powfs[ipowfs].wvl,iwvl);
 		real dtheta1=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
@@ -543,17 +553,17 @@ static real mapfun(real* x, mapdata_t* info){
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun
 */
 void maxapriori(real* g, const dmat* ints, const parms_t* parms,
-	const powfs_t* powfs, int iwfs, int isa, int noisy,
+	const powfs_t* powfs, int iwfs, long isa, int noisy,
 	real bkgrnd, real rne){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	real pixthetay=parms->powfs[ipowfs].pixtheta;
 	intstat_t* intstat=powfs[ipowfs].intstat;
 	ccell* fotf=PR(intstat->fotf,wfsind,0);
 	mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
 	//info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
-	int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);
+	int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, mapfun, &data);
 	ccellfree(data.otf);
 	/* convert to native format along x/y or r/a to check for overflow*/
 	if(parms->powfs[ipowfs].radpix){
@@ -567,7 +577,7 @@ void maxapriori(real* g, const dmat* ints, const parms_t* parms,
 	real gx=g[0]/pixthetax*2./NX(ints);
 	real gy=g[1]/pixthetay*2./NY(ints);
 	if(fabs(gx)>0.55||fabs(gy)>0.55){
-		warning("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
+		warning("sa %4ld iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
 		gx=gx-floor(gx+0.5);
 		gy=gy-floor(gy+0.5);
 		warning("gx=%6.3f, gy=%6.3f\n", gx, gy);
@@ -592,7 +602,7 @@ real wfsfocusadj(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	const int isim=simu->wfsisim;
 	real focus=0;
 	if(parms->powfs[ipowfs].llt){
@@ -644,8 +654,9 @@ real wfsfocusadj(sim_t* simu, int iwfs){
    Fit 3 points around the peak of a 1-d profile.
 */
 real parabolic_peak_1d(dmat* corr){
-	real valmax=0;
-	int jx=0;
+	if(corr->nx<3) return 0;
+	real valmax=-INFINITY;
+	int jx=1;
 	for(int ix=1; ix<corr->nx-1; ix++){
 		if(P(corr, ix)>valmax){
 			jx=ix;
@@ -664,8 +675,8 @@ real parabolic_peak_1d(dmat* corr){
 void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
 	const long nx=NX(corr);
 	const long ny=NY(corr);
-	if(nbox<=0||nbox>nx) nbox=nx;
-	if(nbox<=0||nbox>ny) nbox=ny;
+	if(nbox<=0||nbox>nx) nbox=(int)nx;
+	if(nbox<=0||nbox>ny) nbox=(int)ny;
 	dmat* corrx=dnew(nbox, 1);
 	dmat* corry=dnew(nbox, 1);
 	const long offx=(nx-nbox)/2;
@@ -689,10 +700,10 @@ void parabolic_peak_sum(real* grad, dmat* corr, int nbox){
 */
 void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t* powfs, const int iwfs, const int phytype){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	const real rne=parms->powfs[ipowfs].rne;
 	const real bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind,iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind,iwfs);
 	const dmat *saa=PR(powfs[ipowfs].saa, wfsind);
 	const real saat=parms->powfs[ipowfs].saat;
 	dmat** mtche=NULL;
@@ -727,7 +738,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	   2: normalize measurement globally for all subapertures
 	 */
 	if(parms->powfs[ipowfs].sigmatch==2){
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			i1sum+=dsum(ints[isa]);
 		}
 	}
@@ -743,7 +754,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 	}
 	const real cogthres=cogmask?0:parms->powfs[ipowfs].cogthres;
 	const real cogoff=parms->powfs[ipowfs].cogoff;
-	for(int isa=0; isa<nsa; isa++){
+	for(long isa=0; isa<nsa; isa++){
 		real geach[3]={0,0,1};
 		if(P(saa,isa)<saat) continue; //do not compute gradients for vignetted subapertures
 		switch(phytype){
@@ -793,10 +804,10 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		}
 			  break;
 		case PTYPE_CORR:{//Correlation. Peak first.
-			dcorr(&corr, ints[isa], P(powfs[ipowfs].intstat->i0,isa));
+			dcorr(&corr, ints[isa], PR(powfs[ipowfs].intstat->i0, isa, wfsind));
 			dpara3(geach, corr);
 			if((fabs(geach[0])+fabs(geach[1]))>powfs[ipowfs].pixpsax){
-				warning_once("wfs %d, subaperture %d has incorrect gradient measurement\n", iwfs, isa);
+				warning_once("wfs %d, subaperture %ld has incorrect gradient measurement\n", iwfs, isa);
 				geach[0]=0;
 				geach[1]=0;
 			}
@@ -805,7 +816,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 		}
 			  break;
 		case PTYPE_CORRS:{//Correlation. Sum first (to be removed. Not working well)
-			dcorr(&corr, ints[isa], P(powfs[ipowfs].intstat->i0,isa));
+			dcorr(&corr, ints[isa], PR(powfs[ipowfs].intstat->i0, isa, wfsind));
 			parabolic_peak_sum(geach, corr, 5);
 			geach[0]*=pixthetax;
 			geach[1]*=pixthetay;
@@ -832,7 +843,7 @@ void shwfs_grad(dmat** pgrad, dmat* ints[], const parms_t* parms, const powfs_t*
 */
 dcell* readwfs(const char* file, const parms_t* parms, int ipowfs){
 	dcell* res=0;
-	int iwfs0=P(parms->powfs[ipowfs].wfs,0);
+	int iwfs0=(int)P(parms->powfs[ipowfs].wfs,0);
 	if(!file){
 		return res;
 	} else if(zfexist("%s_powfs%d.bin", file, ipowfs)){
@@ -841,7 +852,7 @@ dcell* readwfs(const char* file, const parms_t* parms, int ipowfs){
 	} else if(zfexist("%s_wfs%d.bin", file, iwfs0)){
 		res=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<NX(res); jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 			//info2("using %s_wfs%d.bin\n", file, iwfs);
 			P(res,jwfs)=dread("%s_wfs%d.bin", file, iwfs);
 		}
@@ -863,7 +874,11 @@ void wait_dmreal(sim_t* simu, int isim){
 		while(simu->dmreal_isim<isim){
 			struct timespec ts;
 			clock_gettime(CLOCK_REALTIME, &ts);
-			ts.tv_nsec+=1e6;
+			ts.tv_nsec+=1000000;
+			if(ts.tv_nsec>=1000000000){
+				ts.tv_sec++;
+				ts.tv_nsec-=1000000000;
+			}
 			//dbg("wait_dmreal waiting: dmreal_isim is %d need %d...\n", simu->dmreal_isim, isim);
 			pthread_cond_timedwait(&simu->dmreal_condr, &simu->dmreal_mutex, &ts);
 		}
@@ -895,15 +910,15 @@ void post_dmreal(sim_t *simu){
  */
 real average_powfs(dmat *vec, lmat *wfs, int replace){
 	real avg=0;
-	int nwfs=NX(wfs);
+	int nwfs=(int)NX(wfs);
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
-		int iwfs=P(wfs,jwfs);
+		int iwfs=(int)P(wfs,jwfs);
 		avg+=P(vec, iwfs);
 	}
 	avg/=nwfs;
 	if(replace){
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
-			int iwfs=P(wfs,jwfs);
+			int iwfs=(int)P(wfs,jwfs);
 			P(vec, iwfs)=avg;
 		}
 	}

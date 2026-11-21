@@ -90,7 +90,7 @@ static inline int fwriteint(FILE* fbuf, int A){
 //write str length and str itself (with tailing NULL)
 static inline int fwritestr(FILE* fbuf, const char* str){
 	if(!str) str="";
-	uint32_t nlen=strlen(str)+1;
+	uint32_t nlen=(uint32_t)(strlen(str)+1);
 	if(fwriteint(fbuf, nlen) || fwrite(str, 1, nlen, fbuf)<nlen) return -1;
 	return 0;
 }
@@ -118,7 +118,8 @@ int plot_empty(sockinfo_t *ps, const char *fig, const char *fn);
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
-static void* listen_drawdaemon(sockinfo_t* sock_data){
+static void* listen_drawdaemon(void *psock_data){
+	sockinfo_t *sock_data=(sockinfo_t *)psock_data;
 	int fd=sock_data->fd;
 	char** figfn=sock_data->figfn;
 	//info("draw is listening to drawdaemon at %d\n", sock_draw);
@@ -180,7 +181,8 @@ static void* listen_drawdaemon(sockinfo_t* sock_data){
 				free(p);
 			}
 			dbg("Unknown cmd: %d with size %d from socket %d. Close connection.\n", cmd, nlen, fd);
-			close(fd);
+			//do not close(fd) here: sockinfo_close() closes p->fd later and the number may have been reused.
+			shutdown(fd, SHUT_RDWR);
 			break;
 		}
 		cmd=0;
@@ -259,7 +261,7 @@ end2:
 	if(draw_single!=-1){
 		p->draw_single=1;
 	}
-	pthread_create(&p->thread, NULL, (thread_fun)listen_drawdaemon, p);
+	pthread_create(&p->thread, NULL, listen_drawdaemon, p);
 	return 0;
 }
 static void sockinfo_close(sockinfo_t *p, int reuse){
@@ -325,6 +327,7 @@ void draw_helper(void){
 		perror("socketpair");
 		warning("socketpair failed, disable draw_helper.\n");
 		draw_direct=1;
+		return;
 	} else{
 		info("draw_helper started\n");
 	}
@@ -333,6 +336,7 @@ void draw_helper(void){
 		close(sv[0]);
 		close(sv[1]);
 		warning("Fork failed. Return.\n");
+		return;
 	}
 	if(pid){//Parent 
 		sock_helper=sv[0];
@@ -621,10 +625,10 @@ int draw(const char* fig,    /**<Category of the figure*/
 				//FWRITEARR(opts.image->p, nlen2);
 #define MAXNX 1024 //downsample if bigger.
 				const dmat *p=opts.image;
-				int xstep=(NX(p)+MAXNX-1)/MAXNX;
-				int ystep=(NY(p)+MAXNX-1)/MAXNX;
-				int nx2=(NX(p))/xstep;
-				int ny2=(NY(p))/ystep;
+				long xstep=(NX(p)+MAXNX-1)/MAXNX;
+				long ystep=(NY(p)+MAXNX-1)/MAXNX;
+				int nx2=(int)(NX(p)/xstep);
+				int ny2=(int)(NY(p)/ystep);
 				dtype *tmp=mymalloc(nx2*ny2, dtype);
 				for(int iy=0; iy<ny2; iy++){
 					dtype *pout=tmp+iy*nx2;
@@ -690,13 +694,13 @@ switch(ctype){\
 					FWRITECMDINT(DRAW_ZLOG, opts.zlog);
 				}
 			}else{//points or lines
-				const int ngroup=(opts.dc && (opts.ngroup>PN(opts.dc)||opts.ngroup==0))?PN(opts.dc):(opts.ngroup?opts.ngroup:1);
+				const int ngroup=(opts.dc && (opts.ngroup>PN(opts.dc)||opts.ngroup==0))?(int)PN(opts.dc):(opts.ngroup?opts.ngroup:1);
 				if(opts.loc){/*there are points to plot. */
 					for(int ig=0; ig<ngroup; ig++){
-						int nlen=opts.loc[ig]->nloc;
+						long nlen=opts.loc[ig]->nloc;
 						if(opts.maxlen && opts.maxlen<nlen) nlen=opts.maxlen;
 						FWRITEINT(DRAW_POINTS);
-						FWRITEINT(nlen);
+						FWRITEINT((int)nlen);
 						FWRITEINT(2);
 						FWRITEINT(1);
 						FWRITEARR(opts.loc[ig]->locx, sizeof(real)*nlen);
@@ -708,16 +712,16 @@ switch(ctype){\
 				} else if(opts.dc || opts.dd){
 					for(int ig=0; ig<ngroup; ig++){
 						dmat* p=opts.dc?P(opts.dc, ig):opts.dd[ig];
-						int nx=NX(p);
-						int ny=NY(p);
+						long nx=NX(p);
+						long ny=NY(p);
 						if(nx==1 && ny>1){
 							nx=ny;
 							ny=1;
 						}
 						if(opts.maxlen&&opts.maxlen<nx) nx=opts.maxlen;
 						FWRITEINT(DRAW_POINTS);
-						FWRITEINT(nx);//number of points
-						FWRITEINT(ny);//number of numbers per point. 1 or 2.
+						FWRITEINT((int)nx);//number of points
+						FWRITEINT((int)ny);//number of numbers per point. 1 or 2.
 						FWRITEINT(0);//square plot or not
 						if(nx && ny){
 							FWRITEARR(P(p), nx*ny*sizeof(real));
@@ -732,7 +736,7 @@ switch(ctype){\
 					FWRITEARR(&opts.dx, sizeof(real));
 				}else if(opts.dxs){
 					FWRITEINT(DRAW_DX);
-					FWRITEINT(PN(opts.dxs));
+					FWRITEINT((int)PN(opts.dxs));
 					FWRITEARR(P(opts.dxs), sizeof(real)*PN(opts.dxs))
 				}
 				if(opts.xylog){
@@ -756,7 +760,7 @@ switch(ctype){\
 					error("Cir should have 4 rows\n");
 				}
 				FWRITEINT(DRAW_CIRCLE);
-				FWRITEINT(NY(opts.cir));
+				FWRITEINT((int)NY(opts.cir));
 				FWRITEARR(P(opts.cir), sizeof(real)*PN(opts.cir));
 			}
 
@@ -829,11 +833,11 @@ int drawloc(const char* fig, loc_t* loc, real zlim,
 	if(!loc || !draw_current(fig, fn)) return 0;
 	loc_create_map(loc);
 	int npad=loc->npad;
-	int nx=loc->map->nx-npad*2;
-	int ny=loc->map->ny-npad*2;
+	long nx=loc->map->nx-npad*2;
+	long ny=loc->map->ny-npad*2;
     dmat *opd0=dnew(nx,ny);
-	for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
 			P(opd0, ix, iy)=(P(loc->map, (ix+npad), (iy+npad))>0);
 		}
 	}
@@ -877,8 +881,8 @@ int drawopd(const char* fig, loc_t* loc, const dmat* opd, real zlim,
 	Zero those where saa<0.01
 	Remove tip/tilt if trs is set
  */
-static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
-	int ng=PN(gradin)/nsa;
+static dmat* grad_prep(const dmat *gradin, const dmat *saa, long nsa, int trs){
+	long ng=PN(gradin)/nsa;
 	dmat *grad=0;
 	if((trs && ng==2) || saa){
 		grad=ddup(gradin);
@@ -887,7 +891,7 @@ static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 	}
 	reshape(grad, nsa, ng);
 	if(saa){
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			if(P(saa, isa)<0.01){
 				P(grad, isa, 0)=NAN;
 				P(grad, isa, 1)=NAN;
@@ -897,7 +901,7 @@ static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 	if(trs&&ng==2){//remove tip/tilt
 		real gxm=0;
 		real gym=0;
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			if(!saa || P(saa, isa)>0.1){
 				gxm+=P(grad, isa, 0);
 				gym+=P(grad, isa, 1);
@@ -905,7 +909,7 @@ static dmat* grad_prep(const dmat *gradin, const dmat *saa, int nsa, int trs){
 		}
 		gxm/=-nsa;
 		gym/=-nsa;
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			if(!saa||P(saa, isa)>0.5){
 				P(grad, isa, 0)+=gxm;
 				P(grad, isa, 1)+=gym;
@@ -975,14 +979,14 @@ int drawopdamp(const char* fig, loc_t* loc, const dmat* opd, const dmat* amp, re
 	loc_create_map(loc);
 
 	int npad=loc->npad;
-	int nx=loc->map->nx-npad*2;
-	int ny=loc->map->ny-npad*2;
+	long nx=loc->map->nx-npad*2;
+	long ny=loc->map->ny-npad*2;
 	real ampthres;
 	dvecmaxmin(P(amp), loc->nloc, &ampthres, 0);
 	ampthres*=0.5;
     dmat* opd0=dnew(nx,ny);
-	for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
+	for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
 			long ii=P(loc->map, (ix+npad), (iy+npad))-1;
             P(opd0, ix, iy)=(ii>-1&&P(amp, ii)>ampthres)?P(opd, ii):NAN;
 		}

@@ -36,7 +36,8 @@ void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 	}
 	recon->GRall=dcellnew(parms->nwfs, nlayer);
 
-	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs].order/2);
+	//itpowfs is -1 when only used for LGS sodium fitting projection
+	const int rmax=parms->recon.twfs_rmax?parms->recon.twfs_rmax:(parms->powfs[parms->itpowfs!=-1?parms->itpowfs:parms->ilgspowfs].order/2);
 	const int rmin=parms->recon.twfs_rmin?parms->recon.twfs_rmin:3;
 	const int zradonly=parms->recon.twfs_radonly;
 	recon->Rmod=dcellnew(parms->ndm, 1);
@@ -57,8 +58,9 @@ void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].skip==2||(!parms->recon.twfs_offsetdm && !parms->powfs[ipowfs].lo)){
-				if(P(recon->GA, iwfs, idm)){
-					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfs, idm), opd, "nn", 1);
+				const int iwfsr=parms->recon.glao?ipowfs:iwfs;//GA is indexed by reconstruction WFS
+				if(P(recon->GA, iwfsr, idm)){
+					dcellmm(&P(recon->GRall, iwfs, idm), P(recon->GA, iwfsr, idm), opd, "nn", 1);
 				}else{
 					error("Please implement without GA\n");
 				}
@@ -99,7 +101,7 @@ void twfs_setup_GR(recon_t* recon, const parms_t* parms){
 				if(!recon->GRlgs){
 					recon->GRlgs=dcellnew(parms->powfs[ipowfs].nwfs, nlayer2);
 				}
-				int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+				int jwfs=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 				for(int ilayer=0; ilayer<nlayer2; ilayer++){
 					P(recon->GRlgs, jwfs, ilayer)=dref(P(recon->GRall, iwfs, ilayer));
 				}
@@ -128,13 +130,14 @@ void twfs_setup_RR(recon_t* recon, const parms_t* parms){
 
 	dspcell* neai=NULL;
 	//int itwfs=-1;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){//GRtwfs is indexed by physical WFS
+		const int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip==2){//twfs
+			const int iwfsr=parms->recon.glao?ipowfs:iwfs;//saneai is indexed by reconstruction WFS
 			if(!neai){
 				neai=dspcellnew(parms->nwfs, parms->nwfs);
 			}
-			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfs,iwfs));
+			P(neai,iwfs,iwfs)=dspref(P(recon->saneai,iwfsr,iwfsr));
 		} 
 	}
 	//need to set a threshold to avoid other modes reconstruct to spherical modes.
@@ -160,7 +163,7 @@ void twfs_recon(sim_t* simu){
 	const int itpowfs=parms->itpowfs;
 	if(simu->wfsflags[itpowfs].gradout){
 		gradoff_acc(simu, parms->ilgspowfs);//todo: improve ipowfs index.
-		const int nlayer=NY(recon->GRall);
+		const int nlayer=(int)NY(recon->GRall);
 		dcell* Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, recon->RRtwfs, simu->gradcl, "nn", 1);

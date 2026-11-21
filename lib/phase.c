@@ -17,34 +17,61 @@
 */
 #include "../math/mathdef.h"
 #include "phase.h"
-/// @brief 
-/// @param pphi1 
-/// @param mphi1 
-/// @param phi1b 
-/// @param amp1 
-/// @param amp2 
-/// @param mode 
-/// @param rmod 
-/// @param fembed 
-/// @param nrep 
-void gerchberg_saxton(
-	dmat **pphi1, /**<[Out]The final pupil phase estimate in radian. same dimension as amp1.*/
-	dmat **mphi1, /**<[Out]The phase update in modes only if mode and rmode are set.*/
-  	const dmat *amp1, /**<[In]Pupil amplitude map. size is n*n. embeded. */
-  	const dmat *amp2, /**<[In]Field amplitude map. size is m*m. usually square root of the PSF. */
-	const dmat *phi1b,/**<[In] The intial final pupil phase estimate in radian.*/
-  	const dmat *mode, /**[In]modal matrix. If not null, project pupil phase update onto the mode span*/
-  	const dmat *rmod, /**[In]modeal reconstructor. If not null, project pupil phase update onto the mode span*/
-  	const real fembed,/**<[in]Embeded factor for amp1*/
-  	const int nrep    /**<[In]Number of repeatitions*/
-  ){
+/**
+   Embed amp*exp(i*phi) into the center of wvf. Uses the same centering as
+   dembed() so that it is consistent for odd sizes.
+
+   @param[out] wvf The complex field. Zeroed and then filled.
+   @param[in,out] tmp Temporary array of the same size as amp. Allocated if NULL.
+   @param[in] phi The phase (radian). Can be NULL.
+   @param[in] amp The amplitude.
+*/
+static void gs_embed(cmat *wvf, cmat **tmp, const dmat *phi, const dmat *amp){
+	if(phi){
+		if(!*tmp) *tmp=cnew(NX(amp), NY(amp));
+		cembed_wvf(*tmp, P(phi), P(amp), NX(amp), NY(amp), TWOPI, 0);
+		cembed(wvf, *tmp, 0);
+	}else{
+		cembedd(wvf, amp, 0);
+	}
+}
+/**
+   Replace the amplitude of a complex number by amp while keeping its phase.
+   The phase is set to 0 if the input is 0.
+*/
+static inline comp gs_setamp(comp val, real amp){
+	real a=cabs(val);
+	return a>0?(val*(amp/a)):COMPLEX(amp, 0);
+}
+/**
+   Estimate the pupil phase from the pupil and focal plane amplitude using the
+   Gerchberg-Saxton algorithm.
+
+   @param[out] pphi1 The final pupil phase estimate in radian. Same dimension as amp1. Can be NULL.
+   @param[out] mphi1 The phase update in modes. Only valid if mode and rmod are set. Can be NULL.
+   @param[in] amp1 Pupil amplitude map. Size is n*n.
+   @param[in] amp2 Field amplitude map. Size is m*m, usually square root of the PSF, with peak in center.
+   @param[in] phi1b The initial pupil phase estimate in radian. Can be NULL.
+   @param[in] mode Modal matrix. If not null, project pupil phase update onto the mode span.
+   @param[in] rmod Modal reconstructor. Used with mode.
+   @param[in] fembed Embedding factor for amp1.
+   @param[in] nrep Number of repetitions.
+*/
+void gerchberg_saxton(dmat **pphi1, dmat **mphi1, const dmat *amp1, const dmat *amp2, const dmat *phi1b,
+	const dmat *mode, const dmat *rmod, const real fembed, const int nrep){
 	if(!amp1 || !amp2){
 		error("amp1, and am2 must be all set\n");
+		return;
+	}
+	if(mode&&!rmod){
+		error("rmod must be set when mode is set\n");
+		return;
 	}
 
 	long nx=(long)round(NX(amp1)*fembed);
 	long ny=(long)round(NY(amp1)*fembed);
 	cmat *wvf1=cnew(nx, ny);
+	cmat *wvf0=NULL;//temporary of the same size as amp1
 	dmat *amp1e=NULL;//same size as wvf1
 	dmat *amp2e=NULL;//same size as wvf1
 	dmat *phi1e=NULL;//phase estimate.
@@ -64,11 +91,7 @@ void gerchberg_saxton(
 	}else{
 		amp2e=ddup(amp2);//duplicate so that we can do fftshift
 	}
-	if(phi1b){
-		cembed_wvf(wvf1, P(phi1b), P(amp1), NX(amp1), NY(amp1), TWOPI, 0);
-	}else{
-		cembedd(wvf1, amp1, 0);
-	}
+	gs_embed(wvf1, &wvf0, phi1b, amp1);
 	if(pphi1){
 		dinit(pphi1, NX(amp1), NY(amp1));
 		phi1u=*pphi1;
@@ -91,7 +114,7 @@ void gerchberg_saxton(
 	for(int irep=0; irep<nrep; irep++){
 		cfft2(wvf1, -1);//to image plane
 		for(long i=0; i<PN(wvf1); i++){
-			P(wvf1,i)*=P(amp2e,i)/cabs(P(wvf1,i));//fix image plane amplitude
+			P(wvf1,i)=gs_setamp(P(wvf1,i), P(amp2e,i));//fix image plane amplitude
 		}
 		cfft2(wvf1, 1);//to pupil plane
 		if(mode || (irep+1)==nrep){
@@ -104,10 +127,10 @@ void gerchberg_saxton(
 			dmm(&mv, 0, rmod, phi1v, "nn", 1);
 			dmm(&phi1v, 0, mode, mv, "nn", 1);
 			if(phi1b) dadd(&phi1u, 1, phi1b, 1);//add back initial phase
-			cembed_wvf(wvf1, P(phi1u), P(amp1), NX(amp1), NY(amp1), TWOPI, 0);
+			gs_embed(wvf1, &wvf0, phi1u, amp1);
 		}else{
 			for(long i=0; i<PN(wvf1); i++){
-				P(wvf1, i)*=P(amp1e, i)/cabs(P(wvf1, i));//fix pupil plane amplitude
+				P(wvf1, i)=gs_setamp(P(wvf1, i), P(amp1e, i));//fix pupil plane amplitude
 			}
 		}
 	}
@@ -116,6 +139,7 @@ void gerchberg_saxton(
 	dfree(phi1e);
 	dfree(phi1v);
 	cfree(wvf1);
+	cfree(wvf0);
 	if(!mphi1) dfree(mv);
 	if(!pphi1) dfree(phi1u);
 }

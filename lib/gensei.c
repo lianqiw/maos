@@ -34,7 +34,7 @@ static int count_unique(const dcell* opdbias){
 		real diff=ddiff(P(opdbias, 0), P(opdbias, iwfs));
 		if(diff>0.005){
 			dbg("opdbias[%d] is different from opdbias[0] by %g.\n", iwfs, diff);
-			return PN(opdbias);
+			return (int)PN(opdbias);
 		}
 	}
 	return 1;
@@ -46,10 +46,10 @@ static cccell* genseotf_do(const pts_t* pts,
 	/*create a grid representing a sub-aperture. */
 	loc_t* loc=mksqloc_auto(pts->nxsa, pts->nxsa, pts->dx, pts->dy);
 	/*The embeding factor for embedding the aperture */
-	const int npsfx=pts->nxsa*embfac;
-	const int npsfy=pts->nysa*embfac;
-	const int nwvl=PN(wvl);
-	const int nsa=pts->nsa;
+	const long npsfx=pts->nxsa*embfac;
+	const long npsfy=pts->nysa*embfac;
+	const int nwvl=(int)PN(wvl);
+	const long nsa=pts->nsa;
 
 	int notf=count_unique(opdbias);
 	int notf2=iscell(amp)?count_unique((dcell*)amp):1;
@@ -138,24 +138,25 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 	const cccell* lotf, /**<[in] OTFs of uplink, optional*/
 	const_anyarray saa_, /**<[in] subaperture area, optional*/
 	const dmat* wvl, /**<[in] wavelength*/
-	int npsfx,/**<[in] PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated*/
-	int npsfy/**<[in] PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated*/
+	long npsfx,/**<[in] PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated*/
+	long npsfy/**<[in] PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated*/
 ){
-	const int nwvl=PN(wvl);
-	const int nsa=NX(P(otfs, 0, 0));
-	const int nlotf=lotf?NX(lotf):0;
-	int nsepsf=NX(otfs);
+	const int nwvl=(int)PN(wvl);
+	const long nsa=NX(P(otfs, 0, 0));
+	const int nlotf=lotf?(int)NX(lotf):0;
+	int nsepsf=(int)NX(otfs);
 	if(nlotf>1){
 		if(nsepsf==1){
 			nsepsf=nlotf;
 		} else if(nsepsf!=nlotf){
 			error("mismatch: notf is %d, lotf is %d\n", nsepsf, nlotf);
+			return;
 		}
 	}
 	cellinit((cell**)psepsfs, nsepsf, nwvl);
 	dccell* sepsfs=*psepsfs;
-	int notfx=NX(P(P(otfs, 0), 0));
-	int notfy=NY(P(P(otfs, 0), 0));
+	long notfx=NX(P(P(otfs, 0), 0));
+	long notfy=NY(P(P(otfs, 0), 0));
 	if(!npsfx) npsfx=notfx;
 	if(!npsfy) npsfy=notfy;
 	dmat *sepsftmp=0;
@@ -179,7 +180,7 @@ void gensepsf(dccell** psepsfs, /**<[out] PSF. The sampling depends on sampling 
 					lotfi=cref(lotfi2);
 				}
 			}
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				real norm=(saai?P(saai, isa):1)/((real)(notfx*notfy));
 				if(P(otf, isa, 0)){
 					//upsample_otf(sepsf, P(otf, isa, 0));//old way, wrong, perturbs otf sampling
@@ -217,17 +218,20 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 ){
 	if(!sepsfs||!dtf){
 		error("sepsfs and dtf must be set\n");
+		return;
 	}
 	if(shift2center&&goff){
-		error("cannot specify both goff and shift2center");
+		error("cannot specify both goff and shift2center\n");
+		return;
 	}
-	const int notfx=NX(P(P(sepsfs, 0, 0), 0, 0));
-	const int notfy=NY(P(P(sepsfs, 0, 0), 0, 0));
-	const int nwvl=NY(sepsfs);
-	const int nsa=NX(P(sepsfs, 0, 0));
-	const int nllt=etf?NY(etf[0].etf):0;
+	const long notfx=NX(P(P(sepsfs, 0, 0), 0, 0));
+	const long notfy=NY(P(P(sepsfs, 0, 0), 0, 0));
+	const int nwvl=(int)NY(sepsfs);
+	const long nsa=NX(P(sepsfs, 0, 0));
+	const int nllt=etf?(int)NY(etf[0].etf):0;
 	if(etf&&nsa!=NX(etf[0].etf)){
-		error("mismatch: nsa=%d, etf is %ldx%ld\n", nsa, NX(etf[0].etf), NY(etf[0].etf));
+		error("mismatch: nsa=%ld, etf is %ldx%ld\n", nsa, NX(etf[0].etf), NY(etf[0].etf));
+		return;
 	}
 
 	/**
@@ -236,32 +240,35 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 	   2) different signal level or wvlwts
 	   3) powfs[ipowfs].bkgrnd contains rayleigh scatter bkgrnd for each wfs in this powfs.
 	*/
-	int ni0=MAX(NX(sepsfs), nllt);
+	int ni0=(int)MAX(NX(sepsfs), nllt);
 	if(NY(wvlwts)>1){
 		if(ni0==1){
-			ni0=NY(wvlwts);
+			ni0=(int)NY(wvlwts);
 		} else if(ni0!=NY(wvlwts)){
 			error("Mismatch: ni0=%d, wvlwts is %ldx%ld\n", ni0, NX(wvlwts), NY(wvlwts));
+			return;
 		}
 	}
 	if(PN(siglev)>1){
 		if(ni0==1){
-			ni0=PN(siglev);
+			ni0=(int)PN(siglev);
 		} else if(ni0!=PN(siglev)){
 			error("Mismatch: ni0=%d, siglev is %ldx1\n", ni0, PN(siglev));
+			return;
 		}
 	}
 	if(goff&&PN(goff)>1){
 		if(ni0==1){
-			ni0=PN(goff);
+			ni0=(int)PN(goff);
 		} else if(ni0!=PN(goff)){
 			error("Mismatch: ni0=%d, goff is %ldx1\n", ni0, NX(goff));
+			return;
 		}
 	}
 	//dbg("number of i0 is %d\n", ni0);
 
-	const int pixpsax=dtf[0].pixpsax;
-	const int pixpsay=dtf[0].pixpsay;
+	const long pixpsax=dtf[0].pixpsax;
+	const long pixpsay=dtf[0].pixpsay;
 	const real dtheta=dtf[0].dtheta;
 	if(pi0){
 		if(!*pi0 || NX(*pi0)!=nsa||NY(*pi0)!=ni0){
@@ -314,7 +321,6 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 		const real norm=1./(real)(notfx*notfy);
 		const ccell* petf=etf?etf[iwvl].etf:0;
 		for(int ii0=0; ii0<ni0; ii0++){
-			real* area=P(PR(saa, ii0, 0));
 			real wvlsig=PR(wvlwts, iwvl, ii0)*PR(siglev, ii0, 0);
 
 			dcell* psepsf=PR(sepsfs, ii0, iwvl);
@@ -322,7 +328,7 @@ void gensei(dcell** pi0, dcell** pgx, dcell** pgy, cccell** pfotf,
 			ccell* se_cache=ccellnew_same(2, MAXTHREAD, notfx, notfy);
 
 OMP_FOR(NTHREAD)
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				int ith=0;
 				/*loaded psepsf. sum to 1 for full sa. peak in center */
 				dmat* sepsfi=P(psepsf, isa, 0);
@@ -406,14 +412,19 @@ OMP_FOR(NTHREAD)
 						dspmulcreal(P(P(gy, isa, ii0)), si, P(seotfj), wvlsig);
 					}
 				}
-				if(i0&&i0scale){
-					real scale=area[isa]/dsum(P(i0, isa, ii0));
-					if(i0) dscale(P(i0, isa, ii0), scale);
-					if(gx) dscale(P(gx, isa, ii0), scale);
-					if(gy) dscale(P(gy, isa, ii0), scale);
-				}
 			}/*for isa */
 			cellfree(se_cache);
 		}/*for ii0*/
 	}/*iwvl */
+	if(i0&&i0scale){//scale after all wavelengths are accumulated
+		for(int ii0=0; ii0<ni0; ii0++){
+			const real* area=P(PR(saa, ii0, 0));
+			for(int isa=0; isa<nsa; isa++){
+				real scale=area[isa]/dsum(P(i0, isa, ii0));
+				dscale(P(i0, isa, ii0), scale);
+				if(gx) dscale(P(gx, isa, ii0), scale);
+				if(gy) dscale(P(gy, isa, ii0), scale);
+			}
+		}
+	}
 }

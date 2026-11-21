@@ -89,6 +89,7 @@ mxArray *c2mx(const cmat *A){
     return out;
 }
 lmat *d2l(const dmat *A){
+    if(!A) return NULL;
     lmat *out=lnew(A->nx, A->ny);
     for(long i=0; i<A->nx*A->ny; i++){
 	out->p[i]=(long)(A->p[i]);
@@ -96,6 +97,7 @@ lmat *d2l(const dmat *A){
     return out;
 }
 dmat *l2d(const lmat *A){
+    if(!A) return NULL;
     dmat *out=dnew(A->nx, A->ny);
     for(long i=0; i<A->nx*A->ny; i++){
 	out->p[i]=(double)(A->p[i]);
@@ -171,6 +173,7 @@ mxArray *str2mx(const char *str){
     return mxCreateString(str);
 }
 dsp *mx2dsp(const mxArray *A){
+    if(!A) return NULL;
     if(!mxIsDouble(A) || mxIsComplex(A)) error("Only double is supported\n");
     dsp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
@@ -187,6 +190,7 @@ dsp *mx2dsp(const mxArray *A){
 }
 #if MX_HAS_INTERLEAVED_COMPLEX
 csp *mx2csp(const mxArray *A){
+    if(!A) return NULL;
     if(!mxIsDouble(A) || !mxIsComplex(A)) error("Only double dcomplex is supported\n");
     csp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
@@ -228,6 +232,7 @@ loc_t *mx2loc(const mxArray *A){
 }
 
 dmat *mx2d(const mxArray *A){
+    if(!A) return NULL;
     if(!mxIsDouble(A)) error("Only double is supported\n");
     if(mxIsComplex(A)){
 	mexErrMsgTxt("A is complex");
@@ -247,6 +252,7 @@ dmat *mx2d(const mxArray *A){
 }
 cmat *mx2c(const mxArray *A){
 #if MX_HAS_INTERLEAVED_COMPLEX
+    if(!A) return NULL;
     if(!mxIsComplex(A)){
 	mexErrMsgTxt("A is not complex");
     }
@@ -332,20 +338,32 @@ void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
 	return out;
     }
 }
+/*Wrappers with the signature required by mx2any().*/
+static inline void *mx2d_any(const mxArray *A){ return mx2d(A); }
+static inline void *mx2c_any(const mxArray *A){ return mx2c(A); }
+static inline void *mx2l_any(const mxArray *A){ return mx2l(A); }
+static inline void *mx2loc_any(const mxArray *A){ return mx2loc(A); }
+static inline void *mx2dsp_any(const mxArray *A){ return mx2dsp(A); }
+/**
+   Convert a Matlab cell array of real dense matrices to dcell using mx2d().
+
+   @param[in] A Matlab cell array.
+   @return Newly allocated dcell whose elements reference Matlab's memory.
+*/
 dcell *mx2dcell(const mxArray *A){
-    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2d);
+    return (dcell*)mx2any(A, mx2d_any);
 }
 dcell *mx2ccell(const mxArray *A){
-    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2c);
+    return (dcell*)mx2any(A, mx2c_any);
 }
 lcell *mx2lcell(const mxArray *A){
-    return (lcell*)mx2any(A, (void*(*)(const mxArray*))mx2l);
+    return (lcell*)mx2any(A, mx2l_any);
 }
 loccell *mx2loccell(const mxArray *A){
-    return (loccell*)mx2any(A, (void*(*)(const mxArray*))mx2loc);
+    return (loccell*)mx2any(A, mx2loc_any);
 }
 dcell *mx2dspcell(const mxArray *A){
-    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2dsp);
+    return (dcell*)mx2any(A, mx2dsp_any);
 }
 cell *mx2cell(const mxArray*A){
     return (cell*) mx2any(A, NULL);
@@ -362,6 +380,7 @@ static inline kalman_t *mx2kalman(const mxArray*A){
     kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
     kalman->Gwfs=mx2dcell(mxGetField(A,0,"Gwfs"));
     kalman->Cnn=mx2dcell(mxGetField(A,0,"Cnn"));
+    kalman->Rn=mx2dcell(mxGetField(A,0,"Rn"));
 	kalman->M=mx2dcell(mxGetField(A,0,"M"));
     kalman->P=mx2dcell(mxGetField(A,0,"P"));
     return kalman;
@@ -395,7 +414,7 @@ static inline mxArray *cn2est2mx(cn2est_t *cn2est){
     int pos=0;
     mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
     mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->htrecon));
-    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wtrecon->p[0]));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wtrecon?cn2est->wtrecon->p[0]:NULL));
     mxSetFieldByNumber(A, 0, pos++, mxCreateDoubleScalar(cn2est->r0m));
     mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->ht));
     mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wt));

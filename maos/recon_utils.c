@@ -49,7 +49,7 @@ void apply_invpsd(dcell** xout, const void* A, const dcell* xin, real alpha, int
 	int ips1, ips2;
 	if(xb<0){/*do all cells */
 		ips1=0;
-		ips2=NX(xin)*NY(xin);
+		ips2=(int)(NX(xin)*NY(xin));
 	} else{/*do the specified cell */
 		ips1=xb;
 		ips2=xb+1;
@@ -92,7 +92,7 @@ void apply_fractal(dcell** xout, const void* A, const dcell* xin, real alpha, in
 	int ips1, ips2;
 	if(xb<0){/*do all cells */
 		ips1=0;
-		ips2=NX(xin)*NY(xin);
+		ips2=(int)(NX(xin)*NY(xin));
 	} else{/*do the specified cell */
 		ips1=xb;
 		ips2=xb+1;
@@ -146,7 +146,7 @@ static dmat* applyWeach(dmat* xin, const dsp* W0, const dmat* W1, const real wt)
    \f$xin<-(W0-W1*W1')*xin;\f$
 */
 void applyW(dcell* xin, const dsp* W0, const dmat* W1, const real* wt){
-	const int nevl=NX(xin);
+	const int nevl=(int)NX(xin);
 	for(int iy=0; iy<NY(xin); iy++){
 		for(int ievl=0; ievl<nevl; ievl++){
 			dmat *xout=applyWeach(P(xin, ievl, iy), W0, W1, wt[ievl]);
@@ -163,14 +163,14 @@ dcell* calcWmcc(const dcell* A, const dcell* B, const dsp* W0,
 	const dmat* W1, const dmat* wt){
 
 	assert(NX(wt)==NX(B)&&NY(wt)==1&&NX(A)==NX(B));
-	const int nevl=NX(B);
+	const int nevl=(int)NX(B);
 	dcell* res=dcellnew(NY(A), NY(B));
 	OMP_FOR(4)
-	for(int iy=0; iy<NY(B); iy++){
+	for(int iy=0; iy<(int)NY(B); iy++){
 		for(int ievl=0; ievl<nevl; ievl++){
 			dmat* xout=applyWeach(P(B, ievl, iy), W0, W1, P(wt, ievl));
 			OMP_FOR(4)
-			for(int ix=0; ix<NY(A); ix++){
+			for(int ix=0; ix<(int)NY(A); ix++){
 				dmm(&P(res, ix, iy), 1, P(A, ievl, ix), xout, "tn", 1);
 			}
 			dfree(xout);
@@ -231,14 +231,14 @@ dsp* nea2sp(dmat* nea, int ll, int ur, int ng){
 /**
    Check the dimension of NEA and fix if possible
 */
-void nea_check(dmat *nea, int nsa, int ng){
+void nea_check(dmat *nea, long nsa, int ng){
 	if(!nea){
 		error("nea is not defined.\n");
 	} else if(NY(nea)==1){
 		reshape(nea, nsa, NX(nea)/nsa);
 	}
 	if(NX(nea)!=nsa||(NY(nea)!=ng&&NY(nea)!=3)){
-		error("nea has wrong format (%ldx%ld), should be (%dx%d).\n", NX(nea), NY(nea), nsa, 3);
+		error("nea has wrong format (%ldx%ld), should be (%ldx%d).\n", NX(nea), NY(nea), nsa, 3);
 	}
 }
 /**
@@ -306,10 +306,14 @@ void nea_mm(dmat **pout, const dmat *in, const int ng){
 	}
 }
 /**
-   Apply matrix inversion in a 2x2 symmetrisa matrix packed in row vector [a[0,0],a[1,1],a[0,1]]
-   Input and output may be the same.
-*/
+   Apply matrix inversion in a 2x2 symmetric matrix packed in row vector [a[0,0],a[1,1],a[0,1]].
+   Input and output may be the same. Entries that are singular are not updated.
 
+   @param[in,out] pout The scaled inverse in the same packing. Allocated if NULL.
+   @param[in] in The symmetric matrix of each subaperture, nsa x 2 or nsa x 3.
+   @param[in] ng Number of gradients per subaperture. If ng>2, treat as diagonal matrix.
+   @param[in] scale Scaling factor applied to the inverse.
+*/
 void nea_inv(dmat **pout, const dmat *in, int ng, real scale){
 	const int isxy=nea_prep(pout, in, ng);
 	dmat *out=*pout;
@@ -388,8 +392,8 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 				}
 				if(dmtmp){
 					for(int idm=0; idm<parms->ndm; idm++){
-						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(dmtmp, idm)), .locout=locs,
-							.phiout=P(xx), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
+						prop(ADDR((propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(dmtmp, idm)), .locout=locs,
+							.phiout=P(xx), .alpha=1, .hs=hs, .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)}));
 					}
 				}
 				dmm(&P(simu->ecov, ievl), 1, xx, xx, "nt", 1);
@@ -414,12 +418,15 @@ void psfr_calc(sim_t* simu, dcell* opdr, dcell* dmpsol, dcell* dmerr, dcell* dme
 
 /**
    Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2
-Estimation. The result will be an average of them.  */
+   Estimation. The result will be an average of them.
 
-
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+   @return The Cn2 estimation struct, or NULL if cn2est_new() returns NULL. Newly allocated; the caller frees it with cn2est_free().
+*/
 cn2est_t* cn2est_prepare(const parms_t* parms, const powfs_t* powfs){
 	dmat* pair=parms->cn2.pair;
-	int npair=NX(pair)*NY(pair);
+	int npair=(int)(NX(pair)*NY(pair));
 	int ipowfs=-1;
 	for(int ind=0; ind<npair; ind++){
 		int iwfs=(int)P(pair, ind);
@@ -527,7 +534,8 @@ void cn2est_isim(dcell* cn2res, recon_t* recon, const parms_t* parms, const dcel
 			cn2est_reset(cn2est);
 		}
 
-		if(cn2res){
+		//icn2 is static and not reset between seeds. Guard against writing past the end of cn2res.
+		if(cn2res && icn2<NX(P(cn2res, 0))){
 			P(P(cn2res, 0), icn2)=cn2est->r0m;
 			memcpy(PCOL(P(cn2res, 1), icn2), P(P(cn2est->wtrecon, 0)),
 				NX(cn2est->htrecon)*sizeof(real));
