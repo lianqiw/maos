@@ -265,7 +265,8 @@ var NAVTREE =
         [ "Code", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md108", null ]
       ] ],
       [ "macOS unit test failures", "db/d87/md_docs_2claude__changes__20261120.html#claude_macos", null ],
-      [ "UndefinedBehaviorSanitizer", "db/d87/md_docs_2claude__changes__20261120.html#claude_ubsan", null ]
+      [ "UndefinedBehaviorSanitizer", "db/d87/md_docs_2claude__changes__20261120.html#claude_ubsan", null ],
+      [ "valgrind", "db/d87/md_docs_2claude__changes__20261120.html#claude_valgrind", null ]
     ] ],
     [ "README", "d3/dcc/md__r_e_a_d_m_e.html", null ],
     [ "Todo List", "dd/da0/todo.html", null ],
@@ -306,13 +307,13 @@ var NAVTREEINDEX =
 "d6/d94/maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95",
 "d9/df5/skyc_20.html",
 "da/dfb/dmath_8h.html#ab48bc9b9c8f923e19dafc70b8fff5de2",
-"db/dd5/thread_8h.html#aefb4ea36bbedea7ae5ada90fee8248fb",
-"dd/dc1/lmath_8h.html#a58564392e6d0b5caab436f3e64947f57",
-"de/d07/cmath_8h.html#aea0aee4d85d9edf5da01d697700567c4",
-"de/de7/smath_8h.html#aa371a77d0b4b6666dc2239c9dbd8a55a",
-"df/def/type_8h.html#a340ff044a49985cc619efe1949111025",
-"df/def/type_8h.html#ace9dc2f64789615eca5eee8fa8e80bb6",
-"globals_m.html"
+"db/dd5/thread_8h.html#ac484ce8461053d81b280ae84d3d2c110",
+"dd/dc1/lmath_8h.html#a57fd9bfee0aa615e6ed2ab9ed0fece94",
+"de/d07/cmath_8h.html#ae9103b8a83d73f56aac1fb8650afa6d9",
+"de/de7/smath_8h.html#aa1ebd8e1d073034133fd5a178b624698",
+"df/def/type_8h.html#a33f7b985bf7933943eed9bb36b4676ed",
+"df/def/type_8h.html#ace7f877fd34c3f699d35a6a81c081a26",
+"globals_l.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

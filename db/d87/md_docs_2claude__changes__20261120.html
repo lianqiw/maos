@@ -113,7 +113,7 @@ $(function(){initNavTree('db/d87/md_docs_2claude__changes__20261120.html','../..
 Verification</h1>
 <ul>
 <li>Builds without warnings: C with CUDA, C++ (<span class="tt">CC=g++</span>) without CUDA, and C++ without OpenMP (which uses the internal thread pool).</li>
-<li><span class="tt">make check</span>: 34 programs, all pass in these builds and in a clang build with UndefinedBehaviorSanitizer, which reports no errors.</li>
+<li><span class="tt">make check</span>: 34 programs, all pass in these builds and in a clang build with UndefinedBehaviorSanitizer, which reports no errors. valgrind reports no errors for the test programs, except cmocka_matops, cmocka_recon and cmocka_servo, which did not finish within 25 minutes under valgrind.</li>
 <li><span class="tt">make doc</span> in a build configured with <span class="tt">--enable-gcov</span>: the unit test page shows all cases passing and the line coverage of sys, math and lib.</li>
 <li><span class="tt">scripts/maos_check.sh 5</span> on GPU and CPU: within run-to-run noise (MCAO cases vary by about 5% between runs).</li>
 <li>Not run: skyc, the scheduler and the GTK tools were compiled only; mex was not compiled (no Matlab on the test machine).</li>
@@ -139,7 +139,6 @@ Not changed</h1>
 <li>skyc/powfs.c: <span class="tt"><a class="el" href="../../da/dfb/dmath_8h.html#a2bc5998e492b6e39092af54480355c00">dinterp1</a></span> is called with a 2-D <span class="tt">xnew</span>, which it rejects.</li>
 <li>maos/petal_utils.c keeps its static thread variables.</li>
 <li>tools/memdbg.c does not compile as C++.</li>
-<li>test/cmocka_fdpcg <span class="tt">test_g</span> stops with SIGTRAP on macOS (Apple Silicon). It could not be reproduced on Linux with gcc, or with clang and UBSan.</li>
 </ul>
 <h1 class="doxsection"><a class="anchor" id="claude_first_review"></a>
 First review of the reported bugs</h1>
@@ -1407,7 +1406,15 @@ UndefinedBehaviorSanitizer</h1>
 <li>math/mat.c X(zero), math/matmath.c X(scale): memset with NULL.</li>
 <li>sys/sha1.c: <span class="tt">uint8_t&lt;&lt;24</span> overflowed int.</li>
 <li>lib/readcfg.c readcfg_int: NaN or out of range values were converted to int after error() returned (error is recoverable in tests and mex).</li>
-<li>math/blas.c X(expm): for a zero matrix, log2(0)=-inf was converted to int. </li>
+<li>math/blas.c X(expm): for a zero matrix, log2(0)=-inf was converted to int.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="claude_valgrind"></a>
+valgrind</h1>
+<p>Found by running the unit tests under valgrind after cmocka_fdpcg stopped with SIGTRAP on macOS (the macOS allocator traps on heap corruption that glibc does not detect).</p><ul>
+<li>sys/mem.h <span class="tt">mymalloc</span>, <span class="tt">myrealloc</span>: <span class="tt">nelem*sizeof(type)</span> was not parenthesized, so a count such as <span class="tt">n+1</span> allocated <span class="tt">n+sizeof(type)</span> bytes. Only the test (<span class="tt">mymalloc(os+1, real)</span>) and one call with <span class="tt">char</span> were affected.</li>
+<li>sys/mem.c <span class="tt">realloc_maos</span>: <span class="tt">realloc(p, 0)</span> is implementation defined (undefined in C23). It now frees and returns NULL on all platforms, as glibc does (e.g. <span class="tt">X(spsetnzmax)</span> with 0).</li>
+<li>lib/readcfg.c: <span class="tt"><a class="el" href="../../da/d6e/readcfg_8h.html#a5d0f9941eb121d7ed9ca2bd36c0e82df">readcfg_lmat</a></span> and <span class="tt"><a class="el" href="../../da/d6e/readcfg_8h.html#a148c541d8f64b38e2125c954181e26de">readstr_dmat</a></span> used nx and ny uninitialized when parsing failed; <span class="tt"><a class="el" href="../../da/d6e/readcfg_8h.html#ac7f7925edc9875dac2770938ecca4d21">open_config</a></span> read before the line when it starts with <span class="tt">=</span> after error() returned.</li>
+<li>sys/sock.c <span class="tt"><a class="el" href="../../df/d04/sock_8h.html#a6c13c4782e5461737bc253878ceed153">listen_port_add</a></span>: a new pollfd slot was read before it was set. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
