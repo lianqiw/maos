@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/servo.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -124,8 +126,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ab73c6cf92b85a0420b775e885844deca" id="r_ab73c6cf92b85a0420b775e885844deca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab73c6cf92b85a0420b775e885844deca">servo_reset</a> (<a class="el" href="#da/d58/structservo__t">servo_t</a> *st)</td></tr>
 <tr class="memitem:a90db8b0851f40c4080286b84f5ac203c" id="r_a90db8b0851f40c4080286b84f5ac203c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90db8b0851f40c4080286b84f5ac203c">servo_free</a> (<a class="el" href="#da/d58/structservo__t">servo_t</a> *st)</td></tr>
 <tr class="memitem:aeb7bd24fd0a88ebb4a5e110ed1461a9c" id="r_aeb7bd24fd0a88ebb4a5e110ed1461a9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d7/d37/structsho__t">sho_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeb7bd24fd0a88ebb4a5e110ed1461a9c">sho_new</a> (real f0, real zeta)</td></tr>
-<tr class="memitem:a81dc7529927d5f54365c4c95b703be8d" id="r_a81dc7529927d5f54365c4c95b703be8d"><td class="memItemLeft" align="right" valign="top"><a id="a81dc7529927d5f54365c4c95b703be8d" name="a81dc7529927d5f54365c4c95b703be8d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sho_free</b> (<a class="el" href="#d7/d37/structsho__t">sho_t</a> *sho)</td></tr>
+<tr class="memitem:a81dc7529927d5f54365c4c95b703be8d" id="r_a81dc7529927d5f54365c4c95b703be8d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a81dc7529927d5f54365c4c95b703be8d">sho_free</a> (<a class="el" href="#d7/d37/structsho__t">sho_t</a> *sho)</td></tr>
 <tr class="memitem:a92893baa1879792e349dcf1e0ab05814" id="r_a92893baa1879792e349dcf1e0ab05814"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a92893baa1879792e349dcf1e0ab05814">sho_step</a> (panyarray xout, <a class="el" href="#d7/d37/structsho__t">sho_t</a> *sho, anyarray xi, real dt, int average)</td></tr>
 <tr class="memitem:aa29234f8fe794556f32704e97553f64e" id="r_aa29234f8fe794556f32704e97553f64e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa29234f8fe794556f32704e97553f64e">sho_reset</a> (<a class="el" href="#d7/d37/structsho__t">sho_t</a> *sho)</td></tr>
 <tr class="memitem:a6fd393b4721be086c1bf2b88cb60e551" id="r_a6fd393b4721be086c1bf2b88cb60e551"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6fd393b4721be086c1bf2b88cb60e551">sho_filter</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *xi, real dt, real f0, real zeta, int average)</td></tr>
@@ -480,9 +481,23 @@ mpreintd</td>
 <p>2011-01-17: The optimization process is quite slow, but the result is only dependent on the sigma2n and fs. psdin does not change during the simulation. Built a lookup table in skyc using various sigma2n and interpolate to get ress, resn, and gain.</p>
 <p>2012-03-28: Cleaned up this routine. groupped similar calculations together. Change g2=a from g=sqrt(a)</p>
 <p>2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);</p>
-<p>sigma2n is a dmat array of all wanted sigma2n. Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]</p>
 <p>The upper end of frequency must be nyquist freq so that noise transfer can be computed. But we need to capture the turbulence PSD beyond nyquist freq, which are uncorrectable.</p>
-<p>2022-03-04: added SHO response parameter. </p>
+<p>2022-03-04: added SHO response parameter.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Number of time steps per loop update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pmargin</td><td>Phase margin (radian). 0 means pi/4. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f0</td><td>SHO resonance frequency (Hz). Not used if not positive. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zeta</td><td>SHO damping ratio. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">servo_type</td><td>1 for integrator, 2 for type II with lead filter. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>Input PSD with frequency in the first column. If NULL, only optimize for phase margin. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sigma2n</td><td><a class="el" href="../../d5/d21/class_array.html">Array</a> of all wanted noise variance. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated dcell with one dmat per sigma2n entry, containing [g, res_sig, res_n] for type I or [g, a, T, res_sig, res_n] for type II. If psdin is NULL, contains only the gain. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -524,7 +539,19 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Optimize integrator control with optional SHO response (output) to have correct phase margin (pi/4) when abs(Hol)==1. </p>
+<p>Optimize integrator control with optional SHO response (output) to have correct phase margin when abs(Hol)==1.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Number of time steps per loop update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pmargin</td><td>Phase margin (radian). 0 means pi/4. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f0</td><td>SHO resonance frequency (Hz). Not used if not positive. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zeta</td><td>SHO damping ratio. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Integrator gain. </dd></dl>
 
 </div>
 </div>
@@ -566,7 +593,19 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert Closed loop residual PSD back to OL psd using rejection transfer function: PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist; Only implemented for integrator. </p>
+<p>Convert Closed loop residual PSD back to OL psd using rejection transfer function: PSD_OL=PSD_CL/Hrej-sigma2n/F_nyquist; Only implemented for integrator.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">psdcl</td><td>Closed loop PSD with frequency in the first column and one or more PSD columns. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Number of time steps per loop update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gain</td><td>Integrator gain. If 0, psdcl is copied. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sigma2n</td><td>Noise variance. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated open loop PSD with frequency in the first column. Negative values are clipped to 0. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -613,9 +652,22 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the residual error after servo rejection of a type II servo given the gain.</p>
+<p>Compute the residual error after servo rejection of a type I or type II servo given the gain.</p>
 <p>Written: 2010-06-11</p>
-<p>Tested OK: 2010-06-11 </p>
+<p>Tested OK: 2010-06-11</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">noise_amp</td><td>Noise amplification factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>Input PSD with frequency in the first column and PSD in the second. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Number of time steps per loop update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gain</td><td>Servo gain: [g] for type I or [g, a, T] for type II. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">servo_type</td><td>1 for integrator, 2 for type II. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Residual signal error after servo rejection. </dd></dl>
 
 </div>
 </div>
@@ -652,7 +704,18 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a>. al is additional latency </p>
+<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">merr</td><td>Template measurement error used to allocate memory. May be empty. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ap</td><td>Coefficients of the modified integrator. NULL means a pure integrator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s), not the loop update time. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ep</td><td>Servo gain. May be NULL if gain is applied externally. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#da/d58/structservo__t">servo_t</a>. Free with servo_free(). </dd></dl>
 
 </div>
 </div>
@@ -689,7 +752,18 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a> with scalar ap and ep </p>
+<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a> with scalar ap and ep</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">merr</td><td>Template measurement error used to allocate memory. May be empty. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ap</td><td>Coefficient of the modified integrator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ep</td><td>Servo gain. 0 means gain is applied externally. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#da/d58/structservo__t">servo_t</a>. Free with servo_free(). </dd></dl>
 
 </div>
 </div>
@@ -736,7 +810,20 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a> with an sho </p>
+<p>Initialize <a class="el" href="#da/d58/structservo__t">servo_t</a> with an sho</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">merr</td><td>Template measurement error used to allocate memory. May be empty. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ap</td><td>Coefficients of the modified integrator. NULL means a pure integrator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">al</td><td>Additional latency in units of dt. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ep</td><td>Servo gain. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f0</td><td>SHO resonance frequency (Hz). SHO is not used if not positive or infinite. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zeta</td><td>SHO damping ratio. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#da/d58/structservo__t">servo_t</a>. Free with servo_free(). </dd></dl>
 
 </div>
 </div>
@@ -758,7 +845,15 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Applies type I or type II filter based on number of entries in gain. </p>
+<p>Applies type I or type II filter based on number of entries in gain.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">st</td><td>Servo struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">_merr</td><td>Measurement error. May be empty. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the integrator is updated, 0 if there is no (delayed) measurement error yet. </dd></dl>
 
 </div>
 </div>
@@ -785,7 +880,15 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Adjust integrator content without shift. </p>
+<p>Adjust integrator content without shift.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">st</td><td>Servo struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">madj</td><td>Adjustment to add to the integrator. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor of madj. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -807,7 +910,14 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create servo output. It handles st-&gt;alfrac. and outputs the averaged position over the integration period. </p>
+<p>Create servo output. It handles st-&gt;alfrac. and outputs the averaged position over the integration period.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">st</td><td>Servo struct. Its SHO state, if any, is updated. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_</td><td>Output. Allocated if NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -844,7 +954,18 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>test type I/II filter with ideal measurement to make sure it is implemented correctly. </p>
+<p>test type I/II filter with ideal measurement to make sure it is implemented correctly.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">input</td><td>Input time series. Each column is a time step. Reshaped in place if it has a single column. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Simulation time step (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Number of time steps per loop update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sigma2n</td><td>Noise covariance. Noise is not added if its norm is 0. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gain</td><td>Servo gain. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated residual time series. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -862,7 +983,13 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>reset the data to 0. </p>
+<p>reset the data to 0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">st</td><td>Servo struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -880,7 +1007,13 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free <a class="el" href="#da/d58/structservo__t">servo_t</a> struct </p>
+<p>Free <a class="el" href="#da/d58/structservo__t">servo_t</a> struct</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">st</td><td>Servo struct to free. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -902,11 +1035,36 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Second harmonic oscillator. Initialization. Equation is is d^x/dt^2+c1*dx/dt+c2*x=c2*xi State space model is |x'|' | -c1 -c2 | |x'| |xi| |x | = | 1 0 | | x| + c2 |0 | where x' is dx/dt and written as dx in struct. we use c2*xi so that it is in the same unit and scale as x. </p>
+<p>Second harmonic oscillator. Initialization. Equation is is d^x/dt^2+c1*dx/dt+c2*x=c2*xi State space model is |x'|' | -c1 -c2 | |x'| |xi| |x | = | 1 0 | | x| + c2 |0 | where x' is dx/dt and written as dx in struct. we use c2*xi so that it is in the same unit and scale as x.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">f0</td><td>Resonance frequency  </td></tr>
-    <tr><td class="paramname">zeta</td><td>Damping </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f0</td><td>Resonance frequency (Hz). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zeta</td><td>Damping ratio. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="#d7/d37/structsho__t">sho_t</a>, or NULL if f0 is 0 or infinite. Free with sho_free(). </dd></dl>
+
+</div>
+</div>
+<a id="a81dc7529927d5f54365c4c95b703be8d" name="a81dc7529927d5f54365c4c95b703be8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81dc7529927d5f54365c4c95b703be8d">&#9670;&#160;</a></span>sho_free()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sho_free </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#d7/d37/structsho__t">sho_t</a> *</td>          <td class="paramname"><span class="paramname"><em>sho</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free <a class="el" href="#d7/d37/structsho__t">sho_t</a> (second order harmonic oscillator).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sho</td><td>SHO struct to free. May be NULL. </td></tr>
   </table>
   </dd>
 </dl>
@@ -947,7 +1105,17 @@ mpreintd</td>
       </table>
 </div><div class="memdoc">
 <p>Second harmonic oscillator state space update. xi is driving position. Second harmonic oscillator state space update. xi is driving position. Update the position after time dt. Also compute the average position between 0 and dt (for WFS integration) if avg is set.</p>
-<p>sho-&gt;x +=dt*sho-&gt;dx;//update position ddx=sho-&gt;dx*(-sho-&gt;c1)+sho-&gt;x*(-sho-&gt;c2)+xi;//update speed sho-&gt;dx+=dt*ddx; //update speed </p>
+<p>sho-&gt;x +=dt*sho-&gt;dx;//update position ddx=sho-&gt;dx*(-sho-&gt;c1)+sho-&gt;x*(-sho-&gt;c2)+xi;//update speed sho-&gt;dx+=dt*ddx; //update speed</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">xout_</td><td>Output position (or average position if avg is set). Allocated if NULL. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">sho</td><td>SHO state. If NULL, xi is copied to xout_. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xi_</td><td>Driving position. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Time to advance (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">avg</td><td>Whether to output the average position over dt instead of the final position. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -965,7 +1133,13 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Second harmonic oscillator. Reset. </p>
+<p>Second harmonic oscillator. Reset.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">sho</td><td>SHO state. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1002,17 +1176,18 @@ mpreintd</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Second harmonic oscillator. Filter a time series for testing. </p>
+<p>Second harmonic oscillator. Filter a time series for testing.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">x</td><td>Input time series  </td></tr>
-    <tr><td class="paramname">dt</td><td>Input time series sampling  </td></tr>
-    <tr><td class="paramname">f0</td><td>Resonance frequency  </td></tr>
-    <tr><td class="paramname">zeta</td><td>Damping  </td></tr>
-    <tr><td class="paramname">avg</td><td>Average or not </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Input time series. Each column is filtered independently. A row vector is treated as a column. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Input time series sampling (s). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">f0</td><td>Resonance frequency (Hz). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zeta</td><td>Damping ratio. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">avg</td><td>Average or not. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated filtered time series. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -1026,8 +1201,12 @@ mpreintd</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../de/d09/servo_8h.html">servo.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

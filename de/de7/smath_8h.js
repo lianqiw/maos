@@ -2,6 +2,7 @@ var smath_8h =
 [
     [ "snew", "de/de7/smath_8h.html#a6c1805d11d1e8f18edd7d44c2450cfd6", null ],
     [ "snew_file", "de/de7/smath_8h.html#acfbc8435a93d17061d68255e5e371192", null ],
+    [ "snew_do", "de/de7/smath_8h.html#a187f4434c46a6ac647a20336b1c9867e", null ],
     [ "smat_cast", "de/de7/smath_8h.html#a56743748c78b7fe273769f35e5bcdd6f", null ],
     [ "sinit", "de/de7/smath_8h.html#aa6fa0b5c2f20bcf9a20b2f45f619db2e", null ],
     [ "sfree_content", "de/de7/smath_8h.html#ad819cbbde6c9a4ba0ed32b9759e14bd4", null ],
@@ -183,6 +184,7 @@ var smath_8h =
     [ "sspwdot", "de/de7/smath_8h.html#aa7e44efc4cabbf952df10a259b1ada1f", null ],
     [ "sspcellwdot", "de/de7/smath_8h.html#a1b38d76ac6c9ef054247396728706bc7", null ],
     [ "scellmm", "de/de7/smath_8h.html#a1dfab510e2b08f9285f055c783d0299d", null ],
+    [ "smm_cell", "de/de7/smath_8h.html#af2198a22a69a10839bc82d2f668277e2", null ],
     [ "scellmm2", "de/de7/smath_8h.html#a9ecb3c989fb802f4bee819eab6e83753", null ],
     [ "s2sp", "de/de7/smath_8h.html#a16e8645f40494c693c3caed115619ade", null ],
     [ "sspfull", "de/de7/smath_8h.html#af13b2a05d01dd1d6ca2fe4e615c822f1", null ],

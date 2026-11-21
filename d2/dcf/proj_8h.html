@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/proj.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -183,22 +185,22 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Ray tracing for tilted surface like M3 </p>
+<p>Ray tracing for tilted surface like M3</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">phiout</td><td>output OPD  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">mapin</td><td>mapin: M3 surface map, NOT OPD.  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">thetax</td><td>tilt of surface along x, 0 or pi/2  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">thetay</td><td>tilt of surface along y, pi/2 or 0  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">locout</td><td>output grid  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">ratiox</td><td>pupil x scaling.  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">ratioy</td><td>pupil y scaling.  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">ampout</td><td>amplitude of output grid  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">sc</td><td>scaling of OPD  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">hs</td><td>distance from exit pupil to object image  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">ht</td><td>distance from exit pupil to M3 surface  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">betax</td><td>real beam angle  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">betay</td><td>real beam angle </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phiout</td><td>Output OPD, accumulated into. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mapin</td><td>M3 surface map, NOT OPD. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Tilt of surface along x (radian), 0 or pi/2. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Tilt of surface along y (radian), pi/2 or 0. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locout</td><td>Output grid. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ratiox</td><td>Pupil x scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ratioy</td><td>Pupil y scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ampout</td><td>Amplitude of output grid. Points with zero amplitude are skipped. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sc</td><td>Scaling of OPD. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>Distance from exit pupil to object image (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ht</td><td>Distance from exit pupil to M3 surface (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">betax</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> beam angle along x (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">betay</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> beam angle along y (radian). </td></tr>
   </table>
   </dd>
 </dl>
@@ -243,7 +245,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wraps proj_rect_grid for M3. </p>
+<p>Wraps proj_rect_grid for M3.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">tsurf</td><td>The tilted M3 surface map with txdeg, tydeg, ftel, fexit, fsurf set. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>The OPD on locout, accumulated into. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locout</td><td>The output grid. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Angle of the guide star along x (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Angle of the guide star along y (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>Range of the guide star (m). </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -285,7 +298,19 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A convenient wrapper for m3proj() to be called from matlab or python </p>
+<p>A convenient wrapper for m3proj() to be called from matlab or python</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">mapin_0</td><td>The surface map. Its keywords are replaced by keywords. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>The keywords describing the surface (txdeg, tydeg, ftel, fexit, fsurf, etc.). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">locout</td><td>The output grid. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Angle of the guide star along x (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Angle of the guide star along y (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>Range of the guide star (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated OPD on locout; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -299,8 +324,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d2/dcf/proj_8h.html">proj.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

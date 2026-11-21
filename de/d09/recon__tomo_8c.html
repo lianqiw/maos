@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/recon_tomo.c File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -146,7 +148,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Regularization terms for tomography. Can be called multiple times for Cn2 update. </p>
+<p>Regularization terms for tomography. Can be called multiple times for Cn2 update.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;L2, invpsd, or fractal, and ZZT are set; recon-&gt;wt is clipped and normalized. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -177,7 +186,14 @@ G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\eq
 G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
 <p>The left hand side of linear equation (inside the inverse) is stored in RL. The right hand side of the linear equation (outside of the inverse) is stored in RR. The terms regarding the NGS are handled using low rank terms. The gradients from LGS and NGS and concatenated to \(s\).</p>
 <p>In the LGS part, there is a global tip/tilt removal operator because LGS is insensitive to global tip/tilts.</p>
-<p>For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803 </p>
+<p>For details see www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;RR and recon-&gt;RL are set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -208,7 +224,15 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
 <p>Calls <a class="el" href="#a734c26f3d555e9e8038c196ad0a242ef">setup_recon_tomo_matrix()</a> and setup_recon_fit_matrix() to setup the tomography and DM fitting matrix.</p>
 <p>AHST is handled in setup_ngsmod().</p>
 <p>MVST is handled in <a class="el" href="../../d3/deb/maos_2recon_8h.html#a14b7a0beadfd04a65affccf99767892b">setup_recon_mvst()</a>.</p>
-<p>MOAO is handled in setup_recon_moao(). </p>
+<p>MOAO is handled in setup_recon_moao().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
+  </table>
+  </dd>
+</dl>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Here is the call graph for this function:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -256,7 +280,15 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply NEA weighting with optional Gp' gg = GP' * NEAI * gg; </p>
+<p>Apply NEA weighting with optional GP': gg = GP' * NEAI * gg, or gg = NEAI * gg.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">data</td><td>The shared data. data-&gt;gg is replaced. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nthread</td><td>Number of threads. Currently ignored and 1 is used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gpt</td><td>Whether to apply GP'. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -289,7 +321,16 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
       </table>
 </div><div class="memdoc">
 <p>Apply tomography right hand operator without using assembled matrix. Fast and saves memory. The operation is the same as the Tomo_nea_gpt and Tomo_iprop in TomoL, so merge the implemenations.</p>
-<p>xout=HXW'<em>GP'*NEAI</em>(1-TTF*PTTF)*gin. </p>
+<p>xout=HXW'<em>GP'*NEAI</em>(1-TTF*PTTF)*gin.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output on xloc. Allocated if NULL; alpha*RR*gin is accumulated into it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gin</td><td>The gradients. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -321,7 +362,16 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transpose operation of TomoRt. From xout -&gt; gin </p>
+<p>Transpose operation of TomoR. From xin to gout: gout=NEAI*(1-TTF*PTTF)*GP*HXW*xin.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">gout</td><td>The output gradients. Allocated if NULL; alpha*RR'*xin is accumulated into it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input on xloc. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -354,7 +404,16 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
       </table>
 </div><div class="memdoc">
 <p>Apply tomography left hand side operator without using assembled matrix. Fast and saves memory. Only useful in CG. Accumulates to xout;</p>
-<p>Some timing information: Generated in T410s with Intel Core i5 520 M @ 2.4 GHz (1 T is 1 thread, 2 T is 2 thread) and Poweredge with dual Xeon X5355 2.66Ghz (1 P is 1 thread, 8 P is 8 thread) Time 1 T 2 T 1 P 8 P HXW: 7.8 5.4 7.7 5.0 GP: 4.3 2.6 3.6 1.4 remove_mode: 0.3 0.3 0.4 0.6 neai: 0.5 0.3 0.5 0.4 GP': 3.2 2.1 3.4 1.0 HXW': 5.5 4.7 7.4 4.9 cxx: 3.2 2.5 3.5 2.7 </p>
+<p>Some timing information: Generated in T410s with Intel Core i5 520 M @ 2.4 GHz (1 T is 1 thread, 2 T is 2 thread) and Poweredge with dual Xeon X5355 2.66Ghz (1 P is 1 thread, 8 P is 8 thread) Time 1 T 2 T 1 P 8 P HXW: 7.8 5.4 7.7 5.0 GP: 4.3 2.6 3.6 1.4 remove_mode: 0.3 0.3 0.4 0.6 neai: 0.5 0.3 0.5 0.4 GP': 3.2 2.1 3.4 1.0 HXW': 5.5 4.7 7.4 4.9 cxx: 3.2 2.5 3.5 2.7</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output on xloc. Allocated if NULL; alpha*RL*xin is accumulated into it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input on xloc. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -368,8 +427,12 @@ G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.\)</p>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../de/d09/recon__tomo_8c.html">recon_tomo.c</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

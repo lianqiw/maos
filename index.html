@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Overview</title>
+<link rel="icon" href="maos.png" type="image/x-icon" />
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="navtreedata.js"></script>
 <script type="text/javascript" src="navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -101,36 +103,62 @@ $(function(){initNavTree('index.html','',''); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="mainpage"></a></p>
-<p>Multi-Thread Adaptive Optics Simulator (MAOS) is an end-to-end adaptive optics system simulator that is capable to simulate many kinds of astronominal adaptive optics systems, including conventional single conjugate AO (SCAO), multi-conjugate AO (MCAO), laser tomography AO (LTAO), multi-object AO (MOAO), and ground layer AO (GLAO). Please follow the following links for relevant information.</p>
+<p>The Multithreaded Adaptive Optics Simulator (MAOS) is an end-to-end adaptive optics (AO) simulator. It can simulate many kinds of astronomical AO systems, including single conjugate AO (SCAO), multi-conjugate AO (MCAO), laser tomography AO (LTAO), multi-object AO (MOAO), and ground layer AO (GLAO). It is written in C, runs on multi-core CPUs, and can optionally use Nvidia GPUs.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md41"></a>
+User guide</h1>
 <ul>
-<li><a class="el" href="da/d9f/page10_intro.html">Introduction</a></li>
-<li><a class="el" href="d3/d4c/page20_compile.html">Compile the Code</a></li>
-<li><a class="el" href="da/dc3/page30_run.html">Run simulations</a></li>
-<li><a class="el" href="d5/d29/page33_example.html">Examples</a></li>
-<li><a class="el" href="dd/da9/page40_results.html">Simulation Results</a></li>
-<li><a class="el" href="d6/d3f/page43_nfiraos.html">NFIRAOS Performance</a></li>
-<li><a class="el" href="d4/d15/algorithm.html">Algorithms</a></li>
-<li><a class="el" href="d5/d4c/skycoverage.html">Sky Coverage</a></li>
-<li><a class="el" href="de/d19/page90_devel.html">Development</a></li>
+<li><a class="el" href="da/d9f/page10_intro.html">Introduction</a> &ndash; what MAOS models and how it is organized.</li>
+<li><a class="el" href="d3/d4c/page20_compile.html">Compile the Code</a> &ndash; download, dependencies, configure options, GPU and MATLAB support, the job monitor, and the Python scripts.</li>
+<li><a class="el" href="da/dc3/page30_run.html">Run simulations</a> &ndash; command line options, configuration files, and environment variables.</li>
+<li><a class="el" href="d5/d29/page33_example.html">Examples</a> &ndash; walk-through of the TMT NFIRAOS MCAO and SCAO example configurations.</li>
+<li><a class="el" href="d5/d2b/page34_conf.html">Config File List</a> &ndash; the complete list of configuration files.</li>
+<li><a class="el" href="dd/da9/page40_results.html">Simulation Results</a> &ndash; the output files and how to read and plot them.</li>
+<li><a class="el" href="d6/d3f/page43_nfiraos.html">NFIRAOS Performance</a> &ndash; performance of the TMT NFIRAOS baseline.</li>
+<li><a class="el" href="d4/d15/algorithm.html">Algorithms</a> &ndash; notes on DM influence functions, DM hysteresis, and physical optics beam propagation.</li>
+<li><a class="el" href="d5/d4c/skycoverage.html">Sky Coverage</a> &ndash; the sky coverage post-processor <span class="tt">skyc</span>.</li>
 </ul>
-<p><a href="https://github.com/lianqiw/files/blob/master/Wang_AO4ELT2_MAOS.pdf">AO4ELT2 Paper on MAOS</a> <a href="https://github.com/lianqiw/files/blob/master/Wang_SPIE2012_GPU.pdf">SPIE Paper on MAOS and GPU RTC </a> </p>
-<p>Some benchmarking results using the TMT NFIRAOS (30 m aperture, 6 LGS, dual order 60x60 DM):</p><ul>
-<li>Dual Intel Xeon W5590 at 3.33 Ghz: 1.3 s per time step with 8 threads.</li>
-<li>Intel Core i7-2600 at 3.4 Ghz: 1.9s per time step with 4 threads.</li>
-<li>Intel Core i7-2600 at 3.4 Ghz: 1.67s per time step with 8 hyper threads (4 physical cores).</li>
-<li>Nvidia GTX 580 GPU: 0.2s per time step</li>
-<li>8x Nvidia GTX 580 GPU: 0.03s per time step</li>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md42"></a>
+Developer guide</h1>
+<ul>
+<li><a class="el" href="de/d19/page90_devel.html">Development</a><ul>
+<li><a class="el" href="d5/d98/page91_basics.html">Fundamentals</a> &ndash; coding conventions and the basic data types.</li>
+<li><a class="el" href="d7/dbf/page93_maos.html">Architecture</a> &ndash; the structure of the <span class="tt">maos</span> simulator.</li>
+<li><a class="el" href="db/dda/page95_profiling.html">Debugging</a> &ndash; debugging and profiling.</li>
+<li><a class="el" href="d9/d6e/page96_unittest.html">Unit Test Status</a> &ndash; the latest unit test results.</li>
 </ul>
-<dl class="section author"><dt>Author</dt><dd>Lianqi Wang <a href="https://www.linkedin.com/in/lianqiw/">(Linkedin)</a> at <a href="https://www.tmt.org">TMT International Observatory</a>.</dd></dl>
-<p>The source code can be obtained in <a href="https://github.com/lianqiw/maos">Github: lianqiw/maos</a>.</p>
-<p>For references, check <a href="https://www.researchgate.net/profile/Lianqi-Wang">ResearchGate</a>. </p>
+</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md43"></a>
+Publications</h1>
+<ul>
+<li><a href="https://github.com/lianqiw/files/blob/master/Wang_AO4ELT2_MAOS.pdf">AO4ELT2 paper on MAOS</a></li>
+<li><a href="https://github.com/lianqiw/files/blob/master/Wang_SPIE2012_GPU.pdf">SPIE 2012 paper on MAOS and a GPU based RTC</a></li>
+<li>More references are on <a href="https://www.researchgate.net/profile/Lianqi-Wang">ResearchGate</a>.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md44"></a>
+Historical benchmarks</h1>
+<p>Time per simulation step for the TMT NFIRAOS baseline (30 m aperture, 6 LGS, dual order 60x60 DMs), measured on hardware of the time:</p>
+<ul>
+<li>Dual Intel Xeon W5590 at 3.33 GHz: 1.3 s with 8 threads.</li>
+<li>Intel Core i7-2600 at 3.4 GHz: 1.9 s with 4 threads.</li>
+<li>Intel Core i7-2600 at 3.4 GHz: 1.67 s with 8 hyper-threads (4 physical cores).</li>
+<li>One Nvidia GTX 580 GPU: 0.2 s.</li>
+<li>Eight Nvidia GTX 580 GPUs: 0.03 s.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md45"></a>
+Source code and author</h1>
+<p>The source code is on GitHub: <a href="https://github.com/lianqiw/maos">lianqiw/maos</a>. This manual is at <a href="https://lianqiw.github.io/maos">lianqiw.github.io/maos</a>.</p>
+<dl class="section author"><dt>Author</dt><dd>Lianqi Wang <a href="https://www.linkedin.com/in/lianqiw/">(LinkedIn)</a> at <a href="https://www.tmt.org">TMT International Observatory</a>. </dd></dl>
 </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

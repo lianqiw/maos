@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: sys/sockio.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -107,20 +109,16 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae95dc790476eddbcee71194e2f145e42" id="r_ae95dc790476eddbcee71194e2f145e42"><td class="memItemLeft" align="right" valign="top"><a id="ae95dc790476eddbcee71194e2f145e42" name="ae95dc790476eddbcee71194e2f145e42"></a>
-ssize_t&#160;</td><td class="memItemRight" valign="bottom"><b>wrap_io</b> (int sfd, void *p, const size_t len, int mode)</td></tr>
-<tr class="memitem:ac7fb31521bed5d14292784874f15be50" id="r_ac7fb31521bed5d14292784874f15be50"><td class="memItemLeft" align="right" valign="top"><a id="ac7fb31521bed5d14292784874f15be50" name="ac7fb31521bed5d14292784874f15be50"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>stwrite</b> (int sfd, const void *p, size_t len)</td></tr>
-<tr class="memitem:aec87592c4fbf2ad03b9cc5f1cd03fe2a" id="r_aec87592c4fbf2ad03b9cc5f1cd03fe2a"><td class="memItemLeft" align="right" valign="top"><a id="aec87592c4fbf2ad03b9cc5f1cd03fe2a" name="aec87592c4fbf2ad03b9cc5f1cd03fe2a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>stread</b> (int sfd, void *p, size_t len)</td></tr>
+<tr class="memitem:ae95dc790476eddbcee71194e2f145e42" id="r_ae95dc790476eddbcee71194e2f145e42"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae95dc790476eddbcee71194e2f145e42">wrap_io</a> (int sfd, void *p, const size_t len, int mode)</td></tr>
+<tr class="memitem:ac7fb31521bed5d14292784874f15be50" id="r_ac7fb31521bed5d14292784874f15be50"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac7fb31521bed5d14292784874f15be50">stwrite</a> (int sfd, const void *p, size_t len)</td></tr>
+<tr class="memitem:aec87592c4fbf2ad03b9cc5f1cd03fe2a" id="r_aec87592c4fbf2ad03b9cc5f1cd03fe2a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aec87592c4fbf2ad03b9cc5f1cd03fe2a">stread</a> (int sfd, void *p, size_t len)</td></tr>
 <tr class="memitem:ac252e98eb123fd187c8d6b0ec247867d" id="r_ac252e98eb123fd187c8d6b0ec247867d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac252e98eb123fd187c8d6b0ec247867d">stwritestr</a> (int sfd, const char *str)</td></tr>
 <tr class="memitem:a329670963f85960af4805e221af37db2" id="r_a329670963f85960af4805e221af37db2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a329670963f85960af4805e221af37db2">streadstr</a> (int sfd, char **str)</td></tr>
 <tr class="memitem:a9c90e8add61a1ff1783e57c01b14c339" id="r_a9c90e8add61a1ff1783e57c01b14c339"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c90e8add61a1ff1783e57c01b14c339">stwritestrarr</a> (int sfd, const char *const *str, int nstr)</td></tr>
 <tr class="memitem:a7fcad7b6c004d6e16dddff1dbbd8a20d" id="r_a7fcad7b6c004d6e16dddff1dbbd8a20d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7fcad7b6c004d6e16dddff1dbbd8a20d">streadstrarr</a> (int sfd, char ***str, int *nstr)</td></tr>
 <tr class="memitem:a8f261c8d14ae4788e2b7dbd1039a221f" id="r_a8f261c8d14ae4788e2b7dbd1039a221f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f261c8d14ae4788e2b7dbd1039a221f">stwritefd</a> (int sfd, int fd)</td></tr>
 <tr class="memitem:afb4493d945a1d2b3f2c26a04e2a7bf8b" id="r_afb4493d945a1d2b3f2c26a04e2a7bf8b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb4493d945a1d2b3f2c26a04e2a7bf8b">streadfd</a> (int sfd, int *fd)</td></tr>
-<tr class="memitem:ad2364ca481e12db6b45009478899970f" id="r_ad2364ca481e12db6b45009478899970f"><td class="memItemLeft" align="right" valign="top"><a id="ad2364ca481e12db6b45009478899970f" name="ad2364ca481e12db6b45009478899970f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>stcheck</b> (int sfd)</td></tr>
+<tr class="memitem:ad2364ca481e12db6b45009478899970f" id="r_ad2364ca481e12db6b45009478899970f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad2364ca481e12db6b45009478899970f">stcheck</a> (int sfd)</td></tr>
 <tr class="memitem:abc1c613d90cf9a9ffb4697ffb5961b3a" id="r_abc1c613d90cf9a9ffb4697ffb5961b3a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abc1c613d90cf9a9ffb4697ffb5961b3a">udp_send</a> (<a class="el" href="#d4/d74/structudp__t">udp_t</a> *info, char *buf, size_t len, int counter)</td></tr>
 <tr class="memitem:a0ff85fb841b8a4c117ca1a8f897dbb81" id="r_a0ff85fb841b8a4c117ca1a8f897dbb81"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ff85fb841b8a4c117ca1a8f897dbb81">udp_recv</a> (<a class="el" href="#d4/d74/structudp__t">udp_t</a> *info, char **pbuf, size_t *len)</td></tr>
 </table>
@@ -188,6 +186,120 @@ header</td>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="ae95dc790476eddbcee71194e2f145e42" name="ae95dc790476eddbcee71194e2f145e42"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae95dc790476eddbcee71194e2f145e42">&#9670;&#160;</a></span>wrap_io()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t wrap_io </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sfd</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t</td>          <td class="paramname"><span class="paramname"><em>len</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>mode</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Wrap io function and handle partial operations. Uses send()/recv() for sockets and write()/read() otherwise. Retries on EINTR and stops at end of file or closed connection.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">p</td><td>Buffer to write from or read into. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Number of bytes to transfer. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>1 or 'w' for write, 0 or 'r' for read. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of bytes successfully transferred, or -1 on error or invalid mode. </dd></dl>
+
+</div>
+</div>
+<a id="ac7fb31521bed5d14292784874f15be50" name="ac7fb31521bed5d14292784874f15be50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7fb31521bed5d14292784874f15be50">&#9670;&#160;</a></span>stwrite()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int stwrite </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sfd</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t</td>          <td class="paramname"><span class="paramname"><em>len</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Write len bytes from p to socket or file sfd.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Data to write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Number of bytes to write. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -2 for partial write, and -1 on error. </dd></dl>
+
+</div>
+</div>
+<a id="aec87592c4fbf2ad03b9cc5f1cd03fe2a" name="aec87592c4fbf2ad03b9cc5f1cd03fe2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec87592c4fbf2ad03b9cc5f1cd03fe2a">&#9670;&#160;</a></span>stread()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int stread </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sfd</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t</td>          <td class="paramname"><span class="paramname"><em>len</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Read len bytes from socket or file sfd into p.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">p</td><td>Buffer to receive the data. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Number of bytes to read. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -2 for partial read (e.g., connection closed), and -1 on error. </dd></dl>
+
+</div>
+</div>
 <a id="ac252e98eb123fd187c8d6b0ec247867d" name="ac252e98eb123fd187c8d6b0ec247867d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac252e98eb123fd187c8d6b0ec247867d">&#9670;&#160;</a></span>stwritestr()</h2>
 
@@ -206,7 +318,15 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Write a string to socket </p>
+<p>Write a string to socket, preceded by its length including the terminating NUL. A NULL string is written as length 0.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>String to write. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
 
 </div>
 </div>
@@ -228,7 +348,15 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a string from socket </p>
+<p>Read a string written by stwritestr().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">str</td><td>Newly allocated string; the caller frees it. Set to NULL for an empty string or on failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
 
 </div>
 </div>
@@ -255,7 +383,16 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Write a string array to socket </p>
+<p>Write a string array to socket, preceded by the number of strings.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td><a class="el" href="../../d5/d21/class_array.html">Array</a> of strings. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nstr</td><td>Number of strings. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
 
 </div>
 </div>
@@ -282,7 +419,16 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a string array from socket </p>
+<p>Read a string array written by stwritestrarr().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket or file descriptor. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">str</td><td>Newly allocated array of newly allocated strings; the caller frees each string and the array. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nstr</td><td>Number of strings. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
 
 </div>
 </div>
@@ -304,7 +450,15 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wrie a file descriptor to socket. Transfer a open file (socket) descriptor to another process in the same hosts. sfd has to be a AF_UNIX socket. </p>
+<p>Wrie a file descriptor to socket. Transfer a open file (socket) descriptor to another process in the same hosts. sfd has to be a AF_UNIX socket.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>AF_UNIX socket. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor to transfer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure. </dd></dl>
 
 </div>
 </div>
@@ -326,7 +480,40 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a file descriptor from socket. Use with stwritefd(); </p>
+<p>Read a file descriptor from socket. Use with stwritefd();</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>AF_UNIX socket. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">fd</td><td>Received file descriptor. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, -1 on failure. </dd></dl>
+
+</div>
+</div>
+<a id="ad2364ca481e12db6b45009478899970f" name="ad2364ca481e12db6b45009478899970f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2364ca481e12db6b45009478899970f">&#9670;&#160;</a></span>stcheck()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int stcheck </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>sfd</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Check whether the client has shutdown a connection (TCP) without blocking or consuming data.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sfd</td><td>Socket. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if closed or failed, 0 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -358,7 +545,17 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Use UDP socket to send data reliably. Status is checked. </p>
+<p>Use UDP socket to send data reliably. Data is split into packets of info-&gt;payload bytes including header. Afterwards listens for resend requests from udp_recv() until it reports completion or times out.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>UDP connection information. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>Data to send. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>Number of bytes to send. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">counter</td><td>Frame counter written in each packet header. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if sent, -1 if info is invalid. </dd></dl>
 
 </div>
 </div>
@@ -385,7 +582,16 @@ header</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Use UDP socket to receive data reliably. if counter </p>
+<p>Use UDP socket to receive data reliably from udp_send(). Requests resend of missing packets and acknowledges when done.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>UDP connection information. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pbuf</td><td>Receive buffer. Reallocated if NULL or too small; the caller frees it. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">len</td><td>Size of *pbuf in bytes. Updated if reallocated; set to 0 on failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Frame counter of the received data, or -1 on failure. </dd></dl>
 
 </div>
 </div>
@@ -399,8 +605,12 @@ header</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>sys</b></li><li class="navelem"><a href="../../db/d54/sockio_8h.html">sockio.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

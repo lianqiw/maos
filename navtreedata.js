@@ -25,36 +25,76 @@
 var NAVTREE =
 [
   [ "MAOS", "index.html", [
-    [ "Overview", "index.html", null ],
-    [ "Introduction", "da/d9f/page10_intro.html", null ],
+    [ "Overview", "index.html", "index" ],
+    [ "CLAUDE.md", "d6/d23/md__c_l_a_u_d_e.html", [
+      [ "Build", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md1", null ],
+      [ "Tests", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md2", null ],
+      [ "Running", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md3", null ],
+      [ "Architecture", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md4", [
+        [ "Configuration parameters", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md5", null ]
+      ] ],
+      [ "Conventions (from <span class=\"tt\">docs/91_basics.md</span>)", "d6/d23/md__c_l_a_u_d_e.html#autotoc_md6", null ]
+    ] ],
+    [ "Introduction", "da/d9f/page10_intro.html", [
+      [ "What is modeled", "da/d9f/page10_intro.html#intro-model", [
+        [ "Configuration", "da/d9f/page10_intro.html#intro-config", null ],
+        [ "Atmosphere", "da/d9f/page10_intro.html#intro-atm", null ],
+        [ "Telescope", "da/d9f/page10_intro.html#intro-telescope", null ],
+        [ "Wavefront sensors", "da/d9f/page10_intro.html#intro-wfs", null ],
+        [ "Deformable mirrors", "da/d9f/page10_intro.html#intro-dm", null ],
+        [ "Reconstruction and control", "da/d9f/page10_intro.html#intro-recon", null ],
+        [ "Performance evaluation", "da/d9f/page10_intro.html#intro-perf", null ]
+      ] ],
+      [ "Implementation", "da/d9f/page10_intro.html#intro-impl", null ],
+      [ "Source tree", "da/d9f/page10_intro.html#intro-source", null ]
+    ] ],
     [ "Compile the Code", "d3/d4c/page20_compile.html", [
-      [ "Compiling", "d3/d4c/page20_compile.html#autotoc_md0", [
-        [ "Prerequisites", "d3/d4c/page20_compile.html#autotoc_md1", null ],
-        [ "Download the code", "d3/d4c/page20_compile.html#autotoc_md2", [
-          [ "Option 1 (preferred)", "d3/d4c/page20_compile.html#autotoc_md3", null ],
-          [ "Option 2 (snapshot)", "d3/d4c/page20_compile.html#autotoc_md4", null ],
-          [ "Option 3 (released)", "d3/d4c/page20_compile.html#autotoc_md5", null ],
-          [ "Option 4 (binary)", "d3/d4c/page20_compile.html#autotoc_md6", null ]
-        ] ],
-        [ "Compile the Code", "d3/d4c/page20_compile.html#autotoc_md7", null ],
-        [ "Compiler options (Optional)", "d3/d4c/page20_compile.html#autotoc_md8", null ],
-        [ "GPU acceleration (Optional)", "d3/d4c/page20_compile.html#autotoc_md9", null ],
-        [ "Matlab Mex Routines (Optional)", "d3/d4c/page20_compile.html#autotoc_md10", null ],
-        [ "Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)", "d3/d4c/page20_compile.html#autotoc_md11", null ]
+      [ "Quick start", "d3/d4c/page20_compile.html#compile-quick", null ],
+      [ "Prerequisites", "d3/d4c/page20_compile.html#compile-prereq", null ],
+      [ "Download the code", "d3/d4c/page20_compile.html#compile-download", [
+        [ "Git (preferred)", "d3/d4c/page20_compile.html#compile-git", null ],
+        [ "Tagged snapshot", "d3/d4c/page20_compile.html#compile-snapshot", null ],
+        [ "Release tarball", "d3/d4c/page20_compile.html#compile-release", null ],
+        [ "Pre-compiled binaries", "d3/d4c/page20_compile.html#compile-binary", null ]
       ] ],
-      [ "Browser User Interface", "d3/d4c/page20_compile.html#autotoc_md12", null ],
-      [ "Graphical User Interface", "d3/d4c/page20_compile.html#autotoc_md13", [
-        [ "Monitor", "d3/d4c/page20_compile.html#autotoc_md14", null ],
-        [ "Drawdaemon", "d3/d4c/page20_compile.html#autotoc_md15", null ],
-        [ "Plotting results", "d3/d4c/page20_compile.html#autotoc_md16", null ]
+      [ "Build", "d3/d4c/page20_compile.html#compile-build", null ],
+      [ "Configure options", "d3/d4c/page20_compile.html#compile-options", [
+        [ "Compilers", "d3/d4c/page20_compile.html#compile-compilers", null ],
+        [ "C++ build", "d3/d4c/page20_compile.html#compile-cpp", null ],
+        [ "Single precision", "d3/d4c/page20_compile.html#compile-single", null ]
       ] ],
-      [ "Python Scripts", "d3/d4c/page20_compile.html#autotoc_md17", [
-        [ "Interface to MAOS", "d3/d4c/page20_compile.html#autotoc_md18", null ]
+      [ "External libraries", "d3/d4c/page20_compile.html#compile-deps", null ],
+      [ "GPU acceleration", "d3/d4c/page20_compile.html#compile-gpu", null ],
+      [ "MATLAB mex interface", "d3/d4c/page20_compile.html#compile-mex", null ],
+      [ "Unit tests and documentation", "d3/d4c/page20_compile.html#compile-test", null ],
+      [ "Continuous integration", "d3/d4c/page20_compile.html#compile-ci", null ],
+      [ "Troubleshooting", "d3/d4c/page20_compile.html#compile-trouble", null ],
+      [ "Browser based monitor", "d3/d4c/page20_compile.html#compile-browser", null ],
+      [ "Graphical user interface", "d3/d4c/page20_compile.html#compile-gui", [
+        [ "Monitor", "d3/d4c/page20_compile.html#compile-monitor", null ],
+        [ "Drawdaemon", "d3/d4c/page20_compile.html#compile-drawdaemon", null ],
+        [ "Plotting results", "d3/d4c/page20_compile.html#compile-drawres", null ]
+      ] ],
+      [ "Python scripts", "d3/d4c/page20_compile.html#compile-python", [
+        [ "Interface to a running maos", "d3/d4c/page20_compile.html#compile-maos-client", null ]
       ] ]
     ] ],
     [ "Run simulations", "da/dc3/page30_run.html", [
-      [ "Usage", "da/dc3/page30_run.html#sect-run", null ],
-      [ "Configuration Files", "da/dc3/page30_run.html#sect-config", null ],
+      [ "Usage", "da/dc3/page30_run.html#sect-run", [
+        [ "Command line options", "da/dc3/page30_run.html#sect-run-options", null ],
+        [ "Scheduler and detached runs", "da/dc3/page30_run.html#sect-run-sched", null ],
+        [ "GPU selection", "da/dc3/page30_run.html#sect-run-gpu", null ],
+        [ "Seeds, restarting, and multiple runs", "da/dc3/page30_run.html#sect-run-seeds", null ],
+        [ "Output folder", "da/dc3/page30_run.html#sect-run-output", null ],
+        [ "Environment variables", "da/dc3/page30_run.html#sect-run-env", null ]
+      ] ],
+      [ "Configuration Files", "da/dc3/page30_run.html#sect-config", [
+        [ "Syntax", "da/dc3/page30_run.html#sect-config-syntax", null ],
+        [ "Overriding and checking keys", "da/dc3/page30_run.html#sect-config-override", null ],
+        [ "Search path", "da/dc3/page30_run.html#sect-config-path", null ],
+        [ "Organization", "da/dc3/page30_run.html#sect-config-org", null ],
+        [ "Guide to the main parameters", "da/dc3/page30_run.html#sect-config-params", null ]
+      ] ],
       [ "Sample Runs", "da/dc3/page30_run.html#sect-exe", null ],
       [ "Error Budget Breakdown", "da/dc3/page30_run.html#sect-ebb", null ],
       [ "Advanced configuration", "da/dc3/page30_run.html#advanced", [
@@ -69,66 +109,65 @@ var NAVTREE =
     ] ],
     [ "Examples", "d5/d29/page33_example.html", "d5/d29/page33_example" ],
     [ "Simulation Results", "dd/da9/page40_results.html", [
-      [ "RMS WFE", "dd/da9/page40_results.html#autotoc_md20", [
-        [ "Python", "dd/da9/page40_results.html#autotoc_md21", null ],
-        [ "Matlab", "dd/da9/page40_results.html#autotoc_md22", null ]
+      [ "RMS WFE", "dd/da9/page40_results.html#autotoc_md7", [
+        [ "Python", "dd/da9/page40_results.html#autotoc_md8", null ],
+        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md9", null ]
       ] ],
-      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md23", null ],
-      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md24", [
-        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md25", null ],
-        [ "MATLAB", "dd/da9/page40_results.html#autotoc_md26", null ],
+      [ "Plotting Results", "dd/da9/page40_results.html#autotoc_md10", null ],
+      [ "Reading Results", "dd/da9/page40_results.html#autotoc_md11", [
+        [ ".bin file format", "dd/da9/page40_results.html#autotoc_md12", null ],
+        [ "MATLAB", "dd/da9/page40_results.html#sect-mex", null ],
         [ "Python", "dd/da9/page40_results.html#sect-python", null ],
         [ "IDL", "dd/da9/page40_results.html#sect-idl", null ],
         [ "FITS", "dd/da9/page40_results.html#sect-fits", null ]
       ] ],
-      [ "Result Files", "dd/da9/page40_results.html#autotoc_md27", [
-        [ "Wavefront error", "dd/da9/page40_results.html#autotoc_md28", null ],
-        [ "Split tomography results", "dd/da9/page40_results.html#autotoc_md29", null ],
-        [ "Log files", "dd/da9/page40_results.html#autotoc_md30", null ],
-        [ "PSF", "dd/da9/page40_results.html#autotoc_md31", null ],
-        [ "Subaperture Pixels", "dd/da9/page40_results.html#autotoc_md32", null ],
-        [ "Other", "dd/da9/page40_results.html#autotoc_md33", null ]
+      [ "Result Files", "dd/da9/page40_results.html#autotoc_md13", [
+        [ "Wavefront error", "dd/da9/page40_results.html#sect-res", null ],
+        [ "Split tomography results", "dd/da9/page40_results.html#autotoc_md14", null ],
+        [ "Log files", "dd/da9/page40_results.html#autotoc_md15", null ],
+        [ "PSF", "dd/da9/page40_results.html#autotoc_md16", null ],
+        [ "Subaperture Pixels", "dd/da9/page40_results.html#autotoc_md17", null ],
+        [ "Other", "dd/da9/page40_results.html#autotoc_md18", null ]
       ] ],
       [ "Geometry Data", "dd/da9/page40_results.html#geometry", null ],
-      [ "Telemetry Data", "dd/da9/page40_results.html#telemetry", null ]
-    ] ],
-    [ "NFIRAOS Performance", "d6/d3f/page43_nfiraos.html", [
-      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md34", null ],
-      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md35", [
-        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md36", null ],
-        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md37", [
-          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md38", null ],
-          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md39", null ],
-          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md40", null ],
-          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md41", null ]
-        ] ],
-        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md42", null ]
-      ] ],
-      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md43", null ]
-    ] ],
-    [ "Algorithms", "d4/d15/algorithm.html", [
-      [ "DM Actuator Influence Function", "d4/d15/algorithm.html#sect-dm-actuator", [
-        [ "Linear influence function", "d4/d15/algorithm.html#autotoc_md44", null ],
-        [ "Cubic influence function", "d4/d15/algorithm.html#autotoc_md45", null ]
-      ] ],
-      [ "DM Hysteresis", "d4/d15/algorithm.html#hysteresis", null ],
-      [ "Physical Optics Beam Propagation", "d4/d15/algorithm.html#pop", [
-        [ "Maxwell Equation", "d4/d15/algorithm.html#autotoc_md46", null ],
-        [ "Fresnel diffraction integral", "d4/d15/algorithm.html#autotoc_md47", null ],
-        [ "Fresnel approximation", "d4/d15/algorithm.html#autotoc_md48", [
-          [ "Angular Spectrum", "d4/d15/algorithm.html#autotoc_md49", null ],
-          [ "Single FFT", "d4/d15/algorithm.html#autotoc_md50", null ]
-        ] ],
-        [ "Fraunhofer approximation", "d4/d15/algorithm.html#autotoc_md51", null ],
-        [ "Sphere to sphere propagation", "d4/d15/algorithm.html#autotoc_md52", null ]
+      [ "Telemetry Data", "dd/da9/page40_results.html#telemetry", [
+        [ "Summary of save options", "dd/da9/page40_results.html#autotoc_md19", null ]
       ] ]
     ] ],
+    [ "NFIRAOS Performance", "d6/d3f/page43_nfiraos.html", [
+      [ "Turbulence profile", "d6/d3f/page43_nfiraos.html#autotoc_md20", null ],
+      [ "NFIRAOS AO Performance", "d6/d3f/page43_nfiraos.html#autotoc_md21", [
+        [ "NFIRAOS", "d6/d3f/page43_nfiraos.html#autotoc_md22", null ],
+        [ "IRIS Imager", "d6/d3f/page43_nfiraos.html#autotoc_md23", [
+          [ "Wavefront error", "d6/d3f/page43_nfiraos.html#autotoc_md24", null ],
+          [ "J band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md25", null ],
+          [ "H band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md26", null ],
+          [ "K band Strehl Ratio", "d6/d3f/page43_nfiraos.html#autotoc_md27", null ]
+        ] ],
+        [ "MODHIS", "d6/d3f/page43_nfiraos.html#autotoc_md28", null ]
+      ] ],
+      [ "NFIRAOS+", "d6/d3f/page43_nfiraos.html#autotoc_md29", null ]
+    ] ],
+    [ "Algorithms", "d4/d15/algorithm.html", "d4/d15/algorithm" ],
     [ "Sky Coverage", "d5/d4c/skycoverage.html", [
       [ "MAOS presimulation", "d5/d4c/skycoverage.html#presim", null ],
       [ "Sky coverage post processing simulation", "d5/d4c/skycoverage.html#postsim", null ],
       [ "Sky coverage results", "d5/d4c/skycoverage.html#skyres", null ]
     ] ],
     [ "Development", "de/d19/page90_devel.html", "de/d19/page90_devel" ],
+    [ "Changes by Claude, 2026-11-20", "db/d87/md_docs_2claude__changes__20261120.html", [
+      [ "Impact on simulation results", "db/d87/md_docs_2claude__changes__20261120.html#claude_results", [
+        [ "maos (CPU and GPU)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md34", null ],
+        [ "GPU only", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md35", null ],
+        [ "lib and math (shared by maos and skyc)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md36", null ],
+        [ "skyc", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md37", null ],
+        [ "Configuration and file format", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md38", null ]
+      ] ],
+      [ "Other changes (no effect on results)", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39", null ],
+      [ "Unit tests", "db/d87/md_docs_2claude__changes__20261120.html#autotoc_md40", null ],
+      [ "Verification", "db/d87/md_docs_2claude__changes__20261120.html#claude_verification", null ],
+      [ "Not changed", "db/d87/md_docs_2claude__changes__20261120.html#claude_not_changed", null ]
+    ] ],
     [ "README", "d3/dcc/md__r_e_a_d_m_e.html", null ],
     [ "Todo List", "dd/da0/todo.html", null ],
     [ "Data Structures", "annotated.html", [
@@ -136,8 +175,9 @@ var NAVTREE =
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Data Fields", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
-        [ "Functions", "functions_func.html", null ],
-        [ "Variables", "functions_vars.html", "functions_vars" ]
+        [ "Functions", "functions_func.html", "functions_func" ],
+        [ "Variables", "functions_vars.html", "functions_vars" ],
+        [ "Related Symbols", "functions_rela.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -147,6 +187,7 @@ var NAVTREE =
         [ "Functions", "globals_func.html", "globals_func" ],
         [ "Variables", "globals_vars.html", null ],
         [ "Typedefs", "globals_type.html", null ],
+        [ "Enumerations", "globals_enum.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -156,20 +197,22 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"d2/da0/psd_8h.html#aff1d2c30671c9bf6723d7cf5100c90d0",
-"d4/d15/algorithm.html#autotoc_md46",
-"d4/d38/parms_8h.html#a61c15c4338a59918a1603c440f058d36",
-"d4/d38/parms_8h.html#ac8ecc8a08547a292f2c3e6fc47d98e9b",
-"d5/d7f/rayleigh_8h.html#a77f112842f55e1151ef3c8004d3e9e09",
-"d6/d94/maos_2types_8h.html#a5c528e638e52af6ee768b03a7cc9d7b6",
-"d6/d94/maos_2types_8h.html#ae619aa0067b469b498ed74e50a748c35",
-"da/dac/keck_ngs.html",
-"db/d17/evl_sq60.html",
-"dd/dc1/lmath_8h.html#a129e4033d5c3a02a35397f8452835ae2",
-"de/d07/cmath_8h.html#add2fad5f1ff6de6cd676a754c95b9f57",
-"de/de7/smath_8h.html#aa1ebd8e1d073034133fd5a178b624698",
-"df/def/type_8h.html#a3bf4e5f36c19cbe051fc58f2bf162eff",
-"df/def/type_8h.html#add3062c983bde1a679a8ae31151895ea"
+"d1/ddc/atm_mk13n50p.html",
+"d3/dc7/muv_8h.html#a8a200c66e544ed7d4573c03a5ac55b81",
+"d4/d38/parms_8h.html#a1b3586fba1bd11580eac766c9f17c889",
+"d4/d38/parms_8h.html#a82246fadaaa26d5b45f53e4064f43faf",
+"d4/d38/parms_8h.html#ae65ef8c7e32ec1905c34e73156b779de",
+"d5/ddb/atm_mk25p_g_l_50p_f_a.html",
+"d6/d94/maos_2types_8h.html#a63cf2faff093d3cee8e594ad00c56bea",
+"d6/d94/maos_2types_8h.html#aecfdde04f1823426a4a6bde295ae6e95",
+"d9/df5/skyc_20.html",
+"da/dfb/dmath_8h.html#ab48bc9b9c8f923e19dafc70b8fff5de2",
+"dc/d6a/powfs_shngs.html",
+"de/d07/cmath_8h.html#a2c8c34529edf8275376a139f936260c7",
+"de/d53/recon__utils_8h.html#a74f945e450ef8677f831285a7fefce90",
+"df/d04/sock_8h.html#a06ca6a939cfb914d1b5b39b34292ecc7",
+"df/def/type_8h.html#a7107a3025720f4bb8df91f91690addad",
+"df/def/type_8h.html#d6/d98/structpts__t_8____unnamed0_____8____unnamed0_____8____unnamed0_____8____unnamed0____"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

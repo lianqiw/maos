@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/gensei.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -106,7 +108,7 @@ Functions</h2></td></tr>
 <tr class="memitem:aeb97684040b0b54674b200336ce88bd0" id="r_aeb97684040b0b54674b200336ce88bd0"><td class="memItemLeft" align="right" valign="top"><a id="aeb97684040b0b54674b200336ce88bd0" name="aeb97684040b0b54674b200336ce88bd0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> *out, const <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> *in)</td></tr>
 <tr class="memitem:a059c55f5946aa554dde59504aad4fc91" id="r_a059c55f5946aa554dde59504aad4fc91"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a059c55f5946aa554dde59504aad4fc91">genseotf</a> (const <a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> *pts, const_anyarray amp, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *opdbias, const_anyarray saa, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvl, real r0, real L0, int embfac)</td></tr>
-<tr class="memitem:af0409d6f675e23c5c167b0699c8e58c5" id="r_af0409d6f675e23c5c167b0699c8e58c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af0409d6f675e23c5c167b0699c8e58c5">gensepsf</a> (<a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a> **psepsfs, const <a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> *otfs, const <a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> *lotf, const_anyarray saa, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvl, int notfx, int notfy)</td></tr>
+<tr class="memitem:a26aea30e9fb89312a02b3a8e6a60bcb7" id="r_a26aea30e9fb89312a02b3a8e6a60bcb7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a26aea30e9fb89312a02b3a8e6a60bcb7">gensepsf</a> (<a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a> **psepsfs, const <a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> *otfs, const <a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> *lotf, const_anyarray saa, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvl, <a class="el" href="../../d7/d63/classlong.html">long</a> notfx, <a class="el" href="../../d7/d63/classlong.html">long</a> notfy)</td></tr>
 <tr class="memitem:ab51030d92fbec997003e5509ece9e85c" id="r_ab51030d92fbec997003e5509ece9e85c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab51030d92fbec997003e5509ece9e85c">gensei</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **pi0, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **pgx, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **pgy, <a class="el" href="../../df/def/type_8h.html#d6/de5/structcccell">cccell</a> **pfotf, const <a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a> *sepsfs, const <a class="el" href="../../d6/d89/mkdtf_8h.html#d3/d9b/structdtf__t">dtf_t</a> *dtf, const <a class="el" href="../../d6/d89/mkdtf_8h.html#d4/d5b/structetf__t">etf_t</a> *etf, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *saa, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *gxyrot, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *siglev, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvlwts, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *goff, int i0scale, int shift2center)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -161,25 +163,26 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generates short exposure OTF by calling genotf() with p/t/t removal set. </p>
+<p>Generates short exposure OTF by calling genotf() with p/t/t removal set. The result is cached in the SEOTF folder.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>subaperture low left coordinate  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp_</td><td>amplitude map. can be dcell or dmat  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opdbias</td><td>opd bias for otf.  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa_</td><td>list of subaperture area, can be dcell or dmat  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>list of wavelength  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>Outer scale  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>subaperture low left coordinate </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp_</td><td>amplitude map. can be dcell or dmat </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">opdbias</td><td>opd bias for otf. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saa_</td><td>list of subaperture area, can be dcell or dmat </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>list of wavelength </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">L0</td><td>Outer scale </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">embfac</td><td>Embedding factor, normally 2 </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated notf*nwvl cell of OTFs. The caller frees it. </dd></dl>
 
 </div>
 </div>
-<a id="af0409d6f675e23c5c167b0699c8e58c5" name="af0409d6f675e23c5c167b0699c8e58c5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af0409d6f675e23c5c167b0699c8e58c5">&#9670;&#160;</a></span>gensepsf()</h2>
+<a id="a26aea30e9fb89312a02b3a8e6a60bcb7" name="a26aea30e9fb89312a02b3a8e6a60bcb7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26aea30e9fb89312a02b3a8e6a60bcb7">&#9670;&#160;</a></span>gensepsf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -212,25 +215,25 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>npsfx</em></span>, </td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>npsfx</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>npsfy</em></span>&#160;)</td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>npsfy</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Upsample the otf in to out while preserving the PSF sampling. It changes the sampling of OTF. Do not use this if the sampling of OTFs are needed to be preserved. Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. <br  />
- otfs and lotf must have the same sampling, but may have different dimension. Assumes that the otfs have peak in center. </p>
+ otfs and lotf must have the same sampling, but may have different dimension. Assumes that the otfs have peak in center.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">psepsfs</td><td>PSF. The sampling depends on sampling of OTF and notfx  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">otfs</td><td>OTFs of down link  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lotf</td><td>OTFs of uplink, optional  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa_</td><td>subaperture area, optional  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>wavelength  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npsfx</td><td>PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated  </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">psepsfs</td><td>PSF. The sampling depends on sampling of OTF and notfx. Initialized if NULL; otherwise each PSF is reallocated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">otfs</td><td>OTFs of down link </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lotf</td><td>OTFs of uplink, optional </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saa_</td><td>subaperture area, optional </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>wavelength </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">npsfx</td><td>PSF x dimension. optional. If specified, the psf will be padded by 0 or truncated </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">npsfy</td><td>PSF y dimension. optional. If specified, the psf will be padded by 0 or truncated </td></tr>
   </table>
   </dd>
@@ -316,7 +319,26 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-<p>generate subaperture short exposure average pixel intensities sampled on detector from short expsoure PSF, the elongation transfer function of the sodium layer, and the detector transfer function. </p>
+<p>generate subaperture short exposure average pixel intensities sampled on detector from short expsoure PSF, the elongation transfer function of the sodium layer, and the detector transfer function.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pi0</td><td>If not NULL, the nsa*ni0 average pixel intensities. Reallocated if NULL or mismatch in size; otherwise zeroed and recomputed. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pgx</td><td>If not NULL, derivative of i0 along x (or radial direction if gxyrot is set). Same handling as pi0. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pgy</td><td>If not NULL, derivative of i0 along y (or azimuthal direction if gxyrot is set). Same handling as pi0. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pfotf</td><td>If not NULL, the existing content is freed and replaced by the newly allocated OTF (including elongation) of each subaperture and wavelength. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sepsfs</td><td>Short exposure PSF, from gensepsf(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtf</td><td>Detector transfer function, one per wavelength. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">etf</td><td>Elongation transfer function, one per wavelength. NULL for none. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>Subaperture area. Used when i0scale is set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gxyrot</td><td>If not NULL, angle (radian) of each subaperture to compute the derivative in rotated coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">siglev</td><td>Signal level. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvlwts</td><td>Wavelength weights. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">goff</td><td>If not NULL, gradient offset (radian) to shift the PSF by. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i0scale</td><td>Whether to scale i0 to match the subaperture area. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">shift2center</td><td>Whether to shift the PSF to be centered. Cannot be used with goff. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -330,8 +352,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample_otf</b> (<a 
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../dc/d87/gensei_8h.html">gensei.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

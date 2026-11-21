@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: cusolve_cbs Class Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -135,12 +137,9 @@ $(function(){initNavTree('d4/d35/classcusolve__cbs.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a78fcd38283d329a3231d66ac19cc857d" id="r_a78fcd38283d329a3231d66ac19cc857d"><td class="memItemLeft" align="right" valign="top"><a id="a78fcd38283d329a3231d66ac19cc857d" name="a78fcd38283d329a3231d66ac19cc857d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_cbs</b> (<a class="el" href="../../db/da8/chol_8h.html#d8/d3f/structspchol">spchol</a> *_C, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *_Up, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *_Vp)</td></tr>
-<tr class="memitem:a103375b62a5cb850d14bc216141e8c35" id="r_a103375b62a5cb850d14bc216141e8c35"><td class="memItemLeft" align="right" valign="top"><a id="a103375b62a5cb850d14bc216141e8c35" name="a103375b62a5cb850d14bc216141e8c35"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>chol_solve</b> (Real *out, const Real *in, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="memitem:a78fcd38283d329a3231d66ac19cc857d" id="r_a78fcd38283d329a3231d66ac19cc857d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a78fcd38283d329a3231d66ac19cc857d">cusolve_cbs</a> (<a class="el" href="../../db/da8/chol_8h.html#d8/d3f/structspchol">spchol</a> *_C, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *_Up, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *_Vp)</td></tr>
+<tr class="memitem:a103375b62a5cb850d14bc216141e8c35" id="r_a103375b62a5cb850d14bc216141e8c35"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a103375b62a5cb850d14bc216141e8c35">chol_solve</a> (Real *out, const Real *in, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:ac710e24fd1f5e3f2bce55daa3c5c879c" id="r_ac710e24fd1f5e3f2bce55daa3c5c879c"><td class="memItemLeft" align="right" valign="top">virtual Real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac710e24fd1f5e3f2bce55daa3c5c879c">solve</a> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="memdesc:ac710e24fd1f5e3f2bce55daa3c5c879c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in single precision mode, the error is large due to accumulation.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pro-attribs" class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -157,7 +156,78 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>y</b></td></tr>
 <tr class="memitem:a1033d18fd9edb8baaad68b776117a365" id="r_a1033d18fd9edb8baaad68b776117a365"><td class="memItemLeft" align="right" valign="top"><a id="a1033d18fd9edb8baaad68b776117a365" name="a1033d18fd9edb8baaad68b776117a365"></a>
 curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Vr</b></td></tr>
 </table>
+<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a78fcd38283d329a3231d66ac19cc857d" name="a78fcd38283d329a3231d66ac19cc857d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78fcd38283d329a3231d66ac19cc857d">&#9670;&#160;</a></span>cusolve_cbs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cusolve_cbs::cusolve_cbs </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../db/da8/chol_8h.html#d8/d3f/structspchol">spchol</a> *</td>          <td class="paramname"><span class="paramname"><em>_C</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>_Up</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>_Vp</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Copy the Cholesky factor _C (and optional low rank terms _Up, _Vp) to GPU for Cholesky back substitution.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">_C</td><td>Cholesky factor. Converted to the plain sparse format in place by chol_convert. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">_Up</td><td>Low rank term, or NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">_Vp</td><td>Low rank term. Used only if _Up is set. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a103375b62a5cb850d14bc216141e8c35" name="a103375b62a5cb850d14bc216141e8c35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a103375b62a5cb850d14bc216141e8c35">&#9670;&#160;</a></span>chol_solve()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cusolve_cbs::chol_solve </td>
+          <td>(</td>
+          <td class="paramtype">Real *</td>          <td class="paramname"><span class="paramname"><em>out</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Real *</td>          <td class="paramname"><span class="paramname"><em>in</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>stream</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Solve C*out=in with the Cholesky factor in GPU, including permutation. The triangular solves use a single thread block and are slow.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>Device array of the solution. May be the same as in. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Device array of the right hand side. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>CUDA stream. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ac710e24fd1f5e3f2bce55daa3c5c879c" name="ac710e24fd1f5e3f2bce55daa3c5c879c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac710e24fd1f5e3f2bce55daa3c5c879c">&#9670;&#160;</a></span>solve()</h2>
 
@@ -189,17 +259,16 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Vr</b></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in single precision mode, the error is large due to accumulation. </p>
+<p>Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in single precision mode, the error is large due to accumulation.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">xout</td><td></td></tr>
-    <tr><td class="paramname">xin</td><td></td></tr>
-    <tr><td class="paramname">stream</td><td></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>Solution. Allocated if empty, otherwise overwritten. May be the same as xin. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Right hand side. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>CUDA stream. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Real </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Always 0. </dd></dl>
 
 <p>Implements <a class="el" href="../../d3/d82/classcusolve__l.html">cusolve_l</a>.</p>
 
@@ -219,8 +288,12 @@ curmat&#160;</td><td class="memItemRight" valign="bottom"><b>Vr</b></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../d4/d35/classcusolve__cbs.html">cusolve_cbs</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

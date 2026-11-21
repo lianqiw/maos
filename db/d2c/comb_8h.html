@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/comb.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -104,7 +106,6 @@ $(function(){initNavTree('db/d2c/comb_8h.html','../../',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a7f46b8214f59e5284bed078e86403b66" id="r_a7f46b8214f59e5284bed078e86403b66"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f46b8214f59e5284bed078e86403b66">comb_stars</a> (<a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *nwfsmax, <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *starvalid, int flag)</td></tr>
-<tr class="memdesc:a7f46b8214f59e5284bed078e86403b66"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine all valid combinations of stars for all wfs. Assume that the stars are sorted in descending S/N order. valid is set to -1 for stars that need to be skipped. flag=0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination. flag=1: regular. flag=2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim) only implemented for npowfs=1 or npowfs=2.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Compute combination </p>
@@ -132,16 +133,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Determine all valid combinations of stars for all wfs. Assume that the stars are sorted in descending S/N order. valid is set to -1 for stars that need to be skipped. flag=0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination. flag=1: regular. flag=2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim) only implemented for npowfs=1 or npowfs=2. </p>
+<p>Determine all valid combinations of stars for all wfs. Assume that the stars are sorted in descending S/N order. valid is set to -1 for stars that need to be skipped. Only implemented for npowfs=1 or npowfs=2. If no valid combination is found, the number of wfs is reduced and the search is retried.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">nwfsmax</td><td>npowfs*1 array for maximum number of wfs </td></tr>
-    <tr><td class="paramname">starvalid</td><td>nstar*npowfs array for validity of star at powfs mode. -1 means invalid </td></tr>
-    <tr><td class="paramname">flag</td><td>see above </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nwfsmax</td><td>npowfs*1 array for maximum number of wfs </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">starvalid</td><td>nstar*npowfs array for validity of star at powfs mode. -1 means invalid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>0: keep order. nstar should be equal to nwfstot. do not reorder stars. Only 1 combination. 1: regular. 2: make wfs[0] brighter than wfs[1] (stars are sorted from bright to dim). </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated nwfstot*ncomb array with the star index of each wfs (wfs of powfs 0 first) for each combination, or NULL if none is valid. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -155,8 +156,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../db/d2c/comb_8h.html">comb.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

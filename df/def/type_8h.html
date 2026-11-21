@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: math/type.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -2035,7 +2037,7 @@ npad</td>
 <area shape="rect" title=" " alt="" coords="680,173,723,245"/>
 <area shape="rect" title=" " alt="" coords="5,5,504,78"/>
 <area shape="poly" title=" " alt="" coords="255,75,262,115,270,132,282,147,310,164,351,177,458,194,572,203,666,208,660,208,572,208,457,200,350,182,308,168,278,151,265,135,257,116,252,80"/>
-<area shape="rect" title=" " alt="" coords="688,5,715,78"/>
+<area shape="rect" href="../../d7/d63/classlong.html" title=" " alt="" coords="682,5,721,78"/>
 <area shape="poly" title=" " alt="" coords="703,76,704,158,699,154,699,79"/>
 <area shape="rect" title=" " alt="" coords="755,5,810,78"/>
 <area shape="poly" title=" " alt="" coords="779,76,771,114,756,150,736,178,733,173,751,148,766,112,775,79"/>
@@ -2050,14 +2052,14 @@ __unnamed__</td>
 <td class="fielddoc">
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a320665323a3307f015cab4b5b1cdf161" name="a320665323a3307f015cab4b5b1cdf161"></a>int</td>
+<a id="aad5d6519853adbb5af7779fcd6e74d6b" name="aad5d6519853adbb5af7779fcd6e74d6b"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 nxsa</td>
 <td class="fielddoc">
 <p>number of cols per subaperture </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a90e7c3a8c0eebab6593e56fc2e782f89" name="a90e7c3a8c0eebab6593e56fc2e782f89"></a>int</td>
+<a id="a4bbd498edc0dc8397bd16fbf4363b800" name="a4bbd498edc0dc8397bd16fbf4363b800"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 nysa</td>
 <td class="fielddoc">
@@ -6388,7 +6390,7 @@ dsax</td>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line"><a class="code hl_define" href="#aedbdd989a69ced62e7db462fc0a02972">PCOL</a>((A),((A)-&gt;ny==1?0:iy))</div>
-<div class="ttc" id="atype_8h_html_aedbdd989a69ced62e7db462fc0a02972"><div class="ttname"><a href="#aedbdd989a69ced62e7db462fc0a02972">PCOL</a></div><div class="ttdeci">#define PCOL(A, iy)</div><div class="ttdef"><b>Definition</b> type.h:507</div></div>
+<div class="ttc" id="atype_8h_html_aedbdd989a69ced62e7db462fc0a02972"><div class="ttname"><a href="#aedbdd989a69ced62e7db462fc0a02972">PCOL</a></div><div class="ttdeci">#define PCOL(A, iy)</div><div class="ttdef"><b>Definition</b> type.h:538</div></div>
 </div><!-- fragment --><p>Calls <a class="el" href="#aedbdd989a69ced62e7db462fc0a02972">PCOL(A, iy)</a> with wrapping of index </p>
 
 </div>
@@ -6412,7 +6414,7 @@ dsax</td>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">((A)?(<a class="code hl_define" href="#a091b8d3eba8a2c02d6804ed4fd835bb9">PR</a>(A,__VA_ARGS__)):0)</div>
-<div class="ttc" id="atype_8h_html_a091b8d3eba8a2c02d6804ed4fd835bb9"><div class="ttname"><a href="#a091b8d3eba8a2c02d6804ed4fd835bb9">PR</a></div><div class="ttdeci">#define PR(...)</div><div class="ttdef"><b>Definition</b> type.h:513</div></div>
+<div class="ttc" id="atype_8h_html_a091b8d3eba8a2c02d6804ed4fd835bb9"><div class="ttname"><a href="#a091b8d3eba8a2c02d6804ed4fd835bb9">PR</a></div><div class="ttdeci">#define PR(...)</div><div class="ttdef"><b>Definition</b> type.h:544</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -6711,7 +6713,7 @@ dsax</td>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">((A) &amp;&amp; NE0(<a class="code hl_define" href="#afba9f40fe63e258302b2c472f9e9f386">P</a>(A,i)))</div>
-<div class="ttc" id="atype_8h_html_afba9f40fe63e258302b2c472f9e9f386"><div class="ttname"><a href="#afba9f40fe63e258302b2c472f9e9f386">P</a></div><div class="ttdeci">#define P(...)</div><div class="ttdef"><b>Definition</b> type.h:506</div></div>
+<div class="ttc" id="atype_8h_html_afba9f40fe63e258302b2c472f9e9f386"><div class="ttname"><a href="#afba9f40fe63e258302b2c472f9e9f386">P</a></div><div class="ttdeci">#define P(...)</div><div class="ttdef"><b>Definition</b> type.h:537</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -6770,8 +6772,12 @@ dsax</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>math</b></li><li class="navelem"><a href="../../df/def/type_8h.html">type.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

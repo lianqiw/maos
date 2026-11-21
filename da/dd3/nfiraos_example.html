@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<title>MAOS: TMT NFIRAOS LGS MCAO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MAOS: LGS MCAO (default)</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -97,31 +99,30 @@ $(function(){initNavTree('da/dd3/nfiraos_example.html','../../',''); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">TMT NFIRAOS LGS MCAO </div></div>
+  <div class="headertitle"><div class="title">LGS MCAO (default) </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The default configuration <a class="el" href="../../d6/d82/default.html">default.conf</a> uses <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a> which describes the baseline configuration of TMT NFIRAOS. It includes the following files to define all the parameters.</p>
+<div class="textblock"><p>The default configuration <a class="el" href="../../d6/d82/default.html">default.conf</a> uses <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a>, which is a generic LGS MCAO system. It includes <a class="el" href="../../d2/d76/mcao_base.html">mcao_base.conf</a> and <a class="el" href="../../da/d9b/wfs_lgs_ttf_tt.html">wfs_lgs_ttf_tt.conf</a>, which in turn include the following files to define all the parameters.</p>
 <ul>
-<li><a class="el" href="../../d8/db3/sim.html">sim.conf</a> to define some general parameters. It deletes all previous entries,</li>
-<li><a class="el" href="../../d5/d78/dm_dual.html">dm_dual.conf</a> to define the dual deformable mirrors</li>
-<li><a class="el" href="../../d1/ddc/atm_mk13n50p.html">atm/atm_mk13n50p.conf</a> to define the turbulence profiles using the Mauna Kea 13N median seeing</li>
-<li><a class="el" href="../../da/d9b/wfs_lgs_ttf_tt.html">wfs_lgs_ttf_tt.conf</a> to define the wavefront sensors which is composed of the following<ul>
-<li><a class="el" href="../../df/d16/powfs_common.html">powfs_common.conf</a></li>
-<li><a class="el" href="../../d6/dab/powfs_none.html">powfs_none.conf</a></li>
-<li><a class="el" href="../../dd/d31/powfs_shlgs.html">powfs_shlgs.conf</a></li>
-<li><a class="el" href="../../d3/d3d/llt__c_l.html">llt_CL.conf</a></li>
-<li><a class="el" href="../../d5/dc1/powfs_shttf.html">powfs_shttf.conf</a></li>
-<li><a class="el" href="../../d3/df3/powfs_shtt.html">powfs_shtt.conf</a></li>
-</ul>
-</li>
+<li><a class="el" href="../../d8/db3/sim.html">sim.conf</a> to define some general parameters. It includes <span class="tt">keck.conf</span> (<a class="el" href="../../d8/d82/keck.html">examples/keck.conf</a>) for the telescope aperture.</li>
+<li><a class="el" href="../../d5/d78/dm_dual.html">dm_dual.conf</a> to define the dual deformable mirrors (conjugated to 0 and 11.8 km)</li>
+<li><a class="el" href="../../d1/ddc/atm_mk13n50p.html">atm/atm_mk13n50p.conf</a> to define the turbulence profiles using the Maunakea 13N median seeing</li>
 <li><a class="el" href="../../d9/d9a/fov_sq34.html">fov_sq34.conf</a> which is composed of the following<ul>
-<li><a class="el" href="../../d0/d2d/fit_sq34.html">fit_sq34.conf</a> to define the DM fitting fov</li>
 <li><a class="el" href="../../d7/db9/evl_sq34.html">evl_sq34.conf</a> to define the science fov for performance evaluation.</li>
+<li><a class="el" href="../../d0/d2d/fit_sq34.html">fit_sq34.conf</a> to define the DM fitting fov</li>
 </ul>
 </li>
 <li><a class="el" href="../../d8/d1c/recon.html">recon.conf</a> to define the parameters about turbulence reconstruction and DM fitting</li>
-<li><a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a> to define debugging and saving/loading geometry and telemetry. </li>
+<li><a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a> to define debugging and saving/loading geometry and telemetry.</li>
+<li><a class="el" href="../../da/d9b/wfs_lgs_ttf_tt.html">wfs_lgs_ttf_tt.conf</a> to define the wavefront sensors which is composed of the following<ul>
+<li><a class="el" href="../../d6/dab/powfs_none.html">powfs_none.conf</a> to clear the WFS list. It includes <a class="el" href="../../df/d16/powfs_common.html">powfs_common.conf</a> for the common WFS parameters.</li>
+<li><a class="el" href="../../dd/d31/powfs_shlgs.html">powfs_shlgs.conf</a> for six Shack-Hartmann LGS WFS. It uses <a class="el" href="../../d3/d3d/llt__c_l.html">llt_CL.conf</a> for the laser launch telescope (<span class="tt">powfs.fnllt</span>).</li>
+<li><a class="el" href="../../d5/dc1/powfs_shttf.html">powfs_shttf.conf</a> for one tip/tilt/focus NGS WFS (it includes <a class="el" href="../../d3/df3/powfs_shtt.html">powfs_shtt.conf</a>).</li>
+<li><a class="el" href="../../d3/df3/powfs_shtt.html">powfs_shtt.conf</a> for two tip/tilt NGS WFS (it includes <a class="el" href="../../dc/d6a/powfs_shngs.html">powfs_shngs.conf</a>).</li>
 </ul>
+</li>
+</ul>
+<p>The TMT NFIRAOS configuration <a class="el" href="../../d9/d63/nfiraos_lgs.html">examples/nfiraos_lgs.conf</a> is <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a> with the TMT aperture (<a class="el" href="../../d8/d0f/tmt.html">examples/tmt.conf</a>) and NFIRAOS specific parameters. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
@@ -133,8 +134,12 @@ $(function(){initNavTree('da/dd3/nfiraos_example.html','../../',''); });
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../d5/d29/page33_example.html">Examples</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

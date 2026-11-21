@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/sim_utils.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -130,7 +132,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>wrap of the generic vonkarman_genatm to generate turbulence screens. Wind velocities are set for each screen. </p>
+<p>wrap of the generic vonkarman_genatm to generate turbulence screens. Wind velocities are set for each screen.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data; simu-&gt;atm and related data are updated. </td></tr>
+  </table>
+  </dd>
+</dl>
 <div id="dynsection-0" onclick="return dynsection.toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;"><span class="dynarrow"><span class="arrowhead closed"></span></span>Here is the call graph for this function:</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">
 </div>
@@ -162,7 +170,13 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Evolving the Sodium layer by updating the elongation transfer function.</p>
-<p>The trombone position is also updated. </p>
+<p>The trombone position is also updated.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -180,7 +194,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Update flags </p>
+<p>Update per powfs flags (gradient output, physical optics, pistat, dithering PLL and optical gain update) for the current WFS time step simu-&gt;wfsisim.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data; simu-&gt;wfsflags is allocated if NULL and updated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -198,7 +218,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Shift gradient when new gradients are ready (in the end of parallel section in sim in CL or wfsgrad in OL). Do not execute in parallel with other routines. In GLAO mode, also averaged gradients from the same type of powfs. </p>
+<p>Shift gradient when new gradients are ready (in the end of parallel section in sim in CL or wfsgrad in OL). Do not execute in parallel with other routines. In GLAO mode, also averaged gradients from the same type of powfs.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -216,7 +242,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>use random number dirived from input seed to seed other stream. necessary to have independant streams for different wfs in threading routines to avoid race condition and have consitent result </p>
+<p>use random number dirived from input seed to seed other stream. necessary to have independant streams for different wfs in threading routines to avoid race condition and have consitent result</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data; random streams are allocated and seeded from simu-&gt;seed. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -253,7 +285,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize simu (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>) and various simulation data structs. Called for every seed. </p>
+<p>Initialize simu (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>) and various simulation data structs. Called for every seed.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">powfs</td><td>WFS configuration; referenced by simu. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">aper</td><td>Aperture data; referenced by simu. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>Reconstructor; referenced by simu. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">iseed</td><td>Index of the seed in parms-&gt;sim.seeds. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated simulation struct; free with sim_free(). </dd></dl>
 
 </div>
 </div>
@@ -271,7 +314,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Release memory of simu (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>) and close files. </p>
+<p>Release memory of simu (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>) and close files.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data to free. May be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -289,7 +338,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Print out wavefront error information and timing at each time step. </p>
+<p>Print out wavefront error information and timing at each time step.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data; status and plotting data are updated. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -316,7 +371,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Output parameters necessary to run postproc using skyc/skyc.c </p>
+<p>Output parameters necessary to run postproc using skyc/skyc.c</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>WFS configuration. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>Reconstructor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -330,8 +393,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../d6/ddb/sim__utils_8h.html">sim_utils.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

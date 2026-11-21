@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Development</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -100,15 +102,70 @@ $(function(){initNavTree('de/d19/page90_devel.html','../../',''); });
   <div class="headertitle"><div class="title">Development </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="el" href="../../d5/d98/page91_basics.html">Fundementals</a></p>
-<p><a class="el" href="../../d7/dbf/page93_maos.html">Architecture</a></p>
-<p><a class="el" href="../../db/dda/page95_profiling.html">Debugging</a> </p>
+<div class="textblock"><p>This section is for developers who want to understand, modify, or extend the code.</p>
+<ul>
+<li><a class="el" href="../../d5/d98/page91_basics.html">Fundamentals</a> &ndash; C fundamentals, MAOS data types, the <code>bin</code> file format, and coding guidelines.</li>
+<li><a class="el" href="../../d7/dbf/page93_maos.html">Architecture</a> &ndash; library layering, the simulation flow, key data structures, threading, and how to add a parameter.</li>
+<li><a class="el" href="../../db/dda/page95_profiling.html">Debugging</a> &ndash; debugging, memory checking, code coverage, and profiling.</li>
+<li><a class="el" href="../../d9/d6e/page96_unittest.html">Unit Test Status</a> &ndash; results of the unit tests and code coverage.</li>
+</ul>
+<p>The physics and numerical algorithms are described in <a class="el" href="../../d4/d15/algorithm.html">Algorithms</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="devel-build"></a>
+Build Directories</h1>
+<p>The code uses autotools and is always built out of the source tree. Several build directories configured with different options can coexist next to the source directory, for example:</p>
+<div class="fragment"><div class="line">cd maos            #the source directory</div>
+<div class="line">./autogen.sh       #needed for a fresh clone or after editing configure.ac or Makefile.am</div>
+<div class="line">mkdir ../optim &amp;&amp; cd ../optim &amp;&amp; ../maos/configure                  #optimized build</div>
+<div class="line">mkdir ../debug &amp;&amp; cd ../debug &amp;&amp; ../maos/configure --enable-debug   #debug build</div>
+<div class="line">make -j8           #executables are placed in bin/ of the build directory</div>
+</div><!-- fragment --><p>Useful <code>configure</code> options for development are <code>--enable-debug</code>, <code>--enable-gcov</code> (code coverage, implies <code>--enable-debug</code>), <code>--disable-double</code> (single precision), <code>--enable-release</code> (portable build without the scheduler), and <code>CC=clang++</code> (compile the C code as C++). See <a class="el" href="../../d3/d4c/page20_compile.html">Compile the Code</a> for all the options.</p>
+<h1 class="doxsection"><a class="anchor" id="devel-unittest"></a>
+Unit Tests</h1>
+<p>The unit tests are in <code>test/cmocka_*</code>.c and use the <a href="https://cmocka.org">CMocka</a> framework. Each test includes <code>test/unittest.h</code>, which provides helpers such as a double precision <code>assert_float_equal()</code>. Tests must not read or write temporary files: generate the input data in memory and check the results with assertions. To add a test program, add it to <code>bin_PROGRAMS</code> in <code>test/Makefile.am</code>.</p>
+<p>Run the tests from the build directory:</p>
+<div class="fragment"><div class="line">make check                                  #all tests (requires cmocka)</div>
+<div class="line">make -C test check TESTS=cmocka_mat         #a single test</div>
+<div class="line">test/cmocka_mat                             #run a test program directly</div>
+</div><!-- fragment --><p>Each run updates the status report <code>docs/unittest_status.md</code> in the build directory. <code>make</code> <code>doc</code> runs the unit tests, generates the report (with the line coverage of <code>sys</code>, <code>math</code>, and <code>lib</code> when configured with <code>--enable-gcov</code>), and builds the manual with doxygen, where the report replaces the placeholder <a class="el" href="../../d9/d6e/page96_unittest.html">Unit Test Status</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="devel-regression"></a>
+End-to-end Regression</h1>
+<p><code>scripts/maos_check.sh</code> runs <code>maos</code> for 100 steps in many configurations (NGS and LGS SCAO, GLAO, LTAO, MOAO, MCAO with various tomography algorithms, pyramid WFS, NCPA calibration, and others) and compares the mean wavefront error with reference values. Run it from the <code>bin</code> folder of a build directory:</p>
+<div class="fragment"><div class="line">cd ../optim/bin</div>
+<div class="line">../../maos/scripts/maos_check.sh 5        #5 m telescope</div>
+<div class="line">../../maos/scripts/maos_check.sh 5 -g-1   #force CPU</div>
+</div><!-- fragment --><p>The first argument is the telescope diameter: 30 uses <code>tmt.conf</code>, 10 uses <code>keck.conf</code>, and other values set <code>aper.d</code>. The remaining arguments are passed to <code>maos</code>. A configuration fails if the result differs from the reference by more than about 10%; the script exits with the number of failures. The reference values are the <code>REF_GPU</code> and <code>REF_CPU</code> arrays in the script, one pair per diameter. When a change intentionally alters the results, update these arrays: each run appends a line with the new <code>REF_GPU=</code>(...) or <code>REF_CPU=</code>(...) array to <code>maos_check.ref</code> in the current directory, which can be copied into the script. The results and logs are saved to <code>maos_check_*</code>.* files.</p>
+<h1 class="doxsection"><a class="anchor" id="devel-ci"></a>
+Continuous Integration</h1>
+<p>The GitHub workflows in <code></code>.github/workflows run on every push and pull request:</p>
+<ul>
+<li><code>linux.yml:</code> builds with gcc (<code>--enable-release</code> with CUDA, without a GPU so that the simulation runs on the CPU), runs <code>make</code> <code>check</code> and <code>make</code> <code>doc</code>, publishes the documentation to the <code>gh-pages</code> branch, builds with clang and runs <code>make</code> <code>check</code>, and runs <code>scripts/maos_check.sh</code> <code>5</code>.</li>
+<li><code>macos.yml:</code> builds on macOS with <code>--enable-release</code> and runs <code>make</code> <code>check</code>.</li>
+<li><code>macos-cpp.yml</code>: builds on macOS with <code>CC=clang++</code> and runs <code>make</code> <code>check</code>. The code must therefore also compile as C++.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="devel-workflow"></a>
+Contribution Checklist</h1>
+<ul>
+<li>Follow the guidelines in <a class="el" href="../../d5/d98/page91_basics.html#sect-guide">Guidelines</a>.</li>
+<li>Add or update unit tests for changes in <code>sys</code>, <code>math</code>, and <code>lib</code>, and run <code>make</code> <code>check</code>.</li>
+<li>Run <code>scripts/maos_check.sh</code> for changes that affect the simulation, and update its reference values if the change is intended to alter the results.</li>
+<li>Document new parameters in the <code></code>.conf files (see <a class="el" href="../../d7/dbf/page93_maos.html#arch-param">Adding a Parameter</a>) and new functions with doxygen comments. <code>make</code> <code>doc</code> builds the manual. </li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
+<div id="page-nav" class="page-nav-panel">
+<div id="page-nav-resize-handle"></div>
+<div id="page-nav-tree">
+<div id="page-nav-contents">
+</div><!-- page-nav-contents -->
+</div><!-- page-nav-tree -->
+</div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

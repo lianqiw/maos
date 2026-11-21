@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['zernike_0',['zernike',['../d8/d2d/zernike_8h.html#a6360bd013ee1ebf6e1459ddd6518d5db',1,'zernike.c']]],
+  ['zernike_5fcov_5fkolmogorov_1',['zernike_cov_kolmogorov',['../d8/d2d/zernike_8h.html#a39da367ec0cb13e0c1915da411ddd68c',1,'zernike.c']]],
+  ['zero_2',['Zero',['../dd/d45/class_cpu.html#a997c2707b6f7a017de399f33290434b5',1,'Cpu::Zero()'],['../d0/ddc/class_gpu.html#a2b33c824562ebb98961c2a5c163ecf54',1,'Gpu::Zero()'],['../d1/d12/class_cell_array.html#a651185ca7a8619a755f08edc1077ad30',1,'CellArray::Zero()'],['../d0/d44/class_num_array.html#a89fe9fabfdc8c13b9d4d0548f2ef9e51',1,'NumArray::Zero()'],['../dc/d87/classcumap__t.html#a7438345e6cb2504e78fe92b29460484e',1,'cumap_t::Zero()'],['../d4/d0f/class_num_cell.html#a651185ca7a8619a755f08edc1077ad30',1,'NumCell::Zero()']]],
+  ['zfarr_5fclose_3',['zfarr_close',['../d3/d7d/zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3',1,'zfarr.c']]],
+  ['zfarr_5fclose_5fn_4',['zfarr_close_n',['../d3/d7d/zfarr_8h.html#a4da312d93e7d98d003098db6976392fc',1,'zfarr.c']]],
+  ['zfarr_5finit_5',['zfarr_init',['../d3/d7d/zfarr_8h.html#af03bf97cddc74f885360118c25140018',1,'zfarr.c']]],
+  ['zfarr_5finit2_6',['zfarr_init2',['../d3/d7d/zfarr_8h.html#a79e8217928d0be5ebaeabe0df079d385',1,'zfarr.c']]],
+  ['zfarr_5fpush_7',['zfarr_push',['../d3/d7d/zfarr_8h.html#ac67fd16ae7408bdcedc3abc08e4ea3c3',1,'zfarr.c']]],
+  ['zfclose_8',['zfclose',['../d3/d7f/bin_8h.html#a4ed840d37c980314e41e565e7dd617d3',1,'bin.c']]],
+  ['zfdopen_9',['zfdopen',['../d3/d7f/bin_8h.html#ae4c74009c38d112ff46c2040b661a59f',1,'bin.c']]],
+  ['zfdopen_5fas_10',['zfdopen_as',['../d3/d7f/bin_8h.html#ac1e9216577962dfa0f9e330e1f2968a0',1,'bin.c']]],
+  ['zfeof_11',['zfeof',['../d3/d7f/bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201',1,'bin.c']]],
+  ['zferrno_12',['zferrno',['../d3/d7f/bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b',1,'bin.c']]],
+  ['zfexist_13',['zfexist',['../d3/d7f/bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22',1,'bin.c']]],
+  ['zfisfits_14',['zfisfits',['../d3/d7f/bin_8h.html#a01b67a362199a6b984e5759f7d84c168',1,'bin.c']]],
+  ['zflen_15',['zflen',['../d3/d7f/bin_8h.html#a0cc9385f1a99368d36091786b313dea2',1,'bin.c']]],
+  ['zfname_16',['zfname',['../d3/d7f/bin_8h.html#aa8967ca7ae67be2fb41b5497a5cd4ce0',1,'bin.c']]],
+  ['zfopen_17',['zfopen',['../d3/d7f/bin_8h.html#aaf11bfd20fedb311db4a1103211bdbfc',1,'bin.c']]],
+  ['zfpos_18',['zfpos',['../d3/d7f/bin_8h.html#aa2befd7adf220d7469f537919c2c3975',1,'bin.c']]],
+  ['zfread_19',['zfread',['../d3/d7f/bin_8h.html#ac266a2663e090233d93f35fc2453a753',1,'bin.c']]],
+  ['zfrewind_20',['zfrewind',['../d3/d7f/bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289',1,'bin.c']]],
+  ['zfseek_21',['zfseek',['../d3/d7f/bin_8h.html#acff7a399a7daacbf8fcca57c18732f57',1,'bin.c']]],
+  ['zftouch_22',['zftouch',['../d3/d7f/bin_8h.html#a413945d9b9ed2b96159910115707a7ad',1,'bin.c']]],
+  ['zfwrite_23',['zfwrite',['../d3/d7f/bin_8h.html#ace6a770f21f23800c9f497498495d1d5',1,'bin.c']]]
+];

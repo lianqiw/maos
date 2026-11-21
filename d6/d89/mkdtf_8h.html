@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/mkdtf.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -116,13 +118,10 @@ Functions</h2></td></tr>
 <tr class="memitem:adce340f42de02d8e6e09312a407fec4b" id="r_adce340f42de02d8e6e09312a407fec4b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adce340f42de02d8e6e09312a407fec4b">dtf_otf</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **nominal, <a class="el" href="../../d7/d63/classlong.html">long</a> notfx, <a class="el" href="../../d7/d63/classlong.html">long</a> notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat)</td></tr>
 <tr class="memitem:aecc59f77035e09a61d1d74fa4a9d12ab" id="r_aecc59f77035e09a61d1d74fa4a9d12ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecc59f77035e09a61d1d74fa4a9d12ab">mkdtf</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wvls, real dxsa, real embfac, <a class="el" href="../../d7/d63/classlong.html">long</a> notfx, <a class="el" href="../../d7/d63/classlong.html">long</a> notfy, <a class="el" href="../../d7/d63/classlong.html">long</a> pixpsax, <a class="el" href="../../d7/d63/classlong.html">long</a> pixpsay, real pixthetax, real pixthetay, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *pixoffx, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *pixoffy, real pixblur, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *pixrot)</td></tr>
 <tr class="memitem:a23757e9470a03af49f7e86f4d2e94435" id="r_a23757e9470a03af49f7e86f4d2e94435"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d4/d5b/structetf__t">etf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a23757e9470a03af49f7e86f4d2e94435">mketf</a> (const <a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> *dtfs, const_anyarray sodium, int icol, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *srot, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *srsa, real hs, real htel, real za_rad, int no_interp)</td></tr>
-<tr class="memitem:aebceaa4b5aa6ca6e7aaa011d7dea2bc5" id="r_aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memItemLeft" align="right" valign="top"><a id="aebceaa4b5aa6ca6e7aaa011d7dea2bc5" name="aebceaa4b5aa6ca6e7aaa011d7dea2bc5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>dtf_free_do</b> (<a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> *dtfs)</td></tr>
-<tr class="memitem:ad2d2722feb99b759b848cbab3f600eb3" id="r_ad2d2722feb99b759b848cbab3f600eb3"><td class="memItemLeft" align="right" valign="top"><a id="ad2d2722feb99b759b848cbab3f600eb3" name="ad2d2722feb99b759b848cbab3f600eb3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a class="el" href="#d4/d5b/structetf__t">etf_t</a> *etfs)</td></tr>
+<tr class="memitem:aebceaa4b5aa6ca6e7aaa011d7dea2bc5" id="r_aebceaa4b5aa6ca6e7aaa011d7dea2bc5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aebceaa4b5aa6ca6e7aaa011d7dea2bc5">dtf_free_do</a> (<a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> *dtfs)</td></tr>
+<tr class="memitem:ad2d2722feb99b759b848cbab3f600eb3" id="r_ad2d2722feb99b759b848cbab3f600eb3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad2d2722feb99b759b848cbab3f600eb3">etf_free_do</a> (<a class="el" href="#d4/d5b/structetf__t">etf_t</a> *etfs)</td></tr>
 <tr class="memitem:a42b0c09d2d32b74de2c5b88ea515eeff" id="r_a42b0c09d2d32b74de2c5b88ea515eeff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42b0c09d2d32b74de2c5b88ea515eeff">smooth</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *profile, real dxnew)</td></tr>
-<tr class="memitem:a14ac4da1e0e8b091c2e570c4f3566041" id="r_a14ac4da1e0e8b091c2e570c4f3566041"><td class="memItemLeft" align="right" valign="top"><a id="a14ac4da1e0e8b091c2e570c4f3566041" name="a14ac4da1e0e8b091c2e570c4f3566041"></a>
-<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>smooth_cell</b> (const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *profile, real dxnew)</td></tr>
+<tr class="memitem:a14ac4da1e0e8b091c2e570c4f3566041" id="r_a14ac4da1e0e8b091c2e570c4f3566041"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a14ac4da1e0e8b091c2e570c4f3566041">smooth_cell</a> (const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *profile, real dxnew)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routine to generate detector transfer function and elongation transfer function due to sodium layer. </p>
@@ -146,17 +145,22 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>etf_free_do</b> (<a c
 <div id="dynsection-0-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="../../d8/d9c/structdtf__t__coll__graph.png" border="0" usemap="#adtf__t_coll__map" loading="lazy" alt="Collaboration graph"/></div>
 <map name="adtf__t_coll__map" id="adtf__t_coll__map">
-<area shape="rect" title=" " alt="" coords="179,262,220,335"/>
-<area shape="rect" href="../../df/def/type_8h.html#df/d47/structdcell" title=" " alt="" coords="5,5,47,78"/>
-<area shape="poly" title=" " alt="" coords="22,75,23,114,25,156,36,199,56,237,79,258,107,273,136,284,165,292,160,293,134,289,104,278,76,262,52,240,31,201,20,157,17,114,21,80"/>
-<area shape="rect" href="../../df/def/type_8h.html#d6/ddb/structdspcell" title=" " alt="" coords="95,5,152,78"/>
-<area shape="poly" title=" " alt="" coords="128,75,142,152,153,195,167,237,174,254,168,253,162,239,148,197,137,153,126,80"/>
-<area shape="rect" title=" " alt="" coords="176,5,231,78"/>
-<area shape="poly" title=" " alt="" coords="203,75,204,102,202,246,197,245,199,102,201,80"/>
-<area shape="rect" href="../../df/def/type_8h.html#db/d16/structcmat" title=" " alt="" coords="290,5,333,78"/>
-<area shape="poly" title=" " alt="" coords="311,75,303,167,295,210,284,240,263,264,236,283,234,278,259,260,280,237,290,208,298,166,308,79"/>
-<area shape="rect" title=" " alt="" coords="366,5,393,78"/>
-<area shape="poly" title=" " alt="" coords="385,75,388,114,385,157,374,201,352,240,327,263,297,279,266,290,237,296,236,290,265,284,295,274,324,258,348,237,369,199,380,156,383,114,383,80"/>
+<area shape="rect" title=" " alt="" coords="217,427,258,500"/>
+<area shape="rect" href="../../df/def/type_8h.html#df/d47/structdcell" title=" " alt="" coords="98,183,140,255"/>
+<area shape="poly" title=" " alt="" coords="109,252,104,289,100,327,104,366,119,402,135,421,156,435,203,455,198,456,153,440,131,425,114,405,99,367,95,327,98,288,107,258"/>
+<area shape="rect" href="../../d7/d63/classlong.html" title=" " alt="" coords="133,5,172,78"/>
+<area shape="poly" title=" " alt="" coords="132,56,106,75,73,102,42,135,18,174,10,198,8,218,18,264,30,308,43,341,63,370,94,401,119,419,147,434,203,454,198,455,145,439,116,424,91,405,58,373,38,343,25,310,13,266,3,218,5,197,13,172,38,132,70,98,103,71,135,52"/>
+<area shape="poly" title=" " alt="" coords="133,80,128,102,120,167,115,166,123,101,135,75"/>
+<area shape="rect" href="../../df/def/type_8h.html#d6/ddb/structdspcell" title=" " alt="" coords="164,183,221,255"/>
+<area shape="poly" title=" " alt="" coords="161,75,183,166,178,166,160,80"/>
+<area shape="rect" href="../../df/def/type_8h.html#db/d16/structcmat" title=" " alt="" coords="245,183,289,255"/>
+<area shape="poly" title=" " alt="" coords="171,54,196,75,218,100,238,133,253,167,247,167,233,135,214,103,192,79,172,59"/>
+<area shape="poly" title=" " alt="" coords="194,253,199,324,213,403,215,412,210,410,208,404,194,325,191,257"/>
+<area shape="rect" title=" " alt="" coords="313,183,368,255"/>
+<area shape="poly" title=" " alt="" coords="340,253,331,326,320,367,303,405,289,424,272,440,269,435,285,420,298,402,315,365,326,325,337,257"/>
+<area shape="poly" title=" " alt="" coords="265,254,246,412,241,410,260,256"/>
+<area shape="rect" title=" " alt="" coords="437,183,465,255"/>
+<area shape="poly" title=" " alt="" coords="457,253,459,290,456,329,445,370,424,405,390,432,351,450,311,459,275,464,274,459,310,454,349,445,388,428,420,402,440,367,450,328,454,289,454,257"/>
 </map>
 </div>
 <table class="fieldtable">
@@ -225,28 +229,28 @@ pixthetay</td>
 <p>Pixel size along y (radial </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a94d3362514e7c5ce115586659307a06b" name="a94d3362514e7c5ce115586659307a06b"></a>int</td>
+<a id="ae1646c673549a19a82f01abcaa6d4421" name="ae1646c673549a19a82f01abcaa6d4421"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 notfx</td>
 <td class="fielddoc">
 <p>FFT size along x </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="af3034c57cde9b00c3b0b56ac30a84a02" name="af3034c57cde9b00c3b0b56ac30a84a02"></a>int</td>
+<a id="ade199dbf6e92bbdd73c2d077ddb7eb81" name="ade199dbf6e92bbdd73c2d077ddb7eb81"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 notfy</td>
 <td class="fielddoc">
 <p>FFT size along y </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="ab0653db7289fe6f4063607f0a9b64126" name="ab0653db7289fe6f4063607f0a9b64126"></a>int</td>
+<a id="a2385b878bfee8ce873f974645205c736" name="a2385b878bfee8ce873f974645205c736"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 pixpsax</td>
 <td class="fielddoc">
 <p>Number of pixels along x </p>
 </td></tr>
 <tr><td class="fieldtype">
-<a id="a8d5c109c34a0734c2a561e651aa0fcd2" name="a8d5c109c34a0734c2a561e651aa0fcd2"></a>int</td>
+<a id="a4d946793c4f175e38c30339a47ec99ec" name="a4d946793c4f175e38c30339a47ec99ec"></a><a class="el" href="../../d7/d63/classlong.html">long</a></td>
 <td class="fieldname">
 pixpsay</td>
 <td class="fielddoc">
@@ -418,16 +422,17 @@ nwvl</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a OTF for pix blur and pixel binning effect </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Create a OTF for pix blur and pixel binning effect</p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">nominal</td><td>The result </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">notfx</td><td>size of FFT </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">notfy</td><td>size of FFT </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">pdthetax</td><td>Ratio of pixel dtheta vs PSF dtheta squared. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">pdthetay</td><td>Ratio of pixel dtheta vs PSF dtheta squared. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">pixrot</td><td>Rotation of pixel array against PSF (polar coordinate) </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">pixblur</td><td>Pixel blur sigma(fraction of pixel) </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">treat</td><td>Embed a FFT shift in moninal </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nominal</td><td>The result. Allocated or resized as needed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">notfx</td><td>Size of FFT along x. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">notfy</td><td>Size of FFT along y. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pdthetax</td><td>Ratio of pixel size vs PSF sampling along x. 0 to disable pixel binning. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pdthetay</td><td>Ratio of pixel size vs PSF sampling along y. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation of pixel array against PSF (radian, polar coordinate). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixblur</td><td>Pixel blur sigma (fraction of pixel). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">treat</td><td>1: embed a FFT shift in nominal with dotf_treat(). 2: apply dfftshift. 0: none. </td></tr>
   </table>
   </dd>
 </dl>
@@ -507,7 +512,26 @@ nwvl</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>mkdtf() computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction. </p>
+<p>mkdtf() computes the parameters used to sample PSFs onto detectors in the Fourier domain. It incorporates size of the detector pixels, and charge diffusion. For polar coordinate detectors, it also rotates the pixels and pixel coordinates so that they are aranged along the radial and azimuthal direction.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wvls</td><td>List of wavelength (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dxsa</td><td>Subaperture size (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">embfac</td><td>Embedding factor (2). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">notfx</td><td>FFT size along x. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">notfy</td><td>FFT size along y. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixpsax</td><td>Number of pixels along x(r). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixpsay</td><td>Number of pixels along y(a). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetax</td><td>Pixel size along x (r) (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetay</td><td>Pixel size along y (a) (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixoffx</td><td>Offset of image center from center of pixel array, along x or radial, in unit of pixel. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixoffy</td><td>Offset of image center from center of pixel array, along y or azimuthal, in unit of pixel. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixblur</td><td>Pixel blur sigma (fraction of pixel). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation angle of pixels islands in each subaperture. For polar coordinate only. Can be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated array of nwvl <a class="el" href="#d3/d9b/structdtf__t">dtf_t</a>; free with <a class="el" href="#a3a970db34227c79d8b55302019889911">dtf_free()</a>. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">wvls</td><td>List of wavelength  </td></tr>
@@ -543,7 +567,7 @@ nwvl</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const_anyarray</td>          <td class="paramname"><span class="paramname"><em>sodium</em></span>, </td>
+          <td class="paramtype">const_anyarray</td>          <td class="paramname"><span class="paramname"><em>sodium_</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -582,10 +606,26 @@ nwvl</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Compute the elongation transfer function (ETF) for LGS WFS subapertures from the sodium profile. The DTF nominal is fused into the ETF.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtfs</td><td>The dtfs, one per wavelength. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sodium_</td><td>The sodium profile. In each cell first column is coordinate (m). Different cells must have the same coordinate. Can also be a dmat. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">icol</td><td>Which sodium profile column to use (wrapped). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srot</td><td>Rotation angle of each subaperture (radian). Required. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srsa</td><td>Subaperture to LLT distance (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>LGS WFS focus altitude (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">htel</td><td>Telescope altitude (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">za_rad</td><td>Zenith angle (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">no_interp</td><td>Use direct sum instead of interpolation + FFT. Slower. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated array of nwvl <a class="el" href="#d4/d5b/structetf__t">etf_t</a>; free with <a class="el" href="#a74e74e9b6320fc56da458c784afd7368">etf_free()</a>. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dtfs</td><td>The dtfs  </td></tr>
-    <tr><td class="paramname">sodium</td><td>The sodium profile. First column is coordinate.  </td></tr>
+    <tr><td class="paramname">sodium_</td><td>The sodium profile. First column is coordinate.  </td></tr>
     <tr><td class="paramname">icol</td><td>Which sodium profile to use  </td></tr>
     <tr><td class="paramname">srot</td><td>Rotation angle of each subaperture. NULL for NGS WFS  </td></tr>
     <tr><td class="paramname">srsa</td><td>Subaperture to LLT distance  </td></tr>
@@ -593,6 +633,54 @@ nwvl</td>
     <tr><td class="paramname">htel</td><td>Telescope altitude  </td></tr>
     <tr><td class="paramname">za_rad</td><td>Telescope zenith angle in radian  </td></tr>
     <tr><td class="paramname">no_interp</td><td>Use direct sum instead of interpolation + FFT. Slower </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aebceaa4b5aa6ca6e7aaa011d7dea2bc5" name="aebceaa4b5aa6ca6e7aaa011d7dea2bc5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebceaa4b5aa6ca6e7aaa011d7dea2bc5">&#9670;&#160;</a></span>dtf_free_do()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dtf_free_do </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> *</td>          <td class="paramname"><span class="paramname"><em>dtfs</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free the array of <a class="el" href="#d3/d9b/structdtf__t">dtf_t</a> (one per wavelength). Use the <a class="el" href="#a3a970db34227c79d8b55302019889911">dtf_free()</a> macro.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dtfs</td><td>The array to free. Can be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad2d2722feb99b759b848cbab3f600eb3" name="ad2d2722feb99b759b848cbab3f600eb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2d2722feb99b759b848cbab3f600eb3">&#9670;&#160;</a></span>etf_free_do()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void etf_free_do </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#d4/d5b/structetf__t">etf_t</a> *</td>          <td class="paramname"><span class="paramname"><em>etfs</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free the array of <a class="el" href="#d4/d5b/structetf__t">etf_t</a> (one per wavelength). Use the <a class="el" href="#a74e74e9b6320fc56da458c784afd7368">etf_free()</a> macro.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">etfs</td><td>The array to free. Can be NULL. </td></tr>
   </table>
   </dd>
 </dl>
@@ -617,7 +705,45 @@ nwvl</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>profile is nxm array with m&gt;=2. First column is coordinate and the remaining is function of coordinate. This routine smoothes the profile on new coordinate with spacing of dxnew. </p>
+<p>profile is nxm array with m&gt;=2. First column is coordinate and the remaining is function of coordinate. This routine smoothes the profile on new coordinate with spacing of dxnew.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">prof</td><td>The profile. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dxnew</td><td>The new coordinate spacing. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated smoothed profile, or a reference to prof if no smoothing is needed. The caller frees it. </dd></dl>
+
+</div>
+</div>
+<a id="a14ac4da1e0e8b091c2e570c4f3566041" name="a14ac4da1e0e8b091c2e570c4f3566041"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14ac4da1e0e8b091c2e570c4f3566041">&#9670;&#160;</a></span>smooth_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> * smooth_cell </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *</td>          <td class="paramname"><span class="paramname"><em>profs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>dxnew</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Apply smooth() to each sodium profile in profs.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">profs</td><td>The profiles. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dxnew</td><td>The new coordinate spacing. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated dcell; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -631,8 +757,12 @@ nwvl</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d6/d89/mkdtf_8h.html">mkdtf.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

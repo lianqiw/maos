@@ -183,8 +183,8 @@ var type_8h =
       [ "aoi", "df/def/type_8h.html#aaf9b6e72a00cd854904c33648de65fa1", null ]
     ] ],
     [ "pts_t", "df/def/type_8h.html#de/d88/structpts__t", [
-      [ "nxsa", "df/def/type_8h.html#a320665323a3307f015cab4b5b1cdf161", null ],
-      [ "nysa", "df/def/type_8h.html#a90e7c3a8c0eebab6593e56fc2e782f89", null ],
+      [ "nxsa", "df/def/type_8h.html#aad5d6519853adbb5af7779fcd6e74d6b", null ],
+      [ "nysa", "df/def/type_8h.html#a4bbd498edc0dc8397bd16fbf4363b800", null ],
       [ "dx", "df/def/type_8h.html#a0de974d017f51d0cb3d30e6406bb0cf4", null ],
       [ "dy", "df/def/type_8h.html#a494f53b2987007bb4550f3c548ff1bf6", null ]
     ] ],

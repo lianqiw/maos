@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: w01_t Class Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -112,10 +114,47 @@ $(function(){initNavTree('d0/d2e/classw01__t.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7608aa640723daaa7c5e1706da793991" id="r_a7608aa640723daaa7c5e1706da793991"><td class="memItemLeft" align="right" valign="top"><a id="a7608aa640723daaa7c5e1706da793991" name="a7608aa640723daaa7c5e1706da793991"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>w01_t</b> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *R_W0, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *R_W1, int R_nxx)</td></tr>
+<tr class="memitem:a7608aa640723daaa7c5e1706da793991" id="r_a7608aa640723daaa7c5e1706da793991"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7608aa640723daaa7c5e1706da793991">w01_t</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *R_W0, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *R_W1, int R_nxx)</td></tr>
 <tr class="memitem:ae0f32a3855ab89308d236e33463b4c63" id="r_ae0f32a3855ab89308d236e33463b4c63"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0f32a3855ab89308d236e33463b4c63">apply</a> (curcell &amp;out, const curcell &amp;in, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream) const</td></tr>
 </table>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Data for aperture bi-linear weighting, used in fitting </p>
+</div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a7608aa640723daaa7c5e1706da793991" name="a7608aa640723daaa7c5e1706da793991"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7608aa640723daaa7c5e1706da793991">&#9670;&#160;</a></span>w01_t()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">w01_t::w01_t </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *</td>          <td class="paramname"><span class="paramname"><em>R_W0</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>R_W1</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>R_nxx</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Copy the bilinear weighting W0 (sparse) and W1 (vector) to GPU. W0 of fully illuminated points is represented by the constant W0v and index list W0f, while that of partially illuminated points is kept as sparse W0p.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">R_W0</td><td>Sparse bilinear weighting W0. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">R_W1</td><td>Vector weighting W1 for piston removal. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">R_nxx</td><td>Size of the fitting grid along x. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ae0f32a3855ab89308d236e33463b4c63" name="ae0f32a3855ab89308d236e33463b4c63"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae0f32a3855ab89308d236e33463b4c63">&#9670;&#160;</a></span>apply()</h2>
@@ -140,7 +179,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>xout=w0*xin - w1*(w1'*xin). Notice that the weighting per direction is applied at the next step (HA^T) </p>
+<p>xout=w0*xin - w1*(w1'*xin). Notice that the weighting per direction is applied at the next step (HA^T)</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>Output, must be allocated and contiguous. Overwritten. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Input, contiguous, one column per direction. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>CUDA stream. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -158,8 +205,12 @@ Public Member Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../d0/d2e/classw01__t.html">w01_t</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

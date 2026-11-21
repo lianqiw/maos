@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: sys/scheduler_client.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -234,12 +236,10 @@ Functions</h2></td></tr>
 <tr class="memitem:aff3729eaeaa11e6b58769cb1e930684f" id="r_aff3729eaeaa11e6b58769cb1e930684f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff3729eaeaa11e6b58769cb1e930684f">init_hosts</a> ()</td></tr>
 <tr class="memitem:a66ce638173a027fd06e7d714a40d71a6" id="r_a66ce638173a027fd06e7d714a40d71a6"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a66ce638173a027fd06e7d714a40d71a6">lookup_hostaddr</a> (const char *hostname)</td></tr>
 <tr class="memitem:afb6b3f2cfe62dbcf0437cacd8328ab5d" id="r_afb6b3f2cfe62dbcf0437cacd8328ab5d"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb6b3f2cfe62dbcf0437cacd8328ab5d">lookup_hostname</a> (const char *hostaddr)</td></tr>
-<tr class="memitem:a937c9f864f3c274f2ad154e29e73461f" id="r_a937c9f864f3c274f2ad154e29e73461f"><td class="memItemLeft" align="right" valign="top"><a id="a937c9f864f3c274f2ad154e29e73461f" name="a937c9f864f3c274f2ad154e29e73461f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_connect</b> (const char *hostname)</td></tr>
+<tr class="memitem:a937c9f864f3c274f2ad154e29e73461f" id="r_a937c9f864f3c274f2ad154e29e73461f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a937c9f864f3c274f2ad154e29e73461f">scheduler_connect</a> (const char *hostname)</td></tr>
 <tr class="memitem:a58bf53ff0d18a7c82955c024e31fe525" id="r_a58bf53ff0d18a7c82955c024e31fe525"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58bf53ff0d18a7c82955c024e31fe525">scheduler_connect_self</a> (int block)</td></tr>
 <tr class="memitem:ab8adf4adef989fbe64052a8e8766b75d" id="r_ab8adf4adef989fbe64052a8e8766b75d"><td class="memItemLeft" align="right" valign="top">pthread_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab8adf4adef989fbe64052a8e8766b75d">scheduler_listen</a> (thread_fun fun)</td></tr>
-<tr class="memitem:a25cea5f5488b400b89f7cac75f93b815" id="r_a25cea5f5488b400b89f7cac75f93b815"><td class="memItemLeft" align="right" valign="top"><a id="a25cea5f5488b400b89f7cac75f93b815" name="a25cea5f5488b400b89f7cac75f93b815"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_report_path</b> (const char *path)</td></tr>
+<tr class="memitem:a25cea5f5488b400b89f7cac75f93b815" id="r_a25cea5f5488b400b89f7cac75f93b815"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25cea5f5488b400b89f7cac75f93b815">scheduler_report_path</a> (const char *path)</td></tr>
 <tr class="memitem:a143c4df02307a2d39088a677ca9fcd51" id="r_a143c4df02307a2d39088a677ca9fcd51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a143c4df02307a2d39088a677ca9fcd51">scheduler_start</a> (int nthread, int ngpu, int waiting)</td></tr>
 <tr class="memitem:a2b93c8f28b99804e00ac8483359a97fa" id="r_a2b93c8f28b99804e00ac8483359a97fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2b93c8f28b99804e00ac8483359a97fa">scheduler_finish</a> (int status)</td></tr>
 <tr class="memitem:a291e438e222f941d3969e605277de68e" id="r_a291e438e222f941d3969e605277de68e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a291e438e222f941d3969e605277de68e">scheduler_report</a> (<a class="el" href="#d6/d3a/structstatus__t">status_t</a> *status)</td></tr>
@@ -247,8 +247,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_report_path
 <tr class="memitem:a4a334a554ca5c7ac7d9a5828c82e7bfc" id="r_a4a334a554ca5c7ac7d9a5828c82e7bfc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4a334a554ca5c7ac7d9a5828c82e7bfc">scheduler_socket</a> (int dir, int *sfd, int id)</td></tr>
 <tr class="memitem:a928e4a2456fb419b4361122459bf63fb" id="r_a928e4a2456fb419b4361122459bf63fb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a928e4a2456fb419b4361122459bf63fb">call_addr2line</a> (char *ans, int nans, const char *cmd)</td></tr>
 <tr class="memitem:a8c35208c8888c74ab0eac162dd93801e" id="r_a8c35208c8888c74ab0eac162dd93801e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c35208c8888c74ab0eac162dd93801e">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
-<tr class="memitem:ae3019ac0eb0800bb9d3c5df9818216b6" id="r_ae3019ac0eb0800bb9d3c5df9818216b6"><td class="memItemLeft" align="right" valign="top"><a id="ae3019ac0eb0800bb9d3c5df9818216b6" name="ae3019ac0eb0800bb9d3c5df9818216b6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>print_backtrace</b> ()</td></tr>
+<tr class="memitem:ae3019ac0eb0800bb9d3c5df9818216b6" id="r_ae3019ac0eb0800bb9d3c5df9818216b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae3019ac0eb0800bb9d3c5df9818216b6">print_backtrace</a> ()</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines that will be used to talk to the scheduler. </p>
@@ -449,10 +448,10 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Parse and add host info to hosts[] and hostaddr[]. hosts contains the shortcut name, without dot and hostaddr contains the FQDN and optionally the port </p>
+<p>Parse and add host info to hosts[] and hostaddr[]. hosts contains the shortcut name, without dot and hostaddr contains the FQDN and optionally the port</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">line</td><td>contains hostname[=hostaddr:port] </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">line</td><td>Contains hostname[=hostaddr:port]. Empty lines and lines starting with # are ignored. </td></tr>
   </table>
   </dd>
 </dl>
@@ -509,7 +508,14 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Translate hostname to address based on ~/.aos/hosts </p>
+<p>Translate hostname to address based on ~/.aos/hosts</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hostname</td><td>The host name. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The host address (internal data; do not free), or hostname itself if not found. </dd></dl>
 
 </div>
 </div>
@@ -527,7 +533,39 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Translate address to hostname based on ~/.aos/hosts </p>
+<p>Translate address to hostname based on ~/.aos/hosts</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hostaddr</td><td>The host address. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The host name (internal data; do not free), or hostaddr itself if not found. </dd></dl>
+
+</div>
+</div>
+<a id="a937c9f864f3c274f2ad154e29e73461f" name="a937c9f864f3c274f2ad154e29e73461f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a937c9f864f3c274f2ad154e29e73461f">&#9670;&#160;</a></span>scheduler_connect()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int scheduler_connect </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>hostname</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Connect to the scheduler at hostname using PORT. Returns the socket or -1 if failed or the scheduler is disabled.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hostname</td><td>Host name or address of the scheduler. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The socket, or -1 on failure. </dd></dl>
 
 </div>
 </div>
@@ -545,7 +583,14 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>To open a port and connect to scheduler in the local host </p>
+<p>To open a port and connect to scheduler in the local host. Launches the scheduler if it is not running.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">block</td><td>Nonzero to retry up to 100 times; otherwise retry twice. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The socket, or -1 on failure. </dd></dl>
 
 </div>
 </div>
@@ -563,7 +608,38 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Started by maos to listen to the sock which connects to the scheduler for commands. It reuses existing connection. </p>
+<p>Started by maos to listen to the sock which connects to the scheduler for commands. It reuses existing connection.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fun</td><td>Thread function that is called with the socket as its argument. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The thread, or 0 on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a25cea5f5488b400b89f7cac75f93b815" name="a25cea5f5488b400b89f7cac75f93b815"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25cea5f5488b400b89f7cac75f93b815">&#9670;&#160;</a></span>scheduler_report_path()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void scheduler_report_path </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>path</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Report the job path (command line) to the scheduler via a persistent connection. The path is saved so that it can be resent with path=NULL after reconnection.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>The job path. NULL to resend the saved path. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -590,7 +666,15 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set. </p>
+<p>Called by maos to report a job start to scheduler and wait for signal before proceeding if waiting is set.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nthread</td><td>Number of threads the job uses. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ngpu</td><td>Number of GPUs the job uses. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">waiting</td><td>Nonzero to wait for the scheduler (or for idle CPUs if the scheduler is unavailable) before returning. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -608,7 +692,13 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Called by maos to notify scheduler the completion of a job </p>
+<p>Called by maos to notify scheduler the completion of a job</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">status</td><td>0 for success; a crash signal reports a crash; otherwise the job is reported as killed. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -626,7 +716,13 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>called by sim.c to report job status. Do not try to reconnect. </p>
+<p>called by sim.c to report job status. Do not try to reconnect. If not connected, a thread is launched to connect in the background.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">status</td><td>The job status. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -653,7 +749,16 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Ask scheduler (maybe in another machine) to launch executable. Host may be null or contain coma separated hosts returns &lt;0 for error. &gt;=0 success </p>
+<p>Ask scheduler (maybe in another machine) to launch executable. Host may be null or contain coma separated hosts</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">hostarr</td><td>Coma separated host names; NULL means localhost. Temporarily modified but restored. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">argc</td><td>Number of arguments. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">argv</td><td>Arguments. argv[0] is the executable. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if launched on at least one host, -1 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -680,7 +785,16 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>send a drawing sock to the scheduler for caching (dir=1) or request an existing sock (dir=-1) or new sock (dir=0) for drawing. abs(id) should be between 1 and 9999. the id send to the scheduler has the following meaning: -10000&lt;id&lt;0: request existing socket (drawdaemon). preferably for the same id&lt;-10000: request new socket (drawdaemon). id&gt;0: save socket (drawdaemon) for reuse. </p>
+<p>send a drawing sock to the scheduler for caching (dir=1) or request an existing sock (dir=-1) or new sock (dir=0) for drawing. abs(id) should be between 1 and 9999. the id send to the scheduler has the following meaning: -10000&lt;id&lt;0: request existing socket (drawdaemon). preferably for the same id&lt;-10000: request new socket (drawdaemon). id&gt;0: save socket (drawdaemon) for reuse.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dir</td><td>1: send sfd for caching; -1: request an existing socket; 0: request a new socket. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">sfd</td><td>The socket to send (dir=1) or the received socket (dir=0 or -1). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">id</td><td>Drawing id (sign is ignored). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, nonzero on failure. </dd></dl>
 
 </div>
 </div>
@@ -707,7 +821,16 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Execute addr2line as specified in buf, combine the answer, and return the string. </p>
+<p>Execute addr2line as specified in cmdstr and combine the answer into a string. If it fails, the program name and addresses are copied instead.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">ans</td><td>Output string. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nans</td><td>Size of ans. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cmdstr</td><td>The addr2line command. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0. </dd></dl>
 
 </div>
 </div>
@@ -729,7 +852,33 @@ timlast</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert backtrace address to source line. Do not call routines that may call malloc as the mutex in malloc may already be locked. return 0 if success otherwise -1 </p>
+<p>Convert backtrace address to source line. Do not call routines that may call malloc as the mutex in malloc may already be locked.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Addresses returned by backtrace(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of addresses. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if success otherwise -1 </dd></dl>
+
+</div>
+</div>
+<a id="ae3019ac0eb0800bb9d3c5df9818216b6" name="ae3019ac0eb0800bb9d3c5df9818216b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3019ac0eb0800bb9d3c5df9818216b6">&#9670;&#160;</a></span>print_backtrace()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void print_backtrace </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Print the backtrace of the current call stack with symbol names. </p>
 
 </div>
 </div>
@@ -743,8 +892,12 @@ timlast</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>sys</b></li><li class="navelem"><a href="../../d4/d64/scheduler__client_8h.html">scheduler_client.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<title>MAOS: Fundementals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MAOS: Fundamentals</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -97,115 +99,206 @@ $(function(){initNavTree('d5/d98/page91_basics.html','../../',''); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Fundementals </div></div>
+  <div class="headertitle"><div class="title">Fundamentals </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The user is required to have a good understanding of the C fundamentals, like the pointer, to study and improve the code. Here we list a few to remind the user.</p>
+<div class="textblock"><p>To study and improve the code you need a good understanding of C fundamentals, such as pointers. This page reviews a few of them, then describes the data types, the <code>bin</code> file format, and the coding guidelines used in MAOS.</p>
 <h1 class="doxsection"><a class="anchor" id="sect-array"></a>
 Memory Access</h1>
-<p>If you declare an array: <code>double a[1024];</code> the symbol actually contains the address of a 1024x8 byte memory region that is automatically allocated in the stack (malloc, calloc allocations memory in the heap). Suppose the address of the memory region is 0xFF00. Assignment <code>a[0]=1;</code> puts 1 in memory started at 0xFF00. And <code>a[1]=1;</code> puts 1 in memory started at 0xFF08.</p>
-<p>Stack is the memory region allocated dynamically when calling a function. All variables reside in stack automatically disappear when the function returns.</p>
-<p>Heap is the memory reservoir that persists during the life time of the executable. The functions <code>malloc</code>, <code>calloc</code>, <code>realloc</code> reserves memory in the heap while <code>free</code> removes the reservation.</p>
+<p>If you declare an array <code>double a[1024];</code>, the symbol <code>a</code> refers to a 1024x8 byte memory region that is automatically allocated on the stack (<code>malloc</code> and <code>calloc</code> allocate memory on the heap). Suppose the address of the memory region is 0xFF00. The assignment <code>a[0]=1;</code> puts 1 in the memory starting at 0xFF00, and <code>a[1]=1;</code> puts 1 in the memory starting at 0xFF08.</p>
+<p>The stack is the memory region allocated automatically when a function is called. All variables on the stack disappear when the function returns.</p>
+<p>The heap is the memory reservoir that persists during the lifetime of the program. The functions <code>malloc</code>, <code>calloc</code>, and <code>realloc</code> reserve memory on the heap, while <code>free</code> releases the reservation.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-pointer"></a>
 Pointers</h2>
-<p>A pointer is a variable that stores the address of a memory region. For example, <code>void *p;</code> is a basic pointer that just stores the address and can not do any thing about the memory it points to. Its value can be assigned to any other non const vector or from any vector (1d or 2d).</p>
-<p>However, a normal pointer like <code>double *p;</code> also contains information about the memory it points to. More specifically, the compiler know the length of each element so that it can compute the address offset of the elements, just like arrays. For example: </p><div class="fragment"><div class="line">double *p; //assume p=0xFF00.</div>
-<div class="line">p[0]=1;    //stores 1 into memory region at 0xFF00</div>
-<div class="line">p[1]=1;    //stores 1 into memory region at 0xFF08 because a double requires 8 bytes.</div>
-<div class="line">p=p+1;     //now p=0xFF08, i.e., points to the next element, instead of 0xFF01 </div>
-<div class="line">p[i]=1;    //is strictly equivalent to &lt;code&gt;*(p+i)=1;&lt;/code&gt; </div>
+<p>A pointer is a variable that stores the address of a memory region. For example, <code>void *p;</code> is a basic pointer that only stores the address; it cannot be used to access the memory it points to. A <code>void
+*</code> pointer can be assigned to or from any other (non-const) data pointer without a cast in C.</p>
+<p>A typed pointer like <code>double *p;</code> also carries information about the memory it points to. The compiler knows the size of each element, so it can compute the address offset of the elements, just like arrays. For example: </p><div class="fragment"><div class="line">double *p; //assume p=0xFF00.</div>
+<div class="line">p[0]=1;    //stores 1 into memory at 0xFF00</div>
+<div class="line">p[1]=1;    //stores 1 into memory at 0xFF08 because a double requires 8 bytes.</div>
+<div class="line">p=p+1;     //now p=0xFF08, i.e., points to the next element, instead of 0xFF01</div>
+<div class="line">p[i]=1;    //is strictly equivalent to *(p+i)=1;</div>
 </div><!-- fragment --> <h2 class="doxsection"><a class="anchor" id="sect-1d-pointer"></a>
 Array Pointers</h2>
-<p>A pointer can be used to create and index an 1-dimensional (1-d) array in the heap: </p><pre class="fragment">double *p; //declares a double array pointer.
-p=calloc(1024,sizeof(double)); //Allocate a memory block of 1024x8 byte and store its address in p.
-p[0]=1;    //will assign 1 to the first number in the array.
-</pre><h2 class="doxsection"><a class="anchor" id="sect-const"></a>
+<p>A pointer can be used to create and index a 1-dimensional (1-d) array on the heap: </p><div class="fragment"><div class="line">double *p; //declares a double array pointer.</div>
+<div class="line">p=calloc(1024,sizeof(double)); //Allocate a memory block of 1024x8 bytes and store its address in p.</div>
+<div class="line">p[0]=1;    //assigns 1 to the first number in the array.</div>
+<div class="line">free(p);   //release the memory.</div>
+</div><!-- fragment --> <h2 class="doxsection"><a class="anchor" id="sect-const"></a>
 Constness</h2>
-<p>Beware about a const pointer and pointer that points to constant memory regions: </p><div class="fragment"><div class="line">const double *p2;  //p2 is a pointer that points to a memory region that can not be changed. </div>
+<p>Distinguish a pointer to constant memory from a constant pointer: </p><div class="fragment"><div class="line">const double *p2;  //p2 points to memory that cannot be changed through p2.</div>
 <div class="line">p2=p;              //ok</div>
 <div class="line">p2[0]=1;           //illegal.</div>
-<div class="line">double *const p3=p;//p2 is a constant pointer that can not have its value changed. </div>
+<div class="line">double *const p3=p;//p3 is a constant pointer: its value cannot be changed.</div>
 <div class="line">p3=p;              //illegal</div>
 <div class="line">p3[0]=1;           //ok</div>
-</div><!-- fragment --> <h2 class="doxsection"><a class="anchor" id="sect-2d-pointer"></a>
+</div><!-- fragment --><p> In MAOS, input arguments that are not modified are declared <code>const</code>, for example <code>void <a class="el" href="../../da/dfb/dmath_8h.html#ab5adc5cd1e79d9a79751ba482728f230">dcp(dmat **out, const dmat *in)</a>;</code>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-2d-pointer"></a>
 Two Dimension Pointers</h2>
-<p>A two-dimensional (2-d) pointer is like an array pointer. It stores the address of a memory region. However, unlike the array pointer, the compiler knows the length of the first dimension so that is can compute the memory location given 2-d index like <code>a</code>[2][3]; </p><div class="fragment"><div class="line">double (*p)[3]=calloc(3*2,sizeof(double)); //can be used in the same way as double a[2][3];</div>
-</div><!-- fragment --><p> Notice that in 2-d indexing <code>a</code>[2][3], the last index changes the fastest. <br  />
-</p>
+<p>A pointer to an array (a 2-d pointer) also stores the address of a memory region. Unlike the plain array pointer, the compiler knows the length of the last dimension, so it can compute the memory location of a 2-d index like <code>a</code>[2][3]: </p><div class="fragment"><div class="line">double (*p)[3]=calloc(3*2,sizeof(double)); //can be used in the same way as double a[2][3];</div>
+</div><!-- fragment --><p> Notice that in C 2-d indexing <code>a</code>[2][3], the last index changes the fastest. The MAOS array types below use the opposite (column-major, Fortran or Matlab) order: the first index changes the fastest.</p>
 <h1 class="doxsection"><a class="anchor" id="sect-maos-data"></a>
 MAOS Data Types</h1>
 <h2 class="doxsection"><a class="anchor" id="sect-maos-math"></a>
 Fundamental Math Types</h2>
-<p>MAOS defines and uses a few structs to manage memory for basic math types. Those types are defined in the <code>math</code> folder.</p>
-<p>For example, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> is used for 1-d or 2-d double array, and <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> is used for complex array. There is a predefined macro <a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P()</a> to help indexing the arrays: </p><div class="fragment"><div class="line">dmat *a=dnew(10,4); //allocates memory like double a[4][10]</div>
+<p>MAOS uses a few structs to manage memory for basic math types. They are defined in <code><a class="el" href="../../df/def/type_8h.html">math/type.h</a></code> and the functions are declared in the <code>math</code> folder. Each array struct records its type (a magic number, see <a class="el" href="#sect-bin">Bin file format</a>), the data pointer <code>p</code>, the dimensions <code>nx</code> (rows, the fast changing index) and <code>ny</code> (columns), optional <code>keywords</code> (a string saved with the data), and reference counting information so that several arrays can share the same memory.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Type  </th><th class="markdownTableHeadNone">Element  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a>  </td><td class="markdownTableBodyNone"><code>real</code>  </td><td class="markdownTableBodyNone">real array (double, or float with <span class="tt">--disable-double</span>)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a>  </td><td class="markdownTableBodyNone"><code>comp</code>  </td><td class="markdownTableBodyNone">complex array (double complex, or float complex with <span class="tt">--disable-double</span>)  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#d4/d6c/structsmat">smat</a>  </td><td class="markdownTableBodyNone"><code>float</code>  </td><td class="markdownTableBodyNone">single precision real array  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#d9/d5c/structzmat">zmat</a>  </td><td class="markdownTableBodyNone"><code>fcomplex</code>  </td><td class="markdownTableBodyNone">single precision complex array  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a>  </td><td class="markdownTableBodyNone"><code>long</code>  </td><td class="markdownTableBodyNone">integer array  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a>, <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a>  </td><td class="markdownTableBodyNone"><code>real</code>, <code>comp</code>  </td><td class="markdownTableBodyNone">sparse matrix in compressed sparse column format  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#dc/d44/structssp">ssp</a>, <a class="el" href="../../df/def/type_8h.html#d4/d71/structzsp">zsp</a>  </td><td class="markdownTableBodyNone"><code>float</code>, <code>fcomplex</code>  </td><td class="markdownTableBodyNone">single precision sparse matrix  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>  </td><td class="markdownTableBodyNone"><code>real</code>  </td><td class="markdownTableBodyNone">x and y coordinates of a list of points (<code>locx</code>, <code>locy</code>, <code>nloc</code>)  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a>  </td><td class="markdownTableBodyNone"><code>real</code>  </td><td class="markdownTableBodyNone">2-d OPD or amplitude map with origin (<code>ox</code>, <code>oy</code>) and sampling (<code>dx</code>, <code>dy</code>)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>  </td><td class="markdownTableBodyNone">any  </td><td class="markdownTableBodyNone">cell array of pointers to any of the above  </td></tr>
+</table>
+<p><code>real</code> and <code>comp</code> are defined in <code>math/numtype.h</code>. They are <code>double</code> and <code>dcomplex</code> by default. When configured with <span class="tt">--disable-double</span>, the macro <code>CPU_SINGLE</code> is set to 1 and <code>real</code> and <code>comp</code> become <code>float</code> and <code>fcomplex</code>. The <code>d</code> and <code>c</code> prefixed functions then operate on single precision data, so code that uses <code>real</code> works in both modes.</p>
+<p>Use the macros defined in <code><a class="el" href="../../df/def/type_8h.html">math/type.h</a></code> to access the arrays:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Macro  </th><th class="markdownTableHeadNone">Meaning  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(A)</a></code>  </td><td class="markdownTableBodyNone">the data pointer <code>A-&gt;p</code>  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(A,i)</a></code>  </td><td class="markdownTableBodyNone">element <code>i</code>, treating the array as 1-d  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P(A,ix,iy)</a></code>  </td><td class="markdownTableBodyNone">element at row <code>ix</code> and column <code>iy</code>, i.e., <code>A-&gt;p</code>[ix+iy*A-&gt;nx]  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#a091b8d3eba8a2c02d6804ed4fd835bb9">PR(A,ix,iy)</a></code>  </td><td class="markdownTableBodyNone">like <code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P()</a></code>, but an index is wrapped to 0 when that dimension has size 1  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#aedbdd989a69ced62e7db462fc0a02972">PCOL(A,iy)</a></code>  </td><td class="markdownTableBodyNone">pointer to the first element of column <code>iy</code>  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="../../df/def/type_8h.html#ace9dc2f64789615eca5eee8fa8e80bb6">PN(A)</a></code>, <code><a class="el" href="../../df/def/type_8h.html#afe7fbb6b2b187cd6e7fb2de743368378">NX(A)</a></code>, <code><a class="el" href="../../df/def/type_8h.html#a740ad3c2e76d06da584ebe3328750115">NY(A)</a></code>  </td><td class="markdownTableBodyNone">number of elements, rows, and columns; 0 if <code>A</code> is <code>NULL</code>  </td></tr>
+</table>
+<p>When the code is compiled with <span class="tt">--enable-debug</span>, <code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P()</a></code> checks that the index is within the array bounds and calls error() otherwise.</p>
+<div class="fragment"><div class="line">dmat *a=dnew(10,4); //allocates memory like double a[4][10]</div>
 <div class="line">P(a,8,3)=1.;        //visits memory like a[3][8]</div>
-<div class="line">P(a,39)=1.;         //visits memory as if it is 1d array.</div>
-<div class="line">dfree(a);           //frees the memory</div>
+<div class="line">P(a,39)=1.;         //visits memory as if it is a 1d array.</div>
+<div class="line">dfree(a);           //frees the memory and sets a to NULL.</div>
 <div class="line">cmat *a2=cnew(10,4);</div>
-<div class="line">P(a2,7,3)=1.+1*I;</div>
+<div class="line">P(a2,7,3)=COMPLEX(1,1);</div>
 <div class="line">cfree(a2);</div>
-</div><!-- fragment --><p> Sparse arrays are managed using <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> for double and <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> for complex. </p><div class="fragment"><div class="line">dsp *a3=dspnew(10,8,50); //10x8 array with maximum of 50 elements.</div>
-</div><!-- fragment --><p> In addition, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> is used to describe x and y coordinate of uniformly spaced points. <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> is derived from <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> and used to describe 2-d array of opd or amplitude data with origin and resolution information.</p>
-<p>Numerical arrays can be stores in <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> arrays like in matlab. Different types have their specific cell definitions. For example, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> is used to contain <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> pointers, and <a class="el" href="../../df/def/type_8h.html#d8/d42/structccell">ccell</a> is used to contain <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> pointers. All cell arrays share the same struct layout and can be allocated using cellnew() and deallocated using <a class="el" href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree()</a>. However, access elements is better handled with specific cell types to avoid casting. The <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> array can contain arbitrary points. </p><div class="fragment"><div class="line">dcell *c=cellnew(4,4);//allocates a cell array.</div>
-<div class="line">P(c,2,1)=a;           //stores dmat pointer in a cell.</div>
-<div class="line">cellfree(c);</div>
+</div><!-- fragment --><p> Sparse arrays are managed using <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> for real and <a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a> for complex values. </p><div class="fragment"><div class="line">dsp *a3=dspnew(10,8,50); //10x8 sparse matrix with room for 50 non-zero elements.</div>
+<div class="line">dspfree(a3);</div>
+</div><!-- fragment --><p> In addition, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> describes the x and y coordinates of a set of points, usually on a regular grid with spacing <code>dx</code> and <code>dy</code>. <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> describes a 2-d array of OPD or amplitude data together with its origin, sampling, and conjugation height. Its first part has the same layout as <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a>, so a map can be passed to <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> functions via <code>map-&gt;dmat</code>; likewise <code>loc-&gt;dmat</code> views the coordinates as an <code>nloc</code> x 2 <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a>.</p>
+<p>Numerical arrays can be stored in <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> arrays like in Matlab. Each type has its own cell type: for example, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> contains <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> pointers, <a class="el" href="../../df/def/type_8h.html#d8/d42/structccell">ccell</a> contains <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a> pointers, and <a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> contains <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> pointers. Cells of cells (<a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a>, ...) and cells of maps and locs (<a class="el" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a>, <a class="el" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>) also exist. All cell arrays share the same struct layout. Allocate them with the typed constructors, such as <code>dcellnew()</code> or <code>ccellnew()</code> (macros that call cellnew() and cast the result), and free them with <a class="el" href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree()</a> or the typed versions such as dcellfree(). Freeing a cell also frees its elements. Accessing elements is best done through the specific cell types to avoid casting. The generic <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> type can hold arrays of different types. </p><div class="fragment"><div class="line">dcell *c=dcellnew(4,4);//allocates a cell array of dmat.</div>
+<div class="line">P(c,2,1)=dnew(10,4);   //stores a dmat pointer in the cell.</div>
+<div class="line">dcellfree(c);          //frees the cell and the dmat it contains.</div>
 <div class="line"> </div>
-<div class="line">ccell *c2=cellnew(4,4);</div>
-<div class="line">P(c2,2,3)=a2;</div>
+<div class="line">dspcell *c3=dspcellnew(5,5);</div>
+<div class="line">P(c3,3,2)=dspnew(10,8,50);</div>
+<div class="line">dspcellfree(c3);</div>
 <div class="line"> </div>
-<div class="line">dspcell*c3=cellnew(5,5);</div>
-<div class="line">P(c3,3,2)=a3;</div>
-<div class="line"> </div>
-<div class="line">cell *c4=cellnew(5,5);</div>
-<div class="line">P(c4,0,0)=a;</div>
-<div class="line">P(c4,1,0)=a2;</div>
-<div class="line">P(c4,2,0)=a3;</div>
-</div><!-- fragment --><p>Functions for those fundamental math types are defined using macros that works similarly to the C++ template.</p>
+<div class="line">cell *c4=cellnew(5,5); //generic cell. Elements must be cast to cell*.</div>
+<div class="line">P(c4,0,0)=(cell*)dnew(10,4);</div>
+<div class="line">P(c4,1,0)=(cell*)cnew(10,4);</div>
+<div class="line">cellfree(c4);</div>
+</div><!-- fragment --><p> Many functions accept any array type through the transparent unions <code>anyarray</code>, <code>anycell</code>, and their <code>const</code> variants defined in <code><a class="el" href="../../df/def/type_8h.html">math/type.h</a></code>, so no cast is needed when calling them, for example writebin() and <a class="el" href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree()</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-type-generic"></a>
+Type Generic Implementation</h2>
+<p>Functions for the fundamental math types are written once and compiled for each type, similar to C++ templates. <code>math/defs.h</code> defines the macro <code>X(name)</code> that expands to <code>dname</code>, <code>sname</code>, <code>cname</code>, <code>zname</code>, or <code>lname</code>, and the element type <code>T</code> and its real counterpart <code>R</code>, depending on the flags <code>COMP_COMPLEX</code>, <code>COMP_SINGLE</code>, and <code>COMP_LONG</code>. The files <code>math/dmath.c</code>, <code>smath.c</code>, <code>cmath.c</code>, <code>zmath.c</code>, and <code>lmath.c</code> each set these flags and include the same template sources (<code>mat.c</code>, <code>matmath.c</code>, <code>blas.c</code>, <code>sp.c</code>, ...). To add a function, write it once in the template file as <code>X(foo)</code> using <code>T</code> and <code>R</code>, and declare it in the corresponding header macro (for example <code>math/mat.h</code>). Do not edit the per-type wrapper files.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-specific-type"></a>
 Specific Types</h2>
-<p>Specific calculation related types are often encapsulated in corresponding data types. Those types are defined in the <code>lib</code> folder.</p>
+<p>Types used by specific calculations are defined together with the code that uses them in the <code>lib</code> folder, for example <code><a class="el" href="../../d3/d84/lib_2accphi_8h.html#d9/db3/structpropdata__t">propdata_t</a></code> for ray tracing (<code><a class="el" href="../../d3/d84/lib_2accphi_8h.html">lib/accphi.h</a></code>), <code><a class="el" href="../../db/d1f/locfft_8h.html#d3/dcd/structlocfft__t">locfft_t</a></code> for PSF computation (<code><a class="el" href="../../db/d1f/locfft_8h.html">lib/locfft.h</a></code>), and <code>hyst_t</code> for DM hysteresis (<code><a class="el" href="../../d7/dbc/hyst_8h.html">lib/hyst.h</a></code>). The simulation specific structs are in <code><a class="el" href="../../d4/d38/parms_8h.html">maos/parms.h</a></code> and <code><a class="el" href="../../d6/d94/maos_2types_8h.html">maos/types.h</a></code> (see <a class="el" href="../../d7/dbf/page93_maos.html">Architecture</a>).</p>
 <h1 class="doxsection"><a class="anchor" id="sect-bin"></a>
 Bin file format</h1>
-<p>The <code>bin</code> file format is a simple custom binary format developed specifically to save telemetry data for <code>maos</code>. It can be converted to <code>fits</code> file using the supplied binary <code>bin/bin2fits</code>. The data in <code>bin</code> file are stored with the native endian-ness to facilitate memory mapping.</p>
-<p>Data in <code>bin</code> file are stored as one or multiple consecutive <code>blocks</code> : </p><div class="fragment"><div class="line">block1 :self described data</div>
+<p>The <code>bin</code> file format is a simple binary format developed to save telemetry data for <code>maos</code>. The data are stored with the native endianness to allow memory mapping. MAOS writes and reads data with writebin() and readbin() (or typed versions such as <a class="el" href="../../df/dfb/mathdef_8h.html#ad0368089202674ea67ae0d38214c5783">dread()</a> and dcellread()). The format is selected by the file name suffix (see <code>zfopen()</code> in <code>sys/bin.c</code>):</p>
+<ul>
+<li><code></code>.bin: the <code>bin</code> format described below. If a file name has no recognized suffix, <code></code>.bin is appended.</li>
+<li><code></code>.fits: the FITS format. Arrays are saved as FITS images and the keywords as FITS header cards. The elements of a cell array are saved as consecutive HDUs (the primary image followed by extensions).</li>
+<li><code></code>.bin.gz, <code></code>.fits.gz: gzip compressed. <code></code>.bin.zst, <code></code>.fits.zst: zstd compressed (when compiled with zstd support). When reading, compression is detected from the file content (magic bytes), not the name.</li>
+</ul>
+<p>The supplied program <code>bin/bin2fits</code> converts <code>bin</code> files to <code>fits</code> files.</p>
+<p>Data in a <code>bin</code> file are stored as one or multiple consecutive <code>blocks:</code> </p><div class="fragment"><div class="line">block1 :self described data</div>
 <div class="line">[block2] :(optional) self described data</div>
 <div class="line">...</div>
 </div><!-- fragment --><p>Each <code>block</code> is composed of a <code>header</code> and the <code>data</code>.</p>
-<p>The <code>header</code> contains an optional part followed by a mandatory part. The optional part describes the data:</p>
-<div class="fragment"><div class="line">0x6500: 4 byte uint</div>
+<p>The <code>header</code> contains an optional part followed by a mandatory part. The optional part contains the keywords string that describes the data:</p>
+<div class="fragment"><div class="line">0x6500: 4 byte uint (M_COMMENT)</div>
 <div class="line">length: 8 byte uint equal to the length of the following string</div>
-<div class="line">string: variable length, padded to multiple of 8.</div>
-<div class="line">length2: 8 byte uint equal to length</div>
-<div class="line">0x6500: 4 byte uint</div>
-</div><!-- fragment --><p>The mandatory part contains the type and size of <code>data</code> </p><div class="fragment"><div class="line">0x6600: 4 byte uint. Dummy, to facilitate memory alignment for mmap.</div>
+<div class="line">string: variable length, null terminated and padded with zeros to a multiple of 8 bytes.</div>
+<div class="line">length: 8 byte uint, same as above</div>
+<div class="line">0x6500: 4 byte uint (M_COMMENT)</div>
+</div><!-- fragment --><p>The string consists of <code>key=value</code> entries separated by new lines, just like the configuration files. If several such parts are present, the strings are concatenated when read.</p>
+<p>The mandatory part contains the type and size of the <code>data:</code> </p><div class="fragment"><div class="line">0x6600: 4 byte uint (M_SKIP). Padding to facilitate memory alignment for mmap.</div>
 <div class="line">magic:  4 byte uint. See sys/bin.h for all supported types</div>
 <div class="line">nx:     8 byte uint. Inner dimension (fast changing index)</div>
 <div class="line">ny:     8 byte uint. Outer dimension (slow changing index)</div>
-</div><!-- fragment --><p>The <code>data</code> can be either array of fundamental data type or array of other arrays. For array of the fundamental data type, it is simply a copy of the data in the native endian-ness. For arrays of other arrays, the <code>magic</code> is set to 0x6420 and the data is composed of <span class="tt">nx*ny</span> <code>blocks</code>. The <code>data</code> part is skipped if either <code>nx</code> or <code>ny</code> equals to zero.</p>
-<p>The <code>bin</code> file is readable in Matlab or Python using the supplied <code>read</code> or <code>readbin</code> routines. In <code>maos</code>, it can be either read or mapped to memory. For example The atmospheric screens are mapped to memory which enables using extra large atmospheric screens that may not fit in the memory and also enables sharing between concurrent maos runs that uses the same seed.</p>
+</div><!-- fragment --><p>Commonly used <code>magic</code> numbers (enum in <code><a class="el" href="../../d3/d7f/bin_8h.html">sys/bin.h</a></code>):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Magic  </th><th class="markdownTableHeadNone">Name  </th><th class="markdownTableHeadNone">Data  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x6402  </td><td class="markdownTableBodyNone"><code>M_DBL</code>  </td><td class="markdownTableBodyNone">double  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0x6408  </td><td class="markdownTableBodyNone"><code>M_FLT</code>  </td><td class="markdownTableBodyNone">float  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x6404  </td><td class="markdownTableBodyNone"><code>M_CMP</code>  </td><td class="markdownTableBodyNone">double complex  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0x6409  </td><td class="markdownTableBodyNone"><code>M_ZMP</code>  </td><td class="markdownTableBodyNone">float complex  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x6403, 0x6405  </td><td class="markdownTableBodyNone"><code>M_INT64</code>, <code>M_INT32</code>  </td><td class="markdownTableBodyNone">64 or 32 bit integers  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0x640A, 0x640B  </td><td class="markdownTableBodyNone"><code>M_INT8</code>, <code>M_INT16</code>  </td><td class="markdownTableBodyNone">8 or 16 bit integers  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x6401, 0x6400  </td><td class="markdownTableBodyNone"><code>M_DSP64</code>, <code>M_CSP64</code>  </td><td class="markdownTableBodyNone">sparse double/complex with 64 bit index  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0x6407, 0x6406  </td><td class="markdownTableBodyNone"><code>M_DSP32</code>, <code>M_CSP32</code>  </td><td class="markdownTableBodyNone">sparse double/complex with 32 bit index  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x6430&ndash;0x6433  </td><td class="markdownTableBodyNone"><code>M_SSP64</code>, <code>M_SSP32</code>, <code>M_ZSP64</code>, <code>M_ZSP32</code>  </td><td class="markdownTableBodyNone">single precision sparse  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">0x6421  </td><td class="markdownTableBodyNone"><code>MCC_ANY</code>  </td><td class="markdownTableBodyNone">cell array  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">0x64FF  </td><td class="markdownTableBodyNone"><code>M_EOD</code>  </td><td class="markdownTableBodyNone">end of data marker, used in socket transfers  </td></tr>
+</table>
+<p>The <code>data</code> can be either an array of a fundamental data type or an array of other arrays:</p>
+<ul>
+<li>For an array of a fundamental data type, it is simply a copy of the <code>nx*ny</code> elements in the native endianness.</li>
+<li>For a sparse matrix, it contains the number of non-zero elements <code>nzmax</code> (8 bytes), the column pointers (<code>ny+1</code> integers), the row indices (<code>nzmax</code> integers), and the values (<code>nzmax</code> elements).</li>
+<li>For an array of other arrays (a cell), the <code>magic</code> is set to 0x6421 (<code>MCC_ANY</code>) and the data is composed of <code>nx*ny</code> <code>blocks</code>. An empty element is saved as a block with zero dimensions.</li>
+</ul>
+<p>The <code>data</code> part is empty if either <code>nx</code> or <code>ny</code> equals zero.</p>
+<p>The <code>bin</code> file is readable in Python with <code>scripts/readbin.py</code>, in Matlab with <code>scripts/readbin.m</code> or the <code>read</code> mex routine built from <code>mex/read.c</code>, in Julia with <code>scripts/readbin.jl</code>, and in IDL with <code>scripts/readbin.pro</code>. In <code>maos</code>, a file can be either read or mapped into memory. For example, the atmospheric screens can be mapped into memory, which enables using very large screens that may not fit in memory and sharing between concurrent maos runs that use the same seed.</p>
 <h1 class="doxsection"><a class="anchor" id="sect-guide"></a>
 Guidelines</h1>
 <p>When modifying the code, please adhere to the following guidelines.</p>
 <p>Memory allocation:</p>
 <ul>
-<li>When declaring a struct, always initialize it to zero by calling calloc or memset, unless you have a good reason not to.</li>
-<li>Use calloc instead of malloc to initialize the memory unless for large arrays that you will initialize immediately.</li>
+<li>When declaring a struct, always initialize it to zero by calling <code>calloc</code> (or <code>mycalloc</code>) or <code>memset</code>, unless you have a good reason not to.</li>
+<li>Use <code>calloc</code> instead of <code>malloc</code> to initialize the memory, except for large arrays that you will initialize immediately.</li>
+<li>Free everything you allocate. Arrays are freed with the matching function (<code>dfree</code>, <code>cfree</code>, <code>cellfree</code>, ...), which also sets the pointer to <code>NULL</code>. Memory accounting (see <a class="el" href="../../db/dda/page95_profiling.html">Debugging</a>) reports memory that is not freed.</li>
 </ul>
 <p>Functions:</p>
 <ul>
-<li>The input parameters that is also the output should be grouped in the beginning, except when there is a main object for the algorithm.</li>
-<li>In any function, there should usually be at most 1 return statement unless NULL or error code are returned pre-mature.</li>
-<li>One utility function should be handle only one major mask to maximize reusability.</li>
-<li>Input arguments to utility functions (in lib folder) should be basic types to maximize reusability. Input arguments to simulation functions can be wrapped (like simu) to maximum readability.</li>
+<li>Input parameters that are also output should be grouped at the beginning, except when there is a main object for the algorithm.</li>
+<li>A function should usually have at most one return statement, except when returning <code>NULL</code> or an error code early.</li>
+<li>A utility function should handle only one major task to maximize reusability.</li>
+<li>Input arguments to utility functions (in the <code>lib</code> folder) should be basic types to maximize reusability. Input arguments to simulation functions (in the <code>maos</code> folder) can be wrapped (like <code><a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a></code> or <code><a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a></code>) to improve readability.</li>
 </ul>
 <p>Others:</p>
 <ul>
-<li>Avoid non constant static variables/pointers unless you have a good reason to do so. static variables are bad for multi-threading and hard to free after usage.</li>
-<li>whenever modify something temporarily for debugging, make a warning. let it easily identifiable. not make a hidden bug.</li>
-<li>Do not hard code adjustable parameters.</li>
-<li>Always declare unchanged variables to constants. declare pointers as restrict if possible.</li>
-<li>Do not include system headers in header files unless necessary. include those headers in .c file.</li>
-<li>Avoid function casting. It will hide data type check and hide bugs. </li>
+<li>Avoid non-constant static variables/pointers unless you have a good reason to do so. Static variables are bad for multi-threading and hard to free after use.</li>
+<li>Whenever you modify something temporarily for debugging, emit a <code>warning()</code> so that it is easily identifiable and does not become a hidden bug.</li>
+<li>Do not hard code adjustable parameters. Make them configuration parameters (see <a class="el" href="../../d7/dbf/page93_maos.html">Architecture</a>).</li>
+<li>Always declare unchanged variables as <code>const</code>. Declare pointers as <code>restrict</code> if possible.</li>
+<li>Do not include system headers in header files unless necessary. Include those headers in the <code></code>.c file.</li>
+<li>Avoid function pointer casting. It hides data type checks and hides bugs.</li>
+<li>Use the logging macros (<code>info</code>, <code>warning</code>, <code>error</code>, <code>dbg</code>, ...) instead of <code>printf</code> so that the output respects <code>MAOS_LOG_LEVEL</code> and goes to the log file.</li>
+<li>The code must also compile as C++ (CI builds it with <code>CC=clang++</code>), so do not use C++ keywords such as <code>new</code> or <code>class</code> as identifiers and cast explicitly where C++ requires it.</li>
+<li>Each source file carries the GPL copyright header (see <code>scripts/addcopy.sh</code>). </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
@@ -218,8 +311,12 @@ Guidelines</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../de/d19/page90_devel.html">Development</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: cusolve_cg Class Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -141,8 +143,7 @@ $(function(){initNavTree('de/d5d/classcusolve__cg.html','../../',''); });
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a387d964ee6b5e78bb8666d9a3a7baad8" id="r_a387d964ee6b5e78bb8666d9a3a7baad8"><td class="memItemLeft" align="right" valign="top"><a id="a387d964ee6b5e78bb8666d9a3a7baad8" name="a387d964ee6b5e78bb8666d9a3a7baad8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_cg</b> (int _maxit=0, int _cgwarm=0)</td></tr>
-<tr class="memitem:a1caae5e2eebdfe07bda78a18c7af7b04" id="r_a1caae5e2eebdfe07bda78a18c7af7b04"><td class="memItemLeft" align="right" valign="top"><a id="a1caae5e2eebdfe07bda78a18c7af7b04" name="a1caae5e2eebdfe07bda78a18c7af7b04"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>L</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)=0</td></tr>
+<tr class="memitem:a1caae5e2eebdfe07bda78a18c7af7b04" id="r_a1caae5e2eebdfe07bda78a18c7af7b04"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1caae5e2eebdfe07bda78a18c7af7b04">L</a> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)=0</td></tr>
 <tr class="memitem:a21bbb8ff9bdf22c291c970d08114fcc2" id="r_a21bbb8ff9bdf22c291c970d08114fcc2"><td class="memItemLeft" align="right" valign="top"><a id="a21bbb8ff9bdf22c291c970d08114fcc2" name="a21bbb8ff9bdf22c291c970d08114fcc2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (curcell &amp;xout, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:a5c269b965d4fd41078c1459b221c8f6e" id="r_a5c269b965d4fd41078c1459b221c8f6e"><td class="memItemLeft" align="right" valign="top">virtual Real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c269b965d4fd41078c1459b221c8f6e">solve</a> (curcell &amp;xout, const curcell &amp;xin, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
@@ -155,6 +156,52 @@ Data Fields</h2></td></tr>
 <a class="el" href="../../d6/d87/classcusolve__cgpre.html">cusolve_cgpre</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>precond</b></td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a1caae5e2eebdfe07bda78a18c7af7b04" name="a1caae5e2eebdfe07bda78a18c7af7b04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1caae5e2eebdfe07bda78a18c7af7b04">&#9670;&#160;</a></span>L()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void cusolve_cg::L </td>
+          <td>(</td>
+          <td class="paramtype">curcell &amp;</td>          <td class="paramname"><span class="paramname"><em>xout</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Real</td>          <td class="paramname"><span class="paramname"><em>beta</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const curcell &amp;</td>          <td class="paramname"><span class="paramname"><em>xin</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Real</td>          <td class="paramname"><span class="paramname"><em>alpha</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>stream</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel pure-virtual">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="../../d2/dc2/classcufit__grid.html#a574f420fa713c9df7a2b162172717878">cufit_grid</a>, <a class="el" href="../../d4/d1a/classcumoao__t.html#a5b434761383c864491fa0f402d5d3292">cumoao_t</a>, and <a class="el" href="../../db/d1f/classcutomo__grid.html#a6c962bb9b1ed036161472a1aac593e06">cutomo_grid</a>.</p>
+
+</div>
+</div>
 <a id="a5c269b965d4fd41078c1459b221c8f6e" name="a5c269b965d4fd41078c1459b221c8f6e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5c269b965d4fd41078c1459b221c8f6e">&#9670;&#160;</a></span>solve()</h2>
 
@@ -186,6 +233,16 @@ Data Fields</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>Solve L*xout=xin with preconditioned CG. With warm restart (cgwarm), the solve is restarted once if the residual exceeds a threshold derived from the running average residual, and the data are saved for debugging on repeated failure.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>Solution. Allocated if empty. Used as initial guess with warm restart. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Right hand side. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>CUDA stream. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The CG residual. </dd></dl>
 
 <p>Implements <a class="el" href="../../d3/d82/classcusolve__l.html">cusolve_l</a>.</p>
 
@@ -205,8 +262,12 @@ Data Fields</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../de/d5d/classcusolve__cg.html">cusolve_cg</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

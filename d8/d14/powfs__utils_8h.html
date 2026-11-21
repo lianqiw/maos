@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/powfs_utils.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -103,13 +105,48 @@ $(function(){initNavTree('d8/d14/powfs__utils_8h.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a4ee5b0e8a2ef08704c0b2354ca65fc3e" id="r_a4ee5b0e8a2ef08704c0b2354ca65fc3e"><td class="memItemLeft" align="right" valign="top"><a id="a4ee5b0e8a2ef08704c0b2354ca65fc3e" name="a4ee5b0e8a2ef08704c0b2354ca65fc3e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>mtch_wrap</b> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, const int ipowfs)</td></tr>
+<tr class="memitem:a4ee5b0e8a2ef08704c0b2354ca65fc3e" id="r_a4ee5b0e8a2ef08704c0b2354ca65fc3e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ee5b0e8a2ef08704c0b2354ca65fc3e">mtch_wrap</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, const int ipowfs)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains routines to generate mean short exposure (tip/tilt removed) pixel intensities. Mostly used for LGS pixel intensity for its matched filter. Structure functions from kolmogorov spectrum is used. Not able to take into account outerscale yet.</p>
 <dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000009">Todo</a></b></dt><dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov) </dd></dl>
-</div></div><!-- contents -->
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a4ee5b0e8a2ef08704c0b2354ca65fc3e" name="a4ee5b0e8a2ef08704c0b2354ca65fc3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ee5b0e8a2ef08704c0b2354ca65fc3e">&#9670;&#160;</a></span>mtch_wrap()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void mtch_wrap </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *</td>          <td class="paramname"><span class="paramname"><em>parms</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *</td>          <td class="paramname"><span class="paramname"><em>powfs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int</td>          <td class="paramname"><span class="paramname"><em>ipowfs</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Generate matched filter and noise equivalent angle for powfs ipowfs from the i0, gx, gy in intstat, and print NEA if srsa is set.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">powfs</td><td>The powfs struct array. intstat-&gt;mtche, intstat-&gt;i0sum, intstat-&gt;i0sumsum, and sanea are set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ipowfs</td><td>Index of the powfs. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">
 <div id="page-nav-resize-handle"></div>
@@ -119,8 +156,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mtch_wrap</b> (const 
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../d8/d14/powfs__utils_8h.html">powfs_utils.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

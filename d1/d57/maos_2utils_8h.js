@@ -2,9 +2,10 @@ var maos_2utils_8h =
 [
     [ "remove_lock", "d1/d57/maos_2utils_8h.html#adbb2e36f6ae7703736beb266a8ffcb20", null ],
     [ "parse_args", "d1/d57/maos_2utils_8h.html#ab378e384b5122058cbcb93fd61c9a96c", null ],
+    [ "free_arg", "d1/d57/maos_2utils_8h.html#af165695540a14022995fcd8dc6dc7f3c", null ],
     [ "evl_keywords", "d1/d57/maos_2utils_8h.html#aaa75b5b04fbbb1aa2917bf328634b532", null ],
     [ "mkamp", "d1/d57/maos_2utils_8h.html#a9d77bf8d1060f2b89962556f1b3b8d3e", null ],
-    [ "maxapriori", "d1/d57/maos_2utils_8h.html#ac8fc39933f19be380f8a80c7665d049e", null ],
+    [ "maxapriori", "d1/d57/maos_2utils_8h.html#a9b4cba78946d50c1b40157a13938c08b", null ],
     [ "wfslinearity", "d1/d57/maos_2utils_8h.html#a4307931050dd0259e2369bf4591d65a5", null ],
     [ "lgs_wfs_sph_psd", "d1/d57/maos_2utils_8h.html#ae0e3a33ac532506bd59ca25fd9051d10", null ],
     [ "wfsfocusadj", "d1/d57/maos_2utils_8h.html#a5ee5428a0082233dcc43a3900af1125b", null ],

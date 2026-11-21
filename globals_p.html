@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Globals</title>
+<link rel="icon" href="maos.png" type="image/x-icon" />
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="navtreedata.js"></script>
 <script type="text/javascript" src="navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -101,9 +103,10 @@ $(function(){initNavTree('globals_p.html','',''); });
 
 <h3 class="doxsection"><a id="index_p" name="index_p"></a>- p -</h3><ul>
 <li>P&#160;:&#160;<a class="el" href="df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">type.h</a></li>
+<li>PARALLEL&#160;:&#160;<a class="el" href="d2/d2e/setup_8c.html#aa17c6c75a74b1fac8094f3526e204647">setup.c</a></li>
 <li>parse_argopt()&#160;:&#160;<a class="el" href="d4/d08/misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6">misc.h</a></li>
 <li>parse_args()&#160;:&#160;<a class="el" href="d1/d57/maos_2utils_8h.html#ab378e384b5122058cbcb93fd61c9a96c">utils.h</a></li>
-<li>parse_host()&#160;:&#160;<a class="el" href="d4/d64/scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62">scheduler_client.h</a></li>
+<li>parse_host()&#160;:&#160;<a class="el" href="d7/d29/scheduler__client_8c.html#a0f53c3d23f04efdd0d3dbc2312e24c62">scheduler_client.c</a>, <a class="el" href="d4/d64/scheduler__client_8h.html#a0f53c3d23f04efdd0d3dbc2312e24c62">scheduler_client.h</a></li>
 <li>parse_poly()&#160;:&#160;<a class="el" href="d1/d83/loc_8h.html#a33c67f2502e1f02bb5aa18f14cbfbbb6">loc.h</a></li>
 <li>pcg()&#160;:&#160;<a class="el" href="d3/daa/lib_2pcg_8h.html#a5ee00a62b7a0c8b9ecbd39ce221716d3">pcg.h</a></li>
 <li>pchip_wt()&#160;:&#160;<a class="el" href="dd/d2b/libmisc_8h.html#a25f8efb8afacde9b737e6a9d9ce27c8a">libmisc.h</a></li>
@@ -114,24 +117,37 @@ $(function(){initNavTree('globals_p.html','',''); });
 <li>petal_recon()&#160;:&#160;<a class="el" href="dc/da1/petal__utils_8h.html#ab2b6413cfe7341b28ffeba650e3c106d">petal_utils.h</a></li>
 <li>petal_setup_wrap()&#160;:&#160;<a class="el" href="dc/da1/petal__utils_8h.html#a1d478e7815c90cc7e2e80d6d8c711842">petal_utils.h</a></li>
 <li>plot_dir()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#a92f165ec5bb2ccb133a9cfda1acb5400">plot_utils.h</a></li>
+<li>plot_dm()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#a382bfa27ab1f3a43b818aaf91e77416f">plot_utils.h</a></li>
+<li>plot_dm_lo()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#a7de279addd26babafe1311eff321c9bc">plot_utils.h</a></li>
+<li>plot_dmreal()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#ad78e2f20ff9a07974265e705b367226f">plot_utils.h</a></li>
+<li>plot_gradoff()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#ae6fadd0a5ceb6057f60ab577947b6288">plot_utils.h</a></li>
 <li>plot_loc()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#a4bb1de617e7ba823c160f295802836a5">plot_utils.h</a></li>
+<li>plot_psf()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#ac82f1cf16510c40e9322ed88c79e88f4">plot_utils.h</a></li>
+<li>plot_recon()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#a222fe41db22b7c8533df1512789ba57a">plot_utils.h</a></li>
 <li>plot_setup()&#160;:&#160;<a class="el" href="d9/d45/plot__utils_8h.html#aaa44e72b23d700b75cf33496fa5fd822">plot_utils.h</a></li>
 <li>PN&#160;:&#160;<a class="el" href="df/def/type_8h.html#ace9dc2f64789615eca5eee8fa8e80bb6">type.h</a></li>
 <li>poly2fit()&#160;:&#160;<a class="el" href="dd/d2b/libmisc_8h.html#aefe5e957c8884dfb7dfa49430562a87c">libmisc.h</a></li>
 <li>polyfit()&#160;:&#160;<a class="el" href="dd/d2b/libmisc_8h.html#a210f7b71835167dc3ff695d7f38a3a7f">libmisc.h</a></li>
 <li>polyval()&#160;:&#160;<a class="el" href="dd/d2b/libmisc_8h.html#ac019db172581dae2348fd2ffe1b371d3">libmisc.h</a></li>
+<li>PORT&#160;:&#160;<a class="el" href="d7/d29/scheduler__client_8c.html#a8ffa6ccbfb6e875677c7ec47fcbcfb9f">scheduler_client.c</a>, <a class="el" href="d4/d64/scheduler__client_8h.html#a8ffa6ccbfb6e875677c7ec47fcbcfb9f">scheduler_client.h</a></li>
 <li>post_dmreal()&#160;:&#160;<a class="el" href="d1/d57/maos_2utils_8h.html#ac29208e8ac8c3195fa49efea9b4e7ae2">utils.h</a></li>
 <li>PR&#160;:&#160;<a class="el" href="df/def/type_8h.html#a091b8d3eba8a2c02d6804ed4fd835bb9">type.h</a></li>
 <li>prep_cachedm()&#160;:&#160;<a class="el" href="d2/d94/sim_8h.html#aa6076fc51d273d5dce1921f91e280bf0">sim.h</a></li>
-<li>print_backtrace_symbol()&#160;:&#160;<a class="el" href="d4/d64/scheduler__client_8h.html#a8c35208c8888c74ab0eac162dd93801e">scheduler_client.h</a></li>
+<li>print_backtrace()&#160;:&#160;<a class="el" href="d7/d29/scheduler__client_8c.html#ae3019ac0eb0800bb9d3c5df9818216b6">scheduler_client.c</a>, <a class="el" href="d4/d64/scheduler__client_8h.html#ae3019ac0eb0800bb9d3c5df9818216b6">scheduler_client.h</a></li>
+<li>print_backtrace_symbol()&#160;:&#160;<a class="el" href="d7/d29/scheduler__client_8c.html#a8c35208c8888c74ab0eac162dd93801e">scheduler_client.c</a>, <a class="el" href="d4/d64/scheduler__client_8h.html#a8c35208c8888c74ab0eac162dd93801e">scheduler_client.h</a></li>
 <li>print_file()&#160;:&#160;<a class="el" href="d4/d08/misc_8h.html#af00e20eff025c19783d48eb289a342c1">misc.h</a></li>
 <li>print_progress()&#160;:&#160;<a class="el" href="d6/ddb/sim__utils_8h.html#a90fbafc175cd1a29b174570eaa5bc03e">sim_utils.h</a></li>
+<li>print_version()&#160;:&#160;<a class="el" href="d4/d08/misc_8h.html#ac6230d495fc909bb61195c45f703d492">misc.h</a></li>
 <li>printpath()&#160;:&#160;<a class="el" href="d7/dd4/path_8h.html#a07766b8acb6b809987722bd8f9bf2700">path.h</a></li>
 <li>proj_rect_grid()&#160;:&#160;<a class="el" href="d2/dcf/proj_8h.html#a4707011b3ee3d28047f0e9829008cc98">proj.h</a></li>
+<li>prop()&#160;:&#160;<a class="el" href="d3/d84/lib_2accphi_8h.html#a9186a62ba17b7bb6e507b6204ed8763e">accphi.h</a></li>
+<li>prop_prep()&#160;:&#160;<a class="el" href="d3/d84/lib_2accphi_8h.html#ab50dd3a4ec22182aeb21b70fc006fbbb">accphi.h</a></li>
 <li>prop_range()&#160;:&#160;<a class="el" href="d3/d84/lib_2accphi_8h.html#a3a0c016119a791f0a9fd1bda9c919cdc">accphi.h</a></li>
+<li>prop_thread()&#160;:&#160;<a class="el" href="d3/d84/lib_2accphi_8h.html#ae2fd5fecf711b86519a0c15ec8dd9aed">accphi.h</a></li>
 <li>psd1d()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#a1326d7e0d01b16612418c9181ef0e60b">psd.h</a></li>
 <li>psd1dt()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#a8af51aba20d221a672f03d3a1e81c785">psd.h</a></li>
 <li>psd2d()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#a68ad58de7587ca1992d97b42f89a9517">psd.h</a></li>
+<li>psd2d_aniso()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#a13e56d9f4f24cd9bc027f8ddbbaf3ab4">psd.h</a></li>
 <li>psd2ts()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#aff1d2c30671c9bf6723d7cf5100c90d0">psd.h</a></li>
 <li>psd2ts2()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#ac3ee3771c00bd02e3caf7c3198a3b636">psd.h</a></li>
 <li>psd_inte()&#160;:&#160;<a class="el" href="d2/da0/psd_8h.html#a5c5d4d001360bd0401dcf2c402ae5243">psd.h</a></li>
@@ -147,11 +163,13 @@ $(function(){initNavTree('globals_p.html','',''); });
 <li>pts_mcc_ptt()&#160;:&#160;<a class="el" href="d1/d83/loc_8h.html#a2d5bae49b00ac31462965e05bcede903">loc.h</a></li>
 <li>pts_ztilt()&#160;:&#160;<a class="el" href="d1/d83/loc_8h.html#a14ca3161124674983c579cd327b77a4a">loc.h</a></li>
 <li>ptsnew()&#160;:&#160;<a class="el" href="d1/d83/loc_8h.html#a84543d5b33950e44c31a90aff35a2609">loc.h</a></li>
+<li>pycfg_free()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#ac01185e7becab21fa86574a490ba6e94">pywfs.h</a></li>
 <li>pywfs_free()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#ab9030c894228f7971f87beda176273c5">pywfs.h</a></li>
 <li>pywfs_gain_calibrate()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a51055b663bc8f4233e915bc9c2463299">pywfs.h</a></li>
 <li>pywfs_grad()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99">pywfs.h</a></li>
 <li>pywfs_ints()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d">pywfs.h</a></li>
 <li>pywfs_mkg()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#ac90f086f4f98115dcc9a7aa90c44f0cf">pywfs.h</a></li>
+<li>pywfs_new()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a0bda4c56e5e355cf6ac8ef8a53e0a95c">pywfs.h</a></li>
 <li>pywfs_simu()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a56a2705ae38d20c2541c4b3b47be4163">pywfs.h</a></li>
 <li>pywfs_test()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#a8ccc1fa8060ae14a0aeb0c098b7f559d">pywfs.h</a></li>
 <li>pywfs_tt()&#160;:&#160;<a class="el" href="d9/d19/pywfs_8h.html#ab3561d46a195dd543d302906e88f7c2b">pywfs.h</a></li>
@@ -159,8 +177,11 @@ $(function(){initNavTree('globals_p.html','',''); });
 </div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

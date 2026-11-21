@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: math/mathmisc.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -115,17 +117,13 @@ typedef real(*&#160;</td><td class="memItemRight" valign="bottom"><b>golden_sect
 Functions</h2></td></tr>
 <tr class="memitem:aaaa4c88a31aa854fbedaa09ab5c48278" id="r_aaaa4c88a31aa854fbedaa09ab5c48278"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a> double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaa4c88a31aa854fbedaa09ab5c48278">factorial</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> n1, <a class="el" href="../../d7/d63/classlong.html">long</a> n2)</td></tr>
 <tr class="memitem:a0b116ddb2343b4aca8ce9397bcb1a27b" id="r_a0b116ddb2343b4aca8ce9397bcb1a27b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0b116ddb2343b4aca8ce9397bcb1a27b">calc_gcd</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> a, <a class="el" href="../../d7/d63/classlong.html">long</a> b)</td></tr>
-<tr class="memdesc:a0b116ddb2343b4aca8ce9397bcb1a27b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the greatest common divider.  <br /></td></tr>
 <tr class="memitem:a1d7e5986f277a0e9546311fef2526414" id="r_a1d7e5986f277a0e9546311fef2526414"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1d7e5986f277a0e9546311fef2526414">calc_lcm</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> a, <a class="el" href="../../d7/d63/classlong.html">long</a> b)</td></tr>
-<tr class="memdesc:a1d7e5986f277a0e9546311fef2526414"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the least common multiplier.  <br /></td></tr>
 <tr class="memitem:ae647cab5b0b7cbdbbf3b52dea3ba230a" id="r_ae647cab5b0b7cbdbbf3b52dea3ba230a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae647cab5b0b7cbdbbf3b52dea3ba230a">invperm</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> *p, <a class="el" href="../../d7/d63/classlong.html">long</a> np)</td></tr>
 <tr class="memitem:aaaaed679d152deb02470ebcb73919242" id="r_aaaaed679d152deb02470ebcb73919242"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaaed679d152deb02470ebcb73919242">maxminlong</a> (const <a class="el" href="../../d7/d63/classlong.html">long</a> *__restrict p, <a class="el" href="../../d7/d63/classlong.html">long</a> N, <a class="el" href="../../d7/d63/classlong.html">long</a> *__restrict max, <a class="el" href="../../d7/d63/classlong.html">long</a> *__restrict min)</td></tr>
 <tr class="memitem:a17bd719e22e15aaff05bc4c8773dede2" id="r_a17bd719e22e15aaff05bc4c8773dede2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a17bd719e22e15aaff05bc4c8773dede2">nextpow2</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
 <tr class="memitem:ab2457f6b21851a0a5d62695be54331ca" id="r_ab2457f6b21851a0a5d62695be54331ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab2457f6b21851a0a5d62695be54331ca">nextfftsize</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
-<tr class="memitem:ae0a9c8af7043c7b58bf51d49d8a48ea9" id="r_ae0a9c8af7043c7b58bf51d49d8a48ea9"><td class="memItemLeft" align="right" valign="top"><a id="ae0a9c8af7043c7b58bf51d49d8a48ea9" name="ae0a9c8af7043c7b58bf51d49d8a48ea9"></a>
-unsigned <a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mylog2</b> (unsigned <a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
-<tr class="memitem:aa9c48e33e0913833217cf18edacc69e6" id="r_aa9c48e33e0913833217cf18edacc69e6"><td class="memItemLeft" align="right" valign="top"><a id="aa9c48e33e0913833217cf18edacc69e6" name="aa9c48e33e0913833217cf18edacc69e6"></a>
-real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search</b> (golden_section_fun f, void *param, real x1, real x4, real tau)</td></tr>
+<tr class="memitem:ae0a9c8af7043c7b58bf51d49d8a48ea9" id="r_ae0a9c8af7043c7b58bf51d49d8a48ea9"><td class="memItemLeft" align="right" valign="top">unsigned <a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0a9c8af7043c7b58bf51d49d8a48ea9">mylog2</a> (unsigned <a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
+<tr class="memitem:aa9c48e33e0913833217cf18edacc69e6" id="r_aa9c48e33e0913833217cf18edacc69e6"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa9c48e33e0913833217cf18edacc69e6">golden_section_search</a> (golden_section_fun f, void *param, real x1, real x4, real tau)</td></tr>
 <tr class="memitem:a1889170b9cdf1b140a907bc15a94ec83" id="r_a1889170b9cdf1b140a907bc15a94ec83"><td class="memItemLeft" align="right" valign="top">spint *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1889170b9cdf1b140a907bc15a94ec83">readspint</a> (file_t *fp, <a class="el" href="../../d7/d63/classlong.html">long</a> *nx, <a class="el" href="../../d7/d63/classlong.html">long</a> *ny)</td></tr>
 <tr class="memitem:a35d1cc335d45d63efe5d6692256b9438" id="r_a35d1cc335d45d63efe5d6692256b9438"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35d1cc335d45d63efe5d6692256b9438">readvec</a> (void *p, uint32_t magic_p, uint32_t magic_file, size_t size, size_t nmemb, file_t *fp)</td></tr>
 </table>
@@ -187,7 +185,15 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the factorial from n1 to n2. Overflow LONG if n2&gt;20, so we use double as output. </p>
+<p>Compute the factorial from n1 to n2, i.e., the product n1*(n1+1)*...*n2. Overflow LONG if n2&gt;20, so we use long double as output.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>First factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n2</td><td>Last factor. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The product n1*(n1+1)*...*n2, or 1 if n2&lt;n1. </dd></dl>
 
 </div>
 </div>
@@ -209,16 +215,15 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the greatest common divider. </p>
+<p>Compute the greatest common divisor.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">a</td><td>The larger value </td></tr>
-    <tr><td class="paramname">b</td><td>The smaller value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">a</td><td>One value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>Another value. The order of a and b does not matter. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>long The result </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The greatest common divisor of a and b (non-negative). </dd></dl>
 
 </div>
 </div>
@@ -240,16 +245,15 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the least common multiplier. </p>
+<p>Compute the least common multiple.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">a</td><td></td></tr>
-    <tr><td class="paramname">b</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">a</td><td>One value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>Another value. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>long </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The least common multiple of a and b (non-negative), or 0 if both are 0. </dd></dl>
 
 </div>
 </div>
@@ -271,7 +275,15 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reverse an permution vector. A=B(p) &lt;==&gt; A(pi)=B </p>
+<p>Invert a permutation vector. A=B(p) &lt;==&gt; A(pi)=B</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The permutation vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">np</td><td>Length of p. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The inverse permutation vector, or NULL if p is NULL. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -303,7 +315,16 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute max, min and sum of a long vector </p>
+<p>Compute max and min of a long vector.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td>Length of p. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">max</td><td>The maximum value. Can be NULL. Not modified if p is NULL or empty. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">min</td><td>The minimum value. Can be NULL. Not modified if p is NULL or empty. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -321,7 +342,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find the next number that is power of 2. </p>
+<p>Find the next number that is power of 2.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The input number. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The smallest power of 2 that is no less than n. </dd></dl>
 
 </div>
 </div>
@@ -339,7 +367,87 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find the next number suitable for FFT. Use radix of 2, 3, 5, 7, 11 </p>
+<p>Find the next even number suitable for FFT. Use radix of 2, 3, 5, 7.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The input number. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The smallest even number no less than n that only has factors of 2, 3, 5, and 7. </dd></dl>
+
+</div>
+</div>
+<a id="ae0a9c8af7043c7b58bf51d49d8a48ea9" name="ae0a9c8af7043c7b58bf51d49d8a48ea9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0a9c8af7043c7b58bf51d49d8a48ea9">&#9670;&#160;</a></span>mylog2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned <a class="el" href="../../d7/d63/classlong.html">long</a> mylog2 </td>
+          <td>(</td>
+          <td class="paramtype">unsigned <a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>n</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute integer log2 of n, which must be a power of 2.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>The input number. Must be a power of 2. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>m so that pow(2,m)==n. </dd></dl>
+
+</div>
+</div>
+<a id="aa9c48e33e0913833217cf18edacc69e6" name="aa9c48e33e0913833217cf18edacc69e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9c48e33e0913833217cf18edacc69e6">&#9670;&#160;</a></span>golden_section_search()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real golden_section_search </td>
+          <td>(</td>
+          <td class="paramtype">golden_section_fun</td>          <td class="paramname"><span class="paramname"><em>f</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>param</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>x1</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>x4</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>tau</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Find the minimum of f(param, x) in the interval [x1, x4] using golden section search. Stops when the interval is smaller than tau relative to |x1|+|x4|.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>The function to minimize. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">param</td><td>Parameter passed to f. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x1</td><td>Lower end of the interval. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x4</td><td>Upper end of the interval. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">tau</td><td>Relative tolerance. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The abscissa of the minimum. </dd></dl>
 
 </div>
 </div>
@@ -366,7 +474,16 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read spint array of size nx*ny from file and do optional data conversion. </p>
+<p>Read spint array of size nx*ny from file and do optional data conversion.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>The file to read from. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nx</td><td>Number of rows read. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">ny</td><td>Number of columns read. Can be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The array, or NULL if reading failed. Newly allocated; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -408,7 +525,19 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a vector from file and perform conversion if type mismatches. </p>
+<p>Read a vector from file and perform conversion if type mismatches.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">p</td><td>The output array. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic_p</td><td><a class="el" href="../../d2/d6e/struct_magic.html">Magic</a> number (data type) of p. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic_file</td><td><a class="el" href="../../d2/d6e/struct_magic.html">Magic</a> number (data type) of data in the file. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size in bytes of each element of p. Only used if no conversion is needed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nmemb</td><td>Number of elements to read. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>The file to read from. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if succeeded, nonzero if failed. </dd></dl>
 
 </div>
 </div>
@@ -422,8 +551,12 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_search
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>math</b></li><li class="navelem"><a href="../../df/d2b/mathmisc_8h.html">mathmisc.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

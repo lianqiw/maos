@@ -1,21 +1,14 @@
 var searchData=
 [
-  ['u_0',['U',['../d3/dc7/muv_8h.html#adbb422e2111167472b69a8853a9ade9c',1,'muv_t']]],
-  ['udp_5frecv_1',['udp_recv',['../db/d54/sockio_8h.html#a0ff85fb841b8a4c117ca1a8f897dbb81',1,'sockio.c']]],
-  ['udp_5fsend_2',['udp_send',['../db/d54/sockio_8h.html#abc1c613d90cf9a9ffb4697ffb5961b3a',1,'sockio.c']]],
-  ['udp_5ft_3',['udp_t',['../db/d54/sockio_8h.html#d4/d74/structudp__t',1,'']]],
-  ['up_4',['Up',['../d3/dc7/muv_8h.html#a5cdc5331bf4237d1ccbd7e2ff60c1778',1,'muv_t']]],
-  ['upb_5',['UpB',['../d3/dc7/muv_8h.html#a87735c7751cda61faf074e8fea7d733a',1,'muv_t']]],
-  ['update_5fdm_6',['update_dm',['../d2/d94/sim_8h.html#a8115a05357efc3f5259f1eb5cb0b1e23',1,'filter.c']]],
-  ['update_5fwfsflags_7',['update_wfsflags',['../d6/ddb/sim__utils_8h.html#af1e48383ae5fca23ceaaecaa20e40176',1,'sim_utils.c']]],
-  ['usage_8',['Usage',['../da/dc3/page30_run.html#sect-run',1,'']]],
-  ['use_9',['use',['../d4/d38/parms_8h.html#a245c433f1d41ea6add15f0af04179905',1,'powfs_cfg_t']]],
-  ['use_5fcuda_10',['use_cuda',['../d2/d2e/setup_8c.html#ae8287653ae43d338f5cca0b41d1e384d',1,'setup.c']]],
-  ['used_11',['used',['../d4/d38/parms_8h.html#ac7478caddd51ca20ceb2c98c140ed550',1,'moao_cfg_t::used'],['../d6/d94/maos_2types_8h.html#a57579226ab2934985993550e03c153c2',1,'moao_t::used']]],
-  ['useopdr_12',['useopdr',['../d4/d38/parms_8h.html#adb77e58ed14a4410fc7edc259dd45151',1,'dbg_cfg_t']]],
-  ['usephy_13',['usephy',['../d4/d38/parms_8h.html#a76b632ebb21546c4b2198ae2a3c91f1f',1,'powfs_cfg_t']]],
-  ['user_20interface_14',['User Interface',['../d3/d4c/page20_compile.html#autotoc_md12',1,'Browser User Interface'],['../d3/d4c/page20_compile.html#autotoc_md13',1,'Graphical User Interface']]],
-  ['utils_2eh_15',['utils.h',['../d1/d57/maos_2utils_8h.html',1,'']]],
-  ['ux_16',['Ux',['../d6/d89/mkdtf_8h.html#a07e1f39a2b79613e1ae6c5af49afad59',1,'dtf_t']]],
-  ['uy_17',['Uy',['../d6/d89/mkdtf_8h.html#af19273870883e70fe352903389d1a60e',1,'dtf_t']]]
+  ['v_0',['V',['../d3/dc7/muv_8h.html#ad69fad8e7ca6f125c5697622dcb378bd',1,'muv_t']]],
+  ['val_1',['val',['../d4/d08/misc_8h.html#a24ad5e1eedf791f851b48a567df76287',1,'argopt_t']]],
+  ['valtype_2',['valtype',['../d4/d08/misc_8h.html#a83f5c2f8367c892852a68eef3241d247',1,'argopt_t']]],
+  ['variables_3',['Environment variables',['../da/dc3/page30_run.html#sect-run-env',1,'']]],
+  ['variation_4',['Sodium range variation',['../da/dc3/page30_run.html#sect-sodium',1,'']]],
+  ['vector_5',['Vector',['../d5/d21/class_array.html#a0590fa4c9b58ef6ed3b6f92e7bdf72e8',1,'Array::Vector()'],['../d1/d12/class_cell_array.html#ac444571edb54c051706ada08bafc389d',1,'CellArray::Vector()'],['../d0/d44/class_num_array.html#ae43bd1c8e365ea70ed71789ca40e7df1',1,'NumArray::Vector()'],['../d4/d0f/class_num_cell.html#a650eb7ac22fda06e06036849d9a3a00b',1,'NumCell::Vector()']]],
+  ['verbose_6',['verbose',['../d4/d38/parms_8h.html#a3b1a8d3fa4dec50dc37d08c5f8261a2b',1,'cn2est_cfg_t']]],
+  ['verification_7',['Verification',['../db/d87/md_docs_2claude__changes__20261120.html#claude_verification',1,'']]],
+  ['vp_8',['Vp',['../d3/dc7/muv_8h.html#a3a235ce911565ce890b5e1bd780906c2',1,'muv_t']]],
+  ['vpb_9',['VpB',['../d3/dc7/muv_8h.html#af8ada30ee8a5271da7d4890150c4760e',1,'muv_t']]],
+  ['vy_10',['vy',['../df/def/type_8h.html#a1b941ccdd3db094fe026e49f9c4da998',1,'map_t']]]
 ];

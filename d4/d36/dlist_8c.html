@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: sys/dlist.c File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -103,18 +105,145 @@ $(function(){initNavTree('d4/d36/dlist_8c.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a91b8fb283b62dd1f840063fcd53bc867" id="r_a91b8fb283b62dd1f840063fcd53bc867"><td class="memItemLeft" align="right" valign="top"><a id="a91b8fb283b62dd1f840063fcd53bc867" name="a91b8fb283b62dd1f840063fcd53bc867"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>add_head</b> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> *pdata)</td></tr>
-<tr class="memitem:ade5beed61bd688ff60a3300bacd30e68" id="r_ade5beed61bd688ff60a3300bacd30e68"><td class="memItemLeft" align="right" valign="top"><a id="ade5beed61bd688ff60a3300bacd30e68" name="ade5beed61bd688ff60a3300bacd30e68"></a>
-<a class="el" href="../../d6/d93/structdlist.html">dlist</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>remove_head</b> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail)</td></tr>
-<tr class="memitem:a961ba89edc69b7a3438ae70c1c926ee1" id="r_a961ba89edc69b7a3438ae70c1c926ee1"><td class="memItemLeft" align="right" valign="top"><a id="a961ba89edc69b7a3438ae70c1c926ee1" name="a961ba89edc69b7a3438ae70c1c926ee1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>add_tail</b> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> *pdata)</td></tr>
-<tr class="memitem:a78665e19d46ae8004ec56fe763cf2234" id="r_a78665e19d46ae8004ec56fe763cf2234"><td class="memItemLeft" align="right" valign="top"><a id="a78665e19d46ae8004ec56fe763cf2234" name="a78665e19d46ae8004ec56fe763cf2234"></a>
-<a class="el" href="../../d6/d93/structdlist.html">dlist</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>remove_tail</b> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail)</td></tr>
+<tr class="memitem:a91b8fb283b62dd1f840063fcd53bc867" id="r_a91b8fb283b62dd1f840063fcd53bc867"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a91b8fb283b62dd1f840063fcd53bc867">add_head</a> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> *pdata)</td></tr>
+<tr class="memitem:ade5beed61bd688ff60a3300bacd30e68" id="r_ade5beed61bd688ff60a3300bacd30e68"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ade5beed61bd688ff60a3300bacd30e68">remove_head</a> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail)</td></tr>
+<tr class="memitem:a961ba89edc69b7a3438ae70c1c926ee1" id="r_a961ba89edc69b7a3438ae70c1c926ee1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a961ba89edc69b7a3438ae70c1c926ee1">add_tail</a> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> *pdata)</td></tr>
+<tr class="memitem:a78665e19d46ae8004ec56fe763cf2234" id="r_a78665e19d46ae8004ec56fe763cf2234"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a78665e19d46ae8004ec56fe763cf2234">remove_tail</a> (<a class="el" href="../../d6/d93/structdlist.html">dlist</a> **phead, <a class="el" href="../../d6/d93/structdlist.html">dlist</a> **ptail)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements a double linked list. Not thread safe. </p>
-</div></div><!-- contents -->
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a91b8fb283b62dd1f840063fcd53bc867" name="a91b8fb283b62dd1f840063fcd53bc867"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91b8fb283b62dd1f840063fcd53bc867">&#9670;&#160;</a></span>add_head()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void add_head </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>phead</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>ptail</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> *</td>          <td class="paramname"><span class="paramname"><em>pdata</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Insert pdata at the head of the list defined by *phead and *ptail.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phead</td><td>Pointer to the list head; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ptail</td><td>Pointer to the list tail; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pdata</td><td>Node to insert; its links are set. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ade5beed61bd688ff60a3300bacd30e68" name="ade5beed61bd688ff60a3300bacd30e68"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade5beed61bd688ff60a3300bacd30e68">&#9670;&#160;</a></span>remove_head()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> * remove_head </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>phead</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>ptail</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Remove and return the head of the list.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phead</td><td>Pointer to the list head; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ptail</td><td>Pointer to the list tail; updated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The removed node (not freed; owned by the caller), or NULL if the list is empty. </dd></dl>
+
+</div>
+</div>
+<a id="a961ba89edc69b7a3438ae70c1c926ee1" name="a961ba89edc69b7a3438ae70c1c926ee1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a961ba89edc69b7a3438ae70c1c926ee1">&#9670;&#160;</a></span>add_tail()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void add_tail </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>phead</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>ptail</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> *</td>          <td class="paramname"><span class="paramname"><em>pdata</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Append pdata at the tail of the list defined by *phead and *ptail.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phead</td><td>Pointer to the list head; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ptail</td><td>Pointer to the list tail; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pdata</td><td>Node to append; its links are set. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a78665e19d46ae8004ec56fe763cf2234" name="a78665e19d46ae8004ec56fe763cf2234"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78665e19d46ae8004ec56fe763cf2234">&#9670;&#160;</a></span>remove_tail()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> * remove_tail </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>phead</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d93/structdlist.html">dlist</a> **</td>          <td class="paramname"><span class="paramname"><em>ptail</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Remove and return the tail of the list.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phead</td><td>Pointer to the list head; updated. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">ptail</td><td>Pointer to the list tail; updated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The removed node (not freed; owned by the caller), or NULL if the list is empty. </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">
 <div id="page-nav-resize-handle"></div>
@@ -124,8 +253,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_tail</b> (<a clas
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>sys</b></li><li class="navelem"><a href="../../d4/d36/dlist_8c.html">dlist.c</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

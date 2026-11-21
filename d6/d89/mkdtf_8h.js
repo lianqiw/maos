@@ -10,10 +10,10 @@ var mkdtf_8h =
       [ "dxsa", "d6/d89/mkdtf_8h.html#ab15a5c82c888875705395af6c0c4cec0", null ],
       [ "pixthetax", "d6/d89/mkdtf_8h.html#a1fa91ac855c2427b5e05ebc11b3269fc", null ],
       [ "pixthetay", "d6/d89/mkdtf_8h.html#ae764aa0535ea748610bb898da0b454e1", null ],
-      [ "notfx", "d6/d89/mkdtf_8h.html#a94d3362514e7c5ce115586659307a06b", null ],
-      [ "notfy", "d6/d89/mkdtf_8h.html#af3034c57cde9b00c3b0b56ac30a84a02", null ],
-      [ "pixpsax", "d6/d89/mkdtf_8h.html#ab0653db7289fe6f4063607f0a9b64126", null ],
-      [ "pixpsay", "d6/d89/mkdtf_8h.html#a8d5c109c34a0734c2a561e651aa0fcd2", null ],
+      [ "notfx", "d6/d89/mkdtf_8h.html#ae1646c673549a19a82f01abcaa6d4421", null ],
+      [ "notfy", "d6/d89/mkdtf_8h.html#ade199dbf6e92bbdd73c2d077ddb7eb81", null ],
+      [ "pixpsax", "d6/d89/mkdtf_8h.html#a2385b878bfee8ce873f974645205c736", null ],
+      [ "pixpsay", "d6/d89/mkdtf_8h.html#a4d946793c4f175e38c30339a47ec99ec", null ],
       [ "radpix", "d6/d89/mkdtf_8h.html#ae99947a455a836518b0efc123fc76d49", null ],
       [ "nwvl", "d6/d89/mkdtf_8h.html#ab4a3fd5ff2f8df053bd35e191d096aa6", null ]
     ] ],
@@ -28,5 +28,8 @@ var mkdtf_8h =
     [ "dtf_otf", "d6/d89/mkdtf_8h.html#adce340f42de02d8e6e09312a407fec4b", null ],
     [ "mkdtf", "d6/d89/mkdtf_8h.html#aecc59f77035e09a61d1d74fa4a9d12ab", null ],
     [ "mketf", "d6/d89/mkdtf_8h.html#a23757e9470a03af49f7e86f4d2e94435", null ],
-    [ "smooth", "d6/d89/mkdtf_8h.html#a42b0c09d2d32b74de2c5b88ea515eeff", null ]
+    [ "dtf_free_do", "d6/d89/mkdtf_8h.html#aebceaa4b5aa6ca6e7aaa011d7dea2bc5", null ],
+    [ "etf_free_do", "d6/d89/mkdtf_8h.html#ad2d2722feb99b759b848cbab3f600eb3", null ],
+    [ "smooth", "d6/d89/mkdtf_8h.html#a42b0c09d2d32b74de2c5b88ea515eeff", null ],
+    [ "smooth_cell", "d6/d89/mkdtf_8h.html#a14ac4da1e0e8b091c2e570c4f3566041", null ]
 ];

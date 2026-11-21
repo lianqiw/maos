@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Gpu&lt; T &gt; Class Template Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -147,25 +149,346 @@ $(function(){initNavTree('d0/ddc/class_gpu.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7fa22ad25a8a1c9a52fa0b0b1254241f" id="r_a7fa22ad25a8a1c9a52fa0b0b1254241f"><td class="memItemLeft" align="right" valign="top"><a id="a7fa22ad25a8a1c9a52fa0b0b1254241f" name="a7fa22ad25a8a1c9a52fa0b0b1254241f"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>operator new[]</b> (size_t size)</td></tr>
-<tr class="memitem:a2e235d88941f72b223abed4203be879d" id="r_a2e235d88941f72b223abed4203be879d"><td class="memItemLeft" align="right" valign="top"><a id="a2e235d88941f72b223abed4203be879d" name="a2e235d88941f72b223abed4203be879d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete[]</b> (void *p)</td></tr>
+<tr class="memitem:a7fa22ad25a8a1c9a52fa0b0b1254241f" id="r_a7fa22ad25a8a1c9a52fa0b0b1254241f"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7fa22ad25a8a1c9a52fa0b0b1254241f">operator new[]</a> (size_t size)</td></tr>
+<tr class="memitem:a2e235d88941f72b223abed4203be879d" id="r_a2e235d88941f72b223abed4203be879d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e235d88941f72b223abed4203be879d">operator delete[]</a> (void *p)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a2b33c824562ebb98961c2a5c163ecf54" id="r_a2b33c824562ebb98961c2a5c163ecf54"><td class="memItemLeft" align="right" valign="top"><a id="a2b33c824562ebb98961c2a5c163ecf54" name="a2b33c824562ebb98961c2a5c163ecf54"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>Zero</b> (T *p, size_t size, cudaStream_t stream=0)</td></tr>
-<tr class="memitem:a0188038e3bc00df722ce7cccc93d2a5f" id="r_a0188038e3bc00df722ce7cccc93d2a5f"><td class="memItemLeft" align="right" valign="top"><a id="a0188038e3bc00df722ce7cccc93d2a5f" name="a0188038e3bc00df722ce7cccc93d2a5f"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>Copy</b> (T *pout, const T *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
-<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504" id="r_a4eb4101b08b25c2f665ce5166865b504"><td class="memTemplParams" colspan="2"><a id="a4eb4101b08b25c2f665ce5166865b504" name="a4eb4101b08b25c2f665ce5166865b504"></a>
-template&lt;typename S&gt; </td></tr>
-<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504 template"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><b>Copy</b> (T *pout, const S *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
-<tr class="memitem:a3ccea042814fee0ed22adbd6b649c594" id="r_a3ccea042814fee0ed22adbd6b649c594"><td class="memItemLeft" align="right" valign="top"><a id="a3ccea042814fee0ed22adbd6b649c594" name="a3ccea042814fee0ed22adbd6b649c594"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, file_t *fp, cudaStream_t stream=0)</td></tr>
-<tr class="memitem:a4480cd6e3017d0d0c9ed41d4fd2ad58e" id="r_a4480cd6e3017d0d0c9ed41d4fd2ad58e"><td class="memItemLeft" align="right" valign="top"><a id="a4480cd6e3017d0d0c9ed41d4fd2ad58e" name="a4480cd6e3017d0d0c9ed41d4fd2ad58e"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
+<tr class="memitem:a2b33c824562ebb98961c2a5c163ecf54" id="r_a2b33c824562ebb98961c2a5c163ecf54"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2b33c824562ebb98961c2a5c163ecf54">Zero</a> (T *p, size_t size, cudaStream_t stream=0)</td></tr>
+<tr class="memitem:a0188038e3bc00df722ce7cccc93d2a5f" id="r_a0188038e3bc00df722ce7cccc93d2a5f"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0188038e3bc00df722ce7cccc93d2a5f">Copy</a> (T *pout, const T *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
+<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504" id="r_a4eb4101b08b25c2f665ce5166865b504"><td class="memTemplParams" colspan="2">template&lt;typename S&gt; </td></tr>
+<tr class="memitem:a4eb4101b08b25c2f665ce5166865b504 template"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4eb4101b08b25c2f665ce5166865b504">Copy</a> (T *pout, const S *pin, <a class="el" href="../../d7/d63/classlong.html">long</a> size, cudaStream_t stream=0)</td></tr>
+<tr class="memitem:a3ccea042814fee0ed22adbd6b649c594" id="r_a3ccea042814fee0ed22adbd6b649c594"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ccea042814fee0ed22adbd6b649c594">Write</a> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, file_t *fp, cudaStream_t stream=0)</td></tr>
+<tr class="memitem:a4480cd6e3017d0d0c9ed41d4fd2ad58e" id="r_a4480cd6e3017d0d0c9ed41d4fd2ad58e"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4480cd6e3017d0d0c9ed41d4fd2ad58e">Write</a> (T *p, <a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, const char *keywords, const char *format,...)</td></tr>
 </table>
+<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a7fa22ad25a8a1c9a52fa0b0b1254241f" name="a7fa22ad25a8a1c9a52fa0b0b1254241f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fa22ad25a8a1c9a52fa0b0b1254241f">&#9670;&#160;</a></span>operator new[]()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void * <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::operator new[] </td>
+          <td>(</td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Allocate zero initialized device memory.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Allocated memory. Freed with delete[]. </dd></dl>
+
+</div>
+</div>
+<a id="a2e235d88941f72b223abed4203be879d" name="a2e235d88941f72b223abed4203be879d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e235d88941f72b223abed4203be879d">&#9670;&#160;</a></span>operator delete[]()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::operator delete[] </td>
+          <td>(</td>
+          <td class="paramtype">void *</td>          <td class="paramname"><span class="paramname"><em>p</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free device memory.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Memory to free. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2b33c824562ebb98961c2a5c163ecf54" name="a2b33c824562ebb98961c2a5c163ecf54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b33c824562ebb98961c2a5c163ecf54">&#9670;&#160;</a></span>Zero()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::Zero </td>
+          <td>(</td>
+          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cudaStream_t</td>          <td class="paramname"><span class="paramname"><em>stream</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Zero device memory asynchronously.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">p</td><td>Memory to zero. Nothing is done if NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of elements. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0188038e3bc00df722ce7cccc93d2a5f" name="a0188038e3bc00df722ce7cccc93d2a5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0188038e3bc00df722ce7cccc93d2a5f">&#9670;&#160;</a></span>Copy() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::Copy </td>
+          <td>(</td>
+          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>pout</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const T *</td>          <td class="paramname"><span class="paramname"><em>pin</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cudaStream_t</td>          <td class="paramname"><span class="paramname"><em>stream</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Copy device memory asynchronously.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pout</td><td>Destination. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pin</td><td>Source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of elements. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4eb4101b08b25c2f665ce5166865b504" name="a4eb4101b08b25c2f665ce5166865b504"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4eb4101b08b25c2f665ce5166865b504">&#9670;&#160;</a></span>Copy() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<div class="memtemplate">
+template&lt;typename S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::Copy </td>
+          <td>(</td>
+          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>pout</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const S *</td>          <td class="paramname"><span class="paramname"><em>pin</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cudaStream_t</td>          <td class="paramname"><span class="paramname"><em>stream</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Copy device memory with type conversion. See copy_do().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pout</td><td>Destination. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pin</td><td>Source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of elements. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3ccea042814fee0ed22adbd6b649c594" name="a3ccea042814fee0ed22adbd6b649c594"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ccea042814fee0ed22adbd6b649c594">&#9670;&#160;</a></span>Write() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::Write </td>
+          <td>(</td>
+          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>nx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>ny</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>keywords</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">file_t *</td>          <td class="paramname"><span class="paramname"><em>fp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">cudaStream_t</td>          <td class="paramname"><span class="paramname"><em>stream</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Copy device array to host and write it to file. Synchronizes stream.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Device array of nx*ny. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Header keywords. May be NULL. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fp</td><td>File to write to. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to copy in. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4480cd6e3017d0d0c9ed41d4fd2ad58e" name="a4480cd6e3017d0d0c9ed41d4fd2ad58e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4480cd6e3017d0d0c9ed41d4fd2ad58e">&#9670;&#160;</a></span>Write() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a>&lt; T &gt;::Write </td>
+          <td>(</td>
+          <td class="paramtype">T *</td>          <td class="paramname"><span class="paramname"><em>p</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>nx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>ny</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>keywords</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>format</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Copy device array to host and write it to a file named by format.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>Device array of nx*ny. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">keywords</td><td>Header keywords. May be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by arguments. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>cuda/math/<b>types.h</b></li>
 </ul>
@@ -179,8 +502,12 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>Write</b> (T *
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../d0/ddc/class_gpu.html">Gpu</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

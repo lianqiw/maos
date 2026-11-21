@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/mtch.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -197,7 +199,28 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generating matched filter from averaged short exposure images. </p>
+<p>Generating matched filter from averaged short exposure images.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">mtche</td><td>The matched filter (2*npix). Allocated if NULL. Can be NULL to skip. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">neaout</td><td>The subaperture noise equivalent angle squared (2x2). Can be NULL to skip. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i0</td><td>Averaged subaperture image. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>Derivative of i0 along x (r). If NULL, gx and gy are computed by FFT. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>Derivative of i0 along y (a). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">qe</td><td>Non uniform quantum efficiency (optional). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dbkgrnd2</td><td>Background image (optional). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dbkgrnd2c</td><td>Background calibration image (optional). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td>Global background per pixel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrndc</td><td>Global background calibration per pixel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Detector read noise. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetax</td><td>Size of pixel along x (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetay</td><td>Size of pixel along y (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation (CCW, radian) of pixel island. 0 for cartesian. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>1: gx/gy is along r/a coord. 0 for cartesian. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cr</td><td>Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only. </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">mtche</td><td>the matched filter  </td></tr>
@@ -213,8 +236,8 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Detector read noise  </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pixthetax</td><td>Size of pixel along x  </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pixthetay</td><td>Size of pixel along y  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation (CCW, radian) of pixel island. 0 for cartesian  </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>1: gx/gy is along r/a coord. 0 for cartesian.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrot</td><td>Rotation (CCW, radian) of pixel island 0 for cartesian  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>1: gx/gy is along r/a coord.  </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">cr</td><td>Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only </td></tr>
   </table>
   </dd>
@@ -260,7 +283,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A simplified wrapper for mtch </p>
+<p>A simplified wrapper for mtch() without noise, background, or pixel size.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">mtche</td><td>The matched filter. Allocated if NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nea</td><td>The noise equivalent angle squared. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i0</td><td>Averaged subaperture image. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>Derivative of i0 along x. If NULL, computed by FFT. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>Derivative of i0 along y. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cr</td><td>Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -367,7 +401,31 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The routine used to generate matched filter from WFS mean short exposure pixel intensities. </p>
+<p>The routine used to generate matched filter from WFS mean short exposure pixel intensities.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pmtche</td><td>Matched filter (nsa*ni0). Old content is freed and replaced. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">psanea</td><td>Subaperture noise equivalent angle squared (nsa*3 for each ni0: xx, yy, xy). Old content is freed and replaced. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pi0sum</td><td>Sum of subaperture intensity. Old content is freed and replaced. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pi0sumsum</td><td>Sum of all subaperture intensity for each ni0. Old content is freed and replaced. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">i0s</td><td>Subaperture intensities (nsa*ni0). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gxs</td><td>Subaperture intensity gradients along x (radial). Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gys</td><td>Subaperture intensity gradients along y (azimuthal). Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">qe</td><td>Quantum efficiency of each pixel. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2</td><td>Background image. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2c</td><td>Background correction image. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td>Background per pixel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrndc</td><td>Background correction per pixel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Read out noise per pixel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetax</td><td>Pixel size along x (radial) (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixthetay</td><td>Pixel size along y (azimuthal) (radian). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixrots</td><td>Subaperture pixel rotation (radian). Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radgx</td><td>Leave gradients at radial direction. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mtchcr</td><td>Constraint. -1: auto. See mtch() for other values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sigratio</td><td>Scale signal level to increase NEA. 0 is treated as 1. </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">pmtche</td><td>matched filter.  </td></tr>
@@ -385,10 +443,10 @@ Functions</h2></td></tr>
     <tr><td class="paramdir"></td><td class="paramname">rne</td><td>Read out noise per pixel  </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">pixthetax</td><td>Pixel size along x (radial)  </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">pixthetay</td><td>Pixel size along y (azimuthal)  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">pixrots</td><td>subaperture pixel rotation.  </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">pixrots</td><td>subaperture rotation  </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">radgx</td><td>Leave gradients at radial direction  </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">mtchcr</td><td>constraint. -1: auto  </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">sigratio</td><td>scale signal level to increase NEA. default: 1 </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">sigratio</td><td>scale signal level to increase NEA (testing) </td></tr>
   </table>
   </dd>
 </dl>
@@ -413,7 +471,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the derivative using FFT method along direction specified by theta (radian). </p>
+<p>Compute the derivative using FFT method along direction specified by theta (radian).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">i0</td><td>The image. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">theta</td><td>Direction of the derivative (radian). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated derivative per pixel; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -427,8 +493,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d1/d97/mtch_8h.html">mtch.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

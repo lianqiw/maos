@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/mkz.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -152,7 +154,20 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the transpose of a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc. </p>
+<p>Returns the transpose of a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on xloc. NULL for uniform amplitude. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>The subaperture coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saorc</td><td>1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix of size xloc-&gt;nloc*(nsa*2); the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -199,7 +214,20 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc. </p>
+<p>Returns a ztilt gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on xloc. NULL for uniform amplitude. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>The subaperture coordinate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">saorc</td><td>1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix of size (nsa*2)*xloc-&gt;nloc; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -213,8 +241,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d0/d13/mkz_8h.html">mkz.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

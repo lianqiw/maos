@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: sys/thread.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -163,12 +165,9 @@ typedef void *(*&#160;</td><td class="memItemRight" valign="bottom"><b>thread_wr
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a46d357a9305be4f48b8166cb27ec41ff" id="r_a46d357a9305be4f48b8166cb27ec41ff"><td class="memItemLeft" align="right" valign="top"><a id="a46d357a9305be4f48b8166cb27ec41ff" name="a46d357a9305be4f48b8166cb27ec41ff"></a>
-<a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><b>thread_id</b> (void)</td></tr>
+<tr class="memitem:a46d357a9305be4f48b8166cb27ec41ff" id="r_a46d357a9305be4f48b8166cb27ec41ff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d7/d63/classlong.html">long</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46d357a9305be4f48b8166cb27ec41ff">thread_id</a> (void)</td></tr>
 <tr class="memitem:aefb4ea36bbedea7ae5ada90fee8248fb" id="r_aefb4ea36bbedea7ae5ada90fee8248fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d4/dd6/structthread__t">thread_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aefb4ea36bbedea7ae5ada90fee8248fb">thread_prep</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> start, <a class="el" href="../../d7/d63/classlong.html">long</a> end, <a class="el" href="../../d7/d63/classlong.html">long</a> nthread, thread_wrapfun fun, void *data)</td></tr>
-<tr class="memdesc:aefb4ea36bbedea7ae5ada90fee8248fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">prepare thread information  <br /></td></tr>
 <tr class="memitem:a9c06e9160167b01ec6e81558ae27e2d8" id="r_a9c06e9160167b01ec6e81558ae27e2d8"><td class="memItemLeft" align="right" valign="top">pthread_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c06e9160167b01ec6e81558ae27e2d8">thread_new</a> (thread_fun fun, void *arg)</td></tr>
-<tr class="memdesc:a9c06e9160167b01ec6e81558ae27e2d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a thread and take it away.  <br /></td></tr>
 <tr class="memitem:abcf2784ffc1cb49a293c75cdfe6d64e7" id="r_abcf2784ffc1cb49a293c75cdfe6d64e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abcf2784ffc1cb49a293c75cdfe6d64e7">thread_block_signal</a> ()</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -535,7 +534,7 @@ thread_data</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">thread_pool_queue(counter, (thread_wrapfun)fun, arg, njob, urgent)</div>
+<b>Value:</b><div class="fragment"><div class="line">thread_pool_queue(counter, fun, arg, njob, urgent)</div>
 </div><!-- fragment -->
 <p>Queue jobs to counter. Do not wait. </p>
 
@@ -591,6 +590,25 @@ thread_data</td>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a46d357a9305be4f48b8166cb27ec41ff" name="a46d357a9305be4f48b8166cb27ec41ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46d357a9305be4f48b8166cb27ec41ff">&#9670;&#160;</a></span>thread_id()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d7/d63/classlong.html">long</a> thread_id </td>
+          <td>(</td>
+          <td class="paramtype">void</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Return the pthread id of the calling thread.</p>
+<dl class="section return"><dt>Returns</dt><dd>pthread id cast to long. </dd></dl>
+
+</div>
+</div>
 <a id="aefb4ea36bbedea7ae5ada90fee8248fb" name="aefb4ea36bbedea7ae5ada90fee8248fb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aefb4ea36bbedea7ae5ada90fee8248fb">&#9670;&#160;</a></span>thread_prep()</h2>
 
@@ -624,9 +642,18 @@ thread_data</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>prepare thread information </p>
-<p>Break out the job to be executed by multiple threads. </p>
+<p>Break out the job to be executed by multiple threads. The index range is split evenly; threads beyond the range get empty ranges and NULL fun. thd[0].nthread is set to the number of active threads.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Start index (inclusive). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">end</td><td>End index (exclusive). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nthread</td><td>Number of threads. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fun</td><td>Function to be called by each thread. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Data shared by all threads. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Newly allocated array of nthread <a class="el" href="#d4/dd6/structthread__t">thread_t</a>; the caller frees it. NULL if nthread is 0. </dd></dl>
 
 </div>
 </div>
@@ -648,9 +675,15 @@ thread_data</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a thread and take it away. </p>
-<p>Create a new thread and forget. </p>
+<p>Create a new detached thread and forget.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fun</td><td>Thread function. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Argument passed to fun. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Thread id, or 0 on failure. </dd></dl>
 
 </div>
 </div>
@@ -682,8 +715,12 @@ thread_data</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>sys</b></li><li class="navelem"><a href="../../db/dd5/thread_8h.html">thread.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

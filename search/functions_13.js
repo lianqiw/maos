@@ -1,23 +1,4 @@
 var searchData=
 [
-  ['zernike_0',['zernike',['../d8/d2d/zernike_8h.html#a6360bd013ee1ebf6e1459ddd6518d5db',1,'zernike.c']]],
-  ['zernike_5fcov_5fkolmogorov_1',['zernike_cov_kolmogorov',['../d8/d2d/zernike_8h.html#a39da367ec0cb13e0c1915da411ddd68c',1,'zernike.c']]],
-  ['zfarr_5fclose_2',['zfarr_close',['../d3/d7d/zfarr_8h.html#a749eb5424ce0ab50cc3ad55b1560ddf3',1,'zfarr.c']]],
-  ['zfarr_5fclose_5fn_3',['zfarr_close_n',['../d3/d7d/zfarr_8h.html#a4da312d93e7d98d003098db6976392fc',1,'zfarr.c']]],
-  ['zfarr_5finit2_4',['zfarr_init2',['../d3/d7d/zfarr_8h.html#a79e8217928d0be5ebaeabe0df079d385',1,'zfarr.c']]],
-  ['zfarr_5fpush_5',['zfarr_push',['../d3/d7d/zfarr_8h.html#ab81474f55c843efb1d1a3df0b427aef1',1,'zfarr.c']]],
-  ['zfclose_6',['zfclose',['../d3/d7f/bin_8h.html#a4ed840d37c980314e41e565e7dd617d3',1,'bin.c']]],
-  ['zfeof_7',['zfeof',['../d3/d7f/bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201',1,'bin.c']]],
-  ['zferrno_8',['zferrno',['../d3/d7f/bin_8h.html#ac87d75297b5fc4ea1d7c8ad2a62dbd7b',1,'bin.c']]],
-  ['zfexist_9',['zfexist',['../d3/d7f/bin_8h.html#a55e5dc1b9fd29f858d152f3194dd1d22',1,'bin.c']]],
-  ['zfisfits_10',['zfisfits',['../d3/d7f/bin_8h.html#a01b67a362199a6b984e5759f7d84c168',1,'bin.c']]],
-  ['zflen_11',['zflen',['../d3/d7f/bin_8h.html#a0cc9385f1a99368d36091786b313dea2',1,'bin.c']]],
-  ['zfname_12',['zfname',['../d3/d7f/bin_8h.html#aa8967ca7ae67be2fb41b5497a5cd4ce0',1,'bin.c']]],
-  ['zfopen_13',['zfopen',['../d3/d7f/bin_8h.html#aaf11bfd20fedb311db4a1103211bdbfc',1,'bin.c']]],
-  ['zfpos_14',['zfpos',['../d3/d7f/bin_8h.html#aa2befd7adf220d7469f537919c2c3975',1,'bin.c']]],
-  ['zfread_15',['zfread',['../d3/d7f/bin_8h.html#ac266a2663e090233d93f35fc2453a753',1,'bin.c']]],
-  ['zfrewind_16',['zfrewind',['../d3/d7f/bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289',1,'bin.c']]],
-  ['zfseek_17',['zfseek',['../d3/d7f/bin_8h.html#acff7a399a7daacbf8fcca57c18732f57',1,'bin.c']]],
-  ['zftouch_18',['zftouch',['../d3/d7f/bin_8h.html#a413945d9b9ed2b96159910115707a7ad',1,'bin.c']]],
-  ['zfwrite_19',['zfwrite',['../d3/d7f/bin_8h.html#ace6a770f21f23800c9f497498495d1d5',1,'bin.c']]]
+  ['vector_0',['Vector',['../d5/d21/class_array.html#a0590fa4c9b58ef6ed3b6f92e7bdf72e8',1,'Array::Vector()'],['../d1/d12/class_cell_array.html#ac444571edb54c051706ada08bafc389d',1,'CellArray::Vector()'],['../d0/d44/class_num_array.html#ae43bd1c8e365ea70ed71789ca40e7df1',1,'NumArray::Vector()'],['../d4/d0f/class_num_cell.html#a650eb7ac22fda06e06036849d9a3a00b',1,'NumCell::Vector()']]]
 ];

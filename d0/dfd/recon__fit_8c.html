@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/recon_fit.c File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -104,8 +106,7 @@ $(function(){initNavTree('d0/dfd/recon__fit_8c.html','../../',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a8d298f9df5b70d8c5e2f241589216fe7" id="r_a8d298f9df5b70d8c5e2f241589216fe7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d298f9df5b70d8c5e2f241589216fe7">setup_fit</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> *fit, int idealtomo)</td></tr>
-<tr class="memitem:a4bfc73b39b67ad8fd1ff3329552e80ee" id="r_a4bfc73b39b67ad8fd1ff3329552e80ee"><td class="memItemLeft" align="right" valign="top"><a id="a4bfc73b39b67ad8fd1ff3329552e80ee" name="a4bfc73b39b67ad8fd1ff3329552e80ee"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> *fit, int nfit)</td></tr>
+<tr class="memitem:a4bfc73b39b67ad8fd1ff3329552e80ee" id="r_a4bfc73b39b67ad8fd1ff3329552e80ee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4bfc73b39b67ad8fd1ff3329552e80ee">free_fit</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> *fit, int nfit)</td></tr>
 <tr class="memitem:ac24d3db35e5e0e23cf90389c578d4473" id="r_ac24d3db35e5e0e23cf90389c578d4473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac24d3db35e5e0e23cf90389c578d4473">setup_recon_fit</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="memitem:a58f4cbdab5f06550701e99866c9e6002" id="r_a58f4cbdab5f06550701e99866c9e6002"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms)</td></tr>
 <tr class="memitem:ae4acd7dfb4d394a30d98e3fc887c7d68" id="r_ae4acd7dfb4d394a30d98e3fc887c7d68"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae4acd7dfb4d394a30d98e3fc887c7d68">free_powfs_fit</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms)</td></tr>
@@ -133,7 +134,43 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A generic DM fitting routine. </p>
+<p>A generic DM fitting routine.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">fit</td><td>The fit struct with geometry and flags already set. The operators are filled. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idealtomo</td><td>If set, do not compute HXF; FitR traces through the atmosphere directly. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4bfc73b39b67ad8fd1ff3329552e80ee" name="a4bfc73b39b67ad8fd1ff3329552e80ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4bfc73b39b67ad8fd1ff3329552e80ee">&#9670;&#160;</a></span>free_fit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void free_fit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> *</td>          <td class="paramname"><span class="paramname"><em>fit</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>nfit</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free the array of nfit <a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a>. Data in entries marked isref is not freed.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fit</td><td>The array of <a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> to free, including the array itself. May be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nfit</td><td>Number of entries in fit. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -155,7 +192,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setup DM fitting parameters </p>
+<p>Setup DM fitting parameters</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;fit is allocated and set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -182,7 +226,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Setting fitting parameter for turbulence to WFS lenslet grid. </p>
+<p>Setting fitting parameter for turbulence to WFS lenslet grid.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">powfs</td><td>The powfs struct array. powfs[].fit is allocated and set for high order powfs. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>The reconstruction struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -204,7 +256,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Call this instead of free_fit directly to free powfs fit parameters. </p>
+<p>Call this instead of free_fit directly to free powfs fit parameters.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">powfs</td><td>The powfs struct array. powfs[].fit is freed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -236,7 +295,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply fit right hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
+<p>Apply fit right hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; alpha*FR*xin is accumulated into it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>Tomography output on xloc. If NULL, trace through the atmosphere directly. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -268,7 +336,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply fit left hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
+<p>Apply fit left hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; alpha*FL*xin is accumulated into it. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#da/d3f/structfit__t">fit_t</a> struct. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>DM commands. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -282,8 +359,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_fit</b> (<a clas
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../d0/dfd/recon__fit_8c.html">recon_fit.c</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>
