@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: sys/path.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -139,14 +137,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a directory to path. Higher priority is searched first. An existing entry is moved according to the new priority.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priority of the directory. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf-style format of the directory name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add a directory to path. Higher priority is searched first. </p>
 
 </div>
 </div>
@@ -164,13 +155,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a directory to path with default priority of 0.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Directory name. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add a directory to path with default priority of 0. </p>
 
 </div>
 </div>
@@ -188,13 +173,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove a directory from path.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Directory name. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Remove a directory from path. </p>
 
 </div>
 </div>
@@ -212,7 +191,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Print the current search path for configuration files. </p>
+<p>Print current path. </p>
 
 </div>
 </div>
@@ -234,15 +213,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise.</p>
+<p>Try to find a file in path and return its absolute filename if exist, NULL otherwise. <br  />
+</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fn</td><td>filename to search </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">current</td><td>search current folder </td></tr>
+    <tr><td class="paramname">fn</td><td>filename to search </td></tr>
+    <tr><td class="paramname">current</td><td>search current folder </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated file name, or NULL if not found; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -260,7 +239,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Empty the search path and free its memory. </p>
+<p>Empty the path. </p>
 
 </div>
 </div>
@@ -278,14 +257,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find the directory that hold the configuration files.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>"maos" for maos, "skyc" for skyc. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated directory name, or NULL if not found; the caller frees it. </dd></dl>
+<p>Find the directory that hold the configuration files. name is "maos" for maos, "skyc" for skyc. </p>
 
 </div>
 </div>
@@ -299,12 +271,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>sys</b></li><li class="navelem"><a href="../../d7/dd4/path_8h.html">path.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

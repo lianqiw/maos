@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Examples</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -103,50 +101,18 @@ $(function(){initNavTree('d5/d29/page33_example.html','../../',''); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><ul>
-<li><a class="el" href="../../da/dd3/nfiraos_example.html">LGS MCAO (default)</a></li>
+<li><a class="el" href="../../da/dd3/nfiraos_example.html">TMT NFIRAOS LGS MCAO</a></li>
 <li><a class="el" href="../../dc/d7f/scao_base_example.html">SCAO</a></li>
 <li><a class="el" href="../../d0/dbd/scao_lgs_example.html">SCAO LGS</a></li>
 <li><a class="el" href="../../dc/d8a/scao_ngs_example.html">SCAO NGS</a></li>
-<li><a class="el" href="../../d5/d2b/page34_conf.html">Config File List</a></li>
+<li><a class="el" href="../../d5/d2b/page34_conf.html">Config File List</a> </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="sect-example-list"></a>
-Available configurations</h1>
-<p>The baseline configurations in <span class="tt">config/maos</span> are complete and can be used with <span class="tt">-c</span>:</p>
-<ul>
-<li><a class="el" href="../../d6/d82/default.html">default.conf</a> (includes <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a>): LGS MCAO, the default.</li>
-<li><a class="el" href="../../d7/d15/mcao_ngs.html">mcao_ngs.conf</a> &ndash; NGS MCAO.</li>
-<li><a class="el" href="../../d2/d91/scao_lgs.html">scao_lgs.conf</a>, <a class="el" href="../../d3/d4b/scao_ngs.html">scao_ngs.conf</a>, <a class="el" href="../../d7/d20/scao_pywfs.html">scao_pywfs.conf</a> &ndash; single conjugate AO with LGS, Shack-Hartmann NGS, or pyramid NGS WFS.</li>
-<li><a class="el" href="../../d0/d10/ltao.html">ltao.conf</a> &ndash; LGS LTAO with a single DM and on axis DM fitting.</li>
-<li><a class="el" href="../../d4/d4b/glao.html">glao.conf</a> &ndash; GLAO with a single DM.</li>
-</ul>
-<p>The folder <span class="tt">config/maos/examples</span> contains telescope apertures, which are included by other files (<a class="el" href="../../d8/d82/keck.html">examples/keck.conf</a>, <a class="el" href="../../d8/d0f/tmt.html">examples/tmt.conf</a>, <a class="el" href="../../d2/d41/gemini.html">examples/gemini.conf</a>, <a class="el" href="../../d1/df5/elt.html">examples/elt.conf</a>), and configurations of existing or planned AO systems, for example:</p>
-<ul>
-<li><a class="el" href="../../da/dac/keck_ngs.html">examples/keck_ngs.conf</a> &ndash; Keck NGS AO.</li>
-<li><a class="el" href="../../d8/d5b/keck_kapa.html">examples/keck_kapa.conf</a> &ndash; Keck KAPA LGS LTAO.</li>
-<li><a class="el" href="../../da/d85/strata.html">examples/strata.conf</a> and the <span class="tt">strata_*.conf</span> variants: Keck STRATA with the adaptive secondary mirror (KASM) for different instruments and fields of view.</li>
-<li><a class="el" href="../../d9/d63/nfiraos_lgs.html">examples/nfiraos_lgs.conf</a>, <a class="el" href="../../d9/d7e/nfiraos_lgs_noimpl.html">examples/nfiraos_lgs_noimpl.conf</a>, <a class="el" href="../../d9/d65/nfiraos_lgs_pyttf.html">examples/nfiraos_lgs_pyttf.conf</a>, <a class="el" href="../../df/de4/nfiraos_ngs.html">examples/nfiraos_ngs.conf</a> &ndash; TMT NFIRAOS.</li>
-<li><a class="el" href="../../d9/d74/gems_lgs.html">examples/gems_lgs.conf</a> &ndash; a test setup of the Gemini South MCAO system GeMS.</li>
-<li><a class="el" href="../../d9/dfe/raven_lgs.html">examples/raven_lgs.conf</a>, <a class="el" href="../../d0/df6/raven_ngs.html">examples/raven_ngs.conf</a> &ndash; MOAO configurations on the Gemini aperture modeled after Raven.</li>
-<li><a class="el" href="../../d0/d29/morfeo_lgs.html">examples/morfeo_lgs.conf</a> &ndash; LGS MCAO on the ELT aperture.</li>
-<li><a class="el" href="../../d0/d14/mcao_2dm30.html">examples/mcao_2dm30.conf</a>, <a class="el" href="../../d3/d11/mcao_2dm60.html">examples/mcao_2dm60.conf</a>, <a class="el" href="../../d9/d91/mcao_3dm60.html">examples/mcao_3dm60.conf</a> and the Keck variants <a class="el" href="../../d2/d72/keck_2dm30.html">examples/keck_2dm30.conf</a>, <a class="el" href="../../d9/da8/keck_2dm60.html">examples/keck_2dm60.conf</a>, <a class="el" href="../../d3/dbb/keck_3dm60.html">examples/keck_3dm60.conf</a> &ndash; wide field MCAO studies.</li>
-</ul>
-<p>For example, <span class="tt">maos -c nfiraos_lgs.conf -o nfiraos</span> runs TMT NFIRAOS in LGS mode. <a class="el" href="../../d5/d2b/page34_conf.html">Config File List</a> shows the content of every file. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
-<div id="page-nav" class="page-nav-panel">
-<div id="page-nav-resize-handle"></div>
-<div id="page-nav-tree">
-<div id="page-nav-contents">
-</div><!-- page-nav-contents -->
-</div><!-- page-nav-tree -->
-</div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

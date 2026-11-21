@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/recon_utils.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -109,6 +107,7 @@ Functions</h2></td></tr>
 <tr class="memitem:abfaa311b9be11571120dff4f870dca5e" id="r_abfaa311b9be11571120dff4f870dca5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abfaa311b9be11571120dff4f870dca5e">apply_invpsd</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, const void *extra, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin, real alpha, int xb, int yb)</td></tr>
 <tr class="memitem:a6a6ad264e91cb4ab88c057011ca80fd9" id="r_a6a6ad264e91cb4ab88c057011ca80fd9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6a6ad264e91cb4ab88c057011ca80fd9">apply_fractal</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **xout, const void *extra, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin, real alpha, int xb, int yb)</td></tr>
 <tr class="memitem:aa2a1d9e1979e85bc3f9fc9fc7983101c" id="r_aa2a1d9e1979e85bc3f9fc9fc7983101c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2a1d9e1979e85bc3f9fc9fc7983101c">remove_mode</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *x, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *M, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *PM)</td></tr>
+<tr class="memdesc:aa2a1d9e1979e85bc3f9fc9fc7983101c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove projection x = x - M * (PM * x).  <br /></td></tr>
 <tr class="memitem:a29875eda5bf6485bb6b3b5628da3e361" id="r_a29875eda5bf6485bb6b3b5628da3e361"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a29875eda5bf6485bb6b3b5628da3e361">applyW</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *xin, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *W0, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *W1, const real *wt)</td></tr>
 <tr class="memitem:a3f0ea137a809c9619a2faf8d05a7d783" id="r_a3f0ea137a809c9619a2faf8d05a7d783"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3f0ea137a809c9619a2faf8d05a7d783">calcWmcc</a> (const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *A, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *B, const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *W0, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *W1, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *wt)</td></tr>
 <tr class="memitem:ae1325525be10517ff26444de7e8c148b" id="r_ae1325525be10517ff26444de7e8c148b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1325525be10517ff26444de7e8c148b">nea2sp</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *nea, int ll, int ur, int ng)</td></tr>
@@ -151,16 +150,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply Laplacian2 to xin and accumulates to xout: xout+=alpha*L2'*L2*xin.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L2</td><td>The Laplacian operator. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply Laplacian2 to xin and accumulates to xout. </p>
 
 </div>
 </div>
@@ -202,18 +192,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; accumulated into. Must already be allocated. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#d7/dff/structinvpsd__t">invpsd_t</a> struct. Its fftxopd is used as work space. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xb</td><td>Block index. If -1, do all blocks. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yb</td><td>Block index. Do nothing if xb != yb, since we apply to diagonal only. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000010">Todo</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
 </div>
@@ -255,18 +234,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply fractal regularization to xin, scaled by alpha and add to xout. Not thread safe for the same block: A holds the work space. Concurrent callers need a private copy of A (see setup_recon_mvr_mvm_iact()).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output; accumulated into. Must already be allocated. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="../../d6/d94/maos_2types_8h.html#d2/d15/structfractal__t">fractal_t</a> struct. Its xopd is used as work space. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xb</td><td>Block index. If -1, do all blocks. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yb</td><td>Block index. Do nothing if xb != yb, since we apply to diagonal only. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply fractal regularization to x, scaled by alpha. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p><dl class="todo"><dt><b><a class="el" href="../../dd/da0/todo.html#_todo000011">Todo</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
 </div>
@@ -293,12 +261,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove projection onto modes: x = x - M * (PM * x).</p>
+
+<p>Remove projection x = x - M * (PM * x). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">x</td><td>The vector. Nothing is done if any of x, M, or PM is NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">M</td><td>The modes. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">PM</td><td>The mode projection matrix. </td></tr>
+    <tr><td class="paramname">x</td><td>The vector </td></tr>
+    <tr><td class="paramname">M</td><td>The mode </td></tr>
+    <tr><td class="paramname">PM</td><td>The mode projection matrix </td></tr>
   </table>
   </dd>
 </dl>
@@ -333,16 +302,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply weighting W0/W1 with weighting wt for each block: \(xin&lt;-wt*(W0-W1*W1&#39;)*xin;\)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xin</td><td>The vectors (one per direction in each column); replaced by the weighted vectors. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W0</td><td>The sparse weighting matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W1</td><td>The low rank weighting vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wt</td><td>Weight of each direction (row of xin). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>apply weighting W0/W1 with weighting wt for each block. \(xin&lt;-(W0-W1*W1&#39;)*xin;\) </p>
 
 </div>
 </div>
@@ -379,18 +339,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute W0/W1 weighted dot product: \(\sum_i wt_i A_i&#39;*(W0-W1*W1&#39;)*B_i\) where i is the direction.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>First operand, nevl x nA. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Second operand, nevl x nB. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W0</td><td>The sparse weighting matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W1</td><td>The low rank weighting vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wt</td><td>Weight of each direction, nevl x 1. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>nA x nB result. Newly allocated; the caller frees it. </dd></dl>
+<p>Compute W0/W1 weighted dot product: \(A&#39;*(W0-W1*W1&#39;)*B\) </p>
 
 </div>
 </div>
@@ -422,17 +371,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert column vector nsax2 or nsax3 to sparse matrix. The third column of nea is coupling.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nea</td><td>NEA (or its inverse or Cholesky factor) of size nsa x ng or nsa x 3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ll</td><td>Whether to fill the lower left (yx) coupling term. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ur</td><td>Whether to fill the upper right (xy) coupling term. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ng</td><td>Number of gradients per subaperture. If ng&gt;2, treat as diagonal matrix (for raw PWFS). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The (nsa*ng) x (nsa*ng) sparse matrix. Newly allocated; the caller frees it. </dd></dl>
+<p>Convert column vector nsax2 or nsax3 to sparse matrix. The third column of nea is coupling. ll: controls lower left ur: controls upper right if ng&gt;2, treat as diagonal matrix (for raw PWFS) </p>
 
 </div>
 </div>
@@ -459,15 +398,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>The lower triangular Cholesky factor in the same packing. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The symmetric matrix of each subaperture, nsa x 2 or nsa x 3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ng</td><td>Number of gradients per subaperture. If ng&gt;2, treat as diagonal matrix. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same. if ng&gt;2, treat as diagonal matrix </p>
 
 </div>
 </div>
@@ -499,16 +430,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply matrix inversion in a 2x2 symmetric matrix packed in row vector [a[0,0],a[1,1],a[0,1]]. Input and output may be the same. Entries that are singular are not updated.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>The scaled inverse in the same packing. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The symmetric matrix of each subaperture, nsa x 2 or nsa x 3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ng</td><td>Number of gradients per subaperture. If ng&gt;2, treat as diagonal matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Scaling factor applied to the inverse. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply matrix inversion in a 2x2 symmetrisa matrix packed in row vector [a[0,0],a[1,1],a[0,1]] Input and output may be the same. </p>
 
 </div>
 </div>
@@ -535,15 +457,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>The product LL' in the same packing. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The lower triangular matrix L of each subaperture, nsa x 2 or nsa x 3. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ng</td><td>Number of gradients per subaperture. If ng&gt;2, treat as diagonal matrix. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector. Input and output may be the same. if ng&gt;2, treat as diagonal matrix </p>
 
 </div>
 </div>
@@ -570,15 +484,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check the dimension of NEA and fix if possible</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">nea</td><td>The NEA. A single column is reshaped to nsa columns. Errors out if NULL or the format is wrong. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nsa</td><td>Number of subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ng</td><td>Number of gradients per subaperture. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Check the dimension of NEA and fix if possible </p>
 
 </div>
 </div>
@@ -615,17 +521,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute and save PSF reconstruction telemetry. For pseudo open loop estimations, like high order loop, we add opdr to, and subtract dmpsol from the OPD. For closed loop estimations, like ahst low order or lsr, we add dmerr_lo, and dmerr to the OPD.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>The simulation struct. simu-&gt;ecov is accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opdr</td><td>Tomography output (pseudo open loop estimate) on xloc. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dmpsol</td><td>DM commands used for pseudo open loop gradients. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dmerr</td><td>High order closed loop DM error signal. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dmerr_lo</td><td>Low order closed loop error signal (NGS modes). May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute and save PSF reconstruction telemetry. For pseudo open loop estimations, like high order loop, we add opdr to, and subtract dmpsol from the OPD. For closed loop estimations, like ahst low order or lsr, we add dmerr_lo, and dmerr to the OPD. </p>
 
 </div>
 </div>
@@ -647,15 +543,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2 Estimation. The result will be an average of them.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>The powfs struct array. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The Cn2 estimation struct, or NULL if cn2est_new() returns NULL. Newly allocated; the caller frees it with cn2est_free(). </dd></dl>
+<p>Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2 Estimation. The result will be an average of them. </p>
 
 </div>
 </div>
@@ -692,17 +580,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wrapper of Cn2 Estimation operations in recon.c. Pushes the gradients and estimates the Cn2 profile every cn2.step steps, and optionally updates the tomography weights.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">cn2res</td><td>Saved results. cn2res[0] holds r0 and cn2res[1] holds the layer weights, one column per estimation. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">recon</td><td>The reconstruction struct. recon-&gt;wt, r0, and L0 are updated if cn2.tomo is set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>The parameter struct. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">grad</td><td>The WFS gradients. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">tomo_update</td><td>Set to 1 if the tomography needs to be updated. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Wrapper of Cn2 Estimation operations in recon.c </p>
 
 </div>
 </div>
@@ -716,12 +594,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../de/d53/recon__utils_8h.html">recon_utils.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

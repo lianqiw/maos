@@ -14,7 +14,5 @@ var rayleigh_8h =
       [ "dtheta", "d5/d7f/rayleigh_8h.html#a32113c495ce8d7dcfd3fd7e640b7e068", null ],
       [ "npsf", "d5/d7f/rayleigh_8h.html#a629d3407a2e070bf80cea08325a9c44f", null ]
     ] ],
-    [ "rayleigh", "d5/d7f/rayleigh_8h.html#af352c6fe9797b9fd84d665a8fbd346be", null ],
-    [ "rayleigh_free", "d5/d7f/rayleigh_8h.html#aa4d70bdc8b8b9f0b4e6d44cb216f3392", null ],
-    [ "rayleigh_setup", "d5/d7f/rayleigh_8h.html#adaf569250c44d1d73f340b676550d877", null ]
+    [ "rayleigh", "d5/d7f/rayleigh_8h.html#af352c6fe9797b9fd84d665a8fbd346be", null ]
 ];

@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/mkh.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -132,15 +130,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create transpose of ray tracing operator from locin to locout using cubic influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac&lt;=0.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cubic_iac</td><td>Inter-actuator coupling of the cubic influence function. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it. </dd></dl>
+<p>Create transpose of ray tracing operator from locin to locout using cubic influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac==0 </p>
 
 </div>
 </div>
@@ -162,15 +152,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transposes the result from mkht_cubic.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cubic_iac</td><td>Inter-actuator coupling of the cubic influence function. Falls back to bilinear if &lt;=0. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it. </dd></dl>
+<p>Transposes the result from mkht_cubic. </p>
 
 </div>
 </div>
@@ -188,14 +170,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -230,11 +210,10 @@ locout, ...), Pout=H*Pin does the bilinear interpolation.</p>
 <p> where c is the nearest neighbor coupling frequency. The leading coefficient is to normalize the influence function so that it sums to 1.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>The ray tracing parameters including locin and locout. See accphi.h. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">propdata</td><td>See accphi.h </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -256,15 +235,7 @@ locout, ...), Pout=H*Pin does the bilinear interpolation.</p>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and xout should be 1-d arrays of coordinates. We require the coordinates to order incrementally monotonically, but do not require them to be evenly spaced.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input coordinate (one column). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xout</td><td>The output coordinate (one column). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated <a class="el" href="../../df/def/type_8h.html#afe7fbb6b2b187cd6e7fb2de743368378">NX(xout)</a>*NX(xin) sparse matrix; the caller frees it. </dd></dl>
+<p>Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and xout should be 1-d arrays of coordinates. We require the coordinates to order incrementally monotonically, but do not require them to be evenly spaced. </p>
 
 </div>
 </div>
@@ -278,12 +249,8 @@ locout, ...), Pout=H*Pin does the bilinear interpolation.</p>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d3/d56/mkh_8h.html">mkh.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

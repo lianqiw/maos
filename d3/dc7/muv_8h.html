@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/muv.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -383,16 +381,7 @@ maxit</td>
 </div><div class="memdoc">
 <p>Decomposes a matrix into sparse and low rank terms and do math operations.</p>
 <p>The forward operations can be represented by a matrix M and two low rank terms as y = ( M - u*v' ) *x , or by a function Mfun and corresponding argument Mdata.</p>
-<p>This can also be used to solve linear equations using muv_solve() or muv_bgs_solve(). Apply the sparse plus low rank compuation to xin with scaling of alpha: \(xout=(A.M-A.U*A.V&#39;)*xin*alpha\); U,V are low rank.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output, accumulated into. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A_</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> operator. Declared void for use as a pcg callback. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>This can also be used to solve linear equations using muv_solve() or muv_bgs_solve(). Apply the sparse plus low rank compuation to xin with scaling of alpha: \(xout=(A.M-A.U*A.V&#39;)*xin*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
@@ -424,16 +413,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the transpose of operation muv(); Apply the sparse plug low rand compuation to xin with scaling of alpha: \(xout=(A.M-A.V*A.U&#39;)*xin*alpha\); U,V are low rank.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output, accumulated into. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A_</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> operator. Declared void for use as a pcg callback. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input vector. Nothing is done if NULL and A-&gt;M is set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply the transpose of operation muv(); Apply the sparse plug low rand compuation to xin with scaling of alpha: \(xout=(A.M-A.V*A.U&#39;)*xin*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
@@ -465,16 +445,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): \(xout_x=(A.M_xy-A.U_xi*A.V_yi&#39;)*xin_y*alpha\); U,V are low rank.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">xout</td><td>The output, block xb is accumulated into. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Pointer to MUV_IB_T containing the <a class="el" href="#dd/d34/structmuv__t">muv_t</a> operator and block indices. If xb or yb is -1, the full muv() is applied. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input vector (one column). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb): \(xout_x=(A.M_xy-A.U_xi*A.V_yi&#39;)*xin_y*alpha\); U,V are low rank. </p>
 
 </div>
 </div>
@@ -501,15 +472,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>convert the data from dcell to dmat and apply muv_direct_solve_mat(). May be done in place.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>The output. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct prepared by muv_direct_prep(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. Nothing is done if NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place. </p>
 
 </div>
 </div>
@@ -536,15 +499,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply CBS or SVD multiply to xin to get xout. Create xout is not exist already. xout = A^-1 * xin; xin and xout can be the same for in place operation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>The output. Allocated if NULL. Can be the same as xin. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct prepared by muv_direct_prep(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply CBS or SVD multiply to xin to get xout. Create xout is not exist already. xout = A^-1 * xin; xin and xout can be the same for in place operation. </p>
 
 </div>
 </div>
@@ -569,17 +524,10 @@ maxit</td>
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on the sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms,    </p><p class="formulaDsp">
 \[    Up=M^{-1}*U,
-    Vp=-M^{-1}*[V*(I-Up&#39;*V)^{-1}]
+    Vp=M^{-1}*[V*(I-Up&#39;*V)^{-1}]
 \]
 </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct. The factorization (C or MI, Up, Vp) is stored into it. With svd, U and V are absorbed into MI and freed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">svd</td><td>0: Cholesky factorization. Otherwise use SVD; if |svd|&lt;1 it is the SVD inversion threshold. </td></tr>
-  </table>
-  </dd>
-</dl>
-
+ 
 </div>
 </div>
 <a id="ab2e1edae4450a7b5f018f1bb52310892" name="ab2e1edae4450a7b5f018f1bb52310892"></a>
@@ -596,13 +544,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free cholesky decompositions or SVD.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct whose C, MI, Up, Vp are freed. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free cholesky decompositions or SVD. </p>
 
 </div>
 </div>
@@ -634,16 +576,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply cholesky backsubstitution solve to xin to get xout. Create xout is not exist already. xin and xout can be the same for in place operation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">xout</td><td>The output. Allocated if NULL. Can be the same as xin. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct prepared by muv_direct_diag_prep(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The input. Nothing is done if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ib</td><td>The diagonal block index. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply cholesky backsubstitution solve to xin to get xout. Create xout is not exist already. xin and xout can be the same for in place operation. </p>
 
 </div>
 </div>
@@ -670,12 +603,12 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>solve A*x=b using the Block Gauss Seidel algorithm. The matrix is always assembled. We use routines from muv. to do the computation.</p>
+<p>solve A*x=b using the Block Gauss Seidel algorithm. The matrix is always assembled. We use routines from muv. to do the computation. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. Input for warm restart. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Contain info about the left hand side matrix A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve. Nothing is done if NULL. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. input for warm restart.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Contain info about the The left hand side matrix A  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve </td></tr>
   </table>
   </dd>
 </dl>
@@ -710,17 +643,16 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.</p>
+<p>solve x=A^-1*B*b using algorithms depend on algorithm, wrapper. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. Input for warm restart. Allocated if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">L</td><td>Contain info about the left hand side matrix A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">R</td><td>Contain info about the right hand side matrix B. If NULL, b is used as the right hand side directly. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve. NULL is special case. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">px</td><td>The output vector. input for warm restart.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">L</td><td>Contain info about the left hand side matrix A  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">R</td><td>Contain info about the right hand side matrix B  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b</td><td>The right hand side vector to solve. null is special case </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The residual from pcg() for CG; 0 otherwise. </dd></dl>
 
 </div>
 </div>
@@ -742,15 +674,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply CBS or SVD multiply to square sparse matrix. xout = A^-1 * xin * (A^-1)^T. The output is dmat if using SVD, and dsp if using CBS.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct prepared by muv_direct_prep(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The square sparse input matrix. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated dmat (SVD) or dsp (CBS); the caller frees it. </dd></dl>
+<p>Apply CBS or SVD multiply to square sparse matrix. xout = A^-1 * xin * (A^-1)^T. The output is dmat if using SVD, and dsp if using CBS. </p>
 
 </div>
 </div>
@@ -775,17 +699,10 @@ maxit</td>
 <p>Cholesky factorization (svd=0) or svd (svd&gt;0) on each diagonal element of the block sparse matrix and its low rank terms. if svd is less than 1, it is also used as the threshold in SVD inversion.</p>
 <p>When there are low rank terms,    </p><p class="formulaDsp">
 \[    Up=M^{-1}U,
-    Vp=-M^{-1}[V*(I-Up&#39;*V)^{-1}]
+    Vp=M^{-1}[V*(I-Up&#39;*V)^{-1}]
 \]
 </p>
-<p> For each diagonal block.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct. The factorization (CB or MIB, UpB, VpB) is stored into it. U and V are reduced to column block vectors. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">svd</td><td>0: Cholesky factorization. Otherwise use SVD; if svd&lt;1 it is the SVD inversion threshold. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p> For each diagonal block. </p>
 
 </div>
 </div>
@@ -803,13 +720,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free cholesky decompositions or SVD of the diagonal blocks.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct whose CB, MIB, UpB, VpB are freed. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free cholesky decompositions or SVD. </p>
 
 </div>
 </div>
@@ -827,13 +738,7 @@ maxit</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the content of <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct and zero it. The struct itself is not freed.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free <a class="el" href="#dd/d34/structmuv__t">muv_t</a> struct </p>
 
 </div>
 </div>
@@ -847,12 +752,8 @@ maxit</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d3/dc7/muv_8h.html">muv.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

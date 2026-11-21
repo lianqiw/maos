@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/mkg.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -108,6 +106,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a25103dc897a7dacd4378b2cd7f424ace" id="r_a25103dc897a7dacd4378b2cd7f424ace"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25103dc897a7dacd4378b2cd7f424ace">mkg</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *xloc, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *ploc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *saloc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *saa, real saat, real scale, real dispx, real dispy, int do_partial)</td></tr>
 <tr class="memitem:a4bde2eb21a3f84f0fc6a4feff9d91634" id="r_a4bde2eb21a3f84f0fc6a4feff9d91634"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4bde2eb21a3f84f0fc6a4feff9d91634">mkgt</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *xloc, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *ploc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *saloc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *saa, real saat, real scale, real dispx, real dispy, int do_partial)</td></tr>
 <tr class="memitem:a1fc16e6f98b9e9ea8c2db6573595f656" id="r_a1fc16e6f98b9e9ea8c2db6573595f656"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1fc16e6f98b9e9ea8c2db6573595f656">mkg_ngs</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *sacent, real thetax, real thetay, real hc, real hs, int indps, int indastig, int indfocus, int ahstfocus)</td></tr>
+<tr class="memdesc:a1fc16e6f98b9e9ea8c2db6573595f656"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains function that creates average gradient operator </p>
@@ -170,23 +169,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the transpose of mkgt(), the average gradient operator from xloc to saloc.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ploc</td><td>The grid on the aperture plane. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>The amplitude on ploc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Lower left origin of the subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>Subaperture amplitude, normalized to max at 1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saat</td><td>saa threshold to enable gradient operation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">do_partial</td><td>1: use points that are outside of but close to a subaperture. 0: do not use. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix; the caller frees it. </dd></dl>
+<p>Returns the transpose of mkgt() </p>
 
 </div>
 </div>
@@ -248,23 +231,22 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Returns the transpose of a average gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.</p>
+<p>Returns the transpose of a average gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xloc</td><td>The grid on which OPDs are defined. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ploc</td><td>The grid on the aperture plane. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pamp</td><td>The amplitude on ploc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Lower left origin of the subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saa</td><td>Subaperture amplitude, normalized to max at 1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saat</td><td>saa threshold to enable gradient operation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Cone effect scaling. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dispx</td><td>Displacement along x due to beam angle (m). Similar as accphi routines. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dispy</td><td>Displacement along y due to beam angle (m). Similar as accphi routines. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">do_partial</td><td>1: use points that are outside of but close to a subaperture. 0: do not use. </td></tr>
+    <tr><td class="paramname">xloc</td><td>the grid on which OPDs are defined  </td></tr>
+    <tr><td class="paramname">ploc</td><td>the grid on the aperture plane  </td></tr>
+    <tr><td class="paramname">pamp</td><td>the amplitude on ploc  </td></tr>
+    <tr><td class="paramname">saloc</td><td>Lower left origin of the subapertures  </td></tr>
+    <tr><td class="paramname">saa</td><td>subaperture amplitude, normalized to max at 1.  </td></tr>
+    <tr><td class="paramname">saat</td><td>saa threshold to enable gradient operation.  </td></tr>
+    <tr><td class="paramname">scale</td><td>cone effect  </td></tr>
+    <tr><td class="paramname">dispx</td><td>displacement due to beam angle (2 vector). similar as accphi routines  </td></tr>
+    <tr><td class="paramname">dispy</td><td>displacement due to beam angle (2 vector). similar as accphi routines  </td></tr>
+    <tr><td class="paramname">do_partial</td><td>1: use points that are outside of but close to a subaperture. 0: do not use. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated sparse matrix; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -321,22 +303,23 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography</p>
+
+<p>Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sacent</td><td>Amplitude weighted center coordinate of each subaperture (nsa*2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Angular coordinate of NGS along x (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Angular coordinate of NGS along y (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hc</td><td>Upper DM conjugation range (for MCAO) (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hs</td><td>LGS range (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">indps</td><td>Plate scale mode index (0 or 2) (for MCAO). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">indastig</td><td>Astigmatism mode index (0 or 2) (for LTAO). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">indfocus</td><td>Focus mode index (0 or indps+3 or indastig+2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ahstfocus</td><td>1: no focus mode in first PS mode in science OPD. </td></tr>
+    <tr><td class="paramname">sacent</td><td>Amplitude weighted center coordinate of each subaperture (nsa*2) </td></tr>
+    <tr><td class="paramname">thetax</td><td>angular coordinate of NGS </td></tr>
+    <tr><td class="paramname">thetay</td><td>angular coordinate of NGS </td></tr>
+    <tr><td class="paramname">hc</td><td>upper DM conjugation range (for MCAO) </td></tr>
+    <tr><td class="paramname">hs</td><td>LGS range </td></tr>
+    <tr><td class="paramname">indps</td><td>Plate scale mode index (0 or 2) (for MCAO) </td></tr>
+    <tr><td class="paramname">indastig</td><td>Astigmatism mode index (0 or 2) (for LTAO) </td></tr>
+    <tr><td class="paramname">indfocus</td><td>Focus mode index (0 or indps+3 or indastig+2 </td></tr>
+    <tr><td class="paramname">ahstfocus</td><td>=1: no focus mode in first PS mode in science OPD. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated (nsa*2)*nmod interaction matrix; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>dmat </dd></dl>
 
 </div>
 </div>
@@ -350,12 +333,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../db/df3/mkg_8h.html">mkg.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

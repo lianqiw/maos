@@ -29,7 +29,6 @@ var servo_8h =
     [ "servo_reset", "de/d09/servo_8h.html#ab73c6cf92b85a0420b775e885844deca", null ],
     [ "servo_free", "de/d09/servo_8h.html#a90db8b0851f40c4080286b84f5ac203c", null ],
     [ "sho_new", "de/d09/servo_8h.html#aeb7bd24fd0a88ebb4a5e110ed1461a9c", null ],
-    [ "sho_free", "de/d09/servo_8h.html#a81dc7529927d5f54365c4c95b703be8d", null ],
     [ "sho_step", "de/d09/servo_8h.html#a92893baa1879792e349dcf1e0ab05814", null ],
     [ "sho_reset", "de/d09/servo_8h.html#aa29234f8fe794556f32704e97553f64e", null ],
     [ "sho_filter", "de/d09/servo_8h.html#a6fd393b4721be086c1bf2b88cb60e551", null ]

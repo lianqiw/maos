@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: NFIRAOS Performance</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -102,7 +100,7 @@ $(function(){initNavTree('d6/d3f/page43_nfiraos.html','../../',''); });
   <div class="headertitle"><div class="title">NFIRAOS Performance </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
+<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md34"></a>
 Turbulence profile</h1>
 <ul>
 <li>Mauna Kea: based on DIMM/MASS measurements in TMT site testing campaign</li>
@@ -119,11 +117,11 @@ Turbulence profile</h1>
 <tr class="markdownTableHead">
 <th class="markdownTableHeadRight">Percentile  </th><th class="markdownTableHeadRight">Mauna Kea r0 (m)  </th><th class="markdownTableHeadRight">ORM r0 (m)  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyRight">25p  </td><td class="markdownTableBodyRight">0.248  </td><td class="markdownTableBodyRight">0.230  </td></tr>
+<td class="markdownTableBodyRight">25p  </td><td class="markdownTableBodyRight">0.247  </td><td class="markdownTableBodyRight">0.230  </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyRight">50p  </td><td class="markdownTableBodyRight">0.186  </td><td class="markdownTableBodyRight">0.178  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyRight">75p  </td><td class="markdownTableBodyRight">0.137  </td><td class="markdownTableBodyRight">0.138  </td></tr>
+<td class="markdownTableBodyRight">75p  </td><td class="markdownTableBodyRight">0.135  </td><td class="markdownTableBodyRight">0.138  </td></tr>
 </table>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -133,10 +131,10 @@ Turbulence profile</h1>
 <p class="endtd"></p>
 </td></tr>
 </table>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
 NFIRAOS AO Performance</h1>
 <p>The following lists AO system and instrument parameters and the respective AO performance.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
 NFIRAOS</h2>
 <ul>
 <li>30 meter TMT aperture</li>
@@ -146,7 +144,7 @@ NFIRAOS</h2>
 - 2 arcminute diameter field of view (fov)
 - Up to 800 Hz update rate
 
-@subsection autotoc_md23 IRIS Imager
+@subsection autotoc_md37 IRIS Imager
 - 34"x34" square fov
 - 3 on instrument wavefront sensor (OIWFS), selectable between tip/tilt and 2x2 subaperture mode
 - 4 on detector guide window (ODGW)
@@ -154,7 +152,7 @@ NFIRAOS</h2>
 MAOS simulations obtained estimation of the fundamental terms. Implementation error of 153 nm (34x34” FoV) and 152 nm (On axis) is added in quadrature to get the estimate of the total WFE.
 
 
-@subsubsection autotoc_md24 Wavefront error
+@subsubsection autotoc_md38 Wavefront error
 
 The following figures show the RMS WFE averaged over 34"x34" field of view or on axis.
 
@@ -163,7 +161,7 @@ The following figures show the RMS WFE averaged over 34"x34" field of view or on
 </ul>
 <p><img src="../../wfe_iris.svg" alt="" style="pointer-events: none;" class="inline" title="RMS over IRIS fov"/>    </p>
 <p><img src="../../wfe_onaxis.svg" alt="" style="pointer-events: none;" class="inline" title="On axis"/>    </p>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md39"></a>
 J band Strehl Ratio</h3>
 <p>The following figures show the J band Strehl Ratio averaged over 34"x34" field of view or on axis.</p>
 <table class="markdownTable">
@@ -176,7 +174,7 @@ J band Strehl Ratio</h3>
 <p class="endtd"></p>
 </td></tr>
 </table>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md26"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md40"></a>
 H band Strehl Ratio</h3>
 <p>The following figures show the H band Strehl Ratio averaged over 34"x34" field of view or on axis.</p>
 <table class="markdownTable">
@@ -189,7 +187,7 @@ H band Strehl Ratio</h3>
 <p class="endtd"></p>
 </td></tr>
 </table>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md27"></a>
+<h3 class="doxsection"><a class="anchor" id="autotoc_md41"></a>
 K band Strehl Ratio</h3>
 <p>The following figures show the K band Strehl Ratio averaged over 34"x34" field of view or on axis.</p>
 <table class="markdownTable">
@@ -202,7 +200,7 @@ K band Strehl Ratio</h3>
 <p class="endtd"></p>
 </td></tr>
 </table>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md28"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md42"></a>
 MODHIS</h2>
 <ul>
 <li>On axis science fov</li>
@@ -220,7 +218,7 @@ MODHIS</h2>
 <p class="endtd"></p>
 </td></tr>
 </table>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md29"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md43"></a>
 NFIRAOS+</h1>
 <p>NFIRAOS+ is upgraded NFIRAOS with 0.25m actuator spacing. The following figure shows the comparison of NFIRAOS and NFIRAOS+ fundamental WFE (without implementation error) for different LGS magnitude or detector read out noise. The following conditions are used:</p>
 <ul>
@@ -233,7 +231,7 @@ NFIRAOS+</h1>
 </ul>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Wavefront error of NFIRAOS+ vs NFIRAOS  </th></tr>
+<th class="markdownTableHeadNone">Wavefront erroor of NFIRAOS+ vs NFIRAOS  </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><p class="starttd"><img src="../../LGS_mag_dsa_ron.svg" alt="" style="pointer-events: none;" class="inline"/>    </p>
 <p class="endtd"></p>
@@ -250,11 +248,8 @@ NFIRAOS+</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

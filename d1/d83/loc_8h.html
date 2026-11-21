@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: math/loc.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -121,7 +119,7 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a6c79a45cbac1b110b8771a9639aded76" id="r_a6c79a45cbac1b110b8771a9639aded76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6c79a45cbac1b110b8771a9639aded76">loc_convert</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A)</td></tr>
-<tr class="memitem:acbfab2375d4998abdce5a95b1eb052cd" id="r_acbfab2375d4998abdce5a95b1eb052cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbfab2375d4998abdce5a95b1eb052cd">loc_convert_cell</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *A)</td></tr>
+<tr class="memdesc:a6c79a45cbac1b110b8771a9639aded76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a dmat in place to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> object.  <br /></td></tr>
 <tr class="memitem:a5b4f95f472699e1de2316048f1e46a1c" id="r_a5b4f95f472699e1de2316048f1e46a1c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b4f95f472699e1de2316048f1e46a1c">loc_create_embed</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> *nembed, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real oversize, int fftpad)</td></tr>
 <tr class="memitem:a0228b9c5ec770e72ffc2f0febdbc5e09" id="r_a0228b9c5ec770e72ffc2f0febdbc5e09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0228b9c5ec770e72ffc2f0febdbc5e09">loc_create_map_npad</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int npad, int nx, int ny)</td></tr>
 <tr class="memitem:ae9474383cd2662c9c246d312d21afbce" id="r_ae9474383cd2662c9c246d312d21afbce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae9474383cd2662c9c246d312d21afbce">loc_create_map</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc)</td></tr>
@@ -138,7 +136,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ad414bd9281d336c4db72de1373a3f4d3" id="r_ad414bd9281d336c4db72de1373a3f4d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad414bd9281d336c4db72de1373a3f4d3">locnew</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nloc, real dx, real dy)</td></tr>
 <tr class="memitem:a54eb0584919fe714065cfba437633a90" id="r_a54eb0584919fe714065cfba437633a90"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a54eb0584919fe714065cfba437633a90">locref</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *in)</td></tr>
 <tr class="memitem:a84543d5b33950e44c31a90aff35a2609" id="r_a84543d5b33950e44c31a90aff35a2609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84543d5b33950e44c31a90aff35a2609">ptsnew</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nsa, real dsax, real dsay, <a class="el" href="../../d7/d63/classlong.html">long</a> nxsa, <a class="el" href="../../d7/d63/classlong.html">long</a> nysa, real dx, real dy)</td></tr>
-<tr class="memitem:afc89ab8fece5838d6cd54308079abb69" id="r_afc89ab8fece5838d6cd54308079abb69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc89ab8fece5838d6cd54308079abb69">loc_calc_ptt</a> (real *out, real *coeffout, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real ipcc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *imcc, const real *amp, const real *opd)</td></tr>
+<tr class="memitem:afc89ab8fece5838d6cd54308079abb69" id="r_afc89ab8fece5838d6cd54308079abb69"><td class="memItemLeft" align="right" valign="top"><a id="afc89ab8fece5838d6cd54308079abb69" name="afc89ab8fece5838d6cd54308079abb69"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_calc_ptt</b> (real *out, real *coeffout, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real ipcc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *imcc, const real *amp, const real *opd)</td></tr>
 <tr class="memitem:a8df253e112de8cf6973422c38810ce67" id="r_a8df253e112de8cf6973422c38810ce67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8df253e112de8cf6973422c38810ce67">loc_calc_mod</a> (real *out, real *coeffout, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *mod, const real *amp, real *opd)</td></tr>
 <tr class="memitem:a46226e136c567990047af71fb8c45053" id="r_a46226e136c567990047af71fb8c45053"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46226e136c567990047af71fb8c45053">loc_mcc_ptt</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const real *amp)</td></tr>
 <tr class="memitem:a2d5bae49b00ac31462965e05bcede903" id="r_a2d5bae49b00ac31462965e05bcede903"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d5bae49b00ac31462965e05bcede903">pts_mcc_ptt</a> (const <a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> *pts, const real *amp)</td></tr>
@@ -161,7 +160,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a4131d6d75c196d07ef1ad110e6fd9556" id="r_a4131d6d75c196d07ef1ad110e6fd9556"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4131d6d75c196d07ef1ad110e6fd9556">loc_reduce</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *amp, real thres, int cont, int **skipout)</td></tr>
 <tr class="memitem:a8a2bbfc477710e2aa86c65630e07c786" id="r_a8a2bbfc477710e2aa86c65630e07c786"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8a2bbfc477710e2aa86c65630e07c786">loc_reduce_spcell</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, <a class="el" href="../../df/def/type_8h.html#d6/ddb/structdspcell">dspcell</a> *sp, int dim, int cont)</td></tr>
 <tr class="memitem:ace526a66d1e3f71d9585bc75a48edee1" id="r_ace526a66d1e3f71d9585bc75a48edee1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ace526a66d1e3f71d9585bc75a48edee1">loc_reduce_sp</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *sp, int dim, int cont)</td></tr>
-<tr class="memitem:a00e44a2e52d008cbdf792b699a90107f" id="r_a00e44a2e52d008cbdf792b699a90107f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a00e44a2e52d008cbdf792b699a90107f">loc_add_focus</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real val)</td></tr>
+<tr class="memitem:a00e44a2e52d008cbdf792b699a90107f" id="r_a00e44a2e52d008cbdf792b699a90107f"><td class="memItemLeft" align="right" valign="top"><a id="a00e44a2e52d008cbdf792b699a90107f" name="a00e44a2e52d008cbdf792b699a90107f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_add_focus</b> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real val)</td></tr>
 <tr class="memitem:ab4fb59327b34b322b09c3d5e04d60708" id="r_ab4fb59327b34b322b09c3d5e04d60708"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4fb59327b34b322b09c3d5e04d60708">loc_add_focus_offset</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *opd, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real val, real ox, real oy)</td></tr>
 <tr class="memitem:a961eedac8c3398ba77adc6c9dddc2cd9" id="r_a961eedac8c3398ba77adc6c9dddc2cd9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a961eedac8c3398ba77adc6c9dddc2cd9">loc2mat</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int piston)</td></tr>
 <tr class="memitem:ab855fe221abf303219c6015930b966e8" id="r_ab855fe221abf303219c6015930b966e8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab855fe221abf303219c6015930b966e8">pts2loc</a> (<a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> *pts)</td></tr>
@@ -183,7 +183,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 <tr class="memitem:acd9de0b3686313b9f4235d351f9b82e5" id="r_acd9de0b3686313b9f4235d351f9b82e5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd9de0b3686313b9f4235d351f9b82e5">loc_dxdy</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc)</td></tr>
 <tr class="memitem:a0dc6fca0c31f01ae41f22f2fea2c3113" id="r_a0dc6fca0c31f01ae41f22f2fea2c3113"><td class="memItemLeft" align="right" valign="top"><a id="a0dc6fca0c31f01ae41f22f2fea2c3113" name="a0dc6fca0c31f01ae41f22f2fea2c3113"></a>
 <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>locreaddata</b> (file_t *fp, <a class="el" href="../../d3/d7f/bin_8h.html#de/d7e/structheader__t">header_t</a> *header)</td></tr>
-<tr class="memitem:ae9e58cb7c47e06eb95dc83f36bd37041" id="r_ae9e58cb7c47e06eb95dc83f36bd37041"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae9e58cb7c47e06eb95dc83f36bd37041">loc_keywords</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *loc)</td></tr>
+<tr class="memitem:ae9e58cb7c47e06eb95dc83f36bd37041" id="r_ae9e58cb7c47e06eb95dc83f36bd37041"><td class="memItemLeft" align="right" valign="top"><a id="ae9e58cb7c47e06eb95dc83f36bd37041" name="ae9e58cb7c47e06eb95dc83f36bd37041"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_keywords</b> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *loc)</td></tr>
 <tr class="memitem:ab2bc324bef2c93728a7ca2b8d79f167b" id="r_ab2bc324bef2c93728a7ca2b8d79f167b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab2bc324bef2c93728a7ca2b8d79f167b">loc_coord2ind</a> (<a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *aloc, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *dead)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -244,7 +245,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>*)cellconvert(readbin_id(M_LOC, 1, A), loc_convert_cell)</div>
+<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>*)cellconvert(readbin_id(M_LOC, 1, A), (<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*(*)(<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*))loc_convert)</div>
+<div class="ttc" id="atype_8h_html_db/d76/structcell"><div class="ttname"><a href="../../df/def/type_8h.html#db/d76/structcell">cell</a></div><div class="ttdef"><b>Definition</b> type.h:64</div></div>
 <div class="ttc" id="atype_8h_html_dc/da1/structloccell"><div class="ttname"><a href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a></div><div class="ttdef"><b>Definition</b> type.h:262</div></div>
 </div><!-- fragment -->
 </div>
@@ -264,7 +266,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line"><a class="code hl_define" href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a>(A)</div>
-<div class="ttc" id="acell_8h_html_a088fe3d13e53e5d92d0b9c0165d92420"><div class="ttname"><a href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a></div><div class="ttdeci">#define cellfree(A)</div><div class="ttdef"><b>Definition</b> cell.h:46</div></div>
+<div class="ttc" id="acell_8h_html_a088fe3d13e53e5d92d0b9c0165d92420"><div class="ttname"><a href="../../d0/ddd/cell_8h.html#a088fe3d13e53e5d92d0b9c0165d92420">cellfree</a></div><div class="ttdeci">#define cellfree(A)</div><div class="ttdef"><b>Definition</b> cell.h:40</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -359,39 +361,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert a dmat in place to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> object. Keywords are parsed into the fields.</p>
+
+<p>Convert a dmat in place to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>nloc*2 input array of coordinates. It is reallocated in place and must no longer be used. </td></tr>
+    <tr><td class="paramname">A</td><td>Input array to be changed in place. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>, which takes over A; NULL if A is NULL or not a real matrix. </dd></dl>
-
-</div>
-</div>
-<a id="acbfab2375d4998abdce5a95b1eb052cd" name="acbfab2375d4998abdce5a95b1eb052cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbfab2375d4998abdce5a95b1eb052cd">&#9670;&#160;</a></span>loc_convert_cell()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * loc_convert_cell </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *</td>          <td class="paramname"><span class="paramname"><em>A</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>loc_convert() with the signature required by cellconvert().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>Input dmat object as cell*. See loc_convert(). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> as cell*. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>loc_t* </dd></dl>
 
 </div>
 </div>
@@ -423,17 +401,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an vector to embed OPD into a square array for FFT purpose. This is reverse operation from loc_create_map which maps 2d array indexing info loc indexing.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Create an vector to embed OPD into a square array for FFT purpose. This is reverse operation from loc_create_map which maps 2d array indexing info loc indexing. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">nembed</td><td>Size of square array. Computed and set if &lt;=0 on input, otherwise used as is. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Irregular grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">oversize</td><td>Ratio of oversizing. 2 for FFT to achieve Nyquist sampling. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fftpad</td><td>Pad to size that is fast for FFT. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">nembed</td><td>size of square array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>irregular grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">oversize</td><td>ratio of oversizing. 2 for FFT to achieve Nyquist sampling. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fftpad</td><td>pad to size that is fast for FFT. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated vector of the same length of loc containing 1d index into the square array; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>embed has the same length of loc, contains 1d index into the squre array. </dd></dl>
 
 </div>
 </div>
@@ -465,17 +442,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a map for loc so that we can obtain the index in loc by x,y coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid region in the map is replaced with closest valid point. This extends the coverage of the grid automatically.</p>
-<p>The map stores loc index plus 1 at valid points, and negative index plus 1 of the neighbor for extended points. Does nothing if the map already exists.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. Its map and npad are set (the struct is modified despite const). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npad</td><td>Number of points to pad on each side. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Size of the map along x. 0 to determine automatically. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Size of the map along y. 0 to determine automatically. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Create a map for loc so that we can obtain the index in loc by x,y coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid region in the map is replaced with closest valid point. This extends the coverage of the grid automatically. </p>
 
 </div>
 </div>
@@ -493,13 +460,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a map for loc without padding. See loc_create_map_npad().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. Its map is created (the struct is modified despite const). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Create a map for loc with padding of 1. </p>
 
 </div>
 </div>
@@ -521,15 +482,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>apply hashlittle() to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc to hash. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>Initial hash key. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Updated hash key; key unchanged if loc is NULL. </dd></dl>
+<p>apply hashlittle() to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. </p>
 
 </div>
 </div>
@@ -566,17 +519,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Embed in into dest according to map defined in loc-&gt;map. The two arrays are assumed to be concentric.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">_dest</td><td>Destination 2-d array. Resized to the map size without padding if empty. Points not on loc are set to NAN unless add is set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">_in</td><td>Values defined on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">expanded</td><td>Also fill the extended (ghost) points of the map. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">add</td><td>Add to dest instead of overwriting. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Embed in into dest according to map defined in loc-&gt;map. The two arrays are assumed to be concentric. </p>
 
 </div>
 </div>
@@ -600,12 +543,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 </div><div class="memdoc">
 <p>A convenient wrapper for loc_embed to be called by matlab or python </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location coordinate. Its map is created if not yet. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The location coordinate </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">arr</td><td>The points defined on loc to be embeded to 2-d array. May have multiple vectors. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated cell of embeded 2-d arrays, one per vector; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The embeded 2-d array. </dd></dl>
 
 </div>
 </div>
@@ -632,15 +575,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Embed in into dest according to map defined in loc-&gt;map for cells. Arbitraty map cannot be used here for mapping.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pdest</td><td>Destination cell array of the map size. Allocated if NULL. Each element references the corresponding element of in, or is NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Cell array defined on loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Embed in into dest according to map defined in loc-&gt;map for cells. Arbitraty map cannot be used here for mapping. </p>
 
 </div>
 </div>
@@ -667,15 +602,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Extract values from in into dest according to map defined in loc-&gt;map. Arbitraty map cannot be used here for mapping.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">dest</td><td>Values on loc. Must be preallocated with nloc elements. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. Its map must exist. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>2-d array with the same dimension as loc-&gt;map. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Embed in into dest according to map defined in loc-&gt;map. Arbitraty map cannot be used here for mapping. </p>
 
 </div>
 </div>
@@ -697,15 +624,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert a map to a loc that collects all positive entries while keep each row continuous</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">map</td><td>The map. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold relative to the maximum of map. Points above it are valid. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). NULL if map is NULL. </dd></dl>
+<p>Convert a map to a loc that collects all positive entries while keep each row continuous </p>
 
 </div>
 </div>
@@ -723,13 +642,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the MAP in <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc whose map is freed and set to NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free the MAP in <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> </p>
 
 </div>
 </div>
@@ -747,13 +660,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the internal data (stat and map) of <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. Used as the deinit callback of <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>; the coordinate memory is freed by the dmat machinery.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">p</td><td>The <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> (as cell). Ignored if not a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> data. </p>
 
 </div>
 </div>
@@ -771,14 +678,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Estimate the diameter of loc. 2021-09-03: corrected calculation for square grid. Use the inscribed diameter but not circumcircle.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Maximum extent along x or y (m); 0 if loc is NULL. </dd></dl>
+<p>Estimate the diameter of loc. 2021-09-03: corrected calculation for square grid. Use the inscribed diameter but not circumcircle. </p>
 
 </div>
 </div>
@@ -796,14 +696,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find the point that closes to origin (0,0) in loc. Useful in single point piston constraint in creating reconstructor.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Index of the point closest to origin; 0 if loc is NULL. </dd></dl>
+<p>Find the point that closes to origin (0,0) in loc. Useful in single point piston constraint in creating reconstructor. </p>
 
 </div>
 </div>
@@ -830,16 +723,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc with nloc elements.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nloc</td><td>Number of points. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dy</td><td>Sampling along y (m). Uses dx if 0. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc with zero coordinates; the caller frees it with locfree(). </dd></dl>
+<p>Create a loc with nloc elements. </p>
 
 </div>
 </div>
@@ -857,14 +741,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reference an existing loc. map and stat are not referenced.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The loc to reference. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc sharing coordinates with in; the caller frees it with locfree(). NULL if in is NULL. </dd></dl>
+<p>Reference an existing loc. map and stat are not referenced. </p>
 
 </div>
 </div>
@@ -911,79 +788,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a pts with nsa, dsa, nx, dx</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nsa</td><td>Number of subapertures. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dsax</td><td>Subaperture size along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dsay</td><td>Subaperture size along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nxsa</td><td>Number of points per subaperture along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nysa</td><td>Number of points per subaperture along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling of points within a subaperture along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dy</td><td>Sampling of points within a subaperture along y (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated pts; the caller frees it with ptsfree(). </dd></dl>
-
-</div>
-</div>
-<a id="afc89ab8fece5838d6cd54308079abb69" name="afc89ab8fece5838d6cd54308079abb69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afc89ab8fece5838d6cd54308079abb69">&#9670;&#160;</a></span>loc_calc_ptt()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void loc_calc_ptt </td>
-          <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>rmsout</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>coeffout</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real</td>          <td class="paramname"><span class="paramname"><em>ipcc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>imcc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *</td>          <td class="paramname"><span class="paramname"><em>amp</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real *</td>          <td class="paramname"><span class="paramname"><em>opd</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Same as loc_calc_ptt_stride() with stride 1. rmsout[0..2] receives PR, TT, and PTTR variance; coeffout (optional) receives the piston/tip/tilt coefficients. ipcc and imcc are computed internally if imcc is NULL.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">rmsout</td><td>Variance of PR, TT, and PTTR. Skipped if NULL. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">coeffout</td><td>Piston, tip, and tilt coefficients. Skipped if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ipcc</td><td>Inverse of piston mode weight. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">imcc</td><td>Inverse of 3x3 mode covariance. Computed internally if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude weighting. NULL for uniform. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD on loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Create a pts with nsa, dsa, nx, dx </p>
 
 </div>
 </div>
@@ -1023,17 +828,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 <p>Calculate variance of OPD in modes defined in mod.</p>
 <p>Notice the difference in rmsout for loc_calc_ptt and this loc_calc_mode. in loc_calc_ptt, out[0] is PR, out[1] is TT, out[2] is PTTR in loc_calc_mod, out[0] is PR, out[1] is PTR, out[2] is PTTR, etc</p>
 <p>The mod is already orth-noramlized so that we have the following simple forms.</p>
-<p>coeffout is in unit of zernike!</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">rmsout</td><td>Residual variance after removing the first imod+1 modes, one per mode. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">coeffout</td><td>Mode coefficients. Skipped if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mod</td><td>Orthonormal modes, nloc*nmod. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude weighting. Must not be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD on loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>coeffout is in unit of zernike! </p>
 
 </div>
 </div>
@@ -1055,15 +850,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their inverse covariance matrix. mcc=M'*(amp.*M)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude weighting. NULL for uniform. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated 3x3 matrix mcc (not inverted); the caller frees it. NULL if loc is NULL. </dd></dl>
+<p>assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their inverse covariance matrix. mcc=M'*(amp.*M) </p>
 
 </div>
 </div>
@@ -1085,15 +872,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>same as loc_mcc_ptt, except using pts instead of loc. this is used to build imcc for TT/F powfs ztilt imcc</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>The subaperture points. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude weighting, nxsa*nysa per subaperture. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated cell of 3x3 matrices, one per subaperture (not inverted); the caller frees it. </dd></dl>
+<p>same as loc_mcc_ptt, except using pts instead of loc. this is used to build imcc for TT/F powfs ztilt imcc </p>
 
 </div>
 </div>
@@ -1120,15 +899,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Subtract Piston/Tip/Tilt (in radian) from OPD</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>OPD on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ptt</td><td>Piston, tip, and tilt coefficients. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Subtract Piston/Tip/Tilt (in radian) from OPD </p>
 
 </div>
 </div>
@@ -1155,15 +926,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add Piston/Tip/Tilt to OPD</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>OPD on loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ptt</td><td>Piston, tip, and tilt coefficients. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add Piston/Tip/Tilt from OPD </p>
 
 </div>
 </div>
@@ -1200,17 +963,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Project piston/tip/tilt from opd which may have multiple independent columns. If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>OPD with nloc rows. Modified in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude weighting. NULL for uniform. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">imcc</td><td>Inverse of 3x3 mode covariance. Computed internally if NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cov</td><td>Also remove from the rows, treating opd as a covariance matrix. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Project piston/tip/tilt from opd which may have multiple independent columns. If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side. </p>
 
 </div>
 </div>
@@ -1237,16 +990,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove focus mode from gradients. Do not consider noise weighting</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">grad</td><td>Gradients (all x then all y) on saloc. Focus is removed if factor is not 0. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">factor</td><td>Fraction of focus to remove. 0 to only estimate. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Focus coefficient a of a*(x^2+y^2) estimated from the input gradients. </dd></dl>
+<p>Remove focus mode from gradients. Do not consider noise weighting </p>
 
 </div>
 </div>
@@ -1283,17 +1027,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute zernike best fit for all subapertures. add result to out. returns radians not zernike modes of tip/tilt. Used in wfsgrad</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">out</td><td>Gradients, x for all subapertures followed by y. Allocated if NULL; otherwise accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>The subaperture points. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">imcc</td><td>Inverse of 3x3 mode covariance for each subaperture. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">amp</td><td>Amplitude, nxsa*nysa per subaperture. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>OPD, nxsa*nysa per subaperture. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute zernike best fit for all subapertures. add result to out. returns radians not zernike modes of tip/tilt. Used in wfsgrad </p>
 
 </div>
 </div>
@@ -1315,15 +1049,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create 1 dimensional loc with given vector.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Coordinates along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc with y set to 0; the caller frees it with locfree(). NULL if x is NULL or nx is 0. </dd></dl>
+<p>Create 1 dimensional loc with given vector. </p>
 
 </div>
 </div>
@@ -1350,16 +1076,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x0</td><td>Origin (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc with y set to 0; the caller frees it with locfree(). </dd></dl>
+<p>Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers. </p>
 
 </div>
 </div>
@@ -1391,17 +1108,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of points along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dy</td><td>Sampling along y (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). </dd></dl>
+<p>Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2) </p>
 
 </div>
 </div>
@@ -1419,14 +1126,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc array that covers the <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a>. Notice that it is different from loc_from_map which only covers valid (value&gt;0) regions.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">map</td><td>The map. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). NULL if map is NULL. </dd></dl>
+<p>Create a loc array that covers the <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a>. Notice that it is different from loc_from_map which only covers valid (value&gt;0) regions. </p>
 
 </div>
 </div>
@@ -1468,19 +1168,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of points along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dy</td><td>Sampling along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ox</td><td>Coordinate of the first point along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">oy</td><td>Coordinate of the first point along y (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). </dd></dl>
+<p>Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy </p>
 
 </div>
 </div>
@@ -1512,17 +1200,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a loc array within diameter D, and inner diameter Din, with spacing dx.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Outer diameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Din</td><td>Inner diameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of the gray pixel amplitude, relative to maximum, for a point to be included. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). </dd></dl>
+<p>Create a loc array within diameter D, and inner diameter Din, with spacing dx. </p>
 
 </div>
 </div>
@@ -1540,13 +1218,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Gather information about the starting of each column in loc.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc. Its stat is allocated and filled. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Gather information about the starting of each column in loc. </p>
 
 </div>
 </div>
@@ -1564,13 +1236,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free the stat in <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc whose stat is freed and set to NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Free the stat in <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> </p>
 
 </div>
 </div>
@@ -1617,19 +1283,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a gray pixel circular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phi</td><td>Values on loc to add to. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>Center along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>Center along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r</td><td>Outer radius (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rin</td><td>Inner radius (m). The inner circle is subtracted if &gt;0. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Value to add inside the annulus. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add a gray pixel circular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val </p>
 
 </div>
 </div>
@@ -1676,19 +1330,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply an annular mask in phi.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phi</td><td>Values on loc multiplied by the mask. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>Center along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>Center along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r</td><td>Outer radius (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rin</td><td>Inner radius (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Value of the mask inside the annulus. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply an annular mask in phi. </p>
 
 </div>
 </div>
@@ -1735,19 +1377,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a gray pixel elliptical map in phi using coordinates defined in loc, center defined using cx, cy, radii of rx, ry, and value of val</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phi</td><td>Values on loc to add to. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cx</td><td>Center along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cy</td><td>Center along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rx</td><td>Radius along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ry</td><td>Radius along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Value to add inside the ellipse. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Create a gray pixel elliptical map in phi using coordinates defined in loc, center defined using cx, cy, radii of rx, ry, and value of val </p>
 
 </div>
 </div>
@@ -1784,17 +1414,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove points in loc that have zero value in amp and modify amp in the same time. Keep each row continuous if cont==1. Return in skipout the index of skipped points if skipout is not NULL.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc. Reduced in place. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">amp</td><td>Amplitude on loc. Reduced in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Points with amp below thres are removed. EPS is used if &lt;=0. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cont</td><td>0: remove any point below thres. 1: only remove points at the ends of each column. Other: within each column, switch between keep and skip only after 4 consecutive points of the same kind. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">skipout</td><td>Newly allocated array of nloc flags marking removed points; the caller frees it. Skipped if NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Remove points in loc that have zero value in amp and modify amp in the same time. Keep each row continuous if cont==1. Return in skipout the index of skipped points if skipout is not NULL. </p>
 
 </div>
 </div>
@@ -1826,16 +1446,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using a dspcell, to compute the coupling which is modified accordingly.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc. Reduced in place. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">spc</td><td>Sparse matrices. The dimension along loc is reduced in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>1: loc is along rows of spc. 2: loc is along columns of spc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cont</td><td>See loc_reduce(). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using a dspcell, to compute the coupling which is modified accordingly. </p>
 
 </div>
 </div>
@@ -1867,51 +1478,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20. use single sparse matrix, which is modified accordingly.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc. Reduced in place. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">sp</td><td>Sparse matrix. The dimension along loc is reduced in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dim</td><td>1: loc is along rows of sp. 2: loc is along columns of sp. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cont</td><td>See loc_reduce(). </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a00e44a2e52d008cbdf792b699a90107f" name="a00e44a2e52d008cbdf792b699a90107f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00e44a2e52d008cbdf792b699a90107f">&#9670;&#160;</a></span>loc_add_focus()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void loc_add_focus </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>opd</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *</td>          <td class="paramname"><span class="paramname"><em>loc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const real</td>          <td class="paramname"><span class="paramname"><em>val</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Add val amount of focus (radian like unit) centered at the origin to opd. Piston is removed. See loc_add_focus_offset().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>OPD on loc. Modified in place despite const. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Coefficient a of focus a*(x^2+y^2). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20. use single sparse matrix, which is modified accordingly. </p>
 
 </div>
 </div>
@@ -1948,17 +1515,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add val amount of focus to opd. The unit is in radian like. Piston is removed. The focus is centered at ox, oy</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">opd</td><td>OPD on loc. Modified in place despite const. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Coefficient a of focus a*(x^2+y^2). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ox</td><td>Center along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">oy</td><td>Center along y (m). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add val amount of focus to opd. The unit is in radian like. Piston is removed. The focus is centered at ox, oy </p>
 
 </div>
 </div>
@@ -1980,15 +1537,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a dmat containing locx and locy in two columns</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">piston</td><td>Prepend a column of 1 for piston. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nloc*2 (or nloc*3 with piston) matrix; the caller frees it. NULL if loc is NULL. </dd></dl>
+<p>Create a dmat containing locx and locy in two columns </p>
 
 </div>
 </div>
@@ -2006,14 +1555,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert <a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. Each entry in pts recors the lower left point in each subaperture.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pts</td><td>The subaperture points. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc of all points in all subapertures; the caller frees it with locfree(). NULL if pts is NULL. </dd></dl>
+<p>Convert <a class="el" href="../../df/def/type_8h.html#de/d88/structpts__t">pts_t</a> to <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. Each entry in pts recors the lower left point in each subaperture. </p>
 
 </div>
 </div>
@@ -2035,14 +1577,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Rotate the coordinate by theta (radian) CCW which is equivalent to rotate the points by theta -CCW.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc rotated in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">theta</td><td>Rotation angle (radian). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Rotate the coordinate by theta (radian) CCW which is equivalent to rotate the points by theta -CCW. </p>
 
 </div>
 </div>
@@ -2064,15 +1599,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the angle of rotation from loc1 to loc2. CCW is positive.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc1</td><td>The first loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc2</td><td>The second loc with the same number of points as loc1. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Rotation angle (radian); 0 if either is NULL. </dd></dl>
+<p>Determine the angle of rotation from loc1 to loc2. CCW is positive. </p>
 
 </div>
 </div>
@@ -2099,15 +1626,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Stretch the coordinate by frac along theta (radian) CCW.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc stretched in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">theta</td><td>Direction of the stretch (radian). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">frac</td><td>Stretch factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Stretch the coordinate by frac along theta (radian) CCW. </p>
 
 </div>
 </div>
@@ -2125,14 +1644,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>duplicate a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> object; map and stat are not copied.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc to copy. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). NULL if loc is NULL. </dd></dl>
+<p>duplicate a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> object; </p>
 
 </div>
 </div>
@@ -2159,15 +1671,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute average of locx, locy</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">xm</td><td>Average of locx. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ym</td><td>Average of locy. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute average of locx, locy </p>
 
 </div>
 </div>
@@ -2185,14 +1689,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Parse string representation of polynominal to array representation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">_ps</td><td>Polynomial string in x and y, such as "0.1+x+0.2*x^2*y". </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated 3*n matrix with coefficient, power of x, and power of y for each term; the caller frees it. NULL if _ps is NULL or cannot be parsed. </dd></dl>
+<p>Parse string representation of polynominal to array representation. </p>
 
 </div>
 </div>
@@ -2219,15 +1716,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
 \]
 </p>
-<p> was using string input. New scheme uses bin files to preserve precision.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Input loc. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">polycoeff</td><td>Either a .bin file name of n*4 coefficients, a dmat cast to char*, or a string "polyx;polyy" (see parse_poly()). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). NULL if any input is NULL. </dd></dl>
+<p> was using string input. New scheme uses bin files to preserve precision. </p>
 
 </div>
 </div>
@@ -2249,15 +1738,14 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Transform coordinate with coefficients. See loctransform()</p>
+<p>Transform coordinate with coefficients. See loctransform() </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Input <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>n*4 matrix with columns power of x, power of y, coefficient for new x, and coefficient for new y. </td></tr>
+    <tr><td class="paramname">loc</td><td>Input <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>  </td></tr>
+    <tr><td class="paramname">coeff</td><td>n*4 matrix </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated loc; the caller frees it with locfree(). NULL if any input is NULL. </dd></dl>
 
 </div>
 </div>
@@ -2284,15 +1772,7 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Shift a loc coordinate by sx and sy.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc shifted in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sx</td><td>Shift along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sy</td><td>Shift along y (m). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Shift a loc coordinate by sx and sy. </p>
 
 </div>
 </div>
@@ -2319,15 +1799,7 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the size of a map that is used to build loc or can fully contain loc (embed)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">nx</td><td>Size along x. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">ny</td><td>Size along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>The loc. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute the size of a map that is used to build loc or can fully contain loc (embed) </p>
 
 </div>
 </div>
@@ -2349,14 +1821,7 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Resize a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> by shrinking. map and stat are freed.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">loc</td><td>The loc resized in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nloc</td><td>New number of points. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Resize a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> by shrinking. </p>
 
 </div>
 </div>
@@ -2374,37 +1839,7 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine dx and dy from data.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">out</td><td>The loc. dx and dy are set from data if not set or disagree with data. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ae9e58cb7c47e06eb95dc83f36bd37041" name="ae9e58cb7c47e06eb95dc83f36bd37041"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae9e58cb7c47e06eb95dc83f36bd37041">&#9670;&#160;</a></span>loc_keywords()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void loc_keywords </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *</td>          <td class="paramname"><span class="paramname"><em>p</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Generate the keywords string (dx, dy, ht, iac, dratio, aoi) of <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> for saving to file. Used as the make_keywords callback of <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">p</td><td>The <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> (as cell) whose keywords are regenerated. Ignored if not a <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Determine dx and dy from data. </p>
 
 </div>
 </div>
@@ -2426,15 +1861,14 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Parse the input dead actuator location to actuator indices based on aloc. 2015-03-30: build a mask for dead actuators based on coordinate.</p>
+<p>Parse the input dead actuator location to actuator indices based on aloc. 2015-03-30: build a mask for dead actuators based on coordinate. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator locations. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">dead</td><td>n*2 or n*3 matrix containing dead actuator coordinates (m) and optionally the stuck value (m). A row vector is reshaped in place. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Aloc  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dead</td><td>n*2 or n*3 matrix containing dead actuators </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nloc vector; nonzero marks a dead actuator with value 1 or the stuck value in nm. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -2448,12 +1882,8 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>math</b></li><li class="navelem"><a href="../../d1/d83/loc_8h.html">loc.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

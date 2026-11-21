@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: maos/utils.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -106,8 +104,10 @@ $(function(){initNavTree('d1/d57/maos_2utils_8h.html','../../',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:adbb2e36f6ae7703736beb266a8ffcb20" id="r_adbb2e36f6ae7703736beb266a8ffcb20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adbb2e36f6ae7703736beb266a8ffcb20">remove_lock</a> (int *fdlock, char **fnlock, <a class="el" href="../../d7/d63/classlong.html">long</a> *seeds, <a class="el" href="../../d7/d63/classlong.html">long</a> nseed, <a class="el" href="../../d7/d63/classlong.html">long</a> iseed, int success)</td></tr>
+<tr class="memdesc:adbb2e36f6ae7703736beb266a8ffcb20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove lock file and create Res_seed.done file when maos finishes a seed.  <br /></td></tr>
 <tr class="memitem:ab378e384b5122058cbcb93fd61c9a96c" id="r_ab378e384b5122058cbcb93fd61c9a96c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab378e384b5122058cbcb93fd61c9a96c">parse_args</a> (int argc, const char *argv[])</td></tr>
-<tr class="memitem:af165695540a14022995fcd8dc6dc7f3c" id="r_af165695540a14022995fcd8dc6dc7f3c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af165695540a14022995fcd8dc6dc7f3c">free_arg</a> (<a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> **parg)</td></tr>
+<tr class="memitem:af165695540a14022995fcd8dc6dc7f3c" id="r_af165695540a14022995fcd8dc6dc7f3c"><td class="memItemLeft" align="right" valign="top"><a id="af165695540a14022995fcd8dc6dc7f3c" name="af165695540a14022995fcd8dc6dc7f3c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>free_arg</b> (<a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> **parg)</td></tr>
 <tr class="memitem:aaa75b5b04fbbb1aa2917bf328634b532" id="r_aaa75b5b04fbbb1aa2917bf328634b532"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaa75b5b04fbbb1aa2917bf328634b532">evl_keywords</a> (const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a> *aper, int ievl, int iwvl, int isim)</td></tr>
 <tr class="memitem:a9d77bf8d1060f2b89962556f1b3b8d3e" id="r_a9d77bf8d1060f2b89962556f1b3b8d3e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d77bf8d1060f2b89962556f1b3b8d3e">mkamp</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, const <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *aper, real misregx, real misregy, real D, real Din)</td></tr>
 <tr class="memitem:ac8fc39933f19be380f8a80c7665d049e" id="r_ac8fc39933f19be380f8a80c7665d049e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac8fc39933f19be380f8a80c7665d049e">maxapriori</a> (real *g, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ints, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, int iwfs, int isa, int noisy, real bkgrnd, real rne)</td></tr>
@@ -117,9 +117,11 @@ Functions</h2></td></tr>
 <tr class="memitem:a6790b30ef72abe52665bcc6c6a850402" id="r_a6790b30ef72abe52665bcc6c6a850402"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6790b30ef72abe52665bcc6c6a850402">shwfs_grad</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **pgrad, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ints[], const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a> *powfs, int iwfs, int phytype)</td></tr>
 <tr class="memitem:a25d060ed7078a00c4a9c60928121b055" id="r_a25d060ed7078a00c4a9c60928121b055"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25d060ed7078a00c4a9c60928121b055">readwfs</a> (const char *file, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, int ipowfs)</td></tr>
 <tr class="memitem:a8f8497509bbb601ac374325aa53a0883" id="r_a8f8497509bbb601ac374325aa53a0883"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f8497509bbb601ac374325aa53a0883">average_powfs</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *vec, <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *wfs, int replace)</td></tr>
+<tr class="memdesc:a8f8497509bbb601ac374325aa53a0883"><td class="mdescLeft">&#160;</td><td class="mdescRight">average vector for wfs belonging to a powfs. replace the content when replace is set.  <br /></td></tr>
 <tr class="memitem:a06bf1e5a0ffb47990da4ee94056b0ddd" id="r_a06bf1e5a0ffb47990da4ee94056b0ddd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a06bf1e5a0ffb47990da4ee94056b0ddd">wfsgrad_llt_tt</a> (real *ttx, real *tty, <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, int iwfs, int isim)</td></tr>
 <tr class="memitem:a3e28fa95260cac0d679efd17ea13b22e" id="r_a3e28fa95260cac0d679efd17ea13b22e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3e28fa95260cac0d679efd17ea13b22e">wait_dmreal</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu, int isim)</td></tr>
 <tr class="memitem:ac29208e8ac8c3195fa49efea9b4e7ae2" id="r_ac29208e8ac8c3195fa49efea9b4e7ae2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac29208e8ac8c3195fa49efea9b4e7ae2">post_dmreal</a> (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a> *simu)</td></tr>
+<tr class="memdesc:ac29208e8ac8c3195fa49efea9b4e7ae2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that we are done with dmreal.  <br /></td></tr>
 <tr class="memitem:a32d3d6f0eee614280b8bd70d90f2743e" id="r_a32d3d6f0eee614280b8bd70d90f2743e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a32d3d6f0eee614280b8bd70d90f2743e">addlow2dm</a> (<a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> **dmval, const <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> *parms, const <a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a> *recon, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *low_val, real gain)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
@@ -161,15 +163,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Remove lock file and create Res_seed.done file when maos finishes a seed.</p>
+
+<p>Remove lock file and create Res_seed.done file when maos finishes a seed. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">fdlock</td><td>File descriptors of the lock files of each seed; closed and set to -1. Nothing is done if NULL. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">fnlock</td><td>File names of the lock files; the files are removed and the names freed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">seeds</td><td>List of seeds. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nseed</td><td>Number of seeds. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iseed</td><td>Index of the seed to process. Negative to remove lock files of all seeds. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">success</td><td>Create Res_seed.done if set (only when iseed&gt;=0). </td></tr>
+    <tr><td class="paramname">fdlock</td><td></td></tr>
+    <tr><td class="paramname">fnlock</td><td></td></tr>
+    <tr><td class="paramname">seeds</td><td></td></tr>
+    <tr><td class="paramname">nseed</td><td></td></tr>
+    <tr><td class="paramname">iseed</td><td></td></tr>
+    <tr><td class="paramname">success</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -194,39 +197,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Parse command line arguments argc, argv. Also changes to the output directory if -o is given.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">argc</td><td>Number of arguments. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">argv</td><td>Command line arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated arguments; the caller frees it with free_arg(). </dd></dl>
-
-</div>
-</div>
-<a id="af165695540a14022995fcd8dc6dc7f3c" name="af165695540a14022995fcd8dc6dc7f3c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af165695540a14022995fcd8dc6dc7f3c">&#9670;&#160;</a></span>free_arg()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void free_arg </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> **</td>          <td class="paramname"><span class="paramname"><em>parg</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Free <a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> pointed to by parg and its strings.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">parg</td><td>Pointer to the <a class="el" href="../../d4/d38/parms_8h.html#d1/d81/structarg__t">arg_t</a> to free; set to NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Parse command line arguments argc, argv </p>
 
 </div>
 </div>
@@ -263,18 +234,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Creates header for saving PSFs.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ievl</td><td>Index of evaluation direction. Negative for on axis. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwvl</td><td>Index of wavelength. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>Current time step, used to compute total exposure time. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated keyword string; the caller frees it. </dd></dl>
+<p>Creates header for saving PSFs. </p>
 
 </div>
 </div>
@@ -316,19 +276,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Coordinate of the amplitude map. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aper</td><td>Aperture map. If not NULL, it is ray traced to loc instead of using (D,Din). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">misregx</td><td>Misregistration along x (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">misregy</td><td>Misregistration along y (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">D</td><td>Outer diameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Din</td><td>Inner diameter (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated amplitude; the caller frees it. </dd></dl>
+<p>Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). </p>
 
 </div>
 </div>
@@ -385,21 +333,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">g</td><td>Gradient along x and y (rad) and intensity scaling. The input is the initial guess. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ints</td><td>Subaperture image. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>WFS configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isa</td><td>Index of the subaperture. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">noisy</td><td>Weight the error by noise variance if set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td>Background level. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Read out noise. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun </p>
 
 </div>
 </div>
@@ -426,15 +360,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Test the linearity of WFS iwfs by scanning tilt over -2 to 2 pixels along x, y, radial and azimuthal directions and computing gradients with the physical optics gradient operator. Results are saved to wfslinearity_* files.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>WFS configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Test wfs linearity. </p>
 
 </div>
 </div>
@@ -466,17 +392,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute spherical aberration in LGS WFS gradients for all sodium profile columns. Results are saved to rmod_mf and rmod_cg.</p>
-<p>Notice that powfs[ipowfs].intstat-&gt;mtche, i0 and i0sum are freed and set to NULL, and the elongation transfer function is overwritten.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">powfs</td><td>WFS configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>Reconstructor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute spherical aberration in LGS WFS gradients for all sodium profile columns. </p>
 
 </div>
 </div>
@@ -498,15 +414,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Obtain the focus adjustment caused by sodium profile range variation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Focus error from powfs.focus for the current time step. 0 if not available. </dd></dl>
+<p>Apply the focus adjustment caused sodium profile range variation </p>
 
 </div>
 </div>
@@ -548,18 +456,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calculate gradients using current specified algorithm</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pgrad</td><td>Gradients (rad); allocated if NULL. Values of vignetted subapertures are not updated. The input is used as initial guess for MAP. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ints</td><td>Subaperture images. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">powfs</td><td>WFS configuration. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">phytype</td><td>The gradient algorithm (PTYPE_*). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Calculate gradients using current specified algorithm </p>
 
 </div>
 </div>
@@ -586,16 +483,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read cell array from file specified by whole name or prefix.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>File name or prefix. Files file_powfsd.bin, file_wfsd.bin, and file are tried in order. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ipowfs</td><td>Index of the powfs. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated cell array; the caller frees it. NULL if file is NULL. </dd></dl>
+<p>Read cell array from file specified by whole name or prefix. </p>
 
 </div>
 </div>
@@ -622,16 +510,17 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Average vector for wfs belonging to a powfs. Replace the content when replace is set.</p>
+
+<p>average vector for wfs belonging to a powfs. replace the content when replace is set. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">vec</td><td>The vector containing the values for all wfs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wfs</td><td>The index of wfs belonging to a powfs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">replace</td><td>Replace the content of these wfs by the average when set. </td></tr>
+    <tr><td class="paramname">vec</td><td>The value containing the values </td></tr>
+    <tr><td class="paramname">wfs</td><td>The index of wfs belongs to a powfs </td></tr>
+    <tr><td class="paramname">replace</td><td>replace the content when replace is set. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The average for this powfs. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>real The average for this powfs. </dd></dl>
 
 </div>
 </div>
@@ -668,17 +557,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute tip/tilt for llt ray trace.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ttx</td><td>Tip (rad). Overwritten by the FSM command if present, otherwise accumulated into. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">tty</td><td>Tilt (rad). Same as ttx. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data; simu-&gt;save-&gt;ltpm_real is updated if present. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iwfs</td><td>Index of the WFS. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>Time step index. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute tip/tilt for llt ray trace. </p>
 
 </div>
 </div>
@@ -700,14 +579,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wait for dmreal to be available in event driven simulation.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>Time step for which dmreal is needed. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Wait for dmreal to be available in event driven simulation. </p>
 
 </div>
 </div>
@@ -725,10 +597,11 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Notify that we are done with dmreal in event driven simulation.</p>
+
+<p>Notify that we are done with dmreal. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">simu</td><td>Simulation data. </td></tr>
+    <tr><td class="paramname">simu</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -768,17 +641,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add low order NGS modes to DM actuator commands for AHST and MVST</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">dmval</td><td>DM actuator commands; allocated if NULL and accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">parms</td><td>Simulation parameters. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">recon</td><td>Reconstructor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">low_val</td><td>Low order mode values. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gain</td><td>Scaling factor. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add low order NGS modes to DM actuator commands for AHST and MVST </p>
 
 </div>
 </div>
@@ -792,12 +655,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>maos</b></li><li class="navelem"><a href="../../d1/d57/maos_2utils_8h.html">utils.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

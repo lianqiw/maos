@@ -23,7 +23,6 @@ var misc_8h =
     [ "mysymlink", "d4/d08/misc_8h.html#a4f86cdbb374813c70bae4dfbdc893f8a", null ],
     [ "mylink", "d4/d08/misc_8h.html#a9867f2a8994e96bb38589f4ecdbc347a", null ],
     [ "exist", "d4/d08/misc_8h.html#a7bdca4cbc6b53e05e66455d9ffb8af2d", null ],
-    [ "touch", "d4/d08/misc_8h.html#aac1668c4eefe0f88215711c27c91596a", null ],
     [ "isdir", "d4/d08/misc_8h.html#a8fa8b5dc90e560f9b2c3909b134e69a8", null ],
     [ "isfile", "d4/d08/misc_8h.html#a251424e05fad4be552824c5a51e94ce0", null ],
     [ "islink", "d4/d08/misc_8h.html#a40e09ee72707a692de2a42cea0b4963c", null ],
@@ -43,11 +42,7 @@ var misc_8h =
     [ "available_space", "d4/d08/misc_8h.html#aa8327247b00b74fe0f22822f797f5ec4", null ],
     [ "mystrdup", "d4/d08/misc_8h.html#a78d60c2575f2d453aa78cdde0345228e", null ],
     [ "mysnprintf", "d4/d08/misc_8h.html#a9bd8555fd6d364ebf45f367645039713", null ],
-    [ "mystrrep", "d4/d08/misc_8h.html#aebddfeadccaac64bd19b1bda8b7ee69b", null ],
     [ "parse_argopt", "d4/d08/misc_8h.html#a3349f67347d1f665a17bdd3a7c5bf5a6", null ],
     [ "set_realtime", "d4/d08/misc_8h.html#af601376ec0a30149805fbc5e2c8e14cd", null ],
-    [ "free_strarr", "d4/d08/misc_8h.html#abb6e36b04cc59e87a10f7ef9378cb5a0", null ],
-    [ "print_version", "d4/d08/misc_8h.html#ac6230d495fc909bb61195c45f703d492", null ],
-    [ "sec2str", "d4/d08/misc_8h.html#a2c7cc6a0fd84fec69d69b709e07b907e", null ],
-    [ "rename_log", "d4/d08/misc_8h.html#a5e51eab0bff36d7f23f08fbbebf6b5de", null ]
+    [ "sec2str", "d4/d08/misc_8h.html#a2c7cc6a0fd84fec69d69b709e07b907e", null ]
 ];

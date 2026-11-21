@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/slaving.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -137,15 +135,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the actuator coupling coefficient to be used to identify non-coupled actuators. The max value is 1.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">HA_</td><td>Ray tracing matrix (cell array of fit directions by DMs) from DM actuators to the fitting grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">W1</td><td>Optional weighting function. If NULL, the column sum of abs(HA) is used. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated coupling coefficient for each DM. The caller frees it. </dd></dl>
+<p>Compute the actuator coupling coefficient to be used to identify non-coupled actuators. W1 is optional weighting function. The max value is 1. </p>
 
 </div>
 </div>
@@ -194,20 +184,19 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Compute slaving actuator regularization term.</p>
 <p>Inactive actuators (coupling coefficiency below the threshold) are slaved to neighbors that are active.</p>
-<p>The result is S=H'<em>H; Let b=H*a, we have if mode==1: b(isa)=alpha</em>(a(isa)-sum(a(jsa).*weight(jsa))), where isa is inactive and jsa are neighoring active actuators. if mode==2: b(igroup)=alpha*sum(a(jsa)), where jsa are fully active actuators belonging to igroup if mode==3: b(isa)=alpha*sum(a(jsa)-a(ksa)), where isa is inactive, and jsa and ksa are neighrboring and opposite active actuator</p>
+<p>The result is S=H'<em>H; Let b=H*a, we have if mode==1: b(isa)=alpha</em>(a(isa)-sum(a(jsa).*weight(jsa))), where isa is inactive and jsa are neighoring active actuators. if mode==2: b(igroup)=alpha*sum(a(jsa)), where jsa are fully active actuators belonging to igroup if mode==3: b(isa)=alpha*sum(a(jsa)-a(ksa)), where isa is inactive, and jsa and ksa are neighrboring and opposite active actuator </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>The actuator grid. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency (required). Entries of stuck actuators are set to 1 and floating actuators to 0. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actstuck</td><td>Mask for stuck actuators that will not be slaved, but have value constrained. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actfloat</td><td>Mask for float actuators that will be slaved, but not have value constrained. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>The threshold below which an actuator is deemed slave. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sclsq</td><td>Expected norm of the slaving matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>Mode of operation (1, 2, or 3 as described above; 4 is experimental). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>The actuator grid  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actstuck</td><td>mask for stuck actuators that will not be slaved, but have value constrained.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actfloat</td><td>mask for float actuators that will be slaved, but not have value constrained.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>The threshold that an actuator is deemed slave  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sclsq</td><td>Expected norm of the slaving matrix.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>Mode of operation. (1 or 2) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated block diagonal slaving regularization matrix S=H'*H. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -234,15 +223,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>When some actuators are stuck, zero the corresponding column in HA</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">HA_</td><td>Interaction matrix (dense or sparse, nfit by ndm or ndm by 1) or coupling vector to modify in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stuck</td><td>Mask of stuck actuators for each DM. Nothing is done if NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>When some actuators are stuck, zero the corresponding column in HA </p>
 
 </div>
 </div>
@@ -269,15 +250,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Zero out rows of dead actuators in mode vector.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">HB</td><td>Mode vectors (ndm by nmod) to modify in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dead</td><td>Mask of dead actuators for each DM. Nothing is done if NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Zero out rows of dead actuators in mode vector. </p>
 
 </div>
 </div>
@@ -309,13 +282,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neighboring actuators. This is implemented using a second matrix and then add to the original matrix.</p>
+<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neighboring actuators. This is implemented using a second matrix and then add to the original matrix. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Coordinate of actuators. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">HA</td><td>Sparse matrix to modify. Used instead of HB if set. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">HB</td><td>Dense matrix to modify in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actfloat</td><td>Floating actuator mask. </td></tr>
+    <tr><td class="paramname">aloc</td><td>coordinate of actuators  </td></tr>
+    <tr><td class="paramname">HA</td><td>sparse matrix to modify  </td></tr>
+    <tr><td class="paramname">HB</td><td>dense matrix to modify  </td></tr>
+    <tr><td class="paramname">actfloat</td><td>floating actuator mask </td></tr>
   </table>
   </dd>
 </dl>
@@ -345,12 +318,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Make DM actuator commands zero at stuck actuator locations.</p>
+<p>Make DM actuator commands zero at stuck actuator locations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">adm</td><td>Actuator command to process in place. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stuck</td><td>List of stuck actuators. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array  </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">adm</td><td>Actuator command to process  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stuck</td><td>List of stuck actuators </td></tr>
   </table>
   </dd>
 </dl>
@@ -375,15 +348,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an interpreter that make floating actuators equal to their neighbors.</p>
+<p>Create an interpreter that make floating actuators equal to their neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actfloat</td><td>List of floating actuators. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actfloat</td><td>List of floating actuators </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated block diagonal interpolation matrix. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -415,17 +387,8 @@ Functions</h2></td></tr>
 <li>Project low order modes out from the active actuators</li>
 <li>Project back to full vector</li>
 <li>Extrapolate to inactive actuators</li>
-<li>Add back low order modes to the full vector extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^</li>
+<li>Add back low order modes to the full vector extrap = H_extrap*H_reduce*(I-M*M^+)+M*M^ </li>
 </ol>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling above which an actuator is active. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated extrapolation matrix. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -452,16 +415,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors.</p>
+<p>Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated extrapolation matrix. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -493,17 +455,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create an extrapolator that make inactive actuators equal avearage of active neighbors if exist or all other neighbors.</p>
+<p>Create an extrapolator that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lor</td><td>Low order mode removal before extrapolation. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lor</td><td>Low order mode removal before extrapolation </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated block diagonal extrapolation matrix. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -517,12 +478,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../dc/d37/slaving_8h.html">slaving.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

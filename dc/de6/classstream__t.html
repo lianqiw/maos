@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: stream_t Class Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -114,200 +112,23 @@ $(function(){initNavTree('dc/de6/classstream__t.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6789eb007befc16cd892b76c5e1d380b" id="r_a6789eb007befc16cd892b76c5e1d380b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6789eb007befc16cd892b76c5e1d380b">stream_t</a> ()</td></tr>
-<tr class="memitem:a176470d7f41d9be68723f75fd8d3a794" id="r_a176470d7f41d9be68723f75fd8d3a794"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a176470d7f41d9be68723f75fd8d3a794">init</a> ()</td></tr>
-<tr class="memitem:a9f983870b6d79f2286d3df5d99af0283" id="r_a9f983870b6d79f2286d3df5d99af0283"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9f983870b6d79f2286d3df5d99af0283">~stream_t</a> ()</td></tr>
-<tr class="memitem:a0fcde5716582a0f0197469dec7bb03b6" id="r_a0fcde5716582a0f0197469dec7bb03b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0fcde5716582a0f0197469dec7bb03b6">deinit</a> ()</td></tr>
-<tr class="memitem:a5627cc88b0a768c313329ba38a68603e" id="r_a5627cc88b0a768c313329ba38a68603e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5627cc88b0a768c313329ba38a68603e">reset</a> ()</td></tr>
-<tr class="memitem:a5c1c0aa7649c454ee344f0ca01d5edce" id="r_a5c1c0aa7649c454ee344f0ca01d5edce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c1c0aa7649c454ee344f0ca01d5edce">sync</a> ()</td></tr>
-<tr class="memitem:ac959f9d1856afc7fcd4297c7c4cb8e22" id="r_ac959f9d1856afc7fcd4297c7c4cb8e22"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac959f9d1856afc7fcd4297c7c4cb8e22">operator cudaStream_t</a> ()</td></tr>
-<tr class="memitem:a9d12fc304cba20376b9a2b7196f25f7c" id="r_a9d12fc304cba20376b9a2b7196f25f7c"><td class="memItemLeft" align="right" valign="top">cublasHandle_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d12fc304cba20376b9a2b7196f25f7c">blas</a> ()</td></tr>
-<tr class="memitem:a2e292dc9cd2d2391f5cd67dd3d3a71db" id="r_a2e292dc9cd2d2391f5cd67dd3d3a71db"><td class="memItemLeft" align="right" valign="top">cusparseHandle_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e292dc9cd2d2391f5cd67dd3d3a71db">sparse</a> ()</td></tr>
-<tr class="memitem:af255ea9c75a3a501d807656312082582" id="r_af255ea9c75a3a501d807656312082582"><td class="memItemLeft" align="right" valign="top">cusolverDnHandle_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af255ea9c75a3a501d807656312082582">dn</a> ()</td></tr>
+<tr class="memitem:a176470d7f41d9be68723f75fd8d3a794" id="r_a176470d7f41d9be68723f75fd8d3a794"><td class="memItemLeft" align="right" valign="top"><a id="a176470d7f41d9be68723f75fd8d3a794" name="a176470d7f41d9be68723f75fd8d3a794"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> ()</td></tr>
+<tr class="memitem:a0fcde5716582a0f0197469dec7bb03b6" id="r_a0fcde5716582a0f0197469dec7bb03b6"><td class="memItemLeft" align="right" valign="top"><a id="a0fcde5716582a0f0197469dec7bb03b6" name="a0fcde5716582a0f0197469dec7bb03b6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>deinit</b> ()</td></tr>
+<tr class="memitem:a5627cc88b0a768c313329ba38a68603e" id="r_a5627cc88b0a768c313329ba38a68603e"><td class="memItemLeft" align="right" valign="top"><a id="a5627cc88b0a768c313329ba38a68603e" name="a5627cc88b0a768c313329ba38a68603e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
+<tr class="memitem:a5c1c0aa7649c454ee344f0ca01d5edce" id="r_a5c1c0aa7649c454ee344f0ca01d5edce"><td class="memItemLeft" align="right" valign="top"><a id="a5c1c0aa7649c454ee344f0ca01d5edce" name="a5c1c0aa7649c454ee344f0ca01d5edce"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>sync</b> ()</td></tr>
+<tr class="memitem:ac959f9d1856afc7fcd4297c7c4cb8e22" id="r_ac959f9d1856afc7fcd4297c7c4cb8e22"><td class="memItemLeft" align="right" valign="top"><a id="ac959f9d1856afc7fcd4297c7c4cb8e22" name="ac959f9d1856afc7fcd4297c7c4cb8e22"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>operator cudaStream_t</b> ()</td></tr>
+<tr class="memitem:a9d12fc304cba20376b9a2b7196f25f7c" id="r_a9d12fc304cba20376b9a2b7196f25f7c"><td class="memItemLeft" align="right" valign="top"><a id="a9d12fc304cba20376b9a2b7196f25f7c" name="a9d12fc304cba20376b9a2b7196f25f7c"></a>
+cublasHandle_t&#160;</td><td class="memItemRight" valign="bottom"><b>blas</b> ()</td></tr>
+<tr class="memitem:a2e292dc9cd2d2391f5cd67dd3d3a71db" id="r_a2e292dc9cd2d2391f5cd67dd3d3a71db"><td class="memItemLeft" align="right" valign="top"><a id="a2e292dc9cd2d2391f5cd67dd3d3a71db" name="a2e292dc9cd2d2391f5cd67dd3d3a71db"></a>
+cusparseHandle_t&#160;</td><td class="memItemRight" valign="bottom"><b>sparse</b> ()</td></tr>
+<tr class="memitem:af255ea9c75a3a501d807656312082582" id="r_af255ea9c75a3a501d807656312082582"><td class="memItemLeft" align="right" valign="top"><a id="af255ea9c75a3a501d807656312082582" name="af255ea9c75a3a501d807656312082582"></a>
+cusolverDnHandle_t&#160;</td><td class="memItemRight" valign="bottom"><b>dn</b> ()</td></tr>
 </table>
-<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a6789eb007befc16cd892b76c5e1d380b" name="a6789eb007befc16cd892b76c5e1d380b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6789eb007befc16cd892b76c5e1d380b">&#9670;&#160;</a></span>stream_t()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">stream_t::stream_t </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Create the stream and its cublas, cusparse and cusolver handles. </p>
-
-</div>
-</div>
-<a id="a9f983870b6d79f2286d3df5d99af0283" name="a9f983870b6d79f2286d3df5d99af0283"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f983870b6d79f2286d3df5d99af0283">&#9670;&#160;</a></span>~stream_t()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">stream_t::~stream_t </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Destroy the handles and the stream. </p>
-
-</div>
-</div>
-<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a176470d7f41d9be68723f75fd8d3a794" name="a176470d7f41d9be68723f75fd8d3a794"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a176470d7f41d9be68723f75fd8d3a794">&#9670;&#160;</a></span>init()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void stream_t::init </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Create the stream and the handles associated with it. </p>
-
-</div>
-</div>
-<a id="a0fcde5716582a0f0197469dec7bb03b6" name="a0fcde5716582a0f0197469dec7bb03b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0fcde5716582a0f0197469dec7bb03b6">&#9670;&#160;</a></span>deinit()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void stream_t::deinit </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Destroy the handles and the stream (synchronizing it first). </p>
-
-</div>
-</div>
-<a id="a5627cc88b0a768c313329ba38a68603e" name="a5627cc88b0a768c313329ba38a68603e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5627cc88b0a768c313329ba38a68603e">&#9670;&#160;</a></span>reset()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void stream_t::reset </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Recreate the stream and handles, e.g., to place them on the current GPU. </p>
-
-</div>
-</div>
-<a id="a5c1c0aa7649c454ee344f0ca01d5edce" name="a5c1c0aa7649c454ee344f0ca01d5edce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c1c0aa7649c454ee344f0ca01d5edce">&#9670;&#160;</a></span>sync()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void stream_t::sync </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Block until all work in the stream is done. </p>
-
-</div>
-</div>
-<a id="ac959f9d1856afc7fcd4297c7c4cb8e22" name="ac959f9d1856afc7fcd4297c7c4cb8e22"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac959f9d1856afc7fcd4297c7c4cb8e22">&#9670;&#160;</a></span>operator cudaStream_t()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">stream_t::operator cudaStream_t </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Implicit conversion to the underlying stream.</p>
-<dl class="section return"><dt>Returns</dt><dd>The cuda stream. Owned by this object. </dd></dl>
-
-</div>
-</div>
-<a id="a9d12fc304cba20376b9a2b7196f25f7c" name="a9d12fc304cba20376b9a2b7196f25f7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d12fc304cba20376b9a2b7196f25f7c">&#9670;&#160;</a></span>blas()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">cublasHandle_t stream_t::blas </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>The cublas handle bound to this stream. Owned by this object. </dd></dl>
-
-</div>
-</div>
-<a id="a2e292dc9cd2d2391f5cd67dd3d3a71db" name="a2e292dc9cd2d2391f5cd67dd3d3a71db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e292dc9cd2d2391f5cd67dd3d3a71db">&#9670;&#160;</a></span>sparse()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">cusparseHandle_t stream_t::sparse </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>The cusparse handle bound to this stream. Owned by this object. </dd></dl>
-
-</div>
-</div>
-<a id="af255ea9c75a3a501d807656312082582" name="af255ea9c75a3a501d807656312082582"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af255ea9c75a3a501d807656312082582">&#9670;&#160;</a></span>dn()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">cusolverDnHandle_t stream_t::dn </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd>The cusolver dense handle bound to this stream. Owned by this object. </dd></dl>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>cuda/math/<b>common.h</b></li>
 </ul>
@@ -321,12 +142,8 @@ Public Member Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><a href="../../dc/de6/classstream__t.html">stream_t</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

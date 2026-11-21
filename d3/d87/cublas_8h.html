@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: cuda/math/cublas.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -105,78 +103,21 @@ $(function(){initNavTree('d3/d87/cublas_8h.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a617bff0320e99bbea2e8f4bc2fa8610f" id="r_a617bff0320e99bbea2e8f4bc2fa8610f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a617bff0320e99bbea2e8f4bc2fa8610f">cuspmul</a> (curmat &amp;y, const <a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;A, const curmat &amp;x, <a class="el" href="../../d7/d63/classlong.html">long</a> ncol, char trans, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="memitem:a617bff0320e99bbea2e8f4bc2fa8610f" id="r_a617bff0320e99bbea2e8f4bc2fa8610f"><td class="memItemLeft" align="right" valign="top"><a id="a617bff0320e99bbea2e8f4bc2fa8610f" name="a617bff0320e99bbea2e8f4bc2fa8610f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cuspmul</b> (curmat &amp;y, const <a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;A, const curmat &amp;x, <a class="el" href="../../d7/d63/classlong.html">long</a> ncol, char trans, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:aa8395302f8567d745bfa7a5137eb6a4f" id="r_aa8395302f8567d745bfa7a5137eb6a4f"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:aa8395302f8567d745bfa7a5137eb6a4f template"><td class="memItemLeft" align="right" valign="top">cublasStatus_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa8395302f8567d745bfa7a5137eb6a4f">cublasGdgmm</a> (cublasHandle_t handle, cublasSideMode_t mode, int m, int n, const T *A, int lda, const T *x, int incx, T *C, int ldc)</td></tr>
 <tr class="memitem:a6ccedc7a8a8e1f2d20d221e9d24b4bc3" id="r_a6ccedc7a8a8e1f2d20d221e9d24b4bc3"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a6ccedc7a8a8e1f2d20d221e9d24b4bc3 template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6ccedc7a8a8e1f2d20d221e9d24b4bc3">cudgmm</a> (<a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;C, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;A, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;Sd, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
-<tr class="memitem:a57f44851ae92c456ffa15237fe59cf9f" id="r_a57f44851ae92c456ffa15237fe59cf9f"><td class="memTemplParams" colspan="2">template&lt;typename T, typename TS&gt; </td></tr>
-<tr class="memitem:a57f44851ae92c456ffa15237fe59cf9f template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a57f44851ae92c456ffa15237fe59cf9f">cudgmm</a> (<a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;C, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;A, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; TS, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;Sd, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
+<tr class="memitem:a57f44851ae92c456ffa15237fe59cf9f" id="r_a57f44851ae92c456ffa15237fe59cf9f"><td class="memTemplParams" colspan="2"><a id="a57f44851ae92c456ffa15237fe59cf9f" name="a57f44851ae92c456ffa15237fe59cf9f"></a>
+template&lt;typename T, typename TS&gt; </td></tr>
+<tr class="memitem:a57f44851ae92c456ffa15237fe59cf9f template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><b>cudgmm</b> (<a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;C, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;A, <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; TS, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;Sd, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:a83f558fff070749fcbe868c22524f6b0" id="r_a83f558fff070749fcbe868c22524f6b0"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a83f558fff070749fcbe868c22524f6b0 template"><td class="memItemLeft" align="right" valign="top">cublasStatus_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a83f558fff070749fcbe868c22524f6b0">cublasGgemm</a> (cublasHandle_t handle, cublasOperation_t transa, cublasOperation_t transb, int m, int n, int k, const T *alpha, const T *A, int lda, const T *B, int ldb, const T *beta, T *C, int ldc)</td></tr>
 <tr class="memitem:aaace2041f027ca5d8c4a502193c3d1c9" id="r_aaace2041f027ca5d8c4a502193c3d1c9"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:aaace2041f027ca5d8c4a502193c3d1c9 template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaace2041f027ca5d8c4a502193c3d1c9">cugemm</a> (<a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt; &amp;C, T beta, const <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt; &amp;A, const <a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt; &amp;B, const char trans[2], T alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
-<a id="a617bff0320e99bbea2e8f4bc2fa8610f" name="a617bff0320e99bbea2e8f4bc2fa8610f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a617bff0320e99bbea2e8f4bc2fa8610f">&#9670;&#160;</a></span>cuspmul()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void cuspmul </td>
-          <td>(</td>
-          <td class="paramtype">curmat &amp;</td>          <td class="paramname"><span class="paramname"><em>y</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>A</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const curmat &amp;</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d7/d63/classlong.html">long</a></td>          <td class="paramname"><span class="paramname"><em>ncolvec</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char</td>          <td class="paramname"><span class="paramname"><em>trans</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Real</td>          <td class="paramname"><span class="paramname"><em>alpha</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>stream</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Sparse matrix multiplication y+=alpha*op(A)*x where A is sparse. x, y are vectors or matrices. (Slow for GS0.) Uses the cuSparse generic API for CUDA version 11 and later which removed the old API.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">y</td><td>Output vector or matrix, accumulated into. Its dense descriptor is created and cached if not yet existing. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Sparse matrix (CSR or CSC). Its SpMV/SpMM work buffer is allocated or enlarged as needed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Input vector or matrix. Its dense descriptor is created and cached if not yet existing. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ncolvec</td><td>Number of columns in x and y. 1 for vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>'t' or 1 to use transpose of A, otherwise use A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor of the product. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream whose cusparse handle is used. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="aa8395302f8567d745bfa7a5137eb6a4f" name="aa8395302f8567d745bfa7a5137eb6a4f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8395302f8567d745bfa7a5137eb6a4f">&#9670;&#160;</a></span>cublasGdgmm()</h2>
 
@@ -237,28 +178,12 @@ template&lt;typename T&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Templated cublas dgmm: C=A*diag(x) or C=diag(x)*A depending on mode. Specialized for float, double, float2, and double2 in cublas.cu.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>cublas handle. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>CUBLAS_SIDE_RIGHT for A*diag(x), CUBLAS_SIDE_LEFT for diag(x)*A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">m</td><td>Number of rows of A and C. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of columns of A and C. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lda</td><td>Leading dimension of A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Diagonal vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">incx</td><td>Stride of x. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">C</td><td>Output matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ldc</td><td>Leading dimension of C. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>cublas status. </dd></dl>
+<p>&lt; C=A*diag(x) </p>
 
 </div>
 </div>
 <a id="a6ccedc7a8a8e1f2d20d221e9d24b4bc3" name="a6ccedc7a8a8e1f2d20d221e9d24b4bc3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ccedc7a8a8e1f2d20d221e9d24b4bc3">&#9670;&#160;</a></span>cudgmm() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ccedc7a8a8e1f2d20d221e9d24b4bc3">&#9670;&#160;</a></span>cudgmm()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -287,59 +212,7 @@ template&lt;typename T&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Multiply a matrix by a diagonal matrix: C=A*diag(Sd).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">C</td><td>Output matrix, preallocated with the same size as A. May be A itself. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Sd</td><td>Diagonal of the diagonal matrix. Must have at least A.Ny() elements. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a57f44851ae92c456ffa15237fe59cf9f" name="a57f44851ae92c456ffa15237fe59cf9f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a57f44851ae92c456ffa15237fe59cf9f">&#9670;&#160;</a></span>cudgmm() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T, typename TS&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">void cudgmm </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>C</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; T, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>A</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d44/class_num_array.html">NumArray</a>&lt; TS, <a class="el" href="../../d0/ddc/class_gpu.html">Gpu</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>Sd</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>stream</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Multiply a matrix by a diagonal matrix of different type: C=A*diag(Sd). Sd is first converted to the type of A.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">C</td><td>Output matrix, preallocated with the same size as A. May be A itself. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Sd</td><td>Diagonal of the diagonal matrix. Must have at least A.Ny() elements. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>C=A*S Sd=diagonal(S) </p>
 
 </div>
 </div>
@@ -423,27 +296,7 @@ template&lt;typename T&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Templated cublas gemm: C=alpha*op(A)*op(B)+beta*C. Specialized for float, double, float2, and double2 in cublas.cu.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>cublas handle. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">transa</td><td>Operation on A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">transb</td><td>Operation on B. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">m</td><td>Number of rows of op(A) and C. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of columns of op(B) and C. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">k</td><td>Number of columns of op(A) and rows of op(B). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor of the product (host or device pointer). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lda</td><td>Leading dimension of A. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ldb</td><td>Leading dimension of B. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">beta</td><td>Scaling factor of C (host or device pointer). </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">C</td><td>Output matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ldc</td><td>Leading dimension of C. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>cublas status. </dd></dl>
+<p>C=alpha*op(A)*op(B)+beta*C </p>
 
 </div>
 </div>
@@ -492,19 +345,7 @@ template&lt;typename T&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Computes C = beta * C + alpha * op(A) * op(B).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">C</td><td>Output matrix. Allocated if empty, otherwise accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">beta</td><td>Scaling factor of C. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">B</td><td>Input matrix. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">trans</td><td>Two characters selecting op for A and B: 't'/'T' for transpose, 'c'/'C' for conjugate transpose, otherwise none. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling factor of the product. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>Stream to run in. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Computes C = beta * C + alpha * op(A) * B ; </p>
 
 </div>
 </div>
@@ -518,12 +359,8 @@ template&lt;typename T&gt; </div>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>cuda</b></li><li class="navelem"><b>math</b></li><li class="navelem"><a href="../../d3/d87/cublas_8h.html">cublas.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

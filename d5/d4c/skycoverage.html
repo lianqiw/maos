@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Sky Coverage</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -102,125 +100,47 @@ $(function(){initNavTree('d5/d4c/skycoverage.html','../../',''); });
   <div class="headertitle"><div class="title">Sky Coverage </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Sky coverage of an LGS MCAO system is evaluated in two steps. First, <span class="tt">maos</span> runs a presimulation with ideal correction of the NGS controlled modes and saves the information needed for NGS WFS modeling. Then, the separate program <span class="tt">skyc</span> uses these data to simulate the NGS WFS and the low order control loop for many random star fields and asterisms. The skyc configuration files are in <span class="tt">config/skyc</span>.</p>
-<h1 class="doxsection"><a class="anchor" id="presim"></a>
+<div class="textblock"><h1 class="doxsection"><a class="anchor" id="presim"></a>
 MAOS presimulation</h1>
-<p>Setting <span class="tt">sim.skysim=1</span> enables the presimulation. This changes the maos configuration as follows:</p><ul>
-<li>Split tomography (<span class="tt">recon.split=1</span>) with ideal NGS mode correction (<span class="tt">tomo.ahst_idealngs=1</span> unless already set) is used, so that the residual NGS modes are open loop turbulence that the NGS loop needs to correct.</li>
-<li><span class="tt">powfs.psfout</span> is set for low order powfs, so that the complex PSFs of the NGS WFS subapertures are saved.</li>
-<li><span class="tt">save.extra</span> is set.</li>
-<li>An output folder (<span class="tt">-o</span>) is required.</li>
-</ul>
-<p><span class="tt">config/maos/skyc_10.conf</span> (or <span class="tt">skyc_20.conf</span>) adds <span class="tt">sim.skysim=1</span>, <span class="tt">sim.end=5000</span>, and a grid of NGS WFS spaced by 10" (or 20") that covers the patrol field, for a configuration with one LGS powfs (6 WFS) followed by two NGS powfs (e.g., the TTF and TT OIWFS of NFIRAOS). The following example runs the presimulation for NFIRAOS at three turbulence percentiles and several zenith angles: </p><div class="fragment"><div class="line">for prof in 50 25 75 ;do</div>
+<p>Add <span class="tt">skyc_10.conf</span> to <span class="tt">maos</span> simulation to output information for sky coverage preprocessing with NGS grid spaced by 10". </p><div class="fragment"><div class="line">for prof in 50 25 75 ;do</div>
 <div class="line">    for za in 0 30 45 50 55 60;do</div>
-<div class="line">        maos -c nfiraos_lgs.conf skyc_10.conf atm_mk13n${prof}p.conf sim.zadeg=$za sim.seeds=[1] -o ${prof}p_za${za}</div>
+<div class="line">        maos -c nfiraos_lgs.conf skyc_10.conf atm_mk13n${prof}p.conf sim.zadeg=$za -o ${prof}p_za${za} sim.seeds=[1] </div>
 <div class="line">    done</div>
 <div class="line">done</div>
-</div><!-- fragment --><p>The files needed by <span class="tt">skyc</span> are saved in subfolder <span class="tt">skysim</span> of the output folder:</p><ul>
-<li><span class="tt">maos.conf</span>: The <span class="tt">maos.*</span> keys that describe the presimulation (<span class="tt">maos.r0z</span>, <span class="tt">maos.dt</span>, <span class="tt">maos.zadeg</span>, <span class="tt">maos.D</span>, <span class="tt">maos.hc</span>, <span class="tt">maos.hs</span>, <span class="tt">maos.nmod</span>, <span class="tt">maos.wvl</span>, <span class="tt">maos.ngsgrid</span>, <span class="tt">maos.npowfs</span>, <span class="tt">maos.msa</span>, <span class="tt">maos.nsa</span>, <span class="tt">maos.seeds</span>, <span class="tt">maos.nstep</span>, the file names below, etc.). It ends with <span class="tt">include="skyc.conf"</span> so that it can be used directly as the skyc configuration.</li>
-<li><span class="tt">RescleNGSm_1.bin</span> and <span class="tt">RescleNGSmp_1.bin</span>: Hard links to the files in <span class="tt">extra</span>. The residual NGS modes (field averaged and for each evaluation direction) that the NGS loop has to correct (see <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a>).</li>
-<li><span class="tt">MCC_za0.bin</span> and <span class="tt">MCC_OA_za0.bin</span>: The NGS mode cross coupling matrices, field averaged and on axis, used to convert NGS mode to wavefront error. The number is the zenith angle.</li>
-<li><span class="tt">powfs1_loc.bin</span>, <span class="tt">powfs1_amp.bin</span>, <span class="tt">powfs1_saloc.bin</span>: The pupil grid, amplitude, and subaperture locations of each NGS powfs.</li>
-<li><span class="tt">wvfout/wvfout_seed1_sa2_x0_y0.bin</span>: For each NGS WFS on the grid, the time history of the complex PSF of each subaperture and wavelength. <span class="tt">sa2</span> is the subaperture order (2 for 2x2) and <span class="tt">x0_y0</span> is the location in arcsec.</li>
-<li><span class="tt">ztiltout/ztiltout_seed1_sa2_x0_y0.bin</span>: The corresponding time history of the geometric (z-tilt) gradients.</li>
-<li><span class="tt">gradoff/gradoff_sa2_x0_y0.bin</span>: The gradient offset of each NGS WFS, when it exists.</li>
-</ul>
-<h1 class="doxsection"><a class="anchor" id="postsim"></a>
+</div><!-- fragment --> <h1 class="doxsection"><a class="anchor" id="postsim"></a>
 Sky coverage post processing simulation</h1>
-<p>Change directory to the <span class="tt">skysim</span> folder of the presimulation and run <span class="tt">skyc</span>: </p><div class="fragment"><div class="line">cd ${prof}p_za${za}/skysim</div>
-<div class="line">skyc -d -o APD_JHKs_typeImr skyc.multirate=1 skyc.seed=1</div>
-</div><!-- fragment --><p> Options:</p><ul>
-<li><span class="tt">-o DIR</span>: Output folder (relative to the current folder). A time stamped folder is used if omitted.</li>
-<li><span class="tt">-c FILE.conf</span>: Use <span class="tt">FILE.conf</span> as the baseline configuration. By default <span class="tt">maos.conf</span> in the current folder is used.</li>
-<li><span class="tt">-d</span>: Run in the background (detached) through the scheduler.</li>
-<li><span class="tt">-n N</span>: Number of threads.</li>
-<li><span class="tt">-O</span>: Rerun seeds that are already done.</li>
-<li><span class="tt">key=value</span> or <span class="tt">FILE.conf</span>: Override parameters.</li>
-</ul>
-<p><span class="tt">skyc</span> reads <span class="tt">maos.conf</span>, which includes <span class="tt">config/skyc/skyc.conf</span> for the default <span class="tt">skyc.*</span> parameters. Zenith angle dependent parameters (detector pixels per subaperture and implementation error) are in <span class="tt">config/skyc/skyc_za*.conf</span>, which can be added to the command line, e.g., <span class="tt">skyc_za30.conf</span>. The main parameters are:</p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Parameter  </th><th class="markdownTableHeadNone">Description  </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.npowfs</span>, <span class="tt">skyc.nwfsmax</span>  </td><td class="markdownTableBodyNone">Number of NGS powfs (must equal <span class="tt">maos.npowfs</span>) and maximum number of WFS of each powfs in an asterism.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.pixtheta</span>, <span class="tt">skyc.pixpsa</span>, <span class="tt">skyc.pixblur</span>, <span class="tt">skyc.pixguard</span>  </td><td class="markdownTableBodyNone">Detector pixel size (arcsec), number of pixels per subaperture, pixel blur, and guard window of each powfs.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.rne</span>, <span class="tt">skyc.excess</span>  </td><td class="markdownTableBodyNone">Read out noise (a negative value selects a frame rate dependent model) and excess photon noise factor.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.zb.*</span>  </td><td class="markdownTableBodyNone">Zero magnitude flux, sky background, detector QE, throughput, and excess background for each wavelength.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.patfov</span>, <span class="tt">skyc.keepout</span>, <span class="tt">skyc.minrad</span>  </td><td class="markdownTableBodyNone">Diameter of the patrol field, probe keep out distance, and minimum star radius (arcsec).  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.nsky</span>, <span class="tt">skyc.start</span>  </td><td class="markdownTableBodyNone">Number of star fields and index of the first one.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.lat</span>, <span class="tt">skyc.lon</span>, <span class="tt">skyc.catscl</span>  </td><td class="markdownTableBodyNone">Galactic latitude and longitude of the Besancon star catalog (<span class="tt">config/skyc/besancon</span>) used to generate random star fields, and the star count scaling.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.stars</span>  </td><td class="markdownTableBodyNone">Load star fields from this file instead of generating them. It is a cell array with one element per star field, each containing a (2+nwvl) by nstar array of star location (radian) and magnitudes.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.maxstar</span>, <span class="tt">skyc.maxaster</span>, <span class="tt">skyc.maxdtrat</span>  </td><td class="markdownTableBodyNone">Maximum number of (brightest) stars per field, asterisms per field, and sampling rates per asterism to simulate.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.dtrats</span>, <span class="tt">skyc.multirate</span>, <span class="tt">skyc.snrmin_fast</span>, <span class="tt">skyc.snrmin_slow</span>  </td><td class="markdownTableBodyNone">Candidate sampling periods (in units of <span class="tt">maos.dt</span>, in descending order). With <span class="tt">skyc.multirate=1</span>, each OIWFS can run at a different rate, selected using the minimum SNR thresholds.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.servo</span>, <span class="tt">skyc.gsplit</span>  </td><td class="markdownTableBodyNone">Servo type (1: integrator, 2: type II, -1: LQG) and separate gain for each mode.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.psd_ws</span>, <span class="tt">skyc.addws</span>  </td><td class="markdownTableBodyNone">Telescope wind shake PSD (skip it if the maos presimulation already includes <span class="tt">sim.wspsd</span>) and how it is added.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.evlstart</span>, <span class="tt">skyc.phystart</span>  </td><td class="markdownTableBodyNone">Time step to start performance evaluation and physical optics simulation.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.phytype</span>  </td><td class="markdownTableBodyNone">Pixel processing: 1: matched filter, 2: CoG, 3: correlation.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.imperrnm</span>, <span class="tt">skyc.imperrnmb</span>  </td><td class="markdownTableBodyNone">Additional implementation error on axis and at the edge of the patrol field (nm).  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.estimate</span>  </td><td class="markdownTableBodyNone">Only estimate the performance with servo analysis, without time domain simulation.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><span class="tt">skyc.seed</span>  </td><td class="markdownTableBodyNone">Seed for the star fields and random numbers.  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><span class="tt">skyc.save</span>  </td><td class="markdownTableBodyNone">Save the selected asterism of each star field for a maos simulation.  </td></tr>
-</table>
-<p>For each star field, <span class="tt">skyc</span> forms the asterisms from the available stars, estimates their performance with servo analysis, and runs time domain physical optics simulations of the NGS WFS (using the saved PSFs) for the most promising asterisms and sampling rates. The best asterism determines the result of the star field.</p>
-<p>Before the first run, <span class="tt">skyc</span> processes the saved PSFs and stores the results in the <span class="tt">skysim</span> folder so that later runs can reuse them: subfolders <span class="tt">pistat</span> (time averaged subaperture PSFs), <span class="tt">neaspec</span>, and <span class="tt">phygrad</span>, and the WFS nonlinearity <span class="tt">powfs0_nonlin.bin</span>, <span class="tt">powfs1_nonlin.bin</span>.</p>
+<p>Change directory to <span class="tt">${prof}p_za${za}/skysim</span> and run the following </p><div class="fragment"><div class="line">skyc skyc.pixpsa=[16 16] skyc.psd_ws= -d skyc.multirate=1 skyc.seed=1 -o APD_JHKs_typeImr_v2 -d  </div>
+</div><!-- fragment --><p> The default config is <span class="tt">maos.conf</span> which is saved by <span class="tt">maos</span> presimulation. Additional parameters that can be overriden are in <span class="tt">${src}/config/skyc/skyc.conf</span>.</p>
 <h1 class="doxsection"><a class="anchor" id="skyres"></a>
 Sky coverage results</h1>
-<p>The following file names are given for maos seed 1 (<span class="tt">maos.seeds</span>) and skyc seed 1 (<span class="tt">skyc.seed</span>), in the output folder of <span class="tt">skyc</span>. The results are mean square wavefront error in \(m^2\). Use <span class="tt">drawres</span> to plot the sky coverage, i.e., the cumulative distribution of the WFE of the star fields (see <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a>).</p>
+<p>The following file names are given for <span class="tt">maos seed=1</span> and <span class="tt">skyc seed=1</span>.</p>
 <ul>
-<li><p class="startli"><span class="tt">Res1_1.bin</span>: An array with one column per star field and the following rows:</p><ul>
-<li>Total NGS mode WFE (including residual wind shake when it is not part of the simulated time series)</li>
-<li>NGS mode WFE due to turbulence</li>
-<li>Tip/tilt WFE due to turbulence</li>
-<li>Residual wind shake tip/tilt WFE</li>
-<li>Estimated WFE from the servo analysis</li>
-<li>On axis NGS mode WFE due to turbulence</li>
-<li>On axis tip/tilt WFE due to turbulence</li>
-<li>Sampling frequency (Hz) of the selected asterism</li>
-<li>Column index of the selected asterism in <span class="tt">Res1_1_aster</span></li>
-<li>Index of the selected asterism within the star field</li>
+<li><code>Res1_1:</code> Science field averaged RMS WFE for each for each sky of the following modes:<ul>
+<li>Total low order</li>
+<li>Turbulence low order</li>
+<li>Turbulence tip/tilt</li>
+<li>Residual windshake tip/tilt</li>
+<li>Estimated error from servo analysis</li>
 </ul>
-<p class="startli">Star fields without a usable asterism have the open loop WFE.</p>
 </li>
-<li><span class="tt">Res1_1_aster.bin</span>: All asterisms that have physical optics simulation results. Each column is for an asterism. The rows are:<ul>
-<li>WFE in physical optics simulations</li>
-<li>WFE from servo analysis</li>
-<li>Star field index</li>
-<li>Number of WFS</li>
-<li>For each WFS:<ul>
-<li>sampling frequency (Hz) (0 if not used)</li>
-<li>signal to noise ratio at this sampling frequency</li>
-<li>x coordinate (radian)</li>
-<li>y coordinate (radian)</li>
-<li>magnitude in each wavelength (<span class="tt">maos.wvl</span>)</li>
+<li><code>Res1_1_oa:</code> On axis RMS WFE in the same format as Res1_1</li>
+<li><code>Res1_1_aster:</code> An array of all aterisms that have been evaluated. Each sky field can have up to skyc.maxaster number of entries. Each column is for an asterism. Each row contains the properties of this astierms:<ul>
+<li>RMS WFE in physical optics simulations</li>
+<li>RMS WFE in servo optimization estimate</li>
+<li>Sky field index</li>
+<li>Number of active WFS</li>
+<li>Multiple numbers per WFS<ul>
+<li>sampling rate (0 if no star is available)</li>
+<li>signal to noise ratio at this sampling rate</li>
+<li>x coordinate</li>
+<li>y coordinate</li>
+<li>magnitude in first wavelength</li>
+<li>magnitude in second wavelength (if applicable)</li>
+<li>magnitude in third wavelength (if applicable) </li>
 </ul>
 </li>
 </ul>
 </li>
-<li><span class="tt">Res1_1_stars.bin</span>: The star fields used, in the same format as <span class="tt">skyc.stars</span>.</li>
-<li><span class="tt">Res1_1_mres.bin</span>: The residual NGS mode time history of the selected asterism for each star field.</li>
-<li><span class="tt">Res1_1_gain.bin</span>: The servo gains of the selected asterism for each star field (when <span class="tt">skyc.servo&gt;0</span> and <span class="tt">skyc.multirate=0</span>).</li>
-<li><span class="tt">Res1_1_minput.bin</span>: The input NGS modes (with wind shake added when <span class="tt">skyc.addws</span> is set).</li>
-<li><span class="tt">psds_m2.bin</span>: The PSD of the input NGS modes.</li>
-<li><span class="tt">Res1_1.done</span>: Created when the seed is done. It is skipped in later runs unless <span class="tt">-O</span> is given.</li>
-<li><span class="tt">skyc_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].conf</span> and <span class="tt">run_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].log</span>: The effective configuration and the log. Renamed to <span class="tt">skyc_done.conf</span> and <span class="tt">run_done.log</span> when finished successfully.</li>
-<li><span class="tt">Res1_1_maos/sky0/</span>: When <span class="tt">skyc.save=1</span>, the PSFs, NEA, residual modes, and a <span class="tt">base.conf</span> of the selected asterism of each star field, for running maos with that asterism. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
@@ -233,11 +153,8 @@ Sky coverage results</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/libmisc.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -108,7 +106,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a4bf8970d027f919a7485a8e426415de6" id="r_a4bf8970d027f919a7485a8e426415de6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4bf8970d027f919a7485a8e426415de6">addnoise</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A, rand_t *rstat, const real bkgrnd, const real bkgrndc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2c, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *qe, real rne, real excess)</td></tr>
 <tr class="memitem:a48f27901c57db366ade9713f9eabc688" id="r_a48f27901c57db366ade9713f9eabc688"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a48f27901c57db366ade9713f9eabc688">addnoise_grad</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *grad, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *neal, rand_t *srand)</td></tr>
 <tr class="memitem:a4f8e2794ef30cdb035443b057ac762e2" id="r_a4f8e2794ef30cdb035443b057ac762e2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4f8e2794ef30cdb035443b057ac762e2">cog_multi</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **cg, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *im, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *loc, int wsize)</td></tr>
-<tr class="memitem:a93a8624cf7001f14a994471ba095d4b5" id="r_a93a8624cf7001f14a994471ba095d4b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a93a8624cf7001f14a994471ba095d4b5">cog_nea</a> (real *nea, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ints, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *cogmask, real cogthres, real cogoff, int ntry, rand_t *rstat, real bkgrnd, real bkgrndc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2i, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2ic, real rne)</td></tr>
+<tr class="memitem:a93a8624cf7001f14a994471ba095d4b5" id="r_a93a8624cf7001f14a994471ba095d4b5"><td class="memItemLeft" align="right" valign="top"><a id="a93a8624cf7001f14a994471ba095d4b5" name="a93a8624cf7001f14a994471ba095d4b5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cog_nea</b> (real *nea, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ints, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *cogmask, real cogthres, real cogoff, int ntry, rand_t *rstat, real bkgrnd, real bkgrndc, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2i, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *bkgrnd2ic, real rne)</td></tr>
 <tr class="memitem:aefe5e957c8884dfb7dfa49430562a87c" id="r_aefe5e957c8884dfb7dfa49430562a87c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aefe5e957c8884dfb7dfa49430562a87c">poly2fit</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *in, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *out, int maxorder)</td></tr>
 <tr class="memitem:a805adf2e9f909d6fcda91fd6a2a66ae2" id="r_a805adf2e9f909d6fcda91fd6a2a66ae2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a805adf2e9f909d6fcda91fd6a2a66ae2">loc_calib</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *GA, <a class="el" href="../../d3/d84/lib_2accphi_8h.html#d9/db3/structpropdata__t">propdata_t</a> *propdata, int maxorder)</td></tr>
 <tr class="memitem:a210f7b71835167dc3ff695d7f38a3a7f" id="r_a210f7b71835167dc3ff695d7f38a3a7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a210f7b71835167dc3ff695d7f38a3a7f">polyfit</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *x, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *y, int maxorder)</td></tr>
@@ -116,7 +115,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a2235242a9bac255b39560b25cf2e5dd4" id="r_a2235242a9bac255b39560b25cf2e5dd4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2235242a9bac255b39560b25cf2e5dd4">wrap_seq</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> index, <a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
 <tr class="memitem:a5b60d683c9be737576399efb2096b1f6" id="r_a5b60d683c9be737576399efb2096b1f6"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b60d683c9be737576399efb2096b1f6">wrap2range</a> (real val, real low, real high)</td></tr>
 <tr class="memitem:a25f8efb8afacde9b737e6a9d9ce27c8a" id="r_a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25f8efb8afacde9b737e6a9d9ce27c8a">pchip_wt</a> (int i, float u)</td></tr>
+<tr class="memdesc:a25f8efb8afacde9b737e6a9d9ce27c8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute p-chip interpolation weighting See <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">https://en.wikipedia.org/wiki/Cubic_Hermite_spline</a>  <br /></td></tr>
 <tr class="memitem:a698c18f4e0938e730e6ead90f4b7a423" id="r_a698c18f4e0938e730e6ead90f4b7a423"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a698c18f4e0938e730e6ead90f4b7a423">atm_interp</a> (real *wt, int ips, int isim, int dtrat, int natm, int interp)</td></tr>
+<tr class="memdesc:a698c18f4e0938e730e6ead90f4b7a423"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute dome seeing turbulence interpolation parameters.  <br /></td></tr>
 <tr class="memitem:a8df349ce4adf0cc8a3a8ab3115122ef9" id="r_a8df349ce4adf0cc8a3a8ab3115122ef9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8df349ce4adf0cc8a3a8ab3115122ef9">wfe_fov_prep</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *thetax, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *thetay, real unit, int npath, int nwvl)</td></tr>
 <tr class="memitem:af43cafa4b0b4a72412366dd48d4036b0" id="r_af43cafa4b0b4a72412366dd48d4036b0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af43cafa4b0b4a72412366dd48d4036b0">wfe_fov_fill</a> (<a class="el" href="../../df/def/type_8h.html#d1/df9/structdccell">dccell</a> *res, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *clep, int ipath, int isim)</td></tr>
 </table>
@@ -174,18 +175,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>add photon and read out noise. pcalib part of bkgrnd is calibrated out. pcalib2 part of bkgrnd2 is calibrated out.</p>
+<p>add photon and read out noise. pcalib part of bkgrnd is calibrated out. pcalib2 part of bkgrnd2 is calibrated out. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>The pixel intensity array </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">rstat</td><td>The random stream </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs per pixel per frame </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrndc</td><td>Removed background in PDEs per pixel per frame </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs of each pixel per frame. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2c</td><td>Removed background in PDEs of each pixel per frame. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">qe</td><td>Pixel dependent Quantum Efficiency. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Read out noise per pixel per read </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">excess</td><td>Excess noise factor. Values below 1 are treated as 1. </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">A</td><td>[in/out]The pixel intensity array  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstat</td><td>The random stream  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs per pixel per frame  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrndc</td><td>Removed background in PDEs per pixel per frame  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs of each pixel per frame.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2c</td><td>Removed background in PDEs of each pixel per frame.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">qe</td><td>Pixel dependent Quantum Efficiency  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Read out noise per pixel per read  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">excess</td><td>Excess noise factor </td></tr>
   </table>
   </dd>
 </dl>
@@ -215,15 +216,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add noise to gradients according to neal, which is LL' decomposition of the sanea</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">grad</td><td>Gradients of 2*nsa with all x gradients first. Noise is added to it. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">neal</td><td>nsa*3: the xx, yy, and xy elements of the lower triangular cholesky factor of NEA (radian). </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">srand</td><td>The random stream. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add noise to gradients according to neal, which is LL' decomposition of the sanea </p>
 
 </div>
 </div>
@@ -255,103 +248,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the CoG on multiple locations near the nominal position.</p>
+<p>Determine the CoG on multiple locations near the nominal position. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">cg</td><td>n*3 The determined position (in pixel) and total intensity. Allocated if NULL. Position is NaN if the peak is outside of the window. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">im</td><td>2-d array contains the image </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>n*2 array. contains the nominal position (in pixel) of each peak </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">cg</td><td>n*3 The determined position and total intensity.  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">im</td><td>2-d array contains the image  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>n*2 array. contains the nominal position of each peak  </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">wsize</td><td>window size </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0. </dd></dl>
-
-</div>
-</div>
-<a id="a93a8624cf7001f14a994471ba095d4b5" name="a93a8624cf7001f14a994471ba095d4b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93a8624cf7001f14a994471ba095d4b5">&#9670;&#160;</a></span>cog_nea()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void cog_nea </td>
-          <td>(</td>
-          <td class="paramtype">real *</td>          <td class="paramname"><span class="paramname"><em>nea</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>ints</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>cogmask</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>cogthres</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>cogoff</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>ntry</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">rand_t *</td>          <td class="paramname"><span class="paramname"><em>rstat</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>bkgrnd</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>bkgrndc</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>bkgrnd2i</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>bkgrnd2ic</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>rne</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>compute cog NEA using Monte Carlo realizations of noise</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">nea</td><td>The NEA covariance (xx, xy, yx, yy) in pixel^2. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ints</td><td>Noise free subaperture image. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cogmask</td><td>Mask for CoG computation. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cogthres</td><td>Threshold for CoG. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cogoff</td><td>Offset (subtracted) for CoG. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ntry</td><td>Number of Monte Carlo realizations. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">rstat</td><td>The random stream. Reseeded with 1 at start. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs per pixel per frame. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrndc</td><td>Removed background in PDEs per pixel per frame. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2i</td><td><a class="el" href="../../d0/d58/class_real.html">Real</a> background in PDEs of each pixel per frame. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bkgrnd2ic</td><td>Removed background in PDEs of each pixel per frame. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">rne</td><td>Read out noise per pixel per read. </td></tr>
   </table>
   </dd>
 </dl>
@@ -381,16 +284,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out.</p>
+<p>Determine the polynomial coefficients that transforms 2-d coordinate (of a grid) in to out. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>input grid. n*2 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>distorted grid, n*2 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum order. Positive to limit the total power of x and y; negative to limit the power of each. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>input grid. n*2  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>distorted grid, n*2  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum order </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nmod*4 array with the power of x, power of y, coefficient for x, and coefficient for y of each term. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -417,16 +319,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Calibrate the distortion as measured using interaction matrix.</p>
+<p>Calibrate the distortion as measured using interaction matrix. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">GA</td><td>Measured interaction matrix </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">propdata</td><td>See accphi.h. locin is the actuator grid and locout the subaperture grid. Defaults are filled by prop_prep(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum order. See poly2fit(). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">GA</td><td>Measured interaction matrix  </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">propdata</td><td>in] See accphi.h  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>Maximum power of x/y. Negative to limit total power </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated distortion coefficients as from poly2fit(), or NULL if the layer is above the guide star. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -453,16 +354,15 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Determine the polynomial coefficients that transforms vector in to out. Both column and row vectors are allowed.</p>
+<p>Determine the polynomial coefficients that transforms vector in to out. Both column and row vectors are allowed. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>output </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>output  </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxorder</td><td>maximum order to fit </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated coefficients in descending order (for polyval). The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -485,20 +385,18 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const int</td>          <td class="paramname"><span class="paramname"><em>separate</em></span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>separate</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Evaluate the polynomial with coefficients coeff (descending order, as from polyfit) at x.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>the coefficient from polyfit </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>input vector  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>the coefficient from polyfit  </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">separate</td><td>if set, separately for each order </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated column vector, or one column per term if separate is set. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -520,15 +418,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 0 1 2 3 2 1 0 1 2 3 2 1 0 ...</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">index</td><td>Index to wrap. May be negative. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Total number of frames. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Wrapped index between 0 and n-1. 0 if n&lt;2. </dd></dl>
+<p>Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 0 1 2 3 2 1 0 1 2 3 2 1 0 ... </p>
 
 </div>
 </div>
@@ -555,16 +445,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>wrap val to between low and high Notice the difference between remainder() and fmod(). remainder(a,b) wraps a to [-b/2, b/2) fmod(a,b) wraps a to [-b,b)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Value to wrap. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">low</td><td>Lower bound. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">high</td><td>Upper bound. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>val wrapped to [low, high] (centered at (low+high)/2) where range=|high-low|; low if low==high. </dd></dl>
+<p>wrap val to between low and high Notice the difference between remainder() and fmod(). remainder(a,b) wraps a to [-b/2, b/2) fmod(a,b) wraps a to [-b,b) </p>
 
 </div>
 </div>
@@ -586,15 +467,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute p-chip interpolation weighting See <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">https://en.wikipedia.org/wiki/Cubic_Hermite_spline</a></p>
+
+<p>compute p-chip interpolation weighting See <a href="https://en.wikipedia.org/wiki/Cubic_Hermite_spline">https://en.wikipedia.org/wiki/Cubic_Hermite_spline</a> </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">i</td><td>index into p[], p[i] with i from -1 to 2 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">u</td><td>fractional distance from i. between [0,1) </td></tr>
+    <tr><td class="paramname">i</td><td>index into p[], p[i] with i from -1 to 2 </td></tr>
+    <tr><td class="paramname">u</td><td>fractional distance from i. between [0,1) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the weighting function </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>real the weighting function </dd></dl>
 
 </div>
 </div>
@@ -636,19 +518,20 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute dome seeing turbulence interpolation parameters</p>
+
+<p>Compute dome seeing turbulence interpolation parameters. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">wt</td><td>Returned weight </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ips</td><td>Current layer index </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>Current simulation frame index </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat</td><td>Turbulence dtrat </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">natm</td><td>Turbulence frame count </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">interp</td><td>Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip. </td></tr>
+    <tr><td class="paramname">wt</td><td>Returned weight </td></tr>
+    <tr><td class="paramname">ips</td><td>Current layer index </td></tr>
+    <tr><td class="paramname">isim</td><td>Current simulation frame index </td></tr>
+    <tr><td class="paramname">dtrat</td><td>Turbulence dtrat </td></tr>
+    <tr><td class="paramname">natm</td><td>Turbulence frame count </td></tr>
+    <tr><td class="paramname">interp</td><td>Interpolation method: 0: no interpolation. 1: linear. 2: sin^2. 3: p-chip.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Turbulence frame to use </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>int Turbulence frame to use </dd></dl>
 
 </div>
 </div>
@@ -685,18 +568,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Prepare data structure to plot WFE vs field angle. Use together with wfe_fov_fill()</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Prepare data structure to plot WFE vs field angle. Use together with wfe_fov_fill() </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetax</td><td>Field angle along x of each evaluation direction. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">thetay</td><td>Field angle along y of each evaluation direction. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">unit</td><td>Scaling to convert field angle to the plotting unit. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">npath</td><td>Number of simulation directories </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nwvl</td><td>Number of wavelengths for Strehl plotting. 0 to skip. </td></tr>
+    <tr><td class="paramname">npath</td><td>Number of simulation directories </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated cell with sorted direction index, and radius vs WFE (total and high order) and Strehl for each path, or NULL if there is only one direction. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -728,16 +605,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute RMS WFE for each direction. Use together with wfe_fov_prep()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">reseach</td><td>Data structure from wfe_fov_prep(). The WFE (nm) of path ipath is filled. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">clep</td><td>Closed loop wavefront error time history of each direction. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ipath</td><td>Index of the simulation directory. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">isim</td><td>Number of time steps to use. 0 or negative to use all. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Compute RMS WFE for each direction. Use together with wfe_fov_prep() </p>
 
 </div>
 </div>
@@ -751,12 +619,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../dd/d2b/libmisc_8h.html">libmisc.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

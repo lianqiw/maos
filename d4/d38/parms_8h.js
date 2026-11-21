@@ -524,7 +524,7 @@ var parms_8h =
       [ "gradoff", "d4/d38/parms_8h.html#a3ea6a96df4168e2e1a6fdf823080040f", null ],
       [ "twfsflag", "d4/d38/parms_8h.html#ac146f818a483505d0b26f65a0e45b151", null ],
       [ "twfsrmax", "d4/d38/parms_8h.html#a91a89431be920b7eca2b8746ec58fc51", null ],
-      [ "wfs_iac", "d4/d38/parms_8h.html#a0327fa3f714da2b20bf875d289fdb1cf", null ],
+      [ "wfs_iac", "d4/d38/parms_8h.html#a612cbf098321429befc1e161bdef7ab6", null ],
       [ "fullatm", "d4/d38/parms_8h.html#a1dcc3f9751e686e97c05d21b02bff1b5", null ],
       [ "recon_stuck", "d4/d38/parms_8h.html#a47c472c893f90a2dbb99db24ba146398", null ]
     ] ],
@@ -678,13 +678,13 @@ var parms_8h =
       [ "gpus", "d4/d38/parms_8h.html#a77af3e9d2c415715254cdb703eb4f61e", null ],
       [ "ngpu", "d4/d38/parms_8h.html#af23c42a9b0647dbad3464fd349bcf2f2", null ],
       [ "ngpu2", "d4/d38/parms_8h.html#a7356cd98a8c2d8b193ed97a1ab568b29", null ],
+      [ "server", "d4/d38/parms_8h.html#a9dd2fbd3368036a4ea001ada021feb80", null ],
       [ "dirout", "d4/d38/parms_8h.html#ae27eb782c897db66719a088a8470fda4", null ],
       [ "confmain", "d4/d38/parms_8h.html#a3f6c43564e88a7efe4540327779ad209", null ],
       [ "confcmd", "d4/d38/parms_8h.html#a1039b6ee39d8075132f4cfa90dfcded6", null ],
       [ "host", "d4/d38/parms_8h.html#a7980d7913b42c73339ae91d80d1fad49", null ],
       [ "execmd", "d4/d38/parms_8h.html#afd31178667f89763217596f9bfa1585a", null ]
     ] ],
-    [ "T_TYPE", "d4/d38/parms_8h.html#aa54a3168fd46da424c10df2764f9ef49", null ],
     [ "setup_parms", "d4/d38/parms_8h.html#ae093c8027457ac84653fbf51f5e325e6", null ],
     [ "setup_parms_gpu", "d4/d38/parms_8h.html#aad108d3a5091968e86ec8adcc269d450", null ],
     [ "free_parms", "d4/d38/parms_8h.html#a8a6a2e33b33daf9cc04fbbd68733cd26", null ]

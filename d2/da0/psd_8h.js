@@ -14,6 +14,5 @@ var psd_8h =
     [ "add_psd", "d2/da0/psd_8h.html#a88b3d3ded70e3150b2f8533e05d6491b", null ],
     [ "add_psd2", "d2/da0/psd_8h.html#a88258084783ed5748c1fa3bbe9aa8b1f", null ],
     [ "psd_select", "d2/da0/psd_8h.html#ac3dbb5a1e3cccfee9b2ac434d6d30296", null ],
-    [ "psd2d_aniso", "d2/da0/psd_8h.html#a13e56d9f4f24cd9bc027f8ddbbaf3ab4", null ],
     [ "psd2d", "d2/da0/psd_8h.html#a68ad58de7587ca1992d97b42f89a9517", null ]
 ];

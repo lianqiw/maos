@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/psd.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -114,12 +112,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a5c5d4d001360bd0401dcf2c402ae5243" id="r_a5c5d4d001360bd0401dcf2c402ae5243"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c5d4d001360bd0401dcf2c402ae5243">psd_inte</a> (const real *nu, const real *psd, <a class="el" href="../../d7/d63/classlong.html">long</a> n)</td></tr>
 <tr class="memitem:af5e87903d1bd33428905018b070ea9eb" id="r_af5e87903d1bd33428905018b070ea9eb"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af5e87903d1bd33428905018b070ea9eb">psd_inte2</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psdin)</td></tr>
 <tr class="memitem:ab44e915165896f1d50bb8afc3de8f81a" id="r_ab44e915165896f1d50bb8afc3de8f81a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab44e915165896f1d50bb8afc3de8f81a">psd_reverse_cumu</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psdin, real scale)</td></tr>
+<tr class="memdesc:ab44e915165896f1d50bb8afc3de8f81a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reverse cumulative sum of PSD.  <br /></td></tr>
 <tr class="memitem:aff1d2c30671c9bf6723d7cf5100c90d0" id="r_aff1d2c30671c9bf6723d7cf5100c90d0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff1d2c30671c9bf6723d7cf5100c90d0">psd2ts</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psdin, rand_t *rstat, real dt, int nstep)</td></tr>
 <tr class="memitem:ac3ee3771c00bd02e3caf7c3198a3b636" id="r_ac3ee3771c00bd02e3caf7c3198a3b636"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac3ee3771c00bd02e3caf7c3198a3b636">psd2ts2</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psdin, int seed, real dt, int nstep)</td></tr>
 <tr class="memitem:a88b3d3ded70e3150b2f8533e05d6491b" id="r_a88b3d3ded70e3150b2f8533e05d6491b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a88b3d3ded70e3150b2f8533e05d6491b">add_psd</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psd1, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psd2, real scale2)</td></tr>
 <tr class="memitem:a88258084783ed5748c1fa3bbe9aa8b1f" id="r_a88258084783ed5748c1fa3bbe9aa8b1f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a88258084783ed5748c1fa3bbe9aa8b1f">add_psd2</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **out, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *in, real scale)</td></tr>
 <tr class="memitem:ac3dbb5a1e3cccfee9b2ac434d6d30296" id="r_ac3dbb5a1e3cccfee9b2ac434d6d30296"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac3dbb5a1e3cccfee9b2ac434d6d30296">psd_select</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psd, int im, int jm, int keepdc, real scale)</td></tr>
-<tr class="memitem:a13e56d9f4f24cd9bc027f8ddbbaf3ab4" id="r_a13e56d9f4f24cd9bc027f8ddbbaf3ab4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a13e56d9f4f24cd9bc027f8ddbbaf3ab4">psd2d_aniso</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *screen, real dx)</td></tr>
+<tr class="memdesc:ac3dbb5a1e3cccfee9b2ac434d6d30296"><td class="mdescLeft">&#160;</td><td class="mdescRight">Choose a mode from the PSD. The first column is frequency.  <br /></td></tr>
+<tr class="memitem:a13e56d9f4f24cd9bc027f8ddbbaf3ab4" id="r_a13e56d9f4f24cd9bc027f8ddbbaf3ab4"><td class="memItemLeft" align="right" valign="top"><a id="a13e56d9f4f24cd9bc027f8ddbbaf3ab4" name="a13e56d9f4f24cd9bc027f8ddbbaf3ab4"></a>
+<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>psd2d_aniso</b> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *screen, real dx)</td></tr>
 <tr class="memitem:a68ad58de7587ca1992d97b42f89a9517" id="r_a68ad58de7587ca1992d97b42f89a9517"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a68ad58de7587ca1992d97b42f89a9517">psd2d</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **extra, const_anyarray screen, real dx)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -143,15 +144,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the 1-d PSD from a 1-d sequence.</p>
+<p>Compute the 1-d PSD from a 1-d sequence. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>The data sequence. A row vector, or one sequence per column. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nseg</td><td>Number of overlapping segments. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>The data sequence  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nseg</td><td>Number of overlapping segments </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated one sided PSD, integrated in each frequency bin, one column per sequence; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -178,16 +178,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Wrap of psd1d to put the frequency along the first column.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>The data sequence. A row vector, or one sequence per column. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nseg</td><td>Number of overlapping segments. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>Sampling period (s). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated PSD with frequency (Hz) in the first column and PSD density in the remaining; the caller frees it. </dd></dl>
+<p>Wrap of psd1d to put the frequency along the first column. </p>
 
 </div>
 </div>
@@ -214,16 +205,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Interpolate psd onto new f. We interpolate in log space which is usually more linear.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The PSD with frequency in the first column and PSD in the second column. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fnew</td><td>The new frequency. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">uselog</td><td>Interpolate in log space of the PSD. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated PSD (without the frequency column) on fnew; the caller frees it. </dd></dl>
+<p>Interpolate psd onto new f. We interpolate in log space which is usually more linear. </p>
 
 </div>
 </div>
@@ -241,14 +223,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The PSD with frequency in the first column and PSD in the second column. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated 4*npeak array with each column containing the centroid frequency, integrated power, starting index, and ending index of a peak; the caller frees it. </dd></dl>
+<p>Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise. </p>
 
 </div>
 </div>
@@ -270,15 +245,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert temporal PSD to spatial</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdt</td><td>The temporal PSD as a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha. fmin and fmax are optional. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vmean</td><td>The mean wind speed (m/s). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated spatial PSD in the same format; the caller frees it. </dd></dl>
+<p>Convert temporal PSD to spatial </p>
 
 </div>
 </div>
@@ -300,15 +267,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert spatial PSD to temporal</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psds</td><td>The spatial PSD as a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha. fmin and fmax are optional. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vmean</td><td>The mean wind speed (m/s). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated temporal PSD in the same format; the caller frees it. </dd></dl>
+<p>Convert spatial PSD to temporal </p>
 
 </div>
 </div>
@@ -335,16 +294,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Integrated a PSD that defines on linear or logrithmically spaced grid nu.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nu</td><td>The frequency grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">psd</td><td>The PSD. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of points. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The integral, or 0 if the grid is neither linear nor logarithmic. </dd></dl>
+<p>Integrated a PSF that defines on linear or logrithmically spaced grid nu. </p>
 
 </div>
 </div>
@@ -362,14 +312,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>wraps psd_inte with a single input variable containing both frequency and psd.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The PSD with frequency in the first column and PSD in the second column. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The integral of the PSD. </dd></dl>
+<p>wraps psd_inte with a single input variable containing both frequency and psd. </p>
 
 </div>
 </div>
@@ -391,15 +334,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reverse cumulative sum of PSD</p>
+
+<p>Reverse cumulative sum of PSD. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The input PSD with frequency in the first column and PSD in the remaining columns. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Scaling applied to the result. </td></tr>
+    <tr><td class="paramname">psdin</td><td>the input PSD </td></tr>
+    <tr><td class="paramname">scale</td><td>optional scaling </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated array with frequency in the first column and sqrt of the reverse integration of PSD in the remaining; the caller frees it. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>dmat* sqrt of the reverse integration of PSD </dd></dl>
 
 </div>
 </div>
@@ -431,17 +375,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert PSD into time series.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The PSD. Either a row vector [alpha, beta, fmin, fmax] of power law beta*f^alpha (fmin and fmax are optional), or two columns of frequency and PSD. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">rstat</td><td>The random number generator state. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>The sampling period (s). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nstepin</td><td>Number of time steps. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated time series of length nstepin; the caller frees it. </dd></dl>
+<p>Convert PSD into time series. </p>
 
 </div>
 </div>
@@ -473,17 +407,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>The PSD. See psd2ts(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">seed</td><td>The random seed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>The sampling period (s). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nstepin</td><td>Number of time steps. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated time series of length nstepin; the caller frees it. </dd></dl>
+<p>Convert PSD into time series. wraps psd2ts with a seed instead of rand_t as input. </p>
 
 </div>
 </div>
@@ -510,16 +434,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add two PSDs. The first column of each dmat is the frequency nu, and the second column is PSD</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psd1</td><td>The first PSD. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">psd2</td><td>The second PSD, interpolated onto the frequency of psd1 if needed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale2</td><td>Scaling of psd2. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated psd1+psd2*scale2; the caller frees it. </dd></dl>
+<p>Add two PSDs. The first column of each dmat is the frequency nu, and the second column is PSD </p>
 
 </div>
 </div>
@@ -546,15 +461,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a PSD scaled by scale to another. The first column of each dmat is the frequency nu, and the second column is PSD.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pout</td><td>The PSD to add to. If NULL, it is set to a copy of in times scale. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>The PSD to add, interpolated onto the frequency of pout if needed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Scaling of in. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Add a PSD scaled by scale to another. The first column of each dmat is the frequency nu, and the second column is PSD. </p>
 
 </div>
 </div>
@@ -591,48 +498,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Choose and sum modes from the PSD. The first column is frequency.</p>
+
+<p>Choose a mode from the PSD. The first column is frequency. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">psd</td><td>The input PSD with frequency in the first column. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">im</td><td>Index of the first mode, 0 to ny(psd)-2. -1: sum all modes. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nm</td><td>Number of modes. At least 1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">keepdc</td><td>Do not remove DC component (f=0). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>Scaling factor. </td></tr>
+    <tr><td class="paramname">psd</td><td>the input PSD </td></tr>
+    <tr><td class="paramname">im</td><td>index of the first mode. -1: sum all modes. 0 to ny(psd)-1. </td></tr>
+    <tr><td class="paramname">nm</td><td>number of modes. </td></tr>
+    <tr><td class="paramname">keepdc</td><td>Do not remove DC component (f=0) </td></tr>
+    <tr><td class="paramname">scale</td><td>scaling fctor </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated two column array of frequency and summed PSD; the caller frees it. </dd></dl>
-
-</div>
-</div>
-<a id="a13e56d9f4f24cd9bc027f8ddbbaf3ab4" name="a13e56d9f4f24cd9bc027f8ddbbaf3ab4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a13e56d9f4f24cd9bc027f8ddbbaf3ab4">&#9670;&#160;</a></span>psd2d_aniso()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> * psd2d_aniso </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>screen</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real</td>          <td class="paramname"><span class="paramname"><em>dx</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>from a 2-d screen, compute 1-d PSD by radially averaging the 2-D psd assuming isotropy.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">screen</td><td>The square 2-d screen. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>The spatial sampling (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated two column array of spatial frequency (1/m) and PSD; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -650,7 +527,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const_anyarray</td>          <td class="paramname"><span class="paramname"><em>screens_</em></span>, </td>
+          <td class="paramtype">const_anyarray</td>          <td class="paramname"><span class="paramname"><em>screen</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -659,16 +536,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>From a 2-d screen, compute 1-d PSD by averaging the 1-D psd of each row/column, and then scale back to the 2-D psd using the technique of computing temporay PSD of turbulence.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">extra</td><td>Extra output [r0 equivalent at 0.5 micron (m), power law slope]. Can be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">screens_</td><td>2-d square screen or cell of 2-d screens of the same size. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling (m). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">extra</td><td>extra output  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">screen</td><td>2-d screen or cell of 2-d screens  </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Sampling </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated two column array of spatial frequency (1/m) and PSD, or NULL if screens_ is empty; the caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -682,12 +557,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d2/da0/psd_8h.html">psd.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

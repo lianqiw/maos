@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/cure.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -143,14 +141,13 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Cumulative Reconstructor</p>
-<p>Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011)</p>
-<p>Integrates x gradients along x chains and connects the chains using y gradients.</p>
+<p>Implementation is based on M.Rosensteiner, J. Opt. Soc. Am. A28, 2132-2138 (2011) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pphix</td><td>Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL; otherwise resized if too small and overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>y gradients, dimension is nx*ny. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Size of subaperture </td></tr>
+    <tr><td class="paramname">pphix</td><td>Output: opd  </td></tr>
+    <tr><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN  </td></tr>
+    <tr><td class="paramname">gy</td><td>y gradients, dimension is ny*ny.  </td></tr>
+    <tr><td class="paramname">dx</td><td>Size of subaperture </td></tr>
   </table>
   </dd>
 </dl>
@@ -185,16 +182,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Implements 2d cure by calling cure1d twice (along x and along y) and averaging the results.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phi</td><td>Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL; otherwise overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gx</td><td>x gradients, dimension is nx*ny. Invalid subapertures set to NaN. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">gy</td><td>y gradients, dimension is nx*ny. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Size of subaperture. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Implements 2d cure by calling cure1d twice. </p>
 
 </div>
 </div>
@@ -221,15 +209,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phix</td><td>Output OPD on the square grid of subaperture corners, with keywords for its geometry. Allocated if NULL; otherwise overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">grad0</td><td>Gradients, nsa*2 (or 2*nsa) with all x gradients first. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. Its map is created if not yet. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid. </p>
 
 </div>
 </div>
@@ -256,15 +236,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. Return phix also on saloc grid.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phix</td><td>Output OPD on saloc. Allocated if NULL; otherwise must have saloc-&gt;nloc rows and only the values are overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">grad</td><td>Gradients, nsa*2 with all x gradients first. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">saloc</td><td>Subaperture locations. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. Return phix also on saloc grid. </p>
 
 </div>
 </div>
@@ -278,12 +250,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../df/d69/cure_8h.html">cure.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

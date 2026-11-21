@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: cusolve_sparse Class Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -133,7 +131,8 @@ $(function(){initNavTree('d2/d23/classcusolve__sparse.html','../../',''); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aaf4ed462d0c420cd4e91f33d0e61e55a" id="r_aaf4ed462d0c420cd4e91f33d0e61e55a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf4ed462d0c420cd4e91f33d0e61e55a">cusolve_sparse</a> (int _maxit, int _cgwarm, <a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *_R, <a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *_L)</td></tr>
+<tr class="memitem:aaf4ed462d0c420cd4e91f33d0e61e55a" id="r_aaf4ed462d0c420cd4e91f33d0e61e55a"><td class="memItemLeft" align="right" valign="top"><a id="aaf4ed462d0c420cd4e91f33d0e61e55a" name="aaf4ed462d0c420cd4e91f33d0e61e55a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>cusolve_sparse</b> (int _maxit, int _cgwarm, <a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *_R, <a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *_L)</td></tr>
 <tr class="memitem:ac5870d71f42ff0b62443f6862b60491e" id="r_ac5870d71f42ff0b62443f6862b60491e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac5870d71f42ff0b62443f6862b60491e">R</a> (curcell &amp;out, Real beta, curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:a5c0174152aeb9e9feeafa46d3525a8f7" id="r_a5c0174152aeb9e9feeafa46d3525a8f7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c0174152aeb9e9feeafa46d3525a8f7">L</a> (curcell &amp;out, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:a0623aa9424fefad8f5110831ef23df2b" id="r_a0623aa9424fefad8f5110831ef23df2b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0623aa9424fefad8f5110831ef23df2b">Rt</a> (curcell &amp;out, Real beta, const curcell &amp;xin, Real alpha, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
@@ -159,48 +158,6 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a4192407d1cb8d3819fbcd7341276a443 inherit pub_attribs_classcusolve__cg" id="r_a4192407d1cb8d3819fbcd7341276a443"><td class="memItemLeft" align="right" valign="top">
 <a class="el" href="../../d6/d87/classcusolve__cgpre.html">cusolve_cgpre</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>precond</b></td></tr>
 </table>
-<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="aaf4ed462d0c420cd4e91f33d0e61e55a" name="aaf4ed462d0c420cd4e91f33d0e61e55a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf4ed462d0c420cd4e91f33d0e61e55a">&#9670;&#160;</a></span>cusolve_sparse()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">cusolve_sparse::cusolve_sparse </td>
-          <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_maxit</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>_cgwarm</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *</td>          <td class="paramname"><span class="paramname"><em>_R</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d3/dc7/muv_8h.html#dd/d34/structmuv__t">muv_t</a> *</td>          <td class="paramname"><span class="paramname"><em>_L</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>CG solver using assembled sparse right (_R) and left (_L) hand side operators copied to GPU.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">_maxit</td><td>Maximum number of CG iterations. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">_cgwarm</td><td>Whether to use warm restart. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">_R</td><td>Right hand side operator. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">_L</td><td>Left hand side operator. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ac5870d71f42ff0b62443f6862b60491e" name="ac5870d71f42ff0b62443f6862b60491e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac5870d71f42ff0b62443f6862b60491e">&#9670;&#160;</a></span>R()</h2>
@@ -354,12 +311,8 @@ Additional Inherited Members</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><a href="../../d2/d23/classcusolve__sparse.html">cusolve_sparse</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

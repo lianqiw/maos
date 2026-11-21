@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/kalman.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -111,19 +109,24 @@ Data Structures</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a3932087027a1148b071c157bcef68799" id="r_a3932087027a1148b071c157bcef68799"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3932087027a1148b071c157bcef68799">sde_fit</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **pcoeff, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *psdin, real tmax_fit, int vibid)</td></tr>
 <tr class="memitem:ad06ce4b648adea4331e0599abd359bc5" id="r_ad06ce4b648adea4331e0599abd359bc5"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad06ce4b648adea4331e0599abd359bc5">sde_fit_auto</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **pcoeff, const_anyarray psdin, real tfit)</td></tr>
+<tr class="memdesc:ad06ce4b648adea4331e0599abd359bc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fit PSD to SHO by maximum the damping ratio while keeping it less than.  <br /></td></tr>
 <tr class="memitem:a93cd2130d006d6bc57381ee38d4e9278" id="r_a93cd2130d006d6bc57381ee38d4e9278"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a93cd2130d006d6bc57381ee38d4e9278">sde_psd</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **psd, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *f, const real *coeff, int ncoeff, int nmod)</td></tr>
 <tr class="memitem:ae249d5a72e2b41548049e36fe8be6d7f" id="r_ae249d5a72e2b41548049e36fe8be6d7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae249d5a72e2b41548049e36fe8be6d7f">sde_psd2</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *ff, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *coeff)</td></tr>
 <tr class="memitem:a4c3c0a5a191a9c865412ad2cee524e35" id="r_a4c3c0a5a191a9c865412ad2cee524e35"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4c3c0a5a191a9c865412ad2cee524e35">reccati</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **Kinf, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **Pout, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *Qn, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *C, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *Rn)</td></tr>
+<tr class="memdesc:a4c3c0a5a191a9c865412ad2cee524e35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.  <br /></td></tr>
 <tr class="memitem:ad6573355cd0bbc651c889cea66aff696" id="r_ad6573355cd0bbc651c889cea66aff696"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad6573355cd0bbc651c889cea66aff696">sde_kalman</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *coeff, const real dthi, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *dtrat_wfs, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *mdirect, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *Gwfs, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *Cnn, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *Proj)</td></tr>
+<tr class="memdesc:ad6573355cd0bbc651c889cea66aff696"><td class="mdescLeft">&#160;</td><td class="mdescRight">Kalman filter based on SDE model.  <br /></td></tr>
 <tr class="memitem:a1abad10ed07b95e05ab3aa2529eab85d" id="r_a1abad10ed07b95e05ab3aa2529eab85d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1abad10ed07b95e05ab3aa2529eab85d">kalman_free</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman)</td></tr>
 <tr class="memitem:af837cdb6f8bb06bf25a285020391e192" id="r_af837cdb6f8bb06bf25a285020391e192"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af837cdb6f8bb06bf25a285020391e192">kalman_test</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *goff, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *input, int flag)</td></tr>
 <tr class="memitem:a802c26d2689fb9d8cc9070226402be4d" id="r_a802c26d2689fb9d8cc9070226402be4d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a802c26d2689fb9d8cc9070226402be4d">kalman_test2</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *coeff, const real dthi, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *dtrat, const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *mdirect, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *Gwfs, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *Cnn, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *Proj, const <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *goff, const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *input, int flag)</td></tr>
-<tr class="memitem:a3ebb7fb8a0edd29dbc8032b1a1022299" id="r_a3ebb7fb8a0edd29dbc8032b1a1022299"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ebb7fb8a0edd29dbc8032b1a1022299">kalman_test3</a> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *input, int flag, const char *fn)</td></tr>
+<tr class="memitem:a3ebb7fb8a0edd29dbc8032b1a1022299" id="r_a3ebb7fb8a0edd29dbc8032b1a1022299"><td class="memItemLeft" align="right" valign="top"><a id="a3ebb7fb8a0edd29dbc8032b1a1022299" name="a3ebb7fb8a0edd29dbc8032b1a1022299"></a>
+<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>kalman_test3</b> (const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *input, int flag, const char *fn)</td></tr>
 <tr class="memitem:a4d3a82244fe94108b9ab5b1c57d06f38" id="r_a4d3a82244fe94108b9ab5b1c57d06f38"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4d3a82244fe94108b9ab5b1c57d06f38">kalman_init</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman)</td></tr>
 <tr class="memitem:a81d84add40bc24fb4b4db4a029a1f075" id="r_a81d84add40bc24fb4b4db4a029a1f075"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a81d84add40bc24fb4b4db4a029a1f075">kalman_update</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman, <a class="el" href="../../df/def/type_8h.html#df/d47/structdcell">dcell</a> *meas, int idtrat)</td></tr>
 <tr class="memitem:acff279fa114b71cc346003059fad90bd" id="r_acff279fa114b71cc346003059fad90bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acff279fa114b71cc346003059fad90bd">kalman_output</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman, <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> **out, real alpha, real beta, int idtrat)</td></tr>
 <tr class="memitem:a621e8bac952c4e76289ef37171333377" id="r_a621e8bac952c4e76289ef37171333377"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a621e8bac952c4e76289ef37171333377">kalman_write</a> (<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *kalman, const char *format,...)</td></tr>
-<tr class="memitem:ac1254dabbb6525070fa0eb778439cb15" id="r_ac1254dabbb6525070fa0eb778439cb15"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac1254dabbb6525070fa0eb778439cb15">kalman_read</a> (const char *format,...)</td></tr>
+<tr class="memitem:ac1254dabbb6525070fa0eb778439cb15" id="r_ac1254dabbb6525070fa0eb778439cb15"><td class="memItemLeft" align="right" valign="top"><a id="ac1254dabbb6525070fa0eb778439cb15" name="ac1254dabbb6525070fa0eb778439cb15"></a>
+<a class="el" href="#d4/d41/structkalman__t">kalman_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>kalman_read</b> (const char *format,...)</td></tr>
 </table>
 <hr/><h2 id="header-inline_5Fclasses" class="groupheader">Data Structure Documentation</h2>
 <a name="d4/d41/structkalman__t" id="d4/d41/structkalman__t"></a>
@@ -327,17 +330,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Estiamte the total PSD power for vibration peaks using FWHM*peak Fit a PSD with SDE model. If vibid is set, vibration peaks are identified and fitted separately before fitting the remaining PSD.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pcoeff</td><td>SDE coefficients. Initial guess on input if vibid is 0. Replaced by the fitted result (one column per mode) if vibid is set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin</td><td>Input PSD with frequency in the first column and PSD in the second. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">tmax_fit</td><td>Time span (s) for covariance fitting. 0 to fit the PSD instead. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">vibid</td><td>Whether to do vibration identification. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Fitting residual (of the last fit if vibid is set). </dd></dl>
+<p>Estiamte the total PSD power for vibration peaks using FWHM*peak If coeff0 is not null, use it immediately, otherwise, do vibration identification </p>
 
 </div>
 </div>
@@ -364,16 +357,20 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Fit PSD to SHO by maximum the damping ratio while keeping it less than 2. Does not support vibration identification which have different damping characteristics.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+
+<p>Fit PSD to SHO by maximum the damping ratio while keeping it less than. </p>
+<ol type="1">
+<li>Does not support vibration identification which have different damping characteristics. <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pcoeff</td><td>Return the SHO coefficients. One column per PSD. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">psdin_</td><td>The input PSD: a dmat with frequency in the first column and one PSD per remaining column, or a cell of such PSDs. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">tfit</td><td>For covariance fitting, the initial time span (s). 0 for default of 0.2. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pcoeff</td><td>Return the SHO coefficients </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">psdin_</td><td>The input PSD </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">tfit</td><td>For covariance fitting, time span. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Fitting residual (the worst one if there are multiple PSDs). </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>real Fitting quality </dd></dl>
+</li>
+</ol>
 
 </div>
 </div>
@@ -410,17 +407,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Computes PSD of SDE with coefficients (coeff) and frequency (f)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">psd</td><td>PSD at f. Allocated if NULL; otherwise zeroed first. If it has nmod columns, each mode is stored separately; otherwise the modes are summed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>Frequency (Hz). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>SDE coefficients, ncoeff for each mode. The last one of each mode is the strength. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ncoeff</td><td>Number of coefficients per mode (order+1). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">nmod</td><td>Number of modes. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Computes PSD of SDE with coefficients (coeff) and frequency (f) </p>
 
 </div>
 </div>
@@ -442,15 +429,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>A convenient wrapper for sde_psd()</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">ff</td><td>Frequency (Hz). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>SDE coefficients. One column per mode. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated PSD summed over modes. The caller frees it. </dd></dl>
+<p>A convenient wrapper for sde_psd() </p>
 
 </div>
 </div>
@@ -492,19 +471,20 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge.</p>
+
+<p>Compute the reccati equation. When noise (Rn) is too large, the iteration will fail to converge. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">Kinf</td><td>Asymptotic Kalman gain \(K_\infty\). Allocated if NULL; otherwise overwritten. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">Pout</td><td>If not NULL, the Sigma_infty: Estimation error covariance matrix. Allocated if NULL; otherwise overwritten. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">A</td><td>Block diagonal stage evolution matrix </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Qn</td><td>Discrete state noise covariance </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">C</td><td>Measurement interaction matrix </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Rn</td><td>Measurement error covariance matrix </td></tr>
+    <tr><td class="paramname">Kinf</td><td>[Out] Asymptotic Kalman gain \(K_\infty\) </td></tr>
+    <tr><td class="paramname">Pout</td><td>[Out] The Sigma_infty: Estimation error covariance matrix </td></tr>
+    <tr><td class="paramname">A</td><td>Block diagonal stage evolution matrix </td></tr>
+    <tr><td class="paramname">Qn</td><td>Discrete state noise covariance </td></tr>
+    <tr><td class="paramname">C</td><td>Measurement interaction matrix </td></tr>
+    <tr><td class="paramname">Rn</td><td>Measurement error covariance matrix </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Convergence indicator: relative change of the last iteration. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>diff Converegence indicator </dd></dl>
 
 </div>
 </div>
@@ -551,20 +531,21 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Kalman filter based on SDE model</p>
+
+<p>Kalman filter based on SDE model. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>SDE coefficients. One column per mode. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dthi</td><td>High order loop sampling period (s). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat_wfs</td><td>WFS dtrat over high order loop. Each wfs may have a different rate. Only 1 or 2 rates are supported </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mdirect</td><td>Mask of modes that are directly controlled by the slower loop. May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Gwfs</td><td>WFS measurement from modes. Can be identity if reconstructor is already applied. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Cnn</td><td>WFS measurement noise covariance in radian^2. nwfs*ndtrat. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Proj</td><td>Project modes in statespace to DM/correction space. Can be identity or NULL. </td></tr>
+    <tr><td class="paramname">coeff</td><td>SDE coefficients </td></tr>
+    <tr><td class="paramname">dthi</td><td>High order loop frequency </td></tr>
+    <tr><td class="paramname">dtrat_wfs</td><td>WFS dtrat over high order loop. Each wfs may have a different rate. Only 1 or 2 rates are supported </td></tr>
+    <tr><td class="paramname">mdirect</td><td>Mode indices that are directly controlled by the slower loop. </td></tr>
+    <tr><td class="paramname">Gwfs</td><td>WFS measurement from modes. Can be identity if reconstructor is already applied. </td></tr>
+    <tr><td class="paramname">Cnn</td><td>WFS measurement noise covariance in radian^2. nwfs*ndtrat. </td></tr>
+    <tr><td class="paramname">Proj</td><td>Project modes in statespace to DM/correction space. Can be identity or NULL.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated Kalman filter, or NULL if the Riccati equation does not converge. Free with kalman_free(). </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>kalman_t* </dd></dl>
 
 </div>
 </div>
@@ -582,13 +563,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>free the struct</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">kalman</td><td>Kalman filter to free. May be NULL. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>free the struct </p>
 
 </div>
 </div>
@@ -620,17 +595,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Test the performance of kalman filter (LQG controller). Derived from servo_test() Gwfs2 is a different gradient interaction matrix to model the aliasing in system flag controlls the servo type: 0: both LQG 1: both integrator 2: LQG (fast) + integrator (slow)</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">kalman</td><td>Kalman filter. Its state is reinitialized and updated. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">goff</td><td>Gradient measurement offset (fast loop). May be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>Time series of nmod*nstep. A single column is treated as a row (single mode). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>Servo type as described above. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated correction residual of nmod*nstep. The caller frees it. </dd></dl>
+<p>Test the performance of kalman filter (LQG controller). Derived from servo_test() Gwfs2 is a different gradient interaction matrix to model the aliasing in system flag controlls the servo type: 0: both LQG 1: both integrator 2: LQG (fast) + integrator (slow) </p>
 
 </div>
 </div>
@@ -653,7 +618,7 @@ psol</td>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *</td>          <td class="paramname"><span class="paramname"><em>dtrat_wfs</em></span>, </td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *</td>          <td class="paramname"><span class="paramname"><em>dtrat</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -692,59 +657,21 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Create a Kalman filter with sde_kalman() and test it with kalman_test().</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">coeff</td><td>SDE coefficients </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dthi</td><td>Loop sampling period (s). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dtrat_wfs</td><td>WFS sampling period as a multiple of the loop </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mdirect</td><td>mask for modes directly controlled by slower loop </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Gwfs</td><td>WFS measurement from modes. Can be identity </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Cnn</td><td>WFS measurement noise covariance in radian^2 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">Proj</td><td>Kalman Projection matrix </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">goff</td><td>Gradient measurement offset (fast loop) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>Time series </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>flag controlls the servo type: 0: both LQG 1: both integrator 2: LQG (fast) + integrator (slow) </td></tr>
+    <tr><td class="paramname">coeff</td><td>SDE coefficients  </td></tr>
+    <tr><td class="paramname">dthi</td><td>Loop frequency  </td></tr>
+    <tr><td class="paramname">dtrat</td><td>WFS frequency as a fraction of loop  </td></tr>
+    <tr><td class="paramname">mdirect</td><td>mask for modes directly controlled by slower loop  </td></tr>
+    <tr><td class="paramname">Gwfs</td><td>WFS measurement from modes. Can be identity  </td></tr>
+    <tr><td class="paramname">Cnn</td><td>WFS measurement noise covariance in radian^2  </td></tr>
+    <tr><td class="paramname">Proj</td><td>Kalman Projection matrix  </td></tr>
+    <tr><td class="paramname">goff</td><td>Gradient measurement offset (fast loop)  </td></tr>
+    <tr><td class="paramname">input</td><td>Time series  </td></tr>
+    <tr><td class="paramname">flag</td><td>flag controlls the servo type: 0: both LQG 1: both integrator 2: LQG (fast) + integrator (slow) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated correction residual. The caller frees it. </dd></dl>
-
-</div>
-</div>
-<a id="a3ebb7fb8a0edd29dbc8032b1a1022299" name="a3ebb7fb8a0edd29dbc8032b1a1022299"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3ebb7fb8a0edd29dbc8032b1a1022299">&#9670;&#160;</a></span>kalman_test3()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> * kalman_test3 </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>flag</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fn</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read <a class="el" href="#d4/d41/structkalman__t">kalman_t</a> from file fn and run kalman_test() with input time series and servo type flag. See kalman_test().</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>Time series. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>Servo type. See kalman_test(). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fn</td><td>File name of the saved <a class="el" href="#d4/d41/structkalman__t">kalman_t</a>. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated correction residual. The caller frees it. </dd></dl>
 
 </div>
 </div>
@@ -762,13 +689,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize kalman filter state. Allocates the state vectors if not yet, otherwise zeros them.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">kalman</td><td>Kalman filter. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Initialize kalman filter state </p>
 
 </div>
 </div>
@@ -796,15 +717,7 @@ psol</td>
       </table>
 </div><div class="memdoc">
 <p>Update state vector when there is a measurement. It modifies meas.</p>
-<p>xhat3=xhat+M*(meas-Cd*xhat) //xhat is x_k|k-1. xhat3 is x_k|k xhat =Ad*xhat3; //xhat is now x_k+1|k xhat2=AdM*xhat3; //xhat2 is x_k+1/M|k</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">kalman</td><td>Kalman filter. Its state is updated. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">meas</td><td>WFS measurements (residual). The PSOL part is added to it, and if meas-&gt;m is set, it is replaced by the difference with the predicted measurement. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">idtrat</td><td>Index of the rate (0: fast, 1: slow). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>xhat3=xhat+M*(meas-Cd*xhat) //xhat is x_k|k-1. xhat3 is x_k|k xhat =Ad*xhat3; //xhat is now x_k+1|k xhat2=AdM*xhat3; //xhat2 is x_k+1/M|k </p>
 
 </div>
 </div>
@@ -841,17 +754,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Output correction xhat2=AdM*xhat2 //evolve correction forward out=out*alpha+(BM*xhat2-psol)*beta</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">kalman</td><td>Kalman filter. Its state is updated. psol is set to *out if alpha or beta is 1. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">out</td><td>Output correction. Allocated if NULL; otherwise scaled by alpha and accumulated into. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>Scaling of the existing output. If 1, psol is subtracted to form closed loop signal. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">beta</td><td>Scaling of the new correction. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">idtrat</td><td>Index of the rate (0: fast, 1: slow). </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Output correction xhat2=AdM*xhat2 //evolve correction forward out=out*alpha+(BM*xhat2-psol)*beta </p>
 
 </div>
 </div>
@@ -878,43 +781,7 @@ psol</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Save <a class="el" href="#d4/d41/structkalman__t">kalman_t</a> to file</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">kalman</td><td>Kalman filter. If NULL, an empty file is created. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ac1254dabbb6525070fa0eb778439cb15" name="ac1254dabbb6525070fa0eb778439cb15"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1254dabbb6525070fa0eb778439cb15">&#9670;&#160;</a></span>kalman_read()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="#d4/d41/structkalman__t">kalman_t</a> * kalman_read </td>
-          <td>(</td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>format</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Read <a class="el" href="#d4/d41/structkalman__t">kalman_t</a> from file saved by kalman_write() and initialize it.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>printf style format of the file name, followed by its arguments. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated Kalman filter. Free with kalman_free(). </dd></dl>
+<p>Save <a class="el" href="#d4/d41/structkalman__t">kalman_t</a> to file </p>
 
 </div>
 </div>
@@ -928,12 +795,8 @@ psol</td>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../df/d07/kalman_8h.html">kalman.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

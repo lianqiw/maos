@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: map2map Class Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -135,11 +133,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>forward</b> (Real *co
 void&#160;</td><td class="memItemRight" valign="bottom"><b>backward</b> (const Real *const *out, Real *const *in, Real alpha, Real *wt, <a class="el" href="../../dc/de6/classstream__t.html">stream_t</a> &amp;stream)</td></tr>
 <tr class="memitem:ac38ca793dbef41d1869bb0e93b03cd8c" id="r_ac38ca793dbef41d1869bb0e93b03cd8c"><td class="memItemLeft" align="right" valign="top"><a id="ac38ca793dbef41d1869bb0e93b03cd8c" name="ac38ca793dbef41d1869bb0e93b03cd8c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pro_methods_classnon_copyable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_methods_classnon_copyable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Protected Member Functions inherited from <a class="el" href="../../dc/d27/classnon_copyable.html">nonCopyable</a></td></tr>
-<tr class="memitem:abc9af2b93df832218a00b15f210ac6e2 inherit pro_methods_classnon_copyable" id="r_abc9af2b93df832218a00b15f210ac6e2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dc/d27/classnon_copyable.html#abc9af2b93df832218a00b15f210ac6e2">nonCopyable</a> ()</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a871442f9e4d57be83c9fb8edee78687a" name="a871442f9e4d57be83c9fb8edee78687a"></a>
@@ -175,17 +168,7 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize for ps to dir ray tracing, e.g., turbulence to WFS</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>Output grid (at the ground). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dir</td><td>Directions and star height. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">_ndir</td><td>Number of directions. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Input grids (layers). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delay</td><td>Unused. The delay of each direction is taken from dir. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Initialize for ps to dir ray tracing, e.g., turbulence to WFS </p>
 
 </div>
 </div>
@@ -207,14 +190,7 @@ Additional Inherited Members</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize for ps to ps ray tracing, e.g., for caching</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">out</td><td>Output grids (layers). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Input grids (layers). Must have the same heights as out. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Initialize for ps to ps ray tracing, e.g., for caching </p>
 
 </div>
 </div>
@@ -232,12 +208,8 @@ Additional Inherited Members</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><a href="../../d6/db6/classmap2map.html">map2map</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

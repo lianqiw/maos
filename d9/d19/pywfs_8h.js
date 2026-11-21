@@ -47,9 +47,7 @@ var pywfs_8h =
       [ "opdadd", "d9/d19/pywfs_8h.html#a268491858839c93d7e3f79ed514f3b47", null ],
       [ "gain", "d9/d19/pywfs_8h.html#a93a85e438a350f07999bb8cfd18705eb", null ]
     ] ],
-    [ "pywfs_new", "d9/d19/pywfs_8h.html#a0bda4c56e5e355cf6ac8ef8a53e0a95c", null ],
     [ "pywfs_free", "d9/d19/pywfs_8h.html#ab9030c894228f7971f87beda176273c5", null ],
-    [ "pycfg_free", "d9/d19/pywfs_8h.html#ac01185e7becab21fa86574a490ba6e94", null ],
     [ "pywfs_grad", "d9/d19/pywfs_8h.html#a4cd0d635d05937b89807720bcd4fac99", null ],
     [ "pywfs_ints", "d9/d19/pywfs_8h.html#a14bafa3942ffa1d79033b200729a555d", null ],
     [ "pywfs_mkg", "d9/d19/pywfs_8h.html#ac90f086f4f98115dcc9a7aa90c44f0cf", null ],

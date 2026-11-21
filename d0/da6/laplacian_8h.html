@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: lib/laplacian.h File Reference</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -146,17 +144,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Apply L2 directly to map with periodic condition.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">opdout</td><td>Output, the laplacian of opd. Must be preallocated with the same size as opd. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">opd</td><td>Input OPD on a square grid. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Apply L2 directly to map with periodic condition. </p>
 
 </div>
 </div>
@@ -193,18 +181,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>build laplacian on square map using periodic conditions</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of points along x. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of points along y. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated (nx*ny)*(nx*ny) sparse laplacian. The caller frees it. </dd></dl>
+<p>build laplacian on square map using periodic conditions </p>
 
 </div>
 </div>
@@ -231,16 +208,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generate laplacian on <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>Grid coordinates. Its map is created if not yet. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Newly allocated nloc*nloc sparse laplacian. The caller frees it. </dd></dl>
+<p>Generate laplacian on <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> </p>
 
 </div>
 </div>
@@ -267,16 +235,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>compute the factor for the laplacian for points with all 4 neighbors.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">r0</td><td>Fried parameter (m). </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">weight</td><td>Weight (fraction of Cn2) of this layer. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dx</td><td>Grid spacing (m). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The scaling factor of the laplacian. </dd></dl>
+<p>compute the factor for the laplacian </p>
 
 </div>
 </div>
@@ -290,12 +249,8 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><b>lib</b></li><li class="navelem"><a href="../../d0/da6/laplacian_8h.html">laplacian.h</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

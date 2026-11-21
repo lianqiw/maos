@@ -1,16 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!-- HTML header for doxygen 1.8.3.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Debugging</title>
-<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
-<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -33,9 +31,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr id="projectrow">
+ <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td id="projectalign">
+  <td style="padding-left: 0.5em;">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -102,42 +100,25 @@ $(function(){initNavTree('db/dda/page95_profiling.html','../../',''); });
   <div class="headertitle"><div class="title">Debugging </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="debug-build"></a>
-Debug Build</h1>
-<p>Configure a separate build directory with <code>--enable-debug</code> to compile without optimization (<code>-g3</code> <code>-O0</code>) and with the <code>DEBUG</code> macro set to 1. In a debug build:</p>
-<ul>
-<li><code><a class="el" href="../../df/def/type_8h.html#afba9f40fe63e258302b2c472f9e9f386">P()</a></code> checks that array indices are within bounds and calls error() otherwise (see <a class="el" href="../../d5/d98/page91_basics.html#sect-maos-math">Fundamental Math Types</a>).</li>
-<li>Memory accounting is enabled by default (see below).</li>
-</ul>
-<h1 class="doxsection"><a class="anchor" id="debug-tools"></a>
-Debugging Tools</h1>
-<p>The GNU <code>gdb</code> can be used for basic troubleshooting. error() raises <code>SIGUSR2</code>, so <code>gdb</code> stops at the location of the error. When the program crashes or calls error(), the signal handler prints a backtrace. If <code>gdb</code> is not able to find the problem, <code>valgrind</code> is good at detecting out of bounds memory access and use after free.</p>
-<p>For CUDA related debugging, use <code>cuda-gdb</code>.</p>
-<p>Increase the verbosity with the environment variable <code>MAOS_LOG_LEVEL</code> (from -5 to 5, default 0). Levels 1 to 3 enable the <code>dbg()</code>, <code>dbg2()</code>, and <code>dbg3()</code> output.</p>
-<h1 class="doxsection"><a class="anchor" id="debug-mem"></a>
-Memory Accounting</h1>
-<p>Set the environment variable <code>MAOS_MEM_DEBUG=1</code> before launching <code>maos</code> to track memory allocation and free. Unreleased memory is printed at exit together with the backtrace of its allocation, which helps to find memory leaks. Memory accounting is enabled by default in debug builds; set <code>MAOS_MEM_DEBUG=0</code> to disable it. Related options:</p>
-<ul>
-<li><code>MAOS_MEM_VERBOSE=1</code> prints every allocation and free.</li>
-<li><code>MAOS_MEM_FUNTRACE=1</code> records the file, line, and function of the allocation instead of the backtrace.</li>
-<li>Sending <code>SIGUSR1</code> to a running process (<code>kill -USR1 pid</code>) enables memory accounting from that point on.</li>
-</ul>
-<p>The accounting covers memory allocated through <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, and <code>free</code> in C code, which <code>sys/mem.h</code> redirects to the accounting wrappers.</p>
-<h1 class="doxsection"><a class="anchor" id="debug-coverage"></a>
-Code Coverage</h1>
-<p>Configure with <code>--enable-gcov</code> (which also enables <code>--enable-debug</code>) to compile with gcov instrumentation. Then:</p>
-<ul>
-<li><code>make</code> <code>check</code> runs the unit tests. If <code>lcov</code> and <code>genhtml</code> are installed, the <code>check-local</code> target in <code>test/Makefile.am</code> collects the coverage of the whole build and writes an HTML report to <code>test/coverage/</code> in the build directory.</li>
-<li><code>make</code> <code>doc</code> runs the unit tests from a clean coverage state, and <code>test/unittest_coverage.sh</code> summarizes the line coverage of <code>sys</code>, <code>math</code>, and <code>lib</code> using <code>gcov</code>. The summary is included in the unit test page of the manual (<a class="el" href="../../d9/d6e/page96_unittest.html">Unit Test Status</a>).</li>
-<li>To measure the coverage of a <code>maos</code> run instead, run <code>maos</code> and then <code>scripts/gcov.sh</code> at the root of the build directory, which uses <code>lcov</code> and <code>genhtml</code> to write the report to <code>out/index.html</code>.</li>
-</ul>
-<h1 class="doxsection"><a class="anchor" id="debug-profiling"></a>
+<div class="textblock"><h1 class="doxsection"><a class="anchor" id="Debugging"></a>
+Debugging</h1>
+<p>The GNU gdb can be used for basic bug troubleshooting. In case it is not able to detect the problem, <code>valgrind</code> can be used which is good at detecting memory out of bound access or use after free.</p>
+<p>Set macro MAOS_MEM_DEBUG=1 before launching maos will also enable it to track the memory allocation/free and print unreleased memory in the end that can be used to detector any potential memory leakage.</p>
+<p>For CUDA related debugging, use cuda-gdb.</p>
+<h1 class="doxsection"><a class="anchor" id="Code"></a>
+Coverage</h1>
+<p>Compile maos with &ndash;enable-gcov to enable code coverage reporting.</p>
+<h1 class="doxsection"><a class="anchor" id="Profiling"></a>
 Profiling</h1>
-<p>MAOS is multi-threaded, and the <code>gprof</code> based profiling does not generate useful information. Instead, use a system wide sampling profiler, such as <code>perf</code>, OProfile, or Intel VTune, to find the hotspots. Setting <code>MAOS_PARALLEL=0</code> disables running the main tasks of each time step in parallel, which helps to obtain more accurate timing of each part, and <code>MAOS_NO_WFS=1</code>, <code>MAOS_NO_EVL=1</code>, or <code>MAOS_NO_RECON=1</code> skip the WFS, performance evaluation, or reconstruction. The option <code>-n</code> sets the number of threads.</p>
-<p>For example, with OProfile: </p><pre class="fragment">operf ./maos [options]
+<p>MAOS is a pthread enabled software, and in the current stage, the gprof based profiling does not generate useful information. Instead, we can use system wide profilers, such as the oprofile or Intel vtune Amplifier to detect hotspots and optimize the code. Set env MAOS_PARALLEL=0 disables internal parallelization that may help to obtain more accurate timing.</p>
+<p>Prepare oprofile: </p><pre class="fragment">opcontrol --callgraph=16
+opcontrol --start
+</pre><p>Then Run MAOS. To view profile: </p><pre class="fragment">opcontrol --stop
+opcontrol --dump
 opreport -cgf -l maos | gprof2dot.py -f oprofile | dot -Tpng -o output.png
-</pre><p><code>gprof2dot.py</code> can be found in the <code>scripts</code> folder. With <code>perf</code>, use </p><pre class="fragment">perf record -g ./maos [options]
-perf report
+</pre><p>or </p><pre class="fragment">opgprof maos | gprof2dot.py | dot -Tpng -o output.png
+
+\c gprof2dot.py can be found in the scripts folder.
 </pre> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
@@ -149,12 +130,8 @@ perf report
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-<!-- start footer part -->
-<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
-  <ul>
-    <li class="navelem"><a href="../../de/d19/page90_devel.html">Development</a></li>
-    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
-  </ul>
-</div>
+
+   </ul>
+ </div>
 </body>
 </html>

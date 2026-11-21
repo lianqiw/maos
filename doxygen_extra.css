@@ -45,6 +45,6 @@ h3.groupheader {
 }
 /*code fragment*/
 div.fragment {
-	padding: 2px 0;
+	padding: 2 0 2 px;
 	border: 0px;
 }

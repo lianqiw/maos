@@ -1,17 +1,12 @@
 var searchData=
 [
-  ['of_20save_20options_0',['Summary of save options',['../dd/da9/page40_results.html#autotoc_md19',1,'']]],
-  ['offset_1',['gradient pixel offset',['../db/df0/powfs_8c.html#WFS',1,'']]],
-  ['on_20results_2',['Other changes (no effect on results)',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39',1,'']]],
-  ['on_20simulation_20results_3',['Impact on simulation results',['../db/d87/md_docs_2claude__changes__20261120.html#claude_results',1,'']]],
-  ['only_4',['GPU only',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md35',1,'']]],
-  ['opds_5',['Specifying Surface OPDs',['../da/dc3/page30_run.html#sect-surface',1,'']]],
-  ['optics_20beam_20propagation_6',['Physical Optics Beam Propagation',['../da/d48/pop.html',1,'algorithm']]],
-  ['options_7',['options',['../da/dc3/page30_run.html#sect-run-options',1,'Command line options'],['../d3/d4c/page20_compile.html#compile-options',1,'Configure options'],['../dd/da9/page40_results.html#autotoc_md19',1,'Summary of save options']]],
-  ['organization_8',['Organization',['../da/dc3/page30_run.html#sect-config-org',1,'']]],
-  ['other_9',['Other',['../dd/da9/page40_results.html#autotoc_md18',1,'']]],
-  ['other_20changes_20no_20effect_20on_20results_10',['Other changes (no effect on results)',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md39',1,'']]],
-  ['output_20folder_11',['Output folder',['../da/dc3/page30_run.html#sect-run-output',1,'']]],
-  ['overriding_20and_20checking_20keys_12',['Overriding and checking keys',['../da/dc3/page30_run.html#sect-config-override',1,'']]],
-  ['overview_13',['Overview',['../index.html',1,'']]]
+  ['nfiraos_0',['NFIRAOS',['../d6/d3f/page43_nfiraos.html#autotoc_md36',1,'NFIRAOS'],['../d6/d3f/page43_nfiraos.html#autotoc_md43',1,'NFIRAOS+']]],
+  ['nfiraos_20ao_20performance_1',['NFIRAOS AO Performance',['../d6/d3f/page43_nfiraos.html#autotoc_md35',1,'']]],
+  ['nfiraos_20lgs_20mcao_2',['TMT NFIRAOS LGS MCAO',['../da/dd3/nfiraos_example.html',1,'page33_example']]],
+  ['nfiraos_20performance_3',['NFIRAOS Performance',['../d6/d3f/page43_nfiraos.html',1,'']]],
+  ['nfiraos_5flgs_20conf_4',['examples/nfiraos_lgs.conf',['../d9/d63/nfiraos_lgs.html',1,'page34_conf']]],
+  ['nfiraos_5flgs_5fnoimpl_20conf_5',['examples/nfiraos_lgs_noimpl.conf',['../d9/d7e/nfiraos_lgs_noimpl.html',1,'page34_conf']]],
+  ['nfiraos_5flgs_5fpyttf_20conf_6',['examples/nfiraos_lgs_pyttf.conf',['../d9/d65/nfiraos_lgs_pyttf.html',1,'page34_conf']]],
+  ['nfiraos_5fngs_20conf_7',['examples/nfiraos_ngs.conf',['../df/de4/nfiraos_ngs.html',1,'page34_conf']]],
+  ['ngs_8',['SCAO NGS',['../dc/d8a/scao_ngs_example.html',1,'page33_example']]]
 ];
