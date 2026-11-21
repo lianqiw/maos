@@ -29,10 +29,10 @@ DX_ENV+=UNITTEST_DOC='$(abs_top_builddir)/docs/unittest_status.md' UNITTEST_EXCL
 #2. macros in C files are only expanded once.
 tmp:
 	@cd $(srcdir)/math && cat defs.h mat.c matmath.c blas.c matbin.c matmmap.c fft.c amoeba.c bessik.c sp.c spmm.c spbin.c > dtmp.c \
-	&& echo '#define COMP_COMPLEX\n' > ctmp.c && cat dtmp.c | sed 's/X(/CX(/g' >>ctmp.c \
-	&& echo '#define COMP_SINGLE\n' > stmp.c && cat dtmp.c | sed 's/X(/SX(/g'>> stmp.c \
-	&& echo '#define COMP_COMPLEX\n#define COMP_SINGLE\n' > ztmp.c && cat dtmp.c | sed 's/X(/ZX(/g' >> ztmp.c \
-	&& echo '#define COMP_LONG\n' >ltmp.c && cat defs.h mat.c matbin.c matmmap.c | sed 's/X(/LX(/g' >> ltmp.c
+	&& printf '#define COMP_COMPLEX\n' > ctmp.c && cat dtmp.c | sed 's/X(/CX(/g' >>ctmp.c \
+	&& printf '#define COMP_SINGLE\n' > stmp.c && cat dtmp.c | sed 's/X(/SX(/g'>> stmp.c \
+	&& printf '#define COMP_COMPLEX\n#define COMP_SINGLE\n' > ztmp.c && cat dtmp.c | sed 's/X(/ZX(/g' >> ztmp.c \
+	&& printf '#define COMP_LONG\n' >ltmp.c && cat defs.h mat.c matbin.c matmmap.c | sed 's/X(/LX(/g' >> ltmp.c
 
 clear-tmp:
 	@cd $(srcdir)/math && rm dtmp.c ctmp.c stmp.c ztmp.c ltmp.c
@@ -51,7 +51,7 @@ fixlibtool:libtool
 
 bin/Makefile:Makefile
 	@mkdir -p bin/
-	@echo -e "all:\n\t@+make --no-print-directory -C .." > bin/Makefile
+	@printf "all:\n\t@+make --no-print-directory -C .." > bin/Makefile
 .ONESHELL:
 
 CLEANFILES=bin/Makefile

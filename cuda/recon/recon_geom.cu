@@ -20,6 +20,15 @@
 
 
 
+/**
+   Copy the bilinear weighting W0 (sparse) and W1 (vector) to GPU. W0 of
+   fully illuminated points is represented by the constant W0v and index list
+   W0f, while that of partially illuminated points is kept as sparse W0p.
+
+   @param[in] R_W0 Sparse bilinear weighting W0.
+   @param[in] R_W1 Vector weighting W1 for piston removal.
+   @param[in] R_nxx Size of the fitting grid along x.
+*/
 w01_t::w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx){
 	nxx=R_nxx;
 	if(!R_W0||!R_W1){
@@ -27,8 +36,8 @@ w01_t::w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx){
 	}
 	cp2gpu(W1, R_W1);
 	if(1){
-	/*W0 of partially illuminates points are stored as sparse matrix in W0f in
-	  GPU. W0 of fully illuminated points are stored in W0p.*/
+	/*W0 of partially illuminates points are stored as sparse matrix in W0p in
+	  GPU. Indices of fully illuminated points are stored in W0f.*/
 		spint* pp=R_W0->pp;
 		spint* pi=R_W0->pi;
 		real* px=R_W0->px;
@@ -69,7 +78,13 @@ w01_t::w01_t(const dsp* R_W0, const dmat* R_W1, int R_nxx){
 	}
 }
 /**
-   res_vec[i]+=sum_j(as[i][j]*b[j]);
+   res_vec[i]+=sum_j(as[i][j]*b[j]); i is blockIdx.y. Shared memory of
+   blockDim.x Real is required.
+
+   @param[in,out] res_vec Output vector to accumulate into.
+   @param[in] as Input vectors, each of length n, stored consecutively.
+   @param[in] b Input vector of length n.
+   @param[in] n Length of each vector.
 */
 __global__ void
 inn_multi_do(Real* res_vec, const Real* as, const Real* b, const int n){
@@ -90,7 +105,13 @@ inn_multi_do(Real* res_vec, const Real* as, const Real* b, const int n){
 	}
 }
 /**
-   a[i][j]=b[j]*beta1[i]*beta2;
+   a[i][j]=b[j]*beta1[i]*beta2; i is blockIdx.y.
+
+   @param[out] as Output vectors, each of length n, stored consecutively.
+   @param[in] b Input vector of length n.
+   @param[in] beta1 Scaling factor per output vector.
+   @param[in] beta2 Common scaling factor.
+   @param[in] n Length of each vector.
 */
 __global__ void
 assign_multi_do(Real* as, const Real* b, Real* beta1, Real beta2, int n){
@@ -102,8 +123,19 @@ assign_multi_do(Real* as, const Real* b, Real* beta1, Real beta2, int n){
 	}
 }
 /**
-   Apply W for fully illuminated points. fully illuminated points are surrounded
-   by partially illuminated points. So unexpected wrapover won't happen.  */
+   Apply W0 for fully illuminated points: out+=W0v*(bilinear weighted
+   neighborhood of in). Fully illuminated points are surrounded by partially
+   illuminated points. So unexpected wrapover won't happen. Direction index is
+   blockIdx.y.
+
+   @param[in,out] outs Output, ntot per direction, accumulated into.
+   @param[in] ins Input, ntot per direction.
+   @param[in] W0f Indices of fully illuminated points.
+   @param[in] W0v Value of W0 at fully illuminated points.
+   @param[in] nx Grid size along x.
+   @param[in] ntot Number of points per direction.
+   @param[in] nW0f Number of fully illuminated points.
+*/
 __global__ void
 apply_W0_do(Real* outs, const Real* ins, const int* W0f, Real W0v, int nx, int ntot, int nW0f){
 	Real* out=outs+blockIdx.y*ntot;
@@ -117,9 +149,13 @@ apply_W0_do(Real* outs, const Real* ins, const int* W0f, Real W0v, int nx, int n
 	}
 }
 /**
- * xout=w0*xin - w1*(w1'*xin).
- * Notice that the weighting per direction is applied at the next step (HA^T)
- * */
+   xout=w0*xin - w1*(w1'*xin).
+   Notice that the weighting per direction is applied at the next step (HA^T)
+
+   @param[out] xout Output, must be allocated and contiguous. Overwritten.
+   @param[in] xin Input, contiguous, one column per direction.
+   @param[in] stream CUDA stream.
+*/
 void w01_t::apply(curcell& xout, const curcell& xin, stream_t& stream) const{
 	int ndir=xin.Nx();
 	if(pis.Nx()<ndir){
@@ -142,6 +178,13 @@ void w01_t::apply(curcell& xout, const curcell& xin, stream_t& stream) const{
 	}
 }
 
+/**
+   Set up the reconstruction geometry in GPU: DM grids, tomography grids,
+   fitting grid, and the W0/W1 weighting.
+
+   @param[in] parms Simulation parameters.
+   @param[in] recon Reconstruction data.
+*/
 curecon_geom::curecon_geom(const parms_t* parms, const recon_t* recon)
 	:npsr(parms->sim.idealtomo?parms->atm.nps:recon->npsr),
 	ndm(parms->ndm), 

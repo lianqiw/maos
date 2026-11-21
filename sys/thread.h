@@ -62,6 +62,11 @@ typedef void *(*thread_wrapfun)(thread_t *);
 #define PDEINIT(A) pthread_mutex_destroy(&A)
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #define PNEW2(A) pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
+/**
+   Block or unblock SIGINT and SIGTERM in the calling thread.
+
+   @param[in] block Nonzero to block, 0 to unblock.
+*/
 static inline void block_signal(int block){
 	sigset_t signal_mask;
 	sigemptyset (&signal_mask);
@@ -90,9 +95,7 @@ struct thread_t{
     void *thread_data; /*private data for each thread*/
 };
 long thread_id(void);
-///prepare thread information
 thread_t *thread_prep(long start, long end, long nthread, thread_wrapfun fun, void *data);
-///Create a thread and take it away
 pthread_t thread_new(thread_fun fun, void *arg);
 void thread_block_signal();
 //Becareful about memory order. It determines the optimization constraints of other operations around the atomic operation
@@ -100,15 +103,43 @@ void thread_block_signal();
 #define MEM_ORDER __ATOMIC_SEQ_CST
 //The build in functions assume pointer is of type unsigned int
 //We use functions instead of defines to enforce type
+/**
+   Atomically subtract val from *ptr and return the new value.
+
+   @param[in,out] ptr Value to update.
+   @param[in] val Amount to subtract.
+   @return New value of *ptr.
+*/
 static inline unsigned int atomic_sub_fetch(unsigned int *ptr, unsigned int val){
     return __atomic_sub_fetch(ptr, val, MEM_ORDER);
 }
+/**
+   Atomically add val to *ptr and return the new value.
+
+   @param[in,out] ptr Value to update.
+   @param[in] val Amount to add.
+   @return New value of *ptr.
+*/
 static inline unsigned int atomic_add_fetch(unsigned int *ptr, unsigned int val){
     return __atomic_add_fetch(ptr, val, MEM_ORDER);
 }
+/**
+   Atomically add val to *ptr and return the old value.
+
+   @param[in,out] ptr Value to update.
+   @param[in] val Amount to add.
+   @return Old value of *ptr.
+*/
 static inline unsigned int atomic_fetch_add(unsigned int *ptr, unsigned int val){
     return __atomic_fetch_add(ptr, val, MEM_ORDER);
 }
+/**
+   Atomically subtract val from *ptr and return the old value.
+
+   @param[in,out] ptr Value to update.
+   @param[in] val Amount to subtract.
+   @return Old value of *ptr.
+*/
 static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val){
     return __atomic_fetch_sub(ptr, val, MEM_ORDER);
 }
@@ -156,6 +187,7 @@ static inline unsigned int atomic_fetch_sub(unsigned int *ptr, unsigned int val)
 
 #if _OPENMP >= 201511 //minimum openmp version supported for taskloop
 /**
+   Set the number of OpenMP threads.
    Notice it is not effective to set the environment variables here.
 
    @param[in] nthread Number of threads.

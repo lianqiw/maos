@@ -32,6 +32,11 @@ struct stfun_t{
 
 /**
    Initialize the stfun data to calculate structure function.
+
+   @param[in] nx Number of points along x of the OPD.
+   @param[in] ny Number of points along y of the OPD.
+   @param[in] amp Amplitude map of nx*ny points. If NULL, a uniform amplitude of 1 is used.
+   @return Newly allocated stfun_t. It is freed by stfun_finalize().
 */
 stfun_t* stfun_init(long nx, long ny, real* amp){
 	stfun_t* A=mycalloc(1, struct stfun_t);
@@ -52,8 +57,11 @@ stfun_t* stfun_init(long nx, long ny, real* amp){
 	return A;
 }
 /**
-   Accumulate OPDs.
- */
+   Accumulate the OPD for structure function computation.
+
+   @param[in,out] A The stfun data.
+   @param[in] opd OPD of nx*ny points.
+*/
 void stfun_push(stfun_t* A, dmat* opd){
 	A->count++;
 	const long nx=NX(A->amp);
@@ -79,7 +87,10 @@ void stfun_push(stfun_t* A, dmat* opd){
 } 
 /**
    Use accumulated data to compute the structure function.
- */
+
+   @param[in] A The stfun data. It is freed by this function.
+   @return Newly allocated structure function of size 2nx*2ny. The caller frees it.
+*/
 dmat* stfun_finalize(stfun_t* A){
 	cscale(A->hattot, 2./A->count);//2 was omitted in accumulation
 	cabs2toreal(A->hat0, 1); //hat0 * hat0^*
@@ -107,11 +118,13 @@ dmat* stfun_finalize(stfun_t* A){
 	return st;
 }
 /**
- * Batch process cell array of OPDs. 
- * */
-dmat *stfun_batch(const_anyarray opd_, /**<nz array of nx*ny array of the OPD*/
-	const dmat *amp /**<n*ny array of the amplitude map*/
-){
+   Batch process cell array of OPDs.
+
+   @param[in] opd_ A single nx*ny OPD or a cell array of nz nx*ny OPDs.
+   @param[in] amp nx*ny array of the amplitude map. May be NULL.
+   @return Newly allocated structure function. The caller frees it.
+*/
+dmat *stfun_batch(const_anyarray opd_, const dmat *amp){
 	const cell *opd=opd_.c;
 	if(!opd){
 		error("OPD should be provided\n");
@@ -131,6 +144,10 @@ dmat *stfun_batch(const_anyarray opd_, /**<nz array of nx*ny array of the OPD*/
 }
 /**
    Generate the structure function of the phase of kolmogorov spectrum.
+
+   @param[in] loc Grid coordinate (m).
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @return Newly allocated nloc*nloc structure function in OPD (m^2) between each pair of points. The caller frees it.
 */
 dmat* stfun_kolmogorov(loc_t* loc, real r0){
 	long nloc=loc->nloc;

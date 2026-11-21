@@ -25,6 +25,9 @@
 #include <unistd.h>
 #include "../lib/aos.h"
 
+/**
+   Print the usage of psfiris.
+*/
 static void usage(){
 	info("Usage: psfiris output.fits prof za ngscount skyp idir npix pixsize("") pixoffx pixoffy blur\n");
 }
@@ -50,6 +53,15 @@ typedef struct psfiris_t{
 	char* msg;
 }psfiris_t;
 
+/**
+   Thread worker that convolves the LGS PSF at wavelength info->start with the
+   tip/tilt and plate scale residual OTF, includes the implementation error, and
+   samples it onto the detector (or outputs the PSF if npix is 0). The input PSF
+   is freed.
+
+   @param[in] info Thread info. info->start is the wavelength index and info->data is psfiris_t.
+   @return NULL.
+*/
 static void* psfiris_do(thread_t* info){
 	psfiris_t* data=(psfiris_t*)info->data;
 	int iwvl=(int)info->start;
@@ -133,6 +145,14 @@ static void* psfiris_do(thread_t* info){
 }
 
 
+/**
+   Sample IRIS PSFs onto the detector. Usage: psfiris output.fits prof za
+   ngscount skyp idir npix pixsize pixoffx pixoffy blur.
+
+   @param[in] argc Number of command line arguments. Must be 12.
+   @param[in] argv Command line arguments. See usage().
+   @return 0 on success. Exits with 1 on invalid input.
+*/
 int main(int argc, char* argv[]){
 	enum{
 		P_OUTFILE=1,

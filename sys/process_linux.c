@@ -27,7 +27,12 @@
 #include "misc.h"
 
 /**
-   Get the executable name of current process with full path.
+   Get the executable name of process pid (current process if pid<=0) with full path.
+
+   @param[out] res Buffer for the executable name.
+   @param[in] nres Size of res.
+   @param[in] pid Process ID, or <=0 for the current process.
+   @return 0 on success, 1 on failure.
 */
 int get_job_progname(char* res, int nres, int pid){
 	char path[PATH_MAX];
@@ -49,7 +54,9 @@ int get_job_progname(char* res, int nres, int pid){
 }
 /**
    Get the memory usage of current process.
- */
+
+   @return Resident memory size in KiB, or 0 on failure.
+*/
 size_t get_job_mem(void){
 	size_t mem=0;
 	FILE* pfile;
@@ -71,7 +78,10 @@ size_t get_job_mem(void){
 	return mem;
 }
 /**
-   Get the launch time of current process.
+   Get the launch time of a process.
+
+   @param[in] pid Process ID.
+   @return Start time in seconds since system boot, or 0 on failure.
 */
 double get_job_launchtime(int pid){
 	double starttime;
@@ -97,6 +107,15 @@ double get_job_launchtime(int pid){
 	starttime=(double)starttime0/(double)sysconf(_SC_CLK_TCK);
 	return starttime;
 }
+/**
+   Read the executable name, state, and number of threads from a /proc stat file.
+
+   @param[in] fnjob Path of the stat file, e.g., /proc/pid/stat.
+   @param[out] exename Executable name in parentheses.
+   @param[out] cstat Process state character, e.g., 'R' for running.
+   @param[out] nthread Number of threads.
+   @return 0 on success, -1 on failure.
+*/
 static int proc_read_status(char* fnjob, char* exename, char* cstat, long* nthread){
 	FILE* fp=fopen(fnjob, "r");
 	if(!fp){
@@ -115,7 +134,10 @@ static int proc_read_status(char* fnjob, char* exename, char* cstat, long* nthre
 	}
 }
 /**
-   Return the number of running jobs.
+   Return the number of running jobs. Counts running threads of other maos and
+   skyc processes and one thread per running MATLAB process.
+
+   @return Number of running jobs, or NCPU if /proc cannot be opened.
 */
 int get_usage_running(void){
 
@@ -195,7 +217,9 @@ int get_usage_running(void){
 }
 /**
    Get the system load.
- */
+
+   @return One minute load average, or 0 on failure.
+*/
 double get_usage_load(void){
 	double load=0;
 	FILE* fp;
@@ -209,6 +233,8 @@ double get_usage_load(void){
 }
 /**
    Get the system memory usage.
+
+   @return Fraction of memory used excluding buffers and cache, or 0 on failure.
 */
 double get_usage_mem(void){
 	double mem=0;
@@ -247,7 +273,12 @@ double get_usage_mem(void){
 }
 
 /**
-   Read the cpu counter.*/
+   Read the cpu counter.
+
+   @param[out] user Busy (user+nice+system) ticks summed over all CPUs.
+   @param[out] tot Total ticks including idle.
+   @return 0 on success, -1 on failure.
+*/
 int read_cpu_counter(long* user, long* tot){
 	FILE* fp;
 	long t_usr, t_nice, t_sys, t_idle;
@@ -263,7 +294,10 @@ int read_cpu_counter(long* user, long* tot){
 	return 0;
 }
 /**
-   return CPU usage of current process */
+   return CPU usage of current process since the previous call.
+
+   @return Number of CPUs used by the current process (1 means one CPU fully used), or 0 on failure.
+*/
 double read_self_cpu(void){
 
 	static double t_last=0, s_last=0;
@@ -293,7 +327,10 @@ double read_self_cpu(void){
 }
 /**
    Return number of processors
+
+   @return Number of online processors.
 */
+
 int get_ncpu(void){
 	return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }

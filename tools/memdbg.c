@@ -86,6 +86,11 @@ static int (*munmap_default)(void* addr, size_t len)=0;
     }
 PNEW(mutex_mem);
 void memdbg_report(void);
+/**
+   Enable or disable memory allocation tracking.
+
+   @param[in] flag Enable tracking if nonzero, disable it if 0.
+*/
 void memdbg_enable(int flag){
 	if(flag){
 		dbg("memdbg enabled\n");
@@ -95,6 +100,13 @@ void memdbg_enable(int flag){
 		disable_memdbg=1;
 	}
 }
+/**
+   Return the absolute path of the executable of process pid (current process if
+   pid<=0), read from /proc/pid/exe.
+
+   @param[in] pid Process ID. The current process if not positive.
+   @return Newly allocated path of the executable; the caller frees it. NULL on failure.
+*/
 char* get_job_progname(int pid){
 	char* progname=NULL;
 	char path[PATH_MAX];
@@ -115,6 +127,12 @@ char* get_job_progname(int pid){
 	return progname;
 }
 
+/**
+   Run the addr2line command in buf and collect the source locations.
+
+   @param[in] buf The addr2line command line to run.
+   @return Newly allocated string of the source locations joined by "->"; the caller frees it.
+*/
 char* call_addr2line(const char* buf){
 	FILE* fpcmd=popen(buf, "r");
 	char out[4096]; strcpy(out, "Backtrace:");
@@ -139,8 +157,11 @@ char* call_addr2line(const char* buf){
 	return strdup(out);
 }
 /**
-   Convert backtrace address to source line.
- */
+   Convert backtrace addresses to source lines with addr2line and print them.
+
+   @param[in] buffer Backtrace addresses. The first entry is skipped.
+   @param[in] size Number of addresses in buffer.
+*/
 void print_backtrace_symbol(void* const* buffer, int size){
 	LOCK(mutex_mem);
 	int disable_save=disable_memdbg;
@@ -168,6 +189,9 @@ end:
 	UNLOCK(mutex_mem);
 }
 #include <execinfo.h>
+/**
+   Print the backtrace of the current call stack with source locations.
+*/
 void print_backtrace(){
 	int size0, size1;
 	size0=1024;
@@ -196,6 +220,13 @@ typedef struct{
 	size_t size;
 }T_STATKEY;
 
+/**
+   Compare two T_STATKEY by their backtrace for tsearch().
+
+   @param[in] a The first T_STATKEY.
+   @param[in] b The second T_STATKEY.
+   @return Negative, 0, or positive if a is less than, equal to, or greater than b.
+*/
 static int stat_cmp(const void* a, const void* b){
 	const T_STATKEY* pa=a;
 	const T_STATKEY* pb=b;
@@ -215,6 +246,14 @@ static int stat_cmp(const void* a, const void* b){
 		return 0;
 	}
 }
+/**
+   twalk() callback that accumulates the size of each unfreed allocation into
+   MSTATROOT grouped by its backtrace (excluding the last two frames).
+
+   @param[in] key Tree node pointing to a T_MEMKEY.
+   @param[in] which The visit order. Only leaf and postorder are processed.
+   @param[in] level Unused.
+*/
 static void stat_usage(const void* key, VISIT which, int level){
 	const T_MEMKEY* key2=*((const T_MEMKEY**)key);
 	(void)level;
@@ -239,6 +278,14 @@ static void stat_usage(const void* key, VISIT which, int level){
 		}
 	}
 }
+/**
+   twalk() callback that prints the size and backtrace of each group of unfreed
+   allocations.
+
+   @param[in] key Tree node pointing to a T_STATKEY.
+   @param[in] which The visit order. Only leaf and postorder are processed.
+   @param[in] level Unused.
+*/
 static void print_usage(const void* key, VISIT which, int level){
 	const T_STATKEY* key2=*((const T_STATKEY**)key);
 	(void)level;
@@ -254,6 +301,13 @@ typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 }deinit_t;
 deinit_t* deinit_head=NULL;
 
+/**
+   Compare two T_MEMKEY by their memory address for tsearch().
+
+   @param[in] a The first T_MEMKEY.
+   @param[in] b The second T_MEMKEY.
+   @return -1, 0, or 1 if a is less than, equal to, or greater than b. 1 if either is NULL.
+*/
 static int key_cmp(const void* a, const void* b){
 	void* p1, * p2;
 	if(!a||!b) return 1;
@@ -263,6 +317,13 @@ static int key_cmp(const void* a, const void* b){
 	else if(p1>p2) return 1;
 	else return 0;
 }
+/**
+   Record an allocation and its backtrace. Does nothing if p is NULL or tracking
+   is disabled.
+
+   @param[in] p The allocated memory.
+   @param[in] size Size of the allocation in bytes.
+*/
 static void memkey_add(void* p, size_t size){
 	if(!p||disable_memdbg) return;
 	LOCK(mutex_mem);
@@ -295,6 +356,12 @@ static void memkey_add(void* p, size_t size){
 	if(found) print_backtrace();
 }
 
+/**
+   Remove the record of an allocation. Warns with a backtrace if p was not
+   recorded. Does nothing if p is NULL or tracking is disabled.
+
+   @param[in] p The memory being freed.
+*/
 static void memkey_del(void* p){
 	if(!p||disable_memdbg) return;
 	void** found=0;
@@ -327,6 +394,9 @@ static void memkey_del(void* p){
 }
 
 static int inited=0;
+/**
+   Resolve the default memory functions with dlsym(RTLD_NEXT, ...).
+*/
 static void get_default(){
 	inited=1;//Mark as false so if dlsym calls malloc/calloc won't cycle
 	LOCK(mutex_mem);
@@ -340,6 +410,14 @@ static void get_default(){
 	munmap_default=dlsym(RTLD_NEXT, "munmap");
 	UNLOCK(mutex_mem);
 }
+/**
+   Allocate zeroed memory from a 4096 byte static buffer. Used while dlsym() is
+   resolving the default functions. The memory is never freed.
+
+   @param[in] nmemb Number of elements.
+   @param[in] size Size of each element in bytes.
+   @return Pointer into the static buffer. Exits if the buffer is exhausted.
+*/
 static void* simple_calloc(size_t nmemb, size_t size){
 	PNEW(mutex_local);
 	LOCK(mutex_local);
@@ -359,6 +437,13 @@ static void* simple_calloc(size_t nmemb, size_t size){
 	UNLOCK(mutex_local);
 	return res;
 }
+/**
+   Replacement of malloc() that records the allocation. Uses a simple static
+   buffer allocator while dlsym() is resolving the default functions.
+
+   @param[in] size Number of bytes.
+   @return The allocated memory, or NULL on failure.
+*/
 void* malloc(size_t size){
 	if(!malloc_default){//Need initializing
 		if(!inited){//True first time
@@ -372,6 +457,14 @@ void* malloc(size_t size){
 	return p;
 }
 
+/**
+   Replacement of calloc() that records the allocation. Uses a simple static
+   buffer allocator while dlsym() is resolving the default functions.
+
+   @param[in] nmemb Number of elements.
+   @param[in] size Size of each element in bytes.
+   @return The zeroed allocated memory, or NULL on failure.
+*/
 void* calloc(size_t nmemb, size_t size){
 	if(!calloc_default){//Need initializing
 		if(!inited){//True first time
@@ -385,6 +478,13 @@ void* calloc(size_t nmemb, size_t size){
 	return p;
 }
 
+/**
+   Replacement of realloc() that updates the allocation record.
+
+   @param[in] p0 The memory to reallocate. May be NULL.
+   @param[in] size New size in bytes.
+   @return The reallocated memory, or NULL on failure.
+*/
 void* realloc(void* p0, size_t size){
 	if(!disable_memdbg&&p0) memkey_del(p0);
 	void* p=realloc_default(p0, size);
@@ -392,11 +492,26 @@ void* realloc(void* p0, size_t size){
 	return p;
 }
 
+/**
+   Replacement of free() that removes the allocation record. Warns with a
+   backtrace if p was not recorded.
+
+   @param[in] p The memory to free. May be NULL.
+*/
 void free(void* p){
 	if(p&&!disable_memdbg) memkey_del(p);
 	free_default(p);
 }
 
+/**
+   Replacement of memalign() that records the allocation. blocksize=0 is used
+   as a control call: bytes=(size_t)-1 enables tracking and reporting at exit;
+   bytes=(size_t)-2 disables tracking and prints the report immediately.
+
+   @param[in] blocksize Alignment in bytes, or 0 for the control call.
+   @param[in] bytes Number of bytes, or the control code if blocksize is 0.
+   @return The allocated memory. NULL for the control call.
+*/
 void* memalign(size_t blocksize, size_t bytes){
 	if(!blocksize){
 		if(bytes==(size_t)-1){
@@ -415,6 +530,17 @@ void* memalign(size_t blocksize, size_t bytes){
 	return p;
 }
 
+/**
+   Replacement of mmap() that records the mapped region.
+
+   @param[in] addr Hint of the address.
+   @param[in] len Length of the mapping in bytes.
+   @param[in] prot Memory protection.
+   @param[in] flag Mapping flags.
+   @param[in] fd File descriptor to map.
+   @param[in] offset Offset in the file.
+   @return The address of the mapping, or MAP_FAILED.
+*/
 void* mmap(void* addr, size_t len, int prot, int flag, int fd, off_t offset){
 	void* p=mmap_default(addr, len, prot, flag, fd, offset);
 	if(!disable_memdbg&&p!=MAP_FAILED) memkey_add(p, len);
@@ -434,8 +560,9 @@ int munmap(void* addr, size_t len){
 }
 
 /**
-   Register routines to be called with mem.c is unloading (deinit).
- */
+   Report memory that is still allocated, grouped by the backtrace of the
+   allocation, and the total allocated and freed memory.
+*/
 void memdbg_report(void){
 	memdbg_toreport=0;
 	int disable_save=disable_memdbg;
@@ -456,6 +583,11 @@ void memdbg_report(void){
 	dbg("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 	disable_memdbg=disable_save;
 }
+/**
+   Constructor called when the library is loaded. Unsets LD_PRELOAD so that
+   child processes are not traced. The default allocators are resolved lazily on
+   the first allocation instead of here.
+*/
 __attribute__((constructor)) void init(){
 	unsetenv("LD_PRELOAD");//prevent ld_preload on child process.
 	dbg("constructor called\n");
@@ -465,6 +597,10 @@ __attribute__((constructor)) void init(){
 	  because get_default printed message earlier than init().
 	*/
 }
+/**
+   Destructor called when the library is unloaded. Prints the memory report if
+   requested by memalign(0, -1).
+*/
 __attribute__((destructor)) void deinit(){
 	if(memdbg_toreport){
 		memdbg_report();

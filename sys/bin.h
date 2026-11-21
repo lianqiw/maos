@@ -133,7 +133,7 @@ typedef struct {
   Make the following function private so that other 
   routine won't call them directly to avoid conflict.
 */
-extern int disable_save; ///saving to disk will be disabled when set to nonzero.
+extern int disable_save;
 /*
   The following functions takes long type integers.
 */
@@ -157,7 +157,6 @@ uint64_t bytes_header(const char *keywords);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
 int read_header(header_t *header, file_t *fp);
-/**Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.*/
 long writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *keywords, const void *p, const uint64_t nx, const uint64_t ny);
 typedef struct mem_t mem_t;

@@ -104,18 +104,21 @@ typedef struct{
 /**
    Returns the transpose of a average gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.
- */
-dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
-	loc_t* ploc,     /**<the grid on the aperture plane*/
-	dmat* pamp,      /**<the amplitude on ploc*/
-	loc_t* saloc,    /**<Lower left origin of the subapertures*/
-	dmat *saa,	     /**<subaperture amplitude, normalized to max at 1.*/
-	real saat,		 /**<saa threshold to enable gradient operation. */
-	real scale,      /**<cone effect*/
-	real dispx,      /**<displacement due to beam angle (2 vector). similar as accphi routines*/
-	real dispy,      /**<displacement due to beam angle (2 vector). similar as accphi routines*/
-	int do_partial   /**<1: use points that are outside of but close to a subaperture. 0: do not use.*/
-){
+
+   @param[in] xloc The grid on which OPDs are defined.
+   @param[in] ploc The grid on the aperture plane.
+   @param[in] pamp The amplitude on ploc.
+   @param[in] saloc Lower left origin of the subapertures.
+   @param[in] saa Subaperture amplitude, normalized to max at 1.
+   @param[in] saat saa threshold to enable gradient operation.
+   @param[in] scale Cone effect scaling.
+   @param[in] dispx Displacement along x due to beam angle (m). Similar as accphi routines.
+   @param[in] dispy Displacement along y due to beam angle (m). Similar as accphi routines.
+   @param[in] do_partial 1: use points that are outside of but close to a subaperture. 0: do not use.
+   @return Newly allocated sparse matrix; the caller frees it.
+*/
+dsp* mkgt(loc_t* xloc, loc_t* ploc, dmat* pamp, loc_t* saloc, dmat *saa, real saat, real scale, real dispx, real dispy,
+	int do_partial){
 /*
 
   Create an average gradient influence matrix from XLOC to SALOC, with
@@ -466,8 +469,20 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 }
 #ifndef MATLAB_MEX_FILE
 /**
-   Returns the transpose of mkgt()
- */
+   Returns the transpose of mkgt(), the average gradient operator from xloc to saloc.
+
+   @param[in] xloc The grid on which OPDs are defined.
+   @param[in] ploc The grid on the aperture plane.
+   @param[in] amp The amplitude on ploc.
+   @param[in] saloc Lower left origin of the subapertures.
+   @param[in] saa Subaperture amplitude, normalized to max at 1.
+   @param[in] saat saa threshold to enable gradient operation.
+   @param[in] scale Cone effect scaling.
+   @param[in] dispx Displacement along x due to beam angle (m).
+   @param[in] dispy Displacement along y due to beam angle (m).
+   @param[in] do_partial 1: use points that are outside of but close to a subaperture. 0: do not use.
+   @return Newly allocated sparse matrix; the caller frees it.
+*/
 dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, dmat *saa, real saat,
 	real scale, real dispx, real dispy, int do_partial){
 	dsp* GS0T=mkgt(xloc, ploc, amp, saloc, saa, saat, scale, dispx, dispy, do_partial);
@@ -477,19 +492,19 @@ dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, dmat *saa, real saat
 }
 #endif
 /**
- * @brief Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography
- * 
- * @param sacent 	Amplitude weighted center coordinate of each subaperture (nsa*2)
- * @param thetax 	angular coordinate of NGS
- * @param thetay 	angular coordinate of NGS
- * @param hc 		upper DM conjugation range (for MCAO)
- * @param hs 		LGS range
- * @param indps 	Plate scale mode index (0 or 2) (for MCAO)
- * @param indastig  Astigmatism mode index (0 or 2) (for LTAO)
- * @param indfocus  Focus mode index (0 or indps+3 or indastig+2
- * @param ahstfocus =1: no focus mode in first PS mode in science OPD.
- * @return dmat 
- */
+   Compute the NGS modal to t/t or t/t/f gradient interaction matrix. Use for sky coverage code for adhoc split tomography
+
+   @param[in] sacent Amplitude weighted center coordinate of each subaperture (nsa*2).
+   @param[in] thetax Angular coordinate of NGS along x (radian).
+   @param[in] thetay Angular coordinate of NGS along y (radian).
+   @param[in] hc Upper DM conjugation range (for MCAO) (m).
+   @param[in] hs LGS range (m).
+   @param[in] indps Plate scale mode index (0 or 2) (for MCAO).
+   @param[in] indastig Astigmatism mode index (0 or 2) (for LTAO).
+   @param[in] indfocus Focus mode index (0 or indps+3 or indastig+2).
+   @param[in] ahstfocus 1: no focus mode in first PS mode in science OPD.
+   @return Newly allocated (nsa*2)*nmod interaction matrix; the caller frees it.
+*/
 dmat* mkg_ngs(dmat *sacent, real thetax, real thetay, real hc, real hs, int indps, int indastig, int indfocus, int ahstfocus){
 	if(!sacent){
 		error("sacent must be specified as a nsa*2 matrix\n");

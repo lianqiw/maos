@@ -19,6 +19,17 @@
 
 
 int cusolve_cg::counter=0;
+/**
+   Solve L*xout=xin with preconditioned CG. With warm restart (cgwarm), the
+   solve is restarted once if the residual exceeds a threshold derived from
+   the running average residual, and the data are saved for debugging on
+   repeated failure.
+
+   @param[in,out] xout Solution. Allocated if empty. Used as initial guess with warm restart.
+   @param[in] xin Right hand side.
+   @param[in] stream CUDA stream.
+   @return The CG residual.
+*/
 Real cusolve_cg::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	Real ans=0;
 	cgtmp.count++;
@@ -68,6 +79,16 @@ repeat:
 	return ans;
 }
 
+/**
+   out=out*beta+alpha*(M-U*V')*in, where M is sparse or dense. out is
+   allocated if empty.
+
+   @param[in,out] out Output. Allocated if empty, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing out.
+   @param[in] in Input.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cusolve_muv::Forward(curcell& out, Real beta, const curcell& in, Real alpha, stream_t& stream){
 	if(!out){
 		out=curcell(nx, 1, nxs, (int*)NULL);
@@ -84,6 +105,16 @@ void cusolve_muv::Forward(curcell& out, Real beta, const curcell& in, Real alpha
 		curmv(out.M()(), 1, U, Vx(), 'n', -alpha, stream);
 	}
 }
+/**
+   Transpose operation: out=out*beta+alpha*(M'-V*U')*in. out is allocated if
+   empty.
+
+   @param[in,out] out Output. Allocated if empty, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing out.
+   @param[in] in Input.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, stream_t& stream){
 	if(!out){
 		out=curcell(ny, 1, nys, (int*)NULL);
@@ -100,6 +131,12 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 		curmv(out.M()(), 1, V, Vx(), 'n', -alpha, stream);
 	}
 }
+/**
+   Copy muv_t (M-U*V') to GPU. M is concatenated into a single sparse or dense
+   matrix. Records the block sizes of the input and output vectors.
+
+   @param[in] in The muv_t operator on CPU. Nothing is done if NULL or in->M is empty.
+*/
 void cusolve_muv::init(const muv_t* in){
 	if(!in||!in->M) {
 		dbg("in or in.M is empty, do nothing\n");
@@ -132,11 +169,28 @@ void cusolve_muv::init(const muv_t* in){
 	}
 }
 
+/**
+   CG solver using assembled sparse right (_R) and left (_L) hand side
+   operators copied to GPU.
+
+   @param[in] _maxit Maximum number of CG iterations.
+   @param[in] _cgwarm Whether to use warm restart.
+   @param[in] _R Right hand side operator.
+   @param[in] _L Left hand side operator.
+*/
 cusolve_sparse::cusolve_sparse(int _maxit, int _cgwarm, muv_t* _R, muv_t* _L)
 	:cusolve_cg(_maxit, _cgwarm){
 	CR.init(_R);
 	CL.init(_L);
 }
+/**
+   Copy the Cholesky factor _C (and optional low rank terms _Up, _Vp) to GPU
+   for Cholesky back substitution.
+
+   @param[in,out] _C Cholesky factor. Converted to the plain sparse format in place by chol_convert.
+   @param[in] _Up Low rank term, or NULL.
+   @param[in] _Vp Low rank term. Used only if _Up is set.
+*/
 cusolve_cbs::cusolve_cbs(spchol* _C, const dmat* _Up, const dmat* _Vp){
 	if(!_C){
 		error("C cannot be empty\n");
@@ -154,14 +208,14 @@ cusolve_cbs::cusolve_cbs(spchol* _C, const dmat* _Up, const dmat* _Vp){
 	}
 }
 /**
- * @brief Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in
- * single precision mode, the error is large due to accumulation.
- *
- * @param xout 
- * @param xin 
- * @param stream 
- * @return Real 
- */
+   Apply the following: xout=solve(xin)-Up*(Vp'*xin). Notice that, in
+   single precision mode, the error is large due to accumulation.
+
+   @param[in,out] xout Solution. Allocated if empty, otherwise overwritten. May be the same as xin.
+   @param[in] xin Right hand side.
+   @param[in] stream CUDA stream.
+   @return Always 0.
+*/
 Real cusolve_cbs::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	if(!xout) xout=xin.New();
 	if(Up){//Apply Vp first in case xin and xout is the same
@@ -178,7 +232,17 @@ Real cusolve_cbs::solve(curcell& xout, const curcell& xin, stream_t& stream){
 	}
 	return 0;
 }
-/*solve in place*/
+/**
+   Solve L*L'*y=y in place with a single thread block, where L is the lower
+   triangular Cholesky factor in CSC format. Shared memory of blockDim.x Real
+   is required.
+
+   @param[in,out] y Right hand side on input, solution on output.
+   @param[in] Cx Nonzero values of L.
+   @param[in] Cp Column pointers of L.
+   @param[in] Ci Row indices of L.
+   @param[in] n Dimension of L.
+*/
 static __global__ void cuchol_solve_lower_do(Real* restrict y, Real* Cx, Spint* Cp, Spint* Ci, int n){
 	int id=threadIdx.x;
 	int nd=blockDim.x;
@@ -215,6 +279,14 @@ static __global__ void cuchol_solve_lower_do(Real* restrict y, Real* Cx, Spint* 
 		__syncthreads();//this is necessary!
 	}
 }
+/**
+   Solve C*out=in with the Cholesky factor in GPU, including permutation. The
+   triangular solves use a single thread block and are slow.
+
+   @param[out] out Device array of the solution. May be the same as in.
+   @param[in] in Device array of the right hand side.
+   @param[in] stream CUDA stream.
+*/
 void cusolve_cbs::chol_solve(Real* out, const Real* in, stream_t& stream){
 	if(!Cl||!Cp) error("Invalid\n");
 	int n=Cl.Nx();
@@ -228,6 +300,12 @@ void cusolve_cbs::chol_solve(Real* out, const Real* in, stream_t& stream){
 	perm_i_do<<<DIM(n, 256), 0, stream>>>(out, y(), Cp(), n);
 	//CUDA_SYNC_STREAM;
 }
+/**
+   Solver that multiplies the input by the precomputed matrix _M, copied to
+   GPU.
+
+   @param[in] _M The precomputed control matrix.
+*/
 cusolve_mvm::cusolve_mvm(dmat* _M){
 	cp2gpu(M, _M);
 }

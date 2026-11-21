@@ -125,9 +125,13 @@ void mts_refresh(mt_state* state);
 /* Multiplier to convert long to dbl [0,1)*/
 #define mt_64_to_double (1./18446744073709551616.)
 /* Mult'r to cvt long long to dbl */
-/**<32 bit val */
-static inline unsigned long mts_lrand(mt_state* state)		/* State for the PRNG */
-{
+/**
+   Generate a 32 bit pseudorandom integer from the Mersenne Twister state.
+
+   @param[in,out] state State for the PRNG. Refreshed as needed.
+   @return A 32 bit pseudorandom integer.
+*/
+static inline unsigned long mts_lrand(mt_state* state){
 	unsigned long random_value;	/* Pseudorandom value generated */
 
 	if(state->stateptr<=0)
@@ -137,9 +141,13 @@ static inline unsigned long mts_lrand(mt_state* state)		/* State for the PRNG */
 	MT_PRE_TEMPER(random_value);
 	return MT_FINAL_TEMPER(random_value);
 }
-/**<32 bit precision double. [0,1) */
-static inline double mts_drand(mt_state* state)		/* State for the PRNG */
-{
+/**
+   Generate a pseudorandom double in [0,1) with 32 bit precision.
+
+   @param[in,out] state State for the PRNG. Refreshed as needed.
+   @return A pseudorandom double in [0,1).
+*/
+static inline double mts_drand(mt_state* state){
 	unsigned long random_value;	/* Pseudorandom value generated */
 
 	if(state->stateptr<=0)
@@ -150,9 +158,13 @@ static inline double mts_drand(mt_state* state)		/* State for the PRNG */
 
 	return random_value*mt_32_to_double;
 }
-/**<64 bit precision double */
-static inline double mts_ldrand(mt_state* state)		/* State for the PRNG */
-{
+/**
+   Generate a pseudorandom double in [0,1) with 64 bit precision (uses two 32 bit values).
+
+   @param[in,out] state State for the PRNG. Refreshed as needed.
+   @return A pseudorandom double in [0,1).
+*/
+static inline double mts_ldrand(mt_state* state){
 #if MT_MACHINE_BITS == 64
 	unsigned long long	final_value;	/* Final (integer) value */
 #endif /* MT_MACHINE_BITS */
@@ -184,6 +196,6 @@ typedef mt_state  rand_t;
 #define lrand     mts_lrand /*rand integer */
 #define randu     mts_drand /*rand double [0,1) */
 #define lrandu    mts_ldrand/*rand double with 64 bit precision within [0,1) */
-double randn(rand_t* rstat);/*normal distribution with 1*/
+double randn(rand_t* rstat);
 long   randp(rand_t* rstat, double xm);
 #endif

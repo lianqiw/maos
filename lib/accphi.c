@@ -120,7 +120,10 @@ void prop_grid_stat_transpose(map_t *mapin, /**<[out] OPD defind on a square gri
 void prop_nongrid_bin(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP);
 
 /**
-   Identify the index of this ray tracing.
+   Identify the index of this ray tracing (the combination of input and output types).
+
+   @param[in,out] propdata Ray tracing parameters. ostat is filled from locout->stat if available.
+   @return Index of the ray tracing case (1-17), or 0 if propdata is NULL or no case matches.
 */
 static int prop_index(propdata_t* propdata){
 	if(!propdata) return 0;
@@ -215,6 +218,19 @@ static int prop_index(propdata_t* propdata){
 	}
 	return index;
 }
+/**
+   Compute the ray tracing geometry from propdata: the displacement
+   (displacex, displacey) at the input layer, the amplitude scaling alpha (including
+   angle of incidence), and the cone effect scaling factor scale. Fills defaults of
+   propdata->alpha (1) and propdata->hs (infinity).
+
+   @param[out] displacex Displacement along x at the input layer (m).
+   @param[out] displacey Displacement along y at the input layer (m).
+   @param[out] alpha Amplitude scaling including angle of incidence.
+   @param[out] scale Cone effect scaling factor.
+   @param[in,out] propdata Ray tracing parameters; defaults of alpha and hs are filled in.
+   @return 1 if valid, 0 if the layer is above the guide star.
+*/
 int prop_prep(real* displacex, real* displacey,  real *alpha, real* scale, propdata_t* propdata){
 	if(!propdata->alpha) propdata->alpha=1;//default to 1
 	if(propdata->hs<=0) propdata->hs=INFINITY;//default to NGS
@@ -239,6 +255,10 @@ int prop_prep(real* displacex, real* displacey,  real *alpha, real* scale, propd
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
+
+   @param[in,out] propdata Ray tracing parameters; the output OPD is accumulated into. alpha defaults to 1.
+   @param[in] start First output index (point, subaperture, or row) to process.
+   @param[in] end One past the last output index to process. 0 means all.
 */
 void prop_range(propdata_t* propdata, long start, long end){
 	if(!propdata) return;
@@ -383,9 +403,20 @@ void prop_range(propdata_t* propdata, long start, long end){
 		error("Invalid\n");
 	}
 }
+/**
+   Ray tracing as specified by propdata for the full output range. See prop_range().
+
+   @param[in,out] propdata Ray tracing parameters; the output OPD is accumulated into.
+*/
 void prop(propdata_t* propdata){
 	prop_range(propdata, 0, 0);
 }
+/**
+   A unified wrapper of prop_range() for use with thread_t.
+
+   @param[in] data Thread data with data->data pointing to propdata_t and the range in start, end.
+   @return NULL.
+*/
 void* prop_thread(thread_t* data){
 	if(!data) return NULL;
 	prop_range((propdata_t*)data->data, data->start, data->end);
@@ -656,7 +687,10 @@ void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP){
    theta CW which means OPD is rotated CCW by theta. alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
    the input grid.  scale is the cone effect. See prop_grid() for definition of
-   other parameters.*/
+   other parameters. The rotation is ignored if locin->iac is set.
+
+   @param[in] theta Rotation angle (radian).
+*/
 void prop_nongrid_rot(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP_NOWRAP, real theta){
 	if(locin->iac){
 		if(theta){

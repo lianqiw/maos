@@ -19,16 +19,23 @@
 #include "cudata.h"
 int nstream=0;
 #define MEM_RESERVE 50000000 
+/**Actual number of GPUs being used.*/
 int NGPU=0;
 int MAXGPU=0;
 Array<int> GPUS;
-cudata_t** cudata_all=NULL;/*for all GPU. */
-cuglobal_t* cuglobal=NULL; /*global data*/
+/**for all GPU. use pointer array to avoid misuse.*/
+cudata_t** cudata_all=NULL;
+/**global data*/
+cuglobal_t* cuglobal=NULL;
 #ifdef __APPLE__
 pthread_key_t cudata_key;
 #else
-__thread cudata_t* cudata=NULL;/*for current thread and current GPU */
+/**for current thread and current GPU*/
+__thread cudata_t* cudata=NULL;
 #endif
+/**
+   Library constructor. Creates the pthread key for cudata on macOS.
+*/
 static __attribute((constructor)) void init(){
 #ifdef __APPLE__
 	pthread_key_create(&cudata_key, NULL);
@@ -36,7 +43,7 @@ static __attribute((constructor)) void init(){
 }
 
 /**
-   Get GPU info.
+   Print properties (name, memory, registers, warp size) of GPU 0.
 */
 void gpu_dbg(){
 	struct cudaDeviceProp prop;
@@ -52,6 +59,11 @@ void gpu_dbg(){
 		prop.regsPerBlock,
 		prop.warpSize);
 }
+/**
+   Return the index of the current GPU, from cudata if set, otherwise from CUDA.
+
+   @return nvidia-smi index of the current GPU if cudata is set, otherwise the CUDA device index.
+*/
 int current_gpu(){
 	int igpu;
 	if(cudata){
@@ -62,7 +74,9 @@ int current_gpu(){
 	return igpu;
 }
 /**
-   Print memory consumption.
+   Print memory used in the current GPU, labeled by msg. Synchronizes the device.
+
+   @param[in] msg Label to print.
 */
 void gpu_print_mem(const char* msg){
 	size_t fr, tot;
@@ -71,7 +85,9 @@ void gpu_print_mem(const char* msg){
 	dbg("GPU %d: mem used %ld MB (%s)\n", current_gpu(), (long)(tot-fr)/1024/1024, msg);
 }
 /**
-   Get available memory.
+   Return free memory of the current GPU in bytes.
+
+   @return Free memory in bytes.
 */
 long gpu_get_free_mem(void){
 	size_t fr, tot;
@@ -79,7 +95,13 @@ long gpu_get_free_mem(void){
 	return (long)fr;
 }
 /**
-   Get available memory/maximum memory ratio. Returns 0-100.
+   Get the used memory/total memory ratio of a GPU and print its properties.
+   The current device is changed to igpu.
+
+   @param[in] igpu CUDA device index.
+   @param[in] minimum Minimum free memory (bytes) required to use the GPU.
+   @return Used memory percentage (0-100). 100 if free memory is less than
+   minimum or querying the GPU fails.
 */
 static long gpu_get_usage_percentage(int igpu, long minimum){
 	size_t fr=0, tot=0;
@@ -218,6 +240,12 @@ static int task_cmp(const void *pa, const void *pb){
 		return 0;
 	}
 }
+/**
+   Check that the CUDA driver is not older than the CUDA runtime. Errors out if
+   it is.
+
+   @return 1 if the driver is older (if error() returns), otherwise 0.
+*/
 int check_cuda_version(){
 	int driverVersion = 0;
 	int runtimeVersion = 0;
@@ -231,12 +259,20 @@ int check_cuda_version(){
 	return 0;
 }
 /**
-   Initialize GPU. Return 1 if success.
-   if gpus is not null, it is of length ngpu. gpus specifies gpu index to use.
-   if gpus is null, ngpu specifies number of gpus to use. all if 0.
+   Initialize GPU: select GPUs, allocate per GPU data, and assign
+   reconstruction, evaluation and WFS tasks to GPUs based on empirical timing.
 
    when mix Tesla and GTX cards, the ordering the GPUs may be different in CUDA
    and NVML, causing the selection of GPUs to fail. Do not use NVML
+
+   @param[in] parms Simulation parameters used to estimate memory requirement
+   and assign tasks. May be NULL.
+   @param[in,out] gpus If not NULL, it is of length ngpu and specifies the GPU
+   indices (nvidia-smi order) to use. A negative entry disables all previous
+   entries. Deduplicated in place.
+   @param[in] ngpu If gpus is NULL, number of GPUs to use, all if 0. Negative
+   disables GPU.
+   @return Number of GPUs used (NGPU). 0 if GPU is not available or not needed.
 */
 int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 	//Set the CUDA CACHE size big enough if user didn't set it.
@@ -532,7 +568,7 @@ end:
 }
 
 /**
-   Clean up device.
+   Free per-GPU (cudata) and global (cuglobal) GPU data and reset NGPU to 0.
 */
 void gpu_cleanup(void){
 	if(NGPU){

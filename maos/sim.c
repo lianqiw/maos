@@ -45,7 +45,11 @@ int sim_pipe[2]={0,0};
 /**
    Initialize the simulation runtime data struct.
    \callgraph
- */
+
+   @param[in] iseed Index of the seed in parms->sim.seeds.
+   @return Newly allocated simulation struct, also stored in global->simu; freed with sim_free(). NULL if
+   another MAOS holds the lock for this seed.
+*/
 sim_t* maos_iseed(int iseed){
 	const parms_t* parms=global->parms;
 	powfs_t* powfs=global->powfs;
@@ -86,7 +90,9 @@ sim_t* maos_iseed(int iseed){
 	return simu;
 }
 /**
-	Prepare before each isim
+   Prepare before each isim
+
+   @param[in,out] simu Simulation data.
 */
 void prepare_isim(sim_t *simu){
 	const parms_t *parms=simu->parms;
@@ -138,9 +144,10 @@ void prepare_isim(sim_t *simu){
 	}
 }
 /**
- * @brief Post process each isim
- * 
- */
+   Post process each isim: update the reconstructor if requested by simu->tomo_update.
+
+   @param[in,out] simu Simulation data.
+*/
 void postproc_isim(sim_t *simu){
 	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
 		if(simu->tomo_update==1){//Only update cn2 regularization term
@@ -168,6 +175,8 @@ static void *wfsgrad_job(void *simu){ return wfsgrad((sim_t *)simu); }
 
    Callable from matlab.
    \callgraph
+
+   @param[in] isim Time step index.
 */
 void maos_isim(int isim){
 	sim_t* simu=global->simu;

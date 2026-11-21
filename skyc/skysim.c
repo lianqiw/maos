@@ -85,6 +85,13 @@
 #include "star.h"
 #include "utils.h"
 #include "nafocus.h"
+/**
+   Fill the results of a star field with the open loop or estimated error when no physical optics result is available.
+
+   @param[in,out] res Results array. Column isky is updated.
+   @param[in] isky Index of the star field.
+   @param[in] varol Mean square error (m^2) to fill in.
+*/
 static void res_set_all(dmat *res, int isky, real varol){
 	P(res, 0, isky)=varol;
 	P(res, 1, isky)=varol;
@@ -96,6 +103,10 @@ static void res_set_all(dmat *res, int isky, real varol){
 }
 /**
    The actual work horse that does the physical optics time domain simulation.
+   Star fields are taken from a shared counter until all are processed.
+
+   @param[in,out] psimu Simulation data. Results for each star field are stored in it.
+   @return Always NULL.
 */
 static void* skysim_isky(void *psimu){
 	sim_s *simu=(sim_s *)psimu;
@@ -357,6 +368,8 @@ skip1:;
 
 /**
    Read in ideal NGS modes
+
+   @param[in,out] simu Simulation data. The mideal and mideal_oa fields are replaced.
 */
 static void skysim_read_mideal(sim_s* simu){
 	const parms_s* parms=simu->parms;
@@ -388,7 +401,9 @@ static void skysim_read_mideal(sim_s* simu){
 	}
 }
 /**
-   Update ideal NGS modes with focus or wind shake
+   Update ideal NGS modes with wind shake if enabled.
+
+   @param[in,out] simu Simulation data. The mideal and mideal_oa fields are updated and the random stream is advanced.
 */
 static void skysim_update_mideal(sim_s* simu){
 	const parms_s* parms=simu->parms;
@@ -413,7 +428,10 @@ static void skysim_update_mideal(sim_s* simu){
 
 /**
    Generate turbulence PSDs from time seris of mideal or from precomputed
-   ones. Combine them with windshake.  */
+   ones. Combine them with windshake.
+
+   @param[in,out] simu Simulation data. The psds field is computed and varol is increased by the windshake variance.
+*/
 static void skysim_calc_psd(sim_s* simu){
 	const parms_s* parms=simu->parms;
 	real var_all=0;
@@ -456,6 +474,11 @@ static void skysim_calc_psd(sim_s* simu){
 	writebin(simu->psds, "psds_m2.bin");
 }
 
+/**
+   Precompute the optimal servo gains for each sampling rate and PSD at different levels of noise.
+
+   @param[in,out] simu Simulation data. The gain_pre and gain_x fields are filled.
+*/
 static void skysim_prep_gain(sim_s* simu){
 	const parms_s* parms=simu->parms;
 	info("Precompute gains for different levels of noise.\n");
@@ -479,6 +502,11 @@ static void skysim_prep_gain(sim_s* simu){
 	writebin(simu->gain_x, "gain_x.bin");
 }
 
+/**
+   Fit the turbulence PSDs with SDE (stochastic differential equation) coefficients for the Kalman filter.
+
+   @param[in,out] simu Simulation data. The sdecoeff field is filled.
+*/
 static void skysim_prep_sde(sim_s* simu){
 	const parms_s* parms=simu->parms;
 	if(!parms->skyc.psdcalc){
@@ -497,6 +525,8 @@ static void skysim_prep_sde(sim_s* simu){
 }
 /**
    Setup the stars fields and then calls skysim_isky() to handle each star field.
+
+   @param[in] parms Simulation parameters.
 */
 void skysim(const parms_s* parms){
 	/*if(parms->skyc.dbg){

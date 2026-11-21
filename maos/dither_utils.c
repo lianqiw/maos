@@ -24,15 +24,15 @@
 #endif
 
 /**
- * @brief Calculate expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
- * This function calculates the dither position based on the given parameters.
- * @param cs The cosine of the dither angle.
- * @param ss The sine of the dither angle.
- * @param alfsm The additional latency due to uplink.
- * @param dtrat The dither rate.
- * @param npoint The number of points.
- * @param isim The simulation index.
- * @param deltam The dither delta.
+   Calculate expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
+
+   @param[out] cs The cosine of the dither angle, scaled to account for averaging.
+   @param[out] ss The sine of the dither angle, scaled to account for averaging.
+   @param[in] alfsm The additional latency due to uplink (in simulation steps).
+   @param[in] dtrat The WFS sampling period in simulation steps.
+   @param[in] npoint The number of WFS frames per dithering cycle.
+   @param[in] isim The simulation step index.
+   @param[in] deltam The dither phase offset (radian).
 */
 void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int isim, real deltam){
 	//adjust for delay due to propagation, and computation delay if delay is not 2 frame.
@@ -50,6 +50,13 @@ void dither_position(real* cs, real* ss, int alfsm, int dtrat, int npoint, int i
 	*cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
 	*ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
 }
+/**
+   When dbg.gradoff_reset==2, accumulate simu->gradoff into simu->gradoffacc
+   weighted by the number of steps since the last update, before gradoff is changed.
+
+   @param[in,out] simu Simulation data.
+   @param[in] ipowfs Unused.
+*/
 void gradoff_acc(sim_t* simu, int ipowfs){
 	(void)ipowfs;
 	if(simu->parms->dbg.gradoff_reset==2&&simu->gradoffisim0>0){//accumulate gradoff before updating it.
@@ -63,13 +70,14 @@ void gradoff_acc(sim_t* simu, int ipowfs){
 }
 /**
    Demodulate the dithering signal to determine the amplitude. Remove trend (detrending) if detrend is set.
- * @param res The result matrix. nmod*1 if not combine.
- * @param signal The signal matrix. nmod*nsim *
- * @param dtrat skip columns due to wfs/sim dt ratio
- * @param npoint The number of points during dithering
- * @param detrend Whether to detrend the signal.
- * @param combine Whether to combine the results. for tip/tilt only
- * @return The calculated dither amplitude.
+
+   @param[out] res The amplitude of each mode (nmod*1). Only used if not combine. Required if nmod>1. May be NULL.
+   @param[in] signal The signal matrix. nmod*nsim, or a column vector for a single mode.
+   @param[in] dtrat skip columns due to wfs/sim dt ratio
+   @param[in] npoint The number of WFS frames per dithering cycle.
+   @param[in] detrend Whether to detrend the signal.
+   @param[in] combine Whether to combine the results. for tip/tilt only
+   @return The calculated dither amplitude (of the first mode if not combine).
 */
 real dither_amp_calc(dmat **res, const dmat *signal, long dtrat, long npoint, int detrend, int combine){
 	long nmod=NY(signal)==1?1:NX(signal);
@@ -135,6 +143,16 @@ real dither_amp_calc(dmat **res, const dmat *signal, long dtrat, long npoint, in
 	dfree(slope);
 	return a2m;
 }
+/**
+   Measure the tip/tilt in gradients of a WFS with uplink tip/tilt control and accumulate it to the uplink drift control
+   signal.
+
+   @param[in,out] grad Gradients of the WFS. Tip/tilt is removed if remove is set.
+   @param[in,out] simu Simulation data. simu->fsmerr_drift is updated.
+   @param[in] gain Gain of the drift integrator. 0 to skip accumulation.
+   @param[in] iwfs WFS index.
+   @param[in] remove Whether to remove tip/tilt from grad.
+*/
 static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int remove){
 	//gain can be set to 1 if the rate is slower than the main tip/tilt and focus control rate.
 	const parms_t* parms=simu->parms;
@@ -164,6 +182,15 @@ static void wfsgrad_tt_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int r
 		dfree(tt);
 	}
 }
+/**
+   Measure the focus in gradients of an LGS WFS and accumulate it to the trombone drift averager.
+
+   @param[in,out] grad Gradients of the WFS. Focus is removed if remove is set.
+   @param[in,out] simu Simulation data. simu->zoomdrift and simu->zoomdrift_count are updated.
+   @param[in] gain Gain applied to the focus. 0 to skip accumulation.
+   @param[in] iwfs WFS index.
+   @param[in] remove Whether to remove focus from grad.
+*/
 static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, int remove){
 	//gain can be set to 1 as zoomgain is applied at zoomint.
 	const parms_t* parms=simu->parms;
@@ -180,7 +207,10 @@ static void wfsgrad_focus_drift(dmat* grad, sim_t* simu, real gain, int iwfs, in
 }
 
 /**
-	Controls gradient drift of individual subapertures due to dithering for matched filter
+   Controls gradient drift of individual subapertures due to dithering for matched filter
+
+   @param[in,out] simu Simulation data. simu->gradoff and the dither deltao are updated.
+   @param[in] ipowfs WFS type index.
 */
 static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 	const parms_t* parms=simu->parms;
@@ -248,8 +278,16 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 		writebin(simu->gradoff, "extra/gradoff_%d_drift", isim);
 	}
 }
+/**
+   Collect statistics with dithering
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] pd Dithering data. imb, and imx and imy for tip/tilt dithering, are accumulated.
+   @param[in] ints Subaperture images of this step.
+   @param[in] iwfs WFS index.
+   @param[in] isim Simulation step index.
+*/
 void dither_acc_i0(const parms_t *parms, dither_t* pd, dcell *ints, int iwfs, int isim){
-	/*Collect statistics with dithering*/
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	dcelladd(&pd->imb, 1, ints, 1.);
 	if(parms->powfs[ipowfs].dither==1){
@@ -269,6 +307,8 @@ void dither_acc_i0(const parms_t *parms, dither_t* pd, dcell *ints, int iwfs, in
    - At Gain output:determine matched filter i0, gx, gy, or CoG gain.
    - Subtract t/t from gradients for non-comon-path (TT) dithering.
 
+   @param[in,out] simu Simulation data.
+   @param[in] iwfs WFS index.
 */
 void dither_acc(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
@@ -450,6 +490,8 @@ void dither_acc(sim_t* simu, int iwfs){
 
 /**
    Dither update: zoom corrector, matched filter, gain ajustment, TWFS.
+
+   @param[in,out] simu Simulation data.
 */
 void dither_post(sim_t* simu){
 	powfs_t* powfs=simu->powfs;//not const to set instat. //todo: move intstat to simu.
@@ -812,6 +854,9 @@ struct fit_cache{
 	dcell *grad;
 	dcell *i0mv;
 }fit_cache={0};
+/**
+   Free the cached data used by sodium_fit().
+*/
 void fit_cache_free(){
 	cellfree(fit_cache.sepsf);
 	cellfree(fit_cache.i0m);
@@ -820,37 +865,41 @@ void fit_cache_free(){
 }
 
 /**
- * Fit i0 to sodium profile using iterative algorithm. The steps are as follows
- * 1. Create sub images for each sodium profile bin
- * 2. Fit such sub-images against i0 to determine the profile
- * 3. Determine subaperture tip/tilt comparing i0 and fitted i0 (using matched filter)
- * 4. Repeat 1-4.
- * */
-void sodium_fit(
-	dmat** sodium, /**<The sodium profile determined by fit*/
-	dcell** pgrad, /**<The gradients determined by fit.*/
-	dcell** pi0,   /**<The output i0*/
-	dcell** pgx,   /**<The output gx*/
-	dcell** pgy,   /**<The output gy*/
-	const dcell* i0i, /**<The input i0*/
-	const dccell* sepsf,   /**<Short exposure PSF*/
-	const dtf_t* dtf,     /**<Detector transfer function*/
-	const loc_t* saloc,   /**<Saloc*/
-	const dcell* saa,      /**<Subaperture area. */
-	const dcell* srsa,    /**<Subaperture to LLT distance*/
-	const dcell* srot,    /**<Subaperture to LLT clocking*/
-	const dmat* siglevs,  /**<Subaperture signal level*/
-	const dmat* wvlwts,    /**<Wavelength weights*/
-	const dcell* gradoff,/**<NCPA gradient to be used for pi0,pgx,pgy output.*/
-	real dh,      /**<The sodium profile sampling in meters*/
-	real hs,      /**<LGS focusing height*/
-	real htel,    /**<Telescope hegith*/
-	real za,      /**<Telescope zenith angle*/
-	real svdthres, /**<SVD threshold*/
-	int nrep,     /**<Number of iterations*/
-	int save,      /**<Save results to file*/
-	int use_cache  /**<Use cache*/
-){
+   Fit i0 to sodium profile using iterative algorithm. The steps are as follows
+   1. Create sub images for each sodium profile bin
+   2. Fit such sub-images against i0 to determine the profile
+   3. Determine subaperture tip/tilt comparing i0 and fitted i0 (using matched filter)
+   4. Repeat 1-4.
+
+   @param[out] sodium The sodium profile determined by fit (height in the first column). Reused (resized) if allocated,
+   otherwise allocated. May be NULL.
+   @param[out] pgrad The gradients determined by fit. Allocated if NULL. May be NULL.
+   @param[out] pi0 The output i0. May be NULL.
+   @param[out] pgx The output gx. May be NULL.
+   @param[out] pgy The output gy. May be NULL.
+   @param[in] i0i The input i0.
+   @param[in] sepsf Short exposure PSF.
+   @param[in] dtf Detector transfer function.
+   @param[in] saloc Subaperture grid.
+   @param[in] saa Subaperture area.
+   @param[in] srsa Subaperture to LLT distance.
+   @param[in] srot Subaperture to LLT clocking.
+   @param[in] siglevs Subaperture signal level.
+   @param[in] wvlwts Wavelength weights.
+   @param[in] gradoff NCPA gradient to be used for pi0,pgx,pgy output and as the initial gradient.
+   @param[in] dh The sodium profile sampling in meters.
+   @param[in] hs LGS focusing height (m).
+   @param[in] htel Telescope height (m).
+   @param[in] za Telescope zenith angle (radian).
+   @param[in] svdthres SVD threshold.
+   @param[in] nrep Number of iterations.
+   @param[in] save Save results to file.
+   @param[in] use_cache Use cache.
+*/
+void sodium_fit(dmat** sodium, dcell** pgrad, dcell** pi0, dcell** pgx, dcell** pgy, const dcell* i0i,
+	const dccell* sepsf, const dtf_t* dtf, const loc_t* saloc, const dcell* saa, const dcell* srsa, const dcell* srot,
+	const dmat* siglevs, const dmat* wvlwts, const dcell* gradoff, real dh, real hs, real htel, real za,
+	real svdthres, int nrep, int save, int use_cache){
 	static int count=-1; count++;
 	//const real ht=25000;//total thickness
 	const real hmin=80000;
@@ -1040,22 +1089,24 @@ OMP_FOR(NTHREAD)
 }
 
 /**
- * Fit i0 to sodium profile and replace i0, gx, gy with derived parameters
- * */
-void sodium_fit_wrap(dmat** psodium, /**<[out] sodium profile*/
-	dcell** pgrad, /**<[out] estimated actual gradient*/
-	dcell** pi0,   /**<[out] The output i0*/
-	dcell** pgx,   /**<[out] The output gx*/
-	dcell** pgy,   /**<[out] The output gy*/
-	const dcell* i0in, /**<[in]The input sa intensities. may equal to *pi0 */
-	const parms_t* parms,/**<[in]parms*/
-	powfs_t* powfs, /**<[in]powfs*/
-	int ipowfs, /**<[in] ipowfs*/
-	real r0,  /**<[in] Fried parameter*/
-	real L0,  /**<[in] outer scale*/
-	int nrep, /**<[in] Number of iterations. 1 for mtche, 3 for cog*/
-	int use_cache /**<[in] cache intermediate results.*/
-	){
+   Fit i0 to sodium profile and replace i0, gx, gy with derived parameters
+
+   @param[out] psodium sodium profile. May be NULL.
+   @param[out] pgrad estimated actual gradient. May be NULL.
+   @param[out] pi0 The output i0. May be NULL.
+   @param[out] pgx The output gx. May be NULL.
+   @param[out] pgy The output gy. May be NULL.
+   @param[in] i0in The input sa intensities. may equal to *pi0
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+   @param[in] ipowfs WFS type index.
+   @param[in] r0 Fried parameter (m).
+   @param[in] L0 outer scale (m).
+   @param[in] nrep Number of iterations. 1 for mtche, 3 for cog
+   @param[in] use_cache cache intermediate results.
+*/
+void sodium_fit_wrap(dmat** psodium, dcell** pgrad, dcell** pi0, dcell** pgx, dcell** pgy, const dcell* i0in,
+	const parms_t* parms, powfs_t* powfs, int ipowfs, real r0, real L0, int nrep, int use_cache){
 	dccell* sepsf=use_cache?fit_cache.sepsf:NULL;
 	if(!sepsf){
 		cccell* otf=NULL, * lotf=NULL;

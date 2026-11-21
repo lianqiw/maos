@@ -32,12 +32,18 @@ extern "C"
 #endif
 
 extern const char* dirskysim;
-/*
-  Notice that both blocks and threads are partitioning isa
+/**
+   Add Gaussian noise to geometric gradients with the NEA (Cholesky factor
+   with xx, yy, xy terms) of each subaperture.
+   Notice that both blocks and threads are partitioning isa
+
+   @param[in,out] g Gradients, x then y, noise added in place.
+   @param[in] nea NEA standard deviation, 3*nsa (xx, yy, xy).
+   @param[in] nsa Number of subapertures.
+   @param[in,out] rstat Random number generator state, one per thread.
 */
 static __global__ void
-add_geom_noise_do(Real* restrict g, const Real* restrict nea,
-	int nsa, curandState* restrict rstat){
+add_geom_noise_do(Real* restrict g, const Real* restrict nea, int nsa, curandState* restrict rstat){
 	const int id=threadIdx.x+blockIdx.x*blockDim.x;
 	curandState lstat=rstat[id];
 	const int nstep=blockDim.x*gridDim.x;
@@ -51,11 +57,21 @@ add_geom_noise_do(Real* restrict g, const Real* restrict nea,
 }
 
 /**
-   Compute ztilt over a square subaperture.
+   Compute ztilt over a square subaperture. One thread block per subaperture.
+   Requires 3*blockDim.x*blockDim.y Real shared memory.
+
+   @param[in,out] g Gradients, x then y, accumulated into.
+   @param[in] opd OPD of all subapertures, nx*nx per subaperture.
+   @param[in] nsa Number of subapertures.
+   @param[in] dx Sampling of OPD (m).
+   @param[in] nx Number of OPD points along each side of a subaperture.
+   @param[in] imcc Inverse of piston/tip/tilt mode covariance, 3x3 per subaperture.
+   @param[in] orig Origin (lower left corner) of each subaperture.
+   @param[in] amp Amplitude, same layout as opd.
+   @param[in] alpha Scaling factor.
 */
 static __global__ void
-cuztilt_do(Real* restrict g, Real* restrict opd,
-	const int nsa, const Real dx, const int nx, Real* imcc,
+cuztilt_do(Real* restrict g, Real* restrict opd, const int nsa, const Real dx, const int nx, Real* imcc,
 	const Real(*orig)[2], const Real* restrict amp, Real alpha){
 	extern __shared__ Real a0[];
 	int idx=threadIdx.x+threadIdx.y*blockDim.x;
@@ -97,16 +113,42 @@ cuztilt_do(Real* restrict g, Real* restrict opd,
 
 	}
 }
-void cuztilt(Real* restrict g, Real* restrict opd,
-	const int nsa, const Real dx, const int nx, Real* imcc,
+/**
+   Compute z-tilt gradients over each of the nsa square subapertures of nx*nx
+   points and add alpha times the result to g. Launches cuztilt_do on stream.
+
+   @param[in,out] g Gradients, x then y, accumulated into.
+   @param[in] opd OPD of all subapertures, nx*nx per subaperture.
+   @param[in] nsa Number of subapertures.
+   @param[in] dx Sampling of OPD (m).
+   @param[in] nx Number of OPD points along each side of a subaperture.
+   @param[in] imcc Inverse of piston/tip/tilt mode covariance, 3x3 per subaperture.
+   @param[in] orig Origin (lower left corner) of each subaperture.
+   @param[in] amp Amplitude, same layout as opd.
+   @param[in] alpha Scaling factor.
+   @param[in] stream CUDA stream.
+*/
+void cuztilt(Real* restrict g, Real* restrict opd, const int nsa, const Real dx, const int nx, Real* imcc,
 	const Real(*orig)[2], const Real* restrict amp, Real alpha, cudaStream_t stream){
 	const int tx=32;
 	cuztilt_do<<<nsa, dim3(tx, tx), tx* tx*3*sizeof(Real), stream>>>
 		(g, opd, nsa, dx, nx, imcc, orig, amp, alpha);
 }
 /**
-   Apply matched filter. \todo this implementation relies on shared variable. It
-   is probably causing competition.  */
+   Apply matched filter. One thread block per subaperture. Requires
+   3*blockDim.x Real shared memory. \todo this implementation relies on shared variable. It
+   is probably causing competition.
+
+   @param[out] grad Gradients. x at grad[isa] and y at grad[isa+nsa].
+   @param[in] mtches Matched filter, 2 values (x, y) per pixel.
+   @param[in] ints Subaperture images, pixpsa per subaperture.
+   @param[in] sigmatch Signal level normalization: 0: none, 1: per subaperture
+   by i0sum, 2: global by scale.
+   @param[in] i0sum Sum of i0 per subaperture. Used if sigmatch is 1.
+   @param[in] scale Global scaling factor. Used if sigmatch is 2.
+   @param[in] pixpsa Number of pixels per subaperture.
+   @param[in] nsa Total number of subapertures (stride between x and y).
+*/
 __global__ static void
 mtche_do(Real* restrict grad, Real(*mtches)[2], const Real* restrict ints,
 	int sigmatch, const Real* restrict i0sum, Real scale, int pixpsa, int nsa){
@@ -146,10 +188,24 @@ mtche_do(Real* restrict grad, Real(*mtches)[2], const Real* restrict ints,
 	}
 }
 
+/**
+   Apply matched filter by launching mtche_do in batches of msa subapertures.
+
+   @param[out] grad Gradients. x at grad[isa] and y at grad[isa+nsa].
+   @param[in] mtches Matched filter, 2 values (x, y) per pixel.
+   @param[in] ints Subaperture images, pixpsa per subaperture.
+   @param[in] sigmatch Signal level normalization: 0: none, 1: per subaperture
+   by i0sum, 2: global by scale.
+   @param[in] i0sum Sum of i0 per subaperture. Used if sigmatch is 1.
+   @param[in] scale Global scaling factor. Used if sigmatch is 2.
+   @param[in] pixpsa Number of pixels per subaperture.
+   @param[in] nsa Total number of subapertures (stride between x and y).
+   @param[in] msa Maximum number of subapertures per kernel launch.
+   @param[in] stream CUDA stream.
+*/
 static void
-mtche(Real* restrict grad, Real(*mtches)[2],
-	const Real* restrict ints, int sigmatch, const Real* restrict i0sum, Real scale,
-	int pixpsa, int nsa, int msa, cudaStream_t stream){
+mtche(Real* restrict grad, Real(*mtches)[2], const Real* restrict ints, int sigmatch, const Real* restrict i0sum,
+	Real scale, int pixpsa, int nsa, int msa, cudaStream_t stream){
 	for(int isa=0; isa<nsa; isa+=msa){
 		int ksa=MIN(msa, nsa-isa);
 		mtche_do<<<ksa, 16, 16*3*sizeof(Real), stream>>>
@@ -157,7 +213,20 @@ mtche(Real* restrict grad, Real(*mtches)[2],
 	}
 }
 /**
-   Apply windowed CoG. /todo: replace atomicAdd by reduction.
+   Apply windowed CoG. One thread block per subaperture. /todo: replace atomicAdd by reduction.
+
+   @param[out] grad Gradients. x at grad[isa] and y at grad[isa+nsa].
+   @param[in] ints Subaperture images, nx*ny per subaperture.
+   @param[in] scale1 Common scaling of the denominator. Used if scale2 is set.
+   @param[in] scale2 If not NULL, the denominator is replaced by scale1*scale2[isa].
+   @param[in] nx Number of pixels along x.
+   @param[in] ny Number of pixels along y.
+   @param[in] pixthetax Pixel size along x (rad).
+   @param[in] pixthetay Pixel size along y (rad).
+   @param[in] nsa Number of subapertures.
+   @param[in] cogmask Pixel weighting mask, nx*ny.
+   @param[in] bkgrnd Background to subtract from each pixel.
+   @param[in] srot If not NULL, rotation angle of each subaperture (radial pixels).
 */
 __global__ static void
 wcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2, 
@@ -201,7 +270,20 @@ wcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2,
 	}
 }
 /**
-   Apply thresholded CoG. /todo: replace atomicAdd by reduction.
+   Apply thresholded CoG. One thread block per subaperture. /todo: replace atomicAdd by reduction.
+
+   @param[out] grad Gradients. x at grad[isa] and y at grad[isa+nsa].
+   @param[in] ints Subaperture images, nx*ny per subaperture.
+   @param[in] scale1 Common scaling of the denominator. Used if scale2 is set.
+   @param[in] scale2 If not NULL, the denominator is replaced by scale1*scale2[isa].
+   @param[in] nx Number of pixels along x.
+   @param[in] ny Number of pixels along y.
+   @param[in] pixthetax Pixel size along x (rad).
+   @param[in] pixthetay Pixel size along y (rad).
+   @param[in] nsa Number of subapertures.
+   @param[in] thres Pixels not exceeding thres after background subtraction are excluded.
+   @param[in] bkgrnd Background to subtract from each pixel.
+   @param[in] srot If not NULL, rotation angle of each subaperture (radial pixels).
 */
 __global__ static void
 tcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2, 
@@ -247,7 +329,11 @@ tcog_do(Real* grad, const Real* restrict ints, Real scale1, Real* scale2,
 	}
 }
 /**
-   Poisson random generator.
+   Draw a Poisson random number with mean xm. Uses a normal approximation for xm>200.
+
+   @param[in,out] rstat Random number generator state.
+   @param[in] xm Mean.
+   @return The random number.
 */
 __device__ static Real curandp(curandState* rstat, Real xm){
 	Real g, t, xmu;
@@ -271,12 +357,22 @@ __device__ static Real curandp(curandState* rstat, Real xm){
 	return x;
 }
 /**
-   Add noise to pix images.
+   Add noise to pix images: photon (Poisson) noise of signal plus background,
+   and Gaussian read out noise, then subtract the background correction.
+
+   @param[in,out] ints0 Subaperture images, pixpsa per subaperture, noise added in place.
+   @param[in] nsa Number of subapertures.
+   @param[in] pixpsa Number of pixels per subaperture.
+   @param[in] bkgrnd Background per pixel.
+   @param[in] bkgrndc Background correction per pixel.
+   @param[in] bkgrnd2s Additional background per pixel, or NULL.
+   @param[in] bkgrnd2cs Additional background correction per pixel, or NULL.
+   @param[in] qe Quantum efficiency per pixel, or NULL.
+   @param[in] rne Read out noise standard deviation.
+   @param[in,out] rstat Random number generator state, one per thread.
 */
 __global__ static void addnoise_do(Real* restrict ints0, int nsa, int pixpsa, Real bkgrnd, Real bkgrndc,
-	const Real* restrict bkgrnd2s,
-	const Real* restrict bkgrnd2cs,
-	const Real* restrict qe, Real rne, curandState* rstat){
+	const Real* restrict bkgrnd2s, const Real* restrict bkgrnd2cs, const Real* restrict qe, Real rne, curandState* rstat){
 	const int id=threadIdx.x+blockIdx.x*blockDim.x;
 	const int nstep=blockDim.x*gridDim.x;
 	curandState lstat=rstat[id];
@@ -296,6 +392,19 @@ __global__ static void addnoise_do(Real* restrict ints0, int nsa, int pixpsa, Re
 	}
 	rstat[id]=lstat;
 }
+/**
+   Apply field stop to the OPD: propagate to the focal plane, multiply by the
+   field stop mask, propagate back, and replace opd by the unwrapped phase.
+
+   @param[in,out] opd OPD, replaced by the field stop filtered OPD.
+   @param[in] amp Amplitude.
+   @param[in] embed Index of OPD points in the nembed*nembed FFT grid.
+   @param[in] nembed Size of the FFT grid.
+   @param[in] fieldstop Field stop mask in the focal plane.
+   @param[in] wvl Wavelength (m).
+   @param[in] fftplan FFT plan for nembed*nembed.
+   @param[in] stream CUDA stream.
+*/
 static void
 cu_fieldstop(curmat& opd, curmat& amp, int* embed, int nembed,
 	curmat& fieldstop, Real wvl, cufftHandle fftplan, cudaStream_t stream){
@@ -307,6 +416,19 @@ cu_fieldstop(curmat& opd, curmat& amp, int* embed, int nembed,
 	unwrap_phase_do<<<DIM(opd.Nx(), 256), 0, stream>>>(wvf, opd, embed, opd.Nx(), wvl);
 }
 
+/**
+   Accumulate subaperture images for dither: imb+=ints, imx+=ints*cd,
+   imy+=ints*sd.
+
+   @param[in,out] imb Per subaperture accumulated images.
+   @param[in,out] imx Per subaperture accumulated images weighted by cd.
+   @param[in,out] imy Per subaperture accumulated images weighted by sd.
+   @param[in] pints Per subaperture images.
+   @param[in] cd Cosine of the dither phase times amplitude.
+   @param[in] sd Sine of the dither phase times amplitude.
+   @param[in] pixpsa Number of pixels per subaperture.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 dither_acc_do(Real* restrict* imb, Real* restrict* imx, Real* restrict* imy,
 	Real* restrict const* pints, Real cd, Real sd, int pixpsa, int nsa){
@@ -322,6 +444,15 @@ dither_acc_do(Real* restrict* imb, Real* restrict* imx, Real* restrict* imy,
 		}
 	}
 }
+/**
+   Allocate accumulation arrays for dithering: imb, and imx, imy if xy is set,
+   each with nsa subapertures of pixpsax*pixpsay pixels.
+
+   @param[in] nsa Number of subapertures.
+   @param[in] pixpsax Number of pixels along x per subaperture.
+   @param[in] pixpsay Number of pixels along y per subaperture.
+   @param[in] xy Whether to also allocate imx and imy.
+*/
 Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay, int xy):imc(0){
 	imb=curcell(nsa, 1, pixpsax, pixpsay);
 	if(xy){
@@ -330,7 +461,17 @@ Dither_t::Dither_t(int nsa, int pixpsax, int pixpsay, int xy):imc(0){
 	}
 }
 
-/**Accumulate for matched filter updating*/
+/**
+   Accumulate for matched filter updating. Every npll calls, the accumulated
+   images are copied to dither and zeroed.
+
+   @param[in,out] dither CPU dither data. imb, imx, imy are set every npll calls.
+   @param[in] ints Subaperture images.
+   @param[in] cs Cosine of the dither phase times amplitude.
+   @param[in] ss Sine of the dither phase times amplitude.
+   @param[in] npll Number of calls to accumulate before output.
+   @param[in] stream CUDA stream.
+*/
 void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, cudaStream_t stream){
 	const int nsa=ints.N();
 	const int pixpsa=ints[0].N();
@@ -348,7 +489,15 @@ void Dither_t::acc(dither_t* dither, curcell& ints, Real cs, Real ss, int npll, 
 	}
 }
 
-/**Accumulate for matched filter updating*/
+/**
+   Accumulate for matched filter updating, only the images (no dither
+   modulation). Every npll calls, imb is copied to dither and zeroed.
+
+   @param[in,out] dither CPU dither data. imb is set every npll calls.
+   @param[in] ints Subaperture images.
+   @param[in] npll Number of calls to accumulate before output.
+   @param[in] stream CUDA stream.
+*/
 void Dither_t::acc_i0(dither_t *dither, curcell &ints, int npll, cudaStream_t stream){
 	curcelladd(imb, 1, ints, 1, stream);
 	imc++;
@@ -408,7 +557,20 @@ static void wfsgrad_callback(cudaStream_t stream, cudaError_t status, void *data
 	free(data);
 }*/
 /**
-   Calculate SHWFS gradients
+   Calculate SHWFS gradients from subaperture images using matched filter or
+   CoG according to phytype_sim. Other types are handled by the CPU version,
+   with output in simu->gradcl.
+
+   @param[out] gradcalc Gradients.
+   @param[in] ints Subaperture images.
+   @param[in] cuwfs GPU WFS data.
+   @param[in] cupowfs GPU WFS type data.
+   @param[in] parms Simulation parameters.
+   @param[in] powfs WFS type data.
+   @param[in,out] simu Simulation data. ints and gradcl are updated for the CPU version.
+   @param[in] iwfs WFS index.
+   @param[in] ipowfs WFS type index.
+   @param[in] stream CUDA stream.
 */
 static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cuwfs, Array<cupowfs_t>& cupowfs,
 	const parms_t* parms, const powfs_t* powfs, sim_t* simu, int iwfs, int ipowfs, stream_t& stream){
@@ -479,6 +641,9 @@ static void shwfs_grad(curmat& gradcalc, const curcell& ints, Array<cuwfs_t>& cu
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
+
+   @param[in] info Thread data. info->data is sim_t. WFS info->start to info->end are processed.
+   @return Always NULL.
 */
 void *gpu_wfsgrad_queue(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
@@ -743,6 +908,13 @@ void *gpu_wfsgrad_queue(thread_t* info){
 	return NULL;
 }
 
+/**
+   Wait for the WFS iwfs stream to finish and, at the output step, copy
+   gradients (and intensities when needed) to CPU (simu->gradcl, simu->ints).
+
+   @param[in,out] simu Simulation data.
+   @param[in] iwfs WFS index.
+*/
 void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
 	gpu_set(cuglobal->wfsgpu[iwfs]);
@@ -773,6 +945,12 @@ void gpu_wfsgrad_sync(sim_t* simu, int iwfs){
 		}
 	}
 }
+/**
+   Save the time-averaged PSF of each subaperture (pistat) for WFS with
+   pistatout set. Saved to dirskysim for sky coverage when sim.skysim is set.
+
+   @param[in] simu Simulation data.
+*/
 void gpu_save_pistat(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const int isim=simu->wfsisim;

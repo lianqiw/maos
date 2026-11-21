@@ -32,6 +32,16 @@
 /**
    Extrapolates by a factor fac through the face of the simplex across from the
    high point, tries it, and replaces the high point if the new point is better.
+
+   @param[in,out] p Vertices of the simplex, (ndim+1) rows of ndim values.
+   @param[in,out] y Function values at the vertices.
+   @param[in,out] psum Sum of the vertices along each dimension.
+   @param[in] ndim Number of dimensions.
+   @param[in] funk The function to minimize.
+   @param[in] data Data passed to funk.
+   @param[in] ihi Index of the highest point.
+   @param[in] fac Extrapolation factor.
+   @return Function value at the trial point.
 */
 static T amotry(T** p, T y[], T psum[], int ndim,
 	T(*funk)(const T[], void* data), void* data, int ihi, T fac){
@@ -62,21 +72,29 @@ static T amotry(T** p, T y[], T psum[], int ndim,
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
 /**
-   Multidimensional minimization of the function funk(x) where x[1..ndim] is a
+   Multidimensional minimization of the function funk(x) where x[0..ndim-1] is a
    vector in ndim dimensions, by the downhill simplex method of Nelder and
    Mead.
 
-   The matrix p[1..ndim+1] [1..ndim] is input. Its ndim+1 rows are
+   The matrix p[0..ndim] [0..ndim-1] is input. Its ndim+1 rows are
    ndim-dimensional vectors which are the vertices of the starting simplex. Also
-   input is the vector y[1..ndim+1], whose components must be preinitialized to
+   input is the vector y[0..ndim], whose components must be preinitialized to
    the values of funk evaluated at the ndim+1 vertices (rows) of p; and ftol the
-   fractional convergence tolerance to be achieved in the function value
-   (n.b.!).
+   absolute convergence tolerance to be achieved in the function value.
 
    On output, p and y will have been reset to ndim+1 new points all within ftol
-   of a minimum function value, and nfunk gives the number of function
-   evaluations taken.
- */
+   of a minimum function value, with the best point in p[0] and y[0], and nfunk
+   gives the number of function evaluations taken.
+
+   @param[in,out] p Vertices of the simplex.
+   @param[in,out] y Function values at the vertices.
+   @param[in] ndim Number of dimensions.
+   @param[in] ftol Absolute convergence tolerance of the function value.
+   @param[in] funk The function to minimize.
+   @param[in] data Data passed to funk.
+   @param[in,out] nfunk On input, maximum number of function evaluations (5000 if not positive). On output,
+   number of function evaluations taken.
+*/
 static void amoeba(T** p, T y[], int ndim, T ftol,
 	T(*funk)(const T[], void* data), void* data, int* nfunk){
 	int i, ihi, ilo, inhi, j, mpts=ndim+1;
@@ -142,8 +160,16 @@ static void amoeba(T** p, T y[], int ndim, T ftol,
 #undef GET_PSUM
 #undef NRANSI
 /**
-  Search minimum along multiple dimenstions. scale contains the scale of each dimension. x
-  contains initial warm restart values.
+   Search minimum along multiple dimenstions using the downhill simplex method. The initial simplex is
+   created by perturbing each dimension of x by 5%.
+
+   @param[in,out] x Initial (warm restart) values on input and the minimum location on output.
+   @param[in] nmod Number of dimensions.
+   @param[in] ftol Absolute convergence tolerance of the function value.
+   @param[in] nmax Maximum number of function evaluations (5000 if not positive).
+   @param[in] fun The function to minimize.
+   @param[in] info Data passed to fun.
+   @return Number of function evaluations taken. 0 if x or info is NULL.
 */
 int X(minsearch)(T* x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void* info){
 	if(!x||!info) return 0;

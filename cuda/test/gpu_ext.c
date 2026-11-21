@@ -21,6 +21,11 @@
  * Test external routines
  * */
 #include "../math/gpu_math.h"
+/**
+   Run the GPU dgemm and dsvd tests (requires CUDA>10).
+
+   @return 0.
+*/
 int main(){
 #if CUDA_VERSION>10000
 	gpu_dgemm_test();

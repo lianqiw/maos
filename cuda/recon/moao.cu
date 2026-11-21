@@ -23,6 +23,17 @@
 //#include "perf.h"
 
 
+/**
+   Set up MOAO DM fitting in GPU for ndir directions: ray tracing operators
+   from the tomography grid (hxp) and common DMs (hap) to each direction, and
+   the MOAO DM operator (ha) with low rank terms and actuator slaving.
+
+   @param[in] parms Simulation parameters. Only fit.maxit and fit.cgwarm are used.
+   @param[in] moao CPU MOAO reconstruction data.
+   @param[in] dir Array of ndir directions to fit for.
+   @param[in] _ndir Number of directions.
+   @param[in] _grid Reconstruction geometry on GPU. Kept as a reference.
+*/
 cumoao_t::cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, curecon_geom* _grid)
 	:cusolve_cg(parms?parms->fit.maxit:0, parms?parms->fit.cgwarm:0), grid(_grid), ndir(_ndir){
 	amap=cugridcell(1, 1);
@@ -48,6 +59,18 @@ cumoao_t::cumoao_t(const parms_t* parms, moao_t* moao, dir_t* dir, int _ndir, cu
 	}
 	rhs=curcell(1, 1, amap[0].nx, amap[0].ny);
 }
+/**
+   Solve the MOAO DM commands for each direction: fit the tomography output
+   xin minus the common DM correction ain onto the MOAO DM with CG. xout[idir]
+   receives the result.
+
+   @param[in,out] xout MOAO DM commands for each direction. Used as warm
+   restart if enabled and updated with the solution.
+   @param[in] xin Tomography output.
+   @param[in] ain Common DM commands.
+   @param[in] stream CUDA stream.
+   @return Always 0.
+*/
 Real cumoao_t::moao_solve(curccell& xout, const curcell& xin, const curcell& ain, stream_t& stream){
 	for(int idir=0; idir<ndir; idir++){
 		cuzero(opdfit.M(), stream);
@@ -77,6 +100,17 @@ Real cumoao_t::moao_solve(curccell& xout, const curcell& xin, const curcell& ain
 	}
 	return 0;
 }
+/**
+   Left hand side operator of MOAO fitting:
+   xout=xout*beta+alpha*(HA'*W*HA+NW*NW'+actslave)*xin.
+
+   @param[in,out] xout Output MOAO DM commands. Allocated if empty, otherwise
+   scaled by beta and accumulated into.
+   @param[in] beta Scaling factor of existing xout.
+   @param[in] xin Input MOAO DM commands.
+   @param[in] alpha Scaling factor of the operator.
+   @param[in] stream CUDA stream.
+*/
 void cumoao_t::L(curcell& xout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
 	if(!xout){
 		xout=curcell(1, 1, amap[0].nx, amap[0].ny);
@@ -96,8 +130,15 @@ void cumoao_t::L(curcell& xout, Real beta, const curcell& xin, Real alpha, strea
 	}
 }
 
-/*
-  Embed and copy DM commands to GPU.
+/**
+   Embed DM commands defined on actuator locations to a 2-d grid using
+   loc->map and copy to GPU.
+
+   @param[out] dmgpu GPU array of nx*ny, already allocated.
+   @param[in] dmcpu DM commands on CPU, a column vector.
+   @param[in] loc Actuator locations with map built.
+   @param[in] nx Grid size along x.
+   @param[in] ny Grid size along y.
 */
 static void gpu_dm2gpu_embed(curmat& dmgpu, dmat* dmcpu, loc_t* loc, int nx, int ny){
 	assert(dmcpu->ny==1);
@@ -115,7 +156,11 @@ static void gpu_dm2gpu_embed(curmat& dmgpu, dmat* dmcpu, loc_t* loc, int nx, int
 }
 
 /**
-   Copy MOAO DM commands from CPU to GPU.*/
+   Copy MOAO DM commands (simu->dm_wfs, simu->dm_evl) from CPU to GPU
+   (cudata->dm_wfs, cudata->dm_evl) when MOAO is reconstructed in CPU.
+
+   @param[in] simu Simulation data.
+*/
 void gpu_moao_2gpu(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;

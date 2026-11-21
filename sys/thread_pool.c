@@ -86,7 +86,8 @@ typedef struct thread_pool_t{
 	unsigned int nidle;/**<Number of idle threads, excluding the master thread.*/
 	unsigned int inited;/**<Whether the thread pool has been inited*/
 }thread_pool_t;
-static thread_pool_t pool;/*The default pool; */
+/**The default pool;*/
+static thread_pool_t pool;
 static const unsigned int jobsall_mask=0xFFF;//number of jobs in jobsall. Must be all 1's
 static int do_job(int urgent);
 #define USE_QUEUE 0
@@ -111,20 +112,25 @@ typedef struct jobs_t{
 	tp_counter_t *counter;/**<address of the job group, whos value keeps track of queued jobs.*/
 }jobs_t;
 
-static jobs_t *jobsall=NULL;//all jobs are allocated here. The first element has next set to 0 to indicate end of list
+/**all jobs are allocated here. The first element has next set to 0 to indicate end of list*/
+static jobs_t *jobsall=NULL;
 static unsigned int jobsall_head=0;
 static unsigned int jobsall_tail=0;
 static unsigned int jobsall_njob=0;
 #define ATOMIC_ORDER __ATOMIC_SEQ_CST
 /**
- * 	Enqueue a new job. Return index of the position.
-	Urgent jobs are queued at the tail while normal ones are queued at the head.
-	When jobs are small, queue at the tail is slow.
-	The jobsall[].fun can have the following states:
-		0: empty slot
-		1: enqueue is in progress
-		else: slot is ready to be processed
-**/
+   Enqueue a new job by copying it into a free slot of jobsall. Does jobs
+   while the queue is full.
+   All jobs are currently queued at the head (queueing urgent jobs at the tail
+   is disabled as it is slow for small jobs).
+   The jobsall[].fun can have the following states:
+   	0: empty slot
+   	1: enqueue is in progress
+   	else: slot is ready to be processed
+
+   @param[in] job Job to enqueue (copied).
+   @param[in] urgent Passed to do_job() while waiting for a free slot.
+*/
 static void jobs_enqueue(jobs_t *job, int urgent){
 	unsigned int ind, ntot2;
 	thread_fun empty=NULL;
@@ -157,7 +163,13 @@ static void jobs_enqueue(jobs_t *job, int urgent){
 	//after setting the value, dequeue can take the node. We need to enfore memory order ? Doesn't seem to prevent retry
 	__atomic_store_n(&jobsall[ind].fun, job->fun, ATOMIC_ORDER);
 }
-///Dequeue a job from the tail. Set job if job is available.
+/**
+   Dequeue a job from the tail. Set job if job is available.
+
+   @param[out] job Dequeued job.
+   @param[in] urgent Unused.
+   @return 1 if a job was dequeued, 0 if no job is available.
+*/
 static unsigned int jobs_dequeue(jobs_t *job, int urgent){
 	(void)urgent;
 	unsigned int ind, ntot2;
@@ -181,8 +193,11 @@ static unsigned int jobs_dequeue(jobs_t *job, int urgent){
 	return 1;
 }
 /**
- * Do a job. If urgent is set, only do urgent jobs.
- */
+   Do a job. If urgent is set, only do urgent jobs.
+
+   @param[in] urgent Whether to only do urgent jobs.
+   @return 1 if a job was done, 0 if no job is available.
+*/
 static int do_job(int urgent){
 	jobs_t job={0};
 	if(jobs_dequeue(&job, urgent)){
@@ -270,20 +285,36 @@ typedef union{
 	};
 }jobshead_t;
 
-static jobs_t *jobsall=NULL;//all jobs are allocated here. The first element has next set to 0 to indicate end of list
-static jobshead_t jobsnormal={0L};/**<Start of the fifo list of pending jobs*/
-static jobshead_t jobsurgent={0L};/**<Start of the fifo list of urgent jobs*/
-static jobshead_t jobspool={0L};  /**<saving unused jobs_t*/
+/**all jobs are allocated here. The first element has next set to 0 to indicate end of list*/
+static jobs_t *jobsall=NULL;
+/**Start of the fifo list of pending jobs*/
+static jobshead_t jobsnormal={0L};
+/**Start of the fifo list of urgent jobs*/
+static jobshead_t jobsurgent={0L};
+/**saving unused jobs_t*/
+static jobshead_t jobspool={0L};
 
 
-//Place job list (jobhead to jobtail) to the beginning of list (head) by connecting jobtail.next to head and replacing head by jobhead
+/**
+   Place job list (jobhead to jobtail) to the beginning of list (head) by connecting jobtail.next to head and replacing
+   head by jobhead.
+
+   @param[in,out] head Head of the list.
+   @param[in] jobheadind Index in jobsall of the first job of the list to push.
+   @param[in] jobtailind Index in jobsall of the last job of the list to push.
+*/
 static void jobs_push(jobshead_t *head, unsigned int jobheadind, unsigned int jobtailind){
 	do{
 		jobsall[jobtailind].next=head->head;
 	}while(!__atomic_compare_exchange_n(&(head->head), &jobsall[jobtailind].next, jobheadind, 
 										1, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
 }
-//Get a job from the beginning of the list.
+/**
+   Get a job from the beginning of the list.
+
+   @param[in,out] head Head of the list.
+   @return Index in jobsall of the job removed, or 0 if the list is empty.
+*/
 static unsigned int jobs_pop(jobshead_t *head){
 	jobshead_t job, job2;
 	job.state=head->state;
@@ -297,8 +328,11 @@ static unsigned int jobs_pop(jobshead_t *head){
 }
 
 /**
- * Do a job. If urgent is set, only do urgent jobs.
- */
+   Do a job. If urgent is set, only do urgent jobs.
+
+   @param[in] urgent Whether to only do urgent jobs.
+   @return 1 if a job was done, 0 if no job is available.
+*/
 static int do_job(int urgent){
 	unsigned int jobind=0;
 	if((jobind=jobs_pop(&jobsurgent))||(!urgent&&(jobind=jobs_pop(&jobsnormal)))){
@@ -398,9 +432,12 @@ void thread_pool_queue(tp_counter_t *counter, thread_fun fun, void *arg, int njo
 
 
 /**
- *   The working function in each thread which never quits until pool is being
- *   resized or destroyed. The master thread does not run this routine.
- */
+   The working function in each thread which never quits until pool is being
+   resized or destroyed. The master thread does not run this routine.
+
+   @param[in] data Thread index cast to pointer. Stored in tid.
+   @return NULL.
+*/
 static void *run_thread(void *data){
 	(void)data;
 	tid=(int)(long)data;
@@ -428,9 +465,13 @@ static void *run_thread(void *data){
 }
 
 /**
- * Wait for jobs in the count to be done. Has the potential to deadlock if it
- * calls do_job and the job inside calls pthread_cond_wait.
- */
+   Wait for jobs in the count to be done. Does jobs while waiting. Has the
+   potential to deadlock if it calls do_job and the job inside calls
+   pthread_cond_wait.
+
+   @param[in] counter Job group counter to wait for.
+   @param[in] urgent Whether to only do urgent jobs while waiting.
+*/
 void thread_pool_wait(tp_counter_t *counter, int urgent){
 	while(counter->group){
 		//if urgent is true, only do urgent jobs.
@@ -439,8 +480,8 @@ void thread_pool_wait(tp_counter_t *counter, int urgent){
 	}
 }
 /**
- * Wait for all jobs to be done.
- */
+   Wait for all jobs to be done.
+*/
 void thread_pool_wait_all(void){
 	/*
 	  We should lock mutex before compare nidle, otherwise another thread maybe
@@ -459,8 +500,11 @@ void thread_pool_wait_all(void){
 	pthread_mutex_unlock(&pool.mutex);
 }
 /**
- *   Initialize the thread pool. Repeated call to resize the pool
- */
+   Initialize the thread pool. Repeated call to resize the pool
+
+   @param[in] nthread Number of threads including the master thread. 0 or more than the number of processors uses the
+   number of processors.
+*/
 void thread_pool_init(unsigned int nthread){
 	if(!jobsall){
 		memset(&pool, 0, sizeof(thread_pool_t));
@@ -512,8 +556,8 @@ void thread_pool_init(unsigned int nthread){
 }
 
 /**
- *   Exit all threads and free thread pool.
- */
+   Exit all threads and free thread pool.
+*/
 void thread_pool_destroy(void){
 	//only 1 thread can destroy the pool
 	if(!jobsall) return;

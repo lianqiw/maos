@@ -102,6 +102,11 @@ void gpu_##X##fft2(X##mat *A_, int direction){\
 GPU_FFT(c, Comp, CUFFT_C2C);
 GPU_FFT(z, Comp, CUFFT_C2C);
 
+/**
+   Install the GPU implementations of svd, svd_pow, gemm (d, c, s, z) and fft2
+   (c, z) into the corresponding *_ext function pointers of the CPU math
+   library so that large arrays are processed in GPU. No-op for CUDA_ARCH<600.
+*/
 void gpu_ext_assign(){
 #if CUDA_ARCH >=600
 #define CPU_ASSIGN_BLAS(X,R,T)\
@@ -128,6 +133,10 @@ void gpu_ext_assign(){
 #endif
 }
 
+/**
+   Test gpu_dgemm against dmm on a random 2000x2000 matrix and print the
+   difference.
+*/
 void gpu_dgemm_test(){
 	dmat *A=dnew(2000, 2000);
 	dmat *B=dref(A);
@@ -147,6 +156,10 @@ void gpu_dgemm_test(){
 	dfree(A); dfree(B); dfree(C); dfree(C2);
 	info("dmm and gpu_dgemm diff are %g %g. sum are %g, %g\n", diffu, diffu2, CS, C2S);
 }
+/**
+   Test and time gpu_dsvd against dsvd on a random 2000x2000 matrix. Saves the
+   inputs and results to files if the difference exceeds 0.01.
+*/
 void gpu_dsvd_test(){//test
 	//gpu_dsvd is faster than dsvd for matrix larger than 500x500 (test is on cassiopeia)
 	dmat *A=dnew(2000, 2000);

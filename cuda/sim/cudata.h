@@ -23,7 +23,7 @@
 #include "perf.h"
 #include "wfs.h"
 #include "gpu_sim.h"
-extern int NGPU;//Actual number of GPUs being used. 
+extern int NGPU;
 extern int MAXGPU;
 extern Array<int> GPUS;//Used GPUS in cuda (col 0) and nvidia-smi index (col 1). nrow may be more than NGPU
 
@@ -41,7 +41,9 @@ typedef struct{
     NumArray<Real> next_atm;
     pthread_t threads;
 }atm_prep_t;
-//Global data independent of GPU
+/**
+   Global data independent of GPU
+*/
 class cuglobal_t{
 public:
     //Field ordering is important in destructor calling.
@@ -57,13 +59,21 @@ public:
     Array<cuwfs_t>wfs;
     Array<atm_prep_t>atm_prep_data;
     curmat mvm;
+    /**
+       Initialize members to zero.
+    */
     cuglobal_t():atmscale(0), recongpu(0), atm_full(0), atm_dtrat(0), atm_interp(0), atm_nps(0){
     }
+    /**
+       Free atmscale.
+    */
     ~cuglobal_t(){
 	    dfree(atmscale);
     }
 };
-//Per GPU data
+/**
+   Per GPU data
+*/
 class cudata_t{
 public:
     int igpu;
@@ -91,8 +101,14 @@ public:
     NumArray<AReal, Gpu>mvm_a; /*contains act result from mvm_m*mvm_g*/
     NumArray<GReal, Gpu>mvm_g;/*the gradients copied from gpu*/
     stream_t mvm_stream;
+    /**
+       Initialize members to zero.
+    */
     cudata_t():igpu(0),recon(0){
     }
+    /**
+       Delete the GPU reconstructor.
+    */
     ~cudata_t(){
 	    delete recon;
     }
@@ -100,6 +116,11 @@ public:
 
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;
+/**
+   Return the per-thread GPU data (macOS lacks __thread so pthread key is used).
+
+   @return Per GPU data of the current thread. Do not free.
+*/
 static inline cudata_t* _cudata(){
     return (cudata_t*)pthread_getspecific(cudata_key);
 }
@@ -107,12 +128,15 @@ static inline cudata_t* _cudata(){
 #else
 extern __thread cudata_t *cudata;
 #endif
-extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
+extern cudata_t **cudata_all;
 extern cuglobal_t *cuglobal;
 void gpu_print_mem(const char *msg);
 long gpu_get_free_mem(void);
 /**
-   switch to the next GPU and update the pointer.
+   Switch the current thread to the given GPU, update the cudata pointer, and
+   release its reserved memory.
+
+   @param[in] igpu GPU index in GPUS (0 to NGPU-1).
 */
 static inline void gpu_set(int igpu){
     extern Array<int> GPUS;
@@ -131,6 +155,11 @@ static inline void gpu_set(int igpu){
 }
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.
+   The internal counter is advanced by add and wraps around NGPU.
+
+   @param[in] add Increment of the internal counter. A fraction allows several
+   calls to share one GPU.
+   @return The GPU index.
 */
 static inline int gpu_next(float add=1){
     static float cur=-1;

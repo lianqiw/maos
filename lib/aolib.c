@@ -21,6 +21,9 @@
 #include "aos.h"
 //jmp_buf exception_return;
 
+/**
+   Library constructor: print a message and register the signal handler.
+*/
 static __attribute__((constructor)) void init(){
 	fprintf(stdout, "aolib loaded\n");
 	register_signal_handler(dummy_signal_handler);
@@ -30,6 +33,9 @@ static __attribute__((constructor)) void init(){
 	// }
 	//default_signal_handler(SIGUSR2, 0, 0);
 }
+/**
+   Library destructor: print a message when the library is unloaded.
+*/
 static __attribute__((destructor)) void deinit(){
 	fprintf(stdout, "aolib unloaded\n");
 }

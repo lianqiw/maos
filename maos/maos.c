@@ -29,8 +29,12 @@
  * Defines main() and a few utilities. *
 */
 /**
-    Return maos data pointer by name. Currently the numbers are filled manually. The
-	next step is to automatically generate them from maos/types.h
+   Return maos data pointer by name. Currently the numbers are filled manually. The
+   next step is to automatically generate them from maos/types.h
+
+   @param[in] name Variable name such as "simu.gradcl", or "list" to list all available variables.
+   @return Reference to the internal variable; do not free. If not found, a static dummy cell whose header lists the
+   available variables. NULL if data is not available.
 */
 static void* find_var(const char* name){
 	struct VAR_MAP{
@@ -209,7 +213,12 @@ static void* find_var(const char* name){
 	return dummy;
 
 }
-//Listen to requests coming from other client.
+/**
+   Listen to requests coming from other client.
+
+   @param[in] psock Socket (cast to pointer) connected to the client. It is closed when the client disconnects.
+   @return NULL.
+*/
 static void* maos_var(void* psock){
 	thread_block_signal();
 	int cmd[2];
@@ -270,7 +279,12 @@ static void* maos_var(void* psock){
 	return NULL;
 }
 
-//Listen to commands coming from scheduler
+/**
+   Listen to commands coming from scheduler
+
+   @param[in] psock Socket (cast to pointer) connected to the scheduler.
+   @return NULL.
+*/
 static void* maos_listener(void* psock){
 	int sock=(int)(long)psock;
 	thread_block_signal();
@@ -327,6 +341,8 @@ static void* maos_listener(void* psock){
 
 /**
    Rename the log files when simulation exits or when signal is caught.
+
+   @param[in] sig Signal number caught, or 0 for normal exit.
 */
 void maos_final(int sig){
 	draw_final(1);
@@ -340,6 +356,9 @@ void maos_final(int sig){
 }
 /**
    Handles signals.
+
+   @param[in] sig Signal number caught.
+   @return 0.
 */
 int maos_signal_handler(int sig){
 	info2("maos_signal_handler: %s (%d)\n", strsignal(sig), sig);
@@ -362,7 +381,9 @@ int maos_signal_handler(int sig){
 
    <p><code>maos base.conf save.setup=1 'powfs.phystep=[0 100 100]'</code><p>
 
-   Any duplicate parameters will override the pervious specified value. The
+   Parameters given as key=value in the command line override those in .conf
+   files given in the command line, which override the master .conf, regardless
+   of the order. Within each of them, a later value overrides an earlier one. The
    configure file default.conf will be loaded as the master .conf unless a -c
    switch is used with another .conf file. For scao simulations, call maos with
    -c switch and the right base .conf file.
@@ -384,12 +405,16 @@ int maos_signal_handler(int sig){
    Other optional parameters:
    \verbatim
    -d          do detach from console and not exit when logged out
-   -s 2 -s 4   set seeds to [2 4]
    -n 4        launch 4 threads.
    -f          To disable job scheduler and force proceed
+   sim.seeds=[2 4]  set seeds to [2 4]
    \endverbatim
    In detached mode, drawing is automatically disabled.
    \callgraph
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return signal_caught: 0 for normal exit, otherwise the signal number caught.
 */
 int main(int argc, const char* argv[]){
 	arg_t* arg=parse_args(argc, argv);/*does chdir */

@@ -20,20 +20,20 @@
 #include "phase.h"
 #include "mkdtf.h"
 /**
- * Create petal piston mode to OPD interaction matrix and/or Convert petal modes to petal OPD.
- * no longer included as common tip/tilt can be recreated with global tip/tilt
- * and differential petal tip/tilt creates high order modes that can be sensed.
- * @param[out]ph, 	Outupt the interaction matrix from petal modes to OPD [can be NULL]
- * @param[out] popd Output the opd from petal mode vector [can be NULL]
- * @param loc		The phase screen grid. Replacing nx, ny, cx, cy.
- * @param nx, 	    Size of the phase screen grid.
- * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of pupil 
- * @param cy,       Center of pupil 
- * @param npetal,   Number of petals.
- * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
- * @param mode  	If set, output opd with the mode vector.
-){
+   Create petal piston mode to OPD interaction matrix and/or Convert petal modes to petal OPD.
+   Petal tip/tilt is no longer included as common tip/tilt can be recreated with global tip/tilt
+   and differential petal tip/tilt creates high order modes that can be sensed.
+
+   @param[out] ph Output the interaction matrix from petal modes to OPD. Old content is freed. Can be NULL.
+   @param[out] popd Output the opd from petal mode vector. Can be NULL.
+   @param[in] loc The phase screen grid. Replacing nx, ny, cx, cy. Can be NULL.
+   @param[in] nx Size of the phase screen grid along x.
+   @param[in] ny Size of the phase screen grid along y.
+   @param[in] cx Center of pupil along x in unit of grid points.
+   @param[in] cy Center of pupil along y in unit of grid points.
+   @param[in] npetal Number of petals.
+   @param[in] theta Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   @param[in] mode The petal mode vector of length npetal. Required if popd is set.
 */
 static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real cx, real cy, long npetal, real theta, const dmat *mode){
 	if(!ph&&!popd){
@@ -122,11 +122,12 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 	}
 }
 /**
- * Create petal piston mode to OPD interaction matrix.
- * @return  	    Outupt the interaction matrix from petal modes to OPD
- * @param loc		The phase screen grid. 
- * @param npetal,   Number of petals.
- * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   Create petal piston mode to OPD interaction matrix.
+
+   @param[in] loc The phase screen grid. The pupil is centered at the origin.
+   @param[in] npetal Number of petals.
+   @param[in] theta Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   @return Newly allocated interaction matrix from petal modes to OPD; the caller frees it.
 */
 dsp *petal_mkh_loc(loc_t *loc, long npetal, real theta){
 	dsp *h=NULL;
@@ -134,15 +135,16 @@ dsp *petal_mkh_loc(loc_t *loc, long npetal, real theta){
 	return h;
 }
 /**
- * Create petal piston mode to OPD interaction matrix.
- * @return  	    Outupt the interaction matrix from petal modes to OPD
- * @param nx, 	    Size of the phase screen grid.
- * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of pupil
- * @param cy,       Center of pupil
- * @param npetal,   Number of petals.
- * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
- */
+   Create petal piston mode to OPD interaction matrix.
+
+   @param[in] nx Size of the phase screen grid along x.
+   @param[in] ny Size of the phase screen grid along y.
+   @param[in] cx Center of pupil along x in unit of grid points.
+   @param[in] cy Center of pupil along y in unit of grid points.
+   @param[in] npetal Number of petals.
+   @param[in] theta Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   @return Newly allocated interaction matrix from petal modes to OPD; the caller frees it.
+*/
 dsp *petal_mkh(long nx, long ny, real cx, real cy, long npetal, real theta){
 	dsp *h=NULL;
 	dbg("nx=%ld, ny=%ld, cx=%g, cy=%g\n", nx, ny, cx, cy);
@@ -150,31 +152,29 @@ dsp *petal_mkh(long nx, long ny, real cx, real cy, long npetal, real theta){
 	return h;
 }
 /**
- * Convert petal modes to petal OPD.
- * @param[out] opd  Output the opd from petal mode vector
- * @param nx, 	    Size of the phase screen grid.
- * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of pupil
- * @param cy,       Center of pupil
- * @param npetal,   Number of petals.
- * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
- * @param mode  	If set, output opd with the mode vector.
-){
+   Convert petal modes to petal OPD.
+
+   @param[out] opd Output the opd from petal mode vector. Must be preallocated; its size defines the grid.
+   @param[in] cx Center of pupil along x in unit of grid points.
+   @param[in] cy Center of pupil along y in unit of grid points.
+   @param[in] npetal Number of petals.
+   @param[in] theta Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   @param[in] mode The petal mode vector of length npetal.
 */
 void petal_opd(anydmat opd, real cx, real cy, long npetal, real theta, const dmat *mode){
 	petal_do(NULL, &opd.dm, NULL, NX(opd.dm), NY(opd.dm), cx, cy, npetal, theta, mode);
 }
 /**
- * Convert petal modes to petal OPD. Alternative interface
- * @return	  		Output the opd from petal mode vector
- * @param nx, 	    Size of the phase screen grid.
- * @param ny,   	Size of the phase screen grid.
- * @param cx,       Center of pupil
- * @param cy,       Center of pupil
- * @param npetal,   Number of petals.
- * @param theta, 	Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
- * @param mode  	If set, output opd with the mode vector.
-){
+   Convert petal modes to petal OPD. Alternative interface
+
+   @param[in] nx Size of the phase screen grid along x.
+   @param[in] ny Size of the phase screen grid along y.
+   @param[in] cx Center of pupil along x in unit of grid points.
+   @param[in] cy Center of pupil along y in unit of grid points.
+   @param[in] npetal Number of petals.
+   @param[in] theta Petal gap offset angle (in radian). 0 means petal gaps aligns against y axis.
+   @param[in] mode The petal mode vector of length npetal.
+   @return Newly allocated opd from petal mode vector; the caller frees it.
 */
 dmat *petal_mkopd(long nx, long ny, real cx, real cy, long npetal, real theta, const dmat *mode){
 	dmat *opd=NULL;
@@ -199,7 +199,9 @@ typedef struct petal_t{
 	int withtt;/**<Whether mod include tip/tilt*/
 }petal_t;
 /**
- * Free the petal_t array
+   Free the petal_t array
+
+   @param[in] p The array of max(1, p->nsa) petal_t to free. Can be NULL.
 */
 void petal_free(petal_t *p){
 	if(!p) return;
@@ -215,6 +217,12 @@ void petal_free(petal_t *p){
 	}
 	free(p);
 }
+/**
+   Free an array of np petal_t pointers, and the array itself.
+
+   @param[in] p The array of petal_t pointers. Can be NULL.
+   @param[in] np Number of elements in p.
+*/
 void petal_free_arr(petal_t **p, int np){
 	if(!p || !np) return;
 	for(int ip=0; ip<np; ip++){
@@ -223,11 +231,12 @@ void petal_free_arr(petal_t **p, int np){
 	free(p);
 }
 /**
- * Connect petal measurements by TTF quadrants.
- * @param mout	The petal measurements for the entire pupil
- * @param mphi  The petal measurements for each quadrant
- * @param npetal The number of petals.
- * @param nsa   Number of subapertures.
+   Connect petal measurements by TTF quadrants.
+
+   @param[out] mout The petal measurements for the entire pupil (npetal*1).
+   @param[in] mphi The petal measurements for each quadrant (npetal*nsa). NAN marks unmeasured petals.
+   @param[in] npetal The number of petals.
+   @param[in] nsa Number of subapertures.
 */
 void petal_connect(dmat **mout, dmat *mphi, int npetal, long nsa){
 	if(NX(mphi)!=npetal||NY(mphi)!=nsa){
@@ -279,19 +288,23 @@ void petal_connect(dmat **mout, dmat *mphi, int npetal, long nsa){
 			}
 		}
 	}
+	//dshow(diff, "diff2");
 }
 
 /**
- * Phase retrieval setup of petal measurements from PSF for a subapertures of a WFS.
- * @param[out] petal: The petal reconstruction parameters.
- * @param amp:		The pupil plane amplitude map. Sorted by subapertures.
- * @param cx,cy:    Coordinate of the pupil center.
- * @param npetal:	Number of petals
- * @param pdtheta:  Ratio of pixtheta/dtheta
- * @param pixblur: 	Pixel blur ratio
- * @param theta: 	The pupil clocking angle (CCW) in radian.
- * @param nsa:	 	Number of subapertures within the given WFS.
- * @param withtt:	Whether tip/tilt in included in the reconstruction.
+   Phase retrieval setup of petal measurements from PSF for a subapertures of a WFS.
+
+   @param[out] petal The petal reconstruction parameters. Must be preallocated.
+   @param[in] amp The pupil plane amplitude map of this subaperture (square). Referenced, not copied.
+   @param[in] cx Coordinate of the pupil center along x in unit of grid points.
+   @param[in] cy Coordinate of the pupil center along y in unit of grid points.
+   @param[in] npetal Number of petals.
+   @param[in] pdtheta Ratio of pixtheta/dtheta.
+   @param[in] pixblur Pixel blur ratio.
+   @param[in] theta The pupil clocking angle (CCW) in radian.
+   @param[in] npsf Number of PSF pixels to use.
+   @param[in] nsa Number of subapertures within the given WFS.
+   @param[in] withtt Whether tip/tilt in included in the reconstruction.
 */
 static void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npetal, real pdtheta, real pixblur, real theta, int npsf, long nsa, int withtt){
 	const long nloc=PN(amp);
@@ -346,12 +359,17 @@ static void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, in
 }
 
 /**
- * Phase retrieval setup of petal measurements from PSFs for all subapertures of a WFS.
- * @param saloc:    Coordinate of the lower left point (where amp is defined) of each subaperture.
- * @param dx:		Grid spatial sampling 
- * @param amp:		The pupil plane amplitude map. Sorted by subapertures.
- * @param theta: 	The pupil clocking angle (CCW) in radian.
- * @param withtt:	Whether tip/tilt in included in the reconstruction.
+   Phase retrieval setup of petal measurements from PSFs for all subapertures of a WFS.
+
+   @param[in] saloc Coordinate of the lower left point (where amp is defined) of each subaperture. NULL or empty for a single subaperture.
+   @param[in] dx Grid spatial sampling (same unit as saloc).
+   @param[in] amp The pupil plane amplitude map. Sorted by subapertures.
+   @param[in] pdtheta Ratio of pixtheta/dtheta.
+   @param[in] pixblur Pixel blur ratio.
+   @param[in] theta The pupil clocking angle (CCW) in radian.
+   @param[in] npsf Number of PSF pixels to use.
+   @param[in] withtt Whether tip/tilt in included in the reconstruction.
+   @return Newly allocated array of nsa petal_t; free with petal_free().
 */
 petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta, real pixblur, real theta, int npsf, int withtt){
 	const long nsa=(saloc&&saloc->nloc>0)?saloc->nloc:1;
@@ -374,9 +392,10 @@ petal_t *petal_setup(const loc_t *saloc, real dx, const dmat *amp, real pdtheta,
 	return petal;
 }
 /**
- * Remove blurry caused by otf.
- * @param psf	PSF with peak in center
- * @param otf	detector otf with peak in corner
+   Remove blurry caused by otf.
+
+   @param[in,out] psf PSF with peak in center. Deblurred in place.
+   @param[in] otf Detector otf with peak in corner.
 */
 void deblur(dmat *psf, const dmat *otf){
 	cmat *wvf=cnew(NX(otf), NY(otf));
@@ -397,13 +416,14 @@ void deblur(dmat *psf, const dmat *otf){
 	cfree(wvf);
 }
 /**
- * Phase retrieval of petal measurements from PSF for a subaperture
- * @param[out] phi1:  The reconstructed pupil phase in zonal space.
- * @param[out] mphi1: The reconstructed pupil phase (if phi1b is specified, the update from phi1b) in modal space.
- * @param[in] petal: The petal reconstruction parameters.
- * @param ints: 	The (subaperture) PSF.
- * @param phi1b     The initial pupil phase estimate in zonal or modal (only nsa==1) space.
- * @param nrep:	 	Number of gerchberg saxton iterations.
+   Phase retrieval of petal measurements from PSF for a subaperture
+
+   @param[out] phi1 The reconstructed pupil phase in zonal space. Can be NULL.
+   @param[out] mphi1 The reconstructed pupil phase (if phi1b is specified, the update from phi1b) in modal space. Can be NULL.
+   @param[in] petal The petal reconstruction parameters.
+   @param[in] ints The (subaperture) PSF.
+   @param[in] phi1b The initial pupil phase estimate in zonal or modal (only nsa==1) space. Can be NULL.
+   @param[in] nrep Number of gerchberg saxton iterations. 0 means 8.
 */
 void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat *ints, const dmat *phi1b, int nrep){
 	if(!nrep) nrep=8;
@@ -460,13 +480,14 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	dfree(phi1b2);
 }
 /**
- * Phase retrieval setup and reconstruction of petal measurements from PSFs for all subapertures of a WFS.
- * @param[out] phi1  The reconstructed pupil phase in zonal space, sorted by subapertures.
- * @param[out] mphi1 The reconstructed pupil phase (if zonal phi1b is specified, the update from phi1b) in modal space for the entire pupil.
- * @param petal     The petal reconstruction parameters.
- * @param ints      The (subaperture) PSFs sorted by subapertures.
- * @param phi1b     The initial pupil phase estimate in zonal or modal (only nsa==1) space.
- * @param nrep      Number of gerchberg saxton iterations.
+   Phase retrieval reconstruction of petal measurements from PSFs for all subapertures of a WFS.
+
+   @param[out] phi1 The reconstructed pupil phase in zonal space, sorted by subapertures. Can be NULL.
+   @param[out] mphi1 The reconstructed pupil phase (if zonal phi1b is specified, the update from phi1b) in modal space for the entire pupil. Can be NULL.
+   @param[in] petal The petal reconstruction parameters from petal_setup().
+   @param[in] ints The (subaperture) PSFs sorted by subapertures.
+   @param[in] phi1b The initial pupil phase estimate in zonal or modal (only nsa==1) space. Can be NULL.
+   @param[in] nrep Number of gerchberg saxton iterations. 0 means 8.
 */
 void petal_solve(dcell **phi1, dmat **mphi1, const petal_t *petal, const dcell *ints, const dmat *phi1b, int nrep){
 	if(!petal || !ints){
@@ -504,6 +525,13 @@ void petal_solve(dcell **phi1, dmat **mphi1, const petal_t *petal, const dcell *
 	}
 	dfree(mval);
 }
+/**
+   Save the petal modes, amplitude and operators of each subaperture to files
+   with names prefixed by format.
+
+   @param[in] petal The petal reconstruction parameters. Can be NULL.
+   @param[in] format The printf style file name prefix, followed by its arguments.
+*/
 void petal_save(petal_t *petal, const char *format, ...){
 	format2fn;
 	if(!petal) return;
@@ -515,17 +543,20 @@ void petal_save(petal_t *petal, const char *format, ...){
 	}
 }
 /**
- * A convenient wrapper for petal_setup and petal_solve to be called by Python.
- * Phase retrieval setup and reconstruction of petal measurements from PSFs for all subapertures of a WFS. 
- * @param[out] phi1  The reconstructed pupil phase in zonal space, sorted by subapertures.
- * @param[out] mphi1 The reconstructed pupil phase (if phi1b is specified, the update from phi1b) in modal space for the entire pupil.
- * @param ints      The (subaperture) PSFs sorted by subapertures.
- * @param phi1b     The initial pupil phase estimate.
- * @param saloc     Coordinate of the lower left point (where amp is defined) of each subaperture.
- * @param amp       The pupil plane amplitude map. Sorted by subapertures.
- * @param theta    The pupil clocking angle (CCW) in radian.
- * @param nrep      Number of gerchberg saxton iterations.
- * @param withtt    Whether tip/tilt in included in the reconstruction.
+   A convenient wrapper for petal_setup and petal_solve to be called by Python.
+   Phase retrieval setup and reconstruction of petal measurements from PSFs for all subapertures of a WFS.
+
+   @param[out] phi1 The reconstructed pupil phase in zonal space, sorted by subapertures. Can be NULL.
+   @param[out] mphi1 The reconstructed pupil phase (if phi1b is specified, the update from phi1b) in modal space for the entire pupil. Can be NULL.
+   @param[in] ints The (subaperture) PSFs sorted by subapertures.
+   @param[in] phi1b The initial pupil phase estimate. Can be NULL.
+   @param[in] saloc Coordinate of the lower left point (where amp is defined) of each subaperture, in unit of amp grid spacing.
+   @param[in] amp The pupil plane amplitude map. Sorted by subapertures.
+   @param[in] pdtheta Ratio of pixtheta/dtheta.
+   @param[in] pixblur Pixel blur ratio.
+   @param[in] theta The pupil clocking angle (CCW) in radian.
+   @param[in] nrep Number of gerchberg saxton iterations.
+   @param[in] withtt Whether tip/tilt in included in the reconstruction.
 */
 void petal_solve_wfs(dcell **phi1, dmat **mphi1, const dcell *ints, const dmat *phi1b, const loc_t *saloc, const dmat *amp, real pdtheta, real pixblur, real theta, int nrep, int withtt){
 	petal_t *petal=petal_setup(saloc, 1, amp, pdtheta, pixblur, theta, 16, withtt);

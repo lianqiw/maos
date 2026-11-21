@@ -40,7 +40,7 @@ extern "C"{
 extern int MEM_VERBOSE;
 extern int MEM_DEBUG;
 extern int MEM_FUNTRACE;
-extern __thread char funtrace[];//stores info about top level function ca
+extern __thread char funtrace[];
 #define funtrace_len 128
 #define funtrace_set (((MEM_DEBUG || MEM_VERBOSE) && !funtrace[0] && MEM_FUNTRACE)?(void*)(long)snprintf(funtrace, funtrace_len, "%s:%d (%s)", BASEFILE,__LINE__,__func__):NULL)
 #define funtrace_unset funtrace[0]=0;

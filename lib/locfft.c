@@ -29,13 +29,18 @@
 */
 
 
-locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
-	const dmat* amp,        /**<[in] The amplitude*/
-	const dmat* wvl,        /**<[in] The wavelength*/
-	const lmat* fftsize,    /**<[in] The suggested size for FFT, nwvl values*/
-	const real oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
-	real fieldstop        /**<[in] Size of field stop (radian) if used*/
-){
+/**
+   Initialize the locfft_t struct that embeds OPD on loc into square arrays for FFT.
+
+   @param[in] loc The loc (referenced, not copied).
+   @param[in] amp The amplitude (referenced, not copied).
+   @param[in] wvl The wavelength (m).
+   @param[in] fftsize The suggested size for FFT, nwvl values. Can be NULL.
+   @param[in] oversize Factor of oversize. 2 for Nyquist sampling.
+   @param[in] fieldstop Size of field stop (radian) if used. 0 to disable.
+   @return Newly allocated struct; free with locfft_free().
+*/
+locfft_t* locfft_init(loc_t* loc, const dmat* amp, const dmat* wvl, const lmat* fftsize, const real oversize, real fieldstop){
 	const int nwvl=(int)(NX(wvl)*NY(wvl));
 	locfft_t* locfft=mycalloc(1, locfft_t);
 	locfft->embed=lcellnew(nwvl, 1);
@@ -71,6 +76,8 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 }
 /**
    Frees the struct
+
+   @param[in] locfft The struct to free. Can be NULL.
 */
 void locfft_free(locfft_t* locfft){
 	if(!locfft) return;
@@ -86,6 +93,11 @@ void locfft_free(locfft_t* locfft){
    \f$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) \f$
 
    where A is the amplitude map.
+
+   @param[in] iopdevl The OPD (m).
+   @param[in] amp The amplitude map.
+   @param[in] wvl The wavelength (m).
+   @return Complex sum (not normalized).
 */
 static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
 	real wvk=TWOPI/wvl;
@@ -106,6 +118,12 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
    energy.
 
    Extract center part of psfsize.
+
+   @param[in,out] psf2sp The complex PSF for each wavelength. Allocated if NULL, otherwise overwritten.
+   @param[in] locfft The locfft struct.
+   @param[in] opd The OPD defined on locfft->loc (m).
+   @param[in] psfsize Size of PSF to extract for each wavelength. NULL for full size. 1 for Strehl only.
+   @param[in] sum2one If set, normalize PSF to sum to 1; otherwise peak is Strehl.
 */
 void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const lmat* psfsize, int sum2one){
 	int nwvl=(int)NX(locfft->wvl);
@@ -189,6 +207,10 @@ OMP_TASK_FOR(4)
 }
 /**
    Apply a field stop to the OPD.
+
+   @param[in] locfft The locfft struct with fieldmask set.
+   @param[in,out] opd The OPD (m), replaced by the field stop filtered OPD.
+   @param[in] wvlwts Weights of each wavelength.
 */
 void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	int nwvl=(int)NX(locfft->wvl);
@@ -239,8 +261,14 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 	ccellfree(wvfs);
 }
 /**
- * Apply the phase function out=in*exp(I*pi*(x^2+y^2)/(z*wvl)
- * */
+   Apply the phase function out=in*exp(I*pi*(x^2+y^2)/(z*wvl)).
+
+   @param[out] out The output complex field. Already allocated.
+   @param[in] in The input complex field. If NULL, out is set to the phase function only. Can be the same as out.
+   @param[in] dx Spatial sampling (m).
+   @param[in] wvl Wavelength (m).
+   @param[in] z Propagation distance (m).
+*/
 static void apply_h(cmat* out, const cmat* in, real dx, real wvl, real z){
 	real coeff=(M_PI/(z*wvl))*dx*dx;
 	long nx2=NX(out)/2;
@@ -264,30 +292,31 @@ static void apply_h(cmat* out, const cmat* in, real dx, real wvl, real z){
 	}
 }
 /**
- * Fresnel propagation using either FFT or angular spectrum method.
- *
- * For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular
- * spectrum method, the output sampling equals to the input sampling. When the
- * output sampling equals, the two methods agree. Notice that at near field when
- * dp is smaller than dx, the output of angular spectrum method is periodic.
- *
- * The output is normalized so that its squared sum equals to
- * nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this
- * scaling. 
- *
- * The brutal force method (method=0) has the exact solution without using
- * fresnel approximation. It is however very slow. The results agrees with
- * method=1 or 2 when the sampling agrees and the approximation holds.
- */
-void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on method. Should not be empty if method is 0.*/
-	real* pdxout,  /**<Sampling of output, can be supplied if method=0, use dp if not supplied.*/
-	const cmat* in, /**<Input complex field, , Amp*exp(-i*k*opd)*/
-	real dxin,   /**<Spatial sampling of in*/
-	real wvl,    /**<Wavelength*/
-	real z,      /**<Propagation distance*/
-	real scale,  /**<Scaling to be applied to out to preserve energy. 0: determine from input*/
-	int method   /**<Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2.*/
-){
+   Fresnel propagation using either FFT or angular spectrum method.
+
+   For FFT method, the output sampling is z*wvl/(dxin*nxin). For angular
+   spectrum method, the output sampling equals to the input sampling. When the
+   output sampling equals, the two methods agree. The angular spectrum method is
+   unitary (propagating by -z reverses it) and its output is periodic.
+
+   The output is normalized so that its squared sum equals to
+   nx*ny*sum(abs(in)^2). Input argument scale should be supplied to cancel this
+   scaling. 
+
+   The brutal force method (method=0) has the exact solution without using
+   fresnel approximation. It is however very slow. The results agrees with
+   method=1 or 2 when the sampling agrees and the approximation holds.
+
+   @param[in,out] pout Output complex field. Sampling depends on method. Allocated if NULL (32x32 for method 0, same size as in otherwise).
+   @param[in,out] pdxout Sampling of output. For method=0 it can be supplied, otherwise z*wvl/(dxin*nx) is used. Set on output.
+   @param[in] in Input complex field, Amp*exp(-i*k*opd).
+   @param[in] dxin Spatial sampling of in (m).
+   @param[in] wvl Wavelength (m).
+   @param[in] z Propagation distance (m).
+   @param[in] scale Scaling to be applied to out to preserve energy. 0: determine from input.
+   @param[in] method Propagation method, 0: brutal force, 1: FFT, 2: angular spectrum, -1: auto between 1 and 2.
+*/
+void fresnel_prop(cmat** pout, real* pdxout, const cmat* in, real dxin, real wvl, real z, real scale, int method){
 	if(method){
 		if(!*pout){
 			*pout=cnew(NX(in), NY(in));

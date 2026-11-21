@@ -41,6 +41,16 @@ typedef struct vkcov_t{
 }vkcov_t;
 vkcov_t* head=NULL;
 PNEW(mutex_cov);
+/**
+   Look up the cached von Karman covariance data with matching parameters.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] L0 Outer scale (m).
+   @param[in] dx Sampling (m).
+   @param[in] n Size of the screen.
+   @param[in] ninit Size of the initial coarse grid.
+   @return Reference to the cached data (do not free), or NULL if not found.
+*/
 static vkcov_t* vkcov_get(real r0, real L0, real dx, long n, long ninit){
 	for(vkcov_t* p=head; p; p=p->next){
 		if(fabs(p->r0-r0)<EPS&&(fabs(p->L0-L0)<EPS||(isinf(p->L0)&&isinf(L0)))
@@ -52,6 +62,9 @@ static vkcov_t* vkcov_get(real r0, real L0, real dx, long n, long ninit){
 		r0, L0, dx, n, ninit);
 	return NULL;
 }
+/**
+   Free the cached von Karman covariance data used by fractal operators.
+*/
 void fractal_vkcov_free(){
 	for(vkcov_t* p=head; p; p=head){
 		head=p->next;
@@ -66,7 +79,15 @@ void fractal_vkcov_free(){
 /**
    Compute Von Karman covariance function at separations computed from the grid
    size nx and sampling dx, with Fried parameter of r0, and outerscale of L0.
-   ninit is the initial side size of the atm array to start with.
+   ninit is the initial side size of the atm array to start with. The result is
+   cached and reused for the same parameters.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] L0 Outer scale (m). Values above 9000 are treated as infinity.
+   @param[in] dx Sampling (m).
+   @param[in] n Size of the screen. n-1 must be ninit-1 times a power of 2.
+   @param[in] ninit Size of the initial coarse grid.
+   @return Reference to the cached covariance data. Do not free; freed by fractal_vkcov_free().
 */
 static vkcov_t* vkcov_calc(real r0, real L0, real dx, long n, long ninit){
 	if(L0>9000) L0=INFINITY;/*L0 bigger than 9000 is treated as infinity. */

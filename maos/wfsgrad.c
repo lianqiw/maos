@@ -51,6 +51,11 @@
 #endif
 /**
    Propagate only controllable component of turbulence to WFS.
+
+   @param[in] simu Simulation data.
+   @param[in,out] opd WFS OPD to accumulate into.
+   @param[in] iwfs Index of the WFS.
+   @param[in] alpha Scaling factor.
 */
 void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const parms_t* parms=simu->parms;
@@ -87,8 +92,14 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	}
 }
 /**
- * Compute tip/tilt for llt ray trace.
- * */
+   Compute tip/tilt for llt ray trace.
+
+   @param[in,out] ttx Tip (rad). Overwritten by the FSM command if present, otherwise accumulated into.
+   @param[in,out] tty Tilt (rad). Same as ttx.
+   @param[in,out] simu Simulation data; simu->save->ltpm_real is updated if present.
+   @param[in] iwfs Index of the WFS.
+   @param[in] isim Time step index.
+*/
 void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 	const parms_t *parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
@@ -493,7 +504,12 @@ void* wfsgrad_iwfs(thread_t* info){
 }
 
 
-/*Compute global tip/tilt error for each WFS*/
+/**
+   Compute global tip/tilt error for each WFS
+
+   @param[in,out] simu Simulation data; fsmerr and save->fsmerrs are updated.
+   @param[in] iwfs Index of the WFS.
+*/
 static void wfsgrad_fsm(sim_t* simu, int iwfs){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -524,7 +540,9 @@ static void wfsgrad_fsm(sim_t* simu, int iwfs){
    which NGS cannot provide due to low frame rate. After the HPF on lgs
    gradients, our system is NO LONGER affected by sodium layer variation.
 
-   if sim.mffocus is set: The HPF is applied to each LGS WFS. 
+   if sim.mffocus is set: The HPF is applied to each LGS WFS.
+
+   @param[in,out] simu Simulation data.
 */
 static void wfsgrad_lgsfocus(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -560,7 +578,11 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 }
 
 /**
-   Every operation here should be in the Simulator not the Controller
+   Post process gradients of each WFS (scaling, offset, saving and plotting). Every operation here should be
+   in the Simulator not the Controller.
+
+   @param[in] info Thread data; info->data is sim_t, which is updated, and WFS start to end are processed.
+   @return NULL.
 */
 void* wfsgrad_post(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
@@ -638,6 +660,9 @@ void* wfsgrad_post(thread_t* info){
 /**
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
    It also includes operations on Gradients before tomography.
+
+   @param[in,out] simu Simulation data.
+   @return NULL.
 */
 void* wfsgrad(sim_t* simu){
 	real tk_start=PARALLEL==1?simu->tk_istart:myclockd();

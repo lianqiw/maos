@@ -83,39 +83,123 @@ using std::conj;//cannot use #define here
 
 #if !defined(IN_EXTERN_C)
 //Prevent compiling failure when number is a literal that defaults to int or double.
+/**
+   Compute A*B for double A and fcomplex B. A is converted to float.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The product, of the complex type.
+*/
 static inline fcomplex operator*(double A, const fcomplex& B){
 	return B*(float)A;
 }
+/**
+   Compute B*A for double A and fcomplex B. A is converted to float.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The product, of the complex type.
+*/
 static inline fcomplex operator*(const fcomplex& B, double A){
 	return B*(float)A;
 }
+/**
+   Compute A*B for float A and dcomplex B. A is converted to double.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The product, of the complex type.
+*/
 static inline dcomplex operator*(float A, const dcomplex& B){
 	return B*(double)A;
 }
+/**
+   Compute B*A for float A and dcomplex B. A is converted to double.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The product, of the complex type.
+*/
 static inline dcomplex operator*(const dcomplex& B, float A){
 	return B*(double)A;
 }
+/**
+   Compute A+B for double A and fcomplex B. A is converted to float.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The sum, of the complex type.
+*/
 static inline fcomplex operator+(double A, const fcomplex& B){
 	return B+(float)A;
 }
+/**
+   Compute B+A for double A and fcomplex B. A is converted to float.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The sum, of the complex type.
+*/
 static inline fcomplex operator+(const fcomplex& B, double A){
 	return B+(float)A;
 }
+/**
+   Compute A+B for float A and dcomplex B. A is converted to double.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The sum, of the complex type.
+*/
 static inline dcomplex operator+(float A, const dcomplex& B){
 	return B+(double)A;
 }
+/**
+   Compute B+A for float A and dcomplex B. A is converted to double.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The sum, of the complex type.
+*/
 static inline dcomplex operator+(const dcomplex& B, float A){
 	return B+(double)A;
 }
+/**
+   Compute A-B for double A and fcomplex B. A is converted to float.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The difference, of the complex type.
+*/
 static inline fcomplex operator-(double A, const fcomplex& B){
 	return (float)A-B;
 }
+/**
+   Compute B-A for double A and fcomplex B. A is converted to float.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The difference, of the complex type.
+*/
 static inline fcomplex operator-(const fcomplex& B, double A){
 	return B-(float)A;
 }
+/**
+   Compute A-B for float A and dcomplex B. A is converted to double.
+
+   @param[in] A The real operand.
+   @param[in] B The complex operand.
+   @return The difference, of the complex type.
+*/
 static inline dcomplex operator-(float A, const dcomplex& B){
 	return (double)A-B;
 }
+/**
+   Compute B-A for float A and dcomplex B. A is converted to double.
+
+   @param[in] B The complex operand.
+   @param[in] A The real operand.
+   @return The difference, of the complex type.
+*/
 static inline dcomplex operator-(const dcomplex& B, float A){
 	return B-(double)A;
 }
@@ -162,15 +246,41 @@ float cargf(fcomplex);
 #endif
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 /*BSD lacks few routines in C99 implementation*/
+/**
+   Complex natural logarithm (double).
+
+   @param[in] x The complex number.
+   @return The principal value of the natural logarithm of x.
+*/
 static inline dcomplex clog(dcomplex x){
 	return log(cabs(x))+I*carg(x);
 }
+/**
+   Complex natural logarithm (float).
+
+   @param[in] x The complex number.
+   @return The principal value of the natural logarithm of x.
+*/
 static inline fcomplex clogf(fcomplex x){
 	return logf(cabsf(x))+I*cargf(x);
 }
+/**
+   Complex power x^z (double).
+
+   @param[in] x The complex base.
+   @param[in] z The complex exponent.
+   @return x raised to the power z.
+*/
 static inline dcomplex cpow(dcomplex x, dcomplex z){
 	return cexp(clog(x)*z);
 }
+/**
+   Complex power x^z (float).
+
+   @param[in] x The complex base.
+   @param[in] z The complex exponent.
+   @return x raised to the power z.
+*/
 static inline fcomplex cpowf(fcomplex x, fcomplex z){
 	return cexpf(clogf(x)*z);
 }

@@ -26,6 +26,9 @@
 #include "interface.h"
 #include "../maos/maos.h"
 #include "maos2mex.h"
+/**
+   Register maos_reset() to be called at deinitialization when the mex file is loaded.
+*/
 static __attribute__((constructor)) void init_maos(){
 	register_deinit(maos_reset, NULL);
 }
@@ -36,6 +39,16 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+/**
+   Matlab entry point to run maos inside Matlab. Usage:
+   maos('setup', '-o dirout -n N -c scao_ngs.conf -g0'), maos('reset'),
+   simu=maos('sim', nstep), simu=maos('get','sim'), parms=maos('get','parms').
+
+   @param[in] nlhs Number of output arguments.
+   @param[out] plhs Output arguments.
+   @param[in] nrhs Number of input arguments.
+   @param[in] prhs Input arguments: command string followed by its arguments.
+*/
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
 	//exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
 	/*if(setjmp(*exception_env)){

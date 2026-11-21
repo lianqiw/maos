@@ -70,10 +70,18 @@ typedef struct{
 	cudaEvent_t event_pall;
 	event_t* event_w;
 }gpu_data_t;
-/*Does matched filter
+/**
+   Does matched filter
   threadIdx.x is 32, for 1/3 of pixels
   threadIdx.y is for a few subapertures
   no need to sync threads as every 32 is in the same warp.
+
+   @param[in] mtch Matched filter. For each subaperture, x then y filter with npix values each.
+   @param[in] pix Pixel intensities of all subapertures, concatenated.
+   @param[in] pixbias Pixel bias subtracted from pix.
+   @param[out] grad Gradients of length 2*nsa, ordered xyxy.
+   @param[in] saind Offset of the first pixel of each subaperture, of length nsa+1.
+   @param[in] nsa Number of subapertures.
 */
 static void __global__ mtch_do(const Real* mtch, const short* pix, const short* pixbias, Real* grad,
 	int* saind, int nsa){
@@ -112,8 +120,16 @@ static void __global__ mtch_do(const Real* mtch, const short* pix, const short* 
 		}
 	}
 }
-/*
-  Accumulate statistics
+/**
+  Accumulate dither statistics of the pixels.
+
+   @param[in] pix Pixel intensities.
+   @param[in,out] im0 Accumulated pixel intensities.
+   @param[in,out] imx Accumulated pixel intensities times cd.
+   @param[in,out] imy Accumulated pixel intensities times sd.
+   @param[in] cd Cosine of the dither phase.
+   @param[in] sd Sine of the dither phase.
+   @param[in] totpix Total number of pixels.
 */
 static void __global__ dither_acc_do(const short* pix,
 	Real* im0, Real* imx, Real* imy,
@@ -136,6 +152,11 @@ static void __global__ dither_acc_do(const short* pix,
    1) Only page locked host memory can do async memcpy that overallps with computation
    2) Has to be Portable for multiple GPUs to do async memcpy concurrently.
 
+   Reads subaperture pixel indices from NFIRAOS_saind. Timing results are saved to files.
+
+   @param[in] gpus List of GPU indices.
+   @param[in] ngpu Number of GPUs to use.
+   @param[in] nstep Number of time steps.
 */
 void mvmfull_real(int* gpus, int ngpu, int nstep){
 	dbg("Using %d gpus. nstep=%d\n", ngpu, nstep);

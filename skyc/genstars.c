@@ -31,18 +31,21 @@
 /**
    Generate stars for nsky star fields from star catalog.
 
-   \return a cell array of nskyx1, each cell contains (2+nwvl) x nstar array of
-location, and magnitudes.  */
-dcell* genstars(long nsky,         /**<number of star fields wanted*/
-	real lat,        /**<galactic latitude.*/
-	real lon,        /**<galactic longitude*/
-	real catscl,     /**<Scale the catlog star count.*/
-	real fov,        /**<diameter of the patrol field of view in arcsec.*/
-	int nwvl,          /**<number of wavelength*/
-	real* wvls,      /**<wavelength vector*/
-	real maglimit,	/**<If set, remove stars dimmer that this in the first wavelength. */
-	rand_t* rstat /**<random stream*/
-){
+   @param[in] nsky Number of star fields wanted.
+   @param[in] lat Galactic latitude (degree).
+   @param[in] lon Galactic longitude (degree).
+   @param[in] catscl Scale of the catalog star count. If negative, its absolute value is the maximum number of J<=19
+   stars, and the star fields are evenly distributed among 0 to that number of J<=19 stars.
+   @param[in] fov Diameter of the patrol field of view (arcsec).
+   @param[in] nwvl Number of wavelengths.
+   @param[in] wvls Wavelengths (m). Must match the catalog J, H, K bands.
+   @param[in] maglimit If nonzero, remove stars dimmer than this in the first wavelength.
+   @param[in,out] rstat Random stream.
+   @return Cell array of nsky x 1. Each cell contains a (2+nwvl) x nstar array of location (rad) and magnitudes, or
+   NULL if the field has no star. Newly allocated; the caller frees it.
+*/
+dcell* genstars(long nsky, real lat, real lon, real catscl, real fov, int nwvl, real* wvls, real maglimit,
+	rand_t* rstat){
 	char fn[80];   //file containing list of stars over the entire fov.
 	real cat_fov=0;//Catalog FoV in degree squared
 	int Jind=-1;   //Index of J band
@@ -207,7 +210,10 @@ static int sortfun_j(const void* p1, const void* p2){
 	return tot1<tot2?1:(tot1>tot2?-1:0);
 }
 /**
-   Sort the stars with J band magnitude from brightest to dimmest.
+   Sort the stars in each star field by total J and H band flux from brightest to dimmest.
+   When only one band is available, sort by the J band flux.
+
+   @param[in,out] stars Star fields as returned by genstars(). Sorted in place.
 */
 void sortstars(dcell* stars){
 	for(long isky=0; isky<stars->nx*stars->ny; isky++){

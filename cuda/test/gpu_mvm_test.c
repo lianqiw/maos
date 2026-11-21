@@ -29,6 +29,13 @@
 
 	A standalone executable that tests different MVM implementations.
   */
+/**
+   Run the MVM test case selected by the command line on the GPUs of this host.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: optional test case (0-4, 10) and number of steps (default 8000).
+   @return Exit status (0).
+*/
 int main(int argc, char *argv[]){
     info("HOST is %s\n", HOST);
     int ngpu;

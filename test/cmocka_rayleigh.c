@@ -110,5 +110,5 @@ int main(void){
 		cmocka_unit_test(test_rayleigh_scaling),
 		cmocka_unit_test(test_rayleigh_zero),
 	};
-	return cmocka_run_group_tests(tests,setup_rayleigh, free_rayleigh);
+	return cmocka_run_group_tests(tests, setup_rayleigh, free_rayleigh);
 }

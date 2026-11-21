@@ -18,7 +18,14 @@
 #include "mtch.h"
 
 /**
-   shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
+   shift i0 along x or y without wraping into i0x1 (+sx/sy) and i0x2 (-sx/sy)
+
+   @param[out] i0x1 Shifted image (+sx/sy) times scale. Only the overlapping region is written.
+   @param[out] i0x2 Shifted image (-sx/sy) times scale. Only the overlapping region is written.
+   @param[in] i0 The image.
+   @param[in] scale Scaling factor.
+   @param[in] sx Shift along x in pixels.
+   @param[in] sy Shift along y in pixels.
 */
 static void mki0sh(real* i0x1, real* i0x2, const dmat* i0, real scale, long sx, long sy){
 	long nx=NX(i0);
@@ -35,7 +42,11 @@ static void mki0sh(real* i0x1, real* i0x2, const dmat* i0, real scale, long sx, 
 
 /**
    Compute the derivative using FFT method along direction specified by theta (radian).
- */
+
+   @param[in] i0 The image.
+   @param[in] theta Direction of the derivative (radian).
+   @return Newly allocated derivative per pixel; the caller frees it.
+*/
 dmat* derive_by_fft(const dmat* i0, real theta){
 	cmat* otf=0;
 	ccpd(&otf, i0);
@@ -58,9 +69,15 @@ dmat* derive_by_fft(const dmat* i0, real theta){
 
 /**
    add two vectors: out=out*alpha+in*beta+theta
+
+   @param[in,out] out The output vector. Not read if alpha is 0.
+   @param[in] alpha Scaling of out.
+   @param[in] in The input vector. Can be NULL.
+   @param[in] N Length of the vectors.
+   @param[in] beta Scaling of in.
+   @param[in] theta Constant to add.
 */
-void addvec(real* restrict out, real alpha,
-	const real* restrict in, long N, real beta, real theta){
+void addvec(real* restrict out, real alpha, const real* restrict in, long N, real beta, real theta){
 
 	if(fabs(alpha)<EPS){
 		memset(out, 0, sizeof(real)*N);
@@ -89,24 +106,27 @@ void addvec(real* restrict out, real alpha,
 
 /**
    Generating matched filter from averaged short exposure images.
+
+   @param[out] mtche The matched filter (2*npix). Allocated if NULL. Can be NULL to skip.
+   @param[out] neaout The subaperture noise equivalent angle squared (2x2). Can be NULL to skip.
+   @param[in] i0 Averaged subaperture image.
+   @param[in] gx Derivative of i0 along x (r). If NULL, gx and gy are computed by FFT.
+   @param[in] gy Derivative of i0 along y (a).
+   @param[in] qe Non uniform quantum efficiency (optional).
+   @param[in] dbkgrnd2 Background image (optional).
+   @param[in] dbkgrnd2c Background calibration image (optional).
+   @param[in] bkgrnd Global background per pixel.
+   @param[in] bkgrndc Global background calibration per pixel.
+   @param[in] rne Detector read noise.
+   @param[in] pixthetax Size of pixel along x (radian).
+   @param[in] pixthetay Size of pixel along y (radian).
+   @param[in] pixrot Rotation (CCW, radian) of pixel island. 0 for cartesian.
+   @param[in] radgx 1: gx/gy is along r/a coord. 0 for cartesian.
+   @param[in] cr Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only.
 */
-void mtch(dmat** mtche,   /**<[out] the matched filter*/
-	dmat** neaout,  /**<[out] the subaperture noise equivalent angle*/
-	const dmat* i0, /**<[in] Averaged subaperture image*/
-	const dmat* gx, /**<[in] derivative of i0 along x (r)*/
-	const dmat* gy, /**<[in] derivative of i0 along y (a)*/
-	const dmat* qe, /**<[in] non uniform quantum efficiency (optional)*/
-	const dmat* dbkgrnd2,  /**<[in] background*/
-	const dmat* dbkgrnd2c, /**<[in] background calibration*/
-	real bkgrnd,    /**<[in] global background*/
-	real bkgrndc,   /**<[in] global background calibration*/
-	real rne,       /**<[in] Detector read noise*/
-	real pixthetax, /**<[in] Size of pixel along x*/
-	real pixthetay, /**<[in] Size of pixel along y*/
-	real pixrot,    /**<[in] Rotation (CCW, radian) of pixel island. 0 for cartesian*/
-	int radgx,      /**<[in] 1: gx/gy is along r/a coord. 0 for cartesian.*/
-	int cr          /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
-){
+void mtch(dmat** mtche, dmat** neaout, const dmat* i0, const dmat* gx, const dmat* gy, const dmat* qe,
+	const dmat* dbkgrnd2, const dmat* dbkgrnd2c, real bkgrnd, real bkgrndc, real rne, real pixthetax, real pixthetay,
+	real pixrot, int radgx, int cr){
 	const real* bkgrnd2=dbkgrnd2?P(dbkgrnd2):0;
 	const real* bkgrnd2c=dbkgrnd2c?P(dbkgrnd2c):0;
 	const real bkgrnd_res=bkgrnd-bkgrndc;
@@ -211,7 +231,14 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	if(mtche0) dfree(mtche0);
 }
 /**
-   A simplified wrapper for mtch
+   A simplified wrapper for mtch() without noise, background, or pixel size.
+
+   @param[out] mtche The matched filter. Allocated if NULL.
+   @param[out] nea The noise equivalent angle squared. Can be NULL.
+   @param[in] i0 Averaged subaperture image.
+   @param[in] gx Derivative of i0 along x. If NULL, computed by FFT.
+   @param[in] gy Derivative of i0 along y.
+   @param[in] cr Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only.
 */
 void mtch2(dmat** mtche, dmat** nea, const dmat* i0, const dmat* gx, const dmat* gy, int cr){
 	mtch(mtche, nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
@@ -220,28 +247,30 @@ void mtch2(dmat** mtche, dmat** nea, const dmat* i0, const dmat* gx, const dmat*
 /**
    The routine used to generate matched filter from WFS mean short exposure
    pixel intensities.
- */
-void mtch_cell(
-	dcell** pmtche,  /**<[out] matched filter. */
-	dcell** psanea,  /**<[out] subaperture noise equivalent angle*/
-	dmat** pi0sum,   /**<[out] sum of subaperture intensity*/
-	dmat** pi0sumsum,/**<[out] sum of all subaperture intensity*/
-	const dcell* i0s, /**<Subaperture intensities*/
-	const dcell* gxs, /**<Subaperture intensity gradients along x (radial)*/
-	const dcell* gys, /**<Subaperture intensity gradients along y (azimuthal)*/
-	const dmat* qe, /**<Quantum efficiency of each pixel*/
-	const dcell* bkgrnd2, /**<bkgrnd image*/
-	const dcell* bkgrnd2c,/**<bkgrnd correction image*/
-	real bkgrnd,  /**<bkgrnd per pixel*/
-	real bkgrndc, /**<bkgrnd correction per pixel*/
-	real rne,     /**<Read out noise per pixel*/
-	real pixthetax, /**<Pixel size along x (radial)*/
-	real pixthetay, /**<Pixel size along y (azimuthal)*/
-	dcell* pixrots,   /**<subaperture pixel rotation.*/
-	int radgx,     /**<Leave gradients at radial direction */
-	int mtchcr,    /**<constraint. -1: auto*/
-	real sigratio /**<scale signal level to increase NEA. default: 1*/
-){
+
+   @param[out] pmtche Matched filter (nsa*ni0). Old content is freed and replaced. Can be NULL.
+   @param[out] psanea Subaperture noise equivalent angle squared (nsa*3 for each ni0: xx, yy, xy). Old content is freed and replaced. Can be NULL.
+   @param[out] pi0sum Sum of subaperture intensity. Old content is freed and replaced. Can be NULL.
+   @param[out] pi0sumsum Sum of all subaperture intensity for each ni0. Old content is freed and replaced. Can be NULL.
+   @param[in] i0s Subaperture intensities (nsa*ni0).
+   @param[in] gxs Subaperture intensity gradients along x (radial). Can be NULL.
+   @param[in] gys Subaperture intensity gradients along y (azimuthal). Can be NULL.
+   @param[in] qe Quantum efficiency of each pixel. Can be NULL.
+   @param[in] bkgrnd2 Background image. Can be NULL.
+   @param[in] bkgrnd2c Background correction image. Can be NULL.
+   @param[in] bkgrnd Background per pixel.
+   @param[in] bkgrndc Background correction per pixel.
+   @param[in] rne Read out noise per pixel.
+   @param[in] pixthetax Pixel size along x (radial) (radian).
+   @param[in] pixthetay Pixel size along y (azimuthal) (radian).
+   @param[in] pixrots Subaperture pixel rotation (radian). Can be NULL.
+   @param[in] radgx Leave gradients at radial direction.
+   @param[in] mtchcr Constraint. -1: auto. See mtch() for other values.
+   @param[in] sigratio Scale signal level to increase NEA. 0 is treated as 1.
+*/
+void mtch_cell(dcell** pmtche, dcell** psanea, dmat** pi0sum, dmat** pi0sumsum, const dcell* i0s, const dcell* gxs,
+	const dcell* gys, const dmat* qe, const dcell* bkgrnd2, const dcell* bkgrnd2c, real bkgrnd, real bkgrndc, real rne,
+	real pixthetax, real pixthetay, dcell* pixrots, int radgx, int mtchcr, real sigratio){
 	int ni0=(int)NY(i0s);
 	const long nsa=NX(i0s);
 	if(psanea){

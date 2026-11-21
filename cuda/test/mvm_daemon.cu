@@ -68,13 +68,24 @@ typedef struct mvm_g_mul_t{
 }mvm_t;
 mvm_t* mvm_data=NULL;
 
-static int mp_count;/*number multi-processors on each GPU*/
+/**number multi-processors on each GPU*/
+static int mp_count;
 
 int ndone;
 int nleft;
 char* start;
 
 int sock_mvm;
+/**
+   Accumulate a part of the MVM: a+=mvm*g. Each thread handles one actuator.
+   Requires blockDim.x*sizeof(Real) bytes of dynamic shared memory.
+
+   @param[in] mvm Column major MVM matrix block with nact rows and ng columns.
+   @param[in,out] a Actuator commands, accumulated into.
+   @param[in] g Gradients of length ng.
+   @param[in] nact Number of actuators.
+   @param[in] ng Number of gradients.
+*/
 __global__ static void mvm_g_mul_do(const Real* restrict mvm, AReal* restrict a, const GReal* restrict g, int nact, int ng){
 	extern __shared__ Real acc[];
 	int iact=threadIdx.x+blockIdx.x*blockDim.x;
@@ -87,7 +98,13 @@ __global__ static void mvm_g_mul_do(const Real* restrict mvm, AReal* restrict a,
 		a[iact]+=(AReal)acc[threadIdx.x];
 	}
 }
-/*A couple of threads that does jobs upon available.*/
+/**
+   Worker thread that polls cmds[ithread] and executes the command (copy MVM to
+   GPU, multiply gradients, copy or sum DM commands) until an unknown command is received.
+
+   @param[in] ithread0 Thread index, cast to a pointer. Threads below NGPU drive the corresponding GPU.
+   @return NULL.
+*/
 static void* mvm_thread(void* ithread0){
 	long ithread=(long)ithread0;
 	int nact=mvm_data->nact;
@@ -169,12 +186,23 @@ static void* mvm_thread(void* ithread0){
 	}
 	return NULL;
 }
+/**
+   Free the global mvm_data and its column index arrays.
+*/
 static void mvm_data_free(void){
 	free(mvm_data->icols);
 	free(mvm_data->kcols);
 	free(mvm_data);
 }
 real tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, tim_dmsend=0;
+/**
+   Handle one request from maos on the socket: receive the MVM matrix
+   (GPU_MVM_M) or receive gradients and send back DM commands (GPU_MVM_G).
+
+   @param[in] pfd Poll descriptor of the client socket.
+   @param[in] flag Unused.
+   @return 0.
+*/
 static int respond(struct pollfd *pfd, int flag){
 	if(!pfd) return 0;
 	(void) flag;
@@ -306,6 +334,13 @@ static int respond(struct pollfd *pfd, int flag){
 	}
 	return 0;
 }
+/**
+   Initialize the GPUs, record the number of multiprocessors, and pre-create
+   streams. Sets NCPU and NGPU_MAX to NGPU. Runs in a separate thread.
+
+   @param[in] A Unused.
+   @return NULL.
+*/
 static void* gpu_mvm_gpu_init(void* A){
 	(void)A;
 	gpu_init(NULL, 0, 0);
@@ -346,6 +381,12 @@ static void* gpu_mvm_gpu_init(void* A){
 	NGPU_MAX=NGPU;
 	return NULL;
 }
+/**
+   Start the MVM daemon listening on port. GPUs are initialized in a separate
+   thread. Blocks while serving requests.
+
+   @param[in] port TCP port to listen on.
+*/
 void gpu_mvm_daemon(int port){
 	/* GPU initialization may take a few seconds to finish. Launch in a separate
 	 * thread and join before using GPU.*/

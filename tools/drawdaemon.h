@@ -166,8 +166,8 @@ struct drawdata_t{
 	int frame_gif; /**<Frame counter saved for gif.*/
 	int session;   /**<Increses when a new client connects */
 };
-extern float io_time1;/*The time this data is received.*/
-extern float io_time2;/*The time last data is received.*/
+extern float io_time1;
+extern float io_time2;
 extern char* font_name;
 extern float font_size;
 extern cairo_font_slant_t font_style;
@@ -179,8 +179,7 @@ extern int font_name_version;
 extern int ndrawdata;
 extern int fifopid;
 extern float lpf;
-extern int noellipsis; 	/*do not allow legend ellipsis.*/
-/*Spaces reserved for title, label, etc */
+extern int noellipsis;
 extern int desc_font_size;
 extern PangoFontDescription* desc;
 extern int client_pid;
@@ -203,7 +202,7 @@ extern GdkPixbuf *icon_avg;
 /*from drawdaemon_draw */
 void round_limit(float* xmin, float* xmax, int logscale);
 void cairo_draw(drawdata_t* drawdata);
-gboolean drawarea_refresh(GtkWidget *drawarea);//called by cairo_draw to redraw drawarea
+gboolean drawarea_refresh(GtkWidget *drawarea);
 void update_zoom(drawdata_t* drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(GtkWidget *window);

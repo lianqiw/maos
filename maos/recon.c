@@ -55,6 +55,10 @@
    Calls tomo() and fit() to do the tomography and DM fit. Do error signal and
    split tomography.
    In closedloop mode, the gradients are from time step isim-1.
+
+   @param[in,out] dmout DM fitting output. Used as initial guess if CG is used.
+   @param[in,out] simu The simulation struct. simu->opdr is updated by tomography.
+   @param[in] gradin The (pseudo open loop) gradients.
 */
 void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
 	const parms_t* parms=simu->parms;
@@ -102,6 +106,8 @@ void tomofit(dcell** dmout, sim_t* simu, dcell* gradin){
    DM command to both LGS and NGS WFS grads in MV Inte or MVST mode. For dtrat>1
    cases, we copy over cl to ol in a end of multi-step integration, and add to
    the accumulated DM commands scaled by 1/dtrat. Tested works
+
+   @param[in,out] simu The simulation struct. simu->gradlastol is updated.
 */
 static void calc_gradol(sim_t* simu){
 	const parms_t* parms=simu->parms;
@@ -134,6 +140,12 @@ OMP_TASK_FOR(4)
 	}*/
 	save_gradol(simu);//must be here since gradol is only calculated in this file. 
 }
+/**
+   Low order reconstruction in split tomography: compute the low order (NGS mode)
+   error signal simu->Merr_lo from the low order WFS gradients.
+
+   @param[in,out] simu The simulation struct.
+*/
 static void recon_split_lo(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const recon_t* recon=simu->recon;
@@ -239,11 +251,11 @@ static void recon_split_lo(sim_t* simu){
 	}
 }
 /**
- * @brief Combine separate 6 NGS modes to TT, PS, Focus
- * 
- * @param psdall 
- * @return void* 
- */
+   Combine separate NGS mode PSDs into TT, PS, and Focus PSDs.
+
+   @param[in] psdall PSD with frequency in the first column, followed by 5 or 6 NGS modes (Tip, Tilt, 3 PS, and optionally Focus).
+   @return The combined PSD with frequency in the first column. Newly allocated, or a reference to psdall if it does not have 5 or 6 modes; the caller frees it.
+*/
 dmat *combine_ngs_psd(const dmat *psdall){
 	int ncol=(int)NY(psdall)-1;
 	if(ncol!=6 && ncol!=5){
@@ -259,8 +271,19 @@ dmat *combine_ngs_psd(const dmat *psdall){
 	return psd;
 }
 /**
- * Convert each PSD mode into open loop PSD and plot both the PSDs and reverse cumulative integral of psd open loop
- */
+   Convert each PSD mode into open loop PSD and plot both the PSDs and reverse cumulative integral of psd open loop
+
+   @param[in] psdall Closed loop PSD with frequency in the first column and one mode per column.
+   @param[in] dt Simulation time step (s).
+   @param[in] dtrat Number of time steps per loop update.
+   @param[in] al Additional latency in units of dt.
+   @param[in] ep Integrator gain of each mode. Must have a single row.
+   @param[in] label Label of the plot.
+   @param[in] modes Name of each mode. May be NULL.
+   @param[in] doplot Whether to plot.
+   @param[in,out] save_cl If not NULL, the closed loop PSD of each mode is appended.
+   @param[in,out] save_ol If not NULL, the open loop PSD of each mode is appended.
+*/
 static void plot_psd(const dmat *psdall, double dt, int dtrat, 
 	double al, const dmat *ep, const char *label, const char*modes[], int doplot, zfarr *save_cl, zfarr *save_ol){
 	if(!ep || NX(ep)!=1){
@@ -302,8 +325,11 @@ static void plot_psd(const dmat *psdall, double dt, int dtrat,
 	free(style);
 }
 /**
- * Servo gain optimization.
-  * */
+   Servo gain optimization. When recon.psd is set, accumulate the DM error time
+   history, compute its PSD and update the high and low order integrator gains.
+
+   @param[in,out] simu The simulation struct. Integrator gains are updated.
+*/
 void recon_servo_update(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	recon_t* recon=simu->recon;
@@ -422,7 +448,11 @@ void recon_servo_update(sim_t* simu){
 }
 /**
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
-   least square reconstruction. */
+   least square reconstruction.
+
+   @param[in,out] simu The simulation struct.
+   @return NULL.
+*/
 void* reconstruct(sim_t* simu){
 	real tk_start=myclockd();
 	const parms_t* parms=simu->parms;

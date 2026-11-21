@@ -19,6 +19,12 @@
 #include "utils.h"
 //Only specialize valid convertors.
 //cpu code defines real, comp, dmat, cmat for double or signle precision accourding to CPU_SINGLE
+/**
+   Wrap a CPU dmat as a host NumArray by weak reference (data is neither
+   copied nor freed). Empty if A is empty.
+
+   @param[in] A CPU matrix. Must outlive this array.
+*/
 template <>
 NumArray<real>::NumArray(const dmat *A){
 	if(PN(A)){
@@ -26,6 +32,12 @@ NumArray<real>::NumArray(const dmat *A){
 		*this=temp;//move data over.
 	}
 }
+/**
+   Wrap a CPU cmat as a host NumArray by weak reference (data is neither
+   copied nor freed). Empty if A is empty.
+
+   @param[in] A CPU matrix. Must outlive this array.
+*/
 template <>
 NumArray<comp>::NumArray(const cmat *A){
 	if(PN(A)){
@@ -34,6 +46,12 @@ NumArray<comp>::NumArray(const cmat *A){
 	}
 }
 //Single precision
+/**
+   Wrap a CPU smat as a host NumArray by weak reference (data is neither
+   copied nor freed). Empty if A is empty.
+
+   @param[in] A CPU matrix. Must outlive this array.
+*/
 template <>
 NumArray<float>::NumArray(const smat *A){
 	if(PN(A)){
@@ -41,6 +59,12 @@ NumArray<float>::NumArray(const smat *A){
 		*this=temp;//move data over.
 	}
 }
+/**
+   Wrap a CPU zmat as a host NumArray by weak reference (data is neither
+   copied nor freed). Empty if A is empty.
+
+   @param[in] A CPU matrix. Must outlive this array.
+*/
 template <>
 NumArray<fcomplex>::NumArray(const zmat *A){
 	if(PN(A)){
@@ -49,23 +73,43 @@ NumArray<fcomplex>::NumArray(const zmat *A){
 	}
 }
 #if CUDA_VERSION>10000
+/**
+   @return CUDA data type of the elements: CUDA_R_32F.
+*/
 template <>
 cudaDataType NumArray<float, Gpu>::dtype(){
 	return CUDA_R_32F;
 }
+/**
+   @return CUDA data type of the elements: CUDA_C_32F.
+*/
 template <>
 cudaDataType NumArray<float2, Gpu>::dtype(){
 	return CUDA_C_32F;
 }
+/**
+   @return CUDA data type of the elements: CUDA_R_64F.
+*/
 template <>
 cudaDataType NumArray<double, Gpu>::dtype(){
 	return CUDA_R_64F;
 }
+/**
+   @return CUDA data type of the elements: CUDA_C_64F.
+*/
 template <>
 cudaDataType NumArray<double2, Gpu>::dtype(){
 	return CUDA_C_64F;
 }
 #endif
+/**
+   Compute the 5 cubic spline influence function coefficients for inter-actuator
+   coupling iac and copy them to GPU. Returns an empty array if iac is 0
+   (linear influence function).
+
+   @param[in] iac Inter-actuator coupling.
+   @return The coefficients on GPU, or an empty array if iac is 0.
+*/
 curmat iac2cc(Real iac){
 	if(iac){
 		Real cc[5];
@@ -82,6 +126,12 @@ curmat iac2cc(Real iac){
 		return curmat();
 	}
 }
+/**
+   Copy loc_t to GPU as interleaved (x,y) pairs and record the sampling and
+   the coordinate range.
+
+   @param[in] in CPU loc. An empty object is created if NULL.
+*/
 culoc_t::culoc_t(const loc_t *in):dx(0), dy(0){
 	if(in){
 		dx=in->dx;

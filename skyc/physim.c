@@ -25,7 +25,13 @@
 */
 
 /**
-   Compute Open loop NGS mode wavefront error from mode vectors.  */
+   Compute Open loop NGS mode wavefront error from mode vectors.
+
+   @param[in] mod NGS mode vectors, one column per time step.
+   @param[in] mcc NGS mode cross coupling matrix.
+   @param[in] istep0 First time step to include.
+   @return Mean square wavefront error averaged over time steps from istep0.
+*/
 real calc_rms(const dmat* mod, const dmat* mcc, int istep0){
 	real rms=0;
 	for(long istep=istep0; istep<mod->ny; istep++){
@@ -37,16 +43,18 @@ real calc_rms(const dmat* mod, const dmat* mcc, int istep0){
 /**
    convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function.
    Notice the the coordinate for each subaperture is different for TTF.
+
+   @param[in,out] wvf Complex pupil function, multiplied by the phase of the NGS modes.
+   @param[in] wvl Wavelength (m).
+   @param[in] modm NGS mode vector.
+   @param[in] powfs The powfs configuration.
+   @param[in] isa Index of subaperture.
+   @param[in] thetax Direction of WFS along x (rad).
+   @param[in] thetay Direction of WFS along y (rad).
+   @param[in] parms The parms.
 */
-void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
-	real wvl,           /**<[in] the wavelength*/
-	const dmat* modm,     /**<[in] the NGS mode vector*/
-	const powfs_s* powfs,       /**<[in] the powfs configuration*/
-	long isa,             /**<[in] index of subaperture*/
-	real thetax,        /**<[in] direction of WFS*/
-	real thetay,        /**<[in] direction of WFS*/
-	const parms_s* parms  /**<[in] the parms*/
-){
+void ngsmod2wvf(cmat* wvf, real wvl, const dmat* modm, const powfs_s* powfs, long isa, real thetax, real thetay,
+	const parms_s* parms){
 	const real* mod=P(modm);
 	const real wvk=TWOPI/wvl;
 	real dx=powfs->dxwvf;
@@ -99,20 +107,22 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 }
 
 /**
- * @brief Time domain physical simulation.
- * 
- * @param mresout 	Residual mode output
- * @param mideal 	Input mode
- * @param mideal_oa Input mode for on axis (?).
- * @param ngsol 	Open loop RMS WFE.
- * @param aster 	Asterism Parameters
- * @param powfs 	POWFS parameters
- * @param parms 	Parameters
- * @param idtratc 	multirate=0: common rate index. multirate=1: fastest rate index.
- * @param noisy 	0: noise free. 1: poisson and ron. 2: only poisson noise (testing)
- * @param phystart 	time step to start physical optics simulation
- * @return dmat* 	Residual RMS WFE.
- */
+   Time domain physical simulation.
+
+   @param[out] mresout Residual NGS mode time history (nmod x nstep). Newly allocated; the caller frees it. May be NULL.
+   @param[in] mideal Input NGS mode time history.
+   @param[in] mideal_oa Input on axis NGS mode time history used for on axis performance evaluation.
+   @param[in] ngsol Open loop NGS mode mean square WFE. Used to detect divergence.
+   @param[in,out] aster Asterism. Its random stream is advanced.
+   @param[in] powfs POWFS parameters.
+   @param[in] parms Parameters.
+   @param[in] idtratc multirate=0: common rate index. multirate=1: fastest rate index.
+   @param[in] noisy 0: noise free. 1: poisson and ron. 2: only poisson noise (testing).
+   @param[in] phystart Time step to start physical optics simulation. -1 disables physical optics.
+   @return Residual mean square WFE (6x1): NGS and TT modes, on axis NGS and TT modes, and on axis NGS and TT modes
+   without considering un-orthogonality. NULL if the loop diverges or the Kalman filter is missing. Newly allocated;
+   the caller frees it.
+*/
 dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngsol,
 	aster_s* aster, const powfs_s* powfs, const parms_s* parms, int idtratc, int noisy, int phystart){
 	const int dtratc=P(parms->skyc.dtrats,idtratc);
@@ -486,7 +496,15 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 }
 
 /**
-   Save NGS WFS and other information for later use in MAOS simulations.*/
+   Save NGS WFS and other information for later use in MAOS simulations.
+
+   @param[in] simu Simulation data.
+   @param[in] aster Array of asterisms. aster[selaster] is used.
+   @param[in] ipres Results of this star field: total, NGS mode, and TT mean square residual (m^2).
+   @param[in] selaster Index of the selected asterism.
+   @param[in] seldtrat Index of the selected sampling rate.
+   @param[in] isky Index of the star field.
+*/
 void skysim_save(const sim_s* simu, const aster_s* aster, const real* ipres, int selaster, int seldtrat, int isky){
 	const parms_s* parms=simu->parms;
 	const int nwvl=parms->maos.nwvl;

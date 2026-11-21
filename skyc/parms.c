@@ -25,6 +25,11 @@
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_MAT(A) parms->A = readcfg_dmat(0,0,#A) /*read a key with real array. */
 
+/**
+   Read the skyc parameters from the configuration.
+
+   @param[in,out] parms Parameters struct whose skyc field is filled.
+*/
 static void setup_parms_skyc(parms_s* parms){
 	READ_INT(skyc.dbg);
 	READ_INT(skyc.dbgsky);
@@ -110,7 +115,9 @@ static void setup_parms_skyc(parms_s* parms){
 	READ_INT(skyc.estimate);
 }
 /**
-   Setup infromation output from maos run.
+   Setup information output from maos run.
+
+   @param[in,out] parms Parameters struct whose maos field is filled.
 */
 static void setup_parms_maos(parms_s* parms){
 	READ_DBL(maos.r0z);
@@ -185,6 +192,13 @@ static void setup_parms_maos(parms_s* parms){
 	}
 }
 
+/**
+   Read the configuration files specified in arg (or maos.conf by default) and
+   setup the skyc parameters. Free with free_parms().
+
+   @param[in] arg Parsed command line arguments.
+   @return Parameters. Newly allocated; free with free_parms().
+*/
 parms_s* setup_parms(const arg_s* arg){
 	/*Setup PATH and result directory */
 	char* config_path=find_config("skyc");
@@ -470,7 +484,9 @@ parms_s* setup_parms(const arg_s* arg){
 	return parms;
 }
 /**
-   Free the data in parms.
+   Free parms and the data in it.
+
+   @param[in] parms Parameters to free.
 */
 void free_parms(parms_s* parms){
 	lfree(parms->skyc.nwfsmax);

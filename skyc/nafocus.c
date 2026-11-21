@@ -21,19 +21,29 @@
 */
 #include "skyc.h"
 #include "nafocus.h"
+/**
+   Sodium layer height PSD beta2*nu^alpha (not divided by 2pi).
+
+   @param[in] nu Temporal frequency (Hz).
+   @param[in] alpha Power law exponent of the PSD.
+   @param[in] beta2 Scaling of the PSD.
+   @return PSD value at nu.
+*/
 static inline real nafocus_NaPSD(real nu, real alpha, real beta2){
 	return beta2*pow(nu, alpha);/*we don't divide 2pi */
 }
 
 /**
    Compute Zoom optics focus corrector open loop transfer function
+
+   @param[in] nu Frequency (Hz).
+   @param[in] fs Sampling frequency (Hz).
+   @param[in] tau Time delay (s).
+   @param[in] zeta Damping of zoom corrector.
+   @param[in] fzc Frequency of zoom corrector (Hz).
+   @return Complex open loop transfer function at nu.
 */
-static inline comp nafocus_Hol(real nu,  /**<[in] frequency.*/
-	real fs,  /**<[in] sampling frequency*/
-	real tau, /**<[in] time delay*/
-	real zeta,/**<[in] dampling of zoom corrector*/
-	real fzc  /**<[in] frequency of zoom corrector*/
-){
+static inline comp nafocus_Hol(real nu, real fs, real tau, real zeta, real fzc){
 	const comp s=COMPLEX(0, 2*M_PI*nu);
 	const comp fsovers=fs/s;
 	const comp Hint=fsovers;
@@ -53,18 +63,23 @@ static inline comp nafocus_Hol(real nu,  /**<[in] frequency.*/
    First find the frequency fc where phase margin is 45. then scale Hol to have
    gain of 1 at fc.
 
+   alpha, beta are the parameters of the sodium power spectrum obtained by
+   fitting measurement data at UBC.
+
    Written: 2010-06-15
    Tested ok against RC's skycoverage code: 2010-06-15.
+
+   @param[in] fs Sampling frequency of NGS (Hz).
+   @param[in] tau Zoom corrector time delay (s).
+   @param[in] zcf Zoom corrector frequency (Hz).
+   @param[in] zeta Zoom corrector damping.
+   @param[in] D Telescope diameter (m).
+   @param[in] hs Guide star altitude (m).
+   @param[in] alpha Parameter of sodium layer height PSD.
+   @param[in] beta Parameter of sodium layer height PSD.
+   @return RMS focus error (m) after sodium tracking.
 */
-real nafocus_residual(real fs,   /**<[in] sampling frequency of NGS*/
-	real tau,  /**<[in] zoom corrector time delay*/
-	real zcf,  /**<[in] zoom corrector frequency (Hz)*/
-	real zeta, /**<[in] zoom corrector sampling*/
-	real D,    /**<[in] telescope diameter */
-	real hs,   /**<[in] guide star altitude*/
-	real alpha,/**<[in] parameter of sodium layer height PSD.*/
-	real beta  /**<[in] parameter of sodium layer height PSD.*/
-){
+real nafocus_residual(real fs, real tau, real zcf, real zeta, real D, real hs, real alpha, real beta){
 	int inu=1;
 	real nu;
 	real margin=M_PI/4;
@@ -120,11 +135,18 @@ real nafocus_residual(real fs,   /**<[in] sampling frequency of NGS*/
 	dfree(nus);
 	return focus;
 }
-dmat* nafocus_time(real alpha,/**<[in] parameter of sodium layer height PSD.*/
-	real beta, /**<[in] parameter of sodium layer height PSD.*/
-	real dt,   /**<[in] time step*/
-	long nstep,/**<[in] number of steps*/
-	rand_t* rstat /**<random number stat*/){
+/**
+   Generate a random time series of sodium layer height with nstep points at
+   time step dt, following the sodium layer height PSD defined by alpha and beta.
+
+   @param[in] alpha Parameter of sodium layer height PSD.
+   @param[in] beta Parameter of sodium layer height PSD.
+   @param[in] dt Time step (s).
+   @param[in] nstep Number of time steps.
+   @param[in,out] rstat Random number generator state.
+   @return Newly allocated nstep x 1 time series. The caller frees it.
+*/
+dmat* nafocus_time(real alpha, real beta, real dt, long nstep, rand_t* rstat){
 	real df=1./(nstep*dt);
 	cmat* psd=cnew(nstep, 1);
 	//cfft2plan(psd, -1);

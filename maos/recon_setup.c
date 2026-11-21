@@ -50,6 +50,10 @@
    Setup the matrix of the inverse of gradient measurement noise equivalent
    angle covariance matrix. For physical optics wfs, the NEA is computed using
    matched filter output. For geometric optics, the NEA is from input.
+
+   @param[in,out] recon The reconstruction struct. recon->sanea, saneai, saneal, and neam are set.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
 */
 void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	const int nwfs=parms->nwfsr;
@@ -287,6 +291,9 @@ void setup_recon_saneai(recon_t* recon, const parms_t* parms, const powfs_t* pow
 /**
    wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and
    differential focus.
+
+   @param[in,out] recon The reconstruction struct. recon->PTT, PFF, and PTTF are set.
+   @param[in] parms The parameter struct.
 */
 static void
 setup_recon_TTFR(recon_t* recon, const parms_t* parms){
@@ -307,25 +314,32 @@ setup_recon_TTFR(recon_t* recon, const parms_t* parms){
 }
 
 /**
-	ecnn is the wavefront estimation error covariance in science focal
-	plane due to wavefront measurement noise. Basically we compute
-	Hx*E*Cnn*E'*Hx' where E is the tomography operator, and Hx is ray
-	tracing from tomography grid xloc to science focal plane ploc. Since
-	Cnn is symmetrical and sparse, we can decompose it easily into
-	Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
-	LL'; This is much faster than computing left and right separately,
-	because 1) the number of points in xloc is larger than in Cnn, so
-	after the tomography right hand side vector is applied, the number of
-	rows is larger than number of columns, this causes the right hand
-	side solver to be much slower. 2) Simply real the computation.
+   ecnn is the wavefront estimation error covariance in the science pupil
+   plane due to wavefront measurement noise. Basically we compute
+   Hx*E*Cnn*E'*Hx' where E is the reconstructor (tomography and DM fitting,
+   MVM, or LSR), and Hx is ray tracing from the DM grid aloc to the science
+   pupil grid locs. Since
+   Cnn is symmetrical and sparse, we can decompose it easily into
+   Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
+   LL'; This is much faster than computing left and right separately,
+   because 1) the number of points in xloc is larger than in Cnn, so
+   after the tomography right hand side vector is applied, the number of
+   rows is larger than number of columns, this causes the right hand
+   side solver to be much slower. 2) Simply real the computation.
 
-	For HX opeation, build the sparse matrix and do multiply is way
-	slower than doing ray tracing directly.
+   For HX opeation, build the sparse matrix and do multiply is way
+   slower than doing ray tracing directly.
 
-	For ad hoc split tomography, we need to remove the five NGS modes
-	from here, as well as in time averaging of estimated turbulence.
+   For ad hoc split tomography, we need to remove the five NGS modes
+   from here, as well as in time averaging of estimated turbulence.
 
-	recon->saneal contains Cnl.
+   recon->saneal contains Cnl.
+
+   @param[in] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
+   @param[in] locs The science pupil grid.
+   @param[in] mask Selects the evaluation directions to compute. May be NULL to compute all.
+   @return ecnn for each evaluation direction (empty for those not selected). Newly allocated; the caller frees it.
 */
 static dcell *setup_recon_ecnn(const recon_t *recon, const parms_t *parms, const loc_t *locs, const lmat *mask){
 	TIC;tic;
@@ -395,6 +409,9 @@ static dcell *setup_recon_ecnn(const recon_t *recon, const parms_t *parms, const
 /**
    Update assembled tomography matrix with new L2. Called from cn2est when new
    profiles are available.
+
+   @param[in,out] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
 */
 void setup_recon_update_cn2(recon_t* recon, const parms_t* parms){
 	if(parms->sim.evlol) return;
@@ -451,7 +468,11 @@ void setup_recon_update_cn2(recon_t* recon, const parms_t* parms){
 /**
    Create the reconstructor to reconstruct the residual focus error due to LGS
    sodium tracking error. Need to average out the focus error caused by
-   atmosphere when applying (a low pass filter is applied to the output).  */
+   atmosphere when applying (a low pass filter is applied to the output).
+
+   @param[in,out] recon The reconstruction struct. The focus reconstructors RFlgsg, RFngsg, and RFdm are set as needed.
+   @param[in] parms The parameter struct.
+*/
 static void
 setup_recon_focus(recon_t* recon, const parms_t* parms){
 	if(parms->nlgspowfs){
@@ -529,11 +550,15 @@ setup_recon_focus(recon_t* recon, const parms_t* parms){
 
 /**
    Setup either the control matrix using either minimum variance reconstructor by calling setup_recon_mvr()
-   or least square reconstructor by calling setup_recon_lsr() 
+   or least square reconstructor by calling setup_recon_lsr()
    It can be called repeatedly to update the reconstructor when NEA updates.
 
    The results are measurement noise dependent and may be updated during simulation.
-   */
+
+   @param[in,out] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+*/
 void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	info("Compute control matrix parameters.\n");
 	TIC;tic;
@@ -575,8 +600,12 @@ void setup_recon_control(recon_t* recon, const parms_t* parms, const powfs_t* po
 }
 
 /**
-   PSD computation for gain update
- */
+   Setup PSD computation for servo gain update: recon->Herr maps DM error to the
+   evaluation directions.
+
+   @param[in,out] recon The reconstruction struct. recon->Herr is set.
+   @param[in] parms The parameter struct.
+*/
 void setup_recon_psd(recon_t* recon, const parms_t* parms){
 	if(!parms->recon.psd) return;
 	recon->Herr=cellnew(parms->evl.nevl, parms->ndm);
@@ -629,8 +658,14 @@ void setup_recon_psd(recon_t* recon, const parms_t* parms){
 }
 
 /**
-   Reconstruction optimization background loops setup.
- */
+   Setup miscellaneous reconstruction data: ecnn (when sim.ecnn is set), PSD for
+   servo gain update, and petal mode reconstruction.
+
+   @param[in,out] recon The reconstruction struct.
+   @param[in] parms The parameter struct.
+   @param[in] locs The science pupil grid.
+   @param[in] powfs The powfs struct array.
+*/
 void setup_recon_misc(recon_t* recon, const parms_t* parms, loc_t* locs, const powfs_t *powfs){
 	TIC;tic;
 	if(parms->sim.ecnn){
@@ -658,6 +693,8 @@ void setup_recon_misc(recon_t* recon, const parms_t* parms, loc_t* locs, const p
 }
 /**
    Frees recon->invpsd or recon->fractal
+
+   @param[in,out] recon The reconstruction struct.
 */
 void 
 free_recon_cxx(recon_t* recon){
@@ -676,7 +713,10 @@ free_recon_cxx(recon_t* recon){
 
 /**
    Free unused object in recon struct after preparation is done.
- */
+
+   @param[in] parms The parameter struct.
+   @param[in,out] recon The reconstruction struct. May be NULL.
+*/
 void free_recon_unused(const parms_t* parms, recon_t* recon){
 	if(!recon) return;
 	/* Free arrays that will no longer be used after reconstruction setup is done. */
@@ -730,6 +770,9 @@ void free_recon_unused(const parms_t* parms, recon_t* recon){
 }
 /**
    Free the recon struct.
+
+   @param[in] parms The parameter struct.
+   @param[in] recon The reconstruction struct to free, including the struct itself. May be NULL.
 */
 void free_recon(const parms_t* parms, recon_t* recon){
 	if(!recon) return;

@@ -44,6 +44,18 @@ extern "C"{
 		grad[nsa*ig+i]=ints[nsa*ig+i]*alpha-goff[nsa*ig+i];\
 	}
 //4 side pyramid
+/**
+   Compute 4 sided pyramid WFS gradients,
+   normalized by the expected signal level siglev and subaperture area saa.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area.
+   @param[in] siglev Expected signal level per subaperture.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs4_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real siglev, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain/siglev;
@@ -52,6 +64,17 @@ pywfs4_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real sigle
 		PYWFS4_GRAD_CALC;
 	}
 }
+/**
+   Compute 4 sided pyramid WFS gradients,
+   normalized by the intensity of each subaperture.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area. Unused.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs4_grad_1_do(Real* grad, const Real* ints, const Real* saa, const Real* goff, Real gain, int nsa){
 	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<nsa; i+=blockDim.x*gridDim.x){
@@ -59,6 +82,18 @@ pywfs4_grad_1_do(Real* grad, const Real* ints, const Real* saa, const Real* goff
 		PYWFS4_GRAD_CALC;
 	}
 }
+/**
+   Compute 4 sided pyramid WFS gradients,
+   normalized by the average total intensity *isum/nsa and subaperture area saa.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area.
+   @param[in] isum Total intensity, in device memory.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs4_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain*nsa/(*isum);
@@ -68,6 +103,18 @@ pywfs4_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum
 	}
 }
 //3 side pyramid
+/**
+   Compute 3 sided pyramid WFS gradients,
+   normalized by the expected signal level siglev and subaperture area saa.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area.
+   @param[in] siglev Expected signal level per subaperture.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs3_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real siglev, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain/siglev;
@@ -76,6 +123,17 @@ pywfs3_grad_0_do(Real* grad, const Real* ints, const Real* saa, const Real sigle
 		PYWFS3_GRAD_CALC;
 	}
 }
+/**
+   Compute 3 sided pyramid WFS gradients,
+   normalized by the intensity of each subaperture.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area. Unused.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs3_grad_1_do(Real* grad, const Real* ints, const Real* saa, const Real* goff, Real gain, int nsa){
 	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<nsa; i+=blockDim.x*gridDim.x){
@@ -83,6 +141,18 @@ pywfs3_grad_1_do(Real* grad, const Real* ints, const Real* saa, const Real* goff
 		PYWFS3_GRAD_CALC;
 	}
 }
+/**
+   Compute 3 sided pyramid WFS gradients,
+   normalized by the average total intensity *isum/nsa and subaperture area saa.
+
+   @param[out] grad Gradients, x then y, 2*nsa.
+   @param[in] ints Sub-pupil intensities, nsa per side.
+   @param[in] saa Subaperture normalized area.
+   @param[in] isum Total intensity, in device memory.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+*/
 __global__ static void
 pywfs3_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum, const Real* goff, Real gain, int nsa){
 	const Real alpha0=gain*nsa/(*isum);
@@ -92,6 +162,19 @@ pywfs3_grad_2_do(Real* grad, const Real* ints, const Real* saa, const Real* isum
 	}
 }
 //RAW: use normalized ints as grads
+/**
+   Use normalized raw sub-pupil intensities as gradients:
+   grad=ints*gain/siglev-goff for all ng values per subaperture.
+
+   @param[out] grad Gradients, ng*nsa.
+   @param[in] ints Sub-pupil intensities, ng*nsa.
+   @param[in] saa Unused.
+   @param[in] siglev Expected signal level per subaperture.
+   @param[in] goff Gradient offset to subtract.
+   @param[in] gain Optical gain.
+   @param[in] nsa Number of subapertures.
+   @param[in] ng Number of values per subaperture.
+*/
 __global__ static void
 pywfsr_grad_do(Real *grad, const Real *ints, const Real *saa, const Real siglev, const Real *goff, Real gain, int nsa,int ng){
 	const Real alpha=gain/siglev;
@@ -100,13 +183,22 @@ pywfsr_grad_do(Real *grad, const Real *ints, const Real *saa, const Real siglev,
 	}
 }
 
-void pywfs_grad(curmat& grad, /**<[out] gradients*/
-		const curmat& ints, /**<[in] Intensity*/
-		const curmat& saa,  /**<[in] Subaperture normalized area*/
-		curmat& isum, /**<[out] Sum intensity*/
-		const curmat& goff, /**<[in] Gradient of flat wavefront*/
-		const pywfs_t* pywfs,
-		cudaStream_t stream){
+/**
+   Compute pyramid WFS gradients from the sub-pupil intensities. Uses raw
+   intensities if cfg->raw is set or nside<3; otherwise normalizes according to
+   cfg->sigmatch: 0: by the expected siglev, 1: by each subaperture's
+   intensity, 2: by the total intensity (stored in isum). Asynchronous on stream.
+
+   @param[out] grad Gradients.
+   @param[in] ints Intensity of each sub-pupil, nsa*nside.
+   @param[in] saa Subaperture normalized area.
+   @param[out] isum Sum intensity. Only computed when sigmatch is 2.
+   @param[in] goff Gradient of flat wavefront.
+   @param[in] pywfs Pyramid WFS configuration.
+   @param[in] stream CUDA stream.
+*/
+void pywfs_grad(curmat& grad, const curmat& ints, const curmat& saa, curmat& isum, const curmat& goff,
+	const pywfs_t* pywfs, cudaStream_t stream){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const int ng=pywfs_ng(pycfg);
 	if(pycfg->raw || pycfg->nside<3){
@@ -156,7 +248,13 @@ void pywfs_grad(curmat& grad, /**<[out] gradients*/
    2017-06-22: Tried to parallelize the modulation step to multiple streams
    within a GPU. Does not help since each FFT occupies the full GPU, preventing
    stream concurrency.
- */
+
+   @param[in,out] ints Sub-pupil intensities, nsa*nside, accumulated into.
+   @param[in] phiout OPD on the pupil (locfft->loc).
+   @param[in,out] cuwfs GPU WFS data. Its stream, FFT plans, and work buffers
+   (pywvf, pyotf, pypsf) are used.
+   @param[in] siglev Signal level per subaperture.
+*/
 void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	//Pyramid WFS
 	cupowfs_t* cupowfs=cuwfs.powfs;
@@ -276,6 +374,19 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	ctoc_final("pywfs");
 	//cuwrite(ints, stream, "gpu_ints"); exit(0);
 }
+/**
+   Compute the pyramid WFS interaction matrix numerically in GPU by poking each
+   mode in mod (or each point of locin if mod is NULL) and differencing against
+   the gradient of the unpoked (opdadd) wavefront. GPU version of pywfs_mkg.
+
+   @param[in] pywfs Pyramid WFS data.
+   @param[in] locin Locations (with map) where the modes are defined.
+   @param[in] locfft Pupil locations of the WFS.
+   @param[in] mod Modes to poke, one per column. NULL to poke each point of locin.
+   @param[in] displacex Displacement along x of locin from locfft (m), as in pywfs_mkg.
+   @param[in] displacey Displacement along y of locin from locfft (m), as in pywfs_mkg.
+   @return Newly allocated nsa*ng x nmod interaction matrix; the caller frees it.
+*/
 dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
 	gpu_set(cuglobal->wfsgpu[pywfs->iwfs0]);
 	const pywfs_cfg_t *pycfg=pywfs->cfg;

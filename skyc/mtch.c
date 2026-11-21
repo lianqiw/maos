@@ -23,8 +23,15 @@
 */
 /**
    Compute pixel intensity i0, and gradient of pixel intensity gx, gy from the
-   PSF.
+   PSF. The results are accumulated into i0, gx, gy.
    \todo merge this file with maos/mtch.c and put in lib folder.
+
+   @param[in,out] i0 Pixel intensity, accumulated.
+   @param[in,out] gx Gradient of pixel intensity along x, accumulated. Used only if deriv is set.
+   @param[in,out] gy Gradient of pixel intensity along y, accumulated. Used only if deriv is set.
+   @param[in] psf PSF with peak in the corner.
+   @param[in] dtf Detector transfer function and sampling matrix.
+   @param[in] deriv Whether to compute gx and gy.
 */
 void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, dtf_s* dtf, int deriv){
 	cmat* otf=cnew(psf->nx, psf->ny);
@@ -56,7 +63,19 @@ void psf2i0gxgy(dmat* i0, dmat* gx, dmat* gy, dmat* psf, dtf_s* dtf, int deriv){
 }
 
 /**
-   Compute matched filter.
+   Compute matched filter mtche and noise equivalent angle sanea (rms, x for all
+   subapertures followed by y) for each subaperture from i0, gx, gy with read out
+   noise rne and background bkgrnd.
+
+   @param[in,out] mtche Matched filter for each subaperture. Allocated if NULL.
+   @param[in,out] sanea Noise equivalent angle (rad), x for all subapertures followed by y. Allocated if NULL.
+   @param[in] i0 Pixel intensity for each subaperture.
+   @param[in] gx Gradient of i0 along x for each subaperture.
+   @param[in] gy Gradient of i0 along y for each subaperture.
+   @param[in] pixtheta Pixel size (rad).
+   @param[in] rne Read out noise.
+   @param[in] bkgrnd Background per pixel.
+   @param[in] cr Constraint flag passed to mtch().
 */
 void genmtch(dcell** mtche, dmat** sanea,
 	dcell* i0, dcell* gx, dcell* gy, real pixtheta,

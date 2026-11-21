@@ -30,6 +30,12 @@ typedef int16_t char16_t;
   2020-03-24: removed data reference from C to matlab capability. 
  */
 extern int donotquit;
+/**
+   Convert loc_t to a nloc x 2 Matlab array of [locx locy]. Data is copied.
+
+   @param[in] loc Grid coordinates. May be NULL.
+   @return New Matlab array, or an empty matrix if loc is NULL.
+*/
 mxArray *loc2mx(const loc_t*loc){
     if(!loc) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=mxCreateDoubleMatrix(loc->nloc, 2, mxREAL);
@@ -37,6 +43,12 @@ mxArray *loc2mx(const loc_t*loc){
     memcpy(mxGetPr(out)+loc->nloc, loc->locy, loc->nloc*sizeof(double));
     return out;
 }
+/**
+   Convert a real sparse matrix to a Matlab sparse array. Data is copied.
+
+   @param[in] A Sparse matrix. May be NULL.
+   @return New Matlab sparse array, or an empty sparse matrix if A is NULL.
+*/
 mxArray *dsp2mx(const dsp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxREAL);
     mxArray *out=0;
@@ -46,6 +58,12 @@ mxArray *dsp2mx(const dsp*A){
     memcpy(mxGetPr(out),A->px,A->nzmax*sizeof(double));
     return out;
 }
+/**
+   Convert a complex sparse matrix to a Matlab complex sparse array. Data is copied.
+
+   @param[in] A Complex sparse matrix. May be NULL.
+   @return New Matlab sparse array, or an empty sparse matrix if A is NULL.
+*/
 mxArray *csp2mx(const csp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxCOMPLEX);
     mxArray *out=0;
@@ -64,6 +82,12 @@ mxArray *csp2mx(const csp*A){
 #endif
     return out;
 }
+/**
+   Convert dmat to a Matlab double array. Data is copied.
+
+   @param[in] A Matrix. May be NULL.
+   @return New Matlab array, or an empty matrix if A is NULL.
+*/
 mxArray *d2mx(const dmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=0;
@@ -71,6 +95,12 @@ mxArray *d2mx(const dmat *A){
     memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
     return out;
 }
+/**
+   Convert cmat to a Matlab complex double array. Data is copied.
+
+   @param[in] A Complex matrix. May be NULL.
+   @return New Matlab array, or an empty matrix if A is NULL.
+*/
 mxArray *c2mx(const cmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxCOMPLEX);
     mxArray *out=0;
@@ -88,6 +118,12 @@ mxArray *c2mx(const cmat *A){
 #endif
     return out;
 }
+/**
+   Convert dmat to lmat by truncating each element to long.
+
+   @param[in] A Matrix.
+   @return Newly allocated lmat; the caller frees it.
+*/
 lmat *d2l(const dmat *A){
     if(!A) return NULL;
     lmat *out=lnew(A->nx, A->ny);
@@ -96,6 +132,12 @@ lmat *d2l(const dmat *A){
     }
     return out;
 }
+/**
+   Convert lmat to dmat.
+
+   @param[in] A Integer matrix.
+   @return Newly allocated dmat; the caller frees it.
+*/
 dmat *l2d(const lmat *A){
     if(!A) return NULL;
     dmat *out=dnew(A->nx, A->ny);
@@ -105,6 +147,12 @@ dmat *l2d(const lmat *A){
     return out;
 }
 
+/**
+   Convert lmat to a Matlab double array (Matlab integer types are not used).
+
+   @param[in] A Integer matrix.
+   @return New Matlab double array.
+*/
 mxArray *l2mx(const lmat *A){
     dmat *out=l2d(A);
     mxArray *B=d2mx(out);
@@ -132,6 +180,13 @@ mxArray *ccell2mx(const ccell *A){
     }
     return out;
     }*/
+/**
+   Convert any supported maos object (dmat, cmat, loc_t, dsp, lmat, or a cell array of them,
+   recursively) to the corresponding Matlab array, dispatching on its id. Data is copied.
+
+   @param[in] A_ maos object. May be NULL.
+   @return New Matlab array, NULL for NULL input, or an empty cell for unsupported types.
+*/
 mxArray *any2mx(const void *A_){
     mxArray *out=0;
     const cell *A=(const cell*)A_;
@@ -169,9 +224,22 @@ mxArray *any2mx(const void *A_){
     }
     return out;
 }
+/**
+   Convert a C string to a Matlab char array.
+
+   @param[in] str Null terminated string.
+   @return New Matlab char array.
+*/
 mxArray *str2mx(const char *str){
     return mxCreateString(str);
 }
+/**
+   Wrap a real Matlab sparse array as dsp without copying.
+
+   @param[in] A Real Matlab sparse array.
+   @return Newly allocated dsp header referencing Matlab's memory, or NULL for an empty array.
+   Only the dsp struct itself may be freed and it must not outlive A.
+*/
 dsp *mx2dsp(const mxArray *A){
     if(!A) return NULL;
     if(!mxIsDouble(A) || mxIsComplex(A)) error("Only double is supported\n");
@@ -189,6 +257,13 @@ dsp *mx2dsp(const mxArray *A){
     return out;
 }
 #if MX_HAS_INTERLEAVED_COMPLEX
+/**
+   Wrap a complex Matlab sparse array as csp without copying (requires interleaved complex).
+
+   @param[in] A Complex Matlab sparse array.
+   @return Newly allocated csp header referencing Matlab's memory, or NULL for an empty array.
+   Only the csp struct itself may be freed and it must not outlive A.
+*/
 csp *mx2csp(const mxArray *A){
     if(!A) return NULL;
     if(!mxIsDouble(A) || !mxIsComplex(A)) error("Only double dcomplex is supported\n");
@@ -206,6 +281,13 @@ csp *mx2csp(const mxArray *A){
     return out;
 }
 #endif
+/**
+   Wrap a nloc x 2 Matlab array of [locx locy] as loc_t without copying the coordinates, and
+   compute dx, dy from the data.
+
+   @param[in] A nloc x 2 Matlab double array.
+   @return Newly allocated loc_t referencing Matlab's memory for the coordinates. It must not outlive A.
+*/
 loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
@@ -231,6 +313,14 @@ loc_t *mx2loc(const mxArray *A){
     return loc;
 }
 
+/**
+   Wrap a real, dense Matlab double array as dmat without copying (the dmat does not own the data).
+   Errors on complex or sparse input.
+
+   @param[in] A Real dense Matlab double array.
+   @return Newly allocated dmat header referencing Matlab's memory, or NULL for an empty array or a
+   scalar 0, which users may pass to mean empty. Freeing it does not free the data.
+*/
 dmat *mx2d(const mxArray *A){
     if(!A) return NULL;
     if(!mxIsDouble(A)) error("Only double is supported\n");
@@ -250,6 +340,13 @@ dmat *mx2d(const mxArray *A){
     }
     return out;
 }
+/**
+   Wrap a dense complex Matlab array as cmat without copying (the cmat does not own the data).
+   Only implemented with interleaved complex (Matlab R2018a and later).
+
+   @param[in] A Complex dense Matlab array.
+   @return Newly allocated cmat header referencing Matlab's memory, or NULL for an empty array.
+*/
 cmat *mx2c(const mxArray *A){
 #if MX_HAS_INTERLEAVED_COMPLEX
     if(!A) return NULL;
@@ -270,6 +367,12 @@ cmat *mx2c(const mxArray *A){
 #endif
     return 0;
 }
+/**
+   Convert a Matlab double array to lmat by truncating each element to long.
+
+   @param[in] A Real dense Matlab double array.
+   @return Newly allocated lmat; the caller frees it.
+*/
 lmat *mx2l(const mxArray *A){
     dmat *B=mx2d(A);
     lmat *out=d2l(B);
@@ -302,6 +405,15 @@ dcell *mx2dcell(const mxArray *A){
     }
     return out;
     }*/
+/**
+   Convert a Matlab array to a maos object. A Matlab cell array is converted recursively to a
+   cell. Non-cell elements are converted by fun if given, otherwise by type: real or complex,
+   dense or sparse. Dense and sparse data reference Matlab's memory (see mx2d(), mx2dsp()).
+
+   @param[in] A Matlab array. May be NULL.
+   @param[in] fun Conversion function for non-cell elements. May be NULL.
+   @return Newly allocated maos object, or NULL; the caller frees it.
+*/
 void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
     if(!A) return NULL;
     else if(!mxIsCell(A)){
@@ -353,22 +465,60 @@ static inline void *mx2dsp_any(const mxArray *A){ return mx2dsp(A); }
 dcell *mx2dcell(const mxArray *A){
     return (dcell*)mx2any(A, mx2d_any);
 }
+/**
+   Convert a Matlab cell array of complex dense matrices using mx2c().
+
+   @param[in] A Matlab cell array.
+   @return Newly allocated cell array. The elements are cmat (referencing Matlab's memory) even
+   though the return type is dcell.
+*/
 dcell *mx2ccell(const mxArray *A){
     return (dcell*)mx2any(A, mx2c_any);
 }
+/**
+   Convert a Matlab cell array of double matrices to lcell using mx2l() (elements are copied).
+
+   @param[in] A Matlab cell array.
+   @return Newly allocated lcell; the caller frees it.
+*/
 lcell *mx2lcell(const mxArray *A){
     return (lcell*)mx2any(A, mx2l_any);
 }
+/**
+   Convert a Matlab cell array of nloc x 2 coordinate arrays to loccell using mx2loc().
+
+   @param[in] A Matlab cell array.
+   @return Newly allocated loccell whose coordinates reference Matlab's memory.
+*/
 loccell *mx2loccell(const mxArray *A){
     return (loccell*)mx2any(A, mx2loc_any);
 }
+/**
+   Convert a Matlab cell array of real sparse matrices using mx2dsp().
+
+   @param[in] A Matlab cell array.
+   @return Newly allocated cell array. The elements are dsp (referencing Matlab's memory) even
+   though the return type is dcell.
+*/
 dcell *mx2dspcell(const mxArray *A){
     return (dcell*)mx2any(A, mx2dsp_any);
 }
+/**
+   Convert a Matlab array or cell array to cell, choosing the conversion by each element's type (see mx2any()).
+
+   @param[in] A Matlab array.
+   @return Newly allocated maos object, or NULL.
+*/
 cell *mx2cell(const mxArray*A){
     return (cell*) mx2any(A, NULL);
 }
 
+/**
+   Convert a Matlab struct (as created by kalman2mx) to kalman_t. Field Rn is not read.
+
+   @param[in] A Matlab struct.
+   @return Newly allocated kalman_t whose dense matrices reference Matlab's memory; the caller frees it.
+*/
 static inline kalman_t *mx2kalman(const mxArray*A){
     kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
 	kalman->AdM=mx2d(mxGetField(A,0,"AdM"));
@@ -385,6 +535,12 @@ static inline kalman_t *mx2kalman(const mxArray*A){
     kalman->P=mx2dcell(mxGetField(A,0,"P"));
     return kalman;
 }
+/**
+   Convert kalman_t to a Matlab struct with the same field names.
+
+   @param[in] kalman Kalman filter data.
+   @return New Matlab struct. Data is copied.
+*/
 static inline mxArray* kalman2mx(kalman_t *kalman){
     const int nfield=12;
     const char *fieldnames[]={"AdM","BM","dthi", "dtrat_wfs", "dtrats","Ad","Cd","Gwfs","Cnn","Rn","M","P"};
@@ -408,6 +564,12 @@ static inline mxArray* kalman2mx(kalman_t *kalman){
     }
     return A;
 }
+/**
+   Convert the results of cn2est_t to a Matlab struct.
+
+   @param[in] cn2est Cn2 estimation results.
+   @return New Matlab struct. Data is copied.
+*/
 static inline mxArray *cn2est2mx(cn2est_t *cn2est){
     const int nfield=12;
     const char *fieldnames[]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlapi","cov2","cov1"};
@@ -431,6 +593,12 @@ static inline mxArray *cn2est2mx(cn2est_t *cn2est){
     return A;
 
 }
+/**
+   Convert the dtf_t array (one per wavelength) to a Matlab struct array with fields nominal and si.
+
+   @param[in] dtf Array of dtf_t, one per wavelength. The count is taken from dtf->nwvl.
+   @return New Matlab struct array. Data is copied.
+*/
 static inline mxArray *dtf2mx(dtf_t *dtf){
     const int nfield=2;
     const char *fieldnames[]={"nominal","si"};
@@ -446,12 +614,24 @@ static inline mxArray *dtf2mx(dtf_t *dtf){
     return A;
 }
 
+/**
+   Convert a Matlab char array to a C string.
+
+   @param[in] A Matlab char array.
+   @return Newly allocated string; the caller frees it.
+*/
 static inline char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=(char*)malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
 }
+/**
+   Create a random number generator seeded by the scalar A.
+
+   @param[in] A Matlab scalar seed.
+   @return Newly allocated random number generator state; the caller frees it.
+*/
 static inline rand_t *mx2rand(const mxArray *A){
     int seed=(int)mxGetScalar(A);
     rand_t *out=(rand_t*)malloc(sizeof(rand_t));
@@ -460,24 +640,56 @@ static inline rand_t *mx2rand(const mxArray *A){
 }
 
 
+/**
+   calloc using Matlab memory manager. The memory is made persistent across mex calls.
+
+   @param[in] nmemb Number of elements.
+   @param[in] size Size of each element in bytes.
+   @return Newly allocated zeroed memory; free it with free_mex().
+*/
 static inline void *calloc_mex(size_t nmemb, size_t size){
     void *p=mxCalloc(nmemb, size);
     mexMakeMemoryPersistent(p);
     return p;
 }
+/**
+   malloc using Matlab memory manager. The memory is made persistent across mex calls.
+
+   @param[in] size Size in bytes.
+   @return Newly allocated memory; free it with free_mex().
+*/
 static inline void *malloc_mex(size_t size){
     void *p=mxMalloc(size);
     mexMakeMemoryPersistent(p);
     return p;
 }
+/**
+   realloc using Matlab memory manager. The memory is made persistent across mex calls.
+
+   @param[in] p Memory to reallocate.
+   @param[in] size New size in bytes.
+   @return Reallocated memory; free it with free_mex().
+*/
 static inline void *realloc_mex(void *p, size_t size){
     p=mxRealloc(p, size);
     mexMakeMemoryPersistent(p);
     return p;
 }
+/**
+   free memory allocated by calloc_mex, malloc_mex, or realloc_mex.
+
+   @param[in] p Memory to free.
+*/
 static inline void free_mex(void*p){
     mxFree(p);
 }
+/**
+   Signal handler registered for mex routines: aborts the mex call with a Matlab error
+   instead of killing Matlab.
+
+   @param[in] sig Signal number.
+   @return 1 to indicate the signal is handled.
+*/
 int mex_signal_handler(int sig){
     if(sig){
         mexErrMsgTxt("Signal caught.\n");
@@ -486,6 +698,9 @@ int mex_signal_handler(int sig){
     }
     return 1;
 }
+/**
+   Run when the mex file is loaded: registers mex_signal_handler() and limits OpenMP to one thread.
+*/
 static __attribute__((constructor)) void init(){
     fprintf(stderr, "mex loaded\n");
     register_signal_handler(mex_signal_handler);
@@ -493,6 +708,9 @@ static __attribute__((constructor)) void init(){
     NTHREAD=1;//MAOS with openmp does not play well with matlab. 
 #endif
 }
+/**
+   Run when the mex file is unloaded.
+*/
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");
 }

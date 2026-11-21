@@ -293,6 +293,12 @@ CELLDEF(loccell, locccell);
 #undef ARR
 #undef CELLARR
 #undef MATARR
+/**
+   Check whether the object pointed by id is a cell array.
+
+   @param[in] id Pointer to an array object. May be NULL.
+   @return 1 if it is a cell array, 0 otherwise.
+*/
 static inline int iscell(const void* id){
     return id?(*(const M_ID*)id==MCC_ANY):0;
     //return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
@@ -450,18 +456,43 @@ def_anyloc(, **, panyloc);
 #define CHECK_INDEX 1
 #endif
 #if CHECK_INDEX
+/**
+   Return the 1-d index i after checking it is within the nx*ny array. Used by P() when CHECK_INDEX is set.
+
+   @param[in] i Linear index.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return i. Calls error() if out of range.
+*/
 static inline long index_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
         error("Index %ld is out of range for (%ld,%ld) array\n", i, nx, ny);
     }
     return i;
 }
+/**
+   Return the linear index ix+iy*nx after checking (ix,iy) is within the nx*ny array.
+
+   @param[in] ix Row index.
+   @param[in] iy Column index.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return ix+iy*nx. Calls error() if out of range.
+*/
 static inline long index_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
         error("Index (%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
     return ix+iy*nx;
 }
+/**
+   Return the offset of column iy after checking it is within the nx*ny array.
+
+   @param[in] iy Column index.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return iy*nx. Calls error() if out of range.
+*/
 static inline long index_col(long iy, long nx, long ny){
     if(iy<0 || iy>=ny){
         error("Column %ld is out of range for (%ld,%ld) array\n", iy, nx, ny);

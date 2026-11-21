@@ -46,6 +46,10 @@ dcell *readwfs(const char *file, const parms_t *parms, int ipowfs);
    The time constant $\tau$ is $1/\omega_{c}$ and the -3dB frequency is $\omega_{c}/(2\pi)$.
    Can also be used for integrator based offloading with the desired corner frequency.
    See also https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
+
+   @param[in] fc Cross over frequency (Hz).
+   @param[in] dt Sampling period (s).
+   @return Filter coefficient $\alpha$: 1 if fc*dt>=1 and 0 if fc<=0.
 */
 static inline real fc2lp(real fc, real dt){
     if(fc*dt>=1){

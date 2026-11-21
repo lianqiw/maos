@@ -30,6 +30,9 @@
 
 /**
    Free moao_t
+
+   @param[in,out] recon Reconstructor. recon->moao is freed and set to NULL.
+   @param[in] parms Simulation parameters.
 */
 void free_recon_moao(recon_t* recon, const parms_t* parms){
 	if(!recon||!recon->moao) return;
@@ -52,7 +55,11 @@ void free_recon_moao(recon_t* recon, const parms_t* parms){
 }
 /**
    Prepare the propagation H matrix for MOAO and compute the reconstructor. We
-   only need a reconstructor for every different MOAO type.  */
+   only need a reconstructor for every different MOAO type.
+
+   @param[in,out] recon Reconstructor. recon->moao is allocated and set up.
+   @param[in] parms Simulation parameters.
+*/
 void setup_recon_moao(recon_t* recon, const parms_t* parms){
 	const int nmoao=parms->nmoao;
 	if(nmoao==0) return;
@@ -139,7 +146,20 @@ void setup_recon_moao(recon_t* recon, const parms_t* parms){
    for MOAO. subtract contributions from DMs that are in common path. Be careful
    which time step the dmcommon is. The DM common should use the commands on the
    step that you are going to apply the MOAO command for. That is the integrator
-   output after this computation.  */
+   output after this computation.
+
+   @param[in,out] xout Right hand side vector to accumulate to. Allocated if NULL.
+   @param[in] recon Reconstructor.
+   @param[in] parms Simulation parameters.
+   @param[in] imoao MOAO type index.
+   @param[in] thetax Direction along x (radian).
+   @param[in] thetay Direction along y (radian).
+   @param[in] hs Guide star or science source height (m).
+   @param[in] opdr Tomography output on the reconstruction grid.
+   @param[in] dmcommon Commands of the common path DMs.
+   @param[out] rhsout Residual OPD on floc to fit. Newly allocated if not NULL.
+   @param[in] alpha Scaling factor.
+*/
 
 static void
 moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
@@ -180,6 +200,11 @@ moao_FitR(dcell** xout, const recon_t* recon, const parms_t* parms, int imoao,
    without using assembled matrix. Slow. don't
    use. Assembled matridx is faster because of multiple
    directions.
+
+   @param[in,out] xout Output vector to accumulate to. Allocated if NULL.
+   @param[in] A The MOAO data (moao_t).
+   @param[in] xin Input MOAO DM commands.
+   @param[in] alpha Scaling factor.
 */
 
 static void
@@ -202,6 +227,8 @@ moao_FitL(dcell** xout, const void* A,
    to take into account the delay in DM commands. there is no close loop
    filtering in MOAO DM commands, but there is still a time delay of 2
    cycles.
+
+   @param[in,out] simu Simulation data. The MOAO DM commands are updated.
 */
 
 void moao_recon(sim_t* simu){

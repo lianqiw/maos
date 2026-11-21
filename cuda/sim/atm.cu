@@ -92,7 +92,9 @@ static void* atm_prep(void *pdata){
 	return NULL;
 }
 /**
-   Transfer atmospheric data to GPU.
+   Transfer the full atmospheric data to all GPUs.
+
+   @param[in] atm Turbulence layers. Nothing is done if NULL.
 */
 static void gpu_atm2gpu_full(const mapcell* atm){
 	if(!atm) return;
@@ -165,7 +167,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	}
 	/*The minimum size to cover the meta-pupil*/
 	static int nx0=0, ny0=0;
-	int atm_match=1;//whether atm matches parms. mismatch happens file atm is loaded from file 
+	int atm_match=1;//whether atm matches parms. mismatch happens when atm is loaded from file 
 	if(PN(atmc)!=parms->atm.nps){
 		atm_match=0;
 	}else{
@@ -363,12 +365,22 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		}//if isim
 	}//for ips
 }
+/**
+   Copy the actual DM commands (dmreal) to every GPU (cudata->dmreal).
+
+   @param[in] dmreal DM commands on grids.
+*/
 void gpu_dmreal2gpu(mapcell* dmreal){
 	for(int im=0; im<NGPU; im++){
 		gpu_set(im);
 		cp2gpu(cudata->dmreal, dmreal);
 	}
 }
+/**
+   Copy the projected DM commands (dmproj) to every GPU (cudata->dmproj).
+
+   @param[in] dmproj Projected DM commands on grids.
+*/
 void gpu_dmproj2gpu(mapcell* dmproj){
 	for(int im=0; im<NGPU; im++){
 		gpu_set(im);

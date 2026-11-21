@@ -36,6 +36,11 @@
    The LAOS W0/W1 gives very good performance in NGS modes.
 
    This function does not work well.
+
+   @param[in] loc The grid coordinate.
+   @param[in] amp The amplitude on loc, normalized to sum to 1. NULL for uniform amplitude.
+   @param[out] W0 The sparse W0. Newly allocated.
+   @param[out] W1 The dense W1. Newly allocated.
 */
 void mkw_amp(loc_t* loc, real* amp, dsp** W0, dmat** W1){
 
@@ -215,7 +220,17 @@ static real calcwtcorner(int ix, int iy,
 }
 /**
    calculate the integral of a box with two points on left/right inside a circle
-   at (icx,icy) with circle icr.  */
+   at (icx,icy) with circle icr.
+
+   @param[in] ix x index of the first point in the map.
+   @param[in] iy y index of the first point in the map.
+   @param[in] jx x index of the second point in the map.
+   @param[in] jy y index of the second point in the map.
+   @param[in] icx x coordinate of the circle center in unit of the map.
+   @param[in] icy y coordinate of the circle center in unit of the map.
+   @param[in] icr Radius of the circle in unit of the map.
+   @return Integral of the product of the two bilinear influence functions inside the circle.
+*/
 static real calcwtlr(int ix, int iy,
 	int jx, int jy,
 	real icx, real icy, real icr){
@@ -263,6 +278,15 @@ static real calcwtlr(int ix, int iy,
 /**
    calculate the integral of a box with two points on bottom/top.  inside a
    circle at (icx,icy) with circle icr.
+
+   @param[in] ix x index of the first point in the map.
+   @param[in] iy y index of the first point in the map.
+   @param[in] jx x index of the second point in the map.
+   @param[in] jy y index of the second point in the map.
+   @param[in] icx x coordinate of the circle center in unit of the map.
+   @param[in] icy y coordinate of the circle center in unit of the map.
+   @param[in] icr Radius of the circle in unit of the map.
+   @return Integral of the product of the two bilinear influence functions inside the circle.
 */
 static real calcwtud(int ix, int iy,
 	int jx, int jy,
@@ -309,8 +333,18 @@ static real calcwtud(int ix, int iy,
 	return wt*dres*dres;
 }
 /**
-  calculate the integral of a box with the same point.  inside a circle at
-  (icx,icy) with circle icr.  */
+   calculate the integral of a box with the same point.  inside a circle at
+   (icx,icy) with circle icr.
+
+   @param[in] ix x index of the first point in the map.
+   @param[in] iy y index of the first point in the map.
+   @param[in] jx x index of the second point in the map.
+   @param[in] jy y index of the second point in the map.
+   @param[in] icx x coordinate of the circle center in unit of the map.
+   @param[in] icy y coordinate of the circle center in unit of the map.
+   @param[in] icr Radius of the circle in unit of the map.
+   @return Integral of the product of the two bilinear influence functions inside the circle.
+*/
 static real calcwtcenter(int ix, int iy, int jx, int jy,
 	real icx, real icy, real icr){
 
@@ -367,13 +401,16 @@ static real calcwtcenter(int ix, int iy, int jx, int jy,
    radius cr, so that for OPD vector A defined on grid loc, the piston removed
    wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront
    error for a continuous OPD that are interpolated bi-linearly using the OPD on
-   the grid.*/
-void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
-	real cx, /**<[in] center of circle, x*/
-	real cy, /**<[in] center of circle, y*/
-	real cr, /**<[in] circle radius*/
-	dsp** W0,  /**<[out] sparse W0*/
-	dmat** W1  /**<[out] dense  W1*/){
+   the grid.
+
+   @param[in] loc The grid coordinate.
+   @param[in] cx Center of circle, x (m).
+   @param[in] cy Center of circle, y (m).
+   @param[in] cr Circle radius (m).
+   @param[out] W0 The sparse W0. Newly allocated.
+   @param[out] W1 The dense W1. Newly allocated.
+*/
+void mkw_circular(loc_t* loc, real cx, real cy, real cr, dsp** W0, dmat** W1){
 	long nloc=loc->nloc;
 	*W0=dspnew(nloc, nloc, 9*nloc);
 	loc_create_map(loc);
@@ -450,16 +487,17 @@ void mkw_circular(loc_t* loc, /**<[in] grid coordinate*/
 }
 /**
    compute the  W0, W1 for bilinear influence function for a annular aperture of
-   radius inner radius cri, and outer radius cro. see mkw().
- */
-void mkw_annular(loc_t* loc, /**<[in] grid coordinate */
-	real cx,  /**<[in] center of circle, x*/
-	real cy,  /**<[in] center of circle, y*/
-	real cri, /**<[in] inner circular hole radius*/
-	real cro, /**<[in] outer circle radius*/
-	dsp** W0,   /**<[out] sparse W0*/
-	dmat** W1   /**<[out] dense  W1*/
-){
+   radius inner radius cri, and outer radius cro. see mkw_circular().
+
+   @param[in] loc The grid coordinate.
+   @param[in] cx Center of circle, x (m).
+   @param[in] cy Center of circle, y (m).
+   @param[in] cri Inner circular hole radius (m).
+   @param[in] cro Outer circle radius (m).
+   @param[out] W0 The sparse W0. Newly allocated.
+   @param[out] W1 The dense W1. Newly allocated.
+*/
+void mkw_annular(loc_t* loc, real cx, real cy, real cri, real cro, dsp** W0, dmat** W1){
 	if(cri<loc->dx){/*filled aperture */
 		mkw_circular(loc, cx, cy, cro, W0, W1);
 	} else{

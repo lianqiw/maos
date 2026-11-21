@@ -20,6 +20,10 @@
 
 /**
    Create a generic cell array.
+
+   @param[in] nx Number of rows. Negative is treated as 0.
+   @param[in] ny Number of columns. Negative is treated as 0.
+   @return Newly allocated cell array with NULL elements; the caller frees it with cellfree().
 */
 cell* cellnew(long nx, long ny){
 	cell* dc;
@@ -37,6 +41,11 @@ cell* cellnew(long nx, long ny){
 
 /**
    check the size of cell array if exist. Otherwise create it
+
+   @param[in,out] A_ Pointer to the cell array. Created if NULL, otherwise its type and size are checked.
+   @param[in] nx Number of rows.
+   @param[in] ny Number of columns.
+   @return 0 on success, -1 if the existing cell array does not match.
 */
 int cellinit(panyarray A_, long nx, long ny){
 	cell** A=A_.c;
@@ -53,7 +62,11 @@ int cellinit(panyarray A_, long nx, long ny){
 	return 0;
 }
 /**
-   check the size of cell array if exist. Otherwise create it. m is created for dcell
+   check the size of cell array if exist. Otherwise create it with the same layout as B. m is created for
+   dcell
+
+   @param[in,out] A_ Pointer to the cell array. Created if NULL, otherwise its type and size are checked.
+   @param[in] B_ The reference cell array. Must be a cell.
 */
 void cellinit2(panyarray A_, const_anyarray B_){
 	const cell* B=B_.c;
@@ -88,9 +101,11 @@ void cellinit2(panyarray A_, const_anyarray B_){
 	}
 }
 /**
- * @brief Construct a reference base on type.
- * 
- */
+   Construct a reference base on type. Cell arrays are recreated with each element referenced.
+
+   @param[in] in Array or cell array to reference.
+   @return Newly allocated reference sharing the data with in; the caller frees it. NULL if in is NULL.
+*/
 cell* cellref(const_anyarray in){
 	if(!in.c) return NULL;
 	if(iscell(in.c)){
@@ -116,6 +131,14 @@ cell* cellref(const_anyarray in){
 		return NULL;
 	}
 }
+/**
+   Compute a hash of the numerical content of array or cell array in (recursively)
+   using key as the seed. Returns the updated key. Sparse arrays are skipped.
+
+   @param[in] in Array or cell array.
+   @param[in] key Seed of the hash.
+   @return The updated hash key.
+*/
 uint32_t cellhash(const_anyarray in, uint32_t key){
 	if(!in.c) return key;
 	if(iscell(in.c)){
@@ -134,9 +157,13 @@ uint32_t cellhash(const_anyarray in, uint32_t key){
 	return key;
 }
 /**
- * @brief Convert elements of cell array in place.
- * 
- */
+   Convert elements of cell array in place.
+
+   @param[in,out] A Array or cell array whose (non-cell) elements are replaced by the result of fun_convert.
+   @param[in] fun_convert Conversion function. It takes ownership of its input and returns the converted
+   array.
+   @return The converted array (A itself if A is a cell array). NULL if A is NULL.
+*/
 cell *cellconvert(cell *A, cell* (*fun_convert)(cell*)){
 	if(!A) return NULL;
 	if(iscell(A)){
@@ -150,7 +177,17 @@ cell *cellconvert(cell *A, cell* (*fun_convert)(cell*)){
 }
 
 /**
-   Obtain the dimensions.
+   Obtain the dimensions of the dense matrix assembled from cell array A. nx, ny
+   are the total rows and columns. *nxs and *nys are allocated (caller frees) to
+   contain the number of rows of each cell row and columns of each cell column.
+   Cells along a row (column) must have the same number of rows (columns).
+
+   @param[in] A_ The cell array.
+   @param[out] nx Total number of rows.
+   @param[out] ny Total number of columns.
+   @param[out] nxs Newly allocated number of rows of each cell row; the caller frees it. NULL if A is empty.
+   @param[out] nys Newly allocated number of columns of each cell column; the caller frees it. NULL if A is
+   empty.
 */
 void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys){
 	const cell* A=A_.c;
@@ -196,7 +233,11 @@ fail:
 	*nx=0; *ny=0;
 }
 /**
-   Resize a generic cell array.
+   Resize a generic cell array. Elements outside of the new size are freed and new elements are NULL.
+
+   @param[in,out] A_ The cell array. Must be valid and with m unset.
+   @param[in] nx New number of rows.
+   @param[in] ny New number of columns.
 */
 void cellresize(anyarray A_, long nx, long ny){
 	cell* A=A_.c;
@@ -238,8 +279,12 @@ void cellresize(anyarray A_, long nx, long ny){
 	A->ny=ny;
 }
 
-/**Check whether the cell has only diagonal entries.
- */
+/**
+   Check whether the cell has only diagonal entries.
+
+   @param[in] A_ The cell array.
+   @return 1 if all off diagonal elements are empty, 0 otherwise or if A_ is not a cell array.
+*/
 int cell_is_diag(const_anyarray A_){
 	const cell *A=A_.c;
 	if(!iscell(A)) return 0;
@@ -256,6 +301,8 @@ int cell_is_diag(const_anyarray A_){
 }
 /**
    free a mat or cell object.
+
+   @param[in,out] A_ The object to free (recursively for cell arrays). May be NULL.
 */
 void cellfree_do(anyarray A_){
 	cell* A=A_.c;
@@ -308,9 +355,12 @@ void cellfree_do(anyarray A_){
 	}
 }
 /**
- * ncol: 0: normal writing. -1: initialize async data. >0: async writing.
- * 	
- * */
+   Write array or cell array to file.
+
+   @param[in] fp File to write to. Must be NULL when ncol>0.
+   @param[in] A_ Array or cell array to write.
+   @param[in] ncol 0: normal writing. -1: initialize async data. >0: async writing of the first ncol columns.
+*/
 void writedata(file_t* fp, const_anyarray A_, long ncol){
 	if(fp&&ncol>0){
 		error("writedata_by_id should be called with either fp or ncol, but not both, aborted.\n");
@@ -365,6 +415,13 @@ void writedata(file_t* fp, const_anyarray A_, long ncol){
 	}
 }
 
+/**
+   Write array or cell array A to file with name given by the printf-style
+   format. Does nothing if the file name is empty or cannot be opened.
+
+   @param[in] A Array or cell array to write.
+   @param[in] format printf-style format of the file name.
+*/
 void writebin(const_anyarray A, const char* format, ...){
 	format2fn;
 	if(!fn) return;
@@ -375,8 +432,11 @@ void writebin(const_anyarray A, const char* format, ...){
 }
 
 /**
- * Calls writebin with build in fp
- * */
+   Asynchronously write data to the file previously initialized with writedata() with ncol=-1.
+
+   @param[in] A Array or cell array to write.
+   @param[in] ncol Number of columns that are ready to write. Must not be 0.
+*/
 void writecell_async(const_anyarray A, long ncol){
 	if(ncol==0){
 		dbg("writecell_async should not be called with ncol=0.\n");
@@ -386,7 +446,11 @@ void writecell_async(const_anyarray A, long ncol){
 }
 /**
    A generic routine for write data to file with separate keywords
- */
+
+   @param[in,out] Ac_ Array or cell array to write; its keywords are replaced by keywords if not NULL.
+   @param[in] keywords Keywords to write.
+   @param[in] format printf-style format of the file name.
+*/
 void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...){
 	format2fn;
 	cell* Ac=Ac_.c;
@@ -397,9 +461,14 @@ void writebin_header(anyarray Ac_, const char* keywords, const char* format, ...
 	writebin(Ac, "%s", fn);
 }
 
-/*
+/**
 	Read a block which may be cell array or basic arrys. do not scan.  id is
 	intended only for the fundamental data. header is read first if header==0 or header->id==0.
+
+   @param[in] fp File to read from.
+   @param[in] id Requested type of the fundamental data. 0 to use the type in the file.
+   @param[in,out] header Header of the block. May be NULL. Its str is taken by the returned cell array.
+   @return Newly allocated data; the caller frees it. NULL if empty or if reading fails.
 */
 cell *readdata(file_t *fp, M_ID id, header_t *header){
 	header_t header2={0,0,0,0};
@@ -465,7 +534,14 @@ cell *readdata(file_t *fp, M_ID id, header_t *header){
 	}
 	return res;
 }
-//scan file for next set of data. first header is already read.
+/**
+   scan file for next set of data. first header is already read.
+
+   @param[in] fp File to read from.
+   @param[in] id Requested type of the fundamental data. 0 to use the type in the file.
+   @param[in,out] header The already read header. Used to read the following headers.
+   @return Newly allocated nx*1 cell array containing all the blocks; the caller frees it. NULL if none.
+*/
 static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	cell *dcout=0;
 	int maxlen=10;
@@ -493,21 +569,23 @@ static cell *readdata_scan(file_t *fp, M_ID id, header_t *header){
 	return dcout;
 }
 /**
- * Read data from file. level indicate intention, which may not match the file, in which case conversion is done.
- * Usage: level=0: array of fundamental data. 
- * 		  level=1: cell of fundamental data. 
- * 		  level>1: cell of cell ...
- * 	      level==-1: automatically identify and read all data. top level non-cell data will be combined to a cell (e.g., fits)
- * 		  level<-1: only from recursive calling when the initial level is -1
- * 
- * id: magic number of request fundamental data. data is converted if it does not match magic number from the file. 
- * 
- * There are two cases the file may be scanned to real all data, only at the top level though
- * 1. Found array of fundamental data but level is not 0. Used to wrap mat to cell or read fits file extension
- * 2. Found cell array with zero dimension. 
- * 
- * Function should be called at the top level only (right after opening file or socket)
- */
+   Read data from file. level indicate intention, which may not match the file, in which case conversion is done.
+
+   There are two cases the file may be scanned to real all data, only at the top level though
+   1. Found array of fundamental data but level is not 0. Used to wrap mat to cell or read fits file extension
+   2. Found cell array with zero dimension.
+
+   Function should be called at the top level only (right after opening file or socket)
+
+   @param[in] fp File to read from.
+   @param[in] id Magic number of request fundamental data. data is converted if it does not match magic
+   number from the file.
+   @param[in] level 0: array of fundamental data. 1: cell of fundamental data. >1: cell of cell ... -1:
+   automatically identify and read all data; top level non-cell data will be combined to a cell (e.g.,
+   fits). <-1: only from recursive calling when the initial level is -1.
+   @param[in,out] header Header that is already read. May be NULL. It is reset on return.
+   @return Newly allocated data; the caller frees it. NULL if reading fails.
+*/
 static cell* readdata_auto(file_t* fp, M_ID id, int level, header_t* header){
 	//dbg("level=%d\n", level);
 	header_t header2={0,0,0,0};
@@ -594,6 +672,13 @@ cell* readbin_id(M_ID id, int level, const char* format, ...){
 	zfclose(fp);
 	return out;
 }
+/**
+   Read any data from file with automatic type and nesting detection. The
+   caller needs to cast the result and free it.
+
+   @param[in] format printf-style format of the file name.
+   @return Newly allocated data; the caller frees it. NULL if the file cannot be opened.
+*/
 cell* readbin(const char* format, ...){
 	format2fn;
 	return readbin_id(M_0, -1, "%s", fn);
@@ -601,7 +686,10 @@ cell* readbin(const char* format, ...){
 /**
    A generic routine for reading data from socket. User need to cast the result.
    We dup the fd to avoid close it after read.
- */
+
+   @param[in] sock The socket.
+   @return Newly allocated data; the caller frees it. NULL on failure.
+*/
 cell* readsock(int sock){
 	file_t* fp=zfdopen(dup(sock));
 	cell* out=fp?readdata_auto(fp, (M_ID)0, -1, 0):NULL;
@@ -611,7 +699,10 @@ cell* readsock(int sock){
 /**
    A generic routine for write data to socket.
    We dup the fd to avoid close it after read.
- */
+
+   @param[in] A Array or cell array to write.
+   @param[in] sock The socket.
+*/
 void writesock(const_anyarray A, int sock){
 	file_t* fp=zfdopen(dup(sock));
 	if(fp) writedata(fp, A, 0);

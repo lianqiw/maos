@@ -38,7 +38,13 @@
 	}
 }*/
 /**
-   out=out*beta+abs2(in)*alpha;
+   out=out*alpha+abs2(in)*beta. out is zeroed first if alpha is 0.
+
+   @param[in,out] out Real array. Allocated if empty.
+   @param[in] alpha Scaling factor of out.
+   @param[in] in Complex array.
+   @param[in] beta Scaling factor of abs2(in).
+   @param[in] stream Stream to run in.
 */
 void curaddcabs2(curmat& out, Real alpha, const cucmat& in, Real beta, cudaStream_t stream){
 	if(!out){
@@ -50,7 +56,12 @@ void curaddcabs2(curmat& out, Real alpha, const cucmat& in, Real beta, cudaStrea
 		(out(), alpha, in(), beta, in.N());
 }
 /**
-   out=out+abs2(in)*alpha;
+   out=out+abs2(in)*beta.
+
+   @param[in,out] out Real array. Allocated if empty.
+   @param[in] in Complex array.
+   @param[in] beta Scaling factor of abs2(in).
+   @param[in] stream Stream to run in.
 */
 void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream){
 	if(!out){
@@ -59,6 +70,14 @@ void curaddcabs2(curmat &out, const cucmat &in, Real beta, cudaStream_t stream){
 	addcabs2_do<<<DIM(in.N(), 256), 0, stream>>>
 		(out(), in(), beta, in.N());
 }
+/**
+   Scale in by alpha in stream. Zeros the array if alpha is 0 and does nothing
+   if alpha is 1.
+
+   @param[in,out] in Array to scale. Nothing is done if empty.
+   @param[in] alpha Scaling factor.
+   @param[in] stream Stream to run in.
+*/
 void Scale(curmat &in, Real alpha, cudaStream_t stream){
 	if(!in) return;
 	if(alpha==0){
@@ -70,11 +89,33 @@ void Scale(curmat &in, Real alpha, cudaStream_t stream){
 
 
 /**
-   Computes C = alpha * C + beta * op(A) * B ;
+   Matrix vector multiply: c = alpha * c + beta * op(A) * b.
+
+   @param[in,out] c Device vector, accumulated into.
+   @param[in] alpha Scaling factor of c.
+   @param[in] A Matrix.
+   @param[in] b Device vector.
+   @param[in] trans 't' or 1 to use transpose of A, otherwise use A.
+   @param[in] beta Scaling factor of the product.
+   @param[in] stream Stream whose cublas handle is used.
 */
 void curmv(Real* c, Real alpha, const curmat& A, const Real* b, char trans, Real beta, stream_t& stream){
 	CUBL(gemv)(stream.blas(), (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A.Nx(), A.Ny(), &beta, A(), A.Nx(), b, 1, &alpha, c, 1);
 }
+/**
+   Cell array multiplication: C=alpha*C+beta*op(A)*op(B), where trans[0] and
+   trans[1] ('n' or 't') select op for A and B. Empty blocks are skipped. C is
+   allocated if empty.
+
+   @param[in,out] C Output cell array. Allocated if empty, otherwise scaled by
+   alpha and accumulated into.
+   @param[in] alpha Scaling factor of C.
+   @param[in] A Input cell array.
+   @param[in] B Input cell array.
+   @param[in] trans Two characters selecting op for A and B.
+   @param[in] beta Scaling factor of the product.
+   @param[in] stream Stream to run in.
+*/
 void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 	const char trans[2], const Real beta, stream_t& stream){
 	if(!A||!B) return;
@@ -122,8 +163,14 @@ void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 }
 
 
-/*
-  A=A*beta+B*alpha;
+/**
+   A=A*beta+B*alpha.
+
+   @param[in,out] A Cell array. Allocated with the same layout as B if empty.
+   @param[in] beta Scaling factor of A.
+   @param[in] B Cell array. Nothing is done if empty.
+   @param[in] alpha Scaling factor of B.
+   @param[in] stream Stream to run in.
 */
 void curcelladd(curcell& A, Real beta, const curcell& B, Real alpha, cudaStream_t stream){
 	if(!B) return;
@@ -163,7 +210,13 @@ void Add(curmat& A, Real beta, cudaStream_t stream){
 
 
 /**
-   A=A*beta+B*alpha; beta, alpha lives in device memory.
+   A=A+B*(*alpha)*alpha2, where alpha lives in device memory.
+
+   @param[in,out] A Cell array. Allocated with the same layout as B if empty.
+   @param[in] B Cell array. Nothing is done if empty.
+   @param[in] alpha Device pointer to scaling factor of B.
+   @param[in] alpha2 Additional scaling factor of B.
+   @param[in] stream Stream to run in.
 */
 void curcelladd(curcell& A, const curcell& B, Real* alpha, Real alpha2, cudaStream_t stream){
 	if(!B) return;
@@ -193,7 +246,12 @@ void curcelladd(curcell& A, const curcell& B, Real* alpha, Real alpha2, cudaStre
 }*/
 
 /**
-   A=A*alpha1+B*alpha; alpha1, alpha lives in device memory.
+   A=A*(*alpha1)+B, where alpha1 lives in device memory.
+
+   @param[in,out] A Cell array. Allocated with the same layout as B if empty.
+   @param[in] alpha1 Device pointer to scaling factor of A.
+   @param[in] B Cell array. Nothing is done if empty.
+   @param[in] stream Stream to run in.
 */
 void curcelladd(curcell& A, Real* alpha1, const curcell& B, cudaStream_t stream){
 	if(!B) return;
@@ -213,6 +271,14 @@ void curcelladd(curcell& A, Real* alpha1, const curcell& B, cudaStream_t stream)
 
 
 
+/**
+   Return the inner product sum(a.*b). Synchronizes the stream.
+
+   @param[in] a First array.
+   @param[in] b Second array.
+   @param[in] stream Stream to run in.
+   @return The inner product.
+*/
 Real curinn(const curmat& a, const curmat& b, cudaStream_t stream){
 	curmat res(1, 1);
 	Real out;
@@ -224,15 +290,21 @@ Real curinn(const curmat& a, const curmat& b, cudaStream_t stream){
 
 /**
    Sum all the elements in an array.
- */
-void cursum2(Real* restrict res,/**<Result in GPU*/
-	const curmat& a,   /**<Source in GPU*/
-	cudaStream_t stream){
+
+   @param[out] res Result in GPU.
+   @param[in] a Source in GPU.
+   @param[in] stream Stream to run in.
+*/
+void cursum2(Real* restrict res, const curmat& a, cudaStream_t stream){
 	DO(cudaMemsetAsync(res, 0, sizeof(Real), stream));
 	sum_wrap(res, a(), a.Nx()*a.Ny(), stream);
 }
 /**
-   Sum all the elements in an array, and return a value.
+   Sum all the elements in an array, and return a value. Synchronizes the stream.
+
+   @param[in] a Source in GPU.
+   @param[in] stream Stream to run in.
+   @return The sum.
 */
 Real cursum(const curmat& a, cudaStream_t stream){
 	Real out;//result in CPU.
@@ -244,7 +316,11 @@ Real cursum(const curmat& a, cudaStream_t stream){
 }
 
 /**
-   Find the maximum value
+   Find the maximum value. Synchronizes the stream.
+
+   @param[in] a Source in GPU.
+   @param[in] stream Stream to run in.
+   @return The maximum value (at least 0). See max_do().
 */
 Real curmax(const curmat& a, cudaStream_t stream){
 	Real out;
@@ -256,7 +332,11 @@ Real curmax(const curmat& a, cudaStream_t stream){
 }
 
 /**
-   Find the maximum value
+   Find the maximum absolute value. Synchronizes the stream.
+
+   @param[in] a Source in GPU.
+   @param[in] stream Stream to run in.
+   @return The maximum absolute value.
 */
 Real curmaxabs(const curmat& a, cudaStream_t stream){
 	Real out;
@@ -267,7 +347,11 @@ Real curmaxabs(const curmat& a, cudaStream_t stream){
 	return out;
 }
 /**
-   Find the maximum value
+   Find the maximum value of all blocks of a cell array. Synchronizes the stream.
+
+   @param[in] a Source cell array in GPU.
+   @param[in] stream Stream to run in.
+   @return The maximum value (at least 0). See max_do().
 */
 Real curcellmax(const curcell& a, cudaStream_t stream){
 	int n=a.Nx()*a.Ny();
@@ -285,7 +369,12 @@ Real curcellmax(const curcell& a, cudaStream_t stream){
 	return out;
 }
 /**
-   Find the maximum value
+   Find the maximum absolute value of all blocks of a cell array. Synchronizes
+   the stream.
+
+   @param[in] a Source cell array in GPU.
+   @param[in] stream Stream to run in.
+   @return The maximum absolute value.
 */
 Real curcellmaxabs(const curcell& a, cudaStream_t stream){
 	int n=a.N();
@@ -303,7 +392,11 @@ Real curcellmaxabs(const curcell& a, cudaStream_t stream){
 	return out;
 }
 /**
-   Scale elements
+   Scale every element of the cell array A by alpha. See Scale().
+
+   @param[in,out] A Cell array to scale. Nothing is done if empty.
+   @param[in] alpha Scaling factor.
+   @param[in] stream Stream to run in.
 */
 void curcellscale(curcell& A, Real alpha, cudaStream_t stream){
 	if(!A) return;
@@ -318,6 +411,14 @@ void curcellscale(curcell& A, Real alpha, cudaStream_t stream){
 
 
 
+/**
+   Scale complex array in by real alpha in stream. Zeros the array if alpha is
+   0 and does nothing if alpha is 1.
+
+   @param[in,out] in Array to scale. Nothing is done if empty.
+   @param[in] alpha Scaling factor.
+   @param[in] stream Stream to run in.
+*/
 void cucscale(cucmat& in, Real alpha, cudaStream_t stream){
 	if(!in) return;
 	if(alpha==0){

@@ -49,7 +49,14 @@ typedef struct{
 	cudaEvent_t event_mvm;
 	event_t* event_a;
 }gpu_data_t;
-/*Only do MVM test. just test the bandwidth*/
+/**
+   Only do MVM test on the first GPU to measure the bandwidth. Saves the timing
+   to timing_mvmonly_%dgpu.
+
+   @param[in] gpus List of GPU indices.
+   @param[in] ngpu Number of GPUs the gradients are split among (only one is used).
+   @param[in] nstep Number of time steps.
+*/
 void mvm_only(int* gpus, int ngpu, int nstep){
 #if 1
 	//const int nact=7673;//total
@@ -87,7 +94,13 @@ void mvm_only(int* gpus, int ngpu, int nstep){
 }
 //Timing only MVM.
 /**
-   A standalone routine that testes applying MVM for a single WFS and update mvm.*/
+   A standalone routine that tests applying MVM for a single WFS and updating
+   the MVM. Saves timing and results to files.
+
+   @param[in] gpus List of GPU indices.
+   @param[in] ngpu Number of GPUs to use.
+   @param[in] nstep Number of time steps.
+*/
 void mvm_iwfs(int* gpus, int ngpu, int nstep){
 #if 1
 	//const int nact=7673;//total

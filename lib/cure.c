@@ -206,7 +206,12 @@ void cure1d(dmat** pphix, const dmat* gx, const dmat* gy, real dx){
 	lfree(flag);
 }
 /**
-   Implements 2d cure by calling cure1d twice.
+   Implements 2d cure by calling cure1d twice (along x and along y) and averaging the results.
+
+   @param[in,out] phi Output OPD of (nx+1)*(ny+1) on the subaperture corners. Allocated if NULL; otherwise overwritten.
+   @param[in] gx x gradients, dimension is nx*ny. Invalid subapertures set to NaN.
+   @param[in] gy y gradients, dimension is nx*ny.
+   @param[in] dx Size of subaperture.
 */
 void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
 	dmat* gxt=dtrans(gx);
@@ -223,6 +228,11 @@ void cure(dmat** phi, const dmat* gx, const dmat* gy, real dx){
 }
 /**
    An alternative interface. grad is nsa*2 defined on saloc, instead of on square grid. phix is on square grid.
+
+   @param[in,out] phix Output OPD on the square grid of subaperture corners, with keywords for its
+   geometry. Allocated if NULL; otherwise overwritten.
+   @param[in] grad0 Gradients, nsa*2 (or 2*nsa) with all x gradients first.
+   @param[in] saloc Subaperture locations. Its map is created if not yet.
 */
 void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 	dmat *grad=0;
@@ -269,6 +279,11 @@ void cure_loc(dmat** phix, const dmat* grad0, const loc_t* saloc){
 /**
    An alternative interface. grad is nsa*2 defined on saloc, instead of on
    square grid. Return phix also on saloc grid.
+
+   @param[in,out] phix Output OPD on saloc. Allocated if NULL; otherwise must have saloc->nloc
+   rows and only the values are overwritten.
+   @param[in] grad Gradients, nsa*2 with all x gradients first.
+   @param[in] saloc Subaperture locations.
 */
 void cure_loc2(dmat** phix, const dmat* grad, const loc_t* saloc){
 	dmat* phi2d=0;

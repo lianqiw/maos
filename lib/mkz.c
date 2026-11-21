@@ -21,7 +21,16 @@
 /**
    Returns the transpose of a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
- */
+
+   @param[in] xloc The grid on which OPDs are defined.
+   @param[in] amp The amplitude on xloc. NULL for uniform amplitude.
+   @param[in] saloc The subaperture coordinate.
+   @param[in] saorc 1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center.
+   @param[in] scale Cone effect scaling.
+   @param[in] dispx Displacement along x due to beam angle (m).
+   @param[in] dispy Displacement along y due to beam angle (m).
+   @return Newly allocated sparse matrix of size xloc->nloc*(nsa*2); the caller frees it.
+*/
 dsp* mkzt(loc_t* xloc, real* amp, loc_t* saloc,
 	int saorc, real scale, real dispx, real dispy){
  /*compute ztilt influence function from xloc to saloc
@@ -120,7 +129,16 @@ dsp* mkzt(loc_t* xloc, real* amp, loc_t* saloc,
 /**
    Returns a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
- */
+
+   @param[in] xloc The grid on which OPDs are defined.
+   @param[in] amp The amplitude on xloc. NULL for uniform amplitude.
+   @param[in] saloc The subaperture coordinate.
+   @param[in] saorc 1: saloc is subaperture origin (lower left corner). 0: saloc is subaperture center.
+   @param[in] scale Cone effect scaling.
+   @param[in] dispx Displacement along x due to beam angle (m).
+   @param[in] dispy Displacement along y due to beam angle (m).
+   @return Newly allocated sparse matrix of size (nsa*2)*xloc->nloc; the caller frees it.
+*/
 dsp* mkz(loc_t* xloc, real* amp, loc_t* saloc,
 	int saorc, real scale, real dispx, real dispy){
 	dsp* zt=mkzt(xloc, amp, saloc, saorc, scale, dispx, dispy);

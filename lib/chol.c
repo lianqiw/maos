@@ -73,7 +73,12 @@ typedef float chol_real;
 		memcpy(p1, p2, sizeof(t1)*size);	\
     }
 /**
-   Convert our dsp spase type to cholmod_sparse type. Data is shared.
+   Convert our dsp spase type to cholmod_sparse type. Index data is shared;
+   values are shared unless real and chol_real differ in size.
+
+   @param[in] A Symmetric sparse matrix. Only the upper triangular part is used by cholmod.
+   @return Newly allocated cholmod_sparse header referencing A's data; the caller frees
+   the header (and x if it differs from A->px) but not the shared arrays.
 */
 static cholmod_sparse* dsp2chol(const dsp* A){
 	cholmod_sparse* B=mycalloc(1, cholmod_sparse);
@@ -94,7 +99,10 @@ static cholmod_sparse* dsp2chol(const dsp* A){
 }
 
 /**
-   Convert cholmod_sparse to dsp. Data is shared
+   Convert cholmod_sparse to dsp. The data is moved into the result.
+
+   @param[in,out] pB The cholmod_sparse to convert. Its header is freed and *pB is set to NULL.
+   @return Newly allocated sparse matrix owning the data, or NULL if pB or *pB is NULL. The caller frees it.
 */
 static dsp* chol2sp(cholmod_sparse**pB){
 	if(!pB || !*pB) return NULL;
@@ -113,7 +121,13 @@ static dsp* chol2sp(cholmod_sparse**pB){
 	return A;
 }
 /**
-   Convert our dmat type to cholmod_dense type.
+   Convert columns of our dmat type to cholmod_dense type. Data is shared
+   unless real and chol_real differ in size.
+
+   @param[in] A Dense matrix.
+   @param[in] start First column.
+   @param[in] end One past the last column. 0 means A->ny.
+   @return Newly allocated cholmod_dense header; the caller frees it (and x if it is not referencing A).
 */
 static cholmod_dense* d2chol(const dmat* A, long start, long end){
 	cholmod_dense* B=mycalloc(1, cholmod_dense);
@@ -130,7 +144,10 @@ static cholmod_dense* d2chol(const dmat* A, long start, long end){
 }
 
 /**
-   Factorize a sparse array into LL' with reordering.
+   Factorize a sparse array into LL' with reordering. Errors out if the factorization fails.
+
+   @param[in] A_in Symmetric positive definite sparse matrix. Only the upper triangular part is used.
+   @return Newly allocated cholesky factor, or NULL if A_in is NULL. Free with chol_free().
 */
 spchol* chol_factorize(const dsp* A_in){
 	if(!A_in) return NULL;
@@ -204,6 +221,9 @@ spchol* chol_factorize(const dsp* A_in){
    This routine works only if the factor is using simplicity factor. not
    supernodal. so, in chol_factorize, we have set c.final_super=0, so that the
    final result is always in simplicity factor.
+
+   @param[in,out] A Cholesky factor. Cl and Cp are filled. Does nothing if A->L is not set or Cl/Cp already exist.
+   @param[in] keep Whether to keep the internal factor A->L (and A->c). If kept, Cp references A->L->Perm.
 */
 void chol_convert(spchol* A, int keep){
 	if(!A||!A->L||A->Cp||A->Cl) return;
@@ -230,7 +250,12 @@ void chol_convert(spchol* A, int keep){
 	}
 }
 /**
-   Alternative interface
+   Alternative interface to chol_factorize(). Returns the lower triangular
+   cholesky factor as dsp and, if Cp is not NULL, the permutation vector in *Cp.
+
+   @param[out] Cp If not NULL, *Cp is set to a newly allocated permutation vector. The caller frees it.
+   @param[in] A_in Symmetric positive definite sparse matrix.
+   @return Newly allocated lower triangular cholesky factor. The caller frees it.
 */
 dsp* chol_factorize2(lmat** Cp, const dsp* A_in){
 	spchol* C=chol_factorize(A_in);
@@ -247,7 +272,11 @@ dsp* chol_factorize2(lmat** Cp, const dsp* A_in){
 	return out;
 }
 /**
-   Save cholesky factor and permutation vector to file.*/
+   Save cholesky factor and permutation vector to file.
+
+   @param[in] A Cholesky factor.
+   @param[in] format printf style format of the file name, followed by its arguments.
+*/
 void chol_save(spchol* A, const char* format, ...){
 	format2fn;
 	file_t* fp=zfopen(fn, "wb");
@@ -303,7 +332,11 @@ void chol_save(spchol* A, const char* format, ...){
 
 /**
    Read cholesky factor form file. In the matlab convention, the upper triangle
-   is saved. */
+   is saved.
+
+   @param[in] format printf style format of the file name, followed by its arguments.
+   @return Newly allocated cholesky factor. Free with chol_free().
+*/
 spchol* chol_read(const char* format, ...){
 	format2fn;
 	spchol* A=mycalloc(1, spchol);
@@ -395,6 +428,15 @@ typedef struct{
 	spchol* A;
 	const dmat* y;
 }CHOLSOLVE_T;
+/**
+   Solve A*x=y for columns start to end of y using the cholmod solver.
+
+   @param[in,out] x Solution. Allocated if NULL; otherwise columns start to end are overwritten.
+   @param[in] A Cholesky factor with the native cholmod factor L.
+   @param[in] y Right hand side.
+   @param[in] start First column.
+   @param[in] end One past the last column (must be nonzero).
+*/
 static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long start, long end){
 	cholmod_dense* y2=d2chol(y, start, end);
 	cholmod_dense* x2=MOD(solve)(CHOLMOD_A, A->L, y2, A->c);
@@ -423,6 +465,10 @@ static void chol_solve_cholmod(dmat** x, const spchol* A, const dmat* y, long st
 /**
    Solve A*x=y where Y is sparse. Not good idea to use dsp ** as chol_solve
    because the result may have different nzmax.
+
+   @param[in] A Cholesky factor with the native cholmod factor L.
+   @param[in] y Sparse right hand side.
+   @return Newly allocated sparse solution. The caller frees it.
 */
 dsp* chol_spsolve(spchol* A, const dsp* y){
 	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
@@ -436,7 +482,15 @@ dsp* chol_spsolve(spchol* A, const dsp* y){
 	return x;
 }
 /**
-   forward permutation. In place permutation does not work.
+   Permute the rows of columns of in into out. In place permutation does not work.
+
+   @param[in,out] out Output matrix. Allocated if NULL; otherwise ncol columns from start_out are overwritten.
+   @param[in] perm Permutation vector.
+   @param[in] in Input matrix.
+   @param[in] start_out First column of out.
+   @param[in] start_in First column of in.
+   @param[in] ncol Number of columns.
+   @param[in] direction 1 for forward (out[i]=in[perm[i]]), otherwise reverse (out[perm[i]]=in[i]).
 */
 static inline void chol_perm(dmat** out, spint* perm, const dmat* in,
 	long start_out, long start_in, long ncol, int direction){
@@ -462,8 +516,13 @@ static inline void chol_perm(dmat** out, spint* perm, const dmat* in,
 	}
 }
 
-/*
-  The performance of this is poorer than chol_solve_each. done in place
+/**
+   Solve L*L'*x=y in place using the lower triangular factor (without permutation).
+
+   @param[in] A Lower triangular cholesky factor L.
+   @param[in,out] y2 Right hand side; replaced by the solution.
+   @param[in] start First column of y2.
+   @param[in] end One past the last column of y2.
 */
 static void chol_solve_lower(const dsp* A, dmat* y2, long start, long end){
 	real* Ax=A->px;
@@ -494,8 +553,13 @@ static void chol_solve_lower(const dsp* A, dmat* y2, long start, long end){
 		}
 	}
 }
-/*
-  The performance of this is poorer than chol_solve_each. done in place
+/**
+   Solve R'*R*x=y in place using the upper triangular factor (without permutation).
+
+   @param[in] A Upper triangular cholesky factor R.
+   @param[in,out] y2 Right hand side; replaced by the solution.
+   @param[in] start First column of y2.
+   @param[in] end One past the last column of y2.
 */
 static void chol_solve_upper(const dsp* A, dmat* y2, long start, long end){
 	real* Ax=A->px;
@@ -527,7 +591,15 @@ static void chol_solve_upper(const dsp* A, dmat* y2, long start, long end){
 		}
 	}
 }
-//Solve from column start to end. *x and y can be the same.
+/**
+   Solve A*x=y from column start to end. *x and y can be the same.
+
+   @param[in,out] x Solution. Allocated if NULL; otherwise columns start to end are overwritten.
+   @param[in] A Cholesky factor.
+   @param[in] y Right hand side.
+   @param[in] start First column.
+   @param[in] end One past the last column. 0 means y->ny.
+*/
 static void chol_solve_each(dmat** x, spchol* A, const dmat* y, long start, long end){
 	if(end==0) end=y->ny;
 	if(A->L){
@@ -546,8 +618,11 @@ static void chol_solve_each(dmat** x, spchol* A, const dmat* y, long start, long
 		dfree(y2);
 	}
 }
-/*
+/**
   Solve section of the columns in multi-threaded way.
+
+   @param[in] info Thread data with data pointing to CHOLSOLVE_T and the column range in start, end.
+   @return NULL.
 */
 static void* chol_solve_thread(thread_t* info){
 	CHOLSOLVE_T* data=(CHOLSOLVE_T*)info->data;
@@ -556,6 +631,10 @@ static void* chol_solve_thread(thread_t* info){
 }
 /**
    Solve A*x=y where the cholesky factor of A is stored in A.
+
+   @param[in,out] x Solution. Allocated if NULL; otherwise overwritten.
+   @param[in] A Cholesky factor.
+   @param[in] y Right hand side.
 */
 void chol_solve(dmat** x, spchol* A, dmat* y){
 	if(y->ny==1){
@@ -574,7 +653,10 @@ void chol_solve(dmat** x, spchol* A, dmat* y){
 	}
 }
 /**
-   Free cholesky factor.*/
+   Free cholesky factor.
+
+   @param[in,out] A Cholesky factor to free. May be NULL.
+*/
 void chol_free_do(spchol* A){
 	if(A){
 		if(A->L){

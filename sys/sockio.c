@@ -28,9 +28,16 @@
 #define MSG_NOSIGNAL 0
 #define NEED_NOSIGPIPE 1 /*e.g., macOS: set SO_NOSIGPIPE on the socket instead*/
 #endif
-/*
-	Wrap io function and handle partial operations.
-	returns numbers of bytes successfully transfored when success or -1 when error happens.
+/**
+   Wrap io function and handle partial operations. Uses send()/recv() for
+   sockets and write()/read() otherwise. Retries on EINTR and stops at end of
+   file or closed connection.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in,out] p Buffer to write from or read into.
+   @param[in] len Number of bytes to transfer.
+   @param[in] mode 1 or 'w' for write, 0 or 'r' for read.
+   @return Number of bytes successfully transferred, or -1 on error or invalid mode.
 */
 ssize_t wrap_io(int sfd, void* p, const size_t len, int mode){
 	const int is_write=(mode==1 || mode=='w');
@@ -71,15 +78,36 @@ ssize_t wrap_io(int sfd, void* p, const size_t len, int mode){
 	}
 	return total;
 }
+/**
+   Write len bytes from p to socket or file sfd.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in] p Data to write.
+   @param[in] len Number of bytes to write.
+   @return 0 on success, -2 for partial write, and -1 on error.
+*/
 int stwrite(int sfd, const void* p, const size_t len){
 	return convert_ans(wrap_io(sfd, (void*)p, len, 'w'), len);
 }
+/**
+   Read len bytes from socket or file sfd into p.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[out] p Buffer to receive the data.
+   @param[in] len Number of bytes to read.
+   @return 0 on success, -2 for partial read (e.g., connection closed), and -1 on error.
+*/
 int stread(int sfd, void* p, const size_t len){
 	return convert_ans(wrap_io(sfd, p, len, 'r'), len);
 }
 
 /**
-   Write a string to socket
+   Write a string to socket, preceded by its length including the terminating
+   NUL. A NULL string is written as length 0.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in] str String to write. May be NULL.
+   @return 0 on success, nonzero on failure.
 */
 int stwritestr(int sfd, const char* str){
 	if(str){
@@ -90,7 +118,11 @@ int stwritestr(int sfd, const char* str){
 	}
 }
 /**
-   Read a string from socket
+   Read a string written by stwritestr().
+
+   @param[in] sfd Socket or file descriptor.
+   @param[out] str Newly allocated string; the caller frees it. Set to NULL for an empty string or on failure.
+   @return 0 on success, nonzero on failure.
 */
 int streadstr(int sfd, char** str){
 	int len;
@@ -108,8 +140,13 @@ int streadstr(int sfd, char** str){
 	return ans;
 }
 /**
-   Write a string array to socket
- */
+   Write a string array to socket, preceded by the number of strings.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in] str Array of strings.
+   @param[in] nstr Number of strings.
+   @return 0 on success, nonzero on failure.
+*/
 int stwritestrarr(int sfd, const char* const* str, int nstr){
 	int ans=stwriteint(sfd, nstr);
 	for(int i=0; i<nstr&&!ans; i++){
@@ -118,7 +155,12 @@ int stwritestrarr(int sfd, const char* const* str, int nstr){
 	return ans;
 }
 /**
-   Read a string array from socket
+   Read a string array written by stwritestrarr().
+
+   @param[in] sfd Socket or file descriptor.
+   @param[out] str Newly allocated array of newly allocated strings; the caller frees each string and the array.
+   @param[out] nstr Number of strings.
+   @return 0 on success, nonzero on failure.
 */
 int streadstrarr(int sfd, char*** str, int* nstr){
 	int ans=streadint(sfd, nstr);
@@ -133,6 +175,10 @@ int streadstrarr(int sfd, char*** str, int* nstr){
 /**
    Wrie a file descriptor to socket. Transfer a open file (socket) descriptor to
    another process in the same hosts. sfd has to be a AF_UNIX socket.
+
+   @param[in] sfd AF_UNIX socket.
+   @param[in] fd File descriptor to transfer.
+   @return 0 on success, -1 on failure.
 */
 int stwritefd(int sfd, int fd){
 	int ans=0;
@@ -161,6 +207,10 @@ int stwritefd(int sfd, int fd){
 }
 /**
    Read a file descriptor from socket. Use with stwritefd();
+
+   @param[in] sfd AF_UNIX socket.
+   @param[out] fd Received file descriptor.
+   @return 0 on success, -1 on failure.
 */
 int streadfd(int sfd, int* fd){
 	int ans=0;
@@ -207,8 +257,16 @@ int stcheck(int sfd){
 #define UDP_RESEND 0xEEEE
 #define UDP_DONE   0xEEED
 /**
- * Use UDP socket to send data reliably. Status is checked.
- * */
+   Use UDP socket to send data reliably. Data is split into packets of
+   info->payload bytes including header. Afterwards listens for resend
+   requests from udp_recv() until it reports completion or times out.
+
+   @param[in] info UDP connection information.
+   @param[in] buf Data to send.
+   @param[in] len Number of bytes to send.
+   @param[in] counter Frame counter written in each packet header.
+   @return 0 if sent, -1 if info is invalid.
+*/
 int udp_send(udp_t* info, char* buf, size_t len, int counter){
 	if(!info || info->sock<=0){
 		warning("udp_send: info or info->sock is invalid\n");
@@ -282,8 +340,14 @@ int udp_send(udp_t* info, char* buf, size_t len, int counter){
 }
 
 /**
- * Use UDP socket to receive data reliably. if counter
- * */
+   Use UDP socket to receive data reliably from udp_send(). Requests resend of
+   missing packets and acknowledges when done.
+
+   @param[in] info UDP connection information.
+   @param[in,out] pbuf Receive buffer. Reallocated if NULL or too small; the caller frees it.
+   @param[in,out] len Size of *pbuf in bytes. Updated if reallocated; set to 0 on failure.
+   @return Frame counter of the received data, or -1 on failure.
+*/
 int udp_recv(udp_t* info, char** pbuf, size_t *len){
 	if(!info||info->sock<=0){
 		warning("udp_recv info or info->sock is invalid\n");

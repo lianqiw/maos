@@ -90,7 +90,10 @@
    When the keepalive flag is on, the socket will receive notice when the
    connection to remote socket is disrupted.
 
-  \todo Find keepalive options in mac.  */
+   \todo Find keepalive options in mac.
+
+   @param[in] sock Socket file descriptor. Ignored if -1.
+*/
 static void socket_tcp_keepalive(int sock){
 	if(sock==-1) return;
 	int keeplive=1;
@@ -113,6 +116,11 @@ static void socket_tcp_keepalive(int sock){
 		}
 	}
 }
+/**
+   Set SO_REUSEADDR so that the port can be bound again immediately.
+
+   @param[in] sock Socket file descriptor. Ignored if -1.
+*/
 static void socket_reuse_addr(int sock){
 	if(sock==-1) return;
 	const int one=1;
@@ -120,6 +128,14 @@ static void socket_reuse_addr(int sock){
 		perror("socket_reuse_addr");
 	}
 }
+/**
+   Prevent SIGPIPE when writing to a closed socket, using SO_NOSIGPIPE if
+   available or ignoring SIGPIPE otherwise (except on linux, which uses
+   MSG_NOSIGNAL).
+
+   @param[in] sock Socket file descriptor.
+   @return 0 on success, -1 on failure or if sock is -1.
+*/
 int socket_nopipe(int sock){
 	if(sock==-1) return -1;
 #ifdef SO_NOSIGPIPE
@@ -134,7 +150,11 @@ int socket_nopipe(int sock){
 	return 0;
 }
 /**
-   Set socket to unblocking mode
+   Set socket to blocking or non-blocking mode.
+
+   @param[in] sock Socket file descriptor.
+   @param[in] block 1 for blocking mode, 0 for non-blocking mode.
+   @return 0 on success, -1 on failure.
 */
 int socket_block(int sock, int block){
 	if(sock==-1) return -1;
@@ -160,6 +180,12 @@ int socket_block(int sock, int block){
   about conversion from in to uint16. THis is an ugly workaround*/
 #undef htons
 #define htons myhtons
+/**
+   Convert a 16 bit integer from host to network byte order.
+
+   @param[in] port Value in host byte order.
+   @return Value in network byte order.
+*/
 static inline uint16_t myhtons(uint16_t port){
 	uint16_t ans;
 #if __BYTE_ORDER == __BIG_ENDIAN
@@ -173,7 +199,9 @@ static inline uint16_t myhtons(uint16_t port){
 #endif
 
 /**
-   Tune socket for more real time.
+   Tune socket for more real time by enabling TCP_NODELAY.
+
+   @param[in] sock Socket file descriptor. Ignored if -1.
 */
 static void socket_tcp_nodelay(int sock){
 	if(sock==-1) return;
@@ -181,8 +209,12 @@ static void socket_tcp_nodelay(int sock){
 	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 }
 /**
- * Set recv timeout in seconds
- * */
+   Set receive timeout.
+
+   @param[in] sock Socket file descriptor.
+   @param[in] sec Timeout in seconds.
+   @return 0 on success, negative on failure.
+*/
 int socket_recv_timeout(int sock, long sec){
 	if(sock==-1) return -1;
 	struct timeval val={sec,0};
@@ -193,8 +225,12 @@ int socket_recv_timeout(int sock, long sec){
 	return ans;
 }
 /**
- * Set recv timeout in seconds
- * */
+   Set send timeout.
+
+   @param[in] sock Socket file descriptor.
+   @param[in] sec Timeout in seconds.
+   @return 0 on success, negative on failure.
+*/
 int socket_send_timeout(int sock, long sec){
 	if(sock==-1) return -1;
 	struct timeval val={sec,0};
@@ -206,7 +242,10 @@ int socket_send_timeout(int sock, long sec){
 }
 /**
    make a server port and bind to sockpath. AF_UNIX.
- */
+
+   @param[in] sockpath Path of the unix socket.
+   @return Socket file descriptor, or -1 on failure.
+*/
 static int bind_socket_unix(const char* sockpath){
 	int sock=socket(AF_UNIX, SOCK_STREAM, 0);
 	socket_nopipe(sock);
@@ -224,10 +263,13 @@ static int bind_socket_unix(const char* sockpath){
 	return sock;
 }
 /**
-   make a server port and bind to localhost on all addresses.
-   protocl is usually SOCK_DGRAM or SOCK_STREAM.
-   ip is usually zero.
-   if port is 0, will bind an assigned port
+   make a server port and bind to localhost on all addresses. Retries every
+   10 seconds, up to 100 times, if bind fails.
+
+   @param[in] protocol Socket type, usually SOCK_DGRAM or SOCK_STREAM.
+   @param[in] ipaddr IP address to bind to. NULL binds to all addresses.
+   @param[in] port Port to bind to. If 0, the system assigns a port.
+   @return Socket file descriptor, or -1 on failure. Exits if socket creation fails.
 */
 int bind_socket(int protocol, const char* ipaddr, uint16_t port){
 	struct sockaddr_in name;
@@ -270,8 +312,11 @@ int bind_socket(int protocol, const char* ipaddr, uint16_t port){
 	return sock;
 }
 /**
- * determine the socket port
- * */
+   Determine the local port of a socket.
+
+   @param[in] sock Socket file descriptor.
+   @return Port number in host byte order, or -1 on failure.
+*/
 int socket_port(int sock){
 	struct sockaddr_in name;
 	socklen_t addrlen=sizeof(name);
@@ -283,8 +328,11 @@ int socket_port(int sock){
 }
 
 /**
- * determine the socket peer IP address
- * */
+   Determine the IP address of the socket peer.
+
+   @param[in] sock Socket file descriptor.
+   @return Peer IPv4 address in network byte order, or 0 on failure.
+*/
 in_addr_t socket_peer(int sock){
 	struct sockaddr_in name;
 	socklen_t addrlen=sizeof(name);
@@ -295,8 +343,11 @@ in_addr_t socket_peer(int sock){
 	}
 }
 /**
- * convert in_addr_t to host name for print out
- * */
+   Convert in_addr_t to host name for print out.
+
+   @param[in] s_addr IPv4 address in network byte order.
+   @return Host name or dotted address string from lookup_hostname().
+*/
 const char* addr2name(in_addr_t s_addr){
 	struct in_addr addr;
 	addr.s_addr=s_addr;
@@ -304,8 +355,13 @@ const char* addr2name(in_addr_t s_addr){
 }
 
 static volatile int quit_listen=0;
+/**
+   quit listening upon signal and do clean up.
+
+   @param[in] sig Signal number.
+   @return 1 to indicate the signal is handled.
+*/
 static int listen_signal_handler(int sig){
-	/*quit listening upon signal and do clean up.*/
 	dbg_time("scheduler caught: %s(%d)\n", strsignal(sig), sig);
 	quit_listen=1;
 	return 1;
@@ -316,6 +372,15 @@ struct pfd_handler_t{
 	const char *name;
 }*pfd_handler=NULL;
 int npfd=0;
+/**
+   Placeholder handler for a newly accepted connection whose type (tcp or
+   http) is not yet determined. listen_port() replaces it after detecting the
+   type. It is an error if it is ever called.
+
+   @param[in] fd Unused.
+   @param[in] flag Unused.
+   @return Does not return normally.
+*/
 int pending_handler(struct pollfd *fd, int flag){
 	(void)flag;
 	(void)fd;
@@ -324,16 +389,16 @@ int pending_handler(struct pollfd *fd, int flag){
 }
 //Add a port with handler. if handler is NULL, it is handled internally.
 /**
- * Add a socket to the pollfd array for event monitoring.
- *
- * @param sock     The socket file descriptor to add.
- * @param events   The events to monitor (e.g., POLLIN, POLLOUT).
- * @param handler  The function to handle events on this socket (can be NULL for internal handling).
- * @param name     A descriptive name for this socket (for debugging/logging).
- *
- * If the socket is already present, updates its handler and name if necessary.
- * Allocates memory for new entries as needed.
- */
+   Add a socket to the pollfd array for event monitoring.
+
+   If the socket is already present, updates its events, handler and name.
+   Allocates memory for new entries as needed.
+
+   @param[in] sock The socket file descriptor to add.
+   @param[in] events The events to monitor (e.g., POLLIN, POLLOUT).
+   @param[in] handler The function to handle events on this socket (NULL for internal handling of a listening socket).
+   @param[in] name A descriptive name for this socket (for debugging/logging). The pointer is stored.
+*/
 void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int), const char *name){
 	int jfd=-1;//insert location
 	for(int ifd=0; ifd<npfd; ifd++){
@@ -370,14 +435,14 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int),
 }
 //remove a port form pollfd. it is not closed. if sock==-2, remove all
 /**
- * Remove a socket from the pollfd array, optionally closing it.
- *
- * @param sock     The socket file descriptor to remove; if -2, remove all sockets.
- * @param toclose  If nonzero, close the socket(s) before removing.
- * @param caller   A string indicating the caller for logging/debugging purposes.
- *
- * This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed.
- */
+   Remove a socket from the pollfd array, optionally closing it.
+
+   This function does not close the socket if toclose is zero. If sock is -2, all sockets are removed.
+
+   @param[in] sock The socket file descriptor to remove; if -2, remove all sockets.
+   @param[in] toclose If nonzero, close the socket(s) before removing.
+   @param[in] caller A string indicating the caller for logging/debugging purposes.
+*/
 void listen_port_del(int sock, int toclose, const char *caller){
 	int ifd;
 	for(ifd=0; ifd<npfd; ifd++){
@@ -404,10 +469,14 @@ void listen_port_del(int sock, int toclose, const char *caller){
    Open a port and listen to it. Calls respond(sock) to handle data. If
    timeout_fun is not NULL, it will be called when 1) connection is
    establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
-   return at error.
-   if localpath is not null and start with /, open the local unix port also
-   if localpath is not null and contains ip address, only bind to that ip address
- */
+   return at error, upon a quit signal, or when all sockets are closed.
+   All sockets are closed and the poll arrays are freed upon return, so it can be called again.
+   if localpath is not null and start with /, open the local unix port also.
+   If ipaddr is not null, only bind to that ip address.
+
+   @param[in] opt Listening options: port, ipaddr, localpath, fd, responder,
+   http_responder, timeout_fun, timeout_sec, and nodelay.
+*/
 void listen_port(listen_opt_t opt){
 	/*uint16_t port, char* localpath, int (*responder)(struct pollfd*, int),
 	double timeout_sec, void (*timeout_fun)(), int nodelay){*/
@@ -608,13 +677,17 @@ void listen_port(listen_opt_t opt){
 
 /**
   Connect to a host at port. If hostname already includes port after :, port is ignored.
-  hostname may start with / to indicate a local UNIX port
+  hostname may start with / to indicate a local UNIX port.
+  In blocking mode, retries every 10 seconds up to 25 times.
+
+  @param[in] hostname The hostname can be just name or name:port, or a unix socket path starting with /.
+  @param[in] port The port if hostname does not include it.
+  @param[in] block Whether to retry until connection is established. The
+  returned socket is always in blocking mode.
+  @param[in] nodelay Whether to set TCP nodelay flag.
+  @return Connected socket file descriptor, or -1 on failure.
 */
-int connect_port(const char* hostname,/**<The hostname can be just name or name:port.*/
-	int port,            /**<The port if hostname does not include it*/
-	int block,           /**<Do we block until connection is established*/
-	int nodelay			 /**<set TCP nodelay flag*/
-	){
+int connect_port(const char* hostname, int port, int block, int nodelay){
 	int sock=-1;
 	if(hostname[0]=='/'){//connect locally so we can pass fd.
 		sock=socket(PF_UNIX, SOCK_STREAM, 0);

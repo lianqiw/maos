@@ -33,11 +33,11 @@ static void load_wisdom(){
 		fclose(fpwisdom);
 	}
 }
+//Put the following within COMP_COMPLEX to avoid run multiple copies of it.
+
 /**
    save FFT wisdom to file.
 */
-
-//Put the following within COMP_COMPLEX to avoid run multiple copies of it.
 static void save_wisdom(){
 	FILE* fpwisdom;
 	if((fpwisdom=fopen(fnwisdom, "w"))){
@@ -107,6 +107,11 @@ static void FFTW(parallel_callback)(void *(*work)(char *), char *jobdata, size_t
 static __attribute__((destructor))void deinit(){
 	save_wisdom();
 }
+/**
+   Initialize FFTW threading (if available), set the parallel callback, and load wisdom from file.
+
+   @return Function pointer to fftw_plan_with_nthreads, or NULL if FFTW threads is not available.
+*/
 static void (*init_threads())(int){
 	void (*p_fftw_plan_with_nthreads)(int)=NULL;
 #if HAS_FFTW_THREADS
@@ -139,6 +144,9 @@ static void (*init_threads())(int){
 }
 /**
    Set number of threads for FFTW based on array size.
+
+   @param[in] nx Number of rows of the array.
+   @param[in] ny Number of columns of the array.
 */
 static void FFTW(fft_threads)(long nx, long ny){
 	static int fft_has_threads=-1;
@@ -186,7 +194,9 @@ struct fft_t{
 	PLAN1D_T *plan1d[3];
 };
 /**
-   Free FFTW plans.
+   Free FFTW plans in fft and fft itself.
+
+   @param[in,out] fft The FFT plans to free. May be NULL.
 */
 void X(fft_free_plan)(fft_t *fft){
 	if(!fft) return;
@@ -211,6 +221,9 @@ void X(fft_free_plan)(fft_t *fft){
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array if FFTW_FLAGS is not FFTW_ESTIMATE. So do it before filling in data.
+
+   @param[in,out] A The array; the plan is stored in A->fft.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 static void X(fft2plan)(X(mat)* A, int dir){
 	assert(abs(dir)==1&&A&&P(A));
@@ -236,6 +249,10 @@ static void X(fft2plan)(X(mat)* A, int dir){
 
 /**
    make plans for cfft2partial.
+
+   @param[in,out] A The array; the plans are stored in A->fft.
+   @param[in] ncomp Size of the region to transform along rows. 0 to only do FFT along the columns.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 static void X(fft2partialplan)(X(mat)* A, long ncomp, int dir){
 	assert(abs(dir)==1);
@@ -278,7 +295,10 @@ static void X(fft2partialplan)(X(mat)* A, long ncomp, int dir){
 }
 void (*X(fft2_ext))(X(mat)* A, int dir)=NULL;
 /**
-   Do 2d FFT transforms.
+   Do 2d FFT transforms in place. No scaling is applied.
+
+   @param[in,out] A The array.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 void X(fft2)(X(mat)* A, int dir){
 	assert(abs(dir)==1); assert(A&&P(A));
@@ -294,7 +314,10 @@ void X(fft2)(X(mat)* A, int dir){
 }
 
 /**
-   Do 2d inverse FFT (scaling factor of 1/(nx*ny) is applied)
+   Do 2d FFT in place with scaling factor of 1/(nx*ny) applied. Usually used for inverse FFT.
+
+   @param[in,out] A The array.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 void X(fft2i)(X(mat)* A, int dir){
 	/*Apply scaling factor*/
@@ -304,6 +327,9 @@ void X(fft2i)(X(mat)* A, int dir){
 
 /**
    Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny)
+
+   @param[in,out] A The array.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 void X(fft2s)(X(mat)* A, int dir){/*symmetrical cfft2. */
 	X(fft2)(A, dir);
@@ -315,6 +341,10 @@ void X(fft2s)(X(mat)* A, int dir){/*symmetrical cfft2. */
    takes 1d fft through its column and selectly for its rows to produce smaller
    psf.
    if ncomp==0, only do FFT along the columns.
+
+   @param[in,out] A The array.
+   @param[in] ncomp Size of the region to transform along rows. Must match existing plan.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
 */
 void X(fft2partial)(X(mat)* A, long ncomp, int dir){
 	assert(abs(dir)==1);
@@ -334,6 +364,9 @@ void X(fft2partial)(X(mat)* A, long ncomp, int dir){
 
 /**
    returns IFFT(fftshift(FFT(A)))
+
+   @param[in] A The array.
+   @return Newly allocated result; the caller frees it. NULL if A is NULL.
 */
 X(mat)* X(ffttreat)(X(mat)* A){
 	if(!A) return NULL;
@@ -347,12 +380,20 @@ X(mat)* X(ffttreat)(X(mat)* A){
 	X(scale)(B, 1./(R)(A->nx*A->ny));
 	return B;
 }
+/**
+   Free FFTW plans. Same as X(fft_free_plan) but named with real type prefix.
+
+   @param[in,out] fft The FFT plans to free. May be NULL.
+*/
 void XR(fft_free_plan)(fft_t *fft){
 	if(fft) X(fft_free_plan)(fft);
 }
 /**
    Create a fftw plan based on a 2 element cell array that contains real/imaginary parts respectively.
- */
+
+   @param[in,out] dc The 2 element cell array; the plan is stored in dc->fft.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
+*/
 static void XR(cell_fft2plan)(XR(cell)* dc, int dir){
 	assert(abs(dir)==1);
 	if(dc->nx*dc->ny!=2||!P(dc,0)||!P(dc,1)){
@@ -386,7 +427,10 @@ static void XR(cell_fft2plan)(XR(cell)* dc, int dir){
 }
 /**
    Do FFT based on a 2 element cell array that contains real/imaginary parts respectively.
- */
+
+   @param[in,out] dc The 2 element cell array.
+   @param[in] dir FFT direction: -1 for forward and 1 for inverse.
+*/
 void XR(cell_fft2)(XR(cell)* dc, int dir){
 	assert(abs(dir)==1);
 	if(!dc->fft||!dc->fft->plan[dir+1]){
@@ -396,7 +440,10 @@ void XR(cell_fft2)(XR(cell)* dc, int dir){
 }
 /**
    Create a fftw plan for 1d real to real FFT.
- */
+
+   @param[in,out] A The vector; the plan is stored in A->fft.
+   @param[in] dir -1 for real to half complex and 1 for half complex to real.
+*/
 void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
 	assert(abs(dir)==1&&A&&P(A));
 	if(A->nx!=1&&A->ny!=1){
@@ -420,8 +467,11 @@ void XR(fft1plan_r2hc)(XR(mat)* A, int dir){
 	UNLOCK_FFT;
 }
 /**
-   Do 1d real to real FFT.
- */
+   Do 1d real to real FFT. The plan must have been created by XR(fft1plan_r2hc).
+
+   @param[in,out] A The vector.
+   @param[in] dir -1 for real to half complex and 1 for half complex to real.
+*/
 void XR(fft1)(XR(mat)* A, int dir){
 	assert(abs(dir)==1);
 	if(!A||!A->fft||!A->fft->plan[dir+1]){

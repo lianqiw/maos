@@ -43,9 +43,17 @@ extern "C"
 
 /**
    Embed amp*exp(2*pi*i*opd). input is nxin*nxin, output is nxout*nxout;
+   One thread block per subaperture (blockIdx.x).
+
+   @param[out] wvf Complex wavefront, nxout*nxout per subaperture. Only the
+   center nxin*nxin region is written; the caller zeroes the rest.
+   @param[in] opd OPD, nxin*nxin per subaperture.
+   @param[in] amp Amplitude, same layout as opd.
+   @param[in] wvl Wavelength (m).
+   @param[in] nxin Input size along each dimension.
+   @param[in] nxout Output size along each dimension.
 */
-__global__ static void sa_embed_wvf_do(Comp* restrict wvf,
-	const Real* restrict opd, const Real* restrict amp,
+__global__ static void sa_embed_wvf_do(Comp* restrict wvf, const Real* restrict opd, const Real* restrict amp,
 	const Real wvl, const int nxin, const int nxout){
 	const int isa=blockIdx.x;
 	const int pad=(nxout-nxin)>>1;
@@ -66,7 +74,15 @@ __global__ static void sa_embed_wvf_do(Comp* restrict wvf,
 }
 
 /**
-   Embed or crop an array to another array. Preserve corner.
+   Embed or crop an array to another array. Preserve corner. Only the four
+   corner quadrants are written. One thread block per subaperture.
+
+   @param[out] out Output, noutx*nouty per subaperture.
+   @param[in] noutx Output size along x.
+   @param[in] nouty Output size along y.
+   @param[in] in Input, ninx*niny per subaperture.
+   @param[in] ninx Input size along x.
+   @param[in] niny Input size along y.
 */
 __global__ static void sa_cpcorner_do(Comp* restrict out, int noutx, int nouty,
 	const Comp* restrict in, int ninx, int niny){
@@ -87,7 +103,16 @@ __global__ static void sa_cpcorner_do(Comp* restrict out, int noutx, int nouty,
 }
 
 /**
-   Embed or crop an array to another array. Preserve center.
+   Embed or crop an array to another array. Preserve center. Only the
+   overlapping region is written. One thread block per subaperture.
+
+   @param[out] out Output, noutx*nouty per subaperture.
+   @param[in] noutx Output size along x.
+   @param[in] nouty Output size along y.
+   @param[in] in Input, ninx*niny per subaperture.
+   @param[in] ninx Input size along x.
+   @param[in] niny Input size along y.
+   @param[in] scale Scaling factor.
 */
 __global__ void sa_cpcenter_do(Comp* restrict out, int noutx, int nouty,
 	const Comp* restrict in, int ninx, int niny, Real scale){
@@ -121,7 +146,12 @@ __global__ void sa_cpcenter_do(Comp* restrict out, int noutx, int nouty,
 	}
 }
 /**
-   abs2 to real.
+   abs2 to real: wvf=|wvf|^2*alpha in place. One thread block per subaperture.
+
+   @param[in,out] wvf Complex array, nx*ny per subaperture.
+   @param[in] nx Size along x.
+   @param[in] ny Size along y.
+   @param[in] alpha Scaling factor.
 */
 __global__ static void sa_abs2real_do(Comp* wvf, const int nx, const int ny,Real alpha){
 	const int isa=blockIdx.x;
@@ -136,7 +166,14 @@ __global__ static void sa_abs2real_do(Comp* wvf, const int nx, const int ny,Real
 	}
 }
 /**
-   FFT Shift from complex to real.
+   FFT Shift from complex to real: out+=alpha*fftshift(real(wvf)). One thread
+   block per subaperture.
+
+   @param[in,out] out Real output, nx*ny per subaperture, accumulated into.
+   @param[in] wvf Complex input, nx*ny per subaperture.
+   @param[in] nx Size along x.
+   @param[in] ny Size along y.
+   @param[in] alpha Scaling factor.
 */
 __global__ static void sa_acc_real_fftshift_do(Real* restrict out, const Comp* restrict wvf,
 	int nx, int ny, Real alpha){
@@ -157,6 +194,11 @@ __global__ static void sa_acc_real_fftshift_do(Real* restrict out, const Comp* r
 /**
    Multiple one array with another. OTFs contains repeated arrays each with notf
    numbers. if repeat is 1, dtfs is repeatd for each array.
+
+   @param[in,out] otfs OTFs, notf per subaperture, multiplied in place.
+   @param[in] notf Number of elements per subaperture.
+   @param[in] dtfs Array to multiply, notf per subaperture or shared if repeat is set.
+   @param[in] repeat Whether dtfs is shared by all subapertures.
 */
 template <typename T, typename P>
 __global__ static void sa_ccwm_do(T* otfs, const int notf, const P* dtfs, int repeat){
@@ -169,7 +211,16 @@ __global__ static void sa_ccwm_do(T* otfs, const int notf, const P* dtfs, int re
 	}
 }
 /**
-   Multiple each OTF with another.
+   Multiple each OTF with the weighted sum of two others: otf*=dtf1*wt1+dtf2*wt2.
+
+   @param[in,out] otfs OTFs, notfx*notfy per subaperture, multiplied in place.
+   @param[in] notfx Size along x.
+   @param[in] notfy Size along y.
+   @param[in] dtfs1 First array, notfx*notfy per subaperture or shared if repeat is set.
+   @param[in] wt1 Weight of the first array.
+   @param[in] dtfs2 Second array, same layout as dtfs1.
+   @param[in] wt2 Weight of the second array.
+   @param[in] repeat Whether dtfs1 and dtfs2 are shared by all subapertures.
 */
 __global__ static void sa_ccwm2_do(Comp* otfs, const int notfx, const int notfy,
 	const Comp* dtfs1, Real wt1, const Comp* dtfs2, Real wt2, int repeat){
@@ -189,7 +240,13 @@ __global__ static void sa_ccwm2_do(Comp* otfs, const int notfx, const int notfy,
 	}
 }
 /**
-   Take the real part and accumulate to output
+   Take the real part and accumulate to output: out+=alpha*real(in).
+
+   @param[in,out] out Real output, ninx*niny per subaperture, accumulated into.
+   @param[in] in Complex input, ninx*niny per subaperture.
+   @param[in] ninx Size along x.
+   @param[in] niny Size along y.
+   @param[in] alpha Scaling factor.
 */
 __global__ static void sa_acc_real_do(Real* out, const Comp* restrict in, int ninx, int niny, Real alpha){
 	const int isa=blockIdx.x;
@@ -204,11 +261,25 @@ __global__ static void sa_acc_real_do(Real* out, const Comp* restrict in, int ni
 /**
    Do the role of si. input psfr is sampled with notfx*notfy, with sampling dtheta.
    Output ints is sampled with pixpsax*pixpsay, at pixtheta.
+   Uses bilinear interpolation of the real part of the input with optional
+   rotation. One thread block per subaperture.
+
+   @param[in,out] ints Subaperture images, pixpsax*pixpsay per subaperture, accumulated into.
+   @param[in] pixpsax Number of pixels along x.
+   @param[in] pixpsay Number of pixels along y.
+   @param[in] pixoffx Pixel offset along x per subaperture (in pixels), or NULL.
+   @param[in] pixoffy Pixel offset along y per subaperture (in pixels), or NULL.
+   @param[in] pixthetax Pixel size along x (rad).
+   @param[in] pixthetay Pixel size along y (rad).
+   @param[in] otf Input PSF (real part used), notfx*notfy per subaperture, centered.
+   @param[in] dtheta Sampling of the input (rad).
+   @param[in] notfx Input size along x.
+   @param[in] notfy Input size along y.
+   @param[in] srot Rotation angle per subaperture, or NULL.
+   @param[in] alpha Scaling factor.
 */
-__global__ static void sa_si_rot_do(Real* restrict ints, int pixpsax, int pixpsay,
-	const Real* pixoffx, const Real* pixoffy,
-	Real pixthetax, Real pixthetay,
-	const Comp* restrict otf, Real dtheta, int notfx, int notfy,
+__global__ static void sa_si_rot_do(Real* restrict ints, int pixpsax, int pixpsay, const Real* pixoffx,
+	const Real* pixoffy, Real pixthetax, Real pixthetay, const Comp* restrict otf, Real dtheta, int notfx, int notfy,
 	const Real* restrict srot, Real alpha){
 	int isa=blockIdx.x;
 	Real pxo=-(pixpsax*0.5-0.5+(pixoffx?pixoffx[isa]:0))*pixthetax;
@@ -244,7 +315,14 @@ __global__ static void sa_si_rot_do(Real* restrict ints, int pixpsax, int pixpsa
 /**
    Add tip/tilt to the OTF for each subaps. exp(-2*pi*sx/nx)*exp(-2*pi*sy/ny).
    peak of otf is in corner.
- */
+
+   @param[in,out] otf OTFs, nx*ny per subaperture, modified in place.
+   @param[in] nx Size along x.
+   @param[in] ny Size along y.
+   @param[in] gx Tilt along x per subaperture.
+   @param[in] gy Tilt along y per subaperture.
+   @param[in] gscale Scaling factor converting gx, gy to shift in number of pixels.
+*/
 __global__ static void sa_add_otf_tilt_corner_do(Comp* restrict otf, int nx, int ny,
 	Real* restrict gx, Real* restrict gy, Real gscale){
 	int isa=blockIdx.x;
@@ -267,6 +345,12 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp* restrict otf, int nx, int
    Do physical wfs images in GPU. please check wfsints() in CPU code for comments.
 
    stream is no longer an input parameter, as the FFT plan depends on it.
+
+   @param[in,out] simu Simulation data. LLT related states (e.g., fsmreal) may be updated.
+   @param[in] phiout OPD of the WFS in device memory.
+   @param[in] gradref Geometric gradients, used to remove tip/tilt for pistat.
+   @param[in] iwfs WFS index.
+   @param[in] isim Simulation step index.
 */
 void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 	//TIC;tic;

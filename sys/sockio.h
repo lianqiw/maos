@@ -26,6 +26,14 @@
 ssize_t wrap_io(int sfd, void* p, const size_t len, int mode);
 int stwrite(int sfd, const void *p, size_t len);
 int stread(int sfd, void *p, size_t len);
+/**
+   Convert the return value of wrap_io() to 0 if all len bytes are
+   transferred, -2 for partial transfer, or -1 on error.
+
+   @param[in] ans Return value of wrap_io().
+   @param[in] len Number of bytes requested.
+   @return 0 on success, -2 for partial transfer, or -1 on error.
+*/
 static inline int convert_ans(ssize_t ans, size_t len){
 	if(ans>=0){
 		if(ans<(ssize_t)len){
@@ -36,15 +44,45 @@ static inline int convert_ans(ssize_t ans, size_t len){
 	}
 	return (int)ans;
 }
+/**
+   Write an int to sfd.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in] cmd Value to write.
+   @return 0 on success, -2 for partial write, -1 on error.
+*/
 static inline int stwriteint(int sfd, int cmd){
     return stwrite(sfd, &cmd, sizeof(int));
 }
+/**
+   Write an array of len ints to sfd.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[in] cmd Array to write.
+   @param[in] len Number of ints.
+   @return 0 on success, -2 for partial write, -1 on error.
+*/
 static inline int stwriteintarr(int sfd, int* cmd, unsigned int len){
     return stwrite(sfd,cmd,len*sizeof(int));
 }
+/**
+   Read an int from sfd into cmd.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[out] cmd Value read.
+   @return 0 on success, -2 for partial read, -1 on error.
+*/
 static inline int streadint(int sfd, int *cmd){
     return stread(sfd, cmd, sizeof(int));
 }
+/**
+   Read an array of len ints from sfd into cmd.
+
+   @param[in] sfd Socket or file descriptor.
+   @param[out] cmd Array to receive the values.
+   @param[in] len Number of ints.
+   @return 0 on success, -2 for partial read, -1 on error.
+*/
 static inline int streadintarr(int sfd, int* cmd, unsigned int len){
     return stread(sfd,cmd,len*sizeof(int));
 }

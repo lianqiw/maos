@@ -40,7 +40,13 @@ struct zstd_t {
     };
 };
 
-/* Create zstd context for existing fd */
+/**
+   Create zstd context for existing fd.
+
+   @param[in] fd File descriptor to read from or write to.
+   @param[in] mode 'r' for reading (decompression), 'w' for writing (compression).
+   @return Newly allocated context; free with zstd_close(). NULL on failure or invalid arguments.
+*/
 zstd_t* zstd_open(int fd, int mode) {
     if (fd < 0 || (mode != 'r' && mode != 'w')) return NULL;
     zstd_t *zf = (zstd_t*)calloc(1, sizeof(zstd_t));
@@ -62,7 +68,15 @@ zstd_t* zstd_open(int fd, int mode) {
     }
     return zf;
 }
-/*Returns 0 if success, -1 if error*/
+/**
+   Compress and write data, or flush or end the compression stream.
+
+   @param[in,out] zf zstd context opened for writing.
+   @param[in] mode 0: compress buf, 1: flush, 2: end the stream.
+   @param[in] buf Data to compress (mode 0 only).
+   @param[in] size Number of bytes in buf.
+   @return 0 if success, -1 if error.
+*/
 static int handle_output(zstd_t *zf, int mode, const void *buf, size_t size) {
 	if(!zf || zf->mode!='w'){
 		warning("handle_output can only handle output\n");
@@ -92,11 +106,23 @@ static int handle_output(zstd_t *zf, int mode, const void *buf, size_t size) {
 	}
 	return 0;
 }
-/* Write buffer. Returns 0 if success, -1 if error, -2 if EOF*/
+/**
+   Compress and write buffer.
+
+   @param[in,out] zf zstd context opened for writing.
+   @param[in] buf Data to write.
+   @param[in] size Number of bytes to write.
+   @return 0 if success, -1 if error.
+*/
 int zstd_write(zstd_t *zf, const void *buf, size_t size) {
 	return handle_output(zf, 0, buf, size);
 }
-/* Flush buffer to file. Returns 0 if success, -1 if error,  -2 if EOF*/
+/**
+   Flush buffer to file.
+
+   @param[in,out] zf zstd context opened for writing.
+   @return 0 if success, -1 if error.
+*/
 int zstd_flush(zstd_t *zf) {
 	return handle_output(zf, 1, 0, 0);
 }
@@ -142,7 +168,14 @@ int zstd_read(zstd_t *zf, void *buf, size_t size) {
 
 
 
-/* Close wrapper */
+/**
+   Flush pending output (write mode), free the zstd context, and close the
+   underlying fd if close_fd is set.
+
+   @param[in,out] zf zstd context. Freed.
+   @param[in] close_fd Whether to close the underlying fd.
+   @return 0, or -1 if zf is NULL.
+*/
 int zstd_close(zstd_t *zf, int close_fd) {
     if (!zf) return -1;
     int err = 0;

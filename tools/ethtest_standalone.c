@@ -41,6 +41,10 @@
 
 /**
    make a server port and bind to localhost on all addresses
+
+   @param[in] port Port number.
+   @param[in] type 1 for TCP (with TCP_NODELAY), 2 for UDP.
+   @return The bound socket. Exits on failure.
 */
 int bind_socket(uint16_t port, int type){
 	int sock;
@@ -92,6 +96,17 @@ int bind_socket(uint16_t port, int type){
 	return sock;
 }
 
+/**
+   Listen on port and accept connections. respond() is called with the socket
+   whenever data arrives on a connected socket; the socket is closed if it returns
+   a negative value. If timeout_sec>0, timeout_fun() is called at least every
+   timeout_sec seconds. Does not return; exits the process on error.
+
+   @param[in] port Port to listen on.
+   @param[in] respond Handler called with the socket when data arrives.
+   @param[in] timeout_sec Timeout of select() in seconds. No timeout if not positive.
+   @param[in] timeout_fun Function called after each select() if not NULL.
+*/
 void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)()){
 	fd_set read_fd_set;
 	fd_set active_fd_set;
@@ -160,6 +175,14 @@ void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*
 	mysleep(0.0001);
 	_Exit(1);
 }
+/**
+   Fill name with the IPv4 address of hostname and port.
+
+   @param[out] name The address to fill.
+   @param[in] hostname Host name.
+   @param[in] port Port number.
+   @return 0 on success, -1 if the hostname cannot be resolved.
+*/
 int init_sockaddr(struct sockaddr_in* name,
 	const char* hostname, uint16_t port){
 	struct hostent* hostinfo;
@@ -181,11 +204,15 @@ int init_sockaddr(struct sockaddr_in* name,
 	}
 }
 
-/*
-  Connect to a host at port.
-  mode=0: read/write
-  mode=1: read only by the client. the server won't read
-  mode=2: write only by the client. the server won't write
+/**
+   Connect to a host at port. Retries up to 10 times, 4 seconds apart, in
+   blocking mode.
+
+   @param[in] hostname Host name of the server.
+   @param[in] port Port number of the server.
+   @param[in] block Blocking mode if nonzero. In non-blocking mode, returns -1 on the first failure.
+   @param[in] mode Unused. (Intended: 0 read/write, 1 read only by the client, 2 write only by the client.)
+   @return The connected socket, or -1 on failure.
 */
 int connect_port(const char* hostname, int port, int block, int mode){
 	int sock;
@@ -237,7 +264,6 @@ int connect_port(const char* hostname, int port, int block, int mode){
 		}
 	} while(count<10);
 	return -1;
-
 }
 
 int N=10000;
@@ -260,11 +286,23 @@ char* start;
 
 #define WRITE(sock, p, n)					\
     if((nrw=write(sock,p,n)!=n)) error("read failed\n");
+/**
+   Current wall clock time.
+
+   @return Time since the epoch in seconds.
+*/
 static double myclockd(void){
 	struct timeval tk;
 	gettimeofday(&tk, NULL);
 	return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;
 }
+/**
+   Responder for listen_port() in test server mode. Reads the number of doubles
+   nr, replies one double, reads nr doubles and replies one double.
+
+   @param[in] sock The connected socket.
+   @return 0 to keep the connection open, -1 on read failure.
+*/
 int server(int sock){
 	double tim1=myclockd();
 	long nr;
@@ -279,6 +317,16 @@ int server(int sock){
 	//dbg("read %5.1f, send %5.1f, read2 %5.1f send2 %5.1f\n", (tim2-tim1)*1e6, (tim3-tim2)*1e6, (tim4-tim3)*1e6, (tim5-tim4)*1e6);
 	return 0;
 }
+/**
+   Ethernet latency test client. For type 1 (TCP), sends N=1 to 10000 doubles
+   with the protocol of server() and prints the timing of each stage. Other types
+   are not implemented. Exits on connection failure.
+
+   @param[in] hostname Server host name.
+   @param[in] port Server port.
+   @param[in] type 1 for TCP. Other types only open a UDP socket.
+   @return 0.
+*/
 int client(const char* hostname, int port, int type){
 	int sock;
 	int nretry=10;
@@ -304,6 +352,14 @@ int client(const char* hostname, int port, int type){
 	}
 	return 0;
 }
+/**
+   Standalone ethernet latency test without MAOS libraries. Usage:
+   ./ethtest server port [type] or ./ethtest client hostname port [type].
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments. See above.
+   @return 0.
+*/
 int main(int argc, char* argv[]){
 	if(argc<3){
 		error("Usage: ./ethtest client servername port or ./ethtest server port");

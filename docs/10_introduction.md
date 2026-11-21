@@ -1,110 +1,153 @@
 \page page10_intro Introduction
 
-The Multithreaded Adaptive Optics Simulator (MAOS) started as a re-implementation
-in C of the algorithms in the original MATLAB based linear adaptive optics
-simulator (LAOS), which suffers performance and multi-threading limitations. The
-goal is to create an efficient time domain general purpose adaptive
-optics simulator to help the development of adaptive optics systems,
-particularly advanced, very high order systems for TMT and other ELTs. MAOS now
-is fairly feature complete in modeling astronomical adaptive optics systems such
-as, multi-conjugate AO (MCAO), laser tomography AO (LTAO), ground layer AO
-(GLAO), multi-object AO (MOAO) and Pyramid based classic AO.
+\tableofcontents
 
-Simulations are configured through configuration files and command line options,
-which are checked for any apparent errors or conflicts. The configuration files
-are very human readable and easy to maintain. Default parameters are maintained
-in the default configuration files and only parameters that need to be overridden
-need to be specified by the end user.
+The Multithreaded Adaptive Optics Simulator (MAOS) started as a C
+re-implementation of the algorithms in the MATLAB based Linear Adaptive Optics
+Simulator (LAOS), which was limited in speed and multi-threading. The goal is an
+efficient, general purpose, time domain adaptive optics simulator to help the
+development of adaptive optics systems, in particular the advanced, very high
+order systems for TMT and other extremely large telescopes (ELTs). MAOS is now
+fairly feature complete for modeling astronomical adaptive optics systems such
+as multi-conjugate AO (MCAO), laser tomography AO (LTAO), ground layer AO
+(GLAO), multi-object AO (MOAO), and classic single conjugate AO with
+Shack-Hartmann or pyramid wavefront sensors.
 
-Atmospheric turbulence is represented as one or multiple discrete optical path
-difference (OPD) screen(s) at different altitudes that evolve according to
-frozen flow with given wind velocities. The turbulence strength \f$r_0\f$ can also
-vary with time. The turbulence is sensed by one or multiple natural guide star
-(NGS) or laser guide star (LGS) Shack-Hartmann wavefront sensor(s) (WFS).  
+# What is modeled {#intro-model}
 
-The telescope aperture is modeled with a gray pixel amplitude map that can
-simulate segmented primary mirrors and secondary mirror support vignetting.
-Aberration of the telescope or instrument optics are modeled as static OPD maps
-with various conjugation. Non-common path aberrations that originate from the WFS
-or science optics are handled by automatically biasing the WFS measurements.
+## Configuration {#intro-config}
 
-The wavefront sensors (WFS) can be simulated as idealized wavefront gradient
-sensors, best Zernike fit tilt sensors, or physical optic WFS using user
-specified detector pixel characteristics and center of gravity or matched filter
-pixel processing algorithm. Pyramid WFS is also implemented for the NGS with
-modulation and optical gain optimization. The laser guide star wavefront sensing
-model includes the impact of guide star elongation for a specified sodium layer
-profile and an optional polar coordinate CCD. Automatic sub-aperture or optical
-gain optimization can be done by dithering the spot in a circular motion and
-compare the input and measured motion.
+Simulations are configured through configuration files and command line
+options. The configuration files are plain text `key=value` lists that are easy
+to read and maintain. Default values of all parameters are kept in the default
+configuration files, so a user only needs to specify the parameters that differ.
+MAOS checks the configuration for apparent errors and conflicts, and stops on
+any unknown key. See \ref page30_run and \ref page34_conf.
 
-One or multiple deformable mirrors are simulated with grid of actuators that
-couple together with a predefined coupling coefficient. The actuator hysteresis,
-stroke limit, inter-actuator stroke limit, stuck or floating dead actuators can
-also be modeled. Both zonal and modal control are supported.
+## Atmosphere {#intro-atm}
 
-The tomographic wavefront reconstruction estimates the turbulence in several
-different heights from the pseudo open loop gradients (formed by adding the
-deformation mirror (DM) correction back to the gradients) measured by the WFS,
-using a computationally efficient implementation of a minimum variance
-reconstruction algorithm as described in [Ellerbroek, 2002]. These reconstructed
-turbulence screens are then fit to the actuators on one or several deformable
-mirrors (DMs) to achieve best possible correction over a specified field of view
-(FoV). For LGS based MCAO with separate low order WFS controlling tip/tilt and
-plate scale, so called `split tomography` control algorithm is used that
-reconstructs the low order modes separately from the high order reconstruction
-with additional sanitization to decouple the two. For classic AO, least squares
-control is also implemented. A simple integrator with gain update is used to
-control the DM. For low order control, an LQG based Kalman filter is also
-implemented.
+Atmospheric turbulence is represented by one or more discrete optical path
+difference (OPD) screens at different altitudes that evolve by frozen flow with
+the given wind velocities. The turbulence strength \f$r_0\f$ can also vary with
+time (`atm.r0evolve`). The turbulence is sensed by one or more natural guide
+star (NGS) or laser guide star (LGS) wavefront sensors (WFS).
 
-Performance evaluation is done in terms of RMS wavefront error, Strehl ratio,
-and/or point spread functions (PSFs) at a few science objects in the target FoV,
-which might be different from the FoV used for the DM fitting step.
+## Telescope {#intro-telescope}
 
-Various knobs and switches are implemented to probe the contributions of various
+The telescope aperture is modeled by a gray pixel amplitude map that can
+represent segmented primary mirrors and the vignetting by the secondary mirror
+supports. Aberrations of the telescope or instrument optics are modeled as
+static OPD maps at their conjugation altitudes. Non-common path aberrations
+(NCPA) that originate in the WFS or science optics are handled by automatically
+biasing the WFS measurements.
+
+## Wavefront sensors {#intro-wfs}
+
+A WFS can be simulated as an idealized wavefront gradient sensor, a best
+Zernike fit tilt sensor, or a physical optics WFS with user specified detector
+pixel characteristics and center of gravity or matched filter pixel processing.
+The pyramid WFS is implemented with modulation and optical gain optimization.
+The LGS model includes spot elongation from a specified sodium layer profile
+and an optional polar coordinate CCD. Subaperture or optical gain can be
+optimized during the simulation by dithering the spot in a circular motion and
+comparing the input and measured motion.
+
+## Deformable mirrors {#intro-dm}
+
+One or more deformable mirrors (DMs) are simulated as grids of actuators with a
+given inter-actuator coupling. Actuator hysteresis, stroke limit,
+inter-actuator stroke limit, and stuck or floating actuators can also be
+modeled. Both zonal and modal control are supported.
+
+## Reconstruction and control {#intro-recon}
+
+The tomographic wavefront reconstruction estimates the turbulence at several
+altitudes from the pseudo open loop gradients (the measured gradients plus the
+contribution of the current DM commands). It uses a computationally efficient
+implementation of the minimum variance reconstructor described in [Ellerbroek,
+2002]. The reconstructed turbulence screens are then fit to the actuators of
+one or more DMs to give the best correction over a specified field of view
+(FoV). For LGS MCAO with separate low order WFS for tip/tilt and plate scale,
+the so called split tomography algorithm reconstructs the low order modes
+separately from the high order modes, with additional steps to decouple the
+two. For classic AO, least squares reconstruction is also implemented. The DMs
+are controlled by integrators whose gains can be optimized during the
+simulation. For low order control, an LQG based Kalman filter is also
+available.
+
+## Performance evaluation {#intro-perf}
+
+Performance is evaluated in terms of RMS wavefront error, Strehl ratio, and
+point spread functions (PSFs) at science directions in the target FoV, which
+can differ from the FoV used for DM fitting.
+
+Many switches are available to isolate the contributions of individual
 effects, such as DM fitting error, tomography error, telescope aberration, DM
-hysteresis error, failed actuators, etc. These simulations are used to optimize
-system parameters and/or build the error budget.
+hysteresis, or failed actuators. These simulations are used to optimize system
+parameters and to build error budgets.
 
-This software is written in the C language (revision 99), with external
-dependent libraries of FFTW version 3 (www.fftw.org), blas/lapack
-(www.netlib.org/lapack/, Openblas, or Intel MKL), Cholmod
-(www.cise.ufl.edu/research/sparse/SuiteSparse/ for Cholesky factorization), and
-optionally CUDA SDK (for GPU acceleration). Automake, autoconf, libtool and make
-are needed to configure the code and compile. It also requires POSIX compliant C
-library for a few system calls. 
+# Implementation {#intro-impl}
 
-A C99 compliant compiler is required to compile the code. The cost has been
-tested with GNU GCC, Intel ICC, and CLANG. For machines with Intel CPUs, the
-code generally runs faster when compiled with ICC and linked with MKL. Nvidia
-CUDA SDK is needed to compile the optional CUDA code which runs in Nvidia GPUs
-(>2.0 compute capability).
+MAOS is written in C (C11 with GNU extensions; the code also compiles as C++)
+and requires a POSIX compliant platform. It depends on the following external
+libraries:
 
-This software also contains two optionally compiled graphical executables
-(drawdaemon, monitor) for plotting and job monitoring (jobs can be monitored
-on several different machines). These two executable require GTK+.
+- FFTW version 3 (https://www.fftw.org) for Fourier transforms.
+- BLAS and LAPACK (reference LAPACK, OpenBLAS, or Intel MKL).
+- CHOLMOD from SuiteSparse
+  (https://github.com/DrTimothyAldenDavis/SuiteSparse) for sparse Cholesky
+  factorization.
+- zlib for compressed files.
+- Optional: the CUDA toolkit for GPU acceleration on Nvidia GPUs, GTK and cairo
+  for the graphical tools, MATLAB for the mex interface, CMocka for unit tests,
+  and zstd, OpenSSL, and libwebsockets for extra file and network features.
 
-The multi-threading is achieved using POSIX Threads (no MPI is implemented) or
-OpenMP. This parallelism works fairly well in multi-core, shared memory
-machines. For example, in a recently purchased desktop as of this writing with
-Intel Core i5 quad-core processor, the software (configured in a NFIRAOS split
-tomography mode with physical optics LGS and geometric best fit Zernike tilt
-NGS), can run at 7 seconds per simulation time step with 1 thread and ~1 seconds
-per time step with 8 threads. The scaling with number of cores is fairly good.
-Each time step takes only ~0.06 seconds on a 8x GTX 580 or dual RTX 2080 Ti GPU
-setup (in single precision mode). The memory consumption in the NFIRAOS baseline
-case is about 2 GB.
+The configure script downloads FFTW, CHOLMOD, and some of the optional
+libraries automatically when they are not found in the system. Autoconf,
+automake, libtool, and make are needed to build from the git repository. MAOS
+is built with GCC and Clang in continuous integration; the Intel compilers (icx
+and the classic icc) are also recognized by the build system. See \ref
+page20_compile for details.
 
-The code contains a few directories. The `sys` directory contains the lower
-levels libraries that often deals with the system for input/output, and process
-management. The `math` directory contains mathematical data structures and
-associated functions. The `lib` directory contains adaptive optics related data
-structures and functions. The `maos` directory contains the end to end adaptive
-optics simulation implementation. The `skyc` is contains routines for sky
-coverage postprocessing that takes `maos` results as input. The `scripts` folder
-contains useful Python, Matlab, and IDL routines that can be used to read/write
-the simulation results or call `maos` internal routines. 
+Parallelism uses POSIX threads and OpenMP (no MPI), so a simulation runs
+within one shared memory machine. It scales well with the number of cores. For
+example, on a quad-core Intel Core i5 desktop of the time, the NFIRAOS
+configuration (split tomography with physical optics LGS and geometric best
+fit Zernike tilt NGS) ran at 7 seconds per time step with 1 thread and about 1
+second per step with 8 threads. The same case took about 0.06 seconds per step
+on 8 GTX 580 GPUs or 2 RTX 2080 Ti GPUs (in single precision). The memory
+usage in the NFIRAOS baseline case is about 2 GB.
 
-Please see \ref page20_compile on how to compile and use MAOS.
+Two optional graphical programs are also included: `drawdaemon` for plotting
+and `monitor` for monitoring jobs on one or more machines. They require GTK
+(version 3 or 4; GTK 2 is still accepted). Jobs can also be monitored and plotted in a web browser
+without GTK.
 
+# Source tree {#intro-source}
+
+The source code is organized in layers, each using only the ones above it:
+
+- `sys`: the operating system layer: memory accounting, threads and thread
+  pool, sockets, file input/output (`.bin` and `.fits`, optionally compressed),
+  and the job scheduler client.
+- `math`: numerical data structures (dense and sparse matrices, cell arrays,
+  coordinates `loc_t`, maps `map_t`) and their functions, with wrappers for
+  BLAS, LAPACK, FFTW, and CHOLMOD.
+- `lib`: adaptive optics building blocks such as turbulence generation, ray
+  tracing, WFS and DM models, and the configuration file parser. It is also
+  built as `aolib.so` for use from Python.
+- `cuda`: the GPU versions of the simulation and reconstruction code.
+- `maos`: the end-to-end simulator.
+- `skyc`: the sky coverage post-processor that takes `maos` results as input.
+  See \ref skycoverage.
+- `tools`: the job scheduler, the `monitor` (GTK and browser versions), the
+  `drawdaemon` plotting program, and utilities such as `drawres`, `drawbin`,
+  and `bin2fits`.
+- `mex`: the MATLAB mex interface.
+- `scripts`: Python, MATLAB, IDL, and Julia routines to read and write
+  simulation results or to call `maos` library routines, plus test scripts.
+- `config`: the configuration files.
+- `test`: unit tests.
+
+See \ref page93_maos for the structure of the simulator, and \ref
+page20_compile for how to compile and use MAOS.

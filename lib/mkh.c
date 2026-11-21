@@ -40,9 +40,10 @@
    |x|>2\end{cases}\f} where c is the nearest neighbor coupling
    frequency. The leading coefficient is to normalize the influence function so
    that it sums to 1.
-	
-   @param[in] propdata See accphi.h
- */
+
+   @param[in] propdata The ray tracing parameters including locin and locout. See accphi.h.
+   @return Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it.
+*/
 dsp* mkh(propdata_t *propdata){
 	dsp* Hb=mkht(propdata);
 	dsp* H=dsptrans(Hb);
@@ -51,7 +52,9 @@ dsp* mkh(propdata_t *propdata){
 }
 /**
    Create transpose of mkh() raytracing matrix. The ray (opd) starts from locin and land in locout.
-   @param[in] propdata See accphi.h
+
+   @param[in] propdata The ray tracing parameters including locin and locout. See accphi.h.
+   @return Newly allocated sparse matrix, or NULL if the input is empty or the layer is above the guide star. The caller frees it.
 */
 dsp* mkht(propdata_t *propdata){
 	const loc_t* locin=propdata->locin;
@@ -155,7 +158,11 @@ dsp* mkht(propdata_t *propdata){
 }
 /**
    Transposes the result from mkht_cubic.
- */
+
+   @param[in] propdata The ray tracing parameters including locin and locout. See accphi.h.
+   @param[in] cubic_iac Inter-actuator coupling of the cubic influence function. Falls back to bilinear if <=0.
+   @return Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it.
+*/
 dsp* mkh_cubic(propdata_t *propdata, real cubic_iac){
 	dsp* Hb=mkht_cubic(propdata, cubic_iac);
 	dsp* H=dsptrans(Hb);
@@ -164,7 +171,12 @@ dsp* mkh_cubic(propdata_t *propdata, real cubic_iac){
 }
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
-   influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac==0*/
+   influence function that can reproduce piston/tip/tilt. Fall back to mkht if iac<=0.
+
+   @param[in] propdata The ray tracing parameters including locin and locout. See accphi.h.
+   @param[in] cubic_iac Inter-actuator coupling of the cubic influence function.
+   @return Newly allocated sparse matrix, or NULL if the input is empty. The caller frees it.
+*/
 dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
 	if(cubic_iac<=0){
 		return mkht(propdata);
@@ -293,7 +305,11 @@ dsp* mkht_cubic(propdata_t *propdata, real cubic_iac){
    Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and
    xout should be 1-d arrays of coordinates. We require the coordinates to order
    incrementally monotonically, but do not require them to be evenly spaced.
- */
+
+   @param[in] xin The input coordinate (one column).
+   @param[in] xout The output coordinate (one column).
+   @return Newly allocated NX(xout)*NX(xin) sparse matrix; the caller frees it.
+*/
 dsp* mkhbin1d(const dmat* xin, const dmat* xout){
 	if(NY(xin)!=1||NY(xout)!=1){
 		error("We require both xin and xout to be only one column\n");

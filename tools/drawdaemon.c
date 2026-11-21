@@ -27,6 +27,15 @@ GdkPixbuf* icon_main=NULL;
 #endif
 GdkPixbuf *icon_log=NULL;
 GdkPixbuf *icon_avg=NULL;
+/**
+   Parse drawdaemon command line arguments and start the listen_draw() thread.
+   argv[1] is the socket or hostname to connect to (localhost if absent), argv[2]
+   is the optional draw_id. When MAOS_DIRECT_LAUNCH is set, stdout and stderr are
+   redirected to TEMP/drawdaemon.log.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+*/
 void handle_args(int argc, char *argv[]){
 	if(argc==1){
 		info("Usage: %s socket or hostname. Assume localhost if not supplied.\n", argv[0]);
@@ -60,6 +69,12 @@ void handle_args(int argc, char *argv[]){
 	thread_new(listen_draw, (void*)target);
 }
 #if USE_APPLICATION
+/**
+   Handler of the GtkApplication activate signal. Creates the main window.
+
+   @param[in] app The application.
+   @param[in] user_data Unused.
+*/
 static void
 activate (GtkApplication *app,
           gpointer        user_data)
@@ -68,6 +83,14 @@ activate (GtkApplication *app,
 	GtkWidget *window = gtk_application_window_new (app);
 	create_window(window);
 }
+/**
+   Handler of the GApplication command-line signal. Parses the arguments and
+   activates the application.
+
+   @param[in] application The application.
+   @param[in] cmdline The command line.
+   @return 0.
+*/
 static int
 command_line(GApplication *application,
 			  GApplicationCommandLine *cmdline){
@@ -81,6 +104,13 @@ command_line(GApplication *application,
 #endif
 
 #if MAC_INTEGRATION
+/**
+   Handler of the macOS NSApplicationWillTerminate signal. Closes the socket
+   pointed to by psock (if valid) and quits the GTK main loop.
+
+   @param[in] app Unused.
+   @param[in] psock Pointer to the socket (int) to close. May be NULL.
+*/
 void mac_terminate(GtkosxApplication *app, gpointer psock){
 	(void)app;
 	if(psock){
@@ -92,6 +122,14 @@ void mac_terminate(GtkosxApplication *app, gpointer psock){
 	gtk_main_quit();
 }
 #endif
+/**
+   Drawdaemon: GUI that receives and plots data sent by maos, drawres, drawbin
+   or other clients via draw(). Usage: drawdaemon [socket|hostname] [draw_id].
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return Exit status.
+*/
 int main(int argc, char* argv[]){
 	
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32

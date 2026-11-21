@@ -42,7 +42,15 @@ extern "C"{
 /**Number of thread in a block. (for reduction).*/
 const int TT_NBX=128;
 /**
-	save aper_locs, aper_amp to GPU.
+   Accumulate the amplitude weighted inner products needed for piston/tip/tilt
+   decomposition: cc={sum(amp*phi*phi), sum(amp*phi), sum(amp*phi*x),
+   sum(amp*phi*y)}. Requires blockDim.x==TT_NBX.
+
+   @param[in,out] cc Coefficients (4 elements), accumulated into. Must be zeroed by the caller.
+   @param[in] loc Location of points.
+   @param[in] nloc Number of points.
+   @param[in] phi Phase at every point.
+   @param[in] amp Amplitude at every point.
 */
 __global__ static void calc_ptt_do(Real* cc, const Real(*restrict loc)[2], const int nloc, const Real* restrict phi,
 	const Real* restrict amp){
@@ -72,22 +80,36 @@ __global__ static void calc_ptt_do(Real* cc, const Real(*restrict loc)[2], const
 		atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
 	}
 }
-//wraps calc_ptt_do
-static void calc_ptt(Real* cc,
-	const Real(*restrict loc)[2],
-	const int nloc,
-	const Real* restrict phi,
+/**
+   wraps calc_ptt_do. cc is zeroed first.
+
+   @param[out] cc Coefficients (4 elements) in device memory.
+   @param[in] loc Location of points.
+   @param[in] nloc Number of points.
+   @param[in] phi Phase at every point.
+   @param[in] amp Amplitude at every point.
+   @param[in] stream CUDA stream.
+*/
+static void calc_ptt(Real* cc, const Real(*restrict loc)[2], const int nloc, const Real* restrict phi,
 	const Real* restrict amp, stream_t& stream){
 	DO(cudaMemsetAsync(cc, 0, 4*sizeof(Real), stream));
 	calc_ptt_do<<<DIM(nloc, TT_NBX), 0, stream>>>
 		(cc, loc, nloc, phi, amp);
 }
-/*
-  Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
-  where amp is the amptliude weighting.  */
-static int calc_ptt_post(real* rmsout, real* coeffout,
-	const real ipcc, const dmat* imcc,
-	const Real* ccb){
+/**
+   Let M be the modal matrix of pistion/tip/tilt. From ccb, which contains
+   phi'*diag(amp)*phi and M'*diag(amp)*phi computed by calc_ptt_do where amp is
+   the amptliude weighting, compute the piston/tip/tilt coefficients and the
+   residual wavefront variance.
+
+   @param[out] rmsout If not NULL, receives (piston removed, tip/tilt, piston/tip/tilt removed) variance.
+   @param[out] coeffout If not NULL, receives the piston/tip/tilt coefficients.
+   @param[in] ipcc Inverse of piston mode norm.
+   @param[in] imcc Inverse of piston/tip/tilt mode covariance.
+   @param[in] ccb Inner products computed by calc_ptt_do (4 elements).
+   @return 1 if the sanity check fails (variance is negative), otherwise 0.
+*/
+static int calc_ptt_post(real* rmsout, real* coeffout, const real ipcc, const dmat* imcc, const Real* ccb){
 	real coeff[3];
 	real tot=ccb[0];
 	coeff[0]=ccb[1]; coeff[1]=ccb[2]; coeff[2]=ccb[3];
@@ -109,10 +131,19 @@ static int calc_ptt_post(real* rmsout, real* coeffout,
 	return ans;
 }
 
-__global__ static void calc_ngsmod_do(Real* cc,
-	const Real(*restrict loc)[2],
-	const int nloc,
-	const Real* restrict phi,
+/**
+   Accumulate the amplitude weighted inner products needed for NGS mode
+   decomposition: cc={sum(amp*phi*phi), sum(amp*phi), sum(amp*phi*x),
+   sum(amp*phi*y), sum(amp*phi*x*x), sum(amp*phi*y*y), sum(amp*phi*x*y)}.
+   Requires blockDim.x==TT_NBX.
+
+   @param[in,out] cc Coefficients (7 elements), accumulated into. Must be zeroed by the caller.
+   @param[in] loc Location of points.
+   @param[in] nloc Number of points.
+   @param[in] phi Phase at every point.
+   @param[in] amp Amplitude at every point.
+*/
+__global__ static void calc_ngsmod_do(Real* cc, const Real(*restrict loc)[2], const int nloc, const Real* restrict phi,
 	const Real* restrict amp){
 	__shared__ Real ccb[7][TT_NBX];
 
@@ -147,12 +178,18 @@ __global__ static void calc_ngsmod_do(Real* cc,
 		atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
 	}
 }
-static void calc_ngsmod(Real* cc,
-	const Real(*restrict loc)[2],
-	const int nloc,
-	const Real* restrict phi,
-	const Real* restrict amp,
-	stream_t& stream){
+/**
+   wraps calc_ngsmod_do. cc is zeroed first.
+
+   @param[out] cc Coefficients (7 elements) in device memory.
+   @param[in] loc Location of points.
+   @param[in] nloc Number of points.
+   @param[in] phi Phase at every point.
+   @param[in] amp Amplitude at every point.
+   @param[in] stream CUDA stream.
+*/
+static void calc_ngsmod(Real* cc, const Real(*restrict loc)[2], const int nloc, const Real* restrict phi,
+	const Real* restrict amp, stream_t& stream){
 	DO(cudaMemsetAsync(cc, 0, 7*sizeof(Real), stream));
 	calc_ngsmod_do<<<DIM(nloc, TT_NBX), 0, stream>>>
 		(cc, loc, nloc, phi, amp);
@@ -197,7 +234,14 @@ strehlcomp_do(Comp* strehlc,
 	}
 }
 /**
-   Compute complex PSF and return.
+   Compute complex PSF for each wavelength.
+
+   @param[in,out] psfs Complex PSF of each wavelength. Allocated if empty, otherwise overwritten.
+   @param[in] iopdevl OPD.
+   @param[in] nwvl Number of wavelengths.
+   @param[in] ievl Evaluation direction index (for FFT plan).
+   @param[in] nloc Number of OPD points.
+   @param[in] stream CUDA stream.
 */
 static void psfcomp(cuccell psfs, const curmat& iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
 	cucmat wvf;
@@ -229,7 +273,15 @@ static void psfcomp(cuccell psfs, const curmat& iopdevl, int nwvl, int ievl, int
 	}
 }
 /**
-   Compute only PSF and add to result.
+   Compute only PSF (intensity) and add to result.
+
+   @param[in,out] psf PSF array of nwvl elements. Allocated if empty, otherwise accumulated into.
+   @param[in] iopdevl OPD.
+   @param[in] nwvl Number of wavelengths.
+   @param[in] ievl Evaluation direction index (for FFT plan).
+   @param[in] nloc Number of OPD points.
+   @param[in] atomic Whether to use atomic add (when multiple directions share psf).
+   @param[in] stream CUDA stream.
 */
 static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
 	cucmat wvf;
@@ -286,9 +338,21 @@ static void psfcomp_r(curmat* psf, const curmat& iopdevl, int nwvl, int ievl, in
     }else{								\
 	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb);	\
     }
-static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
-							dmat **opdcov_cpu, dmat **opdmean_cpu,
-							int ingpu, int do_cov, int do_opdmean, stream_t& stream){
+/**
+   Accumulate the OPD covariance and OPD mean, in GPU or in CPU.
+
+   @param[in,out] opdcov OPD covariance in GPU, accumulated into if ingpu.
+   @param[in,out] opdmean OPD mean in GPU, accumulated into if ingpu.
+   @param[in] iopdevl OPD.
+   @param[in,out] opdcov_cpu OPD covariance in CPU, accumulated into if not ingpu.
+   @param[in,out] opdmean_cpu OPD mean in CPU, accumulated into if not ingpu.
+   @param[in] ingpu Whether to accumulate in GPU.
+   @param[in] do_cov Whether to accumulate the covariance.
+   @param[in] do_opdmean Whether to accumulate the mean.
+   @param[in] stream CUDA stream.
+*/
+static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl, dmat **opdcov_cpu, dmat **opdmean_cpu,
+	int ingpu, int do_cov, int do_opdmean, stream_t& stream){
 	if(ingpu){
 		if(do_cov){
 			cugemm(opdcov, (Real)1, iopdevl, iopdevl, "nt", (Real)1, stream);
@@ -311,6 +375,11 @@ static void save_cov_opdmean(curmat& opdcov, curmat& opdmean, curmat& iopdevl,
 }
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
+   Queues the ray tracing, wavefront error and PSF computation for directions
+   info->start to info->end without waiting for the results. Used with thread_t.
+
+   @param[in] info Thread data. info->data is sim_t, whose results are updated.
+   @return Always NULL.
 */
 void* gpu_perfevl_queue(thread_t* info){
 	TIC;tic;
@@ -489,6 +558,14 @@ void* gpu_perfevl_queue(thread_t* info){
 	}//for ievl
 	return NULL;
 }
+/**
+   Wait for the GPU performance evaluation queued by gpu_perfevl_queue for
+   directions info->start to info->end, then copy results to CPU and compute
+   wavefront error (olep, clep, etc.) for the current step. Used with thread_t.
+
+   @param[in] info Thread data. info->data is sim_t, whose results are updated.
+   @return Always NULL.
+*/
 void* gpu_perfevl_sync(thread_t* info){
 	TIC;tic;
 	sim_t* simu=(sim_t*)info->data;
@@ -530,6 +607,9 @@ void* gpu_perfevl_sync(thread_t* info){
 
 /**
    Compute the PSF or OPDCOV for NGS mode removed opd.
+
+   @param[in,out] simu Simulation data. Results are accumulated or saved.
+   @param[in] cleNGSm NGS mode vector to remove.
 */
 void gpu_perfevl_ngsr(sim_t* simu, real* cleNGSm){
 	const parms_t* parms=simu->parms;
@@ -600,6 +680,12 @@ OMP_TASK_FOR(4)
 		}
 	}
 }
+/**
+   Save time-averaged PSFs (and OPD mean/covariance) accumulated in GPU when
+   the save step is reached. Results are scaled by the number of accumulated steps.
+
+   @param[in] simu Simulation data.
+*/
 void gpu_perfevl_save(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	if(!parms->evl.nevl) return;

@@ -25,13 +25,30 @@ typedef struct {
     double scale;//normalization constant for unit energy
 } bmode_t;
 
-// Target function: returns Jm(x) or Jm'(x)
+/**
+   Target function: returns Jm(x) or Jm'(x)
+
+   @param[in] m Order of the Bessel function.
+   @param[in] x Argument.
+   @param[in] type 0 for Jm(x) (Dirichlet), otherwise Jm'(x) (Neumann).
+   @return Jm(x) or Jm'(x).
+*/
 double target_func(int m, double x, int type) {
     if (type == 0) return jn(m, x); // Dirichlet
     if (x < 1e-9) return (m == 1) ? 0.5 : 0.0; // Neumann: J1'(0)=0.5
     return 0.5 * (jn(m - 1, x) - jn(m + 1, x));
 }
 
+/**
+   Find the next root of Jm(x) (type=0, Dirichlet) or Jm'(x) (type=1, Neumann)
+   after start (use start<0 to find the first root) by stepping and bisection.
+
+   @param[in] m Order of the Bessel function.
+   @param[in] start Previous root to search after. Negative to find the first root.
+   @param[in] k_cutoff Cutoff of the search; no root is searched beyond k_cutoff+5.
+   @param[in] type 0 for Dirichlet (roots of Jm), 1 for Neumann (roots of Jm').
+   @return The next root, or 1e9 if no root is found below k_cutoff+5.
+*/
 double find_next_root(int m, double start, double k_cutoff, int type) {
     // Neumann (type 1) has a root at exactly 0 for m=0
     if (type == 1 && m == 0 && start < 0) return 0.0;
@@ -54,6 +71,13 @@ double find_next_root(int m, double start, double k_cutoff, int type) {
     }
     return (a + b) / 2.0;
 }
+/**
+   Compare two bmode_t by alpha (spatial frequency) for qsort in ascending order.
+
+   @param[in] a Pointer to the first bmode_t.
+   @param[in] b Pointer to the second bmode_t.
+   @return -1, 0, or 1 if the alpha of a is less than, equal to, or greater than that of b.
+*/
 int cmp_alpha(const void *a, const void *b) {
     double d = ((bmode_t*)a)->alpha - ((bmode_t*)b)->alpha;
     return (d > 0) - (d < 0);

@@ -34,15 +34,23 @@
 #include "misc.h"
 #include "daemonize.h"
 int detached=0;
+/**The output to fplog is always without color unless user specified.*/
 FILE *fplog=NULL;
 /*
   \file daemonize.c
 
   Process handling routines.
 */
-int lock_file(const char *fnlock, /**<The filename to lock on*/
-	int block         /**<block on waiting. set to 0 for no waiting.*/
-){
+/**
+   Open and lock file fnlock with lockf() and write the host and PID into it.
+   The file is kept open to maintain the lock.
+
+   @param[in] fnlock The filename to lock on.
+   @param[in] block Block on waiting. Set to 0 for no waiting.
+   @return The file descriptor (>=0) on success, which the caller keeps open to
+   hold the lock, or -1 if the file cannot be opened or locked.
+*/
+int lock_file(const char *fnlock, int block){
 	int fd=open(fnlock, O_RDWR|O_CREAT, 0644);
 	if(fd<0){
 		warning("Open file %s failed: %s\n", fnlock, strerror(errno));
@@ -72,10 +80,13 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
    number. If version is specified and is bigger than the value contained in
    existing fnlock, will kill the old process that created fnlock.
 
-   returns:
-   -PID (<-1): if a running process already locked file
-   -1: failed to lock
-   fd (>-1): successfully locked
+   @param[in] fnlock The filename to lock on.
+   @param[in] block Block on waiting. Set to 0 for no waiting.
+   @param[in] version The version of the software that locks the file, primarily
+   for managing scheduler. May be zero.
+   @return -PID (<-1) if a running process already locked the file, -1 if failed
+   to lock, or the fd (>-1) if successfully locked; the caller keeps it open to
+   hold the lock.
 */
 int lock_file_version(const char* fnlock, int block, int version){
 	int ans;
@@ -158,15 +169,26 @@ failed:
 }
 /**
    Launch a singleton daemon. First try to create a lock file progname.pid
-   in folder lockfolder_in. If lock failes, it means other daemon already
+   in folder lockfolder. If lock failes, it means other daemon already
    exists, will not proceed. If lock succeed, will write pid and version in the
    file.
 
-   the stdin and stderr stream will then be directed to progname.log in folder
-   lockfolder_in. buffering is disabled to ensure real time display by tail.
+   stdin is redirected from /dev/null, stdout to progname.log and stderr to
+   progname.err in folder lockfolder. stdout buffering is disabled to ensure
+   real time display by tail.
 
-   if daemon_func is true, will fork and run it with argument
-   daemon_arg. otherwise the routine returns.
+   if daemon_func is set, the daemon process runs it with argument daemon_arg
+   and then exits, while the calling process returns. Otherwise the calling
+   process exits and the routine returns in the daemon process.
+
+   @param[in] lockfolder Folder for the lock and log files.
+   @param[in] progname Program name used to name the lock and log files.
+   @param[in] version Version written into the lock file; an older running
+   version is killed (see lock_file_version()).
+   @param[in] daemon_func Function to run in the daemon process. May be NULL.
+   @param[in] daemon_arg Argument passed to daemon_func.
+   @return 0 on success or if a daemon is already running, -1 if locking or
+   forking failed (only when daemon_func is set; otherwise the process exits).
 */
 int single_instance_daemonize(const char* lockfolder,
 	const char* progname, int version, void(*daemon_func)(void*), void* daemon_arg){
@@ -312,10 +334,14 @@ void daemonize(void){ /* Fork off the parent process */
 }
 /**
    fork and launch exe as specified in cmd. cmd should composed of the path to
-   start the exe, exe name, and parameters. used by maos/skyc.
+   start the exe (used as the working directory), exe name, and parameters.
+   used by maos/skyc.
 
-   if cwd is NULL, cmd must include path information.
-   if cwd is not NULL cmd must only contain arguments, without path information.
+   @param[in] exepath Path of the executable. If NULL, the exe name (maos or skyc)
+   is located in cmd and found via find_exe() or PATH.
+   @param[in] cmd Command string: working directory, exe name, and arguments. A
+   leading ~ is expanded to HOME.
+   @return PID of the launched process, or -1 if failed.
  */
 pid_t launch_exe(const char* exepath, const char* cmd){
 	const char* exes[]={"maos", "skyc"}; int nexe=2;
@@ -377,6 +403,9 @@ pid_t launch_exe(const char* exepath, const char* cmd){
 }
 /**
    Find an executable from predetermined locations and return the absolute path.
+
+   @param[in] name Name (or path) of the executable.
+   @return Newly allocated path; the caller frees it. NULL if not found.
  */
 char* find_exe(const char* name){
 	if(exist(name)){
@@ -402,7 +431,13 @@ char* find_exe(const char* name){
 	return NULL;
 }
 /**
-   fork twice and launch exename, with arguments args. Returns PID of the grandchild process.
+   fork twice and launch exename, with arguments args.
+
+   @param[in] exename Executable name or path. Located with find_exe(), then PATH.
+   @param[in] args NULL terminated argument list passed to execv; args[0] is the
+   program name.
+   @param[in] path Working directory for the new process. May be NULL.
+   @return PID of the grandchild process, or -1 if failed.
 */
 int spawn_process(const char *exename, const char *const *args, const char *path){
 	int pipfd[2];//pipe to obtain pid of grand child.

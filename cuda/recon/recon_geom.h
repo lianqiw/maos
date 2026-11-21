@@ -22,7 +22,9 @@
 #include "../../maos/types.h"
 
 
-/*Data for aperture bi-linear weighting, used in fitting*/
+/**
+   Data for aperture bi-linear weighting, used in fitting
+*/
 class w01_t{
 	curmat W1;    /**< The aperture weighting, piston removal*/
 	cusp   W0p;   /**< W0 for partial points*/

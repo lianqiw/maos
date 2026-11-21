@@ -80,7 +80,8 @@ typedef struct argopt_t{
 		      2: The key accepts an array of values.*/
     int isfun;  /**< Whether val indicate a function pointer
 		      0: The address to put the return results.
-		      1: A function pointer to call. */
+		      1: A function pointer to call, of type void (*)(int), void (*)(double), or
+		      void (*)(const char*) for M_INT, M_DBL, and M_STR.*/
     void *val;  /**<The address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
 }argopt_t;

@@ -43,6 +43,9 @@ int hide_colorbar=0;
 
 /**
    correct floor for round off errors.
+
+   @param[in] a Value.
+   @return floor(a), or floor(a)+1 if a is within 1e-5 below the next integer.
 */
 static float myfloor(float a){
 	float b=floor(a);
@@ -64,13 +67,24 @@ static float myceil(float a){
 	}
 	return b;
 }
+/**
+   Set the font of layout to the default font scaled by fontscale.
+
+   @param[in,out] layout Pango layout.
+   @param[in] fontscale Scaling factor of the default font size.
+*/
 static void pango_scale_fontsize(PangoLayout* layout, float fontscale){
 	pango_font_description_set_size(desc, desc_font_size*fontscale);//use smaller font size for legends.
 	pango_layout_set_font_description(layout, desc);//needed
 }
 /**
- * determine text size
- * */
+   Determine text size.
+
+   @param[in,out] layout Pango layout. The markup is set to text.
+   @param[in] text Text in pango markup.
+   @param[out] legwidth Width of the text in pixels.
+   @param[out] legheight Height of the text in pixels.
+*/
 static void pango_size(PangoLayout* layout, const char* text, float* legwidth, float* legheight){
 	if(!text){
 		warning("text is null, canceled\n");
@@ -85,10 +99,16 @@ static void pango_size(PangoLayout* layout, const char* text, float* legwidth, f
 	*legheight=(float)height/PANGO_SCALE;
 }
 /**
-   Drawing text. 
-   @param x,y		reference point
-   @param fracx		0: left, 0.5: middle, 1: right
-   @param fracy		0: top, 0.5: middle, 1: bottom
+   Drawing text.
+
+   @param[in,out] cr Cairo context.
+   @param[in,out] layout Pango layout. The markup is set to text.
+   @param[in] x Reference point x.
+   @param[in] y Reference point y.
+   @param[in] text Text in pango markup.
+   @param[in] fracx 0: left, 0.5: middle, 1: right
+   @param[in] fracy 0: top, 0.5: middle, 1: bottom
+   @param[in] vertical Whether to rotate the text by 90 degrees counterclockwise.
 */
 static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
 	const char* text, float fracx, float fracy, int vertical){
@@ -180,7 +200,11 @@ static void calc_tic(float* tic1, float* dtic, int* ntic, int* order, float xmax
 	}
 }
 /**
-   adjust xmin, xmax properly.
+   adjust xmin, xmax properly to tic locations.
+
+   @param[in,out] xmin Minimum value.
+   @param[in,out] xmax Maximum value.
+   @param[in] logscale Whether the axis is in log scale.
 */
 void round_limit(float* xmin, float* xmax, int logscale){
 	if(*xmin==0 && *xmax==0) return;
@@ -224,7 +248,9 @@ void round_limit(float* xmin, float* xmax, int logscale){
 	//info_time("round_limit: [%g, %g] --> [%g, %g]\n", *xmin, *xmax, oldmin, oldmax);
 }
 /**
- * When limit or limit0 changes, update zoomx,y and offx,y to not alter the limit0.
+   When limit or limit0 changes, update zoomx,y and offx,y to not alter the limit0.
+
+   @param[in,out] drawdata The drawdata. Updates zoomx, zoomy, offx, offy, and clears update_zoom.
 */
 void update_zoom(drawdata_t* drawdata){
 	//dbg_time("update_zoom entr: zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
@@ -305,6 +331,17 @@ void update_zoom(drawdata_t* drawdata){
 	cairo_set_dash(cr, style==7?stroke_dash:stroke_solid, 2, 0);\
 }
 
+/**
+   Draw a symbol at a point and move the current point there.
+
+   @param[in,out] cr Cairo context.
+   @param[in] ix x coordinate.
+   @param[in] iy y coordinate.
+   @param[in] style Symbol style: 0: none, 1: o, 2: x, 3: +, 4: square, 5: dot.
+   @param[in] size Symbol size. Enlarged by sqrt(zoomx) if zoomx>1 and size<20.
+   @param[in] zoomx Zoom factor.
+   @param[in] rounding Whether to round the coordinates and size to integers.
+*/
 static inline void
 draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx, int rounding){
 	if(zoomx>1 && size<20){
@@ -357,7 +394,9 @@ draw_point(cairo_t* cr, float ix, float iy, long style, float size, float zoomx,
 }
 /**
    Compute the limit from data for line plotting.
- */
+
+   @param[in,out] drawdata The drawdata. Updates limit, update_zoom, and clears update_limit.
+*/
 static void update_limit(drawdata_t *drawdata){
 	/* update max/minimum for both non-cumu and cumulative case. */
 	//if(drawdata->p || (drawdata->limit_manual&&!drawdata->cumu)||drawdata->limit_changed!=-1) return;
@@ -487,6 +526,11 @@ static void update_limit(drawdata_t *drawdata){
 	return (xs+ys)*0.5;
 }*/
 
+/**
+   Cleanup handler of cairo_draw_thread(). Marks that no drawing thread is running.
+
+   @param[in,out] drawdata The drawdata (drawdata_t*).
+*/
 void thread_cleanup(void *drawdata){
 	((drawdata_t*)drawdata)->thread=0;
 }
@@ -1409,12 +1453,10 @@ repeat:
 	return NULL;
 }
 /**
-   The master routine that draws in the cairo surface.
+   The master routine that draws in the cairo surface. Launches
+   cairo_draw_thread() if the data is ready and no drawing thread is running.
 
-   meaning of limit_changed
-   0: no change from previous plot.
-   1: limit0 is changed and update_zoom is needed to update zoom.
-   -1:new data, or switch between cumu and non-cumu. need to run update_limit.
+   @param[in,out] drawdata The drawdata to draw.
 */
 void cairo_draw(drawdata_t* drawdata){
 	//layout=pango_cairo_create_layout(cr);

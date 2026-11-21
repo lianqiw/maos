@@ -67,13 +67,15 @@
    return a hash number that can be used to identify the data. Apply with care
    to double floating numbers because of round off error. */
 /**
-   hash the data and return an hash number.
-   \return a hash number
+   Hash the data and return a hash number. For long data only a subset of the
+   words (stride length/10000) is sampled.
+
+   @param[in] key The data.
+   @param[in] length The length of the data in bytes.
+   @param[in] initval The initial hash number.
+   @return The hash number.
 */
-uint32_t hashlittle(const void* key, /**<[in] The data*/
-	size_t length,   /**<[in] The length of the data in byte*/
-	uint32_t initval /**<[in] The initial hash number*/
-){
+uint32_t hashlittle(const void* key, size_t length, uint32_t initval){
 
 	uint32_t a, b, c;                                          /* internal state */
 	size_t dstep=(length/10000);/*jump */

@@ -28,7 +28,11 @@ static TIC;
 
 /**
    Setting up aperture cordinate grid aper_locs, and amplitude map for
-performance evaluation. */
+   performance evaluation.
+
+   @param[in] parms Simulation parameters.
+   @return Newly allocated aperture struct. Free with free_aper().
+*/
 aper_t* setup_aper(const parms_t* const parms){
 	aper_t* aper=mycalloc(1, aper_t);
 	tic;
@@ -149,7 +153,10 @@ aper_t* setup_aper(const parms_t* const parms){
 	return aper;
 }
 /**
-   Free the aper structure after simulation*/
+   Free the aper structure after simulation
+
+   @param[in] aper The aperture struct to free.
+*/
 void free_aper(aper_t* aper){
 	/*parms->aper.amp is freed on setup_recon*/
 	locfree(aper->locs);

@@ -40,6 +40,11 @@
    Relocate simu->surfwfs to powfs.opdadd In order to perserve surface for different seeds
 
    Treated as common path aberration
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] aper Aperture data; opdadd and opdbias are accumulated.
+   @param[in,out] powfs WFS configuration; opdbias is accumulated. May be NULL.
+   @param[in] recon Reconstructor; floc is used for NCPA calibration.
 */
 
 static void
@@ -101,6 +106,12 @@ typedef struct{
 	int opdxcover;
 }SURF_DATA;
 
+/**
+   Ray trace a surface to aper->opdadd for science directions covered by it.
+
+   @param[in] info Thread data; info->data is SURF_DATA and evaluation directions start to end are processed.
+   @return NULL.
+*/
 static void* prop_surf_evl(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
@@ -117,6 +128,12 @@ static void* prop_surf_evl(thread_t* info){
 	return NULL;
 }
 
+/**
+   Ray trace a NCPA surface to aper->opdbias on recon->floc for NCPA calibration directions covered by it.
+
+   @param[in] info Thread data; info->data is SURF_DATA and NCPA directions start to end are processed.
+   @return NULL.
+*/
 static void* prop_surf_ncpa(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
@@ -136,6 +153,12 @@ static void* prop_surf_ncpa(thread_t* info){
 	return NULL;
 }
 
+/**
+   Ray trace a surface to powfs opdbias (NCPA surface) or opdadd (common path surface) for WFS covered by it.
+
+   @param[in] info Thread data; info->data is SURF_DATA and WFS start to end are processed.
+   @return NULL.
+*/
 static void* prop_surf_wfs(thread_t* info){
 	SURF_DATA* data=(SURF_DATA*)info->data;
 	const parms_t* parms=data->parms;
@@ -164,6 +187,11 @@ static void* prop_surf_wfs(thread_t* info){
 /**
    Setup surface perpendicular to the beam by ray tracing from the surface to
    WFS and Science grid
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] aper Aperture data; opdadd and opdbias are accumulated.
+   @param[in,out] powfs WFS configuration; opdadd and opdbias are accumulated. May be NULL.
+   @param[in] recon Reconstructor; floc is used for NCPA calibration.
 */
 static void
 setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
@@ -322,8 +350,14 @@ setup_surf_perp(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 	free(tdata_ncpa);
 }
 
-/** We trace rays from Science focal plan OPD to ploc along evaluation
-	directions (type=1) or on axis only (type=2).*/
+/**
+   Right hand side operator for NCPA fitting: xout=xout+HA'*W*aper->opdbias, with HA=recon->HA_ncpa
+   tracing rays from DM to the NCPA calibration directions.
+
+   @param[in,out] xout Output DM vector; allocated if NULL and accumulated into.
+   @param[in] recon Reconstructor.
+   @param[in] aper Aperture data containing opdbias.
+*/
 static void FitR_NCPA(dcell** xout, recon_t* recon, aper_t* aper){
 	const parms_t* parms=global->parms;
 	dcell* xp=NULL;
@@ -336,6 +370,15 @@ static void FitR_NCPA(dcell** xout, recon_t* recon, aper_t* aper){
 	dcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
 	dcellfree(xp);
 }
+/**
+   Left hand side operator for NCPA fitting: xout=xout+alpha*HA'*W*HA*xin,
+   with HA=recon->HA_ncpa and W the aperture weighting.
+
+   @param[in,out] xout Output DM vector; allocated if NULL and accumulated into.
+   @param[in] A Reconstructor (recon_t).
+   @param[in] xin Input DM vector.
+   @param[in] alpha Scaling factor.
+*/
 void FitL_NCPA(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	const recon_t* recon=(const recon_t*)A;
@@ -352,6 +395,12 @@ void FitL_NCPA(dcell** xout, const void* A,
 	dcellmm(xout, recon->actslave, xin, "nn", 1);
 	}*/
 }
+/**
+   Setup ray tracing operator recon->HA_ncpa from DM to the NCPA calibration directions on floc.
+
+   @param[in,out] recon Reconstructor; HA_ncpa is set.
+   @param[in] parms Simulation parameters.
+*/
 static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 	const int nevl= parms->ncpa.ndir;
 	const int ndm=parms->ndm;
@@ -378,8 +427,15 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 		writebin(recon->HA_ncpa, "HA_ncpa");
 	}
 }
+/**
+   Add lenslet spherical aberration (powfs.saspherical, RMS in nm) with focus and piston removed to
+   powfs[ipowfs].opdbias for every subaperture.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] powfs WFS configuration; opdbias is accumulated.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void lenslet_saspherical(const parms_t* parms, powfs_t* powfs, int ipowfs){
-//Spherical aberration
 	if(parms->powfs[ipowfs].saspherical!=0){
 		if(fabs(parms->powfs[ipowfs].saspherical)<1){
 			error("powfs%d: saspherical=%g should be in nm.\n",
@@ -465,8 +521,15 @@ static void lenslet_saspherical(const parms_t* parms, powfs_t* powfs, int ipowfs
 		dfree(opdi);
 	}
 }
+/**
+   Add lenslet defocus specified as P/V (powfs.safocuspv in nm) to powfs[ipowfs].opdbias for every
+   subaperture.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] powfs WFS configuration; opdbias is accumulated.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs, int ipowfs){
-	//defocus specified as P/V
 	if(parms->powfs[ipowfs].safocuspv!=0){
 		if(fabs(parms->powfs[ipowfs].safocuspv)<1){
 			error("powfs%d: safocuspv should be in nm.\n", ipowfs);
@@ -491,6 +554,14 @@ static void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		}
 	}
 }
+/**
+   Add Zernike mode NCPA specified by powfs.ncpa (pairs of RMS and Zernike mode index; a negative RMS
+   is used as is, otherwise it is randomly scaled for each WFS) to powfs[ipowfs].opdbias.
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] powfs WFS configuration; opdbias is accumulated.
+   @param[in] ipowfs Index of the powfs.
+*/
 static void powfs_ncpa(const parms_t *parms, powfs_t *powfs, int ipowfs){
 	if(parms->powfs[ipowfs].ncpa){
 		dmat *ncpa=parms->powfs[ipowfs].ncpa;
@@ -521,7 +592,12 @@ static void powfs_ncpa(const parms_t *parms, powfs_t *powfs, int ipowfs){
 }
 /**
    Setup common and non common OPDs from surf and tsurf
- */
+
+   @param[in] parms Simulation parameters.
+   @param[in,out] aper Aperture data; opdadd and opdbias are set.
+   @param[in,out] powfs WFS configuration; opdadd and opdbias are set.
+   @param[in,out] recon Reconstructor; used for NCPA calibration and dm_ncpa is set.
+*/
 void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* recon){
 	if(parms->load.ncpa){
 		if( parms->ncpa.nsurf|| parms->ncpa.ntsurf){

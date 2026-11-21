@@ -43,11 +43,30 @@ Real curmaxabs(const curmat &a, cudaStream_t stream);
 Real curcellmax(const curcell &a, cudaStream_t stream);
 Real curcellmaxabs(const curcell &a, cudaStream_t stream);
 /**
-   Add tip/tilt to OPD
+   Add piston and tip/tilt to OPD defined on loc: opd+=pis+x*tx+y*ty.
+
+   @param[in,out] opd OPD array.
+   @param[in] loc Device array of coordinates (x, y) of the points.
+   @param[in] pis Piston.
+   @param[in] tx Tip (x tilt) coefficient.
+   @param[in] ty Tilt (y tilt) coefficient.
+   @param[in] stream Stream to run in.
 */
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real pis, Real tx, Real ty, cudaStream_t stream){
     add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), pis, tx, ty);
 }
+/**
+   Add piston and tip/tilt to OPD, with pis, tx, ty further scaled by ptt[0],
+   ptt[1], ptt[2] in device memory.
+
+   @param[in,out] opd OPD array.
+   @param[in] loc Device array of coordinates (x, y) of the points.
+   @param[in] ptt Device array of 3 scaling factors for pis, tx, ty.
+   @param[in] pis Piston.
+   @param[in] tx Tip (x tilt) coefficient.
+   @param[in] ty Tilt (y tilt) coefficient.
+   @param[in] stream Stream to run in.
+*/
 static inline void curaddptt(curmat &opd, Real (*loc)[2], Real *ptt, Real pis, Real tx, Real ty,  cudaStream_t stream){
     add_ptt_do<<<DIM(opd.N(), 256), 0, stream>>>(opd(), loc, opd.N(), ptt, pis, tx, ty);
 }

@@ -26,7 +26,10 @@
 
 /**
    component-wise multiply A with conjugate of B: A=A.*conj(B);
- */
+
+   @param[in,out] A Matrix multiplied in place.
+   @param[in] B Matrix whose conjugate multiplies A.
+*/
 void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B){
 	if(!check_mat(A, B) || !B) return;
 	const long ntot=A->nx*A->ny;
@@ -36,7 +39,10 @@ void X(cwmc)(X(mat)* restrict A, const X(mat)* restrict B){
 }
 /**
    component multiply X(mat) A with XR(mat) B. A=A.*B;
- */
+
+   @param[in,out] A Matrix multiplied in place.
+   @param[in] B Real matrix with the same number of elements as A.
+*/
 void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B){
 	if(!check_mat(A) || !B) return;
 	const long ntot=A->nx*A->ny;
@@ -52,10 +58,16 @@ void X(cwmd)(X(mat)* restrict A, const XR(mat)* restrict B){
    benchmark: embed 32x32 into 64x64,
    without rotation takes 0.161 ms.
    with rotation takes 0.330 ms.
+
+   @param[out] A Output complex array. Zeroed and then filled.
+   @param[in] opd OPD array of nopdx*nopdy (m).
+   @param[in] amp Amplitude array of nopdx*nopdy.
+   @param[in] nopdx Number of points along x of opd and amp.
+   @param[in] nopdy Number of points along y of opd and amp.
+   @param[in] wvl Wavelength (m).
+   @param[in] theta Rotation angle (radian).
 */
-void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
-	const long nopdx, const long nopdy,
-	const R wvl, const R theta){
+void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp, const long nopdx, const long nopdy, const R wvl, const R theta){
 	if(!check_mat(A)) return;
 	T* psf=P(A);
 	const long npsfx=A->nx;
@@ -123,7 +135,11 @@ void X(embed_wvf)(X(mat)* restrict A, const R* opd, const R* amp,
 }
 #define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(T)); /**<macro to do copying*/
 /**
-   do a modules square and copy to real part of output
+   do a modulus square and copy to real part of output
+
+   @param[out] out Output array.
+   @param[in] in Input array.
+   @param[in] length Number of elements.
 */
 static inline void sq2cpy(T* out, const T* in, const long length){
 	for(long i=0; i<length; i++){
@@ -132,6 +148,10 @@ static inline void sq2cpy(T* out, const T* in, const long length){
 }
 /**
    Copy the real part.
+
+   @param[out] out Output array.
+   @param[in] in Input array.
+   @param[in] length Number of elements.
 */
 static inline void realcpy(T* out, const T* in, const long length){
 	for(long i=0; i<length; i++){
@@ -140,18 +160,32 @@ static inline void realcpy(T* out, const T* in, const long length){
 }
 /**
    Copy the absolute value to output.
- */
+
+   @param[out] out Output array.
+   @param[in] in Input array.
+   @param[in] length Number of elements.
+*/
 static inline void abscpy(T* out, const T* in, const long length){
 	for(long i=0; i<length; i++){
 		out[i]=ABS(in[i]);
 	}
 }
+/**
+   convert r/a to x/y
+
+   @param[in] A Value with radius in real part and angle (radian) in imaginary part.
+   @return Value in x/y (real/imaginary) form.
+*/
 static inline T RA2XY(T A){
-	//convert r/a to x/y
 	return COMPLEX(REAL(A)*cos(IMAG(A)), REAL(A)*sin(IMAG(A)));
 }
+/**
+   convert x/y to r/a
+
+   @param[in] A Value in x/y (real/imaginary) form.
+   @return Value with radius in real part and angle (radian) in imaginary part.
+*/
 static inline T XY2RA(T A){
-	//convert x/y to r/a*/
 	return COMPLEX(ABS(A), atan2(IMAG(A), REAL(A)));
 }
 
@@ -171,7 +205,10 @@ static inline T XY2RA(T A){
    * * * * *
    2 * * * 1
    \endverbatim
-   }
+
+   @param[out] A Output array. Zeroed and then filled. Dimensions must be even.
+   @param[in] B Input array. Dimensions must be even.
+   @param[in] flag Operation applied while copying: C_FULL, C_ABS2, C_REAL, or C_ABS.
 */
 void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 	if(!check_mat(A, B)) return;
@@ -216,7 +253,10 @@ void X(cpcorner)(X(mat)* A, const X(mat)* restrict B, CEMBED flag){
 }
 /**
    Put abs square of each element into its realpart.
-   A=abs(A).^2;
+   A=abs(A).^2*scale;
+
+   @param[in,out] A Matrix modified in place.
+   @param[in] scale Scaling factor.
 */
 void X(abs2toreal)(X(mat)* A, R scale){
 	if(!check_mat(A)) return;
@@ -226,6 +266,8 @@ void X(abs2toreal)(X(mat)* A, R scale){
 }
 /**
    Put abs of each elemnt into its realpart. A=abs(A);
+
+   @param[in,out] A Matrix modified in place.
 */
 void X(abstoreal)(X(mat)* A){
 	if(!check_mat(A)) return;
@@ -236,7 +278,10 @@ void X(abstoreal)(X(mat)* A){
 }
 /**
    Copy a XR(mat) into real part of X(mat).
- */
+
+   @param[in,out] A0 Output matrix. Allocated if NULL; otherwise must have the same dimension as B.
+   @param[in] B Input real matrix.
+*/
 void X(cpd)(X(mat)** restrict A0, const XR(mat)* restrict B){
 	if(!B) return;
 	X(mat)* restrict A=*A0;
@@ -253,6 +298,8 @@ void X(cpd)(X(mat)** restrict A0, const XR(mat)* restrict B){
 /**
    Copy real part of a X(mat) to XR(mat) with optional scaling:
    A0=A0.*alpha+real(B)*beta
+   The macro generates X(real2d), X(imag2d), X(abs22d) and X(arg2d) for the
+   real part, imaginary part, absolute value squared, and phase respectively.
 */
 
 #define CMAT_TO_DMAT(name, opt)\
@@ -281,8 +328,12 @@ CMAT_TO_DMAT(arg2d, CARG)
    apply exp(-2*pi*sx/nx)*exp(-2*pi*sy/ny) to otf to move the image
    sx, sy are shifts in terms of pixel.
    sx/nx is equivalent to sx*dtheta*du.
-   peak_corner=1: peak is in center
-   peak_corner=0: peak is in corner
+
+   @param[out] otf Output OTF. May be the same as otfin.
+   @param[in] otfin Input OTF.
+   @param[in] sx Shift along x (pixel).
+   @param[in] sy Shift along y (pixel).
+   @param[in] peak_corner 1: peak is in center; 0: peak is in corner.
 */
 void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 	if(!check_mat(otf, otfin)) return;
@@ -330,6 +381,11 @@ void X(tilt2)(X(mat)* otf, X(mat)* otfin, R sx, R sy, int peak_corner){
 }
 /**
    Inplace tilt the otf to make the image shift.
+
+   @param[in,out] otf OTF modified in place.
+   @param[in] sx Shift along x (pixel).
+   @param[in] sy Shift along y (pixel).
+   @param[in] peak_corner 1: peak is in center; 0: peak is in corner.
 */
 void X(tilt)(X(mat)* otf, R sx, R sy, int peak_corner){
 	X(tilt2)(otf, otf, sx, sy, peak_corner);

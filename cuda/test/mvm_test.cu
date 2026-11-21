@@ -37,11 +37,16 @@ Test using transpose.
 
 #define BLOCKMV_TNY 1
 #define BLOCKMV_TNX 256
-/*
-  y=A*x;
-  Call with
-  blockmv<<<ngrid, dim(tnx, tny), (tny+tnx*tny)*sizeof(Real), stream>>>()
-  with both tnx and tny must be power of two and be less than 32. tny must be 32.
+/**
+   Blocked matrix vector multiply y+=A*x.
+   Call with
+   blockmv<<<ngrid, dim3(BLOCKMV_TNX, BLOCKMV_TNY), 0, stream>>>()
+
+   @param[in,out] y Output vector of length nrow, accumulated into.
+   @param[in] A Column major matrix of nrow*ncol.
+   @param[in] x Input vector of length ncol.
+   @param[in] nrow Number of rows of A.
+   @param[in] ncol Number of columns of A.
 */
 
 __global__  void
@@ -78,9 +83,9 @@ blockmv(Real* restrict y, const Real* restrict A, const Real* restrict x, const 
 	__syncthreads();
 	if(tiy==0 && irow<nrow){
 #pragma unroll
-	for(int i=1; i<BLOCKMV_TNY; i++){
-		sy[0]+=sy[i];
-	}
+		for(int i=1; i<BLOCKMV_TNY; i++){
+			sy[0]+=sy[i];
+		}
 		atomicAdd(&y[irow], sy[0]);
 	}
 }
@@ -118,6 +123,12 @@ test_read_multi(Real* A, int nx, int ny){
 		sum+=A[irow+i*nx];
 	}
 }
+*/
+/**
+   Compare the timing and results of cublas gemv and custom MVM kernels. Results
+   are saved to files.
+
+   @param[in] igpu GPU index to use.
 */
 void mvm_test(int igpu){
 	cudaSetDevice(igpu);

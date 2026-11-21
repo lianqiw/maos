@@ -33,13 +33,14 @@ struct hyst_t{
 /**
   Hysteresis modeling. Create the hysteresis model. It assumes that the hysteresis is measured with a stroke.
   For details, see the documentation 50_hyst.md
+
+   @param[in] hysteresis The ratio of the maximum difference of ascending/descending curve over 2*stroke. Between 0 and 1.
+   @param[in] alpha The alpha parameter. Negative to use the default of 2.
+   @param[in] stroke The DM command is from -stroke to stroke (m). Infinity is replaced by 10e-6.
+   @param[in] nact Number of actuators
+   @return Newly allocated hysteresis model. Free with hyst_free().
 */
-hyst_t* hyst_new(
-	real hysteresis,   /**<The ratio of the maximum difference of ascending/descending curve over 2*stroke. */
-	real alpha,        /**<The alpha parameter*/
-	real stroke,       /**<The DM command is from -stroke to stroke*/
-	long nact          /**<Number of actuators*/
-){
+hyst_t* hyst_new(real hysteresis, real alpha, real stroke, long nact){
 	hyst_t* hyst=mycalloc(1, hyst_t);
 	if(!hyst) return NULL;
 	hyst->xlast=dnew(nact, 1);
@@ -63,6 +64,8 @@ hyst_t* hyst_new(
 
 /**
    Reset hysteresis state
+
+   @param[in,out] hyst Hysteresis model. May be NULL.
 */
 void hyst_reset(hyst_t* hyst){
 	if(!hyst) return;
@@ -72,6 +75,8 @@ void hyst_reset(hyst_t* hyst){
 
 /**
    Free hysteresis model.
+
+   @param[in] hyst Hysteresis model to free. May be NULL.
 */
 void hyst_free(hyst_t* hyst){
 	if(!hyst) return;
@@ -82,6 +87,10 @@ void hyst_free(hyst_t* hyst){
 
 /**
    Apply hysteresis to DM vector. dmreal and dmcmd may be the same
+
+   @param[in,out] hyst Hysteresis model. Its state is updated. If NULL, dmcmd is copied to dmreal.
+   @param[out] dmreal Actual DM position of nact*ntime. Must be preallocated.
+   @param[in] dmcmd DM commands of nact*ntime. Each column is a time step.
 */
 void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
 	if(!hyst){
@@ -105,6 +114,10 @@ void hyst_dmat(hyst_t* hyst, dmat* dmreal, const dmat* dmcmd){
 
 /**
    Apply hysteresis to set of DM vectors
+
+   @param[in,out] hyst Array of hysteresis models, one per DM. If NULL, dmcmd is copied to dmreal.
+   @param[out] dmreal Actual DM positions. Must be preallocated.
+   @param[in] dmcmd DM commands.
 */
 void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
 	if(!hyst){
@@ -117,8 +130,14 @@ void hyst_dcell(hyst_t** hyst, dcell* dmreal, const dcell* dmcmd){
 }
 
 /**
- * Test hysteresis model. Dmcmd has dimensions of nact*ntime
- * */
+   Test hysteresis model. Dmcmd has dimensions of nact*ntime
+
+   @param[in] hysteresis The ratio of the maximum difference of ascending/descending curve over 2*stroke.
+   @param[in] hyst_alpha The alpha parameter.
+   @param[in] hyst_stroke The DM command is from -stroke to stroke.
+   @param[in] dmcmd DM commands of nact*ntime.
+   @return Newly allocated actual DM position of nact*ntime. The caller frees it.
+*/
 dmat* hyst_test(real hysteresis, real hyst_alpha, real hyst_stroke, const dmat* dmcmd){
 	hyst_t* hyst=hyst_new(hysteresis, hyst_alpha, hyst_stroke, NX(dmcmd));
 	dmat* dmreal=dnew(NX(dmcmd), NY(dmcmd));

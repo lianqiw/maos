@@ -29,6 +29,10 @@ char* dirstart;
 /**
    The main(). It parses the command line, setup the parms, ask the scheduler
    for signal to proceed, and then starts skysim to do sky coverage.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return 0 on success.
  */
 int main(int argc, const char* argv[]){
 	if(!(dirstart=getcwd(NULL, 0))){

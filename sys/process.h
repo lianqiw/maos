@@ -39,22 +39,22 @@ double get_job_launchtime(int pid);
 int get_cpu_avail(void);
 int read_cpu_counter(long *user, long *tot);
 double read_self_cpu(void);
-extern int NCPU;  /**<True number of cores*/
-extern int MAXTHREAD;/**<Number of hyper threads. may be larger than NCPU*/
-extern int NTHREAD;  /**<Number of threads for simulation*/
+extern int NCPU;
+extern int MAXTHREAD;
+extern int NTHREAD;
 extern int TCK;
 extern int PID;
 extern long NMEM;
-extern const char *HOME;/*the user home */
-extern const char *USER;/*the user name */
-extern char* HOST;/*the host name */
-extern char* TEMP;/*the temporary folder */
-extern char* DIRCACHE; /*the caching folder */
-extern char* DIRLOCK; /*the lock file folder*/
-extern char* DIREXE;/*the exe path*/
-extern char* DIRSTART; /*the startup directory*/
-extern char* DIROUT; /*the result directory (set by maos)*/
-extern char *EXENAME;/*the name of the executable.*/
+extern const char *HOME;
+extern const char *USER;
+extern char* HOST;
+extern char* TEMP;
+extern char* DIRCACHE;
+extern char* DIRLOCK;
+extern char* DIREXE;
+extern char* DIRSTART;
+extern char* DIROUT;
+extern char *EXENAME;
 int get_ncpu(void);
 void set_dirout(const char* dir);
 #define print_mem(A,...) dbg(A ": %.1f MiB.\n", ##__VA_ARGS__, get_job_mem()/1024.);

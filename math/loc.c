@@ -22,6 +22,8 @@
 
 /**
    Free the MAP in loc_t
+
+   @param[in,out] loc The loc whose map is freed and set to NULL.
 */
 void loc_free_map(loc_t* loc){
 	if(loc&&loc->map){
@@ -31,6 +33,8 @@ void loc_free_map(loc_t* loc){
 }
 /**
    Free the stat in loc_t
+
+   @param[in,out] loc The loc whose stat is freed and set to NULL.
 */
 void loc_free_stat(loc_t* loc){
 	if(loc&&loc->stat){
@@ -40,8 +44,11 @@ void loc_free_stat(loc_t* loc){
 	}
 }
 /**
-   Free loc_t data.
- */
+   Free the internal data (stat and map) of loc_t. Used as the deinit callback
+   of loc_t; the coordinate memory is freed by the dmat machinery.
+
+   @param[in,out] p The loc_t (as cell). Ignored if not a loc_t.
+*/
 void locfree_do(cell* p){
 	if(p && p->id==M_LOC){
 		loc_t *loc=(loc_t*)p;
@@ -50,11 +57,11 @@ void locfree_do(cell* p){
 	}
 }
 /**
- * @brief Convert dmat to loc in place
- * 
- * @param A 
- * @return loc_t* 
- */
+   Convert dmat to loc in place without parsing keywords. dx and dy are set to NAN.
+
+   @param[in,out] A nloc*2 matrix of coordinates. It is reallocated in place and must no longer be used.
+   @return The converted loc_t, which takes over A; NULL if A is NULL.
+*/
 static loc_t *dmat2loc_inplace(dmat*A){
 	if(!A) return NULL;
 	loc_t* loc=myrecalloc(A, dmat, loc_t);
@@ -70,6 +77,12 @@ static loc_t *dmat2loc_inplace(dmat*A){
 	loc->aoi=0;
 	return loc;
 }
+/**
+   Parse dx, dy, ht, iac, dratio, aoi from the keywords of loc and determine
+   dx, dy from the data if needed.
+
+   @param[in,out] loc The loc whose fields are set.
+*/
 static void loc_parse_header(loc_t* loc){
 	if(!loc) return;
 	loc->dx=search_keyword_num(loc->keywords, "dx");
@@ -81,11 +94,11 @@ static void loc_parse_header(loc_t* loc){
 	loc_dxdy(loc);
 }
 /**
- * @brief Convert a dmat in place to loc_t object
- * 
- * @param A 	Input array to be changed in place.
- * @return loc_t* 
- */
+   Convert a dmat in place to loc_t object. Keywords are parsed into the fields.
+
+   @param[in,out] A nloc*2 input array of coordinates. It is reallocated in place and must no longer be used.
+   @return The converted loc_t, which takes over A; NULL if A is NULL or not a real matrix.
+*/
 loc_t* loc_convert(dmat* A){
 	if(!A || A->id!=M_REAL) return NULL;
 	loc_t *loc=dmat2loc_inplace(A);
@@ -103,6 +116,11 @@ cell* loc_convert_cell(cell* A){
 }
 /**
    Create a loc with nloc elements.
+
+   @param[in] nloc Number of points.
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m). Uses dx if 0.
+   @return Newly allocated loc with zero coordinates; the caller frees it with locfree().
 */
 loc_t* locnew(long nloc, real dx, real dy){
 	loc_t* loc=dmat2loc_inplace(dnew(nloc, 2));
@@ -112,7 +130,10 @@ loc_t* locnew(long nloc, real dx, real dy){
 }
 /**
    Reference an existing loc. map and stat are not referenced.
- */
+
+   @param[in] in The loc to reference.
+   @return Newly allocated loc sharing coordinates with in; the caller frees it with locfree(). NULL if in is NULL.
+*/
 loc_t* locref(loc_t* in){
 	if(!in) return NULL;
 	loc_t* loc=dmat2loc_inplace(dref(in->dmat));
@@ -126,6 +147,15 @@ loc_t* locref(loc_t* in){
 }
 /**
    Create a pts with nsa, dsa, nx, dx
+
+   @param[in] nsa Number of subapertures.
+   @param[in] dsax Subaperture size along x (m).
+   @param[in] dsay Subaperture size along y (m).
+   @param[in] nxsa Number of points per subaperture along x.
+   @param[in] nysa Number of points per subaperture along y.
+   @param[in] dx Sampling of points within a subaperture along x (m).
+   @param[in] dy Sampling of points within a subaperture along y (m).
+   @return Newly allocated pts; the caller frees it with ptsfree().
 */
 pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, real dy){
 	pts_t* pts=myrecalloc(locnew(nsa, dsax, dsay), loc_t, pts_t);
@@ -140,7 +170,11 @@ pts_t* ptsnew(long nsa, real dsax, real dsay, long nxsa, long nysa, real dx, rea
 }
 /**
    apply hashlittle() to loc_t.
- */
+
+   @param[in] loc The loc to hash.
+   @param[in] key Initial hash key.
+   @return Updated hash key; key unchanged if loc is NULL.
+*/
 uint32_t lochash(const loc_t* loc, uint32_t key){
 	if(loc){
 		key=dhash(loc->dmat, key);
@@ -150,12 +184,13 @@ uint32_t lochash(const loc_t* loc, uint32_t key){
 /**
    Create an vector to embed OPD into a square array for FFT purpose. 
    This is reverse operation from loc_create_map which maps 2d array indexing info loc indexing.
-   @param[out] nembed 	size of square array
-   @param[in] loc		irregular grid
-   @param[in] oversize	ratio of oversizing. 2 for FFT to achieve Nyquist sampling.
-   @param[in] fftpad	pad to size that is fast for FFT.
-   @return				embed has the same length of loc, contains 1d index into the squre array.
-  */
+
+   @param[in,out] nembed Size of square array. Computed and set if <=0 on input, otherwise used as is.
+   @param[in] loc Irregular grid.
+   @param[in] oversize Ratio of oversizing. 2 for FFT to achieve Nyquist sampling.
+   @param[in] fftpad Pad to size that is fast for FFT.
+   @return Newly allocated vector of the same length of loc containing 1d index into the square array; the caller frees it.
+*/
 lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad){
 	if(!loc) return NULL;
 	real xmin, xmax, ymin, ymax;
@@ -191,7 +226,9 @@ lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad
 	return embed;
 }
 /**
-   Create a map for loc with padding of 1.
+   Create a map for loc without padding. See loc_create_map_npad().
+
+   @param[in] loc The loc. Its map is created (the struct is modified despite const).
 */
 void loc_create_map(const loc_t* loc){
 	loc_create_map_npad((loc_t*)loc, 0, 0, 0);
@@ -204,6 +241,14 @@ DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
    coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid
    region in the map is replaced with closest valid point. This extends the
    coverage of the grid automatically.
+
+   The map stores loc index plus 1 at valid points, and negative index plus 1
+   of the neighbor for extended points. Does nothing if the map already exists.
+
+   @param[in] loc The loc. Its map and npad are set (the struct is modified despite const).
+   @param[in] npad Number of points to pad on each side.
+   @param[in] nx Size of the map along x. 0 to determine automatically.
+   @param[in] ny Size of the map along y. 0 to determine automatically.
 */
 void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 	if(!loc) return;
@@ -355,6 +400,12 @@ if(dnx>=mnx){/*output array is larger*/\
 }
 /**
   Embed in into dest according to map defined in loc->map. The two arrays are assumed to be concentric.
+
+  @param[in,out] _dest Destination 2-d array. Resized to the map size without padding if empty. Points not on loc are set to NAN unless add is set.
+  @param[in] loc The loc. Its map is created if not yet.
+  @param[in] _in Values defined on loc.
+  @param[in] expanded Also fill the extended (ghost) points of the map.
+  @param[in] add Add to dest instead of overwriting.
 */
 void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat _in, int expanded, int add){
 	if(!loc||!_dest.dm||!_in.dm) return;
@@ -388,9 +439,9 @@ void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat _in, int expanded,
 }
 /**
   A convenient wrapper for loc_embed to be called by matlab or python
-  @param[in] loc	The location coordinate
-  @param[in] arr	The points defined on loc to be embeded to 2-d array. May have multiple vectors.
-  @return			The embeded 2-d array.
+  @param[in] loc The location coordinate. Its map is created if not yet.
+  @param[in] arr The points defined on loc to be embeded to 2-d array. May have multiple vectors.
+  @return Newly allocated cell of embeded 2-d arrays, one per vector; the caller frees it.
 */
 dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 	if(!loc||!arr) return NULL;
@@ -423,6 +474,10 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 /**
   Embed in into dest according to map defined in loc->map for cells. Arbitraty map cannot
   be used here for mapping.
+
+  @param[in,out] pdest Destination cell array of the map size. Allocated if NULL. Each element references the corresponding element of in, or is NULL.
+  @param[in] loc The loc. Its map is created if not yet.
+  @param[in] in Cell array defined on loc.
 */
 void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 	if(!pdest||!loc||!in) return;
@@ -448,8 +503,12 @@ void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 	}
 }
 /**
-  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
-  be used here for mapping.
+  Extract values from in into dest according to map defined in loc->map.
+  Arbitraty map cannot be used here for mapping.
+
+  @param[out] dest Values on loc. Must be preallocated with nloc elements.
+  @param[in] loc The loc. Its map must exist.
+  @param[in] in 2-d array with the same dimension as loc->map.
 */
 void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 	if(!dest||!loc||!in) return;
@@ -472,7 +531,12 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 	}
 }
 /**
-   Convert a map to a loc that collects all positive entries while keep each row continuous*/
+   Convert a map to a loc that collects all positive entries while keep each row continuous
+
+   @param[in] map The map.
+   @param[in] thres Threshold relative to the maximum of map. Points above it are valid.
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if map is NULL.
+*/
 loc_t* loc_from_map(map_t* map, real thres){
 	if(!map) return NULL;
 	const real dx=map->dx;
@@ -522,6 +586,10 @@ loc_t* loc_from_map(map_t* map, real thres){
 }
 /**
    Create 1 dimensional loc with given vector.
+
+   @param[in] x Coordinates along x.
+   @param[in] nx Number of points.
+   @return Newly allocated loc with y set to 0; the caller frees it with locfree(). NULL if x is NULL or nx is 0.
 */
 loc_t* mk1dloc_vec(real* x, long nx){
 	if(!x||!nx) return NULL;
@@ -532,6 +600,11 @@ loc_t* mk1dloc_vec(real* x, long nx){
 }
 /**
    Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.
+
+   @param[in] x0 Origin (m).
+   @param[in] dx Sampling (m).
+   @param[in] nx Number of points.
+   @return Newly allocated loc with y set to 0; the caller frees it with locfree().
 */
 loc_t* mk1dloc(real x0, real dx, long nx){
 	loc_t* loc=locnew(nx, dx, dx);
@@ -543,6 +616,9 @@ loc_t* mk1dloc(real x0, real dx, long nx){
 /**
    Create a loc array that covers the map_t. Notice that it is different from
    loc_from_map which only covers valid (value>0) regions.
+
+   @param[in] map The map.
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if map is NULL.
 */
 loc_t* mksqloc_map(const map_t* map){
 	if(!map) return NULL;
@@ -550,13 +626,28 @@ loc_t* mksqloc_map(const map_t* map){
 }
 /**
    Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)
+
+   @param[in] nx Number of points along x.
+   @param[in] ny Number of points along y.
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m).
+   @return Newly allocated loc; the caller frees it with locfree().
 */
 loc_t* mksqloc_auto(long nx, long ny, real dx, real dy){
 	return mksqloc(nx, ny, dx, dy, -nx/2*dx, -ny/2*dy);
 }
 /**
    Create a loc array contains coorindates in a square map of size nx*ny, with
-   sampling dx, and at origin ox,oy */
+   sampling dx, and at origin ox,oy
+
+   @param[in] nx Number of points along x.
+   @param[in] ny Number of points along y.
+   @param[in] dx Sampling along x (m).
+   @param[in] dy Sampling along y (m).
+   @param[in] ox Coordinate of the first point along x (m).
+   @param[in] oy Coordinate of the first point along y (m).
+   @return Newly allocated loc; the caller frees it with locfree().
+*/
 loc_t* mksqloc(long nx, long ny, real dx, real dy, real ox, real oy){
 	loc_t* loc=locnew(nx*ny, dx, dy);
 	for(long iy=0; iy<ny; iy++){
@@ -571,7 +662,13 @@ loc_t* mksqloc(long nx, long ny, real dx, real dy, real ox, real oy){
 
 /**
    Create a loc array within diameter D, and inner diameter Din, with spacing dx.
- */
+
+   @param[in] D Outer diameter (m).
+   @param[in] Din Inner diameter (m).
+   @param[in] dx Sampling (m).
+   @param[in] thres Threshold of the gray pixel amplitude, relative to maximum, for a point to be included.
+   @return Newly allocated loc; the caller frees it with locfree().
+*/
 loc_t* mkannloc(real D, real Din, real dx, real thres){
 	long nx=MAX(D/dx+1, 1);
 	map_t* xy=mapnew(nx, nx, dx, dx);
@@ -587,6 +684,9 @@ loc_t* mkannloc(real D, real Din, real dx, real thres){
 /**
    Estimate the diameter of loc.
    2021-09-03: corrected calculation for square grid. Use the inscribed diameter but not circumcircle.
+
+   @param[in] loc The loc.
+   @return Maximum extent along x or y (m); 0 if loc is NULL.
 */
 real loc_diam(const loc_t* loc){
 	if(!loc) return 0;
@@ -598,6 +698,9 @@ real loc_diam(const loc_t* loc){
 /**
    Find the point that closes to origin (0,0) in loc. Useful in single point
    piston constraint in creating reconstructor.
+
+   @param[in] loc The loc.
+   @return Index of the point closest to origin; 0 if loc is NULL.
 */
 int loccenter(const loc_t* loc){
 	if(!loc) return 0;
@@ -616,7 +719,12 @@ int loccenter(const loc_t* loc){
 
 /**
    assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their
-   inverse covariance matrix.  mcc=M'*(amp.*M) */
+   inverse covariance matrix.  mcc=M'*(amp.*M)
+
+   @param[in] loc The loc.
+   @param[in] amp Amplitude weighting. NULL for uniform.
+   @return Newly allocated 3x3 matrix mcc (not inverted); the caller frees it. NULL if loc is NULL.
+*/
 dmat* loc_mcc_ptt(const loc_t* loc, const real* amp){
 	if(!loc) return NULL;
 	const int nmod=3;
@@ -636,6 +744,10 @@ dmat* loc_mcc_ptt(const loc_t* loc, const real* amp){
 /**
    same as loc_mcc_ptt, except using pts instead of loc.
    this is used to build imcc for TT/F powfs ztilt imcc
+
+   @param[in] pts The subaperture points.
+   @param[in] amp Amplitude weighting, nxsa*nysa per subaperture.
+   @return Newly allocated cell of 3x3 matrices, one per subaperture (not inverted); the caller frees it.
 */
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 	if(!pts) return NULL;
@@ -677,10 +789,18 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 /**
    evaluate piston/tip-tilt/ removed wavefront error.
    output coeffout in unit of radian like units.
+
+   @param[out] rmsout Variance of 3 elements: PR (piston removed), TT (tip/tilt), and PTTR (piston/tip/tilt removed). Skipped if NULL.
+   @param[out] coeffout Piston, tip, and tilt coefficients. Skipped if NULL.
+   @param[in] loc The loc.
+   @param[in] ipcc Inverse of piston mode weight. Computed internally if imcc is NULL.
+   @param[in] imcc Inverse of 3x3 mode covariance from loc_mcc_ptt(). Computed internally if NULL.
+   @param[in] amp Amplitude weighting. NULL for uniform.
+   @param[in] opd OPD on loc.
+   @param[in] stride Stride between consecutive OPD elements.
 */
-void loc_calc_ptt_stride(real* rmsout, real* coeffout,
-	const loc_t* loc, real ipcc,
-	const dmat* imcc, const real* amp, const real* opd, long stride){
+void loc_calc_ptt_stride(real* rmsout, real* coeffout, const loc_t* loc, real ipcc, const dmat* imcc, const real* amp,
+	const real* opd, long stride){
 	if(!loc||!opd) return;
 	dmat *imcc_internal=NULL;
 	if(imcc){
@@ -730,6 +850,19 @@ void loc_calc_ptt_stride(real* rmsout, real* coeffout,
 	}
 	dfree(imcc_internal);
 }
+/**
+   Same as loc_calc_ptt_stride() with stride 1. rmsout[0..2] receives PR, TT,
+   and PTTR variance; coeffout (optional) receives the piston/tip/tilt
+   coefficients. ipcc and imcc are computed internally if imcc is NULL.
+
+   @param[out] rmsout Variance of PR, TT, and PTTR. Skipped if NULL.
+   @param[out] coeffout Piston, tip, and tilt coefficients. Skipped if NULL.
+   @param[in] loc The loc.
+   @param[in] ipcc Inverse of piston mode weight.
+   @param[in] imcc Inverse of 3x3 mode covariance. Computed internally if NULL.
+   @param[in] amp Amplitude weighting. NULL for uniform.
+   @param[in] opd OPD on loc.
+*/
 void loc_calc_ptt(real *rmsout, real *coeffout,
 	const loc_t *loc, const real ipcc,
 	const dmat *imcc, const real *amp, const real *opd){
@@ -745,6 +878,12 @@ void loc_calc_ptt(real *rmsout, real *coeffout,
    The mod is already orth-noramlized so that we have the following simple forms.
 
    coeffout is in unit of zernike!
+
+   @param[out] rmsout Residual variance after removing the first imod+1 modes, one per mode.
+   @param[out] coeffout Mode coefficients. Skipped if NULL.
+   @param[in] mod Orthonormal modes, nloc*nmod.
+   @param[in] amp Amplitude weighting. Must not be NULL.
+   @param[in] opd OPD on loc.
 */
 void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod, const real* amp, real* opd){
 	if(!mod||!opd||!amp) return;
@@ -774,6 +913,10 @@ void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod, const real* amp
 
 /**
    Subtract Piston/Tip/Tilt (in radian) from OPD
+
+   @param[in,out] opd OPD on loc.
+   @param[in] ptt Piston, tip, and tilt coefficients.
+   @param[in] loc The loc.
 */
 void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
@@ -784,7 +927,12 @@ void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	loc_add_ptt(opd, ptt1, loc);
 }
 /**
-   Add Piston/Tip/Tilt from OPD
+   Add Piston/Tip/Tilt to OPD
+
+   @param[in,out] opd OPD on loc.
+   @param[in] stride Stride between consecutive OPD elements.
+   @param[in] ptt Piston, tip, and tilt coefficients.
+   @param[in] loc The loc.
 */
 void loc_add_ptt_stride(real *opd, long stride, const real *ptt, const loc_t *loc){
 	if(!opd||!ptt||!loc) return;
@@ -797,7 +945,11 @@ void loc_add_ptt_stride(real *opd, long stride, const real *ptt, const loc_t *lo
 	}
 }
 /**
-   Add Piston/Tip/Tilt from OPD
+   Add Piston/Tip/Tilt to OPD
+
+   @param[in,out] opd OPD on loc.
+   @param[in] ptt Piston, tip, and tilt coefficients.
+   @param[in] loc The loc.
 */
 void loc_add_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 	if(!opd||!ptt||!loc) return;
@@ -815,9 +967,15 @@ OMP_TASK_FOR(4)
 	}*/
 }
 /**
- * Project piston/tip/tilt from opd which may have multiple independent columns.
- * If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side.
- * */
+   Project piston/tip/tilt from opd which may have multiple independent columns.
+   If cov is set, opd should be symmetric (covariance) and ptt is removed from left and right side.
+
+   @param[in,out] opd OPD with nloc rows. Modified in place.
+   @param[in] loc The loc.
+   @param[in] amp Amplitude weighting. NULL for uniform.
+   @param[in] imcc Inverse of 3x3 mode covariance. Computed internally if NULL.
+   @param[in] cov Also remove from the rows, treating opd as a covariance matrix.
+*/
 void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, const dmat *imcc, int cov){
 	if(NX(opd)!=loc->nloc){
 		error("loc_remove_ptt: opd should have rows equal to loc->nloc and amplitude map size.\n");
@@ -849,8 +1007,13 @@ void loc_remove_ptt(dmat *opd, const loc_t *loc, const real *amp, const dmat *im
 }
 
 /**
- * Remove focus mode from gradients. Do not consider noise weighting
- * */
+   Remove focus mode from gradients. Do not consider noise weighting
+
+   @param[in,out] grad Gradients (all x then all y) on saloc. Focus is removed if factor is not 0.
+   @param[in] saloc Subaperture locations.
+   @param[in] factor Fraction of focus to remove. 0 to only estimate.
+   @return Focus coefficient a of a*(x^2+y^2) estimated from the input gradients.
+*/
 real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor){
 	const dmat *mode=saloc->dmat;
 	real d1=dvecdot(P(mode), P(grad), NULL, PN(grad));
@@ -915,6 +1078,8 @@ void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc, const real* amp,
 }
 /**
    Gather information about the starting of each column in loc.
+
+   @param[in,out] loc The loc. Its stat is allocated and filled.
 */
 void loc_create_stat_do(loc_t* loc){
 	if(!loc) return;
@@ -971,7 +1136,16 @@ void loc_create_stat_do(loc_t* loc){
 }
 /**
    Add a gray pixel circular map in phi using coordinates defined in loc, center
-   defined using cx, cy, radius of r, and value of val */
+   defined using cx, cy, radius of r, and value of val
+
+   @param[in,out] phi Values on loc to add to.
+   @param[in] loc The loc.
+   @param[in] cx Center along x (m).
+   @param[in] cy Center along y (m).
+   @param[in] r Outer radius (m).
+   @param[in] rin Inner radius (m). The inner circle is subtracted if >0.
+   @param[in] val Value to add inside the annulus.
+*/
 void loc_circle_add(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val){
 	if(!phi||!loc || PN(phi)!=loc->nloc){
 		warning("Invalid usage: requires phi, loc and compatible dimension.\n");
@@ -1019,6 +1193,14 @@ void loc_circle_add(dmat* phi, const loc_t* loc, real cx, real cy, real r, real 
 }
 /**
    Apply an annular mask in phi.
+
+   @param[in,out] phi Values on loc multiplied by the mask.
+   @param[in] loc The loc.
+   @param[in] cx Center along x (m).
+   @param[in] cy Center along y (m).
+   @param[in] r Outer radius (m).
+   @param[in] rin Inner radius (m).
+   @param[in] val Value of the mask inside the annulus.
 */
 void loc_circle_mul(dmat* phi, const loc_t* loc, real cx, real cy, real r, real rin, real val){
 	dmat *mask=dnew(loc->nloc,1);
@@ -1028,9 +1210,17 @@ void loc_circle_mul(dmat* phi, const loc_t* loc, real cx, real cy, real r, real 
 }
 /**
    Create a gray pixel elliptical map in phi using coordinates defined in loc,
-   center defined using cx, cy, radii of rx, ry, and value of val */
-void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy,
-	real rx, real ry, real val){
+   center defined using cx, cy, radii of rx, ry, and value of val
+
+   @param[in,out] phi Values on loc to add to.
+   @param[in] loc The loc.
+   @param[in] cx Center along x (m).
+   @param[in] cy Center along y (m).
+   @param[in] rx Radius along x (m).
+   @param[in] ry Radius along y (m).
+   @param[in] val Value to add inside the ellipse.
+*/
+void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy, real rx, real ry, real val){
 	if(!phi||!loc) return;
 /*cx,cy,r are in unit of true unit, as in loc */
 	real dx=loc->dx;
@@ -1167,7 +1357,13 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 }
 /**
    Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using
-   a dspcell, to compute the coupling which is modified accordingly.  */
+   a dspcell, to compute the coupling which is modified accordingly.
+
+   @param[in,out] loc The loc. Reduced in place.
+   @param[in,out] spc Sparse matrices. The dimension along loc is reduced in place.
+   @param[in] dim 1: loc is along rows of spc. 2: loc is along columns of spc.
+   @param[in] cont See loc_reduce().
+*/
 void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 	if(!loc||!spc) return;
 	long nloc=loc->nloc;
@@ -1225,7 +1421,13 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 
 /**
    Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20.  use single sparse
-   matrix, which is modified accordingly.  */
+   matrix, which is modified accordingly.
+
+   @param[in,out] loc The loc. Reduced in place.
+   @param[in,out] sp Sparse matrix. The dimension along loc is reduced in place.
+   @param[in] dim 1: loc is along rows of sp. 2: loc is along columns of sp.
+   @param[in] cont See loc_reduce().
+*/
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 	if(!loc||!sp) return;
 	long nloc=loc->nloc;
@@ -1266,6 +1468,12 @@ void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 /**
    Add val amount of focus to opd. The unit is in radian like.
    Piston is removed. The focus is centered at ox, oy
+
+   @param[in,out] opd OPD on loc. Modified in place despite const.
+   @param[in] loc The loc.
+   @param[in] val Coefficient a of focus a*(x^2+y^2).
+   @param[in] ox Center along x (m).
+   @param[in] oy Center along y (m).
 */
 void loc_add_focus_offset(const dmat* opd, const loc_t* loc, const real val, const real ox, const real oy){
 	if(!opd||!loc||!val) return;
@@ -1288,11 +1496,23 @@ void loc_add_focus_offset(const dmat* opd, const loc_t* loc, const real val, con
 		P(opd,iloc)+=piston;
 	}
 }
+/**
+   Add val amount of focus (radian like unit) centered at the origin to opd.
+   Piston is removed. See loc_add_focus_offset().
+
+   @param[in,out] opd OPD on loc. Modified in place despite const.
+   @param[in] loc The loc.
+   @param[in] val Coefficient a of focus a*(x^2+y^2).
+*/
 void loc_add_focus(const dmat* opd, const loc_t* loc, const real val){
 	loc_add_focus_offset(opd, loc, val, 0, 0);
 }
 /**
    Create a dmat containing locx and locy in two columns
+
+   @param[in] loc The loc.
+   @param[in] piston Prepend a column of 1 for piston.
+   @return Newly allocated nloc*2 (or nloc*3 with piston) matrix; the caller frees it. NULL if loc is NULL.
 */
 dmat* loc2mat(loc_t* loc, int piston){
 	if(!loc) return NULL;
@@ -1316,6 +1536,9 @@ dmat* loc2mat(loc_t* loc, int piston){
 /**
    Convert pts_t to loc_t. Each entry in pts recors the lower
    left point in each subaperture.
+
+   @param[in] pts The subaperture points.
+   @return Newly allocated loc of all points in all subapertures; the caller frees it with locfree(). NULL if pts is NULL.
 */
 loc_t* pts2loc(pts_t* pts){
 	if(!pts) return NULL;
@@ -1345,6 +1568,9 @@ loc_t* pts2loc(pts_t* pts){
 
 /**
    Rotate the coordinate by theta (radian) CCW which is equivalent to rotate the points by theta -CCW.
+
+   @param[in,out] loc The loc rotated in place.
+   @param[in] theta Rotation angle (radian).
 */
 void locrot(loc_t* loc, const real theta){
 	if(!loc||!theta) return;
@@ -1361,7 +1587,11 @@ void locrot(loc_t* loc, const real theta){
 }
 /**
    Determine the angle of rotation from loc1 to loc2. CCW is positive.
- */
+
+   @param[in] loc1 The first loc.
+   @param[in] loc2 The second loc with the same number of points as loc1.
+   @return Rotation angle (radian); 0 if either is NULL.
+*/
 real loc_angle(const loc_t* loc1, const loc_t* loc2){
 	if(!loc1||!loc2) return 0;
 	real mx1, mx2, my1, my2;
@@ -1387,6 +1617,10 @@ real loc_angle(const loc_t* loc1, const loc_t* loc2){
 }
 /**
    Stretch the coordinate by frac along theta (radian) CCW.
+
+   @param[in,out] loc The loc stretched in place.
+   @param[in] theta Direction of the stretch (radian).
+   @param[in] frac Stretch factor.
 */
 void locstretch(loc_t* loc, const real theta, const real frac){
 	if(!loc) return;
@@ -1398,7 +1632,11 @@ void locstretch(loc_t* loc, const real theta, const real frac){
 }
 
 /**
-   duplicate a loc_t object; */
+   duplicate a loc_t object; map and stat are not copied.
+
+   @param[in] loc The loc to copy.
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if loc is NULL.
+*/
 loc_t* locdup(loc_t* loc){
 	if(!loc) return NULL;
 	loc_t* res=locnew(loc->nloc, loc->dx, loc->dy);
@@ -1411,7 +1649,12 @@ loc_t* locdup(loc_t* loc){
 	return res;
 }
 /**
-   Compute average of locx, locy*/
+   Compute average of locx, locy
+
+   @param[out] xm Average of locx.
+   @param[out] ym Average of locy.
+   @param[in] loc The loc.
+*/
 void locmean(real* xm, real* ym, const loc_t* loc){
 	if(!xm||!ym||!loc) return;
 	real x=0, y=0;
@@ -1424,7 +1667,11 @@ void locmean(real* xm, real* ym, const loc_t* loc){
 }
 
 /**
-Parse string representation of polynominal to array representation.*/
+   Parse string representation of polynominal to array representation.
+
+   @param[in] _ps Polynomial string in x and y, such as "0.1+x+0.2*x^2*y".
+   @return Newly allocated 3*n matrix with coefficient, power of x, and power of y for each term; the caller frees it. NULL if _ps is NULL or cannot be parsed.
+*/
 dmat* parse_poly(const char* _ps){
 	if(!_ps) return NULL;
 	if(strchr(_ps, ';')){
@@ -1509,6 +1756,14 @@ fail:
 	return NULL;
 
 }
+/**
+   Transform coordinate with polynomial coefficients for x and y.
+
+   @param[in] loc Input loc.
+   @param[in] cx 3*n matrix of coefficient, power of x, and power of y for the new x.
+   @param[in] cy 3*n matrix of coefficient, power of x, and power of y for the new y.
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if any input is NULL.
+*/
 static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
 	if(!loc||!cx||!cy) return NULL;
 	loc_t* locm=locnew(loc->nloc, loc->dx, loc->dy);
@@ -1567,10 +1822,12 @@ static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
 }
 /**
    Transform coordinate with coefficients. See loctransform()
- */
-loc_t* loctransform2(const loc_t* loc, /**<Input loc_t*/
-					const dmat* coeff /**<n*4 matrix*/
-					){
+
+   @param[in] loc Input loc_t.
+   @param[in] coeff n*4 matrix with columns power of x, power of y, coefficient for new x, and coefficient for new y.
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if any input is NULL.
+*/
+loc_t* loctransform2(const loc_t* loc, const dmat* coeff){
 	if(!loc||!coeff) return NULL;
 	dmat* cx=dnew(3, coeff->nx);
 	dmat* cy=dnew(3, coeff->nx);
@@ -1609,9 +1866,12 @@ static int is_dmat_id(const char *p){
    ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
    \f]
    was using string input. New scheme uses bin files to preserve precision.
+
+   @param[in] loc Input loc.
+   @param[in] polycoeff Either a .bin file name of n*4 coefficients, a dmat cast to char*, or a string "polyx;polyy" (see parse_poly()).
+   @return Newly allocated loc; the caller frees it with locfree(). NULL if any input is NULL.
 */
-loc_t* loctransform(const loc_t* loc,
-	const char* polycoeff){
+loc_t* loctransform(const loc_t* loc, const char* polycoeff){
 	if(!loc||!polycoeff) return NULL;
 	/*Test whether the transform is pure shift. */
 	//Parse from string to 3xn array
@@ -1666,6 +1926,10 @@ loc_t* loctransform(const loc_t* loc,
 
 /**
    Shift a loc coordinate by sx and sy.
+
+   @param[in,out] loc The loc shifted in place.
+   @param[in] sx Shift along x (m).
+   @param[in] sy Shift along y (m).
 */
 void locshift(loc_t* loc, real sx, real sy){
 	if(!loc || (!sx && !sy)) return;
@@ -1677,6 +1941,10 @@ void locshift(loc_t* loc, real sx, real sy){
 /**
    Compute the size of a map that is used to build loc or can fully contain loc
    (embed)
+
+   @param[out] nx Size along x.
+   @param[out] ny Size along y.
+   @param[in] loc The loc.
 */
 void loc_nxny(long* nx, long* ny, const loc_t* loc){
 	if(!loc) return;
@@ -1687,7 +1955,10 @@ void loc_nxny(long* nx, long* ny, const loc_t* loc){
 	*ny=(long)round((ymax-ymin)/loc->dy)+1;
 }
 /**
-   Resize a loc_t by shrinking.
+   Resize a loc_t by shrinking. map and stat are freed.
+
+   @param[in,out] loc The loc resized in place.
+   @param[in] nloc New number of points.
 */
 void locresize(loc_t* loc, long nloc){
 	if(!loc || loc->nloc==nloc) return;
@@ -1786,6 +2057,8 @@ LOC_EMBED_DEF(AOS_CMAT, comp, real, OPX)
 
 /**
    Determine dx and dy from data.
+
+   @param[in,out] out The loc. dx and dy are set from data if not set or disagree with data.
 */
 void loc_dxdy(loc_t* out){
 	if(!out) return;
@@ -1817,6 +2090,12 @@ void loc_dxdy(loc_t* out){
 	}
 }
 
+/**
+   Generate the keywords string (dx, dy, ht, iac, dratio, aoi) of loc_t for
+   saving to file. Used as the make_keywords callback of loc_t.
+
+   @param[in,out] p The loc_t (as cell) whose keywords are regenerated. Ignored if not a loc_t.
+*/
 void loc_keywords(cell *p){
 	if(!p) return;
 	if(p->id==M_LOC){
@@ -1831,10 +2110,12 @@ void loc_keywords(cell *p){
 /**
    Parse the input dead actuator location to actuator indices based on aloc.
    2015-03-30: build a mask for dead actuators based on coordinate.
+
+   @param[in] aloc Actuator locations. Its map is created if not yet.
+   @param[in,out] dead n*2 or n*3 matrix containing dead actuator coordinates (m) and optionally the stuck value (m). A row vector is reshaped in place.
+   @return Newly allocated nloc vector; nonzero marks a dead actuator with value 1 or the stuck value in nm. The caller frees it.
 */
-lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
-	dmat* dead /**<[in] n*2 or n*3 matrix containing dead actuators*/
-){
+lmat* loc_coord2ind(loc_t* aloc, dmat* dead){
 	if(NY(dead)==1 && NX(dead)>1){
 		dead->ny=dead->nx;
 		dead->nx=1;

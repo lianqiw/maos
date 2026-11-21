@@ -43,6 +43,11 @@ static void print_usage(int junk){
 	);
 	exit(0);
 }
+/**
+   Free arg_s pointed to by parg and its strings.
+
+   @param[in] parg Pointer to the arg_s to free. *parg is not reset to NULL.
+*/
 void free_arg(arg_s** parg){
 	if(!parg) return;
 	arg_s *arg=*parg;
@@ -52,7 +57,12 @@ void free_arg(arg_s** parg){
 	free(arg);
 }
 /**
-   Parse command line arguments argc, argv
+   Parse command line arguments, create and chdir into the output directory.
+   May launch through the scheduler and exit.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return Parsed arguments. Newly allocated; free with free_arg().
  */
 arg_s* parse_args(int argc, const char* argv[]){
 	arg_s* arg=mycalloc(1, arg_s);
@@ -111,12 +121,17 @@ arg_s* parse_args(int argc, const char* argv[]){
 }
 /**
    Rename the log files when simulation exits.
+
+   @param[in] sig Signal number that caused the exit, or 0 for normal exit.
  */
 void skyc_final(int sig){
 	rename_log(sig, "skyc");
 }
 /**
    Handles signals.
+
+   @param[in] sig Signal number caught.
+   @return Always 0.
  */
 int skyc_signal_handler(int sig){
 	info("skyc: %s", strsignal(sig));

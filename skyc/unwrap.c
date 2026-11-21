@@ -20,8 +20,14 @@
 */
 #include "skyc.h"
 
+/**
+   Create phase unwrap operator that reconstructs phase from the wrapped phase differences.
+
+   @param[in] nx Number of points along x.
+   @param[in] ny Number of points along y.
+   @return Unwrap operator of size (nx*ny) x (2*nx*ny). Newly allocated; the caller frees it.
+*/
 static dmat* gen_unwrap(long nx, long ny){
-	/*Create phase unwrap operator */
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "%s/.aos/unwrap_%ld_%ld.bin", HOME, nx, ny);
 	/*if(exist(fn)){ */
@@ -115,12 +121,18 @@ static dmat* gen_unwrap(long nx, long ny){
 	return out;
 }
 
+/**
+   Do the actual unwrapping. We do not check the
+   dimensions. The caller must make sure the matrices
+   agree.
+
+   @param[out] phi Log of the wavefront: real part is log amplitude, imaginary part is unwrapped phase.
+   @param[in] wvf Complex wavefront (npsf x npsf).
+   @param[in] unwrap Unwrap operator from gen_unwrap().
+   @param[out] diff Work array for wrapped phase differences (2*npsf x npsf).
+   @param[out] phirecon Work array for the reconstructed phase (npsf x npsf).
+*/
 static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phirecon){
-	/*
-	  Do the actual unwrapping. We do not check the
-	  dimension.s The Caller must make sure the matrices
-	  agree
-	 */
 	int npsf=wvf->nx;
 	cmat* pwvf=wvf;
 	dmat* pdiff=diff;
@@ -145,6 +157,11 @@ static void do_unwrap(cmat* phi, cmat* wvf, dmat* unwrap, dmat* diff, dmat* phir
 	/*toc2("assign"); */
 }
 
+/**
+   Convert saved wavefront of a+bi to log(a+bi) for interpolation. Disabled: returns immediately.
+
+   @param[in,out] data Shared data. The case counter icase is advanced atomically.
+*/
 static void convert_wvf(GENPISTAT_S* data){
 	const parms_s* parms=data->parms;
 	/*powfs_s *powfs=data->powfs; */

@@ -54,6 +54,7 @@ static drawdata_t* drawdata_dialog=NULL;
 static GtkRcStyle* btn_rcstyle=NULL;
 #endif
 PangoFontDescription* desc=NULL;
+/**Spaces reserved for title, label, etc*/
 int desc_font_size=0;
 static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *child, guint n, GtkWidget *topnb);
 int font_name_version=0;
@@ -63,8 +64,10 @@ char **pfilename_gif=NULL;
 float font_size;
 //cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 //cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
-float lpf=1;//low pass filter the update. Set using dialog.
-int window_proportional=1;//resize window proportionally
+/**low pass filter the update. Set using dialog.*/
+float lpf=1;
+/**resize window proportionally*/
+int window_proportional=1;
 /*
   Routines in this file are about the GUI.
 */
@@ -110,6 +113,12 @@ static const char* rc_string_notebook={
 
 #endif
 
+/**
+   Get the top level notebook of a window.
+
+   @param[in] window The window.
+   @return The top level notebook. Owned by the window.
+*/
 static GtkWidget *get_topnb(GtkWidget *window){
 #if USE_TITLEBAR==0
 	GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
@@ -127,6 +136,12 @@ static GtkWidget *get_topnb(GtkWidget *window){
 #endif
 	return topnb;
 }
+/**
+   Get the toolbar (or header bar) of a window.
+
+   @param[in] window The window.
+   @return The toolbar. Owned by the window.
+*/
 static GtkWidget *get_toolbar(GtkWidget *window){
 #if USE_TITLEBAR==0
 	GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
@@ -143,11 +158,23 @@ static GtkWidget *get_toolbar(GtkWidget *window){
 	return toolbar;
 }
 
+/**
+   Get the tab label text of a page in the top level notebook.
+
+   @param[in] topnb The top level notebook.
+   @param[in] subnb The page (sub notebook).
+   @return The label text. Owned by the label; do not free.
+*/
 static const char *topnb_label_get(GtkWidget *topnb, GtkWidget *subnb){
 	GtkWidget *label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(topnb), subnb);
 	return gtk_label_get_text(GTK_LABEL(label));
 }
 
+/**
+   Make window the current window and update the cached menu items and top level notebook.
+
+   @param[in] window The window that becomes current.
+*/
 static void window_changed(GtkWidget* window){
 	//info("window_changed: %p\n", window);
 	curwindow=window;
@@ -156,7 +183,12 @@ static void window_changed(GtkWidget* window){
 	cur_menu_zlog=(GtkWidget*)g_object_get_data(G_OBJECT(window), "menu_zlog");
 	curtopnb=get_topnb(window);
 }
-/*Get the current page for notebook*/
+/**
+   Get the current page for notebook
+
+   @param[in] notebook The notebook.
+   @return The current page, or NULL if notebook is NULL or has no pages.
+*/
 static GtkWidget* get_current_page(GtkWidget* notebook){
 	if(!notebook){
 		dbg_time("notebook is null\n");
@@ -165,6 +197,11 @@ static GtkWidget* get_current_page(GtkWidget* notebook){
 	int n=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
 	return gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), n);
 }
+/**
+   Get the drawdata of the current page of the current window.
+
+   @return The drawdata, or NULL if there is none.
+*/
 static drawdata_t* get_current_drawdata(void){
 	if(!curtopnb) {
 		dbg_time("curtopnb is null\n");
@@ -178,7 +215,12 @@ static drawdata_t* get_current_drawdata(void){
 }
 
 /**
- * Move a tab from one notebook topnb to another one topnb2
+   Move a tab from one notebook topnb to another one topnb2, inserted in
+   alphabetical order of the label.
+
+   @param[in,out] topnb The source top level notebook.
+   @param[in] ipage Index of the page to move.
+   @param[in,out] topnb2 The destination top level notebook.
 */
 static void move_tab_page(GtkWidget* topnb, int ipage, GtkWidget* topnb2){
 	GtkWidget *page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), ipage);
@@ -206,6 +248,13 @@ static void move_tab_page(GtkWidget* topnb, int ipage, GtkWidget* topnb2){
 	g_object_unref(label);
 }
 
+/**
+   Callback of the detach button. Moves the current page of the top level
+   notebook to a new window if there is more than one page.
+
+   @param[in] btn Unused.
+   @param[in] data The top level notebook.
+*/
 static void topnb_detach_btn(GtkWidget *btn, gpointer data){
 	GtkWidget *topnb=GTK_WIDGET(data);
 	(void)btn;
@@ -221,6 +270,9 @@ static void topnb_detach_btn(GtkWidget *btn, gpointer data){
 		move_tab_page(topnb, n, topnb2);
 	}
 }
+/**
+   Update the state of the cumu, icumu, and zlog menu items from the drawdata of the current page.
+*/
 static void update_toolbar(){//always use current page
 	drawdata_t *drawdata=get_current_drawdata();
 	if(!drawdata) return;
@@ -238,6 +290,14 @@ static void update_toolbar(){//always use current page
 		gtk_widget_set_sensitive(cur_menu_zlog, drawdata->p?TRUE:FALSE);
 	}
 }
+/**
+   Idle callback that combines the png frames saved in the folder
+   *pfilename_gif into an animated gif using ImageMagick convert (run in the
+   background), then frees and clears the folder name.
+
+   @param[in] data Unused.
+   @return FALSE to run once.
+*/
 gboolean finalize_gif(void*data){
 	(void)data;
 	if(pfilename_gif && *pfilename_gif){
@@ -259,8 +319,11 @@ gboolean finalize_gif(void*data){
 	}
 	return FALSE;
 }
-/*
-	drawdaemon_draw draws to pixmap2 and then to pixmap to avoid flickering
+/**
+   Recreate the pixmap if the drawing area size changed, and call cairo_draw()
+   to render drawdata to it if there is data.
+
+   @param[in,out] drawdata The drawdata.
 */
 static void update_pixmap(drawdata_t* drawdata){
 	if(!drawdata) return;
@@ -309,9 +372,12 @@ static void update_pixmap(drawdata_t* drawdata){
 		//dbg_time("hasdata=0\n");
 	}
 }
-/// @brief called by drawdaemon_draw to refresh the widget
-/// @param drawdata 
-/// @return FALSE to run only once
+/**
+   called by drawdaemon_draw to refresh the widget
+
+   @param[in] drawarea The drawing area. May be NULL.
+   @return FALSE to run only once
+*/
 gboolean drawarea_refresh(GtkWidget *drawarea){
 	if(drawarea){
 		gtk_widget_queue_draw(drawarea);
@@ -321,6 +387,16 @@ gboolean drawarea_refresh(GtkWidget *drawarea){
 
 
 #if  GTK_MAJOR_VERSION>=4
+/**
+   Handler of the resize signal of the drawing area. Records the new size and
+   redraws.
+
+   @param[in] widget Unused.
+   @param[in] width New width.
+   @param[in] height New height.
+   @param[in,out] drawdata The drawdata of the drawing area.
+   @return FALSE.
+*/
 static gboolean
 on_resize_event(GtkDrawingArea* widget, int width, int height, drawdata_t *drawdata){
 	(void)widget;
@@ -337,9 +413,15 @@ on_resize_event(GtkDrawingArea* widget, int width, int height, drawdata_t *drawd
 	return FALSE;
 }
 #else
-/*
-   Expose event happens when the widget is first configured and whenever it is
-   resized.  Create a new backup pixmap of the appropriate size and draw there.*/
+/**
+   Configure event happens when the widget is first configured and whenever it is
+   resized.  Create a new backup pixmap of the appropriate size and draw there.
+
+   @param[in] widget Unused.
+   @param[in] event The configure event with the new size.
+   @param[in,out] drawdata The drawdata of the drawing area.
+   @return FALSE.
+*/
 static gboolean
 on_configure_event(GtkWidget* widget, GdkEventConfigure* event, drawdata_t *drawdata){
 	(void)event;
@@ -355,6 +437,19 @@ on_configure_event(GtkWidget* widget, GdkEventConfigure* event, drawdata_t *draw
 }
 #endif
 #if GTK_MAJOR_VERSION>=4
+/**
+   Draw function of the drawing area (GTK4; GTK3 and GTK2 use the "draw" or
+   "expose-event" handler of the same body). Paints the rendered pixmap of drawdata
+   pdata, overlays the zoom selection rectangle when active, and queues a
+   re-render if the font, data, or cumulative setting changed. Records the new
+   widget size.
+
+   @param[in] widget Unused.
+   @param[in,out] cr Cairo context to draw to.
+   @param[in] width Widget width.
+   @param[in] height Widget height.
+   @param[in,out] pdata The drawdata.
+*/
 void drawarea_draw_func(GtkDrawingArea *widget, cairo_t *cr, int width, int height, gpointer pdata){
 	(void)widget; (void)width; (void)height;
 	drawdata_t *drawdata=(drawdata_t *)pdata;
@@ -362,10 +457,28 @@ void drawarea_draw_func(GtkDrawingArea *widget, cairo_t *cr, int width, int heig
 	drawdata->width=width;
 	drawdata->height=height;
 #elif GTK_MAJOR_VERSION>=3
+/**
+   Handler of the draw signal of the drawing area (GTK3). Paints the rendered
+   pixmap of drawdata and queues a re-render if needed.
+
+   @param[in] widget Unused.
+   @param[in,out] cr Cairo context to draw to.
+   @param[in,out] pdata The drawdata.
+   @return FALSE.
+*/
 static gboolean on_draw_event(GtkWidget* widget, cairo_t* cr, gpointer pdata){
 	drawdata_t *drawdata=(drawdata_t *)pdata;
 	(void)widget;
 #else
+/**
+   Handler of the expose-event signal of the drawing area (GTK2). Paints the
+   rendered pixmap of drawdata and queues a re-render if needed.
+
+   @param[in] widget The drawing area.
+   @param[in] event Unused.
+   @param[in,out] pdata The drawdata.
+   @return FALSE.
+*/
 static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer pdata){
 	(void) event;
 	drawdata_t *drawdata=(drawdata_t *)pdata;
@@ -405,7 +518,10 @@ static gboolean on_expose_event(GtkWidget*widget, GdkEventExpose*event, gpointer
 }
 
 /**
-   Delete a figure page.
+   Delete a figure page. Marks drawdata for recycling and removes its page from the notebook.
+
+   @param[in,out] drawdata The drawdata of the page.
+   @return 0, so it runs once when called through g_idle_add().
 */
 int delete_page(drawdata_t *drawdata){
 	//dbg_time("deleting page: for %p\n",drawdata);
@@ -428,6 +544,12 @@ int delete_page(drawdata_t *drawdata){
 	}
 	return 0;
 }
+/**
+   Destroy notifier of the "drawdata" object data attached to the drawing area.
+   Frees the cairo surfaces of drawdata and marks it for recycling (recycle=2).
+
+   @param[in,out] data The drawdata.
+*/
 void drawarea_deleted(gpointer data){
 	drawdata_t *drawdata=(drawdata_t*)data;
 	if(drawdata){
@@ -453,6 +575,13 @@ void drawarea_deleted(gpointer data){
 		info_time("drawdata is null\n");
 	}
 }
+/**
+   Set the title of window (the current window if NULL) to the client executable
+   name, host, PID, and path.
+
+   @param[in] window The window. If NULL, uses the current window.
+   @return FALSE so it runs once when called through g_idle_add().
+*/
 gboolean update_title(gpointer window){
 	if(!window) window=curwindow;
 	if(!window || !GTK_IS_WINDOW(window)) return FALSE;//deleted
@@ -471,6 +600,13 @@ gboolean update_title(gpointer window){
 	//return client_pid<0?FALSE:TRUE;//returns true to run repeatedly.
 	return FALSE;//when called by g_idle_add, must return FALSE;
 }
+/**
+   Create a tab label with text and a close button that deletes the page.
+
+   @param[in] str Label text.
+   @param[in] drawdata The drawdata of the page, passed to delete_page() by the close button.
+   @return The new label widget.
+*/
 static GtkWidget* subnb_label_new(const gchar *str, drawdata_t *drawdata){
 	GtkWidget* out;
 	out=gtk_hbox_new(FALSE, 0);
@@ -518,7 +654,13 @@ static GtkWidget* subnb_label_new(const gchar *str, drawdata_t *drawdata){
 #endif
 	return out;
 }
-/*Get the label of itab'th child of notebook subnb*/
+/**
+   Get the label text of a page of notebook subnb
+
+   @param[in] subnb The notebook.
+   @param[in] page The page.
+   @return The label text. Owned by the label; do not free.
+*/
 static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 	GtkWidget* label=gtk_notebook_get_tab_label(GTK_NOTEBOOK(subnb), page);
 #if GTK_MAJOR_VERSION>=4
@@ -530,6 +672,13 @@ static const char* subnb_label_get(GtkWidget* subnb, GtkWidget* page){
 	return text;
 #endif
 }
+/**
+   Move (pan) the plot and redraw.
+
+   @param[in,out] drawdata The drawdata.
+   @param[in] xdiff Displacement along x in pixels.
+   @param[in] ydiff Displacement along y in pixels (positive is up).
+*/
 static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	//dbg_time("do_move: %g %g\n", xdiff, ydiff);
 	drawdata->offx+=xdiff;
@@ -537,10 +686,31 @@ static void do_move(drawdata_t* drawdata, float xdiff, float ydiff){
 	update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 #if GTK_MAJOR_VERSION>=4
+/**
+   Handler of drag-update of the drag gesture (GTK4). Moves the legend box or
+   the plot with the left button, or draws the zoom selection rectangle with
+   the right button.
+
+   @param[in] drag The drag gesture.
+   @param[in] dx Displacement along x from the drag start.
+   @param[in] dy Displacement along y from the drag start.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_drag_update(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t *drawdata){
 	gint button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(drag));
 	//dbg_time("drag_update at %g %g\n", dx, dy);
 #else
+/**
+   Handler of the motion-notify-event (GTK2/3). Moves the legend box or the
+   plot with the left button, or draws the zoom selection rectangle with the
+   right button. Also updates the cursor tooltip with the coordinate.
+
+   @param[in] widget Unused.
+   @param[in] event The motion event.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
@@ -587,6 +757,15 @@ static gboolean drawarea_motion_notify(GtkWidget* widget, GdkEventMotion* event,
 #if GTK_MAJOR_VERSION>=4 //a separate controller for cursor motion
 	return FALSE;
 }
+/**
+   Handler of cursor motion (GTK4). Updates the tooltip with the coordinate
+   (and the pixel value for images) under the cursor.
+
+   @param[in] self Unused.
+   @param[in] x Cursor x coordinate in the widget.
+   @param[in] y Cursor y coordinate in the widget.
+   @param[in,out] drawdata The drawdata.
+*/
 static void drawarea_motion_event(GtkEventControllerMotion *self, gdouble x, gdouble y, drawdata_t *drawdata){
 	(void)self;
 #endif
@@ -637,6 +816,14 @@ static void drawarea_motion_event(GtkEventControllerMotion *self, gdouble x, gdo
 #endif
 }
 
+/**
+   Zoom the plot while preserving the visual point at (xdiff, ydiff) from the center, and redraw.
+
+   @param[in,out] drawdata The drawdata. Ignored if NULL.
+   @param[in] xdiff Horizontal offset in pixels of the zoom center from the plot center.
+   @param[in] ydiff Vertical offset in pixels of the zoom center from the plot center (positive is up).
+   @param[in] mode 1: zoom in by 1.2, -1: zoom out by 1.2, 0: reset zoom and offset.
+*/
 static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	if(!drawdata) return;
 	float old_zoomx=drawdata->zoomx;
@@ -673,6 +860,15 @@ static void do_zoom(drawdata_t* drawdata, float xdiff, float ydiff, int mode){
 	update_pixmap(drawdata);
 }
 #if GTK_MAJOR_VERSION>=4
+/**
+   Handler of the scroll controller (GTK4). Zooms around the last button down location.
+
+   @param[in] scroll The scroll controller.
+   @param[in] dx Horizontal scroll delta.
+   @param[in] dy Vertical scroll delta.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble dx, gdouble dy, drawdata_t *drawdata){
 	GdkEvent *event=gtk_event_controller_get_current_event(GTK_EVENT_CONTROLLER(scroll));
 	double x=drawdata->mxdown;
@@ -684,6 +880,15 @@ static gboolean drawarea_scroll_event(GtkEventControllerScroll *scroll, gdouble 
 	int zoom_dir=delta<0?1:-1;//scroll up (negative delta) zooms in, same as GTK3.
 	//info("dx=%g, dy=%g, x=%g, y=%g\n", dx, dy, x, y);
 #else
+/**
+   Handler of the scroll-event (GTK2/3). Zooms in when scrolling up and out
+   otherwise, around the cursor location.
+
+   @param[in] widget Unused.
+   @param[in] event The scroll event.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, drawdata_t* drawdata){
 	(void)widget;
 	double x=event->x;
@@ -721,6 +926,14 @@ static gboolean drawarea_scroll_event(GtkWidget* widget, GdkEventScroll* event, 
 }
 
 #if GTK_MAJOR_VERSION<4
+/**
+   Handler of the focus-in-event. Resets the mouse region.
+
+   @param[in] widget Unused.
+   @param[in] event Unused.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t* drawdata){
 	(void)event;
 	(void)widget;
@@ -729,12 +942,31 @@ static gboolean focus_in_handler(GtkWidget* widget, GdkEvent* event, drawdata_t*
 	return FALSE;
 }
 
+/**
+   Handler of the button-press-event (GTK2/3). Grabs focus and records the
+   region (legend box or plot) and location of the button press.
+
+   @param[in] widget The drawing area.
+   @param[in] event The button event.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_button_press(GtkWidget* widget, GdkEventButton* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
 	/*Grab focus so the keys work */
 	if(!GTK_WIDGET_HAS_FOCUS(widget)) gtk_widget_grab_focus(widget);
 #else
+/**
+   Handler of drag-begin of the drag gesture (GTK4). Records the region
+   (legend box or plot) and location of the button press.
+
+   @param[in] self Unused.
+   @param[in] x x coordinate of the press.
+   @param[in] y y coordinate of the press.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, drawdata_t* drawdata){
 	(void)self;
 	//always triggered when mouse is clicked.
@@ -761,6 +993,16 @@ static gboolean drawarea_drag_begin(GtkGestureDrag*self, gdouble x, gdouble y, d
 }
 
 #if GTK_MAJOR_VERSION<4
+/**
+   Handler of the button-release-event (GTK2/3). Finishes a move with the left
+   button or zooms into the selected rectangle with the right button. Short or
+   small drags are ignored.
+
+   @param[in] widget Unused.
+   @param[in] event The button event.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_button_release(GtkWidget* widget, GdkEventButton* event, drawdata_t* drawdata){
 	gdouble x=event->x;
 	gdouble y=event->y;
@@ -769,6 +1011,17 @@ static gboolean drawarea_button_release(GtkWidget* widget, GdkEventButton* event
 	gint button=event->button;
 	(void)widget;
 #else
+/**
+   Handler of drag-end of the drag gesture (GTK4). Finishes a move with the
+   left button or zooms into the selected rectangle with the right button.
+   Short or small drags are ignored.
+
+   @param[in] drag The drag gesture.
+   @param[in] dx Displacement along x from the drag start.
+   @param[in] dy Displacement along y from the drag start.
+   @param[in,out] drawdata The drawdata.
+   @return FALSE.
+*/
 static gboolean drawarea_drag_end(GtkGestureDrag *drag, gdouble dx, gdouble dy, drawdata_t* drawdata){
 	gint button=gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(drag));
 	gdouble x=drawdata->mxdown+dx;
@@ -839,11 +1092,31 @@ static void switch_tab(int lr, int ud){
 	}
 }
 #if GTK_MAJOR_VERSION<4
+/**
+   Handler of the key-press-event (GTK2/3). Ctrl+arrow switches tabs; +/-/0/1
+   zooms; arrows move the plot.
+
+   @param[in] widget Unused.
+   @param[in] event The key event.
+   @param[in,out] drawdata The drawdata.
+   @return TRUE if the key is handled, FALSE otherwise.
+*/
 static gboolean drawarea_key_press(GtkWidget* widget, GdkEventKey* event, drawdata_t* drawdata){
 	(void)widget;
 	guint keyval=event->keyval;
 	guint state=event->state;
 #else
+/**
+   Handler of key-pressed of the key controller (GTK4). Ctrl+arrow switches
+   tabs; +/-/0/1 zooms; arrows move the plot.
+
+   @param[in] ec Unused.
+   @param[in] keyval The key value.
+   @param[in] keycode Unused.
+   @param[in] state The modifier state.
+   @param[in,out] drawdata The drawdata.
+   @return TRUE if the key is handled, FALSE otherwise.
+*/
 static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guint keycode, GdkModifierType state, drawdata_t*drawdata){
 	(void) ec; (void) keycode;
 	//info("drawarea_key_press with keyval %ud\n", keyval);
@@ -885,8 +1158,14 @@ static gboolean drawarea_key_press(GtkEventControllerKey *ec, guint keyval, guin
 	}
 	return TRUE;
 }
-//handles action when either top of sub label note book changed
-//-1 means current page
+/**
+   handles action when either top of sub label note book changed. Draws the
+   new page if needed, updates the toolbar, and notifies the client of the
+   current figure and page name.
+
+   @param[in] topn Page index of the top level notebook. -1 means current page.
+   @param[in] subn Page index of the sub notebook. -1 means current page.
+*/
 static void page_changed(int topn, int subn){
 	if(!curtopnb){
 		dbg_time("page_changed: curtopnb is NULL\n");
@@ -939,19 +1218,44 @@ static void page_changed(int topn, int subn){
 	//info("done\n");
 	io_time2=0;
 }
-/*These signal handlers are called before the notebook page switch is done.*/
+/**
+   These signal handlers are called before the notebook page switch is done.
+   Handler of switch-page of the top level notebook.
+
+   @param[in] topnb Unused.
+   @param[in] page Unused.
+   @param[in] n Index of the new page.
+   @param[in] toolbar Unused.
+*/
 static void topnb_page_switch(GtkNotebook* topnb, GtkWidget* page, guint n, GtkWidget* toolbar){
 	(void)topnb; (void)page; (void) toolbar;
 	//gtk_widget_set_sensitive(toolbar, TRUE);
 	//dbg_time("topnb_page_switch: %u\n", n);
 	page_changed(n, -1);
 }
+/**
+   Handler of switch-page of a sub notebook. Called before the switch is done.
+
+   @param[in] subnb Unused.
+   @param[in] page Unused.
+   @param[in] n Index of the new page.
+   @param[in] dummy Unused.
+*/
 static void subnb_page_switch(GtkNotebook* subnb, GtkWidget* page, guint n, gpointer dummy){
 	//dbg_time("subnb_page_switch: %u\n", n);
 	(void)subnb; (void)page;
 	(void)dummy;
 	page_changed(-1, n);
 }
+/**
+   Handler of page-removed of a sub notebook. Removes the sub notebook from the
+   top level notebook when it has no pages left.
+
+   @param[in] subnb The sub notebook.
+   @param[in] drawarea Unused.
+   @param[in] n Unused.
+   @param[in,out] topnb The top level notebook containing subnb.
+*/
 static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *drawarea, guint n, GtkWidget *topnb){
 	//dbg_time("subnb_page_removed, subnb=%p, child=%p, n=%u\n",  subnb, drawarea, n);
 	(void)n; (void)drawarea;
@@ -967,7 +1271,15 @@ static void subnb_page_removed(GtkNotebook *subnb, GtkWidget *drawarea, guint n,
 		}
 	}
 }
-//close additional window if there are no more pages left
+/**
+   Handler of page-removed of the top level notebook. close additional window
+   if there are no more pages left
+
+   @param[in] topnb The top level notebook.
+   @param[in] child Unused.
+   @param[in] n Unused.
+   @param[in] toolbar Unused.
+*/
 static void topnb_page_removed(GtkNotebook* topnb, GtkWidget* child, guint n, GtkWidget* toolbar){
 	//info("topnb_page_removed with n=%d for %p\n", n, topnb);
 	(void)child;
@@ -986,6 +1298,14 @@ static void topnb_page_removed(GtkNotebook* topnb, GtkWidget* child, guint n, Gt
 	}
 	/*gtk_notebook_set_show_tabs(topnb, npage!=1); */
 }
+/**
+   Handler of page-added of the top level notebook. Enables the toolbar and handles the page change.
+
+   @param[in] topnb Unused.
+   @param[in] child Unused.
+   @param[in] n Index of the added page.
+   @param[in,out] toolbar The toolbar.
+*/
 static void topnb_page_added(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
 	//info("topnb_page_added with n=%d for %p\n", n, topnb);
 	(void)topnb; (void)child;
@@ -998,6 +1318,12 @@ static void topnb_page_added(GtkNotebook *topnb, GtkWidget *child, guint n, GtkW
    2012-10-27: GTK 3.6 deprecated gdk_threads_enter(). So it is hard to call
    addpage from child threads. Modify the routine so that addpage is called by
    the main thread when gtk is idle.
+
+   Add a page for drawdata to the notebook of its figure (created if needed) in
+   alphabetical order, or redraw it if the page already exists.
+
+   @param[in,out] drawdata The drawdata to show. Must have fig and name set.
+   @return 0 so it is removed from g_idle_add().
 */
 gboolean addpage(drawdata_t *drawdata){
 	if(!drawdata->fig || !drawdata->name){
@@ -1176,6 +1502,14 @@ gboolean addpage(drawdata_t *drawdata){
 }
 static void save_file(drawdata_t *drawdata);
 #if GTK_VERSION_AFTER(4,10)
+/**
+   Completion callback of the save file dialog (GTK>=4.10). Records the
+   selected file and saves the plot to it.
+
+   @param[in] dialog The file dialog.
+   @param[in] result The asynchronous result.
+   @param[in,out] data The drawdata.
+*/
 static void file_saved(GObject *dialog, GAsyncResult *result, void *data){
 	drawdata_t *drawdata=(drawdata_t*)data;
 	(void) result;
@@ -1188,6 +1522,12 @@ static void file_saved(GObject *dialog, GAsyncResult *result, void *data){
 	}
 }
 #endif
+/**
+   Callback of the save button. Asks for a file name and saves the current plot to it.
+
+   @param[in] button Unused.
+   @param[in] data Unused.
+*/
 static void tool_save(GtkWidget* button, gpointer data){
 	drawdata_t *drawdata=get_current_drawdata();
 	if(!drawdata){
@@ -1240,6 +1580,13 @@ static void tool_save(GtkWidget* button, gpointer data){
 	save_file(drawdata);
 #endif
 }
+/**
+   Save the plot to drawdata->filename. The format is determined by the suffix
+   (eps, pdf, svg, png, or gif; png is assumed if there is none). For gif,
+   starts saving png frames to a folder that is converted by finalize_gif().
+
+   @param[in,out] drawdata The drawdata. Its filename may be updated and surface created.
+*/
 static void save_file(drawdata_t *drawdata){
 	if(!drawdata){
 		dbg_time("drawdata is empty\n");
@@ -1304,6 +1651,12 @@ static void save_file(drawdata_t *drawdata){
 	cairo_draw(drawdata);
 }
 
+/**
+   Callback of the zoom buttons.
+
+   @param[in] button Unused.
+   @param[in] data Zoom mode plus 1 (as pointer): 2 zooms in, 0 zooms out, 1 resets. See do_zoom().
+*/
 static void tool_zoom(GtkWidget* button, gpointer data){
 	(void)button;
 	drawdata_t* drawdata=get_current_drawdata();
@@ -1311,12 +1664,24 @@ static void tool_zoom(GtkWidget* button, gpointer data){
 	do_zoom(drawdata, 0, 0, mode);
 }
 
+/**
+   Callback of the axis limit spin buttons in the property dialog.
+
+   @param[in] spin The spin button.
+   @param[out] val The limit to update.
+*/
 static void limit_change(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	update_zoom(drawdata_dialog);
 	update_pixmap(drawdata_dialog);
 }
 
+/**
+   Callback of the color bar limit spin buttons in the property dialog. Marks zlim as manually set.
+
+   @param[in] spin The spin button.
+   @param[out] val The zlim entry to update.
+*/
 static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->zlim_changed=1;
@@ -1324,16 +1689,34 @@ static void zlim_changed(GtkSpinButton* spin, gfloat* val){
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
+/**
+   Callback of a check button in the property dialog.
+
+   @param[in] btn The check button.
+   @param[out] key Set to whether the button is active.
+*/
 static void checkbtn_toggle(GtkWidget* btn, gint* key){
 	*key=check_button_get_active(btn);
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
+/**
+   Callback of a check button in the property dialog with inverted meaning.
+
+   @param[in] btn The check button.
+   @param[out] key Set to whether the button is inactive.
+*/
 static void checkbtn_toggle_inv(GtkWidget *btn, gint *key){
 	*key=!check_button_get_active(btn);
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
+/**
+   Callback of a check button in the property dialog for a character flag.
+
+   @param[in] btn The check button.
+   @param[out] key Set to 'y' if the button is active, 'n' otherwise.
+*/
 static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*key=check_button_get_active(btn)?'y':'n';
 	drawdata_dialog->drawn=0;
@@ -1343,17 +1726,35 @@ static void checkbtn_toggle_char(GtkWidget *btn, char *key){
 	*val=gtk_range_get_value(range);
 	update_pixmap(drawdata_dialog);
 }*/
+/**
+   Callback of a text entry in the property dialog.
+
+   @param[in] entry The entry.
+   @param[in,out] key The string to replace. The old value is freed; the new value is newly allocated.
+*/
 static void entry_changed(GtkEditable* entry, char** key){
 	free(*key);
 	*key=gtk_editable_get_chars(entry, 0, -1);
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
+/**
+   Callback of a spin button in the property dialog.
+
+   @param[in] spin The spin button.
+   @param[out] val Set to the value of the spin button.
+*/
 static void spin_changed(GtkSpinButton* spin, gfloat* val){
 	*val=gtk_spin_button_get_value(spin);
 	drawdata_dialog->drawn=0;
 	update_pixmap(drawdata_dialog);
 }
+/**
+   Callback of the icumu spin button. Sets the starting index of the
+   cumulative average of the current line plot.
+
+   @param[in] spin The spin button.
+*/
 static void spin_icumu(GtkSpinButton* spin){
 	drawdata_t *drawdata=get_current_drawdata();
 	if(drawdata && !drawdata->p&&!drawdata->square && drawdata->cumu){
@@ -1362,6 +1763,12 @@ static void spin_icumu(GtkSpinButton* spin){
 		//dbg("set %p to %d\n", &drawdata->cumu, drawdata->cumu);
 	}
 }
+/**
+   Callback of the toggle buttons for zlog and cumu of the current page.
+
+   @param[in] btn The toggle button.
+   @param[in] data Which flag to set (as pointer): 1 for zlog, 2 for cumu.
+*/
 static void togglebutton_toggle(GtkWidget* btn, void *data){
 	int key=GPOINTER_TO_INT(data);
 	int val=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
@@ -1379,6 +1786,13 @@ static void togglebutton_toggle(GtkWidget* btn, void *data){
 	update_pixmap(drawdata);
 }
 
+/**
+   Callback of the stop toggle button. Disconnects from the client when
+   active, and restarts listen_draw() when deactivated.
+
+   @param[in] btn The toggle button.
+   @param[in] data Unused.
+*/
 static void togglebutton_stop(GtkWidget* btn, gpointer data){
 	(void)btn; (void) data;
 	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn))){
@@ -1392,6 +1806,12 @@ static void togglebutton_stop(GtkWidget* btn, gpointer data){
 		}
 	}
 }
+/**
+   Callback of the pause toggle button. Asks the client to pause or resume drawing.
+
+   @param[in] btn The toggle button.
+   @param[in] data Unused.
+*/
 static void togglebutton_pause(GtkWidget* btn, gpointer data){
 	(void) data;
 	if(sock==-1) return;
@@ -1401,6 +1821,12 @@ static void togglebutton_pause(GtkWidget* btn, gpointer data){
 		sock=-1;
 	}
 }
+/**
+   Callback of the refresh button. Asks the client to toggle DRAW_SINGLE.
+
+   @param[in] btn Unused.
+   @param[in] data Unused.
+*/
 static void toolbutton_refresh(GtkWidget* btn, gpointer data){
 	(void)btn; (void) data;
 	if(sock==-1){
@@ -1410,6 +1836,13 @@ static void toolbutton_refresh(GtkWidget* btn, gpointer data){
 		sock=-1;
 	}
 }
+/**
+   Callback of the window size spin buttons. Resizes the current window,
+   keeping the aspect ratio if window_proportional is set.
+
+   @param[in] spin The spin button.
+   @param[in] data Which dimension (as pointer): 1 for width, 2 for height.
+*/
 static void set_window_size(GtkWidget *spin, gpointer data){
 	int type=GPOINTER_TO_INT(data);
 	int width, height;
@@ -1445,6 +1878,10 @@ static void set_window_size(GtkWidget *spin, gpointer data){
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
+   and other figure properties. Opens the property dialog for the current page.
+
+   @param[in] button Unused.
+   @param[in] data Unused.
 */
 static void tool_property(GtkWidget* button, gpointer data){
 	(void)button;
@@ -1733,6 +2170,11 @@ static void tool_property(GtkWidget* button, gpointer data){
 }
 
 
+/**
+   Apply the font description desc: update font_name and font_size (in device
+   units), bump font_name_version so that all figures are redrawn, and redraw the
+   current page.
+*/
 void desc_updated(){
 	font_name_version++;/*tell every expose event to update the figure. */
 	if(font_name) free(font_name);
@@ -1774,6 +2216,11 @@ void desc_updated(){
 	update_pixmap(get_current_drawdata());
 }
 
+/**
+   Callback of the font button. Copies the selected font family and size to desc and applies it.
+
+   @param[in] btn The font button.
+*/
 static void tool_font_set(GtkWidget *btn){
 	if(!desc) desc=pango_font_description_new();
 	PangoFontDescription* desc2;
@@ -1794,8 +2241,26 @@ static void tool_font_set(GtkWidget *btn){
 }
 
 #if GTK_MAJOR_VERSION>=3
+/**
+   Handler of window close. Removes the window from the list and moves its
+   tabs to another window. If it is the last window, stops listening, closes
+   the socket, and frees global resources.
+
+   @param[in] window The window being closed.
+   @param[in] event Unused.
+   @return FALSE to allow the window to close.
+*/
 static gboolean close_window(GtkWidget* window, GdkEvent* event)
 #else
+/**
+   Handler of window close. Removes the window from the list and moves its
+   tabs to another window. If it is the last window, stops listening, closes
+   the socket, and frees global resources.
+
+   @param[in] window The window being closed.
+   @param[in] event Unused.
+   @return FALSE to allow the window to close.
+*/
 static gboolean close_window(GtkObject* window, GdkEvent* event)
 #endif
 {
@@ -1840,6 +2305,13 @@ static gboolean close_window(GtkObject* window, GdkEvent* event)
 	return FALSE;
 }
 #if GTK_MAJOR_VERSION < 4
+/**
+   Handler of window events (GTK2/3). Makes the window current when it gains focus.
+
+   @param[in] window The window.
+   @param[in] event The event.
+   @return FALSE.
+*/
 static gboolean window_state(GtkWidget* window, GdkEvent* event){
 	if(event->type==GDK_FOCUS_CHANGE){
 		GdkEventFocus* focus=(GdkEventFocus*)event;
@@ -1850,12 +2322,25 @@ static gboolean window_state(GtkWidget* window, GdkEvent* event){
 	return FALSE;
 }
 #else
+/**
+   Handler of activate-focus of the window (GTK4). Makes the window current.
+
+   @param[in] window The window.
+   @return FALSE.
+*/
 static gboolean window_activate_focus(GtkWidget *window){
 	//info("window_activate_focus\n");
 	window_changed(window);
 	return FALSE;
 }
 #endif
+/**
+   Update the status label with the frame rate of received plots, or the idle or
+   disconnected time. Used as a timeout or idle callback.
+
+   @param[in] data Whether to keep running (as pointer), returned when the client is active.
+   @return GPOINTER_TO_INT(data), or FALSE when idle or disconnected.
+*/
 gboolean update_fpslabel(gpointer data){
 	gint repeat=GPOINTER_TO_INT(data);//TRUE: keep running, false: delete.
 	char newtext[64];
@@ -1891,7 +2376,10 @@ gboolean update_fpslabel(gpointer data){
 }
 //Create a new toolbar item.
 /**
- * Create a new window with a topnb
+   Create a new window with a topnb and toolbar, and make it current.
+
+   @param[in] window Existing window to set up. If NULL, a new window is created.
+   @return The window.
 */
 GtkWidget* create_window(GtkWidget* window){
 	//GtkWidget* old_window=curwindow;

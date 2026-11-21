@@ -31,6 +31,13 @@ void (*X(gemm_ext))(X(mat) **out, T beta, const X(mat) *A, const X(mat) *B, cons
 /**
    compute matrix product using blas dgemm.;
    C=beta*C+ alpha *trans(A)*trans(B); if C exist.
+
+   @param[in,out] C0 Output matrix; allocated if NULL, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling of the existing C.
+   @param[in] A First matrix.
+   @param[in] B Second matrix.
+   @param[in] trans Operation on A and B: 'n' for none, 't' for transpose, 'c' for conjugate transpose.
+   @param[in] alpha Scaling of the product.
 */
 void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	const char trans[2], const T alpha){
@@ -70,8 +77,16 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 }
 
 /**
- * @brief Compute 3 matrix multipliation: out=out*alpha+beta*op(A)*op(B)*op(C)
- */
+   Compute 3 matrix multipliation: out=out*beta+alpha*op(A)*op(B)*op(C)
+
+   @param[in,out] pout Output matrix; allocated if NULL, otherwise scaled by beta and accumulated into.
+   @param[in] beta Scaling of the existing out.
+   @param[in] A First matrix.
+   @param[in] B Second matrix.
+   @param[in] C Third matrix.
+   @param[in] trans Operation on A, B and C (first 3 characters), as in X(mm).
+   @param[in] alpha Scaling of the product.
+*/
 void X(mm3)(X(mat) **pout, T beta, const X(mat) *A, const X(mat) *B, const X(mat) *C, const char trans[4], T alpha){
 	X(mat) *tmp=0;
 	X(mm)(&tmp, 0, A, B, trans, 1);
@@ -84,6 +99,9 @@ void X(mm3)(X(mat) **pout, T beta, const X(mat) *A, const X(mat) *B, const X(mat
    inplace invert a small square SPD matrix using lapack dposv_, usually
    (A'*w*A).  by solving Ax=I; copy x to A.  dposv_ modifies A also. be
    careful
+
+   @param[in,out] A The SPD matrix; replaced by its inverse. Nothing is done if NULL or empty.
+   Its content is undefined if the inversion fails.
 */
 void X(invspd_inplace)(X(mat)* A){
 	if(!A||!A->nx||!A->ny) return;
@@ -109,6 +127,9 @@ void X(invspd_inplace)(X(mat)* A){
 
 /**
    out of place version of dinvspd_inplace
+
+   @param[in] A The SPD matrix.
+   @return Newly allocated inverse; the caller frees it. NULL if A is NULL.
 */
 X(mat)* X(invspd)(const X(mat)* A){
 	if(!A) return NULL;
@@ -120,6 +141,9 @@ X(mat)* X(invspd)(const X(mat)* A){
 
 /**
    inplace invert a general square matrix using lapack dgesv_
+
+   @param[in,out] A The square matrix; replaced by its inverse. Nothing is done if NULL or empty.
+   Its content is undefined if the inversion fails.
 */
 void X(inv_inplace)(X(mat)* A){
 	if(!A||!A->nx||!A->ny) return;
@@ -145,6 +169,9 @@ void X(inv_inplace)(X(mat)* A){
 
 /**
    out of place version of dinv
+
+   @param[in] A The square matrix.
+   @return Newly allocated inverse; the caller frees it. NULL if A is NULL.
 */
 X(mat)* X(inv)(const X(mat)* A){
 	if(!A) return NULL;
@@ -153,6 +180,13 @@ X(mat)* X(inv)(const X(mat)* A){
 	X(inv_inplace)(out);
 	return out;
 }
+/**
+   Compute A'*W, where W is either a diagonal weighting stored as a vector or a full (dense or sparse) matrix.
+
+   @param[out] pAtW The result A'*W. Must point to NULL.
+   @param[in] A The matrix.
+   @param[in] W_ The weighting: a vector of length NX(A) for diagonal weighting, or a square matrix.
+*/
 static void X(applyAtW)(X(mat)**pAtW, const X(mat)*A, const_anyarray W_){
 	if(!A) return;
 	const cell *W=W_.c;
@@ -173,8 +207,14 @@ static void X(applyAtW)(X(mat)**pAtW, const X(mat)*A, const_anyarray W_){
 /**
    compute the pseudo inverse of matrix A with weigthing of full matrix W or
    sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
-   for diagonal weighting.  B=inv(A'*W*A+tikcr)*A'*W;
-   thres is the threshold to truncate eigenvalues.
+   for diagonal weighting.  B=inv(A'*W*A)*A'*W;
+   thres1 and thres2 are the thresholds to truncate eigenvalues, see X(svd_pow2).
+
+   @param[in] A The matrix to pseudo invert.
+   @param[in] W_ The weighting, dense vector (diagonal), dense or sparse matrix. NULL for identity.
+   @param[in] thres1 Drop eigenvalues smaller than thres1 times the maximum eigenvalue.
+   @param[in] thres2 Drop eigenvalues smaller than thres2 times the previous eigenvalue.
+   @return Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.
 */
 X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres1, R thres2){
 	if(!A) return NULL;
@@ -207,9 +247,12 @@ X(mat)* X(pinv2)(const X(mat)* A, const_anyarray W_, R thres1, R thres2){
 	return out;
 }
 /**
- * @brief Wrap dpinv2 with default parameters.
- * 
- */
+   Wrap dpinv2 with default parameters thres1=1e-7 and thres2=1e-3.
+
+   @param[in] A The matrix to pseudo invert.
+   @param[in] W The weighting, dense vector (diagonal), dense or sparse matrix. NULL for identity.
+   @return Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.
+*/
 X(mat) *X(pinv)(const X(mat) *A, const_anyarray W){
 	return X(pinv2)(A, W, 1e-7, 1e-3);
 }
@@ -221,6 +264,11 @@ X(mat) *X(pinv)(const X(mat) *A, const_anyarray W){
    First, scaling the matrix by 2^-n times so it is smaller than 1/threshold.
    Then compute exp(A*beta*2^-n) using Tylor expansion.
    Then compute the final answer by taking exponential of 2^n.
+
+   @param[in,out] out Output matrix; allocated if NULL, otherwise scaled by alpha and accumulated into.
+   @param[in] alpha Scaling of the existing out.
+   @param[in] A The matrix.
+   @param[in] beta Scaling of A inside the exponential.
 */
 void X(expm)(X(mat)** out, R alpha, const X(mat)* A, R beta){
 	const int accuracy=10;//How many terms in Taylor expansion to evaluate
@@ -272,6 +320,10 @@ void X(expm)(X(mat)** out, R alpha, const X(mat)* A, R beta){
 }
 /**
    compute inv(dmcc(A, wt))
+
+   @param[in] A The matrix.
+   @param[in] wt The diagonal weighting.
+   @return Newly allocated inverse of A'*diag(wt)*A; the caller frees it.
 */
 X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 	X(mat)* mcc=X(mcc)(A, wt);
@@ -281,6 +333,9 @@ X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 
 /**
    Compute the cholesky decomposition of a symmetric semi-definit dense matrix.
+
+   @param[in] A The symmetric matrix.
+   @return Newly allocated lower triangular factor L with A=L*L'; the caller frees it. NULL if A is NULL.
 */
 X(mat)* X(chol)(const X(mat)* A){
 	if(!A) return NULL;
@@ -322,6 +377,13 @@ DEF_ENV_FLAG(SVD_SDD_THRES, 0);//Set the threshold to enable using SDD stead of 
    Compute SVD of a general matrix A.
    A=U*diag(S)*V';
    diag(S) is returned.
+
+   @param[out] U Newly allocated left singular vectors; the caller frees it. May be NULL to skip.
+   @param[out] Sdiag Newly allocated singular values in descending order; the caller frees it. May be NULL to
+   skip.
+   @param[out] VT Newly allocated transpose of right singular vectors; the caller frees it. May be NULL to
+   skip.
+   @param[in] A The matrix.
 */
 void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	if(isempty(A)){
@@ -415,8 +477,13 @@ void X(svd)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	}
 }
 /**
-   Compute SVD with caching.
- */
+   Compute SVD with caching. The result is cached in svd/ when A has more than 512 rows.
+
+   @param[out] U Newly allocated left singular vectors; the caller frees it.
+   @param[out] Sdiag Newly allocated singular values; the caller frees it.
+   @param[out] VT Newly allocated transpose of right singular vectors; the caller frees it.
+   @param[in] A The matrix.
+*/
 void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 	char fnsvd[PATH_MAX];
 	int do_cache=0;
@@ -447,14 +514,15 @@ void X(svd_cache)(X(mat)** U, XR(mat)** Sdiag, X(mat)** VT, const X(mat)* A){
 
 /**
    computes pow(A,power) in place using svd.
-   positive thres: Drop eigenvalues that are smaller than thres * max eigen value
-   negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
+   Eigenvalues that are smaller than thres1 * max eigen value or smaller than thres2 * previous eigen value
+   (sorted descendantly) are dropped together with all smaller ones. A zero threshold is disabled.
+
+   @param[in,out] A The square matrix.
+   @param[in] power power of eigen values. usually -1 for inverse
+   @param[in] thres1 SVD inverse threshold relative to the maximum eigen value.
+   @param[in] thres2 SVD inverse threshold relative to the previous eigen value.
 */
-void X(svd_pow2)(X(mat)* A, /**<[in/out] The matrix*/
-	R power, /**<[in] power of eigen values. usually -1 for inverse*/ 
-	R thres1, /**<[in] SVD inverse absolute threshold*/
-	R thres2 /**<[in] SVD inverse relative threshold*/
-	){
+void X(svd_pow2)(X(mat)* A, R power, R thres1, R thres2){
 	if(isempty(A)) return;
 	//dbg("svd_pow: thresholds are %g, %g\n", thres1, thres2);
 //#if !defined(COMP_SINGLE) && !defined(COMP_COMPLEX)
@@ -496,14 +564,19 @@ void X(svd_pow2)(X(mat)* A, /**<[in/out] The matrix*/
 	XR(free)(Sdiag);
 }
 /**
- * @brief Wrap svd_pow with default parameters.
- * 
- */
+   Wrap svd_pow2 with default parameters thres1=1e-7 and thres2=1e-3.
+
+   @param[in,out] A The square matrix.
+   @param[in] power power of eigen values. usually -1 for inverse
+*/
 void X(svd_pow)(X(mat) *A, R power){
 	return X(svd_pow2)(A,power,1e-7,1e-3);
 }	
 /**
-   Inplace Invert a SPD matrix. It is treated as a block matrix
+   Invert a SPD matrix. It is treated as a block matrix
+
+   @param[in] A The SPD block matrix.
+   @return Newly allocated inverse with the same block layout; the caller frees it. NULL if A is empty.
 */
 X(cell)* X(cellinvspd)(X(cell)* A){
 	X(mat)* Ab=X(cell2m)(A);
@@ -517,7 +590,10 @@ X(cell)* X(cellinvspd)(X(cell)* A){
 }
 
 /**
-   Inplace Invert a matrix. It is treated as a block matrix.
+   Invert a matrix. It is treated as a block matrix.
+
+   @param[in] A The square block matrix.
+   @return Newly allocated inverse with the same block layout; the caller frees it.
 */
 X(cell)* X(cellinv)(X(cell)* A){
 	X(mat)* Ab=X(cell2m)(A);
@@ -531,6 +607,9 @@ X(cell)* X(cellinv)(X(cell)* A){
 /**
    invert each component of the dcell. Each cell is treated
    as an individual matrix.
+
+   @param[in] A Cell array of SPD matrices.
+   @return Newly allocated cell array of the inverses; the caller frees it.
 */
 X(cell)* X(cellinvspd_each)(X(cell)* A){
 	X(cell)* out=NULL;
@@ -544,12 +623,16 @@ X(cell)* X(cellinvspd_each)(X(cell)* A){
 
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
-   sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
-	const_anyarray W_,    /**<[in] The weighting matrix. dense or sparse*/
-	R thres1,          /**<[in] SVD absolute inverse threshold*/
-	R thres2         /**<[in] SVD relative inverse threshold*/
-	){
+   sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$
+
+   @param[in] A The matrix to pseudo invert
+   @param[in] W_ The weighting matrix. dense or sparse. Either n*n cell or with the same layout as A for
+   blockwise weighting. NULL for identity.
+   @param[in] thres1 SVD inverse threshold relative to the maximum eigen value, see X(svd_pow2).
+   @param[in] thres2 SVD inverse threshold relative to the previous eigen value, see X(svd_pow2).
+   @return Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.
+*/
+X(cell)* X(cellpinv2)(const X(cell)* A, const_anyarray W_, R thres1, R thres2){
 	if(!A) return NULL;
 	X(cell)* AtW=NULL;
 	X(cell) *ata=NULL;
@@ -585,15 +668,24 @@ X(cell)* X(cellpinv2)(const X(cell)* A, /**<[in] The matrix to pseudo invert*/
 	return out;
 }
 /**
- * @brief Wrap cellpinv2 with default parameters
- * 
- */
+   Wrap cellpinv2 with default parameters thres1=1e-7 and thres2=1e-3.
+
+   @param[in] A The matrix to pseudo invert
+   @param[in] W The weighting matrix, see X(cellpinv2). NULL for identity.
+   @return Newly allocated pseudo inverse; the caller frees it. NULL if A is NULL.
+*/
 X(cell)* X(cellpinv)(const X(cell) *A, const_anyarray W){
 	return X(cellpinv2)(A,W,1e-7,1e-3);
 }
 /**
    compute the power of a block matrix using svd method. First convert it do
-   X(mat), do the power, and convert back to block matrix.
+   X(mat), do the power, and convert back to block matrix. If A is block diagonal, each diagonal block is
+   processed independently.
+
+   @param[in,out] A The square block matrix; replaced by the result.
+   @param[in] power power of eigen values. usually -1 for inverse
+   @param[in] thres1 SVD inverse threshold relative to the maximum eigen value, see X(svd_pow2).
+   @param[in] thres2 SVD inverse threshold relative to the previous eigen value, see X(svd_pow2).
 */
 void X(cellsvd_pow2)(X(cell)* A, R power, R thres1, R thres2){
 	if(cell_is_diag(A)){
@@ -609,9 +701,12 @@ void X(cellsvd_pow2)(X(cell)* A, R power, R thres1, R thres2){
 	}
 }
 /**
- * @brief wrap cellsvd_pow2.
- * 
- */
+   Compute A=A^power using SVD by calling X(cellsvd_pow2) with default
+   thresholds thres1=1e-7 and thres2=1e-3.
+
+   @param[in,out] A The square block matrix; replaced by the result.
+   @param[in] power power of eigen values. usually -1 for inverse
+*/
 void X(cellsvd_pow)(X(cell) *A, R power){
 	X(cellsvd_pow2)(A,power,1e-7,1e-3);
 }

@@ -225,6 +225,14 @@ static void* calc_pistat(void *pdata){
 	return NULL;
 }
 
+/**
+   Generate the average pixel intensity statistics (pistat), NEA spectrum, and
+   physical optics gradients for each seed, powfs, and NGS grid point within the
+   patrol field, using the WFS output saved by maos. Results are saved under dirstart.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs Array of WFS types with detector transfer functions.
+*/
 void genpistat(const parms_s* parms, powfs_s* powfs){
 	real patfov=parms->skyc.patfov;
 	real ngsgrid=parms->maos.ngsgrid;
@@ -268,7 +276,10 @@ void genpistat(const parms_s* parms, powfs_s* powfs){
 	free(data);
 }
 /**
-   Read in the average pixel intensities on the ngs grid
+   Read in the average pixel intensities on the ngs grid and prepare the bspline interpolation of their sum (Strehl)
+   for each subaperture and wavelength.
+
+   @param[in,out] simu Simulation data. The bspstrehl and bspstrehlxy fields are allocated and filled.
 */
 void prep_bspstrehl(sim_s* simu){
 	const parms_s* parms=simu->parms;
@@ -337,7 +348,17 @@ void prep_bspstrehl(sim_s* simu){
 	dfree(gg);
 }
 #include "mtch.h"
-/**Determine WFS nonlinearity.*/
+/**
+   Determine WFS nonlinearity for each powfs and NGS grid point. For each signal
+   level, build the matched filter from the averaged pistat and compute the mean NEA
+   (column 0) and the actual rms error of the measured gradients (column 1) for random
+   offsets drawn from the NEA. Results are cached in files under dirstart.
+
+   @param[in] parms Simulation parameters.
+   @param[in] powfs Array of WFS types with detector transfer functions.
+   @param[in] seed Seed of the maos simulation whose pistat is used.
+   @return Nonlinearity for each powfs: a cell over NGS radius, each siglev x 2. Newly allocated; the caller frees it.
+*/
 dccell* wfs_nonlinearity(const parms_s* parms, powfs_s* powfs, long seed){
 	const int npowfs=parms->maos.npowfs;
 	const int nwvl=parms->maos.nwvl;

@@ -18,7 +18,9 @@
 #ifndef AOS_CUDA_PROP_WRAP_H
 #define AOS_CUDA_PROP_WRAP_H
 #include "types.h"
-/*data to be used by kernel */
+/**
+   data to be used by kernel
+*/
 struct map2map_t{
 	int offdir, offdirx, offdiry;
 	int offps, offpsx, offpsy;

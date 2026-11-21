@@ -36,7 +36,8 @@ const char* cufft_str[]={
 #if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
-int cuda_dedup=0;//1: allow memory deduplication. Useful during setup for const memory.
+/**1: allow memory deduplication. Useful during setup for const memory. Set to 1 during setup and 0 during simulation*/
+int cuda_dedup=0;
 cumemcache_t cumemcache;
 /*
 The generic one:
@@ -47,8 +48,12 @@ void NumArray<T, Dev>::Copy(const NumArray<S, Dev2> &in, cudaStream_t stream){}
 */
 
 /**
-   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use Real
-   array. Allow multiple calling to override the data.  */
+   Copy map_t to cumap_t. Allow multiple calling to override the data.
+
+   @param[in,out] dest GPU map array. Allocated if empty; otherwise its
+   parameters and data are overridden.
+   @param[in] source CPU map array. Nothing is done if it is empty.
+*/
 void cp2gpu(cumapcell& dest, const mapcell* source){
 	if(source->nx==0) return;
 	if(!dest){
@@ -64,13 +69,16 @@ void cp2gpu(cumapcell& dest, const mapcell* source){
 	}
 }
 
-/*
-  Convert a host dsp array to GPU sprase array.g
+/**
+   Convert a host dsp array to GPU sparse array, optionally converted to CSR
+   and/or transposed. Index and value arrays are deduplicated if cuda_dedup is
+   set.
+
+   @param[in] src_csc Source dsp in CSC. Nothing is done if NULL.
+   @param[in] tocsr 0: Keep in CSC. 1: Convert to CSR.
+   @param[in] transp 1: transpose.
 */
-cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
-	int tocsr,        /**<0: Keep in CSC. 1: Convert to CSR */
-	int transp        /**<1: transpose*/
-){
+cusp::cusp(const dsp* src_csc, int tocsr, int transp){
 	if(!src_csc) return;
 	dsp* src_trans=0;
 	const dsp* src=0;
@@ -99,11 +107,25 @@ cusp::cusp(const dsp* src_csc, /**<Source dsp in CSC*/
 	cusparseCreateCsr(&ref->desc, nrow, ncol, ref->nzmax, ref->p, ref->i, ref->x, CUSPARSE_INDEX, CUSPARSE_INDEX, CUSPARSE_INDEX_BASE_ZERO, CUDA_R);
 #endif
 }
+/**
+   Concatenate a dspcell into a single sparse matrix and copy it to GPU.
+
+   @param[out] dest GPU sparse matrix. Replaced.
+   @param[in] srcc CPU sparse cell array.
+   @param[in] tocsr 0: Keep in CSC. 1: Convert to CSR.
+*/
 void cp2gpu(cusp& dest, const dspcell* srcc, int tocsr){
 	dsp* src=dspcell2sp(srcc);
 	dest=cusp(src, tocsr);
 	dspfree(src);
 }
+/**
+   Copy a dspcell to GPU block by block. dest is allocated if empty.
+
+   @param[in,out] dest GPU sparse cell array. Allocated if empty; each block is replaced.
+   @param[in] src CPU sparse cell array. Nothing is done if NULL.
+   @param[in] tocsr 0: Keep in CSC. 1: Convert to CSR.
+*/
 void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr){
 	if(!src) return;
 	if(!dest){
@@ -113,6 +135,14 @@ void cp2gpu(cuspcell& dest, const dspcell* src, int tocsr){
 		dest[i]=cusp(src->p[i], tocsr);
 	}
 }
+/**
+   Copy a real dmat or smat to GPU, converting to Real. dest is allocated if
+   empty, otherwise its size must match. Zeros dest if src_ is NULL.
+
+   @param[in,out] dest GPU array. Allocated if empty, otherwise copied into.
+   @param[in] src_ CPU dmat or smat.
+   @param[in] stream Stream to copy in.
+*/
 void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream){
 	if(src_.c==0){
 		dest.Zero(stream);
@@ -124,6 +154,14 @@ void cp2gpu(curmat &dest, const_anyarray src_, cudaStream_t stream){
 		error("Invalid: id=%u\n", src_.c->id);
 	}
 }
+/**
+   Copy a complex cmat or zmat to GPU, converting to Comp. dest is allocated
+   if empty, otherwise its size must match. Zeros dest if src_ is NULL.
+
+   @param[in,out] dest GPU array. Allocated if empty, otherwise copied into.
+   @param[in] src_ CPU cmat or zmat.
+   @param[in] stream Stream to copy in.
+*/
 void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream){
 	if(src_.c==0){
 		dest.Zero(stream);
@@ -136,17 +174,42 @@ void cp2gpu(cucmat &dest, const_anyarray src_, cudaStream_t stream){
 	}
 }
 
+/**
+   Return the index of the current CUDA device. Weak symbol; overridden by
+   cuda/sim/cudata.cu when linked.
+
+   @return Index of the current CUDA device.
+*/
 __attribute__((weak)) int current_gpu(){
 	int igpu;
 	cudaGetDevice(&igpu);
 	return igpu;
 }
+/**
+   Scale and add host arrays: p1=p1*alpha+p2*beta. Specialized below for
+   complex arrays of different precision.
+
+   @param[in,out] p1 Array of length n.
+   @param[in] alpha Scaling factor of p1.
+   @param[in] p2 Array of length n.
+   @param[in] beta Scaling factor of p2.
+   @param[in] n Number of elements.
+*/
 template <typename T, typename R, typename S>
 void scale_add(T* p1, R alpha, const S* p2, R beta, long n){
 	for(long i=0; i<n; i++){
 		p1[i]=p1[i]*alpha+p2[i]*beta;
 	}
 }
+/**
+   Specialization of scale_add() for double2 p1 and float2 p2.
+
+   @param[in,out] p1 Array of length n.
+   @param[in] alpha Scaling factor of p1.
+   @param[in] p2 Array of length n.
+   @param[in] beta Scaling factor of p2.
+   @param[in] n Number of elements.
+*/
 template <>
 void scale_add<double2, double, float2>(double2* p1, double alpha, const float2* p2, double beta, long n){
 	for(long i=0; i<n; i++){
@@ -154,6 +217,15 @@ void scale_add<double2, double, float2>(double2* p1, double alpha, const float2*
 		p1[i].y=p1[i].y*alpha+p2[i].y*beta;
 	}
 }
+/**
+   Specialization of scale_add() for float2 p1 and double2 p2.
+
+   @param[in,out] p1 Array of length n.
+   @param[in] alpha Scaling factor of p1.
+   @param[in] p2 Array of length n.
+   @param[in] beta Scaling factor of p2.
+   @param[in] n Number of elements.
+*/
 template <>
 void scale_add<float2, float, double2>(float2* p1, float alpha, const double2* p2, float beta, long n){
 	for(long i=0; i<n; i++){
@@ -162,8 +234,16 @@ void scale_add<float2, float, double2>(float2* p1, float alpha, const double2* p
 	}
 }
 /**
-   Convert device (Real) array and add to host double.
-   dest = alpha * dest + beta *src;
+   Copy device array to host, convert type and accumulate:
+   dest = alpha * dest + beta *src. Synchronizes the stream.
+
+   @param[in,out] dest Pointer to host array. Allocated (uninitialized) if NULL.
+   @param[in] alpha Scaling factor of dest.
+   @param[in] src Device array of length n.
+   @param[in] beta Scaling factor of src.
+   @param[in] n Number of elements.
+   @param[in] stream Stream to copy in.
+   @param[in,out] mutex If not NULL, locked during the accumulation.
 */
 template <typename R, typename T, typename S>
 static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
@@ -183,6 +263,11 @@ static void add2cpu(T* restrict* dest, R alpha, const S* src, R beta, long n,
 	if(mutex) UNLOCK(*mutex);
 	free(tmp);
 }
+/**
+   Copy GPU array to CPU and accumulate: *out=*out*alpha+in*beta. *out is
+   allocated if NULL; if in is empty, *out is only scaled by alpha. mutex, if
+   not NULL, protects the accumulation. Synchronizes the stream.
+*/
 #define add2cpu_mat(D, T, C)						\
 void add2cpu(D##mat **out, T alpha, const NumArray<C, Gpu> &in, T beta, \
 	cudaStream_t stream, pthread_mutex_t *mutex){		\
@@ -205,6 +290,9 @@ add2cpu_mat(d, real, Real)
 add2cpu_mat(c, real, Comp)
 add2cpu_mat(s, float, Real)
 add2cpu_mat(z, float, Comp)
+/**
+   Cell version of add2cpu: *out=*out*alpha+in*beta for each block.
+*/
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
@@ -229,6 +317,11 @@ add2cpu_cell(c, real, cuccell)
 add2cpu_cell(s, float, curcell)
 add2cpu_cell(z, float, cuccell)
 
+/**
+   Copy GPU array to CPU of the same precision. *out is allocated if NULL,
+   otherwise its size must match; zeroed if in is empty. Keywords are copied.
+   Synchronizes the stream.
+*/
 #define cp2cpu_same(dmat,dzero,dnew,T)				\
 void cp2cpu(dmat **out, const NumArray<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in) {							\
@@ -255,29 +348,75 @@ cp2cpu_same(smat, szero, snew, float)
 cp2cpu_same(zmat, zzero, znew, fcomplex)
 #if CUDA_DOUBLE
 #if CPU_SINGLE
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 #endif
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(smat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(zmat** out, const cucmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 #else
 #if CPU_SINGLE==0
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(dmat** out, const curmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
+/**
+   Copy GPU array to CPU with precision conversion (via add2cpu).
+
+   @param[in,out] out CPU array. Allocated if NULL, otherwise overwritten.
+   @param[in] in GPU array.
+   @param[in] stream Stream to copy in.
+*/
 void cp2cpu(cmat** out, const cucmat& in, cudaStream_t stream){
 	add2cpu(out, 0, in, 1, stream, 0);
 }
 #endif
 #endif
+/**
+   Copy GPU cell array to CPU block by block. *out is allocated if NULL and
+   zeroed if in is empty.
+*/
 #define cp2cpu_cell(S, T)						\
 void cp2cpu(S##cell **out, const NumCell<T, Gpu> &in, cudaStream_t stream){ \
 	if(!in){							\
@@ -297,6 +436,15 @@ cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)
 cp2cpu_cell(z, Comp)
 
+/**
+   Copy A to CPU, scale by scale, and save it as the i'th entry of ca.
+
+   @param[in,out] ca File array to save to.
+   @param[in] i Index of the entry.
+   @param[in] A GPU array.
+   @param[in] scale Scaling factor.
+   @param[in] stream Stream to copy in.
+*/
 void zfarr_push_scale(struct zfarr* ca, int i, const curmat& A, Real scale, cudaStream_t stream){
 	X(mat)* tmp=NULL;
 	if(scale==1) cp2cpu(&tmp, A, stream);
@@ -305,6 +453,15 @@ void zfarr_push_scale(struct zfarr* ca, int i, const curmat& A, Real scale, cuda
 	X(free)(tmp);
 }
 
+/**
+   Copy A to CPU, scale by scale, and save it as the i'th entry of ca.
+
+   @param[in,out] ca File array to save to.
+   @param[in] i Index of the entry.
+   @param[in] A GPU array.
+   @param[in] scale Scaling factor.
+   @param[in] stream Stream to copy in.
+*/
 void zfarr_push_scale(struct zfarr *ca, int i, const cucmat &A, Real scale, cudaStream_t stream){
 	XC(mat)* tmp=NULL;
 	if(scale==1) cp2cpu(&tmp, A, stream);
@@ -313,6 +470,15 @@ void zfarr_push_scale(struct zfarr *ca, int i, const cucmat &A, Real scale, cuda
 	XC(free)(tmp);
 }
 
+/**
+   Copy A to CPU, scale by scale, and save it as the i'th entry of ca.
+
+   @param[in,out] ca File array to save to.
+   @param[in] i Index of the entry.
+   @param[in] A GPU array.
+   @param[in] scale Scaling factor.
+   @param[in] stream Stream to copy in.
+*/
 void zfarr_push_scale(struct zfarr *ca, int i, const curcell &A, Real scale, cudaStream_t stream){
 	X(cell)* tmp=NULL;
 	if(scale==1) cp2cpu(&tmp, A, stream);
@@ -321,6 +487,15 @@ void zfarr_push_scale(struct zfarr *ca, int i, const curcell &A, Real scale, cud
 	X(cellfree)(tmp);
 }
 
+/**
+   Copy A to CPU, scale by scale, and save it as the i'th entry of ca.
+
+   @param[in,out] ca File array to save to.
+   @param[in] i Index of the entry.
+   @param[in] A GPU array.
+   @param[in] scale Scaling factor.
+   @param[in] stream Stream to copy in.
+*/
 void zfarr_push_scale(struct zfarr *ca, int i, const cuccell &A, Real scale, cudaStream_t stream){
 	XC(cell)* tmp=NULL;
 	if(scale==1) cp2cpu(&tmp, A, stream);
@@ -329,6 +504,21 @@ void zfarr_push_scale(struct zfarr *ca, int i, const cuccell &A, Real scale, cud
 	XC(cellfree)(tmp);
 }
 
+/**
+   Plot GPU opd defined on loc with amplitude amp, if the figure is currently
+   drawn. See drawopdamp().
+
+   @param[in] fig Figure category.
+   @param[in] loc Coordinate of the points.
+   @param[in] opd GPU OPD defined on loc.
+   @param[in] stream Stream to copy in.
+   @param[in] amp Amplitude defined on loc.
+   @param[in] zlim Color range limit.
+   @param[in] title Plot title.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the figure name, followed by arguments.
+*/
 void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t stream,
 	const dmat* amp, real zlim,
 	const char* title, const char* xlabel, const char* ylabel,
@@ -341,6 +531,21 @@ void drawopdamp_gpu(const char* fig, loc_t* loc, const curmat& opd, cudaStream_t
 		dfree(tmp);
 	}
 }
+/**
+   Plot GPU psf divided by count as an image with color range [psfmin, 1], if
+   the figure is currently drawn.
+
+   @param[in] fig Figure category.
+   @param[in] psf GPU PSF.
+   @param[in] count Number of accumulations to normalize by.
+   @param[in] stream Stream to copy in.
+   @param[in] zlog Whether to plot in log scale.
+   @param[in] psfmin Lower limit of the color range.
+   @param[in] title Plot title.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the figure name, followed by arguments.
+*/
 void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int zlog, real psfmin,
 	const char *title, const char *xlabel, const char *ylabel,
 	const char *format, ...){
@@ -351,7 +556,22 @@ void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, i
 		draw(fig, (plot_opts){ .image=psftemp, .zlim={psfmin,1}, .zlog=zlog }, title, xlabel, ylabel, "%s", fn);
 		dfree(psftemp);
 	}
-}void curdraw_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int zlog,
+}
+/**
+   Plot GPU real array psf divided by count as an image, if the figure is
+   currently drawn.
+
+   @param[in] fig Figure category.
+   @param[in] psf GPU real array.
+   @param[in] count Number of accumulations to normalize by.
+   @param[in] stream Stream to copy in.
+   @param[in] zlog Whether to plot in log scale.
+   @param[in] title Plot title.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the figure name, followed by arguments.
+*/
+void curdraw_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, int zlog,
 	const char* title, const char* xlabel, const char* ylabel,
 	const char* format, ...){
 	format2fn;
@@ -362,6 +582,20 @@ void drawpsf_gpu(const char *fig, curmat &psf, int count, cudaStream_t stream, i
 		dfree(psftemp);
 	}
 }
+/**
+   Plot abs(psf)^2/count of GPU complex array psf as an image, if the figure
+   is currently drawn.
+
+   @param[in] fig Figure category.
+   @param[in] psf GPU complex array.
+   @param[in] count Number of accumulations to normalize by.
+   @param[in] stream Stream to copy in.
+   @param[in] zlog Whether to plot in log scale.
+   @param[in] title Plot title.
+   @param[in] xlabel x axis label.
+   @param[in] ylabel y axis label.
+   @param[in] format printf style format of the figure name, followed by arguments.
+*/
 void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, int zlog,
 	const char *title, const char *xlabel, const char *ylabel,
 	const char *format, ...){
@@ -378,7 +612,11 @@ void cucdraw_gpu(const char *fig, cucmat &psf, int count, cudaStream_t stream, i
 }
 #undef cudaFree
 /**
-   Free data if not referenced or reference is 1.
+   Unreference deduplicated memory. Free data if not deduplicated or the
+   reference count drops to 0.
+
+   @param[in] pp Device memory. Nothing is done if NULL.
+   @return CUDA error code of cudaFree, or 0 if not freed.
 */
 int mycudaFree(void* pp){
 	if(!pp) return 0;
@@ -402,6 +640,13 @@ int mycudaFree(void* pp){
 	}
 }
 #undef cudaMalloc
+/**
+   Wrapper of cudaMalloc.
+
+   @param[out] p Allocated device memory. The caller frees it with cudaFree.
+   @param[in] size Number of bytes.
+   @return CUDA error code.
+*/
 int mycudaMalloc(void** p, size_t size){
 	int ans=cudaMalloc(p, size);
 	return ans;

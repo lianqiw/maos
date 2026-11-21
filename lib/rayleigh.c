@@ -19,11 +19,11 @@
 #include "../math/mathdef.h"
 #include "rayleigh.h"
 /**
- * @brief Compute rayleigh backscatter patterns for all WFS. All input are in SI unit.
- * 
+   Compute rayleigh backscatter patterns for all WFS. All input are in SI unit.
 
- * @return dcell* 	PSF for each subaperture
- */
+   @param[in] cfg The configuration, including subaperture grid, WFS directions, LLT locations and scattering layers.
+   @return Newly allocated nsa*nwfs cell of npsf*npsf backscatter PSF for each subaperture, or NULL if cfg is NULL; the caller frees it.
+*/
 dcell *rayleigh(rayleigh_t *cfg){
 	if(!cfg) return NULL;
 	const loc_t *saloc = cfg->saloc;
@@ -73,9 +73,6 @@ dcell *rayleigh(rayleigh_t *cfg){
 								real x_pix=x_sa+(ipx-npsf2)*p2s;
 								real pix_sep2=abs2(x_pix-x_beam)+abs2(y_pix-y_beam);
 								if(pix_sep2<thres0){//within beam
-									/*if(iwfs==0 && ilgs==1){
-										info("pix (%d, %d) at (%g, %g), thres %g, sep %g\n", ipx, ipy, x_pix, y_pix, sqrt(pix_sep2), sqrt(thres0));
-									}*/
 									P(P(out, isa, iwfs), ipx, ipy)+=exp(gscale*pix_sep2)*alpha;
 								}
 							}
@@ -85,10 +82,13 @@ dcell *rayleigh(rayleigh_t *cfg){
 			}//for isa
 		}//for iwfs
 	}//for ih
-	//writebin(out, "out");
-	//dshow(P(out, 0, 0), "out[0,0]");
 	return out;
 }//function
+/**
+   Free rayleigh_t created by rayleigh_setup().
+
+   @param[in] cfg The configuration to free. Can be NULL.
+*/
 void rayleigh_free(rayleigh_t *cfg){
 	if(!cfg) return;
 	locfree(cfg->saloc);
@@ -99,6 +99,14 @@ void rayleigh_free(rayleigh_t *cfg){
 	dfree(cfg->tau);
 	free(cfg);
 }
+/**
+   Create a test configuration of rayleigh_t for a telescope of diameter D (default 5 m):
+   annular subaperture grid, 6 LGS WFS (one on axis and five on a 35 arcsec ring) and a
+   single Rayleigh scattering layer. Free with rayleigh_free().
+
+   @param[in] D Telescope diameter (m). 0 for the default of 5 m.
+   @return Newly allocated configuration; free with rayleigh_free().
+*/
 rayleigh_t *rayleigh_setup(real D){
 	rayleigh_t *cfg=mycalloc(1, rayleigh_t);
 	if(!D) D=5;

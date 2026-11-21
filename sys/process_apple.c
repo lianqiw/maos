@@ -38,7 +38,12 @@
 #include "process.h"
 #include "misc.h"
 /**
-   Get the executable name of current process.
+   Get the executable name of process pid (current process if pid<=0) with full path.
+
+   @param[out] res Buffer for the executable name.
+   @param[in] nres Size of res.
+   @param[in] pid Process ID, or <=0 for the current process.
+   @return 0 on success, 1 on failure.
 */
 int get_job_progname(char* res, int nres, int pid){
 	int ans=1;
@@ -62,7 +67,9 @@ int get_job_progname(char* res, int nres, int pid){
 }
 /**
    Get the memory usage of current process.
- */
+
+   @return Resident memory size in KiB, or 0 on failure.
+*/
 size_t get_job_mem(void){/*return in KiB */
 	size_t mem;
 
@@ -84,7 +91,10 @@ size_t get_job_mem(void){/*return in KiB */
 	return mem;
 }
 /**
-   Get the launch time of current process.
+   Get the launch time of a process.
+
+   @param[in] pid Process ID.
+   @return Start time in seconds since system boot, or 0 on failure.
 */
 double get_job_launchtime(int pid){
 	struct proc_bsdinfo info;
@@ -101,14 +111,18 @@ double get_job_launchtime(int pid){
 		+((long)info.pbi_start_tvusec-(long)boot.tv_usec)*1e-6;
 }
 /**
-   Get the number of running jobs.
+   Get the number of running jobs. Not implemented; returns 0.
+
+   @return 0.
 */
 int get_usage_running(void){
 	/*warning("Please implement it\n"); */
 	return 0;
 }
 /**
-   Get the system memory usage.
+   Get the system load.
+
+   @return The 1-minute load average, or 0 on failure.
 */
 double get_usage_load(void){
 	double load=0;
@@ -116,8 +130,12 @@ double get_usage_load(void){
 		load=0;
 	}
 	return load;
-	/*warning("Please implement"); */
 }
+/**
+   Get the system memory usage.
+
+   @return Fraction of memory used by active, wired, and compressed pages (excluding cache), or 0 on failure.
+*/
 double get_usage_mem(void){
 	vm_statistics64_data_t vm;
 	mach_msg_type_number_t count=HOST_VM_INFO64_COUNT;
@@ -129,6 +147,11 @@ double get_usage_mem(void){
 	double used=(double)(vm.active_count+vm.wire_count+vm.compressor_page_count)*(double)pagesize;
 	return used/(double)NMEM;
 }
+/**
+   return CPU usage of current process since the previous call.
+
+   @return Number of CPUs used by the current process (1 means one CPU fully used), or 0 on failure.
+*/
 double read_self_cpu(void){
 	static double t_last=0, s_last=0;
 	struct rusage usage;
@@ -143,6 +166,14 @@ double read_self_cpu(void){
 	s_last=s_tot;
 	return frac;
 }
+/**
+   Read the cpu tick counters summed over all processors: user is the busy
+   (user+nice+system) ticks and tot includes idle ticks.
+
+   @param[out] user Busy ticks.
+   @param[out] tot Total ticks.
+   @return 0 on success, -1 on failure.
+*/
 int read_cpu_counter(long* user, long* tot){
 	processor_cpu_load_info_data_t* pinfo;
 	mach_msg_type_number_t info_count;
@@ -167,6 +198,12 @@ int read_cpu_counter(long* user, long* tot){
 	vm_deallocate(mach_task_self(), (vm_address_t)pinfo, info_count*sizeof(integer_t));
 	return 0;
 }
+
+/**
+   Return number of processors
+
+   @return Number of processors.
+*/
 
 int get_ncpu(void){
 	int mib[2]={CTL_HW, HW_NCPU};

@@ -29,8 +29,11 @@
 #include "petal.h"
 
 /**
- * hash the data to get a unique file name
- */
+   hash the data to get a unique file name
+
+   @param[in] data Atmosphere generation parameters.
+   @return Newly allocated file name (relative to the cache directory). The caller frees it.
+*/
 static char* create_fnatm(genatm_t* data){
 	uint32_t key;
 	key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
@@ -64,9 +67,13 @@ static char* create_fnatm(genatm_t* data){
 }
 
 /**
- * Geneate the screens two layer at a time and appends to file if fc is not
- * NULL. Handles large screens well without using the full storage.
- */
+   Geneate the screens two layer at a time and appends to file if fc is not
+   NULL. Handles large screens well without using the full storage.
+
+   @param[in,out] fc File to append the screens to. If NULL, screens are stored in data->screen.
+   @param[in,out] data Atmosphere generation parameters. The random stream is consumed, slope is set to -11/3 if 0, and
+   data->screen is allocated if fc is NULL.
+*/
 static void spect_screen_do(zfarr* fc, genatm_t* data){
 	real slope=data->slope;
 	if(!slope) slope=data->slope=-11./3.;
@@ -170,8 +177,12 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 }
 
 /**
- * Generate one screen at a time and save to file
- */
+   Generate fractal screens. Save one screen at a time to file if fc is not NULL.
+
+   @param[in,out] fc File to append the screens to. If NULL, screens are stored in data->screen.
+   @param[in,out] data Atmosphere generation parameters. The random stream is consumed and data->screen is allocated if
+   fc is NULL.
+*/
 static void fractal_screen_do(zfarr* fc, genatm_t* data){
 	const long nx=NX(data);
 	const long ny=NY(data);
@@ -201,6 +212,12 @@ OMP_FOR(NTHREAD)
 		}
 	}
 }
+/**
+   Generate screens using fractal method if slope is -1, otherwise using FFT of the spectrum.
+
+   @param[in,out] fc File to append the screens to. If NULL, screens are stored in data->screen.
+   @param[in,out] data Atmosphere generation parameters.
+*/
 static void genscreen_do(zfarr* fc, genatm_t* data){
 	if(fabs(data->slope+1)<EPS){
 		fractal_screen_do(fc, data);
@@ -209,10 +226,14 @@ static void genscreen_do(zfarr* fc, genatm_t* data){
 	}
 }
 /**
- * Generates multiple screens from spectrum. Note that if data->share=1, the
- * atmosphere will be different from data->share=0 due to different algorithms
- * used.
- */
+   Generates multiple screens from spectrum. Note that if data->share=1, the
+   atmosphere will be different from data->share=0 due to different algorithms
+   used.
+
+   @param[in,out] data Atmosphere generation parameters. The random stream is consumed.
+   @return Newly allocated screens, one per layer. If data->share is set, they are memory mapped from the cache file. The
+   caller frees it.
+*/
 mapcell* genscreen(genatm_t* data){
 	mapcell *screen=NULL;
 	long nlayer=data->nlayer;
@@ -235,7 +256,12 @@ mapcell* genscreen(genatm_t* data){
 	return screen;
 }
 /**
- * Calculate RMS WFE in m from r0 and L0
+   Calculate RMS WFE in m from r0 and L0
+
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @param[in] L0 Outer scale (m).
+   @param[in] slope PSD slope. 0 means -11/3.
+   @return RMS wavefront error (m).
 */
 static real calc_rms(real r0, real L0, real slope){
 	real kn2=pow(2*M_PI/0.5e-6, -2);
@@ -244,7 +270,12 @@ static real calc_rms(real r0, real L0, real slope){
 	return sqrt(coeff*M_PI*kn2*pow(r0, -5./3.)*pow(L0, -slope-2));
 }
 /**
- * Calculate r0 from RMS WFE in m and L0
+   Calculate r0 from RMS WFE in m and L0
+
+   @param[in] rms RMS wavefront error (m).
+   @param[in] L0 Outer scale (m).
+   @param[in] slope PSD slope. 0 means -11/3.
+   @return Fried parameter (m) at 0.5 micron.
 */
 static real calc_r0(real rms, real L0, real slope){
 	real kn2=pow(2*M_PI/0.5e-6, -2);
@@ -272,7 +303,10 @@ static real calc_r0(real rms, real L0, real slope){
 	* r0 (Fried parameter in m) or rms (in nm)
 	* dx (sampling)
 	* nx (number of points)
- */
+
+   @param[in] keywords File name or a string of key=value pairs as described above.
+   @return Newly allocated screens. The caller frees it.
+*/
 mapcell* genscreen_str(const char* keywords){
 	mapcell* surfs=NULL;
 	if(zfexist("%s",keywords)){
@@ -369,7 +403,15 @@ mapcell* genscreen_str(const char* keywords){
 }
 /**
    A simpler interface to gerate a single screen.
- */
+
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @param[in] L0 Outer scale (m).
+   @param[in] slope PSD slope. 0 means -11/3.
+   @param[in] dx Sampling (m).
+   @param[in] nx Number of points along x and y.
+   @param[in] seed Random seed.
+   @return Newly allocated screen. The caller frees it.
+*/
 map_t* genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed){
 	rand_t rstat;
 	seed_rand(&rstat, seed);
@@ -383,6 +425,13 @@ map_t* genatm_simple(real r0, real L0, real slope, real dx, long nx, int seed){
 }
 /**
    Generate atmosphere and map onto loc.
+
+   @param[in] loc Grid coordinate.
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @param[in] dsa Outer scale (m) of the generated screen.
+   @param[in] slope PSD slope. 0 means -11/3.
+   @param[in] seed Random seed.
+   @return Newly allocated OPD (m) defined on loc. The caller frees it.
 */
 dmat* genatm_loc(loc_t* loc, real r0, real dsa, real slope, int seed){
 	real D=loc_diam(loc);
@@ -439,20 +488,21 @@ dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 /**
    Creates 2-d PSD at size nx*ny: psd=(strength*(f^2+L0^-2)^(slope/2))^power.
    Zero frequency component is in the corner P(psd,0).
- */
-void spatial_psd(dmat** pout,  /**<Output*/
-	long nx,      /**<The size*/
-	long ny,      /**<The size*/
-	real dx,    /**<The sampling of spatial coordinate.*/
-	real strength, /**<Strength coefficient*/
-	real outerscale, /**<Outerscale */
-	real minfreq,  /**<Low end frequency cut off*/
-	real maxfreq,  /**<High end frequency cut off*/
-	real slope, /**<should be -11/3 for von karman or kolmogorov
-			 screens, or -4 for biharmonic screen (just
-			 testing only).*/
-	real power  /**< optionally do a power of psd.*/
-){
+
+   @param[in,out] pout Output. Reused if the size matches, otherwise (re)allocated.
+   @param[in] nx The size along x.
+   @param[in] ny The size along y.
+   @param[in] dx The sampling of spatial coordinate (m).
+   @param[in] strength Strength coefficient.
+   @param[in] outerscale Outerscale (m). 0 means infinity.
+   @param[in] minfreq Low end frequency cut off (1/m).
+   @param[in] maxfreq High end frequency cut off (1/m). 0 means infinity.
+   @param[in] slope should be -11/3 for von karman or kolmogorov screens, or -4 for biharmonic screen (just testing
+   only). 0 means -11/3.
+   @param[in] power optionally do a power of psd.
+*/
+void spatial_psd(dmat** pout, long nx, long ny, real dx, real strength, real outerscale, real minfreq, real maxfreq,
+	real slope, real power){
 	if(slope==0) slope=-11./3.;//Kolmogorov
 	slope*=power/2.;
 	if(maxfreq==0) maxfreq=INFINITY;
@@ -486,7 +536,16 @@ void spatial_psd(dmat** pout,  /**<Output*/
 }
 /**
    Compute spatial PSD of turbulence spectrum.
- */
+
+   @param[in] nx The size along x.
+   @param[in] ny The size along y.
+   @param[in] dx The sampling (m).
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @param[in] L0 Outer scale (m).
+   @param[in] slope PSD slope. 0 means -11/3.
+   @param[in] power Power to apply to the PSD (e.g., 0.5 for the amplitude spectrum).
+   @return Newly allocated PSD with zero frequency at the corner. The caller frees it.
+*/
 dmat* turbpsd(long nx, long ny, real dx, real r0, real L0, real slope, real power){
 	real strength=0.0229*pow(r0, -5./3.)*pow((0.5e-6)/(2.*M_PI), 2);
 	dmat* out=0;
@@ -495,7 +554,14 @@ dmat* turbpsd(long nx, long ny, real dx, real r0, real L0, real slope, real powe
 }
 /**
    Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
-   weights.  */
+   weights.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] nps Number of layers.
+   @param[in] ht Layer heights (m).
+   @param[in] wt Layer weights. Layers with weight below 0.01 are ignored.
+   @return Isoplanatic angle (radian).
+*/
 real calc_aniso(real r0, int nps, real* ht, real* wt){
 	real wh=0;
 	for(int ips=0; ips<nps; ips++){
@@ -507,6 +573,12 @@ real calc_aniso(real r0, int nps, real* ht, real* wt){
 }
 /**
    Estimate Green wood frequency
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] nps Number of layers.
+   @param[in] ws Layer wind speeds (m/s).
+   @param[in] wt Layer weights.
+   @return Greenwood frequency (Hz).
 */
 real calc_greenwood(real r0, int nps, real* ws, real* wt){
 	real wv=0;
@@ -518,7 +590,16 @@ real calc_greenwood(real r0, int nps, real* ws, real* wt){
 /**
    Estimate generalized aniso angle theta2 from Fried parameter r0, and layer
    height and weights, and deformable mirror conjugation heights hc1 hc2 of the
-   ground and altitude DMs. */
+   ground and altitude DMs.
+
+   @param[in] r0 Fried parameter (m).
+   @param[in] nps Number of layers.
+   @param[in] ht Layer heights (m).
+   @param[in] wt Layer weights.
+   @param[in] hc1 Conjugation height (m) of the ground DM.
+   @param[in] hc2 Conjugation height (m) of the altitude DM.
+   @return Generalized isoplanatic angle (radian).
+*/
 real calc_aniso2(real r0, int nps, real* ht, real* wt, real hc1, real hc2){
 	real wh=0;
 	real hh=pow(fabs(hc2-hc1), 5./3.);//symmetric in hc1 and hc2

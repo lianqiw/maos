@@ -79,14 +79,17 @@ typedef struct MONITOR_T{
 }MONITOR_T;
 
 
-static MONITOR_T* pmonitor=NULL;//head of linked list
+/**head of linked list*/
+static MONITOR_T* pmonitor=NULL;
 static int all_done=0;
-/*A linked list to store running process*/
-static RUN_T* running=NULL;/*points to the begining */
-static RUN_T** running_end=&running;/*points to the last to add. */
-/*A linked list to store ended process*/
+/**A linked list to store running process. points to the begining*/
+static RUN_T* running=NULL;
+/**points to the last to add.*/
+static RUN_T** running_end=&running;
+/**A linked list to store ended process*/
 static RUN_T* runned=NULL;
-static RUN_T** runned_end=&runned;//points to the pointer of end slot
+/**points to the pointer of end slot*/
+static RUN_T** runned_end=&runned;
 static double usage_cpu;
 static RUN_T* running_add(int pid, int sock);
 static RUN_T* running_get_by_pid(int pid);
@@ -101,13 +104,28 @@ static void scheduler_timeout(void);
 static void monitor_send(RUN_T* run, const char* path);
 static void monitor_send_initial(MONITOR_T* ic);
 static void monitor_send_load(void);
-static int counter=-1;//an negative index for a pending run
-static int nused_cpu=0;//number of CPUs being used
-static int nused_gpu=0;//number of GPUs being used
-static time_t lasttime3=0;//every 3 seconds
-static time_t lasttime10=0;//every 10 seconds
+/**an negative index for a pending run*/
+static int counter=-1;
+/**number of CPUs being used*/
+static int nused_cpu=0;
+/**number of GPUs being used*/
+static int nused_gpu=0;
+/**every 3 seconds*/
+static time_t lasttime3=0;
+/**every 10 seconds*/
+static time_t lasttime10=0;
 #define MAXSOCK 1024
-static const char* sockname[MAXSOCK]={0};//saving the client name of each socket
+/**saving the client name of each socket*/
+static const char* sockname[MAXSOCK]={0};
+/**
+   Query or update the number of CPUs and GPUs used by running jobs.
+
+   @param[in] cmd 0: query, 1: add resource usage, 2: remove resource usage, 3: reset to zero.
+   @param[in] pid For cmd 0, 1 queries GPUs and other values query CPUs. Otherwise the job pid used for logging.
+   @param[in] nthread Number of CPUs to add or remove.
+   @param[in] ngpu Number of GPUs to add or remove.
+   @return For cmd 0 with pid 1, the number of GPUs in use; otherwise the number of CPUs in use.
+*/
 static int nrun_handle(int cmd, int pid, int nthread, int ngpu){
 	switch(cmd){
 	case 0:
@@ -147,18 +165,42 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu){
 	}
 	return nused_cpu;
 }
+/**
+   Get the number of CPUs or GPUs in use.
+
+   @param[in] type 0: CPUs, 1: GPUs.
+   @return Number of CPUs or GPUs in use.
+*/
 static int nrun_get(int type){
 	return nrun_handle(0, type, 0, 0);
 }
+/**
+   Record that a job started using nthread CPUs and ngpu GPUs.
+
+   @param[in] pid Job pid (for logging).
+   @param[in] nthread Number of CPUs used by the job.
+   @param[in] ngpu Number of GPUs used by the job.
+*/
 static void nrun_add(int pid, int nthread, int ngpu){
 	nrun_handle(1, pid, nthread, ngpu);
 }
+/**
+   Record that a job released nthread CPUs and ngpu GPUs. Counts are clipped at zero.
+
+   @param[in] pid Job pid (for logging).
+   @param[in] nthread Number of CPUs released.
+   @param[in] ngpu Number of GPUs released.
+*/
 static void nrun_sub(int pid, int nthread, int ngpu){
 	nrun_handle(2, pid, nthread, ngpu);
 }
 /**
-   The following runned_* routines maintains the linked list
-   "runned" which contains the already finished jobs.
+   Append irun to the end of the "runned" linked list of finished jobs and mark
+   it done. The runned_* routines maintain this list. irun must already be
+   unlinked from the running list.
+
+   @param[in,out] irun Job record. Ownership moves to the runned list.
+   @return 0 if irun has a finished status, 1 (with a warning) otherwise.
 */
 static int runned_add(RUN_T* irun){
 	/*move irun to end of runned list from running list. */
@@ -172,6 +214,12 @@ static int runned_add(RUN_T* irun){
 		return 0;
 	}
 }
+/**
+   Remove the finished job pid (all finished jobs if pid is -1) from the runned
+   list, notify monitors, and free the records.
+
+   @param[in] pid Job pid, or -1 for all finished jobs.
+*/
 void runned_remove(int pid){
 	RUN_T *irun=NULL;
 	int found=0;
@@ -208,7 +256,10 @@ void runned_remove(int pid){
 	return irun;
 }*/
 /**
-   Restart a crashed/finished job
+   Restart a crashed or finished job by moving it from the runned list to the
+   beginning of the running list with queued status and a new negative pid.
+
+   @param[in] pid Pid of the finished job.
 */
 void runned_restart(int pid){
 	RUN_T *irun=NULL;
@@ -249,8 +300,13 @@ void runned_restart(int pid){
 	}
 }
 /**
-   The following running_* routiens operates on running linked list
-   which contains queued jobs.
+   Add a job to the end of the "running" linked list, which contains queued and
+   running jobs. The running_* routines operate on this list. If the job already
+   exists, only its socket is updated.
+
+   @param[in] pid Job pid. Positive for a launched process, negative for a queued job.
+   @param[in] sock Socket connected to the job, or -1.
+   @return The existing or newly allocated record, owned by the running list, or NULL if a positive pid has already exited.
 */
 static RUN_T* running_add(int pid, int sock){
 	RUN_T* irun;
@@ -281,6 +337,13 @@ static RUN_T* running_add(int pid, int sock){
 	}
 }
 
+/**
+   Move job pid from the running list to the runned list with the given final
+   status, releasing its CPU/GPU usage and notifying monitors.
+
+   @param[in] pid Job pid.
+   @param[in] status Final status, e.g. S_FINISH, S_CRASH, or S_KILLED.
+*/
 static void running_remove(int pid, int status){
 	//dbg_time("Removing %d from running\n", pid);
 	RUN_T* irun=NULL;
@@ -316,6 +379,12 @@ static void running_remove(int pid, int status){
 	}
 }
 
+/**
+   Find a job in the running list by pid.
+
+   @param[in] pid Job pid. 0 matches the first job with a positive pid.
+   @return Reference to the record in the running list, or NULL if not found.
+*/
 static RUN_T* running_get_by_pid(int pid){
 	RUN_T* irun;
 	for(irun=running; irun; irun=irun->next){
@@ -326,6 +395,12 @@ static RUN_T* running_get_by_pid(int pid){
 	return irun;
 }
 
+/**
+   Find the first job in the running list with the given status.
+
+   @param[in] status Status value such as S_QUEUED or S_WAIT.
+   @return Reference to the record in the running list, or NULL if not found.
+*/
 static RUN_T* running_get_by_status(int status){
 	RUN_T* irun;
 	//int jrun=0;
@@ -338,6 +413,12 @@ static RUN_T* running_get_by_status(int status){
 	return irun;
 }
 
+/**
+   Find a job in the running list by its connection socket.
+
+   @param[in] sock Socket connected to the job.
+   @return Reference to the record in the running list, or NULL if not found.
+*/
 static RUN_T* running_get_by_sock(int sock){
 	RUN_T* irun;
 	for(irun=running; irun; irun=irun->next){
@@ -347,6 +428,13 @@ static RUN_T* running_get_by_sock(int sock){
 	}
 	return irun;
 }
+/**
+   Kill job pid: send SIGTERM if it has been started (waking it up first if it is
+   waiting) and mark it as unknown until it exits, or remove it from the running
+   list as killed if it is still queued.
+
+   @param[in] pid Job pid.
+*/
 void running_kill(int pid){
 	RUN_T* irun=running_get_by_pid(pid);
 	if(irun){
@@ -363,7 +451,14 @@ void running_kill(int pid){
 		//dbg_time("%5d term signal sent\n", pid);
 	}
 }
-///check whether the job still exists
+/**
+   Check whether a launched job still exists. A job whose process is gone for
+   more than 60 seconds is marked as crashed and moved to the runned list. A job
+   that has not reported for 600 seconds is marked as unknown.
+
+   @param[in,out] irun Job record. May be moved to the runned list.
+   @return 1 if the job process is still considered alive, 0 otherwise.
+*/
 static int check_job_exists(RUN_T *irun){
 	int ans=0;
 	if(irun && irun->pid>0 && irun->status.info<10){
@@ -482,7 +577,12 @@ static void process_queue(void){
 		dbg_time("no resource available. nused_cpu=%d, ngpu=%d.\n", nrun_get(0), nrun_get(1));
 	}
 }
-/** replace \n by space*/
+/**
+   Replace newline characters by spaces.
+
+   @param[in] path0 Input string.
+   @return Newly allocated copy with newlines replaced; the caller frees it.
+*/
 static char* remove_endl(const char* path0){
 	char* path=strdup(path0);
 	for(char* tmp=path; tmp[0]; tmp++){
@@ -492,6 +592,12 @@ static char* remove_endl(const char* path0){
 	}
 	return path;
 }
+/**
+   Add a new job to the running list with queued status and notify monitors.
+
+   @param[in] exename Path to the executable.
+   @param[in] execmd Job command line with arguments separated by newline.
+*/
 static void queue_new_job(const char* exename, const char* execmd){
 	RUN_T* irun=running_add(--counter, -1);
 	if(!irun){
@@ -509,22 +615,15 @@ static void queue_new_job(const char* exename, const char* execmd){
 }
 
 /**
- * @brief Sends a command to a running process (maos) and optionally passes a socket.
- *
- * This function retrieves the running process by its PID, then attempts to send a command
- * (and optionally a socket) to the process via its command socket. It also replies to the
- * provided socket (if valid) with the result of the operation.
- *
- * @param pid   The process ID of the target running process.
- * @param sock  The socket descriptor to reply to, or -1 if no reply is needed.
- * @param cmd   The command to send to the running process.
- *
- * @return 0 on success, -1 on failure.
- *
- * The function logs a warning if the operation fails, or a debug message on success.
- * If the process or its command socket is not found, or if writing the command fails,
- * the function returns -1.
- */
+   Send a command to a running maos process via its command socket, optionally
+   passing a socket to it. The reply to sock (0 on success, -1 on failure) is
+   written before the socket is passed. Logs a warning on failure.
+
+   @param[in] pid Pid of the target maos process.
+   @param[in] sock Socket to reply to and pass to maos, or -1 if none.
+   @param[in] cmd Command to send to maos (e.g. MAOS_DRAW, MAOS_VAR).
+   @return 0 on success, -1 if the process or its command socket is not found or writing the command fails.
+*/
 int maos_command(int pid, int sock, int cmd){
 	RUN_T* irun=running_get_by_pid(pid);
 	int cmd2[2]={cmd, 0};
@@ -539,9 +638,9 @@ int maos_command(int pid, int sock, int cmd){
 	}
 	return failed?-1:0;//do not keep this connection.
 }
-/*
+/**
  Stores drawdaemon sockets
- */
+*/
 typedef struct SOCKID_M{
 	int id;
 	int sock;
@@ -551,16 +650,12 @@ typedef struct SOCKID_M{
 static SOCKID_T* shead=0;
 
 /**
- * @brief Saves or updates the association between a socket and an ID.
- *
- * This function searches for an existing entry in the linked list of SOCKID_T structures
- * that matches the given socket descriptor (`sock_save`). If found, it updates the associated
- * ID with the provided `id` value and logs the update. If not found, it creates a new entry,
- * initializes it with the given socket and ID, inserts it at the head of the list, and logs the save.
- *
- * @param sock_save The socket descriptor to be saved or updated.
- * @param id        The ID to associate with the socket.
- */
+   Save a drawdaemon socket with an id in the linked list, or update the id if
+   the socket is already saved.
+
+   @param[in] sock_save Socket descriptor to save. Ownership moves to the list.
+   @param[in] id Id (session id) to associate with the socket.
+*/
 static void socket_save(int sock_save, int id){
 	int found=0;
 	for(SOCKID_T* p=shead; p; p=p->next){
@@ -583,6 +678,11 @@ static void socket_save(int sock_save, int id){
 		dbg_time("Save socket %d with id %d\n", sock_save, id);
 	}
 }
+/**
+   Unlink p from the saved socket list and free it. Does not close the socket.
+
+   @param[in] p Entry to remove. Freed.
+*/
 static void socket_remove(SOCKID_T*p){
 	//remove from list. make sure p->next is saved
 	if(p->prev){//middle item
@@ -595,7 +695,13 @@ static void socket_remove(SOCKID_T*p){
 	}
 	free(p);
 }
-//retrieve socket from linked list based in id. 
+/**
+   Retrieve and remove a saved drawdaemon socket by id. Bad sockets encountered
+   are closed and removed. If none matches id, a socket saved with id 0 is used.
+
+   @param[in] id Id to look up.
+   @return The socket, now owned by the caller, or -1 if not found.
+*/
 static int socket_get(int id){
 	int sock_save=-1;
 	//dbg_time("Looking up socket with id %d\n", id);
@@ -628,6 +734,9 @@ static int socket_get(int id){
 	}
 	return sock_save;	
 }
+/**
+   Send a heartbeat to all saved drawdaemon sockets and remove those that fail.
+*/
 static void socket_heartbeat(){
 	for(SOCKID_T* p_next, *p=shead; p; p=p_next){
 		p_next=p->next;
@@ -639,7 +748,9 @@ static void socket_heartbeat(){
 		}
 	}
 }
-/*Close all connection upon scheduler exit.*/
+/**
+   Close all saved drawdaemon sockets upon scheduler exit.
+*/
 static void socket_close(){
 	for(SOCKID_T *p_next, *p=shead; p; p=p_next){
 		p_next=p->next;
@@ -647,6 +758,13 @@ static void socket_close(){
 		socket_remove(p);
 	}
 }
+/**
+   Name a socket for logging. If the socket was previously a monitor, the stale
+   monitor is removed.
+
+   @param[in] sock Socket descriptor.
+   @param[in] name Name of the client. Must remain valid (string literal).
+*/
 static void set_sockname(int sock, const char *name){
 	if(sock>-1&&sock<MAXSOCK&&(!sockname[sock]||strcmp(sockname[sock],name))){
 		if(sockname[sock] && !strcmp(sockname[sock], "monitor")){
@@ -657,11 +775,22 @@ static void set_sockname(int sock, const char *name){
 		sockname[sock]=name;
 	}
 }
+/**
+   Clear the name of a socket.
+
+   @param[in] sock Socket descriptor.
+*/
 static void unset_sockname(int sock){
 	if(sock>-1&&sock<MAXSOCK){
 		sockname[sock]=NULL;
 	}
 }
+/**
+   Get the name of a socket for logging.
+
+   @param[in] sock Socket descriptor.
+   @return The name, or "" if not named. Do not free.
+*/
 static const char* get_sockname(int sock){
 	if(sock>-1 && sock<MAXSOCK && sockname[sock]){
 		return sockname[sock];
@@ -670,7 +799,16 @@ static const char* get_sockname(int sock){
 	}
 }
 
-static int scheduler_recv_wait=-1;//>-1: there is pending scheduler_recv_socket.
+/**>-1: there is pending scheduler_recv_socket.*/
+static int scheduler_recv_wait=-1;
+/**
+   Ask the first monitor with plotting enabled to start a drawdaemon for pid,
+   and record sock as the pending draw request.
+
+   @param[in] sock Socket of draw() waiting for a drawdaemon.
+   @param[in] pid Pid of the process requesting drawing.
+   @return 0 on success, nonzero if sending failed, -1 if no monitor supports plotting.
+*/
 static int monitor_request_draw(int sock, int pid){
 	MONITOR_T* pm=0;
 	int ans=-1;
@@ -700,12 +838,14 @@ static int monitor_request_draw(int sock, int pid){
 	return ans;
 }
 /**
- * @brief Send socket to draw for drawing.
- * 
- * @param sock 
- * @param pid 	<=0: service pending request. >0: request drawing
- * @return int 0 for success. -1 for failure
- */
+   Hand a drawdaemon socket to draw(). With pid<=0 it is passed to the pending
+   draw() request from monitor_request_draw(); otherwise it is passed to maos pid
+   via maos_command().
+
+   @param[in] sock Drawdaemon socket.
+   @param[in] pid <=0: service the pending request. >0: ask maos pid to draw with sock.
+   @return 0 for success, -1 for failure.
+*/
 int send_draw_sock(int sock, int pid){
 	int ret;//return status
 	set_sockname(sock, "drawdaemon");
@@ -741,10 +881,14 @@ int send_draw_sock(int sock, int pid){
 }
 //PNEW(mutex_sch);//respond() and scheduler_handle_ws() much lock this before preceed.
 /**
-   respond to client requests. The fixed header is int[2] for opcode and
-   pid. Optional data follows based on opcode. The disadvanced of this is that
+   Respond to client requests. The fixed header is int[2] for opcode and
+   pid. Optional data follows based on opcode. The disadvantage of this is that
    new commands with additional payload cannot be easily introduced in the
    scheduler().
+
+   @param[in] pfd Poll entry of the client socket.
+   @param[in] flag -1 asks the client to shut down before reading. Otherwise unused.
+   @return 0 to keep the connection, -1 (or nonzero) to close the socket.
 */
 static int respond(struct pollfd *pfd, int flag){
 	if(!pfd){
@@ -1074,6 +1218,10 @@ static int respond(struct pollfd *pfd, int flag){
 }
 
 
+/**
+   Periodic task called by listen_port(): process the job queue, check jobs every
+   3 seconds, and report load and send drawdaemon heartbeats every 10 seconds.
+*/
 static void scheduler_timeout(void){
 	time_t thistime=myclocki();
 	//Process job queue
@@ -1099,6 +1247,15 @@ static void scheduler_timeout(void){
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
+/**
+   Add a monitor client to the MONITOR_T linked list (or update an existing one
+   for the same socket) and send it the full job list.
+
+   @param[in] sock Socket of the monitor.
+   @param[in] flag Options. >=0x8: old scheme, load reporting only. <0: bit 0 enables load, bit 1 plotting, bit 2 text (http) mode.
+   @param[in] func Function to send text directly to the client, or NULL to write to sock.
+   @param[in] userdata Parameter passed to func.
+*/
 void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, void *userdata), void* userdata){
 	//dbg_time("added monitor on sock %d\n",sock);
 	set_sockname(sock, "monitor");
@@ -1131,6 +1288,12 @@ void monitor_add(int sock, int flag, int (*func)(char* buf, int nlen, int mode, 
 	node->userdata=userdata;
 	monitor_send_initial(node);
 }
+/**
+   Remove the monitor connected at sock from the monitor list and shut down the
+   socket for writing.
+
+   @param[in] sock Socket of the monitor.
+*/
 void monitor_remove(int sock){
 	MONITOR_T* ic=NULL;
 	for(MONITOR_T **curr=&pmonitor; *curr;){
@@ -1149,6 +1312,15 @@ void monitor_remove(int sock){
 	}
 	warning_time("Monitor is not found fd=%d\n", sock);
 }
+/**
+   Format job path or status as text for http (websocket) monitors.
+
+   @param[in] irun Job record.
+   @param[in] path Job path. If NULL, the status is formatted instead.
+   @param[out] buf Output buffer.
+   @param[in] size Size of buf.
+   @return Length of the text (as snprintf, may exceed size if truncated).
+*/
 static int http_convert(RUN_T *irun, const char *path, char *buf, int size){
 	int len;
 	if(path){
@@ -1169,6 +1341,14 @@ static int http_convert(RUN_T *irun, const char *path, char *buf, int size){
 	}
 	return len;
 }
+/**
+   Send job path or status to one monitor.
+
+   @param[in] irun Job record.
+   @param[in] path Job path. If NULL, the status is sent instead.
+   @param[in] ic Monitor to send to.
+   @return 0 on success, nonzero on failure.
+*/
 static int monitor_send_do(RUN_T* irun, const char* path, MONITOR_T *ic){
 	if(!irun || !ic) return -1;
 	int ans=0;
@@ -1200,7 +1380,13 @@ static int monitor_send_do(RUN_T* irun, const char* path, MONITOR_T *ic){
 	return ans;
 }
 
-/* Notify alreadyed connected monitors job update. */
+/**
+   Notify already connected monitors of a job update. Monitors that fail are
+   removed.
+
+   @param[in] irun Job record.
+   @param[in] path Job path. If NULL, the status is sent instead.
+*/
 static void monitor_send(RUN_T* irun, const char* path){
 	MONITOR_T* ic;
 redo:
@@ -1212,6 +1398,13 @@ redo:
 		}
 	}
 }
+/**
+   Query nvidia-smi for GPU usage. GPU usage query is disabled permanently after
+   the first failure.
+
+   @param[out] gpu_mem Fraction of total GPU memory used. 0 if disabled.
+   @return Fraction of GPUs that use more than 500 MB of memory, or 0 if disabled.
+*/
 double get_usage_gpu(double* const gpu_mem){
 	static int enabled=1;
 	*gpu_mem=0;
@@ -1244,7 +1437,9 @@ double get_usage_gpu(double* const gpu_mem){
 	}
 	return 0;
 }
-/* Notify alreadyed connected monitors machine load. */
+/**
+   Notify already connected monitors of the machine load.
+*/
 static void monitor_send_load(void){
 	MONITOR_T* ic, * ic2;
 	double mem=get_usage_mem();
@@ -1271,7 +1466,12 @@ static void monitor_send_load(void){
 		}
 	}
 }
-/* Notify the new added monitor all job information. */
+/**
+   Send the newly added monitor information of all jobs. The monitor is removed
+   on failure.
+
+   @param[in] ic Monitor to send to.
+*/
 static void monitor_send_initial(MONITOR_T* ic){
 	int sock=ic->sock;
 	for(RUN_T* irun=runned; irun; irun=irun->next){
@@ -1288,6 +1488,16 @@ static void monitor_send_initial(MONITOR_T* ic){
 	}
 }
 
+/**
+   Scheduler: queues and launches jobs according to available CPUs and GPUs,
+   keeps their status, and serves monitor, drawdaemon, and browser (http and
+   websocket) clients. -d runs as daemon; --direct skips locking as it is already
+   done by the launcher.
+
+   @param[in] argc Number of arguments.
+   @param[in] argv Arguments: [-h|--help] [-d] [--direct].
+   @return 0 for help, 1 if the lock file cannot be acquired. Otherwise exits with 0.
+*/
 int main(int argc, const char* argv[]){
 	int flag=0;
 	//err2out=0;//send error() and dbg() to stderr
@@ -1348,7 +1558,7 @@ int main(int argc, const char* argv[]){
 		FILE* fpcmd=popen("nvidia-smi -L 2>/dev/null", "r");
 		if(!fpcmd){
 			NGPU=0;
-		} else{
+		}else{
 			char line[4096];
 			while(fgets(line, sizeof(line), fpcmd)){
 				if(!strncmp(line, "GPU", 3)){

@@ -28,16 +28,6 @@
   - WFS to XLOC Backward (Transpose): Propagate from WFS to XLOC (Parallel across each Layer). Launch successive kernels for
   each direction.
   - Layer to layer cache: Fully parallel. 
-  
-  @param data	Prepared parameters for the propagation
-  @param pdirs	Data pointers for each WFS dir (dir).
-  @param ppss	Data pointers for each XLOC layer (ps).
-  @param ii		The layer (forward) or direction (backward) to propagate
-  @param ndir	Number of directions
-  @param nps	Number of phase screens (XLOC)
-  @param alpha1	OPD value scaling factor
-  @param alpha2 Additional scaling defined on dir (layer weighting)
-  @param trans	Transpose operation (backward propagation).
 
   Do not separate the function branches because each layer/wfs combination may
   use different branches.
@@ -48,6 +38,16 @@
   2024-07-25: Do not loop over layers (forward) or directions (backward) inside
   the kernel because they may have different offset and therefore requires block
   to block synchronization between loop steps (which is not possible).
+
+  @param[in] data Prepared parameters for the propagation (device memory).
+  @param[in,out] pdirs Data pointers for each WFS dir (dir). Accumulated into for forward propagation.
+  @param[in,out] ppss Data pointers for each XLOC layer (ps). Accumulated into for backward propagation.
+  @param[in] ii The layer (forward) or direction (backward) to propagate. Unused for layer to layer (ndir==0).
+  @param[in] ndir Number of directions. 0 for layer to layer propagation.
+  @param[in] nps Number of phase screens (XLOC).
+  @param[in] alpha1 OPD value scaling factor.
+  @param[in] alpha2 Additional scaling defined on dir (layer weighting). May be NULL.
+  @param[in] trans 't' for transpose operation (backward propagation).
 */
 __global__ void
 map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ii, int ndir, int nps, Real alpha1, const Real* alpha2, char trans){
@@ -348,7 +348,7 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ii, int n
 		}
 	}
 }
-/*
+/**
   Prepare data and copy to GPU so that one kernel (map2map_do) can handle multiple independent ray tracing without range checking.
   Forward: ps->dir (xloc -> wfs or dm->floc)
   Backward: dir->ps (wfs -> xloc or floc->dm)
@@ -469,10 +469,14 @@ void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 
 /**
    Initialize for ps to dir ray tracing, e.g., turbulence to WFS
+
+   @param[in] out Output grid (at the ground).
+   @param[in] dir Directions and star height.
+   @param[in] _ndir Number of directions.
+   @param[in] in Input grids (layers).
+   @param[in] delay Unused. The delay of each direction is taken from dir.
 */
-void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, //output.
-	const cugridcell& in,//input.
-	Real delay){//directions and star height.
+void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, const cugridcell& in, Real delay){
 	if(hdata){
 		deinit();
 	}
@@ -498,8 +502,11 @@ void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, //outpu
 }
 /**
    Initialize for ps to ps ray tracing, e.g., for caching
+
+   @param[in] out Output grids (layers).
+   @param[in] in Input grids (layers). Must have the same heights as out.
 */
-void map2map::init_l2l(const cugridcell& out, const cugridcell& in){//input. layers.
+void map2map::init_l2l(const cugridcell& out, const cugridcell& in){
 	if(nlayer) error("Already initialized\n");
 	nlayer=in.N();
 	ndir=0;//this is laye to layer.
@@ -517,7 +524,17 @@ void map2map::init_l2l(const cugridcell& out, const cugridcell& in){//input. lay
 }
 /**
    Rotate each OPD array by theta CCW (dir=-1) or CW (dir=1) around point (cx, cy)
- */
+   using bilinear interpolation. blockIdx.z indexes the array.
+
+   @param[in,out] outs Output arrays, accumulated into. NULL entries are skipped.
+   @param[in] ins Input arrays. NULL entries are skipped.
+   @param[in] cx Rotation center x index.
+   @param[in] cy Rotation center y index.
+   @param[in] nx Size of each array along x.
+   @param[in] ny Size of each array along y.
+   @param[in] wfsrot cos and sin of the rotation angle for each array (2 per array).
+   @param[in] dir Rotation direction (1 or -1).
+*/
 __global__ static void
 map_rot_do(Real* const* outs, const Real* const* ins, Real cx, Real cy, long nx, long ny, const Real* wfsrot, int dir){
 	const Real* in=ins[blockIdx.z];
@@ -546,8 +563,15 @@ map_rot_do(Real* const* outs, const Real* const* ins, Real cx, Real cy, long nx,
 	}
 }
 /**
-   Rotate each OPD array by theta CCW around point (cx, cy)
- */
+   Rotate each OPD array by theta around the array center (nx/2, ny/2). See
+   map_rot_do().
+
+   @param[out] out Output cell array, preallocated. Zeroed before rotation.
+   @param[in] in Input cell array. All nonempty blocks must have the same size.
+   @param[in] wfsrot cos and sin of the rotation angle for each block (2 per block).
+   @param[in] dir 1: rotate CW. -1: rotate CCW.
+   @param[in] stream Stream to run in.
+*/
 void map_rot(curcell& out, const curcell& in, const curmat& wfsrot, int dir, stream_t& stream){
 	long nx=0;
 	long ny=0;

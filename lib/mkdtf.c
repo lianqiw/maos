@@ -20,8 +20,10 @@
 #include "mkh.h"
 #include "libmisc.h"
 /**
-	Create a chess pattern on nominal that absorbes fftshift
-	fft[nominal*otf(peak in corner)] gives psf in center.
+   Create a chess pattern on nominal that absorbes fftshift
+   fft[nominal*otf(peak in corner)] gives psf in center.
+
+   @param[in,out] wvf The OTF with peak in center, modified in place.
 */
 void cotf_treat(cmat *wvf){
 	cfftshift(wvf);//peak in corner
@@ -30,6 +32,11 @@ void cotf_treat(cmat *wvf){
 	cfft2(wvf, 1);//peak in corner with chess pattern. fft again will bring peak to center
 	cscale(wvf, 1./(real)(NX(wvf)*NY(wvf)));//cancel FFT scaling effect.
 }
+/**
+   Real valued version of cotf_treat().
+
+   @param[in,out] otf The OTF with peak in center, modified in place.
+*/
 void dotf_treat(dmat *otf){
 	cmat *wvf=NULL;
 	ccpd(&wvf, otf);
@@ -38,15 +45,16 @@ void dotf_treat(dmat *otf){
 	cfree(wvf);
 }
 /**
- * Create a OTF for pix blur and pixel binning effect
- * @param[out] nominal The result
- * @param notfx 	size of FFT
- * @param notfy 	size of FFT
- * @param pdthetax	Ratio of pixel dtheta vs PSF dtheta squared.
- * @param pdthetay	Ratio of pixel dtheta vs PSF dtheta squared.
- * @param pixrot	Rotation of pixel array against PSF (polar coordinate)
- * @param pixblur   Pixel blur sigma(fraction of pixel)
- * @param treat		Embed a FFT shift in moninal
+   Create a OTF for pix blur and pixel binning effect
+
+   @param[out] nominal The result. Allocated or resized as needed.
+   @param[in] notfx Size of FFT along x.
+   @param[in] notfy Size of FFT along y.
+   @param[in] pdthetax Ratio of pixel size vs PSF sampling along x. 0 to disable pixel binning.
+   @param[in] pdthetay Ratio of pixel size vs PSF sampling along y.
+   @param[in] pixrot Rotation of pixel array against PSF (radian, polar coordinate).
+   @param[in] pixblur Pixel blur sigma (fraction of pixel).
+   @param[in] treat 1: embed a FFT shift in nominal with dotf_treat(). 2: apply dfftshift. 0: none.
 */
 void dtf_otf(dmat **nominal, long notfx, long notfy, real pdthetax, real pdthetay, real pixrot, real pixblur, int treat){
 	const long notfx2=notfx>>1;
@@ -85,21 +93,24 @@ void dtf_otf(dmat **nominal, long notfx, long notfy, real pdthetax, real pdtheta
    diffusion. For polar coordinate detectors, it also rotates the pixels and
    pixel coordinates so that they are aranged along the radial and azimuthal
    direction.
- */
-dtf_t* mkdtf(const dmat* wvls, /**<List of wavelength*/
-	real dxsa,        /**<Subaperture size*/
-	real embfac,      /**<Embedding factor (2)*/
-	long notfx,       /**<FFT size along x*/
-	long notfy,       /**<FFT size along y*/
-	long pixpsax,     /**<Number of pixels along x(r)*/
-	long pixpsay,     /**<Number of pixels along y(a)*/
-	real pixthetax,   /**<Pixel size along x (r)*/
-	real pixthetay,   /**<Pixel size along y (a)*/
-	const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
-	const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
-	const real pixblur,     /**<Pixel blur sigma(fraction of pixel)*/
-	const dcell* pixrot /**<Rotation angle of pixels islands in each subaperture. for polar coordinate only*/
-){
+
+   @param[in] wvls List of wavelength (m).
+   @param[in] dxsa Subaperture size (m).
+   @param[in] embfac Embedding factor (2).
+   @param[in] notfx FFT size along x.
+   @param[in] notfy FFT size along y.
+   @param[in] pixpsax Number of pixels along x(r).
+   @param[in] pixpsay Number of pixels along y(a).
+   @param[in] pixthetax Pixel size along x (r) (radian).
+   @param[in] pixthetay Pixel size along y (a) (radian).
+   @param[in] pixoffx Offset of image center from center of pixel array, along x or radial, in unit of pixel. Can be NULL.
+   @param[in] pixoffy Offset of image center from center of pixel array, along y or azimuthal, in unit of pixel. Can be NULL.
+   @param[in] pixblur Pixel blur sigma (fraction of pixel).
+   @param[in] pixrot Rotation angle of pixels islands in each subaperture. For polar coordinate only. Can be NULL.
+   @return Newly allocated array of nwvl dtf_t; free with dtf_free().
+*/
+dtf_t* mkdtf(const dmat* wvls, real dxsa, real embfac, long notfx, long notfy, long pixpsax, long pixpsay,
+	real pixthetax, real pixthetay, const dmat* pixoffx, const dmat* pixoffy, const real pixblur, const dcell* pixrot){
 	int nwvl=(int)(NX(wvls)*NY(wvls));
 	dtf_t* dtfs=mycalloc(nwvl, dtf_t);
 	dtfs->nwvl=nwvl;
@@ -405,6 +416,11 @@ etf_t* mketf(const dtf_t* dtfs, const_anyarray sodium_, int icol, const dcell* s
 	return etfs;
 }
 
+/**
+   Free the array of dtf_t (one per wavelength). Use the dtf_free() macro.
+
+   @param[in] dtfs The array to free. Can be NULL.
+*/
 void dtf_free_do(dtf_t* dtfs){
 	if(!dtfs) return;
 	for(int iwvl=0;iwvl<dtfs->nwvl;iwvl++){
@@ -416,6 +432,11 @@ void dtf_free_do(dtf_t* dtfs){
 	free(dtfs);
 }
 
+/**
+   Free the array of etf_t (one per wavelength). Use the etf_free() macro.
+
+   @param[in] etfs The array to free. Can be NULL.
+*/
 void etf_free_do(etf_t* etfs){
 	if(!etfs) return;
 	for(int iwvl=0;iwvl<etfs->nwvl;iwvl++){
@@ -427,7 +448,11 @@ void etf_free_do(etf_t* etfs){
    profile is nxm array with m>=2. First column is coordinate and the remaining
    is function of coordinate. This routine smoothes the profile on new
    coordinate with spacing of dxnew.
- */
+
+   @param[in] prof The profile.
+   @param[in] dxnew The new coordinate spacing.
+   @return Newly allocated smoothed profile, or a reference to prof if no smoothing is needed. The caller frees it.
+*/
 dmat* smooth(const dmat* prof, real dxnew){
 	const long nxin=NX(prof);
 	const real x0in=P(prof,0);
@@ -458,6 +483,13 @@ dmat* smooth(const dmat* prof, real dxnew){
 	}
 	return out;
 }
+/**
+   Apply smooth() to each sodium profile in profs.
+
+   @param[in] profs The profiles.
+   @param[in] dxnew The new coordinate spacing.
+   @return Newly allocated dcell; the caller frees it.
+*/
 dcell *smooth_cell(const dcell *profs, real dxnew){
 	dcell *out=dcellnew(NX(profs), NY(profs));
 	for(int ix=0; ix<PN(profs); ix++){

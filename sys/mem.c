@@ -28,7 +28,8 @@
 #include <sys/time.h> //setitimer
 #include <errno.h>
 #include <dlfcn.h>
-int signal_caught=0;//indicate that signal is caught.
+/**indicate that signal is caught.*/
+int signal_caught=0;
 #define IN_MEM_C 1
 #include "mem.h"
 #include "thread.h"
@@ -51,6 +52,7 @@ int signal_caught=0;//indicate that signal is caught.
   matlab manage the memory during referencing..
   */
 
+/**stores info about top level function call*/
 __thread char funtrace[funtrace_len]={0};
 #undef strdup
 #undef strndup
@@ -67,6 +69,7 @@ void  (*free_custom)(void*);
 int MEM_VERBOSE=0;
 int MEM_DEBUG=DEBUG+0;
 int MEM_FUNTRACE=0;
+/**default is 0; override with MAOS_LOG_LEVEL; higher value has more output*/
 int LOG_LEVEL=0;
 static void print_mem_debug();
 PNEW(mutex_deinit);
@@ -93,7 +96,12 @@ unsigned int memkey_thres =0;
 unsigned int memkey_maxadd=0;
 unsigned int memkey_maxdel=0;
 unsigned int memkey_notfound=0;
-//Enable or disable MEM_DEBUG
+/**
+   Enable or disable MEM_DEBUG. Prints the outstanding allocations if it was
+   already enabled.
+
+   @param[in] enabled Nonzero to allocate the memory key table and enable MEM_DEBUG; zero to free it and disable.
+*/
 static void memkey_init(int enabled){
 	if(memkey_len){
 		print_mem_debug();
@@ -119,7 +127,12 @@ static void memkey_init(int enabled){
 	}
 	
 }
-//convert address to index. Make sure last two bits has at least 1 set
+/**
+   convert address to index. Make sure last two bits has at least 1 set
+
+   @param[in] p Memory address.
+   @return Hash index into memkey_all.
+*/
 static unsigned int addr2ind(void*p){
 	unsigned long ind=(unsigned long)p;
 	do{
@@ -127,7 +140,12 @@ static unsigned int addr2ind(void*p){
 	}while(!(ind & 3));
 	return (unsigned int)(ind&memkey_len);
 }
-//add memory pointer to list
+/**
+   add memory pointer to list
+
+   @param[in] p Allocated memory address.
+   @param[in] size Size of the allocation in bytes.
+*/
 static void memkey_add(void *p, size_t size){
 	if(atomic_add_fetch(&memcnt, 1)>memkey_thres){
 		memkey_thres=memcnt;
@@ -159,7 +177,13 @@ static void memkey_add(void *p, size_t size){
 		}
 	}
 }
-//Memory allocated from exterior library will not be found. We limit number of tries to avoid searching too much
+/**
+   Remove memory pointer from the list. Memory allocated from exterior library
+   will not be found. We limit number of tries to avoid searching too much
+
+   @param[in] p Memory address being freed.
+   @return Size of the recorded allocation in bytes, or 0 if not found.
+*/
 static size_t memkey_del(void *p){
 	size_t size=0;
 	unsigned int counter=0;
@@ -185,6 +209,10 @@ static size_t memkey_del(void *p){
 	}
 	return size;
 }
+/**
+   Print memory that has been allocated but not freed (up to 50 records) along
+   with their backtrace. Used when MEM_DEBUG is enabled.
+*/
 static void print_mem_debug(){
 	if(!memkey_len){
 		dbg("MEM_DEBUG was not enabled, canceled.\n");
@@ -298,7 +326,12 @@ unsigned int memkey_max=0;
 memkey_t *memkey_all=NULL;
 memhead_t memhead_idle={0L};
 memhead_t memhead_used={0L};
-//Place to to the beginning of list.
+/**
+   Place to to the beginning of list.
+
+   @param[in,out] head List head.
+   @param[in] ind Index of the node in memkey_all to push.
+*/
 static void memhead_push(memhead_t *head, unsigned int ind){
 	memkey_all[ind].list.next=head->next;
 	do{
@@ -310,7 +343,12 @@ static void memhead_push(memhead_t *head, unsigned int ind){
 	while(!atomic_compare_exchange_n(&(head->next), &memkey_all[ind].list.next, ind));
 	
 }
-//Remove memkey from beginning of list (only
+/**
+   Remove memkey from beginning of list.
+
+   @param[in,out] head List head.
+   @return Index of the popped node, or 0 if the list is empty.
+*/
 static unsigned int memhead_pop(memhead_t *head){
 	memhead_t key, key2;
 	//compare both counter and pointer to make sure the node is not changed.
@@ -325,7 +363,12 @@ static unsigned int memhead_pop(memhead_t *head){
 }
 
 /**
-	Delete node i if the previous node is not locked. Returns True if success.
+	Delete node i if the previous node is not locked and move it to the idle list.
+
+	@param[in,out] head List head.
+	@param[in] iprev Index of the previous node; 0 means head.
+	@param[in] i Index of the node to delete.
+	@return 1 if success, 0 otherwise.
 */
 static int memhead_recycle(memhead_t *head, unsigned int iprev, unsigned int i){
 	int ans=0;
@@ -377,7 +420,11 @@ static int memhead_recycle(memhead_t *head, unsigned int iprev, unsigned int i){
 	return ans;
 }
 
-//delete a node (first mark as delete then recycle nodes)
+/**
+   delete a node (first mark as delete then recycle nodes)
+
+   @param[in] p Memory address to delete. If NULL, only recycle the deleted nodes.
+*/
 static void memkey_del(void *p){
 	int done=0;
 	memhead_t next={0L};
@@ -439,7 +486,12 @@ retry:
 		dbg("unexpected: %p is not found memcnt=%u, memkey_count=%u, nretry=%u\n", p, memcnt, memkey_count, nretry);
 	}
 }
-//Add a memkey
+/**
+   Add a memkey
+
+   @param[in] p Allocated memory address.
+   @param[in] size Size of the allocation in bytes.
+*/
 static void memkey_add(void *p, size_t size){
 	unsigned int ind;
 	memalloc+=size;
@@ -478,6 +530,10 @@ retry:
 	memhead_push(&memhead_used, ind);
 }
 
+/**
+   Print memory that has been allocated but not freed (up to 10 records) and the
+   total memory usage. Used when MEM_DEBUG is enabled.
+*/
 void print_mem_debug(){
 	unsigned int i;
 	unsigned int print_count=0;
@@ -538,9 +594,17 @@ typedef struct{
 }memkey_t;
 PNEW(mutex_mem);
 static void *MROOT=NULL;
-static void *MSTATROOT=NULL;//reuses keys from MROOT.
+/**reuses keys from MROOT.*/
+static void *MSTATROOT=NULL;
 
 typedef int(*compar)(const void *, const void *);
+/**
+   Compare two memory records by their call location (funtrace or backtrace).
+
+   @param[in] pa First record.
+   @param[in] pb Second record.
+   @return Negative, zero, or positive as pa is ordered before, same as, or after pb.
+*/
 static int stat_cmp(const memkey_t *pa, const memkey_t *pb){
 	if(!pa->nfunc&&!pb->nfunc){
 		return strcmp(pa->funtrace, pb->funtrace);
@@ -560,6 +624,13 @@ static int stat_cmp(const memkey_t *pa, const memkey_t *pb){
 	}
 	return 0;
 }
+/**
+   twalk() callback that merges records from the same call location into MSTATROOT.
+
+   @param[in] key Pointer to the node pointer of the record.
+   @param[in] which Visit type of the node.
+   @param[in] level Unused.
+*/
 static void stat_usage(const void *key, VISIT which, int level){
 	const memkey_t *key2=*((const memkey_t **)key);
 	(void)level;
@@ -577,6 +648,13 @@ static void stat_usage(const void *key, VISIT which, int level){
 }
 
 static int print_count=0;
+/**
+   twalk() callback that prints a record (up to 100 records).
+
+   @param[in] key Pointer to the node pointer of the record.
+   @param[in] which Visit type of the node.
+   @param[in] level Unused.
+*/
 static void print_usage(const void *key, VISIT which, int level){
 	const memkey_t *key2=*((const memkey_t **)key);
 	(void)level;
@@ -599,6 +677,10 @@ static void print_usage(const void *key, VISIT which, int level){
 	}
 }
 
+/**
+   Print memory that has been allocated but not freed, combining records with
+   the same backtrace. Used when MEM_DEBUG is enabled.
+*/
 void print_mem_debug(){
 	if(MROOT){
 		info3("%u (%lu MB) allocated memory not freed!!!\n", memcnt, (memalloc-memfree)>>20);
@@ -617,6 +699,13 @@ void print_mem_debug(){
 	}
 	info3("Memory allocation is %lu kB, still in use %lu KB.\n", memalloc>>10, (memalloc-memfree)>>10);
 }
+/**
+   Compare two memory records by address.
+
+   @param[in] a First record.
+   @param[in] b Second record.
+   @return -1, 0, or 1 as the address of a is less than, equal to, or greater than that of b; 1 if either is NULL.
+*/
 static int key_cmp(const void *a, const void *b){
 	void *p1, *p2;
 	if(!a||!b) return 1;
@@ -626,6 +715,12 @@ static int key_cmp(const void *a, const void *b){
 	else if(p1>p2) return 1;
 	else return 0;
 }
+/**
+   Add a memory record to the tree.
+
+   @param[in] p Allocated memory address.
+   @param[in] size Size of the allocation in bytes.
+*/
 static void memkey_add(void *p, size_t size){
 	if(!p){
 		if(size){
@@ -703,6 +798,14 @@ static void memkey_init(int enabled){
 }
 #endif
 
+/**
+   Replacement of calloc() that records the allocation when memory accounting
+   (MAOS_MEM_DEBUG) is enabled. Calls error() if allocation fails.
+
+   @param[in] nelem Number of elements.
+   @param[in] nbyte Size of each element in bytes.
+   @return Newly allocated zeroed memory; the caller frees it with free_maos().
+*/
 void *calloc_maos(size_t nelem, size_t nbyte){
 	void *p=calloc_default(nelem, nbyte);
 	if(!p){
@@ -717,6 +820,13 @@ void *calloc_maos(size_t nelem, size_t nbyte){
 	funtrace_unset;
 	return p;
 }
+/**
+   Replacement of malloc() that records the allocation when memory accounting
+   is enabled. Calls error() if allocation fails.
+
+   @param[in] size Number of bytes.
+   @return Newly allocated memory; the caller frees it with free_maos().
+*/
 void *malloc_maos(size_t size){
 	void *p=malloc_default(size);
 	if(!p){
@@ -731,6 +841,14 @@ void *malloc_maos(size_t size){
 	funtrace_unset;
 	return p;
 }
+/**
+   Replacement of realloc() that updates the memory accounting record. Calls
+   error() if allocation fails for nonzero size.
+
+   @param[in,out] p0 Memory to reallocate, may be NULL. Invalid after the call if reallocated.
+   @param[in] size New size in bytes.
+   @return Reallocated memory; the caller frees it with free_maos().
+*/
 void *realloc_maos(void *p0, size_t size){
 	//to avoid race condition if p0 and p is different and p0 is allocated to another thread
 	//We delete p0 first and then readd p.
@@ -757,6 +875,15 @@ void *realloc_maos(void *p0, size_t size){
 	funtrace_unset;
 	return p;
 }
+/**
+   Reallocate p0 from oldsize to newsize bytes and zero out the newly
+   allocated segment.
+
+   @param[in,out] p0 Memory to reallocate, may be NULL. Invalid after the call if reallocated.
+   @param[in] oldsize Old size in bytes.
+   @param[in] newsize New size in bytes.
+   @return Reallocated memory; the caller frees it with free_maos().
+*/
 void *recalloc_maos(void *p0, size_t oldsize, size_t newsize){//zero out newly allocated segment
 	void* pnew=realloc_maos(p0, newsize);
 	if(newsize>oldsize){
@@ -764,6 +891,11 @@ void *recalloc_maos(void *p0, size_t oldsize, size_t newsize){//zero out newly a
 	}
 	return pnew;
 }
+/**
+   Replacement of free() that removes the memory accounting record.
+
+   @param[in] p Memory to free, may be NULL.
+*/
 void free_maos(void *p){
 	size_t size=0;
 	if(memkey_len && p){
@@ -776,6 +908,10 @@ void free_maos(void *p){
 	funtrace_unset;
 }
 
+/**
+   Read environment variables MAOS_MEM_DEBUG, MAOS_MEM_VERBOSE,
+   MAOS_MEM_FUNTRACE, and MAOS_LOG_LEVEL.
+*/
 void read_sys_env(){
 	READ_ENV_INT(MEM_DEBUG, 0, 1);//enable memory accounting
 	READ_ENV_INT(MEM_VERBOSE, 0, 2);//enable verbose memory operation
@@ -783,6 +919,10 @@ void read_sys_env(){
 	READ_ENV_INT(LOG_LEVEL, -5, 5);
 }
 
+/**
+   Resolve the default memory functions, read environment variables, and
+   initialize process info and memory accounting. Only runs once.
+*/
 static void init_mem(){
 	if(!calloc_default){
 		calloc_default=(void *(*)(size_t, size_t))dlsym(RTLD_DEFAULT, "calloc");
@@ -797,12 +937,20 @@ static void init_mem(){
 		//fpconsole=fdopen(dup(fileno(stdout)), "a");
 	}
 }
+/**
+   Library constructor that calls init_mem().
+*/
 static __attribute__((constructor)) void init(){
 	init_mem();
 }
 /**
- * register an external set of malloc functions
- * */
+   register an external set of malloc functions
+
+   @param[in] ex_malloc Replacement for malloc. Ignored if NULL.
+   @param[in] ex_calloc Replacement for calloc. Ignored if NULL.
+   @param[in] ex_realloc Replacement for realloc. Ignored if NULL.
+   @param[in] ex_free Replacement for free. Ignored if NULL.
+*/
 void register_malloc(void* (*ex_malloc)(size_t), void* (*ex_calloc)(size_t, size_t), void* (*ex_realloc)(void *, size_t), void(*ex_free)(void *)){
 	if(ex_malloc)  malloc_default= ex_malloc;
 	if(ex_calloc)  calloc_default= ex_calloc;
@@ -817,8 +965,10 @@ typedef struct deinit_t{/*contains either fun or data that need to be freed. */
 deinit_t *deinit_head=NULL;
 
 /**
-   Register routines to be called with mem.c is unloading (deinit).
- */
+   Library destructor. Removes old cache files, calls and frees the routines
+   registered by register_deinit(), and prints memory debug information if
+   enabled.
+*/
 static __attribute__((destructor)) void deinit(){
 	void freepath();
 	void thread_pool_destroy();
@@ -842,7 +992,10 @@ static __attribute__((destructor)) void deinit(){
 }
 
 /**
-   Register a function or data to call or free upon exit
+   Register a function or data to call or free upon exit. Duplicates are ignored.
+
+   @param[in] fun Function to call upon exit. May be NULL.
+   @param[in] data Data to free upon exit. May be NULL.
 */
 void register_deinit(void (*fun)(void), void *data){
 	LOCK(mutex_deinit);
@@ -869,6 +1022,17 @@ void register_deinit(void (*fun)(void), void *data){
 
 static int (*signal_handler)(int)=0;//If set will be called by default_signal_handler to avoid exit.
 static volatile sig_atomic_t fatal_error_in_progress=0;
+/**
+   Signal handler installed by register_signal_handler(). SIGUSR1 enables memory
+   debugging. Otherwise prints a backtrace (except SIGINT), calls the
+   registered handler, and then propagates the signal to the default handler
+   unless it is SIGUSR2 (raised by error()) and the registered handler returns
+   nonzero to cancel it.
+
+   @param[in] sig Signal number.
+   @param[in] siginfo Signal information. May be NULL.
+   @param[in] unused Unused.
+*/
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	(void)unused;
 	if(sig==0){
@@ -926,13 +1090,25 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 		}
 	}
 }
+/**
+   A signal handler for register_signal_handler() that prints the signal and
+   returns 1 so that error() (SIGUSR2) does not quit.
+
+   @param[in] sig Signal number.
+   @return 1 to cancel the default action.
+*/
 int dummy_signal_handler(int sig){
 	info2("Signal %d caught, will %s quit.\n", sig, sig==SIGUSR2?"not":"");
 	return 1;
 }
 /**
-   Register signal handler
+   Install default_signal_handler() for common fatal and termination signals.
+   func, if not NULL, is called by it with the signal number; returning nonzero
+   for SIGUSR2 cancels the exit caused by error().
+
+   @param[in] func Signal handler to call. May be NULL.
 */
+
 void register_signal_handler(int (*func)(int)){
 	//info2("Register signal handler %p\n", func);
 	struct sigaction act={0};

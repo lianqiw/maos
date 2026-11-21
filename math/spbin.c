@@ -21,7 +21,11 @@
 /**
    Function to write sparse matrix data into file pointed using a file
    pointer. Generally used by library developer.  We do not convert data during
-   saving, but rather do the conversion during reading.
+   saving, but rather do the conversion during reading. The matrix is sorted
+   in place before writing.
+
+   @param[in] fp File to write to.
+   @param[in] sp Sparse matrix to write. NULL or empty writes an empty header.
 */
 void X(spwritedata)(file_t* fp, const X(sp)* sp){
 	header_t header={M_SPT, 0, 0, NULL};
@@ -46,7 +50,12 @@ void X(spwritedata)(file_t* fp, const X(sp)* sp){
 /**
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.
-  */
+
+   @param[in] fp File to read from.
+   @param[in,out] header Header of the data. If NULL or its id is 0, the header
+   is read from fp. Its keywords are taken over and its fields reset on return.
+   @return Newly allocated sparse matrix, or NULL if empty; the caller frees it.
+*/
 X(sp)* X(spreaddata)(file_t* fp, header_t* header){
 	header_t header2={0,0,0,0};
 	if(!header){

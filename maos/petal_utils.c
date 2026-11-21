@@ -20,7 +20,12 @@
 #include "save.h"
 #include "plot_utils.h"
 /**
- * Petaling mode control
+   Setup petaling mode control when recon.petal is set: petal modes on the ground
+   DM (recon->apetal) and petal reconstructors for the TTF and TT OIWFS.
+
+   @param[in,out] recon The reconstruction struct. apetal and petal are allocated and set.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
 */
 void petal_setup_wrap(recon_t *recon, const parms_t *parms, const powfs_t *powfs){
 	if(!parms->recon.petal) return;
@@ -77,10 +82,12 @@ static void *wfsgrad_petal_thread(void *psimu){
 	return NULL;
 }
 /**
- * Reconstruct petal modes. The function is now split into three parts:
- * Part 1: accumuate i0 at every time step and set do_petal if a reconstruction is due.
- * Part 2: launch a new thread to do the petal reconstruction.
- * Part 3: join the thread and do post-processing to update the reference vectors.
+   Reconstruct petal modes. The function is now split into three parts:
+   Part 1: accumuate i0 at every time step and set do_petal if a reconstruction is due.
+   Part 2: launch a new thread to do the petal reconstruction.
+   Part 3: join the thread and do post-processing to update the reference vectors.
+
+   @param[in,out] simu The simulation struct.
 */
 void petal_recon(sim_t *simu){
 	const parms_t *parms=simu->parms;

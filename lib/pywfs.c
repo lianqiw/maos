@@ -22,28 +22,37 @@
 #include "turbulence.h"
 #include "libmisc.h"
 #include "cure.h"
-static double PYWFS_PSIZE=3; //Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2
-int PYWFS_DEBUG=0;//debugging implementation
-static int PYWFS_TT_DUAL=0;//average tip/tilt response along +/-
-static int PYWFS_FULL=0;//make saloc entire focal plane
+/**Size of pywfs detector image. sub-pupil center to center dist is PYWFS_SIZE/2*/
+static double PYWFS_PSIZE=3;
+/**debugging implementation*/
+int PYWFS_DEBUG=0;
+/**average tip/tilt response along +/-*/
+static int PYWFS_TT_DUAL=0;
+/**make saloc entire focal plane*/
+static int PYWFS_FULL=0;
 /**
    \file pywfs.h
 
    Setup pyramid WFS and do simulation.
 */
 /**
- * Create detector pixel to subaperture mapping
- * nside==4: (regular 4-side pyramid)
- * 	2 3
- * 	0 1
- * nside==3: (3-sided pyramid)
- * 1  2
- *   0
- * nside==2: (roof)
- * 0 1
- * nside==1: (zernike sensor)
- * 0
- * */
+   Create detector pixel to subaperture mapping
+   nside==4: (regular 4-side pyramid)
+   	2 3
+   	0 1
+   nside==3: (3-sided pyramid)
+   1  2
+     0
+   nside==2: (roof)
+   0 1
+   nside==1: (zernike sensor)
+   0
+
+   @param[in,out] pywfs The PYWFS struct. si, sioff, and msaloc are replaced.
+   @param[in] loc_fft The grid of the pupil image after FFT.
+   @param[in] saloc0 The subaperture grid (lower left corner).
+   @param[in] pupelong Pupil elongation fraction along the radial direction. 0 to disable.
+*/
 static void pywfs_mksi(pywfs_t *pywfs, loc_t *loc_fft, loc_t *saloc0, real pupelong){
 	dspcellfree(pywfs->si);
 	cellfree(pywfs->msaloc);
@@ -107,6 +116,18 @@ static void pywfs_mksi(pywfs_t *pywfs, loc_t *loc_fft, loc_t *saloc0, real pupel
 		P(pywfs->si, ind)=mkh(ADDR((propdata_t){.locin=loc_fft, .locout=saloc, .shiftx=(offx*notf2)*dxp+shx, .shifty=(offy*notf2)*dxp+shy}));
 	}
 }
+/**
+   Create and initialize a pyramid WFS from configuration pycfg. Optional parameters in
+   pycfg are filled with defaults. loc is the pupil OPD grid (created from pycfg->D and
+   dx if NULL); amp is the amplitude on loc (uniform if NULL). Computes subaperture
+   illumination, gradient offset and optical gain. pycfg is referenced, not copied, and
+   must outlive the returned struct. Free with pywfs_free().
+
+   @param[in,out] pycfg The configuration. Unset optional parameters are filled with defaults.
+   @param[in] loc The pupil OPD grid (referenced). If NULL, an annular grid is created from pycfg->D and pycfg->dx.
+   @param[in] amp The amplitude on loc (referenced). Uniform if NULL.
+   @return Newly allocated PYWFS struct; free with pywfs_free().
+*/
 pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 	READ_ENV_INT(PYWFS_DEBUG, -10, 10);
 	READ_ENV_INT(PYWFS_TT_DUAL, 0, 1);
@@ -383,10 +404,11 @@ pywfs_t *pywfs_new(pywfs_cfg_t *pycfg, loc_t *loc, const dmat *amp){
 /**
    Perform FFT over the complex PSF with additional phases caused by the
    pyramid. FFT on each quadrant of the PSF creates diffraction effects.
-   @param[in,out] ints	The intensity. Accumulate.
-   @param[in] pywfs		PYWFS parameters
-   @param[in] opd		The OPD
-   @param[in] siglev	The signal level.
+
+   @param[in,out] ints The intensity (nsa*nside), accumulated into. Allocated if NULL.
+   @param[in] pywfs PYWFS parameters.
+   @param[in] opd The OPD on pywfs->locfft->loc (m).
+   @param[in] siglev The signal level per subaperture.
 */
 void pywfs_ints(dmat **ints, const pywfs_t *pywfs, const dmat *opd, real siglev){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
@@ -471,7 +493,11 @@ void pywfs_ints(dmat **ints, const pywfs_t *pywfs, const dmat *opd, real siglev)
 }
 /**
    Compute gradients. It replaces the result, not accumulate.
- */
+
+   @param[out] pgrad The gradients (nsa*ng). Allocated if NULL.
+   @param[in] pywfs PYWFS parameters.
+   @param[in] ints The subaperture intensity (nsa*nside).
+*/
 void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	const long nsa=NX(ints);
@@ -534,6 +560,9 @@ void pywfs_grad(dmat **pgrad, const pywfs_t *pywfs, const dmat *ints){
 }
 /**
    Return measurement of T/T mode, normalized for 1 unit of input.
+
+   @param[in] pywfs PYWFS parameters.
+   @return Newly allocated (nsa*ng)*2 matrix of gradients for unit tip and tilt; the caller frees it.
 */
 dmat *pywfs_tt(const pywfs_t *pywfs){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
@@ -607,6 +636,13 @@ dmat *pywfs_tt(const pywfs_t *pywfs){
 	dfree(ints);
 	return out;
 }
+/**
+   Compute a hash of the PYWFS configuration for caching.
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] key The initial hash key.
+   @return The updated hash key.
+*/
 static uint32_t pywfs_hash(const pywfs_t *pywfs, uint32_t key){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
 	key=lochash(pywfs->loc, key);
@@ -628,7 +664,15 @@ dmat *(*pywfs_mkg_ext)(const pywfs_t *pywfs, const loc_t *locin, const loc_t *lo
    gain can be used as long as it "correct", i.e., a radian of tilt produces one
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
- */
+
+   @param[in] pywfs PYWFS parameters.
+   @param[in] locin The grid of the input OPD.
+   @param[in] locfft The pupil grid (possibly distorted) of pywfs->locfft.
+   @param[in] mod The modes defined on locin. If NULL, use zonal poke of each point in locin.
+   @param[in] displacex Displacement along x of locin from locfft (m).
+   @param[in] displacey Displacement along y of locin from locfft (m).
+   @return Newly allocated interaction matrix (nsa*ng)*nmod; the caller frees it.
+*/
 static dmat *pywfs_mkg_do(const pywfs_t *pywfs, const loc_t *locin, const loc_t *locfft, const dmat *mod,
 	real displacex, real displacey){
 #if USE_CUDA
@@ -707,8 +751,17 @@ static dmat *pywfs_mkg_do(const pywfs_t *pywfs, const loc_t *locin, const loc_t 
 	return ggd;
 }
 /**
-   locin is on pupil.
- */
+   Compute the PYWFS interaction matrix with caching. locin is on pupil.
+
+   @param[in,out] pywfs PYWFS parameters. pywfs->opdadd is replaced if opdadd is set.
+   @param[in] locin The grid of the input OPD, on pupil.
+   @param[in] distortion The pupil distortion transform string for loctransform(). Can be NULL.
+   @param[in] mod The modes defined on locin. If NULL, use zonal poke.
+   @param[in] opdadd Additional OPD on pywfs->loc as the operating point. Can be NULL.
+   @param[in] displacex Displacement along x of locin from pupil (m).
+   @param[in] displacey Displacement along y of locin from pupil (m).
+   @return Newly allocated interaction matrix (nsa*ng)*nmod; the caller frees it.
+*/
 dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, const dmat *mod, const dmat *opdadd,
 	real displacex, real displacey){
 	const pywfs_cfg_t *pycfg=pywfs->cfg;
@@ -743,6 +796,8 @@ dmat *pywfs_mkg(pywfs_t *pywfs, const loc_t *locin, const char *distortion, cons
 }
 /**
    frees pywfs_t
+
+   @param[in] pywfs The PYWFS struct to free. Can be NULL. pywfs->cfg is not freed.
 */
 void pywfs_free(pywfs_t *pywfs){
 	if(!pywfs) return;
@@ -763,6 +818,11 @@ void pywfs_free(pywfs_t *pywfs){
 	cellfree(pywfs->saa);
 	free(pywfs);
 }
+/**
+   Free pywfs_cfg_t and its arrays.
+
+   @param[in] pycfg The configuration to free. Can be NULL.
+*/
 void pycfg_free(pywfs_cfg_t *pycfg){
 	if(!pycfg) return;
 	cellfree(pycfg->wvl);
@@ -772,16 +832,17 @@ void pycfg_free(pywfs_cfg_t *pycfg){
 	free(pycfg);
 }
 /**
- * A convenient wrapper to simulate pywfs from Python.
- * @param[out] ints		Subaperture images
- * @param[out] grad		Subaperture gradients
- * @param[in] pycfg		Configuration struct. Optional if order, wvl, siglev are all set
- * @param[in] order		PWFS order. optional if pycfg is set
- * @param[in] wvl		Wavelength. optional if pycfg is set
- * @param[in] siglev	Signal level of each subaperture. optional if pycfg is set
- * @param[in] loc		OPD loc. 
- * @param[in] amp		OPD amplitude map.
- * @param[in] opd		OPD.
+   A convenient wrapper to simulate pywfs from Python.
+
+   @param[in,out] ints Subaperture images, accumulated into. Allocated if NULL. Can be NULL.
+   @param[out] grad Subaperture gradients. Allocated if NULL.
+   @param[in,out] pycfg Configuration struct. Unset parameters are filled. Optional if order, wvl, siglev are all set.
+   @param[in] order PWFS order. Optional if pycfg is set.
+   @param[in] wvl Wavelength (m). Optional if pycfg is set.
+   @param[in] siglev Signal level of each subaperture. Optional if pycfg is set.
+   @param[in] loc OPD loc. Can be NULL.
+   @param[in] amp OPD amplitude map. Can be NULL.
+   @param[in] opd OPD (m).
 */
 void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *wvl, real siglev, loc_t *loc, const dmat *amp, const dmat *opd){
 	int free_pycfg=0;
@@ -807,16 +868,20 @@ void pywfs_simu(dmat **ints, dmat **grad, pywfs_cfg_t *pycfg, int order, dmat *w
 	if(free_pycfg) pycfg_free(pycfg);
 }
 /**
- * PYWFS gain calibrate using measurements.
- * The idea is as follows.
- * With a given input OPD, the PWFS measures OPDR.
- * Feed OPDR to PWFS, it measures OPDR2. Optionally add a fitting error to the input.
- * Scale OPDR by alpha, it measures OPDR3.
- * Iterate the alpha until OPDR3 has the same magnitude as OPDR.
- * The final alpha is the gain adjustment.
- * This does not quite work because the original input OPD and OPDR has different spatial frequency content.
- * Most of OPD is not measurable.
- */
+   PYWFS gain calibrate using measurements.
+   The idea is as follows.
+   With a given input OPD, the PWFS measures OPDR.
+   Feed OPDR to PWFS, it measures OPDR2. Optionally add a fitting error to the input.
+   Scale OPDR by alpha, it measures OPDR3.
+   Iterate the alpha until OPDR3 has the same magnitude as OPDR.
+   The final alpha is the gain adjustment.
+   This does not quite work because the original input OPD and OPDR has different spatial frequency content.
+   Most of OPD is not measurable.
+
+   @param[in,out] pywfs PYWFS parameters. pywfs->gain is updated.
+   @param[in] grad The measured gradients.
+   @param[in] r0 Fried parameter (m) used to add fitting error. 0 to disable.
+*/
 void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0){
 	dmat *ints=NULL;
 	dmat *grad2=NULL;
@@ -862,7 +927,14 @@ void pywfs_gain_calibrate(pywfs_t *pywfs, const dmat *grad, real r0){
 	dfree(opd2tot);
 }
 extern int PYWFS_DEBUG;
-///Test PYWFS implementation
+/**
+   Test PYWFS implementation when env MAOS_PYWFS_DEBUG is set. 1 (or -1 with petal
+   modes): linearity with zernike (petal) modes; 2: linearity with noise and dithering;
+   3: NCPA calibration; 4: automatic gain calibration. Results are saved to files and
+   the program exits afterwards.
+
+   @param[in,out] pywfs PYWFS parameters. Can be NULL. pywfs->gain may be changed by the gain calibration test.
+*/
 void pywfs_test(pywfs_t *pywfs){
 	if(!PYWFS_DEBUG) return;
 	if(!pywfs) return;

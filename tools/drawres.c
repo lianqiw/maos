@@ -26,6 +26,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include "../lib/aos.h"
+/**
+   Print the usage of drawres.
+*/
 static void usage(){
 	fprintf(stderr, "Usage:\n"
 		"drawres [-s 1] folder1 folder2 ...\n");
@@ -39,6 +42,13 @@ typedef struct arg_t{
 	int nseed;
 	long* seeds;
 }arg_t;
+/**
+   Parse the command line options. -s seed may be repeated. Exits on -h.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments.
+   @return Newly allocated arg_t with the seeds and the index of the first non-option argument. The caller frees it.
+*/
 static arg_t* parse_args(int argc, char** argv){
 	arg_t* arg=mycalloc(1, arg_t);
 	static struct option long_options[]={
@@ -67,6 +77,11 @@ static arg_t* parse_args(int argc, char** argv){
 	arg->iarg=optind;
 	return arg;
 }
+/**
+   Replace NaN entries of res with zero in place.
+
+   @param[in,out] res The array to fix.
+*/
 void fixnan(dmat* res){
 	for(long i=0; i<res->nx*res->ny; i++){
 		if(isnan(P(res, i))){
@@ -75,7 +90,14 @@ void fixnan(dmat* res){
 	}
 }
 /**
-   The main.
+   Plot the MAOS results in each result folder given on the command line with
+   drawdaemon. Usage: drawres [-s seed] folder1 folder2 ... Wildcards are
+   supported. When invoked as drawreshi or with MAOS_DRAWRES_HI=1, only high order
+   closed loop results are plotted.
+
+   @param[in] argc Number of command line arguments.
+   @param[in] argv Command line arguments: options and result folders.
+   @return 0 on success, 1 if no valid result is found.
 */
 int main(int argc, char* argv[]){
 	int DRAWRES_HI=0;
