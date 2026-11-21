@@ -4335,7 +4335,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
         <tr>
           <td class="memname"><a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> * dinterp1 </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>xin_</em></span>, </td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>xin</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -4357,14 +4357,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
 <p>Interpolation of 1d array. Uses X(interp1linear) or X(interp1log) if xin is linearly or logarithmically spaced, otherwise searches the bin for each point.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin_</td><td>The coordinate in the first column. If yin_ is NULL, the second column is used as the function value. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yin_</td><td>The function values. Can be NULL. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinate vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The coordinate in the first column. If yin_ is NULL, the other columns are the function values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yin_</td><td>The function values with the same number of rows as xin. Each column is a function. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinates. Only the first column is used. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ydefault</td><td>The value for points outside of xin. If NaN, values are extrapolated (linear or log spacing uses the end values instead). </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The interpolated values. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The interpolated values, xnew-&gt;nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
 
 </div>
 </div>
@@ -4382,7 +4382,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>yin</em></span>, </td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>yin_</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -4399,14 +4399,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
 <p>Interpolate using linear interp. xin is the coordinate of yin. xnew is the coordinate of the output.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The linearly spaced (increasing or decreasing) coordinate vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yin</td><td>The function values. Each column is a function. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinate vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The linearly spaced (increasing or decreasing) coordinate in the first column. If yin_ is NULL, the other columns are the function values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yin_</td><td>The function values with the same number of rows as xin. Each column is a function. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinates. Only the first column is used. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ydefault</td><td>The value for points outside of xin. If NaN, the nearest end value is used. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The interpolated values, xnew-&gt;nx by yin-&gt;ny. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The interpolated values, xnew-&gt;nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
 
 </div>
 </div>
@@ -4424,7 +4424,7 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>yin</em></span>, </td>
+          <td class="paramtype">const <a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *</td>          <td class="paramname"><span class="paramname"><em>yin_</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -4441,14 +4441,14 @@ real&#160;</td><td class="memItemRight" valign="bottom"><b>dtrapz</b> (const <a 
 <p>Interpolate using log(xin) and log(xnew) xin is the coordinate of yin. xnew is the coordinate of the output.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The logarithmically spaced (increasing or decreasing) coordinate vector. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yin</td><td>The function values. Each column is a function. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinate vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xin</td><td>The logarithmically spaced (increasing or decreasing) coordinate in the first column. If yin_ is NULL, the other columns are the function values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yin_</td><td>The function values with the same number of rows as xin. Each column is a function. Can be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xnew</td><td>The new coordinates. Only the first column is used. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ydefault</td><td>The value for points outside of xin. If NaN, the nearest end value is used. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The interpolated values, xnew-&gt;nx by yin-&gt;ny. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The interpolated values, xnew-&gt;nx by the number of functions. Newly allocated; the caller frees it. NULL if input is invalid. </dd></dl>
 
 </div>
 </div>
