@@ -57,7 +57,7 @@ static void __global__ mtch_do(const Real* mtch, const Real* pix, Real* grad, in
 	int ig=threadIdx.y+blockDim.y*blockIdx.x;
 	const Real* mtchi=mtch+ig*pixpsa;
 	const Real* pixi=pix+ig/2*pixpsa;
-	if(ig>nsa*2) return;//over range
+	if(ig>=nsa*2) return;//over range
 	//sum 3 times for 90 pixels.
 	cumi[threadIdx.x]=0;
 	if(threadIdx.x<30){

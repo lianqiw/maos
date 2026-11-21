@@ -45,14 +45,24 @@ convert the function beschb.
 #define MAXIT 10000
 #define XMIN 2.0
 
-#define NUSE1 5
-#define NUSE2 5
+#define NUSE1 7 /*double precision values from Numerical Recipes beschb.*/
+#define NUSE2 8
 
 #define nrerror error
 #define NR_END 1
 #define FREE_ARG char*
 
-static T chebev(T a, T b, T c[], int m, T x){
+/**
+   Chebyshev evaluation: evaluates the Chebyshev series sum_{k=0}^{m-1} c_k T_k(y)-c_0/2 with y=(2x-a-b)/(b-a).
+
+   @param[in] a Lower end of the interval.
+   @param[in] b Upper end of the interval.
+   @param[in] c Chebyshev coefficients.
+   @param[in] m Number of coefficients to use.
+   @param[in] x Point of evaluation. Must be within [a, b].
+   @return The value of the series at x.
+*/
+static T chebev(T a, T b, const T c[], int m, T x){
 	T d=0.0, dd=0.0, sv, y, y2;
 	int j;
 
@@ -68,11 +78,11 @@ static T chebev(T a, T b, T c[], int m, T x){
 
 static void beschb(T x, T* gam1, T* gam2, T* gampl, T* gammi){
 	T xx;
-	static T c1[]={
+	static const T c1[]={
 	-1.142022680371172e0,6.516511267076e-3,
 	3.08709017308e-4,-3.470626964e-6,6.943764e-9,
 	3.6780e-11,-1.36e-13};
-	static T c2[]={
+	static const T c2[]={
 	1.843740587300906e0,-0.076852840844786e0,
 	1.271927136655e-3,-4.971736704e-6,-3.3126120e-8,
 	2.42310e-10,-1.70e-13,-1.0e-15};

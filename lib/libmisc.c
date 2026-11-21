@@ -42,6 +42,7 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 	long np=NX(A)*NY(A);
 	assert(!bkgrnd2||NX(bkgrnd2)*NY(bkgrnd2)==np);
 	assert(!bkgrnd2c||NX(bkgrnd2c)*NY(bkgrnd2c)==np);
+	assert(!qe||NX(qe)*NY(qe)==np);
 	if(excess<1) excess=1;
 	for(int ix=0; ix<np; ix++){
 		real tot=P(A,ix)+bkgrnd+(bkgrnd2?P(bkgrnd2,ix):0);
@@ -51,7 +52,7 @@ void addnoise(dmat* A,              /**<[in/out]The pixel intensity array*/
 			tot*=P(qe,ix);
 			scale=1./P(qe,ix);
 		}
-		P(A,ix)=(randp(rstat, tot*excess)+tot*(1.-excess)+rne*randn(rstat))/scale-corr;
+		P(A,ix)=(randp(rstat, tot*excess)+tot*(1.-excess)+rne*randn(rstat))*scale-corr;
 	}
 }
 /**
@@ -226,6 +227,7 @@ dmat* loc_calib(const dsp* GA,     /**<[in] Measured interaction matrix*/
 	//static int count=-1; count++;
 	if(NX(GA)!=saloc->nloc*2||NY(GA)!=aloc->nloc){
 		error("GA, aloc, and saloc does not match\n");
+		return NULL;
 	}
 	real dispx, dispy, alpha, scale;
 	if(!prop_prep(&dispx, &dispy, &alpha, &scale, propdata)){
@@ -333,10 +335,10 @@ dmat* polyval(
 	const int separate	/**<[in] if set, separately for each order*/
 ){
 	int mul=separate?1:0;//column multiplier
-	int nmod=separate?PN(coeff):1;
+	long nmod=separate?PN(coeff):1;
 	dmat *out=dnew(PN(x), nmod);
 	for(long iy=0; iy<PN(coeff); iy++){
-		int icol=iy*mul;
+		long icol=iy*mul;
 		real pc=P(coeff,iy); //coefficient
 		real po=PN(coeff)-1-iy;//descending order
 		for(long ix=0; ix<PN(x); ix++){
@@ -351,11 +353,8 @@ dmat* polyval(
    Determine the polynomial coefficients that transforms vector in to out.
    Both column and row vectors are allowed.
 */
-dmat *polyfit(const dmat *x, /**<[in] input vector */
-	const dmat *y, /**<[in] output */
-	const int maxorder /**<[in] maximum order to fit*/
-	){
-	if(!(PN(x)==PN(x) && (NX(x)==1 || NY(x)==1) && (NX(y)==1 || NY(y)==1))){
+dmat *polyfit(const dmat *x, const dmat *y, const int maxorder){
+	if(!(PN(x)==PN(y) && (NX(x)==1 || NY(x)==1) && (NX(y)==1 || NY(y)==1))){
 		error("polyfit: in and out must be vector\n");
 		return NULL;
 	}
@@ -381,7 +380,7 @@ dmat *polyfit(const dmat *x, /**<[in] input vector */
    Wrap the index for dataset with total of n frames for continuity. For example, if n is 4, the result is 
    0 1 2 3 2 1 0 1 2 3 2 1 0 ...
 */
-int wrap_seq(long index, long n){
+long wrap_seq(long index, long n){
 	if(n<2) return 0;
 	long m=n*2-2;
 	index=(index%m+m)%m;
@@ -401,7 +400,7 @@ real wrap2range(real val, real low, real high){
 	}
 	real med=0.5*(low+high);
 	real range=fabs(high-low);
-	return remainder(val-med, range);
+	return med+remainder(val-med, range);
 }
 /**
  * @brief compute p-chip interpolation weighting
@@ -413,6 +412,7 @@ real wrap2range(real val, real low, real high){
 real pchip_wt(int i, float u){
 	if(i<-1||i>2||u<0||u>1){
 		error("Invalid i=%d, u=%g\n", i, u);
+		return 0;
 	}
 	real ans=0;
 	switch(i){
@@ -441,7 +441,7 @@ real pchip_wt(int i, float u){
  */
 int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp){
 	if(interp==3) ips=ips-1;
-	int iframe=wrap_seq(isim/dtrat+ips, natm);
+	int iframe=(int)wrap_seq(isim/dtrat+ips, natm);
 	if(interp<=0){
 		*wt=0;
 	} else{
@@ -456,7 +456,9 @@ int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp){
 	return iframe;
 }
 static int compare_dbl2_ascend(const void *a, const void *b){
-	return (int)(((double *)a)[0]-((double *)b)[0]);
+	const real va=((const real *)a)[0];
+	const real vb=((const real *)b)[0];
+	return (va>vb)-(va<vb);
 }
 /**
  * Prepare data structure to plot WFE vs field angle.
@@ -464,7 +466,7 @@ static int compare_dbl2_ascend(const void *a, const void *b){
  * @param npath Number of simulation directories
  * */
 dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npath, int nwvl){
-	const int nevl=PN(thetax);
+	const int nevl=(int)PN(thetax);
 	if(nevl<=1) return NULL;
 	dccell *reseach=dccellnew(3+(nwvl?1:0), 1);
 	P(reseach, 0)=dcellnew_same(1, 1, nevl, 1);//CL vs dir indexing
@@ -485,7 +487,7 @@ dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npat
 			P(P(P(reseach, 1), ipath), ievl, 0)=P(tmp, 0, ievl);	
 			P(P(P(reseach, 2), ipath), ievl, 0)=P(tmp, 0, ievl);	
 			for(int iwvl=0; iwvl<nwvl; iwvl++){//for Strehl plotting
-				P(P(P(reseach, 3, ipath), iwvl), ievl, 0)=P(tmp, 0, ievl);
+				P(P(P(reseach, 3), iwvl, ipath), ievl, 0)=P(tmp, 0, ievl);
 			}
 		}
 	}
@@ -499,10 +501,10 @@ dccell *wfe_fov_prep(const dmat *thetax, const dmat *thetay, real unit, int npat
  * */
 void wfe_fov_fill(dccell *reseach, const dcell *clep, int ipath, int isim){
 	if(!reseach || !clep) return;
-	if(isim<=0) isim=NY(P(clep,0));
+	if(isim<=0) isim=(int)NY(P(clep,0));
 	dmat *res=P(P(reseach, 1), ipath);
 	dmat *res_ho=P(P(reseach, 2), ipath);
-	const int nevl=NX(res);
+	const int nevl=(int)NX(res);
 	int istart=MAX((int)(0.2*isim), 20);
 	if(istart>=isim) istart=0;
 	for(int ievl=0; ievl<nevl; ievl++){

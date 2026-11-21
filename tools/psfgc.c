@@ -57,7 +57,7 @@ typedef struct psfiris_t{
 
 static void* psfiris_do(thread_t* info){
 	psfiris_t* data=(psfiris_t*)info->data;
-	int ipsf=info->start;
+	int ipsf=(int)info->start;
 	int nwvl=data->nwvl;
 	int iwvl=ipsf%nwvl;
 	int notf=data->notf;
@@ -73,7 +73,7 @@ static void* psfiris_do(thread_t* info){
 	dcell* psf_lgs=data->psf_lgs;
 	dcell* output=data->output;
 	char* msg=data->msg;
-	int ncomp=P(psf_lgs,0)->nx;
+	long ncomp=P(psf_lgs,0)->nx;
 	cmat* otf=cnew(ncomp, ncomp);
 	//cfft2plan(otf,1);
 	//cfft2plan(otf,-1);
@@ -93,6 +93,7 @@ static void* psfiris_do(thread_t* info){
 		double embfac=wvl/dtheta/dxsa;
 		dbg("embfac=%g\n", embfac);
 		dtf_t* dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL);
+		dfree(wvlmat);
 		ccwmd(otf, P(dtf->nominal,0));
 		cfft2(otf, -1);
 		P(output,ipsf)=dnew(npix, npix);
@@ -147,11 +148,11 @@ int main(int argc, char* argv[]){
 	} else{
 		outfile=strdup(argv[P_OUTFILE]);
 	}
-	int seed=strtol(argv[P_SEED], NULL, 10);
+	int seed=(int)strtol(argv[P_SEED], NULL, 10);
 	double exposure=strtod(argv[P_EXP], NULL);
 	double thetax=strtod(argv[P_X], NULL);
 	double thetay=strtod(argv[P_Y], NULL);
-	int npix=strtol(argv[P_NPIX], NULL, 10);
+	int npix=(int)strtol(argv[P_NPIX], NULL, 10);
 	double pixsize=strtod(argv[P_PIXSIZE], NULL)*AS2RAD;
 	double pixoffx=strtod(argv[P_PIXOFFX], NULL);
 	double pixoffy=strtod(argv[P_PIXOFFY], NULL);
@@ -175,15 +176,19 @@ int main(int argc, char* argv[]){
 	} else if(zfexist("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay)){
 		psf_lgs=dcellread("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay);
 	}
-	if(psf_lgs->nx*psf_lgs->nx==0){
+	if(!psf_lgs || psf_lgs->nx*psf_lgs->ny==0){
 		warning("Array is empty, nothing to do\n"); exit(0);
 	}
 	int nwvl=0; /*number of wavelength*/
 	int nexp=0; /*number of exposure*/
 	double* wvls=NULL;
 	if(psf_lgs->ny!=1){
-		nwvl=psf_lgs->nx;
-		nexp=psf_lgs->ny;
+		nwvl=(int)psf_lgs->nx;
+		nexp=(int)psf_lgs->ny;
+		wvls=mymalloc(nwvl, double);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+			wvls[iwvl]=search_keyword_num_valid(P(psf_lgs,iwvl)->keywords, "Wavelength");
+		}
 	} else{
 		for(int i=0; i<psf_lgs->nx*psf_lgs->ny; i++){
 			double wvl=search_keyword_num_valid(P(psf_lgs,i)->keywords, "Wavelength");
@@ -199,7 +204,7 @@ int main(int argc, char* argv[]){
 				wvls[nwvl-1]=wvl;
 			}
 		}
-		nexp=psf_lgs->nx/nwvl;
+		nexp=(int)(psf_lgs->nx/nwvl);
 		if(psf_lgs->nx!=nexp*nwvl){
 			error("nwvl=%d, nexp=%d, not matching ntot=%ld\n", nwvl, nexp, psf_lgs->nx);
 		}
@@ -211,23 +216,25 @@ int main(int argc, char* argv[]){
 			texp, texp*nexp);
 	}
 	if(exposure>0){
-		int i1;
+		//Keep only the PSFs of the selected exposure and free the others.
 		int i10=(int)round(exposure/texp-1)*nwvl;
 		nexp=1;
-		for(i1=0; i1<nexp*nwvl; i1++){
-			P(psf_lgs,i1)=P(psf_lgs,i1+i10);
+		dcell* psf_sel=dcellnew(nwvl, 1);
+		for(int i1=0; i1<nwvl; i1++){
+			P(psf_sel,i1)=P(psf_lgs,i1+i10);
+			P(psf_lgs,i1+i10)=NULL;
 		}
-		psf_lgs->nx=nexp*nwvl;
-		psf_lgs->ny=1;
+		dcellfree(psf_lgs);
+		psf_lgs=psf_sel;
 	}
 	int npsf=nexp*nwvl;
-	int psfsize1=P(psf_lgs,0)->nx;
+	long psfsize1=P(psf_lgs,0)->nx;
 	double image_size=pixsize*npix;
 	int notf=(int)search_keyword_num_valid(P(psf_lgs,0)->keywords, "FFT Grid");
 	double sumpsf=search_keyword_num_valid(P(psf_lgs,0)->keywords, "PSF Sum to");
 	double dx=search_keyword_num_valid(P(psf_lgs,0)->keywords, "OPD Sampling");
 	double dtheta1=search_keyword_num_valid(P(psf_lgs,0)->keywords, "PSF Sampling")*AS2RAD;
-	int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
+	long psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
 	if(image_size>dtheta1*psfsizevalid){/*need blending*/
 		dbg("Enlarging PSF\n");
 		dcell* psf_large=dcellread("evlpsfcl_4096.fits");

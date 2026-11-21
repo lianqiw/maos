@@ -54,14 +54,14 @@ zfarr *zfarr_init(long nx, long ny, const char *format, ...){
 /**
    Append a A of type type into the zfarr ca, at location i. Append if i==0.
 */
-void zfarr_push(zfarr* ca, int i, const_anyarray A_){
+void zfarr_push(zfarr* ca, long i, const_anyarray A_){
 	const cell* A=A_.c;
 	if(!ca){
 		warning_once("zfarr is NULL\n");
 		return;
 	}
 	if(i>0&&ca->cur>i){
-		warning("Invalid. %s, cur=%ld, i=%x, skip.\n", zfname(ca->fp), ca->cur, i);
+		warning("Invalid. %s, cur=%ld, i=%ld, skip.\n", zfname(ca->fp), ca->cur, i);
 		print_backtrace();
 		return;
 	}

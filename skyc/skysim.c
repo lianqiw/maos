@@ -97,7 +97,8 @@ static void res_set_all(dmat *res, int isky, real varol){
 /**
    The actual work horse that does the physical optics time domain simulation.
 */
-static void* skysim_isky(sim_s* simu){
+static void* skysim_isky(void *psimu){
+	sim_s *simu=(sim_s *)psimu;
 	unsigned int isky;
 	powfs_s* powfs=simu->powfs;
 	const parms_s* parms=simu->parms;
@@ -105,18 +106,20 @@ static void* skysim_isky(sim_s* simu){
 	const int noisy=parms->skyc.noisy;
 	const int seed_maos=simu->seed_maos;
 	
-	int nstep=parms->maos.nstep;
+	long nstep=parms->maos.nstep;
 
 	while((isky=atomic_fetch_add(&simu->isky, 1))<simu->isky_end){
 		real tk_1=myclockd();
 		/*Setup star parameters. */
-		int nstar;
+		int nstar=0;
 		star_s* star=setup_star(&nstar, simu, P(stars,isky), seed_maos);
 		int naster;
 		aster_s* asters=setup_aster_comb(&naster, star, nstar, parms);
 		if(!asters||!naster){
 			//info("Field%4d,  0 stars\n", isky);
 			res_set_all(simu->res, isky, simu->varol);
+			free(asters);
+			free_star(star, nstar, parms);
 			continue;
 		}
 		if(parms->skyc.dbgaster>=naster){
@@ -129,7 +132,7 @@ static void* skysim_isky(sim_s* simu){
 		  domain simulations.
 		*/
 	OMP_TASK_FOR(4)
-		for(int iaster=0; iaster<naster; iaster++){
+		for(long iaster=0; iaster<naster; iaster++){
 			if(parms->skyc.dbgaster<0||iaster==parms->skyc.dbgaster){
 				/*Parallelizing over aster gives same random stream. */
 				seed_rand(&asters[iaster].rand, parms->skyc.seed+iaster+isky+40);
@@ -152,7 +155,7 @@ static void* skysim_isky(sim_s* simu){
 			}
 			//Now begin time domain Physical Optics Simulations.
 OMP_TASK_FOR(4)
-			for(int iaster=0; iaster<naster; iaster++){
+			for(long iaster=0; iaster<naster; iaster++){
 				aster_s* asteri=&asters[iaster];
 				asteri->nstep=nstep;
 				asteri->minphyres=simu->varol;
@@ -180,23 +183,26 @@ OMP_TASK_FOR(4)
 						simu->mideal, simu->mideal_oa, simu->varol,
 						asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
 					if(P(asteri->phyres,idtrat)){
+						//phyres is kept as ATM only. Residual wind shake is added when reporting.
+						real phyres_ws=P(P(asteri->phyres,idtrat), 0);
 						if(!parms->skyc.addws && parms->skyc.psd_ws){
-							P(P(asteri->phyres,idtrat), 0)+=P(asteri->res_ws,idtrat);
+							phyres_ws+=P(asteri->res_ws,parms->skyc.multirate?0:idtrat);
 						}
-						if(P(P(asteri->phyres,idtrat), 0)<asteri->minphyres){
-							asteri->minphyres=P(P(asteri->phyres,idtrat), 0);
+						if(phyres_ws<asteri->minphyres){
+							asteri->minphyres=phyres_ws;
 							asteri->idtratphy=idtrat;
 						}
 					}
 				}
 				if(asteri->minphyres<simu->varol && simu->res_aster){//collect statistics of all asterisms
-					int res_iaster=atomic_fetch_add(&simu->res_iaster, 1);
+					//res_aster may be reallocated by dresize. Hold the lock while writing, and
+					//also while reading it in the reporting section below (other OMP tasks
+					//and other skysim_isky threads access it concurrently).
+					LOCK(simu->mutex_status);
+					int res_iaster=simu->res_iaster++;
 					asteri->iaster_all=res_iaster;
-					if(res_iaster+20>NY(simu->res_aster)){
-						OMP(critical) //inside if test to avoid overhead
-						if(res_iaster+20>NY(simu->res_aster)){
-							dresize(simu->res_aster, NX(simu->res_aster), NY(simu->res_aster)+1000);
-						}
+					if(res_iaster>=NY(simu->res_aster)){
+						dresize(simu->res_aster, NX(simu->res_aster), NY(simu->res_aster)+1000);
 					}
 					real *p=PCOL(simu->res_aster, res_iaster);
 					*(p++)=asteri->minphyres;//phy result
@@ -205,7 +211,7 @@ OMP_TASK_FOR(4)
 					*(p++)=asteri->nwfs;
 					for(int iwfs=0; iwfs<asteri->nwfs; iwfs++){
 						const int istar=asteri->wfs[iwfs].istar;
-						const int idtrat=parms->skyc.multirate?P(asteri->idtrats, iwfs):asteri->idtratphy;
+						const int idtrat=(int)(parms->skyc.multirate?P(asteri->idtrats, iwfs):asteri->idtratphy);
 						*(p++)=idtrat==-1?0:P(parms->skyc.fss, idtrat);
 						*(p++)=idtrat==-1?0:P(asteri->wfs[iwfs].pistat->snr, idtrat);
 						*(p++)=star[istar].thetax;
@@ -214,7 +220,7 @@ OMP_TASK_FOR(4)
 							*(p++)=P(star[istar].mags, iwvl);
 						}
 					}
-			
+					UNLOCK(simu->mutex_status);
 				}
 skip1:;
 			}//for iaster
@@ -240,14 +246,14 @@ skip1:;
 						}
 						for(int iwfs=0; iwfs<nwfs; iwfs++){
 							if(!asteri->wfs[iwfs].use) continue;
-							int idtmp=parms->skyc.multirate?P(asteri->idtrats, iwfs):idtrat;
+							int idtmp=(int)(parms->skyc.multirate?P(asteri->idtrats, iwfs):idtrat);
 							dttmp[iwfs]=P(parms->skyc.dtrats, idtmp);
 							snrtmp[iwfs]=P(asteri->wfs[iwfs].pistat->snr, idtmp);
 						}
 						real phyps=INFINITY;
 						real phytt=INFINITY;
 						real phyres=INFINITY;
-						const real addws=(parms->skyc.addws||!parms->skyc.psd_ws)?0:P(asteri->res_ws, idtrat);
+						const real addws=(parms->skyc.addws||!parms->skyc.psd_ws)?0:P(asteri->res_ws, parms->skyc.multirate?0:idtrat);
 						if(asteri->phyres&&P(asteri->phyres,idtrat)){
 							phyres=P(P(asteri->phyres,idtrat), 0)+addws;
 							phytt=P(P(asteri->phyres,idtrat), 1)+addws;
@@ -269,7 +275,7 @@ skip1:;
 				if(phymin && P(phymin, 0)<simu->varol){
 					/*Field Averaged Performance. */
 					//May include ws/vib if skyc.addws is true.
-					const real addws=(parms->skyc.addws||!parms->skyc.psd_ws)?0:P(asteri->res_ws, sky_idtrat);
+					const real addws=(parms->skyc.addws||!parms->skyc.psd_ws)?0:P(asteri->res_ws, parms->skyc.multirate?0:sky_idtrat);
 					P(simu->res, 0, isky)=P(phymin,0)+addws;/*Total */
 					P(simu->res, 1, isky)=P(phymin,0);/*ATM NGS Mode error. */
 					P(simu->res, 2, isky)=P(phymin,1);/*ATM Tip/tilt Error. */
@@ -281,7 +287,7 @@ skip1:;
 					P(simu->res, 8, isky)=asteri->iaster_all;//index to res_aster
 					P(simu->res, 9, isky)=sky_iaster;
 					if(parms->skyc.save){
-						skysim_save(simu, asteri, PCOL(simu->res, isky), sky_iaster, sky_idtrat, isky);
+						skysim_save(simu, asters, PCOL(simu->res, isky), sky_iaster, sky_idtrat, isky);
 					}
 				}
 				dcp(&P(simu->mres,isky), P(asteri->phymres, sky_idtrat));
@@ -289,11 +295,11 @@ skip1:;
 				res_set_all(simu->res, isky, simu->varol);
 			}
 		} else{//If(skyc.estimate)
-			sky_min=res_geom[0];
 			sky_iaster=res_geom[1];
-			sky_idtrat=asters[sky_iaster].idtratest;
+			sky_min=sky_iaster!=-1?res_geom[0]:simu->varol;
+			sky_idtrat=sky_iaster!=-1?asters[sky_iaster].idtratest:-1;
 			res_set_all(simu->res, isky, sky_min);
-			P(simu->res, 7, isky)=P(parms->skyc.fss, sky_idtrat);
+			P(simu->res, 7, isky)=sky_idtrat!=-1?P(parms->skyc.fss, sky_idtrat):0;
 			P(simu->res, 9, isky)=sky_iaster;
 		}//If(skyc.estimate)
 		if(sky_iaster!=-1){
@@ -390,7 +396,7 @@ static void skysim_update_mideal(sim_s* simu){
 		/*Add ws to mideal. After genstars so we don't purturb it. */
 		int im_ws=parms->skyc.addws==1?0:1;
 		info("Add wind shake time series to mideal mode %d\n", im_ws);
-		dmat* telws=psd2ts(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
+		dmat* telws=psd2ts(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, (int)simu->mideal->ny);
 		/*telws is in m. need to convert to rad since mideal is in this unit. */
 		real alpha=1./sqrt(P(parms->maos.mcc, 0, 0));
 		dscale(telws, alpha);//convert from wfe to radian.
@@ -444,7 +450,7 @@ static void skysim_calc_psd(sim_s* simu){
 		simu->varol+=var_ws;//testing
 
 		//add windshake PSD to ngs/tt. 
-		int im_ws=parms->skyc.addws==1?0:1;
+		int im_ws=(parms->skyc.addws==1||NX(simu->psds)<2)?0:1;//psds has a single entry when gsplit=0
 		add_psd2(&P(simu->psds, im_ws), parms->skyc.psd_ws, 1); //all in m^2 unit.
 	}
 	writebin(simu->psds, "psds_m2.bin");
@@ -569,7 +575,7 @@ void skysim(const parms_s* parms){
 			skysim_update_mideal(simu);//add wind shake / vib time series
 		}
 		writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
-		int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
+		int nsky=(int)MIN(simu->stars->nx, parms->skyc.nsky);
 		simu->res=dnew_mmap(10, nsky, NULL, "Res%d_%d%s", seed_maos, parms->skyc.seed, parms->skyc.dbg?"_dbg":"");//Total, ATM NGS, ATM TT, WS, 0
 		if(!parms->skyc.estimate){
 			simu->res_aster=dnew(4+(4+parms->maos.nwvl)*parms->skyc.nwfstot, nsky*(parms->skyc.maxaster?parms->skyc.maxaster:20));//result for all asterisms that have PO results

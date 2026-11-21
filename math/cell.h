@@ -31,7 +31,7 @@ static inline cell* cell_cast(const void* A){
 cell *cellref(const_anyarray in);
 uint32_t cellhash(const_anyarray A, uint32_t key) CHECK_UNUSED_RESULT;
 cell *cellconvert(cell *A, cell* (*fun_convert)(cell*));
-void cellinit(panyarray A, long nx, long ny);
+int cellinit(panyarray A, long nx, long ny);
 void cellinit2(panyarray A, const_anyarray B);
 void celldim(const_anyarray A_, long* nx, long* ny, long** nxs, long** nys);
 void cellresize(anyarray in, long nx, long ny);
@@ -43,6 +43,7 @@ void cellfree_do(anyarray dc);
 void writedata(file_t* fd, const_anyarray A, long ncol);
 void writebin(const_anyarray dc, const char* format, ...) CHECK_ARG(2);
 cell *readdata(file_t *fp, M_ID id, header_t *header);
+cell* readbin_fp(file_t* fp, M_ID id, int level);
 cell* readbin_id(M_ID id, int level, const char* format, ...) CHECK_ARG(3);
 cell* readbin(const char* format, ...) CHECK_ARG(1);
 

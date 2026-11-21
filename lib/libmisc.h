@@ -40,7 +40,7 @@ dmat *poly2fit(const dmat *in, const dmat *out, int maxorder);
 dmat *loc_calib(const dsp *GA, propdata_t *propdata, int maxorder);
 dmat *polyfit(const dmat *x, const dmat *y, int maxorder);
 dmat *polyval(const dmat *x, const dmat *coeff, int separate);
-int wrap_seq(long index, long n);
+long wrap_seq(long index, long n);
 real wrap2range(real val, real low, real high);
 real pchip_wt(int i, float u);
 int atm_interp(real *wt, int ips, int isim, int dtrat, int natm, int interp);

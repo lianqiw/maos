@@ -651,9 +651,9 @@ public:
 	}
 	//Use default copy constructor and copy assignment operator
 	void init(long nxi=0, long nyi=1){
-		Parent::init(nxi*nyi);
-		pm_cpu.init();
-		pm.init();
+		Parent::init(nxi, nyi);
+		m=TMat();//blocks are no longer in continuous memory
+		p2pm();
 	}
 	//Create a similar cell from this cell.
 	NumCell New()const{
@@ -708,7 +708,14 @@ public:
 					}
 					*this=in.New();
 				}
-				m.Copy(in.m, stream);
+				if(m&&in.m&&m.N()==in.m.N()){
+					m.Copy(in.m, stream);
+				} else{
+					for(long i=0; i<N(); i++){
+						p[i].Copy(in.p[i], stream);
+					}
+					p2pm(stream);
+				}
 				//dbg("NumCell: Copy, m is %ldx%ld\n", m.Nx(), m.Ny());
 			}
 		}
@@ -809,7 +816,13 @@ public:
 		return ref->x;
 	}
 	cusp(){}
-	cusp(const dsp* in, int tocsr=0, int transp=0);
+	/** Copy a CPU sparse matrix to GPU. See utils.cu. */
+	cusp(const dsp* src_csc, int tocsr=0, int transp=0);
+	/**
+	   Create a reference to an existing sparse matrix.
+
+	   @param[in] in Sparse matrix to reference.
+	*/
 	cusp(const cusp& in):ref(in.ref){
 		if(ref) ref->count++;
 	}
@@ -1013,6 +1026,9 @@ void Copy(NumArray<T, Dev> &out, const NumArray<T2, Dev2> &in, cudaStream_t stre
 }*/
 template <typename T, typename T2>
 void Copy(NumArray<T, Gpu> &out, const NumArray<T2> &in, cudaStream_t stream=0){
+	if(out.N()!=in.N()){
+		out.init(in.Nx(), in.Ny());
+	}
 	cp2gpu(out(), in(), in.Nx(), in.Ny(), stream);
 }
 /*static inline void Copy(cumap_t&out, const cumap_t &in, cudaStream_t stream=0){

@@ -48,16 +48,19 @@ void X(mm)(X(mat)** C0, const T beta, const X(mat)* A, const X(mat)* B,
 	} else{
 		m=A->nx; k=A->ny;
 	}
-	if(trans[1]=='T'||trans[1]=='t'||trans[0]=='C'||trans[0]=='c'){
+	if(trans[1]=='T'||trans[1]=='t'||trans[1]=='C'||trans[1]=='c'){
 		n=B->nx;
 		k2=B->ny;
 	} else{
 		n=B->ny;
 		k2=B->nx;
 	}
-	if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td, trans=%s\n",
-		m, k, k2, n, trans);
-	X(init)(C0, m, n);
+	if(k!=k2){
+		error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td, trans=%s\n",
+			m, k, k2, n, trans);
+		return;
+	}
+	if(X(init)(C0, m, n)) return;
 	X(mat)* C=*C0;
 	lda=A->nx;
 	ldb=B->nx;
@@ -83,8 +86,11 @@ void X(mm3)(X(mat) **pout, T beta, const X(mat) *A, const X(mat) *B, const X(mat
    careful
 */
 void X(invspd_inplace)(X(mat)* A){
-	if(!A) return;
-	if(A->nx!=A->ny) error("Must be a square matrix");
+	if(!A||!A->nx||!A->ny) return;
+	if(A->nx!=A->ny){
+		error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
+		return;
+	}
 	ptrdiff_t info=0, N=A->nx;
 	const char uplo='U';
 	/* B is identity matrix */
@@ -94,10 +100,10 @@ void X(invspd_inplace)(X(mat)* A){
 	}
 	Z(posv)(&uplo, &N, &N, P(A), &N, B, &N, &info);
 	if(info!=0){
-		writebin(A, "posv");
-		error("posv_ failed, info=%td. data saved to posv.\n", info);
+		error("posv_ failed, info=%td.\n", info);
+	}else{
+		memcpy(P(A), B, sizeof(T)*N*N);
 	}
-	memcpy(P(A), B, sizeof(T)*N*N);
 	free(B);
 }
 
@@ -116,8 +122,11 @@ X(mat)* X(invspd)(const X(mat)* A){
    inplace invert a general square matrix using lapack dgesv_
 */
 void X(inv_inplace)(X(mat)* A){
-	if(!A) return;
-	if(A->nx!=A->ny) error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
+	if(!A||!A->nx||!A->ny) return;
+	if(A->nx!=A->ny){
+		error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
+		return;
+	}
 	ptrdiff_t info=0, N=A->nx;
 	T* B=mycalloc(N*N, T);
 	for(int i=0;i<N;i++){
@@ -126,10 +135,10 @@ void X(inv_inplace)(X(mat)* A){
 	ptrdiff_t* ipiv=mycalloc(N, ptrdiff_t);
 	Z(gesv)(&N, &N, P(A), &N, ipiv, B, &N, &info);
 	if(info!=0){
-		writebin(A, "gesv");
-		error("dgesv_ failed, info=%td. data saved to posv.\n", info);
+		error("dgesv_ failed, info=%td.\n", info);
+	}else{
+		memcpy(P(A), B, sizeof(T)*N*N);
 	}
-	memcpy(P(A), B, sizeof(T)*N*N);
 	free(B);
 	free(ipiv);
 }
@@ -226,8 +235,8 @@ void X(expm)(X(mat)** out, R alpha, const X(mat)* A, R beta){
 		if(norm<max2){
 			norm=max2;
 		}
-		scaling=(int)ceil(log2(fabs(norm*beta*threshold)));
-		if(scaling<0) scaling=0;
+		double s=ceil(log2(fabs(norm*beta*threshold)));//-inf for a zero matrix
+		scaling=(s>0&&s<INT_MAX)?(int)s:0;
 	}
 	X(add)(&m_small, 0, A, beta*exp2(-scaling));
 	X(mat)* result=X(new)(A->nx, A->ny);
@@ -275,7 +284,10 @@ X(mat)* X(imcc)(const X(mat)* A, const X(mat)* wt){
 */
 X(mat)* X(chol)(const X(mat)* A){
 	if(!A) return NULL;
-	if(A->nx!=A->ny) error("dchol requires square matrix\n");
+	if(A->nx!=A->ny){
+		error("dchol requires square matrix\n");
+		return NULL;
+	}
 	X(mat)* B=X(dup)(A);
 	if(A->nx==1){
 		P(B,0)=sqrt(P(B,0));
@@ -523,7 +535,8 @@ X(cell)* X(cellinv)(X(cell)* A){
 X(cell)* X(cellinvspd_each)(X(cell)* A){
 	X(cell)* out=NULL;
 	X(cellcp)(&out, A);
-	for(int i=0; i<out->nx*out->ny; i++){
+	if(!out) return NULL;
+	for(int i=0; i<PN(out); i++){//empty blocks are skipped by X(invspd_inplace)
 		X(invspd_inplace)(P(out,i));
 	}
 	return out;

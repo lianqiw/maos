@@ -19,9 +19,9 @@
 #include "defs.h"
 
 typedef struct mm_t{
-	int nx, ny, nz;
-	int ax, az;
-	int bz, by;
+	long nx, ny, nz;
+	long ax, az;
+	long bz, by;
 }mm_t;
 /*
   determine parameters to perform for loop based on trans
@@ -29,9 +29,10 @@ typedef struct mm_t{
 static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2]){
 	const cell *A=A_.c;
 	const cell *B=B_.c;
-	int ax, az;//stride for A
-	int nx, ny, nz;
-	int bz, by;//stride for B
+	long ax, az;//stride for A
+	long nx, ny, nz;
+	long bz, by;//stride for B
+	int bad=0;
 	if(trans[0]=='n'||trans[0]=='N'){
 		nx=A->nx;
 		ax=1; az=A->nx;
@@ -42,7 +43,7 @@ static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2
 		nz=A->nx;
 	} else{
 		error("Invalid trans[0]=%c\n", trans[0]);
-		nx=0; az=0; ax=0; nz=0;
+		nx=0; az=0; ax=0; nz=0; bad=1;
 	}
 	if(trans[1]=='n'||trans[1]=='N'){
 		ny=B->ny;
@@ -53,6 +54,7 @@ static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2
 				by=B->ny;
 			}else{
 				error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+				bad=1;
 			}
 		}
 	} else if(trans[1]=='c'||trans[1]=='t'){
@@ -64,11 +66,15 @@ static mm_t parse_trans(const_anyarray A_, const_anyarray B_, const char trans[2
 				bz=B->ny;
 			}else{
 				error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
+				bad=1;
 			}
 		}
 	} else{
 		error("Invalid trans[1]=%c\n", trans[1]);
-		ny=0; by=0; bz=0;
+		ny=0; by=0; bz=0; bad=1;
+	}
+	if(bad){//invalid input: skip the computation
+		nx=0; ny=0; nz=0;
 	}
 	mm_t out={nx, ny, nz, ax, az, bz, by};
 	return out;
@@ -112,6 +118,7 @@ void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T 
 			if(PN(x)!=NY(A)||PN(y)!=NX(A)){
 				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld", 
 				trans, NX(y),NY(y),NX(A),NY(A),NX(x),NY(x));
+				return;
 			}
 			for(long icol=0; icol<A->ny; icol++){
 				for(long ix=A->pp[icol]; ix<A->pp[icol+1]; ix++){
@@ -122,6 +129,7 @@ void X(spmv)(X(mat)* y, const X(sp)* A, const X(mat)* restrict x, char trans, T 
 			if(PN(x)!=NX(A)||PN(y)!=NY(A)){
 				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
 				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
+				return;
 			}
 OMP_FOR(4)
 			for(long icol=0L; icol<A->ny; icol++){			
@@ -135,6 +143,7 @@ OMP_FOR(4)
 			if(PN(x)!=NX(A)||PN(y)!=NY(A)){
 				error("Invalid dimension in y+=op(A)*x*alpha with op=%c: y is %ldx%ld, A is %ldx%ld, x is %ldx%ld",
 				trans, NX(y), NY(y), NX(A), NY(A), NX(x), NY(x));
+				return;
 			}
 OMP_FOR(4)			
 			for(long icol=0L; icol<A->ny; icol++){
@@ -161,7 +170,7 @@ OMP_FOR(4)
 static void X(spmm_do)(X(mat)** yout, const X(sp)* A, const X(mat)* x, const char trans[2], const int transy, const T alpha){
 	if(!A||!x||!PN(A) ||!PN(x)) return;
 	mm_t D=parse_trans(A, x, trans);
-	X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny);	
+	if(!D.nz || X(init)(yout, transy?D.ny:D.nx, transy?D.nx:D.ny)) return;//invalid input
 	X(mat)* y=*yout;
 	if(x->ny==1&&trans[1]=='n'&&transy==0){
 		X(spmv)(y, A, x, trans[0], alpha);
@@ -330,13 +339,13 @@ void X(spmulsp2)(X(sp)** C0, const X(sp)* A, const X(sp)* B, const char trans[2]
 	X(sp)* Bt=0;
 	if(trans[0]=='t'||trans[0]=='c'){
 		At=X(sptrans)(A);
-		if(trans[0]=='c'){
+		if(trans[0]=='t'){
 			X(spconj)(At);
 		}
 	}
-	if(trans[1]=='t'||trans[1]=='t'){
+	if(trans[1]=='t'||trans[1]=='c'){
 		Bt=X(sptrans)(B);
-		if(trans[1]=='c'){
+		if(trans[1]=='t'){
 			X(spconj)(Bt);
 		}
 	}
@@ -395,19 +404,25 @@ void X(cellmm)(panyarray C0_, const_anyarray A_, const_anyarray B_, const char t
 		if(iscell(B) && PN(B)==1){
 			B=P(B,0);
 		}
-		cell *C=NULL;
+		cell **C=C0;
 		if(*C0 && iscell(*C0) && PN(*C0)==1){
-			C=P(*C0, 0);
+			C=&P(*C0, 0);
 		}
-		return X(cellmm)(C?&C:C0, A, B, trans, alpha);
+		if(A==A_.c && B==B_.c && C==C0){//no progress: avoid infinite recursion
+			error("Mismatch: A is %s, B is %s, C is %s; cannot multiply.\n", 
+				iscell(A)?"cell":"array", iscell(B)?"cell":"array", *C0?(iscell(*C0)?"cell":"array"):"NULL");
+			return;
+		}
+		X(cellmm)(C, A, B, trans, alpha);
+		return;
 	}else if(iscell(A)&&iscell(B)){//multiplication of cells.
 		mm_t D=parse_trans(A, B, trans);
-		cellinit(C0, D.nx, D.ny);
+		if(!D.nz || cellinit(C0, D.nx, D.ny)) return;
 		cell* C=*C0;
 OMP_FOR_COLLAPSE(2, 8)
-		for(int iy=0; iy<D.ny; iy++){
-			for(int ix=0; ix<D.nx; ix++){
-				for(int iz=0; iz<D.nz; iz++){
+		for(long iy=0; iy<D.ny; iy++){
+			for(long ix=0; ix<D.nx; ix++){
+				for(long iz=0; iz<D.nz; iz++){
 					X(cellmm)(P(C)+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 				}
 			}
@@ -469,7 +484,7 @@ void X(celladdI)(anyarray A_, T alpha){
 	if(!A) return;
 	assert(A->nx==A->ny);
 OMP_FOR(8)
-	for(int ii=0; ii<A->ny; ii++){
+	for(long ii=0; ii<A->ny; ii++){
 		if(!P(A, ii, ii)){
 		} else if(ismat(P(A, ii, ii))){
 			X(addI)(X(mat_cast)(P(A, ii, ii)), alpha);
@@ -511,7 +526,7 @@ void X(celladd)(panyarray pA_, R ac, const_anyarray B_, R bc){
 		cellinit2(pA, B);
 		cell* A=*pA;
 OMP_FOR(8)
-		for(int i=0; i<B->nx*B->ny; i++){
+		for(long i=0; i<B->nx*B->ny; i++){
 			X(celladd)(&P(A,i), ac, P(B,i), bc);
 		}
 	} else{//non cell
@@ -561,7 +576,7 @@ void X(cellscale)(anyarray A_, R w){
 		return;
 	}else if(iscell(A)){
 OMP_FOR(8)
-		for(int i=0; i<A->nx*A->ny; i++){
+		for(long i=0; i<A->nx*A->ny; i++){
 			X(cellscale)(P(A,i), w);
 		}
 	} else{
@@ -590,7 +605,10 @@ X(mat)* X(cell2m)(const_anyarray A_){
 	if(!A) return 0;
 	long nx=0, ny=0, *nxs=NULL, *nys=NULL;
 	celldim(A, &nx, &ny, &nxs, &nys);
-	
+	if(!nxs||!nys){//empty or invalid
+		free(nxs); free(nys);
+		return PN(A)?NULL:X(new)(0, 0);
+	}
 	X(mat)* out=X(new)(nx, ny);
 	long jcol=0;
 	for(long iy=0; iy<A->ny; iy++){

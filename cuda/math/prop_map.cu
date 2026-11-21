@@ -352,8 +352,15 @@ map2map_do(map2map_t* data, Real* const* pdirs, Real* const* ppss, int ii, int n
   Prepare data and copy to GPU so that one kernel (map2map_do) can handle multiple independent ray tracing without range checking.
   Forward: ps->dir (xloc -> wfs or dm->floc)
   Backward: dir->ps (wfs -> xloc or floc->dm)
-*/
 
+  @param[in,out] res Propagation parameters to fill (host memory). A reverse
+  entry is allocated for matched bilinear propagation.
+  @param[in] g_dir Grid of the direction (output for forward propagation).
+  @param[in] g_ps Grid of the phase screen (input for forward propagation).
+  @param[in] dispx Displacement of g_dir relative to g_ps along x (m).
+  @param[in] dispy Displacement of g_dir relative to g_ps along y (m).
+  @param[in] cc Cubic interpolation coefficients. Empty for bilinear.
+*/
 void map2map_prep(map2map_t* res, const cugrid_t& g_dir, const cugrid_t& g_ps,
 	Real dispx, Real dispy, const curmat& cc){
 	assert(g_ps.ny!=1);
@@ -476,9 +483,8 @@ void map2map::init_l2d(const cugrid_t& out, const dir_t* dir, int _ndir, //outpu
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
 		const Real ht=in[ilayer].ht;
 		for(int idir=0; idir<ndir; idir++){
-			if(!dir[idir].skip){
+			if(!dir[idir].skip&&1.f-ht/dir[idir].hs>0.01){//entry is left zero (no-op) otherwise
 				const Real scale=1.f-ht/dir[idir].hs;
-				if(scale<=0.01) continue;
 				const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx*scale;
 				const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy*scale;
 				cugrid_t outscale=out.Scale(scale);

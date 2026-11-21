@@ -36,7 +36,7 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 	const real oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
 	real fieldstop        /**<[in] Size of field stop (radian) if used*/
 ){
-	const int nwvl=NX(wvl)*NY(wvl);
+	const int nwvl=(int)(NX(wvl)*NY(wvl));
 	locfft_t* locfft=mycalloc(1, locfft_t);
 	locfft->embed=lcellnew(nwvl, 1);
 	locfft->nembed=lnew(nwvl, 1);
@@ -58,11 +58,11 @@ locfft_t* locfft_init(loc_t* loc,       /**<[in] The loc*/
 		locfft->fieldstop=fieldstop;
 		locfft->fieldmask=dcellnew(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-			int nembed=P(locfft->nembed, iwvl);
+			long nembed=P(locfft->nembed, iwvl);
 			P(locfft->fieldmask, iwvl)=dnew(nembed, nembed);
 			real dtheta=P(wvl, iwvl)/(loc->dx*nembed);//sampling of psf
 			real radius=fieldstop/(dtheta*2);
-			dbg("field stop is %g, dtheta is %g, radius is %g, nembed=%d.\n", fieldstop, dtheta, radius, nembed);
+			dbg("field stop is %g, dtheta is %g, radius is %g, nembed=%ld.\n", fieldstop, dtheta, radius, nembed);
 			dcircle(P(locfft->fieldmask, iwvl), nembed/2+1, nembed/2+1, 1, 1, radius, 1);
 			dfftshift(P(locfft->fieldmask, iwvl));
 		}
@@ -108,16 +108,17 @@ static comp strehlcomp(const dmat* iopdevl, const dmat* amp, const real wvl){
    Extract center part of psfsize.
 */
 void locfft_psf(ccell** psf2sp, const locfft_t* locfft, const dmat* opd, const lmat* psfsize, int sum2one){
-	long nwvl=NX(locfft->wvl);
+	int nwvl=(int)NX(locfft->wvl);
 	if(!*psf2sp){
 		*psf2sp=ccellnew(nwvl, 1);
 	}
 	ccell* psf2s=*psf2sp;
 	if(NX(opd)!=NX(locfft->amp)){
 		error("The length of opd should be %ld, but is %ld\n", NX(locfft->amp), NX(opd));
+		return;
 	}
 OMP_TASK_FOR(4)	
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	for(long iwvl=0; iwvl<nwvl; iwvl++){
 		if(psfsize&&P(psfsize, iwvl)==1){
 			if(!P(psf2s, iwvl)){
 				P(psf2s, iwvl)=cnew(1, 1);
@@ -133,6 +134,8 @@ OMP_TASK_FOR(4)
 			if(ref){//Full PSF is returned
 				if(!P(psf2s, iwvl)){
 					P(psf2s, iwvl)=cnew(nembed, nembed);
+				}else{
+					czero(P(psf2s, iwvl));//only the embed points are written below
 				}
 				psf2=P(psf2s, iwvl);
 			} else{//Crop of PSF is returned.
@@ -169,7 +172,7 @@ OMP_TASK_FOR(4)
 			}
 			TIM(3);
 #if TIMING
-			info2("locfft_psf(%d:%ldx%ld): exp %.4f, fft %.4f (%.2f GFLOPS), abs2 %.2f.\n", iwvl, nembed, nembed,
+			info2("locfft_psf(%ld:%ldx%ld): exp %.4f, fft %.4f (%.2f GFLOPS), abs2 %.2f.\n", iwvl, nembed, nembed,
 				tk1-tk0, tk2-tk1, 8L*(use1d?P(psfsize, iwvl):nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
 #endif		
 		}
@@ -188,13 +191,13 @@ OMP_TASK_FOR(4)
    Apply a field stop to the OPD.
 */
 void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
-	int nwvl=NX(locfft->wvl);
+	int nwvl=(int)NX(locfft->wvl);
 	if(nwvl>1){
 		warning("Not tested for multi-wavelength case yet.\n");
 	}
 	ccell* wvfs=ccellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		int nembed=P(locfft->nembed, iwvl);
+		long nembed=P(locfft->nembed, iwvl);
 		lmat* embed=P(locfft->embed, iwvl);
 		cmat* wvf=cnew(nembed, nembed);
 		P(wvfs, iwvl)=wvf;
@@ -232,6 +235,7 @@ void locfft_fieldstop(const locfft_t* locfft, dmat* opd, const dmat* wvlwts){
 			P(opd, iloc)+=P(wvlwts, iwvl)*val;
 		}
 	}
+	dfree(opdold);
 	ccellfree(wvfs);
 }
 /**
@@ -357,16 +361,21 @@ void fresnel_prop(cmat** pout, /**<Output complex field. Sampling depends on met
 		*pdxout=fabs(z)*wvl/(dxin*NX(in));
 		apply_h(out, out, *pdxout, wvl, z);
 		cscale(out, scale);
-	} else if(method==2){//angular spectrum
-		cmat* in2=cdup(in);	//cfftshift(in2);//no need
-		cfft2(in2, -1);
-		apply_h(out, NULL, dxin, wvl, z);//cfftshift(out);//no need
+	} else if(method==2){//angular spectrum: apply the transfer function in the frequency domain.
+		//The impulse response sampled in the spatial domain is aliased when dp<dxin, where this method is used.
+		if(out!=in) ccp(&out, in);
 		cfft2(out, -1);
-		ccwm(out, in2);
-		cfree(in2);
+		const long nx=NX(out), ny=NY(out);
+		const real coeff=-M_PI*wvl*z/(dxin*dxin);//H=exp(-i*pi*wvl*z*(fx^2+fy^2))
+		for(long iy=0; iy<ny; iy++){
+			const real fy=(real)(iy<(ny+1)/2?iy:iy-ny)/ny;
+			for(long ix=0; ix<nx; ix++){
+				const real fx=(real)(ix<(nx+1)/2?ix:ix-nx)/nx;
+				P(out, ix, iy)*=EXPI(coeff*(fx*fx+fy*fy));
+			}
+		}
 		cfft2(out, 1);
-		cfftshift(out);
-		cscale(out, scale/(PN(out)));
+		cscale(out, scale/sqrt((real)PN(out)));//same normalization as the FFT method
 		*pdxout=dxin;
 	} else{
 		error("Invalid method\n");

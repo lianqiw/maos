@@ -23,12 +23,13 @@
    This file defines functions relates to map_t, etc.
 */
 map_t* map_convert(dmat* A);
+cell* map_convert_cell(cell* A);
 rmap_t* rmap_convert(dmat* A);
 #define mapwrite(out, A...) writebin(dmat_cast(out), A)
 #define mapread(A...)    map_convert(dmat_cast(readbin_id(M_MAP, 0, A)))
 
-#define mapcellread(A...) (mapcell*)cellconvert(readbin_id(M_MAP, 1, A), (cell * (*)(cell *))map_convert)
-#define mapcellread_mmap(A...) (mapcell*)cellconvert((cell*)dcellread_mmap(A), (cell * (*)(cell *))map_convert)
+#define mapcellread(A...) (mapcell*)cellconvert(readbin_id(M_MAP, 1, A), map_convert_cell)
+#define mapcellread_mmap(A...) (mapcell*)cellconvert((cell*)dcellread_mmap(A), map_convert_cell)
 #define mapcellnew (mapcell*)cellnew
 #define mapccellnew (mapccell*)cellnew
 

@@ -50,10 +50,10 @@ typedef struct atm_cfg_t{
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/
     lmat *ipsr;    /**<corresponding reconstruction layer*/
-    int nx;       /**<turbulence screen size along x*/
-    int ny;       /**<turbulence screen size along y*/
+    long nx;      /**<turbulence screen size along x*/
+    long ny;      /**<turbulence screen size along y*/
     lmat *nxn;    /**<minimum turbulence screen size along to cover meta pupil*/
-    int nxnmax;   /**<max of nxn*/
+    long nxnmax;  /**<max of nxn*/
     int method;   /**<0: FFT Von Karman. 1: FFT Biharmonic. 2: Fractal method.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
@@ -709,7 +709,7 @@ typedef struct dbg_cfg_t{
     int twfsflag;    /**<use TWFS to control 0: all modes, 1: radial only*/
 	int twfsrmax;    /**<TWFS maximum zernike radial order.*/
 
-    int wfs_iac;     /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
+    real wfs_iac;    /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
     int fullatm;     /**<Always copy full atm to GPU.*/
     int recon_stuck; /**<Whether to handle stuck actuator in reconstruction.*/
 }dbg_cfg_t;
@@ -900,7 +900,6 @@ typedef struct arg_t{
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
     int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
-    int server;      /**<MAOS acting as server*/
     char *dirout;    /**<Result output directory*/
     char *confmain;  /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/

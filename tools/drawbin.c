@@ -55,8 +55,8 @@ int main(int argc, char* argv[]){
 			info("%s is %ldx%ld\n", argv[2], arg2->nx, arg2->ny);
 		}
 	}
-	int mx=0;
-	int my=0;
+	long mx=0;
+	long my=0;
 	if(argc>3){
 		mx=strtol(argv[3], NULL, 10);
 	}

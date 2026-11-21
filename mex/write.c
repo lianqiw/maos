@@ -81,7 +81,7 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 			}
 		}
 	} else{/*not cell.*/
-		int ntot=0;
+		long ntot=0;
 		int byte=0;
 		int magic=0;
 		if(mxIsComplex(arr)){
@@ -158,7 +158,9 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 					zfwrite(&nz, sizeof(uint64_t), 1, fp);
 				}
 				//Do not use getNz. It shows available slots, but not actual data.
+				mwSize dims2[2];//do not overwrite the const dims owned by arr
 				if(fp->isfits){
+					header2.dims=dims2;
 					//write Jc header
 					header2.magic=(sizeof(mwIndex)==4?M_INT32:M_INT64);
 					header2.str=(char*)"Jc";
@@ -200,7 +202,7 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 				dcomplex* tmp=(dcomplex*)tmp0;
 				double* Pr=(double*)Pr0;
 				double* Pi=(double*)Pi0;
-				for(int i=0; i<ntot; i++){
+				for(long i=0; i<ntot; i++){
 					tmp[i].x=Pr[i];
 					tmp[i].y=Pi[i];
 				}
@@ -208,17 +210,17 @@ static void writedata(file_t* fp, const mxArray* arr, const mxArray* header){
 				fcomplex* tmp=(fcomplex*)tmp0;
 				float* Pr=(float*)Pr0;
 				float* Pi=(float*)Pi0;
-				for(int i=0; i<ntot; i++){
+				for(long i=0; i<ntot; i++){
 					tmp[i].x=Pr[i];
 					tmp[i].y=Pi[i];
 				}
 			}
 
-			zfwrite(tmp0, byte, ntot, fp);
+			zfwrite(tmp0, byte/2, ntot*2, fp);//real and imaginary parts are byte swapped separately for fits.
 			free(tmp0);
 		} else
 #endif
-			zfwrite(mxGetData(arr), byte, ntot, fp);
+			zfwrite(mxGetData(arr), mxIsComplex(arr)?byte/2:byte, mxIsComplex(arr)?ntot*2:ntot, fp);//real and imaginary parts are byte swapped separately for fits.
 	}
 	free(str);
 }

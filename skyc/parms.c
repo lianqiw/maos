@@ -82,8 +82,8 @@ static void setup_parms_skyc(parms_s* parms){
 	parms->skyc.dtrats=readcfg_dmat(0,0,"skyc.dtrats");
 	//readcfg_ignore(parms->skyc.multirate?"skyc.dtrats":"skyc.dtrats_mr");
 	if(parms->skyc.multirate){
-		parms->skyc.snrmin_fast=readcfg_dmat(PN(parms->skyc.dtrats),1,"skyc.snrmin_fast");
-		parms->skyc.snrmin_slow=readcfg_dmat(PN(parms->skyc.dtrats),1,"skyc.snrmin_slow");
+		parms->skyc.snrmin_fast=readcfg_dmat((int)PN(parms->skyc.dtrats),1,"skyc.snrmin_fast");
+		parms->skyc.snrmin_slow=readcfg_dmat((int)PN(parms->skyc.dtrats),1,"skyc.snrmin_slow");
 	}else{
 		readcfg_ignore("skyc.snrmin_fast");
 		readcfg_ignore("skyc.snrmin_slow");
@@ -199,7 +199,6 @@ parms_s* setup_parms(const arg_s* arg){
 	if(!readcfg_peek("skyc.nsky")){
 		open_config("maos.conf", 0);//open default config
 	}
-	remove(arg->confcmd);
 	parms_s* parms=mycalloc(1, parms_s);
 	parms->skyc.nthread=arg->nthread;
 	setup_parms_maos(parms);
@@ -210,9 +209,10 @@ parms_s* setup_parms(const arg_s* arg){
 		real wt=0;
 		parms->skyc.wvlwt=dnew(parms->maos.nwvl, 1);
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
+			wt=0;
 			for(int jwvl=0; jwvl<NX(parms->skyc.zb.qe); jwvl++){
 				if(fabs(parms->maos.wvl[iwvl]-P(parms->skyc.zb.wvl, jwvl))<0.1e-6){
-					wt=P(parms->skyc.zb.qe,iwvl)*P(parms->skyc.zb.thruput,iwvl);
+					wt=P(parms->skyc.zb.qe,jwvl)*P(parms->skyc.zb.thruput,jwvl);
 					break;
 				}
 			}
@@ -237,7 +237,7 @@ parms_s* setup_parms(const arg_s* arg){
 			parms->skyc.gsplit=1;
 		}
 	}
-	parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
+	parms->skyc.ndtrat=(int)(parms->skyc.dtrats->nx*parms->skyc.dtrats->ny);
 	
 	if(parms->skyc.psd_ws){
 		if(parms->skyc.addws<0){
@@ -390,7 +390,9 @@ parms_s* setup_parms(const arg_s* arg){
 		if(parms->skyc.verbose<1){
 			parms->skyc.verbose=1;
 		}
-		parms->skyc.dbg=1;
+		if(parms->skyc.dbg<1){
+			parms->skyc.dbg=1;
+		}
 		parms->skyc.nthread=1;
 	}
 	if(parms->skyc.interpg==-1){
@@ -446,6 +448,8 @@ parms_s* setup_parms(const arg_s* arg){
 					if(nseed!=i){
 						parms->maos.seeds[nseed]=parms->maos.seeds[i];
 						parms->fdlock[nseed]=parms->fdlock[i];
+						parms->fnlock[nseed]=parms->fnlock[i];
+						parms->fnlock[i]=NULL;
 					}
 					nseed++;
 				}

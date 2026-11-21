@@ -68,7 +68,7 @@ dsp* mkzt(loc_t* xloc, real* amp, loc_t* saloc,
 		/*find points that belongs to this subaperture. */
 		for(int iy=iceil(scy-dsa2); iy<ifloor(scy+dsa2);iy++){
 			for(int ix=iceil(scx-dsa2); ix<ifloor(scx+dsa2);ix++){
-				int ii=loc_map_get(map, ix, iy);
+				long ii=loc_map_get(map, ix, iy);
 				if(ii>0){
 					ii--;
 					ind[count]=ii;

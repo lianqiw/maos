@@ -30,7 +30,7 @@ dsp *nea2sp(dmat *nea, int ll, int ur, int ng);
 void nea_chol(dmat **pout, const dmat *in, int ng);
 void nea_inv(dmat **pout, const dmat *in, int ng, real scale);
 void nea_mm(dmat **pout, const dmat *in, int ng);
-void nea_check(dmat *nea, int nsa, int ng);
+void nea_check(dmat *nea, long nsa, int ng);
 
 void psfr_calc(sim_t *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 cn2est_t* cn2est_prepare(const parms_t *parms, const powfs_t *powfs);

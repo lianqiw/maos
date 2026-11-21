@@ -5,7 +5,7 @@ AC_DEFUN([MY_CHECK_LAPACK], [
     [use_mkl="default"])
 
 	default="default pkg-config default-3"
-	if test "x$enable_threadlibx" != xno ; then
+	if test "x$enable_threadlib" != xno ; then
    		openblas="openblas-threads openblas-threads-0 openblas-serial openblas-serial-0"
   	else
    		openblas="openblas-serial openblas-serial-0"

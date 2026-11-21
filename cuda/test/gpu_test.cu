@@ -85,6 +85,7 @@ void gpu_map2map(cumap_t& out, const cumap_t& in, Real dispx, Real dispy, Real a
 	if(wrap.reverse){
 		cudaFree(wrap.reverse);
 	}
+	cudaFree(p);
 }
 
 /*Test ray tracing*/

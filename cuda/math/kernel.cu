@@ -18,9 +18,15 @@
 #include "kernel.h"
 
 /**
-   A few kernels.
-*/
+   Add piston and tip/tilt to opd defined on loc: opd+=pis+x*tx+y*ty. Grid-stride loop.
 
+   @param[in,out] opd OPD array of length n.
+   @param[in] loc Coordinates (x, y) of the n points.
+   @param[in] n Number of points.
+   @param[in] pis Piston.
+   @param[in] tx Tip (x tilt) coefficient.
+   @param[in] ty Tilt (y tilt) coefficient.
+*/
 __global__ void add_ptt_do(Real* restrict opd, Real(*restrict loc)[2],
 	int n, Real pis, Real tx, Real ty){
 	const int step=blockDim.x*gridDim.x;
@@ -356,9 +362,13 @@ __global__ void add_tilt_do(Real* opd, int nx, int ny, Real ox, Real oy, Real dx
 }
 
 /**
-   component wise multiply.
-*/
+   Component wise multiply of complex array by real array: dest=dest.*from.
+   Specialization of cwm_do() in kernel.h.
 
+   @param[in,out] dest Complex array of length n.
+   @param[in] from Real array of length n.
+   @param[in] n Number of elements.
+*/
 template <>
 __global__ void cwm_do(Comp* dest, const Real* from, long n){
 	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
@@ -395,9 +405,9 @@ __global__ void cwm_do(Comp* dest, Comp* from1, Comp* from2, int lda, int ldb, i
 __global__ void unwrap_phase_do(Comp* wvf, Real* opd, int* embed, int n, Real wvl){
 	Real kki=wvl/(2*M_PI);
 	Real wvlh=wvl*0.5;
-	for(int i=threadIdx.x+threadIdx.y*blockDim.x; i<n; i+=blockDim.x*blockDim.y){
+	for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
 		Real val=atan2(wvf[embed[i]].y, wvf[embed[i]].x)*kki;
-		Real diff=fmodf(val-opd[i]+wvlh, wvl);
+		Real diff=Z(fmod)(val-opd[i]+wvlh, wvl);
 		if(diff<0) diff+=wvl;
 		opd[i]+=diff-wvlh;
 	}

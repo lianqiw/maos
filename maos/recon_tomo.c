@@ -62,7 +62,7 @@ setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
 			for(int ips=0; ips<npsr; ips++){
 				if(parms->tomo.square){/*periodic bc */
 					P(recon->L2,ips,ips)=mklaplacian_map
-					(P(recon->xmap,ips)->nx, P(recon->xmap,ips)->nx,
+					(P(recon->xmap,ips)->nx, P(recon->xmap,ips)->ny,
 						P(recon->xloc,ips)->dx, recon->r0,
 						P(recon->wt,ips));
 				} else{/*reflecive bc */
@@ -97,7 +97,8 @@ setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
 		if(parms->save.setup){
 			writebin(recon->invpsd->invpsd, "recon_invpsd");
 		}
-		dcellscale(recon->invpsd->invpsd, sqrt(parms->tomo.cxxscale*TOMOSCALE));
+		//invpsd is applied once (not as L2'*L2), so it takes the full scaling.
+		dcellscale(recon->invpsd->invpsd, parms->tomo.cxxscale*TOMOSCALE);
 
 		ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
 		for(int ips=0; ips<recon->npsr; ips++){
@@ -112,11 +113,11 @@ setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
 		recon->fractal->r0=parms->atmr.r0;
 		recon->fractal->L0=parms->atmr.L0;
 		recon->fractal->wt=P(parms->atmr.wt);
-		recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
+		recon->fractal->scale=parms->tomo.cxxscale*TOMOSCALE;//applied once. same as invpsd.
 		recon->fractal->ninit=parms->tomo.ninit;
 		dcell* xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 		for(int ips=0; ips<npsr; ips++){
-			int nn=nextfftsize(MAX(P(recon->xmap,ips)->nx, P(recon->xmap,ips)->ny))+1;
+			long nn=nextfftsize(MAX(P(recon->xmap,ips)->nx, P(recon->xmap,ips)->ny))+1;
 			P(xopd,ips)=dnew(nn, nn);
 		}
 	}
@@ -134,9 +135,9 @@ setup_recon_tomo_reg(recon_t* recon, const parms_t* parms){
 			/*dbg("Scaling of ZZT is %g\n",val); */
 			/*piston mode eq 47 in Brent 2002 paper */
 			int icenter=loccenter(P(recon->xloc,ips));
-			int nloc=P(recon->xloc,ips)->nloc;
+			long nloc=P(recon->xloc,ips)->nloc;
 			dsp* ZZT=P(recon->ZZT, ips, ips)=dspnew(nloc, nloc, 1);
-			int icol;
+			long icol;
 			int count=0;
 			for(icol=0; icol<nloc; icol++){
 				ZZT->pp[icol]=count;
@@ -193,22 +194,18 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	if(parms->load.tomo){
 	/*right hand side. */
 		warning("Loading saved recon->RR\n");
-		recon->RR.M=readbin("RRM");
-		if(zfexist("RRU")){
-			recon->RR.U=dcellread("RRU");
-			recon->RR.V=dcellread("RRV");
+		/*file names match those written with save.recon below. */
+		recon->RR.M=readbin("tomo_RRM");
+		if(zfexist("tomo_RRU")){
+			recon->RR.U=dcellread("tomo_RRU");
+			recon->RR.V=dcellread("tomo_RRV");
 		}
 		/*Left hand side */
 		warning("Loading saved recon->RL\n");
-		recon->RL.M=readbin("RLM");
-		recon->RL.U=dcellread("RLU");
-		recon->RL.V=dcellread("RLV");
-		if(parms->tomo.alg==0&&zfexist("RLC")){
-			recon->RL.C=chol_read("RLC");
-		}
-		if(parms->tomo.alg==2&&zfexist("RLMI")){
-			recon->RL.MI=dread("RLMI");
-		}
+		recon->RL.M=readbin("tomo_RLM");
+		recon->RL.U=dcellread("tomo_RLU");
+		recon->RL.V=dcellread("tomo_RLV");
+		/*RL.C and RL.MI are loaded below.*/
 	} else{
 		info("Building recon->RR\n");
 		const dspcell* saneai=recon->saneai;
@@ -347,11 +344,11 @@ void setup_recon_tomo_matrix(recon_t* recon, const parms_t* parms){
 	}
 	if(((parms->tomo.alg==0||parms->tomo.alg==2)&&!parms->tomo.bgs)||(parms->sim.ecnn&&!parms->recon.mvm)){
 		if(parms->load.tomo){
-			if(parms->tomo.alg==0&&zfexist("RLC")){
-				recon->RL.C=chol_read("RLC");
+			if(parms->tomo.alg==0&&zfexist("tomo_RLC")){
+				recon->RL.C=chol_read("tomo_RLC");
 			}
-			if(parms->tomo.alg==2&&zfexist("RLMI")){
-				recon->RL.MI=dread("RLMI");
+			if(parms->tomo.alg==2&&zfexist("tomo_RLMI")){
+				recon->RL.MI=dread("tomo_RLMI");
 			}
 		}
 		if(!recon->RL.C&&!recon->RL.MI){
@@ -414,7 +411,7 @@ void setup_recon_tomo(recon_t* recon, const parms_t* parms, const powfs_t* powfs
 			//To avoid rank deficienciy in AHST, we do not remove the modes in the first wfs.
 			for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 				if(parms->powfs[ipowfs].nwfsr>0	&& !parms->powfs[ipowfs].skip){
-					int iwfs=P(parms->powfs[ipowfs].wfsr, 0);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfsr, 0);
 					if(recon->TTF_LHS) dfree(P(recon->TTF_LHS, iwfs, iwfs));
 					if(recon->PTTF_LHS) dfree(P(recon->PTTF_LHS, iwfs, iwfs));
 				}
@@ -491,7 +488,8 @@ typedef struct Tomo_T{
 
    gg  = GP * HXW * xin
 */
-static void* Tomo_prop_do(Tomo_T *data){
+static void* Tomo_prop_do(void *pdata){
+	Tomo_T *data=(Tomo_T *)pdata;
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
@@ -503,7 +501,7 @@ static void* Tomo_prop_do(Tomo_T *data){
 		const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 		const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		dmat* xx=dnew(recon->ploc->nloc, 1);
-		const real hs=parms->wfs[iwfs].hs;
+		const real hs=parms->wfsr[iwfs].hs;
 		for(int ips=0; ips<nps; ips++){
 			if(parms->tomo.square&&!parms->dbg.tomo_hxw){
 			/*Do the ray tracing instead of using HXW. */
@@ -512,14 +510,14 @@ static void* Tomo_prop_do(Tomo_T *data){
 				real shiftx=0;
 				real shifty=0;
 				if(parms->tomo.predict){
-					int ips0=P(parms->atmr.indps, ips);
+					int ips0=(int)P(parms->atmr.indps, ips);
 					shiftx=P(simu->atm, ips0)->vx*delay;
 					shifty=P(simu->atm, ips0)->vy*delay;
 				}
-				prop(&(propdata_t){.mapin=P(recon->xmap, ips), .phiin=P(P(data->xin, ips)),
+				prop(ADDR((propdata_t){.mapin=P(recon->xmap, ips), .phiin=P(P(data->xin, ips)),
 					.ostat=recon->ploc->stat, .phiout=P(xx), .alpha=1, .hs=hs,
 					.thetax=parms->wfsr[iwfs].thetax, .thetay=parms->wfsr[iwfs].thetay,
-					.misregx=misregx, .misregy=misregy, .shiftx=shiftx, .shifty=shifty});
+					.misregx=misregx, .misregy=misregy, .shiftx=shiftx, .shifty=shifty}));
 			} else{
 				dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 				dspmm(&xx, P(HXW, iwfs, ips), P(data->xin, ips), "nn", 1);
@@ -534,8 +532,8 @@ static void* Tomo_prop_do(Tomo_T *data){
 				reshape(xxr, recon->ploc->nloc, 1);
 			}else{
 				xxr=dnew(recon->ploc->nloc, 1);
-				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(xx), .locout=recon->ploc, .phiout=P(xxr), 
-					.rot=-recon->wfsr[iwfs].misregc});
+				prop(ADDR((propdata_t){.locin=recon->ploc, .phiin=P(xx), .locout=recon->ploc, .phiout=P(xxr), 
+					.rot=-recon->wfsr[iwfs].misregc}));
 			}
 		}
 		/*Apply the gradient operation */
@@ -563,7 +561,8 @@ static void Tomo_prop(Tomo_T* data, int nthread){
 
    gg = GP' * NEAI * gg;
 */
-static void* Tomo_nea_gpt_do(Tomo_T *data){
+static void* Tomo_nea_gpt_do(void *pdata){
+	Tomo_T *data=(Tomo_T *)pdata;
 	const recon_t* recon=data->recon;
 	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
@@ -585,8 +584,8 @@ static void* Tomo_nea_gpt_do(Tomo_T *data){
 				reshape(P(data->gg, iwfs), recon->ploc->nloc, 1);
 			}else{
 				P(data->gg, iwfs)=dnew(recon->ploc->nloc, 1);
-				prop(&(propdata_t){.locin=recon->ploc, .phiin=P(ggr), .locout=recon->ploc, .phiout=P(P(data->gg, iwfs)), 
-					.rot=recon->wfsr[iwfs].misregc});
+				prop(ADDR((propdata_t){.locin=recon->ploc, .phiin=P(ggr), .locout=recon->ploc, .phiout=P(P(data->gg, iwfs)), 
+					.rot=recon->wfsr[iwfs].misregc}));
 			}
 			dfree(ggr);
 		}
@@ -594,9 +593,13 @@ static void* Tomo_nea_gpt_do(Tomo_T *data){
 	return NULL;
 }
 /**
- * gg=NEAI*gg
- */
-static void* Tomo_nea_do(Tomo_T *data){
+   Apply NEA weighting: gg=NEAI*gg.
+
+   @param[in,out] pdata The shared data. data->gg is replaced.
+   @return NULL.
+*/
+static void* Tomo_nea_do(void *pdata){
+	Tomo_T *data=(Tomo_T *)pdata;
 	const recon_t* recon=data->recon;
 	const parms_t *parms=global->parms;
 	dspcell* NEAI=recon->saneai/*PDSPCELL*/;
@@ -632,7 +635,8 @@ void Tomo_nea_gpt(Tomo_T* data, int nthread, int gpt){
 
    xout = Cxx^-1 * xin + HXW' * gg;
 */
-static void* Tomo_iprop_do(Tomo_T *data){
+static void* Tomo_iprop_do(void *pdata){
+	Tomo_T *data=(Tomo_T *)pdata;
 	const recon_t* recon=data->recon;
 	const parms_t* parms=global->parms;
 	sim_t* simu=global->simu;
@@ -648,21 +652,22 @@ static void* Tomo_iprop_do(Tomo_T *data){
 			xmap.p=P(P(data->xout, ips));
 			for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 				if(!P(data->gg, iwfs)) continue;
-				const real hs=parms->wfs[iwfs].hs;
-				const int ipowfs=parms->wfs[iwfs].powfs;
+				const real hs=parms->wfsr[iwfs].hs;
+				const int ipowfs=parms->wfsr[iwfs].powfs;
 				const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 				real misregx=(shwfs?parms->wfsr[iwfs].misregx:0);
 				real misregy=(shwfs?parms->wfsr[iwfs].misregy:0);
 				real shiftx=0, shifty=0;
 				if(parms->tomo.predict){
 					const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
-					int ips0=P(parms->atmr.indps, ips);
+					int ips0=(int)P(parms->atmr.indps, ips);
 					shiftx=P(simu->atm, ips0)->vx*delay;
 					shifty=P(simu->atm, ips0)->vy*delay;
 				}
-				prop(&(propdata_t){.mapin=&xmap, .ostat=recon->ploc->stat, .phiout=P(P(data->gg, iwfs)), 
-					.alpha=1, .hs=hs, .misregx=misregx, .misregy=misregy,
-					.shiftx=shiftx, .shifty=shifty});
+				prop(ADDR((propdata_t){.mapin=&xmap, .ostat=recon->ploc->stat, .phiout=P(P(data->gg, iwfs)), 
+					.alpha=1, .hs=hs, .thetax=parms->wfsr[iwfs].thetax, .thetay=parms->wfsr[iwfs].thetay,
+					.misregx=misregx, .misregy=misregy,
+					.shiftx=shiftx, .shifty=shifty, .transpose=1}));
 			}
 		} else{
 			dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
@@ -707,8 +712,12 @@ static void Tomo_iprop(Tomo_T* data, int nthread){
    TomoL, so merge the implemenations.
 
    xout=HXW'*GP'*NEAI*(1-TTF*PTTF)*gin.
-*/
 
+   @param[in,out] xout The output on xloc. Allocated if NULL; alpha*RR*gin is accumulated into it.
+   @param[in] A The recon_t struct.
+   @param[in] gin The gradients.
+   @param[in] alpha Scaling factor.
+*/
 void TomoR(dcell** xout, const void* A,
 	const dcell* gin, const real alpha){
 	TIC_tm;tic_tm;
@@ -732,14 +741,14 @@ void TomoR(dcell** xout, const void* A,
 void TomoRt(dcell** gout, const void* A,
 	const dcell* xin, const real alpha){
 	const recon_t* recon=(const recon_t*)A;
-	if(!*gout){
-		*gout=dcellnew(NX(recon->saneai), 1);
-	}
-	Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
+	dcell* gg=dcellnew(NX(recon->saneai), 1);/*use temporary so that existing *gout is not NEA weighted.*/
+	Tomo_T data={recon, alpha, xin, gg, NULL, 1};
 	Tomo_prop(&data, recon->nthread);
 	/*Using Tomo_nea_gpt followed by TTFRt is equilvaent as using remove_mode followed by Tomo_nea_gpt.*/
-	remove_mode(*gout, recon->TTF, recon->PTTF);
+	remove_mode(gg, recon->TTF, recon->PTTF);
 	Tomo_nea_gpt(&data, recon->nthread, 0);
+	dcelladd(gout, 1, gg, alpha);
+	dcellfree(gg);
 }
 
 /**
@@ -757,8 +766,12 @@ void TomoRt(dcell** gout, const void* A,
    GP':  3.2  2.1  3.4  1.0
    HXW': 5.5  4.7  7.4  4.9
    cxx:  3.2  2.5  3.5  2.7
-*/
 
+   @param[in,out] xout The output on xloc. Allocated if NULL; alpha*RL*xin is accumulated into it.
+   @param[in] A The recon_t struct.
+   @param[in] xin The input on xloc.
+   @param[in] alpha Scaling factor.
+*/
 void TomoL(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	TIC_tm;tic_tm;

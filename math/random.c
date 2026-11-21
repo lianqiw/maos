@@ -291,7 +291,7 @@ double randn(rand_t* rstat){
 	int i;
 	while(1){
 		U=2*randu(rstat)-1;
-		l=lrand(rstat);
+		l=(unsigned int)lrand(rstat);
 		i=l&LEVELS_1;/*8 bit for addressing*/
 		x=U*wtab[i];
 		if(fabs(U)<ktab[i]) break;

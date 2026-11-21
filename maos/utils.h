@@ -32,7 +32,7 @@ char *evl_keywords(const parms_t *parms, const aper_t *aper, int ievl, int iwvl,
 
 dmat *mkamp(const loc_t *loc, const map_t *aper, real misregx, real misregy, real D, real Din);
 void maxapriori(real *g, const dmat *ints, const parms_t *parms, 
-		const powfs_t *powfs, int iwfs, int isa, int noisy,
+		const powfs_t *powfs, int iwfs, long isa, int noisy,
 		real bkgrnd, real rne);
 void wfslinearity(const parms_t *parms, powfs_t *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const parms_t *parms, powfs_t *powfs, recon_t *recon, const int iwfs);

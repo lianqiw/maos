@@ -36,7 +36,16 @@
 #endif
 
 
-static void* atm_prep(atm_prep_t* data){
+/**
+   Thread worker that copies the nx0*ny0 subset of a turbulence layer starting
+   at (offx, offy), with wrapping, into data->next_atm in Real precision.
+
+   @param[in,out] pdata Preparation data for one layer. data->next_atm must be
+   allocated and is filled.
+   @return Always NULL.
+*/
+static void* atm_prep(void *pdata){
+	atm_prep_t *data=(atm_prep_t *)pdata;
 	PNEW(lock);
 	LOCK(lock);/*make sure we only read one layer at a time. */
 	//TIC;tic;
@@ -101,7 +110,46 @@ static void gpu_atm2gpu_full(const mapcell* atm){
 	toc2("atm to gpu");
 }
 /**
-   Transfer atmosphere or update atmosphere in GPU.
+   Minimum number of points along each side of a turbulence layer that has to be
+   hosted in GPU. It is the meta-pupil size, parms->atm.nxn, enlarged when
+   needed to cover the uplink beam of side launched LGS which may be outside of
+   the meta-pupil.
+
+   @param[in] parms Simulation parameters.
+   @param[in] ips Layer index.
+   @return The number of points.
+*/
+static long atm_nxn_gpu(const parms_t* parms, int ips){
+	long nxn=P(parms->atm.nxn, ips);
+	const real ht=P(parms->atm.ht, ips);
+	const real dx=parms->atm.dx;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		const llt_cfg_t* llt=parms->powfs[ipowfs].llt;
+		if(!llt) continue;
+		const real scale=1.-ht/parms->wfs[iwfs].hs;
+		if(scale<0) continue;
+		const int illt=P(llt->i, P(parms->powfs[ipowfs].wfsind, iwfs));
+		//center of the uplink beam at this layer. See wfsgrad.c
+		const real cx=ht*parms->wfs[iwfs].thetax+scale*P(llt->ox, illt);
+		const real cy=ht*parms->wfs[iwfs].thetay+scale*P(llt->oy, illt);
+		const real r=MAX(fabs(cx), fabs(cy))+scale*llt->d*0.5;
+		const long nxl=2*(long)ceil(r/dx)+6;//6: guard like create_metapupil
+		if(nxn<nxl) nxn=nxl;
+	}
+	return nxn;
+}
+/**
+   Transfer atmosphere or update atmosphere in GPU. If GPU memory is
+   sufficient, the full screens are copied once per seed. Otherwise only a
+   subset covering the meta-pupil is kept in GPU and refreshed in advance by
+   background threads as the screens move with the wind.
+
+   @param[in] atmc Turbulence layers. Nothing is done if NULL.
+   @param[in] atmscale Per step scaling of the atmosphere, or NULL.
+   @param[in] parms Simulation parameters.
+   @param[in] iseed Seed index. A change triggers a full update.
+   @param[in] isim Simulation step index.
 */
 void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms, int iseed, int isim){
 	if(!atmc) return;
@@ -122,7 +170,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		atm_match=0;
 	}else{
 		for(int ips=0; ips<parms->atm.nps; ips++){
-			if(PN(atm[ips])!=P(parms->atm.nxn,ips)){
+			if(NX(atm[ips])!=parms->atm.nx||NY(atm[ips])!=parms->atm.ny){
 				atm_match=0;
 				break;
 			}
@@ -146,7 +194,10 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 		}
 		//avail_min-=256<<19;//reserve 128MiB 
 		//avail_max-=256<<19;
-		const long nxn=parms->atm.nxnmax;
+		long nxn=parms->atm.nxnmax;
+		for(int ips=0; ips<nps; ips++){
+			nxn=MAX(nxn, atm_nxn_gpu(parms, ips));
+		}
 		long need=nps*sizeof(Real)*nxn*nxn;
 		dbg("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n",
 			nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
@@ -236,7 +287,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 	for(int ips=0; ips<nps; ips++){
 	/*Load atmosphere to Real memory in advance. This takes time if atm is stored in file.*/
 		if(isim+100>prep_data[ips].isim_next&&!prep_data[ips].next_atm){
-			const int nxni=parms->atm.nxn->p[ips];
+			const int nxni=atm_nxn_gpu(parms, ips);
 			prep_data[ips].next_atm.init(nx0, ny0);
 			const int margin=1;//to avoid going out of range due to interpolation.
 			//Compute the origin of the subset phase screen to be copied to GPU.
@@ -269,7 +320,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			prep_data[ips].atm=atm[ips];
 
 			/*launch an independent thread to pull data in. thread will be joined when needed.*/
-			pthread_create(&prep_data[ips].threads, NULL, (thread_fun)atm_prep, prep_data+ips);
+			pthread_create(&prep_data[ips].threads, NULL, atm_prep, prep_data+ips);
 		}/*need to cpy atm to next_atm. */
 	}
 	for(int ips=0; ips<nps; ips++){
@@ -288,7 +339,7 @@ void gpu_atm2gpu(const mapcell* atmc, const dmat* atmscale, const parms_t* parms
 			prep_data[ips].next_atm.deinit();
 			/*Update next_isim. */
 			long isim1, isim2;
-			const int nxni=parms->atm.nxn->p[ips];
+			const int nxni=atm_nxn_gpu(parms, ips);
 			if(fabs(atm[ips]->vx)<EPS){
 				isim1=INT_MAX;
 			} else if(atm[ips]->vx>0){/*align right. */

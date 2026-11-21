@@ -105,7 +105,7 @@ static void gpu_dm2gpu_embed(curmat& dmgpu, dmat* dmcpu, loc_t* loc, int nx, int
 	map_t* map=loc->map;
 	real* pin=dmcpu->p-1;
 	for(long i=0; i<map->nx*map->ny; i++){
-		long iphi=(long)map->p[i];
+		long iphi=labs((long)map->p[i]);//negative: ghost point takes the neighbor's value, as in prop() and loc_embed().
 		if(iphi){
 			pout[i]=pin[iphi];
 		}

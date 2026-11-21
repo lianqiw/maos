@@ -175,8 +175,8 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 	const int pos_n=pycfg->modulpos;
 	const int pos_nr=pycfg->modulring;
 	cucmat& otf=cuwfs.pyotf;
+	ctoc_init(20);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-		ctoc_init(20);
 		cucmat& wvf=cuwfs.pywvf[iwvl];
 		const Real wvl=locfft->wvl->p[iwvl];
 		cuzero(wvf, stream);
@@ -232,49 +232,49 @@ void pywfs_ints(curmat& ints, curmat& phiout, cuwfs_t& cuwfs, Real siglev){
 			curdraw_gpu("Ints", cuwfs.pypsf, 1, stream, 1, "PWFS Pupil", "x", "y", "wfs %d pupil", pywfs->iwfs0);
 		}
 		ctoc("modul");
-		embed_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
-			(otf, cuwfs.pypsf, ncomp*ncomp);
-		ctoc("embed");
-		//cuwrite(otf, stream, "gpu_wvf4");
-		CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);//otf contains the OTF
-		ctoc("fft");
-		//cuwrite(otf, stream, "gpu_wvf5");
-		cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
-			(otf(), cupowfs->pynominal(), ncomp*ncomp);//applying DTF and then FFT
-		ctoc("cwm");
-		CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
-		ctoc("ifft");
-		//cuwrite(otf, stream, "gpu_wvf6");
-		//Use ray tracing for si
-		const Real dx2=dx*nembed/ncomp;
-		const int nsa=cupowfs->saloc.Nloc();
-		const Real alpha=(Real)nsa*siglev/(Real)(ncomp*ncomp);
-		for(int ind=0; ind<pycfg->nside; ind++){
-			Real shx=0, shy=0;
-			culoc_t saloc;
-			if(cupowfs->msaloc){
-				saloc=cupowfs->msaloc[ind];
-			} else{
-				saloc=cupowfs->saloc;
-			}
-			if(pywfs->pupilshift){
-				shx=P(pywfs->pupilshift, ind, 0)*saloc.Dx();
-				shy=P(pywfs->pupilshift, ind, 1)*saloc.Dy();
-			}
-			Real* pout=ints()+ind*nsa;
-			Real offx=P(pywfs->sioff, ind, 0);
-			Real offy=P(pywfs->sioff, ind, 1);
-			map2loc_linear<<<DIM(nsa, 256), 0, stream>>>
-				(pout, otf, otf.Nx(), otf.Ny(),
-					saloc(), saloc.Nloc(),
-					1./dx2, 1./dx2,
-					(offx*ncomp2)-(-ncomp2+0.5)+shx,
-					(offy*ncomp2)-(-ncomp2+0.5)+shy, alpha);
+	}//for iwvl. pypsf accumulates all wavelengths; detector sampling is done once, as in the CPU version.
+	embed_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
+		(otf, cuwfs.pypsf, ncomp*ncomp);
+	ctoc("embed");
+	//cuwrite(otf, stream, "gpu_wvf4");
+	CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);//otf contains the OTF
+	ctoc("fft");
+	//cuwrite(otf, stream, "gpu_wvf5");
+	cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
+		(otf(), cupowfs->pynominal(), ncomp*ncomp);//applying DTF and then FFT
+	ctoc("cwm");
+	CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
+	ctoc("ifft");
+	//cuwrite(otf, stream, "gpu_wvf6");
+	//Use ray tracing for si
+	const Real dx2=dx*nembed/ncomp;
+	const int nsa=cupowfs->saloc.Nloc();
+	const Real alpha=(Real)nsa*siglev/(Real)(ncomp*ncomp);
+	for(int ind=0; ind<pycfg->nside; ind++){
+		Real shx=0, shy=0;
+		culoc_t saloc;
+		if(cupowfs->msaloc){
+			saloc=cupowfs->msaloc[ind];
+		} else{
+			saloc=cupowfs->saloc;
 		}
-		ctoc("sample");
-		ctoc_final("pywfs");
-		//cuwrite(ints, stream, "gpu_ints"); exit(0);
+		if(pywfs->pupilshift){
+			shx=P(pywfs->pupilshift, ind, 0)*saloc.Dx();
+			shy=P(pywfs->pupilshift, ind, 1)*saloc.Dy();
+		}
+		Real* pout=ints()+ind*nsa;
+		Real offx=P(pywfs->sioff, ind, 0);
+		Real offy=P(pywfs->sioff, ind, 1);
+		map2loc_linear<<<DIM(nsa, 256), 0, stream>>>
+			(pout, otf, otf.Nx(), otf.Ny(),
+				saloc(), saloc.Nloc(),
+				1./dx2, 1./dx2,
+				(offx*ncomp2)-(-ncomp2+0.5)+shx,
+				(offy*ncomp2)-(-ncomp2+0.5)+shy, alpha);
 	}
+	ctoc("sample");
+	ctoc_final("pywfs");
+	//cuwrite(ints, stream, "gpu_ints"); exit(0);
 }
 dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locfft, const dmat* mod, real displacex, real displacey){
 	gpu_set(cuglobal->wfsgpu[pywfs->iwfs0]);
@@ -310,6 +310,9 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 	//cuwrite(grad0, stream, "grad0_gpu");
 	//cuwrite(ints, stream, "ints0_gpu");
 	const int nmod=mod?mod->ny:locin->nloc;
+	//displacex/y are displacements in meters (shiftx/y in the CPU version), not
+	//directions. mapcell2loc scales misregistration by the cone effect factor.
+	const Real scale=1.-(P(mapinsq,0)->ht-pycfg->hc)/(pycfg->hs-pycfg->hc);
 	dmat* ggd=dnew(nsa*ng, nmod);
 
 	for(int imod=0; imod<nmod; imod++){
@@ -333,7 +336,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		cp2gpu(cumapin, mapinsq);
 		//cuzero(phiout, stream);
 		Copy(phiout, phiout0, stream);
-		mapcell2loc(phiout, culocout, cumapin, pywfs->cfg->hs, pywfs->cfg->hc, displacex, displacey, 0, 0, 1, stream);
+		mapcell2loc(phiout, culocout, cumapin, pywfs->cfg->hs, pywfs->cfg->hc, 0, 0, displacex/scale, displacey/scale, 1, stream);
 		//cuwrite(cumapin[0].p, stream, "gpu_cumapin_%d", imod);
 		//cuwrite(phiout, stream, "gpu_phiout_%d", imod);
 		cuzero(ints, stream);
@@ -346,7 +349,7 @@ dmat* gpu_pywfs_mkg(const pywfs_t* pywfs, const loc_t* locin, const loc_t* locff
 		cp2cpu(&gradc, grad, stream);
 		if(imod%((nmod+9)/10)==0){
 			Real ts=myclockd()-tk;
-			info("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", imod, locin->nloc, ts, ts/(imod+1)*locin->nloc, dstd(gradc));
+			info("%d of %d. %.2f of %.2f seconds. std(grad)=%g.\n", imod, nmod, ts, ts/(imod+1)*nmod, dstd(gradc));
 		}
 		dfree(gradc);
 	}

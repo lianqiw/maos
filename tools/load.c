@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include "../sys/sys.h"
-long matlab_pid;
+pid_t matlab_pid;
 static int kill_matlab(int sig){
     if(sig!=0){
 	kill(matlab_pid,SIGTERM);
@@ -43,7 +43,7 @@ int main(int argc, char **argv){
 	error("Usage:load script.m or load script\n");
     }
     char *cwd=getcwd(NULL, 0); if(!cwd) cwd=strdup(HOME);
-    int slen=strlen(cwd)+3+strlen(argv[1]);
+    long slen=strlen(cwd)+3+strlen(argv[1]);
     char scmd[slen];
     if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
@@ -54,11 +54,11 @@ int main(int argc, char **argv){
     free(cwd);
     strcat(scmd,"/");
     strcat(scmd,argv[1]);
-    if(!strcmp(argv[1]+strlen(argv[1])-2,".m")){
+    if(strlen(argv[1])>2 && !strcmp(argv[1]+strlen(argv[1])-2,".m")){
 	argv[1][strlen(argv[1])-2]='\0';
     }
     info("Will launch %s\n",scmd);
-    long pid=fork();
+    pid_t pid=fork();
     if(pid<0){
 	exit(EXIT_FAILURE);
     }else if(pid>0){
@@ -116,7 +116,7 @@ int main(int argc, char **argv){
 	snprintf(fnlog,PATH_MAX,"load_%s_%d.log",argv[1],(int)getpid());
 	if(!freopen("/dev/null", "r", stdin)) warning("Error redirect stdin\n");
 	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-	if(!dup2(fileno(stdout), fileno(stderr))) warning("Error redirect stderr\n");
+	if(dup2(fileno(stdout), fileno(stderr))<0) warning("Error redirect stderr\n");
 	setbuf(stdout,NULL);/*disable buffering. */
 	unsetenv("DISPLAY");
 	execlp("matlab","matlab","-nojvm","-nodesktop","-nosplash","-r",argv[1],NULL);

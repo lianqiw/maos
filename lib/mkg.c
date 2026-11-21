@@ -134,7 +134,7 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 	real weight[2];
 	real dx1, dx2;
 	real dp1, dp2, poffset[2];
-	int nsa, isa;
+	long nsa, isa;
 	int limx, limy;
 	int same;
 	real dx=xloc->dx;
@@ -201,11 +201,11 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 	real dplocx, plocx, dplocy, plocy;
 	real wt0, wtsum;
 	int nplocx, nplocy;
-	int ipix, ipix2, itmp, jtmp;
+	long ipix, ipix2, itmp, jtmp;
 	int indx[2], indy[2];
 	int valid=1;
 	int iw;
-	int iphi;
+	long iphi;
 	real* amp=pamp?P(pamp):0;
 	if(!same&&amp){
 		/*
@@ -429,8 +429,8 @@ dsp* mkgt(loc_t* xloc,/**<the grid on which OPDs are defined*/
 			ampsum=0;
 		}
 		for(iw=0; iw<2; iw++){
-			int jj=pp[iw][isa];
-			for(int ii=pp[iw][isa]; ii<count[iw]; ii++){
+			long jj=pp[iw][isa];
+			for(long ii=pp[iw][isa]; ii<count[iw]; ii++){
 				px[iw][ii]*=ampsum;
 				if(fabs(px[iw][ii])>TOL){//<TOL after accumulation, remove.
 					if(jj!=ii){
@@ -491,14 +491,19 @@ dsp* mkg(loc_t* xloc, loc_t* ploc, dmat* amp, loc_t* saloc, dmat *saa, real saat
  * @return dmat 
  */
 dmat* mkg_ngs(dmat *sacent, real thetax, real thetay, real hc, real hs, int indps, int indastig, int indfocus, int ahstfocus){
-	if(!sacent) error("sacent must be specified as a nsa*2 matrix\n");
-	const int nsa=NX(sacent);
+	if(!sacent){
+		error("sacent must be specified as a nsa*2 matrix\n");
+		return NULL;
+	}
+	const long nsa=NX(sacent);
 	const int nmod=2+(indps?3:0)+(indastig?2:0)+(indfocus?1:0);
 	const real scale=pow(1.-hc/hs, -2);
 	const real scale1=1.-scale;
 	dmat *pg=dnew(nsa*2, nmod);
-	if(indps+3>nmod || indastig+2>nmod || indfocus+1>nmod){
+	if((indps&&indps+3>nmod) || (indastig&&indastig+2>nmod) || (indfocus&&indfocus+1>nmod)){
 		error("indps=%d, indastig=%d or indfocus=%d is incorrect\n", indps, indastig, indfocus);
+		dfree(pg);
+		return NULL;
 	}
 	for(long isa=0; isa<nsa; isa++){
 		const real xm=P(sacent,isa,0);/*dot of x with amp. */

@@ -41,8 +41,20 @@
 #define MAX(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); (_M1)>(_M2)?(_M1):(_M2);})
 #undef	MIN
 #define MIN(a,b) ({__typeof__(a) _m1=(a); __typeof__(b) _m2=(b); (_m1)<(_m2)?(_m1):(_m2);})
-#define RSS(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); sqrtf(_M1*_M1+_M2*_M2);})
+#define RSS(a,b) ({__typeof__(a) _M1=(a); __typeof__(b) _M2=(b); sqrt(_M1*_M1+_M2*_M2);})
 #define CLIP(x,d_,u_) ({__typeof__(d_) d=(d_); __typeof__(u_) u=(u_);x=x<d?d:(x>u?u:x);})
+/*Address of a compound literal, e.g., prop(ADDR((propdata_t){...})). In C++ a
+  compound literal is a temporary and taking its address directly is an error
+  without -fpermissive. The temporary is valid until the end of the full
+  expression.*/
+#ifdef __cplusplus
+extern "C++"{ //may be included inside extern "C"
+template<typename T> static inline T* addr_of(T&& x){ return &x; }
+}
+#define ADDR(...) addr_of(__VA_ARGS__)
+#else
+#define ADDR(...) (&(__VA_ARGS__))
+#endif
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
 #else

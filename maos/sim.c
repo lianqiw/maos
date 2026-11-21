@@ -159,6 +159,10 @@ void postproc_isim(sim_t *simu){
 	}
 }
 
+/*Wrappers with the thread_fun signature for QUEUE().*/
+static void *reconstruct_job(void *simu){ return reconstruct((sim_t *)simu); }
+static void *perfevl_job(void *simu){ return perfevl((sim_t *)simu); }
+static void *wfsgrad_job(void *simu){ return wfsgrad((sim_t *)simu); }
 /**
    Simulation for each time step.
 
@@ -203,21 +207,21 @@ void maos_isim(int isim){
 		}
 		if(!NO_RECON){
 			//don't put this first. It has cpu overhead in computing gradol
-			QUEUE(&group, reconstruct, simu, 1, 0);
+			QUEUE(&group, reconstruct_job, simu, 1, 0);
 		}
 		if(!NO_EVL){
 			if(parms->gpu.evl){
 				//wait for GPU tasks to be queued before calling sync
 				WAIT(&group, 0);
 			}
-			QUEUE(&group, perfevl, simu, 1, 0);
+			QUEUE(&group, perfevl_job, simu, 1, 0);
 		}
 		if(!NO_WFS){
 			if(parms->tomo.ahst_idealngs==1||(parms->gpu.wfs&&!parms->gpu.evl)){
 				/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 				WAIT(&group, 0);
 			}
-			QUEUE(&group, wfsgrad, simu, 1, 0);
+			QUEUE(&group, wfsgrad_job, simu, 1, 0);
 		}
 		if(!NO_RECON){
 			//wait for all tasks to finish before modifying grad and dmreal
@@ -245,10 +249,18 @@ void maos_isim(int isim){
 			if(!NO_EVL) perfevl(simu);
 		}
 	}
+	postproc_isim(simu);
 	simu->tk_iend=myclockd();
 	print_progress(simu);
 }
-static void*perfevl_loop(sim_t *simu){
+/**
+   Run perfevl() for all time steps. Used in event driven mode (PARALLEL=2).
+
+   @param[in,out] psimu Simulation data.
+   @return NULL.
+*/
+static void*perfevl_loop(void *psimu){
+	sim_t *simu=(sim_t *)psimu;
 	int simstart=simu->parms->sim.start;
 	int simend=simu->parms->sim.end;
 	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
@@ -270,7 +282,14 @@ static void*perfevl_loop(sim_t *simu){
 	}
 	return NULL;
 }
-static void *wfsgrad_loop(sim_t *simu){
+/**
+   Run wfsgrad() and shift_grad() for all time steps. Used in event driven mode (PARALLEL=2).
+
+   @param[in,out] psimu Simulation data.
+   @return NULL.
+*/
+static void *wfsgrad_loop(void *psimu){
+	sim_t *simu=(sim_t *)psimu;
 	int simstart=simu->parms->sim.start;
 	int simend=simu->parms->sim.end;
 	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
@@ -281,7 +300,14 @@ static void *wfsgrad_loop(sim_t *simu){
 	}
 	return NULL;
 }
-static void *reconstruct_loop(sim_t *simu){
+/**
+   Run reconstruct() and filter_dm() for all time steps. Used in event driven mode (PARALLEL=2).
+
+   @param[in,out] psimu Simulation data.
+   @return NULL.
+*/
+static void *reconstruct_loop(void *psimu){
+	sim_t *simu=(sim_t *)psimu;
 	int simstart=simu->parms->sim.start;
 	int simend=simu->parms->sim.end;
 	for(int isim=simstart; isim<simend&&!signal_caught; isim++){
@@ -348,10 +374,10 @@ void maos_sim(){
 				}
 			}/*isim */
 		}
-		long isim0=0;
+		long isim0=simstart;//steps before sim.start are not simulated (NAN)
 		if(!parms->sim.evlol){//determine starting point
 			double sumc=0;
-			for(isim0=simend-1; isim0>1; isim0--){
+			for(isim0=simend-1; isim0>MAX(1, simstart); isim0--){
 				sumc+=P(simu->cle, 0, isim0);
 				if((simend-isim0)>25 && P(simu->cle, 0, isim0-1)*(simend-isim0)>sumc*1.2){
 					break;

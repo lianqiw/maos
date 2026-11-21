@@ -118,6 +118,9 @@ void X(free_content)(X(mat)* A){
 	if(check_mat(A)){
 		//only need to initiate write when fp is set.
 		//if(A->fp) X(writedata)(A->fp, A, A->ny);//don't do this. 
+		if(A->fp && !A->async && zfisfits(A->fp)){//async writing is not supported for fits. write all data now.
+			X(writedata)(A->fp, A, 0);
+		}
 		if(A->async){//make sure entire data is written.
 			async_write(A->async, PN(A)*sizeof(T), 1);
 			async_free(A->async); A->async=NULL;
@@ -176,8 +179,9 @@ X(mat) *X(ref)(const X(mat) *in){
 */
 X(mat)* X(refcols)(const X(mat)* in, long icol, long ncol){
 	if(!check_mat(in)) return NULL;
-	if(icol<0 || (icol+ncol)>NY(in)){
+	if(icol<0 || ncol<0 || (icol+ncol)>NY(in)){
 		error("Invalid parameters: icol=%ld, ncol=%ld, ny=%ld", icol, ncol, NY(in));
+		return NULL;
 	}
 	return X(new_do)(in->nx, ncol, PCOL(in, icol), in->mem);
 }
@@ -186,8 +190,9 @@ X(mat)* X(refcols)(const X(mat)* in, long icol, long ncol){
 */
 void X(cols)(X(mat) *out, const X(mat) *in, long icol, long ncol){
 	if(!check_mat(in)||!out) return;
-	if(icol<0||(icol+ncol)>NY(in)){
+	if(icol<0||ncol<0||(icol+ncol)>NY(in)){
 		error("Invalid parameters: icol=%ld, ncol=%ld, ny=%ld", icol, ncol, NY(in));
+		return;
 	}
 	if(out->id) X(free_content)(out);	
 	out->id=M_T;
@@ -254,7 +259,7 @@ int X(resize)(X(mat)* A, long nx, long ny){
 		return -1;
 	}
 	if(A->nx!=nx||A->ny!=ny){
-		if(A->nx==nx||A->ny==1){
+		if(A->nx==nx||(A->ny==1&&(ny==1||nx>=A->nx))){//layout is preserved by linear realloc
 			P(A)=myrealloc(P(A), nx*ny, T);
 			if(nx*ny>PN(A)){
 				memset(P(A)+PN(A), 0, (nx*ny-PN(A))*sizeof(T));
@@ -263,14 +268,20 @@ int X(resize)(X(mat)* A, long nx, long ny){
 			long nymin=MIN(ny, A->ny);
 			if(A->nx<nx){//expand row count
 				P(A)=myrealloc(P(A), nx*ny, T);//expand memory size
-				for(int icol=nymin-1; icol>0; icol--){
+				for(long icol=nymin-1; icol>0; icol--){
 					memmove(P(A)+icol*nx, P(A)+icol*A->nx, A->nx*sizeof(T));
 				}
+				for(int icol=0; icol<nymin; icol++){//zero the new rows
+					memset(P(A)+icol*nx+A->nx, 0, (nx-A->nx)*sizeof(T));
+				}
 			}else{//reduce row count
-				for(int icol=1; icol<nymin; icol++){
+				for(long icol=1; icol<nymin; icol++){
 					memmove(P(A)+icol*nx, P(A)+icol*A->nx, nx*sizeof(T));
 				}
 				P(A)=myrealloc(P(A), nx*ny, T);//reduce memory size
+			}
+			if(ny>nymin){//zero the new columns
+				memset(P(A)+nymin*nx, 0, (ny-nymin)*nx*sizeof(T));
 			}
 		} /*else{//
 			T* p=mycalloc(nx*ny, T);
@@ -341,7 +352,7 @@ X(mat)* X(cat)(const X(mat)* in1, const X(mat)* in2, int dim){
    Set elements to zero.
 */
 void X(zero)(X(mat)* A){
-	if(A){
+	if(A&&P(A)){
 		memset(P(A), 0, sizeof(T)*PN(A));
 	}
 }
@@ -376,7 +387,7 @@ uint32_t X(hash)(const X(mat)* A, uint32_t key){
 */
 void X(cp)(X(mat)** out0, const X(mat)* in){
 	if(check_mat(in)){
-		X(init)(out0, in->nx, in->ny);
+		if(X(init)(out0, in->nx, in->ny)) return;
 		X(mat)* out=*out0;
 		if(in->keywords){
 			free(out->keywords);
@@ -448,7 +459,7 @@ void X(show)(const X(mat)* A, const char* format, ...){
 	for(int iset=0; iset<nset; iset++){
 		int ncol=(iset+1)*colmax;
 		if(A->ny==1){//Display horizontaly
-			if(ncol>A->nx) ncol=A->nx;
+			if(ncol>A->nx) ncol=(int)A->nx;
 			if(ncol>100) ncol=100;
 			for(int i=0; i<ncol; i++){
 				PRINT(P(A,i));
@@ -456,9 +467,9 @@ void X(show)(const X(mat)* A, const char* format, ...){
 			}
 			if(ncol%colmax!=0) info("\n");
 		}else{
-			if(ncol>A->ny) ncol=A->ny;
+			if(ncol>A->ny) ncol=(int)A->ny;
 			//info("Cols %d to %d\n", iset, ncol-1);
-			int nxmax=MIN(A->nx, rowmax);
+			int nxmax=(int)MIN(A->nx, rowmax);
 			for(int j=0; j<nxmax; j++){
 				for(int i=iset*colmax; i<ncol; i++){
 					PRINT(P(A, j, i));
@@ -478,16 +489,16 @@ void X(show_diag)(const X(mat)* A, const char* format, ...){
 		return;
 	}
 	info("%s diagonal:", fn);//display inline
-	int n=MIN(NX(A), NY(A));
-	int ns=MIN(n, 6);
-	for(int i=0; i<ns; i++){
+	long n=MIN(NX(A), NY(A));
+	long ns=MIN(n, 6);
+	for(long i=0; i<ns; i++){
 		PRINT(P(A,i,i));
 	}
 	if(n>ns*2){
 		info("...");
 		ns=n-ns;
 	}
-	for(int i=ns; i<n; i++){
+	for(long i=ns; i<n; i++){
 		PRINT(P(A,i,i));
 	}
 	info("\n");
@@ -530,17 +541,25 @@ int X(flip)(X(mat)* A, int axis){
 		dbg("flip: A is null or axis is invalid: %p %d\n", A, axis);
 		return -1;
 	}
-	const long xoff=(axis==0||axis==1)?(A->nx-1):0;
-	const long xscale=xoff?-1:0;
-	const long yoff=(axis==0||axis==2)?(A->ny-1):0;
-	const long yscale=yoff?-1:0;
+	if(axis==0){//flipping both axes is equivalent to reversing the linear index
+		const long nn=PN(A);
+		for(long i=0; i<nn/2; i++){
+			T tmp=P(A, nn-1-i);
+			P(A, nn-1-i)=P(A, i);
+			P(A, i)=tmp;
+		}
+		return 0;
+	}
+	const long nx=A->nx;
 	const long ny=A->ny;
-	const long nx2=A->nx/2;
-	for(long iy=0; iy<ny; iy++){
+	const long nx2=axis==1?nx/2:nx;//only loop over half of the flipped axis
+	const long ny2=axis==2?ny/2:ny;
+	for(long iy=0; iy<ny2; iy++){
+		const long jy=axis==2?(ny-1-iy):iy;
 		for(long ix=0; ix<nx2; ix++){
-			T* ptmp=&P(A, xoff+xscale*ix, yoff+yscale*iy);
-			T tmp=*ptmp;
-			*ptmp=P(A, ix, iy);
+			const long jx=axis==1?(nx-1-ix):ix;
+			T tmp=P(A, jx, jy);
+			P(A, jx, jy)=P(A, ix, iy);
 			P(A, ix, iy)=tmp;
 		}
 	}
@@ -578,13 +597,29 @@ T X(trace)(const X(mat)* A){
 }
 
 #ifndef COMP_COMPLEX
-static int sort_ascend(const T* A, const T* B){
-	if((*A)>(*B)) return 1;
-	else return -1;
+/**
+   qsort comparison function for ascending order.
+
+   @param[in] pA The first value.
+   @param[in] pB The second value.
+   @return 1, 0, or -1 if *A is greater than, equal to, or less than *B.
+*/
+static int sort_ascend(const void* pA, const void* pB){
+	const T A=*(const T*)pA;
+	const T B=*(const T*)pB;
+	return (A>B)-(A<B);
 }
-static int sort_descend(const T* A, const T* B){
-	if((*A)>(*B)) return -1;
-	else return 1;
+/**
+   qsort comparison function for descending order.
+
+   @param[in] pA The first value.
+   @param[in] pB The second value.
+   @return -1, 0, or 1 if *A is greater than, equal to, or less than *B.
+*/
+static int sort_descend(const void* pA, const void* pB){
+	const T A=*(const T*)pA;
+	const T B=*(const T*)pB;
+	return (A<B)-(A>B);
 }
 /**
   Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
@@ -592,8 +627,7 @@ static int sort_descend(const T* A, const T* B){
 void X(sort)(X(mat)* A, int ascend){
 	if(!check_mat(A)) return;
 	for(int i=0; i<A->ny; i++){
-		qsort(PCOL(A, i), A->nx, sizeof(R),
-			(int(*)(const void*, const void*))(ascend?sort_ascend:sort_descend));
+		qsort(PCOL(A, i), A->nx, sizeof(R), ascend?sort_ascend:sort_descend);
 	}
 }
 
@@ -754,12 +788,12 @@ int X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 	if(!((Anx&1)==0&&(Any&1)==0&&(Bnx&1)==0&&(Bny&1)==0)){
 		warning("Arrays with odd index may not work as expected\n");
 	}
-	const int ny2=MIN(Any, Bny)>>1;
-	const int nx2=MIN(Anx, Bnx)>>1;
-	const int xoff=Anx/2-nx2;
-	const int yoff=Any/2-ny2;
-	const int nx2d=nx2*sizeof(T);
-	for(int i=0; i<ny2; i++){
+	const long ny2=MIN(Any, Bny)>>1;
+	const long nx2=MIN(Anx, Bnx)>>1;
+	const long xoff=Anx/2-nx2;
+	const long yoff=Any/2-ny2;
+	const size_t nx2d=nx2*sizeof(T);
+	for(long i=0; i<ny2; i++){
 		memcpy(&P(A, xoff, 		yoff+i), 	 &P(B, Bnx-nx2,	Bny-ny2+i), nx2d);
 		memcpy(&P(A, xoff+nx2, 	yoff+i),	 &P(B, 0, 	  	Bny-ny2+i), nx2d);
 		memcpy(&P(A, xoff, 		yoff+i+ny2), &P(B, Bnx-nx2,	i), 		nx2d);
@@ -778,21 +812,21 @@ int X(cpcorner2center)(X(mat)* A, const X(mat)* B){
 */
 int X(shift)(X(mat)** B0, const X(mat)* A, int sx, int sy){
 	if(!check_mat(A)) return -1;
-	X(init)(B0, A->nx, A->ny);
+	if(X(init)(B0, A->nx, A->ny)) return -1;
 	X(mat)* B=*B0;
 	if(P(B)==P(A)) return -1;
-	const int nx=A->nx;
-	const int ny=A->ny;
-	sx=sx%nx; if(sx<0) sx+=nx;
-	sy=sy%ny; if(sy<0) sy+=ny;
+	const long nx=A->nx;
+	const long ny=A->ny;
+	sx=(int)(sx%nx); if(sx<0) sx+=nx;
+	sy=(int)(sy%ny); if(sy<0) sy+=ny;
 	if(sx!=0||sy!=0){
-		int dy=ny-sy;
-		int dx=nx-sx;
-		for(int iy=0; iy<sy; iy++){
+		long dy=ny-sy;
+		long dx=nx-sx;
+		for(long iy=0; iy<sy; iy++){
 			memcpy(&P(B, 0, iy), &P(A, dx, iy+dy), sx*sizeof(T));/*3 */
 			memcpy(&P(B, sx, iy), &P(A, 0, iy+dy), dx*sizeof(T));/*4 */
 		}
-		for(int iy=sy; iy<ny; iy++){
+		for(long iy=sy; iy<ny; iy++){
 			memcpy(&P(B, 0, iy), &P(A, dx, iy-sy), sx*sizeof(T));/*1 */
 			memcpy(&P(B, sx, iy), &P(A, 0, iy-sy), dx*sizeof(T));/*2 */
 		}
@@ -955,7 +989,11 @@ X(cell)* X(cellreduce)(const X(cell)* A, int dim){
 	X(cell)* out=NULL;
 	long nx, ny, * nxs, * nys;
 	celldim(A, &nx, &ny, &nxs, &nys);
-	if(nx==0||ny==0) return NULL;
+	if(nx==0||ny==0){
+		free(nxs);
+		free(nys);
+		return NULL;
+	}
 	if(dim==1){
 		out=X(cellnew)(1, A->ny);
 		for(long iy=0; iy<A->ny; iy++){
@@ -1025,18 +1063,18 @@ void X(celldropempty)(X(cell)** A0, int dim){
 				int count=0;
 				for(int ix=0; ix<A->nx; ix++){
 					if(keep[ix]){
-						if(count!=ix){
-							for(int iy=0; iy<A->ny; iy++){
-								P(B, count, iy)=P(A, ix, iy);
-							}
+						for(int iy=0; iy<A->ny; iy++){
+							P(B, count, iy)=P(A, ix, iy);
+							P(A, ix, iy)=NULL;
 						}
 						count++;
 					} else{
 						warning("row %d dropped\n", ix);
 					}
 				}
-				free(P(A)); free(A);
-				A=B;
+				B->m=A->m; A->m=NULL;//transfer the contiguous storage
+				X(cellfree)(A);//frees the dropped (empty) blocks and the container
+				*A0=B;
 			}
 		}
 	} else if(dim==2){
@@ -1056,7 +1094,9 @@ void X(celldropempty)(X(cell)** A0, int dim){
 				}
 				count++;
 			} else{
-		   /*warning("Col %d dropped\n", iy); */
+				for(int ix=0; ix<A->nx; ix++){//free the empty blocks
+					X(free)(P(A, ix, iy));
+				}
 			}
 		}
 		A->ny=count;
@@ -1077,15 +1117,18 @@ void X(celldropempty)(X(cell)** A0, int dim){
    convert a vector to cell using dimensions specified in dims. Reference the vector
 */
 X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
+	if(!A||!dims) return NULL;
 	long nx=0;
 	for(int ix=0; ix<ndim; ix++){
 		nx+=dims[ix];
 	}
 	if(A->ny!=1){
 		error("Use d2cell2 instead for non vectors\n");
+		return NULL;
 	}
 	if(nx!=A->nx){
 		error("Shape doesn't agree. nx=%ld, nx=%ld\n", nx, A->nx);
+		return NULL;
 	}
 	long kr=0;
 	X(cell)* B=X(cellnew)(ndim, 1);
@@ -1105,15 +1148,29 @@ X(cell)* X(2cellref)(const X(mat)* A, long* dims, long ndim){
 void X(2cell)(X(cell)** B, const X(mat)* A, const X(cell)* ref){
 	long nx, ny, * nxs, * nys;
 	if(*B) ref=*B;/*use B as reference. */
+	if(!ref) return;
 	celldim(ref, &nx, &ny, &nxs, &nys);
+	if(!nxs||!nys){//empty or invalid reference
+		if(A&&PN(A)){
+			error("Shape doesn't agree. Reference is empty or invalid but input is %ldx%ld\n", A->nx, A->ny);
+		}else if(!*B && !PN(ref)){
+			*B=X(cellnew)(ref->nx, ref->ny);
+		}
+		free(nxs); free(nys);
+		return;
+	}
 	if(!A){
 		if(nx!=0||ny!=0){
 			error("Shape doesn't agree. A is 0x0. Reference is %ldx%ld\n",
 				nx, ny);
+			free(nxs); free(nys);
+			return;
 		}
 	} else if(nx!=A->nx||ny!=A->ny){
 		error("Shape doesn't agree. Reference is %ldx%ld but input is %ldx%ld\n",
 			nx, ny, A->nx, A->ny);
+		free(nxs); free(nys);
+		return;
 	}
 	if(!*B){
 		*B=X(cellnew)(ref->nx, ref->ny);
@@ -1157,10 +1214,11 @@ X(cell)* X(cellsub)(const X(cell)* in, long sx, long nx, long sy, long ny){
 	if(ny<=0){
 		ny=in->ny-sy;
 	}
-	X(cell)* out=X(cellnew)(nx, ny);
-	if(sx+nx>in->nx||sy+ny>in->ny){
+	if(sx<0||sy<0||sx+nx>in->nx||sy+ny>in->ny){
 		error("Invalid parameter range\n");
+		return NULL;
 	}
+	X(cell)* out=X(cellnew)(nx, ny);
 	for(int iy=0; iy<ny; iy++){
 		for(int ix=0; ix<nx; ix++){
 			P(out, ix, iy)=X(ref)(P(in, ix+sx, iy+sy));
@@ -1174,14 +1232,16 @@ X(cell)* X(cellsub)(const X(cell)* in, long sx, long nx, long sy, long ny){
 */
 X(mat)* X(cell_col)(X(cell)* input, long icol){
 	if(!input) return NULL;
-	if(icol>NY(input)){
+	if(icol<0||icol>=NY(input)){
 		error("Column %ld exceeds number of columns %ld\n", icol, NY(input));
+		return NULL;
 	}
 	long npix=PN(input, 0, 0);
 	long nsa=input->nx;
 	if(input->m){
 		if(PN(input->m)!=npix*PN(input)){
 			error("dimension mismatch.\n");
+			return NULL;
 		}
 		return X(new_do)(npix, nsa, P(input->m)+(npix*nsa)*icol, NULL);
 	} else{
@@ -1190,6 +1250,8 @@ X(mat)* X(cell_col)(X(cell)* input, long icol){
 		for(long isa=0; isa<nsa; isa++){
 			if(PN(input, isa, icol)!=npix){
 				error("dimension mismatch.\n");
+				X(free)(output);
+				return NULL;
 			}
 			memcpy(PCOL(output, isa), P(P(input, isa, icol)), sizeof(T)*npix);
 		}

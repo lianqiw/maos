@@ -58,7 +58,7 @@ static int changes_loaded=0;//whether changes.conf has been loaded.
    trim the spaces before and after string. str is modified to skip leading spaces.*/
 static void strtrim(char** str){
 	if(!*str) return;
-	int iend;
+	long iend;
 	/*turn non-printable characters, coma, and semicolumn, to space */
 	for(char* tmp=*str; !is_end(*tmp); tmp++){
 		if(!isgraph((unsigned char)*tmp)||isspace((unsigned char)*tmp)){
@@ -67,9 +67,9 @@ static void strtrim(char** str){
 	}
 	/*remove leading spaces. */
 	while(!is_end(**str)&&isspace((unsigned char)(*str)[0])) (*str)++;
-	iend=strlen(*str)-1;
+	iend=(long)strlen(*str)-1;
 	/*remove tailing spaces. */
-	while((isspace((unsigned char)(*str)[iend])||(*str)[iend]==';')&&iend>=0){
+	while(iend>=0&&(isspace((unsigned char)(*str)[iend])||(*str)[iend]==';')){
 		(*str)[iend]='\0';
 		iend--;
 	}
@@ -124,7 +124,7 @@ static char* squeeze(char* line){
 			comment[0]='\0';
 		}
 		/*Remove trailing linebreak, semi-colon, and spaces*/
-		int nread=strlen(line)-1;
+		long nread=(long)strlen(line)-1;
 		while(nread>=0&&(isspace((unsigned char)line[nread])||is_end(line[nread]))){
 			line[nread]='\0';
 			nread--;
@@ -335,6 +335,8 @@ static void open_config_full(
 			}
 		}else if(eql==ssline){
 			error("Input (%s) should not start with =", ssline);
+			ssline[0]='\0';//skip the line if error() returns.
+			continue;
 		}
 		int append=0;
 		int replace=0;//this indicates a replacement entry
@@ -428,7 +430,7 @@ static void open_config_full(
 					if(oldstore->data&&oldstore->data[0]!=0&&oldstore->data[0]!='('){
 						if(replace==2) warning("%s has been renamed to %s.\n", store->key, oldstore->data);
 						free(store->key);store->key=NULL;
-						if(strcmp(store->data, oldstore->data)){//this is not an replacement entry
+						if(!store->data||strcmp(store->data, oldstore->data)){//this is not an replacement entry
 							store->key=strdup(oldstore->data);
 							entryfind=tfind(store, &MROOT, key_cmp);//search again
 						}else{
@@ -447,25 +449,28 @@ static void open_config_full(
 			 	if(append){
 					/*append (append=1) or remove (append=-1) new value with/from old value for arrays. 
 					both have to start/end with [/] */
-					const int nolddata=strlen(oldstore->data);
-					const int nnewdata=strlen(store->data);
+					const long nolddata=oldstore->data?(long)strlen(oldstore->data):0;
+					const long nnewdata=store->data?(long)strlen(store->data):0;
 					if(nolddata>0 && (oldstore->data[0]!='['||oldstore->data[nolddata-1]!=']')){
 						error("olddata='%s' should be entirely encapsulated by [].\n", oldstore->data);
-					} else if(store->data[0]!='['||store->data[nnewdata-1]!=']'){
-						error("newdata='%s' should be entirely encapsulated by [].\n", store->data);
+					} else if(nnewdata<2||store->data[0]!='['||store->data[nnewdata-1]!=']'){
+						error("newdata='%s' should be entirely encapsulated by [].\n", store->data?store->data:"");
 					} else{
-						if(append==1){//append
+						if(append==1 && nolddata==0){//old value is empty: take the new value.
+							free(oldstore->data);
+							oldstore->data=store->data; store->data=NULL;
+						}else if(append==1){//append
 							oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata), char);
 							oldstore->data[nolddata-1]=oldstore->data[nolddata-2]=='['?0:' ';
 							strncat(oldstore->data, store->data+1, nnewdata-1);
 						}else if(append==-1){//remove
-							if(!strncmp(oldstore->data+(nolddata-nnewdata+1), store->data+1, nnewdata-1)){
+							if(nolddata>=nnewdata && !strncmp(oldstore->data+(nolddata-nnewdata+1), store->data+1, nnewdata-1)){
 								char *ptmp=oldstore->data+(nolddata-nnewdata+1);
 								while(ptmp>oldstore->data && ptmp[-1]==' ') ptmp--;
 								ptmp[0]=']';
 								ptmp[1]=0;
 							}else{
-								error("Cannot remove %s from the end of %s\n", store->data, oldstore->data);
+								error("Cannot remove %s from the end of %s\n", store->data, oldstore->data?oldstore->data:"");
 							}
 						}else{
 							error("Invalid value: append=%d\n", append);
@@ -582,7 +587,7 @@ int readcfg_peek(const char* format, ...){
 int readcfg_peek_n(const char* format, ...){
 	format2key;
 	const STORE_T* store=getrecord(key, 0);
-	if(!store) return 0;
+	if(!store||!store->data) return 0;
 	const char* sdata=store->data;
 	const char* startptr=strchr(sdata, '[');
 	const char* endptr=strchr(sdata, ']');
@@ -656,7 +661,7 @@ char* readcfg_str(const char* format, ...){
 lmat *readcfg_lmat(int n, int relax, const char *format, ...){
 	format2key;
 	long* val=NULL;
-	int nx, ny;
+	int nx=0, ny=0;
 	char *data;
 	if(!(data=getrecord_data(key, 1))){
 		//warning("%s not found, assume 0.\n", key);
@@ -699,7 +704,7 @@ dmat* readstr_dmat(int n, ///<[in]Number of elements requested
 			}
 		}
 	} else{
-		int nx, ny;
+		int nx=0, ny=0;
 		real* val=NULL;
 		readstr_numarr((void**)&val, &nx, &ny, n, relax, M_REAL, key, fn);
 		if(nx&&ny){
@@ -752,8 +757,9 @@ int readcfg_int(const char* format, ...){
 	if(!(val=getrecord_data(key, 1))){
 		warning("%s not found, assume 0.\n", key);
 		ans=0;
-	}else if(isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||(ans-(int)ans)!=0){
+	}else if(isnan(ans=readstr_num(key, val, &endstr))||endstr[0]!='\0'||!(fabs(ans)<=INT_MAX)||(ans-(int)ans)!=0){
 		error("Invalid data: %s=%s\n", key, val);
+		ans=0;
 	}
 	return (int)ans;
 }

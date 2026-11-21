@@ -324,17 +324,20 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 			cuzero(lltopd, stream);
 		}
 		const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
-		const real thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
-		const real thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
+		/*The uplink beam is launched from (ox, oy) toward the guide star. At
+		  layer height ht it is centered at ht*thetax+(1-ht/hs)*ox, which is
+		  what atm2loc computes when ox is passed as the misregistration (scaled
+		  by 1-ht/hs). This matches the CPU code in wfsgrad.c. llt->misreg is a
+		  pupil centering error of the launch amplitude only.*/
 		atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
-			hs, 0, thetaxl, thetayl,
-			parms->powfs[ipowfs].llt->misreg->p[0],
-			parms->powfs[ipowfs].llt->misreg->p[1],
+			hs, 0, parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
+			parms->powfs[ipowfs].llt->ox->p[illt],
+			parms->powfs[ipowfs].llt->oy->p[illt],
 			parms->sim.dt, isim, 1, stream);
 		
-		
-		if(pistatout||parms->powfs[ipowfs].idealfsm){
-		//warning("Remove tip/tilt in uplink ideally\n");
+		real ttx=0, tty=0;
+		if(parms->powfs[ipowfs].idealfsm){
+			/*remove tip/tilt completely. Same as CPU.*/
 			Real* lltg=cuwfs[iwfs].lltg;
 			lltg[0]=lltg[1]=0;
 			cuztilt(lltg, lltopd, 1,
@@ -342,13 +345,12 @@ void wfsints(sim_t* simu, Real* phiout, curmat& gradref, int iwfs, int isim){
 				cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
 				cupowfs[ipowfs].llt.pts(), cuwfs[iwfs].lltamp, 1.f, stream);
 			CUDA_SYNC_STREAM;
-			simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
-			simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
+			ttx=simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
+			tty=simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
+		}else{/*uplink jitter and correction*/
+			wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
 		}
-		real ttx=0, tty=0;
-		wfsgrad_llt_tt(&ttx, &tty, simu, iwfs, isim);
-
-		if(ttx!=0&&tty!=0){
+		if(ttx!=0||tty!=0){
 			/* add tip/tilt to opd  */
 			const real dx=powfs[ipowfs].llt->pts->dx;
 			const real ox=powfs[ipowfs].llt->pts->origx[0];

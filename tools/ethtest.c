@@ -37,7 +37,7 @@ char* buf1, * buf2;
 /*Write long messages with smaller buffer*/
 int stwrite3(int sfd, const void* p, size_t len, size_t buflen){
 	if(buflen>len) buflen=len;
-	size_t nwrite;
+	ssize_t nwrite;
 	long left=len;//do not use size_t which is unsigned
 #ifdef __linux__
 	int is_sock=issock(sfd);
@@ -45,23 +45,23 @@ int stwrite3(int sfd, const void* p, size_t len, size_t buflen){
 	do{
 #ifdef __linux__
 		if(is_sock){
-			nwrite=send(sfd, p, len, MSG_NOSIGNAL);
+			nwrite=send(sfd, p, buflen, MSG_NOSIGNAL);
 		} else
 #endif
 			nwrite=write(sfd, p, buflen);
 
-		left-=nwrite;
+		if(nwrite>0) left-=nwrite;
 	} while(nwrite>0&&left>0);
 	return left?-1:0;
 }
 /*Read long messages with smaller buffer*/
 int stread3(int sfd, void* p, size_t len, size_t buflen){
 	if(buflen>len) buflen=len;
-	size_t nread;
+	ssize_t nread;
 	long left=len;
 	do{
 		nread=read(sfd, p, buflen);
-		left-=nread;
+		if(nread>0) left-=nread;
 	} while(nread>0&&left>0);
 	return left?-1:0;
 }
@@ -83,15 +83,13 @@ int server(struct pollfd *pfd, int flag){
 	//warm up
 	for(int i=0; i<10; i++){
 		if(stread(sock, buf2, nmax)||stwrite(sock, buf2, 64)){
-			close(sock);
-			return -1;
+			return -1;//listen_port closes the socket
 		}
 	}
 	for(int len=nmin; len<=nmax; len+=nstep){
 		for(int irep=0; irep<nrep; irep++){
 			if(stread(sock, buf2, len)||stwrite(sock, buf2, 64)){
-				close(sock);
-				return -1;
+				return -1;//listen_port closes the socket
 			}
 		}
 	}
@@ -272,7 +270,7 @@ int main(int argc, char* argv[]){
 
 	char* NBUF=getenv("NBUF");
 	if(NBUF){
-		nbuf=strtol(NBUF, NULL, 10);
+		nbuf=(int)strtol(NBUF, NULL, 10);
 		dbg("nbuf=%d\n", nbuf);
 	}
 	char* ipaddr=0;
@@ -281,32 +279,32 @@ int main(int argc, char* argv[]){
 	}
 
 	if(!strcmp(argv[1], "server")){
-		int port=strtol(argv[2], NULL, 10);
+		int port=(int)strtol(argv[2], NULL, 10);
 		listen_port((listen_opt_t){.ipaddr=ipaddr, .port=port, .responder=server, .nodelay=1});
 	} else if(!strcmp(argv[1], "mvm_server")){
-		int port=strtol(argv[2], NULL, 10);
+		int port=(int)strtol(argv[2], NULL, 10);
 		listen_port((listen_opt_t){.ipaddr=ipaddr, .port=port, .responder=mvm_server, .nodelay=1});
 	} else{
 		if(argc<4){
 			error("Usage: ./ethtest client hostname port [nrep] [nmin] [nmax] [nstep]");
 		}
 		const char* host=argv[2];
-		int port=strtol(argv[3], NULL, 10);
+		int port=(int)strtol(argv[3], NULL, 10);
 		int nstep=100;
 		int nmin=409584;
 		int nmax=409584;
 		int nrep=1000;
 		if(argc>4){
-			nrep=strtol(argv[4], NULL, 10);
+			nrep=(int)strtol(argv[4], NULL, 10);
 		}
 		if(argc>5){
-			nmin=strtol(argv[5], NULL, 10);
+			nmin=(int)strtol(argv[5], NULL, 10);
 		}
 		if(argc>6){
-			nmax=strtol(argv[6], NULL, 10);
+			nmax=(int)strtol(argv[6], NULL, 10);
 		}
 		if(argc>7){
-			nstep=strtol(argv[7], NULL, 10);
+			nstep=(int)strtol(argv[7], NULL, 10);
 		}
 
 		client(host, port, nmin, nmax, nstep, nrep);

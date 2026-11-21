@@ -72,7 +72,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 	if(!slope) slope=data->slope=-11./3.;
 	rand_t* rstat=data->rstat;
 	real* wt=data->wt;
-	int nlayer=data->nlayer;
+	int nlayer=(int)data->nlayer;
 	long nx=data->nx;
 	long ny=data->ny;
 	real dx=data->dx;
@@ -150,6 +150,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 				this_scale=prev_scale; prev_scale=0;
 			}
 			dcwm(this_screen->dmat, this_scale);
+			dfree(this_scale);//drop the reference
 		}
 		real tk3=myclockd();
 		if(fc){/*save to file. */
@@ -162,6 +163,7 @@ static void spect_screen_do(zfarr* fc, genatm_t* data){
 			ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy", tk4-tk3);
 	}
 	cellfree(dc);
+	dfree(prev_scale);
 	cellfree(dc2);
 	dfree(spect2);
 	dfree(spect);
@@ -283,7 +285,7 @@ mapcell* genscreen_str(const char* keywords){
 		real mode=search_keyword_num(keywords, "mode");
 		real dx=search_keyword_num_default(keywords, "dx", 1./64.);
 		real nx=search_keyword_num_default(keywords, "nx", 2048);
-		real ny=search_keyword_num_default(keywords, "nx", nx);
+		real ny=search_keyword_num_default(keywords, "ny", nx);
 		real ht=search_keyword_num_default(keywords, "ht", 0);
 		real vx=search_keyword_num_default(keywords, "vx", 0);
 		real vy=search_keyword_num_default(keywords, "vy", 0);
@@ -353,7 +355,7 @@ mapcell* genscreen_str(const char* keywords){
 				P(surfs, i)->keywords=stradd(keywords, old, NULL);
 				P(surfs,i)->ht=ht;
 				P(surfs, i)->vx=vx;
-				P(surfs, i)->vx=vy;
+				P(surfs, i)->vy=vy;
 				if(old) free(old);
 				real rmsnmi=sqrt(dsumsq(DMAT(P(surfs,i)))/PN(surfs,i))*1e9;
 				if(isnan(rmsnm)){
@@ -386,17 +388,22 @@ dmat* genatm_loc(loc_t* loc, real r0, real dsa, real slope, int seed){
 	real D=loc_diam(loc);
 	dmat* opd=dnew(loc->nloc, 1);
 	map_t* atm=genatm_simple(r0, dsa, slope, loc->dx, ceil(D/loc->dx)*2, seed);
-	prop(&(propdata_t){.mapin=atm, .locout=loc, .phiout=P(opd), .alpha=1, .wrap=1});
+	prop(ADDR((propdata_t){.mapin=atm, .locout=loc, .phiout=P(opd), .alpha=1, .wrap=1}));
 	mapfree(atm);
 	return opd;
 }
 
 /**
- * Compute the covariance for separation of r, and put the values in cov. In
- * kolmogorov spectrum, the variance are defined as half of the structure
- * function between two points separated by rmax.
- */
+   Compute the covariance for separation of r, and put the values in cov. In
+   kolmogorov spectrum, the variance are defined as half of the structure
+   function between two points separated by rmax.
 
+   @param[in] r Separation (m).
+   @param[in] rmax Maximum separation (m). Only used for kolmogorov spectrum.
+   @param[in] r0 Fried parameter (m) at 0.5 micron.
+   @param[in] L0 Outer scale (m). Infinity means kolmogorov spectrum.
+   @return Newly allocated OPD covariance (m^2) with the same size as r. The caller frees it.
+*/
 dmat* turbcov(dmat* r, real rmax, real r0, real L0){
 	real tg1=tgamma(11./6)*pow(24./5*tgamma(6./5.), 5./6.)
 		*pow(2*M_PI/0.5e-6, -2)/pow(M_PI, 8./3.);
@@ -455,8 +462,8 @@ void spatial_psd(dmat** pout,  /**<Output*/
 	const real minfreq2=minfreq*minfreq;
 	const real maxfreq2=(maxfreq==0?INFINITY:(maxfreq*maxfreq));
 	const real scrnstr=pow(strength*(dfx*dfy), power);
-	const int nx2=nx/2;
-	const int ny2=ny/2;
+	const long nx2=nx/2;
+	const long ny2=ny/2;
 	if(*pout&&((*pout)->nx!=nx||(*pout)->ny!=ny)){
 		dfree(*pout);
 	}
@@ -464,10 +471,11 @@ void spatial_psd(dmat** pout,  /**<Output*/
 		*pout=dnew(nx, ny);
 	}
 	dmat* psd=*pout;
+	dzero(psd);//reused output may contain stale values outside of the frequency range.
 	OMP_FOR(NTHREAD)
-	for(int iy=0;iy<ny;iy++){
+	for(long iy=0;iy<ny;iy++){
 		real r2y=pow((iy<ny2?iy:iy-ny)*dfy, 2);/* to avoid fft shifting. */
-		for(int ix=0;ix<nx;ix++){
+		for(long ix=0;ix<nx;ix++){
 			real r2=pow((ix<nx2?ix:ix-nx)*dfx, 2)+r2y;
 			if(r2<=maxfreq2&&r2>=minfreq2){
 				P(psd, ix, iy)=pow(r2+zerofreq2, slope)*scrnstr;
@@ -513,7 +521,7 @@ real calc_greenwood(real r0, int nps, real* ws, real* wt){
    ground and altitude DMs. */
 real calc_aniso2(real r0, int nps, real* ht, real* wt, real hc1, real hc2){
 	real wh=0;
-	real hh=pow(hc2-hc1, 5./3.);
+	real hh=pow(fabs(hc2-hc1), 5./3.);//symmetric in hc1 and hc2
 	for(int ips=0; ips<nps; ips++){
 		real t1=0.5*pow(fabs(ht[ips]-hc1), 5./3.)+0.5*pow(fabs(ht[ips]-hc2), 5./3.);
 		real t2=-0.25*hh-0.25/hh*pow(pow(fabs(ht[ips]-hc1), 5./3.)-pow(fabs(ht[ips]-hc2), 5./3.), 2);

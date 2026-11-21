@@ -16,7 +16,7 @@ def maos_cumu(files, seeds=None, nsim0=0): ##return cumulative average
     print(fds)
     nsim=res.shape[-1]
     if nsim0<=0:
-        nsim0=min(5000, np.int(nsim*0.1))
+        nsim0=min(5000, int(nsim*0.1))
     yy=np.arange(1, nsim+1-nsim0)
     xx=nsim0+yy
     yy.shape=(1,1,nsim-nsim0)

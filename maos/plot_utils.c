@@ -90,7 +90,7 @@ void plot_loc(const char* fig, const parms_t* parms, int show_recon, int show_ev
 		count++;
 		if(ifit==0) legend[count]="DM Fitting";
 	}
-	for(int idir=0; show_recon && idir<parms->ncpa.ndir; idir++){
+	for(int idir=0; show_recon && parms->ncpa.calib && idir<parms->ncpa.ndir; idir++){
 		real hs=P(parms->ncpa.hs,idir);
 		P(cir, 0, count)=ht*P(parms->ncpa.thetax,idir);
 		P(cir, 1, count)=ht*P(parms->ncpa.thetay,idir);
@@ -185,7 +185,7 @@ void plot_dir(const char* fig, const parms_t* parms, real totfov, const char* fo
 		legend[count]=powfs_legend(parms, ipowfs);
 		P(locs,count)=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 			P(locs,count)->locx[jwfs]=parms->wfs[iwfs].thetax*RAD2AS;
 			P(locs,count)->locy[jwfs]=parms->wfs[iwfs].thetay*RAD2AS;
 		}
@@ -271,7 +271,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		for(int iamp=0; iamp<PN(powfs[ipowfs].amp); iamp++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,iamp);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs,iamp);
 			if(parms->plot.setup>1){
 				drawopd("Aperture", powfs[ipowfs].loc, P(powfs[ipowfs].amp,iamp), 0,
 					"WFS Amplitude Map", "x (m)", "y (m)", "amp wfs%d", iwfs);
@@ -282,7 +282,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 			}
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 			if(powfs[ipowfs].gradoff){
 				drawgrad("Goff", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].gradoff, jwfs),
 					parms->plot.grad2opd, parms->powfs[ipowfs].trs, 0,
@@ -296,7 +296,7 @@ void plot_setup(const parms_t* parms, const powfs_t* powfs,
 		if(powfs[ipowfs].sanea){
 			//const real neathres=0.33*(parms->powfs[ipowfs].type==WFS_SH?parms->powfs[ipowfs].pixtheta:parms->powfs[ipowfs].fieldstop);
 			for(int jwfs=0; jwfs<PN(powfs[ipowfs].sanea); jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 				drawgrad("Gnea", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(powfs[ipowfs].sanea, jwfs),
 					0, 0, 0 /*neathres*neathres*/,
 					"WFS Subaperture Noise Equivalent Angle (rad^2)", "x (m)", "y (m)", "Gnea %d", iwfs);
@@ -434,7 +434,7 @@ void plot_gradoff(sim_t *simu, int iwfs){
 			}
 		}else{
 			int ipowfs=parms->wfs[iwfs].powfs;
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+			int jwfs=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 			int draw_single_save=draw_single;
 			draw_single=0;
 			drawgrad("Goff", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa, jwfs), P(simu->gradoff, iwfs),

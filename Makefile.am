@@ -13,7 +13,17 @@ include $(top_srcdir)/aminclude.am
 #all-local:$(srcdir)/math/dtmp.c
 #For documentation only. | enforces ordering in parallel build
 .NOTPARALLEL:doc
-doc:| tmp clear-doc doxygen-run clear-tmp
+doc:| tmp clear-doc unittest-doc doxygen-run clear-tmp
+#Run the unit tests and generate the unit test status and coverage report
+#docs/unittest_status.md in the build folder. It replaces the placeholder
+#docs/96_unittest.md of the source folder in the documentation.
+unittest-doc:
+if GCOV
+	@for dir in sys math lib test; do find $$dir -name "*.gcda" -exec rm -f {} \; ;done
+endif
+	-@$(MAKE) $(AM_MAKEFLAGS) check
+	@$(SHELL) $(srcdir)/test/unittest_report.sh $(abs_top_srcdir) $(abs_top_builddir) --coverage
+DX_ENV+=UNITTEST_DOC='$(abs_top_builddir)/docs/unittest_status.md' UNITTEST_EXCLUDE='$(abs_top_srcdir)/docs/96_unittest.md'
 #The following tmp files are used to by pass two doxygen limitations
 #1. files included in c files are only expanded for dependencies, not original definitions
 #2. macros in C files are only expanded once.
@@ -28,7 +38,7 @@ clear-tmp:
 	@cd $(srcdir)/math && rm dtmp.c ctmp.c stmp.c ztmp.c ltmp.c
 
 clear-doc:
-	@rm -rf doxygen-doc
+	@rm -rf doxygen-doc docs/unittest_status.md
 
 EXTRA_DIST = doxygen.cfg docs scripts config 
 BUILT_SOURCES=bin/Makefile

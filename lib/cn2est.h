@@ -45,7 +45,7 @@ typedef struct cn2est_t{
    lmat* mask;       /**<select subapertures that are both full and have neighbors to compute covariance*/
 
    dmat* overlapi;  /**<1./Number of overlapping subapertures for each separation*/
-   int nsa;         /**<Number of subapertures*/
+   long nsa;        /**<Number of subapertures*/
    int nwfs;        /**<number of wfs*/
    int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
    int ovs;         /**<Over sampling ratio in building the influence matrix*/

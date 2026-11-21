@@ -137,7 +137,7 @@ fdpcg_perm(const long* nx, const long* ny, const real* os, int bs, int nps, int 
 	  later so that in GPU, when at os0 or os6, we only need to do postive
 	  frequency operations */
 	int nxh=half?1:2;
-	int ix0, ix1;
+	long ix0, ix1;
 	for(int ixh=0; ixh<nxh; ixh++){
 		if(ixh==0){
 			ix0=-adimx2;
@@ -314,7 +314,7 @@ fdpcg_prop_trans(long nps, long nxp, long nyp, long* nx, long* ny, real dx, real
 			}
 		}
 	}
-	pp[nxp*nxp]=count;
+	pp[nxp*nyp]=count;
 	/*we put conj above because csptrans applies a conjugation. */
 	//csp* propf=csptrans(propt);
 	//cspfree(propt);
@@ -433,7 +433,7 @@ fdpcg_t* fdpcg_prepare(const parms_t* parms, const recon_t* recon, const powfs_t
 		}
 		csp* tmp=cspdup(sel);
 		cspmuldiag(tmp, P(g), 1);
-		csp* tmp2=cspmulsp(tmp, tmp, "tn");
+		csp* tmp2=cspmulsp(tmp, tmp, "cn");
 		cspadd(&Mmid, 1, tmp2, 1);
 		cspfree(tmp);
 		cspfree(tmp2);
@@ -456,7 +456,7 @@ OMP_FOR(parms->powfs[hipowfs].nwfsr)
 	for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
 		real dispx[nps];
 		real dispy[nps];
-		int iwfs=P(parms->powfs[hipowfs].wfsr,jwfs);
+		int iwfs=(int)P(parms->powfs[hipowfs].wfsr,jwfs);
 		real neai=P(recon->neam,iwfs);
 		for(long ips=0; ips<nps; ips++){
 			/*
@@ -467,7 +467,7 @@ OMP_FOR(parms->powfs[hipowfs].nwfsr)
 			dispx[ips]=ht[ips]*parms->wfsr[iwfs].thetax;
 			dispy[ips]=ht[ips]*parms->wfsr[iwfs].thetay;
 			if(atm){
-				int ips0=P(parms->atmr.indps,ips);
+				int ips0=(int)P(parms->atmr.indps,ips);
 				dispx[ips]+=P(atm,ips0)->vx*delay;
 				dispy[ips]+=P(atm,ips0)->vy*delay;
 			}
@@ -480,7 +480,7 @@ OMP_FOR(parms->powfs[hipowfs].nwfsr)
 		//cspscale(propxt, 1./neai); //absorbed below
 		/*prop is not real for off axis wfs. */
 		/*Compute propx'*Mmid*propx and add to Mhat; */
-		csp* tmp=cspmulsp(Mmid, propxt, "nt");
+		csp* tmp=cspmulsp(Mmid, propxt, "nc");
 		csp* tmp2=cspmulsp(propxt, tmp, "nn");
 		cspfree(tmp);
 		cspfree(propxt);
@@ -520,12 +520,12 @@ OMP_CRITICAL
 	dbg("fdpcg: Block size is %d, there are %ld blocks\n", bs, nb);
 	/*Permutation vector */
 	fdpcg->scale=needscale;
-	lmat* perm=fdpcg_perm(nx, ny, os, bs, nps, 0, 0);
+	lmat* perm=fdpcg_perm(nx, ny, os, bs, (int)nps, 0, 0);
 	csp* Mhatp=cspperm(Mhat, 0, P(perm), P(perm));/*forward permutation. */
 	cspfree(Mhat);
 	lfree(perm);
 
-	perm=fdpcg_perm(nx, ny, os, bs, nps, 1, 0); /*contains fft shift information*/
+	perm=fdpcg_perm(nx, ny, os, bs, (int)nps, 1, 0); /*contains fft shift information*/
 	if(parms->save.fdpcg){
 		writebin(perm, "fdpcg_perm");
 	}
@@ -542,7 +542,7 @@ OMP_CRITICAL
 #else//use block diagonal matrix
 	fdpcg->perm=perm; perm=NULL;
 	if(parms->gpu.tomo){
-		fdpcg->permhf=fdpcg_perm(nx, ny, os, bs, nps, 1, 1);
+		fdpcg->permhf=fdpcg_perm(nx, ny, os, bs, (int)nps, 1, 1);
 		if(parms->save.fdpcg){
 			writebin(fdpcg->permhf, "fdpcg_permhf");
 		}
@@ -588,7 +588,8 @@ typedef struct{
 /**
    Copy x vector and do FFT on each layer
 */
-static void* fdpcg_fft(fdpcg_info_t* data){
+static void* fdpcg_fft(void *pdata){
+	fdpcg_info_t *data=(fdpcg_info_t *)pdata;
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhati=data->xhati;
 	const dcell* xin=data->xin;
@@ -617,8 +618,13 @@ static void* fdpcg_fft(fdpcg_info_t* data){
 
 /**
    Multiply each block in parallel
- */
-static void* fdpcg_mulblock(fdpcg_info_t* data){
+
+   @param[in,out] pdata Shared thread data. data->xhat is accumulated. Blocks are distributed among threads with
+   data->ib.
+   @return NULL.
+*/
+static void* fdpcg_mulblock(void *pdata){
+	fdpcg_info_t *data=(fdpcg_info_t *)pdata;
 	fdpcg_t* fdpcg=data->fdpcg;
 	long bs=P(fdpcg->Mbinv,0)->nx;//size of block
 	unsigned int ib;
@@ -630,8 +636,13 @@ static void* fdpcg_mulblock(fdpcg_info_t* data){
 
 /**
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
- */
-static void* fdpcg_ifft(fdpcg_info_t* data){
+
+   @param[in,out] pdata Shared thread data. data->xout is overwritten. Layers are distributed among threads with
+   data->ips.
+   @return NULL.
+*/
+static void* fdpcg_ifft(void *pdata){
+	fdpcg_info_t *data=(fdpcg_info_t *)pdata;
 	fdpcg_t* fdpcg=data->fdpcg;
 	ccell* xhat2i=data->xhat2i;
 	dcell* xout=data->xout;
@@ -668,7 +679,7 @@ void fdpcg_precond(dcell** xout, const void* A, const dcell* xin){
 	const unsigned int nps=recon->npsr;
 	fdpcg_t* fdpcg=recon->fdpcg;
 	long bs=recon->fdpcg->bs;
-	unsigned int nb=recon->fdpcg->nxtot/bs;
+	unsigned int nb=(unsigned int)(recon->fdpcg->nxtot/bs);//nxtot<2^29 is checked in fdpcg_perm
 	//long nxtot=fdpcg->nxtot;
 	ccell* xhati=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));
 	ccell* xhat2i=ccellnew3(nps, 1, P(recon->xnx), P(recon->xny));

@@ -54,10 +54,10 @@ void proj_rect_grid(real* phiout,  /**<[out] output OPD*/
 	real betax,    /**<real beam angle*/
 	real betay     /**<real beam angle*/
 ){
-	const int wrapx1=NX(mapin);
-	const int wrapy1=NY(mapin);
-	const int wrapx=wrapx1-1;
-	const int wrapy=wrapy1-1;
+	const long wrapx1=NX(mapin);
+	const long wrapy1=NY(mapin);
+	const long wrapx=wrapx1-1;
+	const long wrapy=wrapy1-1;
 	real offx=hs*betax;
 	real offy=hs*betay;
 	if(ratiox<0) offx=-offx;

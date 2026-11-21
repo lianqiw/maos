@@ -1,5 +1,5 @@
 AC_DEFUN([MY_CHECK_CUDA],[
-	if test "${CN}"="CLANG" -a "$system" = "apple" ;then
+	if test "${CN}" = "CLANG" -a "$system" = "apple" ;then
 		CUDA_CFLAGS="-stdlib=libc++"
 	else
 		CUDA_CFLAGS= #CFLAGS for CUDA
@@ -39,8 +39,8 @@ AC_DEFUN([MY_CHECK_CUDA],[
 		with_cuda=yes
 	fi
 	if test "$with_cuda" != "no" ;then #test CUDA availability
-		if test "$enable_single" = "yes" -a "$cuda_double" = "yes" ;then
-			AC_MSG_ERROR([cuda_double is only possible without --enable-single])
+		if test "$enable_single" = 1 -a "$cuda_double" = "yes" ;then
+			AC_MSG_ERROR([--enable-cuda-double requires double precision (no --enable-single or --disable-double)])
 		fi
 		#if test "$enable_allstatic" = "yes"; then
 		#AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")

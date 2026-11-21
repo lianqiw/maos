@@ -159,24 +159,13 @@ static inline double mts_ldrand(mt_state* state)		/* State for the PRNG */
 	unsigned long random_value_1;	/* 1st pseudorandom value generated */
 	unsigned long random_value_2;	/* 2nd pseudorandom value generated */
 
-	/*
-	 * For maximum speed, we'll handle the two overflow cases
-	 * together.  That will save us one test in the common case, at
-	 * the expense of an extra one in the overflow case.
-	 */
-	if(--state->stateptr<=0){
-		if(state->stateptr<0){
-			mts_refresh(state);
-			random_value_1=state->statevec[--state->stateptr];
-		} else{
-			random_value_1=state->statevec[state->stateptr];
-			mts_refresh(state);
-		}
-	} else
-		random_value_1=state->statevec[--state->stateptr];
-
+	if(state->stateptr<=0)
+		mts_refresh(state);
+	random_value_1=state->statevec[--state->stateptr];
 	MT_TEMPER(random_value_1);
 
+	if(state->stateptr<=0)
+		mts_refresh(state);
 	random_value_2=state->statevec[--state->stateptr];
 	MT_TEMPER(random_value_2);
 

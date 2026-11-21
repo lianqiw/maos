@@ -77,22 +77,19 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
    -1: failed to lock
    fd (>-1): successfully locked
 */
-int lock_file_version(const char* fnlock, /**<The filename to lock on*/
-	int block,         /**<block on waiting. set to 0 for no waiting.*/
-	int version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
-){
+int lock_file_version(const char* fnlock, int block, int version){
+	int ans;
 	int fd;
 	int count=0;
-	if((count++)>10){
-		return -1;
-	}
 	fd=open(fnlock, O_RDWR|O_CREAT, 0644);
-retry:
+	ans=fd;
+
 	if(fd<0){
 		warning_time("Open file %s failed: %s\n", fnlock, strerror(errno));
 	}else{//check file content first
 		int op=LOCK_EX;
 		if(!block) op|=LOCK_NB;
+retry:
 		//lockf does not inherit to fork(), so we have to use flock here
 		if(flock(fd, op)){/*lock faild. another process already locked file.*/
 			if(block){/*In block mode, we should never fail. */
@@ -101,21 +98,31 @@ retry:
 			//lock failed. check version of the running process. kill it if old version
 			int pid=0, version_old=0;
 			int ans1=0, ans2=-1;
+			lseek(fd, 0, SEEK_SET);//the dup shares the file offset
 			FILE* fp=fdopen(dup(fd), "r");
 			if(fp){//check existing instance
 				ans1=fscanf(fp, "%d %d", &pid, &version_old);
 				fclose(fp); fp=NULL;
 				if(ans1>0 && pid>0){
-					if((ans2=kill(pid, 0))){//already exited or in a different host
+					if((ans2=kill(pid, 0)) && errno==ESRCH){//already exited or in a different host
 						pid=0;
 					}
 				}
-				if(pid){//already running
-					if(ans1>1 && version && version_old && version>version_old){
+				if(!pid){//pid not yet written, stale, or from a different host. retry a few times.
+					if((count++)<10){
+						sleep(1);
+						goto retry;
+					}
+					dbg_time("Unable to lock %s, which is held by an unknown process.\n", fnlock);
+					ans=-1;
+					goto failed;
+				}else{//already running
+					if(ans1>1 && version && version_old && version>version_old && (count++)<10){
 						ans2=kill(pid, SIGTERM);
 						if(ans2){//signal send failed
 							dbg_time("%d failed to send TERM signal to old executive %d, return -1.\n", getpid(), pid);
-							return -pid;
+							ans=-pid;
+							goto failed;
 						}else{
 							dbg_time("%d successfully sends TERM signal to old executive %d\n", getpid(), pid);
 							sleep(1);
@@ -123,10 +130,13 @@ retry:
 						}
 					}else{
 						dbg_time("Already running as PID %d.\n", pid);
-						return -pid;//keep existing drawdaemon
+						ans=-pid;
+						goto failed;//keep existing drawdaemon
 					}
 				}
-				
+			}else{
+				ans=-1;
+				goto failed;
 			}
 		} else{/*lock succeed. write pid. the pid will be updated with correct pid later. */
 			char strpid[60];
@@ -142,6 +152,9 @@ retry:
 		}
 	}
 	return fd;
+failed:
+	close(fd);
+	return ans;
 }
 /**
    Launch a singleton daemon. First try to create a lock file progname.pid
@@ -263,6 +276,10 @@ void redirect(void){
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	fplog=fopen(fnlog, "w");
+	if(!fplog){
+		warning("Unable to open %s for log: %s\n", fnlog, strerror(errno));
+		return;
+	}
 	setbuf(fplog, NULL);
 	if(detached){
 		if(!freopen("/dev/null", "r", stdin)
@@ -328,12 +345,15 @@ pid_t launch_exe(const char* exepath, const char* cmd){
 	const char* cmd2end=cmd2+strlen(cmd2);
 	for(int iexe=0; iexe<nexe; iexe++){
 		const char* exe=exes[iexe];
-		char* cmd3=cmd2;
+		const size_t nexestr=strlen(exe);
 		char* stexe=NULL;
-		do{
-			stexe=strstr(cmd3, exe);
-			cmd3=cmd3+strlen(exe);
-		} while(stexe&&cmd3<cmd2end&&(*(stexe-1)!='/'||!isspace((int)stexe[strlen(exe)])));
+		//find exe that is preceded by '/' and followed by space or end of string.
+		for(char* cmd3=cmd2; cmd3<cmd2end&&(cmd3=strstr(cmd3, exe)); cmd3+=nexestr){
+			if(cmd3>cmd2&&cmd3[-1]=='/'&&(!cmd3[nexestr]||isspace((int)cmd3[nexestr]))){
+				stexe=cmd3;
+				break;
+			}
+		}
 		if(stexe){
 			exename=exe;
 			stexe[-1]='\0';
@@ -342,7 +362,7 @@ pid_t launch_exe(const char* exepath, const char* cmd){
 				exepath=exe;//has to use shell.
 			}
 			args[0]=exename;
-			args[1]=stexe+strlen(exe)+1;
+			args[1]=stexe[nexestr]?(stexe+nexestr+1):NULL;
 			break;
 		}
 	}

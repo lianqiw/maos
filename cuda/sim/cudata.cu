@@ -159,7 +159,16 @@ static long gpu_get_usage_percentage(int igpu, long minimum){
 		return 0;
 	}
 }*/
-static int cmp_long2_ascend(const long* a, const long* b){
+/**
+   qsort comparator to sort by the second element in ascending order.
+
+   @param[in] pa First row of the gpu_info array.
+   @param[in] pb Second row of the gpu_info array.
+   @return 1 if a[1]>b[1], -1 if a[1]<b[1], 0 otherwise.
+*/
+static int cmp_long2_ascend(const void *pa, const void *pb){
+	const long *a=(const long *)pa;
+	const long *b=(const long *)pb;
 	if(a[1]>b[1]){
 		return 1;
 	} else if(a[1]<b[1]){
@@ -168,7 +177,16 @@ static int cmp_long2_ascend(const long* a, const long* b){
 		return 0;
 	}
 }
-static int cmp_long3_ascend(const long *a, const long *b){
+/**
+   qsort comparator to sort by the third element in ascending order.
+
+   @param[in] pa First row of the gpu_info array.
+   @param[in] pb Second row of the gpu_info array.
+   @return 1 if a[2]>b[2], -1 if a[2]<b[2], 0 otherwise.
+*/
+static int cmp_long3_ascend(const void *pa, const void *pb){
+	const long *a=(const long *)pa;
+	const long *b=(const long *)pb;
 	if(a[2]>b[2]){
 		return 1;
 	} else if(a[2]<b[2]){
@@ -182,7 +200,16 @@ struct task_t{
 	int* dest;
 	char name[64];
 };
-static int task_cmp(const task_t* a, const task_t* b){
+/**
+   qsort comparator to sort tasks by timing in descending order.
+
+   @param[in] pa First task.
+   @param[in] pb Second task.
+   @return 1 if b is slower, -1 if b is faster, 0 if equal.
+*/
+static int task_cmp(const void *pa, const void *pb){
+	const task_t *a=(const task_t *)pa;
+	const task_t *b=(const task_t *)pb;
 	if(b->timing>a->timing){
 		return 1;
 	} else if(b->timing<a->timing){
@@ -313,7 +340,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 		goto end;
 	}
 	//sort to obtain [1] as nvidia-smi index
-	qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), (int(*)(const void *, const void *))cmp_long2_ascend);
+	qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), cmp_long2_ascend);
 	//check whether GPU is disabled by environment variable
 	for(int ig=0; ig<MAXGPU; ig++){
 		gpu_info(1,ig)=ig;//PCI-id ordering. (nvidia-smi order)
@@ -363,7 +390,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			}
 		}
 		/*sort so that gpus with more available memory is in the front.*/
-		qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), (int(*)(const void*, const void*))cmp_long3_ascend);
+		qsort(gpu_info, MAXGPU, gpu_info.Nx()*sizeof(long), cmp_long3_ascend);
 		for(int ig=0; ig<ngpu; ig++){
 			if(gpu_info(3,ig) && gpu_info(2,ig)<100){
 				GPUS(NGPU,0)=(int)gpu_info(0,ig);//cuda index
@@ -426,7 +453,12 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 			if(parms->gpu.wfs) ntask+=parms->nwfs;
 			if(ntask==0){
 				info("GPU is not needed\n");
-				delete[] cudata_all;
+				for(int ig=0; ig<NGPU; ig++){
+					gpu_set(ig);
+					delete cudata;
+				}
+				delete[] cudata_all; cudata_all=NULL;
+				delete cuglobal; cuglobal=NULL;
 				NGPU=0;
 				GPUS.deinit();
 				goto end;
@@ -465,7 +497,7 @@ int gpu_init(const parms_t* parms, int* gpus, int ngpu){
 				snprintf(tasks[count].name, 64, "WFS %d", iwfs);
 				count++;
 			}
-			qsort(tasks, count, sizeof(task_t), (int(*)(const void*, const void*))task_cmp);
+			qsort(tasks, count, sizeof(task_t), task_cmp);
 			NumArray<float>timtot(NGPU);
 			for(int igpu=0; igpu<NGPU; igpu++){
 				timtot[igpu]=0;

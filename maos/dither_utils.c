@@ -192,15 +192,15 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 	gradoff_acc(simu, ipowfs);
 
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-		const int nsa=NX(intstat->i0);
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
+		const long nsa=NX(intstat->i0);
 		//outer loop to prevent i0 from drifting
 		//Compute CoG of i0 + goff and drive it toward gradoff with low gain (0.1)
 		if(1){
 			dzero(goff);
 			shwfs_grad(&goff, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);//force cog
 			dadd(&goff, 1, P(simu->gradoff, iwfs), 1);
-			if(simu->gradoffdrift){//cog boot strapped
+			if(simu->gradoffdrift&&P(simu->gradoffdrift, iwfs)){//cog boot strapped
 				dadd(&goff, 1, P(simu->gradoffdrift, iwfs), -1);
 			} else if(simu->powfs[ipowfs].gradoff){//cmf boot strapped, gradoff is cog of i0
 				dadd(&goff, 1, P(simu->powfs[ipowfs].gradoff, jwfs), -1);
@@ -221,7 +221,7 @@ static void wfsgrad_sa_drift(sim_t* simu, int ipowfs){
 			const real cogthres=parms->powfs[ipowfs].cogthres;
 			const real cogoff=parms->powfs[ipowfs].cogoff;
 
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				real g0[2], gx[2], gy[2];
 				dcp(&i0sx, PR(intstat->i0, isa, jwfs));
 				dcog(g0, i0sx, 0., 0., cogthres, cogoff, 0, NULL);
@@ -301,11 +301,11 @@ void dither_acc(sim_t* simu, int iwfs){
 
 		//For SHWFS CoG gaim update.
 		if(parms->powfs[ipowfs].type==WFS_SH&&parms->powfs[ipowfs].phytype_sim2!=PTYPE_MF&&isim>=parms->powfs[ipowfs].dither_ogskip){
-			const int nsa=powfs[ipowfs].saloc->nloc;
+			const long nsa=powfs[ipowfs].saloc->nloc;
 			if(!pd->ggm){
 				pd->ggm=dnew(nsa*2, 1);
 			}
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				P(pd->ggm, isa)+=cs*P(P(simu->gradcl, iwfs), isa);
 				P(pd->ggm, isa+nsa)+=ss*P(P(simu->gradcl, iwfs), isa+nsa);
 			}
@@ -391,7 +391,7 @@ void dither_acc(sim_t* simu, int iwfs){
 			P(P(simu->resdither, iwfs), 1, ic)=pd->a2m;
 			P(P(simu->resdither, iwfs), 2, ic)=pd->a2me;
 			if(PN(pd->a2mv)>1){
-				int nm=PN(pd->a2mv);
+				int nm=(int)PN(pd->a2mv);
 				memcpy(&P(P(simu->resdither, iwfs), 4, ic), P(pd->a2mv), nm*sizeof(real));
 				memcpy(&P(P(simu->resdither, iwfs), 4+nm, ic), P(pd->a2mev), nm*sizeof(real));
 				/*P(P(simu->resdither, iwfs), 4, ic)=pd->a2m2;
@@ -461,7 +461,7 @@ void dither_post(sim_t* simu){
 		const int nwfs=parms->powfs[ipowfs].nwfs;
 
 		if(simu->wfsflags[ipowfs].ogout){//This is matched filter or cog update
-			const int nsa=powfs[ipowfs].saloc->nloc;
+			const long nsa=powfs[ipowfs].saloc->nloc;
 			const real scale1=(real)parms->powfs[ipowfs].dither_pllrat/(real)parms->powfs[ipowfs].dither_ograt;
 			int ptype2=parms->powfs[ipowfs].phytype_sim2;
 			if(parms->powfs[ipowfs].dither==-1||(ptype2==PTYPE_MF)){
@@ -501,13 +501,13 @@ void dither_post(sim_t* simu){
 					info("Applying LPF with gain %.2f to i0/gx/gy update at update cycle %d\n", g2, simu->wfsflags[ipowfs].ogout);
 				}
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
 					//Scale the output due to accumulation
 					//TODO: remove the LPF which is not useful.
 					//TODO: combine pd->i0 with intstat->i0
 					//TODO: accumulate directly to intstat->i0 instead of to pd->imx
-					for(int isa=0; isa<nsa; isa++){
+					for(long isa=0; isa<nsa; isa++){
 						dadd(&P(intstat->i0, isa, jwfs), 1-g2, P(pd->i0, isa), scale1*g2);
 						if(parms->powfs[ipowfs].dither==1){
 							dadd(&P(intstat->gx, isa, jwfs), 1-g2, P(pd->gx, isa), scale1*g2);
@@ -548,7 +548,7 @@ void dither_post(sim_t* simu){
 					//obsolete: use sodium fit for LGS instead. It works much better and avoids cog bootstrap problem and can work without TWFS.
 					dmat *i0grad=0;
 					for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 						shwfs_grad(&i0grad, PCOL(intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
 						if(parms->save.dither){
 							writebin(i0grad, "extra/wfs%d_i0grad_%d", iwfs, isim);
@@ -601,7 +601,7 @@ void dither_post(sim_t* simu){
 						}
 
 						for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-							int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+							int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 							if(ptype2==PTYPE_COG){
 								if(jwfs==0) dbg("in cog mode, gradoff+=(g_ncpa-grad)\n");
 								dadd(&P(simu->gradoff, iwfs), 1, P(grad, jwfs), -1);
@@ -622,7 +622,7 @@ void dither_post(sim_t* simu){
 						if(ptype2==PTYPE_MF){
 							if(simu->gradoff) {
 								for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-									int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+									int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 									dzero(P(simu->gradoff, iwfs));
 								}
 							}
@@ -640,16 +640,18 @@ void dither_post(sim_t* simu){
 					dcellzero(simu->gradoffacc);
 					simu->gradoffisim0=isim;
 				}
-				if(!simu->gradoffdrift&&parms->powfs[ipowfs].dither==1){
+				if(parms->powfs[ipowfs].dither==1&&(!simu->gradoffdrift||!P(simu->gradoffdrift, P(parms->powfs[ipowfs].wfs, 0)))){
 					//Use gradoff before adjustment is not good. There are difference between i and i0.
 					if(parms->powfs[ipowfs].phytype_sim==PTYPE_MF){
 						info2("Step %5d: powfs%d set gradoffdrift to cog of initial i0\n", isim, ipowfs);
 					} else{
 						info2("Step %5d: powfs%d set gradoffdrift to cog of created i0 + gradoff\n", isim, ipowfs);
 					}
-					simu->gradoffdrift=dcellnew(nwfs, 1);
+					if(!simu->gradoffdrift){//indexed by iwfs
+						simu->gradoffdrift=dcellnew(parms->nwfs, 1);
+					}
 					for(int jwfs=0; jwfs<nwfs; jwfs++){
-						int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+						int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 						shwfs_grad(&P(simu->gradoffdrift, iwfs), PCOLR(powfs[ipowfs].intstat->i0, jwfs), parms, powfs, iwfs, PTYPE_COG);
 						if(parms->powfs[ipowfs].phytype_sim!=PTYPE_MF){
 							dadd(&P(simu->gradoffdrift, iwfs), 1, P(simu->gradoff, iwfs), 1);//added on 2021-08-11
@@ -701,11 +703,11 @@ void dither_post(sim_t* simu){
 				}
 				//For CoG gain
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dither_t* pd=simu->dither[iwfs];
 					const int ogsingle=!pd->gg0||parms->powfs[ipowfs].dither_ogsingle;
-					const int ng=ogsingle?1:(powfs[ipowfs].saloc->nloc*parms->powfs[ipowfs].ng);
-					const int nd=PN(pd->a2mv);
+					const long ng=ogsingle?1:(powfs[ipowfs].saloc->nloc*parms->powfs[ipowfs].ng);
+					const int nd=(int)PN(pd->a2mv);
 					if(!P(simu->gradscale, iwfs)){
 						P(simu->gradscale, iwfs)=dnew(ng, 1);
 						dset(P(simu->gradscale, iwfs), parms->powfs[ipowfs].gradscale);
@@ -814,6 +816,7 @@ void fit_cache_free(){
 	cellfree(fit_cache.sepsf);
 	cellfree(fit_cache.i0m);
 	cellfree(fit_cache.i0mv);
+	cellfree(fit_cache.grad);
 }
 
 /**
@@ -896,7 +899,7 @@ void sodium_fit(
 	//etf_t** etfs=use_cache?fit_cache.etfs:NULL;
 	dccell* i0m=use_cache?fit_cache.i0m:NULL;//sa image for each sodium bin
 	dcell* i0mv=use_cache?fit_cache.i0mv:NULL;//vectorized i0m
-	dcell *grad=use_cache?fit_cache.grad:*pgrad;
+	dcell *grad=use_cache?fit_cache.grad:NULL;//model gradient. do not alias *pgrad which is output.
 	int skip_first=0;
 
 	if(!i0m){//prepare to create the sub layer image model

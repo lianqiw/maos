@@ -128,14 +128,21 @@ void flt2pix(const float *restrict p, void *pix, long nx, long ny, int gray, flo
 		}
 	} else{/*b/w */
 		unsigned char *pc=(unsigned char *)pix;
-		float scale=255./(max-min);
+		float scale, offset;
+		if(fabs(max-min)>1.e-4*fabs(min)){
+			scale=255./(max-min);
+			offset=0;
+		} else{//avoid division by zero
+			scale=0;
+			offset=127.5;
+		}
 		for(int i=0; i<nx*ny; i++){
 			float xi=p[i];
 			if(isnan(xi)){
 				pc[i]=0;
 			}else{
 				if(zlog) xi=log10(fabs(xi));
-				pc[i]=(unsigned char)((xi-min)*scale);
+				pc[i]=(unsigned char)((xi-min)*scale+offset);
 			}
 		}
 	}
@@ -270,6 +277,11 @@ static char** char_ellipsis(char *legends[], int npts){
 		}
 	}
 	int slen=strlen(legends[0]);
+	for(int ip=1; ip<npts; ip++){//use the shortest length to avoid reading beyond any string
+		if(!legends[ip]) return legends2;
+		int slen2=strlen(legends[ip]);
+		if(slen2<slen) slen=slen2;
+	}
 	if(npts<1 || slen<20){
 		return legends2;
 	}
@@ -304,7 +316,7 @@ static char** char_ellipsis(char *legends[], int npts){
 				}
 			}
 			is=cstart+2;
-			slen=strlen(legends2[0]);
+			if(clen>4) slen-=clen-2;//all strings are shortened by the same amount
 			cstart=-1;
 		}
 	}
@@ -392,7 +404,7 @@ void *listen_draw(void *user_data){
 			client_pid=0;
 			//we set socket timeout to check disconnection.
 			//server sends heartbeat every 10 seconds (since 2021-09-29).
-			if(socket_block(sock, 0)||socket_recv_timeout(sock, 30)){//was 600. changed to 30 to detect disconnection.
+			if(socket_block(sock, 1)||socket_recv_timeout(sock, 30)){//was 600. changed to 30 to detect disconnection.
 				sock=-1;
 				warning("Set sock block and timout failed.\n");
 			}

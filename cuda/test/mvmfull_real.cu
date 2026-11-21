@@ -423,7 +423,7 @@ void mvmfull_real(int* gpus, int ngpu, int nstep){
 			}
 			real theta=M_PI*0.5*istep+datai->FSMdelta;
 			Real cd=cos(theta);
-			Real sd=cos(theta);
+			Real sd=sin(theta);
 			//Do not start before pixels are transported
 #if 0
 			for(int ism=1; ism<nsm; ism++){//wait for MVM

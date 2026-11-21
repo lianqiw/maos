@@ -138,7 +138,7 @@ int socket_nopipe(int sock){
 */
 int socket_block(int sock, int block){
 	if(sock==-1) return -1;
-	int arg=fcntl(sock, F_GETFD);
+	int arg=fcntl(sock, F_GETFL);
 	if(arg==-1){
 		perror("fcntl");
 		return -1;
@@ -148,7 +148,7 @@ int socket_block(int sock, int block){
 	} else{
 		arg|=O_NONBLOCK;
 	}
-	if(fcntl(sock, F_SETFD, arg)==-1){
+	if(fcntl(sock, F_SETFL, arg)==-1){
 		perror("fcntl");
 		return -1;
 	}
@@ -261,6 +261,7 @@ int bind_socket(int protocol, const char* ipaddr, uint16_t port){
 			warning_time("Failed to bind to port %d\n", port);
 			close(sock);
 			sock=-1;
+			break;
 		}
 	}
 	if(sock!=-1){
@@ -356,6 +357,7 @@ void listen_port_add(int sock, short events, int(*handler)(struct pollfd*, int),
 			error("Unable to allocate memory for pollfd or pfd_handler\n");
 			return;
 		}
+		pfd[jfd].fd=-1;//new slot
 	}
 	if(pfd[jfd].fd!=sock && handler!=pending_handler){
 		dbg_time("fd=%2d %c%c (%s).\n", sock , (events&POLLIN)?'r':' ', (events&POLLOUT)?'w':' ', name);
@@ -412,6 +414,7 @@ void listen_port(listen_opt_t opt){
 	
 	int sock_local=-1;
 	int sock=-1;
+	int local_bound=0;//whether opt.localpath is created by us
 	if(opt.port){
 		if((sock=bind_socket(SOCK_STREAM, opt.ipaddr, opt.port))==-1){
 			warning_time("(%d) bind_socket failed\n", opt.port);
@@ -440,6 +443,7 @@ void listen_port(listen_opt_t opt){
 			if(sock_local==-1){
 				dbg_time("(%d) bind to %s failed\n", sock, opt.localpath);
 			} else{
+				local_bound=1;
 				if(!listen(sock_local, 10)){
 					listen_port_add(sock_local, POLLIN, NULL, "listen_local");
 					socket_send_timeout(sock_local, 60);
@@ -463,9 +467,11 @@ void listen_port(listen_opt_t opt){
 		opt.timeout_sec=-1;
 	}
 
+	quit_listen=0;//reset from a previous call
 	register_signal_handler(listen_signal_handler);
 	int nlisten=2;
-	static double lasttime=0;
+	double lasttime=0;
+	double quit_time=0;
 	//quit_listen is set by listen_signal_handler to 1 when need to quit
 	while(quit_listen<2&&nlisten){
 		//int new_connection=0;
@@ -481,7 +487,6 @@ void listen_port(listen_opt_t opt){
 			  It is the port that remain in TIME_WAIT state.
 			 */
 			dbg_time("(%d) terminate pending: ask all clients (count=%d) to close.\n", sock, nlisten);
-			static double quit_time=0;
 			if(!quit_time) quit_time=myclockd();
 			//stop listening. It is ok to actively shutdown the listening port
 			if(sock!=-1){
@@ -543,7 +548,7 @@ void listen_port(listen_opt_t opt){
 					} else{
 						if(pfd_handler[ifd].handler==pending_handler){//check whether client is tcp or http
 							char buf[5]={0};
-							int len=recv(pfd[ifd].fd, buf, 4, MSG_PEEK);
+							int len=(int)recv(pfd[ifd].fd, buf, 4, MSG_PEEK);
 							if((len==4 && !strcmp(buf, "GET "))
 								||(len>=3 && buf[0] == 0x16 && buf[1] == 0x03 &&
     							(buf[2] == 0x00 || buf[2] == 0x01 || buf[2] == 0x02 || buf[2] == 0x03))){
@@ -594,7 +599,10 @@ void listen_port(listen_opt_t opt){
 	}
 	info_time("listen_port exited\n");
 	listen_port_del(-2, 1, "shutdown all");
-	if(opt.localpath) remove(opt.localpath);
+	free(pfd); pfd=NULL;
+	free(pfd_handler); pfd_handler=NULL;
+	npfd=0;
+	if(local_bound) remove(opt.localpath);
 	//sync();
 }
 
@@ -637,9 +645,8 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 			if(nodelay){
 				socket_tcp_nodelay(sock);
 			}
-			if(!block){
-				socket_block(sock, 0);
-			}
+			//Do not set O_NONBLOCK: connect() would return EINPROGRESS and
+			//callers expect a blocking socket. block only controls retrying.
 			int res=-1;
 			struct addrinfo* result=NULL;
 			char hoststr[512];
@@ -660,10 +667,10 @@ int connect_port(const char* hostname,/**<The hostname can be just name or name:
 				if(col&&strlen(col+1)>0){//port is part of hostaddr
 					size_t nn=col-hostaddr;
 					if(nn+1>sizeof(hoststr)) nn=sizeof(hoststr)-1;
-					strscpy(hoststr, hostaddr, nn); 
+					strscpy(hoststr, hostaddr, nn+1);
 					nn=strlen(col+1);
 					if(nn+1>sizeof(portstr)) nn=sizeof(portstr)-1;
-					strscpy(portstr, col+1, nn);
+					strscpy(portstr, col+1, nn+1);
 				} else{
 					snprintf(hoststr, sizeof(hoststr), "%s", hostaddr);
 					snprintf(portstr, sizeof(portstr), "%d", port);

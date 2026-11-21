@@ -74,21 +74,7 @@ blockmv(Real* restrict y, const Real* restrict A, const Real* restrict x, const 
 		}
 	}
 #endif
-	/*
-#if BLOCKMV_TNY==32
-	if(irow<nrow){
-#pragma unroll
-	for(int step=(BLOCKMV_TNY>>1); step>0; step>>=1){
-		__syncthreads();
-		if(tiy<step){
-		sy[0]+=sy[step];
-		}
-	}
-	if(!tiy){
-		atomicAdd(&y[irow], sy[0]);
-	}
-	}
-#else
+	//reduce along y and accumulate into y.
 	__syncthreads();
 	if(tiy==0 && irow<nrow){
 #pragma unroll
@@ -97,7 +83,6 @@ blockmv(Real* restrict y, const Real* restrict A, const Real* restrict x, const 
 	}
 		atomicAdd(&y[irow], sy[0]);
 	}
-	#endif*/
 }
 
 /**

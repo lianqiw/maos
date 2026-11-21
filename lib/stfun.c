@@ -115,6 +115,7 @@ dmat *stfun_batch(const_anyarray opd_, /**<nz array of nx*ny array of the OPD*/
 	const cell *opd=opd_.c;
 	if(!opd){
 		error("OPD should be provided\n");
+		return NULL;
 	}
 	stfun_t *A=NULL;
 	if(iscell(opd)){

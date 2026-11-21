@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
 	}
 	for(int iarg=jarg; iarg<argc; iarg++){
 		const char* fn=argv[iarg];
-		char fn2[strlen(fn)+1]; strcpy(fn2, fn);
+		char fn2[strlen(fn)+2]; strcpy(fn2, fn);//+2: .fits is one char longer than .bin
 		char* tmp=strstr(fn2, ".bin");
 		if(!tmp){
 			warning("Entry %s has invalid format, skip it\n", fn);

@@ -52,7 +52,7 @@ static inline int limit_diff(real* x1, real* x2, real thres, long stuck1, long s
 */
 static inline void ttsplit_do(const recon_t* recon, dcell* dmcmd, dmat* ttm, real lp){
 #if 1
-	int ndm=NX(dmcmd);
+	int ndm=(int)NX(dmcmd);
 	real totaltt[2]={0,0};
 	real tt1[2];
 	for(int idm=0; idm<ndm; idm++){
@@ -88,7 +88,7 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 	*/
 	if(!parms->sim.dmclip) return;
 	for(int idm=0; idm<parms->ndm; idm++){
-		const int nact=P(dmcmd, idm)->nx;
+		const long nact=P(dmcmd, idm)->nx;
 		int nclip=0;
 		if(NX(parms->dm[idm].stroke)==1){
 			if(NY(parms->dm[idm].stroke)!=1){
@@ -104,7 +104,7 @@ static inline void clipdm(sim_t* simu, dcell* dmcmd){
 			real *pcmd=P(P(dmcmd, idm));
 			real *plow=P(parms->dm[idm].stroke);
 			real *phigh=plow+nact;
-			for(int iact=0; iact<nact; iact++){
+			for(long iact=0; iact<nact; iact++){
 				if(pcmd[iact]<plow[iact]){
 					pcmd[iact]=plow[iact];
 					nclip++;
@@ -131,8 +131,8 @@ static inline void clipdm_dead(const sim_t* simu, dcell* dmcmd){
 	if(!recon->actstuck) return;
 	for(int idm=0; idm<parms->ndm; idm++){
 		if(!P(recon->actstuck,idm)) continue;
-		const int nact=P(recon->aloc,idm)->nloc;
-		for(int iact=0; iact<nact; iact++){
+		const long nact=P(recon->aloc,idm)->nloc;
+		for(long iact=0; iact<nact; iact++){
 			real val=P(P(recon->actstuck,idm),iact)*1e-9;
 			if(val){
 				P(P(dmcmd,idm),iact)=val;
@@ -150,7 +150,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 	for(int idm=0; idm<parms->ndm; idm++){
 	/* Embed DM commands to a square array (borrow dmrealsq) */
 		real iastroke, iastroked;
-		int nx=P(recon->anx,idm);
+		long nx=P(recon->anx,idm);
 		dmat* dmr;
 		dmat* dm;
 		if(parms->dm[idm].strokescale){ //convert dm to voltage
@@ -174,8 +174,8 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 		do{
 			count=0;
 			dmat* map=DMAT(P(recon->amap,idm));
-			for(int iy=0; iy<P(recon->any,idm)-1; iy++){
-				for(int ix=0; ix<nx-1; ix++){
+			for(long iy=0; iy<P(recon->any,idm)-1; iy++){
+				for(long ix=0; ix<nx-1; ix++){
 					int iact1=P(map, ix, iy);
 					if(iact1>0){
 						int iact2=P(map, ix, iy+1);
@@ -206,7 +206,7 @@ static inline void clipdm_ia(const sim_t* simu, dcell* dmcmd){
 			info2("Fix is %s after %d trials\n", count?"failed.":"success.", trials);
 		}
 		if(!parms->fit.square){//copy data back
-			loc_extract(P(simu->dmreal,idm), P(recon->aloc,idm), P(simu->dmrealsq,idm));
+			loc_extract(dm, P(recon->aloc,idm), P(simu->dmrealsq,idm));
 		}
 		if(parms->dm[idm].strokescale){//convert back to opd
 			dmat* dm2=dinterp1(P(parms->dm[idm].strokescale,1), 0, dm, NAN);
@@ -414,7 +414,11 @@ static void postproc_dm(sim_t* simu){
 			while(simu->dmreal_count<count){
 				struct timespec ts;
 				clock_gettime(CLOCK_REALTIME, &ts);
-				ts.tv_nsec+=1e6;
+				ts.tv_nsec+=1000000;
+				if(ts.tv_nsec>=1000000000){
+					ts.tv_sec++;
+					ts.tv_nsec-=1000000000;
+				}
 				//dbg("waiting: dmreal_count is %d need %d\n", simu->dmreal_count, count);
 				pthread_cond_timedwait(&simu->dmreal_condw, &simu->dmreal_mutex, &ts);
 			}
@@ -446,11 +450,11 @@ void filter_fsm(sim_t* simu){
 				dmat* fsmerr=0;
 				real scale=1./parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 					dadd(&fsmerr, 1, P(simu->fsmerr,iwfs), scale);
 				}
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 					dcp(&P(simu->fsmerr,iwfs), fsmerr);
 				}
 				dfree(fsmerr);
@@ -460,7 +464,7 @@ void filter_fsm(sim_t* simu){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		int hasinput=0;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 			if(!simu->fsmint[iwfs]) continue;
 			/*fsmerr is from gradients from this time step. so output integrator before update for correct delay*/
 			servo_output(simu->fsmint[iwfs], &P(simu->fsmcmd, iwfs));
@@ -473,7 +477,7 @@ void filter_fsm(sim_t* simu){
 				dzero(P(simu->ltpm_cmd, ipowfs));
 				real scale=1./parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dadd(&P(simu->ltpm_cmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
 					//remove position from previous step. (with time lag)
 					dadd(&P(simu->fsmcmd, iwfs), 1, P(simu->ltpm_real, ipowfs), -1);
@@ -481,7 +485,7 @@ void filter_fsm(sim_t* simu){
 			} else if(hasinput){//integrator based offloading to LLT_FSM
 				real scale=parms->powfs[ipowfs].llt->epfsm/parms->powfs[ipowfs].nwfs;
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dadd(&P(simu->ltpm_cmd, ipowfs), 1, P(simu->fsmcmd, iwfs), scale);
 				}
 			}

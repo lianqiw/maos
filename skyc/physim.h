@@ -19,7 +19,7 @@
 #define SKYC_SIM_H
 real calc_rms(const dmat *mideal, const dmat *mcc, int istep0);
 void ngsmod2wvf(cmat *wvf, real wvl, const dmat *modm,
-		const powfs_s *powfs, int isa, real thetax, real thetay, 
+		const powfs_s *powfs, long isa, real thetax, real thetay, 
 		const parms_s *parms);
 dmat* physim(dmat **mres, const dmat *mideal, const dmat *mideal_oa, real ngsol,
 		 aster_s *aster, const powfs_s *powfs, const parms_s *parms, 

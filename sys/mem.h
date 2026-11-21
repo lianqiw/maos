@@ -47,9 +47,9 @@ extern __thread char funtrace[];//stores info about top level function ca
 extern void  (*free_default)(void *);
 //Do not convert alloca to function call. It is auto freed after function returns.
 #define myalloca(nelem, type)     (type*)alloca(nelem*sizeof(type))
-#define mycalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mycalloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, calloc_maos(nelem, sizeof(type)))
-#define mymalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mymalloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, malloc_maos(nelem*sizeof(type)))
-#define myrealloc(p, nelem, type) (type*)(funtrace_set, MEM_VERBOSE?(info_line("myrealloc: %zux%zu bytes ", (size_t)nelem, sizeof(type)),0):0, realloc_maos(p, nelem*sizeof(type)))
+#define mycalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mycalloc: %zux%zu bytes ", (size_t)(nelem), sizeof(type)),0):0, calloc_maos(nelem, sizeof(type)))
+#define mymalloc(nelem, type)     (type*)(funtrace_set, MEM_VERBOSE?(info_line("mymalloc: %zux%zu bytes ", (size_t)(nelem), sizeof(type)),0):0, malloc_maos((nelem)*sizeof(type)))
+#define myrealloc(p, nelem, type) (type*)(funtrace_set, MEM_VERBOSE?(info_line("myrealloc: %zux%zu bytes ", (size_t)(nelem), sizeof(type)),0):0, realloc_maos(p, (nelem)*sizeof(type)))
 #define myrecalloc(p, oldtype, newtype) (newtype*)(funtrace_set, MEM_VERBOSE?(info_line("myrecalloc: 1x%zu bytes ", sizeof(newtype)),0):0,recalloc_maos(p, sizeof(oldtype), sizeof(newtype)))
 #define myfree(p) if(p) free_maos(p)
 

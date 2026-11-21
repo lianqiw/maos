@@ -21,6 +21,11 @@
 #endif
 
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <malloc.h>
 #include <pthread.h>
 
 #include <search.h>
@@ -28,7 +33,8 @@
 
 #include <limits.h>
 #include <sys/syscall.h>
-/**
+#include <sys/mman.h>
+/*
    Notice: When destructor or at exit is called on this file, using
    malloc/calloc etc will cause this file to be reloaded (constructor called)
    and therefore stuck in infinite loop.
@@ -41,7 +47,7 @@ static void (*free_default)(void* p)=0;
 static void* (*realloc_default)(void* p, size_t size)=0;
 static void* (*memalign_default)(size_t blocksize, size_t bytes)=0;
 static void* (*mmap_default)(void* addr, size_t len, int prot, int flag, int fd, off_t offset)=0;
-static void (*munmap_default)(void* addr, size_t len)=0;
+static int (*munmap_default)(void* addr, size_t len)=0;
 
 /*
   Derived from mem.c, but intended for using using LD_PRELOAD.
@@ -95,7 +101,7 @@ char* get_job_progname(int pid){
 	/*readlink doesn't append \0 */
 	char procpath[PATH_MAX];
 	snprintf(procpath, PATH_MAX, "/proc/%d/exe", pid>0?pid:(int)getpid());
-	int nprog=readlink(procpath, path, PATH_MAX);
+	int nprog=readlink(procpath, path, PATH_MAX-1);//leave room for \0
 	if(nprog>0){
 		path[nprog]='\0';
 		char* delt=strstr(path, "(deleted)");
@@ -120,10 +126,12 @@ char* call_addr2line(const char* buf){
 			char* tmp=strrchr(ans, '/');
 			if(tmp){
 				tmp++;
-				char* tmp2=strchr(tmp, '\n'); tmp2[0]='\0';
+				char* tmp2=strchr(tmp, '\n');
+				if(tmp2) tmp2[0]='\0';
+				size_t nout=strlen(out);
+				if(nout+2+strlen(tmp)>=sizeof(out)) break;//no more room
 				strcat(out, "->");
 				strcat(out, tmp);
-				if(strlen(out)>=4000) break;
 			}
 		}
 		pclose(fpcmd);
@@ -217,7 +225,7 @@ static void stat_usage(const void* key, VISIT which, int level){
 		key3.nfunc=key2->nfunc-2;
 		if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
 			T_STATKEY* keynew=calloc_default(1, sizeof(T_STATKEY));
-			P(keynew)=P(key2);
+			keynew->p=key2->p;
 			keynew->func=malloc_default(key3.nfunc*sizeof(void*));
 			memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 			keynew->nfunc=key3.nfunc;
@@ -235,7 +243,7 @@ static void print_usage(const void* key, VISIT which, int level){
 	const T_STATKEY* key2=*((const T_STATKEY**)key);
 	(void)level;
 	if(which==leaf||which==postorder){
-		dbg("size %4zu B@%p\n", (key2->size), P(key2));
+		dbg("size %4zu B@%p\n", (key2->size), key2->p);
 		print_backtrace_symbol(key2->func, key2->nfunc);
 	}
 }
@@ -261,7 +269,7 @@ static void memkey_add(void* p, size_t size){
 	int disable_save=disable_memdbg;
 	disable_memdbg=1;//prevent recursive calling
 	T_MEMKEY* key=calloc_default(1, sizeof(T_MEMKEY));
-	P(key)=p;
+	key->p=p;
 	key->size=size;
 	key->nfunc=backtrace(key->func, DT);
 	void** found=tfind(key, &MROOT, key_cmp);
@@ -373,7 +381,7 @@ void* calloc(size_t nmemb, size_t size){
 		}
 	}
 	void* p=calloc_default(nmemb, size);
-	if(!disable_memdbg) memkey_add(p, size);
+	if(!disable_memdbg) memkey_add(p, nmemb*size);
 	return p;
 }
 
@@ -409,13 +417,20 @@ void* memalign(size_t blocksize, size_t bytes){
 
 void* mmap(void* addr, size_t len, int prot, int flag, int fd, off_t offset){
 	void* p=mmap_default(addr, len, prot, flag, fd, offset);
-	if(!disable_memdbg) memkey_add(p, len);
+	if(!disable_memdbg&&p!=MAP_FAILED) memkey_add(p, len);
 	return p;
 }
 
-void munmap(void* addr, size_t len){
+/**
+   Replacement of munmap() that removes the record of the mapped region.
+
+   @param[in] addr Address of the mapping.
+   @param[in] len Length of the mapping in bytes.
+   @return 0 on success, -1 on failure (same as munmap()).
+*/
+int munmap(void* addr, size_t len){
 	if(!disable_memdbg) memkey_del(addr);
-	munmap_default(addr, len);
+	return munmap_default(addr, len);
 }
 
 /**

@@ -116,6 +116,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	}
 
 	int kover=0; //k overflows maxit
+	int kres=maxiter;//index of diff that holds the final residual
 	for(int k=0; ; k++){
 		ctoc_init(20);
 		if(k==maxiter){
@@ -165,6 +166,7 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 		if(((kover||k+1==maxiter)&&(cgthres<=0||diff[k]<cgthres))||kover>=3){
 			curcelladd(r0, Ap, ak+k, -1, stream);
 			pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
+			kres=k+1;
 			ctoc("add");
 			ctoc_final("CG final %d", k, maxiter);
 			break;
@@ -190,12 +192,12 @@ Real pcg(curcell& x0, cusolve_cg* Amul, cusolve_cgpre* Mmul,
 	/* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
 	CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
-	info("GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"", maxiter, diff[0], diff[maxiter]);
+	info("GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"", maxiter, diff[0], diff[kres]);
 #elif PRINT_RES==2
 	info("\n");
 #endif
 	Real residual=-1;/*Only useful if PRINT_RES is set*/
-	residual=diff[maxiter];
+	residual=diff[kres];
 	return residual;
 }
 

@@ -90,8 +90,6 @@ void cusolve_muv::Trans(curcell& out, Real beta, const curcell& in, Real alpha, 
 	} else{
 		Scale(out.M(), beta, stream);
 	}
-
-	Scale(out.M(), beta, stream);
 	if(M){
 		cuspmul(out.M(), M, in.M(), 1, 't', alpha, stream);
 	}else{

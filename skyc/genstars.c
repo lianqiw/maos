@@ -90,6 +90,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			dmat* pres=P(res,isky);
 			for(long istar=0; istar<nstar; istar++){
 				long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
+				if(ind>=ntot) ind=ntot-1;/*round() can give ntot*/
 				for(int iwvl=0; iwvl<nwvl; iwvl++){
 					P(pres, 2+iwvl, istar)=P(catalog, ind, iwvl);
 				}
@@ -124,7 +125,7 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 			}
 			//J19c=0 is ok. Do not skip.
 			if(J19c<nmax&&counti[J19c]<nsky0){
-				int isky=counti[J19c]+(J19c)*nsky0;
+				long isky=counti[J19c]+(J19c)*nsky0;
 				P(res,isky)=dref(tmp);
 				count++;
 				counti[J19c]++;
@@ -170,22 +171,51 @@ dcell* genstars(long nsky,         /**<number of star fields wanted*/
 	return res;
 }
 /**
-   The sort function for stars. Sort stars according total flux.
+   Total J and H band flux of a star. With J band only (nrow==3), use the J band flux.
+
+   @param[in] p    The star (x, y, J, H, ...).
+   @param[in] nrow Number of rows (2+nwvl) of the star.
+   @return The total flux.
+*/
+static real star_flux(const real* p, long nrow){
+	const real Z_J=3.7666e9;
+	const real Z_H=2.7206e9;
+	return Z_J*pow(10, -0.4*p[2])+(nrow>3?Z_H*pow(10, -0.4*p[3]):0);
+}
+/**
+   Compare two stars with J and H band magnitudes by total flux.
+
+   @param[in] p1 First star (x, y, J, H, ...).
+   @param[in] p2 Second star (x, y, J, H, ...).
+   @return -1 if p1 is brighter than p2, 1 if dimmer, 0 if equal.
  */
-static int sortfun(const real* p1, const real* p2){
-	static real Z_J=3.7666e9;
-	static real Z_H=2.7206e9;
-	real tot1=Z_J*pow(10, -0.4*p1[2])+Z_H*pow(10, -0.4*p1[3]);/*tot flux */
-	real tot2=Z_J*pow(10, -0.4*p2[2])+Z_H*pow(10, -0.4*p2[3]);
-	return tot1<tot2?1:-1;
+static int sortfun_jh(const void* p1, const void* p2){
+	real tot1=star_flux((const real*)p1, 4);
+	real tot2=star_flux((const real*)p2, 4);
+	return tot1<tot2?1:(tot1>tot2?-1:0);
+}
+/**
+   Compare two stars with J band magnitude only by flux.
+
+   @param[in] p1 First star (x, y, J).
+   @param[in] p2 Second star (x, y, J).
+   @return -1 if p1 is brighter than p2, 1 if dimmer, 0 if equal.
+ */
+static int sortfun_j(const void* p1, const void* p2){
+	real tot1=star_flux((const real*)p1, 3);
+	real tot2=star_flux((const real*)p2, 3);
+	return tot1<tot2?1:(tot1>tot2?-1:0);
 }
 /**
    Sort the stars with J band magnitude from brightest to dimmest.
 */
 void sortstars(dcell* stars){
 	for(long isky=0; isky<stars->nx*stars->ny; isky++){
-		if(!P(stars,isky)) continue;
-		qsort(P(P(stars,isky)), P(stars,isky)->ny, P(stars,isky)->nx*sizeof(real),
-			(int(*)(const void*, const void*))sortfun);
+		if(!P(stars,isky)||!P(stars,isky)->ny) continue;
+		const long nrow=P(stars,isky)->nx;
+		if(nrow<3){
+			error("Star field %ld has %ld rows, expect at least 3 (x, y, J).\n", isky, nrow);
+		}
+		qsort(P(P(stars,isky)), P(stars,isky)->ny, nrow*sizeof(real), nrow>3?sortfun_jh:sortfun_j);
 	}
 }

@@ -34,7 +34,7 @@ int get_job_progname(char* res, int nres, int pid){
 	/*readlink doesn't append \0 */
 	char procpath[PATH_MAX];
 	snprintf(procpath, PATH_MAX, "/proc/%d/exe", pid>0?pid:(int)getpid());
-	int nprog=readlink(procpath, path, PATH_MAX);
+	int nprog=(int)readlink(procpath, path, PATH_MAX-1);
 	if(nprog>0){
 		path[nprog]='\0';
 		char* delt=strstr(path, "(deleted)");
@@ -51,16 +51,17 @@ int get_job_progname(char* res, int nres, int pid){
    Get the memory usage of current process.
  */
 size_t get_job_mem(void){
-	size_t mem;
+	size_t mem=0;
 	FILE* pfile;
 	static int pagesize=0;//in kB
 	if(!pagesize){
-		pagesize=sysconf(_SC_PAGESIZE)/1024;
+		pagesize=(int)(sysconf(_SC_PAGESIZE)/1024);
 		//pagesize=getpagesize()/1024;
 	}
 	if((pfile=fopen("/proc/self/statm", "r"))){
 		if(fscanf(pfile, "%*d %zu", &mem)!=1){
 			warning("failed to read statm\n");
+			mem=0;
 		}
 		mem*=pagesize;
 		fclose(pfile);
@@ -89,7 +90,7 @@ double get_job_launchtime(int pid){
 		"%*d %*d %*d %*d %*d %*d %llu "/*starttime */
 		, &starttime0);
 	fclose(fp);
-	if(nread<0){
+	if(nread!=1){
 		warning("Unable to read %s, nread=%d\n", fnjob, nread);
 		return 0;
 	}
@@ -102,7 +103,7 @@ static int proc_read_status(char* fnjob, char* exename, char* cstat, long* nthre
 	/*warning("Unable to open file %s\n",fnjob);//job exited */
 		return -1;
 	}
-	int nread=fscanf(fp, "%*d %s %c %*d %*d %*d %*d %*d "/*tpgid */
+	int nread=fscanf(fp, "%*d %255s %c %*d %*d %*d %*d %*d "/*tpgid */
 		"%*u %*u %*u %*u %*u %*u %*u "/*stime */
 		"%*d %*d %*d %*d %ld", exename, cstat, nthread);
 	fclose(fp);
@@ -146,7 +147,7 @@ int get_usage_running(void){
 		if(cstat!='R'&&nthread==1){
 			continue;/*Job is not running; */
 		}
-		if(nthread>1&&strcmp(exename, "(MATLAB)")){
+		if(nthread>1&&!strcmp(exename, "(MATLAB)")){
 			/*Only count 1 thread of MATLAB*/
 			nthread=1;
 		} else if(nthread>1){/*There are many threads. Check each one. */
@@ -203,7 +204,7 @@ double get_usage_load(void){
 		warning("failed to read loadavg\n");
 		load=0;
 	}
-	fclose(fp);
+	if(fp) fclose(fp);
 	return load;
 }
 /**
@@ -252,8 +253,8 @@ int read_cpu_counter(long* user, long* tot){
 	long t_usr, t_nice, t_sys, t_idle;
 	fp=fopen("/proc/stat", "r");
 	if(!fp||fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
-		&t_usr, &t_nice, &t_sys, &t_idle)<0){
-		fclose(fp);
+		&t_usr, &t_nice, &t_sys, &t_idle)!=4){
+		if(fp) fclose(fp);
 		return -1;
 	}
 	fclose(fp);
@@ -271,14 +272,15 @@ double read_self_cpu(void){
 	FILE* fp=fopen("/proc/self/stat", "r");
 	if(!fp||fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
 		&stime, &utime)!=2){
-		fclose(fp);
+		if(fp) fclose(fp);
 		return 0;
 	}
 	fclose(fp);
 	fp=fopen("/proc/stat", "r");
 	if(!fp||fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
-		&t_usr, &t_nice, &t_sys, &t_idle)<0){
-		fclose(fp); return 0;
+		&t_usr, &t_nice, &t_sys, &t_idle)!=4){
+		if(fp) fclose(fp);
+		return 0;
 	}
 	fclose(fp);
 	double t_tot=(double)(t_usr+t_nice+t_sys+t_idle);
@@ -293,7 +295,7 @@ double read_self_cpu(void){
    Return number of processors
 */
 int get_ncpu(void){
-	return sysconf(_SC_NPROCESSORS_ONLN);
+	return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 #endif

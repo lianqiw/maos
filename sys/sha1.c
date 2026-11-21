@@ -47,7 +47,7 @@ static void sha1_transform(SHA1_CTX *ctx, const unsigned char *data) {
     uint32_t a, b, c, d, e, t;
 
     for (int i = 0; i < 16; i++)
-        w[i] = (data[4*i]<<24)|(data[4*i+1]<<16)|(data[4*i+2]<<8)|data[4*i+3];
+        w[i] = ((uint32_t)data[4*i]<<24)|((uint32_t)data[4*i+1]<<16)|((uint32_t)data[4*i+2]<<8)|data[4*i+3];
     for (int i = 16; i < 80; i++) {
         uint32_t v = w[i-3]^w[i-8]^w[i-14]^w[i-16];
         w[i] = (v << 1) | (v >> 31);

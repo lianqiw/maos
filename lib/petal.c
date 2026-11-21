@@ -40,6 +40,14 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 		warning("Either ph or popd should be set. No action\n");
 		return;
 	}
+	if(npetal<=1){
+		error("npetal=%ld is invalid\n", npetal);
+		return;
+	}
+	if(popd&&(!mode||PN(mode)!=npetal)){
+		error("Mode must be set and have length of %ld in order to output OPD\n", npetal);
+		return;
+	}
 	if (loc){
 		nx=loc->nloc;
 		ny=1;
@@ -60,11 +68,6 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 	}
 	if(popd){
 		dinit(popd, nx, ny);
-		if(!mode){
-			error("Mode must be set in order to output OPD\n");
-		}else if(PN(mode)!=npetal){
-			error("Mode must have length of %ld (is %ld)\n", npetal, PN(mode));
-		}
 	}
 	//info("nx=%ld, ny=%ld, cx=%g, cy=%g\n", nx, ny, cx, cy);
 	long count=0;
@@ -105,7 +108,7 @@ static void petal_do(dsp **ph, dmat **popd, loc_t *loc, long nx, long ny, real c
 				P(*popd, ix, iy)=P(mode, iseg);
 				if(onedge){
 					P(*popd, ix, iy)=P(mode, iseg)*0.5;
-					P(*popd, ix, iy)=P(mode, (iseg+onedge+npetal)%npetal)*0.5;
+					P(*popd, ix, iy)+=P(mode, (iseg+onedge+npetal)%npetal)*0.5;
 				}
 			}
 		}
@@ -192,7 +195,7 @@ typedef struct petal_t{
 	int nrep;  /**<Number of gerchberg_saxton iterations*/
 	int npetal;/**<Number of petals*/
 	int npsf;  /**<Number of pixels to use*/
-	int nsa;   /**<Number of subapertures in this group.*/
+	long nsa;  /**<Number of subapertures in this group.*/
 	int withtt;/**<Whether mod include tip/tilt*/
 }petal_t;
 /**
@@ -200,14 +203,15 @@ typedef struct petal_t{
 */
 void petal_free(petal_t *p){
 	if(!p) return;
-	int nsa=p->nsa;
+	long nsa=p->nsa;
 	if(!nsa) nsa=1;
-	for(int isa=0; isa<nsa; isa++){
+	for(long isa=0; isa<nsa; isa++){
 		dfree(p[isa].amp);
 		dspfree(p[isa].hpetal);
 		dfree(p[isa].mod);
 		dfree(p[isa].rmod);
 		lfree(p[isa].ind);
+		dfree(p[isa].otf);
 	}
 	free(p);
 }
@@ -225,9 +229,10 @@ void petal_free_arr(petal_t **p, int np){
  * @param npetal The number of petals.
  * @param nsa   Number of subapertures.
 */
-void petal_connect(dmat **mout, dmat *mphi, int npetal, int nsa){
+void petal_connect(dmat **mout, dmat *mphi, int npetal, long nsa){
 	if(NX(mphi)!=npetal||NY(mphi)!=nsa){
 		error("mphi has invalid size\n");
+		return;
 	}
 	dinit(mout, npetal, 1);
 	dmat *diff=*mout;
@@ -251,24 +256,27 @@ void petal_connect(dmat **mout, dmat *mphi, int npetal, int nsa){
 		}
 	}
 	//dshow(diff, "diff1");
-	for(int jp=0; jp<npetal; jp++){
-		int ip=(jp+inan)%npetal;//start from behind first gap
-		int ip1=(ip+1)%npetal;
-		if(isnan(P(diff, ip1))){
-			P(diff, ip1)=0;//reset accumulation
-		} else{
-			P(diff, ip1)+=P(diff, ip);
-		}
-	}
-	//dshow(diff, "diff2");
 	if(inan==npetal){
-		//no invalid gap, need to connect head and tail.
-		//When we started we assume the value at jp+inan is 0. 
-		//After accumulation, the value at jp+inan is the excessive phase that needs to be removed
-		real reduce=-P(diff, 0)/(npetal);
+		//no invalid gap. Start from petal 0 with value 0 and accumulate.
+		const real d0=P(diff, 0);//difference from the last petal to petal 0
 		P(diff, 0)=0;
 		for(int ip=1; ip<npetal; ip++){
+			P(diff, ip)+=P(diff, ip-1);
+		}
+		//The sum of differences around the ring should be zero. Distribute the closure error.
+		const real reduce=-(P(diff, npetal-1)+d0)/npetal;
+		for(int ip=1; ip<npetal; ip++){
 			P(diff, ip)+=reduce*ip;
+		}
+	}else{
+		for(int jp=0; jp<npetal; jp++){
+			int ip=(jp+inan)%npetal;//start from behind first gap
+			int ip1=(ip+1)%npetal;
+			if(isnan(P(diff, ip1))){
+				P(diff, ip1)=0;//reset accumulation
+			} else{
+				P(diff, ip1)+=P(diff, ip);
+			}
 		}
 	}
 }
@@ -285,12 +293,13 @@ void petal_connect(dmat **mout, dmat *mphi, int npetal, int nsa){
  * @param nsa:	 	Number of subapertures within the given WFS.
  * @param withtt:	Whether tip/tilt in included in the reconstruction.
 */
-static void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npetal, real pdtheta, real pixblur, real theta, int npsf, int nsa, int withtt){
+static void petal_setup_sa(petal_t *petal, const dmat *amp, real cx, real cy, int npetal, real pdtheta, real pixblur, real theta, int npsf, long nsa, int withtt){
 	const long nloc=PN(amp);
 	const long nx=round(sqrt(nloc));
 	const long ny=nloc/nx;
 	if(!petal){
 		error("petal should be pre-allocated\n");
+		return;
 	}
 	dmat *mod=NULL;
 	lmat *map=NULL;
@@ -410,6 +419,7 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 	real amax=dmax(amp2);
 	if(amax==0){
 		warning("amp2 is zero. cannot proceed\n"); 
+		dfree(amp2);
 		return;
 	}
 	for(long i=0; i<PN(amp2); i++){
@@ -424,6 +434,8 @@ void petal_solve_sa(dmat **phi1, dmat **mphi1, const petal_t *petal, const dmat 
 			dspmm(&phi1b2, petal->hpetal, phi1b, "nn", 1);
 		}else{
 			error("Phi1b has invalid size\n");
+			dfree(amp2);
+			return;
 		}
 	}
 	//dshow(phi1b, "phi1b");
@@ -465,6 +477,7 @@ void petal_solve(dcell **phi1, dmat **mphi1, const petal_t *petal, const dcell *
 	const long nsa=petal->nsa;
 	if(phi1b && ((nsa>1 && PN(phi1b)!=nloc*nsa) || (nsa==1 && PN(phi1b)!=petal->npetal))){
 		error("phi1b should have the same size as amp or is npetal for tt wfs.\n");
+		return;
 	}
 	if(phi1) cellinit(phi1, nsa, 1);
 	dmat *mval=dnew(petal->npetal, nsa);

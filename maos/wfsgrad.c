@@ -56,7 +56,7 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 	const real hs=parms->wfs[iwfs].hs;
 	const real misregx=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregx:0;
 	const real misregy=parms->powfs[ipowfs].type==WFS_SH?parms->wfs[iwfs].misregy:0;
@@ -71,8 +71,8 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 		if(powfs[ipowfs].loc_tel){
 			loc=P(powfs[ipowfs].loc_tel, wfsind);
 		}
-		prop(&(propdata_t){.locin=aloc, .phiin=P(P(wfsopd, 0)), .locout=loc, .phiout=P(opd), 
-			.alpha=alpha, .misregx=misregx, .misregy=misregy});
+		prop(ADDR((propdata_t){.locin=aloc, .phiin=P(P(wfsopd, 0)), .locout=loc, .phiout=P(opd), 
+			.alpha=alpha, .misregx=misregx, .misregy=misregy}));
 		dcellfree(wfsopd);
 	} else{
 		//project tubulence onto DM grid (global ideal)
@@ -80,9 +80,9 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 			loc_t* loc=powfs[ipowfs].loc_dm?P(powfs[ipowfs].loc_dm, wfsind, idm):(powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, wfsind):powfs[ipowfs].loc);
 			const real ht=parms->dm[idm].ht;
 			if(ht>hs) continue;
-			prop(&(propdata_t){.mapin=P(simu->dmprojsq, idm), .locout=loc, .phiout=P(opd), .alpha=alpha, 
+			prop(ADDR((propdata_t){.mapin=P(simu->dmprojsq, idm), .locout=loc, .phiout=P(opd), .alpha=alpha, 
 				.hs=hs, .thetax=parms->wfs[iwfs].thetax, .thetay=parms->wfs[iwfs].thetay, 
-				.misregx=misregx, .misregy=misregy});
+				.misregx=misregx, .misregy=misregy}));
 		}
 	}
 }
@@ -92,8 +92,8 @@ void wfs_ideal_atm(sim_t* simu, dmat* opd, int iwfs, real alpha){
 void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 	const parms_t *parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
-	const int illt=P(parms->powfs[ipowfs].llt->i, wfsind);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
+	const int illt=(int)P(parms->powfs[ipowfs].llt->i, wfsind);
 	if(NE(simu->fsmreal, iwfs)){
 		*ttx=P(P(simu->fsmreal, iwfs), 0);
 		*tty=P(P(simu->fsmreal, iwfs), 1);
@@ -120,12 +120,15 @@ void wfsgrad_llt_tt(real*ttx, real*tty, sim_t* simu, int iwfs, int isim){
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
-   physical optics mode.  */
+   physical optics mode.
 
+   @param[in] info Thread data; info->data is sim_t, which is updated, and info->start is the WFS index.
+   @return NULL.
+*/
 void* wfsgrad_iwfs(thread_t* info){
 	sim_t* simu=(sim_t*)info->data;
 	const int isim=simu->wfsisim;
-	const int iwfs=info->start;
+	const int iwfs=(int)info->start;
 	const parms_t* parms=simu->parms;
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(isim<parms->powfs[ipowfs].step) return NULL;
@@ -147,11 +150,11 @@ void* wfsgrad_iwfs(thread_t* info){
 	const real dt=parms->sim.dt;
 	/*The following are truly constants for this powfs */
 	const int imoao=parms->powfs[ipowfs].moao;
-	const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+	const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 	const int dtrat=parms->powfs[ipowfs].dtrat;
-	const int save_gradgeom=P(parms->save.gradgeom, iwfs);
-	const int save_opd=P(parms->save.wfsopd, iwfs);
-	const int save_ints=P(parms->save.ints, iwfs);
+	const int save_gradgeom=(int)P(parms->save.gradgeom, iwfs);
+	const int save_opd=(int)P(parms->save.wfsopd, iwfs);
+	const int save_ints=(int)P(parms->save.ints, iwfs);
 	const int noisy=parms->powfs[ipowfs].noisy;
 	/*The following depends on isim */
 	const int do_phy=simu->wfsflags[ipowfs].do_phy;
@@ -183,7 +186,7 @@ void* wfsgrad_iwfs(thread_t* info){
 				wfs_propdata->phiout=P(opd);
 				if(parms->atm.dtrat>0){
 					real wt;
-					int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
+					int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, (int)NX(atm), parms->atm.interp);
 					wfs_propdata->alpha=atmscale*wt;
 					wfs_propdata->mapin=P(atm, iframe);
 				}else{
@@ -270,8 +273,8 @@ void* wfsgrad_iwfs(thread_t* info){
 			if(dmwfs[iwfs]){
 				/* No need to do mis registration here since the MOAO DM is attached
 				to close to the WFS.*/
-				prop(&(propdata_t){.locin=P(recon->moao[imoao].aloc, 0), .phiin=P(dmwfs[iwfs]),
-					.ptsout=powfs[ipowfs].pts, .phiout=P(opd), .alpha=-1});
+				prop(ADDR((propdata_t){.locin=P(recon->moao[imoao].aloc, 0), .phiin=P(dmwfs[iwfs]),
+					.ptsout=powfs[ipowfs].pts, .phiout=P(opd), .alpha=-1}));
 			}
 		}
 
@@ -310,7 +313,7 @@ void* wfsgrad_iwfs(thread_t* info){
 					real vy=0;
 					map_t *atmi;
 					if(parms->atm.dtrat>0){
-						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, NX(atm), parms->atm.interp);
+						int iframe=atm_interp(&wt, ips, isim, parms->atm.dtrat, (int)NX(atm), parms->atm.interp);
 						atmi=P(atm, iframe);
 					}else{
 						vx=P(atm, ips)->vx;
@@ -318,11 +321,11 @@ void* wfsgrad_iwfs(thread_t* info){
 						atmi=P(atm, ips);
 					}
 				
-					prop(&(propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
+					prop(ADDR((propdata_t){.mapin=atmi, .ptsout=powfs[ipowfs].llt->pts,
 						.phiout=P(lltopd), .alpha=atmscale*wt, .hs=hs, 
 						.thetax=thetax, .thetay=thetay,
 						.shiftx=ox-vx*isim*dt, .shifty=oy-vy*isim*dt,
-						.wrap=1});
+						.wrap=1}));
 				}
 			}
 			if(parms->powfs[ipowfs].idealfsm){
@@ -393,10 +396,9 @@ void* wfsgrad_iwfs(thread_t* info){
 				wfsints_t* intsdata=simu->wfs_intsdata+iwfs;
 				intsdata->ints=ints;
 				intsdata->psfout=psfout;
-				intsdata->pistatout=P(simu->pistatout, iwfs);
-				if(parms->powfs[ipowfs].pistatout && !parms->powfs[ipowfs].pistatstc){
-					intsdata->gradref=*gradcalc;
-				}
+				//pistat is accumulated only after pistatstart, when gradcalc is computed.
+				intsdata->pistatout=do_pistat?P(simu->pistatout, iwfs):NULL;
+				intsdata->gradref=(do_pistat && !parms->powfs[ipowfs].pistatstc)?*gradcalc:NULL;
 				intsdata->opd=opd;
 				intsdata->lltopd=lltopd;
 				intsdata->isim=isim;
@@ -454,8 +456,8 @@ void* wfsgrad_iwfs(thread_t* info){
 						zfarr_push(simu->save->intsny[iwfs], isim, ints);
 					}
 				}
-				if(parms->powfs[ipowfs].i0save==2){
-					dcelladd(&P(simu->ints, iwfs), 1, ints, 1);
+				if(parms->powfs[ipowfs].i0save){
+					dcelladd(&P(simu->intsout, iwfs), 1, ints, 1);
 				}
 				if(abs(parms->powfs[ipowfs].dither)==1 && isim>=parms->powfs[ipowfs].dither_ogskip
 					&&parms->powfs[ipowfs].type==WFS_SH
@@ -536,7 +538,7 @@ static void wfsgrad_lgsfocus(sim_t* simu){
 			continue;
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 			real focus=P(P(LGSfocus, iwfs), 0);
 			P(P(simu->LGSfocusts, iwfs), 0, isim)=focus;//save time history
 			if(parms->sim.mffocus){
@@ -565,7 +567,7 @@ void* wfsgrad_post(thread_t* info){
 	const parms_t* parms=simu->parms;
 	//Postprocessing gradients
 	const int isim=simu->wfsisim;
-	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	for(int iwfs=(int)info->start; iwfs<info->end; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		if(isim<parms->powfs[ipowfs].step) continue;
 #if USE_CUDA
@@ -662,7 +664,7 @@ void* wfsgrad(sim_t* simu){
 	if(parms->plot.run){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			int ipowfs=parms->wfs[iwfs].powfs;
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
+			int jwfs=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 			drawgrad("Gcl", simu->powfs[ipowfs].saloc, PR(simu->powfs[ipowfs].saa,jwfs),P(simu->gradcl, iwfs),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.gmax,
 				"WFS Closeloop Gradients Calibrated", "x (m)", "y (m)", "WFS %d", iwfs);

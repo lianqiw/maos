@@ -49,7 +49,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 	const loc_t* plocs=aper->locs;
 	real* x=plocs->locx;
 	real* y=plocs->locy;
-	int nloc=plocs->nloc;
+	long nloc=plocs->nloc;
 	real* amp=P(aper->amp);
 	const int nmod=ngsmod->nmod;
 	dcell* mcc=dcellnew(parms->evl.nevl, 1);
@@ -83,7 +83,7 @@ static dcell* ngsmod_mcc(const parms_t* parms, recon_t* recon, const aper_t* ape
 			real thetax=P(parms->evl.thetax,ievl);
 			real thetay=P(parms->evl.thetay,ievl);
 
-			for(int iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				real xx=x[iloc]*x[iloc];
 				real xy=x[iloc]*y[iloc];
 				real yy=y[iloc]*y[iloc];
@@ -152,7 +152,7 @@ static void ngsmod_dm(dcell** dmc, const recon_t* recon, const dcell* M, real ga
 	real MCC_fcp=ngsmod->aper_fcp;
 	loc_t** aloc=P(recon->aloc);
 	//convert mode vector and add to dm commands 
-	const int ndm=NX(recon->aloc);
+	const int ndm=(int)NX(recon->aloc);
 	if(!*dmc){
 		*dmc=dcellnew(ndm, 1);
 	}
@@ -461,14 +461,14 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* wfsmask
 		if((!wfsmask||P(wfsmask, iwfs))&&P(GM, iwfs)&&P(saneai, iwfs, iwfs)->px[0]>0){
 			dbg(" %d", iwfs);
 			P(GM2, iwfs)=ddup(P(GM, iwfs));
-			nmod=P(GM2, iwfs)->ny;
-			int ng=P(GM2, iwfs)->nx;
+			nmod=(int)P(GM2, iwfs)->ny;
+			long ng=P(GM2, iwfs)->nx;
 			if(ng>=8){//TTF OIWFS
 				nttf++;
 			} else if(ng==2){
 				ntt++;
 			} else{
-				error("Unknown WFS type: ng=%d\n", ng);
+				error("Unknown WFS type: ng=%ld\n", ng);
 			}
 		}
 	}
@@ -516,7 +516,7 @@ static dcell* inv_gm(const dcell* GM, const dspcell* saneai, const lmat* wfsmask
 		if(P(GM2, iwfs)){
 			for(int imod=0; imod<nmod; imod++){
 				if(!P(Mctrl, imod)){
-					int ng=P(GM2, iwfs)->nx;
+					long ng=P(GM2, iwfs)->nx;
 					memset(PCOL(P(GM2, iwfs), imod), 0, ng*sizeof(real));
 				}
 			}
@@ -782,19 +782,22 @@ void ngsmod_remove(sim_t* simu, dcell* dmerr){
 	if(!dmerr||!ngsmod->Pngs) return;
 	
 	if(parms->tomo.ahst_wt==4){//this is equivalent to ahst_wt=1 for 2 dms.
-		dcellzero(simu->Mtmp_lo);
-		dcellmm(&simu->Mtmp_lo, ngsmod->Pngs2, dmerr, "nn", 1);
+		//simu->Mtmp_lo is 1x1 of nmod. Pngs2 output is ndm x 1 of nmod+1 (includes piston).
+		dcell *Mtmp=NULL;
+		dcellmm(&Mtmp, ngsmod->Pngs2, dmerr, "nn", 1);
 		//if ndm==1, remove all 2nd order modes from ground DM since LGS cannot sense them properly
 		//if ndm>1 and ahst_keepfocus=0, remove focus from all DMs. LGS focus is not reliable
 		//merge 2nd order modes from upper DMs to ground DM.
-		const int im0=parms->ndm==1?ngsmod->nmod:(parms->tomo.ahst_keepfocus?3:4);
-		for(int im=im0; im<ngsmod->nmod; im++){
-			P(P(simu->Mtmp_lo, 0), im)=0;
+		const int nmod2=(int)NX(P(Mtmp, 0));
+		const int im0=parms->ndm==1?nmod2:(parms->tomo.ahst_keepfocus?3:4);
+		for(int im=im0; im<nmod2; im++){
+			P(P(Mtmp, 0), im)=0;
 			for(int idm=1; idm<parms->ndm; idm++){
-				P(P(simu->Mtmp_lo, 0), im)-=P(P(simu->Mtmp_lo, idm), im);
+				P(P(Mtmp, 0), im)-=P(P(Mtmp, idm), im);
 			}
 		}
-		dcellmm(&dmerr, ngsmod->Modes2, simu->Mtmp_lo, "nn", -1);//t/t are removed from all dms.
+		dcellmm(&dmerr, ngsmod->Modes2, Mtmp, "nn", -1);//t/t are removed from all dms.
+		dcellfree(Mtmp);
 	}else{
 		dcellzero(simu->Mngs_hi);
 		dcellmm(&simu->Mngs_hi, ngsmod->Pngs, dmerr, "nn", 1);

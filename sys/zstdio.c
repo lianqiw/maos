@@ -100,11 +100,18 @@ int zstd_write(zstd_t *zf, const void *buf, size_t size) {
 int zstd_flush(zstd_t *zf) {
 	return handle_output(zf, 1, 0, 0);
 }
-/* Read buffer.  Returns 0 if success, -1 if error,  -2 if EOF.*/
-size_t zstd_read(zstd_t *zf, void *buf, size_t size) {
+/**
+   Read and decompress into buffer.
+
+   @param[in,out] zf zstd context opened for reading.
+   @param[out] buf Buffer to receive the decompressed data.
+   @param[in] size Number of bytes to read.
+   @return 0 if success, -1 if error or zf is invalid, -2 if EOF before size bytes are read.
+*/
+int zstd_read(zstd_t *zf, void *buf, size_t size) {
     if (!zf || zf->mode != 'r'){
 		warning("zstd_read has wrong parameters\n");
-		return 0;
+		return -1;
 	}
 
     ZSTD_outBuffer output = { buf, size, 0 };

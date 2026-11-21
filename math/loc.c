@@ -93,6 +93,15 @@ loc_t* loc_convert(dmat* A){
 	return loc;
 }
 /**
+   loc_convert() with the signature required by cellconvert().
+
+   @param[in,out] A Input dmat object as cell*. See loc_convert().
+   @return The converted loc_t as cell*.
+*/
+cell* loc_convert_cell(cell* A){
+	return (cell*)loc_convert(dmat_cast(A));
+}
+/**
    Create a loc with nloc elements.
 */
 loc_t* locnew(long nloc, real dx, real dy){
@@ -165,6 +174,7 @@ lmat* loc_create_embed(long* nembed, const loc_t* loc, real oversize, int fftpad
 	} else{
 		if(*nembed<(long)(nxy*0.6)){
 			error("Supplied nembed %ld is too small, recommend %ld\n", *nembed, nxy);
+			return NULL;
 		} else if(*nembed<nxy){
 			warning("Supplied nembed %ld is too small, recommend %ld\n", *nembed, nxy);
 		}
@@ -228,13 +238,11 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 		if(map_nx>nx||map_ny>ny){
 			error("Specified size %dx%d is too small, need at least %ldx%ld\n",
 				nx, ny, map_nx, map_ny);
+			UNLOCK(maplock);
+			return;
 		}
-		if(npad<(nx-map_nx)/2){
-			npad=(nx-map_nx)/2;
-		}
-		if(npad>(ny-map_ny)/2){
-			npad=(ny-map_ny)/2;
-		}
+		//the guaranteed padding on all sides is the requested npad plus the minimum extra padding along x and y.
+		npad+=(int)MIN((nx-map_nx)/2, (ny-map_ny)/2);
 		xmin-=((nx-map_nx)/2)*loc->dx;
 		ymin-=((ny-map_ny)/2)*loc->dy;
 		map_nx=nx;
@@ -299,7 +307,7 @@ void loc_create_map_npad(const loc_t* loc, int npad, int nx, int ny){
 										iphi--;
 										real rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
 										if(P(level, jx, jy)<min_level){
-											min_level=P(level, jx, jy);
+											min_level=(int)P(level, jx, jy);
 											min_rad=rad;
 											min_sep=sep;
 											min_jy=jy;
@@ -357,7 +365,8 @@ void loc_embed(anydmat _dest, const loc_t* loc, const_anydmat _in, int expanded,
 	dmat *dest=dmat_cast(_dest.dm);
 	dmat *in=dmat_cast(_in.dm);
 	if(!dest || !in){
-		error("Needs implementation for these types: %u %u", _dest.dm->id, _in.dm->id);
+		error("Needs implementation for these types: %u %u", _dest.dm?_dest.dm->id:0, _in.dm?_in.dm->id:0);
+		return;
 	}
 	if(!dest->nx||!dest->ny){
 		dresize(dest, map->nx-loc->npad*2, map->ny-loc->npad*2);
@@ -394,14 +403,15 @@ dcell* loc_embed2(const loc_t* loc, const dmat* arr){
 		arrnx=arr->ny;
 		arrny=1;
 	}
-	int nx=arrnx/loc->nloc;
-	int ny=arrny;
+	long nx=arrnx/loc->nloc;
+	long ny=arrny;
 	if(nx*loc->nloc!=arrnx){
 		error("arr has wrong dimension: %ldx%ld. loc length is %ld \n", arrnx, arrny, loc->nloc);
+		return NULL;
 	}
 	dcell* dest=dcellnew(nx, ny);
 	dmat *tmp=dnew_do(loc->nloc,1,P(arr),0);//weak reference
-	for(int ix=0; ix<nx*ny; ix++){
+	for(long ix=0; ix<nx*ny; ix++){
 		P(dest, ix)=dnew(loc->map->nx, loc->map->ny);
 		tmp->p=&P(arr, ix*loc->nloc);
 		loc_embed(P(dest, ix), loc, tmp, 0, 0);
@@ -426,6 +436,7 @@ void loc_embed_cell(dcell** pdest, const loc_t* loc, const dcell* in){
 	dcell* dest=*pdest;
 	if(dest->nx!=map->nx||dest->ny!=map->ny){
 		error("dest and map doesn't agree\n");
+		return;
 	}
 	for(long i=0; i<map->nx*map->ny; i++){
 		long iphi=P(map,i);
@@ -445,10 +456,12 @@ void loc_extract(dmat* dest, const loc_t* loc, map_t* in){
 	map_t* map=loc->map;
 	if(!map){
 		error("map is null\n");
+		return;
 	}
 	if(in->nx!=map->nx||in->ny!=map->ny){
 		error("in and map doesn't agree: in is %ldx%ld, map is %ldx%ld\n",
 			in->nx, in->ny, map->nx, map->ny);
+		return;
 	}
 	real* restrict pdest1=P(dest)-1;//iphi count from 1
 	for(long i=0; i<map->nx*map->ny; i++){
@@ -475,7 +488,7 @@ loc_t* loc_from_map(map_t* map, real thres){
 	loc_t* loc=locnew(nx*ny, dx, dy);
 	long count=0;
 	for(iy=0; iy<ny; iy++){
-		int istart=-1,iend=-1;
+		long istart=-1,iend=-1;
 		for(ix=0; ix<nx; ix++){
 			if(P(map, ix, iy)>thres){
 				istart=ix;
@@ -498,7 +511,6 @@ loc_t* loc_from_map(map_t* map, real thres){
 	}
 	if(!count){
 		warning("loc_from_map: there are 0 points.\n");
-		writebin(map, "loc_from_map");
 		print_backtrace();
 	}
 	locresize(loc, count);
@@ -628,9 +640,9 @@ dmat* loc_mcc_ptt(const loc_t* loc, const real* amp){
 dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 	if(!pts) return NULL;
 	const int nmod=3;
-	const int nsa=pts->nsa;
+	const long nsa=pts->nsa;
 	dcell* mcc=dcellnew_same(nsa, 1, nmod, nmod);
-	for(int isa=0; isa<nsa; isa++){
+	for(long isa=0; isa<nsa; isa++){
 		const real origy=pts->origy[isa];
 		const real origx=pts->origx[isa];
 		const real dx=pts->dx;
@@ -668,7 +680,7 @@ dcell* pts_mcc_ptt(const pts_t* pts, const real* amp){
 */
 void loc_calc_ptt_stride(real* rmsout, real* coeffout,
 	const loc_t* loc, real ipcc,
-	const dmat* imcc, const real* amp, const real* opd, int stride){
+	const dmat* imcc, const real* amp, const real* opd, long stride){
 	if(!loc||!opd) return;
 	dmat *imcc_internal=NULL;
 	if(imcc){
@@ -734,14 +746,13 @@ void loc_calc_ptt(real *rmsout, real *coeffout,
 
    coeffout is in unit of zernike!
 */
-void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod,
-	const real* amp, real* opd){
-	if(!mod||!opd) return;
-	const int nmod=mod->ny;
-	const int nloc=mod->nx;
+void loc_calc_mod(real* rmsout, real* coeffout, const dmat* mod, const real* amp, real* opd){
+	if(!mod||!opd||!amp) return;
+	const long nmod=mod->ny;
+	const long nloc=mod->nx;
 	double tot=0; //use double for accumulation
 	double val[nmod];
-	memset(val, 0, sizeof(real)*nmod);
+	memset(val, 0, sizeof(double)*nmod);
 	//val=(Mod*Amp*Opd)
 	for(long iloc=0; iloc<nloc; iloc++){
 		real junk=opd[iloc]*amp[iloc];
@@ -775,7 +786,7 @@ void loc_sub_ptt(dmat* opd, const real* ptt, const loc_t* loc){
 /**
    Add Piston/Tip/Tilt from OPD
 */
-void loc_add_ptt_stride(real *opd, int stride, const real *ptt, const loc_t *loc){
+void loc_add_ptt_stride(real *opd, long stride, const real *ptt, const loc_t *loc){
 	if(!opd||!ptt||!loc) return;
 	const long nloc=loc->nloc;
 	const real *restrict locx=loc->locx;
@@ -851,15 +862,21 @@ real loc_remove_focus_grad(dmat *grad, const loc_t *saloc, real factor){
 }
 /**
    Compute zernike best fit for all subapertures. add result to out.  returns
-   radians not zernike modes of tip/tilt. Used in wfsgrad */
-void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc,
-	const real* amp, const real* opd){
-	if(!pts||!imcc|!opd) return;
-	const int nsa=pts->nsa;
+   radians not zernike modes of tip/tilt. Used in wfsgrad
+
+   @param[in,out] out Gradients, x for all subapertures followed by y. Allocated if NULL; otherwise accumulated into.
+   @param[in] pts The subaperture points.
+   @param[in] imcc Inverse of 3x3 mode covariance for each subaperture.
+   @param[in] amp Amplitude, nxsa*nysa per subaperture.
+   @param[in] opd OPD, nxsa*nysa per subaperture.
+*/
+void pts_ztilt(dmat** out, const pts_t* pts, const dcell* imcc, const real* amp, const real* opd){
+	if(!pts||!imcc||!opd) return;
+	const long nsa=pts->nsa;
 	assert(imcc->nx==nsa&&imcc->ny==1);
 	if(!*out) *out=dnew(nsa*2, 1);
 	real* res=P(*out);
-	for(int isa=0; isa<nsa; isa++){
+	for(long isa=0; isa<nsa; isa++){
 		const real origy=pts->origy[isa];
 		const real origx=pts->origx[isa];
 		const real dx=pts->dx;
@@ -905,14 +922,14 @@ void loc_create_stat_do(loc_t* loc){
 	loc->stat=locstat;
 	const real* locx=loc->locx;
 	const real* locy=loc->locy;
-	int nloc=loc->nloc;
+	long nloc=loc->nloc;
 	real dx=locstat->dx=loc->dx;
 	real dy=locstat->dy=loc->dy;
-	int ncolmax=(int)round((locy[nloc-1]-locy[0])/dy)+2;
+	long ncolmax=(long)round((locy[nloc-1]-locy[0])/dy)+2;
 	locstat->cols=mymalloc(ncolmax, locstatcol_t);
-	int colcount=0;
+	long colcount=0;
 	/*do first column separately. */
-	int iloc=0;
+	long iloc=0;
 	locstat->cols[colcount].pos=iloc;
 	locstat->cols[colcount].xstart=locx[iloc];
 	locstat->cols[colcount].ystart=locy[iloc];
@@ -970,7 +987,7 @@ void loc_circle_add(dmat* phi, const loc_t* loc, real cx, real cy, real r, real 
 	real dyres=res*dy;
 	real res2=res*res;
 	real r2=r*r;
-	real r2l=(r-dx*1.5)*(r-dy*1.5);
+	real r2l=(r>dx*1.5&&r>dy*1.5)?(r-dx*1.5)*(r-dy*1.5):0;
 	real r2u=(r+dx*1.5)*(r+dy*1.5);
 	real* locx=loc->locx;
 	real* locy=loc->locy;
@@ -1028,9 +1045,10 @@ void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy,
 	real ry1=1./ry;
 	real rx12=rx1*rx1;
 	real ry12=ry1*ry1;
-	real r2=2.;
-	real r2l=(rx-dx)*(rx-dx)*rx12+(ry-dy)*(ry-dy)*ry12;
-	real r2u=(rx+dx)*(rx+dx)*rx12+(ry+dy)*(ry+dy)*ry12;
+	real r2=1.;//normalized radius of the ellipse
+	real dr=MAX(fabs(dx)*rx1, fabs(dy)*ry1);//normalized pixel size
+	real r2l=dr<1?(1-dr)*(1-dr):0;
+	real r2u=(1+dr)*(1+dr);
 	real* locx=loc->locx;
 	real* locy=loc->locy;
 	real iix, iiy;
@@ -1059,30 +1077,36 @@ void loc_ellipse_add(dmat* phi, const loc_t* loc, real cx, real cy,
 /**
    Remove points in loc that have zero value in amp and modify amp in the same
    time. Keep each row continuous if cont==1. Return in skipout the index of
-   skipped points if skipout is not NULL.  */
+   skipped points if skipout is not NULL.
 
+   @param[in,out] loc The loc. Reduced in place.
+   @param[in,out] amp Amplitude on loc. Reduced in place.
+   @param[in] thres Points with amp below thres are removed. EPS is used if <=0.
+   @param[in] cont 0: remove any point below thres. 1: only remove points at the ends of each column. Other: within each column, switch between keep and skip only after 4 consecutive points of the same kind.
+   @param[out] skipout Newly allocated array of nloc flags marking removed points; the caller frees it. Skipped if NULL.
+*/
 void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 	if(!loc||!amp) return;
 	if(thres<=0) thres=EPS;
 	int redo_stat=loc->stat?1:0;
-	int nloc=loc->nloc;
+	long nloc=loc->nloc;
 	int* skip=mycalloc(nloc, int);
 	if(cont){/*make sure loc is continuous. */
 		loc_create_stat(loc);
 		locstat_t* locstat=loc->stat;
-		int ncol=locstat->ncol;
-		for(int icol=0; icol<ncol; icol++){
-			int pstart=locstat->cols[icol].pos;
-			int pend=locstat->cols[icol+1].pos;
+		long ncol=locstat->ncol;
+		for(long icol=0; icol<ncol; icol++){
+			long pstart=locstat->cols[icol].pos;
+			long pend=locstat->cols[icol+1].pos;
 			if(cont==1){//original method
-				for(int pos=pstart; pos<pend; pos++){
+				for(long pos=pstart; pos<pend; pos++){
 					if(P(amp, pos)<thres){
 						skip[pos]=1;
 					} else{
 						break;
 					}
 				}
-				for(int pos=pend-1; pos>pstart-1; pos--){
+				for(long pos=pend-1; pos>pstart-1; pos--){
 					if(P(amp, pos)<thres){
 						skip[pos]=1;
 					} else{
@@ -1092,7 +1116,7 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 			}else{//new method
 			int nkeep=0, nskip=0;//count continuous keep/skip
 			int lastskip=1;
-			for(int pos=pstart; pos<pend; pos++){
+			for(long pos=pstart; pos<pend; pos++){
 				if(P(amp,pos)<thres){
 					nskip++;
 					nkeep=0;
@@ -1117,14 +1141,14 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
 			}
 		}
 	} else{
-		for(int iloc=0; iloc<nloc; iloc++){
+		for(long iloc=0; iloc<nloc; iloc++){
 			if(P(amp,iloc)<thres){
 				skip[iloc]=1;
 			}
 		}
 	}
-	int count=0;
-	for(int iloc=0; iloc<nloc; iloc++){
+	long count=0;
+	for(long iloc=0; iloc<nloc; iloc++){
 		loc->locx[count]=loc->locx[iloc];
 		loc->locy[count]=loc->locy[iloc];
 		P(amp,count)=P(amp,iloc);
@@ -1146,7 +1170,7 @@ void loc_reduce(loc_t* loc, dmat* amp, real thres, int cont, int** skipout){
    a dspcell, to compute the coupling which is modified accordingly.  */
 void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 	if(!loc||!spc) return;
-	int nloc=loc->nloc;
+	long nloc=loc->nloc;
 	dmat* sum=NULL;
 	for(int isp=0; isp<spc->nx*spc->ny; isp++){
 		if(P(spc,isp)){
@@ -1157,23 +1181,25 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 	}
 	if(!sum||sum->nx*sum->ny!=loc->nloc){
 		error("Mismatch\n");
+		dfree(sum);
+		return;
 	}
 	int* skip;
 	loc_reduce(loc, sum, EPS, cont, &skip);
 	dfree(sum);
-	int count;
+	long count;
 	if(dim==1){/*opd(loc)=sp*opd(locin); */
 		count=0;
-		int* map=mycalloc(nloc, int);
-		for(int iloc=0; iloc<nloc; iloc++){
-			map[iloc]=count;
+		spint* map=mycalloc(nloc, spint);
+		for(long iloc=0; iloc<nloc; iloc++){
+			map[iloc]=(spint)count;
 			if(!skip[iloc]) count++;
 		}
 		for(int isp=0; isp<spc->nx*spc->ny;isp++){
 			dsp* sp=P(spc,isp);
 			if(!sp) continue;
 			sp->nx=count;
-			for(int iz=0; iz<sp->nzmax; iz++){
+			for(long iz=0; iz<sp->pp[sp->ny]; iz++){
 				sp->pi[iz]=map[sp->pi[iz]];
 			}
 		}
@@ -1183,7 +1209,7 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
 			dsp* sp=P(spc,isp);
 			if(!sp) continue;
 			count=0;
-			for(int iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				if(!skip[iloc]){
 					sp->pp[count]=sp->pp[iloc];
 					count++;
@@ -1202,27 +1228,29 @@ void loc_reduce_spcell(loc_t* loc, dspcell* spc, int dim, int cont){
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t* loc, dsp* sp, int dim, int cont){
 	if(!loc||!sp) return;
-	int nloc=loc->nloc;
-	if((dim==1&&nloc!=sp->nx)||(dim==2&&nloc!=sp->ny)||dim<0||dim>2)
+	long nloc=loc->nloc;
+	if((dim==1&&nloc!=sp->nx)||(dim==2&&nloc!=sp->ny)||dim<1||dim>2){
 		error("Mismatch dimension\n");
+		return;
+	}
 	dmat* sum=dspsumabs(sp, 3-dim);
 	int* skip=NULL;
 	loc_reduce(loc, sum, EPS, cont, &skip);
 	dfree(sum);
-	int count=0;
+	long count=0;
 	if(dim==1){/*opd(loc)=sp*opd(locin); */
-		int* map=mycalloc(nloc, int);
-		for(int iloc=0; iloc<nloc; iloc++){
-			map[iloc]=count;
+		spint* map=mycalloc(nloc, spint);
+		for(long iloc=0; iloc<nloc; iloc++){
+			map[iloc]=(spint)count;
 			if(!skip[iloc]) count++;
 		}
 		sp->nx=count;
-		for(int iz=0; iz<sp->nzmax; iz++){
+		for(long iz=0; iz<sp->pp[sp->ny]; iz++){
 			sp->pi[iz]=map[sp->pi[iz]];
 		}
 		free(map);
 	} else if(dim==2){
-		for(int iloc=0; iloc<nloc; iloc++){
+		for(long iloc=0; iloc<nloc; iloc++){
 			if(!skip[iloc]){
 				sp->pp[count]=sp->pp[iloc];
 				count++;
@@ -1354,7 +1382,7 @@ real loc_angle(const loc_t* loc1, const loc_t* loc2){
 			count++;
 		}
 	}
-	sina/=count;
+	if(count) sina/=count;
 	return asin(sina);
 }
 /**
@@ -1421,6 +1449,7 @@ dmat* parse_poly(const char* _ps){
 				if(P(cx, 0, icx)==0) P(cx, 0, icx)=1;
 			} else{
 				error("Unable to parse (%s). ps=(%s)\n", _ps, ps);
+				goto fail;
 			}
 		} else{
 			ps=endptr;
@@ -1442,6 +1471,7 @@ dmat* parse_poly(const char* _ps){
 					P(cx, iy, icx)+=strtol(ps, &endptr, 10);
 					if(ps==endptr){
 						error("Unable to parse %s\n", _ps);
+						goto fail;
 					}
 					ps=endptr;
 				} else{
@@ -1451,10 +1481,11 @@ dmat* parse_poly(const char* _ps){
 				P(cx, 0, icx)*=strtod(ps, &endptr);
 				if(ps==endptr){
 					error("Unable to parse %s\n", _ps);
+					goto fail;
 				}
 				ps=endptr;
 			}
-			while(ps[0]==' ') ps++;
+			while(ps[0]==' '||ps[0]=='*') ps++;//factors may be separated by *
 		}
 		icx++;
 		if(ps[0]==';'||ps[0]==0){
@@ -1467,11 +1498,15 @@ dmat* parse_poly(const char* _ps){
 			}
 		} else{
 			error("Unable to parse (%s)\n", ps);
+			goto fail;
 		}
 	}
 	ncx=icx;
 	dresize(cx, 3, ncx);
 	return cx;
+fail:
+	dfree(cx);
+	return NULL;
 
 }
 static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
@@ -1486,7 +1521,7 @@ static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
 	for(int ic=0; ic<cx->ny; ic++){
 		int ocx=(int)round(P(cx, 1, ic));
 		int ocy=(int)round(P(cx, 2, ic));
-		if((P(cx, 1, ic)-ocx)>EPS||(P(cx, 2, ic)-ocy)>EPS){//not integer
+		if(fabs(P(cx, 1, ic)-ocx)>EPS||fabs(P(cx, 2, ic)-ocy)>EPS||ocx<0||ocy<0){//not integer or negative
 			nonint=1;
 		}
 		if(ocx>np) np=ocx;
@@ -1495,7 +1530,7 @@ static loc_t* loctransform_do(const loc_t* loc, const dmat* cx, const dmat* cy){
 	for(int ic=0; ic<cy->ny; ic++){
 		int ocx=(int)round(P(cy, 1, ic));
 		int ocy=(int)round(P(cy, 2, ic));
-		if((P(cy, 1, ic)-ocx)>EPS||(P(cy, 2, ic)-ocy)>EPS){//not integer
+		if(fabs(P(cy, 1, ic)-ocx)>EPS||fabs(P(cy, 2, ic)-ocy)>EPS||ocx<0||ocy<0){//not integer or negative
 			nonint=1;
 		}
 		if(ocx>np) np=ocx;
@@ -1551,6 +1586,22 @@ loc_t* loctransform2(const loc_t* loc, /**<Input loc_t*/
 	return locm;
 }
 /**
+   Whether p points to a dmat (cast to char*) rather than a string. The bytes
+   are compared one at a time to avoid an unaligned load and reading past the
+   end of a short string.
+
+   @param[in] p dmat or string.
+   @return 1 if p starts with the dmat magic number.
+*/
+static int is_dmat_id(const char *p){
+	const unsigned char *b=(const unsigned char *)p;
+	const uint32_t id=M_REAL;
+	for(int i=0; i<4; i++){
+		if(b[i]!=((id>>(8*i))&0xFF)) return 0;
+	}
+	return 1;
+}
+/**
    Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym.
    polyn contains the formula
    \f[
@@ -1567,7 +1618,7 @@ loc_t* loctransform(const loc_t* loc,
 	int input_type;
 	if(check_suffix(polycoeff, ".bin")){//file input
 		input_type=1;
-	} else if(*((const uint32_t*)polycoeff)==M_REAL){//dmat input
+	} else if(is_dmat_id(polycoeff)){//dmat input
 		input_type=2;
 	} else{
 		input_type=0;//string input as formula
@@ -1593,7 +1644,11 @@ loc_t* loctransform(const loc_t* loc,
 		char* polyn=strdup(polycoeff);
 		char* px=polyn;
 		char* py=strchr(polyn, ';');
-		if(py==px||!py) error("Wrong format. There should be a ';': {%s}\n", polycoeff);
+		if(py==px||!py){
+			error("Wrong format. There should be a ';': {%s}\n", polycoeff);
+			free(polyn);
+			return NULL;
+		}
 		py[0]='\0';
 		py++;
 		//info("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
@@ -1662,12 +1717,13 @@ void locresize(loc_t* loc, long nloc){
 	}								\
 	X(mat*) p=*out;							\
 	real dx1=1./locstat->dx;					\
+	real dy1=1./locstat->dy;					\
 	long xoff0=((*out)->nx - locstat->nx +1)/2;			\
 	long yoff0=((*out)->ny - locstat->ny +1)/2;			\
 									\
 	for(long icol=0; icol<locstat->ncol; icol++){			\
 	    long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1); \
-	    long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
+	    long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dy1); \
 	    long pos1=locstat->cols[icol].pos;				\
 	    long pos2=locstat->cols[icol+1].pos;			\
 	    T *restrict dest=&P(p,xoff+xoff0,yoff+yoff0);		\
@@ -1766,8 +1822,8 @@ void loc_keywords(cell *p){
 	if(p->id==M_LOC){
 		loc_t *loc=(loc_t*)p;
 		if(loc->keywords) free(loc->keywords);
-		char str[120];
-		snprintf(str, 120, "dx=%.15g;\ndy=%.15g;ht=%.15g\n;iac=%.15g;\ndratio=%.15g;\naoi=%.15g\n", loc->dx, loc->dy, loc->ht, loc->iac, loc->dratio, loc->aoi);
+		char str[256];
+		snprintf(str, sizeof(str), "dx=%.15g;\ndy=%.15g;ht=%.15g\n;iac=%.15g;\ndratio=%.15g;\naoi=%.15g\n", loc->dx, loc->dy, loc->ht, loc->iac, loc->dratio, loc->aoi);
 		loc->keywords=strdup(str);
 	}
 }
@@ -1785,17 +1841,19 @@ lmat* loc_coord2ind(loc_t* aloc,       /**<[in] Aloc*/
 	}
 	if(NY(dead)!=2&&NY(dead)!=3){
 		error("dead must contain 2 or 3 columns of data. %ldx%ld\n", NX(dead), NY(dead));
+		return NULL;
 	}
 	loc_create_map(aloc);
 	map_t* map=aloc->map;
 	real ox=aloc->map->ox;
 	real oy=aloc->map->oy;
 	real dx1=1./aloc->dx;
+	real dy1=1./aloc->dy;
 	dmat* ps=dead/*PDMAT*/;
 	lmat* out=lnew(aloc->nloc, 1);
 	for(long jact=0; jact<NX(dead); jact++){
 		long mapx=(long)round((P(ps, jact, 0)-ox)*dx1);
-		long mapy=(long)round((P(ps, jact, 1)-oy)*dx1);
+		long mapy=(long)round((P(ps, jact, 1)-oy)*dy1);
 		long iact=loc_map_get(map, mapx, mapy)-1;
 		if(iact>=0){
 			P(out, iact)=(NY(dead)==3?P(ps, jact, 2)*1e9:1);//integer in nm.

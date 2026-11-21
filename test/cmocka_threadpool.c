@@ -15,17 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <stdint.h>
-#include <cmocka.h>
-#include "../lib/aos.h"
+#include "unittest.h"
 
 static void dummy_loader(unsigned int depth, unsigned int n, int urgent);
-static void dummy_quitfun(const char *msg){
-    info("quitfun called with %s.\n", msg);
-}
 typedef struct data_t{
 	unsigned int i;
 	unsigned int n;
@@ -34,7 +26,8 @@ typedef struct data_t{
 	int urgent;
 }data_t;
 
-static void* dummy_runner(data_t *data){
+static void* dummy_runner(void *pdata){
+	data_t *data=(data_t *)pdata;
 	int do_loader=0;
 	unsigned int i;
 	unsigned int tot=0;
@@ -55,7 +48,7 @@ static void dummy_loader(unsigned int depth, unsigned int n, int urgent){
 	//dbg("depth=%u\n", depth);
 	data_t data={0,n,0,depth-1,urgent};
 	tp_counter_t counter={0};
-	thread_pool_queue(&counter, (thread_wrapfun)dummy_runner, &data, n, urgent);
+	thread_pool_queue(&counter, dummy_runner, &data, n, urgent);
 	thread_pool_wait(&counter, urgent);
 	assert_int_equal(data.tot, n*(n-1)/2);
 	if(data.tot!=n*(n-1)/2){
@@ -65,38 +58,26 @@ static void dummy_loader(unsigned int depth, unsigned int n, int urgent){
 static void test_thread_pool(void** state){
     (void)state;
 	thread_pool_init(NTHREAD);
-	dummy_loader(100,1000,1);
+	dummy_loader(100, 1000, 1);
+	dummy_loader(20, 1000, 0);
+	dummy_loader(1, 1, 0);
+	thread_pool_destroy();
 }
-void print_mem_debug();
+/** Memory accounting works with concurrent allocation and free from OpenMP threads. */
 static void test_mem(void** state){
 	(void)state;
-#pragma omp parallel for	
+	long count=0;
+#pragma omp parallel for reduction(+:count)
 	for(int i=0; i<10000; i++){
 		int *a=mycalloc(100, int);
 		a[0]=1;
 		a[99]=1;
+		count+=a[0]+a[99]+a[50];
 		myfree(a);
 	}
+	assert_int_equal(count, 20000);
 }
-int main(void){
-#if 0
-    quitfun=dummy_quitfun;
-    LOG_LEVEL=0;
-    const struct CMUnitTest tests[]={
-        cmocka_unit_test(test_thread_pool),
-		cmocka_unit_test(test_mem)
-    };
-
-    return cmocka_run_group_tests(tests, NULL, NULL);
-#else	
-	//test_mem(NULL);
-	int nrepeat=0;
-	if((nrepeat++)<100){//recursive call to catch error with gdb.
-		test_thread_pool(NULL);
-		thread_pool_destroy();
-	}
-	(void) test_thread_pool;
-	(void)dummy_quitfun;
-	(void) test_mem;
-#endif	
-}
+UNITTEST_MAIN(
+	cmocka_unit_test(test_thread_pool),
+	cmocka_unit_test(test_mem),
+)

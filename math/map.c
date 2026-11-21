@@ -31,6 +31,15 @@ map_t* map_convert(dmat *A){
 	if(map->keywords) map_parse_keywords(map); 
 	return map;
 }
+/**
+   map_convert() with the signature required by cellconvert().
+
+   @param[in,out] A Input dmat object as cell*. See map_convert().
+   @return The converted map_t as cell*.
+*/
+cell* map_convert_cell(cell* A){
+	return (cell*)map_convert(dmat_cast(A));
+}
 
 /**
  * @brief Convert a dmat in place to rmap object. Ensure that the type is properly initialized
@@ -154,7 +163,10 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		real minx=-R-guard, miny=-R-guard, maxx=R+guard, maxy=R+guard;
 		if(dirs && ht0!=0){
 			if(dirs->nx<4||dirs->ny<=0){
-				error("dirs should have no less than 3 rows and positive number of cols.\n");
+				error("dirs should have no less than 4 rows and positive number of cols.\n");
+				if(nxout) *nxout=0;
+				if(nyout) *nyout=0;
+				return;
 			}
 			for(int idir=0; idir<dirs->ny; idir++){
 				real ht=ht0-P(dirs,3, idir);//hc
@@ -179,11 +191,11 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 			}
 			//info("range is %g, %g; %g, %g, maxR=%g\n", minx, maxx, miny, maxy, maxR);
 		}else if(ht0!=0){
-			error("if ht0 is 0, dirs must be set\n");
+			error("if ht0 is not 0, dirs must be set\n");
 		}
 		ox=floor(minx/dx)*dx;//round
 		nx=ceil((maxx-ox)/dx)+1;
-		oy=floor(miny/dx)*dx;
+		oy=floor(miny/dy)*dy;
 		ny=ceil((maxy-oy)/dy)+1;
 		//info("ox=%g, oy=%g, nx=%ld, ny=%ld\n", ox, oy, nx, ny);
 	}
@@ -202,7 +214,7 @@ void create_metapupil(map_t** mapout,/**<[out] map*/
 		long nx2=1<<iceil(log2((real)nx));
 		long ny2=1<<iceil(log2((real)ny));
 		ox-=(nx2-nx)/2*dx;
-		oy-=(ny2-ny)/2*dx;
+		oy-=(ny2-ny)/2*dy;
 		nx=nx2;
 		ny=ny2;
 	}
@@ -334,8 +346,18 @@ void map_make_keywords(cell* p){
 	map_t *map=(map_t *)p;
 	if(map->keywords) free(map->keywords);
 	char keywords[1024];
-	snprintf(keywords, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+	int nk=snprintf(keywords, sizeof(keywords), "ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
 		map->ox, map->oy, map->dx, map->dy, map->ht, map->vx, map->vy);
+	//DM grid only parameters that are parsed by map_parse_keywords.
+	if(map->iac&&nk>0&&nk<(int)sizeof(keywords)){
+		nk+=snprintf(keywords+nk, sizeof(keywords)-nk, "iac=%.15g\n", map->iac);
+	}
+	if(map->dratio&&nk>0&&nk<(int)sizeof(keywords)){
+		nk+=snprintf(keywords+nk, sizeof(keywords)-nk, "dratio=%.15g\n", map->dratio);
+	}
+	if(map->aoi&&nk>0&&nk<(int)sizeof(keywords)){
+		nk+=snprintf(keywords+nk, sizeof(keywords)-nk, "aoi=%.15g\n", map->aoi);
+	}
 	map->keywords=strdup(keywords);
 }
 
@@ -355,8 +377,12 @@ void rmap_make_keywords(cell* p){
 /**
    blend atm1 with atm2 according to wind direction angle and required
    overlapping region of at least overx*overy. Not used.
-*/
 
+   @param[in,out] atm1 First screen. The overlapping region is blended.
+   @param[in,out] atm2 Second screen. Its origin is updated and the overlapping region is blended.
+   @param[in] overx Number of overlapping points along x.
+   @param[in] overy Number of overlapping points along y.
+*/
 void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
 	const long nx=NX(atm1);
 	const long ny=NY(atm1);
@@ -377,7 +403,7 @@ void map_blend(map_t* atm1, map_t* atm2, long overx, long overy){
 	long offy=(ny-overy)*nx;
 	if(ca==0){/*along y. */
 		rr=ny-overy;/*distance between the origins. */
-		atm2->oy=atm1->oy+rr*sa*atm1->dx;
+		atm2->oy=atm1->oy+rr*sa*atm1->dy;
 		atm2->ox=atm1->ox;
 		real wty=sa<0?1:0;
 		real* p1=P(atm1)+(1-(long)wty)*offy;

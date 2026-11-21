@@ -30,10 +30,10 @@
 void X(scale)(X(mat)* A, R w){
 	if(!A || !check_mat(A)) return;
 	if(w==(T)0){
-		memset(P(A), 0, sizeof(T)*A->nx*A->ny);
+		if(P(A)) memset(P(A), 0, sizeof(T)*A->nx*A->ny);
 	} else{
 		OMP_SIMD()
-		for(int i=0; i<A->nx*A->ny; i++){
+		for(long i=0; i<A->nx*A->ny; i++){
 			P(A, i)*=w;
 		}
 	}
@@ -89,7 +89,7 @@ void X(randu)(X(mat)* A, const T max, rand_t* rstat){
 		warning("Input is not valid");
 		return;
 	}
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=RANDU(rstat)*max;
 	}
 }
@@ -102,20 +102,23 @@ void X(randn)(X(mat)* A, const T sigma, rand_t* rstat){
 		warning("Input is not valid");
 		return;
 	}
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)=RANDN(rstat)*sigma;
 	}
 }
 
 /**
-   compute the dot product of A and B. (inner product)
-*/
+   Compute the dot product (inner product) of A and B without conjugation.
 
+   @param[in] A The first matrix.
+   @param[in] B The second matrix. Must have the same size as A.
+   @return sum(A.*B), or 0 if A or B is NULL or empty, or if they do not match (error is raised).
+*/
 T X(dot)(const X(mat)* A, const X(mat)* B){
-	if(!check_match(A, B)) return -1;
+	if(!A||!B||!PN(A)||!PN(B)||!check_match(A, B)) return 0;
 	TD out=0;
 	OMP_SIMD_R(reduction(+:out))
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<A->nx*A->ny; i++){
 		out+=P(A, i)*P(B, i);
 	}
 	if(isnan(REAL(out))){
@@ -132,16 +135,16 @@ T X(dot)(const X(mat)* A, const X(mat)* B){
 T X(wdot)(const T* a, const X(mat)* w, const T* b){
 	if(!check_mat(w)||!a||!b) return 0;
 	TD res=0;
-	for(int j=0; j<w->ny; j++){
+	for(long j=0; j<w->ny; j++){
 		OMP_SIMD_R(reduction(+:res))
-		for(int i=0; i<w->nx; i++){
+		for(long i=0; i<w->nx; i++){
 			res+=P(w, i, j)*a[i]*b[j];
 		}
 	}
 	if(isnan(REAL(res))){
 		writebin(w, "wdot_w");
-		writearr("wdot_a", 1, sizeof(real), M_T, NULL, a, w->nx, w->ny);
-		writearr("wdot_b", 1, sizeof(real), M_T, NULL, b, w->nx, w->ny);
+		writearr("wdot_a", 1, sizeof(T), M_T, NULL, a, w->nx, 1);
+		writearr("wdot_b", 1, sizeof(T), M_T, NULL, b, w->ny, 1);
 		error("NaN found.\n");
 	}
 	return (T)res;
@@ -372,7 +375,7 @@ void X(cwdiv)(X(mat)* B, const X(mat)* A, T value){
 		return;
 	}
 	OMP_SIMD()
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<A->nx*A->ny; i++){
 		P(B, i)/=P(A, i);
 		if(isnan(REAL(P(B, i)))) P(B, i)=value;
 	}
@@ -387,9 +390,9 @@ void X(mulvec)(T* restrict y, const X(mat)* restrict A,
 		warning("input is not valid\n");
 		return;
 	}
-	for(int iy=0; iy<A->ny; iy++){
+	for(long iy=0; iy<A->ny; iy++){
 		OMP_SIMD()
-		for(int ix=0; ix<A->nx; ix++){
+		for(long ix=0; ix<A->nx; ix++){
 			y[ix]+=(x[iy]*alpha)*P(A, ix, iy);
 		}
 	}
@@ -415,11 +418,11 @@ void X(mulvec3)(T* y, const X(mat)* A, const T* x){
 */
 X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 	if(!check_mat(A)||!check(A->nx==wt->nx&&wt->ny==1)) return NULL;
-	int nmod=A->ny;
-	int nsa2=A->nx;
+	long nmod=A->ny;
+	long nsa2=A->nx;
 	X(mat)* ata=X(new)(nmod, nmod);;
-	for(int imod=0; imod<nmod; imod++){
-		for(int jmod=imod; jmod<nmod; jmod++){
+	for(long imod=0; imod<nmod; imod++){
+		for(long jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
 			OMP_SIMD_R(reduction(+:tmp))
 			for(long ik=0; ik<nsa2; ik++){
@@ -439,14 +442,14 @@ X(mat)* X(mcc)(const X(mat)* A, const X(mat)* wt){
 */
 X(mat)* X(tmcc)(const X(mat)* A, const X(mat)* wt){
 	if(!check_mat(A)||!check(A->ny==wt->nx&&wt->ny==1)) return NULL;
-	int nmod=A->nx;
-	int nsa2=A->ny;
+	long nmod=A->nx;
+	long nsa2=A->ny;
 	X(mat)* ata=X(new)(nmod, nmod);;
-	for(int imod=0; imod<nmod; imod++){
-		for(int jmod=imod; jmod<nmod; jmod++){
+	for(long imod=0; imod<nmod; imod++){
+		for(long jmod=imod; jmod<nmod; jmod++){
 			T tmp=0;
 			OMP_SIMD_R(reduction(+:tmp))
-			for(int k=0; k<nsa2; k++){
+			for(long k=0; k<nsa2; k++){
 				tmp+=P(A, imod, k)*P(A, jmod, k)*P(wt, k);
 			}
 			P(ata, jmod, imod)=tmp;
@@ -483,8 +486,9 @@ int X(circle)(X(mat)* A, R cx, R cy, R dx, R dy, R r, T val){
 	const R res2=(R)(res*res);
 	R resm=(R)((nres-1)*0.5);
 	R r2=r*r;
-	R r2l=r>1.5?((r-1.5)*(r-1.5)):0;
-	R r2u=(r+2.5)*(r+2.5);
+	const R dmax=MAX(fabs(dx), fabs(dy));//margins below are in unit of pixel
+	R r2l=r>1.5*dmax?((r-1.5*dmax)*(r-1.5*dmax)):0;
+	R r2u=(r+2.5*dmax)*(r+2.5*dmax);
 	for(int iy=0; iy<A->ny; iy++){
 		R r2y=(iy*dy-cy)*(iy*dy-cy);
 		for(int ix=0; ix<A->nx; ix++){
@@ -527,12 +531,15 @@ int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
 		warning("Input is not valid\n");
 		return -1;
 	}
-	const int nres=10;//super-resolution
+	const int nres=12;//super-resolution. Even and not a multiple of 4 so that no sub-sample falls on integer or half-integer offsets.
 	const R res=(R)(2./nres);
 	const R res2=(R)(res*res);
 	const R cnt=cos(theta);
 	const R snt=sin(theta);
 	
+	//The bilinear influence function has support [-1,1]x[-1,1] in pixel
+	//coordinate, which extends by up to ext along the rotated axes.
+	const R ext=fabs(cnt)+fabs(snt);
 	R resm=(R)((nres-1)*0.5);
 	for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
@@ -541,9 +548,9 @@ int X(rectangle)(X(mat) *A, R cx, R cy, R rx, R ry, R theta, T val){
 			R xi=xi0*cnt+yi0*snt;
 			R yi=-xi0*snt+yi0*cnt;
 			T val2=0;
-			if(fabs(xi)<rx&&fabs(yi)<ry){//completely inside
+			if(fabs(xi)<=rx-ext&&fabs(yi)<=ry-ext){//support completely inside
 				val2=val;				
-			} else if(fabs(xi)<rx+1&&fabs(yi)<ry+1){//partially inside
+			} else if(fabs(xi)<rx+ext&&fabs(yi)<ry+ext){//partially inside
 				T tot=0.;
 				for(int jy=0; jy<nres; jy++){
 					OMP_SIMD()
@@ -580,7 +587,7 @@ void X(rotvec)(X(mat)* A, const R theta){
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	OMP_SIMD()
-	for(int i=0; i<A->nx; i++){
+	for(long i=0; i<A->nx; i++){
 		T tmp=P(A, i, 0)*ctheta-P(A, i, 1)*stheta;
 		P(A, i, 1)=P(A, i, 0)*stheta+P(A, i, 1)*ctheta;
 		P(A, i, 0)=tmp;
@@ -593,12 +600,13 @@ void X(rotvec)(X(mat)* A, const R theta){
 */
 void X(rotvect)(X(mat)* A, const R theta){
 	if(!check_mat(A)||A->nx!=2){
-		warning("A has wrong dimension\n");
+		warning("A has wrong dimension. Canceled.\n");
+		return;
 	}
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	OMP_SIMD()
-	for(int i=0; i<A->ny; i++){
+	for(long i=0; i<A->ny; i++){
 		T tmp=P(A, 0, i)*ctheta-P(A, 1, i)*stheta;
 		P(A, 1, i)=P(A, 0, i)*stheta+P(A, 1, i)*ctheta;
 		P(A, 0, i)=tmp;
@@ -615,9 +623,8 @@ void X(rotvecnn)(X(mat)** B0, const X(mat)* A, R theta){
 		warning("A has wrong dimension\n");
 		return;
 	}
-	X(init)(B0, 2, 2);
+	if(X(init)(B0, 2, 2)) return;
 	X(mat)* B=*B0;
-	assert(B->nx==2&&B->ny==2);
 	const T ctheta=cos(theta);
 	const T stheta=sin(theta);
 	X(mat)* tmp=X(new)(2, 2);
@@ -648,6 +655,7 @@ void X(corr)(X(mat)** pout, const X(mat)* A, const X(mat)* B){
 	} else{
 		if(((*pout)->nx&1)!=1||((*pout)->ny&1)!=1){
 			error("output dimension shall be odd\n");
+			return;
 		}
 	}
 	X(mat)* out=*pout;
@@ -723,9 +731,9 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 			thres=0;
 			warning_once("X(cog): threshold is ignored when mask is given\n");
 		}
-		for(int iy=0; iy<im->ny; iy++){
+		for(long iy=0; iy<im->ny; iy++){
 			OMP_SIMD_R(reduction(+:sum, sumx, sumy))
-			for(int ix=0; ix<im->nx; ix++){
+			for(long ix=0; ix<im->nx; ix++){
 				iI=(REAL(P(im, ix, iy))-bkgrnd)*REAL(P(mask, ix, iy));
 				sum+=iI;
 				sumx+=iI*ix;
@@ -733,9 +741,9 @@ void X(cog)(R* grad, const X(mat)* im, R offsetx, R offsety,
 			}
 		}
 	}else{
-		for(int iy=0; iy<im->ny; iy++){
+		for(long iy=0; iy<im->ny; iy++){
 			OMP_SIMD_R(reduction(+:sum, sumx, sumy))
-			for(int ix=0; ix<im->nx; ix++){
+			for(long ix=0; ix<im->nx; ix++){
 				iI=REAL(P(im, ix, iy))-bkgrnd;
 				if(iI>thres){
 					sum+=iI;
@@ -801,7 +809,7 @@ void X(shift2center)(X(mat)* A, R offsetx, R offsety){
    2010-07-21: Bug found: The result was not orthonormal. cause: nonvalid was not initialized to 0.
 */
 void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
-	const int nmod=Mod->ny;
+	const long nmod=Mod->ny;
 	const long nx=Mod->nx;
 	R wtsum=(R)nx;
 	if(amp){
@@ -809,15 +817,19 @@ void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 	}
 	int nonvalid[nmod];
 	memset(nonvalid, 0, sizeof(int)*nmod);
-	for(int imod=0; imod<nmod; imod++){
+	for(long imod=0; imod<nmod; imod++){
 		if(nmod>10){
-			info("Gramschmidt: %d of %d\n", imod, nmod);
+			info("Gramschmidt: %ld of %ld\n", imod, nmod);
 		}
 		if(imod>0){/*orthogonalize */
 			/*compute dot product. */
-			for(int jmod=0; jmod<imod; jmod++){
+			for(long jmod=0; jmod<imod; jmod++){
 				if(nonvalid[jmod]) continue;
-				const T cross=-X(vecdot)(PCOL(Mod, imod), PCOL(Mod, jmod), amp, nx)/wtsum;
+				TD dot=0;/*<jmod|wt|imod>, conjugated for complex*/
+				for(long ix=0; ix<nx; ix++){
+					dot+=CONJ(P(Mod, ix, jmod))*P(Mod, ix, imod)*(amp?amp[ix]:1);
+				}
+				const T cross=(T)(-dot/(double)wtsum);
 				OMP_SIMD()
 				for(long ix=0; ix<nx; ix++){
 					P(Mod, ix, imod)+=cross*P(Mod, ix, jmod);
@@ -825,7 +837,12 @@ void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 			}
 		}
 		/*normalize*/
-		R norm=sqrt(REAL(X(vecdot)(PCOL(Mod, imod), PCOL(Mod, imod), amp, nx)/wtsum));
+		real norm2=0;/*<imod|wt|imod>*/
+		for(long ix=0; ix<nx; ix++){
+			const R mag=ABS(P(Mod, ix, imod));
+			norm2+=mag*mag*(amp?amp[ix]:1);
+		}
+		R norm=(R)sqrt(norm2/wtsum);
 		if(fabs(norm)>1.e-15){
 			norm=1./norm;
 			OMP_SIMD()
@@ -834,7 +851,7 @@ void X(gramschmidt)(X(mat)*restrict Mod, R* restrict amp){
 			}
 		} else{
 			nonvalid[imod]=1;
-			warning("Column %d is not independent on other columns\n", imod);
+			warning("Column %ld is not independent on other columns\n", imod);
 		}
 	}
 }
@@ -848,6 +865,7 @@ int X(clip)(X(mat)* restrict A, R min, R max){
 	if(isinf(min)&&isinf(max)) return 0;
 	if(max<=min){
 		error("upper light should be larger than lower limit\n");
+		return 0;
 	}
 	T* restrict Ap=P(A);
 	int nclip=0;
@@ -922,7 +940,7 @@ void X(polyval)(X(mat)* A, XR(mat)* p){
 		p->nx=p->ny;
 		p->ny=1;
 	}
-	int np=p->nx;
+	long np=p->nx;
 	for(long i=0; i<A->nx*A->ny; i++){
 		T tmp=0;
 		OMP_SIMD_R(reduction(+:tmp))
@@ -957,12 +975,13 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 		}else if(PN(A) != PN(*B0)){
 			error("A is %ldx%ld, B is %ldx%ld. They should match in size.\n",
 				NX(A), NY(A), NX(*B0), NY(*B0));
+			return;
 		}
 		if(ac!=(T)0){
 			X(mat) * restrict B=*B0;
 			if(bc!=(T)0){
 				OMP_SIMD()
-				for(int i=0; i<PN(A); i++){
+				for(long i=0; i<PN(A); i++){
 					P(B, i)=P(B, i)*bc+P(A, i)*ac;
 				}
 			} else{
@@ -970,10 +989,16 @@ void X(add)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 					X(cp)(B0, A);
 				} else{/*just assign */
 					OMP_SIMD()
-					for(int i=0; i<PN(A); i++){
+					for(long i=0; i<PN(A); i++){
 						P(B, i)=P(A, i)*ac;
 					}
 				}
+			}
+		}else if(bc!=(T)1){/*B=bc*B */
+			X(mat) * restrict B=*B0;
+			OMP_SIMD()
+			for(long i=0; i<PN(B); i++){
+				P(B, i)*=bc;
 			}
 		}
 	}
@@ -985,24 +1010,26 @@ void X(addcol)(X(mat) *B, long icol, T bc, const X(mat) *A, const T ac){
 	if(NX(A)&&ac!=(T)0){
 		if(!B||NY(A)>1||icol<0){
 			error("only support adding a vector to an existing matrix\n");
+			return;
 		}else if(NX(A)!=NX(B)||NY(B)<=icol){
 			error("Mismatch: A is %ldx%ld, B is %ldx%ld. icol is %ld.\n",
 				NX(A), NY(A), NX(B), NY(B), icol);
+			return;
 		}
 		if(bc!=(T)0){
 			OMP_SIMD()
-				for(int i=0; i<NX(A); i++){
+				for(long i=0; i<NX(A); i++){
 					P(B, i, icol)=P(B, i, icol)*bc+P(A, i)*ac;
 				}
 		} else{
 			if(ac==(T)1){
 				OMP_SIMD()
-					for(int i=0; i<NX(A); i++){
+					for(long i=0; i<NX(A); i++){
 						P(B, i, icol)=P(A, i);
 					}
 			} else{/*just assign */
 				OMP_SIMD()
-					for(int i=0; i<NX(A); i++){
+					for(long i=0; i<NX(A); i++){
 						P(B, i, icol)=P(A, i)*ac;
 					}
 			}
@@ -1036,7 +1063,7 @@ void X(add_relax)(X(mat)** B0, T bc, const X(mat)* A, const T ac){
 void X(adds)(X(mat)*restrict A, const T ac){
 	if(!A||!A->nx||ac==(T)0) return;
 	OMP_SIMD()
-	for(int i=0; i<A->nx*A->ny; i++){
+	for(long i=0; i<A->nx*A->ny; i++){
 		P(A, i)+=ac;
 	}
 }
@@ -1070,12 +1097,13 @@ X(mat)* X(linspace)(R min, R dx, long n){
    Check whether xin is linearly spaced
 */
 static R X(islinear)(const X(mat)* xin){
+	if(!xin||xin->nx<2) return 0;
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=(P(xin, 0));
 	R xmaxl=(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
-	if(fabs(xsep+xminl-P(xin, 1))>xsep*1.e-3){
+	if(!(xsep!=0) || !(fabs(xsep+xminl-P(xin, 1))<=fabs(xsep)*1.e-3)){
 		return 0;
 	} else{
 		return xsep;
@@ -1085,40 +1113,68 @@ static R X(islinear)(const X(mat)* xin){
    Check whether xin is logrithmically spaced
 */
 static R X(islog)(const X(mat)* xin){
+	if(!xin||xin->nx<2) return 0;
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=log10(P(xin, 0));
 	R x1=log10(P(xin, 1));
 	R xmaxl=log10(P(xin, nmax1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
-	if(isinf(xsep)||fabs(xsep+xminl-x1)>xsep*1.e-3){
+	if(!(xsep!=0) || isinf(xsep) || !(fabs(xsep+xminl-x1)<=fabs(xsep)*1.e-3)){
 		return 0;
 	} else{
 		return xsep;
 	}
 }
 /**
+   Select the function values for the interp1 routines.
+
+   @param[in] xin The coordinate in the first column, optionally followed by function values.
+   @param[in] yin_ The function values, with the same number of rows as xin. Can be NULL.
+   @return yin_ if it is not NULL; otherwise a reference to columns 2 and later of xin, which the caller
+   frees. NULL if yin_ is NULL and xin has one column, or if the number of rows does not match.
+*/
+static X(mat)* X(interp_check_y)(const X(mat)* xin, const X(mat)* yin_){
+	X(mat)*yin=NULL;
+	if(!yin_){
+		if(NY(xin)>1){
+			yin=X(refcols)(xin, 1, NY(xin)-1);
+		}else{
+			error("yin is NULL and xin has only one column.\n");
+			return NULL;
+		}
+	}else if(yin_->nx!=xin->nx){
+		error("xin and yin must have the same nx.\n");
+		return NULL;
+	}else{
+		yin=(X(mat)*)yin_;
+	}
+	return yin;
+}
+/**
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
 */
-X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, T ydefault){
+X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
+	if(!xin||!xnew||NX(xin)<2) return NULL;
 	if(!X(islinear)(xin)){
 		error("xin is not linearly spaced\n");
+		return NULL;
 	}
-	if(xin->ny!=1||xnew->ny!=1){
-		error("Either xin or xnew is in wrong format\n");
-	}
+	X(mat)* yin=X(interp_check_y)(xin, yin_);
+	if(!yin) return NULL;
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=(P(xin, 0));
 	R xmaxl=(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
 	R xsep1=1./xsep;
-	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
+	X(mat)* ynew=X(new)(xnew->nx, yin->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
 			R xx=((P(xnew, ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
+			if(xxm==nmax1 && xx-nmax1<=1e-6*nmax1) xxm=nmax1-1;//the last grid point is within range
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
 			} else if(xxm>=nmax1){
@@ -1128,6 +1184,9 @@ X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xne
 				P(ynew, ix, iy)=xxw*P(yin, xxm+1, iy)+(1.-xxw)*P(yin, xxm, iy);
 			}
 		}
+	}
+	if(yin!=yin_){
+		X(free)(yin);
 	}
 	return ynew;
 }
@@ -1136,24 +1195,26 @@ X(mat)* X(interp1linear)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xne
    Interpolate using log(xin) and log(xnew)
    xin is the coordinate of yin. xnew is the coordinate of the output.
 */
-X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, T ydefault){
+X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
+	if(!xin||!xnew||NX(xin)<2) return NULL;
 	if(!X(islog)(xin)){
 		error("xin is not logrithmically spaced\n");
+		return NULL;
 	}
-	if(xin->ny!=1||xnew->ny!=1){
-		error("Either xin or xnew is in wrong format\n");
-	}
+	X(mat)* yin=X(interp_check_y)(xin, yin_);
+	if(!yin) return NULL;
 	long nmax=xin->nx;
 	long nmax1=nmax-1;
 	R xminl=log10(P(xin, 0));
 	R xmaxl=log10(P(xin, nmax-1));
 	R xsep=(xmaxl-xminl)/(R)(nmax1);
 	R xsep1=1./xsep;
-	X(mat)* ynew=X(new)(xnew->nx, xnew->ny);
+	X(mat)* ynew=X(new)(xnew->nx, yin->ny);
 	for(long iy=0; iy<ynew->ny; iy++){
 		for(long ix=0; ix<ynew->nx; ix++){
 			R xx=(log10(P(xnew, ix))-xminl)*xsep1;
 			long xxm=ifloor(xx);
+			if(xxm==nmax1 && xx-nmax1<=1e-6*nmax1) xxm=nmax1-1;//the last grid point is within range
 			if(xxm<0){
 				P(ynew, ix, iy)=isnan(ydefault)?P(yin, 0, iy):ydefault;
 			} else if(xxm>=nmax1){
@@ -1164,33 +1225,38 @@ X(mat)* X(interp1log)(const X(mat)* xin, const X(mat)* yin, const X(mat)* xnew, 
 			}
 		}
 	}
+	if(yin!=yin_){
+		X(free)(yin);
+	}
 	return ynew;
 }
 /**
    Interpolation of 1d array
  */
-X(mat)* X(interp1)(const X(mat)* xin_, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
+X(mat)* X(interp1)(const X(mat)* xin, const X(mat)* yin_, const X(mat)* xnew, T ydefault){
+	if(!xin||!xnew||NX(xin)<2) return NULL;
 	X(mat)* restrict ynew=NULL;
-	X(mat) *restrict xin=X(refcols)(xin_, 0, 1);
-	X(mat) *restrict yin=yin_?X(ref)(yin_):X(refcols)(xin_, 1, 1);
-
+	X(mat)* yin=X(interp_check_y)(xin, yin_);
+	if(!yin) return NULL;
 	if(X(islinear)(xin)){
 		ynew=X(interp1linear)(xin, yin, xnew, ydefault);
 	} else if(X(islog)(xin)){
 		ynew=X(interp1log)(xin, yin, xnew, ydefault);
 	} else{//arbitrary spacing
-		if(xin->ny!=1||xnew->ny!=1){
-			error("Either xin or xnew is in wrong format\n");
-		}
 		ynew=X(new)(xnew->nx, yin->ny);
-		int curpos=0;
+		const long nend=xin->nx-1;
+		long curpos=0;
 		for(long ix=0; ix<ynew->nx; ix++){
+			const R xn=P(xnew, ix);
 			int found=0;
-			for(curpos=0; curpos<xin->nx-2; curpos++){
-				if(P(xnew, ix)>P(xin, curpos)&&P(xnew, ix)<P(xin, curpos+1)){
+			for(curpos=0; curpos<nend; curpos++){//works for increasing or decreasing xin
+				if((xn-P(xin, curpos))*(xn-P(xin, curpos+1))<=0){
 					found=1;
 					break;
 				}
+			}
+			if(!found){//extrapolate using the first or last interval, whichever end is nearer
+				curpos=(fabs(xn-P(xin, 0))<fabs(xn-P(xin, nend)))?0:(nend-1);
 			}
 			if(found||isnan(ydefault)){
 				R xx=((P(xnew, ix))-P(xin, curpos))/(P(xin, curpos+1)-P(xin, curpos));
@@ -1204,8 +1270,9 @@ X(mat)* X(interp1)(const X(mat)* xin_, const X(mat)* yin_, const X(mat)* xnew, T
 			}
 		}
 	}
-	X(free)(xin);
-	X(free)(yin);
+	if(yin!=yin_){
+		X(free)(yin);
+	}
 	return ynew;
 }
 
@@ -1264,8 +1331,8 @@ void X(blend)(X(mat)* restrict A, X(mat)* restrict B, int overlap){
 void X(histfill)(X(mat)** out, const X(mat)* A,
 	R center, R spacing, int n){
 	if(!A||!P(A)) return;
-	int nn=A->nx*A->ny;
-	X(init)(out, n, nn);
+	long nn=A->nx*A->ny;
+	if(X(init)(out, n, nn)) return;
 	X(mat)* Op=*out;
 	const T* restrict Ap=P(A);
 	const R spacingi=1./spacing;
@@ -1327,11 +1394,12 @@ void X(histfill)(X(mat)** out, const X(mat)* A,
    see www.paulinternet.nl/?page=bicubicx */
 X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 	T* px, * py;
+	if(!x) return NULL;
 	const long nx=x->nx;
 	px=P(x);
 	switch(x->ny){
 	case 1:
-		py=P(y);
+		py=(y&&PN(y)==nx)?P(y):NULL;
 		break;
 	case 2:
 		assert(y==NULL);
@@ -1339,7 +1407,10 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 		break;
 	default:
 		py=NULL;
+	}
+	if(!py||nx<2){
 		error("Invalid input\n");
+		return NULL;
 	}
 	X(mat)* coeff=X(new)(4, nx);
 	T xsep=(px[nx-1]-px[0])/(nx-1);
@@ -1350,6 +1421,8 @@ X(mat)* X(spline_prep)(X(mat)* x, X(mat)* y){
 	for(long ix=0; ix<nx-1; ix++){
 		if(fabs(px[ix+1]-px[ix]-xsep)>thres){
 			error("The coordinate is not evenly spaced\n");
+			X(free)(coeff);
+			return NULL;
 		}
 		if(UNLIKELY(ix==0)){
 			ypriv=2*py[ix]-py[ix+1];
@@ -1576,9 +1649,10 @@ void X(gauss_fit)(
 	if(ma) *ma=sqrt(0.5*(sumx2+sumy2+tmp));
 	if(mb) *mb=sqrt(0.5*(sumx2+sumy2-tmp));
 	if(angle) *angle=0.5*atan2(2*sumxy,(sumx2-sumy2));
-	if(amp) *amp=sum/(2.*M_PI*sqrt(det));
+	const R amp0=sum/(2.*M_PI*sqrt(det));
+	if(amp) *amp=amp0;
 	if(img){
-		X(init)(img, nx, ny);
+		if(X(init)(img, nx, ny)) return;
 		// inverse covariance
         R inv00 =  sumy2 / det;
         R inv11 =  sumx2 / det;
@@ -1589,7 +1663,7 @@ void X(gauss_fit)(
             for(long ix=0; ix<nx; ix++){
                 R x = (ix - sumx);
                 R Q = inv00*x*x + 2*inv01*x*y + inv11*y*y;
-                P(*img, ix, iy) = *amp * exp(-0.5 * Q);
+                P(*img, ix, iy) = amp0 * exp(-0.5 * Q);
             }
         }
 
@@ -1742,6 +1816,7 @@ T X(trapz)(const X(mat)* restrict x, const X(mat)* restrict y){
 	if(!y) return 0;
 	if(x&&x->nx!=y->nx){
 		error("First dimension of x must match y\n");
+		return 0;
 	}
 	T out=0;
 	for(long icol=0; icol<y->ny; icol++){
@@ -1810,8 +1885,9 @@ void X(cellcat2)(X(cell)** pA, const X(cell)* B, int dim){
 		if(A->ny!=B->ny){
 			error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
+			return;
 		}
-		int xoff=A->nx;
+		long xoff=A->nx;
 		cellresize(A, NX(A)+NX(B),NY(A));
 		for(long iy=0; iy<A->ny; iy++){
 			for(long ix=0; ix<B->nx; ix++){
@@ -1822,8 +1898,9 @@ void X(cellcat2)(X(cell)** pA, const X(cell)* B, int dim){
 		if(A->nx!=B->nx){
 			error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n",
 				A->nx, A->ny, B->nx, B->ny);
+			return;
 		}
-		int yoff=A->ny;
+		long yoff=A->ny;
 		cellresize(A, NX(A), NY(A)+NY(B));
 		for(long iy=0; iy<B->ny; iy++){
 			for(long ix=0; ix<B->nx; ix++){
@@ -1851,6 +1928,7 @@ X(cell)* X(cellcat_each)(const X(cell)* A, const X(cell)* B, int dim){
 	}
 	if(A->nx!=B->nx||A->ny!=B->ny){
 		error("Mismatch: (%ld %ld), (%ld %ld)\n", A->nx, A->ny, B->nx, B->ny);
+		return NULL;
 	}
 	X(cell)* out=X(cellnew)(A->nx, A->ny);
 	for(long ix=0; ix<A->nx*A->ny; ix++){
@@ -1877,7 +1955,10 @@ R X(cellnorm)(const X(cell)* A){
 */
 T X(celldot)(const X(cell)* A, const X(cell)* B){
 	if(!A||!B) return 0;
-	if(A->nx!=B->nx||A->ny!=1||B->ny!=1) error("mismatch\n");
+	if(A->nx!=B->nx||A->ny!=1||B->ny!=1){
+		error("mismatch: A is %ldx%ld, B is %ldx%ld\n", A->nx, A->ny, B->nx, B->ny);
+		return 0;
+	}
 	T out=0;
 	for(int i=0; i<A->nx; i++){
 		out+=X(dot)(P(A, i), P(B, i));
@@ -1890,7 +1971,11 @@ T X(celldot)(const X(cell)* A, const X(cell)* B){
    B=A.*B*alpha
 */
 void X(cellcwm)(X(cell)* B, const X(cell)* A){
-	if(A->nx!=B->nx||A->ny!=B->ny) error("mismatch\n");
+	if(!A||!B) return;
+	if(A->nx!=B->nx||A->ny!=B->ny){
+		error("mismatch\n");
+		return;
+	}
 	for(int i=0; i<A->nx*A->ny; i++){
 		X(cwm)(P(B, i), P(A, i));
 	}
@@ -1929,7 +2014,8 @@ R X(celldiff)(const X(cell)* A, const X(cell)* B){
 	X(cell)* C=NULL;
 	X(cellcp)(&C, A);
 	X(celladd)(&C, 1, B, -1);
-	R d=sqrt(X(cellnorm)(C)*2/(X(cellnorm)(C)+X(cellnorm)(B)));
+	R d=sqrt(X(cellnorm)(C)*2/(X(cellnorm)(A)+X(cellnorm)(B)));
+	X(cellfree)(C);
 	return isnan(d)?0:d;
 }
 
@@ -1966,8 +2052,12 @@ void X(cellcwpow)(X(cell)* A, R power){
    \f[f^\prime(0)=(f(1)-f(-1))/2\f] by
    \f[f^\prime(0)=(f(1)-f(0))\f]
    Otehr type of boundaries are handled in the same way.
-*/
 
+   @param[in] x The x coordinate vector.
+   @param[in] y The y coordinate vector.
+   @param[in] z The function values of size numel(x) by numel(y).
+   @return The nx by ny cell of 4x4 coefficients. The last row and column are empty. Newly allocated; the caller frees it.
+*/
 X(cell)* X(bspline_prep)(X(mat)* x, X(mat)* y, X(mat)* z){
 	const long nx=x->nx;
 	const long ny=y->nx;

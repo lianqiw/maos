@@ -95,7 +95,7 @@ void sde_psd(dmat** psd, const dmat* f, const real* coeff, int ncoeff, int nmod)
 */
 dmat* sde_psd2(const dmat* ff, const dmat* coeff){
 	dmat* psd=0;
-	sde_psd(&psd, ff, P(coeff), NX(coeff), NY(coeff));
+	sde_psd(&psd, ff, P(coeff), (int)NX(coeff), (int)NY(coeff));
 	return psd;
 }
 static real coeff_isbad(const real* coeff, int ncoeff){
@@ -117,8 +117,11 @@ static real coeff_isbad(const real* coeff, int ncoeff){
    It is better to fit covariance than PSD because what the LQG
    cares is how the variable involves with time within the next time
    steps. Covariance describes this better than the PSD.
-*/
 
+   @param[in] coeff SDE coefficients.
+   @param[in,out] pdata Pointer to sde_fit_t. Its count and psdcov_sde are updated.
+   @return Normalized difference. Bad coefficients give a large penalty.
+*/
 static real sde_diff(const real* coeff, void* pdata){
 	sde_fit_t* data=(sde_fit_t*)pdata;
 	real tmp;
@@ -183,7 +186,7 @@ static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dm
 		}
 	}
 	real ratio;
-	sde_psd(&psdcov_sde, freq, P(coeff), NX(coeff), NY(coeff));
+	sde_psd(&psdcov_sde, freq, P(coeff), (int)NX(coeff), (int)NY(coeff));
 	real var_sde;
 	if(ncov){
 	//writebin(psdcov_sde, "sde_psd");
@@ -203,9 +206,13 @@ static void sde_scale_coeff(dmat* coeff, real var_in, dmat* psdcov_sde, const dm
    answer in the same format. Functions returns difference in PSD to indicate residual
 */
 static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int print){
-	if(!pcoeff) error("pcoeff must not be NULL\n");
+	if(!pcoeff){
+		error("pcoeff must not be NULL\n");
+		return INFINITY;
+	}
 	if(NY(psdin)!=2){
 		error("psd must contain nu and psd\n");
+		return INFINITY;
 	}
 	real df=0.01;//ensure we can sample narrow peaks when interpolating psd
 	dmat* freq=0, * psdcov_in=0, * psdcov_sde=0;
@@ -233,7 +240,6 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
 		var_in=P(psdcov_in,0);
 		if(isinf(P(psdcov_in,0))){
 			warning("covariance is not finite at 0\n");
-			writebin(psdcov_in, "bad_cov");
 		}
 		//writebin(psdcov_in, "in_cov");
 		psdcov_sde=dnew(nf, 1);
@@ -263,8 +269,8 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
 		P(*pcoeff, 1)=1;
 	}
 	dmat *coeff=*pcoeff;
-	int ncoeff=NX(coeff);
-	int nmod=NY(coeff);
+	int ncoeff=(int)NX(coeff);
+	int nmod=(int)NY(coeff);
 	//Scale to make sure total energy is preserved.
 	sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
 
@@ -318,7 +324,10 @@ static real sde_fit_do(dmat **pcoeff, const dmat* psdin, real tmax_fit, int prin
    If coeff0 is not null, use it immediately, otherwise, do vibration identification
  */
 real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
-	if(!pcoeff) error("pcoeff must not be NULL\n");
+	if(!pcoeff){
+		error("pcoeff must not be NULL\n");
+		return INFINITY;
+	}
 	if(!vibid){
 		return sde_fit_do(pcoeff, psdin, tmax_fit, 1);
 	} else{
@@ -331,32 +340,36 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
 			info("\nnvib=%ld\n", NY(vibs));
 			for(int ivib=0; ivib<NY(vibs); ivib++){
 				real omegai=2*M_PI*P(vibs,ivib*4+0);
-				int i1=P(vibs,ivib*4+2);
-				int i2=P(vibs,ivib*4+3)+1;
+				long i1=P(vibs,ivib*4+2);
+				long i2=P(vibs,ivib*4+3)+1;
 				if(i2-i1<3){
 					i2++;
 					i1--;
 				}
+				if(i2+2>NX(psd2)) i2=NX(psd2)-2;
+				if(i1<1) i1=1;
 				dmat* psdi=dsub(psdin, i1, i2-i1, 0, 0);//extract peak
-				dmat* coeffi=P(coeffs,ivib)=dnew(3, 1);
+				dmat* coeffi=dnew(3, 1);
 
 				P(coeffi,0)=2*omegai*0.1;
 				P(coeffi,1)=omegai*omegai;
+				P(coeffs,ivib)=ddup(coeffi);//keep the input (initial guess)
 				real diff=sde_fit_do(&coeffi, psdi, tmax_fit, 1);
 				if(diff>1e-4 || fabs(sqrt(P(coeffi,1))-sqrt(P(P(coeffs,ivib),1)))>2*M_PI){
 					warning("Fitting failed for %d, Freq=%g, %g\n", ivib,
 						sqrt(P(coeffi,1))/(2*M_PI), sqrt(P(P(coeffs,ivib),1))/(2*M_PI));
-					writebin(psdi, "psdi_%d", ivib);
-					writebin(coeffi, "coeffi_%d", ivib);
-					writebin(P(coeffs,ivib), "coeffo_%d", ivib);
 					if(fabs(sqrt(P(coeffi,1))-sqrt(P(P(coeffs,ivib),1)))>2*M_PI*5){
-						dcp(&P(coeffs,ivib), coeffi);
 						warning("Use input\n");
+					}else{
+						dcp(&P(coeffs,ivib), coeffi);
 					}
+				}else{
+					dcp(&P(coeffs,ivib), coeffi);
 				}
+				dfree(coeffi);
 				dfree(psdi);
 				real* psd2p=PCOL(psd2, 1);
-				for(int i=i1; i<i2; i++){//replace the peak by a linear interpolation
+				for(long i=i1; i<i2; i++){//replace the peak by a linear interpolation
 					psd2p[i]=(psd2p[i1-1]*(i2+1-i)+psd2p[i2+1]*(i-(i1-1)))/(i2-i1+2);
 				}
 			}
@@ -366,6 +379,7 @@ real sde_fit(dmat** pcoeff, const dmat* psdin, real tmax_fit, int vibid){
 		real diff=sde_fit_do(&coeffi, psd2, tmax_fit, 1);
 		
 		dfree(psd2);
+		dfree(*pcoeff);
 		*pcoeff=dcell2m(coeffs);
 		dcellfree(coeffs);
 		return diff;
@@ -408,6 +422,7 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 		dfree(coeff);
 		if(!zeta_best){
 			error("Fitting failed\n");
+			return INFINITY;
 		}
 		real f0=sqrt(P(*pcoeff, 1))/2/M_PI;
 		info("sde_fit_auto: tmax=%4.2f, f0=%4.2f, zeta=%4.2f, diff=%.2e.\n", tfit_best, f0, zeta_best, diff_best);
@@ -415,11 +430,12 @@ real sde_fit_auto(dmat **pcoeff, const_anyarray psdin_, real tfit){
 	}else{
 		int npsd=0;
 		if(iscell(psdin_.dc)){//cell array of PSDs
-			npsd=PN(psdin_.dc);
+			npsd=(int)PN(psdin_.dc);
 		}else if(NY(psdin_.dm)>2){//each column beyond first one is a PSD.
-			npsd=NY(psdin_.dm)-1;
+			npsd=(int)NY(psdin_.dm)-1;
 		}else{
 			error("Invalid input for.\n");
+			return INFINITY;
 		}
 		dcell* coeff=dcellnew(1, npsd);
 		real diff_worst=0;
@@ -550,6 +566,34 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	const dcell *Gwfs, const dcell *Cnn, const dmat *Proj){
 	const long nmod=NY(coeff);//number of modes
 	const long order=coeff->nx-1;
+	{//validate input before allocating anything
+		const long nwfs=NX(Gwfs);
+		if(!dtrat_wfs||NX(dtrat_wfs)!=nwfs||NY(dtrat_wfs)!=1){
+			error("dtrat_wfs should have size %ldx1\n", nwfs);
+			return NULL;
+		}
+		lmat *dtrats=lunique(dtrat_wfs, 1);
+		const long ndtrat=PN(dtrats);
+		int bad=0;
+		if(ndtrat>2){
+			error("More than two rates are not yet implemented.\n");
+			bad=1;
+		}else if(P(dtrats, ndtrat-1)%P(dtrats,0)!=0){
+			error("The two dtrats must be multiple of each other\n");
+			bad=1;
+		}else if(Cnn && NY(Cnn)<ndtrat){
+			error("Cnn should have at least %ld columns\n", ndtrat);
+			bad=1;
+		}else if(mdirect && PN(mdirect)!=nmod){
+			error("mdirect should have %ld elements.\n", nmod);
+			bad=1;
+		}else if(Proj && (NX(Proj)!=nmod || NY(Proj)!=nmod)){
+			error("Proj shall have dimenion of %ldx%ld\n", nmod, nmod);
+			bad=1;
+		}
+		lfree(dtrats);
+		if(bad) return NULL;
+	}
 	/*Ac is block diagonal matrix for continuous domain state evolution.
 	  For third order, each block is
 	  |-c1 -c2 -c3 |
@@ -584,30 +628,9 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	dmat* AcI=ddup(Ac);
 	dsvd_pow(AcI, -1);//Inverse of Ac
 	const long nwfs=NX(Gwfs);
-	if(NX(dtrat_wfs)!=nwfs||NY(dtrat_wfs)!=1){
-		error("dtrat_wfs should have size %ldx1\n", NX(dtrat_wfs));
-	}
 	kalman_t* res=mycalloc(1, kalman_t);
 	res->dtrats=lunique(dtrat_wfs, 1);
 	const long ndtrat=PN(res->dtrats); //(1<<(NX(dtrat_wfs)))-1;
-	if(ndtrat>2){
-		error("More than two rates are not yet implemented.\n");
-	}else if(P(res->dtrats, ndtrat-1)%P(res->dtrats,0)!=0){
-		error("The two dtrats must be multiple of each other\n");
-	}
-	
-	if(Cnn && NY(Cnn)<ndtrat){
-		error("Cnn should have at least %ld columns\n", ndtrat);
-	}
-	if(mdirect && PN(mdirect)!=nmod){
-		error("mdirect should have %ld elements.\n", nmod);
-	}
-	if(PN(Gwfs)!=nwfs){
-		error("Gwfs shall have %ld elements\n", nwfs);
-	}
-	if(Proj && (NX(Proj)!=nmod || NY(Proj)!=nmod)){
-		error("Proj shall have dimenion of %ldx%ld\n", nmod, nmod);
-	}
 	//const int dtrat_min=P(res->dtrats,0);
 	//const int dtrat_max=P(res->dtrats, ndtrat-1);
 	
@@ -631,7 +654,7 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 	int failed=0;
 	/*Loop over first set of steps to find needed kalman filter.*/
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
-		int dtrat=P(res->dtrats, idtrat);
+		int dtrat=(int)P(res->dtrats, idtrat);
 		if(P(res->Cd,idtrat)) continue;//case already done
 		dmat* Sigma_zeta=0;//covariance of state noise integrated over WFS exposure time
 		dmat* Radd=0;
@@ -677,7 +700,7 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 		dcell *GwfsU=dcellnew(nwfs, 1);
 		dcell *neai=dcellnew(nwfs, nwfs);
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ng=NX(P(Gwfs, iwfs));
+			long ng=NX(P(Gwfs, iwfs));
 			P(Cd,iwfs)=dnew(ng, nstate);
 			P(Rn, iwfs, iwfs)=dnew(ng, ng);
 			if(dtrat%P(dtrat_wfs,iwfs)==0){
@@ -690,10 +713,10 @@ kalman_t* sde_kalman(const dmat *coeff, const real dthi, const lmat* dtrat_wfs,c
 				P(GwfsU, iwfs)=Gwfsi; 
 				dmm3(&P(Cd,iwfs), 0, Gwfsi, Pd, Qwfs, "nnn", 1);//Cd=Gwfs*Pd*Qwfs
 				dmm3(&P(Rn, iwfs, iwfs), 0, Gwfsi, Radd, Gwfsi, "nnt", 1);//Rn=Gwfsi*Radd*Gwfsi'
-				if(P(Cnn, iwfs, idtrat)){
+				if(Cnn && P(Cnn, iwfs, idtrat)){
 					dadd(&P(Rn, iwfs, iwfs), 1, P(Cnn, iwfs, idtrat), sqrt((real)P(dtrat_wfs, iwfs)/dtrat));
 					P(neai, iwfs, iwfs)=dnew(ng, ng);
-					for(int ig=0; ig<ng; ig++){
+					for(long ig=0; ig<ng; ig++){
 						P(P(neai, iwfs, iwfs), ig, ig)=1./P(P(Cnn, iwfs, idtrat), ig, ig); //in radian^-2 for weighting
 					}
 					//dshow(P(neai, iwfs, iwfs), "neai");
@@ -838,21 +861,22 @@ void kalman_output(kalman_t* kalman, dmat** out, real alpha, real beta, int idtr
    2: LQG (fast) + integrator (slow)
 */
 dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int flag){
+	dmat* input_row=NULL;
 	if(NX(input)>1 && NY(input)==1){/*single mode. each column is for a mode.*/
-		reshape((dmat*)input, 1, NX(input));
+		input=input_row=dref_reshape(input, 1, NX(input));
 	}
 	const dcell* Gwfs=kalman->Gwfs;
-	const int nwfs=NX(Gwfs);
+	const int nwfs=(int)NX(Gwfs);
 	dcell* rmsn=dcellnew(nwfs, 1);//RMS noise
 	long ngs[nwfs];
-	int dtrat_fast=P(kalman->dtrats, 0);
-	int dtrat_slow=P(kalman->dtrats, PN(kalman->dtrats)>1?1:0);
+	int dtrat_fast=(int)P(kalman->dtrats, 0);
+	int dtrat_slow=(int)P(kalman->dtrats, PN(kalman->dtrats)>1?1:0);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ng=P(Gwfs,iwfs)->nx;
+		long ng=P(Gwfs,iwfs)->nx;
 		int idtrat=(P(kalman->dtrat_wfs, iwfs)==dtrat_fast)?0:1;
 		if(dsumsq(P(kalman->Cnn, iwfs, idtrat))>0){
 			P(rmsn, iwfs)=dnew(ng, 1);
-			for(int ig=0; ig<ng; ig++){
+			for(long ig=0; ig<ng; ig++){
 				P(P(rmsn,iwfs), ig)=sqrt(P(P(kalman->Cnn, iwfs, idtrat),ig,ig));
 			}
 		}
@@ -861,7 +885,7 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	dcell* acc=dcellnew3(nwfs, 1, ngs, 0);//measurement accumulation
 	dcell* meas_fast=dcellnew3(nwfs, 1, ngs, 0);//measurement at fast rate
 	dcell* meas_slow=dcellnew3(nwfs, 1, ngs, 0);//measurement at slow rate
-	const int nmod=NX(input);
+	const int nmod=(int)NX(input);
 	dmat* mres=ddup(input);	//store correction residual
 	kalman_init(kalman);
 	rand_t rstat;
@@ -874,7 +898,7 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 	dmat *mreal_offset=dnew(nmod, 1);//offset to fast rate
 	dmat *mreal_slow=dnew(nmod, 1);//slow loop output
 	real gain=0.5;
-	int ndtrat=PN(kalman->M);
+	int ndtrat=(int)PN(kalman->M);
 	int int_fast=flag==1;//fast loop is integrator
 	int int_slow=flag>0;//slow loop is integrator
 	dmat *ep=dnew(1,1); P(ep, 0)=gain;
@@ -913,7 +937,7 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 		//Process WFS measurement output.
 		int indk=0;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int dtrat_wfs=P(kalman->dtrat_wfs,iwfs);
+			int dtrat_wfs=(int)P(kalman->dtrat_wfs,iwfs);
 			if((1+istep)%dtrat_wfs==0){//WFS has output
 				indk|=1<<iwfs;//mark WFS that has output
 				//Average the measurement and zero out the averager.
@@ -960,13 +984,19 @@ dmat* kalman_test(kalman_t* kalman, const dcell *goff, const dmat* input, int fl
 			servo_filter(st_fast, indk?P(merr_fast,0):NULL);
 		}		
 	}
+	dfree(input_row);
 	dcellfree(rmsn);
 	dcellfree(meas_fast);
+	dcellfree(meas_slow);
 	dcellfree(acc);
-	dfree(outi);
+	cellfree(outc);//also frees outi, which does not own its data
 	cellfree(merr_fast);
+	cellfree(merr_slow);
+	dfree(mreal);
 	cellfree(mreal_slow);
 	cellfree(mreal_offset);
+	servo_free(st_fast);
+	servo_free(st_slow);
 	return mres;
 }
 dmat* kalman_test2(const dmat* coeff, /**<SDE coefficients*/
@@ -1055,6 +1085,13 @@ kalman_t* kalman_read(const char* format, ...){
 	if(ic!=PN(tmp)){
 		error("kalman_t: read and write Mismatch\n");
 	}
+	ic--;
+	cellfree(tmp->p[ic]);
+	while(ic>0){
+		ic--;
+		tmp->p[ic]=0;
+	}
+	cellfree(tmp);
 	kalman_init(kalman);
 	return kalman;
 }

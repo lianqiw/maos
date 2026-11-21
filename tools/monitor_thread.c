@@ -191,6 +191,7 @@ void* add_host_thread(void* phost){
 	int ihost=GPOINTER_TO_INT(phost);
 	if(ihost<0 || ihost>=nhost){
 		warning_time("Invalid ihost=%d\n", ihost);
+		return GINT_TO_POINTER(-1);
 	}else if(hsock[ihost]>-1 || hsock_new[ihost]>-1){
 		warning_time("host %d is already connected\n", ihost);
 	}else if(hsock[ihost]==-1){
@@ -389,7 +390,7 @@ static int respond(int sock){
 			if(!headless) g_idle_add((GSourceFunc)refresh, iproc);
 		}
 		if(old_info&&old_info!=iproc->status.info &&
-			iproc->status.info>0 && iproc->status.info<(int)sizeof(status_msg)){
+			iproc->status.info>0 && iproc->status.info<(int)(sizeof(status_msg)/sizeof(status_msg[0]))){
 			info_time("Job %d on host %s is %s.\n", iproc->pid, hosts[ihost], status_msg[iproc->status.info]);
 		}
 	}

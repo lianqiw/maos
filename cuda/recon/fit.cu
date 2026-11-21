@@ -125,7 +125,7 @@ void cufit_grid::do_hxpt(const curcell& xout, Real alpha, stream_t& stream){
 	if(xcache){
 		cuzero(xcache.M(), stream);
 		hxp1.backward(opdfit2.pm, xcache.pm, alpha, fitwt(), stream);
-		hxp0.backward(xcache.pm, xout.pm, alpha, NULL, stream);
+		hxp0.backward(xcache.pm, xout.pm, 1, NULL, stream);
 	} else{
 		hxp.backward(opdfit2.pm, xout.pm, alpha, fitwt(), stream);
 	}

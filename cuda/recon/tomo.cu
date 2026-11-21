@@ -180,6 +180,9 @@ void cutomo_grid::init_hx(const parms_t* parms, const recon_t* recon){
 cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curecon_geom* _grid)
 	:cusolve_cg(parms?parms->tomo.maxit:0, parms?parms->tomo.cgwarm:0),
 	grid(_grid), rhs_nttf(0), lhs_nttf(0), lhs_skip0(0), nwfs(0){
+	if(!parms||!recon){
+		error("parms and recon must be set.\n");
+	}
 	nwfs=parms->nwfsr;
 	if(!parms->tomo.square){
 		error("cutomo_grid requires parms->tomo.square=1.\n");
@@ -260,7 +263,7 @@ cutomo_grid::cutomo_grid(const parms_t* parms, const recon_t* recon, const curec
 					GPDATA[iwfs].PFF=PFF(iwfs, iwfs)();
 					if(!lhs_nttf) lhs_nttf=PFF(iwfs, iwfs).Nx();
 					else if(lhs_nttf!=PFF(iwfs, iwfs).Nx()){
-						error("PTTF for different WFS does not match: %d vs %ld\n", rhs_nttf, PTTF(iwfs, iwfs).Nx());
+						error("PFF for different WFS does not match: %d vs %ld\n", lhs_nttf, PFF(iwfs, iwfs).Nx());
 					}
 				}else if(!parms->recon.split || parms->tomo.splitlrt==2){
 					lhs_nttf=rhs_nttf;
@@ -362,12 +365,12 @@ __global__ void gpu_laplacian_do(lap_t* datai, Real* const* outall, const Real* 
 	}
 }
 
+#define DIM_GP 128
 /**
    The third grid dimension tells the wfs to handle.
    gout = GP*wfsopd    #if wfsopd is set
    ttf = - PTTF * gout #if nttf is set
 */
-#define DIM_GP 128
 __global__ static void gpu_gp_do(gpu_gp_t* data, Real* const* gout, Real* ttfout, Real* const* wfsopd, int nttf, int skip0){
 	__shared__ Real ggf[3][DIM_GP];
 	//__shared__ Real gy[DIM_GP];
@@ -629,15 +632,19 @@ void cutomo_grid::R(curcell& xout, Real beta, curcell& _grad, Real alpha, stream
 }
 
 void cutomo_grid::Rt(curcell& gout, Real beta, const curcell& xin, Real alpha, stream_t& stream){
+	const int accumulate=gout&&beta!=0;
 	if(!gout){
 		gout=curcell(nwfs, 1, grid->ngrad, (long*)NULL);
-	} else{
-		curcellscale(gout, beta, stream);
 	}
+	//the GP operation overwrites its output. Use a temporary array to accumulate.
+	curcell gtmp=accumulate?gout.New():gout;
 	HX(xin, alpha, stream);
-	do_gp(gout, opdwfs, rhs_nttf, 0, stream);
+	do_gp(gtmp, opdwfs, rhs_nttf, 0, stream);
 	curcell dummy;
-	do_gpt(dummy, gout, rhs_nttf, stream);
+	do_gpt(dummy, gtmp, rhs_nttf, stream);
+	if(accumulate){
+		curcelladd(gout, beta, gtmp, 1, stream);
+	}
 }
 
 /*

@@ -42,7 +42,7 @@ void ngsmod2wvf(cmat* wvf,            /**<[in/out] complex pupil function*/
 	real wvl,           /**<[in] the wavelength*/
 	const dmat* modm,     /**<[in] the NGS mode vector*/
 	const powfs_s* powfs,       /**<[in] the powfs configuration*/
-	int isa,              /**<[in] index of subaperture*/
+	long isa,             /**<[in] index of subaperture*/
 	real thetax,        /**<[in] direction of WFS*/
 	real thetay,        /**<[in] direction of WFS*/
 	const parms_s* parms  /**<[in] the parms*/
@@ -118,7 +118,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	const int dtratc=P(parms->skyc.dtrats,idtratc);
 	const int hasphy=(phystart>-1&&phystart<aster->nstep)?1:0;//whether physical optics is enabled
 		
-	const int nmod=mideal->nx;
+	const int nmod=(int)mideal->nx;
 	dmat* res=dnew(6, 1);/*Results. 
 							1-2: NGS and TT modes.,
 							3-4: On axis NGS and TT modes,
@@ -127,7 +127,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 	dmat* merr=dnew(nmod, 1);/*modal error */
 	dmat* merrm=dnew(nmod, 1);//reconstruction error signal
 	dmat* pmerrm=NULL;//set to merrm when there is output
-	const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;//number of simulation steps
+	const long nstep=aster->nstep?aster->nstep:parms->maos.nstep;//number of simulation steps
 	dmat* mres=dnew(nmod, nstep);//residual mode history
 	dmat* rnefs=parms->skyc.rnefs;//read out noise at each sampling frequency
 	dcell* zgradc=dcellnew3(aster->nwfs, 1, aster->ngrad, 0);//zernike gradient accumulation
@@ -155,7 +155,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 			if(P(aster->idtrats, iwfs)==idtratc){//active wfs at fastest rate
 				indk_fast |= (1<<iwfs);
 			}else{
-				dtrat_slow=P(aster->dtrats,iwfs);
+				dtrat_slow=(int)P(aster->dtrats,iwfs);
 			}
 		}
 		if(dtrat_slow!=dtratc&&(parms->skyc.servo!=-1)){
@@ -235,7 +235,7 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 				dcellzero(ints[iwfs]);
 			}
 		}
-		for(int istep=0; istep<nstep; istep++){
+		for(long istep=0; istep<nstep; istep++){
 			//if(istep<1000) dshow(mreal, "mreal total");
 			memcpy(P(merr), PCOL(mideal, istep), nmod*sizeof(real));
 			dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
@@ -282,13 +282,13 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 					for(long ig=0; ig<ng; ig++){
 						P(P(zgradc, iwfs), ig)+=P(aster->wfs[iwfs].ztiltout, ig, istep);
 					}
-					int dtrati=(multirate?P(aster->dtrats,iwfs):dtratc);
+					int dtrati=(int)(multirate?P(aster->dtrats,iwfs):dtratc);
 					if((istep+1)%dtrati==0){
 						indk|=1<<iwfs;//has output
 						dadd(&P(gradout,iwfs), 0, P(zgradc,iwfs), 1./dtrati);
 						dzero(P(zgradc,iwfs));
 						if(noisy){
-							int idtrati=(multirate?P(aster->idtrats,iwfs):idtratc);
+							int idtrati=(int)(multirate?P(aster->idtrats,iwfs):idtratc);
 							dmat* nea=P(aster->wfs[iwfs].pistat->sanea,idtrati);
 							//if((istep+1)==dtrati) dshow(nea, "nea[%d]", iwfs);
 							for(int i=0; i<nea->nx; i++){
@@ -319,8 +319,8 @@ dmat* physim(dmat** mresout, const dmat* mideal, const dmat* mideal_oa, real ngs
 						}/*isa */
 					}/*iwvl */
 					/*Form detector image from accumulated PSFs*/
-					const int dtrati=multirate?P(aster->dtrats,iwfs):dtratc;
-					const int idtrat=multirate?P(aster->idtrats,iwfs):idtratc;
+					const int dtrati=(int)(multirate?P(aster->dtrats,iwfs):dtratc);
+					const int idtrat=(int)(multirate?P(aster->idtrats,iwfs):idtratc);
 					if((istep+1)%dtrati==0){/*WFS has output */
 						indk|=1<<iwfs;//has output
 						dcellzero(ints[iwfs]);
@@ -591,7 +591,7 @@ void skysim_save(const sim_s* simu, const aster_s* aster, const real* ipres, int
 		fprintf(fp, "powfs.rne=[3 %.2f]\n", rne);
 		fprintf(fp, "powfs.phystep=[0 %ld]\n", 50+(long)P(parms->skyc.dtrats,seldtrat)*20);
 		fprintf(fp, "powfs.noisy=[1 1 ]\n");
-		fprintf(fp, "powfs.pixtheta=[0.8 %g]\n", parms->skyc.pixtheta[1]);
+		fprintf(fp, "powfs.pixtheta=[0.8 %g]\n", parms->skyc.pixtheta[0]*RAD2AS);
 		fprintf(fp, "powfs.pixpsa=[6 %d]\n", parms->skyc.pixpsa[0]);
 		fprintf(fp, "powfs.ncomp=[64 %d]\n", parms->maos.ncomp[0]);
 		fprintf(fp, "powfs.nwvl=[1 %d]\n", nwvl);

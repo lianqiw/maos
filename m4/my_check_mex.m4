@@ -24,7 +24,7 @@ AC_DEFUN([MY_CHECK_MEX], [AS_IF([test $enable_single = 1], [with_matlab=no],[
 	else
 		with_matlab=yes
 	fi
-	if test "$enable_single" = "yes" ;then
+	if test "$enable_single" = 1 ;then
 		if test "$with_matlab" != "no" ;then
 			AC_MSG_WARN([MATLAB linking is only possible without --enable-single. Disabled mex.])
 			with_matlab=no
@@ -33,7 +33,7 @@ AC_DEFUN([MY_CHECK_MEX], [AS_IF([test $enable_single = 1], [with_matlab=no],[
 
 	if test "$with_matlab" != "no" ;then
 		if test ${MEXDIR:0:1} = '~' ;then
-			MEXDIR=$HOME:${MEXDIR:1}
+			MEXDIR=$HOME${MEXDIR:1}
 		fi
 		if test -x "${MEXDIR}/mex" ;then
 			MEXDIR="${MEXDIR}"

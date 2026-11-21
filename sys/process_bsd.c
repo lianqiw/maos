@@ -33,8 +33,11 @@ int get_job_progname(char* res, int nres, int pid){
 	mib[3]=pid>0?pid:getpid();
 	char buf[PATH_MAX];
 	size_t cb=sizeof(buf);
-	sysctl(mib, 4, buf, &cb, NULL, 0);
-	strscpy(res, nres, path2); 
+	if(sysctl(mib, 4, buf, &cb, NULL, 0)){
+		warning("Failed to get program name of %d\n", mib[3]);
+		return 1;
+	}
+	strscpy(res, buf, nres);
 	return 0;
 }
 size_t get_job_mem(void){/*return in KiB */

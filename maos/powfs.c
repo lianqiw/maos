@@ -123,14 +123,15 @@ dmat *dcellmax_each(dcell *saa, real alpha){
 void wfspupmask(const parms_t* parms, loc_t* loc, dmat* amp, int iwfs){
 	long nloc=loc->nloc;
 	dmat* ampmask=dnew(nloc, 1);
+	real hsi=parms->wfs[iwfs].hs;
 	for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 		int jpowfs=parms->wfs[jwfs].powfs;
 		if(parms->powfs[jpowfs].lo) continue;
-		real hs=parms->wfs[jwfs].hs;
+		real hsj=parms->wfs[jwfs].hs;
 		real ht=parms->atm.hmax*0.7-parms->wfs[jwfs].hc;
-		real r=parms->aper.d*0.5*(1.-ht/hs)/(1.-ht/hs);
-		real sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht;
-		real sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht;
+		real r=parms->aper.d*0.5*(1.-ht/hsj)/(1.-ht/hsi);
+		real sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht/(1-ht/hsi);
+		real sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht/(1-ht/hsi);
 		loc_circle_add(ampmask, loc, sx, sy, r, 0, 1);
 	}
 	for(int i=0; i<nloc; i++){
@@ -196,7 +197,7 @@ sa_reduce(powfs_t* powfs, int ipowfs, real saat){
 	}
 
 	int count=0;
-	const int npsa=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->nysa;
+	const long npsa=powfs[ipowfs].pts->nxsa*powfs[ipowfs].pts->nysa;
 	for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 		if(P(saa, isa)>=saat){
 			/*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,
@@ -228,9 +229,9 @@ sa_reduce(powfs_t* powfs, int ipowfs, real saat){
 	powfs[ipowfs].saasum=dnew(PN(powfs[ipowfs].amp),1);
 		
 	for(int jwfs=0; jwfs<NX(powfs[ipowfs].saa); jwfs++){
-		P(powfs[ipowfs].saasum, jwfs)=dsum(P(powfs[ipowfs].saa, jwfs));
 		dresize(P(powfs[ipowfs].amp, jwfs), count*npsa, 1);
 		dresize(P(powfs[ipowfs].saa, jwfs), count, 1);
+		P(powfs[ipowfs].saasum, jwfs)=dsum(P(powfs[ipowfs].saa, jwfs));
 		if(powfs[ipowfs].loc_tel&&P(powfs[ipowfs].loc_tel, jwfs)){
 			locresize(P(powfs[ipowfs].loc_tel, jwfs), count*npsa);
 		}
@@ -297,9 +298,15 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
 		//make sure orderpad has the same evenness as order. orderpad is larger than order to handle misregistration.
 		const int orderpad=order+(order>2?(1+misreg/dsa)*2:0);//2*MAX(fabs(offsetx), fabs(offsety)); //to avoid missing subapertures when there is saoffx/saoffy
 		dbg("saloc: offsetx=%g, offsety=%g, order=%d, orderpad=%d\n", offsetx, offsety, order, orderpad);
+		/*Keep a subaperture if it overlaps with the annular aperture, enlarged
+		  by WFS and aperture misregistration (in unit of dsa). Subapertures
+		  with insufficient illumination are removed later by saat.*/
+		const real rmargin=(misreg+(PN(parms->aper.misreg)>=2?RSS(P(parms->aper.misreg, 0), P(parms->aper.misreg, 1)):0))/dsa;
 		/*r2max: Maximum distance^2 from the center to keep a subaperture */
-		real r2max=pow(order*0.5, 2);
-		real r2min=dsa<parms->aper.din?pow(parms->aper.din/dsa/2, 2):-1;
+		const real r2max=pow(order*0.5+rmargin, 2);
+		/*r2min: subapertures entirely within this distance^2 are obscured. */
+		const real rin=parms->aper.din/dsa/2-rmargin;
+		const real r2min=(dsa<parms->aper.din&&rin>0)?pow(rin, 2):-1;
 		/*the lower left *grid* coordinate of the subaperture */
 		
 		powfs[ipowfs].saloc=locnew(orderpad*orderpad, dsa, dsa);
@@ -310,13 +317,16 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
 			//Normalized coordinate in uniq of sa size
 				real xc=((real)i+offsetx);
 				real yc=((real)j+offsety);
-				//Radius of four corners.
-				real r1=pow(xc+1, 2)+pow(yc+1, 2);
-				real r2=pow(xc+1, 2)+pow(yc, 2);
-				real r3=pow(xc, 2)+pow(yc+1, 2);
-				real r4=pow(xc, 2)+pow(yc, 2);
-				if(r1<r2max||r2<r2max||r3<r2max||r4<r2max||
-					r1>r2min||r2>r2min||r3>r2min||r4>r2min){
+				//Minimum distance^2 from the center to the subaperture
+				const real dxmin=xc>0?xc:(xc+1<0?-(xc+1):0);
+				const real dymin=yc>0?yc:(yc+1<0?-(yc+1):0);
+				const real rmin2=dxmin*dxmin+dymin*dymin;
+				//Maximum distance^2 from the center to the subaperture (farthest corner)
+				const real dxmax=MAX(fabs(xc), fabs(xc+1));
+				const real dymax=MAX(fabs(yc), fabs(yc+1));
+				const real rmax2=dxmax*dxmax+dymax*dymax;
+				//Keep it if it is partially inside the outer edge and not entirely inside the inner obscuration.
+				if(rmin2<r2max && rmax2>r2min){
 					powfs[ipowfs].saloc->locx[count]=xc*dsa;
 					powfs[ipowfs].saloc->locy[count]=yc*dsa;
 					count++;
@@ -324,7 +334,7 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
 			}
 		}
 		//info("count=%d\n", count);
-		powfs[ipowfs].saloc->nloc=count;
+		locresize(powfs[ipowfs].saloc, count);//also moves locy. Do not set nloc directly.
 	}
 	powfs[ipowfs].saloc->ht=INFINITY;//indicate that it is subaperture corner and do not use it for ray tracing.
 	/*convert saloc to pts*/
@@ -502,10 +512,12 @@ setup_shwfs_geom(powfs_t* powfs, const parms_t* parms, map_t* aper, int ipowfs){
  */
 void setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	//TIC;tic;
+	//An empty distortion string is treated as no distortion. Use the same test everywhere below.
+#define HAS_TEL2WFS(iwfs) (parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]&&parms->distortion.tel2wfs[iwfs][0])
 	int multi=0;//Determine wheather each wfs has different amplitude
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
-		if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]&&strlen(parms->distortion.tel2wfs[iwfs])>0){
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
+		if(HAS_TEL2WFS(iwfs)){
 			multi=multi|1;
 		}
 		if(parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy){
@@ -527,11 +539,11 @@ void setup_powfs_misreg_tel(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	}
 OMP_FOR(nwfsp)
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 		loc_t *loc=powfs[ipowfs].loc;
-		if((parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]) || parms->wfs[iwfs].misregc){
+		if(HAS_TEL2WFS(iwfs) || parms->wfs[iwfs].misregc){
 			//loc_tel: account for distortion as well as rotation misregistration, but not shift in x/y which is done in mkamp.
-			if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfs]){
+			if(HAS_TEL2WFS(iwfs)){
 				P(powfs[ipowfs].loc_tel, jwfs)
 					=loctransform(powfs[ipowfs].loc, parms->distortion.tel2wfs[iwfs]);
 			}else{//misregc is set. need to rotate grid, so duplicate it.
@@ -541,13 +553,18 @@ OMP_FOR(nwfsp)
 			if(parms->wfs[iwfs].misregc){
 				locrot(loc, -parms->wfs[iwfs].misregc);
 			}
+		}else if(powfs[ipowfs].loc_tel){
+			//Other WFS of this powfs need loc_tel. Users of loc_tel expect every entry to be valid.
+			//Do not use locref() as sa_reduce() modifies loc_tel and loc separately.
+			P(powfs[ipowfs].loc_tel, jwfs)=locdup(powfs[ipowfs].loc);
 		}
 	}
+#undef HAS_TEL2WFS
 }
 void setup_powfs_amp(powfs_t* powfs, const parms_t* parms, const map_t* aper, const dmat *amisreg, int ipowfs){
 	int has_misreg=0;
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 		if(parms->wfs[iwfs].misregx||parms->wfs[iwfs].misregy){
 			has_misreg=1;break;
 		}
@@ -558,7 +575,7 @@ void setup_powfs_amp(powfs_t* powfs, const parms_t* parms, const map_t* aper, co
 
 OMP_FOR(nwfsp)
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+		int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 		loc_t *loc=powfs[ipowfs].loc_tel?P(powfs[ipowfs].loc_tel, jwfs):powfs[ipowfs].loc;
 		P(powfs[ipowfs].amp, jwfs)=mkamp(loc, aper,
 			parms->wfs[iwfs].misregx-PRR(amisreg,0), parms->wfs[iwfs].misregy-PRR(amisreg,1),
@@ -582,7 +599,7 @@ setup_powfs_misreg_dm(powfs_t* powfs, const parms_t* parms, int ipowfs){
 OMP_FOR_COLLAPSE(2, NTHREAD)
 		for(int idm=0; idm<parms->ndm; idm++){
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 				if(parms->distortion.dm2wfs[iwfs+idm*parms->nwfs]){
 					P(powfs[ipowfs].loc_dm, jwfs, idm)
 						=loctransform(powfs[ipowfs].loc, parms->distortion.dm2wfs[iwfs+idm*parms->nwfs]);
@@ -619,7 +636,7 @@ setup_shwfs_grad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			/*This mkg takes about 5 seconds. */
 			powfs[ipowfs].GS0=dspcellnew(NX(powfs[ipowfs].amp), 1);
 	OMP_FOR(NX(powfs[ipowfs].amp))
-			for(int jwfs=0; jwfs<NX(powfs[ipowfs].amp); jwfs++){
+			for(int jwfs=0; jwfs<(int)NX(powfs[ipowfs].amp); jwfs++){
 				P(powfs[ipowfs].GS0, jwfs)=mkg(powfs[ipowfs].loc,
 					powfs[ipowfs].loc,
 					P(powfs[ipowfs].amp, jwfs),
@@ -679,7 +696,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				nea_check(P(nea, ii), nsa, ng);
 			}
 		} else{
-			int nnea=PN(powfs[ipowfs].amp);
+			int nnea=(int)PN(powfs[ipowfs].amp);
 			nea=dcellnew(nnea, 1);
 			dbg2("powfs%d: generate neasim from powfs.neasim.\n", ipowfs);
 			for(int jwfs=0; jwfs<nnea; jwfs++){
@@ -692,7 +709,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 				nea_rad=nea_rad*MAS2RAD/sqrt(parms->powfs[ipowfs].dtrat*parms->sim.dt/parms->sim.dtref);//in rad
 				real* saa=P(P(powfs[ipowfs].saa, jwfs));
 				dmat* nea_each=P(nea, jwfs)=dnew(nsa, 3);
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					if(saa[isa]>saat){
 						P(nea_each, isa, 0)=P(nea_each, isa, 1)=nea_rad/sqrt(saa[isa]);
 					}
@@ -702,7 +719,7 @@ void setup_powfs_neasim(const parms_t* parms, powfs_t* powfs){
 		/*for(int wfsind=0; wfsind<NX(nea); wfsind++){
 			dmat *saa=PR(powfs[ipowfs].saa, wfsind);
 			dmat *nea_each=P(nea, wfsind);
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				if(P(saa,isa)<saat){
 					P(nea_each, isa, 0)=P(nea_each, isa, 1)=P(nea_each, isa, 2)=INFINITY;
 				}
@@ -728,7 +745,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	const int pixpsay=parms->powfs[ipowfs].pixpsa;
 	const int radpix=parms->powfs[ipowfs].radpix;
 	const real dsa=powfs[ipowfs].pts->dsa;
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	if(parms->powfs[ipowfs].llt){
 		const int nllt=parms->powfs[ipowfs].llt->nllt;
 		real rsa2, rsa2max=0;
@@ -748,7 +765,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			P(powfs[ipowfs].srot, illt)=dnew(nsa, 1);
 			P(powfs[ipowfs].srsa, illt)=dnew(nsa, 1);
 
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				real ddx=(powfs[ipowfs].saloc->locx[isa]-ox2);
 				real ddy=(powfs[ipowfs].saloc->locy[isa]-oy2);
 				rsa2=pow(ddx, 2)+pow(ddy, 2);
@@ -777,7 +794,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				desrot=atan2(ddy, ddx);
 			}
 			dmat* saa=PR(powfs[ipowfs].saa, illt);
-			for(int isa=0; isa<nsa; isa++){
+			for(long isa=0; isa<nsa; isa++){
 				int ind=(int)round(P(P(powfs[ipowfs].srsa, illt), isa)/dprint);
 				real irot=fabs(P(P(powfs[ipowfs].srot, illt), isa)-desrot);
 				if(ind>=pnsa){
@@ -831,7 +848,7 @@ setup_shwfs_prep_phy(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			}else if(notf<128 && notf>120){
 			notf=128;
 			}*/
-			notf=nextfftsize(notf);
+			notf=(int)nextfftsize(notf);
 			okind="calculated";
 		}
 		powfs[ipowfs].notfx=notf;
@@ -950,7 +967,7 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	dmat* pixoffx=0;
 	dmat* pixoffy=0;
 	if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
-		const int nsa=powfs[ipowfs].saloc->nloc;
+		const long nsa=powfs[ipowfs].saloc->nloc;
 		if(fabs(parms->powfs[ipowfs].pixoffx)<1){
 			info("powfs%d: uniform pixel offset\n", ipowfs);
 			//both pixoff within 1 denotes constant offset in unit of pixel.
@@ -970,7 +987,7 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				const real st=sin(angle);
 
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
-					for(int isa=0; isa<nsa; isa++){
+					for(long isa=0; isa<nsa; isa++){
 						real ox=powfs[ipowfs].saloc->locx[isa]+dsah;
 						real oy=powfs[ipowfs].saloc->locy[isa]+dsah;
 						real dx=ox*ct-oy*st-ox;
@@ -987,7 +1004,7 @@ setup_shwfs_dtf(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			} else if(parms->powfs[ipowfs].pixoffx==2){
 				info("powfs%d: CCD global shift wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
 				for(int jwfs=0; jwfs<nwfs; jwfs++){
-					for(int isa=0; isa<nsa; isa++){
+					for(long isa=0; isa<nsa; isa++){
 						real gx=parms->powfs[ipowfs].pixoffy;
 						real gy=0;
 						if(parms->powfs[ipowfs].radpix){
@@ -1076,7 +1093,7 @@ static void setup_powfs_focus(powfs_t* powfs, const parms_t* parms, int ipowfs){
 static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	char* fnprof=parms->powfs[ipowfs].llt->fnprof;
 	dcell* Nains=dcellread("%s", fnprof);
-	int nprof=PN(Nains);
+	int nprof=(int)PN(Nains);
 	if(nprof!=1&&nprof!=parms->powfs[ipowfs].nwfs){
 		error("The sodium profile input %s is in wrong fromat\n", fnprof);
 	}
@@ -1098,7 +1115,7 @@ static void setup_powfs_sodium(powfs_t* powfs, const parms_t* parms, int ipowfs)
 	fnprof=parms->powfs[ipowfs].llt->fnprep;
 	if(fnprof){
 		Nains=dcellread("%s", fnprof);
-		nprof=PN(Nains);
+		nprof=(int)PN(Nains);
 		if(nprof!=1&&nprof!=parms->powfs[ipowfs].nwfs){
 			error("The sodium profile input %s is in wrong fromat\n", fnprof);
 		}
@@ -1114,19 +1131,35 @@ static int etf_match(etf_t* etf, int icol, real hs, real thresh){
 	return (etf&&etf->icol==icol&&fabs(etf->hs-hs)<thresh);
 }
 /**
-   Compute Elongation Transfer function.
-   - mode=0: for preparation of matched filter.
-   - mode=1: for simulation.
-   - mode=2: for simulation, next profile (linear interpolation.)
+   Clear one of etfprep, etfsim, etfsim2 and free it if no other one shares it.
+
+   @param[in,out] powfs The powfs struct of this powfs.
+   @param[in,out] petf Pointer to one of the etf members of powfs. Set to NULL.
+*/
+static void etf_release(powfs_t* powfs, etf_t** petf){
+	etf_t* etf=*petf;
+	*petf=NULL;
+	if(etf&&etf!=powfs->etfprep&&etf!=powfs->etfsim&&etf!=powfs->etfsim2){
+		etf_free_do(etf);
+	}
+}
+/**
+   Compute Elongation Transfer function. An existing ETF is reused if it matches.
+
+   @param[in,out] powfs The powfs struct array. etfprep, etfsim, or etfsim2 is updated.
+   @param[in] parms The parameter struct.
+   @param[in] ipowfs Index of the powfs.
+   @param[in] mode 0: for preparation of matched filter (etfprep). 1: for simulation (etfsim). 2: for simulation, next profile for linear interpolation (etfsim2).
+   @param[in] icol Column of the sodium profile to use.
+   @param[in] deltah Offset of the sodium layer range (m).
+   @param[in] thresh Tolerance of the range (m) to reuse an existing ETF.
 */
 void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode, int icol, real deltah, real thresh){
 	if(!parms->powfs[ipowfs].llt) return;
     etf_t** petf=0;
 	const dcell* sodium=powfs[ipowfs].sodium;
 	if(mode==0){/*preparation. */
-		if(powfs[ipowfs].etfprep&&powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
-			etf_free(powfs[ipowfs].etfprep);
-		}
+		etf_release(&powfs[ipowfs], &powfs[ipowfs].etfprep);
 		if(powfs[ipowfs].sodiumprep){
 			dbg("Using sodiumprep for etfprep\n");
 			sodium=powfs[ipowfs].sodiumprep;
@@ -1141,10 +1174,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		if(etf_match(powfs[ipowfs].etfsim, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			dbg2("No need to update etfsim\n");
 		} else{
-			if(powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
-				etf_free(powfs[ipowfs].etfsim);
-			}
-			powfs[ipowfs].etfsim=0;
+			etf_release(&powfs[ipowfs], &powfs[ipowfs].etfsim);
 			if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 				//reuse etfsim2 as etfsim
 				dbg2("reuse etfsim2 as etfsim.\n");
@@ -1157,10 +1187,7 @@ void setup_shwfs_etf(powfs_t *powfs, const parms_t *parms, int ipowfs, int mode,
 		if(etf_match(powfs[ipowfs].etfsim2, icol, parms->powfs[ipowfs].hs+deltah, thresh)){
 			dbg2("No need to update etfsim2\n");
 		} else{
-			if(powfs[ipowfs].etfsim2!=powfs[ipowfs].etfsim){
-				etf_free(powfs[ipowfs].etfsim2);
-			}
-			powfs[ipowfs].etfsim2=0;
+			etf_release(&powfs[ipowfs], &powfs[ipowfs].etfsim2);
 			petf=&powfs[ipowfs].etfsim2;
 		}
 	} else{
@@ -1198,7 +1225,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	llt->amp=dnew(nxsa*nxsa, 1);
 	if(lltcfg->fnamp){
 		map_t* lltamp=mapread("%s", lltcfg->fnamp);
-		prop(&(propdata_t){.mapin=lltamp, .ptsout=llt->pts, .phiout=P(llt->amp)});
+		prop(ADDR((propdata_t){.mapin=lltamp, .ptsout=llt->pts, .phiout=P(llt->amp)}));
 		sumamp2=ddot(llt->amp, llt->amp);
 		mapfree(lltamp);
 	} else{
@@ -1231,12 +1258,12 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 	dscale(llt->amp, sumamp2);
 	if(lltcfg->fnsurf){
 		mapcell* ncpa=genscreen_str(lltcfg->fnsurf);
-		int nlotf=NX(ncpa)*NY(ncpa);
+		int nlotf=(int)(NX(ncpa)*NY(ncpa));
 		assert(nlotf==1||nlotf==parms->powfs[ipowfs].nwfs);
 		llt->ncpa=dcellnew(nlotf, 1);
 		for(int ilotf=0; ilotf<nlotf; ilotf++){
 			P(llt->ncpa, ilotf)=dnew(nxsa, nxsa);
-			prop(&(propdata_t){.mapin=P(ncpa, ilotf), .ptsout=llt->pts, .phiout=P(P(llt->ncpa, ilotf))});
+			prop(ADDR((propdata_t){.mapin=P(ncpa, ilotf), .ptsout=llt->pts, .phiout=P(P(llt->ncpa, ilotf))}));
 		}
 		cellfree(ncpa);
 	}
@@ -1337,7 +1364,7 @@ setup_powfs_llt(powfs_t* powfs, const parms_t* parms, int ipowfs){
 static void
 setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 	TIC;tic;
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	const int ntry=500;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
@@ -1378,7 +1405,7 @@ setup_shwfs_cog_nea(const parms_t* parms, powfs_t* powfs, int ipowfs){
 			bkgrnd2c=PCOLR(powfs[ipowfs].bkgrndc, jwfs);
 		}
 		dmat* nea=dnew(2, 2);
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			dmat* bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
 			dmat* bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
 			dzero(nea);
@@ -1438,7 +1465,7 @@ static void setup_shwfs_cog_gradoff(const parms_t* parms, powfs_t* powfs, int ip
 		error("setting up gradoff requires i0 to be available\n");
 		return;
 	}
-	const int nsa=powfs[ipowfs].saloc->nloc;
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const real pixthetax=parms->powfs[ipowfs].radpixtheta;
 	const real pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -1457,7 +1484,7 @@ static void setup_shwfs_cog_gradoff(const parms_t* parms, powfs_t* powfs, int ip
 	}
 
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			dmat* ints=PR(intstat->i0, isa, jwfs);/*equivalent noise*/
 			dmat* cogmask=NULL;
 			if(powfs[ipowfs].intstat->cogmask){
@@ -1499,9 +1526,9 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 			//convert runtime saved ints.
 				intstat->i0=dcellnew(nsa, parms->powfs[ipowfs].nwfs);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dcell* i0=dcellread("%s/ints_1_wfs%d", parms->powfs[ipowfs].i0load, iwfs);
-					for(int isa=0; isa<nsa; isa++){
+					for(long isa=0; isa<nsa; isa++){
 						P(intstat->i0, isa, jwfs)=dref(P(i0, isa));
 					}
 					dcellfree(i0);
@@ -1528,7 +1555,7 @@ setup_shwfs_phygrad(powfs_t* powfs, const parms_t* parms, int ipowfs){
 				info("Using 1 sepsf for each wfs when loading sepsf\n");
 				intstat->sepsf=dccellnew(parms->powfs[ipowfs].nwfs, 1);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					dcell* sepsf=P(intstat->sepsf, jwfs)=dcellread("%s_wfs%d", parms->powfs[ipowfs].piinfile, iwfs);
 					real pmax=dmax(P(sepsf, 0));
 					if(P(P(sepsf, 0), 0)>pmax*0.5){
@@ -1681,7 +1708,7 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 				warning("powfs%d: will add to existing gradoff.\n", ipowfs);
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 				if(P(opdbias, jwfs)){
 					real* amp=P(PR(powfs[ipowfs].amp, jwfs));
 					if(parms->powfs[ipowfs].type==WFS_PY){//pywfs
@@ -1711,13 +1738,13 @@ void setup_powfs_calib(const parms_t* parms, powfs_t* powfs){
 				powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 			}
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-				int nsa=powfs[ipowfs].saloc->nloc;
+				long nsa=powfs[ipowfs].saloc->nloc;
 				if(!P(powfs[ipowfs].gradoff, jwfs)){
 					P(powfs[ipowfs].gradoff, jwfs)=dnew(nsa*2, 1);
 				}
 
-				real pixthetax=parms->powfs[ipowfs].pixtheta;
-				real pixthetay=parms->powfs[ipowfs].radpixtheta;
+				real pixthetax=parms->powfs[ipowfs].radpixtheta;
+				real pixthetay=parms->powfs[ipowfs].pixtheta;
 				for(int isa=0; isa<nsa; isa++){
 					real gx=pixthetax*PR(powfs[ipowfs].pixoffx, isa, jwfs);
 					real gy=pixthetay*PR(powfs[ipowfs].pixoffy, isa, jwfs);
@@ -1759,7 +1786,7 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 		error("Please update usage of amp if there are multiple Pyramid WFS in this powfs.\n");
 	}
 	pywfs_t *pywfs=powfs[ipowfs].pywfs=pywfs_new((pywfs_cfg_t*)pycfg, powfs[ipowfs].loc, P(powfs[ipowfs].amp,0));
-	pywfs->iwfs0=P(parms->powfs[ipowfs].wfs, 0);
+	pywfs->iwfs0=(int)P(parms->powfs[ipowfs].wfs, 0);
 	powfs[ipowfs].saloc=locref(pywfs->saloc);
 	powfs[ipowfs].saa=dcellnew(1,1);
 	P(powfs[ipowfs].saa,0)=dref(pywfs->saa);
@@ -1768,12 +1795,12 @@ void setup_pywfs(const pywfs_cfg_t *pycfg, powfs_t *powfs, const parms_t *parms,
 
 	//Determine the NEA. It will be changed by powfs.gradscale as dithering converges
 	{
-		int nsa=PN(pywfs->saa);
+		long nsa=PN(pywfs->saa);
 		int ng=pywfs_ng(pycfg);
 		powfs[ipowfs].sanea=dcellnew(1, 1);
 		dmat *sanea=P(powfs[ipowfs].sanea, 0)=dnew(nsa, ng);
 		real rne=parms->powfs[ipowfs].rne;
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			real ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
 			real sig=P(pywfs->saa, isa)*parms->powfs[ipowfs].siglev;//siglev of subaperture
 			real neai=pow(ogi/sig, 2)*(sig+4*rne*rne);
@@ -1911,11 +1938,9 @@ static void free_powfs_shwfs(powfs_t* powfs, int ipowfs){
 	dfree(powfs[ipowfs].focus);
 	dcellfree(powfs[ipowfs].sodium);
 	dcellfree(powfs[ipowfs].sodiumprep);
-	if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
-		etf_free(powfs[ipowfs].etfprep);
-	}
-	etf_free(powfs[ipowfs].etfsim);
-	etf_free(powfs[ipowfs].etfsim2);
+	etf_release(&powfs[ipowfs], &powfs[ipowfs].etfprep);
+	etf_release(&powfs[ipowfs], &powfs[ipowfs].etfsim);
+	etf_release(&powfs[ipowfs], &powfs[ipowfs].etfsim2);
 	dcellfree(powfs[ipowfs].opdadd);
 	dcellfree(powfs[ipowfs].opdbias);
 	dcellfree(powfs[ipowfs].gradoff);

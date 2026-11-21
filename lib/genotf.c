@@ -113,7 +113,7 @@ static void genotf_do(cmat** otf, long pttr, long npsfx, long npsfy,
  */
 static void *genotf_wrap(thread_t* info){
 	GENOTF_T* data=(GENOTF_T*)info->data;
-	const int nsa=data->nsa;
+	const long nsa=data->nsa;
 	ccell* otf=data->otf;
 	loc_t* loc=data->loc;
 	const long nxsa=loc->nloc;
@@ -127,11 +127,12 @@ static void *genotf_wrap(thread_t* info){
 	const dmat* B=data->B;
 	const T_VALID* pval=data->pval;
 	if(!(check(!area||NX(area)*NY(area)==nsa) 
-		|| check(!amp||NX(amp)*NY(amp)==nxsa*nsa) 
-		||	check(!opdbias||NX(opdbias)*NY(opdbias)==nxsa*nsa))){
+		&& check(!amp||NX(amp)*NY(amp)==nxsa*nsa) 
+		&& check(!opdbias||NX(opdbias)*NY(opdbias)==nxsa*nsa))){
 		error("Invalid input\n");
+		return NULL;
 	}
-	for(int isa=info->start; isa<info->end; isa++){
+	for(long isa=info->start; isa<info->end; isa++){
 		info_progress(isa,nsa);
 		const real* opdbiasi=NULL;
 		if(opdbias){
@@ -225,29 +226,39 @@ static dmat* loc_sep(const loc_t* loc){
    none null to build OTF for a static map.
 
    2020-01-21: Compute OTF using nyquist sampling and then upsample with FFT.
-*/
 
-void genotf(ccell** potf,    /**<The otf array for output*/
-	loc_t* loc,    /**<the aperture grid (same for all apertures)*/
-	const dmat* amp,    /**<The amplitude map of all the (sub)apertures*/
-	const dmat* opdbias,/**<The static OPD bias (complex part of amp). */
-	const dmat* area,   /**<normalized area of the (sub)apertures*/
-	real thres,  /**<The threshold to consider a (sub)aperture as full*/
-	real wvl,    /**<The wavelength. only needef if opdbias is not null*/
-	const dmat* cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
-	real r0,     /**<Fried parameter*/
-	real l0,     /**<Outer scale*/
-	long npsfx,   /**<Size of PSF*/
-	long npsfy,   /**<Size of PSF*/
-	long nsa,      /**<Number of (sub)apertures*/
-	long pttr      /**<Remove piston/tip/tilt*/
-){
+   @param[in,out] potf The otf array for output. Allocated if NULL; otherwise each OTF is overwritten.
+   @param[in] loc the aperture grid (same for all apertures)
+   @param[in] amp The amplitude map of all the (sub)apertures. NULL for uniform amplitude.
+   @param[in] opdbias The static OPD bias (complex part of amp). NULL for none.
+   @param[in] area normalized area of the (sub)apertures
+   @param[in] thres The threshold to consider a (sub)aperture as full
+   @param[in] wvl The wavelength (m).
+   @param[in] cov The covariance. If not supplied use r0 and l0 for von Karman spectrum.
+   @param[in] r0 Fried parameter (m).
+   @param[in] l0 Outer scale (m).
+   @param[in] npsfx Size of PSF along x.
+   @param[in] npsfy Size of PSF along y.
+   @param[in] nsa Number of (sub)apertures
+   @param[in] pttr Remove piston/tip/tilt
+*/
+void genotf(ccell** potf, loc_t* loc, const dmat* amp, const dmat* opdbias, const dmat* area, real thres, real wvl,
+	const dmat* cov, real r0, real l0, long npsfx, long npsfy, long nsa, long pttr){
 	if(amp&&loc->nloc*nsa!=NX(amp)*NY(amp)){
 		error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, NX(amp), NY(amp), nsa);
-	} else if(cov&&(NX(amp)!=NX(cov)||NX(cov)!=NY(cov))){
+		return;
+	} else if(cov&&(loc->nloc!=NX(cov)||NX(cov)!=NY(cov))){
 		error("loc and cov mismatch\n");
+		return;
 	} else if(nsa<1||npsfx<1||npsfy<1){
 		error("nsa, notfx, notfy has to be at least 1\n");
+		return;
+	} else if(area&&NX(area)*NY(area)!=nsa){
+		error("area has wrong size %ldx%ld, nsa=%ld\n", NX(area), NY(area), nsa);
+		return;
+	} else if(opdbias&&NX(opdbias)*NY(opdbias)!=loc->nloc*nsa){
+		error("opdbias has wrong size %ldx%ld, expect %ld\n", NX(opdbias), NY(opdbias), loc->nloc*nsa);
+		return;
 	}
 	/*creating pairs of points that both exist with given separation*/
 	T_VALID* pval=gen_pval(npsfx, npsfy, loc);/*returns T_VALID array. */
@@ -265,7 +276,7 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 	if(opdbias&&dsumsq(opdbias)==0){
 		opdbias=0;
 	}
-	if(!opdbias&&nsa>1){
+	if(!opdbias&&nsa>1&&area){
 		real maxarea=0;
 		for(long isa=0; isa<nsa; isa++){
 			if(P(area,isa)>maxarea){
@@ -273,7 +284,7 @@ void genotf(ccell** potf,    /**<The otf array for output*/
 				isafull=isa;
 			}
 		}
-		if(isafull>0){
+		if(isafull>=0){
 			genotf_do(&otffull, pttr, npsfx, npsfy, loc, amp?P(amp)+isafull*nloc:NULL, NULL, wvl, cov, pval);
 		}
 	}
@@ -298,8 +309,15 @@ void genotf(ccell** potf,    /**<The otf array for output*/
    time. The 2-d covariance is additionally averaged over all the points so that
    B(r)=<f(x)'f(x+r)>_x,t To compute B, we first figure out the number of
    overlapping pairs of points for each r and then compute the averaging. When
-   the amplitude is less than the threshold, the point does not count.*/
+   the amplitude is less than the threshold, the point does not count.
 
+   @param[in] loc Point coordinates. Its map is created if not yet.
+   @param[in] amp Amplitude on loc. NULL to use all points.
+   @param[in] ampthres Points with amplitude below this threshold are excluded.
+   @param[in] cov The 4-d covariance of nloc*nloc.
+   @param[in] norm 1: average to compute the covariance. 0: sum to compute approximate PSD.
+   @return Newly allocated 2-d covariance with the peak at the center. The caller frees it.
+*/
 dmat* mk2dcov(loc_t* loc, const dmat* amp, real ampthres, const dmat* cov, int norm){
 	if(loc->nloc!=NX(cov)||loc->nloc!=NY(cov)){
 		error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, NX(cov), NY(cov));
@@ -339,7 +357,7 @@ dmat* mk2dcov(loc_t* loc, const dmat* amp, real ampthres, const dmat* cov, int n
 				long ix=map_x[iloc]+im2;
 				long iy=map_y[iloc]+jm2;
 				long iloc2=(long)loc_map_get(map, ix, iy);
-				if(iloc2>0&&(!amp||P(amp,iloc2)>=ampthres)){
+				if(iloc2>0&&(!amp||P(amp,iloc2-1)>=ampthres)){
 					acc+=P(cov, iloc2-1, iloc);
 					count++;
 				}

@@ -279,7 +279,7 @@ dmat* cov_vonkarman(const loc_t* loc, const dmat* modz,	real L0){
 	dmm(&CC, 1, modz, modz, "tn", 1);
 	long nembed=0;
 	lmat* embed=loc_create_embed(&nembed, loc, 2, 0);
-	int nmod=NY(modz);
+	long nmod=NY(modz);
 	ccell* spect=ccellnew(nmod, 1);
 	OMP_FOR(NTHREAD)
 	for(long ic=0; ic<nmod; ic++){
@@ -310,6 +310,7 @@ dmat* cov_vonkarman(const loc_t* loc, const dmat* modz,	real L0){
 	dfree(tmp);
 	lfree(embed);
 	dfree(CCi);
+	dfree(CC);
 	dfree(turbspec);
 	ccellfree(spect);
 	return DD;
@@ -344,6 +345,7 @@ dcell* cov_diagnolize(const dmat* mod, /**<Input mode*/
 	if(i<S->nx){
 		dbg("Drop %ld last columns.\n", S->nx-i);
 		dresize(kl, NX(kl), i);
+		dresize(S, i, 1);//keep the variance consistent with the modes
 	}
 	dfree(U);
 	dfree(Vt);
@@ -385,11 +387,12 @@ static dcell* KL_vonkarman_do(const loc_t* loc, int ttr, real iac, real L0){
 		/*real dx=loc->dx*0.5;
 		real dy=loc->dy*0.5;
 		loc_t *ploc=mksqloc((xmax-xmin+2*loc->dx)/dx+1, (ymax-ymin+loc->dy*2)/dy+1, dx, dy, xmin-loc->dx, ymin-loc->dy);*/
-		dsp *h=mkh_cubic(&(propdata_t){.locin=loc, .locout=loc}, iac);
+		dsp *h=mkh_cubic(ADDR((propdata_t){.locin=loc, .locout=loc}), iac);
 		dmat *modu=NULL;
 		dcellmm(&modu, h, modz, "nn", 1);//convert to dense modal matrix.
 		dspfree(h);
 		cov=cov_vonkarman(loc, modu, L0);
+		dfree(modu);
 		//locfree(ploc);
 	}
 	kl=cov_diagnolize(modz, cov);

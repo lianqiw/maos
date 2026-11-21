@@ -37,8 +37,8 @@ dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
 		ncol=NY(v);
 	}
 	if(nseg<=1) nseg=1;
-	const int lseg2=nx/(nseg+1);
-	const int lseg=lseg2*2;
+	const long lseg2=nx/(nseg+1);
+	const long lseg=lseg2*2;
 	dmat* psd=dnew(lseg2+1, ncol);
 	cmat* hat=cnew(lseg, 1);
 	//cfft2plan(hat, -1);
@@ -46,19 +46,19 @@ dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
 		real* ppsd=PCOL(psd, icol);
 		for(int iseg=0; iseg<nseg; iseg++){
 			real* p=P(v)+icol*nx+iseg*lseg2;
-			for(int ix=0; ix<lseg; ix++){
+			for(long ix=0; ix<lseg; ix++){
 				P(hat,ix)=p[ix]*W_J(ix, lseg2);
 			}
 			cfft2(hat, -1);
 			ppsd[0]+=cabs2(P(hat,0));
-			for(int ix=1; ix<lseg2; ix++){
+			for(long ix=1; ix<lseg2; ix++){
 				ppsd[ix]+=cabs2(P(hat,ix))+cabs2(P(hat,lseg-ix));
 			}
 			ppsd[lseg2]+=cabs2(P(hat,lseg2));
 		}
 	}
 	real sumwt=0;
-	for(int ix=0; ix<lseg; ix++){
+	for(long ix=0; ix<lseg; ix++){
 		sumwt+=pow(W_J(ix, lseg2), 2);
 	}
 	sumwt*=lseg*nseg;
@@ -72,9 +72,9 @@ dmat* psd1d(const dmat* v, /**<[in] The data sequence*/
 dmat* psd1dt(const dmat* v, long nseg, real dt){
 	dmat* psd=psd1d(v, nseg);
 	dmat* psd2=dnew(NX(psd), psd->ny+1);
-	int N=(psd->nx-1)*2;
+	long N=(psd->nx-1)*2;
 	real df=1./(N*dt);
-	for(int i=0; i<NX(psd); i++){
+	for(long i=0; i<NX(psd); i++){
 		P(psd2,i)=df*i;
 	}
 	dscale(psd, 1./df);//divide so the value is point, not integrated in a bin.
@@ -89,6 +89,7 @@ dmat* psd1dt(const dmat* v, long nseg, real dt){
 dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
 	if(NY(psdin)!=2){
 		error("psdin should have 2 columns for frequency and psd.\n");
+		return NULL;
 	}
 	dmat* f1=drefcols(psdin, 0, 1);
 	dmat* psd1=dsub(psdin, 0, 0, 1, 1);//copy
@@ -115,6 +116,11 @@ dmat* psd_interp1(const dmat* psdin, const dmat* fnew, int uselog){
    Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.
  */
 dmat* psd_vibid(const dmat* psdin){
+	int nmaxp=100;
+	if(!psdin||NY(psdin)<2||NX(psdin)<3){
+		warning("psdin should have at least 3 rows and 2 columns.\n");
+		return dnew(4, 0);
+	}
 	real* f=P(psdin);
 	real* psd=PCOL(psdin, 1);
 	dmat* y=dsub(psdin, 0, 0, 1, 1);
@@ -123,8 +129,7 @@ dmat* psd_vibid(const dmat* psdin){
 	int inpeak=0;
 	real ylpf0=P(y,1);
 	real dylpf0=fabs(P(y,1)-P(y,0));
-	real ylpf=0, dylpf=0;
-	int nmaxp=100;
+	real ylpf=ylpf0, dylpf=dylpf0;//start the second stage from the first stage.
 	dmat* res=dnew(4, nmaxp);
 	real thres=25e-18;/*threshold: 5 nm*/
 	real sumxy=0, sumy=0, sum=0;
@@ -171,6 +176,12 @@ dmat* psd_vibid(const dmat* psdin){
 			}
 		}
 	}
+	if(inpeak&&sum*0.5>thres){//peak extends to the end. Also keeps a peak that has been combined.
+		P(res, 0, count)=sumxy/sumy;
+		P(res, 1, count)=sum*0.5;
+		P(res, 3, count)=NX(psdin)-1;
+		count++;
+	}
 	dfree(y);
 	dresize(res, 4, count);
 	return res;
@@ -180,6 +191,7 @@ dmat* psd_vibid(const dmat* psdin){
 dmat* psd_t2s(const dmat* psdt, real vmean){
 	if(NX(psdt)!=1||NY(psdt)>4){
 		error("psdt needs to be 1 row and less than 4 cols\n");
+		return NULL;
 	}
 	real alpha=P(psdt,0);//power
 	real beta=P(psdt,1);//strength
@@ -203,6 +215,7 @@ dmat* psd_t2s(const dmat* psdt, real vmean){
 dmat* psd_s2t(const dmat* psds, real vmean){
 	if(NX(psds)!=1||NY(psds)>4){
 		error("psds needs to be 1 row and less than 4 cols\n");
+		return NULL;
 	}
 	real alpha=P(psds,0);//power
 	real beta=P(psds,1);//strength
@@ -235,7 +248,7 @@ real psd_inte(const real* nu, const real* psd, long n){
 			res_sig+=psd[i];
 		}
 		res_sig*=dnu;
-	} else if((log(nu[1])-log(nu[0])-dlognu)<dlognu*1.e-4){
+	} else if(fabs(log(nu[1])-log(nu[0])-dlognu)<dlognu*1.e-4){
 		for(long i=0; i<n; i++){
 			res_sig+=psd[i]*nu[i];
 		}
@@ -249,6 +262,7 @@ real psd_inte(const real* nu, const real* psd, long n){
 real psd_inte2(const dmat* psdin){
 	if(NY(psdin)!=2){
 		error("psdin should have two columns\n");
+		return NAN;
 	}
 	real* nu=P(psdin);
 	long n=NX(psdin);
@@ -263,14 +277,14 @@ real psd_inte2(const dmat* psdin){
  * @return dmat* 	sqrt of the reverse integration of PSD
  */
 dmat *psd_reverse_cumu(const dmat *psdin, real scale){
-	int nx=NX(psdin);
+	long nx=NX(psdin);
 	dmat *cumu=dnew(NX(psdin), NY(psdin));
 	const real *nu=P(psdin);
 	real dlogf=(log(nu[nx-1])-log(nu[0]))/(nx-1);	
-	if((log(nu[1])-log(nu[0])-dlogf)<dlogf*1.e-4){//log spacing
+	if(fabs(log(nu[1])-log(nu[0])-dlogf)<dlogf*1.e-4){//log spacing
 		info("log spacing\n");
 		for(int iy=1; iy<NY(psdin); iy++){
-			int ix=nx-1;
+			long ix=nx-1;
 			P(cumu, ix, iy)=P(psdin, ix, iy)*P(psdin, ix, 0)*dlogf;
 			for(ix=nx-2; ix>-1; ix--){
 				P(cumu, ix, iy)=P(cumu, ix+1, iy)+P(psdin, ix, iy)*P(psdin, ix, 0)*dlogf;
@@ -278,7 +292,7 @@ dmat *psd_reverse_cumu(const dmat *psdin, real scale){
 		}
 	} else{
 		for(int iy=1; iy<NY(psdin); iy++){
-			int ix=nx-1;
+			long ix=nx-1;
 			P(cumu, ix, iy)=P(psdin, ix, iy)*(P(psdin, ix, 0)-P(psdin, ix-1, 0));
 			for(ix=nx-2; ix>-1; ix--){
 				P(cumu, ix, iy)=P(cumu, ix+1, iy)+P(psdin, ix, iy)*(P(psdin, ix+1, 0)-P(psdin, ix, 0));
@@ -311,6 +325,7 @@ dmat *psd2ts2(const dmat *psdin, int seed, real dt, int nstepin){
 dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 	if(!psdin){
 		error("psdin cannot be null\n");
+		return NULL;
 	}
 	long nstep=nextpow2(nstepin);
 	real df=1./(dt*nstep);
@@ -327,6 +342,7 @@ dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 		}
 		if(NX(psdin)>3){
 			imax=(long)round(P(psdin,3)/df);
+			if(imax>nstep) imax=nstep;//psd has nstep elements
 		}
 		dbg("fmin=%g, fmax=%g, df=%g, i0=%ld, imax=%ld\n",
 			P(psdin,2), P(psdin,3), df, i0, imax);
@@ -336,11 +352,15 @@ dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 	} else if(NY(psdin)==2){
 		if(NX(psdin)<2){
 			error("Invalid PSD. nx should be more than 1\n");
+			dfree(fs);
+			return NULL;
 		}
 		psd=dinterp1(psdin, 0, fs, 1e-40);
 		P(psd,0)=0;/*disable pistion. */
 	} else{
 		error("psdin is invalid format. shape is %ldx%ld\n", NX(psdin), NY(psdin));
+		dfree(fs);
+		return NULL;
 	}
 	cmat* wshat=cnew(nstep, 1);
 	//cfft2plan(wshat, -1);
@@ -360,8 +380,11 @@ dmat* psd2ts(const dmat* psdin, rand_t* rstat, real dt, int nstepin){
 /**
    Check whether two PSDs has the same frequency. the first column of each
    dmat is the frequency nu, and the second column is PSD.
-*/
 
+   @param[in] psd1 The first PSD.
+   @param[in] psd2 The second PSD.
+   @return 1 if the frequencies match, 0 otherwise.
+*/
 static int check_psd_match(const dmat* psd1, const dmat* psd2){
 	real ans=1;
 	if(NX(psd1)!=NX(psd2)){
@@ -432,13 +455,13 @@ dmat* psd_select(const dmat* psd, int im, int nm, int keepdc, real scale){
 	int jm=0;
 	if(im<0){//all modes
 		im=1;
-		jm=NY(psd);
+		jm=(int)NY(psd);
 	}else{
 		im++;
 		if(nm<=0){
 			nm=1;
 		}
-		jm=MIN(im+nm, NY(psd));
+		jm=(int)MIN(im+nm, NY(psd));
 	}
 	for(int ix=0; ix<NX(psd2); ix++){
 		real tmp=0;

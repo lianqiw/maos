@@ -43,8 +43,8 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 		}
 	}
 	lmat *comb=comb_stars(parms->skyc.nwfsmax, starvalid, flag);
-	*naster=NY(comb);
-	int nwfstot=NX(comb);
+	*naster=(int)NY(comb);
+	int nwfstot=(int)NX(comb);
 	aster_s *aster=mycalloc(*naster, aster_s);
 	for(int iaster=0; iaster<*naster; iaster++){
 		aster[iaster].nwfs=nwfstot;
@@ -55,7 +55,7 @@ aster_s* setup_aster_comb(int* naster, const star_s* star, int nstar, const parm
 		for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 			for(int jwfs=0; jwfs<P(parms->skyc.nwfsmax, ipowfs); jwfs++){
 				if(iwfs<nwfstot){
-					int istar=P(comb, iwfs, iaster);
+					int istar=(int)P(comb, iwfs, iaster);
 					aster[iaster].wfs[iwfs].ipowfs=ipowfs;
 					aster[iaster].wfs[iwfs].istar=istar;
 					aster[iaster].wfs[iwfs].use=1;
@@ -212,7 +212,7 @@ static void interp_gain(real* out, const dcell* gain, const dmat* gainx,
 	if(xx<0){/*too small. */
 		ig=0;
 	} else if(xx>=nx-1){/*too big */
-		ig=nx-1;
+		ig=(int)(nx-1);
 	} else{/*within the range */
 		ig=ifloor(xx);
 		/*2013-12-06: use one of the set, not interpolate*/
@@ -238,7 +238,7 @@ static void mask_gm(dmat *ggm, const lmat *mblind){
 static dmat* setup_aster_gm_mask(lmat** mblind, const parms_s* parms, const dcell* gm_in, const lmat* mask){
 	if(!gm_in||gm_in->nx==0) return NULL;
 	dcell* gm=dcellnew(gm_in->nx, 1);
-	int nwfs=gm->nx; 
+	int nwfs=(int)gm->nx; 
 	int nttf=0;
 	int ntt=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -430,7 +430,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		slow_idtrat=parms->skyc.ndtrat;
 		//Find the dtrat of the slowest WFS
 		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-			int idtrat=P(aster->idtrats,iwfs);
+			int idtrat=(int)P(aster->idtrats,iwfs);
 			if(idtrat!=-1){
 				if(slow_idtrat>idtrat){
 					slow_idtrat=idtrat;
@@ -621,7 +621,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 		dfree(sigma);
 		if(simu->psds->nx < nmod){
 			warning_once("Use gain of mode 0 for modes with no PSD\n");
-			for(int imod=simu->psds->nx; imod<nmod; imod++){
+			for(int imod=(int)simu->psds->nx; imod<nmod; imod++){
 				memcpy(PCOL(pgain, imod), PCOL(pgain, 0), sizeof(real)*ng);
 			}
 		}
@@ -660,7 +660,7 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 
 		if(icase_fast!=icase_slow){//there is slow loop. make gains equal.
 			//Average the gain for different modes so that the control output is invisible to fast loop.
-			int n=nmod;
+			int n=(int)nmod;
 			if(parms->maos.indfocus==n-1 && P(aster->mdirect, n-1)){//focus is by the slow loop and is already blind to the fast loop
 				n--;
 			}
@@ -702,9 +702,9 @@ static void setup_aster_servo(sim_s* simu, aster_s* aster, const parms_s* parms)
 }
 /**Place sanea**2 to diagonal of neam */
 static void set_diag_pow2(dmat **pneam, dmat *sanea){
-	int ng=PN(sanea);
+	long ng=PN(sanea);
 	dinit(pneam, ng, ng);
-	for(int ig=0; ig<ng; ig++){
+	for(long ig=0; ig<ng; ig++){
 		P(*pneam,ig,ig)=pow(P(sanea,ig), 2);
 	}
 }
@@ -763,7 +763,7 @@ static void select_aster_dtrat(aster_s* aster, int maxdtrat, real maxerror){
 	const real wvfmargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
 	aster->idtratest=-1;//idtrat at astermin
 	aster->minest=maxerror;
-	const int ndtrat=NX(aster->res_ngs);
+	const int ndtrat=(int)NX(aster->res_ngs);
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 		real wfv=P(aster->res_ngs, idtrat, 0);
 		if(wfv<aster->minest){
@@ -821,8 +821,10 @@ void setup_aster_controller(sim_s* simu, aster_s* aster, star_s *star, const par
 /**
    for sort incrementally.
  */
-static int sortdbl(const real* a, const real* b){
-	return a[0]<b[0]?-1:1;
+static int sortdbl(const void *pa, const void *pb){
+	const real *a=(const real *)pa;
+	const real *b=(const real *)pb;
+	return (a[0]>b[0])-(a[0]<b[0]);
 }
 /**
    Select a few asterisms that have decent performance (less than maxerror) */
@@ -850,7 +852,7 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 
 	result[0]=skymin;
 	result[1]=iastermin;
-	if(aster[iastermin].idtratest!=-1){
+	if(iastermin!=-1 && aster[iastermin].idtratest!=-1){
 		result[2]=P(parms->skyc.fss, aster[iastermin].idtratest);
 	}
 
@@ -861,7 +863,7 @@ int setup_aster_select(real* result, aster_s* aster, int naster, star_s* star,
 		if(!parms->skyc.multirate && parms->skyc.maxaster>0&&naster>parms->skyc.maxaster){
 			taster=parms->skyc.maxaster;
 		}
-		qsort(P(imin), naster, 2*sizeof(real), (int(*)(const void*, const void*))sortdbl);
+		qsort(P(imin), naster, 2*sizeof(real), sortdbl);
 		for(int jaster=0; jaster<taster; jaster++){
 			if(P(imin, 0, jaster)>maxerror && naster>3) continue;
 			int iaster=(int)P(imin, 1, jaster);

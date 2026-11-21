@@ -73,24 +73,30 @@ void save_pistat(sim_t* simu){
 void save_gradol(sim_t* simu){
 	const parms_t* parms=simu->parms;
 	const powfs_t* powfs=simu->powfs;
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(!parms->powfs[ipowfs].psol||!P(simu->gradlastol,iwfs)) continue;
+	for(int iwfsr=0; iwfsr<parms->nwfsr; iwfsr++){//gradlastol is indexed by reconstruction WFS
+		const int ipowfs=parms->wfsr[iwfsr].powfs;
+		if(!parms->powfs[ipowfs].psol||!P(simu->gradlastol,iwfsr)) continue;
+		//In GLAO mode, the (averaged) gradient of each powfs is associated with its first WFS.
+		const int iwfs=parms->recon.glao?(int)P(parms->powfs[ipowfs].wfs, 0):iwfsr;
 		if(parms->plot.run){
-			int jwfs=P(parms->powfs[ipowfs].wfsind, iwfs);
-			drawgrad("Gpol", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(simu->gradlastol,iwfs),
+			const int jwfs=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
+			drawgrad("Gpol", powfs[ipowfs].saloc, PR(powfs[ipowfs].saa, jwfs), P(simu->gradlastol,iwfsr),
 				parms->plot.grad2opd, parms->powfs[ipowfs].trs, parms->plot.opdmax,
 				"WFS Pseudo Openloop Gradients ", "x (m)", "y (m)", "WFS %2d", iwfs);
 		}
 		if(simu->save->gradol[iwfs]&&(simu->reconisim+1)%parms->powfs[ipowfs].dtrat==0){
-			zfarr_push(simu->save->gradol[iwfs], simu->reconisim, P(simu->gradlastol,iwfs));
+			zfarr_push(simu->save->gradol[iwfs], simu->reconisim, P(simu->gradlastol,iwfsr));
 		}
 	}
 	if(parms->save.ngcov>0){
 		/*Outputing psol gradient covariance. */
 		for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-			int iwfs1=P(parms->save.gcov,igcov*2);
-			int iwfs2=P(parms->save.gcov,igcov*2+1);
+			int iwfs1=(int)P(parms->save.gcov,igcov*2);
+			int iwfs2=(int)P(parms->save.gcov,igcov*2+1);
+			if(parms->recon.glao){//gradlastol is indexed by wfsr (one per powfs in glao)
+				iwfs1=parms->wfs[iwfs1].powfs;
+				iwfs2=parms->wfs[iwfs2].powfs;
+			}
 			//dbg("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
 			dmm(&P(simu->gcov,igcov), 1, P(simu->gradlastol,iwfs1), P(simu->gradlastol,iwfs2), "nt", 1);
 		}
@@ -126,9 +132,9 @@ static void atm2xloc(dcell** opdx, const sim_t* simu){
 		for(int ips=0; ips<parms->atm.nps; ips++){
 			real shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt;
 			real shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt;
-			int ipsr=P(parms->atm.ipsr, ips);
-			prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
-				.alpha=1, .shiftx=shiftx, .shifty=shifty, .wrap=1});
+			int ipsr=(int)P(parms->atm.ipsr, ips);
+			prop(ADDR((propdata_t){.mapin=P(simu->atm, ips), .locout=P(recon->xloc, ipsr), .phiout=P(P(*opdx, ipsr)),
+				.alpha=1, .shiftx=shiftx, .shifty=shifty, .wrap=1}));
 		}
 	}
 }

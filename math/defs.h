@@ -132,8 +132,9 @@
 #define CARG carg
 #define ABS cabs
 #define FABS fabs
-#define RANDU(A) COMPLEX(randu(A),randu(A))
-#define RANDN(A) COMPLEX(randn(A),randn(A))
+/*The real part is drawn first. Function arguments have no defined evaluation order.*/
+#define RANDU(A) ({double rand_re_=randu(A); COMPLEX(rand_re_,randu(A));})
+#define RANDN(A) ({double rand_re_=randn(A); COMPLEX(rand_re_,randn(A));})
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
@@ -177,8 +178,8 @@
 #define CARG cargf
 #define ABS cabsf
 #define FABS fabsf
-#define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
-#define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
+#define RANDU(A) ({float rand_re_=(float)randu(A); COMPLEX(rand_re_,(float)randu(A));})
+#define RANDN(A) ({float rand_re_=(float)randn(A); COMPLEX(rand_re_,(float)randn(A));})
 #define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define COMP_COMPLEX */

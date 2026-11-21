@@ -21,12 +21,12 @@
    shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
 */
 static void mki0sh(real* i0x1, real* i0x2, const dmat* i0, real scale, long sx, long sy){
-	int nx=NX(i0);
+	long nx=NX(i0);
 	typedef real pcol[nx];
 	pcol* i0x1p=(pcol*)i0x1;
 	pcol* i0x2p=(pcol*)i0x2;
-	for(int iy=0; iy<i0->ny-sy; iy++){
-		for(int ix=0; ix<i0->nx-sx; ix++){
+	for(long iy=0; iy<i0->ny-sy; iy++){
+		for(long ix=0; ix<i0->nx-sx; ix++){
 			i0x1p[iy+sy][ix+sx]=P(i0, ix, iy)*scale;
 			i0x2p[iy][ix]=P(i0, ix+sx, iy+sy)*scale;
 		}
@@ -60,26 +60,26 @@ dmat* derive_by_fft(const dmat* i0, real theta){
    add two vectors: out=out*alpha+in*beta+theta
 */
 void addvec(real* restrict out, real alpha,
-	const real* restrict in, int N, real beta, real theta){
+	const real* restrict in, long N, real beta, real theta){
 
 	if(fabs(alpha)<EPS){
 		memset(out, 0, sizeof(real)*N);
 		if(in){
-			for(int i=0; i<N; i++){
+			for(long i=0; i<N; i++){
 				out[i]=in[i]*beta+theta;
 			}
 		} else{
-			for(int i=0; i<N; i++){
+			for(long i=0; i<N; i++){
 				out[i]=theta;
 			}
 		}
 	} else{
 		if(in){
-			for(int i=0; i<N; i++){
+			for(long i=0; i<N; i++){
 				out[i]=out[i]*alpha+in[i]*beta+theta;
 			}
 		} else{
-			for(int i=0; i<N; i++){
+			for(long i=0; i<N; i++){
 				out[i]=out[i]*alpha+theta;
 			}
 		}
@@ -124,7 +124,7 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 		mtchcry=nmod;
 		nmod+=2;
 	}
-	const int i0n=NX(i0)*NY(i0);
+	const long i0n=NX(i0)*NY(i0);
 	dmat* i0m=dnew(2, nmod);
 	dmat* i0g=dnew(i0n, nmod);
 	dmat* wt=dnew(i0n, 1);
@@ -152,27 +152,28 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	}
 	addvec(PCOL(i0g, 0), 1, P(gx), i0n, 1, 0);
 	addvec(PCOL(i0g, 1), 1, P(gy), i0n, 1, 0);
-	addvec(PCOL(i0g, 2), 1, P(i0), i0n, kpx, bkgrnd_res);
-	addvec(PCOL(i0g, 2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-	addvec(PCOL(i0g, 2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
+	/*The image and residual background are scaled together by kpx (or kpy).*/
+	addvec(PCOL(i0g, 2), 1, P(i0), i0n, kpx, 0);
+	addvec(PCOL(i0g, 2), 1, bkgrnd2, i0n, kpx, bkgrnd_res*kpx);
+	addvec(PCOL(i0g, 2), 1, bkgrnd2c, i0n, -kpx, 0);/*subtract calibration */
 	if(mtchcrx){
 		mki0sh(PCOL(i0g, mtchcrx), PCOL(i0g, mtchcrx+1), i0, kpx, 1, 0);
-		addvec(PCOL(i0g, mtchcrx), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-		addvec(PCOL(i0g, mtchcrx), 1, bkgrnd2c, i0n, -1, 0);
-		addvec(PCOL(i0g, mtchcrx+1), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-		addvec(PCOL(i0g, mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
+		addvec(PCOL(i0g, mtchcrx), 1, bkgrnd2, i0n, kpx, bkgrnd_res*kpx);
+		addvec(PCOL(i0g, mtchcrx), 1, bkgrnd2c, i0n, -kpx, 0);
+		addvec(PCOL(i0g, mtchcrx+1), 1, bkgrnd2, i0n, kpx, bkgrnd_res*kpx);
+		addvec(PCOL(i0g, mtchcrx+1), 1, bkgrnd2c, i0n, -kpx, 0);
 	}
 	if(mtchcry){
 		mki0sh(PCOL(i0g, mtchcry), PCOL(i0g, mtchcry+1), i0, kpy, 0, 1);
-		addvec(PCOL(i0g, mtchcry), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-		addvec(PCOL(i0g, mtchcry), 1, bkgrnd2c, i0n, -1, 0);
-		addvec(PCOL(i0g, mtchcry+1), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-		addvec(PCOL(i0g, mtchcry+1), 1, bkgrnd2c, i0n, -1, 0);
+		addvec(PCOL(i0g, mtchcry), 1, bkgrnd2, i0n, kpy, bkgrnd_res*kpy);
+		addvec(PCOL(i0g, mtchcry), 1, bkgrnd2c, i0n, -kpy, 0);
+		addvec(PCOL(i0g, mtchcry+1), 1, bkgrnd2, i0n, kpy, bkgrnd_res*kpy);
+		addvec(PCOL(i0g, mtchcry+1), 1, bkgrnd2c, i0n, -kpy, 0);
 	}
 
 	/*adding rayleigh backscatter poisson noise. */
 	real rne2=rne*rne;
-	for(int i=0; i<i0n; i++){/*noise weighting. */
+	for(long i=0; i<i0n; i++){/*noise weighting. */
 		if(P(i0,i)<0){//ignore negative pixels.
 			P(wt,i)=1./rne2;
 		} else if(qe){
@@ -188,7 +189,7 @@ void mtch(dmat** mtche,   /**<[out] the matched filter*/
 	dmm(mtche, 0, i0m, tmp, "nn", 1);
 	dfree(tmp);
 
-	for(int i=0; i<i0n; i++){/*noise weighting. */
+	for(long i=0; i<i0n; i++){/*noise weighting. */
 		P(wt,i)=1./P(wt,i);
 	}
 	dmat* nea2=dtmcc(*mtche, wt);
@@ -241,8 +242,8 @@ void mtch_cell(
 	int mtchcr,    /**<constraint. -1: auto*/
 	real sigratio /**<scale signal level to increase NEA. default: 1*/
 ){
-	int ni0=NY(i0s);
-	const int nsa=NX(i0s);
+	int ni0=(int)NY(i0s);
+	const long nsa=NX(i0s);
 	if(psanea){
 		dcellfree(*psanea);
 		*psanea=dcellnew_same(ni0, 1, nsa, 3);
@@ -261,7 +262,7 @@ void mtch_cell(
 		*pi0sumsum=dnew(ni0, 1);
 	}
 
-	const int npix=PN(i0s, 0, 0);
+	const long npix=PN(i0s, 0, 0);
 	if(pmtche){
 		dcellfree(*pmtche);
 		*pmtche=dcellnew_same(nsa, ni0, 2, npix);
@@ -273,7 +274,7 @@ void mtch_cell(
 		real i0sumsum=0;
 		int ncrdisable=0;
 		dmat* nea2=0;
-		for(int isa=0; isa<nsa; isa++){
+		for(long isa=0; isa<nsa; isa++){
 			real pixrot=pixrots?P(PR(pixrots, ii0, 0), isa):0;//pixel rotation
 			int cr=mtchcr;
 			if(cr==-1){
@@ -288,7 +289,7 @@ void mtch_cell(
 			dmat* bkgrnd2i=bkgrnd2?PR(bkgrnd2, isa, ii0):NULL;
 			dmat* bkgrnd2ci=bkgrnd2c?PR(bkgrnd2c, isa, ii0):NULL;
 
-			mtch(&P(*pmtche, isa, ii0), &nea2, P(i0s, isa, ii0),
+			mtch(pmtche?&P(*pmtche, isa, ii0):NULL, &nea2, P(i0s, isa, ii0),
 				gxs?P(gxs, isa, ii0):0, gys?P(gys, isa, ii0):0, qe,
 				bkgrnd2i, bkgrnd2ci, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
 				pixrot, radgx, cr);
@@ -314,7 +315,7 @@ void mtch_cell(
 			//Signal level too low or error to high.
 				P(nea2, 0)=P(nea2, 3)=0;//nea2thres;
 				P(nea2, 1)=P(nea2, 2)=0;
-				dset(P(*pmtche, isa, ii0), 0);
+				if(pmtche) dset(P(*pmtche, isa, ii0), 0);
 			}
 			if(psanea){
 				P(P(*psanea, ii0), isa, 0)=P(nea2, 0);
@@ -325,7 +326,7 @@ void mtch_cell(
 		dfree(nea2);
 
 		if(mtchcr==-1){
-			info("Mtched filter contraint are disabled for %d subaps out of %d.\n", ncrdisable, nsa);
+			info("Mtched filter contraint are disabled for %d subaps out of %ld.\n", ncrdisable, nsa);
 		}
 		if(pi0sumsum){
 			P(*pi0sumsum, ii0)=i0sumsum;

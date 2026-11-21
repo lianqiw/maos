@@ -90,7 +90,7 @@ void curcellmm(curcell& C, Real alpha, const curcell& A, const curcell& B,
 		az=1; ax=A.Nx();
 		nz=A.Nx();
 	}
-	if(trans[1]=='n'||trans[0]=='N'){
+	if(trans[1]=='n'||trans[1]=='N'){
 		ny=B.Ny();
 		bz=1; by=B.Nx();
 		if(nz!=B.Nx()) error("mismatch\n");

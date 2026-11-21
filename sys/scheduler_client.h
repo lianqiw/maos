@@ -163,6 +163,7 @@ enum {
 extern int nhost;
 extern char **hosts;
 extern char **hostshort;
+extern uint16_t PORT;/**<Port of the scheduler. See init_hosts().*/
 /*hosts*/
 void parse_host(const char *line);
 void free_hosts();

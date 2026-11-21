@@ -68,7 +68,7 @@ setup_surf_tilt(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 
 	for(int iwfs=0; iwfs<parms->nwfs&&powfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+		const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 		loc_t* locwfs;
 		if(powfs[ipowfs].loc_tel){
 			warning("We don't handle this case yet. Think carefully when to apply shift.\n");
@@ -107,12 +107,12 @@ static void* prop_surf_evl(thread_t* info){
 	const aper_t* aper=data->aper;
 	const map_t* surf=data->surf;
 	const int* evlcover=data->evlcover;
-	for(int ievl=info->start; ievl<info->end; ievl++){
+	for(int ievl=(int)info->start; ievl<info->end; ievl++){
 		if(!evlcover[ievl]){
 			continue;
 		}
-		prop(&(propdata_t){.mapin=surf, .ostat=aper->locs->stat, .phiout=P(P(aper->opdadd, ievl)),
-			.alpha=1, .hs=P(parms->evl.hs, ievl), .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
+		prop(ADDR((propdata_t){.mapin=surf, .ostat=aper->locs->stat, .phiout=P(P(aper->opdadd, ievl)),
+			.alpha=1, .hs=P(parms->evl.hs, ievl), .thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)}));
 	}
 	return NULL;
 }
@@ -128,14 +128,10 @@ static void* prop_surf_ncpa(thread_t* info){
 		dbg2("Ignore CPA surface %d for aper->opdbias\n", data->isurf);
 		return NULL;
 	}
-	for(int idir=info->start; idir<info->end; idir++){
+	for(int idir=(int)info->start; idir<info->end; idir++){
 		if(!ncpacover[idir]) continue;
-		if(!data->isncpa){
-			dbg("Ignore CPA surface %d for aper->opdbias\n", data->isurf);
-			continue;
-		}
-		prop(&(propdata_t){.mapin=surf, .locout=recon->floc, .phiout=P(P(aper->opdbias, idir)),
-			.alpha=1, .hs=P(parms->ncpa.hs, idir), .thetax=P(parms->ncpa.thetax, idir), .thetay=P(parms->ncpa.thetay, idir)});
+		prop(ADDR((propdata_t){.mapin=surf, .locout=recon->floc, .phiout=P(P(aper->opdbias, idir)),
+			.alpha=1, .hs=P(parms->ncpa.hs, idir), .thetax=P(parms->ncpa.thetax, idir), .thetay=P(parms->ncpa.thetay, idir)}));
 	}
 	return NULL;
 }
@@ -146,12 +142,12 @@ static void* prop_surf_wfs(thread_t* info){
 	const powfs_t* powfs=data->powfs;
 	const map_t* surf=data->surf;
 	const int* wfscover=data->wfscover;
-	for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	for(int iwfs=(int)info->start; iwfs<info->end; iwfs++){
 		if(!wfscover[iwfs]){
 			continue;
 		}
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		const int wfsind=P(parms->powfs[ipowfs].wfsind, iwfs);
+		const int wfsind=(int)P(parms->powfs[ipowfs].wfsind, iwfs);
 		loc_t* locwfs;
 		if(powfs[ipowfs].loc_tel){
 			locwfs=P(powfs[ipowfs].loc_tel, wfsind);
@@ -159,8 +155,8 @@ static void* prop_surf_wfs(thread_t* info){
 			locwfs=powfs[ipowfs].loc;
 		}
 		dcell *opdout=data->isncpa?powfs[ipowfs].opdbias:powfs[ipowfs].opdadd;
-		prop(&(propdata_t){.mapin=surf, .locout=locwfs, .phiout=P(P(opdout, wfsind)),
-			.alpha=1, .hs=parms->wfs[iwfs].hs, .thetax=parms->wfs[iwfs].thetax, .thetay=parms->wfs[iwfs].thetay, .wrap=1});
+		prop(ADDR((propdata_t){.mapin=surf, .locout=locwfs, .phiout=P(P(opdout, wfsind)),
+			.alpha=1, .hs=parms->wfs[iwfs].hs, .thetax=parms->wfs[iwfs].thetax, .thetay=parms->wfs[iwfs].thetay, .wrap=1}));
 	}
 	return NULL;
 }
@@ -366,11 +362,11 @@ static void setup_recon_HAncpa(recon_t* recon, const parms_t* parms){
 			if( parms->ncpa.calib==2&&idm>0){
 				continue;
 			}
-			P(HA, ievl, idm)=mkh(&(propdata_t){.locin=P(recon->aloc, idm), .locout=recon->floc,
+			P(HA, ievl, idm)=mkh(ADDR((propdata_t){.locin=P(recon->aloc, idm), .locout=recon->floc,
 				.hs=P(parms->ncpa.hs, ievl), 
 				.thetax=P(parms->ncpa.thetax, ievl),
 				.thetay=P(parms->ncpa.thetay, ievl)
-				});
+				}));
 		}
 	}
 	//We don't handle float ot stuck actuators in NCPA calibration.
@@ -412,7 +408,7 @@ static void lenslet_saspherical(const parms_t* parms, powfs_t* powfs, int ipowfs
 			a=(R4-b*N)/R2;
 
 		*/
-		const int nxsa=powfs[ipowfs].pts->nxsa;
+		const long nxsa=powfs[ipowfs].pts->nxsa;
 		//Can be upgraded to actual amplitude for fill factor, but need to use a full subaperture.
 		dmat* ampw=dnew(nxsa, nxsa);
 		for(int ix=0; ix<nxsa*nxsa; ix++){
@@ -477,8 +473,8 @@ static void lenslet_safocuspv(const parms_t* parms, powfs_t* powfs, int ipowfs){
 		}
 		real pv=parms->powfs[ipowfs].safocuspv*1e-9;
 		info2("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
-		const int nxsa=powfs[ipowfs].pts->nxsa;
-		const int npsa=nxsa*nxsa;
+		const long nxsa=powfs[ipowfs].pts->nxsa;
+		const long npsa=nxsa*nxsa;
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			real nx2=(nxsa-1)*0.5;
 			real Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
@@ -648,15 +644,15 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 			if(any_ncpa && (!parms->ncpa.offsetdm || parms->powfs[ipowfs].skip==2)){//convert NCPA DM command to gradients.
 				dbg("powfs%d: convert dm_ncpa to opdbias\n", ipowfs);
 				for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-					int iwfs=P(parms->powfs[ipowfs].wfs, jwfs);
+					int iwfs=(int)P(parms->powfs[ipowfs].wfs, jwfs);
 					const real hs=parms->wfs[iwfs].hs;
 					const real thetax=parms->wfs[iwfs].thetax;
 					const real thetay=parms->wfs[iwfs].thetay;
 					for(int idm=0; idm<parms->ndm; idm++){
 						if(!P(recon->dm_ncpa, idm)||P(recon->dm_ncpa, idm)->nx==0) continue;
-						prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
+						prop(ADDR((propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
 							.locout=powfs[ipowfs].loc, .phiout=P(P(powfs[ipowfs].opdbias, jwfs)),
-							.alpha=-1, .hs=hs, .thetax=thetax, .thetay=thetay});
+							.alpha=-1, .hs=hs, .thetax=thetax, .thetay=thetay}));
 					}
 				}
 			}
@@ -667,7 +663,7 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 					if(P(powfs[ipowfs].opdbias, jwfs)){
 						real ptt[3]={0,0,0};
 						loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 0, NULL,
-							P(P(powfs[ipowfs].amp, jwfs)), P(P(powfs[ipowfs].opdbias, jwfs)));
+							P(PR(powfs[ipowfs].amp, jwfs, 0)), P(P(powfs[ipowfs].opdbias, jwfs)));
 						loc_sub_ptt(P(powfs[ipowfs].opdbias, jwfs), ptt, powfs[ipowfs].loc);
 						loc_sub_ptt(P(powfs[ipowfs].opdadd, jwfs), ptt, powfs[ipowfs].loc);
 					}
@@ -689,10 +685,11 @@ void setup_surf(const parms_t* parms, aper_t* aper, powfs_t* powfs, recon_t* rec
 		dcellzero(aper->opdadd);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 			for(int idm=0; idm<parms->ndm; idm++){
-				prop(&(propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
+				if(!P(recon->dm_ncpa, idm)||P(recon->dm_ncpa, idm)->nx==0) continue;
+				prop(ADDR((propdata_t){.locin=P(recon->aloc, idm), .phiin=P(P(recon->dm_ncpa, idm)),
 					.locout=aper->locs, .phiout=P(P(aper->opdadd, ievl)),
 					.alpha=1, .hs=P(parms->evl.hs, ievl), 
-					.thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)});
+					.thetax=P(parms->evl.thetax, ievl), .thetay=P(parms->evl.thetay, ievl)}));
 			}
 		}
 		if(parms->save.setup>1){

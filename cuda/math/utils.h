@@ -52,8 +52,15 @@ class cumemcache_t{
 	}
 };
 extern cumemcache_t cumemcache;
-extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
+extern int cuda_dedup;
 
+/**
+   Convert an array of type N to type M element by element.
+
+   @param[out] out Output array of length nx.
+   @param[in] in Input array of length nx.
+   @param[in] nx Number of elements.
+*/
 template<typename M, typename N>
 void type_convert(M *out, const N *in, long nx){
 	for(int i=0; i<nx; i++){

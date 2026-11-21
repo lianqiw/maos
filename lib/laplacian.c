@@ -50,8 +50,10 @@ void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real w
 	const long nx=NX(opd);
 	const long ny=NY(opd);
 	real cf=laplacian_coef(r0, weight, dx);
-	if(!opdout)
+	if(!opdout){
 		error("opdout is not allocated\n");
+		return;
+	}
 	for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
 			P(opdout, ix, iy)=cf*(-P(opd, ix, iy)
@@ -65,9 +67,9 @@ void apply_laplacian_map(dmat* opdout, const dmat* opd, real dx, real r0, real w
 }
 /**
    build laplacian on square map using periodic conditions*/
-dsp* mklaplacian_map(int nx, int ny, real dx, real r0, real weight){
+dsp* mklaplacian_map(long nx, long ny, real dx, real r0, real weight){
 	dsp* L2=dspnew(nx*ny, nx*ny, nx*ny*5);
-	int iy, ix;
+	long iy, ix;
 	spint* pp=L2->pp;
 	spint* pi=L2->pi;
 	real* px=L2->px;

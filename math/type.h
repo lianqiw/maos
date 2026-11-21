@@ -229,8 +229,8 @@ typedef struct pts_t{
 	};
 	//before this line same memory layout as loc_t
 	//the following are specific to pts_t
-	int nxsa;        /**<number of cols per subaperture*/
-	int nysa;        /**<number of rows per subaperture*/
+	long nxsa;       /**<number of cols per subaperture*/
+	long nysa;       /**<number of rows per subaperture*/
 	real dx;     /**<sampling of points in each subaperture*/
 	real dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;

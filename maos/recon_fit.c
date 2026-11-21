@@ -30,18 +30,18 @@ static dspcell*
 setup_fit_HXF(const fit_t* fit){
 	TIC;tic;
 	if(!fit->xloc) return 0;
-	const int nfit=NX(fit->thetax);
-	const int npsr=NX(fit->xloc);
+	const int nfit=(int)NX(fit->thetax);
+	const int npsr=(int)NX(fit->xloc);
 	dspcell* HXF=dspcellnew(nfit, npsr);
 OMP_FOR_COLLAPSE(2, NTHREAD)
 	for(int ifit=0; ifit<nfit; ifit++){
 		for(int ips=0; ips<npsr; ips++){
-			P(HXF, ifit, ips)=mkh(&(propdata_t){
+			P(HXF, ifit, ips)=mkh(ADDR((propdata_t){
 				.locin=P(fit->xloc,ips), 
 				.locout=fit->floc, 
 				.hs=P(fit->hs,ifit),
 				.thetax=P(fit->thetax,ifit),
-				.thetay=P(fit->thetay,ifit)});
+				.thetay=P(fit->thetay,ifit)}));
 		}
 	}
 	toc2("HXF");
@@ -52,8 +52,8 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static void
 setup_fit_HA(fit_t* fit){
-	const int nfit=NX(fit->thetax);
-	const int ndm=NX(fit->aloc);
+	const int nfit=(int)NX(fit->thetax);
+	const int ndm=(int)NX(fit->aloc);
 	fit->HA=cellnew(nfit, ndm);
 	TIC;tic;
 OMP_FOR_COLLAPSE(2, NTHREAD)
@@ -64,13 +64,13 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
 			if(fit->misreg&&fit->misreg[ifit+idm*nfit]){
 				loc=loctransform(loc, fit->misreg[ifit+idm*nfit]);
 			}
-			dsp *ha=mkh(&(propdata_t){
+			dsp *ha=mkh(ADDR((propdata_t){
 				.locin=P(fit->aloc,idm), 
 				.locout=loc, 
 				.hs=P(fit->hs,ifit),
 				.thetax=P(fit->thetax,ifit),
 				.thetay=P(fit->thetay,ifit)
-				});
+				}));
 			if(fit->modal){
 				dspmm((dmat**)&P(fit->HA, ifit, idm), ha, P(fit->amod, idm, idm), "nn", 1);
 				dspfree(ha);
@@ -117,7 +117,7 @@ OMP_FOR_COLLAPSE(2, NTHREAD)
    DMs. Becareful with tip/tilt contraint when using CBS.  */
 static void
 setup_fit_lrt(fit_t* fit){
-	const int ndm=NX(fit->aloc);
+	const int ndm=(int)NX(fit->aloc);
 	fit->NW=dcellnew(ndm, 1);
 	//real fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
 	real fitscl=1./fit->floc->nloc;
@@ -138,17 +138,17 @@ setup_fit_lrt(fit_t* fit){
 		act_stuck(fit->aloc, actcpl, fit->actstuck);
 	}
 	for(int idm=0; idm<ndm; idm++){
-		int nloc=P(fit->aloc,idm)->nloc;
+		long nloc=P(fit->aloc,idm)->nloc;
 		P(fit->NW,idm)=dnew(nloc, nnw);
 	}
 	int inw=0;/*current column */
 	if(fit->flag.lrt_piston){
 		info("Adding piston constraint to fit matrix\n");
 		for(int idm=0; idm<ndm; idm++){
-			int nloc=P(fit->aloc,idm)->nloc;
+			long nloc=P(fit->aloc,idm)->nloc;
 			real* p=P(P(fit->NW,idm))+(inw+idm)*nloc;
 			const real* cpl=actcpl?P(P(actcpl,idm)):NULL;
-			for(int iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				if(!cpl || cpl[iloc]>0.1){ //don't count floating or stuck actuators
 					p[iloc]=fitscl;
 				}
@@ -160,12 +160,12 @@ setup_fit_lrt(fit_t* fit){
 		info("Adding TT constraint on upper DMs to fit matrix.\n");
 		const real factor=fitscl*2./loc_diam(P(fit->aloc,0));
 		for(int idm=1; idm<ndm; idm++){
-			int nloc=P(fit->aloc,idm)->nloc;
+			long nloc=P(fit->aloc,idm)->nloc;
 			real* p=P(P(fit->NW,idm))+(inw+(idm-1)*2)*nloc;
 			real* p2x=p;
 			real* p2y=p+nloc;
 			const real* cpl=P(P(actcpl,idm));
-			for(int iloc=0; iloc<nloc; iloc++){
+			for(long iloc=0; iloc<nloc; iloc++){
 				if(cpl[iloc]>0.1){
 					p2x[iloc]=P(fit->aloc,idm)->locx[iloc]*factor;/*x tilt */
 					p2y[iloc]=P(fit->aloc,idm)->locy[iloc]*factor;/*y tilt */
@@ -205,8 +205,8 @@ setup_fit_lrt(fit_t* fit){
 */
 static void
 setup_fit_matrix(fit_t* fit){
-	const int nfit=NX(fit->thetax);
-	const int ndm=NX(fit->aloc);
+	const int nfit=(int)NX(fit->thetax);
+	const int ndm=(int)NX(fit->aloc);
 	if(ndm==0) return;
 
 	cell* HA=fit->HA;
@@ -214,7 +214,7 @@ setup_fit_matrix(fit_t* fit){
 	/*Assemble Fit matrix. */
 	if(!fit->FR.M&&fit->flag.assemble){
 		if(fit->HXF){//not idealtomo.
-			const int npsr=NX(fit->xloc);
+			const int npsr=(int)NX(fit->xloc);
 			dbg("Building fit->FR\n");
 			fit->FR.M=cellnew(ndm, npsr);
 			dspcell* FRM=(dspcell*)fit->FR.M;
@@ -236,7 +236,7 @@ setup_fit_matrix(fit_t* fit){
 			dmat frvi={0};
 			//FRV
 			for(int ips=0; ips<npsr; ips++){
-				int nloc=P(fit->xloc,ips)->nloc;
+				long nloc=P(fit->xloc,ips)->nloc;
 				FRV[ips]=dnew(nloc, nfit);
 				for(int ifit=0; ifit<nfit; ifit++){
 					/*notice the sqrt. */
@@ -256,7 +256,7 @@ setup_fit_matrix(fit_t* fit){
 		dmat** FRU=P(fit->FR.U);
 		dmat frui={0}; dmat *pfrui=&frui;
 		for(int idm=0; idm<ndm; idm++){
-			int nx=NY(P(HA,0,idm));
+			long nx=NY(P(HA,0,idm));
 			FRU[idm]=dnew(nx, nfit);
 			for(int ifit=0; ifit<nfit; ifit++){
 			/*notice the sqrt. */
@@ -478,7 +478,7 @@ void setup_powfs_fit(powfs_t* powfs, const recon_t* recon, const parms_t* parms)
 		wfsloc->ht=0;
 		wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
-			int iwfs=P(parms->powfs[ipowfs].wfs,jwfs);
+			int iwfs=(int)P(parms->powfs[ipowfs].wfs,jwfs);
 			fit_t* fit=fitall+jwfs;
 			if(jwfs==0){
 				memcpy(&fit->flag, &parms->fit, sizeof(fit_cfg_t));//use parms->fit.
@@ -542,7 +542,7 @@ void free_powfs_fit(powfs_t* powfs, const parms_t* parms){
 void FitR(dcell** xout, const void* A,
 	const dcell* xin, const real alpha){
 	const fit_t* fit=(const fit_t*)A;
-	const int nfit=NX(fit->thetax);
+	const int nfit=(int)NX(fit->thetax);
 	dcell* xp=dcellnew(nfit, 1);
 
 	if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
@@ -554,10 +554,10 @@ void FitR(dcell** xout, const void* A,
 			real hs=P(fit->hs, ifit);
 			P(xp, ifit)=dnew(fit->floc->nloc, 1);
 			for(int ips=0; ips<parms->atm.nps; ips++){
-				prop(&(propdata_t){.mapin=P(simu->atm, ips), .locout=fit->floc, .phiout=P(P(xp, ifit)),
+				prop(ADDR((propdata_t){.mapin=P(simu->atm, ips), .locout=fit->floc, .phiout=P(P(xp, ifit)),
 					.alpha=atmscale, .hs=hs, .thetax=P(fit->thetax, ifit), .thetay=P(fit->thetay, ifit),
 					.shiftx=-P(simu->atm, ips)->vx*isim*parms->sim.dt, 
-					.shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt, .wrap=1});
+					.shifty=-P(simu->atm, ips)->vy*isim*parms->sim.dt, .wrap=1}));
 			}
 			/*if(simu->telws){//Wind shake. Enable after cuda code also has it.
 				real tmp=P(simu->telws, isim);
@@ -570,13 +570,13 @@ void FitR(dcell** xout, const void* A,
 	} else if(fit->HXF){
 		dcellmm(&xp, fit->HXF, xin, "nn", 1.);
 	} else{/*Do the ray tracing from xloc to ploc */
-		const int npsr=NX(fit->xloc);
+		const int npsr=(int)NX(fit->xloc);
 		for(int ifit=0; ifit<nfit; ifit++){
 			real hs=P(fit->hs, ifit);
 			P(xp, ifit)=dnew(fit->floc->nloc, 1);
 			for(int ips=0; ips<npsr; ips++){
-				prop(&(propdata_t){.locin=P(fit->xloc, ips), .phiin=P(P(xin, ips)), .locout=fit->floc,
-					.phiout=P(P(xp, ifit)), .alpha=1, .hs=hs, .thetax=P(fit->thetax, ifit), .thetay=P(fit->thetay, ifit)});
+				prop(ADDR((propdata_t){.locin=P(fit->xloc, ips), .phiin=P(P(xin, ips)), .locout=fit->floc,
+					.phiout=P(P(xp, ifit)), .alpha=1, .hs=hs, .thetax=P(fit->thetax, ifit), .thetay=P(fit->thetay, ifit)}));
 			}
 		}
 	}

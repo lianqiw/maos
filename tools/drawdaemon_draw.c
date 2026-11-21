@@ -52,8 +52,11 @@ static float myfloor(float a){
 	return b;
 }
 /**
-   correct ceil for round off errors;*/
+   correct ceil for round off errors;
 
+   @param[in] a Value.
+   @return ceil(a), or ceil(a)-1 if a is within 1e-5 above the previous integer.
+*/
 static float myceil(float a){
 	float b=ceil(a);
 	if(b-a>1-1.e-5){
@@ -114,16 +117,37 @@ static void pango_text(cairo_t* cr, PangoLayout* layout, float x, float y,
 	pango_cairo_show_layout(cr, layout);//top left corner of the layout is drawn at the current point of cairo context.
 	cairo_restore(cr);
 }
+/**
+   Draw 10^power as text.
 
+   @param[in,out] cr Cairo context.
+   @param[in,out] layout Pango layout.
+   @param[in] x Reference point x.
+   @param[in] y Reference point y.
+   @param[in] power The exponent.
+   @param[in] fracx 0: left, 0.5: middle, 1: right
+   @param[in] fracy 0: top, 0.5: middle, 1: bottom
+   @param[in] vertical Whether to rotate the text by 90 degrees counterclockwise.
+*/
 static void pango_text_power(cairo_t *cr, PangoLayout *layout, float x, float y, float power, float fracx, float fracy, int vertical){
 	char powindex[40];
 	snprintf(powindex, 40, "10<sup>%g</sup>", power);
 	pango_text(cr, layout, x, y, powindex, fracx, fracy, vertical);
 }
 
+/**
+   Compute tic locations. The tics are tic1+i*dtic for i in [0, ntic), in units of 10^order.
 
-static void calc_tic(float* tic1, float* dtic, int* ntic, int* order,
-	float xmax, float xmin, int maxtic, int logscale){
+   @param[out] tic1 First tic, scaled by 10^-order.
+   @param[out] dtic Tic spacing, scaled by 10^-order.
+   @param[out] ntic Number of tics.
+   @param[out] order Order of magnitude (power of 10) of the tic labels. 0 if its absolute value is at most 2.
+   @param[in] xmax Maximum value. Already log10 of data if logscale is set.
+   @param[in] xmin Minimum value. Already log10 of data if logscale is set.
+   @param[in] maxtic Maximum number of tics.
+   @param[in] logscale Unused.
+*/
+static void calc_tic(float* tic1, float* dtic, int* ntic, int* order, float xmax, float xmin, int maxtic, int logscale){
 //when logscale is true, the xmin, xmax are already log of data.
 //dbg("xmin=%g, xmax=%g, \n", xmin, xmax);
 	float diff=xmax-xmin;
@@ -466,7 +490,18 @@ static void update_limit(drawdata_t *drawdata){
 void thread_cleanup(void *drawdata){
 	((drawdata_t*)drawdata)->thread=0;
 }
-void* cairo_draw_thread(drawdata_t* drawdata){
+/**
+   Thread function that renders drawdata to its file surface (when saving) or
+   to the off-screen pixmap, then schedules drawarea_refresh() in the GUI thread
+   and optionally saves a png frame for gif export. Repeats while newer frames
+   are pending and exits early if drawdata is being recycled. thread_cleanup()
+   is called on exit.
+
+   @param[in,out] pdrawdata The drawdata to render.
+   @return NULL.
+*/
+void* cairo_draw_thread(void *pdrawdata){
+	drawdata_t *drawdata=(drawdata_t *)pdrawdata;
 	pthread_cleanup_push(thread_cleanup, drawdata);
 repeat:
 	if(__atomic_load_n(&drawdata->recycle, __ATOMIC_SEQ_CST)){
@@ -1389,6 +1424,6 @@ void cairo_draw(drawdata_t* drawdata){
 		return;
 	}
 	if(!drawdata->thread){
-		drawdata->thread=thread_new((thread_fun)cairo_draw_thread, drawdata);
+		drawdata->thread=thread_new(cairo_draw_thread, drawdata);
 	}//else: drawing is in progress. skip request.
 }

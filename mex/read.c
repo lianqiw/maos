@@ -237,7 +237,7 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 	//convert from interleaved complex to separate complex.
 		if(mxFLAG==mxCOMPLEX){
 			void* tmp0=malloc(ntot*byte);
-			zfread(tmp0, byte, ntot, fp);
+			zfread(tmp0, byte/2, ntot*2, fp);//real and imaginary parts are byte swapped separately for fits.
 			void* Pr0=mxGetPr(out);
 			void* Pi0=mxGetPi(out);
 			if(id==mxDOUBLE_CLASS){
@@ -262,7 +262,7 @@ static mxArray* readdata(file_t* fp, mxArray** header, int start, int howmany){
 			free(tmp0);
 		} else
 #endif
-			zfread(mxGetData(out), byte, ntot, fp);
+			zfread(mxGetData(out), mxFLAG==mxCOMPLEX?byte/2:byte, mxFLAG==mxCOMPLEX?ntot*2:ntot, fp);//real and imaginary parts are byte swapped separately for fits.
 
 	} else{
 		fprintf(stderr, "magic=%x\n", magic);

@@ -21,6 +21,8 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/resource.h>
+#include <stdlib.h>
 #include <sys/proc.h>
 #include <sys/sysctl.h>
 #include <mach-o/dyld.h>
@@ -85,14 +87,18 @@ size_t get_job_mem(void){/*return in KiB */
    Get the launch time of current process.
 */
 double get_job_launchtime(int pid){
-	(void)pid;
-	double starttime;
-	struct timeval tp;
-	gettimeofday(&tp, NULL);
-	/*set to the current time */
-	starttime=tp.tv_sec+tp.tv_usec;
-	/*warning("Please finish it\n"); */
-	return starttime;
+	struct proc_bsdinfo info;
+	if(proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, sizeof(info))!=(int)sizeof(info)){
+		return 0;
+	}
+	struct timeval boot;
+	size_t len=sizeof(boot);
+	int mib[2]={CTL_KERN, KERN_BOOTTIME};
+	if(sysctl(mib, 2, &boot, &len, NULL, 0)){
+		return 0;
+	}
+	return (double)((long)info.pbi_start_tvsec-(long)boot.tv_sec)
+		+((long)info.pbi_start_tvusec-(long)boot.tv_usec)*1e-6;
 }
 /**
    Get the number of running jobs.
@@ -106,17 +112,36 @@ int get_usage_running(void){
 */
 double get_usage_load(void){
 	double load=0;
+	if(getloadavg(&load, 1)!=1){
+		load=0;
+	}
 	return load;
 	/*warning("Please implement"); */
 }
 double get_usage_mem(void){
-	double mem=0;
-	/*warning("Please implement"); */
-	return mem;
+	vm_statistics64_data_t vm;
+	mach_msg_type_number_t count=HOST_VM_INFO64_COUNT;
+	vm_size_t pagesize=0;
+	if(NMEM<=0||host_page_size(mach_host_self(), &pagesize)!=KERN_SUCCESS
+		||host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info64_t)&vm, &count)!=KERN_SUCCESS){
+		return 0;
+	}
+	double used=(double)(vm.active_count+vm.wire_count+vm.compressor_page_count)*(double)pagesize;
+	return used/(double)NMEM;
 }
 double read_self_cpu(void){
-	/*warning("Please implement"); */
-	return 0;
+	static double t_last=0, s_last=0;
+	struct rusage usage;
+	if(getrusage(RUSAGE_SELF, &usage)){
+		return 0;
+	}
+	double s_tot=usage.ru_utime.tv_sec+usage.ru_utime.tv_usec*1e-6
+		+usage.ru_stime.tv_sec+usage.ru_stime.tv_usec*1e-6;
+	double t_tot=myclockd();
+	double frac=t_last>0&&t_tot>t_last?(s_tot-s_last)/(t_tot-t_last):0;
+	t_last=t_tot;
+	s_last=s_tot;
+	return frac;
 }
 int read_cpu_counter(long* user, long* tot){
 	processor_cpu_load_info_data_t* pinfo;
@@ -139,7 +164,7 @@ int read_cpu_counter(long* user, long* tot){
 		*user+=tmp;
 		*tot+=tmp+pinfo[i].cpu_ticks[CPU_STATE_IDLE];
 	}
-	vm_deallocate(mach_task_self(), (vm_address_t)pinfo, info_count);
+	vm_deallocate(mach_task_self(), (vm_address_t)pinfo, info_count*sizeof(integer_t));
 	return 0;
 }
 

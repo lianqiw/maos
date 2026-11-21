@@ -231,7 +231,7 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 	TIC;tic;
 	muv_direct_diag_free(A);
 
-	int nb=NX(A->M);
+	int nb=(int)NX(A->M);
 	A->nb=nb;
 	if(use_svd){
 		A->MIB=dcellnew(nb, 1);
@@ -275,8 +275,12 @@ void muv_direct_diag_prep(muv_t* A, real svd){
 */
 /**
    Apply CBS or SVD multiply to xin to get xout. Create xout is not exist
-   already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.*/
+   already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.
 
+   @param[out] xout The output. Allocated if NULL. Can be the same as xin.
+   @param[in] A The muv_t struct prepared by muv_direct_prep().
+   @param[in] xin The input.
+*/
 void muv_direct_solve_mat(dmat** xout, const muv_t* A, dmat* xin){
 	if(xin->id!=M_REAL){
 		error("xin is invalid\n");
@@ -327,8 +331,13 @@ void* muv_direct_spsolve(const muv_t* A, const dsp* xin){
 }
 /**
    Apply cholesky backsubstitution solve to xin to get xout. Create xout is not
-   exist already.  xin and xout can be the same for in place operation. */
+   exist already.  xin and xout can be the same for in place operation.
 
+   @param[out] xout The output. Allocated if NULL. Can be the same as xin.
+   @param[in] A The muv_t struct prepared by muv_direct_diag_prep().
+   @param[in] xin The input. Nothing is done if NULL.
+   @param[in] ib The diagonal block index.
+*/
 void muv_direct_diag_solve(dmat** xout, const muv_t* A, dmat* xin, int ib){
 	if(!xin) return;
 	dmat* dotpt=NULL;
@@ -374,7 +383,7 @@ void muv_bgs_solve(dcell** px,    /**<[in,out] The output vector. input for warm
 	const dcell* b /**<[in] The right hand side vector to solve*/
 ){
 	if(!b) return;
-	int nb=NX(b);
+	int nb=(int)NX(b);
 	assert(NY(b)==1);
 	if(!*px){
 		*px=dcellnew2(b); /*initialize the output array. */

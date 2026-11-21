@@ -39,6 +39,13 @@
 #else
 #define USE_TITLEBAR 0
 #endif
+#if GTK_VERSION_AFTER(4,10) //GtkTreeView, GtkListStore, and GtkDialog are deprecated since 4.10
+#define USE_COLUMN_VIEW 1 //use GtkColumnView with GListStore
+#define USE_ALERT_DIALOG 1 //use GtkAlertDialog
+#else
+#define USE_COLUMN_VIEW 0
+#define USE_ALERT_DIALOG 0
+#endif
 #if GTK_VERSION_AFTER(3, 2)
 #define gtk_hbox_new(A,B) gtk_box_new(GTK_ORIENTATION_HORIZONTAL, B)
 #define gtk_vbox_new(A,B) gtk_box_new(GTK_ORIENTATION_VERTICAL, B)

@@ -69,8 +69,11 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
 		real ploc_xm=0, ploc_ym=0;
 		locmean(&ploc_xm, &ploc_ym, recon->ploc);
 		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-			if(parms->recon.distortion_tel2wfs[iwfs]){
-				loc_t *ploc2=loctransform(recon->ploc, parms->recon.distortion_tel2wfs[iwfs]);
+			const int ipowfs=parms->wfsr[iwfs].powfs;
+			//distortion_tel2wfs is indexed by physical WFS. Use the first WFS of the powfs in GLAO mode.
+			const char *tel2wfs=parms->recon.distortion_tel2wfs[parms->recon.glao?P(parms->powfs[ipowfs].wfs, 0):iwfs];
+			if(tel2wfs){
+				loc_t *ploc2=loctransform(recon->ploc, tel2wfs);
 				real xm=0, ym=0;
 				locmean(&xm, &ym, ploc2);
 				locshift(ploc2, -xm, -ym);
@@ -89,8 +92,13 @@ setup_recon_ploc(recon_t* recon, const parms_t* parms){
    subapertures which is different from powfs.loc. The amplitude depends on the
    distortion as we assume that the distortion can be extracted from dm to wfs
    interaction matrix calibration.
-*/
 
+   @param[in,out] pgloc The grid. Created if *pgloc is NULL; otherwise reused.
+   @param[in,out] gamp Amplitude map on the grid. The existing one is freed and replaced. Not computed if gamp is NULL.
+   @param[in] parms The parameter struct.
+   @param[in] aper The telescope aperture amplitude map.
+   @param[in] iwfsr Index of the reconstruction WFS.
+*/
 void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const map_t* aper, int iwfsr){
 	const int ipowfs=parms->wfsr[iwfsr].powfs;
 	real dx=parms->powfs[ipowfs].dx;
@@ -101,9 +109,12 @@ void shwfs_gloc_gamp(loc_t** pgloc, dmat** gamp, const parms_t* parms, const map
 	
 	loc_t *gloc=*pgloc;
 	if(gamp){
-		if((parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfsr])||parms->wfsr[iwfsr].misregc){
-			if(parms->distortion.tel2wfs&&parms->distortion.tel2wfs[iwfsr]){
-				gloc=loctransform(gloc, parms->distortion.tel2wfs[iwfsr]);
+		//distortion.tel2wfs is indexed by physical WFS. Use the first WFS of the powfs in GLAO mode.
+		const int iwfs=parms->recon.glao?(int)P(parms->powfs[ipowfs].wfs, 0):iwfsr;
+		const char *tel2wfs=parms->distortion.tel2wfs?parms->distortion.tel2wfs[iwfs]:NULL;
+		if(tel2wfs||parms->wfsr[iwfsr].misregc){
+			if(tel2wfs){
+				gloc=loctransform(gloc, tel2wfs);
 			} else{//misregc is set. need to rotate grid, so duplicate it.
 				gloc=locdup(gloc);
 			}
@@ -206,7 +217,7 @@ setup_recon_xloc(recon_t* recon, const parms_t* parms){
 		char* fn=parms->load.xloc;
 		warning("Loading xloc from %s\n", fn);
 		recon->xloc=loccellread("%s", fn);
-		int nxloc=NX(recon->xloc);
+		int nxloc=(int)NX(recon->xloc);
 		if(nxloc!=npsr)
 			error("Invalid saved file. npsr=%d, nxloc=%d\n", npsr, nxloc);
 		for(int ips=0; ips<npsr; ips++){
@@ -447,9 +458,9 @@ setup_recon_aloc(recon_t* recon, const parms_t* parms){
 	}
 	if(anystuck||anyfloat){
 		for(int idm=0; idm<ndm; idm++){
-			int nstuck=recon->actstuck?count_nonzero(P(recon->actstuck, idm)):0;
-			int nfloat=recon->actfloat?count_nonzero(P(recon->actfloat, idm)):0;
-			info2("    DM %d has %d stuck and %d floating actuators\n", idm, nstuck, nfloat);
+			long nstuck=recon->actstuck?count_nonzero(P(recon->actstuck, idm)):0;
+			long nfloat=recon->actfloat?count_nonzero(P(recon->actfloat, idm)):0;
+			info2("    DM %d has %ld stuck and %ld floating actuators\n", idm, nstuck, nfloat);
 		}
 	}
 	if(parms->save.setup){
@@ -496,11 +507,11 @@ setup_recon_amod(recon_t* recon, const parms_t* parms){
 }
 /**
    Setup ray tracing operator from xloc to ploc for guide stars.
-   @param recon
-   @param parms
-   @param atm		If set, atm[].vx,vy will be used for predictive offsetting.
-*/
 
+   @param[in,out] recon The reconstruction struct. recon->HXW and recon->HXWtomo are set.
+   @param[in] parms The parameter struct.
+   @param[in] atm If set, atm[].vx,vy will be used for predictive offsetting.
+*/
 void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 	loc_t* ploc=recon->ploc;
 	const int nwfsr=parms->nwfsr;
@@ -516,9 +527,9 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 			error("Loaded HXW has wrong cell size.\n");
 		}
 		dspcell* HXW=recon->HXW/*PDSPCELL*/;
-		int nploc=ploc->nloc;
+		long nploc=ploc->nloc;
 		for(int ips=0; ips<npsr; ips++){
-			int nloc=P(recon->xloc, ips)->nloc;
+			long nloc=P(recon->xloc, ips)->nloc;
 			for(int iwfs=0; iwfs<nwfsr; iwfs++){
 				if(!P(HXW, iwfs, ips)
 					||P(HXW, iwfs, ips)->nx!=nploc
@@ -541,9 +552,9 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 			const real delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 			loc_t* loc=recon->ploc; //do not use ploc_tel. the rotation is handled in recon_utils.
 			for(int ips=0; ips<npsr; ips++){
-				int ips2=atm?P(parms->atmr.indps, ips):-1;//point ahead to reduce lag.
+				int ips2=atm?(int)P(parms->atmr.indps, ips):-1;//point ahead to reduce lag.
 				cellfree(P(HXW, iwfsr, ips));
-				P(HXW, iwfsr, ips)=mkh(&(propdata_t){.locin=P(recon->xloc, ips), .locout=loc, 
+				P(HXW, iwfsr, ips)=mkh(ADDR((propdata_t){.locin=P(recon->xloc, ips), .locout=loc, 
 					.hs=parms->wfsr[iwfsr].hs,
 					.thetax=parms->wfsr[iwfsr].thetax,
 					.thetay=parms->wfsr[iwfsr].thetay,
@@ -551,7 +562,7 @@ void setup_recon_HXW(recon_t* recon, const parms_t* parms, mapcell *atm){
 					.misregy=shwfs?parms->wfsr[iwfsr].misregy:0,
 					.shiftx=atm?P(atm, ips2)->vx*delay:0,
 					.shifty=atm?P(atm, ips2)->vy*delay:0
-				});
+				}));
 			}
 		}
 		toc2("HXW");
@@ -605,7 +616,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 		int any=0;
 		for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 			if(parms->powfs[ipowfs].type!=WFS_SH) continue;
-			const int iwfs0=P(parms->powfs[ipowfs].wfsr, 0);
+			const int iwfs0=(int)P(parms->powfs[ipowfs].wfsr, 0);
 			int share_gp=NX(powfs[ipowfs].amp)==1;
 			any++;
 			/*
@@ -617,7 +628,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 			*/
 	OMP_FOR(parms->powfs[ipowfs].nwfsr) 
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-				const int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
+				const int iwfs=(int)P(parms->powfs[ipowfs].wfsr, jwfs);
 				if(!share_gp||iwfs==iwfs0){
 					//create gloc that aligns with saloc edges. The GP created this way has fewer elements.
 					dmat* gamp=0;
@@ -633,7 +644,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 							1, 0, 0, 1);
 					} else if(parms->powfs[ipowfs].gtype_recon==GTYPE_Z){//Zernike fit
 						dsp* ZS0=mkz(gloc, P(gamp), P(recon->saloc, ipowfs), 1, 1, 0, 0);
-						dsp* H=mkh(&(propdata_t){.locin=ploc, .locout=gloc});
+						dsp* H=mkh(ADDR((propdata_t){.locin=ploc, .locout=gloc}));
 						gp=dspmulsp(ZS0, H, "nn");
 						dspfree(H);
 						dspfree(ZS0);
@@ -648,7 +659,7 @@ setup_recon_GP(recon_t* recon, const parms_t* parms, const map_t *aper, const po
 			//outside of OMP_FOR
 			if(share_gp){
 				for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-					const int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
+					const int iwfs=(int)P(parms->powfs[ipowfs].wfsr, jwfs);
 					P(recon->GP, iwfs)=dspref(P(recon->GP, iwfs0));
 				}
 			}
@@ -677,13 +688,13 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			error("Wrong saved GA (%ldx%ld). Need (%dx%d)\n",
 				NX(recon->GA), NY(recon->GA), nwfsr, ndm);
 		for(int idm=0; idm<ndm; idm++){
-			int nloc=P(recon->aloc, idm)->nloc;
+			long nloc=P(recon->aloc, idm)->nloc;
 			for(int iwfs=0; iwfs<nwfsr; iwfs++){
 				int ipowfs=parms->wfsr[iwfs].powfs;
 				if(parms->tomo.ahst_idealngs&&parms->powfs[ipowfs].lo){
 					continue;
 				}
-				int nsa=P(recon->saloc, ipowfs)->nloc;
+				long nsa=P(recon->saloc, ipowfs)->nloc;
 				if(P(recon->GA, iwfs, idm)->nx!=nsa*2||(!parms->recon.modal&&P(recon->GA, iwfs, idm)->ny!=nloc)
 					||(parms->recon.modal&&P(recon->GA, iwfs, idm)->ny!=P(recon->amod, idm, idm)->ny)){
 					error("Wrong saved GA\n");
@@ -703,6 +714,8 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			}*/
 			const int shwfs=parms->powfs[ipowfs].type==WFS_SH;
 			const loc_t* saloc=P(recon->saloc, ipowfs);
+			//distortion inputs are indexed by physical WFS. Use the first WFS of the powfs in GLAO mode.
+			const int iwfs=parms->recon.glao?(int)P(parms->powfs[ipowfs].wfs, 0):iwfsr;
 			for(int idm=0; idm<ndm; idm++){
 				loc_t* aloc=P(recon->aloc, idm);
 				propdata_t propdata={.locin=aloc,
@@ -727,14 +740,14 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						}
 						if(!parms->recon.modal){
 							info("PyWFS mkg from aloc to saloc\n");
-							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
+							dmat* tmp=pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*parms->nwfs],
 								0, opdadd, dispx, dispy);
 							P(recon->GA, iwfsr, idm)=(cell*)d2sp(tmp, dmaxabs(tmp)*1e-6);
 							dfree(tmp);
 						} else{
 							info("PyWFS mkg from amod to saloc\n");
 							//We compute the GM for full set of modes so that it is cached only once.
-							P(recon->GA, iwfsr, idm)=(cell*)pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr],
+							P(recon->GA, iwfsr, idm)=(cell*)pywfs_mkg(powfs[ipowfs].pywfs, aloc, parms->recon.distortion_dm2wfs[iwfs+idm*parms->nwfs],
 								P(recon->amod, idm, idm), opdadd, dispx, dispy);
 						}
 						if(fabs(alpha-1)>EPS){
@@ -742,8 +755,8 @@ void setup_recon_GA(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 						}						
 					}
 				} else{//SHWFS
-					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfsr+idm*nwfsr]:0;
-					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfsr+idm*nwfsr]:0;
+					char* input=parms->distortion.dm2wfs?parms->distortion.dm2wfs[iwfs+idm*parms->nwfs]:0;
+					char* calib=parms->recon.distortion_dm2wfs?parms->recon.distortion_dm2wfs[iwfs+idm*parms->nwfs]:0;
 					loc_t* loc=ploc;
 
 					if(input&&saloc->nloc>4){//there is distortion input
@@ -955,8 +968,11 @@ setup_recon_dmttr(recon_t* recon, const parms_t* parms){
 }
 /**
    setting up global tip/tilt remove operator from WFS gradients.
-*/
 
+   @param[in,out] recon The reconstruction struct. recon->TT is set for powfs that need tip/tilt removal.
+   @param[in] parms The parameter struct.
+   @param[in] powfs The powfs struct array.
+*/
 static void
 setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 	int nwfsr=parms->nwfsr;
@@ -965,17 +981,17 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 		if(parms->powfs[ipowfs].trs
 			||(parms->recon.split&&!parms->powfs[ipowfs].lo&&!parms->powfs[ipowfs].skip)
 			||parms->powfs[ipowfs].dither==1){
-			int nsa=P(recon->saloc, ipowfs)->nloc;
+			long nsa=P(recon->saloc, ipowfs)->nloc;
 			dmat* TT=0;
 			if(parms->powfs[ipowfs].type==WFS_SH){//SHWFS
 				TT=dnew(nsa*2, 2);
 				real* TTx=PCOL(TT, 0);
 				real* TTy=PCOL(TT, 1);
-				for(int isa=0; isa<nsa; isa++){
+				for(long isa=0; isa<nsa; isa++){
 					TTx[isa]=1;
 					TTy[isa]=0;
 				}
-				for(int isa=nsa; isa<nsa*2; isa++){
+				for(long isa=nsa; isa<nsa*2; isa++){
 					TTx[isa]=0;
 					TTy[isa]=1;
 				}
@@ -987,7 +1003,7 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 			if(!recon->TT) recon->TT=dcellnew(nwfsr, nwfsr);
 			dbg("powfs %d has tip/tilt mode in recon->TT\n", ipowfs);
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfsr, jwfs);
 				P(recon->TT, iwfs, iwfs)=dref(TT);
 			}
 			dfree(TT);
@@ -999,8 +1015,10 @@ setup_recon_TT(recon_t* recon, const parms_t* parms, const powfs_t* powfs){
 }
 /**
    Operator to remove focus modes.
-*/
 
+   @param[in,out] recon The reconstruction struct. recon->FF is set for powfs that need focus removal.
+   @param[in] parms The parameter struct.
+*/
 static void
 setup_recon_FF(recon_t* recon, const parms_t* parms){
 	int nwfs=parms->nwfsr;
@@ -1008,7 +1026,7 @@ setup_recon_FF(recon_t* recon, const parms_t* parms){
 		if(parms->powfs[ipowfs].nwfsr>0
 			&& !parms->powfs[ipowfs].skip
 			&& parms->powfs[ipowfs].frs){
-			const int nsa=P(recon->saloc, ipowfs)->nloc;
+			const long nsa=P(recon->saloc, ipowfs)->nloc;
 			dmat* FF=dnew(nsa*2, 1);
 			/*saloc is lower left corner of subaperture. don't have to be the center. */
 			memcpy(P(FF), P(recon->saloc, ipowfs)->locx, sizeof(real)*nsa);
@@ -1016,7 +1034,7 @@ setup_recon_FF(recon_t* recon, const parms_t* parms){
 			if(!recon->FF) recon->FF=dcellnew(nwfs, nwfs);
 			dbg("powfs %d has focus mode in recon->FF\n", ipowfs);
 			for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-				int iwfs=P(parms->powfs[ipowfs].wfsr, jwfs);
+				int iwfs=(int)P(parms->powfs[ipowfs].wfsr, jwfs);
 				P(recon->FF, iwfs, iwfs)=dref(FF);
 			}
 			dfree(FF);
@@ -1072,10 +1090,11 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 			const int ipowfs=parms->wfs[iwfs].powfs;
 			if(parms->powfs[ipowfs].dither>1){
+				const int iwfsr=parms->recon.glao?ipowfs:iwfs;//GA and saneai are indexed by reconstruction WFS
 				const real ht=parms->dm[idm].ht;
 				const real dispx=ht*parms->wfs[iwfs].thetax;
 				const real dispy=ht*parms->wfs[iwfs].thetay;
-				const int nmod=parms->recon.modal?P(recon->anmod, idm):P(recon->aloc,0)->nloc;
+				const int nmod=(int)(parms->recon.modal?P(recon->anmod, idm):P(recon->aloc,0)->nloc);
 				const int dither_nd=parms->powfs[ipowfs].dither_mmd?MAX(1, DITHER_ND):1;
 				const int dither_md=parms->powfs[ipowfs].dither_mmd?((nmod+dither_nd-1)/dither_nd):1; //number of modes per bin
 				recon->dither_md=dither_md;
@@ -1114,13 +1133,13 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						if(jm+md2>nmod){
 							md2=nmod-jm;
 						}
-						real dither_amp2=dither_amp*(1-id/dither_nd);//higher order modes have higher gain, so reduce its strength.
+						real dither_amp2=dither_amp*(1.-(real)id/dither_nd);//higher order modes have higher gain, so reduce its strength.
 						real dither_amp3=dither_amp2/sqrt(md2);//split into modes within the bin
 						dmat *wt=dnew(md2, 1);
 						dset(wt, 1);
 
 						dmat *mtmp=drefcols(P(recon->amod, idm, idm), jm, md2);
-						dmat *gtmp=drefcols(dmat_cast(P(recon->GA, iwfs, idm)), jm, md2);
+						dmat *gtmp=drefcols(dmat_cast(P(recon->GA, iwfsr, idm)), jm, md2);
 						dmm(&dither_m, 0, mtmp, wt, "nn", dither_amp3);
 						dmm(&grad, 0, gtmp, wt, "nn", dither_amp3);
 						dfree(mtmp);
@@ -1128,9 +1147,10 @@ void setup_recon_dither_dm(recon_t* recon, const powfs_t* powfs, const parms_t* 
 						dfree(wt);
 					}
 
-					dither_rg=dpinv(grad, P(recon->saneai, iwfs, iwfs));
+					dither_rg=dpinv(grad, P(recon->saneai, iwfsr, iwfsr));
 					dither_ra=dpinv(dither_m, 0);
 					if(id==0){
+						dfree(P(recon->dither_m, idm));//set by a previous dithering wfs
 						P(recon->dither_m, idm)=dither_m; dither_m=NULL;
 						P(recon->dither_rg, iwfs, iwfs)=dither_rg; dither_rg=NULL;
 						P(recon->dither_ra, iwfs, idm)=dither_ra; dither_ra=NULL;
@@ -1253,7 +1273,7 @@ recon_t* setup_recon_prep(const parms_t* parms, const map_t* aper, const powfs_t
 			P(recon->dx, iht)=(parms->atmr.dx/P(recon->os, iht))*scale;
 		}
 		/*number of reconstruction layers */
-		recon->npsr=NX(recon->ht);
+		recon->npsr=(int)NX(recon->ht);
 		/*setup atm reconstruction layer grid */
 		setup_recon_xloc(recon, parms);
 		/*setup xloc/aloc to WFS grad */
