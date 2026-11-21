@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Architecture</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -100,79 +102,144 @@ $(function(){initNavTree('d7/dbf/page93_maos.html','../../',''); });
   <div class="headertitle"><div class="title">Architecture </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="sect-structure"></a>
+<div class="textblock"><p>This page describes how the code is organized and how a <code>maos</code> simulation runs. See <a class="el" href="../../d5/d98/page91_basics.html">Fundamentals</a> for the data types and <a class="el" href="../../db/dda/page95_profiling.html">Debugging</a> for debugging.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-layers"></a>
+Library Layering</h1>
+<p>The source is organized as layered libraries. Each layer depends only on the layers above it (this is also the <code>SUBDIRS</code> build order in <code>Makefile.am</code>):</p>
+<ol type="1">
+<li><code>sys/</code>: operating system layer. Memory accounting (<code>mem.c</code>), threads and the thread pool (<code>thread.c</code>, <code>thread_pool.c</code>), sockets (<code>sock.c</code>, <code>sockio.c</code>), file IO with the <code>bin</code> and <code>fits</code> formats and gzip/zstd compression (<code>bin.c</code>, <code>zstdio.c</code>), the scheduler client (<code><a class="el" href="../../d7/d29/scheduler__client_8c.html">scheduler_client.c</a></code>), and per OS process information (<code>process_*</code>.c).</li>
+<li><code>math/</code>: numerical containers (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a>, <a class="el" href="../../df/def/type_8h.html#db/d16/structcmat">cmat</a>, <a class="el" href="../../df/def/type_8h.html#d4/d6c/structsmat">smat</a>, <a class="el" href="../../df/def/type_8h.html#d9/d5c/structzmat">zmat</a>, <a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a>, sparse <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a>/<a class="el" href="../../df/def/type_8h.html#d1/d2a/structcsp">csp</a>, <a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> arrays, <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>, <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a>) with BLAS, LAPACK, FFTW, and CHOLMOD wrappers. The functions are type generic (see <a class="el" href="../../d5/d98/page91_basics.html#sect-type-generic">Type Generic Implementation</a>).</li>
+<li><code>lib/</code>: physics and AO building blocks reusable outside of <code>maos</code>, built into <code>libaos</code> together with <code>sys</code> and <code>math:</code> turbulence generation, ray tracing (<code>accphi.c</code>), the <code>mkg</code>, <code>mkh</code>, <code>mkz</code>, <code>mkw</code> operators, PCG, servo, PSD, pyramid WFS, the configuration file parser (<code>readcfg.c</code>), and the plotting client (<code>draw.c</code>). Functions here take basic types, not <code>maos</code> structs. <code>lib/aolib.c</code> builds <code>bin/aolib.so</code>, which is used by the Python (<code>scripts/libaos.py</code>) and Matlab interfaces.</li>
+<li><code>cuda/</code>: GPU versions of the simulation and reconstruction, organized as <code>cuda/math</code>, <code>cuda/recon</code>, and <code>cuda/sim</code>. They mirror the CPU code paths and are compiled only when CUDA is found (<code>USE_CUDA</code>).</li>
+<li><code>maos/</code>: the simulator.</li>
+<li><code>skyc/</code>: sky coverage post processing, a separate executable with its own parameters (see <a class="el" href="../../d5/d4c/skycoverage.html">Sky Coverage</a>).</li>
+<li><code>tools/</code>: the job <code>scheduler</code>, the <code>monitor</code> (GTK and browser interfaces), <code>drawdaemon</code> (GTK plotting), <code>drawres</code>, <code>bin2fits</code>, and other utilities.</li>
+<li><code>mex/</code> and <code>scripts/</code>: Matlab and Python bindings and scripts. <code>scripts/lib2mex.py</code> and <code>scripts/lib2py.py</code> parse the headers to generate <code>mex/aolib.c</code> and <code>scripts/libaos.py</code>, so the formatting of structs and doc comments in those headers matters.</li>
+</ol>
+<h1 class="doxsection"><a class="anchor" id="sect-structure"></a>
 Simulation Flow</h1>
+<p>The following is the call sequence of <code>maos</code>. Function names link to their documentation.</p>
 <ul>
-<li><a class="el" href="../../de/d78/maos_8c.html#ac0f2228420376f4db7e1274f2b41667c">main()</a> is the entrance into the program. It calls<ul>
-<li><a class="el" href="../../d2/d9f/parms_8c.html#ab3962981bdc9c2389acca735314ec686">setup_parms()</a>: to setup the parameters of types <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> and check for errors.<ul>
-<li><a class="el" href="../../d2/d9f/parms_8c.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu()</a>: to setup the GPU usage for various tasks</li>
+<li><a class="el" href="../../de/d78/maos_8c.html#ac0f2228420376f4db7e1274f2b41667c">main()</a> (<code><a class="el" href="../../de/d78/maos_8c.html">maos/maos.c</a></code>) parses the command line, then<ul>
+<li><a class="el" href="../../d2/d9f/parms_8c.html#ab3962981bdc9c2389acca735314ec686">setup_parms()</a> (<code><a class="el" href="../../d2/d9f/parms_8c.html">maos/parms.c</a></code>) reads the configuration files into <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> and checks for errors:<ul>
+<li>The <code>readcfg_*</code>() functions read every key, for example <code>readcfg_sim()</code>, <code>readcfg_powfs()</code>, <code>readcfg_wfs()</code>, <code>readcfg_dm()</code>, <code>readcfg_tomo()</code>, <code>readcfg_gpu()</code>.</li>
+<li>All keys that are read are saved to <code>maos_HOST_PID.conf</code> (linked as <code>maos_recent.conf</code>) in the output folder so that the simulation can be reproduced.</li>
+<li>The <code>setup_parms_postproc_*</code>() functions derive dependent values and validate the parameters.</li>
 </ul>
 </li>
-<li>maos_setup(): to setup the AO system geometry and data structs. It calls<ul>
-<li>setup_aper(): to setup the aperture grid and amplitude map (of type <a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a>)</li>
-<li>setup_powfs_init(): to setup the WFS subapertures geometry</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a376b025ba1fd17827089d97a298e109c">setup_recon_prep()</a>: to setup reconstruction grid (ploc, aloc, floc, GP, GX, etc.)</li>
-<li>setup_surf(): to setup NCPA</li>
-<li>setup_shwfs_phy(): to setup physical optics (dtf, etf, i0, mtch, cog)</li>
-<li>setup_powfs_neasim(): to setup grad noise model if not using photon noise.</li>
-<li>setup_powfs_calib(): NCPA calibration</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a98fbe241a9a99143835d5b3c1726c1e8">setup_recon_GA()</a>: Actuator to gradient</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a699cb83e672d1ebc6885edce0f0b5d2a">setup_recon_GF()</a>: Focus mode to gradient</li>
-<li>setup_recon_GR(): Radial Zernike modes to gradient</li>
-<li>ngsmod_prep(): AHST ngsmod geometry</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a367e861f652afcd5f4764c37a09c9400">setup_recon_saneai()</a>: to setup noise covariance</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#af1da2a8efe02e505b025aee27f4f02ff">setup_recon_dither_dm()</a>: Common mode dithering setup</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a5af69df7b36ffcdd820bd19a87d26e96">setup_recon_control()</a>: Setup controller</li>
-<li>setup_recon_moao(): to setup MOAO</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit()</a>: to setup fitting to WFS subaperture algorithm</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abccc70ee3253427358536ee2b4185c6c">setup_recon_mvm()</a>: to calculate MVM control matrix</li>
-<li>gpu_setup_recon_mvm(): calculate MVM control matrix using GPUs</li>
-<li>gpu_wfsgrad_init(): to setup WFS in GPU.</li>
-<li>gpu_setup_recon(): to setup recon in GPU.</li>
-<li>gpu_perfevl_init(): to initialize performance evaluation parameters in GPU.</li>
-<li>gpu_wfssurf2gpu(): to copy NCPA OPDs to GPU.</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abbea7539111904f7a79b6d30a0718d8d">setup_recon_misc()</a>: to compute PSD, etc.</li>
-<li>plot_setup(): to plot the geometry (ploc, floc, aloc, amplitude map, etc.).</li>
+<li><a class="el" href="../../d7/d29/scheduler__client_8c.html#a143c4df02307a2d39088a677ca9fcd51">scheduler_start()</a> waits for permission from the scheduler to start (see <a class="el" href="#arch-scheduler">Scheduler, Monitor, and Drawdaemon</a>).</li>
+<li><a class="el" href="../../d2/d9f/parms_8c.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu()</a> selects the GPUs and sets the <code>parms-&gt;gpu</code> flags.</li>
+<li><code>THREAD_POOL_INIT()</code> initializes the thread pool or OpenMP with <code>NTHREAD</code> threads (option <code>-n</code>).</li>
+<li>maos_setup() (<code><a class="el" href="../../d2/d2e/setup_8c.html">maos/setup.c</a></code>) sets up the AO system geometry and data structs. Its main steps are:<ul>
+<li>setup_aper(): the aperture grid and amplitude map (<a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a>).</li>
+<li>setup_powfs_init(): the WFS subaperture geometry (<a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a>).</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a376b025ba1fd17827089d97a298e109c">setup_recon_prep()</a>: the reconstruction grids (ploc, aloc, floc, xloc) and the ray tracing operators (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a>).</li>
+<li>setup_surf(): surface errors and NCPA.</li>
+<li>setup_shwfs_phy(): physical optics WFS data (dtf, etf, i0, matched filter, cog).</li>
+<li>setup_powfs_neasim(): gradient noise model for geometric WFS.</li>
+<li>setup_powfs_calib(): NCPA calibration.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a98fbe241a9a99143835d5b3c1726c1e8">setup_recon_GA()</a>, <a class="el" href="../../d3/deb/maos_2recon_8h.html#a699cb83e672d1ebc6885edce0f0b5d2a">setup_recon_GF()</a>, twfs_setup_GR(): actuator, focus, and radial mode to gradient operators.</li>
+<li>ngsmod_prep(): low order NGS mode geometry for split tomography.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a367e861f652afcd5f4764c37a09c9400">setup_recon_saneai()</a>: noise covariance.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#af1da2a8efe02e505b025aee27f4f02ff">setup_recon_dither_dm()</a>: DM dithering.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a5af69df7b36ffcdd820bd19a87d26e96">setup_recon_control()</a>: tomography, DM fitting, or least squares reconstructor.</li>
+<li>setup_recon_moao(): MOAO, if enabled.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a58f4cbdab5f06550701e99866c9e6002">setup_powfs_fit()</a>: fitting of turbulence onto the WFS subapertures (<code>sim.wfsalias=2</code> or <code>sim.idealwfs=2</code>).</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abccc70ee3253427358536ee2b4185c6c">setup_recon_mvm()</a> or gpu_setup_recon_mvm(): the control matrix when <code>recon.mvm</code> is enabled.</li>
+<li>gpu_wfsgrad_init(), gpu_setup_recon(), gpu_perfevl_init(), gpu_wfssurf2gpu(): copy data to the GPU when the corresponding <code>parms-&gt;gpu</code> flag is set.</li>
+<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#abbea7539111904f7a79b6d30a0718d8d">setup_recon_misc()</a>: PSD and other miscellaneous data.</li>
+<li>plot_setup(): plot the geometry when <code>plot.setup</code> is set.</li>
 </ul>
 </li>
-<li>maos_sim(): to start the simulation. It then calls<ul>
-<li>maos_iseed(): to initialize runtime data for each seed including turbulence</li>
-<li>In event driven simulation mode (PARALLEL=2). It calls the following in parallel each in a loop<ul>
-<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a> &amp; print_progress(): performance simulation</li>
-<li><a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a> and shift_grad(): compute gradients and shift to gradlast</li>
-<li>reconstruct() &amp; filter_dm: wfs reconstruction and servo filtering</li>
+<li>maos_sim() (<code>maos/sim.c</code>) runs the simulation for each seed in <code>sim.seeds:</code> <ul>
+<li>maos_iseed() calls sim_init() to create the runtime data (<a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>) and generates the frozen flow turbulence with genatm().</li>
+<li>In the parallel (<code>PARALLEL=1</code>) and serial (<code>PARALLEL=0</code>) modes, maos_isim() is called for each time step from <code>sim.start</code> to <code>sim.end</code>. It calls <code>prepare_isim()</code> (turbulence for non frozen flow, sodium profile update, DM projection), then<ul>
+<li>with <code>PARALLEL=1</code>, queues reconstruct(), <a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>, and <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a> to run concurrently, waits for them, then calls shift_grad() and filter_dm(). The GPU versions of perfevl and wfsgrad are queued first so that they start early.</li>
+<li>with <code>PARALLEL=0</code> in closed loop, calls <a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>, <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a>, reconstruct(), shift_grad(), and filter_dm() in sequence.</li>
+<li>with <code>PARALLEL=0</code> in open loop, calls <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a>, shift_grad(), reconstruct(), filter_dm(), and <a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a> in sequence.</li>
+<li><code>postproc_isim()</code> updates the reconstructor when requested (for example by Cn2 estimation or dithering).</li>
+<li>print_progress() reports the progress.</li>
 </ul>
 </li>
-<li>In parallel simulation, calls maos_isim() for each step. It then calls<ul>
-<li>sim_update_etf(): update sodium profile if needed</li>
-<li>genatm(): update turbulence if not using frozen-flow</li>
-<li>In parallel mode (PARALLEL=1)<ul>
-<li>perfevl_pre(): wfsgrad_prep, reconstruct() in parallel and then wait</li>
-<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>: <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a>, in parallel and then wait</li>
-<li>shift_grad(): copy from grad to gradlast for reconstruct()</li>
-<li>filter_dm(): servo filtering (dmreal)</li>
+<li>In the event driven mode (<code>PARALLEL=2</code>), three loops run concurrently for all time steps and synchronize with each other through counters:<ul>
+<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a> and print_progress(),</li>
+<li><a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a> and shift_grad(),</li>
+<li>reconstruct(), filter_dm(), and <code>postproc_isim()</code>, which updates the reconstructor when requested (for example by Cn2 estimation).</li>
 </ul>
 </li>
-<li>In serial mode (PARALLEL=0), calls the following in sequence<ul>
-<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>: (in closed loop) to evaluate the performance in science field</li>
-<li><a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a>: to compute WFS gradients</li>
-<li>reconstruct():</li>
-<li>shift_grad():</li>
-<li>filter_dm():</li>
-<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>:</li>
+<li>sim_free() frees the runtime data of the seed.</li>
 </ul>
 </li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#affdf4abbd6002b77777fe7c1852cfcc7">setup_recon_update_cn2()</a>: Update tomography parameter when needed</li>
-<li><a class="el" href="../../d3/deb/maos_2recon_8h.html#a5af69df7b36ffcdd820bd19a87d26e96">setup_recon_control()</a>: Update recon parameters when needed.</li>
-<li>print_progress(): show progress</li>
-</ul>
-</li>
-<li>free_simu(): to delete run time structs and close files </li>
+<li><a class="el" href="../../d2/d2e/setup_8c.html#ab51286f168c1230cda425a07100662ea">maos_reset()</a> and <a class="el" href="../../d2/d9f/parms_8c.html#a8a6a2e33b33daf9cc04fbbd68733cd26">free_parms()</a> free the remaining data.</li>
 </ul>
 </li>
 </ul>
-</li>
+<p>The main functions of each time step are:</p>
+<ul>
+<li><a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a> (<code><a class="el" href="../../da/dd9/perfevl_8c.html">maos/perfevl.c</a></code>): ray traces the turbulence and DM shapes to the science directions and computes the wavefront error and PSFs.</li>
+<li><a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a> (<code>maos/wfsgrad.c</code>): computes the WFS OPD, the subaperture images in physical optics mode, and the gradients.</li>
+<li>shift_grad(): copies the new gradients to <code>gradlastcl/<code>gradlastol</code> for</code> the reconstructor.</li>
+<li>reconstruct() (<code>maos/recon.c</code>): computes the DM error signal from the gradients.</li>
+<li>filter_dm() (<code>maos/filter.c</code>): applies the servo filter to compute the DM commands (<code>dmcmd</code>) and the actual DM shape (<code>dmreal</code>), including hysteresis (see <a class="el" href="../../da/dbe/hysteresis.html">DM Hysteresis</a>).</li>
 </ul>
+<p>In closed loop, reconstruct() uses the gradients of the previous time step (<code>simu-&gt;reconisim</code> is <code>isim-1</code>), which is what allows it to run concurrently with <a class="el" href="../../d2/d94/sim_8h.html#a4c93f77705cfbae58d97f2701147cf03">wfsgrad()</a> and <a class="el" href="../../da/dd9/perfevl_8c.html#ad68da0434440479a9d97b5fe711ebb26">perfevl()</a>.</p>
+<p><code>PARALLEL</code> is read from the environment variable <code>MAOS_PARALLEL</code> (default 1; see read_sim_env()). maos_setup() changes it to 0 in open loop (<code>sim.closeloop=0</code>) or when <code>evl.tomo</code> is set. <code>PARALLEL=2</code> requires OpenMP and does not support <code>sim.dmproj</code>; otherwise it falls back to 1. The environment variables <code>MAOS_NO_WFS</code>, <code>MAOS_NO_EVL</code>, and <code>MAOS_NO_RECON</code> skip the corresponding calls, which is useful for timing.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-structs"></a>
+Key Data Structures</h1>
+<ul>
+<li><a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a> (<code><a class="el" href="../../d4/d38/parms_8h.html">maos/parms.h</a></code>): all the input parameters, read once by <a class="el" href="../../d2/d9f/parms_8c.html#ab3962981bdc9c2389acca735314ec686">setup_parms()</a> and treated as constant afterwards. The members mirror the configuration keys, for example <code>parms-&gt;powfs</code>[ipowfs] (<a class="el" href="../../d4/d38/parms_8h.html#d5/d33/structpowfs__cfg__t">powfs_cfg_t</a>), <code>parms-&gt;wfs</code>[iwfs] (<a class="el" href="../../d4/d38/parms_8h.html#d2/d57/structwfs__cfg__t">wfs_cfg_t</a>), <code>parms-&gt;dm</code>[idm] (<a class="el" href="../../d4/d38/parms_8h.html#d9/df5/structdm__cfg__t">dm_cfg_t</a>), <code>parms-&gt;sim</code> (<a class="el" href="../../d4/d38/parms_8h.html#d3/d8f/structsim__cfg__t">sim_cfg_t</a>), and <code>parms-&gt;gpu</code> (<a class="el" href="../../d4/d38/parms_8h.html#de/d64/structgpu__cfg__t">gpu_cfg_t</a>).</li>
+<li><a class="el" href="../../d6/d94/maos_2types_8h.html#d5/deb/structaper__t">aper_t</a> (<code><a class="el" href="../../d6/d94/maos_2types_8h.html">maos/types.h</a></code>): the telescope aperture: the evaluation grid (<code>locs</code>), the amplitude, and the PSF computation data (<code>locfft</code>).</li>
+<li><a class="el" href="../../d6/d94/maos_2types_8h.html#da/dcf/structpowfs__t">powfs_t</a>: data shared by all WFS of the same type (geometry, amplitude, and physical optics data such as the subaperture OTFs and matched filters).</li>
+<li><a class="el" href="../../d6/d94/maos_2types_8h.html#d1/d27/structrecon__t">recon_t</a>: the reconstruction grids and operators (<code>ploc</code>, <code>aloc</code>, <code>xloc</code>, <code>GA</code>, <code>GX</code>, <code>HXF</code>, ...), the tomography and fitting parameters, and the control matrix.</li>
+<li><a class="el" href="../../d6/d94/maos_2types_8h.html#d1/da4/structsim__t">sim_t</a>: the runtime data of one seed: atmosphere, DM commands and shapes, gradients, performance results, saved telemetry, and the synchronization state for the parallel modes.</li>
+<li><a class="el" href="../../d6/d94/maos_2types_8h.html#db/d00/structglobal__t">global_t</a>: holds pointers to the above (<code>global-&gt;parms</code>, <code>global-&gt;powfs</code>, <code>global-&gt;aper</code>, <code>global-&gt;recon</code>, <code>global-&gt;simu</code>) for use by the scheduler listener, the signal handler, and the Matlab/Python interfaces.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="arch-gpu"></a>
+GPU Code Paths</h1>
+<p>When <code>maos</code> is compiled with CUDA, the <code>cuda/</code> library provides GPU versions of the WFS (<code>gpu_wfsgrad*</code>), performance evaluation (<code>gpu_perfevl*</code>), and reconstruction (<code>gpu_setup_recon</code>, <code>gpu_tomo</code>, <code>gpu_fit</code>, ...). Each task uses the GPU when its flag in <code>parms-&gt;gpu</code> is set: <code>gpu.wfs</code>, <code>gpu.evl</code>, <code>gpu.tomo</code>, <code>gpu.fit</code>, <code>gpu.lsr</code>, <code>gpu.psf</code>, and <code>gpu.moao</code> (defaults in <code>config/maos/sim.conf</code>). <a class="el" href="../../d2/d9f/parms_8c.html#aad108d3a5091968e86ec8adcc269d450">setup_parms_gpu()</a> turns off the flags that do not apply to the configuration, sets <code>gpu.recon</code>, initializes the GPUs with gpu_init(), and clears all the flags if no GPU is used. The command line option <code>-g</code> selects the GPUs (<code>-g-1</code> disables GPU) and <code>-G</code> sets the number of GPUs. The CPU code calls the <code>gpu_*</code> functions inside <code>#if</code> <code>USE_CUDA</code> blocks depending on these flags.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-param"></a>
+Adding a Parameter</h1>
+<p>Every runtime option is a <code>key=value</code> entry in the <code>config/maos/*</code>.conf files and maps 1:1 to a field of <a class="el" href="../../d4/d38/parms_8h.html#d4/d51/structparms__t">parms_t</a>: <code>wfs.thetax</code> becomes <code>parms-&gt;wfs.thetax</code> (or <code>parms-&gt;wfs</code>[iwfs].thetax for per WFS keys). To add a parameter:</p>
+<ol type="1">
+<li>Add the field with a doc comment to the struct in <code><a class="el" href="../../d4/d38/parms_8h.html">maos/parms.h</a></code>.</li>
+<li>Read it in the matching <code>readcfg_*</code>() function in <code><a class="el" href="../../d2/d9f/parms_8c.html">maos/parms.c</a></code> with one of the <code>READ_*</code> macros, for example <code>READ_INT</code>(sim.foo), <code>READ_DBL</code>(sim.foo), <code>READ_STR</code>(sim.foo), or <code>READ_DMAT</code>(sim.foo), or <code>READ_POWFS(dbl,foo)</code>, <code>READ_WFS(dbl,foo)</code>, <code>READ_DM(dbl,foo)</code> for array parameters that have one value per powfs, WFS, or DM.</li>
+<li>Derive dependent values and validate the input in the appropriate <code>setup_parms_postproc_*</code>() function.</li>
+<li>Add the key with its default value and a comment to the appropriate <code></code>.conf file, for example <code>sim.conf</code>, <code>recon.conf</code>, <code>dbg.conf</code>, or <code>powfs_common.conf</code>.</li>
+<li>Free any allocated memory in <a class="el" href="../../d2/d9f/parms_8c.html#a8a6a2e33b33daf9cc04fbbd68733cd26">free_parms()</a>.</li>
+</ol>
+<p>The configuration parser (<code>lib/readcfg.c</code>) checks the keys when it is closed in <a class="el" href="../../d2/d9f/parms_8c.html#ab3962981bdc9c2389acca735314ec686">setup_parms()</a>: a key that is supplied by the user (on the command line or in a user <code></code>.conf file) but never read is an error, and so is a key that is read more than once. Unused keys in the default configuration files only produce a warning. Set <code>MAOS_PERMISSIVE=1</code> to turn these errors into warnings. A key that is read but not found produces a warning and is assumed to be 0, so always provide a default in the <code></code>.conf files. Conf files <code>include=</code> each other; later values override earlier ones, and <code>key+=value</code> appends to an array.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-thread"></a>
+Threading</h1>
+<p><code>maos</code> parallelizes both across the main tasks of a time step (see above) and inside each task. The macros in <code><a class="el" href="../../db/dd5/thread_8h.html">sys/thread.h</a></code> provide a common interface:</p>
+<ul>
+<li><code><a class="el" href="../../db/dd5/thread_8h.html#ab1d4c33237acfb7e3b6165ae68c13792" title="Queue jobs to counter. Do not wait.">QUEUE(group, fun, arg, njob, urgent)</a></code> queues <code>njob</code> calls of <code>fun(arg)</code>; <code>WAIT(group, urgent)</code> waits for the queued jobs in the group; <code><a class="el" href="../../db/dd5/thread_8h.html#ac484ce8461053d81b280ae84d3d2c110" title="Queue jobs to a temp counter, Then wait for it to complete.">CALL()</a></code> queues and waits.</li>
+<li><code>QUEUE_THREAD()</code>, <code>CALL_THREAD()</code> run an array of <code><a class="el" href="../../db/dd5/thread_8h.html#d4/dd6/structthread__t">thread_t</a></code>, which divides an index range among the threads (see <code>thread_prep()</code>).</li>
+<li><code>OMP_FOR()</code>, <code>OMP_TASK_FOR()</code> parallelize loops with OpenMP.</li>
+</ul>
+<p>When compiled with OpenMP 4.5 or newer, these macros use OpenMP tasks. Otherwise they use the thread pool in <code>sys/thread_pool.c</code>, which keeps a fixed number of threads that take jobs from a queue; a thread that waits for its jobs runs other pending jobs in the meantime. <a class="el" href="../../de/d78/maos_8c.html#ac0f2228420376f4db7e1274f2b41667c">main()</a> runs maos_sim() inside an OpenMP <code>parallel/<code>single</code> region</code> (<code>OMPTASK_SINGLE</code>) so that the tasks can be scheduled.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-mem"></a>
+Memory Accounting</h1>
+<p><code>sys/mem.h</code> replaces <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, and <code>free</code> (in C code) with wrappers that record every allocation when memory debugging is enabled. It is enabled by default in debug builds (<code>--enable-debug</code>) and can be set with the environment variable <code>MAOS_MEM_DEBUG=1</code> or 0. At exit, the unreleased memory is printed together with the backtrace of its allocation. <code>MAOS_MEM_VERBOSE=1</code> prints every allocation and free. Use <code>mycalloc(n,
+type)</code> and <code>mymalloc(n, type)</code> to allocate typed memory. See <a class="el" href="../../db/dda/page95_profiling.html">Debugging</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="arch-log"></a>
+Logging</h1>
+<p>The logging macros are defined in <code><a class="el" href="../../d2/de5/sys_2common_8h.html">sys/common.h</a></code> and filtered by the environment variable <code>MAOS_LOG_LEVEL</code> (default 0, range -5 to 5). The output goes to the terminal (unless detached) and to the log file.</p>
+<ul>
+<li><code>info3()</code>, <code>info2()</code>, <code>info()</code>: information of decreasing importance, shown at the default level.</li>
+<li><code>dbg()</code>, <code>dbg2()</code>, <code>dbg3()</code>: debugging information, shown only when <code>MAOS_LOG_LEVEL</code> is at least 1, 2, or 3, respectively.</li>
+<li><code>warning()</code>: a warning with the file and line number.</li>
+<li><code>error()</code>: prints the message with the file and line number and raises <code>SIGUSR2</code>. The signal handler (<code>sys/mem.c</code>) prints a backtrace and calls the handler registered by the program, which normally terminates it.</li>
+<li>Variants such as <code>info_once()</code>, <code>warning_once()</code>, <code>dbg_time()</code>, and <code>info_time()</code> print only once or add a time stamp.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="arch-scheduler"></a>
+Scheduler, Monitor, and Drawdaemon</h1>
+<ul>
+<li>The <code>scheduler</code> (<code>tools/scheduler.c</code>) is a per user daemon that queues jobs and keeps their status. It listens on a TCP port that is derived from the user name or read from <code>~/</code>.aos/port. When compiled with libwebsockets, it also serves the browser monitor (<code>monitor.html</code>) on that port plus 100. <code>maos</code> launches the scheduler if it is not running.</li>
+<li><code>maos</code> talks to the scheduler through <code><a class="el" href="../../d7/d29/scheduler__client_8c.html">sys/scheduler_client.c</a></code>: <a class="el" href="../../d7/d29/scheduler__client_8c.html#a25cea5f5488b400b89f7cac75f93b815">scheduler_report_path()</a> reports the job, <a class="el" href="../../d7/d29/scheduler__client_8c.html#a143c4df02307a2d39088a677ca9fcd51">scheduler_start()</a> waits until enough CPUs are available (the <code>-f</code> option skips the wait), <a class="el" href="../../d7/d29/scheduler__client_8c.html#a291e438e222f941d3969e605277de68e">scheduler_report()</a> sends the status every step, and <a class="el" href="../../d7/d29/scheduler__client_8c.html#a2b93c8f28b99804e00ac8483359a97fa">scheduler_finish()</a> reports the end. <a class="el" href="../../d7/d29/scheduler__client_8c.html#ab8adf4adef989fbe64052a8e8766b75d">scheduler_listen()</a> starts a thread in <code>maos</code> that handles requests forwarded by the scheduler, such as a request to start drawing.</li>
+<li>The <code>monitor</code> (<code>tools/monitor*</code>.c, or <code>monitor.html</code> in a browser) connects to the schedulers on the hosts listed in <code>~/</code>.aos/hosts, shows the jobs, and can kill jobs or request plots.</li>
+<li>Plotting uses <code>lib/draw.c</code>. When plotting is requested (<code>plot</code>.* options or from the monitor), <code>maos</code> sends the data over a socket to <code>drawdaemon</code> (<code>tools/drawdaemon*</code>.c), which is either launched locally or connected through the monitor and the scheduler.</li>
+</ul>
+<p>Configure with <code>--disable-scheduler</code> (implied by <code>--enable-release</code>) to build without the scheduler. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
@@ -184,8 +251,12 @@ Simulation Flow</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../de/d19/page90_devel.html">Development</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

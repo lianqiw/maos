@@ -1,6 +1,7 @@
 var loc_8h =
 [
     [ "loc_convert", "d1/d83/loc_8h.html#a6c79a45cbac1b110b8771a9639aded76", null ],
+    [ "loc_convert_cell", "d1/d83/loc_8h.html#acbfab2375d4998abdce5a95b1eb052cd", null ],
     [ "loc_create_embed", "d1/d83/loc_8h.html#a5b4f95f472699e1de2316048f1e46a1c", null ],
     [ "loc_create_map_npad", "d1/d83/loc_8h.html#a0228b9c5ec770e72ffc2f0febdbc5e09", null ],
     [ "loc_create_map", "d1/d83/loc_8h.html#ae9474383cd2662c9c246d312d21afbce", null ],

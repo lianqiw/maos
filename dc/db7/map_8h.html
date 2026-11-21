@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: math/map.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -123,6 +125,7 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a063262a5f31503e32c784abbc7a0855b" id="r_a063262a5f31503e32c784abbc7a0855b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a063262a5f31503e32c784abbc7a0855b">map_convert</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A)</td></tr>
+<tr class="memitem:ac91d5d404f781023c525b0685f972ca1" id="r_ac91d5d404f781023c525b0685f972ca1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac91d5d404f781023c525b0685f972ca1">map_convert_cell</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *A)</td></tr>
 <tr class="memitem:ac44af32fcc3487df0d7dc4f861eb64f7" id="r_ac44af32fcc3487df0d7dc4f861eb64f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d3/d27/structrmap__t">rmap_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac44af32fcc3487df0d7dc4f861eb64f7">rmap_convert</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A)</td></tr>
 <tr class="memitem:a3aff9d494ac68438376e0bb4e894bb70" id="r_a3aff9d494ac68438376e0bb4e894bb70"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3aff9d494ac68438376e0bb4e894bb70">mapnew</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> nx, <a class="el" href="../../d7/d63/classlong.html">long</a> ny, real dx, real dy)</td></tr>
 <tr class="memitem:a137222cc40e02cb453f0856b0514b030" id="r_a137222cc40e02cb453f0856b0514b030"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a137222cc40e02cb453f0856b0514b030">mapnew2</a> (<a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> *A)</td></tr>
@@ -159,7 +162,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">writebin(<a class="code hl_function" href="../../da/dfb/dmath_8h.html#a64468aff0b03ca71e827827661a500a2">dmat_cast</a>(out), A)</div>
-<div class="ttc" id="admath_8h_html_a64468aff0b03ca71e827827661a500a2"><div class="ttname"><a href="../../da/dfb/dmath_8h.html#a64468aff0b03ca71e827827661a500a2">dmat_cast</a></div><div class="ttdeci">dmat * dmat_cast(const_anyarray A)</div><div class="ttdef"><b>Definition</b> dtmp.c:386</div></div>
+<div class="ttc" id="admath_8h_html_a64468aff0b03ca71e827827661a500a2"><div class="ttname"><a href="../../da/dfb/dmath_8h.html#a64468aff0b03ca71e827827661a500a2">dmat_cast</a></div><div class="ttdeci">dmat * dmat_cast(const_anyarray A)</div><div class="ttdef"><b>Definition</b> dtmp.c:387</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -195,9 +198,8 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a>*)cellconvert(readbin_id(M_MAP, 1, A), (<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * (*)(<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *))map_convert)</div>
+<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a>*)cellconvert(readbin_id(M_MAP, 1, A), map_convert_cell)</div>
 <div class="ttc" id="atype_8h_html_d2/d8c/structmapcell"><div class="ttname"><a href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a></div><div class="ttdef"><b>Definition</b> type.h:260</div></div>
-<div class="ttc" id="atype_8h_html_db/d76/structcell"><div class="ttname"><a href="../../df/def/type_8h.html#db/d76/structcell">cell</a></div><div class="ttdef"><b>Definition</b> type.h:64</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,8 +217,9 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a>*)cellconvert((<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*)<a class="code hl_function" href="../../da/dfb/dmath_8h.html#ace97766e5b28d9ac5fc94737a48c66d9">dcellread_mmap</a>(A), (<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * (*)(<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *))map_convert)</div>
-<div class="ttc" id="admath_8h_html_ace97766e5b28d9ac5fc94737a48c66d9"><div class="ttname"><a href="../../da/dfb/dmath_8h.html#ace97766e5b28d9ac5fc94737a48c66d9">dcellread_mmap</a></div><div class="ttdeci">dcell * dcellread_mmap(const char *format,...)</div><div class="ttdef"><b>Definition</b> dtmp.c:5238</div></div>
+<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#d2/d8c/structmapcell">mapcell</a>*)cellconvert((<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*)<a class="code hl_function" href="../../da/dfb/dmath_8h.html#ace97766e5b28d9ac5fc94737a48c66d9">dcellread_mmap</a>(A), map_convert_cell)</div>
+<div class="ttc" id="admath_8h_html_ace97766e5b28d9ac5fc94737a48c66d9"><div class="ttname"><a href="../../da/dfb/dmath_8h.html#ace97766e5b28d9ac5fc94737a48c66d9">dcellread_mmap</a></div><div class="ttdeci">dcell * dcellread_mmap(const char *format,...)</div><div class="ttdef"><b>Definition</b> dtmp.c:5249</div></div>
+<div class="ttc" id="atype_8h_html_db/d76/structcell"><div class="ttname"><a href="../../df/def/type_8h.html#db/d76/structcell">cell</a></div><div class="ttdef"><b>Definition</b> type.h:64</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -320,6 +323,31 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a>, which takes over A; NULL if A is NULL or not a real matrix. </dd></dl>
+
+</div>
+</div>
+<a id="ac91d5d404f781023c525b0685f972ca1" name="ac91d5d404f781023c525b0685f972ca1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac91d5d404f781023c525b0685f972ca1">&#9670;&#160;</a></span>map_convert_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * map_convert_cell </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *</td>          <td class="paramname"><span class="paramname"><em>A</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>map_convert() with the signature required by cellconvert().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>Input dmat object as cell*. See map_convert(). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#d6/da3/structmap__t">map_t</a> as cell*. </dd></dl>
 
 </div>
 </div>
@@ -799,8 +827,12 @@ Functions</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>math</b></li><li class="navelem"><a href="../../dc/db7/map_8h.html">map.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

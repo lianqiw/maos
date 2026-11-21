@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: math/loc.h File Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -119,6 +121,7 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a6c79a45cbac1b110b8771a9639aded76" id="r_a6c79a45cbac1b110b8771a9639aded76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6c79a45cbac1b110b8771a9639aded76">loc_convert</a> (<a class="el" href="../../df/def/type_8h.html#d3/d27/structdmat">dmat</a> *A)</td></tr>
+<tr class="memitem:acbfab2375d4998abdce5a95b1eb052cd" id="r_acbfab2375d4998abdce5a95b1eb052cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbfab2375d4998abdce5a95b1eb052cd">loc_convert_cell</a> (<a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *A)</td></tr>
 <tr class="memitem:a5b4f95f472699e1de2316048f1e46a1c" id="r_a5b4f95f472699e1de2316048f1e46a1c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../df/def/type_8h.html#d7/da0/structlmat">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b4f95f472699e1de2316048f1e46a1c">loc_create_embed</a> (<a class="el" href="../../d7/d63/classlong.html">long</a> *nembed, const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, real oversize, int fftpad)</td></tr>
 <tr class="memitem:a0228b9c5ec770e72ffc2f0febdbc5e09" id="r_a0228b9c5ec770e72ffc2f0febdbc5e09"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0228b9c5ec770e72ffc2f0febdbc5e09">loc_create_map_npad</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc, int npad, int nx, int ny)</td></tr>
 <tr class="memitem:ae9474383cd2662c9c246d312d21afbce" id="r_ae9474383cd2662c9c246d312d21afbce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae9474383cd2662c9c246d312d21afbce">loc_create_map</a> (const <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> *loc)</td></tr>
@@ -241,8 +244,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>*)cellconvert(readbin_id(M_LOC, 1, A), (<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*(*)(<a class="code hl_struct" href="../../df/def/type_8h.html#db/d76/structcell">cell</a>*))loc_convert)</div>
-<div class="ttc" id="atype_8h_html_db/d76/structcell"><div class="ttname"><a href="../../df/def/type_8h.html#db/d76/structcell">cell</a></div><div class="ttdef"><b>Definition</b> type.h:64</div></div>
+<b>Value:</b><div class="fragment"><div class="line">(<a class="code hl_struct" href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a>*)cellconvert(readbin_id(M_LOC, 1, A), loc_convert_cell)</div>
 <div class="ttc" id="atype_8h_html_dc/da1/structloccell"><div class="ttname"><a href="../../df/def/type_8h.html#dc/da1/structloccell">loccell</a></div><div class="ttdef"><b>Definition</b> type.h:262</div></div>
 </div><!-- fragment -->
 </div>
@@ -365,6 +367,31 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a>, which takes over A; NULL if A is NULL or not a real matrix. </dd></dl>
+
+</div>
+</div>
+<a id="acbfab2375d4998abdce5a95b1eb052cd" name="acbfab2375d4998abdce5a95b1eb052cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbfab2375d4998abdce5a95b1eb052cd">&#9670;&#160;</a></span>loc_convert_cell()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> * loc_convert_cell </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../df/def/type_8h.html#db/d76/structcell">cell</a> *</td>          <td class="paramname"><span class="paramname"><em>A</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>loc_convert() with the signature required by cellconvert().</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td>Input dmat object as cell*. See loc_convert(). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The converted <a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a> as cell*. </dd></dl>
 
 </div>
 </div>
@@ -2421,8 +2448,12 @@ ym{ip}=\sum_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><b>math</b></li><li class="navelem"><a href="../../d1/d83/loc_8h.html">loc.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

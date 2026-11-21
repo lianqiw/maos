@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Simulation Results</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -100,322 +102,402 @@ $(function(){initNavTree('dd/da9/page40_results.html','../../',''); });
   <div class="headertitle"><div class="title">Simulation Results </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md27"></a>
+<div class="textblock"><p>MAOS writes all results to the output folder given by <span class="tt">-o</span>. Numerical results use the <span class="tt">.bin</span> format described in <a class="el" href="../../d5/d98/page91_basics.html#sect-bin">Bin file format</a>; PSFs and science OPDs use FITS. The number after the last underscore in a file name is the seed (for example <span class="tt">Res_1.bin</span> is for seed 1). When reading a file with the tools below, the suffix (<span class="tt">.bin</span>, <span class="tt">.fits</span>, with optional <span class="tt">.gz</span>) may be omitted.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
 RMS WFE</h1>
-<p>MAOS provides a few convenient routines to quickly process the simulation results and obtain time averaged wavefront error.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md28"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
 Python</h2>
-<p>Use the following (see <code>aolib.py</code>): </p><pre class="fragment">res,fds=maos_res(dir[,seeds] [,iframe] [,iframe2]) #gather field averaged WFE. [] indicate optional
-res,fds=maos_res(dir*) #gather field averaged WFE from multiple folders recursively
-res,fds=maos_res_each(dir*) #gather results for each field
-</pre><h2 class="doxsection"><a class="anchor" id="autotoc_md29"></a>
-Matlab</h2>
-<p>Use the following: </p><pre class="fragment">res=maos_res(dir[,seeds] [,range]) %gather field averaged WFE. [] indicate optional
-res,fds=maos_reseach(dir[, seeds] [,range]) #gather results for each field
-</pre><h1 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
-Plotting Results</h1>
-<p>The wavefront error time history can be processed using the built in tool <span class="tt">drawres</span> and plotted using the Gtk based <span class="tt">drawdaemon</span>. </p><pre class="fragment">drawres folder1 folder2 ...
-</pre><p>If the specified folder contains subfolders with results, they will be plotted together. When using on a text terminal with <span class="tt">DISPLAY</span> not set, if there is <span class="tt">monitor</span> running in a connected computer, it will launch <span class="tt">drawdaemon</span>.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md31"></a>
-Reading Results</h1>
-<p>MAOS generates output in binary format <span class="tt">.bin</span> files (which maybe gzipped) as described below. PSFs are written into <span class="tt">.fits</span> files with extensions.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md32"></a>
-.bin file format</h2>
-<p>The data are saved to the <code></code>.bin files in a simple modular way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned int), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
-<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <span class="tt"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></span> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
-<p>We use <span class="tt">.bin</span> format instead of <span class="tt">.fits</span> because it can be conveniently memory mapped for best efficiency in reading or saving.</p>
-<p>For implementation details, please refer to <a class="el" href="../../d5/d98/page91_basics.html#sect-bin">Bin file format</a>.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md33"></a>
+<p><span class="tt">scripts/maos_result.py</span> contains routines that read <span class="tt">Res_*.bin</span> or <span class="tt">Resp_*.bin</span> from one or more result folders and average the wavefront variance over a range of time steps and over the seeds found in each folder. Add the <span class="tt">scripts</span> folder to <span class="tt">PYTHONPATH</span> so that <span class="tt">readbin.py</span> can be imported. </p><pre class="fragment">from maos_result import *
+res,fds=maos_res(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1)      #field averaged WFE
+res,fds=maos_res_tot(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1)  #high order + low order total
+res,fds=maos_res_hi(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1)   #high order only
+res,fds=maos_res_each(fds, seeds=None, iframe1=0.2, iframe2=1, quiet=1) #each evaluation direction
+</pre><ul>
+<li><span class="tt">fds</span> is a folder name or a list of folder names. Wildcards are expanded with <span class="tt">glob</span>. Folders without valid results are skipped; the returned <span class="tt">fds</span> lists the folders that are used, one per row of <span class="tt">res</span>.</li>
+<li><span class="tt">seeds</span> is a list of seeds. By default all <span class="tt">Res_*.bin</span> files in each folder are used.</li>
+<li><span class="tt">iframe1</span> and <span class="tt">iframe2</span> select the time steps to average. A value less than 1 (up to 1 for <span class="tt">iframe2</span>) is a fraction of the number of completed steps; a larger value is a step index. The default discards the first 20% of the steps. With <span class="tt">iframe1=0</span> and <span class="tt">iframe2=0</span> the time history is returned instead of the average.</li>
+<li>The results are wavefront variance in \(nm^2\). Use <span class="tt">np.sqrt(res)</span> to get the RMS WFE in nm.</li>
+<li><span class="tt">maos_res</span> returns one row per folder with columns: high order WFE, tip/tilt WFE, and low order total WFE (plus focus when split tomography includes a focus mode). For integrated tomography, the high order column is the piston/tip/tilt removed WFE and the last two columns are both tip/tilt.</li>
+<li><span class="tt">maos_res_each</span> returns an array of dimension <span class="tt">nfolder*ndirection*nmod</span> with the closed loop piston removed, tip/tilt, and piston/tip/tilt removed WFE for each evaluation direction (the last part of <span class="tt">Resp_*.bin</span>).</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
 MATLAB</h2>
-<p>There are two MATLAB <code>mex</code> routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.fits files in MATLAB. The source of these mex routines are located in source sub-folder <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as <code>$HOME/matlab</code>. The usage in <code>MATLAB</code> is as follows:</p>
-<div class="fragment"><div class="line">cle=read(&#39;Res_1&#39;);     #will try .bin or .fits</div>
-<div class="line">cle=read(&#39;Res_1.bin&#39;); #only use .bin</div>
-<div class="line"> </div>
-<div class="line">write(cle,&#39;Res_1&#39;);     will write the data to \c Res_1.bin</div>
-<div class="line">write(cle,&#39;Res_1.bin&#39;); will write the data to \c Res_1.bin without compression.</div>
-</div><!-- fragment --><p>If there is any problem in compiling <code>read.c</code> and <code>write.c</code>, there are also two matlab scripts in the <code>scripts</code> folder, <code>readbin.m</code> and <code>writebin.m</code>, that have most of functionality of <code>read.c</code>, <code>write.c</code> albeit a bit slower and cannot handle compressed files conveniently.</p>
+<p>There is no MATLAB counterpart of <span class="tt">maos_result.py</span>. Read <span class="tt">Res_1.bin</span> with the <span class="tt">read</span> mex routine (see <a class="el" href="#sect-mex">MATLAB</a>) and process the cells as described in <a class="el" href="#sect-res">Wavefront error</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
+Plotting Results</h1>
+<p>The wavefront error time history can be plotted with the built in tool <span class="tt">drawres</span>, which sends the plots to the GTK based <span class="tt">drawdaemon</span>. </p><pre class="fragment">drawres [-s seed] folder1 folder2 ...
+</pre><ul>
+<li>Without a folder, the current directory is used. Subfolders of each folder (except <span class="tt">skysim</span>) are searched recursively, and every folder that contains <span class="tt">Res_*.bin</span> is plotted together, so that results can be compared.</li>
+<li><span class="tt">-s seed</span> limits the plots to the given seed. It may be repeated.</li>
+<li>The time axis is in seconds when <span class="tt">sim.dt</span> is found in <span class="tt">maos_done.conf</span> or <span class="tt">maos_recent.conf</span> of the folder, and in steps otherwise.</li>
+<li>The closed loop results (tab <span class="tt">CL</span>) are shown as total, high order, low order, tip/tilt, plate scale, and focus WFE (the last two only for split tomography) for each seed and averaged over the seeds. Open loop results are in tab <span class="tt">OL</span>. When there are several evaluation directions, the WFE as a function of field angle is also plotted from <span class="tt">Resp_*.bin</span>.</li>
+<li>Set environment variable <span class="tt">MAOS_DRAWRES_HI=1</span> (or call the program as <span class="tt">drawreshi</span>) to plot only the high order closed loop results.</li>
+<li><span class="tt">drawres</span> also plots sky coverage results (<span class="tt">Res*_*.bin</span> written by <span class="tt">skyc</span>), but maos and skyc results cannot be mixed in one call.</li>
+</ul>
+<p><span class="tt">drawres</span> connects to an idle <span class="tt">drawdaemon</span> or asks the scheduler to launch one. A <span class="tt">monitor</span> that is connected to the scheduler can display the plots. Otherwise <span class="tt">drawdaemon</span> is launched locally when <span class="tt">DISPLAY</span> or <span class="tt">WAYLAND_DISPLAY</span> is set.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
+Reading Results</h1>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
+.bin file format</h2>
+<p>Each array is saved as an optional header, a 4 byte magic number that identifies the data type, two 8 byte unsigned integers for the <span class="tt">nx</span> and <span class="tt">ny</span> dimensions, and the data in column major order (<span class="tt">x</span> changes fastest). A cell array has its own magic number and dimensions, followed by each of its elements written in the same way. The header is a text string with <span class="tt">key=value</span> entries, for example the sampling of a <span class="tt"><a class="el" href="../../df/def/type_8h.html#da/ddc/structloc__t">loc_t</a></span> grid or the <span class="tt">sim.dt</span> and <span class="tt">evl.dx</span> of <span class="tt">Res_1.bin</span>.</p>
+<p>Files are written uncompressed unless the file name ends with <span class="tt">.gz</span> (gzip) or <span class="tt">.zst</span> (zstd). Readers detect the compression from the file content. FITS files are also supported for reading and writing. We use <span class="tt">.bin</span> by default because it is simple, supports cell arrays, and can be memory mapped.</p>
+<p>For implementation details, please refer to <a class="el" href="../../d5/d98/page91_basics.html#sect-bin">Bin file format</a>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-mex"></a>
+MATLAB</h2>
+<p>The source folder <span class="tt">mex</span> contains the mex routines <span class="tt">read</span> and <span class="tt">write</span> that read and write <span class="tt">.bin</span> or <span class="tt">.fits</span> files in MATLAB. They are built in the <span class="tt">mex</span> subfolder of the build folder if MATLAB is found by <span class="tt">configure</span> (see <span class="tt">--with-matlab</span>). Alternatively, run <span class="tt">compile.sh</span> in the <span class="tt">mex</span> subfolder of the source folder. Copy <span class="tt">read.mexa64</span> and <span class="tt">write.mexa64</span> to a folder that is in your MATLAB path, such as <span class="tt">$HOME/matlab</span>. Usage:</p>
+<div class="fragment"><div class="line">res=read(&#39;Res_1&#39;);          %tries Res_1.bin, Res_1.bin.gz, and Res_1.fits</div>
+<div class="line">[res, header]=read(&#39;Res_1&#39;);%also returns the header</div>
+<div class="line">res=read(&#39;Res_1&#39;, n, start);%for a cell array, reads n cells starting at cell start (1 based)</div>
+<div class="line">write(res, &#39;Res_1&#39;);        %writes to Res_1.bin</div>
+<div class="line">write(res, header, &#39;Res_1&#39;);%writes with a header</div>
+</div><!-- fragment --><p>The mex <span class="tt">write</span> compresses <span class="tt">.bin</span> files with gzip (keeping the <span class="tt">.bin</span> suffix) and writes <span class="tt">.fits</span> files uncompressed. The mex <span class="tt">read</span> handles gzip but not zstd compressed files.</p>
+<p>If the mex routines cannot be compiled, the MATLAB scripts <span class="tt">readbin.m</span> and <span class="tt">writebin.m</span> in the <span class="tt">scripts</span> folder provide most of the functionality, albeit slower.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-python"></a>
 Python</h2>
-<p>There is <code>readbin.py</code> in <code>scripts</code> folder for reading <code></code>.bin or <code></code>.fits files in python. Alternatively, it is also possible to call <code>C</code> routines in python, including <code>read</code> and <code>write</code>. To do so, first set an environment variable <code>MAOS_AOLIB</code> poing to the <code>aolib.so</code> file in the <code></code>.bin folder in the compiling directory. Then import <code>scripts/aoslib.py</code> to your python.</p>
+<p><span class="tt">scripts/readbin.py</span> reads <span class="tt">.bin</span> and <span class="tt">.fits</span> files (uncompressed or gzip) into numpy arrays: </p><pre class="fragment">from readbin import readbin
+res=readbin('Res_1')   #tries Res_1.bin, Res_1.bin.gz, Res_1.fits, Res_1.fits.gz
+</pre><p>Because numpy uses row major order, an array of size <span class="tt">nx*ny</span> in MAOS is returned with shape <span class="tt">(ny, nx)</span>. A cell array is returned as a numpy object array with the same convention (a cell with <span class="tt">ny=1</span> becomes a 1-d array). The header of each array is available in its <span class="tt">header</span> attribute. A FITS file with several images is returned as an array of the images.</p>
+<p>Alternatively, the C routines in <span class="tt">aolib.so</span> (built in the <span class="tt">bin</span> folder of the build folder) can be called from Python. Set the environment variable <span class="tt">MAOS_AOLIB</span> to the path of <span class="tt">aolib.so</span> and import <span class="tt">scripts/libaos.py</span>. It provides <span class="tt">read</span> and <span class="tt">write</span> that use the C implementation (with zstd support) as well as many routines from <span class="tt">lib</span>.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-idl"></a>
 IDL</h2>
-<p>There are two idl scripts in the sub-folder <code>script</code>. They are <code>readbin.pro</code> for reading <code></code>.bin files, and <code>writebin.pro</code> for writing <code></code>.bin files.</p>
+<p>The <span class="tt">scripts</span> folder contains <span class="tt">readbin.pro</span> (with <span class="tt">readdata.pro</span>) for reading <span class="tt">.bin</span> files in IDL. There is also a Julia reader <span class="tt">readbin.jl</span> that uses <span class="tt">aolib.so</span>.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-fits"></a>
 FITS</h2>
-<p>Certain results (e.g., PSF) are saved in <code></code>.fits format. Any standard fits reader (e.g., <code>fv</code>, <code>ds9</code>) should be able to read them. There is also an executable <code>bin2fits</code> that can convert <code></code>.bin to <code></code>.fits files.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md34"></a>
+<p>Certain results (PSFs, science OPDs) are saved in <span class="tt">.fits</span> format. Any standard FITS reader (e.g., <span class="tt">fv</span>, <span class="tt">ds9</span>, <span class="tt">astropy</span>) can read them. A cell array is saved as a sequence of FITS images (extensions). The executable <span class="tt">bin2fits</span> converts <span class="tt">.bin</span> files to <span class="tt">.fits</span> files.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
 Result Files</h1>
-<p>There will be several files created during simulation in the result folder and subfolder <span class="tt">extra</span> (those results are not saved when <code>save.extra=0</code>). The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix <code></code>.bin or <code></code>.fits has been omitted. You do not need to add the suffix when use <code>read</code>. </p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
+<p>The main results are saved in the output folder. Additional results are saved in the subfolder <span class="tt">extra</span> when <span class="tt">save.extra=1</span> (the default in <span class="tt">dbg.conf</span>). The file names below are for seed 1. Most of the results are saved incrementally during the simulation, so they can be read while the simulation is running; time steps that have not been simulated yet contain NaN or 0.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-res"></a>
 Wavefront error</h2>
 <ul>
-<li><code>Res_1:</code> A binary file containing a cell array that include the main results.<ul>
-<li>Use res=read('Res_1');</li>
-<li><p class="startli"><code>res</code>[0] contains the open loop wavefront variance (WFV in units of \(m^2\)) in row vectors. When sim.rmax=1, the rows are</p><ul>
+<li><span class="tt">Res_1.bin</span>: A cell array of 4 elements with the main results. The header contains <span class="tt">sim.dt</span> and <span class="tt">evl.dx</span>. Each element is an array with one column per time step. Values are wavefront variance in \(m^2\), averaged over the science evaluation directions using the weights <span class="tt">evl.wt</span>.<ul>
+<li><p class="startli"><span class="tt">Res[0]</span> contains the open loop wavefront variance. When <span class="tt">evl.rmax=1</span> (the default), the rows are</p><ul>
 <li>Piston removed WFV</li>
 <li>WFV in tip/tilt modes</li>
 <li>Piston/tip/tilt removed WFV</li>
 </ul>
-<p class="startli">When sim.rmax&gt;1, the rows are</p><ul>
+<p class="startli">When <span class="tt">evl.rmax&gt;1</span>, there are <span class="tt">(evl.rmax+1)*(evl.rmax+2)/2</span> rows. Row <span class="tt">i</span> is the WFV with the first <span class="tt">i+1</span> Zernike modes removed:</p><ul>
 <li>Piston removed WFV</li>
-<li>Piston/Tip removed WFE</li>
-<li>Piston/Tip/Tilt removed WFE</li>
+<li>Piston/tip removed WFV</li>
+<li>Piston/tip/tilt removed WFV</li>
 <li>...</li>
 </ul>
 </li>
-<li><code>res</code>[1] no longer used.</li>
-<li><code>res</code>[2] contains the closed loop wavefront variance in row vectors. The format is the same as res[0]</li>
-<li><code>res</code>[3] (Only in split tomography) contains the closed loop wavefront variance. The rows are (not depend on sim.rmax)<ul>
-<li>WFV in LGS contains modes</li>
-<li>WFV in NGS Tip/Tilt modes</li>
-<li>WFV in NGS modes (including Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS))</li>
+<li><span class="tt">Res[1]</span> is no longer used and is empty.</li>
+<li><span class="tt">Res[2]</span> contains the closed loop wavefront variance in the same format as <span class="tt">Res[0]</span>.</li>
+<li><span class="tt">Res[3]</span> (only when <span class="tt">evl.split</span> is set, e.g., in split tomography) contains the closed loop wavefront variance split into (independent of <span class="tt">evl.rmax</span>)<ul>
+<li>WFV in LGS controlled modes (total minus NGS modes)</li>
+<li>WFV in NGS tip/tilt modes</li>
+<li>WFV in all NGS modes (tip/tilt and the additional low order modes controlled by the NGS WFS)</li>
+<li>WFV in NGS focus mode (only when focus is one of the NGS modes)</li>
 </ul>
 </li>
 </ul>
 </li>
-<li><code>Resp_1:</code> <code>resp:</code> Results for each direction. Combines the following four files previous saved individually: Resolmp_1, Resclmp_1, Resolep_1, Resclep_1.<ul>
-<li>Use <code>resp=read</code>('Resp_1)</li>
-<li><code>resp</code>[0,idir]: Open loop wavefront Zernike modes, for evaluation direction idir, defined on un-normalized coordinate on the aperture, in the Noll's Zernike order of piston/tip/tilt ...</li>
-<li><code>resp</code>[1,idir]: Close loop wavefront Zernike modes, in the same format as <code>resp</code>[0,idir].</li>
-<li><code>resp</code>[2,idir]: Open loop wavefront variance for each science field point in the same format as res[0].</li>
-<li><code>resp</code>[3,idir]: Closed loop wavefront variance for each science field point in the same format as res[0].</li>
+<li><span class="tt">Resp_1.bin</span>: Results for each science evaluation direction. A cell array of <span class="tt">nevl</span> by 4. The header contains <span class="tt">sim.dt</span>, <span class="tt">evl.dx</span>, <span class="tt">evl.thetax</span>, and <span class="tt">evl.thetay</span> (in arcsec). In MATLAB, use <span class="tt">resp{idir,k}</span>; in Python use <span class="tt">resp[k,idir]</span>.<ul>
+<li><span class="tt">k=0</span>: Open loop wavefront modes. When <span class="tt">evl.rmax=1</span>, the rows are piston (m), tip (rad), and tilt (rad). When <span class="tt">evl.rmax&gt;1</span>, the rows are the coefficients (m) of the orthonormalized Zernike modes in Noll's order of piston/tip/tilt/...</li>
+<li><span class="tt">k=1</span>: Closed loop wavefront modes in the same format.</li>
+<li><span class="tt">k=2</span>: Open loop wavefront variance in the same format as <span class="tt">Res[0]</span>.</li>
+<li><span class="tt">k=3</span>: Closed loop wavefront variance in the same format as <span class="tt">Res[0]</span>.</li>
 </ul>
 </li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
 Split tomography results</h2>
+<p>These files are saved in <span class="tt">extra</span> when <span class="tt">evl.split</span> is set. The NGS modes are the low order modes defined in <span class="tt">ahst_Modes</span> (tip/tilt first, then plate scale, focus, etc. depending on the configuration).</p>
 <ul>
-<li><code>Resclemp_1:</code> LGS/TT/NGS mode wavefront error for each direction.</li>
-<li><code>RescleNGSm_1:</code> contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li>
-<li><code>RescleNGSmp_1:</code> This is NGS mode before averaging over directions.</li>
-<li><code>ResoleNGSm_1</code> and <code>ResoleNGSmp_1:</code> Like above, but for open loop.</li>
+<li><span class="tt">Resclemp_1.bin</span>: For each direction, a 3 by <span class="tt">nsim</span> array of the closed loop WFV in LGS controlled modes, in NGS tip/tilt modes (field averaged), and in the NGS modes.</li>
+<li><span class="tt">RescleNGSm_1.bin</span>: The closed loop NGS mode coefficients (field averaged), one column per time step. With <span class="tt">tomo.ahst_idealngs</span> set, it contains the NGS modes that are corrected ideally. It is the input of the sky coverage post processing (see <a class="el" href="../../d5/d4c/skycoverage.html">Sky Coverage</a>).</li>
+<li><span class="tt">RescleNGSmp_1.bin</span>: For each direction, the inner product of the closed loop OPD with the NGS modes (before averaging over directions).</li>
+<li><span class="tt">ResoleNGSm_1.bin</span> and <span class="tt">ResoleNGSmp_1.bin</span>: Like above, but for open loop.</li>
+<li><span class="tt">RescorrNGSm_1.bin</span>: The NGS mode correction (integrator output) applied (only when <span class="tt">recon.split=1</span> and <span class="tt">sim.fuseint=0</span>).</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md37"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
 Log files</h2>
 <ul>
-<li><code>maos_</code>[HOST]_[PID].conf: The final effective configuration for MAOS run with pid PID. Can be used to reproduce the simulation or check the configurations. Lines begin with # are defaults configurations while the rest have been overridden. File for most recent run is linked to <code>maos_recent.conf</code> </li>
-<li><code>run_</code>[HOST]_[PID].log: Log file. File for most recent run is linked to <code>run_recent.log</code> </li>
-<li><code>sanea_sim_1:</code> When wavefront sensors are running in physical optics mode, the average gradient measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for \(x\) (or radial) gradient, and the second half is for \(y\) (or azimuthal) gradient. They are in units of \(rad^2\).</li>
+<li><span class="tt">maos_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].conf</span>: The final effective configuration of the MAOS process with pid PID. The first line includes the default configuration file. Lines beginning with # are default values while the rest have been overridden. It can be used to reproduce the simulation or check the configuration. When the simulation finishes successfully, it is renamed to <span class="tt">maos_done.conf</span> (an older one is renamed to <span class="tt">maos_done.1.conf</span>, etc.). <span class="tt">maos_recent.conf</span> links to the file of the most recent run.</li>
+<li><span class="tt">run_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].log</span>: The log file. It is renamed to <span class="tt">run_done.log</span> when the simulation finishes successfully, or to <span class="tt">run_[<a class="el" href="../../d0/d85/process_8c.html#a5bbd92c3ad0df50e0737bfb96b15b4f5">HOST</a>]_[PID].err</span> if it fails. <span class="tt">run_recent.log</span> links to the file of the most recent run.</li>
+<li><span class="tt">Res_1.done</span>: Created when seed 1 finishes. MAOS skips seeds that are already done in the output folder unless <span class="tt">-O</span> (override) is given.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md38"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
 PSF</h2>
-<p>The PSF total FOV is <code>evl.wvl/evl</code>.dx but may be trimmed by setting <code>evl.psfsize</code> to a smaller number (of pixels). The PSF sampling is usually <span class="tt">evl.wvl/(2*aper.d)</span> but may be <span class="tt">evl.wvl/(evl.psfgridsize*evl.dx)</span> if <code>evl.psfgridsize</code> is set. The exact number of those can be checked in the fits header.</p>
+<p>PSFs are computed when <span class="tt">evl.psfmean</span> or <span class="tt">evl.psfhist</span> is set, starting from time step <span class="tt">evl.psfisim</span>, for directions with <span class="tt">evl.psf</span> set. Each PSF has FITS keywords that describe the field location, zenith angle, \(r_0\), \(L_0\), wavelength, OPD sampling, FFT grid size, PSF sampling (<span class="tt">dp</span> in arcsec), total intensity, and exposure time. The PSF sampling is <span class="tt">evl.wvl/(nfft*evl.dx)</span>, where the FFT size <span class="tt">nfft</span> is set by <span class="tt">evl.psfgridsize</span> or, by default, is about twice the aperture diameter, giving a sampling of about <span class="tt">evl.wvl/(2*aper.d)</span>. The PSF size is <span class="tt">nfft</span> pixels unless trimmed to <span class="tt">evl.psfsize</span> pixels. The suffix <span class="tt">x0_y0</span> is the field location in arcsec (followed by the source height for sources not at infinity).</p>
 <ul>
-<li><code>evlpsfcl_1:</code> When <code>evl.psfmean</code> is 1, contains the time averaged science closed loop psf. if is a cell array of \(n_{wvl}\times n_{evl}\). Each cell contains a center cut of the science PSF.</li>
-<li><code>evlpsfdl_1:</code> diffraction limited, PSF.</li>
-<li><code>evlpsfol_1:</code> frame and field averaged open loop science PSF.</li>
-<li><code>evlpsfhist_1_ievlx:</code> When <code>evl.psfhist</code> is 1, each of these files contains the time history of the complex PSF of evaluation direction \(x\).</li>
+<li><span class="tt">evlpsfcl_1_x0_y0.fits</span>: The closed loop science PSF, cumulatively averaged since <span class="tt">evl.psfisim</span>. Every <span class="tt">evl.psfmean</span> steps, one PSF per wavelength is appended, so the last <span class="tt">evl.nwvl</span> images are the average over the whole simulation.</li>
+<li><span class="tt">evlpsfcl_ngsr_1_x0_y0.fits</span>: Like above, but with the NGS modes removed (<span class="tt">evl.psf=2</span> or 3 in split tomography).</li>
+<li><span class="tt">evlpsfol_1.fits</span>: When <span class="tt">evl.psfol</span> is set, the open loop science PSF on axis (<span class="tt">evl.psfol=1</span>) or averaged over all directions (<span class="tt">evl.psfol=2</span>), in the same format.</li>
+<li><span class="tt">evlpsfdl.fits</span>: The diffraction limited PSF, one per wavelength.</li>
+<li><span class="tt">evlpsfhist_1_x0_y0.fits</span>: When <span class="tt">evl.psfhist</span> is set, the time history of the complex PSF.</li>
+<li><span class="tt">evlopdcov_1_x0_y0.fits</span> and <span class="tt">evlopdmean_1_x0_y0.fits</span>: When <span class="tt">evl.cov</span> or <span class="tt">evl.opdmean</span> is set, the cumulative average of the covariance and mean of the closed loop science OPD. Open loop versions are <span class="tt">evlopdcovol_1.fits</span> and <span class="tt">evlopdmeanol_1.fits</span>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md39"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
 Subaperture Pixels</h2>
-<p>The subaperture pixels can be saved by specifying <code>save.setup=1</code> for models computed during the setup process, and <code>save.ints=1</code> for runtime data. The pixels are grouped by subapertures, with the subaperture ordering defined in <code>saloc</code> (see <code>powfs0_saloc.bin</code>).</p>
+<p>The subaperture pixels can be saved by specifying <span class="tt">save.setup=1</span> for models computed during the setup process, and <span class="tt">save.ints=1</span> for runtime data. The pixels are grouped by subapertures, with the subaperture ordering defined in <span class="tt">saloc</span> (see <span class="tt">setup/powfs0_saloc.bin</span>).</p>
 <ul>
-<li><code>setup/powfs0_i0.bin</code>: contains the WFS model image used to build matched filter or calibrate CoG.</li>
-<li><code>wfs0_intsnf_1.bin:</code> contains noise free WFS pixel for every frame.</li>
-<li><code>wfs0_intsny_1.bin:</code> contains noisy WFS pixels for every frame.</li>
+<li><span class="tt">setup/powfs0_i0.bin</span>: The WFS model image used to build the matched filter or calibrate CoG. <span class="tt">powfs0_gx.bin</span> and <span class="tt">powfs0_gy.bin</span> are its x and y derivatives.</li>
+<li><span class="tt">wfs0_intsnf_1.bin</span>: The noise free WFS pixels for every frame.</li>
+<li><span class="tt">wfs0_intsny_1.bin</span>: The noisy WFS pixels for every frame.</li>
 </ul>
-<p>The config input <code>powfs.bkgrndfn</code> uses the same format.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md40"></a>
+<p>The config input <span class="tt">powfs.bkgrndfn</span> uses the same format.</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
 Other</h2>
+<p>These files are saved in <span class="tt">extra</span> when <span class="tt">save.extra=1</span>. Cell arrays with one element per WFS have empty elements for WFS that do not use the feature.</p>
 <ul>
-<li><code>Resfsmcmd_1:</code> Each cell contains the FSM tip/tilt command (only none empty for LGS WFS) history in unit of radian.</li>
-<li><code>Resfsmerr_1:</code> Each cell contains the FSM tip/tilt error history in unit of radian.</li>
-<li><code>psdcl_1</code> and <code>psdol_1:</code> Closed loop and pseudo open loop PSD for high order control obtained from telemetry.</li>
-<li><span class="tt">ResCG_1</span>: Tomography and DM Fitting conjugate gradient residual time history.</li>
-<li><span class="tt">Reszoompos_1</span>: For LGS only, the trombine position. One cell per WFS.</li>
+<li><span class="tt">Resfsmerr_1.bin</span> and <span class="tt">Resfsmcmd_1.bin</span>: For each LGS WFS (or WFS with <span class="tt">powfs.dither=1</span>), the uplink FSM tip/tilt error and command time history in radian.</li>
+<li><span class="tt">Resltpm_1.bin</span>: For each LGS powfs, the common path pointing mirror command of the laser launch telescope.</li>
+<li><span class="tt">Reszoompos_1.bin</span>: For LGS WFS when <span class="tt">sim.mffocus</span> is set, the trombone (zoom) position.</li>
+<li><span class="tt">Resfocuserrs_1.bin</span>: For LGS WFS, the LGS focus error time history (raw and high pass filtered).</li>
+<li><span class="tt">Respsdcl_hi_1.bin</span> and <span class="tt">Respsdol_hi_1.bin</span>: Closed loop and pseudo open loop PSD of the high order control computed from telemetry when <span class="tt">recon.psd</span> is set. <span class="tt">Respsdcl_lo_1.bin</span> and <span class="tt">Respsdol_lo_1.bin</span> are for the low order control in split tomography. <span class="tt">Resgain_1.bin</span> contains the updated control gains.</li>
+<li><span class="tt">ResCG_1.bin</span>: The conjugate gradient residual time history of the tomography and DM fitting.</li>
+<li><span class="tt">Resditheramp_1.bin</span>: For WFS with <span class="tt">powfs.dither</span> set, the dithering statistics (estimated signal amplitude and gain adjustment) at each update. Saved with <span class="tt">save.extra</span> or <span class="tt">save.dither</span>, as is <span class="tt">Resdithererr_wfs*_1.bin</span>, the common path dithering error history.</li>
+<li><span class="tt">Rescn2_1.bin</span>: The estimated \(r_0\) and \(C_n^2\) profile when the \(C_n^2\) estimation (<span class="tt">cn2.pair</span>) is enabled.</li>
+<li><span class="tt">Restwfs_1.bin</span>: The radial mode error measured by the truth WFS at each of its outputs, when there is a truth WFS.</li>
+<li><span class="tt">telws_1.bin</span>: The telescope wind shake tip/tilt time series generated from <span class="tt">sim.wspsd</span>.</li>
+<li><span class="tt">dmhist_1.bin</span>: The histogram of the DM commands of each actuator when <span class="tt">dm.hist</span> is set.</li>
 </ul>
 <h1 class="doxsection"><a class="anchor" id="geometry"></a>
 Geometry Data</h1>
-<p>When <code>save.setup=1</code>, MAOS will save the geometry data created before entering simulation to files in folder <code>setup</code>. When <code>save.recon=1</code>, the tomography and DM fitting matrices are also saved, which takes space and are not enabled by <code>save.setup=1</code>.</p>
-<p>The following explains each file. Not all of them may exist, depending on set of options. The suffix of the file names are removed.</p>
+<p>When <span class="tt">save.setup=1</span>, MAOS saves the geometry data created before entering simulation to files in folder <span class="tt">setup</span>. When <span class="tt">save.recon=1</span>, the tomography and DM fitting matrices are also saved, which takes space and are not enabled by <span class="tt">save.setup=1</span>. Some files are only saved with <span class="tt">save.setup=2</span> or higher, and <span class="tt">save.setup&gt;1</span> also enables <span class="tt">save.recon</span>, <span class="tt">save.mvst</span>, <span class="tt">save.ncpa</span>, and <span class="tt">save.fdpcg</span>.</p>
+<p>The following explains the common files. Not all of them exist, depending on the options. The suffix of the file names are removed.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">File name  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>actslave</code>  </td><td class="markdownTableBodyNone">The slaving operator  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">aper_locs</span>  </td><td class="markdownTableBodyNone">The fine sampled grid on the telescope aperture for performance evaluation.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>ahst_GM</code>  </td><td class="markdownTableBodyNone">ad hoc split tomography, model to gradient operator  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">aper_amp</span>  </td><td class="markdownTableBodyNone">Telescope aperture amplitude defined on aper_locs  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>ahst_MCC</code>  </td><td class="markdownTableBodyNone">ahst, model cross coupling matrix.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">aper_mcc</span>  </td><td class="markdownTableBodyNone">Modal cross-coupling matrix for piston/tip/tilt modes defined on aper_locs  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>ahst_Mdm</code>  </td><td class="markdownTableBodyNone">ahst, the NGS mode defined on DM grid  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ploc</span>  </td><td class="markdownTableBodyNone">The coarse sampled grid on the aperture for reconstruction  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>ahst_Pngs</code>  </td><td class="markdownTableBodyNone">ahst, ngs mode removal operator from DM commands  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">floc</span>  </td><td class="markdownTableBodyNone">The grid on the aperture for DM fitting  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>ahst_Ptt</code>  </td><td class="markdownTableBodyNone">ahst, tip/tilt removal operator from DM commands  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">xloc</span>  </td><td class="markdownTableBodyNone">The tomography grid, one per reconstruction layer.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>ahst_Rngs</code>  </td><td class="markdownTableBodyNone">ahst, ngs mode reconstructor  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">aloc</span>  </td><td class="markdownTableBodyNone">DM actuator grid, one per DM.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>ahst_Wa</code>  </td><td class="markdownTableBodyNone">ahst, the weighting using science field.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">amap</span>  </td><td class="markdownTableBodyNone">DM actuator grid as a map, one per DM.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>aloc</code>  </td><td class="markdownTableBodyNone">DM actuator grid.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">W0</span>  </td><td class="markdownTableBodyNone">The W0 weighting defined on floc.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>ploc</code>  </td><td class="markdownTableBodyNone">The coarse sampled grid on aperture for reconstruction  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">W1</span>  </td><td class="markdownTableBodyNone">The W1 weighting defined on floc.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>xloc</code>  </td><td class="markdownTableBodyNone">The tomography grid.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">saneai</span>  </td><td class="markdownTableBodyNone">The inverse of the NEA squared used in tomography ( \(rad^{-2}\))  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>TT</code>  </td><td class="markdownTableBodyNone">The global tip/tilt modes for wfs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">TT</span>  </td><td class="markdownTableBodyNone">The global tip/tilt modes for WFS (with save.recon)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>PTT</code>  </td><td class="markdownTableBodyNone">The global tip/tilt removal operator for wfs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">PTT</span>  </td><td class="markdownTableBodyNone">The global tip/tilt removal operator for WFS  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>saneai</code>  </td><td class="markdownTableBodyNone">The inverse of nea^2 used in tomography (rad^2)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">TTF</span>  </td><td class="markdownTableBodyNone">The global tip/tilt and focus modes for WFS  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>W0</code>  </td><td class="markdownTableBodyNone">The W0 weighting defined on ploc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">PTTF</span>  </td><td class="markdownTableBodyNone">The global tip/tilt and focus removal operator for WFS  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>W1</code>  </td><td class="markdownTableBodyNone">The W1 weighting defined on ploc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">GA</span>  </td><td class="markdownTableBodyNone">Gradient operator from aloc (with save.recon)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>aper_locs</code>  </td><td class="markdownTableBodyNone">The fine sampled grid on telescope aperture.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">GP</span>  </td><td class="markdownTableBodyNone">Gradient operator from ploc (with save.recon)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>aper_amp</code>  </td><td class="markdownTableBodyNone">Telescope aperture amplitude defined on aper_locs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">HXW</span>  </td><td class="markdownTableBodyNone">Ray tracing from xloc to ploc along WFS directions (with save.recon)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>aper_mcc</code>  </td><td class="markdownTableBodyNone">modal cross-coupling matrix for modes defined on aper_locs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">HA</span>  </td><td class="markdownTableBodyNone">Ray tracing from aloc to floc along fitting directions (with save.recon)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>FLM</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, sparse matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">L2</span>  </td><td class="markdownTableBodyNone">Laplacian regularization on xloc (with save.setup&gt;1)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>FLU</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, Low rank U matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">FLM</span>, <span class="tt">FLU</span>, <span class="tt">FLV</span>  </td><td class="markdownTableBodyNone">Fit left hand side operator: sparse matrix and low rank U and V matrices (with save.recon)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>FLV</code>  </td><td class="markdownTableBodyNone">Fit left hand side operator, Low rank V matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">FRM</span>, <span class="tt">FRU</span>, <span class="tt">FRV</span>  </td><td class="markdownTableBodyNone">Fit right hand side operator: sparse matrix and low rank U and V matrices (with save.recon)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>FRM</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, sparse matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fit_actcpl</span>  </td><td class="markdownTableBodyNone">Actuator coupling used to treat inactive actuators in DM fitting  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>FRU</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, Low rank U matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">fit_actextrap</span>  </td><td class="markdownTableBodyNone">Actuator extrapolation operator  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>FRV</code>  </td><td class="markdownTableBodyNone">Fit right hand side operator, Low rank V matrix  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tomo_RRM</span>, <span class="tt">tomo_RRU</span>, <span class="tt">tomo_RRV</span>  </td><td class="markdownTableBodyNone">Tomography right hand side operator (with save.recon)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>GA</code>  </td><td class="markdownTableBodyNone">Gradient operator from aloc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">tomo_RLM</span>, <span class="tt">tomo_RLU</span>, <span class="tt">tomo_RLV</span>  </td><td class="markdownTableBodyNone">Tomography left hand side operator (with save.recon)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>GP</code>  </td><td class="markdownTableBodyNone">Gradient operator from ploc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">MVM</span>  </td><td class="markdownTableBodyNone">The control matrix when <span class="tt">recon.mvm</span> is set  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>GX</code>  </td><td class="markdownTableBodyNone">Gradient operator from xloc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ahst_MCC</span>  </td><td class="markdownTableBodyNone">ahst, NGS mode cross coupling matrix.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>HA</code>  </td><td class="markdownTableBodyNone">Ray tracing from aloc to ploc along fit directions  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ahst_Modes</span>  </td><td class="markdownTableBodyNone">ahst, the NGS modes defined on DM grid  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>HXF</code>  </td><td class="markdownTableBodyNone">Ray tracing from xloc to ploc along fit directions  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ahst_GM</span>  </td><td class="markdownTableBodyNone">ahst, NGS modes to gradient operator  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>HXW</code>  </td><td class="markdownTableBodyNone">Ray tracing from xloc to ploc along wfs directions  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ahst_Pngs_wt1</span>  </td><td class="markdownTableBodyNone">ahst, NGS mode removal operator from DM commands (suffix is tomo.ahst_wt)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>L2</code>  </td><td class="markdownTableBodyNone">Laplacian regularization on xloc  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ahst_Rngs</span>  </td><td class="markdownTableBodyNone">ahst, NGS mode reconstructor  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>NW</code>  </td><td class="markdownTableBodyNone">Low rank terms in fitting  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">focus_RFlgsg</span>  </td><td class="markdownTableBodyNone">LGS focus reconstructor from LGS gradients  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>NW2</code>  </td><td class="markdownTableBodyNone">Adjusted low rank terms by slaving.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">psd_Herr</span>, <span class="tt">psd_eloc</span>  </td><td class="markdownTableBodyNone">Ray tracing operator and grid used to compute the PSD from telemetry  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_area</code>  </td><td class="markdownTableBodyNone">The subaperture area  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_loc</span>  </td><td class="markdownTableBodyNone">The grid for all subapertures (grouped by subapertures)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_dtf0_nominal</code>  </td><td class="markdownTableBodyNone">The nominal of DTF  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_amp</span>  </td><td class="markdownTableBodyNone">The amplitude defined on powfs0_loc  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_dtf0_si</code>  </td><td class="markdownTableBodyNone">The si of DTF  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_pts</span>  </td><td class="markdownTableBodyNone">The lower left grid point of each subaperture.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_etfprep0_2d</code>  </td><td class="markdownTableBodyNone">The elongation transfer function  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_saloc</span>  </td><td class="markdownTableBodyNone">The lower left corner of each subaperture  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_GP</code>  </td><td class="markdownTableBodyNone">The gradient operator from ploc.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_saa</span>  </td><td class="markdownTableBodyNone">The subaperture area (relative to a full subaperture)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_GS0</code>  </td><td class="markdownTableBodyNone">The gradient operator from aper_locs.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_GS0</span>  </td><td class="markdownTableBodyNone">The averaging gradient operator from powfs0_loc (with save.setup&gt;1).  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_i0</code>  </td><td class="markdownTableBodyNone">The subaperture time averaged image for matched filter  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_neasim</span>  </td><td class="markdownTableBodyNone">The Cholesky factor of the NEA covariance used to add noise to gradients  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_gx</code>  </td><td class="markdownTableBodyNone">The pixel by pixel x gradient of i0  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_gradoff</span>  </td><td class="markdownTableBodyNone">The gradient reference vector  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_gy</code>  </td><td class="markdownTableBodyNone">The pixel by pixel y gradient of i0  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_llt_loc</span>  </td><td class="markdownTableBodyNone">The aperture grid of the uplink laser launch telescope (LLT)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_imcc</code>  </td><td class="markdownTableBodyNone">The inverse of model cross-coupling matrix of piston/tip/tilt modes  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_llt_amp</span>  </td><td class="markdownTableBodyNone">The aperture amplitude of LLT defined on powfs0_llt_loc  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_loc</code>  </td><td class="markdownTableBodyNone">The grid for all subapertures (grouped by subapertures)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_llt_imcc</span>  </td><td class="markdownTableBodyNone">The inverse of model cross-coupling matrix of p/t/t modes for LLT  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_amp</code>  </td><td class="markdownTableBodyNone">The amplitude defined on powfs0_loc  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_llt_psf</span>  </td><td class="markdownTableBodyNone">The LLT uplink PSF  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_llt_loc</code>  </td><td class="markdownTableBodyNone">The aperture grid of the uplink laser launch telescope (LLT)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_srot</span>  </td><td class="markdownTableBodyNone">The orientation of each subaperture wrt LLT  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_llt_amp</code>  </td><td class="markdownTableBodyNone">The aperture amplitude of LLT defined on powfs0_llt_loc  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_srsa</span>  </td><td class="markdownTableBodyNone">The distance of each subaperture from the LLT  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_llt_imcc</code>  </td><td class="markdownTableBodyNone">The inverse of model cross-coupling matrix of p/t/t modes for LLT  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_sprint</span>  </td><td class="markdownTableBodyNone">Which subapertures to print  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_srot</code>  </td><td class="markdownTableBodyNone">The orientation of each subaperture wrt LLT  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_sodium</span>  </td><td class="markdownTableBodyNone">The sodium layer profile  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_srsa</code>  </td><td class="markdownTableBodyNone">The distance of each subaperture from the LLT  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_focus</span>  </td><td class="markdownTableBodyNone">The additional LGS focus error time series due to sodium range variation (powfs0_llt.fnrange)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_mtche</code>  </td><td class="markdownTableBodyNone">The matched filter gradient estimator  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_dtf0_nominal</span>  </td><td class="markdownTableBodyNone">The nominal of DTF for wavelength 0 (with save.setup&gt;1)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_pts</code>  </td><td class="markdownTableBodyNone">The lower left grid point of each subaperture.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_dtf0_si</span>  </td><td class="markdownTableBodyNone">The si of DTF for wavelength 0 (with save.setup&gt;1)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_saloc</code>  </td><td class="markdownTableBodyNone">The lower left corner of each subaperture  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_etfprep0</span>  </td><td class="markdownTableBodyNone">The elongation transfer function for wavelength 0 (with save.setup&gt;2)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_sanea</code>  </td><td class="markdownTableBodyNone">The subaperture noise equivalent angle(nea) in rad^2  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_sepsf</span>  </td><td class="markdownTableBodyNone">The subaperture short exposure PSF (tip/tilt removed, with save.setup&gt;1)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_saneaxy</code>  </td><td class="markdownTableBodyNone">The nea along x/y directions in rad^2  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_i0</span>  </td><td class="markdownTableBodyNone">The subaperture time averaged image for matched filter  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_saneaixy</code>  </td><td class="markdownTableBodyNone">The inverse of nea along x/y directions in rad^-2  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_gx</span>  </td><td class="markdownTableBodyNone">The pixel by pixel x gradient of i0  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_saneara</code>  </td><td class="markdownTableBodyNone">The subaperture nea along r/a directions in rad^-2  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_gy</span>  </td><td class="markdownTableBodyNone">The pixel by pixel y gradient of i0  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_sepsf</code>  </td><td class="markdownTableBodyNone">The subaperture short exposure psf (tip/tilt removed)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_mtche</span>  </td><td class="markdownTableBodyNone">The matched filter gradient estimator  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_sodium</code>  </td><td class="markdownTableBodyNone">The sodium layer profile  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs0_sprint</code>  </td><td class="markdownTableBodyNone">which subapertures to print  </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>powfs0_GS0</code>  </td><td class="markdownTableBodyNone">The averaging gradient operator from pts.  </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>powfs1_ZS0</code>  </td><td class="markdownTableBodyNone">The ztilt best fit gradient operator from pts.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">powfs0_sanea</span>  </td><td class="markdownTableBodyNone">The subaperture noise equivalent angle (NEA) covariance in \(rad^2\)  </td></tr>
 </table>
 <h1 class="doxsection"><a class="anchor" id="telemetry"></a>
 Telemetry Data</h1>
-<p>Depending on parameters enabled, the simulation telemetry data will be saved to files in the simulation folder. The following describes them in detail. Notice that save.grad, save.gradgeom, save.ints and save.wfsopd takes values of 1, 2 or 3, where 1 means saving for all wfs, 2 means saving for only high order wfs and 3 means saving for lower order wfs.</p>
-<p>Name convention: the last number after underscore is the seed. The following shows results for seed1. When there are multiple wfs or science fields, we only show the results for the first.</p>
-<p>Many of the results contains a cell array of length <code>nsim</code> (number of simulation steps), whenever that makes sense.</p>
-<p>The data regarding the DM commands are all defined on the actuator grid <code>aloc</code>.</p>
-<p>The second column of the tables shows which option in <code>dbg.conf</code> enables the save of this data.</p>
+<p>Depending on the parameters enabled, the simulation telemetry data are saved to files in the simulation folder. The following describes them in detail.</p>
+<p>The options <span class="tt">save.ints</span>, <span class="tt">save.grad</span>, <span class="tt">save.gradnf</span>, <span class="tt">save.gradpsol</span>, <span class="tt">save.gradgeom</span>, and <span class="tt">save.wfsopd</span> take either a scalar value (0 or 1, applied to all WFS) or a vector with one value per WFS, where 1 enables saving for that WFS.</p>
+<p>Name convention: the last number after underscore is the seed. The following shows results for seed 1. When there are multiple WFS or science fields, we only show the results for the first.</p>
+<p>Most of these files contain a cell array of length <span class="tt">nsim</span> (number of simulation steps). Elements for steps without output (e.g., WFS that run at a lower rate) are empty.</p>
+<p>The data regarding the DM commands are all defined on the actuator grid <span class="tt">aloc</span>. The gradients are in radian, with the x gradients of all subapertures followed by the y gradients.</p>
+<p>The second column of the tables shows which option in <span class="tt">dbg.conf</span> enables the save of this data.</p>
 <p>The suffix of the file names are removed.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">File name  </th><th class="markdownTableHeadNone">Option to enable  </th><th class="markdownTableHeadNone">Description  </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>atm_1</code>  </td><td class="markdownTableBodyNone">save.atm  </td><td class="markdownTableBodyNone">The atmosphere  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">atm_1</span>  </td><td class="markdownTableBodyNone">save.atm  </td><td class="markdownTableBodyNone">The atmosphere screens  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>dmerr_hi_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM error signal for high order wfs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">atm_winddir_1</span>  </td><td class="markdownTableBodyNone">save.atm  </td><td class="markdownTableBodyNone">The wind direction of each layer  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>dmfit_hi_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM fit result for high order wfs  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmerr_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM error signal  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>Merr_lo_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The low order mode error signal (split tomography)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmrecon_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM reconstruction (tomography and fitting) output  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>Mint_lo_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The low order mode integrator output (split tomography)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">Merr_lo_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The low order mode error signal (split tomography)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>dmint_hi_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM integrator output of high order wfs output (split integrator only)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">Mint_lo_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The low order mode integrator output (split tomography, sim.fuseint=0)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>dmint_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM integrator output (command integrator for both high/low wfs)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmint_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM integrator output  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>dmreal_1</code>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The real, effective DM commands applied  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmcmd_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The DM commands  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>dmpttr_1</code>  </td><td class="markdownTableBodyNone">save.dmpttr  </td><td class="markdownTableBodyNone">The piston/tip/tilt removed, effective, DM commands.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmreal_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The real, effective DM commands applied  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>evl0_opdcl_1</code>  </td><td class="markdownTableBodyNone">save.evlopd  </td><td class="markdownTableBodyNone">The closed loop opd for science fields  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">dmproj_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The atmosphere projected onto the DM (sim.dmproj)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>evl0_opdol_1</code>  </td><td class="markdownTableBodyNone">save.evlopd  </td><td class="markdownTableBodyNone">The open loop opd for science fields  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ttmreal_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The tip/tilt mirror commands (when sim.lpttm is set)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>gcov_wfs0_5_10_1</code>  </td><td class="markdownTableBodyNone">save.gcov  </td><td class="markdownTableBodyNone">The covariance between gradients of wfs 0 and 5 saved at time step 10  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">wfs0_moaofit_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The MOAO DM commands for WFS 0  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>opdr_1</code>  </td><td class="markdownTableBodyNone">save.opdr  </td><td class="markdownTableBodyNone">The tomography output, defined on xloc  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">evl0_moaofit_1</span>  </td><td class="markdownTableBodyNone">save.dm  </td><td class="markdownTableBodyNone">The MOAO DM commands for science direction 0  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>opdx_1</code>  </td><td class="markdownTableBodyNone">save.opdx  </td><td class="markdownTableBodyNone">The atmosphere projected onto xloc (direct fitting)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">evl0_opdcl_1.fits</span>  </td><td class="markdownTableBodyNone">save.evlopd  </td><td class="markdownTableBodyNone">The closed loop OPD for science fields (every save.evlopd steps)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>wfs0_gradcl_1</code>  </td><td class="markdownTableBodyNone">save.grad  </td><td class="markdownTableBodyNone">The wfs gradient measurement.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">evl0_opdol_1.fits</span>  </td><td class="markdownTableBodyNone">save.evlopd  </td><td class="markdownTableBodyNone">The open loop OPD for science fields (every save.evlopd steps)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>wfs0_gradnf_1</code>  </td><td class="markdownTableBodyNone">save.grad  </td><td class="markdownTableBodyNone">The wfs noise free gradient.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">gcov_1_wfs0_5_10</span>  </td><td class="markdownTableBodyNone">save.gcov  </td><td class="markdownTableBodyNone">The covariance between the PSOL gradients of WFS 0 and 5 averaged over the first 10 steps (saved every save.gcovp steps)  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>wfs0_gradol_1</code>  </td><td class="markdownTableBodyNone">save.grad  </td><td class="markdownTableBodyNone">The wfs pseudo open loop gradient  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">ecov_1_9</span>  </td><td class="markdownTableBodyNone">save.ecov  </td><td class="markdownTableBodyNone">The covariance of the DM error vector accumulated until time step index 9 (saved every save.ecov steps)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>wfs0_gradgeom_1</code>  </td><td class="markdownTableBodyNone">save.gradgeom  </td><td class="markdownTableBodyNone">The wfs geometric gradient (in physical optics wfs simulations)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">opdr_1</span>  </td><td class="markdownTableBodyNone">save.opdr  </td><td class="markdownTableBodyNone">The tomography output, defined on xloc  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>wfs0_intsnf_1</code>  </td><td class="markdownTableBodyNone">save.ints  </td><td class="markdownTableBodyNone">The wfs subaperture images (noise free)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">opdx_1</span>  </td><td class="markdownTableBodyNone">save.opdx  </td><td class="markdownTableBodyNone">The atmosphere projected onto xloc (direct fitting)  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>wfs0_intsny_1</code>  </td><td class="markdownTableBodyNone">save.ints  </td><td class="markdownTableBodyNone">The wfs subaperture images (noisy)  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">wfs0_gradcl_1</span>  </td><td class="markdownTableBodyNone">save.grad  </td><td class="markdownTableBodyNone">The WFS gradient measurement.  </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>wfs0_lltopd_1</code>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The wfs laser launch telescope OPD.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">wfs0_gradnf_1</span>  </td><td class="markdownTableBodyNone">save.gradnf  </td><td class="markdownTableBodyNone">The WFS noise free gradient.  </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>wfs0_opd_1</code>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The wfs OPD.  </td></tr>
+<td class="markdownTableBodyNone"><span class="tt">wfs0_gradpsol_1</span>  </td><td class="markdownTableBodyNone">save.gradpsol  </td><td class="markdownTableBodyNone">The WFS pseudo open loop gradient  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_gradgeom_1</span>  </td><td class="markdownTableBodyNone">save.gradgeom  </td><td class="markdownTableBodyNone">The WFS geometric gradient (in physical optics WFS simulations)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_intsnf_1</span>  </td><td class="markdownTableBodyNone">save.ints  </td><td class="markdownTableBodyNone">The WFS subaperture images (noise free)  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_intsny_1</span>  </td><td class="markdownTableBodyNone">save.ints  </td><td class="markdownTableBodyNone">The WFS subaperture images (noisy)  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_opd_1</span>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The WFS OPD.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_opdol_1</span>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The WFS OPD before DM correction.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">wfs0_lltopd_1</span>  </td><td class="markdownTableBodyNone">save.wfsopd  </td><td class="markdownTableBodyNone">The WFS laser launch telescope OPD.  </td></tr>
 </table>
-<hr  />
- </div></div><!-- contents -->
+<h2 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
+Summary of save options</h2>
+<p>All the <span class="tt">save.*</span> options are documented in <span class="tt">config/maos/dbg.conf</span>. The following table summarizes their effects.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option  </th><th class="markdownTableHeadNone">Effect  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.extra</span>  </td><td class="markdownTableBodyNone">Saves the additional results in subfolder <span class="tt">extra</span> (enabled by default).  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.all</span>  </td><td class="markdownTableBodyNone">Sets <span class="tt">save.setup</span> and <span class="tt">save.run</span> to the same value.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.setup</span>  </td><td class="markdownTableBodyNone">Saves the setup data in subfolder <span class="tt">setup</span> (see <a class="el" href="#geometry">Geometry Data</a>). Values greater than 1 save more and also enable <span class="tt">save.recon</span>, <span class="tt">save.mvst</span>, <span class="tt">save.ncpa</span>, and <span class="tt">save.fdpcg</span>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.recon</span>  </td><td class="markdownTableBodyNone">Saves the reconstructor matrices (large).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.mvst</span>  </td><td class="markdownTableBodyNone">Saves the MVST intermediate matrices.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.ncpa</span>  </td><td class="markdownTableBodyNone">Saves the NCPA surface OPD on the aperture and WFS.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.fdpcg</span>  </td><td class="markdownTableBodyNone">Saves the FDPCG preconditioner matrices.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.mvm</span>  </td><td class="markdownTableBodyNone">Saves the MVM control matrix (<span class="tt">MVM.bin</span>).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.mvmi</span>, <span class="tt">save.mvmf</span>  </td><td class="markdownTableBodyNone">Save the intermediate results of the MVM control matrix assembly on GPU (<span class="tt">mvmi.bin</span>, <span class="tt">mvmf.bin</span>).  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.atm</span>  </td><td class="markdownTableBodyNone">Saves the atmosphere. Not enabled by <span class="tt">save.run</span> or <span class="tt">save.all</span>.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.run</span>  </td><td class="markdownTableBodyNone">Saves the RTC telemetry: sets <span class="tt">save.dm</span>, <span class="tt">save.extra</span>, <span class="tt">save.dither</span>, <span class="tt">save.gradoff</span>, <span class="tt">save.ints</span>, <span class="tt">save.grad</span>, <span class="tt">save.gradnf</span>, <span class="tt">save.gradpsol</span>, and <span class="tt">save.gradgeom</span>. When greater than 1, also sets <span class="tt">save.opdr</span>, <span class="tt">save.opdx</span>, <span class="tt">save.evlopd</span>, and <span class="tt">save.wfsopd</span>, which use a lot of disk space and slow down the simulation.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.dm</span>  </td><td class="markdownTableBodyNone">Saves the DM commands and error signals.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.ints</span>, <span class="tt">save.grad</span>, <span class="tt">save.gradnf</span>, <span class="tt">save.gradpsol</span>, <span class="tt">save.gradgeom</span>, <span class="tt">save.wfsopd</span>  </td><td class="markdownTableBodyNone">Save the WFS pixels, gradients, and OPDs (see the table above).  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.evlopd</span>  </td><td class="markdownTableBodyNone">Saves the science OPD every this many time steps.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.opdr</span>, <span class="tt">save.opdx</span>  </td><td class="markdownTableBodyNone">Save the tomography output and the atmosphere projected onto <span class="tt">xloc</span>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.gcov</span>, <span class="tt">save.gcovp</span>  </td><td class="markdownTableBodyNone">Save the PSOL gradient covariance for the pairs of WFS listed in <span class="tt">save.gcov</span> every <span class="tt">save.gcovp</span> steps.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.ecov</span>  </td><td class="markdownTableBodyNone">Saves the covariance of the DM error vector every this many steps.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">save.dither</span>  </td><td class="markdownTableBodyNone">Saves the matched filter and gradient scaling estimated from dithering (in <span class="tt">extra</span>).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">save.gradoff</span>  </td><td class="markdownTableBodyNone">Saves the gradient reference vector updates (in <span class="tt">extra</span>).  </td></tr>
+</table>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">
@@ -426,8 +508,11 @@ Telemetry Data</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

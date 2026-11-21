@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Run simulations</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -104,215 +106,420 @@ $(function(){initNavTree('da/dc3/page30_run.html','../../',''); });
 Usage</h1>
 <p>We assume that <span class="tt">maos</span> is already in the PATH so we can type <span class="tt">maos</span> to launch it.</p>
 <p>Use the following command to get the help message: </p><div class="fragment"><div class="line">maos -h  #will print the help message and exit.</div>
-</div><!-- fragment --><p>The valid command line arguments are listed as follows</p>
-<div class="fragment"><div class="line">Usage: maos [OPTION...] [FILE]...</div>
-<div class="line">maos is a simulation tool developed to adaptive optics systems</div>
-<div class="line"> </div>
-<div class="line">Examples:</div>
-<div class="line">maos -o result # Run the default configuration from default.conf and save results to \c result folder. </div>
-<div class="line">   ~/.aos/default.conf will be used if exists, </div>
-<div class="line">   otherwise src_dir/config/maos/default.conf will be used.</div>
+</div><!-- fragment --><p>The general form of the command line is</p>
+<div class="fragment"><div class="line">maos [OPTION...] [-c base.conf] [override.conf ...] [key=value ...] [-o DIR]</div>
+</div><!-- fragment --><p>Options, <span class="tt">.conf</span> files, and <span class="tt">key=value</span> entries can appear in any order. A value that contains spaces, such as an array <span class="tt">[1 2 3]</span>, does not need to be quoted: maos joins all the arguments and keeps text inside <span class="tt">[]</span> or quotes together. Quote it anyway if your shell would otherwise expand it.</p>
+<p>Examples: </p><div class="fragment"><div class="line">maos -o result    # Run the default configuration and save results to folder result.</div>
 <div class="line"> </div>
 <div class="line">maos -c scao_ngs.conf sim.seeds=[1 10] -d -o scao_ngs override.conf</div>
-<div class="line">         # Run a single conjugate natural guide star case, with seed 1 and 10</div>
-<div class="line">         # detach from the terminal and output results to folder scao_ngs</div>
-<div class="line">         # and read in overriding parameters stored in override.conf and chol.conf</div>
-<div class="line"> </div>
-<div class="line">Options:</div>
-<div class="line">-h, --help        to print out this message</div>
-<div class="line">-d, --detach      to detach from terminal and run in background</div>
-<div class="line">-f, --force       force starting simulation without scheduler</div>
-<div class="line">-n, --nthread=N   Use N threads, default is 1</div>
-<div class="line">-o, --output=DIR  output the results to DIR.</div>
-<div class="line">-c, --conf=FILE.conf   Use FILE.conf as the baseline config instead of nfiraos.conf</div>
-<div class="line">-p, --path=dir    Add dir to the internal PATH</div>
-<div class="line">-g, --gpu=i       Use the i&#39;th gpu. 0 for the first. -1 to disable. default: automatic</div>
-<div class="line">-G, --ngpu=N      Use a total of N gpus.</div>
-<div class="line">-r, --run=host    Run the job in another host. Requires scheduler to be running.</div>
-<div class="line"> </div>
-<div class="line">The following environment variables are supported</div>
-<div class="line">MAOS_TOMOSCALE=1e12 Rebalance tomography terms for single precision calculation</div>
-<div class="line">MAOS_PARALLEL=1      Set to 0 to disable parallel launch</div>
-<div class="line">MAOS_NO_WFS=0        Set to 1 to disable all WFS calls</div>
-<div class="line">MAOS_NO_EVL=0        Set to 1 to disable evaluation calls</div>
-<div class="line">MAOS_NO_RECON=0      Set to 1 to disable reconstruction calls</div>
-<div class="line">MAOS_KEEP_MEM=0      Set to 1 to keep some temporary memory between steps.</div>
-<div class="line">MAOS_MEM_DEBUG=0     Set to 1 to enable malloc/free accounting. Useful to detect memory leak.</div>
-<div class="line">MAOS_MEM_VERBOSE=0   Set to 1 to print detailed malloc/free info</div>
-<div class="line">MAOS_LOG_LEVEL=0     Set logging level. -3: error and warning only,</div>
-<div class="line">                           -2:  essential info, -1  useful info, 0:  all info,</div>
-<div class="line">                           1:  debugging info, 2: more debugging info, 3: everything.</div>
-<div class="line">MAOS_GPU_DISABLE_0=1         Do not utilize GPU 0 (sudo nvidia-smi -i 0 -c 2 has the same effect)</div>
-</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="sect-config"></a>
+<div class="line">                  # Run a single conjugate natural guide star case, with seed 1 and 10,</div>
+<div class="line">                  # detach from the terminal, output results to folder scao_ngs,</div>
+<div class="line">                  # and read overriding parameters from override.conf.</div>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="sect-run-options"></a>
+Command line options</h2>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-h</span>, <span class="tt">--help</span>  </td><td class="markdownTableBodyNone">Print the help message and exit.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">-c FILE.conf</span>, <span class="tt">--conf=FILE.conf</span>  </td><td class="markdownTableBodyNone">Use <span class="tt">FILE.conf</span> as the baseline (main) configuration instead of <span class="tt">default.conf</span>.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-o DIR</span>, <span class="tt">--output=DIR</span>  </td><td class="markdownTableBodyNone">Save results to <span class="tt">DIR</span> (created if needed). maos changes into <span class="tt">DIR</span> before running. Without <span class="tt">-o</span>, nothing is saved, and options that require saving (<span class="tt">save.setup</span>, <span class="tt">save.all</span>, <span class="tt">sim.skysim</span>, <span class="tt">evl.psfmean</span>, <span class="tt">evl.psfhist</span>) cause an error.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">-n N</span>, <span class="tt">--nthread=N</span>  </td><td class="markdownTableBodyNone">Use <span class="tt">N</span> threads. The default is the number of online CPU cores, or <span class="tt">OMP_NUM_THREADS</span> if it is smaller.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-g i</span>, <span class="tt">--gpu=i</span>  </td><td class="markdownTableBodyNone">Use GPU <span class="tt">i</span> (in <span class="tt">nvidia-smi</span> order). Repeat to use several GPUs, e.g. <span class="tt">-g0 -g2</span>. <span class="tt">-g-1</span> disables the GPU. Default: automatic.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">-G N</span>, <span class="tt">--ngpu=N</span>  </td><td class="markdownTableBodyNone">Use <span class="tt">N</span> GPUs, chosen automatically. When both <span class="tt">-g</span> and <span class="tt">-G</span> are given, <span class="tt">-g</span> takes priority.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-d</span>, <span class="tt">--detach</span>  </td><td class="markdownTableBodyNone">Detach from the terminal and run in the background. Requires <span class="tt">-o</span>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">-f</span>, <span class="tt">--force</span>  </td><td class="markdownTableBodyNone">Start immediately without waiting for the scheduler to allocate CPUs. Jobs running in the foreground always start immediately.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-O</span>, <span class="tt">--override</span>  </td><td class="markdownTableBodyNone">Rerun seeds that are already finished (have a <span class="tt">Res_&lt;seed&gt;.done</span> file). See <a class="el" href="#sect-run-seeds">Seeds, restarting, and multiple runs</a>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">-r host</span>, <span class="tt">--run=host</span>  </td><td class="markdownTableBodyNone">Run the job on another host. Requires the scheduler (<span class="tt">scheduler</span>) on that host.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">-p DIR</span>, <span class="tt">--path=DIR</span>  </td><td class="markdownTableBodyNone">Add <span class="tt">DIR</span> to the search path for <span class="tt">.conf</span> and data files.  </td></tr>
+</table>
+<p>The help message printed by <span class="tt">maos -h</span> also lists a few environment variables. See <a class="el" href="#sect-run-env">Environment variables</a> for the complete list.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-run-sched"></a>
+Scheduler and detached runs</h2>
+<p>When maos runs in the foreground (no <span class="tt">-d</span> and no <span class="tt">-r</span>), it starts right away and reports its progress to the scheduler, which is launched automatically if it is not already running. The <span class="tt">monitor</span> program (GTK or the browser interface) connects to the scheduler to show the progress of all jobs and to plot results.</p>
+<p>With <span class="tt">-d</span> or <span class="tt">-r host</span>, maos hands the job to the scheduler, which queues it and launches it when enough CPUs (and GPUs) are free. If the scheduler cannot be reached, maos warns and runs the job by itself in the background. Without <span class="tt">-f</span>, such a job still waits until enough CPUs are idle. When maos is built with <span class="tt">--disable-scheduler</span> (or <span class="tt">--enable-release</span>), detached jobs start immediately.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-run-gpu"></a>
+GPU selection</h2>
+<p>When maos is compiled with CUDA, it uses the GPUs by default. Without <span class="tt">-g</span> or <span class="tt">-G</span>, maos uses all usable GPUs that have enough free memory, the least busy ones first. Use <span class="tt">-g i</span> (repeatable) to select GPUs by their <span class="tt">nvidia-smi</span> index, <span class="tt">-G N</span> to use <span class="tt">N</span> automatically selected GPUs, or <span class="tt">-g-1</span> to run on CPU only. Setting the environment variable <span class="tt">MAOS_GPU_DISABLE_&lt;i&gt;=1</span> excludes GPU <span class="tt">i</span> from use.</p>
+<p>Which parts of the simulation run on the GPU is controlled by the <span class="tt">gpu.*</span> keys in <a class="el" href="../../d8/db3/sim.html">sim.conf</a>, all enabled (<span class="tt">1</span>) by default: <span class="tt">gpu.wfs</span> (wavefront sensors), <span class="tt">gpu.evl</span> (performance evaluation), <span class="tt">gpu.tomo</span> (tomography), <span class="tt">gpu.fit</span> (DM fitting), <span class="tt">gpu.lsr</span> (least squares reconstruction), <span class="tt">gpu.psf</span> (PSF accumulation), and <span class="tt">gpu.moao</span>. maos turns off some of them automatically when the configuration is not supported on GPU, for example <span class="tt">gpu.evl</span> when <span class="tt">evl.rmax&gt;1</span>, or <span class="tt">gpu.tomo</span> when <span class="tt">tomo.cxxalg</span> is not 0.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-run-seeds"></a>
+Seeds, restarting, and multiple runs</h2>
+<p><span class="tt">sim.seeds</span> is a list of random seeds (default <span class="tt">[1]</span>). Each seed is a separate realization of the turbulence and noise, and the seeds are simulated one after another in the same process:</p>
+<div class="fragment"><div class="line">maos sim.seeds=[1 2 3 4] -o mydir</div>
+</div><!-- fragment --><p>When a seed finishes, maos creates <span class="tt">Res_&lt;seed&gt;.done</span> in the output folder. When maos starts, it skips every seed that already has a <span class="tt">.done</span> file and every seed that another maos process is running in the same folder (detected with a lock file). Therefore:</p>
+<ul>
+<li>To resume after an interruption, rerun the same command. Finished seeds are skipped; an unfinished seed is restarted from the beginning.</li>
+<li>Several maos processes can share an output folder and a seed list; each seed is run only once.</li>
+<li>Use <span class="tt">-O</span> to rerun finished seeds anyway. If there is no seed left to run, maos prints <span class="tt">There are no seed to run. Use -O to override.</span> and exits.</li>
+</ul>
+<p><span class="tt">sim.start</span> and <span class="tt">sim.end</span> (default <span class="tt">0</span> and <span class="tt">500</span> in <a class="el" href="../../d8/db3/sim.html">sim.conf</a>) set the first and last (exclusive) time step. <span class="tt">sim.dt</span> (default <span class="tt">1/600</span> s) is the loop time step.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-run-output"></a>
+Output folder</h2>
+<p>With <span class="tt">-o DIR</span>, maos writes the following in <span class="tt">DIR</span>:</p>
+<ul>
+<li><span class="tt">Res_&lt;seed&gt;.bin</span> and <span class="tt">Resp_&lt;seed&gt;.bin</span>: the wavefront error time history and other results. See <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a> for the content and how to read them.</li>
+<li><span class="tt">Res_&lt;seed&gt;.done</span>: marks a finished seed.</li>
+<li><span class="tt">extra/</span>: additional results when <span class="tt">save.extra=1</span> (the default).</li>
+<li><span class="tt">maos_&lt;host&gt;_&lt;pid&gt;.conf</span>: every configuration key with the value used. It starts with <span class="tt">include=</span> the main <span class="tt">.conf</span> file followed by all the keys; keys that keep the value from the main configuration are commented out. Rerun the same configuration with <span class="tt">maos -c maos_done.conf -o newdir</span>.</li>
+<li><span class="tt">run_&lt;host&gt;_&lt;pid&gt;.log</span>: the log of the run.</li>
+<li>When the run finishes normally, the two files are renamed to <span class="tt">maos_done.conf</span> and <span class="tt">run_done.log</span> (an existing pair from a previous run is renamed to <span class="tt">maos_done.N.conf</span> and <span class="tt">run_done.N.log</span>). When the run is killed or fails, the log is renamed to <span class="tt">run_&lt;host&gt;_&lt;pid&gt;.err</span>. The symbolic links <span class="tt">maos_recent.conf</span> and <span class="tt">run_recent.log</span> point to the most recent files.</li>
+<li><span class="tt">setup/</span>: data structures prepared during setup when <span class="tt">save.setup=1</span>.</li>
+<li><span class="tt">skysim/</span>: inputs for the sky coverage post processor when <span class="tt">sim.skysim=1</span>.</li>
+<li>PSF <span class="tt">.fits</span> files (<span class="tt">evlpsfcl_&lt;seed&gt;_x&lt;thetax&gt;_y&lt;thetay&gt;.fits</span>, etc.) when <span class="tt">evl.psfmean</span> or <span class="tt">evl.psfhist</span> is set.</li>
+</ul>
+<p>Other <span class="tt">save.*</span> keys in <a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a> save telemetry such as gradients, DM commands, and OPDs.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-run-env"></a>
+Environment variables</h2>
+<p>The following environment variables are read by maos. Variables starting with <span class="tt">MAOS_</span> can also be given as <span class="tt">MAOS_X=value</span> in a <span class="tt">.conf</span> file or on the command line, which sets the environment variable before it is used. This does not work for <span class="tt">MAOS_CONFIG_PATH</span>, <span class="tt">MAOS_PERMISSIVE</span>, and the low level flags at the end of this section, which are read before the configuration is loaded; set them in the shell.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Variable  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Description  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_CONFIG_PATH</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">Folder that contains the configuration files: <span class="tt">$MAOS_CONFIG_PATH/config/maos</span> or <span class="tt">$MAOS_CONFIG_PATH/maos</span>. See <a class="el" href="#sect-config-path">Search path</a>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_LOG_LEVEL</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Amount of output, from -5 to 5. -3: errors and warnings only; -2: also the most important information; -1: also useful information; 0: all information; 1, 2, 3: increasing amount of debugging output.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_PERMISSIVE</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to turn the errors for unrecognized keys (or keys used more than once) into warnings.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_PARALLEL</span>  </td><td class="markdownTableBodyNone">1  </td><td class="markdownTableBodyNone">1: run WFS, reconstruction, and performance evaluation of each time step in parallel. 0: run them one after another. 2: event driven parallel mode (requires OpenMP; falls back to 1 otherwise).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_NO_WFS</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to skip all WFS calls (for debugging and timing).  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_NO_EVL</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to skip performance evaluation calls.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_NO_RECON</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to skip reconstruction calls.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_KEEP_MEM</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to keep some temporary memory between time steps.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_TOMOSCALE</span>  </td><td class="markdownTableBodyNone">1e-12  </td><td class="markdownTableBodyNone">Scaling applied to the turbulence regularization terms in tomography to keep numbers in range, needed for single precision.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_MEM_DEBUG</span>  </td><td class="markdownTableBodyNone">0 (1 in debug builds)  </td><td class="markdownTableBodyNone">Set to 1 to enable malloc/free accounting, which reports memory leaks at exit.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_MEM_VERBOSE</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 or 2 to print every malloc/free call.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_MEM_FUNTRACE</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to record the allocating function name instead of a backtrace in memory accounting.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_GPU_DISABLE_&lt;i&gt;</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">Set to a nonzero value to exclude GPU <span class="tt">&lt;i&gt;</span> (nvidia-smi index).  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_MISREG_SEQ</span>  </td><td class="markdownTableBodyNone">1  </td><td class="markdownTableBodyNone">Random seed used to randomize WFS misregistration set by <span class="tt">powfs.misregx</span>, <span class="tt">powfs.misregy</span>, and <span class="tt">powfs.misregc</span>.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_DRAW_NOREUSE</span>  </td><td class="markdownTableBodyNone">0  </td><td class="markdownTableBodyNone">Set to 1 to start a new <span class="tt">drawdaemon</span> window instead of reusing an existing one.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">OMP_NUM_THREADS</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">When smaller than the number of CPU cores, limits the default number of threads (see <span class="tt">-n</span>).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">CUDA_LAUNCH_BLOCKING</span>  </td><td class="markdownTableBodyNone">(unset)  </td><td class="markdownTableBodyNone">When nonzero, maos uses only the default CUDA stream.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">MAOS_DIRECT_LAUNCH</span>  </td><td class="markdownTableBodyNone">(internal)  </td><td class="markdownTableBodyNone">Set by the scheduler when it launches a job. Do not set it.  </td></tr>
+</table>
+<p>The following variables are for testing and developing maos: <span class="tt">MAOS_PYWFS_DEBUG</span>, <span class="tt">MAOS_PYWFS_TT_DUAL</span>, <span class="tt">MAOS_PYWFS_PSIZE</span> (default 3), <span class="tt">MAOS_PYWFS_FULL</span> (pyramid WFS), <span class="tt">MAOS_LGS_SPH_PSD</span>, <span class="tt">MAOS_SODIUM_FIT</span>, <span class="tt">MAOS_DITHER_ND</span>, <span class="tt">MAOS_DITHER_MD2</span>, <span class="tt">MAOS_DITHER_MD3</span>, and the low level flags <span class="tt">MAOS_PROP_GRID_MAP_OPTIM</span>, <span class="tt">MAOS_LOC_MAP_EXTEND</span>, <span class="tt">MAOS_SVD_SDD_THRES</span>, and <span class="tt">MAOS_CN2EST_NO_NEGATIVE</span>.</p>
+<h1 class="doxsection"><a class="anchor" id="sect-config"></a>
 Configuration Files</h1>
-<p>All user modifiable options are configured through config files with suffix <code></code>.conf or key=value in the command line. The supplied default setup files are stored in sub-folder <code>config/maos</code>. The config files are organized in a modular way. One <code></code>.conf file can include another <code></code>.conf file with <code>include=filename.conf</code>. The <code></code>.conf files in <code>config/maos</code> file are self-documented.</p>
-<p>All the options are in the form of <code>key=value</code>. The usually convention is: if the entry in <span class="tt">parms</span> called <span class="tt">parms-&gt;wfs.thetax</span>, the entry in .conf file will be in the form <span class="tt">wfs.thetax=value</span>.</p>
-<p>Some of the rules are:</p>
+<p>All user modifiable options are configured through config files with suffix <code></code>.conf or <span class="tt">key=value</span> entries on the command line. The supplied default setup files are stored in sub-folder <code>config/maos</code>. The config files are organized in a modular way. One <code></code>.conf file can include another <code></code>.conf file with <code>include=filename.conf</code>. The <code></code>.conf files in <code>config/maos</code> are self-documented. <a class="el" href="../../d5/d2b/page34_conf.html">Config File List</a> lists all of them.</p>
+<p>All the options are in the form of <code>key=value</code>. The usual convention is: if the entry in <span class="tt">parms</span> is called <span class="tt">parms-&gt;wfs.thetax</span>, the entry in the .conf file will be in the form <span class="tt">wfs.thetax=value</span>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-config-syntax"></a>
+Syntax</h2>
 <ul>
-<li>array values must be embraced by <code></code>[] and separated by <code></code>,</li>
-<li>string are embraced by double or single quotes ('' or "").</li>
-<li>A line ended with \ will be concatenated with the next line.</li>
-<li>Anything after comment string # will be ignored during reading.</li>
+<li>Anything after <span class="tt">#</span> is a comment.</li>
+<li>A line ending with <span class="tt">\</span> continues on the next line.</li>
+<li><span class="tt">include=file.conf</span> (or a line with only <span class="tt">file.conf</span>) reads another file at that place. <span class="tt">path=DIR</span> adds <span class="tt">DIR</span> (relative to the folder of the current file) to the search path.</li>
+<li><span class="tt">key=value</span> sets a value. The same key can be set many times. Within the same level (see below), the value read last wins.</li>
+<li><span class="tt">key+=[...]</span> appends to an existing array and <span class="tt">key-=[...]</span> removes the given values from the end of the array. Both values must be enclosed in <span class="tt">[]</span>.</li>
+<li><span class="tt">key=ref:other.key</span> uses the value of another key, e.g., <span class="tt">sim.aplo=ref:sim.aphi</span>.</li>
+<li>Numbers can be written as simple expressions without spaces, such as <span class="tt">1/600</span>, <span class="tt">0.5*2</span>, or <span class="tt">30+5</span>. <span class="tt">inf</span> and <span class="tt">nan</span> are accepted.</li>
+<li>Numerical arrays are enclosed in <span class="tt">[]</span> with entries separated by spaces or commas: <span class="tt">[1 2 3]</span> or <span class="tt">[1, 2, 3]</span>.<ul>
+<li><span class="tt">n@m</span> repeats the number <span class="tt">n</span> <span class="tt">m</span> times: <span class="tt">[0.5@3]</span> is <span class="tt">[0.5 0.5 0.5]</span>.</li>
+<li>A factor can be applied to the whole array: <span class="tt">[1 2 3]*2</span>, <span class="tt">2*[1 2 3]</span>, <span class="tt">[1 2 3]/2</span>, <span class="tt">2/[1 2 3]</span>, or <span class="tt">[1 2 3]+1</span>.</li>
+<li><span class="tt">;</span> starts a new column: <span class="tt">[1 2 3; 4 5 6]</span> has 3 rows and 2 columns. A trailing <span class="tt">'</span> transposes: <span class="tt">[1 2 3; 4 5 6]'</span> has 2 rows and 3 columns.</li>
+<li>A key that takes a numerical array can also take a file name (<span class="tt">.bin</span> or <span class="tt">.fits</span>, optionally gzipped) that contains the array.</li>
 </ul>
-<p>The config <span class="tt">key=value</span> can be specified multiple times for any key, in which case the latter value will override the previous value, except when <code>key+=value</code> is used which causes it to append instead. The software will complain and exit if any <span class="tt">key=value</span> pair is not understood or required but not provided.</p>
-<p>The recommended way to organize config files for a specific problem is to keep a baseline <code></code>.conf file in sub-folder <code>config/maos</code> in the source folder that specify all the necessary <code>key=value</code> entries through optionally including other <code></code>.conf files. The default entry is <span class="tt">default.conf</span> unless <span class="tt">-c file.conf</span> switch is supplied in the command line.</p>
-<p>Embed the overriding options in the command line (embrace it with quote if the option contains spaces, like arrays) or put in one or multiple overriding file (in the simulation folder, not inside -c config/maos) to override the values you want to change from the baseline.</p>
-<p>The <code></code>.conf files in the <code>config/maos</code> folder are only modified during code development and should not be modified by the end user. Use overriding <code></code>.conf files in simulation folders or embed configurations in the command line to modify the values.</p>
-<p>In the <code>config/maos</code> folder, there are a few sample <code></code>.conf files that is complete for each configuration:</p>
-<ul>
-<li><a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a> for LGS mcao simulations (the default),</li>
-<li><a class="el" href="../../d7/d15/mcao_ngs.html">mcao_ngs.conf</a> for NGS mcao simulations</li>
-<li><a class="el" href="../../d2/d91/scao_lgs.html">scao_lgs.conf</a> for single conjugate LGS simulation</li>
-<li><a class="el" href="../../d3/d4b/scao_ngs.html">scao_ngs.conf</a> for single conjugate NGS simulation.</li>
-<li><a class="el" href="../../d7/d20/scao_pywfs.html">scao_pywfs.conf</a> for Pyramid WFS NGS simulation.</li>
+</li>
+<li>Strings may be enclosed in single or double quotes. Quotes are needed only when the string contains spaces or commas. String arrays use <span class="tt">[]</span> with entries separated by commas: <span class="tt">["a.bin", "b.bin"]</span> or <span class="tt">[a.bin,b.bin]</span>. <span class="tt">[]</span> is an empty array; <span class="tt">[""]</span> is an array with one empty string.</li>
+<li>Many per-type arrays, such as most <span class="tt">powfs.*</span> keys, accept either one value per element or a single value that is used for all elements.</li>
 </ul>
-<p>Each of this file include a few other <code></code>.conf files by specifying <code>include=<span class="tt">filename.conf</span></code>, for example, all these baseline <code></code>.conf files include the following common <span class="tt">.conf</span> files that is independent on the simulation mode or geometry.</p>
+<p>Old key names that have been renamed are listed in <a class="el" href="../../de/dbe/changes.html">changes.conf</a> and are converted automatically, with a warning if the key was renamed with <span class="tt">=&gt;</span>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-config-override"></a>
+Overriding and checking keys</h2>
+<p>Configuration is read in three levels, from low to high priority:</p>
+<ol type="1">
+<li>The main <span class="tt">.conf</span> file (<span class="tt">-c FILE.conf</span>, or <span class="tt">default.conf</span>) and all files it includes.</li>
+<li><span class="tt">.conf</span> files given on the command line, and the files they include.</li>
+<li><span class="tt">key=value</span> entries given on the command line.</li>
+</ol>
+<p>A value from a higher level always overrides a lower one, no matter in which order they appear on the command line. Within the same level, the value read last wins.</p>
+<p>maos checks that every supplied key is used:</p>
 <ul>
-<li><a class="el" href="../../d8/db3/sim.html">sim.conf</a> to specify general simulation parameters such as loop gain, number of time steps, etc,</li>
+<li>A key in level 2 or 3 that maos does not recognize is an error, so a misspelled key cannot silently be ignored. In level 1, and for <span class="tt">dbg.*</span> keys, it is only a warning. Set <span class="tt">MAOS_PERMISSIVE=1</span> to make all of these warnings.</li>
+<li>A key that maos reads but is not defined anywhere gives a warning and is assumed to be 0 or empty. The supplied <span class="tt">.conf</span> files define every key, so this only happens with incomplete custom main <span class="tt">.conf</span> files.</li>
+<li>Invalid values or array lengths are errors.</li>
+</ul>
+<p>The full list of keys and values actually used is saved to <span class="tt">maos_done.conf</span> in the output folder (see <a class="el" href="#sect-run-output">Output folder</a>).</p>
+<h2 class="doxsection"><a class="anchor" id="sect-config-path"></a>
+Search path</h2>
+<p>The configuration folder is the first of the following that exists:</p>
+<ol type="1">
+<li><span class="tt">config/maos</span> next to the maos executable,</li>
+<li><span class="tt">$MAOS_CONFIG_PATH/config/maos</span> or <span class="tt">$MAOS_CONFIG_PATH/maos</span>,</li>
+<li><span class="tt">config/maos</span> in the source tree that maos was compiled from,</li>
+<li><span class="tt">~/.aos/config-&lt;version&gt;/maos</span>.</li>
+</ol>
+<p><span class="tt">.conf</span> files and data files named in them (e.g. <span class="tt">aper.fnamp</span>) are searched in the folder where maos is launched (before changing into the <span class="tt">-o</span> folder), then in the configuration folder and its <span class="tt">bin</span>, <span class="tt">atm</span>, and <span class="tt">examples</span> sub-folders, then in folders added by <span class="tt">-p</span> or <span class="tt">path=</span>. An absolute path is used as is.</p>
+<p>Without <span class="tt">-c</span>, the main file is <span class="tt">~/.aos/default.conf</span> if it exists, otherwise <span class="tt">default.conf</span> found through the search path (so a <span class="tt">default.conf</span> in the launch folder takes precedence).</p>
+<h2 class="doxsection"><a class="anchor" id="sect-config-org"></a>
+Organization</h2>
+<p>The recommended way to organize config files for a specific problem is to keep a baseline <code></code>.conf file that specifies all the necessary <code>key=value</code> entries, usually by including other <code></code>.conf files. The default entry is <span class="tt">default.conf</span> unless <span class="tt">-c file.conf</span> is supplied on the command line.</p>
+<p>Put the values you want to change on the command line (quote them if your shell requires it) or in one or more overriding <span class="tt">.conf</span> files in the simulation folder.</p>
+<p>The <code></code>.conf files in the <code>config/maos</code> folder are only modified during code development and should not be modified by the end user. Use overriding <code></code>.conf files in simulation folders or embed configurations on the command line to modify the values.</p>
+<p>In the <code>config/maos</code> folder, there are a few baseline <code></code>.conf files that are complete for each configuration:</p>
+<ul>
+<li><a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a> for LGS MCAO simulations (the default through <a class="el" href="../../d6/d82/default.html">default.conf</a>),</li>
+<li><a class="el" href="../../d7/d15/mcao_ngs.html">mcao_ngs.conf</a> for NGS MCAO simulations,</li>
+<li><a class="el" href="../../d2/d91/scao_lgs.html">scao_lgs.conf</a> for single conjugate LGS simulation,</li>
+<li><a class="el" href="../../d3/d4b/scao_ngs.html">scao_ngs.conf</a> for single conjugate NGS simulation,</li>
+<li><a class="el" href="../../d7/d20/scao_pywfs.html">scao_pywfs.conf</a> for single conjugate NGS simulation with a pyramid WFS,</li>
+<li><a class="el" href="../../d0/d10/ltao.html">ltao.conf</a> for LGS LTAO simulations,</li>
+<li><a class="el" href="../../d4/d4b/glao.html">glao.conf</a> for GLAO simulations.</li>
+</ul>
+<p>Each of these files includes a few other <code></code>.conf files by specifying <code>include=<span class="tt">filename.conf</span></code>. For example, all of them include the following common <span class="tt">.conf</span> files that are independent of the simulation mode or geometry.</p>
+<ul>
+<li><a class="el" href="../../d8/db3/sim.html">sim.conf</a> to specify general simulation parameters such as the telescope aperture (it includes <span class="tt">keck.conf</span> from <span class="tt">examples/</span>), loop gain, number of time steps, etc.,</li>
 <li><a class="el" href="../../d8/d1c/recon.html">recon.conf</a> to specify reconstruction parameters in closed loop,</li>
-<li><a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a> to specify debugging parameters.</li>
+<li><a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a> to specify debugging, plotting, saving, and loading parameters.</li>
 </ul>
-<p>The following list the exclusive <span class="tt">.conf</span> files used to specified particular set of configurations. Each group should only appear once.</p>
+<p>The following list the exclusive <span class="tt">.conf</span> files used to specify a particular set of configurations. Each group should only appear once.</p>
 <ul>
-<li><span class="tt">atm_*.conf</span>: set to a different preconfigured turbulence profile.</li>
-<li><span class="tt">dm_*.conf</span>: set deformable mirror configuration.</li>
-<li><span class="tt">fov_*.conf</span>: set the science FoV.</li>
-<li><span class="tt">wfs_*.conf</span>: set the wfs group type</li>
+<li><span class="tt">atm_*.conf</span> (in <span class="tt">atm/</span>): a preconfigured turbulence profile.</li>
+<li><span class="tt">dm_*.conf</span>: the deformable mirror configuration.</li>
+<li><span class="tt">fov_*.conf</span>: the science FoV (<span class="tt">evl_*.conf</span>) and DM fitting FoV (<span class="tt">fit_*.conf</span>).</li>
+<li><span class="tt">wfs_*.conf</span>: the set of WFS types. Each is composed of <span class="tt">powfs_*.conf</span> files. <a class="el" href="../../d6/dab/powfs_none.html">powfs_none.conf</a> (included first) clears the WFS list, and each <span class="tt">powfs_*.conf</span> appends one WFS type with <span class="tt">+=</span>.</li>
+<li><span class="tt">examples/*.conf</span>: telescope apertures (<span class="tt">keck.conf</span>, <span class="tt">tmt.conf</span>, <span class="tt">gemini.conf</span>, <span class="tt">elt.conf</span>) and complete configurations of existing or planned AO systems.</li>
 </ul>
-<p>For example, the baseline configuration for TMT MCAO system <span class="tt">mcao_lgs.conf</span> includes <span class="tt">atm_mk13n50p.conf</span> to specify MK13N median seeing turbulence profile, <span class="tt">dm_dual.conf</span> to specify dual DM system, <span class="tt">wfs_lgs_ttf_tt.conf</span> to specify WFS configuration as LGS WFS plus TTF NGS WFS plus TT NGS WFS, <span class="tt">evl_sq34.conf</span> to specify the science FoV as simpson weighting on 3x3 points in the square 34x34"
-FoV, and &lt;tt&gt;fit_sq34.conf&lt;/tt&gt; to sepcify the DM fitting FoV as simpson weighting on
-3x3 points in the square 34x34" FoV.</p>
-<p>For an MCAO configuration, the DM fitting FoV can be larger than the science FoV in order to sharpen diffraction limited TTF NGS. For an LTAO configuration, use <span class="tt">fit_oa.conf</span> to set only on axis DM fitting FoV. A GLAO system can be simulated by having a single DM but with a wide DM fitting FoV, as an alternative to setting <span class="tt">recon.glao=0</span> which averages WFS measurements before reconstruction.</p>
-<p>See <a class="el" href="../../d5/d29/page33_example.html">Examples</a> for more detailed explanations.</p>
+<p>For example, the default configuration <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a> includes <a class="el" href="../../d2/d76/mcao_base.html">mcao_base.conf</a> and <a class="el" href="../../da/d9b/wfs_lgs_ttf_tt.html">wfs_lgs_ttf_tt.conf</a>. <a class="el" href="../../d2/d76/mcao_base.html">mcao_base.conf</a> includes <a class="el" href="../../d8/db3/sim.html">sim.conf</a>, <a class="el" href="../../d5/d78/dm_dual.html">dm_dual.conf</a> for a dual DM system, <a class="el" href="../../d1/ddc/atm_mk13n50p.html">atm/atm_mk13n50p.conf</a> for the Maunakea 13N median seeing turbulence profile, <a class="el" href="../../d9/d9a/fov_sq34.html">fov_sq34.conf</a> for the science FoV (<a class="el" href="../../d7/db9/evl_sq34.html">evl_sq34.conf</a>, Simpson weighting on 3x3 points in the square 34x34" FoV) and the DM fitting FoV (\ref fit_sq34, the same
+points), \ref recon, and \ref dbg. \ref wfs_lgs_ttf_tt defines six LGS WFS, one
+tip/tilt/focus NGS WFS, and two tip/tilt NGS WFS.
+
+For an MCAO configuration, the DM fitting FoV can be larger than the science FoV
+in order to sharpen diffraction limited TTF NGS. For an LTAO configuration, use
+\ref fit_oa to set only on axis DM fitting FoV. A GLAO system can be simulated
+by having a single DM but with a wide DM fitting FoV, as an alternative to
+setting &lt;tt&gt;recon.glao=1&lt;/tt&gt; which averages WFS measurements before reconstruction.
+
+See \ref page33_example for more detailed explanations.
+
+@subsection sect-config-params Guide to the main parameters
+
+The table below lists the most frequently changed keys in each group. The
+defaults are in the listed file; the comment next to each key in that file
+describes it.
+
+&lt;table class="markdownTable"&gt;
+  &lt;tr class="markdownTableHead"&gt;    &lt;th class="markdownTableHeadNone"&gt; Group  </p>
+<p>File  </p>
+<p>Main keys  </p>
+<p><span class="tt">aper</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>, <span class="tt">examples/keck.conf</span>  </p>
+<p><span class="tt">aper.d</span> (outer and inner diameter, <span class="tt">[11.0 2.4]</span> from <span class="tt">keck.conf</span>), <span class="tt">aper.fnamp</span> (pupil amplitude map), <span class="tt">aper.rotdeg</span>  </p>
+<p><span class="tt">sim</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>  </p>
+<p><span class="tt">sim.seeds</span>, <span class="tt">sim.end</span> (500), <span class="tt">sim.dt</span> (1/600), <span class="tt">sim.zadeg</span> (30), <span class="tt">sim.closeloop</span> (1), <span class="tt">sim.ephi</span> (0.5, high order integrator gain), <span class="tt">sim.alhi</span> (extra latency), <span class="tt">sim.eplo</span>, <span class="tt">sim.fcfocus</span>, <span class="tt">sim.idealtomo</span>, <span class="tt">sim.evlol</span>, <span class="tt">sim.skysim</span>  </p>
+<p><span class="tt">atm</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>, <span class="tt">atm/atm_*.conf</span>  </p>
+<p><span class="tt">atm.r0z</span> (0.186 m in <a class="el" href="../../d1/ddc/atm_mk13n50p.html">atm/atm_mk13n50p.conf</a>), <span class="tt">atm.L0</span> (30 m), <span class="tt">atm.ht</span>, <span class="tt">atm.wt</span>, <span class="tt">atm.ws</span>, <span class="tt">atm.wddeg</span>, <span class="tt">atm.frozenflow</span>, <span class="tt">atm.size</span>, <span class="tt">atm.dx</span> (1/64 m)  </p>
+<p><span class="tt">atmr</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>  </p>
+<p><span class="tt">atmr.ht</span>, <span class="tt">atmr.wt</span> (reconstructed layers, default follow <span class="tt">atm</span>), <span class="tt">atmr.os</span>  </p>
+<p><span class="tt">dm</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>, <span class="tt">dm_*.conf</span>  </p>
+<p><span class="tt">dm.ht</span>, <span class="tt">dm.dx</span> (0.5 m actuator pitch), <span class="tt">dm.offset</span>, <span class="tt">dm.iac</span>, <span class="tt">dm.stroke</span>, <span class="tt">dm.actstuck</span>, <span class="tt">dm.actfloat</span>  </p>
+<p><span class="tt">powfs</span>  </p>
+<p><span class="tt">powfs_*.conf</span>, <a class="el" href="../../df/d16/powfs_common.html">powfs_common.conf</a>  </p>
+<p>per WFS type: <span class="tt">powfs.type</span> (0: SHWFS, 1: pyramid), <span class="tt">powfs.dsa</span>, <span class="tt">powfs.nwfs</span>, <span class="tt">powfs.hs</span>, <span class="tt">powfs.wvl</span>, <span class="tt">powfs.dtrat</span>, <span class="tt">powfs.siglev</span>, <span class="tt">powfs.bkgrnd</span>, <span class="tt">powfs.rne</span>, <span class="tt">powfs.noisy</span>, <span class="tt">powfs.phystep</span>, <span class="tt">powfs.phytype_recon</span>, <span class="tt">powfs.pixtheta</span>, <span class="tt">powfs.pixpsa</span>, <span class="tt">powfs.nearecon</span>, <span class="tt">powfs.neasim</span>, <span class="tt">powfs.fnllt</span>  </p>
+<p><span class="tt">wfs</span>  </p>
+<p><span class="tt">powfs_*.conf</span>  </p>
+<p>per WFS: <span class="tt">wfs.thetax</span>, <span class="tt">wfs.thetay</span> (arcsec, concatenated for all WFS types), <span class="tt">wfs.siglev</span>  </p>
+<p><span class="tt">llt</span>  </p>
+<p><a class="el" href="../../d3/d3d/llt__c_l.html">llt_CL.conf</a>, <a class="el" href="../../df/db7/llt__s_l.html">llt_SL.conf</a>  </p>
+<p>laser launch telescope and sodium layer: <span class="tt">llt.d</span>, <span class="tt">llt.ox</span>, <span class="tt">llt.oy</span>, <span class="tt">llt.fnprof</span>, <span class="tt">llt.fnrange</span>  </p>
+<p><span class="tt">evl</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>, <span class="tt">evl_*.conf</span>  </p>
+<p><span class="tt">evl.thetax</span>, <span class="tt">evl.thetay</span>, <span class="tt">evl.wt</span>, <span class="tt">evl.fov</span>, <span class="tt">evl.wvl</span>, <span class="tt">evl.psfmean</span>, <span class="tt">evl.psfisim</span>, <span class="tt">evl.psfsize</span>, <span class="tt">evl.psfgridsize</span>  </p>
+<p><span class="tt">fit</span>  </p>
+<p><a class="el" href="../../d8/d1c/recon.html">recon.conf</a>, <span class="tt">fit_*.conf</span>  </p>
+<p><span class="tt">fit.thetax</span>, <span class="tt">fit.thetay</span>, <span class="tt">fit.wt</span>, <span class="tt">fit.fov</span>, <span class="tt">fit.alg</span>, <span class="tt">fit.actslave</span>  </p>
+<p><span class="tt">recon</span>, <span class="tt">tomo</span>, <span class="tt">lsr</span>  </p>
+<p><a class="el" href="../../d8/d1c/recon.html">recon.conf</a>  </p>
+<p><span class="tt">recon.alg</span> (0: MVR, 1: LSR), <span class="tt">recon.split</span> (1), <span class="tt">recon.glao</span>, <span class="tt">recon.mvm</span>, <span class="tt">recon.modal</span>, <span class="tt">recon.psd</span>, <span class="tt">tomo.alg</span>, <span class="tt">tomo.precond</span>, <span class="tt">tomo.maxit</span>, <span class="tt">lsr.alg</span>, <span class="tt">lsr.actslave</span>  </p>
+<p><span class="tt">ncpa</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>  </p>
+<p><span class="tt">ncpa.surf</span>, <span class="tt">ncpa.calib</span> (1), <span class="tt">ncpa.thetax</span>, <span class="tt">ncpa.thetay</span>  </p>
+<p><span class="tt">moao</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>  </p>
+<p><span class="tt">moao.dx</span>, <span class="tt">moao.gdm</span>, <span class="tt">evl.moao</span>, <span class="tt">powfs.moao</span>  </p>
+<p><span class="tt">gpu</span>  </p>
+<p><a class="el" href="../../d8/db3/sim.html">sim.conf</a>  </p>
+<p><span class="tt">gpu.wfs</span>, <span class="tt">gpu.evl</span>, <span class="tt">gpu.tomo</span>, <span class="tt">gpu.fit</span>, <span class="tt">gpu.lsr</span>, <span class="tt">gpu.psf</span>, <span class="tt">gpu.moao</span> (see <a class="el" href="#sect-run-gpu">GPU selection</a>)  </p>
+<p><span class="tt">save</span>, <span class="tt">plot</span>, <span class="tt">load</span>, <span class="tt">dbg</span>  </p>
+<p><a class="el" href="../../d8/ddb/dbg.html">dbg.conf</a>  </p>
+<p><span class="tt">save.setup</span>, <span class="tt">save.run</span>, <span class="tt">save.all</span>, <span class="tt">save.extra</span>, <span class="tt">plot.all</span>, <span class="tt">plot.setup</span>, <span class="tt">plot.run</span>, <span class="tt">load.*</span>  </p>
+<p>Values that have physical units use SI units unless noted otherwise. Angles such as <span class="tt">wfs.thetax</span> and <span class="tt">evl.thetax</span> are in arcsec. When <span class="tt">evl.fov</span> (or <span class="tt">fit.fov</span>) is not 0 or 1, <span class="tt">evl.thetax</span> and <span class="tt">evl.thetay</span> are given in units of <span class="tt">evl.fov</span> (the full width in arcsec) and scaled by it. Similarly, when <span class="tt">powfs.astscale</span> is not 0 or 1, <span class="tt">wfs.thetax</span> and <span class="tt">wfs.thetay</span> of that powfs are multiplied by it, so the asterism is given with a radius of 0.5 and <span class="tt">powfs.astscale</span> is its diameter in arcsec (maos checks the radius unless all WFS of the powfs are on axis).</p>
 <h1 class="doxsection"><a class="anchor" id="sect-exe"></a>
 Sample Runs</h1>
 <p>To run predefined AO modes:</p>
-<div class="fragment"><div class="line">maos -o mcao # default is MCAO with 2 dms. Save results to folder mcao.</div>
-<div class="line">maos -c mcao_ngs.conf  # NGS MCAO</div>
-<div class="line">maos -c scao_ngs.conf  # NGS SCAO</div>
-<div class="line">maos -c scao_pwfs.conf # NGS SCAO using PWFS</div>
-<div class="line">maos -c scao_lgs.conf  # LGS SCAO</div>
-<div class="line">maos -c mcao_lgs.conf dm_single.conf evl.moao=0 moao.dx=[1/2] #LGS LTAO with MOAO for each science field.</div>
-<div class="line">maos -c mcao_lgs.conf dm_triple.conf #LGS MCAO with 3 DMs</div>
-</div><!-- fragment --><p>To run simulation for sample AO systems:</p>
-<div class="fragment"><div class="line">maos -c keck_lgs.conf #KECK LGS AO</div>
-<div class="line">maos -c nfiraos_lgs.conf #NFIRAOS MCAO with implementation errors</div>
-<div class="line">maos -c nfiraos_lgs_pyttf.conf #NFIRAOS MCAO with PWFS as TTF sensor and implementation errors</div>
-<div class="line">maos -c nfiraos_ngs.conf #NFIRAOS NGS AO with PWFS with implementation errors</div>
-</div><!-- fragment --><p> The default case starts with <span class="tt">default.conf</span>. It can be overriden by the environment variable <span class="tt">MAOS_DEFAULT=filename</span>.</p>
-<p>To customize number of components</p>
+<div class="fragment"><div class="line">maos -o mcao                # default is LGS MCAO with 2 DMs. Save results to folder mcao.</div>
+<div class="line">maos -c mcao_ngs.conf       # NGS MCAO</div>
+<div class="line">maos -c scao_ngs.conf       # NGS SCAO</div>
+<div class="line">maos -c scao_pywfs.conf     # NGS SCAO using a pyramid WFS</div>
+<div class="line">maos -c scao_lgs.conf       # LGS SCAO</div>
+<div class="line">maos -c ltao.conf           # LGS LTAO</div>
+<div class="line">maos -c glao.conf           # GLAO</div>
+<div class="line">maos -c mcao_lgs.conf dm_single.conf evl.moao=0 moao.dx=[1/2] # LGS LTAO with MOAO for each science field.</div>
+<div class="line">maos -c mcao_lgs.conf dm_triple.conf # LGS MCAO with 3 DMs</div>
+</div><!-- fragment --><p>To run simulation for sample AO systems (in <span class="tt">config/maos/examples</span>):</p>
+<div class="fragment"><div class="line">maos -c keck_ngs.conf          # Keck NGS AO</div>
+<div class="line">maos -c keck_kapa.conf         # Keck KAPA LGS LTAO</div>
+<div class="line">maos -c nfiraos_lgs.conf       # TMT NFIRAOS LGS MCAO</div>
+<div class="line">maos -c nfiraos_lgs_pyttf.conf # TMT NFIRAOS LGS MCAO with a pyramid WFS as the TTF sensor</div>
+<div class="line">maos -c nfiraos_ngs.conf       # TMT NFIRAOS NGS AO with a pyramid WFS</div>
+</div><!-- fragment --><p>The default case starts with <span class="tt">default.conf</span>, which includes <a class="el" href="../../dd/d10/mcao_lgs.html">mcao_lgs.conf</a>. Put your own <span class="tt">~/.aos/default.conf</span> to change the default (see <a class="el" href="#sect-config-path">Search path</a>).</p>
+<p>To customize the number of components</p>
 <div class="fragment"><div class="line">maos dm_single.conf wfs_lgs_only.conf recon.glao=1 # LGS GLAO</div>
-<div class="line">maos dm_triple.conf dm.dx=0.3  # triple DM with 0.3 actuator pitch</div>
-<div class="line">maos wfs_lgs_ttf_tt_twfs.conf  # with LGS, TTF, TT, and TWFS</div>
-<div class="line">maos evl_x.conf #evaluate performance along x axis.</div>
+<div class="line">maos dm_triple.conf dm.dx=0.3  # triple DM with 0.3 m actuator pitch</div>
+<div class="line">maos wfs_lgs_ttf_tt_twfs.conf powfs.dtrat=[1 1 1 100] # with LGS, TTF, TT, and truth WFS. The truth WFS must have dtrat&gt;1.</div>
+<div class="line">maos evl_x.conf                # evaluate performance along the x axis.</div>
 </div><!-- fragment --><p>Change aperture</p>
 <div class="fragment"><div class="line">maos aper.d=[10]    # 10 meter circular</div>
 <div class="line">maos aper.d=[10, 1] # 10 meter annular diameter with 1 meter inner obscuration</div>
-<div class="line">maos aper.d=[10, 1] aper.fnamp=aper.bin # with supplied amplitude map. Diameters need to match.</div>
-</div><!-- fragment --><p>Change turbulence</p>
-<div class="fragment"><div class="line">maos atm_mk13n25p.conf #use another predefined profile. The default is atm_mk13n50p.conf</div>
+<div class="line">maos aper.d=[10, 1] aper.fnamp=aper.bin # with supplied amplitude map.</div>
+<div class="line">maos tmt.conf       # TMT aperture. Also keck.conf, gemini.conf, elt.conf.</div>
+</div><!-- fragment --><p>When <span class="tt">aper.fnamp</span> is given, its diameter must agree with <span class="tt">aper.d</span> (within 1 m), otherwise the amplitude map is not used. Set <span class="tt">aper.d=[0]</span> to take the diameter from the amplitude map.</p>
+<p>Change turbulence</p>
+<div class="fragment"><div class="line">maos atm_mk13n25p.conf # use another predefined profile. The default is atm_mk13n50p.conf</div>
 <div class="line">maos atm.r0z=0.1     # change r0 at zenith to 0.1m</div>
-<div class="line">maos sim.zadeg=30    # change zenith angle to 30 degrees</div>
+<div class="line">maos sim.zadeg=45    # change zenith angle to 45 degrees (default is 30)</div>
 <div class="line">maos atm_single.conf # use single ground layer turbulence</div>
-</div><!-- fragment --><p>Configuring WFS. Adjust the number of elements depending on how many powfs is in use. A powfs is a type of WFS. Each type can have multiple WFS.</p>
+</div><!-- fragment --><p>Configuring WFS. Adjust the number of elements depending on how many powfs are in use. A powfs is a type of WFS. Each type can have multiple WFS. The default configuration has three: LGS, TTF NGS, and TT NGS.</p>
 <div class="fragment"><div class="line">maos powfs.noisy=[0]     # use noise free WFS for all wfs types</div>
 <div class="line">maos powfs.noisy=[1 0 0] # use noise free WFS for wfs type 1 and 2.</div>
 <div class="line">maos powfs.phystep=[-1]  # use geometric wfs instead of physical optics wfs for all</div>
 </div><!-- fragment --><p>Adjust the controller</p>
-<div class="fragment"><div class="line">maos sim.ephi=0.3 #Change gain of the main integrator to 0.3</div>
-</div><!-- fragment --> <h1 class="doxsection"><a class="anchor" id="sect-ebb"></a>
+<div class="fragment"><div class="line">maos sim.ephi=0.3 # Change gain of the main integrator to 0.3</div>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="sect-ebb"></a>
 Error Budget Breakdown</h1>
 <p>There are options to allow probing for error budget items, such as DM fitting error, tomography error, etc.</p>
-<div class="fragment"><div class="line">maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1: single DM fitting on axis</div>
-<div class="line">maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1b: Multiconjugate DM fitting over a field</div>
-<div class="line">maos scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2: noise free classic AO simulation with geometric SHWFS.</div>
-<div class="line">maos mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2b: noise free MCAO with geometric SHWFS.</div>
-<div class="line">maos mcao_ngs.conf powfs.phystep=[-1] powfs.noisy=[0] # step3: noise free MCAO with geometric SHWFS in closed loop simulation.</div>
-<div class="line">maos mcao_ngs.conf powfs.noisy=[0] # step4: noise free MCAO with physical optics WFS.</div>
-<div class="line">maos mcao_lgs.conf powfs.noisy=[1] # step5: noisy MCAO with physical optics LGS WFS.</div>
-</div><!-- fragment --><p>Note that the option <span class="tt">sim.closeloop=0 atm.frozenflow=1</span> uses open loop correction (no servo lag) with frozen flow turbulence. The option <span class="tt">sim.idealtomo=1</span> enables DM fitting directly from turbulence rather than from tomography output. For open loop simulations, truth wfs should not be included or disabled with sim.eptwfs=0, and non-iterative solvers (tomo.alg=0, fit.alg=0) usually work better than CG.</p>
+<div class="fragment"><div class="line">maos -c scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1: single DM fitting on axis</div>
+<div class="line">maos -c mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 sim.idealtomo=1 # step1b: Multiconjugate DM fitting over a field</div>
+<div class="line">maos -c scao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2: noise free classic AO simulation with geometric SHWFS.</div>
+<div class="line">maos -c mcao_ngs.conf sim.closeloop=0 atm.frozenflow=1 powfs.phystep=[-1] powfs.noisy=[0] # step2b: noise free MCAO with geometric SHWFS.</div>
+<div class="line">maos -c mcao_ngs.conf powfs.phystep=[-1] powfs.noisy=[0] # step3: noise free MCAO with geometric SHWFS in closed loop simulation.</div>
+<div class="line">maos -c mcao_ngs.conf powfs.noisy=[0] # step4: noise free MCAO with physical optics WFS.</div>
+<div class="line">maos -c mcao_lgs.conf # step5: noisy MCAO with physical optics LGS WFS.</div>
+</div><!-- fragment --><p>Note that the option <span class="tt">sim.closeloop=0 atm.frozenflow=1</span> uses open loop correction (no servo lag) with frozen flow turbulence. The option <span class="tt">sim.idealtomo=1</span> enables DM fitting directly from turbulence rather than from tomography output. For open loop simulations, truth WFS should not be included or should be disabled with <span class="tt">sim.eptwfs=0</span>, and non-iterative solvers (<span class="tt">tomo.alg=0</span>, <span class="tt">fit.alg=0</span>) usually work better than CG.</p>
 <p>The following error budget items are computed:</p>
 <ul>
 <li><span class="tt">DM fitting error</span>: step1 gives DM fitting error which depends on the actuator spacing.</li>
-<li><span class="tt">DM projection error</span>: the quadrature difference between step1 and step1b gives DM projecting error which depends on the field of view and number of DMs.</li>
+<li><span class="tt">DM projection error</span>: the quadrature difference between step1 and step1b gives DM projection error which depends on the field of view and number of DMs.</li>
 <li><span class="tt">WFS aliasing error</span>: the quadrature difference between step1 and step2 gives WFS aliasing error.</li>
 <li><span class="tt">Tomography error</span>: the quadrature difference between the RSS of the three terms above and step2b is the tomography error which depends on the asterism geometry.</li>
 <li><span class="tt">Servo lag error</span>: the quadrature difference between step2b and step3 gives servo lag error.</li>
 <li><span class="tt">WFS nonlinearity error</span>: the quadrature difference between step3 and step4 gives WFS non-linearity error.</li>
 <li><span class="tt">WFS noise effect</span>: the quadrature difference between step4 and step5 gives WFS noise error.</li>
 </ul>
+<p>Other keys in <a class="el" href="../../d8/db3/sim.html">sim.conf</a> that help isolate error terms:</p>
+<ul>
+<li><span class="tt">sim.evlol=1</span> evaluates the uncorrected (open loop) turbulence only and skips WFS and reconstruction.</li>
+<li><span class="tt">sim.idealwfs=1</span> uses only the turbulence in the DM correctable space for the WFS (removes aliasing). It conflicts with <span class="tt">sim.wfsalias</span>.</li>
+<li><span class="tt">sim.wfsalias=1</span> studies the WFS aliasing by projecting the turbulence onto the space orthogonal to the DM vector space.</li>
+<li><span class="tt">sim.idealevl=1</span> evaluates the performance only in the DM correctable space, ignoring DM fitting and projection error.</li>
+<li><span class="tt">sim.noatm=1</span> disables the atmosphere, e.g., to evaluate telescope surface errors only.</li>
+</ul>
 <h1 class="doxsection"><a class="anchor" id="advanced"></a>
 Advanced configuration</h1>
 <h2 class="doxsection"><a class="anchor" id="sect-surface"></a>
 Specifying Surface OPDs</h2>
-<p>We can optionally setup one or more static surfaces that cover science fields and/or wavefront sensors. Each surface file must contain a 2-d array of the OPD with a header specifying the following keys. If header is not available, the OPD is assumed to have 1/64 sampling and centered on the pupil.</p>
+<p>We can optionally set up one or more static surfaces that cover science fields and/or wavefront sensors. Each surface file must contain a 2-d array of the OPD with a header specifying the following keys. If <span class="tt">dx</span> is missing, it is computed from <span class="tt">D</span> (the diameter) or assumed to be 1/64 m. If <span class="tt">ox</span> or <span class="tt">oy</span> is missing, the OPD is centered on the pupil.</p>
 <div class="fragment"><div class="line">dx  the sampling in x direction (first dimension).</div>
-<div class="line">dy  the sampling in y direction (second dimension).</div>
+<div class="line">dy  the sampling in y direction (second dimension). Default is dx.</div>
 <div class="line">ox  the origin in x direction.</div>
 <div class="line">oy  the origin in y direction.</div>
-<div class="line">h   the height conjugation of this surface</div>
+<div class="line">h   the height conjugation of this surface (default 0)</div>
 <div class="line">vx  the frozen flow wind speed along x of this surface (0 for static)</div>
 <div class="line">vy  the frozen flow wind speed along y of this surface (0 for static)</div>
 </div><!-- fragment --><p>Optionally, the header can also include the following keys to indicate its coverage</p>
-<div class="fragment"><div class="line">SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror</div>
+<div class="fragment"><div class="line">SURFNAME=name       #name of the surface. M1 or M2 for the primary or secondary mirror.</div>
+<div class="line">                    #M1 and M2 are rotated by aper.rotdeg. M1 is also shifted by aper.misreg.</div>
 <div class="line">SURFEVL=[1 1 1 ...] #length: nevl. 1: enabled for this science evaluation direction (assume all 1 if omitted)</div>
-<div class="line">SURFWFS=[1 1 1 ...] #length: nwfs. 1: enabled for this WFS (assume all 1 if omitted)</div>
+<div class="line">SURFWFS=[1 1 1 ...] #length: 1, nwfs, or npowfs. 1: enabled for this WFS (assume all 1 if omitted)</div>
 </div><!-- fragment --><p>Use the <code>write</code> mex routine, <code>writebin.m</code>, or <code>aolib.writebin</code> to write the bin file: </p><div class="fragment"><div class="line">write(OPD, header, &#39;opd1.bin&#39;)</div>
-</div><!-- fragment --><p> Or simply use fits format. Put the list of surface file names in key <code>surf</code>. </p><div class="fragment"><div class="line">maos ncpa.surf=[&#39;opd1.bin&#39;,&#39;opd2.bin&#39;, &#39;opd3.fits&#39;]</div>
-</div><!-- fragment --><p>It is also possible to specify NCPA with inline configuration: </p><div class="fragment"><div class="line">maos ncpa.surf=[&quot;&#39;r0=0.1;slope=-4;SURFEVL=1;&#39;, &#39;r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0&#39;&quot;]</div>
+</div><!-- fragment --><p> Or simply use fits format. Put the list of surface file names in key <code>ncpa.surf</code> (<code>surf</code> is an accepted alias). </p><div class="fragment"><div class="line">maos ncpa.surf=[&#39;opd1.bin&#39;,&#39;opd2.bin&#39;, &#39;opd3.fits&#39;]</div>
+</div><!-- fragment --><p>It is also possible to generate a surface on the fly with an inline description. The keys are <span class="tt">r0</span> (in m) or <span class="tt">rms</span> (in nm), <span class="tt">slope</span> (PSD power law, default -11/3), <span class="tt">L0</span> (default <span class="tt">nx*dx</span>), <span class="tt">nx</span> (default 2048), <span class="tt">ny</span>, <span class="tt">dx</span> (default 1/64), <span class="tt">seed</span>, <span class="tt">ht</span>, <span class="tt">vx</span>, <span class="tt">vy</span>, plus the coverage keys above. <span class="tt">mode=n</span> generates the Zernike mode <span class="tt">n</span> with the given <span class="tt">rms</span> instead. </p><div class="fragment"><div class="line">maos ncpa.surf=[&quot;&#39;r0=0.1;slope=-4;SURFEVL=1;&#39;, &#39;r0=0.2; slope=-4;SURFWFS=1 1 1 1 1 1 0 0 0&#39;&quot;]</div>
 <div class="line">maos ncpa.surf=[&quot;&#39;r0=0.1;slope=-4;L0=30;nx=2048;dx=1./64;SURFEVL=1;SURFWFS=0&#39;&quot;]</div>
 </div><!-- fragment --><p> The double quote is necessary here to group the single quoted entries together.</p>
-<p>The amplitude map of the telescope can be specified with <span class="tt">aper.fnamp=aper.bin</span> with a similar data format, with OPD replaced by amplitude map between 0 and 1. By default, NCPA are calibrated, use <span class="tt">ncpa.calib=0</span> to disable calibration</p>
+<p>The amplitude map of the telescope can be specified with <span class="tt">aper.fnamp=aper.bin</span> with a similar data format, with OPD replaced by amplitude map between 0 and 1. By default, NCPA are calibrated (<span class="tt">ncpa.calib=1</span> uses all DMs, 2 uses only the ground DM). Use <span class="tt">ncpa.calib=0</span> to disable calibration.</p>
 <h2 class="doxsection"><a class="anchor" id="sect-wfs"></a>
 WFS Configuration</h2>
-<p>The WFS configuration are mostly supplied in <code>powfs</code>, which applies to all the wfs belonging to this type. For wfs specific parameters, use <code>wfs</code>. If there is a single number in <code>powfs</code>.[key], it applies to all powfs. The follow lists a few common options</p>
+<p>The WFS configuration is mostly supplied in <code>powfs</code>, which applies to all the wfs belonging to this type. For wfs specific parameters, use <code>wfs</code>. If there is a single number in <code>powfs</code>.[key], it applies to all powfs. The following lists a few common options</p>
 <div class="fragment"><div class="line">powfs.noisy=[0]         #set noise free for all powfs</div>
 <div class="line">powfs.noisy=[1 0 0]     #set noise free only for powfs 1 and 2.</div>
 <div class="line">powfs.phystep=[0 -1 -1] #use physical optics wfs for the first type (high order), and geometric for the remaining (t/t/f)</div>
-<div class="line">powfs.phytype=[1 2 2]   #pixel processing 1: use matched filter, 2: cog</div>
-<div class="line">powfs.siglev=[900 100 100] #specify signal level for physical optics wfs mode at sim.dtref Hz per pixel.</div>
-<div class="line">powfs.bkgrnd=[10 0 0]   #specify background level at sim.dtref Hz per pixel</div>
-<div class="line">powfs.rne=[3 1 1]       #specify read out noise for physical optics wfs mode</div>
-<div class="line">powfs.nearecon=[20 2 1] #specify noise equivalent angle in milli-arcsecond for geometric wfs mode</div>
-<div class="line">powfs.neasim=[20 2 1]   #specify nea for simulation. -1 to match nearecon.</div>
-</div><!-- fragment --><p>WFS specific parameters usually include WFS coordinate </p><div class="fragment"><div class="line">wfs.thteax=[]           #specify the x coordinate in arcsec</div>
+<div class="line">powfs.phytype_recon=[1 2 2] #pixel processing 1: use matched filter, 2: cog</div>
+<div class="line">powfs.siglev=[900 100 100]  #signal level per subaperture per frame at sim.dtref for physical optics wfs mode.</div>
+<div class="line">powfs.bkgrnd=[10 0 0]   #background level per pixel per frame at sim.dtref</div>
+<div class="line">powfs.rne=[3 1 1]       #read out noise for physical optics wfs mode</div>
+<div class="line">powfs.nearecon=[20 2 1] #noise equivalent angle in milli-arcsecond for geometric wfs mode</div>
+<div class="line">powfs.neasim=[20 2 1]   #nea for simulation. -1 to match nearecon.</div>
+</div><!-- fragment --><p>WFS specific parameters usually include WFS coordinates </p><div class="fragment"><div class="line">wfs.thetax=[]           #specify the x coordinate in arcsec</div>
 <div class="line">wfs.thetay=[]           #specify the y coordinate in arcsec</div>
 </div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="sect-perfevl"></a>
 Point Spread Function</h2>
-<p>MAOS only computes RMS averaged wavefront errors by default, which are saved to <code>Res_</code>[seed].bin and c Resp_[seed].bin. When desired, PSFs computing can be enabled for some or all of the science evaluation directions. Modify <code>evl.thetax</code> , <code>evl.thetay</code> , and <code>evl.wt</code> to modify evaluation directions and relative weighting for field averaging. Notice that this will significantly slow down the simulation. Use the following parameters to enable PSF computation. </p><div class="fragment"><div class="line">maos evl.psfisim=20 evl.psfmean=1 # start averaging from step 20, save averaged PSF once in the end.</div>
-<div class="line">maos evl.psfmean=1 evl.psfol=1   # also include open loop PSF</div>
-<div class="line">maos evl.psfmean=1 evl.psfsize=[1024,1024]     # only save center part 1024x1024 of the PSF</div>
-<div class="line">maos evl.psfmean=1 evl.psfgridsize=[4096,4096] # specify PSF FFT grid size to control the sampling.</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="sect-act"></a>
+<p>MAOS only computes RMS averaged wavefront errors by default, which are saved to <code>Res_</code>[seed].bin and <code>Resp_</code>[seed].bin. When desired, PSF computation can be enabled for some or all of the science evaluation directions (<span class="tt">evl.psf</span>). Modify <code>evl.thetax</code> , <code>evl.thetay</code> , and <code>evl.wt</code> to modify evaluation directions and relative weighting for field averaging. Notice that this will significantly slow down the simulation. Use the following parameters to enable PSF computation. </p><div class="fragment"><div class="line">maos evl.psfisim=20 evl.psfmean=1 # start averaging from step 20, save averaged PSF once in the end.</div>
+<div class="line">maos evl.psfmean=100            # also save the averaged PSF every 100 steps.</div>
+<div class="line">maos evl.psfmean=1 evl.psfol=1  # also include open loop PSF</div>
+<div class="line">maos evl.psfmean=1 evl.psfsize=[1024]     # only save center part 1024x1024 of the PSF</div>
+<div class="line">maos evl.psfmean=1 evl.psfgridsize=[4096] # specify PSF FFT grid size to control the sampling.</div>
+</div><!-- fragment --><p> <span class="tt">evl.psfsize</span> and <span class="tt">evl.psfgridsize</span> take one value for all wavelengths or one value per wavelength in <span class="tt">evl.wvl</span>.</p>
+<h2 class="doxsection"><a class="anchor" id="sect-act"></a>
 Actuator Slaving</h2>
-<p>Due to pupil obscuration, there may be actuators that are not sensed by the WFS and therefore cannot be accurately reconstructed. The actuator coupling coefficient, computed using DM fitting ray tracing (HA in Minimum variance reconstruction) or gradient interaction matrix (GA in least squares reconstruction), is used to determine how accurately an actuator is sensed/controlled. Activated by </p><pre class="fragment">  lsr.actslave=1 #or 2, for lsr
-  fit.actslave=1 #or 2, for mvr
+<p>Due to pupil obscuration, there may be actuators that are not sensed by the WFS and therefore cannot be accurately reconstructed. The actuator coupling coefficient, computed using DM fitting ray tracing (HA in minimum variance reconstruction) or gradient interaction matrix (GA in least squares reconstruction), is used to determine how accurately an actuator is sensed/controlled. Activated by </p><pre class="fragment">  lsr.actslave=1 #or 2, for lsr (default 1)
+  fit.actslave=1 #or 2, for mvr (default 1)
 </pre><ul>
-<li><code>actslave=1</code> enables implementation with threshold <code></code>.actthres. When an actuator is outside of the pupil, its coupling coefficient is usually very small. When it is below lsr.acthres, its value is slaved to its neighboring actuators.</li>
-<li><code>actslave=2</code> in addition enables implementation with threshold <code></code>.actthres2. When an actautor is hidden by secondary mirror support struts, it may still have relatively strong coupling, but regions separated by the structs may have different piston values, so called island effect. The mitigation method is to limit the value gap around such actautors whoes coupling is below .actthres2.</li>
+<li><code>actslave=1</code> enables implementation with threshold <code></code>.actthres (<span class="tt">lsr.actthres=0.7</span>, <span class="tt">fit.actthres=0.1</span> by default). When an actuator is outside of the pupil, its coupling coefficient is usually very small. When it is below the threshold, its value is slaved to its neighboring actuators.</li>
+<li><code>actslave=2</code> in addition enables implementation with threshold <code></code>.actthres2 (<span class="tt">lsr.actthres2=0.8</span>, <span class="tt">fit.actthres2=0.7</span>). When an actuator is hidden by secondary mirror support struts, it may still have relatively strong coupling, but regions separated by the struts may have different piston values, the so called island effect. The mitigation method is to limit the value gap around such actuators whose coupling is below .actthres2.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="sect-sodium"></a>
 Sodium range variation</h2>
-<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="../../d3/d3d/llt__c_l.html">llt_CL.conf</a> or <a class="el" href="../../df/db7/llt__s_l.html">llt_SL.conf</a>. When supplied by user, use <code>powfs0_llt.fnrange</code>. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
+<p>The sodium range variation is specified through the LLT configuration key <code>llt.fnrange</code> in <a class="el" href="../../d3/d3d/llt__c_l.html">llt_CL.conf</a> or <a class="el" href="../../df/db7/llt__s_l.html">llt_SL.conf</a>, which is selected by <span class="tt">powfs.fnllt</span>. To override it, use <code>powfs0_llt.fnrange</code>, where <span class="tt">0</span> is the index of the LGS powfs. The file should contain additional change (wrt fnprof) of sodium height in meters with dimension nx1 or nxnLGS where <code>n</code> can be less than, equal to or greater than the length of simulation and nLGS is the number of LGS in this powfs (6 for NFIRAOS).</p>
 <p>The range variation is simulated by adding corresponding focus mode to LGS WFS wavefront.</p>
 <h2 class="doxsection"><a class="anchor" id="pixel-background"></a>
 Rayleigh backscatter</h2>
-<p>The Rayleigh backscatter effect can be introduced using <span class="tt">powfs.bkgrndfn=[filename,]</span> which contains simulation background level for each pixel defined at <span class="tt">sim.dtref</span>. The file contains a cell array of <span class="tt">nsa*nlgswfs</span> while each cell contains a <span class="tt">npixpisax*npixpsay</span> numerical array. <span class="tt">nlgswfs</span> is the number of <span class="tt">wfs</span> for this <span class="tt">powfs</span>.</p>
+<p>The Rayleigh backscatter effect can be introduced using <span class="tt">powfs.bkgrndfn=[filename,]</span> which contains the background level for each pixel per frame, defined at <span class="tt">sim.dtref</span>. The file contains a cell array of <span class="tt">nsa*1</span> (shared by all WFS) or <span class="tt">nsa*nwfs</span>, where <span class="tt">nwfs</span> is the number of <span class="tt">wfs</span> for this <span class="tt">powfs</span>, and each cell contains a <span class="tt">npixpsax*npixpsay</span> numerical array. The subapertures are ordered as in <span class="tt">powfs0_saloc.bin</span>. <span class="tt">powfs.bkgrndfnc</span> specifies the part that is subtracted (calibrated).</p>
 <h1 class="doxsection"><a class="anchor" id="maos_skycoverage"></a>
 Sky coverage</h1>
-<p>The sky coverage simulation is done in two parts. <code>maos</code> is run first used to prepare NGS mode and WFS PSF time series:</p>
+<p>The sky coverage simulation is done in two parts. <code>maos</code> is run first to prepare NGS mode and WFS PSF time series:</p>
 <p><code>maos</code> -c nfiraos_lgs.conf skyc_10.conf -o 50p_za0_ncpa</p>
 <p>The second step is to run <code>skyc</code> in the sky sim folder <code>cd</code> 50p_za0_ncpa/skysim <code>skyc</code> -d -o APD_JHKs_typeImr</p>
-<p>The results are stored in <code>Res1_1.bin</code> for <code>maos</code> seed 1, <code>skyc</code> seed 1. There are <code>nsky=500</code> columns with the following row definitions:</p>
+<p>The results are stored in <code>Res1_1.bin</code> for <code>maos</code> seed 1, <code>skyc</code> seed 1. There are <code>skyc.nsky</code> (500 by default) columns with the following row definitions:</p>
 <ol type="1">
 <li>Total residual error</li>
-<li>Residual atmpheric (included in <code>maos</code> simulations) error</li>
+<li>Residual atmospheric (included in <code>maos</code> simulations) error in NGS modes</li>
 <li>Residual atmosphere error only in tip/tilt modes.</li>
-<li>Residual windshake if skyc.psd_is is set and skyc.addws=0. (deprecated use)</li>
-<li>0 (not used)</li>
+<li>Residual windshake if <span class="tt">skyc.psd_ws</span> is set and <span class="tt">skyc.addws=0</span>.</li>
+<li>Estimated error.</li>
+<li>Residual atmospheric error in NGS modes on axis only.</li>
+<li>Residual atmospheric error in tip/tilt modes on axis only.</li>
+<li>Selected NGS WFS sampling frequency.</li>
+<li>Index into <code>Res1_1_aster.bin</code>.</li>
+<li>Index of the selected asterism.</li>
 </ol>
-<hr  />
-<p>See <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a> for further explanation and results interpretation. </p>
+<p>See <a class="el" href="../../d5/d4c/skycoverage.html">Sky Coverage</a> for details and <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a> for further explanation and results interpretation. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
@@ -324,8 +531,11 @@ Sky coverage</h1>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

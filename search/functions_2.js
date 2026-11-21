@@ -281,7 +281,7 @@ var searchData=
   ['cusolve_5fcbs_278',['cusolve_cbs',['../d4/d35/classcusolve__cbs.html#a78fcd38283d329a3231d66ac19cc857d',1,'cusolve_cbs']]],
   ['cusolve_5fmvm_279',['cusolve_mvm',['../de/dda/classcusolve__mvm.html#a85ef0cc99f6799b6109dba06f2075d0f',1,'cusolve_mvm']]],
   ['cusolve_5fsparse_280',['cusolve_sparse',['../d2/d23/classcusolve__sparse.html#aaf4ed462d0c420cd4e91f33d0e61e55a',1,'cusolve_sparse']]],
-  ['cusp_281',['cusp',['../d4/d25/classcusp.html#a5a4cf9e7a38f7fc6b47c73d15ce879b4',1,'cusp::cusp()'],['../d4/d25/classcusp.html#ab3188077a0314e4e23234e29e84d8851',1,'cusp::cusp(const dsp *in, int tocsr=0, int transp=0)'],['../d4/d25/classcusp.html#a8c3317731a12c1e4c25e03d04017cc2f',1,'cusp::cusp(const cusp &amp;in)']]],
+  ['cusp_281',['cusp',['../d4/d25/classcusp.html#a5a4cf9e7a38f7fc6b47c73d15ce879b4',1,'cusp::cusp()'],['../d4/d25/classcusp.html#a687d05826e6029635921c30025c24678',1,'cusp::cusp(const dsp *src_csc, int tocsr=0, int transp=0)'],['../d4/d25/classcusp.html#a8c3317731a12c1e4c25e03d04017cc2f',1,'cusp::cusp(const cusp &amp;in)']]],
   ['cuspmul_282',['cuspmul',['../d3/d87/cublas_8h.html#a617bff0320e99bbea2e8f4bc2fa8610f',1,'cublas.cu']]],
   ['cutomo_5fgrid_283',['cutomo_grid',['../db/d1f/classcutomo__grid.html#a7254c2dd1abd977d7f0536bcfb178904',1,'cutomo_grid']]],
   ['cvecperm_284',['cvecperm',['../de/d07/cmath_8h.html#a379334c2ea8abebb8df335a241c57f8f',1,'ctmp.c']]],

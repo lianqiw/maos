@@ -1,8 +1,12 @@
 var searchData=
 [
-  ['ymin_0',['ymin',['../df/def/type_8h.html#a055eb815edb115e0225d517aab0d922e',1,'locstat_t']]],
-  ['your_20decision_1',['Needs your decision',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md132',1,'']]],
-  ['your_20earlier_20fixes_20in_2088beaf2da_20that_20were_20incomplete_2',['Your earlier fixes in 88beaf2da that were incomplete',['../d8/d99/md_docs_2claude__review__20261119.html#autotoc_md129',1,'']]],
-  ['ystart_3',['ystart',['../df/def/type_8h.html#a3bf4e5f36c19cbe051fc58f2bf162eff',1,'locstatcol_t']]],
-  ['ystep_4',['ystep',['../dc/d59/cn2est_8h.html#a4a4d59155e1ba30596e6e8c1a4505200',1,'cn2est_pair_t']]]
+  ['_7earray_0',['~Array',['../d5/d21/class_array.html#a6ff1a3bcced5c607c0bbdda2f4f0dc51',1,'Array']]],
+  ['_7ecudata_5ft_1',['~cudata_t',['../db/d5f/classcudata__t.html#a39193b2e23274c58ae18584232667f42',1,'cudata_t']]],
+  ['_7ecuglobal_5ft_2',['~cuglobal_t',['../d7/de7/classcuglobal__t.html#a9e8e7d9209531ad3e550f662255889b8',1,'cuglobal_t']]],
+  ['_7ecumemcache_5ft_3',['~cumemcache_t',['../de/d37/classcumemcache__t.html#a92f5acab163b2406861dc1a234099647',1,'cumemcache_t']]],
+  ['_7ecusp_4',['~cusp',['../d4/d25/classcusp.html#a2f7ba82af98954df51ef2e4148043a75',1,'cusp']]],
+  ['_7ecusp_5fref_5',['~cusp_ref',['../df/d03/structcusp__ref.html#a187be4305128209bcbed8c1ad3045d90',1,'cusp_ref']]],
+  ['_7elock_5ft_6',['~lock_t',['../d7/dc3/classlock__t.html#a489380f686904af5c2af90219b5ff94f',1,'lock_t']]],
+  ['_7erefp_7',['~RefP',['../dd/db6/class_ref_p.html#aedd3c6856df7212b99f586dde55a401e',1,'RefP']]],
+  ['_7estream_5ft_8',['~stream_t',['../dc/de6/classstream__t.html#a9f983870b6d79f2286d3df5d99af0283',1,'stream_t']]]
 ];

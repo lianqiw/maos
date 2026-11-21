@@ -1,7 +1,7 @@
 var classcusp =
 [
     [ "cusp", "d4/d25/classcusp.html#a5a4cf9e7a38f7fc6b47c73d15ce879b4", null ],
-    [ "cusp", "d4/d25/classcusp.html#ab3188077a0314e4e23234e29e84d8851", null ],
+    [ "cusp", "d4/d25/classcusp.html#a687d05826e6029635921c30025c24678", null ],
     [ "cusp", "d4/d25/classcusp.html#a8c3317731a12c1e4c25e03d04017cc2f", null ],
     [ "~cusp", "d4/d25/classcusp.html#a2f7ba82af98954df51ef2e4148043a75", null ],
     [ "Type", "d4/d25/classcusp.html#abbb60d4f97f54e19c95f54bdd89bd477", null ],

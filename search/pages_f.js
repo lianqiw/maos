@@ -1,5 +1,28 @@
 var searchData=
 [
-  ['j_20band_20strehl_20ratio_0',['J band Strehl Ratio',['../d6/d3f/page43_nfiraos.html#autotoc_md46',1,'']]],
-  ['job_20list_20tools_20monitor_5fgui_20c_1',['Job list (tools/monitor_gui.c)',['../da/d2c/md_docs_2claude__gtk4__20261119.html#autotoc_md104',1,'']]]
+  ['layering_0',['Library Layering',['../d7/dbf/page93_maos.html#arch-layers',1,'']]],
+  ['lgs_1',['SCAO LGS',['../d0/dbd/scao_lgs_example.html',1,'page33_example']]],
+  ['lgs_20mcao_20default_2',['LGS MCAO (default)',['../da/dd3/nfiraos_example.html',1,'page33_example']]],
+  ['lib_3',['lib',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md49',1,'Group: lib'],['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md73',1,'lib'],['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md103',1,'lib'],['../db/d87/md_docs_2claude__changes__20261120.html#claude_coverage',1,'Unit test coverage of sys, math and lib']]],
+  ['lib_20chol_20c_4',['lib/chol.c',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md92',1,'']]],
+  ['lib_20fixes_20from_20the_20second_20review_5',['Low-priority lib fixes from the second review',['../db/d87/md_docs_2claude__changes__20261120.html#claude_lowprio',1,'']]],
+  ['lib_20group_3a_20bug_20triage_6',['lib group: bug triage',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md50',1,'']]],
+  ['lib_20maos_20skyc_20tools_20cuda_20and_20mex_7',['Second review of sys, math, lib, maos, skyc, tools, cuda and mex',['../db/d87/md_docs_2claude__changes__20261120.html#claude_second_review',1,'']]],
+  ['libraries_8',['External libraries',['../d3/d4c/page20_compile.html#compile-deps',1,'']]],
+  ['library_20additions_20needed_20by_20the_20tests_9',['Library additions needed by the tests',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md90',1,'']]],
+  ['library_20bugs_20found_10',['Library bugs found',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md99',1,'']]],
+  ['library_20bugs_20found_20by_20the_20coverage_20tests_11',['Library bugs found by the coverage tests',['../db/d87/md_docs_2claude__changes__20261120.html#claude_covbugs',1,'']]],
+  ['library_20layering_12',['Library Layering',['../d7/dbf/page93_maos.html#arch-layers',1,'']]],
+  ['line_20options_13',['Command line options',['../da/dc3/page30_run.html#sect-run-options',1,'']]],
+  ['linear_20influence_20function_14',['Linear influence function',['../d4/d15/algorithm.html#autotoc_md30',1,'']]],
+  ['linux_20workflow_15',['CI: CUDA build in the Linux workflow',['../db/d87/md_docs_2claude__changes__20261120.html#claude_ci_cuda',1,'']]],
+  ['list_16',['List',['../d5/d2b/page34_conf.html',1,'Config File List'],['../dd/da0/todo.html',1,'Todo List']]],
+  ['list_20tools_20monitor_5fgui_20c_17',['Job list (tools/monitor_gui.c)',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md67',1,'']]],
+  ['llt_5fcl_20conf_18',['llt_CL.conf',['../d3/d3d/llt__c_l.html',1,'page34_conf']]],
+  ['llt_5fsl_20conf_19',['llt_SL.conf',['../df/db7/llt__s_l.html',1,'page34_conf']]],
+  ['lock_5ffile_5fversion_20',['sys/daemonize.c: lock_file_version',['../db/d87/md_docs_2claude__changes__20261120.html#autotoc_md64',1,'']]],
+  ['log_20files_21',['Log files',['../dd/da9/page40_results.html#autotoc_md15',1,'']]],
+  ['logging_22',['Logging',['../d7/dbf/page93_maos.html#arch-log',1,'']]],
+  ['low_20priority_20lib_20fixes_20from_20the_20second_20review_23',['Low-priority lib fixes from the second review',['../db/d87/md_docs_2claude__changes__20261120.html#claude_lowprio',1,'']]],
+  ['ltao_20conf_24',['ltao.conf',['../d0/d10/ltao.html',1,'page34_conf']]]
 ];

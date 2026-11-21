@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: cusp Class Reference</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -123,7 +125,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad9474cc44ddf97480e4fd96c6969aa63" id="r_ad9474cc44ddf97480e4fd96c6969aa63"><td class="memItemLeft" align="right" valign="top">Real *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad9474cc44ddf97480e4fd96c6969aa63">Px</a> ()</td></tr>
 <tr class="memitem:ab6cda23de7cf41fe290cdfaed2d86708" id="r_ab6cda23de7cf41fe290cdfaed2d86708"><td class="memItemLeft" align="right" valign="top">const Real *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab6cda23de7cf41fe290cdfaed2d86708">Px</a> () const</td></tr>
 <tr class="memitem:a5a4cf9e7a38f7fc6b47c73d15ce879b4" id="r_a5a4cf9e7a38f7fc6b47c73d15ce879b4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5a4cf9e7a38f7fc6b47c73d15ce879b4">cusp</a> ()</td></tr>
-<tr class="memitem:ab3188077a0314e4e23234e29e84d8851" id="r_ab3188077a0314e4e23234e29e84d8851"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab3188077a0314e4e23234e29e84d8851">cusp</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *in, int tocsr=0, int transp=0)</td></tr>
+<tr class="memitem:a687d05826e6029635921c30025c24678" id="r_a687d05826e6029635921c30025c24678"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a687d05826e6029635921c30025c24678">cusp</a> (const <a class="el" href="../../df/def/type_8h.html#de/d35/structdsp">dsp</a> *src_csc, int tocsr=0, int transp=0)</td></tr>
 <tr class="memitem:a8c3317731a12c1e4c25e03d04017cc2f" id="r_a8c3317731a12c1e4c25e03d04017cc2f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c3317731a12c1e4c25e03d04017cc2f">cusp</a> (const <a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;in)</td></tr>
 <tr class="memitem:aaf2891b248c26e20bb1bee6c780cf401" id="r_aaf2891b248c26e20bb1bee6c780cf401"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf2891b248c26e20bb1bee6c780cf401">operator=</a> (const <a class="el" href="../../d4/d25/classcusp.html">cusp</a> &amp;in)</td></tr>
 <tr class="memitem:a2f7ba82af98954df51ef2e4148043a75" id="r_a2f7ba82af98954df51ef2e4148043a75"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2f7ba82af98954df51ef2e4148043a75">~cusp</a> ()</td></tr>
@@ -155,8 +157,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="ab3188077a0314e4e23234e29e84d8851" name="ab3188077a0314e4e23234e29e84d8851"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3188077a0314e4e23234e29e84d8851">&#9670;&#160;</a></span>cusp() <span class="overload">[2/3]</span></h2>
+<a id="a687d05826e6029635921c30025c24678" name="a687d05826e6029635921c30025c24678"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a687d05826e6029635921c30025c24678">&#9670;&#160;</a></span>cusp() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,14 +181,6 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Copy a CPU sparse matrix to GPU. See utils.cu.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Source dsp in CSC. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">tocsr</td><td>0: Keep in CSC. 1: Convert to CSR. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">transp</td><td>1: transpose.</td></tr>
-  </table>
-  </dd>
-</dl>
 <p>Convert a host dsp array to GPU sparse array, optionally converted to CSR and/or transposed. Index and value arrays are deduplicated if cuda_dedup is set.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -620,8 +614,12 @@ Friends</h2></td></tr>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a href="../../d4/d25/classcusp.html">cusp</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>

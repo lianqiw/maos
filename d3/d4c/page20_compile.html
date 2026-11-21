@@ -1,14 +1,16 @@
-<!-- HTML header for doxygen 1.8.3.1-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MAOS: Compile the Code</title>
+<link rel="icon" href="../../maos.png" type="image/x-icon" />
 <link href="../../tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../jquery.js"></script>
 <script type="text/javascript" src="../../dynsections.js"></script>
+<script type="text/javascript" src="../../clipboard.js"></script>
 <link href="../../navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="../../navtreedata.js"></script>
 <script type="text/javascript" src="../../navtree.js"></script>
@@ -31,9 +33,9 @@ MathJax.Hub.Config({
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
- <tr style="height: 56px;">
+ <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="../../maos.png"/></td>
-  <td style="padding-left: 0.5em;">
+  <td id="projectalign">
    <div id="projectname">MAOS
    </div>
    <div id="projectbrief">Multithreaded Adaptive Optics Simulator</div>
@@ -100,166 +102,301 @@ $(function(){initNavTree('d3/d4c/page20_compile.html','../../',''); });
   <div class="headertitle"><div class="title">Compile the Code </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md7"></a>
-Compiling</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md8"></a>
-Prerequisites</h2>
+<div class="textblock"><h1 class="doxsection"><a class="anchor" id="compile-quick"></a>
+Quick start</h1>
+<div class="fragment"><div class="line">git clone https://github.com/lianqiw/maos.git ~/work/maos/src</div>
+<div class="line">cd ~/work/maos/src &amp;&amp; ./autogen.sh</div>
+<div class="line">mkdir ~/work/maos/optim &amp;&amp; cd ~/work/maos/optim</div>
+<div class="line">../src/configure</div>
+<div class="line">make -j8</div>
+<div class="line">make check   #optional: run the unit tests</div>
+<div class="line">bin/maos     #run the default simulation (TMT NFIRAOS)</div>
+</div><!-- fragment --><p>The sections below explain each step and the available options.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-prereq"></a>
+Prerequisites</h1>
+<p>MAOS runs on POSIX platforms: Linux and macOS are built and tested in continuous integration. Windows users can use WSL. The BSDs may work but are not tested.</p>
+<p>Required:</p>
 <ul>
-<li>Posix compatible platform: Linux, macOS, or WSL for windows. BSDs may work but are not actively verified.</li>
-<li>C11 compliant compiler (GCC, clang, or icx).</li>
-<li>System utils: make, cmake, tar, bzip2, wget or curl</li>
-<li>If compile from git repo, autotools (autoconf, automake, libtool) are needed.</li>
-<li>FFTW version 3. Will download from MAOS site if not available in the system.</li>
-<li>Optimized blas and lapack. Blas and lapack can usually be installed through the linux distribution official repository. Will download from MAOS site if not available in the system. use &ndash;enable-mkl to force using Inte MKL.</li>
-<li>Cholmod. For sparse matrix cholesky factorization. Will download from MAOS site if not available in the system.</li>
-<li>(Optional) CUDA. For GPU acceleration.</li>
-<li>(Optional) GTK+. For drawdaemon and monitor.</li>
-<li>(Optional) libwebsockets. For web based job monitoring. It requires <span class="tt">cmake</span> to compile. Will download from MAOS site if not available in the system.</li>
-<li>(Optional) CMocka. For unit testing.</li>
-<li>(Optional) Doxygen. For generating documentation (this website)</li>
+<li>A C11 compiler with GNU extensions: GCC, Clang (including Apple Clang), or the Intel compilers (icx or the classic icc). A C++ compiler (<span class="tt">g++</span> or <span class="tt">clang++</span>) can also be used, see <a class="el" href="#compile-cpp">C++ build</a>.</li>
+<li><span class="tt">make</span>, <span class="tt">tar</span>, <span class="tt">bzip2</span>, <span class="tt">which</span>, and <span class="tt">curl</span> or <span class="tt">wget</span> (used by <span class="tt">configure</span> to download missing libraries).</li>
+<li>Python 3. It is used during the build to generate the MATLAB interface source <span class="tt">mex/aolib.c</span>.</li>
+<li>When building from the git repository: autoconf, automake, and libtool.</li>
+<li>zlib, BLAS and LAPACK, FFTW 3, and CHOLMOD (SuiteSparse). <span class="tt">configure</span> downloads FFTW and CHOLMOD (and Intel MKL as BLAS/LAPACK on x86-64 Linux) when they are not found, see <a class="el" href="#compile-deps">External libraries</a>. zlib and BLAS/LAPACK should be installed from the system package manager.</li>
 </ul>
-<p>In linux, use the native package manager (apt for Debian/Ubuntu, rpm for Fedora/Centos/RHEL and derivatives) to install.</p>
-<p>In macOS, it is convenient to use homebrew (<a href="https://brew.sh/">https://brew.sh/</a>) to install.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md9"></a>
-Download the code</h2>
-<p>We recommend using different folders to 1) store the source code, 2) compile the code (different directory can be used for different compiling options), and 3) run simulations.</p>
-<h3 class="doxsection"><a class="anchor" id="autotoc_md10"></a>
-Option 1 (preferred)</h3>
-<p>The preferred method is to use the always up-to-data Git version: </p><div class="fragment"><div class="line">cd ~/work/programming</div>
-<div class="line">git clone https://github.com/lianqiw/maos.git maos</div>
-<div class="line">cd maos</div>
+<p>Optional:</p>
+<ul>
+<li>CUDA toolkit 7.0 or later: GPU acceleration, see <a class="el" href="#compile-gpu">GPU acceleration</a>.</li>
+<li>GTK 3 or GTK 4 (GTK 2 is still accepted) with cairo: the <span class="tt">drawdaemon</span> and <span class="tt">monitor</span> programs, see <a class="el" href="#compile-gui">Graphical user interface</a>. libnotify enables desktop notifications in <span class="tt">monitor</span>. On macOS, gtk-mac-integration is used if found.</li>
+<li>CMocka: unit tests. Downloaded if not found.</li>
+<li>MATLAB: the mex interface, see <a class="el" href="#compile-mex">MATLAB mex interface</a>.</li>
+<li>zstd (1.5 or later): reading and writing zstd compressed files.</li>
+<li>OpenSSL: HTTPS for the browser based monitor.</li>
+<li>libwebsockets: an additional websocket server, see <a class="el" href="#compile-browser">Browser based monitor</a>. Requires <span class="tt">cmake</span> when it has to be compiled from source.</li>
+<li>Doxygen: building this manual with <span class="tt">make doc</span>.</li>
+</ul>
+<p>On Debian/Ubuntu, the libraries used in continuous integration are installed with </p><div class="fragment"><div class="line">sudo apt-get install autoconf automake libtool make bzip2 zlib1g-dev \</div>
+<div class="line">  libfftw3-dev libsuitesparse-dev libcmocka-dev libopenblas-openmp-dev</div>
+</div><!-- fragment --><p> Add <span class="tt">libgtk-3-dev</span> (or <span class="tt">libgtk-4-dev</span>) for the graphical tools and <span class="tt">nvidia-cuda-toolkit</span> for GPU support. On Fedora/RHEL, use <span class="tt">dnf</span> with the corresponding <span class="tt">-devel</span> packages (e.g., <span class="tt">fftw-devel</span>, <span class="tt">suitesparse-devel</span>, <span class="tt">openblas-devel</span>). On macOS, use Homebrew (<a href="https://brew.sh/">https://brew.sh/</a>): </p><div class="fragment"><div class="line">brew install autoconf automake libtool make fftw suite-sparse cmocka libomp gtk4 libwebsockets</div>
+</div><!-- fragment --><p> If <span class="tt">autoreconf</span> is missing, <span class="tt">autogen.sh</span> offers to install the basic tools with <span class="tt">apt</span>, <span class="tt">dnf</span>, <span class="tt">brew</span>, or <span class="tt">port</span>.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-download"></a>
+Download the code</h1>
+<p>We recommend separate folders for 1) the source code, 2) the build (one folder per set of build options), and 3) running simulations. In this page <span class="tt">$src_dir</span> refers to the source folder.</p>
+<h2 class="doxsection"><a class="anchor" id="compile-git"></a>
+Git (preferred)</h2>
+<p>The git repository is always up to date: </p><div class="fragment"><div class="line">cd ~/work/maos</div>
+<div class="line">git clone https://github.com/lianqiw/maos.git src</div>
+<div class="line">cd src</div>
 <div class="line">./autogen.sh</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md11"></a>
-Option 2 (snapshot)</h3>
-<p>Download the tag version that is not formally released:</p>
-<div class="fragment"><div class="line">cd ~/work/programming</div>
-<div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/v2.8.tar.gz -o maos.tar.gz</div>
-<div class="line">tar xvf maos.tar.gz</div>
-<div class="line">cd maos-2.8</div>
+</div><!-- fragment --><p> Run <span class="tt">git pull</span> to update. <span class="tt">autogen.sh</span> (which calls <span class="tt">autoreconf -i</span>) is needed after a fresh clone; afterwards <span class="tt">make</span> reruns the autotools by itself when <span class="tt">configure.ac</span> or a <span class="tt">Makefile.am</span> changes.</p>
+<h2 class="doxsection"><a class="anchor" id="compile-snapshot"></a>
+Tagged snapshot</h2>
+<p>A tagged version, for example v3.4: </p><div class="fragment"><div class="line">cd ~/work/maos</div>
+<div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/v3.4.tar.gz -o maos-3.4.tar.gz</div>
+<div class="line">tar xf maos-3.4.tar.gz</div>
+<div class="line">cd maos-3.4</div>
 <div class="line">./autogen.sh</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md12"></a>
-Option 3 (released)</h3>
-<p>There are released version that comes with <span class="tt">configure</span>. Use this if the utilities mentioned above are not available. In this case, do not try to update the <span class="tt">configure.ac</span> file which will trigger regeneration of <span class="tt">configure</span> and require these utilities.</p>
-<div class="fragment"><div class="line">cd ~/work/programming</div>
-<div class="line">curl -L https://github.com/lianqiw/maos/archive/refs/tags/maos-2.8.0.tar.gz</div>
-<div class="line">cd maos_2.8.0</div>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="compile-release"></a>
+Release tarball</h2>
+<p>Some releases include a source tarball that already contains <span class="tt">configure</span>, so the autotools are not needed. Do not modify <span class="tt">configure.ac</span> or <span class="tt">Makefile.am</span> in this case; that would trigger regeneration of <span class="tt">configure</span> and require the autotools. </p><div class="fragment"><div class="line">cd ~/work/maos</div>
+<div class="line">curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos-2.8.0.tar.gz -o maos-2.8.0.tar.gz</div>
+<div class="line">tar xf maos-2.8.0.tar.gz</div>
+<div class="line">cd maos-2.8.0</div>
 <div class="line">export src_dir=$(pwd)</div>
-</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="autotoc_md13"></a>
-Option 4 (binary)</h3>
-<p>Instead of compiling the code, there are also pre-compiled binaries that can be downloaded. This option works the best when there is no desire to modify the code.</p>
-<div class="fragment"><div class="line">cd ~/work/maos</div>
-<div class="line">#choose one below:</div>
-<div class="line">#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_linux_amd64-2.8.0.tar.bz2 #for linux</div>
-<div class="line">#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_amd64-2.8.0.tar.bz2 #for macos </div>
-<div class="line">#curl -L https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_aarch64-2.8.0.tar.bz2 #for macos apple silicon</div>
-<div class="line">tar xvf maos_*.bz2</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md14"></a>
-Compile the Code</h2>
-<p>Next we create another folder, where we are going to compile the code. example:</p>
-<div class="fragment"><div class="line">cd ~/work/maos</div>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="compile-binary"></a>
+Pre-compiled binaries</h2>
+<p>Release v2.8 also provides pre-compiled binaries. They are older than the source code and do not include the job scheduler and monitor. </p><div class="fragment"><div class="line">cd ~/work/maos</div>
+<div class="line">#choose one of the following:</div>
+<div class="line">curl -LO https://github.com/lianqiw/maos/releases/download/v2.8/maos_linux_amd64-2.8.0.tar.bz2   #Linux x86-64</div>
+<div class="line">curl -LO https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_amd64-2.8.0.tar.bz2   #macOS Intel</div>
+<div class="line">curl -LO https://github.com/lianqiw/maos/releases/download/v2.8/maos_macos_aarch64-2.8.0.tar.bz2 #macOS Apple silicon</div>
+<div class="line">tar xf maos_*.tar.bz2</div>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="compile-build"></a>
+Build</h1>
+<p>MAOS is always built out of tree, in a folder different from the source: </p><div class="fragment"><div class="line">cd ~/work/maos</div>
 <div class="line">mkdir optim &amp;&amp; cd optim</div>
 <div class="line">$src_dir/configure</div>
-<div class="line">make -j4 #this will compile using 4 threads.</div>
-</div><!-- fragment --><p> You can replace <span class="tt">optim</span> with any directory name of your choice. The compiled executable is maos in the sub-folder <span class="tt">bin</span> of the compiling folder. You do not have to do <span class="tt">make install</span> to run the simulations, but if not, then you need to add <span class="tt">optim/bin</span> to your executable path (e.g. update your .bash_profile or .zshenv file <span class="tt">$PATH</span> variable).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md15"></a>
-Compiler options (Optional)</h2>
-<p>The default compiler for the system is used with optimization flags. There are a few optional switches or additional components that can be enabled when calling configure.</p>
-<p>To use a different compiler or enable debugging: </p><div class="fragment"><div class="line">$src_dir/configure CC=icc    #ICC compiler</div>
-<div class="line">$src_dir/configure CC=clang  #clang compiler. Also used for compiling cuda code if cuda is detected.</div>
-<div class="line">$src_dir/configure CC=gcc4.5 #use gcc4.5</div>
-<div class="line">$src_dir/configure --enable-debug #enable debugging (debug is not enabled by default)</div>
-<div class="line">$src_dir/configure --disable-openmp #Use pthreads instead of openmp (openmp is the default)</div>
-<div class="line">$src_dir/configure --disable-double #Use single precision (double is the default)</div>
-<div class="line">$src_dir/configure --disable-scheduler #disable the built-in scheduler (for CPU cluster with job management)</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md16"></a>
-GPU acceleration (Optional)</h2>
-<p>To enable GPU computing, first install nvidia graphics driver and cuda software development toolkit (SDK), and then issue the following command to ensure graphics configuration is correct: <code>nvidia-smi</code>. You should see all your nvidia gpus are listed. When <span class="tt">clang</span> is used as the C compiler, it will be used instead of <span class="tt">nvcc</span> to compute the <span class="tt">cuda</span> code.</p>
-<p>The configure can automatically detect cuda if <span class="tt">nvcc</span> is in the path, or if cuda is installed in <span class="tt">/usr/local/cuda</span>. For other locations, you need to pass the cuda directory to configure:</p>
-<p><span class="tt">$src_dir/configure --with-cuda=$cuda_dir</span></p>
-<p>When GPU compute is compiled in <span class="tt">maos</span> and Nvidia GPUs are available, <span class="tt">maos</span> will make use of all suitable GPUs to run simulation. If that is not desirable, the GPU compute can be disabled at run time by passing <span class="tt">-g-1</span> to <span class="tt">maos</span>. Different set of GPU can also be selected by passing one or multiple <span class="tt">-gi</span> or <span class="tt">-Gn</span>:</p>
-<div class="fragment"><div class="line">maos -g-1    #disable GPU compute</div>
-<div class="line">maos -g0 -g2 #Only use gpu 0 and 2</div>
-<div class="line">maos -G2     #Automatically choose 2 gpus.</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md17"></a>
-Matlab Mex Routines (Optional)</h2>
-<p>To compile mex routines for matlab, pass the matlab directory to configure if it is not in <code>$PATH:</code> </p>
-<div class="fragment"><div class="line">$src_dir/configure --with-matlab=$matlab_dir</div>
-</div><!-- fragment --><p>The compiled mex routines are in <code>mex</code> folder in the compilation directory.</p>
+<div class="line">make -j8</div>
+</div><!-- fragment --><p> You can replace <span class="tt">optim</span> with any name, and keep several build folders side by side with different options, for example: </p><div class="fragment"><div class="line">~/work/maos/src       #source code</div>
+<div class="line">~/work/maos/optim     #$src_dir/configure</div>
+<div class="line">~/work/maos/debug     #$src_dir/configure --enable-debug</div>
+<div class="line">~/work/maos/release   #$src_dir/configure --enable-release</div>
+<div class="line">~/work/maos/cpp       #$src_dir/configure CC=clang++</div>
+</div><!-- fragment --><p> At the end, <span class="tt">configure</span> prints a summary of the detected compiler, precision, OpenMP, CUDA, GTK, MATLAB, and Doxygen support. The details of all checks are in <span class="tt">config.log</span>.</p>
+<p>The programs are placed in the <span class="tt">bin</span> subfolder of the build folder:</p>
 <ul>
-<li>The <code>read()</code> and <code>write()</code> are for handling .bin and .fits files.</li>
-<li>The <code>aolib()</code> exports many useful routines for use in <code>matlab</code>. Run <code>aolib()</code> to see the list of available functions.</li>
-<li>The <code>maos()</code> can be used to run maos within matlab. Run <code>maos()</code> to see instructions.</li>
+<li><span class="tt">maos</span>: the simulator. See <a class="el" href="../../da/dc3/page30_run.html">Run simulations</a>.</li>
+<li><span class="tt">skyc</span>: the sky coverage post-processor. See <a class="el" href="../../d5/d4c/skycoverage.html">Sky Coverage</a>.</li>
+<li><span class="tt">scheduler</span>: the job scheduler and web server for the monitors. It is started automatically by <span class="tt">maos</span> (not built with <span class="tt">--disable-scheduler</span> or <span class="tt">--enable-release</span>).</li>
+<li><span class="tt">monitor</span> and <span class="tt">drawdaemon</span>: the GTK job monitor and plotting program (only when GTK is found; <span class="tt">monitor</span> also needs the scheduler).</li>
+<li><span class="tt">drawres</span>, <span class="tt">drawbin</span>: plot results or <span class="tt">.bin</span> files with <span class="tt">drawdaemon</span>.</li>
+<li><span class="tt">bin2fits</span>, <span class="tt"><a class="el" href="../../d0/ddd/cell_8h.html#a0bea79ccbc952d08c41fdb768002169b">readbin</a></span>, <span class="tt">psfiris</span>, <span class="tt">psfgc</span>, <span class="tt">mvm_cpu</span>, <span class="tt">ethtest</span>: utilities. <span class="tt">load</span> and <span class="tt">record_cpu</span> are built on Linux only.</li>
+<li><span class="tt">aolib.so</span>: the <span class="tt">lib</span> routines as a shared library for Python, see <a class="el" href="#compile-python">Python scripts</a>.</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md18"></a>
-Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon (Optional)</h2>
-<p>For macOS, it is the simplest to install gtk and gtk-mac-integration (only for gtk+-3) using homebrew (or macport). For manual install, follow the instructions on <a href="https://www.gtk.org/docs/installations/">page</a> to install gtk+ for osx and configure the envirionmental parameters. Make sure <span class="tt">pkg-config</span> is in the <span class="tt">PATH</span>. Version 2, 3, and 4 are supported. Highest version is chosen unless explicitly disabled (see below).</p>
-<p>Now rerun <span class="tt">autogen.sh</span>, <span class="tt">configure</span> and <span class="tt">make</span>. Monitor and drawdaemon should appear in <span class="tt">bin</span> folder now. To select gtk version when multiple ones are available: </p><div class="fragment"><div class="line">$src_dir/configure --disable-gtk-3 #disable gtk-3</div>
-<div class="line">$src_dir/configure --disable-gtk-4 #disable gtk-4 </div>
-</div><!-- fragment --> <h1 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
-Browser User Interface</h1>
-<p>When <span class="tt">maos</span> is compiled with <span class="tt">libwebsockets</span>, there is a browser interface that can manage maos jobs, as well as plot current running jobs. The URL for this interface can be found in the output when <span class="tt">maos</span> runs. A tutorial is available at <a href="https://youtu.be/2gWJ9WdUk2Y">Youtube</a>.</p>
+<p>On macOS, application bundles <span class="tt">drawdaemon.app</span> and <span class="tt">monitor.app</span> are also created in <span class="tt">bin</span>. Running <span class="tt">make</span> inside <span class="tt">bin</span> rebuilds the whole build folder.</p>
+<p><span class="tt">make install</span> is not needed. Add the <span class="tt">bin</span> folder to <span class="tt">PATH</span> instead (e.g., in <span class="tt">.bash_profile</span> or <span class="tt">.zshenv</span>). The executables find the configuration files in the source folder (<span class="tt">$src_dir/config</span>), whose path is compiled in. If the source folder is moved, set <span class="tt">MAOS_CONFIG_PATH</span> to the folder that contains <span class="tt">config</span> (see <a class="el" href="../../da/dc3/page30_run.html">Run simulations</a>). The browser monitor also serves its files from <span class="tt">$src_dir/tools</span>, so keep the source folder in place.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-options"></a>
+Configure options</h1>
+<p>Options are passed to <span class="tt">configure</span>. The most useful ones are:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Option  </th><th class="markdownTableHeadNone">Default  </th><th class="markdownTableHeadNone">Effect  </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-debug</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Compile with <span class="tt">-g3 -O0</span> and enable debug checks. The default is <span class="tt">-g -O3 -mtune=native</span>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--enable-gcov</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Code coverage with gcov (implies <span class="tt">--enable-debug</span>). <span class="tt">make check</span> then produces an lcov report if lcov is installed.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-release</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Build for compatibility: disables the scheduler (hence <span class="tt">monitor</span> and the browser monitor). On macOS, targets macOS 11.0 or later.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-scheduler</span>  </td><td class="markdownTableBodyNone">enabled  </td><td class="markdownTableBodyNone">Do not build the job scheduler and <span class="tt">monitor</span>. Useful on clusters with their own job management.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--disable-double</span> (or <span class="tt">--enable-single</span>)  </td><td class="markdownTableBodyNone">double  </td><td class="markdownTableBodyNone">Use single precision on both CPU and GPU. See <a class="el" href="#compile-single">Single precision</a>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-openmp</span>  </td><td class="markdownTableBodyNone">enabled if found  </td><td class="markdownTableBodyNone">Do not use OpenMP; only POSIX threads are used.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-openmp</span>  </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone">On macOS, download or compile libomp if it is not found.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-threadlib</span>  </td><td class="markdownTableBodyNone">threaded  </td><td class="markdownTableBodyNone">Use the serial versions of FFTW, MKL and OpenBLAS.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-mkl</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">On x86-64 Linux, prefer Intel MKL for BLAS/LAPACK and download it if not installed.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-dlong</span>  </td><td class="markdownTableBodyNone">long if available  </td><td class="markdownTableBodyNone">Do not use the long integer (<span class="tt">cholmod_l_*</span>) CHOLMOD interface.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--disable-binary</span>  </td><td class="markdownTableBodyNone">enabled  </td><td class="markdownTableBodyNone">Compile missing libraries from source instead of downloading pre-compiled ones.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-download</span>  </td><td class="markdownTableBodyNone">enabled  </td><td class="markdownTableBodyNone">Do not download anything. Missing required libraries cause an error.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--with-cuda[=DIR]</span> / <span class="tt">--without-cuda</span>  </td><td class="markdownTableBodyNone">auto  </td><td class="markdownTableBodyNone">CUDA toolkit location, or disable CUDA. See <a class="el" href="#compile-gpu">GPU acceleration</a>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--with-ccbin=CC</span>  </td><td class="markdownTableBodyNone"><span class="tt">$CC</span>  </td><td class="markdownTableBodyNone">Host compiler passed to <span class="tt">nvcc -ccbin</span>.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-cuda-double</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Use double precision on the GPU.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--enable-nvcc</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Use <span class="tt">nvcc</span> for the CUDA code even when <span class="tt">CC</span> is clang.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--with-matlab[=DIR]</span> / <span class="tt">--without-matlab</span>  </td><td class="markdownTableBodyNone">auto  </td><td class="markdownTableBodyNone">MATLAB location for the mex interface, or disable it. See <a class="el" href="#compile-mex">MATLAB mex interface</a>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-gtk-3</span>, <span class="tt">--disable-gtk-4</span>, <span class="tt">--enable-gtk-4</span>  </td><td class="markdownTableBodyNone">GTK 3  </td><td class="markdownTableBodyNone">Select the GTK version. See <a class="el" href="#compile-gui">Graphical user interface</a>.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-cmocka</span> / <span class="tt">--disable-cmocka</span>  </td><td class="markdownTableBodyNone">enabled  </td><td class="markdownTableBodyNone">Unit tests with CMocka.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--disable-zstd</span>  </td><td class="markdownTableBodyNone">enabled if found  </td><td class="markdownTableBodyNone">Do not use zstd compression.  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-libwebsockets</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Also serve the browser monitor with libwebsockets.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--with-openssl=DIR</span>  </td><td class="markdownTableBodyNone">auto  </td><td class="markdownTableBodyNone">OpenSSL location (HTTPS for the browser monitor).  </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><span class="tt">--enable-doxygen</span>  </td><td class="markdownTableBodyNone">off  </td><td class="markdownTableBodyNone">Download doxygen (and a TeX distribution) if not installed, for <span class="tt">make doc</span>.  </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><span class="tt">--prefix=DIR</span>  </td><td class="markdownTableBodyNone"><span class="tt">~/.aos</span>  </td><td class="markdownTableBodyNone">Where downloaded and compiled libraries are installed.  </td></tr>
+</table>
+<p>Run <span class="tt">$src_dir/configure --help</span> for the complete list. To change options, it is simplest to configure again in a new, empty build folder.</p>
+<h2 class="doxsection"><a class="anchor" id="compile-compilers"></a>
+Compilers</h2>
+<p>The default compiler of the system is used. Select another one with <span class="tt">CC</span>: </p><div class="fragment"><div class="line">$src_dir/configure CC=clang  #clang. Also compiles the CUDA code, see below.</div>
+<div class="line">$src_dir/configure CC=icx    #Intel oneAPI compiler</div>
+<div class="line">$src_dir/configure CC=gcc-14 #a specific gcc version</div>
+</div><!-- fragment --><p> The environment variable <span class="tt">MAOS_CC</span> is used as the compiler when <span class="tt">CC</span> is not set. <span class="tt">configure</span> recognizes GCC, Clang, and the Intel compilers from the output of <span class="tt">$CC --version</span>, and stops with <span class="tt">Compiler ... is unknown</span> for other compilers.</p>
+<h2 class="doxsection"><a class="anchor" id="compile-cpp"></a>
+C++ build</h2>
+<p>The C code can also be compiled as C++, which is tested in continuous integration on macOS: </p><div class="fragment"><div class="line">$src_dir/configure CC=clang++   #or CC=g++</div>
+</div><!-- fragment --><p> C++ mode is enabled when <span class="tt">CC</span> (or <span class="tt">CFLAGS</span>) contains <span class="tt">++</span>. New code must compile in both modes.</p>
+<h2 class="doxsection"><a class="anchor" id="compile-single"></a>
+Single precision</h2>
+<p>By default the CPU code uses double precision and the GPU code uses single precision. <span class="tt">--disable-double</span> (or <span class="tt">--enable-single</span>) switches the CPU code to single precision too, which reduces memory usage and run time. It requires the single precision FFTW library (<span class="tt">fftw3f</span>) and disables the MATLAB mex interface. <span class="tt">--enable-cuda-double</span> switches the GPU code to double precision; it cannot be combined with single precision CPU code. The precision in use is printed at startup of <span class="tt">maos</span>, e.g., <span class="tt">CPU(F64,+O3) with CUDA(v120,F32)</span>.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-deps"></a>
+External libraries</h1>
+<p>For FFTW, CHOLMOD, CMocka, and libwebsockets (when enabled), <span class="tt">configure</span> tries in turn:</p>
+<ol type="1">
+<li>The library already installed in the system (found by <span class="tt">pkg-config</span> or the default search paths).</li>
+<li>A pre-compiled library downloaded from <a href="https://github.com/lianqiw/files">https://github.com/lianqiw/files</a> (skipped with <span class="tt">--disable-binary</span>).</li>
+<li>Compiling the library from the source downloaded from the same place.</li>
+</ol>
+<p>For BLAS/LAPACK, it tries MKL (x86-64 Linux only), then the generic <span class="tt">-llapack -lblas</span> (which on macOS is the Accelerate framework), then OpenBLAS (threaded first), and on x86-64 Linux downloads MKL as the last resort (or first with <span class="tt">--enable-mkl</span>). zlib is compiled from source if missing.</p>
+<p>The downloads are kept in <span class="tt">external/downloads</span> of the build folder. Libraries are installed into the prefix (default <span class="tt">~/.aos</span>): headers in <span class="tt">~/.aos/include</span> and libraries in <span class="tt">~/.aos/lib64</span> (<span class="tt">lib&lt;suffix&gt;</span> in general, depending on the platform). This location is added to the run path of the executables, so do not delete it. Compilation logs are in <span class="tt">external/compile.log</span> and <span class="tt">external/compile_NAME.log</span>. <span class="tt">make clean</span> removes the <span class="tt">external</span> folder.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-gpu"></a>
+GPU acceleration</h1>
+<p>Install the Nvidia driver and the CUDA toolkit, and check with <span class="tt">nvidia-smi</span> that all GPUs are listed. <span class="tt">configure</span> enables CUDA automatically when <span class="tt">nvcc</span> is in <span class="tt">PATH</span> or in <span class="tt">/usr/local/cuda/bin</span>. For other locations, pass the CUDA folder (the one that contains <span class="tt">bin/nvcc</span>): </p><div class="fragment"><div class="line">$src_dir/configure --with-cuda=$cuda_dir</div>
+<div class="line">$src_dir/configure --with-cuda=/usr --with-ccbin=gcc-12  #as in CI: Ubuntu&#39;s CUDA 12.0 supports gcc up to 12</div>
+<div class="line">$src_dir/configure --without-cuda   #disable CUDA</div>
+</div><!-- fragment --><p>Notes:</p>
+<ul>
+<li>CUDA toolkit 7.0 or later is required.</li>
+<li>The code is compiled for a single GPU architecture: the lowest compute capability reported by <span class="tt">nvidia-smi</span>, limited to the newest one supported by the toolkit. When <span class="tt">nvidia-smi</span> is not available (e.g., on a build machine without GPU), the oldest architecture supported by the toolkit is used (compute capability 5.0 for CUDA 12, 7.5 for CUDA 13). <span class="tt">configure</span> stops if the GPU is older than what the toolkit supports.</li>
+<li>When <span class="tt">CC</span> is clang, clang compiles the CUDA code instead of <span class="tt">nvcc</span>. Use <span class="tt">--enable-nvcc</span> to use <span class="tt">nvcc</span> anyway. With <span class="tt">nvcc</span>, the host compiler is <span class="tt">$CC</span>, or the one given by <span class="tt">--with-ccbin</span>. Use the latter when <span class="tt">CC</span> is newer than what <span class="tt">nvcc</span> supports.</li>
+<li>The GPU code uses single precision unless <span class="tt">--enable-cuda-double</span> is given.</li>
+</ul>
+<p>When <span class="tt">maos</span> is compiled with CUDA and Nvidia GPUs are available, it uses all suitable GPUs. GPUs are selected at run time with <span class="tt">-g</span> or <span class="tt">-G</span>: </p><div class="fragment"><div class="line">maos -g-1    #do not use GPU</div>
+<div class="line">maos -g0 -g2 #only use GPU 0 and 2</div>
+<div class="line">maos -G2     #automatically choose 2 GPUs</div>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="compile-mex"></a>
+MATLAB mex interface</h1>
+<p>The mex routines are built automatically when MATLAB is found: either <span class="tt">matlab</span> is in <span class="tt">PATH</span>, or MATLAB is installed in <span class="tt">/Applications/MATLAB*.app</span>, <span class="tt">~/Applications/MATLAB*.app</span>, <span class="tt">/opt/MATLAB/*</span>, or <span class="tt">/usr/local/share/MATLAB/*</span>. Otherwise, pass the MATLAB folder: </p><div class="fragment"><div class="line">$src_dir/configure --with-matlab=$matlab_dir  #folder containing bin/mex</div>
+<div class="line">$src_dir/configure --without-matlab           #disable mex</div>
+</div><!-- fragment --><p> The mex interface is not available with single precision, or when the MATLAB architecture does not match the build. The compiled routines are in the <span class="tt">mex</span> folder of the build folder:</p>
+<ul>
+<li><span class="tt">read()</span> and <span class="tt">write()</span> read and write <span class="tt">.bin</span> and <span class="tt">.fits</span> files.</li>
+<li><span class="tt">aolib()</span> exports many <span class="tt">lib</span> routines to MATLAB. Run <span class="tt">aolib()</span> to see the list of available functions. Its source <span class="tt">mex/aolib.c</span> is generated by <span class="tt">scripts/lib2mex.py</span> from the headers.</li>
+<li><span class="tt">maos()</span> runs <span class="tt">maos</span> within MATLAB. Run <span class="tt">maos()</span> to see the instructions.</li>
+</ul>
+<p>The <span class="tt">scripts</span> folder also contains <span class="tt">readbin.m</span> and <span class="tt">writebin.m</span>, pure MATLAB routines for <span class="tt">.bin</span> files that need no compilation.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-test"></a>
+Unit tests and documentation</h1>
+<p>When CMocka is available (it is downloaded if needed), the unit tests in <span class="tt">test/cmocka_*.c</span> are built and run with </p><div class="fragment"><div class="line">make check                               #all unit tests</div>
+<div class="line">make -C test check TESTS=cmocka_mat      #a single test</div>
+</div><!-- fragment --><p> The results are summarized in <span class="tt">docs/unittest_status.md</span> of the build folder (see <a class="el" href="../../d9/d6e/page96_unittest.html">Unit Test Status</a>). With <span class="tt">--enable-gcov</span>, <span class="tt">make check</span> also generates a line coverage report in <span class="tt">test/coverage</span> if <span class="tt">lcov</span> is installed.</p>
+<p>The end-to-end regression test runs a set of short simulations and compares the wavefront errors against reference values: </p><div class="fragment"><div class="line">cd bin</div>
+<div class="line">$src_dir/scripts/maos_check.sh 5     #5 m telescope. Also 10 or 30.</div>
+<div class="line">$src_dir/scripts/maos_check.sh 5 -g-1 #force CPU</div>
+</div><!-- fragment --><p>When doxygen is found (or <span class="tt">--enable-doxygen</span> is used), <span class="tt">make doc</span> runs the unit tests and builds this manual into <span class="tt">doxygen-doc/html</span> of the build folder.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-ci"></a>
+Continuous integration</h1>
+<p>The GitHub workflows in <span class="tt">.github/workflows</span> build MAOS on every push:</p>
+<ul>
+<li>Linux (Ubuntu): GCC with <span class="tt">--enable-release</span> and CUDA (Ubuntu's toolkit with <span class="tt">--with-ccbin=gcc-12</span>), then <span class="tt">make check</span>, <span class="tt">make doc</span>, and <span class="tt">maos_check.sh 5</span> (on CPU, as the runners have no GPU). Then Clang with <span class="tt">--enable-release --without-cuda</span> and <span class="tt">make check</span>.</li>
+<li>macOS: Apple Clang with <span class="tt">--enable-release --disable-binary</span>, then <span class="tt">make check</span>.</li>
+<li>macOS in C++ mode: <span class="tt">CC=clang++ --disable-binary</span>, then <span class="tt">make check</span>.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="compile-trouble"></a>
+Troubleshooting</h1>
+<ul>
+<li>Look at the summary at the end of the <span class="tt">configure</span> output and at <span class="tt">config.log</span> to see which libraries were found.</li>
+<li><span class="tt">Please install zlib</span>, <span class="tt">Please install blas/lapack</span>: install them with the package manager. MKL is downloaded automatically only on x86-64 Linux.</li>
+<li><span class="tt">FFTW library is not found</span>, <span class="tt">CHOLMOD library is not found</span>: the download or compilation failed. Check the network access (<span class="tt">curl</span> or <span class="tt">wget</span> is needed) and the logs in <span class="tt">external/</span>, or install the libraries from the package manager (<span class="tt">libfftw3-dev</span>, <span class="tt">libsuitesparse-dev</span>).</li>
+<li><span class="tt">Require at least CUDA toolkit 7.0</span>: upgrade CUDA or use <span class="tt">--without-cuda</span>.</li>
+<li><span class="tt">CUDA version supports compute capability X - Y, but device is at Z</span>: the GPU is too old for the installed CUDA toolkit. Use an older toolkit or <span class="tt">--without-cuda</span>.</li>
+<li><span class="tt">nvcc</span> fails with an unsupported host compiler: pass a supported one with <span class="tt">--with-ccbin</span>.</li>
+<li><span class="tt">mex not found at ...</span>: pass <span class="tt">--with-matlab=DIR</span> or <span class="tt">--without-matlab</span>.</li>
+<li>No OpenMP on macOS: Apple Clang needs <span class="tt">libomp</span> (e.g., <span class="tt">brew install
+  libomp</span>), or use <span class="tt">--enable-openmp</span> to download it.</li>
+<li><span class="tt">monitor</span> or <span class="tt">scheduler</span> missing: they are not built with <span class="tt">--enable-release</span> or <span class="tt">--disable-scheduler</span>; <span class="tt">monitor</span> also needs GTK.</li>
+<li>Executables fail to find shared libraries after <span class="tt">~/.aos</span> (or the <span class="tt">--prefix</span> folder) was removed: configure and build again.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="compile-browser"></a>
+Browser based monitor</h1>
+<p>The <span class="tt">scheduler</span>, which is started automatically by <span class="tt">maos</span>, includes a web server that serves a browser interface to manage <span class="tt">maos</span> jobs and plot their data in real time. <span class="tt">maos</span> prints its address at startup, for example <span class="tt"><a href="http://localhost:10123">http://localhost:10123</a></span>. A tutorial is available on <a href="https://youtu.be/2gWJ9WdUk2Y">YouTube</a>.</p>
+<ul>
+<li>The port is the number in <span class="tt">~/.aos/port</span>. If that file does not exist, the port is computed from the user name (between 10000 and 12287).</li>
+<li>The page is protected with HTTP basic authentication. The user name is your login name and the password is the first line of <span class="tt">~/.aos/htpasswd</span>, which is created with a random password on the first connection.</li>
+<li>When OpenSSL was found at configure time and a certificate and key exist in <span class="tt">~/.aos/HOSTNAME.crt</span> and <span class="tt">~/.aos/HOSTNAME.key</span> (or <span class="tt">~/.aos/Server.crt</span> and <span class="tt">~/.aos/Server.key</span>), the same port also accepts HTTPS.</li>
+<li>With <span class="tt">--enable-libwebsockets</span>, libwebsockets serves the same interface on port number + 100.</li>
+<li>The page files (<span class="tt">monitor.html</span>, <span class="tt">monitor.js</span>, ...) are read from <span class="tt">$src_dir/tools</span>.</li>
+</ul>
 <p><a href="https://youtu.be/2gWJ9WdUk2Y"><img src="../../monitor-html.jpg" alt="Browser User Interface" width="60%" class="inline"/></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md20"></a>
-Graphical User Interface</h1>
-<p>When GTK+ libraries are found in the system, additional executables will be compiled, <code>drawdaemon</code>, <code>drawres</code>, <code>drawbin</code> and <code>monitor</code> in the <code>bin</code> folder.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-gui"></a>
+Graphical user interface</h1>
+<p>When GTK is found, <span class="tt">monitor</span> and <span class="tt">drawdaemon</span> are built in <span class="tt">bin</span>. <span class="tt">drawdaemon</span> also needs cairo. By default GTK 3 is preferred, then GTK 4, then GTK 2. To select a version when several are installed: </p><div class="fragment"><div class="line">$src_dir/configure --enable-gtk-4   #prefer gtk4</div>
+<div class="line">$src_dir/configure --disable-gtk-3  #do not use gtk3</div>
+<div class="line">$src_dir/configure --disable-gtk-4  #do not use gtk4</div>
+</div><!-- fragment --><p> On macOS, install GTK with Homebrew (or MacPorts), together with gtk-mac-integration for GTK 3. For a manual installation, follow <a href="https://www.gtk.org/docs/installations/">https://www.gtk.org/docs/installations/</a> and make sure <span class="tt">pkg-config</span> is in <span class="tt">PATH</span> and finds GTK. Then rerun <span class="tt">configure</span> and <span class="tt">make</span>.</p>
 <ul>
-<li>The plotting utility <code>drawdaemon</code> is launched automatically when plotting commands are issued in simulation (<span class="tt">maos plot.all=1</span>) or in post processing with <code>drawres</code> or <code>drawbin</code> </li>
-<li>The monitoring utility <code>monitor</code> can be used to monitor jobs in this and linked machines.</li>
-<li>The <code>drawres</code> can be used to automatically plot the results folder.</li>
-<li>The <code>drawbin</code> can be used to automatically plot the OPDs or maps.</li>
+<li><span class="tt">drawdaemon</span> plots data sent by <span class="tt">maos</span>, <span class="tt">drawres</span>, or <span class="tt">drawbin</span>. It is launched automatically when plotting is requested.</li>
+<li><span class="tt">monitor</span> monitors jobs on this and other machines.</li>
+<li><span class="tt">drawres</span> plots the results in result folders.</li>
+<li><span class="tt">drawbin</span> plots OPDs or maps stored in <span class="tt">.bin</span> files (<span class="tt">drawbin loc.bin
+  opd.bin</span> or <span class="tt">drawbin map.bin</span>).</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md21"></a>
+<h2 class="doxsection"><a class="anchor" id="compile-monitor"></a>
 Monitor</h2>
-<p>In order to use monitor to monitor jobs in different machines, follow these steps:</p>
-<p>Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor.</p>
+<p>To monitor jobs on several machines, create the following files in the <span class="tt">.aos</span> folder of your home folder on all the machines:</p>
 <ul>
-<li><span class="tt">~/.aos/hosts</span> Each line contains a machine's hostname you want to monitor. It also supports the full format <span class="tt">prettyname=full_hostname:port</span></li>
-<li><span class="tt">~/.aos/port</span> contains the port you want the <span class="tt">scheduler</span> to bind to so that the monitor can connect to it. Any non-privileged port numbers are fine (like 10000). Different users should have different port number. The port has to be the same on all the machines unless explicitly specified in <span class="tt">hosts</span>. If not set, the number will be automatically computed based on username. Make sure the firewall allows them.</li>
-<li>After modifying the two files above, the <span class="tt">scheduler</span> should be killed and restarted (by simply running <span class="tt">maos</span> once.)</li>
-<li>Please be aware that no authentication is performed. The user should make sure such ports are protected.</li>
-<li>When <span class="tt">libwebsockets</span> is enabled, there is also a browser based interface. The address is printed in the beginning of <span class="tt">maos</span> log message.</li>
+<li><span class="tt">~/.aos/hosts</span>: one machine per line, as <span class="tt">hostname</span> or <span class="tt">shortname=hostname:port</span>. Lines starting with <span class="tt">#</span> are ignored.</li>
+<li><span class="tt">~/.aos/port</span>: the port that the <span class="tt">scheduler</span> listens on, so that the monitor can connect to it. Any non-privileged port (e.g., 10000) works, but different users on the same machine need different ports. The port must be the same on all machines unless it is given in <span class="tt">hosts</span>. If this file does not exist, the port is computed from the user name. Make sure the firewall allows it.</li>
 </ul>
+<p>After changing these files, kill the running <span class="tt">scheduler</span>; <span class="tt">maos</span> starts a new one when it runs. The GTK monitor connection itself is not authenticated, so protect the port (e.g., with a firewall) on shared networks.</p>
 <p><img src="../../monitor-gtk3.jpg" alt="Monitor" width="60%" class="inline"/></p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md22"></a>
+<h2 class="doxsection"><a class="anchor" id="compile-drawdaemon"></a>
 Drawdaemon</h2>
-<p>Once the monitor is running, it will display running jobs on each connected host. Right click on a running job and select <span class="tt">Plot selected jobs</span> will launch drawdaemon and start plotting the telemetry data in realtime. This works for local and remote host. Multiple drawdaemon windows can be started for the same or different jobs.</p>
-<p>An alternative way to launch drawdaemon is to include <code>plot.setup=1</code> <code>plot.run=1</code> or <code>plot.all=1</code> in maos command line.</p>
-<p>Remote plotting: when a job is running remotely or in a headless machine, and <span class="tt">drawres</span>, <span class="tt">drawbin</span>, or <span class="tt">maos</span> plotting is issued, the <span class="tt">monitor</span> can open a <span class="tt">drawdaemon</span> in the local computer and plot remotely.</p>
+<p>The monitor lists the jobs on each connected host. Select a running job and choose <span class="tt">Plot</span> from the right click menu to launch <span class="tt">drawdaemon</span> and plot the telemetry data in real time. This works for local and remote hosts. Several <span class="tt">drawdaemon</span> windows can be opened for the same or different jobs.</p>
+<p><span class="tt">drawdaemon</span> is also launched when plotting is enabled on the <span class="tt">maos</span> command line with <span class="tt">plot.setup=1</span>, <span class="tt">plot.run=1</span>, or <span class="tt">plot.all=1</span>.</p>
+<p>Remote plotting: when <span class="tt">maos</span>, <span class="tt">drawres</span>, or <span class="tt">drawbin</span> runs on a remote or headless machine without a display, a running <span class="tt">monitor</span> connected to that machine opens <span class="tt">drawdaemon</span> on the local computer.</p>
 <p><img src="../../drawdaemon-gtk3.jpg" alt="Drawdaemon" width="60%" class="inline"/></p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md23"></a>
+<h2 class="doxsection"><a class="anchor" id="compile-drawres"></a>
 Plotting results</h2>
-<p><span class="tt">drawres result_folder</span> can be used to plot the results. Wildcards are supported to match many folders. It will launch drawdaemon using an active monitor in a remote machine if the current shell does not have DISPLAY set. This can be used to view results remotely.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md24"></a>
-Python Scripts</h1>
-<p>MAOS comes with a few useful python routines location in <code>scripts/</code> folder:</p>
+<p><span class="tt">drawres result_folder ...</span> plots the results in one or more folders. Wildcards are supported to match many folders, and <span class="tt">-s seed</span> selects seeds. Without a display, it plots through a monitor as described above, so results can be viewed remotely.</p>
+<h1 class="doxsection"><a class="anchor" id="compile-python"></a>
+Python scripts</h1>
+<p>The <span class="tt">scripts</span> folder contains Python routines. Add it to the module search path, e.g., <span class="tt">export PYTHONPATH=$src_dir/scripts</span>. They need <span class="tt">numpy</span> and <span class="tt">scipy</span>; <span class="tt">draw.py</span> also needs <span class="tt">matplotlib</span>.</p>
 <ul>
-<li><span class="tt">readbin.py</span> contains <span class="tt"><a class="el" href="../../d0/ddd/cell_8h.html#a0bea79ccbc952d08c41fdb768002169b">readbin</a></span> that can read <span class="tt">bin</span> or <span class="tt">fits</span> files.</li>
-<li><span class="tt">draw.py</span> contains routines to draw <span class="tt">opd</span> defined on coordinate <span class="tt">loc</span>. Use <span class="tt">draw(loc, opd)</span> or <span class="tt">draw(map)</span> where <span class="tt">map</span> is a 2d array.</li>
-<li><span class="tt">maos_result.py</span> contains routines <span class="tt">maos_res</span> to read and process <code>MAOS</code> results. It also imports <code>libaos.py</code> and <code>draw.py</code> </li>
-<li><span class="tt">libaos.py</span> contains routines that wraps <code>MAOS</code> library routines via <code>aolib.so</code> and <code>ctypes</code>. It contains <span class="tt">read</span> and <span class="tt">write</span> that can also read and write <span class="tt">bin</span> and <span class="tt">fits</span> files.</li>
-<li><span class="tt">lib2py.py</span> generates <span class="tt">libaos.py</span>. Similarly <span class="tt">lib2mex.py</span> generates MATLAB mex routines.</li>
-<li><span class="tt">maos_client</span> provides an interface to a running maos session. See next subsection.</li>
+<li><span class="tt">readbin.py</span>: <span class="tt">readbin(filename)</span> reads <span class="tt">.bin</span> and <span class="tt">.fits</span> files (also gzip compressed).</li>
+<li><span class="tt">maos_result.py</span>: <span class="tt">maos_res()</span> and related functions read and average the wavefront error results in result folders (see <a class="el" href="../../dd/da9/page40_results.html">Simulation Results</a>).</li>
+<li><span class="tt">draw.py</span>: <span class="tt">draw(loc, opd)</span> plots an OPD defined on coordinates <span class="tt">loc</span>; <span class="tt">draw(map)</span> plots a 2-d array.</li>
+<li><span class="tt">libaos.py</span>: wraps the <span class="tt">lib</span> routines in <span class="tt">bin/aolib.so</span> with <span class="tt">ctypes</span> (through <span class="tt">interface.py</span>). It includes <span class="tt">read()</span> and <span class="tt">write()</span> for <span class="tt">.bin</span> and <span class="tt">.fits</span> files. Set the environment variable <span class="tt">MAOS_AOLIB</span> to the full path of <span class="tt">aolib.so</span>, e.g., <span class="tt">export MAOS_AOLIB=~/work/maos/optim/bin/aolib.so</span>.</li>
+<li><span class="tt">lib2py.py</span> regenerates <span class="tt">libaos.py</span> from the headers (<span class="tt">lib/*.h</span> and a few others). Run it after changing function declarations in those headers. Similarly, <span class="tt">lib2mex.py</span> generates the MATLAB <span class="tt">aolib</span> mex source.</li>
+<li><span class="tt">maos_client.py</span>: an interface to a running <span class="tt">maos</span>. See below.</li>
 </ul>
-<p>For <span class="tt">libaos.py</span> to work, an environment variable <span class="tt">MAOS_AOLIB</span> need to set to the path of <span class="tt">aolib.so</span>.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
-Interface to MAOS</h2>
-<p>It is possible to retrieve or override MAOS internal data when it is running. See the following steps:</p>
-<p>First, set up shell environment so that the libaos.py can find it.</p>
-<ul>
-<li><span class="tt">export MAOS_AOLIB=\path\to\bin\aolib.so</span></li>
-</ul>
-<p>Then open <code>ipython</code> (or <code>python</code>) and run the following</p>
-<ul>
-<li><code>import</code> <code>maos_client</code> # import the module</li>
-<li><code>maos_client.connect(host,port)</code> # the host and port is the same as used by monitor</li>
-<li><code>maos_client.get_list()</code> # get list of available variables</li>
-<li><code>maos_client.get_var(name)</code> # get variable with the name</li>
-<li><code>maos_client.get_all()</code> # get all variables</li>
-<li><code>maos_client.pause(0)</code> # unpause maos</li>
-<li><code>maos_client.pause(1)</code> # pause or step maos. </li>
-</ul>
+<p>Readers for other languages are also provided: <span class="tt">readbin.m</span> (MATLAB), <span class="tt">readbin.pro</span> (IDL), and <span class="tt">readbin.jl</span> (Julia).</p>
+<h2 class="doxsection"><a class="anchor" id="compile-maos-client"></a>
+Interface to a running maos</h2>
+<p>The data of a running <span class="tt">maos</span> can be retrieved, and the simulation paused, from Python: </p><div class="fragment"><div class="line">import maos_client</div>
+<div class="line">maos_client.connect(host, pid_=pid) # scheduler host and the PID of the maos job</div>
+<div class="line">maos_client.get_list()          # list of available variables</div>
+<div class="line">maos_client.get_var(name)       # get the variable with this name, e.g., simu.gradcl</div>
+<div class="line">maos_client.get_all()           # get all variables</div>
+<div class="line">maos_client.pause(1)            # pause or step maos</div>
+<div class="line">maos_client.pause(0)            # resume maos</div>
+</div><!-- fragment --><p> The connection goes through the scheduler, which hands it to the <span class="tt">maos</span> process with that PID. The port defaults to the scheduler port: the number in <span class="tt">~/.aos/port</span>, or else a number derived from the user name, as in <span class="tt">maos</span>. Pass <span class="tt">port_</span> to <span class="tt">connect()</span> to override it. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
@@ -271,8 +408,11 @@ Interface to MAOS</h2>
 </div><!-- page-nav-tree -->
 </div><!-- page-nav -->
 </div><!-- container -->
-
-   </ul>
- </div>
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="../../doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
+  </ul>
+</div>
 </body>
 </html>
